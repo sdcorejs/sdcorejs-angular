@@ -7,19 +7,20 @@
 **Provided in**: NOT provided by default — consumer app must register it in `app.config.ts`
 
 ## One-line purpose
-Root-level configuration token for `@sdcorejs/angular` — carries the per-domain license key(s) that unlock licensed features and global formatting preferences (e.g. number locale).
+Root-level configuration token for `@sdcorejs/angular` — carries global presentation preferences (number format, default language) shared by every component in the package.
 
 ## Interface
 
 ```ts
 export interface ISdCoreConfiguration {
-  // License Key được cấp theo domain/sub domain, ví dụ: domain.com, sub.domain.com
-  // Domain localhost, 127.0.0.1 không cần key
-  // Các domain DEV/QC/UAT/PROD ... cần key tương ứng cho từng domain
-  licenseKey?: string | string[];
   format?: {
     number?: '1,234,567.89' | '1.234.567,89'; // Default: '1,234,567.89'
   };
+  // Ngôn ngữ mặc định cho các message của Core UI.
+  // - Language enum ('vi' | 'en' | 'ja' | 'ko' | 'zh') — dùng catalog built-in.
+  // - Function () => Record<string, string> — custom catalog do portal tự định nghĩa.
+  // Có thể bị override bởi localStorage (chỉ Language enum). Default: 'vi'.
+  language?: Language | (() => Record<string, string>);
 }
 
 export const SD_CORE_CONFIGURATION = new InjectionToken<ISdCoreConfiguration>('sd-core.configuration');
@@ -29,8 +30,8 @@ export const SD_CORE_CONFIGURATION = new InjectionToken<ISdCoreConfiguration>('s
 
 | Field | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `licenseKey` | `string \| string[]` | — | License keys are issued per domain / subdomain (e.g. `domain.com`, `sub.domain.com`). `localhost` and `127.0.0.1` do NOT require a key. Each environment (DEV / QC / UAT / PROD) needs its matching key — provide an array if a build serves multiple domains. |
 | `format.number` | `'1,234,567.89' \| '1.234.567,89'` | `'1,234,567.89'` | Number-format style for the whole app. The `'.'` thousand / `','` decimal variant is the Vietnamese-locale default. |
+| `language` | `Language \| (() => Record<string, string>)` | `'vi'` | Default language for Core UI messages. A `Language` enum value (`'vi' \| 'en' \| 'ja' \| 'ko' \| 'zh'`) selects a built-in catalog; a function returns a custom catalog owned by the portal. A `Language` value stored in `localStorage` wins over the configured enum; a custom catalog function is never overridden. |
 
 ## Setup
 
@@ -38,10 +39,9 @@ export const SD_CORE_CONFIGURATION = new InjectionToken<ISdCoreConfiguration>('s
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
 import { SD_CORE_CONFIGURATION, ISdCoreConfiguration } from '@sdcorejs/angular/configurations';
-import { environment } from '../environments/environment';
 
 const sdCoreConfig: ISdCoreConfiguration = {
-  licenseKey: environment.sdLicenseKeys, // string | string[]
+  language: 'vi',
   format: {
     number: '1.234.567,89', // optional; default is '1,234,567.89'
   },
@@ -59,7 +59,7 @@ export const appConfig: ApplicationConfig = {
 
 The token is read internally by `@sdcorejs/angular` services and components that need a global setting:
 
-- License-gated components / features: validate `licenseKey` against current `window.location.hostname` at bootstrap.
+- `I18nService`: resolves the active catalog from `language` (falling back to `localStorage`, then `'vi'`).
 - Number-formatting pipes and form fields: pick the thousands/decimal separator from `format.number`.
 - Components rendering currency/numeric values inherit the global format — individual components rarely override it.
 
@@ -74,7 +74,6 @@ const numberFormat = config?.format?.number ?? '1,234,567.89';
 ```
 
 ## Anti-patterns
-- Do NOT hard-code a production license key in source — wire it via `environment.*.ts` so DEV/QC/UAT/PROD each get their own key.
 - Do NOT provide the token at a feature module / route level — it's a root singleton; provide it once in `ApplicationConfig`.
-- Do NOT pass `licenseKey: ''` on production builds expecting it to be a no-op — empty/missing key on a non-localhost domain is treated as unlicensed.
 - Do NOT mutate the config object after providing it — `useValue` is read once at injection time.
+- Do NOT expect a `licenseKey` field — the package is MIT and carries no license gate. The field, `SdLicenseService`, and `SdBaseSecureComponent` were removed; delete any leftover `licenseKey` from your config object.

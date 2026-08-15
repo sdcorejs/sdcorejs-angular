@@ -110,17 +110,76 @@ describe('ɵsdFormControlConnector', () => {
     expect(Object.is(secondGroup.get('renamed'), replacement)).toBeTrue();
   });
 
-  it('does not replace or remove a control it does not own', () => {
+  it('replaces a FOREIGN control registered under the same name so the value reaches the form', () => {
+    // why: guard ngược cho một bug im lặng. Trước đây connector bỏ qua việc đăng ký khi FormGroup đã
+    // có control trùng `name` (`ownsRegistration = !current`), nên control nội bộ của component
+    // không bao giờ nằm trong form: người dùng gõ, nhưng `group.value[name]` không đổi và form
+    // submit ra rỗng, không một cảnh báo nào. Spec cũ ("does not replace or remove a control it does
+    // not own") khẳng định đúng hành vi hỏng đó.
     const host = fixture.componentInstance;
     const external = new FormControl('external');
     const group = new FormGroup({ field: external });
 
     host.form.set(group);
     fixture.detectChanges();
-    expect(group.get('field')).toBe(external);
 
-    group.setControl('field', new FormControl('replacement'));
-    const replacement = group.get('field');
+    expect(group.get('field')).toBe(host.control());
+    expect(group.get('field')).not.toBe(external);
+  });
+
+  it('propagates the control value to the parent form after replacing a foreign control', () => {
+    const host = fixture.componentInstance;
+    const group = new FormGroup({ field: new FormControl('external') });
+
+    host.form.set(group);
+    fixture.detectChanges();
+
+    host.control().setValue('typed by the user');
+
+    expect(group.value).toEqual({ field: 'typed by the user' });
+  });
+
+  it('restores the displaced control when the connector rebinds to a different name', () => {
+    // why: nếu chỉ `setControl` mà không nhớ control bị đẩy ra, đổi `name` sẽ để control của
+    // component nằm lại ở CẢ key cũ lẫn key mới, còn control gốc của consumer thì mất hẳn.
+    const host = fixture.componentInstance;
+    const external = new FormControl('external');
+    const group = new FormGroup({ field: external });
+
+    host.form.set(group);
+    fixture.detectChanges();
+    expect(group.get('field')).toBe(host.control());
+
+    host.name.set('other');
+    fixture.detectChanges();
+
+    expect(group.get('field')).toBe(external);
+    expect(group.get('other') === host.control()).toBeTrue();
+  });
+
+  it('restores the displaced control when the host is destroyed', () => {
+    const host = fixture.componentInstance;
+    const external = new FormControl('external');
+    const group = new FormGroup({ field: external });
+
+    host.form.set(group);
+    fixture.detectChanges();
+    expect(group.get('field')).toBe(host.control());
+
+    fixture.destroy();
+
+    expect(group.get('field')).toBe(external);
+  });
+
+  it('does not touch a control that someone else registered over ours', () => {
+    const host = fixture.componentInstance;
+    const group = new FormGroup({ field: new FormControl('external') });
+
+    host.form.set(group);
+    fixture.detectChanges();
+
+    const replacement = new FormControl('replacement');
+    group.setControl('field', replacement);
     host.name.set('other');
     fixture.detectChanges();
 
@@ -416,5 +475,101 @@ describe('ɵsdFormControlConnector', () => {
     control.setValue('after-destroy');
     expect(host.model()).toBe('model');
     expect(host.modelWrites).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// `registeredControl` — register something other than the bound control
+//
+// why: `<sd-date>` / `<sd-datetime>` / `<sd-date-range>` bind their control straight to the Material
+// editor, so it holds a `Date` or a display string. With `transform` the consumer is promised that
+// `form.get(name).value` matches `model`, which only works if the *registration* can point
+// elsewhere. Everything else — validators, disabled, state, model binding — must stay on `control`.
+// ---------------------------------------------------------------------------
+
+@Component({
+  selector: 'sd-registered-host',
+  standalone: true,
+  template: '',
+})
+class RegisteredControlHost {
+  readonly form = signal<ɵSdFormControlParent>(undefined);
+  readonly name = signal<string | undefined>('field');
+  readonly control = signal<AbstractControl<string | null>>(new FormControl<string | null>('editor'));
+  readonly registered = signal<AbstractControl | null>(null);
+  readonly model = signal<string | null>('model');
+
+  readonly connector = ɵsdFormControlConnector<string | null, string | null>({
+    form: this.form,
+    name: this.name,
+    control: this.control,
+    registeredControl: this.registered,
+    model: this.model,
+    writeModel: (value: string | null) => this.model.set(value),
+  });
+}
+
+describe('ɵsdFormControlConnector (registeredControl)', () => {
+  let fixture: ComponentFixture<RegisteredControlHost>;
+  let host: RegisteredControlHost;
+  let group: FormGroup;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ imports: [RegisteredControlHost] });
+    fixture = TestBed.createComponent(RegisteredControlHost);
+    host = fixture.componentInstance;
+    group = new FormGroup({});
+  });
+
+  it('registers the bound control when no alternative is supplied', () => {
+    host.form.set(group);
+    fixture.detectChanges();
+
+    expect(group.get('field')).toBe(host.control());
+  });
+
+  it('registers the alternative control instead when one is supplied', () => {
+    const modelFacing = new FormControl<string | null>('facing');
+    host.registered.set(modelFacing);
+    host.form.set(group);
+    fixture.detectChanges();
+
+    expect(group.get('field')).toBe(modelFacing);
+    expect(group.get('field')).not.toBe(host.control());
+  });
+
+  it('swaps the registration when the alternative appears at runtime', () => {
+    host.form.set(group);
+    fixture.detectChanges();
+    expect(group.get('field')).toBe(host.control());
+
+    const modelFacing = new FormControl<string | null>('facing');
+    host.registered.set(modelFacing);
+    fixture.detectChanges();
+
+    expect(group.get('field')).toBe(modelFacing);
+  });
+
+  it('removes the alternative it owns on destroy', () => {
+    const modelFacing = new FormControl<string | null>('facing');
+    host.registered.set(modelFacing);
+    host.form.set(group);
+    fixture.detectChanges();
+
+    fixture.destroy();
+
+    expect(group.contains('field')).toBeFalse();
+  });
+
+  // why: registration đổi chỗ, còn model binding thì KHÔNG — nó vẫn phải chạy trên `control`.
+  it('keeps the model binding on the bound control', () => {
+    const modelFacing = new FormControl<string | null>('facing');
+    host.registered.set(modelFacing);
+    host.form.set(group);
+    fixture.detectChanges();
+
+    host.control().setValue('typed');
+
+    expect(host.model()).toBe('typed');
   });
 });

@@ -2,7 +2,9 @@ import { computed, inject, Injectable, signal, Signal, WritableSignal } from '@a
 import { ISdCoreConfiguration, SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
 import { I18N_MESSAGES } from './i18n.messages';
 import { I18N_STORAGE_KEY } from './i18n.token';
-import { SUPPORTED_LANGUAGES, I18nParams, Language } from './i18n.types';
+import { I18nParams } from './i18n.types';
+import { SUPPORTED_LANGUAGES } from '@sdcorejs/utils/constants';
+import { Language } from '@sdcorejs/utils/models';
 
 @Injectable({ providedIn: 'root' })
 export class I18nService {

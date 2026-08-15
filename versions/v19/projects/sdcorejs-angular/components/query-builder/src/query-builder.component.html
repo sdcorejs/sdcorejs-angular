@@ -9,13 +9,22 @@
     }
   </div>
 } @else {
-  <div class="qb-container" [class.is-disabled]="resolvedDisabled()" (click)="closeAllDropdowns()">
+  <!-- why: "click ra vùng trống để đóng dropdown" là hành vi CHỈ có ở chuột — người dùng bàn phím
+       không có cách nào đóng. Thêm Escape làm tương đương. role="group": container là một nhóm
+       control nên KHÔNG nhận tabindex, tab đi thẳng vào các nút/select bên trong. -->
+  <div
+    class="qb-container"
+    role="group"
+    [class.is-disabled]="resolvedDisabled()"
+    (click)="closeAllDropdowns()"
+    (keydown.escape)="closeAllDropdowns()">
     <ng-container [ngTemplateOutlet]="groupTpl" [ngTemplateOutletContext]="{ $implicit: tree(), isRoot: true }"></ng-container>
   </div>
 }
 
 <!-- Recursive group node -->
 <ng-template #groupTpl let-group let-isRoot="isRoot" let-parent="parent" let-index="index">
+  @let _removeGroupLabel = removeGroupLabel();
   <div class="qb-group" [class.is-root]="isRoot">
     <div class="qb-header" [class.is-open]="group.open">
       <div class="qb-logic-switch">
@@ -24,15 +33,18 @@
       </div>
 
       <div class="qb-actions">
-        <button type="button" class="qb-btn qb-btn-add" title="Thêm" aria-label="Thêm điều kiện hoặc nhóm" [disabled]="resolvedDisabled()" (click)="toggleDropdown(group, $event)">+</button>
+        <button type="button" class="qb-btn qb-btn-add" [title]="addLabel()" [attr.aria-label]="addNodeLabel()" [disabled]="resolvedDisabled()" (click)="toggleDropdown(group, $event)">+</button>
         @if (group.open) {
-          <div class="qb-dropdown" (click)="$event.stopPropagation()">
-            <button type="button" (click)="addRule(group)">+ Điều kiện</button>
-            <button type="button" (click)="addGroup(group)">+ Nhóm</button>
+          <!-- why: dropdown là NHÓM hai nút (role="group"), không phải nút — không nhận tabindex,
+               tab đi thẳng vào hai nút. stopPropagation cho cả click lẫn Enter để thao tác bên
+               trong dropdown không kích hoạt handler "đóng tất cả" của container. -->
+          <div class="qb-dropdown" role="group" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()">
+            <button type="button" (click)="addRule(group)">+ {{ conditionLabel() }}</button>
+            <button type="button" (click)="addGroup(group)">+ {{ groupLabel() }}</button>
           </div>
         }
         @if (!isRoot) {
-          <button type="button" class="qb-btn qb-btn-remove" title="Xoá nhóm" aria-label="Xoá nhóm" [disabled]="resolvedDisabled()" (click)="removeNode(parent, index)">✕</button>
+          <button type="button" class="qb-btn qb-btn-remove" [title]="_removeGroupLabel" [attr.aria-label]="_removeGroupLabel" [disabled]="resolvedDisabled()" (click)="removeNode(parent, index)">✕</button>
         }
       </div>
     </div>
@@ -50,7 +62,7 @@
           }
         </div>
       } @empty {
-        <div class="qb-empty">Chưa có điều kiện</div>
+        <div class="qb-empty">{{ emptyLabel() }}</div>
       }
     </div>
   </div>
@@ -58,13 +70,18 @@
 
 <!-- Single rule node: field → operator → value -->
 <ng-template #ruleTpl let-rule let-parent="parent" let-index="index">
+  @let _selectFieldLabel = selectFieldLabel();
+  @let _valueLabel = valueLabel();
+  @let _removeConditionLabel = removeConditionLabel();
+  @let _dateModes = dateModes();
+  @let _relativeUnitOptions = relativeUnitOptions();
   <div class="qb-rule">
     <sd-select
       class="qb-field"
       [items]="resolvedFields()"
       valueField="key"
       displayField="label"
-      placeholder="Chọn trường"
+      [placeholder]="_selectFieldLabel"
       size="sm"
       [model]="rule.field"
       (modelChange)="setField(rule, $event)"
@@ -109,7 +126,7 @@
         @if (showValueSourceSelector(rule)) {
           <sd-select
             class="qb-value-source"
-            [items]="valueSourceOptions"
+            [items]="valueSourceOptions()"
             valueField="value"
             displayField="display"
             size="sm"
@@ -142,7 +159,7 @@
             [items]="compareFields(rule)"
             valueField="key"
             displayField="label"
-            placeholder="Chọn trường"
+            [placeholder]="_selectFieldLabel"
             size="sm"
             [model]="rule.compareField"
             (modelChange)="setCompareField(rule, $event)"
@@ -168,9 +185,9 @@
           <div class="qb-between">
             @switch (fieldOf(rule)?.type) {
               @case ('number') {
-                <sd-input-number class="qb-val" placeholder="Từ" size="sm" [model]="rule.value?.from" (modelChange)="setBetweenFrom(rule, $event)" [min]="fieldOf(rule)?.min" [max]="fieldOf(rule)?.max" [disabled]="resolvedDisabled()" hideInlineError [autoId]="autoIdFor('from-' + index)"></sd-input-number>
+                <sd-input-number class="qb-val" [placeholder]="fromLabel()" size="sm" [model]="rule.value?.from" (modelChange)="setBetweenFrom(rule, $event)" [min]="fieldOf(rule)?.min" [max]="fieldOf(rule)?.max" [disabled]="resolvedDisabled()" hideInlineError [autoId]="autoIdFor('from-' + index)"></sd-input-number>
                 <span class="qb-dash">—</span>
-                <sd-input-number class="qb-val" placeholder="Đến" size="sm" [model]="rule.value?.to" (modelChange)="setBetweenTo(rule, $event)" [min]="fieldOf(rule)?.min" [max]="fieldOf(rule)?.max" [disabled]="resolvedDisabled()" hideInlineError [autoId]="autoIdFor('to-' + index)"></sd-input-number>
+                <sd-input-number class="qb-val" [placeholder]="toLabel()" size="sm" [model]="rule.value?.to" (modelChange)="setBetweenTo(rule, $event)" [min]="fieldOf(rule)?.min" [max]="fieldOf(rule)?.max" [disabled]="resolvedDisabled()" hideInlineError [autoId]="autoIdFor('to-' + index)"></sd-input-number>
               }
               @case ('date') {
                 <sd-date class="qb-val qb-date-val" size="sm" [model]="rule.value?.from" (modelChange)="setBetweenFrom(rule, $event)" [disabled]="resolvedDisabled()" hideInlineError [autoId]="autoIdFor('from-' + index)"></sd-date>
@@ -187,17 +204,17 @@
         } @else {
           @switch (fieldOf(rule)?.type) {
             @case ('string') {
-              <sd-input class="qb-val" placeholder="Giá trị" size="sm" [model]="rule.value" (modelChange)="setScalar(rule, $event)" [disabled]="resolvedDisabled()" hideInlineError [autoId]="autoIdFor('val-' + index)"></sd-input>
+              <sd-input class="qb-val" [placeholder]="_valueLabel" size="sm" [model]="rule.value" (modelChange)="setScalar(rule, $event)" [disabled]="resolvedDisabled()" hideInlineError [autoId]="autoIdFor('val-' + index)"></sd-input>
             }
             @case ('number') {
-              <sd-input-number class="qb-val" placeholder="Giá trị" size="sm" [model]="rule.value" (modelChange)="setScalar(rule, $event)" [min]="fieldOf(rule)?.min" [max]="fieldOf(rule)?.max" [disabled]="resolvedDisabled()" hideInlineError [autoId]="autoIdFor('val-' + index)"></sd-input-number>
+              <sd-input-number class="qb-val" [placeholder]="_valueLabel" size="sm" [model]="rule.value" (modelChange)="setScalar(rule, $event)" [min]="fieldOf(rule)?.min" [max]="fieldOf(rule)?.max" [disabled]="resolvedDisabled()" hideInlineError [autoId]="autoIdFor('val-' + index)"></sd-input-number>
             }
             @case ('boolean') {
-              <sd-select class="qb-val" [items]="booleanItems(fieldOf(rule)!)" valueField="value" displayField="display" placeholder="Giá trị" size="sm" [model]="rule.value" (modelChange)="setScalar(rule, $event)" [disabled]="resolvedDisabled()" [clearable]="false" hideInlineError [autoId]="autoIdFor('val-' + index)"></sd-select>
+              <sd-select class="qb-val" [items]="booleanItems(fieldOf(rule)!)" valueField="value" displayField="display" [placeholder]="_valueLabel" size="sm" [model]="rule.value" (modelChange)="setScalar(rule, $event)" [disabled]="resolvedDisabled()" [clearable]="false" hideInlineError [autoId]="autoIdFor('val-' + index)"></sd-select>
             }
             @case ('date') {
               @let _dateMode = dateMode(rule);
-              <sd-select class="qb-date-mode" [items]="dateModes" valueField="value" displayField="display" size="sm" [model]="_dateMode" (modelChange)="setDateMode(rule, $event)" [disabled]="resolvedDisabled()" [clearable]="false" hideInlineError [autoId]="autoIdFor('datemode-' + index)">
+              <sd-select class="qb-date-mode" [items]="_dateModes" valueField="value" displayField="display" size="sm" [model]="_dateMode" (modelChange)="setDateMode(rule, $event)" [disabled]="resolvedDisabled()" [clearable]="false" hideInlineError [autoId]="autoIdFor('datemode-' + index)">
                 <ng-template sdItemDef let-item="item">
                   <span class="qb-opt">
                     <sd-icon class="qb-opt-icon" [name]="$any(item).icon"></sd-icon>
@@ -217,13 +234,13 @@
                 }
                 @case ('relative') {
                   <sd-input-number class="qb-rel-amount" type="positive" [precision]="0" size="sm" [model]="relativeAmount(rule)" (modelChange)="setRelativeAmount(rule, $event)" [disabled]="resolvedDisabled()" hideInlineError [autoId]="autoIdFor('rel-amount-' + index)"></sd-input-number>
-                  <sd-select class="qb-rel-unit" [items]="relativeUnitOptions" valueField="value" displayField="display" size="sm" [model]="relativeUnitDirValue(rule)" (modelChange)="setRelativeUnitDir(rule, $event)" [disabled]="resolvedDisabled()" [clearable]="false" hideInlineError [autoId]="autoIdFor('rel-unit-' + index)"></sd-select>
+                  <sd-select class="qb-rel-unit" [items]="_relativeUnitOptions" valueField="value" displayField="display" size="sm" [model]="relativeUnitDirValue(rule)" (modelChange)="setRelativeUnitDir(rule, $event)" [disabled]="resolvedDisabled()" [clearable]="false" hideInlineError [autoId]="autoIdFor('rel-unit-' + index)"></sd-select>
                 }
               }
             }
             @case ('datetime') {
               @let _dtMode = dateMode(rule);
-              <sd-select class="qb-date-mode" [items]="dateModes" valueField="value" displayField="display" size="sm" [model]="_dtMode" (modelChange)="setDateMode(rule, $event)" [disabled]="resolvedDisabled()" [clearable]="false" hideInlineError [autoId]="autoIdFor('datemode-' + index)">
+              <sd-select class="qb-date-mode" [items]="_dateModes" valueField="value" displayField="display" size="sm" [model]="_dtMode" (modelChange)="setDateMode(rule, $event)" [disabled]="resolvedDisabled()" [clearable]="false" hideInlineError [autoId]="autoIdFor('datemode-' + index)">
                 <ng-template sdItemDef let-item="item">
                   <span class="qb-opt">
                     <sd-icon class="qb-opt-icon" [name]="$any(item).icon"></sd-icon>
@@ -243,18 +260,18 @@
                 }
                 @case ('relative') {
                   <sd-input-number class="qb-rel-amount" type="positive" [precision]="0" size="sm" [model]="relativeAmount(rule)" (modelChange)="setRelativeAmount(rule, $event)" [disabled]="resolvedDisabled()" hideInlineError [autoId]="autoIdFor('rel-amount-' + index)"></sd-input-number>
-                  <sd-select class="qb-rel-unit" [items]="relativeUnitOptions" valueField="value" displayField="display" size="sm" [model]="relativeUnitDirValue(rule)" (modelChange)="setRelativeUnitDir(rule, $event)" [disabled]="resolvedDisabled()" [clearable]="false" hideInlineError [autoId]="autoIdFor('rel-unit-' + index)"></sd-select>
+                  <sd-select class="qb-rel-unit" [items]="_relativeUnitOptions" valueField="value" displayField="display" size="sm" [model]="relativeUnitDirValue(rule)" (modelChange)="setRelativeUnitDir(rule, $event)" [disabled]="resolvedDisabled()" [clearable]="false" hideInlineError [autoId]="autoIdFor('rel-unit-' + index)"></sd-select>
                 }
               }
             }
             @case ('values') {
-              <sd-select class="qb-val" [items]="fieldOf(rule)!.values || []" valueField="value" displayField="display" [multiple]="isMulti(rule.operator)" placeholder="Giá trị" size="sm" [model]="rule.value" (modelChange)="setScalar(rule, $event)" [disabled]="resolvedDisabled()" [clearable]="false" hideInlineError [autoId]="autoIdFor('val-' + index)"></sd-select>
+              <sd-select class="qb-val" [items]="valueItems(fieldOf(rule)!)" valueField="value" displayField="display" [multiple]="isMulti(rule.operator)" [placeholder]="_valueLabel" size="sm" [model]="rule.value" (modelChange)="setScalar(rule, $event)" [disabled]="resolvedDisabled()" [clearable]="false" hideInlineError [autoId]="autoIdFor('val-' + index)"></sd-select>
             }
           }
         }
       }
     }
 
-    <button type="button" class="qb-btn qb-btn-remove-rule" title="Xoá điều kiện" aria-label="Xoá điều kiện" [disabled]="resolvedDisabled()" (click)="removeNode(parent, index)">✕</button>
+    <button type="button" class="qb-btn qb-btn-remove-rule" [title]="_removeConditionLabel" [attr.aria-label]="_removeConditionLabel" [disabled]="resolvedDisabled()" (click)="removeNode(parent, index)">✕</button>
   </div>
 </ng-template>

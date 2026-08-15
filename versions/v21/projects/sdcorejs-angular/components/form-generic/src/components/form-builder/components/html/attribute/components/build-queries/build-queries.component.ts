@@ -15,20 +15,20 @@ import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdAutocomplete } from '@sdcorejs/angular/forms/autocomplete';
 import {
-  GetComponentAttributes,
-  GetVariableAttributes,
+  sdGetComponentAttributes,
+  sdGetVariableAttributes,
   SdFormGenericComponent,
   SdFormGenericGroup,
   SdFormGenericVariable,
 } from '../../../../../../../models';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'build-queries',
   templateUrl: './build-queries.component.html',
   styleUrl: './build-queries.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdAutocomplete, SdButton, SdModal, TranslatePipe],
+  imports: [SdAutocomplete, SdButton, SdModal, SdTranslatePipe],
 })
 export class BuildQueries implements OnInit, OnDestroy {
   private ref = inject(ChangeDetectorRef);
@@ -67,7 +67,7 @@ export class BuildQueries implements OnInit, OnDestroy {
 
   edit = () => {
     this.rightProperties =
-      [...GetComponentAttributes(this.components()), ...GetVariableAttributes(this.variables())].map(e => ({
+      [...sdGetComponentAttributes(this.components()), ...sdGetVariableAttributes(this.variables())].map(e => ({
         value: '${' + e.value + '}',
         display: e.display,
       })) || [];

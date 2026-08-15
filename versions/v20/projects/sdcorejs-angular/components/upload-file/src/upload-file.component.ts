@@ -38,7 +38,7 @@ import {
 } from './configurations';
 import { FilterDocumentPipe, FilterImagePipe } from './pipes';
 import { IsImage, PreviewFile, UploadFileService } from './services';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 // https://stackoverflow.com/questions/4459379/preview-an-image-before-it-is-uploaded
@@ -58,10 +58,10 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
     FilterDocumentPipe,
     SdFormatNumberPipe,
     MatProgressSpinner,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
 })
-export class SdUploadFile<TArgs = any> {
+export class SdUploadFile<TArgs = unknown> {
   // ─── Injected Services ────────────────────────────────────────────────
   readonly #notifyService = inject(SdNotifyService);
   readonly #confirmService = inject(SdConfirmService);
@@ -275,19 +275,24 @@ export class SdUploadFile<TArgs = any> {
   }
 
   #bindDropEvents(dropContainer: HTMLElement) {
-    dropContainer.addEventListener('dragover', (evt: Event) => {
+    // why: 4 listener này trước đây là hàm ẩn danh nên không bao giờ gỡ được. Drop container
+    // có thể sống lâu hơn component (consumer giữ element, hoặc element bị tách khỏi view mà
+    // vẫn còn tham chiếu) → handler giữ luôn component đã destroy kèm cả injector subtree,
+    // và một cú drop sau teardown vẫn chạy #uploadFile trên state đã chết.
+    // Giữ reference + gỡ trong DestroyRef.onDestroy để teardown là tất định.
+    const onDragOver = (evt: Event): void => {
       evt.preventDefault();
       (dropContainer as any).style.opacity = 0.9;
       dropContainer.style.border = '2px solid grey';
-    });
-    dropContainer.addEventListener('dragenter', (evt: Event) => {
+    };
+    const onDragEnter = (evt: Event): void => {
       evt.preventDefault();
-    });
-    dropContainer.addEventListener('dragleave', () => {
+    };
+    const onDragLeave = (): void => {
       (dropContainer as any).style.opacity = 0.6;
       dropContainer.style.border = '2px dashed grey';
-    });
-    dropContainer.addEventListener('drop', async (evt: DragEvent) => {
+    };
+    const onDrop = async (evt: DragEvent): Promise<void> => {
       evt.preventDefault();
       (dropContainer as any).style.opacity = 0.6;
       dropContainer.style.border = '2px dashed grey';
@@ -296,6 +301,18 @@ export class SdUploadFile<TArgs = any> {
         files.push(file);
       }
       await this.#uploadFile(files);
+    };
+
+    dropContainer.addEventListener('dragover', onDragOver);
+    dropContainer.addEventListener('dragenter', onDragEnter);
+    dropContainer.addEventListener('dragleave', onDragLeave);
+    dropContainer.addEventListener('drop', onDrop);
+
+    this.#destroyRef.onDestroy(() => {
+      dropContainer.removeEventListener('dragover', onDragOver);
+      dropContainer.removeEventListener('dragenter', onDragEnter);
+      dropContainer.removeEventListener('dragleave', onDragLeave);
+      dropContainer.removeEventListener('drop', onDrop);
     });
   }
 
@@ -509,6 +526,27 @@ export class SdUploadFile<TArgs = any> {
       return;
     }
     this.selectedFile.set(this.selectedFile() !== file ? file : null);
+  };
+
+  // why: template cần biết có phải thiết bị cảm ứng không để chỉ khi đó mới gắn
+  // role="button"/tabindex lên khung ảnh (onSelect là no-op trên desktop — thêm điểm dừng tab
+  // ở đó chỉ làm phiền người dùng bàn phím).
+  readonly isTouchDevice = this.#isMobileOrTablet;
+
+  // why: drop zone giờ là role="button" + tabindex="0" nên Enter/Space phải mở hộp thoại chọn tệp
+  // y hệt click. preventDefault để Space không cuộn trang.
+  onUploadKeydown = (event: Event) => {
+    event.preventDefault();
+    this.onUpload();
+  };
+
+  // why: khung ảnh bọc các nút (xoá / phóng to). Chỉ xử lý phím khi CHÍNH khung đang giữ focus,
+  // nếu không Enter trên nút xoá sẽ vừa xoá vừa toggle chọn ảnh.
+  onSelectKeydown = (file: PreviewFile, event: KeyboardEvent) => {
+    if (!this.#isMobileOrTablet) return;
+    if (event.target !== event.currentTarget) return;
+    event.preventDefault();
+    this.onSelect(file);
   };
 
   // ─── Resize ───────────────────────────────────────────────────────────

@@ -6,6 +6,10 @@
 @let _format = format();
 @let _required = required();
 @let _isInline = isInline();
+<!-- why: một cổng gate duy nhất cho <mat-error>, aria-invalid và aria-describedby — trước đây
+     message hiện nhưng control không báo invalid nên screen reader không biết ô đang lỗi. -->
+@let _errorVisible = !!_errorMessage && formControl.touched;
+@let _showInlineError = !_hideInlineError && _errorVisible;
 
 @if (isViewed()) {
   <sd-view
@@ -41,12 +45,15 @@
     </ng-content>
   }
 
+  <!-- why: div chỉ là hộp layout. aria-hidden="true" cũ ẩn CẢ cây con (label + <input> +
+       <mat-error> + nút clear) khỏi accessibility tree. role="presentation" chỉ vô hiệu hoá
+       chính div, không lan xuống con; (click) là tiện ích chuột mà bàn phím đã có sẵn qua Tab. -->
   <div
     class="d-flex align-items-center"
+    role="presentation"
     [class.c-focused]="isFocused"
     [class.c-disabled]="formControl.disabled"
-    (click)="onClick()"
-    aria-hidden="true">
+    (click)="onClick()">
     <mat-form-field
       [class.sd-md]="size() === 'md'"
       [class.sd-sm]="size() === 'sm'"
@@ -62,8 +69,9 @@
         </mat-label>
       }
 
+      <!-- why: BỎ aria-hidden trên chính <input> — ô vẫn nhận focus bằng Tab, aria-hidden chỉ
+           làm screen reader đọc ra khoảng lặng. -->
       <input
-        aria-hidden="true"
         [id]="id"
         [formControl]="inputControl"
         #control
@@ -87,10 +95,12 @@
         [attr.data-empty]="dataEmpty()"
         [attr.data-value]="dataValue()"
         [attr.data-required]="dataRequired()"
-        [attr.data-error-message]="dataErrorMessage()" />
+        [attr.data-error-message]="dataErrorMessage()"
+        [attr.aria-invalid]="_errorVisible ? 'true' : null"
+        [attr.aria-describedby]="_errorMessage ? errorId : null" />
 
-      @if (!_hideInlineError && _errorMessage && formControl.touched) {
-        <mat-error>{{ _errorMessage }}</mat-error>
+      @if (_showInlineError) {
+        <mat-error [id]="errorId">{{ _errorMessage }}</mat-error>
       }
 
       <!-- why: nút clear render TRƯỚC error icon. Clear hover-gated (visibility:hidden) vẫn
@@ -104,6 +114,9 @@
 
       @if (_hideInlineError && _errorMessage && formControl.touched) {
         <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
+      }
+      @if (_hideInlineError && _errorMessage && formControl.touched) {
+        <span class="sd-visually-hidden" [id]="errorId" matSuffix>{{ _errorMessage }}</span>
       }
 
       @if (sdSuffixDef()?.templateRef; as suffixRef) {

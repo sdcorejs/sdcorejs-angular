@@ -9,8 +9,9 @@ import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
 import { NavigationEnd, Params, Router, RouterModule } from '@angular/router';
 
 import { SdInput, SdSuffixDefDirective } from '@sdcorejs/angular/forms';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdSafeHtmlPipe } from '@sdcorejs/angular/pipes';
+import { sdIsExternalHttpUrl, sdOpenExternal } from '@sdcorejs/angular/utilities';
 import { StringUtilities } from '@sdcorejs/utils/fns';
 
 // NOTE: Import nội bộ trong module layout
@@ -21,7 +22,7 @@ import { LayoutUserComponent } from '../user/user.component';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
-  selector: 'sidebar',
+  selector: 'sd-sidebar-v1-panel',
   standalone: true,
   imports: [
     SdIcon,
@@ -37,13 +38,13 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
     HighlightSearchPipe,
     SdSuffixDefDirective,
     LayoutUserComponent,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SidebarComponent {
+export class SdSidebarV1Panel {
   // ==========================================
   // INJECT SERVICES (Thay thế Constructor rườm rà)
   // ==========================================
@@ -51,6 +52,7 @@ export class SidebarComponent {
   #layoutStorageService = inject(SdLayoutStorageService);
   #navigationState = inject(SdLayoutNavigationStateService);
   #menuFocusPipe = inject(MenuFocusPipe);
+  #i18n = inject(I18nService);
   #window = inject(DOCUMENT).defaultView;
   #destroyRef = inject(DestroyRef); // Dùng để unsubscribe RxJS tự động
 
@@ -78,9 +80,11 @@ export class SidebarComponent {
   menusByGroup = signal<SdLayoutMenu[]>([]);
   #hoveredMenuNodeKey = signal<string | null>(null);
   #pinIconHoverTimerId = signal<ReturnType<typeof setTimeout> | null>(null);
+  // why: `title` của nhóm ghim là nhãn HIỂN THỊ (đổ vào `titleMenuGroup` trên header), không phải
+  // id — phải dịch. Tính trong computed nên đổi ngôn ngữ là tiêu đề nhóm đổi theo.
   pinnedMenuGroup = computed<SdLayoutChildrenMenu>(() => ({
     id: 'pinned-menu-group',
-    title: 'Đã ghim',
+    title: this.#i18n.t('core.module.layout.sidebar.pinned'),
     children: this.#navigationState.pinnedMenus(),
   }));
 
@@ -147,6 +151,22 @@ export class SidebarComponent {
     this.treeControl.toggle(menu);
   };
 
+  // why: mục menu nay là role="button" + tabindex="0" nên Enter/Space phải điều hướng đúng như
+  // click. Lọc theo target để phím bấm trên nút ghim lồng bên trong không kéo theo điều hướng.
+  onMenuNodeKeydown = (event: KeyboardEvent, node: { path: string; queryParams: Params }): void => {
+    if (event.target !== event.currentTarget) return;
+    // why: chặn Space cuộn trang.
+    event.preventDefault();
+    this.navigate({ path: node.path, queryParams: node.queryParams ?? {} });
+  };
+
+  // why: nhánh có con nay là role="button" + aria-expanded → Enter/Space phải gập/mở đúng như click.
+  onToggleMenuNodeKeydown = (event: KeyboardEvent, menu: SdLayoutMenu): void => {
+    if (event.target !== event.currentTarget) return;
+    event.preventDefault();
+    this.onToggleMenuNode(menu);
+  };
+
   isPinnedNode = (node: SdLayoutMenu): boolean => this.pinnedNodeKeys().has(this.#getMenuNodeKey(node));
   isHoveredNode = (node: SdLayoutMenu): boolean => this.#hoveredMenuNodeKey() === this.#getMenuNodeKey(node);
 
@@ -202,8 +222,12 @@ export class SidebarComponent {
 
   navigate = (args: { path: string; queryParams: Params }): void => {
     const { path, queryParams } = args;
-    if (path.includes('http')) {
-      this.#window?.open(path, '_blank', 'noopener');
+    // why: `path.includes('http')` là substring test chứ không phải scheme test — chuỗi
+    // `javascript:fetch(...)//http` lọt qua rồi chạy như script trong chính origin của app.
+    // `sdIsExternalHttpUrl` parse URL thật, `sdOpenExternal` từ chối scheme lạ và luôn gắn
+    // `noopener,noreferrer` (chặn reverse tabnabbing qua `window.opener`).
+    if (sdIsExternalHttpUrl(path)) {
+      sdOpenExternal(path);
       return;
     }
     this.#router.navigate([path.split('?')[0]], {

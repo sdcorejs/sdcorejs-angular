@@ -1,5 +1,5 @@
 import { Injectable, Pipe, PipeTransform, inject } from '@angular/core';
-import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { DateUtilities } from '@sdcorejs/utils/fns';
 import { EMPTY_STR } from '@sdcorejs/utils/constants';
 import { SdFormGenericComponent, SdFormGenericHtml } from '../models';
 import { FormGenericService } from '../services';

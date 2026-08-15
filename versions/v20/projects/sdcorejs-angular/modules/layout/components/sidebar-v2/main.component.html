@@ -1,6 +1,10 @@
-<div class="sd-sidebar-v2" (keydown.escape)="closeFromEscape()">
+<!-- why: `(keydown.escape)` được gom lên HOST của component (xem `host` trong main.component.ts).
+     Trước đây nó nằm trên div bọc và trên <section> flyout — cả hai đều KHÔNG focusable nên chỉ
+     "chạy nhờ" event nổi bọt từ con, đồng thời khiến markup khai báo interaction handler trên
+     phần tử không nhận được focus. Host là tổ tiên của tất cả nên hành vi giữ nguyên. -->
+<div class="sd-sidebar-v2">
   <aside class="sd-sidebar-v2__rail d-flex flex-column align-items-center gap-8 py-12 bg-white border-right border-black200">
-    <button type="button" class="sd-sidebar-v2__brand d-flex align-items-center justify-content-center" aria-label="Trang chủ">
+    <button type="button" class="sd-sidebar-v2__brand d-flex align-items-center justify-content-center" [attr.aria-label]="'core.module.layout.home.tab-name' | sdTranslate">
       @if (sidebar().logoUrl) {
         <img class="sd-sidebar-v2__logo" [src]="sidebar().logoUrl" alt="" />
       } @else {
@@ -8,7 +12,7 @@
       }
     </button>
 
-    <nav class="d-flex flex-column align-items-center gap-4 flex-1" aria-label="Nhóm menu">
+    <nav class="d-flex flex-column align-items-center gap-4 flex-1" [attr.aria-label]="'core.module.layout.sidebar.menu-groups' | sdTranslate">
       @for (item of railItems(); track item.key) {
         <button
           type="button"
@@ -37,14 +41,14 @@
     <button
       type="button"
       class="sd-sidebar-v2__backdrop"
-      aria-label="Đóng menu"
+      [attr.aria-label]="'core.module.layout.sidebar.close-menu' | sdTranslate"
       (click)="closeFromBackdrop()"
       (keydown.escape)="closeFromEscape()"></button>
     <section
       class="sd-sidebar-v2__flyout d-flex flex-column bg-white border-right border-black200 mat-elevation-z4"
+      role="region"
       [attr.aria-label]="activeGroup()?.title || 'Menu'"
-      (mouseleave)="leaveFlyout()"
-      (keydown.escape)="closeFromEscape()">
+      (mouseleave)="leaveFlyout()">
       <header class="d-flex align-items-center justify-content-between gap-8 px-16 py-12 border-bottom border-black200">
         <span class="T16M text-ellipsis">{{ activeGroup()?.title || sidebar().defaultTitle || 'Menu' }}</span>
         @if (isFlyoutLocked()) {
@@ -53,7 +57,7 @@
       </header>
       <div class="p-12">
         <sd-layout-search-field
-          placeholder="Tìm trong nhóm"
+          [placeholder]="'core.module.layout.sidebar.search-in-group' | sdTranslate"
           [autoId]="'layout-v2-context-search'"
           [model]="searchText()"
           (sdChange)="searchText.set($event)">

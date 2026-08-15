@@ -40,7 +40,7 @@ interface SdCache<T> {
 - `snapshot()` distinguishes a stored `undefined` from absence.
 - Concurrent `load()` calls for the same effective identity share one loader promise.
 - Late loader completion cannot repopulate a removed/destroyed generation.
-- `release()` detaches one facade without deleting the persistent value.
+- `release()` detaches one facade without deleting the persistent value. The memory entry survives until it is evicted by the LRU bound (see below) or removed explicitly.
 - `destroy()` is idempotent and releases the handle; for memory caches it also drops the owner entry when appropriate.
 
 ## Persistence and serialization
@@ -51,9 +51,32 @@ Persistent entries use a versioned envelope containing a deterministic identity 
 
 Storage corruption, quota/security failures and unavailable browser storage do not crash the application or overwrite the current in-memory value. Tombstones prevent removed legacy entries from reappearing.
 
+## Memory bound (LRU)
+
+`type: 'memory'` entries are held in an LRU map with a hard cap. When the cap is exceeded, the least-recently-used entry is dropped; both reads and writes count as "recently used".
+
+- **Default cap:** `SD_CACHE_DEFAULT_MAX_MEMORY_ENTRIES` = **500** entries.
+- **Configure:** `maxMemoryEntries` on `SD_CACHE_CONFIG`. Values that are not finite or `< 1` fall back to the default.
+- **Scope:** memory only. `session`/`local` entries are governed by browser storage quota, not by this cap.
+- **What counts as a read:** every `get()`, `has()`, `snapshot()` and cache-hit `load()` — including repeated calls through a handle that is already open, not just the first read that hydrates it. Recency is a property of the call, never of the handle's age.
+- A read never resurrects an already-evicted owner: the still-open handle keeps serving its own hydrated copy, but the shared entry stays gone.
+
+```ts
+providers: [
+  {
+    provide: SD_CACHE_CONFIG,
+    useValue: { maxMemoryEntries: 200 } satisfies ISdCacheConfiguration,
+  },
+];
+```
+
+Why a cap: `release()` detaches a handle but deliberately keeps the cached value, and `SdApiService` releases its handle after every request. Without a cap, each distinct cached request URL left a memory entry alive for the lifetime of the application. Eviction is bounded rather than tied to `release()` so that the cache keeps hitting across requests — dropping the entry on last release would turn the memory cache into a no-op for the API layer.
+
+An evicted key behaves exactly like a cold key: `has()` returns `false`, `get()` returns `undefined` (or the `default`), and the next `load()` re-runs the loader. A handle that is still open keeps serving its own hydrated value even if the shared entry was evicted.
+
 ## Global configuration
 
-`SD_CACHE_CONFIG` is active and supports global namespace/version, serializer, identity canonicalizer, key conversion and remote callbacks.
+`SD_CACHE_CONFIG` is active and supports global namespace/version, serializer, identity canonicalizer, key conversion, the memory bound and remote callbacks.
 
 ```ts
 providers: [
@@ -62,6 +85,7 @@ providers: [
     useValue: {
       namespace: 'portal',
       version: 2,
+      maxMemoryEntries: 500,
       convertKey: key => `tenant-42:${key}`,
     } satisfies ISdCacheConfiguration,
   },
@@ -81,5 +105,6 @@ The injected persistence adapter reports storage as unavailable outside the brow
 - Values no longer pass through lossy JSON cloning. Unsupported values throw a typed persistence error.
 - Use `snapshot()` when `undefined` is a legitimate cached value.
 - Release dynamic handles to avoid retaining observers.
+- **Memory caches are now bounded at 500 entries (LRU).** Applications that relied on an unbounded memory cache and keep more than 500 distinct memory keys hot should raise `maxMemoryEntries`, or move long-lived data to `type: 'session' | 'local'`.
 
 Focused coverage lives in `cache.service.spec.ts`, `cache.types.spec.ts` and the shared persistence specs.

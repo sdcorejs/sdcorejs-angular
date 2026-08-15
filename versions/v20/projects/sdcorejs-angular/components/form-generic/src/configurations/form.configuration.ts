@@ -9,7 +9,7 @@ import {
 } from '../models';
 import { SdFormGenericValidationConfiguration } from '../models/form-generic-validation.model';
 
-export interface IWorkflowConfigurationForm<TSelectionArgs = any> {
+export interface IWorkflowConfigurationForm<TSelectionArgs = unknown> {
   // Mẫu chung chọn nhanh
   templates: SdFormGenericTemplate[];
   // Definition cho select/radio/checklist

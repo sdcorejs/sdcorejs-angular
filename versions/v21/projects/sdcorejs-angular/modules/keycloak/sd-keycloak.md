@@ -29,7 +29,7 @@ Thin wrapper around the official `keycloak-js` SDK: bootstraps Keycloak at app-i
 | `provideSdKeycloak(options)` | EnvironmentProviders factory | Standalone-bootstrap registration |
 | `SdKeycloakModule.forRoot(options)` | NgModule | Legacy `AppModule` registration |
 | `SdKeycloakService` | Service (`providedIn: 'root'`) | Wraps the `Keycloak` instance with helpers |
-| `SdKeycloakInterceptor` | `HttpInterceptorFn` | Refreshes token if needed, then attaches `Bearer <token>` to URLs whose path includes any `secureRoutes` substring |
+| `SdKeycloakInterceptor` | `HttpInterceptorFn` | Refreshes token if needed, then attaches `Bearer <token>` to requests whose **origin + path prefix** match a `secureRoutes` entry |
 | `SD_KEYCLOAK_CONFIGURATION` | InjectionToken | Holds the `loadTenantConfig()` provider |
 | `SdKeycloakTenantConfig` | Interface | `{ url, realm, clientId, secureRoutes?, silentRenewUrl?, authErrorUrl? }` |
 | `ISdKeycloakConfiguration` | Interface | `{ loadTenantConfig: () => Promise<SdKeycloakTenantConfig> }` |
@@ -41,7 +41,8 @@ interface SdKeycloakTenantConfig {
   url: string;             // 'https://sso.example.com' (Keycloak base URL)
   realm: string;           // 'my-realm'
   clientId: string;        // 'my-spa'
-  secureRoutes?: string[]; // substrings to match req.url against, e.g. ['/api/v1']
+  secureRoutes?: string[]; // same-origin path prefixes (['/api/v1']) or absolute origins
+                           // (['https://api.example.com/v1']) — see "secureRoutes matching"
   silentRenewUrl?: string; // basename of the silent-SSO redirect file in public/ (default 'silent-renew' -> ${origin}/silent-renew.html)
   authErrorUrl?: string;   // basename of the static error page in public/ (default 'auth-keycloak-error' -> redirect target when init() throws)
 }
@@ -152,9 +153,25 @@ export class AppModule {}
 - **`checkLoginIframe: false`** is set deliberately to prevent the Keycloak iframe loop bug. SSO state is therefore only validated at refresh time, not continuously.
 - **Auto-refresh:** `onTokenExpired` triggers `updateToken(30)` (refresh if expiry within 30s). On failure, `keycloak.login()` runs — full-page redirect.
 - **Interceptor refresh:** before each secured request, `keycloak.updateToken(30)` is awaited — guarantees the request never carries a token expiring in <30s.
-- **`secureRoutes` matching is substring-based** (`req.url.includes(route)`), NOT glob. `'/api'` will match `https://thirdparty.com/api/x` — be specific.
+- **`secureRoutes` matching is origin-aware and segment-aware** — see the dedicated section below.
 - **Anonymous requests pass through:** if `keycloak.authenticated` is falsy, the interceptor calls `next(req)` unmodified.
+- **Missing config:** `init()` throws when `url` / `realm` / `clientId` is missing or blank, naming the fields. An empty `secureRoutes` only warns in dev mode (valid, but it means no request ever carries a token).
 - **No SSR guard.** This service assumes a browser. Importing it server-side will throw on `keycloak-js` browser globals.
+
+### `secureRoutes` matching
+
+Matching goes through `sdMatchesSecureRoute` (`@sdcorejs/angular/utilities`), which parses both the request URL and the route entry instead of comparing strings. A route entry is either:
+
+| Entry | Matches | Does NOT match |
+| --- | --- | --- |
+| `'/api/v1'` (path prefix) | same-origin `/api/v1`, `/api/v1/users` | `/api/v1beta`, `/api/v10`, any cross-origin URL |
+| `'https://api.example.com/v1'` (absolute) | `https://api.example.com/v1/users` | `https://api.example.com/public/ping`, `https://api.example.com.evil.tld/v1/x` |
+
+Anything that fails to parse — including an empty-string entry — matches nothing (fail closed).
+
+**This replaced an unanchored substring test.** The old condition was `config.secureRoutes?.some(route => req.url.includes(route))`: no host check, no segment boundary. With the documented sample config `secureRoutes: ['/api/v1']`, a request to `https://evil.example.com/api/v1/collect` matched and received `Authorization: Bearer <token>` — the access token was handed to a third-party host. Being "specific" with the route string was never a real mitigation, because the attacker controls the path.
+
+Outside a browser (SSR, prerender, unit tests) there is no `window.location`, so a relative entry and a relative request URL are both resolved against a fixed synthetic origin. Relative-to-relative matching stays consistent; an absolute entry still requires a real origin match, so nothing is loosened.
 
 ## Examples
 
@@ -213,7 +230,8 @@ export class HeaderUser {
 ## Anti-patterns
 
 - Do NOT call `kc.keycloak.init(...)` yourself — `provideSdKeycloak` already wires it as `APP_INITIALIZER`. A second `init` throws.
-- Do NOT use vague `secureRoutes` like `['/api']` if your app calls third-party APIs containing `/api/` — use unique segments (`'/api/v1/myproduct'`) or full origin substrings.
+- Do NOT assume a relative `secureRoutes` entry covers a cross-origin API. `'/api/v1'` matches the app's OWN origin only. To send the token to a separate API host, list it as an absolute entry (`'https://api.example.com/v1'`) — and list every origin explicitly, because a lookalike host (`api.example.com.evil.tld`) will not match.
+- Do NOT use `'/'` as a `secureRoutes` entry — it is the one universal prefix and attaches the token to every same-origin request, including static assets.
 - Do NOT remove `silent-renew.html` from `public/` — silent SSO check fails and `init` resolves `false` unexpectedly. (Prefer the `angular.json` assets glob so it can't go missing on a fresh checkout.)
 - The core `auth-keycloak-error.html` works verbatim, but for production you'll usually add a logo / support contact / branded copy via its inline placeholders. Do NOT put app-bundle-dependent markup (external JS/CSS/images) in it — it must render when the bundle failed.
 - Do NOT rename only the `*Url` config without creating the matching `public/<name>.html` — the basename and the file must agree.

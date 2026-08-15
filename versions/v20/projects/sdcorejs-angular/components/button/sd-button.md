@@ -3,7 +3,7 @@
 **Type**: Component
 **Selector**: `sd-button`
 **Import path**: `@sdcorejs/angular/components/button` (or barrel: `@sdcorejs/angular/components`)
-**Class**: `SdButton extends SdBaseSecureComponent`
+**Class**: `SdButton` (implements `OnInit`, `OnDestroy`)
 **Standalone**: yes
 **Change detection**: `OnPush`
 
@@ -28,7 +28,7 @@ Standard action button — used everywhere a user triggers an action (save, canc
 | --- | --- | --- | --- |
 | `autoId` | `string \| null \| undefined` | `undefined` | Optional. Generates `data-autoId="components-button-<value>"` for E2E selectors. |
 | `type` | `'fill' \| 'light' \| 'outline' \| 'text'` | `'light'` | Visual variant. `fill`=primary action, `light`=default, `outline`=secondary, `text`=Material text button style. |
-| `color` | `Color \| 'black'` | `'secondary'` | Material color tokens (`primary`, `accent`, `warn`, `success`, `info`, `secondary`, ...). `black` is a button-only option. |
+| `color` | `SdButtonColor` = `Color \| 'black'` | `'secondary'` | `Color` (from `@sdcorejs/utils/models`) is exactly `'primary' \| 'secondary' \| 'info' \| 'success' \| 'warning' \| 'error'`. `'black'` is a button-only extra. There is no `accent` or `warn` — those are Angular Material's palette names, not SDCoreJS tokens. |
 | `size` | `'sm' \| 'md' \| 'lg'` | `'sm'` | Height: sm = 32px, md = 40px, lg = 48px. Typography follows the underlying Angular Material button. |
 | `htmlType` | `'button' \| 'submit' \| 'reset'` | `'button'` | Sets the underlying `<button type="...">`. Use `'submit'` only when the button is INSIDE a `<form>`. |
 | `title` | `string` | `undefined` | Visible label. Required unless icon-only. |
@@ -75,6 +75,7 @@ The button itself does NOT enforce permission — wrap with the `*sdPermission` 
 - Always set `title` OR `tooltip` for icon-only buttons (screen reader fallback)
 - `disabled` correctly sets `aria-disabled` via Material under the hood
 - Throttling avoids accidental double-submit on rapid clicks
+- **Focus ring**: the component clears the default outline (`&:focus { outline: none }`) so mouse users see no border, but restores a visible ring on `:focus-visible` (`2px solid var(--sd-primary)`, `outline-offset: 2px`). Keyboard users always see where focus is. Do not add a blanket `outline: none` in consumer styles without a `:focus-visible` replacement.
 
 ## Examples
 

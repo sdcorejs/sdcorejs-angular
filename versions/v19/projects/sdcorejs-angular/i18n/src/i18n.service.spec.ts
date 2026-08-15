@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
 import { I18N_STORAGE_KEY } from './i18n.token';
 import { I18nService } from './i18n.service';
-import { Language } from './i18n.types';
+import { Language } from '@sdcorejs/utils/models';
 
 describe('I18nService — initial resolution', () => {
   beforeEach(() => localStorage.removeItem(I18N_STORAGE_KEY));

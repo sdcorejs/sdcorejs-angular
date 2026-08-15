@@ -9,7 +9,7 @@
 
 <sd-side-drawer
   #drawer
-  [title]="'core.component.table.filter' | translate"
+  [title]="'core.component.table.filter' | sdTranslate"
   width="90vw">
   <div class="mobile-filter-body">
     <!-- ============================ -->
@@ -176,7 +176,7 @@
         [autoId]="_autoId + 'cancel'"
         class="mobile-filter-action"
         (click)="onCancel()"
-        [title]="'core.confirm.no' | translate"
+        [title]="'core.confirm.no' | sdTranslate"
         type="text"
         color="secondary">
       </sd-button>
@@ -184,7 +184,7 @@
         [autoId]="_autoId + 'apply'"
         class="mobile-filter-action"
         (click)="onApply()"
-        [title]="'core.confirm.yes' | translate"
+        [title]="'core.confirm.yes' | sdTranslate"
         type="fill"
         color="primary">
       </sd-button>

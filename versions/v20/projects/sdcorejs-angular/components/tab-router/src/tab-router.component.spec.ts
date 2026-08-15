@@ -10,7 +10,7 @@ import { SdTabRouterItemComponent } from './components/tab-router-item/tab-route
 import { SdTabRouterOutletComponent } from './components/tab-router-outlet/tab-router-outlet.component';
 import { SdTabRouterService } from './services/tab-router.service';
 import { SdTabDecoratorService } from './services/tab-decorator.service';
-import { SdTab, SdTabInfo } from './models/tab-router.model';
+import { SdTabRouterTab, SdTabInfo } from './models/tab-router.model';
 
 // ---------------------------------------------------------------------------
 // Stub component — must have @Component for ngComponentOutlet to work
@@ -23,7 +23,7 @@ class DummyTabComponent {}
 // Helpers
 // ---------------------------------------------------------------------------
 
-function makeTab(overrides: Partial<SdTab> = {}): SdTab {
+function makeTab(overrides: Partial<SdTabRouterTab> = {}): SdTabRouterTab {
   return {
     key: 'tab-key-1',
     component: DummyTabComponent,
@@ -34,7 +34,7 @@ function makeTab(overrides: Partial<SdTab> = {}): SdTab {
     data: {},
     tabInfoChanges: new Subject<SdTabInfo>(),
     ...overrides,
-  } as SdTab;
+  } as SdTabRouterTab;
 }
 
 // ---------------------------------------------------------------------------
@@ -48,7 +48,7 @@ describe('SdTabRouterNav', () => {
     template: `<sd-tab-router-nav [tabs]="tabs"></sd-tab-router-nav>`,
   })
   class NavHost {
-    tabs: SdTab[] = [];
+    tabs: SdTabRouterTab[] = [];
   }
 
   let fixture: ComponentFixture<NavHost>;
@@ -176,7 +176,7 @@ describe('SdTabRouterItem', () => {
     template: `<sd-tab-router-item [tab]="tab"></sd-tab-router-item>`,
   })
   class ItemHost {
-    tab: SdTab = makeTab({ key: 'item-k1', url: '/item/1' });
+    tab: SdTabRouterTab = makeTab({ key: 'item-k1', url: '/item/1' });
   }
 
   let fixture: ComponentFixture<ItemHost>;
@@ -356,7 +356,7 @@ describe('SdTabRouterOutlet', () => {
     tabRouterService.close(tab2);
     fixture.detectChanges();
 
-    const remaining = (outletCmp as any).tabs() as SdTab[];
+    const remaining = (outletCmp as any).tabs() as SdTabRouterTab[];
     expect(remaining.length).toBe(1);
     expect(remaining[0].key).toBe('k1');
   });
@@ -373,7 +373,7 @@ describe('SdTabRouterOutlet', () => {
     tabRouterService.close(tab1);
     fixture.detectChanges();
 
-    const remaining = (outletCmp as any).tabs() as SdTab[];
+    const remaining = (outletCmp as any).tabs() as SdTabRouterTab[];
     expect(remaining.length).toBe(1);
     expect(remaining[0].key).toBe('k2');
     expect(navigateSpy).toHaveBeenCalledWith([tab2.url], jasmine.objectContaining({ state: { switchTab: true } }));
@@ -391,7 +391,7 @@ describe('SdTabRouterOutlet', () => {
     fixture.detectChanges();
 
     expect(navigateByUrlSpy).toHaveBeenCalledWith('/', jasmine.objectContaining({ state: { switchTab: true } }));
-    const remaining = (outletCmp as any).tabs() as SdTab[];
+    const remaining = (outletCmp as any).tabs() as SdTabRouterTab[];
     expect(remaining.length).toBe(0);
   });
 
@@ -406,7 +406,7 @@ describe('SdTabRouterOutlet', () => {
     tabRouterService.close(tab);
     fixture.detectChanges();
 
-    const remaining = (outletCmp as any).tabs() as SdTab[];
+    const remaining = (outletCmp as any).tabs() as SdTabRouterTab[];
     expect(remaining.length).toBe(1);
   });
 });

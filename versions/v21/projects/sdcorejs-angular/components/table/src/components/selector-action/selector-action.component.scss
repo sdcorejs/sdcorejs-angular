@@ -10,7 +10,9 @@
   left: 0px;
   top: 0px;
   background: var(--sd-primary);
-  border-radius: 4px 0px 0px 4px;
+  // why: badge nằm sát mép trái của `.c-quick-action` nên nó LÀ góc trái của thanh. Bo 4px trong khi
+  // thanh bo 8px làm hai đầu thanh lệch nhau — trái vuông hơn phải. Khớp đúng 8px của thanh.
+  border-radius: 8px 0px 0px 8px;
   .c-length {
     position: static;
     width: auto;

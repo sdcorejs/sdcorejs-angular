@@ -6,17 +6,28 @@
   @for (command of filteredCommands; track command.key) {
     @let _meta = _item | command: command;
     @if (command.type === 'normal') {
+      <!-- why: bỏ aria-hidden="true" — đây là <button> THẬT, vẫn nhận tab focus nhưng screen reader
+           không đọc được gì (nút chỉ có icon, không có text). Thay bằng aria-label lấy từ chính
+           tiêu đề command đang hiển thị ở tooltip. -->
       <button
+        type="button"
         [attr.data-autoid]="_autoId + '-' + command.key"
         (click)="command.click(_item.data)"
         [matTooltip]="_meta.title"
-        aria-hidden="true"
+        [attr.aria-label]="_meta.title"
         [disabled]="_meta.disabled"
         mat-icon-button>
         <sd-icon class="c-icon" [color]="command.color || 'secondary'" [fontSet]="command.fontSet" [name]="_meta.icon"></sd-icon>
       </button>
     } @else {
-      <button [attr.data-autoid]="_autoId + '-' + command.key" [matMenuTriggerFor]="menu" aria-hidden="true" mat-icon-button>
+      <!-- why: nút mở menu con — cũng bỏ aria-hidden và gắn aria-label + aria-haspopup="menu". -->
+      <button
+        type="button"
+        [attr.data-autoid]="_autoId + '-' + command.key"
+        [matMenuTriggerFor]="menu"
+        [attr.aria-label]="_meta.title"
+        aria-haspopup="menu"
+        mat-icon-button>
         @if (_meta.icon) {
           <sd-icon class="c-icon" [fontSet]="command.fontSet" [name]="_meta.icon"></sd-icon>
         } @else {

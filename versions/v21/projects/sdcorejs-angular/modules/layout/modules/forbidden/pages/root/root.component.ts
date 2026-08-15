@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { SdButton, SdTabComponent } from '@sdcorejs/angular/components';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 // NOTE: Import nội bộ trong module layout thì dùng path tương đối
 import { SdPageComponent } from '../../../../components';
@@ -12,7 +12,7 @@ import { resolveTabName } from '../../../../utils';
 @Component({
   templateUrl: './root.component.html',
   styleUrl: './root.component.scss',
-  imports: [SdButton, SdPageComponent, TranslatePipe],
+  imports: [SdButton, SdPageComponent, SdTranslatePipe],
 })
 @SdTabComponent({
   component: RootComponent,
@@ -25,6 +25,7 @@ export class RootComponent {
   // INJECT SERVICES (Modern Angular)
   // ==========================================
   readonly #route = inject(ActivatedRoute);
+  readonly #router = inject(Router);
   readonly #layoutService = inject(SdLayoutService);
   readonly #i18n = inject(I18nService);
 
@@ -52,7 +53,12 @@ export class RootComponent {
   // ==========================================
   // PUBLIC METHODS
   // ==========================================
-  reload() {
-    window.location.href = '';
+  /**
+   * why: `window.location.href = ''` vừa là global thô (throw khi SSR vì không có `window`), vừa chỉ
+   * reload lại đúng trang lỗi này thay vì rời khỏi nó — trong khi nút mang nhãn "Về trang chủ".
+   * Điều hướng bằng Router tới `homeUrl` mà consumer đã khai trong SD_LAYOUT_CONFIGURATION.
+   */
+  reload(): void {
+    void this.#router.navigateByUrl(this.#layoutService.homeUrl);
   }
 }

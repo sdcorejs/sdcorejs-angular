@@ -13,11 +13,13 @@ import {
   OnDestroy,
   OnInit,
   output,
+  signal,
   TemplateRef,
+  untracked,
   viewChild,
   contentChild,
 } from '@angular/core';
-import { AbstractControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
+import { AbstractControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
@@ -31,16 +33,21 @@ import {
   SdFormControl,
   SdInlineErrorValidator,
   sdFormControlState,
+  SdTemporalValueTransform,
   SdViewed,
   SdViewedInput,
+  sdParseTransformedTemporal,
+  sdSerializeTemporalValue,
   sdViewedInline,
   sdViewedTransform,
   ɵsdFormControlConnector,
+  ɵsdModelFacingControl,
+  ɵsdTimerScope,
 } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { Size } from '@sdcorejs/utils/models';
-import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { DateUtilities } from '@sdcorejs/utils/fns';
 import { BrowserUtilities, Utilities } from '@sdcorejs/utils/fns';
 import { isValid as isValidDate, parse as parseDate } from 'date-fns';
 import { Subscription } from 'rxjs';
@@ -71,9 +78,20 @@ function parseFirstValid(value: string, formats: string[]): Date | null {
   return null;
 }
 
+/**
+ * why: `DateUtilities.isDate` nhận Date, timestamp, canonical `yyyy/MM/dd HH:mm[:ss]` và ISO, nhưng
+ * KHÔNG nhận chuỗi RFC-1123 của `toUTCString()`. Không có nhánh dự phòng này thì
+ * `<sd-datetime transform="UTCString">` không đọc lại được chính output của nó.
+ */
+function coerceDatetimeSource(value: SdDatetimeModelValue): SdDatetimeModelValue {
+  if (DateUtilities.isDate(value)) return value;
+  return sdParseTransformedTemporal(value) ?? value;
+}
+
 function datetimeModelToControl(value: SdDatetimeModelValue, showSeconds: boolean): string | null {
-  if (!DateUtilities.isDate(value)) return null;
-  const normalized = DateUtilities.toFormat(value, showSeconds ? 'yyyy/MM/dd HH:mm:ss' : 'yyyy/MM/dd HH:mm');
+  const source = coerceDatetimeSource(value);
+  if (!DateUtilities.isDate(source)) return null;
+  const normalized = DateUtilities.toFormat(source, showSeconds ? 'yyyy/MM/dd HH:mm:ss' : 'yyyy/MM/dd HH:mm');
   if (!normalized) return null;
   return DateUtilities.toFormat(normalized, showSeconds ? 'dd/MM/yyyy HH:mm:ss' : 'dd/MM/yyyy HH:mm') || null;
 }
@@ -86,8 +104,15 @@ function datetimeControlToStored(value: string | null, showSeconds: boolean): st
 }
 
 function normalizeDatetimeModel(value: SdDatetimeModelValue, showSeconds: boolean): string | null {
-  if (!DateUtilities.isDate(value)) return null;
-  return DateUtilities.toFormat(value, showSeconds ? 'yyyy/MM/dd HH:mm:ss' : 'yyyy/MM/dd HH:mm:00') || null;
+  const source = coerceDatetimeSource(value);
+  if (!DateUtilities.isDate(source)) return null;
+  return DateUtilities.toFormat(source, showSeconds ? 'yyyy/MM/dd HH:mm:ss' : 'yyyy/MM/dd HH:mm:00') || null;
+}
+
+/** Parses the committed display string back to the local instant it denotes. */
+function datetimeControlToDate(value: string | null): Date | null {
+  if (!value) return null;
+  return parseFirstValid(value, ['dd/MM/yyyy HH:mm:ss', 'dd/MM/yyyy HH:mm']);
 }
 
 @Component({
@@ -117,7 +142,7 @@ function normalizeDatetimeModel(value: SdDatetimeModelValue, showSeconds: boolea
     MatFormFieldModule,
     SdLabel,
     SdView,
-    TranslatePipe,
+    SdTranslatePipe,
     SdMaterialDatetimePicker,
     SdDatetimePickerActions,
     SdDatetimePickerApply,
@@ -127,6 +152,9 @@ function normalizeDatetimeModel(value: SdDatetimeModelValue, showSeconds: boolea
 })
 export class SdDatetime implements OnDestroy, OnInit {
   id = `I${Utilities.generateUuid()}`;
+  /** why: id ổn định của <mat-error> để control trỏ `aria-describedby` sang — thông báo lỗi
+   *  phải đọc được từ chính control, không chỉ hiện ra màn hình. */
+  readonly errorId = `${this.id}-error`;
 
   // ==========================================
   // 1. SIGNAL QUERIES
@@ -145,6 +173,9 @@ export class SdDatetime implements OnDestroy, OnInit {
   private elementRef = inject(ElementRef);
   private formConfig = inject(SD_FORM_CONFIGURATION, { optional: true });
   readonly #i18n = inject(I18nService);
+  // why: focus + mở picker hoãn 100ms; handle phải bị clear khi destroy, nếu không open()
+  // dựng overlay mồ côi trên view đã tháo.
+  readonly #timers = ɵsdTimerScope();
 
   // ==========================================
   // 3. SIGNAL INPUTS & MODEL
@@ -249,6 +280,13 @@ export class SdDatetime implements OnDestroy, OnInit {
   maxDateInput = input<any>(undefined, { alias: 'maxDate' });
   resolvedMax = computed(() => this.#parseDateBoundary(this.maxInput() ?? this.maxDateInput()));
 
+  /**
+   * Output serialization strategy for the committed value. Affects `model` / `modelChange` /
+   * `sdChange` and the registered form field only — the field keeps displaying
+   * `dd/MM/yyyy HH:mm[:ss]` per `showSeconds`. Left unset, the canonical string is emitted.
+   */
+  transform = input<SdTemporalValueTransform | undefined>();
+
   valueModel = model<SdDatetimeModelValue>(undefined, { alias: 'model' });
 
   // viewed-mode: formControl.value là chuỗi display (dd/MM/yyyy HH:mm) nên DatePipe không parse được.
@@ -273,19 +311,93 @@ export class SdDatetime implements OnDestroy, OnInit {
   // ==========================================
   isMobileOrTablet = BrowserUtilities.isMobile();
   formControl = new SdFormControl();
+
+  /** `true` khi text vừa nhập không phải datetime dd/MM/yyyy HH:mm(:ss) hợp lệ. */
+  readonly #invalidFormat = signal(false);
+
+  /**
+   * why: lỗi format PHẢI đi qua pipeline validator. Trước đây nó bị nhét thẳng vào control bằng
+   * `setErrors()` — tức là nằm NGOÀI pipeline — nên bất kỳ `updateValueAndValidity` nào chạy sau
+   * (effect validators của connector, hay chính `setValue`) đều xoá sạch lỗi mà không ai hay biết.
+   * Nhánh xoá lỗi cũ còn sai thêm một lần nữa: `setErrors({ ...errors, date: null })` để lại một
+   * object errors KHÔNG rỗng, mà `AbstractControl._calculateStatus()` coi mọi object errors non-null
+   * là INVALID → một datetime hoàn toàn hợp lệ vẫn bị đánh dấu invalid (và phát `statusChanges`
+   * INVALID ra cho form cha) cho tới khi `updateValueAndValidity` kế tiếp che đi. Trả `null` từ
+   * validator thì key `date` biến mất hẳn, không còn `date: null` treo lại.
+   * Validator giữ identity ổn định (connector chỉ gắn 1 lần) và đọc cờ qua `untracked` để không
+   * tự biến mình thành dependency reactive khi bị gọi trong effect/computed.
+   */
+  readonly #datetimeFormatValidator: ValidatorFn = () =>
+    untracked(() => (this.#invalidFormat() ? { date: this.#i18n.t('core.form.datetime.invalid-format') } : null));
+
+  readonly #validators = computed<readonly ValidatorFn[]>(() =>
+    this.inlineError() ? [this.#datetimeFormatValidator, SdInlineErrorValidator] : [this.#datetimeFormatValidator]
+  );
+
+  /**
+   * why: control gắn vào editor nên nó giữ CHUỖI HIỂN THỊ `dd/MM/yyyy HH:mm[:ss]` — không phải model.
+   * Có `transform` thì consumer được hứa `form.get(name).value` bằng `model`, nên form phải nhận
+   * control này. Không có transform thì `registered` trả null và form vẫn nhận control của editor.
+   */
+  readonly #modelFacing = ɵsdModelFacingControl<SdDatetimeModelValue>({
+    active: computed(() => !!this.transform()),
+    model: this.valueModel,
+    writeModel: value => {
+      this.valueModel.set(value);
+      this.sdChange.emit(value);
+    },
+    source: computed<AbstractControl>(() => this.formControl),
+    modelEquals: (left, right) => this.#modelsEqual(left, right),
+  });
+  /** Control registered in the parent form while a `transform` is active; holds the public model. */
+  readonly modelControl = this.#modelFacing.control;
+
+  /**
+   * Serializes a committed datetime, applying the precision `showSeconds` already governs: seconds
+   * are kept only when they are shown, and milliseconds are always dropped.
+   */
+  #serializeCommitted(display: string | null): SdDatetimeModelValue {
+    const parsed = datetimeControlToDate(display);
+    const transform = this.transform();
+    if (!parsed || !transform) return display ? (datetimeControlToStored(display, this.showSeconds()) ?? this.valueModel()) : null;
+
+    const seconds = this.showSeconds() ? parsed.getSeconds() : 0;
+    const normalized = new Date(
+      parsed.getFullYear(),
+      parsed.getMonth(),
+      parsed.getDate(),
+      parsed.getHours(),
+      parsed.getMinutes(),
+      seconds,
+      0
+    );
+    return sdSerializeTemporalValue(normalized, transform) ?? this.valueModel();
+  }
+
+  /**
+   * why: `normalizeDatetimeModel` gộp về canonical string, nên hai chuỗi transform khác nhau của
+   * cùng một thời điểm so ra bằng nhau và `writeModel` bị bỏ qua — đổi `transform` lúc runtime rồi
+   * commit lại sẽ không phát ra chuỗi mới. Khi có transform thì so nguyên văn.
+   */
+  #modelsEqual(left: SdDatetimeModelValue, right: SdDatetimeModelValue): boolean {
+    if (this.transform()) return Object.is(left, right);
+    return normalizeDatetimeModel(left, this.showSeconds()) === normalizeDatetimeModel(right, this.showSeconds());
+  }
+
   readonly #formConnector = ɵsdFormControlConnector<SdDatetimeModelValue, string | null>({
     form: this.form,
     name: this.name,
     control: computed<AbstractControl<string | null>>(() => this.formControl),
+    registeredControl: this.#modelFacing.registered,
     model: this.valueModel,
     writeModel: value => {
       this.valueModel.set(value);
       this.sdChange.emit(value);
     },
     modelToControl: value => datetimeModelToControl(value, this.showSeconds()),
-    controlToModel: value => (value ? (datetimeControlToStored(value, this.showSeconds()) ?? this.valueModel()) : null),
-    modelEquals: (left, right) => normalizeDatetimeModel(left, this.showSeconds()) === normalizeDatetimeModel(right, this.showSeconds()),
-    validators: computed(() => (this.inlineError() ? SdInlineErrorValidator : null)),
+    controlToModel: value => this.#serializeCommitted(value),
+    modelEquals: (left, right) => this.#modelsEqual(left, right),
+    validators: this.#validators,
     required: this.required,
     disabled: this.disabled,
     viewed: this.viewed,
@@ -333,6 +445,12 @@ export class SdDatetime implements OnDestroy, OnInit {
   }
 
   onPickerConfirm(value: Date) {
+    // why: chọn được datetime từ picker nghĩa là text sai định dạng đã bị thay thế — cờ phải tắt.
+    // Cờ chỉ được reset trong `onConfirmInput`, nên trước đây gõ bậy rồi chọn từ lịch để lại lỗi
+    // `date` VĨNH VIỄN: control invalid + hiện "Sai định dạng" trên một giá trị hoàn toàn hợp lệ.
+    // Đây là regression MỚI của việc đưa lỗi vào pipeline validator — bản `setErrors` cũ tình cờ
+    // bị `updateValueAndValidity` kế tiếp xoá hộ.
+    this.#setDatetimeError(false);
     const display = DateUtilities.toFormat(value, this.showSeconds() ? 'dd/MM/yyyy HH:mm:ss' : 'dd/MM/yyyy HH:mm') || null;
     if (this.formControl.value !== display) {
       this.formControl.setValue(display);
@@ -384,7 +502,8 @@ export class SdDatetime implements OnDestroy, OnInit {
 
   focus = () => {
     this.isFocused = true;
-    setTimeout(() => {
+    // why: vẫn 100ms như cũ — chỉ scope handle theo DestroyRef.
+    this.#timers.schedule(() => {
       this.inputRef()?.nativeElement?.focus();
       this.open();
     }, 100);
@@ -427,18 +546,13 @@ export class SdDatetime implements OnDestroy, OnInit {
     const regexToSecond = /^([1-9]|([012][0-9])|(3[01]))\/([0]{0,1}[1-9]|1[012])\/\d\d\d\d [012]{0,1}[0-9]:[0-6][0-9]:[0-6][0-9]$/g;
 
     if (currentVal && !(regexToMinutes.test(currentVal) || regexToSecond.test(currentVal))) {
-      setTimeout(() => {
-        formControl.markAsDirty();
-        formControl.markAsTouched();
-        formControl.setErrors({ ...formControl.errors, date: this.#i18n.t('core.form.datetime.invalid-format') });
-      }, 0);
+      formControl.markAsDirty();
+      formControl.markAsTouched();
+      this.#setDatetimeError(true);
       return;
     }
 
-    setTimeout(() => {
-      formControl.setErrors({ ...formControl.errors, date: null });
-      this.formControl.updateValueAndValidity();
-    }, 0);
+    this.#setDatetimeError(false);
 
     // Đồng bộ qua canonical control; connector sở hữu conversion và model/output timing.
     if (currentVal) {
@@ -454,8 +568,24 @@ export class SdDatetime implements OnDestroy, OnInit {
     }
   };
 
+  /**
+   * Bật/tắt cờ format rồi chạy lại pipeline NGAY.
+   * why: chạy lại đồng bộ để lỗi xuất hiện/biến mất đúng nhịp nhập, đồng thời phát `events` cho
+   * `sdFormControlState` tick — connector gắn validator bằng `emitEvent: false` nên không tick hộ.
+   * Early-return khi cờ không đổi để một datetime hợp lệ không bị phát thừa một vòng status.
+   */
+  #setDatetimeError(invalid: boolean): void {
+    if (this.#invalidFormat() === invalid) return;
+    this.#invalidFormat.set(invalid);
+    this.formControl.updateValueAndValidity();
+  }
+
   clear = ($event: any) => {
     $event?.stopPropagation();
+    // why: phải tắt cờ TRƯỚC và NGOÀI nhánh `if` — sau khi gõ text sai, `onConfirmInput` return sớm
+    // nên `formControl.value` vẫn là null; nhánh `if` không chạy và lỗi `date` sẽ treo lại trên một
+    // field vừa được xoá trắng.
+    this.#setDatetimeError(false);
     if (this.formControl.value) {
       this.formControl.setValue(null);
     }

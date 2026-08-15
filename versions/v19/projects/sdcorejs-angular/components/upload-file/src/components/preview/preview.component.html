@@ -44,7 +44,7 @@
           @if(selectedFile.isImgError) {
             <div class="c-image-error">
               <sd-icon name="warning_amber"></sd-icon>
-              <div class="T14R">{{ 'core.component.upload-file.error-occurred' | translate }}</div>
+              <div class="T14R">{{ 'core.component.upload-file.error-occurred' | sdTranslate }}</div>
             </div>
           } @else if (selectedFile.isPreviewImage && (selectedFile.previewSrc || selectedFile.src)) {
             <img fill priority [src]="selectedFile.previewSrc || selectedFile.src" class="main-image" alt="Main display image" />
@@ -70,7 +70,7 @@
               @if(selectedFile.fileName) {
                 <div class="T14M">{{selectedFile.fileName}}</div>
               }
-              <sd-button [title]="'core.component.upload-file.upload' | translate" (click)="onDownload(selectedFile)" type="fill" color="primary"></sd-button>
+              <sd-button [title]="'core.component.upload-file.upload' | sdTranslate" (click)="onDownload(selectedFile)" type="fill" color="primary"></sd-button>
           }
         }
         <sd-button prefixIcon="arrow_forward_ios" class="next-icon" (click)="updateCurrentImage(1)"></sd-button>

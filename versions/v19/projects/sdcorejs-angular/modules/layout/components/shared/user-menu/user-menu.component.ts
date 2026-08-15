@@ -14,7 +14,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { SdAvatar } from '@sdcorejs/angular/components';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { isObservable } from 'rxjs';
 import {
@@ -27,7 +27,7 @@ import {
 @Component({
   selector: 'sd-layout-user-menu',
   standalone: true,
-  imports: [SdAvatar, SdIcon, TranslatePipe],
+  imports: [SdAvatar, SdIcon, SdTranslatePipe],
   templateUrl: './user-menu.component.html',
   styleUrl: './user-menu.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -91,11 +91,6 @@ export const EN_MESSAGES = {
   'core.excel.cannot-read-file': 'Could not read file content',
   'core.excel.no-sheet': 'Excel file has no data sheet',
 
-  // ---- Service: docx ----
-  'core.docx.invalid-format': 'Invalid format. Please select a template in DOC or DOCX format',
-  'core.docx.size-exceeded': 'Template file size exceeds the supported limit. Please try again',
-  'core.docx.convert-error': 'An error occurred while converting the DOCX file',
-
   // ---- Service: notify (toast) ----
   'core.notify.type.success': 'Success',
   'core.notify.type.info': 'Information',
@@ -217,7 +212,6 @@ export const EN_MESSAGES = {
   'core.form.time-range.step': 'Times must align to a {step}-minute interval',
   'core.form.time-range.from': 'From',
   'core.form.time-range.to': 'To',
-  'core.form.time-range.clear': 'Clear time range',
 
   // ---- Forms: time-spinner ----
   'core.form.time-spinner.hour': 'Hour',
@@ -248,6 +242,7 @@ export const EN_MESSAGES = {
 
   // ---- Forms: select ----
   'core.form.select.required': 'Please enter information',
+  'core.form.select.selectAll': 'All',
 
   // ---- Forms: textarea ----
   'core.form.textarea.required': 'Please enter information',
@@ -266,14 +261,6 @@ export const EN_MESSAGES = {
   'core.component.editor.image.max-height': 'Image height {height}px exceeds the limit of {max}px',
   'core.component.editor.image.max-per-selection': 'You can select at most {max} images per selection',
 
-  // ---- Component: document-builder ----
-  'core.component.document-builder.page-number.current': 'Current page number',
-  'core.component.document-builder.page-number.total': 'Total pages',
-  'core.component.document-builder.ck-comment.label': 'Comment',
-  'core.component.document-builder.ck-comment.text-too-long': 'Text too long ({length} characters). Maximum {max} characters.',
-  'core.component.document-builder.variable.not-allowed': 'Adding variable to the text is not allowed',
-  'core.component.document-builder.variable.invalid-data': 'Invalid variable data',
-
   // ---- Component: form-builder ----
   'core.component.form-builder.field-key': 'Field key',
   'core.component.form-builder.display': 'Display',
@@ -288,6 +275,7 @@ export const EN_MESSAGES = {
   'core.component.form-builder.required-when': 'Required when',
   'core.component.form-builder.confirm': 'Confirm',
   'core.component.form-builder.delete': 'Delete',
+  'core.component.form-builder.select-item': 'Select to edit',
   'core.component.form-builder.save': 'Save',
   'core.component.form-builder.hint': 'Hint',
   'core.component.form-builder.parameter': 'Parameters',
@@ -359,9 +347,13 @@ export const EN_MESSAGES = {
   'core.component.form-builder.display-label': 'Display label',
   'core.component.form-builder.attribute': 'Attribute',
   'core.component.form-builder.add-variable': 'Add variable',
+  'core.component.form-builder.no-variable': 'No variables yet. Add one to use it in condition expressions.',
+  'core.component.form-builder.no-validation': 'No validations yet. Add one to show a warning or an error on a condition.',
   'core.component.form-builder.add-new': 'Add new',
   'core.component.form-builder.detail': 'Details',
   'core.component.form-builder.create-update': 'Create/update',
+  'core.component.form-builder.update-row': 'Update row',
+  'core.component.form-builder.add-row': 'Add row',
   'core.component.form-builder.default': 'Default',
   'core.component.form-builder.show-more': 'Show more',
   'core.component.form-builder.show-less': 'Show less',
@@ -543,6 +535,8 @@ export const EN_MESSAGES = {
   'core.component.table.error-occurred': 'An error occurred',
   'core.component.table.not-an-array': 'Data is not an array',
   'core.component.table.config.confirm-reset': 'Confirm reset all settings to defaults',
+  'core.component.table.config.drag-hint': 'Drag the ⠿ handle to reorder columns',
+  'core.component.table.config.drag-handle': 'Drag to reorder column',
   'core.component.table.popup-export.select-columns': 'Please select columns to export',
   'core.component.table.selector-action.default-msg': 'items selected',
   'core.component.tab-router.too-many-tabs': 'You have opened too many tabs.',
@@ -576,6 +570,13 @@ export const EN_MESSAGES = {
   'core.module.layout.user.notification': 'Notifications',
   'core.module.layout.sidebar.search': 'Search',
   'core.module.layout.sidebar.toggle': 'Toggle sidebar',
+  'core.module.layout.sidebar.menu-groups': 'Menu groups',
+  'core.module.layout.sidebar.close-menu': 'Close menu',
+  'core.module.layout.sidebar.search-in-group': 'Search this group',
+  'core.module.layout.sidebar.primary-nav': 'Primary navigation',
+  'core.module.layout.sidebar.more-menu': 'More menus',
+  'core.module.layout.sidebar.more': 'More',
+  'core.module.layout.sidebar.search-in-menu': 'Search menus',
 
   // ---- Module: layout (greeting + weekday) ----
   'core.module.layout.greeting.hello': 'Hello, {name}',
@@ -616,4 +617,91 @@ export const EN_MESSAGES = {
 
   // ---- Module: generic (generic-select) ----
   'core.module.generic.generic-select.detail-link': 'details',
+
+  // ---- Component: query-bar ----
+  'core.component.query-bar.search-placeholder': 'Search...',
+  'core.component.query-bar.no-fields': 'No fields configured',
+  'core.component.query-bar.add-filter': 'Add filter',
+  'core.component.query-bar.clear-all': 'Clear all ({count})',
+  'core.component.query-bar.search': 'Search',
+  'core.component.query-bar.logic-operator': 'Logic operator',
+  'core.component.query-bar.boolean.true': 'Yes',
+  'core.component.query-bar.boolean.false': 'No',
+  'core.component.query-bar.placeholder.value': 'value',
+  'core.component.query-bar.placeholder.text': 'type…',
+  'core.component.query-bar.placeholder.from-number': 'From',
+  'core.component.query-bar.placeholder.to-number': 'To',
+  'core.component.query-bar.placeholder.from-text': 'from…',
+  'core.component.query-bar.placeholder.to-text': 'to…',
+  'core.component.query-bar.swap-field': 'Swap field',
+  'core.component.query-bar.placeholder.select-value': 'Select value',
+  'core.component.query-bar.placeholder.enter-value': 'Enter value',
+  'core.component.query-bar.loading-values': 'Loading...',
+  'core.component.query-bar.field-empty': 'No fields configured yet.',
+  'core.component.query-bar.saved-filters.tooltip': 'Saved filters',
+  'core.component.query-bar.saved-filters.tooltip-disabled': 'Requires [savedFiltersKey] to enable',
+  'core.component.query-bar.saved-filters.delete': 'Delete filter',
+  'core.component.query-bar.saved-filters.empty': 'No saved filters yet.',
+  'core.component.query-bar.saved-filters.save': 'Save current filter',
+  'core.component.query-bar.saved-filters.name-label': 'Filter name',
+
+  // ---- Component: query-builder ----
+  'core.component.query-builder.date-mode.absolute': 'Specific date',
+  'core.component.query-builder.date-mode.now': 'Today',
+  'core.component.query-builder.date-mode.relative': 'Relative',
+  'core.component.query-builder.value-source.literal': 'Enter a value',
+  'core.component.query-builder.value-source.field': 'Compare with field',
+  'core.component.query-builder.relative.hour-previous': 'hours ago',
+  'core.component.query-builder.relative.hour-next': 'hours from now',
+  'core.component.query-builder.relative.day-previous': 'days ago',
+  'core.component.query-builder.relative.day-next': 'days from now',
+  'core.component.query-builder.relative.week-previous': 'weeks ago',
+  'core.component.query-builder.relative.week-next': 'weeks from now',
+  'core.component.query-builder.relative.month-previous': 'months ago',
+  'core.component.query-builder.relative.month-next': 'months from now',
+  'core.component.query-builder.relative.format': '{amount} {phrase}',
+  'core.component.query-builder.add': 'Add',
+  'core.component.query-builder.add-node': 'Add a condition or group',
+  'core.component.query-builder.condition': 'Condition',
+  'core.component.query-builder.group': 'Group',
+  'core.component.query-builder.remove-group': 'Remove group',
+  'core.component.query-builder.remove-condition': 'Remove condition',
+  'core.component.query-builder.empty': 'No conditions yet',
+  'core.component.query-builder.select-field': 'Select field',
+  'core.component.query-builder.value': 'Value',
+  'core.component.query-builder.from': 'From',
+  'core.component.query-builder.to': 'To',
+  'core.component.query-builder.boolean.true': 'Yes',
+  'core.component.query-builder.boolean.false': 'No',
+
+  // ---- Component: tree ----
+  'core.component.tree.selected-count': '{count} item(s) selected',
+  'core.component.tree.expand': 'Expand tree item',
+  'core.component.tree.collapse': 'Collapse tree item',
+  'core.component.tree.retry-item': 'Retry loading tree item',
+  'core.component.tree.load-error': 'Unable to load tree data',
+
+  // ---- Directive: hover-copy ----
+  'core.directive.hover-copy.copied': 'Copied',
+
+  // ---- Module: layout (sidebar sections + pin) ----
+  'core.module.layout.sidebar.pinned': 'Pinned',
+  'core.module.layout.sidebar.recent': 'Recent',
+  'core.module.layout.sidebar.all-menu': 'All menus',
+  'core.module.layout.menu.pin': 'Pin {title}',
+  'core.module.layout.menu.unpin': 'Unpin {title}',
+
+  // ---- Per-control accessible names (replacing borrowed keys) ----
+  'core.form.date.open-picker': 'Open calendar',
+  'core.form.datetime.open-picker': 'Open calendar',
+  'core.form.date-range.open-picker': 'Open calendar',
+  'core.form.date-range.clear': 'Clear date range',
+  'core.form.select.search': 'Search',
+  'core.component.table.loading': 'Loading table data',
+  'core.component.upload-file.loading': 'Uploading file',
+  'core.component.import-excel.loading': 'Loading data',
+  'core.component.upload-file.remove': 'Remove file',
+  'core.component.upload-file.zoom': 'Zoom image',
+  'core.component.upload-file.view-all': 'View all images',
+  'core.component.form-builder.canvas': 'Form design canvas',
 } as const;

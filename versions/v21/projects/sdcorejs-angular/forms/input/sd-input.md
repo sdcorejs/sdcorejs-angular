@@ -47,7 +47,6 @@ Workhorse text input — single-line `text`/`email`/`password`/`number` field wi
 | `patternErrorMessage` | `string \| null \| undefined`                          | from preset                                 | Override the error message for `pattern`. Falls back to the preset's built-in message.                                                                                                                                                                                                                              |
 | `validator`           | `SdCustomValidator \| undefined`                       | `undefined`                                 | Async custom validator (wrapped via `HandleSdCustomValidator`).                                                                                                                                                                                                                                                     |
 | `inlineError`         | `string \| undefined`                                  | `undefined`                                 | Forces an inline error message (synthetic `inlineError` validator).                                                                                                                                                                                                                                                 |
-| `tooltip`             | `string \| undefined`                                  | `undefined`                                 | Hover tooltip on the field.                                                                                                                                                                                                                                                                                         |
 | `hyperlink`           | `string \| null \| undefined`                          | `undefined`                                 | Render value as a link in `[viewed]` mode.                                                                                                                                                                                                                                                                          |
 | `required`            | `boolean`                                              | `false`                                     | Adds `Validators.required`.                                                                                                                                                                                                                                                                                         |
 | `readonly`            | `boolean`                                              | `false`                                     | HTML `readonly` — input still focusable, value cannot be edited.                                                                                                                                                                                                                                                    |
@@ -64,17 +63,18 @@ Workhorse text input — single-line `text`/`email`/`password`/`number` field wi
 
 | Name               | Type                  | Notes                                                                                                                                              |
 | ------------------ | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sdChange`         | `any`                 | Emitted when the value changes (after Angular value-change).                                                                                       |
+| `sdChange`         | `any`                 | Emitted when the value changes (after Angular value-change). Fires per keystroke.                                                                   |
 | `sdFocus`          | `void`                | Fires on focus.                                                                                                                                    |
 | `sdBlur`           | `any`                 | Fires on blur, payload = trimmed value.                                                                                                            |
-| `keyupEnter`       | `any`                 | Fires on Enter keyup, payload = trimmed value.                                                                                                     |
-| `sdFocusForceBlur` | `void` (EventEmitter) | When a parent subscribes, focusing the input immediately blurs it and emits — used to delegate focus elsewhere (e.g. open a side picker on click). |
+| `keyupEnter`     | `any`                 | Fires on Enter keyup, payload = trimmed value.                                                                                                     |
+| `sdCleared`        | `void`                | Fires when `clear()` empties a non-empty field (the built-in clear ×). Distinct from `sdChange`, which also fires per keystroke — subscribe to `sdCleared` when "the user cleared the field" is a discrete intent you act on (e.g. a table column filter reloading immediately). |
+| `sdFocusForceBlur` | `void` (EventEmitter) | When a parent subscribes, focusing the input immediately blurs it and emits — used to delegate focus elsewhere (e.g. open a side picker on click). Still a plain `@Output`/`EventEmitter` because the component reads `.observed` to decide whether to force the blur at all. |
 
 ## Public methods
 
 | Name                 | Signature          | Notes                                                                                                                |
 | -------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------- |
-| `clear($event?)`     | `(Event?) => void` | Resets the value to `null` and emits `sdChange(null)`. No-op when already empty. Backs the built-in clear button.    |
+| `clear($event?)`     | `(Event?) => void` | Resets the value to `null` and emits `sdChange(null)` **exactly once**. Re-validates and surfaces the resulting message (e.g. `required`) immediately. No-op when already empty. Backs the built-in clear button. |
 | `showClear()`        | `() => boolean`    | Whether the built-in clear button should render: `clearable`, has a value, and not `required`/`disabled`/`readonly`. |
 | `focus()` / `blur()` | `() => void`       | Programmatic focus / blur of the native input.                                                                       |
 | `reValidate()`       | `() => void`       | Re-runs validators on the underlying control.                                                                        |
@@ -104,6 +104,7 @@ Applied automatically on `<sd-input>` for styling hooks:
 - **Reactive validator updates** — validator inputs (`required` / `minlength` / `maxlength` / `pattern` / `inlineError` / `validator`) are signal inputs; an internal `effect()` re-runs `setValidators` + `updateValueAndValidity({ emitEvent: false })` whenever any of them changes. You can flip `required` on/off at runtime and the control re-validates automatically (no manual `reValidate()` needed).
 - **`[disabled]` reactive** — toggling `disabled` calls `formControl.disable() / enable()` via an effect, with `emitEvent: false` (no spurious `statusChanges`).
 - **`[(model)]` two-way** — host-side writes propagate via an effect: when `model` changes, the component calls `formControl.setValue(val, { emitEvent: false })` so the host won't re-trigger its own `(modelChange)` listener. The reverse direction (user typing → `valueChanges` → `valueModel.set()` → `(modelChange)` emit) runs through the normal Angular signal-model mechanism.
+- **Why `clear()` writes to `formControl` WITH events** — `clear()` calls `formControl.setValue(null)` **without** `{ emitEvent: false }`. This is deliberate: the control carries `required` / `pattern` / mask validators and the async `[validator]`, and the error message is derived through a `computed` that only recomputes when the control's reactive snapshot (`sdFormControlState`) ticks on a control event. Suppressing the event would leave `errorMessage`, `data-empty`, `data-value` and the rendered `<mat-error>` frozen on the pre-clear value — the field would go empty, turn red, and show no message. The internal `valueChanges` subscriber is skipped for this one write (`clear()` already sets the model and emits `sdChange(null)` itself), so consumers still see exactly one `sdChange`. The mask display control keeps `{ emitEvent: false }` because its subscriber would parse the value straight back. (Bug fixed 2026-08-09.)
 - **Auto-trim on blur / Enter** — leading/trailing whitespace is stripped from the value when the user blurs or presses Enter.
 - **Input masks** — when `[mask]` is set, `formControl`, `[(model)]`, `sdChange`, `sdBlur`, E2E `data-value`, validators, and parent forms all see the raw string. A separate display control owns separators and caret mapping. Mask parsing waits for IME `compositionend`; paste and selection edits are reformatted without moving the caret to the end. Empty, incomplete, and invalid values are distinct states. Auto-trim is skipped while masking.
 - **Default `appearance`** — when `[appearance]` is omitted, the component reads the `SD_FORM_CONFIGURATION` injection token (`{ appearance: MatFormFieldAppearance }`). Provide it once at the application bootstrap to flip ALL inputs to `'fill'` (or any other appearance) without touching each template. Falls back to `'outline'` if the token isn't provided.
@@ -133,7 +134,7 @@ Applied automatically on `<sd-input>` for styling hooks:
 - Required marker shows as a red `*` next to the label
 - Optional built-in **slim clear button** (`clearable`, default `false`; `.sd-clear-btn`, thin `close` icon) at the trailing edge when the field has a value AND is not `required`/`disabled`/`readonly`. It is **hover-gated** (`sd-hover`) — hidden until the field is hovered or focused. Click resets the value to `null` and emits `sdChange(null)` (clear is an explicit action → `null`, never `''`/`undefined`; `undefined` is reserved for the pristine never-touched state). Shared style/behavior with `sd-input-number`/`sd-input-color`/`sd-date`/`sd-datetime`.
 - Optional suffix slot (`sdSuffixDef`) for an extra icon button at the trailing edge — common patterns: search icon, eye-toggle for password. Renders to the right of the built-in clear button.
-- Inline error message appears below the field in red — unless `[hideInlineError]="true"`, in which case the field gets a red outline + a trailing-edge `error` icon (`.sd-error-icon`) carrying the message as a tooltip. The error icon sits **flush at the right edge**; when the built-in clear button is also present it renders to the **left** of the error icon (the hover-gated clear reserves its slot via `visibility:hidden`, so it never shifts the error icon inward).
+- Inline error message appears below the field in red — unless `[hideInlineError]="true"`, in which case the field gets a red outline + a trailing-edge `error` icon (`.sd-error-icon`) carrying the message as a tooltip. In this mode the message is ALSO rendered into a screen-reader-only element (`span.sd-visually-hidden`, wired to the control through `aria-describedby`), so assistive tech announces the error even though the visible text lives only in a tooltip. The error icon sits **flush at the right edge**; when the built-in clear button is also present it renders to the **left** of the error icon (the hover-gated clear reserves its slot via `visibility:hidden`, so it never shifts the error icon inward).
 - Helper text shows as light-gray text below the field (or as an info icon next to the label, depending on layout)
 - In `[viewed]="true"` mode: no input chrome — just the value as plain text (or as a hyperlink if `hyperlink` is set)
 
@@ -177,7 +178,7 @@ Inside `<sd-table>` custom cells or custom inline filters, always use `size="sm"
 
 ## Dense dashboard/filter usage
 
-When this control is rendered in dashboard cards, filter bars, external filter panels, table toolbars, query bars, or other compact non-form surfaces, prefer `hideInlineError` so Material does not reserve the inline error/subscript row under the field. Pair it with `size="sm"` when the component supports `size`. Validation remains visible through the compact error icon/tooltip without increasing the control height.
+When this control is rendered in dashboard cards, filter bars, external filter panels, table toolbars, query bars, or other compact non-form surfaces, prefer `hideInlineError` so Material does not reserve the inline error/subscript row under the field. Pair it with `size="sm"` when the component supports `size`. Validation remains visible through the compact error icon/tooltip without increasing the control height, and the message is also exposed to assistive tech through a screen-reader-only element (`span.sd-visually-hidden`) referenced by `aria-describedby`.
 
 ```html
 <sd-input size="sm" hideInlineError placeholder="Search" [(model)]="filter.keyword"></sd-input>
@@ -284,6 +285,21 @@ await expect(el).toHaveAttribute('data-pattern', 'EMAIL');
 // error message — only when field is in error state
 await expect(el).toHaveAttribute('data-error-message', 'Vui lòng nhập thông tin');
 ```
+
+## Accessibility
+
+`aria-hidden="true"` used to sit on the real `<input>` **and** on the layout `<div>` that wraps the
+whole `mat-form-field`. That single attribute removed the label, the control, the `mat-error` and the
+clear button from the accessibility tree at once, while the control still took keyboard focus — a
+screen reader landed on it and announced nothing.
+
+- The control element carries **no** `aria-hidden`.
+- The layout wrapper is marked `role="presentation"` (layout only). Unlike `aria-hidden` this does
+  **not** hide descendants; its `(click)` handler is a mouse convenience that keyboard users already
+  get by tabbing straight into the control.
+- When the inline error renders, the control gets `aria-invalid="true"` and an
+  `aria-describedby` pointing at the `<mat-error>` (stable id, exposed as `errorId`). Both are gated
+  on the same condition as the message itself.
 
 ## Anti-patterns
 

@@ -17,7 +17,13 @@ import {
 import { FormGroup } from '@angular/forms';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
-import { SdTableCellDefDirective, SdTable, SdTableColumn, SdTableOption } from '@sdcorejs/angular/components/table';
+import {
+  SdTableCellDefDirective,
+  SdTableCommandHeaderDefDirective,
+  SdTable,
+  SdTableColumn,
+  SdTableOption,
+} from '@sdcorejs/angular/components/table';
 import { SdUploadFile } from '@sdcorejs/angular/components/upload-file';
 import { SdAutocomplete, SdInput, SdInputNumber, SdRadio, SdSearch } from '@sdcorejs/angular/forms';
 import { filter, startWith, Subject, Subscription } from 'rxjs';
@@ -25,7 +31,7 @@ import { SdFormGenericTableColumn, SdFormGenericSelectionItem, SdFormGenericTabl
 import { FormGenericService } from '../../../../../../services';
 import { SdDate } from '@sdcorejs/angular/forms/date';
 import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'lib-table',
@@ -40,6 +46,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
     SdUploadFile,
     SdTable,
     SdTableCellDefDirective,
+    SdTableCommandHeaderDefDirective,
     SdSideDrawer,
     SdButton,
     SdUploadFile,
@@ -47,12 +54,13 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
     SdDate,
     SdDatetime,
     // Pipe cho phần viewed
-    TranslatePipe,
+    SdTranslatePipe,
   ],
 })
 export class TableComponent implements AfterViewInit, OnDestroy, OnInit {
   private ref = inject(ChangeDetectorRef);
   private readonly formGenericService = inject(FormGenericService);
+  readonly #i18n = inject(I18nService);
 
   @ViewChildren(SdUploadFile) uploadFiles?: QueryList<SdUploadFile>;
   @ViewChild(SdTable) table?: SdTable;
@@ -101,7 +109,12 @@ export class TableComponent implements AfterViewInit, OnDestroy, OnInit {
   #subscription = new Subscription();
   tableOption?: SdTableOption;
   row: any = {};
-  columnValues: Record<string, SdFormGenericSelectionItem[] | SdSearch> = {};
+  // why: phải nói rõ `SdSearch<SdFormGenericSelectionItem>` chứ không để `SdSearch` trần. Default
+  // generic của `SdSearch` đã siết `any → unknown`, mà `SdSearch<T>` covariant theo `T`
+  // (`(args) => Promise<T[]>`), nên `SdSearch<unknown>` không còn gán được cho `items` của cột
+  // lazy-values (`SdSearch<Record<string, any>>`). Nguồn dữ liệu ở đây luôn là selection item của
+  // form-generic, nên khai báo đúng kiểu là cách sửa chuẩn — không phải cast.
+  columnValues: Record<string, SdFormGenericSelectionItem[] | SdSearch<SdFormGenericSelectionItem>> = {};
   formRenderColumn: Record<string, SdFormGenericTableColumn> = {};
   // Lấy những fileColumns để định nghĩa cellDef tương ứng
   fileKeys: string[] = [];
@@ -347,6 +360,17 @@ export class TableComponent implements AfterViewInit, OnDestroy, OnInit {
 
   ngOnDestroy(): void {
     this.#subscription.unsubscribe();
+  }
+
+  /**
+   * Tiêu đề của side-drawer phải nói đúng tác vụ đang làm — trước đây nó cứng là "Chi tiết" cho cả
+   * thêm mới lẫn sửa, còn dòng "Tạo mới/cập nhật" thì rơi vào thân drawer vì gắn nhầm slot.
+   */
+  get detailTitle(): string {
+    if (this.viewed || this.component?.properties?.viewed) return this.#i18n.t('core.component.form-builder.detail');
+    return this.#selectedIndex === -1
+      ? this.component?.properties?.titleButtonCreate || this.#i18n.t('core.component.form-builder.add-row')
+      : this.#i18n.t('core.component.form-builder.update-row');
   }
 
   onDetail = (row?: any) => {

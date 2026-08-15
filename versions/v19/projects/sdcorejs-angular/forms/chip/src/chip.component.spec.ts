@@ -1,6 +1,6 @@
-import { Component, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { FormGroup, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SdChip } from './chip.component';
 import { queryAllByCss, queryByCss } from '../../../testing/test-utils';
@@ -23,7 +23,7 @@ import { queryAllByCss, queryByCss } from '../../../testing/test-utils';
     [min]="min"
     [max]="max"
     [model]="model"
-    (modelChange)="model = $event"
+    (modelChange)="onModelChange($event)"
     (sdChange)="onSdChange($event)"></sd-chip>`,
 })
 class HostComponent {
@@ -38,6 +38,11 @@ class HostComponent {
   max = 0;
   model: (string | number)[] = [];
   changes: any[][] = [];
+  modelEmissions: ((string | number)[] | undefined)[] = [];
+  onModelChange(v: (string | number)[] | undefined) {
+    this.modelEmissions.push(v);
+    this.model = v ?? [];
+  }
   onSdChange(v: any[]) {
     this.changes.push(v);
   }
@@ -264,6 +269,100 @@ describe('SdChip', () => {
       const before = host.changes.length;
       chip.onClear();
       expect(host.changes.length).toBeGreaterThan(before);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // why: RED trước fix — `#add`/`#select` gọi `values.push(...)` trên chính mảng của consumer
+  // rồi `model.set(<cùng reference>)`. Signal so sánh bằng Object.is nên `modelChange` KHÔNG
+  // phát (host desync âm thầm), đồng thời mảng gốc của consumer bị sửa sau lưng.
+  describe('array-valued model is replaced, never mutated in place', () => {
+    it('emits modelChange and leaves the caller array untouched when a chip is added', () => {
+      const original: (string | number)[] = ['alpha'];
+      host.model = original;
+      fixture.detectChanges();
+      host.modelEmissions.length = 0;
+
+      addChip(chip, 'beta');
+      fixture.detectChanges();
+
+      expect(original).toEqual(['alpha']);
+      expect(host.modelEmissions.length).toBe(1);
+      expect(host.modelEmissions[0]).toEqual(['alpha', 'beta']);
+      expect(host.model).not.toBe(original);
+      expect(chip.formControl.value).not.toBe(original);
+    });
+
+    it('emits modelChange and leaves the caller array untouched when an autocomplete option is selected', () => {
+      const original: (string | number)[] = ['alpha'];
+      host.model = original;
+      fixture.detectChanges();
+      host.modelEmissions.length = 0;
+
+      chip.onSelect({ option: { value: 'beta' } } as any);
+      fixture.detectChanges();
+
+      expect(original).toEqual(['alpha']);
+      expect(host.modelEmissions.length).toBe(1);
+      expect(host.modelEmissions[0]).toEqual(['alpha', 'beta']);
+      expect(host.model).not.toBe(original);
+    });
+
+    it('emits modelChange and leaves the caller array untouched when a chip is removed', () => {
+      const original: (string | number)[] = ['alpha', 'beta'];
+      host.model = original;
+      fixture.detectChanges();
+      host.modelEmissions.length = 0;
+
+      chip.onRemove('alpha');
+      fixture.detectChanges();
+
+      expect(original).toEqual(['alpha', 'beta']);
+      expect(host.modelEmissions.length).toBe(1);
+      expect(host.modelEmissions[0]).toEqual(['beta']);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // why: RED trước fix — `#updateValidator` gọi clearValidators()+setValidators() nên MỌI
+  // validator consumer tự gắn lên `formControl` (public API) bị xoá mỗi lần required/min/max đổi.
+  describe('additive validator management', () => {
+    it('keeps a consumer-attached validator when required flips', () => {
+      const consumerValidator: ValidatorFn = () => ({ consumer: true });
+      chip.formControl.addValidators(consumerValidator);
+      chip.formControl.updateValueAndValidity({ emitEvent: false });
+      expect(chip.formControl.hasError('consumer')).toBe(true);
+
+      host.required = true;
+      fixture.detectChanges();
+
+      expect(chip.formControl.hasValidator(consumerValidator)).toBe(true);
+      expect(chip.formControl.hasError('consumer')).toBe(true);
+      expect(chip.formControl.hasValidator(Validators.required)).toBe(true);
+    });
+
+    it('keeps a consumer-attached validator when min/max change', () => {
+      const consumerValidator: ValidatorFn = () => ({ consumer: true });
+      chip.formControl.addValidators(consumerValidator);
+      chip.formControl.updateValueAndValidity({ emitEvent: false });
+
+      host.min = 2;
+      host.max = 5;
+      fixture.detectChanges();
+
+      expect(chip.formControl.hasValidator(consumerValidator)).toBe(true);
+      chip.formControl.setValue(['a']);
+      expect(chip.formControl.hasError('minlength')).toBe(true);
+    });
+
+    it('removes only the component-owned required validator when required goes back to false', () => {
+      host.required = true;
+      fixture.detectChanges();
+      expect(chip.formControl.hasValidator(Validators.required)).toBe(true);
+
+      host.required = false;
+      fixture.detectChanges();
+      expect(chip.formControl.hasValidator(Validators.required)).toBe(false);
     });
   });
 
@@ -599,4 +698,137 @@ describe('SdChip (viewed inline mode)', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('sd-view')).not.toBeNull();
   });
+});
+
+// ---------------------------------------------------------------------------
+// Runtime [required] / [min] toggle must refresh the rendered error message
+// ---------------------------------------------------------------------------
+describe('SdChip (runtime validator inputs refresh the error message)', () => {
+  // why: RED trước fix — `errorMessage` chỉ phụ thuộc `#state()`. Connector cài Validators.required
+  // bằng `updateValueAndValidity({ emitEvent: false })` nên `formControl.errors` đổi mà KHÔNG phát
+  // event → `#state` không tick → computed giữ giá trị cũ → dưới OnPush control invalid, viền đỏ,
+  // nhưng <mat-error> KHÔNG bao giờ xuất hiện. Dùng autoDetectChanges (tôn trọng OnPush) — ép
+  // detectChanges() cũng không cứu được vì computed đã memo hoá, nhưng autoDetect mới là chuẩn.
+  let fixture: ComponentFixture<SdChip>;
+
+  const matError = (): HTMLElement | null => fixture.nativeElement.querySelector('mat-error');
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({ imports: [SdChip, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(SdChip);
+    fixture.componentRef.setInput('label', 'Tags');
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+  });
+
+  it('renders the required message when [required] flips on at RUNTIME', async () => {
+    fixture.componentInstance.formControl.markAsTouched();
+    await fixture.whenStable();
+    expect(matError()).toBeNull();
+
+    fixture.componentRef.setInput('required', true);
+    await fixture.whenStable();
+
+    expect(fixture.componentInstance.formControl.hasError('required')).toBeTrue();
+    expect(fixture.componentInstance.errorMessage()).toBe('Vui lòng nhập thông tin');
+    expect(matError()?.textContent?.trim()).toBe('Vui lòng nhập thông tin');
+  });
+
+  it('removes the message again when [required] flips back off at RUNTIME', async () => {
+    fixture.componentInstance.formControl.markAsTouched();
+    fixture.componentRef.setInput('required', true);
+    await fixture.whenStable();
+    expect(matError()?.textContent?.trim()).toBe('Vui lòng nhập thông tin');
+
+    fixture.componentRef.setInput('required', false);
+    await fixture.whenStable();
+
+    expect(fixture.componentInstance.formControl.hasError('required')).toBeFalse();
+    expect(fixture.componentInstance.errorMessage()).toBeUndefined();
+    expect(matError()).toBeNull();
+  });
+
+  it('renders the minlength message when [min] is raised at RUNTIME', async () => {
+    fixture.componentInstance.formControl.setValue(['a']);
+    fixture.componentInstance.formControl.markAsTouched();
+    await fixture.whenStable();
+    expect(matError()).toBeNull();
+
+    fixture.componentRef.setInput('min', 2);
+    await fixture.whenStable();
+
+    expect(fixture.componentInstance.formControl.hasError('minlength')).toBeTrue();
+    expect(matError()?.textContent?.trim()).toBe('Vui lòng nhập ít nhất 2 giá trị');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Timer lifetime — the deferred blur/focus must not outlive the view
+// ---------------------------------------------------------------------------
+
+describe('SdChip deferred timer lifetime', () => {
+  const chipOf = (fixture: ComponentFixture<HostComponent>) =>
+    fixture.debugElement.query(el => el.componentInstance instanceof SdChip)!.componentInstance as SdChip;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+    }).compileComponents();
+  });
+
+  it('does not detect changes after the view is destroyed inside the 150ms blur window', fakeAsync(() => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    const chip = chipOf(fixture);
+    const chipDe = fixture.debugElement.query(el => el.componentInstance instanceof SdChip)!;
+
+    chip.onFocus();
+    chip.onBlur();
+
+    // why: `#ref` của component là một ViewRef; spy trên prototype nên bắt được đúng lời gọi
+    // detectChanges() phát ra từ trong timer, không cần chọc vào private field.
+    const viewRefPrototype = Object.getPrototypeOf(chipDe.injector.get(ChangeDetectorRef));
+    const detectChanges = spyOn(viewRefPrototype, 'detectChanges');
+
+    fixture.destroy();
+
+    expect(() => tick(300)).not.toThrow();
+    expect(detectChanges).not.toHaveBeenCalled();
+    // why: cả thân timer bị huỷ, không chỉ riêng detectChanges.
+    expect(chip.isFocused).toBeTrue();
+  }));
+
+  it('does not focus the chip input after the view is destroyed inside the 100ms focus window', fakeAsync(() => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    const chip = chipOf(fixture);
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    const focusSpy = spyOn(input, 'focus');
+
+    chip.focus();
+    fixture.destroy();
+
+    expect(() => tick(300)).not.toThrow();
+    expect(focusSpy).not.toHaveBeenCalled();
+  }));
+
+  it('still runs the deferred blur while the view is alive', fakeAsync(() => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    const chip = chipOf(fixture);
+
+    chip.onFocus();
+    expect(chip.isFocused).toBeTrue();
+
+    chip.onBlur();
+    tick(149);
+    expect(chip.isFocused).toBeTrue();
+
+    tick(1);
+    expect(chip.isFocused).toBeFalse();
+
+    fixture.destroy();
+  }));
 });

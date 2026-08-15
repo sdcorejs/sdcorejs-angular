@@ -5,7 +5,7 @@
 **Import path**: `@sdcorejs/angular/forms/checkbox` (or barrel: `@sdcorejs/angular/forms`)
 **Class**: `SdCheckbox`
 **Standalone**: yes
-**Change detection**: default (no `OnPush` set)
+**Change detection**: `OnPush`
 
 ## One-line purpose
 
@@ -80,7 +80,9 @@ None — text comes from the `label` input.
 
 ### `inlineError` flow
 
-Setting `[inlineError]="'Some message'"` triggers an internal `#updateValidator()` call that attaches the shared `SdInlineErrorValidator` (from `@sdcorejs/angular/forms/models`) returning `{ inlineError: true }`. The template then shows `<mat-error>{{ inlineError }}</mat-error>` when `formControl.errors?.['inlineError'] && formControl.touched`. Clearing `[inlineError]` to an empty string removes the validator and calls `updateValueAndValidity()`.
+Setting `[inlineError]="'Some message'"` makes the shared form connector attach `SdInlineErrorValidator` (from `@sdcorejs/angular/forms/models`), which returns `{ inlineError: true }`. The template then shows `<mat-error>{{ inlineError }}</mat-error>` when `formControl.errors?.['inlineError'] && formControl.touched`. Clearing `[inlineError]` to an empty string removes that validator again — the connector only adds/removes the validator it owns, so validators you attach yourself to the public `formControl` survive.
+
+> **OnPush note**: the component is `OnPush` and fully signal-driven. The `<mat-error>` gate reads `formControl.errors` / `formControl.touched` as plain properties, but the same template also reads `data-*` signals derived from the control's event stream, so any control event (touch, value, status) marks the view dirty and the gate is re-evaluated. Do not add DOM that depends on control state without a signal read in the same template.
 
 ## Visual cues (helps agent map screenshots → component)
 

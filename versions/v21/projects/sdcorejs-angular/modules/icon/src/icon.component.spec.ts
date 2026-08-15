@@ -1,8 +1,27 @@
+import { OverlayContainer } from '@angular/cdk/overlay';
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { MatMenuModule } from '@angular/material/menu';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { LucidePlus } from '@lucide/angular';
 import { queryByCss, setInput } from '../../../testing/test-utils';
 import { SdIcon } from './icon.component';
 import { provideSdIcon } from './icon.provider';
+
+@Component({
+  standalone: true,
+  imports: [SdIcon, MatMenuModule],
+  template: `
+    <button type="button" [matMenuTriggerFor]="menu">open</button>
+    <mat-menu #menu="matMenu">
+      <button type="button" mat-menu-item>
+        <sd-icon name="edit" size="sm"></sd-icon>
+        <span>Sửa</span>
+      </button>
+    </mat-menu>
+  `,
+})
+class MenuHostComponent {}
 
 describe('SdIcon', () => {
   it('renders Material outlined icon by default', async () => {
@@ -93,5 +112,32 @@ describe('SdIcon', () => {
 
     expect(fixture.componentInstance.resolvedSize()).toBe('1.25rem');
     expect(fixture.componentInstance.resolvedCssSize()).toBe('1.25rem');
+  });
+
+  // why: base CSS của Material nhắm thẳng `.mat-icon` con trong menu/list item và ép nó 24px +
+  // margin-right 12px. Glyph bên trong sd-icon vì thế phình to hơn host rồi bị xén (host có
+  // overflow hidden) và lệch sang trái — đúng lỗi "icon bị cắt đè" khi mở mat-menu. Glyph phải luôn
+  // khít host ở mọi ngữ cảnh Material, không phụ thuộc component cha vá tay.
+  it('keeps the Material glyph inside the host box when rendered in a mat-menu item', async () => {
+    await TestBed.configureTestingModule({
+      imports: [MenuHostComponent, NoopAnimationsModule],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(MenuHostComponent);
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('button') as HTMLElement).click();
+    fixture.detectChanges();
+
+    const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+    const host = overlay.querySelector('sd-icon') as HTMLElement;
+    const glyph = host.querySelector('.sd-icon__material') as HTMLElement;
+    const hostRect = host.getBoundingClientRect();
+    const glyphRect = glyph.getBoundingClientRect();
+
+    expect(hostRect.width).toBeCloseTo(16, 0);
+    expect(glyphRect.width).toBeCloseTo(hostRect.width, 0);
+    expect(glyphRect.height).toBeCloseTo(hostRect.height, 0);
+    // Khoảng cách với nhãn là việc của menu item, không phải của glyph bên trong host.
+    expect(getComputedStyle(glyph).marginRight).toBe('0px');
   });
 });

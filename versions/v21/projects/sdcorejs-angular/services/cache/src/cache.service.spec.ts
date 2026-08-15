@@ -11,7 +11,14 @@ import {
   SdPersistenceStorageArea,
 } from '@sdcorejs/angular/services/persistence';
 import { Utilities } from '@sdcorejs/utils/fns';
-import { ISdCacheConfiguration, SD_CACHE_CONFIG, SdCache, SdCacheOption, adaptLegacySdCacheCallbacks } from './cache.model';
+import {
+  ISdCacheConfiguration,
+  SD_CACHE_CONFIG,
+  SD_CACHE_DEFAULT_MAX_MEMORY_ENTRIES,
+  SdCache,
+  SdCacheOption,
+  adaptLegacySdCacheCallbacks,
+} from './cache.model';
 import { SdCacheService } from './cache.service';
 
 class FakeStorageAdapter implements SdPersistenceStorageAdapter {
@@ -1328,6 +1335,136 @@ describe('SdCacheService', () => {
     second.set('B');
     expect(second.get()).toBe('B');
     expect(first.get()).toBe('A');
+  });
+
+  // ─── Memory LRU bound ──────────────────────────────────────────────────────
+  // why: SdApiService luôn gọi release() (không phải destroy()) sau mỗi request, và release()
+  // chỉ bỏ state của handle chứ KHÔNG bỏ entry memory. Không có trần thì mỗi URL từng cache
+  // để lại một entry sống hết đời app. Các spec dưới đo hệ quả quan sát được: entry cũ nhất
+  // bị đẩy ra khi vượt trần.
+
+  function writeMemoryEntry(service: SdCacheService, key: string, value: string): void {
+    const handle = service.create<string>(key);
+    handle.set(value);
+    handle.release();
+  }
+
+  it('evicts the least-recently-used memory entry once the configured bound is exceeded', () => {
+    const service = configure({ maxMemoryEntries: 2 });
+    writeMemoryEntry(service, 'lru-a', 'A');
+    writeMemoryEntry(service, 'lru-b', 'B');
+    writeMemoryEntry(service, 'lru-c', 'C');
+
+    expect(service.create<string>('lru-a').has()).toBeFalse();
+    expect(service.create<string>('lru-b').get()).toBe('B');
+    expect(service.create<string>('lru-c').get()).toBe('C');
+  });
+
+  it('refreshes recency on read so the untouched entry is evicted first', () => {
+    const service = configure({ maxMemoryEntries: 2 });
+    writeMemoryEntry(service, 'recency-a', 'A');
+    writeMemoryEntry(service, 'recency-b', 'B');
+
+    const readA = service.create<string>('recency-a');
+    expect(readA.get()).toBe('A');
+    readA.release();
+
+    writeMemoryEntry(service, 'recency-c', 'C');
+
+    expect(service.create<string>('recency-b').has()).toBeFalse();
+    expect(service.create<string>('recency-a').get()).toBe('A');
+    expect(service.create<string>('recency-c').get()).toBe('C');
+  });
+
+  // why: spec trên tạo handle MỚI cho mỗi lần đọc, nên nó chỉ chạm vào đường hydrate — đường
+  // DUY NHẤT từng refresh recency. SdApiService (và mọi consumer giữ handle) đọc nhiều lần qua
+  // MỘT handle đang mở: lúc đó state.hydrated đã true, #readEntry không chạy lại, và trước khi
+  // sửa thì key nóng nhất lại là key bị evict đầu tiên.
+  it('refreshes recency on every read through one already-open handle, not only on hydration', () => {
+    const service = configure({ maxMemoryEntries: 2 });
+    writeMemoryEntry(service, 'hot', 'A');
+
+    // Handle mở LIÊN TỤC từ đây: lần đọc đầu tiên đi qua hydrate nên không chứng minh được gì.
+    const hot = service.create<string>('hot');
+    expect(hot.get()).toBe('A');
+
+    writeMemoryEntry(service, 'cold', 'B');
+
+    // Lần đọc THỨ HAI qua đúng handle đó — phải đẩy 'hot' lên "vừa dùng gần nhất".
+    expect(hot.get()).toBe('A');
+    hot.release();
+
+    writeMemoryEntry(service, 'overflow', 'C');
+
+    expect(service.create<string>('cold').has()).toBeFalse();
+    expect(service.create<string>('hot').get()).toBe('A');
+    expect(service.create<string>('overflow').get()).toBe('C');
+  });
+
+  it('counts has() and snapshot() through an open handle as recent use', () => {
+    const service = configure({ maxMemoryEntries: 2 });
+    writeMemoryEntry(service, 'probed', 'A');
+
+    const probed = service.create<string>('probed');
+    writeMemoryEntry(service, 'other', 'B');
+
+    expect(probed.has()).toBeTrue();
+    expect(probed.snapshot()).toEqual({ present: true, value: 'A' });
+    probed.release();
+
+    writeMemoryEntry(service, 'overflow', 'C');
+
+    expect(service.create<string>('other').has()).toBeFalse();
+    expect(service.create<string>('probed').get()).toBe('A');
+  });
+
+  it('does not resurrect an evicted owner when a surviving handle reads it', () => {
+    const service = configure({ maxMemoryEntries: 1 });
+    writeMemoryEntry(service, 'evicted', 'A');
+    const survivor = service.create<string>('evicted');
+
+    writeMemoryEntry(service, 'winner', 'B');
+
+    // Handle còn mở vẫn phục vụ bản clone của chính nó…
+    expect(survivor.get()).toBe('A');
+    survivor.release();
+
+    // …nhưng lần đọc đó KHÔNG được ghi lại entry chung đã bị evict.
+    expect(service.create<string>('evicted').has()).toBeFalse();
+    expect(service.create<string>('winner').get()).toBe('B');
+  });
+
+  it('bounds memory growth at the default when no configuration is supplied', () => {
+    const service = configure();
+    const total = SD_CACHE_DEFAULT_MAX_MEMORY_ENTRIES + 2;
+    for (let index = 0; index < total; index += 1) writeMemoryEntry(service, `bounded-${index}`, `value-${index}`);
+
+    expect(service.create<string>('bounded-0').has()).toBeFalse();
+    expect(service.create<string>('bounded-1').has()).toBeFalse();
+    expect(service.create<string>(`bounded-${total - 1}`).get()).toBe(`value-${total - 1}`);
+  });
+
+  it('falls back to the default bound when maxMemoryEntries is not a usable number', () => {
+    const service = configure({ maxMemoryEntries: 0 });
+    writeMemoryEntry(service, 'invalid-bound-a', 'A');
+    writeMemoryEntry(service, 'invalid-bound-b', 'B');
+    writeMemoryEntry(service, 'invalid-bound-c', 'C');
+
+    expect(service.create<string>('invalid-bound-a').get()).toBe('A');
+    expect(service.create<string>('invalid-bound-c').get()).toBe('C');
+  });
+
+  it('leaves persistent areas untouched by the memory bound', () => {
+    const service = configure({ maxMemoryEntries: 1 });
+    const first = service.create<string>('persisted-a', { type: 'local' });
+    first.set('A');
+    first.release();
+    const second = service.create<string>('persisted-b', { type: 'local' });
+    second.set('B');
+    second.release();
+
+    expect(service.create<string>('persisted-a', { type: 'local' }).get()).toBe('A');
+    expect(service.create<string>('persisted-b', { type: 'local' }).get()).toBe('B');
   });
 
   it('completes live observers and prevents a pending load from persisting after injector destroy', async () => {

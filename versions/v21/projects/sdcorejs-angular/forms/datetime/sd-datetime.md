@@ -50,7 +50,49 @@ Single date + time-of-day picker — user picks a calendar date AND an `HH:mm` (
 | `model`           | `string \| number \| Date \| null \| undefined` | `undefined`                                 | Two-way bound value (use `[(model)]`). Stored / emitted as `yyyy/MM/dd HH:mm:ss` string (or `yyyy/MM/dd HH:mm:00` when `showSeconds = false`).                                                                                                                     |
 | `showSeconds`     | `boolean`                                       | `false`                                     | When `true`, displays and stores seconds in the popup spinner and the stored/emitted format.                                                                                                                                                                       |
 
+| `transform`       | `SdTemporalValueTransform \| undefined`          | `undefined`                                 | Output serialization strategy for the committed value — see **Value transform** below. Does not affect the display. |
+
 > **Coerce**: `required`, `disabled`, `viewed`, `clearable`, `hideInlineError`, `showSeconds` use `booleanAttribute` — bare attribute = `true`.
+
+
+## Value transform (`transform`)
+
+`transform` names how a **committed** value leaves the component. It changes `model` / `modelChange`
+/ `sdChange` and the registered `FormGroup` field — and nothing else. What the field *shows* is
+untouched.
+
+| `transform` | Serializer      | Output                                                        |
+| ----------- | --------------- | ------------------------------------------------------------- |
+| `undefined` | existing canonical formatter | Unchanged behaviour (the default).               |
+| `ISOString` | `toISOString()` | UTC ISO 8601 with a `Z` suffix and milliseconds.               |
+| `UTCString` | `toUTCString()` | UTC RFC-1123, English, `GMT` suffix, no milliseconds.          |
+
+```text
+ISOString   2026-08-15T03:20:30.000Z
+UTCString   Sat, 15 Aug 2026 03:20:30 GMT
+```
+
+Notes that bite if missed:
+
+- **The UTC calendar day can differ from the local one.** A value picked late in the day east of
+  Greenwich, or early in the day west of it, serializes to the neighbouring date. That is correct —
+  both name the same instant — but a server comparing date strings will see the other day.
+- **Reading is wider than writing.** The active `transform` decides the output shape only; every
+  input the component accepted before is still accepted, plus ISO and UTC strings. A model arriving
+  in one shape is not rewritten into another just because `transform` is set.
+- **Changing `transform` at runtime rewrites nothing.** The bound model keeps its current string and
+  no event fires; the next user commit uses the new strategy.
+- `transform` is a value-serialization strategy, not an Angular input-coercion `transform`.
+
+Precision follows `showSeconds`, exactly as it does without a transform: seconds are kept only when
+they are displayed, and milliseconds are always zero. Incoming values are left alone — a model that
+arrives with seconds or milliseconds keeps them until the user commits again.
+
+```html
+<sd-datetime transform="UTCString" [showSeconds]="true" [(model)]="createdAt"></sd-datetime>
+```
+
+The field still shows `dd/MM/yyyy HH:mm` (or `dd/MM/yyyy HH:mm:ss` with `showSeconds`).
 
 ## Outputs
 
@@ -80,7 +122,8 @@ Applied automatically on `<sd-datetime>` for styling hooks:
 - **Does NOT implement `ControlValueAccessor`.** Forms use the SDCoreJS pattern: pass the parent form via `[form]="formGroup"` (or `[form]="ngForm"`) plus a `name`. On `ngOnInit`, the component calls `formGroup.addControl(name, formControl)` and removes it in `ngOnDestroy`.
 - **`formControlName` and `[(ngModel)]` are NOT supported.** Use `[(model)]` for two-way value binding and `[form]+[name]` for FormGroup integration.
 - **`[viewed]="true"`** flips into DETAIL read-only mode: the input is hidden and the value (or `<ng-template sdViewDef>`) is rendered. If `hyperlink` is set, the value renders as a link.
-- **Validators**: `[required]` adds `Validators.required`. `[inlineError]="msg"` injects a synthetic error and shows `msg`. The picker emits its own `matDatepickerMin` / `matDatepickerMax` errors (via the min/max bounds on `<input>`). Direct text entry validates against `dd/MM/yyyy HH:mm` (and `dd/MM/yyyy HH:mm:ss`) regex — bad format sets a synthetic `date: 'Sai định dạng'` error. Error tooltip messages: required → "Vui lòng nhập thông tin"; min → "Ngày nhỏ nhất: <localized>"; max → "Ngày lớn nhất: <localized>"; bad format → "Sai định dạng"; `inlineError` → the provided message.
+- **Validators**: `[required]` adds `Validators.required`. `[inlineError]="msg"` injects a synthetic error and shows `msg`. The picker emits its own `matDatepickerMin` / `matDatepickerMax` errors (via the min/max bounds on `<input>`). Direct text entry validates against `dd/MM/yyyy HH:mm` (and `dd/MM/yyyy HH:mm:ss`) regex — bad format raises a synthetic `date: 'Sai định dạng'` error. Error tooltip messages: required → "Vui lòng nhập thông tin"; min → "Ngày nhỏ nhất: <localized>"; max → "Ngày lớn nhất: <localized>"; bad format → "Sai định dạng"; `inlineError` → the provided message.
+- **The `date` format error is a real validator, not a `setErrors()` injection.** It is produced by a stable `ValidatorFn` registered on `formControl` through the shared connector, so it survives any later `updateValueAndValidity()` — whether triggered by the component, by a `setValue`, or by the consumer. Clearing it removes the `date` key entirely (the validator returns `null`); the control is never left with a `{ date: null }` errors object, so a well-formed datetime is never transiently reported as `INVALID` to a parent `FormGroup`. All validators are attached **additively** (`addValidators` / `removeValidators`), so a validator a consumer attaches directly to the exposed `formControl` is preserved.
 - **Date adapter**: `SdNativeDateAdapter` and the date-format tokens from `@sdcorejs/angular-material-datetime` are provided locally by `SdDatetime`, so consumers do not need app-level adapter configuration. Internally native `Date` objects are used; emitted/stored values are `yyyy/MM/dd HH:mm:ss` strings (or `yyyy/MM/dd HH:mm:00` when `showSeconds = false`).
 
 ## Public methods & getters
@@ -96,7 +139,7 @@ Applied automatically on `<sd-datetime>` for styling hooks:
 | `focusInputElement()`    | method                       | Focuses the native `<input>` without opening the picker.                                                                                                                                               |
 | `onFocus()`              | event handler                | Sets `isFocused = true` and emits `sdFocus`.                                                                                                                                                           |
 | `onBlur()`               | event handler                | Sets `isFocused = false`.                                                                                                                                                                              |
-| `onConfirmInput($event)` | event handler                | Validates typed text against `dd/MM/yyyy HH:mm[ss]` regex on blur/enter; syncs back to `valueModel` and emits `sdChange` when valid.                                                                   |
+| `onConfirmInput($event)` | event handler                | Validates typed text against `dd/MM/yyyy HH:mm[ss]` regex on blur/enter; syncs back to `valueModel` and emits `sdChange` when valid. Toggles the `date` format error **synchronously** through the validator pipeline (previously deferred by a `setTimeout` + `setErrors()`).                                                                   |
 | `formControl`            | `SdFormControl`              | Underlying reactive control. Accessible for direct validator inspection in tests.                                                                                                                      |
 | `pickerOpened`           | `Signal<boolean>`            | `true` while the CDK Overlay popup is open.                                                                                                                                                            |
 | `isFocused`              | `boolean`                    | Current focus state (drives CSS classes).                                                                                                                                                              |
@@ -106,7 +149,7 @@ Applied automatically on `<sd-datetime>` for styling hooks:
 - An outlined input field with a single calendar+clock icon on the trailing side
 - The text inside reads as `dd/MM/yyyy HH:mm` (e.g. `09/05/2026 14:30`)
 - Clicking the icon opens a popup: a month-grid calendar on top, a time picker (hours + minutes spinner/slider) below
-- An optional slim clear-button (`clearable`, default `false`; `.sd-clear-btn` — round transparent button with a thin `close` icon, grey → red on hover) appears next to the calendar icon when a value is set and the field is not `required`/`disabled`; clears via `clear()` (emits `sdChange(null)`). **Hover-gated** (`sd-hover`) — hidden until the field is hovered or focused. Shared style with `sd-input`/`sd-input-number`/`sd-input-color`/`sd-date` (`assets/scss/core/form.scss`). **Not rendered in `[bare]` mode** — bare is "value + caret only" for inline chip contexts where the clear-x duplicated the chip's own remove-× and could clear the value when dismissing the picker.
+- An optional slim clear-button (`clearable`, default `false`; `.sd-clear-btn` — round transparent button with a thin `close` icon, grey → red on hover) appears next to the calendar icon when a value is set and the field is not `required`/`disabled`; clears via `clear()` (emits `sdChange(null)`). **Hover-gated** (`sd-hover`) — hidden until the field is hovered or focused. Shared style with `sd-input`/`sd-input-number`/`sd-input-color`/`sd-date` (`assets/scss/core/form.scss`). **Not rendered when the host is bare** (`viewed='inline'`, which sets `.sd-bare`) — bare is "value + caret only" for inline chip contexts where the clear-× duplicated the chip's own remove-× and could clear the value when dismissing the picker.
 - In `[viewed]="true"` mode: no input chrome — just the formatted datetime as plain text (or as a hyperlink if `hyperlink` is set)
 
 ## Standalone imports and table-cell usage
@@ -151,7 +194,7 @@ For read-only datetime display, use `sdFormatDatetime` and `sdView`.
 
 ## Dense dashboard/filter usage
 
-When this control is rendered in dashboard cards, filter bars, external filter panels, table toolbars, query bars, or other compact non-form surfaces, prefer `hideInlineError` so Material does not reserve the inline error/subscript row under the field. Pair it with `size="sm"` when the component supports `size`. Validation remains visible through the compact error icon/tooltip without increasing the control height.
+When this control is rendered in dashboard cards, filter bars, external filter panels, table toolbars, query bars, or other compact non-form surfaces, prefer `hideInlineError` so Material does not reserve the inline error/subscript row under the field. Pair it with `size="sm"` when the component supports `size`. Validation remains visible through the compact error icon/tooltip without increasing the control height, and the message is also exposed to assistive tech through a screen-reader-only element (`span.sd-visually-hidden`) referenced by `aria-describedby`.
 
 ```html
 <sd-datetime size="sm" hideInlineError [(model)]="filter.scheduledAt"></sd-datetime>
@@ -208,6 +251,24 @@ const el = page.locator('[data-autoid="forms-datetime-createdAt"]');
 await expect(el).toHaveAttribute('data-empty', 'false');
 await expect(el).toHaveAttribute('data-required', 'false');
 ```
+
+## Accessibility
+
+`aria-hidden="true"` used to sit on the real `<input>` **and** on the layout `<div>` that wraps the
+whole `mat-form-field`. That single attribute removed the label, the control, the `mat-error` and the
+clear button from the accessibility tree at once, while the control still took keyboard focus — a
+screen reader landed on it and announced nothing.
+
+- The control element carries **no** `aria-hidden`.
+- The layout wrapper is marked `role="presentation"` (layout only). Unlike `aria-hidden` this does
+  **not** hide descendants; its `(click)` handler is a mouse convenience that keyboard users already
+  get by tabbing straight into the control.
+- When the inline error renders, the control gets `aria-invalid="true"` and an
+  `aria-describedby` pointing at the `<mat-error>` (stable id, exposed as `errorId`). Both are gated
+  on the same condition as the message itself.
+
+- The picker trigger is a real `<button type="button">` with an `aria-label` (it used to be a bare
+  `<span (click)>`: not reachable by keyboard, no accessible name).
 
 ## Anti-patterns
 

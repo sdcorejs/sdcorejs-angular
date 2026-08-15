@@ -5,6 +5,7 @@ import { Injectable, Pipe, PipeTransform, inject } from '@angular/core';
 import { SdLayoutMenu, Menus } from '../services/menu/menu.model';
 import { Params } from '@angular/router';
 import { SdPermissionService } from '@sdcorejs/angular/modules/permission';
+import { sdIsExternalHttpUrl, sdParseUrl } from '@sdcorejs/angular/utilities';
 // End
 @Pipe({
   name: 'menu',
@@ -43,8 +44,12 @@ export class MenuPipe implements PipeTransform {
       }
 
       if ('permission' in menu) {
-        const path = menu?.path?.includes('http') ? menu.path : menu.path;
-        if (!menu.path) {
+        // why: code cũ là `const path = menu?.path?.includes('http') ? menu.path : menu.path` — hai
+        // nhánh giống hệt nhau nên biến `path` không biến đổi gì, tức phần validate URL đã bị mất.
+        // `path` chảy thẳng xuống `window.open()` / `routerLink` của sidebar, nên ở đây validate thật
+        // và loại menu có scheme nguy hiểm (`javascript:`, `data:`, `vbscript:`…) — fail closed.
+        // Không cần biến trung gian nữa: `path` đi kèm nguyên vẹn trong `{ ...menu }`.
+        if (!menu.path || !this.#isSafeMenuPath(menu.path)) {
           return null;
         }
 
@@ -54,7 +59,6 @@ export class MenuPipe implements PipeTransform {
         ) {
           return {
             ...menu,
-            path,
             id: this.#getHashIdMenu(menu),
           };
         }
@@ -62,7 +66,6 @@ export class MenuPipe implements PipeTransform {
         if (typeof menu.permission === 'boolean' && menu.permission) {
           return {
             ...menu,
-            path,
             id: this.#getHashIdMenu(menu),
           };
         }
@@ -70,13 +73,22 @@ export class MenuPipe implements PipeTransform {
         if (typeof menu.permission === 'function' && menu.permission()) {
           return {
             ...menu,
-            path,
             id: this.#getHashIdMenu(menu),
           };
         }
 
         return null;
       }
+
+      // why: tới đây menu không có `children` và cũng KHÔNG có key `permission`. Nếu nó vẫn có `path`
+      // thì đó là một menu lá điều hướng được, và việc gõ sai key (`permision`, `permissions`) sẽ
+      // khiến item hiện với MỌI người — fail open. Chặn ở runtime (fail closed) thay vì siết type
+      // `SdLayoutMenu`: menu thường được dựng động từ API/JSON rồi ép `as SdLayoutMenu[]`, nên siết
+      // type không bắt được ca đó mà lại thành breaking change cho consumer đang build tĩnh.
+      if ('path' in menu) {
+        return null;
+      }
+
       return {
         ...menu,
         id: Utilities.generateUuid(),
@@ -91,6 +103,13 @@ export class MenuPipe implements PipeTransform {
     });
     return results;
   }
+
+  /**
+   * why: `sdParseUrl` không truyền base nên chỉ parse được URL TUYỆT ĐỐI. Không parse được ⇒ path
+   * tương đối ⇒ route nội bộ của app, an toàn. Parse được thì scheme bắt buộc phải là `http(s)`;
+   * mọi scheme khác bị loại vì `path` cuối cùng chảy vào `window.open()` của sidebar.
+   */
+  #isSafeMenuPath = (path: string): boolean => sdParseUrl(path) == null || sdIsExternalHttpUrl(path);
 
   #getHashIdMenu = (menu: SdLayoutMenu): string => {
     const explicitId = typeof menu.id === 'string' ? menu.id.trim() : '';

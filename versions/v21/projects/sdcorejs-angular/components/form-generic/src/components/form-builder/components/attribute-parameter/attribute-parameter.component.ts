@@ -5,14 +5,14 @@ import { SdModal } from '@sdcorejs/angular/components/modal';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { SdFormGenericComponent, SdFormGenericGroup } from '../../../../models';
 import { SdInput } from '@sdcorejs/angular/forms';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'attribute-parameter',
   templateUrl: './attribute-parameter.component.html',
   styleUrl: './attribute-parameter.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdButton, SdModal, SdInput, TranslatePipe],
+  imports: [SdButton, SdModal, SdInput, SdTranslatePipe],
 })
 export class AttributeParameter implements OnInit {
   private ref = inject(ChangeDetectorRef);

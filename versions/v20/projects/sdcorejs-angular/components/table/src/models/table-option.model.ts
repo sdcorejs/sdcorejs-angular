@@ -23,6 +23,18 @@ interface SdTableBaseOption<T = any> {
    */
   key?: string;
   /**
+   * Field định danh của MỘT DÒNG (hỗ trợ dot-notation, vd `'id'` hoặc `'user.id'`).
+   *
+   * Table dùng giá trị này làm `SdTableItem.meta.id` — khoá cho `trackBy` của mat-table,
+   * cho `preserveSelection`, cho trạng thái bung của tree và cho các `data-autoid` theo dòng.
+   *
+   * Không truyền thì table tự sinh id theo IDENTITY của object data (ổn định trong suốt
+   * vòng đời object, nhưng KHÔNG sống sót qua một lần fetch mới của server). Vì vậy hãy
+   * khai báo `rowKey` khi dùng `preserveSelection`, `tree` với `type: 'server'`, hoặc khi
+   * cần autoId theo dòng ổn định cho E2E.
+   */
+  rowKey?: string;
+  /**
    * Cấu hình hiển thị/phục hồi config của table.
    * Xem thêm kiểu chi tiết tại `TableOptionConfig`.
    */

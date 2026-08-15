@@ -1,10 +1,16 @@
 @let _configuration = configuration();
 @let _autoId = autoId();
+@let _columns = ['invisible', 'title', 'width', 'fixed', 'truncate'];
 
-<sd-modal width="sm" [title]="'core.component.table.setup' | translate" #modal>
+<sd-modal width="sm" [title]="'core.component.table.setup' | sdTranslate" #modal>
   @if (_configuration) {
-    <div class="c-container">
-      <div class="c-table" style="max-height: 70vh">
+    <div class="c-container sd-table-config">
+      <!-- why: drag handle là affordance duy nhất cho việc đổi thứ tự cột, và nó không tự nói ra
+           điều đó — một dòng hint tránh việc người dùng không bao giờ phát hiện tính năng.
+           Ký hiệu ⠿ nằm SẴN trong chuỗi i18n (đúng vị trí trong câu), nên không kèm icon riêng. -->
+      <p class="c-hint">{{ 'core.component.table.config.drag-hint' | sdTranslate }}</p>
+
+      <div class="c-table">
         <table
           mat-table
           [dataSource]="_configuration.columns!"
@@ -12,60 +18,78 @@
           [cdkDropListData]="_configuration.columns"
           (cdkDropListDropped)="dropTable($event)">
           <ng-container matColumnDef="invisible">
-            <th mat-header-cell class="c-th text-center px-4" *matHeaderCellDef style="width: 96px">
-              {{ 'core.component.form-builder.display' | translate }}
+            <th mat-header-cell class="c-th" *matHeaderCellDef>
+              {{ 'core.component.form-builder.display' | sdTranslate }}
             </th>
-            <td class="text-center px-4" mat-cell *matCellDef="let item">
-              <div class="d-flex" style="gap: 8px">
-                <div class="c-handle" (mousedown)="handleMouseDown()" (mouseup)="handleMouseUp()">
-                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#5f6368">
-                    <path d="M0 0h24v24H0V0z" fill="none" />
-                    <path
-                      d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-                  </svg>
-                </div>
-                <sd-switch [model]="!item.invisible" (modelChange)="item.invisible = !item.invisible" />
+            <td mat-cell *matCellDef="let item">
+              <div class="c-display-cell">
+                <button
+                  type="button"
+                  class="c-handle"
+                  [title]="'core.component.table.config.drag-handle' | sdTranslate"
+                  [attr.aria-label]="'core.component.table.config.drag-handle' | sdTranslate"
+                  (mousedown)="handleMouseDown()"
+                  (mouseup)="handleMouseUp()">
+                  <sd-icon name="drag_indicator" aria-hidden="true"></sd-icon>
+                </button>
+                <!-- why: ô "Hiển thị" KHÔNG bao giờ bị khoá — nó là đường duy nhất để bật lại một
+                     cột đã tắt. -->
+                <sd-checkbox [model]="!item.invisible" (modelChange)="item.invisible = !item.invisible" />
               </div>
             </td>
           </ng-container>
+
           <ng-container matColumnDef="title">
-            <th mat-header-cell class="c-th px-4" *matHeaderCellDef>
-              {{ 'core.component.table.column-header' | translate }}
+            <th mat-header-cell class="c-th" *matHeaderCellDef>
+              {{ 'core.component.table.column-header' | sdTranslate }}
             </th>
-            <td class="px-4" mat-cell *matCellDef="let item">
-              <sd-input class="pb-4" [placeholder]="item?.origin?.title" [(model)]="item.title" hideInlineError></sd-input>
+            <td mat-cell *matCellDef="let item">
+              <sd-input
+                size="sm"
+                [placeholder]="item?.origin?.title"
+                [(model)]="item.title"
+                [disabled]="isRowDisabled(item)"
+                hideInlineError></sd-input>
             </td>
           </ng-container>
+
           <ng-container matColumnDef="width">
-            <th mat-header-cell class="c-th px-4" *matHeaderCellDef style="width: 80px">
-              {{ 'core.component.table.width' | translate }}
+            <th mat-header-cell class="c-th c-col-width" *matHeaderCellDef>
+              {{ 'core.component.table.width' | sdTranslate }}
             </th>
-            <td class="px-4" mat-cell *matCellDef="let item">
-              <sd-input class="pb-4" [placeholder]="item?.origin?.width" [(model)]="item.width" hideInlineError></sd-input>
+            <td mat-cell class="c-col-width" *matCellDef="let item">
+              <sd-input
+                size="sm"
+                [placeholder]="item?.origin?.width"
+                [(model)]="item.width"
+                [disabled]="isRowDisabled(item)"
+                hideInlineError></sd-input>
             </td>
           </ng-container>
+
           <ng-container matColumnDef="fixed">
-            <th mat-header-cell class="c-th text-center px-4" *matHeaderCellDef style="width: 80px">
-              {{ 'core.component.table.fixed' | translate }}
+            <th mat-header-cell class="c-th c-col-toggle" *matHeaderCellDef>
+              {{ 'core.component.table.fixed' | sdTranslate }}
             </th>
-            <td class="text-center px-4" mat-cell *matCellDef="let item">
-              <sd-switch [(model)]="item.fixed" />
+            <td mat-cell class="c-col-toggle" *matCellDef="let item">
+              <sd-checkbox [(model)]="item.fixed" [disabled]="isRowDisabled(item)" />
             </td>
           </ng-container>
 
           <ng-container matColumnDef="truncate">
-            <th mat-header-cell class="c-th text-center px-4" *matHeaderCellDef style="width: 100px">
-              {{ 'core.component.table.char-limit' | translate }}
+            <th mat-header-cell class="c-th c-col-toggle" *matHeaderCellDef>
+              {{ 'core.component.table.char-limit' | sdTranslate }}
             </th>
-            <td class="text-center px-4" mat-cell *matCellDef="let item">
-              <sd-switch [(model)]="item.truncate" />
+            <td mat-cell class="c-col-toggle" *matCellDef="let item">
+              <sd-checkbox [(model)]="item.truncate" [disabled]="isRowDisabled(item)" />
             </td>
           </ng-container>
 
-          <tr mat-header-row *matHeaderRowDef="['invisible', 'title', 'width', 'fixed', 'truncate']; sticky: true"></tr>
+          <tr mat-header-row *matHeaderRowDef="_columns; sticky: true"></tr>
           <tr
             mat-row
-            *matRowDef="let row; columns: ['invisible', 'title', 'width', 'fixed', 'truncate']"
+            *matRowDef="let row; columns: _columns"
+            [class.c-row-hidden]="isRowDisabled(row)"
             cdkDrag
             [cdkDragData]="row"
             cdkDragLockAxis="y"
@@ -76,8 +100,24 @@
     </div>
   }
   <ng-container sdFooterRight>
-    <sd-button [autoId]="_autoId ? _autoId + '-config-skip' : null" class="mr-8" (click)="close()" [title]="'core.component.table.skip' | translate" color="secondary"> </sd-button>
-    <sd-button [autoId]="_autoId ? _autoId + '-config-reset' : null" class="mr-8" (click)="onReset()" [title]="'core.component.form-builder.default' | translate" color="primary"> </sd-button>
-    <sd-button [autoId]="_autoId ? _autoId + '-config-apply' : null" (click)="onSave()" [title]="'core.component.table.apply' | translate" type="fill" color="primary"> </sd-button>
+    <sd-button
+      [autoId]="_autoId ? _autoId + '-config-skip' : null"
+      (click)="close()"
+      [title]="'core.component.table.skip' | sdTranslate"
+      color="secondary">
+    </sd-button>
+    <sd-button
+      [autoId]="_autoId ? _autoId + '-config-reset' : null"
+      (click)="onReset()"
+      [title]="'core.component.form-builder.default' | sdTranslate"
+      color="primary">
+    </sd-button>
+    <sd-button
+      [autoId]="_autoId ? _autoId + '-config-apply' : null"
+      (click)="onSave()"
+      [title]="'core.component.table.apply' | sdTranslate"
+      type="fill"
+      color="primary">
+    </sd-button>
   </ng-container>
 </sd-modal>

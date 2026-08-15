@@ -4,14 +4,14 @@ import { Subject } from 'rxjs';
 
 import { SdTabRouterService } from './tab-router.service';
 import { SdTabActivated, SdTabBase, SdTabDeactivated } from '../events/tab-router.event';
-import { SdTab, SdTabInfo } from '../models/tab-router.model';
+import { SdTabRouterTab, SdTabInfo } from '../models/tab-router.model';
 
 @Component({ standalone: true, template: '' })
 class CompA {}
 @Component({ standalone: true, template: '' })
 class CompB {}
 
-const makeTab = (over: Partial<SdTab> = {}): SdTab =>
+const makeTab = (over: Partial<SdTabRouterTab> = {}): SdTabRouterTab =>
   ({
     component: CompA,
     key: 'k1',
@@ -22,7 +22,7 @@ const makeTab = (over: Partial<SdTab> = {}): SdTab =>
     data: {},
     tabInfoChanges: new Subject<SdTabInfo>(),
     ...over,
-  }) as SdTab;
+  }) as SdTabRouterTab;
 
 describe('SdTabRouterService', () => {
   let service: SdTabRouterService;
@@ -82,7 +82,7 @@ describe('SdTabRouterService', () => {
 
   describe('setCurrentTab', () => {
     it('updates currentTab and emits to currentTabChanges', () => {
-      const seen: (SdTab | undefined)[] = [];
+      const seen: (SdTabRouterTab | undefined)[] = [];
       service.currentTabChanges.subscribe(t => seen.push(t));
 
       const tab = makeTab({ key: 'a', url: '/a' });

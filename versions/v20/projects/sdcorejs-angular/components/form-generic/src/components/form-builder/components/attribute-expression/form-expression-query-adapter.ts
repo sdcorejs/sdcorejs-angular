@@ -1,6 +1,6 @@
 import { SdQueryBuilderField } from '@sdcorejs/angular/components/query-builder';
 import { Filter, Operator } from '@sdcorejs/utils/models';
-import { Attribute, AttributeOperators, DayInfo, SdFormGenericExpression, SdFormGenericExpressionCondition } from '../../../../models';
+import { Attribute, SD_ATTRIBUTE_OPERATORS, DayInfo, SdFormGenericExpression, SdFormGenericExpressionCondition } from '../../../../models';
 
 let expressionId = 0;
 
@@ -9,7 +9,7 @@ export function formAttributesToQueryFields(attributes: Attribute[]): SdQueryBui
     key: attribute.value,
     label: attribute.display,
     type: attribute.type === 'datetime' ? 'datetime' : attribute.type,
-    operators: AttributeOperators[attribute.type].map(operator => operator.value as Operator),
+    operators: SD_ATTRIBUTE_OPERATORS[attribute.type].map(operator => operator.value as Operator),
     values: attribute.type === 'values' ? attribute.values : undefined,
     trueLabel: attribute.type === 'boolean' ? attribute.displayOnTrue : undefined,
     falseLabel: attribute.type === 'boolean' ? attribute.displayOnFalse : undefined,

@@ -92,11 +92,6 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.excel.cannot-read-file': 'Không đọc được nội dung file',
   'core.excel.no-sheet': 'File Excel không có sheet dữ liệu',
 
-  // ---- Service: docx ----
-  'core.docx.invalid-format': 'Định dạng không hợp lệ. Vui lòng chọn Mẫu có định dạng DOC hoặc DOCX',
-  'core.docx.size-exceeded': 'Kích thước tệp mẫu vượt quá tiêu chuẩn hỗ trợ của hệ thống. Vui lòng thử lại',
-  'core.docx.convert-error': 'Có lỗi xảy ra khi chuyển đổi file DOCX',
-
   // ---- Service: notify (toast) ----
   'core.notify.type.success': 'Thành công',
   'core.notify.type.info': 'Thông tin',
@@ -218,7 +213,6 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.time-range.step': 'Các mốc giờ phải theo khoảng {step} phút',
   'core.form.time-range.from': 'Từ',
   'core.form.time-range.to': 'Đến',
-  'core.form.time-range.clear': 'Xóa khoảng giờ',
 
   // ---- Forms: time-spinner ----
   'core.form.time-spinner.hour': 'Giờ',
@@ -249,6 +243,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Forms: select ----
   'core.form.select.required': 'Vui lòng nhập thông tin',
+  'core.form.select.selectAll': 'Tất cả',
 
   // ---- Forms: textarea ----
   'core.form.textarea.required': 'Vui lòng nhập thông tin',
@@ -267,14 +262,6 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.editor.image.max-height': 'Chiều cao ảnh {height}px vượt quá giới hạn {max}px',
   'core.component.editor.image.max-per-selection': 'Chỉ được phép chọn tối đa {max} ảnh mỗi lần',
 
-  // ---- Component: document-builder ----
-  'core.component.document-builder.page-number.current': 'Số trang hiện tại',
-  'core.component.document-builder.page-number.total': 'Tổng số trang',
-  'core.component.document-builder.ck-comment.label': 'Bình luận',
-  'core.component.document-builder.ck-comment.text-too-long': 'Văn bản quá dài ({length} ký tự). Tối đa {max} ký tự.',
-  'core.component.document-builder.variable.not-allowed': 'Không cho phép thêm variable vào văn bản',
-  'core.component.document-builder.variable.invalid-data': 'Dữ liệu variable không hợp lệ',
-
   // ---- Component: form-builder ----
   'core.component.form-builder.field-key': 'Trường dữ liệu',
   'core.component.form-builder.display': 'Hiển thị',
@@ -289,6 +276,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.form-builder.required-when': 'Bắt buộc khi',
   'core.component.form-builder.confirm': 'Xác nhận',
   'core.component.form-builder.delete': 'Xóa',
+  'core.component.form-builder.select-item': 'Chọn để sửa',
   'core.component.form-builder.save': 'Lưu',
   'core.component.form-builder.hint': 'Gợi ý',
   'core.component.form-builder.parameter': 'Tham số',
@@ -360,9 +348,13 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.form-builder.display-label': 'Nhãn hiển thị',
   'core.component.form-builder.attribute': 'Thuộc tính',
   'core.component.form-builder.add-variable': 'Thêm biến',
+  'core.component.form-builder.no-variable': 'Chưa có biến nào. Thêm biến để dùng trong biểu thức điều kiện.',
+  'core.component.form-builder.no-validation': 'Chưa có xác thực nào. Thêm xác thực để hiện cảnh báo hoặc lỗi theo điều kiện.',
   'core.component.form-builder.add-new': 'Thêm mới',
   'core.component.form-builder.detail': 'Chi tiết',
   'core.component.form-builder.create-update': 'Tạo mới/cập nhật',
+  'core.component.form-builder.update-row': 'Cập nhật dòng',
+  'core.component.form-builder.add-row': 'Thêm dòng',
   'core.component.form-builder.default': 'Mặc định',
   'core.component.form-builder.show-more': 'Xem thêm',
   'core.component.form-builder.show-less': 'Thu gọn',
@@ -544,6 +536,8 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.error-occurred': 'Có lỗi xảy ra',
   'core.component.table.not-an-array': 'Dữ liệu không phải là một mảng',
   'core.component.table.config.confirm-reset': 'Xác nhận đưa tất cả thiết lập về mặc định',
+  'core.component.table.config.drag-hint': 'Kéo biểu tượng ⠿ để sắp xếp lại thứ tự cột',
+  'core.component.table.config.drag-handle': 'Kéo để đổi thứ tự cột',
   'core.component.table.popup-export.select-columns': 'Vui lòng chọn cột dữ liệu để xuất',
   'core.component.table.selector-action.default-msg': 'dữ liệu được chọn',
   'core.component.tab-router.too-many-tabs': 'Bạn đã mở quá nhiều tab.',
@@ -578,6 +572,13 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.module.layout.user.notification': 'Thông báo',
   'core.module.layout.sidebar.search': 'Tìm kiếm',
   'core.module.layout.sidebar.toggle': 'Thu gọn hoặc mở rộng thanh điều hướng',
+  'core.module.layout.sidebar.menu-groups': 'Nhóm menu',
+  'core.module.layout.sidebar.close-menu': 'Đóng menu',
+  'core.module.layout.sidebar.search-in-group': 'Tìm trong nhóm',
+  'core.module.layout.sidebar.primary-nav': 'Điều hướng chính',
+  'core.module.layout.sidebar.more-menu': 'Thêm menu',
+  'core.module.layout.sidebar.more': 'Thêm',
+  'core.module.layout.sidebar.search-in-menu': 'Tìm trong menu',
 
   // ---- Module: layout (greeting + weekday) ----
   'core.module.layout.greeting.hello': 'Xin chào, {name}',
@@ -617,4 +618,91 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Module: generic (generic-select) ----
   'core.module.generic.generic-select.detail-link': 'chi tiết',
+
+  // ---- Component: query-bar ----
+  'core.component.query-bar.search-placeholder': 'Tìm kiếm...',
+  'core.component.query-bar.no-fields': 'Chưa cấu hình fields',
+  'core.component.query-bar.add-filter': 'Thêm filter',
+  'core.component.query-bar.clear-all': 'Xóa tất cả ({count})',
+  'core.component.query-bar.search': 'Tìm kiếm',
+  'core.component.query-bar.logic-operator': 'Toán tử logic',
+  'core.component.query-bar.boolean.true': 'Có',
+  'core.component.query-bar.boolean.false': 'Không',
+  'core.component.query-bar.placeholder.value': 'giá trị',
+  'core.component.query-bar.placeholder.text': 'nhập…',
+  'core.component.query-bar.placeholder.from-number': 'Từ',
+  'core.component.query-bar.placeholder.to-number': 'Đến',
+  'core.component.query-bar.placeholder.from-text': 'từ…',
+  'core.component.query-bar.placeholder.to-text': 'đến…',
+  'core.component.query-bar.swap-field': 'Đổi field',
+  'core.component.query-bar.placeholder.select-value': 'Chọn giá trị',
+  'core.component.query-bar.placeholder.enter-value': 'Nhập giá trị',
+  'core.component.query-bar.loading-values': 'Đang tải...',
+  'core.component.query-bar.field-empty': 'Chưa có field nào được cấu hình.',
+  'core.component.query-bar.saved-filters.tooltip': 'Bộ lọc đã lưu',
+  'core.component.query-bar.saved-filters.tooltip-disabled': 'Cần [savedFiltersKey] để bật',
+  'core.component.query-bar.saved-filters.delete': 'Xoá bộ lọc',
+  'core.component.query-bar.saved-filters.empty': 'Chưa có bộ lọc nào.',
+  'core.component.query-bar.saved-filters.save': 'Lưu bộ lọc hiện tại',
+  'core.component.query-bar.saved-filters.name-label': 'Tên bộ lọc',
+
+  // ---- Component: query-builder ----
+  'core.component.query-builder.date-mode.absolute': 'Ngày cụ thể',
+  'core.component.query-builder.date-mode.now': 'Hôm nay',
+  'core.component.query-builder.date-mode.relative': 'Tương đối',
+  'core.component.query-builder.value-source.literal': 'Nhập giá trị',
+  'core.component.query-builder.value-source.field': 'Chọn trường',
+  'core.component.query-builder.relative.hour-previous': 'giờ trước',
+  'core.component.query-builder.relative.hour-next': 'giờ tới',
+  'core.component.query-builder.relative.day-previous': 'ngày trước',
+  'core.component.query-builder.relative.day-next': 'ngày tới',
+  'core.component.query-builder.relative.week-previous': 'tuần trước',
+  'core.component.query-builder.relative.week-next': 'tuần tới',
+  'core.component.query-builder.relative.month-previous': 'tháng trước',
+  'core.component.query-builder.relative.month-next': 'tháng tới',
+  'core.component.query-builder.relative.format': '{amount} {phrase}',
+  'core.component.query-builder.add': 'Thêm',
+  'core.component.query-builder.add-node': 'Thêm điều kiện hoặc nhóm',
+  'core.component.query-builder.condition': 'Điều kiện',
+  'core.component.query-builder.group': 'Nhóm',
+  'core.component.query-builder.remove-group': 'Xoá nhóm',
+  'core.component.query-builder.remove-condition': 'Xoá điều kiện',
+  'core.component.query-builder.empty': 'Chưa có điều kiện',
+  'core.component.query-builder.select-field': 'Chọn trường',
+  'core.component.query-builder.value': 'Giá trị',
+  'core.component.query-builder.from': 'Từ',
+  'core.component.query-builder.to': 'Đến',
+  'core.component.query-builder.boolean.true': 'Có',
+  'core.component.query-builder.boolean.false': 'Không',
+
+  // ---- Component: tree ----
+  'core.component.tree.selected-count': 'Đã chọn {count} mục',
+  'core.component.tree.expand': 'Mở rộng mục',
+  'core.component.tree.collapse': 'Thu gọn mục',
+  'core.component.tree.retry-item': 'Tải lại mục',
+  'core.component.tree.load-error': 'Không tải được dữ liệu cây',
+
+  // ---- Directive: hover-copy ----
+  'core.directive.hover-copy.copied': 'Đã sao chép',
+
+  // ---- Module: layout (sidebar sections + pin) ----
+  'core.module.layout.sidebar.pinned': 'Đã ghim',
+  'core.module.layout.sidebar.recent': 'Gần đây',
+  'core.module.layout.sidebar.all-menu': 'Tất cả menu',
+  'core.module.layout.menu.pin': 'Ghim {title}',
+  'core.module.layout.menu.unpin': 'Bỏ ghim {title}',
+
+  // ---- Nhãn khả truy cập riêng cho từng control (thay cho key mượn tạm) ----
+  'core.form.date.open-picker': 'Mở lịch',
+  'core.form.datetime.open-picker': 'Mở lịch',
+  'core.form.date-range.open-picker': 'Mở lịch',
+  'core.form.date-range.clear': 'Xóa khoảng ngày',
+  'core.form.select.search': 'Tìm kiếm',
+  'core.component.table.loading': 'Đang tải dữ liệu bảng',
+  'core.component.upload-file.loading': 'Đang tải tệp lên',
+  'core.component.import-excel.loading': 'Đang tải dữ liệu',
+  'core.component.upload-file.remove': 'Xóa tệp',
+  'core.component.upload-file.zoom': 'Phóng to ảnh',
+  'core.component.upload-file.view-all': 'Xem tất cả ảnh',
+  'core.component.form-builder.canvas': 'Khu vực thiết kế form',
 };

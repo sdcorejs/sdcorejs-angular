@@ -4,6 +4,7 @@ import {
   Component,
   DestroyRef,
   ElementRef,
+  OnDestroy,
   TemplateRef,
   booleanAttribute,
   computed,
@@ -40,7 +41,7 @@ interface SdModalDismissRef {
   standalone: true,
   imports: [SdIcon, CommonModule, MatBottomSheetModule, MatDialogModule, MatDividerModule, MatButtonModule],
 })
-export class SdModal {
+export class SdModal implements OnDestroy {
   static index = signal(0);
 
   templateRef = viewChild.required<TemplateRef<any>>('templateRef');
@@ -88,6 +89,33 @@ export class SdModal {
     this.#isMobile = BrowserUtilities.isMobile();
   }
 
+  // why: PHẢI là ngOnDestroy, KHÔNG phải #destroyRef.onDestroy. Angular chạy executeOnDestroys
+  // (ngOnDestroy) TRƯỚC processCleanups (mọi callback DestroyRef.onDestroy). `sdClosed = output()`
+  // tự đăng ký một DestroyRef.onDestroy trong constructor của OutputEmitterRef ngay lúc khởi tạo
+  // field — tức TRƯỚC hook nào đăng ký trong constructor của component. Đăng ký ở constructor thì
+  // tới lượt mình chạy, emitter đã `destroyed = true` và `emit()` chỉ log cảnh báo rồi thoát.
+  ngOnDestroy(): void {
+    // why: overlay của MatDialog/MatBottomSheet sống trong CDK overlay container ở <body>,
+    // KHÔNG nằm trong view của <sd-modal>. Host bị destroy (điều hướng route, @if tắt nhánh…)
+    // mà không close ref thì overlay + backdrop ở lại mồ côi, che và chặn click cả trang.
+    // Dùng forceClose (không qua beforeClose) vì đã destroy thì không thể huỷ việc đóng.
+    //
+    // Emit TRƯỚC khi forceClose: afterClosed()/afterDismissed() bắn BẤT ĐỒNG BỘ, mà subscription
+    // của chúng dùng takeUntilDestroyed(#destroyRef) nên đã bị gỡ trước khi tới lượt. Không emit
+    // ở đây thì destroy một modal đang mở sẽ đóng overlay mà KHÔNG bao giờ báo (sdClosed).
+    this.#markClosed();
+    this.forceClose();
+  }
+
+  // why: idempotent — chốt trên isOpened(). Đường destroy emit trước, nếu sau đó
+  // afterClosed()/afterDismissed() vẫn kịp bắn thì lần thứ hai là no-op, không double-emit.
+  #markClosed = (): void => {
+    if (!this.isOpened()) return;
+    this.isOpened.set(false);
+    this.#closeRequest = undefined;
+    this.sdClosed.emit();
+  };
+
   #resolveWidth(): string {
     const w = this.width() || '80vw';
     if (this.#isMobile) return w;
@@ -119,14 +147,7 @@ export class SdModal {
         disableClose: this.disableBackdropClose() || !!this.beforeClose(),
       });
       this.#bindGuardedDismiss(this.#bottomSheetRef);
-      this.#bottomSheetRef
-        .afterDismissed()
-        .pipe(takeUntilDestroyed(this.#destroyRef))
-        .subscribe(() => {
-          this.isOpened.set(false);
-          this.#closeRequest = undefined;
-          this.sdClosed.emit();
-        });
+      this.#bottomSheetRef.afterDismissed().pipe(takeUntilDestroyed(this.#destroyRef)).subscribe(this.#markClosed);
     } else {
       this.#dialogRef = this.#dialog.open(this.templateRef(), {
         width: this.#resolvedWidth,
@@ -135,14 +156,7 @@ export class SdModal {
         disableClose: this.disableBackdropClose() || !!this.beforeClose(),
       });
       this.#bindGuardedDismiss(this.#dialogRef);
-      this.#dialogRef
-        .afterClosed()
-        .pipe(takeUntilDestroyed(this.#destroyRef))
-        .subscribe(() => {
-          this.isOpened.set(false);
-          this.#closeRequest = undefined;
-          this.sdClosed.emit();
-        });
+      this.#dialogRef.afterClosed().pipe(takeUntilDestroyed(this.#destroyRef)).subscribe(this.#markClosed);
     }
   };
 

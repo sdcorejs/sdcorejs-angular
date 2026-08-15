@@ -50,10 +50,11 @@ isLoading(selector = 'body'): Element | false | null;
 - One shared `style[data-sd-loading-styles]` is maintained per document. The service adopts an existing consumer style element without deleting consumer-owned content.
 - Removing/reparenting an overlay is repaired on the next acquisition.
 - Injector teardown closes all owned refs, removes library-owned overlays/style content and clears bookkeeping.
+- Overlay and stylesheet nodes are written with direct `DOCUMENT` DOM calls rather than `Renderer2`, so every detach is synchronous. Under `provideAnimations()` / `provideNoopAnimations()` the injected `Renderer2` routes `removeChild` through the animation engine, which only detaches the node on its next flush; a `close()` outside a change-detection cycle, or an injector teardown, has no such flush and would strand the overlay (`z-index: 99999`) and the `<style>` element in the document.
 
 ## SSR behavior
 
-On the server, `start()` returns an already-closed ref, `stop()` is a no-op, `isLoading()` returns `null`, and `run()` still runs/awaits the supplied task. No DOM query or renderer mutation occurs.
+On the server, `start()` returns an already-closed ref, `stop()` is a no-op, `isLoading()` returns `null`, and `run()` still runs/awaits the supplied task. No DOM query or mutation occurs, and no renderer is created.
 
 ## Migration from pre-1.4 behavior
 

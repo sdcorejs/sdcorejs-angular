@@ -3,17 +3,23 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { SdQuerySavedFiltersMenu } from './saved-filters-menu.component';
 import { SdQuery, SdSavedFilter } from '../../query-bar.model';
+import { SdConfirmService } from '@sdcorejs/angular/services/confirm';
 
 describe('SdQuerySavedFiltersMenu', () => {
   let fixture: ComponentFixture<SdQuerySavedFiltersMenu>;
   let component: SdQuerySavedFiltersMenu;
+  // why: promptSave dùng SdConfirmService.withInput thay window.prompt — stub service
+  // để spec không mở Material dialog thật (withInput reject 'CANCEL' khi user huỷ).
+  let withInputSpy: jasmine.Spy;
 
   const STORAGE = 'sd-query-bar:savedFilters:test';
 
   beforeEach(async () => {
     localStorage.removeItem(STORAGE);
+    withInputSpy = jasmine.createSpy('withInput');
     await TestBed.configureTestingModule({
       imports: [SdQuerySavedFiltersMenu, NoopAnimationsModule],
+      providers: [{ provide: SdConfirmService, useValue: { withInput: withInputSpy } }],
     }).compileComponents();
     fixture = TestBed.createComponent(SdQuerySavedFiltersMenu);
     component = fixture.componentInstance;
@@ -37,14 +43,14 @@ describe('SdQuerySavedFiltersMenu', () => {
     expect(component.savedFilters()).toEqual([]);
   });
 
-  it('promptSave appends a filter, persists it, and uses the current [query]', () => {
+  it('promptSave appends a filter, persists it, and uses the current [query]', async () => {
     const q: SdQuery = { filters: [{ field: 'x', operator: 'EQUAL', data: 1 } as any], logic: 'OR' };
     fixture.componentRef.setInput('key', 'test');
     fixture.componentRef.setInput('query', q);
     fixture.detectChanges();
-    spyOn(window, 'prompt').and.returnValue('Filter 1');
+    withInputSpy.and.resolveTo('Filter 1');
 
-    component.promptSave();
+    await component.promptSave();
 
     expect(component.savedFilters().length).toBe(1);
     expect(component.savedFilters()[0].name).toBe('Filter 1');
@@ -52,11 +58,19 @@ describe('SdQuerySavedFiltersMenu', () => {
     expect(JSON.parse(localStorage.getItem(STORAGE)!).length).toBe(1);
   });
 
-  it('promptSave with a blank/cancelled name does nothing', () => {
+  it('promptSave does nothing when the dialog is cancelled (withInput rejects)', async () => {
     fixture.componentRef.setInput('key', 'test');
     fixture.detectChanges();
-    spyOn(window, 'prompt').and.returnValue(null);
-    component.promptSave();
+    withInputSpy.and.rejectWith('CANCEL');
+    await component.promptSave();
+    expect(component.savedFilters()).toEqual([]);
+  });
+
+  it('promptSave does nothing when the entered name is blank', async () => {
+    fixture.componentRef.setInput('key', 'test');
+    fixture.detectChanges();
+    withInputSpy.and.resolveTo('   ');
+    await component.promptSave();
     expect(component.savedFilters()).toEqual([]);
   });
 
@@ -111,7 +125,7 @@ describe('SdQuerySavedFiltersMenu', () => {
   it('clicking footer save calls promptSave', () => {
     fixture.componentRef.setInput('key', 'test');
     fixture.detectChanges();
-    spyOn(window, 'prompt').and.returnValue(null);
+    withInputSpy.and.rejectWith('CANCEL');
     const spy = spyOn(component, 'promptSave').and.callThrough();
     (fixture.nativeElement.querySelector('.c-saved-filters') as HTMLButtonElement).click();
     fixture.detectChanges();

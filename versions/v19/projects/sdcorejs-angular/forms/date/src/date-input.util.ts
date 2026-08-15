@@ -1,4 +1,4 @@
-import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { DateUtilities } from '@sdcorejs/utils/fns';
 import { isValid as isValidDate, parse as parseDate } from 'date-fns';
 
 export const DATE_DISPLAY_FORMAT = 'dd/MM/yyyy';

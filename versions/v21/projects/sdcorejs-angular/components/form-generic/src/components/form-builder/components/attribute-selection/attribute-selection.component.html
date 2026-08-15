@@ -1,7 +1,7 @@
-<sd-section class="mt-8" [title]="'core.component.form-builder.data' | translate" icon="format_list_bulleted">
+<sd-section class="mt-8" [title]="'core.component.form-builder.data' | sdTranslate" icon="format_list_bulleted">
   @if (selections.length) {
     <div class="d-flex align-items-center py-4">
-      <div class="T14M" style="flex: 1">{{ 'core.component.form-builder.data-api' | translate }}</div>
+      <div class="T14M" style="flex: 1">{{ 'core.component.form-builder.data-api' | sdTranslate }}</div>
       <sd-autocomplete
         style="width: 200px"
         size="sm"
@@ -16,14 +16,14 @@
 
     @if (component.type === 'select' && !!valuesKey) {
       <build-queries
-        [label]="'core.component.form-builder.query-condition' | translate"
+        [label]="'core.component.form-builder.query-condition' | sdTranslate"
         [selections]="selections"
         [valuesKey]="valuesKey"
         [components]="components()"
         [variables]="variables()"
         [(model)]="component.properties!.query"></build-queries>
       <build-variables
-        [label]="'core.component.form-builder.assign-value' | translate"
+        [label]="'core.component.form-builder.assign-value' | sdTranslate"
         [selections]="selections"
         [valuesKey]="valuesKey"
         [components]="components()"
@@ -37,7 +37,7 @@
   }
   @if (!valuesKey) {
     <div class="d-flex flex-column" style="gap: 4px">
-      <div class="T14M">{{ 'core.component.form-builder.data-static' | translate }}</div>
+      <div class="T14M">{{ 'core.component.form-builder.data-static' | sdTranslate }}</div>
       @for (item of values; track item.value; let idx = $index) {
         <div class="d-flex align-items-end py-4" style="gap: 4px">
           <sd-input style="width: 200px" size="sm" [(model)]="item.value" (sdChange)="onChangeValues()" hideInlineError></sd-input>
@@ -45,7 +45,7 @@
           <sd-button prefixIcon="delete" (click)="removeItem(idx)" color="error"></sd-button>
         </div>
       }
-      <sd-button prefixIcon="add" [title]="'core.component.form-builder.add-data' | translate" (click)="addItem()" color="primary"></sd-button>
+      <sd-button prefixIcon="add" [title]="'core.component.form-builder.add-data' | sdTranslate" (click)="addItem()" color="primary"></sd-button>
     </div>
   }
 </sd-section>

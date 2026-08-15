@@ -37,7 +37,7 @@ import {
   ɵsdCoerceFormGroup,
   ɵsdFormControlConnector,
 } from '@sdcorejs/angular/forms/models';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import {
@@ -91,7 +91,7 @@ export type SdTimeModelValue = string | null | undefined;
     SdLabel,
     SdTimeSpinner,
     SdView,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
 })
 export class SdTime {
@@ -186,9 +186,18 @@ export class SdTime {
     const value = this.valueModel();
     return value == null ? null : (sdNormalizeTime(value) ?? value);
   });
-  readonly showClear = computed(
-    () => this.clearable() && !this.required() && !this.disabled() && !this.isReadonly() && !sdIsEmpty(this.formControl.value)
-  );
+  readonly showClear = computed(() => {
+    // why: `formControl.value` là property THƯỜNG, không phát tín hiệu nào. Bản cũ chốt kết quả
+    // ngay lần đọc đầu (ô còn rỗng ⇒ false) rồi không bao giờ tính lại, nên bật `[clearable]` xong
+    // nút × vẫn không bao giờ xuất hiện — bug ngủ đông vì `clearable` mặc định là false. `#state`
+    // tick theo value/status/touched của control, đó là dependency reactive duy nhất cần thiết.
+    void this.#state();
+    // why: `#state` chỉ bắt được thao tác của người dùng. Ghi giá trị theo kiểu programmatic đi qua
+    // connector, mà connector `setValue(..., { emitEvent: false })` — không phát event nào nên
+    // `#state` đứng im. `valueModel` là signal duy nhất đổi trong nhánh đó.
+    void this.valueModel();
+    return this.clearable() && !this.required() && !this.disabled() && !this.isReadonly() && !sdIsEmpty(this.formControl.value);
+  });
 
   readonly dataDisabled = computed(() => (this.#state().disabled ? 'true' : 'false'));
   readonly dataInvalid = computed(() => (this.#state().invalid ? 'true' : 'false'));

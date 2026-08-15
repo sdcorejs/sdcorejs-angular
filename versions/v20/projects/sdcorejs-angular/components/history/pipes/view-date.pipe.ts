@@ -1,5 +1,5 @@
 import { Injectable, Pipe, PipeTransform } from '@angular/core';
-import { DateUtilities } from '@sdcorejs/angular/utilities';
+import { DateUtilities } from '@sdcorejs/utils/fns';
 import { EMPTY_STR } from '@sdcorejs/utils/constants';
 
 @Pipe({

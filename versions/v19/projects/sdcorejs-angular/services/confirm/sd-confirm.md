@@ -16,6 +16,21 @@ Opens a Material dialog (`DialogConfirmComponent`) for confirm/input/radio/selec
 - Asking for a date alongside a confirmation (use `withDate`).
 - Asking for date and time alongside a confirmation (use `withDatetime`).
 
+## Dismissal always settles the promise
+
+Every method settles on every close path. Anything that is not an explicit Accept — the Cancel button, the ESC key, a backdrop click (when `disableBackdropClose: false`), or a programmatic `dialogRef.close()` — **rejects with the string `'CANCEL'`**.
+
+This changed in release 1.7. Previously the result was only inspected via `if (result) { … }`, so any close that did not come from one of the two buttons produced `undefined` and the promise **never settled**: `await` hung forever and the caller's closure (plus everything it captured) stayed pinned for the rest of the session. If you were relying on that hang, you were relying on a leak.
+
+```typescript
+try {
+  await confirmService.confirm('Delete this record?');
+  // accepted
+} catch {
+  // cancelled, dismissed with ESC, or closed programmatically
+}
+```
+
 ## When NOT to use
 - For richer forms — use a dedicated dialog component with `MatDialog.open(...)`.
 - For non-blocking notifications — use `SdNotifyService` (toast/snackbar).

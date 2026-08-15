@@ -4,6 +4,8 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, injec
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import { sdIsExternalHttpUrl, sdOpenExternal } from '@sdcorejs/angular/utilities';
 import { SdLayoutUserInfo, SidebarConfigurationV2 } from '../../configurations';
 import { SdLayoutMenu, SdLayoutNavigationStateService, getMenuStableKey, selectPrimaryMenuGroups } from '../../services';
 import { SdLayoutMenuTreeComponent } from '../shared/menu-tree/menu-tree.component';
@@ -11,15 +13,16 @@ import { SdLayoutSearchFieldComponent } from '../shared/search-field/search-fiel
 import { SdLayoutUserMenuComponent } from '../shared/user-menu/user-menu.component';
 
 @Component({
-  selector: 'sidebar-mobile-v2',
+  selector: 'sd-sidebar-mobile-v2',
   standalone: true,
-  imports: [A11yModule, SdIcon, SdLayoutSearchFieldComponent, SdLayoutMenuTreeComponent, SdLayoutUserMenuComponent],
+  imports: [A11yModule, SdIcon, SdLayoutSearchFieldComponent, SdLayoutMenuTreeComponent, SdLayoutUserMenuComponent, SdTranslatePipe],
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SidebarMobileV2Component {
+export class SdSidebarMobileV2 {
   readonly #router = inject(Router);
+  readonly #i18n = inject(I18nService);
   readonly #document = inject(DOCUMENT);
   readonly #destroyRef = inject(DestroyRef);
   readonly #navigationState = inject(SdLayoutNavigationStateService);
@@ -56,7 +59,7 @@ export class SidebarMobileV2Component {
   }
 
   openMore(trigger?: EventTarget | null): void {
-    this.#openSheet('more', 'Thêm', this.overflowMenus(), trigger);
+    this.#openSheet('more', this.#i18n.t('core.module.layout.sidebar.more'), this.overflowMenus(), trigger);
   }
 
   activateMenu(menu: SdLayoutMenu, trigger?: EventTarget | null): void {
@@ -106,8 +109,10 @@ export class SidebarMobileV2Component {
 
   #navigate(menu: Extract<SdLayoutMenu, { path: string }>): void {
     this.#navigationState.recordRecent(menu, { enabled: true, maxItems: 5 });
-    if (menu.path.includes('http')) {
-      this.#document.defaultView?.open(menu.path, '_blank', 'noopener');
+    // why: `includes('http')` là substring test — `javascript:fetch(...)//http` lọt qua và chạy như
+    // script trong origin của app. Parse URL thật rồi mới mở, kèm `noopener,noreferrer`.
+    if (sdIsExternalHttpUrl(menu.path)) {
+      sdOpenExternal(menu.path);
       this.closeSheet();
       return;
     }

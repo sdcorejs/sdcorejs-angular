@@ -63,8 +63,14 @@ export class ExamplePreviewComponent {
     this.error.set(null);
     try {
       this.componentType.set(await example.loadComponent());
-    } catch {
-      this.error.set('The live example could not be loaded.');
+    } catch (cause) {
+      // why: swallowing the cause left "could not be loaded" as the only clue, which says nothing
+      // about a failed chunk, a missing provider, or a broken import. Surface it in both places —
+      // console for the stack, the alert itself for whoever is looking at the page.
+      // eslint-disable-next-line no-console
+      console.error('[example-preview] failed to load', example.sectionId, cause);
+      const detail = cause instanceof Error ? `${cause.name}: ${cause.message}` : String(cause);
+      this.error.set(`The live example could not be loaded. ${detail}`);
     } finally {
       this.loading.set(false);
     }

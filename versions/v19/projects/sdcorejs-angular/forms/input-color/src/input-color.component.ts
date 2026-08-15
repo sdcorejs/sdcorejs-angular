@@ -2,7 +2,7 @@ import { booleanAttribute, ChangeDetectionStrategy, Component, computed, Element
 import { MatFormFieldAppearance } from '@angular/material/form-field';
 import { SdInput } from '@sdcorejs/angular/forms/input';
 import { SdSuffixDefDirective } from '@sdcorejs/angular/forms/directives';
-import { SdViewed, SdViewedInput, sdViewedTransform } from '@sdcorejs/angular/forms/models';
+import { SdViewed, SdViewedInput, sdViewedInline, sdViewedTransform } from '@sdcorejs/angular/forms/models';
 import { Size } from '@sdcorejs/utils/models';
 
 // why: matches #RGB, #RRGGBB, #RRGGBBAA. Capital + lowercase hex allowed.
@@ -45,6 +45,18 @@ export class SdInputColor {
   readonly hideInlineError = input(false, { transform: booleanAttribute });
   /** Display mode — forwarded to the inner `<sd-input>`. `'inline'` = borderless inline-edit; disabled `'inline'` → static. */
   readonly viewed = input<SdViewed, SdViewedInput>(false, { transform: sdViewedTransform });
+
+  // Tri-state `viewed` — dùng chung primitive như các control khác thay vì so sánh thô.
+  // why: `viewed` là tri-state (boolean | 'inline') và `'inline'` là TRUTHY. Guard cũ
+  // `if (this.viewed()) return` trong openPicker()/clear() vì thế khoá luôn chế độ inline —
+  // ở inline (vốn VẪN sửa được) thì bảng chọn màu của OS và clear() lập trình đều chết.
+  // sdViewedInline cho isViewed() = đúng `true` (và hạ disabled+'inline' xuống static),
+  // khớp với template vốn đã gate swatch bằng `viewed() === true`.
+  readonly #viewedState = sdViewedInline(this.viewed, undefined, this.disabled);
+  /** `true` when `viewed === true` (static view — no editor, no picker). */
+  readonly isViewed = this.#viewedState.isViewed;
+  /** `true` when `viewed === 'inline'` and the control is still editable. */
+  readonly isInline = this.#viewedState.isInline;
 
   // Two-way model — same alias as <sd-input>
   readonly valueModel = model<string | null | undefined>(undefined, { alias: 'model' });
@@ -100,7 +112,7 @@ export class SdInputColor {
   };
 
   openPicker = (): void => {
-    if (this.disabled() || this.readonly() || this.viewed()) return;
+    if (this.disabled() || this.readonly() || this.isViewed()) return;
     this.picker()?.nativeElement.click();
   };
 
@@ -114,7 +126,7 @@ export class SdInputColor {
   // consumer gọi tay (programmatic). No-op khi không sửa được hoặc đã rỗng.
   clear = (ev?: Event): void => {
     ev?.stopPropagation();
-    if (this.required() || this.disabled() || this.readonly() || this.viewed()) return;
+    if (this.required() || this.disabled() || this.readonly() || this.isViewed()) return;
     const v = this.valueModel();
     if (v == null || v === '') return;
     this.valueModel.set(null);

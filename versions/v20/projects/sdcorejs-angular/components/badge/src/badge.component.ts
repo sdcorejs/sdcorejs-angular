@@ -56,8 +56,21 @@ export class SdBadge {
   @Output() readonly click = new EventEmitter<Event>();
 
   onClick = (event: Event) => {
+    // why: chỉ nuốt event khi thực sự có consumer lắng nghe. Trước đây badge luôn stopPropagation
+    // nên khi đặt badge bên trong một control cha (vd <a> của tab-router) thì click không bao giờ
+    // tới cha — buộc cha phải nhân bản handler lên chính badge, tạo interactive lồng interactive.
+    if (!this.click.observed) return;
     event.stopPropagation();
     this.click.emit(event);
+  };
+
+  // why: badge clickable trước đây là <div (click)> + aria-hidden="true" — vừa không nhận focus
+  // bàn phím vừa biến mất khỏi accessibility tree, tệ hơn là không làm gì. Nay khi có consumer
+  // lắng nghe (click) thì badge nhận role="button" + tabindex="0" và Enter/Space chạy đúng như click.
+  onActivateKey = (event: Event) => {
+    // why: chặn hành vi mặc định của Space (cuộn trang) trước khi kích hoạt.
+    event.preventDefault();
+    this.onClick(event);
   };
 
   // ==========================================

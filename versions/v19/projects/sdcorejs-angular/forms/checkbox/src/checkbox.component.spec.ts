@@ -56,6 +56,66 @@ describe('SdCheckbox', () => {
     if (!checkbox) throw new Error('SdCheckbox not found in fixture');
   });
 
+  // why: RED trước fix — component thiếu `changeDetection: OnPush` dù 100% signal-driven, nên
+  // subtree bị dirty-check mỗi tick CD của toàn app. Các spec dưới dùng autoDetectChanges (tôn
+  // trọng OnPush) thay vì detectChanges() cưỡng bức — detectChanges() luôn check view nên sẽ
+  // che đúng loại bug này.
+  describe('OnPush change detection', () => {
+    it('declares ChangeDetectionStrategy.OnPush', () => {
+      const def = (SdCheckbox as unknown as { ɵcmp: { onPush: boolean } }).ɵcmp;
+      expect(def.onPush).toBe(true);
+    });
+
+    it('refreshes data-* attributes from control events without a forced detectChanges()', async () => {
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+      const el = fixture.nativeElement.querySelector('mat-checkbox') as HTMLElement;
+      expect(el.getAttribute('data-disabled')).toBe('false');
+      expect(el.getAttribute('data-value')).toBe('false');
+
+      checkbox.formControl.setValue(true);
+      await fixture.whenStable();
+      expect(el.getAttribute('data-value')).toBe('true');
+      expect(el.getAttribute('data-empty')).toBe('false');
+
+      checkbox.formControl.disable();
+      await fixture.whenStable();
+      expect(el.getAttribute('data-disabled')).toBe('true');
+
+      checkbox.formControl.enable();
+      checkbox.formControl.setValue(null);
+      await fixture.whenStable();
+      expect(el.getAttribute('data-disabled')).toBe('false');
+      expect(el.getAttribute('data-empty')).toBe('true');
+    });
+
+    it('shows and hides the inlineError message purely from control touched events', async () => {
+      host.inlineError = 'Sai rồi';
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+      expect(fixture.nativeElement.querySelector('mat-error')).toBeNull();
+
+      checkbox.formControl.markAsTouched();
+      await fixture.whenStable();
+      expect((fixture.nativeElement.querySelector('mat-error') as HTMLElement).textContent?.trim()).toBe('Sai rồi');
+
+      checkbox.formControl.markAsUntouched();
+      await fixture.whenStable();
+      expect(fixture.nativeElement.querySelector('mat-error')).toBeNull();
+    });
+
+    it('refreshes the viewed text branch from a model change', async () => {
+      host.viewed = true;
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+      expect(/Không|No|いいえ|否|아니오|core\.form\.checkbox\.unchecked/.test(fixture.nativeElement.textContent)).toBe(true);
+
+      checkbox.formControl.setValue(true);
+      await fixture.whenStable();
+      expect(/Có|Yes|はい|是|예|core\.form\.checkbox\.checked/.test(fixture.nativeElement.textContent)).toBe(true);
+    });
+  });
+
   describe('inlineError message (OnPush re-render on touch)', () => {
     // why: probe — template gate cho mat-error đọc formControl.errors/touched (raw). Kiểm tra
     // dùng autoDetectChanges (tôn trọng OnPush) xem message có hiện khi markAsTouched không.

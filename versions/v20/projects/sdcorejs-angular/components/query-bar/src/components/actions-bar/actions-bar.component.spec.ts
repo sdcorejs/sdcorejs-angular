@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { I18nService } from '@sdcorejs/angular/i18n';
 
 import { SdQueryActionsBar } from './actions-bar.component';
 
@@ -88,5 +89,43 @@ describe('SdQueryActionsBar', () => {
     fixture.componentRef.setInput('savedFiltersKey', 'demo');
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('.c-save-filter')).toBeNull();
+  });
+
+  describe('i18n labels', () => {
+    let i18n: I18nService;
+
+    beforeEach(() => {
+      i18n = TestBed.inject(I18nService);
+      i18n.setLanguage('vi', { reload: false });
+    });
+
+    afterEach(() => {
+      i18n.setLanguage('vi', { reload: false });
+    });
+
+    it('interpolates the filter count into the clear-all tooltip instead of concatenating it', () => {
+      fixture.componentRef.setInput('filtersCount', 3);
+      fixture.detectChanges();
+      expect(component.clearAllLabel()).toBe('Xóa tất cả (3)');
+
+      i18n.setLanguage('en', { reload: false });
+      expect(component.clearAllLabel()).toBe('Clear all (3)');
+    });
+
+    it('translates the logic-group aria-label and the search tooltip', () => {
+      expect(component.logicGroupLabel()).toBe('Toán tử logic');
+      expect(component.searchLabel()).toBe('Tìm kiếm');
+
+      i18n.setLanguage('en', { reload: false });
+      expect(component.logicGroupLabel()).toBe('Logic operator');
+      expect(component.searchLabel()).toBe('Search');
+    });
+
+    it('puts the translated aria-label on the rendered AND/OR group', () => {
+      fixture.componentRef.setInput('showLogicToggle', true);
+      fixture.componentRef.setInput('filtersCount', 2);
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.c-logic-toggle').getAttribute('aria-label')).toBe('Toán tử logic');
+    });
   });
 });

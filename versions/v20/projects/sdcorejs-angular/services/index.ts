@@ -6,7 +6,6 @@ export * from '@sdcorejs/angular/services/confirm';
 export * from '@sdcorejs/angular/services/api';
 export * from '@sdcorejs/angular/services/loading';
 export * from '@sdcorejs/angular/services/excel';
-export * from '@sdcorejs/angular/services/docx';
 export * from '@sdcorejs/angular/services/viewport';
 export * from '@sdcorejs/angular/services/unsaved-changes';
 export * from '@sdcorejs/angular/services/task';

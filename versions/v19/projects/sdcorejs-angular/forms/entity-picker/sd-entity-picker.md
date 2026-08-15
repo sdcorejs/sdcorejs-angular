@@ -54,7 +54,8 @@ readonly employees: SdEntityPickerDataProvider<Employee, number> = {
 | `disabledEntity`                                  | `(item) => boolean`                   | `undefined`          | Disables individual rows.                                                       |
 | `multiple`                                        | `boolean`                             | `false`              | Enables key-array selection and page select-all.                                |
 | `form` / `name`                                   | `FormGroup` / `string`                | — / UUID             | Registers through the shared SDCoreJS form connector.                           |
-| `required`, `disabled`, `readonly`                | `boolean`                             | `false`              | Standard form-control policies.                                                 |
+| `required`, `disabled`, `readonly`                | `boolean`                             | `false`              | Standard form-control policies. `required` renders a validation message (below). |
+| `inlineError`                                     | `string \| undefined`                 | `undefined`          | Component-local error text; forces the control invalid and renders the message. |
 | `viewed`                                          | `boolean \| 'inline'`                 | `false`              | Static display policy shared by SDCoreJS controls.                              |
 | `clearable`                                       | `boolean`                             | `true`               | Shows the clear action when a value exists.                                     |
 | `addable`                                         | `boolean`                             | `false`              | Shows an Add action and emits `sdAdd`; business creation stays in the host app. |
@@ -94,13 +95,28 @@ The selected/detail context exposes `$implicit`, `entities`, and `keys`; the row
 | -------------------------- | --------------------------- | ---------------------------------- |
 | `modelChange` / `sdChange` | `SdEntityPickerModel<TKey>` | Committed model changes.           |
 | `sdAdd`                    | `void`                      | Host-owned create workflow.        |
-| `sdLoadError`              | `unknown`                   | Current page or hydration failure. |
+| `loadError`              | `unknown`                   | Current page or hydration failure. |
 
 Public methods include `open()`, `applySelection()`, `cancel()`, `clear()`, `retry()`, `keyOf()`, and `displayEntity()`.
 
+Public signals include `connectorState`, `errorMessage` (raw message for the current errors) and `visibleErrorMessage` (the same message after the interaction gate — this is what the template renders).
+
+## Validation message
+
+`[required]` and `[inlineError]` both surface a message under the trigger:
+
+```html
+<div data-entity-picker-error class="sd-entity-picker__error" role="alert">Vui lòng nhập thông tin</div>
+```
+
+- `required` → shared select message (i18n key `core.form.select.required`; the catalog has no picker-specific key yet).
+- `inlineError` → the exact string you passed.
+- The message is **interaction-gated**: it stays hidden until the control is `touched` or `dirty`, so a freshly rendered form is not painted red. `applySelection()` and `clear()` mark the control touched + dirty; a parent `markAllAsTouched()` on submit also reveals it.
+- While the message is visible, the trigger carries `aria-invalid="true"` and `aria-describedby` pointing at the message element.
+
 ## Error and accessibility behavior
 
-Provider errors render the compact error `SdDataState` with Retry. Aborted/stale failures never replace the current result. The trigger uses `aria-haspopup="dialog"`, the modal owns focus containment, translated actions are available in en/vi/ja/ko/zh, and focus returns to the trigger after close.
+Provider errors render the compact error `SdDataState` with Retry — that is a **data-loading** failure and is separate from the validation message described above. Aborted/stale failures never replace the current result. The trigger uses `aria-haspopup="dialog"`, the modal owns focus containment, translated actions are available in en/vi/ja/ko/zh, and focus returns to the trigger after close.
 
 ## Anti-patterns
 

@@ -43,7 +43,6 @@ export type ShowcaseExampleSourceKey =
   | "components/data-state/example-forbidden"
   | "components/data-state/example-loading"
   | "components/data-state/example-success"
-  | "components/document-builder/example-soan-mau-hop-dong"
   | "components/editor/example-chi-doc"
   | "components/editor/example-soan-noi-dung"
   | "components/form-generic/example-builder-render"
@@ -144,6 +143,7 @@ export type ShowcaseExampleSourceKey =
   | "components/table/example-footer-tong-hop"
   | "components/table/example-full-demo-local"
   | "components/table/example-giu-selection-xuyen-trang"
+  | "components/table/example-hanh-dong-o-header-cot-command"
   | "components/table/example-keo-tha-doi-thu-tu"
   | "components/table/example-khong-co-filler"
   | "components/table/example-lenh-dong-co-menu-con"
@@ -167,6 +167,18 @@ export type ShowcaseExampleSourceKey =
   | "components/view/example-gia-tri-co-sieu-lien-ket"
   | "components/view/example-nhan-va-gia-tri-co-ban"
   | "components/view/example-template-tuy-chinh-gia-tri"
+  | "directives/desktop/example-cap-doi-voi-sdmobile"
+  | "directives/desktop/example-chi-render-tren-desktop"
+  | "directives/hover-copy/example-nut-sao-chep-hien-khi-hover"
+  | "directives/hover-copy/example-tat-nut-sao-chep"
+  | "directives/href/example-link-ngoai-mo-tab-moi-an-toan"
+  | "directives/href/example-link-noi-bo-di-qua-router"
+  | "directives/mobile/example-cap-doi-voi-sddesktop"
+  | "directives/mobile/example-chi-render-tren-mobile"
+  | "directives/scroll/example-thanh-cuon-ngang-chi-hien-khi-hover"
+  | "directives/tooltip/example-noi-dung-dang-template"
+  | "directives/tooltip/example-tooltip-van-ban"
+  | "directives/tooltip/example-vi-tri-mau-va-do-tre"
   | "forms/autocomplete/example-cac-trang-thai-bao-loi"
   | "forms/autocomplete/example-chinh-sua-noi-tuyen"
   | "forms/autocomplete/example-co-ban"
@@ -189,15 +201,18 @@ export type ShowcaseExampleSourceKey =
   | "forms/chip/example-lien-ket-hai-chieu"
   | "forms/chip/example-vo-hieu-hoa"
   | "forms/date-range/example-chinh-sua-noi-tuyen"
+  | "forms/date-range/example-chuan-hoa-gia-tri-dau-ra"
   | "forms/date-range/example-co-ban"
   | "forms/date-range/example-trang-thai"
   | "forms/date-range/example-validator"
   | "forms/date/example-chinh-sua-noi-tuyen"
+  | "forms/date/example-chuan-hoa-gia-tri-dau-ra"
   | "forms/date/example-co-ban"
   | "forms/date/example-kich-thuoc"
   | "forms/date/example-trang-thai"
   | "forms/date/example-validator"
   | "forms/datetime/example-chinh-sua-noi-tuyen"
+  | "forms/datetime/example-chuan-hoa-gia-tri-dau-ra"
   | "forms/datetime/example-co-ban"
   | "forms/datetime/example-trang-thai"
   | "forms/datetime/example-validator"
@@ -235,6 +250,7 @@ export type ShowcaseExampleSourceKey =
   | "forms/radio/example-validator"
   | "forms/select/example-api-footer-action"
   | "forms/select/example-chinh-sua-noi-tuyen"
+  | "forms/select/example-chon-nhieu-voi-dong-tat-ca"
   | "forms/select/example-co-ban"
   | "forms/select/example-footer-action-giong-dropdown-item"
   | "forms/select/example-footer-action-khi-khong-co-ket-qua"
@@ -267,6 +283,22 @@ export type ShowcaseExampleSourceKey =
   | "modules/layout/example-sidebar-v1-classic"
   | "modules/layout/example-sidebar-v2-rail"
   | "modules/layout/example-sidebar-v3-collapsible"
+  | "pipes-utilities/empty/example-gia-tri-co-noi-dung-giu-nguyen"
+  | "pipes-utilities/empty/example-gia-tri-rong-hien-thi-dau-gach"
+  | "pipes-utilities/format-date/example-dinh-dang-mac-dinh"
+  | "pipes-utilities/format-date/example-dinh-dang-tuy-chinh"
+  | "pipes-utilities/format-date/example-gia-tri-khong-hop-le"
+  | "pipes-utilities/format-datetime/example-chi-lay-phan-gio"
+  | "pipes-utilities/format-datetime/example-dinh-dang-mac-dinh"
+  | "pipes-utilities/format-number/example-chuan-quoc-te"
+  | "pipes-utilities/format-number/example-chuan-viet-nam"
+  | "pipes-utilities/format-number/example-so-chu-so-thap-phan"
+  | "pipes-utilities/safe-html/example-sanitize-mac-dinh"
+  | "pipes-utilities/safe-html/example-tin-cay-co-chu-dich"
+  | "pipes-utilities/time-different/example-qua-nguong-thi-ve-ngay-tuyet-doi"
+  | "pipes-utilities/time-different/example-thoi-gian-tuong-doi"
+  | "pipes-utilities/view/example-chuan-hoa-gia-tri-rong"
+  | "pipes-utilities/view/example-gop-mang-thanh-chuoi"
   | "services/confirm/example-chon-muc-do"
   | "services/confirm/example-chon-ngay"
   | "services/confirm/example-chon-ngay-gio"
@@ -276,9 +308,6 @@ export type ShowcaseExampleSourceKey =
   | "services/confirm/example-nhat-ky-gan-nhat"
   | "services/confirm/example-xac-nhan-co-ban"
   | "services/confirm/example-xac-nhan-xoa"
-  | "services/docx/example-chuyen-doi-sang-html"
-  | "services/docx/example-ket-qua"
-  | "services/docx/example-mo-file-docx"
   | "services/excel/example-tai-template-trong"
   | "services/excel/example-xuat-file-csv"
   | "services/excel/example-xuat-file-xlsx"
@@ -604,13 +633,6 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-success",
     title: "Success",
     description: "Không có presentation wrapper dư thừa; content được project trực tiếp.",
-  },
-  {
-    sourceKey: "components/document-builder/example-soan-mau-hop-dong",
-    pageKey: "components/document-builder",
-    sectionId: "example-soan-mau-hop-dong",
-    title: "Soạn mẫu hợp đồng",
-    description: "Existing “Soạn mẫu hợp đồng” scenario preserved from the showcase.",
   },
   {
     sourceKey: "components/editor/example-soan-noi-dung",
@@ -1362,6 +1384,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Existing “Kéo thả đổi thứ tự” scenario preserved from the showcase.",
   },
   {
+    sourceKey: "components/table/example-hanh-dong-o-header-cot-command",
+    pageKey: "components/table",
+    sectionId: "example-hanh-dong-o-header-cot-command",
+    title: "Hành động ở header cột command",
+    description: "Ô header của cột command vốn để trống. Chiếu nội dung vào đó để đặt một hành động cấp bảng (ở đây là thêm dòng) ngay trên cụm sửa/xoá của từng dòng, khỏi cần thêm một dải riêng dưới bảng.",
+  },
+  {
     sourceKey: "components/table/example-cell-template-tuy-chinh",
     pageKey: "components/table",
     sectionId: "example-cell-template-tuy-chinh",
@@ -1472,6 +1501,90 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-template-tuy-chinh-gia-tri",
     title: "Template tùy chỉnh giá trị",
     description: "Existing “Template tùy chỉnh giá trị” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "directives/desktop/example-chi-render-tren-desktop",
+    pageKey: "directives/desktop",
+    sectionId: "example-chi-render-tren-desktop",
+    title: "Chỉ render trên desktop",
+    description: "Khối bên dưới chỉ tồn tại trong DOM khi BrowserUtilities.isMobile() trả về false — không phải ẩn bằng CSS.",
+  },
+  {
+    sourceKey: "directives/desktop/example-cap-doi-voi-sdmobile",
+    pageKey: "directives/desktop",
+    sectionId: "example-cap-doi-voi-sdmobile",
+    title: "Cặp đôi với sdMobile",
+    description: "Hai directive loại trừ nhau, nên đặt cạnh nhau là cách rẽ nhánh markup theo thiết bị mà không cần *ngIf thủ công.",
+  },
+  {
+    sourceKey: "directives/hover-copy/example-nut-sao-chep-hien-khi-hover",
+    pageKey: "directives/hover-copy",
+    sectionId: "example-nut-sao-chep-hien-khi-hover",
+    title: "Nút sao chép hiện khi hover",
+    description: "Rê chuột vào ô bên dưới rồi bấm nút — giá trị vào clipboard và tooltip đổi sang 'Đã sao chép' trong 1 giây.",
+  },
+  {
+    sourceKey: "directives/hover-copy/example-tat-nut-sao-chep",
+    pageKey: "directives/hover-copy",
+    sectionId: "example-tat-nut-sao-chep",
+    title: "Tắt nút sao chép",
+    description: "Khi disabled, nút bị GỠ khỏi DOM chứ không chỉ ẩn bằng opacity — không còn cách nào bấm trúng nó.",
+  },
+  {
+    sourceKey: "directives/href/example-link-noi-bo-di-qua-router",
+    pageKey: "directives/href",
+    sectionId: "example-link-noi-bo-di-qua-router",
+    title: "Link nội bộ đi qua Router",
+    description: "Chuỗi không phải http/https được tách path + query rồi đẩy sang Router.navigate — bấm không nạp lại trang.",
+  },
+  {
+    sourceKey: "directives/href/example-link-ngoai-mo-tab-moi-an-toan",
+    pageKey: "directives/href",
+    sectionId: "example-link-ngoai-mo-tab-moi-an-toan",
+    title: "Link ngoài mở tab mới an toàn",
+    description: "Chỉ url parse ra đúng scheme http:/https: mới được coi là link ngoài, và luôn mở kèm noopener,noreferrer để chặn reverse tabnabbing.",
+  },
+  {
+    sourceKey: "directives/mobile/example-chi-render-tren-mobile",
+    pageKey: "directives/mobile",
+    sectionId: "example-chi-render-tren-mobile",
+    title: "Chỉ render trên mobile",
+    description: "Mở DevTools ở chế độ device rồi tải lại trang để thấy khối này xuất hiện — directive đọc user agent lúc khởi tạo, không phản ứng với resize.",
+  },
+  {
+    sourceKey: "directives/mobile/example-cap-doi-voi-sddesktop",
+    pageKey: "directives/mobile",
+    sectionId: "example-cap-doi-voi-sddesktop",
+    title: "Cặp đôi với sdDesktop",
+    description: "Đúng một trong hai nhánh tồn tại trong DOM, nên không có chi phí render cho nhánh còn lại.",
+  },
+  {
+    sourceKey: "directives/scroll/example-thanh-cuon-ngang-chi-hien-khi-hover",
+    pageKey: "directives/scroll",
+    sectionId: "example-thanh-cuon-ngang-chi-hien-khi-hover",
+    title: "Thanh cuộn ngang chỉ hiện khi hover",
+    description: "Rê chuột vào khung để thấy thanh cuộn ngang xuất hiện; đưa chuột ra ngoài, overflow-x quay lại hidden. Directive cũng phát scrollTop() để cuộn khung về đầu.",
+  },
+  {
+    sourceKey: "directives/tooltip/example-tooltip-van-ban",
+    pageKey: "directives/tooltip",
+    sectionId: "example-tooltip-van-ban",
+    title: "Tooltip văn bản",
+    description: "Rê chuột vào nút để tooltip hiện bên dưới — vị trí mặc định là bottom.",
+  },
+  {
+    sourceKey: "directives/tooltip/example-vi-tri-mau-va-do-tre",
+    pageKey: "directives/tooltip",
+    sectionId: "example-vi-tri-mau-va-do-tre",
+    title: "Vị trí, màu và độ trễ",
+    description: "Delay tính bằng mili-giây trước khi overlay mở; màu áp thẳng vào nền hộp tooltip.",
+  },
+  {
+    sourceKey: "directives/tooltip/example-noi-dung-dang-template",
+    pageKey: "directives/tooltip",
+    sectionId: "example-noi-dung-dang-template",
+    title: "Nội dung dạng template",
+    description: "Truyền TemplateRef để tooltip mang markup thật (danh sách, nhãn, liên kết) thay vì một dòng chữ.",
   },
   {
     sourceKey: "forms/autocomplete/example-co-ban",
@@ -1656,6 +1769,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Bấm vào ngày để mở lịch ngay; text giữ nguyên tới khi chọn. Hover hiện × để xoá.",
   },
   {
+    sourceKey: "forms/date/example-chuan-hoa-gia-tri-dau-ra",
+    pageKey: "forms/date",
+    sectionId: "example-chuan-hoa-gia-tri-dau-ra",
+    title: "Chuẩn hoá giá trị đầu ra",
+    description: "transform chỉ đổi giá trị đi ra (model, sdChange, field trong FormGroup) — ô nhập vẫn là dd/MM/yyyy. Ngày được serialize ở nửa đêm GIỜ ĐỊA PHƯƠNG, nên phần ngày trong chuỗi UTC có thể lệch một ngày so với ô hiển thị. Đó là cùng một thời điểm.",
+  },
+  {
     sourceKey: "forms/date-range/example-co-ban",
     pageKey: "forms/date-range",
     sectionId: "example-co-ban",
@@ -1684,6 +1804,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Bấm vào khoảng để mở lịch chọn; text giữ nguyên tới khi chọn. Hover hiện × để xoá.",
   },
   {
+    sourceKey: "forms/date-range/example-chuan-hoa-gia-tri-dau-ra",
+    pageKey: "forms/date-range",
+    sectionId: "example-chuan-hoa-gia-tri-dau-ra",
+    title: "Chuẩn hoá giá trị đầu ra",
+    description: "Mỗi đầu range được serialize RIÊNG — cả object không bao giờ bị gộp thành một chuỗi. Ô nhập vẫn là dd/MM/yyyy → dd/MM/yyyy; range thiếu một đầu vẫn giữ null ở đầu đó.",
+  },
+  {
     sourceKey: "forms/datetime/example-co-ban",
     pageKey: "forms/datetime",
     sectionId: "example-co-ban",
@@ -1710,6 +1837,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-chinh-sua-noi-tuyen",
     title: "Chỉnh sửa nội tuyến",
     description: "Bấm vào để mở overlay datetime; text giữ nguyên tới khi chọn. Hover hiện × để xoá.",
+  },
+  {
+    sourceKey: "forms/datetime/example-chuan-hoa-gia-tri-dau-ra",
+    pageKey: "forms/datetime",
+    sectionId: "example-chuan-hoa-gia-tri-dau-ra",
+    title: "Chuẩn hoá giá trị đầu ra",
+    description: "transform chỉ đổi giá trị đi ra — ô nhập vẫn theo showSeconds. Độ chính xác vẫn do showSeconds quy định: tắt thì giây về 0, bật thì giữ giây; mili-giây luôn bằng 0.",
   },
   {
     sourceKey: "forms/entity-picker/example-server-single-select",
@@ -1971,6 +2105,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "UI gọn cho bảng / toolbar.",
   },
   {
+    sourceKey: "forms/select/example-chon-nhieu-voi-dong-tat-ca",
+    pageKey: "forms/select",
+    sectionId: "example-chon-nhieu-voi-dong-tat-ca",
+    title: "Chọn nhiều với dòng Tất cả",
+    description: "Row 'Tất cả' đầu panel — chỉ hiện khi multiple + items là mảng tĩnh. Tick chọn toàn bộ items enabled khớp search hiện tại (item disabled 'Pháp chế' không bị đụng); đang search thì tick CHỈ thêm items khớp filter, selection cũ giữ nguyên. Checkbox có 3 trạng thái checked / indeterminate / unchecked.",
+  },
+  {
     sourceKey: "forms/select/example-footer-action-khi-khong-co-ket-qua",
     pageKey: "forms/select",
     sectionId: "example-footer-action-khi-khong-co-ket-qua",
@@ -2174,6 +2315,118 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Collapsible desktop navigation and a unified mobile drawer with pinned and recent menus.",
   },
   {
+    sourceKey: "pipes-utilities/empty/example-gia-tri-rong-hien-thi-dau-gach",
+    pageKey: "pipes-utilities/empty",
+    sectionId: "example-gia-tri-rong-hien-thi-dau-gach",
+    title: "Giá trị rỗng hiển thị dấu gạch",
+    description: "Chỉ đúng ba trường hợp null, undefined và '' được thay thế. Số 0 và chuỗi '0' KHÔNG bị coi là rỗng.",
+  },
+  {
+    sourceKey: "pipes-utilities/empty/example-gia-tri-co-noi-dung-giu-nguyen",
+    pageKey: "pipes-utilities/empty",
+    sectionId: "example-gia-tri-co-noi-dung-giu-nguyen",
+    title: "Giá trị có nội dung giữ nguyên",
+    description: "Pipe trả về nguyên giá trị gốc, không ép kiểu và không format — cần chuẩn hoá mảng thì dùng sdView.",
+  },
+  {
+    sourceKey: "pipes-utilities/format-date/example-dinh-dang-mac-dinh",
+    pageKey: "pipes-utilities/format-date",
+    sectionId: "example-dinh-dang-mac-dinh",
+    title: "Định dạng mặc định",
+    description: "Không truyền tham số thì pipe dùng dd/MM/yyyy — dạng ngày chuẩn của các form trong pack.",
+  },
+  {
+    sourceKey: "pipes-utilities/format-date/example-dinh-dang-tuy-chinh",
+    pageKey: "pipes-utilities/format-date",
+    sectionId: "example-dinh-dang-tuy-chinh",
+    title: "Định dạng tuỳ chỉnh",
+    description: "Tham số đầu tiên là chuỗi token truyền thẳng cho DateUtilities.toFormat.",
+  },
+  {
+    sourceKey: "pipes-utilities/format-date/example-gia-tri-khong-hop-le",
+    pageKey: "pipes-utilities/format-date",
+    sectionId: "example-gia-tri-khong-hop-le",
+    title: "Giá trị không hợp lệ",
+    description: "Giá trị không parse được trả về null, nên interpolation ra chuỗi rỗng thay vì 'Invalid Date'.",
+  },
+  {
+    sourceKey: "pipes-utilities/format-datetime/example-dinh-dang-mac-dinh",
+    pageKey: "pipes-utilities/format-datetime",
+    sectionId: "example-dinh-dang-mac-dinh",
+    title: "Định dạng mặc định",
+    description: "Dùng cho cột nhật ký, lịch sử thao tác — nơi cần đủ giây để phân biệt hai bản ghi liền nhau.",
+  },
+  {
+    sourceKey: "pipes-utilities/format-datetime/example-chi-lay-phan-gio",
+    pageKey: "pipes-utilities/format-datetime",
+    sectionId: "example-chi-lay-phan-gio",
+    title: "Chỉ lấy phần giờ",
+    description: "Truyền token ngắn hơn khi cột đã có ngày ở chỗ khác; pipe không ép phải hiện đủ ngày + giờ.",
+  },
+  {
+    sourceKey: "pipes-utilities/format-number/example-chuan-quoc-te",
+    pageKey: "pipes-utilities/format-number",
+    sectionId: "example-chuan-quoc-te",
+    title: "Chuẩn quốc tế",
+    description: "Dấu phẩy ngăn hàng nghìn, dấu chấm ngăn thập phân. Đây cũng là mặc định khi app chưa cấu hình format.number.",
+  },
+  {
+    sourceKey: "pipes-utilities/format-number/example-chuan-viet-nam",
+    pageKey: "pipes-utilities/format-number",
+    sectionId: "example-chuan-viet-nam",
+    title: "Chuẩn Việt Nam",
+    description: "Đảo vai trò hai dấu. Đặt một lần ở SD_CORE_CONFIGURATION là mọi pipe và form field trong app đi theo, không cần truyền tham số.",
+  },
+  {
+    sourceKey: "pipes-utilities/format-number/example-so-chu-so-thap-phan",
+    pageKey: "pipes-utilities/format-number",
+    sectionId: "example-so-chu-so-thap-phan",
+    title: "Số chữ số thập phân",
+    description: "Tham số đầu là số chữ số sau dấu thập phân (mặc định 2). Giá trị không phải số trả về chuỗi rỗng.",
+  },
+  {
+    sourceKey: "pipes-utilities/safe-html/example-sanitize-mac-dinh",
+    pageKey: "pipes-utilities/safe-html",
+    sectionId: "example-sanitize-mac-dinh",
+    title: "Sanitize mặc định",
+    description: "Thẻ script, thuộc tính on* và url javascript: bị loại bỏ; phần markup lành tính còn lại vẫn render. Đây là nhánh dùng cho mọi dữ liệu đến từ server.",
+  },
+  {
+    sourceKey: "pipes-utilities/safe-html/example-tin-cay-co-chu-dich",
+    pageKey: "pipes-utilities/safe-html",
+    sectionId: "example-tin-cay-co-chu-dich",
+    title: "Tin cậy có chủ đích",
+    description: "Tham số true gọi bypassSecurityTrustHtml. Chỉ dùng cho markup do chính app viết ra, ví dụ một sprite SVG nội bộ — không bao giờ cho dữ liệu người dùng nhập.",
+  },
+  {
+    sourceKey: "pipes-utilities/time-different/example-thoi-gian-tuong-doi",
+    pageKey: "pipes-utilities/time-different",
+    sectionId: "example-thoi-gian-tuong-doi",
+    title: "Thời gian tương đối",
+    description: "Tham số thứ hai là ngưỡng: dưới ngưỡng thì hiện khoảng cách tương đối và tick mỗi giây, chạm ngưỡng thì rơi về format.",
+  },
+  {
+    sourceKey: "pipes-utilities/time-different/example-qua-nguong-thi-ve-ngay-tuyet-doi",
+    pageKey: "pipes-utilities/time-different",
+    sectionId: "example-qua-nguong-thi-ve-ngay-tuyet-doi",
+    title: "Quá ngưỡng thì về ngày tuyệt đối",
+    description: "Giá trị đã cũ hơn ngưỡng KHÔNG tạo timer nào — pipe trả về of(...) ngay, nên một danh sách dài không sinh hàng loạt interval thừa.",
+  },
+  {
+    sourceKey: "pipes-utilities/view/example-chuan-hoa-gia-tri-rong",
+    pageKey: "pipes-utilities/view",
+    sectionId: "example-chuan-hoa-gia-tri-rong",
+    title: "Chuẩn hoá giá trị rỗng",
+    description: "So với sdEmpty, sdView bắt thêm NaN và mảng rỗng — đó là hai giá trị hay lọt lưới nhất khi render dữ liệu API.",
+  },
+  {
+    sourceKey: "pipes-utilities/view/example-gop-mang-thanh-chuoi",
+    pageKey: "pipes-utilities/view",
+    sectionId: "example-gop-mang-thanh-chuoi",
+    title: "Gộp mảng thành chuỗi",
+    description: "Mỗi phần tử được chuẩn hoá đệ quy trước khi nối, nên phần tử rỗng bên trong mảng cũng thành dấu gạch thay vì biến mất.",
+  },
+  {
     sourceKey: "services/confirm/example-xac-nhan-co-ban",
     pageKey: "services/confirm",
     sectionId: "example-xac-nhan-co-ban",
@@ -2235,27 +2488,6 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-nhat-ky-gan-nhat",
     title: "Nhật ký gần nhất",
     description: "Existing “Nhật ký gần nhất” scenario preserved from the showcase.",
-  },
-  {
-    sourceKey: "services/docx/example-mo-file-docx",
-    pageKey: "services/docx",
-    sectionId: "example-mo-file-docx",
-    title: "Mở file .docx",
-    description: "open() – mở file picker, đọc file, gọi pandoc.wasm, trả về { html, messages }. WASM được tải lần đầu (~vài MB) nên có thể chậm.",
-  },
-  {
-    sourceKey: "services/docx/example-chuyen-doi-sang-html",
-    pageKey: "services/docx",
-    sectionId: "example-chuyen-doi-sang-html",
-    title: "Chuyển đổi sang HTML",
-    description: "convertToHtmlString() – không trả mảng cảnh báo.",
-  },
-  {
-    sourceKey: "services/docx/example-ket-qua",
-    pageKey: "services/docx",
-    sectionId: "example-ket-qua",
-    title: "Kết quả",
-    description: "Existing “Kết quả” scenario preserved from the showcase.",
   },
   {
     sourceKey: "services/excel/example-xuat-file-xlsx",

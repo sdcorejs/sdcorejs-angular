@@ -1,140 +1,90 @@
 # Utilities — Extensions
 
 **Import path**: `@sdcorejs/angular/utilities/extensions`
-**Canonical source**: every namespace below is re-exported from `@sdcorejs/utils/fns`. Prefer importing from `@sdcorejs/utils/fns` directly when there is no Angular dependency.
 
-Pure-function utility namespaces. None of them mutate global prototypes — earlier monkey-patching has been deprecated in favour of explicit namespaced calls. Import the named export and call its members.
+Local pure-function helpers owned by this library. None of them mutate global prototypes — import the named export and call its members.
 
-Each file re-exports a single object (`ArrayUtilities`, `StringUtilities`, `NumberUtilities`, `DateUtilities`, `ColorUtilities`, `ValidationUtilities`, `Utilities`, `BrowserUtilities`) whose members are the functions documented below.
-
----
-
-## `array.extension.ts` — `ArrayUtilities`
-
-Generic helpers for filtering and shaping arrays of records, with diacritic-insensitive search.
-
-| Name | Signature | Purpose |
-| --- | --- | --- |
-| `search` | `<T>(items: T[], searchText, fields?, children?) => T[]` | Filter items whose given field(s) include the search text using `StringUtilities.aliasIncludes` (Vietnamese-diacritic-insensitive). Recurses into `children` field if provided. |
-| `union` | `<T>(key: string, ...args: T[][]) => T[]` | Merge multiple arrays and de-duplicate by `item[key]` (first occurrence wins). |
-| `toObject` | `<T>(key: string, items: T[]) => Record<string, T>` | Convert array of records into a dictionary keyed by `item[key].toString()`. |
-| `distinct` | `<T>(items: T[]) => T[]` | Return unique values via `new Set(...)`. Works on primitives. |
-| `paging` | `<T>(items: T[], pageSize: number, page = 0) => T[]` | Slice page `page` of size `pageSize` (zero-indexed). |
-
-```ts
-ArrayUtilities.search(users, 'Đỗ', ['fullName', 'email']); // matches "Do" too
-```
+> **No more `@sdcorejs/utils` re-exports.** This entry point used to re-export `ArrayUtilities`, `StringUtilities`, `NumberUtilities`, `DateUtilities`, `ColorUtilities`, `ValidationUtilities`, `Utilities` and `BrowserUtilities` from `@sdcorejs/utils/fns`. Those re-exports are removed: anything owned by `@sdcorejs/utils` is imported from `@sdcorejs/utils` directly (`import { ArrayUtilities } from '@sdcorejs/utils/fns'`) and documented there. `@sdcorejs/utils` is a runtime dependency of this package, so it is already in your tree — add it to your own `package.json` when you import from it directly. What remains below is code that lives in this repository.
 
 ---
 
-## `color.extension.ts` — `ColorUtilities`
+## `object.extension.ts` — `ObjectUtilities`
 
-Color conversion helpers.
+Deep-clone and deep-merge for plain objects. Prototype-safe: only `Object.prototype`/`null`-prototype objects recurse; class instances, `Date`, `Map`, … are copied by reference.
 
 | Name | Signature | Purpose |
 | --- | --- | --- |
-| `hslToHex` | `(h: number, s: number, l: number) => string` | Convert HSL (`0–360, 0–100, 0–100`) to `#rrggbb` hex. |
-| `rgbToHex` | `(r: number, g: number, b: number) => string` | Convert RGB (`0–255` each, clamped) to `#rrggbb` hex. |
-
-> Standalone exports `hslToHex` / `rgbToHex` are kept as deprecated aliases pointing to `ColorUtilities`. Migrate to `ColorUtilities.hslToHex` / `ColorUtilities.rgbToHex`.
+| `isPlainObject` | `(value: unknown) => value is Record<PropertyKey, unknown>` | `true` only for object literals / `Object.create(null)`. |
+| `clone` | `<T>(value: T) => T` | Recursive copy of arrays + plain objects; everything else by reference. |
+| `merge` | `<T, U>(target: T, source: U) => T & U` | Immutable deep merge of two plain objects; `undefined` source values are skipped. |
+| `deepMerge` | `<T>(...sources: T[]) => T` | Left-to-right `merge` over any number of objects. |
 
 ---
 
-## `date.extension.ts` — `DateUtilities`
+## `url-safety.ts` — URL parsing and external-link guards
 
-Date arithmetic and formatting; tolerant of `string | Date | any`. All functions return `null` (not throw) on invalid input.
+Security helpers behind the sidebar/link handling and `SdKeycloakInterceptor` route matching. See the source for full doc comments.
 
 | Name | Signature | Purpose |
 | --- | --- | --- |
-| `isDate` | `(value: any) => boolean` | Validate a value as a real date (incl. common `MM/dd/yyyy`, `yyyy-MM-dd` string variants). |
-| `toFormat` | `(value: any, format: string) => string` | Format a date using tokens `yyyy MM dd HH mm ss` (uses `Intl.DateTimeFormat` for locale-correct parts). |
-| `parseFrom` | `(value: any, format: string) => Date \| null` | Inverse of `toFormat` — parse a string given a format pattern. |
-| `equal` | `(d1, d2) => boolean` | Strict-equal by `.getTime()`; both invalid → `true`, mixed → `false`. |
-| `dayDiff` / `monthDiff` / `yearDiff` | `(d1, d2) => number \| null` | Difference in days / calendar months / calendar years (signed; `d2 - d1`). |
-| `age` | `(d1, d2) => number \| null` | Year-fractional age (months/12) rounded via `NumberUtilities.round`. |
-| `addMiliseconds` / `addHours` / `addDays` / `addMonths` | `(value, n) => Date \| null` | Return a new `Date` shifted by `n` units. |
-| `begin` | `(value) => Date \| null` | Start-of-day (`00:00:00.000`). |
-| `end` | `(value) => Date \| null` | End-of-day (`23:59:59.999`) — implemented as `begin(value+1day) - 1ms`. |
-| `timeDifference` | `(previous, current = new Date()) => string` | Human-friendly relative phrase — `"5 minutes ago"`, `"2 days ago"`, `"3 years ago"`. English output. |
+| `sdParseUrl` | `(value, base?) => URL \| undefined` | Safe `new URL(...)` — returns `undefined` instead of throwing. |
+| `sdResolveBaseOrigin` | `(explicit?) => string` | Document origin, or `SD_NON_BROWSER_ORIGIN` under SSR. |
+| `sdIsExternalHttpUrl` | `(value) => boolean` | `true` only for absolute `http:`/`https:` URLs **without embedded credentials**. `javascript:` and `user:pass@` forms fail. |
+| `sdOpenExternal` | `(value, target?) => Window \| null` | `window.open` gated by `sdIsExternalHttpUrl`, always `noopener,noreferrer`. |
+| `sdIsAllowedOrigin` | `(url, allowedOrigins, baseOrigin?) => boolean` | Origin allow-list check on parsed origins (no substring matching). |
+| `sdMatchesSecureRoute` | `(url, routes, baseOrigin?) => boolean` | Segment-aware path-prefix match for interceptor `secureRoutes`. |
+| `sdIsPathPrefix` | `(prefix, pathname) => boolean` | `/api` matches `/api/v1` but not `/api-evil`. |
 
 ---
 
-## `number.extension.ts` — `NumberUtilities`
+## `utility.extension.ts` — `SdUtilities`
 
-Number formatting and validation. Inputs are tolerant (`any`); strip commas before parsing.
-
-| Name | Signature | Purpose |
-| --- | --- | --- |
-| `toVNCurrency` | `(value: any) => string \| null` | Format with `vi-VN` locale (`1.234.567,89`). Same as `toVN` — kept as alias. |
-| `toVN` | `(value: any) => string \| null` | Vietnamese locale number format. |
-| `toISO` | `(value: any) => string \| null` | `en-US` locale format (`1,234,567.89`). |
-| `isNumber` | `(value: any) => boolean` | Coercible to a finite number, not empty. |
-| `isPositiveInteger` | `(value: any) => boolean` | Matches `^[0-9]*$` AND `> 0`. |
-| `isPositiveNumber` | `(value: any) => boolean` | Matches `^[0-9]+(\.[0-9]+)?$` AND `> 0`. |
-| `round` | `(value: any, digits = 2) => number \| null` | Round to `digits` decimals via `Math.round`. |
-
----
-
-## `string.extension.ts` — `StringUtilities`
-
-Vietnamese-aware string helpers, regex constants, and lightweight templating.
-
-Exposed regex constants: `REGEX_EMAIL`, `REGEX_PHONE`, `REGEX_VN_PHONE`, `REGEX_VN_ID`, `REGEX_PASSPORT`, `REGEX_VN_ID_OR_PASSPORT`, `REGEX_TIME` (also surfaced via `VALIDATION_PATTERNS`).
+General-purpose facade of this library (upload/download, clipboard, paging, hash, uuid, …). All 14 members are **local implementations** in this file with Angular-specific behaviour (interceptors, i18n, DOM) — this is not an alias of `@sdcorejs/utils`.
 
 | Name | Signature | Purpose |
 | --- | --- | --- |
-| `isNullOrEmpty` | `(value: any) => boolean` | `undefined`, `null`, or `''`. |
-| `isNullOrWhiteSpace` | `(value: any) => boolean` | Above OR string of only spaces. |
-| `changeAliasLowerCase` | `(alias: any) => string` | Strip Vietnamese diacritics and special chars; lowercase, trim. |
-| `aliasIncludes` | `(alias: any, searchText: any) => boolean` | `changeAliasLowerCase(alias).includes(changeAliasLowerCase(searchText))`. Used by `ArrayUtilities.search`. |
-| `format` | `(template: string, ...args: any[]) => string` | C#-style `{0} {1}` placeholder replacement. |
-| `templateToDisplay` | `(template: string, entity: object) => string` | Replace `${path.to.field}` placeholders by reading nested values from `entity`. |
-| `parseExpression` | `(template: string, entity: object) => unknown` | Like `templateToDisplay` but if the entire template is one `${path}` returns the raw value (preserves type); supports literals `true`/`false`/`null`/`undefined`/numbers. Safe — does NOT `eval`. |
-| `encrypt` / `decrypt` | `(obj: any) => string` / `(s: string) => any` | Reversible obfuscation (URL-encoded JSON with `{`↔`}` swap and a fixed SALT). NOT cryptographically secure — for opaque URL params only. |
-| `convertToSnakeCaseCode` | `(name: string) => string` | `"Đội Kỹ Thuật"` → `"doi_ky_thuat"`. Throws if `name` not a string. |
-| `generateUniqueCode` | `(name: string, existingCodes: string[]) => string` | `convertToSnakeCaseCode` + suffix `_1`, `_2`, ... until unique. |
-| `sha256` | `(input: string) => Promise<string>` | URL-safe base64 SHA-256 via `crypto.subtle`. |
-
-> Deprecated: `isValidEmail` / `isValidPhone` / `isValidCode` (moved to `ValidationUtilities.isEmail` / `isPhone` / `isCode`). Kept as deprecated wrappers on `StringUtilities`.
-> Deprecated regex aliases: `REGEX_PHONE_VN` → `REGEX_VN_PHONE`, `REGEX_IDVN` → `REGEX_VN_ID`, `REGEX_IDVN_OR_PASSPORT` → `REGEX_VN_ID_OR_PASSPORT`.
-
----
-
-## `string.extension.ts` — `ValidationUtilities`
-
-Higher-level value validators built on `StringUtilities.REGEX_*`. New canonical home for the `isValid*` helpers that used to live on `StringUtilities`.
-
-| Name | Signature | Purpose |
-| --- | --- | --- |
-| `isEmail` / `isPhone` / `isVnPhone` / `isVnId` / `isPassport` / `isVnIdOrPassport` / `isTime` / `isUrl` | `(value: any) => boolean` | Regex validators against the matching `REGEX_*` constant. |
-| `isCode` | `(value: any) => boolean` | 2–20 chars, alphanumeric + `@_-`. |
-
----
-
-## `utility.extension.ts` — `Utilities` + `BrowserUtilities`
-
-`SdUtilities` from older releases has been split into two namespaces:
-
-### `Utilities` — generic helpers
-
-| Name | Signature | Purpose |
-| --- | --- | --- |
-| `fetchAllByPaging` | `<T>(func: (pageSize, pageNumber) => Promise<{items, total}>, defaultPageSize?) => Promise<T[]>` | Drain a paginated API into a single array (default page size `1000`). Renamed from `allWithPaging`. |
+| `upload` | `(option?: { extensions?, maxSizeInMb?, validator?, multiple? }) => Promise<File \| File[] \| null>` | Programmatic file picker — injects a hidden `<input type=file>`, validates extension/size/custom rule. Resolves `null` when the OS dialog is cancelled or the change event carries no file. In `multiple` mode EVERY file is validated, so one bad file rejects the whole call. The hidden input is removed as soon as the call settles. |
+| `download` | `(fileOrPath: File \| string, fileName?) => void` | Trigger browser download of a `File` (blob URL) or a string path. Absolute `http:`/`https:` URLs open in a new tab through `sdOpenExternal` (`noopener,noreferrer`) instead of downloading. |
+| `downloadBlob` | `(blob: Blob, fileName?) => void` | Trigger download of an arbitrary `Blob`. |
+| `changeAliasLowerCase` | `(value) => string` | Lower-case + strip Vietnamese diacritics (for search matching). |
+| `copyToClipboard` | `(text: string) => void` | `navigator.clipboard.writeText`. |
+| `allWithPaging` | `<T>(func, defaultPageSize?) => Promise<T[]>` | Drain a paginated API into a single array (default page size `1000`). |
+| `isIncognito` | `() => Promise<{ isPrivate: boolean; browserName: string }>` | Browser-specific private-mode probes (Safari indexedDB blob, Chrome storage quota, Firefox `serviceWorker`, IE `indexedDB`). |
+| `isMobile` | `() => boolean` | UA sniff for `Mobi` or `Android`. |
 | `randomId` | `(prefix?: string) => string` | Base-36 timestamp ID, optionally prefixed. |
-| `hash` | `(obj: any) => string` | Stable 32-bit non-crypto hash of any object — `h` + abs(int). Uses `stableStringify` (sorted keys, special-cases `File`). |
+| `hash` | `(obj: any) => string` | Stable 32-bit non-crypto hash — `h` + abs(int). Uses `stableStringify` (sorted keys, special-cases `Date` → ISO string and `File`). |
 | `parseQueryParams` | `(queryString?: string) => Record<string, string>` | Wrap `URLSearchParams` into a plain object. |
+| `getClientPublicIp` | `(endpoint: string) => Promise<string \| null>` | See below — endpoint is required. |
 | `generateUuid` | `() => string` | `crypto.randomUUID()` with timestamp+random fallback for legacy browsers. |
 | `getNestedValue` | `(obj: any, path: string) => any` | Read nested value by dotted path; safe against `undefined` segments. |
 
-### `BrowserUtilities` — browser/DOM helpers
+### `SdUtilities.getClientPublicIp` — endpoint is required (BREAKING)
 
-| Name | Signature | Purpose |
-| --- | --- | --- |
-| `upload` | `(option?: { extensions?, maxSizeInMb?, validator?, multiple? }) => Promise<File \| File[] \| null>` | Programmatic file picker — injects a hidden `<input type=file>`, validates extension/size/custom rule, resolves with selected file(s). |
-| `download` | `(fileOrPath: File \| string, fileName?) => void` | Trigger browser download of a `File` (via blob URL) or a string path/URL. External `http*` URLs open in new tab instead. |
-| `downloadBlob` | `(blob: Blob, fileName?) => void` | Trigger download of an arbitrary `Blob`. |
-| `copyToClipboard` | `(text: string) => void` | `navigator.clipboard.writeText`. |
-| `isMobile` | `() => boolean` | UA sniff for `Mobi` or `Android`. |
-| `detectIncognito` | `() => Promise<{ isPrivate: boolean; browserName: string }>` | Run browser-specific probes (Safari indexedDB blob, Chrome storage quota, Firefox `serviceWorker`, IE `indexedDB`) and resolve with detected browser name + private-mode flag. `browserName` ∈ `{ 'Safari', 'Chrome', 'Brave', 'Edge', 'Opera', 'Chromium', 'Firefox', 'Internet Explorer', 'Unknown' }`. |
+```ts
+getClientPublicIp(endpoint: string): Promise<string | null>
+```
 
-> The legacy `SdUtilities` object is kept as a deprecated aggregate that proxies the union of `Utilities` + `BrowserUtilities` members (plus old `allWithPaging` / `isIncognito` names). Migrate to the split namespaces.
+| Before | After |
+| --- | --- |
+| `SdUtilities.getClientPublicIp()` — always called `https://api.ipify.org?format=json` | `SdUtilities.getClientPublicIp('/api/client-ip')` — calls only what you name |
+
+The hard-coded third-party call is gone. A UI library that silently ships a user's IP address to an
+endpoint the application never declared is a privacy/GDPR exposure and a network dependency every
+consumer inherited without asking. `endpoint` is now a required argument, so **no request leaves the
+app unless the app asks for one** — prefer a first-party endpoint.
+
+- `endpoint` must be an absolute `http:`/`https:` URL or a same-origin path (`/api/client-ip`); it is
+  parsed with `sdParseUrl` and anything else (`javascript:`, `file:`, garbage) returns `null` without
+  issuing a request.
+- The endpoint must answer with JSON shaped `{ "ip": "..." }`.
+- Failures (bad endpoint, network error, non-2xx) resolve to `null` and log **only in dev mode**.
+
+To keep the old behaviour, name the third-party endpoint yourself and disclose it in your privacy
+policy: `SdUtilities.getClientPublicIp('https://api.ipify.org?format=json')`.
+
+### Developer logging is dev-mode only
+
+`download` / `downloadBlob` / `isIncognito` / `getClientPublicIp` used to `console.warn` /
+`console.error` in shipped code. Those calls are now gated behind Angular's `isDevMode()`, so a
+production build stays silent. Return values are unchanged — keep handling `null` / no-op results
+rather than reading the console.

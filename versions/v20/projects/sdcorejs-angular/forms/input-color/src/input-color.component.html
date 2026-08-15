@@ -27,10 +27,14 @@
         class="sd-input-color__swatch"
         [style.background]="swatchColor()"
         [class.sd-input-color__swatch--empty]="swatchColor() === 'transparent'"
-        [disabled]="disabled() || readonly() || viewed() === true"
+        [disabled]="disabled() || readonly() || isViewed()"
         (click)="openPicker()"
         title="Mở bảng chọn màu"
         aria-label="Mở bảng chọn màu"></button>
+      <!-- why: GIỮ aria-hidden ở đây. Đây là proxy thuần: tabindex="-1" (ngoài tab order),
+           width/height 0, opacity 0, pointer-events:none — người dùng không thể tới được, và
+           openPicker() chỉ .click() chứ không .focus(). Control thật là <button> ngay trên,
+           đã có accessible name. Nếu bỏ aria-hidden, AT sẽ đọc thừa một "color picker" ma. -->
       <input
         #picker
         type="color"

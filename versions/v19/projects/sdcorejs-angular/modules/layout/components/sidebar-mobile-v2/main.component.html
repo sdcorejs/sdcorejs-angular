@@ -3,7 +3,7 @@
     <ng-content></ng-content>
   </main>
 
-  <nav class="sd-sidebar-mobile-v2__bar d-flex align-items-stretch bg-white border-top border-black200" aria-label="Điều hướng chính">
+  <nav class="sd-sidebar-mobile-v2__bar d-flex align-items-stretch bg-white border-top border-black200" [attr.aria-label]="'core.module.layout.sidebar.primary-nav' | sdTranslate">
     @for (menu of primaryMenus(); track menu.id || menu.title) {
       <button
         type="button"
@@ -24,17 +24,17 @@
       <button
         type="button"
         class="sd-sidebar-mobile-v2__bar-action d-flex flex-column align-items-center justify-content-center gap-4 flex-1"
-        aria-label="Thêm menu"
+        [attr.aria-label]="'core.module.layout.sidebar.more-menu' | sdTranslate"
         [attr.aria-expanded]="sheetGroupKey() === 'more' && isSheetOpen()"
         (click)="openMore($event.currentTarget)">
         <sd-icon name="more_horiz"></sd-icon>
-        <span class="sd-sidebar-mobile-v2__label">Thêm</span>
+        <span class="sd-sidebar-mobile-v2__label">{{ 'core.module.layout.sidebar.more' | sdTranslate }}</span>
       </button>
     }
   </nav>
 
   @if (isSheetOpen()) {
-    <button type="button" class="sd-sidebar-mobile-v2__backdrop" aria-label="Đóng menu" (click)="closeSheet()"></button>
+    <button type="button" class="sd-sidebar-mobile-v2__backdrop" [attr.aria-label]="'core.module.layout.sidebar.close-menu' | sdTranslate" (click)="closeSheet()"></button>
     <section
       data-v2-sheet
       class="sd-sidebar-mobile-v2__sheet d-flex flex-column bg-white rounded-top-16 mat-elevation-z8"
@@ -49,7 +49,7 @@
         <button
           type="button"
           class="sd-sidebar-mobile-v2__close d-flex align-items-center justify-content-center"
-          aria-label="Đóng"
+          [attr.aria-label]="'core.common.close' | sdTranslate"
           (click)="closeSheet()">
           <sd-icon name="close"></sd-icon>
         </button>
@@ -57,7 +57,7 @@
       <div class="d-flex flex-column gap-12 p-12 overflow-auto">
         <sd-layout-user-menu presentation="mobile-inline" [userInfo]="userInfo()"></sd-layout-user-menu>
         <sd-layout-search-field
-          placeholder="Tìm trong menu"
+          [placeholder]="'core.module.layout.sidebar.search-in-menu' | sdTranslate"
           [autoId]="'layout-v2-mobile-search'"
           [model]="searchText()"
           (sdChange)="searchText.set($event)">

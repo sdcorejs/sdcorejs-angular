@@ -185,3 +185,58 @@ describe('SdSplitterHandleComponent — dblclick + aria', () => {
     expect(handleEl.getAttribute('aria-valuenow')).toBe('50');
   });
 });
+
+describe('SdSplitterHandleComponent — teardown giữa lúc drag', () => {
+  let fixture: ComponentFixture<Host>;
+  let handleEl: HTMLElement;
+  let frames: Map<number, FrameRequestCallback>;
+  let cancelled: number[];
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ imports: [Host] });
+    fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    handleEl = fixture.debugElement.query(By.css('sd-splitter-handle')).nativeElement;
+    spyOn(handleEl, 'setPointerCapture').and.stub();
+    spyOn(handleEl, 'releasePointerCapture').and.stub();
+
+    // rAF giả có hàng đợi thật: requestAnimationFrame xếp hàng, cancelAnimationFrame gỡ khỏi hàng.
+    // Nhờ vậy "còn frame chờ hay không" là quan sát được, không phụ thuộc timing của trình duyệt.
+    frames = new Map<number, FrameRequestCallback>();
+    cancelled = [];
+    let nextHandle = 0;
+    spyOn(window, 'requestAnimationFrame').and.callFake((cb: FrameRequestCallback) => {
+      const handle = ++nextHandle;
+      frames.set(handle, cb);
+      return handle;
+    });
+    spyOn(window, 'cancelAnimationFrame').and.callFake((handle: number) => {
+      cancelled.push(handle);
+      frames.delete(handle);
+    });
+  });
+
+  it('huỷ frame đang chờ khi destroy giữa lúc drag (không để dragMove thoát ra sau teardown)', () => {
+    dispatchPointer(handleEl, 'pointerdown', { pointerId: 1, clientX: 100, clientY: 0, button: 0 });
+    dispatchPointer(handleEl, 'pointermove', { pointerId: 1, clientX: 150, clientY: 0 });
+
+    // pointerup KHÔNG bao giờ tới: component bị tháo giữa chừng
+    expect(frames.size).toBe(1);
+
+    fixture.destroy();
+
+    expect(cancelled.length).toBe(1);
+    expect(frames.size).toBe(0);
+  });
+
+  it('destroy khi không có frame nào chờ → không gọi cancelAnimationFrame thừa', () => {
+    dispatchPointer(handleEl, 'pointerdown', { pointerId: 1, clientX: 100, clientY: 0, button: 0 });
+    dispatchPointer(handleEl, 'pointermove', { pointerId: 1, clientX: 150, clientY: 0 });
+    dispatchPointer(handleEl, 'pointerup', { pointerId: 1, clientX: 150, clientY: 0 });
+    expect(cancelled.length).toBe(1);
+
+    fixture.destroy();
+
+    expect(cancelled.length).toBe(1);
+  });
+});

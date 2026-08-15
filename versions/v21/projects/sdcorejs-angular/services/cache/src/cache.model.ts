@@ -45,12 +45,23 @@ export type SdCacheGetCallback = (key: string, option?: SdCacheOption<unknown>) 
 
 export type SdCacheRemoveCallback = (key: string, option?: SdCacheOption<unknown>) => Promise<void> | void;
 
+/**
+ * Số entry `type: 'memory'` tối đa được giữ trước khi LRU đẩy entry cũ nhất ra.
+ * Ghi đè bằng `maxMemoryEntries` trên `SD_CACHE_CONFIG`.
+ */
+export const SD_CACHE_DEFAULT_MAX_MEMORY_ENTRIES = 500;
+
 export interface ISdCacheConfiguration {
   convertKey?: (key: string) => string;
   namespace?: string;
   version?: string | number;
   serializer?: SdPersistenceSerializer;
   identityCanonicalizer?: SdPersistenceIdentityCanonicalizer;
+  /**
+   * Trần LRU cho cache `type: 'memory'`. Mặc định `SD_CACHE_DEFAULT_MAX_MEMORY_ENTRIES` (500).
+   * Giá trị không hợp lệ (không hữu hạn, < 1) sẽ rơi về mặc định.
+   */
+  maxMemoryEntries?: number;
   set?: SdCacheSetCallback;
   get?: SdCacheGetCallback;
   remove?: SdCacheRemoveCallback;

@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { SD_PDFJS_LIB, SdPdfJsLib, SdPreviewPdf } from './preview-pdf.component';
 import { SD_PDF_BROWSER_ADAPTER, SdPdfBrowserAdapter, SdPdfIntersectionEntry } from './preview-pdf.browser';
 import { SD_PDF_PRINT_ADAPTER, SdPdfPrintAdapter, SdPdfPrintJob } from './preview-pdf.print';
@@ -366,6 +367,11 @@ describe('SdPreviewPdf', () => {
     });
 
     it('renders empty title from i18n', () => {
+      // why: ngôn ngữ là state TOÀN CỤC (I18nService + localStorage). Một spec khác gọi
+      // `setLanguage(...)` mà không khôi phục sẽ làm spec này đỏ tuỳ theo thứ tự chạy — Jasmine
+      // random hoá thứ tự, nên nó xanh khi chạy riêng và đỏ trong full suite. Ghim ngôn ngữ trước
+      // khi render thay vì tin vào giá trị mặc định.
+      TestBed.inject(I18nService).setLanguage('vi');
       fixture.detectChanges();
       const title = fixture.nativeElement.querySelector('.sd-preview-pdf-status__title');
       expect(title?.textContent).toContain('Không có');

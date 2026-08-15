@@ -82,8 +82,9 @@ export const subtreeMatches = <T>(
  * Lọc mảng children: chỉ giữ child có subtree khớp `predicate`.
  *
  * Trả về MẢNG MỚI nhưng GIỮ NGUYÊN object reference của từng child (không clone)
- * — nhờ vậy `meta.id` (hash từ data) ổn định, selection / trạng thái bung không
- * bị mất khi từ khoá search đổi. Đây là bước "prune" của tính năng search-con.
+ * — nhờ vậy `meta.id` (bám theo identity của object data, hoặc theo `option.rowKey`)
+ * ổn định, selection / trạng thái bung không bị mất khi từ khoá search đổi. Đây là
+ * bước "prune" của tính năng search-con.
  */
 export const filterMatchingChildren = <T>(children: T[], predicate: (data: T) => boolean, option?: SdTableOptionTree): T[] =>
   children.filter(child => subtreeMatches(child, predicate, option));

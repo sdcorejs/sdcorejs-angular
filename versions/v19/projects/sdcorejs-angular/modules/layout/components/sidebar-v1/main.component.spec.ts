@@ -4,7 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
 import { SdLayoutStorageService } from '../../services';
-import { SidebarV1Component } from './main.component';
+import { SdSidebarV1 } from './main.component';
 
 const storage = <T>(value: T) => ({
   get: () => value,
@@ -15,7 +15,7 @@ const storage = <T>(value: T) => ({
 });
 
 @Component({
-  selector: 'sidebar',
+  selector: 'sd-sidebar-v1-panel',
   standalone: true,
   template: `
     <div class="wide-sidebar-content">
@@ -44,12 +44,12 @@ class SidebarStubComponent {
   popupUserMenuClosed = output<void>();
 }
 
-describe('SidebarV1Component responsive compatibility', () => {
-  let fixture: ComponentFixture<SidebarV1Component>;
+describe('SdSidebarV1 responsive compatibility', () => {
+  let fixture: ComponentFixture<SdSidebarV1>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [SidebarV1Component, NoopAnimationsModule],
+      imports: [SdSidebarV1, NoopAnimationsModule],
       providers: [
         {
           provide: SdLayoutStorageService,
@@ -57,10 +57,10 @@ describe('SidebarV1Component responsive compatibility', () => {
         },
       ],
     })
-      .overrideComponent(SidebarV1Component, { set: { imports: [MatSidenavModule, CommonModule, SidebarStubComponent] } })
+      .overrideComponent(SdSidebarV1, { set: { imports: [MatSidenavModule, CommonModule, SidebarStubComponent] } })
       .compileComponents();
 
-    fixture = TestBed.createComponent(SidebarV1Component);
+    fixture = TestBed.createComponent(SdSidebarV1);
     fixture.componentRef.setInput('menus', []);
     fixture.componentRef.setInput('userInfo', { fullName: 'Demo User' });
     fixture.componentRef.setInput('sidebar', { version: 1 });

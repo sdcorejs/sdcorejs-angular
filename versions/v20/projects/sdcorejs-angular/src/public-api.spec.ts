@@ -321,10 +321,33 @@ type Release14PublicTypes = readonly [
 ];
 
 describe('sd-angular public API', () => {
-  it('loads the library entrypoint', async () => {
-    await import('./public-api');
+  it('re-exports the category barrels from the root entrypoint', async () => {
+    // why: `public-api.ts` used to be ten bare `import '...'` statements with no `export`, so the
+    // published root entrypoint shipped a 517-byte FESM bundle with zero exports and
+    // `import { SdButton } from '@sdcorejs/angular'` silently resolved to nothing. This spec is the
+    // regression guard: it fails the moment the root barrel stops re-exporting.
+    const rootApi = await import('./public-api');
 
-    expect(true).toBeTrue();
+    expect(Object.keys(rootApi).length).toBeGreaterThan(100);
+  });
+
+  it('exposes a representative runtime symbol from every category barrel at the root', async () => {
+    const rootApi = (await import('./public-api')) as unknown as Record<string, unknown>;
+
+    // One probe per top-level barrel listed in public-api.ts, so a dropped `export *` is caught.
+    const probes = [
+      'SdButton', // components
+      'SdInput', // forms
+      'SdApiService', // services
+      'SdNotifyService', // services
+      'SdOperator', // components/operator — must be the component class, not a removed type alias
+      'SdIcon', // modules
+      'I18nService', // i18n via services/modules chain
+    ];
+
+    const missing = probes.filter(name => rootApi[name] == null);
+
+    expect(missing).toEqual([]);
   });
 
   it('keeps every 1.4 public type reachable from its category barrel', () => {

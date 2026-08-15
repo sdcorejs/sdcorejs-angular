@@ -79,6 +79,19 @@
         [disabled]="disabled"
         [viewed]="viewed"></lib-radio>
     </div>
+  } @else if (component.type === 'checkbox') {
+    <!-- why: form-builder tạo được field checkbox từ lâu nhưng ở đây KHÔNG có nhánh nào cho nó, nên
+         field ấy render ra khoảng trống — không control, không nhãn, không dữ liệu. -->
+    <div [class]="col">
+      <!-- why: KHÔNG truyền [required] — sd-checkbox không có input đó, nên binding chỉ là chữ chết. -->
+      <lib-checkbox
+        [setVariables]="setVariables()"
+        [form]="form()"
+        [component]="component"
+        [entity]="entity"
+        [disabled]="disabled"
+        [viewed]="viewed"></lib-checkbox>
+    </div>
   } @else if (component.type === 'datetime') {
     <div [class]="col">
       <lib-datetime

@@ -6,7 +6,13 @@
 @let _iconCssSize = iconCssSize();
 @let iconName = icon() || defaultIcon;
 @let isPointer = click.observed;
+@let _role = isPointer ? 'button' : null;
+@let _tabIndex = isPointer ? 0 : null;
 
+<!-- why: bỏ aria-hidden="true" khỏi cả ba nhánh. Badge mang nội dung thật (title/description) nên
+     aria-hidden xoá luôn nội dung đó khỏi accessibility tree; khi badge còn clickable thì nó vừa
+     nhận focus vừa không đọc được gì — tệ hơn là không làm gì. Nay role/tabindex/keydown chỉ bật
+     khi thực sự có consumer lắng nghe (click). -->
 @if (_type === 'round') {
   <div
     class="c-badge"
@@ -16,8 +22,11 @@
     [ngClass]="containerCombinedClasses()"
     [class.c-badge--has-icon]="!!icon()"
     [class.pointer]="isPointer"
+    [attr.role]="_role"
+    [attr.tabindex]="_tabIndex"
     (click)="onClick($event)"
-    aria-hidden="true">
+    (keydown.enter)="onActivateKey($event)"
+    (keydown.space)="onActivateKey($event)">
     @if (icon()) {
       <sd-icon
         class="c-material-icon"
@@ -36,8 +45,11 @@
     matTooltipClass="sd-multiline-tooltip"
     [ngClass]="containerCombinedClasses()"
     [class.pointer]="isPointer"
+    [attr.role]="_role"
+    [attr.tabindex]="_tabIndex"
     (click)="onClick($event)"
-    aria-hidden="true">
+    (keydown.enter)="onActivateKey($event)"
+    (keydown.space)="onActivateKey($event)">
     <div class="c-icon d-flex align-items-center">
       @if (icon()) {
         <sd-icon
@@ -63,8 +75,11 @@
     matTooltipClass="sd-multiline-tooltip"
     [class.c-badge-icon]="_type === 'icon'"
     [class.pointer]="isPointer"
+    [attr.role]="_role"
+    [attr.tabindex]="_tabIndex"
     (click)="onClick($event)"
-    aria-hidden="true">
+    (keydown.enter)="onActivateKey($event)"
+    (keydown.space)="onActivateKey($event)">
     <div class="c-icon d-flex align-items-center">
       <sd-icon
         class="c-material-icon mr-4"

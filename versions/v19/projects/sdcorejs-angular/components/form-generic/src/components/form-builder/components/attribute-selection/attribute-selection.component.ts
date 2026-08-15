@@ -15,7 +15,7 @@ import {
 import { FormGenericService } from '../../../../services';
 import { BuildQueries } from './components/build-queries/build-queries.component';
 import { BuildVariables } from './components/build-variables/build-variables.component';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 // Template là các mẫu do Portal định nghĩa sẵn (key, label ....) để người dùng chọn nhanh
 // Khi thực hiện sao chép 1 template chúng ta sẽ CLONE để tránh ảnh hưởng template gốc
@@ -23,7 +23,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   selector: 'attribute-selection',
   templateUrl: './attribute-selection.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdInput, SdAutocomplete, SdButton, SdSection, BuildQueries, BuildVariables, TranslatePipe],
+  imports: [SdInput, SdAutocomplete, SdButton, SdSection, BuildQueries, BuildVariables, SdTranslatePipe],
 })
 export class AttributeSelection implements OnInit {
   private ref = inject(ChangeDetectorRef);

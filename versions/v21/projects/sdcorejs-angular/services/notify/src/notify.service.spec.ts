@@ -1,4 +1,4 @@
-import { ApplicationRef } from '@angular/core';
+import { ApplicationRef, EnvironmentInjector, createEnvironmentInjector } from '@angular/core';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdNotifyService } from './notify.service';
@@ -257,4 +257,118 @@ describe('SdNotifyService', () => {
     service.clearAll();
     expect(service.toasts().length).toBe(0);
   });
+});
+
+// ─── Teardown (DestroyRef) ────────────────────────────────────────────────────
+// why: SdNotifyService là providedIn:'root' nhưng root injector VẪN bị destroy (TestBed reset,
+// mỗi request khi SSR, micro-frontend unmount). Các spec dưới đây chạy service trong một
+// EnvironmentInjector con để destroy được tất định mà không phải tháo cả TestBed.
+
+describe('SdNotifyService teardown', () => {
+  let owned: EnvironmentInjector[] = [];
+
+  beforeEach(() => {
+    owned = [];
+    TestBed.configureTestingModule({
+      providers: [{ provide: I18nService, useValue: { t: (key: string) => key } }],
+    });
+  });
+
+  afterEach(() => {
+    // Dọn rác nếu một spec fail trước khi kịp destroy() — view đang attach vào
+    // ApplicationRef của TestBed sẽ bám sang spec kế tiếp nếu bỏ qua bước này.
+    owned.forEach(injector => injector.destroy());
+    toastContainers().forEach(node => node.remove());
+  });
+
+  function createIsolatedService(): { service: SdNotifyService; destroy: () => void } {
+    const injector = createEnvironmentInjector([SdNotifyService], TestBed.inject(EnvironmentInjector));
+    owned.push(injector);
+    return {
+      service: injector.get(SdNotifyService),
+      destroy: () => {
+        injector.destroy();
+        owned = owned.filter(item => item !== injector);
+      },
+    };
+  }
+
+  function toastContainers(): Element[] {
+    return Array.from(document.body.querySelectorAll('toast-container'));
+  }
+
+  it('removes the toast container node from <body> when the owning injector is destroyed', () => {
+    const before = toastContainers().length;
+    const { destroy } = createIsolatedService();
+
+    const created = toastContainers();
+    expect(created.length).toBe(before + 1);
+    const container = created[created.length - 1];
+    expect(document.body.contains(container)).toBeTrue();
+
+    destroy();
+
+    expect(document.body.contains(container)).toBeFalse();
+    expect(toastContainers().length).toBe(before);
+  });
+
+  it('detaches the container view from ApplicationRef on destroy', () => {
+    const appRef = TestBed.inject(ApplicationRef);
+    const detachSpy = spyOn(appRef, 'detachView').and.callThrough();
+    const { destroy } = createIsolatedService();
+
+    expect(detachSpy).not.toHaveBeenCalled();
+    destroy();
+    expect(detachSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('cancels pending debounce timers so a buffered flush cannot write to a destroyed service', fakeAsync(() => {
+    const { service, destroy } = createIsolatedService();
+
+    service.error('late error');
+    expect(service.toasts().length).toBe(0);
+
+    destroy();
+    tick(500);
+
+    expect(service.toasts().length).toBe(0);
+  }));
+
+  // why: 3 spec trên chạy trong EnvironmentInjector con nên appRef VẪN sống — chúng chỉ đi qua
+  // nhánh `!this.appRef.destroyed`. Nhánh CÒN LẠI mới là nhánh chạy trên teardown root thật
+  // (SSR mỗi request, micro-frontend unmount, TestBed reset): hook destroy của service chạy SAU
+  // ApplicationRef.destroy(), lúc đó detachView chỉ log NG0406 nên bị bỏ qua cùng componentRef
+  // .destroy(). Không có spec nào chạm vào nó thì "chỉ detach khi appRef còn sống" là niềm tin,
+  // không phải sự thật đã kiểm chứng. Mô phỏng bằng cách ép getter `destroyed` trả true.
+  it('skips detachView when ApplicationRef is already destroyed, but still removes the DOM node', () => {
+    const appRef = TestBed.inject(ApplicationRef);
+    const before = toastContainers().length;
+    const { destroy } = createIsolatedService();
+
+    const created = toastContainers();
+    expect(created.length).toBe(before + 1);
+    const container = created[created.length - 1];
+
+    const detachSpy = spyOn(appRef, 'detachView').and.callThrough();
+    spyOnProperty(appRef, 'destroyed', 'get').and.returnValue(true);
+
+    expect(() => destroy()).not.toThrow();
+
+    expect(detachSpy).not.toHaveBeenCalled();
+    expect(document.body.contains(container)).toBeFalse();
+    expect(toastContainers().length).toBe(before);
+  });
+
+  it('still stops buffered flushes when ApplicationRef is already destroyed', fakeAsync(() => {
+    const appRef = TestBed.inject(ApplicationRef);
+    const { service, destroy } = createIsolatedService();
+
+    service.error('late error');
+    spyOnProperty(appRef, 'destroyed', 'get').and.returnValue(true);
+
+    destroy();
+    tick(500);
+
+    expect(service.toasts().length).toBe(0);
+  }));
 });

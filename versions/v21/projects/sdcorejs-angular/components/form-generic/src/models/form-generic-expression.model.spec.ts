@@ -1,13 +1,13 @@
 import {
-  AttributeOperators,
-  DayInfoPreviouses,
-  EvaluateExpression,
-  ExpressionToJavascriptExpression,
-  GetAttributes,
-  GetDatetimeValue,
-  Operators,
+  SD_ATTRIBUTE_OPERATORS,
+  SD_DAY_INFO_PREVIOUSES,
+  sdEvaluateExpression,
+  sdExpressionToJavascriptExpression,
+  sdGetAttributes,
+  sdGetDatetimeValue,
+  SdFormGenericOperators,
   SdFormGenericExpressionCondition,
-  TemplateToCondition,
+  sdTemplateToCondition,
 } from './form-generic-expression.model';
 
 function condition(
@@ -28,26 +28,26 @@ describe('form generic expression model', () => {
     afterEach(() => jasmine.clock().uninstall());
 
     it('formats now and relative-day tokens deterministically', () => {
-      expect(GetDatetimeValue('now')).toBe('2026/01/15 10:30:00');
-      expect(GetDatetimeValue('2LastDay')).toBe('2026/01/13 10:30:00');
-      expect(GetDatetimeValue('2NextDay')).toBe('2026/01/17 10:30:00');
+      expect(sdGetDatetimeValue('now')).toBe('2026/01/15 10:30:00');
+      expect(sdGetDatetimeValue('2LastDay')).toBe('2026/01/13 10:30:00');
+      expect(sdGetDatetimeValue('2NextDay')).toBe('2026/01/17 10:30:00');
     });
 
     it('rejects empty, non-string, and malformed relative-day tokens', () => {
-      expect(GetDatetimeValue('')).toBeUndefined();
-      expect(GetDatetimeValue(10 as unknown as string)).toBeUndefined();
-      expect(GetDatetimeValue('LastDay')).toBeUndefined();
-      expect(GetDatetimeValue('tomorrow')).toBeUndefined();
+      expect(sdGetDatetimeValue('')).toBeUndefined();
+      expect(sdGetDatetimeValue(10 as unknown as string)).toBeUndefined();
+      expect(sdGetDatetimeValue('LastDay')).toBeUndefined();
+      expect(sdGetDatetimeValue('tomorrow')).toBeUndefined();
     });
 
     it('formats relative-day selector defaults and explicit values', () => {
-      expect(DayInfoPreviouses[0].format(0)).toBe('1LastDay');
-      expect(DayInfoPreviouses[1].format(3)).toBe('3NextDay');
+      expect(SD_DAY_INFO_PREVIOUSES[0].format(0)).toBe('1LastDay');
+      expect(SD_DAY_INFO_PREVIOUSES[1].format(3)).toBe('3NextDay');
     });
   });
 
   it('exposes operator sets appropriate to each attribute type', () => {
-    expect(Operators.map(item => item.value)).toEqual([
+    expect(SdFormGenericOperators.map(item => item.value)).toEqual([
       'EQUAL',
       'NOT_EQUAL',
       'GREATER_THAN',
@@ -57,12 +57,12 @@ describe('form generic expression model', () => {
       'NULL',
       'NOT_NULL',
     ]);
-    expect(AttributeOperators.boolean.map(item => item.value)).toEqual(['EQUAL', 'NOT_EQUAL']);
-    expect(AttributeOperators.number).toBe(Operators);
+    expect(SD_ATTRIBUTE_OPERATORS.boolean.map(item => item.value)).toEqual(['EQUAL', 'NOT_EQUAL']);
+    expect(SD_ATTRIBUTE_OPERATORS.number).toBe(SdFormGenericOperators);
   });
 
   it('maps nested form controls to expression attributes and ignores unsupported controls', () => {
-    const attributes = GetAttributes([
+    const attributes = sdGetAttributes([
       { type: 'textfield', key: 'name', label: 'Name' },
       { type: 'textarea', key: 'notes', label: 'Notes' },
       { type: 'number', key: 'amount', label: 'Amount' },
@@ -87,38 +87,40 @@ describe('form generic expression model', () => {
       { value: 'owner', display: 'Owner', type: 'string' },
       { value: 'nested.code', display: 'Code', type: 'string' },
     ]);
-    expect(GetAttributes([])).toEqual([]);
+    expect(sdGetAttributes([])).toEqual([]);
   });
 
   it('substitutes nested entity values while preserving missing placeholders as undefined', () => {
     const template = "${user.name} === 'Ada' && ${count} > 1 && ${missing} === undefined";
 
-    expect(TemplateToCondition(template, { user: { name: 'Ada' }, count: 2 })).toBe("'Ada' === 'Ada' && 2 > 1 && undefined === undefined");
-    expect(TemplateToCondition(undefined, {})).toBeUndefined();
+    expect(sdTemplateToCondition(template, { user: { name: 'Ada' }, count: 2 })).toBe(
+      "'Ada' === 'Ada' && 2 > 1 && undefined === undefined"
+    );
+    expect(sdTemplateToCondition(undefined, {})).toBeUndefined();
   });
 
   it('normalizes ISO date strings during template substitution', () => {
-    expect(TemplateToCondition('${createdAt}', { createdAt: '2026-01-15T03:30:00.000Z' })).toMatch(/^'2026\/01\/15 \d{2}:30:00'$/);
+    expect(sdTemplateToCondition('${createdAt}', { createdAt: '2026-01-15T03:30:00.000Z' })).toMatch(/^'2026\/01\/15 \d{2}:30:00'$/);
   });
 
   it('evaluates comparison, null, and nested-field conditions', () => {
     const entity = { value: 10, empty: '', nested: { code: 'A' } };
 
-    expect(EvaluateExpression(condition('EQUAL', 10), entity)).toBeTrue();
-    expect(EvaluateExpression(condition('NOT_EQUAL', 11), entity)).toBeTrue();
-    expect(EvaluateExpression(condition('GREATER_THAN', 9), entity)).toBeTrue();
-    expect(EvaluateExpression(condition('LESS_THAN', 11), entity)).toBeTrue();
-    expect(EvaluateExpression(condition('GREATER_OR_EQUAL', 10), entity)).toBeTrue();
-    expect(EvaluateExpression(condition('LESS_OR_EQUAL', 10), entity)).toBeTrue();
-    expect(EvaluateExpression(condition('NULL', null, 'empty'), entity)).toBeTrue();
-    expect(EvaluateExpression(condition('NOT_NULL', null, 'nested.code'), entity)).toBeTrue();
+    expect(sdEvaluateExpression(condition('EQUAL', 10), entity)).toBeTrue();
+    expect(sdEvaluateExpression(condition('NOT_EQUAL', 11), entity)).toBeTrue();
+    expect(sdEvaluateExpression(condition('GREATER_THAN', 9), entity)).toBeTrue();
+    expect(sdEvaluateExpression(condition('LESS_THAN', 11), entity)).toBeTrue();
+    expect(sdEvaluateExpression(condition('GREATER_OR_EQUAL', 10), entity)).toBeTrue();
+    expect(sdEvaluateExpression(condition('LESS_OR_EQUAL', 10), entity)).toBeTrue();
+    expect(sdEvaluateExpression(condition('NULL', null, 'empty'), entity)).toBeTrue();
+    expect(sdEvaluateExpression(condition('NOT_NULL', null, 'nested.code'), entity)).toBeTrue();
   });
 
   it('returns undefined for incomplete or unsupported conditions', () => {
-    expect(EvaluateExpression(condition(undefined, 1), { value: 1 })).toBeUndefined();
-    expect(EvaluateExpression(condition('EQUAL', ''), { value: '' })).toBeUndefined();
-    expect(EvaluateExpression(condition('IN' as never, 1), { value: 1 })).toBeUndefined();
-    expect(EvaluateExpression({ key: 'empty', type: 'combinator', combinator: '&&', conditions: [] }, { value: 1 })).toBeUndefined();
+    expect(sdEvaluateExpression(condition(undefined, 1), { value: 1 })).toBeUndefined();
+    expect(sdEvaluateExpression(condition('EQUAL', ''), { value: '' })).toBeUndefined();
+    expect(sdEvaluateExpression(condition('IN' as never, 1), { value: 1 })).toBeUndefined();
+    expect(sdEvaluateExpression({ key: 'empty', type: 'combinator', combinator: '&&', conditions: [] }, { value: 1 })).toBeUndefined();
   });
 
   it('evaluates boolean combinators and propagates indeterminate children', () => {
@@ -126,13 +128,13 @@ describe('form generic expression model', () => {
     const greaterThanTwenty = condition('GREATER_THAN', 20);
 
     expect(
-      EvaluateExpression({ key: 'and', type: 'combinator', combinator: '&&', conditions: [equalsTen, greaterThanTwenty] }, { value: 10 })
+      sdEvaluateExpression({ key: 'and', type: 'combinator', combinator: '&&', conditions: [equalsTen, greaterThanTwenty] }, { value: 10 })
     ).toBeFalse();
     expect(
-      EvaluateExpression({ key: 'or', type: 'combinator', combinator: '||', conditions: [equalsTen, greaterThanTwenty] }, { value: 10 })
+      sdEvaluateExpression({ key: 'or', type: 'combinator', combinator: '||', conditions: [equalsTen, greaterThanTwenty] }, { value: 10 })
     ).toBeTrue();
     expect(
-      EvaluateExpression(
+      sdEvaluateExpression(
         { key: 'invalid', type: 'combinator', combinator: '&&', conditions: [equalsTen, condition(undefined, 1)] },
         { value: 10 }
       )
@@ -155,7 +157,7 @@ describe('form generic expression model', () => {
     ];
 
     for (const [operator, value, expected] of cases) {
-      expect(ExpressionToJavascriptExpression(condition(operator, value))).toBe(expected);
+      expect(sdExpressionToJavascriptExpression(condition(operator, value))).toBe(expected);
     }
   });
 
@@ -163,12 +165,12 @@ describe('form generic expression model', () => {
     const left = condition('EQUAL', 1, 'left');
     const right = condition('EQUAL', 2, 'right');
 
-    expect(ExpressionToJavascriptExpression({ key: 'single', type: 'combinator', combinator: '&&', conditions: [left] })).toBe(
+    expect(sdExpressionToJavascriptExpression({ key: 'single', type: 'combinator', combinator: '&&', conditions: [left] })).toBe(
       '(${left} === 1)'
     );
-    expect(ExpressionToJavascriptExpression({ key: 'both', type: 'combinator', combinator: '&&', conditions: [left, right] })).toBe(
+    expect(sdExpressionToJavascriptExpression({ key: 'both', type: 'combinator', combinator: '&&', conditions: [left, right] })).toBe(
       '((${left} === 1) && (${right} === 2))'
     );
-    expect(ExpressionToJavascriptExpression({ key: 'empty', type: 'combinator', combinator: '||', conditions: [] })).toBe('');
+    expect(sdExpressionToJavascriptExpression({ key: 'empty', type: 'combinator', combinator: '||', conditions: [] })).toBe('');
   });
 });

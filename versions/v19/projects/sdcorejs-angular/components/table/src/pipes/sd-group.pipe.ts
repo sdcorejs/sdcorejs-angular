@@ -2,6 +2,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { SdTableOption } from '../models/table-option.model';
 import { MapToSdTableItem, SdTableItem } from '../models/table-item.model';
 import { Utilities } from '@sdcorejs/utils/fns';
+import { buildGroupHeaderContext, SdGroupHeaderHost, syncGroupSelectionMeta } from '../services/table-selection/table-selection.util';
 
 @Pipe({ name: 'sdGroup' })
 export class SdGroupPipe implements PipeTransform {
@@ -16,10 +17,16 @@ export class SdGroupPipe implements PipeTransform {
    * expand/collapse qua các lần transform. Pipe đọc state từ Map; nếu key chưa tồn tại,
    * dùng `!option.group.defaultCollapsed`. Pipe ghi state về Map cho lần read sau.
    *
+   * `host` (optional, owned by component) — nhận danh sách header vừa sinh (để component
+   * sync selection state) và cung cấp callback toggle cho template context.
+   *
    * @example
-   * `_items | sdGroup: _tableOption : groupExpandState`
+   * `_items | sdGroup: _tableOption : groupExpandState : groupHost`
    */
-  transform(items: SdTableItem[], gridOption: SdTableOption, expandState?: Map<string, boolean>): SdTableItem[] {
+  transform(items: SdTableItem[], gridOption: SdTableOption, expandState?: Map<string, boolean>, host?: SdGroupHeaderHost): SdTableItem[] {
+    // why: sink do component sở hữu, pipe reset TẠI CHỖ mỗi lần transform (không gán
+    // mảng mới) để reference bên component luôn ổn định.
+    if (host) host.headers.length = 0;
     if (gridOption?.tree) {
       if (typeof ngDevMode !== 'undefined' && ngDevMode && gridOption.group) {
         console.warn('[sd-table] option.tree and option.group cannot be used together. group is ignored.');
@@ -53,14 +60,24 @@ export class SdGroupPipe implements PipeTransform {
       if (collapsible && expandState) expandState.set(key, isExpanded);
 
       const header = MapToSdTableItem({} as any);
+      // why: `MapToSdTableItem({})` sinh id cho một object rỗng MỚI mỗi lần transform →
+      // trackBy của mat-table đổi liên tục (và trước kia, khi id là hash nội dung, MỌI
+      // header dùng CHUNG một id). Khoá id theo group key: duy nhất giữa các group và
+      // ổn định qua mọi lần re-eval.
+      header.meta.id = `sd-group-${key}`;
       header.meta.group = {
         isGroupHeader: true,
         key,
         values: bucket.values,
         items: bucket.items,
+        // why: precompute 1 lần — template/context không map lại mỗi CD pass nữa.
+        data: bucket.items.map(i => i.data),
         isExpanded,
       };
       header.meta.selector!.selectable = false;
+      header.meta.group.context = buildGroupHeaderContext(header, host);
+      syncGroupSelectionMeta(header);
+      host?.headers.push(header);
       result.push(header);
 
       if (!collapsible || isExpanded) {

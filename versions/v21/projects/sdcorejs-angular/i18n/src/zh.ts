@@ -92,11 +92,6 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.excel.cannot-read-file': '无法读取文件内容',
   'core.excel.no-sheet': 'Excel 文件没有数据表',
 
-  // ---- Service: docx ----
-  'core.docx.invalid-format': '格式不正确，请选择 DOC 或 DOCX 格式的模板',
-  'core.docx.size-exceeded': '模板文件大小超出支持范围，请重试',
-  'core.docx.convert-error': '转换 DOCX 文件时发生错误',
-
   // ---- Service: notify (toast) ----
   'core.notify.type.success': '成功',
   'core.notify.type.info': '信息',
@@ -218,7 +213,6 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.time-range.step': '时间必须符合 {step} 分钟间隔',
   'core.form.time-range.from': '开始',
   'core.form.time-range.to': '结束',
-  'core.form.time-range.clear': '清除时间范围',
 
   // ---- Forms: time-spinner ----
   'core.form.time-spinner.hour': '时',
@@ -249,6 +243,7 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Forms: select ----
   'core.form.select.required': '请选择',
+  'core.form.select.selectAll': '全部',
 
   // ---- Forms: textarea ----
   'core.form.textarea.required': '请输入内容',
@@ -267,14 +262,6 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.editor.image.max-height': '图片高度 {height}px 超过限制 {max}px',
   'core.component.editor.image.max-per-selection': '每次最多选择 {max} 张图片',
 
-  // ---- Component: document-builder ----
-  'core.component.document-builder.page-number.current': '当前页码',
-  'core.component.document-builder.page-number.total': '总页数',
-  'core.component.document-builder.ck-comment.label': '评论',
-  'core.component.document-builder.ck-comment.text-too-long': '文本过长（{length} 字符）。最多 {max} 字符。',
-  'core.component.document-builder.variable.not-allowed': '不允许在文本中添加变量',
-  'core.component.document-builder.variable.invalid-data': '变量数据无效',
-
   // ---- Component: form-builder ----
   'core.component.form-builder.field-key': '字段键',
   'core.component.form-builder.display': '显示',
@@ -289,6 +276,7 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.form-builder.required-when': '必填条件',
   'core.component.form-builder.confirm': '确认',
   'core.component.form-builder.delete': '删除',
+  'core.component.form-builder.select-item': '选择以编辑',
   'core.component.form-builder.save': '保存',
   'core.component.form-builder.hint': '提示',
   'core.component.form-builder.parameter': '参数',
@@ -360,9 +348,13 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.form-builder.display-label': '显示标签',
   'core.component.form-builder.attribute': '属性',
   'core.component.form-builder.add-variable': '添加变量',
+  'core.component.form-builder.no-variable': '尚无变量。添加变量后可在条件表达式中使用。',
+  'core.component.form-builder.no-validation': '尚无验证。添加验证以按条件显示警告或错误。',
   'core.component.form-builder.add-new': '新增',
   'core.component.form-builder.detail': '详情',
   'core.component.form-builder.create-update': '新建/更新',
+  'core.component.form-builder.update-row': '更新行',
+  'core.component.form-builder.add-row': '添加行',
   'core.component.form-builder.default': '默认',
   'core.component.form-builder.show-more': '查看更多',
   'core.component.form-builder.show-less': '收起',
@@ -544,6 +536,8 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.error-occurred': '发生错误',
   'core.component.table.not-an-array': '数据不是数组',
   'core.component.table.config.confirm-reset': '确认将所有设置恢复为默认值',
+  'core.component.table.config.drag-hint': '拖动 ⠿ 图标可重新排列列顺序',
+  'core.component.table.config.drag-handle': '拖动以调整列顺序',
   'core.component.table.popup-export.select-columns': '请选择要导出的列',
   'core.component.table.selector-action.default-msg': '项已选择',
   'core.component.tab-router.too-many-tabs': '您已打开过多标签页。',
@@ -576,6 +570,13 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.module.layout.user.notification': '通知',
   'core.module.layout.sidebar.search': '搜索',
   'core.module.layout.sidebar.toggle': '切换侧边栏',
+  'core.module.layout.sidebar.menu-groups': '菜单分组',
+  'core.module.layout.sidebar.close-menu': '关闭菜单',
+  'core.module.layout.sidebar.search-in-group': '在分组内搜索',
+  'core.module.layout.sidebar.primary-nav': '主导航',
+  'core.module.layout.sidebar.more-menu': '更多菜单',
+  'core.module.layout.sidebar.more': '更多',
+  'core.module.layout.sidebar.search-in-menu': '搜索菜单',
 
   // ---- Module: layout (greeting + weekday) ----
   'core.module.layout.greeting.hello': '你好，{name}',
@@ -614,4 +615,91 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Module: generic (generic-select) ----
   'core.module.generic.generic-select.detail-link': '详情',
+
+  // ---- Component: query-bar ----
+  'core.component.query-bar.search-placeholder': '搜索...',
+  'core.component.query-bar.no-fields': '尚未配置字段',
+  'core.component.query-bar.add-filter': '添加筛选',
+  'core.component.query-bar.clear-all': '清除全部 ({count})',
+  'core.component.query-bar.search': '搜索',
+  'core.component.query-bar.logic-operator': '逻辑运算符',
+  'core.component.query-bar.boolean.true': '是',
+  'core.component.query-bar.boolean.false': '否',
+  'core.component.query-bar.placeholder.value': '值',
+  'core.component.query-bar.placeholder.text': '输入…',
+  'core.component.query-bar.placeholder.from-number': '起始',
+  'core.component.query-bar.placeholder.to-number': '结束',
+  'core.component.query-bar.placeholder.from-text': '起始…',
+  'core.component.query-bar.placeholder.to-text': '结束…',
+  'core.component.query-bar.swap-field': '更改字段',
+  'core.component.query-bar.placeholder.select-value': '选择值',
+  'core.component.query-bar.placeholder.enter-value': '输入值',
+  'core.component.query-bar.loading-values': '加载中...',
+  'core.component.query-bar.field-empty': '尚未配置任何字段。',
+  'core.component.query-bar.saved-filters.tooltip': '已保存的筛选',
+  'core.component.query-bar.saved-filters.tooltip-disabled': '需要 [savedFiltersKey] 才能启用',
+  'core.component.query-bar.saved-filters.delete': '删除筛选',
+  'core.component.query-bar.saved-filters.empty': '暂无已保存的筛选。',
+  'core.component.query-bar.saved-filters.save': '保存当前筛选',
+  'core.component.query-bar.saved-filters.name-label': '筛选名称',
+
+  // ---- Component: query-builder ----
+  'core.component.query-builder.date-mode.absolute': '指定日期',
+  'core.component.query-builder.date-mode.now': '今天',
+  'core.component.query-builder.date-mode.relative': '相对',
+  'core.component.query-builder.value-source.literal': '输入值',
+  'core.component.query-builder.value-source.field': '与字段比较',
+  'core.component.query-builder.relative.hour-previous': '小时前',
+  'core.component.query-builder.relative.hour-next': '小时后',
+  'core.component.query-builder.relative.day-previous': '天前',
+  'core.component.query-builder.relative.day-next': '天后',
+  'core.component.query-builder.relative.week-previous': '周前',
+  'core.component.query-builder.relative.week-next': '周后',
+  'core.component.query-builder.relative.month-previous': '个月前',
+  'core.component.query-builder.relative.month-next': '个月后',
+  'core.component.query-builder.relative.format': '{amount}{phrase}',
+  'core.component.query-builder.add': '添加',
+  'core.component.query-builder.add-node': '添加条件或分组',
+  'core.component.query-builder.condition': '条件',
+  'core.component.query-builder.group': '分组',
+  'core.component.query-builder.remove-group': '删除分组',
+  'core.component.query-builder.remove-condition': '删除条件',
+  'core.component.query-builder.empty': '暂无条件',
+  'core.component.query-builder.select-field': '选择字段',
+  'core.component.query-builder.value': '值',
+  'core.component.query-builder.from': '起始',
+  'core.component.query-builder.to': '结束',
+  'core.component.query-builder.boolean.true': '是',
+  'core.component.query-builder.boolean.false': '否',
+
+  // ---- Component: tree ----
+  'core.component.tree.selected-count': '已选择 {count} 项',
+  'core.component.tree.expand': '展开树节点',
+  'core.component.tree.collapse': '折叠树节点',
+  'core.component.tree.retry-item': '重新加载树节点',
+  'core.component.tree.load-error': '无法加载树数据',
+
+  // ---- Directive: hover-copy ----
+  'core.directive.hover-copy.copied': '已复制',
+
+  // ---- Module: layout (sidebar sections + pin) ----
+  'core.module.layout.sidebar.pinned': '已固定',
+  'core.module.layout.sidebar.recent': '最近',
+  'core.module.layout.sidebar.all-menu': '全部菜单',
+  'core.module.layout.menu.pin': '固定 {title}',
+  'core.module.layout.menu.unpin': '取消固定 {title}',
+
+  // ---- Per-control accessible names (replacing borrowed keys) ----
+  'core.form.date.open-picker': '打开日历',
+  'core.form.datetime.open-picker': '打开日历',
+  'core.form.date-range.open-picker': '打开日历',
+  'core.form.date-range.clear': '清除日期范围',
+  'core.form.select.search': '搜索',
+  'core.component.table.loading': '正在加载表格数据',
+  'core.component.upload-file.loading': '正在上传文件',
+  'core.component.import-excel.loading': '正在加载数据',
+  'core.component.upload-file.remove': '删除文件',
+  'core.component.upload-file.zoom': '放大图片',
+  'core.component.upload-file.view-all': '查看全部图片',
+  'core.component.form-builder.canvas': '表单设计画布',
 };

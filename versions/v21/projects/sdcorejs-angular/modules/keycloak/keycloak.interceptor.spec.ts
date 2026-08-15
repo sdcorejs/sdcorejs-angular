@@ -188,24 +188,88 @@ describe('SdKeycloakInterceptor', () => {
     });
   });
 
-  // ─── 8. Substring matching — partial URL match ───────────────────────────────
+  // ─── 8. Origin-aware route matching (token-leak regression) ──────────────────
 
-  it('should attach token when secureRoute substring appears anywhere in the URL', done => {
+  it('should attach token to a same-origin absolute URL under the configured path prefix', done => {
     const keycloakInstance = makeKeycloakInstanceStub('token-xyz');
     configure({
       keycloak: keycloakInstance as any,
       config: { ...SECURE_CONFIG, secureRoutes: ['/api/v1'] },
     });
 
-    httpClient.get('https://backend.example.com/api/v1/orders?page=1').subscribe({
-      next: () => done(),
-    });
+    const sameOriginUrl = `${window.location.origin}/api/v1/orders?page=1`;
+    httpClient.get(sameOriginUrl).subscribe({ next: () => done() });
 
     setTimeout(() => {
-      const req = httpMock.expectOne('https://backend.example.com/api/v1/orders?page=1');
+      const req = httpMock.expectOne(sameOriginUrl);
       expect(req.request.headers.get('Authorization')).toBe('Bearer token-xyz');
       req.flush({});
     });
+  });
+
+  it('should NOT attach token to a foreign origin whose path merely contains the secureRoute', () => {
+    // why: đây chính là lỗ rò token. Điều kiện cũ `req.url.includes(route)` khớp chuỗi con không
+    // neo, không xét host — nên `https://evil.example.com/api/v1/collect` cũng nhận
+    // `Authorization: Bearer <token>`, tức access token bị gửi thẳng sang host bên thứ ba.
+    const keycloakInstance = makeKeycloakInstanceStub('token-xyz');
+    configure({
+      keycloak: keycloakInstance as any,
+      config: { ...SECURE_CONFIG, secureRoutes: ['/api/v1'] },
+    });
+
+    const foreignUrl = 'https://evil.example.com/api/v1/collect';
+    httpClient.get(foreignUrl).subscribe({ next: () => undefined });
+
+    // Không khớp secureRoute nên interceptor forward NGAY, không chờ updateToken.
+    const req = httpMock.expectOne(foreignUrl);
+    expect(req.request.headers.has('Authorization')).toBeFalse();
+    expect(keycloakInstance.updateToken).not.toHaveBeenCalled();
+    req.flush({});
+  });
+
+  it('should attach token when secureRoutes declares an absolute origin and the URL matches it', done => {
+    const keycloakInstance = makeKeycloakInstanceStub('origin-token');
+    configure({
+      keycloak: keycloakInstance as any,
+      config: { ...SECURE_CONFIG, secureRoutes: ['https://api.example.com/v1'] },
+    });
+
+    httpClient.get('https://api.example.com/v1/users').subscribe({ next: () => done() });
+
+    setTimeout(() => {
+      const req = httpMock.expectOne('https://api.example.com/v1/users');
+      expect(req.request.headers.get('Authorization')).toBe('Bearer origin-token');
+      req.flush({});
+    });
+  });
+
+  it('should NOT attach token to a lookalike host of the configured absolute origin', () => {
+    const keycloakInstance = makeKeycloakInstanceStub('origin-token');
+    configure({
+      keycloak: keycloakInstance as any,
+      config: { ...SECURE_CONFIG, secureRoutes: ['https://api.example.com/v1'] },
+    });
+
+    const lookalike = 'https://api.example.com.evil.tld/v1/users';
+    httpClient.get(lookalike).subscribe({ next: () => undefined });
+
+    const req = httpMock.expectOne(lookalike);
+    expect(req.request.headers.has('Authorization')).toBeFalse();
+    req.flush({});
+  });
+
+  it('should NOT attach token to a sibling path that merely string-prefixes the secureRoute', () => {
+    const keycloakInstance = makeKeycloakInstanceStub('token-xyz');
+    configure({
+      keycloak: keycloakInstance as any,
+      config: { ...SECURE_CONFIG, secureRoutes: ['/api/v1'] },
+    });
+
+    httpClient.get('/api/v1beta/orders').subscribe({ next: () => undefined });
+
+    const req = httpMock.expectOne('/api/v1beta/orders');
+    expect(req.request.headers.has('Authorization')).toBeFalse();
+    req.flush({});
   });
 
   // ─── 9. Multiple secureRoutes — first matching route attaches token ───────────

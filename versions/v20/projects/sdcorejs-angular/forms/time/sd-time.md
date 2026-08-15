@@ -27,13 +27,17 @@ import { SdTime } from '@sdcorejs/angular/forms/time';
 | `min` / `max`                      | `string \| null`               | `undefined`           | Inclusive time-only boundaries.                                                                     |
 | `step`                             | `number` minutes               | `1`                   | Positive integer minute interval, anchored to `min` when present and otherwise midnight.            |
 | `required`                         | `boolean`                      | `false`               | Rejects an empty value.                                                                             |
-| `clearable`                        | `boolean`                      | `false`               | Shows clear when optional and editable.                                                             |
+| `clearable`                        | `boolean`                      | `false`               | Shows a clear `×` in the input suffix while the field is optional, editable, and non-empty.        |
 | `disabled` / `readonly`            | `boolean`                      | `false`               | Disabled affects Angular Forms; readonly remains focusable but not editable.                        |
 | `viewed`                           | `boolean \| 'inline'`          | `false`               | Static or inline display policy shared by SDCoreJS controls.                                        |
 | `appearance`, `floatLabel`, `size` | Material/SDCoreJS form options | shared defaults       | Matches the other form controls.                                                                    |
 | `hideInlineError`, `inlineError`   | error options                  | `false` / `undefined` | Inline message or compact tooltip behavior.                                                         |
 
 Outputs are `sdChange`, `sdFocus`, and `sdBlur`. Public methods include `open()`, `focus()`, and `clear()`.
+
+The picker trigger is a plain `<button class="sd-suffix-icon sd-suffix-btn">`, the same 20px affordance `<sd-date>` / `<sd-datetime>` / `<sd-date-range>` use — not a `mat-icon-button`, whose 40px box and 48px touch target pushed the clock inward and made the hit area visibly larger than every other suffix in the pack.
+
+The clear button is hover-gated (`.sd-clear-btn.sd-hover`) like `<sd-input>`: it reserves its slot but only becomes visible while the field is hovered or focused. `showClear()` tracks both user typing and programmatic model writes — the latter matter because the shared form connector writes with `{ emitEvent: false }`, so a value pushed through `[model]` never ticks the control-event stream. `clear()` still works regardless of `clearable`; the input only governs the affordance.
 
 ## Parsing and validation
 
@@ -42,7 +46,10 @@ Outputs are `sdChange`, `sdFocus`, and `sdBlur`. Public methods include `open()`
 - `min`, `max`, and `step` are validated independently of locale and timezone.
 - Arrow Up/Down advances by `step` minutes and clamps to the configured boundaries.
 - The picker uses a fixed internal date anchor; only the `HH:mm` result is committed.
+- The validation message (inline `<mat-error>` and the `hideInlineError` tooltip icon) is **interaction-gated** — it renders only once the control is touched or dirty. A `[required]` field no longer shows its error on first paint, before the user has typed or blurred.
 
 ## Accessibility and automation
 
 The editor is a numeric-inputmode text field with an accessible label. The picker trigger has its own translated label. `data-autoId`, disabled/invalid/empty/value/required/error metadata follow the common form-control contract.
+
+The `<div>` wrapped around the spinner inside the picker `mat-menu` only exists to stop click bubbling from closing the menu; it is marked `role="presentation"`, never `aria-hidden="true"`. `aria-hidden` there would have hidden the hour/minute spinner and the Cancel/Confirm buttons from assistive tech while they stayed focusable.

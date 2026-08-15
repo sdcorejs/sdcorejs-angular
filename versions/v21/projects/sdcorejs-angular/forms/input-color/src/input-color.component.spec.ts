@@ -373,4 +373,170 @@ describe('SdInputColor (viewed inline mode)', () => {
     expect(fixture.nativeElement.querySelector('sd-input sd-view')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('.sd-input-color__swatch')).toBeNull();
   });
+
+  // why: `viewed` là tri-state (boolean | 'inline') và 'inline' TRUTHY. Guard cũ
+  // `if (... || this.viewed()) return` trong openPicker()/clear() vì thế khoá luôn chế độ
+  // inline — bảng chọn màu của OS và clear() lập trình đều chết dù inline VẪN sửa được.
+  // Phải gate bằng isViewed() (đúng `true`) từ sdViewedInline.
+  describe("viewed='inline' vẫn mở được picker và clear() được", () => {
+    // why: KHÔNG stub `picker` nữa. Bản stub cũ ghi đè viewChild bằng một <input> rời nên nó chỉ
+    // kiểm tra đúng cái guard boolean và vẫn XANH dù trong DOM thật chẳng có element nào —
+    // nhánh inline của <sd-input> khi đó không project `sdSuffixDef`. Giờ nhánh inline đã project,
+    // spec bám thẳng vào <input type="color"> thật để không còn "xanh vì lý do sai".
+    const pickerEl = (): HTMLInputElement | null => fixture.nativeElement.querySelector('input.sd-input-color__hidden-picker');
+
+    it('isViewed() is false and isInline() is true for inline', async () => {
+      fixture.componentRef.setInput('viewed', 'inline');
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+
+      expect(fixture.componentInstance.isViewed()).toBeFalse();
+      expect(fixture.componentInstance.isInline()).toBeTrue();
+    });
+
+    it('renders the swatch AND the hidden colour input inside the inline branch', async () => {
+      fixture.componentRef.setInput('viewed', 'inline');
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+
+      expect(fixture.nativeElement.querySelector('sd-input sd-inline-text')).not.toBeNull();
+      const swatch = fixture.nativeElement.querySelector('.sd-input-color__swatch') as HTMLButtonElement | null;
+      expect(swatch).not.toBeNull();
+      expect(swatch!.disabled).toBeFalse();
+      expect(pickerEl()).not.toBeNull();
+    });
+
+    it('openPicker() clicks the REAL hidden colour input in inline mode', async () => {
+      fixture.componentRef.setInput('viewed', 'inline');
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+
+      const el = pickerEl();
+      expect(el).not.toBeNull();
+      const spy = spyOn(el!, 'click');
+
+      fixture.componentInstance.openPicker();
+
+      expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    it('clicking the swatch opens the picker in inline mode', async () => {
+      fixture.componentRef.setInput('viewed', 'inline');
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+
+      const el = pickerEl();
+      expect(el).not.toBeNull();
+      const spy = spyOn(el!, 'click');
+
+      (fixture.nativeElement.querySelector('.sd-input-color__swatch') as HTMLButtonElement).click();
+      await fixture.whenStable();
+
+      expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    it('readonly still blocks openPicker() even though the real element is mounted', async () => {
+      fixture.componentRef.setInput('viewed', 'inline');
+      fixture.componentRef.setInput('readonly', true);
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+
+      const el = pickerEl();
+      expect(el).not.toBeNull();
+      const spy = spyOn(el!, 'click');
+
+      fixture.componentInstance.openPicker();
+
+      expect(spy).not.toHaveBeenCalled();
+    });
+
+    it('clear() resets the model in inline mode', async () => {
+      fixture.componentRef.setInput('viewed', 'inline');
+      fixture.componentRef.setInput('model', '#FF0000');
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+      const emitted: (string | null | undefined)[] = [];
+      fixture.componentInstance.sdChange.subscribe(v => emitted.push(v));
+
+      fixture.componentInstance.clear();
+      await fixture.whenStable();
+
+      expect(fixture.componentInstance.valueModel()).toBeNull();
+      expect(emitted).toEqual([null]);
+    });
+
+    it('viewed=true still blocks clear() (static view — no picker in the DOM at all)', async () => {
+      fixture.componentRef.setInput('viewed', true);
+      fixture.componentRef.setInput('model', '#FF0000');
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+
+      fixture.componentInstance.openPicker();
+      fixture.componentInstance.clear();
+      await fixture.whenStable();
+
+      expect(fixture.componentInstance.isViewed()).toBeTrue();
+      expect(pickerEl()).toBeNull();
+      expect(fixture.componentInstance.valueModel()).toBe('#FF0000');
+    });
+
+    it("disabled + viewed='inline' degrades to static → picker and clear() stay blocked", async () => {
+      fixture.componentRef.setInput('viewed', 'inline');
+      fixture.componentRef.setInput('disabled', true);
+      fixture.componentRef.setInput('model', '#FF0000');
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+
+      fixture.componentInstance.openPicker();
+      fixture.componentInstance.clear();
+      await fixture.whenStable();
+
+      expect(fixture.componentInstance.isViewed()).toBeTrue();
+      expect(fixture.componentInstance.isInline()).toBeFalse();
+      expect(pickerEl()).toBeNull();
+      expect(fixture.componentInstance.valueModel()).toBe('#FF0000');
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Accessibility
+// why: `aria-hidden="true"` trên phần tử focus được (hoặc trên phần tử BỌC nội dung focus được)
+// tệ hơn là không làm gì: control vẫn nhận focus bằng Tab nhưng screen reader không đọc gì.
+// Trước đây nó bị rắc khắp forms/** chỉ để dập 4 rule a11y đang bị tắt trong eslint.
+// ---------------------------------------------------------------------------
+const FOCUSABLE_SELECTOR =
+  'input:not([tabindex="-1"]), textarea:not([tabindex="-1"]), select:not([tabindex="-1"]), ' +
+  'button:not([tabindex="-1"]), a[href]:not([tabindex="-1"]), [tabindex]:not([tabindex="-1"])';
+
+/** Trả về tag của mọi phần tử aria-hidden mà bản thân nó hoặc con nó focus được. */
+function ariaHiddenFocusables(root: HTMLElement): string[] {
+  return Array.from(root.querySelectorAll('[aria-hidden="true"]'))
+    .filter(el => el.matches(FOCUSABLE_SELECTOR) || el.querySelector(FOCUSABLE_SELECTOR) !== null)
+    .map(el => el.tagName.toLowerCase());
+}
+
+describe('SdInputColor (accessibility)', () => {
+  let fixture: ComponentFixture<HostComponent>;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({ imports: [HostComponent, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+  });
+
+  it('leaves no aria-hidden on any focusable element', () => {
+    // why: <input type="color"> ẩn VẪN giữ aria-hidden — nhưng nó tabindex="-1", kích thước 0,
+    // pointer-events:none nên không phải phần tử focus được; guard vì thế phải sạch.
+    expect(ariaHiddenFocusables(fixture.nativeElement)).toEqual([]);
+  });
+
+  it('keeps the visible swatch button as the named, keyboard-reachable control', () => {
+    const swatch = fixture.nativeElement.querySelector('button.sd-input-color__swatch') as HTMLButtonElement;
+    expect(swatch).not.toBeNull();
+    expect(swatch.type).toBe('button');
+    expect(swatch.getAttribute('aria-label')).toBeTruthy();
+    expect(swatch.hasAttribute('aria-hidden')).toBe(false);
+  });
 });

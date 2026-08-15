@@ -4,4 +4,4 @@ export interface SdSearchReq<TData extends string | number = string> {
   searchFields?: string[]; // Các field muốn searchs
   value?: TData | TData[];
 }
-export type SdSearch<T = any> = (args: SdSearchReq) => Promise<T[]>;
+export type SdSearch<T = unknown> = (args: SdSearchReq) => Promise<T[]>;

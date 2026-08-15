@@ -1,6 +1,7 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { from, switchMap } from 'rxjs';
+import { sdMatchesSecureRoute } from '@sdcorejs/angular/utilities';
 import { SdKeycloakService } from './keycloak.service';
 
 export const SdKeycloakInterceptor: HttpInterceptorFn = (req, next) => {
@@ -12,8 +13,12 @@ export const SdKeycloakInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req);
   }
 
-  // Kiểm tra xem URL của request có nằm trong mảng secureRoutes không
-  const isSecure = config.secureRoutes?.some(route => req.url.includes(route));
+  // why: trước đây là `config.secureRoutes?.some(route => req.url.includes(route))` — một phép so
+  // khớp chuỗi con KHÔNG neo, không kiểm tra host. Với cấu hình mẫu `secureRoutes: ['/api/v1']`,
+  // bất kỳ URL nào chứa chuỗi đó (vd `https://evil.example.com/api/v1/collect`) đều nhận header
+  // `Authorization: Bearer <token>` — tức là rò access token sang host bên thứ ba.
+  // `sdMatchesSecureRoute` parse URL rồi so origin + tiền tố path theo segment, và fail-closed.
+  const isSecure = sdMatchesSecureRoute(req.url, config.secureRoutes);
   if (!isSecure) {
     return next(req);
   }

@@ -1120,78 +1120,6 @@ export class DataStateDemoComponent {
   border-radius: 8px;
 }`,
   },
-  "components/document-builder": {
-    typescript: `import { AfterViewInit, ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
-import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
-import { SdDocumentBuilder, SdDocumentBuilderOption } from '@sdcorejs/angular/components/document-builder';
-
-@Component({
-  selector: 'app-document-builder-demo',
-  standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, SdDocumentBuilder],
-  template: \`
-    <demo-page #demoPage
-      title="Document Builder"
-      description="Trình soạn thảo tài liệu đầy đủ — định dạng nâng cao, chèn bảng, ảnh, heading, biến (variable), comment. Dùng để dựng mẫu hợp đồng, văn bản nội bộ.">
-
-      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-soan-mau-hop-dong') {
-      <demo-section heading="Soạn mẫu hợp đồng" [props]="[{ name: 'option', value: 'config' }, { name: 'contentChange', value: 'event' }]">
-        <div class="doc-box">
-          <sd-document-builder
-            style="height: 100%; width: 100%"
-            [option]="builderOption"
-            (contentChange)="onContentChange($event)">
-          </sd-document-builder>
-        </div>
-      </demo-section>
-      }
-    </demo-page>
-  \`,
-  styles: [\`
-    .doc-box {
-      width: 100%;
-      height: 520px;
-    }
-  \`],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class DocumentBuilderDemoComponent implements AfterViewInit {
-  readonly builderRef = viewChild(SdDocumentBuilder);
-
-  readonly builderOption: SdDocumentBuilderOption = {
-    orientation: 'PORTRAIT',
-  };
-
-  readonly defaultContent = \`
-    <h2>HỢP ĐỒNG LAO ĐỘNG</h2>
-    <p>Hôm nay, ngày ____/____/______, tại văn phòng công ty, chúng tôi gồm có:</p>
-    <p><strong>Bên A:</strong> Công ty TNHH ABC</p>
-    <p><strong>Bên B:</strong> Ông/Bà ______________________, CCCD số ______________</p>
-    <h3>Điều 1: Công việc và địa điểm làm việc</h3>
-    <p>Bên B đồng ý làm việc tại vị trí lập trình viên, thuộc phòng Công nghệ thông tin.</p>
-    <h3>Điều 2: Thời hạn hợp đồng</h3>
-    <p>Hợp đồng có thời hạn 12 tháng, kể từ ngày ký.</p>
-    <h3>Điều 3: Lương và phúc lợi</h3>
-    <p>Mức lương cơ bản là 20.000.000 VNĐ mỗi tháng.</p>
-  \`;
-
-  readonly htmlOutput = signal<string>('');
-
-  ngAfterViewInit(): void {
-    // Document Builder không có @Input content — phải gọi setContent sau khi view init.
-    queueMicrotask(() => this.builderRef()?.setContent(this.defaultContent));
-  }
-
-  onContentChange(html: string): void {
-    this.htmlOutput.set(html);
-  }
-}
-`,
-    scss: `.doc-box {
-  width: 100%;
-  height: 520px;
-}`,
-  },
   "components/editor": {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
@@ -1434,7 +1362,14 @@ const SEED: SdFormGeneric = {
       ],
     } as any,
   ],
-  validations: [],
+  // why: badge đếm trên toolbar chỉ hiện khi có cấu hình — seed rỗng thì không có gì để nhìn.
+  validations: [
+    {
+      alert: 'warning',
+      type: 'function',
+      code: 'reviewBeforeSubmit',
+    } as any,
+  ],
 };
 
 const DRAG_DROP_POPUP_SEED: SdFormGeneric = {
@@ -1747,12 +1682,12 @@ export class FormGenericDemoComponent {
     typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdHistoryItem } from '@sdcorejs/angular/components/history';
-import type { SdColor } from '@sdcorejs/angular/utilities';
+import type { Color } from '@sdcorejs/utils/models';
 
 // SdHistoryItemType chưa được export ở barrel — khai báo lại tại đây để tránh sửa thư viện.
 interface SdHistoryItemType {
   title: string;
-  status?: { title?: string; color?: SdColor; icon?: string };
+  status?: { title?: string; color?: Color; icon?: string };
   date?: string;
   actor?: string;
   source?: string;
@@ -3045,7 +2980,7 @@ export class ModalDemoComponent {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdOperator } from '@sdcorejs/angular/components/operator';
-import type { Operator } from '@sdcorejs/angular/utilities/models';
+import type { Operator } from '@sdcorejs/utils/models';
 
 @Component({
   selector: 'app-operator-demo',
@@ -3585,7 +3520,7 @@ export class PreviewDemoComponent {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdQueryBar, SdQueryField, SdQueryLogic } from '@sdcorejs/angular/components/query-bar';
-import { Filter } from '@sdcorejs/angular/utilities/models';
+import { Filter } from '@sdcorejs/utils/models';
 
 interface Employee {
   id: number;
@@ -5299,6 +5234,7 @@ import {
   SdTable,
   SdTableOption,
   SdTableCellDefDirective,
+  SdTableCommandHeaderDefDirective,
   SdTableExpandDefDirective,
   SdTableGroupDefDirective,
   SdMaterialFooterDefDirective,
@@ -5439,6 +5375,7 @@ const TASKS: Task[] = [
     DecimalPipe,
     SdTable,
     SdTableCellDefDirective,
+    SdTableCommandHeaderDefDirective,
     SdTableExpandDefDirective,
     SdTableGroupDefDirective,
     SdMaterialFooterDefDirective,
@@ -5648,6 +5585,21 @@ const TASKS: Task[] = [
       <demo-section heading="Kéo thả đổi thứ tự" [props]="[{ name: 'rowReorder', value: 'true' }]">
         <div class="table-box">
           <sd-table [option]="reorderOption"></sd-table>
+        </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-hanh-dong-o-header-cot-command') {
+      <demo-section
+        heading="Hành động ở header cột command"
+        [props]="[{ name: 'sdTableCommandHeaderDef', value: 'template' }]"
+        note="Ô header của cột command vốn để trống. Chiếu nội dung vào đó để đặt một hành động cấp bảng (ở đây là thêm dòng) ngay trên cụm sửa/xoá của từng dòng, khỏi cần thêm một dải riêng dưới bảng.">
+        <div class="table-box">
+          <sd-table [option]="commandHeaderOption">
+            <ng-template sdTableCommandHeaderDef>
+              <sd-button prefixIcon="add" type="text" color="primary" tooltip="Thêm dòng" (click)="addCommandHeaderRow()"></sd-button>
+            </ng-template>
+          </sd-table>
         </div>
       </demo-section>
       }
@@ -6167,6 +6119,25 @@ export class TableDemoComponent {
     style: { shadow: true },
   };
 
+  // why: dùng signal cho items để nút "thêm dòng" trong header command có thứ để tác động thật,
+  // thay vì chỉ là một nút trang trí.
+  readonly commandHeaderRows = signal<Employee[]>(EMPLOYEES.slice(0, 3));
+  readonly commandHeaderOption: SdTableOption<Employee> = {
+    type: 'local',
+    items: () => this.commandHeaderRows(),
+    paginate: { hidden: true },
+    commands: [
+      { icon: 'edit', title: 'Sửa', click: () => undefined },
+      { icon: 'delete', title: 'Xoá', click: row => this.commandHeaderRows.update(rows => rows.filter(e => e.id !== row.id)) },
+    ],
+    columns: [
+      { field: 'name', type: 'string', title: 'Nhân sự', width: '260px' },
+      { field: 'department', type: 'string', title: 'Phòng', width: '140px' },
+      { field: 'position', type: 'string', title: 'Chức vụ' },
+    ],
+    style: { shadow: true },
+  };
+
   readonly customCellOption: SdTableOption<Employee> = {
     type: 'local',
     items: () => EMPLOYEES.slice(0, 6),
@@ -6245,6 +6216,14 @@ export class TableDemoComponent {
     ],
     style: { shadow: true },
   };
+
+  addCommandHeaderRow(): void {
+    this.commandHeaderRows.update(rows => {
+      const next = EMPLOYEES[rows.length % EMPLOYEES.length];
+      // Cấp id mới để bảng không trùng key khi vòng lại danh sách mẫu.
+      return [...rows, { ...next, id: Math.max(0, ...rows.map(e => e.id)) + 1 }];
+    });
+  }
 
   totalSalary(items: SdTableItem<Employee>[]): number {
     return (items || []).reduce((sum, e) => sum + (e?.data?.salary ?? 0), 0);
@@ -6484,11 +6463,15 @@ interface TreeDemoItem {
         <div class="tree-demo-panel">
           <sd-tree [option]="customDemoOption">
             <ng-template sdTreeItemDef let-item let-level="level" let-isLeaf="isLeaf" let-toggle="toggle">
+              <!-- why: SdTreeItemDefDirective mặc định generic là unknown (khác SdOrgChartItemDef,
+                   vốn default về type node cụ thể), nên dưới strictTemplates item không đọc được
+                   property nào. Alias qua @let + cast một lần thay vì rải $any() khắp template. -->
+              @let _node = $any(item);
               <button type="button" class="tree-custom-item" [class.tree-custom-item--leaf]="isLeaf" (click)="toggle()">
                 <span>L{{ level + 1 }}</span>
-                <strong>{{ item.title }}</strong>
-                @if (item.description) {
-                  <small>{{ item.description }}</small>
+                <strong>{{ _node.title }}</strong>
+                @if (_node.description) {
+                  <small>{{ _node.description }}</small>
                 }
               </button>
             </ng-template>
@@ -7126,6 +7109,569 @@ export class ViewDemoComponent {
   width: 100%;
 }`,
   },
+  "directives/desktop": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdDesktopDirective, SdMobileDirective } from '@sdcorejs/angular/directives';
+import { BrowserUtilities } from '@sdcorejs/utils/fns';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+@Component({
+  selector: 'app-desktop-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, SdDesktopDirective, SdMobileDirective],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Desktop Directive"
+      description="*sdDesktop chỉ tạo embedded view khi thiết bị KHÔNG phải mobile. Quyết định diễn ra một lần trong constructor, không theo dõi resize.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chi-render-tren-desktop') {
+        <demo-section
+          heading="Chỉ render trên desktop"
+          [props]="[{ name: '*sdDesktop', value: 'true' }]"
+          note="Khối bên dưới chỉ tồn tại trong DOM khi BrowserUtilities.isMobile() trả về false — không phải ẩn bằng CSS.">
+          <div class="device-box">
+            <div *sdDesktop class="device-card device-card--desktop" data-desktop-block>Nội dung chỉ dành cho desktop</div>
+            <code data-is-mobile>BrowserUtilities.isMobile() = {{ isMobile }}</code>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-cap-doi-voi-sdmobile') {
+        <demo-section
+          heading="Cặp đôi với sdMobile"
+          [props]="[
+            { name: '*sdDesktop', value: 'true' },
+            { name: '*sdMobile', value: 'true' },
+          ]"
+          note="Hai directive loại trừ nhau, nên đặt cạnh nhau là cách rẽ nhánh markup theo thiết bị mà không cần *ngIf thủ công.">
+          <div class="device-box">
+            <div *sdDesktop class="device-card device-card--desktop">Bố cục desktop: bảng nhiều cột</div>
+            <div *sdMobile class="device-card device-card--mobile">Bố cục mobile: danh sách thẻ</div>
+          </div>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  styles: \`
+    .device-box {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .device-card {
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid #dfe3e8;
+    }
+
+    .device-card--desktop {
+      background: #eef4ff;
+    }
+
+    .device-card--mobile {
+      background: #fff4e6;
+    }
+
+    code {
+      padding: 8px 12px;
+      border: 1px solid #dfe3e8;
+      border-radius: 8px;
+      background: #f7f9fb;
+    }
+  \`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class DesktopDemoComponent {
+  readonly isMobile = BrowserUtilities.isMobile();
+}
+`,
+    scss: `.device-box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.device-card {
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid #dfe3e8;
+}
+
+.device-card--desktop {
+  background: #eef4ff;
+}
+
+.device-card--mobile {
+  background: #fff4e6;
+}
+
+code {
+  padding: 8px 12px;
+  border: 1px solid #dfe3e8;
+  border-radius: 8px;
+  background: #f7f9fb;
+}`,
+  },
+  "directives/hover-copy": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdHoverCopyDirective } from '@sdcorejs/angular/directives';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+@Component({
+  selector: 'app-hover-copy-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, SdHoverCopyDirective],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Hover Copy Directive"
+      description="[sdHoverCopy] gắn một nút sao chép vào bất kỳ phần tử nào; nút chỉ hiện khi hover và tự đổi tooltip thành thông báo đã sao chép.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-nut-sao-chep-hien-khi-hover') {
+        <demo-section
+          heading="Nút sao chép hiện khi hover"
+          [props]="[{ name: '[sdHoverCopy]', value: 'text' }]"
+          note="Rê chuột vào ô bên dưới rồi bấm nút — giá trị vào clipboard và tooltip đổi sang 'Đã sao chép' trong 1 giây.">
+          <div class="copy-row">
+            <span class="copy-cell" [sdHoverCopy]="orderCode" data-copy-order>{{ orderCode }}</span>
+            <span class="copy-cell" [sdHoverCopy]="taxCode" data-copy-tax>{{ taxCode }}</span>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tat-nut-sao-chep') {
+        <demo-section
+          heading="Tắt nút sao chép"
+          [props]="[
+            { name: '[sdHoverCopy]', value: 'text' },
+            { name: '[sdHoverCopyDisabled]', value: 'true' },
+          ]"
+          note="Khi disabled, nút bị GỠ khỏi DOM chứ không chỉ ẩn bằng opacity — không còn cách nào bấm trúng nó.">
+          <div class="copy-row">
+            <span class="copy-cell" [sdHoverCopy]="lockedValue" [sdHoverCopyDisabled]="true" data-copy-disabled>{{ lockedValue }}</span>
+          </div>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  styles: \`
+    .copy-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .copy-cell {
+      display: inline-block;
+      min-width: 220px;
+      padding: 10px 40px 10px 12px;
+      border: 1px solid #dfe3e8;
+      border-radius: 8px;
+      background: #f7f9fb;
+      font-family: 'SFMono-Regular', Consolas, Menlo, monospace;
+      font-size: 13px;
+    }
+  \`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class HoverCopyDemoComponent {
+  readonly orderCode = 'DH-2026-000184';
+  readonly taxCode = '0312345678-001';
+  // why: KHÔNG đặt tên field là \`secret\` — git-secrets của org quét theo tên định danh, nên một
+  // hằng demo vô hại cũng chặn commit, và nó chặn ở bundle đã build (published-pages) chứ không
+  // phải ở file này, nên thủ phạm rất khó lần ra.
+  readonly lockedValue = 'Không cho sao chép';
+}
+`,
+    scss: `.copy-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.copy-cell {
+  display: inline-block;
+  min-width: 220px;
+  padding: 10px 40px 10px 12px;
+  border: 1px solid #dfe3e8;
+  border-radius: 8px;
+  background: #f7f9fb;
+  font-family: 'SFMono-Regular', Consolas, Menlo, monospace;
+  font-size: 13px;
+}`,
+  },
+  "directives/href": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdHrefDirective } from '@sdcorejs/angular/directives';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+@Component({
+  selector: 'app-href-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, SdHrefDirective],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Href Directive"
+      description="a[sdHref] nhận MỘT chuỗi url rồi tự chọn cách đi: link nội bộ đi qua Router (không reload), link http/https ra ngoài mở tab mới kèm noopener.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-link-noi-bo-di-qua-router') {
+        <demo-section
+          heading="Link nội bộ đi qua Router"
+          [props]="[{ name: '[sdHref]', value: 'url' }]"
+          note="Chuỗi không phải http/https được tách path + query rồi đẩy sang Router.navigate — bấm không nạp lại trang.">
+          <a class="demo-link" [sdHref]="internalUrl" data-href-internal>Mở trang Tooltip Directive</a>
+          <code>{{ internalUrl }}</code>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-link-ngoai-mo-tab-moi-an-toan') {
+        <demo-section
+          heading="Link ngoài mở tab mới an toàn"
+          [props]="[{ name: '[sdHref]', value: 'https url' }]"
+          note="Chỉ url parse ra đúng scheme http:/https: mới được coi là link ngoài, và luôn mở kèm noopener,noreferrer để chặn reverse tabnabbing.">
+          <a class="demo-link" [sdHref]="externalUrl" data-href-external>Mở angular.dev</a>
+          <code>{{ externalUrl }}</code>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  styles: \`
+    .demo-link {
+      display: inline-block;
+      padding: 10px 14px;
+      border: 1px solid #dfe3e8;
+      border-radius: 8px;
+      background: #eef4ff;
+      color: var(--sd-primary, #005cbb);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    code {
+      padding: 8px 12px;
+      border: 1px solid #dfe3e8;
+      border-radius: 8px;
+      background: #f7f9fb;
+      font-size: 13px;
+    }
+  \`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class HrefDemoComponent {
+  readonly internalUrl = '/v/latest/directives/tooltip';
+  readonly externalUrl = 'https://angular.dev';
+}
+`,
+    scss: `.demo-link {
+  display: inline-block;
+  padding: 10px 14px;
+  border: 1px solid #dfe3e8;
+  border-radius: 8px;
+  background: #eef4ff;
+  color: var(--sd-primary, #005cbb);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+code {
+  padding: 8px 12px;
+  border: 1px solid #dfe3e8;
+  border-radius: 8px;
+  background: #f7f9fb;
+  font-size: 13px;
+}`,
+  },
+  "directives/mobile": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdDesktopDirective, SdMobileDirective } from '@sdcorejs/angular/directives';
+import { BrowserUtilities } from '@sdcorejs/utils/fns';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+@Component({
+  selector: 'app-mobile-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, SdDesktopDirective, SdMobileDirective],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Mobile Directive"
+      description="*sdMobile chỉ tạo embedded view trên thiết bị mobile. Cùng một quyết định một-lần như *sdDesktop, chỉ đảo điều kiện.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chi-render-tren-mobile') {
+        <demo-section
+          heading="Chỉ render trên mobile"
+          [props]="[{ name: '*sdMobile', value: 'true' }]"
+          note="Mở DevTools ở chế độ device rồi tải lại trang để thấy khối này xuất hiện — directive đọc user agent lúc khởi tạo, không phản ứng với resize.">
+          <div class="device-box">
+            <div *sdMobile class="device-card device-card--mobile" data-mobile-block>Nội dung chỉ dành cho mobile</div>
+            <code data-is-mobile>BrowserUtilities.isMobile() = {{ isMobile }}</code>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-cap-doi-voi-sddesktop') {
+        <demo-section
+          heading="Cặp đôi với sdDesktop"
+          [props]="[
+            { name: '*sdMobile', value: 'true' },
+            { name: '*sdDesktop', value: 'true' },
+          ]"
+          note="Đúng một trong hai nhánh tồn tại trong DOM, nên không có chi phí render cho nhánh còn lại.">
+          <div class="device-box">
+            <div *sdMobile class="device-card device-card--mobile">Thanh hành động dán đáy màn hình</div>
+            <div *sdDesktop class="device-card device-card--desktop">Thanh hành động nằm trong toolbar</div>
+          </div>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  styles: \`
+    .device-box {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .device-card {
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid #dfe3e8;
+    }
+
+    .device-card--desktop {
+      background: #eef4ff;
+    }
+
+    .device-card--mobile {
+      background: #fff4e6;
+    }
+
+    code {
+      padding: 8px 12px;
+      border: 1px solid #dfe3e8;
+      border-radius: 8px;
+      background: #f7f9fb;
+    }
+  \`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class MobileDemoComponent {
+  readonly isMobile = BrowserUtilities.isMobile();
+}
+`,
+    scss: `.device-box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.device-card {
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid #dfe3e8;
+}
+
+.device-card--desktop {
+  background: #eef4ff;
+}
+
+.device-card--mobile {
+  background: #fff4e6;
+}
+
+code {
+  padding: 8px 12px;
+  border: 1px solid #dfe3e8;
+  border-radius: 8px;
+  background: #f7f9fb;
+}`,
+  },
+  "directives/scroll": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdScrollDirective } from '@sdcorejs/angular/directives';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+@Component({
+  selector: 'app-scroll-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, SdScrollDirective],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Scroll Directive"
+      description="[sdScroll] giữ overflow-y: auto thường trực nhưng chỉ bật overflow-x khi con trỏ nằm trong vùng — thanh cuộn ngang không chiếm chỗ lúc chỉ đọc.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-thanh-cuon-ngang-chi-hien-khi-hover') {
+        <demo-section
+          heading="Thanh cuộn ngang chỉ hiện khi hover"
+          [props]="[{ name: '[sdScroll]', value: 'true' }]"
+          note="Rê chuột vào khung để thấy thanh cuộn ngang xuất hiện; đưa chuột ra ngoài, overflow-x quay lại hidden. Directive cũng phát scrollTop() để cuộn khung về đầu.">
+          <div class="scroll-frame" sdScroll #frame data-scroll-frame>
+            <div class="scroll-wide">
+              @for (row of rows; track row) {
+                <p>{{ row }}</p>
+              }
+            </div>
+          </div>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  styles: \`
+    .scroll-frame {
+      width: 100%;
+      max-width: 520px;
+      height: 160px;
+      border: 1px solid #dfe3e8;
+      border-radius: 8px;
+      background: #f7f9fb;
+      padding: 12px;
+    }
+
+    .scroll-wide {
+      width: 900px;
+    }
+
+    .scroll-wide p {
+      margin: 0 0 8px;
+      white-space: nowrap;
+      font-family: 'SFMono-Regular', Consolas, Menlo, monospace;
+      font-size: 13px;
+    }
+  \`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ScrollDemoComponent {
+  readonly rows = Array.from(
+    { length: 12 },
+    (_, index) => \`Dòng \${index + 1} — nội dung rất dài để ép khung phải cuộn theo chiều ngang khi hover\`
+  );
+}
+`,
+    scss: `.scroll-frame {
+  width: 100%;
+  max-width: 520px;
+  height: 160px;
+  border: 1px solid #dfe3e8;
+  border-radius: 8px;
+  background: #f7f9fb;
+  padding: 12px;
+}
+
+.scroll-wide {
+  width: 900px;
+}
+
+.scroll-wide p {
+  margin: 0 0 8px;
+  white-space: nowrap;
+  font-family: 'SFMono-Regular', Consolas, Menlo, monospace;
+  font-size: 13px;
+}`,
+  },
+  "directives/tooltip": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdTooltipDirective } from '@sdcorejs/angular/directives';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+@Component({
+  selector: 'app-tooltip-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, SdTooltipDirective],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Tooltip Directive"
+      description="[sdTooltip] dựng tooltip qua CDK Overlay: nhận chuỗi hoặc TemplateRef, đổi được vị trí, màu và độ trễ; nội dung tooltip vẫn chọn/copy được.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tooltip-van-ban') {
+        <demo-section
+          heading="Tooltip văn bản"
+          [props]="[{ name: '[sdTooltip]', value: 'text' }]"
+          note="Rê chuột vào nút để tooltip hiện bên dưới — vị trí mặc định là bottom.">
+          <button type="button" class="demo-target" [sdTooltip]="'Số dư khả dụng sau khi trừ phong toả'" data-tooltip-basic>
+            Số dư khả dụng
+          </button>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-vi-tri-mau-va-do-tre') {
+        <demo-section
+          heading="Vị trí, màu và độ trễ"
+          [props]="[
+            { name: 'sdTooltipPosition', value: 'top / bottom / left / right' },
+            { name: 'sdTooltipColor', value: '#hex' },
+            { name: 'sdTooltipDelay', value: 'ms' },
+          ]"
+          note="Delay tính bằng mili-giây trước khi overlay mở; màu áp thẳng vào nền hộp tooltip.">
+          <button type="button" class="demo-target" [sdTooltip]="'Hiện phía trên'" sdTooltipPosition="top" data-tooltip-top>Top</button>
+          <button type="button" class="demo-target" [sdTooltip]="'Hiện bên trái'" sdTooltipPosition="left" data-tooltip-left>Left</button>
+          <button
+            type="button"
+            class="demo-target"
+            [sdTooltip]="'Đỏ cảnh báo, chờ 600ms'"
+            sdTooltipPosition="right"
+            sdTooltipColor="#d92d20"
+            [sdTooltipDelay]="600"
+            data-tooltip-delay>
+            Right + delay
+          </button>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-noi-dung-dang-template') {
+        <demo-section
+          heading="Nội dung dạng template"
+          [props]="[{ name: '[sdTooltip]', value: 'template' }]"
+          note="Truyền TemplateRef để tooltip mang markup thật (danh sách, nhãn, liên kết) thay vì một dòng chữ.">
+          <button type="button" class="demo-target" [sdTooltip]="richTooltip" data-tooltip-template>Chi tiết phí</button>
+          <ng-template #richTooltip>
+            <div class="rich-tooltip">
+              <strong>Phí giao dịch</strong>
+              <span>Phí cố định: 11.000 đ</span>
+              <span>Phí theo giá trị: 0,02%</span>
+            </div>
+          </ng-template>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  styles: \`
+    .demo-target {
+      padding: 10px 14px;
+      border: 1px solid #dfe3e8;
+      border-radius: 8px;
+      background: #f7f9fb;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .rich-tooltip {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+  \`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TooltipDemoComponent {}
+`,
+    scss: `.demo-target {
+  padding: 10px 14px;
+  border: 1px solid #dfe3e8;
+  border-radius: 8px;
+  background: #f7f9fb;
+  cursor: pointer;
+  font: inherit;
+}
+
+.rich-tooltip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}`,
+  },
   "forms/autocomplete": {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -7543,61 +8089,124 @@ import { SdDate } from '@sdcorejs/angular/forms/date';
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdDate],
   template: \`
-    <demo-page #demoPage title="Date" description="sd-date – chọn 1 ngày, hiển thị theo định dạng dd/MM/yyyy. Bind hai chiều với chuỗi ISO.">
+    <demo-page
+      #demoPage
+      title="Date"
+      description="sd-date – chọn 1 ngày, hiển thị theo định dạng dd/MM/yyyy. Bind hai chiều với chuỗi ISO.">
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-co-ban') {
-      <demo-section heading="Cơ bản" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Mở lịch và chọn ngày.">
-        <div style="width: 320px; display:flex; flex-direction:column; gap:8px">
-          <sd-date label="Ngày sinh" helperText="Theo CMND/CCCD"
-            [(model)]="birthday" [form]="form"></sd-date>
-          <div style="font-size:12px; color:#555">
-            Giá trị: <b>{{ birthday() || '(trống)' }}</b>
+        <demo-section heading="Cơ bản" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Mở lịch và chọn ngày.">
+          <div style="width: 320px; display:flex; flex-direction:column; gap:8px">
+            <sd-date label="Ngày sinh" helperText="Theo CMND/CCCD" [(model)]="birthday" [form]="form"></sd-date>
+            <div style="font-size:12px; color:#555">
+              Giá trị: <b>{{ birthday() || '(trống)' }}</b>
+            </div>
           </div>
-        </div>
-      </demo-section>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-validator') {
-      <demo-section heading="Validator" [props]="[{ name: 'required', value: 'true' }]" note="Để trống và bấm Kiểm tra để hiện lỗi inline.">
-        <div style="width: 320px; display:flex; flex-direction:column; gap:12px">
-          <sd-date label="required"
-            [(model)]="startDate" [form]="formValid" required></sd-date>
-          <div style="display:flex; gap:8px">
-            <button type="button" (click)="check()">Kiểm tra</button>
-            <button type="button" (click)="reset()">Đặt lại</button>
+        <demo-section
+          heading="Validator"
+          [props]="[{ name: 'required', value: 'true' }]"
+          note="Để trống và bấm Kiểm tra để hiện lỗi inline.">
+          <div style="width: 320px; display:flex; flex-direction:column; gap:12px">
+            <sd-date label="required" [(model)]="startDate" [form]="formValid" required></sd-date>
+            <div style="display:flex; gap:8px">
+              <button type="button" (click)="check()">Kiểm tra</button>
+              <button type="button" (click)="reset()">Đặt lại</button>
+            </div>
           </div>
-        </div>
-      </demo-section>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trang-thai') {
-      <demo-section heading="Trạng thái" [props]="[{ name: 'disabled', value: 'true' }, { name: 'viewed', value: 'true' }]" note="Hai trạng thái khoá.">
-        <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
-          <sd-date style="width: 240px" label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-date>
-          <sd-date style="width: 240px" label="viewed" [(model)]="lockedB" [form]="form" viewed></sd-date>
-        </div>
-      </demo-section>
+        <demo-section
+          heading="Trạng thái"
+          [props]="[
+            { name: 'disabled', value: 'true' },
+            { name: 'viewed', value: 'true' },
+          ]"
+          note="Hai trạng thái khoá.">
+          <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
+            <sd-date style="width: 240px" label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-date>
+            <sd-date style="width: 240px" label="viewed" [(model)]="lockedB" [form]="form" viewed></sd-date>
+          </div>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-kich-thuoc') {
-      <demo-section heading="Kích thước" [props]="[{ name: 'size', value: 'sm' }]" note="UI gọn cho toolbar.">
-        <div style="width: 280px">
-          <sd-date label="sm" size="sm" [(model)]="filter" [form]="form"></sd-date>
-        </div>
-      </demo-section>
+        <demo-section heading="Kích thước" [props]="[{ name: 'size', value: 'sm' }]" note="UI gọn cho toolbar.">
+          <div style="width: 280px">
+            <sd-date label="sm" size="sm" [(model)]="filter" [form]="form"></sd-date>
+          </div>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chinh-sua-noi-tuyen') {
-      <demo-section heading="Chỉnh sửa nội tuyến" [props]="[{ name: 'viewed', value: 'inline' }]" note="Bấm vào ngày để mở lịch ngay; text giữ nguyên tới khi chọn. Hover hiện × để xoá.">
-        <div style="width: 260px; font-size:13px; color:#555">
-          Ngày sinh: <sd-date [viewed]="'inline'" [(model)]="lockedB" [form]="form"></sd-date>
-        </div>
-      </demo-section>
+        <demo-section
+          heading="Chỉnh sửa nội tuyến"
+          [props]="[{ name: 'viewed', value: 'inline' }]"
+          note="Bấm vào ngày để mở lịch ngay; text giữ nguyên tới khi chọn. Hover hiện × để xoá.">
+          <div style="width: 260px; font-size:13px; color:#555">
+            Ngày sinh: <sd-date [viewed]="'inline'" [(model)]="lockedB" [form]="form"></sd-date>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chuan-hoa-gia-tri-dau-ra') {
+        <demo-section
+          heading="Chuẩn hoá giá trị đầu ra"
+          [props]="[{ name: 'transform', value: 'ISOString / UTCString' }]"
+          note="transform chỉ đổi giá trị đi ra (model, sdChange, field trong FormGroup) — ô nhập vẫn là dd/MM/yyyy. Ngày được serialize ở nửa đêm GIỜ ĐỊA PHƯƠNG, nên phần ngày trong chuỗi UTC có thể lệch một ngày so với ô hiển thị. Đó là cùng một thời điểm.">
+          <div class="transform-grid">
+            <div>
+              <sd-date label="ISOString" transform="ISOString" [(model)]="isoDate"></sd-date>
+              <code>{{ isoDate() ?? '—' }}</code>
+            </div>
+            <div>
+              <sd-date label="UTCString" transform="UTCString" [(model)]="utcDate"></sd-date>
+              <code>{{ utcDate() ?? '—' }}</code>
+            </div>
+            <div>
+              <sd-date label="Không transform" [(model)]="plainDate"></sd-date>
+              <code>{{ plainDate() ?? '—' }}</code>
+            </div>
+          </div>
+        </demo-section>
       }
     </demo-page>
+  \`,
+  styles: \`
+    .transform-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .transform-grid > div {
+      flex: 1 1 220px;
+      min-width: 0;
+    }
+
+    .transform-grid code {
+      display: block;
+      margin-top: 4px;
+      padding: 6px 8px;
+      border: 1px solid #dfe3e8;
+      border-radius: 6px;
+      background: #f7f9fb;
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
   \`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DateDemoComponent {
+  isoDate = signal<string | null>(null);
+  utcDate = signal<string | null>(null);
+  plainDate = signal<string | null>(null);
+
   form = new FormGroup({});
   formValid = new FormGroup({});
 
@@ -7607,71 +8216,169 @@ export class DateDemoComponent {
   lockedB = signal<string | null>('2025-02-20');
   filter = signal<string | null>(null);
 
-  check() { this.formValid.markAllAsTouched(); }
-  reset() { this.formValid.reset(); this.formValid.markAsUntouched(); }
+  check() {
+    this.formValid.markAllAsTouched();
+  }
+  reset() {
+    this.formValid.reset();
+    this.formValid.markAsUntouched();
+  }
 }
 `,
+    scss: `.transform-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  width: 100%;
+}
+
+.transform-grid > div {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.transform-grid code {
+  display: block;
+  margin-top: 4px;
+  padding: 6px 8px;
+  border: 1px solid #dfe3e8;
+  border-radius: 6px;
+  background: #f7f9fb;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}`,
   },
   "forms/date-range": {
-    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+    typescript: `import { JsonPipe } from '@angular/common';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdDateRange } from '@sdcorejs/angular/forms/date-range';
 
-interface Range { from?: string | null; to?: string | null }
+interface Range {
+  from?: string | null;
+  to?: string | null;
+}
 
 @Component({
   selector: 'app-date-range-demo',
   standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdDateRange],
+  imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, JsonPipe, SdDateRange],
   template: \`
-    <demo-page #demoPage title="Date Range" description="sd-date-range – chọn khoảng thời gian từ – đến. Model là object { from, to } dạng ISO.">
+    <demo-page
+      #demoPage
+      title="Date Range"
+      description="sd-date-range – chọn khoảng thời gian từ – đến. Model là object { from, to } dạng ISO.">
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-co-ban') {
-      <demo-section heading="Cơ bản" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Chọn ngày bắt đầu và ngày kết thúc trong cùng popup.">
-        <div style="width: 380px; display:flex; flex-direction:column; gap:8px">
-          <sd-date-range label="Khoảng thời gian báo cáo" helperText="Chọn ngày bắt đầu và kết thúc"
-            [(model)]="period" [form]="form"></sd-date-range>
-          <div style="font-size:12px; color:#555">
-            Từ <b>{{ period()?.from || '...' }}</b> đến <b>{{ period()?.to || '...' }}</b>
+        <demo-section
+          heading="Cơ bản"
+          [props]="[{ name: '[(model)]', value: 'two-way' }]"
+          note="Chọn ngày bắt đầu và ngày kết thúc trong cùng popup.">
+          <div style="width: 380px; display:flex; flex-direction:column; gap:8px">
+            <sd-date-range
+              label="Khoảng thời gian báo cáo"
+              helperText="Chọn ngày bắt đầu và kết thúc"
+              [(model)]="period"
+              [form]="form"></sd-date-range>
+            <div style="font-size:12px; color:#555">
+              Từ <b>{{ period()?.from || '...' }}</b> đến <b>{{ period()?.to || '...' }}</b>
+            </div>
           </div>
-        </div>
-      </demo-section>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-validator') {
-      <demo-section heading="Validator" [props]="[{ name: 'required', value: 'true' }]" note="Để trống và bấm Kiểm tra.">
-        <div style="width: 380px; display:flex; flex-direction:column; gap:12px">
-          <sd-date-range label="required"
-            [(model)]="billing" [form]="formValid" required></sd-date-range>
-          <div style="display:flex; gap:8px">
-            <button type="button" (click)="check()">Kiểm tra</button>
-            <button type="button" (click)="reset()">Đặt lại</button>
+        <demo-section heading="Validator" [props]="[{ name: 'required', value: 'true' }]" note="Để trống và bấm Kiểm tra.">
+          <div style="width: 380px; display:flex; flex-direction:column; gap:12px">
+            <sd-date-range label="required" [(model)]="billing" [form]="formValid" required></sd-date-range>
+            <div style="display:flex; gap:8px">
+              <button type="button" (click)="check()">Kiểm tra</button>
+              <button type="button" (click)="reset()">Đặt lại</button>
+            </div>
           </div>
-        </div>
-      </demo-section>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trang-thai') {
-      <demo-section heading="Trạng thái" [props]="[{ name: 'disabled', value: 'true' }, { name: 'viewed', value: 'true' }]" note="Khoảng đã set sẵn.">
-        <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
-          <sd-date-range style="width: 300px" label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-date-range>
-          <sd-date-range style="width: 300px" label="viewed" [(model)]="lockedB" [form]="form" viewed></sd-date-range>
-        </div>
-      </demo-section>
+        <demo-section
+          heading="Trạng thái"
+          [props]="[
+            { name: 'disabled', value: 'true' },
+            { name: 'viewed', value: 'true' },
+          ]"
+          note="Khoảng đã set sẵn.">
+          <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
+            <sd-date-range style="width: 300px" label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-date-range>
+            <sd-date-range style="width: 300px" label="viewed" [(model)]="lockedB" [form]="form" viewed></sd-date-range>
+          </div>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chinh-sua-noi-tuyen') {
-      <demo-section heading="Chỉnh sửa nội tuyến" [props]="[{ name: 'viewed', value: 'inline' }]" note="Bấm vào khoảng để mở lịch chọn; text giữ nguyên tới khi chọn. Hover hiện × để xoá.">
-        <div style="width: 340px; font-size:13px; color:#555">
-          Kỳ: <sd-date-range [viewed]="'inline'" [(model)]="lockedB" [form]="form"></sd-date-range>
-        </div>
-      </demo-section>
+        <demo-section
+          heading="Chỉnh sửa nội tuyến"
+          [props]="[{ name: 'viewed', value: 'inline' }]"
+          note="Bấm vào khoảng để mở lịch chọn; text giữ nguyên tới khi chọn. Hover hiện × để xoá.">
+          <div style="width: 340px; font-size:13px; color:#555">
+            Kỳ: <sd-date-range [viewed]="'inline'" [(model)]="lockedB" [form]="form"></sd-date-range>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chuan-hoa-gia-tri-dau-ra') {
+        <demo-section
+          heading="Chuẩn hoá giá trị đầu ra"
+          [props]="[{ name: 'transform', value: 'ISOString / UTCString' }]"
+          note="Mỗi đầu range được serialize RIÊNG — cả object không bao giờ bị gộp thành một chuỗi. Ô nhập vẫn là dd/MM/yyyy → dd/MM/yyyy; range thiếu một đầu vẫn giữ null ở đầu đó.">
+          <div class="transform-grid">
+            <div>
+              <sd-date-range label="ISOString" transform="ISOString" [(model)]="isoPeriod"></sd-date-range>
+              <code>{{ isoPeriod() | json }}</code>
+            </div>
+            <div>
+              <sd-date-range label="UTCString" transform="UTCString" [(model)]="utcPeriod"></sd-date-range>
+              <code>{{ utcPeriod() | json }}</code>
+            </div>
+            <div>
+              <sd-date-range label="Không transform" [(model)]="plainPeriod"></sd-date-range>
+              <code>{{ plainPeriod() | json }}</code>
+            </div>
+          </div>
+        </demo-section>
       }
     </demo-page>
+  \`,
+  styles: \`
+    .transform-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .transform-grid > div {
+      flex: 1 1 260px;
+      min-width: 0;
+    }
+
+    .transform-grid code {
+      display: block;
+      margin-top: 4px;
+      padding: 6px 8px;
+      border: 1px solid #dfe3e8;
+      border-radius: 6px;
+      background: #f7f9fb;
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
   \`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DateRangeDemoComponent {
+  isoPeriod = signal<Range | null>(null);
+  utcPeriod = signal<Range | null>(null);
+  plainPeriod = signal<Range | null>(null);
+
   form = new FormGroup({});
   formValid = new FormGroup({});
 
@@ -7680,10 +8387,37 @@ export class DateRangeDemoComponent {
   lockedA = signal<Range | null>({ from: '2025-01-01', to: '2025-01-31' });
   lockedB = signal<Range | null>({ from: '2025-02-01', to: '2025-02-28' });
 
-  check() { this.formValid.markAllAsTouched(); }
-  reset() { this.formValid.reset(); this.formValid.markAsUntouched(); }
+  check() {
+    this.formValid.markAllAsTouched();
+  }
+  reset() {
+    this.formValid.reset();
+    this.formValid.markAsUntouched();
+  }
 }
 `,
+    scss: `.transform-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  width: 100%;
+}
+
+.transform-grid > div {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.transform-grid code {
+  display: block;
+  margin-top: 4px;
+  padding: 6px 8px;
+  border: 1px solid #dfe3e8;
+  border-radius: 6px;
+  background: #f7f9fb;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}`,
   },
   "forms/datetime": {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
@@ -7696,51 +8430,116 @@ import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdDatetime],
   template: \`
-    <demo-page #demoPage title="Datetime" description="sd-datetime – chọn ngày + giờ trong cùng một control. Bind hai chiều với chuỗi 'YYYY-MM-DD HH:mm'.">
+    <demo-page
+      #demoPage
+      title="Datetime"
+      description="sd-datetime – chọn ngày + giờ trong cùng một control. Bind hai chiều với chuỗi 'YYYY-MM-DD HH:mm'.">
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-co-ban') {
-      <demo-section heading="Cơ bản" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Mở popup picker để chọn ngày và giờ.">
-        <div style="width: 340px; display:flex; flex-direction:column; gap:8px">
-          <sd-datetime label="Thời điểm cuộc họp" helperText="Bao gồm ngày và giờ"
-            [(model)]="meeting" [form]="form"></sd-datetime>
-          <div style="font-size:12px; color:#555">Giá trị: <b>{{ meeting() || '(trống)' }}</b></div>
-        </div>
-      </demo-section>
+        <demo-section heading="Cơ bản" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Mở popup picker để chọn ngày và giờ.">
+          <div style="width: 340px; display:flex; flex-direction:column; gap:8px">
+            <sd-datetime label="Thời điểm cuộc họp" helperText="Bao gồm ngày và giờ" [(model)]="meeting" [form]="form"></sd-datetime>
+            <div style="font-size:12px; color:#555">
+              Giá trị: <b>{{ meeting() || '(trống)' }}</b>
+            </div>
+          </div>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-validator') {
-      <demo-section heading="Validator" [props]="[{ name: 'required', value: 'true' }]" note="Bỏ trống và bấm Kiểm tra để xem lỗi.">
-        <div style="width: 340px; display:flex; flex-direction:column; gap:12px">
-          <sd-datetime label="required"
-            [(model)]="startAt" [form]="formValid" required></sd-datetime>
-          <div style="display:flex; gap:8px">
-            <button type="button" (click)="check()">Kiểm tra</button>
-            <button type="button" (click)="reset()">Đặt lại</button>
+        <demo-section heading="Validator" [props]="[{ name: 'required', value: 'true' }]" note="Bỏ trống và bấm Kiểm tra để xem lỗi.">
+          <div style="width: 340px; display:flex; flex-direction:column; gap:12px">
+            <sd-datetime label="required" [(model)]="startAt" [form]="formValid" required></sd-datetime>
+            <div style="display:flex; gap:8px">
+              <button type="button" (click)="check()">Kiểm tra</button>
+              <button type="button" (click)="reset()">Đặt lại</button>
+            </div>
           </div>
-        </div>
-      </demo-section>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trang-thai') {
-      <demo-section heading="Trạng thái" [props]="[{ name: 'disabled', value: 'true' }, { name: 'viewed', value: 'true' }]" note="Hai trạng thái không cho chỉnh sửa.">
-        <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
-          <sd-datetime style="width: 260px" label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-datetime>
-          <sd-datetime style="width: 260px" label="viewed" [(model)]="lockedB" [form]="form" viewed></sd-datetime>
-        </div>
-      </demo-section>
+        <demo-section
+          heading="Trạng thái"
+          [props]="[
+            { name: 'disabled', value: 'true' },
+            { name: 'viewed', value: 'true' },
+          ]"
+          note="Hai trạng thái không cho chỉnh sửa.">
+          <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
+            <sd-datetime style="width: 260px" label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-datetime>
+            <sd-datetime style="width: 260px" label="viewed" [(model)]="lockedB" [form]="form" viewed></sd-datetime>
+          </div>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chinh-sua-noi-tuyen') {
-      <demo-section heading="Chỉnh sửa nội tuyến" [props]="[{ name: 'viewed', value: 'inline' }]" note="Bấm vào để mở overlay datetime; text giữ nguyên tới khi chọn. Hover hiện × để xoá.">
-        <div style="width: 300px; font-size:13px; color:#555">
-          Hẹn lúc: <sd-datetime [viewed]="'inline'" [(model)]="lockedB" [form]="form"></sd-datetime>
-        </div>
-      </demo-section>
+        <demo-section
+          heading="Chỉnh sửa nội tuyến"
+          [props]="[{ name: 'viewed', value: 'inline' }]"
+          note="Bấm vào để mở overlay datetime; text giữ nguyên tới khi chọn. Hover hiện × để xoá.">
+          <div style="width: 300px; font-size:13px; color:#555">
+            Hẹn lúc: <sd-datetime [viewed]="'inline'" [(model)]="lockedB" [form]="form"></sd-datetime>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chuan-hoa-gia-tri-dau-ra') {
+        <demo-section
+          heading="Chuẩn hoá giá trị đầu ra"
+          [props]="[
+            { name: 'transform', value: 'ISOString / UTCString' },
+            { name: 'showSeconds', value: 'true' },
+          ]"
+          note="transform chỉ đổi giá trị đi ra — ô nhập vẫn theo showSeconds. Độ chính xác vẫn do showSeconds quy định: tắt thì giây về 0, bật thì giữ giây; mili-giây luôn bằng 0.">
+          <div class="transform-grid">
+            <div>
+              <sd-datetime label="ISOString" transform="ISOString" [(model)]="isoAt"></sd-datetime>
+              <code>{{ isoAt() ?? '—' }}</code>
+            </div>
+            <div>
+              <sd-datetime label="UTCString + giây" transform="UTCString" [showSeconds]="true" [(model)]="utcAt"></sd-datetime>
+              <code>{{ utcAt() ?? '—' }}</code>
+            </div>
+            <div>
+              <sd-datetime label="Không transform" [(model)]="plainAt"></sd-datetime>
+              <code>{{ plainAt() ?? '—' }}</code>
+            </div>
+          </div>
+        </demo-section>
       }
     </demo-page>
+  \`,
+  styles: \`
+    .transform-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .transform-grid > div {
+      flex: 1 1 240px;
+      min-width: 0;
+    }
+
+    .transform-grid code {
+      display: block;
+      margin-top: 4px;
+      padding: 6px 8px;
+      border: 1px solid #dfe3e8;
+      border-radius: 6px;
+      background: #f7f9fb;
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
   \`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DatetimeDemoComponent {
+  isoAt = signal<string | null>(null);
+  utcAt = signal<string | null>(null);
+  plainAt = signal<string | null>(null);
+
   form = new FormGroup({});
   formValid = new FormGroup({});
 
@@ -7749,10 +8548,37 @@ export class DatetimeDemoComponent {
   lockedA = signal<string | null>('2025-01-15 09:30');
   lockedB = signal<string | null>('2025-02-20 14:00');
 
-  check() { this.formValid.markAllAsTouched(); }
-  reset() { this.formValid.reset(); this.formValid.markAsUntouched(); }
+  check() {
+    this.formValid.markAllAsTouched();
+  }
+  reset() {
+    this.formValid.reset();
+    this.formValid.markAsUntouched();
+  }
 }
 `,
+    scss: `.transform-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  width: 100%;
+}
+
+.transform-grid > div {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.transform-grid code {
+  display: block;
+  margin-top: 4px;
+  padding: 6px 8px;
+  border: 1px solid #dfe3e8;
+  border-radius: 6px;
+  background: #f7f9fb;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}`,
   },
   "forms/entity-picker": {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
@@ -8751,6 +9577,26 @@ interface Option { value: string; display: string; }
       </demo-section>
       }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chon-nhieu-voi-dong-tat-ca') {
+      <demo-section
+        heading="Chọn nhiều với dòng Tất cả"
+        [props]="[{ name: 'showSelectAll', value: 'true' }, { name: 'multiple', value: 'true' }, { name: 'disabledField', value: 'disabled' }]"
+        note="Row 'Tất cả' đầu panel — chỉ hiện khi multiple + items là mảng tĩnh. Tick chọn toàn bộ items enabled khớp search hiện tại (item disabled 'Pháp chế' không bị đụng); đang search thì tick CHỈ thêm items khớp filter, selection cũ giữ nguyên. Checkbox có 3 trạng thái checked / indeterminate / unchecked.">
+        <div class="select-demo-column">
+          <sd-select
+            label="Đơn vị tham gia" multiple showSelectAll
+            [items]="selectAllItems"
+            valueField="value" displayField="display" disabledField="disabled"
+            placeholder="Chọn các đơn vị..."
+            minWidthPanel="360px"
+            [(model)]="selectAllDepts"
+            [form]="form">
+          </sd-select>
+          <div class="select-demo-status">Đã chọn ({{ selectAllDepts()?.length ?? 0 }}): <b>{{ selectAllDepts()?.join(', ') || '(trống)' }}</b></div>
+        </div>
+      </demo-section>
+      }
+
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-footer-action-khi-khong-co-ket-qua') {
       <demo-section
         heading="Footer action khi không có kết quả"
@@ -9078,12 +9924,18 @@ export class SelectDemoComponent {
 
   footerItems: Option[] = [...this.largeItems];
 
+  /** why: 'LEGAL' disabled để demo hành vi bỏ qua item disabled của dòng "Tất cả" */
+  selectAllItems: (Option & { disabled?: boolean })[] = this.largeItems.map(item =>
+    item.value === 'LEGAL' ? { ...item, disabled: true } : { ...item }
+  );
+
   dept = signal<string | null>(null);
   deptR = signal<string | null>(null);
   lockedA = signal<string | null>('HR');
   lockedB = signal<string | null>('FIN');
   inlineDept = signal<string | null>('IT');
   quick = signal<string | null>(null);
+  selectAllDepts = signal<string[] | null>(null);
   footerDept = signal<string | null>(null);
   footerActionDept = signal<string | null>(null);
   footerItemDept = signal<string | null>(null);
@@ -10159,6 +11011,890 @@ export class LayoutDemoComponent {
   width: 100%;
 }`,
   },
+  "pipes-utilities/empty": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdEmptyPipe } from '@sdcorejs/angular/pipes';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+@Component({
+  selector: 'app-empty-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, SdEmptyPipe],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Empty Pipe"
+      description="sdEmpty đổi null / undefined / chuỗi rỗng thành dấu gạch chuẩn (--) để bảng và view không bao giờ có ô trống trắng.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-gia-tri-rong-hien-thi-dau-gach') {
+        <demo-section
+          heading="Giá trị rỗng hiển thị dấu gạch"
+          [props]="[{ name: 'sdEmpty', value: 'pipe' }]"
+          note="Chỉ đúng ba trường hợp null, undefined và '' được thay thế. Số 0 và chuỗi '0' KHÔNG bị coi là rỗng.">
+          <div class="value-grid">
+            @for (sample of emptySamples; track sample.label) {
+              <div class="value-cell">
+                <span class="value-cell__label">{{ sample.label }}</span>
+                <code>{{ sample.value | sdEmpty }}</code>
+              </div>
+            }
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-gia-tri-co-noi-dung-giu-nguyen') {
+        <demo-section
+          heading="Giá trị có nội dung giữ nguyên"
+          [props]="[{ name: 'sdEmpty', value: 'pipe' }]"
+          note="Pipe trả về nguyên giá trị gốc, không ép kiểu và không format — cần chuẩn hoá mảng thì dùng sdView.">
+          <div class="value-grid">
+            @for (sample of filledSamples; track sample.label) {
+              <div class="value-cell">
+                <span class="value-cell__label">{{ sample.label }}</span>
+                <code>{{ sample.value | sdEmpty }}</code>
+              </div>
+            }
+          </div>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  styles: \`
+    .value-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .value-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 160px;
+      padding: 10px 12px;
+      border: 1px solid #dfe3e8;
+      border-radius: 8px;
+      background: #f7f9fb;
+    }
+
+    .value-cell__label {
+      font-size: 12px;
+      color: #6b6b6b;
+    }
+
+    code {
+      font-family: 'SFMono-Regular', Consolas, Menlo, monospace;
+      font-size: 13px;
+    }
+  \`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class EmptyDemoComponent {
+  readonly emptySamples = [
+    { label: 'null', value: null },
+    { label: 'undefined', value: undefined },
+    { label: "'' (chuỗi rỗng)", value: '' },
+  ];
+
+  readonly filledSamples = [
+    { label: "'Nguyễn Văn A'", value: 'Nguyễn Văn A' },
+    { label: '0', value: 0 },
+    { label: 'false', value: false },
+  ];
+}
+`,
+    scss: `.value-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.value-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 160px;
+  padding: 10px 12px;
+  border: 1px solid #dfe3e8;
+  border-radius: 8px;
+  background: #f7f9fb;
+}
+
+.value-cell__label {
+  font-size: 12px;
+  color: #6b6b6b;
+}
+
+code {
+  font-family: 'SFMono-Regular', Consolas, Menlo, monospace;
+  font-size: 13px;
+}`,
+  },
+  "pipes-utilities/format-date": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdFormatDatePipe } from '@sdcorejs/angular/pipes';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+@Component({
+  selector: 'app-format-date-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, SdFormatDatePipe],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Format Date Pipe"
+      description="sdFormatDate đưa Date, ISO string hoặc timestamp về một chuỗi ngày theo token của DateUtilities; mặc định là dd/MM/yyyy.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-dinh-dang-mac-dinh') {
+        <demo-section
+          heading="Định dạng mặc định"
+          [props]="[{ name: 'sdFormatDate', value: 'dd/MM/yyyy' }]"
+          note="Không truyền tham số thì pipe dùng dd/MM/yyyy — dạng ngày chuẩn của các form trong pack.">
+          <div class="value-grid">
+            @for (sample of sources; track sample.label) {
+              <div class="value-cell">
+                <span class="value-cell__label">{{ sample.label }}</span>
+                <code>{{ sample.value | sdFormatDate }}</code>
+              </div>
+            }
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-dinh-dang-tuy-chinh') {
+        <demo-section
+          heading="Định dạng tuỳ chỉnh"
+          [props]="[{ name: 'sdFormatDate', value: 'format' }]"
+          note="Tham số đầu tiên là chuỗi token truyền thẳng cho DateUtilities.toFormat.">
+          <div class="value-grid">
+            @for (format of formats; track format) {
+              <div class="value-cell">
+                <span class="value-cell__label">{{ format }}</span>
+                <code>{{ isoDate | sdFormatDate: format }}</code>
+              </div>
+            }
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-gia-tri-khong-hop-le') {
+        <demo-section
+          heading="Giá trị không hợp lệ"
+          [props]="[{ name: 'sdFormatDate', value: 'dd/MM/yyyy' }]"
+          note="Giá trị không parse được trả về null, nên interpolation ra chuỗi rỗng thay vì 'Invalid Date'.">
+          <div class="value-grid">
+            @for (sample of invalidSources; track sample.label) {
+              <div class="value-cell">
+                <span class="value-cell__label">{{ sample.label }}</span>
+                <code class="value-cell__empty">{{ sample.value | sdFormatDate }}</code>
+              </div>
+            }
+          </div>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  styles: \`
+    .value-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .value-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 200px;
+      padding: 10px 12px;
+      border: 1px solid #dfe3e8;
+      border-radius: 8px;
+      background: #f7f9fb;
+    }
+
+    .value-cell__label {
+      font-size: 12px;
+      color: #6b6b6b;
+    }
+
+    .value-cell__empty {
+      min-height: 18px;
+    }
+
+    code {
+      font-family: 'SFMono-Regular', Consolas, Menlo, monospace;
+      font-size: 13px;
+    }
+  \`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class FormatDateDemoComponent {
+  readonly isoDate = '2026-08-14T09:41:00.000Z';
+
+  readonly sources = [
+    { label: 'ISO string', value: '2026-08-14T09:41:00.000Z' },
+    { label: 'Date', value: new Date(2026, 7, 14) },
+    { label: 'timestamp (ms)', value: 1_786_779_660_000 },
+  ];
+
+  readonly formats = ['dd/MM/yyyy', 'yyyy-MM-dd', 'dd MMM yyyy', 'MM/yyyy'];
+
+  readonly invalidSources = [
+    { label: 'null', value: null },
+    { label: "'khong-phai-ngay'", value: 'khong-phai-ngay' },
+  ];
+}
+`,
+    scss: `.value-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.value-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 200px;
+  padding: 10px 12px;
+  border: 1px solid #dfe3e8;
+  border-radius: 8px;
+  background: #f7f9fb;
+}
+
+.value-cell__label {
+  font-size: 12px;
+  color: #6b6b6b;
+}
+
+.value-cell__empty {
+  min-height: 18px;
+}
+
+code {
+  font-family: 'SFMono-Regular', Consolas, Menlo, monospace;
+  font-size: 13px;
+}`,
+  },
+  "pipes-utilities/format-datetime": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdFormatDatetimePipe } from '@sdcorejs/angular/pipes';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+@Component({
+  selector: 'app-format-datetime-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, SdFormatDatetimePipe],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Format Datetime Pipe"
+      description="sdFormatDatetime là bản kèm giờ của sdFormatDate: cùng bộ token, chỉ khác định dạng mặc định dd/MM/yyyy HH:mm:ss.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-dinh-dang-mac-dinh') {
+        <demo-section
+          heading="Định dạng mặc định"
+          [props]="[{ name: 'sdFormatDatetime', value: 'dd/MM/yyyy HH:mm:ss' }]"
+          note="Dùng cho cột nhật ký, lịch sử thao tác — nơi cần đủ giây để phân biệt hai bản ghi liền nhau.">
+          <div class="value-grid">
+            @for (sample of sources; track sample.label) {
+              <div class="value-cell">
+                <span class="value-cell__label">{{ sample.label }}</span>
+                <code>{{ sample.value | sdFormatDatetime }}</code>
+              </div>
+            }
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chi-lay-phan-gio') {
+        <demo-section
+          heading="Chỉ lấy phần giờ"
+          [props]="[{ name: 'sdFormatDatetime', value: 'format' }]"
+          note="Truyền token ngắn hơn khi cột đã có ngày ở chỗ khác; pipe không ép phải hiện đủ ngày + giờ.">
+          <div class="value-grid">
+            @for (format of formats; track format) {
+              <div class="value-cell">
+                <span class="value-cell__label">{{ format }}</span>
+                <code>{{ isoDatetime | sdFormatDatetime: format }}</code>
+              </div>
+            }
+          </div>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  styles: \`
+    .value-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .value-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 220px;
+      padding: 10px 12px;
+      border: 1px solid #dfe3e8;
+      border-radius: 8px;
+      background: #f7f9fb;
+    }
+
+    .value-cell__label {
+      font-size: 12px;
+      color: #6b6b6b;
+    }
+
+    code {
+      font-family: 'SFMono-Regular', Consolas, Menlo, monospace;
+      font-size: 13px;
+    }
+  \`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class FormatDatetimeDemoComponent {
+  readonly isoDatetime = '2026-08-14T09:41:07.000Z';
+
+  readonly sources = [
+    { label: 'ISO string', value: '2026-08-14T09:41:07.000Z' },
+    { label: 'Date', value: new Date(2026, 7, 14, 16, 41, 7) },
+  ];
+
+  readonly formats = ['HH:mm', 'HH:mm:ss', 'dd/MM HH:mm', 'yyyy-MM-dd HH:mm:ss'];
+}
+`,
+    scss: `.value-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.value-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 220px;
+  padding: 10px 12px;
+  border: 1px solid #dfe3e8;
+  border-radius: 8px;
+  background: #f7f9fb;
+}
+
+.value-cell__label {
+  font-size: 12px;
+  color: #6b6b6b;
+}
+
+code {
+  font-family: 'SFMono-Regular', Consolas, Menlo, monospace;
+  font-size: 13px;
+}`,
+  },
+  "pipes-utilities/format-number": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+@Component({
+  selector: 'app-format-number-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, SdFormatNumberPipe],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Format Number Pipe"
+      description="sdFormatNumber nhóm hàng nghìn theo kiểu quốc tế hoặc kiểu Việt Nam. Không truyền kiểu thì pipe lấy format.number từ SD_CORE_CONFIGURATION.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chuan-quoc-te') {
+        <demo-section
+          heading="Chuẩn quốc tế"
+          [props]="[{ name: 'sdFormatNumber', value: '1,234,567.89' }]"
+          note="Dấu phẩy ngăn hàng nghìn, dấu chấm ngăn thập phân. Đây cũng là mặc định khi app chưa cấu hình format.number.">
+          <div class="value-grid">
+            @for (sample of amounts; track sample) {
+              <div class="value-cell">
+                <span class="value-cell__label">{{ sample }}</span>
+                <code>{{ sample | sdFormatNumber: 2 : '1,234,567.89' }}</code>
+              </div>
+            }
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chuan-viet-nam') {
+        <demo-section
+          heading="Chuẩn Việt Nam"
+          [props]="[{ name: 'sdFormatNumber', value: '1.234.567,89' }]"
+          note="Đảo vai trò hai dấu. Đặt một lần ở SD_CORE_CONFIGURATION là mọi pipe và form field trong app đi theo, không cần truyền tham số.">
+          <div class="value-grid">
+            @for (sample of amounts; track sample) {
+              <div class="value-cell">
+                <span class="value-cell__label">{{ sample }}</span>
+                <code>{{ sample | sdFormatNumber: 2 : '1.234.567,89' }}</code>
+              </div>
+            }
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-so-chu-so-thap-phan') {
+        <demo-section
+          heading="Số chữ số thập phân"
+          [props]="[{ name: 'sdFormatNumber', value: 'digits' }]"
+          note="Tham số đầu là số chữ số sau dấu thập phân (mặc định 2). Giá trị không phải số trả về chuỗi rỗng.">
+          <div class="value-grid">
+            @for (digits of digitOptions; track digits) {
+              <div class="value-cell">
+                <span class="value-cell__label">digits = {{ digits }}</span>
+                <code>{{ 1234567.891 | sdFormatNumber: digits : '1,234,567.89' }}</code>
+              </div>
+            }
+            <div class="value-cell">
+              <span class="value-cell__label">'khong-phai-so'</span>
+              <code class="value-cell__empty">{{ 'khong-phai-so' | sdFormatNumber }}</code>
+            </div>
+          </div>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  styles: \`
+    .value-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .value-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 180px;
+      padding: 10px 12px;
+      border: 1px solid #dfe3e8;
+      border-radius: 8px;
+      background: #f7f9fb;
+    }
+
+    .value-cell__label {
+      font-size: 12px;
+      color: #6b6b6b;
+    }
+
+    .value-cell__empty {
+      min-height: 18px;
+    }
+
+    code {
+      font-family: 'SFMono-Regular', Consolas, Menlo, monospace;
+      font-size: 13px;
+    }
+  \`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class FormatNumberDemoComponent {
+  readonly amounts = [1234567.891, 250000, 0.5, -98765.4];
+  readonly digitOptions = [0, 2, 4];
+}
+`,
+    scss: `.value-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.value-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 180px;
+  padding: 10px 12px;
+  border: 1px solid #dfe3e8;
+  border-radius: 8px;
+  background: #f7f9fb;
+}
+
+.value-cell__label {
+  font-size: 12px;
+  color: #6b6b6b;
+}
+
+.value-cell__empty {
+  min-height: 18px;
+}
+
+code {
+  font-family: 'SFMono-Regular', Consolas, Menlo, monospace;
+  font-size: 13px;
+}`,
+  },
+  "pipes-utilities/safe-html": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdSafeHtmlPipe } from '@sdcorejs/angular/pipes';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+@Component({
+  selector: 'app-safe-html-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, SdSafeHtmlPipe],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Safe Html Pipe"
+      description="sdSafeHtml sanitize theo mặc định; bỏ qua sanitize là một lựa chọn phải khai báo rõ ràng cho từng chỗ dùng.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-sanitize-mac-dinh') {
+        <demo-section
+          heading="Sanitize mặc định"
+          [props]="[{ name: 'sdSafeHtml', value: 'pipe' }]"
+          note="Thẻ script, thuộc tính on* và url javascript: bị loại bỏ; phần markup lành tính còn lại vẫn render. Đây là nhánh dùng cho mọi dữ liệu đến từ server.">
+          <div class="html-pair">
+            <div class="html-cell">
+              <span class="html-cell__label">Chuỗi gốc</span>
+              <code>{{ untrusted }}</code>
+            </div>
+            <div class="html-cell">
+              <span class="html-cell__label">Kết quả render</span>
+              <div class="html-cell__output" data-safe-html-sanitized [innerHTML]="untrusted | sdSafeHtml"></div>
+            </div>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tin-cay-co-chu-dich') {
+        <demo-section
+          heading="Tin cậy có chủ đích"
+          [props]="[{ name: 'sdSafeHtml', value: 'trusted' }]"
+          note="Tham số true gọi bypassSecurityTrustHtml. Chỉ dùng cho markup do chính app viết ra, ví dụ một sprite SVG nội bộ — không bao giờ cho dữ liệu người dùng nhập.">
+          <div class="html-pair">
+            <div class="html-cell">
+              <span class="html-cell__label">Chuỗi gốc</span>
+              <code>{{ appAuthored }}</code>
+            </div>
+            <div class="html-cell">
+              <span class="html-cell__label">Kết quả render</span>
+              <div class="html-cell__output" data-safe-html-trusted [innerHTML]="appAuthored | sdSafeHtml: true"></div>
+            </div>
+          </div>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  styles: \`
+    .html-pair {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .html-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1 1 260px;
+      min-width: 0;
+      padding: 10px 12px;
+      border: 1px solid #dfe3e8;
+      border-radius: 8px;
+      background: #f7f9fb;
+    }
+
+    .html-cell__label {
+      font-size: 12px;
+      color: #6b6b6b;
+    }
+
+    .html-cell__output {
+      min-height: 20px;
+    }
+
+    code {
+      font-family: 'SFMono-Regular', Consolas, Menlo, monospace;
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+  \`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class SafeHtmlDemoComponent {
+  readonly untrusted = '<b>Ghi chú từ khách hàng</b><img src="x" onerror="alert(1)"><script>alert(2)</script>';
+  readonly appAuthored = '<span style="color:#1677ff;font-weight:600">Nhãn do app tự dựng</span>';
+}
+`,
+    scss: `.html-pair {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  width: 100%;
+}
+
+.html-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 260px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #dfe3e8;
+  border-radius: 8px;
+  background: #f7f9fb;
+}
+
+.html-cell__label {
+  font-size: 12px;
+  color: #6b6b6b;
+}
+
+.html-cell__output {
+  min-height: 20px;
+}
+
+code {
+  font-family: 'SFMono-Regular', Consolas, Menlo, monospace;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}`,
+  },
+  "pipes-utilities/time-different": {
+    typescript: `import { AsyncPipe } from '@angular/common';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdTimeDifferentPipe } from '@sdcorejs/angular/pipes';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+@Component({
+  selector: 'app-time-different-demo',
+  standalone: true,
+  imports: [AsyncPipe, DemoPageComponent, DemoSectionComponent, SdTimeDifferentPipe],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Time Different Pipe"
+      description="sdTimeDifferent trả về một Observable đếm lại mỗi giây khi mốc thời gian còn nằm trong ngưỡng tương đối, rồi tự complete và chuyển sang ngày tuyệt đối.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-thoi-gian-tuong-doi') {
+        <demo-section
+          heading="Thời gian tương đối"
+          [props]="[
+            { name: 'sdTimeDifferent', value: 'format' },
+            { name: 'different', value: 'second / minute / hour / day / month' },
+          ]"
+          note="Tham số thứ hai là ngưỡng: dưới ngưỡng thì hiện khoảng cách tương đối và tick mỗi giây, chạm ngưỡng thì rơi về format.">
+          <div class="value-grid">
+            @for (sample of recent; track sample.label) {
+              <div class="value-cell">
+                <span class="value-cell__label">{{ sample.label }}</span>
+                <code>{{ sample.value | sdTimeDifferent: 'dd/MM/yyyy HH:mm' : 'day' | async }}</code>
+              </div>
+            }
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-qua-nguong-thi-ve-ngay-tuyet-doi') {
+        <demo-section
+          heading="Quá ngưỡng thì về ngày tuyệt đối"
+          [props]="[{ name: 'sdTimeDifferent', value: 'format' }]"
+          note="Giá trị đã cũ hơn ngưỡng KHÔNG tạo timer nào — pipe trả về of(...) ngay, nên một danh sách dài không sinh hàng loạt interval thừa.">
+          <div class="value-grid">
+            @for (sample of old; track sample.label) {
+              <div class="value-cell">
+                <span class="value-cell__label">{{ sample.label }}</span>
+                <code>{{ sample.value | sdTimeDifferent: 'dd/MM/yyyy HH:mm' : 'minute' | async }}</code>
+              </div>
+            }
+          </div>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  styles: \`
+    .value-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .value-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 220px;
+      padding: 10px 12px;
+      border: 1px solid #dfe3e8;
+      border-radius: 8px;
+      background: #f7f9fb;
+    }
+
+    .value-cell__label {
+      font-size: 12px;
+      color: #6b6b6b;
+    }
+
+    code {
+      font-family: 'SFMono-Regular', Consolas, Menlo, monospace;
+      font-size: 13px;
+    }
+  \`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TimeDifferentDemoComponent {
+  readonly #now = Date.now();
+
+  readonly recent = [
+    { label: '30 giây trước', value: new Date(this.#now - 30 * 1000) },
+    { label: '12 phút trước', value: new Date(this.#now - 12 * 60 * 1000) },
+    { label: '5 giờ trước', value: new Date(this.#now - 5 * 60 * 60 * 1000) },
+  ];
+
+  readonly old = [
+    { label: '3 giờ trước (ngưỡng minute)', value: new Date(this.#now - 3 * 60 * 60 * 1000) },
+    { label: '2 năm trước', value: new Date(this.#now - 730 * 24 * 60 * 60 * 1000) },
+  ];
+}
+`,
+    scss: `.value-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.value-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 220px;
+  padding: 10px 12px;
+  border: 1px solid #dfe3e8;
+  border-radius: 8px;
+  background: #f7f9fb;
+}
+
+.value-cell__label {
+  font-size: 12px;
+  color: #6b6b6b;
+}
+
+code {
+  font-family: 'SFMono-Regular', Consolas, Menlo, monospace;
+  font-size: 13px;
+}`,
+  },
+  "pipes-utilities/view": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdViewPipe } from '@sdcorejs/angular/pipes';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+@Component({
+  selector: 'app-view-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, SdViewPipe],
+  template: \`
+    <demo-page
+      #demoPage
+      title="View Pipe"
+      description="sdView là bản chuẩn hoá hiển thị: giá trị rỗng (kể cả NaN và mảng rỗng) thành dấu gạch, mảng có phần tử thành chuỗi ngăn cách bằng dấu phẩy.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chuan-hoa-gia-tri-rong') {
+        <demo-section
+          heading="Chuẩn hoá giá trị rỗng"
+          [props]="[{ name: 'sdView', value: 'pipe' }]"
+          note="So với sdEmpty, sdView bắt thêm NaN và mảng rỗng — đó là hai giá trị hay lọt lưới nhất khi render dữ liệu API.">
+          <div class="value-grid">
+            @for (sample of emptySamples; track sample.label) {
+              <div class="value-cell">
+                <span class="value-cell__label">{{ sample.label }}</span>
+                <code>{{ sample.value | sdView }}</code>
+              </div>
+            }
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-gop-mang-thanh-chuoi') {
+        <demo-section
+          heading="Gộp mảng thành chuỗi"
+          [props]="[{ name: 'sdView', value: 'pipe' }]"
+          note="Mỗi phần tử được chuẩn hoá đệ quy trước khi nối, nên phần tử rỗng bên trong mảng cũng thành dấu gạch thay vì biến mất.">
+          <div class="value-grid">
+            @for (sample of arraySamples; track sample.label) {
+              <div class="value-cell">
+                <span class="value-cell__label">{{ sample.label }}</span>
+                <code>{{ sample.value | sdView }}</code>
+              </div>
+            }
+          </div>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  styles: \`
+    .value-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .value-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 200px;
+      padding: 10px 12px;
+      border: 1px solid #dfe3e8;
+      border-radius: 8px;
+      background: #f7f9fb;
+    }
+
+    .value-cell__label {
+      font-size: 12px;
+      color: #6b6b6b;
+    }
+
+    code {
+      font-family: 'SFMono-Regular', Consolas, Menlo, monospace;
+      font-size: 13px;
+    }
+  \`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ViewDemoComponent {
+  readonly emptySamples = [
+    { label: 'null', value: null },
+    { label: "'' (chuỗi rỗng)", value: '' },
+    { label: 'Number.NaN', value: Number.NaN },
+    { label: '[] (mảng rỗng)', value: [] },
+  ];
+
+  readonly arraySamples = [
+    { label: "['Kế toán', 'Nhân sự']", value: ['Kế toán', 'Nhân sự'] },
+    { label: "['Kế toán', null, 'Nhân sự']", value: ['Kế toán', null, 'Nhân sự'] },
+    { label: '[1, 2, 3]', value: [1, 2, 3] },
+  ];
+}
+`,
+    scss: `.value-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.value-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 200px;
+  padding: 10px 12px;
+  border: 1px solid #dfe3e8;
+  border-radius: 8px;
+  background: #f7f9fb;
+}
+
+.value-cell__label {
+  font-size: 12px;
+  color: #6b6b6b;
+}
+
+code {
+  font-family: 'SFMono-Regular', Consolas, Menlo, monospace;
+  font-size: 13px;
+}`,
+  },
   "services/confirm": {
     typescript: `import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
@@ -10353,96 +12089,6 @@ export class ConfirmDemoComponent {
         (v) => this.log.set('Datetime: ' + v),
         () => this.log.set('Datetime: HỦY'),
       );
-  }
-}
-`,
-  },
-  "services/docx": {
-    typescript: `import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
-import { SdDocxService } from '@sdcorejs/angular/services/docx';
-
-@Component({
-  selector: 'app-docx-demo',
-  standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, MatButtonModule],
-  template: \`
-    <demo-page #demoPage title="Docx" description="SdDocxService – chuyển đổi file .docx sang HTML qua pandoc.wasm. API chính: open() mở file picker; convertToHtml(file) / convertToHtmlString(file) chuyển trực tiếp một File/Blob.">
-      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-mo-file-docx') {
-      <demo-section heading="Mở file .docx" [props]="[{ name: 'open()', value: 'method' }]" note="open() – mở file picker, đọc file, gọi pandoc.wasm, trả về { html, messages }. WASM được tải lần đầu (~vài MB) nên có thể chậm.">
-        <button mat-flat-button color="primary" [disabled]="busy()" (click)="onOpen()">Chọn file .docx</button>
-      </demo-section>
-      }
-
-      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chuyen-doi-sang-html') {
-      <demo-section heading="Chuyển đổi sang HTML" [props]="[{ name: 'convertToHtmlString()', value: 'method' }]" note="convertToHtmlString() – không trả mảng cảnh báo.">
-        <button mat-stroked-button color="primary" [disabled]="busy()" (click)="onOpenString()">Chọn file & lấy HTML</button>
-      </demo-section>
-      }
-
-      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-ket-qua') {
-      <demo-section heading="Kết quả">
-        <div style="width:100%">
-          <div style="font-size:12px;color:#666;margin-bottom:6px">{{ status() }}</div>
-          @if (preview()) {
-            <div style="max-height:280px;overflow:auto;border:1px solid #ddd;border-radius:6px;padding:12px;background:#fff" [innerHTML]="preview()"></div>
-          }
-        </div>
-      </demo-section>
-      }
-    </demo-page>
-  \`,
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class DocxDemoComponent {
-  readonly #docx = inject(SdDocxService);
-  readonly busy = signal(false);
-  readonly status = signal('(chưa chọn file)');
-  readonly preview = signal<string | null>(null);
-
-  async onOpen() {
-    this.busy.set(true);
-    this.status.set('Đang xử lý...');
-    try {
-      const result = await this.#docx.open();
-      if (!result) {
-        this.status.set('Đã hủy hoặc không có file.');
-        this.preview.set(null);
-      } else {
-        this.status.set(\`Thành công. \${result.messages.length} cảnh báo.\`);
-        this.preview.set(result.html);
-      }
-    } finally {
-      this.busy.set(false);
-    }
-  }
-
-  async onOpenString() {
-    this.busy.set(true);
-    this.status.set('Đang xử lý...');
-    try {
-      const html = await new Promise<string | null>((resolve) => {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.doc,.docx';
-        input.onchange = async () => {
-          const file = input.files?.[0];
-          if (!file) { resolve(null); return; }
-          resolve(await this.#docx.convertToHtmlString(file));
-        };
-        input.click();
-      });
-      if (html == null) {
-        this.status.set('Đã hủy hoặc lỗi chuyển đổi.');
-        this.preview.set(null);
-      } else {
-        this.status.set('Đã chuyển đổi sang HTML.');
-        this.preview.set(html);
-      }
-    } finally {
-      this.busy.set(false);
-    }
   }
 }
 `,
@@ -12053,18 +13699,6 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
         <article data-success>Dữ liệu đã sẵn sàng</article>
       </sd-data-state>
     </demo-section>`,
-  },
-  "components/document-builder/example-soan-mau-hop-dong": {
-    ...SHOWCASE_PAGE_SOURCES["components/document-builder"],
-    html: `<demo-section heading="Soạn mẫu hợp đồng" [props]="[{ name: 'option', value: 'config' }, { name: 'contentChange', value: 'event' }]">
-    <div class="doc-box">
-      <sd-document-builder
-        style="height: 100%; width: 100%"
-        [option]="builderOption"
-        (contentChange)="onContentChange($event)">
-      </sd-document-builder>
-    </div>
-  </demo-section>`,
   },
   "components/editor/example-chi-doc": {
     ...SHOWCASE_PAGE_SOURCES["components/editor"],
@@ -13699,6 +15333,21 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     </div>
   </demo-section>`,
   },
+  "components/table/example-hanh-dong-o-header-cot-command": {
+    ...SHOWCASE_PAGE_SOURCES["components/table"],
+    html: `<demo-section
+    heading="Hành động ở header cột command"
+    [props]="[{ name: 'sdTableCommandHeaderDef', value: 'template' }]"
+    note="Ô header của cột command vốn để trống. Chiếu nội dung vào đó để đặt một hành động cấp bảng (ở đây là thêm dòng) ngay trên cụm sửa/xoá của từng dòng, khỏi cần thêm một dải riêng dưới bảng.">
+    <div class="table-box">
+      <sd-table [option]="commandHeaderOption">
+        <ng-template sdTableCommandHeaderDef>
+          <sd-button prefixIcon="add" type="text" color="primary" tooltip="Thêm dòng" (click)="addCommandHeaderRow()"></sd-button>
+        </ng-template>
+      </sd-table>
+    </div>
+  </demo-section>`,
+  },
   "components/table/example-keo-tha-doi-thu-tu": {
     ...SHOWCASE_PAGE_SOURCES["components/table"],
     html: `<demo-section heading="Kéo thả đổi thứ tự" [props]="[{ name: 'rowReorder', value: 'true' }]">
@@ -13878,11 +15527,15 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     <div class="tree-demo-panel">
       <sd-tree [option]="customDemoOption">
         <ng-template sdTreeItemDef let-item let-level="level" let-isLeaf="isLeaf" let-toggle="toggle">
+          <!-- why: SdTreeItemDefDirective mặc định generic là unknown (khác SdOrgChartItemDef,
+               vốn default về type node cụ thể), nên dưới strictTemplates item không đọc được
+               property nào. Alias qua @let + cast một lần thay vì rải $any() khắp template. -->
+          @let _node = $any(item);
           <button type="button" class="tree-custom-item" [class.tree-custom-item--leaf]="isLeaf" (click)="toggle()">
             <span>L{{ level + 1 }}</span>
-            <strong>{{ item.title }}</strong>
-            @if (item.description) {
-              <small>{{ item.description }}</small>
+            <strong>{{ _node.title }}</strong>
+            @if (_node.description) {
+              <small>{{ _node.description }}</small>
             }
           </button>
         </ng-template>
@@ -14075,6 +15728,172 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
       <sd-view label="Loại hợp đồng" display="Dịch vụ thường xuyên"></sd-view>
     </div>
   </demo-section>`,
+  },
+  "directives/desktop/example-cap-doi-voi-sdmobile": {
+    ...SHOWCASE_PAGE_SOURCES["directives/desktop"],
+    html: `<demo-section
+      heading="Cặp đôi với sdMobile"
+      [props]="[
+        { name: '*sdDesktop', value: 'true' },
+        { name: '*sdMobile', value: 'true' },
+      ]"
+      note="Hai directive loại trừ nhau, nên đặt cạnh nhau là cách rẽ nhánh markup theo thiết bị mà không cần *ngIf thủ công.">
+      <div class="device-box">
+        <div *sdDesktop class="device-card device-card--desktop">Bố cục desktop: bảng nhiều cột</div>
+        <div *sdMobile class="device-card device-card--mobile">Bố cục mobile: danh sách thẻ</div>
+      </div>
+    </demo-section>`,
+  },
+  "directives/desktop/example-chi-render-tren-desktop": {
+    ...SHOWCASE_PAGE_SOURCES["directives/desktop"],
+    html: `<demo-section
+      heading="Chỉ render trên desktop"
+      [props]="[{ name: '*sdDesktop', value: 'true' }]"
+      note="Khối bên dưới chỉ tồn tại trong DOM khi BrowserUtilities.isMobile() trả về false — không phải ẩn bằng CSS.">
+      <div class="device-box">
+        <div *sdDesktop class="device-card device-card--desktop" data-desktop-block>Nội dung chỉ dành cho desktop</div>
+        <code data-is-mobile>BrowserUtilities.isMobile() = {{ isMobile }}</code>
+      </div>
+    </demo-section>`,
+  },
+  "directives/hover-copy/example-nut-sao-chep-hien-khi-hover": {
+    ...SHOWCASE_PAGE_SOURCES["directives/hover-copy"],
+    html: `<demo-section
+      heading="Nút sao chép hiện khi hover"
+      [props]="[{ name: '[sdHoverCopy]', value: 'text' }]"
+      note="Rê chuột vào ô bên dưới rồi bấm nút — giá trị vào clipboard và tooltip đổi sang 'Đã sao chép' trong 1 giây.">
+      <div class="copy-row">
+        <span class="copy-cell" [sdHoverCopy]="orderCode" data-copy-order>{{ orderCode }}</span>
+        <span class="copy-cell" [sdHoverCopy]="taxCode" data-copy-tax>{{ taxCode }}</span>
+      </div>
+    </demo-section>`,
+  },
+  "directives/hover-copy/example-tat-nut-sao-chep": {
+    ...SHOWCASE_PAGE_SOURCES["directives/hover-copy"],
+    html: `<demo-section
+      heading="Tắt nút sao chép"
+      [props]="[
+        { name: '[sdHoverCopy]', value: 'text' },
+        { name: '[sdHoverCopyDisabled]', value: 'true' },
+      ]"
+      note="Khi disabled, nút bị GỠ khỏi DOM chứ không chỉ ẩn bằng opacity — không còn cách nào bấm trúng nó.">
+      <div class="copy-row">
+        <span class="copy-cell" [sdHoverCopy]="lockedValue" [sdHoverCopyDisabled]="true" data-copy-disabled>{{ lockedValue }}</span>
+      </div>
+    </demo-section>`,
+  },
+  "directives/href/example-link-ngoai-mo-tab-moi-an-toan": {
+    ...SHOWCASE_PAGE_SOURCES["directives/href"],
+    html: `<demo-section
+      heading="Link ngoài mở tab mới an toàn"
+      [props]="[{ name: '[sdHref]', value: 'https url' }]"
+      note="Chỉ url parse ra đúng scheme http:/https: mới được coi là link ngoài, và luôn mở kèm noopener,noreferrer để chặn reverse tabnabbing.">
+      <a class="demo-link" [sdHref]="externalUrl" data-href-external>Mở angular.dev</a>
+      <code>{{ externalUrl }}</code>
+    </demo-section>`,
+  },
+  "directives/href/example-link-noi-bo-di-qua-router": {
+    ...SHOWCASE_PAGE_SOURCES["directives/href"],
+    html: `<demo-section
+      heading="Link nội bộ đi qua Router"
+      [props]="[{ name: '[sdHref]', value: 'url' }]"
+      note="Chuỗi không phải http/https được tách path + query rồi đẩy sang Router.navigate — bấm không nạp lại trang.">
+      <a class="demo-link" [sdHref]="internalUrl" data-href-internal>Mở trang Tooltip Directive</a>
+      <code>{{ internalUrl }}</code>
+    </demo-section>`,
+  },
+  "directives/mobile/example-cap-doi-voi-sddesktop": {
+    ...SHOWCASE_PAGE_SOURCES["directives/mobile"],
+    html: `<demo-section
+      heading="Cặp đôi với sdDesktop"
+      [props]="[
+        { name: '*sdMobile', value: 'true' },
+        { name: '*sdDesktop', value: 'true' },
+      ]"
+      note="Đúng một trong hai nhánh tồn tại trong DOM, nên không có chi phí render cho nhánh còn lại.">
+      <div class="device-box">
+        <div *sdMobile class="device-card device-card--mobile">Thanh hành động dán đáy màn hình</div>
+        <div *sdDesktop class="device-card device-card--desktop">Thanh hành động nằm trong toolbar</div>
+      </div>
+    </demo-section>`,
+  },
+  "directives/mobile/example-chi-render-tren-mobile": {
+    ...SHOWCASE_PAGE_SOURCES["directives/mobile"],
+    html: `<demo-section
+      heading="Chỉ render trên mobile"
+      [props]="[{ name: '*sdMobile', value: 'true' }]"
+      note="Mở DevTools ở chế độ device rồi tải lại trang để thấy khối này xuất hiện — directive đọc user agent lúc khởi tạo, không phản ứng với resize.">
+      <div class="device-box">
+        <div *sdMobile class="device-card device-card--mobile" data-mobile-block>Nội dung chỉ dành cho mobile</div>
+        <code data-is-mobile>BrowserUtilities.isMobile() = {{ isMobile }}</code>
+      </div>
+    </demo-section>`,
+  },
+  "directives/scroll/example-thanh-cuon-ngang-chi-hien-khi-hover": {
+    ...SHOWCASE_PAGE_SOURCES["directives/scroll"],
+    html: `<demo-section
+      heading="Thanh cuộn ngang chỉ hiện khi hover"
+      [props]="[{ name: '[sdScroll]', value: 'true' }]"
+      note="Rê chuột vào khung để thấy thanh cuộn ngang xuất hiện; đưa chuột ra ngoài, overflow-x quay lại hidden. Directive cũng phát scrollTop() để cuộn khung về đầu.">
+      <div class="scroll-frame" sdScroll #frame data-scroll-frame>
+        <div class="scroll-wide">
+          @for (row of rows; track row) {
+            <p>{{ row }}</p>
+          }
+        </div>
+      </div>
+    </demo-section>`,
+  },
+  "directives/tooltip/example-noi-dung-dang-template": {
+    ...SHOWCASE_PAGE_SOURCES["directives/tooltip"],
+    html: `<demo-section
+      heading="Nội dung dạng template"
+      [props]="[{ name: '[sdTooltip]', value: 'template' }]"
+      note="Truyền TemplateRef để tooltip mang markup thật (danh sách, nhãn, liên kết) thay vì một dòng chữ.">
+      <button type="button" class="demo-target" [sdTooltip]="richTooltip" data-tooltip-template>Chi tiết phí</button>
+      <ng-template #richTooltip>
+        <div class="rich-tooltip">
+          <strong>Phí giao dịch</strong>
+          <span>Phí cố định: 11.000 đ</span>
+          <span>Phí theo giá trị: 0,02%</span>
+        </div>
+      </ng-template>
+    </demo-section>`,
+  },
+  "directives/tooltip/example-tooltip-van-ban": {
+    ...SHOWCASE_PAGE_SOURCES["directives/tooltip"],
+    html: `<demo-section
+      heading="Tooltip văn bản"
+      [props]="[{ name: '[sdTooltip]', value: 'text' }]"
+      note="Rê chuột vào nút để tooltip hiện bên dưới — vị trí mặc định là bottom.">
+      <button type="button" class="demo-target" [sdTooltip]="'Số dư khả dụng sau khi trừ phong toả'" data-tooltip-basic>
+        Số dư khả dụng
+      </button>
+    </demo-section>`,
+  },
+  "directives/tooltip/example-vi-tri-mau-va-do-tre": {
+    ...SHOWCASE_PAGE_SOURCES["directives/tooltip"],
+    html: `<demo-section
+      heading="Vị trí, màu và độ trễ"
+      [props]="[
+        { name: 'sdTooltipPosition', value: 'top / bottom / left / right' },
+        { name: 'sdTooltipColor', value: '#hex' },
+        { name: 'sdTooltipDelay', value: 'ms' },
+      ]"
+      note="Delay tính bằng mili-giây trước khi overlay mở; màu áp thẳng vào nền hộp tooltip.">
+      <button type="button" class="demo-target" [sdTooltip]="'Hiện phía trên'" sdTooltipPosition="top" data-tooltip-top>Top</button>
+      <button type="button" class="demo-target" [sdTooltip]="'Hiện bên trái'" sdTooltipPosition="left" data-tooltip-left>Left</button>
+      <button
+        type="button"
+        class="demo-target"
+        [sdTooltip]="'Đỏ cảnh báo, chờ 600ms'"
+        sdTooltipPosition="right"
+        sdTooltipColor="#d92d20"
+        [sdTooltipDelay]="600"
+        data-tooltip-delay>
+        Right + delay
+      </button>
+    </demo-section>`,
   },
   "forms/autocomplete/example-cac-trang-thai-bao-loi": {
     ...SHOWCASE_PAGE_SOURCES["forms/autocomplete"],
@@ -14313,135 +16132,237 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
   },
   "forms/date-range/example-chinh-sua-noi-tuyen": {
     ...SHOWCASE_PAGE_SOURCES["forms/date-range"],
-    html: `<demo-section heading="Chỉnh sửa nội tuyến" [props]="[{ name: 'viewed', value: 'inline' }]" note="Bấm vào khoảng để mở lịch chọn; text giữ nguyên tới khi chọn. Hover hiện × để xoá.">
-    <div style="width: 340px; font-size:13px; color:#555">
-      Kỳ: <sd-date-range [viewed]="'inline'" [(model)]="lockedB" [form]="form"></sd-date-range>
-    </div>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Chỉnh sửa nội tuyến"
+      [props]="[{ name: 'viewed', value: 'inline' }]"
+      note="Bấm vào khoảng để mở lịch chọn; text giữ nguyên tới khi chọn. Hover hiện × để xoá.">
+      <div style="width: 340px; font-size:13px; color:#555">
+        Kỳ: <sd-date-range [viewed]="'inline'" [(model)]="lockedB" [form]="form"></sd-date-range>
+      </div>
+    </demo-section>`,
+  },
+  "forms/date-range/example-chuan-hoa-gia-tri-dau-ra": {
+    ...SHOWCASE_PAGE_SOURCES["forms/date-range"],
+    html: `<demo-section
+      heading="Chuẩn hoá giá trị đầu ra"
+      [props]="[{ name: 'transform', value: 'ISOString / UTCString' }]"
+      note="Mỗi đầu range được serialize RIÊNG — cả object không bao giờ bị gộp thành một chuỗi. Ô nhập vẫn là dd/MM/yyyy → dd/MM/yyyy; range thiếu một đầu vẫn giữ null ở đầu đó.">
+      <div class="transform-grid">
+        <div>
+          <sd-date-range label="ISOString" transform="ISOString" [(model)]="isoPeriod"></sd-date-range>
+          <code>{{ isoPeriod() | json }}</code>
+        </div>
+        <div>
+          <sd-date-range label="UTCString" transform="UTCString" [(model)]="utcPeriod"></sd-date-range>
+          <code>{{ utcPeriod() | json }}</code>
+        </div>
+        <div>
+          <sd-date-range label="Không transform" [(model)]="plainPeriod"></sd-date-range>
+          <code>{{ plainPeriod() | json }}</code>
+        </div>
+      </div>
+    </demo-section>`,
   },
   "forms/date-range/example-co-ban": {
     ...SHOWCASE_PAGE_SOURCES["forms/date-range"],
-    html: `<demo-section heading="Cơ bản" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Chọn ngày bắt đầu và ngày kết thúc trong cùng popup.">
-    <div style="width: 380px; display:flex; flex-direction:column; gap:8px">
-      <sd-date-range label="Khoảng thời gian báo cáo" helperText="Chọn ngày bắt đầu và kết thúc"
-        [(model)]="period" [form]="form"></sd-date-range>
-      <div style="font-size:12px; color:#555">
-        Từ <b>{{ period()?.from || '...' }}</b> đến <b>{{ period()?.to || '...' }}</b>
+    html: `<demo-section
+      heading="Cơ bản"
+      [props]="[{ name: '[(model)]', value: 'two-way' }]"
+      note="Chọn ngày bắt đầu và ngày kết thúc trong cùng popup.">
+      <div style="width: 380px; display:flex; flex-direction:column; gap:8px">
+        <sd-date-range
+          label="Khoảng thời gian báo cáo"
+          helperText="Chọn ngày bắt đầu và kết thúc"
+          [(model)]="period"
+          [form]="form"></sd-date-range>
+        <div style="font-size:12px; color:#555">
+          Từ <b>{{ period()?.from || '...' }}</b> đến <b>{{ period()?.to || '...' }}</b>
+        </div>
       </div>
-    </div>
-  </demo-section>`,
+    </demo-section>`,
   },
   "forms/date-range/example-trang-thai": {
     ...SHOWCASE_PAGE_SOURCES["forms/date-range"],
-    html: `<demo-section heading="Trạng thái" [props]="[{ name: 'disabled', value: 'true' }, { name: 'viewed', value: 'true' }]" note="Khoảng đã set sẵn.">
-    <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
-      <sd-date-range style="width: 300px" label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-date-range>
-      <sd-date-range style="width: 300px" label="viewed" [(model)]="lockedB" [form]="form" viewed></sd-date-range>
-    </div>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Trạng thái"
+      [props]="[
+        { name: 'disabled', value: 'true' },
+        { name: 'viewed', value: 'true' },
+      ]"
+      note="Khoảng đã set sẵn.">
+      <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
+        <sd-date-range style="width: 300px" label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-date-range>
+        <sd-date-range style="width: 300px" label="viewed" [(model)]="lockedB" [form]="form" viewed></sd-date-range>
+      </div>
+    </demo-section>`,
   },
   "forms/date-range/example-validator": {
     ...SHOWCASE_PAGE_SOURCES["forms/date-range"],
     html: `<demo-section heading="Validator" [props]="[{ name: 'required', value: 'true' }]" note="Để trống và bấm Kiểm tra.">
-    <div style="width: 380px; display:flex; flex-direction:column; gap:12px">
-      <sd-date-range label="required"
-        [(model)]="billing" [form]="formValid" required></sd-date-range>
-      <div style="display:flex; gap:8px">
-        <button type="button" (click)="check()">Kiểm tra</button>
-        <button type="button" (click)="reset()">Đặt lại</button>
+      <div style="width: 380px; display:flex; flex-direction:column; gap:12px">
+        <sd-date-range label="required" [(model)]="billing" [form]="formValid" required></sd-date-range>
+        <div style="display:flex; gap:8px">
+          <button type="button" (click)="check()">Kiểm tra</button>
+          <button type="button" (click)="reset()">Đặt lại</button>
+        </div>
       </div>
-    </div>
-  </demo-section>`,
+    </demo-section>`,
   },
   "forms/date/example-chinh-sua-noi-tuyen": {
     ...SHOWCASE_PAGE_SOURCES["forms/date"],
-    html: `<demo-section heading="Chỉnh sửa nội tuyến" [props]="[{ name: 'viewed', value: 'inline' }]" note="Bấm vào ngày để mở lịch ngay; text giữ nguyên tới khi chọn. Hover hiện × để xoá.">
-    <div style="width: 260px; font-size:13px; color:#555">
-      Ngày sinh: <sd-date [viewed]="'inline'" [(model)]="lockedB" [form]="form"></sd-date>
-    </div>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Chỉnh sửa nội tuyến"
+      [props]="[{ name: 'viewed', value: 'inline' }]"
+      note="Bấm vào ngày để mở lịch ngay; text giữ nguyên tới khi chọn. Hover hiện × để xoá.">
+      <div style="width: 260px; font-size:13px; color:#555">
+        Ngày sinh: <sd-date [viewed]="'inline'" [(model)]="lockedB" [form]="form"></sd-date>
+      </div>
+    </demo-section>`,
+  },
+  "forms/date/example-chuan-hoa-gia-tri-dau-ra": {
+    ...SHOWCASE_PAGE_SOURCES["forms/date"],
+    html: `<demo-section
+      heading="Chuẩn hoá giá trị đầu ra"
+      [props]="[{ name: 'transform', value: 'ISOString / UTCString' }]"
+      note="transform chỉ đổi giá trị đi ra (model, sdChange, field trong FormGroup) — ô nhập vẫn là dd/MM/yyyy. Ngày được serialize ở nửa đêm GIỜ ĐỊA PHƯƠNG, nên phần ngày trong chuỗi UTC có thể lệch một ngày so với ô hiển thị. Đó là cùng một thời điểm.">
+      <div class="transform-grid">
+        <div>
+          <sd-date label="ISOString" transform="ISOString" [(model)]="isoDate"></sd-date>
+          <code>{{ isoDate() ?? '—' }}</code>
+        </div>
+        <div>
+          <sd-date label="UTCString" transform="UTCString" [(model)]="utcDate"></sd-date>
+          <code>{{ utcDate() ?? '—' }}</code>
+        </div>
+        <div>
+          <sd-date label="Không transform" [(model)]="plainDate"></sd-date>
+          <code>{{ plainDate() ?? '—' }}</code>
+        </div>
+      </div>
+    </demo-section>`,
   },
   "forms/date/example-co-ban": {
     ...SHOWCASE_PAGE_SOURCES["forms/date"],
     html: `<demo-section heading="Cơ bản" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Mở lịch và chọn ngày.">
-    <div style="width: 320px; display:flex; flex-direction:column; gap:8px">
-      <sd-date label="Ngày sinh" helperText="Theo CMND/CCCD"
-        [(model)]="birthday" [form]="form"></sd-date>
-      <div style="font-size:12px; color:#555">
-        Giá trị: <b>{{ birthday() || '(trống)' }}</b>
+      <div style="width: 320px; display:flex; flex-direction:column; gap:8px">
+        <sd-date label="Ngày sinh" helperText="Theo CMND/CCCD" [(model)]="birthday" [form]="form"></sd-date>
+        <div style="font-size:12px; color:#555">
+          Giá trị: <b>{{ birthday() || '(trống)' }}</b>
+        </div>
       </div>
-    </div>
-  </demo-section>`,
+    </demo-section>`,
   },
   "forms/date/example-kich-thuoc": {
     ...SHOWCASE_PAGE_SOURCES["forms/date"],
     html: `<demo-section heading="Kích thước" [props]="[{ name: 'size', value: 'sm' }]" note="UI gọn cho toolbar.">
-    <div style="width: 280px">
-      <sd-date label="sm" size="sm" [(model)]="filter" [form]="form"></sd-date>
-    </div>
-  </demo-section>`,
+      <div style="width: 280px">
+        <sd-date label="sm" size="sm" [(model)]="filter" [form]="form"></sd-date>
+      </div>
+    </demo-section>`,
   },
   "forms/date/example-trang-thai": {
     ...SHOWCASE_PAGE_SOURCES["forms/date"],
-    html: `<demo-section heading="Trạng thái" [props]="[{ name: 'disabled', value: 'true' }, { name: 'viewed', value: 'true' }]" note="Hai trạng thái khoá.">
-    <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
-      <sd-date style="width: 240px" label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-date>
-      <sd-date style="width: 240px" label="viewed" [(model)]="lockedB" [form]="form" viewed></sd-date>
-    </div>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Trạng thái"
+      [props]="[
+        { name: 'disabled', value: 'true' },
+        { name: 'viewed', value: 'true' },
+      ]"
+      note="Hai trạng thái khoá.">
+      <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
+        <sd-date style="width: 240px" label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-date>
+        <sd-date style="width: 240px" label="viewed" [(model)]="lockedB" [form]="form" viewed></sd-date>
+      </div>
+    </demo-section>`,
   },
   "forms/date/example-validator": {
     ...SHOWCASE_PAGE_SOURCES["forms/date"],
-    html: `<demo-section heading="Validator" [props]="[{ name: 'required', value: 'true' }]" note="Để trống và bấm Kiểm tra để hiện lỗi inline.">
-    <div style="width: 320px; display:flex; flex-direction:column; gap:12px">
-      <sd-date label="required"
-        [(model)]="startDate" [form]="formValid" required></sd-date>
-      <div style="display:flex; gap:8px">
-        <button type="button" (click)="check()">Kiểm tra</button>
-        <button type="button" (click)="reset()">Đặt lại</button>
+    html: `<demo-section
+      heading="Validator"
+      [props]="[{ name: 'required', value: 'true' }]"
+      note="Để trống và bấm Kiểm tra để hiện lỗi inline.">
+      <div style="width: 320px; display:flex; flex-direction:column; gap:12px">
+        <sd-date label="required" [(model)]="startDate" [form]="formValid" required></sd-date>
+        <div style="display:flex; gap:8px">
+          <button type="button" (click)="check()">Kiểm tra</button>
+          <button type="button" (click)="reset()">Đặt lại</button>
+        </div>
       </div>
-    </div>
-  </demo-section>`,
+    </demo-section>`,
   },
   "forms/datetime/example-chinh-sua-noi-tuyen": {
     ...SHOWCASE_PAGE_SOURCES["forms/datetime"],
-    html: `<demo-section heading="Chỉnh sửa nội tuyến" [props]="[{ name: 'viewed', value: 'inline' }]" note="Bấm vào để mở overlay datetime; text giữ nguyên tới khi chọn. Hover hiện × để xoá.">
-    <div style="width: 300px; font-size:13px; color:#555">
-      Hẹn lúc: <sd-datetime [viewed]="'inline'" [(model)]="lockedB" [form]="form"></sd-datetime>
-    </div>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Chỉnh sửa nội tuyến"
+      [props]="[{ name: 'viewed', value: 'inline' }]"
+      note="Bấm vào để mở overlay datetime; text giữ nguyên tới khi chọn. Hover hiện × để xoá.">
+      <div style="width: 300px; font-size:13px; color:#555">
+        Hẹn lúc: <sd-datetime [viewed]="'inline'" [(model)]="lockedB" [form]="form"></sd-datetime>
+      </div>
+    </demo-section>`,
+  },
+  "forms/datetime/example-chuan-hoa-gia-tri-dau-ra": {
+    ...SHOWCASE_PAGE_SOURCES["forms/datetime"],
+    html: `<demo-section
+      heading="Chuẩn hoá giá trị đầu ra"
+      [props]="[
+        { name: 'transform', value: 'ISOString / UTCString' },
+        { name: 'showSeconds', value: 'true' },
+      ]"
+      note="transform chỉ đổi giá trị đi ra — ô nhập vẫn theo showSeconds. Độ chính xác vẫn do showSeconds quy định: tắt thì giây về 0, bật thì giữ giây; mili-giây luôn bằng 0.">
+      <div class="transform-grid">
+        <div>
+          <sd-datetime label="ISOString" transform="ISOString" [(model)]="isoAt"></sd-datetime>
+          <code>{{ isoAt() ?? '—' }}</code>
+        </div>
+        <div>
+          <sd-datetime label="UTCString + giây" transform="UTCString" [showSeconds]="true" [(model)]="utcAt"></sd-datetime>
+          <code>{{ utcAt() ?? '—' }}</code>
+        </div>
+        <div>
+          <sd-datetime label="Không transform" [(model)]="plainAt"></sd-datetime>
+          <code>{{ plainAt() ?? '—' }}</code>
+        </div>
+      </div>
+    </demo-section>`,
   },
   "forms/datetime/example-co-ban": {
     ...SHOWCASE_PAGE_SOURCES["forms/datetime"],
     html: `<demo-section heading="Cơ bản" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Mở popup picker để chọn ngày và giờ.">
-    <div style="width: 340px; display:flex; flex-direction:column; gap:8px">
-      <sd-datetime label="Thời điểm cuộc họp" helperText="Bao gồm ngày và giờ"
-        [(model)]="meeting" [form]="form"></sd-datetime>
-      <div style="font-size:12px; color:#555">Giá trị: <b>{{ meeting() || '(trống)' }}</b></div>
-    </div>
-  </demo-section>`,
+      <div style="width: 340px; display:flex; flex-direction:column; gap:8px">
+        <sd-datetime label="Thời điểm cuộc họp" helperText="Bao gồm ngày và giờ" [(model)]="meeting" [form]="form"></sd-datetime>
+        <div style="font-size:12px; color:#555">
+          Giá trị: <b>{{ meeting() || '(trống)' }}</b>
+        </div>
+      </div>
+    </demo-section>`,
   },
   "forms/datetime/example-trang-thai": {
     ...SHOWCASE_PAGE_SOURCES["forms/datetime"],
-    html: `<demo-section heading="Trạng thái" [props]="[{ name: 'disabled', value: 'true' }, { name: 'viewed', value: 'true' }]" note="Hai trạng thái không cho chỉnh sửa.">
-    <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
-      <sd-datetime style="width: 260px" label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-datetime>
-      <sd-datetime style="width: 260px" label="viewed" [(model)]="lockedB" [form]="form" viewed></sd-datetime>
-    </div>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Trạng thái"
+      [props]="[
+        { name: 'disabled', value: 'true' },
+        { name: 'viewed', value: 'true' },
+      ]"
+      note="Hai trạng thái không cho chỉnh sửa.">
+      <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
+        <sd-datetime style="width: 260px" label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-datetime>
+        <sd-datetime style="width: 260px" label="viewed" [(model)]="lockedB" [form]="form" viewed></sd-datetime>
+      </div>
+    </demo-section>`,
   },
   "forms/datetime/example-validator": {
     ...SHOWCASE_PAGE_SOURCES["forms/datetime"],
     html: `<demo-section heading="Validator" [props]="[{ name: 'required', value: 'true' }]" note="Bỏ trống và bấm Kiểm tra để xem lỗi.">
-    <div style="width: 340px; display:flex; flex-direction:column; gap:12px">
-      <sd-datetime label="required"
-        [(model)]="startAt" [form]="formValid" required></sd-datetime>
-      <div style="display:flex; gap:8px">
-        <button type="button" (click)="check()">Kiểm tra</button>
-        <button type="button" (click)="reset()">Đặt lại</button>
+      <div style="width: 340px; display:flex; flex-direction:column; gap:12px">
+        <sd-datetime label="required" [(model)]="startAt" [form]="formValid" required></sd-datetime>
+        <div style="display:flex; gap:8px">
+          <button type="button" (click)="check()">Kiểm tra</button>
+          <button type="button" (click)="reset()">Đặt lại</button>
+        </div>
       </div>
-    </div>
-  </demo-section>`,
+    </demo-section>`,
   },
   "forms/entity-picker/example-error-retry-va-create-action": {
     ...SHOWCASE_PAGE_SOURCES["forms/entity-picker"],
@@ -14929,6 +16850,26 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     </div>
   </demo-section>`,
   },
+  "forms/select/example-chon-nhieu-voi-dong-tat-ca": {
+    ...SHOWCASE_PAGE_SOURCES["forms/select"],
+    html: `<demo-section
+    heading="Chọn nhiều với dòng Tất cả"
+    [props]="[{ name: 'showSelectAll', value: 'true' }, { name: 'multiple', value: 'true' }, { name: 'disabledField', value: 'disabled' }]"
+    note="Row 'Tất cả' đầu panel — chỉ hiện khi multiple + items là mảng tĩnh. Tick chọn toàn bộ items enabled khớp search hiện tại (item disabled 'Pháp chế' không bị đụng); đang search thì tick CHỈ thêm items khớp filter, selection cũ giữ nguyên. Checkbox có 3 trạng thái checked / indeterminate / unchecked.">
+    <div class="select-demo-column">
+      <sd-select
+        label="Đơn vị tham gia" multiple showSelectAll
+        [items]="selectAllItems"
+        valueField="value" displayField="display" disabledField="disabled"
+        placeholder="Chọn các đơn vị..."
+        minWidthPanel="360px"
+        [(model)]="selectAllDepts"
+        [form]="form">
+      </sd-select>
+      <div class="select-demo-status">Đã chọn ({{ selectAllDepts()?.length ?? 0 }}): <b>{{ selectAllDepts()?.join(', ') || '(trống)' }}</b></div>
+    </div>
+  </demo-section>`,
+  },
   "forms/select/example-co-ban": {
     ...SHOWCASE_PAGE_SOURCES["forms/select"],
     html: `<demo-section heading="Cơ bản" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Bind hai chiều, hiển thị giá trị đã chọn.">
@@ -15408,6 +17349,273 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
       <app-layout-version-preview [version]="3" [menus]="menus"></app-layout-version-preview>
     </demo-section>`,
   },
+  "pipes-utilities/empty/example-gia-tri-co-noi-dung-giu-nguyen": {
+    ...SHOWCASE_PAGE_SOURCES["pipes-utilities/empty"],
+    html: `<demo-section
+      heading="Giá trị có nội dung giữ nguyên"
+      [props]="[{ name: 'sdEmpty', value: 'pipe' }]"
+      note="Pipe trả về nguyên giá trị gốc, không ép kiểu và không format — cần chuẩn hoá mảng thì dùng sdView.">
+      <div class="value-grid">
+        @for (sample of filledSamples; track sample.label) {
+          <div class="value-cell">
+            <span class="value-cell__label">{{ sample.label }}</span>
+            <code>{{ sample.value | sdEmpty }}</code>
+          </div>
+        }
+      </div>
+    </demo-section>`,
+  },
+  "pipes-utilities/empty/example-gia-tri-rong-hien-thi-dau-gach": {
+    ...SHOWCASE_PAGE_SOURCES["pipes-utilities/empty"],
+    html: `<demo-section
+      heading="Giá trị rỗng hiển thị dấu gạch"
+      [props]="[{ name: 'sdEmpty', value: 'pipe' }]"
+      note="Chỉ đúng ba trường hợp null, undefined và '' được thay thế. Số 0 và chuỗi '0' KHÔNG bị coi là rỗng.">
+      <div class="value-grid">
+        @for (sample of emptySamples; track sample.label) {
+          <div class="value-cell">
+            <span class="value-cell__label">{{ sample.label }}</span>
+            <code>{{ sample.value | sdEmpty }}</code>
+          </div>
+        }
+      </div>
+    </demo-section>`,
+  },
+  "pipes-utilities/format-date/example-dinh-dang-mac-dinh": {
+    ...SHOWCASE_PAGE_SOURCES["pipes-utilities/format-date"],
+    html: `<demo-section
+      heading="Định dạng mặc định"
+      [props]="[{ name: 'sdFormatDate', value: 'dd/MM/yyyy' }]"
+      note="Không truyền tham số thì pipe dùng dd/MM/yyyy — dạng ngày chuẩn của các form trong pack.">
+      <div class="value-grid">
+        @for (sample of sources; track sample.label) {
+          <div class="value-cell">
+            <span class="value-cell__label">{{ sample.label }}</span>
+            <code>{{ sample.value | sdFormatDate }}</code>
+          </div>
+        }
+      </div>
+    </demo-section>`,
+  },
+  "pipes-utilities/format-date/example-dinh-dang-tuy-chinh": {
+    ...SHOWCASE_PAGE_SOURCES["pipes-utilities/format-date"],
+    html: `<demo-section
+      heading="Định dạng tuỳ chỉnh"
+      [props]="[{ name: 'sdFormatDate', value: 'format' }]"
+      note="Tham số đầu tiên là chuỗi token truyền thẳng cho DateUtilities.toFormat.">
+      <div class="value-grid">
+        @for (format of formats; track format) {
+          <div class="value-cell">
+            <span class="value-cell__label">{{ format }}</span>
+            <code>{{ isoDate | sdFormatDate: format }}</code>
+          </div>
+        }
+      </div>
+    </demo-section>`,
+  },
+  "pipes-utilities/format-date/example-gia-tri-khong-hop-le": {
+    ...SHOWCASE_PAGE_SOURCES["pipes-utilities/format-date"],
+    html: `<demo-section
+      heading="Giá trị không hợp lệ"
+      [props]="[{ name: 'sdFormatDate', value: 'dd/MM/yyyy' }]"
+      note="Giá trị không parse được trả về null, nên interpolation ra chuỗi rỗng thay vì 'Invalid Date'.">
+      <div class="value-grid">
+        @for (sample of invalidSources; track sample.label) {
+          <div class="value-cell">
+            <span class="value-cell__label">{{ sample.label }}</span>
+            <code class="value-cell__empty">{{ sample.value | sdFormatDate }}</code>
+          </div>
+        }
+      </div>
+    </demo-section>`,
+  },
+  "pipes-utilities/format-datetime/example-chi-lay-phan-gio": {
+    ...SHOWCASE_PAGE_SOURCES["pipes-utilities/format-datetime"],
+    html: `<demo-section
+      heading="Chỉ lấy phần giờ"
+      [props]="[{ name: 'sdFormatDatetime', value: 'format' }]"
+      note="Truyền token ngắn hơn khi cột đã có ngày ở chỗ khác; pipe không ép phải hiện đủ ngày + giờ.">
+      <div class="value-grid">
+        @for (format of formats; track format) {
+          <div class="value-cell">
+            <span class="value-cell__label">{{ format }}</span>
+            <code>{{ isoDatetime | sdFormatDatetime: format }}</code>
+          </div>
+        }
+      </div>
+    </demo-section>`,
+  },
+  "pipes-utilities/format-datetime/example-dinh-dang-mac-dinh": {
+    ...SHOWCASE_PAGE_SOURCES["pipes-utilities/format-datetime"],
+    html: `<demo-section
+      heading="Định dạng mặc định"
+      [props]="[{ name: 'sdFormatDatetime', value: 'dd/MM/yyyy HH:mm:ss' }]"
+      note="Dùng cho cột nhật ký, lịch sử thao tác — nơi cần đủ giây để phân biệt hai bản ghi liền nhau.">
+      <div class="value-grid">
+        @for (sample of sources; track sample.label) {
+          <div class="value-cell">
+            <span class="value-cell__label">{{ sample.label }}</span>
+            <code>{{ sample.value | sdFormatDatetime }}</code>
+          </div>
+        }
+      </div>
+    </demo-section>`,
+  },
+  "pipes-utilities/format-number/example-chuan-quoc-te": {
+    ...SHOWCASE_PAGE_SOURCES["pipes-utilities/format-number"],
+    html: `<demo-section
+      heading="Chuẩn quốc tế"
+      [props]="[{ name: 'sdFormatNumber', value: '1,234,567.89' }]"
+      note="Dấu phẩy ngăn hàng nghìn, dấu chấm ngăn thập phân. Đây cũng là mặc định khi app chưa cấu hình format.number.">
+      <div class="value-grid">
+        @for (sample of amounts; track sample) {
+          <div class="value-cell">
+            <span class="value-cell__label">{{ sample }}</span>
+            <code>{{ sample | sdFormatNumber: 2 : '1,234,567.89' }}</code>
+          </div>
+        }
+      </div>
+    </demo-section>`,
+  },
+  "pipes-utilities/format-number/example-chuan-viet-nam": {
+    ...SHOWCASE_PAGE_SOURCES["pipes-utilities/format-number"],
+    html: `<demo-section
+      heading="Chuẩn Việt Nam"
+      [props]="[{ name: 'sdFormatNumber', value: '1.234.567,89' }]"
+      note="Đảo vai trò hai dấu. Đặt một lần ở SD_CORE_CONFIGURATION là mọi pipe và form field trong app đi theo, không cần truyền tham số.">
+      <div class="value-grid">
+        @for (sample of amounts; track sample) {
+          <div class="value-cell">
+            <span class="value-cell__label">{{ sample }}</span>
+            <code>{{ sample | sdFormatNumber: 2 : '1.234.567,89' }}</code>
+          </div>
+        }
+      </div>
+    </demo-section>`,
+  },
+  "pipes-utilities/format-number/example-so-chu-so-thap-phan": {
+    ...SHOWCASE_PAGE_SOURCES["pipes-utilities/format-number"],
+    html: `<demo-section
+      heading="Số chữ số thập phân"
+      [props]="[{ name: 'sdFormatNumber', value: 'digits' }]"
+      note="Tham số đầu là số chữ số sau dấu thập phân (mặc định 2). Giá trị không phải số trả về chuỗi rỗng.">
+      <div class="value-grid">
+        @for (digits of digitOptions; track digits) {
+          <div class="value-cell">
+            <span class="value-cell__label">digits = {{ digits }}</span>
+            <code>{{ 1234567.891 | sdFormatNumber: digits : '1,234,567.89' }}</code>
+          </div>
+        }
+        <div class="value-cell">
+          <span class="value-cell__label">'khong-phai-so'</span>
+          <code class="value-cell__empty">{{ 'khong-phai-so' | sdFormatNumber }}</code>
+        </div>
+      </div>
+    </demo-section>`,
+  },
+  "pipes-utilities/safe-html/example-sanitize-mac-dinh": {
+    ...SHOWCASE_PAGE_SOURCES["pipes-utilities/safe-html"],
+    html: `<demo-section
+      heading="Sanitize mặc định"
+      [props]="[{ name: 'sdSafeHtml', value: 'pipe' }]"
+      note="Thẻ script, thuộc tính on* và url javascript: bị loại bỏ; phần markup lành tính còn lại vẫn render. Đây là nhánh dùng cho mọi dữ liệu đến từ server.">
+      <div class="html-pair">
+        <div class="html-cell">
+          <span class="html-cell__label">Chuỗi gốc</span>
+          <code>{{ untrusted }}</code>
+        </div>
+        <div class="html-cell">
+          <span class="html-cell__label">Kết quả render</span>
+          <div class="html-cell__output" data-safe-html-sanitized [innerHTML]="untrusted | sdSafeHtml"></div>
+        </div>
+      </div>
+    </demo-section>`,
+  },
+  "pipes-utilities/safe-html/example-tin-cay-co-chu-dich": {
+    ...SHOWCASE_PAGE_SOURCES["pipes-utilities/safe-html"],
+    html: `<demo-section
+      heading="Tin cậy có chủ đích"
+      [props]="[{ name: 'sdSafeHtml', value: 'trusted' }]"
+      note="Tham số true gọi bypassSecurityTrustHtml. Chỉ dùng cho markup do chính app viết ra, ví dụ một sprite SVG nội bộ — không bao giờ cho dữ liệu người dùng nhập.">
+      <div class="html-pair">
+        <div class="html-cell">
+          <span class="html-cell__label">Chuỗi gốc</span>
+          <code>{{ appAuthored }}</code>
+        </div>
+        <div class="html-cell">
+          <span class="html-cell__label">Kết quả render</span>
+          <div class="html-cell__output" data-safe-html-trusted [innerHTML]="appAuthored | sdSafeHtml: true"></div>
+        </div>
+      </div>
+    </demo-section>`,
+  },
+  "pipes-utilities/time-different/example-qua-nguong-thi-ve-ngay-tuyet-doi": {
+    ...SHOWCASE_PAGE_SOURCES["pipes-utilities/time-different"],
+    html: `<demo-section
+      heading="Quá ngưỡng thì về ngày tuyệt đối"
+      [props]="[{ name: 'sdTimeDifferent', value: 'format' }]"
+      note="Giá trị đã cũ hơn ngưỡng KHÔNG tạo timer nào — pipe trả về of(...) ngay, nên một danh sách dài không sinh hàng loạt interval thừa.">
+      <div class="value-grid">
+        @for (sample of old; track sample.label) {
+          <div class="value-cell">
+            <span class="value-cell__label">{{ sample.label }}</span>
+            <code>{{ sample.value | sdTimeDifferent: 'dd/MM/yyyy HH:mm' : 'minute' | async }}</code>
+          </div>
+        }
+      </div>
+    </demo-section>`,
+  },
+  "pipes-utilities/time-different/example-thoi-gian-tuong-doi": {
+    ...SHOWCASE_PAGE_SOURCES["pipes-utilities/time-different"],
+    html: `<demo-section
+      heading="Thời gian tương đối"
+      [props]="[
+        { name: 'sdTimeDifferent', value: 'format' },
+        { name: 'different', value: 'second / minute / hour / day / month' },
+      ]"
+      note="Tham số thứ hai là ngưỡng: dưới ngưỡng thì hiện khoảng cách tương đối và tick mỗi giây, chạm ngưỡng thì rơi về format.">
+      <div class="value-grid">
+        @for (sample of recent; track sample.label) {
+          <div class="value-cell">
+            <span class="value-cell__label">{{ sample.label }}</span>
+            <code>{{ sample.value | sdTimeDifferent: 'dd/MM/yyyy HH:mm' : 'day' | async }}</code>
+          </div>
+        }
+      </div>
+    </demo-section>`,
+  },
+  "pipes-utilities/view/example-chuan-hoa-gia-tri-rong": {
+    ...SHOWCASE_PAGE_SOURCES["pipes-utilities/view"],
+    html: `<demo-section
+      heading="Chuẩn hoá giá trị rỗng"
+      [props]="[{ name: 'sdView', value: 'pipe' }]"
+      note="So với sdEmpty, sdView bắt thêm NaN và mảng rỗng — đó là hai giá trị hay lọt lưới nhất khi render dữ liệu API.">
+      <div class="value-grid">
+        @for (sample of emptySamples; track sample.label) {
+          <div class="value-cell">
+            <span class="value-cell__label">{{ sample.label }}</span>
+            <code>{{ sample.value | sdView }}</code>
+          </div>
+        }
+      </div>
+    </demo-section>`,
+  },
+  "pipes-utilities/view/example-gop-mang-thanh-chuoi": {
+    ...SHOWCASE_PAGE_SOURCES["pipes-utilities/view"],
+    html: `<demo-section
+      heading="Gộp mảng thành chuỗi"
+      [props]="[{ name: 'sdView', value: 'pipe' }]"
+      note="Mỗi phần tử được chuẩn hoá đệ quy trước khi nối, nên phần tử rỗng bên trong mảng cũng thành dấu gạch thay vì biến mất.">
+      <div class="value-grid">
+        @for (sample of arraySamples; track sample.label) {
+          <div class="value-cell">
+            <span class="value-cell__label">{{ sample.label }}</span>
+            <code>{{ sample.value | sdView }}</code>
+          </div>
+        }
+      </div>
+    </demo-section>`,
+  },
   "services/confirm/example-chon-muc-do": {
     ...SHOWCASE_PAGE_SOURCES["services/confirm"],
     html: `<demo-section heading="Chọn mức độ" [props]="[{ name: 'withRadio()', value: 'method' }]" note="withRadio() – chọn từ danh sách radio.">
@@ -15460,29 +17668,6 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     ...SHOWCASE_PAGE_SOURCES["services/confirm"],
     html: `<demo-section heading="Xác nhận xóa" [props]="[{ name: 'confirm()', value: 'method' }]" note="Tùy chỉnh tiêu đề, nhãn nút và màu nút.">
     <button mat-flat-button color="warn" (click)="onDelete()">Xóa bản ghi</button>
-  </demo-section>`,
-  },
-  "services/docx/example-chuyen-doi-sang-html": {
-    ...SHOWCASE_PAGE_SOURCES["services/docx"],
-    html: `<demo-section heading="Chuyển đổi sang HTML" [props]="[{ name: 'convertToHtmlString()', value: 'method' }]" note="convertToHtmlString() – không trả mảng cảnh báo.">
-    <button mat-stroked-button color="primary" [disabled]="busy()" (click)="onOpenString()">Chọn file & lấy HTML</button>
-  </demo-section>`,
-  },
-  "services/docx/example-ket-qua": {
-    ...SHOWCASE_PAGE_SOURCES["services/docx"],
-    html: `<demo-section heading="Kết quả">
-    <div style="width:100%">
-      <div style="font-size:12px;color:#666;margin-bottom:6px">{{ status() }}</div>
-      @if (preview()) {
-        <div style="max-height:280px;overflow:auto;border:1px solid #ddd;border-radius:6px;padding:12px;background:#fff" [innerHTML]="preview()"></div>
-      }
-    </div>
-  </demo-section>`,
-  },
-  "services/docx/example-mo-file-docx": {
-    ...SHOWCASE_PAGE_SOURCES["services/docx"],
-    html: `<demo-section heading="Mở file .docx" [props]="[{ name: 'open()', value: 'method' }]" note="open() – mở file picker, đọc file, gọi pandoc.wasm, trả về { html, messages }. WASM được tải lần đầu (~vài MB) nên có thể chậm.">
-    <button mat-flat-button color="primary" [disabled]="busy()" (click)="onOpen()">Chọn file .docx</button>
   </demo-section>`,
   },
   "services/excel/example-tai-template-trong": {

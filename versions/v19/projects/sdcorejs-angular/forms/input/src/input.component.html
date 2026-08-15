@@ -6,6 +6,10 @@
 @let _errorMessage = visibleErrorMessage();
 @let _required = required();
 @let _isInline = isInline();
+<!-- why: cùng MỘT cổng gate cho cả 3 thứ — hiện <mat-error>, bật aria-invalid, và trỏ
+     aria-describedby. Trước đây message hiện mà control không hề báo invalid, nên screen
+     reader đọc xong ô nhập vẫn không biết là đang lỗi. -->
+@let _showInlineError = !_hideInlineError && !!_errorMessage;
 
 @if (isViewed()) {
   <sd-view
@@ -17,17 +21,29 @@
     [valueTemplate]="viewTemplate()">
   </sd-view>
 } @else if (_isInline) {
-  <sd-inline-text
-    [control]="activeControl()"
-    [placeholder]="placeholder() || _label || ''"
-    [clearable]="clearable() && !_required"
-    [autoId]="autoId()"
-    [state]="connectorState().invalid ? 'error' : 'auto'"
-    (sdFocus)="onFocus()"
-    (sdBlur)="onBlur()"
-    (keyupEnter)="onKeyupEnter()"
-    (cleared)="cleared.emit()">
-  </sd-inline-text>
+  <!-- why: nhánh inline PHẢI project `sdSuffixDef` giống nhánh mat-form-field. Trước đây chỉ
+       <sd-inline-text> được render, nên <sd-input-color viewed="'inline'"> mất luôn swatch và
+       <input type="color"> ẩn — openPicker() gọi được nhưng không có element nào để click, tức
+       là no-op câm. <sd-inline-text> là inline-flex tự hug nội dung nên chỉ cần một hàng flex. -->
+  <div class="sd-input-inline">
+    <sd-inline-text
+      [control]="activeControl()"
+      [placeholder]="placeholder() || _label || ''"
+      [clearable]="clearable() && !_required"
+      [autoId]="autoId()"
+      [state]="connectorState().invalid ? 'error' : 'auto'"
+      (sdFocus)="onFocus()"
+      (sdBlur)="onBlur()"
+      (keyupEnter)="onKeyupEnter()"
+      (cleared)="cleared.emit()">
+    </sd-inline-text>
+
+    @if (sdSuffixDef()?.templateRef; as suffixRef) {
+      <span class="sd-input-inline__suffix">
+        <ng-container *ngTemplateOutlet="suffixRef"></ng-container>
+      </span>
+    }
+  </div>
 } @else {
   @if (!_appearance) {
     <ng-content select="[sdLabel]">
@@ -37,12 +53,17 @@
     </ng-content>
   }
 
+  <!-- why: div này CHỈ là hộp layout. Nó từng mang aria-hidden="true" để dập cảnh báo lint —
+       và aria-hidden ẩn CẢ cây con, nên label, <input>, <mat-error> lẫn nút clear biến mất
+       khỏi accessibility tree cùng lúc. role="presentation" chỉ vô hiệu hoá chính div (KHÔNG
+       lan xuống con), còn (click) chỉ là tiện ích chuột: bàn phím Tab thẳng vào <input> và
+       nhận đúng kết quả đó, nên không cần thêm key handler. -->
   <div
     class="d-flex align-items-center sd-input-container"
+    role="presentation"
     [class.c-focused]="isFocused"
     [class.c-disabled]="formControl.disabled"
-    (click)="onClick()"
-    aria-hidden="true">
+    (click)="onClick()">
     <div class="sd-input-field-wrap">
       <mat-form-field
         [class.sd-md]="size() === 'md'"
@@ -59,8 +80,9 @@
           </mat-label>
         }
 
+        <!-- why: BỎ aria-hidden trên chính <input>. Input vẫn focus được bằng Tab, nên
+             aria-hidden khiến screen reader đọc ra… không gì cả — tệ hơn là không làm gì. -->
         <input
-          aria-hidden="true"
           [id]="id"
           [formControl]="activeControl()"
           [type]="effectiveType()"
@@ -87,11 +109,13 @@
           [attr.data-minlength]="dataMinLength()"
           [attr.data-pattern]="dataPattern()"
           [attr.data-error-message]="dataErrorMessage()"
+          [attr.aria-invalid]="_errorMessage ? 'true' : null"
+          [attr.aria-describedby]="_errorMessage ? errorId : null"
           (compositionstart)="onCompositionStart()"
           (compositionend)="onCompositionEnd($event)" />
 
-        @if (!_hideInlineError && _errorMessage) {
-          <mat-error>{{ _errorMessage }}</mat-error>
+        @if (_showInlineError) {
+          <mat-error [id]="errorId">{{ _errorMessage }}</mat-error>
         }
 
         <!-- why: nút clear render TRƯỚC error icon. Clear hover-gated (visibility:hidden) vẫn
@@ -105,6 +129,9 @@
 
         @if (_hideInlineError && _errorMessage) {
           <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
+        }
+        @if (_hideInlineError && _errorMessage) {
+          <span class="sd-visually-hidden" [id]="errorId" matSuffix>{{ _errorMessage }}</span>
         }
 
         @if (sdSuffixDef()?.templateRef; as suffixRef) {
@@ -122,7 +149,7 @@
           class="sd-maxlength-counter"
           [class.sd-maxlength-counter--visible]="isFocused"
           [class.sd-maxlength-counter--exceeded]="isMaxlengthExceeded()"
-          [attr.title]="isMaxlengthExceeded() ? ('core.form.input.exceeded' | translate) : null">
+          [attr.title]="isMaxlengthExceeded() ? ('core.form.input.exceeded' | sdTranslate) : null">
           {{ getCurrentLength() }}/{{ _maxLength }}
         </div>
       }

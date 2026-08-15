@@ -34,7 +34,7 @@
             class="sd-layout-user-menu__action sd-layout-user-menu__signout d-flex align-items-center gap-8 px-8 py-8 T14R text-left text-error"
             (click)="runSignout()">
             <sd-icon name="logout"></sd-icon>
-            {{ 'core.module.layout.user.logout' | translate }}
+            {{ 'core.module.layout.user.logout' | sdTranslate }}
           </button>
         }
       </div>
@@ -48,7 +48,7 @@
               class="sd-layout-user-menu__action d-flex align-items-center gap-8 px-8 py-8 T14R text-left"
               (click)="runUpdateProfile()">
               <sd-icon name="edit"></sd-icon>
-              {{ 'core.module.layout.user.update-profile' | translate }}
+              {{ 'core.module.layout.user.update-profile' | sdTranslate }}
             </button>
           }
           @if (settingAction()) {
@@ -58,7 +58,7 @@
               class="sd-layout-user-menu__action d-flex align-items-center gap-8 px-8 py-8 T14R text-left"
               (click)="runSetting()">
               <sd-icon name="settings"></sd-icon>
-              {{ 'core.module.layout.user.setting' | translate }}
+              {{ 'core.module.layout.user.setting' | sdTranslate }}
             </button>
           }
           @if (notificationAction()) {
@@ -68,7 +68,7 @@
               class="sd-layout-user-menu__action d-flex align-items-center gap-8 px-8 py-8 T14R text-left"
               (click)="runNotification()">
               <sd-icon name="notifications"></sd-icon>
-              <span class="flex-1">{{ 'core.module.layout.user.notification' | translate }}</span>
+              <span class="flex-1">{{ 'core.module.layout.user.notification' | sdTranslate }}</span>
               @if (_notificationBadge) {
                 <span data-notification-badge class="sd-layout-user-menu__badge">{{ _notificationBadge }}</span>
               }
@@ -81,7 +81,7 @@
               class="sd-layout-user-menu__action d-flex align-items-center gap-8 px-8 py-8 T14R text-left"
               (click)="runChangePassword()">
               <sd-icon name="lock"></sd-icon>
-              {{ 'core.module.layout.user.change-password' | translate }}
+              {{ 'core.module.layout.user.change-password' | sdTranslate }}
             </button>
           }
         </div>
@@ -150,7 +150,7 @@
             class="sd-layout-user-menu__action d-flex align-items-center gap-8 px-8 py-8 T14R text-left"
             (click)="runUpdateProfile()">
             <sd-icon name="edit"></sd-icon>
-            {{ 'core.module.layout.user.update-profile' | translate }}
+            {{ 'core.module.layout.user.update-profile' | sdTranslate }}
           </button>
         }
         @if (settingAction()) {
@@ -161,7 +161,7 @@
             class="sd-layout-user-menu__action d-flex align-items-center gap-8 px-8 py-8 T14R text-left"
             (click)="runSetting()">
             <sd-icon name="settings"></sd-icon>
-            {{ 'core.module.layout.user.setting' | translate }}
+            {{ 'core.module.layout.user.setting' | sdTranslate }}
           </button>
         }
         @if (notificationAction()) {
@@ -172,7 +172,7 @@
             class="sd-layout-user-menu__action d-flex align-items-center gap-8 px-8 py-8 T14R text-left"
             (click)="runNotification()">
             <sd-icon name="notifications"></sd-icon>
-            <span class="flex-1">{{ 'core.module.layout.user.notification' | translate }}</span>
+            <span class="flex-1">{{ 'core.module.layout.user.notification' | sdTranslate }}</span>
             @if (_notificationBadge) {
               <span data-notification-badge class="sd-layout-user-menu__badge">{{ _notificationBadge }}</span>
             }
@@ -186,7 +186,7 @@
             class="sd-layout-user-menu__action d-flex align-items-center gap-8 px-8 py-8 T14R text-left"
             (click)="runChangePassword()">
             <sd-icon name="lock"></sd-icon>
-            {{ 'core.module.layout.user.change-password' | translate }}
+            {{ 'core.module.layout.user.change-password' | sdTranslate }}
           </button>
         }
         @if (signoutAction()) {
@@ -197,7 +197,7 @@
             class="sd-layout-user-menu__action d-flex align-items-center gap-8 px-8 py-8 T14R text-left text-error"
             (click)="runSignout()">
             <sd-icon name="logout"></sd-icon>
-            {{ 'core.module.layout.user.logout' | translate }}
+            {{ 'core.module.layout.user.logout' | sdTranslate }}
           </button>
         }
       </div>

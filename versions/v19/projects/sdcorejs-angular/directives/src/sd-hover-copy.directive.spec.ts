@@ -12,6 +12,7 @@ import { Component } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { BrowserUtilities } from '@sdcorejs/utils/fns';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdHoverCopyDirective } from './sd-hover-copy.directive';
 
 @Component({
@@ -171,10 +172,10 @@ describe('SdHoverCopyDirective', () => {
       expect(getTooltip()!.style.opacity).toBe('0');
     });
 
-    it('clicking copy button shows tooltip text "Copied" with opacity 1', () => {
+    it('clicking copy button shows the translated copied tooltip with opacity 1', () => {
       directiveInstance.onMouseEnter();
       getDirectiveButton()!.click();
-      expect(getTooltip()!.innerText).toBe('Copied');
+      expect(getTooltip()!.innerText).toBe('Đã sao chép');
       expect(getTooltip()!.style.opacity).toBe('1');
     });
 
@@ -192,6 +193,79 @@ describe('SdHoverCopyDirective', () => {
       directiveInstance.onMouseLeave();
       expect(getTooltip()!.style.opacity).toBe('0');
     });
+
+    // why: tooltip mặc định đã đi qua I18nService từ trước, riêng phản hồi sau khi copy vẫn cứng
+    // 'Copied' — cùng một tooltip mà hiển thị hai ngôn ngữ.
+    it('reads the copied feedback from the catalogue, not a hardcoded English string', () => {
+      const i18n = TestBed.inject(I18nService);
+      i18n.setLanguage('en', { reload: false });
+
+      directiveInstance.onMouseEnter();
+      getDirectiveButton()!.click();
+      expect(getTooltip()!.innerText).toBe('Copied');
+
+      directiveInstance.onMouseLeave();
+      expect(getTooltip()!.innerText).toBe('Copy');
+
+      i18n.setLanguage('vi', { reload: false });
+    });
+  });
+
+  // ─── teardown ────────────────────────────────────────────────────────────────
+
+  describe('teardown', () => {
+    // why: timeout 1s ẩn tooltip trước đây không lưu handle và directive không có teardown, nên
+    // host bị destroy trong 1s đó vẫn chạy #hideTooltip() trên node đã gỡ khỏi DOM.
+    // fakeAsync sẽ báo "timer(s) still in the queue" nếu timer không được clear khi destroy.
+    it('clears the pending hide-tooltip timeout when the host is destroyed', fakeAsync(() => {
+      directiveInstance.onMouseEnter();
+      getDirectiveButton()!.click();
+      const tooltip = getTooltip()!;
+      expect(tooltip.innerText).toBe('Đã sao chép');
+
+      fixture.destroy();
+
+      // Không tick: nếu timer còn trong hàng đợi, fakeAsync fail ở cuối test.
+      expect(tooltip.innerText).toBe('Đã sao chép');
+    }));
+
+    it('does not reset the tooltip after destroy even once 1000ms of virtual time passes', fakeAsync(() => {
+      directiveInstance.onMouseEnter();
+      getDirectiveButton()!.click();
+      const tooltip = getTooltip()!;
+
+      fixture.destroy();
+      tick(1000);
+
+      expect(tooltip.innerText).toBe('Đã sao chép');
+      expect(tooltip.style.opacity).toBe('1');
+    }));
+
+    it('clears the pending hide-tooltip timeout when the button is removed by sdHoverCopyDisabled', fakeAsync(() => {
+      directiveInstance.onMouseEnter();
+      const tooltip = getTooltip()!;
+      getDirectiveButton()!.click();
+
+      host.disabled = true;
+      fixture.detectChanges();
+
+      // Timer đã bị clear cùng lúc gỡ button — fakeAsync không còn task nào treo.
+      expect(tooltip.innerText).toBe('Đã sao chép');
+    }));
+
+    it('restarts the 1s timer on a second click instead of leaking the first one', fakeAsync(() => {
+      directiveInstance.onMouseEnter();
+      const button = getDirectiveButton()!;
+      button.click();
+      tick(600);
+      button.click();
+      tick(600);
+      // Timer đầu đã bị huỷ nên tooltip vẫn còn "Copied" ở mốc 1200ms.
+      expect(getTooltip()!.innerText).toBe('Đã sao chép');
+      tick(400);
+      expect(getTooltip()!.innerText).toBe('Sao chép');
+      expect(getTooltip()!.style.opacity).toBe('0');
+    }));
   });
 
   // ─── ngOnChanges — dynamic enable/disable ────────────────────────────────────

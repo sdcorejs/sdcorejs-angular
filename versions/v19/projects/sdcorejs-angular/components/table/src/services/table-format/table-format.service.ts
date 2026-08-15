@@ -2,7 +2,7 @@ import { Injectable, inject, isSignal } from '@angular/core';
 import { SdFormatDatePipe, SdFormatDatetimePipe, SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
 import { EMPTY_STR } from '@sdcorejs/utils/constants';
 import { Utilities } from '@sdcorejs/utils/fns';
-import { ArrayUtilities, NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { ArrayUtilities, NumberUtilities } from '@sdcorejs/utils/fns';
 
 import { SdTableColumn, SdTableColumnNormal } from '../../models/table-column.model';
 import { MapToSdTableItem, SdTableDisplay, SdTableItem } from '../../models/table-item.model';
@@ -90,14 +90,22 @@ export class TableFormatService {
   /**
    * Chuyển đổi dữ liệu thô thành SdTableItem kèm các thiết lập hiển thị (Display Meta)
    */
-  async format<T = any>(
+  // why: `columns` phải là `SdTableColumn<T>` chứ không phải `SdTableColumn` (mặc định `unknown`).
+  // Cột mang callback nhận `rowData: T` (`transform`, `tooltip`, `click`, `useBadge`) nên tham số
+  // đứng ở vị trí contravariant — khi default generic còn là `any` thì mọi thứ gán được cho nhau nhờ
+  // bivariance của `any`; đổi default sang `unknown` làm lộ ra rằng service đang nhận cột "kiểu khác"
+  // với hàng nó format. Ràng buộc theo cùng `T` là cách sửa đúng, không phải cast.
+  async format<T = unknown>(
     rawItems: T[],
-    columns: SdTableColumn[],
+    columns: SdTableColumn<T>[],
     cacheValues: Record<string, any[]>,
-    cacheObjValues: Record<string, Record<string, string>>
+    cacheObjValues: Record<string, Record<string, string>>,
+    rowKey?: string
   ): Promise<SdTableItem<T>[]> {
-    const items = rawItems.map(MapToSdTableItem);
-    const execute = async (column: SdTableColumnNormal) => {
+    // why: KHÔNG dùng `rawItems.map(MapToSdTableItem)` — `map` truyền cả index làm
+    // tham số thứ 2, tức index sẽ bị nhận nhầm thành `rowKey`.
+    const items = rawItems.map(item => MapToSdTableItem(item, rowKey));
+    const execute = async (column: SdTableColumnNormal<T>) => {
       const { field, click, tooltip, htmlTemplate, transform } = column;
       const fieldStr = field;
 
@@ -220,9 +228,9 @@ export class TableFormatService {
     return '';
   }
 
-  #processValuesDisplay(
+  #processValuesDisplay<T>(
     value: any,
-    column: SdTableColumnNormal & { type: 'values' | 'lazy-values' },
+    column: SdTableColumnNormal<T> & { type: 'values' | 'lazy-values' },
     field: string,
     cacheObjValues: Record<string, Record<string, string>>
   ): string {
@@ -230,10 +238,10 @@ export class TableFormatService {
     return vals.map(val => cacheObjValues[field]?.[val]?.[column.option.displayField as any] || val).join(', ');
   }
 
-  #createBadge(
-    column: SdTableColumnNormal,
+  #createBadge<T>(
+    column: SdTableColumnNormal<T>,
     value: any,
-    rowData: any,
+    rowData: T,
     cacheValues: Record<string, any[]>
   ): { badge: SdTableDisplay['badge']; title?: string | number | null } | undefined {
     if (column.useBadge) {

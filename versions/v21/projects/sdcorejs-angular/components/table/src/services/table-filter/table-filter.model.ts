@@ -1,9 +1,9 @@
 import { TemplateRef } from '@angular/core';
 import type { SdSearch } from '@sdcorejs/angular/forms/models';
-import { DateUtilities } from '@sdcorejs/angular/utilities';
+import { DateUtilities } from '@sdcorejs/utils/fns';
 import { Filter, NestedKeyOf, Operator, Order, PagingReq } from '@sdcorejs/utils/models';
 import { Observable } from 'rxjs';
-import { SdTableColumn } from '../../models/table-column.model';
+import { SdTableColumn, SdTableColumnAnyRow } from '../../models/table-column.model';
 
 export interface SdTableQuickFilter {
   code: string;
@@ -31,7 +31,7 @@ export interface TableFilterValue {
   filtered?: boolean; // Để nhận biết là có đang lọc hay không
 }
 
-export interface SdTableFilterRequest<T = any> {
+export interface SdTableFilterRequest<T = unknown> {
   columnOperator: Record<NestedKeyOf<T>, Operator>;
   rawColumnFilter: Record<NestedKeyOf<T>, any>;
   rawExternalFilter: Record<string, any>;
@@ -43,7 +43,7 @@ export interface SdTableFilterRequest<T = any> {
   visibledColumns?: SdTableColumn[];
 }
 
-export interface SdTableOptionFilter<T = any> {
+export interface SdTableOptionFilter<T = unknown> {
   /** Key định danh nếu muốn lưu cache */
   key?: string;
 
@@ -78,10 +78,14 @@ export interface SdTableOptionFilter<T = any> {
   onClearFilter?: () => void;
 }
 
+// why: `columns` nhận `SdTableColumnAnyRow[]` (= `SdTableColumn<never>[]`). Hàm chỉ đọc
+// `field` / `type` / `filter.operator.default` — không bao giờ chạm dữ liệu hàng — nên không cần generic
+// theo `T`; `never` ở vị trí contravariant khiến mọi `SdTableColumn<T>` vẫn truyền vào được sau khi
+// default generic siết từ `any` sang `unknown`.
 export const SdConvertToPagingReq = (
   filterRequest: SdTableFilterRequest,
   args: {
-    columns?: SdTableColumn[];
+    columns?: SdTableColumnAnyRow[];
     externalFilters?: SdTableExternalFilter[];
     fieldMapping?: Record<string, string>;
     orders?: Order[];
@@ -306,7 +310,7 @@ export const SdConvertToPagingReq = (
   return req;
 };
 
-export declare type SdTableExternalFilter<TData = any> =
+export declare type SdTableExternalFilter<TData = unknown> =
   | TextFilter<TData>
   | DateFilter<TData>
   | DateTimeFilter<TData>
@@ -317,7 +321,7 @@ export declare type SdTableExternalFilter<TData = any> =
   | BooleanFilter<TData>
   | CustomFilter<TData>;
 
-interface BaseFilter<TData = any> {
+interface BaseFilter<TData = unknown> {
   field: string;
   title: string;
   defaultShowing?: boolean;
@@ -328,26 +332,26 @@ interface BaseFilter<TData = any> {
   onChange?: (value: any) => void;
 }
 
-interface TextFilter<TData = any> extends BaseFilter<TData> {
+interface TextFilter<TData = unknown> extends BaseFilter<TData> {
   type: 'string';
   default?: string;
 }
 
-interface DateFilter<TData = any> extends BaseFilter<TData> {
+interface DateFilter<TData = unknown> extends BaseFilter<TData> {
   type: 'date';
   default?: Date | string;
   minDate?: string | number | Date;
   maxDate?: string | number | Date;
 }
 
-interface DateTimeFilter<TData = any> extends BaseFilter<TData> {
+interface DateTimeFilter<TData = unknown> extends BaseFilter<TData> {
   type: 'datetime';
   default?: Date | string;
   minDate?: string | number | Date;
   maxDate?: string | number | Date;
 }
 
-interface DateRangeFilter<TData = any> extends BaseFilter<TData> {
+interface DateRangeFilter<TData = unknown> extends BaseFilter<TData> {
   type: 'daterange';
   enableTime?: boolean;
   minDate?: string | number | Date;
@@ -358,12 +362,12 @@ interface DateRangeFilter<TData = any> extends BaseFilter<TData> {
   };
 }
 
-interface NumberFilter<TData = any> extends BaseFilter<TData> {
+interface NumberFilter<TData = unknown> extends BaseFilter<TData> {
   type: 'number';
   default?: number;
 }
 
-interface ValuesFilter<TData = any> extends BaseFilter<TData> {
+interface ValuesFilter<TData = unknown> extends BaseFilter<TData> {
   type: 'values';
   option: {
     valueField: string;
@@ -374,7 +378,7 @@ interface ValuesFilter<TData = any> extends BaseFilter<TData> {
   default?: string | string[];
 }
 
-interface LazyValuesFilter<TData = any> extends BaseFilter<TData> {
+interface LazyValuesFilter<TData = unknown> extends BaseFilter<TData> {
   type: 'lazy-values';
   option: {
     valueField: string;
@@ -385,7 +389,7 @@ interface LazyValuesFilter<TData = any> extends BaseFilter<TData> {
   default?: string | string[];
 }
 
-interface BooleanFilter<TData = any> extends BaseFilter<TData> {
+interface BooleanFilter<TData = unknown> extends BaseFilter<TData> {
   type: 'boolean';
   option?: {
     displayOnTrue?: string;
@@ -394,7 +398,7 @@ interface BooleanFilter<TData = any> extends BaseFilter<TData> {
   default?: boolean;
 }
 
-interface CustomFilter<TData = any> extends BaseFilter<TData> {
+interface CustomFilter<TData = unknown> extends BaseFilter<TData> {
   type: 'custom';
   // filterDef?: TemplateRef<SdTableFilterDefDirective>;
   filterDef?: TemplateRef<any>;

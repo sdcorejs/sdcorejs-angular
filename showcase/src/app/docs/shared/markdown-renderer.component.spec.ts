@@ -125,7 +125,7 @@ describe('MarkdownRendererComponent', () => {
   });
 
   it('maps a local forms directory link to the versioned forms category', () => {
-    const host = renderPublishedMarkdown('[Forms](../forms/)', 'modules/generic/sd-generic');
+    const host = renderPublishedMarkdown('[Forms](../forms/)', 'modules/permission/sd-permission');
 
     const link = host.querySelector('a') as HTMLAnchorElement;
     expect(link.getAttribute('href')).toBe('/sdcorejs-angular/v/21.1.2/forms');

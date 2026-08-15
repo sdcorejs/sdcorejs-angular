@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform, inject } from '@angular/core';
-import { SdTab, SdTabInfo } from '../models/tab-router.model';
+import { SdTabRouterTab, SdTabInfo } from '../models/tab-router.model';
 import { SdTabRouterService } from '../services/tab-router.service';
 @Pipe({
   name: 'sdTabInfo',
@@ -12,7 +12,7 @@ export class SdTabInfoPipe implements PipeTransform {
   constructor(...args: unknown[]);
 
   constructor() {}
-  transform(tabInfo: SdTabInfo | undefined | null, tab: SdTab): SdTabInfo {
+  transform(tabInfo: SdTabInfo | undefined | null, tab: SdTabRouterTab): SdTabInfo {
     if (tabInfo) {
       return tabInfo;
     }

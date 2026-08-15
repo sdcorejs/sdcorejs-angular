@@ -175,6 +175,15 @@ $badges: '';
   color: $badgeDescriptionColor;
 }
 
+// why: badge clickable giờ nhận tabindex="0" nên BẮT BUỘC phải có focus ring nhìn thấy được —
+// không có thì người dùng bàn phím tab vào mà không biết mình đang đứng ở đâu. Dùng :focus-visible
+// để chuột không bị viền.
+:host [role='button']:focus-visible {
+  outline: 2px solid var(--sd-primary, #005cbb);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 // Css để sử dụng \n tooltip
 ::ng-deep .sd-multiline-tooltip {
   white-space: pre-line;

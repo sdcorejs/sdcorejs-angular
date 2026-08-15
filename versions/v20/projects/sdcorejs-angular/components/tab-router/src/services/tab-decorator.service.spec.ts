@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 
 import { SdTabDecoratorService } from './tab-decorator.service';
 import { SdTabRouterService } from './tab-router.service';
-import { SdTabComponent } from '../decorators/tab.decorator';
+import { SdTabComponent, ɵsdConnectTabComponentBuilders, ɵsdResetTabComponentBuilders } from '../decorators/tab.decorator';
 
 @Component({ standalone: true, template: '' })
 class FooComponent {}
@@ -45,71 +45,70 @@ describe('SdTabDecoratorService', () => {
   });
 
   describe('@SdTabComponent decorator', () => {
-    it('registers a builder once the service becomes available', () => {
-      // Apply decorator BEFORE service is constructed → waits in BehaviorSubject pipeline.
-      const decorator = SdTabComponent<Type<unknown>>({ component: FooComponent, name: 'Foo' });
-      decorator(FooComponent);
+    // why: decorator giờ chỉ ghi vào một collection tĩnh; outlet (qua ɵsdConnectTabComponentBuilders)
+    // là bên drain collection đó vào SdTabRouterService. Không còn subscription nào để rò rỉ.
+    let disconnect: (() => void) | undefined;
 
-      TestBed.configureTestingModule({
-        providers: [SdTabRouterService, SdTabDecoratorService],
-      });
-      const router = TestBed.inject(SdTabRouterService);
-      const addSpy = spyOn(router, 'addBuilder').and.callThrough();
-
-      TestBed.inject(SdTabDecoratorService);
-
-      expect(addSpy).toHaveBeenCalledOnceWith(jasmine.objectContaining({ component: FooComponent, name: 'Foo' }));
+    beforeEach(() => {
+      ɵsdResetTabComponentBuilders();
+      disconnect = undefined;
     });
 
-    it('registers immediately if service was already constructed', () => {
-      TestBed.configureTestingModule({
-        providers: [SdTabRouterService, SdTabDecoratorService],
-      });
-      const router = TestBed.inject(SdTabRouterService);
-      TestBed.inject(SdTabDecoratorService);
+    afterEach(() => {
+      disconnect?.();
+      ɵsdResetTabComponentBuilders();
+    });
 
+    it('drains builders registered before the router service exists', () => {
+      SdTabComponent<Type<unknown>>({ component: FooComponent, name: 'Foo' })(FooComponent);
+
+      TestBed.configureTestingModule({ providers: [SdTabRouterService] });
+      const router = TestBed.inject(SdTabRouterService);
       const addSpy = spyOn(router, 'addBuilder').and.callThrough();
+
+      disconnect = ɵsdConnectTabComponentBuilders(builder => router.addBuilder(builder));
+
+      expect(addSpy).toHaveBeenCalledOnceWith(jasmine.objectContaining({ component: FooComponent, name: 'Foo' }));
+      expect(router.builders.getValue().some(builder => builder.component === FooComponent)).toBeTrue();
+    });
+
+    it('forwards builders registered after the outlet connected', () => {
+      TestBed.configureTestingModule({ providers: [SdTabRouterService] });
+      const router = TestBed.inject(SdTabRouterService);
+      disconnect = ɵsdConnectTabComponentBuilders(builder => router.addBuilder(builder));
+      const addSpy = spyOn(router, 'addBuilder').and.callThrough();
+
       SdTabComponent({ component: BarComponent, name: 'Bar' })(BarComponent);
 
       expect(addSpy).toHaveBeenCalledOnceWith(jasmine.objectContaining({ component: BarComponent, name: 'Bar' }));
     });
 
-    it('take(1): does not re-fire when service is republished', () => {
-      const decorator = SdTabComponent({ component: BazComponent, name: 'Baz' });
-      decorator(BazComponent);
+    it('replays the collection for a second connect and dedupes through addBuilder', () => {
+      SdTabComponent({ component: BazComponent, name: 'Baz' })(BazComponent);
 
-      TestBed.configureTestingModule({
-        providers: [SdTabRouterService, SdTabDecoratorService],
-      });
+      TestBed.configureTestingModule({ providers: [SdTabRouterService] });
       const router = TestBed.inject(SdTabRouterService);
-      const addSpy = spyOn(router, 'addBuilder').and.callThrough();
+      ɵsdConnectTabComponentBuilders(builder => router.addBuilder(builder))();
+      disconnect = ɵsdConnectTabComponentBuilders(builder => router.addBuilder(builder));
 
-      TestBed.inject(SdTabDecoratorService);
-      expect(addSpy).toHaveBeenCalledTimes(1);
-
-      // Republish — but the decorator subscription used take(1) so it has already
-      // completed. Another emission must NOT trigger addBuilder again.
-      SdTabDecoratorService.tabRouterService.next(router);
-      expect(addSpy).toHaveBeenCalledTimes(1);
+      expect(router.builders.getValue().filter(builder => builder.component === BazComponent).length).toBe(1);
     });
 
-    it('ignores undefined emissions (filter guards against null/undefined)', () => {
-      const decorator = SdTabComponent({ component: LateComponent, name: 'Late' });
-      decorator(LateComponent);
-
-      // Push an undefined value manually
-      SdTabDecoratorService.tabRouterService.next(undefined);
-
-      // Now construct the service properly
-      TestBed.configureTestingModule({
-        providers: [SdTabRouterService, SdTabDecoratorService],
-      });
+    it('stops forwarding once the outlet disconnects', () => {
+      TestBed.configureTestingModule({ providers: [SdTabRouterService] });
       const router = TestBed.inject(SdTabRouterService);
+      ɵsdConnectTabComponentBuilders(builder => router.addBuilder(builder))();
       const addSpy = spyOn(router, 'addBuilder').and.callThrough();
 
-      TestBed.inject(SdTabDecoratorService);
+      SdTabComponent({ component: LateComponent, name: 'Late' })(LateComponent);
 
-      expect(addSpy).toHaveBeenCalledOnceWith(jasmine.objectContaining({ component: LateComponent }));
+      expect(addSpy).not.toHaveBeenCalled();
+    });
+
+    it('never subscribes to the static BehaviorSubject', () => {
+      SdTabComponent({ component: LateComponent, name: 'Late' })(LateComponent);
+
+      expect(SdTabDecoratorService.tabRouterService.observed).toBeFalse();
     });
   });
 });

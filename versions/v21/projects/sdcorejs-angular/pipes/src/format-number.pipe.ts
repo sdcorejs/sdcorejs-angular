@@ -1,6 +1,6 @@
 import { inject, Injectable, Pipe, PipeTransform } from '@angular/core';
 import { ISdCoreConfiguration, SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
-import { NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { NumberUtilities } from '@sdcorejs/utils/fns';
 @Pipe({
   name: 'sdFormatNumber',
   standalone: true,

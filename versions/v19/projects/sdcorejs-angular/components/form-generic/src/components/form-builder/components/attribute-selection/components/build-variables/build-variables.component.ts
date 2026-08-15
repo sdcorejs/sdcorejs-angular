@@ -16,22 +16,22 @@ import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdAutocomplete } from '@sdcorejs/angular/forms/autocomplete';
 import { Utilities } from '@sdcorejs/utils/fns';
 import {
-  GetComponentAttributes,
-  GetVariableAttributes,
+  sdGetComponentAttributes,
+  sdGetVariableAttributes,
   SdFormGenericComponent,
   SdFormGenericDefinitionSelection,
   SdFormGenericGroup,
   SdFormGenericVariable,
 } from '../../../../../../models';
 import { startWith, Subject, Subscription } from 'rxjs';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'build-variables',
   templateUrl: './build-variables.component.html',
   styleUrl: './build-variables.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdAutocomplete, SdButton, SdModal, TranslatePipe],
+  imports: [SdAutocomplete, SdButton, SdModal, SdTranslatePipe],
 })
 export class BuildVariables implements OnInit, OnDestroy {
   private ref = inject(ChangeDetectorRef);
@@ -92,7 +92,7 @@ export class BuildVariables implements OnInit, OnDestroy {
   }
 
   edit = async () => {
-    this.leftProperties = [...GetComponentAttributes(this.components()), ...GetVariableAttributes(this.variables())];
+    this.leftProperties = [...sdGetComponentAttributes(this.components()), ...sdGetVariableAttributes(this.variables())];
     this.rightProperties =
       this.selection?.variables?.items?.map(e => ({
         value: '${' + e.value + '}',

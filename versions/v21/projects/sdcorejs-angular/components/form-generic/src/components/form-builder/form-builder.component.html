@@ -27,7 +27,7 @@
   <!-- ════════════════════════ LEFT PALETTE ════════════════════════ -->
   <aside class="fb-palette">
     <div class="fb-panel-header">
-      <div class="fb-panel-header__title">{{ 'core.component.form-builder.components' | translate }}</div>
+      <div class="fb-panel-header__title">{{ 'core.component.form-builder.components' | sdTranslate }}</div>
     </div>
 
     <!-- Search pill -->
@@ -35,7 +35,7 @@
       <span class="msi" aria-hidden="true">search</span>
       <input
         type="text"
-        [placeholder]="'core.component.form-builder.search-components' | translate"
+        [placeholder]="'core.component.form-builder.search-components' | sdTranslate"
         [value]="paletteSearch()"
         (input)="paletteSearch.set($any($event.target).value)" />
       <span class="kbd">⌘K</span>
@@ -50,18 +50,26 @@
           [cdkDropListData]="group.items"
           [cdkDropListConnectedTo]="connectedRowDropLists()"
           [cdkDropListEnterPredicate]="noReturnPredicate">
+          <!-- why: bỏ aria-hidden="true" — mục palette là control THẬT (click để thêm component vào
+               form) và có tên hiển thị. aria-hidden xoá nó khỏi accessibility tree trong khi vẫn
+               nhận chuột. Nay role="button" + tabindex="0" + Enter/Space chạy đúng như click, tức
+               người dùng bàn phím dựng được form mà không cần kéo-thả. -->
           @for (formBuilderComponent of group.items; track formBuilderComponent.type) {
             <div
               cdkDrag
               [cdkDragData]="formBuilderComponent"
               class="fb-palette-item"
+              role="button"
+              tabindex="0"
+              [attr.aria-label]="formBuilderComponent.name"
               [matTooltip]="formBuilderComponent.name"
               matTooltipPosition="right"
               (click)="addComponent(formBuilderComponent)"
+              (keydown.enter)="onPaletteItemKeydown(formBuilderComponent, $event)"
+              (keydown.space)="onPaletteItemKeydown(formBuilderComponent, $event)"
               (cdkDragStarted)="onPaletteDragStarted(formBuilderComponent)"
               (cdkDragMoved)="onAnyDragMoved($event)"
-              (cdkDragEnded)="onAnyDragEnded()"
-              aria-hidden="true">
+              (cdkDragEnded)="onAnyDragEnded()">
               <span class="fb-palette-item__icon"
                 ><span class="msi">{{ formBuilderComponent.symbol }}</span></span
               >
@@ -88,49 +96,57 @@
           <button
             type="button"
             class="fb-icon-btn"
-            [matTooltip]="'core.component.form-builder.back-to-design' | translate"
+            [matTooltip]="'core.component.form-builder.back-to-design' | sdTranslate"
             (click)="cancelGroupEdit()">
             <span class="msi">chevron_left</span>
           </button>
           <span class="fb-groupedit__icon"
             ><span class="msi">{{ _editingGroup.properties?.icon || 'category' }}</span></span
           >
-          <span>{{ _editingGroup.label || ('core.component.form-builder.edit-group' | translate) }}</span>
-          <span class="fb-groupedit__hint">{{ 'core.component.form-builder.edit-group' | translate }}</span>
+          <span>{{ _editingGroup.label || ('core.component.form-builder.edit-group' | sdTranslate) }}</span>
+          <span class="fb-groupedit__hint">{{ 'core.component.form-builder.edit-group' | sdTranslate }}</span>
         </div>
         <div class="fb-canvas__actions">
-          <sd-button type="text" [title]="'core.component.form-builder.cancel' | translate" (click)="cancelGroupEdit()"></sd-button>
+          <sd-button type="text" [title]="'core.component.form-builder.cancel' | sdTranslate" (click)="cancelGroupEdit()"></sd-button>
           <sd-button
             type="fill"
             color="primary"
             prefixIcon="check"
-            [title]="'core.component.form-builder.confirm' | translate"
+            [title]="'core.component.form-builder.confirm' | sdTranslate"
             (click)="confirmGroupEdit()"></sd-button>
         </div>
       </header>
     } @else {
       <header class="fb-canvas__header">
         <div class="fb-canvas__title">
-          <span>{{ 'core.component.form-builder.layout' | translate }}</span>
+          <span>{{ 'core.component.form-builder.canvas' | sdTranslate }}</span>
         </div>
         <div class="fb-canvas__actions">
           <!-- Toolbar cluster: view JSON / variables / validation -->
-          <button type="button" class="fb-icon-btn" [matTooltip]="'core.component.form-builder.view-json' | translate" (click)="viewJSON()">
+          <button type="button" class="fb-icon-btn" [matTooltip]="'core.component.form-builder.view-json' | sdTranslate" (click)="viewJSON()">
             <span class="msi">data_object</span>
           </button>
+          <!-- why: số biến / số xác thực trước đây chỉ biết được sau khi mở dialog. Badge cho thấy
+               form đã cấu hình gì ngay trên toolbar. -->
           <button
             type="button"
-            class="fb-icon-btn"
-            [matTooltip]="'core.component.form-builder.config-variable' | translate"
+            class="fb-icon-btn fb-icon-btn--badged"
+            [matTooltip]="'core.component.form-builder.config-variable' | sdTranslate"
             (click)="configureVariables()">
             <span class="msi">data_array</span>
+            @if (variables.length) {
+              <span class="fb-icon-btn__badge" [attr.aria-label]="variables.length">{{ variables.length }}</span>
+            }
           </button>
           <button
             type="button"
-            class="fb-icon-btn"
-            [matTooltip]="'core.component.form-builder.config-validation-warning-error' | translate"
+            class="fb-icon-btn fb-icon-btn--badged"
+            [matTooltip]="'core.component.form-builder.config-validation-warning-error' | sdTranslate"
             (click)="openConfigureValidation()">
             <span class="msi">rule</span>
+            @if (validations.length) {
+              <span class="fb-icon-btn__badge" [attr.aria-label]="validations.length">{{ validations.length }}</span>
+            }
           </button>
 
           <span class="fb-divider"></span>
@@ -139,11 +155,11 @@
           <div class="fb-mode-toggle" role="tablist">
             <button type="button" role="tab" [class.is-active]="!isPreview()" [attr.aria-selected]="!isPreview()" (click)="setMode(false)">
               <span class="msi">edit</span>
-              <span>{{ 'core.component.form-builder.design' | translate }}</span>
+              <span>{{ 'core.component.form-builder.design' | sdTranslate }}</span>
             </button>
             <button type="button" role="tab" [class.is-active]="isPreview()" [attr.aria-selected]="isPreview()" (click)="setMode(true)">
               <span class="msi">visibility</span>
-              <span>{{ 'core.component.form-builder.preview' | translate }}</span>
+              <span>{{ 'core.component.form-builder.preview' | sdTranslate }}</span>
             </button>
           </div>
         </div>
@@ -156,15 +172,15 @@
         <div class="fb-preview-card">
           <div class="fb-preview-card__chip">
             <span class="msi">visibility</span>
-            {{ 'core.component.form-builder.preview-runtime' | translate }}
+            {{ 'core.component.form-builder.preview-runtime' | sdTranslate }}
           </div>
           <sd-form-render [configuration]="{ components: this.components, validations: this.validations }"></sd-form-render>
           <div class="fb-preview-card__footer">
-            <sd-button type="text" [title]="'core.component.form-builder.cancel' | translate" (click)="setMode(false)"></sd-button>
+            <sd-button type="text" [title]="'core.component.form-builder.cancel' | sdTranslate" (click)="setMode(false)"></sd-button>
             <sd-button
               type="fill"
               color="primary"
-              [title]="'core.component.form-builder.submit' | translate"
+              [title]="'core.component.form-builder.submit' | sdTranslate"
               (click)="onValidate()"></sd-button>
           </div>
         </div>
@@ -173,14 +189,18 @@
         @if (!dragDropRows.length && !isPaletteEmptyDropTarget()) {
           <div class="fb-empty">
             <div class="fb-empty__art"><span class="msi">dashboard_customize</span></div>
-            <div class="fb-empty__title">{{ 'core.component.form-builder.empty-title' | translate }}</div>
+            <div class="fb-empty__title">{{ 'core.component.form-builder.empty-title' | sdTranslate }}</div>
             <div class="fb-empty__hint">
-              {{ 'core.component.form-builder.empty-hint' | translate }}
+              {{ 'core.component.form-builder.empty-hint' | sdTranslate }}
               <span class="fb-empty__kbd"><span class="msi">keyboard</span>⌘ K</span>
             </div>
           </div>
         }
 
+        <!-- why: aria-hidden="true" ở đây ẩn TOÀN BỘ canvas — mọi row, mọi component đã đặt và mọi
+             <input> preview bên trong đều biến mất khỏi accessibility tree. Bỏ hẳn. "Click vùng
+             trống để bỏ chọn" chỉ là hành vi chuột nên bổ sung Escape làm tương đương bàn phím;
+             role="group" mô tả đúng bản chất (vùng chứa control) và giữ canvas không nhận tabindex. -->
         <div
           cdkDropList
           cdkDropListOrientation="vertical"
@@ -188,7 +208,9 @@
           [cdkDropListEnterPredicate]="canEnterCanvasDropList"
           (cdkDropListDropped)="drop($event)"
           (click)="clickFormContentEmpty()"
-          aria-hidden="true">
+          (keydown.escape)="clickFormContentEmpty()"
+          role="group"
+          [attr.aria-label]="'core.component.form-builder.canvas' | sdTranslate">
           @if (isPaletteEmptyDropTarget()) {
             <div class="fb-row-insert-placeholder fb-palette-drop-placeholder" [style.--fb-placeholder-columns]="12" aria-hidden="true">
               <ng-container *ngTemplateOutlet="dropPlaceholderTemplate; context: { $implicit: draggedPaletteItem() }"></ng-container>
@@ -214,9 +236,12 @@
               [class.is-row-full]="isRowFull(row)"
               [class.is-row-inline-locked]="isRowInlineDropLocked(row)"
               [class.is-resizing-row]="resizeState()?.rowId === row.id"
-              [id]="row.id"
-              aria-hidden="true">
-              <div class="fb-row__drag" [matTooltip]="'core.component.form-builder.drag-vertically' | translate" cdkDragHandle>
+              [id]="row.id">
+              <!-- why: bỏ aria-hidden="true" — row là VÙNG CHỨA các component đã đặt (gồm cả input
+                   thật). aria-hidden ẩn hết nội dung con khỏi accessibility tree trong khi chúng
+                   vẫn tab tới được. Row tự nó không phải control (không có click) nên không cần
+                   role/tabindex. -->
+              <div class="fb-row__drag" [matTooltip]="'core.component.form-builder.drag-vertically' | sdTranslate" cdkDragHandle>
                 <span class="msi">drag_indicator</span>
               </div>
               <div *cdkDragPreview class="fb-drag-preview" aria-hidden="true">
@@ -233,7 +258,7 @@
               <button
                 type="button"
                 class="fb-row-break-btn"
-                [matTooltip]="'core.component.form-builder.break' | translate"
+                [matTooltip]="'core.component.form-builder.break' | sdTranslate"
                 matTooltipPosition="right"
                 (click)="insertBreakAfter(row); $event.stopPropagation()">
                 <span class="msi">horizontal_rule</span>
@@ -263,9 +288,18 @@
                     </div>
                   }
                   <!-- Group component renders as outlined card with colored header bar -->
+                  <!-- why: card KHÔNG mang role="button". Nó bọc cả .fb-actions (nút thật) và, với
+                       nhánh component, preview control có <input> thật — role="button" ở đây khiến AT
+                       gộp toàn bộ card thành MỘT nút và mọi control bên trong biến mất khỏi
+                       accessibility tree (đúng lỗi mà aria-hidden cũ từng gây ra). Affordance bàn
+                       phím/AT là <button> thật ở đầu .fb-actions (aria-pressed + aria-label), toolbar
+                       hiện cả khi :focus-within. (click) trên card chỉ là tiện ích chuột, nên hai rule
+                       a11y dưới đây bị tắt CÓ CHỦ Ý — thêm tabindex/keydown vào card sẽ dựng lại đúng
+                       cái bẫy vừa gỡ. -->
                   @if (item.type === 'group') {
                     @let g = $any(item);
                     @let cv = groupColorVars(g.properties?.color);
+                    <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
                     <div
                       cdkDrag
                       [cdkDragData]="item"
@@ -279,8 +313,7 @@
                       (click)="selectComponent(item); $event.stopPropagation()"
                       (cdkDragStarted)="dragStartComponentItem($event)"
                       (cdkDragMoved)="onAnyDragMoved($event)"
-                      (cdkDragEnded)="dragEndComponentItem($event); onAnyDragEnded()"
-                      aria-hidden="true">
+                      (cdkDragEnded)="dragEndComponentItem($event); onAnyDragEnded()">
                       <div *cdkDragPreview class="fb-drag-preview" aria-hidden="true">
                         <ng-container *ngTemplateOutlet="dragPreviewTemplate"></ng-container>
                       </div>
@@ -300,25 +333,38 @@
                         @if (hasConditional(item)) {
                           <span class="fb-group__conditional-chip">
                             <span class="msi" style="font-size: 12px">bolt</span>
-                            {{ 'core.component.form-builder.conditional' | translate }}
+                            {{ 'core.component.form-builder.conditional' | sdTranslate }}
                           </span>
                         }
                         <span class="fb-group__count">{{ g.components?.length || 0 }} fields</span>
                       </div>
                       <!-- Floating action toolbar -->
                       <div class="fb-actions">
+                        <!-- why: đây là affordance "chọn item để sửa" cho bàn phím / screen reader. Nó KHÔNG nằm
+                             trên thẻ card bọc ngoài: card bọc cả .fb-actions (nút thật) và preview control (input
+                             thật), nên role="button" ở đó khiến AT gộp toàn bộ thành một nút và các control bên
+                             trong biến mất khỏi accessibility tree. Card giữ (click) làm tiện ích chuột. -->
+                        <button
+                          type="button"
+                          class="fb-icon-btn"
+                          [attr.aria-pressed]="item.id === selectedComponent()?.id"
+                          [attr.aria-label]="item.properties?.label || item.type"
+                          [matTooltip]="'core.component.form-builder.select-item' | sdTranslate"
+                          (click)="selectComponent(item); $event.stopPropagation()">
+                          <span class="msi">ads_click</span>
+                        </button>
                         <!-- why: Detail = mở canvas thiết kế riêng cho group (thay cho drag/drop trong group). -->
                         <button
                           type="button"
                           class="fb-icon-btn"
-                          [matTooltip]="'core.component.form-builder.edit-group' | translate"
+                          [matTooltip]="'core.component.form-builder.edit-group' | sdTranslate"
                           (click)="enterGroupEdit(g); $event.stopPropagation()">
                           <span class="msi">open_in_full</span>
                         </button>
                         <button
                           type="button"
                           class="fb-icon-btn"
-                          [matTooltip]="'core.component.form-builder.duplicate' | translate"
+                          [matTooltip]="'core.component.form-builder.duplicate' | sdTranslate"
                           (click)="onDuplicate(item); $event.stopPropagation()">
                           <span class="msi">content_copy</span>
                         </button>
@@ -329,8 +375,8 @@
                           [class.on]="item.properties?.hidden"
                           [matTooltip]="
                             item.properties?.hidden
-                              ? ('core.component.form-builder.show' | translate)
-                              : ('core.component.form-builder.hide' | translate)
+                              ? ('core.component.form-builder.show' | sdTranslate)
+                              : ('core.component.form-builder.hide' | sdTranslate)
                           "
                           (click)="onChangeHidden(item); $event.stopPropagation()">
                           <span class="msi">{{ item.properties?.hidden ? 'visibility_off' : 'visibility' }}</span>
@@ -338,7 +384,7 @@
                         <button
                           type="button"
                           class="fb-icon-btn danger"
-                          [matTooltip]="'core.component.form-builder.delete' | translate"
+                          [matTooltip]="'core.component.form-builder.delete' | sdTranslate"
                           (click)="removeComponent(item.id); $event.stopPropagation()">
                           <span class="msi">delete</span>
                         </button>
@@ -346,11 +392,22 @@
 
                       <!-- Static preview: children render read-only (không drag/resize/select).
                            Sửa nội dung group qua nút Detail (enterGroupEdit). -->
-                      <div class="fb-group__body fb-group__body--static" (click)="enterGroupEdit(g); $event.stopPropagation()">
+                      <!-- why: warning này chỉ lộ ra SAU khi bỏ aria-hidden ở div cha (rule bỏ qua
+                           mọi hậu duệ của một node aria-hidden). Body group là control mở màn hình
+                           Detail nên nhận role="button" + tabindex="0" + Enter/Space; preview con
+                           bên trong đã `pointer-events: none` nên không tranh chấp target. -->
+                      <div
+                        class="fb-group__body fb-group__body--static"
+                        role="button"
+                        tabindex="0"
+                        [attr.aria-label]="'core.component.form-builder.detail' | sdTranslate"
+                        (click)="enterGroupEdit(g); $event.stopPropagation()"
+                        (keydown.enter)="onEnterGroupEditKeydown(g, $event)"
+                        (keydown.space)="onEnterGroupEditKeydown(g, $event)">
                         @if (!g.components?.length) {
                           <div class="fb-group__empty">
                             <span class="msi" style="font-size: 16px; margin-right: 6px">open_in_full</span>
-                            {{ 'core.component.form-builder.group-empty-hint' | translate }}
+                            {{ 'core.component.form-builder.group-empty-hint' | sdTranslate }}
                           </div>
                         }
                         @for (child of g.components; track child.id) {
@@ -364,6 +421,7 @@
                     </div>
                   } @else if (item.type === 'break') {
                     <!-- Break: row separator cố định. Render 12-col line, không có resize/edit attribute. -->
+                    <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
                     <div
                       cdkDrag
                       [cdkDragData]="item"
@@ -374,8 +432,7 @@
                       (click)="selectComponent(item); $event.stopPropagation()"
                       (cdkDragStarted)="dragStartComponentItem($event)"
                       (cdkDragMoved)="onAnyDragMoved($event)"
-                      (cdkDragEnded)="dragEndComponentItem($event); onAnyDragEnded()"
-                      aria-hidden="true">
+                      (cdkDragEnded)="dragEndComponentItem($event); onAnyDragEnded()">
                       <div *cdkDragPreview class="fb-drag-preview" aria-hidden="true">
                         <ng-container *ngTemplateOutlet="dragPreviewTemplate"></ng-container>
                       </div>
@@ -384,9 +441,22 @@
                       </div>
                       <div class="fb-break-line">
                         <span class="msi">horizontal_rule</span>
-                        <span class="fb-break-label">{{ 'core.component.form-builder.break' | translate }}</span>
+                        <span class="fb-break-label">{{ 'core.component.form-builder.break' | sdTranslate }}</span>
                       </div>
                       <div class="fb-actions">
+                        <!-- why: đây là affordance "chọn item để sửa" cho bàn phím / screen reader. Nó KHÔNG nằm
+                             trên thẻ card bọc ngoài: card bọc cả .fb-actions (nút thật) và preview control (input
+                             thật), nên role="button" ở đó khiến AT gộp toàn bộ thành một nút và các control bên
+                             trong biến mất khỏi accessibility tree. Card giữ (click) làm tiện ích chuột. -->
+                        <button
+                          type="button"
+                          class="fb-icon-btn"
+                          [attr.aria-pressed]="item.id === selectedComponent()?.id"
+                          [attr.aria-label]="item.properties?.label || item.type"
+                          [matTooltip]="'core.component.form-builder.select-item' | sdTranslate"
+                          (click)="selectComponent(item); $event.stopPropagation()">
+                          <span class="msi">ads_click</span>
+                        </button>
                         <button
                           type="button"
                           class="fb-icon-btn"
@@ -394,8 +464,8 @@
                           [class.on]="item.properties?.hidden"
                           [matTooltip]="
                             item.properties?.hidden
-                              ? ('core.component.form-builder.show' | translate)
-                              : ('core.component.form-builder.hide' | translate)
+                              ? ('core.component.form-builder.show' | sdTranslate)
+                              : ('core.component.form-builder.hide' | sdTranslate)
                           "
                           (click)="onChangeHidden(item); $event.stopPropagation()">
                           <span class="msi">{{ item.properties?.hidden ? 'visibility_off' : 'visibility' }}</span>
@@ -403,7 +473,7 @@
                         <button
                           type="button"
                           class="fb-icon-btn danger"
-                          [matTooltip]="'core.component.form-builder.delete' | translate"
+                          [matTooltip]="'core.component.form-builder.delete' | sdTranslate"
                           (click)="removeComponent(item.id); $event.stopPropagation()">
                           <span class="msi">delete</span>
                         </button>
@@ -411,6 +481,7 @@
                     </div>
                   } @else {
                     <!-- Regular form component -->
+                    <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
                     <div
                       cdkDrag
                       [cdkDragData]="item"
@@ -423,8 +494,7 @@
                       (click)="selectComponent(item); $event.stopPropagation()"
                       (cdkDragStarted)="dragStartComponentItem($event)"
                       (cdkDragMoved)="onAnyDragMoved($event)"
-                      (cdkDragEnded)="dragEndComponentItem($event); onAnyDragEnded()"
-                      aria-hidden="true">
+                      (cdkDragEnded)="dragEndComponentItem($event); onAnyDragEnded()">
                       <div *cdkDragPreview class="fb-drag-preview" aria-hidden="true">
                         <ng-container *ngTemplateOutlet="dragPreviewTemplate"></ng-container>
                       </div>
@@ -440,22 +510,35 @@
                       @if (item.properties?.hidden) {
                         <span class="fb-status-chip hidden">
                           <span class="msi">visibility_off</span>
-                          {{ 'core.component.form-builder.hidden' | translate }}
+                          {{ 'core.component.form-builder.hidden' | sdTranslate }}
                         </span>
                       } @else if (item.properties?.viewed) {
                         <span class="fb-status-chip readonly">
                           <span class="msi">edit_off</span>
-                          {{ 'core.component.form-builder.read-only' | translate }}
+                          {{ 'core.component.form-builder.read-only' | sdTranslate }}
                         </span>
                       } @else if (hasConditional(item)) {
                         <span class="fb-status-chip conditional">
                           <span class="msi">bolt</span>
-                          {{ 'core.component.form-builder.conditional' | translate }}
+                          {{ 'core.component.form-builder.conditional' | sdTranslate }}
                         </span>
                       }
 
                       <!-- Floating action toolbar pill -->
                       <div class="fb-actions">
+                        <!-- why: đây là affordance "chọn item để sửa" cho bàn phím / screen reader. Nó KHÔNG nằm
+                             trên thẻ card bọc ngoài: card bọc cả .fb-actions (nút thật) và preview control (input
+                             thật), nên role="button" ở đó khiến AT gộp toàn bộ thành một nút và các control bên
+                             trong biến mất khỏi accessibility tree. Card giữ (click) làm tiện ích chuột. -->
+                        <button
+                          type="button"
+                          class="fb-icon-btn"
+                          [attr.aria-pressed]="item.id === selectedComponent()?.id"
+                          [attr.aria-label]="item.properties?.label || item.type"
+                          [matTooltip]="'core.component.form-builder.select-item' | sdTranslate"
+                          (click)="selectComponent(item); $event.stopPropagation()">
+                          <span class="msi">ads_click</span>
+                        </button>
                         <button
                           type="button"
                           class="fb-icon-btn"
@@ -463,8 +546,8 @@
                           [class.on]="item.properties?.viewed"
                           [matTooltip]="
                             item.properties?.viewed
-                              ? ('core.component.form-builder.unset-readonly' | translate)
-                              : ('core.component.form-builder.set-readonly' | translate)
+                              ? ('core.component.form-builder.unset-readonly' | sdTranslate)
+                              : ('core.component.form-builder.set-readonly' | sdTranslate)
                           "
                           (click)="onChangeViewed(item); $event.stopPropagation()">
                           <span class="msi">edit_off</span>
@@ -472,7 +555,7 @@
                         <button
                           type="button"
                           class="fb-icon-btn"
-                          [matTooltip]="'core.component.form-builder.duplicate' | translate"
+                          [matTooltip]="'core.component.form-builder.duplicate' | sdTranslate"
                           (click)="onDuplicate(item); $event.stopPropagation()">
                           <span class="msi">content_copy</span>
                         </button>
@@ -483,8 +566,8 @@
                           [class.on]="item.properties?.hidden"
                           [matTooltip]="
                             item.properties?.hidden
-                              ? ('core.component.form-builder.show' | translate)
-                              : ('core.component.form-builder.hide' | translate)
+                              ? ('core.component.form-builder.show' | sdTranslate)
+                              : ('core.component.form-builder.hide' | sdTranslate)
                           "
                           (click)="onChangeHidden(item); $event.stopPropagation()">
                           <span class="msi">{{ item.properties?.hidden ? 'visibility_off' : 'visibility' }}</span>
@@ -492,7 +575,7 @@
                         <button
                           type="button"
                           class="fb-icon-btn danger"
-                          [matTooltip]="'core.component.form-builder.delete' | translate"
+                          [matTooltip]="'core.component.form-builder.delete' | sdTranslate"
                           (click)="removeComponent(item.id); $event.stopPropagation()">
                           <span class="msi">delete</span>
                         </button>
@@ -514,7 +597,7 @@
                           (cdkDragStarted)="startResizeControl(item, row)"
                           (cdkDragMoved)="changeSizeControl($event, item, row.items, i)"
                           (cdkDragEnded)="endResizeControl($event)"
-                          [matTooltip]="'core.component.form-builder.flex' | translate"
+                          [matTooltip]="'core.component.form-builder.flex' | sdTranslate"
                           aria-label="resize"></div>
                       </div>
                     </div>
@@ -545,7 +628,7 @@
   <!-- ════════════════════════ RIGHT ATTRIBUTES ════════════════════════ -->
   <aside class="fb-attrs">
     <div class="fb-panel-header">
-      <div class="fb-panel-header__title">{{ 'core.component.form-builder.attribute' | translate }}</div>
+      <div class="fb-panel-header__title">{{ 'core.component.form-builder.attribute' | sdTranslate }}</div>
     </div>
 
     @let _selectedComponent = selectedComponent();
@@ -556,7 +639,7 @@
           ><span class="msi">{{ symbolFor(_selectedComponent) }}</span></span
         >
         <div class="fb-attrs__sel-meta">
-          <div class="fb-attrs__sel-name">{{ $any(_selectedComponent).label || ('core.component.form-builder.untitled' | translate) }}</div>
+          <div class="fb-attrs__sel-name">{{ $any(_selectedComponent).label || ('core.component.form-builder.untitled' | sdTranslate) }}</div>
           <div class="fb-attrs__sel-key">
             @if ($any(_selectedComponent).key) {
               {{ $any(_selectedComponent).key }} · {{ typeLabelFor(_selectedComponent) }}
@@ -567,7 +650,10 @@
         </div>
       </div>
 
-      <div class="fb-attrs__body" aria-hidden="true">
+      <!-- why: aria-hidden="true" ở đây là ổ chứa lớn nhất — panel này render TOÀN BỘ form thuộc
+           tính của component đang chọn (hàng chục <input>/<select> thật). aria-hidden khiến chúng
+           vẫn tab tới được nhưng screen reader không đọc được nhãn nào cả. Bỏ hẳn. -->
+      <div class="fb-attrs__body">
         @if (_selectedComponent.type === 'textfield') {
           <textfield-attribute [components]="components" [variables]="variables" [component]="_selectedComponent"></textfield-attribute>
         } @else if (_selectedComponent.type === 'textarea') {
@@ -602,8 +688,8 @@
     } @else {
       <div class="fb-attrs__placeholder">
         <span class="msi">ads_click</span>
-        <div class="title">{{ 'core.component.form-builder.no-selection-title' | translate }}</div>
-        <div class="hint">{{ 'core.component.form-builder.no-selection-hint' | translate }}</div>
+        <div class="title">{{ 'core.component.form-builder.no-selection-title' | sdTranslate }}</div>
+        <div class="hint">{{ 'core.component.form-builder.no-selection-hint' | sdTranslate }}</div>
       </div>
     }
   </aside>
@@ -640,38 +726,78 @@
 
 <!-- ══════════════════════ JSON / variables modals ═══════════════════════ -->
 <sd-modal title="JSON" view="dialog" width="80%" modalClass="sd-form-builder-dialog" #popupViewJSON>
-  <sd-textarea [(model)]="jsonString"></sd-textarea>
+  <!-- why: schema là JSON nhiều tầng — textarea trần không cho biết dấu ngoặc nào khớp dấu nào,
+       cũng không báo cú pháp hỏng cho tới lúc bấm Lưu. -->
+  <sd-code-editor language="json" [(model)]="jsonString" maxHeight="60vh"></sd-code-editor>
   <ng-container sdFooterRight>
     <sd-button
       type="fill"
-      [title]="'core.component.form-builder.save' | translate"
+      [title]="'core.component.form-builder.save' | sdTranslate"
       (click)="updateJSON()"
       prefixIcon="save"
       color="primary"></sd-button>
   </ng-container>
 </sd-modal>
 <sd-modal
-  [title]="'core.component.form-builder.config-variable' | translate"
+  [title]="'core.component.form-builder.config-variable' | sdTranslate"
   view="dialog"
   width="800px"
   modalClass="sd-form-builder-dialog"
   #popupConfigureVariables>
-  @for (variable of clonedVariables; track variable.id) {
-    <div class="d-flex align-items-center" style="gap: 8px">
-      <sd-input [form]="form" [label]="'core.component.form-builder.field-key' | translate" [(model)]="variable.key" required></sd-input>
-      <sd-input
-        [form]="form"
-        [label]="'core.component.form-builder.display-label' | translate"
-        [(model)]="variable.label"
-        required></sd-input>
-      <sd-button prefixIcon="delete" (click)="removeVariables(variable.id)" color="error"></sd-button>
-    </div>
-  }
-  <a href="javascript:;" (click)="addVariables()">{{ 'core.component.form-builder.add-variable' | translate }}</a>
+  <!-- why: trước đây các hàng nằm trần trong modal (modal body padding 0) nên dính sát mép, không
+       có trạng thái rỗng, và nút thêm là <a href="javascript:;"> — không phải nút thật, bàn phím và
+       screen reader đều đọc sai. -->
+  <div class="fb-variables">
+    @if (clonedVariables.length) {
+      <!-- why: mỗi biến chỉ có hai trường cùng kiểu, lặp lại theo hàng — đó là dữ liệu dạng bảng.
+           Đặt nhãn cột MỘT lần ở header thay vì lặp nhãn nổi trên từng ô của từng hàng. -->
+      <table class="fb-variables__table">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'core.component.form-builder.field-key' | sdTranslate }}</th>
+            <th scope="col">{{ 'core.component.form-builder.display-label' | sdTranslate }}</th>
+            <!-- why: cột thao tác không cần nhãn nhìn thấy, nhưng vẫn phải có tên cho screen reader —
+                 lib không có tiện ích .sr-only nên đặt tên bằng aria-label ngay trên ô header. -->
+            <th scope="col" class="fb-variables__actions-col" [attr.aria-label]="'core.component.form-builder.delete' | sdTranslate"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (variable of clonedVariables; track variable.id) {
+            <tr>
+              <td>
+                <sd-input size="sm" [form]="form" [(model)]="variable.key" hideInlineError required></sd-input>
+              </td>
+              <td>
+                <sd-input size="sm" [form]="form" [(model)]="variable.label" hideInlineError required></sd-input>
+              </td>
+              <td class="fb-variables__actions-col">
+                <sd-button
+                  prefixIcon="delete"
+                  type="text"
+                  color="error"
+                  [tooltip]="'core.component.form-builder.delete' | sdTranslate"
+                  (click)="removeVariables(variable.id)"></sd-button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    } @else {
+      <p class="fb-variables__empty">{{ 'core.component.form-builder.no-variable' | sdTranslate }}</p>
+    }
+
+    <sd-button
+      class="fb-variables__add"
+      type="text"
+      color="primary"
+      prefixIcon="add"
+      [title]="'core.component.form-builder.add-variable' | sdTranslate"
+      (click)="addVariables()"></sd-button>
+  </div>
   <ng-container sdFooterRight>
     <sd-button
       type="fill"
-      [title]="'core.component.form-builder.save' | translate"
+      [title]="'core.component.form-builder.save' | sdTranslate"
       (click)="updateVariables()"
       prefixIcon="save"
       color="primary"></sd-button>

@@ -1,22 +1,143 @@
-.c-builder {
-  padding: 8px;
-  width: 100%;
-  border: 1px solid #e6e6e6;
-  border-radius: 4px;
-  .c-condition {
-    width: 80px;
-    .c-where {
-      width: 80px;
-      border: 1px solid #e6e6e6;
-      background-color: #f2f2f2;
-      color: #757575;
-      border-radius: 4px;
-      padding: 4px;
-      text-align: center;
+// why: pill FEEL trước đây chỉ được tạo dáng bởi `:host ::ng-deep .fb-expr` trong
+// form-builder.component.scss. Điều đó chỉ đúng khi expression-builder nằm TRONG cây DOM của
+// form-builder — còn khi nó được dùng trong dialog "Cấu hình xác thực", modal render qua overlay ở
+// document.body nên ra khỏi `:host` và toàn bộ style rơi mất: pill hiện thành "FEEL / Thiết lập
+// biểu thức / functions" dính liền, không khung, không màu. Style thuộc về component sở hữu markup,
+// nên nó nằm ở đây và chạy đúng ở mọi ngữ cảnh.
+:host {
+  display: block;
+}
+
+.fb-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fb-field__label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface-variant, #5f6368);
+}
+
+.fb-expr {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 4px 0 0;
+  border-radius: 6px;
+  background: var(--md-sys-color-surface-container-lowest, #fff);
+  border: 1px solid var(--md-sys-color-outline-variant, #e0e0e0);
+  font-size: 12px;
+  color: var(--md-sys-color-on-surface-variant, #5f6368);
+  cursor: pointer;
+  transition: border-color 0.12s ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--md-sys-color-primary, #2a66f4);
+    outline: none;
+  }
+
+  &__badge {
+    align-self: stretch;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+    background: var(--md-sys-color-primary-container, #eaf1ff);
+    color: var(--md-sys-color-primary, #2a66f4);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    border-radius: 5px 0 0 5px;
+  }
+
+  &__code {
+    flex: 1;
+    min-width: 0;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 11px;
+    color: var(--md-sys-color-on-surface, #1f1f1f);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    .var {
+      color: var(--md-sys-color-primary, #2a66f4);
+      font-weight: 500;
     }
-    .c-select {
-      margin-left: 10px;
-      width: 70px;
+    .op {
+      color: var(--md-sys-color-error, #b3261e);
+    }
+    .lit {
+      color: var(--md-sys-color-success, #1e8e3e);
+    }
+  }
+
+  .empty {
+    flex: 1;
+    padding-left: 6px;
+    color: var(--md-sys-color-on-surface-variant, #5f6368);
+    font-style: italic;
+  }
+
+  // Nút mở modal: chỉ là icon, không được trông như nút chính.
+  .fb-icon-btn {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--md-sys-color-on-surface-variant, #5f6368);
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.06);
+      color: var(--md-sys-color-on-surface, #1f1f1f);
+    }
+
+    .msi {
+      font-family: 'Material Symbols Outlined', 'Material Icons';
+      font-size: 18px;
+      line-height: 1;
+    }
+  }
+}
+
+// ── Modal builder ────────────────────────────────────────────────────────────
+// why: modal render qua overlay nên phải đi ::ng-deep theo panel class của nó.
+::ng-deep .sd-form-builder-dialog {
+  .c-builder {
+    padding: 8px;
+    width: 100%;
+    border: 1px solid var(--sd-border, #e6e6e6);
+    border-radius: 8px;
+
+    .c-condition {
+      width: 80px;
+      flex-shrink: 0;
+
+      .c-where {
+        width: 80px;
+        border: 1px solid var(--sd-border, #e6e6e6);
+        background-color: var(--sd-surface-variant, #f2f2f2);
+        color: var(--sd-text-secondary, #757575);
+        border-radius: 4px;
+        padding: 4px;
+        text-align: center;
+        font-size: 12px;
+      }
+
+      .c-select {
+        margin-left: 10px;
+        width: 70px;
+      }
     }
   }
 }

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy, inject } from '@angular/core';
-import { SdFormatComponent, SdFormGenericTextarea } from '../../../../../models';
+import { sdFormatComponent, SdFormGenericTextarea } from '../../../../../models';
 import { BuilderService } from '../../../services';
 import { filter, Subscription } from 'rxjs';
 
@@ -17,7 +17,7 @@ export class TextareaControl implements AfterViewInit, OnDestroy {
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericTextarea) {
     if (this.component !== component) {
       this.component = component;
-      SdFormatComponent(this.component);
+      sdFormatComponent(this.component);
     }
   }
 

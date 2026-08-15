@@ -1,6 +1,15 @@
+// why: component dùng ViewEncapsulation.None nên rule này RÒ RA TOÀN CỤC — nó tước vòng focus của
+// MỌI nút do consumer chiếu vào bất kỳ modal nào, không chỉ nút của thư viện. `!important` còn
+// khiến consumer không ghi đè lại được. Giữ nguyên phần dập outline cho chuột, nhưng trả lại vòng
+// focus cho điều hướng bàn phím qua :focus-visible (cũng !important để thắng rule ở trên).
 .sd-modal-root button {
   &:focus {
     outline: none !important;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--sd-primary, #005cbb) !important;
+    outline-offset: 2px;
   }
 }
 

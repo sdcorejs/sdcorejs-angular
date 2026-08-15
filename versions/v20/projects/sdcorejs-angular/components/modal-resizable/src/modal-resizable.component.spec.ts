@@ -2,15 +2,30 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 
 import { SdLoadingService } from '@sdcorejs/angular/services';
 import { SdModalResizable } from './modal-resizable.component';
+import { SdModalResizableRegistry } from './modal-resizable.registry';
 
 describe('SdModalResizable', () => {
   let fixture: ComponentFixture<SdModalResizable>;
   let component: SdModalResizable;
   let loading: { start: jasmine.Spy; stop: jasmine.Spy };
+  let registry: SdModalResizableRegistry;
   const createdElements: HTMLElement[] = [];
+  let panelSeq = 0;
 
+  /**
+   * Panel giả lập một instance <sd-modal-resizable> KHÁC đang sống: có id và đã đăng ký
+   * vào registry, đúng như panel thật do component tạo qua portal.
+   */
   function addPanel(classes = '', width?: number): HTMLElement {
+    const panel = addForeignPanel(classes, width);
+    registry.register(panel.id);
+    return panel;
+  }
+
+  /** Panel KHÔNG thuộc library: cùng class `.modal-resizable` nhưng không đăng ký registry. */
+  function addForeignPanel(classes = '', width?: number): HTMLElement {
     const panel = document.createElement('div');
+    panel.id = `spec-panel-${++panelSeq}`;
     panel.className = `modal-resizable ${classes}`.trim();
     if (width !== undefined) panel.dataset['width'] = String(width);
     document.body.appendChild(panel);
@@ -24,6 +39,7 @@ describe('SdModalResizable', () => {
       imports: [SdModalResizable],
       providers: [{ provide: SdLoadingService, useValue: loading }],
     });
+    registry = TestBed.inject(SdModalResizableRegistry);
     fixture = TestBed.createComponent(SdModalResizable);
     component = fixture.componentInstance;
     // Flush afterNextRender in every test so no portal callback survives a
@@ -34,6 +50,7 @@ describe('SdModalResizable', () => {
   afterEach(() => {
     fixture.destroy();
     createdElements.forEach(element => element.remove());
+    createdElements.length = 0;
   });
 
   it('attaches its template portal to the document render surface', async () => {
@@ -118,6 +135,66 @@ describe('SdModalResizable', () => {
     expect(component.isLoading()).toBeFalse();
     expect(loading.stop).toHaveBeenCalledTimes(2);
   });
+
+  // -------------------------------------------------------------------------
+  // Teardown: timers hẹn giờ không được chạy sau khi component đã destroy
+  // -------------------------------------------------------------------------
+
+  it('drops the pending open() timer when the component is destroyed mid-flight', fakeAsync(() => {
+    const panel = document.getElementById(component.id)!;
+    panel.classList.add('c-closed');
+    Object.defineProperty(panel, 'offsetWidth', { configurable: true, value: 480 });
+
+    component.open();
+    fixture.destroy();
+    tick(200);
+
+    // Callback của open() giữ tham chiếu trực tiếp tới element → nếu timer không bị clear
+    // nó vẫn ghi dataset.width và gỡ class trên một panel đã bị tháo khỏi DOM.
+    expect(panel.dataset['width']).toBeUndefined();
+    expect(panel.classList).toContain('c-closed');
+  }));
+
+  it('drops the pending close()/arrange timers when the component is destroyed mid-flight', fakeAsync(() => {
+    const sibling = addPanel('', 420);
+    component.isOpened.set(true);
+
+    component.close();
+    fixture.destroy();
+    tick(200);
+
+    // #arrangePanels hẹn 200ms và ghi inline style lên MỌI panel đang đăng ký.
+    expect(sibling.style.width).toBe('');
+    expect(sibling.style.right).toBe('');
+  }));
+
+  it('stops arranging a destroyed instance panel for the instances that survive it', fakeAsync(() => {
+    const survivor = addPanel('', 420);
+    const ownPanel = document.getElementById(component.id)!;
+    ownPanel.dataset['width'] = '300';
+
+    fixture.destroy();
+    tick(200);
+
+    // Instance đã destroy phải rời registry → panel của nó không còn chiếm chỗ trong stack.
+    expect(registry.panels()).not.toContain(ownPanel);
+    expect(registry.panels()).toEqual([survivor]);
+  }));
+
+  // -------------------------------------------------------------------------
+  // Scoping: chỉ chạm panel do library sở hữu
+  // -------------------------------------------------------------------------
+
+  it('leaves .modal-resizable elements it does not own untouched', fakeAsync(() => {
+    const foreign = addForeignPanel('', 420);
+
+    component.maximize();
+    tick(200);
+
+    // Trước đây querySelectorAll('.modal-resizable') ghi đè width/right lên cả phần tử này.
+    expect(foreign.style.width).toBe('');
+    expect(foreign.style.right).toBe('');
+  }));
 
   it('toggles editing and publishes focus state', () => {
     const changed = jasmine.createSpy('changed');

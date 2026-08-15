@@ -412,6 +412,29 @@ describe('SdTabGroup', () => {
       expect(secondLabel.querySelector('.sd-tab__close')).toBeNull();
     });
 
+    // why: nút đóng từng là `<sd-icon role="button" aria-label="Close tab">` — custom element
+    // không tự focusable và không có handler bàn phím, tức người dùng bàn phím không đóng được tab.
+    it('renders the close affordance as a real focusable button with an i18n label', () => {
+      const close = getTabLabels(fixture)[0].querySelector('.sd-tab__close') as HTMLElement;
+
+      expect(close.tagName).toBe('BUTTON');
+      expect(close.getAttribute('type')).toBe('button');
+      expect(close.getAttribute('aria-label')).toBeTruthy();
+      expect(close.getAttribute('aria-label')).not.toBe('Close tab');
+    });
+
+    it('keyboard activation of the close button emits tabClosed, same as a mouse click', () => {
+      const close = getTabLabels(fixture)[0].querySelector('.sd-tab__close') as HTMLButtonElement;
+
+      // Native <button>: Enter/Space đều được trình duyệt dịch thành một click event thật.
+      close.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      close.click();
+      fixture.detectChanges();
+
+      expect(host.closedEvents.length).toBe(1);
+      expect(host.closedEvents[0].index).toBe(0);
+    });
+
     it('clicking close emits tabClosed with correct index + tab', () => {
       const firstLabel = getTabLabels(fixture)[0];
       const close = firstLabel.querySelector('.sd-tab__close') as HTMLElement;

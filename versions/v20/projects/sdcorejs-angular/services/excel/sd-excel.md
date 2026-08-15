@@ -70,7 +70,7 @@ interface SdExcelExportOption<T = any> {
 }
 ```
 
-**Numeric handling**: cell values that are JS `number` are written with `numFmt = '#'`.
+**Numeric handling**: JS `number` values are written as real numbers. Whole numbers carry `numFmt: '0'` (so `0` renders as "0"); decimals keep Excel's General format so their fractional part is not visually rounded. (Older releases set `numFmt = '#'` and then overwrote the whole `style` object, so no format was ever applied.)
 
 **Throws**: `'Column N: Field is required'`, `'Column N: Title is required'` (same validation as `generateTemplate`).
 

@@ -1,6 +1,8 @@
 @let _label = label();
 @let _appearance = appearance();
-@let _errorMessage = errorMessage();
+<!-- why: dùng bản đã gate theo tương tác của connector, KHÔNG dùng `errorMessage()` thô — field
+     `[required]` trước đây bung lỗi ngay lần paint đầu, khi người dùng còn chưa chạm vào ô nào. -->
+@let _errorMessage = connectorState().validationError;
 @let _helperText = helperText();
 @let _required = required();
 
@@ -74,7 +76,7 @@
         class="sd-clear-btn sd-hover"
         matSuffix
         (click)="clear($event)"
-        [attr.aria-label]="'core.form.time.clear' | translate">
+        [attr.aria-label]="'core.form.time.clear' | sdTranslate">
         <sd-icon name="close"></sd-icon>
       </button>
     }
@@ -82,28 +84,38 @@
     @if (hideInlineError() && _errorMessage) {
       <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
     }
+    @if (hideInlineError() && _errorMessage) {
+      <span class="sd-visually-hidden" matSuffix>{{ _errorMessage }}</span>
+    }
 
+    <!-- why: KHÔNG dùng `mat-icon-button` — nó dựng hộp 40px + touch target 48px, nên đồng hồ bị
+         đẩy vào trong và vùng bấm phình to hơn hẳn mọi suffix khác. sd-date/sd-datetime/sd-date-range
+         đều đã dùng `.sd-suffix-icon.sd-suffix-btn` (20px, khớp gap 8px + padding 12px của
+         `.mat-mdc-form-field-icon-suffix`); sd-time là control cuối còn lệch. -->
     <button
       #menuTrigger="matMenuTrigger"
       type="button"
-      mat-icon-button
       matSuffix
       data-time-picker-trigger
+      class="cursor-pointer sd-suffix-icon sd-suffix-btn"
       [matMenuTriggerFor]="timePickerMenu"
       [disabled]="formControl.disabled || isReadonly()"
-      [attr.aria-label]="'core.form.time.open-picker' | translate"
+      [attr.aria-label]="'core.form.time.open-picker' | sdTranslate"
       (menuOpened)="preparePicker()">
       <sd-icon name="schedule"></sd-icon>
     </button>
   </mat-form-field>
 
   <mat-menu #timePickerMenu="matMenu" class="sd-time-picker-menu">
-    <div class="d-flex flex-column" (click)="$event.stopPropagation()">
+    <!-- why: div này chỉ tồn tại để chặn click nổi bọt làm đóng mat-menu — nó không phải một
+         "nút" và không cần focus. role="presentation" là tín hiệu đúng (khác aria-hidden ở chỗ
+         KHÔNG ẩn cây con: spinner giờ/phút và hai nút bên trong vẫn đọc được bình thường). -->
+    <div class="d-flex flex-column" role="presentation" (click)="$event.stopPropagation()">
       <sd-time-spinner [value]="pickerDraft()" [baseValue]="pickerDraft()" [stepMinute]="step()" (valueChange)="onPickerValue($event)">
       </sd-time-spinner>
       <div class="d-flex justify-content-end gap-8 p-8">
-        <button type="button" mat-button (click)="cancelPicker()">{{ 'core.common.cancel' | translate }}</button>
-        <button type="button" mat-flat-button (click)="applyPicker()">{{ 'core.form.time.confirm' | translate }}</button>
+        <button type="button" mat-button (click)="cancelPicker()">{{ 'core.common.cancel' | sdTranslate }}</button>
+        <button type="button" mat-flat-button (click)="applyPicker()">{{ 'core.form.time.confirm' | sdTranslate }}</button>
       </div>
     </div>
   </mat-menu>

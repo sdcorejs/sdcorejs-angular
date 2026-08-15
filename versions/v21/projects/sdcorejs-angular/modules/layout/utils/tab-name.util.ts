@@ -1,5 +1,5 @@
 import { I18N_MESSAGES, I18N_STORAGE_KEY } from '@sdcorejs/angular/i18n';
-import { Language } from '@sdcorejs/angular/models';
+import { Language } from '@sdcorejs/utils/models';
 
 /**
  * Resolve a translated tab name for `@SdTabComponent`.

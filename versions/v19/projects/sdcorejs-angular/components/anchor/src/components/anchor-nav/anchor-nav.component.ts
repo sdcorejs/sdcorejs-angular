@@ -23,7 +23,7 @@ export class AnchorNav implements OnDestroy {
   parentAutoId = input<string | undefined | null>(undefined);
   color = input<Color>('primary');
 
-  // CSS var binding cho active state — map SdColor → global token `--sd-{color}`.
+  // CSS var binding cho active state — map Color → global token `--sd-{color}`.
   // SCSS đọc qua `var(--anchor-active-color)` cho border + text + icon.
   cssActiveVar = computed(() => `var(--sd-${this.color()})`);
 

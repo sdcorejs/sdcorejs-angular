@@ -3,7 +3,7 @@
   class="c-saved-filters"
   [disabled]="!key()"
   [matMenuTriggerFor]="menu"
-  [matTooltip]="key() ? 'Bộ lọc đã lưu' : 'Cần [savedFiltersKey] để bật'">
+  [matTooltip]="key() ? tooltipLabel() : tooltipDisabledLabel()">
   <sd-icon name="bookmark_border"></sd-icon>
 </button>
 
@@ -16,14 +16,14 @@
         role="button"
         tabindex="0"
         class="c-sf-del"
-        aria-label="Xoá bộ lọc"
+        [attr.aria-label]="deleteLabel()"
         (click)="remove(f.id, $event)"
         (keydown.enter)="remove(f.id, $event)">
         <sd-icon name="close"></sd-icon>
       </span>
     </button>
   } @empty {
-    <div class="c-sf-empty">Chưa có bộ lọc nào.</div>
+    <div class="c-sf-empty">{{ emptyLabel() }}</div>
   }
   <!-- why: footer save action sống trong mat-menu để dropdown gom 1 vùng (list +
        save) — user mở dropdown thấy ngay cả 2 hành động, không phải tìm nút lưu
@@ -31,6 +31,6 @@
   <hr class="c-sf-divider" aria-hidden="true" />
   <button type="button" mat-menu-item class="c-sf-save" [disabled]="!key()" (click)="promptSave()">
     <sd-icon name="bookmark_add"></sd-icon>
-    <span>Lưu bộ lọc hiện tại</span>
+    <span>{{ saveLabel() }}</span>
   </button>
 </mat-menu>

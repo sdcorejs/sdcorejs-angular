@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   sd-query-bar — unified filter chip row (Jira/Linear/Notion style).
   Visual spec: refs/design_handoff_sd_query_bar/README.md
   TODO(next-iter): replace inline placeholders for field-picker + chip-popover
@@ -12,6 +12,8 @@
 @let _editingIndex = editingIndex();
 @let _resolvedMode = resolvedMode();
 @let _resolvedShowOperatorOnChip = resolvedShowOperatorOnChip();
+@let _noFieldsLabel = noFieldsLabel();
+@let _addFilterLabel = addFilterLabel();
 
 <div
   class="c-query-bar"
@@ -32,7 +34,7 @@
         [ngModel]="search()"
         (ngModelChange)="setSearch($event)"
         (keydown.enter)="triggerApply()"
-        placeholder="Tìm kiếm..." />
+        [placeholder]="searchPlaceholder()" />
     </div>
     <span class="c-divider" aria-hidden="true"></span>
   }
@@ -53,8 +55,11 @@
   @if (_resolvedMode === 'inline') {
     <!-- ===== INLINE MODE (GitLab-style token builder) ===== -->
 
-    <!-- Completed chips -->
-    @for (filter of _filters; track $index; let i = $index) {
+    <!-- Completed chips.
+         why: track theo rowId(filter) chứ KHÔNG theo $index — track $index gắn chip với vị trí,
+         nên xoá filter đầu tiên sẽ bind lại chip cũ sang filter kế tiếp và kéo theo state nội bộ
+         (inline-chip `#editing`, inline-value-chip `draft`) sang sai filter. -->
+    @for (filter of _filters; track rowId(filter); let i = $index) {
       @if (_showOrConnector && i > 0) {
         <span class="c-or-connector" aria-hidden="true">OR</span>
       }
@@ -111,12 +116,13 @@
       class="c-add-filter"
       [matMenuTriggerFor]="addPicker.menu()"
       [disabled]="_resolvedFields.length === 0 || _usedFieldKeys.size >= _resolvedFields.length"
-      [matTooltip]="_resolvedFields.length === 0 ? 'Chưa cấu hình fields' : 'Thêm filter'">
+      [matTooltip]="_resolvedFields.length === 0 ? _noFieldsLabel : _addFilterLabel">
       <sd-icon name="add"></sd-icon>
     </button>
   } @else {
     <!-- ===== POPOVER MODE (default) — compact chips edited via mat-menu ===== -->
-    @for (filter of _filters; track $index; let i = $index) {
+    <!-- why: track theo rowId(filter) — xem ghi chú ở nhánh inline. -->
+    @for (filter of _filters; track rowId(filter); let i = $index) {
       @if (_showOrConnector && i > 0) {
         <span class="c-or-connector" aria-hidden="true">OR</span>
       }
@@ -141,7 +147,7 @@
       class="c-add-filter"
       [matMenuTriggerFor]="addPicker.menu()"
       [disabled]="_resolvedFields.length === 0 || _usedFieldKeys.size >= _resolvedFields.length"
-      [matTooltip]="_resolvedFields.length === 0 ? 'Chưa cấu hình fields' : 'Thêm filter'">
+      [matTooltip]="_resolvedFields.length === 0 ? _noFieldsLabel : _addFilterLabel">
       <sd-icon name="add"></sd-icon>
     </button>
   }

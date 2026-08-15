@@ -5,7 +5,7 @@ import { Utilities } from '@sdcorejs/utils/fns';
 import { Operator } from '@sdcorejs/utils/models';
 import { map, startWith } from 'rxjs/operators';
 import { SdTableFilterDefDirective } from '../../directives/sd-table-filter-def.directive';
-import { SdTableColumn } from '../../models/table-column.model';
+import { SdTableColumnAnyRow } from '../../models/table-column.model';
 import {
   SdTableExternalFilter,
   SdTableOptionFilter,
@@ -46,7 +46,7 @@ export class SdTableFilterService {
     filter: SdTableOptionFilter | undefined,
     args: {
       id: string;
-      columns: SdTableColumn[] | undefined;
+      columns: SdTableColumnAnyRow[] | undefined;
       externalFilters: SdTableExternalFilter[] | undefined;
     }
   ) => {
@@ -63,11 +63,15 @@ export class SdTableFilterService {
     };
   };
 
+  // why: `columns` khai báo `SdTableColumnAnyRow[]` (= `SdTableColumn<never>[]`) chứ không phải
+  // `SdTableColumn[]`. Service filter chỉ đọc `field`/`type`/`filter` trên cột, không bao giờ chạm dữ
+  // liệu hàng; sau khi default generic siết `any → unknown` thì `SdTableColumn<T>` hết tự khớp với
+  // `SdTableColumn<unknown>` (T ở vị trí contravariant), nên đây là kiểu đúng thay vì quay lại `any`.
   register = (
     filter: SdTableOptionFilter | undefined,
     args: {
       id: string;
-      columns: SdTableColumn[] | undefined;
+      columns: SdTableColumnAnyRow[] | undefined;
       externalFilters: SdTableExternalFilter[] | undefined;
       filterDefs: SdTableFilterDefDirective[] | undefined;
       columnOperator?: Record<string, Operator>;
@@ -211,7 +215,7 @@ export class SdTableFilterService {
   };
 
   #defaultConfiguration = (args: {
-    columns: SdTableColumn[] | undefined;
+    columns: SdTableColumnAnyRow[] | undefined;
     externalFilters: SdTableExternalFilter[] | undefined;
   }): TableFilterConfiguration => {
     const { externalFilters } = args;
@@ -227,7 +231,7 @@ export class SdTableFilterService {
   };
 
   #defaultValue = (args: {
-    columns: SdTableColumn[] | undefined;
+    columns: SdTableColumnAnyRow[] | undefined;
     externalFilters: SdTableExternalFilter[] | undefined;
     columnOperator?: Record<string, Operator>;
   }): TableFilterValue => {
@@ -266,7 +270,7 @@ export class SdTableFilterService {
 
   #initConfiguration = (
     args: {
-      columns: SdTableColumn[] | undefined;
+      columns: SdTableColumnAnyRow[] | undefined;
       externalFilters: SdTableExternalFilter[] | undefined;
       filterDefs: SdTableFilterDefDirective[] | undefined;
     },
@@ -286,7 +290,7 @@ export class SdTableFilterService {
 
   #initValue = (
     args: {
-      columns: SdTableColumn[] | undefined;
+      columns: SdTableColumnAnyRow[] | undefined;
       externalFilters: SdTableExternalFilter[] | undefined;
       filterDefs: SdTableFilterDefDirective[] | undefined;
       columnOperator?: Record<string, Operator>;

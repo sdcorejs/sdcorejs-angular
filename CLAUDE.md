@@ -112,7 +112,13 @@ Workflow: `.github/workflows/publish-npm.yml`. Auth qua **npm trusted publishing
   - `v1.0-beta.1` → 19.1.0-beta.1 / 20.1.0-beta.1 / 21.1.0-beta.1 (npm tag=beta).
 - Manual dispatch trên Actions tab → nhập release suffix vào field `patch`. Nhánh này chỉ dùng cho publish/debug thủ công; `published-docs` public được buộc vào tag flow.
 
-Trước publish matrix, job `verify-version-sync` chạy `npm run check:sync` để chặn tag release nếu `v20`/`v21` lệch khỏi `v19`.
+Trước publish matrix có **2 gate**, matrix `needs:` cả hai — đỏ một cái là không publish gì hết:
+- `verify-version-sync` — `npm run check:sync`, chặn tag release nếu `v20`/`v21` lệch khỏi `v19`.
+- `test` — chạy full suite của `versions/v19` (`npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadlessCI --code-coverage`). **`--code-coverage` là bắt buộc**: threshold trong `projects/sdcorejs-angular/karma.conf.js` chỉ được đánh giá khi có coverage; thiếu cờ đó thì threshold không gate gì cả. `ChromeHeadlessCI` = `ChromeHeadless` + `--no-sandbox --disable-gpu --disable-dev-shm-usage` (custom launcher khai trong karma.conf.js).
+
+⚠️ Hai gate này chỉ chạy trên **tag/dispatch**, chưa có workflow chạy test trên PR/push `main`. Suite đỏ vẫn chỉ lộ ra lúc release.
+
+Karma in seed random của Jasmine ở đầu mỗi run (`[karma] Jasmine random seed = <n>`); ép seed bằng env `JASMINE_SEED`. **Pin seed KHÔNG đủ để replay**: `spec.id` gán theo thứ tự module trong bundle, mà bundle không ổn định giữa các build — chi tiết trong comment đầu `karma.conf.js`.
 
 Workflow matrix [v19/v20/v21] chạy song song, mỗi job:
 1. Resolve release suffix + dist-tag từ tag/dispatch input.

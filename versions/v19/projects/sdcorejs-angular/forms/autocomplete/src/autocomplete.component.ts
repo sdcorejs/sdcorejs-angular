@@ -22,17 +22,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
-import {
-  AsyncValidatorFn,
-  FormControl,
-  FormGroup,
-  FormGroupDirective,
-  FormsModule,
-  NgForm,
-  ReactiveFormsModule,
-  ValidatorFn,
-  Validators,
-} from '@angular/forms';
+import { FormControl, FormGroup, FormGroupDirective, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule, MatAutocompleteTrigger } from '@angular/material/autocomplete';
 import { ErrorStateMatcher } from '@angular/material/core';
 import { MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
@@ -56,10 +46,11 @@ import {
   sdViewedInline,
   sdViewedTransform,
   ɵsdFormControlConnector,
+  ɵsdTimerScope,
 } from '@sdcorejs/angular/forms/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
-import { ArrayUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { ArrayUtilities } from '@sdcorejs/utils/fns';
 import { Size } from '@sdcorejs/utils/models';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { Observable, Subscription, combineLatest, defer, from, of, timer } from 'rxjs';
@@ -95,8 +86,11 @@ class SdAutocompleteErrotStateMatcher implements ErrorStateMatcher {
     SdView,
   ],
 })
-export class SdAutocomplete<T = any> implements OnInit, OnDestroy {
+export class SdAutocomplete<T = unknown> implements OnInit, OnDestroy {
   id = `I${Utilities.generateUuid()}`;
+  /** why: id ổn định của <mat-error> để control trỏ `aria-describedby` sang — thông báo lỗi
+   *  phải đọc được từ chính control, không chỉ hiện ra màn hình. */
+  readonly errorId = `${this.id}-error`;
 
   // ==========================================
   // 1. SIGNAL QUERIES
@@ -115,6 +109,9 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy {
   private ref = inject(ChangeDetectorRef);
   private formConfig = inject(SD_FORM_CONFIGURATION, { optional: true });
   readonly #i18n = inject(I18nService);
+  // why: focus() (và open() gọi lại nó) hoãn 100ms rồi mới openPanel(). Không giữ handle thì
+  // panel overlay có thể mở SAU khi control đã destroy và không còn ai đóng nó.
+  readonly #timers = ɵsdTimerScope();
 
   // ==========================================
   // 3. SIGNAL INPUTS & MODEL
@@ -226,10 +223,21 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy {
 
   inputControl = new SdFormControl();
   formControl = new SdFormControl();
+  // why: validator đi qua connector (addValidators/removeValidators — additive) thay vì
+  // setValidators()/setAsyncValidators() như trước. `formControl` là public API, consumer hoàn toàn
+  // có thể tự gắn validator lên nó; setValidators THAY THẾ cả danh sách nên xoá sạch validator của
+  // consumer mỗi lần required/[validator]/inlineError đổi. Connector chỉ thêm/gỡ đúng phần component
+  // sở hữu, phần còn lại của danh sách giữ nguyên.
   readonly #formConnector = ɵsdFormControlConnector<unknown, unknown>({
     form: this.form,
     name: this.name,
     control: computed(() => this.formControl),
+    required: this.required,
+    validators: computed(() => (this.inlineError() ? [SdInlineErrorValidator] : null)),
+    asyncValidators: computed(() => {
+      const custom = this.validator();
+      return custom ? [HandleSdCustomValidator(custom)] : null;
+    }),
   });
   matcher = new SdAutocompleteErrotStateMatcher(this.formControl);
 
@@ -281,13 +289,6 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy {
         this.inputControl.enable({ emitEvent: false });
         this.formControl.enable({ emitEvent: false });
       }
-    });
-
-    effect(() => {
-      const req = this.required();
-      const val = this.validator();
-      const inl = this.inlineError();
-      untracked(() => this.#updateValidator(req, val, inl));
     });
   }
 
@@ -534,7 +535,8 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy {
 
   focus = () => {
     this.isFocused = true;
-    setTimeout(() => {
+    // why: vẫn 100ms như cũ — chỉ scope handle theo DestroyRef.
+    this.#timers.schedule(() => {
       this.autocompleteTrigger()?.openPanel();
       this.inputRef()?.nativeElement?.focus();
     }, 100);
@@ -550,8 +552,18 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy {
     $event?.stopPropagation();
     this.filteredItems.set([]);
     this.inputControl?.setValue('');
-    if (this.valueModel()) {
-      this.formControl.setValue(null, { emitEvent: false });
+    // why: guard bằng `!= null && !== ''` chứ KHÔNG dùng truthiness. Giá trị `0` là hợp lệ —
+    // load path (selected$) đã coi `val === 0` là có giá trị — nên `if (this.valueModel())`
+    // im lặng từ chối xoá đúng những item có value = 0 (hoặc false).
+    const current = this.valueModel();
+    if (current != null && current !== '') {
+      // why: KHÔNG dùng { emitEvent: false } khi reset formControl. formControl mang async
+      // [validator] (HandleSdCustomValidator). Chặn event thì lúc async resolve, setErrors cũng im →
+      // #state (sdFormControlState) không tick → errorMessage không recompute → message lỗi không
+      // hiện/không clear sau khi xoá. Đúng lỗi mà comment ở onSelect nói là đã fix. Subscriber
+      // formControl.valueChanges set valueModel có guard `!==`, và clear() set lại cùng giá trị
+      // (no-op) → không lặp.
+      this.formControl.setValue(null);
       this.valueModel.set(null);
       this.sdChange.emit(null);
       this.sdSelection.emit({ values: [null], selectedItems: [], value: null, selectedItem: null });
@@ -565,19 +577,9 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy {
   };
 
   reValidate = () => {
-    this.inputControl.updateValueAndValidity({ emitEvent: true });
-  };
-
-  #updateValidator = (req: boolean, val: SdCustomValidator | undefined, inl: string | undefined) => {
-    const validators: ValidatorFn[] = [];
-    const asyncValidators: AsyncValidatorFn[] = [];
-
-    if (req) validators.push(Validators.required);
-    if (val) asyncValidators.push(HandleSdCustomValidator(val));
-    if (inl) validators.push(SdInlineErrorValidator);
-
-    this.formControl.setValidators(validators.length ? validators : null);
-    this.formControl.setAsyncValidators(asyncValidators.length ? asyncValidators : null);
-    this.formControl.updateValueAndValidity({ emitEvent: false });
+    // why: mọi validator (required / [validator] / inlineError) được cài trên formControl —
+    // inputControl chỉ giữ text search và KHÔNG có validator nào. Gọi trên inputControl là no-op,
+    // tức API public reValidate() trước đây không validate gì cả.
+    this.formControl.updateValueAndValidity({ emitEvent: true });
   };
 }

@@ -23,17 +23,8 @@ import {
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import {
-  AsyncValidatorFn,
-  FormControl,
-  FormGroup,
-  FormsModule,
-  NgForm,
-  ReactiveFormsModule,
-  ValidatorFn,
-  Validators,
-} from '@angular/forms';
-import { MatCheckboxModule } from '@angular/material/checkbox';
+import { FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
+import { MatPseudoCheckbox } from '@angular/material/core';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
 import { MatInput, MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -57,10 +48,11 @@ import {
   sdViewedInline,
   sdViewedTransform,
   ɵsdFormControlConnector,
+  ɵsdTimerScope,
 } from '@sdcorejs/angular/forms/models';
-import { I18nService } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
-import { ArrayUtilities, StringUtilities, Utilities } from '@sdcorejs/angular/utilities/extensions';
+import { ArrayUtilities, StringUtilities, Utilities } from '@sdcorejs/utils/fns';
 import { NestedKeyOf, Size } from '@sdcorejs/utils/models';
 
 import { combineLatest, timer } from 'rxjs';
@@ -84,15 +76,19 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
     MatTooltipModule,
     MatFormFieldModule,
     MatSelectModule,
-    MatCheckboxModule,
+    MatPseudoCheckbox,
     MatProgressSpinnerModule,
     SdLabel,
     SdView,
     SdSelectFooterActionDirective,
+    SdTranslatePipe,
   ],
 })
 export class SdSelect<T extends object | string | number = Record<string, unknown>> implements OnInit {
   id = `I${Utilities.generateUuid()}`;
+  /** why: id ổn định của <mat-error> để control trỏ `aria-describedby` sang — thông báo lỗi
+   *  phải đọc được từ chính control, không chỉ hiện ra màn hình. */
+  readonly errorId = `${this.id}-error`;
 
   // ==========================================
   // 1. SIGNAL QUERIES & INJECTS
@@ -126,6 +122,9 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   #formConfiguration = inject(SD_FORM_CONFIGURATION, { optional: true });
   #el = inject(ElementRef);
   readonly #i18n = inject(I18nService);
+  // why: focus/mở panel + focus ô search đều hoãn 100ms; handle phải bị clear khi destroy,
+  // nếu không callback vẫn chạm selectRef/matInputRef của view đã tháo.
+  readonly #timers = ɵsdTimerScope();
 
   // ==========================================
   // 2. SIGNAL INPUTS & MODEL
@@ -168,8 +167,13 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   helperText = input<string | undefined>();
   placeholder = input<string | undefined>();
 
-  valueField = input.required<NestedKeyOf<T>>();
-  displayField = input.required<NestedKeyOf<T>>();
+  // why: KHÔNG dùng input.required. Component nhận `T extends object | string | number` và template
+  // có nhánh riêng cho mảng primitive (`@else if (!_valueField && !_displayField)`), nhưng
+  // input.required làm nhánh đó không bao giờ tới được: `<sd-select [items]="['a','b']">` ném NG0950
+  // ngay lần render đầu vì template đọc valueField()/displayField() trước khi có giá trị.
+  // Mặc định '' (giống disabledField) → bỏ trống cả hai = item chính là value + label.
+  valueField = input<NestedKeyOf<T> | ''>('');
+  displayField = input<NestedKeyOf<T> | ''>('');
   disabledField = input<NestedKeyOf<T> | ''>('');
   cacheChecksum = input<any>();
 
@@ -186,6 +190,11 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   /** Display mode: `false` edit · `true` static view · `'inline'` view + click-to-edit (bare editor). */
   viewed = input<SdViewed, SdViewedInput>(false, { transform: sdViewedTransform });
   multiple = input(false, { transform: booleanAttribute });
+  /**
+   * Hiện option "Tất cả" đầu panel (chỉ multiple + items là mảng tĩnh/Signal — ẩn với
+   * SdSearch lazy vì dataset không xác định). Opt-in, default `false`.
+   */
+  showSelectAll = input(false, { transform: booleanAttribute });
   /**
    * Whether the `viewed='inline'` text face shows a hover clear-× to empty the value.
    * Default `true`. Set `false` where the HOST owns removal (e.g. `<sd-query-bar>` chips,
@@ -209,14 +218,23 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   /**
    * Tổng hợp error message để hiển thị trong tooltip khi hideInlineError = true.
    */
+  // why: `required` và `inlineError` PHẢI được đọc VÔ ĐIỀU KIỆN. Connector cài/gỡ validator bằng
+  // `updateValueAndValidity({ emitEvent: false })` → `formControl.errors` đổi mà KHÔNG phát event
+  // nào → `#state` (sdFormControlState) không tick. Nếu computed chỉ phụ thuộc `#state` thì bật
+  // `[required]` (hoặc set `[inlineError]`) lúc RUNTIME sẽ giữ nguyên message cũ dưới OnPush:
+  // control invalid, viền đỏ, nhưng KHÔNG có chữ. Đọc trong nhánh `errors[...]` là không đủ — lần
+  // chạy "không lỗi" thoát sớm ở `if (!errors)` nên không đăng ký được dependency nào.
+  // `customValidator` thì an toàn: nó tới từ async validator, `setErrors` mặc định CÓ phát event.
   readonly errorMessage = computed<string | undefined>(() => {
     void this.#state();
+    void this.required();
+    const inlineError = this.inlineError();
     const errors = this.formControl.errors;
     if (!errors) return undefined;
 
     if (errors['required']) return this.#i18n.t('core.form.select.required');
     if (errors['customValidator']) return errors['customValidator'] as string;
-    if (errors['inlineError']) return this.inlineError();
+    if (errors['inlineError']) return inlineError;
     return undefined;
   });
 
@@ -240,10 +258,20 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   // 4. INTERNAL STATE & STREAMS
   // ==========================================
   formControl = new SdFormControl();
+  // why: validator đi qua connector (addValidators/removeValidators — additive) thay vì
+  // clearValidators()+clearAsyncValidators()+setValidators() như trước. `formControl` là public API,
+  // consumer hoàn toàn có thể tự gắn validator lên nó; cách cũ xoá SẠCH những validator đó mỗi lần
+  // required/[validator]/inlineError đổi. Connector chỉ thêm/gỡ đúng phần component sở hữu.
   readonly #formConnector = ɵsdFormControlConnector<unknown, unknown>({
     form: this.form,
     name: this.name,
     control: computed(() => this.formControl),
+    required: this.required,
+    validators: computed(() => (this.inlineError() ? [SdInlineErrorValidator] : null)),
+    asyncValidators: computed(() => {
+      const custom = this.validator();
+      return custom ? [HandleSdCustomValidator(custom)] : null;
+    }),
   });
   inputControl = new FormControl('');
 
@@ -300,6 +328,41 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   });
 
   delayTime = computed(() => (typeof this.actualItems() === 'function' ? 500 : 0));
+
+  /**
+   * Scope của "Tất cả": item enabled khớp search text hiện tại, tính trên MẢNG NGUỒN
+   * `actualItems()`.
+   */
+  // why: KHÔNG đọc filteredItems — nó đã bị cắt theo `limit` paging nên tick all sẽ thiếu item;
+  // luật khớp search phải trùng với filter của allItems$ (aliasIncludes trên cả value + display).
+  readonly selectAllScope = computed<T[]>(() => {
+    const data = this.actualItems();
+    if (!Array.isArray(data)) return [];
+    const sText = this.searchText() || '';
+    return (data as T[]).filter(item => {
+      if (item == null || this.itemDisabled(item)) return false;
+      return StringUtilities.aliasIncludes(this.itemValue(item), sText) || StringUtilities.aliasIncludes(this.itemDisplay(item), sText);
+    });
+  });
+
+  /** Row "Tất cả" chỉ render khi opt-in + multiple + items tĩnh + scope có item để thao tác. */
+  readonly selectAllVisible = computed(
+    () => this.showSelectAll() && this.multiple() && Array.isArray(this.actualItems()) && this.selectAllScope().length > 0
+  );
+
+  /** Trạng thái checkbox "Tất cả", tính trên items ENABLED trong scope (item disabled bỏ qua). */
+  readonly selectAllState = computed<'checked' | 'indeterminate' | 'unchecked'>(() => {
+    const scope = this.selectAllScope();
+    const val = this.normalizedValue();
+    const selected = new Set((Array.isArray(val) ? val : []).map(v => String(v)));
+    if (!scope.length || !selected.size) return 'unchecked';
+    let count = 0;
+    for (const item of scope) {
+      if (selected.has(String(this.itemValue(item)))) count++;
+    }
+    if (count === 0) return 'unchecked';
+    return count === scope.length ? 'checked' : 'indeterminate';
+  });
 
   // ==========================================
   // 5. GETTER & HELPERS
@@ -406,13 +469,6 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
     effect(() => {
       if (this.disabled()) this.formControl.disable({ emitEvent: false });
       else this.formControl.enable({ emitEvent: false });
-    });
-
-    effect(() => {
-      const req = this.required();
-      const val = this.validator();
-      const inl = this.inlineError();
-      untracked(() => this.#updateValidator(req, val, inl));
     });
 
     effect(() => {
@@ -598,21 +654,6 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
     });
   }
 
-  #updateValidator = (req: boolean, val: SdCustomValidator | undefined, inl: string | undefined) => {
-    this.formControl.clearValidators();
-    this.formControl.clearAsyncValidators();
-    const validators: ValidatorFn[] = [];
-    const asyncValidators: AsyncValidatorFn[] = [];
-
-    if (req) validators.push(Validators.required);
-    if (val) asyncValidators.push(HandleSdCustomValidator(val));
-    if (inl) validators.push(SdInlineErrorValidator);
-
-    this.formControl.setValidators(validators.length ? validators : null);
-    this.formControl.setAsyncValidators(asyncValidators.length ? asyncValidators : null);
-    this.formControl.updateValueAndValidity({ emitEvent: false });
-  };
-
   #loadSelectedItems = async (value: any, items: SdSearch) => {
     if (value === undefined || value === null || value === '') return [];
 
@@ -683,14 +724,58 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   onSelectionChange = (change: MatSelectChange) => {
     this.allSelected = !this.selectRef()?.options.some(e => !e.selected);
     const value = change?.value ?? '';
+    // why: KHÔNG dùng { emitEvent: false } khi mirror giá trị chọn sang formControl. formControl mang
+    // async [validator] (HandleSdCustomValidator). CVA của mat-select đã setValue (có event) trước khi
+    // (selectionChange) chạy; setValue im lặng ở đây HUỶ lần async đang pending đó rồi chạy lại im →
+    // setErrors lúc resolve cũng im → #state (sdFormControlState) không tick → errorMessage không
+    // recompute → viền đỏ nhưng KHÔNG có message.
+    // NHƯNG cũng KHÔNG được setValue vô điều kiện: control lúc này ĐÃ mang đúng giá trị (CVA vừa ghi),
+    // nên ghi lại sẽ phát valueChanges LẦN HAI trên chính control và trên FormGroup cha, đồng thời
+    // khởi động lại async [validator] hai lần cho mỗi lần chọn. Guard `!==` giữ đúng MỘT event:
+    // đi qua UI thì CVA lo, gọi trực tiếp (programmatic/test) thì nhánh setValue lo.
     if (this.multiple()) {
-      this.formControl.setValue(value || [], { emitEvent: false });
-      this.#onChange(value || []);
+      const next = value || [];
+      if (this.formControl.value !== next) this.formControl.setValue(next);
+      this.#onChange(next);
     } else {
       this.clearSearch();
-      this.formControl.setValue(value, { emitEvent: false });
+      if (this.formControl.value !== value) this.formControl.setValue(value);
       this.#onChange(value);
     }
+  };
+
+  /**
+   * Toggle "Tất cả" theo scope hiện tại (items enabled khớp search):
+   * - Đang `checked` → BỎ chọn các value trong scope (giữ value ngoài scope, kể cả item disabled đã chọn).
+   * - Ngược lại → CHỌN THÊM toàn bộ scope, union với selection hiện có (additive khi đang search).
+   */
+  // why: KHÔNG emit sdChange/sdSelection ở đây — giữ đúng semantics hiện hành: hai output đó chỉ
+  // bắn khi panel đóng với giá trị đổi (onOpenedChange so hash).
+  // why: setValue KHÔNG dùng { emitEvent: false } — cùng lý do như onSelectionChange: formControl
+  // mang async [validator], setValue im lặng sẽ huỷ lần async pending rồi chạy lại im → setErrors
+  // không phát event → #state không tick → errorMessage stale (viền đỏ mà không có message).
+  // Guard `!==` giữ đúng MỘT event: đây là đường programmatic nên nhánh setValue luôn chạy.
+  toggleSelectAll = (): void => {
+    const scope = this.selectAllScope();
+    if (!scope.length) return;
+
+    const current = this.normalizedValue();
+    // why: normalizedValue có nhánh bọc scalar boolean thành mảng — với multiple thực tế value là
+    // (number | string)[], cast để khớp chữ ký #onChange.
+    const currentArr: (number | string)[] = Array.isArray(current) ? ([...current] as (number | string)[]) : [];
+    const scopeValues = scope.map(item => this.itemValue(item) as number | string);
+
+    let next: (number | string)[];
+    if (this.selectAllState() === 'checked') {
+      const scopeKeys = new Set(scopeValues.map(v => String(v)));
+      next = currentArr.filter(v => !scopeKeys.has(String(v)));
+    } else {
+      const existing = new Set(currentArr.map(v => String(v)));
+      next = [...currentArr, ...scopeValues.filter(v => !existing.has(String(v)))];
+    }
+
+    if (this.formControl.value !== next) this.formControl.setValue(next);
+    this.#onChange(next);
   };
 
   reValidate = () => {
@@ -728,7 +813,9 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   focus = () => {
     this.focused.set(true);
     this.updatePanelWidth();
-    setTimeout(() => {
+    // why: vẫn 100ms như cũ — chỉ scope handle theo DestroyRef. Mở panel trên mat-select đã
+    // destroy sẽ dựng overlay mồ côi không ai đóng.
+    this.#timers.schedule(() => {
       this.selectRef()?.focus();
       this.selectRef()?.open();
     }, 100);
@@ -760,7 +847,8 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
     if (isOpened) {
       this.focused.set(true);
       this.clearSearch();
-      setTimeout(() => this.matInputRef()?.focus(), 100);
+      // why: vẫn 100ms như cũ — chỉ scope handle theo DestroyRef.
+      this.#timers.schedule(() => this.matInputRef()?.focus(), 100);
       this.#hashedValue = Utilities.hash({ value: this.formControl.value });
     } else {
       this.focused.set(false);

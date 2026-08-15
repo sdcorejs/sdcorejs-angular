@@ -26,6 +26,7 @@ Floating bottom toolbar that slides up to reveal a message (left) and optional a
 - **Width**: `max-content` (sizes to natural content), capped at `min(90vw, 720px)`. No fixed `min-width`.
 - **Reveal animation**: slides up from below with `transform: translate3d(0, 100%, 0)` → `translate3d(0, 0, 0)`, opacity 0 → 1, 200ms ease-in-out. `visibility` toggled too so it's removed from the a11y tree when hidden.
 - **Empty action slot**: when `[sdAction]` projects nothing, the action wrapper is `display: none` and the gap collapses — so a message-only toolbar isn't stretched / lopsided.
+- **Corner radius**: the bar is `border-radius: 8px`. Projected content that sits flush against an edge — a coloured count badge at the left, for instance — paints over that corner, so it must repeat the same 8px on the edge it touches (`border-radius: 8px 0 0 8px`). A smaller radius there makes one end of the bar read as squarer than the other.
 
 ## Inputs
 | Name | Type | Default | Notes |
@@ -49,23 +50,23 @@ None. The component is driven entirely by the `opened` input — no imperative m
 ### 1. Canonical use — bulk actions in a table
 ```html
 <!-- Inside sd-table's selector-action component -->
-<sd-quick-action [opened]="hasSelection()">
+<sd-quick-action [opened]="hasSelection() && actions().length > 0">
   <div class="d-flex align-items-center" sdMessage>
     <div class="c-bg-length"><span class="c-length">{{ selected().length }}</span></div>
     <div class="c-message">{{ message() }}</div>
   </div>
-  @if (actions().length > 0) {
-    <div class="d-flex align-items-center" sdAction>
-      @for (action of actions(); track action.title) {
-        <sd-button class="ml-4" [title]="action.title" (click)="onAction(action)"></sd-button>
-      }
-      <sd-button class="ml-4" prefixIcon="close" type="outline" (click)="onClear()"></sd-button>
-    </div>
-  }
+  <div class="d-flex align-items-center" sdAction>
+    @for (action of actions(); track action.title) {
+      <sd-button class="ml-4" [title]="action.title" (click)="onAction(action)"></sd-button>
+    }
+    <sd-button class="ml-4" prefixIcon="close" type="outline" (click)="onClear()"></sd-button>
+  </div>
 </sd-quick-action>
 ```
 
-When `actions()` is empty, only the count message renders — and the toolbar shrinks to fit (no awkward 320px stretch).
+**Gate `opened` on the actions, not just on the selection.** A bar carrying a count and a lone `×` restates what the row checkboxes already show while floating over the content the user is trying to read — `<sd-table>` and `<sd-tree>` both keep it closed when the selection resolves to zero runnable actions, and `<sd-tree-select>` relies on that to keep its picker modal clean.
+
+A message-only bar is still legitimate when the message *is* the payload (example 2 below); the rule above is about selection bars specifically.
 
 ### 2. Message-only floating notice
 ```html

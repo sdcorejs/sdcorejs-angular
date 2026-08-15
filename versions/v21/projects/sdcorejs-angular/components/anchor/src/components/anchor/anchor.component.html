@@ -3,7 +3,7 @@
     <ng-content></ng-content>
   </div>
 
-  @if (!hideNav()) {
+  @if (!navHidden()) {
     <div class="c-anchor-list" [style.flex-basis]="sidebarWidth()">
       <anchor-nav
         [sections]="sections()"

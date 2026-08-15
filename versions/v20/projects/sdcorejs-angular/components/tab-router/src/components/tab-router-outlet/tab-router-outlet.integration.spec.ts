@@ -8,7 +8,7 @@ import { Subject } from 'rxjs';
 import { SdTabRouterOutletComponent } from './tab-router-outlet.component';
 import { SdTabRouterService } from '../../services/tab-router.service';
 import { SdTabDecoratorService } from '../../services/tab-decorator.service';
-import { SdTab } from '../../models/tab-router.model';
+import { SdTabRouterTab } from '../../models/tab-router.model';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
 
@@ -276,7 +276,7 @@ describe('SdTabRouterOutletComponent (integration)', () => {
         queryParams: {},
         data: {},
         tabInfoChanges: new Subject(),
-      })) as SdTab[];
+      })) as SdTabRouterTab[];
       (outletCmp as any).tabs.set(fakeTabs);
       fixture.detectChanges();
 

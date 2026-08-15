@@ -156,6 +156,38 @@
     border-top: 1px solid #f2f2f2;
     background-color: #fff;
   }
+
+  // Row "Tất cả" — không phải mat-option, nhưng phải khớp từng pixel với một option multiple.
+  // why: chỉ lặp lại đúng box model của .mat-mdc-option (min-height 36px + padding 8px 12px như
+  // override ở trên). Scale/margin của ô tick KHÔNG set ở đây — nó dùng chính <mat-pseudo-checkbox>
+  // nên rule .sd-select-panel.sd-multiple .mat-pseudo-checkbox bên dưới đã lo, và màu tick cũng tự
+  // theo panel (class mat-primary) giống hệt các option.
+  .sd-select-all-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 36px;
+    padding: 8px 12px;
+    cursor: pointer;
+    user-select: none;
+    // why: KHÔNG set background — mat-option để trong suốt (`background: rgba(0,0,0,0)`) và ăn nền
+    // panel, vốn là surface-container của M3 chứ không phải trắng. Hardcode #fff làm row nổi lên
+    // như một mảng trắng giữa danh sách xám.
+    border-bottom: 1px solid var(--mat-sys-outline-variant, #f2f2f2);
+
+    // why: mượn đúng state-layer token mà Material dùng cho option hover, để row sáng lên y hệt
+    // các dòng bên dưới; fallback cho theme M2 chưa có token M3.
+    &:hover,
+    &:focus-visible {
+      background-color: var(--mat-option-hover-state-layer-color, rgba(0, 0, 0, 0.04));
+      outline: none;
+    }
+
+    .mdc-list-item__primary-text {
+      font-size: 14px;
+      white-space: normal;
+    }
+  }
 }
 
 ::ng-deep .sd-multiline-tooltip {

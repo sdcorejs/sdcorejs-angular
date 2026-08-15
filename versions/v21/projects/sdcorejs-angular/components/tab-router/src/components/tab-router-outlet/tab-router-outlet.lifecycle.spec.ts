@@ -18,8 +18,9 @@ import { SdTabRouterService } from '../../services/tab-router.service';
 import { SdTabDecoratorService } from '../../services/tab-decorator.service';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
-import { SD_TAB, SdTab } from '../../models/tab-router.model';
+import { SD_TAB, SdTabRouterTab } from '../../models/tab-router.model';
 import { SdTabRouterItemComponent } from '../tab-router-item/tab-router-item.component';
+import { SdTabComponent, ɵsdResetTabComponentBuilders } from '../../decorators/tab.decorator';
 
 // Shared counters across instances per class — we don't share state across tests though
 // (re-initialised in beforeEach via reset()).
@@ -300,7 +301,7 @@ describe('SdTabRouterOutletComponent — lifecycle invariants', () => {
 });
 
 describe('SdTabRouterOutletComponent - SD_TAB injection', () => {
-  const captured: { tabA?: SdTab | null; tabB?: SdTab | null } = {};
+  const captured: { tabA?: SdTabRouterTab | null; tabB?: SdTabRouterTab | null } = {};
 
   @Component({ standalone: true, template: '<span data-cy="sd-tab-a"></span>' })
   class SdTabAComponent {
@@ -353,7 +354,7 @@ describe('SdTabRouterOutletComponent - SD_TAB injection', () => {
     fixture.detectChanges();
   });
 
-  it('provides a different SdTab instance for each tab via SD_TAB', async () => {
+  it('provides a different SdTabRouterTab instance for each tab via SD_TAB', async () => {
     await sdTabRouter.navigateByUrl('/sd-a');
     fixture.detectChanges();
     await fixture.whenStable();
@@ -484,5 +485,53 @@ describe('SdTabRouterOutletComponent — initial navigation (F5 / direct URL)', 
         .sort()
     ).toEqual(['1', '2']);
     expect(counters.pageA.ctor).toBe(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// @SdTabComponent drain
+// ---------------------------------------------------------------------------
+// why: decorator không còn subscribe gì cả — nó chỉ ghi vào collection tĩnh. Outlet là bên
+// "drain" collection đó vào SdTabRouterService khi khởi tạo, nên hợp đồng đó phải có test ở
+// mức outlet chứ không chỉ ở mức unit của decorator.
+describe('SdTabRouterOutletComponent — @SdTabComponent drain', () => {
+  let fixture: ComponentFixture<HostComponent>;
+  let tabRouterService: SdTabRouterService;
+
+  beforeEach(async () => {
+    ɵsdResetTabComponentBuilders();
+    // Decorate TRƯỚC khi outlet tồn tại — đúng thứ tự thật (decorator chạy lúc module load).
+    SdTabComponent({ component: PageAComponent, name: 'Page A' })(PageAComponent);
+
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+      providers: [
+        provideRouter([{ path: 'a', component: PageAComponent }]),
+        SdTabRouterService,
+        SdTabDecoratorService,
+        {
+          provide: SdNotifyService,
+          useValue: { warning: jasmine.createSpy(), success: jasmine.createSpy(), error: jasmine.createSpy(), info: jasmine.createSpy() },
+        },
+        { provide: I18nService, useValue: { t: (k: string) => k, instant: (k: string) => k, get: (k: string) => k } },
+      ],
+    }).compileComponents();
+
+    tabRouterService = TestBed.inject(SdTabRouterService);
+  });
+
+  afterEach(() => ɵsdResetTabComponentBuilders());
+
+  it('registers nothing while no outlet exists', () => {
+    expect(tabRouterService.builders.getValue()).toEqual([]);
+  });
+
+  it('drains builders registered at decoration time once the outlet initialises', async () => {
+    expect(tabRouterService.builders.getValue()).toEqual([]);
+
+    fixture = TestBed.createComponent(HostComponent);
+    await settle(fixture);
+
+    expect(tabRouterService.builders.getValue().some(builder => builder.component === PageAComponent)).toBeTrue();
   });
 });

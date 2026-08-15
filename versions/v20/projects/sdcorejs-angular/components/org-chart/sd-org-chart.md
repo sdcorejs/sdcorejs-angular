@@ -36,7 +36,7 @@ New usage should bind only `[option]`, like `sd-table`. Put `autoId`, `items`, `
 | `option`       | `SdOrgChartOption`                                       | `undefined` | Main option object for new usage.                                                                           |
 | `items`        | `SdOrgChartItem[]`                                        | required    | Root nodes. Mỗi item có `id`, `title`, optional `image`, `description`, `color`, `children`, `expanded`.    |
 | `itemTemplate` | `TemplateRef<SdOrgChartItemContext> \| null \| undefined` | `undefined` | TemplateRef input để custom toàn bộ node. Bị override bởi projected `sdOrgChartItemDef` nếu cả hai cùng có. |
-| `collapsible`  | `boolean`                                                 | `true`      | Cho phép click nút chevron để ẩn/hiện children. Nếu `false`, mọi node có children luôn mở.                  |
+| `collapsible`  | `boolean`                                                 | `true`      | Cho phép click nút chevron để ẩn/hiện children. Nếu `false`, mọi node có children luôn mở và chevron KHÔNG render. `option.collapsible` thắng input rời. |
 | `autoId`       | `string \| undefined \| null`                             | `undefined` | Host emits `data-autoid="components-org-chart-<autoId>"`; child node parts emit stable ids too.             |
 
 ## Model
@@ -97,6 +97,8 @@ export interface SdOrgChartItem {
 | `hasChildren`        | `boolean`                | Whether `children` has at least one item.        |
 | `isLeaf`             | `boolean`                | `!hasChildren`.                                  |
 | `toggle`             | `() => void`             | Toggle current node if `collapsible` is enabled. |
+
+Context object của mỗi node được memo hoá theo `item.id`: giữa hai chu kỳ change detection, cùng một item luôn nhận CÙNG một object context (chỉ dựng lại khi `items` hoặc trạng thái expand đổi). Đừng mutate context trong template — nó dùng chung cho mọi lần render của node đó.
 
 ## AutoId scheme
 
@@ -160,7 +162,7 @@ const orgItems: SdOrgChartItem[] = [
 - Card radius `6px`, connector lines neutral `#d9e2ef`.
 - Node có `image` render avatar tròn `44px`.
 - Node không có `image` + không có `description` dùng compact card, hợp với leaf như `Sales`, `Marketing`.
-- Chevron button nằm giữa card và connector, chỉ render khi node có children và `collapsible=true`.
+- Chevron button nằm giữa card và connector, chỉ render khi node có children và collapsible đang bật — tính theo giá trị đã resolve, tức `option.collapsible` nếu có, ngược lại mới lấy input rời `[collapsible]`.
 
 ## Anti-patterns
 
@@ -172,3 +174,8 @@ const orgItems: SdOrgChartItem[] = [
 
 - `<sd-table>` tree mode: dùng khi dữ liệu phân cấp cần cột, sort, filter, paging.
 - `<sd-avatar>`: dùng riêng cho avatar người dùng nếu không cần layout org chart.
+
+## Accessibility
+
+- Each node `<li>` is `role="treeitem"` and now declares the **required** `aria-selected="false"` — the ARIA `treeitem` role mandates it, and without it screen readers drop the tree semantics entirely. The value is static because the org chart is a read-only diagram with no selection concept.
+- Each node also exposes `aria-level` (1-based depth) so the reading order conveys hierarchy, alongside the existing `aria-expanded` on nodes that have children.

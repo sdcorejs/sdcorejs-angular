@@ -9,6 +9,11 @@ name: Publish @sdcorejs/angular to npm
 # for the same 3 versions and commits the archive back to `main`.
 # Release commits are expected to have already run the v19 -> v20/v21 rollout
 # (`npm run sync`); this workflow builds and publishes the checked-in workspaces.
+#
+# Gates that run BEFORE anything is published:
+#   verify-version-sync  - v20/v21 still match the v19 source of truth
+#   test                 - the full v19 Karma/Jasmine suite + coverage thresholds
+# Both must be green or the publish matrix never starts.
 
 on:
   push:
@@ -56,8 +61,43 @@ jobs:
       - name: Check generated version workspaces
         run: npm run check:sync
 
+  test:
+    name: Unit tests (v19)
+    runs-on: ubuntu-latest
+    # The suite is ~4.6k specs; it finishes in a couple of minutes. The cap only
+    # exists so a wedged headless browser cannot burn a full job allowance.
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: versions/v19/package-lock.json
+
+      - name: Install dependencies
+        # Same reasoning as the publish job: npm install (not npm ci) because the
+        # checked-in lockfiles can lag behind the manifests after a sync rollout.
+        run: npm install --legacy-peer-deps
+        working-directory: versions/v19
+
+      - name: Run the sdcorejs-angular test suite
+        # --code-coverage is REQUIRED, not a nicety: the karma coverage thresholds
+        # in projects/sdcorejs-angular/karma.conf.js are only evaluated when
+        # coverage is collected, so without it the thresholds gate nothing.
+        # ChromeHeadlessCI = ChromeHeadless + the usual CI sandbox flags (see karma.conf.js).
+        # karma.conf.js prints the Jasmine random seed at the top of the run; quote it
+        # when reporting a red run (replay caveat documented in that file).
+        run: npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadlessCI --code-coverage
+        working-directory: versions/v19
+
   build-and-publish:
-    needs: verify-version-sync
+    # Never publish a red suite. Both gates must pass before any npm publish runs.
+    needs: [verify-version-sync, test]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

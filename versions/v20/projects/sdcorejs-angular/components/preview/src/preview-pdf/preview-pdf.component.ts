@@ -16,7 +16,7 @@ import {
   viewChildren,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import {
   PdfErrorEvent,
   PdfErrorReason,
@@ -146,7 +146,7 @@ type PdfSidebarTabMode = Exclude<PdfSidebarMode, 'none'>;
 @Component({
   selector: 'sd-preview-pdf',
   standalone: true,
-  imports: [SdIcon, CommonModule, FormsModule, TranslatePipe],
+  imports: [SdIcon, CommonModule, FormsModule, SdTranslatePipe],
   templateUrl: './preview-pdf.component.html',
   styleUrl: './preview-pdf.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

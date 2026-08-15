@@ -88,6 +88,13 @@ $qb-radius-input:   6px;
     font-size: 13px;
     color: $qb-text;
     &::placeholder { color: $qb-text-muted; }
+    // why: ô này không có border riêng nên `outline: none` xoá SẠCH mọi chỉ báo focus — người dùng
+    // bàn phím không biết con trỏ đang ở đâu. Trả lại vòng focus khi điều hướng bằng phím.
+    &:focus-visible {
+      outline: 2px solid $qb-primary;
+      outline-offset: 1px;
+      border-radius: 4px;
+    }
   }
   .c-search-kbd {
     font-family: 'Roboto Mono', monospace;
@@ -376,6 +383,12 @@ $qb-radius-input:   6px;
     outline: none;
 
     &:focus { border-color: $qb-primary; }
+    // why: đổi màu border là chỉ báo yếu (mất hẳn với người khó phân biệt màu). Bổ sung vòng focus
+    // thật cho điều hướng bàn phím.
+    &:focus-visible {
+      outline: 2px solid $qb-primary;
+      outline-offset: 1px;
+    }
   }
 
   .c-pop-between {

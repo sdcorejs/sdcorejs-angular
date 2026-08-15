@@ -7,7 +7,7 @@
       <a class="T12R" href="javascript:;" (click)="edit()">{{ queryString }}</a>
     </div>
   </div>
-  <sd-modal [title]="'core.component.form-builder.set-query-value' | translate" width="400px" modalClass="sd-form-builder-dialog">
+  <sd-modal [title]="'core.component.form-builder.set-query-value' | sdTranslate" width="400px" modalClass="sd-form-builder-dialog">
     <div class="c-builder">
       @for (property of leftProperties; track property.value) {
         <div class="d-flex align-items-center py-8" style="gap: 8px">
@@ -16,7 +16,7 @@
             <div class="T16M">{{ property.display }}</div>
           </div>
           <sd-autocomplete
-            [label]="'core.component.form-builder.value-source-field' | translate"
+            [label]="'core.component.form-builder.value-source-field' | sdTranslate"
             [form]="form"
             style="flex: 1"
             [(model)]="model![property.value]"
@@ -28,7 +28,7 @@
       }
     </div>
     <ng-container sdFooterRight>
-      <sd-button prefixIcon="save" [title]="'core.component.form-builder.confirm' | translate" (click)="onAccept()" color="primary" type="fill"></sd-button>
+      <sd-button prefixIcon="save" [title]="'core.component.form-builder.confirm' | sdTranslate" (click)="onAccept()" color="primary" type="fill"></sd-button>
     </ng-container>
   </sd-modal>
 }

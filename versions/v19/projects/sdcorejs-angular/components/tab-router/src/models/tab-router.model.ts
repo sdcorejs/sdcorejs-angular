@@ -9,7 +9,7 @@ export interface SdTabInfo {
   color?: Color;
 }
 
-export interface SdTab {
+export interface SdTabRouterTab {
   component: Type<any>;
   injector?: any;
   key: string;
@@ -22,4 +22,4 @@ export interface SdTab {
   beforeClose?: () => boolean | Promise<boolean>; // Return true thì mới được close
 }
 
-export const SD_TAB = new InjectionToken<SdTab>('SD_TAB');
+export const SD_TAB = new InjectionToken<SdTabRouterTab>('SD_TAB');

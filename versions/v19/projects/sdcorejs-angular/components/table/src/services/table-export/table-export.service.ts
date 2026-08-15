@@ -3,7 +3,7 @@ import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdExcelColumn, SdExcelService } from '@sdcorejs/angular/services';
 import { SdExcelSheet } from '@sdcorejs/angular/services/excel';
 import { Utilities } from '@sdcorejs/utils/fns';
-import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { DateUtilities } from '@sdcorejs/utils/fns';
 import { SdTableColumn } from '../../models/table-column.model';
 import { ConfiguredTableResult } from '../../models/table-option-config.model';
 import { SdTableOptionExportColumn } from '../../models/table-option-export.model';
@@ -50,9 +50,7 @@ export class TableExportService {
   // theo catalog ngôn ngữ hiện tại.
   exportTitle = computed(() => {
     const percent = this.#exportPercent();
-    return percent === null
-      ? this.#i18n.t('core.component.table.export')
-      : this.#i18n.t('core.component.table.exporting', { percent });
+    return percent === null ? this.#i18n.t('core.component.table.export') : this.#i18n.t('core.component.table.exporting', { percent });
   });
 
   /** Đặt tiến độ export (0-100), hoặc null để trả nút về nhãn mặc định. */

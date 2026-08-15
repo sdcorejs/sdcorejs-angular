@@ -12,7 +12,7 @@ import {
   inject,
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 import { ToastData } from '../../notify.model';
 import { SdNotifyService } from '../../notify.service';
@@ -22,7 +22,7 @@ const TOAST_EXIT_ANIMATION_MS = 200;
 @Component({
   selector: 'toast',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, SdTranslatePipe],
   templateUrl: './toast.component.html',
   styleUrl: './toast.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

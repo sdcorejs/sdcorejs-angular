@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input, output, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output, viewChild } from '@angular/core';
+import { I18nService } from '@sdcorejs/angular/i18n';
 
 import { SdOperator } from '@sdcorejs/angular/components/operator';
 import { SdDate } from '@sdcorejs/angular/forms/date';
@@ -39,6 +40,14 @@ type Density = 'compact' | 'comfortable';
   imports: [SdIcon, CommonModule, SdOperator, SdDate, SdDateRange, SdDatetime, SdInput, SdInputNumber, SdSelect, SdQueryInlineValueChip],
 })
 export class SdQueryBuildChip {
+  readonly #i18n = inject(I18nService);
+
+  // why: nhãn mặc định của field boolean phải trùng với nhãn parent dựng cho chip đã hoàn thành
+  // (`SdQueryBar.chipValueText`), nếu không cùng một field sẽ hiện hai ngôn ngữ giữa lúc đang tạo
+  // chip và lúc chip xong.
+  readonly booleanTrueLabel = computed(() => this.#i18n.t('core.component.query-bar.boolean.true'));
+  readonly booleanFalseLabel = computed(() => this.#i18n.t('core.component.query-bar.boolean.false'));
+
   /** Current build state — drives every visual branch. */
   readonly building = input.required<BuildingChip>();
 

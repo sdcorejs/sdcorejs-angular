@@ -3,9 +3,8 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { HttpClient, HttpErrorResponse, HttpEvent, HttpRequest, HttpResponse, provideHttpClient } from '@angular/common/http';
 import { SdApiService } from './api.service';
 import { SdCacheService } from '@sdcorejs/angular/services/cache';
-import { ISdApiConfiguration, SD_API_CONFIG, SD_API_CONFIGURATION, SdApiHandler, SdGetOption } from './api.model';
+import { ISdApiConfiguration, SD_API_CONFIG, SD_API_CONFIGURATION, SdApiError, SdApiHandler, SdGetOption } from './api.model';
 import { EMPTY, Observable, of, throwError } from 'rxjs';
-import { Utilities } from '@sdcorejs/utils/fns';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -169,12 +168,36 @@ describe('SdApiService', () => {
 
   // ─── { ok: false } response shape ───────────────────────────────────────────
 
-  it('get() throws the body when response has { ok: false }', async () => {
+  it('get() rejects with a typed SdApiError when response has { ok: false }', async () => {
     const errorBody = { ok: false, message: 'Unauthorized', code: 401 };
     const promise = service.get('/api/protected');
     const req = httpMock.expectOne('/api/protected');
     req.flush(errorBody);
-    await expectAsync(promise).toBeRejectedWith(errorBody);
+
+    const rejection = await promise.then(
+      () => undefined,
+      (error: unknown) => error
+    );
+    // why: bản cũ ném thẳng plain object, nên `instanceof Error` và `.message` đều hỏng và mọi
+    // retry predicate bỏ qua nhánh này.
+    expect(rejection instanceof SdApiError).toBeTrue();
+    expect(rejection instanceof Error).toBeTrue();
+    expect((rejection as SdApiError).name).toBe('SdApiError');
+    expect((rejection as SdApiError).body).toEqual(errorBody);
+    expect((rejection as SdApiError).message).toBe('Unauthorized');
+  });
+
+  it('falls back to a descriptive SdApiError message when the envelope carries no message', async () => {
+    const promise = service.get('/api/protected-no-message');
+    httpMock.expectOne('/api/protected-no-message').flush({ ok: false, code: 500 });
+
+    const rejection = await promise.then(
+      () => undefined,
+      (error: unknown) => error
+    );
+    expect(rejection instanceof SdApiError).toBeTrue();
+    expect((rejection as SdApiError).message).toBe('The API response envelope reported ok: false');
+    expect((rejection as SdApiError).body).toEqual({ ok: false, code: 500 });
   });
 
   it('get() does NOT throw when response has { ok: true, ... }', async () => {
@@ -640,26 +663,75 @@ describe('SdApiService', () => {
 
   it('treats an explicitly cached undefined response as a presence hit', async () => {
     const option: SdGetOption = { cacheOption: { type: 'memory' } };
-    const cacheKey = Utilities.hash({
-      method: 'GET',
-      url: '/api/cached-undefined',
-      body: undefined,
-      headers: undefined,
-      params: undefined,
-      context: undefined,
-      reportProgress: false,
-      responseType: 'json',
-      withCredentials: false,
-      transferCache: undefined,
-      timeout: 60000,
-      retry: undefined,
-    });
-    const seed = TestBed.inject(SdCacheService).create<undefined>(cacheKey, option.cacheOption);
+    const cacheService = TestBed.inject(SdCacheService);
+    // why: key derivation là chi tiết nội bộ (đã đổi từ Utilities.hash sang SHA-256), nên spec đọc
+    // key mà service thực sự dùng thay vì tự dựng lại — nếu không, spec khoá cứng thuật toán hash.
+    const createSpy = spyOn(cacheService, 'create').and.callThrough();
+
+    const seeding = service.get('/api/cached-undefined', option);
+    httpMock.expectOne('/api/cached-undefined').flush({ generation: 1 });
+    await seeding;
+
+    const cacheKey = createSpy.calls.mostRecent().args[0] as string;
+    const seed = cacheService.create<undefined>(cacheKey, option.cacheOption);
     seed.set(undefined);
     seed.release();
 
     await expectAsync(service.get<undefined>('/api/cached-undefined', option)).toBeResolvedTo(undefined);
     expect(httpMock.match('/api/cached-undefined').length).toBe(0);
+  });
+
+  it('derives cache keys from a SHA-256 digest instead of a 31-bit rolling hash', async () => {
+    const cacheService = TestBed.inject(SdCacheService);
+    const createSpy = spyOn(cacheService, 'create').and.callThrough();
+
+    const promise = service.get('/api/digest-key', { cacheOption: { type: 'memory' } });
+    httpMock.expectOne('/api/digest-key').flush({ ok: true });
+    await promise;
+
+    // why: `Utilities.hash` là rolling hash 32-bit rồi Math.abs → 31 bit hiệu dụng; một va chạm là
+    // hai request khác nhau dùng chung một body đã cache.
+    expect(createSpy.calls.mostRecent().args[0] as string).toMatch(/^sd-api@1:[0-9a-f]{64}$/);
+  });
+
+  it('skips the persistent cache entirely when the request contract cannot be canonicalized', async () => {
+    const cacheService = TestBed.inject(SdCacheService);
+    const createSpy = spyOn(cacheService, 'create').and.callThrough();
+
+    // why: symbol không serialize được → SdGraphSerializer.stringify ném UNSUPPORTED_VALUE, tức
+    // nhánh fail-closed của #digestKey.
+    const promise = service.post('/api/uncanonicalizable', { token: Symbol('nope') }, { cacheOption: { type: 'local' } });
+    httpMock.expectOne('/api/uncanonicalizable').flush({ ok: true });
+    await expectAsync(promise).toBeResolvedTo({ ok: true } as never);
+
+    // why: bản trước mint một key DUY NHẤT mỗi lần gọi, và key đó chảy thẳng vào cache BỀN
+    // (`type: 'local'`) — mỗi request không canonicalize được để lại một entry storage không bao giờ
+    // đọc lại (key không sinh lại lần hai) và không bao giờ bị evict: rò rỉ không giới hạn.
+    expect(createSpy).not.toHaveBeenCalled();
+  });
+
+  it('does not share an in-flight response between two uncanonicalizable requests', async () => {
+    const first = service.post('/api/uncanonicalizable-dedupe', { token: Symbol('a') }, { dedupe: true });
+    const second = service.post('/api/uncanonicalizable-dedupe', { token: Symbol('b') }, { dedupe: true });
+
+    // Bỏ cache/dedupe phải là bỏ HẲN: hai lời gọi vẫn là hai request riêng, không gộp nhầm.
+    const requests = httpMock.match('/api/uncanonicalizable-dedupe');
+    expect(requests.length).toBe(2);
+    requests[0].flush({ which: 'first' });
+    requests[1].flush({ which: 'second' });
+
+    await expectAsync(Promise.all([first, second])).toBeResolvedTo([{ which: 'first' }, { which: 'second' }] as never);
+  });
+
+  it('canonicalizes request identity so key order in the body does not split the dedupe entry', async () => {
+    const first = service.post('/api/canonical-body', { alpha: 1, beta: 2 }, { dedupe: true });
+    const second = service.post('/api/canonical-body', { beta: 2, alpha: 1 }, { dedupe: true });
+
+    const requests = httpMock.match('/api/canonical-body');
+    expect(requests.length).toBe(1);
+    requests[0].flush({ shared: true });
+
+    await expectAsync(Promise.all([first, second])).toBeResolvedTo([{ shared: true }, { shared: true }]);
   });
 
   it('retries retryable GET statuses with bounded exponential backoff', fakeAsync(() => {
@@ -919,6 +991,75 @@ describe('SdApiService', () => {
     req.flush({ id: 5 });
     const result = await promise;
     expect(result).toEqual({ id: 5 }); // raw body, not 'MAPPED'
+  });
+
+  // ─── handler: host matching is origin-aware, not a raw string prefix ─────────
+
+  it('does not match a lookalike host that merely shares the configured host as a string prefix', async () => {
+    TestBed.resetTestingModule();
+    const config: ISdApiConfiguration = {
+      handlers: [{ hosts: ['https://api.example.com'], mapResponse: () => 'MAPPED' }],
+    };
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        SdCacheService,
+        { provide: SD_API_CONFIG, multi: true, useValue: config },
+      ],
+    });
+    service = TestBed.inject(SdApiService);
+    httpMock = TestBed.inject(HttpTestingController);
+
+    // why: `url.startsWith(host)` coi 'https://api.example.com.attacker.tld/x' là khớp handler của
+    // 'https://api.example.com', nên host giả mạo nhận trọn hook của handler (kể cả header auth).
+    const promise = service.get('https://api.example.com.attacker.tld/x');
+    httpMock.expectOne('https://api.example.com.attacker.tld/x').flush({ id: 7 });
+
+    await expectAsync(promise).toBeResolvedTo({ id: 7 });
+  });
+
+  it('still matches the exact configured origin', async () => {
+    TestBed.resetTestingModule();
+    const config: ISdApiConfiguration = { handlers: [{ hosts: ['https://api.example.com'], mapResponse: () => 'MAPPED' }] };
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        SdCacheService,
+        { provide: SD_API_CONFIG, multi: true, useValue: config },
+      ],
+    });
+    service = TestBed.inject(SdApiService);
+    httpMock = TestBed.inject(HttpTestingController);
+
+    const promise = service.get('https://api.example.com/v1/users');
+    httpMock.expectOne('https://api.example.com/v1/users').flush({ id: 8 });
+
+    await expectAsync(promise).toBeResolvedTo('MAPPED');
+  });
+
+  it('matches a configured host path prefix by segment, not by characters', async () => {
+    TestBed.resetTestingModule();
+    const config: ISdApiConfiguration = { handlers: [{ hosts: ['https://api.example.com/v1'], mapResponse: () => 'MAPPED' }] };
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        SdCacheService,
+        { provide: SD_API_CONFIG, multi: true, useValue: config },
+      ],
+    });
+    service = TestBed.inject(SdApiService);
+    httpMock = TestBed.inject(HttpTestingController);
+
+    const covered = service.get('https://api.example.com/v1/users');
+    httpMock.expectOne('https://api.example.com/v1/users').flush({ id: 9 });
+    await expectAsync(covered).toBeResolvedTo('MAPPED');
+
+    const sibling = service.get('https://api.example.com/v1beta/users');
+    httpMock.expectOne('https://api.example.com/v1beta/users').flush({ id: 10 });
+    await expectAsync(sibling).toBeResolvedTo({ id: 10 });
   });
 
   // ─── responseType ────────────────────────────────────────────────────────────

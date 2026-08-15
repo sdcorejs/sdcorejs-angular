@@ -25,18 +25,15 @@ export class SdAuthService {
     // this.#handleSignin();
     this.#handleSignout();
     this.#handleChangePassword();
-    const defaultUser = {
-      id: 'guest-id',
-      username: 'guest',
-      firstName: 'Guest',
-      email: 'guest@gmail.com',
-    };
+    // why: code cũ dựng sẵn một identity giả (`guest` / `guest@gmail.com`) và dùng nó vừa làm giá trị
+    // khi CHƯA cấu hình `guard.authInfo`, vừa làm `initialValue` trong lúc lookup thật còn pending.
+    // Hệ quả: template thấy một user "đã đăng nhập" hợp lệ và render UI của người dùng đã xác thực,
+    // dù thực tế chưa ai đăng nhập. `undefined` là trạng thái trung thực duy nhất cho cả hai ca —
+    // template bắt buộc phải xử lý nhánh chưa xác thực (`@if (user(); as u)`) thay vì tin vào user giả.
     if (this.authConfiguration?.guard?.authInfo) {
-      this.getAuthInfo = toSignal(normalizeAsync(this.authConfiguration.guard?.authInfo()), {
-        initialValue: defaultUser,
-      });
+      this.getAuthInfo = toSignal(normalizeAsync(this.authConfiguration.guard?.authInfo()));
     } else {
-      this.getAuthInfo = signal(defaultUser);
+      this.getAuthInfo = signal<SdAuthInfo | undefined>(undefined);
     }
   }
 

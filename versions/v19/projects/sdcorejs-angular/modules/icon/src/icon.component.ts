@@ -52,12 +52,18 @@ import { SD_ICON_CONFIGURATION } from './icon.provider';
         flex: 0 0 auto;
       }
 
-      .sd-icon__material {
+      /* why: base CSS của Material nhắm thẳng .mat-icon con trong menu/list/button item và ép
+         width/height 24px + margin-right 12px lên nó. Glyph khi đó to hơn host --sd-icon-size,
+         bị overflow hidden xén mất và lệch sang trái — lỗi "icon bị cắt đè" trong mat-menu. Selector
+         đi qua :host (0,3,0) để luôn thắng .mat-mdc-menu-item .mat-icon (0,2,0) bất kể thứ tự nạp
+         stylesheet; khoảng cách với nhãn để menu/list lo ở cấp host, không nhét vào trong glyph. */
+      :host .sd-icon__material {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         width: 100%;
         height: 100%;
+        margin: 0;
         color: currentColor;
         font-size: inherit;
         line-height: 1;

@@ -15,6 +15,10 @@
 @let _floatLabel = floatLabel();
 @let _valueField = valueField();
 @let _displayField = displayField();
+@let _autoId = autoId();
+<!-- why: một cổng gate duy nhất cho <mat-error>, aria-invalid và aria-describedby. -->
+@let _errorVisible = !!_errorMessage && formControl.touched;
+@let _showInlineError = !_hideInlineError && _errorVisible;
 
 @if (isViewed()) {
   <sd-view
@@ -59,15 +63,19 @@
     </ng-content>
   }
 
+  <!-- why: div chỉ là hộp layout. aria-hidden="true" cũ ẩn CẢ cây con — label, <mat-select>,
+       <mat-error>, nút clear — khỏi accessibility tree. role="presentation" chỉ vô hiệu hoá
+       chính div, KHÔNG lan xuống con; (click) là tiện ích chuột, bàn phím Tab thẳng vào
+       <mat-select> và (focusin) đã lo phần updatePanelWidth() tương ứng. -->
   <div
     class="d-flex align-items-center"
+    role="presentation"
     [class.sd-inline-editor]="_isInline"
     [class.c-focused]="_focused"
     [class.c-disabled]="formControl.disabled"
     (click)="onClick()"
     (mouseenter)="updatePanelWidth()"
-    (focusin)="updatePanelWidth()"
-    aria-hidden="true">
+    (focusin)="updatePanelWidth()">
     @if (_multiple) {
       <mat-form-field
         [class.sd-md]="_size === 'md'"
@@ -96,7 +104,7 @@
           [class.sd-selected]="!_required && _normalizedValue?.length"
           [required]="_required"
           (openedChange)="onOpenedChange($event)"
-          [attr.data-autoId]="autoId()"
+          [attr.data-autoId]="_autoId"
           [attr.data-disabled]="dataDisabled()"
           [attr.data-invalid]="dataInvalid()"
           [attr.data-empty]="dataEmpty()"
@@ -125,15 +133,41 @@
           @if (filtered()) {
             <div class="c-filter-input-container">
               <div class="filter-input-wrapper">
-                <sd-icon name="search"></sd-icon>
+                <sd-icon name="search" aria-hidden="true"></sd-icon>
+                <!-- why: BỎ aria-hidden — đây là ô lọc THẬT, người dùng focus và gõ vào được, nên
+                     aria-hidden chỉ làm screen reader câm. Panel không có <label> nào, nên phải
+                     tự đặt tên bằng aria-label, nếu không AT chỉ đọc "edit text" trống trơn. -->
                 <input
                   [formControl]="inputControl"
-                  aria-hidden="true"
                   matInput
                   autocomplete="off"
                   class="c-search-input"
+                  [attr.aria-label]="'core.form.select.search' | sdTranslate"
                   (keydown)="$event.stopPropagation()" />
               </div>
+            </div>
+          }
+
+          <!-- why: row "Tất cả" KHÔNG phải mat-option thật — nếu là option, giá trị của nó lọt vào
+               formControl.value và keyboard navigation của mat-select. Nhưng nó phải TRÔNG y hệt một
+               option: dùng chính <mat-pseudo-checkbox> + .mdc-list-item__primary-text mà mat-option
+               render, nên ăn cùng scale/margin (rule .sd-multiple) và cùng màu theme (panel mang
+               class mat-primary) — mat-checkbox MDC thật thì lệch cột và ăn accent của theme.
+               Vì pseudo-checkbox là decorative + aria-hidden, chính div mang role/aria/keyboard. -->
+          @if (selectAllVisible()) {
+            @let _selectAllState = selectAllState();
+            <div
+              class="sd-select-all-row"
+              role="checkbox"
+              tabindex="0"
+              [attr.aria-checked]="_selectAllState === 'indeterminate' ? 'mixed' : _selectAllState === 'checked'"
+              [attr.data-autoid]="_autoId ? _autoId + '-select-all' : null"
+              (click)="toggleSelectAll()"
+              (keydown.enter)="toggleSelectAll(); $event.preventDefault()"
+              (keydown.space)="toggleSelectAll(); $event.preventDefault()"
+              (keydown)="$event.stopPropagation()">
+              <mat-pseudo-checkbox class="mat-mdc-option-pseudo-checkbox" [state]="_selectAllState" aria-hidden="true"></mat-pseudo-checkbox>
+              <span class="mdc-list-item__primary-text">{{ 'core.form.select.selectAll' | sdTranslate }}</span>
             </div>
           }
 
@@ -189,12 +223,18 @@
           }
         </mat-select>
 
-        @if (_hideInlineError && _errorMessage && formControl.touched) {
+        @if (_hideInlineError && _errorVisible) {
           <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
         }
+        @if (_hideInlineError && _errorVisible) {
+          <span class="sd-visually-hidden" matSuffix>{{ _errorMessage }}</span>
+        }
 
-        @if (!_hideInlineError && _errorMessage && formControl.touched) {
-          <mat-error>{{ _errorMessage }}</mat-error>
+        <!-- why: <mat-error> phải có id ỔN ĐỊNH. MatFormField tự nối id này vào aria-describedby
+             của <mat-select> (và host binding của MatSelect lo aria-invalid), nhưng chỉ khi id
+             tồn tại — id auto-gen của Material đổi theo từng instance nên test/AT không bám được. -->
+        @if (_showInlineError) {
+          <mat-error [id]="errorId">{{ _errorMessage }}</mat-error>
         }
 
         @if (_normalizedValue?.length && !_required && !formControl.disabled && !_bare) {
@@ -232,7 +272,7 @@
           [class.sd-selected]="!_required && _normalizedValue !== undefined && _normalizedValue !== null"
           [required]="_required"
           (openedChange)="onOpenedChange($event)"
-          [attr.data-autoId]="autoId()"
+          [attr.data-autoId]="_autoId"
           [attr.data-disabled]="dataDisabled()"
           [attr.data-invalid]="dataInvalid()"
           [attr.data-empty]="dataEmpty()"
@@ -265,13 +305,16 @@
           @if (filtered()) {
             <div class="c-filter-input-container">
               <div class="filter-input-wrapper">
-                <sd-icon name="search"></sd-icon>
+                <sd-icon name="search" aria-hidden="true"></sd-icon>
+                <!-- why: BỎ aria-hidden — đây là ô lọc THẬT, người dùng focus và gõ vào được, nên
+                     aria-hidden chỉ làm screen reader câm. Panel không có <label> nào, nên phải
+                     tự đặt tên bằng aria-label, nếu không AT chỉ đọc "edit text" trống trơn. -->
                 <input
                   [formControl]="inputControl"
-                  aria-hidden="true"
                   matInput
                   autocomplete="off"
                   class="c-search-input"
+                  [attr.aria-label]="'core.form.select.search' | sdTranslate"
                   (keydown)="$event.stopPropagation()" />
               </div>
             </div>
@@ -330,12 +373,18 @@
           }
         </mat-select>
 
-        @if (_hideInlineError && _errorMessage && formControl.touched) {
+        @if (_hideInlineError && _errorVisible) {
           <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
         }
+        @if (_hideInlineError && _errorVisible) {
+          <span class="sd-visually-hidden" matSuffix>{{ _errorMessage }}</span>
+        }
 
-        @if (!_hideInlineError && _errorMessage && formControl.touched) {
-          <mat-error>{{ _errorMessage }}</mat-error>
+        <!-- why: <mat-error> phải có id ỔN ĐỊNH. MatFormField tự nối id này vào aria-describedby
+             của <mat-select> (và host binding của MatSelect lo aria-invalid), nhưng chỉ khi id
+             tồn tại — id auto-gen của Material đổi theo từng instance nên test/AT không bám được. -->
+        @if (_showInlineError) {
+          <mat-error [id]="errorId">{{ _errorMessage }}</mat-error>
         }
 
         @if (_normalizedValue !== undefined && _normalizedValue !== null && !_required && !formControl.disabled && !_bare) {

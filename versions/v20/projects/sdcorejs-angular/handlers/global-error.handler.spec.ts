@@ -1,4 +1,4 @@
-import { ErrorHandler } from '@angular/core';
+import { ErrorHandler, PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdGlobalErrorHandler } from './global-error.handler';
@@ -157,5 +157,104 @@ describe('SdGlobalErrorHandler', () => {
   it('should NOT call console.warn for non-chunk errors', () => {
     handler.handleError(new Error('ordinary runtime error'));
     expect(consoleWarnSpy).not.toHaveBeenCalled();
+  });
+
+  // ─── 9. SSR — no browser API may be touched on the server ───────────────────
+
+  /** Re-mount the handler on a non-browser platform, reusing the console/confirm spies. */
+  function injectServerHandler(): SdGlobalErrorHandler {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [SdGlobalErrorHandler, { provide: I18nService, useValue: i18nStub }, { provide: PLATFORM_ID, useValue: 'server' }],
+    });
+    return TestBed.inject(SdGlobalErrorHandler);
+  }
+
+  it('should NOT call window.confirm for a chunk-load error when running on the server', () => {
+    const serverHandler = injectServerHandler();
+
+    // why: `window.confirm`/`window.location.reload` không tồn tại khi render trên server — gọi
+    // thẳng khiến CHÍNH ErrorHandler ném lỗi và che mất lỗi gốc.
+    expect(() => serverHandler.handleError(new Error('Loading chunk 42 failed'))).not.toThrow();
+    expect(confirmSpy).not.toHaveBeenCalled();
+  });
+
+  it('should still classify the error on the server without touching browser APIs', () => {
+    const serverHandler = injectServerHandler();
+
+    serverHandler.handleError(new Error('Failed to fetch dynamically imported module /chunk-a.js'));
+    expect(consoleWarnSpy).toHaveBeenCalledWith(jasmine.stringContaining('Chunk Load error detected:'), jasmine.any(String));
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+  });
+
+  it('should keep logging ordinary errors on the server (no browser API involved)', () => {
+    const serverHandler = injectServerHandler();
+    const error = new Error('ordinary server-side error');
+
+    expect(() => serverHandler.handleError(error)).not.toThrow();
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Application error:', error);
+    expect(confirmSpy).not.toHaveBeenCalled();
+  });
+
+  // ─── 10. Dev vs production logging ──────────────────────────────────────────
+
+  it('should emit both the chunk warning and the error log while dev mode is on', () => {
+    handler.handleError(new Error('dev mode logging'));
+    expect(consoleErrorSpy).toHaveBeenCalled();
+
+    handler.handleError(new Error('Loading chunk 99 failed'));
+    expect(consoleWarnSpy).toHaveBeenCalled();
+  });
+
+  describe('production build (ngDevMode = false)', () => {
+    // why: `isDevMode()` chỉ đọc global `ngDevMode`, nên tắt cờ này là mô phỏng đúng production
+    // build. `enableProdMode()` là global một chiều của cả process nên không dùng được ở đây.
+    const globalRef = globalThis as unknown as { ngDevMode?: unknown };
+    let originalNgDevMode: unknown;
+    let hadNgDevMode = false;
+
+    beforeEach(() => {
+      hadNgDevMode = 'ngDevMode' in globalRef;
+      originalNgDevMode = globalRef.ngDevMode;
+      globalRef.ngDevMode = false;
+    });
+
+    afterEach(() => {
+      if (hadNgDevMode) globalRef.ngDevMode = originalNgDevMode;
+      else delete globalRef.ngDevMode;
+    });
+
+    it('should STILL console.error an ordinary application error in production', () => {
+      // why: `ErrorHandler` này THAY THẾ ErrorHandler mặc định của Angular (vốn luôn log). Gate
+      // `console.error` sau `isDevMode()` khiến bản production nuốt sạch mọi lỗi ứng dụng — không
+      // console, không log collector, bug production vô hình.
+      const error = new Error('production runtime error');
+      handler.handleError(error);
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Application error:', error);
+    });
+
+    it('should STILL console.error a string / rejection-wrapped error in production', () => {
+      handler.handleError('production string error');
+      const rejection = { rejection: new Error('production network timeout') };
+      handler.handleError(rejection);
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Application error:', 'production string error');
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Application error:', rejection);
+    });
+
+    it('should NOT emit the verbose chunk-detection warning in production', () => {
+      handler.handleError(new Error('Loading chunk 42 failed'));
+
+      expect(consoleWarnSpy).not.toHaveBeenCalled();
+    });
+
+    it('should still prompt the user to reload on a chunk-load error in production', () => {
+      // Chỉ log dài dòng bị tắt; hành vi hướng tới người dùng thì không đổi.
+      handler.handleError(new Error('Failed to fetch dynamically imported module /chunk-a.js'));
+
+      expect(confirmSpy).toHaveBeenCalledTimes(1);
+      expect(consoleErrorSpy).not.toHaveBeenCalled();
+    });
   });
 });

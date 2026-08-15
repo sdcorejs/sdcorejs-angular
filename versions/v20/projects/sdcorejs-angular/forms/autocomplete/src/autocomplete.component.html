@@ -12,6 +12,9 @@
 @let _isInline = isInline();
 @let _bare = _isInline;
 @let _hasValue = nVal !== undefined && nVal !== null && nVal !== '';
+<!-- why: một cổng gate duy nhất cho <mat-error>, aria-invalid và aria-describedby. -->
+@let _errorVisible = !!_errorMessage && formControl.touched;
+@let _showInlineError = !_hideInlineError && _errorVisible;
 
 @if (isViewed()) {
   <sd-view
@@ -50,13 +53,17 @@
     </ng-content>
   }
 
+  <!-- why: div chỉ là hộp layout. aria-hidden="true" cũ ẩn CẢ cây con — label, <input>,
+       <mat-error>, nút clear và cả panel gợi ý — khỏi accessibility tree. role="presentation"
+       chỉ vô hiệu hoá chính div, KHÔNG lan xuống con; (click) là tiện ích chuột mà bàn phím đã
+       có qua Tab vào <input>. -->
   <div
     class="d-flex align-items-center"
+    role="presentation"
     [class.sd-inline-editor]="_isInline"
     [class.c-focused]="isFocused"
     [class.c-disabled]="formControl.disabled"
-    (click)="onClick()"
-    aria-hidden="true">
+    (click)="onClick()">
     <mat-form-field
       [class.sd-md]="size() === 'md'"
       [class.sd-sm]="size() === 'sm'"
@@ -72,6 +79,8 @@
         </mat-label>
       }
 
+      <!-- why: BỎ aria-hidden trên chính <input> — ô Tab tới và gõ được, aria-hidden chỉ khiến
+           screen reader đọc ra khoảng lặng. -->
       <input
         [id]="id"
         [formControl]="inputControl"
@@ -95,7 +104,8 @@
         [attr.data-loading]="dataLoading()"
         [attr.data-required]="dataRequired()"
         [attr.data-error-message]="dataErrorMessage()"
-        aria-hidden="true" />
+        [attr.aria-invalid]="_errorVisible ? 'true' : null"
+        [attr.aria-describedby]="_errorMessage ? errorId : null" />
 
       @if (!_loading && nVal && !inputControl.disabled && !_bare) {
         <button type="button" class="sd-clear-btn" matSuffix (click)="clear($event)" title="Xóa" aria-label="Xóa">
@@ -128,20 +138,26 @@
 
         @if (addable() && sdAdd.observed) {
           <mat-option class="sd__option--add" (keyup.Space)="$event.stopPropagation()" disabled="true">
-            <div (click)="onAdd($event)">
-              <sd-icon class="mr-1" name="add"></sd-icon>
+            <!-- why: trước là <div (click)> — không Tab tới được, không có role, và chỉ "im lặng"
+                 với lint vì cả cụm nằm trong cây aria-hidden. <button type="button"> lấy sẵn
+                 Enter/Space + role button, không phải bịa tabindex/keydown thủ công. -->
+            <button type="button" class="sd__option--add-btn" (click)="onAdd($event)">
+              <sd-icon class="mr-1" name="add" aria-hidden="true"></sd-icon>
               {{ 'New item' }}
-            </div>
+            </button>
           </mat-option>
         }
       </mat-autocomplete>
 
-      @if (_hideInlineError && _errorMessage && formControl.touched) {
+      @if (_hideInlineError && _errorVisible) {
         <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
       }
+      @if (_hideInlineError && _errorVisible) {
+        <span class="sd-visually-hidden" [id]="errorId" matSuffix>{{ _errorMessage }}</span>
+      }
 
-      @if (!_hideInlineError && _errorMessage && formControl.touched) {
-        <mat-error>{{ _errorMessage }}</mat-error>
+      @if (_showInlineError) {
+        <mat-error [id]="errorId">{{ _errorMessage }}</mat-error>
       }
     </mat-form-field>
   </div>

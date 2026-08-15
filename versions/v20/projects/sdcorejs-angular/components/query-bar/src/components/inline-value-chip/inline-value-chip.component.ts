@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, effect, input, output, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
 import { SdOperator } from '@sdcorejs/angular/components/operator';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdInlineText } from '@sdcorejs/angular/forms/inline-text';
 import { Operator } from '@sdcorejs/utils/models';
 
@@ -32,6 +33,8 @@ type ChipState = 'pending' | 'active' | 'focus' | 'error';
   styleUrl: './inline-value-chip.component.scss',
 })
 export class SdQueryInlineValueChip {
+  readonly #i18n = inject(I18nService);
+
   /** Field this chip filters by — must be kind `string` or `number`. */
   readonly field = input.required<SdQueryField>();
   /** Active operator (drives BETWEEN dual-input + no-data hiding). */
@@ -67,9 +70,17 @@ export class SdQueryInlineValueChip {
 
   readonly icon = computed(() => sdQueryFieldIcon(this.field()));
 
-  readonly ph = computed(() => (this.isNumber() ? 'giá trị' : 'nhập…'));
-  readonly phFrom = computed(() => (this.isNumber() ? 'Từ' : 'từ…'));
-  readonly phTo = computed(() => (this.isNumber() ? 'Đến' : 'đến…'));
+  // why: placeholder của field số và field chuỗi khác nhau về cách viết hoa/dấu ba chấm nên phải
+  // là key riêng — không tự ghép được từ một chuỗi chung cho mọi ngôn ngữ.
+  readonly ph = computed(() =>
+    this.#i18n.t(this.isNumber() ? 'core.component.query-bar.placeholder.value' : 'core.component.query-bar.placeholder.text')
+  );
+  readonly phFrom = computed(() =>
+    this.#i18n.t(this.isNumber() ? 'core.component.query-bar.placeholder.from-number' : 'core.component.query-bar.placeholder.from-text')
+  );
+  readonly phTo = computed(() =>
+    this.#i18n.t(this.isNumber() ? 'core.component.query-bar.placeholder.to-number' : 'core.component.query-bar.placeholder.to-text')
+  );
 
   readonly hasValue = computed(() => {
     if (this.isNoData()) return true;

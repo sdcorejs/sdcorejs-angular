@@ -4,7 +4,7 @@ import { SdFormGenericArgs } from './form-render/form-render-args.model';
 // Khi render ra các UI như dropdown, radio, checklist, để đơn giản hóa việc cài đặt mình sẽ sử dụng valuesKey và gán value tương ứng
 // Dựa vào value, có thể xác định được API cần gọi để lấy data, xử lý logic đặc thù
 // Args là
-export interface SdFormGenericSelectionItem<T = any> {
+export interface SdFormGenericSelectionItem<T = unknown> {
   value: string;
   display: string;
   disabled?: boolean;
@@ -18,13 +18,13 @@ export interface SdFormGenericSelectionStaticItem {
   label: string;
 }
 
-export type SdFormGenericDefinitionSelection<T = any, TArgs = any> =
+export type SdFormGenericDefinitionSelection<T = unknown, TArgs = unknown> =
   | SelectionValues<T>
   | SelectionLazyValues<T>
   | SelectionValuesKey<TArgs>
   | SelectionLazyValuesKey<TArgs>;
 
-interface SelectionVariables<T = any> {
+interface SelectionVariables<T = unknown> {
   // Thực tế khi selection thay đổi, dựa vào thông tin detail ví dụ { code: 'a', name: 'b', ...} sẽ có mong muốn gán các thông tin này vào form
   // Sử dụng chung với thuộc tính setVariables trong properties để trigger việc thay đổi giá trị khi selection thay đổi
   // Chẳng hạn như ở màn hình cập nhật gì đó, khi chọn dữ liệu muốn cập nhật thì UI load sẵn dữ liệu được chọn
@@ -56,10 +56,10 @@ interface SelectionLazyValuesKey<TArgs> extends SelecttionBase {
   args?: TArgs;
 }
 
-interface SelectionValues<T = any> extends SelecttionBase {
+interface SelectionValues<T = unknown> extends SelecttionBase {
   values: (args: SdFormGenericArgs) => Promise<SdFormGenericSelectionItem<T>[]>;
 }
 
-interface SelectionLazyValues<T = any> extends SelecttionBase {
+interface SelectionLazyValues<T = unknown> extends SelecttionBase {
   lazyValues: (searchArgs: Parameters<SdSearch>[0], args: SdFormGenericArgs) => Promise<SdFormGenericSelectionItem<T>[]>;
 }

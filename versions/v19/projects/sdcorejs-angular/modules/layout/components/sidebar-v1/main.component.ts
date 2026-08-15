@@ -5,17 +5,17 @@ import { MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
 // NOTE: Import nội bộ trong module layout
 import { SdLayoutUserInfo, SidebarConfigurationV1 } from '../../configurations';
 import { SdLayoutMenu, SdLayoutStorageService } from '../../services';
-import { SidebarComponent } from './components/sidebar/sidebar.component';
+import { SdSidebarV1Panel } from './components/sidebar/sidebar.component';
 
 @Component({
-  selector: 'sidebar-v1',
+  selector: 'sd-sidebar-v1',
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss',
-  imports: [MatSidenavModule, CommonModule, SidebarComponent],
+  imports: [MatSidenavModule, CommonModule, SdSidebarV1Panel],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SidebarV1Component {
+export class SdSidebarV1 {
   // ==========================================
   // INJECT SERVICES
   // ==========================================

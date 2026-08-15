@@ -93,11 +93,6 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.excel.cannot-read-file': 'ファイルの内容を読み取れませんでした',
   'core.excel.no-sheet': 'Excelファイルにデータシートがありません',
 
-  // ---- Service: docx ----
-  'core.docx.invalid-format': '形式が正しくありません。DOCまたはDOCX形式のテンプレートを選択してください',
-  'core.docx.size-exceeded': 'テンプレートファイルのサイズが上限を超えています。もう一度お試しください',
-  'core.docx.convert-error': 'DOCXファイルの変換中にエラーが発生しました',
-
   // ---- Service: notify (toast) ----
   'core.notify.type.success': '成功',
   'core.notify.type.info': '情報',
@@ -219,7 +214,6 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.time-range.step': '時刻は{step}分間隔で入力してください',
   'core.form.time-range.from': '開始',
   'core.form.time-range.to': '終了',
-  'core.form.time-range.clear': '時間範囲をクリア',
 
   // ---- Forms: time-spinner ----
   'core.form.time-spinner.hour': '時',
@@ -250,6 +244,7 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Forms: select ----
   'core.form.select.required': '選択してください',
+  'core.form.select.selectAll': 'すべて',
 
   // ---- Forms: textarea ----
   'core.form.textarea.required': '入力してください',
@@ -268,14 +263,6 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.editor.image.max-height': '画像の高さ {height}px は上限 {max}px を超えています',
   'core.component.editor.image.max-per-selection': '一度に選択できる画像は最大{max}枚です',
 
-  // ---- Component: document-builder ----
-  'core.component.document-builder.page-number.current': '現在のページ番号',
-  'core.component.document-builder.page-number.total': '総ページ数',
-  'core.component.document-builder.ck-comment.label': 'コメント',
-  'core.component.document-builder.ck-comment.text-too-long': 'テキストが長すぎます（{length}文字）。最大{max}文字です。',
-  'core.component.document-builder.variable.not-allowed': 'テキストへの変数の追加は許可されていません',
-  'core.component.document-builder.variable.invalid-data': '変数データが正しくありません',
-
   // ---- Component: form-builder ----
   'core.component.form-builder.field-key': 'フィールドキー',
   'core.component.form-builder.display': '表示',
@@ -290,6 +277,7 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.form-builder.required-when': '必須条件',
   'core.component.form-builder.confirm': '確認',
   'core.component.form-builder.delete': '削除',
+  'core.component.form-builder.select-item': '選択して編集',
   'core.component.form-builder.save': '保存',
   'core.component.form-builder.hint': 'ヒント',
   'core.component.form-builder.parameter': 'パラメータ',
@@ -361,9 +349,13 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.form-builder.display-label': '表示ラベル',
   'core.component.form-builder.attribute': '属性',
   'core.component.form-builder.add-variable': '変数を追加',
+  'core.component.form-builder.no-variable': '変数がまだありません。追加すると条件式で使用できます。',
+  'core.component.form-builder.no-validation': '検証がまだありません。追加すると条件に応じて警告やエラーを表示できます。',
   'core.component.form-builder.add-new': '新規追加',
   'core.component.form-builder.detail': '詳細',
   'core.component.form-builder.create-update': '作成/更新',
+  'core.component.form-builder.update-row': '行を更新',
+  'core.component.form-builder.add-row': '行を追加',
   'core.component.form-builder.default': 'デフォルト',
   'core.component.form-builder.show-more': 'もっと見る',
   'core.component.form-builder.show-less': '折りたたむ',
@@ -545,6 +537,8 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.error-occurred': 'エラーが発生しました',
   'core.component.table.not-an-array': 'データが配列ではありません',
   'core.component.table.config.confirm-reset': 'すべての設定をデフォルトに戻しますか',
+  'core.component.table.config.drag-hint': '⠿ アイコンをドラッグして列の順序を変更できます',
+  'core.component.table.config.drag-handle': 'ドラッグして列の順序を変更',
   'core.component.table.popup-export.select-columns': 'エクスポートする列を選択してください',
   'core.component.table.selector-action.default-msg': '件選択中',
   'core.component.tab-router.too-many-tabs': 'タブを開きすぎています。',
@@ -579,6 +573,13 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.module.layout.user.notification': '通知',
   'core.module.layout.sidebar.search': '検索',
   'core.module.layout.sidebar.toggle': 'サイドバーを切り替える',
+  'core.module.layout.sidebar.menu-groups': 'メニューグループ',
+  'core.module.layout.sidebar.close-menu': 'メニューを閉じる',
+  'core.module.layout.sidebar.search-in-group': 'グループ内を検索',
+  'core.module.layout.sidebar.primary-nav': 'メイン ナビゲーション',
+  'core.module.layout.sidebar.more-menu': 'その他のメニュー',
+  'core.module.layout.sidebar.more': 'その他',
+  'core.module.layout.sidebar.search-in-menu': 'メニューを検索',
 
   // ---- Module: layout (greeting + weekday) ----
   'core.module.layout.greeting.hello': 'こんにちは、{name}さん',
@@ -619,4 +620,91 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Module: generic (generic-select) ----
   'core.module.generic.generic-select.detail-link': '詳細',
+
+  // ---- Component: query-bar ----
+  'core.component.query-bar.search-placeholder': '検索...',
+  'core.component.query-bar.no-fields': 'フィールドが設定されていません',
+  'core.component.query-bar.add-filter': 'フィルターを追加',
+  'core.component.query-bar.clear-all': 'すべてクリア ({count})',
+  'core.component.query-bar.search': '検索',
+  'core.component.query-bar.logic-operator': '論理演算子',
+  'core.component.query-bar.boolean.true': 'はい',
+  'core.component.query-bar.boolean.false': 'いいえ',
+  'core.component.query-bar.placeholder.value': '値',
+  'core.component.query-bar.placeholder.text': '入力…',
+  'core.component.query-bar.placeholder.from-number': '開始',
+  'core.component.query-bar.placeholder.to-number': '終了',
+  'core.component.query-bar.placeholder.from-text': '開始…',
+  'core.component.query-bar.placeholder.to-text': '終了…',
+  'core.component.query-bar.swap-field': 'フィールドを変更',
+  'core.component.query-bar.placeholder.select-value': '値を選択',
+  'core.component.query-bar.placeholder.enter-value': '値を入力',
+  'core.component.query-bar.loading-values': '読み込み中...',
+  'core.component.query-bar.field-empty': 'フィールドが設定されていません。',
+  'core.component.query-bar.saved-filters.tooltip': '保存済みフィルター',
+  'core.component.query-bar.saved-filters.tooltip-disabled': '[savedFiltersKey] が必要です',
+  'core.component.query-bar.saved-filters.delete': 'フィルターを削除',
+  'core.component.query-bar.saved-filters.empty': '保存済みフィルターはありません。',
+  'core.component.query-bar.saved-filters.save': '現在のフィルターを保存',
+  'core.component.query-bar.saved-filters.name-label': 'フィルター名',
+
+  // ---- Component: query-builder ----
+  'core.component.query-builder.date-mode.absolute': '指定した日付',
+  'core.component.query-builder.date-mode.now': '今日',
+  'core.component.query-builder.date-mode.relative': '相対',
+  'core.component.query-builder.value-source.literal': '値を入力',
+  'core.component.query-builder.value-source.field': 'フィールドと比較',
+  'core.component.query-builder.relative.hour-previous': '時間前',
+  'core.component.query-builder.relative.hour-next': '時間後',
+  'core.component.query-builder.relative.day-previous': '日前',
+  'core.component.query-builder.relative.day-next': '日後',
+  'core.component.query-builder.relative.week-previous': '週間前',
+  'core.component.query-builder.relative.week-next': '週間後',
+  'core.component.query-builder.relative.month-previous': 'ヶ月前',
+  'core.component.query-builder.relative.month-next': 'ヶ月後',
+  'core.component.query-builder.relative.format': '{amount}{phrase}',
+  'core.component.query-builder.add': '追加',
+  'core.component.query-builder.add-node': '条件またはグループを追加',
+  'core.component.query-builder.condition': '条件',
+  'core.component.query-builder.group': 'グループ',
+  'core.component.query-builder.remove-group': 'グループを削除',
+  'core.component.query-builder.remove-condition': '条件を削除',
+  'core.component.query-builder.empty': '条件がまだありません',
+  'core.component.query-builder.select-field': 'フィールドを選択',
+  'core.component.query-builder.value': '値',
+  'core.component.query-builder.from': '開始',
+  'core.component.query-builder.to': '終了',
+  'core.component.query-builder.boolean.true': 'はい',
+  'core.component.query-builder.boolean.false': 'いいえ',
+
+  // ---- Component: tree ----
+  'core.component.tree.selected-count': '{count} 件選択中',
+  'core.component.tree.expand': 'ツリー項目を展開',
+  'core.component.tree.collapse': 'ツリー項目を折りたたむ',
+  'core.component.tree.retry-item': 'ツリー項目を再読み込み',
+  'core.component.tree.load-error': 'ツリーデータを読み込めません',
+
+  // ---- Directive: hover-copy ----
+  'core.directive.hover-copy.copied': 'コピーしました',
+
+  // ---- Module: layout (sidebar sections + pin) ----
+  'core.module.layout.sidebar.pinned': 'ピン留め済み',
+  'core.module.layout.sidebar.recent': '最近',
+  'core.module.layout.sidebar.all-menu': 'すべてのメニュー',
+  'core.module.layout.menu.pin': '{title} をピン留め',
+  'core.module.layout.menu.unpin': '{title} のピン留めを解除',
+
+  // ---- Per-control accessible names (replacing borrowed keys) ----
+  'core.form.date.open-picker': 'カレンダーを開く',
+  'core.form.datetime.open-picker': 'カレンダーを開く',
+  'core.form.date-range.open-picker': 'カレンダーを開く',
+  'core.form.date-range.clear': '日付範囲をクリア',
+  'core.form.select.search': '検索',
+  'core.component.table.loading': 'テーブルデータを読み込み中',
+  'core.component.upload-file.loading': 'ファイルをアップロード中',
+  'core.component.import-excel.loading': 'データを読み込み中',
+  'core.component.upload-file.remove': 'ファイルを削除',
+  'core.component.upload-file.zoom': '画像を拡大',
+  'core.component.upload-file.view-all': 'すべての画像を表示',
+  'core.component.form-builder.canvas': 'フォーム設計キャンバス',
 };

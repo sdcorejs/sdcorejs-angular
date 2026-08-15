@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { I18nService } from '@sdcorejs/angular/i18n';
 
 import { SdQueryInlineValueChip } from './inline-value-chip.component';
 import { SdQueryField } from '../../query-bar.model';
@@ -189,6 +190,45 @@ describe('SdQueryInlineValueChip', () => {
       const sepToInput = input.getBoundingClientRect().left - sep.getBoundingClientRect().right;
       // why: cùng là 4px, sai số <= 2px do sub-pixel rendering.
       expect(Math.abs(iconToField - sepToInput)).toBeLessThanOrEqual(2);
+    });
+  });
+
+  describe('i18n placeholders', () => {
+    let i18n: I18nService;
+
+    beforeEach(() => {
+      i18n = TestBed.inject(I18nService);
+      i18n.setLanguage('vi', { reload: false });
+    });
+
+    afterEach(() => {
+      i18n.setLanguage('vi', { reload: false });
+    });
+
+    it('uses distinct catalogue keys for the number and string placeholder styles', () => {
+      setup(numberField, null);
+      expect(component.ph()).toBe('giá trị');
+
+      setup(stringField, null);
+      expect(component.ph()).toBe('nhập…');
+    });
+
+    it('translates the BETWEEN from/to placeholders per field type', () => {
+      setup(numberField, null, 'BETWEEN');
+      expect(component.phFrom()).toBe('Từ');
+      expect(component.phTo()).toBe('Đến');
+
+      setup(stringField, null, 'BETWEEN');
+      expect(component.phFrom()).toBe('từ…');
+      expect(component.phTo()).toBe('đến…');
+    });
+
+    it('follows a language switch', () => {
+      setup(numberField, null, 'BETWEEN');
+      i18n.setLanguage('en', { reload: false });
+      expect(component.ph()).toBe('value');
+      expect(component.phFrom()).toBe('From');
+      expect(component.phTo()).toBe('To');
     });
   });
 });

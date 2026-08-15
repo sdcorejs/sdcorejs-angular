@@ -1,6 +1,6 @@
 import { Pipe, PipeTransform, inject } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { DateUtilities, NumberUtilities } from '@sdcorejs/angular/utilities';
+import { DateUtilities, NumberUtilities } from '@sdcorejs/utils/fns';
 import { SdImportExcelItem, SdUploadExcelColumn } from '../import-excel.model';
 
 @Pipe({

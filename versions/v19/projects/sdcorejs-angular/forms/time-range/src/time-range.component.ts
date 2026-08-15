@@ -30,8 +30,7 @@ import {
   ɵsdFormControlConnector,
 } from '@sdcorejs/angular/forms/models';
 import { SdTime, SdTimeModelValue } from '@sdcorejs/angular/forms/time';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
-import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { Size } from '@sdcorejs/utils/models';
@@ -60,8 +59,13 @@ function rangeEquals(left: SdTimeRangeModelValue, right: SdTimeRangeModelValue):
     '[class.sd-has-label]': '!!label()',
     '[class.sd-viewed]': 'connectorState().isViewed || connectorState().isInline',
     '[class.sd-bare]': 'connectorState().isInline',
+    // why: mũi tên "→" phải canh giữa theo CHIỀU CAO Ô INPUT, không phải theo cả field (field còn
+    // ôm subscript lỗi bên dưới). Chiều cao ô đổi theo size của mat-form-field, nên host phát class
+    // size để SCSS chọn đúng `--sd-time-range-row-height`.
+    '[class.sd-time-range--md]': "size() === 'md'",
+    '[class.sd-time-range--sm]': "size() === 'sm'",
   },
-  imports: [SdIcon, SdLabel, SdTime, SdView, TranslatePipe],
+  imports: [SdLabel, SdTime, SdView],
 })
 export class SdTimeRange {
   readonly #i18n = inject(I18nService);
@@ -133,9 +137,24 @@ export class SdTimeRange {
       required: this.required(),
       allowOpenEnded: this.allowOpenEnded(),
     };
+    // why: text gõ sai ở endpoint (vd "25:10") KHÔNG bao giờ tới được model tổng — `sd-time` chỉ
+    // ghi model khi giá trị hợp lệ. Vì chỉ control tổng được đăng ký vào form cha, trạng thái
+    // invalid của endpoint phải được kéo lên đây, nếu không form cha báo VALID trong khi UI đang đỏ.
+    // why: phải đọc bản THÔ, KHÔNG phải `endpointInvalid` (đã gate theo `touched || dirty`). Kể từ
+    // khi endpoint bị gỡ khỏi FormGroup của consumer, validator này là ĐƯỜNG DUY NHẤT để validity
+    // của endpoint tới được form cha — gate theo tương tác ở đây nghĩa là một endpoint invalid mà
+    // người dùng chưa chạm vào sẽ để `form.valid === true` trong khi UI đang đỏ. Bản gate chỉ dùng
+    // cho HIỂN THỊ (`visibleError`, `dataInvalid`).
+    const endpointInvalid = this.endpointInvalidRaw();
     const rangeValidator: ValidatorFn = control => {
+      // why: `endpoint` phải CỘNG THÊM vào lỗi của range chứ không được THAY THẾ. Trả về mỗi
+      // `{ endpoint: true }` sẽ xoá sạch `required`/`incomplete`/`range` khỏi control tổng, nên
+      // consumer (và cả `errorMessage` của chính component) bắt theo các key đó sẽ hỏng trong im
+      // lặng — vd `[required]` + blur ô "Từ" khi chưa gõ gì: `hasError('required')` bỗng thành false.
       const error = sdValidateTimeRange(control.value as SdTimeRangeModelValue, constraints);
-      return error ? ({ [error]: true } satisfies ValidationErrors) : null;
+      const errors: ValidationErrors = error ? { [error]: true } : {};
+      if (endpointInvalid) errors['endpoint'] = true;
+      return Object.keys(errors).length > 0 ? errors : null;
     };
     return this.inlineError() ? [rangeValidator, SdInlineErrorValidator] : [rangeValidator];
   });
@@ -174,15 +193,39 @@ export class SdTimeRange {
     const to = value?.to ?? '';
     return from || to ? `${from} → ${to}` : '';
   });
-  readonly showClear = computed(() => {
-    const fromControlValue = this.fromTime()?.connectorState().value;
-    const toControlValue = this.toTime()?.connectorState().value;
-    const hasValue =
-      !sdIsEmpty(fromControlValue) || !sdIsEmpty(toControlValue) || !sdIsEmpty(this.fromValue()) || !sdIsEmpty(this.toValue());
-    return this.clearable() && hasValue && !this.required() && !this.disabled() && !this.isReadonly();
+  /**
+   * Endpoint invalid ĐÃ gate theo tương tác — CHỈ dùng cho hiển thị (message, `data-invalid`).
+   * `connectorState().invalid` của `sd-time` là `invalid && (touched || dirty)`.
+   */
+  readonly endpointInvalid = computed(() => !!(this.fromTime()?.connectorState().invalid || this.toTime()?.connectorState().invalid));
+
+  /**
+   * Endpoint invalid THÔ — không gate theo tương tác. Dùng cho VALIDATOR của control tổng.
+   * why: endpoint không còn được đăng ký vào FormGroup của consumer, nên validity của chúng chỉ
+   * tới được form cha qua control tổng. Nếu đường đó cũng gate theo `touched || dirty` thì một
+   * endpoint invalid do ghi programmatic (chưa ai chạm vào) sẽ để form cha VALID — sai contract
+   * đã ghi trong `sd-time-range.md`.
+   * `formControl.invalid` là property thường nên tự nó không phát tín hiệu; đọc `connectorState()`
+   * một nhịp để computed có dependency reactive theo `events` của endpoint control.
+   */
+  readonly endpointInvalidRaw = computed(() => {
+    const from = this.fromTime();
+    const to = this.toTime();
+    void from?.connectorState();
+    void to?.connectorState();
+    return !!(from?.formControl.invalid || to?.formControl.invalid);
   });
 
-  readonly endpointInvalid = computed(() => !!(this.fromTime()?.connectorState().invalid || this.toTime()?.connectorState().invalid));
+  /**
+   * Message đã gate theo tương tác — thứ template được phép hiển thị.
+   * why: `errorMessage()` thô bung lỗi ngay lần paint đầu với `[required]`, khi người dùng chưa
+   * chạm vào ô nào. `connectorState().validationError` gate theo control tổng; range còn có 2
+   * endpoint có thể invalid trong khi control tổng chưa dirty (text sai không tới được model tổng),
+   * nên phải cộng thêm nhánh endpoint — `endpointInvalid` tự nó đã gate theo touched/dirty.
+   */
+  readonly visibleError = computed<string | undefined>(
+    () => this.connectorState().validationError ?? (this.endpointInvalid() ? this.errorMessage() : undefined)
+  );
 
   readonly dataDisabled = computed(() => (this.#state().disabled ? 'true' : 'false'));
   readonly dataInvalid = computed(() => (this.#state().invalid || this.endpointInvalid() ? 'true' : 'false'));
@@ -199,7 +242,10 @@ export class SdTimeRange {
 
   readonly errorMessage = computed<string | undefined>(() => {
     void this.#state();
-    void this.endpointInvalid();
+    // why: đọc bản THÔ. Connector gắn lại validator bằng `updateValueAndValidity({ emitEvent: false })`
+    // nên `#state` KHÔNG tick khi tập lỗi của control tổng đổi vì endpoint; `endpointInvalidRaw`
+    // đổi đúng vào lúc đó nên nó là dependency duy nhất kéo message tính lại.
+    void this.endpointInvalidRaw();
     const errors = this.formControl.errors;
     const endpointErrors = this.fromTime()?.formControl.errors ?? this.toTime()?.formControl.errors;
     if (errors?.['required'] || endpointErrors?.['required']) return this.#i18n.t('core.form.time-range.required');

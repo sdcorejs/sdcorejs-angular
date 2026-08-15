@@ -26,7 +26,7 @@
 
 ## Why SDCoreJS
 
-- **Business UI above the Material primitives.** Use tables, query builders, document tooling, import/export flows, drawers, modals, and application layout modules without rebuilding those patterns for every portal.
+- **Business UI above the Material primitives.** Use tables, query builders, import/export flows, drawers, modals, and application layout modules without rebuilding those patterns for every portal.
 - **One form contract.** Controls share `[(model)]`, validation, disabled, read-only, and viewed-state conventions, with optional `FormGroup` registration for larger forms.
 - **Focused application bundles.** Components, forms, services, and modules are published as secondary entry points, and the package declares `sideEffects: false`; import the leaf entry points your application uses.
 - **Angular-aligned releases.** The repository maintains matching package lines for Angular 19, 20, and 21 from the same v19 source workspace.
@@ -36,10 +36,10 @@
 
 | Area                 | What the library provides                                                                                                                  |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| UI components        | Navigation/data state, PDF preview, job progress, audit diff, modals, drawers, tabs, charts, editors, and document tooling                 |
+| UI components        | Navigation/data state, PDF preview, job progress, audit diff, modals, drawers, tabs, charts, and editors                                   |
 | Data and workflow    | Local/server tables, query builders, entity/tree pickers, unsaved-change guards, background tasks, file upload, and Excel import           |
 | Form controls        | Text/mask, number, time/time range, date/date range, datetime, select, autocomplete, checkbox, radio, switch, chip, color, and inline text |
-| Application services | Typed API/retry/cancel, ref-counted loading, graph-safe storage/cache/persistence, viewport signals, notifications, Excel, and DOCX        |
+| Application services | Typed API/retry/cancel, ref-counted loading, graph-safe storage/cache/persistence, viewport signals, notifications, and Excel               |
 | Portal modules       | Auth, Keycloak, permission, layout, and icon modules                                                                                       |
 | Developer experience | Standalone imports, typed APIs, signal-oriented state, `OnPush` components, shared SCSS utilities, and E2E-friendly `data-*` attributes    |
 | Localization         | Built-in Vietnamese, English, Japanese, Korean, and Chinese catalogs, plus a synchronous custom-catalog hook                               |
@@ -241,7 +241,7 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-`I18nService.setLanguage()` persists a built-in language and reloads by default so the pure `TranslatePipe` sees the new catalog. Applications can provide a complete custom catalog through the synchronous `language: () => catalog` configuration hook. See the [i18n reference](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/i18n/i18n.md) for catalog typing, interpolation, fallbacks, and custom-language constraints.
+`I18nService.setLanguage()` persists a built-in language and reloads by default so the pure `SdTranslatePipe` sees the new catalog. Applications can provide a complete custom catalog through the synchronous `language: () => catalog` configuration hook. See the [i18n reference](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/i18n/i18n.md) for catalog typing, interpolation, fallbacks, and custom-language constraints.
 
 ## Examples and documentation
 
@@ -340,3 +340,4 @@ Use [GitHub Issues](https://github.com/sdcorejs/sdcorejs-angular/issues) for rep
 ## License
 
 `@sdcorejs/angular` is released under the [MIT License](LICENSE).
+

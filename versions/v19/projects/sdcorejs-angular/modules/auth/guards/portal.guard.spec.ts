@@ -26,17 +26,29 @@ function makeGuard(config?: ISdAuthConfiguration): SdPortalGuard {
 // ---------------------------------------------------------------------------
 describe('SdPortalGuard', () => {
   // -------------------------------------------------------------------------
-  // GROUP 1: No SD_AUTH_CONFIGURATION provided
+  // GROUP 1: No SD_AUTH_CONFIGURATION provided — FAIL CLOSED
   // -------------------------------------------------------------------------
   describe('when SD_AUTH_CONFIGURATION is not provided', () => {
     it('instantiates without throwing', () => {
       expect(() => makeGuard()).not.toThrow();
     });
 
-    it('canActivate() returns true (pass-through default)', () => {
+    // why: hàng rào portal bị vô hiệu âm thầm là ca tệ nhất — nó là cửa ngõ của cả app shell.
+    it('canActivate() returns false (fail closed — deny by default)', () => {
+      spyOn(console, 'error');
       const guard = makeGuard();
       const result = guard.canActivate(routeSnap, stateSnap);
-      expect(result).toBeTrue();
+      expect(result).toBeFalse();
+    });
+
+    it('logs loudly in dev mode so the missing provider is obvious', () => {
+      const errorSpy = spyOn(console, 'error');
+      const guard = makeGuard();
+
+      guard.canActivate(routeSnap, stateSnap);
+
+      expect(errorSpy).toHaveBeenCalledTimes(1);
+      expect(errorSpy.calls.mostRecent().args[0]).toContain('SD_AUTH_CONFIGURATION.guard.portal');
     });
   });
 
@@ -44,14 +56,15 @@ describe('SdPortalGuard', () => {
   // GROUP 2: SD_AUTH_CONFIGURATION provided but guard.portal is absent
   // -------------------------------------------------------------------------
   describe('when configuration has no guard.portal callback', () => {
-    it('canActivate() returns true (no portal callback — pass through)', () => {
+    it('canActivate() returns false (partial config is still a misconfiguration)', () => {
+      spyOn(console, 'error');
       const config: ISdAuthConfiguration = {
         action: { signout: () => Promise.resolve() },
         // guard.portal intentionally omitted
       };
       const guard = makeGuard(config);
       const result = guard.canActivate(routeSnap, stateSnap);
-      expect(result).toBeTrue();
+      expect(result).toBeFalse();
     });
   });
 

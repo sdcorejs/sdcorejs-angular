@@ -5,7 +5,7 @@ import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdQuickAction } from '@sdcorejs/angular/components/quick-action';
 import { SdTableItem } from '../../models/table-item.model';
 import { SdTableOption } from '../../models/table-option.model';
-import { Action, ActionFilterPipe } from './action-filter.pipe';
+import { Action, sdResolveTableActions } from './action-filter.pipe';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
@@ -13,7 +13,7 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   templateUrl: './selector-action.component.html',
   styleUrl: './selector-action.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdIcon, MatMenuModule, SdButton, SdQuickAction, ActionFilterPipe],
+  imports: [SdIcon, MatMenuModule, SdButton, SdQuickAction],
 })
 export class SelectorActionComponent {
   // ==========================================
@@ -44,7 +44,13 @@ export class SelectorActionComponent {
     return msg;
   });
 
-  opened = computed(() => !!this.selectedTableItems()?.length);
+  /** Bulk actions the current selection is allowed to run. */
+  actions = computed<Action[]>(() => sdResolveTableActions(this.selectedTableItems(), this.tableOption()?.selector?.actions));
+
+  // why: chọn dòng mà KHÔNG có action nào chạy được thì thanh quick-action chỉ còn đúng một nút ✕ —
+  // nó che nội dung bảng để đổi lấy thông tin người dùng đã thấy (dòng đang highlight + checkbox).
+  // Không có action ⇒ không mở thanh; bỏ chọn bằng chính checkbox ở header/dòng.
+  opened = computed(() => !!this.selectedTableItems()?.length && this.actions().length > 0);
 
   // ==========================================
   // 4. HANDLERS

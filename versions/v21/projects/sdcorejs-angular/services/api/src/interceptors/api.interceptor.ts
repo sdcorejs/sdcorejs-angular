@@ -2,6 +2,7 @@ import { HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest
 import { inject, Injectable } from '@angular/core';
 import { defer, from, Observable, of, throwError } from 'rxjs';
 import { catchError, concatMap, dematerialize, map, materialize, switchMap } from 'rxjs/operators';
+import { sdApiMatchesHandlerHosts } from '../api-host';
 import { ISdApiConfiguration, SD_API_CONFIG, SdApiHandler } from '../api.model';
 
 @Injectable()
@@ -55,6 +56,8 @@ export class SdHttpInterceptor implements HttpInterceptor {
 
   #findHandler(url: string): SdApiHandler | undefined {
     const handlers = this.#configurations.flatMap(configuration => configuration.handlers ?? []);
-    return handlers.find(handler => handler.hosts.some(host => url.startsWith(host)));
+    // why: `url.startsWith(host)` cho phép host nhìn-giống-thật (`https://api.example.com.attacker.tld`)
+    // khớp handler của `https://api.example.com` và nhận trọn `intercept` — kể cả header auth.
+    return handlers.find(handler => sdApiMatchesHandlerHosts(url, handler.hosts));
   }
 }

@@ -24,8 +24,8 @@
           [class.sd-preview-pdf-iconbtn--active]="_isSidebarOpen"
           [attr.aria-expanded]="_isSidebarOpen"
           [attr.aria-controls]="sidebarRegionId()"
-          [attr.aria-label]="'core.component.preview-pdf.toggle-sidebar' | translate"
-          [attr.title]="'core.component.preview-pdf.toggle-sidebar' | translate"
+          [attr.aria-label]="'core.component.preview-pdf.toggle-sidebar' | sdTranslate"
+          [attr.title]="'core.component.preview-pdf.toggle-sidebar' | sdTranslate"
           [attr.data-autoId]="autoIdSidebarToggle()"
           (click)="toggleSidebar()">
           <sd-icon fontIcon="menu"></sd-icon>
@@ -37,7 +37,7 @@
             {{ title() || filename() }}
           </div>
           <div class="sd-preview-pdf-header__sub">
-            {{ 'core.component.preview-pdf.pages-count' | translate: { count: _numPages } }}
+            {{ 'core.component.preview-pdf.pages-count' | sdTranslate: { count: _numPages } }}
           </div>
         </div>
       </div>
@@ -49,8 +49,8 @@
           [class.sd-preview-pdf-iconbtn--active]="_searchBarOpen"
           [attr.aria-expanded]="_searchBarOpen"
           [attr.aria-controls]="searchBarId()"
-          [attr.aria-label]="'core.component.preview-pdf.search' | translate"
-          [attr.title]="'core.component.preview-pdf.search' | translate"
+          [attr.aria-label]="'core.component.preview-pdf.search' | sdTranslate"
+          [attr.title]="'core.component.preview-pdf.search' | sdTranslate"
           [attr.data-autoId]="autoIdSearchToggle()"
           (click)="searchBarOpen() ? closeSearch() : openSearch()">
           <sd-icon fontIcon="search"></sd-icon>
@@ -59,8 +59,8 @@
           <button
             type="button"
             class="sd-preview-pdf-iconbtn"
-            [attr.aria-label]="'core.component.preview-pdf.print' | translate"
-            [attr.title]="'core.component.preview-pdf.print' | translate"
+            [attr.aria-label]="'core.component.preview-pdf.print' | sdTranslate"
+            [attr.title]="'core.component.preview-pdf.print' | sdTranslate"
             [attr.data-autoId]="autoIdPrint()"
             (click)="printFile()">
             <sd-icon fontIcon="print"></sd-icon>
@@ -70,8 +70,8 @@
           <button
             type="button"
             class="sd-preview-pdf-iconbtn"
-            [attr.aria-label]="'core.component.preview-pdf.download' | translate"
-            [attr.title]="'core.component.preview-pdf.download' | translate"
+            [attr.aria-label]="'core.component.preview-pdf.download' | sdTranslate"
+            [attr.title]="'core.component.preview-pdf.download' | sdTranslate"
             [attr.data-autoId]="autoIdDownload()"
             (click)="downloadFile()">
             <sd-icon fontIcon="download"></sd-icon>
@@ -81,8 +81,8 @@
           <button
             type="button"
             class="sd-preview-pdf-iconbtn"
-            [attr.aria-label]="'core.component.preview-pdf.fullscreen' | translate"
-            [attr.title]="'core.component.preview-pdf.fullscreen' | translate"
+            [attr.aria-label]="'core.component.preview-pdf.fullscreen' | sdTranslate"
+            [attr.title]="'core.component.preview-pdf.fullscreen' | sdTranslate"
             [attr.data-autoId]="autoIdFullscreen()"
             (click)="toggleFullscreen()">
             <sd-icon [fontIcon]="isFullscreen() ? 'fullscreen_exit' : 'fullscreen'"></sd-icon>
@@ -106,8 +106,8 @@
           #searchInput
           type="text"
           class="sd-preview-pdf-searchbar__input"
-          [attr.aria-label]="'core.component.preview-pdf.search-placeholder' | translate"
-          [attr.placeholder]="'core.component.preview-pdf.search-placeholder' | translate"
+          [attr.aria-label]="'core.component.preview-pdf.search-placeholder' | sdTranslate"
+          [attr.placeholder]="'core.component.preview-pdf.search-placeholder' | sdTranslate"
           [value]="_searchTerm"
           [attr.data-autoId]="autoIdSearchInput()"
           (input)="onSearchInput($event)" />
@@ -118,8 +118,8 @@
           type="button"
           class="sd-preview-pdf-iconbtn"
           [disabled]="_searchTotal === 0"
-          [attr.aria-label]="'core.component.preview-pdf.search-prev' | translate"
-          [attr.title]="'core.component.preview-pdf.search-prev' | translate"
+          [attr.aria-label]="'core.component.preview-pdf.search-prev' | sdTranslate"
+          [attr.title]="'core.component.preview-pdf.search-prev' | sdTranslate"
           [attr.data-autoId]="autoIdSearchPrev()"
           (click)="searchPrev()">
           <sd-icon fontIcon="keyboard_arrow_up"></sd-icon>
@@ -128,8 +128,8 @@
           type="button"
           class="sd-preview-pdf-iconbtn"
           [disabled]="_searchTotal === 0"
-          [attr.aria-label]="'core.component.preview-pdf.search-next' | translate"
-          [attr.title]="'core.component.preview-pdf.search-next' | translate"
+          [attr.aria-label]="'core.component.preview-pdf.search-next' | sdTranslate"
+          [attr.title]="'core.component.preview-pdf.search-next' | sdTranslate"
           [attr.data-autoId]="autoIdSearchNext()"
           (click)="searchNext()">
           <sd-icon fontIcon="keyboard_arrow_down"></sd-icon>
@@ -140,8 +140,8 @@
           class="sd-preview-pdf-iconbtn"
           [class.sd-preview-pdf-iconbtn--active]="searchCaseSensitive()"
           [attr.aria-pressed]="searchCaseSensitive()"
-          [attr.aria-label]="'core.component.preview-pdf.search-case' | translate"
-          [attr.title]="'core.component.preview-pdf.search-case' | translate"
+          [attr.aria-label]="'core.component.preview-pdf.search-case' | sdTranslate"
+          [attr.title]="'core.component.preview-pdf.search-case' | sdTranslate"
           [attr.data-autoId]="autoIdSearchCase()"
           (click)="toggleSearchCaseSensitive()">
           <sd-icon fontIcon="match_case"></sd-icon>
@@ -151,8 +151,8 @@
           class="sd-preview-pdf-iconbtn"
           [class.sd-preview-pdf-iconbtn--active]="searchWholeWord()"
           [attr.aria-pressed]="searchWholeWord()"
-          [attr.aria-label]="'core.component.preview-pdf.search-whole' | translate"
-          [attr.title]="'core.component.preview-pdf.search-whole' | translate"
+          [attr.aria-label]="'core.component.preview-pdf.search-whole' | sdTranslate"
+          [attr.title]="'core.component.preview-pdf.search-whole' | sdTranslate"
           [attr.data-autoId]="autoIdSearchWhole()"
           (click)="toggleSearchWholeWord()">
           <sd-icon fontIcon="text_fields"></sd-icon>
@@ -161,8 +161,8 @@
         <button
           type="button"
           class="sd-preview-pdf-iconbtn"
-          [attr.aria-label]="'core.component.preview-pdf.search-close' | translate"
-          [attr.title]="'core.component.preview-pdf.search-close' | translate"
+          [attr.aria-label]="'core.component.preview-pdf.search-close' | sdTranslate"
+          [attr.title]="'core.component.preview-pdf.search-close' | sdTranslate"
           [attr.data-autoId]="autoIdSearchClose()"
           (click)="closeSearch()">
           <sd-icon fontIcon="close"></sd-icon>
@@ -201,7 +201,7 @@
               (keydown)="onSidebarTabKeyDown($event, 'thumbnails')"
               (click)="setSidebarMode('thumbnails')">
               <sd-icon fontIcon="view_carousel"></sd-icon>
-              <span>{{ 'core.component.preview-pdf.tab.thumbnails' | translate }}</span>
+              <span>{{ 'core.component.preview-pdf.tab.thumbnails' | sdTranslate }}</span>
             </button>
             <button
               #sidebarTab
@@ -218,7 +218,7 @@
               (keydown)="onSidebarTabKeyDown($event, 'outline')"
               (click)="setSidebarMode('outline')">
               <sd-icon fontIcon="list"></sd-icon>
-              <span>{{ 'core.component.preview-pdf.tab.outline' | translate }}</span>
+              <span>{{ 'core.component.preview-pdf.tab.outline' | sdTranslate }}</span>
             </button>
             <button
               #sidebarTab
@@ -235,7 +235,7 @@
               (keydown)="onSidebarTabKeyDown($event, 'search')"
               (click)="setSidebarMode('search')">
               <sd-icon fontIcon="search"></sd-icon>
-              <span>{{ 'core.component.preview-pdf.tab.search' | translate }}</span>
+              <span>{{ 'core.component.preview-pdf.tab.search' | sdTranslate }}</span>
             </button>
           </div>
 
@@ -257,7 +257,7 @@
                         class="sd-preview-pdf-thumb"
                         [class.sd-preview-pdf-thumb--active]="p === _activePage"
                         [attr.aria-current]="p === _activePage ? 'page' : null"
-                        [attr.aria-label]="'core.component.preview-pdf.page-of' | translate: { current: p, total: _numPages }"
+                        [attr.aria-label]="'core.component.preview-pdf.page-of' | sdTranslate: { current: p, total: _numPages }"
                         [attr.data-autoId]="autoIdThumb(p - 1)"
                         (click)="goToPage(p)">
                         <div class="sd-preview-pdf-thumb__page">
@@ -274,7 +274,7 @@
                 <ul
                   class="sd-preview-pdf-outline-tree"
                   role="tree"
-                  [attr.aria-label]="'core.component.preview-pdf.tab.outline' | translate">
+                  [attr.aria-label]="'core.component.preview-pdf.tab.outline' | sdTranslate">
                   @for (row of visibleOutline(); track row.item.id) {
                     <li class="sd-preview-pdf-outline-tree__node" role="none">
                       <div class="sd-preview-pdf-outline-tree__row" [style.padding-left.px]="(row.level - 1) * 16">
@@ -292,6 +292,9 @@
                           <span class="sd-preview-pdf-outline-tree__toggle-placeholder" aria-hidden="true"></span>
                         }
 
+                        <!-- why: role="treeitem" BẮT BUỘC có aria-selected — thiếu nó screen reader
+                             không đọc được mục outline nào đang là mục hiện hành. Ở đây "được chọn"
+                             = mục trỏ tới trang đang xem, đúng bằng điều kiện của aria-current. -->
                         @if (row.item.url && row.item.page === null) {
                           <a
                             #outlineItem
@@ -303,6 +306,7 @@
                             [attr.data-outline-id]="row.item.id"
                             [attr.aria-level]="row.level"
                             [attr.aria-expanded]="row.item.children.length > 0 ? isOutlineExpanded(row.item.id) : null"
+                            [attr.aria-selected]="row.item.page === _activePage"
                             [attr.aria-current]="row.item.page === _activePage ? 'page' : null"
                             [attr.tabindex]="outlineFocusId() === row.item.id ? 0 : -1"
                             (focus)="focusOutlineItem(row.item.id)"
@@ -318,6 +322,7 @@
                             [attr.data-outline-id]="row.item.id"
                             [attr.aria-level]="row.level"
                             [attr.aria-expanded]="row.item.children.length > 0 ? isOutlineExpanded(row.item.id) : null"
+                            [attr.aria-selected]="row.item.page === _activePage"
                             [attr.aria-current]="row.item.page === _activePage ? 'page' : null"
                             [attr.tabindex]="outlineFocusId() === row.item.id ? 0 : -1"
                             (focus)="focusOutlineItem(row.item.id)"
@@ -335,17 +340,17 @@
                 @if (!_searchTerm) {
                   <div class="sd-preview-pdf-sidebar__message">
                     <sd-icon fontIcon="search"></sd-icon>
-                    <p>{{ 'core.component.preview-pdf.search-placeholder' | translate }}</p>
+                    <p>{{ 'core.component.preview-pdf.search-placeholder' | sdTranslate }}</p>
                   </div>
                 } @else if (_searchTotal === 0) {
                   <div class="sd-preview-pdf-sidebar__message">
                     <sd-icon fontIcon="search_off"></sd-icon>
-                    <p>{{ 'core.component.preview-pdf.search-no-results' | translate }}</p>
+                    <p>{{ 'core.component.preview-pdf.search-no-results' | sdTranslate }}</p>
                   </div>
                 } @else {
                   @if (searchTruncated()) {
                     <p class="sd-preview-pdf-search-limit" role="status">
-                      {{ 'core.component.preview-pdf.search-truncated' | translate: { count: _searchTotal } }}
+                      {{ 'core.component.preview-pdf.search-truncated' | sdTranslate: { count: _searchTotal } }}
                     </p>
                   }
                   <ul class="sd-preview-pdf-search-list">
@@ -383,10 +388,10 @@
               <sd-icon fontIcon="picture_as_pdf"></sd-icon>
             </div>
             <div class="sd-preview-pdf-status__title">
-              {{ 'core.component.preview-pdf.empty.title' | translate }}
+              {{ 'core.component.preview-pdf.empty.title' | sdTranslate }}
             </div>
             <div class="sd-preview-pdf-status__hint">
-              {{ 'core.component.preview-pdf.empty.subtitle' | translate }}
+              {{ 'core.component.preview-pdf.empty.subtitle' | sdTranslate }}
             </div>
           </div>
         }
@@ -396,12 +401,12 @@
             <div
               class="sd-preview-pdf-spinner"
               role="progressbar"
-              [attr.aria-label]="'core.component.preview-pdf.loading' | translate"
+              [attr.aria-label]="'core.component.preview-pdf.loading' | sdTranslate"
               aria-valuemin="0"
               aria-valuemax="100"
               [attr.aria-valuenow]="_loadPercent"></div>
             <div class="sd-preview-pdf-status__title">
-              {{ 'core.component.preview-pdf.loading' | translate }}
+              {{ 'core.component.preview-pdf.loading' | sdTranslate }}
               @if (_loadPercent > 0) {
                 <span class="sd-preview-pdf-progress-pct">&nbsp;{{ _loadPercent }}%</span>
               }
@@ -418,20 +423,20 @@
                 <sd-icon fontIcon="error"></sd-icon>
               </div>
               <div class="sd-preview-pdf-status__title">
-                {{ 'core.component.preview-pdf.error.' + err.reason + '.title' | translate }}
+                {{ 'core.component.preview-pdf.error.' + err.reason + '.title' | sdTranslate }}
               </div>
               <div class="sd-preview-pdf-status__hint">
-                {{ 'core.component.preview-pdf.error.' + err.reason + '.body' | translate }}
+                {{ 'core.component.preview-pdf.error.' + err.reason + '.body' | sdTranslate }}
               </div>
               <div class="sd-preview-pdf-status__actions">
                 <button type="button" class="sd-preview-pdf-btn-primary" (click)="retryLoad()" [attr.data-autoId]="autoIdRetry()">
                   <sd-icon fontIcon="refresh"></sd-icon>
-                  <span>{{ 'core.component.preview-pdf.error.retry' | translate }}</span>
+                  <span>{{ 'core.component.preview-pdf.error.retry' | sdTranslate }}</span>
                 </button>
                 @if (canDownload()) {
                   <button type="button" class="sd-preview-pdf-btn-secondary" (click)="downloadFile()">
                     <sd-icon fontIcon="download"></sd-icon>
-                    <span>{{ 'core.component.preview-pdf.error.download-raw' | translate }}</span>
+                    <span>{{ 'core.component.preview-pdf.error.download-raw' | sdTranslate }}</span>
                   </button>
                 }
               </div>
@@ -449,7 +454,7 @@
                     class="sd-preview-pdf-continuous-page"
                     role="img"
                     [attr.data-page]="pageNumber"
-                    [attr.aria-label]="'core.component.preview-pdf.page-of' | translate: { current: pageNumber, total: _numPages }">
+                    [attr.aria-label]="'core.component.preview-pdf.page-of' | sdTranslate: { current: pageNumber, total: _numPages }">
                   </canvas>
                 </div>
               }
@@ -461,7 +466,7 @@
                 #pageCanvas
                 class="sd-preview-pdf-page"
                 role="img"
-                [attr.aria-label]="'core.component.preview-pdf.page-of' | translate: { current: _activePage, total: _numPages }">
+                [attr.aria-label]="'core.component.preview-pdf.page-of' | sdTranslate: { current: _activePage, total: _numPages }">
               </canvas>
             </div>
           }
@@ -479,8 +484,8 @@
             type="button"
             class="sd-preview-pdf-toolbar__btn"
             [disabled]="!_canPrev"
-            [attr.aria-label]="'core.component.preview-pdf.first-page' | translate"
-            [attr.title]="'core.component.preview-pdf.first-page' | translate"
+            [attr.aria-label]="'core.component.preview-pdf.first-page' | sdTranslate"
+            [attr.title]="'core.component.preview-pdf.first-page' | sdTranslate"
             [attr.data-autoId]="autoIdFirst()"
             (click)="firstPage()">
             <sd-icon fontIcon="first_page"></sd-icon>
@@ -489,8 +494,8 @@
             type="button"
             class="sd-preview-pdf-toolbar__btn"
             [disabled]="!_canPrev"
-            [attr.aria-label]="'core.component.preview-pdf.prev-page' | translate"
-            [attr.title]="'core.component.preview-pdf.prev-page' | translate"
+            [attr.aria-label]="'core.component.preview-pdf.prev-page' | sdTranslate"
+            [attr.title]="'core.component.preview-pdf.prev-page' | sdTranslate"
             [attr.data-autoId]="autoIdPrev()"
             (click)="prevPage()">
             <sd-icon fontIcon="chevron_left"></sd-icon>
@@ -504,7 +509,7 @@
               #pageInput
               (keydown.enter)="onPageInputEnter($event)"
               (blur)="onPageInputBlur($event)"
-              [attr.aria-label]="'core.component.preview-pdf.page-of' | translate: { current: _activePage, total: _numPages }"
+              [attr.aria-label]="'core.component.preview-pdf.page-of' | sdTranslate: { current: _activePage, total: _numPages }"
               [attr.data-autoId]="autoIdPageInput()" />
             <span class="sd-preview-pdf-toolbar__page-total">/ {{ _numPages }}</span>
           </span>
@@ -512,8 +517,8 @@
             type="button"
             class="sd-preview-pdf-toolbar__btn"
             [disabled]="!_canNext"
-            [attr.aria-label]="'core.component.preview-pdf.next-page' | translate"
-            [attr.title]="'core.component.preview-pdf.next-page' | translate"
+            [attr.aria-label]="'core.component.preview-pdf.next-page' | sdTranslate"
+            [attr.title]="'core.component.preview-pdf.next-page' | sdTranslate"
             [attr.data-autoId]="autoIdNext()"
             (click)="nextPage()">
             <sd-icon fontIcon="chevron_right"></sd-icon>
@@ -522,8 +527,8 @@
             type="button"
             class="sd-preview-pdf-toolbar__btn"
             [disabled]="!_canNext"
-            [attr.aria-label]="'core.component.preview-pdf.last-page' | translate"
-            [attr.title]="'core.component.preview-pdf.last-page' | translate"
+            [attr.aria-label]="'core.component.preview-pdf.last-page' | sdTranslate"
+            [attr.title]="'core.component.preview-pdf.last-page' | sdTranslate"
             [attr.data-autoId]="autoIdLast()"
             (click)="lastPage()">
             <sd-icon fontIcon="last_page"></sd-icon>
@@ -534,8 +539,8 @@
           <button
             type="button"
             class="sd-preview-pdf-toolbar__btn"
-            [attr.aria-label]="'core.component.preview-pdf.zoom-out' | translate"
-            [attr.title]="'core.component.preview-pdf.zoom-out' | translate"
+            [attr.aria-label]="'core.component.preview-pdf.zoom-out' | sdTranslate"
+            [attr.title]="'core.component.preview-pdf.zoom-out' | sdTranslate"
             [attr.data-autoId]="autoIdZoomOut()"
             (click)="zoomOut()">
             <sd-icon fontIcon="remove"></sd-icon>
@@ -544,8 +549,8 @@
           <button
             type="button"
             class="sd-preview-pdf-toolbar__btn"
-            [attr.aria-label]="'core.component.preview-pdf.zoom-in' | translate"
-            [attr.title]="'core.component.preview-pdf.zoom-in' | translate"
+            [attr.aria-label]="'core.component.preview-pdf.zoom-in' | sdTranslate"
+            [attr.title]="'core.component.preview-pdf.zoom-in' | sdTranslate"
             [attr.data-autoId]="autoIdZoomIn()"
             (click)="zoomIn()">
             <sd-icon fontIcon="add"></sd-icon>
@@ -560,7 +565,7 @@
             [attr.data-autoId]="autoIdFitPage()"
             (click)="setZoom('page-fit')">
             <sd-icon fontIcon="fit_screen"></sd-icon>
-            <span>{{ 'core.component.preview-pdf.fit-page' | translate }}</span>
+            <span>{{ 'core.component.preview-pdf.fit-page' | sdTranslate }}</span>
           </button>
           <button
             type="button"
@@ -569,7 +574,7 @@
             [attr.data-autoId]="autoIdFitWidth()"
             (click)="setZoom('page-width')">
             <sd-icon fontIcon="swap_horiz"></sd-icon>
-            <span>{{ 'core.component.preview-pdf.fit-width' | translate }}</span>
+            <span>{{ 'core.component.preview-pdf.fit-width' | sdTranslate }}</span>
           </button>
 
           <span class="sd-preview-pdf-toolbar__divider"></span>
@@ -577,8 +582,8 @@
           <button
             type="button"
             class="sd-preview-pdf-toolbar__btn"
-            [attr.aria-label]="'core.component.preview-pdf.rotate' | translate"
-            [attr.title]="'core.component.preview-pdf.rotate' | translate"
+            [attr.aria-label]="'core.component.preview-pdf.rotate' | sdTranslate"
+            [attr.title]="'core.component.preview-pdf.rotate' | sdTranslate"
             [attr.data-autoId]="autoIdRotate()"
             (click)="rotate('right')">
             <sd-icon fontIcon="rotate_right"></sd-icon>
@@ -593,7 +598,7 @@
             <span>
               {{
                 (_scrollModeCurrent === 'page' ? 'core.component.preview-pdf.scroll-page' : 'core.component.preview-pdf.scroll-continuous')
-                  | translate
+                  | sdTranslate
               }}
             </span>
           </button>

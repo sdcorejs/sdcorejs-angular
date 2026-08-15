@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ɵAfterRenderManager as AfterRenderManager } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { SdSplitterComponent } from './splitter.component';
@@ -312,5 +312,52 @@ describe('SdSplitterComponent — outputs', () => {
     await fixture.whenStable();
     expect(captured.layoutChange.length).toBe(1);
     expect(captured.layoutChange[0].panels.find((p: any) => p.id === 'a').size).toBe(3);
+  });
+});
+
+describe('SdSplitterComponent — render hook registration', () => {
+  let fixture: ComponentFixture<Host>;
+
+  /** AfterRenderManager root — `impl.register` được gọi mỗi lần có afterRender hook mới. */
+  function afterRenderImpl(): { register: (sequence: unknown) => void } {
+    const manager = TestBed.inject(AfterRenderManager) as unknown as { impl: { register: (sequence: unknown) => void } };
+    return manager.impl;
+  }
+
+  beforeEach(async () => {
+    TestBed.configureTestingModule({ imports: [Host] });
+    fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+  });
+
+  it('không xếp thêm render hook one-shot nào cho mỗi lần orientation tick', async () => {
+    const registerSpy = spyOn(afterRenderImpl(), 'register').and.callThrough();
+
+    for (let i = 0; i < 4; i++) {
+      fixture.componentInstance.orientation = i % 2 === 0 ? 'vertical' : 'horizontal';
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+    }
+
+    // Hook phải được đăng ký ĐÚNG MỘT lần ở constructor, không phải mỗi lần effect chạy lại.
+    expect(registerSpy).not.toHaveBeenCalled();
+  });
+
+  it('vẫn sync handle theo orientation mới dù không đăng ký thêm hook', async () => {
+    const splitterEl = fixture.debugElement.query(By.css('sd-splitter')).nativeElement as HTMLElement;
+    const registerSpy = spyOn(afterRenderImpl(), 'register').and.callThrough();
+
+    fixture.componentInstance.orientation = 'vertical';
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const handles = splitterEl.querySelectorAll('sd-splitter-handle');
+    expect(handles.length).toBe(2);
+    handles.forEach(handle => expect(handle.classList.contains('sd-splitter__handle--vertical')).toBe(true));
+    expect(registerSpy).not.toHaveBeenCalled();
   });
 });

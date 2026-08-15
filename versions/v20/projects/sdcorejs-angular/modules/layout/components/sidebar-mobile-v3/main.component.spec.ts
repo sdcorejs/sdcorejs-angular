@@ -2,14 +2,14 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { SD_LAYOUT_CONFIGURATION } from '../../configurations';
 import { SdLayoutMenu, SdLayoutNavigationStateService } from '../../services';
-import { SidebarMobileV3Component } from './main.component';
+import { SdSidebarMobileV3 } from './main.component';
 
 const dashboard: SdLayoutMenu = { id: 'dashboard', title: 'Tổng quan', path: '/dashboard', permission: true };
 const reports: SdLayoutMenu = { id: 'reports', title: 'Báo cáo bán hàng', path: '/reports', permission: true };
 const menus: SdLayoutMenu[] = [{ id: 'work', title: 'Công việc', children: [dashboard, reports] }];
 
-describe('SidebarMobileV3Component', () => {
-  let fixture: ComponentFixture<SidebarMobileV3Component>;
+describe('SdSidebarMobileV3', () => {
+  let fixture: ComponentFixture<SdSidebarMobileV3>;
   let signout: jasmine.Spy;
 
   beforeEach(async () => {
@@ -17,7 +17,7 @@ describe('SidebarMobileV3Component', () => {
     document.body.style.overflow = '';
     signout = jasmine.createSpy('signout');
     await TestBed.configureTestingModule({
-      imports: [SidebarMobileV3Component],
+      imports: [SdSidebarMobileV3],
       providers: [
         provideRouter([]),
         {
@@ -34,7 +34,7 @@ describe('SidebarMobileV3Component', () => {
         },
       ],
     }).compileComponents();
-    fixture = TestBed.createComponent(SidebarMobileV3Component);
+    fixture = TestBed.createComponent(SdSidebarMobileV3);
     fixture.componentRef.setInput('menus', menus);
     fixture.componentRef.setInput('userInfo', { fullName: 'Demo User', role: { text: 'Operator' } });
     fixture.componentRef.setInput('sidebar', { version: 3 });
@@ -113,6 +113,24 @@ describe('SidebarMobileV3Component', () => {
 
     expect(fixture.nativeElement.querySelector('[data-v3-mobile-pinned]').textContent).toContain('Tổng quan');
     expect(fixture.nativeElement.querySelector('[data-v3-mobile-recent]').textContent).toContain('Báo cáo bán hàng');
+  });
+
+  it('opens an absolute http(s) menu with noopener,noreferrer and never opens a javascript: scheme', () => {
+    const windowOpen = spyOn(window, 'open');
+    const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+
+    fixture.componentInstance.navigateMenu({ id: 'docs', title: 'Tài liệu', path: 'https://example.com/docs', permission: true });
+    expect(windowOpen).toHaveBeenCalledWith('https://example.com/docs', '_blank', 'noopener,noreferrer');
+    expect(navigate).not.toHaveBeenCalled();
+
+    windowOpen.calls.reset();
+    fixture.componentInstance.navigateMenu({
+      id: 'evil',
+      title: 'Evil',
+      path: 'javascript:fetch("//evil.example.com")//http',
+      permission: true,
+    });
+    expect(windowOpen).not.toHaveBeenCalled();
   });
 
   it('releases body scroll when destroyed while open', () => {

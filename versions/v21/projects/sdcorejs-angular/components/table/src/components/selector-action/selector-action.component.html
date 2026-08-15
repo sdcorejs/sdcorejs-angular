@@ -1,4 +1,4 @@
-@let _actions = selectedTableItems() | actionFilter: tableOption()?.selector?.actions;
+@let _actions = actions();
 @let _selectedTableItems = selectedTableItems();
 @let _autoId = autoId();
 
@@ -55,7 +55,15 @@
         </mat-menu>
       }
     }
-    <!-- Nút close luôn hiện kể cả không có action — đảm bảo user có lối thoát clear selection -->
-    <sd-button [autoId]="_autoId ? _autoId + '-clear-selection' : null" class="ml-4" prefixIcon="close" color="secondary" type="outline" (click)="onClear()" width="35px"></sd-button>
+    <!-- why: thanh này chỉ mở khi CÓ action (xem `opened`), nên nút ✕ luôn đi kèm ít nhất một
+         action — nó là lối thoát nhanh, không còn là nội dung duy nhất của thanh. -->
+    <sd-button
+      [autoId]="_autoId ? _autoId + '-clear-selection' : null"
+      class="ml-4"
+      prefixIcon="close"
+      color="secondary"
+      type="outline"
+      (click)="onClear()"
+      width="35px"></sd-button>
   </div>
 </sd-quick-action>

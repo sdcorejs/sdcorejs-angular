@@ -6,7 +6,7 @@ import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdInput, SdSelect } from '@sdcorejs/angular/forms';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { ISdFormGenericConfiguration, SD_FORM_GENERIC_CONFIGURATION } from '../../../../configurations';
-import { Attribute, GetAttributes } from '../../../../models';
+import { Attribute, sdGetAttributes } from '../../../../models';
 import {
   SdFormGenericValidation,
   SdFormGenericValidationFunction,
@@ -14,15 +14,14 @@ import {
 } from '../../../../models/form-generic-validation.model';
 import { SdFormGeneric } from '../../../../models/form-generic.model';
 import { ExpressionBuilderComponent } from '../expression-builder/expression-builder.component';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
-import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'configure-validation',
   templateUrl: './configure-validation.component.html',
   styleUrl: './configure-validation.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdIcon, MatMenuModule, SdModal, SdButton, SdInput, SdSelect, ExpressionBuilderComponent, TranslatePipe],
+  imports: [MatMenuModule, SdModal, SdButton, SdInput, SdSelect, ExpressionBuilderComponent, SdTranslatePipe],
 })
 export class ConfigureValidationComponent implements AfterViewInit, OnDestroy {
   @ViewChild(SdModal) modal?: SdModal;
@@ -57,7 +56,7 @@ export class ConfigureValidationComponent implements AfterViewInit, OnDestroy {
     } else {
       this.validations = [];
     }
-    this.attributes = GetAttributes(formGeneric.components);
+    this.attributes = sdGetAttributes(formGeneric.components);
     if (formGeneric) {
       this.modal?.open();
       this.ref.markForCheck();

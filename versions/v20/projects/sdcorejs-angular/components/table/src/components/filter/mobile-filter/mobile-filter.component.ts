@@ -8,7 +8,7 @@ import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
 import { SdInput } from '@sdcorejs/angular/forms/input';
 import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
 import { SdSelect } from '@sdcorejs/angular/forms/select';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { Operator } from '@sdcorejs/utils/models';
 import { SdTableFilterDefDirective } from '../../../directives/sd-table-filter-def.directive';
 import { SdTableColumn } from '../../../models/table-column.model';
@@ -47,7 +47,7 @@ import { ColumnFilterComponent } from '../column-filter/column-filter.component'
     SdDatetime,
     SdDateRange,
     FilterValuesPipe,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
 })
 export class MobileFilterComponent {

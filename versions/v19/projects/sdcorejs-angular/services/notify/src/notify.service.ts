@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { ApplicationRef, createComponent, EnvironmentInjector, inject, Injectable, signal } from '@angular/core';
+import { ApplicationRef, ComponentRef, createComponent, DestroyRef, EnvironmentInjector, inject, Injectable, signal } from '@angular/core';
 import { Utilities } from '@sdcorejs/utils/fns';
 
 import { I18nService } from '@sdcorejs/angular/i18n';
@@ -22,13 +22,23 @@ export class SdNotifyService {
   // State
   #buffer: Record<string, string[]> = {};
   #timers: Record<string, ReturnType<typeof setTimeout> | null> = {};
+  #containerRef?: ComponentRef<ToastContainerComponent>;
+  #containerElement?: HTMLElement;
   private readonly appRef = inject(ApplicationRef);
   private readonly injector = inject(EnvironmentInjector);
   private readonly document = inject(DOCUMENT);
+  readonly #destroyRef = inject(DestroyRef);
   readonly #i18n = inject(I18nService);
+  /** Đặt trong `#teardown()` — mọi API public trở thành no-op sau khi injector bị destroy. */
+  #destroyed = false;
 
   constructor() {
     this.#initContainer();
+    // why: providedIn:'root' KHÔNG có nghĩa là sống mãi — root injector vẫn bị destroy
+    // (TestBed reset, mỗi request khi SSR, micro-frontend unmount). Không có hook teardown thì
+    // ComponentRef + node <body> ở lại vĩnh viễn và timer debounce đang chờ sẽ flush vào signal
+    // của service đã chết → toast ma + leak view/DOM tích luỹ theo từng lần bootstrap.
+    this.#destroyRef.onDestroy(() => this.#teardown());
   }
 
   #initContainer() {
@@ -39,6 +49,36 @@ export class SdNotifyService {
     this.appRef.attachView(componentRef.hostView);
     const domElem = (componentRef.hostView as any).rootNodes[0] as HTMLElement;
     this.document.body.appendChild(domElem);
+    this.#containerRef = componentRef;
+    this.#containerElement = domElem;
+  }
+
+  #teardown() {
+    // why: cờ này chặn MỌI lời gọi sau teardown. Chỉ dọn timer đang chờ là chưa đủ: một
+    // `error()`/`warning()` gọi sau khi injector đã destroy vẫn chạy `#addToBuffer` và hẹn một
+    // timer 500ms MỚI mà không còn ai clear — nó flush vào signal của service đã chết.
+    this.#destroyed = true;
+    // why: dọn timer TRƯỚC khi huỷ view — flush chạy sau khi container đã destroy sẽ
+    // update signal mà không còn ai render, thuần tuý là công vô ích trên state đã chết.
+    this.#clearAllTimers();
+    this.#buffer = {};
+
+    const componentRef = this.#containerRef;
+    const containerElement = this.#containerElement;
+    this.#containerRef = undefined;
+    this.#containerElement = undefined;
+
+    // why: hook destroy của service chạy SAU ApplicationRef.destroy() khi root injector bị tháo
+    // (hook đăng ký theo thứ tự khởi tạo, mà appRef luôn có trước). Lúc đó view đã bị huỷ và
+    // detachView chỉ log NG0406 — nên chỉ detach khi appRef còn sống.
+    if (componentRef && !this.appRef.destroyed && !componentRef.hostView.destroyed) {
+      this.appRef.detachView(componentRef.hostView);
+      componentRef.destroy();
+    }
+    // why: createComponent() tạo host node rời rồi ta tự appendChild, nên destroy() không
+    // bảo đảm gỡ node khỏi <body> — gỡ tay để không để lại rác DOM. remove() an toàn khi
+    // node đã bị tách.
+    containerElement?.remove();
   }
 
   // Public API
@@ -73,6 +113,7 @@ export class SdNotifyService {
 
   // Private helpers
   #addImmediate(type: ToastType, message: string, option?: NotifyOption) {
+    if (this.#destroyed) return;
     const newToast: ToastData = {
       id: Utilities.generateUuid(),
       type,
@@ -91,6 +132,7 @@ export class SdNotifyService {
   }
 
   #addToBuffer(type: ToastType, message: string | string[], option?: NotifyOption) {
+    if (this.#destroyed) return;
     if (!this.#buffer[type]) {
       this.#buffer[type] = [];
     }

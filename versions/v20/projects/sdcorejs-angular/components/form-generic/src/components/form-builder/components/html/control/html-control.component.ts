@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy, inject } from '@angular/core';
-import { SdFormatComponent, SdFormGenericHtml } from '../../../../../models';
+import { sdFormatComponent, SdFormGenericHtml } from '../../../../../models';
 import { BuilderService } from '../../../services';
 import { filter, Subscription } from 'rxjs';
 import { HtmlPipe } from '../../../../../pipes';
@@ -21,7 +21,7 @@ export class HtmlControl implements AfterViewInit, OnDestroy {
   component!: SdFormGenericHtml;
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericHtml) {
     this.component = component;
-    SdFormatComponent(this.component);
+    sdFormatComponent(this.component);
     this.content = this.component.content;
   }
   content?: string;

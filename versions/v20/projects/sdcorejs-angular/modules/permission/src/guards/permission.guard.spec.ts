@@ -2,13 +2,13 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { SdPermissionGuard } from './permission.guard';
 import { ISdPermissionConfiguration, SD_PERMISSION_CONFIGURATION } from '../configurations';
-import { SdPermissionService } from '../services';
+import { SD_PERMISSION_PUBLIC, SdPermissionService } from '../services';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-const stateSnap = {} as RouterStateSnapshot;
+const stateSnap = { url: '/orders' } as RouterStateSnapshot;
 
 function makeRouteSnap(data: Record<string, unknown> = {}): ActivatedRouteSnapshot {
   return { data } as unknown as ActivatedRouteSnapshot;
@@ -24,12 +24,16 @@ function makePermissionService(
     'loadPermissions',
     'getToken',
     'decodeToken',
+    'readUnverifiedTokenClaims',
+    'reset',
+    'invalidate',
   ]);
   svc.hasPermission.and.returnValue(hasPermissionResult);
   svc.loadAllPermissions.and.returnValue(loadAllResult);
   svc.loadPermissions.and.returnValue(Promise.resolve([]));
   svc.getToken.and.returnValue(Promise.resolve(undefined));
   svc.decodeToken.and.returnValue(Promise.resolve(null));
+  svc.readUnverifiedTokenClaims.and.returnValue(Promise.resolve(null));
   return svc;
 }
 
@@ -93,15 +97,88 @@ describe('SdPermissionGuard', () => {
   // GROUP 2: canActivateChild — permission check
   // -------------------------------------------------------------------------
   describe('canActivateChild()', () => {
-    it('returns true when route.data.permission is undefined (no restriction)', async () => {
-      // When permission is undefined, guard calls hasPermission(undefined, ...).
-      // The real service short-circuits to true for empty/falsy input.
-      // Spy mimics this by returning true when called with a falsy permission.
-      const permSvc = makePermissionService(false);
-      permSvc.hasPermission.and.callFake((perm: any) => !perm?.toString());
+    // why: `canActivateChild` chạy cho MỌI route con. Route quên khai báo `data.permission` (hoặc gõ
+    // sai key) trước đây rơi vào nhánh "rỗng ⇒ cho qua" và được cấp quyền âm thầm.
+    it('returns FALSE when route.data has no "permission" entry (fail closed)', async () => {
+      spyOn(console, 'error');
+      const permSvc = makePermissionService(true);
       const guard = makeGuard({ loadPermissions: () => [] }, permSvc);
 
       const result = await guard.canActivateChild(makeRouteSnap({}), stateSnap);
+
+      expect(result).toBeFalse();
+      // Không được hỏi service — thiếu khai báo là từ chối ngay, không có nhánh "rỗng ⇒ true".
+      expect(permSvc.hasPermission).not.toHaveBeenCalled();
+    });
+
+    it('returns FALSE when the data key is misspelled (permision / permissions)', async () => {
+      spyOn(console, 'error');
+      const permSvc = makePermissionService(true);
+      const guard = makeGuard({ loadPermissions: () => [] }, permSvc);
+
+      const typo = await guard.canActivateChild(makeRouteSnap({ permision: 'PERM_A' }), stateSnap);
+      const plural = await guard.canActivateChild(makeRouteSnap({ permissions: ['PERM_A'] }), stateSnap);
+
+      expect(typo).toBeFalse();
+      expect(plural).toBeFalse();
+    });
+
+    // why: `onForbiden` thường `navigateByUrl('/layout/forbidden')`. Nếu nhánh "không khai báo
+    // permission" cũng gọi nó thì một trang forbidden quên khai báo sẽ tự chặn mình và gọi lại
+    // `onForbiden` → vòng lặp redirect vô tận. Thiếu khai báo phải chặn IM LẶNG.
+    it('does NOT call onForbiden() when the route declares no permission (cannot self-recurse)', async () => {
+      spyOn(console, 'error');
+      const onForbidenSpy = jasmine.createSpy('onForbiden');
+      const permSvc = makePermissionService(true);
+      const guard = makeGuard({ loadPermissions: () => [], onForbiden: onForbidenSpy }, permSvc);
+
+      const result = await guard.canActivateChild(makeRouteSnap({}), stateSnap);
+
+      expect(result).toBeFalse();
+      expect(onForbidenSpy).not.toHaveBeenCalled();
+    });
+
+    it('never loops when the forbidden target itself declares no permission', async () => {
+      spyOn(console, 'error');
+      const permSvc = makePermissionService(false);
+      const visited: string[] = [];
+      // Mô phỏng `onForbiden` điều hướng sang /forbidden, và /forbidden lại chạy qua guard.
+      const guard = makeGuard(
+        {
+          loadPermissions: () => [],
+          onForbiden: () => {
+            visited.push('/forbidden');
+            if (visited.length > 5) return;
+            void guard.canActivateChild(makeRouteSnap({}), { url: '/forbidden' } as RouterStateSnapshot);
+          },
+        },
+        permSvc
+      );
+
+      await guard.canActivateChild(makeRouteSnap({ permission: 'PERM_DENIED' }), stateSnap);
+
+      // Đúng MỘT lần điều hướng: lần chạy guard trên /forbidden không được kích hoạt onForbiden nữa.
+      expect(visited).toEqual(['/forbidden']);
+    });
+
+    it('logs loudly in dev mode when the route declares no permission', async () => {
+      const errorSpy = spyOn(console, 'error');
+      const permSvc = makePermissionService(true);
+      const guard = makeGuard({ loadPermissions: () => [] }, permSvc);
+
+      await guard.canActivateChild(makeRouteSnap({}), stateSnap);
+
+      expect(errorSpy).toHaveBeenCalledTimes(1);
+      expect(errorSpy.calls.mostRecent().args[0]).toContain('SD_PERMISSION_PUBLIC');
+    });
+
+    it('allows a route that opts out explicitly with SD_PERMISSION_PUBLIC', async () => {
+      const permSvc = makePermissionService(false);
+      permSvc.hasPermission.and.callFake((perm: any) => perm === SD_PERMISSION_PUBLIC);
+      const guard = makeGuard({ loadPermissions: () => [] }, permSvc);
+
+      const result = await guard.canActivateChild(makeRouteSnap({ permission: SD_PERMISSION_PUBLIC }), stateSnap);
+
       expect(result).toBeTrue();
     });
 

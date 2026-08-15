@@ -3,7 +3,7 @@
 **Type**: Component (two related components, documented together — used as a pair)
 **Selectors**: `sd-stepper`, `sd-step`
 **Import path**: `@sdcorejs/angular/components/stepper`
-**Classes**: `SdStepper extends SdBaseSecureComponent`, `SdStep`
+**Classes**: `SdStepper`, `SdStep`
 **Standalone**: yes
 **Change detection**: `OnPush` on both
 
@@ -35,7 +35,7 @@ Declarative wizard / stepper container wrapping Angular Material's `mat-stepper`
 | `headerPosition` | `'top' \| 'bottom'` | `'top'` | Only meaningful for horizontal orientation. `'top'` (default) shows headers above the content, `'bottom'` flips it. |
 | `animationDuration` | `string` | `'500ms'` | CSS time string forwarded to `mat-stepper.animationDuration`. Pass `'0ms'` to disable animation. |
 | `disableRipple` | `boolean` | `false` | `booleanAttribute` transform. Disables the ripple on step header click. |
-| `color` | `SdColor` (`'primary' \| 'secondary' \| 'info' \| 'success' \| 'warning' \| 'error'`) | `'primary'` | Drives the active indicator, completed indicator, and active connector color via the Core CSS vars (`--sd-<color>`). Same palette as `<sd-tab-group>` and `<sd-badge>`. |
+| `color` | `Color` (`'primary' \| 'secondary' \| 'info' \| 'success' \| 'warning' \| 'error'`) | `'primary'` | Drives the active indicator, completed indicator, and active connector color via the Core CSS vars (`--sd-<color>`). Same palette as `<sd-tab-group>` and `<sd-badge>`. |
 | `autoId` | `string \| undefined` | `undefined` | Emitted as `data-autoId` on the host element for e2e selectors. |
 
 ### Outputs

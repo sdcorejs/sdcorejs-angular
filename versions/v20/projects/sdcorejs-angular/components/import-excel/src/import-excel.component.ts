@@ -13,12 +13,12 @@ import { MatMenuModule } from '@angular/material/menu';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdExcelService, SdExcelSheet, SdExcelTemplate, SdExcelTemplateColumn } from '@sdcorejs/angular/services/excel';
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
-import { DateUtilities, NumberUtilities } from '@sdcorejs/angular/utilities';
+import { DateUtilities, NumberUtilities } from '@sdcorejs/utils/fns';
 import { SdLoadingService } from '@sdcorejs/angular/services/loading';
 import { ColumnTransformPipe } from './pipes/column-transform.pipe';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { SdBadge } from '@sdcorejs/angular/components/badge';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
@@ -40,7 +40,7 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
     MatMenuModule,
     MatProgressSpinner,
     SdBadge,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
   providers: [ColumnHiddenPipe],
 })
@@ -402,6 +402,14 @@ export class SdImportExcel implements OnInit, OnDestroy {
     this.showing = showing;
     this.#paginator.pageIndex = 0;
     this.#reload();
+  };
+
+  // why: vùng trạng thái rỗng nay là role="button" + tabindex="0" nên Enter/Space phải tải file
+  // mẫu đúng như click. preventDefault để Space không cuộn trang.
+  onDownloadTemplateKeydown = (event: KeyboardEvent) => {
+    if (event.target !== event.currentTarget) return;
+    event.preventDefault();
+    void this.downloadTemplate();
   };
 
   downloadTemplate = async () => {

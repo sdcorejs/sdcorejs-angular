@@ -1,4 +1,4 @@
-import { booleanAttribute, Component, ElementRef, HostListener, inject, input, numberAttribute, output } from '@angular/core';
+import { booleanAttribute, Component, DestroyRef, ElementRef, HostListener, inject, input, numberAttribute, output } from '@angular/core';
 import { SplitterOrientation } from '../splitter.models';
 
 @Component({
@@ -22,6 +22,14 @@ import { SplitterOrientation } from '../splitter.models';
 })
 export class SdSplitterHandleComponent {
   readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
+  readonly #destroyRef = inject(DestroyRef);
+
+  constructor() {
+    // why: destroy giữa lúc drag (splitter re-sync handle, panel bị @if gỡ…) thì pointerup
+    // KHÔNG bao giờ tới → frame đang chờ vẫn chạy và emit dragMove từ component đã tháo.
+    // Huỷ frame ở cả destroy chứ không chỉ ở pointerup.
+    this.#destroyRef.onDestroy(() => this.#cancelPendingFrame());
+  }
 
   orientation = input<SplitterOrientation>('horizontal');
   disabled = input(false, { transform: booleanAttribute });
@@ -112,10 +120,13 @@ export class SdSplitterHandleComponent {
     this.elementRef.nativeElement.releasePointerCapture(ev.pointerId);
     this.#pointerId = null;
     // Hủy rAF đang chờ để tránh emit dragMove sau khi drag kết thúc
-    if (this.#rafPending != null) {
-      cancelAnimationFrame(this.#rafPending);
-      this.#rafPending = null;
-    }
+    this.#cancelPendingFrame();
     this.dragEnd.emit();
+  }
+
+  #cancelPendingFrame(): void {
+    if (this.#rafPending == null) return;
+    cancelAnimationFrame(this.#rafPending);
+    this.#rafPending = null;
   }
 }

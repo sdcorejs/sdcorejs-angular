@@ -92,11 +92,6 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.excel.cannot-read-file': '파일 내용을 읽을 수 없습니다',
   'core.excel.no-sheet': 'Excel 파일에 데이터 시트가 없습니다',
 
-  // ---- Service: docx ----
-  'core.docx.invalid-format': '형식이 올바르지 않습니다. DOC 또는 DOCX 형식의 템플릿을 선택해 주세요',
-  'core.docx.size-exceeded': '템플릿 파일 크기가 지원 한도를 초과했습니다. 다시 시도해 주세요',
-  'core.docx.convert-error': 'DOCX 파일 변환 중 오류가 발생했습니다',
-
   // ---- Service: notify (toast) ----
   'core.notify.type.success': '성공',
   'core.notify.type.info': '정보',
@@ -218,7 +213,6 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.time-range.step': '시간은 {step}분 간격에 맞아야 합니다',
   'core.form.time-range.from': '시작',
   'core.form.time-range.to': '종료',
-  'core.form.time-range.clear': '시간 범위 지우기',
 
   // ---- Forms: time-spinner ----
   'core.form.time-spinner.hour': '시',
@@ -249,6 +243,7 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Forms: select ----
   'core.form.select.required': '선택해 주세요',
+  'core.form.select.selectAll': '전체',
 
   // ---- Forms: textarea ----
   'core.form.textarea.required': '정보를 입력해 주세요',
@@ -267,14 +262,6 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.editor.image.max-height': '이미지 높이 {height}px가 한도 {max}px를 초과합니다',
   'core.component.editor.image.max-per-selection': '한 번에 최대 {max}장의 이미지를 선택할 수 있습니다',
 
-  // ---- Component: document-builder ----
-  'core.component.document-builder.page-number.current': '현재 페이지 번호',
-  'core.component.document-builder.page-number.total': '전체 페이지 수',
-  'core.component.document-builder.ck-comment.label': '댓글',
-  'core.component.document-builder.ck-comment.text-too-long': '텍스트가 너무 깁니다 ({length}자). 최대 {max}자입니다.',
-  'core.component.document-builder.variable.not-allowed': '텍스트에 변수를 추가할 수 없습니다',
-  'core.component.document-builder.variable.invalid-data': '변수 데이터가 올바르지 않습니다',
-
   // ---- Component: form-builder ----
   'core.component.form-builder.field-key': '필드 키',
   'core.component.form-builder.display': '표시',
@@ -289,6 +276,7 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.form-builder.required-when': '필수 조건',
   'core.component.form-builder.confirm': '확인',
   'core.component.form-builder.delete': '삭제',
+  'core.component.form-builder.select-item': '선택하여 편집',
   'core.component.form-builder.save': '저장',
   'core.component.form-builder.hint': '힌트',
   'core.component.form-builder.parameter': '매개변수',
@@ -360,9 +348,13 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.form-builder.display-label': '표시 라벨',
   'core.component.form-builder.attribute': '속성',
   'core.component.form-builder.add-variable': '변수 추가',
+  'core.component.form-builder.no-variable': '아직 변수가 없습니다. 추가하면 조건식에서 사용할 수 있습니다.',
+  'core.component.form-builder.no-validation': '아직 검증이 없습니다. 추가하면 조건에 따라 경고나 오류를 표시할 수 있습니다.',
   'core.component.form-builder.add-new': '새로 추가',
   'core.component.form-builder.detail': '상세',
   'core.component.form-builder.create-update': '생성/수정',
+  'core.component.form-builder.update-row': '행 수정',
+  'core.component.form-builder.add-row': '행 추가',
   'core.component.form-builder.default': '기본',
   'core.component.form-builder.show-more': '더 보기',
   'core.component.form-builder.show-less': '접기',
@@ -544,6 +536,8 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.error-occurred': '오류가 발생했습니다',
   'core.component.table.not-an-array': '데이터가 배열이 아닙니다',
   'core.component.table.config.confirm-reset': '모든 설정을 기본값으로 초기화하시겠습니까',
+  'core.component.table.config.drag-hint': '⠿ 아이콘을 끌어 열 순서를 변경하세요',
+  'core.component.table.config.drag-handle': '끌어서 열 순서 변경',
   'core.component.table.popup-export.select-columns': '내보낼 열을 선택해 주세요',
   'core.component.table.selector-action.default-msg': '개 선택됨',
   'core.component.tab-router.too-many-tabs': '너무 많은 탭이 열려 있습니다.',
@@ -577,6 +571,13 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.module.layout.user.notification': '알림',
   'core.module.layout.sidebar.search': '검색',
   'core.module.layout.sidebar.toggle': '사이드바 전환',
+  'core.module.layout.sidebar.menu-groups': '메뉴 그룹',
+  'core.module.layout.sidebar.close-menu': '메뉴 닫기',
+  'core.module.layout.sidebar.search-in-group': '그룹 내 검색',
+  'core.module.layout.sidebar.primary-nav': '기본 탐색',
+  'core.module.layout.sidebar.more-menu': '더 보기 메뉴',
+  'core.module.layout.sidebar.more': '더 보기',
+  'core.module.layout.sidebar.search-in-menu': '메뉴 검색',
 
   // ---- Module: layout (greeting + weekday) ----
   'core.module.layout.greeting.hello': '안녕하세요, {name}님',
@@ -616,4 +617,91 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Module: generic (generic-select) ----
   'core.module.generic.generic-select.detail-link': '상세',
+
+  // ---- Component: query-bar ----
+  'core.component.query-bar.search-placeholder': '검색...',
+  'core.component.query-bar.no-fields': '필드가 설정되지 않았습니다',
+  'core.component.query-bar.add-filter': '필터 추가',
+  'core.component.query-bar.clear-all': '전체 지우기 ({count})',
+  'core.component.query-bar.search': '검색',
+  'core.component.query-bar.logic-operator': '논리 연산자',
+  'core.component.query-bar.boolean.true': '예',
+  'core.component.query-bar.boolean.false': '아니오',
+  'core.component.query-bar.placeholder.value': '값',
+  'core.component.query-bar.placeholder.text': '입력…',
+  'core.component.query-bar.placeholder.from-number': '시작',
+  'core.component.query-bar.placeholder.to-number': '종료',
+  'core.component.query-bar.placeholder.from-text': '시작…',
+  'core.component.query-bar.placeholder.to-text': '종료…',
+  'core.component.query-bar.swap-field': '필드 변경',
+  'core.component.query-bar.placeholder.select-value': '값 선택',
+  'core.component.query-bar.placeholder.enter-value': '값 입력',
+  'core.component.query-bar.loading-values': '로딩 중...',
+  'core.component.query-bar.field-empty': '설정된 필드가 없습니다.',
+  'core.component.query-bar.saved-filters.tooltip': '저장된 필터',
+  'core.component.query-bar.saved-filters.tooltip-disabled': '[savedFiltersKey]가 필요합니다',
+  'core.component.query-bar.saved-filters.delete': '필터 삭제',
+  'core.component.query-bar.saved-filters.empty': '저장된 필터가 없습니다.',
+  'core.component.query-bar.saved-filters.save': '현재 필터 저장',
+  'core.component.query-bar.saved-filters.name-label': '필터 이름',
+
+  // ---- Component: query-builder ----
+  'core.component.query-builder.date-mode.absolute': '특정 날짜',
+  'core.component.query-builder.date-mode.now': '오늘',
+  'core.component.query-builder.date-mode.relative': '상대',
+  'core.component.query-builder.value-source.literal': '값 입력',
+  'core.component.query-builder.value-source.field': '필드와 비교',
+  'core.component.query-builder.relative.hour-previous': '시간 전',
+  'core.component.query-builder.relative.hour-next': '시간 후',
+  'core.component.query-builder.relative.day-previous': '일 전',
+  'core.component.query-builder.relative.day-next': '일 후',
+  'core.component.query-builder.relative.week-previous': '주 전',
+  'core.component.query-builder.relative.week-next': '주 후',
+  'core.component.query-builder.relative.month-previous': '개월 전',
+  'core.component.query-builder.relative.month-next': '개월 후',
+  'core.component.query-builder.relative.format': '{amount}{phrase}',
+  'core.component.query-builder.add': '추가',
+  'core.component.query-builder.add-node': '조건 또는 그룹 추가',
+  'core.component.query-builder.condition': '조건',
+  'core.component.query-builder.group': '그룹',
+  'core.component.query-builder.remove-group': '그룹 삭제',
+  'core.component.query-builder.remove-condition': '조건 삭제',
+  'core.component.query-builder.empty': '아직 조건이 없습니다',
+  'core.component.query-builder.select-field': '필드 선택',
+  'core.component.query-builder.value': '값',
+  'core.component.query-builder.from': '시작',
+  'core.component.query-builder.to': '종료',
+  'core.component.query-builder.boolean.true': '예',
+  'core.component.query-builder.boolean.false': '아니오',
+
+  // ---- Component: tree ----
+  'core.component.tree.selected-count': '{count}개 선택됨',
+  'core.component.tree.expand': '트리 항목 펼치기',
+  'core.component.tree.collapse': '트리 항목 접기',
+  'core.component.tree.retry-item': '트리 항목 다시 불러오기',
+  'core.component.tree.load-error': '트리 데이터를 불러올 수 없습니다',
+
+  // ---- Directive: hover-copy ----
+  'core.directive.hover-copy.copied': '복사되었습니다',
+
+  // ---- Module: layout (sidebar sections + pin) ----
+  'core.module.layout.sidebar.pinned': '고정됨',
+  'core.module.layout.sidebar.recent': '최근',
+  'core.module.layout.sidebar.all-menu': '전체 메뉴',
+  'core.module.layout.menu.pin': '{title} 고정',
+  'core.module.layout.menu.unpin': '{title} 고정 해제',
+
+  // ---- Per-control accessible names (replacing borrowed keys) ----
+  'core.form.date.open-picker': '달력 열기',
+  'core.form.datetime.open-picker': '달력 열기',
+  'core.form.date-range.open-picker': '달력 열기',
+  'core.form.date-range.clear': '날짜 범위 지우기',
+  'core.form.select.search': '검색',
+  'core.component.table.loading': '표 데이터를 불러오는 중',
+  'core.component.upload-file.loading': '파일 업로드 중',
+  'core.component.import-excel.loading': '데이터를 불러오는 중',
+  'core.component.upload-file.remove': '파일 삭제',
+  'core.component.upload-file.zoom': '이미지 확대',
+  'core.component.upload-file.view-all': '모든 이미지 보기',
+  'core.component.form-builder.canvas': '폼 디자인 캔버스',
 };

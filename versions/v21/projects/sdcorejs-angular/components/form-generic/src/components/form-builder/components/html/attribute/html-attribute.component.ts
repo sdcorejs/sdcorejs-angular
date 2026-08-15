@@ -13,8 +13,8 @@ import {
 import { FormGroup } from '@angular/forms';
 import { debounceTime, filter, Subscription } from 'rxjs';
 import {
-  GetComponentAttributes,
-  SdFormatComponent,
+  sdGetComponentAttributes,
+  sdFormatComponent,
   SdFormGenericComponent,
   SdFormGenericDefinitionHtml,
   SdFormGenericGroup,
@@ -28,13 +28,13 @@ import { AttributeInput } from '../../attribute-input/attribute-input.component'
 import { AttributeSelect } from '../../attribute-select/attribute-select.component';
 import { AttributeTextarea } from '../../attribute-textarea/attribute-textarea.component';
 import { BuildQueries } from './components/build-queries/build-queries.component';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'html-attribute',
   templateUrl: './html-attribute.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AttributeInput, AttributeSelect, AttributeExpression, AttributeTextarea, BuildQueries, TranslatePipe],
+  imports: [AttributeInput, AttributeSelect, AttributeExpression, AttributeTextarea, BuildQueries, SdTranslatePipe],
 })
 export class HtmlAttribute implements OnInit, AfterViewInit, OnDestroy {
   private ref = inject(ChangeDetectorRef);
@@ -48,7 +48,7 @@ export class HtmlAttribute implements OnInit, AfterViewInit, OnDestroy {
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericHtml) {
     if (this.component !== component) {
       this.component = component;
-      SdFormatComponent(this.component);
+      sdFormatComponent(this.component);
     }
   }
   form = new FormGroup({});
@@ -69,7 +69,7 @@ export class HtmlAttribute implements OnInit, AfterViewInit, OnDestroy {
       this.ref.markForCheck();
     });
     this.rightProperties =
-      GetComponentAttributes(this.components()).map(e => ({
+      sdGetComponentAttributes(this.components()).map(e => ({
         value: '${' + e.value + '}',
         display: e.display,
       })) || [];

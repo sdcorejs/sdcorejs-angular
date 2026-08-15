@@ -99,7 +99,7 @@
             [class.c-bool-active]="_building.value === true"
             [attr.data-autoId]="_autoId + '-true'"
             (click)="commitValue.emit(true)">
-            {{ $any(_building.field).trueLabel || 'Có' }}
+            {{ $any(_building.field).trueLabel || booleanTrueLabel() }}
           </button>
           <button
             type="button"
@@ -107,7 +107,7 @@
             [class.c-bool-active]="_building.value === false"
             [attr.data-autoId]="_autoId + '-false'"
             (click)="commitValue.emit(false)">
-            {{ $any(_building.field).falseLabel || 'Không' }}
+            {{ $any(_building.field).falseLabel || booleanFalseLabel() }}
           </button>
         </span>
       } @else {

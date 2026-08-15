@@ -1,0 +1,10 @@
+@if (component && entity) {
+  <sd-checkbox
+    [form]="form()"
+    [label]="component.label || component.key"
+    [name]="component.key"
+    [autoId]="component.key"
+    [(model)]="entity[component.key!]"
+    [disabled]="disabled"
+    [viewed]="viewed || component.properties?.viewed"></sd-checkbox>
+}

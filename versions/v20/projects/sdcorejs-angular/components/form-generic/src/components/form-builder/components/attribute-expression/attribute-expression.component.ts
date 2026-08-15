@@ -2,11 +2,11 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, viewChild
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdQueryBuilder, SdQueryBuilderField } from '@sdcorejs/angular/components/query-builder';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { Filter } from '@sdcorejs/utils/models';
 import {
   Attribute,
-  GetAttributes,
+  sdGetAttributes,
   SdFormGenericComponent,
   SdFormGenericExpression,
   SdFormGenericGroup,
@@ -21,7 +21,7 @@ import { filterToFormExpression, formAttributesToQueryFields, formExpressionToFi
   templateUrl: './attribute-expression.component.html',
   styleUrl: './attribute-expression.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdButton, SdModal, SdQueryBuilder, ExpressionQueryPipe, TranslatePipe],
+  imports: [SdButton, SdModal, SdQueryBuilder, ExpressionQueryPipe, SdTranslatePipe],
 })
 export class AttributeExpression {
   private readonly ref = inject(ChangeDetectorRef);
@@ -76,7 +76,7 @@ export class AttributeExpression {
     if (components?.length) {
       for (const component of components) {
         if (component.type === 'group') {
-          attributes.push(...GetAttributes(component.components));
+          attributes.push(...sdGetAttributes(component.components));
         } else if (component.type === 'textfield' || component.type === 'textarea') {
           attributes.push({
             value: component.key,

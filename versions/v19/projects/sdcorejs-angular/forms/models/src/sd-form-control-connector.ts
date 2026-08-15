@@ -1,4 +1,4 @@
-import { Signal, computed, effect, untracked } from '@angular/core';
+import { Signal, computed, effect, isDevMode, untracked } from '@angular/core';
 import { AbstractControl, AsyncValidatorFn, FormGroup, NgForm, ValidatorFn, Validators } from '@angular/forms';
 
 import { sdFormControlState } from './form-control-state';
@@ -13,6 +13,18 @@ interface ɵSdFormControlConnectorBaseOptions<TControl> {
   readonly name: Signal<string | null | undefined>;
   /** Canonical control registered in the parent form. */
   readonly control: Signal<AbstractControl<TControl>>;
+  /**
+   * Control to register in the parent form **instead of** `control`, when the two must differ.
+   *
+   * why: `<sd-date>` / `<sd-datetime>` / `<sd-date-range>` bind `control` straight to the Material
+   * editor, so it necessarily holds the editor's own representation (a `Date`, or the display
+   * string) — not the public model. That is fine until `transform` is set, at which point the
+   * consumer is promised that `form.get(name).value` matches `model` and the `sdChange` payload.
+   * Yielding a model-facing control here moves only the *registration*; validators, disabled, state
+   * and the model binding all stay on `control`, so a `null`/absent signal keeps today's behaviour
+   * exactly. The component owning both controls is responsible for mirroring value and validity.
+   */
+  readonly registeredControl?: Signal<AbstractControl | null | undefined>;
   readonly validators?: Signal<ValidatorFn | readonly ValidatorFn[] | null | undefined>;
   readonly asyncValidators?: Signal<AsyncValidatorFn | readonly AsyncValidatorFn[] | null | undefined>;
   /** Adds/removes Validators.required while preserving validators supplied above. */
@@ -171,16 +183,57 @@ export function ɵsdFormControlConnector<TModel, TControl>(
   effect(onCleanup => {
     const formGroup = ɵsdCoerceFormGroup(options.form());
     const name = options.name();
-    const control = options.control();
+    // why: `?? options.control()` chứ không phải một nhánh riêng — không khai `registeredControl`
+    // (hoặc trả null) là đi đúng đường cũ, nên mọi control hiện có giữ nguyên control đã đăng ký.
+    const control = options.registeredControl?.() ?? options.control();
 
     if (!formGroup || !name) return;
 
     const current = formGroup.get(name);
-    const ownsRegistration = !current;
-    if (ownsRegistration) formGroup.addControl(name, control);
+
+    // why: trước đây là `const ownsRegistration = !current; if (ownsRegistration) addControl(...)`
+    // — tức là khi FormGroup cha ĐÃ có control trùng `name`, control nội bộ của component không bao
+    // giờ được đăng ký. Hậu quả im lặng: người dùng gõ vào field, nhưng `form.value[name]` không bao
+    // giờ đổi, form submit rỗng và không có bất kỳ cảnh báo nào. Trùng `name` gần như luôn là lỗi
+    // của consumer (khai control thủ công rồi lại truyền `[form]`+`name`, hoặc 2 control cùng tên).
+    // Giờ: thay control bằng `setControl` để giá trị THỰC SỰ tới được form, cộng thêm lỗi dev-mode
+    // chỉ đúng tên field để consumer gỡ khai báo thừa.
+    // Ba trường hợp, và chỉ trường hợp thứ ba là thay đổi hành vi:
+    //  1. chưa có gì ở `name`      → tự đăng ký, TA sở hữu, gỡ khi cleanup.
+    //  2. đã có ĐÚNG control này   → consumer chủ động đăng ký hộ; ta KHÔNG sở hữu nên
+    //                                 không được gỡ khi destroy (nếu không sẽ xoá control
+    //                                 mà consumer đang chủ ý giữ).
+    //  3. đã có control KHÁC       → xung đột tên. Trước đây im lặng bỏ qua, nên giá trị người
+    //                                 dùng gõ không bao giờ tới được form và submit ra rỗng.
+    const ownsRegistration = current == null;
+    // why: control bị ta đẩy ra (nếu có) phải được GHI NHỚ để trả lại khi cleanup. Nếu không, đổi
+    // `name` hoặc destroy component sẽ để control của ta nằm lại vĩnh viễn trong FormGroup của
+    // consumer, còn control gốc của họ thì mất hẳn — tệ hơn cả bug ban đầu.
+    const displaced = !ownsRegistration && current !== control ? current : undefined;
+    if (ownsRegistration) {
+      formGroup.addControl(name, control);
+    } else if (current !== control) {
+      if (isDevMode()) {
+        console.error(
+          `[sd-forms] FormGroup đã có control tên "${name}" và nó KHÔNG phải control của <sd-*> này. ` +
+            `Control cũ bị thay thế để giá trị nhập vào thực sự tới được form — trước đây trường hợp này ` +
+            `bị bỏ qua im lặng và form submit ra rỗng. Bỏ khai báo control "${name}" thủ công, hoặc đổi ` +
+            `\`name\` của component.`
+        );
+      }
+      formGroup.setControl(name, control);
+    }
 
     onCleanup(() => {
-      if (ownsRegistration && formGroup.get(name) === control) formGroup.removeControl(name);
+      // Nếu ai đó đã đăng ký chồng lên sau ta thì không đụng vào.
+      if (formGroup.get(name) !== control) return;
+      if (displaced) {
+        // Trả lại đúng control ban đầu của consumer.
+        formGroup.setControl(name, displaced);
+      } else if (ownsRegistration) {
+        formGroup.removeControl(name);
+      }
+      // Trường hợp còn lại: consumer tự đăng ký ĐÚNG control này — ta không sở hữu nên không gỡ.
     });
   });
 

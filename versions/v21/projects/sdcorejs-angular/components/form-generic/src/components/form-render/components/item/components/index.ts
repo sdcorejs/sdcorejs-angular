@@ -6,6 +6,7 @@ export * from './number/number.component';
 export * from './datetime/datetime.component';
 export * from './select/select.component';
 export * from './radio/radio.component';
+export * from './checkbox/checkbox.component';
 export * from './upload/upload.component';
 export * from './table/table.component';
 export * from './html/html.component';

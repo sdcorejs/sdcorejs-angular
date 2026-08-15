@@ -1,0 +1,18 @@
+// why: Material tạo khoảng cách giữa leading icon và nhãn của menu item bằng `margin-right` đặt trên
+// `.mat-icon`. Với `<sd-icon>` thì `.mat-icon` nằm BÊN TRONG host, nên margin đó không đẩy nhãn ra —
+// nó chỉ làm glyph lệch và bị xén trong host (sd-icon đã trung hoà margin đó ở cấp component). Rule
+// dưới đây trả khoảng cách về đúng cấp: host `<sd-icon>` khi nó là icon dẫn đầu của menu item.
+//
+// Đặt ở cấp host nên Material font icon và Lucide SVG hành xử giống hệt nhau — Lucide không render
+// `.mat-icon` nên trước đây không nhận được khoảng cách nào từ Material.
+//
+// Chỉ nhắm con TRỰC TIẾP: menu tự bọc icon trong wrapper flex có `gap` riêng (sd-table command,
+// sd-tree command) không được cộng thêm margin. Angular slot nội dung không phải `mat-icon` vào
+// trong `.mat-mdc-menu-item-text`, nên phải liệt kê cả hai cấp.
+//
+// Bọc trong `:where()` để specificity bằng 0: bất kỳ rule nào của menu cụ thể — kể cả một class đơn —
+// cũng thắng, nên đây là default an toàn chứ không phải thứ phải đi vá bằng `!important`.
+:where(.mat-mdc-menu-item > sd-icon:first-child),
+:where(.mat-mdc-menu-item > .mat-mdc-menu-item-text > sd-icon:first-child) {
+  margin-right: var(--mat-menu-item-spacing, 12px);
+}

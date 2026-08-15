@@ -30,17 +30,17 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdInput } from '@sdcorejs/angular/forms/input';
-import { SdTextarea } from '@sdcorejs/angular/forms/textarea';
+import { SdCodeEditor } from '@sdcorejs/angular/components/code-editor';
 import { SdConfirmService, SdNotifyService } from '@sdcorejs/angular/services';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { debounceTime, startWith, Subject, Subscription } from 'rxjs';
 import {
-  COMPONENT_ICONS,
+  SD_COMPONENT_ICONS,
   FormBuilderComponent,
   FormBuilderComponentGroup,
-  FormBuilderComponents,
-  GenerateId,
-  GenerateKey,
+  SD_FORM_BUILDER_COMPONENTS,
+  sdGenerateId,
+  sdGenerateKey,
   SdFormGenericComponent,
   SdFormGenericGroup,
   SdFormGenericVariable,
@@ -78,7 +78,7 @@ import {
 import { ConfigureValidationComponent } from './components/configure-validation/configure-validation.component';
 import { buildFormBuilderRows, canPlaceInRow, flattenFormBuilderRows, FormBuilderLayoutRow, moveItemToRow } from './form-builder-layout';
 import { BuilderService } from './services';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 interface DragDropRowItem extends FormBuilderLayoutRow {
   rowIndex?: number;
@@ -133,11 +133,11 @@ type PaletteDropTarget =
     GroupAttribute,
     SdModal,
     SdInput,
-    SdTextarea,
+    SdCodeEditor,
     SdButton,
     SdFormRender,
     ConfigureValidationComponent,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
 })
 export class SdFormBuilder implements OnInit, OnDestroy {
@@ -164,8 +164,8 @@ export class SdFormBuilder implements OnInit, OnDestroy {
   readonly formGeneric = input<SdFormGeneric | undefined>(undefined);
 
   // ── component registry (immutable) ─────────────────────────────────────
-  readonly formBuilderComponents = FormBuilderComponents;
-  readonly componentIcons = COMPONENT_ICONS;
+  readonly formBuilderComponents = SD_FORM_BUILDER_COMPONENTS;
+  readonly componentIcons = SD_COMPONENT_ICONS;
 
   // ── palette state (signal + computed group buckets) ────────────────────
   readonly paletteSearch = signal('');
@@ -400,7 +400,7 @@ export class SdFormBuilder implements OnInit, OnDestroy {
   addComponent = (item: FormBuilderComponent, index?: number, layoutColumns = '12') => {
     // why: không cho thêm group khi đang Detail trong 1 group (tránh group lồng group).
     if (item.type === 'group' && this.editingGroupId()) return;
-    const id = GenerateId();
+    const id = sdGenerateId();
     const columns = item.type === 'break' ? '12' : layoutColumns;
     let newComponent: SdFormGenericComponent | SdFormGenericGroup;
     if (item.type === 'group') {
@@ -421,7 +421,7 @@ export class SdFormBuilder implements OnInit, OnDestroy {
       // (auto-gen cho stability) nhưng không hiển thị trong attribute panel.
       newComponent = {
         id,
-        key: GenerateKey(),
+        key: sdGenerateKey(),
         type: 'break',
         label: 'Break',
         layout: { columns: '12' },
@@ -432,7 +432,7 @@ export class SdFormBuilder implements OnInit, OnDestroy {
     } else {
       newComponent = {
         id,
-        key: GenerateKey(),
+        key: sdGenerateKey(),
         type: item.type as any,
         label: item.type,
         layout: { columns },
@@ -511,7 +511,7 @@ export class SdFormBuilder implements OnInit, OnDestroy {
     return !!(p.visibleWhenExpression || p.hiddenWhenExpression || p.disabledWhenExpression || p.requiredWhenExpression);
   };
 
-  /** Map SdColor preset → 2 CSS var names cho header-bg và header-fg của group card. */
+  /** Map Color preset → 2 CSS var names cho header-bg và header-fg của group card. */
   groupColorVars = (color: string | undefined | null): { bg: string; fg: string } => {
     switch (color) {
       case 'secondary':
@@ -535,6 +535,15 @@ export class SdFormBuilder implements OnInit, OnDestroy {
 
   // ── Group drill-in (Detail) navigation ──────────────────────────────────
   /** Mở canvas thiết kế riêng cho 1 group (chỉ children của nó). Snapshot để Cancel revert. */
+  // why: body group nay là role="button" + tabindex="0" nên Enter/Space phải mở màn hình Detail
+  // đúng như click. stopPropagation để item cha (cũng là role="button") không tự chọn lại.
+  onEnterGroupEditKeydown = (group: SdFormGenericGroup, event: KeyboardEvent) => {
+    if (event.target !== event.currentTarget) return;
+    event.preventDefault();
+    event.stopPropagation();
+    this.enterGroupEdit(group);
+  };
+
   enterGroupEdit = (group: SdFormGenericGroup) => {
     this.#groupSnapshot = JSON.stringify(group.components ?? []);
     this.editingGroupId.set(group.id);
@@ -573,8 +582,8 @@ export class SdFormBuilder implements OnInit, OnDestroy {
     const lastItemId = row.items[row.items.length - 1]?.id;
     const insertAfter = lastItemId ? scope.findIndex(c => c.id === lastItemId) : scope.length - 1;
     const newBreak: any = {
-      id: GenerateId(),
-      key: GenerateKey(),
+      id: sdGenerateId(),
+      key: sdGenerateKey(),
       type: 'break',
       label: 'Break',
       layout: { columns: '12' },
@@ -602,6 +611,15 @@ export class SdFormBuilder implements OnInit, OnDestroy {
   selectComponent = (item?: SdFormGenericComponent | SdFormGenericGroup) => {
     this.selectedComponent.set(item);
     this.#ref.markForCheck();
+  };
+
+  // why: mục palette nay là role="button" + tabindex="0" nên Enter/Space phải thêm component đúng
+  // như click — trước đây chỉ kéo-thả hoặc click chuột mới dựng được form.
+  onPaletteItemKeydown = (item: FormBuilderComponent, event: KeyboardEvent) => {
+    if (event.target !== event.currentTarget) return;
+    // why: chặn Space cuộn trang.
+    event.preventDefault();
+    this.addComponent(item);
   };
 
   onClickedOutside = (e: any) => {
@@ -881,7 +899,9 @@ export class SdFormBuilder implements OnInit, OnDestroy {
   // Copy form hiện tại
   jsonString?: string;
   viewJSON = () => {
-    this.jsonString = JSON.stringify({ components: this.components });
+    // why: JSON một dòng thì không đọc nổi và cũng không sửa được bằng tay; schema này lồng nhiều
+    // tầng nên in thụt lề mới dùng được với editor.
+    this.jsonString = JSON.stringify({ components: this.components }, null, 2);
     this.popupViewJSON()?.open();
     this.#ref.markForCheck();
   };
@@ -1091,12 +1111,12 @@ export class SdFormBuilder implements OnInit, OnDestroy {
   };
 
   #regenerateComponentIdentity = (component: SdFormGenericComponent | SdFormGenericGroup) => {
-    component.id = GenerateId();
+    component.id = sdGenerateId();
     if (component.type === 'group') {
       component.components = component.components.map(child => this.#cloneComponentWithNewIdentity(child));
       return;
     }
 
-    component.key = GenerateKey();
+    component.key = sdGenerateKey();
   };
 }

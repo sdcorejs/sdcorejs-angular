@@ -18,7 +18,6 @@ Form-bound rich-text editor (CKEditor 5 ClassicEditor) with bold/italic/underlin
 
 ## When NOT to use
 - For short comments / chat messages → use `<sd-mini-editor>` (lighter toolbar)
-- For document templates with variables, page orientation, page breaks, headings TOC → use `<sd-document-builder>`
 - For plain text → use `<sd-input type="textarea">`
 - For code → use `<sd-code-editor>`
 
@@ -159,7 +158,6 @@ await expect(ed).toHaveAttribute('data-empty', 'false');
 
 ## Related
 - `<sd-mini-editor>` — compact comment-style editor
-- `<sd-document-builder>` — full document authoring with variables, page settings
 - `<sd-label>` — used internally for the label row
 - `SdCustomValidator` — custom async validator type
 - `SD_EDITOR_CONFIGURATION` — DI token for upload config

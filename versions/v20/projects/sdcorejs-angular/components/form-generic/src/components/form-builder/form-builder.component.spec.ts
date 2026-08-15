@@ -1,6 +1,5 @@
 import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { SdLicenseService } from '@sdcorejs/angular/services/license';
 
 import { SdFormBuilder } from './form-builder.component';
 import { buildFormBuilderRows } from './form-builder-layout';
@@ -33,8 +32,6 @@ describe('SdFormBuilder — group drill-in (Detail)', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [SdFormBuilder, NoopAnimationsModule],
-      // why: SdBaseSecureComponent gọi licenseService.enforceLicense() trong constructor.
-      providers: [{ provide: SdLicenseService, useValue: { enforceLicense: () => {} } }],
     });
     fixture = TestBed.createComponent(SdFormBuilder);
     component = fixture.componentInstance;
@@ -464,5 +461,64 @@ describe('SdFormBuilder — group drill-in (Detail)', () => {
     expect(duplicated.components[0].id).not.toBe(g.components[0].id);
     expect(duplicated.components[0].key).not.toBe(g.components[0].key);
     expect(duplicated.components[0].label).toBe(g.components[0].label);
+  });
+
+  // -------------------------------------------------------------------------
+  // A11y — palette item / canvas item / group body từng là <div (click)> mang
+  // aria-hidden="true": vừa biến mất khỏi accessibility tree vừa không kích hoạt
+  // được bằng bàn phím.
+  // -------------------------------------------------------------------------
+
+  /** Bắn keydown lên `el` rồi chạy handler với target === currentTarget (như DOM thật). */
+  function pressOn(el: HTMLElement, key: string, handler: (ev: KeyboardEvent) => void): KeyboardEvent {
+    const listener = ((ev: Event) => handler(ev as KeyboardEvent)) as EventListener;
+    el.addEventListener('keydown', listener);
+    const ev = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+    el.dispatchEvent(ev);
+    el.removeEventListener('keydown', listener);
+    return ev;
+  }
+
+  it('Enter on a palette item adds the component, same as a click', () => {
+    const paletteTextfield = component.formBuilderComponents.find(item => item.type === 'textfield')!;
+    const before = component.components.length;
+
+    pressOn(document.createElement('div'), 'Enter', ev => component.onPaletteItemKeydown(paletteTextfield, ev));
+
+    expect(component.components.length).toBe(before + 1);
+  });
+
+  it('Space on a palette item adds the component and blocks the page scroll', () => {
+    const paletteTextfield = component.formBuilderComponents.find(item => item.type === 'textfield')!;
+    const before = component.components.length;
+
+    const ev = pressOn(document.createElement('div'), ' ', keyEvent => component.onPaletteItemKeydown(paletteTextfield, keyEvent));
+
+    expect(component.components.length).toBe(before + 1);
+    expect(ev.defaultPrevented).toBe(true);
+  });
+
+  // why: affordance chọn item cho bàn phím/AT giờ là nút thật trong .fb-actions (card bọc cả nút
+  // hành động và preview control thật, nên role=button trên card khiến AT gộp hết thành một nút).
+  it('the keyboard select affordance is a real button inside the item actions, not the card itself', () => {
+    // suite này cố ý không render ở beforeEach — spec này cần DOM nên seed rows + render tại chỗ.
+    component.dragDropRows = buildFormBuilderRows(component.components as any) as any;
+    fixture.detectChanges();
+    const card = fixture.nativeElement.querySelector('.fb-item, .fb-group') as HTMLElement;
+    expect(card).not.toBeNull();
+    expect(card.getAttribute('role')).toBeNull();
+    expect(card.getAttribute('tabindex')).toBeNull();
+    const selectBtn = card.querySelector('.fb-actions button[aria-pressed]') as HTMLButtonElement;
+    expect(selectBtn).not.toBeNull();
+    selectBtn.click();
+    expect(component.selectedComponent()).toBeDefined();
+  });
+
+  it('Enter on the group body opens the group Detail screen, same as a click', () => {
+    const g = group1();
+
+    pressOn(document.createElement('div'), 'Enter', ev => component.onEnterGroupEditKeydown(g, ev));
+
+    expect(component.editingGroupId()).toBe(g.id);
   });
 });

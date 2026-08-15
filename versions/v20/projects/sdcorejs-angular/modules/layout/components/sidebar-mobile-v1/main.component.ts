@@ -3,17 +3,17 @@ import { Component, effect, inject, input, signal, untracked } from '@angular/co
 // NOTE: Import nội bộ trong module layout
 import { SdLayoutUserInfo, SidebarConfigurationV1 } from '../../configurations';
 import { SdLayoutMenu, SdLayoutStorageService } from '../../services';
-import { SidebarMobileOverlayComponent } from './components/sidebar/sidebar.component';
+import { SdSidebarMobileOverlay } from './components/sidebar/sidebar.component';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
-  selector: 'sidebar-mobile-v1',
+  selector: 'sd-sidebar-mobile-v1',
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss',
-  imports: [SdIcon, CommonModule, SidebarMobileOverlayComponent],
+  imports: [SdIcon, CommonModule, SdSidebarMobileOverlay],
   standalone: true,
 })
-export class SidebarMobileV1Component {
+export class SdSidebarMobileV1 {
   #layoutStorageService = inject(SdLayoutStorageService);
 
   menus = input<SdLayoutMenu[]>([]);

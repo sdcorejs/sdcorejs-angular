@@ -1,13 +1,13 @@
-import { SdTab } from '../models/tab-router.model';
+import { SdTabRouterTab } from '../models/tab-router.model';
 
 export class SdTabBase {
-  #tab: SdTab | undefined;
+  #tab: SdTabRouterTab | undefined;
 
-  constructor(tab: SdTab | undefined) {
+  constructor(tab: SdTabRouterTab | undefined) {
     this.#tab = tab;
   }
 
-  get tab(): SdTab | undefined {
+  get tab(): SdTabRouterTab | undefined {
     return this.#tab;
   }
 }

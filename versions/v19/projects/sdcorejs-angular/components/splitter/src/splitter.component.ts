@@ -15,6 +15,8 @@ import {
   input,
   numberAttribute,
   output,
+  signal,
+  untracked,
 } from '@angular/core';
 import { SdSplitterHandleComponent } from './splitter-handle/splitter-handle.component';
 import { SdSplitterPanelComponent } from './splitter-panel/splitter-panel.component';
@@ -74,6 +76,8 @@ export class SdSplitterComponent {
   #dragStartSize: { handleIndex: number; containerPx: number } | null = null;
   #dragLastDelta = 0;
   #prevCollapsedMap = new Map<string | number, boolean>();
+  // Lật true sau lần render đầu → effect sync handle mới được phép chạm DOM.
+  #firstRenderDone = signal(false);
 
   constructor() {
     // 1. Reconcile state khi panels signal đổi (panel add/remove qua @if/@for)
@@ -150,16 +154,26 @@ export class SdSplitterComponent {
       }
     });
 
-    // Sync handles sau khi DOM render xong (panels đã projected vào host)
+    // Sync handles sau khi DOM render xong (panels đã projected vào host).
+    // why: afterNextRender đăng ký BÊN TRONG effect() sẽ tạo MỘT hook one-shot mới cho MỖI lần
+    // panels/orientation/disabled/keyboardStep tick — cùng với đó là một sequence + một
+    // DestroyRef.onDestroy mới xếp hàng trong AfterRenderManager. Đăng ký ĐÚNG MỘT lần ở
+    // constructor (chỉ để mở cổng sau lần render đầu), rồi đọc reactive value trong effect.
+    afterNextRender(() => this.#firstRenderDone.set(true), { injector: this.#injector });
+
     effect(() => {
-      const panelCount = this.panels().length;
+      const panels = this.panels();
       const orientation = this.resolvedOrientation();
       const disabled = this.resolvedDisabled();
       const keyboardStep = this.resolvedKeyboardStep();
-      afterNextRender(
-        () => this.#syncHandles(panelCount, orientation, disabled, keyboardStep),
-        { injector: this.#injector } // component-scoped → auto-cancel khi component destroy
-      );
+      // why: #syncHandles đọc panel.resizable() để tính handleDisabled. Khi nó còn chạy TRỰC TIẾP
+      // trong effect thì mỗi resizable() là một dependency ngầm — không rõ ràng, và trộn lẫn với
+      // các signal mà #syncHandles tình cờ đọc (panels(), state…). Đọc TƯỜNG MINH ở đây rồi gọi
+      // #syncHandles trong untracked(): dependency set của effect là đúng 5 dòng này, không hơn.
+      const resizables = panels.map(panel => panel.resizable());
+      // Lần CD đầu tiên panel chưa render xong → chờ afterNextRender mở cổng rồi effect tự chạy lại.
+      if (!this.#firstRenderDone()) return;
+      untracked(() => this.#syncHandles(panels, orientation, disabled, keyboardStep, resizables));
     });
 
     // Destroy handle ComponentRef khi container bị destroy (tránh leak)
@@ -183,9 +197,14 @@ export class SdSplitterComponent {
     };
   }
 
-  #syncHandles(panelCount: number, orientation: SplitterOrientation, disabled: boolean, keyboardStep: number): void {
-    const panels = this.panels();
-    const needed = Math.max(0, panelCount - 1);
+  #syncHandles(
+    panels: readonly SdSplitterPanelComponent[],
+    orientation: SplitterOrientation,
+    disabled: boolean,
+    keyboardStep: number,
+    resizables: readonly boolean[]
+  ): void {
+    const needed = Math.max(0, panels.length - 1);
     // Remove excess
     while (this.#handleRefs.length > needed) {
       this.#handleRefs.pop()!.destroy();
@@ -200,23 +219,35 @@ export class SdSplitterComponent {
       ref.instance.toggleRequest.subscribe(() => this.#onHandleToggle(handleIndex));
       this.#handleRefs.push(ref);
     }
-    // Apply inputs với disabled tính theo per-panel resizable
+    // Apply inputs với disabled tính theo per-panel resizable (đã đọc sẵn ở effect)
     for (let i = 0; i < this.#handleRefs.length; i++) {
       const ref = this.#handleRefs[i];
-      const prev = panels[i];
-      const next = panels[i + 1];
-      const handleDisabled = disabled || !prev.resizable() || !next.resizable();
+      const handleDisabled = disabled || !resizables[i] || !resizables[i + 1];
       ref.setInput('orientation', orientation);
       ref.setInput('disabled', handleDisabled);
       ref.setInput('keyboardStep', keyboardStep);
       ref.changeDetectorRef.detectChanges();
     }
-    // Re-arrange DOM: panel0, handle0, panel1, handle1, ..., panelN
-    const host = this.#host.nativeElement;
+    // Thứ tự DOM mong muốn: panel0, handle0, panel1, handle1, ..., panelN
+    const desired: HTMLElement[] = [];
     for (let i = 0; i < panels.length; i++) {
-      host.appendChild(panels[i].elementRef.nativeElement);
-      if (i < this.#handleRefs.length) host.appendChild(this.#handleRefs[i].location.nativeElement);
+      desired.push(panels[i].elementRef.nativeElement);
+      if (i < this.#handleRefs.length) desired.push(this.#handleRefs[i].location.nativeElement);
     }
+    // why: appendChild trên một node ĐANG ở đúng vị trí vẫn là một move thật — trình duyệt tháo
+    // rồi gắn lại element, nên iframe/video/audio bên trong reload từ đầu và focus/scroll trong
+    // panel bị mất. Effect này chạy lại mỗi khi orientation/disabled/keyboardStep/resizable đổi,
+    // tức đổi [resizable] của MỘT panel cũng đủ để xáo tung DOM sống. Chỉ sắp xếp lại khi trình
+    // tự panel/handle THỰC SỰ khác với DOM hiện tại.
+    const host = this.#host.nativeElement;
+    if (this.#matchesDomOrder(host, desired)) return;
+    for (const node of desired) host.appendChild(node);
+  }
+
+  #matchesDomOrder(host: HTMLElement, desired: readonly HTMLElement[]): boolean {
+    const tracked = new Set<Element>(desired);
+    const actual = Array.from(host.children).filter(child => tracked.has(child));
+    return actual.length === desired.length && desired.every((node, index) => actual[index] === node);
   }
 
   #onDragStart(handleIndex: number): void {

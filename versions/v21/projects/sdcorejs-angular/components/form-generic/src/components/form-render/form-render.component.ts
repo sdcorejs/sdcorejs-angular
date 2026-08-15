@@ -16,7 +16,13 @@ import { Utilities } from '@sdcorejs/utils/fns';
 import { combineLatest, Subject, Subscription } from 'rxjs';
 import { debounceTime, startWith } from 'rxjs/operators';
 import { ISdFormGenericConfiguration, SD_FORM_GENERIC_CONFIGURATION } from '../../configurations';
-import { EvaluateExpression, SdFormatComponent, SdFormGenericComponent, SdFormGenericGroup, SdFormRenderConfiguration } from '../../models';
+import {
+  sdEvaluateExpression,
+  sdFormatComponent,
+  SdFormGenericComponent,
+  SdFormGenericGroup,
+  SdFormRenderConfiguration,
+} from '../../models';
 import { SdFormGenericValidation } from '../../models/form-generic-validation.model';
 import { WhenExpressionPipe } from '../../pipes';
 import { LibItemComponent, VariableComponent } from './components';
@@ -144,7 +150,7 @@ export class SdFormRender implements OnDestroy, AfterViewInit {
     const messages: string[] = [];
     for (const validation of this.configuration?.validations?.filter(e => e.alert === alert) || []) {
       if (validation.type === 'expression') {
-        const result = EvaluateExpression(validation.expression, this.entity);
+        const result = sdEvaluateExpression(validation.expression, this.entity);
         if (result) {
           messages.push(validation.message);
         }
@@ -193,7 +199,7 @@ export class SdFormRender implements OnDestroy, AfterViewInit {
 
   #cloneAndFormatComponent(component: SdFormGenericComponent | SdFormGenericGroup): SdFormGenericComponent | SdFormGenericGroup {
     const clonedComponent = JSON.parse(JSON.stringify(component)) as SdFormGenericComponent | SdFormGenericGroup;
-    SdFormatComponent(clonedComponent);
+    sdFormatComponent(clonedComponent);
 
     if (clonedComponent.type === 'group') {
       clonedComponent.components = clonedComponent.components.map(child => this.#cloneAndFormatComponent(child) as SdFormGenericComponent);

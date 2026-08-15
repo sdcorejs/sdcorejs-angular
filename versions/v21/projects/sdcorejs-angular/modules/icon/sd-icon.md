@@ -49,3 +49,20 @@ Available font sets:
 `size` uses `Size` from `@sdcorejs/utils/models`: `sm`, `md`, or `lg`. It also accepts a CSS size string such as `18px` or `1.25rem` for one-off cases.
 
 `SdButton` uses `SdIcon` for `prefixIcon` and `suffixIcon`. Use `fontSet="material-icons"`, `fontSet="material-icons-outlined"`, or `fontSet="lucide"` on a button for per-component migration, or set `defaultFontSet: 'lucide'` in `provideSdIcon` for app-level migration.
+
+## Inside Material containers (menu, list, button)
+
+Material's base CSS targets the `.mat-icon` element directly — inside a menu item it forces `width`/`height` to `--mat-menu-item-icon-size` (24px) and adds `margin-right: var(--mat-menu-item-spacing, 12px)`. In an `<sd-icon>` that element is the *inner* glyph, so those rules used to blow the glyph past the host box (which clips it) and shift it left: the icon rendered cropped and crowding the label. Lucide never hit this at all, because its SVG is not a `.mat-icon` — the two sets drifted apart.
+
+`SdIcon` now pins the glyph to the host box and zeroes that margin, so the rendered size is always `size` / `--sd-icon-size` regardless of the Material container, and both font sets behave identically. Host components no longer need `margin: 0 !important` or `overflow: hidden` guards around a menu icon.
+
+Spacing between a leading icon and its label belongs to the menu item, not the glyph. `sd-core.scss` gives a leading `<sd-icon>` in a `mat-menu-item` the Material spacing by default:
+
+```scss
+:where(.mat-mdc-menu-item > sd-icon:first-child),
+:where(.mat-mdc-menu-item > .mat-mdc-menu-item-text > sd-icon:first-child) {
+  margin-right: var(--mat-menu-item-spacing, 12px);
+}
+```
+
+It sits in `:where()`, so its specificity is zero: a menu that lays its own row out — a flex wrapper with `gap`, or its own `margin-right` on the icon — wins with any ordinary selector, no `!important` needed. A menu that supplies spacing through `gap` should set `margin-right: 0` on the icon so the two do not stack.

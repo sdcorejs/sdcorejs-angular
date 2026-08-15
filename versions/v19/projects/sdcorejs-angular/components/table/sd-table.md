@@ -3,7 +3,7 @@
 **Type**: Component (generic over `T`)
 **Selector**: `sd-table`
 **Import path**: `@sdcorejs/angular/components/table` (or barrel: `@sdcorejs/angular/components`)
-**Class**: `SdTable<T = unknown> extends SdBaseSecureComponent`
+**Class**: `SdTable<T = unknown>` (implements `AfterViewInit`, `OnDestroy`)
 **Standalone**: yes
 **Change detection**: `OnPush`
 
@@ -43,6 +43,7 @@ Everything is configured via the `SdTableOption<T>` object passed to `[option]`.
 | `onFilter` (server) | `(filterReq, { externalFilterValid }) => void`                   | no           | Called BEFORE each server fetch; useful to cancel / log / sync URL.                                                                                                                                                                          |
 | `columns`           | `SdTableColumn<T>[]`                                             | yes          | Column definitions (see schema below).                                                                                                                                                                                                       |
 | `key`               | `string`                                                         | no           | Storage key for persisted user column-config (visibility/order/width).                                                                                                                                                                       |
+| `rowKey`            | `string`                                                         | no           | Field that identifies a row (dot-notation supported, e.g. `'id'` / `'user.id'`). Becomes `SdTableItem.meta.id` — the mat-table `trackBy` key, the `preserveSelection` key, the tree expand-state key and the per-row `data-autoid` suffix. See **Row identity** below. |
 | `config`            | `TableOptionConfig`                                              | no           | `{ visible?, resizable?, onResize? }` — gear button, drag-to-resize, resize callback. See **Column resize** section.                                                                                                                         |
 | `selector`          | `SdTableOptionSelector<T>`                                       | no           | Multi-select + bulk actions.                                                                                                                                                                                                                 |
 | `expand`            | `SdTableOptionExpand<T>`                                         | no           | Per-row expansion (master-detail).                                                                                                                                                                                                           |
@@ -58,6 +59,34 @@ Everything is configured via the `SdTableOption<T>` object passed to `[option]`.
 | `style`             | `{ shadow?, maxHeight?, minHeight?, rowCss? }`                   | no           | Shadow toggle, scroll bounds, per-row CSS.                                                                                                                                                                                                   |
 | `rowReorder`        | `{ enabled?, onChange?, icon?, disabled?(row,i) }`               | no           | Drag-and-drop row reordering. Respects groups.                                                                                                                                                                                               |
 | `index`             | `{ enabled?, title?, width? }`                                   | no           | Adds a leading STT (row-number) column. Default `title: '#'`, `width: '50px'`. Numbering is global across pages — `pageIndex * pageSize + i + 1`. Placed after selector/tree/command(left)/group, before data columns. Hidden on group rows. |
+
+### Row identity (`rowKey` → `SdTableItem.meta.id`)
+
+Every row the table renders is wrapped in an `SdTableItem` whose `meta.id` is the row's identity. It is used for:
+
+- the mat-table `trackBy` (which DOM row view is reused for which data row),
+- `selector.preserveSelection` (the key of the internal selected-items map),
+- the tree expand/collapse state map,
+- the per-row `data-autoid` suffixes (`…-expand-<rowId>`, `…-tree-toggle-<rowId>`).
+
+**How the id is derived:**
+
+| `option.rowKey` | Resulting `meta.id`                                                                  | Survives a server re-fetch? |
+| --------------- | ------------------------------------------------------------------------------------ | --------------------------- |
+| set (e.g. `'id'`) | `String(row.id)` — readable and deterministic                                       | yes                         |
+| unset           | generated `sd-row-<n>`, pinned to the row data object's **identity** (via a `WeakMap`) | no                          |
+
+Without `rowKey`, the same data object always maps back to the same id (so local filtering, sorting, paging and tree child re-formatting all keep their ids), but a **new** object — which is what a server fetch produces — gets a new id.
+
+> **Changed (BREAKING for consumers who relied on the old behaviour).** `meta.id` used to be a **content hash** (`Utilities.hash({ data })`). That made two rows with equal content share one id — which corrupted row-view recycling, made `flattenTree` drop the duplicate, and collided in the expand-state / preserved-selection maps. It also made *every* group header share a single id. Ids are no longer derived from content.
+>
+> **Migration:** add `rowKey: '<your id field>'` to `option` if you use any of:
+>
+> - `selector.preserveSelection` on a `type: 'server'` table (selection must survive a re-fetch),
+> - `tree` on a `type: 'server'` table (expand state must survive a re-fetch),
+> - per-row `data-autoid` values as E2E selectors (they must be stable across page loads).
+>
+> Everything else works unchanged with no option edit. A side effect of the fix: two rows with identical content are now rendered as two distinct rows (previously the second one could be swallowed by the tree flattener).
 
 ### Column schema (`SdTableColumn<T>`)
 
@@ -114,6 +143,8 @@ export interface TableOptionConfig {
 | `resizable` | `boolean`                             | When `true`, a 6px drag handle appears on the right edge of every **data** column header. Cursor switches to `col-resize` on hover; dragging updates the width live (mousemove updates inline style outside Angular zone for smoothness) and persists on mouseup. **Excluded from resize:** the special columns `sdSelection`, `sdCommand`, `sdGroup`, `sdSubInformation`, `sdReorder`, `sdIndex`, and `type: 'children'` parent header cells. |
 | `onResize`  | `(field, width, columnWidth) => void` | Fires once per `mouseup`. `field` = column resized, `width` = new width (e.g. `'220px'`), `columnWidth` = snapshot `Record<field, width>` of **all** data columns that currently have a width set (including ones not resized this time). Useful for syncing width state to a remote profile or analytics.                                                                                                                                     |
 
+**Column-config dialog layout:** one row per configurable column, in display order. Each row carries a drag handle (`⠿`, reorders the column), a **Hiển thị** checkbox, the header title and width inputs (`size="sm"`), and **Cố định** / **Giới hạn ký tự** checkboxes. A localized hint above the table (`core.component.table.config.drag-hint`) advertises the drag affordance, which is otherwise invisible. Turning **Hiển thị** off dims the row and disables its title/width/fixed/truncate editors — those settings are meaningless for a hidden column — while the display checkbox itself stays enabled so the column can be brought back.
+
 **Persistence:** When `option.key` is provided, resize writes to the same storage entry used by the column-config dialog (under the prefix `TABLE_CONFIG`). Without a key it falls back to session storage keyed by `Utilities.hash(option)`.
 
 **Reload semantics:** Resizing does **NOT** trigger a data reload, value cache refresh, or filter re-register — it only updates the configuration signal locally and writes storage silently (via the new `SdStorage.setSilent`). Safe to use on heavy server-mode tables.
@@ -146,6 +177,7 @@ The table adds these special columns conditionally — **do not** define a data 
 | `onSelectAll`     | `(selectedItems) => void`             | Header checkbox callback.                                                                                                                                                                    |
 | `disabled`        | `(rowData, selectedItems) => boolean` | Per-row disable predicate.                                                                                                                                                                   |
 | `defaultSelected` | `(rowData) => boolean`                | Pre-select after each load.                                                                                                                                                                  |
+| `preserveSelection` | `boolean`                           | Keep the selection across paging / filtering / sorting / reload; `selectedTableItems()` then returns every selected row including off-page ones. Matching is by `meta.id` — **set `option.rowKey`** when the table is `type: 'server'`, otherwise a re-fetch produces new row objects with new ids and the selection is not restored. See **Row identity**. |
 
 Header select-all operates only on visible rows that are selectable. Rows disabled by `disabled` or incompatible with the currently available `actions` are skipped. The header is checked only when every selectable visible row is selected; when no visible row is selectable, it stays unchecked. A row that is already selected remains enabled so the user can deselect it.
 
@@ -277,6 +309,15 @@ None. All callbacks live inside the `option` object (`onSelect`, `onReload`, `co
 - `[sdTableFooterDef]="'<field>'"` — custom footer cell (totals row). Presence of any footer def turns on the footer row.
 - `[sdTableFilterDef]="'<field>'"` — custom inline-filter template per column.
 - `[sdTableExpandDef]` — custom row-expansion (sub-information) template.
+- `[sdTableCommandHeaderDef]` — content for the **header cell of the command column**, which is otherwise empty. No field argument (there is only one command column). Use it for a table-level action — typically "add row" — so it sits directly above the per-row command buttons instead of needing its own strip below the table. Rendered centered; the cell stays 50px wide, so keep it to one icon button. Nothing is rendered (no wrapper element) when the template is absent.
+
+```html
+<sd-table [option]="option">
+  <ng-template sdTableCommandHeaderDef>
+    <sd-button prefixIcon="add" type="text" color="primary" tooltip="Thêm dòng" (click)="addRow()"></sd-button>
+  </ng-template>
+</sd-table>
+```
 
 ### Standalone imports for projected table templates
 
@@ -396,10 +437,11 @@ When rendering SD form controls in `sdTableFilterDef`, editable cells, external-
 - **Header row**: column titles, sort arrows on sortable columns, inline filter row beneath header (input/select/daterange depending on column `type`). Sticky on scroll.
 - **Body rows**: standard row height, hover highlight, per-row commands cell on the **right** (default) or `command.align='left'`. Tree expand toggle (`chevron_right` collapsed / `expand_more` expanded, light hover bg) is **embedded in the first column** — the `sdIndex` cell when `index.enabled`, otherwise the first data column — indented per depth (no separate toggle column). Expand caret for master-detail when `expand` configured.
 - **Selection column**: leftmost checkbox column when `selector.visible`. Header checkbox toggles select-all.
+- **Selection-action bar** (`<selector-action>`, floating): opens only when rows are selected **and** `selector.actions` resolves to at least one action the selection is allowed to run. A table with `selector.visible` but no `actions` never floats the bar — it would restate the checkbox state with `×` as its only control; deselect through the checkboxes instead. The per-row allow-list still applies, so a selection mixing rows with different permitted actions can resolve to zero and keep the bar closed.
 - **Sticky columns**: any column with `fixed: true` stays pinned while horizontal scroll happens; rendered with a subtle box-shadow on the boundary (via `StickyShadowDirective`).
 - **Group rows**: spanning row with HTML rendered from `group.htmlTemplate`, separating sub-sections.
 - **Empty state**: shows blank body; loading state shows centered Material spinner.
-- **Pagination bar** (bottom): "Đang hiển thị 1-50/1.234" + page-size selector + first/prev/next/last buttons. Vietnamese labels via `MatPaginatorIntlCro`.
+- **Pagination bar** (bottom): "Đang hiển thị 1-50/1.234" + page-size selector + first/prev/next/last buttons. Vietnamese labels via `SdTablePaginatorIntl`.
 - **Drag handle** (when `rowReorder.enabled`): leftmost icon column `sdReorder` with the configured icon (default `drag_indicator`); rows can be reordered within the same group.
 - **Row-number (STT) column** (when `index.enabled`): sticky `sdIndex` column rendering the global row number (`pageIndex * pageSize + i + 1`). Sits after selector/tree/command(left)/group, before data columns. Title defaults to `'#'`, width `'50px'`. Hidden on group spanning rows.
 - **Column resize handle** (when `config.resizable`): a 6px transparent strip at the right edge of each data-column header. Cursor changes to `col-resize` on hover; a subtle dark overlay appears on hover for affordance. The handle does not show on `sdSelection`/`sdCommand`/`sdGroup`/`sdSubInformation`/`sdReorder`/`sdIndex` columns or on `type: 'children'` parent headers.
@@ -431,7 +473,7 @@ The export button's label comes from the i18n catalog, so it follows the app lan
 
 ## Permission gating
 
-The component extends `SdBaseSecureComponent`. Bulk actions (`selector.actions`) and per-row `commands` are usually gated at the application level (hide via `hidden(row)` predicate or before composing the option). For full row visibility wrap the host with `*sdPermission`.
+None built in. The package ships no license or permission gate of its own. Bulk actions (`selector.actions`) and per-row `commands` are gated at the application level (hide via the `hidden(row)` predicate, or omit the option when composing it). To gate the whole table, wrap the host with `*sdPermission`.
 
 ## Examples
 
@@ -633,6 +675,8 @@ The drag handle hides automatically for columns excluded from resize. Widths rel
 - ❌ Recreating `tableOption` on every change-detection cycle (e.g. computing it inside the template) — every new reference triggers a full re-init via the `effect`. Keep it as a class property.
 - ❌ Using `type: 'local'` for ≥ 1k rows that come from the server — paging happens client-side, so all rows are fetched and held in memory. Switch to `type: 'server'`.
 - ❌ Skipping `option.key` on a customer-facing list — without it, user column-config is not persisted across page reloads.
+- ❌ Turning on `selector.preserveSelection` (or `tree`) on a `type: 'server'` table without `option.rowKey` — a re-fetch produces new row objects, so the ids change and the selection / expand state is not restored. See **Row identity**.
+- ❌ Returning a fresh object from `style.rowCss` that encodes state the table cannot see — `rowCss` is resolved **once per render** (and after a tree expand), not on every change-detection pass. Trigger a `reload()` when the styling inputs change.
 - ❌ Wiring per-row navigation via the cell `click` callback when the user expects right-click "open in new tab" — use a column with `htmlTemplate` rendering an `<a [sdHref]>` instead.
 - ❌ Defining `commands` AND `command.commands` simultaneously — `command` is the newer API; pick one to avoid confusion.
 - ❌ Putting a heavy server-side `items()` in front of a daterange filter without honoring the `BETWEEN` / `GREATER_OR_EQUAL` operators emitted in `pagingReq.filters` — the table builds the request correctly; your backend must accept that operator vocabulary.
@@ -690,9 +734,17 @@ All interactive children derive their autoId from the table base `components-tab
 | Config modal: skip / reset / apply                    | `components-button-<B>-config-skip` / `-config-reset` / `-config-apply`                                      |
 | External filter: clear / setting / submit             | `components-button-<B>clear` / `…setting` / `…submit`                                                        |
 
-`<rowId>` / `groupKey` come from `SdTableItem.meta.id` (stable hash) / `meta.group.key`, guaranteeing uniqueness per row/group. The base autoId is passed down to `external-filter`, `mobile-filter`, `column-filter`, `desktop-command`, `selector-action`, and `config` via their `[autoId]` input.
+`<rowId>` / `groupKey` come from `SdTableItem.meta.id` / `meta.group.key`, guaranteeing uniqueness per row/group. **Set `option.rowKey` if you want `<rowId>` to be a readable, deterministic value** (e.g. `…-expand-42`) — without it the id is an internally generated `sd-row-<n>` that changes between page loads and is unusable as a stable E2E selector. See **Row identity** above. Group toggles use `meta.group.key` (a hash of the group field values) and stay deterministic regardless. The base autoId is passed down to `external-filter`, `mobile-filter`, `column-filter`, `desktop-command`, `selector-action`, and `config` via their `[autoId]` input.
 
 > Not yet covered: `popup-export` (export-template modal) — its buttons have no autoId (follow-up).
+
+## Accessibility
+
+- **Sort headers are in the accessibility tree.** `mat-sort-header` puts `role="button"`, `tabindex` and `aria-sort` on the header `<div>` itself; that element used to carry `aria-hidden="true"`, which erased both the column name and the sort direction while the header still took focus — keyboard/screen-reader users could not sort the table at all. The attribute is gone from all three header variants (group header, first-columns header, second-columns header).
+- **Loading is announced.** The spinner overlay is `role="status" aria-live="polite"` with an i18n `aria-label`, and the scroll container gets `aria-busy="true"` while `loading()` is set. Previously an async fetch produced no announcement whatsoever.
+- **Empty state is announced.** The `no-results` / `choose-filter` / `no-data` block is `role="status" aria-live="polite"`, so a fetch that returns zero rows is reported instead of leaving the user waiting silently.
+- **Row commands are named.** The per-row command buttons (`desktop-command`) dropped `aria-hidden="true"` — they are real `<button>`s that still took tab focus while announcing nothing, because they render an icon with no text. They now expose `aria-label` from the command title, plus `aria-haspopup="menu"` on the submenu trigger.
+- **Clickable HTML cells are keyboard reachable.** A cell whose display config supplies `click` renders as `role="button"` + `tabindex="0"` with Enter/Space mirroring the click (it previously carried `aria-hidden="true"`). The handler ignores key events bubbling from consumer-supplied markup inside the cell, so nested controls do not double-fire.
 
 ## Related
 

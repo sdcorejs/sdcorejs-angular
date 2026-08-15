@@ -77,11 +77,12 @@ Applied automatically on `<sd-chip-calendar>` for styling hooks:
 - **`formControlName` and `[(ngModel)]` are NOT supported.** Use `[model]` + `(modelChange)` (or `[(model)]`) and `[form]+[name]`.
 - **`[viewed]="true"`** = read-only chip strip (no calendar trigger, no ✕).
 - **`[viewed]="'inline'"`** keeps the editable chip strip + calendar trigger mounted (no separate read-only face); a **disabled** `'inline'` collapses to the static `<sd-view>`.
-- **Validators**: `[required]`, `[min]` (`minLength`), `[max]` (`maxLength`). Tooltip messages mirror `<sd-chip>`.
+- **Validators (additive)**: `[required]`, `[min]` (`minLength`), `[max]` (`maxLength`). Tooltip messages mirror `<sd-chip>`. They are routed through the shared form connector, which adds/removes only the validators this component owns — validators you attach yourself to the public `formControl` are preserved (the component no longer calls `clearValidators()` / `setValidators()`).
+- **The model array is replaced, never mutated** — picking a date, toggling one off, selecting an autocomplete option, removing a chip and clearing all build a **new array** and emit it. The array you pass into `[model]` is never written to, and because the reference always changes, `modelChange` fires reliably (signal equality is `Object.is`, so an in-place `push` would have been swallowed).
 
 ## Chip / value structure
 
-Values are date strings formatted `'yyyy/MM/dd'` (produced internally via `DateUtilities.toFormat(date, 'yyyy/MM/dd')`). The component does not emit `Date` objects. Toggling a previously-selected date removes it from the array.
+Values are date strings formatted `'yyyy/MM/dd'` (produced internally via `DateUtilities.toFormat(date, 'yyyy/MM/dd')`). The component does not emit `Date` objects. Toggling a previously-selected date removes it from the (new) array.
 
 > **Display vs. storage**: chips render the stored `'yyyy/MM/dd'` string through Angular's `date` pipe as `'dd/MM/yyyy'` (e.g. stored `2026/05/09` → displayed `09/05/2026`). The emitted `modelChange` array always contains the `'yyyy/MM/dd'` storage format.
 
@@ -134,7 +135,7 @@ For read-only date arrays, map to display strings first or use a custom cell tem
 
 ## Dense dashboard/filter usage
 
-When this control is rendered in dashboard cards, filter bars, external filter panels, table toolbars, query bars, or other compact non-form surfaces, prefer `hideInlineError` so Material does not reserve the inline error/subscript row under the field. Pair it with `size="sm"` when the component supports `size`. Validation remains visible through the compact error icon/tooltip without increasing the control height.
+When this control is rendered in dashboard cards, filter bars, external filter panels, table toolbars, query bars, or other compact non-form surfaces, prefer `hideInlineError` so Material does not reserve the inline error/subscript row under the field. Pair it with `size="sm"` when the component supports `size`. Validation remains visible through the compact error icon/tooltip without increasing the control height, and the message is also exposed to assistive tech through a screen-reader-only element (`span.sd-visually-hidden`) referenced by `aria-describedby`.
 
 ```html
 <sd-chip-calendar size="sm" hideInlineError [(model)]="filter.holidays"></sd-chip-calendar>
@@ -189,6 +190,21 @@ const el = page.locator('[data-autoid="forms-chip-calendar-dates"]');
 await expect(el).toHaveAttribute('data-empty', 'false');
 await expect(el).toHaveAttribute('data-required', 'false');
 ```
+
+## Accessibility
+
+`aria-hidden="true"` used to sit on the layout `<div>` wrapping the chip grid **and** on the `<div>`
+wrapping `<mat-calendar>` inside the menu — the second one hid the whole date grid from assistive
+tech even though it still took focus and responded to arrow keys.
+
+- Neither wrapper carries `aria-hidden` any more. The menu wrapper is `role="presentation"` (it only
+  exists to stop click bubbling from closing the menu) which does **not** hide the calendar inside.
+- When an `sdViewDef` face is shown there is no focusable element inside it, so the click handler was
+  moved onto that face and it is now `role="button" tabindex="0"` with Enter/Space keyboard handlers
+  that mirror the click exactly. No `aria-label` is set there on purpose: the projected content is
+  the visible label and an `aria-label` would override it.
+- The chip input gets `aria-invalid="true"` plus `aria-describedby` pointing at the `<mat-error>`
+  (stable id, exposed as `errorId`) whenever the inline error renders.
 
 ## Anti-patterns
 

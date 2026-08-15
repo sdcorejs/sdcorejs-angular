@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { Observable } from 'rxjs';
 import { DialogConfirmComponent } from './components/dialog-confirm/dialog-confirm.component';
 import { Color } from '@sdcorejs/utils/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
@@ -16,6 +17,24 @@ export class SdConfirmService {
   constructor(...args: unknown[]);
 
   constructor() {}
+
+  /**
+   * Biến `afterClosed()` của dialog thành một Promise LUÔN settle.
+   *
+   * why: cả 6 API trước đây đều viết `if (result) { ...ACCEPT/CANCEL... }`, nên MỌI đường đóng
+   * dialog không đi qua hai nút — phím ESC, click backdrop (khi `disableBackdropClose: false`),
+   * hoặc `dialogRef.close()` gọi từ code — cho `result` là `undefined` và promise KHÔNG BAO GIỜ
+   * settle. Closure của caller (cùng mọi thứ nó giữ) bị ghim lại đến hết phiên, và `await` đứng im
+   * mãi mãi. Đóng-không-chọn về ngữ nghĩa chính là huỷ, nên nó reject `'CANCEL'` — đúng nhánh mà
+   * consumer vốn đã bắt.
+   */
+  #settleOnClose = <TValue>(afterClosed: Observable<{ action?: 'ACCEPT' | 'CANCEL'; value?: TValue } | undefined>): Promise<TValue> =>
+    new Promise<TValue>((resolve, reject) => {
+      afterClosed.subscribe(result => {
+        if (result?.action === 'ACCEPT') resolve(result.value as TValue);
+        else reject(result?.action ?? 'CANCEL');
+      });
+    });
 
   confirm = (
     message: string,
@@ -41,17 +60,7 @@ export class SdConfirmService {
         yesButtonColor: option?.yesButtonColor || 'primary',
       },
     });
-    return new Promise((resolve, reject) => {
-      dialogRef.afterClosed().subscribe(result => {
-        if (result) {
-          if (result.action === 'CANCEL') {
-            reject(result.action);
-          } else if (result.action === 'ACCEPT') {
-            resolve(result.value);
-          }
-        }
-      });
-    });
+    return this.#settleOnClose(dialogRef.afterClosed());
   };
 
   withInput = (
@@ -85,17 +94,7 @@ export class SdConfirmService {
         },
       },
     });
-    return new Promise((resolve, reject) => {
-      dialogRef.afterClosed().subscribe(result => {
-        if (result) {
-          if (result.action === 'CANCEL') {
-            reject(result.action);
-          } else if (result.action === 'ACCEPT') {
-            resolve(result.value);
-          }
-        }
-      });
-    });
+    return this.#settleOnClose(dialogRef.afterClosed());
   };
 
   withRadio = (
@@ -135,17 +134,7 @@ export class SdConfirmService {
         },
       },
     });
-    return new Promise((resolve, reject) => {
-      dialogRef.afterClosed().subscribe(result => {
-        if (result) {
-          if (result.action === 'CANCEL') {
-            reject(result.action);
-          } else if (result.action === 'ACCEPT') {
-            resolve(result.value);
-          }
-        }
-      });
-    });
+    return this.#settleOnClose(dialogRef.afterClosed());
   };
 
   withSelect = (
@@ -187,17 +176,7 @@ export class SdConfirmService {
         },
       },
     });
-    return new Promise((resolve, reject) => {
-      dialogRef.afterClosed().subscribe(result => {
-        if (result) {
-          if (result.action === 'CANCEL') {
-            reject(result.action);
-          } else if (result.action === 'ACCEPT') {
-            resolve(result.value);
-          }
-        }
-      });
-    });
+    return this.#settleOnClose(dialogRef.afterClosed());
   };
 
   withDate = (
@@ -236,17 +215,7 @@ export class SdConfirmService {
         },
       },
     });
-    return new Promise((resolve, reject) => {
-      dialogRef.afterClosed().subscribe(result => {
-        if (result) {
-          if (result.action === 'CANCEL') {
-            reject(result.action);
-          } else if (result.action === 'ACCEPT') {
-            resolve(result.value);
-          }
-        }
-      });
-    });
+    return this.#settleOnClose(dialogRef.afterClosed());
   };
 
   withDatetime = (
@@ -287,16 +256,6 @@ export class SdConfirmService {
         },
       },
     });
-    return new Promise((resolve, reject) => {
-      dialogRef.afterClosed().subscribe(result => {
-        if (result) {
-          if (result.action === 'CANCEL') {
-            reject(result.action);
-          } else if (result.action === 'ACCEPT') {
-            resolve(result.value);
-          }
-        }
-      });
-    });
+    return this.#settleOnClose(dialogRef.afterClosed());
   };
 }

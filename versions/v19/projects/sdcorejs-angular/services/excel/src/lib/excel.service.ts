@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import type { CellValue, Style } from 'exceljs';
 // import hash from 'object-hash';
-import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { DateUtilities } from '@sdcorejs/utils/fns';
 import { BrowserUtilities } from '@sdcorejs/utils/fns';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdExcelExportOption, SdExcelTemplate } from './excel.model';
@@ -296,16 +296,19 @@ export class SdExcelService {
     const fromRow = hasDescription ? 4 : 3;
     items.forEach((e, idx1) => {
       columns.forEach((column, idx2) => {
-        if (typeof e[column.field] === 'number') {
-          // Format mặc định với kiểu số
-          firstSheet.getCell(fromRow + idx1, 1 + idx2).value = +e[column.field];
-          firstSheet.getCell(fromRow + idx1, 1 + idx2).numFmt = '#';
+        const cell = firstSheet.getCell(fromRow + idx1, 1 + idx2);
+        const raw = e[column.field];
+        if (typeof raw === 'number') {
+          cell.value = +raw;
+          // why: gán `cell.style` THAY THẾ toàn bộ object style (exceljs), nên numFmt phải nằm
+          // trong cùng object — bản cũ set `cell.numFmt = '#'` TRƯỚC rồi gán style đè → numFmt
+          // chưa từng có tác dụng. '#' cũng là format lỗi: 0 hiển thị ô TRỐNG và phần thập phân
+          // bị làm tròn hiển thị → số nguyên dùng '0', số thập phân giữ General.
+          cell.style = Number.isInteger(raw) ? { ...this.#cellStyle, numFmt: '0' } : { ...this.#cellStyle };
         } else {
-          firstSheet.getCell(fromRow + idx1, 1 + idx2).value = neutralizeSpreadsheetFormula(e[column.field]) as CellValue;
+          cell.value = neutralizeSpreadsheetFormula(raw) as CellValue;
+          cell.style = { ...this.#cellStyle };
         }
-        firstSheet.getCell(fromRow + idx1, 1 + idx2).style = {
-          ...this.#cellStyle,
-        };
       });
     });
     const file = await workbook.xlsx.writeBuffer();

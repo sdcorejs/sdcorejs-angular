@@ -1,6 +1,5 @@
 import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { SdLicenseService } from '@sdcorejs/angular/services/license';
 import { buildFormBuilderRows } from './form-builder-layout';
 import { SdFormBuilder } from './form-builder.component';
 
@@ -15,7 +14,6 @@ describe('SdFormBuilder drag/drop placeholders', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [SdFormBuilder, NoopAnimationsModule],
-      providers: [{ provide: SdLicenseService, useValue: { enforceLicense: () => {} } }],
     });
     fixture = TestBed.createComponent(SdFormBuilder);
     component = fixture.componentInstance;

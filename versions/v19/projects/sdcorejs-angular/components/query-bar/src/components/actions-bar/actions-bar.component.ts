@@ -1,5 +1,6 @@
-import { booleanAttribute, ChangeDetectionStrategy, Component, input, model, output } from '@angular/core';
+import { booleanAttribute, ChangeDetectionStrategy, Component, computed, inject, input, model, output } from '@angular/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { I18nService } from '@sdcorejs/angular/i18n';
 
 import { SdQuery, SdQueryLogic, SdSavedFilter } from '../../query-bar.model';
 import { SdQuerySavedFiltersMenu } from '../saved-filters-menu/saved-filters-menu.component';
@@ -24,6 +25,8 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   imports: [SdIcon, MatTooltipModule, SdQuerySavedFiltersMenu],
 })
 export class SdQueryActionsBar {
+  readonly #i18n = inject(I18nService);
+
   // AND/OR toggle —
   readonly showLogicToggle = input(false, { transform: booleanAttribute });
   readonly logic = model<SdQueryLogic>('AND');
@@ -42,6 +45,14 @@ export class SdQueryActionsBar {
   // Search trigger —
   readonly canSearch = input(false);
   readonly search = output<void>();
+
+  // Nhãn i18n —
+  // why: bọc trong `computed()` chứ không dùng pipe `translate` (pure pipe không chạy lại khi
+  // `I18nService.setLanguage()` đổi catalog), và `clear-all` còn phải nội suy `{count}` nên
+  // ghép chuỗi trong template sẽ khoá cứng trật tự từ của tiếng Việt.
+  readonly logicGroupLabel = computed(() => this.#i18n.t('core.component.query-bar.logic-operator'));
+  readonly clearAllLabel = computed(() => this.#i18n.t('core.component.query-bar.clear-all', { count: this.filtersCount() }));
+  readonly searchLabel = computed(() => this.#i18n.t('core.component.query-bar.search'));
 
   setLogic(value: SdQueryLogic): void {
     if (this.logic() === value) return;

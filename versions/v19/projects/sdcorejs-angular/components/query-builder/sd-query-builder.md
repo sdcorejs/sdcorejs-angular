@@ -72,7 +72,7 @@ interface SdQueryBuilderField {
   key: string;                 // dot-notation path → Filter.field
   label: string;               // field picker + view-mode field token
   type: SdQueryBuilderFieldType;
-  icon?: string;               // leading Material icon in the picker; defaults to QB_TYPE_ICON[type] → 'tune'
+  icon?: string;               // leading Material icon in the picker; defaults to SD_QB_TYPE_ICON[type] → 'tune'
   operators?: Operator[];      // override the per-type allowed set
   defaultOperator?: Operator;  // override the starting operator
   values?: { value: any; display: string }[];  // for type 'values'
@@ -119,22 +119,30 @@ interface DateRelative {
 
 type SdQbRelativeUnit      = DateRelative['unit'];       // alias of the utils member type
 type SdQbRelativeDirection = DateRelative['direction'];
-type QbDateMode            = 'absolute' | 'now' | 'relative';
-type QbToday               = 'TODAY';                    // the date-today sentinel
+type SdQbDateMode            = 'absolute' | 'now' | 'relative';
+type SdQbToday               = 'TODAY';                    // the date-today sentinel
 ```
 
 A date rule's internal `value` is exactly one of:
 - `null` or a concrete date string → **absolute**
-- `'TODAY'` (the `QB_TODAY` sentinel) → **now / today**
+- `'TODAY'` (the `SD_QB_TODAY` sentinel) → **now / today**
 - a `DateRelative` object → **relative offset**
 
 Helpers / constants exported:
-- `qbIsRelativeDate(v): v is DateRelative` — type guard (delegates to `FilterUtilities.isDateRelative`)
-- `qbIsToday(v): v is 'TODAY'` — narrows the today sentinel
-- `qbDefaultRelative(): DateRelative` — returns `{ amount: 1, direction: 'previous', unit: 'day' }` (fresh object each call)
-- `QB_TODAY` — the `'TODAY'` string sentinel
-- `QB_DATE_MODES` — `[{ value:'absolute', display:'Ngày cụ thể' }, { value:'now', display:'Hôm nay' }, { value:'relative', display:'Tương đối' }]`
-- `QB_RELATIVE_UNIT_OPTIONS` — 6 combined `unit:direction` tokens (`'day:previous'` … `'month:next'`) with Vietnamese display labels
+- `sdQbIsRelativeDate(v): v is DateRelative` — type guard (delegates to `FilterUtilities.isDateRelative`)
+- `sdQbIsToday(v): v is 'TODAY'` — narrows the today sentinel
+- `sdQbDefaultRelative(): DateRelative` — returns `{ amount: 1, direction: 'previous', unit: 'day' }` (fresh object each call)
+- `SD_QB_TODAY` — the `'TODAY'` string sentinel
+- `SD_QB_DATE_MODES` — `[{ value:'absolute', labelKey:'core.component.query-builder.date-mode.absolute', icon:'event' }, …]`
+- `SD_QB_RELATIVE_UNIT_OPTIONS` — 6 combined `unit:direction` tokens (`'day:previous'` … `'month:next'`), each carrying a `labelKey`
+- `SD_QB_VALUE_SOURCE_OPTIONS` — the `literal` / `field` operand sources, each carrying a `labelKey`
+- `qbRelativeLabelKey(unit, direction)` — i18n key of the combined offset phrase (also covers `hour`, which the UI does not offer but `DateRelative` allows)
+
+> **BREAKING (option tables):** these tables used to carry a pre-translated `display`. They now carry
+> `labelKey` only, and the label is resolved at READ time by the component, so it follows
+> `I18nService.setLanguage()`. A `display` baked in at module-eval time could never react to a
+> language change. Read the resolved list from the component signals (`dateModes()`,
+> `valueSourceOptions()`, `relativeUnitOptions()`), not from the constants.
 
 **Emitted `Filter` shapes for a relative rule** — the discriminator is `dataType` (sibling of `data`):
 
@@ -155,7 +163,7 @@ An incomplete offset (missing `unit` / `direction`, or `amount < 1`) is invalid 
 **Back-compat:** filters persisted before the migration stored `data: { rel: 'now' | 'offset', … }`. `filterToTree` still reads that legacy shape when seeding `[value]` and re-emits the new `dataType` form on the next change, so old saved queries keep working.
 
 ## Operator vocabulary
-Allowed operators come from `QB_OPERATORS_BY_TYPE[type]` unless `field.operators` overrides. The starting operator is `field.defaultOperator ?? QB_DEFAULT_OPERATOR_BY_TYPE[type]`. The operator selector (`<sd-operator>`) is **hidden** when only one operator is allowed. Helpers exported alongside the component: `qbAllowedOperators`, `qbDefaultOperator`, `qbIsNoDataOperator`, `qbIsMultiOperator`, `qbSupportsFieldCompareOperator`.
+Allowed operators come from `SD_QB_OPERATORS_BY_TYPE[type]` unless `field.operators` overrides. The starting operator is `field.defaultOperator ?? SD_QB_DEFAULT_OPERATOR_BY_TYPE[type]`. The operator selector (`<sd-operator>`) is **hidden** when only one operator is allowed. Helpers exported alongside the component: `sdQbAllowedOperators`, `sdQbDefaultOperator`, `sdQbIsNoDataOperator`, `sdQbIsMultiOperator`, `sdQbSupportsFieldCompareOperator`.
 
 ## Date / datetime value editor
 
@@ -169,14 +177,25 @@ For `date` and `datetime` fields, the value editor behaviour depends on the acti
 - **`NULL` / `NOT_NULL`** — no value editor at all (same as other types).
 
 The mode is **derived from the rule's value** — no separate state. The component exposes:
-- `dateMode(rule): QbDateMode` — reads the current mode (`'absolute'` | `'now'` | `'relative'`)
+- `dateMode(rule): SdQbDateMode` — reads the current mode (`'absolute'` | `'now'` | `'relative'`)
 - `setDateMode(rule, mode)` — reseeds the value per mode
 - `relativeAmount(rule): number` — reads the offset amount (default `1`)
 - `setRelativeAmount(rule, raw)` — sets amount, clamped to integer `>= 1`
 - `relativeUnitDirValue(rule): string` — reads the `'unit:direction'` token (e.g. `'day:previous'`)
 - `setRelativeUnitDir(rule, token)` — writes unit + direction from a `'unit:direction'` token
-- `dateModes` — stable ref to `QB_DATE_MODES` (for template `[items]`)
-- `relativeUnitOptions` — stable ref to `QB_RELATIVE_UNIT_OPTIONS` (for template `[items]`)
+- `dateModes()` — `SD_QB_DATE_MODES` with each `labelKey` resolved to `display` through `I18nService` (for template `[items]`)
+- `relativeUnitOptions()` — same treatment for `SD_QB_RELATIVE_UNIT_OPTIONS`
+- `valueSourceOptions()` — same treatment for `SD_QB_VALUE_SOURCE_OPTIONS`
+
+All three are `computed()`, so the array reference stays stable across change-detection passes (required by
+`sd-select [items]`, which otherwise loops through `toObservable(items)` → `markForCheck()`), yet is rebuilt
+when the language changes.
+
+The static template strings (`Chọn trường`, `Giá trị`, `Từ` / `Đến`, `Thêm`, `Điều kiện` / `Nhóm`, `Xoá nhóm` /
+`Xoá điều kiện`, `Chưa có điều kiện`) are exposed the same way: `selectFieldLabel()`, `valueLabel()`,
+`fromLabel()`, `toLabel()`, `addLabel()`, `addNodeLabel()`, `conditionLabel()`, `groupLabel()`,
+`removeGroupLabel()`, `removeConditionLabel()`, `emptyLabel()`. Boolean-field defaults come from
+`core.component.query-builder.boolean.true` / `.false` when the field declares no `trueLabel` / `falseLabel`.
 
 ## Field picker behaviour
 
@@ -192,7 +211,7 @@ Renders a `<div class="qb-view">` (disabled-input look) containing the rules as 
 - `EQUAL =`, `NOT_EQUAL !=`, `> < >= <=`, `CONTAIN → like '%v%'`, `START_WITH → like 'v%'`, `END_WITH → like '%v'` (NOT_* → `not like`), `IN → in (…)`, `BETWEEN → between a and b`, `NULL → is null`, `NOT_NULL → is not null`
 - `and` / `or` lowercase; nested multi-child groups wrapped in `( … )`; string values single-quoted (`'` escaped to `''`); `values` shown via their display label; boolean shown via `trueLabel`/`falseLabel`
 - each piece is a `<span class="qb-tok qb-tok-<kind>">` so operators (`qb-tok-op`) and values (`qb-tok-value`) are highlighted distinctly from field/logic/paren
-- relative date values render as readable Vietnamese: `hôm nay` (for `dataType:'date-today'`) or `N ngày|tuần|tháng trước|tới` (for `dataType:'date-relative'`)
+- relative date values render in the active language: the `core.component.query-builder.date-mode.now` label (for `dataType:'date-today'`) or `{amount} {phrase}` assembled from `core.component.query-builder.relative.*` (for `dataType:'date-relative'`) — the catalogue owns the word order, so `3 ngày trước` / `3 days ago` / `3日前` all come out right
 - field-reference operands render as the right-hand field label, e.g. `Giá > Giá vốn` for `dataType:'field'`
 
 Example output: `(Mã = 'ABC' and Tên like '%abc%') or Giá > 100`
@@ -246,12 +265,12 @@ fields: SdQueryBuilderField[] = [
 ## Anti-patterns
 - ❌ Sharing one `value` object across builder instances — seed a fresh `Filter`/`null` per instance.
 - ❌ Expecting a flat `Filter[]` when you used nested groups — nesting lives in `value` (the tree); `filters` only mirrors the root's direct children.
-- ❌ Hardcoding operator lists in the template — declare `field.operators` / rely on `QB_OPERATORS_BY_TYPE`.
+- ❌ Hardcoding operator lists in the template — declare `field.operators` / rely on `SD_QB_OPERATORS_BY_TYPE`.
 - ❌ Using `mode="view"` to disable editing while keeping the tree UI — use `[disabled]="true"` for that; `view` swaps to the raw-string renderer.
 
 ## Known limitations
 
-- **Hard-coded Vietnamese strings** — display labels for the date-mode select (`'Ngày cụ thể'`, `'Hôm nay'`, `'Tương đối'`), relative unit options (`'ngày trước'`, `'tháng tới'`, …), and the view-mode relative tokens (`'hôm nay'`, `'ngày trước'`, `'tới'`) are baked into the component and serializer. Migration through `I18nService` is deferred tech debt.
+- **SQL keywords in view mode are not translated** — `and` / `or` / `like` / `between` / `is null` stay literal SQL syntax by design; only field labels and *values* go through `I18nService`.
 - **Relative dates: minute / hour granularity** — only `day`, `week`, `month` units are supported. Hour / minute offsets are intentionally out of scope for this iteration.
 - **Field-to-field comparison: compound values** — field references only support single-operand operators. `BETWEEN`, `IN`, and `NOT_IN` stay literal-value editors.
 - **Relative dates: BETWEEN** — relative values are not supported as BETWEEN endpoints. Switching from a single-value operator with a relative value to BETWEEN resets the value to `{ from: null, to: null }`.
@@ -261,4 +280,10 @@ fields: SdQueryBuilderField[] = [
 - `<sd-operator>` — operator picker reused for each rule
 - `<sd-select>` / `<sd-input>` / `<sd-date>` / `<sd-datetime>` — the per-type value editors
 - `Filter` / `Operator` (`@sdcorejs/utils/models`) — output contract
-- `filterToTokens` / `treeToFilter` / `filterToTree` — serializer helpers (exported)
+- `filterToTokens(filter, fields, translate?)` / `treeToFilter` / `filterToTree` — serializer helpers (exported). `translate` is a `SdQbTranslate` (`(key, params?) => string`); the component passes `I18nService.t`. Omit it only outside an injection context — the serializer then renders the raw i18n keys so a missing translation is visible instead of silently Vietnamese.
+
+## Accessibility
+
+- The builder container is `role="group"` (a set of controls, not a widget) so it takes no tab stop of its own — Tab goes straight to the buttons and pickers inside.
+- "Click empty space to close open dropdowns" is a mouse-only affordance; **Escape** now does the same thing, so keyboard users can dismiss an open add-menu.
+- The add-menu dropdown is `role="group"` and swallows Enter as well as click, so activating a button inside it never reaches the container's "close all" handler.

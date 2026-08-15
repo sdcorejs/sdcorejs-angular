@@ -1,14 +1,15 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdLayoutMenu, SdLayoutNavigationStateService, SdLayoutStorageService } from '../../services';
-import { SidebarV3Component } from './main.component';
+import { SdSidebarV3 } from './main.component';
 
 const dashboard: SdLayoutMenu = { id: 'dashboard', title: 'Tổng quan', path: '/dashboard', permission: true };
 const reports: SdLayoutMenu = { id: 'reports', title: 'Báo cáo bán hàng', tooltipTitle: 'Doanh số', path: '/reports', permission: true };
 const menus: SdLayoutMenu[] = [{ id: 'work', title: 'Công việc', children: [dashboard, reports] }];
 
-describe('SidebarV3Component', () => {
-  let fixture: ComponentFixture<SidebarV3Component>;
+describe('SdSidebarV3', () => {
+  let fixture: ComponentFixture<SdSidebarV3>;
   let utilityStyles: HTMLStyleElement;
 
   beforeEach(async () => {
@@ -18,13 +19,13 @@ describe('SidebarV3Component', () => {
     utilityStyles.textContent =
       '.d-flex { display: flex !important; } .justify-content-between { justify-content: space-between !important; } .justify-content-center { justify-content: center !important; }';
     document.head.appendChild(utilityStyles);
-    await TestBed.configureTestingModule({ imports: [SidebarV3Component], providers: [provideRouter([])] }).compileComponents();
+    await TestBed.configureTestingModule({ imports: [SdSidebarV3], providers: [provideRouter([])] }).compileComponents();
   });
 
   afterEach(() => utilityStyles.remove());
 
   function create(sidebar: Record<string, unknown> = { version: 3 }): void {
-    fixture = TestBed.createComponent(SidebarV3Component);
+    fixture = TestBed.createComponent(SdSidebarV3);
     fixture.componentRef.setInput('menus', menus);
     fixture.componentRef.setInput('userInfo', { fullName: 'Demo User' });
     fixture.componentRef.setInput('sidebar', sidebar);
@@ -90,6 +91,25 @@ describe('SidebarV3Component', () => {
     expect(navigate).toHaveBeenCalledWith(['/reports'], jasmine.any(Object));
   });
 
+  it('opens an absolute http(s) menu with noopener,noreferrer and never opens a javascript: scheme', () => {
+    create();
+    const windowOpen = spyOn(window, 'open');
+    const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+
+    fixture.componentInstance.navigateMenu({ id: 'docs', title: 'Tài liệu', path: 'https://example.com/docs', permission: true });
+    expect(windowOpen).toHaveBeenCalledWith('https://example.com/docs', '_blank', 'noopener,noreferrer');
+    expect(navigate).not.toHaveBeenCalled();
+
+    windowOpen.calls.reset();
+    fixture.componentInstance.navigateMenu({
+      id: 'evil',
+      title: 'Evil',
+      path: 'javascript:fetch("//evil.example.com")//http',
+      permission: true,
+    });
+    expect(windowOpen).not.toHaveBeenCalled();
+  });
+
   it('omits the brand and centers compact controls when collapsed', () => {
     create({ version: 3, defaultCollapsed: true });
 
@@ -123,5 +143,15 @@ describe('SidebarV3Component', () => {
     ) as HTMLInputElement;
     expect(input).not.toBeNull();
     expect(input.placeholder).toBe('Tìm trong tất cả menu');
+  });
+
+  // why: ba tiêu đề section trước đây là literal tiếng Việt trong template, không dịch được.
+  it('renders the all-menu section heading from the i18n catalogue', () => {
+    TestBed.inject(I18nService).setLanguage('vi', { reload: false });
+    create();
+
+    const headings = Array.from(fixture.nativeElement.querySelectorAll('h2')).map(h => (h as HTMLElement).textContent?.trim());
+    expect(headings).toContain('Tất cả menu');
+    expect(headings).not.toContain('');
   });
 });

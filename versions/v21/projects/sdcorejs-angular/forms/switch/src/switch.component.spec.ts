@@ -12,6 +12,7 @@ import { SdSwitch } from './switch.component';
     [color]="color"
     [disabled]="disabled"
     [required]="required"
+    [hideInlineError]="hideInlineError"
     [viewed]="viewed"
     [(model)]="model"
     (sdChange)="onSdChange($event)"></sd-switch>`,
@@ -21,6 +22,7 @@ class HostComponent {
   color: any = 'primary';
   disabled: boolean | '' | null | undefined = false;
   required: boolean | '' | null | undefined = false;
+  hideInlineError: boolean | '' | null | undefined = false;
   viewed = false;
   model: boolean | null | undefined = false;
   changes: any[] = [];
@@ -53,6 +55,7 @@ describe('SdSwitch', () => {
   let switchInstance: SdSwitch;
 
   beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
     await TestBed.configureTestingModule({
       imports: [HostComponent, NoopAnimationsModule],
     }).compileComponents();
@@ -173,6 +176,63 @@ describe('SdSwitch', () => {
       fixture.detectChanges();
       switchInstance.formControl.setValue(null);
       expect(switchInstance.formControl.hasError('required')).toBe(false);
+    });
+  });
+
+  // why: RED trước fix — `hideInlineError` là input CHẾT và `sd-switch.md` mô tả một message
+  // required hiển thị dưới hàng, nhưng switch.component.html không có bất kỳ markup lỗi nào.
+  // Hệ quả: switch `required` để OFF chặn submit mà người dùng không thấy lý do.
+  describe('required error message (inline)', () => {
+    it('renders nothing before the user interacts, even though the control is already invalid', async () => {
+      host.required = true;
+      host.model = null;
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+
+      expect(switchInstance.formControl.hasError('required')).toBe(true);
+      expect(fixture.nativeElement.querySelector('mat-error')).toBeNull();
+    });
+
+    it('renders the required message after the control is touched (no forced CD)', async () => {
+      host.required = true;
+      host.model = null;
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+
+      switchInstance.formControl.markAsTouched();
+      await fixture.whenStable();
+
+      const error = fixture.nativeElement.querySelector('mat-error') as HTMLElement | null;
+      expect(error).not.toBeNull();
+      expect(error!.textContent?.trim()).toBe('Vui lòng nhập thông tin');
+    });
+
+    it('clears the message once the switch becomes valid', async () => {
+      host.required = true;
+      host.model = null;
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+      switchInstance.formControl.markAsTouched();
+      await fixture.whenStable();
+      expect(fixture.nativeElement.querySelector('mat-error')).not.toBeNull();
+
+      switchInstance.formControl.setValue(true);
+      await fixture.whenStable();
+
+      expect(fixture.nativeElement.querySelector('mat-error')).toBeNull();
+    });
+
+    it('hideInlineError suppresses the message (the input is no longer dead)', async () => {
+      host.required = true;
+      host.model = null;
+      host.hideInlineError = true;
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+      switchInstance.formControl.markAsTouched();
+      await fixture.whenStable();
+
+      expect(switchInstance.formControl.hasError('required')).toBe(true);
+      expect(fixture.nativeElement.querySelector('mat-error')).toBeNull();
     });
   });
 

@@ -9,7 +9,7 @@
     (mouseleave)="onMouseleaveSideBar()"
     [mode]="isMobile() ? 'over' : 'side'"
     [fixedInViewport]="isMobile()">
-    <sidebar
+    <sd-sidebar-v1-panel
       [menus]="menus()"
       [userInfo]="userInfo()"
       [sidebar]="sidebar()"
@@ -19,7 +19,7 @@
       (expandSideBar)="onExpandSideBar()"
       (popupUserMenuOpened)="onPopupOfSideBarOpened()"
       (popupUserMenuClosed)="onPopupOfSideBarClosed()">
-    </sidebar>
+    </sd-sidebar-v1-panel>
   </mat-sidenav>
 
   <mat-sidenav-content class="c-layout-content" [class.isShowSidebar]="isMenuLock()">

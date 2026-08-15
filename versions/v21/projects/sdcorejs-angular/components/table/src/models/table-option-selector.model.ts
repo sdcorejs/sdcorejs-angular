@@ -28,14 +28,15 @@ export interface SdTableOptionSelector<T = any> {
    *
    * - Default (false): selection bị mất khi data items được re-fetch (server-side) hoặc
    *   item references thay đổi. Action bar chỉ hiển thị số item selected ở page hiện tại.
-   * - Enabled (true): table giữ map nội bộ selectedItems theo `meta.id` (hash của data).
+   * - Enabled (true): table giữ map nội bộ selectedItems theo `meta.id`.
    *   Sau mỗi #render, restore `isSelected` cho item nào id đã có trong map.
    *   `selectedTableItems()` trả về TOÀN BỘ item đã chọn xuyên trang (kể cả off-page),
    *   nên action bar + callback `click(items)` nhận đầy đủ data đang được chọn.
    *
-   * Lưu ý: matching dựa trên `Utilities.hash(data)` — hai item có cùng data shape sẽ
-   * trùng id (mong muốn). Nếu data có timestamp/random field thay đổi giữa các lần fetch,
-   * id sẽ khác và selection không restore được.
+   * ⚠️ Matching dựa trên `meta.id`. Không khai báo `option.rowKey` thì id được sinh theo
+   * IDENTITY của object data — sống qua filter/sort/paging phía client, nhưng KHÔNG sống
+   * qua một lần fetch mới của server (object mới → id mới). Với `type: 'server'`, HÃY
+   * khai báo `option.rowKey` trỏ vào field định danh của dòng.
    */
   preserveSelection?: boolean;
 }

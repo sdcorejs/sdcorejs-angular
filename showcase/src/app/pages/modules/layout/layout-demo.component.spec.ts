@@ -45,12 +45,12 @@ describe('LayoutDemoComponent', () => {
   it('renders all six desktop and mobile sidebar variants without runtime errors', () => {
     const element = fixture.nativeElement as HTMLElement;
     const variants = [
-      [1, 'desktop', 'sidebar-v1'],
-      [1, 'mobile', 'sidebar-mobile-v1'],
-      [2, 'desktop', 'sidebar-v2'],
-      [2, 'mobile', 'sidebar-mobile-v2'],
-      [3, 'desktop', 'sidebar-v3'],
-      [3, 'mobile', 'sidebar-mobile-v3'],
+      [1, 'desktop', 'sd-sidebar-v1'],
+      [1, 'mobile', 'sd-sidebar-mobile-v1'],
+      [2, 'desktop', 'sd-sidebar-v2'],
+      [2, 'mobile', 'sd-sidebar-mobile-v2'],
+      [3, 'desktop', 'sd-sidebar-v3'],
+      [3, 'mobile', 'sd-sidebar-mobile-v3'],
     ] as const;
 
     for (const [version, viewport, expectedSelector] of variants) {

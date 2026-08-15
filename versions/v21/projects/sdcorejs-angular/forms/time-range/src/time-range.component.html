@@ -1,5 +1,7 @@
 @let _label = label();
-@let _errorMessage = errorMessage();
+<!-- why: bản đã gate theo tương tác, KHÔNG dùng `errorMessage()` thô — range `[required]`
+     trước đây bung lỗi ngay lần paint đầu, khi người dùng còn chưa chạm vào ô nào. -->
+@let _errorMessage = visibleError();
 @let _required = required();
 
 @if (isViewed()) {
@@ -30,10 +32,13 @@
     [attr.data-value]="dataValue()"
     [attr.data-required]="dataRequired()"
     [attr.data-error-message]="dataErrorMessage()">
+    <!-- why: KHÔNG truyền [form] xuống endpoint. Trước đây mỗi endpoint tự đăng ký vào FormGroup
+         của consumer dưới tên `from-<uuid>` / `to-<uuid>`, nên `form.value` mọc thêm 2 key đổi
+         theo từng instance — vỡ shape giá trị và `form.reset(obj)`. Chỉ control tổng được đăng ký;
+         trạng thái invalid của endpoint được kéo lên control tổng qua `#validators`. -->
     <sd-time
       #fromTime
       class="sd-time-range-endpoint"
-      [form]="form()"
       [name]="fromName"
       [autoId]="fromAutoId()"
       [placeholder]="fromPlaceholder() || 'HH:mm'"
@@ -43,6 +48,7 @@
       [max]="max()"
       [step]="step()"
       [required]="_required"
+      [clearable]="clearable()"
       [disabled]="disabled()"
       [readonly]="isReadonly()"
       [viewed]="isInline() ? 'inline' : false"
@@ -53,12 +59,13 @@
       (sdBlur)="onBlur()">
     </sd-time>
 
+    <!-- why: GIỮ aria-hidden — mũi tên chỉ là trang trí, ý nghĩa "từ → đến" đã nằm trong
+         aria-label của hai <sd-time> con; đọc thêm "mũi tên phải" chỉ gây nhiễu. -->
     <span class="sd-time-range-separator" aria-hidden="true">→</span>
 
     <sd-time
       #toTime
       class="sd-time-range-endpoint"
-      [form]="form()"
       [name]="toName"
       [autoId]="toAutoId()"
       [placeholder]="toPlaceholder() || 'HH:mm'"
@@ -68,6 +75,7 @@
       [max]="max()"
       [step]="step()"
       [required]="_required"
+      [clearable]="clearable()"
       [disabled]="disabled()"
       [readonly]="isReadonly()"
       [viewed]="isInline() ? 'inline' : false"
@@ -77,12 +85,6 @@
       (sdFocus)="onFocus()"
       (sdBlur)="onBlur()">
     </sd-time>
-
-    @if (showClear()) {
-      <button type="button" class="sd-time-range-clear" (click)="clear()" [attr.aria-label]="'core.form.time-range.clear' | translate">
-        <sd-icon name="close"></sd-icon>
-      </button>
-    }
   </div>
 
   @if (!hideInlineError() && _errorMessage) {

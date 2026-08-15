@@ -2,7 +2,7 @@ import { Component, DebugElement, ViewChild } from '@angular/core';
 import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { By } from '@angular/platform-browser';
-import { IMAGE_LOADER } from '@angular/common';
+import { DOCUMENT, IMAGE_LOADER } from '@angular/common';
 import { SdPreviewImage } from './preview-image.component';
 
 // ---------------------------------------------------------------------------
@@ -38,11 +38,16 @@ function makeNonImageFile(name = 'doc.pdf', type = 'application/pdf'): File {
 @Component({
   standalone: true,
   imports: [SdPreviewImage],
-  template: ` <sd-preview-image #previewRef [items]="items" (close)="onClose()"></sd-preview-image> `,
+  template: `
+    <sd-preview-image #previewRef [items]="items" [thumbnailPosition]="thumbnailPosition" (close)="onClose()"></sd-preview-image>
+  `,
 })
 class HostComponent {
   @ViewChild('previewRef') previewRef!: SdPreviewImage;
   items: (string | File)[] = [];
+  // why: mặc định giữ nguyên 'bottom' như trước để không đổi hành vi các spec cũ; spec a11y của
+  // chấm chỉ mục cần chuyển sang 'dots'.
+  thumbnailPosition: 'bottom' | 'top' | 'left' | 'right' | 'dots' | 'none' = 'bottom';
   closedCount = 0;
   onClose(): void {
     this.closedCount++;
@@ -186,6 +191,50 @@ describe('SdPreviewImage', () => {
       component.onClickThumbnailImage(0);
       fixture.detectChanges();
       expect(component.activeIndex()).toBe(0);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // A11y — role="tablist" từng có con là <button> trần, không role="tab", không
+  // aria-selected và không trỏ tới tabpanel nào.
+  // -------------------------------------------------------------------------
+
+  describe('accessibility: dots indicator', () => {
+    beforeEach(fakeAsync(() => {
+      host.thumbnailPosition = 'dots';
+      host.items = [makeImageFile('a.png'), makeImageFile('b.png'), makeImageFile('c.png')];
+      fixture.detectChanges();
+      tick();
+      fixture.detectChanges();
+    }));
+
+    const getDots = (): HTMLElement[] => Array.from(fixture.nativeElement.querySelectorAll('.sd-preview-dot'));
+
+    it('every dot inside role="tablist" declares role="tab"', () => {
+      const dots = getDots();
+      expect(dots.length).toBe(3);
+      dots.forEach(dot => expect(dot.getAttribute('role')).toBe('tab'));
+    });
+
+    it('marks exactly one dot as aria-selected and moves it with the active image', () => {
+      expect(getDots().map(d => d.getAttribute('aria-selected'))).toEqual(['true', 'false', 'false']);
+
+      component.onClickThumbnailImage(2);
+      fixture.detectChanges();
+
+      expect(getDots().map(d => d.getAttribute('aria-selected'))).toEqual(['false', 'false', 'true']);
+    });
+
+    it('points every tab at the stage tabpanel through aria-controls', () => {
+      const stage = fixture.nativeElement.querySelector('.sd-preview-stage') as HTMLElement;
+      expect(stage.getAttribute('role')).toBe('tabpanel');
+      getDots().forEach(dot => expect(dot.getAttribute('aria-controls')).toBe(stage.id));
+    });
+
+    // why: mọi chấm trước đây đều đọc là "Ảnh tiếp theo" — nhãn sai và trùng nhau.
+    it('names each dot after its own image instead of reusing the "next" label', () => {
+      const labels = getDots().map(d => d.getAttribute('aria-label'));
+      expect(new Set(labels).size).toBe(3);
     });
   });
 
@@ -351,5 +400,88 @@ describe('SdPreviewImage — autoId', () => {
     expect(comp.autoIdThumb(0)).toBe('components-preview-image-gallery-thumb-0');
     expect(comp.autoIdThumb(3)).toBe('components-preview-image-gallery-thumb-3');
     expect(comp.autoIdDot(1)).toBe('components-preview-image-gallery-dot-1');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// describe: SSR-safe document access
+// ---------------------------------------------------------------------------
+// why: constructor đọc biến global `document` nên component ném `document is not defined`
+// khi render trên server. Spec dùng một Proxy quanh document thật, cấp qua token DOCUMENT:
+// nếu component đi qua token thì listener 'fullscreenchange' phải xuất hiện trong bản ghi.
+
+interface RecordedDocumentListener {
+  type: string;
+  listener: EventListenerOrEventListenerObject;
+}
+
+function createRecordingDocument(): {
+  documentProxy: Document;
+  added: RecordedDocumentListener[];
+  removed: RecordedDocumentListener[];
+} {
+  const added: RecordedDocumentListener[] = [];
+  const removed: RecordedDocumentListener[] = [];
+  const documentProxy = new Proxy(document, {
+    get(target: Document, property: string | symbol) {
+      if (property === 'addEventListener') {
+        return (type: string, listener: EventListenerOrEventListenerObject, options?: unknown) => {
+          added.push({ type, listener });
+          return target.addEventListener(type, listener, options as AddEventListenerOptions);
+        };
+      }
+      if (property === 'removeEventListener') {
+        return (type: string, listener: EventListenerOrEventListenerObject, options?: unknown) => {
+          removed.push({ type, listener });
+          return target.removeEventListener(type, listener, options as EventListenerOptions);
+        };
+      }
+      const value = Reflect.get(target, property) as unknown;
+      return typeof value === 'function' ? (value as (...args: unknown[]) => unknown).bind(target) : value;
+    },
+  }) as Document;
+  return { documentProxy, added, removed };
+}
+
+describe('SdPreviewImage document injection', () => {
+  let fixture: ComponentFixture<HostComponent>;
+  let added: RecordedDocumentListener[];
+  let removed: RecordedDocumentListener[];
+
+  beforeEach(async () => {
+    spyOn(URL, 'createObjectURL').and.returnValue('blob:mock-url');
+    spyOn(URL, 'revokeObjectURL').and.stub();
+
+    const recording = createRecordingDocument();
+    added = recording.added;
+    removed = recording.removed;
+
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+      providers: [
+        { provide: DOCUMENT, useValue: recording.documentProxy },
+        { provide: IMAGE_LOADER, useValue: (config: { src: string }) => config.src },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+  });
+
+  function fullscreenListeners(entries: RecordedDocumentListener[]): RecordedDocumentListener[] {
+    return entries.filter(entry => entry.type === 'fullscreenchange');
+  }
+
+  it('binds fullscreenchange through the injected DOCUMENT, not the global one', () => {
+    expect(fullscreenListeners(added).length).toBe(1);
+  });
+
+  it('removes the fullscreenchange listener from the injected DOCUMENT on destroy', () => {
+    const bound = fullscreenListeners(added)[0];
+    expect(bound).toBeDefined();
+
+    fixture.destroy();
+
+    expect(fullscreenListeners(removed).some(entry => entry.listener === bound.listener)).toBeTrue();
   });
 });

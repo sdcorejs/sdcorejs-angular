@@ -453,6 +453,47 @@ describe('SdStorageService', () => {
     expect(args.get()).toBe('args');
   });
 
+  // why: `namespace` KHÔNG có default. Ba spec dưới khoá lại điều đó: một hằng số dùng chung cho cả
+  // thư viện không tách được hai app chung origin (cả hai đều nhận cùng hằng số), nó chỉ đổi identity
+  // của mọi handle đang chạy và bỏ rơi dữ liệu đã persist. Tách partition là việc của app.
+  it('keeps a handle without namespace on its original identity — no implicit namespace is folded in', () => {
+    let service = configure();
+    service.create<string>('shared-key').set('written-without-namespace');
+    const storedKey = Array.from(adapter.local.keys())[0];
+
+    // Sau khi restart, handle KHÔNG namespace phải đọc lại đúng giá trị cũ dưới đúng key cũ.
+    service = restart();
+    expect(service.create<string>('shared-key').get()).toBe('written-without-namespace');
+    expect(Array.from(adapter.local.keys())).toEqual([storedKey]);
+
+    // Và bất kỳ namespace tường minh nào cũng phải là partition KHÁC, kể cả tên của thư viện.
+    const namespaced = service.create<string>('shared-key', { namespace: 'sdcorejs' });
+    expect(namespaced.get()).toBeUndefined();
+    namespaced.set('written-with-namespace');
+    expect(new Set(adapter.local.keys()).size).toBe(2);
+    expect(service.create<string>('shared-key').get()).toBe('written-without-namespace');
+  });
+
+  it('isolates two apps on the same origin that share a logical key but declare different namespaces', () => {
+    const service = configure();
+    const appA = service.create<string>('user-preferences', { namespace: 'app-a' });
+    const appB = service.create<string>('user-preferences', { namespace: 'app-b' });
+    appA.set('theme-dark');
+    appB.set('theme-light');
+    expect(appA.get()).toBe('theme-dark');
+    expect(appB.get()).toBe('theme-light');
+    expect(new Set(adapter.local.keys()).size).toBe(2);
+  });
+
+  it('lets SD_STORAGE_CONFIG.namespace partition every handle of the app at once', () => {
+    const service = configure({ namespace: 'portal' });
+    service.create<string>('shared-key').set('from-portal');
+    const defaulted = restart();
+    expect(defaulted.create<string>('shared-key').get()).toBeUndefined();
+    const portal = restart({ namespace: 'portal' });
+    expect(portal.create<string>('shared-key').get()).toBe('from-portal');
+  });
+
   it('persists canonical policy variants under collision-free keys and reloads each independently', () => {
     let service = configure();
     const variants = [

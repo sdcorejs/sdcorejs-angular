@@ -135,6 +135,69 @@ describe('SdBadge', () => {
       const el = queryByCss<HTMLDivElement>(fixture, 'div.c-badge');
       expect(el.classList.contains('pointer')).toBe(false);
     });
+
+    // why: badge từng bị stopPropagation VÔ ĐIỀU KIỆN nên click không bao giờ tới control cha
+    // (vd <a> của tab-router) — buộc cha phải nhân bản handler lên badge.
+    it('does NOT stop propagation when nobody listens to (click)', () => {
+      setInput(fixture, 'type', 'round');
+      const el = queryByCss<HTMLDivElement>(fixture, 'div.c-badge');
+      const ev = new MouseEvent('click', { bubbles: true });
+      const spyStop = spyOn(ev, 'stopPropagation');
+      el.dispatchEvent(ev);
+      expect(spyStop).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── A11Y ─────────────────────────────────────────────────────────────────
+  describe('accessibility', () => {
+    (['round', 'tag', 'icon'] as const).forEach(type => {
+      it(`type="${type}" does not carry aria-hidden`, () => {
+        setInput(fixture, 'type', type);
+        setInput(fixture, 'title', 'A');
+        const root = fixture.nativeElement.firstElementChild as HTMLElement;
+        expect(root.hasAttribute('aria-hidden')).toBe(false);
+      });
+    });
+
+    it('exposes role=button + tabindex=0 only when (click) has a subscriber', () => {
+      setInput(fixture, 'type', 'round');
+      const before = queryByCss<HTMLDivElement>(fixture, 'div.c-badge');
+      expect(before.getAttribute('role')).toBeNull();
+      expect(before.getAttribute('tabindex')).toBeNull();
+
+      // why: component là OnPush và `click.observed` không phải signal → phải làm view dirty
+      // (setInput) mới re-render, giống spec "applies pointer class only when click is observed".
+      fixture.componentInstance.click.subscribe(() => undefined);
+      setInput(fixture, 'title', 'A');
+      const after = queryByCss<HTMLDivElement>(fixture, 'div.c-badge');
+      expect(after.getAttribute('role')).toBe('button');
+      expect(after.getAttribute('tabindex')).toBe('0');
+    });
+
+    it('Enter emits click just like a mouse click', () => {
+      let received: Event | null = null;
+      fixture.componentInstance.click.subscribe((e: Event) => (received = e));
+      setInput(fixture, 'type', 'round');
+      const el = queryByCss<HTMLDivElement>(fixture, 'div.c-badge');
+
+      const ev = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
+      el.dispatchEvent(ev);
+
+      expect(received).toBe(ev as any);
+    });
+
+    it('Space emits click and prevents the default page scroll', () => {
+      let received: Event | null = null;
+      fixture.componentInstance.click.subscribe((e: Event) => (received = e));
+      setInput(fixture, 'type', 'tag');
+      const el = queryByCss<HTMLDivElement>(fixture, 'div.c-badge--tag');
+
+      const ev = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+      el.dispatchEvent(ev);
+
+      expect(received).toBe(ev as any);
+      expect(ev.defaultPrevented).toBe(true);
+    });
   });
 
   describe('description', () => {

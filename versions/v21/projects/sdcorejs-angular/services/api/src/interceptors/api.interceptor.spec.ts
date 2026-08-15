@@ -403,6 +403,90 @@ describe('SdHttpInterceptor', () => {
     ctrl.verify();
   });
 
+  // ─── host matching: parsed origin, not a raw string prefix ──────────────────
+
+  it('does not run a handler for a lookalike host that shares the configured host as a string prefix', () => {
+    const interceptSpy = jasmine
+      .createSpy<(request: HttpRequest<unknown>) => HttpRequest<unknown>>('intercept')
+      .and.callFake(request => request.clone({ setHeaders: { Authorization: 'Bearer secret' } }));
+    configure([{ hosts: ['https://api.example.com'], intercept: interceptSpy }]);
+    const http = TestBed.inject(HttpClient);
+    const ctrl = TestBed.inject(HttpTestingController);
+
+    // why: với `url.startsWith(host)`, host giả mạo này khớp handler của api.example.com và nhận
+    // luôn header Authorization mà `intercept` gắn vào.
+    http.get('https://api.example.com.attacker.tld/x').subscribe();
+
+    const req = ctrl.expectOne('https://api.example.com.attacker.tld/x');
+    expect(interceptSpy).not.toHaveBeenCalled();
+    expect(req.request.headers.get('Authorization')).toBeNull();
+    req.flush(null);
+    ctrl.verify();
+  });
+
+  it('still runs the handler for the exact configured origin', () => {
+    configure([
+      {
+        hosts: ['https://api.example.com'],
+        intercept: request => request.clone({ setHeaders: { Authorization: 'Bearer secret' } }),
+      },
+    ]);
+    const http = TestBed.inject(HttpClient);
+    const ctrl = TestBed.inject(HttpTestingController);
+
+    http.get('https://api.example.com/v1/users').subscribe();
+
+    const req = ctrl.expectOne('https://api.example.com/v1/users');
+    expect(req.request.headers.get('Authorization')).toBe('Bearer secret');
+    req.flush(null);
+    ctrl.verify();
+  });
+
+  it('treats a configured host path as a segment prefix so /v1 does not cover /v1beta', () => {
+    configure([
+      {
+        hosts: ['https://api.example.com/v1'],
+        intercept: request => request.clone({ setHeaders: { Authorization: 'Bearer secret' } }),
+      },
+    ]);
+    const http = TestBed.inject(HttpClient);
+    const ctrl = TestBed.inject(HttpTestingController);
+
+    http.get('https://api.example.com/v1/users').subscribe();
+    const covered = ctrl.expectOne('https://api.example.com/v1/users');
+    expect(covered.request.headers.get('Authorization')).toBe('Bearer secret');
+    covered.flush(null);
+
+    http.get('https://api.example.com/v1beta/users').subscribe();
+    const sibling = ctrl.expectOne('https://api.example.com/v1beta/users');
+    expect(sibling.request.headers.get('Authorization')).toBeNull();
+    sibling.flush(null);
+    ctrl.verify();
+  });
+
+  it('keeps matching same-origin relative hosts such as /api', () => {
+    configure([
+      {
+        hosts: ['/api'],
+        intercept: request => request.clone({ setHeaders: { 'X-Relative': 'matched' } }),
+      },
+    ]);
+    const http = TestBed.inject(HttpClient);
+    const ctrl = TestBed.inject(HttpTestingController);
+
+    http.get('/api/users').subscribe();
+    const matched = ctrl.expectOne('/api/users');
+    expect(matched.request.headers.get('X-Relative')).toBe('matched');
+    matched.flush(null);
+
+    // why: cùng origin nhưng khác nhánh path thì không được coi là thuộc handler '/api'.
+    http.get('/public/ping').subscribe();
+    const unmatched = ctrl.expectOne('/public/ping');
+    expect(unmatched.request.headers.get('X-Relative')).toBeNull();
+    unmatched.flush(null);
+    ctrl.verify();
+  });
+
   it('handles config with no handlers list gracefully', () => {
     // why: a configuration object with falsy/undefined handlers must not blow up
     TestBed.resetTestingModule();

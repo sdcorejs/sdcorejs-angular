@@ -111,7 +111,10 @@
           max-height: calc(100% - 5px);
         }
 
+        // why: đổi từ <div (click)> sang <button type="button"> để bàn phím mở được preview →
+        // reset chrome mặc định của button, giữ nguyên diện mạo overlay cũ.
         .c-overlay-count {
+          border: 0;
           display: flex;
           top: 50%;
           left: 50%;
@@ -195,21 +198,41 @@
     color: map.get(color.$color_map, 'primary');
   }
 
+  // why: .c-zoom đổi từ <sd-icon> sang <button> để nhận focus bàn phím → reset chrome mặc định
+  // của button (nền/viền/padding) để giữ nguyên diện mạo cũ.
   .c-zoom {
     height: 18px;
     width: 18px;
     font-size: 18px;
     cursor: pointer;
     color: #fff;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 
 :host ::ng-deep {
   button {
+    // why: bỏ outline mặc định của Material nhưng PHẢI trả lại vòng focus cho bàn phím —
+    // :focus-visible chỉ hiện khi điều hướng bằng phím, chuột vẫn sạch như cũ.
     &:focus {
       outline: none;
     }
+    &:focus-visible {
+      outline: 2px solid var(--sd-primary, #005cbb);
+      outline-offset: 2px;
+    }
   }
+}
+
+// why: drop zone + khung ảnh nay nhận tabindex nên cần vòng focus thấy được.
+:host [role='button']:focus-visible {
+  outline: 2px solid var(--sd-primary, #005cbb);
+  outline-offset: 2px;
 }
 
 .c-drag-placeholder {
@@ -222,58 +245,58 @@
 
 .file {
   padding: 5px;
-  content: url('./assets/file-types/file.png');
+  content: url('./assets/file-types/file.svg');
 
   &.png {
-    content: url('./assets/file-types/png.png');
+    content: url('./assets/file-types/png.svg');
   }
 
   &.jpg {
-    content: url('./assets/file-types/jpg.png');
+    content: url('./assets/file-types/jpg.svg');
   }
 
   &.pdf {
-    content: url('./assets/file-types/pdf.png');
+    content: url('./assets/file-types/pdf.svg');
   }
 
   &.doc {
-    content: url('./assets/file-types/doc.png');
+    content: url('./assets/file-types/doc.svg');
   }
 
   &.docx {
-    content: url('./assets/file-types/docx.png');
+    content: url('./assets/file-types/docx.svg');
   }
 
   &.xls {
-    content: url('./assets/file-types/xls.png');
+    content: url('./assets/file-types/xls.svg');
   }
 
   &.xlsx {
-    content: url('./assets/file-types/xlsx.png');
+    content: url('./assets/file-types/xlsx.svg');
   }
 
   &.ppt {
-    content: url('./assets/file-types/xls.png');
+    content: url('./assets/file-types/xls.svg');
   }
 
   &.pptx {
-    content: url('./assets/file-types/xlsx.png');
+    content: url('./assets/file-types/xlsx.svg');
   }
 
   &.csv {
-    content: url('./assets/file-types/csv.png');
+    content: url('./assets/file-types/csv.svg');
   }
 
   &.psd {
-    content: url('./assets/file-types/psd.png');
+    content: url('./assets/file-types/psd.svg');
   }
 
   &.xml {
-    content: url('./assets/file-types/xml.png');
+    content: url('./assets/file-types/xml.svg');
   }
 
   &.zip {
-    content: url('./assets/file-types/zip.png');
+    content: url('./assets/file-types/zip.svg');
   }
 }
 
@@ -302,61 +325,61 @@
     height: 24px;
     max-width: 100%;
     margin-right: 4px;
-    content: url('./assets/file-types/file.png');
+    content: url('./assets/file-types/file.svg');
     &.png {
-      content: url('./assets/file-types/png.png');
+      content: url('./assets/file-types/png.svg');
     }
 
     &.jpg {
-      content: url('./assets/file-types/jpg.png');
+      content: url('./assets/file-types/jpg.svg');
     }
 
     &.pdf {
-      content: url('./assets/file-types/pdf.png');
+      content: url('./assets/file-types/pdf.svg');
     }
 
     &.doc {
-      content: url('./assets/file-types/doc.png');
+      content: url('./assets/file-types/doc.svg');
     }
 
     &.docx {
-      content: url('./assets/file-types/docx.png');
+      content: url('./assets/file-types/docx.svg');
     }
 
     &.xls {
-      content: url('./assets/file-types/xls.png');
+      content: url('./assets/file-types/xls.svg');
     }
 
     &.xlsx {
-      content: url('./assets/file-types/xlsx.png');
+      content: url('./assets/file-types/xlsx.svg');
     }
 
     &.ppt {
-      content: url('./assets/file-types/xls.png');
+      content: url('./assets/file-types/xls.svg');
     }
 
     &.pptx {
-      content: url('./assets/file-types/xlsx.png');
+      content: url('./assets/file-types/xlsx.svg');
     }
 
     &.csv {
-      content: url('./assets/file-types/csv.png');
+      content: url('./assets/file-types/csv.svg');
     }
 
     &.psd {
-      content: url('./assets/file-types/psd.png');
+      content: url('./assets/file-types/psd.svg');
     }
 
     &.xml {
-      content: url('./assets/file-types/xml.png');
+      content: url('./assets/file-types/xml.svg');
     }
 
     &.zip {
-      content: url('./assets/file-types/zip.png');
+      content: url('./assets/file-types/zip.svg');
     }
 
     &.tiff {
-      content: url('./assets/file-types/tiff.png');
+      content: url('./assets/file-types/tiff.svg');
     }
   }
   .c-file-name {
@@ -366,6 +389,8 @@
     white-space: nowrap; // không xuống dòng
     text-overflow: ellipsis; // hiển thị ...
   }
+  // why: .c-close đổi từ <sd-icon> sang <button> (bàn phím phải xoá được tài liệu) → reset
+  // chrome mặc định của button để giữ nguyên diện mạo cũ.
   .c-close {
     margin-left: auto;
     font-size: 16px;
@@ -374,6 +399,12 @@
     cursor: pointer;
     border-radius: 50%;
     flex-shrink: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     color: map.get(color.$color_map, 'text-secondary');
     &:hover {
       background-color: map.get(color.$color_map, 'border'); // nền xám nhạt

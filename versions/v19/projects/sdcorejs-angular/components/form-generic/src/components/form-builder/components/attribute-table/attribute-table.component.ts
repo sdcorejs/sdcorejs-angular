@@ -13,14 +13,14 @@ import {
   SdFormGenericGroup,
   SdFormGenericTableColumn,
   SdFormGenericVariable,
-  TableColumnTypes,
+  SD_TABLE_COLUMN_TYPES,
 } from '../../../../models';
 import { AttributeInput } from '../attribute-input/attribute-input.component';
 import { AttributeSelect } from '../attribute-select/attribute-select.component';
 import { AttributeSelection } from '../attribute-selection/attribute-selection.component';
 import { AttributeSwitch } from '../attribute-switch/attribute-switch.component';
 import { AttributeParameter } from '../attribute-parameter/attribute-parameter.component';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 // Template là các mẫu do Portal định nghĩa sẵn (key, label ....) để người dùng chọn nhanh
 // Khi thực hiện sao chép 1 template chúng ta sẽ CLONE để tránh ảnh hưởng template gốc
@@ -38,7 +38,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
     AttributeSelect,
     AttributeSwitch,
     AttributeParameter,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
 })
 export class AttributeTable {
@@ -58,7 +58,7 @@ export class AttributeTable {
   tables: SdFormGenericDefinitionTable[] = this.formGenericConfiguration?.form?.tables || [];
 
   // Columns
-  types = TableColumnTypes;
+  types = SD_TABLE_COLUMN_TYPES;
   columns: SdFormGenericTableColumn[] = [];
   @Input({ alias: 'columns', required: true }) set _columns(columns: SdFormGenericTableColumn[] | undefined | null) {
     if (this.columns !== columns) {

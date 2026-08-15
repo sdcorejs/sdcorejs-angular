@@ -96,7 +96,7 @@ export class ContractDetailComponent {
 
 ## Permission gating
 
-None. `<sd-view>` does not extend `SdBaseSecureComponent`. Wrap the host with `*sdPermission` if a field or section is sensitive.
+None built in. Wrap the host with `*sdPermission` if a field or section is sensitive.
 
 ## Examples
 

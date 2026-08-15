@@ -32,7 +32,7 @@
             class="sd-layout-menu-tree__pin d-flex align-items-center justify-content-center"
             [class.sd-layout-menu-tree__pin--visible]="node.isPinVisible"
             [attr.data-pin-key]="node.key"
-            [attr.aria-label]="node.isPinned ? 'Unpin ' + node.title : 'Pin ' + node.title"
+            [attr.aria-label]="node.pinLabel"
             [attr.aria-pressed]="node.isPinned"
             (click)="onTogglePinned($event, node.menu)">
             <sd-icon name="push_pin"></sd-icon>

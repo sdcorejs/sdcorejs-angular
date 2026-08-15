@@ -48,6 +48,8 @@
     <!-- STAGE ............................................................... -->
     <div
       class="sd-preview-stage"
+      [id]="stageId"
+      role="tabpanel"
       [class.sd-preview-stage--dragging]="zoom() > 1"
       (wheel)="onWheel($event)"
       (pointerdown)="onPointerDown($event)"
@@ -57,24 +59,26 @@
       (dblclick)="onImageDblClick()">
 
       @switch (_stage) {
+        <!-- why: cả hai trạng thái này đều xuất hiện BẤT ĐỒNG BỘ (sau khi normalize/tải ảnh) nên
+             cần live region, nếu không screen reader không biết viewer đã rỗng hay đang tải. -->
         @case ('empty') {
-          <div class="sd-preview-status">
+          <div class="sd-preview-status" role="status" aria-live="polite">
             <div class="sd-preview-status__tile sd-preview-status__tile--muted">
               <sd-icon fontIcon="image_not_supported"></sd-icon>
             </div>
             <div class="sd-preview-status__title">
-              {{ 'core.component.preview-image.no-image' | translate }}
+              {{ 'core.component.preview-image.no-image' | sdTranslate }}
             </div>
             <div class="sd-preview-status__hint">
-              {{ 'core.component.preview-image.no-image-hint' | translate }}
+              {{ 'core.component.preview-image.no-image-hint' | sdTranslate }}
             </div>
           </div>
         }
         @case ('loading') {
-          <div class="sd-preview-status">
+          <div class="sd-preview-status" role="status" aria-live="polite">
             <div class="sd-preview-spinner" role="progressbar"></div>
             <div class="sd-preview-status__hint">
-              {{ 'core.component.preview-image.loading' | translate }}
+              {{ 'core.component.preview-image.loading' | sdTranslate }}
             </div>
           </div>
         }
@@ -83,28 +87,28 @@
             @if (img.loading) {
               <!-- Per-image loading (retry inline) — giữ nav/dots/thumbs visible -->
               <div class="sd-preview-image-loading" role="status"
-                   [attr.aria-label]="'core.component.preview-image.loading' | translate">
+                   [attr.aria-label]="'core.component.preview-image.loading' | sdTranslate">
                 <div class="sd-preview-spinner"></div>
                 <div class="sd-preview-status__hint">
-                  {{ 'core.component.preview-image.loading' | translate }}
+                  {{ 'core.component.preview-image.loading' | sdTranslate }}
                 </div>
               </div>
             } @else if (img.error) {
               <!-- Inline broken-image placeholder — giữ nav/dots/thumbs visible -->
               <div class="sd-preview-image-broken" role="img"
-                   [attr.aria-label]="'core.component.preview-image.load-error' | translate">
+                   [attr.aria-label]="'core.component.preview-image.load-error' | sdTranslate">
                 <div class="sd-preview-status__tile sd-preview-status__tile--danger">
                   <sd-icon fontIcon="broken_image"></sd-icon>
                 </div>
                 <div class="sd-preview-status__title">
-                  {{ 'core.component.preview-image.load-error' | translate }}
+                  {{ 'core.component.preview-image.load-error' | sdTranslate }}
                 </div>
                 <div class="sd-preview-status__hint">
-                  {{ 'core.component.preview-image.load-error-hint' | translate }}
+                  {{ 'core.component.preview-image.load-error-hint' | sdTranslate }}
                 </div>
                 <button type="button" class="sd-preview-btn-primary" (click)="retryActive()" [attr.data-autoId]="autoIdRetry()">
                   <sd-icon fontIcon="refresh"></sd-icon>
-                  <span>{{ 'core.component.preview-image.retry' | translate }}</span>
+                  <span>{{ 'core.component.preview-image.retry' | sdTranslate }}</span>
                 </button>
               </div>
             } @else {
@@ -129,7 +133,7 @@
         <div class="sd-preview-kbd-hint" aria-hidden="true">
           <span class="sd-preview-kbd">←</span>
           <span class="sd-preview-kbd">→</span>
-          <span class="sd-preview-kbd-text">{{ 'core.component.preview-image.kbd-hint-nav' | translate }}</span>
+          <span class="sd-preview-kbd-text">{{ 'core.component.preview-image.kbd-hint-nav' | sdTranslate }}</span>
         </div>
       }
 
@@ -139,7 +143,7 @@
           type="button"
           class="sd-preview-nav sd-preview-nav--prev"
           [disabled]="!hasPrev()"
-          [attr.aria-label]="'core.component.preview-image.prev' | translate"
+          [attr.aria-label]="'core.component.preview-image.prev' | sdTranslate"
           [attr.data-autoId]="autoIdPrev()"
           (click)="updateCurrentImage(-1)">
           <sd-icon fontIcon="chevron_left"></sd-icon>
@@ -148,7 +152,7 @@
           type="button"
           class="sd-preview-nav sd-preview-nav--next"
           [disabled]="!hasNext()"
-          [attr.aria-label]="'core.component.preview-image.next' | translate"
+          [attr.aria-label]="'core.component.preview-image.next' | sdTranslate"
           [attr.data-autoId]="autoIdNext()"
           (click)="updateCurrentImage(1)">
           <sd-icon fontIcon="chevron_right"></sd-icon>
@@ -156,14 +160,23 @@
       }
 
       <!-- DOTS INDICATOR ......................................... -->
+      <!-- why: role="tablist" ở đây là ARIA SAI cấu trúc — con của nó là <button> trần, không có
+           role="tab", không aria-selected, và cũng không có tabpanel nào để trỏ tới. Một tablist
+           rỗng tab khiến screen reader thông báo "danh sách tab, 0 tab". Các chấm này thực chất là
+           bộ chọn ảnh, nên hoàn thiện pattern: tablist + tab + aria-selected + aria-controls trỏ
+           về vùng stage. Nhãn cũng sửa: trước đây MỌI chấm đều đọc là "Ảnh tiếp theo". -->
       @if (_thumbnailPosition === 'dots' && _stage === 'ready' && _images.length > 1) {
-        <div class="sd-preview-dots" role="tablist">
+        <div class="sd-preview-dots" role="tablist" [attr.aria-label]="'core.component.preview-image.title' | sdTranslate">
           @for (img of _images; track img.id; let i = $index) {
             <button
               type="button"
+              role="tab"
               class="sd-preview-dot"
               [class.sd-preview-dot--active]="i === _activeIndex"
-              [attr.aria-label]="'core.component.preview-image.next' | translate"
+              [attr.aria-selected]="i === _activeIndex"
+              [attr.aria-controls]="stageId"
+              [attr.tabindex]="i === _activeIndex ? 0 : -1"
+              [attr.aria-label]="img.alt || img.name"
               [attr.data-autoId]="autoIdDot(i)"
               (click)="onClickThumbnailImage(i)"></button>
           }
@@ -177,8 +190,8 @@
             <button
               type="button"
               class="sd-preview-toolbar__btn"
-              [attr.aria-label]="'core.component.preview-image.zoom-out' | translate"
-              [attr.title]="'core.component.preview-image.zoom-out' | translate"
+              [attr.aria-label]="'core.component.preview-image.zoom-out' | sdTranslate"
+              [attr.title]="'core.component.preview-image.zoom-out' | sdTranslate"
               [attr.data-autoId]="autoIdZoomOut()"
               (click)="zoomOut()">
               <sd-icon fontIcon="zoom_out"></sd-icon>
@@ -187,8 +200,8 @@
             <button
               type="button"
               class="sd-preview-toolbar__btn"
-              [attr.aria-label]="'core.component.preview-image.zoom-in' | translate"
-              [attr.title]="'core.component.preview-image.zoom-in' | translate"
+              [attr.aria-label]="'core.component.preview-image.zoom-in' | sdTranslate"
+              [attr.title]="'core.component.preview-image.zoom-in' | sdTranslate"
               [attr.data-autoId]="autoIdZoomIn()"
               (click)="zoomIn()">
               <sd-icon fontIcon="zoom_in"></sd-icon>
@@ -198,17 +211,17 @@
           <button
             type="button"
             class="sd-preview-toolbar__btn sd-preview-toolbar__btn--with-label"
-            [attr.aria-label]="'core.component.preview-image.fit' | translate"
+            [attr.aria-label]="'core.component.preview-image.fit' | sdTranslate"
             [attr.data-autoId]="autoIdFit()"
             (click)="fitToScreen()">
             <sd-icon fontIcon="fit_screen"></sd-icon>
-            <span class="sd-preview-toolbar__btn-label">{{ 'core.component.preview-image.fit' | translate }}</span>
+            <span class="sd-preview-toolbar__btn-label">{{ 'core.component.preview-image.fit' | sdTranslate }}</span>
           </button>
           <button
             type="button"
             class="sd-preview-toolbar__btn"
-            [attr.aria-label]="'core.component.preview-image.rotate' | translate"
-            [attr.title]="'core.component.preview-image.rotate' | translate"
+            [attr.aria-label]="'core.component.preview-image.rotate' | sdTranslate"
+            [attr.title]="'core.component.preview-image.rotate' | sdTranslate"
             [attr.data-autoId]="autoIdRotate()"
             (click)="rotate('right')">
             <sd-icon fontIcon="rotate_right"></sd-icon>
@@ -218,8 +231,8 @@
             <button
               type="button"
               class="sd-preview-toolbar__btn"
-              [attr.aria-label]="'core.component.preview-image.download' | translate"
-              [attr.title]="'core.component.preview-image.download' | translate"
+              [attr.aria-label]="'core.component.preview-image.download' | sdTranslate"
+              [attr.title]="'core.component.preview-image.download' | sdTranslate"
               [attr.data-autoId]="autoIdDownload()"
               (click)="downloadCurrent()">
               <sd-icon fontIcon="download"></sd-icon>
@@ -228,8 +241,8 @@
           <button
             type="button"
             class="sd-preview-toolbar__btn"
-            [attr.aria-label]="'core.component.preview-image.fullscreen' | translate"
-            [attr.title]="'core.component.preview-image.fullscreen' | translate"
+            [attr.aria-label]="'core.component.preview-image.fullscreen' | sdTranslate"
+            [attr.title]="'core.component.preview-image.fullscreen' | sdTranslate"
             [attr.data-autoId]="autoIdFullscreen()"
             (click)="toggleFullscreen()">
             <sd-icon [fontIcon]="isFullscreen() ? 'fullscreen_exit' : 'fullscreen'"></sd-icon>

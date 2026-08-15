@@ -50,6 +50,20 @@ Header/footer padding is `16px`. Body padding is `0`; add your own wrapper when 
 | `startLoading()` | Starts the loading overlay inside the drawer.                                  |
 | `stopLoading()`  | Stops the loading overlay.                                                     |
 
+## Body scroll lock
+
+While a drawer is open, page scroll is locked by setting `document.body.style.overflow = 'hidden'`.
+
+The lock is **ref-counted and shared across every `<sd-side-drawer>` instance** (root-provided `SdBodyScrollLockService`), so stacked drawers behave correctly:
+
+- The first drawer to open records the app's previous `overflow` value and applies the lock.
+- Further drawers only bump the counter — the DOM is not touched again.
+- Closing a drawer only restores `overflow` when it is the **last** one holding a lock. Close order does not matter: closing the outer drawer first keeps the page locked while an inner drawer is still open, and the original value (not `hidden`) is restored at the end.
+- Destroying a drawer while it is open releases its lock too, so teardown can never strand the page in a permanently unscrollable state.
+- `open()` / `close()` are idempotent per instance — repeated calls cannot unbalance the counter.
+
+Do not write `document.body.style.overflow` yourself while a drawer is open; the value is restored from the snapshot taken at the first lock.
+
 ## Example
 
 ```html
@@ -77,3 +91,10 @@ Header/footer padding is `16px`. Body padding is `0`; add your own wrapper when 
   padding: 16px;
 }
 ```
+
+## Accessibility
+
+- The drawer root is a labelled modal: `role="dialog"`, `aria-modal="true"`, `aria-label` bound to `title`.
+- **Escape closes the drawer** (new). Previously "click the backdrop" was the only dismissal besides the close button, and it had no keyboard equivalent at all. Escape is gated on the same `disableBackdropClose` flag: with `[disableBackdropClose]="true"` neither the backdrop click nor Escape dismisses the drawer.
+- The backdrop declares `role="presentation"` instead of `aria-hidden="true"` — it is a decorative click-catcher with no content, and `role="presentation"` is the accurate signal for that.
+- The close button uses an i18n `aria-label` (`core.common.close`, previously the hard-coded English string `"Close"`) and keeps a `:focus-visible` ring.

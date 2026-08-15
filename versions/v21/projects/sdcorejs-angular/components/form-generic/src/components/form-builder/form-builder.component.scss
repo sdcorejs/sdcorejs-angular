@@ -109,6 +109,30 @@
       background 0.12s ease,
       color 0.12s ease;
 
+    // why: nút mang badge phải là mốc định vị, nếu không badge sẽ neo theo toolbar.
+    &--badged {
+      position: relative;
+      overflow: visible;
+    }
+
+    // Badge đếm: cho biết form đã cấu hình bao nhiêu biến / bao nhiêu xác thực mà không phải mở dialog.
+    &__badge {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      min-width: 14px;
+      height: 14px;
+      padding: 0 3px;
+      border-radius: 7px;
+      background: var(--md-sys-color-error, #b3261e);
+      color: var(--md-sys-color-on-error, #fff);
+      font-size: 9px;
+      font-weight: 600;
+      line-height: 14px;
+      text-align: center;
+      pointer-events: none;
+    }
+
     &:hover {
       background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
       color: var(--md-sys-color-on-surface);
@@ -797,12 +821,78 @@
     scroll-padding-bottom: 24px;
   }
 
+  // why: sd-modal đã tự kẻ đường phân cách phía trên footer; thêm `box-shadow: 0 -1px 0` ở đây là
+  // vẽ chồng lên đúng đường đó, thành ra viền dày gấp đôi và đậm hơn hẳn phần còn lại của dialog.
   .sd-modal-footer {
     min-height: 64px;
     padding: 12px 16px;
     background: var(--sd-surface, #fff);
-    box-shadow: 0 -1px 0 var(--sd-border, #dde0e5);
   }
+
+  // ── Dialog "Cấu hình biến" ────────────────────────────────────────────
+  // why: các hàng trước đây là d-flex trần với gap 8px — hai ô input giãn hết cỡ, nút xoá tròn đỏ
+  // to ngang nút chính, và không có gì phân tách hàng này với hàng kia. Cho mỗi hàng một khung
+  // riêng, khoá bề rộng cột và hạ nút xoá xuống dạng text.
+  .fb-variables {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    // why: hai trường cùng kiểu lặp theo hàng — dạng bảng đọc nhanh hơn danh sách thẻ, và nhãn cột
+    // chỉ cần xuất hiện một lần ở header thay vì nổi trên từng ô của từng hàng.
+    &__table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      border: 1px solid var(--sd-border, #e6e6e6);
+      border-radius: 8px;
+      overflow: hidden;
+
+      th {
+        padding: 8px 12px;
+        background: var(--md-sys-color-surface-container-low, #f7f8fa);
+        border-bottom: 1px solid var(--sd-border, #e6e6e6);
+        color: var(--sd-text-secondary, #6b7280);
+        font-size: 12px;
+        font-weight: 500;
+        text-align: left;
+        white-space: nowrap;
+      }
+
+      td {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--sd-border, #e6e6e6);
+        vertical-align: middle;
+      }
+
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+    }
+
+    // Cột thao tác co theo nội dung; hai cột dữ liệu chia phần còn lại.
+    &__actions-col {
+      width: 1px;
+      white-space: nowrap;
+      text-align: right;
+    }
+
+    &__empty {
+      margin: 0;
+      padding: 16px;
+      border: 1px dashed var(--sd-border, #e6e6e6);
+      border-radius: 8px;
+      color: var(--sd-text-secondary, #6b7280);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    &__add {
+      align-self: flex-start;
+    }
+  }
+
+  // Editor JSON cần khung riêng: sd-code-editor tự cuộn, đừng để modal cuộn lồng thêm một lớp nữa.
 }
 
 ::ng-deep .fb-validation-menu.mat-mdc-menu-panel {
@@ -1727,14 +1817,21 @@ table-control {
   display: flex;
   gap: var(--gap-2);
   margin-top: 4px;
+  // why: đổi từ <span> sang <button type="button"> để bàn phím chọn được màu → reset padding mặc
+  // định của button (giữ hình tròn 24px) và bổ sung focus ring.
   .fb-color-swatch {
     width: 24px;
     height: 24px;
     border-radius: 50%;
     cursor: pointer;
+    padding: 0;
     border: 2px solid transparent;
     &.is-active {
       border-color: var(--md-sys-color-on-surface);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--sd-primary, #005cbb);
+      outline-offset: 2px;
     }
     &.primary {
       background: var(--md-sys-color-primary);
@@ -1800,6 +1897,8 @@ table-control {
     background: color-mix(in srgb, var(--md-sys-color-primary) 4%, transparent);
   }
 }
+// why: .fb-add-link đổi từ <a> sang <button type="button"> (bàn phím phải thêm được cột) → reset
+// chrome mặc định của button để giữ nguyên diện mạo "link", và thêm focus ring khi tab tới.
 .fb-add-link {
   display: inline-flex;
   align-items: center;
@@ -1809,11 +1908,18 @@ table-control {
   cursor: pointer;
   padding: 4px 0;
   text-decoration: none;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
   .msi {
     font-size: 14px;
   }
   &:hover {
     text-decoration: underline;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--sd-primary, #005cbb);
+    outline-offset: 2px;
   }
 }
 

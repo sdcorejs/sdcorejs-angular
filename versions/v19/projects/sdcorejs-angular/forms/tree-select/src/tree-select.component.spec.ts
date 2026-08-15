@@ -20,6 +20,7 @@ describe('SdTreeSelect', () => {
   let component: SdTreeSelect<Department, number>;
 
   beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
     await TestBed.configureTestingModule({ imports: [NoopAnimationsModule, SdTreeSelect] }).compileComponents();
     fixture = TestBed.createComponent(SdTreeSelect<Department, number>);
     component = fixture.componentInstance;
@@ -101,10 +102,76 @@ describe('SdTreeSelect', () => {
     expect(component.model()).toEqual([2]);
   });
 
+  // why: RED trước fix — `[required]` đã nối Validators.required nhưng template không render
+  // message nào, nên một tree-select bắt buộc bỏ trống chặn submit hoàn toàn im lặng.
+  describe('validation message', () => {
+    it('stays hidden while the control is untouched, even though it is already invalid', () => {
+      fixture.componentRef.setInput('required', true);
+      fixture.detectChanges();
+
+      expect(component.formControl.hasError('required')).toBeTrue();
+      expect(fixture.nativeElement.querySelector('[data-tree-select-error]')).toBeNull();
+    });
+
+    it('renders the required message, reddens the field and wires aria-describedby once touched', () => {
+      fixture.componentRef.setInput('required', true);
+      fixture.detectChanges();
+
+      component.formControl.markAsTouched();
+      fixture.detectChanges();
+
+      const error = fixture.nativeElement.querySelector('[data-tree-select-error]') as HTMLElement | null;
+      const trigger = fixture.nativeElement.querySelector('[data-tree-select-trigger]') as HTMLInputElement;
+      expect(error).not.toBeNull();
+      expect(error!.textContent?.trim()).toBe('Vui lòng nhập thông tin');
+      // why: <mat-error> chỉ được MatFormField render khi `errorState === true`, và cùng cờ đó bật
+      // luôn viền đỏ. Nên sự hiện diện của message + class này chứng minh errorStateMatcher đã nối
+      // đúng trạng thái lỗi của connector vào Material.
+      expect(fixture.nativeElement.querySelector('.mat-form-field-invalid')).not.toBeNull();
+      expect(trigger.getAttribute('aria-describedby')).toBe(error!.id);
+    });
+
+    // why: Material cố tình để `aria-invalid` là null khi field vừa `required` vừa RỖNG (chưa nhập
+    // thì chưa "sai"); chỉ lỗi không phải required mới bật cờ. sd-select cũng hành xử y hệt.
+    it('exposes aria-invalid for a non-required error', () => {
+      fixture.componentRef.setInput('inlineError', 'Phòng ban đã ngừng hoạt động');
+      fixture.detectChanges();
+      component.formControl.markAsTouched();
+      fixture.detectChanges();
+
+      const trigger = fixture.nativeElement.querySelector('[data-tree-select-trigger]') as HTMLInputElement;
+      expect(trigger.getAttribute('aria-invalid')).toBe('true');
+    });
+
+    it('clears the message once a value is selected', () => {
+      fixture.componentRef.setInput('required', true);
+      fixture.detectChanges();
+      component.formControl.markAsTouched();
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('[data-tree-select-error]')).not.toBeNull();
+
+      component.formControl.setValue(1);
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('[data-tree-select-error]')).toBeNull();
+    });
+
+    it('renders a component-local inlineError message', () => {
+      fixture.componentRef.setInput('inlineError', 'Phòng ban đã ngừng hoạt động');
+      fixture.detectChanges();
+      component.formControl.markAsTouched();
+      fixture.detectChanges();
+
+      const error = fixture.nativeElement.querySelector('[data-tree-select-error]') as HTMLElement | null;
+      expect(error).not.toBeNull();
+      expect(error!.textContent?.trim()).toBe('Phòng ban đã ngừng hoạt động');
+    });
+  });
+
   it('forwards root and lazy load errors from the composed tree', async () => {
     const error = new Error('tree failed');
     const loadError = jasmine.createSpy('loadError');
-    component.sdLoadError.subscribe(loadError);
+    component.loadError.subscribe(loadError);
     fixture.componentRef.setInput('items', () => Promise.reject(error));
     fixture.detectChanges();
     await fixture.whenStable();

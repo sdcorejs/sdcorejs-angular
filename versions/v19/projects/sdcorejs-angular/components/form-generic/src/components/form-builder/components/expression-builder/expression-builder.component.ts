@@ -8,18 +8,18 @@ import { SdInput } from '@sdcorejs/angular/forms/input';
 import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
 import { SdSelect } from '@sdcorejs/angular/forms/select';
 import { Utilities } from '@sdcorejs/utils/fns';
-import { ArrayUtilities, DateUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { ArrayUtilities, DateUtilities } from '@sdcorejs/utils/fns';
 import {
   Attribute,
-  AttributeOperators,
-  DayInfoPreviouses,
-  DayInfoTypes,
+  SD_ATTRIBUTE_OPERATORS,
+  SD_DAY_INFO_PREVIOUSES,
+  SD_DAY_INFO_TYPES,
   SdFormGenericExpression,
   SdFormGenericExpressionCondition,
 } from '../../../../models';
 import { ExpressionQueryPipe } from '../../../../pipes';
 import { SdSuffixDefDirective } from '@sdcorejs/angular/forms/directives';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 // Component xây dựng Expression dựa vào SdFormGenericExpression
 @Component({
@@ -38,7 +38,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
     ExpressionQueryPipe,
     SdDatetime,
     SdSuffixDefDirective,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
 })
 export class ExpressionBuilderComponent implements OnInit {
@@ -46,13 +46,13 @@ export class ExpressionBuilderComponent implements OnInit {
 
   @ViewChild(SdModal) modal?: SdModal;
   form = new FormGroup({});
-  attributeOperators = AttributeOperators;
+  attributeOperators = SD_ATTRIBUTE_OPERATORS;
   attributes: Attribute[] = [];
   numberAttributes: Attribute[] = [];
   dateAttributes: Attribute[] = [];
   attribute: Record<string, Attribute> = {};
-  types = DayInfoTypes;
-  previouses = DayInfoPreviouses;
+  types = SD_DAY_INFO_TYPES;
+  previouses = SD_DAY_INFO_PREVIOUSES;
 
   @Input() label?: string;
 
@@ -116,6 +116,15 @@ export class ExpressionBuilderComponent implements OnInit {
     this.ref.markForCheck();
   };
 
+  // why: pill `.fb-expr` là role="button" + tabindex="0" nên Enter/Space PHẢI mở modal đúng như
+  // click. Lọc theo target để phím bấm trên nút "functions" lồng bên trong không mở modal hai lần.
+  onExprKeydown = (event: KeyboardEvent) => {
+    if (event.target !== event.currentTarget) return;
+    // why: chặn Space cuộn trang.
+    event.preventDefault();
+    void this.onEdit();
+  };
+
   addCondition = (conditions: SdFormGenericExpression['conditions']) => {
     conditions.push({
       key: Utilities.randomId(),
@@ -167,7 +176,8 @@ export class ExpressionBuilderComponent implements OnInit {
     if (condition.dayInfo?.type === 'NOW') {
       condition.value = 'now';
     } else if (condition.dayInfo?.type === 'RELATED' && condition.dayInfo.relatedValue) {
-      condition.value = DayInfoPreviouses.find(e => e.value === condition.dayInfo.related)?.format(condition.dayInfo.relatedValue) ?? null;
+      condition.value =
+        SD_DAY_INFO_PREVIOUSES.find(e => e.value === condition.dayInfo.related)?.format(condition.dayInfo.relatedValue) ?? null;
     } else if (condition.value?.type === 'DATETIME' && condition.value) {
       condition.value = DateUtilities.toFormat(condition.value, 'yyyy/MM/dd HH:mm:00');
     }

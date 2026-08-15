@@ -5,7 +5,7 @@
 **Import path**: `@sdcorejs/angular/forms/textarea` (or barrel: `@sdcorejs/angular/forms`)
 **Class**: `SdTextarea`
 **Standalone**: yes
-**Change detection**: default (no `OnPush` declared)
+**Change detection**: `OnPush`
 
 ## One-line purpose
 
@@ -112,10 +112,12 @@ Applied automatically on `<sd-textarea>` for styling hooks:
 - **`[viewed]="true"`** flips into DETAIL read-only mode: textarea is hidden, value is rendered as plain text (or via `<ng-template sdLabelDef>` for the label and `<ng-template sdViewDef>` for the value); falls back to em-dash via `sdEmpty` when empty.
 - **`[viewed]="'inline'"`** keeps the textarea editable but borderless — the mat-form-field shell is flattened (transparent, no outline) so it reads like text and edits in place; a faint background appears on hover/focus as the editable affordance. `[disabled]` + `'inline'` degrades to the static `true` view (nothing to edit).
 - **Validators**: `[required]` → `Validators.required`. `[maxlength]` → `Validators.maxLength`. `[pattern]` → `Validators.pattern` (raw regex string). `[validator]` → async custom validator. `[inlineError]="msg"` → synthetic `inlineError` validator. Error tooltip messages: required → "Vui lòng nhập thông tin"; maxlength → "Số ký tự tối đa: N"; pattern → "Định dạng không hợp lệ"; customValidator → message returned by validator; inlineError → echoes `inlineError`.
-- **Reactive validator updates** — validator inputs (`required` / `maxlength` / `pattern` / `inlineError` / `validator`) are signal inputs; an internal `effect()` re-runs `setValidators` + `updateValueAndValidity({ emitEvent: false })` whenever any of them changes. You can flip `required` on/off at runtime and the control re-validates automatically.
+- **Reactive validator updates (additive)** — validator inputs (`required` / `maxlength` / `pattern` / `inlineError` / `validator`) are signal inputs, routed through the shared form connector. Whenever one changes, the connector **adds/removes only its own validators** (`addValidators` / `removeValidators` + `updateValueAndValidity({ emitEvent: false })`). You can flip `required` on/off at runtime and the control re-validates automatically. Validators you attach yourself to the public `formControl` (via `addValidators` / `addAsyncValidators`) are **preserved** — the previous implementation called `clearValidators()` + `clearAsyncValidators()` on every input change and silently wiped them.
+- **`[validator]` uses the shared `HandleSdCustomValidator`** — the component no longer carries its own copy. The shared helper passes a literal `0` through to your validator (the old local copy coerced `value || null`, so a legitimate `0` arrived as `null`); empty string / `undefined` still normalise to `null`.
 - **`[disabled]` reactive** — toggling `disabled` calls `formControl.disable() / enable()` via an effect, with `emitEvent: false` (no spurious `statusChanges` emitted).
 - **`[(model)]` two-way** — host-side writes propagate via a signal effect: when `model` changes, the component calls `formControl.setValue(val, { emitEvent: false })` so the host won't re-trigger its own `(modelChange)` listener. The reverse direction (user typing → `valueChanges` → `valueModel.set()` → `(modelChange)` emit) runs through the normal Angular signal-model mechanism.
 - **Auto-trim on blur** — leading/trailing whitespace is stripped when the user blurs the field. This triggers a `setValue` which propagates to `sdChange` if the value actually changed.
+- **`OnPush`** — the component is fully signal-driven; the template refreshes off `sdFormControlState` (value / status / touched / dirty events) plus the `sdChanges` → `markForCheck()` subscription. If you mutate the public `formControl` from outside, use the normal control API (`setValue`, `markAsTouched`, `updateValueAndValidity`) so the event fires — a write with `{ emitEvent: false }` will not refresh the view.
 - **Default `appearance`** — when `[appearance]` is omitted, the component reads the `SD_FORM_CONFIGURATION` injection token (`{ appearance: MatFormFieldAppearance }`). Provide it once at application bootstrap to flip ALL form fields to `'fill'` (or any other appearance). Falls back to `'outline'` if the token is not provided.
 
 ### Three ways to integrate
@@ -183,7 +185,7 @@ Inside `<sd-table>` custom cells or custom inline filters, always use `size="sm"
 
 ## Dense dashboard/filter usage
 
-When this control is rendered in dashboard cards, filter bars, external filter panels, table toolbars, query bars, or other compact non-form surfaces, prefer `hideInlineError` so Material does not reserve the inline error/subscript row under the field. Pair it with `size="sm"` when the component supports `size`. Validation remains visible through the compact error icon/tooltip without increasing the control height.
+When this control is rendered in dashboard cards, filter bars, external filter panels, table toolbars, query bars, or other compact non-form surfaces, prefer `hideInlineError` so Material does not reserve the inline error/subscript row under the field. Pair it with `size="sm"` when the component supports `size`. Validation remains visible through the compact error icon/tooltip without increasing the control height, and the message is also exposed to assistive tech through a screen-reader-only element (`span.sd-visually-hidden`) referenced by `aria-describedby`.
 
 ```html
 <sd-textarea size="sm" hideInlineError [rows]="2" [(model)]="filter.note"></sd-textarea>
@@ -237,6 +239,21 @@ When this control is rendered in dashboard cards, filter bars, external filter p
   </ng-template>
 </sd-textarea>
 ```
+
+## Accessibility
+
+`aria-hidden="true"` used to sit on the real `<input>` **and** on the layout `<div>` that wraps the
+whole `mat-form-field`. That single attribute removed the label, the control, the `mat-error` and the
+clear button from the accessibility tree at once, while the control still took keyboard focus — a
+screen reader landed on it and announced nothing.
+
+- The control element carries **no** `aria-hidden`.
+- The layout wrapper is marked `role="presentation"` (layout only). Unlike `aria-hidden` this does
+  **not** hide descendants; its `(click)` handler is a mouse convenience that keyboard users already
+  get by tabbing straight into the control.
+- When the inline error renders, the control gets `aria-invalid="true"` and an
+  `aria-describedby` pointing at the `<mat-error>` (stable id, exposed as `errorId`). Both are gated
+  on the same condition as the message itself.
 
 ## Anti-patterns
 

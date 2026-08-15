@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy, inject } from '@angular/core';
-import { SdFormatComponent, SdFormGenericTable } from '../../../../../models';
+import { sdFormatComponent, SdFormGenericTable } from '../../../../../models';
 import { BuilderService } from '../../../services';
 import { filter, Subscription } from 'rxjs';
 
@@ -19,7 +19,7 @@ export class TableControl implements AfterViewInit, OnDestroy {
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericTable) {
     if (this.component !== component) {
       this.component = component;
-      SdFormatComponent(this.component);
+      sdFormatComponent(this.component);
     }
   }
 

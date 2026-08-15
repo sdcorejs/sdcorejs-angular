@@ -1,7 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { SdPermissionDirective } from './permission.directive';
-import { SdPermissionService } from '../services';
+import { SD_PERMISSION_PUBLIC, SdPermissionService } from '../services';
 import { SD_PERMISSION_CONFIGURATION } from '../configurations';
 
 // ---------------------------------------------------------------------------
@@ -15,6 +15,9 @@ function makePermissionService(hasPermissionResult: boolean): jasmine.SpyObj<SdP
     loadAllPermissions: Promise.resolve(),
     getToken: Promise.resolve(undefined),
     decodeToken: Promise.resolve(null),
+    readUnverifiedTokenClaims: Promise.resolve(null),
+    reset: undefined,
+    invalidate: undefined,
   });
 }
 
@@ -98,26 +101,50 @@ describe('SdPermissionDirective', () => {
   afterEach(() => TestBed.resetTestingModule());
 
   // -------------------------------------------------------------------------
-  // GROUP 1: No permission input → always render
+  // GROUP 1: No permission input → FAIL CLOSED (delegated to hasPermission)
   // -------------------------------------------------------------------------
-  describe('when sdPermission is undefined / null / empty — no restriction', () => {
-    it('renders content when sdPermission is undefined', () => {
-      const { fixture } = setupFixture(false); // spy returns false but should be irrelevant
+  // why: nhánh "rỗng ⇒ render vô điều kiện" cũ nằm NGAY TRONG directive, nên nó bỏ qua service hoàn
+  // toàn: `*sdPermission="perm"` với `perm` undefined (gõ sai tên biến, dữ liệu chưa về) hiện nút cho
+  // tất cả mọi người. Giờ mọi quyết định phải đi qua `hasPermission` — directive không còn cửa sau.
+  describe('when sdPermission is undefined / null / empty — fail closed', () => {
+    it('hides content when sdPermission is undefined', () => {
+      const { fixture } = setupFixture(false);
       fixture.componentInstance.permission.set(undefined);
       fixture.detectChanges();
-      expect(isContentVisible(fixture)).toBeTrue();
+      expect(isContentVisible(fixture)).toBeFalse();
     });
 
-    it('renders content when sdPermission is null', () => {
+    it('hides content when sdPermission is null', () => {
       const { fixture } = setupFixture(false);
       fixture.componentInstance.permission.set(null);
       fixture.detectChanges();
-      expect(isContentVisible(fixture)).toBeTrue();
+      expect(isContentVisible(fixture)).toBeFalse();
     });
 
-    it('renders content when sdPermission is an empty string', () => {
+    it('hides content when sdPermission is an empty string', () => {
       const { fixture } = setupFixture(false);
       fixture.componentInstance.permission.set('');
+      fixture.detectChanges();
+      expect(isContentVisible(fixture)).toBeFalse();
+    });
+
+    it('delegates the empty case to hasPermission() instead of short-circuiting', () => {
+      const { fixture, permSvc } = setupFixture(false);
+      fixture.componentInstance.permission.set(undefined);
+      fixture.detectChanges();
+      expect(permSvc.hasPermission).toHaveBeenCalledWith(undefined, undefined);
+    });
+
+    it('renders only when the explicit SD_PERMISSION_PUBLIC opt-out is used', () => {
+      const { fixture, permSvc } = setupFixture(false);
+      // Bám đúng ngữ nghĩa thật của service: rỗng ⇒ false, sentinel ⇒ true.
+      permSvc.hasPermission.and.callFake((perm: any) => perm === SD_PERMISSION_PUBLIC);
+
+      fixture.componentInstance.permission.set('');
+      fixture.detectChanges();
+      expect(isContentVisible(fixture)).toBeFalse();
+
+      fixture.componentInstance.permission.set(SD_PERMISSION_PUBLIC);
       fixture.detectChanges();
       expect(isContentVisible(fixture)).toBeTrue();
     });
@@ -199,26 +226,31 @@ describe('SdPermissionDirective', () => {
   // GROUP 5: Reactivity — permission changes dynamically
   // -------------------------------------------------------------------------
   describe('reactivity — permission changes after initial render', () => {
-    it('hides content when permission changes from undefined to a denied code', () => {
-      const { fixture } = setupFixture(false);
-      fixture.componentInstance.permission.set(undefined);
+    it('hides content when permission changes from a granted code to a denied one', () => {
+      const { fixture, permSvc } = setupFixture(true);
+      fixture.componentInstance.permission.set('PERM_OK');
       fixture.detectChanges();
       expect(isContentVisible(fixture)).toBeTrue();
 
+      permSvc.hasPermission.and.returnValue(false);
       fixture.componentInstance.permission.set('PERM_DENIED');
       fixture.detectChanges();
       expect(isContentVisible(fixture)).toBeFalse();
     });
 
-    it('shows content when permission changes back to undefined', () => {
-      const { fixture } = setupFixture(false);
-      fixture.componentInstance.permission.set('PERM_DENIED');
+    // why: quyền đang hiện mà binding rơi về undefined (dữ liệu bị reset, user đổi tenant) phải ẩn
+    // ngay — code cũ lại render vô điều kiện, biến một lỗi dữ liệu thành lỗ hổng hiển thị.
+    it('hides content when permission changes back to undefined', () => {
+      const { fixture, permSvc } = setupFixture(true);
+      permSvc.hasPermission.and.callFake((perm: any) => !!perm);
+
+      fixture.componentInstance.permission.set('PERM_OK');
       fixture.detectChanges();
-      expect(isContentVisible(fixture)).toBeFalse();
+      expect(isContentVisible(fixture)).toBeTrue();
 
       fixture.componentInstance.permission.set(undefined);
       fixture.detectChanges();
-      expect(isContentVisible(fixture)).toBeTrue();
+      expect(isContentVisible(fixture)).toBeFalse();
     });
   });
 });

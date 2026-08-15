@@ -10,7 +10,7 @@
     <button
       type="button"
       class="c-layout-icon-toggle"
-      [attr.aria-label]="'core.module.layout.sidebar.toggle' | translate"
+      [attr.aria-label]="'core.module.layout.sidebar.toggle' | sdTranslate"
       (click)="onToggleMenuLock($event)">
       <sd-icon [name]="isShowSidebar() ? 'keyboard_arrow_right' : 'keyboard_arrow_left'"></sd-icon>
     </button>

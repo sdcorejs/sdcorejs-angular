@@ -17,7 +17,7 @@ import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import {
   SdFormControl,
   sdFormControlState,
@@ -48,10 +48,11 @@ import { Subscription } from 'rxjs';
     '[class.sd-c-warning]': "color() === 'warning'",
     '[class.sd-c-error]': "color() === 'error'",
   },
-  imports: [FormsModule, ReactiveFormsModule, MatSlideToggleModule, MatFormFieldModule, SdLabel, TranslatePipe],
+  imports: [FormsModule, ReactiveFormsModule, MatSlideToggleModule, MatFormFieldModule, SdLabel, SdTranslatePipe],
 })
 export class SdSwitch implements OnInit, OnDestroy {
   readonly #ref = inject(ChangeDetectorRef);
+  readonly #i18n = inject(I18nService);
 
   id = `I${Utilities.generateUuid()}`;
   readonly #defaultName = Utilities.generateUuid();
@@ -99,6 +100,15 @@ export class SdSwitch implements OnInit, OnDestroy {
   readonly dataValue = computed(() => sdSerializeDataValue(this.#state().value));
   readonly dataRequired = computed(() => (this.required() ? 'true' : 'false'));
 
+  // why: `[required]` gắn Validators.required nhưng template TRƯỚC ĐÂY không render bất kỳ
+  // message nào, nên switch bắt buộc để OFF chặn submit mà người dùng không thấy lý do —
+  // đúng loại bug "error invalid nhưng message ẩn". Dùng lại key `core.form.input.required`
+  // ('Vui lòng nhập thông tin') vì catalog i18n chưa có key riêng cho switch.
+  readonly errorMessage = computed<string | undefined>(() => {
+    void this.#state();
+    return this.formControl.errors?.['required'] ? this.#i18n.t('core.form.input.required') : undefined;
+  });
+
   readonly #formConnector = ɵsdFormControlConnector<boolean | null | undefined, boolean | null | undefined>({
     form: this.form,
     name: computed(() => this.name() || this.#defaultName),
@@ -110,8 +120,14 @@ export class SdSwitch implements OnInit, OnDestroy {
     },
     validators: computed(() => (this.required() ? Validators.required : null)),
     disabled: this.disabled,
+    validationError: this.errorMessage,
     controlEquals: (controlValue, modelValue) => (controlValue === null && modelValue === false) || Object.is(controlValue, modelValue),
   });
+
+  /** Shared reactive form policy — `validationError` is already interaction-gated (touched/dirty). */
+  readonly connectorState = this.#formConnector.state;
+  /** Message to render inline; `undefined` while untouched, or when `hideInlineError` is set. */
+  readonly visibleErrorMessage = computed(() => (this.hideInlineError() ? undefined : this.connectorState().validationError));
 
   ngOnInit() {
     this.#subscription.add(

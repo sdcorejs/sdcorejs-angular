@@ -74,6 +74,8 @@ readonly beforeClose = createSdUnsavedChangesCloseGuard(this.unsaved, {
 <sd-tab [beforeClose]="beforeClose" (closeError)="report($event)">...</sd-tab>
 ```
 
+> The error event is `sdCloseError` on `<sd-modal>` / `<sd-side-drawer>` but `closeError` on `<sd-tab>` — the two prefixed names shipped that way in earlier releases and renaming them would break consumers.
+
 The hooks are additive. Without `beforeClose`, close remains synchronous and backward-compatible. With a hook, concurrent close requests share one promise. `false`, a thrown error, or a rejected promise keeps the surface open.
 
 For tab-router pages, inject `SD_TAB` and assign the same guard to `tab.beforeClose`. TabRouter also fails closed when the callback throws or rejects.

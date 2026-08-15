@@ -22,14 +22,14 @@
       <sd-icon class="sd-data-state__icon" aria-hidden="true" [name]="currentIcon" [fontSet]="fontSet()"></sd-icon>
     }
 
-    <div class="sd-data-state__title">{{ title() ?? (titleKey() | translate) }}</div>
-    <div class="sd-data-state__message">{{ message() ?? (messageKey() | translate) }}</div>
+    <div class="sd-data-state__title">{{ title() ?? (titleKey() | sdTranslate) }}</div>
+    <div class="sd-data-state__message">{{ message() ?? (messageKey() | sdTranslate) }}</div>
 
     @if (retryable() || actionLabel()) {
       <div class="sd-data-state__actions">
         @if (retryable()) {
           <button type="button" data-state-retry (click)="retry()">
-            {{ retryLabel() || ('core.component.data-state.retry' | translate) }}
+            {{ retryLabel() || ('core.component.data-state.retry' | sdTranslate) }}
           </button>
         }
         @if (actionLabel(); as label) {

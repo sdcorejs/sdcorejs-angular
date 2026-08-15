@@ -16,20 +16,26 @@ Use it for back-office portals that need permission-aware navigation, responsive
 | -------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | `SdLayoutComponent` / `sd-layout`                  | Selects the configured V1, V2, or V3 desktop/mobile pair and projects page content             |
 | `SdPageComponent` / `sd-page`                      | Renders a titled content frame inside the shell                                                |
-| `SidebarV1Component`, `SidebarMobileV1Component`   | Existing classic sidebar and mobile drawer                                                     |
-| `SidebarV2Component`, `SidebarMobileV2Component`   | Compact primary rail with contextual flyout or mobile bottom sheet                             |
-| `SidebarV3Component`, `SidebarMobileV3Component`   | Collapsible navigation with search, Pinned, and Recent sections                                |
-| `SdLayoutService`                                  | Exposes resolved `userInfo` and `sidebar` signals                                              |
+| `SdSidebarV1`, `SdSidebarMobileV1`   | Existing classic sidebar and mobile drawer                                                     |
+| `SdSidebarV2`, `SdSidebarMobileV2`   | Compact primary rail with contextual flyout or mobile bottom sheet                             |
+| `SdSidebarV3`, `SdSidebarMobileV3`   | Collapsible navigation with search, Pinned, and Recent sections                                |
+| `SdLayoutService`                                  | Exposes resolved `userInfo` and `sidebar` signals plus the resolved `homeUrl`                  |
 | `SdViewportService`                                | Shared signal source for viewport dimensions and responsive state                              |
 | `SdLayoutResponsiveService`                        | Deprecated compatibility adapter that evaluates the layout breakpoint over `SdViewportService` |
 | `SdLayoutNavigationStateService`                   | Shares pinned/recent stable keys and version-scoped UI state                                   |
-| `SdLayoutStorageService`                           | Persists layout state through `SdStorageService` and migrates legacy pinned objects lazily     |
+| `SdLayoutStorageService`                           | Persists layout state through `SdStorageService`, migrates legacy pinned objects lazily, and exposes `clear()` |
 | `MenuPipe`, `MenuFocusPipe`, `HighLightSearchPipe` | Permission filtering, route focus, and search highlighting                                     |
 | `resolveTabName(key)`                              | Resolves a translated `@SdTabComponent` tab label without Angular DI |
-| `SD_LAYOUT_CONFIGURATION`                          | Consumer layout configuration                                                                  |
+| `SD_LAYOUT_CONFIGURATION`                          | Consumer layout configuration. **Required** — `SdLayoutService` throws when it is missing      |
+| `SD_LAYOUT_DEMO_FALLBACK`                          | `boolean`. Opt-in mock user/sidebar for demos when `SD_LAYOUT_CONFIGURATION` is absent         |
+| `SD_LAYOUT_STORAGE_NAMESPACE`                      | `SdLayoutStorageNamespace` — optional user/tenant namespace for every persisted layout entry   |
+| `SdLayoutStorageNamespace`                         | `string \| (() => string \| null \| undefined)` — a resolver is re-read on every handle access |
 | `SD_LAYOUT_VIEWPORT`                               | Compatibility alias of the shared `SD_VIEWPORT` test/host abstraction                          |
 
-`SdLayoutModule` also registers the built-in `home`, `not-found`, and `forbidden` child routes.
+`SdLayoutModule` also registers the built-in `home`, `not-found`, and `forbidden` child routes. Each of
+them declares `data: { permission: SD_PERMISSION_PUBLIC }` so that an application mounting the layout
+under `canActivateChild: [SdPermissionGuard]` can still reach them — in particular the `forbidden`
+page, which is the usual `onForbiden` target and would otherwise deny itself.
 
 ## Configuration
 
@@ -67,6 +73,22 @@ interface SdLayoutUserRole {
 ```
 
 Shared sidebar fields are `brandColor`, `brandLightColor`, `logoUrl`, `defaultTitle`, and `pin.enabled`.
+
+`homeUrl` is the destination the built-in `forbidden` and `not-found` pages navigate to (via `Router`) when the user presses their "back home" button; it defaults to `/`. It is also exposed as `SdLayoutService.homeUrl`.
+
+### `SD_LAYOUT_CONFIGURATION` is required
+
+`SdLayoutService` throws when the token is not provided. It used to log a warning and degrade to a mock user (`demo@example.com`) with a no-op sign-out, which let a misconfigured application ship a UI that claimed the visitor was signed in.
+
+Demos and playgrounds that genuinely want the mock data must say so:
+
+```ts
+import { SD_LAYOUT_DEMO_FALLBACK } from '@sdcorejs/angular/modules/layout';
+
+providers: [{ provide: SD_LAYOUT_DEMO_FALLBACK, useValue: true }];
+```
+
+The flag is a separate token rather than a field of `ISdLayoutConfiguration` because it has to be readable in exactly the case where no configuration object exists. Never enable it in a real environment.
 
 Account actions appear only when their callback is configured. Their order is `updateProfile`, `setting`, `notification`, `changePassword`, then `signout`. Role metadata is hidden when `role.text` is empty. Notification counts are normalized to a non-negative integer, hidden at zero, and capped visually at `99+`; the notification action remains available at zero. Observable sources are subscribed once per current configuration and released with the account menu component.
 
@@ -139,7 +161,7 @@ export const appConfig: ApplicationConfig = {
 </sd-layout>
 ```
 
-Provide the permission module configuration used by `MenuPipe` whenever menu permissions are strings. Boolean permissions such as `permission: true` are useful for public destinations and isolated demos.
+Provide the permission module configuration used by `MenuPipe` whenever menu permissions are strings. Boolean permissions such as `permission: true` are useful for public destinations and isolated demos. Every navigable leaf must carry a `permission` field; see "Menu filtering fails closed" below.
 
 ## Version examples
 
@@ -218,6 +240,15 @@ const menus: SdLayoutMenu[] = [
 
 V2 honors up to three valid `primaryMenuIds` in the supplied order, fills missing slots from the remaining visible roots, and exposes overflow through More. V3 search is accent-insensitive and searches the filtered menu tree.
 
+### Menu filtering fails closed
+
+`MenuPipe` drops a leaf instead of rendering it when either check fails:
+
+- **`permission` is missing.** A leaf that has a `path` but no `permission` key is removed. A mistyped key (`permision`, `permissions`) therefore hides the entry rather than showing it to everyone. `permission: undefined` was already handled and still fails closed. Entries with neither `path` nor `children` (labels, dividers) are unaffected.
+- **`path` uses an unsafe scheme.** A path is kept when it is app-relative (`/reports`) or an absolute `http:` / `https:` URL. Anything else — `javascript:`, `data:`, `vbscript:` — is removed, and a group left with no surviving children is removed with it.
+
+External destinations open through the shared `sdOpenExternal` helper, so every sidebar version passes `noopener,noreferrer` and never hands `window.opener` to the opened tab. The previous `path.includes('http')` test was a substring match, so a value such as `javascript:fetch(...)//http` passed it and executed in the application origin.
+
 V2's desktop rail and V3's collapsed desktop drawer center the avatar as the account-menu trigger without rendering a separate disclosure chevron. Collapsed V3 also hides the brand block and keeps only the centered expand control; the expanded drawer and both mobile variants retain the full account identity presentation.
 
 V2/V3 desktop and mobile menu searches share the same internal Soft-pill field: a gray token-based surface, leading search icon and primary focus ring. Placeholder text, `autoId` hooks, accent-insensitive filtering and parent-owned search signals keep their existing contracts.
@@ -254,6 +285,41 @@ Labels are translated in all five bundled locales (English: "Home" / "Access Den
 - Pinned and Recent data are shared between sidebar versions. Version-specific UI state such as V2 active/locked group and V3 collapsed state remains scoped by version.
 - For V3, a persisted collapsed value takes precedence over `defaultCollapsed`. Recent items are deduplicated, newest first, and capped by `recent.maxItems`.
 - Do not read the UUID-backed local-storage entries directly. Use `SdLayoutStorageService` or `SdLayoutNavigationStateService` so validation and migration continue to run.
+- Persisted entries are keyed by fixed UUIDs that carry no identity. On a shared browser that means the next person to sign in inherits the previous user's pinned and recently visited modules unless the application separates them. Two mechanisms are available and are meant to be used together:
+
+  ```ts
+  import { SD_LAYOUT_STORAGE_NAMESPACE, SdLayoutStorageService } from '@sdcorejs/angular/modules/layout';
+  import { SdAuthService } from '@sdcorejs/angular/modules/auth';
+
+  // 1. Scope every entry to the signed-in user or tenant.
+  //    SdLayoutStorageService is a root singleton and is usually constructed BEFORE anyone has
+  //    signed in, so provide a FUNCTION: it is re-evaluated on every handle access, and the seven
+  //    handles are rebuilt as soon as it reports a different identity.
+  providers: [
+    {
+      provide: SD_LAYOUT_STORAGE_NAMESPACE,
+      useFactory: () => {
+        const auth = inject(SdAuthService); // hoisted — the resolver runs outside the injection context
+        return () => auth.getAuthInfo?.()?.id;
+      },
+    },
+  ];
+
+  // 2. Wipe the entries on sign-out, BEFORE the identity is dropped.
+  @Injectable({ providedIn: 'root' })
+  export class SessionService {
+    readonly #layoutStorage = inject(SdLayoutStorageService); // hoisted — inject() in the body throws NG0203
+    readonly #auth = inject(SdAuthService);
+
+    async signout(): Promise<void> {
+      this.#layoutStorage.clear();
+      this.#auth.signout();
+    }
+  }
+  ```
+
+  `SD_LAYOUT_STORAGE_NAMESPACE` accepts a `string` or a `() => string | null | undefined` resolver (`SdLayoutStorageNamespace`). A blank or whitespace-only value is treated as no namespace, and a handle created without a namespace keeps exactly the storage key the library used before this token existed — existing installations keep reading their current data after an upgrade. Because the namespace is resolved at call time, `clear()` wipes the partition of whoever is signed in *at that moment*: call it before the auth info goes back to `undefined`, otherwise it clears the anonymous partition and leaves the signed-out user's data behind. `clear()` removes `isShowSidebar`, `menuLockStatus`, `lastActiveMenuGroupId`, `pinnedMenuGroup`, `pinnedMenuKeys`, `recentMenuKeys`, and `versionStates`; in-memory pinned/recent signals are rebuilt on the next `SdLayoutNavigationStateService.hydrate()`.
+- The built-in `forbidden` and `not-found` pages leave through `Router.navigateByUrl(homeUrl)`. They no longer assign to `window.location`, which reloaded the error page itself and was unavailable during server-side rendering.
 
 ## Accessibility
 
@@ -261,7 +327,35 @@ Labels are translated in all five bundled locales (English: "Home" / "Access Den
 - Desktop flyouts and mobile sheets close with Escape. Mobile overlays trap focus, restore focus to their trigger, and release body scroll when closed or destroyed.
 - Active, expanded, pressed, dialog, and navigation states are exposed with the corresponding ARIA attributes.
 - Motion used for preview/sidebar transitions is removed when `prefers-reduced-motion: reduce` is active.
+- **No nested interactive elements.** On the v1 sidebar the menu row keeps its click handler as a mouse convenience, but `role="button"` / `tabindex` / `aria-current` / Enter-Space sit on the TITLE element, with the pin toggle as an independent sibling button. A `role="button"` wrapper around another button makes assistive tech collapse the pair into a single control and drop the inner one.
 - Keep menu titles meaningful and unique; icons are supplementary and must not be the only accessible label.
+
+## i18n
+
+Chrome the layout owns (as opposed to consumer-supplied menu titles) resolves through `I18nService`:
+
+| What                                                               | Key                                   |
+| ------------------------------------------------------------------ | ------------------------------------- |
+| "Pinned" heading (v1 tooltip + group title, v3, mobile v3)         | `core.module.layout.sidebar.pinned`   |
+| "Recent" heading (v3, mobile v3)                                   | `core.module.layout.sidebar.recent`   |
+| "All menus" heading (v3, mobile v3)                                | `core.module.layout.sidebar.all-menu` |
+| Pin toggle `aria-label` (shared `menu-tree`, v1 sidebar)           | `core.module.layout.menu.pin`         |
+| Unpin toggle `aria-label` (shared `menu-tree`, v1 sidebar)         | `core.module.layout.menu.unpin`       |
+| Home link `aria-label` on the v1 logo                              | `core.module.layout.home.tab-name`    |
+| Brand button `aria-label` (v2 rail)                                | `core.module.layout.home.tab-name`    |
+| Menu-group nav `aria-label` (v2 rail)                              | `core.module.layout.sidebar.menu-groups` |
+| Backdrop / close `aria-label` (v2, mobile v2)                      | `core.module.layout.sidebar.close-menu` |
+| Context search placeholder (v2)                                    | `core.module.layout.sidebar.search-in-group` |
+| Primary-nav `aria-label` (mobile v2)                               | `core.module.layout.sidebar.primary-nav` |
+| "More" bar action label + `aria-label` (mobile v2)                  | `core.module.layout.sidebar.more` / `.more-menu` |
+| Menu search placeholder (mobile v2)                                | `core.module.layout.sidebar.search-in-menu` |
+
+`menu.pin` / `menu.unpin` interpolate `{title}` (the menu's own title) so each locale places the verb and the
+name in its own order — the previous `'Pin ' + title` concatenation forced English word order everywhere. The
+label is built inside the `nodes` / `pinnedMenuGroup` computeds, so it follows a language change.
+
+`SdLayoutService` deliberately keeps its "SD_LAYOUT_CONFIGURATION was not provided" throw/warn out of the
+catalogue: those are developer diagnostics, not user-facing copy (marked `@i18n-ignore` in the source).
 
 ## Notes and anti-patterns
 

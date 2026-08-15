@@ -1,4 +1,4 @@
-import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { DateUtilities } from '@sdcorejs/utils/fns';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { SdTableColumn, SdTableColumnLazyValues, SdTableColumnValues } from '../../models/table-column.model';
 import { SdTableItem } from '../../models/table-item.model';

@@ -252,6 +252,86 @@ describe('SdSection', () => {
   });
 
   // -------------------------------------------------------------------------
+  // A11y — header từng là <div (click)> + aria-hidden="true"
+  // -------------------------------------------------------------------------
+
+  describe('accessibility: header', () => {
+    const getHeader = () => getSectionEl(fixture).querySelector('.sd-section-header') as HTMLElement;
+
+    it('header does not carry aria-hidden', () => {
+      expect(getHeader().hasAttribute('aria-hidden')).toBe(false);
+    });
+
+    it('header stays non-interactive when the section is not collapsible', () => {
+      const header = getHeader();
+      expect(header.getAttribute('role')).toBeNull();
+      expect(header.getAttribute('tabindex')).toBeNull();
+      expect(header.getAttribute('aria-expanded')).toBeNull();
+    });
+
+    it('exposes role=button + tabindex + aria-expanded when collapsible', () => {
+      host.collapsible = true;
+      fixture.detectChanges();
+      const header = getHeader();
+      expect(header.getAttribute('role')).toBe('button');
+      expect(header.getAttribute('tabindex')).toBe('0');
+      expect(header.getAttribute('aria-expanded')).toBe('true');
+    });
+
+    it('aria-expanded follows the collapsed state and aria-controls points at the body', () => {
+      host.collapsible = true;
+      host.collapsed = true;
+      fixture.detectChanges();
+      const header = getHeader();
+      expect(header.getAttribute('aria-expanded')).toBe('false');
+      expect(header.getAttribute('aria-controls')).toBe(component.bodyId);
+
+      host.collapsed = false;
+      fixture.detectChanges();
+      const body = getSectionEl(fixture).querySelector('.sd-section-body') as HTMLElement;
+      expect(body.id).toBe(component.bodyId);
+    });
+
+    it('Enter on the header collapses the section, same as a click', () => {
+      host.collapsible = true;
+      fixture.detectChanges();
+      const header = getHeader();
+
+      header.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      fixture.detectChanges();
+
+      expect(component.collapsed()).toBeTrue();
+    });
+
+    it('Space on the header toggles and prevents the page scroll', () => {
+      host.collapsible = true;
+      fixture.detectChanges();
+      const header = getHeader();
+
+      const ev = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+      header.dispatchEvent(ev);
+      fixture.detectChanges();
+
+      expect(component.collapsed()).toBeTrue();
+      expect(ev.defaultPrevented).toBe(true);
+    });
+
+    // why: consumer chiếu nút vào [sdHeaderRight]; Enter trên nút đó KHÔNG được gập section.
+    it('ignores keyboard events that bubble up from a projected control', () => {
+      host.collapsible = true;
+      fixture.detectChanges();
+      const header = getHeader();
+      const inner = document.createElement('button');
+      header.appendChild(inner);
+
+      inner.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      fixture.detectChanges();
+
+      expect(component.collapsed()).toBeFalse();
+    });
+  });
+
+  // -------------------------------------------------------------------------
   // Input: hideHeader
   // -------------------------------------------------------------------------
 

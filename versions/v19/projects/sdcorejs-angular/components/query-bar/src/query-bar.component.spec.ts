@@ -3,10 +3,14 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SdOperator } from '@sdcorejs/angular/components/operator';
+import { I18nService } from '@sdcorejs/angular/i18n';
+import { Operator } from '@sdcorejs/utils/models';
 
 import { SdQueryBar } from './query-bar.component';
+import { SdQueryBuildChip } from './components/build-chip/build-chip.component';
+import { SdQueryInlineChip } from './components/inline-chip/inline-chip.component';
 import { SdQueryInlineValueChip } from './components/inline-value-chip/inline-value-chip.component';
-import { SdQueryField } from './query-bar.model';
+import { SD_QUERY_OPERATORS_BY_TYPE, SdQueryField, sdQueryAllowedOperators } from './query-bar.model';
 
 describe('SdQueryBar', () => {
   let fixture: ComponentFixture<SdQueryBar>;
@@ -723,6 +727,286 @@ describe('SdQueryBar (extras)', () => {
       const txt = (fixture.nativeElement.querySelector('.c-token sd-select') as HTMLElement)?.textContent ?? '';
       expect(txt).toContain('Beta');
       expect(txt).not.toContain('+');
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Regression: per-CD allocation + row identity + editingIndex reindexing
+  // ---------------------------------------------------------------------------
+
+  describe('allowedOperators referential stability (per-CD allocation bug class)', () => {
+    // why: simple mode (không khai `operators`) là case phổ biến nhất và trước đây trả về
+    // `[defaultOperator]` MỚI mỗi lần gọi — template gọi mỗi CD → child OnPush dirty vô hạn.
+    const simpleField = { key: 'name', label: 'Name', type: 'string' } as SdQueryField;
+
+    it('sdQueryAllowedOperators returns the same array instance for the same field', () => {
+      const first = sdQueryAllowedOperators(simpleField);
+
+      expect(sdQueryAllowedOperators(simpleField)).toBe(first);
+      expect(first).toEqual(['CONTAIN']);
+    });
+
+    it('allowedOperatorsFor is stable per field and still isolates different fields', () => {
+      const otherField = { key: 'age', label: 'Age', type: 'number' } as SdQueryField;
+
+      expect(component.allowedOperatorsFor(simpleField)).toBe(component.allowedOperatorsFor(simpleField));
+      expect(component.allowedOperatorsFor(otherField)).not.toBe(component.allowedOperatorsFor(simpleField));
+      expect(component.allowedOperatorsFor(otherField)).toEqual(['EQUAL']);
+    });
+
+    it('hands the build chip the same allowedOperators array across change detection passes', () => {
+      fixture.componentRef.setInput('mode', 'inline');
+      fixture.componentRef.setInput('fields', [simpleField]);
+      component.beginBuild(simpleField);
+      fixture.detectChanges();
+
+      const chip = fixture.debugElement.query(By.directive(SdQueryBuildChip)).componentInstance as SdQueryBuildChip;
+      const first = chip.allowedOperators();
+      expect(first).toEqual(['CONTAIN']);
+
+      // why: sd-query-bar là OnPush — `fixture.detectChanges()` một mình KHÔNG chạy lại template
+      // khi view đã sạch, nên phải markForCheck để thực sự đo lại binding qua từng chu kỳ CD.
+      for (let pass = 0; pass < 3; pass += 1) {
+        fixture.changeDetectorRef.markForCheck();
+        fixture.detectChanges();
+      }
+
+      expect(chip.allowedOperators()).toBe(first);
+    });
+
+    it('still returns the declared array / full type set without cloning them', () => {
+      const declared: Operator[] = ['EQUAL', 'NOT_EQUAL'];
+      const declaredField = { key: 'code', label: 'Code', type: 'string', operators: declared } as SdQueryField;
+      const fullField = { key: 'note', label: 'Note', type: 'string', operators: true } as SdQueryField;
+
+      expect(component.allowedOperatorsFor(declaredField)).toBe(declared);
+      expect(component.allowedOperatorsFor(fullField)).toBe(SD_QUERY_OPERATORS_BY_TYPE['string']);
+    });
+  });
+
+  describe('filter row identity (track key)', () => {
+    const nameField = { key: 'name', label: 'Name', type: 'string' } as SdQueryField;
+    const codeField = { key: 'code', label: 'Code', type: 'string' } as SdQueryField;
+    const activeField = { key: 'active', label: 'Active', type: 'boolean' } as SdQueryField;
+    const lockedField = { key: 'locked', label: 'Locked', type: 'boolean' } as SdQueryField;
+
+    it('assigns a stable id per filter object and keeps it through updateFilter', () => {
+      const first = { field: 'name', operator: 'CONTAIN', data: 'a' } as any;
+      component.filters.set([first]);
+      const id = component.rowId(first);
+
+      expect(component.rowId(first)).toBe(id);
+
+      component.updateFilterData(0, 'b');
+
+      expect(component.filters()[0]).not.toBe(first);
+      expect(component.rowId(component.filters()[0])).toBe(id);
+    });
+
+    it('gives different filters different ids', () => {
+      const a = { field: 'name', operator: 'CONTAIN', data: 'a' } as any;
+      const b = { field: 'code', operator: 'CONTAIN', data: 'b' } as any;
+
+      expect(component.rowId(a)).not.toBe(component.rowId(b));
+    });
+
+    // why: đây là bug class chính — track $index gắn chip với VỊ TRÍ, nên xoá index 0 làm
+    // instance chip cũ được bind lại sang filter kế tiếp, mang theo state nội bộ.
+    it('destroys the removed seamless chip instead of migrating its state to the next filter', () => {
+      fixture.componentRef.setInput('mode', 'inline');
+      fixture.componentRef.setInput('fields', [nameField, codeField]);
+      component.filters.set([
+        { field: 'name', operator: 'CONTAIN', data: 'a' } as any,
+        { field: 'code', operator: 'CONTAIN', data: 'b' } as any,
+      ]);
+      fixture.detectChanges();
+
+      const before = fixture.debugElement
+        .queryAll(By.directive(SdQueryInlineValueChip))
+        .map(de => de.componentInstance as SdQueryInlineValueChip);
+      expect(before.length).toBe(2);
+
+      // dirty, uncommitted state on the chip that is about to be removed
+      before[0].draft.set('rác chưa commit');
+      before[0].hasError.set(true);
+      before[0].focused.set(true);
+
+      component.removeFilter(0);
+      fixture.detectChanges();
+
+      const after = fixture.debugElement
+        .queryAll(By.directive(SdQueryInlineValueChip))
+        .map(de => de.componentInstance as SdQueryInlineValueChip);
+
+      expect(after.length).toBe(1);
+      expect(after[0]).toBe(before[1]);
+      expect(after[0].hasError()).toBeFalse();
+      expect(after[0].focused()).toBeFalse();
+      expect(after[0].draft()).toBe('b');
+    });
+
+    it('does not migrate the inline chip edit toggle to the next filter after removing index 0', () => {
+      fixture.componentRef.setInput('mode', 'inline');
+      fixture.componentRef.setInput('fields', [activeField, lockedField]);
+      component.filters.set([
+        { field: 'active', operator: 'EQUAL', data: true } as any,
+        { field: 'locked', operator: 'EQUAL', data: false } as any,
+      ]);
+      fixture.detectChanges();
+
+      const before = fixture.debugElement.queryAll(By.directive(SdQueryInlineChip)).map(de => de.componentInstance as SdQueryInlineChip);
+      expect(before.length).toBe(2);
+
+      before[0].enterEdit();
+      fixture.detectChanges();
+
+      component.removeFilter(0);
+      fixture.detectChanges();
+
+      const after = fixture.debugElement.queryAll(By.directive(SdQueryInlineChip)).map(de => de.componentInstance as SdQueryInlineChip);
+
+      expect(after.length).toBe(1);
+      expect(after[0]).toBe(before[1]);
+      expect(after[0].editing()).toBeFalse();
+    });
+
+    it('keeps the same chip instance when only the value changes', () => {
+      fixture.componentRef.setInput('mode', 'inline');
+      fixture.componentRef.setInput('fields', [nameField]);
+      component.filters.set([{ field: 'name', operator: 'CONTAIN', data: 'a' } as any]);
+      fixture.detectChanges();
+
+      const before = fixture.debugElement.query(By.directive(SdQueryInlineValueChip)).componentInstance as SdQueryInlineValueChip;
+
+      component.updateFilterData(0, 'z');
+      fixture.detectChanges();
+
+      const after = fixture.debugElement.query(By.directive(SdQueryInlineValueChip)).componentInstance as SdQueryInlineValueChip;
+      expect(after).toBe(before);
+    });
+  });
+
+  describe('removeFilter keeps editingIndex aligned', () => {
+    const fields = [
+      { key: 'name', label: 'Name', type: 'string' },
+      { key: 'code', label: 'Code', type: 'string' },
+      { key: 'note', label: 'Note', type: 'string' },
+    ] as SdQueryField[];
+
+    function seedThree(): void {
+      fixture.componentRef.setInput('fields', fields);
+      component.filters.set([
+        { field: 'name', operator: 'CONTAIN', data: 'a' } as any,
+        { field: 'code', operator: 'CONTAIN', data: 'b' } as any,
+        { field: 'note', operator: 'CONTAIN', data: 'c' } as any,
+      ]);
+      fixture.detectChanges();
+    }
+
+    // why: editingIndex là chỉ số vào mảng filters; xoá một chip ĐỨNG TRƯỚC làm nó trỏ lố 1 ô
+    // và commit sau đó ghi giá trị staged vào SAI filter.
+    it('shifts editingIndex down when a lower-indexed chip is removed', () => {
+      seedThree();
+      component.openChipPopover(2);
+      expect(component.editingIndex()).toBe(2);
+
+      component.removeFilter(0);
+      fixture.detectChanges();
+
+      expect(component.editingIndex()).toBe(1);
+    });
+
+    it('commits the staged value into the edited filter, not its neighbour', () => {
+      seedThree();
+      component.openChipPopover(2);
+      component.removeFilter(0);
+      fixture.detectChanges();
+
+      component.onChipPopoverCommit({ field: 'note', operator: 'CONTAIN', data: 'committed' } as any);
+
+      expect(component.filters()).toEqual([
+        jasmine.objectContaining({ field: 'code', data: 'b' }),
+        jasmine.objectContaining({ field: 'note', data: 'committed' }),
+      ]);
+    });
+
+    it('clears editingIndex when the edited chip itself is removed', () => {
+      seedThree();
+      component.openChipPopover(1);
+
+      component.removeFilter(1);
+      fixture.detectChanges();
+
+      expect(component.editingIndex()).toBeNull();
+    });
+
+    it('leaves editingIndex untouched when a higher-indexed chip is removed', () => {
+      seedThree();
+      component.openChipPopover(0);
+
+      component.removeFilter(2);
+      fixture.detectChanges();
+
+      expect(component.editingIndex()).toBe(0);
+    });
+  });
+
+  // `#i18n` được inject từ lâu nhưng KHÔNG hề được gọi — mọi chuỗi vẫn hardcode tiếng Việt.
+  // Nhóm spec này chốt rằng nó thực sự tham gia vào việc dựng chuỗi hiển thị.
+  describe('i18n — the injected I18nService actually drives the labels', () => {
+    let i18n: I18nService;
+
+    beforeEach(() => {
+      i18n = TestBed.inject(I18nService);
+      i18n.setLanguage('vi', { reload: false });
+    });
+
+    afterEach(() => {
+      i18n.setLanguage('vi', { reload: false });
+    });
+
+    it('resolves the search placeholder + add-filter tooltips from the catalogue', () => {
+      expect(component.searchPlaceholder()).toBe(i18n.t('core.component.query-bar.search-placeholder'));
+      expect(component.noFieldsLabel()).toBe(i18n.t('core.component.query-bar.no-fields'));
+      expect(component.addFilterLabel()).toBe(i18n.t('core.component.query-bar.add-filter'));
+    });
+
+    it('re-renders the search placeholder into the DOM after a language switch', () => {
+      fixture.componentRef.setInput('showSearch', true);
+      fixture.detectChanges();
+
+      const input = (): HTMLInputElement => fixture.nativeElement.querySelector('.c-search-input');
+      expect(input().placeholder).toBe('Tìm kiếm...');
+
+      i18n.setLanguage('en', { reload: false });
+      fixture.detectChanges();
+      expect(input().placeholder).toBe('Search...');
+    });
+
+    it('translates both branches of the add-filter tooltip', () => {
+      expect(component.noFieldsLabel()).toBe('Chưa cấu hình fields');
+
+      i18n.setLanguage('en', { reload: false });
+      expect(component.noFieldsLabel()).toBe('No fields configured');
+      expect(component.addFilterLabel()).toBe('Add filter');
+    });
+
+    it('renders a boolean chip value through the catalogue, and lets the field override it', () => {
+      const field = { key: 'active', label: 'Active', type: 'boolean' } as SdQueryField;
+      fixture.componentRef.setInput('fields', [field]);
+      fixture.detectChanges();
+
+      const filter = { field: 'active', operator: 'EQUAL', data: true } as any;
+      expect(component.chipValueText(filter)).toBe('Có');
+
+      i18n.setLanguage('en', { reload: false });
+      expect(component.chipValueText(filter)).toBe('Yes');
+      expect(component.chipValueText({ field: 'active', operator: 'EQUAL', data: false } as any)).toBe('No');
+
+      // consumer override vẫn thắng nhãn i18n mặc định
+      fixture.componentRef.setInput('fields', [{ ...field, trueLabel: 'ON', falseLabel: 'OFF' } as SdQueryField]);
+      fixture.detectChanges();
+      expect(component.chipValueText(filter)).toBe('ON');
     });
   });
 });

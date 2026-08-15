@@ -25,10 +25,11 @@
     "test:showcase-route-shells": "node --test scripts/generate-showcase-route-shells.test.mjs",
     "test:collect-docs": "node --test scripts/collect-docs.test.mjs",
     "test:published-page": "node --test scripts/build-published-page.test.mjs",
+    "test:check-i18n": "node --test scripts/check-i18n.test.mjs",
     "build:page": "node scripts/build-published-page.mjs",
     "prune:pages": "node scripts/build-published-page.mjs --prune-only",
     "test:showcase-generators": "npm run test:showcase-changelog && npm run test:showcase-examples && npm run test:showcase-route-shells",
-    "test:scripts": "npm run test:showcase-generators && npm run test:showcase-branding && npm run test:collect-docs && npm run test:published-page",
+    "test:scripts": "npm run test:showcase-generators && npm run test:showcase-branding && npm run test:collect-docs && npm run test:published-page && npm run test:check-i18n",
     "changeset": "changeset"
   },
   "devDependencies": {

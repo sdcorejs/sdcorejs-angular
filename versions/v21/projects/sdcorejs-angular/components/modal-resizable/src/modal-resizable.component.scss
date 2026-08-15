@@ -20,8 +20,15 @@
     0px 3px 6px rgba(0, 0, 0, 0.2);
   border-radius: 4px 4px 0 0;
 
+  // why: giữ `outline: none` cho chuột nhưng trả lại vòng focus cho bàn phím — nút thu nhỏ/phóng
+  // to trên thanh tiêu đề trước đây hoàn toàn không có chỉ báo focus.
   button.c-action--white:focus {
     outline: none !important;
+  }
+
+  button.c-action--white:focus-visible {
+    outline: 2px solid #fff !important;
+    outline-offset: 2px;
   }
 
   &.c-minium-of-list {
@@ -56,6 +63,12 @@
     outline: none;
   }
 
+  // why: xoá outline mà không có gì thay thế thì người dùng bàn phím không thấy mình đang ở nút nào.
+  &:focus-visible {
+    outline: 2px solid var(--sd-primary, #005cbb);
+    outline-offset: 2px;
+  }
+
   &--white {
     color: map.get(color.$color_map, 'white');
 
@@ -75,6 +88,12 @@
   color: #212121;
   overflow: hidden;
   outline: none;
+
+  // why: nút icon không có nền/viền riêng nên `outline: none` xoá sạch chỉ báo focus.
+  &:focus-visible {
+    outline: 2px solid var(--sd-primary, #005cbb);
+    outline-offset: 2px;
+  }
 
   sd-icon {
     float: left;

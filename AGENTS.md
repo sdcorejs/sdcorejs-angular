@@ -116,6 +116,8 @@ Thứ tự bắt buộc:
 
 **Bước 2 không được bỏ.** Bỏ thì archive của release đó ra rỗng nội dung (per-version changelog trích theo section này).
 
+**2 gate trước publish matrix** (matrix `needs:` cả hai — đỏ một cái là không publish gì hết): `verify-version-sync` (`npm run check:sync`) và `test` (full suite của `versions/v19`). Job `test` chạy `--code-coverage` vì threshold trong `karma.conf.js` chỉ được đánh giá khi có coverage, và dùng browser `ChromeHeadlessCI`. ⚠️ Hai gate chỉ chạy trên tag/dispatch — **chưa có test trên PR/push `main`**.
+
 **Auth npm = trusted publishing (OIDC), không còn `NPM_TOKEN`.** Job publish chạy `permissions: id-token: write`, Node 22 + `npm@latest` (OIDC cần npm >= 11.5.1, Node >= 22.14.0) và **cố tình không set `NODE_AUTH_TOKEN`** — có token thì npm dùng token thay OIDC, và 2FA policy của package trả 403 `an automation token was specified`. Trusted publisher bên npmjs.com pin theo repo + **tên file workflow**, nên đổi tên `publish-npm.yml` là phải khai lại bên npm.
 
 ⚠️ **Major digit khoá theo Angular line, không phải semver.** Breaking change KHÔNG tăng được major. Breaking phải ghi rõ mục `### Changed (BREAKING for consumers)` + migration diff trong changelog. Version number một mình không signal được breaking.

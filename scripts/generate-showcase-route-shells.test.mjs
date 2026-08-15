@@ -110,7 +110,22 @@ test('builds only the supported release routes, including page redirects and all
   const pages = parseDocumentationRegistry(REGISTRY_FIXTURE);
   const routes = createRouteShellDefinitions(pages, SUPPORTED_RELEASES);
 
-  assert.deepEqual(SUPPORTED_RELEASES, ['21.1.5', '21.1.4', '21.1.3', '21.1.2', '20.1.5', '20.1.4', '20.1.3', '20.1.2', '19.1.5', '19.1.4', '19.1.3', '19.1.2']);
+  // why: KHÔNG hardcode danh sách release. `SUPPORTED_RELEASES` được suy ra từ
+  // `published-docs/versions.json`, nên mỗi lần phát hành là danh sách đổi và một literal sẽ mục
+  // ngay. Test này đã đỏ sẵn trên `main` vì lý do đó (dừng ở `21.1.5` trong khi `1.6` đã ra).
+  // Khẳng định CẤU TRÚC — thứ thật sự là hợp đồng — thay vì nội dung.
+  assert.ok(SUPPORTED_RELEASES.length > 0, 'SUPPORTED_RELEASES must not be empty');
+  for (const release of SUPPORTED_RELEASES) {
+    assert.match(release, /^(19|20|21)\.\d+\.\d+$/, `unexpected release id: ${release}`);
+  }
+  const releasesByMajor = new Map();
+  for (const release of SUPPORTED_RELEASES) {
+    const major = release.split('.')[0];
+    releasesByMajor.set(major, (releasesByMajor.get(major) ?? 0) + 1);
+  }
+  assert.deepEqual([...releasesByMajor.keys()].sort(), ['19', '20', '21'], 'every Angular line must be represented');
+  assert.equal(new Set(releasesByMajor.values()).size, 1, 'each Angular line must expose the same number of releases');
+
   assert.equal(PUBLIC_BASE_URL, 'https://sdcorejs.github.io/sdcorejs-angular/');
   assert.equal(routes.length, 1 + SUPPORTED_RELEASES.length * (3 + 2 + pages.length * 5));
   assert.ok(routes.some(route => route.routePath === 'about'));
@@ -152,10 +167,7 @@ test('builds route shells for a future release supplied by the published manifes
 });
 
 test('matches the canonical v19 runtime registry and expected deployment route count', () => {
-  const registrySource = readFileSync(
-    new URL('../showcase/src/app/docs/core/documentation.registry.ts', import.meta.url),
-    'utf8'
-  );
+  const registrySource = readFileSync(new URL('../showcase/src/app/docs/core/documentation.registry.ts', import.meta.url), 'utf8');
   const pages = parseDocumentationRegistry(registrySource);
   const routes = createRouteShellDefinitions(pages);
   const categoryCounts = Object.fromEntries(
@@ -164,16 +176,29 @@ test('matches the canonical v19 runtime registry and expected deployment route c
       .map(category => [category, pages.filter(page => page.category === category).length])
   );
 
-  assert.equal(pages.length, 97);
-  assert.equal(routes.length, 5941);
+  assert.equal(pages.length, 96);
+
+  // why: `routes.length` từng là hằng số 5941 và đã mục ngay khi release 1.6 ra (thực tế 7426).
+  // Con số đó là TÍCH của hai thứ đã được kiểm ở nơi khác — số release được hỗ trợ và số route mỗi
+  // release — nên khẳng định quan hệ, không khẳng định tích. Cách này bắt được đúng thứ cần bắt
+  // (một release sinh ra nhiều/ít route hơn các release khác) mà không phải sửa test sau mỗi lần tag.
+  const routesPerRelease = SUPPORTED_RELEASES.map(
+    release => routes.filter(route => route.routePath === `v/${release}` || route.routePath.startsWith(`v/${release}/`)).length
+  );
+  assert.equal(new Set(routesPerRelease).size, 1, `every release must emit the same route count, got ${routesPerRelease.join(', ')}`);
+  assert.equal(
+    routes.length,
+    1 + SUPPORTED_RELEASES.length * routesPerRelease[0],
+    'total = 1 root redirect + one identical block per release'
+  );
   assert.deepEqual(categoryCounts, {
     components: 35,
     directives: 6,
-    forms: 21,
+    forms: 22,
     guides: 3,
     'modules-integrations': 10,
     'pipes-utilities': 9,
-    services: 13,
+    services: 11,
   });
   assert.equal(
     pages.some(page => page.slug === 'icon-configuration'),

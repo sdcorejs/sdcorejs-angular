@@ -5,7 +5,7 @@ import { SdTreeItemContext } from './tree.model';
   selector: '[sdTreeItemDef]',
   standalone: true,
 })
-export class SdTreeItemDefDirective<T = any> {
+export class SdTreeItemDefDirective<T = unknown> {
   static ngTemplateContextGuard<T>(_dir: SdTreeItemDefDirective<T>, ctx: unknown): ctx is SdTreeItemContext<T> {
     return true;
   }

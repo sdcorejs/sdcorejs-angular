@@ -1,17 +1,17 @@
 @let _userInfo = userInfo();
 <sd-page>
   <div class="d-flex flex-column" headerLeft>
-    <div class="font-weight-medium fs-20">{{ 'core.module.layout.greeting.hello' | translate: { name: _userInfo?.fullName ?? _userInfo?.email ?? _userInfo?.username ?? '' } }}</div>
+    <div class="font-weight-medium fs-20">{{ 'core.module.layout.greeting.hello' | sdTranslate: { name: _userInfo?.fullName ?? _userInfo?.email ?? _userInfo?.username ?? '' } }}</div>
     <span class="T12R text-secondary">{{ todayInfo() }}</span>
   </div>
   <div class="h-full d-flex flex-column align-items-center">
     <div class="h-full d-flex flex-column align-items-center justify-content-center text-center wrapper">
       <img alt="forbidden" class="sd-image-forbidden" />
-      <span class="T16M mt-24">{{ 'core.module.layout.forbidden.title' | translate }}</span>
+      <span class="T16M mt-24">{{ 'core.module.layout.forbidden.title' | sdTranslate }}</span>
       <span class="T14R text-secondary mt-4"
-        >{{ 'core.module.layout.forbidden.message' | translate }}</span
+        >{{ 'core.module.layout.forbidden.message' | sdTranslate }}</span
       >
-      <sd-button class="mt-16" type="fill" color="primary" (click)="reload()" [title]="'core.module.layout.forbidden.back-home' | translate"> </sd-button>
+      <sd-button class="mt-16" type="fill" color="primary" (click)="reload()" [title]="'core.module.layout.forbidden.back-home' | sdTranslate"> </sd-button>
     </div>
   </div>
 </sd-page>

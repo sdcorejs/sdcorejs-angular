@@ -88,3 +88,16 @@ mat-chip-listbox {
   color: map.get(color.$color_map, 'primary') !important;
   border-radius: 50%;
 }
+// why: mặt sdViewDef giờ là phần tử role="button" + tabindex=0 (bàn phím mở được đúng như
+// chuột) — cần focus ring rõ ràng và không được đổi layout so với bản <div> trần cũ.
+.sd-chip-calendar__view-trigger {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--sd-primary, #1565c0);
+    outline-offset: 2px;
+  }
+}

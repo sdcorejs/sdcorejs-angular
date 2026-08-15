@@ -3,7 +3,7 @@ import { BehaviorSubject } from 'rxjs';
 import { SdTabAction } from '../actions/tab-router.action';
 import { SdTabComponentBuilder } from '../decorators/tab.decorator';
 import { SdTabBase, SdTabEvent } from '../events/tab-router.event';
-import { SdTab } from '../models/tab-router.model';
+import { SdTabRouterTab } from '../models/tab-router.model';
 
 @Injectable({
   providedIn: 'root',
@@ -12,10 +12,10 @@ export class SdTabRouterService {
   events = new BehaviorSubject<SdTabEvent>(new SdTabBase(undefined));
   actions = new BehaviorSubject<SdTabAction | undefined>(undefined);
   builders = new BehaviorSubject<SdTabComponentBuilder[]>([]);
-  currentTabChanges = new BehaviorSubject<SdTab | undefined>(undefined);
-  newTabs = new BehaviorSubject<SdTab | undefined>(undefined);
-  updateTabs = new BehaviorSubject<SdTab | undefined>(undefined);
-  #currentTab: SdTab | undefined = undefined;
+  currentTabChanges = new BehaviorSubject<SdTabRouterTab | undefined>(undefined);
+  newTabs = new BehaviorSubject<SdTabRouterTab | undefined>(undefined);
+  updateTabs = new BehaviorSubject<SdTabRouterTab | undefined>(undefined);
+  #currentTab: SdTabRouterTab | undefined = undefined;
   #componentBuilders: SdTabComponentBuilder[] = [];
 
   addBuilder = (builder: SdTabComponentBuilder) => {
@@ -33,7 +33,7 @@ export class SdTabRouterService {
     return this.#currentTab?.key || null;
   }
 
-  // select = (tabOrKey: string | SdTab): void => {
+  // select = (tabOrKey: string | SdTabRouterTab): void => {
   //   const tab = this.#tabs.find(e => {
   //     if (typeof (tabOrKey) === 'string') {
   //       return e.key === tabOrKey;
@@ -45,7 +45,7 @@ export class SdTabRouterService {
   //   }
   // }
 
-  // add = (tab: SdTab): void => {
+  // add = (tab: SdTabRouterTab): void => {
   //   if (!tab.key) {
   //     this.notifyService.notify.warning('Tab key is required');
   //   }
@@ -61,7 +61,7 @@ export class SdTabRouterService {
   //   }
   // }
 
-  // remove = (tabOrKey: string | SdTab): void => {
+  // remove = (tabOrKey: string | SdTabRouterTab): void => {
   //   this.#tabs = this.#tabs.filter(e => {
   //     if (typeof (tabOrKey) === 'string') {
   //       return e.key !== tabOrKey;
@@ -70,18 +70,18 @@ export class SdTabRouterService {
   //   });
   // }
 
-  setCurrentTab = (tab: SdTab): void => {
+  setCurrentTab = (tab: SdTabRouterTab): void => {
     this.#currentTab = tab;
     this.currentTabChanges.next(tab);
   };
 
-  pushEvent = (tab: SdTab, Event: Type<SdTabEvent>) => {
+  pushEvent = (tab: SdTabRouterTab, Event: Type<SdTabEvent>) => {
     this.events.next(new Event(tab));
   };
 
   setOptions = () => {};
 
-  close = (tab?: SdTab) => {
+  close = (tab?: SdTabRouterTab) => {
     tab = tab || this.#currentTab;
     if (tab) {
       this.actions.next({
@@ -92,5 +92,5 @@ export class SdTabRouterService {
   };
 
   // Gọi hàm này để thực hiện update tab
-  updateTab = (tab: SdTab) => {};
+  updateTab = (tab: SdTabRouterTab) => {};
 }

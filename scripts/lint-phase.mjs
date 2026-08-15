@@ -29,7 +29,6 @@ const phasePaths = {
     'projects/sdcorejs-angular/components/autoid-inspector',
     'projects/sdcorejs-angular/components/avatar',
     'projects/sdcorejs-angular/components/badge',
-    'projects/sdcorejs-angular/components/base',
     'projects/sdcorejs-angular/components/button',
     'projects/sdcorejs-angular/components/chart',
   ],

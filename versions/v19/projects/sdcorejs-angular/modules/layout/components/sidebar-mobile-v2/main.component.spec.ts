@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { SD_LAYOUT_CONFIGURATION } from '../../configurations';
 import { SdLayoutMenu } from '../../services';
-import { SidebarMobileV2Component } from './main.component';
+import { SdSidebarMobileV2 } from './main.component';
 
 const dashboard: SdLayoutMenu = { id: 'dashboard', title: 'Tổng quan', path: '/dashboard', permission: true };
 const work: SdLayoutMenu = { id: 'work', title: 'Công việc', children: [dashboard] };
@@ -14,15 +14,15 @@ const admin: SdLayoutMenu = {
 const reports: SdLayoutMenu = { id: 'reports', title: 'Báo cáo', children: [{ title: 'Doanh số', path: '/reports', permission: true }] };
 const help: SdLayoutMenu = { id: 'help', title: 'Trợ giúp', children: [{ title: 'FAQ', path: '/help', permission: true }] };
 
-describe('SidebarMobileV2Component', () => {
-  let fixture: ComponentFixture<SidebarMobileV2Component>;
+describe('SdSidebarMobileV2', () => {
+  let fixture: ComponentFixture<SdSidebarMobileV2>;
   let router: Router;
   let signout: jasmine.Spy;
 
   beforeEach(async () => {
     signout = jasmine.createSpy('signout');
     await TestBed.configureTestingModule({
-      imports: [SidebarMobileV2Component],
+      imports: [SdSidebarMobileV2],
       providers: [
         provideRouter([]),
         {
@@ -39,7 +39,7 @@ describe('SidebarMobileV2Component', () => {
         },
       ],
     }).compileComponents();
-    fixture = TestBed.createComponent(SidebarMobileV2Component);
+    fixture = TestBed.createComponent(SdSidebarMobileV2);
     fixture.componentRef.setInput('menus', [dashboard, work, admin, reports, help]);
     fixture.componentRef.setInput('userInfo', { fullName: 'Demo User', role: { text: 'Operator' } });
     fixture.componentRef.setInput('sidebar', { version: 2, primaryMenuIds: ['admin', 'missing', 'admin'] });
@@ -95,6 +95,24 @@ describe('SidebarMobileV2Component', () => {
 
     fixture.componentInstance.activateMenu(dashboard);
     expect(navigate).toHaveBeenCalledWith(['/dashboard'], jasmine.any(Object));
+  });
+
+  it('opens an absolute http(s) menu with noopener,noreferrer and never opens a javascript: scheme', () => {
+    const windowOpen = spyOn(window, 'open');
+    const navigate = spyOn(router, 'navigate').and.resolveTo(true);
+
+    fixture.componentInstance.onNavigate({ id: 'docs', title: 'Tài liệu', path: 'https://example.com/docs', permission: true });
+    expect(windowOpen).toHaveBeenCalledWith('https://example.com/docs', '_blank', 'noopener,noreferrer');
+    expect(navigate).not.toHaveBeenCalled();
+
+    windowOpen.calls.reset();
+    fixture.componentInstance.onNavigate({
+      id: 'evil',
+      title: 'Evil',
+      path: 'javascript:fetch("//evil.example.com")//http',
+      permission: true,
+    });
+    expect(windowOpen).not.toHaveBeenCalled();
   });
 
   it('closes on Escape, restores focus and releases body scroll', () => {
