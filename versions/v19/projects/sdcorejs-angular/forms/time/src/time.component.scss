@@ -21,6 +21,25 @@
   color: color.$disabled-text !important;
 }
 
+// why: nút mở picker phải là <button> thật (Tab/Enter/Space + accessible name + `disabled` thật),
+// nhưng giao diện phải y hệt một icon trần — reset sạch chrome mặc định của button. Giống hệt
+// `.sd-suffix-btn` của sd-date/sd-datetime/sd-date-range; kích thước 20px do `.sd-suffix-icon` lo.
+.sd-suffix-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+}
+
 @include inline.sd-inline-panel;
 
 :host(.sd-bare) {

@@ -85,15 +85,19 @@
       <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
     }
     @if (hideInlineError() && _errorMessage) {
-      <span class="sd-visually-hidden" matSuffix>{{ _errorMessage }}</span>
+      <span class="sd-visually-hidden" matSuffix>{{ _errorMessage }}</span>
     }
 
+    <!-- why: KHÔNG dùng `mat-icon-button` — nó dựng hộp 40px + touch target 48px, nên đồng hồ bị
+         đẩy vào trong và vùng bấm phình to hơn hẳn mọi suffix khác. sd-date/sd-datetime/sd-date-range
+         đều đã dùng `.sd-suffix-icon.sd-suffix-btn` (20px, khớp gap 8px + padding 12px của
+         `.mat-mdc-form-field-icon-suffix`); sd-time là control cuối còn lệch. -->
     <button
       #menuTrigger="matMenuTrigger"
       type="button"
-      mat-icon-button
       matSuffix
       data-time-picker-trigger
+      class="cursor-pointer sd-suffix-icon sd-suffix-btn"
       [matMenuTriggerFor]="timePickerMenu"
       [disabled]="formControl.disabled || isReadonly()"
       [attr.aria-label]="'core.form.time.open-picker' | sdTranslate"

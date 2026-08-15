@@ -113,7 +113,11 @@ Legacy split inputs (`items`, `tree`, `selectedItems`, `selector`, `commands`, `
 | `onExpand`              | `(event: SdTreeToggleEvent<T>) => void`                                          | Expand callback.                                                                                  |
 | `onCollapse`            | `(event: SdTreeToggleEvent<T>) => void`                                          | Collapse callback.                                                                                |
 
-`selector.single` limits selection to one loaded node. `selector.cascade` accepts `independent` (default) or `descendants`. Descendant cascade selects loaded descendants and reconciles loaded ancestors; a partially selected branch exposes an indeterminate checkbox and `aria-checked="mixed"`.
+`selector.single` limits selection to one loaded node **and switches the per-row control to a radio** — a checkbox reads as "pick several", so the limit would only reveal itself after the user ticks a second node and watches the first clear. The radios are deliberately *not* wrapped in a `<mat-radio-group>`: a group binds Arrow Up/Down to moving the selection, and tree rows already use those two keys to navigate. Clicking the selected radio still clears it, same as the checkbox path.
+
+`selector.cascade` accepts `independent` (default) or `descendants`. Descendant cascade selects loaded descendants and reconciles loaded ancestors; a partially selected branch exposes an indeterminate checkbox and `aria-checked="mixed"`. Indeterminate has no meaning under `single`, where the selection is one node.
+
+Read the resolved mode from `selectionSingle()`.
 
 ## Tree Item
 
@@ -298,7 +302,7 @@ it when the host wants its own wording. `errorMessage()` returns `error.message`
 - Nodes at `tree.maxDepth` render as leaves — no chevron, no default folder icon, no expand event.
 - Branch nodes show a toggle icon and default folder / folder-open icon when no explicit node icon is provided.
 - Leaf nodes have no default icon unless `treeItem.icon` is set.
-- Checkbox column appears only when `selector.visible === true`.
+- Selection control appears only when `selector.visible === true` — a checkbox, or a radio when `selector.single` is on.
 - Floating selection bar appears only when the selection resolves to at least one action — see "Selection quick-action bar".
 - Row command trigger appears at the end of a row only when visible commands exist, usually on hover.
 - Loading spinner appears on a lazy node while `onExpandChildren` is resolving.
