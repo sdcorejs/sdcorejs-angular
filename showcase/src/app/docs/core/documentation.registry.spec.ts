@@ -24,7 +24,7 @@ describe('documentation registry', () => {
     for (const category of DOC_CATEGORIES) {
       expect(getDocPagesByCategory(category)).withContext(category).toHaveSize(EXPECTED_CATEGORY_COUNTS[category]);
     }
-    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(332);
+    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(335);
   });
 
   it('uses unique stable page ids and category/slug pairs', () => {
@@ -46,7 +46,7 @@ describe('documentation registry', () => {
     const exampleIds = DOC_PAGES.flatMap(page => page.examples.map(example => example.id));
 
     expect(new Set(exampleIds).size).toBe(exampleIds.length);
-    expect(exampleIds).toHaveSize(332);
+    expect(exampleIds).toHaveSize(335);
     for (const page of DOC_PAGES) {
       expect(page.examples).toHaveSize(page.demoSectionCount);
       for (const example of page.examples) {

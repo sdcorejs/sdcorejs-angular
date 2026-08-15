@@ -201,15 +201,18 @@ export type ShowcaseExampleSourceKey =
   | "forms/chip/example-lien-ket-hai-chieu"
   | "forms/chip/example-vo-hieu-hoa"
   | "forms/date-range/example-chinh-sua-noi-tuyen"
+  | "forms/date-range/example-chuan-hoa-gia-tri-dau-ra"
   | "forms/date-range/example-co-ban"
   | "forms/date-range/example-trang-thai"
   | "forms/date-range/example-validator"
   | "forms/date/example-chinh-sua-noi-tuyen"
+  | "forms/date/example-chuan-hoa-gia-tri-dau-ra"
   | "forms/date/example-co-ban"
   | "forms/date/example-kich-thuoc"
   | "forms/date/example-trang-thai"
   | "forms/date/example-validator"
   | "forms/datetime/example-chinh-sua-noi-tuyen"
+  | "forms/datetime/example-chuan-hoa-gia-tri-dau-ra"
   | "forms/datetime/example-co-ban"
   | "forms/datetime/example-trang-thai"
   | "forms/datetime/example-validator"
@@ -1766,6 +1769,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Bấm vào ngày để mở lịch ngay; text giữ nguyên tới khi chọn. Hover hiện × để xoá.",
   },
   {
+    sourceKey: "forms/date/example-chuan-hoa-gia-tri-dau-ra",
+    pageKey: "forms/date",
+    sectionId: "example-chuan-hoa-gia-tri-dau-ra",
+    title: "Chuẩn hoá giá trị đầu ra",
+    description: "transform chỉ đổi giá trị đi ra (model, sdChange, field trong FormGroup) — ô nhập vẫn là dd/MM/yyyy. Ngày được serialize ở nửa đêm GIỜ ĐỊA PHƯƠNG, nên phần ngày trong chuỗi UTC có thể lệch một ngày so với ô hiển thị. Đó là cùng một thời điểm.",
+  },
+  {
     sourceKey: "forms/date-range/example-co-ban",
     pageKey: "forms/date-range",
     sectionId: "example-co-ban",
@@ -1794,6 +1804,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Bấm vào khoảng để mở lịch chọn; text giữ nguyên tới khi chọn. Hover hiện × để xoá.",
   },
   {
+    sourceKey: "forms/date-range/example-chuan-hoa-gia-tri-dau-ra",
+    pageKey: "forms/date-range",
+    sectionId: "example-chuan-hoa-gia-tri-dau-ra",
+    title: "Chuẩn hoá giá trị đầu ra",
+    description: "Mỗi đầu range được serialize RIÊNG — cả object không bao giờ bị gộp thành một chuỗi. Ô nhập vẫn là dd/MM/yyyy → dd/MM/yyyy; range thiếu một đầu vẫn giữ null ở đầu đó.",
+  },
+  {
     sourceKey: "forms/datetime/example-co-ban",
     pageKey: "forms/datetime",
     sectionId: "example-co-ban",
@@ -1820,6 +1837,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-chinh-sua-noi-tuyen",
     title: "Chỉnh sửa nội tuyến",
     description: "Bấm vào để mở overlay datetime; text giữ nguyên tới khi chọn. Hover hiện × để xoá.",
+  },
+  {
+    sourceKey: "forms/datetime/example-chuan-hoa-gia-tri-dau-ra",
+    pageKey: "forms/datetime",
+    sectionId: "example-chuan-hoa-gia-tri-dau-ra",
+    title: "Chuẩn hoá giá trị đầu ra",
+    description: "transform chỉ đổi giá trị đi ra — ô nhập vẫn theo showSeconds. Độ chính xác vẫn do showSeconds quy định: tắt thì giây về 0, bật thì giữ giây; mili-giây luôn bằng 0.",
   },
   {
     sourceKey: "forms/entity-picker/example-server-single-select",

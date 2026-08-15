@@ -637,7 +637,7 @@ const FORM_PAGES = [
     publishedDocId: 'forms/date/sd-date',
     keywords: ['datepicker', 'calendar', 'iso date', 'form'],
     status: 'stable',
-    demoSectionCount: 5,
+    demoSectionCount: 6,
     loadComponent: () => import('../../pages/forms/date/date-demo.component').then(m => m.DateDemoComponent),
   }),
   defineDocPage({
@@ -650,7 +650,7 @@ const FORM_PAGES = [
     publishedDocId: 'forms/date-range/sd-date-range',
     keywords: ['range picker', 'from to', 'calendar', 'period'],
     status: 'stable',
-    demoSectionCount: 4,
+    demoSectionCount: 5,
     loadComponent: () => import('../../pages/forms/date-range/date-range-demo.component').then(m => m.DateRangeDemoComponent),
   }),
   defineDocPage({
@@ -663,7 +663,7 @@ const FORM_PAGES = [
     publishedDocId: 'forms/datetime/sd-datetime',
     keywords: ['date time picker', 'calendar', 'time', 'schedule'],
     status: 'stable',
-    demoSectionCount: 4,
+    demoSectionCount: 5,
     loadComponent: () => import('../../pages/forms/datetime/datetime-demo.component').then(m => m.DatetimeDemoComponent),
   }),
   defineDocPage({
