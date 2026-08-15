@@ -451,6 +451,51 @@ describe('SdTree', () => {
     expect(row(fixture.nativeElement, 'payable').getAttribute('aria-selected')).toBe('false');
   });
 
+  // why: checkbox là ký hiệu của "chọn nhiều". Với `selector.single` người dùng chỉ phát hiện ra
+  // giới hạn sau khi tick node thứ hai và thấy node đầu tự bỏ chọn — radio nói trước điều đó.
+  describe('single-selection control', () => {
+    it('renders a radio per row instead of a checkbox', async () => {
+      const fixture = await createFixture(StaticHostComponent);
+      fixture.componentInstance.selector = { visible: true, single: true };
+      fixture.detectChanges();
+
+      expect(treeComponent<NodeItem>(fixture).selectionSingle()).toBeTrue();
+      expect(fixture.nativeElement.querySelectorAll('mat-radio-button').length).toBeGreaterThan(0);
+      expect(fixture.nativeElement.querySelectorAll('mat-checkbox').length).toBe(0);
+    });
+
+    it('keeps checkboxes when the selector allows several nodes', async () => {
+      const fixture = await createFixture(StaticHostComponent);
+
+      expect(treeComponent<NodeItem>(fixture).selectionSingle()).toBeFalse();
+      expect(fixture.nativeElement.querySelectorAll('mat-checkbox').length).toBeGreaterThan(0);
+      expect(fixture.nativeElement.querySelectorAll('mat-radio-button').length).toBe(0);
+    });
+
+    it('still replaces the previous node when a second one is picked', async () => {
+      const fixture = await createFixture(StaticHostComponent);
+      fixture.componentInstance.selector = { visible: true, single: true };
+      fixture.detectChanges();
+
+      const tree = treeComponent<NodeItem>(fixture);
+      tree.toggleSelection(tree.visibleNodes().find(node => node.id === 'payable')!);
+      tree.toggleSelection(tree.visibleNodes().find(node => node.id === 'hr')!);
+      fixture.detectChanges();
+
+      expect(tree.selectedItems()).toEqual([HR_DATA]);
+    });
+
+    // why: radio không gom vào <mat-radio-group> — group chiếm Arrow Up/Down để đổi lựa chọn, mà
+    // hàng cây đã dùng đúng hai phím đó để điều hướng.
+    it('does not wrap the radios in a radio group', async () => {
+      const fixture = await createFixture(StaticHostComponent);
+      fixture.componentInstance.selector = { visible: true, single: true };
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('mat-radio-group')).toBeNull();
+    });
+  });
+
   // why: `<sd-tree-select>` dựng sd-tree với selector KHÔNG có action nào (chọn xong bấm "Áp dụng"
   // ở footer modal). Thanh quick-action khi đó chỉ nhắc lại đúng thứ checkbox đã nói, lại còn nổi
   // đè lên cây trong modal. Không có action ⇒ không mở thanh.

@@ -128,6 +128,51 @@
   height: var(--sd-tree-checkbox-size);
 }
 
+// why: radio (chế độ `selector.single`) phải chiếm đúng ô như checkbox, nếu không đổi giữa hai chế
+// độ là cả cột nhảy. `.mdc-radio` cũng là hộp content-box ăn theo `--mdc-radio-state-layer-size`
+// (mặc định 40px) y như checkbox, nên ép cùng một cách. `!important` cho token màu là bắt buộc:
+// theme đặt `.mat-mdc-radio-button.mat-accent` ở specificity cao hơn class này — cùng lý do
+// `forms/radio` phải làm vậy. Ghi cả `--mdc-*` lẫn `--mat-*` vì Material đọc cả hai họ.
+.sd-tree__radio {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 var(--sd-tree-control-size);
+  width: var(--sd-tree-control-size);
+  height: var(--sd-tree-control-size);
+  margin: 0 4px 0 0;
+  --mdc-radio-state-layer-size: var(--sd-tree-control-size);
+  --mdc-radio-selected-icon-color: var(--sd-primary, #005cbb) !important;
+  --mdc-radio-selected-focus-icon-color: var(--sd-primary, #005cbb) !important;
+  --mdc-radio-selected-hover-icon-color: var(--sd-primary, #005cbb) !important;
+  --mdc-radio-selected-pressed-icon-color: var(--sd-primary, #005cbb) !important;
+  --mat-radio-selected-icon-color: var(--sd-primary, #005cbb) !important;
+  --mat-radio-checked-state-layer-color: var(--sd-primary, #005cbb) !important;
+}
+
+// why: glyph mặc định 20px, to hơn tick 16px của checkbox — hai chế độ đặt cạnh nhau sẽ lệch cỡ.
+// Material tính padding của `.mdc-radio` theo state-layer, nên phải khoá cả ba như bên checkbox.
+.sd-tree__radio ::ng-deep .mdc-radio {
+  flex: 0 0 var(--sd-tree-checkbox-size);
+  width: var(--sd-tree-checkbox-size);
+  height: var(--sd-tree-checkbox-size);
+  padding: calc((var(--sd-tree-control-size) - var(--sd-tree-checkbox-size)) / 2);
+}
+
+.sd-tree__radio ::ng-deep .mdc-radio .mdc-radio__background,
+.sd-tree__radio ::ng-deep .mdc-radio .mdc-radio__native-control {
+  top: calc((var(--sd-tree-control-size) - var(--sd-tree-checkbox-size)) / 2);
+  left: calc((var(--sd-tree-control-size) - var(--sd-tree-checkbox-size)) / 2);
+  width: var(--sd-tree-checkbox-size);
+  height: var(--sd-tree-checkbox-size);
+}
+
+// why: `mat-radio-button` không có nhãn ở đây, nhưng `.mdc-form-field` của nó vẫn chừa chỗ cho một
+// nhãn rỗng — khoảng trắng thừa đẩy tên node lệch khỏi cột của chế độ checkbox.
+.sd-tree__radio ::ng-deep .mdc-form-field > label {
+  display: none;
+}
+
 // why: hàng đã canh theo dòng đầu, nên icon 20px phải tự căn giữa trong ô 28px của dòng đó — nếu
 // không nó sẽ dính lên mép trên. Dùng min-height chứ không phải height: `sd-icon` có `:host { height }`
 // cùng độ ưu tiên, đặt height ở đây sẽ ăn thua theo thứ tự nạp stylesheet.

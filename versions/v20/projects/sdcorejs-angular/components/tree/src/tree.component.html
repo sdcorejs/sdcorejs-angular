@@ -1,5 +1,6 @@
 @let _resolvedItemTemplate = resolvedItemTemplate();
 @let _selectionVisible = selectionVisible();
+@let _selectionSingle = selectionSingle();
 @let _selectionMessage = selectionMessage();
 @let _selectionActionViews = selectionActionViews();
 @let _selectionQuickActionOpened = selectionQuickActionOpened();
@@ -52,15 +53,29 @@
             }
           </button>
 
+          <!-- why: `selector.single` cho phép đúng MỘT node, mà checkbox lại là ký hiệu của
+               "chọn nhiều" — người dùng tick node thứ hai rồi mới phát hiện node đầu tự bỏ. Radio
+               nói trước điều đó. Không gom vào <mat-radio-group>: group chiếm Arrow Up/Down cho
+               việc chuyển lựa chọn, trong khi hàng cây đã dùng đúng hai phím đó để điều hướng. -->
           @if (_selectionVisible) {
-            <mat-checkbox
-              class="sd-tree__checkbox"
-              [checked]="node.selected"
-              [indeterminate]="node.selectionIndeterminate"
-              [disabled]="node.selectionDisabled"
-              [attr.data-autoid]="node.autoIds.checkbox"
-              (click)="$event.stopPropagation()"
-              (change)="toggleSelection(node)" />
+            @if (_selectionSingle) {
+              <mat-radio-button
+                class="sd-tree__radio"
+                [checked]="node.selected"
+                [disabled]="node.selectionDisabled"
+                [attr.data-autoid]="node.autoIds.checkbox"
+                (click)="$event.stopPropagation()"
+                (change)="toggleSelection(node)" />
+            } @else {
+              <mat-checkbox
+                class="sd-tree__checkbox"
+                [checked]="node.selected"
+                [indeterminate]="node.selectionIndeterminate"
+                [disabled]="node.selectionDisabled"
+                [attr.data-autoid]="node.autoIds.checkbox"
+                (click)="$event.stopPropagation()"
+                (change)="toggleSelection(node)" />
+            }
           }
 
           @if (node.icon) {

@@ -17,6 +17,7 @@ import {
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatRadioModule } from '@angular/material/radio';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -98,6 +99,7 @@ const EMPTY_DESCENDANT_COUNTS: ReadonlyMap<string, number> = new Map<string, num
     MatCheckboxModule,
     MatMenuModule,
     MatProgressSpinnerModule,
+    MatRadioModule,
     MatTooltipModule,
     SdButton,
     SdQuickAction,
@@ -170,6 +172,12 @@ export class SdTree<T = unknown> {
 
   readonly normalizedFilterText = computed(() => normalizeText(this.#filterText()));
   readonly selectionVisible = computed(() => this.resolvedSelectable() && this.resolvedSelector()?.visible === true);
+  /**
+   * why: `selector.single` giới hạn đúng một node, nên ô chọn phải là radio — checkbox là ký hiệu
+   * của "chọn nhiều" và người dùng chỉ phát hiện ra giới hạn sau khi tick node thứ hai và thấy node
+   * đầu tự bỏ chọn. `<sd-tree-select>` không multiple sẽ tự rơi vào nhánh này.
+   */
+  readonly selectionSingle = computed(() => this.resolvedSelector()?.single === true);
   readonly selectedIdSet = computed(() => {
     const selectedItems = this.option()?.selectedItems ?? this.selectedItemsInput();
     return selectedItems ? this.#idsFromSelectedItems(selectedItems) : this.#selectedIds();

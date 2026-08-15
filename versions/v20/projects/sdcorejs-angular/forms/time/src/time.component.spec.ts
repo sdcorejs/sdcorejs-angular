@@ -114,6 +114,17 @@ describe('SdTime', () => {
     });
   });
 
+  // why: bản cũ dùng `mat-icon-button` cho nút mở picker — hộp 40px + touch target 48px, trong khi
+  // mọi suffix khác của pack là 20px. Đồng hồ bị đẩy vào trong, vùng bấm phình to hơn hẳn sd-date.
+  it('sizes the picker trigger like every other suffix affordance', () => {
+    const trigger = fixture.nativeElement.querySelector('[data-time-picker-trigger]') as HTMLButtonElement;
+
+    expect(trigger.classList).toContain('sd-suffix-icon');
+    expect(trigger.classList).toContain('sd-suffix-btn');
+    expect(trigger.classList).not.toContain('mat-mdc-icon-button');
+    expect(trigger.querySelector('.mat-mdc-button-touch-target')).toBeNull();
+  });
+
   it('registers with the parent form and removes only its owned control on destroy', () => {
     expect(host.form.get('startTime')).toBe(component.formControl);
 

@@ -71,7 +71,7 @@ Root and branch request races are contained: obsolete root results cannot overwr
 
 ## Selection semantics
 
-- Single mode keeps at most one loaded node selected.
+- Single mode keeps at most one loaded node selected, and the tree renders **radios** rather than checkboxes so the limit is visible before the user tries to pick a second node (`selector.single` — see `sd-tree.md`).
 - Independent mode changes only the activated node.
 - Descendant cascade applies to descendants already loaded by `SdTree`; partial child selection renders the parent indeterminate.
 - Disabled nodes are not selected by user interaction.
