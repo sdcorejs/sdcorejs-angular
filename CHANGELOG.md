@@ -6,6 +6,12 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+## [2.0] - 2026-08-15
+
+Release suffix `2.0` publishes `19.2.0`, `20.2.0`, and `21.2.0` as a stable release across the maintained Angular lines.
+
+**Read the breaking-change entry below before upgrading.** The suffix jumps from `1.6` to `2.0` deliberately: the major digit of an npm version is locked to the Angular line, so it can never signal a break. The leading digit of the release suffix is the only signal this changelog has, and this release removes three exported surfaces. `npm install @sdcorejs/angular@^19.0.0` does not protect you here — the compiler will.
+
 ### Changed (BREAKING for consumers)
 
 - **`SdLicenseService`, `SdBaseSecureComponent` and `ISdCoreConfiguration.licenseKey` are gone.** The package is MIT and public; no component has enforced a license since the gate was made dormant, so the three surfaces were carrying a promise the library does not keep. Removed outright rather than left deprecated: an exported base class whose constructor could still `throw` on a mis-configured host is a production hazard for anyone who inherits it.
