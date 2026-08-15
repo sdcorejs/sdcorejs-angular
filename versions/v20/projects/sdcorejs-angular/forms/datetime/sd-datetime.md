@@ -50,7 +50,49 @@ Single date + time-of-day picker — user picks a calendar date AND an `HH:mm` (
 | `model`           | `string \| number \| Date \| null \| undefined` | `undefined`                                 | Two-way bound value (use `[(model)]`). Stored / emitted as `yyyy/MM/dd HH:mm:ss` string (or `yyyy/MM/dd HH:mm:00` when `showSeconds = false`).                                                                                                                     |
 | `showSeconds`     | `boolean`                                       | `false`                                     | When `true`, displays and stores seconds in the popup spinner and the stored/emitted format.                                                                                                                                                                       |
 
+| `transform`       | `SdTemporalValueTransform \| undefined`          | `undefined`                                 | Output serialization strategy for the committed value — see **Value transform** below. Does not affect the display. |
+
 > **Coerce**: `required`, `disabled`, `viewed`, `clearable`, `hideInlineError`, `showSeconds` use `booleanAttribute` — bare attribute = `true`.
+
+
+## Value transform (`transform`)
+
+`transform` names how a **committed** value leaves the component. It changes `model` / `modelChange`
+/ `sdChange` and the registered `FormGroup` field — and nothing else. What the field *shows* is
+untouched.
+
+| `transform` | Serializer      | Output                                                        |
+| ----------- | --------------- | ------------------------------------------------------------- |
+| `undefined` | existing canonical formatter | Unchanged behaviour (the default).               |
+| `ISOString` | `toISOString()` | UTC ISO 8601 with a `Z` suffix and milliseconds.               |
+| `UTCString` | `toUTCString()` | UTC RFC-1123, English, `GMT` suffix, no milliseconds.          |
+
+```text
+ISOString   2026-08-15T03:20:30.000Z
+UTCString   Sat, 15 Aug 2026 03:20:30 GMT
+```
+
+Notes that bite if missed:
+
+- **The UTC calendar day can differ from the local one.** A value picked late in the day east of
+  Greenwich, or early in the day west of it, serializes to the neighbouring date. That is correct —
+  both name the same instant — but a server comparing date strings will see the other day.
+- **Reading is wider than writing.** The active `transform` decides the output shape only; every
+  input the component accepted before is still accepted, plus ISO and UTC strings. A model arriving
+  in one shape is not rewritten into another just because `transform` is set.
+- **Changing `transform` at runtime rewrites nothing.** The bound model keeps its current string and
+  no event fires; the next user commit uses the new strategy.
+- `transform` is a value-serialization strategy, not an Angular input-coercion `transform`.
+
+Precision follows `showSeconds`, exactly as it does without a transform: seconds are kept only when
+they are displayed, and milliseconds are always zero. Incoming values are left alone — a model that
+arrives with seconds or milliseconds keeps them until the user commits again.
+
+```html
+<sd-datetime transform="UTCString" [showSeconds]="true" [(model)]="createdAt"></sd-datetime>
+```
+
+The field still shows `dd/MM/yyyy HH:mm` (or `dd/MM/yyyy HH:mm:ss` with `showSeconds`).
 
 ## Outputs
 

@@ -33,11 +33,15 @@ import {
   SdFormControl,
   SdInlineErrorValidator,
   sdFormControlState,
+  SdTemporalValueTransform,
   SdViewed,
   SdViewedInput,
+  sdParseTransformedTemporal,
+  sdSerializeTemporalValue,
   sdViewedInline,
   sdViewedTransform,
   ɵsdFormControlConnector,
+  ɵsdModelFacingControl,
   ɵsdTimerScope,
 } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
@@ -74,9 +78,20 @@ function parseFirstValid(value: string, formats: string[]): Date | null {
   return null;
 }
 
+/**
+ * why: `DateUtilities.isDate` nhận Date, timestamp, canonical `yyyy/MM/dd HH:mm[:ss]` và ISO, nhưng
+ * KHÔNG nhận chuỗi RFC-1123 của `toUTCString()`. Không có nhánh dự phòng này thì
+ * `<sd-datetime transform="UTCString">` không đọc lại được chính output của nó.
+ */
+function coerceDatetimeSource(value: SdDatetimeModelValue): SdDatetimeModelValue {
+  if (DateUtilities.isDate(value)) return value;
+  return sdParseTransformedTemporal(value) ?? value;
+}
+
 function datetimeModelToControl(value: SdDatetimeModelValue, showSeconds: boolean): string | null {
-  if (!DateUtilities.isDate(value)) return null;
-  const normalized = DateUtilities.toFormat(value, showSeconds ? 'yyyy/MM/dd HH:mm:ss' : 'yyyy/MM/dd HH:mm');
+  const source = coerceDatetimeSource(value);
+  if (!DateUtilities.isDate(source)) return null;
+  const normalized = DateUtilities.toFormat(source, showSeconds ? 'yyyy/MM/dd HH:mm:ss' : 'yyyy/MM/dd HH:mm');
   if (!normalized) return null;
   return DateUtilities.toFormat(normalized, showSeconds ? 'dd/MM/yyyy HH:mm:ss' : 'dd/MM/yyyy HH:mm') || null;
 }
@@ -89,8 +104,15 @@ function datetimeControlToStored(value: string | null, showSeconds: boolean): st
 }
 
 function normalizeDatetimeModel(value: SdDatetimeModelValue, showSeconds: boolean): string | null {
-  if (!DateUtilities.isDate(value)) return null;
-  return DateUtilities.toFormat(value, showSeconds ? 'yyyy/MM/dd HH:mm:ss' : 'yyyy/MM/dd HH:mm:00') || null;
+  const source = coerceDatetimeSource(value);
+  if (!DateUtilities.isDate(source)) return null;
+  return DateUtilities.toFormat(source, showSeconds ? 'yyyy/MM/dd HH:mm:ss' : 'yyyy/MM/dd HH:mm:00') || null;
+}
+
+/** Parses the committed display string back to the local instant it denotes. */
+function datetimeControlToDate(value: string | null): Date | null {
+  if (!value) return null;
+  return parseFirstValid(value, ['dd/MM/yyyy HH:mm:ss', 'dd/MM/yyyy HH:mm']);
 }
 
 @Component({
@@ -258,6 +280,13 @@ export class SdDatetime implements OnDestroy, OnInit {
   maxDateInput = input<any>(undefined, { alias: 'maxDate' });
   resolvedMax = computed(() => this.#parseDateBoundary(this.maxInput() ?? this.maxDateInput()));
 
+  /**
+   * Output serialization strategy for the committed value. Affects `model` / `modelChange` /
+   * `sdChange` and the registered form field only — the field keeps displaying
+   * `dd/MM/yyyy HH:mm[:ss]` per `showSeconds`. Left unset, the canonical string is emitted.
+   */
+  transform = input<SdTemporalValueTransform | undefined>();
+
   valueModel = model<SdDatetimeModelValue>(undefined, { alias: 'model' });
 
   // viewed-mode: formControl.value là chuỗi display (dd/MM/yyyy HH:mm) nên DatePipe không parse được.
@@ -305,18 +334,69 @@ export class SdDatetime implements OnDestroy, OnInit {
     this.inlineError() ? [this.#datetimeFormatValidator, SdInlineErrorValidator] : [this.#datetimeFormatValidator]
   );
 
+  /**
+   * why: control gắn vào editor nên nó giữ CHUỖI HIỂN THỊ `dd/MM/yyyy HH:mm[:ss]` — không phải model.
+   * Có `transform` thì consumer được hứa `form.get(name).value` bằng `model`, nên form phải nhận
+   * control này. Không có transform thì `registered` trả null và form vẫn nhận control của editor.
+   */
+  readonly #modelFacing = ɵsdModelFacingControl<SdDatetimeModelValue>({
+    active: computed(() => !!this.transform()),
+    model: this.valueModel,
+    writeModel: value => {
+      this.valueModel.set(value);
+      this.sdChange.emit(value);
+    },
+    source: computed<AbstractControl>(() => this.formControl),
+    modelEquals: (left, right) => this.#modelsEqual(left, right),
+  });
+  /** Control registered in the parent form while a `transform` is active; holds the public model. */
+  readonly modelControl = this.#modelFacing.control;
+
+  /**
+   * Serializes a committed datetime, applying the precision `showSeconds` already governs: seconds
+   * are kept only when they are shown, and milliseconds are always dropped.
+   */
+  #serializeCommitted(display: string | null): SdDatetimeModelValue {
+    const parsed = datetimeControlToDate(display);
+    const transform = this.transform();
+    if (!parsed || !transform) return display ? (datetimeControlToStored(display, this.showSeconds()) ?? this.valueModel()) : null;
+
+    const seconds = this.showSeconds() ? parsed.getSeconds() : 0;
+    const normalized = new Date(
+      parsed.getFullYear(),
+      parsed.getMonth(),
+      parsed.getDate(),
+      parsed.getHours(),
+      parsed.getMinutes(),
+      seconds,
+      0
+    );
+    return sdSerializeTemporalValue(normalized, transform) ?? this.valueModel();
+  }
+
+  /**
+   * why: `normalizeDatetimeModel` gộp về canonical string, nên hai chuỗi transform khác nhau của
+   * cùng một thời điểm so ra bằng nhau và `writeModel` bị bỏ qua — đổi `transform` lúc runtime rồi
+   * commit lại sẽ không phát ra chuỗi mới. Khi có transform thì so nguyên văn.
+   */
+  #modelsEqual(left: SdDatetimeModelValue, right: SdDatetimeModelValue): boolean {
+    if (this.transform()) return Object.is(left, right);
+    return normalizeDatetimeModel(left, this.showSeconds()) === normalizeDatetimeModel(right, this.showSeconds());
+  }
+
   readonly #formConnector = ɵsdFormControlConnector<SdDatetimeModelValue, string | null>({
     form: this.form,
     name: this.name,
     control: computed<AbstractControl<string | null>>(() => this.formControl),
+    registeredControl: this.#modelFacing.registered,
     model: this.valueModel,
     writeModel: value => {
       this.valueModel.set(value);
       this.sdChange.emit(value);
     },
     modelToControl: value => datetimeModelToControl(value, this.showSeconds()),
-    controlToModel: value => (value ? (datetimeControlToStored(value, this.showSeconds()) ?? this.valueModel()) : null),
-    modelEquals: (left, right) => normalizeDatetimeModel(left, this.showSeconds()) === normalizeDatetimeModel(right, this.showSeconds()),
+    controlToModel: value => this.#serializeCommitted(value),
+    modelEquals: (left, right) => this.#modelsEqual(left, right),
     validators: this.#validators,
     required: this.required,
     disabled: this.disabled,

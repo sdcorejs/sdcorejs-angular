@@ -45,7 +45,54 @@ Two-date range picker — user picks a start date AND an end date through a sing
 | `hideInlineError` | `boolean`                                                             | `false`                                     | Hide inline message; surfaces error via `errorMessage` instead.                                                                                 |
 | `model`           | `{ from?: string \| null; to?: string \| null } \| null \| undefined` | `undefined`                                 | Two-way bound range value (use `[(model)]`). Both ends are ISO-style date strings (`yyyy/MM/dd`).                                               |
 
+| `transform`       | `SdTemporalValueTransform \| undefined`          | `undefined`                                 | Output serialization strategy for the committed value — see **Value transform** below. Does not affect the display. |
+
 > **Coerce**: `required`, `disabled`, `hideInlineError` use `booleanAttribute` — bare attribute = `true`.
+
+
+## Value transform (`transform`)
+
+`transform` names how a **committed** value leaves the component. It changes `model` / `modelChange`
+/ `sdChange` and the registered `FormGroup` field — and nothing else. What the field *shows* is
+untouched.
+
+| `transform` | Serializer      | Output                                                        |
+| ----------- | --------------- | ------------------------------------------------------------- |
+| `undefined` | existing canonical formatter | Unchanged behaviour (the default).               |
+| `ISOString` | `toISOString()` | UTC ISO 8601 with a `Z` suffix and milliseconds.               |
+| `UTCString` | `toUTCString()` | UTC RFC-1123, English, `GMT` suffix, no milliseconds.          |
+
+```text
+ISOString   2026-08-15T03:20:30.000Z
+UTCString   Sat, 15 Aug 2026 03:20:30 GMT
+```
+
+Notes that bite if missed:
+
+- **The UTC calendar day can differ from the local one.** A value picked late in the day east of
+  Greenwich, or early in the day west of it, serializes to the neighbouring date. That is correct —
+  both name the same instant — but a server comparing date strings will see the other day.
+- **Reading is wider than writing.** The active `transform` decides the output shape only; every
+  input the component accepted before is still accepted, plus ISO and UTC strings. A model arriving
+  in one shape is not rewritten into another just because `transform` is set.
+- **Changing `transform` at runtime rewrites nothing.** The bound model keeps its current string and
+  no event fires; the next user commit uses the new strategy.
+- `transform` is a value-serialization strategy, not an Angular input-coercion `transform`.
+
+Each endpoint is serialized **independently**, like a `<sd-date>` would be — the range object itself
+is never collapsed into one string:
+
+```ts
+{ from: fromDate.toISOString(), to: toDate.toISOString() }
+```
+
+A partial range keeps `null` on the missing end, and clearing still yields `{ from: null, to: null }`.
+
+```html
+<sd-date-range transform="ISOString" [(model)]="period"></sd-date-range>
+```
+
+The field still shows `dd/MM/yyyy → dd/MM/yyyy`.
 
 ## Outputs
 

@@ -26,11 +26,16 @@ import {
   provideSdStrictDateFnsAdapter,
   SD_FORM_CONFIGURATION,
   sdFormControlState,
+  SdTemporalValueTransform,
   SdViewed,
   SdViewedInput,
+  sdLocalStartOfDay,
+  sdParseTransformedTemporal,
+  sdSerializeTemporalValue,
   sdViewedInline,
   sdViewedTransform,
   ɵsdFormControlConnector,
+  ɵsdModelFacingControl,
   ɵsdTimerScope,
 } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
@@ -296,6 +301,13 @@ export class SdDateRange {
   maxInput = input<any>(undefined, { alias: 'max' });
   resolvedMax = computed(() => this.#parseDateBoundary(this.maxInput()));
 
+  /**
+   * Output serialization strategy applied to **each endpoint** of the committed range. Affects
+   * `model` / `modelChange` / `sdChange` and the registered form field only — the field keeps
+   * showing `dd/MM/yyyy → dd/MM/yyyy`. Left unset, endpoints stay canonical `yyyy/MM/dd` strings.
+   */
+  transform = input<SdTemporalValueTransform | undefined>();
+
   valueModel = model<SdDateRangeValue | undefined | null>(undefined, { alias: 'model' });
 
   // ==========================================
@@ -360,10 +372,29 @@ export class SdDateRange {
     return [validator];
   });
 
+  /**
+   * why: control tổng giữ `{ from: Date, to: Date }` — biểu diễn của editor. Có `transform` thì
+   * consumer được hứa `form.get(name).value` bằng `model` (hai endpoint đã serialize), nên form phải
+   * nhận control này. Không có transform thì `registered` trả null, form vẫn nhận control tổng.
+   */
+  readonly #modelFacing = ɵsdModelFacingControl<SdDateRangeValue | undefined | null>({
+    active: computed(() => !!this.transform()),
+    model: this.valueModel,
+    writeModel: value => {
+      this.valueModel.set(value);
+      this.sdChange.emit(value);
+    },
+    source: computed(() => this.formControl),
+    modelEquals: (left, right) => (left?.from ?? null) === (right?.from ?? null) && (left?.to ?? null) === (right?.to ?? null),
+  });
+  /** Control registered in the parent form while a `transform` is active; holds the public model. */
+  readonly modelControl = this.#modelFacing.control;
+
   readonly #rangeConnector = ɵsdFormControlConnector<unknown, unknown>({
     form: this.form,
     name: this.name,
     control: computed(() => this.formControl),
+    registeredControl: this.#modelFacing.registered,
     validators: this.#validators,
     disabled: this.disabled,
   });
@@ -382,8 +413,12 @@ export class SdDateRange {
     effect(() => {
       const val = this.valueModel();
       untracked(() => {
-        const fromStr = DateUtilities.isDate(val?.from) ? DateUtilities.toFormat(val?.from, 'yyyy/MM/dd') : null;
-        const toStr = DateUtilities.isDate(val?.to) ? DateUtilities.toFormat(val?.to, 'yyyy/MM/dd') : null;
+        // why: đi qua `#coerceEndpoint` chứ không gọi thẳng `DateUtilities.isDate` — hàm đó từ chối
+        // chuỗi RFC-1123, nên `transform="UTCString"` sẽ không render được chính giá trị nó phát ra.
+        const fromDate = this.#coerceEndpoint(val?.from);
+        const toDate = this.#coerceEndpoint(val?.to);
+        const fromStr = fromDate ? DateUtilities.toFormat(fromDate, 'yyyy/MM/dd') : null;
+        const toStr = toDate ? DateUtilities.toFormat(toDate, 'yyyy/MM/dd') : null;
 
         // Chỉ set value nếu có sự khác biệt (tránh loop)
         // control1/control2 giờ giữ native Date (date-fns adapter), không cần .toDate() như Moment.
@@ -448,10 +483,7 @@ export class SdDateRange {
     if (dateStamp(this.control2.value) !== dateStamp(to)) this.control2.setValue(to);
 
     // Model giữ contract chuỗi `yyyy/MM/dd` (giống `#emit`), không phải native Date.
-    const next: SdDateRangeValue = {
-      from: from ? DateUtilities.toFormat(from, 'yyyy/MM/dd') : null,
-      to: to ? DateUtilities.toFormat(to, 'yyyy/MM/dd') : null,
-    };
+    const next: SdDateRangeValue = { from: this.#endpointOut(from), to: this.#endpointOut(to) };
     const current = this.valueModel();
     if (next.from !== (current?.from ?? null) || next.to !== (current?.to ?? null)) {
       this.valueModel.set(next);
@@ -459,10 +491,27 @@ export class SdDateRange {
     }
   }
 
+  /**
+   * Serializes one endpoint. Each end is a date, so the instant is local start-of-day — the calendar
+   * day the user picked. The two ends are serialized independently; the range object itself is never
+   * turned into a single string.
+   */
+  #endpointOut(value: Date | null): string | null {
+    if (!value) return null;
+    const transformed = sdSerializeTemporalValue(sdLocalStartOfDay(value), this.transform());
+    return transformed ?? DateUtilities.toFormat(value, 'yyyy/MM/dd') ?? null;
+  }
+
   /** Consumer có thể ghi thẳng `Date` hoặc chuỗi ngày vào control tổng — chấp nhận cả hai. */
   #coerceEndpoint(value: unknown): Date | null {
     if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
-    if (typeof value !== 'string' || value.trim() === '' || !DateUtilities.isDate(value)) return null;
+    if (typeof value !== 'string' || value.trim() === '') return null;
+    if (!DateUtilities.isDate(value)) {
+      // why: `DateUtilities.isDate` từ chối chuỗi RFC-1123 của `toUTCString()`, nên không có nhánh
+      // này thì `<sd-date-range transform="UTCString">` không đọc lại được chính output của nó.
+      const parsedTransformed = sdParseTransformedTemporal(value);
+      return parsedTransformed ? sdLocalStartOfDay(parsedTransformed) : null;
+    }
     const normalized = DateUtilities.toFormat(value, 'yyyy/MM/dd');
     return normalized ? parseDate(normalized, 'yyyy/MM/dd', new Date()) : null;
   }
@@ -487,8 +536,8 @@ export class SdDateRange {
     const to = this.control2.value || null;
 
     const currentModel = this.valueModel();
-    const newFrom = DateUtilities.isDate(from) ? DateUtilities.toFormat(from, 'yyyy/MM/dd') : null;
-    const newTo = DateUtilities.isDate(to) ? DateUtilities.toFormat(to, 'yyyy/MM/dd') : null;
+    const newFrom = DateUtilities.isDate(from) ? this.#endpointOut(from as Date) : null;
+    const newTo = DateUtilities.isDate(to) ? this.#endpointOut(to as Date) : null;
 
     if (newFrom !== currentModel?.from || newTo !== currentModel?.to) {
       const nextModel = { from: newFrom, to: newTo };

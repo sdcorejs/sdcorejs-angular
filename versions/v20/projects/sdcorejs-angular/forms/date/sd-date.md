@@ -47,7 +47,48 @@ Single-date picker — Material datepicker with date-fns adapter (`dd/MM/yyyy` p
 | `hyperlink`       | `string \| null \| undefined`                   | `undefined`                                 | Used in `[viewed]` mode to render the date as a link.                                                                                                                                                                                                                            |
 | `model`           | `string \| number \| Date \| null \| undefined` | `undefined`                                 | Two-way bound value (use `[(model)]`). Persisted as `'yyyy/MM/dd'` string internally.                                                                                                                                                                                            |
 
+| `transform`       | `SdTemporalValueTransform \| undefined`          | `undefined`                                 | Output serialization strategy for the committed value — see **Value transform** below. Does not affect the display. |
+
 > **Coerce**: `required`, `disabled`, `viewed`, `clearable`, `hideInlineError` use `booleanAttribute` — bare attribute = `true`.
+
+
+## Value transform (`transform`)
+
+`transform` names how a **committed** value leaves the component. It changes `model` / `modelChange`
+/ `sdChange` and the registered `FormGroup` field — and nothing else. What the field *shows* is
+untouched.
+
+| `transform` | Serializer      | Output                                                        |
+| ----------- | --------------- | ------------------------------------------------------------- |
+| `undefined` | existing canonical formatter | Unchanged behaviour (the default).               |
+| `ISOString` | `toISOString()` | UTC ISO 8601 with a `Z` suffix and milliseconds.               |
+| `UTCString` | `toUTCString()` | UTC RFC-1123, English, `GMT` suffix, no milliseconds.          |
+
+```text
+ISOString   2026-08-15T03:20:30.000Z
+UTCString   Sat, 15 Aug 2026 03:20:30 GMT
+```
+
+Notes that bite if missed:
+
+- **The UTC calendar day can differ from the local one.** A value picked late in the day east of
+  Greenwich, or early in the day west of it, serializes to the neighbouring date. That is correct —
+  both name the same instant — but a server comparing date strings will see the other day.
+- **Reading is wider than writing.** The active `transform` decides the output shape only; every
+  input the component accepted before is still accepted, plus ISO and UTC strings. A model arriving
+  in one shape is not rewritten into another just because `transform` is set.
+- **Changing `transform` at runtime rewrites nothing.** The bound model keeps its current string and
+  no event fires; the next user commit uses the new strategy.
+- `transform` is a value-serialization strategy, not an Angular input-coercion `transform`.
+
+`<sd-date>` and `<sd-date-range>` serialize **local start-of-day**: the calendar day the user picked,
+at midnight in their own timezone, never whatever time the editor happened to carry.
+
+```html
+<sd-date transform="ISOString" [(model)]="filterDate"></sd-date>
+```
+
+The field still shows `dd/MM/yyyy`.
 
 ## Outputs
 
