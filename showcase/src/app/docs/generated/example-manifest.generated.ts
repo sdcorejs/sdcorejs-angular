@@ -4,6 +4,12 @@
 export type ShowcaseExampleSourceKey =
   | "components/anchor/example-anchor-mac-dinh"
   | "components/anchor/example-mau-va-cat-ngan-chu"
+  | "components/api-contract-builder/example-che-do-xem"
+  | "components/api-contract-builder/example-contract-sai-va-chan-doan"
+  | "components/api-contract-builder/example-get-tim-kiem-san-pham"
+  | "components/api-contract-builder/example-ket-qua-chan-doan"
+  | "components/api-contract-builder/example-post-map-body"
+  | "components/api-contract-builder/example-truong-output-cho-dropdown-table"
   | "components/audit-diff/example-custom-value-template"
   | "components/audit-diff/example-format-redact-va-order"
   | "components/audit-diff/example-nested-table"
@@ -360,6 +366,48 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-mau-va-cat-ngan-chu",
     title: "Màu và cắt ngắn chữ",
     description: "Existing “Màu và cắt ngắn chữ” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/api-contract-builder/example-get-tim-kiem-san-pham",
+    pageKey: "components/api-contract-builder",
+    sectionId: "example-get-tim-kiem-san-pham",
+    title: "GET tìm kiếm sản phẩm",
+    description: "Query map từ input, header Authorization nội suy ${env.token}, output là mảng gốc lấy thẳng ${res.body.items}.",
+  },
+  {
+    sourceKey: "components/api-contract-builder/example-post-map-body",
+    pageKey: "components/api-contract-builder",
+    sectionId: "example-post-map-body",
+    title: "POST map body",
+    description: "input.a → req.body.x, input.b → req.body.y, input.c → req.body.z, env.userId → req.body.u, và một literal tĩnh ở req.body.v.",
+  },
+  {
+    sourceKey: "components/api-contract-builder/example-contract-sai-va-chan-doan",
+    pageKey: "components/api-contract-builder",
+    sectionId: "example-contract-sai-va-chan-doan",
+    title: "Contract sai và chẩn đoán",
+    description: "${env.unknown} chưa khai báo, {id} thiếu req.path, ${input.page} không tồn tại, output mảng trỏ vào một số.",
+  },
+  {
+    sourceKey: "components/api-contract-builder/example-ket-qua-chan-doan",
+    pageKey: "components/api-contract-builder",
+    sectionId: "example-ket-qua-chan-doan",
+    title: "Kết quả chẩn đoán",
+    description: "Giá trị đọc trực tiếp từ hai output của demo phía trên.",
+  },
+  {
+    sourceKey: "components/api-contract-builder/example-che-do-xem",
+    pageKey: "components/api-contract-builder",
+    sectionId: "example-che-do-xem",
+    title: "Chế độ xem",
+    description: "Chế độ xem hiển thị tóm tắt cùng JSON; disabled giữ nguyên các bước nhưng khoá chỉnh sửa.",
+  },
+  {
+    sourceKey: "components/api-contract-builder/example-truong-output-cho-dropdown-table",
+    pageKey: "components/api-contract-builder",
+    sectionId: "example-truong-output-cho-dropdown-table",
+    title: "Trường output cho dropdown / table",
+    description: "listSdApiContractSchemaFields() làm phẳng mảng gốc — đây chính là dữ liệu form-builder sẽ dùng để chọn valueField / displayField và sinh column.",
   },
   {
     sourceKey: "components/audit-diff/example-nested-table",

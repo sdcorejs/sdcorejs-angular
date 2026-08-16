@@ -1,0 +1,136 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.sd-acb-node {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--sd-border-color, #e6e6e6);
+  border-radius: 8px;
+  background: var(--sd-surface, #fff);
+}
+
+// why: node gốc đã được section (hoặc thẻ của record entry) đóng khung rồi — vẽ thêm viền nữa là
+// khung lồng khung, và phần đệm thừa làm cột của nó lệch khỏi cột của các node con.
+.sd-acb-node[data-depth='0'] {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+// why: grid CHỨ KHÔNG phải flex-wrap. Flex co theo nội dung nên hàng có "Định dạng thời gian" đẩy
+// mọi thứ lệch so với hàng không có; grid giữ đúng 5 cột cho mọi hàng cùng cấp.
+.sd-acb-node__row {
+  display: grid;
+  grid-template-columns: minmax(140px, 1.3fr) minmax(120px, 1fr) minmax(110px, 0.9fr) minmax(120px, 1fr) 36px;
+  gap: 8px;
+  align-items: center;
+}
+
+.sd-acb-node__row--meta > *:nth-child(1) {
+  grid-column: 1 / 3;
+}
+
+.sd-acb-node__row--meta > *:nth-child(2) {
+  grid-column: 3 / 5;
+}
+
+.sd-acb-node__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sd-text-secondary, #6b6b6b);
+  overflow-wrap: anywhere;
+}
+
+.sd-acb-node__cell {
+  min-width: 0;
+}
+
+.sd-acb-node__remove {
+  display: inline-flex;
+  justify-content: flex-end;
+  min-width: 36px;
+}
+
+.sd-acb-node__children {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 2px;
+  padding-left: 12px;
+  border-left: 2px solid var(--sd-border-color, #e6e6e6);
+}
+
+.sd-acb-node__empty {
+  margin: 0;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--sd-text-secondary, #6b6b6b);
+}
+
+.sd-acb-node__add {
+  align-self: flex-start;
+}
+
+// why: severity KHÔNG chỉ báo bằng màu — luôn kèm icon + chữ, để người mù màu và screen reader
+// nhận được cùng một thông tin.
+.sd-acb-node__diagnostic {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+
+  &[data-severity='error'] {
+    color: var(--sd-error, #b3261e);
+  }
+
+  &[data-severity='warning'] {
+    color: var(--sd-warning, #8a5a00);
+  }
+}
+
+.sd-acb-node__confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  background: var(--sd-surface-muted, #f3f5f8);
+  border: 1px dashed var(--sd-border-color, #e6e6e6);
+}
+
+@media (max-width: 900px) {
+  .sd-acb-node__row {
+    grid-template-columns: minmax(120px, 1fr) minmax(110px, 1fr) 36px;
+  }
+
+  .sd-acb-node__row > .sd-acb-node__cell:nth-child(4) {
+    grid-column: 1 / 3;
+  }
+
+  .sd-acb-node__row--meta > *:nth-child(1),
+  .sd-acb-node__row--meta > *:nth-child(2) {
+    grid-column: 1 / 3;
+  }
+}
+
+@media (max-width: 600px) {
+  .sd-acb-node__row {
+    grid-template-columns: 1fr 36px;
+  }
+
+  .sd-acb-node__row > .sd-acb-node__cell {
+    grid-column: 1 / 2;
+  }
+
+  .sd-acb-node__children {
+    padding-left: 8px;
+  }
+}

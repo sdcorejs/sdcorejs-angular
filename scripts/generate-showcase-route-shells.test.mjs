@@ -176,7 +176,7 @@ test('matches the canonical v19 runtime registry and expected deployment route c
       .map(category => [category, pages.filter(page => page.category === category).length])
   );
 
-  assert.equal(pages.length, 96);
+  assert.equal(pages.length, 97);
 
   // why: `routes.length` từng là hằng số 5941 và đã mục ngay khi release 1.6 ra (thực tế 7426).
   // Con số đó là TÍCH của hai thứ đã được kiểm ở nơi khác — số release được hỗ trợ và số route mỗi
@@ -192,7 +192,7 @@ test('matches the canonical v19 runtime registry and expected deployment route c
     'total = 1 root redirect + one identical block per release'
   );
   assert.deepEqual(categoryCounts, {
-    components: 35,
+    components: 36,
     directives: 6,
     forms: 22,
     guides: 3,
