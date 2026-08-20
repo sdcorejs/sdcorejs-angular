@@ -105,13 +105,10 @@
             <sd-api-contract-node-editor
               [node]="$any(_inputSchema)"
               basePath="input.schema"
-              layer="declaration"
-              [allowTransform]="true"
-              [allowedTypes]="allTypes"
-              [diagnostics]="_diagnostics"
               [disabled]="_readonly"
               [autoId]="_autoId ? _autoId + '-input' : undefined"
-              (nodeChange)="setInputSchema($event)"></sd-api-contract-node-editor>
+              (nodeChange)="setInputSchema($event)"
+                (editRequest)="openNodeDrawer('input.schema', $event)"></sd-api-contract-node-editor>
           } @else {
             <p class="sd-acb__empty-text">{{ 'core.component.api-contract-builder.empty.section' | sdTranslate }}</p>
           }
@@ -150,56 +147,41 @@
             <sd-api-contract-record-editor
               [record]="$any(_req.path)"
               basePath="req.path"
-              layer="mapping"
-              [allowedTypes]="scalarTypes"
-              [suggestions]="_requestSuggestions"
-              [diagnostics]="_diagnostics"
               [disabled]="_readonly"
-              newKeyPrefix="param"
               [emptyLabel]="'core.component.api-contract-builder.empty.path' | sdTranslate"
               [autoId]="_autoId ? _autoId + '-path' : undefined"
-              (recordChange)="setRequestRecord('path', $event)"></sd-api-contract-record-editor>
+              (recordChange)="setRequestRecord('path', $event)"
+              (editRequest)="openNodeDrawer('req.path', $event)"></sd-api-contract-record-editor>
 
             <h4 class="sd-acb__heading">{{ 'core.component.api-contract-builder.request.query' | sdTranslate }}</h4>
             <sd-api-contract-record-editor
               [record]="$any(_req.query)"
               basePath="req.query"
-              layer="mapping"
-              [allowedTypes]="queryTypes"
-              [suggestions]="_requestSuggestions"
-              [diagnostics]="_diagnostics"
               [disabled]="_readonly"
-              newKeyPrefix="param"
               [emptyLabel]="'core.component.api-contract-builder.empty.query' | sdTranslate"
               [autoId]="_autoId ? _autoId + '-query' : undefined"
-              (recordChange)="setRequestRecord('query', $event)"></sd-api-contract-record-editor>
+              (recordChange)="setRequestRecord('query', $event)"
+              (editRequest)="openNodeDrawer('req.query', $event)"></sd-api-contract-record-editor>
 
             <h4 class="sd-acb__heading">{{ 'core.component.api-contract-builder.request.headers' | sdTranslate }}</h4>
             <sd-api-contract-record-editor
               [record]="$any(_req.headers)"
               basePath="req.headers"
-              layer="mapping"
-              [allowedTypes]="scalarTypes"
-              [suggestions]="_requestSuggestions"
-              [diagnostics]="_diagnostics"
               [disabled]="_readonly"
-              newKeyPrefix="header"
               [emptyLabel]="'core.component.api-contract-builder.empty.headers' | sdTranslate"
               [autoId]="_autoId ? _autoId + '-headers' : undefined"
-              (recordChange)="setRequestRecord('headers', $event)"></sd-api-contract-record-editor>
+              (recordChange)="setRequestRecord('headers', $event)"
+              (editRequest)="openNodeDrawer('req.headers', $event)"></sd-api-contract-record-editor>
 
             <h4 class="sd-acb__heading">{{ 'core.component.api-contract-builder.request.body' | sdTranslate }}</h4>
             @if (_req.body) {
               <sd-api-contract-node-editor
                 [node]="$any(_req.body)"
                 basePath="req.body"
-                layer="mapping"
-                [allowedTypes]="allTypes"
-                [suggestions]="_requestSuggestions"
-                [diagnostics]="_diagnostics"
                 [disabled]="_readonly"
                 [autoId]="_autoId ? _autoId + '-body' : undefined"
-                (nodeChange)="setRequestBody($event)"></sd-api-contract-node-editor>
+                (nodeChange)="setRequestBody($event)"
+                  (editRequest)="openNodeDrawer('req.body', $event)"></sd-api-contract-node-editor>
               @if (!_readonly) {
                 <sd-button
                   type="text"
@@ -246,26 +228,21 @@
             <sd-api-contract-record-editor
               [record]="$any(_res.headers)"
               basePath="res.headers"
-              layer="declaration"
-              [allowedTypes]="scalarTypes"
-              [diagnostics]="_diagnostics"
               [disabled]="_readonly"
-              newKeyPrefix="header"
               [emptyLabel]="'core.component.api-contract-builder.empty.headers' | sdTranslate"
               [autoId]="_autoId ? _autoId + '-res-headers' : undefined"
-              (recordChange)="setResponseHeaders($event)"></sd-api-contract-record-editor>
+              (recordChange)="setResponseHeaders($event)"
+              (editRequest)="openNodeDrawer('res.headers', $event)"></sd-api-contract-record-editor>
 
             <h4 class="sd-acb__heading">{{ 'core.component.api-contract-builder.response.body' | sdTranslate }}</h4>
             @if (_res.body) {
               <sd-api-contract-node-editor
                 [node]="$any(_res.body)"
                 basePath="res.body"
-                layer="declaration"
-                [allowedTypes]="allTypes"
-                [diagnostics]="_diagnostics"
                 [disabled]="_readonly"
                 [autoId]="_autoId ? _autoId + '-res-body' : undefined"
-                (nodeChange)="setResponseBody($event)"></sd-api-contract-node-editor>
+                (nodeChange)="setResponseBody($event)"
+                  (editRequest)="openNodeDrawer('res.body', $event)"></sd-api-contract-node-editor>
               @if (!_readonly) {
                 <sd-button
                   type="text"
@@ -314,14 +291,10 @@
             <sd-api-contract-node-editor
               [node]="$any(_outputSchema)"
               basePath="output.schema"
-              layer="mapping"
-              [allowTransform]="true"
-              [allowedTypes]="allTypes"
-              [suggestions]="outputSuggestions()"
-              [diagnostics]="_diagnostics"
               [disabled]="_readonly"
               [autoId]="_autoId ? _autoId + '-output' : undefined"
-              (nodeChange)="setOutputSchema($event)"></sd-api-contract-node-editor>
+              (nodeChange)="setOutputSchema($event)"
+                (editRequest)="openNodeDrawer('output.schema', $event)"></sd-api-contract-node-editor>
 
             <h4 class="sd-acb__heading">{{ 'core.component.api-contract-builder.output.fields' | sdTranslate }}</h4>
             @let _outputFields = outputFields();
@@ -332,7 +305,7 @@
                     <code>{{ field.path }}</code>
                     <span class="sd-acb__field-type">{{ field.type }}</span>
                     @if (field.required === true) {
-                      <span class="sd-acb__field-flag">{{ 'core.component.api-contract-builder.required.true' | sdTranslate }}</span>
+                      <span class="sd-acb__field-flag">{{ 'core.component.api-contract-builder.field.required' | sdTranslate }}</span>
                     }
                   </li>
                 }
@@ -354,9 +327,24 @@
             (navigate)="goToDiagnostic($event)"></sd-api-contract-diagnostic-list>
 
           <h4 class="sd-acb__heading">{{ 'core.component.api-contract-builder.review.json' | sdTranslate }}</h4>
-          <sd-code-editor language="json" [viewed]="true" maxHeight="480px" [model]="json()"></sd-code-editor>
+          <sd-code-editor
+            language="json"
+            maxHeight="480px"
+            [viewed]="disabled() || mode() === 'view'"
+            [model]="json()"
+            (modelChange)="applyPastedJson($event)"></sd-code-editor>
         </section>
       }
     }
   </div>
+
+  <!-- why MỘT instance duy nhất, đặt ngoài @switch: mỗi layer một drawer sẽ là mỗi layer một draft, và
+       đổi step giữa lúc đang sửa sẽ destroy drawer cùng với thay đổi chưa lưu. -->
+  <sd-api-contract-node-drawer
+    #nodeDrawer
+    [layer]="drawerLayer()"
+    [allowTransform]="drawerAllowsTransform()"
+    [suggestions]="drawerSuggestions()"
+    [autoId]="_autoId ? _autoId + '-node-drawer' : undefined"
+    (nodeCommit)="applyNodeCommit($event)"></sd-api-contract-node-drawer>
 }

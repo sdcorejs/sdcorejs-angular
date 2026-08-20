@@ -1,215 +1,30 @@
+@let _entries = entries();
 @let _disabled = disabled();
-@let _layer = layer();
-@let _allowTransform = allowTransform();
-@let _rootTitle = rootTitle();
-@let _rootName = rootName();
+@let _autoId = autoId();
 
-<ng-container
-  *ngTemplateOutlet="nodeTpl; context: { $implicit: node(), pointer: emptyPointer, parent: null, name: _rootName, title: _rootTitle, depth: 0 }"></ng-container>
+<div class="sd-acb-list">
+  @if (!_entries.length) {
+    <p class="sd-acb-list__empty">{{ 'core.component.api-contract-builder.node.empty' | sdTranslate }}</p>
+  }
 
-<ng-template #nodeTpl let-n let-pointer="pointer" let-parent="parent" let-name="name" let-title="title" let-depth="depth">
-  @let _path = pathOf(pointer);
-  @let _messages = messagesAt(_path);
-  @let _children = childEntries(n, pointer);
-  @let _mapped = hasWholeMapping(n);
-  @let _temporal = _allowTransform && (n.type === 'date' || n.type === 'datetime');
+  @for (entry of _entries; track entry.key) {
+    <sd-api-contract-node-summary
+      [name]="entry.key"
+      [node]="entry.node"
+      [readonly]="_disabled"
+      [autoId]="_autoId ? _autoId + '-' + entry.key : undefined"
+      (edit)="requestEdit(entry.key, entry.node)"
+      (remove)="removeProperty(entry.key)"></sd-api-contract-node-summary>
+  }
 
-  <div class="sd-acb-node" [attr.data-depth]="depth" [attr.data-path]="_path">
-    <!-- why: grid cố định cột — mọi hàng cùng cấp phải thẳng hàng, kể cả hàng KHÔNG có
-         "Định dạng thời gian" (ô trống giữ chỗ) hay không có nút xoá. -->
-    <div class="sd-acb-node__row">
-      @if (name !== null) {
-        <sd-input
-          class="sd-acb-node__cell"
-          size="sm"
-          hideInlineError
-          [autoId]="fieldAutoId(_path, 'name')"
-          [label]="'core.component.api-contract-builder.node.name' | sdTranslate"
-          [model]="name"
-          [disabled]="_disabled"
-          (sdBlur)="renameProperty(parent, name, $event)"
-          (keyupEnter)="renameProperty(parent, name, $event)"></sd-input>
-      } @else if (title) {
-        <span class="sd-acb-node__cell sd-acb-node__title">{{ title }}</span>
-      } @else {
-        <span class="sd-acb-node__cell"></span>
-      }
-
-      <sd-select
-        class="sd-acb-node__cell"
-        size="sm"
-        hideInlineError
-        [clearable]="false"
-        [autoId]="fieldAutoId(_path, 'type')"
-        [label]="'core.component.api-contract-builder.node.type' | sdTranslate"
-        [items]="typeOptions()"
-        valueField="value"
-        displayField="label"
-        [model]="displayType(n, _path)"
-        [disabled]="_disabled"
-        (sdChange)="requestType(pointer, n, $event)"></sd-select>
-
-      <sd-select
-        class="sd-acb-node__cell"
-        size="sm"
-        hideInlineError
-        [clearable]="false"
-        [autoId]="fieldAutoId(_path, 'required')"
-        [label]="'core.component.api-contract-builder.node.required' | sdTranslate"
-        [items]="requiredOptions"
-        valueField="value"
-        displayField="label"
-        [model]="requiredValue(n)"
-        [disabled]="_disabled"
-        (sdChange)="setRequired(pointer, $event)"></sd-select>
-
-      @if (_temporal) {
-        <sd-select
-          class="sd-acb-node__cell"
-          size="sm"
-          hideInlineError
-          [clearable]="false"
-          [autoId]="fieldAutoId(_path, 'transform')"
-          [label]="'core.component.api-contract-builder.node.transform' | sdTranslate"
-          [items]="transformOptions"
-          valueField="value"
-          displayField="label"
-          [model]="n.transform ?? ''"
-          [disabled]="_disabled"
-          (sdChange)="setTransform(pointer, $event)"></sd-select>
-      } @else {
-        <span class="sd-acb-node__cell"></span>
-      }
-
-      @if (name !== null && canRemove(parent) && !_disabled) {
-        <sd-button
-          class="sd-acb-node__remove"
-          type="text"
-          color="error"
-          size="sm"
-          prefixIcon="delete"
-          [autoId]="fieldAutoId(_path, 'remove')"
-          [tooltip]="'core.component.api-contract-builder.node.remove' | sdTranslate"
-          (click)="requestRemove(parent, name, n, _path)"></sd-button>
-      } @else {
-        <span class="sd-acb-node__remove"></span>
-      }
-    </div>
-
-    <div class="sd-acb-node__row sd-acb-node__row--meta">
-      <sd-input
-        size="sm"
-        hideInlineError
-        [autoId]="fieldAutoId(_path, 'label')"
-        [label]="'core.component.api-contract-builder.node.label' | sdTranslate"
-        [model]="n.label ?? ''"
-        [disabled]="_disabled"
-        (sdChange)="setText(pointer, 'label', $event)"></sd-input>
-      <sd-input
-        size="sm"
-        hideInlineError
-        [autoId]="fieldAutoId(_path, 'description')"
-        [label]="'core.component.api-contract-builder.node.description' | sdTranslate"
-        [model]="n.description ?? ''"
-        [disabled]="_disabled"
-        (sdChange)="setText(pointer, 'description', $event)"></sd-input>
-      <span class="sd-acb-node__remove"></span>
-    </div>
-
-    @if (_layer === 'mapping') {
-      <sd-api-contract-source-editor
-        [node]="n"
-        [suggestions]="suggestions()"
-        [disabled]="_disabled"
-        [autoId]="fieldAutoId(_path, 'value')"
-        (nodeChange)="applyNode(pointer, $event)"></sd-api-contract-source-editor>
-    }
-
-    @if (duplicateKeyPath() === _path) {
-      <p class="sd-acb-node__diagnostic" data-severity="error" [attr.data-autoId]="fieldAutoId(_path, 'duplicate')">
-        <sd-icon name="error" size="sm"></sd-icon>
-        <span>{{ 'core.component.api-contract-builder.node.duplicate-key' | sdTranslate }}</span>
-      </p>
-    }
-
-    @if (pendingRemovePath() === _path) {
-      <div class="sd-acb-node__confirm" role="alertdialog" [attr.data-autoId]="fieldAutoId(_path, 'confirm-remove')">
-        <span>{{ 'core.component.api-contract-builder.node.confirm-remove' | sdTranslate: { name: name } }}</span>
-        <sd-button
-          type="fill"
-          color="error"
-          size="sm"
-          [autoId]="fieldAutoId(_path, 'confirm-remove-yes')"
-          [title]="'core.component.api-contract-builder.confirm.yes' | sdTranslate"
-          (click)="confirmRemove(parent, name)"></sd-button>
-        <sd-button
-          type="text"
-          size="sm"
-          [autoId]="fieldAutoId(_path, 'confirm-remove-no')"
-          [title]="'core.component.api-contract-builder.confirm.no' | sdTranslate"
-          (click)="cancelRemove()"></sd-button>
-      </div>
-    }
-
-    @if (pendingTypePath() === _path) {
-      <div class="sd-acb-node__confirm" role="alertdialog" [attr.data-autoId]="fieldAutoId(_path, 'confirm-type')">
-        <span>{{ 'core.component.api-contract-builder.node.confirm-type' | sdTranslate }}</span>
-        <sd-button
-          type="fill"
-          color="warning"
-          size="sm"
-          [autoId]="fieldAutoId(_path, 'confirm-type-yes')"
-          [title]="'core.component.api-contract-builder.confirm.yes' | sdTranslate"
-          (click)="confirmType()"></sd-button>
-        <sd-button
-          type="text"
-          size="sm"
-          [autoId]="fieldAutoId(_path, 'confirm-type-no')"
-          [title]="'core.component.api-contract-builder.confirm.no' | sdTranslate"
-          (click)="cancelType()"></sd-button>
-      </div>
-    }
-
-    @for (message of _messages; track message.code + $index) {
-      <p class="sd-acb-node__diagnostic" [attr.data-severity]="message.severity">
-        <sd-icon [name]="message.severity === 'error' ? 'error' : 'warning'" size="sm"></sd-icon>
-        <span>{{ message.message }}</span>
-      </p>
-    }
-
-    @if (n.type === 'object' && !_mapped) {
-      <div class="sd-acb-node__children">
-        @for (entry of _children; track entry.key) {
-          <ng-container
-            *ngTemplateOutlet="
-              nodeTpl;
-              context: { $implicit: entry.node, pointer: entry.pointer, parent: pointer, name: entry.key, title: null, depth: depth + 1 }
-            "></ng-container>
-        }
-        @if (!_children.length) {
-          <p class="sd-acb-node__empty">{{ 'core.component.api-contract-builder.node.empty' | sdTranslate }}</p>
-        }
-        @if (!_disabled) {
-          <sd-button
-            class="sd-acb-node__add"
-            type="light"
-            size="sm"
-            prefixIcon="add"
-            [autoId]="fieldAutoId(_path, 'add')"
-            [title]="'core.component.api-contract-builder.node.add-property' | sdTranslate"
-            (click)="addProperty(pointer, n)"></sd-button>
-        }
-      </div>
-    }
-
-    @if (n.type === 'array' && n.items) {
-      <div class="sd-acb-node__children">
-        <ng-container
-          *ngTemplateOutlet="
-            nodeTpl;
-            context: { $implicit: n.items, pointer: itemsPointer(pointer), parent: pointer, name: null, title: itemsTitle, depth: depth + 1 }
-          "></ng-container>
-      </div>
-    }
-  </div>
-</ng-template>
+  @if (!_disabled) {
+    <sd-button
+      class="sd-acb-list__add"
+      type="light"
+      size="sm"
+      prefixIcon="add"
+      [autoId]="_autoId ? _autoId + '-add' : undefined"
+      [title]="'core.component.api-contract-builder.node.add-property' | sdTranslate"
+      (click)="requestAdd()"></sd-button>
+  }
+</div>

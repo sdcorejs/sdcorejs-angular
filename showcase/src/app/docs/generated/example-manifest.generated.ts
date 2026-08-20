@@ -4,9 +4,13 @@
 export type ShowcaseExampleSourceKey =
   | "components/anchor/example-anchor-mac-dinh"
   | "components/anchor/example-mau-va-cat-ngan-chu"
+  | "components/api-contract-builder/example-ba-che-do-nguon-gia-tri"
   | "components/api-contract-builder/example-che-do-xem"
   | "components/api-contract-builder/example-contract-sai-va-chan-doan"
+  | "components/api-contract-builder/example-dan-json-de-nap-contract"
+  | "components/api-contract-builder/example-danh-sach-gon-sua-trong-drawer"
   | "components/api-contract-builder/example-get-tim-kiem-san-pham"
+  | "components/api-contract-builder/example-gia-tri-tinh-theo-kieu-du-lieu"
   | "components/api-contract-builder/example-ket-qua-chan-doan"
   | "components/api-contract-builder/example-post-map-body"
   | "components/api-contract-builder/example-truong-output-cho-dropdown-table"
@@ -401,6 +405,34 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-che-do-xem",
     title: "Chế độ xem",
     description: "Chế độ xem hiển thị tóm tắt cùng JSON; disabled giữ nguyên các bước nhưng khoá chỉnh sửa.",
+  },
+  {
+    sourceKey: "components/api-contract-builder/example-ba-che-do-nguon-gia-tri",
+    pageKey: "components/api-contract-builder",
+    sectionId: "example-ba-che-do-nguon-gia-tri",
+    title: "Ba chế độ nguồn giá trị",
+    description: "keyword lấy từ nguồn (một dropdown, không gõ ${…}); Authorization là template ghép nên mở ở Nâng cao; version là giá trị tĩnh.",
+  },
+  {
+    sourceKey: "components/api-contract-builder/example-danh-sach-gon-sua-trong-drawer",
+    pageKey: "components/api-contract-builder",
+    sectionId: "example-danh-sach-gon-sua-trong-drawer",
+    title: "Danh sách gọn, sửa trong drawer",
+    description: "Mỗi trường là một hàng chỉ để đọc. Bấm hàng hoặc nút Thêm để mở drawer; contract chỉ đổi khi bấm Lưu. Trường object hiện số trường con — bấm vào để đi sâu ngay trong drawer đó, không mở drawer lồng drawer.",
+  },
+  {
+    sourceKey: "components/api-contract-builder/example-gia-tri-tinh-theo-kieu-du-lieu",
+    pageKey: "components/api-contract-builder",
+    sectionId: "example-gia-tri-tinh-theo-kieu-du-lieu",
+    title: "Giá trị tĩnh theo kiểu dữ liệu",
+    description: "Mỗi kiểu dữ liệu render đúng control của nó; object và array dùng sd-code-editor. Giá trị date/datetime lưu dạng ISO.",
+  },
+  {
+    sourceKey: "components/api-contract-builder/example-dan-json-de-nap-contract",
+    pageKey: "components/api-contract-builder",
+    sectionId: "example-dan-json-de-nap-contract",
+    title: "Dán JSON để nạp contract",
+    description: "Sang bước Kiểm tra: nút Copy lấy contract ra, và dán JSON vào chính editor đó để nạp contract mới. JSON sai cú pháp thì contract giữ nguyên và có thêm chẩn đoán contract.invalid.",
   },
   {
     sourceKey: "components/api-contract-builder/example-truong-output-cho-dropdown-table",

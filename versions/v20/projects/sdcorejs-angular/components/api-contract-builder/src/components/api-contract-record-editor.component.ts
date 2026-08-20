@@ -1,17 +1,9 @@
-import { booleanAttribute, ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { booleanAttribute, ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdButton } from '@sdcorejs/angular/components/button';
-import { SdIcon } from '@sdcorejs/angular/modules/icon';
-import { SD_API_CONTRACT_DATA_TYPES, type SdApiContractDataType, type SdApiContractDiagnostic } from '../api-contract.model';
-import {
-  createSdApiContractNode,
-  sdApiContractRecordRemove,
-  sdApiContractRecordRename,
-  sdApiContractRecordSet,
-  type SdApiContractStructuralNode,
-} from '../api-contract.schema';
-import { SdApiContractNodeEditor } from './api-contract-node-editor.component';
-import type { SdApiContractSuggestion } from './api-contract-suggestion.model';
+import { sdApiContractRecordRemove, type SdApiContractStructuralNode } from '../api-contract.schema';
+import type { SdApiContractNodeEditRequest } from './api-contract-node-drawer.component';
+import { SdApiContractNodeSummary } from './api-contract-node-summary.component';
 
 type SdApiContractNodeRecord = Record<string, SdApiContractStructuralNode>;
 
@@ -22,15 +14,18 @@ interface SdApiContractRecordEntry {
 }
 
 /**
- * Editor for one keyed collection of nodes — `req.path`, `req.query`, `req.headers`, `res.headers`.
+ * One keyed collection of nodes — `req.path` / `req.query` / `req.headers` / `res.headers` — rendered
+ * as a list you read, not a list you type into.
  *
- * Keys are renamed on blur, never per keystroke: a per-keystroke rename would rewrite the key one
- * character at a time and invalidate every `${…}` that points at it in between.
+ * Every entry is a collapsed row. Adding and editing both ask the builder to open its drawer; only
+ * removal is applied straight away, because there is nothing to stage about deleting a row. That is
+ * why `add()` emits an edit request rather than an entry: a half-declared field must never reach the
+ * contract just because someone clicked the add button and changed their mind.
  */
 @Component({
   selector: 'sd-api-contract-record-editor',
   standalone: true,
-  imports: [SdButton, SdIcon, SdTranslatePipe, SdApiContractNodeEditor],
+  imports: [SdButton, SdTranslatePipe, SdApiContractNodeSummary],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @let _entries = entries();
@@ -43,32 +38,13 @@ interface SdApiContractRecordEntry {
       }
 
       @for (entry of _entries; track entry.key) {
-        <div class="sd-acb-record__entry" [attr.data-path]="entry.path">
-          <!-- why: khoá đi THẲNG vào hàng của node thay vì đứng riêng một hàng bên trên — nhờ vậy
-               "Tên trường / Kiểu dữ liệu / Bắt buộc" của một entry thẳng cột với mọi hàng khác, và
-               bớt được một cấp lồng khung. -->
-          <sd-api-contract-node-editor
-            [node]="entry.node"
-            [basePath]="entry.path"
-            [layer]="layer()"
-            [allowedTypes]="allowedTypes()"
-            [suggestions]="suggestions()"
-            [diagnostics]="diagnostics()"
-            [disabled]="_disabled"
-            [rootName]="entry.key"
-            [rootRemovable]="!_disabled"
-            [autoId]="_autoId"
-            (nodeChange)="replace(entry.key, $event)"
-            (rootRename)="rename(entry.key, $event)"
-            (rootRemove)="remove(entry.key)"></sd-api-contract-node-editor>
-
-          @if (duplicateKey() === entry.key) {
-            <p class="sd-acb-record__diagnostic" data-severity="error">
-              <sd-icon name="error" size="sm"></sd-icon>
-              <span>{{ 'core.component.api-contract-builder.node.duplicate-key' | sdTranslate }}</span>
-            </p>
-          }
-        </div>
+        <sd-api-contract-node-summary
+          [name]="entry.key"
+          [node]="entry.node"
+          [readonly]="_disabled"
+          [autoId]="_autoId ? _autoId + '-' + entry.key : undefined"
+          (edit)="requestEdit(entry)"
+          (remove)="remove(entry.key)"></sd-api-contract-node-summary>
       }
 
       @if (!_disabled) {
@@ -79,7 +55,7 @@ interface SdApiContractRecordEntry {
           prefixIcon="add"
           [autoId]="_autoId ? _autoId + '-add' : undefined"
           [title]="'core.component.api-contract-builder.request.add-entry' | sdTranslate"
-          (click)="add()"></sd-button>
+          (click)="requestAdd()"></sd-button>
       }
     </div>
   `,
@@ -87,20 +63,12 @@ interface SdApiContractRecordEntry {
     `
       :host {
         display: block;
+        width: 100%;
       }
       .sd-acb-record {
         display: flex;
         flex-direction: column;
-        gap: 10px;
-      }
-      .sd-acb-record__entry {
-        display: flex;
-        flex-direction: column;
         gap: 6px;
-        padding: 10px 12px;
-        border: 1px solid var(--sd-border-color, #e6e6e6);
-        border-radius: 8px;
-        background: var(--sd-surface, #fff);
       }
       .sd-acb-record__empty {
         margin: 0;
@@ -111,14 +79,6 @@ interface SdApiContractRecordEntry {
       .sd-acb-record__add {
         align-self: flex-start;
       }
-      .sd-acb-record__diagnostic {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        margin: 0;
-        font-size: 12px;
-        color: var(--sd-error, #b3261e);
-      }
     `,
   ],
 })
@@ -126,19 +86,12 @@ export class SdApiContractRecordEditor {
   record = input<SdApiContractNodeRecord | undefined>();
   /** Diagnostic path of the collection itself, e.g. `req.query`. */
   basePath = input.required<string>();
-  layer = input<'declaration' | 'mapping'>('mapping');
-  allowedTypes = input<readonly SdApiContractDataType[]>(SD_API_CONTRACT_DATA_TYPES);
-  suggestions = input<readonly SdApiContractSuggestion[]>([]);
-  diagnostics = input<readonly SdApiContractDiagnostic[]>([]);
   disabled = input(false, { transform: booleanAttribute });
   emptyLabel = input<string>('');
-  /** Prefix for generated keys when the user adds an entry. */
-  newKeyPrefix = input<string>('field');
   autoId = input<string | null | undefined>();
 
   recordChange = output<SdApiContractNodeRecord>();
-
-  protected readonly duplicateKey = signal<string | null>(null);
+  editRequest = output<SdApiContractNodeEditRequest>();
 
   protected readonly entries = computed<SdApiContractRecordEntry[]>(() => {
     const record = this.record();
@@ -147,40 +100,19 @@ export class SdApiContractRecordEditor {
     return Object.keys(record).map(key => ({ key, node: record[key], path: `${base}.${key}` }));
   });
 
-  protected add(): void {
-    const record = this.record() ?? {};
-    const prefix = this.newKeyPrefix();
-    let index = Object.keys(record).length + 1;
-    while (Object.prototype.hasOwnProperty.call(record, `${prefix}${index}`)) index += 1;
-    const type = this.allowedTypes().includes('string') ? 'string' : this.allowedTypes()[0];
-    this.recordChange.emit(sdApiContractRecordSet(record, `${prefix}${index}`, createSdApiContractNode(type)));
+  readonly #keys = computed(() => this.entries().map(entry => entry.key));
+
+  protected requestAdd(): void {
+    this.editRequest.emit({ name: null, node: null, siblingNames: this.#keys() });
+  }
+
+  protected requestEdit(entry: SdApiContractRecordEntry): void {
+    this.editRequest.emit({ name: entry.key, node: entry.node, siblingNames: this.#keys() });
   }
 
   protected remove(key: string): void {
-    this.duplicateKey.set(null);
     const record = this.record();
     if (!record) return;
     this.recordChange.emit(sdApiContractRecordRemove(record, key));
-  }
-
-  protected rename(from: string, to: unknown): void {
-    this.duplicateKey.set(null);
-    const record = this.record();
-    if (!record || typeof to !== 'string') return;
-    const trimmed = to.trim();
-    if (!trimmed || trimmed === from) return;
-
-    const renamed = sdApiContractRecordRename(record, from, trimmed);
-    if (renamed === record) {
-      this.duplicateKey.set(from);
-      return;
-    }
-    this.recordChange.emit(renamed);
-  }
-
-  protected replace(key: string, node: SdApiContractStructuralNode): void {
-    const record = this.record();
-    if (!record) return;
-    this.recordChange.emit(sdApiContractRecordSet(record, key, node));
   }
 }

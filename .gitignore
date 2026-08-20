@@ -53,3 +53,7 @@ refs/
 GEMINI.md
 # AGENTS.md is repo-owned and committed — it is the shared agent entrypoint
 # alongside CLAUDE.md, not a local scratch file.
+
+# Local sandbox workspace — an independent Angular app for eyeballing one component at a time.
+# Not part of the published package and not mirrored per version; keep it out of the repo.
+/sandbox

@@ -226,6 +226,59 @@ in `output.schema`.
 - Inside a subtree covered by a whole-node `source`, the children are plain declarations — they do
   not need their own `source`.
 
+### The value row in the editor
+
+The contract stores only `source` / `value`. The editor's mode picker is **derived** from them and is
+never persisted, so a hand-authored contract round-trips byte for byte.
+
+| Picker option    | Control shown                                       | Derived from                                              |
+| ---------------- | --------------------------------------------------- | --------------------------------------------------------- |
+| `Lấy từ nguồn`   | one dropdown of the available `input` / `env` / `res` references | `source` is empty, or is exactly one `${…}` reference   |
+| `Giá trị tĩnh`   | a control matching the declared type (table below)   | `value` is present                                        |
+| `Nâng cao`       | a raw expression input                              | `source` is a template the dropdown cannot express        |
+| `Map từng trường`| the child list, drilled into inside the drawer       | an `object` with neither `source` nor `value`              |
+
+The picker is **required** and has no "unset" option. A node with neither `source` nor `value` is
+`CHƯA CHỌN`, not a state you can pick: the picker renders empty and flags itself, which matches the
+`mapping.node.unmapped` warning validation already reports for that node. An `object` is the exception —
+it defaults to `Map từng trường`, because mapping field by field *is* a real mapping.
+
+`Nâng cao` exists because a dropdown cannot express a composite template such as
+`Bearer ${env.token}` — literal text plus a reference. Loading such a contract opens the row in
+`Nâng cao` with the text verbatim.
+
+A clean single reference that points at a field which no longer exists stays in `Lấy từ nguồn`: the
+dropdown keeps showing the stored path so the author can see and fix it, and validation reports
+`mapping.reference.missing` as usual. The editor never rewrites or drops it.
+
+Static values render per declared type:
+
+| `type`             | Control                                    |
+| ------------------ | ------------------------------------------ |
+| `string`           | `<sd-input>`                               |
+| `number`           | `<sd-input-number>`                        |
+| `boolean`          | `<sd-select>` (Đúng / Sai)                 |
+| `date`             | `<sd-date>`                                |
+| `datetime`         | `<sd-datetime>`                            |
+| `object` / `array` | `<sd-code-editor language="json">`         |
+
+A temporal literal is stored as an **ISO string**, never a locale-formatted one. The JSON editor
+emits the parsed value only while the text is valid JSON; a half-typed fragment is ignored, so the
+last valid literal survives keystroke by keystroke.
+
+## Reviewing and pasting the JSON
+
+Step 6 renders the whole contract in `<sd-code-editor language="json">`:
+
+- **Copy** — the editor's own copy button puts the serialized contract on the clipboard.
+- **Paste** — the editor is editable, so a contract can be pasted straight in. Valid JSON replaces
+  the contract and is re-rendered through `serializeSdApiContract`, which is what gives the pasted
+  text its canonical key order and 2-space indentation.
+- Text that is not valid JSON leaves the contract untouched and adds a `contract.invalid` diagnostic.
+  Nothing is silently repaired.
+- A pasted contract is adopted **verbatim**. Missing or malformed parts are reported, never filled in.
+- `mode="view"` and `disabled` make the editor read-only — copy still works, paste does not.
+
 ## REST request structure
 
 ```ts
@@ -555,28 +608,59 @@ readonly canSave = signal(false);
 | Step | Contents                                                                                        |
 | ---- | ----------------------------------------------------------------------------------------------- |
 | 1 General  | code, name, description, read-only contract version                                        |
-| 2 Input schema | nested editor — add / rename / remove, type, required, label, description, temporal transform |
-| 3 Request  | method + url, then path / query / headers / body sections with per-field value mode and inline diagnostics |
-| 4 Response | success status codes, headers, nested body declaration — no mapping                          |
-| 5 Output   | "use a response field as the output" action, output schema editor, leaf-field list          |
+| 2 Input schema | the input fields as a list; a row opens the drawer                                     |
+| 3 Request  | method + url, then path / query / headers / body as lists, plus inline diagnostics          |
+| 4 Response | success status codes, headers and body declaration as lists — no mapping                    |
+| 5 Output   | "use a response field as the output" action, output field list, leaf-field list             |
 | 6 Review   | validation summary (click a row to jump to the offending step) and the JSON preview          |
 
-UX notes:
+### Reading a list, editing in a drawer
 
-- **Every node is one row on a fixed grid** — name, type, required, temporal transform, remove —
-  with empty placeholder cells where a column does not apply, so rows stay in line whether or not a
-  node is temporal or removable. A `req.query` / `req.headers` / `req.path` key is edited **in that
-  same row**, not on a separate row above the node, and the top-level node draws no frame of its own
-  because the section already provides one.
-- Removing a node that has children, and retyping a node that would discard nested fields, both ask
-  for inline confirmation first.
-- A rename that collides with a sibling is refused and reported inline; references are revalidated on
-  every edit, so a rename that orphans an expression surfaces immediately.
+Every collection of nodes — the four schema layers and the four keyed records — renders the same way:
+**one collapsed row per field, and an add button.** A row is read-only. It shows the field name, its
+type, a `Bắt buộc` badge when required, and a one-line summary of how the value is produced:
+
+| Row shows               | Node                                        |
+| ----------------------- | ------------------------------------------- |
+| `← input.keyword`       | `source` is exactly one reference           |
+| `← Bearer ${env.token}` | `source` is a composite template            |
+| `= "v2"`                | `value` is a literal                        |
+| `4 trường`              | an `object` mapped field by field           |
+| `chưa gán`              | neither `source` nor `value`                |
+
+Clicking a row, or the add button, opens **one side drawer** — the only place a node is edited. The
+drawer stages a draft and writes it back on `Lưu`, so the contract changes **once per Save**, not once
+per keystroke. Cancelling, or closing with unsaved changes and confirming the discard, leaves the
+contract untouched. That is the point of the design: clicking add and changing your mind no longer
+leaves a half-declared field behind in the contract.
+
+The list is deliberately **flat**. An `object` field is one row showing its child count; its children
+are reached by drilling into it *inside the same drawer*, which grows a breadcrumb
+(`customer › address`) rather than opening a drawer inside a drawer. Children are added and removed
+there too — the outer list never shows a tree.
+
+An `array` layer (typically `output.schema` after adopting `${res.body.items}`) lists the **element's**
+fields, because that is where the fields live. The list reads `items.properties`, and a commit is
+written back under the same pointer.
+
+Design consequences worth knowing:
+
+- The builder owns exactly **one** drawer instance, mounted outside the step switch, so moving between
+  steps cannot destroy an open draft.
+- A rename goes through the record/property rename helper, so a field keeps its position in the JSON
+  instead of jumping to the end — a clean diff for whoever reviews the contract.
+- A name that collides with a sibling, or an empty name, disables `Lưu` and says why inline. Nothing is
+  written until the name is valid.
+- Changing a field's type to one that cannot hold children discards them, and there is no separate
+  confirmation prompt: the change lives in the draft, so `Huỷ` (or discarding on close) puts the
+  children back. The drawer *is* the confirmation step.
+- Removing a field is applied straight from its row with no confirmation step — there is nothing to
+  stage about a delete, and the row is not a draft.
 - Severity is never signalled by colour alone — every diagnostic carries an icon, the severity, the
   stable `code` and the structural `path`, and the active step also carries `aria-current="step"`.
 - The JSON preview is read-only (`<sd-code-editor language="json" [viewed]="true">`) with its built-in
   copy button. Raw JSON editing is deliberately absent so two editors never write one model.
-- The layout is responsive at desktop and tablet widths, and every control is a real focusable element.
+- Every control is a real focusable element, and a collapsed row is reachable by keyboard.
 
 ## Common mistakes
 
@@ -603,7 +687,5 @@ Out of scope for this first version, on purpose:
 - `map` / `filter` / `reduce` transformation of individual array elements, and per-item projection.
 - Direct `form-builder` / `form-render` integration.
 - Error-response schemas per status code; user-defined data types.
-- Editing a **composite** static literal (an object or array `value`) in the visual editor — a literal
-  authored elsewhere still validates, serializes and round-trips; only the inline editor is limited to
-  scalars, because a JSON sub-editor writing the same model as the tree editor is the exact conflict
-  the read-only review step avoids.
+- Reading the clipboard programmatically. Copy uses the editor's own button; paste is a normal paste
+  into the editable JSON editor, so no clipboard permission is ever requested.

@@ -426,7 +426,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/api-contract-builder/sd-api-contract-builder',
     keywords: ['api contract', 'rest mapping', 'endpoint', 'json schema', 'low-code'],
     status: 'stable',
-    demoSectionCount: 6,
+    demoSectionCount: 10,
     loadComponent: () =>
       import('../../pages/components/api-contract-builder/api-contract-builder-demo.component').then(m => m.ApiContractBuilderDemoComponent),
   }),

@@ -1,19 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { SdCodeEditor } from '@sdcorejs/angular/components/code-editor';
 import { I18nService } from '@sdcorejs/angular/i18n';
 
 import { SdApiContractBuilder } from './api-contract-builder.component';
 import { provideSdApiContract } from './api-contract.configuration';
-import type { SdApiContract, SdApiContractDataType, SdApiContractDiagnostic } from './api-contract.model';
-import { sdApiContractSearchSample, SD_API_CONTRACT_SAMPLE_ENVIRONMENT } from './api-contract.samples';
-import type { SdApiContractNodePointer, SdApiContractStructuralNode } from './api-contract.schema';
-import { SdApiContractNodeEditor } from './components/api-contract-node-editor.component';
-import { SdApiContractSourceEditor } from './components/api-contract-source-editor.component';
+import type { SdApiContract, SdApiContractDiagnostic } from './api-contract.model';
+import { sdApiContractCreateSample, sdApiContractSearchSample, SD_API_CONTRACT_SAMPLE_ENVIRONMENT } from './api-contract.samples';
+import type { SdApiContractStructuralNode } from './api-contract.schema';
+import { SdApiContractNodeDrawer } from './components/api-contract-node-drawer.component';
 import type { SdApiContractSuggestion } from './components/api-contract-suggestion.model';
 
 /** Typed window onto the protected surface — the specs drive behaviour, not private state. */
 interface BuilderInternals {
+  applyPastedJson(value: unknown): void;
   requestSuggestions(): SdApiContractSuggestion[];
   outputSuggestions(): SdApiContractSuggestion[];
   useResponseFieldAsOutput(value: unknown): void;
@@ -23,25 +24,25 @@ interface BuilderInternals {
   activeStep(): number;
 }
 
-interface NodeEditorInternals {
-  basePath(): string;
-  requestType(pointer: SdApiContractNodePointer, node: SdApiContractStructuralNode, type: unknown): void;
-  confirmType(): void;
-  cancelType(): void;
-  setRequired(pointer: SdApiContractNodePointer, value: unknown): void;
-  addProperty(pointer: SdApiContractNodePointer, node: SdApiContractStructuralNode): void;
-  requestRemove(parent: SdApiContractNodePointer | null, key: string, node: SdApiContractStructuralNode, path: string): void;
-  confirmRemove(parent: SdApiContractNodePointer | null, key: string): void;
-  renameProperty(parent: SdApiContractNodePointer | null, from: string, to: unknown): void;
-  pendingRemovePath(): string | null;
-  duplicateKeyPath(): string | null;
-}
-
 interface SourceEditorInternals {
   setMode(mode: unknown): void;
   setSource(value: unknown): void;
   setStaticScalar(value: unknown): void;
-  insertReference(expression: unknown): void;
+}
+
+/** The drawer's protected surface, driven through the builder's real wiring. */
+interface DrawerInternals {
+  setName(value: unknown): void;
+  setType(value: unknown): void;
+  setRequired(value: unknown): void;
+  enter(key: string): void;
+  backTo(depth: number): void;
+  addChild(): void;
+  removeChild(key: string): void;
+  applyCurrent(node: SdApiContractStructuralNode): void;
+  currentName(): string;
+  canSave(): boolean;
+  save(): void;
 }
 
 describe('SdApiContractBuilder', () => {
@@ -93,10 +94,35 @@ describe('SdApiContractBuilder', () => {
     fixture.detectChanges();
   }
 
-  function nodeEditors(): NodeEditorInternals[] {
-    return fixture.debugElement
-      .queryAll(By.directive(SdApiContractNodeEditor))
-      .map(debugElement => debugElement.componentInstance as unknown as NodeEditorInternals);
+  /**
+   * The one drawer the builder owns.
+   *
+   * why đi qua đây thay vì tự dựng drawer trong spec: chỗ dễ sai nhất của contract này là DÂY NỐI —
+   * danh sách nào yêu cầu, builder ghi commit về đâu. Tự dựng drawer sẽ test drawer lần thứ hai và
+   * bỏ qua đúng phần dễ sai.
+   */
+  function drawer(): DrawerInternals {
+    const found = fixture.debugElement.query(By.directive(SdApiContractNodeDrawer));
+    if (!found) throw new Error('No drawer mounted');
+    return found.componentInstance as unknown as DrawerInternals;
+  }
+
+  /** Clicks a collapsed row the way a user does, by its derived autoId. */
+  function clickRow(section: string, key: string): void {
+    const row = host().querySelector<HTMLElement>(`[data-autoid="acb-${section}-${key}"]`);
+    if (!row) throw new Error(`No summary row for "${section}.${key}"`);
+    row.click();
+    fixture.detectChanges();
+  }
+
+  /** The input layer's root, unwrapped from the model's declaration typing. */
+  function inputSchema(): SdApiContractStructuralNode {
+    return component.model()!.input.schema as unknown as SdApiContractStructuralNode;
+  }
+
+  function saveDrawer(): void {
+    drawer().save();
+    fixture.detectChanges();
   }
 
   function typeInto(selector: string, value: string, event: 'input' | 'blur' = 'input'): void {
@@ -231,174 +257,139 @@ describe('SdApiContractBuilder', () => {
       goToStep(1);
     });
 
-    it('adds a property', () => {
-      const editor = nodeEditors()[0];
-      editor.addProperty([], component.model()!.input.schema as unknown as SdApiContractStructuralNode);
-      fixture.detectChanges();
+    it('opens the drawer for a new field without touching the contract yet', () => {
+      clickButton('button[data-autoId$="acb-input-add"]');
 
-      const properties = component.model()!.input.schema as unknown as SdApiContractStructuralNode;
-      expect(Object.keys(properties.properties ?? {})).toEqual(['keyword', 'page', 'createdFrom', 'field4']);
+      expect(Object.keys(inputSchema().properties ?? {})).toEqual(['keyword', 'page', 'createdFrom']);
+      expect(emissions.length).toBe(0);
+    });
+
+    it('commits a new field once the drawer is saved', () => {
+      clickButton('button[data-autoId$="acb-input-add"]');
+      drawer().setName('perPage');
+      saveDrawer();
+
+      expect(Object.keys(inputSchema().properties ?? {})).toEqual(['keyword', 'page', 'createdFrom', 'perPage']);
       expect(emissions.length).toBe(1);
     });
 
-    it('renames a property on blur and keeps its position', () => {
-      nodeEditors()[0].renameProperty([], 'page', 'pageIndex');
-      fixture.detectChanges();
+    it('seeds the drawer from the schema row that was clicked', () => {
+      clickRow('input', 'page');
 
-      const schema = component.model()!.input.schema as unknown as SdApiContractStructuralNode;
-      expect(Object.keys(schema.properties ?? {})).toEqual(['keyword', 'pageIndex', 'createdFrom']);
+      expect(drawer().currentName()).toBe('page');
     });
 
-    it('refuses a rename that collides with a sibling and says so inline', () => {
-      const editor = nodeEditors()[0];
-      editor.renameProperty([], 'page', 'keyword');
-      fixture.detectChanges();
+    it('renames a field from the drawer and keeps its position', () => {
+      clickRow('input', 'page');
+      drawer().setName('pageIndex');
+      saveDrawer();
 
+      expect(Object.keys(inputSchema().properties ?? {})).toEqual(['keyword', 'pageIndex', 'createdFrom']);
+    });
+
+    it('refuses a rename that collides with a sibling', () => {
+      clickRow('input', 'page');
+      drawer().setName('keyword');
+
+      expect(drawer().canSave()).toBeFalse();
+
+      saveDrawer();
+      expect(Object.keys(inputSchema().properties ?? {})).toEqual(['keyword', 'page', 'createdFrom']);
       expect(emissions.length).toBe(0);
-      expect(editor.duplicateKeyPath()).toBe('input.schema.properties.page');
-      expect(host().querySelector('.sd-acb-node__diagnostic[data-severity="error"]')).not.toBeNull();
     });
 
-    it('removes a scalar property immediately', () => {
-      const editor = nodeEditors()[0];
-      const schema = component.model()!.input.schema as unknown as SdApiContractStructuralNode;
-      editor.requestRemove([], 'page', schema.properties!['page'], 'input.schema.properties.page');
+    it('removes a field from its summary row', () => {
+      const remove = host().querySelector<HTMLElement>('[data-autoid="acb-input-page-remove"]');
+      expect(remove).withContext('remove button on the summary row').not.toBeNull();
+
+      remove!.click();
       fixture.detectChanges();
 
-      expect(Object.keys((component.model()!.input.schema as unknown as SdApiContractStructuralNode).properties ?? {})).toEqual([
-        'keyword',
-        'createdFrom',
-      ]);
+      expect(Object.keys(inputSchema().properties ?? {})).toEqual(['keyword', 'createdFrom']);
     });
 
-    it('asks before removing a node that has children', () => {
-      const nested: SdApiContract = seed(withNestedInput());
-      goToStep(1);
-      const editor = nodeEditors()[0];
-      const customer = (nested.input.schema as unknown as SdApiContractStructuralNode).properties!['customer'];
+    it('changes a field type through the drawer', () => {
+      clickRow('input', 'page');
+      drawer().setType('string');
+      saveDrawer();
 
-      editor.requestRemove([], 'customer', customer, 'input.schema.properties.customer');
-      fixture.detectChanges();
-      expect(editor.pendingRemovePath()).toBe('input.schema.properties.customer');
-      expect(emissions.length).toBe(0);
-
-      editor.confirmRemove([], 'customer');
-      fixture.detectChanges();
-      expect(Object.keys((component.model()!.input.schema as unknown as SdApiContractStructuralNode).properties ?? {})).toEqual([
-        'keyword',
-      ]);
-    });
-
-    it('asks before a type change that discards nested fields, and can be cancelled', () => {
-      seed(withNestedInput());
-      goToStep(1);
-      const editor = nodeEditors()[0];
-      const pointer: SdApiContractNodePointer = ['properties', 'customer'];
-      const customer = (component.model()!.input.schema as unknown as SdApiContractStructuralNode).properties!['customer'];
-
-      editor.requestType(pointer, customer, 'string');
-      fixture.detectChanges();
-      expect(emissions.length).toBe(0);
-
-      editor.cancelType();
-      fixture.detectChanges();
-      expect((component.model()!.input.schema as unknown as SdApiContractStructuralNode).properties!['customer'].type).toBe('object');
-
-      editor.requestType(pointer, customer, 'string');
-      editor.confirmType();
-      fixture.detectChanges();
-      expect((component.model()!.input.schema as unknown as SdApiContractStructuralNode).properties!['customer'].type).toBe('string');
-    });
-
-    it('changes a leaf type without asking', () => {
-      const editor = nodeEditors()[0];
-      const page = (component.model()!.input.schema as unknown as SdApiContractStructuralNode).properties!['page'];
-
-      editor.requestType(['properties', 'page'], page, 'string' as SdApiContractDataType);
-      fixture.detectChanges();
-
-      expect((component.model()!.input.schema as unknown as SdApiContractStructuralNode).properties!['page'].type).toBe('string');
+      expect(inputSchema().properties!['page'].type).toBe('string');
       expect(emissions.length).toBe(1);
     });
 
     it('writes required:true, and drops the key entirely for not-required', () => {
-      const editor = nodeEditors()[0];
-      const pointer: SdApiContractNodePointer = ['properties', 'page'];
-      const page = (): SdApiContractStructuralNode =>
-        (component.model()!.input.schema as unknown as SdApiContractStructuralNode).properties!['page'];
+      const page = (): SdApiContractStructuralNode => inputSchema().properties!['page'];
 
-      editor.setRequired(pointer, 'true');
-      fixture.detectChanges();
+      clickRow('input', 'page');
+      drawer().setRequired('true');
+      saveDrawer();
       expect(page().required).toBeTrue();
 
       // why: UI chỉ có Có/Không. "Không" bỏ hẳn key thay vì ghi `false` — JSON sạch, và `false` do
       // người viết tay khai báo vẫn được serializer giữ nguyên (model vẫn là tri-state).
-      editor.setRequired(pointer, 'false');
-      fixture.detectChanges();
+      clickRow('input', 'page');
+      drawer().setRequired('false');
+      saveDrawer();
       expect(page().required).toBeUndefined();
       expect('required' in page()).toBeFalse();
-    });
-
-    it('offers only two required options', () => {
-      const options = (nodeEditors()[0] as unknown as { requiredOptions: { value: string }[] }).requiredOptions;
-
-      expect(options.map(option => option.value)).toEqual(['true', 'false']);
     });
 
     it('shows a declared required:false as not-required without rewriting it', () => {
       // why: seed KHÔNG được chuẩn hoá — `required: false` viết tay phải sống nguyên vẹn trong JSON.
       expect(emissions.length).toBe(0);
-      expect((component.model()!.input.schema as unknown as SdApiContractStructuralNode).properties!['keyword'].required).toBeFalse();
+      expect(inputSchema().properties!['keyword'].required).toBeFalse();
       expect(internals.json()).toContain('"required": false');
     });
-  });
 
-  describe('row layout', () => {
-    // why: cột chỉ thẳng hàng khi MỌI hàng phát ra đúng số ô của grid — kể cả hàng không có
-    // "Định dạng thời gian" hay không có nút xoá (đều là ô giữ chỗ rỗng).
-    it('emits the same cell count for every node row, whatever the node carries', () => {
-      seed();
-      for (const step of [1, 2, 3, 4]) {
-        goToStep(step);
-        const rows = Array.from(host().querySelectorAll('.sd-acb-node__row:not(.sd-acb-node__row--meta)'));
-        expect(rows.length).withContext(`step ${step}`).toBeGreaterThan(0);
-        for (const row of rows) {
-          expect(row.children.length)
-            .withContext(`step ${step} · ${row.parentElement?.getAttribute('data-path')}`)
-            .toBe(5);
-        }
-      }
-    });
-
-    it('folds a record key into the node row instead of a separate row above it', () => {
-      seed();
-      goToStep(2);
-
-      const entry = host().querySelector('.sd-acb-node[data-path="req.query.page"]');
-      const row = entry!.querySelector('.sd-acb-node__row');
-      expect(host().querySelector('.sd-acb-record__head')).toBeNull();
-      expect(row!.querySelector('sd-input')).not.toBeNull();
-      expect(row!.querySelector('sd-select')).not.toBeNull();
-      expect((row!.querySelector('sd-input input') as HTMLInputElement).value).toBe('page');
-    });
-
-    it('does not repeat the section heading as a node caption', () => {
-      seed();
-      goToStep(3);
-
-      const headings = Array.from(host().querySelectorAll('.sd-acb__heading')).map(node => node.textContent?.trim());
-      const captions = Array.from(host().querySelectorAll('.sd-acb-node__title')).map(node => node.textContent?.trim());
-      expect(captions.filter(caption => caption && headings.includes(caption))).toEqual([]);
-    });
-
-    it('leaves the top-level node unframed so the section is the only frame', () => {
-      seed();
+    it('lists an object field as one row and edits its children inside the drawer', () => {
+      // why AC-008 nằm ở đây: danh sách ngoài PHẲNG — `customer` là MỘT hàng, không phải một cây.
+      // Field con của nó chỉ tồn tại bên trong drawer, nên drill-down chết là object lồng nhau thành
+      // read-only vĩnh viễn.
+      seed(withNestedInput());
       goToStep(1);
 
-      expect(host().querySelector('.sd-acb-node[data-depth="0"]')).not.toBeNull();
-      expect(host().querySelector('.sd-acb-node[data-depth="1"]')).not.toBeNull();
+      expect(host().querySelector('[data-autoid="acb-input-customer"]')).not.toBeNull();
+      expect(host().querySelector('[data-autoid="acb-input-customer-id"]')).toBeNull();
+
+      clickRow('input', 'customer');
+      drawer().enter('id');
+      drawer().setName('fullName');
+      drawer().backTo(0);
+      saveDrawer();
+
+      const customer = inputSchema().properties!['customer'];
+      expect(Object.keys(customer.properties ?? {})).toEqual(['fullName']);
+      expect(emissions.length).toBe(1);
+    });
+
+    it('adds a child to an object field from inside the drawer', () => {
+      seed(withNestedInput());
+      goToStep(1);
+
+      clickRow('input', 'customer');
+      drawer().addChild();
+      saveDrawer();
+
+      expect(Object.keys(inputSchema().properties!['customer'].properties ?? {})).toEqual(['id', 'truong']);
+    });
+
+    it('removes a child of an object field from inside the drawer', () => {
+      seed(withNestedInput());
+      goToStep(1);
+
+      clickRow('input', 'customer');
+      drawer().removeChild('id');
+      saveDrawer();
+
+      expect(Object.keys(inputSchema().properties!['customer'].properties ?? {})).toEqual([]);
     });
   });
+
+  // why cả describe("row layout") bị XOÁ: các test trong đó khẳng định hàng bảy ô, container query,
+  // caption `.sd-acb-node__title` và `data-depth` của node editor cũ — đúng cái layout contract này
+  // bỏ đi khi danh sách thu về hàng read-only. Bất biến thay thế mạnh hơn và nằm ở
+  // describe("request mapping") / describe("schema editing"): danh sách không được chứa control sửa
+  // được nào, và một object là MỘT hàng chứ không phải một cây.
 
   describe('request mapping', () => {
     beforeEach(() => {
@@ -406,40 +397,64 @@ describe('SdApiContractBuilder', () => {
       goToStep(2);
     });
 
-    it('adds a query entry', () => {
+    it('opens the drawer for a new query entry without touching the contract yet', () => {
+      // why: đây là điểm khác bản cũ. Trước đây bấm "Thêm" ghi ngay một entry rác vào contract; giờ
+      // nó chỉ mở drawer, và người bấm nhầm rồi đóng lại không để lại dấu vết nào.
       clickButton('button[data-autoId$="acb-query-add"]');
-
-      expect(Object.keys(component.model()!.req.query ?? {})).toEqual(['keyword', 'page', 'createdFrom', 'param4']);
-      expect(emissions.length).toBe(1);
-    });
-
-    it('adds a header entry', () => {
-      clickButton('button[data-autoId$="acb-headers-add"]');
-
-      expect(Object.keys(component.model()!.req.headers ?? {})).toEqual(['Authorization', 'x-user-id', 'header3']);
-    });
-
-    it('renames a query entry from the node row and keeps its position', () => {
-      const editor = nodeEditors().find(candidate => candidate.basePath() === 'req.query.page');
-      editor!.renameProperty(null, 'page', 'pageIndex');
-      fixture.detectChanges();
-
-      expect(Object.keys(component.model()!.req.query ?? {})).toEqual(['keyword', 'pageIndex', 'createdFrom']);
-    });
-
-    it('refuses a query rename that collides with a sibling', () => {
-      const editor = nodeEditors().find(candidate => candidate.basePath() === 'req.query.page');
-      editor!.renameProperty(null, 'page', 'keyword');
-      fixture.detectChanges();
 
       expect(Object.keys(component.model()!.req.query ?? {})).toEqual(['keyword', 'page', 'createdFrom']);
       expect(emissions.length).toBe(0);
     });
 
-    it('removes a query entry from the node row', () => {
-      const editor = nodeEditors().find(candidate => candidate.basePath() === 'req.query.page');
-      const page = component.model()!.req.query!['page'] as unknown as SdApiContractStructuralNode;
-      editor!.requestRemove(null, 'page', page, 'req.query.page');
+    it('commits a new query entry once the drawer is saved', () => {
+      clickButton('button[data-autoId$="acb-query-add"]');
+      drawer().setName('perPage');
+      saveDrawer();
+
+      expect(Object.keys(component.model()!.req.query ?? {})).toEqual(['keyword', 'page', 'createdFrom', 'perPage']);
+      expect(emissions.length).toBe(1);
+    });
+
+    it('commits a new header entry once the drawer is saved', () => {
+      clickButton('button[data-autoId$="acb-headers-add"]');
+      drawer().setName('x-trace-id');
+      saveDrawer();
+
+      expect(Object.keys(component.model()!.req.headers ?? {})).toEqual(['Authorization', 'x-user-id', 'x-trace-id']);
+    });
+
+    it('seeds the drawer from the row that was clicked', () => {
+      clickRow('query', 'page');
+
+      expect(drawer().currentName()).toBe('page');
+    });
+
+    it('renames a query entry from the drawer and keeps its position', () => {
+      // why kiểm thứ tự: rename đi qua `sdApiContractRecordRename` chứ không phải remove-rồi-add, nên
+      // entry giữ đúng chỗ trong JSON. Nhảy xuống cuối là một diff bẩn cho người review contract.
+      clickRow('query', 'page');
+      drawer().setName('pageIndex');
+      saveDrawer();
+
+      expect(Object.keys(component.model()!.req.query ?? {})).toEqual(['keyword', 'pageIndex', 'createdFrom']);
+    });
+
+    it('refuses a query rename that collides with a sibling', () => {
+      clickRow('query', 'page');
+      drawer().setName('keyword');
+
+      expect(drawer().canSave()).toBeFalse();
+
+      saveDrawer();
+      expect(Object.keys(component.model()!.req.query ?? {})).toEqual(['keyword', 'page', 'createdFrom']);
+      expect(emissions.length).toBe(0);
+    });
+
+    it('removes a query entry from its summary row', () => {
+      const remove = host().querySelector<HTMLElement>('[data-autoid="acb-query-page-remove"]');
+      expect(remove).withContext('remove button on the summary row').not.toBeNull();
+
+      remove!.click();
       fixture.detectChanges();
 
       expect(Object.keys(component.model()!.req.query ?? {})).toEqual(['keyword', 'createdFrom']);
@@ -454,42 +469,71 @@ describe('SdApiContractBuilder', () => {
       expect('body' in component.model()!.req).toBeFalse();
     });
 
-    it('switches a mapped node between source and static', () => {
-      const sourceEditor = fixture.debugElement.queryAll(By.directive(SdApiContractSourceEditor))[0]
-        .componentInstance as unknown as SourceEditorInternals;
+    it('switches a mapped node between source and static through the drawer', () => {
+      // why đi qua drawer: source editor có 29 spec riêng rồi. Cái đáng test ở đây là commit hạ cánh
+      // đúng vào `req.query.keyword` chứ không phải mode picker hoạt động.
+      clickRow('query', 'keyword');
+      drawer().applyCurrent({ type: 'string', value: 'phone' });
+      saveDrawer();
 
-      sourceEditor.setMode('static');
-      fixture.detectChanges();
-      expect(component.model()!.req.query!['keyword'].value as unknown).toBe('');
+      expect(component.model()!.req.query!['keyword'].value as unknown).toBe('phone');
       expect(component.model()!.req.query!['keyword'].source).toBeUndefined();
 
-      const staticEditor = fixture.debugElement.queryAll(By.directive(SdApiContractSourceEditor))[0]
-        .componentInstance as unknown as SourceEditorInternals;
-      staticEditor.setStaticScalar('phone');
-      fixture.detectChanges();
-      expect(component.model()!.req.query!['keyword'].value as unknown).toBe('phone');
+      clickRow('query', 'keyword');
+      drawer().applyCurrent({ type: 'string', source: '${input.keyword}' });
+      saveDrawer();
 
-      const backToSource = fixture.debugElement.queryAll(By.directive(SdApiContractSourceEditor))[0]
-        .componentInstance as unknown as SourceEditorInternals;
-      backToSource.setMode('source');
-      backToSource.setSource('${input.keyword}');
-      fixture.detectChanges();
       expect(component.model()!.req.query!['keyword'].source).toBe('${input.keyword}');
       expect('value' in component.model()!.req.query!['keyword']).toBeFalse();
     });
 
-    it('appends an inserted reference to the expression', () => {
-      const sourceEditor = fixture.debugElement.queryAll(By.directive(SdApiContractSourceEditor))[0]
-        .componentInstance as unknown as SourceEditorInternals;
-      sourceEditor.setSource('prefix-');
-      fixture.detectChanges();
-
-      const next = fixture.debugElement.queryAll(By.directive(SdApiContractSourceEditor))[0]
-        .componentInstance as unknown as SourceEditorInternals;
-      next.insertReference('${input.keyword}');
-      fixture.detectChanges();
+    it('authors a composite template through the drawer', () => {
+      clickRow('query', 'keyword');
+      drawer().applyCurrent({ type: 'string', source: 'prefix-${input.keyword}' });
+      saveDrawer();
 
       expect(component.model()!.req.query!['keyword'].source).toBe('prefix-${input.keyword}');
+    });
+
+    it('emits exactly one modelChange per Save, no matter how much was edited', () => {
+      // why: đây là lời hứa công khai của component. Drawer sửa tên, type và mapping cùng lúc mà chỉ
+      // được phát MỘT contract mới — nếu không, một hành động của người dùng thành ba lần cha re-render.
+      const before = emissions.length;
+
+      clickRow('query', 'page');
+      drawer().setName('pageIndex');
+      drawer().applyCurrent({ type: 'number', required: true, source: '${input.page}' });
+      saveDrawer();
+
+      expect(emissions.length - before).toBe(1);
+    });
+
+    it('keeps a contract-level problem savable, because diagnostics own it', () => {
+      clickRow('query', 'keyword');
+      drawer().applyCurrent({ type: 'string', source: '${input.khongTonTai}' });
+      saveDrawer();
+
+      expect(component.model()!.req.query!['keyword'].source).toBe('${input.khongTonTai}');
+      expect(internals.diagnostics().some(diagnostic => diagnostic.code === 'mapping.reference.missing')).toBeTrue();
+    });
+
+    it('renders no editable control in the record list itself', () => {
+      // why: bất biến của contract này. Một control lọt ra ngoài drawer là hai nguồn sự thật cho cùng
+      // một node, và là đường để cây đổi giữa lúc drawer đang mở.
+      const list = host().querySelector('[data-autoid="acb-query-add"]')?.closest('.sd-acb-record');
+      const rows = host().querySelectorAll('[data-autoid^="acb-query-"]');
+      expect(rows.length).toBeGreaterThan(0);
+
+      for (const row of Array.from(rows)) {
+        expect(row.querySelector('sd-input'))
+          .withContext(row.getAttribute('data-autoid') ?? '')
+          .toBeNull();
+        expect(row.querySelector('sd-select'))
+          .withContext(row.getAttribute('data-autoid') ?? '')
+          .toBeNull();
+        expect(row.querySelector('sd-code-editor')).toBeNull();
+      }
+      expect(list).withContext('record list container').not.toBeNull();
     });
 
     it('suggests input fields and injected env variables, marking the sensitive one without a value', () => {
@@ -513,15 +557,17 @@ describe('SdApiContractBuilder', () => {
       expect(internals.outputSuggestions().some(suggestion => suggestion.root === 'res')).toBeTrue();
     });
 
-    it('shows an inline error on the node that references an unknown env variable', () => {
+    it('reports an unknown env variable through diagnostics, and shows the row unmapped-free', () => {
+      // why đổi chỗ khẳng định: hàng thu gọn không còn mang chẩn đoán từng node — nó chỉ đọc. Lỗi vẫn
+      // phải nổi lên, chỉ là ở danh sách chẩn đoán và bước Kiểm tra, nơi người dùng thấy TẤT CẢ lỗi
+      // cùng lúc thay vì phải cuộn qua từng hàng.
       const contract = sdApiContractSearchSample();
       contract.req.headers!['Authorization'] = { type: 'string', source: 'Bearer ${env.nope}' };
       seed(contract);
       goToStep(2);
 
-      const card = host().querySelector('.sd-acb-node[data-path="req.headers.Authorization"]');
-      expect(card).not.toBeNull();
-      expect(card!.querySelector('.sd-acb-node__diagnostic[data-severity="error"]')).not.toBeNull();
+      expect(internals.diagnostics().some(diagnostic => diagnostic.code === 'mapping.env.unknown')).toBeTrue();
+      expect(host().querySelector('[data-autoid="acb-headers-Authorization"]')).not.toBeNull();
     });
   });
 
@@ -557,9 +603,11 @@ describe('SdApiContractBuilder', () => {
       internals.useResponseFieldAsOutput('body.items');
       fixture.detectChanges();
 
-      const editor = nodeEditors()[0];
-      const items = (component.model()!.output.schema as unknown as SdApiContractStructuralNode).items!;
-      editor.requestRemove(['items'], 'name', items.properties!['name'], 'output.schema.items.properties.name');
+      // why xoá qua hàng: tầng output là `array`, field nằm ở `items.properties`. Danh sách phải tự
+      // biết đọc `items` — đọc thẳng `properties` sẽ ra rỗng và cả tầng output thành không sửa được.
+      const remove = host().querySelector<HTMLElement>('[data-autoid="acb-output-name-remove"]');
+      expect(remove).withContext('remove button on the adopted output row').not.toBeNull();
+      remove!.click();
       fixture.detectChanges();
 
       const output = component.model()!.output.schema as unknown as SdApiContractStructuralNode;
@@ -621,6 +669,71 @@ describe('SdApiContractBuilder', () => {
 
       expect(host().querySelector('.sd-acb-diagnostics__badge[data-severity="ok"]')).not.toBeNull();
     });
+
+    it('renders the review JSON as an editable editor so a contract can be pasted in', () => {
+      seed();
+      goToStep(5);
+
+      const editor = fixture.debugElement.queryAll(By.directive(SdCodeEditor))[0];
+      expect(editor).withContext('review step should host a code editor').toBeDefined();
+      expect((editor.componentInstance as SdCodeEditor).viewed()).toBeFalse();
+    });
+
+    it('replaces the contract when a valid one is pasted, and re-formats it', () => {
+      seed();
+      goToStep(5);
+
+      const pasted = sdApiContractCreateSample();
+      internals.applyPastedJson(pasted as unknown);
+      fixture.detectChanges();
+
+      expect(component.model()!.code).toBe(pasted.code);
+      // why: text hiển thị đi qua serializer nên format 2 space là tất định, không phụ thuộc chuỗi
+      // người dùng dán vào.
+      expect(internals.json()).toContain('\n  "code": ');
+      expect(internals.diagnostics().some(diagnostic => diagnostic.code === 'contract.invalid')).toBeFalse();
+    });
+
+    it('keeps the contract and reports contract.invalid when the pasted JSON is malformed', () => {
+      seed();
+      goToStep(5);
+
+      internals.applyPastedJson('{"code": ');
+      fixture.detectChanges();
+
+      expect(component.model()!.code).toBe('product.search');
+      expect(internals.diagnostics().some(diagnostic => diagnostic.code === 'contract.invalid')).toBeTrue();
+    });
+
+    it('clears the paste error once a valid contract is pasted', () => {
+      seed();
+      goToStep(5);
+
+      internals.applyPastedJson('{"code": ');
+      fixture.detectChanges();
+      expect(internals.diagnostics().some(diagnostic => diagnostic.code === 'contract.invalid')).toBeTrue();
+
+      internals.applyPastedJson(sdApiContractCreateSample() as unknown);
+      fixture.detectChanges();
+
+      expect(internals.diagnostics().some(diagnostic => diagnostic.code === 'contract.invalid')).toBeFalse();
+    });
+
+    it('loads a pasted contract verbatim instead of repairing the missing parts', () => {
+      seed();
+      goToStep(5);
+
+      // why: contract ngoài có thể thiếu/sai — component phải nạp nguyên trạng rồi CHẨN ĐOÁN. Tự
+      // thêm `output.schema` hay `res` sẽ che đúng lỗi mà tác giả contract cần thấy.
+      internals.applyPastedJson({ contractVersion: 1, code: 'partial', name: 'Partial', req: { method: 'GET', url: '/x' } });
+      fixture.detectChanges();
+
+      const model = component.model() as unknown as Record<string, unknown>;
+      expect(model['code']).toBe('partial');
+      expect('output' in model).toBeFalse();
+      expect('res' in model).toBeFalse();
+      expect(internals.diagnostics().length).toBeGreaterThan(0);
+    });
   });
 
   describe('outputs', () => {
@@ -666,7 +779,7 @@ describe('SdApiContractBuilder', () => {
       expect(host().querySelector('.sd-acb__steps')).not.toBeNull();
       expect(host().querySelector<HTMLInputElement>('sd-input input')?.disabled).toBeTrue();
       goToStep(1);
-      expect(host().querySelector('button[data-autoId$="acb-input-input-schema-add"]')).toBeNull();
+      expect(host().querySelector('button[data-autoId$="acb-input-add"]')).toBeNull();
     });
 
     it('renders a summary and the JSON in view mode', () => {
@@ -686,7 +799,7 @@ describe('SdApiContractBuilder', () => {
 
       expect(host().getAttribute('data-autoId')).toBe('acb');
       goToStep(1);
-      expect(host().querySelector('button[data-autoId$="acb-input-input-schema-add"]')).not.toBeNull();
+      expect(host().querySelector('button[data-autoId$="acb-input-add"]')).not.toBeNull();
     });
 
     it('omits the attributes when no autoId is given', () => {

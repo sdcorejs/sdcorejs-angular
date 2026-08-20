@@ -11,6 +11,7 @@ import {
   output,
   signal,
   untracked,
+  viewChild,
 } from '@angular/core';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdButton } from '@sdcorejs/angular/components/button';
@@ -38,19 +39,30 @@ import {
   type SdApiContractRestNode,
 } from './api-contract.model';
 import {
+  addSdApiContractProperty,
   cloneSdApiContract,
   cloneSdApiContractNode,
   createSdApiContractNode,
   formatSdApiContractExpression,
+  getSdApiContractNodeAt,
   listSdApiContractResponseFields,
   listSdApiContractSchemaFields,
+  renameSdApiContractProperty,
   resolveSdApiContractResponsePath,
+  sdApiContractRecordRename,
+  sdApiContractRecordSet,
+  setSdApiContractNodeAt,
   type SdApiContractSchemaField,
   type SdApiContractStructuralNode,
 } from './api-contract.schema';
 import { serializeSdApiContract } from './api-contract.serializer';
 import { validateSdApiContract } from './api-contract.validation';
 import { SdApiContractDiagnosticList } from './components/api-contract-diagnostic-list.component';
+import {
+  SdApiContractNodeDrawer,
+  type SdApiContractNodeCommit,
+  type SdApiContractNodeEditRequest,
+} from './components/api-contract-node-drawer.component';
 import { SdApiContractNodeEditor } from './components/api-contract-node-editor.component';
 import { SdApiContractRecordEditor } from './components/api-contract-record-editor.component';
 import type { SdApiContractSuggestion } from './components/api-contract-suggestion.model';
@@ -67,6 +79,22 @@ interface SdApiContractStep {
 }
 
 type SdApiContractNodeRecord = Record<string, SdApiContractStructuralNode>;
+
+/** Every place a node can live. The builder needs it to route a commit back to its owner. */
+type SdApiContractDrawerSection =
+  | 'input.schema'
+  | 'req.path'
+  | 'req.query'
+  | 'req.headers'
+  | 'req.body'
+  | 'res.headers'
+  | 'res.body'
+  | 'output.schema';
+
+interface SdApiContractDrawerTarget {
+  section: SdApiContractDrawerSection;
+  request: SdApiContractNodeEditRequest;
+}
 
 const STEP_GENERAL = 0;
 const STEP_INPUT = 1;
@@ -99,6 +127,7 @@ const STEP_REVIEW = 5;
     SdTranslatePipe,
     SdApiContractDiagnosticList,
     SdApiContractNodeEditor,
+    SdApiContractNodeDrawer,
     SdApiContractRecordEditor,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -164,9 +193,41 @@ export class SdApiContractBuilder {
     };
   });
 
+  // why: builder sở hữu ĐÚNG MỘT drawer, nên phải tự nhớ danh sách nào vừa yêu cầu mở nó. Không có
+  // mốc này thì `applyNodeCommit` không biết ghi kết quả vào `req.query` hay `res.headers`.
+  readonly #drawerTarget = signal<SdApiContractDrawerTarget | null>(null);
+
+  protected readonly nodeDrawer = viewChild<SdApiContractNodeDrawer>('nodeDrawer');
+
+  protected readonly drawerLayer = computed<'schema' | 'mapping'>(() =>
+    this.#drawerTarget()?.section === 'input.schema' ? 'schema' : 'mapping'
+  );
+
+  // why chỉ input/output schema: `transform` là thuộc tính của schema frontend. `req`/`res` mô tả HTTP,
+  // ở đó một giá trị thời gian đã là chuỗi trên đường truyền rồi.
+  protected readonly drawerAllowsTransform = computed(() => {
+    const section = this.#drawerTarget()?.section;
+    return section === 'input.schema' || section === 'output.schema';
+  });
+
+  protected readonly drawerSuggestions = computed<readonly SdApiContractSuggestion[]>(() => {
+    const section = this.#drawerTarget()?.section;
+    if (section === undefined) return [];
+    if (section === 'output.schema') return this.outputSuggestions();
+    if (section === 'res.headers' || section === 'res.body') return this.outputSuggestions();
+    return this.requestSuggestions();
+  });
+
+  // why: JSON dán vào có thể chưa parse được (đang gõ dở, thiếu ngoặc). Lỗi đó KHÔNG đến từ
+  // `validateSdApiContract` — nó chưa bao giờ thấy contract — nên phải mang riêng rồi trộn vào
+  // danh sách chẩn đoán, để người dán thấy lý do thay vì thấy contract im lặng không đổi.
+  readonly #pasteError = signal<SdApiContractDiagnostic | null>(null);
+
   protected readonly diagnostics = computed<readonly SdApiContractDiagnostic[]>(() => {
     const draft = this.#draft();
-    return draft ? validateSdApiContract(draft, this.#configuration) : [];
+    const base = draft ? validateSdApiContract(draft, this.#configuration) : [];
+    const pasteError = this.#pasteError();
+    return pasteError ? [pasteError, ...base] : base;
   });
 
   protected readonly json = computed(() => serializeSdApiContract(this.#draft()));
@@ -311,6 +372,86 @@ export class SdApiContractBuilder {
     this.#commit({ ...draft, req: { ...draft.req, url: typeof value === 'string' ? value : '' } });
   }
 
+  // -------------------------------------------------------------------------
+  // Drawer
+  // -------------------------------------------------------------------------
+
+  /**
+   * Opens the one drawer for whichever list asked.
+   *
+   * why gác `readonly` ở đây nữa: hàng thu gọn đã tự chặn khi read-only, nhưng builder là nơi duy nhất
+   * biết `mode`/`disabled` thật. Hai lớp gác rẻ hơn một đường mở drawer lọt trong chế độ xem.
+   */
+  protected openNodeDrawer(section: SdApiContractDrawerSection, request: SdApiContractNodeEditRequest): void {
+    if (this.readonly()) return;
+
+    this.#drawerTarget.set({ section, request });
+    const drawer = this.nodeDrawer();
+    if (!drawer) return;
+
+    if (request.name === null || request.node === null) drawer.openForAdd(request.siblingNames);
+    else drawer.openForEdit(request.name, request.node, request.siblingNames);
+  }
+
+  /**
+   * Writes a committed node back where it came from — one `modelChange`, at Save time.
+   *
+   * A rename goes through `sdApiContractRecordRename` first so the entry keeps its position in the
+   * JSON instead of jumping to the end. The drawer has already refused a duplicate name, so the
+   * rename cannot collide by the time it reaches here.
+   */
+  protected applyNodeCommit(commit: SdApiContractNodeCommit): void {
+    const target = this.#drawerTarget();
+    const draft = this.#draft();
+    this.#drawerTarget.set(null);
+    if (!target || !draft) return;
+
+    const previous = target.request.name;
+    const pointer = target.request.pointer ?? [];
+
+    switch (target.section) {
+      case 'req.path':
+      case 'req.query':
+      case 'req.headers': {
+        const key = target.section.slice('req.'.length) as 'path' | 'query' | 'headers';
+        const record = (draft.req?.[key] ?? {}) as unknown as SdApiContractNodeRecord;
+        this.setRequestRecord(key, commitIntoRecord(record, previous, commit));
+        return;
+      }
+      case 'res.headers': {
+        const record = (draft.res?.headers ?? {}) as unknown as SdApiContractNodeRecord;
+        this.setResponseHeaders(commitIntoRecord(record, previous, commit));
+        return;
+      }
+      case 'input.schema': {
+        const root = draft.input?.schema as unknown as SdApiContractStructuralNode | undefined;
+        if (!root) return;
+        this.setInputSchema(commitIntoProperties(root, pointer, previous, commit));
+        return;
+      }
+      case 'req.body': {
+        const root = draft.req?.body as unknown as SdApiContractStructuralNode | undefined;
+        if (!root) return;
+        this.setRequestBody(commitIntoProperties(root, pointer, previous, commit));
+        return;
+      }
+      case 'res.body': {
+        const root = draft.res?.body as unknown as SdApiContractStructuralNode | undefined;
+        if (!root) return;
+        this.setResponseBody(commitIntoProperties(root, pointer, previous, commit));
+        return;
+      }
+      case 'output.schema': {
+        const root = draft.output?.schema as unknown as SdApiContractStructuralNode | undefined;
+        if (!root) return;
+        this.setOutputSchema(commitIntoProperties(root, pointer, previous, commit));
+        return;
+      }
+      default:
+        return;
+    }
+  }
+
   protected setRequestRecord(section: 'path' | 'query' | 'headers', record: SdApiContractNodeRecord): void {
     const draft = this.#draft();
     if (!draft) return;
@@ -399,11 +540,81 @@ export class SdApiContractBuilder {
     this.setOutputSchema(schema);
   }
 
+  /**
+   * Adopts a contract pasted into the review editor.
+   *
+   * `<sd-code-editor language="json">` emits the PARSED value when the text is valid JSON and the
+   * raw STRING while it is still half-typed. A string therefore means "not parseable yet": keep the
+   * current draft and report it, because replacing a contract with a fragment of text would destroy
+   * the author's work on a keystroke.
+   *
+   * A parseable object is adopted VERBATIM — no field is added, removed or repaired. Whatever is
+   * wrong with it surfaces through `validateSdApiContract`, which is the whole point of pasting.
+   */
+  protected applyPastedJson(value: unknown): void {
+    if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+      this.#pasteError.set({
+        code: 'contract.invalid',
+        severity: 'error',
+        path: '',
+        message: 'The pasted text is not valid JSON. The contract was left unchanged.',
+      });
+      return;
+    }
+
+    this.#pasteError.set(null);
+    this.#commit(cloneSdApiContract(value as SdApiContract));
+  }
+
   #commit(next: SdApiContract): void {
     this.#lastEmitted = next;
     this.#draft.set(next);
     this.model.set(next);
   }
+}
+
+/**
+ * Places a committed node back under a schema root's `properties`.
+ *
+ * why phân biệt add với overwrite: `addSdApiContractProperty` CỐ Ý không ghi đè key đã tồn tại (nó bảo
+ * caller phải tự dedupe). Sửa một field đang có thì phải đi qua `setSdApiContractNodeAt`, nếu không
+ * mọi lần Lưu trên field cũ sẽ im lặng không có tác dụng.
+ */
+function commitIntoProperties(
+  root: SdApiContractStructuralNode,
+  pointer: readonly string[],
+  previous: string | null,
+  commit: SdApiContractNodeCommit
+): SdApiContractStructuralNode {
+  // why đi qua pointer: danh sách nói cho ta biết nó đang đọc `properties` hay `items.properties`.
+  // Ghi thẳng vào root sẽ tạo ra một nhánh `properties` song song mà tầng `array` không bao giờ đọc.
+  const container = getSdApiContractNodeAt(root, pointer);
+  if (!container) return root;
+
+  let next = container;
+  if (previous !== null && previous !== commit.name) {
+    next = renameSdApiContractProperty(next, previous, commit.name);
+  }
+
+  const exists = next.properties && Object.prototype.hasOwnProperty.call(next.properties, commit.name);
+  next = exists
+    ? setSdApiContractNodeAt(next, ['properties', commit.name], commit.node)
+    : addSdApiContractProperty(next, commit.name, commit.node);
+
+  return setSdApiContractNodeAt(root, pointer, next);
+}
+
+/** Places a committed node back into a keyed record, keeping the author's key order. */
+function commitIntoRecord(
+  record: SdApiContractNodeRecord,
+  previous: string | null,
+  commit: SdApiContractNodeCommit
+): SdApiContractNodeRecord {
+  if (previous !== null && previous !== commit.name) {
+    const renamed = sdApiContractRecordRename(record, previous, commit.name);
+    return sdApiContractRecordSet(renamed, commit.name, commit.node);
+  }
+  return sdApiContractRecordSet(record, commit.name, commit.node);
 }
 
 /** Recursively rebuilds a response subtree as a mapped output subtree. */
