@@ -4,6 +4,16 @@
 export type ShowcaseExampleSourceKey =
   | "components/anchor/example-anchor-mac-dinh"
   | "components/anchor/example-mau-va-cat-ngan-chu"
+  | "components/api-contract-builder/example-ba-che-do-nguon-gia-tri"
+  | "components/api-contract-builder/example-che-do-xem"
+  | "components/api-contract-builder/example-contract-sai-va-chan-doan"
+  | "components/api-contract-builder/example-dan-json-de-nap-contract"
+  | "components/api-contract-builder/example-danh-sach-gon-sua-trong-drawer"
+  | "components/api-contract-builder/example-get-tim-kiem-san-pham"
+  | "components/api-contract-builder/example-gia-tri-tinh-theo-kieu-du-lieu"
+  | "components/api-contract-builder/example-ket-qua-chan-doan"
+  | "components/api-contract-builder/example-post-map-body"
+  | "components/api-contract-builder/example-truong-output-cho-dropdown-table"
   | "components/audit-diff/example-custom-value-template"
   | "components/audit-diff/example-format-redact-va-order"
   | "components/audit-diff/example-nested-table"
@@ -360,6 +370,76 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-mau-va-cat-ngan-chu",
     title: "Màu và cắt ngắn chữ",
     description: "Existing “Màu và cắt ngắn chữ” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/api-contract-builder/example-get-tim-kiem-san-pham",
+    pageKey: "components/api-contract-builder",
+    sectionId: "example-get-tim-kiem-san-pham",
+    title: "GET tìm kiếm sản phẩm",
+    description: "Query map từ input, header Authorization nội suy ${env.token}, output là mảng gốc lấy thẳng ${res.body.items}.",
+  },
+  {
+    sourceKey: "components/api-contract-builder/example-post-map-body",
+    pageKey: "components/api-contract-builder",
+    sectionId: "example-post-map-body",
+    title: "POST map body",
+    description: "input.a → req.body.x, input.b → req.body.y, input.c → req.body.z, env.userId → req.body.u, và một literal tĩnh ở req.body.v.",
+  },
+  {
+    sourceKey: "components/api-contract-builder/example-contract-sai-va-chan-doan",
+    pageKey: "components/api-contract-builder",
+    sectionId: "example-contract-sai-va-chan-doan",
+    title: "Contract sai và chẩn đoán",
+    description: "${env.unknown} chưa khai báo, {id} thiếu req.path, ${input.page} không tồn tại, output mảng trỏ vào một số.",
+  },
+  {
+    sourceKey: "components/api-contract-builder/example-ket-qua-chan-doan",
+    pageKey: "components/api-contract-builder",
+    sectionId: "example-ket-qua-chan-doan",
+    title: "Kết quả chẩn đoán",
+    description: "Giá trị đọc trực tiếp từ hai output của demo phía trên.",
+  },
+  {
+    sourceKey: "components/api-contract-builder/example-che-do-xem",
+    pageKey: "components/api-contract-builder",
+    sectionId: "example-che-do-xem",
+    title: "Chế độ xem",
+    description: "Chế độ xem hiển thị tóm tắt cùng JSON; disabled giữ nguyên các bước nhưng khoá chỉnh sửa.",
+  },
+  {
+    sourceKey: "components/api-contract-builder/example-ba-che-do-nguon-gia-tri",
+    pageKey: "components/api-contract-builder",
+    sectionId: "example-ba-che-do-nguon-gia-tri",
+    title: "Ba chế độ nguồn giá trị",
+    description: "keyword lấy từ nguồn (một dropdown, không gõ ${…}); Authorization là template ghép nên mở ở Nâng cao; version là giá trị tĩnh.",
+  },
+  {
+    sourceKey: "components/api-contract-builder/example-danh-sach-gon-sua-trong-drawer",
+    pageKey: "components/api-contract-builder",
+    sectionId: "example-danh-sach-gon-sua-trong-drawer",
+    title: "Danh sách gọn, sửa trong drawer",
+    description: "Mỗi trường là một hàng chỉ để đọc. Bấm hàng hoặc nút Thêm để mở drawer; contract chỉ đổi khi bấm Lưu. Trường object hiện số trường con — bấm vào để đi sâu ngay trong drawer đó, không mở drawer lồng drawer.",
+  },
+  {
+    sourceKey: "components/api-contract-builder/example-gia-tri-tinh-theo-kieu-du-lieu",
+    pageKey: "components/api-contract-builder",
+    sectionId: "example-gia-tri-tinh-theo-kieu-du-lieu",
+    title: "Giá trị tĩnh theo kiểu dữ liệu",
+    description: "Mỗi kiểu dữ liệu render đúng control của nó; object và array dùng sd-code-editor. Giá trị date/datetime lưu dạng ISO.",
+  },
+  {
+    sourceKey: "components/api-contract-builder/example-dan-json-de-nap-contract",
+    pageKey: "components/api-contract-builder",
+    sectionId: "example-dan-json-de-nap-contract",
+    title: "Dán JSON để nạp contract",
+    description: "Sang bước Kiểm tra: nút Copy lấy contract ra, và dán JSON vào chính editor đó để nạp contract mới. JSON sai cú pháp thì contract giữ nguyên và có thêm chẩn đoán contract.invalid.",
+  },
+  {
+    sourceKey: "components/api-contract-builder/example-truong-output-cho-dropdown-table",
+    pageKey: "components/api-contract-builder",
+    sectionId: "example-truong-output-cho-dropdown-table",
+    title: "Trường output cho dropdown / table",
+    description: "listSdApiContractSchemaFields() làm phẳng mảng gốc — đây chính là dữ liệu form-builder sẽ dùng để chọn valueField / displayField và sinh column.",
   },
   {
     sourceKey: "components/audit-diff/example-nested-table",

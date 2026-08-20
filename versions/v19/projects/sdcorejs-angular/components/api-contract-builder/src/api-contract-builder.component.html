@@ -1,0 +1,350 @@
+@let _draft = draft();
+@let _readonly = readonly();
+@let _autoId = autoId();
+@let _diagnostics = diagnostics();
+@let _activeStep = activeStep();
+@let _requestSuggestions = requestSuggestions();
+@let _responseFieldOptions = responseFieldOptions();
+
+<!-- why: contract từ ngoài có thể thiếu hẳn một tầng. Mọi nhánh đọc `_draft.<section>` đều phải
+     gác — builder hiển thị contract sai kèm chẩn đoán chứ không tự vá, và cũng không được nổ. -->
+@if (!_draft) {
+  <div class="sd-acb__empty">
+    <sd-icon name="description" size="lg"></sd-icon>
+    <p>{{ 'core.component.api-contract-builder.empty.contract' | sdTranslate }}</p>
+    @if (!_readonly) {
+      <sd-button
+        type="fill"
+        color="primary"
+        size="sm"
+        prefixIcon="add"
+        [autoId]="_autoId ? _autoId + '-create' : undefined"
+        [title]="'core.component.api-contract-builder.create-contract' | sdTranslate"
+        (click)="createContract()"></sd-button>
+    }
+  </div>
+} @else if (isView()) {
+  <section class="sd-acb__view">
+    <dl class="sd-acb__summary">
+      <dt>{{ 'core.component.api-contract-builder.contract.code' | sdTranslate }}</dt>
+      <dd data-field="code">{{ _draft.code }}</dd>
+      <dt>{{ 'core.component.api-contract-builder.contract.name' | sdTranslate }}</dt>
+      <dd data-field="name">{{ _draft.name }}</dd>
+      <dt>{{ 'core.component.api-contract-builder.request.method' | sdTranslate }}</dt>
+      <dd data-field="method">{{ _draft.req?.method }}</dd>
+      <dt>{{ 'core.component.api-contract-builder.request.url' | sdTranslate }}</dt>
+      <dd data-field="url">{{ _draft.req?.url }}</dd>
+    </dl>
+
+    <sd-api-contract-diagnostic-list
+      [diagnostics]="_diagnostics"
+      [autoId]="_autoId ? _autoId + '-diagnostics' : undefined"></sd-api-contract-diagnostic-list>
+
+    <sd-code-editor language="json" [viewed]="true" maxHeight="420px" [model]="json()"></sd-code-editor>
+  </section>
+} @else {
+  <nav class="sd-acb__steps" [attr.aria-label]="'core.component.api-contract-builder.steps' | sdTranslate">
+    @for (step of steps; track step.index) {
+      <button
+        type="button"
+        class="sd-acb__step"
+        [class.sd-acb__step--active]="_activeStep === step.index"
+        [attr.aria-current]="_activeStep === step.index ? 'step' : null"
+        [attr.data-autoId]="_autoId ? _autoId + '-step-' + step.key : null"
+        (click)="goToStep(step.index)">
+        <span class="sd-acb__step-index">{{ step.index + 1 }}</span>
+        <span class="sd-acb__step-label">{{ step.label }}</span>
+      </button>
+    }
+  </nav>
+
+  <div class="sd-acb__body">
+    @switch (_activeStep) {
+      @case (0) {
+        <section class="sd-acb__section" data-step="general">
+          <div class="sd-acb__grid">
+            <sd-input
+              size="sm"
+              hideInlineError
+              [autoId]="_autoId ? _autoId + '-code' : undefined"
+              [label]="'core.component.api-contract-builder.contract.code' | sdTranslate"
+              [model]="_draft.code"
+              [disabled]="_readonly"
+              (sdChange)="setText('code', $event)"></sd-input>
+            <sd-input
+              size="sm"
+              hideInlineError
+              [autoId]="_autoId ? _autoId + '-name' : undefined"
+              [label]="'core.component.api-contract-builder.contract.name' | sdTranslate"
+              [model]="_draft.name"
+              [disabled]="_readonly"
+              (sdChange)="setText('name', $event)"></sd-input>
+            <sd-input
+              size="sm"
+              hideInlineError
+              [autoId]="_autoId ? _autoId + '-description' : undefined"
+              [label]="'core.component.api-contract-builder.contract.description' | sdTranslate"
+              [model]="_draft.description ?? ''"
+              [disabled]="_readonly"
+              (sdChange)="setText('description', $event)"></sd-input>
+            <sd-input
+              size="sm"
+              hideInlineError
+              [autoId]="_autoId ? _autoId + '-version' : undefined"
+              [label]="'core.component.api-contract-builder.contract.version' | sdTranslate"
+              [model]="contractVersion"
+              [readonly]="true"
+              [disabled]="true"></sd-input>
+          </div>
+        </section>
+      }
+
+      @case (1) {
+        <section class="sd-acb__section" data-step="input">
+          @if (_draft.input?.schema; as _inputSchema) {
+            <sd-api-contract-node-editor
+              [node]="$any(_inputSchema)"
+              basePath="input.schema"
+              [disabled]="_readonly"
+              [autoId]="_autoId ? _autoId + '-input' : undefined"
+              (nodeChange)="setInputSchema($event)"
+                (editRequest)="openNodeDrawer('input.schema', $event)"></sd-api-contract-node-editor>
+          } @else {
+            <p class="sd-acb__empty-text">{{ 'core.component.api-contract-builder.empty.section' | sdTranslate }}</p>
+          }
+        </section>
+      }
+
+      @case (2) {
+        <section class="sd-acb__section" data-step="request">
+          @if (_draft.req; as _req) {
+            <div class="sd-acb__grid">
+              <sd-select
+                size="sm"
+                hideInlineError
+                [clearable]="false"
+                [autoId]="_autoId ? _autoId + '-method' : undefined"
+                [label]="'core.component.api-contract-builder.request.method' | sdTranslate"
+                [items]="methodOptions"
+                valueField="value"
+                displayField="label"
+                [model]="_req.method"
+                [disabled]="_readonly"
+                (sdChange)="setMethod($event)"></sd-select>
+              <sd-input
+                class="sd-acb__url"
+                size="sm"
+                hideInlineError
+                [autoId]="_autoId ? _autoId + '-url' : undefined"
+                [label]="'core.component.api-contract-builder.request.url' | sdTranslate"
+                [placeholder]="urlPlaceholder"
+                [model]="_req.url"
+                [disabled]="_readonly"
+                (sdChange)="setUrl($event)"></sd-input>
+            </div>
+
+            <h4 class="sd-acb__heading">{{ 'core.component.api-contract-builder.request.path' | sdTranslate }}</h4>
+            <sd-api-contract-record-editor
+              [record]="$any(_req.path)"
+              basePath="req.path"
+              [disabled]="_readonly"
+              [emptyLabel]="'core.component.api-contract-builder.empty.path' | sdTranslate"
+              [autoId]="_autoId ? _autoId + '-path' : undefined"
+              (recordChange)="setRequestRecord('path', $event)"
+              (editRequest)="openNodeDrawer('req.path', $event)"></sd-api-contract-record-editor>
+
+            <h4 class="sd-acb__heading">{{ 'core.component.api-contract-builder.request.query' | sdTranslate }}</h4>
+            <sd-api-contract-record-editor
+              [record]="$any(_req.query)"
+              basePath="req.query"
+              [disabled]="_readonly"
+              [emptyLabel]="'core.component.api-contract-builder.empty.query' | sdTranslate"
+              [autoId]="_autoId ? _autoId + '-query' : undefined"
+              (recordChange)="setRequestRecord('query', $event)"
+              (editRequest)="openNodeDrawer('req.query', $event)"></sd-api-contract-record-editor>
+
+            <h4 class="sd-acb__heading">{{ 'core.component.api-contract-builder.request.headers' | sdTranslate }}</h4>
+            <sd-api-contract-record-editor
+              [record]="$any(_req.headers)"
+              basePath="req.headers"
+              [disabled]="_readonly"
+              [emptyLabel]="'core.component.api-contract-builder.empty.headers' | sdTranslate"
+              [autoId]="_autoId ? _autoId + '-headers' : undefined"
+              (recordChange)="setRequestRecord('headers', $event)"
+              (editRequest)="openNodeDrawer('req.headers', $event)"></sd-api-contract-record-editor>
+
+            <h4 class="sd-acb__heading">{{ 'core.component.api-contract-builder.request.body' | sdTranslate }}</h4>
+            @if (_req.body) {
+              <sd-api-contract-node-editor
+                [node]="$any(_req.body)"
+                basePath="req.body"
+                [disabled]="_readonly"
+                [autoId]="_autoId ? _autoId + '-body' : undefined"
+                (nodeChange)="setRequestBody($event)"
+                  (editRequest)="openNodeDrawer('req.body', $event)"></sd-api-contract-node-editor>
+              @if (!_readonly) {
+                <sd-button
+                  type="text"
+                  color="error"
+                  size="sm"
+                  prefixIcon="delete"
+                  [autoId]="_autoId ? _autoId + '-remove-body' : undefined"
+                  [title]="'core.component.api-contract-builder.request.remove-body' | sdTranslate"
+                  (click)="removeRequestBody()"></sd-button>
+              }
+            } @else {
+              <p class="sd-acb__empty-text">{{ 'core.component.api-contract-builder.empty.body' | sdTranslate }}</p>
+              @if (!_readonly) {
+                <sd-button
+                  type="light"
+                  size="sm"
+                  prefixIcon="add"
+                  [autoId]="_autoId ? _autoId + '-add-body' : undefined"
+                  [title]="'core.component.api-contract-builder.request.add-body' | sdTranslate"
+                  (click)="addRequestBody()"></sd-button>
+              }
+            }
+          } @else {
+            <p class="sd-acb__empty-text">{{ 'core.component.api-contract-builder.empty.section' | sdTranslate }}</p>
+          }
+        </section>
+      }
+
+      @case (3) {
+        <section class="sd-acb__section" data-step="response">
+          @if (_draft.res; as _res) {
+            <sd-input
+              class="sd-acb__status"
+              size="sm"
+              hideInlineError
+              [autoId]="_autoId ? _autoId + '-status' : undefined"
+              [label]="'core.component.api-contract-builder.response.status' | sdTranslate"
+              [helperText]="'core.component.api-contract-builder.response.status-hint' | sdTranslate"
+              [model]="statusText()"
+              [disabled]="_readonly"
+              (sdChange)="setStatus($event)"></sd-input>
+
+            <h4 class="sd-acb__heading">{{ 'core.component.api-contract-builder.response.headers' | sdTranslate }}</h4>
+            <sd-api-contract-record-editor
+              [record]="$any(_res.headers)"
+              basePath="res.headers"
+              [disabled]="_readonly"
+              [emptyLabel]="'core.component.api-contract-builder.empty.headers' | sdTranslate"
+              [autoId]="_autoId ? _autoId + '-res-headers' : undefined"
+              (recordChange)="setResponseHeaders($event)"
+              (editRequest)="openNodeDrawer('res.headers', $event)"></sd-api-contract-record-editor>
+
+            <h4 class="sd-acb__heading">{{ 'core.component.api-contract-builder.response.body' | sdTranslate }}</h4>
+            @if (_res.body) {
+              <sd-api-contract-node-editor
+                [node]="$any(_res.body)"
+                basePath="res.body"
+                [disabled]="_readonly"
+                [autoId]="_autoId ? _autoId + '-res-body' : undefined"
+                (nodeChange)="setResponseBody($event)"
+                  (editRequest)="openNodeDrawer('res.body', $event)"></sd-api-contract-node-editor>
+              @if (!_readonly) {
+                <sd-button
+                  type="text"
+                  color="error"
+                  size="sm"
+                  prefixIcon="delete"
+                  [autoId]="_autoId ? _autoId + '-remove-res-body' : undefined"
+                  [title]="'core.component.api-contract-builder.response.remove-body' | sdTranslate"
+                  (click)="removeResponseBody()"></sd-button>
+              }
+            } @else {
+              <p class="sd-acb__empty-text">{{ 'core.component.api-contract-builder.empty.body' | sdTranslate }}</p>
+              @if (!_readonly) {
+                <sd-button
+                  type="light"
+                  size="sm"
+                  prefixIcon="add"
+                  [autoId]="_autoId ? _autoId + '-add-res-body' : undefined"
+                  [title]="'core.component.api-contract-builder.response.add-body' | sdTranslate"
+                  (click)="addResponseBody()"></sd-button>
+              }
+            }
+          } @else {
+            <p class="sd-acb__empty-text">{{ 'core.component.api-contract-builder.empty.section' | sdTranslate }}</p>
+          }
+        </section>
+      }
+
+      @case (4) {
+        <section class="sd-acb__section" data-step="output">
+          @if (_draft.output?.schema; as _outputSchema) {
+            @if (!_readonly && _responseFieldOptions.length) {
+              <sd-select
+                class="sd-acb__adopt"
+                size="sm"
+                hideInlineError
+                [autoId]="_autoId ? _autoId + '-use-response' : undefined"
+                [label]="'core.component.api-contract-builder.output.use-response' | sdTranslate"
+                [items]="_responseFieldOptions"
+                valueField="value"
+                displayField="label"
+                [(model)]="responseFieldToken"
+                (sdChange)="useResponseFieldAsOutput($event)"></sd-select>
+            }
+
+            <sd-api-contract-node-editor
+              [node]="$any(_outputSchema)"
+              basePath="output.schema"
+              [disabled]="_readonly"
+              [autoId]="_autoId ? _autoId + '-output' : undefined"
+              (nodeChange)="setOutputSchema($event)"
+                (editRequest)="openNodeDrawer('output.schema', $event)"></sd-api-contract-node-editor>
+
+            <h4 class="sd-acb__heading">{{ 'core.component.api-contract-builder.output.fields' | sdTranslate }}</h4>
+            @let _outputFields = outputFields();
+            @if (_outputFields.length) {
+              <ul class="sd-acb__fields" [attr.data-autoId]="_autoId ? _autoId + '-output-fields' : null">
+                @for (field of _outputFields; track field.path) {
+                  <li class="sd-acb__field">
+                    <code>{{ field.path }}</code>
+                    <span class="sd-acb__field-type">{{ field.type }}</span>
+                    @if (field.required === true) {
+                      <span class="sd-acb__field-flag">{{ 'core.component.api-contract-builder.field.required' | sdTranslate }}</span>
+                    }
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="sd-acb__empty-text">{{ 'core.component.api-contract-builder.output.no-fields' | sdTranslate }}</p>
+            }
+          } @else {
+            <p class="sd-acb__empty-text">{{ 'core.component.api-contract-builder.empty.section' | sdTranslate }}</p>
+          }
+        </section>
+      }
+
+      @default {
+        <section class="sd-acb__section" data-step="review">
+          <sd-api-contract-diagnostic-list
+            [diagnostics]="_diagnostics"
+            [autoId]="_autoId ? _autoId + '-diagnostics' : undefined"
+            (navigate)="goToDiagnostic($event)"></sd-api-contract-diagnostic-list>
+
+          <h4 class="sd-acb__heading">{{ 'core.component.api-contract-builder.review.json' | sdTranslate }}</h4>
+          <sd-code-editor
+            language="json"
+            maxHeight="480px"
+            [viewed]="disabled() || mode() === 'view'"
+            [model]="json()"
+            (modelChange)="applyPastedJson($event)"></sd-code-editor>
+        </section>
+      }
+    }
+  </div>
+
+  <!-- why MỘT instance duy nhất, đặt ngoài @switch: mỗi layer một drawer sẽ là mỗi layer một draft, và
+       đổi step giữa lúc đang sửa sẽ destroy drawer cùng với thay đổi chưa lưu. -->
+  <sd-api-contract-node-drawer
+    #nodeDrawer
+    [layer]="drawerLayer()"
+    [allowTransform]="drawerAllowsTransform()"
+    [suggestions]="drawerSuggestions()"
+    [autoId]="_autoId ? _autoId + '-node-drawer' : undefined"
+    (nodeCommit)="applyNodeCommit($event)"></sd-api-contract-node-drawer>
+}

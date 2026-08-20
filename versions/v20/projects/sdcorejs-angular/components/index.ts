@@ -13,6 +13,7 @@ export * from '@sdcorejs/angular/components/section';
 export * from '@sdcorejs/angular/components/inform';
 export * from '@sdcorejs/angular/components/form-generic';
 export * from '@sdcorejs/angular/components/anchor';
+export * from '@sdcorejs/angular/components/api-contract-builder';
 export * from '@sdcorejs/angular/components/query-builder';
 export * from '@sdcorejs/angular/components/org-chart';
 export * from '@sdcorejs/angular/components/tree';

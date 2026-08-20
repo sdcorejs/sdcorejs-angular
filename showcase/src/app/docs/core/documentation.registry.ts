@@ -418,6 +418,20 @@ const COMPONENT_PAGES = [
   }),
   defineDocPage({
     category: 'components',
+    slug: 'api-contract-builder',
+    title: 'API Contract Builder',
+    description: 'Trình khai báo API contract dạng JSON: input schema, request, response và output mapping.',
+    selector: 'sd-api-contract-builder',
+    importPath: '@sdcorejs/angular/components/api-contract-builder',
+    publishedDocId: 'components/api-contract-builder/sd-api-contract-builder',
+    keywords: ['api contract', 'rest mapping', 'endpoint', 'json schema', 'low-code'],
+    status: 'stable',
+    demoSectionCount: 10,
+    loadComponent: () =>
+      import('../../pages/components/api-contract-builder/api-contract-builder-demo.component').then(m => m.ApiContractBuilderDemoComponent),
+  }),
+  defineDocPage({
+    category: 'components',
     slug: 'query-builder',
     title: 'Query Builder',
     description: 'Bộ dựng điều kiện dạng cây với nhóm AND/OR lồng nhau và nhiều kiểu trường.',
