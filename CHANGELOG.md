@@ -30,6 +30,10 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
   - **`required` reads Có / Không** in the picker instead of `Bắt buộc` / `Không bắt buộc`, which is what the documentation already described and what fits the column without truncating. The "required" flag shown beside an output field in `mode="view"` keeps its own wording through a new `field.required` key, since a bare *Có* means nothing there.
   - 78 new i18n keys across all five locales, docs in `components/api-contract-builder/sd-api-contract-builder.md`, and a ten-section showcase page at `/components/api-contract-builder`.
 
+### Fixed
+
+- **`<sd-table>` with `type: 'local'` dropped every row once an inline column filter on a `MULTIPLE` `values` / `lazy-values` column had two or more values selected.** Client-side matching picked its branch from the array-ness of the **row** value instead of the filter value, so a scalar cell (`status: 'ACTIVE'`) fell through to a strict `===` against `['ACTIVE','PENDING'].toString()` → `'active,pending'` and could never match. Selecting exactly one value happened to work (`['ACTIVE'].toString() === 'ACTIVE'`), which is why the defect read as intermittent rather than broken. Matching now branches on the shape of the actual values: several selected values are OR-ed — mirroring the `IN` operator `SdConvertToPagingReq` sends in `type: 'server'`, so local and server tables agree — and an array-valued cell matches when the intersection is non-empty. A scalar filter value on a `MULTIPLE` column (e.g. `filter.default: 'ACTIVE'`) no longer throws `TypeError: …map is not a function`.
+
 ## [2.0] - 2026-08-15
 
 Release suffix `2.0` publishes `19.2.0`, `20.2.0`, and `21.2.0` as a stable release across the maintained Angular lines.

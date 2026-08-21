@@ -54,19 +54,20 @@ export const matchesColumnFilter = <T>(
         }
       } else if (type === 'values' || type === 'lazy-values') {
         const columnType = column as SdTableColumnValues<T> | SdTableColumnLazyValues<T>;
-        const isMultiple = columnType.option.selection === 'MULTIPLE';
-        if (isMultiple && Array.isArray(rawColVal)) {
-          const columnValues: string[] =
-            rawColVal.map((i: any) => (Utilities.getNestedValue(i, columnType.option.valueField) ?? '').toString().trim().toLowerCase()) ??
-            [];
-          const filterValues: string[] = rawColumnFilter[field]?.map((v: any) => (v ?? '').toString().trim().toLowerCase());
-          if (filterValues?.length && filterValues.every(fv => !columnValues.includes(fv))) {
-            return false;
-          }
-        } else {
-          if (columnValue !== filterValue) {
-            return false;
-          }
+        // why: chọn nhánh theo HÌNH DẠNG GIÁ TRỊ, không theo `option.selection`. Inline filter dropdown
+        // multiple luôn phát ra mảng, còn dữ liệu hàng thường là scalar; trước đây nhánh lại chọn theo
+        // array-ness của DỮ LIỆU HÀNG nên scalar row rơi xuống so sánh `===` với `['A','B'].toString()`
+        // = 'a,b' và không bao giờ khớp (chọn 1 giá trị thì vô tình đúng, chọn từ 2 là mất hết dòng).
+        const rawFilterValue = rawColumnFilter[field];
+        const filterValues: string[] = (Array.isArray(rawFilterValue) ? rawFilterValue : [rawFilterValue])
+          .map((v: any) => (v ?? '').toString().trim().toLowerCase())
+          .filter(v => !!v);
+        const columnValues: string[] = Array.isArray(rawColVal)
+          ? rawColVal.map((i: any) => (Utilities.getNestedValue(i, columnType.option.valueField) ?? '').toString().trim().toLowerCase())
+          : [columnValue];
+        // why: nhiều giá trị = OR, khớp đúng operator `IN` mà SdConvertToPagingReq gửi cho server.
+        if (filterValues.length && !filterValues.some(fv => columnValues.includes(fv))) {
+          return false;
         }
       } else if (type === 'number') {
         const fValue = +filterValue.replace('>=', '').replace('<=', '').replace('>', '').replace('<', '');
