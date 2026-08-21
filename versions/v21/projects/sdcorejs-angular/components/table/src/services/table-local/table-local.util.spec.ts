@@ -10,6 +10,7 @@ interface TableLocalTestRow {
   };
   amount: number;
   createdAt: string;
+  status?: string;
   statuses?: { id: string; name: string }[];
   children?: TableLocalTestRow[];
 }
@@ -21,6 +22,17 @@ const columns: SdTableOption<TableLocalTestRow>['columns'] = [
   {
     field: 'statuses',
     title: 'Statuses',
+    type: 'values',
+    option: {
+      items: [],
+      valueField: 'id',
+      displayField: 'name',
+      selection: 'MULTIPLE',
+    },
+  },
+  {
+    field: 'status',
+    title: 'Status',
     type: 'values',
     option: {
       items: [],
@@ -76,6 +88,63 @@ describe('table-local.util', () => {
     ).toBeTrue();
     expect(matchesColumnFilter(row, columns, { statuses: ['inactive'] })).toBeFalse();
     expect(matchesColumnFilter(row, columns, { createdAt: { from: '2026-02-01' } })).toBeFalse();
+  });
+
+  it('matches a scalar row value against a MULTIPLE dropdown filter (IN semantics)', () => {
+    const row: TableLocalTestRow = { id: 1, user: { name: 'Alice' }, amount: 10, createdAt: '2026-01-05', status: 'ACTIVE' };
+
+    expect(matchesColumnFilter(row, columns, { status: ['ACTIVE'] })).toBeTrue();
+    // regression: từ 2 giá trị trở lên, scalar row từng bị so với `['ACTIVE','PENDING'].toString()` nên rụng hết dòng
+    expect(matchesColumnFilter(row, columns, { status: ['ACTIVE', 'PENDING'] })).toBeTrue();
+    expect(matchesColumnFilter(row, columns, { status: ['PENDING', 'ACTIVE'] })).toBeTrue();
+    expect(matchesColumnFilter(row, columns, { status: ['DRAFT', 'PENDING'] })).toBeFalse();
+    expect(matchesColumnFilter(row, columns, { status: [] })).toBeTrue();
+  });
+
+  it('accepts a scalar filter value on a MULTIPLE column', () => {
+    const row: TableLocalTestRow = {
+      id: 1,
+      user: { name: 'Alice' },
+      amount: 10,
+      createdAt: '2026-01-05',
+      status: 'ACTIVE',
+      statuses: [{ id: 'active', name: 'Active' }],
+    };
+
+    expect(matchesColumnFilter(row, columns, { status: 'ACTIVE' })).toBeTrue();
+    expect(matchesColumnFilter(row, columns, { status: 'DRAFT' })).toBeFalse();
+    // regression: `filter.default` dạng string trên cột MULTIPLE từng ném TypeError (`.map is not a function`)
+    expect(matchesColumnFilter(row, columns, { statuses: 'active' })).toBeTrue();
+    expect(matchesColumnFilter(row, columns, { statuses: 'vip' })).toBeFalse();
+  });
+
+  it('keeps OR semantics when both the row value and the filter are arrays', () => {
+    const row: TableLocalTestRow = {
+      id: 1,
+      user: { name: 'Alice' },
+      amount: 10,
+      createdAt: '2026-01-05',
+      statuses: [
+        { id: 'active', name: 'Active' },
+        { id: 'vip', name: 'VIP' },
+      ],
+    };
+
+    expect(matchesColumnFilter(row, columns, { statuses: ['vip', 'archived'] })).toBeTrue();
+    expect(matchesColumnFilter(row, columns, { statuses: ['archived', 'banned'] })).toBeFalse();
+  });
+
+  it('filters local items by a MULTIPLE dropdown column filter', () => {
+    const rows = [
+      MapToSdTableItem<TableLocalTestRow>({ id: 1, user: { name: 'Alice' }, amount: 10, createdAt: '2026-01-01', status: 'ACTIVE' }),
+      MapToSdTableItem<TableLocalTestRow>({ id: 2, user: { name: 'Bob' }, amount: 20, createdAt: '2026-01-02', status: 'PENDING' }),
+      MapToSdTableItem<TableLocalTestRow>({ id: 3, user: { name: 'Carol' }, amount: 30, createdAt: '2026-01-03', status: 'DRAFT' }),
+    ];
+
+    const result = filterLocalItems(rows, { type: 'local', columns }, request({ status: ['ACTIVE', 'PENDING'] }));
+
+    expect(result.total).toBe(2);
+    expect(result.items.map(item => item.data.id)).toEqual([1, 2]);
   });
 
   it('filters local table items, sorts by nested fields and returns the requested page', () => {

@@ -252,6 +252,19 @@ tree: {
 - **`sd-select` / `sd-date-range` / `sd-date`** vẫn dùng `(sdChange)` → commit + reload tức thì.
 - **Dense controls:** custom `sdTableFilterDef` templates, editable table-cell controls, external-filter custom templates, and dashboard/table toolbar controls must use `size="sm"` where supported and `hideInlineError` on SD form components (`sd-input`, `sd-select`, `sd-autocomplete`, `sd-date`, `sd-date-range`, `sd-datetime`, `sd-input-number`, `sd-textarea`, `sd-chip`, `sd-chip-calendar`, `sd-input-color`) so inputs do not inflate row/header/toolbar height or inject inline error text into dense surfaces.
 
+#### Inline column filter — local matching semantics (`type: 'local'`)
+
+Client-side matching sống ở `matchesColumnFilter` (`services/table-local/table-local.util.ts`) và bám theo đúng operator mà `SdConvertToPagingReq` gửi lên server ở `type: 'server'`:
+
+| Column `type`                      | Luật khớp                                                                                              |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `'string'`                         | `CONTAIN`, không phân biệt hoa thường                                                                  |
+| `'number'`                         | `=`, hoặc prefix `>` / `>=` / `<` / `<=` gõ trong ô filter                                             |
+| `'boolean'`                        | `'1'`/`'true'` vs `'0'`/`'false'`                                                                      |
+| `'date'` / `'datetime'` / `'time'` | range `{ from, to }`, thiếu một đầu thì biên đó mở                                                     |
+| `'values'` / `'lazy-values'`       | chọn nhiều giá trị = **OR** (tương đương `IN`); dữ liệu hàng dạng mảng thì khớp khi **giao khác rỗng** |
+
+`'values'` / `'lazy-values'` **không** đọc `option.selection` lúc so khớp — nhánh được chọn theo hình dạng giá trị thực tế. Nhờ vậy cột `selection: 'MULTIPLE'` lọc đúng cho cả dữ liệu hàng scalar (`status: 'ACTIVE'`) và dữ liệu hàng mảng (`statuses: [{ id, name }]`), và `filter.default` dạng string trên cột MULTIPLE cũng là input hợp lệ.
 ### Commands (`SdTableCommandNormal<T>`)
 
 `{ color?, icon?: string \| (row)=>string, fontSet?, title?: string \| (row)=>string, disabled?: boolean \| (row)=>boolean, hidden?: boolean \| (row)=>boolean \| Promise<boolean>, click(row), htmlTemplate?(row)=>string }`. Group via `{ ... children: SdTableCommandNormal<T>[] }`.
