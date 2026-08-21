@@ -20,8 +20,10 @@
       [class.c-op-active]="item.value === _model"
       (click)="select(item.value)">
       <span class="c-op-icon" [innerHTML]="item.icon"></span>
-      <span class="c-op-label">{{ item.display }}</span>
-      <span class="c-op-code">{{ item.value }}</span>
+      <span class="c-op-text">
+        <span class="c-op-label">{{ item.display }}</span>
+        <span class="c-op-code">{{ item.value }}</span>
+      </span>
     </button>
   }
 </mat-menu>

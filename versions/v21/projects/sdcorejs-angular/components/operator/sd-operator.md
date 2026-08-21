@@ -43,7 +43,7 @@ Compact operator picker for filter UIs. The trigger shows only the current opera
 ## Visual cues
 - Trigger is an icon-only button; tooltip is the translated label of the current operator.
 - Empty model shows a funnel fallback icon.
-- Menu rows show icon, translated label, and the raw operator code at the end.
+- Menu rows are two-line: the icon sits left of a text block whose first line is the translated label (normal weight) and whose second line is the raw operator code in muted grey monospace. The label never wraps — a long one such as `Lớn hơn, hoặc bằng` widens the panel instead of folding, which is what the previous single-row layout did in narrow table-filter columns.
 - Active operator row gets the active class; disabled trigger cannot open the menu.
 
 ## Behavior notes
