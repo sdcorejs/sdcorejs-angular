@@ -108,7 +108,7 @@
                   (mouseleave)="onMouseLeaveMenuNode($event, node)"
                   [ngStyle]="{
                     backgroundColor:
-                      (currentPath() | menuFocus: node) ? _sidebar.brandLightColor || 'var(--sd-primary-light, #d7e3ff)' : 'transparent',
+                      (currentPath() | menuFocus: node : activeMenuPath()) ? _sidebar.brandLightColor || 'var(--sd-primary-light, #d7e3ff)' : 'transparent',
                   }">
                   <!-- why: role=button KHÔNG được bọc phần tử tương tác khác (nút ghim bên trong) —
                        AT coi cả cụm là MỘT nút và nút ghim biến mất khỏi accessibility tree. Nay
@@ -119,13 +119,13 @@
                       class="c-menu-node-description-content"
                       role="button"
                       tabindex="0"
-                      [attr.aria-current]="(currentPath() | menuFocus: node) ? 'page' : null"
+                      [attr.aria-current]="(currentPath() | menuFocus: node : activeMenuPath()) ? 'page' : null"
                       (click)="navigate(node)"
                       (keydown.enter)="onMenuNodeKeydown($event, node)"
                       (keydown.space)="onMenuNodeKeydown($event, node)"
                       [ngStyle]="{
                         color:
-                          (currentPath() | menuFocus: node)
+                          (currentPath() | menuFocus: node : activeMenuPath())
                             ? _sidebar.brandColor || 'var(--sd-primary, #005cbb)'
                             : 'var(--sd-text, #1a1b1f)',
                       }"
@@ -160,7 +160,7 @@
                    mọi mục con bên trong) khỏi accessibility tree. -->
               <mat-nested-tree-node
                 *matTreeNodeDef="let node; when: hasChild"
-                [class]="{ expanded: treeControl.isExpanded(node), isfocus: currentPath() | menuFocus: node }">
+                [class]="{ expanded: treeControl.isExpanded(node), isfocus: currentPath() | menuFocus: node : activeMenuPath() }">
                 <li>
                   <div
                     class="c-menu-node"

@@ -2,35 +2,30 @@ import { Injectable, Pipe, PipeTransform } from '@angular/core';
 
 // NOTE: Import nội bộ trong module layout thì dùng path tương đối
 import { SdLayoutMenu } from '../services';
+import { containsMenuPath, isMenuPathMatch } from '../utils';
 // End
 @Pipe({
   name: 'menuFocus',
 })
 @Injectable({ providedIn: 'root' })
 export class MenuFocusPipe implements PipeTransform {
-  transform(routePath: string, menuItem: SdLayoutMenu): boolean {
+  /**
+   * @param activeMenuPath Path khớp sát nhất với route hiện tại (xem `resolveActiveMenuPath`).
+   * Truyền vào thì chỉ menu chứa đúng path đó mới focus, nên '/appointment' không sáng khi đang ở
+   * '/appointment/cs'. Bỏ trống thì giữ cách khớp phần đầu cũ.
+   */
+  transform(routePath: string, menuItem: SdLayoutMenu, activeMenuPath?: string | null): boolean {
     if (!routePath) {
       return false;
     }
+    if (activeMenuPath !== undefined) {
+      return activeMenuPath ? containsMenuPath(menuItem, activeMenuPath) : false;
+    }
     if ('children' in menuItem && menuItem.children) {
       return menuItem.children.some(child => {
-        return 'path' in child && child.path ? this.#match(routePath, child.path) : false;
+        return 'path' in child && child.path ? isMenuPathMatch(routePath, child.path) : false;
       });
     }
-    return 'path' in menuItem && this.#match(routePath, menuItem.path);
+    return 'path' in menuItem && isMenuPathMatch(routePath, menuItem.path);
   }
-
-  #match = (routePath: string, path: string): boolean => {
-    if (!path) {
-      return false;
-    }
-    if (routePath === path) {
-      return true;
-    }
-    return this.#normalizePath(routePath).startsWith(this.#normalizePath(path));
-  };
-
-  #normalizePath = (p: string): string => {
-    return p.endsWith('/') ? p : p + '/';
-  };
 }

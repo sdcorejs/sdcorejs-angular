@@ -6,6 +6,7 @@ import { sdIsExternalHttpUrl, sdOpenExternal } from '@sdcorejs/angular/utilities
 
 import { SdLayoutUserInfo, SidebarConfigurationV1 } from '../../../../configurations';
 import { SdLayoutMenu, SdLayoutStorageService } from '../../../../services';
+import { resolveActiveMenuPath } from '../../../../utils';
 import { LayoutUserComponent } from '../user/user.component';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
@@ -168,24 +169,24 @@ export class SdSidebarMobileOverlay {
     }
   };
 
-  #getMenuGroupByCurrentPath = (menus: SdLayoutMenu[], menuGroup?: SdLayoutMenu): SdLayoutMenu[] => {
+  #getMenuGroupByCurrentPath = (menus: SdLayoutMenu[]): SdLayoutMenu[] => {
+    // Nhiều menu cùng khớp route thì chỉ path sát nhất được chọn, tránh nhận nhầm group của path cha
+    const activePath = resolveActiveMenuPath(menus, this.currentPath());
+    if (!activePath) return [];
+    const menuGroup = this.#findMenuGroupByPath(menus, activePath);
+    return menuGroup ? [menuGroup] : [];
+  };
+
+  #findMenuGroupByPath = (menus: SdLayoutMenu[], activePath: string, menuGroup?: SdLayoutMenu): SdLayoutMenu | null => {
     for (const menu of menus) {
-      if ('path' in menu && this.#isMenuPathMatchByCurrentPath(menu.path)) {
-        return [menuGroup ?? menu];
+      if ('path' in menu && menu.path === activePath) {
+        return menuGroup ?? menu;
       }
       if ('children' in menu && menu.children?.length) {
-        const result = this.#getMenuGroupByCurrentPath(menu.children, menuGroup ?? menu);
-        if (result?.length) return result;
+        const result = this.#findMenuGroupByPath(menu.children, activePath, menuGroup ?? menu);
+        if (result) return result;
       }
     }
-    return [];
+    return null;
   };
-
-  #isMenuPathMatchByCurrentPath = (path: string): boolean => {
-    if (!path) return false;
-    if (this.currentPath() === path) return true;
-    return this.#normalizePath(this.currentPath()).startsWith(this.#normalizePath(path));
-  };
-
-  #normalizePath = (p: string): string => (p.endsWith('/') ? p : p + '/');
 }
