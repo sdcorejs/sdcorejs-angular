@@ -5,6 +5,39 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { SdBadge } from './badge.component';
 import { queryByCss, setInput } from '../../../testing/test-utils';
 
+type Rgb = readonly [number, number, number];
+
+function hexToRgb(hex: string): Rgb {
+  return [Number.parseInt(hex.slice(1, 3), 16), Number.parseInt(hex.slice(3, 5), 16), Number.parseInt(hex.slice(5, 7), 16)];
+}
+
+function parseCssRgb(value: string): Rgb {
+  const channels = value
+    .match(/[\d.]+/g)
+    ?.slice(0, 3)
+    .map(Number);
+  if (!channels || channels.length !== 3) throw new Error(`Unsupported CSS color: ${value}`);
+  return channels as unknown as Rgb;
+}
+
+function mixRgb(color: Rgb, weight: number, mix: Rgb): Rgb {
+  return color.map((channel, index) => Math.round(channel * weight + mix[index] * (1 - weight))) as unknown as Rgb;
+}
+
+function relativeLuminance([red, green, blue]: Rgb): number {
+  const channels = [red, green, blue].map(value => {
+    const channel = value / 255;
+    return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+}
+
+function contrastRatio(foreground: Rgb, background: Rgb): number {
+  const lighter = Math.max(relativeLuminance(foreground), relativeLuminance(background));
+  const darker = Math.min(relativeLuminance(foreground), relativeLuminance(background));
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
 describe('SdBadge', () => {
   let fixture: ComponentFixture<SdBadge>;
 
@@ -164,6 +197,7 @@ describe('SdBadge', () => {
       const before = queryByCss<HTMLDivElement>(fixture, 'div.c-badge');
       expect(before.getAttribute('role')).toBeNull();
       expect(before.getAttribute('tabindex')).toBeNull();
+      expect(before.getAttribute('aria-label')).toBeNull();
 
       // why: component là OnPush và `click.observed` không phải signal → phải làm view dirty
       // (setInput) mới re-render, giống spec "applies pointer class only when click is observed".
@@ -172,6 +206,54 @@ describe('SdBadge', () => {
       const after = queryByCss<HTMLDivElement>(fixture, 'div.c-badge');
       expect(after.getAttribute('role')).toBe('button');
       expect(after.getAttribute('tabindex')).toBe('0');
+    });
+
+    it('names an interactive badge from a numeric title, including zero', () => {
+      fixture.componentInstance.click.subscribe(() => undefined);
+      setInput(fixture, 'type', 'round');
+      setInput(fixture, 'title', 0);
+
+      expect(queryByCss<HTMLElement>(fixture, '.c-badge').getAttribute('aria-label')).toBe('0');
+    });
+
+    it('combines visible title and description for an interactive badge name', () => {
+      fixture.componentInstance.click.subscribe(() => undefined);
+      setInput(fixture, 'type', 'tag');
+      setInput(fixture, 'title', 'Queued');
+      setInput(fixture, 'description', 'Awaiting approval');
+
+      expect(queryByCss<HTMLElement>(fixture, '.c-badge').getAttribute('aria-label')).toBe('Queued Awaiting approval');
+    });
+
+    it('uses tooltip text when an interactive badge has no visible text', () => {
+      fixture.componentInstance.click.subscribe(() => undefined);
+      setInput(fixture, 'type', 'icon');
+      setInput(fixture, 'tooltip', 'Open status details');
+
+      expect(queryByCss<HTMLElement>(fixture, '.c-badge-icon').getAttribute('aria-label')).toBe('Open status details');
+    });
+
+    it('derives a readable name for an icon-only interactive badge', () => {
+      fixture.componentInstance.click.subscribe(() => undefined);
+      setInput(fixture, 'type', 'icon');
+      setInput(fixture, 'icon', 'check_circle');
+
+      expect(queryByCss<HTMLElement>(fixture, '.c-badge-icon').getAttribute('aria-label')).toBe('check circle');
+    });
+
+    it('keeps an icon-only interactive badge keyboard activatable', () => {
+      let received: Event | null = null;
+      fixture.componentInstance.click.subscribe(event => (received = event));
+      setInput(fixture, 'type', 'icon');
+      setInput(fixture, 'icon', 'check_circle');
+      const root = queryByCss<HTMLElement>(fixture, '.c-badge-icon');
+
+      const event = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
+      root.dispatchEvent(event);
+
+      expect(root.getAttribute('role')).toBe('button');
+      expect(root.getAttribute('tabindex')).toBe('0');
+      expect(received).toBe(event as any);
     });
 
     it('Enter emits click just like a mouse click', () => {
@@ -198,6 +280,41 @@ describe('SdBadge', () => {
       expect(received).toBe(ev as any);
       expect(ev.defaultPrevented).toBe(true);
     });
+  });
+
+  describe('default palette contrast', () => {
+    const palette = [
+      ['primary', '#005cbb', 14],
+      ['secondary', '#5c6270', 12],
+      ['info', '#006a6a', 14],
+      ['success', '#2e7d32', 14],
+      ['warning', '#a66300', 14],
+      ['error', '#ba1a1a', 14],
+    ] as const;
+
+    for (const [color, baseHex, tintPercent] of palette) {
+      it(`uses the ${color}-dark foreground on ${color}-light at WCAG AA contrast`, () => {
+        const host = fixture.nativeElement as HTMLElement;
+        const base = hexToRgb(baseHex);
+        const light = mixRgb(base, tintPercent / 100, [255, 255, 255]);
+        const dark = mixRgb(base, 0.84, [0, 0, 0]);
+        host.style.setProperty(`--sd-${color}`, `rgb(${base.join(', ')})`);
+        host.style.setProperty(`--sd-${color}-light`, `rgb(${light.join(', ')})`);
+        host.style.setProperty(`--sd-${color}-dark`, `rgb(${dark.join(', ')})`);
+        setInput(fixture, 'type', 'tag');
+        setInput(fixture, 'color', color);
+        setInput(fixture, 'title', 'Status');
+
+        const badge = queryByCss<HTMLElement>(fixture, '.c-badge--tag');
+        const styles = getComputedStyle(badge);
+        const foreground = parseCssRgb(styles.color);
+        const background = parseCssRgb(styles.backgroundColor);
+
+        expect(foreground).withContext(color).toEqual(dark);
+        expect(parseCssRgb(styles.borderTopColor)).withContext(`${color} border`).toEqual(dark);
+        expect(contrastRatio(foreground, background)).withContext(color).toBeGreaterThanOrEqual(4.5);
+      });
+    }
   });
 
   describe('description', () => {

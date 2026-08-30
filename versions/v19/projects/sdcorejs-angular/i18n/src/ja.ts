@@ -169,6 +169,8 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.tree-select.cancel': 'キャンセル',
   'core.form.tree-select.apply': '適用',
   'core.component.tree.retry': '再試行',
+  'core.component.section.expand': '「{title}」を展開',
+  'core.component.section.collapse': '「{title}」を折りたたむ',
   'core.service.unsaved-changes.message': '未保存の変更があります。破棄して続行しますか？',
   'core.component.job-progress.status.idle': '準備完了',
   'core.component.job-progress.status.queued': '待機中',

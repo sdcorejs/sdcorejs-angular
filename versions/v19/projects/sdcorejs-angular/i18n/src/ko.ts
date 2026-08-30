@@ -168,6 +168,8 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.tree-select.cancel': '취소',
   'core.form.tree-select.apply': '적용',
   'core.component.tree.retry': '다시 시도',
+  'core.component.section.expand': '{title} 펼치기',
+  'core.component.section.collapse': '{title} 접기',
   'core.service.unsaved-changes.message': '저장하지 않은 변경 사항이 있습니다. 변경을 버리고 계속할까요?',
   'core.component.job-progress.status.idle': '준비됨',
   'core.component.job-progress.status.queued': '대기 중',
