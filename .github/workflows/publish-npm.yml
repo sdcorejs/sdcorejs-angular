@@ -26,13 +26,31 @@ on:
         required: true
         type: string
       tag:
-        description: 'npm dist-tag (beta / latest)'
+        description: 'npm dist-tag. angular19/20/21 are recovery tags that do not move latest.'
         required: true
         default: 'beta'
         type: choice
         options:
           - beta
           - latest
+          - angular19
+          - angular20
+          - angular21
+      major:
+        description: 'Angular major to publish. Release tags always publish all three; select one only for recovery.'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - '19'
+          - '20'
+          - '21'
+      publish_docs:
+        description: 'Generate and commit the release API-doc archive after a manual recovery.'
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -101,6 +119,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      # npm updates one package packument for all three versions. Concurrent PUTs
+      # can race while the previous version is still being processed and return E409.
+      max-parallel: 1
       matrix:
         include:
           - version: v19
@@ -115,6 +136,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # A manual recovery must rebuild the immutable release tree rather than
+          # whatever commit happens to be current on main when the retry runs.
+          ref: ${{ github.event_name == 'workflow_dispatch' && format('v{0}', github.event.inputs.patch) || github.ref }}
 
       - name: Ensure release tag is current main
         if: ${{ github.event_name == 'push' }}
@@ -149,12 +173,22 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             PATCH="${{ github.event.inputs.patch }}"
             TAG="${{ github.event.inputs.tag }}"
+            REQUESTED_MAJOR="${{ github.event.inputs.major }}"
           else
             PATCH="${GITHUB_REF_NAME#v}"
             if echo "$PATCH" | grep -qE '(beta|alpha|rc)'; then TAG="beta"; else TAG="latest"; fi
+            REQUESTED_MAJOR="all"
           fi
           if ! echo "$PATCH" | grep -qE '^[0-9]+\.[0-9]+(-(alpha|beta|rc)(\.[0-9]+)?)?$'; then
             echo "::error::Invalid release suffix '$PATCH'. Expected 1.0 or 1.0-beta.1."
+            exit 1
+          fi
+          if ! echo "$TAG" | grep -qE '^(beta|latest|angular(19|20|21))$'; then
+            echo "::error::Invalid npm dist-tag '$TAG'."
+            exit 1
+          fi
+          if echo "$TAG" | grep -qE '^angular(19|20|21)$' && [ "$TAG" != "angular$REQUESTED_MAJOR" ]; then
+            echo "::error::Recovery tag '$TAG' must match requested major '$REQUESTED_MAJOR'."
             exit 1
           fi
           echo "patch=$PATCH" >> "$GITHUB_OUTPUT"
@@ -179,6 +213,7 @@ jobs:
         working-directory: versions/${{ matrix.version }}
 
       - name: Publish @sdcorejs/angular@${{ steps.resolve.outputs.version }} (tag=${{ steps.resolve.outputs.tag }})
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.major == 'all' || github.event.inputs.major == format('{0}', matrix.major) }}
         # No NODE_AUTH_TOKEN on purpose. npm authenticates through the OIDC
         # trusted publisher configured for this repository + workflow file; if a
         # token is present npm uses it instead and the package's 2FA policy
@@ -189,16 +224,20 @@ jobs:
   publish-docs:
     name: Publish versioned API docs
     needs: build-and-publish
-    if: ${{ github.event_name == 'push' }}
+    if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish_docs) }}
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout release tag
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # Tag-triggered releases document the tag tree. A manual recovery starts
+          # from main so its generated-doc commit remains a fast-forward push.
+          ref: ${{ github.event_name == 'workflow_dispatch' && 'main' || github.ref }}
 
       - name: Ensure release tag is current main
+        if: ${{ github.event_name == 'push' }}
         run: |
           git fetch origin main --depth=1
           TAG_SHA="$(git rev-parse HEAD)"
@@ -216,7 +255,13 @@ jobs:
 
       - name: Resolve release suffix
         id: resolve
-        run: echo "patch=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            PATCH="${{ github.event.inputs.patch }}"
+          else
+            PATCH="${GITHUB_REF_NAME#v}"
+          fi
+          echo "patch=$PATCH" >> "$GITHUB_OUTPUT"
 
       - name: Generate published-docs for 19/20/21
         run: |
