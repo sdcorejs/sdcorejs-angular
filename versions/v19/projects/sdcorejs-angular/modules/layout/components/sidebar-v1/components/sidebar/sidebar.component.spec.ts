@@ -166,6 +166,17 @@ describe('SdSidebarV1Panel', () => {
     expect(component.totalMenuInMenusByGroup()).toBe(3);
   });
 
+  it('keeps only the most exact menu active when a parent path also matches', async () => {
+    const appointment: SdLayoutMenu = { id: 'appointment', title: 'Lịch hẹn', path: '/appointment', permission: true };
+    const appointmentCs: SdLayoutMenu = { id: 'appointment-cs', title: 'Lịch hẹn CS', path: '/appointment/cs', permission: true };
+    await create({ path: '/appointment/cs' });
+
+    fixture.componentRef.setInput('menus', [{ id: 'appointments', title: 'Lịch hẹn', children: [appointment, appointmentCs] }]);
+    fixture.detectChanges();
+
+    expect(component.activeMenuPath()).toBe('/appointment/cs');
+  });
+
   it('uses the shared apps fallback when V1 has no configured logo and preserves a custom logo', async () => {
     await create();
 

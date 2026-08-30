@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, input
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { SdLayoutMenu, SdLayoutRootMenu, getMenuStableKey, searchMenuLeaves } from '../../../services';
+import { resolveActiveMenuPath } from '../../../utils';
 
 interface SdLayoutMenuTreeNode {
   menu: SdLayoutMenu;
@@ -46,6 +47,8 @@ export class SdLayoutMenuTreeComponent {
     const alwaysShowPin = this.pinVisibility() === 'always';
     const query = this.query().trim();
     const menus = query ? searchMenuLeaves(this.menus(), query) : this.menus();
+    // Nhiều menu cùng khớp route thì chỉ path sát nhất sáng: ở '/appointment/cs' thì '/appointment' không sáng nữa
+    const activeMenuPath = resolveActiveMenuPath(menus, this.activePath());
     const nodes: SdLayoutMenuTreeNode[] = [];
 
     const append = (items: SdLayoutMenu[], depth: number, ancestors: string[]): void => {
@@ -63,7 +66,7 @@ export class SdLayoutMenuTreeComponent {
           depth,
           paddingLeft: 12 + depth * 16,
           isGroup,
-          isActive: !!path && this.#pathMatches(this.activePath(), path),
+          isActive: !!path && path === activeMenuPath,
           isPinned,
           isPinVisible: alwaysShowPin || isPinned || hoveredPinKey === key,
           // why: template cũ nối `'Pin ' + node.title` — chuỗi tiếng Anh cứng và ép trật tự
@@ -110,10 +113,5 @@ export class SdLayoutMenuTreeComponent {
     if (this.#pinHoverTimerId === undefined) return;
     clearTimeout(this.#pinHoverTimerId);
     this.#pinHoverTimerId = undefined;
-  }
-
-  #pathMatches(currentPath: string, menuPath: string): boolean {
-    const normalize = (path: string): string => (path.endsWith('/') ? path : `${path}/`);
-    return currentPath === menuPath || normalize(currentPath).startsWith(normalize(menuPath));
   }
 }

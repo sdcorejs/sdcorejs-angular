@@ -18,6 +18,7 @@ import { StringUtilities } from '@sdcorejs/utils/fns';
 import { SdLayoutUserInfo, SidebarConfigurationV1 } from '../../../../configurations';
 import { HighlightSearchPipe, MenuFocusPipe } from '../../../../pipes';
 import { SdLayoutChildrenMenu, SdLayoutMenu, SdLayoutNavigationStateService, SdLayoutStorageService } from '../../../../services';
+import { resolveActiveMenuPath } from '../../../../utils';
 import { LayoutUserComponent } from '../user/user.component';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
@@ -95,6 +96,8 @@ export class SdSidebarV1Panel {
   logoUrl = computed(() => this.sidebar().logoUrl?.trim() || undefined);
   pinnedNodeKeys = computed(() => new Set(this.pinnedMenuGroup().children?.map(m => this.#getMenuNodeKey(m)) ?? []));
   isPinnedMenuGroupActive = computed(() => this.idMenuGroupActive() === this.pinnedMenuGroup().id);
+  // Path khớp sát nhất trong nhánh menu đang hiển thị. Nhờ nó '/appointment' hết sáng khi đang ở '/appointment/cs'.
+  activeMenuPath = computed(() => resolveActiveMenuPath(this.menusByGroup(), this.currentPath()));
 
   // ==========================================
   // DATA STRUCTURES
@@ -351,7 +354,7 @@ export class SdSidebarV1Panel {
       }
     }
 
-    if (!this.#menuFocusPipe.transform(this.currentPath(), menuItem)) {
+    if (!this.#menuFocusPipe.transform(this.currentPath(), menuItem, this.activeMenuPath())) {
       const iconMenu = menuNode.querySelector('.c-menu-node-icon') as HTMLElement;
       const content = menuNode.querySelector('.c-menu-node-description-content') as HTMLElement;
       const iconExpand = menuNode.querySelector('.c-menu-node-description-icon-expand') as HTMLElement;
@@ -398,7 +401,7 @@ export class SdSidebarV1Panel {
       }
     }
 
-    if (!this.#menuFocusPipe.transform(this.currentPath(), menuItem)) {
+    if (!this.#menuFocusPipe.transform(this.currentPath(), menuItem, this.activeMenuPath())) {
       const iconMenu = menuNode.querySelector('.c-menu-node-icon') as HTMLElement;
       const content = menuNode.querySelector('.c-menu-node-description-content') as HTMLElement;
       const iconExpand = menuNode.querySelector('.c-menu-node-description-icon-expand') as HTMLElement;
@@ -442,19 +445,28 @@ export class SdSidebarV1Panel {
     return node.title || '';
   };
 
-  #getMenuGroupByCurrentPath = (menus: SdLayoutMenu[], menuGroup?: SdLayoutMenu): SdLayoutMenu[] => {
+  #getMenuGroupByCurrentPath = (menus: SdLayoutMenu[]): SdLayoutMenu[] => {
+    const activePath = resolveActiveMenuPath(menus, this.currentPath());
+    if (!activePath) {
+      return [];
+    }
+    const menuGroup = this.#findMenuGroupByPath(menus, activePath);
+    return menuGroup ? [menuGroup] : [];
+  };
+
+  #findMenuGroupByPath = (menus: SdLayoutMenu[], activePath: string, menuGroup?: SdLayoutMenu): SdLayoutMenu | null => {
     for (const menu of menus) {
-      if ('path' in menu && this.#isMenuPathMatchByCurrentPath(menu.path)) {
-        return [menuGroup ?? menu];
+      if ('path' in menu && menu.path === activePath) {
+        return menuGroup ?? menu;
       }
       if ('children' in menu && menu.children?.length) {
-        const result = this.#getMenuGroupByCurrentPath(menu.children, menuGroup ?? menu);
-        if (result?.length) {
+        const result = this.#findMenuGroupByPath(menu.children, activePath, menuGroup ?? menu);
+        if (result) {
           return result;
         }
       }
     }
-    return [];
+    return null;
   };
 
   #bindingMenuGroupByCurrentPath = (menus: SdLayoutMenu[]): void => {
@@ -530,13 +542,18 @@ export class SdSidebarV1Panel {
   };
 
   #expandParentNodesByCurrentPath(menus: SdLayoutMenu[]): boolean {
+    const activePath = resolveActiveMenuPath(menus, this.currentPath());
+    return activePath ? this.#expandParentNodesByPath(menus, activePath) : false;
+  }
+
+  #expandParentNodesByPath(menus: SdLayoutMenu[], activePath: string): boolean {
     let shouldPropagate = false;
     for (const menu of menus) {
-      if ('path' in menu && this.#isMenuPathMatchByCurrentPath(menu.path)) {
+      if ('path' in menu && menu.path === activePath) {
         shouldPropagate = true;
       }
       if ('children' in menu && menu.children?.length) {
-        const childHasMatch = this.#expandParentNodesByCurrentPath(menu.children);
+        const childHasMatch = this.#expandParentNodesByPath(menu.children, activePath);
         if (childHasMatch) {
           this.treeControl.expand(menu);
           shouldPropagate = true;
@@ -604,20 +621,6 @@ export class SdSidebarV1Panel {
     }
     return matchedCount === needle.length;
   };
-
-  #isMenuPathMatchByCurrentPath = (path: string): boolean => {
-    if (!path) {
-      return false;
-    }
-
-    if (this.currentPath() === path) {
-      return true;
-    }
-
-    return this.#normalizePath(this.currentPath()).startsWith(this.#normalizePath(path));
-  };
-
-  #normalizePath = (p: string): string => (p.endsWith('/') ? p : p + '/');
 
   #closeMenu(): void {
     this.showSideBar.emit(null);

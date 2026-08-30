@@ -28,6 +28,17 @@ describe('SdLayoutMenuTreeComponent', () => {
     expect(fixture.nativeElement.querySelector('[data-menu-key="id:reports"]').getAttribute('aria-current')).toBe('page');
   });
 
+  it('activates only the most exact route when a parent path also matches', () => {
+    const appointment: SdLayoutRootMenu = { id: 'appointment', title: 'Lịch hẹn', path: '/appointment', permission: true };
+    const appointmentCs: SdLayoutRootMenu = { id: 'appointment-cs', title: 'Lịch hẹn CS', path: '/appointment/cs', permission: true };
+    fixture.componentRef.setInput('menus', [{ id: 'appointments', title: 'Lịch hẹn', children: [appointment, appointmentCs] }]);
+    fixture.componentRef.setInput('activePath', '/appointment/cs');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-menu-key="id:appointment-cs"]').getAttribute('aria-current')).toBe('page');
+    expect(fixture.nativeElement.querySelector('[data-menu-key="id:appointment"]').getAttribute('aria-current')).toBeNull();
+  });
+
   it('filters its contextual leaves without case or accent sensitivity', () => {
     fixture.componentRef.setInput('query', 'BAO CAO');
     fixture.detectChanges();

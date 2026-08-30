@@ -240,6 +240,10 @@ const menus: SdLayoutMenu[] = [
 
 V2 honors up to three valid `primaryMenuIds` in the supplied order, fills missing slots from the remaining visible roots, and exposes overflow through More. V3 search is accent-insensitive and searches the filtered menu tree.
 
+### Active menu resolution prefers the most exact path
+
+A menu is active only when it owns the longest `path` that matches the current route. With both `/appointment` and `/appointment/cs` declared, standing on `/appointment/cs` highlights the child alone — the ancestor entry is no longer lit up, and `aria-current="page"` is set on that one row. `resolveActiveMenuPath(menus, routePath)` from the layout `utils` is the single decision point: V1 uses it for node focus, menu-group binding and branch expansion, and the shared `sd-layout-menu-tree` (V2, V3 and their mobile variants) uses it for `isActive`. Matching stays segment-based, so `/appointment` never matches `/appointments`, and a route with no menu of its own (`/appointment/cs/123`) still activates its closest declared ancestor. `MenuFocusPipe` takes the resolved path as its third argument; called with two arguments it keeps the previous prefix matching.
+
 ### Menu filtering fails closed
 
 `MenuPipe` drops a leaf instead of rendering it when either check fails:

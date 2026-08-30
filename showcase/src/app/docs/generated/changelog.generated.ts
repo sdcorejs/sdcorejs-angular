@@ -62,6 +62,47 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
     "sections": []
   },
   {
+    "id": "release-2-2",
+    "title": "Release 2.2",
+    "suffix": "2.2",
+    "date": "2026-08-30",
+    "anchor": "release-2-2",
+    "unreleased": false,
+    "packageVersions": [
+      {
+        "angularMajor": 19,
+        "version": "19.2.2"
+      },
+      {
+        "angularMajor": 20,
+        "version": "20.2.2"
+      },
+      {
+        "angularMajor": 21,
+        "version": "21.2.2"
+      }
+    ],
+    "summaryMarkdown": "Release suffix `2.2` publishes `19.2.2`, `20.2.2`, and `21.2.2`.",
+    "markdown": "Release suffix `2.2` publishes `19.2.2`, `20.2.2`, and `21.2.2`.\n\n### Fixed\n\n- **The sidebar highlighted an ancestor menu together with the child the route actually belongs to.** A menu counted as active whenever the current route matched the front of its `path`, so declaring both `/appointment` and `/appointment/cs` lit up both rows while standing on `/appointment/cs`. When several menus match, only the longest — most exact — path is active now; the ancestor goes dark and `aria-current=\"page\"` lands on a single row. The new `resolveActiveMenuPath(menus, routePath)` in the layout `utils` is the single decision point, used by V1 for node focus, menu-group binding and branch expansion, and by the shared `sd-layout-menu-tree` behind V2/V3 and their mobile variants. Matching stays segment-based (`/appointment` still never matches `/appointments`), and a route with no menu of its own (`/appointment/cs/123`) still activates its closest declared ancestor. `MenuFocusPipe` accepts the resolved path as an optional third argument and keeps its previous prefix matching when called with two.",
+    "sections": [
+      {
+        "key": "fixed",
+        "title": "Fixed",
+        "level": 3,
+        "anchor": "release-2-2-fixed",
+        "markdown": "- **The sidebar highlighted an ancestor menu together with the child the route actually belongs to.** A menu counted as active whenever the current route matched the front of its `path`, so declaring both `/appointment` and `/appointment/cs` lit up both rows while standing on `/appointment/cs`. When several menus match, only the longest — most exact — path is active now; the ancestor goes dark and `aria-current=\"page\"` lands on a single row. The new `resolveActiveMenuPath(menus, routePath)` in the layout `utils` is the single decision point, used by V1 for node focus, menu-group binding and branch expansion, and by the shared `sd-layout-menu-tree` behind V2/V3 and their mobile variants. Matching stays segment-based (`/appointment` still never matches `/appointments`), and a route with no menu of its own (`/appointment/cs/123`) still activates its closest declared ancestor. `MenuFocusPipe` accepts the resolved path as an optional third argument and keeps its previous prefix matching when called with two.",
+        "items": [
+          {
+            "text": "**The sidebar highlighted an ancestor menu together with the child the route actually belongs to.** A menu counted as active whenever the current route matched the front of its `path`, so declaring both `/appointment` and `/appointment/cs` lit up both rows while standing on `/appointment/cs`. When several menus match, only the longest — most exact — path is active now; the ancestor goes dark and `aria-current=\"page\"` lands on a single row. The new `resolveActiveMenuPath(menus, routePath)` in the layout `utils` is the single decision point, used by V1 for node focus, menu-group binding and branch expansion, and by the shared `sd-layout-menu-tree` behind V2/V3 and their mobile variants. Matching stays segment-based (`/appointment` still never matches `/appointments`), and a route with no menu of its own (`/appointment/cs/123`) still activates its closest declared ancestor. `MenuFocusPipe` accepts the resolved path as an optional third argument and keeps its previous prefix matching when called with two.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      }
+    ]
+  },
+  {
     "id": "release-2-1",
     "title": "Release 2.1",
     "suffix": "2.1",

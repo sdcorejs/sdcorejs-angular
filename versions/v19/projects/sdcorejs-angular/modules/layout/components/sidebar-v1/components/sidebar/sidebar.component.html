@@ -115,17 +115,17 @@
                   (mouseleave)="onMouseLeaveMenuNode($event, node)"
                   [ngStyle]="{
                     backgroundColor:
-                      (currentPath() | menuFocus: node) ? _sidebar.brandLightColor || 'var(--sd-primary-light, #d7e3ff)' : 'transparent',
+                      (currentPath() | menuFocus: node : activeMenuPath()) ? _sidebar.brandLightColor || 'var(--sd-primary-light, #d7e3ff)' : 'transparent',
                   }">
                   <div class="c-menu-node-description" [class.d-none]="!isShowSidebar()">
                     <a
                       class="c-menu-node-description-content"
                       [href]="menuNodeHref(node)"
-                      [attr.aria-current]="(currentPath() | menuFocus: node) ? 'page' : null"
+                      [attr.aria-current]="(currentPath() | menuFocus: node : activeMenuPath()) ? 'page' : null"
                       (click)="onMenuNodeClick($event, node)"
                       [ngStyle]="{
                         color:
-                          (currentPath() | menuFocus: node)
+                          (currentPath() | menuFocus: node : activeMenuPath())
                             ? _sidebar.brandColor || 'var(--sd-primary, #005cbb)'
                             : 'var(--sd-text, #1a1b1f)',
                       }"
@@ -158,7 +158,7 @@
 
               <mat-nested-tree-node
                 *matTreeNodeDef="let node; when: hasChild"
-                [class]="{ expanded: treeControl.isExpanded(node), isfocus: currentPath() | menuFocus: node }">
+                [class]="{ expanded: treeControl.isExpanded(node), isfocus: currentPath() | menuFocus: node : activeMenuPath() }">
                 <div class="c-menu-node" (mouseenter)="onMouseOverMenuNode($event, node)" (mouseleave)="onMouseLeaveMenuNode($event, node)">
                   <div class="d-flex align-items-center" style="gap: 10px; width: 100%">
                     <button
