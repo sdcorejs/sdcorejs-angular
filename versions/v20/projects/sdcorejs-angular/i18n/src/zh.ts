@@ -168,6 +168,8 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.tree-select.cancel': '取消',
   'core.form.tree-select.apply': '应用',
   'core.component.tree.retry': '重试',
+  'core.component.section.expand': '展开{title}',
+  'core.component.section.collapse': '收起{title}',
   'core.service.unsaved-changes.message': '您有未保存的更改。是否放弃更改并继续？',
   'core.component.job-progress.status.idle': '就绪',
   'core.component.job-progress.status.queued': '排队中',

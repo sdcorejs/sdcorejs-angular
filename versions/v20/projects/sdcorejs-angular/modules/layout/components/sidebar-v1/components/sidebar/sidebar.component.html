@@ -5,7 +5,10 @@
   <div class="wrapper" [style.height]="isMobile() ? '100dvh' : '100%'">
     <div class="c-header">
       <div class="c-logo">
-        <a href="javascript:;" [attr.aria-label]="'core.module.layout.home.tab-name' | sdTranslate" (click)="openHomePage()">
+        <a
+          href="/layout/home"
+          [attr.aria-label]="'core.module.layout.home.tab-name' | sdTranslate"
+          (click)="$event.preventDefault(); openHomePage()">
           @if (logoUrl(); as _logoUrl) {
             <img alt="" [src]="_logoUrl" />
           } @else {
@@ -22,6 +25,8 @@
         <div class="c-menu-group">
           @if (_sidebar?.pin?.enabled && pinnedMenuGroup().children?.length) {
             <button
+              type="button"
+              [attr.aria-label]="'core.module.layout.sidebar.pinned' | sdTranslate"
               (mouseenter)="onMouseOverMenuGroupNode($event, pinnedMenuGroup())"
               (mouseleave)="onMouseLeaveMenuGroupNode($event, pinnedMenuGroup())"
               (click)="expandPinnedGroup()"
@@ -44,6 +49,8 @@
           }
           @for (nodeMenuGroup of menus(); track nodeMenuGroup.id) {
             <button
+              type="button"
+              [attr.aria-label]="nodeMenuGroup.tooltipTitle || nodeMenuGroup.title"
               (mouseenter)="onMouseOverMenuGroupNode($event, nodeMenuGroup)"
               (mouseleave)="onMouseLeaveMenuGroupNode($event, nodeMenuGroup)"
               (click)="expandMenuGroup(nodeMenuGroup)"
@@ -102,7 +109,7 @@
           <div class="c-menu-tree-container">
             <mat-tree [dataSource]="dataSource" [treeControl]="treeControl" [style.backgroundColor]="'transparent'">
               <mat-nested-tree-node *matTreeNodeDef="let node; when: !hasChild">
-                <li
+                <div
                   class="c-menu-node"
                   (mouseenter)="onMouseOverMenuNode($event, node)"
                   (mouseleave)="onMouseLeaveMenuNode($event, node)"
@@ -110,26 +117,19 @@
                     backgroundColor:
                       (currentPath() | menuFocus: node) ? _sidebar.brandLightColor || 'var(--sd-primary-light, #d7e3ff)' : 'transparent',
                   }">
-                  <!-- why: role=button KHÔNG được bọc phần tử tương tác khác (nút ghim bên trong) —
-                       AT coi cả cụm là MỘT nút và nút ghim biến mất khỏi accessibility tree. Nay
-                       role=button + tabindex + Enter/Space + aria-current + (click) nằm CÙNG trên
-                       phần TIÊU ĐỀ, nút ghim là sibling độc lập; cả hai đều focus được. -->
                   <div class="c-menu-node-description" [class.d-none]="!isShowSidebar()">
-                    <div
+                    <a
                       class="c-menu-node-description-content"
-                      role="button"
-                      tabindex="0"
+                      [href]="menuNodeHref(node)"
                       [attr.aria-current]="(currentPath() | menuFocus: node) ? 'page' : null"
-                      (click)="navigate(node)"
-                      (keydown.enter)="onMenuNodeKeydown($event, node)"
-                      (keydown.space)="onMenuNodeKeydown($event, node)"
+                      (click)="onMenuNodeClick($event, node)"
                       [ngStyle]="{
                         color:
                           (currentPath() | menuFocus: node)
                             ? _sidebar.brandColor || 'var(--sd-primary, #005cbb)'
                             : 'var(--sd-text, #1a1b1f)',
                       }"
-                      [innerHTML]="node.title | highLightSearch: searchText() | sdSafeHtml"></div>
+                      [innerHTML]="node.title | highLightSearch: searchText() | sdSafeHtml"></a>
 
                     <!-- why: nút ghim trước đây là <sd-icon (click)> — custom element không nhận
                          focus bàn phím và không có tên khả truy cập, nên không ghim được bằng phím.
@@ -153,45 +153,33 @@
                       </button>
                     }
                   </div>
-                </li>
+                </div>
               </mat-nested-tree-node>
 
-              <!-- why: bỏ aria-hidden="true" — nó ẩn TOÀN BỘ nhánh menu có con (tiêu đề nhóm lẫn
-                   mọi mục con bên trong) khỏi accessibility tree. -->
               <mat-nested-tree-node
                 *matTreeNodeDef="let node; when: hasChild"
                 [class]="{ expanded: treeControl.isExpanded(node), isfocus: currentPath() | menuFocus: node }">
-                <li>
-                  <div
-                    class="c-menu-node"
-                    (mouseenter)="onMouseOverMenuNode($event, node)"
-                    (mouseleave)="onMouseLeaveMenuNode($event, node)">
-                    <div class="d-flex align-items-center" style="gap: 10px; width: 100%">
-                      <!-- why: nhánh có con là nút GẬP/MỞ thật nhưng trước đây chỉ có (click) và
-                           không khai trạng thái. Nay role=button + tabindex + aria-expanded +
-                           Enter/Space. -->
-                      <div
-                        [class.d-none]="!isShowSidebar()"
-                        class="c-menu-node-description"
-                        role="button"
-                        tabindex="0"
-                        [attr.aria-expanded]="treeControl.isExpanded(node)"
-                        (click)="onToggleMenuNode(node)"
-                        (keydown.enter)="onToggleMenuNodeKeydown($event, node)"
-                        (keydown.space)="onToggleMenuNodeKeydown($event, node)">
-                        <div
-                          class="c-menu-node-description-content"
-                          [innerHTML]="node.title | highLightSearch: searchText() | sdSafeHtml"></div>
-                        <sd-icon
-                          class="c-menu-node-description-icon-expand"
-                          [name]="treeControl.isExpanded(node) ? 'keyboard_arrow_up' : 'keyboard_arrow_down'"></sd-icon>
-                      </div>
-                    </div>
+                <div class="c-menu-node" (mouseenter)="onMouseOverMenuNode($event, node)" (mouseleave)="onMouseLeaveMenuNode($event, node)">
+                  <div class="d-flex align-items-center" style="gap: 10px; width: 100%">
+                    <button
+                      type="button"
+                      [class.d-none]="!isShowSidebar()"
+                      class="c-menu-node-description"
+                      [attr.aria-expanded]="treeControl.isExpanded(node)"
+                      (click)="onToggleMenuNode(node)">
+                      <span
+                        class="c-menu-node-description-content"
+                        [innerHTML]="node.title | highLightSearch: searchText() | sdSafeHtml"></span>
+                      <sd-icon
+                        aria-hidden="true"
+                        class="c-menu-node-description-icon-expand"
+                        [name]="treeControl.isExpanded(node) ? 'keyboard_arrow_up' : 'keyboard_arrow_down'"></sd-icon>
+                    </button>
                   </div>
-                  <ul class="p-0" [class.d-none]="!treeControl.isExpanded(node)">
-                    <ng-container matTreeNodeOutlet></ng-container>
-                  </ul>
-                </li>
+                </div>
+                <div class="c-menu-node-group p-0" role="group" [class.d-none]="!treeControl.isExpanded(node)">
+                  <ng-container matTreeNodeOutlet></ng-container>
+                </div>
               </mat-nested-tree-node>
             </mat-tree>
           </div>

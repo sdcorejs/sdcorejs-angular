@@ -18,11 +18,19 @@
   padding: 8px 16px;
 }
 
-// why: header collapsible nay nhận tabindex="0" nên cần focus ring nhìn thấy được.
-.sd-section-header[role='button']:focus-visible {
+.sd-section-collapse-toggle {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+// why: native collapse trigger needs a visible focus indicator inside the section header.
+.sd-section-collapse-toggle:focus-visible {
   outline: 2px solid var(--sd-primary, #005cbb);
   outline-offset: -2px;
-  border-radius: 8px;
 }
 
 .sd-section-header-left,

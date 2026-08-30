@@ -4,6 +4,7 @@
 @let _description = description();
 @let _fontSet = fontSet();
 @let _iconCssSize = iconCssSize();
+@let _accessibleName = accessibleName();
 @let iconName = icon() || defaultIcon;
 @let isPointer = click.observed;
 @let _role = isPointer ? 'button' : null;
@@ -24,6 +25,7 @@
     [class.pointer]="isPointer"
     [attr.role]="_role"
     [attr.tabindex]="_tabIndex"
+    [attr.aria-label]="isPointer ? _accessibleName : null"
     (click)="onClick($event)"
     (keydown.enter)="onActivateKey($event)"
     (keydown.space)="onActivateKey($event)">
@@ -47,6 +49,7 @@
     [class.pointer]="isPointer"
     [attr.role]="_role"
     [attr.tabindex]="_tabIndex"
+    [attr.aria-label]="isPointer ? _accessibleName : null"
     (click)="onClick($event)"
     (keydown.enter)="onActivateKey($event)"
     (keydown.space)="onActivateKey($event)">
@@ -77,6 +80,7 @@
     [class.pointer]="isPointer"
     [attr.role]="_role"
     [attr.tabindex]="_tabIndex"
+    [attr.aria-label]="isPointer ? _accessibleName : null"
     (click)="onClick($event)"
     (keydown.enter)="onActivateKey($event)"
     (keydown.space)="onActivateKey($event)">

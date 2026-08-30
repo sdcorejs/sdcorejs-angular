@@ -151,8 +151,21 @@ export class SdSidebarV1Panel {
     this.treeControl.toggle(menu);
   };
 
-  // why: mục menu nay là role="button" + tabindex="0" nên Enter/Space phải điều hướng đúng như
-  // click. Lọc theo target để phím bấm trên nút ghim lồng bên trong không kéo theo điều hướng.
+  menuNodeHref = (node: { path: string; queryParams?: Params }): string => {
+    if (sdIsExternalHttpUrl(node.path)) return node.path;
+    return this.#router.serializeUrl(
+      this.#router.createUrlTree([node.path.split('?')[0]], {
+        queryParams: node.queryParams ?? {},
+      })
+    );
+  };
+
+  onMenuNodeClick = (event: MouseEvent, node: { path: string; queryParams?: Params }): void => {
+    event.preventDefault();
+    this.navigate({ path: node.path, queryParams: node.queryParams ?? {} });
+  };
+
+  // why: giữ public keyboard handler cũ để không làm thay đổi declaration API.
   onMenuNodeKeydown = (event: KeyboardEvent, node: { path: string; queryParams: Params }): void => {
     if (event.target !== event.currentTarget) return;
     // why: chặn Space cuộn trang.
@@ -160,7 +173,7 @@ export class SdSidebarV1Panel {
     this.navigate({ path: node.path, queryParams: node.queryParams ?? {} });
   };
 
-  // why: nhánh có con nay là role="button" + aria-expanded → Enter/Space phải gập/mở đúng như click.
+  // why: giữ public keyboard handler cũ; native branch button now owns keyboard activation.
   onToggleMenuNodeKeydown = (event: KeyboardEvent, menu: SdLayoutMenu): void => {
     if (event.target !== event.currentTarget) return;
     event.preventDefault();

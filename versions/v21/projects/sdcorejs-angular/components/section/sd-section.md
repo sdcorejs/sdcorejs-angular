@@ -64,6 +64,7 @@ Each item row uses `8px 16px` padding and projects the value in the default slot
 ## Accessibility
 
 - The header is **never** `aria-hidden`. It holds the title/subtitle and everything projected into `[sdHeaderLeft]` / `[sdHeaderRight]` (usually real buttons) — hiding it erased all of that from the accessibility tree while the region still took clicks.
-- When `collapsible` is set, the header becomes a real control: `role="button"`, `tabindex="0"`, `aria-expanded` (mirrors `!collapsed`), `aria-controls` pointing at the body element's generated id, a `:focus-visible` ring, and Enter/Space that toggle exactly like a click (Space calls `preventDefault()` so the page does not scroll).
-- When `collapsible` is **not** set, the header stays non-interactive (no `role`, no `tabindex`, no `aria-expanded`) — `toggleCollapse()` is effectively a no-op there, so a tab stop would be noise.
-- The keyboard handler ignores events whose `target` is not the header itself. Enter/Space on a consumer button projected into `[sdHeaderRight]` activates that button only — it does not also collapse the section.
+- When `collapsible` is set, a localized native `<button>` exposes the collapse action through `aria-label`, `aria-expanded`, `aria-controls`, and a visible focus ring. Native Enter/Space behavior works without turning the projected header container into a nested interactive control.
+- When `collapsible` is **not** set, the header stays non-interactive and no collapse trigger is rendered.
+- Header whitespace remains clickable for compatibility. Clicks from projected links, buttons, form controls, editable content, roles, or explicit tab stops do not bubble into a second collapse action.
+- Collapsed body content is removed from the DOM, so focusable descendants are never left inside an `aria-hidden` container.

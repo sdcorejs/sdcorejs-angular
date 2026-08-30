@@ -9,19 +9,19 @@
 // Margin-left 16px mỗi cấp menu - hardcode 3 cấp
 :host ::ng-deep {
   .mat-nested-tree-node {
-    ul {
+    .c-menu-node-group {
       .c-menu-node-description-content {
         margin-left: 16px !important;
       }
 
       .mat-nested-tree-node {
-        ul {
+        .c-menu-node-group {
           .c-menu-node-description-content {
             margin-left: 32px !important;
           }
 
           .mat-nested-tree-node {
-            ul {
+            .c-menu-node-group {
               .c-menu-node-description-content {
                 margin-left: 48px !important;
               }
@@ -33,12 +33,9 @@
   }
 }
 
-// Reset css
-ul,
-li {
+.c-menu-node-group {
   margin-top: 0;
   margin-bottom: 0;
-  list-style-type: none;
 }
 
 // End
@@ -170,6 +167,16 @@ li {
               height: 100%;
             }
 
+            button.c-menu-node-description {
+              width: 100%;
+              padding: 0;
+              border: 0;
+              background: transparent;
+              color: inherit;
+              text-align: left;
+              cursor: pointer;
+            }
+
             .c-menu-node-description {
               flex: 1;
               display: flex;
@@ -214,8 +221,13 @@ li {
               }
             }
 
-            // why: mục menu nay là role="button" + tabindex="0" nên cần vòng focus thấy được.
-            .c-menu-node-description[role='button']:focus-visible {
+            a.c-menu-node-description-content {
+              color: inherit;
+              text-decoration: none;
+            }
+
+            .c-menu-node-description-content:focus-visible,
+            button.c-menu-node-description:focus-visible {
               outline: 2px solid var(--sd-primary, #005cbb);
               outline-offset: -2px;
             }
