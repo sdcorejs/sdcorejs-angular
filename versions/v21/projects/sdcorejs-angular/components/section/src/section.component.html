@@ -7,19 +7,7 @@
 @let _iconColor = iconColor();
 <div class="sd-section c-shadow-section">
   @if (!_hideHeader) {
-    <!-- why: bỏ aria-hidden="true" — header chứa title/subTitle và toàn bộ nội dung chiếu
-         [sdHeaderLeft]/[sdHeaderRight] (thường có nút bấm). aria-hidden xoá tất cả khỏi
-         accessibility tree trong khi vùng này vẫn nhận click. Khi collapsible, header trở thành
-         nút thật: role=button + tabindex=0 + aria-expanded/aria-controls + Enter/Space. -->
-    <div
-      class="sd-section-header cursor-pointer"
-      [attr.role]="_collapsible ? 'button' : null"
-      [attr.tabindex]="_collapsible ? 0 : null"
-      [attr.aria-expanded]="_collapsible ? !_collapsed : null"
-      [attr.aria-controls]="_collapsible ? bodyId : null"
-      (click)="toggleCollapse()"
-      (keydown.enter)="onHeaderKeydown($event)"
-      (keydown.space)="onHeaderKeydown($event)">
+    <div class="sd-section-header" [class.cursor-pointer]="_collapsible">
       <div class="sd-section-header-left">
         <ng-content select="[sdHeaderLeft]">
           @if (_icon) {
@@ -46,13 +34,17 @@
       <div class="sd-section-header-right">
         <ng-content select="[sdHeaderRight]"></ng-content>
         @if (_collapsible) {
-          <div class="d-flex align-items-center">
-            @if (_collapsed) {
-              <sd-icon name="expand_more"></sd-icon>
-            } @else {
-              <sd-icon name="expand_less"></sd-icon>
-            }
-          </div>
+          <button
+            type="button"
+            class="sd-section-collapse-toggle d-flex align-items-center"
+            [attr.aria-label]="
+              (_collapsed ? 'core.component.section.expand' : 'core.component.section.collapse') | sdTranslate: { title: _title || '' }
+            "
+            [attr.aria-expanded]="!_collapsed"
+            [attr.aria-controls]="bodyId"
+            (click)="onCollapseButtonClick($event)">
+            <sd-icon aria-hidden="true" [name]="_collapsed ? 'expand_more' : 'expand_less'"></sd-icon>
+          </button>
         }
       </div>
     </div>

@@ -167,6 +167,8 @@ export const EN_MESSAGES = {
   'core.form.tree-select.cancel': 'Cancel',
   'core.form.tree-select.apply': 'Apply',
   'core.component.tree.retry': 'Retry',
+  'core.component.section.expand': 'Expand {title}',
+  'core.component.section.collapse': 'Collapse {title}',
   'core.service.unsaved-changes.message': 'You have unsaved changes. Discard them and continue?',
   'core.component.job-progress.status.idle': 'Ready',
   'core.component.job-progress.status.queued': 'Queued',

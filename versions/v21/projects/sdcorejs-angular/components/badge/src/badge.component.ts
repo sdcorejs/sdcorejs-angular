@@ -87,6 +87,19 @@ export class SdBadge {
     return this.color();
   });
 
+  accessibleName = computed(() => {
+    const visibleText = [this.title(), this.description()]
+      .filter(value => value !== undefined && value !== null && String(value).trim() !== '')
+      .map(value => String(value).trim())
+      .join(' ');
+    if (visibleText) return visibleText;
+
+    const tooltip = this.tooltip()?.trim();
+    if (tooltip) return tooltip;
+
+    return (this.icon() || this.defaultIcon).replace(/[_-]+/g, ' ').trim();
+  });
+
   baseColorClasses = computed(() => {
     const c = this.effectiveColor();
     return {

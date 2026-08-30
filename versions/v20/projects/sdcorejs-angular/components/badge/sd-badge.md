@@ -54,7 +54,7 @@ None — content is driven by `title`, `description`, and `icon`.
 ## Visual cues
 - **`type="icon"` (default)**: a horizontal row — icon on the left (colored per `color`), title (and optional description) on the right; no background/border. Compact, used inline in tables and lists.
 - **`type="round"`**: a solid colored pill containing `title` text. Hỗ trợ thêm `icon` (kể từ version có size md/lg) — khi truyền `icon`, render icon-left + title-right giống `tag` nhưng giữ pill border-radius. Không hỗ trợ `description`.
-- **`type="tag"`**: a light-tinted rounded card with icon + title + optional description; the background is a soft tint of `color` and the text is `color`.
+- **`type="tag"`**: a light-tinted rounded card with icon + title + optional description; the background stays on the `*-light` token while text, icon, and border use the matching contrast-safe `*-dark` token.
 - **`size`**: `sm` (mặc định, padding/font hiện hữu) / `md` / `lg` — áp dụng cho cả `round` và `tag`, scale padding container + font-size title/description; icon element scale theo `$badgeIconSize` (16/18/24px).
 - Default icon (when none specified) is a small filled dot (`fiber_manual_record`).
 - Cursor is `pointer` only when `(click)` is bound; otherwise non-interactive.
@@ -119,6 +119,8 @@ None — content is driven by `title`, `description`, and `icon`.
 ## Accessibility
 - The badge root is **never** `aria-hidden`. It carries the visible `title`/`description` text, so hiding it would erase real content from the accessibility tree.
 - When — and only when — a consumer binds `(click)`, the root becomes a real control: `role="button"`, `tabindex="0"`, a `:focus-visible` ring, and Enter/Space that emit the same `click` output as a mouse click (Space also calls `preventDefault()` so the page does not scroll). Without a `(click)` listener the badge stays a plain, non-focusable status indicator.
+- Interactive badges receive an `aria-label` from non-empty `title` + `description`, then `tooltip`, then a readable icon-name fallback (underscores and hyphens become spaces). Numeric `0` remains a valid title.
+- Default round/tag foregrounds and borders use `*-dark` over the existing `*-light` backgrounds; standalone badge icons use the same dark foreground tokens. Consumers can keep overriding the public CSS variables.
 - `onClick` only calls `stopPropagation()` when the `click` output actually has a subscriber. A badge with no listener lets the event bubble to the enclosing control — this is how `<sd-tab-router>` can place a badge inside its `<a>` without nesting two interactive elements.
 
 ## Anti-patterns

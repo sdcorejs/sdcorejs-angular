@@ -6,6 +6,14 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+### Fixed
+
+- **The sidebar highlighted an ancestor menu together with the child the route actually belongs to.** A menu counted as active whenever the current route matched the front of its `path`, so declaring both `/appointment` and `/appointment/cs` lit up both rows while standing on `/appointment/cs`. When several menus match, only the longest — most exact — path is active now; the ancestor goes dark and `aria-current="page"` lands on a single row. The new `resolveActiveMenuPath(menus, routePath)` in the layout `utils` is the single decision point, used by V1 for node focus, menu-group binding and branch expansion, and by the shared `sd-layout-menu-tree` behind V2/V3 and their mobile variants. Matching stays segment-based (`/appointment` still never matches `/appointments`), and a route with no menu of its own (`/appointment/cs/123`) still activates its closest declared ancestor. `MenuFocusPipe` accepts the resolved path as an optional third argument and keeps its previous prefix matching when called with two.
+
+## [2.1] - 2026-08-30
+
+Release suffix `2.1` publishes `19.2.1`, `20.2.1`, and `21.2.1`.
+
 ### Added
 
 - **`<sd-api-contract-builder>`** (`@sdcorejs/angular/components/api-contract-builder`) — a design-time builder for an **API contract**: one JSON document describing the data the frontend hands in (`input.schema`), the HTTP request that is sent (`req`), the HTTP response that comes back (`res`), and the data the frontend finally receives (`output.schema`). It exists so an integrator can declare an endpoint once and a future `form-builder` / `form-render` can drive a dropdown, a table or a create/update/delete action from it without anyone hand-writing mapping code.
@@ -36,9 +44,9 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ### Fixed
 
-- **`<sd-table>` with `type: 'local'` dropped every row once an inline column filter on a `MULTIPLE` `values` / `lazy-values` column had two or more values selected.** Client-side matching picked its branch from the array-ness of the **row** value instead of the filter value, so a scalar cell (`status: 'ACTIVE'`) fell through to a strict `===` against `['ACTIVE','PENDING'].toString()` → `'active,pending'` and could never match. Selecting exactly one value happened to work (`['ACTIVE'].toString() === 'ACTIVE'`), which is why the defect read as intermittent rather than broken. Matching now branches on the shape of the actual values: several selected values are OR-ed — mirroring the `IN` operator `SdConvertToPagingReq` sends in `type: 'server'`, so local and server tables agree — and an array-valued cell matches when the intersection is non-empty. A scalar filter value on a `MULTIPLE` column (e.g. `filter.default: 'ACTIVE'`) no longer throws `TypeError: …map is not a function`.
+- `SdSection`, Sidebar v1 and `SdBadge` now expose named native controls and links, isolate collapsed focus, use valid tree/group markup, and use contrast-safe badge tokens without changing their public inputs, outputs or selectors.
 
-- **The sidebar highlighted an ancestor menu together with the child the route actually belongs to.** A menu counted as active whenever the current route matched the front of its `path`, so declaring both `/appointment` and `/appointment/cs` lit up both rows while standing on `/appointment/cs`. When several menus match, only the longest — most exact — path is active now; the ancestor goes dark and `aria-current="page"` lands on a single row. The new `resolveActiveMenuPath(menus, routePath)` in the layout `utils` is the single decision point, used by V1 for node focus, menu-group binding and branch expansion, and by the shared `sd-layout-menu-tree` behind V2/V3 and their mobile variants. Matching stays segment-based (`/appointment` still never matches `/appointments`), and a route with no menu of its own (`/appointment/cs/123`) still activates its closest declared ancestor. `MenuFocusPipe` accepts the resolved path as an optional third argument and keeps its previous prefix matching when called with two.
+- **`<sd-table>` with `type: 'local'` dropped every row once an inline column filter on a `MULTIPLE` `values` / `lazy-values` column had two or more values selected.** Client-side matching picked its branch from the array-ness of the **row** value instead of the filter value, so a scalar cell (`status: 'ACTIVE'`) fell through to a strict `===` against `['ACTIVE','PENDING'].toString()` → `'active,pending'` and could never match. Selecting exactly one value happened to work (`['ACTIVE'].toString() === 'ACTIVE'`), which is why the defect read as intermittent rather than broken. Matching now branches on the shape of the actual values: several selected values are OR-ed — mirroring the `IN` operator `SdConvertToPagingReq` sends in `type: 'server'`, so local and server tables agree — and an array-valued cell matches when the intersection is non-empty. A scalar filter value on a `MULTIPLE` column (e.g. `filter.default: 'ACTIVE'`) no longer throws `TypeError: …map is not a function`.
 
 ## [2.0] - 2026-08-15
 

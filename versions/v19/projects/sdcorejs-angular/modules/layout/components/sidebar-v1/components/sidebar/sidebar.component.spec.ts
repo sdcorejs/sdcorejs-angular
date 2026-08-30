@@ -1,5 +1,6 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { NavigationEnd, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 
@@ -19,7 +20,14 @@ describe('SdSidebarV1Panel', () => {
   let fixture: ComponentFixture<SdSidebarV1Panel>;
   let component: SdSidebarV1Panel;
   let routerEvents: Subject<unknown>;
-  let router: { events: Subject<unknown>; url: string; navigate: jasmine.Spy; navigateByUrl: jasmine.Spy };
+  let router: {
+    events: Subject<unknown>;
+    url: string;
+    navigate: jasmine.Spy;
+    navigateByUrl: jasmine.Spy;
+    createUrlTree: jasmine.Spy;
+    serializeUrl: jasmine.Spy;
+  };
   let storage: ReturnType<typeof createStorage>;
   let navigationState: {
     pinnedMenus: ReturnType<typeof signal<SdLayoutMenu[]>>;
@@ -50,6 +58,8 @@ describe('SdSidebarV1Panel', () => {
       url: options.path ?? '/orders',
       navigate: jasmine.createSpy('navigate').and.resolveTo(true),
       navigateByUrl: jasmine.createSpy('navigateByUrl').and.resolveTo(true),
+      createUrlTree: jasmine.createSpy('createUrlTree'),
+      serializeUrl: jasmine.createSpy('serializeUrl'),
     };
     storage = createStorage();
     navigationState = {
@@ -83,6 +93,62 @@ describe('SdSidebarV1Panel', () => {
     });
     fixture.componentRef.setInput('isShowSidebar', true);
     fixture.componentRef.setInput('isMobile', options.mobile ?? false);
+    fixture.detectChanges();
+  }
+
+  async function createRealTemplate(options: { show?: boolean } = {}) {
+    routerEvents = new Subject<unknown>();
+    router = {
+      events: routerEvents,
+      url: '/orders',
+      navigate: jasmine.createSpy('navigate').and.resolveTo(true),
+      navigateByUrl: jasmine.createSpy('navigateByUrl').and.resolveTo(true),
+      createUrlTree: jasmine
+        .createSpy('createUrlTree')
+        .and.callFake((commands: string[], extras: { queryParams?: Record<string, unknown> }) => ({
+          commands,
+          queryParams: extras.queryParams ?? {},
+        })),
+      serializeUrl: jasmine.createSpy('serializeUrl').and.callFake((tree: { commands: string[]; queryParams: Record<string, unknown> }) => {
+        const query = Object.entries(tree.queryParams)
+          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+          .join('&');
+        return `${tree.commands[0]}${query ? `?${query}` : ''}`;
+      }),
+    };
+    storage = createStorage();
+    navigationState = {
+      pinnedMenus: signal([report]),
+      hydrate: jasmine.createSpy('hydrate'),
+      togglePinned: jasmine.createSpy('togglePinned'),
+    };
+
+    await TestBed.configureTestingModule({
+      imports: [SdSidebarV1Panel, NoopAnimationsModule],
+      providers: [
+        { provide: Router, useValue: router },
+        { provide: SdLayoutStorageService, useValue: storage },
+        { provide: SdLayoutNavigationStateService, useValue: navigationState },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(SdSidebarV1Panel);
+    component = fixture.componentInstance;
+    component.currentPath.set('/orders');
+    fixture.componentRef.setInput('menus', menus);
+    fixture.componentRef.setInput('userInfo', { fullName: 'Test User' });
+    fixture.componentRef.setInput('sidebar', {
+      version: 1,
+      pin: { enabled: true },
+      brandColor: '#123456',
+      brandLightColor: '#abc',
+    });
+    fixture.componentRef.setInput('isShowSidebar', options.show ?? true);
+    fixture.componentRef.setInput('isMobile', false);
+    fixture.detectChanges();
+    component.treeControl.expand(admin);
+    fixture.detectChanges();
+    await fixture.whenStable();
     fixture.detectChanges();
   }
 
@@ -369,5 +435,67 @@ describe('SdSidebarV1Panel', () => {
     wrapper.removeEventListener('keydown', listener);
 
     expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  describe('real template accessibility', () => {
+    function accessibleNameSource(element: HTMLElement): string {
+      return element.getAttribute('aria-label')?.trim() || element.textContent?.trim() || '';
+    }
+
+    beforeEach(async () => createRealTemplate());
+
+    it('gives every rendered control and link an accessible name source', () => {
+      const root = fixture.nativeElement as HTMLElement;
+      const controls = root.querySelectorAll<HTMLElement>('button, a[href], [role="button"]');
+      expect(controls.length).toBeGreaterThan(0);
+
+      for (const control of controls) {
+        expect(accessibleNameSource(control)).withContext(control.outerHTML).not.toBe('');
+      }
+      for (const groupButton of root.querySelectorAll<HTMLElement>('.c-menu-group > button')) {
+        expect(groupButton.getAttribute('aria-label')?.trim()).withContext(groupButton.outerHTML).toBeTruthy();
+      }
+    });
+
+    it('renders a valid home href and named native links for every leaf', () => {
+      const root = fixture.nativeElement as HTMLElement;
+      const home = root.querySelector('.c-logo a') as HTMLAnchorElement;
+      const leafLinks = root.querySelectorAll<HTMLAnchorElement>('.c-menu-tree-container a.c-menu-node-description-content[href]');
+
+      expect(home.getAttribute('href')).toBe('/layout/home');
+      expect(home.getAttribute('href')).not.toContain('javascript:');
+      expect(leafLinks.length).toBe(2);
+      expect(Array.from(leafLinks).map(link => accessibleNameSource(link))).toEqual(jasmine.arrayContaining(['Orders', 'Người dùng']));
+    });
+
+    it('uses Material treeitems with neutral wrappers and explicit groups', () => {
+      const root = fixture.nativeElement as HTMLElement;
+      const tree = root.querySelector('mat-tree') as HTMLElement;
+      const treeItems = root.querySelectorAll<HTMLElement>('mat-nested-tree-node');
+
+      expect(root.querySelectorAll('.c-menu-tree-container li').length).toBe(0);
+      expect(tree.getAttribute('role')).toBe('tree');
+      expect(treeItems.length).toBeGreaterThan(0);
+      for (const treeItem of treeItems) {
+        expect(treeItem.getAttribute('role')).toBe('treeitem');
+      }
+      expect(root.querySelector('.c-menu-node-group')?.getAttribute('role')).toBe('group');
+    });
+
+    it('contains hidden focusables inside an inert boundary without aria-hidden', () => {
+      fixture.componentRef.setInput('isShowSidebar', false);
+      fixture.detectChanges();
+      const tree = (fixture.nativeElement as HTMLElement).querySelector('.c-menu-tree') as HTMLElement;
+      const focusable = tree.querySelector<HTMLElement>('button, a[href], input, [tabindex]');
+
+      expect(tree.hasAttribute('inert')).toBeTrue();
+      expect(tree.closest('[aria-hidden="true"]')).toBeNull();
+      expect(focusable).not.toBeNull();
+      expect(focusable?.closest('[inert]')).toBe(tree);
+
+      fixture.componentRef.setInput('isShowSidebar', true);
+      fixture.detectChanges();
+      expect(tree.hasAttribute('inert')).toBeFalse();
+    });
   });
 });

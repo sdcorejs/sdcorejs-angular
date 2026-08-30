@@ -8,12 +8,12 @@ $badgeIconSize:
   'lg' 24;
 
 $badgeIconColor:
-  'primary' map.get(color.$color_map, 'primary'),
-  'secondary' map.get(color.$color_map, 'secondary'),
-  'info' map.get(color.$color_map, 'info'),
-  'success' map.get(color.$color_map, 'success'),
-  'error' map.get(color.$color_map, 'error'),
-  'warning' map.get(color.$color_map, 'warning');
+  'primary' map.get(color.$color_map, 'primary-dark'),
+  'secondary' map.get(color.$color_map, 'secondary-dark'),
+  'info' map.get(color.$color_map, 'info-dark'),
+  'success' map.get(color.$color_map, 'success-dark'),
+  'error' map.get(color.$color_map, 'error-dark'),
+  'warning' map.get(color.$color_map, 'warning-dark');
 
 $badgeDescriptionColor: map.get(color.$color_map, 'text-secondary');
 
@@ -92,44 +92,44 @@ $badges: '';
 
   &.c-primary {
     background: map.get(color.$color_map, 'primary-light');
-    color: map.get(color.$color_map, 'primary');
+    color: map.get(color.$color_map, 'primary-dark');
     &.c-badge--tag {
-      border: 1px solid map.get(color.$color_map, 'primary');
+      border: 1px solid map.get(color.$color_map, 'primary-dark');
     }
   }
   &.c-secondary {
     background: map.get(color.$color_map, 'secondary-light');
-    color: map.get(color.$color_map, 'secondary');
+    color: map.get(color.$color_map, 'secondary-dark');
     &.c-badge--tag {
-      border: 1px solid map.get(color.$color_map, 'secondary');
+      border: 1px solid map.get(color.$color_map, 'secondary-dark');
     }
   }
   &.c-info {
     background: map.get(color.$color_map, 'info-light');
-    color: map.get(color.$color_map, 'info');
+    color: map.get(color.$color_map, 'info-dark');
     &.c-badge--tag {
-      border: 1px solid map.get(color.$color_map, 'info');
+      border: 1px solid map.get(color.$color_map, 'info-dark');
     }
   }
   &.c-warning {
     background: map.get(color.$color_map, 'warning-light');
-    color: map.get(color.$color_map, 'warning');
+    color: map.get(color.$color_map, 'warning-dark');
     &.c-badge--tag {
-      border: 1px solid map.get(color.$color_map, 'warning');
+      border: 1px solid map.get(color.$color_map, 'warning-dark');
     }
   }
   &.c-success {
     background: map.get(color.$color_map, 'success-light');
-    color: map.get(color.$color_map, 'success');
+    color: map.get(color.$color_map, 'success-dark');
     &.c-badge--tag {
-      border: 1px solid map.get(color.$color_map, 'success');
+      border: 1px solid map.get(color.$color_map, 'success-dark');
     }
   }
   &.c-error {
     background: map.get(color.$color_map, 'error-light');
-    color: map.get(color.$color_map, 'error');
+    color: map.get(color.$color_map, 'error-dark');
     &.c-badge--tag {
-      border: 1px solid map.get(color.$color_map, 'error');
+      border: 1px solid map.get(color.$color_map, 'error-dark');
     }
   }
 

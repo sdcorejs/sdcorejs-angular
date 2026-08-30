@@ -168,6 +168,8 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.tree-select.cancel': 'Hủy',
   'core.form.tree-select.apply': 'Áp dụng',
   'core.component.tree.retry': 'Thử lại',
+  'core.component.section.expand': 'Mở rộng {title}',
+  'core.component.section.collapse': 'Thu gọn {title}',
   'core.service.unsaved-changes.message': 'Bạn có thay đổi chưa lưu. Bỏ thay đổi và tiếp tục?',
   'core.component.job-progress.status.idle': 'Sẵn sàng',
   'core.component.job-progress.status.queued': 'Đang chờ',

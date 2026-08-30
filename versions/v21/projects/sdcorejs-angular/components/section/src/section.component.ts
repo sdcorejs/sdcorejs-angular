@@ -1,6 +1,10 @@
 import { booleanAttribute, Component, effect, ElementRef, inject, input, model } from '@angular/core';
 import { Color } from '@sdcorejs/utils/models';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
+
+const SECTION_INTERACTIVE_SELECTOR =
+  'a[href], button, input, select, textarea, [role="button"], [role="link"], [contenteditable="true"], [tabindex]';
 
 // why: id tăng dần để nối aria-controls từ header sang body — mỗi instance cần một id duy nhất.
 let sectionBodyIdSeq = 0;
@@ -9,7 +13,10 @@ let sectionBodyIdSeq = 0;
   selector: 'sd-section',
   templateUrl: './section.component.html',
   styleUrl: './section.component.scss',
-  imports: [SdIcon],
+  imports: [SdIcon, SdTranslatePipe],
+  host: {
+    '(click)': 'onHeaderClick($event)',
+  },
 })
 export class SdSection {
   #el = inject(ElementRef);
@@ -45,9 +52,23 @@ export class SdSection {
     }
   };
 
-  // why: header là div[role=button] nhưng consumer chiếu nội dung tuỳ ý vào [sdHeaderRight]
-  // (thường là nút bấm). Nếu không lọc theo target thì Enter/Space trên nút của consumer vừa
-  // kích hoạt nút vừa gập section. Chỉ xử lý khi chính header đang giữ focus.
+  protected onHeaderClick = (event: MouseEvent): void => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+
+    const header = target.closest('.sd-section-header');
+    if (!header || header.closest('sd-section') !== this.#el.nativeElement) return;
+    if (target.closest(SECTION_INTERACTIVE_SELECTOR)) return;
+
+    this.toggleCollapse();
+  };
+
+  protected onCollapseButtonClick = (event: MouseEvent): void => {
+    event.stopPropagation();
+    this.toggleCollapse();
+  };
+
+  // why: giữ public handler cũ để không làm thay đổi declaration API của component.
   onHeaderKeydown = (event: KeyboardEvent) => {
     if (event.target !== event.currentTarget) return;
     // why: chặn Space cuộn trang trước khi toggle.

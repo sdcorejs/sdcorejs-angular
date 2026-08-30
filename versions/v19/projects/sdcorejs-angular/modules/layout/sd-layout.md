@@ -327,11 +327,12 @@ Labels are translated in all five bundled locales (English: "Home" / "Access Den
 
 ## Accessibility
 
-- Version controls and sidebar actions are native buttons with visible keyboard focus.
+- Version controls and sidebar actions are native buttons with visible keyboard focus and explicit names; tooltips are supplemental rather than the naming source.
 - Desktop flyouts and mobile sheets close with Escape. Mobile overlays trap focus, restore focus to their trigger, and release body scroll when closed or destroyed.
 - Active, expanded, pressed, dialog, and navigation states are exposed with the corresponding ARIA attributes.
 - Motion used for preview/sidebar transitions is removed when `prefers-reduced-motion: reduce` is active.
-- **No nested interactive elements.** On the v1 sidebar the menu row keeps its click handler as a mouse convenience, but `role="button"` / `tabindex` / `aria-current` / Enter-Space sit on the TITLE element, with the pin toggle as an independent sibling button. A `role="button"` wrapper around another button makes assistive tech collapse the pair into a single control and drop the inner one.
+- Sidebar v1 uses a real `/layout/home` link, native route links for leaf nodes, native disclosure buttons for branches, and independent named pin buttons. Material owns `tree` / `treeitem`; neutral wrappers and explicit `role="group"` containers avoid invalid `list` / `listitem` nesting.
+- A hidden Sidebar v1 tree is contained by `inert` instead of `aria-hidden`, so its links, buttons, and search control cannot remain keyboard-exposed while absent from the accessibility tree.
 - Keep menu titles meaningful and unique; icons are supplementary and must not be the only accessible label.
 
 ## i18n

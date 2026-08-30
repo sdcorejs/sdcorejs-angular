@@ -38,7 +38,7 @@ class HostComponent {
   standalone: true,
   imports: [SdSection],
   template: `
-    <sd-section [collapsible]="true" [(collapsed)]="collapsed">
+    <sd-section title="Custom heading" [collapsible]="true" [(collapsed)]="collapsed">
       <span sdHeaderLeft class="custom-header-left">Custom heading</span>
       <button sdHeaderRight>Action</button>
       <p class="body-content">Body text</p>
@@ -257,6 +257,7 @@ describe('SdSection', () => {
 
   describe('accessibility: header', () => {
     const getHeader = () => getSectionEl(fixture).querySelector('.sd-section-header') as HTMLElement;
+    const getTrigger = () => getSectionEl(fixture).querySelector('.sd-section-collapse-toggle') as HTMLButtonElement | null;
 
     it('header does not carry aria-hidden', () => {
       expect(getHeader().hasAttribute('aria-hidden')).toBe(false);
@@ -267,24 +268,31 @@ describe('SdSection', () => {
       expect(header.getAttribute('role')).toBeNull();
       expect(header.getAttribute('tabindex')).toBeNull();
       expect(header.getAttribute('aria-expanded')).toBeNull();
+      expect(getTrigger()).toBeNull();
     });
 
-    it('exposes role=button + tabindex + aria-expanded when collapsible', () => {
+    it('uses a named native button instead of making the whole header interactive', () => {
       host.collapsible = true;
       fixture.detectChanges();
       const header = getHeader();
-      expect(header.getAttribute('role')).toBe('button');
-      expect(header.getAttribute('tabindex')).toBe('0');
-      expect(header.getAttribute('aria-expanded')).toBe('true');
+      const trigger = getTrigger();
+
+      expect(header.getAttribute('role')).toBeNull();
+      expect(header.getAttribute('tabindex')).toBeNull();
+      expect(trigger?.tagName).toBe('BUTTON');
+      expect(trigger?.type).toBe('button');
+      expect(trigger?.getAttribute('aria-label')?.trim()).toBeTruthy();
+      expect(trigger?.getAttribute('aria-expanded')).toBe('true');
+      expect(trigger?.getAttribute('aria-controls')).toBe(component.bodyId);
+      expect(trigger?.querySelector('sd-icon')?.getAttribute('aria-hidden')).toBe('true');
     });
 
     it('aria-expanded follows the collapsed state and aria-controls points at the body', () => {
       host.collapsible = true;
       host.collapsed = true;
       fixture.detectChanges();
-      const header = getHeader();
-      expect(header.getAttribute('aria-expanded')).toBe('false');
-      expect(header.getAttribute('aria-controls')).toBe(component.bodyId);
+      expect(getTrigger()?.getAttribute('aria-expanded')).toBe('false');
+      expect(getTrigger()?.getAttribute('aria-controls')).toBe(component.bodyId);
 
       host.collapsed = false;
       fixture.detectChanges();
@@ -292,42 +300,17 @@ describe('SdSection', () => {
       expect(body.id).toBe(component.bodyId);
     });
 
-    it('Enter on the header collapses the section, same as a click', () => {
+    it('the native collapse button toggles the section exactly once', () => {
       host.collapsible = true;
       fixture.detectChanges();
-      const header = getHeader();
-
-      header.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      getTrigger()?.click();
       fixture.detectChanges();
 
       expect(component.collapsed()).toBeTrue();
-    });
-
-    it('Space on the header toggles and prevents the page scroll', () => {
-      host.collapsible = true;
-      fixture.detectChanges();
-      const header = getHeader();
-
-      const ev = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
-      header.dispatchEvent(ev);
-      fixture.detectChanges();
-
-      expect(component.collapsed()).toBeTrue();
-      expect(ev.defaultPrevented).toBe(true);
-    });
-
-    // why: consumer chiếu nút vào [sdHeaderRight]; Enter trên nút đó KHÔNG được gập section.
-    it('ignores keyboard events that bubble up from a projected control', () => {
-      host.collapsible = true;
-      fixture.detectChanges();
-      const header = getHeader();
-      const inner = document.createElement('button');
-      header.appendChild(inner);
-
-      inner.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-      fixture.detectChanges();
-
-      expect(component.collapsed()).toBeFalse();
+      expect(
+        getSectionEl(fixture).querySelector('[aria-hidden="true"] button, [aria-hidden="true"] a[href], [aria-hidden="true"] [tabindex]')
+      ).toBeNull();
+      expect(getSectionEl(fixture).querySelector('.extra-content')).toBeNull();
     });
   });
 
@@ -338,8 +321,7 @@ describe('SdSection', () => {
   describe('input: hideHeader', () => {
     it('renders header by default (hideHeader=false)', () => {
       const el = getSectionEl(fixture);
-      // header div has cursor-pointer class
-      const header = el.querySelector('.cursor-pointer') as HTMLElement;
+      const header = el.querySelector('.sd-section-header') as HTMLElement;
       expect(header).not.toBeNull();
     });
 
@@ -347,7 +329,7 @@ describe('SdSection', () => {
       host.hideHeader = true;
       fixture.detectChanges();
       const el = getSectionEl(fixture);
-      const header = el.querySelector('.cursor-pointer') as HTMLElement;
+      const header = el.querySelector('.sd-section-header') as HTMLElement;
       expect(header).toBeNull();
     });
 
@@ -404,6 +386,25 @@ describe('SdSection', () => {
     it('projects [sdHeaderRight] slot content into the header right area', () => {
       const el = slotsFixture.debugElement.query(By.directive(SdSection)).nativeElement as HTMLElement;
       expect(el.querySelector('.sd-section-header-right button')?.textContent?.trim()).toBe('Action');
+    });
+
+    it('does not collapse when a projected header action is clicked', () => {
+      const el = getSectionEl(slotsFixture);
+      const projectedAction = el.querySelector('[sdHeaderRight]') as HTMLButtonElement;
+
+      projectedAction.click();
+      slotsFixture.detectChanges();
+
+      expect(slotsFixture.componentInstance.collapsed).toBeFalse();
+    });
+
+    it('keeps header whitespace click collapse compatibility', () => {
+      const header = getSectionEl(slotsFixture).querySelector('.sd-section-header') as HTMLElement;
+
+      header.click();
+      slotsFixture.detectChanges();
+
+      expect(slotsFixture.componentInstance.collapsed).toBeTrue();
     });
 
     it('projects [sdFooterLeft] and [sdFooterRight] slots into the footer areas', () => {
