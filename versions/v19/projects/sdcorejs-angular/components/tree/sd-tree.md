@@ -254,6 +254,12 @@ Command menu icons default to `fontSet: 'material-icons-outlined'` and `color: '
 </sd-tree>
 ```
 
+Angular's template checker cannot infer the generic parameter of a projected `sdTreeItemDef` directive from the
+`SdTreeComponentOption<T>` bound to its parent `<sd-tree>` because the directive has no generic input of its own. To
+keep the documented syntax above compatible with `strictTemplates`, `SdTreeItemDefDirective` defaults only its
+projected context item to `any`. This is a compatibility fallback, not inferred `T`; the Tree models and options keep
+their `unknown` defaults.
+
 Custom templates can grow row height; the tree row stretches instead of clipping taller item content. The context also exposes `loadError` and `retry()` for a custom lazy-error presentation.
 
 ## Public API

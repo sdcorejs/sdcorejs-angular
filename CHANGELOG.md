@@ -6,6 +6,14 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+## [2.3] - 2026-08-31
+
+Release suffix `2.3` publishes `19.2.3`, `20.2.3`, and `21.2.3`.
+
+### Fixed
+
+- **Projected `<sd-tree>` item templates compile again with `strictTemplates` and the documented syntax.** Angular cannot infer the generic parameter of `SdTreeItemDefDirective` from `SdTreeComponentOption<T>` on the parent component because the projected directive has no generic input of its own. Its narrowly scoped compatibility default is restored from `unknown` to `any`, so `<ng-template sdTreeItemDef let-item>{{ item.name }}</ng-template>` no longer requires `$any()`, a cast pipe, or a consumer-local context guard. Every Tree model and option keeps its existing `unknown` default; this does not roll back the broader type-safety improvements.
+
 ## [2.2] - 2026-08-30
 
 Release suffix `2.2` publishes `19.2.2`, `20.2.2`, and `21.2.2`.

@@ -1,5 +1,5 @@
 import { OverlayContainer } from '@angular/cdk/overlay';
-import { Component, signal } from '@angular/core';
+import { Component, TemplateRef, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -333,6 +333,15 @@ class MaxDepthHostComponent {
 }
 
 describe('SdTree', () => {
+  it('defaults the projected item-template context to any for strict-template consumers', () => {
+    type DefaultContext = SdTreeItemDefDirective['templateRef'] extends TemplateRef<infer TContext> ? TContext : never;
+    type IsAny<T> = 0 extends 1 & T ? true : false;
+
+    const defaultItemIsAny: IsAny<DefaultContext['$implicit']> = true;
+
+    expect(defaultItemIsAny).toBeTrue();
+  });
+
   it('renders static tree rows from SdTreeItem, default expansion, roles and stable auto ids', async () => {
     const fixture = await createFixture(StaticHostComponent);
 
