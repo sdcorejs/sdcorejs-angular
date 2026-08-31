@@ -6768,15 +6768,11 @@ interface TreeDemoItem {
         <div class="tree-demo-panel">
           <sd-tree [option]="customDemoOption">
             <ng-template sdTreeItemDef let-item let-level="level" let-isLeaf="isLeaf" let-toggle="toggle">
-              <!-- why: SdTreeItemDefDirective mặc định generic là unknown (khác SdOrgChartItemDef,
-                   vốn default về type node cụ thể), nên dưới strictTemplates item không đọc được
-                   property nào. Alias qua @let + cast một lần thay vì rải $any() khắp template. -->
-              @let _node = $any(item);
               <button type="button" class="tree-custom-item" [class.tree-custom-item--leaf]="isLeaf" (click)="toggle()">
                 <span>L{{ level + 1 }}</span>
-                <strong>{{ _node.title }}</strong>
-                @if (_node.description) {
-                  <small>{{ _node.description }}</small>
+                <strong>{{ item.title }}</strong>
+                @if (item.description) {
+                  <small>{{ item.description }}</small>
                 }
               </button>
             </ng-template>
@@ -15995,15 +15991,11 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     <div class="tree-demo-panel">
       <sd-tree [option]="customDemoOption">
         <ng-template sdTreeItemDef let-item let-level="level" let-isLeaf="isLeaf" let-toggle="toggle">
-          <!-- why: SdTreeItemDefDirective mặc định generic là unknown (khác SdOrgChartItemDef,
-               vốn default về type node cụ thể), nên dưới strictTemplates item không đọc được
-               property nào. Alias qua @let + cast một lần thay vì rải $any() khắp template. -->
-          @let _node = $any(item);
           <button type="button" class="tree-custom-item" [class.tree-custom-item--leaf]="isLeaf" (click)="toggle()">
             <span>L{{ level + 1 }}</span>
-            <strong>{{ _node.title }}</strong>
-            @if (_node.description) {
-              <small>{{ _node.description }}</small>
+            <strong>{{ item.title }}</strong>
+            @if (item.description) {
+              <small>{{ item.description }}</small>
             }
           </button>
         </ng-template>
