@@ -184,15 +184,15 @@ describe('E2E attributes', () => {
     flush();
   }));
 
-  // why: header sắp xếp từng mang aria-hidden="true". `mat-sort-header` tự gắn role="button" +
-  // tabindex + aria-sort lên chính div đó, nên aria-hidden xoá cả tên cột lẫn hướng sắp xếp khỏi
-  // accessibility tree → người dùng screen reader mất hoàn toàn khả năng sắp xếp bảng.
-  it('keeps the sortable column headers in the accessibility tree', fakeAsync(() => {
+  // why: title vẫn phải nằm trong accessibility tree, nhưng option này không bật sorting nên
+  // không được lộ aria-sort hay focusable sort control.
+  it('keeps header titles accessible without exposing omitted sorting', fakeAsync(() => {
     settleWith(employeeOption());
     const headers = Array.from(sdTableEl.querySelectorAll<HTMLElement>('.c-header-title'));
     expect(headers.length).toBeGreaterThan(0);
     headers.forEach(header => expect(header.hasAttribute('aria-hidden')).toBe(false));
-    expect(headers.some(header => header.hasAttribute('aria-sort'))).toBe(true);
+    expect(sdTableEl.querySelectorAll('[aria-sort]').length).toBe(0);
+    expect(sdTableEl.querySelectorAll('.sd-table-sort-header').length).toBe(0);
     flush();
   }));
 });

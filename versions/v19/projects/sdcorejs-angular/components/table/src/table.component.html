@@ -325,12 +325,13 @@
               [style.min-width]="column.minWidth || column.width"
               [style.max-width]="column.maxWidth"
               [attr.rowspan]="_configuration.multipleHeader && column.type !== 'children' ? 2 : 1"
-              [attr.colspan]="column.type === 'children' ? column.children.length : 1">
+              [attr.colspan]="column.type === 'children' ? column.children.length : 1"
+              [attr.aria-sort]="
+                _tableOption.sort?.enable && column.type !== 'children' && column.sortable ? getSortAria(column.field) : null
+              ">
               <div>
-                <!-- why: bỏ aria-hidden="true" khỏi header. `mat-sort-header` tự gắn role="button",
-                     tabindex và aria-sort lên chính div này — aria-hidden khiến header vẫn tab tới
-                     được nhưng không đọc được tên cột lẫn hướng sắp xếp, tức người dùng screen
-                     reader mất hoàn toàn khả năng sắp xếp bảng. -->
+                <!-- why: sort control chỉ ôm title; filter là sibling nên không thành interactive
+                     descendant. aria-sort thuộc semantic <th>, không thuộc control này. -->
                 @if (column.type === 'children') {
                   <div
                     class="c-header-title"
@@ -339,14 +340,22 @@
                     <column-title [column]="column" [titleDef]="_titleDef[column.field]"></column-title>
                   </div>
                 } @else {
-                  <div
-                    mat-sort-header
-                    class="c-header-title"
-                    [class.justify-content-end]="column.align === 'right'"
-                    [class.text-right]="column.align === 'right'"
-                    [disabled]="!column.sortable">
-                    <column-title [column]="column" [titleDef]="_titleDef[column.field]"></column-title>
-                  </div>
+                  @if (_tableOption.sort?.enable && column.sortable) {
+                    <div
+                      [sdTableSortHeader]="column.field"
+                      class="c-header-title"
+                      [class.justify-content-end]="column.align === 'right'"
+                      [class.text-right]="column.align === 'right'">
+                      <column-title [column]="column" [titleDef]="_titleDef[column.field]"></column-title>
+                    </div>
+                  } @else {
+                    <div
+                      class="c-header-title"
+                      [class.justify-content-end]="column.align === 'right'"
+                      [class.text-right]="column.align === 'right'">
+                      <column-title [column]="column" [titleDef]="_titleDef[column.field]"></column-title>
+                    </div>
+                  }
                   @let hideInlineFilter =
                     _tableOption.filter?.disabled ||
                     _tableOption.filter?.hideInlineFilter === true ||
@@ -404,18 +413,25 @@
               class="c-th px-8"
               [style.width]="column.width"
               [style.min-width]="column.minWidth || column.width"
-              [style.max-width]="column.maxWidth">
+              [style.max-width]="column.maxWidth"
+              [attr.aria-sort]="_tableOption.sort?.enable && column.sortable ? getSortAria(column.field) : null">
               <div>
-                <!-- why: xem chú thích ở header nhóm trên — mat-sort-header là control thật,
-                     aria-hidden xoá tên cột + aria-sort khỏi accessibility tree. -->
-                <div
-                  mat-sort-header
-                  class="c-header-title"
-                  [class.justify-content-end]="column.align === 'right'"
-                  [class.text-right]="column.align === 'right'"
-                  [disabled]="!column.sortable">
-                  <column-title [column]="column" [titleDef]="_titleDef[column.field]"></column-title>
-                </div>
+                @if (_tableOption.sort?.enable && column.sortable) {
+                  <div
+                    [sdTableSortHeader]="column.field"
+                    class="c-header-title"
+                    [class.justify-content-end]="column.align === 'right'"
+                    [class.text-right]="column.align === 'right'">
+                    <column-title [column]="column" [titleDef]="_titleDef[column.field]"></column-title>
+                  </div>
+                } @else {
+                  <div
+                    class="c-header-title"
+                    [class.justify-content-end]="column.align === 'right'"
+                    [class.text-right]="column.align === 'right'">
+                    <column-title [column]="column" [titleDef]="_titleDef[column.field]"></column-title>
+                  </div>
+                }
                 @if (!_tableOption.filter?.disabled && !_tableOption.filter?.hideInlineFilter && columnOperator) {
                   <ng-container *sdDesktop>
                     <column-filter

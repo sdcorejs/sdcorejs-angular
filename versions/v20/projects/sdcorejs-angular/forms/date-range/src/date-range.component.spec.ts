@@ -924,6 +924,25 @@ describe('SdDateRange (accessibility)', () => {
     inputs.forEach(el => expect(el.hasAttribute('aria-hidden')).toBe(false));
   });
 
+  it('uses only the valid autocomplete token off for both independently addressable endpoints', () => {
+    const inputs = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll<HTMLInputElement>('mat-date-range-input input'));
+    const start = inputs.find(input => input.id === cmp.id1);
+    const end = inputs.find(input => input.id === cmp.id2);
+
+    expect(start).withContext('matStartDate input must remain addressable by its generated id').toBeDefined();
+    expect(end).withContext('matEndDate input must remain addressable by its generated id').toBeDefined();
+    expect(cmp.id1).not.toBe(cmp.id2);
+
+    for (const [endpoint, input] of [
+      ['start', start!],
+      ['end', end!],
+    ] as const) {
+      expect(input.getAttribute('autocomplete')).withContext(`${endpoint} endpoint autocomplete attribute`).toBe('off');
+      expect(input.autocomplete).withContext(`${endpoint} endpoint reflected autocomplete property`).toBe('off');
+      expect(input.autocomplete).withContext(`${endpoint} endpoint must not reuse its generated id`).not.toBe(input.id);
+    }
+  });
+
   it('exposes the calendar trigger as a keyboard-reachable, named <button>', () => {
     const btn = fixture.nativeElement.querySelector('button.sd-suffix-btn') as HTMLButtonElement;
     expect(btn).not.toBeNull();

@@ -4,8 +4,11 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  Directive,
   Injectable,
+  Input,
   OnDestroy,
+  OnInit,
   computed,
   contentChild,
   contentChildren,
@@ -17,7 +20,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { MatPaginator, MatPaginatorIntl, MatPaginatorModule } from '@angular/material/paginator';
-import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatSort, MatSortable, MatSortModule, SortDirection } from '@angular/material/sort';
 import { MatTable, MatTableModule } from '@angular/material/table';
 import { SdExcelColumn, SdNotifyService } from '@sdcorejs/angular/services';
 import { Subject, Subscription, firstValueFrom, isObservable } from 'rxjs';
@@ -103,6 +106,45 @@ import {
 } from './services/tree/tree.util';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+
+/** Internal title-only sort control. The semantic header cell owns aria-sort. */
+@Directive({
+  selector: '[sdTableSortHeader]',
+  standalone: true,
+  host: {
+    class: 'sd-table-sort-header',
+    role: 'button',
+    '[attr.data-sort-id]': 'id',
+    '[attr.tabindex]': 'sort.disabled ? -1 : 0',
+    '[attr.aria-disabled]': 'sort.disabled ? "true" : null',
+    '(click)': 'activate()',
+    '(keydown)': 'onKeydown($event)',
+  },
+})
+class SdTableSortHeaderDirective implements MatSortable, OnInit, OnDestroy {
+  @Input({ required: true, alias: 'sdTableSortHeader' }) id!: string;
+  start!: SortDirection;
+  disableClear!: boolean;
+  readonly sort = inject(MatSort);
+
+  ngOnInit(): void {
+    this.sort.register(this);
+  }
+
+  ngOnDestroy(): void {
+    this.sort.deregister(this);
+  }
+
+  activate(): void {
+    if (!this.sort.disabled) this.sort.sort(this);
+  }
+
+  onKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    this.activate();
+  }
+}
 
 // why: tên cũ `MatPaginatorIntlCro` là vết copy-paste từ ví dụ locale Croatia — lớp này chỉ phục vụ
 // nhãn phân trang của `<sd-table>` (VI/EN), không liên quan gì tới tiếng Croatia. Tên cũ lại còn
@@ -191,6 +233,7 @@ const EMPTY_COMMANDS: SdTableCommand[] = [];
     SelectorActionComponent,
     StickyShadowDirective,
     SdColumnResizeDirective,
+    SdTableSortHeaderDirective,
     SdTranslatePipe,
   ],
 })
@@ -400,7 +443,12 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       const sort = this.sort();
       if (sort) {
         untracked(() => {
-          this.#subscription.add(sort.sortChange.subscribe(() => this.#requestReload(false)));
+          this.#subscription.add(
+            sort.sortChange.subscribe(() => {
+              this.#ref.markForCheck();
+              this.#requestReload(false);
+            })
+          );
         });
       }
     });
@@ -1304,6 +1352,14 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     const onResize = this.tableOption()?.config?.onResize;
     if (!onResize) return;
     onResize(field, width, buildColumnWidthMap(this.configuration()?.column));
+  };
+
+  getSortAria = (field: string): 'none' | 'ascending' | 'descending' => {
+    const sort = this.sort();
+    if (sort?.active !== field) return 'none';
+    if (sort.direction === 'asc') return 'ascending';
+    if (sort.direction === 'desc') return 'descending';
+    return 'none';
   };
 
   onOperatorChange = (column: SdTableColumn, operator: Operator | undefined) => {

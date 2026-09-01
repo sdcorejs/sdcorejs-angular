@@ -249,6 +249,8 @@ screen reader landed on it and announced nothing.
 
 - Both range inputs carry `aria-invalid` / `aria-describedby`; the clear and calendar triggers are
   real `<button type="button">` elements with `aria-label` (they used to be bare `<sd-icon (click)>`).
+- Both native range inputs use the valid HTML autocomplete token `off`; generated component ids are
+  used only for element identity and are never exposed as autocomplete values.
 
 ## Anti-patterns
 

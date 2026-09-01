@@ -62,6 +62,52 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
     "sections": []
   },
   {
+    "id": "release-2-4",
+    "title": "Release 2.4",
+    "suffix": "2.4",
+    "date": "2026-09-01",
+    "anchor": "release-2-4",
+    "unreleased": false,
+    "packageVersions": [
+      {
+        "angularMajor": 19,
+        "version": "19.2.4"
+      },
+      {
+        "angularMajor": 20,
+        "version": "20.2.4"
+      },
+      {
+        "angularMajor": 21,
+        "version": "21.2.4"
+      }
+    ],
+    "summaryMarkdown": "Release suffix `2.4` publishes `19.2.4`, `20.2.4`, and `21.2.4`.",
+    "markdown": "Release suffix `2.4` publishes `19.2.4`, `20.2.4`, and `21.2.4`.\n\n### Fixed\n\n- **`<sd-date-range>` now emits valid autocomplete metadata for both endpoints.** The end-date input no longer derives its `autocomplete` value from a generated component id; both start and end inputs use the valid HTML token `off`.\n- **`<sd-table>` keeps sort state on semantic column headers without duplicating the design-system icon.** `aria-sort` now belongs only to the native `<th>`. A title-only internal sort control keeps inline filters and resize handles outside the sort activation target, delegates state and events to the existing `MatSort`, and renders exactly one custom indicator with no Angular Material arrow. When `option.sort.enable` is false or omitted, or a leaf column is not sortable, no sort control, `aria-sort`, sort focus target, or sort icon is created. Mouse, Enter/Space, custom titles, multi-row headers, server request ordering, filters and resize behavior remain compatible; enabled and disabled fixtures pass unsuppressed Axe WCAG 2.1 A/AA scans.",
+    "sections": [
+      {
+        "key": "fixed",
+        "title": "Fixed",
+        "level": 3,
+        "anchor": "release-2-4-fixed",
+        "markdown": "- **`<sd-date-range>` now emits valid autocomplete metadata for both endpoints.** The end-date input no longer derives its `autocomplete` value from a generated component id; both start and end inputs use the valid HTML token `off`.\n- **`<sd-table>` keeps sort state on semantic column headers without duplicating the design-system icon.** `aria-sort` now belongs only to the native `<th>`. A title-only internal sort control keeps inline filters and resize handles outside the sort activation target, delegates state and events to the existing `MatSort`, and renders exactly one custom indicator with no Angular Material arrow. When `option.sort.enable` is false or omitted, or a leaf column is not sortable, no sort control, `aria-sort`, sort focus target, or sort icon is created. Mouse, Enter/Space, custom titles, multi-row headers, server request ordering, filters and resize behavior remain compatible; enabled and disabled fixtures pass unsuppressed Axe WCAG 2.1 A/AA scans.",
+        "items": [
+          {
+            "text": "**`<sd-date-range>` now emits valid autocomplete metadata for both endpoints.** The end-date input no longer derives its `autocomplete` value from a generated component id; both start and end inputs use the valid HTML token `off`.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "**`<sd-table>` keeps sort state on semantic column headers without duplicating the design-system icon.** `aria-sort` now belongs only to the native `<th>`. A title-only internal sort control keeps inline filters and resize handles outside the sort activation target, delegates state and events to the existing `MatSort`, and renders exactly one custom indicator with no Angular Material arrow. When `option.sort.enable` is false or omitted, or a leaf column is not sortable, no sort control, `aria-sort`, sort focus target, or sort icon is created. Mouse, Enter/Space, custom titles, multi-row headers, server request ordering, filters and resize behavior remain compatible; enabled and disabled fixtures pass unsuppressed Axe WCAG 2.1 A/AA scans.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      }
+    ]
+  },
+  {
     "id": "release-2-3",
     "title": "Release 2.3",
     "suffix": "2.3",
