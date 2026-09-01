@@ -170,6 +170,9 @@
         // vòng hover tròn quanh icon. Bảng ở đây là UI dày đặc, dòng chỉ 36px, nên hạ cả hai bằng
         // token của Material thay vì đè width/height lên chính element.
         --mat-paginator-container-size: 40px;
+        // Angular Material 20+ dùng token --mat-* cho width/height, còn v19 dùng --mdc-*.
+        // Giữ cả hai để paginator compact nhất quán trên mọi major đang co-publish.
+        --mat-icon-button-state-layer-size: 32px;
         --mdc-icon-button-state-layer-size: 32px;
         --mdc-icon-button-icon-size: 20px;
       }
@@ -290,62 +293,39 @@
 }
 
 :host ::ng-deep {
-  .mat-sort-header-content {
-    display: block;
-    text-align: left;
-    width: 100%;
-  }
-
   .mat-select-arrow {
     color: #a6a6a6;
   }
 
-  .mat-sort-header-disabled {
-    background-image: none !important;
-    cursor: default !important;
-    // padding-right: 12px !important;
-    padding-right: 0px !important;
-  }
-
-  .mat-sort-header-container {
-    align-items: start !important;
-  }
-
-  .mat-sort-header-arrow {
-    margin-top: 4px !important;
-  }
-
-  // Ẩn mũi tên sort mặc định của Angular Material để tránh hiển thị 2 mũi tên,
-  // do bên dưới đã tự vẽ mũi tên bằng background-image theo style của design system.
-  .mat-sort-header-arrow {
-    display: none !important;
-  }
-
-  // Tự vẽ mũi tên sort qua background-image dựa vào aria-sort:
+  // Sort control chỉ chứa title; inline filter vẫn là sibling focusable độc lập.
   // - none: hiện icon 2 chiều (placeholder) khi cột có thể sort
   // - ascending / descending: hiện mũi tên tương ứng với hướng sort hiện tại
-  .mat-sort-header {
+  .sd-table-sort-header {
     cursor: pointer;
+    outline: none;
 
-    &[aria-sort] {
+    &:focus-visible {
+      border-bottom: solid 1px currentColor;
+    }
+  }
+
+  th[aria-sort] .sd-table-sort-header {
       background-repeat: no-repeat;
       background-position: center right 0;
       background-size: 16px 16px;
-      cursor: pointer;
       padding-right: 24px;
-    }
+  }
 
-    &[aria-sort='none'] {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 0 24 24' width='24px' fill='%23000000'%3E%3Cpath d='M0 0h24v24H0V0z' fill='none'/%3E%3Cpath fill='%237A7A7A' d='M12 5.83L15.17 9l1.41-1.41L12 3 7.41 7.59 8.83 9 12 5.83zm0 12.34L8.83 15l-1.41 1.41L12 21l4.59-4.59L15.17 15 12 18.17z'/%3E%3C/svg%3E");
-    }
+  th[aria-sort='none'] .sd-table-sort-header {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 0 24 24' width='24px' fill='%23000000'%3E%3Cpath d='M0 0h24v24H0V0z' fill='none'/%3E%3Cpath fill='%237A7A7A' d='M12 5.83L15.17 9l1.41-1.41L12 3 7.41 7.59 8.83 9 12 5.83zm0 12.34L8.83 15l-1.41 1.41L12 21l4.59-4.59L15.17 15 12 18.17z'/%3E%3C/svg%3E");
+  }
 
-    &[aria-sort='ascending'] {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 0 24 24' width='24px' fill='%23000000'%3E%3Cpath d='M0 0h24v24H0V0z' fill='none'/%3E%3Cpath fill='%237A7A7A' d='M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z'/%3E%3C/svg%3E");
-    }
+  th[aria-sort='ascending'] .sd-table-sort-header {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 0 24 24' width='24px' fill='%23000000'%3E%3Cpath d='M0 0h24v24H0V0z' fill='none'/%3E%3Cpath fill='%237A7A7A' d='M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z'/%3E%3C/svg%3E");
+  }
 
-    &[aria-sort='descending'] {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 0 24 24' width='24px' fill='%23000000'%3E%3Cpath d='M0 0h24v24H0V0z' fill='none'/%3E%3Cpath fill='%237A7A7A' d='M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z'/%3E%3C/svg%3E");
-    }
+  th[aria-sort='descending'] .sd-table-sort-header {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 0 24 24' width='24px' fill='%23000000'%3E%3Cpath d='M0 0h24v24H0V0z' fill='none'/%3E%3Cpath fill='%237A7A7A' d='M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z'/%3E%3C/svg%3E");
   }
 }
 
