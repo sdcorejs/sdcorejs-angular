@@ -3,8 +3,8 @@ import { inject, isDevMode, NgModule } from '@angular/core';
 import { SdHttpInterceptor } from './interceptors/api.interceptor';
 
 /**
- * Thông điệp của assertion dev-mode ở constructor. Export ra để spec khẳng định đúng nội dung,
- * và để consumer grep được khi thấy nó trong console.
+ * Thông điệp của assertion dev-mode ở constructor cho Angular 19/20. Export ra để spec khẳng định
+ * đúng nội dung, và để consumer grep được khi thấy nó trong console.
  */
 export const SD_API_MISSING_HTTP_CLIENT_MESSAGE =
   '[sd-api] SdApiModule không còn tự cấu hình HttpClient. ' +
@@ -31,6 +31,11 @@ export class SdApiModule {
     //
     // Chỉ cảnh báo (không ném) vì đây là thư viện: có app cấu hình HttpClient ở injector con hoặc
     // trong test harness riêng, ném ở đây sẽ chặn cả những setup hợp lệ đó.
+    //
+    // Angular 21 cung cấp HttpClient ở root mặc định, nên check này cố ý im lặng trên v21. Consumer
+    // vẫn phải gọi `provideHttpClient(withInterceptorsFromDi())` nếu muốn HTTP_INTERCEPTORS dạng
+    // class (bao gồm SdHttpInterceptor) tham gia request chain; public API không có token để module
+    // phân biệt cấu hình đó với HttpClient mặc định.
     if (isDevMode() && inject(HttpClient, { optional: true }) === null) {
       console.error(SD_API_MISSING_HTTP_CLIENT_MESSAGE);
     }

@@ -153,6 +153,8 @@ Under SSR there is no `window.location`, so relative hosts and relative URLs are
 
 `SdApiModule` contributes **only** the `HTTP_INTERCEPTORS` entry for `SdHttpInterceptor`. It does not call `provideHttpClient(...)`; configuring Angular HTTP is the application's job.
 
+Angular 21 provides a default root `HttpClient`, while Angular 19/20 require an explicit provider. That difference does not change this module's setup: `provideHttpClient(withInterceptorsFromDi())` is still required when the application wants the class-based `SdHttpInterceptor` to run. On Angular 21, omitting it leaves `HttpClient` injectable but leaves the module's interceptor outside the request chain.
+
 ```ts
 @NgModule({
   imports: [SdApiModule],
@@ -174,7 +176,7 @@ providers: [
 
 Earlier versions shipped `provideHttpClient(withInterceptorsFromDi())` inside the module's own providers, and the documented setup was just `imports: [SdApiModule]`. A library NgModule re-registering root HttpClient configuration silently overrode what the application had already declared, so an app using `provideHttpClient(withInterceptors([...]))` lost its own functional interceptors just by importing `SdApiModule` — hence the removal.
 
-The removal has no compile-time signal: an application that followed the old guidance still builds, and only fails at runtime with `NullInjectorError: No provider for HttpClient` on the **first API call**, far from the misconfiguration. `SdApiModule` therefore asserts in its constructor: in dev mode, if `HttpClient` is not resolvable, it logs the exact provider you are missing.
+The removal has no compile-time signal. On Angular 19/20, an application that followed the old guidance still builds and only fails at runtime with `NullInjectorError: No provider for HttpClient` on the **first API call**, far from the misconfiguration. `SdApiModule` therefore asserts in its constructor: in dev mode, if `HttpClient` is not resolvable, it logs the exact provider you are missing.
 
 ```
 [sd-api] SdApiModule không còn tự cấu hình HttpClient. Thêm
@@ -183,7 +185,7 @@ The removal has no compile-time signal: an application that followed the old gui
 `NullInjectorError: No provider for HttpClient`.
 ```
 
-The message is exported as `SD_API_MISSING_HTTP_CLIENT_MESSAGE`. The check is dev-mode only (a production build never pays for it) and logs rather than throws, so a legitimate setup that provides `HttpClient` in a child injector or a bespoke test harness is not blocked.
+The message is exported as `SD_API_MISSING_HTTP_CLIENT_MESSAGE`. The check is dev-mode only (a production build never pays for it) and logs rather than throws, so a legitimate setup that provides `HttpClient` in a child injector or a bespoke test harness is not blocked. On Angular 21+, the framework-provided root client makes this absence check intentionally silent; silence means only that `HttpClient` resolves, not that `withInterceptorsFromDi()` is active.
 
 **Migration:**
 
@@ -218,7 +220,7 @@ The message is exported as `SD_API_MISSING_HTTP_CLIENT_MESSAGE`. The check is de
 
 - `{ ok: false }` responses now reject with `SdApiError`. Read the payload from `error.body`.
 - Handler `hosts` are matched by origin + path segment. A host entry that relied on loose string-prefix matching (for example `'https://api.example'` intended to cover `https://api.example.com`) no longer matches; list each origin explicitly.
-- `SdApiModule` no longer provides `HttpClient`. Add `provideHttpClient(withInterceptorsFromDi())` to the application if it was relying on the module for it — see [BREAKING: `imports: [SdApiModule]` alone is no longer enough](#breaking-imports-sdapimodule-alone-is-no-longer-enough). A dev-mode console assertion names the missing provider at module construction.
+- `SdApiModule` no longer provides or configures `HttpClient`. Add `provideHttpClient(withInterceptorsFromDi())` to activate `SdHttpInterceptor` — see [BREAKING: `imports: [SdApiModule]` alone is no longer enough](#breaking-imports-sdapimodule-alone-is-no-longer-enough). On Angular 19/20, a dev-mode console assertion names the missing provider; Angular 21+ already provides a default client, so no missing-client assertion is possible.
 - Persistent cache entries written by an earlier version will not be read back — the key derivation changed. Entries simply miss once and are rewritten.
 - A request whose contract cannot be canonicalized now skips cache and dedupe instead of receiving a unique per-call key. Behaviour is unchanged for callers; only the stray persistent-storage writes are gone.
 
