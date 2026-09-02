@@ -1,0 +1,267 @@
+---
+artifact_id: spec-sdcorejs-angular-angular22-support-r1
+artifact_kind: spec
+schema_version: 1
+change_ref: angular22-support
+source_spec: none
+source_plan: none
+commit_policy: with-change
+owner: brainstorming
+name: angular22-support
+description: Production-safe two-stage design for Angular 22 support across angular-material-datetime and Core UI.
+contract_id: sdcorejs-angular-angular22-support
+requirement_id: REQ-SDANGULAR-ANGULAR22
+owner_repository_id: github.com/sdcorejs/sdcorejs-angular
+owner_repository_role: library
+owner_module_id: multi-version-release
+repository_relative_path: .sdcorejs/specs/angular/2026-09-02-angular22-support-design.md
+source_revision: 2235f1880cb7386fc8cb7e3585030f0f3d57deb9
+parent_repository_id: null
+parent_references: []
+approved_at: null
+approved_by: null
+approval_source: pending-user-review
+track: angular
+target_root_kind: target-project
+stack_profile: core-ui-angular
+profile_confidence: high
+acceptance_criteria_count: 34
+manual_criteria_count: 2
+redaction_applied: false
+supersedes: null
+change_control:
+  revision: 1
+  supersedes: null
+  change_reason: null
+---
+
+# Angular 22 support — design proposal
+
+## Status
+
+Proposed design based on the user-selected two-stage production-safe approach. Implementation remains gated on review of this document and approval of the resulting implementation plan; each irreversible publication remains gated on its own later authorization.
+
+## Goal
+
+Add Angular 22 as a first-class supported line alongside Angular 19, 20, and 21, using the same source and release discipline already used by Core UI. Release suffix `2.5` is the intended first four-line release, producing:
+
+- `@sdcorejs/angular@19.2.5`
+- `@sdcorejs/angular@20.2.5`
+- `@sdcorejs/angular@21.2.5`
+- `@sdcorejs/angular@22.2.5`
+
+Every exact version and tag must be confirmed unused immediately before publication. `@sd-angular/core` is not published by this repository and is outside this design.
+
+## Architecture and release order
+
+The work is split into two repositories and must execute in this order:
+
+1. **Datetime dependency:** update `@sdcorejs/angular-material-datetime` so its Angular peer ranges include Angular 22, verify it against Angular 22, and prepare the next unused exact patch version. The expected version is `1.0.4`, subject to an immediate `npm view` collision check. Its implementation PR first updates code, tests, Changeset metadata, and CI to a supported Node runtime. After that PR is merged and green, the repository-generated Changesets release PR is reviewed separately. Merging that release PR and publishing the package require an explicit release authorization distinct from design or implementation approval.
+2. **Core UI:** consume the newly published datetime version, add a real Angular 22 workspace, extend repository tooling and CI to four version lines, then verify and publish the Core UI `2.5` release.
+
+The v22 dependency install, compatibility gate, release build, and representative consumer installs must not use `--legacy-peer-deps`, `--force`, a local tarball, a patched `node_modules`, or an unpublished Git dependency to bypass peer constraints. Existing v19-v21 CI may retain its current `--legacy-peer-deps` install path in this release; removing that historical workaround is separate scope. Stage two cannot begin its v22 install/build work until stage one is visible from the npm registry and installs normally.
+
+Each repository receives its own focused commit history and pull request. The dependency pull request is merged and released before the Core UI pull request can be considered release-ready.
+
+## Toolchain baseline
+
+The Angular 22 workspace targets the stable Angular 22.1 line verified on 2026-09-02:
+
+- Angular framework, CDK, Material, compiler, and adapters: manifest range `~22.1.4`, exact lock resolution recorded and reviewed
+- Angular CLI and `@angular-devkit/build-angular`: manifest range `~22.1.6`, exact lock resolution recorded and reviewed
+- `ng-packagr`: manifest range `~22.1.1`, exact lock resolution recorded and reviewed
+- TypeScript: `~6.0.3`, satisfying Angular's `>=6.0.0 <6.1.0` constraint
+- RxJS: existing compatible `~7.8` line
+- Zone.js: `~0.16.2`
+- `angular-eslint`: `~22.1.0`, whose Angular CLI peer accepts Angular 22
+
+The workspace retains `@angular-devkit/build-angular` for parity with v19-v21. Migrating to the newer `@angular/build` package is a separate modernization and is not part of this release.
+
+Angular 22 requires Node `^22.22.3 || ^24.15.0 || ^26.0.0`. Cross-major CI pins Node `22.22.3`, which is supported by both the Angular 19 baseline and Angular 22. The current local Node `22.22.2` is one patch below that floor, so local v22 installation and verification require an upgrade before the implementation can be declared green. The v22 workspace and published package use the full major-aware engine range; v19-v21 retain their current engine contracts.
+
+## Workspace and source model
+
+- `versions/v19` remains the canonical implementation source.
+- `versions/v20`, `versions/v21`, and the new `versions/v22` are derived workspaces.
+- Shared source changes continue to flow through the sync command from v19.
+- Angular-major-specific dependency manifests, lockfiles, compiler settings, and compatibility shims may differ in v22 where required.
+- `versions/v22/package-lock.json` must be generated by a clean Angular 22 install. It must not be copied from v21 or contain Angular 21 resolutions.
+- The v22 manifest transform pins the reviewed Angular 22.1 minor trains above and rewrites `angular-eslint`, TypeScript, Zone.js, Node engines, the datetime dependency, package version, and public peer ranges. It does not rely on a generic `^22.0.0` development range that could silently move the workspace to Angular 22.2.
+- Synchronization tooling must explicitly know all four lines and must fail if v22 is missing or drifts.
+- `check-version-sync` normalizes only the declared v22-specific transform before comparing v22 with canonical v19. A regression test enumerates each allowed override; any other source or manifest difference remains a failure.
+- Documentation collectors, lint/build scripts, deployment scripts, and workflow matrices must all derive from one explicit supported-version contract or be guarded by a test that proves their four-line values agree.
+
+The one-time v22 bootstrap uses v21 as the complete workspace skeleton because it contains the newest major-specific structure. It excludes the v21 lockfile, rewrites all Angular/toolchain metadata for v22, then refreshes shared library sources from canonical v19. Only workspace helper scripts actually referenced by the v22 package are required. Duplicate per-workspace deploy/sync scripts are legacy and must not become a second v22 release orchestrator; root scripts remain authoritative.
+
+## Package and peer-dependency policy
+
+- Existing v19, v20, and v21 package lines retain their current shared Angular peer contract: `^19.0.0 || ^20.0.0 || ^21.0.0`.
+- Packages built in the v22 workspace advertise Angular 22 peers only; they do not claim that a v22-built artifact supports Angular 19-21.
+- `@sdcorejs/angular-material-datetime` expands its peer contract to accept Angular 22 while retaining the already supported Angular majors, provided its compatibility suite stays green.
+- Core UI updates its datetime dependency only after the exact dependency version is published and installable.
+- The v22-only peer and engine values are an explicit derived-manifest transform in sync tooling and an explicit normalization in the sync checker; they are not hand-maintained drift.
+- No `@sdcorejs/utils` re-export is added back to `@sdcorejs/angular/utilities`; consumers continue importing utils from their direct package entry points.
+- Public Core UI selectors, exports, runtime behavior, and documented consumer syntax remain backward compatible.
+
+## Release numbering and npm channel
+
+Release suffix `2.5` is the inception point for Angular 22. Historical suffixes must not be rewritten to imply that Angular 22 packages existed before `22.2.5`.
+
+Approving this design and its implementation plan authorizes the scoped code changes, verification, commits, branch pushes, and implementation pull requests in both repositories. It does not authorize merging a Changesets release PR, pushing release tag `v2.5`, publishing to npm, moving a dist-tag, or merging unrelated work. The workflow pauses for explicit authorization before the dependency release and again before the Core UI release.
+
+For the stable Core UI release, all four tarballs are built, checksummed, inspected, and retained as CI artifacts before the first publish. The trusted-publishing sequence is then:
+
+1. Publish `19.2.5`, `20.2.5`, and `21.2.5` sequentially with their recovery tags `angular19`, `angular20`, and `angular21`; verify each exact version from npm after its publish.
+2. Keep the existing `latest` tag unchanged throughout those first three publishes.
+3. Publish the already checksummed `22.2.5` tarball last with `--tag latest`. A successful final publish creates the exact v22 version and moves `latest` once; a failed publish leaves `latest` on the prior release.
+4. Verify `latest === 22.2.5` plus all four exact versions before release documentation is generated.
+
+This sequence deliberately avoids `npm dist-tag add`: npm trusted OIDC authenticates `npm publish` but not general dist-tag mutations. The workflow retains `id-token: write`, a GitHub-hosted runner, npm `>=11.5.1`, the exact trusted workflow identity, matching repository metadata, automatic provenance, and the intentional absence of `NODE_AUTH_TOKEN`. Tarballs are published without rebuilding after the prepublish gate.
+
+Exact-version collision checks cover every package/version pair plus the release tag immediately before the irreversible publish step. Published versions are never overwritten.
+
+## RED-first regression contract
+
+Before adding v22 support, tests must fail for the missing line and stale matrices. At minimum:
+
+1. Add a script-level supported-version test that expects `[19, 20, 21, 22]` across workspace directories, root scripts, sync, deploy, lint, documentation collectors, CI, publish workflow, and package-peer generation.
+2. Assert a v22 manifest exists with the reviewed Angular 22.1 toolchain ranges, `angular-eslint@22`, supported Node engine union, and a v22-only public Angular peer contract.
+3. Assert the v22 manifest transformation and sync-check normalization contain exactly the approved override fields and no broader parity exclusion.
+4. Assert the v22 lockfile resolves Angular 22 packages, `angular-eslint@22`, and the released datetime dependency without peer overrides.
+5. Change the showcase route/version regression that currently excludes the `22.x` fixture so it expects the first supported v22 suffix and rejects fabricated earlier v22 history.
+6. Add or extend showcase tests for version utilities, version service, selector/about UI, changelog visibility, and published-page routing.
+7. Add workflow contract tests for four-line build-before-publish ordering, recovery tags, a single final `latest` transition, `id-token: write`, npm `>=11.5.1`, no `NODE_AUTH_TOKEN`, and publication of checksummed artifacts without rebuild.
+8. Add dependency-repository consumer/build coverage using Angular 22 and a supported Node CI runtime before widening its peer range.
+9. Compare the datetime package export map and public declaration inventory with exact npm baseline `1.0.3`. Compare Core UI v19-v21 exports/declarations with the exact `2.4` tarball baselines, allowing only reviewed release metadata changes. Compile representative unchanged consumers for v19-v22.
+10. Capture the intended RED output against the pre-change revision, then rerun the same focused commands to GREEN after implementation.
+
+Tests must assert outcomes rather than merely inspect that text `22` appears in files. No skipped test, focused test, exception list, compatibility flag, or reduced strictness may turn a failing v22 install/build into a pass.
+
+## CI and transaction-safe publication
+
+CI must run the canonical test suite and a compatibility gate for v22. It must also lint, build, and pack all four version lines before any npm publish begins. Package jobs upload immutable tarballs plus SHA-256 checksums; the sequential publish job downloads and verifies those artifacts instead of rebuilding source.
+
+The release job has two phases:
+
+1. **Reversible gate:** clean install, sync check, tests, lint, compilation/build, package creation, tarball metadata/declaration inspection, and exact-version collision checks for all artifacts.
+2. **Irreversible publish:** after separate user authorization, sequentially publish the already verified tarballs with the recovery-tag/final-`latest` order above only after phase one has completed for every line.
+
+The workflow must not build one line and publish it before later lines have been verified. A publish failure stops the sequence and reports exactly which immutable versions succeeded; it never retries blindly or overwrites a package. If a command returns an uncertain network result, the workflow queries the exact version before deciding whether a retry is safe. `latest` remains on the previous release unless the final v22 publish succeeds. Documentation and release-page generation occur only after all intended packages and `latest` are confirmed on npm.
+
+## Verification matrix
+
+### Datetime dependency repository
+
+- Clean install with a supported Node version.
+- Existing tests, lint, typecheck, and build.
+- Angular 22 consumer or workspace build using normal peer resolution.
+- CI workflow verification that the Angular 22 job no longer runs on Node 20.
+- `npm pack --dry-run` and tarball manifest/declaration inspection.
+- Export-map and public-declaration inventory comparison against exact npm baseline `@sdcorejs/angular-material-datetime@1.0.3`.
+- Changesets implementation/release-PR status and exact-version collision check.
+- After separate authorization and publication, `npm view` and clean `npm pack`/install of the exact version.
+
+### Core UI repository
+
+- Supported-version contract tests RED then GREEN.
+- Canonical v19 full tests plus script tests and sync checks.
+- v22 compatibility tests, strict compilation, lint, build, and pack.
+- Lint and build for v19, v20, v21, and v22.
+- Generated-source and clean-worktree checks after synchronization.
+- Tarball metadata, peer dependencies, declarations, exports, and dependency inspection for each line.
+- Export-map and public-declaration inventory comparison for v19-v21 against their exact `2.4` npm tarballs, plus representative unchanged consumer compilation for all four majors.
+- Showcase route/version/changelog tests proving v22 begins at suffix `2.5`.
+- README, `README.npm.md`, compatibility table/badges, package description, and generated package-README parity checks for four supported majors.
+- Workflow contract checks for immutable build artifacts, recovery tags, final-only `latest`, and trusted-publishing invariants.
+- After separate authorization and publication, `npm view` and `npm pack` verification for every exact package version.
+
+Karma suites run sequentially because they share port 9876. Memory-heavy builds also run sequentially unless the implementation proves isolated parallel builds are reliable in CI.
+
+## Acceptance criteria
+
+### Datetime implementation readiness
+
+1. `@sdcorejs/angular-material-datetime` installs, tests, and builds with Angular 22 using normal npm peer resolution.
+2. Its Angular 19 baseline and Angular 22 consumer fixture both run on pinned Node `22.22.3`; release CI no longer tests the Angular 22 fixture on Node 20.
+3. Existing supported Angular peers remain accepted while Angular 22 is added, and its export map/public declaration inventory matches exact npm baseline `1.0.3` except the reviewed peer/version metadata.
+4. An implementation PR with the regression, peer change, CI update, and Changeset is green and merged; the generated release PR proposes the next unused exact patch, expected `1.0.4`, but is not merged automatically.
+
+### Datetime release execution — separate authorization
+
+5. The user explicitly authorizes merging the datetime Changesets release PR and publishing after reviewing its green release evidence.
+6. The authorized release publishes exactly the previously verified tarball through the repository workflow; no version is overwritten.
+7. npm `view`, `pack`, and a clean Angular 22 consumer install verify the exact datetime release before Core UI records it as a dependency.
+
+### Core UI implementation and prepublish readiness
+
+8. `versions/v22` exists as a real Angular 22 workspace with its own Angular 22 lockfile.
+9. The v22 manifest uses the reviewed Angular 22.1 minor trains, TypeScript `~6.0.3`, Zone.js `~0.16.2`, `angular-eslint@22`, and the supported Node engine union.
+10. v19 remains the canonical shared source; the one-time v22 bootstrap and later synchronization cover v20, v21, and v22 without losing required workspace helper files.
+11. Shared-source synchronization leaves no unexplained diff in any derived workspace.
+12. The v22 public-manifest transform rewrites only approved version, dependency, peer, and engine fields; sync-check normalization enumerates and tests those exact exceptions. Package descriptions are updated canonically in v19 and mirrored to every line.
+13. Root scripts, sync/deploy/lint/docs collectors, CI, and publish workflow agree on `[19, 20, 21, 22]`.
+14. The new supported-version and workflow regressions are RED before v22 wiring and GREEN afterward.
+15. The v22 lockfile resolves Angular 22 and `angular-eslint@22`, contains no Angular 21 framework/build resolution, and the v22 install/build path uses no peer-resolution bypass.
+16. v19-v21 retain their existing shared `^19 || ^20 || ^21` Angular peer contract.
+17. v22 package artifacts advertise Angular 22 peers only and use the Angular 22-compatible Node engine union.
+18. No `@sdcorejs/utils` compatibility re-export is restored.
+19. v19-v21 export maps and public declaration inventories match their exact `2.4` npm baselines except reviewed release metadata; representative unchanged consumers compile for v19-v22.
+20. Showcase routing, selectors, about/version views, and changelog recognize v22 from suffix `2.5` onward without inventing earlier v22 history.
+21. `README.md`, `README.npm.md`, compatibility tables/badges, package descriptions, and generated package READMEs consistently document Angular 19-22.
+22. Canonical tests, script tests, and synchronization checks pass.
+23. Lint and build pass for v19, v20, v21, and v22.
+24. The v22 clean install, strict compilation/consumer fixture, tests, build, and pack pass under a supported Node version without `--legacy-peer-deps`.
+25. All four exact Core UI tarballs are built once, checksummed, inspected, and retained before any npm publish begins.
+26. Workflow contract tests prove the recovery-tag/final-`latest` order and preserve `id-token: write`, npm `>=11.5.1`, GitHub-hosted execution, trusted workflow identity, provenance, matching repository metadata, and no `NODE_AUTH_TOKEN`.
+27. The implementation branch is committed and pushed without modifying Enterprise Portal, Knowledge, or `@sd-angular/core`.
+
+### Core UI release execution — separate authorization
+
+28. After all prepublish criteria are current, the user explicitly authorizes the `v2.5` tag/publish action; implementation or spec approval alone is not sufficient.
+29. Immediately before the irreversible action, all four exact versions and tag `v2.5` are confirmed unused and the tag target is the approved, green release commit on `main`.
+30. The authorized workflow publishes `19.2.5`, `20.2.5`, and `21.2.5` under `angular19`, `angular20`, and `angular21`, verifying each while leaving `latest` unchanged.
+31. The workflow publishes the prebuilt `22.2.5` tarball last with `latest`; only this final successful publish moves `latest`.
+32. npm confirms all four exact package versions and `latest === 22.2.5`; exact `npm pack` artifacts match the prepublish package metadata, declarations, exports, and checksums expected from the release build.
+33. Release documentation/pages are generated only after criterion 32 passes, and the release commit/tag state is pushed through the repository workflow.
+34. A partial or uncertain publish follows the documented stop/query/repair-forward policy; it never overwrites, unpublishes, force-pushes, or blindly retries an immutable version.
+
+## Failure and rollback policy
+
+- A datetime compatibility failure blocks Core UI v22 work; peer ranges are not widened speculatively.
+- A green datetime implementation does not authorize its Changesets release PR; without explicit release authorization, Core UI waits at the dependency boundary.
+- A Core UI install, test, lint, build, pack, or metadata failure blocks all Core UI publication.
+- A version collision changes the proposed exact suffix through a reviewed plan update; an existing npm version is never reused.
+- If one of v19-v21 publishes fails, stop before v22; `latest` remains unchanged. Record immutable successes, query uncertain results, repair forward, and resume only missing exact versions after explicit approval.
+- If the final v22 publish fails, `latest` remains unchanged. If it succeeds but post-publish verification finds a problem, do not unpublish or overwrite automatically; record the immutable state and require an approved forward-fix/dist-tag decision.
+- If Angular 22 must not become `latest`, stop before publication and obtain a revised, approved dist-tag design.
+- Source changes are reverted through normal commits or pull-request updates; destructive Git resets are out of scope.
+
+## In scope
+
+- Dependency peer compatibility and its Angular 22 verification/release.
+- A v22 Core UI workspace, lockfile, package manifests, scripts, CI, release workflow, showcase version handling, and release documentation generation.
+- RED-first regression coverage and complete pre/post-publish verification.
+- Focused commits, pushes, and pull requests for both repositories.
+- Explicit manual release checkpoints for the datetime Changesets release and Core UI tag-triggered release.
+
+## Non-goals
+
+- Consumer Portal or Knowledge module changes.
+- Publishing or modifying `@sd-angular/core`.
+- Restoring utils re-exports.
+- Migrating builders, redesigning public APIs, or unrelated dependency modernization.
+- Publishing during design or implementation before the release gate and explicit release authorization.
+- Merging unrelated pull requests.
+- Fabricating historical Angular 22 packages or pages.
+
+## Decisions captured
+
+- Use the two-stage dependency-first approach selected by the user.
+- Preserve the current builder family for minimal migration risk.
+- Treat v22 as a distinct package line with a v22-only Angular peer contract.
+- Pin the v22 development workspace to the reviewed 22.1 minor trains; use a generated exact lockfile instead of allowing an unreviewed minor jump.
+- Keep existing v19-v21 peer/install behavior unchanged; require normal peer resolution for the new v22 and consumer gates.
+- Introduce v22 history at suffix `2.5`; publish the first three lines under recovery tags and move `latest` exactly once through the final v22 publish.
+- Preserve npm trusted-publishing/OIDC invariants and publish prebuilt checksummed tarballs without rebuilding.
+- Require an officially supported Node runtime instead of bypassing Angular's engine constraint.
+- Treat design/implementation approval and irreversible release authorization as separate decisions.
