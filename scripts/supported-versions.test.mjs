@@ -106,6 +106,26 @@ function assertV22RegistryLock(packages) {
   }
 }
 
+function resolvesLockedDependency(packages, packagePath, dependencyName) {
+  const marker = 'node_modules/';
+  const markerIndexes = [];
+  let searchFrom = 0;
+  while (true) {
+    const index = packagePath.indexOf(marker, searchFrom);
+    if (index < 0) break;
+    markerIndexes.push(index);
+    searchFrom = index + marker.length;
+  }
+
+  const candidates = packagePath ? [`${packagePath}/node_modules/${dependencyName}`] : [`node_modules/${dependencyName}`];
+  candidates.push(...markerIndexes.reverse().map(index => {
+    const prefix = packagePath.slice(0, index).replace(/\/$/u, '');
+    return `${prefix ? `${prefix}/` : ''}node_modules/${dependencyName}`;
+  }));
+
+  return candidates.map(candidate => packages[candidate]).find(Boolean);
+}
+
 test('[workspace] repository contains exactly the four supported Angular workspaces', () => {
   const actual = readdirSync(join(REPO_ROOT, 'versions'), { withFileTypes: true })
     .filter(entry => entry.isDirectory() && /^v\d+$/u.test(entry.name))
@@ -113,6 +133,55 @@ test('[workspace] repository contains exactly the four supported Angular workspa
     .sort((left, right) => Number(left.slice(1)) - Number(right.slice(1)));
 
   assert.deepEqual(actual, SUPPORTED_WORKSPACES);
+});
+
+test('[workspace] root lockfile exactly represents the orchestrator manifest used by npm ci', () => {
+  const manifest = readJson('package.json');
+  const lock = readJson('package-lock.json');
+  const root = lock.packages?.[''];
+
+  assert.equal(lock.name, manifest.name);
+  assert.equal(lock.version, manifest.version);
+  assert.equal(root?.name, manifest.name);
+  assert.equal(root?.version, manifest.version);
+  assert.deepEqual(root?.dependencies ?? {}, manifest.dependencies ?? {});
+  assert.deepEqual(root?.devDependencies ?? {}, manifest.devDependencies ?? {});
+
+  for (const dependencyName of [
+    ...Object.keys(manifest.dependencies ?? {}),
+    ...Object.keys(manifest.devDependencies ?? {}),
+  ]) {
+    assert.ok(
+      lock.packages?.[`node_modules/${dependencyName}`],
+      `root lockfile is missing direct dependency ${dependencyName}`,
+    );
+  }
+});
+
+test('[workspace] every lockfile retains complete cross-platform dependency closure', () => {
+  for (const workspace of SUPPORTED_WORKSPACES) {
+    const packages = readJson(`versions/${workspace}/package-lock.json`).packages ?? {};
+    for (const [packagePath, packageEntry] of Object.entries(packages)) {
+      const dependencies = {
+        ...(packageEntry.dependencies ?? {}),
+        ...(packageEntry.optionalDependencies ?? {}),
+      };
+      for (const [dependencyName, dependencySpec] of Object.entries(dependencies)) {
+        const resolved = resolvesLockedDependency(packages, packagePath, dependencyName);
+        assert.ok(
+          resolved,
+          `${workspace}:${packagePath} cannot resolve dependency ${dependencyName}`,
+        );
+        if (/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u.test(dependencySpec)) {
+          assert.equal(
+            resolved.version,
+            dependencySpec,
+            `${workspace}:${packagePath} resolved ${dependencyName} to the wrong version`,
+          );
+        }
+      }
+    }
+  }
 });
 
 test('[workspace] root lint and script gates enumerate every line in order', () => {
