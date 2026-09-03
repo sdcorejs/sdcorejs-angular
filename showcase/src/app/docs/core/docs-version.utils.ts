@@ -1,6 +1,7 @@
 import { DocsVersionEntry, DocsVersionGroup, DocsVersionsManifest } from './published-docs.models';
 
 export const SHOWCASE_RELEASE_MINIMUMS = Object.freeze({
+  22: '22.2.5',
   21: '21.1.2',
   20: '20.1.2',
   19: '19.1.2',

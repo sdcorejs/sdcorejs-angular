@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  Angular 19 / 20 / 21 • Standalone • Signal-first • OnPush by default • i18n-ready
+  Angular 19 / 20 / 21 / 22 • Standalone • Signal-first • OnPush by default • i18n-ready
 </p>
 
 <p align="center">
@@ -44,7 +44,7 @@
   <a href="https://sdcorejs.github.io/sdcorejs-angular/">Live Showcase</a>
 </p>
 
-> **Note**: This repo (`vn-angular`) is the **internal development workspace**. Code, tests, demos and showcase live here. Sync mirror is published from [`sdcorejs/sdcorejs-angular`](https://github.com/sdcorejs/sdcorejs-angular) to npm as `@sdcorejs/angular`. End users should consume the npm package, not this repo.
+> **Note**: `versions/v19` is the canonical source workspace in [`sdcorejs/sdcorejs-angular`](https://github.com/sdcorejs/sdcorejs-angular). Shared library code, tests and package documentation start here, then the root sync derives v20, v21 and v22; the standalone showcase lives at repository root. End users should consume the npm package, not a workspace checkout.
 
 ---
 
@@ -56,7 +56,7 @@
 * ✅ Auth + Keycloak + permission modules ready out-of-the-box
 * ✅ Signal-first reactivity, OnPush default
 * ✅ i18n bilingual (Vietnamese / English) — extensible to any locale
-* ✅ Material 19/20/21 compatible — single package, multi-major peer range
+* ✅ Material 19/20/21/22 compatible — one package name with Angular-aligned version lines
 * ✅ Tree-shakable subpath exports (per-component, per-form-control)
 * ✅ Type-safe end-to-end (`NestedKeyOf<T>`, `Filter<T>`, `Color`, `Size`, …)
 * ✅ AI-friendly semantic naming + per-component md docs
@@ -69,7 +69,7 @@
 npm install @sdcorejs/angular @sdcorejs/utils @angular/material @angular/material-date-fns-adapter
 ```
 
-**Peer ranges**: `@angular/{common,core,material} ^19.0.0 || ^20.0.0 || ^21.0.0`. Choose the matching `@sdcorejs/angular` version: `19.x.y` for Angular 19, `20.x.y` for Angular 20, `21.x.y` for Angular 21.
+**Peer ranges**: package lines 19–21 keep `@angular/* ^19.0.0 || ^20.0.0 || ^21.0.0`; package line 22 accepts Angular peers `^22.0.0` only. Choose the matching `@sdcorejs/angular` major. Angular 22 begins at `22.2.5`; there is no earlier v22 package history.
 
 ```bash
 # Angular 19
@@ -80,6 +80,9 @@ npm install @sdcorejs/angular@^20
 
 # Angular 21
 npm install @sdcorejs/angular@^21
+
+# Angular 22
+npm install @sdcorejs/angular@^22
 ```
 
 Import the global stylesheet once in `styles.scss`:
@@ -210,15 +213,16 @@ Tất cả hỗ trợ `[(model)]` + `[form]` (FormGroup) + `required`/`pattern`/
 
 ---
 
-## 🏗 Multi-version (Angular 19 / 20 / 21)
+## 🏗 Multi-version (Angular 19 / 20 / 21 / 22)
 
 | Angular | Install | Status |
 | --- | --- | --- |
 | 19.x | `npm install @sdcorejs/angular@^19` | Stable |
 | 20.x | `npm install @sdcorejs/angular@^20` | Stable |
 | 21.x | `npm install @sdcorejs/angular@^21` | Stable |
+| 22.x | `npm install @sdcorejs/angular@^22` | Stable from `22.2.5` |
 
-Same source, same API surface — peer dependency major chỉ khác Angular major. Sync pipeline đảm bảo 3 phiên bản luôn ngang nhau về tính năng.
+Same canonical source, same public API surface — dependency/peer major và shim chỉ khác theo Angular major. Sync pipeline giữ bốn line ngang nhau về tính năng từ v22 inception suffix `2.5`.
 
 ---
 
@@ -257,21 +261,24 @@ Custom keys: dùng `TranslatePipe` (`{{ 'my.key' | translate }}`) hoặc service
 ## 🧪 Development
 
 ```bash
-# Clone vn-angular (this repo) then:
-npm install
-npm run start            # serve demo
-npm run showcase         # serve component showcase
+# From versions/v19, using exact Node 22.22.3:
+npm ci --legacy-peer-deps
 npm run test:ci          # full test suite (2700+ tests)
 npm run build            # build the sd-angular library
+
+# Showcase is a separate root workspace and consumes the built v19 library:
+cd ../..
+npm --prefix showcase ci --legacy-peer-deps
+npm --prefix showcase run start
 ```
 
 ---
 
 ## 🚀 Publishing
 
-Source workflow: changes land in `versions/v19`, then roll out to `v20` / `v21`; push tag `v<release-suffix>` to trigger GitHub Actions matrix publishing 3 versions `19.<release-suffix>` / `20.<release-suffix>` / `21.<release-suffix>` in parallel. For release `v1.0`, this publishes `19.1.0`, `20.1.0`, and `21.1.0`.
+Source workflow: shared changes land in `versions/v19`, then root `npm run sync` derives `v20` / `v21` / `v22`. Release builds use exact Node `22.22.3` with `npm ci --legacy-peer-deps` for v19–v21 and clean `npm ci` for v22. All four immutable tarballs are built and verified before one non-matrix publisher releases v19/v20/v21 sequentially under `angular19`/`angular20`/`angular21`, then v22 under `latest`. Release `v2.5` publishes `19.2.5`, `20.2.5`, `21.2.5`, and the v22 inception package `22.2.5`.
 
-Required secret in `sdcorejs/sdcorejs-angular`: `NPM_TOKEN`.
+Publishing uses npm trusted publishing (OIDC) with exact `npm@11.5.1`; the workflow intentionally has no `NPM_TOKEN` or `NODE_AUTH_TOKEN` and never mutates dist-tags separately.
 
 ---
 

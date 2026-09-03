@@ -6,6 +6,18 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+## [2.5] - 2026-09-02
+
+Release suffix `2.5` publishes `19.2.5`, `20.2.5`, `21.2.5`, and `22.2.5`.
+
+### Added
+
+- **Angular 22 is now a first-class package line.** `22.2.5` is the inception release for that line; no earlier Angular 22 package history is implied. It is built from the same canonical v19 source as the generated v20 and v21 workspaces and is published as the stable `latest` target only after the three maintained recovery lines have been verified.
+
+### Changed
+
+- **Release compatibility remains dependency-first and public-API compatible.** The Angular 22 line consumes `@sdcorejs/angular-material-datetime@1.0.4`, which is released and verified first for Angular 22 peer compatibility. The four `@sdcorejs/angular` packages keep the existing public API, entry points, selectors and consumer syntax; this release adds framework compatibility rather than a consumer migration.
+
 ## [2.4] - 2026-09-01
 
 Release suffix `2.4` publishes `19.2.4`, `20.2.4`, and `21.2.4`.

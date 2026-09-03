@@ -5,13 +5,13 @@
 </p>
 
 <p align="center">
-  Built on Angular Material, with standalone controls, consistent form patterns, workflow components, application services, theming, and localization for Angular 19, 20, and 21.
+  Built on Angular Material, with standalone controls, consistent form patterns, workflow components, application services, theming, and localization for Angular 19, 20, 21, and 22.
 </p>
 
 <p align="center">
   <a href="https://www.npmjs.com/package/@sdcorejs/angular"><img src="https://img.shields.io/npm/v/@sdcorejs/angular.svg" alt="npm version" /></a>
   <a href="https://www.npmjs.com/package/@sdcorejs/angular"><img src="https://img.shields.io/npm/dm/@sdcorejs/angular.svg" alt="monthly npm downloads" /></a>
-  <a href="#compatibility"><img src="https://img.shields.io/badge/Angular-19%20%7C%2020%20%7C%2021-DD0031?logo=angular&logoColor=white" alt="Angular 19, 20, and 21" /></a>
+  <a href="#compatibility"><img src="https://img.shields.io/badge/Angular-19%20%7C%2020%20%7C%2021%20%7C%2022-DD0031?logo=angular&logoColor=white" alt="Angular 19, 20, 21, and 22" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/sdcorejs/sdcorejs-angular.svg" alt="MIT license" /></a>
 </p>
 
@@ -29,7 +29,7 @@
 - **Business UI above the Material primitives.** Use tables, query builders, import/export flows, drawers, modals, and application layout modules without rebuilding those patterns for every portal.
 - **One form contract.** Controls share `[(model)]`, validation, disabled, read-only, and viewed-state conventions, with optional `FormGroup` registration for larger forms.
 - **Focused application bundles.** Components, forms, services, and modules are published as secondary entry points, and the package declares `sideEffects: false`; import the leaf entry points your application uses.
-- **Angular-aligned releases.** The repository maintains matching package lines for Angular 19, 20, and 21 from the same v19 source workspace.
+- **Angular-aligned releases.** The repository maintains matching package lines for Angular 19, 20, 21, and 22 from the same canonical v19 source workspace; Angular 22 begins with `22.2.5`.
 - **Documentation for people and tools.** The live showcase is paired with version-pinned Markdown and JSON manifests that can be consumed by developers, automation, and AI coding agents.
 
 ## Highlights
@@ -53,12 +53,13 @@ Use the package major that matches the Angular major in your application.
 | 19.x    | `^19`               | `npm install @sdcorejs/angular@^19 @angular/material@^19 @angular/material-date-fns-adapter@^19` |
 | 20.x    | `^20`               | `npm install @sdcorejs/angular@^20 @angular/material@^20 @angular/material-date-fns-adapter@^20` |
 | 21.x    | `^21`               | `npm install @sdcorejs/angular@^21 @angular/material@^21 @angular/material-date-fns-adapter@^21` |
+| 22.x    | `^22`               | `npm install @sdcorejs/angular@^22 @angular/material@^22 @angular/material-date-fns-adapter@^22` |
 
-The package manifests accept Angular 19–21 peers, while the release workflow publishes an Angular-aligned package line for each major. The first version number is therefore reserved for Angular compatibility. Read the [changelog](CHANGELOG.md) before upgrading because consumer-breaking changes are called out there explicitly rather than relying on a conventional semver-major bump.
+The Angular 19–21 package lines keep the shared `^19.0.0 || ^20.0.0 || ^21.0.0` peer contract; the Angular 22 line advertises Angular 22 peers only (`^22.0.0`). The first version number is reserved for Angular compatibility. Read the [changelog](CHANGELOG.md) before upgrading because consumer-breaking changes are called out there explicitly rather than relying on a conventional semver-major bump.
 
 ## Installation
 
-Start with an existing Angular 19, 20, or 21 application. This repository and its CI use npm.
+Start with an existing Angular 19, 20, 21, or 22 application. This repository and its CI use npm.
 
 ```bash
 # Example for an Angular 19 application
@@ -276,7 +277,7 @@ Read `versions.json` to select a release that matches the installed package, the
 
 ## Versioning and releases
 
-- Package major `19`, `20`, or `21` identifies the matching Angular line.
+- Package major `19`, `20`, `21`, or `22` identifies the matching Angular line. The Angular 22 line starts at `22.2.5`; there are no earlier Angular 22 releases.
 - A release suffix is published across the maintained lines from the same v19 source surface, with only required Angular-major adaptations.
 - Pin the package major in applications, for example `@sdcorejs/angular@^20` for Angular 20.
 - Review [CHANGELOG.md](CHANGELOG.md) before every upgrade. Because the package major is reserved for Angular compatibility, breaking changes are labeled explicitly in the changelog.
@@ -284,24 +285,32 @@ Read `versions.json` to select a release that matches the installed package, the
 
 ## Development
 
-The repository uses `versions/v19` as the source workspace. Work on shared library code, tests, npm documentation, and showcase pages there; the root sync process derives the v20 and v21 workspaces.
+The repository uses `versions/v19` as the canonical source workspace. Work on shared library code, tests, and package documentation there; the root sync process derives the v20, v21, and v22 workspaces. The standalone `showcase/` consumes the built v19 library rather than being mirrored into version workspaces.
 
-Prerequisites: Node.js 20, npm, and a Chromium installation for the headless Karma suite.
+Prerequisites: exact Node.js `22.22.3`, npm, and a Chromium installation for the headless Karma suite.
 
 ```bash
 git clone https://github.com/sdcorejs/sdcorejs-angular.git
-cd sdcorejs-angular/versions/v19
-npm install
+cd sdcorejs-angular
+
+# Historical package lines retain their reviewed peer-resolution route.
+npm --prefix versions/v19 ci --legacy-peer-deps
+npm --prefix versions/v20 ci --legacy-peer-deps
+npm --prefix versions/v21 ci --legacy-peer-deps
+
+# Angular 22 must resolve normally, without a peer bypass.
+npm --prefix versions/v22 ci
 
 # Build the library
-npm run build
+npm --prefix versions/v19 run build
 
 # Run the showcase at http://localhost:4200
-npm run showcase
+npm --prefix showcase ci --legacy-peer-deps
+npm --prefix showcase run start
 
 # Test and lint the v19 library
-npm run test:ci
-npm run lint
+npm --prefix versions/v19 run test:ci
+npm --prefix versions/v19 run lint
 ```
 
 After a shared v19 change, return to the repository root:
@@ -311,7 +320,7 @@ npm run sync
 npm run check:sync
 ```
 
-`npm run sync` updates the derived Angular 20 and 21 workspaces. Always review that generated diff before committing it.
+`npm run sync` updates the derived Angular 20, 21, and 22 workspaces. Always review that generated diff before committing it.
 
 ## Contributing
 
@@ -323,7 +332,7 @@ npm run check:sync
 
 Keep public imports backward compatible where possible. Record consumer-breaking behavior under `Changed (BREAKING for consumers)` in the changelog.
 
-Release-preparation branches keep package versions unchanged while review is in progress. Apply the shared release suffix only after the reviewed changes are merged into `main`, then publish the matching Angular 19, 20, and 21 package lines through the release workflow.
+Release-preparation branches keep package versions unchanged while review is in progress. Apply the shared release suffix only after the reviewed changes are merged into `main`. The release workflow builds and verifies all four immutable tarballs before one sequential publisher releases Angular 19/20/21 under `angular19`/`angular20`/`angular21`, then Angular 22 under `latest`. Trusted publishing is OIDC-only on exact Node `22.22.3` and npm `11.5.1`; it does not use `NODE_AUTH_TOKEN` or a separate `npm dist-tag` mutation.
 
 ## Support and issue reporting
 

@@ -23,6 +23,7 @@ const DEFAULT_VERSIONS_PATH = join(REPO_ROOT, 'published-docs', 'versions.json')
 export const PUBLIC_BASE_URL = 'https://sdcorejs.github.io/sdcorejs-angular/';
 const SHOWCASE_RELEASE_MINIMUMS = Object.freeze(
   new Map([
+    [22, '22.2.5'],
     [21, '21.1.2'],
     [20, '20.1.2'],
     [19, '19.1.2'],
@@ -87,19 +88,26 @@ export function selectSupportedReleases(manifest) {
 
 export const SUPPORTED_RELEASES = Object.freeze(selectSupportedReleases(JSON.parse(readFileSync(DEFAULT_VERSIONS_PATH, 'utf8'))));
 
-// The newest maintained Angular line. A page under published-pages/<suffix>/ is already
-// scoped to one release, so it pre-renders exactly ONE npm version instead of every
-// published release — emitting all of them multiplied the shell HTML ~12x (87MB vs 7MB per
-// page) and would have blown past the 1GB GitHub Pages limit after a few retained releases.
+// A page under published-pages/<suffix>/ is already scoped to one release, so it
+// pre-renders exactly ONE npm version: the newest Angular line that existed at that suffix.
+// Emitting every line multiplied the shell HTML ~12x (87MB vs 7MB per page) and would have
+// blown past the 1GB GitHub Pages limit after a few retained releases.
 // Deep links to the other Angular lines still resolve client-side via the in-app switcher;
 // they are simply not pre-rendered.
-const CANONICAL_SHELL_MAJOR = Math.max(...SHOWCASE_RELEASE_MINIMUMS.keys());
+const ANGULAR_22_INCEPTION_SUFFIX = '2.5';
+
+function compareReleaseSuffix(left, right) {
+  const [leftMinor, leftPatch] = left.split('.').map(Number);
+  const [rightMinor, rightPatch] = right.split('.').map(Number);
+  return leftMinor - rightMinor || leftPatch - rightPatch;
+}
 
 export function canonicalReleaseForSuffix(suffix) {
   if (!/^\d+\.\d+$/.test(String(suffix))) {
     throw new Error(`Invalid release suffix "${suffix}" (expected <digits>.<digits>, for example 1.6).`);
   }
-  return `${CANONICAL_SHELL_MAJOR}.${suffix}`;
+  const canonicalMajor = compareReleaseSuffix(String(suffix), ANGULAR_22_INCEPTION_SUFFIX) >= 0 ? 22 : 21;
+  return `${canonicalMajor}.${suffix}`;
 }
 
 const DOC_TABS = Object.freeze([
