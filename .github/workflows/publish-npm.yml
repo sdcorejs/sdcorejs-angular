@@ -1,127 +1,119 @@
 name: Publish @sdcorejs/angular to npm
 
-# Convention: tag = `v<release-suffix>` (example `v1.0`, `v1.0-beta.1`) with no Angular major.
-# The workflow expands one release tag into 3 package versions:
-#   v1.0        -> 19.1.0 / 20.1.0 / 21.1.0 (npm dist-tag latest)
-#   v1.0-beta.1 -> 19.1.0-beta.1 / 20.1.0-beta.1 / 21.1.0-beta.1 (npm dist-tag beta)
-#
-# After all 3 npm publishes succeed, the tag workflow snapshots published-docs
-# for the same 3 versions and commits the archive back to `main`.
-# Release commits are expected to have already run the v19 -> v20/v21 rollout
-# (`npm run sync`); this workflow builds and publishes the checked-in workspaces.
-#
-# Gates that run BEFORE anything is published:
-#   verify-version-sync  - v20/v21 still match the v19 source of truth
-#   test                 - the full v19 Karma/Jasmine suite + coverage thresholds
-# Both must be green or the publish matrix never starts.
-
 on:
   push:
     tags:
-      - 'v*'
+      - 'v2.5'
   workflow_dispatch:
-    inputs:
-      patch:
-        description: 'Release suffix, for example "1.0" or "1.0-beta.1". Publishes 19.<suffix> / 20.<suffix> / 21.<suffix>.'
-        required: true
-        type: string
-      tag:
-        description: 'npm dist-tag. angular19/20/21 are recovery tags that do not move latest.'
-        required: true
-        default: 'beta'
-        type: choice
-        options:
-          - beta
-          - latest
-          - angular19
-          - angular20
-          - angular21
-      major:
-        description: 'Angular major to publish. Release tags always publish all three; select one only for recovery.'
-        required: true
-        default: 'all'
-        type: choice
-        options:
-          - all
-          - '19'
-          - '20'
-          - '21'
-      publish_docs:
-        description: 'Generate and commit the release API-doc archive after a manual recovery.'
-        required: true
-        default: false
-        type: boolean
 
-permissions:
-  contents: write
-  # Required by npm trusted publishing: lets the job mint the short-lived OIDC
-  # token npm exchanges for publish rights, instead of a long-lived NPM_TOKEN.
-  id-token: write
+permissions: {}
 
 concurrency:
-  group: publish-npm
+  group: publish-npm-v2.5
   cancel-in-progress: false
 
 jobs:
-  verify-version-sync:
-    name: Verify v19 rollout to v20/v21
+  verify_source:
+    name: Verify release source and contracts
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      source_sha: ${{ steps.release_plan.outputs.source_sha }}
+      targets_json: ${{ steps.release_plan.outputs.targets_json }}
 
     steps:
-      - name: Checkout
+      - name: Checkout immutable release source
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_dispatch' && 'refs/tags/v2.5' || github.ref }}
+
+      - name: Require the release tag to point at main
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          git fetch origin main --depth=1
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '22.22.3'
+          registry-url: 'https://registry.npmjs.org'
+          cache: npm
+          cache-dependency-path: package-lock.json
 
-      - name: Check generated version workspaces
+      - name: Resolve the immutable four-target release plan
+        id: release_plan
+        run: |
+          echo "source_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          node --input-type=module -e "import {releaseTargets} from './scripts/release-package-contract.mjs';process.stdout.write('targets_json='+JSON.stringify(releaseTargets('2.5'))+'\n')" >> "$GITHUB_OUTPUT"
+
+      - name: Pin npm used by the release contract
+        run: |
+          npm install -g npm@11.5.1
+          test "$(npm --version)" = "11.5.1"
+
+      - name: Install orchestrator dependencies
+        run: npm ci
+
+      - name: Verify generated workspaces
         run: npm run check:sync
 
-  test:
-    name: Unit tests (v19)
+      - name: Run repository and release-contract tests
+        run: npm run test:scripts
+
+  test-v19:
+    name: Canonical v19 lint, build and coverage
+    needs: verify_source
     runs-on: ubuntu-latest
-    # The suite is ~4.6k specs; it finishes in a couple of minutes. The cap only
-    # exists so a wedged headless browser cannot burn a full job allowance.
     timeout-minutes: 30
+    permissions:
+      contents: read
 
     steps:
-      - name: Checkout
+      - name: Checkout immutable release source
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.verify_source.outputs.source_sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: '22.22.3'
+          registry-url: 'https://registry.npmjs.org'
           cache: npm
           cache-dependency-path: versions/v19/package-lock.json
 
-      - name: Install dependencies
-        # Same reasoning as the publish job: npm install (not npm ci) because the
-        # checked-in lockfiles can lag behind the manifests after a sync rollout.
-        run: npm install --legacy-peer-deps
+      - name: Pin npm used by the canonical release gate
+        run: |
+          npm install -g npm@11.5.1
+          test "$(npm --version)" = "11.5.1"
+
+      - name: Install v19 exactly
+        run: npm ci --legacy-peer-deps
         working-directory: versions/v19
 
-      - name: Run the sdcorejs-angular test suite
-        # --code-coverage is REQUIRED, not a nicety: the karma coverage thresholds
-        # in projects/sdcorejs-angular/karma.conf.js are only evaluated when
-        # coverage is collected, so without it the thresholds gate nothing.
-        # ChromeHeadlessCI = ChromeHeadless + the usual CI sandbox flags (see karma.conf.js).
-        # karma.conf.js prints the Jasmine random seed at the top of the run; quote it
-        # when reporting a red run (replay caveat documented in that file).
+      - name: Lint v19
+        run: npm run lint
+        working-directory: versions/v19
+
+      - name: Build v19
+        run: npm run build
+        working-directory: versions/v19
+
+      - name: Run canonical coverage suite
         run: npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadlessCI --code-coverage
         working-directory: versions/v19
 
-  build-and-publish:
-    # Never publish a red suite. Both gates must pass before any npm publish runs.
-    needs: [verify-version-sync, test]
+  build-pack:
+    name: Build immutable package (${{ matrix.version }})
+    needs: [verify_source, test-v19]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
-      # npm updates one package packument for all three versions. Concurrent PUTs
-      # can race while the previous version is still being processed and return E409.
-      max-parallel: 1
       matrix:
         include:
           - version: v19
@@ -130,153 +122,232 @@ jobs:
             major: 20
           - version: v21
             major: 21
+          - version: v22
+            major: 22
 
     steps:
-      - name: Checkout
+      - name: Checkout immutable release source
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-          # A manual recovery must rebuild the immutable release tree rather than
-          # whatever commit happens to be current on main when the retry runs.
-          ref: ${{ github.event_name == 'workflow_dispatch' && format('v{0}', github.event.inputs.patch) || github.ref }}
-
-      - name: Ensure release tag is current main
-        if: ${{ github.event_name == 'push' }}
-        run: |
-          git fetch origin main --depth=1
-          TAG_SHA="$(git rev-parse HEAD)"
-          MAIN_SHA="$(git rev-parse origin/main)"
-          if [ "$TAG_SHA" != "$MAIN_SHA" ]; then
-            echo "::error::Release tag $GITHUB_REF_NAME must point at origin/main before npm publish."
-            echo "tag=$TAG_SHA main=$MAIN_SHA"
-            exit 1
-          fi
+          ref: ${{ needs.verify_source.outputs.source_sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          # Trusted publishing needs Node >= 22.14.0 (npm docs).
-          node-version: 22
+          node-version: '22.22.3'
+          registry-url: 'https://registry.npmjs.org'
           cache: npm
           cache-dependency-path: versions/${{ matrix.version }}/package-lock.json
-          registry-url: 'https://registry.npmjs.org'
 
-      - name: Upgrade npm for trusted publishing
-        # Node 22 still bundles npm 10.x; OIDC publishing needs npm >= 11.5.1.
+      - name: Pin npm used to create the artifact
         run: |
-          npm install -g npm@latest
-          npm --version
+          npm install -g npm@11.5.1
+          test "$(npm --version)" = "11.5.1"
 
-      - name: Resolve release suffix + npm dist-tag
-        id: resolve
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            PATCH="${{ github.event.inputs.patch }}"
-            TAG="${{ github.event.inputs.tag }}"
-            REQUESTED_MAJOR="${{ github.event.inputs.major }}"
-          else
-            PATCH="${GITHUB_REF_NAME#v}"
-            if echo "$PATCH" | grep -qE '(beta|alpha|rc)'; then TAG="beta"; else TAG="latest"; fi
-            REQUESTED_MAJOR="all"
-          fi
-          if ! echo "$PATCH" | grep -qE '^[0-9]+\.[0-9]+(-(alpha|beta|rc)(\.[0-9]+)?)?$'; then
-            echo "::error::Invalid release suffix '$PATCH'. Expected 1.0 or 1.0-beta.1."
-            exit 1
-          fi
-          if ! echo "$TAG" | grep -qE '^(beta|latest|angular(19|20|21))$'; then
-            echo "::error::Invalid npm dist-tag '$TAG'."
-            exit 1
-          fi
-          if echo "$TAG" | grep -qE '^angular(19|20|21)$' && [ "$TAG" != "angular$REQUESTED_MAJOR" ]; then
-            echo "::error::Recovery tag '$TAG' must match requested major '$REQUESTED_MAJOR'."
-            exit 1
-          fi
-          echo "patch=$PATCH" >> "$GITHUB_OUTPUT"
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "version=${{ matrix.major }}.$PATCH" >> "$GITHUB_OUTPUT"
-
-      - name: Write version into library package.json
-        run: |
-          PKG="projects/sdcorejs-angular/package.json"
-          node -e "const fs=require('fs');const p='${PKG}';const j=JSON.parse(fs.readFileSync(p,'utf8'));j.version='${{ steps.resolve.outputs.version }}';fs.writeFileSync(p,JSON.stringify(j,null,2)+'\n');"
-          grep '"version"' "$PKG"
+      - name: Install historical workspace exactly
+        if: ${{ matrix.version != 'v22' }}
+        run: npm ci --legacy-peer-deps
         working-directory: versions/${{ matrix.version }}
 
-      - name: Install dependencies
-        # npm install is intentional here. v20/v21 package-lock files can still
-        # contain Angular 19 pins after sync, so npm ci would be too strict.
-        run: npm install --legacy-peer-deps
+      - name: Install Angular 22 workspace exactly
+        if: ${{ matrix.version == 'v22' }}
+        run: npm ci
         working-directory: versions/${{ matrix.version }}
 
-      - name: Build library
-        run: node --max_old_space_size=8000 ./node_modules/@angular/cli/bin/ng build sdcorejs-angular
+      - name: Select the matrix target from the validated plan
+        id: target
+        env:
+          TARGETS_JSON: ${{ needs.verify_source.outputs.targets_json }}
+          TARGET_WORKSPACE: ${{ matrix.version }}
+        run: node -e "const targets=JSON.parse(process.env.TARGETS_JSON);const target=targets.find(item=>item.workspace===process.env.TARGET_WORKSPACE);if(!target)throw new Error('matrix target is absent from the validated plan');process.stdout.write('version='+target.version+'\ntarget_json='+JSON.stringify(target)+'\n')"
+
+      - name: Stamp exact release version
+        run: node -e "const fs=require('node:fs');const p='projects/sdcorejs-angular/package.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));j.version='${{ steps.target.outputs.version }}';fs.writeFileSync(p,JSON.stringify(j,null,2)+'\n');"
         working-directory: versions/${{ matrix.version }}
 
-      - name: Publish @sdcorejs/angular@${{ steps.resolve.outputs.version }} (tag=${{ steps.resolve.outputs.tag }})
-        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.major == 'all' || github.event.inputs.major == format('{0}', matrix.major) }}
-        # No NODE_AUTH_TOKEN on purpose. npm authenticates through the OIDC
-        # trusted publisher configured for this repository + workflow file; if a
-        # token is present npm uses it instead and the package's 2FA policy
-        # rejects it with "an automation token was specified".
-        run: npm publish --access public --tag ${{ steps.resolve.outputs.tag }}
-        working-directory: versions/${{ matrix.version }}/dist/sdcorejs-angular
+      - name: Lint package line
+        run: npm run lint
+        working-directory: versions/${{ matrix.version }}
 
-  publish-docs:
-    name: Publish versioned API docs
-    needs: build-and-publish
-    if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish_docs) }}
+      - name: Build package line
+        run: npm run build
+        working-directory: versions/${{ matrix.version }}
+
+      - name: Pack once and record immutable metadata
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ needs.verify_source.outputs.source_sha }}
+          TARGET_JSON: ${{ steps.target.outputs.target_json }}
+        run: |
+          set -euo pipefail
+          test "$SOURCE_SHA" = "$(git rev-parse HEAD)"
+          STAGE="release-stage/${{ matrix.version }}"
+          mkdir -p "$STAGE"
+          npm pack "versions/${{ matrix.version }}/dist/sdcorejs-angular" --json --pack-destination "$STAGE" > "$STAGE/pack.json"
+          TARBALL="$(node -e "const p=require('./$STAGE/pack.json')[0];process.stdout.write(p.filename)")"
+          SHA256="$(sha256sum "$STAGE/$TARBALL" | awk '{print $1}')"
+          INTEGRITY="$(node -e "const p=require('./$STAGE/pack.json')[0];process.stdout.write(p.integrity)")"
+          SHASUM="$(node -e "const p=require('./$STAGE/pack.json')[0];process.stdout.write(p.shasum)")"
+          printf '%s  %s\n' "$SHA256" "$TARBALL" > "$STAGE/sha256.txt"
+          export STAGE TARBALL SHA256 SOURCE_SHA INTEGRITY SHASUM
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          const target = JSON.parse(process.env.TARGET_JSON);
+          const pack = JSON.parse(readFileSync(`${process.env.STAGE}/pack.json`, 'utf8'))[0];
+          if (pack.integrity !== process.env.INTEGRITY || pack.shasum !== process.env.SHASUM) throw new Error('npm pack metadata changed');
+          writeFileSync(`${process.env.STAGE}/artifact.json`, `${JSON.stringify({
+            target,
+            tarball: process.env.TARBALL,
+            sha256: process.env.SHA256,
+            sourceSha: process.env.SOURCE_SHA,
+            pack,
+          }, null, 2)}\n`);
+          NODE
+
+      - name: Upload immutable package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdcorejs-angular-${{ matrix.version }}-2.5
+          path: release-stage
+          if-no-files-found: error
+          retention-days: 14
+
+  verify-packages:
+    name: Verify all four retained packages
+    needs: [verify_source, build-pack]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
-      - name: Checkout
+      - name: Checkout immutable release source
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-          # Tag-triggered releases document the tag tree. A manual recovery starts
-          # from main so its generated-doc commit remains a fast-forward push.
-          ref: ${{ github.event_name == 'workflow_dispatch' && 'main' || github.ref }}
-
-      - name: Ensure release tag is current main
-        if: ${{ github.event_name == 'push' }}
-        run: |
-          git fetch origin main --depth=1
-          TAG_SHA="$(git rev-parse HEAD)"
-          MAIN_SHA="$(git rev-parse origin/main)"
-          if [ "$TAG_SHA" != "$MAIN_SHA" ]; then
-            echo "::error::Docs are generated from the tag tree and committed to main. Tag $GITHUB_REF_NAME must point at origin/main."
-            echo "tag=$TAG_SHA main=$MAIN_SHA"
-            exit 1
-          fi
+          ref: ${{ needs.verify_source.outputs.source_sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '22.22.3'
+          registry-url: 'https://registry.npmjs.org'
 
-      - name: Resolve release suffix
-        id: resolve
+      - name: Pin npm used by package verification
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            PATCH="${{ github.event.inputs.patch }}"
-          else
-            PATCH="${GITHUB_REF_NAME#v}"
-          fi
-          echo "patch=$PATCH" >> "$GITHUB_OUTPUT"
+          npm install -g npm@11.5.1
+          test "$(npm --version)" = "11.5.1"
 
-      - name: Generate published-docs for 19/20/21
+      - name: Download every package artifact
+        uses: actions/download-artifact@v4
+        with:
+          pattern: sdcorejs-angular-v*-2.5
+          path: release-artifacts
+          merge-multiple: true
+
+      - name: Declare the complete verification set
+        run: echo "verify artifact workspaces v19 v20 v21 v22 with sha256 integrity shasum"
+
+      - name: Validate baselines and compile unchanged strict consumers
+        run: node scripts/release-package-contract.mjs --artifact-root release-artifacts --suffix 2.5 --baseline-suffix 2.4 --datetime-version 1.0.4 --compile-consumers
+
+  publish-packages:
+    name: Publish the verified transaction
+    needs: [verify_source, verify-packages]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout immutable release source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.verify_source.outputs.source_sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.3'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Pin trusted-publishing npm
         run: |
-          RELEASE_DATE="$(date -u +%F)"
-          npm run collect-release-docs -- --patch "${{ steps.resolve.outputs.patch }}" --date "$RELEASE_DATE" --skip-existing
+          npm install -g npm@11.5.1
+          test "$(npm --version)" = "11.5.1"
 
-      - name: Commit published-docs archive
+      - name: Download the already verified package artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: sdcorejs-angular-v*-2.5
+          path: release-artifacts
+          merge-multiple: true
+
+      - name: Execute one fail-closed publish transaction
+        run: node scripts/release-package-contract.mjs --artifact-root release-artifacts --suffix 2.5 --baseline-suffix 2.4 --datetime-version 1.0.4 --publish --require-provenance
+
+  publish-docs-and-page:
+    name: Publish verified docs and static page
+    needs: [verify_source, publish-packages]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout the immutable release source for the archive commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.verify_source.outputs.source_sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.3'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Pin npm used for postpublish verification
         run: |
-          if [ -z "$(git status --porcelain published-docs)" ]; then
-            echo "No published-docs changes to commit."
-            exit 0
-          fi
+          npm install -g npm@11.5.1
+          test "$(npm --version)" = "11.5.1"
 
+      - name: Download the verified package artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: sdcorejs-angular-v*-2.5
+          path: release-artifacts
+          merge-multiple: true
+
+      - name: Revalidate and materialize the verified v19 package
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/release-package-contract.mjs --artifact-root release-artifacts --suffix 2.5 --baseline-suffix 2.4 --datetime-version 1.0.4 > verified-release.json
+          V19_TARBALL="$(find release-artifacts/v19 -type f -name '*.tgz' -print -quit)"
+          test -n "$V19_TARBALL"
+          sha256sum "$V19_TARBALL"
+          node -e "const a=require('./release-artifacts/v19/artifact.json');if(!a.pack.integrity)throw new Error('integrity missing')"
+          mkdir -p versions/v19/dist/sdcorejs-angular
+          tar -xzf "$V19_TARBALL" --strip-components=1 -C versions/v19/dist/sdcorejs-angular
+
+      - name: Clean-install Showcase
+        run: npm --prefix showcase ci --legacy-peer-deps
+
+      - name: Generate all four API-doc archives
+        run: npm run collect-release-docs -- --patch 2.5 --date "$(date -u +%F)" --commit "${{ needs.verify_source.outputs.source_sha }}" --skip-existing
+
+      - name: Build and retain static release page
+        shell: bash
+        run: |
+          npm run build:page -- --suffix 2.5
+          test -d published-pages/2.5
+          test ! -d published-pages/2.0
+          node -e "const p=require('./published-pages/pages.json');const retained2x=p.suffixes.filter(s=>s.startsWith('2.'));if(p.latest!=='2.5'||retained2x.join(',')!=='2.5,2.4,2.3,2.2,2.1'||!p.suffixes.some(s=>s.startsWith('1.')))throw new Error('published-pages retention mismatch')"
+
+      - name: Commit generated docs and page
+        shell: bash
+        run: |
+          if test -z "$(git status --porcelain published-docs published-pages)"; then exit 0; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add published-docs
-          git commit -m "docs: publish API docs for v${{ steps.resolve.outputs.patch }}"
+          git add published-docs published-pages
+          git commit -m "docs: publish Angular 22 release 2.5"
           git push origin HEAD:main

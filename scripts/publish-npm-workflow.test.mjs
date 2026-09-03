@@ -220,7 +220,12 @@ test('postpublish materializes verified v19, clean-installs Showcase and commits
   const buildIndex = postpublishCommands.indexOf('npm run build:page -- --suffix');
   assert.ok(installIndex >= 0 && installIndex < buildIndex, 'Showcase must be clean-installed before page generation');
 
-  lacks(executableCommands(deployPagesWorkflow), /(?:\bng build\b|npm run build|npm ci|npm install)/u, 'deploy-pages must remain a build-free copier');
+  const deployBuildOrInstallCommand = /(?:^|(?:&&|\|\||;)\s*|\b(?:if|then|while|until|do)\s+)(?:[A-Za-z_][A-Za-z0-9_]*=\S+\s+)*(?:(?:node\b[^\r\n;&|]*\b|npx\s+)?ng\s+build\b|npm(?:\s+--prefix\s+\S+)?\s+(?:run\s+build(?::[^\s;&|]+)?|ci|install)\b)/mu;
+  lacks(
+    executableCommands(deployPagesWorkflow),
+    deployBuildOrInstallCommand,
+    'deploy-pages must remain a build-free copier',
+  );
 });
 
 test('publisher revalidates exact versions, recovery tags, latest and provenance through the tested transaction', () => {
