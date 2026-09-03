@@ -25,6 +25,7 @@ export const LAYOUT_DEMO_NOTIFICATION_COUNT = signal(6);
 
 const LAYOUT_DEMO_TRANSLATIONS: Readonly<Record<string, string>> = {
   'core.module.layout.sidebar.search': 'Search menu',
+  'core.module.layout.sidebar.more-menu': 'More menu',
   'core.module.layout.user.update-profile': 'Update profile',
   'core.module.layout.user.setting': 'Settings',
   'core.module.layout.user.notification': 'Notifications',

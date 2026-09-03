@@ -122,7 +122,9 @@ describe('LayoutDemoComponent', () => {
       showcase?.querySelector<HTMLButtonElement>('[data-layout-viewport="mobile"]')?.click();
       fixture.detectChanges();
       if (version === 2) {
-        showcase?.querySelector<HTMLButtonElement>('button[aria-label="Thêm menu"]')?.click();
+        const moreButton = showcase?.querySelector<HTMLButtonElement>('button[aria-label="More menu"]') ?? null;
+        expect(moreButton).withContext('V2 More trigger').not.toBeNull();
+        moreButton?.click();
         fixture.detectChanges();
       }
       if (version === 3) {
@@ -130,12 +132,14 @@ describe('LayoutDemoComponent', () => {
         fixture.detectChanges();
       }
 
-      const row = showcase?.querySelector('[data-mobile-account-row]');
-      const actions = showcase?.querySelector('[data-mobile-account-actions]');
-      expect(row?.querySelector('[data-user-summary]')).withContext(`V${version} profile`).not.toBeNull();
-      expect(row?.querySelector('[data-user-action="signout"]')).withContext(`V${version} signout`).not.toBeNull();
-      expect(row?.querySelector('[data-user-role]')?.textContent).withContext(`V${version} role`).toContain('Product Owner');
-      expect(actions?.querySelector('[data-user-action="update-profile"]')).withContext(`V${version} actions`).not.toBeNull();
+      const row = showcase?.querySelector<HTMLElement>('[data-mobile-account-row]') ?? null;
+      const actions = showcase?.querySelector<HTMLElement>('[data-mobile-account-actions]') ?? null;
+      expect(row).withContext(`V${version} account row`).not.toBeNull();
+      expect(actions).withContext(`V${version} account actions`).not.toBeNull();
+      expect(row!.querySelector('[data-user-summary]')).withContext(`V${version} profile`).not.toBeNull();
+      expect(row!.querySelector('[data-user-action="signout"]')).withContext(`V${version} signout`).not.toBeNull();
+      expect(row!.querySelector('[data-user-role]')?.textContent).withContext(`V${version} role`).toContain('Product Owner');
+      expect(actions!.querySelector('[data-user-action="update-profile"]')).withContext(`V${version} actions`).not.toBeNull();
     }
   });
 });
