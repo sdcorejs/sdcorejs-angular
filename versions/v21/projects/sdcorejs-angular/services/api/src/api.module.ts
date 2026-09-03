@@ -3,8 +3,8 @@ import { inject, isDevMode, NgModule } from '@angular/core';
 import { SdHttpInterceptor } from './interceptors/api.interceptor';
 
 /**
- * Thông điệp của assertion dev-mode ở constructor cho Angular 19/20. Export ra để spec khẳng định
- * đúng nội dung, và để consumer grep được khi thấy nó trong console.
+ * Thông điệp của assertion dev-mode ở constructor. Export ra để spec khẳng định đúng nội dung,
+ * và để consumer grep được khi thấy nó trong console.
  */
 export const SD_API_MISSING_HTTP_CLIENT_MESSAGE =
   '[sd-api] SdApiModule không còn tự cấu hình HttpClient. ' +
