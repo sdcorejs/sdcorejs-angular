@@ -89,10 +89,12 @@ test('parses page metadata regardless of property order and mirrors published-do
   ]);
 });
 
-test('selects every published release from 1.2 onward so 1.5 route shells are automatic', () => {
+test('selects Angular 22 only from its 2.5 inception while retaining earlier maintained lines', () => {
   assert.deepEqual(
     selectSupportedReleases({
       versions: [
+        { version: '22.2.5' },
+        { version: '22.2.4' },
         { version: '19.1.4' },
         { version: '21.1.5' },
         { version: '20.1.2' },
@@ -102,7 +104,7 @@ test('selects every published release from 1.2 onward so 1.5 route shells are au
         { version: '19.1.5' },
       ],
     }),
-    ['21.1.5', '20.1.5-beta.1', '20.1.2', '19.1.5', '19.1.4']
+    ['22.2.5', '21.1.5', '20.1.5-beta.1', '20.1.2', '19.1.5', '19.1.4']
   );
 });
 
@@ -116,15 +118,20 @@ test('builds only the supported release routes, including page redirects and all
   // Khẳng định CẤU TRÚC — thứ thật sự là hợp đồng — thay vì nội dung.
   assert.ok(SUPPORTED_RELEASES.length > 0, 'SUPPORTED_RELEASES must not be empty');
   for (const release of SUPPORTED_RELEASES) {
-    assert.match(release, /^(19|20|21)\.\d+\.\d+$/, `unexpected release id: ${release}`);
+    assert.match(release, /^(19|20|21|22)\.\d+\.\d+$/, `unexpected release id: ${release}`);
   }
   const releasesByMajor = new Map();
   for (const release of SUPPORTED_RELEASES) {
     const major = release.split('.')[0];
     releasesByMajor.set(major, (releasesByMajor.get(major) ?? 0) + 1);
   }
-  assert.deepEqual([...releasesByMajor.keys()].sort(), ['19', '20', '21'], 'every Angular line must be represented');
-  assert.equal(new Set(releasesByMajor.values()).size, 1, 'each Angular line must expose the same number of releases');
+  for (const historicalMajor of ['19', '20', '21']) {
+    assert.ok(releasesByMajor.has(historicalMajor), `Angular ${historicalMajor} history must remain represented`);
+  }
+  assert.ok(
+    [...releasesByMajor.keys()].every(major => ['19', '20', '21', '22'].includes(major)),
+    'only maintained Angular lines may be represented'
+  );
 
   assert.equal(PUBLIC_BASE_URL, 'https://sdcorejs.github.io/sdcorejs-angular/');
   assert.equal(routes.length, 1 + SUPPORTED_RELEASES.length * (3 + 2 + pages.length * 5));
@@ -159,11 +166,12 @@ test('builds only the supported release routes, including page redirects and all
 
 test('builds route shells for a future release supplied by the published manifest', () => {
   const pages = parseDocumentationRegistry(REGISTRY_FIXTURE);
-  const routes = createRouteShellDefinitions(pages, ['21.1.5', '20.1.5', '19.1.5']);
+  const routes = createRouteShellDefinitions(pages, ['22.2.5', '21.2.5', '20.2.5', '19.2.5']);
 
-  assert.ok(routes.some(route => route.routePath === 'v/21.1.5/components/alert/overview'));
-  assert.ok(routes.some(route => route.routePath === 'v/20.1.5/guides/introduction/api'));
-  assert.ok(routes.some(route => route.routePath === 'v/19.1.5/changelog'));
+  assert.ok(routes.some(route => route.routePath === 'v/22.2.5/components/alert/overview'));
+  assert.ok(routes.some(route => route.routePath === 'v/21.2.5/components/alert/overview'));
+  assert.ok(routes.some(route => route.routePath === 'v/20.2.5/guides/introduction/api'));
+  assert.ok(routes.some(route => route.routePath === 'v/19.2.5/changelog'));
 });
 
 test('matches the canonical v19 runtime registry and expected deployment route count', () => {
@@ -263,9 +271,12 @@ test('writes every route as route/index.html and emits the special 404 shell', (
   }
 });
 
-test('canonicalReleaseForSuffix pins a page to the newest Angular line', () => {
+test('canonicalReleaseForSuffix switches to Angular 22 at suffix 2.5 without fabricating earlier history', () => {
   assert.equal(canonicalReleaseForSuffix('1.6'), '21.1.6');
   assert.equal(canonicalReleaseForSuffix('0.11'), '21.0.11');
+  assert.equal(canonicalReleaseForSuffix('2.4'), '21.2.4');
+  assert.equal(canonicalReleaseForSuffix('2.5'), '22.2.5');
+  assert.equal(canonicalReleaseForSuffix('2.6'), '22.2.6');
 });
 
 test('canonicalReleaseForSuffix rejects anything that is not a release suffix', () => {
@@ -280,11 +291,12 @@ test('a version-scoped page pre-renders exactly one release', () => {
     { category: 'forms', slug: 'input', title: 'Input' },
   ];
 
-  const single = createRouteShellDefinitions(pages, [canonicalReleaseForSuffix('1.6')]);
-  const all = createRouteShellDefinitions(pages, ['21.1.6', '20.1.6', '19.1.6']);
+  const single = createRouteShellDefinitions(pages, [canonicalReleaseForSuffix('2.5')]);
+  const all = createRouteShellDefinitions(pages, ['22.2.5', '21.2.5', '20.2.5', '19.2.5']);
 
-  assert.ok(single.length < all.length, 'one release must emit fewer shells than three');
+  assert.ok(single.length < all.length, 'one release must emit fewer shells than four');
   assert.ok(single.every(route => !route.routePath.startsWith('v/19.')));
   assert.ok(single.every(route => !route.routePath.startsWith('v/20.')));
-  assert.ok(single.some(route => route.routePath.startsWith('v/21.1.6/')));
+  assert.ok(single.every(route => !route.routePath.startsWith('v/21.')));
+  assert.ok(single.some(route => route.routePath.startsWith('v/22.2.5/')));
 });

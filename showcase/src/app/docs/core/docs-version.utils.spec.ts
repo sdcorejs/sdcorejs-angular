@@ -10,9 +10,12 @@ import { DocsVersionsManifest } from './published-docs.models';
 
 const manifest: DocsVersionsManifest = {
   package: '@sdcorejs/angular',
-  latest: '21.1.2',
+  latest: '22.2.5',
   baseUrl: 'https://example.test/docs',
   versions: [
+    { version: '22.2.5', index: 'ignored', released: '2026-09-02', count: 97 },
+    { version: '22.2.4', index: 'ignored', released: '2026-08-31', count: 97 },
+    { version: '22.1.9', index: 'ignored', released: '2026-08-30', count: 97 },
     { version: '19.1.2', index: 'ignored', released: '2026-07-11', count: 85 },
     { version: '21.0.11', index: 'ignored', released: '2026-07-03', count: 85 },
     { version: '21.1.2', index: 'ignored', released: '2026-07-11', count: 85 },
@@ -34,25 +37,25 @@ describe('documentation version utilities', () => {
   });
 
   it('groups published versions by descending Angular major', () => {
-    expect(groupVersionsByMajor(manifest.versions).map(group => group.major)).toEqual([21, 20, 19]);
-    expect(groupVersionsByMajor(manifest.versions)[0]?.versions.map(item => item.version)).toEqual(['21.1.2', '21.0.11']);
+    expect(groupVersionsByMajor(manifest.versions).map(group => group.major)).toEqual([22, 21, 20, 19]);
+    expect(groupVersionsByMajor(manifest.versions)[0]?.versions.map(item => item.version)).toEqual(['22.2.5', '22.2.4', '22.1.9']);
   });
 
   it('resolves latest and falls back for an invalid requested version', () => {
-    expect(resolveRequestedVersion('latest', manifest)).toEqual({ version: '21.1.2', fallback: false });
-    expect(resolveRequestedVersion('99.0.0', manifest)).toEqual({ version: '21.1.2', fallback: true });
+    expect(resolveRequestedVersion('latest', manifest)).toEqual({ version: '22.2.5', fallback: false });
+    expect(resolveRequestedVersion('99.0.0', manifest)).toEqual({ version: '22.2.5', fallback: true });
   });
 
   it('uses the highest same-major fallback regardless of manifest order', () => {
     const lowerVersionFirst = {
       ...manifest,
       versions: [
-        manifest.versions[3],
-        manifest.versions[2],
-        manifest.versions[4],
-        manifest.versions[0],
+        manifest.versions[6],
         manifest.versions[5],
-        manifest.versions[1],
+        manifest.versions[7],
+        manifest.versions[3],
+        manifest.versions[8],
+        manifest.versions[4],
       ],
     };
 
@@ -63,10 +66,10 @@ describe('documentation version utilities', () => {
     });
   });
 
-  it('keeps every published Showcase release from 1.2 onward, including future 1.5 docs', () => {
+  it('keeps historical Showcase releases and starts Angular 22 at 22.2.5', () => {
     const showcaseManifest = selectShowcaseReleaseManifest({
       ...manifest,
-      latest: '21.1.5',
+      latest: '22.2.5',
       versions: [
         { version: '21.1.5', index: 'ignored', released: '2026-07-27', count: 97 },
         { version: '20.1.5', index: 'ignored', released: '2026-07-27', count: 97 },
@@ -79,6 +82,7 @@ describe('documentation version utilities', () => {
     });
 
     expect(showcaseManifest.versions.map(entry => entry.version)).toEqual([
+      '22.2.5',
       '21.1.5',
       '21.1.4',
       '21.1.2',
@@ -89,11 +93,13 @@ describe('documentation version utilities', () => {
       '19.1.4',
       '19.1.2',
     ]);
-    expect(showcaseManifest.latest).toBe('21.1.5');
+    expect(showcaseManifest.latest).toBe('22.2.5');
+    expect(resolveRequestedVersion('22.2.5', showcaseManifest)).toEqual({ version: '22.2.5', fallback: false });
+    expect(resolveRequestedVersion('22.1.9', showcaseManifest)).toEqual({ version: '22.2.5', fallback: true });
     expect(resolveRequestedVersion('20.1.4', showcaseManifest)).toEqual({ version: '20.1.4', fallback: false });
     expect(resolveRequestedVersion('20.1.1', showcaseManifest)).toEqual({ version: '20.1.5', fallback: true });
     expect(resolveRequestedVersion('19.1.1', showcaseManifest)).toEqual({ version: '19.1.5', fallback: true });
-    expect(resolveRequestedVersion('99.0.0', showcaseManifest)).toEqual({ version: '21.1.5', fallback: true });
+    expect(resolveRequestedVersion('99.0.0', showcaseManifest)).toEqual({ version: '22.2.5', fallback: true });
   });
 
   it('preserves category, slug, tab, query and fragment while switching versions', () => {

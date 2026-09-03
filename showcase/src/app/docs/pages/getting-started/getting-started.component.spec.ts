@@ -6,7 +6,7 @@ import { GettingStartedComponent } from './getting-started.component';
 describe('GettingStartedComponent', () => {
   let fixture: ComponentFixture<GettingStartedComponent>;
   beforeEach(async () => {
-    const paramMap = convertToParamMap({ version: '21.1.2' });
+    const paramMap = convertToParamMap({ version: '22.2.5' });
     await TestBed.configureTestingModule({
       imports: [GettingStartedComponent],
       providers: [
@@ -28,7 +28,8 @@ describe('GettingStartedComponent', () => {
 
     expect(element.querySelector('h1')?.textContent).toContain('Get started');
     expect(element.querySelectorAll('.setup-step')).toHaveSize(4);
-    expect(element.textContent).toContain('npm install @sdcorejs/angular@^21 @angular/material@^21 @angular/material-date-fns-adapter@^21');
+    expect(element.textContent).toContain('Angular 19–22');
+    expect(element.textContent).toContain('npm install @sdcorejs/angular@^22 @angular/material@^22 @angular/material-date-fns-adapter@^22');
     expect(element.textContent).toContain("@use '@sdcorejs/angular/assets/scss/sd-core.scss'");
     expect(element.textContent).toContain('Material+Symbols+Outlined');
     expect(element.textContent).toContain("import { provideAnimationsAsync } from '@angular/platform-browser/animations/async'");
@@ -38,6 +39,6 @@ describe('GettingStartedComponent', () => {
     const links = [...(fixture.nativeElement as HTMLElement).querySelectorAll<HTMLAnchorElement>('.category-link')];
 
     expect(links).toHaveSize(7);
-    expect(links.every(link => link.getAttribute('href')?.startsWith('/v/21.1.2/'))).toBeTrue();
+    expect(links.every(link => link.getAttribute('href')?.startsWith('/v/22.2.5/'))).toBeTrue();
   });
 });

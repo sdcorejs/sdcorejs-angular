@@ -17,6 +17,10 @@ test('releaseTagFor derives the release tag from an archive version', () => {
   assert.equal(releaseTagFor('19.0.4'), 'v0.4');
 });
 
+test('[workspace] releaseTagFor maps the Angular 22 inception version to v2.5', () => {
+  assert.equal(releaseTagFor('22.2.5'), 'v2.5');
+});
+
 test('releaseTagFor rejects a version that is not <major>.<suffix>', () => {
   assert.throws(() => releaseTagFor('1.5'), /release tag/i);
   assert.throws(() => releaseTagFor('nope'), /release tag/i);

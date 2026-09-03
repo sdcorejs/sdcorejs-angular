@@ -20,7 +20,7 @@ describe('ChangelogComponent', () => {
     versions = {
       selectedVersion: signal<string | null>(null),
       invalidVersion: signal<string | null>('99.0.0'),
-      resolve: jasmine.createSpy().and.resolveTo('21.1.2'),
+      resolve: jasmine.createSpy().and.resolveTo('22.2.5'),
     };
     await TestBed.configureTestingModule({
       imports: [ChangelogComponent],
@@ -32,7 +32,7 @@ describe('ChangelogComponent', () => {
     }).compileComponents();
 
     router = TestBed.inject(Router);
-    spyOnProperty(router, 'url', 'get').and.returnValue('/v/99.0.0/changelog?major=21#release');
+    spyOnProperty(router, 'url', 'get').and.returnValue('/v/99.0.0/changelog?major=22#release');
     spyOn(router, 'navigateByUrl').and.resolveTo(true);
     fixture = TestBed.createComponent(ChangelogComponent);
     fixture.detectChanges();
@@ -42,7 +42,7 @@ describe('ChangelogComponent', () => {
     await fixture.whenStable();
 
     expect(versions.resolve).toHaveBeenCalledWith('99.0.0');
-    expect(router.navigateByUrl).toHaveBeenCalledWith('/v/21.1.2/changelog?major=21#release', { replaceUrl: true });
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/v/22.2.5/changelog?major=22#release', { replaceUrl: true });
   });
 
   it('shows only populated release sections and mirrors the generated unreleased entry', () => {
@@ -74,5 +74,32 @@ describe('ChangelogComponent', () => {
 
     expect(jumpLinks).toHaveSize(SHOWCASE_CHANGELOG_RELEASES.length);
     expect([...packageLinks].map(link => link.getAttribute('href'))).toEqual(expectedPackageHrefs);
+  });
+
+  it('offers Angular 22 filtering from release 2.5 without fabricating earlier links', () => {
+    const releases: readonly ShowcaseChangelogRelease[] = SHOWCASE_CHANGELOG_RELEASES;
+    const preInception = releases.find(release => release.suffix === '2.4');
+    const inception = releases.find(release => release.suffix === '2.5');
+    const filterButtons = [...fixture.nativeElement.querySelectorAll('.changelog__filters button')] as HTMLButtonElement[];
+
+    expect(filterButtons.map(button => button.textContent?.trim())).toEqual([
+      'All maintained lines',
+      'Angular 22',
+      'Angular 21',
+      'Angular 20',
+      'Angular 19',
+    ]);
+    expect(preInception?.packageVersions.map(version => Number(version.angularMajor))).toEqual([19, 20, 21]);
+    expect(inception?.packageVersions.map(version => Number(version.angularMajor))).toEqual([19, 20, 21, 22]);
+
+    filterButtons.find(button => button.textContent?.trim() === 'Angular 22')?.click();
+    fixture.detectChanges();
+
+    const packageHrefs = [...fixture.nativeElement.querySelectorAll('.release__versions a')].map((link: HTMLAnchorElement) =>
+      link.getAttribute('href')
+    );
+    expect(packageHrefs).toContain('/v/22.2.5');
+    expect(packageHrefs.some(href => /^\/v\/22\.1\./.test(href ?? ''))).toBeFalse();
+    expect(fixture.nativeElement.querySelector('#release-2-4')).toBeNull();
   });
 });

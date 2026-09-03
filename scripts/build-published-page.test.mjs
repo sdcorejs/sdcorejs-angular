@@ -70,3 +70,24 @@ test('buildPagesIndex stays valid with no published pages yet', () => {
   assert.equal(index.latest, null);
   assert.deepEqual(index.suffixes, []);
 });
+
+test('publishing 2.5 prunes exactly 2.0, retains 2.1-2.5 and leaves the 1.x group untouched', () => {
+  const historical1x = ['1.6', '1.5', '1.4', '1.3', '1.2'];
+  const beforeRelease = [...historical1x, '2.4', '2.3', '2.2', '2.1', '2.0'];
+  const afterCopy = [...beforeRelease, '2.5'];
+
+  const prune = selectSuffixesToPrune(afterCopy);
+  const retained = afterCopy.filter(suffix => !prune.includes(suffix));
+  const index = buildPagesIndex(retained);
+
+  assert.deepEqual(prune, ['2.0']);
+  assert.deepEqual(
+    index.suffixes.filter(suffix => suffix.startsWith('2.')),
+    ['2.5', '2.4', '2.3', '2.2', '2.1'],
+  );
+  assert.deepEqual(
+    index.suffixes.filter(suffix => suffix.startsWith('1.')),
+    historical1x,
+  );
+  assert.equal(index.latest, '2.5');
+});

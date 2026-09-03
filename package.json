@@ -26,10 +26,15 @@
     "test:collect-docs": "node --test scripts/collect-docs.test.mjs",
     "test:published-page": "node --test scripts/build-published-page.test.mjs",
     "test:check-i18n": "node --test scripts/check-i18n.test.mjs",
+    "test:supported-versions": "node --test scripts/supported-versions.test.mjs",
+    "test:version-sync-contract": "node --test scripts/check-version-sync.test.mjs",
+    "test:release-package-contract": "node --test scripts/release-package-contract.test.mjs",
+    "test:publish-npm-workflow": "node --test scripts/publish-npm-workflow.test.mjs",
+    "test:showcase-angular22-contract": "node --test scripts/generate-showcase-changelog.test.mjs scripts/generate-showcase-route-shells.test.mjs && npm --prefix versions/v19 ci --legacy-peer-deps && npm --prefix versions/v19 run build && npm --prefix showcase ci --legacy-peer-deps && npm --prefix showcase run link:library && npm --prefix showcase run test -- --include=src/app/docs/core/docs-version.utils.spec.ts --include=src/app/docs/core/docs-version.service.spec.ts --include=src/app/docs/shared/version-selector.component.spec.ts --include=src/app/docs/pages/about/about.component.spec.ts --include=src/app/docs/pages/changelog/changelog.component.spec.ts --include=src/app/docs/pages/getting-started/getting-started.component.spec.ts --include=src/app/docs/pages/home/docs-home.component.spec.ts",
     "build:page": "node scripts/build-published-page.mjs",
     "prune:pages": "node scripts/build-published-page.mjs --prune-only",
     "test:showcase-generators": "npm run test:showcase-changelog && npm run test:showcase-examples && npm run test:showcase-route-shells",
-    "test:scripts": "npm run test:showcase-generators && npm run test:showcase-branding && npm run test:collect-docs && npm run test:published-page && npm run test:check-i18n",
+    "test:scripts": "npm run test:showcase-generators && npm run test:showcase-branding && npm run test:collect-docs && npm run test:published-page && npm run test:check-i18n && npm run test:supported-versions && npm run test:version-sync-contract && npm run test:release-package-contract && npm run test:publish-npm-workflow",
     "changeset": "changeset"
   },
   "devDependencies": {
