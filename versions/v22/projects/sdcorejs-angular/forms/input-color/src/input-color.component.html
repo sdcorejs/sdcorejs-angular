@@ -1,0 +1,48 @@
+<sd-input
+  [label]="label()"
+  [helperText]="helperText()"
+  [placeholder]="placeholder()"
+  [size]="size()"
+  [appearance]="appearance() ?? undefined"
+  [form]="form()"
+  [name]="name() ?? ''"
+  [autoId]="autoId()"
+  [required]="required()"
+  [disabled]="disabled()"
+  [readonly]="readonly()"
+  [clearable]="clearable()"
+  [hideInlineError]="hideInlineError()"
+  [viewed]="viewed()"
+  [pattern]="hexPattern"
+  patternErrorMessage="Mã màu HEX không hợp lệ (vd #1565C0)"
+  [model]="valueModel()"
+  (sdChange)="onInputChange($event)">
+  <ng-template sdSuffixDef>
+    <div class="sd-input-color__suffix">
+      <!-- why: nút clear do <sd-input> tự render (built-in, hover-gated). Ở đây
+           chỉ chiếu swatch + native picker. onInputChange coerce '' → null nên
+           clear của sd-input vẫn cho ra model rỗng đúng nghĩa. -->
+      <button
+        type="button"
+        class="sd-input-color__swatch"
+        [style.background]="swatchColor()"
+        [class.sd-input-color__swatch--empty]="swatchColor() === 'transparent'"
+        [disabled]="disabled() || readonly() || isViewed()"
+        (click)="openPicker()"
+        title="Mở bảng chọn màu"
+        aria-label="Mở bảng chọn màu"></button>
+      <!-- why: GIỮ aria-hidden ở đây. Đây là proxy thuần: tabindex="-1" (ngoài tab order),
+           width/height 0, opacity 0, pointer-events:none — người dùng không thể tới được, và
+           openPicker() chỉ .click() chứ không .focus(). Control thật là <button> ngay trên,
+           đã có accessible name. Nếu bỏ aria-hidden, AT sẽ đọc thừa một "color picker" ma. -->
+      <input
+        #picker
+        type="color"
+        class="sd-input-color__hidden-picker"
+        tabindex="-1"
+        aria-hidden="true"
+        [value]="pickerSafeValue()"
+        (input)="onPickerChange($event)" />
+    </div>
+  </ng-template>
+</sd-input>

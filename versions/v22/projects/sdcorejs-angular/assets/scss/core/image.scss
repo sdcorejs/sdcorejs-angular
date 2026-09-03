@@ -1,0 +1,35 @@
+// Centralized state-image classes.
+// why: previously each component referenced its own assets/*.svg via `content: url(...)`,
+// duplicating files across modules. Single source of truth here so a designer can swap
+// an asset in `assets/images/` without grepping the codebase.
+//
+// Usage:
+//   <img class="sd-image-not-found" alt="not-found" />
+// or inside ::before / ::after via @extend:
+//   &::before { @extend .sd-image-data-empty; }
+
+$sd-image-path: '../../images' !default;
+
+$sd-images: (
+  'coming-soon',
+  'data-empty',
+  'expired',
+  'file-error',
+  'filter-empty',
+  'filter-required',
+  'forbidden',
+  'image-error',
+  'maintenance',
+  'not-found',
+  'offline',
+  'submitted',
+  'success',
+  'unauthorized',
+  'unknown-error'
+);
+
+@each $name in $sd-images {
+  .sd-image-#{$name} {
+    content: url('#{$sd-image-path}/#{$name}.svg');
+  }
+}

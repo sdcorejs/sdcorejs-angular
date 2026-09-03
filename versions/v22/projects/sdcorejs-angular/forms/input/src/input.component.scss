@@ -1,0 +1,89 @@
+@use '../../../assets/scss/core/color.scss' as color;
+@use 'sass:map';
+
+// Inline mode (viewed='inline') renders <sd-inline-text> (forms/inline-text) — it owns its
+// own borderless seamless styling, so no inline-input rule is needed here.
+
+:host {
+  display: block;
+}
+
+// why: nhánh inline cũng project `sdSuffixDef` (swatch của <sd-input-color>, icon search…),
+// nên cần một hàng flex để suffix nằm cạnh text thay vì rơi xuống dòng dưới.
+.sd-input-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+}
+
+.sd-input-inline__suffix {
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+}
+
+// why: chỉ pad-top khi có label để chừa chỗ cho mat float-label, tránh bị cắt ở mép trên.
+:host(.sd-has-label) {
+  padding-top: 4px;
+}
+
+// why: viewed mode hiển thị sd-view (text only) → bỏ đệm trên.
+:host(.sd-viewed) { padding-top: 0; }
+
+:host ::ng-deep {
+  // Form field color
+  .mat-mdc-form-field {
+    // Disabled background & border
+    &.mat-form-field-appearance-outline {
+      &.mat-form-field-disabled {
+        .mat-mdc-text-field-wrapper {
+          background: color.$disabled-bg;
+        }
+      }
+    }
+    // Disabled text input color
+    input {
+      &.mat-mdc-input-element:disabled {
+        color: color.$disabled-text !important;
+      }
+    }
+    .mat-mdc-placeholder-required {
+      color: map.get(color.$color_map, 'error');
+    }
+  }
+}
+
+.sd-input-field-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.sd-maxlength-counter {
+  position: absolute;
+  right: 4px;
+  top: calc(100% - 16px);
+  opacity: 0;
+  font-size: 10px;
+  line-height: 1.1;
+  color: rgba(0, 0, 0, 0.38);
+  pointer-events: none;
+  transition: opacity 120ms ease;
+  z-index: 1;
+}
+
+.sd-maxlength-counter--exceeded {
+  color: map.get(color.$color_map, 'error');
+  font-weight: 600;
+}
+
+:host ::ng-deep .sd-input-container.c-focused .sd-maxlength-counter,
+:host ::ng-deep .sd-input-container:hover .sd-maxlength-counter,
+:host ::ng-deep .sd-input-container .sd-maxlength-counter.sd-maxlength-counter--visible {
+  opacity: 1;
+}
+
+.sd-md:hover .btn-copy {
+  visibility: visible;
+}

@@ -1,0 +1,29 @@
+<div class="c-mobile-layout">
+  <div class="c-mobile-topbar">
+    <div class="c-topbar-brand">
+      @if (sidebar().logoUrl) {
+        <img class="c-topbar-logo" [src]="sidebar().logoUrl" alt="logo" />
+      }
+      <span class="c-topbar-title">{{ titleMenuGroup() || sidebar().defaultTitle || 'Back Office' }}</span>
+    </div>
+    <button class="c-hamburger-btn" (click)="openSidebar()">
+      <sd-icon name="menu"></sd-icon>
+    </button>
+  </div>
+
+  <div class="c-mobile-content">
+    <ng-content></ng-content>
+  </div>
+
+  <sd-sidebar-mobile-overlay
+    [menus]="menus()"
+    [userInfo]="userInfo()"
+    [sidebar]="sidebar()"
+    [isShowSidebar]="isShowSidebar()"
+    (showSideBar)="onToggle($event)"
+    (expandSideBar)="onExpandSideBar()"
+    (popupUserMenuOpened)="onPopupOfSideBarOpened()"
+    (popupUserMenuClosed)="onPopupOfSideBarClosed()"
+    (titleMenuGroupChanged)="onTitleMenuGroupChanged($event)">
+  </sd-sidebar-mobile-overlay>
+</div>

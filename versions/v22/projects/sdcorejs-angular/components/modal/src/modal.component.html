@@ -1,0 +1,38 @@
+<ng-template #templateRef>
+  <div
+    class="sd-modal-root"
+    [attr.data-autoId]="autoId()"
+    [attr.data-opened]="dataOpened()">
+    @if (!lazyLoadContent() || alreadyOpened()) {
+      @if (title()) {
+        <div class="sd-modal-header">
+          <div class="sd-modal-header-left">
+            <ng-content select="[sdHeaderLeft]">
+              <div class="sd-modal-title T18M">{{ title() }}</div>
+            </ng-content>
+          </div>
+          <div class="sd-modal-header-right">
+            <ng-content select="[sdHeaderRight]"></ng-content>
+            @if (!hideClose()) {
+              <button
+                type="button"
+                class="sd-modal-close-btn"
+                aria-label="Close"
+                (click)="close()"
+                [attr.data-autoId]="closeButtonAutoId()">
+                <sd-icon name="close"></sd-icon>
+              </button>
+            }
+          </div>
+        </div>
+      }
+      <div class="sd-modal-body">
+        <ng-content></ng-content>
+      </div>
+      <div class="sd-modal-footer" #footer>
+        <div class="sd-modal-footer-left"><ng-content select="[sdFooterLeft]"></ng-content></div>
+        <div class="sd-modal-footer-right"><ng-content select="[sdFooterRight]"></ng-content></div>
+      </div>
+    }
+  </div>
+</ng-template>

@@ -1,0 +1,34 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+// why: trigger là <input readonly>, nên con trỏ text mặc định nói dối rằng ô này gõ được.
+// Đổi sang pointer để nó đọc như một control "bấm để mở", giống mat-select.
+.sd-tree-select__trigger {
+  cursor: pointer;
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
+// why: `.sd-modal-body` cố tình `padding: 0` (consumer tự quản), nên trước đây ô tìm kiếm và
+// cây dính sát mép modal. Padding sống ở đây, cùng nhịp 16px với header/footer của sd-modal.
+.sd-tree-select__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  min-height: 320px;
+}
+
+.sd-tree-select__search {
+  flex: 0 0 auto;
+}
+
+.sd-tree-select__tree {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}

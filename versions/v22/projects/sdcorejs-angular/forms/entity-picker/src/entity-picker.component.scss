@@ -1,0 +1,73 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.sd-entity-picker__control {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  border: 1px solid var(--sd-border, #d0d5dd);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.sd-entity-picker__trigger,
+.sd-entity-picker__view {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 40px;
+  padding: 9px 12px;
+  border: 0;
+  background: transparent;
+  color: var(--sd-text, #2f3136);
+  font: inherit;
+  text-align: start;
+}
+
+.sd-entity-picker__trigger {
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--sd-primary, #1677ff);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
+}
+
+.sd-entity-picker__placeholder {
+  color: var(--sd-text-secondary, #667085);
+}
+
+.sd-entity-picker__clear {
+  flex: 0 0 36px;
+  min-height: 36px;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+// why: message lỗi phải nổi bật như <mat-error> của các control Material khác — cùng cỡ chữ
+// caption + màu error token, đặt ngay dưới trigger.
+.sd-entity-picker__error {
+  margin-top: 4px;
+  color: var(--sd-error, #d92d20);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.sd-entity-picker__body {
+  display: grid;
+  gap: 12px;
+  min-height: 320px;
+}
+
+.sd-entity-picker__detail {
+  padding: 12px;
+  border-top: 1px solid var(--sd-border, #d0d5dd);
+}

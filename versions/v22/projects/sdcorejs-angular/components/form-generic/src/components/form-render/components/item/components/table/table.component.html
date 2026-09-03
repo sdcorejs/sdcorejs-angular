@@ -1,0 +1,138 @@
+@if(component && tableOption) {
+  <div style="width: 100%">
+    <sd-table [option]="tableOption">
+      <!-- why: nút thêm dòng nằm ở ô header của cột command — ô đó vốn để trống, và đặt ở đây thì
+           hành động "thêm" đứng ngay trên cụm sửa/xoá của từng dòng thay vì chiếm thêm một dải
+           riêng dưới bảng. -->
+      <!-- why: KHÔNG bọc ng-template trong @if — contentChild chỉ quét nội dung chiếu vào tĩnh, còn
+           @if dựng một embedded view nên template sẽ không bao giờ được nhìn thấy và nút biến mất.
+           Template luôn tồn tại; điều kiện nằm BÊN TRONG. -->
+      <ng-template sdTableCommandHeaderDef>
+        @if(!viewed && !component.properties?.viewed) {
+          <sd-button
+            prefixIcon="add"
+            type="text"
+            color="primary"
+            (click)="onDetail()"
+            [title]="''"
+            [tooltip]="component.properties?.titleButtonCreate || ('core.component.form-builder.add-new' | sdTranslate)"></sd-button>
+        }
+      </ng-template>
+      @for(key of imageKeys; track key) {
+        <ng-template [sdTableCellDef]="key" let-item="item">
+          <sd-upload-file
+            type="image"
+           [model]="item[key]"
+           [args]="getArgs(key)"
+           (modelChange)="onFileUploadChange(item, key, $event)"
+            align="left"
+            disabled
+            previewWidth="50px"
+            previewHeight="50px"></sd-upload-file>
+        </ng-template>
+      }
+      @for(key of fileKeys; track key) {
+        <ng-template [sdTableCellDef]="key" let-item="item">
+          <sd-upload-file
+           [model]="item[key]"
+           [args]="getArgs(key)"
+           (modelChange)="onFileUploadChange(item, key, $event)"
+            align="left"
+            disabled
+            previewWidth="50px"
+            previewHeight="50px"></sd-upload-file>
+        </ng-template>
+      }
+    </sd-table>
+    @if(!viewed && !component.properties?.viewed) {
+      <!-- why: `sdTitle` / `sdBody` KHÔNG phải slot của sd-side-drawer (nó chỉ có sdHeaderLeft /
+           sdHeaderRight / sdFooterLeft / sdFooterRight + ng-content mặc định), nên hai khối đó
+           trước đây rơi thẳng vào thân drawer — "Tạo mới/cập nhật" hiện trong body còn tiêu đề kẹt
+           ở "Chi tiết". Dùng [title] động theo tác vụ và để nội dung ở content mặc định. -->
+      <sd-side-drawer [title]="detailTitle" width="500px">
+        <div class="c-table-create-update">
+          @if(!!component.columns?.length) {
+            <div class="c-drawer-fields">
+              @for(column of component.columns;track column.key) {
+                @let validate = formRenderColumn[column.key].validate;
+                <div>
+                  @if(column.type === 'string') {
+                    <sd-input
+                    [form]="form()"
+                    [label]="column.label"
+                    [(model)]="row[column.key]"
+                    [required]="validate?.required"
+                    [pattern]="column.validate?.pattern"
+                    [patternErrorMessage]="column.validate?.patternErrorMessage"></sd-input>
+                  }@else if(column.type === 'number') {
+                    <sd-input-number
+                    [form]="form()"
+                    [label]="column.label"
+                    [(model)]="row[column.key]"
+                    [required]="validate?.required"
+                    [min]="column.validate?.min"></sd-input-number>
+                  }@else if(column.type === 'radio') {
+                    <sd-radio
+                    [form]="form()"
+                    [label]="column.label"
+                    [name]="column.key"
+                    [items]="column.values"
+                    valueField="value"
+                    displayField="display"
+                    [required]="validate?.required"></sd-radio>
+                  }@else if(column.type === 'values') {
+                    <sd-autocomplete
+                      [form]="form()"
+                      [label]="column.label"
+                      [(model)]="row[column.key]"
+                      [items]="columnValues[column.key]"
+                      valueField="value"
+                      displayField="display"
+                      [required]="validate?.required"></sd-autocomplete>
+                  }@else if(column.type === 'date') {
+                    <sd-date
+                    [form]="form()"
+                    [label]="column.label"
+                    [(model)]="row[column.key]"
+                    [required]="validate?.required"></sd-date>
+                  }@else if(column.type === 'datetime') {
+                    <sd-datetime
+                    [form]="form()"
+                    [label]="column.label"
+                    [(model)]="row[column.key]"
+                    [required]="validate?.required"></sd-datetime>
+                  }@else if(column.type === 'image') {
+                    <sd-upload-file
+                    [label]="column.label"
+                    type="image"
+                    [(model)]="row[column.key]"
+                    [args]="column.args"
+                    previewWidth="50px"
+                    previewHeight="50px"
+                    align="left"></sd-upload-file>
+                  }@else if (column.type === 'file') {
+                    <sd-upload-file
+                    [label]="column.label"
+                    type="file"
+                    [(model)]="row[column.key]"
+                    [args]="column.args"
+                    previewWidth="50px"
+                    previewHeight="50px"
+                    align="left"></sd-upload-file>
+                  }
+                </div>
+              }
+            </div>
+          }
+
+        </div>
+        <!-- why: `.sd-side-drawer-footer` đã có padding 16px — mọi consumer sdFooterRight khác trong
+             lib đều dựa vào đó. `pr-16` ở đây cộng thêm 16px nữa, đẩy nút Lưu vào trong; `text-right`
+             thì vô tác dụng vì slot đã là flex justify-end. -->
+        <div sdFooterRight>
+          <sd-button [title]="'core.component.form-builder.save' | sdTranslate" prefixIcon="save" color="primary" type="fill" (click)="onAccept()"></sd-button>
+        </div>
+      </sd-side-drawer>
+    }
+  </div>
+}

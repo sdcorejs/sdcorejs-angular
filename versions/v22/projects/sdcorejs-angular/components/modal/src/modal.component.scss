@@ -1,0 +1,203 @@
+// why: component dùng ViewEncapsulation.None nên rule này RÒ RA TOÀN CỤC — nó tước vòng focus của
+// MỌI nút do consumer chiếu vào bất kỳ modal nào, không chỉ nút của thư viện. `!important` còn
+// khiến consumer không ghi đè lại được. Giữ nguyên phần dập outline cho chuột, nhưng trả lại vòng
+// focus cho điều hướng bàn phím qua :focus-visible (cũng !important để thắng rule ở trên).
+.sd-modal-root button {
+  &:focus {
+    outline: none !important;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--sd-primary, #005cbb) !important;
+    outline-offset: 2px;
+  }
+}
+
+.sd-modal-panel,
+.sd-modal-bottom-sheet-panel {
+  --sd-modal-radius: var(--sd-overlay-radius, 24px);
+  --sd-modal-bottom-sheet-radius: var(--sd-overlay-bottom-sheet-radius, 28px);
+  --sd-modal-surface: var(--sd-surface, #fff);
+  --sd-modal-border: var(--sd-border, #dde0e5);
+  --sd-modal-shadow: 0 6px 18px rgba(15, 23, 42, 0.18), 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+
+.sd-modal-panel {
+  .mat-mdc-dialog-container {
+    --mdc-dialog-container-shape: var(--sd-modal-radius);
+    --mat-dialog-container-shape: var(--sd-modal-radius);
+  }
+
+  .mat-mdc-dialog-surface,
+  .mdc-dialog__surface,
+  .mat-dialog-container {
+    padding: 0 !important; // Loi touchUi date picker
+    border-radius: var(--sd-modal-radius) !important;
+    background: var(--sd-modal-surface);
+    max-height: calc(100vh - 32px);
+    overflow: hidden;
+    box-shadow: var(--sd-modal-shadow);
+  }
+
+  .mat-dialog-container,
+  .mat-mdc-dialog-container {
+    .mat-dialog-content,
+    .mat-mdc-dialog-content {
+      max-height: 80vh;
+    }
+
+    .mat-dialog-actions,
+    .mat-mdc-dialog-actions {
+      min-height: auto;
+      margin-bottom: 0;
+      padding: 0;
+    }
+  }
+}
+
+.sd-modal-root {
+  display: flex;
+  width: 100%;
+  max-height: inherit;
+  flex-direction: column;
+  background: var(--sd-modal-surface, var(--sd-surface, #fff));
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.sd-modal-header {
+  min-height: 64px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sd-modal-header-left {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sd-modal-header-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.sd-modal-title {
+  min-width: 0;
+}
+
+.sd-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  max-height: 80vh;
+  overflow: auto;
+  padding: 0;
+}
+
+.sd-modal-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  width: 32px;
+  height: 32px;
+  margin-left: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--sd-text-secondary);
+  line-height: 0;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 80ms ease, color 80ms ease;
+
+  &:hover {
+    background: var(--sd-surface-muted);
+    color: var(--sd-text);
+  }
+
+  &:active {
+    background: var(--sd-border);
+  }
+
+  &:focus {
+    outline: none !important;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--sd-primary) !important;
+    outline-offset: 2px;
+  }
+
+  sd-icon {
+    display: block;
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+    line-height: 20px;
+  }
+}
+
+.sd-modal-bottom-sheet-panel.mat-bottom-sheet-container,
+.sd-modal-bottom-sheet-panel.mat-mdc-bottom-sheet-container,
+.sd-modal-bottom-sheet-panel .mat-bottom-sheet-container,
+.sd-modal-bottom-sheet-panel .mat-mdc-bottom-sheet-container {
+  padding: 0;
+  min-width: 100vw;
+  box-sizing: border-box;
+  outline: 0;
+  max-height: min(80vh, calc(100vh - 16px));
+  overflow: hidden;
+  border-radius: var(--sd-modal-bottom-sheet-radius) var(--sd-modal-bottom-sheet-radius) 0 0 !important;
+  background: var(--sd-modal-surface);
+  box-shadow: var(--sd-modal-shadow);
+  display: flex;
+  flex-direction: column;
+}
+
+.sd-modal-footer {
+  min-height: 56px;
+  padding: 16px;
+  border-top: 1px solid var(--sd-modal-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.sd-modal-footer-left,
+.sd-modal-footer-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sd-modal-footer-left {
+  flex: 1 1 auto;
+}
+
+.sd-modal-footer-right {
+  flex: 0 0 auto;
+  margin-left: auto;
+  justify-content: flex-end;
+}
+
+.sd-modal-footer-left:empty,
+.sd-modal-footer-right:empty {
+  display: none;
+}
+
+.sd-modal-footer:has(.sd-modal-footer-left:empty):has(.sd-modal-footer-right:empty) {
+  display: none;
+}

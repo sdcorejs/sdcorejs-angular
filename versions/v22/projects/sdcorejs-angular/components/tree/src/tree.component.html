@@ -1,0 +1,163 @@
+@let _resolvedItemTemplate = resolvedItemTemplate();
+@let _selectionVisible = selectionVisible();
+@let _selectionSingle = selectionSingle();
+@let _selectionMessage = selectionMessage();
+@let _selectionActionViews = selectionActionViews();
+@let _selectionQuickActionOpened = selectionQuickActionOpened();
+@let _rootError = rootError();
+
+@if (rootLoading()) {
+  <div class="sd-tree__root-loading" role="status" aria-live="polite">
+    <mat-progress-spinner diameter="24" mode="indeterminate" />
+  </div>
+} @else if (_rootError) {
+  <div class="sd-tree__root-error" role="alert">
+    <span>{{ errorMessage(_rootError) }}</span>
+    <button type="button" data-tree-retry (click)="retry()">{{ 'core.component.tree.retry' | sdTranslate }}</button>
+  </div>
+} @else {
+  <div class="sd-tree" role="tree" [attr.aria-busy]="rootLoading()" [style.--sd-tree-indent-size]="indentSize() + 'px'">
+    @for (node of visibleViewNodes(); track node.id) {
+      <!-- why: `[tabIndex]` là property DOM (camelCase) — nó set đúng giá trị nhưng KHÔNG sinh
+           attribute `tabindex` trong markup, nên mọi thứ đọc markup (lint a11y, snapshot test,
+           devtools inspect) đều thấy row là không focusable. Đổi sang `[attr.tabindex]`. -->
+      <div
+        class="sd-tree__row"
+        role="treeitem"
+        [attr.tabindex]="node.tabIndex"
+        [class.sd-tree__row--selected]="node.selected"
+        [style.--sd-tree-level]="node.level"
+        [attr.aria-level]="node.level + 1"
+        [attr.aria-expanded]="node.ariaExpanded"
+        [attr.aria-selected]="_selectionVisible ? node.selected : null"
+        [attr.aria-checked]="_selectionVisible ? (node.selectionIndeterminate ? 'mixed' : node.selected) : null"
+        [attr.data-autoid]="node.autoIds.row"
+        (focus)="onRowFocus(node)"
+        (keydown)="onRowKeydown(node, $event)">
+        <div class="sd-tree__main">
+          <button
+            type="button"
+            class="sd-tree__toggle"
+            [class.sd-tree__toggle--placeholder]="!node.hasChildren"
+            [disabled]="node.toggleDisabled"
+            [attr.aria-label]="node.toggleLabel"
+            [attr.data-autoid]="node.autoIds.toggle"
+            [attr.data-tree-node-retry]="node.loadError ? node.id : null"
+            (click)="toggle(node, $event)">
+            @if (node.isLoading) {
+              <mat-progress-spinner diameter="16" mode="indeterminate" />
+            } @else if (node.loadError) {
+              <sd-icon name="refresh"></sd-icon>
+            } @else if (node.hasChildren) {
+              <sd-icon [name]="node.isExpanded ? 'expand_more' : 'chevron_right'"></sd-icon>
+            }
+          </button>
+
+          <!-- why: `selector.single` cho phép đúng MỘT node, mà checkbox lại là ký hiệu của
+               "chọn nhiều" — người dùng tick node thứ hai rồi mới phát hiện node đầu tự bỏ. Radio
+               nói trước điều đó. Không gom vào <mat-radio-group>: group chiếm Arrow Up/Down cho
+               việc chuyển lựa chọn, trong khi hàng cây đã dùng đúng hai phím đó để điều hướng. -->
+          @if (_selectionVisible) {
+            @if (_selectionSingle) {
+              <mat-radio-button
+                class="sd-tree__radio"
+                [checked]="node.selected"
+                [disabled]="node.selectionDisabled"
+                [attr.data-autoid]="node.autoIds.checkbox"
+                (click)="$event.stopPropagation()"
+                (change)="toggleSelection(node)" />
+            } @else {
+              <mat-checkbox
+                class="sd-tree__checkbox"
+                [checked]="node.selected"
+                [indeterminate]="node.selectionIndeterminate"
+                [disabled]="node.selectionDisabled"
+                [attr.data-autoid]="node.autoIds.checkbox"
+                (click)="$event.stopPropagation()"
+                (change)="toggleSelection(node)" />
+            }
+          }
+
+          @if (node.icon) {
+            <sd-icon class="sd-tree__item-icon" color="primary" [attr.data-autoid]="node.autoIds.icon" [name]="node.icon"></sd-icon>
+          }
+
+          <div class="sd-tree__content" [class.sd-tree__content--custom]="_resolvedItemTemplate" [attr.data-autoid]="node.autoIds.label">
+            @if (_resolvedItemTemplate) {
+              <ng-container *ngTemplateOutlet="_resolvedItemTemplate; context: node.context" />
+            } @else {
+              <span class="sd-tree__label">{{ node.label }}</span>
+            }
+          </div>
+        </div>
+
+        @if (node.commands.length) {
+          <button
+            type="button"
+            class="sd-tree__command-trigger"
+            mat-icon-button
+            [matMenuTriggerFor]="commandMenu"
+            [attr.data-autoid]="node.autoIds.command"
+            (click)="$event.stopPropagation()">
+            <sd-icon class="c-icon" name="more_vert"></sd-icon>
+          </button>
+          <mat-menu #commandMenu="matMenu" class="sd-tree__command-menu">
+            @for (command of node.commands; track command.key) {
+              <button
+                type="button"
+                class="sd-tree__command-menu-item"
+                mat-menu-item
+                [disabled]="command.disabled"
+                [attr.data-autoid]="command.autoId"
+                (click)="command.command.click(node.data)">
+                <span class="sd-tree__command-menu-content">
+                  <sd-icon
+                    class="c-icon sd-tree__command-menu-icon"
+                    [class.sd-tree__command-menu-icon--default]="command.defaultColor"
+                    [color]="command.color"
+                    [fontSet]="command.fontSet"
+                    [name]="command.icon"></sd-icon>
+                  <span class="sd-tree__command-title">{{ command.title }}</span>
+                </span>
+              </button>
+            }
+          </mat-menu>
+        }
+      </div>
+    }
+  </div>
+}
+
+<sd-quick-action [opened]="_selectionQuickActionOpened">
+  <div class="d-flex align-items-center" sdMessage>
+    <div class="c-bg-length">
+      <span class="c-length sd-tree__qa-count">{{ selectedCount() }}</span>
+    </div>
+    <div class="c-message">
+      {{ _selectionMessage }}
+    </div>
+  </div>
+
+  <div class="d-flex align-items-center mr-8 sd-tree__qa-actions" sdAction>
+    @for (actionView of _selectionActionViews; track $index) {
+      <sd-button
+        [autoId]="actionView.autoId"
+        class="ml-4"
+        [tooltip]="actionView.action.tooltip"
+        [prefixIcon]="actionView.action.icon"
+        [color]="actionView.action.color || 'primary'"
+        [type]="actionView.action.type || 'light'"
+        [fontSet]="actionView.action.fontSet"
+        [title]="actionView.action.title"
+        (click)="onSelectionAction(actionView.action)" />
+    }
+    <sd-button
+      [autoId]="clearSelectionAutoId()"
+      class="ml-4"
+      prefixIcon="close"
+      color="secondary"
+      type="outline"
+      width="35px"
+      (click)="clearSelection()" />
+  </div>
+</sd-quick-action>

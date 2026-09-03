@@ -1,0 +1,30 @@
+<div class="fb-field">
+  @if (label) {
+    <div class="fb-field__label">{{ label }}</div>
+  }
+  @let exprText = model | expressionQuery;
+  <div class="fb-expr" (click)="onEdit()" role="button" tabindex="0" (keydown.enter)="onEdit()" (keydown.space)="onEdit()">
+    <span class="fb-expr__badge">QB</span>
+    @if (exprText) {
+      <span class="fb-expr__code mono">{{ exprText }}</span>
+    } @else {
+      <span class="empty">{{ 'core.component.form-builder.set-expression' | sdTranslate }}</span>
+    }
+    <button type="button" class="fb-icon-btn" (click)="onEdit(); $event.stopPropagation()" aria-label="edit expression">
+      <span class="msi">account_tree</span>
+    </button>
+  </div>
+</div>
+
+<sd-modal [title]="'core.component.form-builder.set-expression' | sdTranslate" width="920px" modalClass="sd-form-builder-dialog">
+  <div class="fb-expression-query">
+    <sd-query-builder [fields]="queryFields" [(value)]="draftFilter"></sd-query-builder>
+  </div>
+  <sd-button
+    sdFooterRight
+    prefixIcon="check"
+    [title]="'core.component.form-builder.confirm' | sdTranslate"
+    (click)="onAccept()"
+    color="primary"
+    type="fill"></sd-button>
+</sd-modal>

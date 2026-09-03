@@ -1,0 +1,51 @@
+:host {
+  --sd-splitter-handle-size: 4px;
+  --sd-splitter-handle-color: var(--sd-primary-light, #d7e3ff);
+  --sd-splitter-handle-hover-color: var(--sd-primary, #005cbb);
+  --sd-splitter-handle-active-color: var(--sd-primary, #005cbb);
+  --sd-splitter-handle-hit-area: 8px;
+  --sd-splitter-handle-radius: 0;
+  --sd-splitter-disabled-opacity: 0.5;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 var(--sd-splitter-handle-hit-area);
+  user-select: none;
+  outline: none;
+
+  &.sd-splitter__handle--horizontal {
+    cursor: col-resize;
+    .sd-splitter__handle-bar {
+      width: var(--sd-splitter-handle-size);
+      height: 100%;
+    }
+  }
+
+  &.sd-splitter__handle--vertical {
+    cursor: row-resize;
+    flex-direction: column;
+    .sd-splitter__handle-bar {
+      width: 100%;
+      height: var(--sd-splitter-handle-size);
+    }
+  }
+
+  .sd-splitter__handle-bar {
+    background: var(--sd-splitter-handle-color);
+    border-radius: var(--sd-splitter-handle-radius);
+    transition: background-color 120ms ease;
+  }
+
+  &:hover .sd-splitter__handle-bar { background: var(--sd-splitter-handle-hover-color); }
+  &:focus-visible {
+    outline: 2px solid var(--sd-splitter-handle-active-color);
+    outline-offset: 1px;
+  }
+
+  &.sd-splitter__handle--disabled {
+    cursor: default;
+    opacity: var(--sd-splitter-disabled-opacity);
+    pointer-events: none;
+  }
+}

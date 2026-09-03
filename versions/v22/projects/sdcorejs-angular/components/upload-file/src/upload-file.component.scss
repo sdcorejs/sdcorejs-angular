@@ -1,0 +1,413 @@
+@use '../../../assets/scss/core/color.scss' as color;
+@use 'sass:map';
+:host {
+  width: 100%;
+  display: block;
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  .c-drag-preview {
+    border: 2px dashed map.get(color.$color_map, 'primary');
+    border-radius: 4px;
+    vertical-align: middle;
+    display: table-cell;
+
+    .c-container {
+      width: 100%;
+      height: 100%;
+      padding: 5px 10px 0px 10px;
+      display: table;
+
+      sd-icon {
+        color: map.get(color.$color_map, 'secondary-light');
+        vertical-align: middle;
+        display: table-cell;
+      }
+    }
+
+    .c-image-error {
+      width: 100%;
+      height: 100%;
+      padding: 5px 10px 0px 10px;
+      display: table;
+
+      sd-icon {
+        color: map.get(color.$color_map, 'secondary-light');
+        vertical-align: middle;
+        display: table-cell;
+      }
+    }
+  }
+
+  .c-area-upload {
+    border: 1px dashed map.get(color.$color_map, 'primary');
+    border-radius: 8px;
+    display: table;
+    position: relative;
+    text-align: center;
+    margin: 3px;
+    opacity: 0.6;
+    &:hover {
+      opacity: 0.3;
+    }
+  }
+
+  .c-area {
+    border: 1px dashed map.get(color.$color_map, 'primary');
+    border-radius: 8px;
+    display: table;
+    position: relative;
+    text-align: center;
+    margin: 3px;
+    opacity: 0.6;
+
+    &.c-view {
+      border: 1px solid map.get(color.$color_map, 'border');
+      opacity: 0.9;
+    }
+
+    &.c-area-error {
+      background-color: rgba(242, 243, 244, 1);
+    }
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.4);
+      // opacity: 0.5;
+    }
+
+    &.c-loading {
+      background-color: rgba(242, 243, 244, 1);
+    }
+
+    .c-icon {
+      vertical-align: middle;
+      display: table-cell;
+      margin: 16px;
+      font-size: 50px;
+      color: grey;
+      cursor: pointer;
+    }
+
+    .c-preview {
+      vertical-align: middle;
+      display: table-cell;
+
+      .c-img-container {
+        width: 100%;
+        display: table;
+
+        .c-action {
+          display: none;
+          position: absolute;
+          top: 0;
+          width: 100%;
+          height: 100%;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .c-img {
+          max-width: 100%;
+          max-height: calc(100% - 5px);
+        }
+
+        // why: đổi từ <div (click)> sang <button type="button"> để bàn phím mở được preview →
+        // reset chrome mặc định của button, giữ nguyên diện mạo overlay cũ.
+        .c-overlay-count {
+          border: 0;
+          display: flex;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          padding: 2px;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          gap: 10px;
+          position: absolute;
+          border-radius: 2px;
+          width: 65%;
+          height: 65%;
+          background: rgba(0, 0, 0, 0.54);
+          cursor: pointer;
+          .c-overlay-text {
+            color: #fff;
+            font-family: Roboto;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 500;
+            line-height: 14px;
+          }
+        }
+
+        &:hover:not(.has-overlay),
+        &.c-selected:not(.has-overlay) {
+          .c-action {
+            display: flex;
+          }
+
+          .c-img {
+            opacity: 0.2;
+          }
+        }
+      }
+
+      .c-btn-remove {
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        background: transparent;
+        cursor: pointer;
+        color: white;
+        border: none;
+        z-index: 9;
+        border-radius: 50%;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        top: -8px;
+        right: -8px;
+        background-color: #e6e6e6;
+        color: #000;
+        border: 2px solid #fff;
+
+        sd-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
+      }
+    }
+  }
+
+  .c-img-eror {
+    height: 18px;
+    width: 18px;
+    font-size: 18px;
+    cursor: pointer;
+    color: map.get(color.$color_map, 'text-secondary');
+  }
+
+  .c-upload {
+    height: 18px;
+    width: 18px;
+    font-size: 18px;
+    cursor: pointer;
+    color: map.get(color.$color_map, 'primary');
+  }
+
+  // why: .c-zoom đổi từ <sd-icon> sang <button> để nhận focus bàn phím → reset chrome mặc định
+  // của button (nền/viền/padding) để giữ nguyên diện mạo cũ.
+  .c-zoom {
+    height: 18px;
+    width: 18px;
+    font-size: 18px;
+    cursor: pointer;
+    color: #fff;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+:host ::ng-deep {
+  button {
+    // why: bỏ outline mặc định của Material nhưng PHẢI trả lại vòng focus cho bàn phím —
+    // :focus-visible chỉ hiện khi điều hướng bằng phím, chuột vẫn sạch như cũ.
+    &:focus {
+      outline: none;
+    }
+    &:focus-visible {
+      outline: 2px solid var(--sd-primary, #005cbb);
+      outline-offset: 2px;
+    }
+  }
+}
+
+// why: drop zone + khung ảnh nay nhận tabindex nên cần vòng focus thấy được.
+:host [role='button']:focus-visible {
+  outline: 2px solid var(--sd-primary, #005cbb);
+  outline-offset: 2px;
+}
+
+.c-drag-placeholder {
+  border-radius: 4px;
+  background: map.get(color.$color_map, 'primary-light');
+  border: 2px dashed map.get(color.$color_map, 'primary');
+  display: table-cell;
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.file {
+  padding: 5px;
+  content: url('./assets/file-types/file.svg');
+
+  &.png {
+    content: url('./assets/file-types/png.svg');
+  }
+
+  &.jpg {
+    content: url('./assets/file-types/jpg.svg');
+  }
+
+  &.pdf {
+    content: url('./assets/file-types/pdf.svg');
+  }
+
+  &.doc {
+    content: url('./assets/file-types/doc.svg');
+  }
+
+  &.docx {
+    content: url('./assets/file-types/docx.svg');
+  }
+
+  &.xls {
+    content: url('./assets/file-types/xls.svg');
+  }
+
+  &.xlsx {
+    content: url('./assets/file-types/xlsx.svg');
+  }
+
+  &.ppt {
+    content: url('./assets/file-types/xls.svg');
+  }
+
+  &.pptx {
+    content: url('./assets/file-types/xlsx.svg');
+  }
+
+  &.csv {
+    content: url('./assets/file-types/csv.svg');
+  }
+
+  &.psd {
+    content: url('./assets/file-types/psd.svg');
+  }
+
+  &.xml {
+    content: url('./assets/file-types/xml.svg');
+  }
+
+  &.zip {
+    content: url('./assets/file-types/zip.svg');
+  }
+}
+
+.mat-icon-button {
+  width: 25px;
+  height: 25px;
+  line-height: 25px;
+
+  .material-icons {
+    font-size: 17px;
+  }
+}
+
+.c-document-container {
+  margin-top: 4px;
+  display: flex;
+  gap: 4px;
+  justify-content: left;
+  align-items: center;
+  padding: 4px;
+  border: 1px map.get(color.$color_map, 'border') dashed;
+  border-radius: 4px;
+  height: 32px;
+  background-color: #f9f9f9;
+  .c-document-image {
+    height: 24px;
+    max-width: 100%;
+    margin-right: 4px;
+    content: url('./assets/file-types/file.svg');
+    &.png {
+      content: url('./assets/file-types/png.svg');
+    }
+
+    &.jpg {
+      content: url('./assets/file-types/jpg.svg');
+    }
+
+    &.pdf {
+      content: url('./assets/file-types/pdf.svg');
+    }
+
+    &.doc {
+      content: url('./assets/file-types/doc.svg');
+    }
+
+    &.docx {
+      content: url('./assets/file-types/docx.svg');
+    }
+
+    &.xls {
+      content: url('./assets/file-types/xls.svg');
+    }
+
+    &.xlsx {
+      content: url('./assets/file-types/xlsx.svg');
+    }
+
+    &.ppt {
+      content: url('./assets/file-types/xls.svg');
+    }
+
+    &.pptx {
+      content: url('./assets/file-types/xlsx.svg');
+    }
+
+    &.csv {
+      content: url('./assets/file-types/csv.svg');
+    }
+
+    &.psd {
+      content: url('./assets/file-types/psd.svg');
+    }
+
+    &.xml {
+      content: url('./assets/file-types/xml.svg');
+    }
+
+    &.zip {
+      content: url('./assets/file-types/zip.svg');
+    }
+
+    &.tiff {
+      content: url('./assets/file-types/tiff.svg');
+    }
+  }
+  .c-file-name {
+    flex: 0 1 auto; // chiếm hết phần còn lại
+    min-width: 0; // bắt buộc để ellipsis hoạt động trong flex
+    overflow: hidden; // ẩn phần tràn
+    white-space: nowrap; // không xuống dòng
+    text-overflow: ellipsis; // hiển thị ...
+  }
+  // why: .c-close đổi từ <sd-icon> sang <button> (bàn phím phải xoá được tài liệu) → reset
+  // chrome mặc định của button để giữ nguyên diện mạo cũ.
+  .c-close {
+    margin-left: auto;
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    border-radius: 50%;
+    flex-shrink: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: map.get(color.$color_map, 'text-secondary');
+    &:hover {
+      background-color: map.get(color.$color_map, 'border'); // nền xám nhạt
+    }
+  }
+}

@@ -235,7 +235,7 @@ if (Test-Path -LiteralPath $v19LibPackagePath) {
 
 # why: README npm-facing do REPO SINH RA, không lấy từ vn-angular. Lib folder bị delete+rebuild mỗi sync
 # nên không thể giữ file repo-owned bằng /XF — thay vào đó copy bản canonical README.npm.md đè lên.
-# Rollout (bước 5, KHÔNG /XF README) sẽ tự copy bản này sang v20/v21 → 3 bản đồng nhất, chỉ maintain 1 file.
+# Rollout (bước 5, KHÔNG /XF README) sẽ tự copy bản này sang v20/v21/v22 → 4 bản đồng nhất, chỉ maintain 1 file.
 $canonicalReadme = Join-Path $TargetPath "README.npm.md"
 $v19LibReadme = Join-Path $v19Path "projects/sdcorejs-angular/README.md"
 if (Test-Path -LiteralPath $canonicalReadme) {
@@ -245,7 +245,7 @@ if (Test-Path -LiteralPath $canonicalReadme) {
   Write-Warning "Canonical npm README not found: $canonicalReadme - lib README left as synced from vn-angular."
 }
 
-Write-Host "[5/5] Rollout to v20, v21 based on v19 workspace" -ForegroundColor Cyan
+Write-Host "[5/5] Rollout to v20, v21, v22 based on v19 workspace" -ForegroundColor Cyan
 $multiVersionScript = Join-Path $PSScriptRoot "sync-multi-version-workspaces.ps1"
 & $multiVersionScript -RootPath $TargetPath -CommitId $commitId
 
@@ -266,4 +266,4 @@ else {
   }
 }
 
-Write-Host "All done. Synced vn-angular@$commitId -> versions/v19 -> v20/v21. Reorganized monorepo structure." -ForegroundColor Green
+Write-Host "All done. Synced vn-angular@$commitId -> versions/v19 -> v20/v21/v22. Reorganized monorepo structure." -ForegroundColor Green

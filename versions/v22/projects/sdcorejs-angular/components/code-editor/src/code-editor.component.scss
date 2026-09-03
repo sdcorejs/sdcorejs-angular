@@ -1,0 +1,230 @@
+// ==========================================
+// KHOANG CHỨA CHÍNH (DARK MODE WRAPPER)
+// ==========================================
+.sd-code-wrapper {
+  background-color: #1e1e1e; // Màu nền chuẩn VS Code Dark
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin: 16px 0;
+  font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+
+  // ==========================================
+  // THANH HEADER (Phong cách macOS)
+  // ==========================================
+  .sd-code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #2d2d2d;
+    padding: 8px 16px;
+    border-bottom: 1px solid #404040;
+
+    .mac-dots {
+      display: flex;
+      gap: 6px;
+      .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        &.red { background-color: #ff5f56; }
+        &.yellow { background-color: #ffbd2e; }
+        &.green { background-color: #27c93f; }
+      }
+    }
+
+    .lang-badge {
+      color: #858585;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .copy-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: none;
+      border: none;
+      color: #cccccc;
+      cursor: pointer;
+      font-size: 13px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+
+      sd-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+
+      &:hover {
+        background-color: #404040;
+        color: #ffffff;
+      }
+
+      .text-success {
+        color: #27c93f !important;
+      }
+    }
+  }
+
+  // ==========================================
+  // KHUNG HIỂN THỊ & NHẬP LIỆU (EDITOR)
+  // ==========================================
+  .sd-code-content {
+    overflow-y: auto;
+    position: relative; // Cần thiết để chứa lớp overlay
+
+    // Custom thanh cuộn (Scrollbar) cho mượt mà
+    &::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: #555;
+      border-radius: 4px;
+      &:hover {
+        background: #777;
+      }
+    }
+    &::-webkit-scrollbar-track {
+      background: #1e1e1e;
+    }
+
+    // --- PHÉP THUẬT XẾP CHỒNG (OVERLAY) TẠI ĐÂY ---
+    .editor-overlay-container {
+      position: relative;
+      min-height: 100px; /* Đảm bảo luôn có không gian để click vào gõ */
+    }
+
+    /* ĐỊNH DẠNG CHUNG: Bắt buộc Textarea và Pre/Code phải khớp khít nhau 100% về vị trí, kích thước, font chữ */
+    .code-textarea, .code-display {
+      margin: 0;
+      padding: 16px;
+      border: 0;
+      width: 100%;
+      min-height: 100%;
+      font-family: inherit; // Kế thừa font Fira Code từ .sd-code-wrapper
+      font-size: 14px;
+      line-height: 1.5;
+      white-space: pre-wrap; // Tự động rớt dòng
+      word-break: break-all;
+      tab-size: 2;
+    }
+
+    /* 1. TEXTAREA: Lớp dùng để gõ (Nổi lên trên) */
+    .code-textarea {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 2;
+      background: transparent !important; // Trong suốt để thấy màu Prism bên dưới
+      color: transparent !important;      // Giấu chữ thô đi
+      -webkit-text-fill-color: transparent !important; // Chống bị override bởi global styles
+      caret-color: #ffffff;               // Chỉ giữ lại con trỏ chuột màu trắng
+      resize: none;
+      outline: none;
+      overflow: hidden;                   // Tắt cuộn riêng của textarea, dùng cuộn của khung ngoài
+
+      // why: chữ và nền của textarea đều trong suốt nên `outline: none` khiến nó KHÔNG có bất kỳ
+      // chỉ báo focus nào — chỉ còn caret, quá yếu. Trả lại vòng focus cho điều hướng bàn phím.
+      &:focus-visible {
+        outline: 2px solid var(--sd-primary, #005cbb);
+        outline-offset: -2px;
+      }
+    }
+
+    /* 2. PRE/CODE: Lớp hiển thị màu PrismJS (Chìm bên dưới) */
+    .code-display {
+      position: relative;
+      z-index: 1;
+      pointer-events: none; // Cho phép click xuyên qua lớp này để chạm tới Textarea
+
+      code {
+        color: #d4d4d4; // Màu chữ trắng xám mặc định cho text thường
+        font-family: inherit;
+      }
+    }
+  }
+
+  // ==========================================
+  // PRISMJS SYNTAX HIGHLIGHTING (Theme: Tomorrow Night)
+  // Nhúng trực tiếp để Component chạy độc lập, cắm là chạy!
+  // ==========================================
+  .token.comment,
+  .token.block-comment,
+  .token.prolog,
+  .token.doctype,
+  .token.cdata {
+    color: #999999;
+  }
+
+  .token.punctuation {
+    color: #cccccc;
+  }
+
+  .token.tag,
+  .token.attr-name,
+  .token.namespace,
+  .token.deleted {
+    color: #e2777a; // Đỏ hồng cho thẻ HTML (vd: <div>)
+  }
+
+  .token.function-name {
+    color: #6196cc;
+  }
+
+  .token.boolean,
+  .token.number,
+  .token.function {
+    color: #f08d49; // Cam cho function, number, boolean (true/false)
+  }
+
+  .token.property,
+  .token.class-name,
+  .token.constant,
+  .token.symbol {
+    color: #f8c555; // Vàng cho tên thuộc tính (keys trong JSON)
+  }
+
+  .token.selector,
+  .token.important,
+  .token.atrule,
+  .token.keyword,
+  .token.builtin {
+    color: #cc99cd; // Tím mộng mơ cho từ khóa (const, let, class, import)
+  }
+
+  .token.string,
+  .token.char,
+  .token.attr-value,
+  .token.regex,
+  .token.variable {
+    color: #7ec699; // Xanh lá cây cho chuỗi (String)
+  }
+
+  .token.operator,
+  .token.entity,
+  .token.url {
+    color: #67cdcc; // Xanh ngọc cho các dấu (bằng, cộng trừ, v.v.)
+  }
+
+  .token.important,
+  .token.bold {
+    font-weight: bold;
+  }
+
+  .token.italic {
+    font-style: italic;
+  }
+
+  .token.entity {
+    cursor: help;
+  }
+
+  .token.inserted {
+    color: green;
+  }
+}

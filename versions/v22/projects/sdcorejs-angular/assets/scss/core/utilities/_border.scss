@@ -1,0 +1,22 @@
+// --------------------------------------------------------------------------
+// Border-radius  (px-based, 0–200)
+//   rounded-0 … rounded-200 | rounded-full
+// --------------------------------------------------------------------------
+@for $i from 0 through 200 {
+  .rounded-#{$i} { border-radius: #{$i}px !important; }
+}
+
+.rounded-full { border-radius: 9999px !important; }
+
+// --------------------------------------------------------------------------
+// Border utilities
+//   border | border-0 | border-top | border-bottom | border-left | border-right
+// --------------------------------------------------------------------------
+$_border-color: var(--sd-border);
+
+.border        { border: 1px solid $_border-color !important; }
+.border-0      { border: 0 !important; }
+.border-top    { border-top: 1px solid $_border-color !important; }
+.border-bottom { border-bottom: 1px solid $_border-color !important; }
+.border-left   { border-left: 1px solid $_border-color !important; }
+.border-right  { border-right: 1px solid $_border-color !important; }

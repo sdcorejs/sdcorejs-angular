@@ -1,0 +1,116 @@
+<!--
+  Completed inline chip — non-string/number/seamless branches.
+  Edit lifecycle is self-managed: click enters edit + auto-opens picker,
+  focusout outside the wrapper exits edit, picker emits commit single OR
+  liveChange (multi) OR commitRange (BETWEEN).
+-->
+@let _field = field();
+@let _operator = operator();
+@let _data = data();
+@let _multiple = multiple();
+@let _editing = editing();
+@let _isNoData = isNoData();
+@let _autoId = autoId();
+
+<div class="c-token" [class.c-token-editing]="_editing">
+  <sd-icon class="c-token-icon" [name]="iconName()"></sd-icon>
+  <span class="c-token-field">{{ _field.label }}</span>
+
+  @if (!_isNoData && showOperator()) {
+    <sd-operator class="c-token-op" [operators]="[_operator]" [model]="_operator" [disabled]="true" />
+  } @else if (!_isNoData) {
+    <span class="c-token-sep">:</span>
+  }
+
+  @if (!_isNoData) {
+    @if (_field.type === 'boolean') {
+      @if (_editing) {
+        <!-- why: native button thay sd-button — mat-button MDC baseline 36px buộc
+             phải hack height/padding overrides; chip 28/32px nhỏ hơn nhiều. Tự vẽ
+             pill nhỏ với CSS scoped trong chip, không qua MDC, gọn + chuẩn baseline. -->
+        <span class="c-token-value c-token-value-edit c-bool-toggle">
+          <button
+            type="button"
+            class="c-bool-btn c-bool-true"
+            [class.c-bool-active]="_data === true"
+            [attr.data-autoId]="_autoId + '-true'"
+            (click)="emitBoolean(true)">
+            {{ $any(_field).trueLabel || booleanTrueLabel() }}
+          </button>
+          <button
+            type="button"
+            class="c-bool-btn c-bool-false"
+            [class.c-bool-active]="_data === false"
+            [attr.data-autoId]="_autoId + '-false'"
+            (click)="emitBoolean(false)">
+            {{ $any(_field).falseLabel || booleanFalseLabel() }}
+          </button>
+        </span>
+      } @else {
+        <button type="button" class="c-token-value" (click)="enterEdit()">{{ valueText() }}</button>
+      }
+    } @else if ((_field.type === 'date' || _field.type === 'datetime') && _operator === 'BETWEEN') {
+      <!-- why: sd-date-range [viewed]="'inline'" tự quản click→edit + focusout (datetime downgrade về date).
+           Chip không wiring lifecycle nữa; [clearable]=false vì chip có × riêng. -->
+      <span class="c-token-value c-token-value-edit">
+        <sd-date-range size="sm"
+          [autoId]="_autoId"
+          [viewed]="'inline'"
+          [clearable]="false"
+          [model]="$any(_data)"
+          (sdChange)="emitRangeCommit($any($event))"></sd-date-range>
+      </span>
+    } @else if (_field.type === 'values' || _field.type === 'lazy-values') {
+      @let _opt = $any(_field).option;
+      <!-- why: sd-select [viewed]="'inline'" tự quản click→edit + focusout→thoát + bare editor.
+           Chip không wiring lifecycle cho nhánh này nữa (bỏ enterEdit/onFocusOut/bare). -->
+      <span class="c-token-value c-token-value-edit">
+        <sd-select #chipPicker size="sm" minWidthPanel="300px"
+          [autoId]="_autoId"
+          [items]="_field.type === 'lazy-values' ? $any(_opt).search : $any(_opt.items)"
+          [valueField]="_opt.valueField"
+          [displayField]="_opt.displayField"
+          [multiple]="_multiple"
+          [viewed]="'inline'"
+          [clearable]="false"
+          [model]="$any(_data)"
+          (sdChange)="_multiple ? emitLive($event) : emitSingleCommit($event)">
+          <!-- why: viewed mode mặc định dùng comma-joined cho multi — quá dài cho chip.
+               Override bằng template "head +N" giống popover chipValueText. -->
+          <ng-template #sdValue let-selectedItems="selectedItems">
+            @if ((selectedItems?.length ?? 0) > 1) {
+              <span class="c-token-multi-head">{{ $any(selectedItems)[0][_opt.displayField] }}</span> +{{ selectedItems.length - 1 }}
+            } @else if ((selectedItems?.length ?? 0) === 1) {
+              <span class="c-token-multi-head">{{ $any(selectedItems)[0][_opt.displayField] }}</span>
+            }
+          </ng-template>
+        </sd-select>
+      </span>
+    } @else if (_field.type === 'date') {
+      <span class="c-token-value c-token-value-edit">
+        <sd-date size="sm"
+          [autoId]="_autoId"
+          [viewed]="'inline'"
+          [clearable]="false"
+          [model]="$any(_data)"
+          (sdChange)="emitSingleCommit($any($event))"></sd-date>
+      </span>
+    } @else if (_field.type === 'datetime') {
+      <span class="c-token-value c-token-value-edit">
+        <sd-datetime size="sm"
+          [autoId]="_autoId"
+          [viewed]="'inline'"
+          [clearable]="false"
+          [model]="$any(_data)"
+          (sdChange)="emitSingleCommit($any($event))"></sd-datetime>
+      </span>
+    } @else {
+      <!-- Fallback (unforeseen type) — read-only display via valueText. -->
+      <span class="c-token-value">{{ valueText() }}</span>
+    }
+  }
+
+  <button type="button" class="c-token-remove" aria-label="Remove filter" (click)="remove.emit()">
+    <sd-icon name="close"></sd-icon>
+  </button>
+</div>

@@ -1,0 +1,24 @@
+@if (templates.length) {
+  <!-- <div class="d-flex align-items-center py-4">
+    <div class="T14M" style="flex: 1">Dữ liệu mẫu</div>
+    <sd-autocomplete
+      style="width: 200px"
+      size="sm"
+      [(model)]="component.template"
+      [items]="templates"
+      valueField="value"
+      displayField="display"
+      (sdChange)="onChange($event)"
+      hideInlineError></sd-autocomplete>
+  </div> -->
+  <sd-autocomplete
+      class="py-8"
+      size="sm"
+      [label]="'core.component.form-builder.template-data' | sdTranslate"
+      [(model)]="component.template"
+      [items]="templates"
+      valueField="value"
+      displayField="display"
+      (sdChange)="onChange($event)"
+      hideInlineError></sd-autocomplete>
+}

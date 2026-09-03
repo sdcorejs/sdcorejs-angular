@@ -1,0 +1,30 @@
+@let _entries = entries();
+@let _disabled = disabled();
+@let _autoId = autoId();
+
+<div class="sd-acb-list">
+  @if (!_entries.length) {
+    <p class="sd-acb-list__empty">{{ 'core.component.api-contract-builder.node.empty' | sdTranslate }}</p>
+  }
+
+  @for (entry of _entries; track entry.key) {
+    <sd-api-contract-node-summary
+      [name]="entry.key"
+      [node]="entry.node"
+      [readonly]="_disabled"
+      [autoId]="_autoId ? _autoId + '-' + entry.key : undefined"
+      (edit)="requestEdit(entry.key, entry.node)"
+      (remove)="removeProperty(entry.key)"></sd-api-contract-node-summary>
+  }
+
+  @if (!_disabled) {
+    <sd-button
+      class="sd-acb-list__add"
+      type="light"
+      size="sm"
+      prefixIcon="add"
+      [autoId]="_autoId ? _autoId + '-add' : undefined"
+      [title]="'core.component.api-contract-builder.node.add-property' | sdTranslate"
+      (click)="requestAdd()"></sd-button>
+  }
+</div>

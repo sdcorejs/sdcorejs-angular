@@ -1,0 +1,61 @@
+:host {
+  display: block;
+
+  // why: chiều cao Ô INPUT (không tính subscript lỗi) theo từng size của mat-form-field —
+  // xem `assets/scss/core/form.scss` (`.sd-md` 43.5px infix, `.sd-sm` 32px, mặc định 56px).
+  // Mũi tên "→" canh giữa theo biến này nên luôn thẳng hàng với text trong hai ô.
+  --sd-time-range-row-height: 56px;
+}
+
+:host(.sd-time-range--md) {
+  --sd-time-range-row-height: 44px;
+}
+
+:host(.sd-time-range--sm) {
+  --sd-time-range-row-height: 32px;
+}
+
+:host(.sd-has-label) {
+  padding-top: 4px;
+}
+
+:host(.sd-viewed) {
+  padding-top: 0;
+}
+
+.sd-time-range-fields {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.sd-time-range-endpoint {
+  min-width: 0;
+  flex: 1 1 0;
+}
+
+.sd-time-range-separator {
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: var(--sd-time-range-row-height);
+  align-items: center;
+  justify-content: center;
+  color: var(--sd-text-secondary, #667085);
+  line-height: 1;
+}
+
+.sd-time-range-error {
+  padding: 0 16px;
+  color: var(--mat-form-field-error-text-color, #ba1a1a);
+  font-size: 12px;
+}
+
+@media (max-width: 599px) {
+  .sd-time-range-fields {
+    flex-wrap: wrap;
+  }
+
+  .sd-time-range-endpoint {
+    flex-basis: calc(50% - 12px);
+  }
+}

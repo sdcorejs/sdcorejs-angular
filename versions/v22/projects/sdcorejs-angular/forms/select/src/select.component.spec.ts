@@ -1,0 +1,2369 @@
+import { ChangeDetectionStrategy as SdAngular22ChangeDetectionStrategy } from '@angular/core';
+import { Component, signal, ViewChild } from '@angular/core';
+import { ComponentFixture, TestBed, fakeAsync, flushMicrotasks, tick } from '@angular/core/testing';
+import { AsyncValidatorFn, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { By } from '@angular/platform-browser';
+import { SD_FORM_CONFIGURATION, SdInlineErrorValidator } from '@sdcorejs/angular/forms/models';
+import { SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
+import { SdSelect } from './select.component';
+import { SdSelectFooterActionContext, SdSelectFooterActionDirective } from './select-footer-action.directive';
+
+// ---------------------------------------------------------------------------
+// Host wrappers
+// ---------------------------------------------------------------------------
+
+/** Default single-select host */
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  standalone: true,
+  imports: [SdSelect, FormsModule, ReactiveFormsModule],
+  template: `<sd-select
+    [label]="label"
+    [placeholder]="placeholder"
+    [items]="items"
+    valueField="id"
+    displayField="name"
+    [required]="required"
+    [disabled]="disabled"
+    [hideInlineError]="hideInlineError"
+    [inlineError]="inlineError"
+    [(model)]="model"
+    (sdChange)="onSdChange($event)"
+    (sdSelection)="onSdSelection($event)"></sd-select>`,
+})
+class HostComponent {
+  label?: string;
+  placeholder?: string;
+  items?: any;
+  required = false;
+  disabled = false;
+  hideInlineError = false;
+  inlineError?: string;
+  model?: any;
+  changes: any[] = [];
+  selections: any[] = [];
+  onSdChange(v: any) {
+    this.changes.push(v);
+  }
+  onSdSelection(v: any) {
+    this.selections.push(v);
+  }
+}
+
+/** Multi-select host — multiple is static so MatSelect doesn't throw */
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  standalone: true,
+  imports: [SdSelect, FormsModule, ReactiveFormsModule],
+  template: `<sd-select
+    [items]="items"
+    valueField="id"
+    displayField="name"
+    [multiple]="true"
+    [(model)]="model"
+    (sdChange)="onSdChange($event)"
+    (sdSelection)="onSdSelection($event)"></sd-select>`,
+})
+class MultiHostComponent {
+  items?: any;
+  model?: any;
+  changes: any[] = [];
+  selections: any[] = [];
+  onSdChange(v: any) {
+    this.changes.push(v);
+  }
+  onSdSelection(v: any) {
+    this.selections.push(v);
+  }
+}
+
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  standalone: true,
+  imports: [SdSelect],
+  template: `<sd-select name="status" [form]="fg" valueField="id" displayField="name"></sd-select>`,
+})
+class FgHost {
+  fg!: FormGroup;
+}
+
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  standalone: true,
+  imports: [SdSelect, FormsModule],
+  template: `<form #f="ngForm"><sd-select name="status" [form]="f" valueField="id" displayField="name"></sd-select></form>`,
+})
+class NgFormHost {
+  @ViewChild('f') ngForm!: NgForm;
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+const FRUIT_ITEMS = [
+  { id: 1, name: 'Apple' },
+  { id: 2, name: 'Banana' },
+  { id: 3, name: 'Cherry' },
+];
+
+/** 15 items so filtered() returns true (length > 10) */
+const LARGE_ITEMS = Array.from({ length: 15 }, (_, i) => ({ id: i + 1, name: `Item ${i + 1}` }));
+
+function getComp(fixture: ComponentFixture<any>): SdSelect {
+  const comp = fixture.debugElement.query(el => el.componentInstance instanceof SdSelect)?.componentInstance as SdSelect;
+  if (!comp) throw new Error('SdSelect not found in fixture');
+  return comp;
+}
+
+// ---------------------------------------------------------------------------
+// Main suite — single-select
+// ---------------------------------------------------------------------------
+
+describe('SdSelect', () => {
+  let fixture: ComponentFixture<HostComponent>;
+  let host: HostComponent;
+  let comp: SdSelect;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(HostComponent);
+    host = fixture.componentInstance;
+    host.items = FRUIT_ITEMS;
+    fixture.detectChanges();
+    comp = getComp(fixture);
+  });
+
+  // -------------------------------------------------------------------------
+  // Creation & rendering
+  // -------------------------------------------------------------------------
+  describe('creation & rendering', () => {
+    it('creates the component', () => {
+      expect(comp).toBeTruthy();
+    });
+
+    it('renders a mat-select element', () => {
+      const el = fixture.nativeElement.querySelector('mat-select');
+      expect(el).not.toBeNull();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Single-select mode
+  // -------------------------------------------------------------------------
+  describe('single-select mode', () => {
+    it('multiple() is false by default', () => {
+      expect(comp.multiple()).toBe(false);
+    });
+
+    it('onSelectionChange sets formControl value to the selected value', fakeAsync(() => {
+      comp.onSelectionChange({ value: 2, source: null! });
+      tick();
+      fixture.detectChanges();
+      expect(comp.formControl.value).toBe(2);
+    }));
+
+    it('onSelectionChange updates valueModel to the selected value', fakeAsync(() => {
+      comp.onSelectionChange({ value: 1, source: null! });
+      tick();
+      fixture.detectChanges();
+      expect(comp.valueModel()).toBe(1);
+    }));
+
+    it('clear() sets formControl to null in single mode', fakeAsync(() => {
+      host.model = 1;
+      fixture.detectChanges();
+      tick();
+      comp.clear();
+      tick();
+      fixture.detectChanges();
+      expect(comp.formControl.value).toBeNull();
+    }));
+
+    it('clear() emits sdChange with null in single mode', fakeAsync(() => {
+      host.model = 1;
+      fixture.detectChanges();
+      tick();
+      comp.clear();
+      tick();
+      fixture.detectChanges();
+      expect(host.changes).toContain(null);
+    }));
+  });
+
+  // -------------------------------------------------------------------------
+  // Items / options
+  // -------------------------------------------------------------------------
+  describe('items input', () => {
+    it('populates filteredItems from static array after pipeline emits', fakeAsync(() => {
+      // Force inputControl to emit so combineLatest fires
+      comp.inputControl.setValue('', { emitEvent: true });
+      tick(600);
+      fixture.detectChanges();
+      expect(comp.filteredItems().length).toBe(3);
+    }));
+
+    it('renders empty filteredItems when items is null', fakeAsync(() => {
+      host.items = null;
+      fixture.detectChanges();
+      comp.inputControl.setValue('', { emitEvent: true });
+      tick(600);
+      fixture.detectChanges();
+      expect(comp.filteredItems().length).toBe(0);
+    }));
+
+    it('limits rendered items to the default limit (50)', fakeAsync(() => {
+      const many = Array.from({ length: 60 }, (_, i) => ({ id: i, name: `Item ${i}` }));
+      host.items = many;
+      fixture.detectChanges();
+      comp.inputControl.setValue('', { emitEvent: true });
+      tick(600);
+      fixture.detectChanges();
+      expect(comp.filteredItems().length).toBeLessThanOrEqual(50);
+    }));
+  });
+
+  // -------------------------------------------------------------------------
+  // Search / filter (filtered mode when items.length > 10)
+  // -------------------------------------------------------------------------
+  describe('search / filter behaviour', () => {
+    beforeEach(fakeAsync(() => {
+      host.items = LARGE_ITEMS;
+      fixture.detectChanges();
+      comp.inputControl.setValue('', { emitEvent: true });
+      tick(600);
+      fixture.detectChanges();
+    }));
+
+    it('filtered() is true when items.length > 10', () => {
+      expect(comp.filtered()).toBe(true);
+    });
+
+    it('filters filteredItems when inputControl search text changes', fakeAsync(() => {
+      comp.inputControl.setValue('Item 1');
+      tick(600);
+      fixture.detectChanges();
+      const names = comp.filteredItems().map((i: any) => i.name);
+      expect(names.some((n: string) => n.startsWith('Item 1'))).toBe(true);
+    }));
+
+    it('returns all items when search text is cleared', fakeAsync(() => {
+      comp.inputControl.setValue('Item 1');
+      tick(600);
+      fixture.detectChanges();
+      comp.inputControl.setValue('');
+      tick(600);
+      fixture.detectChanges();
+      expect(comp.filteredItems().length).toBeGreaterThan(1);
+    }));
+
+    it('returns empty array when no items match search text', fakeAsync(() => {
+      comp.inputControl.setValue('zzz_no_match');
+      tick(600);
+      fixture.detectChanges();
+      expect(comp.filteredItems().length).toBe(0);
+    }));
+
+    it('clearSearch() resets inputControl, searchText and filteredItems', fakeAsync(() => {
+      comp.inputControl.setValue('Item 1');
+      tick(600);
+      fixture.detectChanges();
+      expect(comp.searchText()).toBe('Item 1');
+
+      comp.clearSearch();
+      tick(600);
+      fixture.detectChanges();
+
+      expect(comp.inputControl.value).toBe('');
+      expect(comp.searchText()).toBe('');
+      expect(comp.filteredItems().length).toBeGreaterThan(1);
+    }));
+  });
+
+  // -------------------------------------------------------------------------
+  // model two-way binding
+  // -------------------------------------------------------------------------
+  describe('model two-way binding', () => {
+    it('syncs formControl when model input changes', fakeAsync(() => {
+      host.model = 2;
+      fixture.detectChanges();
+      tick();
+      fixture.detectChanges();
+      expect(comp.formControl.value).toBe(2);
+    }));
+
+    it('syncs valueModel back to host when formControl.setValue is called', fakeAsync(() => {
+      comp.formControl.setValue(3);
+      tick();
+      fixture.detectChanges();
+      expect(host.model).toBe(3);
+    }));
+
+    it('clear() resets valueModel to null in single mode', fakeAsync(() => {
+      host.model = 1;
+      fixture.detectChanges();
+      tick();
+      comp.clear();
+      tick();
+      fixture.detectChanges();
+      expect(comp.valueModel()).toBeNull();
+    }));
+  });
+
+  // -------------------------------------------------------------------------
+  // disabled
+  // -------------------------------------------------------------------------
+  describe('disabled', () => {
+    it('disables formControl when disabled = true', () => {
+      host.disabled = true;
+      fixture.detectChanges();
+      expect(comp.formControl.disabled).toBe(true);
+    });
+
+    it('enables formControl when disabled is toggled off', () => {
+      host.disabled = true;
+      fixture.detectChanges();
+      host.disabled = false;
+      fixture.detectChanges();
+      expect(comp.formControl.disabled).toBe(false);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // required validator
+  // -------------------------------------------------------------------------
+  describe('required validator', () => {
+    it('applies required validator when required = true', fakeAsync(() => {
+      host.required = true;
+      fixture.detectChanges();
+      tick();
+      comp.formControl.setValue(null, { emitEvent: false });
+      comp.formControl.updateValueAndValidity({ emitEvent: false });
+      expect(comp.formControl.hasError('required')).toBe(true);
+    }));
+
+    it('passes validation when a value is provided with required = true', fakeAsync(() => {
+      host.required = true;
+      fixture.detectChanges();
+      tick();
+      comp.formControl.setValue(1, { emitEvent: false });
+      comp.formControl.updateValueAndValidity({ emitEvent: false });
+      expect(comp.formControl.hasError('required')).toBe(false);
+    }));
+  });
+
+  // -------------------------------------------------------------------------
+  // inlineError validator
+  // -------------------------------------------------------------------------
+  describe('inlineError validator', () => {
+    it('sets inlineError on formControl when inlineError is provided', () => {
+      host.inlineError = 'Field error';
+      fixture.detectChanges();
+      comp.formControl.updateValueAndValidity();
+      expect(comp.formControl.hasError('inlineError')).toBe(true);
+    });
+
+    it('clears inlineError when inlineError input is cleared', () => {
+      host.inlineError = 'Field error';
+      fixture.detectChanges();
+      host.inlineError = undefined;
+      fixture.detectChanges();
+      comp.formControl.updateValueAndValidity();
+      expect(comp.formControl.hasError('inlineError')).toBe(false);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // errorMessage getter
+  // -------------------------------------------------------------------------
+  describe('errorMessage getter', () => {
+    it('returns "Vui lòng nhập thông tin" for required error', fakeAsync(() => {
+      host.required = true;
+      fixture.detectChanges();
+      tick();
+      comp.formControl.setValue(null, { emitEvent: false });
+      comp.formControl.markAsTouched();
+      comp.formControl.updateValueAndValidity({ emitEvent: false });
+      expect(comp.errorMessage()).toBe('Vui lòng nhập thông tin');
+    }));
+
+    it('returns the inlineError message when inlineError validator fires', () => {
+      host.inlineError = 'Custom select error';
+      fixture.detectChanges();
+      comp.formControl.updateValueAndValidity();
+      expect(comp.errorMessage()).toBe('Custom select error');
+    });
+
+    it('returns undefined when no errors', () => {
+      expect(comp.errorMessage()).toBeUndefined();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // output events — single mode
+  // -------------------------------------------------------------------------
+  describe('output events', () => {
+    it('emits sdChange when panel closes with a changed value', fakeAsync(() => {
+      // open: hash of current (null) value is stored
+      comp.onOpenedChange(true);
+      tick(200);
+      // change the form value to make hash differ
+      comp.formControl.setValue(2, { emitEvent: false });
+      // close: new hash != old hash → sdChange emitted
+      comp.onOpenedChange(false);
+      tick();
+      fixture.detectChanges();
+      expect(host.changes.length).toBeGreaterThan(0);
+    }));
+
+    it('emits sdChange with null when clear() is called (single mode)', fakeAsync(() => {
+      host.model = 1;
+      fixture.detectChanges();
+      tick();
+      comp.clear();
+      tick();
+      fixture.detectChanges();
+      expect(host.changes).toContain(null);
+    }));
+
+    it('emits sdSelection when clear() is called with a value (single mode)', fakeAsync(() => {
+      host.model = 1;
+      fixture.detectChanges();
+      tick();
+      comp.clear();
+      tick();
+      fixture.detectChanges();
+      const sel = host.selections[host.selections.length - 1];
+      expect(sel).toBeTruthy();
+      expect(sel.multiple).toBe(false);
+    }));
+  });
+
+  // -------------------------------------------------------------------------
+  // reValidate
+  // -------------------------------------------------------------------------
+  describe('reValidate', () => {
+    it('calls updateValueAndValidity on formControl', () => {
+      const spy = spyOn(comp.formControl, 'updateValueAndValidity').and.callThrough();
+      comp.reValidate();
+      expect(spy).toHaveBeenCalled();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // appearance
+  // -------------------------------------------------------------------------
+  describe('appearance', () => {
+    it('defaults to "outline" without SD_FORM_CONFIGURATION token', () => {
+      expect(comp.appearance()).toBe('outline');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // item accessor helpers
+  // -------------------------------------------------------------------------
+  describe('item accessor helpers', () => {
+    it('itemValue returns the value at valueField path', () => {
+      expect(comp.itemValue({ id: 42, name: 'Test' } as any)).toBe(42);
+    });
+
+    it('itemDisplay returns the display string at displayField path', () => {
+      expect(comp.itemDisplay({ id: 1, name: 'Hello' } as any)).toBe('Hello');
+    });
+
+    it('itemDisabled returns false when disabledField is empty (default)', () => {
+      expect(comp.itemDisabled({ id: 1, name: 'X', disabled: true } as any)).toBe(false);
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Multi-select suite — uses dedicated MultiHostComponent
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (multi-select mode)', () => {
+  let fixture: ComponentFixture<MultiHostComponent>;
+  let host: MultiHostComponent;
+  let comp: SdSelect;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [MultiHostComponent, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(MultiHostComponent);
+    host = fixture.componentInstance;
+    host.items = FRUIT_ITEMS;
+    fixture.detectChanges();
+    comp = getComp(fixture);
+  });
+
+  it('multiple() returns true', () => {
+    expect(comp.multiple()).toBe(true);
+  });
+
+  it('onSelectionChange sets formControl to array of selected values', fakeAsync(() => {
+    comp.onSelectionChange({ value: [1, 2], source: null! });
+    tick();
+    fixture.detectChanges();
+    expect(comp.formControl.value).toEqual([1, 2]);
+  }));
+
+  it('onSelectionChange updates valueModel to the array', fakeAsync(() => {
+    comp.onSelectionChange({ value: [3], source: null! });
+    tick();
+    fixture.detectChanges();
+    expect(comp.valueModel()).toEqual([3]);
+  }));
+
+  it('normalizedValue wraps scalar model into array', fakeAsync(() => {
+    host.model = 1;
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+    expect(Array.isArray(comp.normalizedValue())).toBe(true);
+  }));
+
+  it('clear() sets valueModel to [] in multi mode', fakeAsync(() => {
+    host.model = [1, 2];
+    fixture.detectChanges();
+    tick();
+    comp.clear();
+    tick();
+    fixture.detectChanges();
+    expect(comp.valueModel()).toEqual([]);
+  }));
+
+  it('clear() emits sdSelection with multiple: true and empty values', fakeAsync(() => {
+    host.model = [1];
+    fixture.detectChanges();
+    tick();
+    comp.clear();
+    tick();
+    fixture.detectChanges();
+    const sel = host.selections[host.selections.length - 1];
+    expect(sel.multiple).toBe(true);
+    expect(sel.values).toEqual([]);
+  }));
+});
+
+// ---------------------------------------------------------------------------
+// FormGroup lifecycle
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (FormGroup lifecycle)', () => {
+  let fg: FormGroup;
+  let fixture: ComponentFixture<FgHost>;
+
+  beforeEach(async () => {
+    fg = new FormGroup({});
+    await TestBed.configureTestingModule({
+      imports: [FgHost, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(FgHost);
+    fixture.componentInstance.fg = fg;
+    fixture.detectChanges();
+  });
+
+  it('adds control to FormGroup on init', () => {
+    expect(fg.contains('status')).toBe(true);
+  });
+
+  it('removes control from FormGroup on destroy', () => {
+    fixture.destroy();
+    expect(fg.contains('status')).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// NgForm extraction
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (NgForm extraction)', () => {
+  let fixture: ComponentFixture<NgFormHost>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [NgFormHost, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(NgFormHost);
+    fixture.detectChanges();
+  });
+
+  it('extracts FormGroup from NgForm and registers the control', fakeAsync(() => {
+    tick();
+    const ngForm = fixture.componentInstance.ngForm;
+    expect(ngForm).toBeTruthy();
+    expect(ngForm.form.contains('status')).toBe(true);
+  }));
+});
+
+// ---------------------------------------------------------------------------
+// bare + open() — Task 3
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (bare + open)', () => {
+  let fixture: ComponentFixture<SdSelect<any>>;
+
+  let component: SdSelect<any>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [SdSelect, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(SdSelect);
+    component = fixture.componentInstance;
+  });
+
+  it('no label → no .sd-has-label; label set → .sd-has-label added', () => {
+    fixture.componentRef.setInput('valueField', 'id');
+    fixture.componentRef.setInput('displayField', 'name');
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(false);
+    fixture.componentRef.setInput('label', 'Trạng thái');
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(true);
+  });
+
+  it('viewed defaults false; viewed=true adds .sd-viewed host class', () => {
+    fixture.componentRef.setInput('valueField', 'id');
+    fixture.componentRef.setInput('displayField', 'name');
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-viewed')).toBe(false);
+    fixture.componentRef.setInput('viewed', true);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-viewed')).toBe(true);
+  });
+
+  it('open() opens the select panel', () => {
+    fixture.componentRef.setInput('valueField', 'id');
+    fixture.componentRef.setInput('displayField', 'name');
+    fixture.componentRef.setInput('items', [{ id: 'a', name: 'A' }]);
+    fixture.detectChanges();
+    component.open();
+    expect(component.selectRef()?.panelOpen).toBe(true);
+  });
+
+  it('non-bare single: still renders .sd-clear-btn when a value is set', fakeAsync(() => {
+    fixture.componentRef.setInput('valueField', 'id');
+    fixture.componentRef.setInput('displayField', 'name');
+    fixture.componentRef.setInput('items', [{ id: 'a', name: 'A' }]);
+    fixture.componentRef.setInput('model', 'a');
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.sd-clear-btn')).not.toBeNull();
+  }));
+});
+
+// ---------------------------------------------------------------------------
+// SD_FORM_CONFIGURATION token
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (SD_FORM_CONFIGURATION)', () => {
+  @Component({
+    changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+    standalone: true,
+    imports: [SdSelect],
+    template: `<sd-select valueField="id" displayField="name"></sd-select>`,
+  })
+  class StubHost {}
+
+  let fixture: ComponentFixture<StubHost>;
+  let comp: SdSelect;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [StubHost, NoopAnimationsModule],
+      providers: [{ provide: SD_FORM_CONFIGURATION, useValue: { appearance: 'fill' } }],
+    }).compileComponents();
+    fixture = TestBed.createComponent(StubHost);
+    fixture.detectChanges();
+    comp = getComp(fixture);
+  });
+
+  it('uses appearance from SD_FORM_CONFIGURATION token', () => {
+    expect(comp.appearance()).toBe('fill');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// E2E data-* attributes (Tasks 11–12)
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (E2E attributes)', () => {
+  let fixture: ComponentFixture<HostComponent>;
+  let host: HostComponent;
+  let comp: SdSelect;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(HostComponent);
+    host = fixture.componentInstance;
+    host.items = FRUIT_ITEMS;
+    fixture.detectChanges();
+    comp = getComp(fixture);
+  });
+
+  it('renders data-disabled reflecting FormControl state', () => {
+    fixture.detectChanges();
+    const el = fixture.nativeElement.querySelector('mat-select');
+    expect(el.getAttribute('data-disabled')).toBe('false');
+    comp.formControl.disable();
+    fixture.detectChanges();
+    expect(el.getAttribute('data-disabled')).toBe('true');
+  });
+
+  it('renders data-empty toggling with value', () => {
+    fixture.detectChanges();
+    const el = fixture.nativeElement.querySelector('mat-select');
+    expect(el.getAttribute('data-empty')).toBe('true');
+    comp.formControl.setValue(1);
+    fixture.detectChanges();
+    expect(el.getAttribute('data-empty')).toBe('false');
+  });
+
+  it('renders data-value reflecting selected key', () => {
+    comp.formControl.setValue(2);
+    fixture.detectChanges();
+    const el = fixture.nativeElement.querySelector('mat-select');
+    expect(el.getAttribute('data-value')).toBe('2');
+  });
+
+  it('renders data-invalid=true only after touched + invalid', () => {
+    comp.formControl.setValidators([Validators.required]);
+    comp.formControl.updateValueAndValidity();
+    fixture.detectChanges();
+    const el = fixture.nativeElement.querySelector('mat-select');
+    expect(el.getAttribute('data-invalid')).toBe('false');
+    comp.formControl.markAsTouched();
+    fixture.detectChanges();
+    expect(el.getAttribute('data-invalid')).toBe('true');
+  });
+
+  it('renders data-loading reflecting the loading signal', () => {
+    fixture.detectChanges();
+    const el = fixture.nativeElement.querySelector('mat-select');
+    expect(el.getAttribute('data-loading')).toBe('false');
+    comp.loading.set(true);
+    fixture.detectChanges();
+    expect(el.getAttribute('data-loading')).toBe('true');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// viewed inline mode (tri-state `viewed`)
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (viewed inline mode)', () => {
+  let fixture: ComponentFixture<SdSelect<any>>;
+
+  let comp: SdSelect<any>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [SdSelect, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(SdSelect);
+    comp = fixture.componentInstance;
+    fixture.componentRef.setInput('valueField', 'id');
+    fixture.componentRef.setInput('displayField', 'name');
+    fixture.componentRef.setInput('items', [
+      { id: 'a', name: 'A' },
+      { id: 'b', name: 'B' },
+    ]);
+  });
+
+  it('viewed="inline" → isInline true, isViewed false; text face + (hidden) editor both rendered', fakeAsync(() => {
+    // asserts: inline mounts BOTH the sd-view text face AND the (bare, hidden) editor — never a swap
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.componentRef.setInput('model', 'a');
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    expect(comp.isInline()).toBe(true);
+    expect(comp.isViewed()).toBe(false);
+    // text face (sd-view) is the visible trigger
+    expect(fixture.nativeElement.querySelector('.sd-inline-view sd-view')).not.toBeNull();
+    // editor is always rendered (chrome hidden) so its panel can open — host is bare
+    expect(fixture.nativeElement.querySelector('mat-select')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.sd-inline-editor')).not.toBeNull();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-bare')).toBe(true);
+  }));
+
+  it('clicking the text face opens the panel WITHOUT hiding the view text', fakeAsync(() => {
+    // asserts: the core UX requirement — text is retained while the panel is open (only a commit changes it)
+    const openSpy = spyOn(comp, 'open').and.callThrough();
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.componentRef.setInput('model', 'a');
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+
+    (fixture.nativeElement.querySelector('.sd-inline-view') as HTMLElement).click();
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+
+    expect(openSpy).toHaveBeenCalled();
+    // text face stays — only a committed value changes it
+    expect(fixture.nativeElement.querySelector('.sd-inline-view sd-view')).not.toBeNull();
+    expect(comp.isViewed()).toBe(false);
+  }));
+
+  it('inline editor is bare (no inline clear-×) without passing [bare]', fakeAsync(() => {
+    // asserts: inline implies bare → no accidental clear-× next to the trigger (the original chip bug)
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.componentRef.setInput('model', 'a');
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-bare')).toBe(true);
+    expect(fixture.nativeElement.querySelector('.sd-clear-btn')).toBeNull();
+  }));
+
+  it('inline + value renders a hover clear-× that clears WITHOUT opening the panel', fakeAsync(() => {
+    // asserts: inline clear affordance empties the value and stops propagation (no panel open)
+    const openSpy = spyOn(comp, 'open');
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.componentRef.setInput('model', 'a');
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+
+    const clearBtn = fixture.nativeElement.querySelector('.sd-inline-view .sd-inline-clear') as HTMLElement | null;
+    expect(clearBtn).not.toBeNull();
+    clearBtn!.click();
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+
+    expect(comp.valueModel()).toBeNull();
+    expect(openSpy).not.toHaveBeenCalled();
+  }));
+
+  it('inline clear-× is hidden when required (cannot empty a required value)', fakeAsync(() => {
+    // asserts: required inline field exposes no clear affordance
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.componentRef.setInput('model', 'a');
+    fixture.componentRef.setInput('required', true);
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.sd-inline-clear')).toBeNull();
+  }));
+
+  it('inline clear-× is hidden when there is no value', fakeAsync(() => {
+    // asserts: empty inline field has nothing to clear
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.sd-inline-clear')).toBeNull();
+  }));
+
+  it('[clearable]="false" hides the inline clear-× (host owns removal, e.g. chip)', fakeAsync(() => {
+    // asserts: a host that owns its own removal (query-bar chip) opts out → no second ×
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.componentRef.setInput('model', 'a');
+    fixture.componentRef.setInput('clearable', false);
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.sd-inline-clear')).toBeNull();
+  }));
+
+  it('inline panel width floors at 200px when the trigger is narrow', () => {
+    // asserts: narrow text trigger doesn't produce a cramped panel — inline floors width at 200px
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.componentRef.setInput('model', 'a');
+    fixture.detectChanges();
+    comp.updatePanelWidth();
+    // narrow text face (< 200px) → panel forced to 200px
+    expect(comp.calculatedPanelWidth()).toBe('200px');
+  });
+
+  it('viewed=true stays static (no editor, no inline face)', fakeAsync(() => {
+    // asserts: viewed=true is unchanged DETAIL behaviour — no editor mounts, no inline click target
+    fixture.componentRef.setInput('viewed', true);
+    fixture.componentRef.setInput('model', 'a');
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    expect(comp.isInline()).toBe(false);
+    expect(comp.isViewed()).toBe(true);
+    expect(fixture.nativeElement.querySelector('.sd-inline-view')).toBeNull();
+    expect(fixture.nativeElement.querySelector('mat-select')).toBeNull();
+    expect(fixture.nativeElement.querySelector('sd-view')).not.toBeNull();
+  }));
+});
+
+// ---------------------------------------------------------------------------
+// sdViewDef = unified view-template override (fed into <sd-view> valueTemplate)
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (sdViewDef view-template override)', () => {
+  @Component({
+    changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+    standalone: true,
+    imports: [SdSelect, SdViewDefDirective],
+    template: `
+      <sd-select [viewed]="mode" valueField="id" displayField="name" [items]="items" [model]="model">
+        <ng-template sdViewDef let-value="value" let-items="selectedItems" let-item="selectedItem">
+          <span class="vd">VD:{{ value }}|{{ items?.length }}|{{ item?.name }}</span>
+        </ng-template>
+      </sd-select>
+    `,
+  })
+  class VdHost {
+    mode: any = true;
+    items = [
+      { id: 'a', name: 'Alpha' },
+      { id: 'b', name: 'Beta' },
+    ];
+
+    model: any = 'a';
+  }
+
+  let fixture: ComponentFixture<VdHost>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [VdHost, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(VdHost);
+  });
+
+  it('viewed=true: renders the sdViewDef template (not the default sd-view text) with full context', fakeAsync(() => {
+    // asserts: sdViewDef overrides the view rendering AND receives value + selectedItems + selectedItem
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    const vd = fixture.nativeElement.querySelector('.vd') as HTMLElement | null;
+    expect(vd).not.toBeNull();
+    expect(vd!.textContent).toContain('VD:a'); // value
+    expect(vd!.textContent).toContain('|1|'); // selectedItems.length
+    expect(vd!.textContent).toContain('Alpha'); // selectedItem.name
+  }));
+
+  it('inline: the inline text face also renders via the sdViewDef template', fakeAsync(() => {
+    // asserts: sdViewDef drives BOTH static view and the inline text face — one rendering path
+    fixture.componentInstance.mode = 'inline';
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    const vd = fixture.nativeElement.querySelector('.sd-inline-view .vd') as HTMLElement | null;
+    expect(vd).not.toBeNull();
+    expect(vd!.textContent).toContain('VD:a');
+  }));
+});
+
+describe('SdSelect (#sdSelected editable-trigger template)', () => {
+  @Component({
+    changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+    standalone: true,
+    imports: [SdSelect],
+    template: `
+      <sd-select valueField="id" displayField="name" [items]="items" [model]="model" [multiple]="multiple">
+        <ng-template #sdSelected let-item let-items="items" let-multiple="multiple" let-display="display">
+          <span class="sel">SEL:{{ multiple ? items?.length : item?.name }}|{{ display }}</span>
+        </ng-template>
+      </sd-select>
+    `,
+  })
+  class SelHost {
+    items = [
+      { id: 'a', name: 'Alpha' },
+      { id: 'b', name: 'Beta' },
+    ];
+
+    model: any = 'a';
+    multiple = false;
+  }
+
+  // A second host WITHOUT the template — proves the default display fallback.
+  @Component({
+    changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+    standalone: true,
+    imports: [SdSelect],
+    template: `<sd-select valueField="id" displayField="name" [items]="items" [model]="model"></sd-select>`,
+  })
+  class PlainHost {
+    items = [
+      { id: 'a', name: 'Alpha' },
+      { id: 'b', name: 'Beta' },
+    ];
+
+    model: any = 'a';
+  }
+
+  // Material renders a custom <mat-select-trigger> only once the select is non-empty,
+  // which needs its options registered → open the panel to force selection resolution.
+  function openSelect(fixture: ComponentFixture<unknown>): void {
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    const sd = fixture.debugElement.query(By.directive(SdSelect)).componentInstance as SdSelect<any>;
+    sd.open();
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+  }
+
+  it('single mode: renders #sdSelected in the trigger with item + display context', fakeAsync(() => {
+    const fixture = TestBed.createComponent(SelHost);
+    openSelect(fixture);
+    const sel = fixture.nativeElement.querySelector('.sel') as HTMLElement | null;
+    expect(sel).not.toBeNull();
+    expect(sel!.textContent).toContain('SEL:Alpha'); // item.name (single)
+    expect(sel!.textContent).toContain('Alpha'); // display
+  }));
+
+  it('multiple mode: context.multiple is true and items is the selected array', fakeAsync(() => {
+    const fixture = TestBed.createComponent(SelHost);
+    fixture.componentInstance.multiple = true;
+    fixture.componentInstance.model = ['a', 'b'];
+    openSelect(fixture);
+    const sel = fixture.nativeElement.querySelector('.sel') as HTMLElement | null;
+    expect(sel).not.toBeNull();
+    expect(sel!.textContent).toContain('SEL:2'); // items.length in multiple branch
+  }));
+
+  it('falls back to plain display text when #sdSelected is not projected', fakeAsync(() => {
+    const fixture = TestBed.createComponent(PlainHost);
+    openSelect(fixture);
+    expect(fixture.nativeElement.querySelector('.sel')).toBeNull();
+    expect(fixture.nativeElement.textContent || '').toContain('Alpha');
+  }));
+});
+
+describe('SdSelect (sdSelectFooterAction)', () => {
+  @Component({
+    changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+    standalone: true,
+    imports: [SdSelect, SdSelectFooterActionDirective],
+    template: `
+      <sd-select valueField="id" displayField="name" [items]="items">
+        <ng-template sdSelectFooterAction>
+          <button type="button" class="footer-action always" (click)="add('always', '')">Always</button>
+        </ng-template>
+
+        <ng-template sdSelectFooterAction when="empty" let-searchText="searchText">
+          <button type="button" class="footer-action empty" (click)="add('empty', searchText)">Add {{ searchText }}</button>
+        </ng-template>
+
+        <ng-template sdSelectFooterAction when="has-result" let-searchText="searchText">
+          <button type="button" class="footer-action has-result" (click)="add('has-result', searchText)">Use {{ searchText }}</button>
+        </ng-template>
+      </sd-select>
+    `,
+  })
+  class FooterHost {
+    items = LARGE_ITEMS;
+    calls: { type: string; searchText: string }[] = [];
+
+    add(type: string, searchText: string): void {
+      this.calls.push({ type, searchText });
+    }
+  }
+
+  @Component({
+    changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+    standalone: true,
+    imports: [SdSelect, SdSelectFooterActionDirective],
+    template: `
+      <sd-select valueField="id" displayField="name" [items]="items">
+        <ng-template sdSelectFooterAction>
+          <button type="button" class="footer-action first">First</button>
+        </ng-template>
+        <ng-template sdSelectFooterAction>
+          <button type="button" class="footer-action second">Second</button>
+        </ng-template>
+        <ng-template sdSelectFooterAction>
+          <button type="button" class="footer-action third">Third</button>
+        </ng-template>
+      </sd-select>
+    `,
+  })
+  class MultiFooterHost {
+    items = FRUIT_ITEMS;
+  }
+
+  @Component({
+    changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+    standalone: true,
+    imports: [SdSelect, SdSelectFooterActionDirective],
+    template: `
+      <sd-select valueField="id" displayField="name" [items]="items">
+        <ng-template sdSelectFooterAction when="empty" let-searchText="searchText">
+          <button type="button" class="footer-action empty">Add {{ searchText }}</button>
+        </ng-template>
+      </sd-select>
+    `,
+  })
+  class EmptyOnlyFooterHost {
+    items = FRUIT_ITEMS;
+  }
+
+  function openFooterSelect<T>(fixture: ComponentFixture<T>): SdSelect<any> {
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    const sd = fixture.debugElement.query(By.directive(SdSelect)).componentInstance as SdSelect<any>;
+    sd.open();
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    return sd;
+  }
+
+  function footerActions(): HTMLElement[] {
+    return Array.from(document.body.querySelectorAll<HTMLElement>('.sd-select-panel .footer-action'));
+  }
+
+  function footerContainer(): HTMLElement | null {
+    return document.body.querySelector<HTMLElement>('.sd-select-panel .sd-select-footer-actions');
+  }
+
+  afterEach(() => {
+    document.body.querySelectorAll('.cdk-overlay-container').forEach(el => {
+      el.innerHTML = '';
+    });
+  });
+
+  it('renders when="always" regardless of search results', fakeAsync(() => {
+    const fixture = TestBed.createComponent(FooterHost);
+    openFooterSelect(fixture);
+    const actions = footerActions();
+    expect(actions.some(el => el.classList.contains('always'))).toBe(true);
+  }));
+
+  it('does not render the footer container when no footer action is visible', fakeAsync(() => {
+    const fixture = TestBed.createComponent(EmptyOnlyFooterHost);
+    openFooterSelect(fixture);
+    expect(footerContainer()).toBeNull();
+  }));
+
+  it('renders when="empty" only when search text is present and filtered option count is 0', fakeAsync(() => {
+    const fixture = TestBed.createComponent(FooterHost);
+    const sd = openFooterSelect(fixture);
+
+    sd.inputControl.setValue('missing-item');
+    tick(600);
+    fixture.detectChanges();
+
+    const actions = footerActions();
+    expect(sd.filteredItems().length).toBe(0);
+    expect(actions.some(el => el.classList.contains('empty'))).toBe(true);
+    expect(actions.some(el => el.classList.contains('has-result'))).toBe(false);
+  }));
+
+  it('renders when="has-result" when filtered option count is greater than 0', fakeAsync(() => {
+    const fixture = TestBed.createComponent(FooterHost);
+    const sd = openFooterSelect(fixture);
+
+    sd.inputControl.setValue('Item 1');
+    tick(600);
+    fixture.detectChanges();
+
+    const actions = footerActions();
+    expect(sd.filteredItems().length).toBeGreaterThan(0);
+    expect(actions.some(el => el.classList.contains('has-result'))).toBe(true);
+    expect(actions.some(el => el.classList.contains('empty'))).toBe(false);
+  }));
+
+  it('preserves declaration order for multiple footer actions', fakeAsync(() => {
+    const fixture = TestBed.createComponent(MultiFooterHost);
+    openFooterSelect(fixture);
+    expect(footerActions().map(el => el.textContent?.trim())).toEqual(['First', 'Second', 'Third']);
+  }));
+
+  it('passes searchText context and keeps consumer click bindings working', fakeAsync(() => {
+    const fixture = TestBed.createComponent(FooterHost);
+    const host = fixture.componentInstance;
+    const sd = openFooterSelect(fixture);
+
+    sd.inputControl.setValue('Dragonfruit');
+    tick(600);
+    fixture.detectChanges();
+
+    const emptyAction = footerActions().find(el => el.classList.contains('empty'))!;
+    expect(emptyAction.textContent).toContain('Dragonfruit');
+    emptyAction.click();
+    fixture.detectChanges();
+
+    expect(host.calls).toEqual([{ type: 'empty', searchText: 'Dragonfruit' }]);
+  }));
+
+  // -----------------------------------------------------------------------
+  // when() as function (sync + async)
+  // -----------------------------------------------------------------------
+
+  @Component({
+    changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+    standalone: true,
+    imports: [SdSelect, SdSelectFooterActionDirective],
+    template: `
+      <sd-select valueField="id" displayField="name" [items]="items">
+        <ng-template sdSelectFooterAction [when]="whenFn">
+          <button type="button" class="footer-action fn-true">Fn True</button>
+        </ng-template>
+      </sd-select>
+    `,
+  })
+  class FnTrueHost {
+    items = FRUIT_ITEMS;
+    readonly whenFn = (): boolean => true;
+  }
+
+  @Component({
+    changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+    standalone: true,
+    imports: [SdSelect, SdSelectFooterActionDirective],
+    template: `
+      <sd-select valueField="id" displayField="name" [items]="items">
+        <ng-template sdSelectFooterAction [when]="whenFn">
+          <button type="button" class="footer-action fn-false">Fn False</button>
+        </ng-template>
+      </sd-select>
+    `,
+  })
+  class FnFalseHost {
+    items = FRUIT_ITEMS;
+    readonly whenFn = (): boolean => false;
+  }
+
+  @Component({
+    changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+    standalone: true,
+    imports: [SdSelect, SdSelectFooterActionDirective],
+    template: `
+      <sd-select valueField="id" displayField="name" [items]="items">
+        <ng-template sdSelectFooterAction [when]="whenFn">
+          <button type="button" class="footer-action fn-async">Fn Async</button>
+        </ng-template>
+      </sd-select>
+    `,
+  })
+  class FnAsyncHost {
+    items = FRUIT_ITEMS;
+    readonly whenFn = async (): Promise<boolean> => true;
+  }
+
+  @Component({
+    changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+    standalone: true,
+    imports: [SdSelect, SdSelectFooterActionDirective],
+    template: `
+      <sd-select valueField="id" displayField="name" [items]="items">
+        <ng-template sdSelectFooterAction [when]="whenFn">
+          <button type="button" class="footer-action fn-ctx">Ctx Check</button>
+        </ng-template>
+      </sd-select>
+    `,
+  })
+  class FnContextHost {
+    items = FRUIT_ITEMS;
+    capturedCtx: SdSelectFooterActionContext | null = null;
+    whenFn = (ctx: SdSelectFooterActionContext): boolean => {
+      this.capturedCtx = ctx;
+      return true;
+    };
+  }
+
+  @Component({
+    changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+    standalone: true,
+    imports: [SdSelect, SdSelectFooterActionDirective],
+    template: `
+      <sd-select valueField="id" displayField="name" [items]="items">
+        <ng-template sdSelectFooterAction [when]="emailWhen" let-searchText="searchText">
+          <button type="button" class="footer-action email-fn">Add {{ searchText }}</button>
+        </ng-template>
+      </sd-select>
+    `,
+  })
+  class FnEmailHost {
+    items = LARGE_ITEMS;
+    readonly emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
+    readonly emailWhen = (ctx: SdSelectFooterActionContext): boolean =>
+      ctx.searchText.trim().length > 0 &&
+      this.emailPattern.test(ctx.searchText.trim()) &&
+      (ctx.filteredItems as { id: number; name: string }[]).length === 0;
+  }
+
+  it('renders footer action when sync when() function returns true', fakeAsync(() => {
+    const fixture = TestBed.createComponent(FnTrueHost);
+    openFooterSelect(fixture);
+    flushMicrotasks();
+    fixture.detectChanges();
+    expect(footerActions().some(el => el.classList.contains('fn-true'))).toBe(true);
+  }));
+
+  it('hides footer action when sync when() function returns false', fakeAsync(() => {
+    const fixture = TestBed.createComponent(FnFalseHost);
+    openFooterSelect(fixture);
+    flushMicrotasks();
+    fixture.detectChanges();
+    expect(footerActions().some(el => el.classList.contains('fn-false'))).toBe(false);
+  }));
+
+  it('renders footer action when async when() function resolves to true', fakeAsync(() => {
+    const fixture = TestBed.createComponent(FnAsyncHost);
+    openFooterSelect(fixture);
+    flushMicrotasks();
+    fixture.detectChanges();
+    expect(footerActions().some(el => el.classList.contains('fn-async'))).toBe(true);
+  }));
+
+  it('passes filteredItems and selectedItems in context to when() function', fakeAsync(() => {
+    const fixture = TestBed.createComponent(FnContextHost);
+    const host = fixture.componentInstance;
+    openFooterSelect(fixture);
+    flushMicrotasks();
+    fixture.detectChanges();
+    expect(host.capturedCtx).not.toBeNull();
+    expect(Array.isArray(host.capturedCtx!.filteredItems)).toBe(true);
+    expect(Array.isArray(host.capturedCtx!.selectedItems)).toBe(true);
+  }));
+
+  it('when() function replaces pattern — gates action by email format + no matching results', fakeAsync(() => {
+    const fixture = TestBed.createComponent(FnEmailHost);
+    const sd = openFooterSelect(fixture);
+
+    sd.inputControl.setValue('invalid');
+    tick(600);
+    fixture.detectChanges();
+    flushMicrotasks();
+    fixture.detectChanges();
+    expect(footerActions().find(el => el.classList.contains('email-fn'))).toBeUndefined();
+
+    sd.inputControl.setValue('new.user@example.com');
+    tick(600);
+    fixture.detectChanges();
+    flushMicrotasks();
+    fixture.detectChanges();
+    expect(footerActions().find(el => el.classList.contains('email-fn'))?.textContent).toContain('new.user@example.com');
+  }));
+
+  it('SdSelectFooterActionDirective does not have a pattern input', fakeAsync(() => {
+    // why: đảm bảo breaking change được enforce — pattern đã bị xóa
+    @Component({
+      changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+      standalone: true,
+      imports: [SdSelect, SdSelectFooterActionDirective],
+      template: `
+        <sd-select valueField="id" displayField="name" [items]="items">
+          <ng-template sdSelectFooterAction></ng-template>
+        </sd-select>
+      `,
+    })
+    class PatternCheckHost {
+      items = FRUIT_ITEMS;
+    }
+
+    const fixture = TestBed.createComponent(PatternCheckHost);
+    openFooterSelect(fixture);
+    const sd = fixture.debugElement.query(By.directive(SdSelect)).componentInstance as SdSelect<any>;
+    const dir = sd.footerActions()[0];
+    expect((dir as any).pattern).toBeUndefined();
+  }));
+});
+
+// ---------------------------------------------------------------------------
+// Primitive items — valueField / displayField are OPTIONAL
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (primitive items — valueField/displayField optional)', () => {
+  // why: cả hai từng là input.required nên nhánh primitive của template
+  // (`@else if (!_valueField && !_displayField)`) không bao giờ tới được:
+  // `<sd-select [items]="['a','b']">` ném NG0950 ngay lần render đầu vì template đọc
+  // valueField()/displayField() trước khi có giá trị.
+  @Component({
+    changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+    standalone: true,
+    imports: [SdSelect],
+    template: `<sd-select [items]="items" [model]="model"></sd-select>`,
+  })
+  class PrimitiveHost {
+    items: any = ['Alpha', 'Beta'];
+    model: any = undefined;
+  }
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [PrimitiveHost, NoopAnimationsModule] }).compileComponents();
+  });
+
+  afterEach(() => {
+    document.querySelectorAll('.cdk-overlay-container').forEach(el => (el.innerHTML = ''));
+  });
+
+  it('renders without throwing NG0950 when both fields are omitted', () => {
+    const fixture = TestBed.createComponent(PrimitiveHost);
+    expect(() => fixture.detectChanges()).not.toThrow();
+    expect(fixture.nativeElement.querySelector('mat-select')).not.toBeNull();
+  });
+
+  it('defaults valueField/displayField to an empty string (same shape as disabledField)', () => {
+    const fixture = TestBed.createComponent(PrimitiveHost);
+    fixture.detectChanges();
+    const comp = getComp(fixture);
+    expect(comp.valueField()).toBe('');
+    expect(comp.displayField()).toBe('');
+  });
+
+  it('uses the primitive itself as both value and display', fakeAsync(() => {
+    const fixture = TestBed.createComponent(PrimitiveHost);
+    fixture.componentInstance.model = 'Beta';
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    const comp = getComp(fixture);
+    expect(comp.selectedItems() as any).toEqual(['Beta']);
+    expect(comp.display()).toBe('Beta');
+  }));
+
+  it('renders one mat-option per primitive item (the primitive template branch)', fakeAsync(() => {
+    const fixture = TestBed.createComponent(PrimitiveHost);
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    const comp = getComp(fixture);
+    comp.open();
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+
+    const labels = Array.from(document.querySelectorAll('.sd-select-panel mat-option')).map(el => (el.textContent || '').trim());
+    expect(labels).toEqual(['Alpha', 'Beta']);
+
+    comp.selectRef()?.close();
+    fixture.detectChanges();
+    tick(600);
+  }));
+
+  it('still supports the object branch when both fields ARE provided', fakeAsync(() => {
+    @Component({
+      changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+      standalone: true,
+      imports: [SdSelect],
+      template: `<sd-select valueField="id" displayField="name" [items]="items" [model]="1"></sd-select>`,
+    })
+    class ObjHost {
+      items = FRUIT_ITEMS;
+    }
+
+    const fixture = TestBed.createComponent(ObjHost);
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    const comp = getComp(fixture);
+    expect(comp.display()).toBe('Apple');
+  }));
+});
+
+// ---------------------------------------------------------------------------
+// Validators are ADDITIVE on the publicly exposed formControl
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (consumer validators survive on the public formControl)', () => {
+  // why: #updateValidator cũ gọi clearValidators() + clearAsyncValidators() rồi setValidators() →
+  // xoá sạch validator do consumer tự gắn lên `formControl` (control này là public API). Giờ đi qua
+  // connector (addValidators/removeValidators) nên chỉ phần component sở hữu mới bị thêm/gỡ.
+  const consumerValidator: ValidatorFn = () => ({ consumer: true });
+
+  let fixture: ComponentFixture<HostComponent>;
+  let host: HostComponent;
+  let comp: SdSelect;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(HostComponent);
+    host = fixture.componentInstance;
+    host.items = FRUIT_ITEMS;
+    fixture.detectChanges();
+    comp = getComp(fixture);
+  });
+
+  it('keeps a consumer-attached sync validator when [required] flips on', fakeAsync(() => {
+    comp.formControl.addValidators(consumerValidator);
+    comp.formControl.updateValueAndValidity();
+    expect(comp.formControl.hasError('consumer')).toBe(true);
+
+    host.required = true;
+    fixture.detectChanges();
+    tick();
+
+    expect(comp.formControl.hasValidator(consumerValidator)).toBe(true);
+    expect(comp.formControl.hasError('consumer')).toBe(true);
+  }));
+
+  it('keeps a consumer-attached sync validator when [inlineError] changes', fakeAsync(() => {
+    comp.formControl.addValidators(consumerValidator);
+    comp.formControl.updateValueAndValidity();
+
+    host.inlineError = 'Sai rồi';
+    fixture.detectChanges();
+    tick();
+
+    expect(comp.formControl.hasValidator(consumerValidator)).toBe(true);
+    expect(comp.formControl.hasError('inlineError')).toBe(true);
+  }));
+
+  it('keeps a consumer-attached async validator when [required] flips on', fakeAsync(() => {
+    const consumerAsync: AsyncValidatorFn = async () => ({ consumerAsync: true });
+    comp.formControl.addAsyncValidators(consumerAsync);
+    comp.formControl.updateValueAndValidity();
+    tick();
+
+    host.required = true;
+    fixture.detectChanges();
+    tick();
+
+    expect(comp.formControl.hasAsyncValidator(consumerAsync)).toBe(true);
+  }));
+
+  it('still removes the component-owned required validator when [required] flips off', fakeAsync(() => {
+    host.required = true;
+    fixture.detectChanges();
+    tick();
+    expect(comp.formControl.hasValidator(Validators.required)).toBe(true);
+
+    host.required = false;
+    fixture.detectChanges();
+    tick();
+
+    expect(comp.formControl.hasValidator(Validators.required)).toBe(false);
+  }));
+
+  it('removes the component-owned inlineError validator without touching consumer validators', fakeAsync(() => {
+    comp.formControl.addValidators(consumerValidator);
+    host.inlineError = 'Sai rồi';
+    fixture.detectChanges();
+    tick();
+    expect(comp.formControl.hasValidator(SdInlineErrorValidator)).toBe(true);
+
+    host.inlineError = undefined;
+    fixture.detectChanges();
+    tick();
+
+    expect(comp.formControl.hasValidator(SdInlineErrorValidator)).toBe(false);
+    expect(comp.formControl.hasValidator(consumerValidator)).toBe(true);
+  }));
+});
+
+// ---------------------------------------------------------------------------
+// Async [validator] message after picking an option (bug class "invalid, no message")
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (async [validator] message after onSelectionChange)', () => {
+  // why: onSelectionChange cũ mirror giá trị bằng setValue(value, { emitEvent: false }) → huỷ lần
+  // async validator đang pending của CVA rồi chạy lại im → setErrors im → #state không tick →
+  // errorMessage giữ giá trị cũ → viền đỏ nhưng KHÔNG có message. Dùng autoDetectChanges (tôn trọng
+  // OnPush); detectChanges ép check sẽ che đúng lớp lỗi này.
+  @Component({
+    changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+    standalone: true,
+    imports: [SdSelect],
+    template: `<sd-select valueField="id" displayField="name" [items]="items" [validator]="validator" [(model)]="model"></sd-select>`,
+  })
+  class ValidatorHost {
+    items = FRUIT_ITEMS;
+    validator?: (value: any) => string | Promise<string>;
+    model: any = undefined;
+  }
+
+  let fixture: ComponentFixture<ValidatorHost>;
+  let host: ValidatorHost;
+  let comp: SdSelect;
+
+  const matError = () => fixture.nativeElement.querySelector('mat-error') as HTMLElement | null;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({ imports: [ValidatorHost, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(ValidatorHost);
+    host = fixture.componentInstance;
+    fixture.detectChanges();
+    comp = getComp(fixture);
+  });
+
+  it('renders the validator message after selecting an invalid option (no forced CD)', async () => {
+    host.validator = (v: any) => (v === 2 ? 'Giá trị không hợp lệ' : '');
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+
+    comp.formControl.markAsTouched();
+    await fixture.whenStable();
+    expect(matError()).toBeNull();
+
+    comp.onSelectionChange({ value: 2, source: null! });
+    await fixture.whenStable();
+
+    expect(comp.formControl.hasError('customValidator')).toBeTrue();
+    expect(matError()?.textContent?.trim()).toBe('Giá trị không hợp lệ');
+  });
+
+  it('clears a stale validator message once a valid option is selected', async () => {
+    host.validator = (v: any) => (v === 2 ? 'Giá trị không hợp lệ' : '');
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+
+    comp.formControl.markAsTouched();
+    comp.onSelectionChange({ value: 2, source: null! });
+    await fixture.whenStable();
+    expect(matError()?.textContent?.trim()).toBe('Giá trị không hợp lệ');
+
+    comp.onSelectionChange({ value: 1, source: null! });
+    await fixture.whenStable();
+
+    expect(comp.errorMessage()).toBeUndefined();
+    expect(matError()).toBeNull();
+  });
+
+  it('does not loop the model back and forth when the event is allowed through', async () => {
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+
+    comp.onSelectionChange({ value: 3, source: null! });
+    await fixture.whenStable();
+
+    expect(comp.formControl.value).toBe(3);
+    expect(host.model).toBe(3);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Exactly ONE valueChanges per selection — mat-select's CVA already wrote the value
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (one valueChanges emission per selection through the real panel)', () => {
+  // why: `<mat-select [formControl]="formControl">` — CVA của mat-select ghi value KÈM event
+  // NGAY TRƯỚC khi `(selectionChange)` chạy. `onSelectionChange` mirror lại một lần nữa vô điều
+  // kiện thì mỗi lần người dùng chọn sẽ phát valueChanges HAI lần trên control và HAI lần trên
+  // FormGroup cha, đồng thời async [validator] bị khởi động lại hai lượt. Spec này đi qua panel
+  // thật (click <mat-option>) chứ không gọi tay handler — chỉ đường UI thật mới lộ được cú đúp.
+  @Component({
+    changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+    standalone: true,
+    imports: [SdSelect, ReactiveFormsModule],
+    template: `<sd-select name="fruit" [form]="fg" valueField="id" displayField="name" [items]="items" [multiple]="multiple"></sd-select>`,
+  })
+  class FormHost {
+    fg = new FormGroup({});
+    items = FRUIT_ITEMS;
+    multiple = false;
+  }
+
+  let fixture: ComponentFixture<FormHost>;
+  let host: FormHost;
+  let comp: SdSelect;
+
+  const optionByText = (text: string): HTMLElement => {
+    const match = Array.from(document.querySelectorAll('mat-option')).find(el => (el.textContent || '').trim() === text);
+    if (!match) throw new Error(`mat-option "${text}" not found in the open panel`);
+    return match as HTMLElement;
+  };
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({ imports: [FormHost, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(FormHost);
+    host = fixture.componentInstance;
+  });
+
+  afterEach(() => {
+    document.querySelectorAll('.cdk-overlay-container').forEach(el => (el.innerHTML = ''));
+  });
+
+  it('emits valueChanges exactly once on the control and once on the parent FormGroup', async () => {
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    comp = getComp(fixture);
+
+    comp.open();
+    await fixture.whenStable();
+
+    const controlEmissions: any[] = [];
+    const groupEmissions: any[] = [];
+    const subs = [
+      comp.formControl.valueChanges.subscribe(v => controlEmissions.push(v)),
+      host.fg.valueChanges.subscribe(v => groupEmissions.push(v)),
+    ];
+
+    optionByText('Banana').click();
+    await fixture.whenStable();
+
+    subs.forEach(s => s.unsubscribe());
+    expect(comp.formControl.value).toBe(2);
+    expect(controlEmissions).toEqual([2]);
+    expect(groupEmissions.length).toBe(1);
+  });
+
+  it('emits valueChanges exactly once per pick in multiple mode too', async () => {
+    host.multiple = true;
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    comp = getComp(fixture);
+
+    comp.open();
+    await fixture.whenStable();
+
+    const controlEmissions: any[] = [];
+    const sub = comp.formControl.valueChanges.subscribe(v => controlEmissions.push(v));
+
+    optionByText('Cherry').click();
+    await fixture.whenStable();
+
+    sub.unsubscribe();
+    expect(comp.formControl.value).toEqual([3]);
+    expect(controlEmissions.length).toBe(1);
+  });
+});
+
+describe('SdSelect (the async [validator] restarts only once per selection)', () => {
+  // why: mỗi lần valueChanges phát là một lần async validator chạy lại. Cú đúp setValue vì thế
+  // nhân đôi số lần gọi `[validator]` — với validator gọi API thì đó là 2 request cho 1 cú click.
+  @Component({
+    changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+    standalone: true,
+    imports: [SdSelect],
+    template: `<sd-select valueField="id" displayField="name" [items]="items" [validator]="validator"></sd-select>`,
+  })
+  class ValidatorCountHost {
+    items = FRUIT_ITEMS;
+    runs: any[] = [];
+    validator = (v: any) => {
+      this.runs.push(v);
+      return '';
+    };
+  }
+
+  let fixture: ComponentFixture<ValidatorCountHost>;
+  let comp: SdSelect;
+
+  const optionByText = (text: string): HTMLElement => {
+    const match = Array.from(document.querySelectorAll('mat-option')).find(el => (el.textContent || '').trim() === text);
+    if (!match) throw new Error(`mat-option "${text}" not found in the open panel`);
+    return match as HTMLElement;
+  };
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({ imports: [ValidatorCountHost, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(ValidatorCountHost);
+  });
+
+  afterEach(() => {
+    document.querySelectorAll('.cdk-overlay-container').forEach(el => (el.innerHTML = ''));
+  });
+
+  it('calls [validator] exactly once for a single pick', async () => {
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    comp = getComp(fixture);
+
+    comp.open();
+    await fixture.whenStable();
+    fixture.componentInstance.runs.length = 0;
+
+    optionByText('Apple').click();
+    await fixture.whenStable();
+
+    expect(comp.formControl.value).toBe(1);
+    expect(fixture.componentInstance.runs).toEqual([1]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Runtime [required] / [inlineError] must refresh the rendered error message
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (runtime validator inputs refresh the error message)', () => {
+  // why: cùng lớp lỗi với sd-chip. `errorMessage` chỉ phụ thuộc `#state()`, trong khi connector cài
+  // Validators.required / SdInlineErrorValidator bằng `updateValueAndValidity({ emitEvent: false })`
+  // → `formControl.errors` đổi mà KHÔNG phát event → `#state` không tick → computed giữ giá trị cũ
+  // → dưới OnPush control invalid, viền đỏ, nhưng <mat-error> KHÔNG hiện. Host dùng signal cho
+  // required/inlineError để việc đổi input tự đánh thức change detection (không ép detectChanges).
+  @Component({
+    changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+    standalone: true,
+    imports: [SdSelect],
+    template: `<sd-select
+      label="Trái cây"
+      valueField="id"
+      displayField="name"
+      [items]="items"
+      [required]="required()"
+      [inlineError]="inlineError()"></sd-select>`,
+  })
+  class RuntimeValidatorHost {
+    items = FRUIT_ITEMS;
+    required = signal(false);
+    inlineError = signal<string | undefined>(undefined);
+  }
+
+  let fixture: ComponentFixture<RuntimeValidatorHost>;
+  let host: RuntimeValidatorHost;
+  let comp: SdSelect;
+
+  const matError = (): HTMLElement | null => fixture.nativeElement.querySelector('mat-error');
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({ imports: [RuntimeValidatorHost, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(RuntimeValidatorHost);
+    host = fixture.componentInstance;
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    comp = getComp(fixture);
+  });
+
+  afterEach(() => {
+    document.querySelectorAll('.cdk-overlay-container').forEach(el => (el.innerHTML = ''));
+  });
+
+  it('renders the required message when [required] flips on at RUNTIME', async () => {
+    comp.formControl.markAsTouched();
+    await fixture.whenStable();
+    // why: đọc computed ở đây để `#state` được "chốt" đúng tick hiện tại. Nếu chỉ soi DOM thì lần
+    // đọc đầu tiên rơi vào SAU khi flip required và `#state` recompute nhờ tick của markAsTouched —
+    // spec sẽ xanh vì lý do sai, che mất đúng lỗi đang kiểm.
+    expect(comp.errorMessage()).toBeUndefined();
+    expect(matError()).toBeNull();
+
+    host.required.set(true);
+    await fixture.whenStable();
+
+    expect(comp.formControl.hasError('required')).toBeTrue();
+    expect(comp.errorMessage()).toBe('Vui lòng nhập thông tin');
+    expect(matError()?.textContent?.trim()).toBe('Vui lòng nhập thông tin');
+  });
+
+  it('renders the [inlineError] message when it is set at RUNTIME', async () => {
+    comp.formControl.markAsTouched();
+    await fixture.whenStable();
+    expect(comp.errorMessage()).toBeUndefined();
+    expect(matError()).toBeNull();
+
+    host.inlineError.set('Server từ chối giá trị này');
+    await fixture.whenStable();
+
+    expect(comp.formControl.hasError('inlineError')).toBeTrue();
+    expect(matError()?.textContent?.trim()).toBe('Server từ chối giá trị này');
+  });
+
+  it('removes the message again when [required] flips back off at RUNTIME', async () => {
+    comp.formControl.markAsTouched();
+    host.required.set(true);
+    await fixture.whenStable();
+    expect(comp.errorMessage()).toBe('Vui lòng nhập thông tin');
+    expect(matError()).not.toBeNull();
+
+    host.required.set(false);
+    await fixture.whenStable();
+
+    expect(comp.formControl.hasError('required')).toBeFalse();
+    expect(comp.errorMessage()).toBeUndefined();
+    expect(matError()).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Timer lifetime — the deferred focus/open must not outlive the view
+// ---------------------------------------------------------------------------
+
+describe('SdSelect deferred focus lifetime', () => {
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+    }).compileComponents();
+  });
+
+  const setup = () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    const comp = fixture.debugElement.query(el => el.componentInstance instanceof SdSelect)!.componentInstance as SdSelect;
+    return { fixture, comp, matSelect: comp.selectRef()! };
+  };
+
+  it('does not open the mat-select panel after the view is destroyed inside the 100ms window', fakeAsync(() => {
+    const { fixture, comp, matSelect } = setup();
+    const openSpy = spyOn(matSelect, 'open');
+    const focusSpy = spyOn(matSelect, 'focus');
+
+    comp.focus();
+    fixture.destroy();
+
+    expect(() => tick(300)).not.toThrow();
+    // why: mở overlay trên mat-select đã destroy để lại panel mồ côi không ai đóng.
+    expect(openSpy).not.toHaveBeenCalled();
+    expect(focusSpy).not.toHaveBeenCalled();
+  }));
+
+  it('still opens on the same 100ms delay while the view is alive', fakeAsync(() => {
+    const { fixture, comp, matSelect } = setup();
+    const openSpy = spyOn(matSelect, 'open');
+    spyOn(matSelect, 'focus');
+
+    comp.focus();
+    tick(99);
+    expect(openSpy).not.toHaveBeenCalled();
+
+    tick(1);
+    expect(openSpy).toHaveBeenCalled();
+
+    fixture.destroy();
+  }));
+});
+
+// ---------------------------------------------------------------------------
+// Accessibility
+// why: `aria-hidden="true"` trên phần tử focus được (hoặc trên phần tử BỌC nội dung focus được)
+// tệ hơn là không làm gì: control vẫn nhận focus bằng Tab nhưng screen reader không đọc gì.
+// Trước đây nó bị rắc khắp forms/** chỉ để dập 4 rule a11y đang bị tắt trong eslint.
+// ---------------------------------------------------------------------------
+const FOCUSABLE_SELECTOR =
+  'input:not([tabindex="-1"]), textarea:not([tabindex="-1"]), select:not([tabindex="-1"]), ' +
+  'button:not([tabindex="-1"]), a[href]:not([tabindex="-1"]), [tabindex]:not([tabindex="-1"])';
+
+/** Trả về tag của mọi phần tử aria-hidden mà bản thân nó hoặc con nó focus được. */
+function ariaHiddenFocusables(root: HTMLElement): string[] {
+  return Array.from(root.querySelectorAll('[aria-hidden="true"]'))
+    .filter(el => el.matches(FOCUSABLE_SELECTOR) || el.querySelector(FOCUSABLE_SELECTOR) !== null)
+    .map(el => el.tagName.toLowerCase());
+}
+
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  standalone: true,
+  imports: [SdSelect],
+  template: `<sd-select [items]="items" [required]="required" valueField="id" displayField="name"></sd-select>`,
+})
+class A11yHost {
+  // why: `filtered` là computed nội bộ (bật khi > 10 item) chứ không phải input — muốn hiện ô
+  // lọc trong panel thì phải nạp đủ item.
+  items: any[] = LARGE_ITEMS;
+  required = false;
+}
+
+describe('SdSelect (accessibility)', () => {
+  let fixture: ComponentFixture<A11yHost>;
+  let cmp: SdSelect<any>;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({ imports: [A11yHost, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(A11yHost);
+    fixture.detectChanges();
+    cmp = fixture.debugElement.query(By.directive(SdSelect)).componentInstance as SdSelect<any>;
+  });
+
+  it('leaves no aria-hidden on any focusable element (or wrapper of one)', () => {
+    expect(ariaHiddenFocusables(fixture.nativeElement)).toEqual([]);
+  });
+
+  it('marks the layout wrapper role=presentation instead of aria-hidden', () => {
+    const wrapper = fixture.nativeElement.querySelector('div[role="presentation"]') as HTMLElement;
+    expect(wrapper).not.toBeNull();
+    expect(wrapper.hasAttribute('aria-hidden')).toBe(false);
+    expect(wrapper.querySelector('mat-select')).not.toBeNull();
+  });
+
+  it('gives the in-panel filter input a real accessible name and no aria-hidden', () => {
+    cmp.selectRef()?.open();
+    fixture.detectChanges();
+
+    const filter = document.querySelector('input.c-search-input') as HTMLInputElement;
+    expect(filter).not.toBeNull();
+    expect(filter.hasAttribute('aria-hidden')).toBe(false);
+    expect(filter.getAttribute('aria-label')).toBeTruthy();
+
+    cmp.selectRef()?.close();
+    fixture.detectChanges();
+  });
+
+  it('links the rendered inline error to the control via a stable id', () => {
+    fixture.componentInstance.required = true;
+    fixture.detectChanges();
+    cmp.formControl.markAsTouched();
+    cmp.formControl.updateValueAndValidity();
+    fixture.detectChanges();
+
+    const error = fixture.nativeElement.querySelector('mat-error') as HTMLElement;
+    expect(error).not.toBeNull();
+    expect(error.id).toBe(cmp.errorId);
+    // why: <mat-select> tự sở hữu aria-invalid + aria-describedby qua host binding của Material
+    // (MatFormField đẩy id của <mat-error> vào). Ta chỉ cần id ỔN ĐỊNH thay cho id auto-gen.
+    const select = fixture.nativeElement.querySelector('mat-select') as HTMLElement;
+    expect(select.getAttribute('aria-invalid')).toBe('true');
+    expect(select.getAttribute('aria-describedby')).toContain(cmp.errorId);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Select all (showSelectAll) — multiple + static items only
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (select all)', () => {
+  /** id 2 disabled — dùng cho các case bỏ qua item disabled */
+  const SA_ITEMS = [
+    { id: 1, name: 'Apple' },
+    { id: 2, name: 'Banana', disabled: true },
+    { id: 3, name: 'Cherry' },
+    { id: 4, name: 'Berry' },
+  ];
+
+  /** 120 items (limit mặc định 50) — disabled tại index 0/40/80 → 117 enabled */
+  const SA_LARGE = Array.from({ length: 120 }, (_, i) => ({
+    id: i + 1,
+    name: `Row ${i + 1}`,
+    disabled: i % 40 === 0,
+  }));
+  const SA_LARGE_ENABLED_IDS = SA_LARGE.filter(e => !e.disabled).map(e => e.id);
+
+  @Component({
+    changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+    standalone: true,
+    imports: [SdSelect, FormsModule, ReactiveFormsModule],
+    template: `<sd-select
+      [items]="items"
+      valueField="id"
+      displayField="name"
+      disabledField="disabled"
+      [multiple]="multiple"
+      [showSelectAll]="showSelectAll"
+      [autoId]="autoId"
+      [(model)]="model"
+      (sdChange)="onSdChange($event)"
+      (sdSelection)="onSdSelection($event)"></sd-select>`,
+  })
+  class SelectAllHost {
+    items: any = SA_ITEMS;
+    multiple = true;
+    showSelectAll = true;
+    autoId?: string;
+    model?: any;
+    changes: any[] = [];
+    selections: any[] = [];
+    onSdChange(v: any) {
+      this.changes.push(v);
+    }
+    onSdSelection(v: any) {
+      this.selections.push(v);
+    }
+  }
+
+  @Component({
+    changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+    standalone: true,
+    imports: [SdSelect, FormsModule, ReactiveFormsModule],
+    template: `<sd-select [items]="items" [multiple]="true" [showSelectAll]="true" [(model)]="model"></sd-select>`,
+  })
+  class PrimitiveSelectAllHost {
+    items = ['a', 'b', 'c'];
+    model?: any;
+  }
+
+  function createHost(mutate?: (host: SelectAllHost) => void): {
+    fixture: ComponentFixture<SelectAllHost>;
+    host: SelectAllHost;
+    comp: SdSelect<any>;
+  } {
+    const fixture = TestBed.createComponent(SelectAllHost);
+    const host = fixture.componentInstance;
+    mutate?.(host);
+    fixture.detectChanges();
+    const comp = getComp(fixture) as SdSelect<any>;
+    return { fixture, host, comp };
+  }
+
+  function openPanel(fixture: ComponentFixture<any>, comp: SdSelect<any>): void {
+    comp.open();
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+  }
+
+  function selectAllRow(): HTMLElement | null {
+    return document.body.querySelector<HTMLElement>('.sd-select-panel .sd-select-all-row');
+  }
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [SelectAllHost, PrimitiveSelectAllHost, NoopAnimationsModule],
+    }).compileComponents();
+  });
+
+  afterEach(() => {
+    document.body.querySelectorAll('.cdk-overlay-container').forEach(el => {
+      el.innerHTML = '';
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // AC-001 — render row + label i18n
+  // -------------------------------------------------------------------------
+  it('AC-001: renders .sd-select-all-row with a mat-pseudo-checkbox at the top of the panel', fakeAsync(() => {
+    const { fixture, comp } = createHost();
+    tick(600);
+    fixture.detectChanges();
+    openPanel(fixture, comp);
+
+    const row = selectAllRow();
+    expect(row).not.toBeNull();
+    expect(row!.querySelector('mat-pseudo-checkbox')).not.toBeNull();
+  }));
+
+  // why: row phải dùng ĐÚNG element mà mat-option multiple render — mat-checkbox MDC lệch cột và
+  // ăn màu accent của theme thay vì primary. Khoá lại bằng test để không ai đổi ngược.
+  it('AC-001: uses the same pseudo-checkbox element/class as the options (not a real mat-checkbox)', fakeAsync(() => {
+    const { fixture, comp } = createHost();
+    tick(600);
+    fixture.detectChanges();
+    openPanel(fixture, comp);
+
+    const row = selectAllRow()!;
+    expect(row.querySelector('mat-checkbox')).toBeNull();
+    expect(row.querySelector('.mat-mdc-option-pseudo-checkbox')).not.toBeNull();
+    expect(row.querySelector('.mdc-list-item__primary-text')?.textContent?.trim()).toBe('Tất cả');
+  }));
+
+  it('AC-001: row exposes checkbox semantics (role + aria-checked tracks the state)', fakeAsync(() => {
+    const { fixture, comp } = createHost(h => (h.model = [1]));
+    tick(600);
+    fixture.detectChanges();
+    openPanel(fixture, comp);
+
+    const row = selectAllRow()!;
+    expect(row.getAttribute('role')).toBe('checkbox');
+    expect(row.getAttribute('aria-checked')).toBe('mixed');
+  }));
+
+  it('AC-001: clicking the row toggles the selection', fakeAsync(() => {
+    const { fixture, comp } = createHost();
+    tick(600);
+    fixture.detectChanges();
+    openPanel(fixture, comp);
+
+    selectAllRow()!.click();
+    tick();
+    fixture.detectChanges();
+
+    expect(comp.formControl.value).toEqual([1, 3, 4]);
+  }));
+
+  it('AC-001: label comes from i18n core.form.select.selectAll (vi = "Tất cả")', fakeAsync(() => {
+    const { fixture, comp } = createHost();
+    tick(600);
+    fixture.detectChanges();
+    openPanel(fixture, comp);
+
+    expect(selectAllRow()!.textContent).toContain('Tất cả');
+  }));
+
+  // -------------------------------------------------------------------------
+  // AC-002 — hidden when default / single / lazy
+  // -------------------------------------------------------------------------
+  it('AC-002: showSelectAll defaults to false → selectAllVisible false, no row rendered', fakeAsync(() => {
+    const { fixture, comp } = createHost(h => (h.showSelectAll = false));
+    tick(600);
+    fixture.detectChanges();
+    expect(comp.showSelectAll()).toBe(false);
+    expect(comp.selectAllVisible()).toBe(false);
+    openPanel(fixture, comp);
+    expect(selectAllRow()).toBeNull();
+  }));
+
+  it('AC-002: single mode → selectAllVisible false even with showSelectAll', fakeAsync(() => {
+    const { fixture, comp } = createHost(h => (h.multiple = false));
+    tick(600);
+    fixture.detectChanges();
+    expect(comp.selectAllVisible()).toBe(false);
+    openPanel(fixture, comp);
+    expect(selectAllRow()).toBeNull();
+  }));
+
+  it('AC-002: lazy SdSearch items → selectAllVisible false', fakeAsync(() => {
+    const { fixture, comp } = createHost(h => {
+      h.items = async () => SA_ITEMS;
+    });
+    tick(600);
+    fixture.detectChanges();
+    expect(comp.selectAllVisible()).toBe(false);
+  }));
+
+  // -------------------------------------------------------------------------
+  // AC-003 — tick chọn hết items enabled, không dính limit paging
+  // -------------------------------------------------------------------------
+  it('AC-003: toggleSelectAll selects every enabled item across the FULL source array (120 items, limit 50)', fakeAsync(() => {
+    const { fixture, comp } = createHost(h => (h.items = SA_LARGE));
+    tick(600);
+    fixture.detectChanges();
+
+    comp.toggleSelectAll();
+    tick();
+    fixture.detectChanges();
+
+    expect(comp.formControl.value).toEqual(SA_LARGE_ENABLED_IDS);
+    expect((comp.formControl.value as any[]).length).toBe(117);
+  }));
+
+  it('AC-003: disabled items are not selected by toggleSelectAll', fakeAsync(() => {
+    const { fixture, comp } = createHost();
+    tick(600);
+    fixture.detectChanges();
+
+    comp.toggleSelectAll();
+    tick();
+    fixture.detectChanges();
+
+    expect(comp.formControl.value).toEqual([1, 3, 4]);
+  }));
+
+  // -------------------------------------------------------------------------
+  // AC-004 — untick giữ item disabled đang chọn sẵn
+  // -------------------------------------------------------------------------
+  it('AC-004: untick from checked removes enabled values but keeps a pre-selected disabled value', fakeAsync(() => {
+    const { fixture, host, comp } = createHost(h => (h.model = [1, 2, 3, 4]));
+    tick(600);
+    fixture.detectChanges();
+
+    expect(comp.selectAllState()).toBe('checked');
+    comp.toggleSelectAll();
+    tick();
+    fixture.detectChanges();
+
+    expect(comp.formControl.value).toEqual([2]);
+    expect(host.model).toEqual([2]);
+  }));
+
+  // -------------------------------------------------------------------------
+  // AC-005 — search additive
+  // -------------------------------------------------------------------------
+  it('AC-005: with active search, tick adds only matching enabled items and keeps existing selection', fakeAsync(() => {
+    const { fixture, comp } = createHost(h => (h.model = [1]));
+    tick(600);
+    fixture.detectChanges();
+
+    comp.inputControl.setValue('ber');
+    tick(600);
+    fixture.detectChanges();
+
+    comp.toggleSelectAll();
+    tick();
+    fixture.detectChanges();
+
+    // 'ber' khớp 'Berry' (id 4); id 1 đã chọn từ trước phải giữ nguyên
+    expect(comp.formControl.value).toEqual([1, 4]);
+  }));
+
+  it('AC-005: with active search, untick removes only matching items from the selection', fakeAsync(() => {
+    const { fixture, comp } = createHost(h => (h.model = [1, 4]));
+    tick(600);
+    fixture.detectChanges();
+
+    comp.inputControl.setValue('ber');
+    tick(600);
+    fixture.detectChanges();
+
+    expect(comp.selectAllState()).toBe('checked');
+    comp.toggleSelectAll();
+    tick();
+    fixture.detectChanges();
+
+    expect(comp.formControl.value).toEqual([1]);
+  }));
+
+  // -------------------------------------------------------------------------
+  // AC-006 — checked / indeterminate / unchecked
+  // -------------------------------------------------------------------------
+  it('AC-006: no selection → unchecked', fakeAsync(() => {
+    const { fixture, comp } = createHost();
+    tick(600);
+    fixture.detectChanges();
+    expect(comp.selectAllState()).toBe('unchecked');
+  }));
+
+  it('AC-006: partial selection → indeterminate', fakeAsync(() => {
+    const { fixture, comp } = createHost(h => (h.model = [1]));
+    tick(600);
+    fixture.detectChanges();
+    expect(comp.selectAllState()).toBe('indeterminate');
+  }));
+
+  it('AC-006: all ENABLED items selected → checked (unselected disabled item does not block)', fakeAsync(() => {
+    const { fixture, comp } = createHost(h => (h.model = [1, 3, 4]));
+    tick(600);
+    fixture.detectChanges();
+    expect(comp.selectAllState()).toBe('checked');
+  }));
+
+  // -------------------------------------------------------------------------
+  // AC-007 — formControl/valueModel đổi; sdChange/sdSelection chỉ bắn khi đóng panel
+  // -------------------------------------------------------------------------
+  it('AC-007: toggleSelectAll updates formControl + valueModel but does NOT emit sdChange immediately', fakeAsync(() => {
+    const { fixture, host, comp } = createHost();
+    tick(600);
+    fixture.detectChanges();
+
+    comp.onOpenedChange(true);
+    tick(200);
+    comp.toggleSelectAll();
+    tick();
+    fixture.detectChanges();
+
+    expect(comp.formControl.value).toEqual([1, 3, 4]);
+    expect(host.model).toEqual([1, 3, 4]);
+    expect(host.changes.length).toBe(0);
+
+    comp.onOpenedChange(false);
+    tick();
+    fixture.detectChanges();
+
+    expect(host.changes.length).toBe(1);
+    expect(host.changes[0]).toEqual([1, 3, 4]);
+    const sel = host.selections[host.selections.length - 1];
+    expect(sel.multiple).toBe(true);
+    expect(sel.values).toEqual([1, 3, 4]);
+  }));
+
+  // -------------------------------------------------------------------------
+  // AC-008 — primitive items (không valueField/displayField)
+  // -------------------------------------------------------------------------
+  it('AC-008: primitive items — toggleSelectAll selects every item', fakeAsync(() => {
+    const fixture = TestBed.createComponent(PrimitiveSelectAllHost);
+    fixture.detectChanges();
+    const comp = getComp(fixture) as SdSelect<any>;
+    tick(600);
+    fixture.detectChanges();
+
+    expect(comp.selectAllVisible()).toBe(true);
+    comp.toggleSelectAll();
+    tick();
+    fixture.detectChanges();
+
+    expect(comp.formControl.value).toEqual(['a', 'b', 'c']);
+  }));
+
+  // -------------------------------------------------------------------------
+  // AC-009 — data-autoid
+  // -------------------------------------------------------------------------
+  it('AC-009: row carries data-autoid "<autoId>-select-all" when autoId is set', fakeAsync(() => {
+    const { fixture, comp } = createHost(h => (h.autoId = 'demo'));
+    tick(600);
+    fixture.detectChanges();
+    openPanel(fixture, comp);
+
+    const row = selectAllRow();
+    expect(row).not.toBeNull();
+    expect(row!.getAttribute('data-autoid')).toBe('forms-select-demo-select-all');
+  }));
+});

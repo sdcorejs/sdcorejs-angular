@@ -1,0 +1,395 @@
+<!--
+  FEEL-style expression trigger pill (M3 redesign).
+  Bấm vào pill mở modal builder hiện tại (onEdit).
+-->
+<div class="fb-field">
+  @if (label) {
+    <div class="fb-field__label">{{ label }}</div>
+  }
+  @let exprText = model | expressionQuery;
+  <!-- why: pill này đã khai role="button" + tabindex="0" nhưng CHỈ có (click) — tab tới được mà
+       Enter/Space không mở được modal, tức là một nút giả. Bổ sung handler bàn phím phản chiếu
+       đúng click; lọc theo target để Enter trên nút "functions" bên trong không mở modal hai lần. -->
+  <div class="fb-expr" (click)="onEdit()" (keydown.enter)="onExprKeydown($event)" (keydown.space)="onExprKeydown($event)" role="button" tabindex="0">
+    <span class="fb-expr__badge">FEEL</span>
+    @if (exprText) {
+      <span class="fb-expr__code mono">{{ exprText }}</span>
+    } @else {
+      <span class="empty">{{ 'core.component.form-builder.set-expression' | sdTranslate }}</span>
+    }
+    <button
+      type="button"
+      class="fb-icon-btn"
+      (click)="onEdit(); $event.stopPropagation()"
+      [attr.aria-label]="'core.component.form-builder.set-expression' | sdTranslate">
+      <span class="msi">functions</span>
+    </button>
+  </div>
+</div>
+@if (expression) {
+  <sd-modal [title]="'core.component.form-builder.set-expression' | sdTranslate" modalClass="sd-form-builder-dialog">
+    <div class="c-builder">
+      <div class="d-flex justify-content-end">
+        <sd-button
+          prefixIcon="calculate"
+          class="mr-4"
+          [title]="'core.component.form-builder.condition-group' | sdTranslate"
+          color="primary"
+          (click)="addCombinator(expression.conditions)"></sd-button>
+        <sd-button
+          prefixIcon="add"
+          [title]="'core.component.form-builder.condition' | sdTranslate"
+          color="primary"
+          (click)="addCondition(expression.conditions)"
+          type="fill"></sd-button>
+      </div>
+      <!-- Cấp 1 -->
+      @for (conditionLv1 of expression.conditions; track conditionLv1.key; let idxLv1 = $index) {
+        <div class="d-flex align-items-end py-8" style="gap: 8px">
+          <div class="c-condition">
+            <!-- Dòng 1 chỉ hiện WHERE -->
+            @if (idxLv1 === 0) {
+              <div class="c-where">WHERE</div>
+            }
+            <!-- Dòng 2 hiển thị combinator -->
+            @if (idxLv1 === 1) {
+              <div class="c-select">
+                <sd-select
+                  size="sm"
+                  [(model)]="expression.combinator"
+                  [items]="[
+                    { value: '&&', display: 'AND' },
+                    { value: '||', display: 'OR' }
+                  ]"
+                  valueField="value"
+                  displayField="display"
+                  required
+                  hideInlineError=""></sd-select>
+              </div>
+            }
+          </div>
+          @if (conditionLv1.type === 'condition') {
+            <sd-autocomplete
+              size="sm"
+              [form]="form"
+              style="width: 200px"
+              [(model)]="conditionLv1.field"
+              [items]="attributes"
+              (sdChange)="onChangeAttribute(conditionLv1)"
+              valueField="value"
+              displayField="display"
+              required
+              hideInlineError></sd-autocomplete>
+            @let fieldAttribute = attribute[conditionLv1.field!];
+            <sd-select
+              size="sm"
+              [form]="form"
+              style="width: 100px"
+              [(model)]="conditionLv1.operator"
+              [items]="attributeOperators[fieldAttribute?.type || 'string']"
+              valueField="value"
+              displayField="display"
+              [disabled]="!fieldAttribute?.type"
+              required
+              hideInlineError></sd-select>
+            @if (
+              !!fieldAttribute?.type && conditionLv1.operator && conditionLv1.operator !== 'NULL' && conditionLv1.operator !== 'NOT_NULL'
+            ) {
+              @if (fieldAttribute.type === 'string') {
+                <sd-input size="sm" [form]="form" style="flex: 1" [(model)]="conditionLv1.value" required hideInlineError></sd-input>
+              } @else if (fieldAttribute.type === 'number') {
+                <sd-input-number size="sm" [form]="form" style="flex: 1" [(model)]="conditionLv1.value" hideInlineError></sd-input-number>
+                <sd-autocomplete
+                  size="sm"
+                  [form]="form"
+                  style="flex: 1"
+                  [(model)]="conditionLv1.value"
+                  [items]="numberAttributes"
+                  valueField="value"
+                  displayField="display"
+                  hideInlineError></sd-autocomplete>
+              } @else if (fieldAttribute.type === 'datetime' && conditionLv1.dayInfo) {
+                <sd-select
+                  size="sm"
+                  [placeholder]="'core.component.form-builder.time' | sdTranslate"
+                  [form]="form"
+                  style="width: 150px"
+                  [items]="types"
+                  valueField="value"
+                  displayField="display"
+                  [(model)]="conditionLv1.dayInfo.type"
+                  (sdChange)="onChangeDateInfo(conditionLv1)"
+                  required
+                  hideInlineError>
+                </sd-select>
+                @if (conditionLv1.dayInfo.type === 'RELATED') {
+                  <sd-input-number
+                    size="sm"
+                    [form]="form"
+                    style="width: 80px"
+                    [(model)]="conditionLv1.dayInfo.relatedValue"
+                    (sdChange)="onChangeDateInfo(conditionLv1)"
+                    [min]="1"
+                    required
+                    hideInlineError>
+                  </sd-input-number>
+                  <sd-select
+                    size="sm"
+                    [form]="form"
+                    style="flex: 1"
+                    [items]="previouses"
+                    valueField="value"
+                    displayField="display"
+                    [(model)]="conditionLv1.dayInfo.related"
+                    (sdChange)="onChangeDateInfo(conditionLv1)"
+                    required
+                    hideInlineError>
+                  </sd-select>
+                } @else if (conditionLv1.dayInfo.type === 'DATETIME') {
+                  <sd-datetime
+                    size="sm"
+                    [form]="form"
+                    style="flex: 1"
+                    [(model)]="conditionLv1.value"
+                    (sdChange)="onChangeDateInfo(conditionLv1)"
+                    required
+                    hideInlineError>
+                  </sd-datetime>
+                } @else if (conditionLv1.dayInfo.type === 'ATTRIBUTE') {
+                  <sd-autocomplete
+                    size="sm"
+                    [form]="form"
+                    style="flex: 1"
+                    [(model)]="conditionLv1.value"
+                    [items]="dateAttributes"
+                    valueField="value"
+                    displayField="display"
+                    hideInlineError></sd-autocomplete>
+                }
+              } @else if (fieldAttribute.type === 'boolean') {
+                <sd-select
+                  size="sm"
+                  [form]="form"
+                  style="flex: 1"
+                  [(model)]="conditionLv1.value"
+                  [items]="[
+                    { value: true, display: fieldAttribute.displayOnTrue },
+                    { value: false, display: fieldAttribute.displayOnFalse }
+                  ]"
+                  valueField="value"
+                  displayField="display"
+                  required
+                  hideInlineError></sd-select>
+              } @else if (fieldAttribute.type === 'values') {
+                <sd-autocomplete
+                  size="sm"
+                  [form]="form"
+                  style="flex: 1"
+                  [(model)]="conditionLv1.value"
+                  [items]="fieldAttribute.values"
+                  valueField="value"
+                  displayField="display"
+                  required
+                  hideInlineError></sd-autocomplete>
+              }
+            }
+            <sd-button class="ml-auto" prefixIcon="delete" type="text" color="error" [tooltip]="'core.component.form-builder.delete' | sdTranslate" (click)="remove(expression.conditions, idxLv1)"></sd-button>
+          } @else if (conditionLv1.type === 'combinator') {
+            <div class="c-builder">
+              <div class="d-flex justify-content-end">
+                <sd-button class="mr-4" prefixIcon="delete" type="text" color="error" [tooltip]="'core.component.form-builder.delete' | sdTranslate" (click)="remove(expression.conditions, idxLv1)"></sd-button>
+                <sd-button
+                  prefixIcon="add"
+                  [title]="'core.component.form-builder.condition' | sdTranslate"
+                  size="sm"
+                  color="primary"
+                  (click)="addCondition(conditionLv1.conditions)"
+                  type="fill"></sd-button>
+              </div>
+              <!-- Cấp 2 -->
+              @for (conditionLv2 of conditionLv1.conditions; track conditionLv2.key; let idxLv2 = $index) {
+                <div class="d-flex align-items-end py-8" style="gap: 8px">
+                  <div class="c-condition">
+                    <!-- Dòng 1 chỉ hiện WHERE -->
+                    @if (idxLv2 === 0) {
+                      <div class="c-where">WHERE</div>
+                    }
+                    <!-- Dòng 2 hiển thị combinator -->
+                    @if (idxLv2 === 1) {
+                      <div class="c-select">
+                        <sd-select
+                          size="sm"
+                          [(model)]="conditionLv1.combinator"
+                          [items]="[
+                            { value: '&&', display: 'AND' },
+                            { value: '||', display: 'OR' }
+                          ]"
+                          valueField="value"
+                          displayField="display"
+                          required
+                          hideInlineError=""></sd-select>
+                      </div>
+                    }
+                  </div>
+                  @if (conditionLv2.type === 'condition') {
+                    <sd-autocomplete
+                      size="sm"
+                      [form]="form"
+                      style="width: 200px"
+                      [(model)]="conditionLv2.field"
+                      [items]="attributes"
+                      (sdChange)="onChangeAttribute(conditionLv2)"
+                      valueField="value"
+                      displayField="display"
+                      required
+                      hideInlineError></sd-autocomplete>
+                    @let fieldAttribute = attribute[conditionLv2.field!];
+                    <sd-select
+                      size="sm"
+                      [form]="form"
+                      style="width: 100px"
+                      [(model)]="conditionLv2.operator"
+                      [items]="attributeOperators[fieldAttribute?.type || 'string']"
+                      valueField="value"
+                      displayField="display"
+                      [disabled]="!fieldAttribute?.type"
+                      required
+                      hideInlineError></sd-select>
+                    @if (
+                      !!fieldAttribute?.type &&
+                      conditionLv2.operator &&
+                      conditionLv2.operator !== 'NULL' &&
+                      conditionLv2.operator !== 'NOT_NULL'
+                    ) {
+                      @if (fieldAttribute.type === 'string') {
+                        <sd-input
+                          size="sm"
+                          [form]="form"
+                          style="flex: 1"
+                          [(model)]="conditionLv2.value"
+                          required
+                          hideInlineError></sd-input>
+                      } @else if (fieldAttribute.type === 'number') {
+                        <sd-input-number
+                          size="sm"
+                          [form]="form"
+                          style="flex: 1"
+                          [(model)]="conditionLv2.value"
+                          hideInlineError></sd-input-number>
+                        <sd-autocomplete
+                          size="sm"
+                          [form]="form"
+                          style="flex: 1"
+                          [(model)]="conditionLv2.value"
+                          [items]="numberAttributes"
+                          valueField="value"
+                          displayField="display"
+                          hideInlineError></sd-autocomplete>
+                      } @else if (fieldAttribute.type === 'datetime' && conditionLv2.dayInfo) {
+                        <sd-select
+                          size="sm"
+                          [form]="form"
+                          [placeholder]="'core.component.form-builder.time' | sdTranslate"
+                          style="width: 150px"
+                          [items]="types"
+                          valueField="value"
+                          displayField="display"
+                          [(model)]="conditionLv2.dayInfo.type"
+                          (sdChange)="onChangeDateInfo(conditionLv2)"
+                          required
+                          hideInlineError>
+                        </sd-select>
+                        @if (conditionLv2.dayInfo.type === 'RELATED') {
+                          <sd-input-number
+                            size="sm"
+                            [form]="form"
+                            style="width: 80px"
+                            [(model)]="conditionLv2.dayInfo.relatedValue"
+                            (sdChange)="onChangeDateInfo(conditionLv2)"
+                            [min]="1"
+                            required
+                            hideInlineError>
+                          </sd-input-number>
+                          <sd-select
+                            size="sm"
+                            [form]="form"
+                            style="flex: 1"
+                            [items]="previouses"
+                            valueField="value"
+                            displayField="display"
+                            [(model)]="conditionLv2.dayInfo.related"
+                            (sdChange)="onChangeDateInfo(conditionLv2)"
+                            required
+                            hideInlineError>
+                          </sd-select>
+                        } @else if (conditionLv2.dayInfo.type === 'DATETIME') {
+                          <sd-datetime
+                            size="sm"
+                            [form]="form"
+                            style="flex: 1"
+                            [(model)]="conditionLv2.value"
+                            (sdChange)="onChangeDateInfo(conditionLv2)"
+                            required
+                            hideInlineError>
+                          </sd-datetime>
+                        } @else if (conditionLv2.dayInfo.type === 'ATTRIBUTE') {
+                          <sd-autocomplete
+                            size="sm"
+                            [form]="form"
+                            style="flex: 1"
+                            [(model)]="conditionLv2.value"
+                            [items]="dateAttributes"
+                            valueField="value"
+                            displayField="display"
+                            hideInlineError></sd-autocomplete>
+                        }
+                      } @else if (fieldAttribute.type === 'boolean') {
+                        <sd-select
+                          size="sm"
+                          [form]="form"
+                          style="flex: 1"
+                          [(model)]="conditionLv2.value"
+                          [items]="[
+                            { value: true, display: fieldAttribute.displayOnTrue },
+                            { value: false, display: fieldAttribute.displayOnFalse }
+                          ]"
+                          valueField="value"
+                          displayField="display"
+                          required
+                          hideInlineError></sd-select>
+                      } @else if (fieldAttribute.type === 'values') {
+                        <sd-autocomplete
+                          size="sm"
+                          [form]="form"
+                          style="flex: 1"
+                          [(model)]="conditionLv2.value"
+                          [items]="fieldAttribute.values"
+                          valueField="value"
+                          displayField="display"
+                          required
+                          hideInlineError></sd-autocomplete>
+                      }
+                    }
+                    <!-- why: chỗ này từng truyền `idxLv1` — index của nhóm ở CẤP 1 — vào mảng
+                         điều kiện cấp 2, nên bấm xoá một dòng con sẽ xoá nhầm dòng khác (hoặc
+                         không xoá gì khi nhóm nằm ở vị trí vượt quá số con). Phải là `idxLv2`. -->
+                    <sd-button
+                      class="ml-auto"
+                      prefixIcon="delete"
+                      type="text"
+                      color="error"
+                      [tooltip]="'core.component.form-builder.delete' | sdTranslate"
+                      (click)="remove(conditionLv1.conditions, idxLv2)"></sd-button>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+    <ng-container sdFooterRight>
+      <sd-button prefixIcon="save" [title]="'core.component.form-builder.confirm' | sdTranslate" (click)="onAccept()" color="primary" type="fill"></sd-button>
+    </ng-container>
+  </sd-modal>
+}

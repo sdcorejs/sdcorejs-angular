@@ -1,0 +1,116 @@
+/* =========================================
+   1. ROBOTO (Text Font)
+   ========================================= */
+
+@font-face {
+  font-family: 'Roboto';
+  src: url('./roboto/roboto-v50-latin_vietnamese-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roboto';
+  src: url('./roboto/roboto-v50-latin_vietnamese-italic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+
+@font-face {
+  font-family: 'Roboto';
+  src: url('./roboto/roboto-v50-latin_vietnamese-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roboto';
+  src: url('./roboto/roboto-v50-latin_vietnamese-600.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* =========================================
+   2. MATERIAL ICONS (Cũ - Classic)
+   ========================================= */
+
+/* Filled (Regular) */
+@font-face {
+  font-family: 'Material Icons';
+  src: url('./material-icons/material-icons-v145-latin-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+/* Outlined */
+@font-face {
+  font-family: 'Material Icons Outlined';
+  src: url('./material-icons/material-icons-outlined-v110-latin-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+/* =========================================
+   3. MATERIAL SYMBOLS (Mới - v29)
+   Đây là bộ icon thế hệ mới của Google
+   ========================================= */
+@font-face {
+  font-family: 'Material Symbols Outlined'; /* Đặt tên này để khớp với class chuẩn */
+  src: url('./material-symbols/material-symbols-v29-latin-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+/* =========================================
+   4. CSS CLASSES (Utility Classes)
+   ========================================= */
+
+/* Class dùng chung để tránh lặp code */
+%icon-shared-style {
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  /* 1. Hỗ trợ trình duyệt cũ (Webkit/Chrome cũ) */
+  -webkit-font-feature-settings: 'liga';
+
+  /* 2. Thuộc tính chuẩn (Standard) - Bắt buộc phải có để hết warning */
+  font-feature-settings: 'liga';
+  /* ======================================================== */
+  /* Làm mượt font trên các nền tảng */
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Áp dụng lại cho các class */
+.material-icons {
+  font-family: 'Material Icons';
+  @extend %icon-shared-style;
+}
+
+.material-icons-outlined {
+  font-family: 'Material Icons Outlined';
+  @extend %icon-shared-style;
+}
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  @extend %icon-shared-style;
+  /* Symbols có thể cần thêm settings riêng nếu dùng variable font,
+     nhưng với file woff2 tĩnh của bạn thì setting trên là đủ */
+}

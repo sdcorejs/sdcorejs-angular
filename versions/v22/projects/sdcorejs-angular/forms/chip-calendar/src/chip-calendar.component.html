@@ -1,0 +1,131 @@
+@let _label = label();
+@let _appearance = appearance();
+@let _required = required();
+@let _isViewed = isViewed();
+@let _hideInlineError = hideInlineError();
+@let _sdViewDef = sdViewDef();
+@let _labelTemplate = (sdLabelTemplate() ?? sdLabelDef()?.templateRef) || undefined;
+@let _valueTemplate = (sdValueTemplate() ?? _sdViewDef?.templateRef) || undefined;
+@let _errorMessage = errorMessage();
+@let _size = size();
+@let _removable = removable();
+<!-- why: một cổng gate duy nhất cho <mat-error>, aria-invalid và aria-describedby. -->
+@let _errorVisible = !!_errorMessage && formControl.touched;
+@let _showInlineError = !_hideInlineError && _errorVisible;
+@let _viewTemplate = _sdViewDef?.templateRef;
+
+@if (_isViewed) {
+  <sd-view
+    [label]="_label"
+    [labelTemplate]="_labelTemplate"
+    [value]="formControl.value"
+    [display]="formControl.value"
+    [hyperlink]="hyperlink()"
+    [valueTemplate]="_valueTemplate">
+  </sd-view>
+} @else {
+  @if (!_appearance && _labelTemplate) {
+    <ng-container *ngTemplateOutlet="_labelTemplate"></ng-container>
+  }
+  @if (!_appearance && _label && !_labelTemplate) {
+    <sd-label [label]="_label" [required]="_required"></sd-label>
+  }
+
+  <!-- why: div chỉ là hộp layout — aria-hidden="true" cũ ẩn CẢ cây con (chip, ô nhập, <mat-error>)
+       khỏi accessibility tree. Ở đây (click) KHÔNG phải tiện ích chuột thừa như các control khác:
+       khi sdViewDef đang hiển thị thì không có phần tử focus được nào bên trong, nên click là lối
+       vào DUY NHẤT. Vì vậy handler được chuyển hẳn xuống phần tử view và phần tử đó nhận
+       role="button" + tabindex="0" + keydown Enter/Space; div ngoài không còn handler nào. -->
+  <div
+    class="d-flex align-items-center"
+    [class.sd-view]="!!_viewTemplate"
+    [class.c-focused]="isFocused"
+    [class.c-disabled]="formControl.disabled">
+    @if (_viewTemplate && !isFocused) {
+      <!-- why: KHÔNG đặt aria-label — nội dung sdViewDef chính là nhãn nhìn thấy được, aria-label
+           sẽ ghi đè và làm AT đọc khác chữ trên màn hình. -->
+      <div
+        class="sd-chip-calendar__view-trigger"
+        role="button"
+        tabindex="0"
+        (click)="onClick()"
+        (keydown.enter)="onViewKeydown($event)"
+        (keydown.space)="onViewKeydown($event)">
+        <ng-container *ngTemplateOutlet="_viewTemplate; context: { value: formControl.value }"></ng-container>
+      </div>
+    } @else {
+      <mat-form-field
+        [class.sd-md]="_size === 'md'"
+        [class.sd-sm]="_size === 'sm'"
+        [class.hide-inline-error]="_hideInlineError"
+        [appearance]="_appearance"
+        [floatLabel]="floatLabel()">
+        @if (_appearance && _label) {
+          <mat-label>{{ _label }}</mat-label>
+        }
+        <mat-chip-grid [formControl]="formControl" #chipList [class.sd-md]="_size === 'md'" [class.sd-sm]="_size === 'sm'">
+          @for (item of formControl.value; track item) {
+            @if (item) {
+              <mat-chip-row
+                [class.sd-md]="_size === 'md'"
+                [class.sd-sm]="_size === 'sm'"
+                [removable]="_removable"
+                (removed)="onRemove(item)"
+                [disabled]="inputControl.disabled"
+                (click)="onClickChip($event, item)"
+                [value]="item">
+                <span>{{ item | date: 'dd/MM/yyyy' }}</span>
+                @if (!inputControl.disabled && item | sdRemovableChip: _removable) {
+                  <sd-icon matChipRemove name="cancel"></sd-icon>
+                }
+              </mat-chip-row>
+            }
+          }
+
+          <input
+            class="sd-chip-input"
+            [formControl]="inputControl"
+            [placeholder]="placeholder() || _label"
+            [matChipInputFor]="chipList"
+            autocomplete="off"
+            [errorStateMatcher]="matcher"
+            [matMenuTriggerFor]="calendarMenu"
+            [required]="_required"
+            matInput
+            [attr.data-autoId]="autoId()"
+            [attr.data-disabled]="dataDisabled()"
+            [attr.data-empty]="dataEmpty()"
+            [attr.data-value]="dataValue()"
+            [attr.data-count]="dataCount()"
+            [attr.data-required]="dataRequired()"
+            [attr.data-error-message]="dataErrorMessage()"
+            [attr.aria-invalid]="_errorVisible ? 'true' : null"
+            [attr.aria-describedby]="_errorMessage ? errorId : null"
+            readonly
+            #input />
+        </mat-chip-grid>
+
+        <mat-menu #calendarMenu="matMenu" overlapTrigger="false" (closed)="onCloseCalendar()">
+          <!-- why: aria-hidden="true" ở đây từng ẩn NGUYÊN <mat-calendar> — tức toàn bộ lưới ngày,
+               nút chuyển tháng và ô ngày đang chọn — khỏi accessibility tree, dù lịch vẫn nhận
+               focus và điều hướng bằng phím mũi tên. role="presentation" chỉ vô hiệu hoá cái div
+               bọc (nó chỉ tồn tại để chặn nổi bọt click làm đóng menu), KHÔNG lan xuống lịch. -->
+          <div style="width: 280px" role="presentation" (click)="$event.stopPropagation()">
+            <mat-calendar (selectedChange)="onSelectDate($event)" [dateClass]="dateClass"> </mat-calendar>
+          </div>
+        </mat-menu>
+        @if (_hideInlineError && _errorVisible) {
+          <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
+        }
+        @if (_hideInlineError && _errorVisible) {
+          <span class="sd-visually-hidden" [id]="errorId" matSuffix>{{ _errorMessage }}</span>
+
+        }
+
+        @if (_showInlineError) {
+          <mat-error [id]="errorId">{{ _errorMessage }}</mat-error>
+        }
+      </mat-form-field>
+    }
+  </div>
+}

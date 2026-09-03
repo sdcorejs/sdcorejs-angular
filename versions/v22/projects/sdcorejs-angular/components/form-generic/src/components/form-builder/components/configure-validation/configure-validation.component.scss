@@ -1,0 +1,43 @@
+// why: nội dung modal render trong overlay ở body nên style scoped của component không với tới —
+// phải đi qua ::ng-deep của panel class mà modal mang.
+::ng-deep .sd-form-builder-dialog {
+  .fb-validations {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    // Mỗi luật là một thẻ có viền thay vì mat-elevation-z2 — bóng đổ chồng lên nhau trong danh sách
+    // dài trông rối, còn viền thì tách bạch rõ ràng.
+    &__card {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px;
+      border: 1px solid var(--sd-border, #e6e6e6);
+      border-radius: 8px;
+      background: var(--sd-surface, #fff);
+    }
+
+    // Loại thông báo hẹp, nội dung thông báo rộng, nút xoá co theo nội dung.
+    &__head {
+      display: grid;
+      grid-template-columns: minmax(140px, 220px) minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+    }
+
+    &__empty {
+      margin: 0;
+      padding: 16px;
+      border: 1px dashed var(--sd-border, #e6e6e6);
+      border-radius: 8px;
+      color: var(--sd-text-secondary, #6b7280);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    &__add {
+      align-self: flex-start;
+    }
+  }
+}

@@ -1,0 +1,21 @@
+﻿<div
+  class="c-anchor-list"
+  [style.width]="sidebarWidth()"
+  [style.--anchor-active-color]="cssActiveVar()">
+  @for (section of sections(); track section.id) {
+    <div
+      class="c-anchor-list-item"
+      [class.active]="section.id === activeSectionId()"
+      (click)="onClickSection(section.id)"
+      (keydown.enter)="onClickSection(section.id)"
+      [attr.data-autoId]="itemAutoId(section)"
+      tabindex="0">
+      @if (section.icon()) {
+        <sd-icon class="c-anchor-list-item-icon" [name]="section.icon()"></sd-icon>
+      }
+      <div class="c-anchor-list-item-text" [class.ellipsis]="ellipsis()">
+        {{ section.title() }}
+      </div>
+    </div>
+  }
+</div>

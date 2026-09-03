@@ -1,0 +1,29 @@
+@if (component && entity) {
+  @if (viewed || component.properties?.viewed) {
+    <div class="text-secondary">{{ component.label || component.key }}</div>
+    <sd-upload-file
+      [type]="component.properties?.type"
+      [form]="form()"
+      [model]="entity[component.key!]"
+      align="left"
+      [args]="component.properties?.args"
+      disabled
+      previewWidth="50px"
+      previewHeight="50px"></sd-upload-file>
+  } @else {
+    <sd-upload-file
+      [type]="component.properties?.type"
+      [form]="form()"
+      [label]="component.label || component.key"
+      [(model)]="entity[component.key!]"
+      [max]="component.properties?.max"
+      [maxSize]="component.properties?.maxSize"
+      [extensions]="component.properties?.extensions"
+      [args]="component.properties?.args"
+      align="left"
+      [required]="component.validate?.required || required"
+      [disabled]="disabled"
+      previewWidth="50px"
+      previewHeight="50px"></sd-upload-file>
+  }
+}

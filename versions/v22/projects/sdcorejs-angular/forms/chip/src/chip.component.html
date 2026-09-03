@@ -1,0 +1,103 @@
+@let _label = label();
+@let _appearance = appearance();
+@let _required = required();
+@let _isViewed = isViewed();
+@let _hideInlineError = hideInlineError();
+@let _sdViewDef = sdViewDef();
+@let _labelTemplate = (sdLabelTemplate() ?? sdLabelDef()?.templateRef) || undefined;
+@let _valueTemplate = (sdValueTemplate() ?? _sdViewDef?.templateRef) || undefined;
+@let _errorMessage = errorMessage();
+@let _size = size();
+@let _removable = removable();
+
+@if (_isViewed) {
+  <sd-view
+    [label]="_label"
+    [labelTemplate]="_labelTemplate"
+    [value]="formControl.value"
+    [display]="formControl.value"
+    [hyperlink]="hyperlink()"
+    [valueTemplate]="_valueTemplate">
+  </sd-view>
+} @else {
+  @if (!_appearance && _labelTemplate) {
+    <ng-container *ngTemplateOutlet="_labelTemplate"></ng-container>
+  }
+  @if (!_appearance && _label && !_labelTemplate) {
+    <sd-label [label]="_label" [required]="_required"></sd-label>
+  }
+
+  <div
+    class="d-flex align-items-center"
+    [class.sd-view]="!!_sdViewDef?.templateRef"
+    [class.c-focused]="isFocused"
+    [class.c-disabled]="formControl.disabled"
+    (keydown.enter)="onClick()"
+    tabindex="0"
+    (click)="onClick()">
+    @if (_sdViewDef?.templateRef && !isFocused) {
+      <ng-container *ngTemplateOutlet="_sdViewDef!.templateRef; context: { value: formControl.value }"></ng-container>
+    } @else {
+      <mat-form-field
+        [class.sd-md]="_size === 'md'"
+        [class.sd-sm]="_size === 'sm'"
+        [class.hide-inline-error]="_hideInlineError"
+        [appearance]="_appearance"
+        [floatLabel]="floatLabel()">
+        @if (_appearance && _label) {
+          <mat-label>{{ _label }}</mat-label>
+        }
+        <mat-chip-grid [formControl]="formControl" #chipList [class.sd-md]="_size === 'md'" [class.sd-sm]="_size === 'sm'">
+          @for (item of formControl.value; track $index) {
+            @if (item) {
+              <mat-chip-row
+                [class.sd-md]="_size === 'md'"
+                [class.sd-sm]="_size === 'sm'"
+                [removable]="_removable"
+                (removed)="onRemove(item)"
+                [disabled]="inputControl.disabled"
+                (click)="onClickChip($event, item)">
+                <span>{{ item }}</span>
+                @if (!inputControl.disabled && item | sdRemovableChip: _removable) {
+                  <sd-icon matChipRemove name="cancel"></sd-icon>
+                }
+              </mat-chip-row>
+            }
+          }
+          <input
+            class="sd-chip-input"
+            [formControl]="inputControl"
+            [placeholder]="placeholder() || _label"
+            [matChipInputFor]="chipList"
+            [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+            (matChipInputTokenEnd)="onAdd($event)"
+            autocomplete="off"
+            [errorStateMatcher]="matcher"
+            (focus)="onFocus()"
+            (blur)="onBlur()"
+            [required]="_required"
+            matInput
+            [attr.data-autoId]="autoId()"
+            [attr.data-disabled]="dataDisabled()"
+            [attr.data-empty]="dataEmpty()"
+            [attr.data-value]="dataValue()"
+            [attr.data-count]="dataCount()"
+            [attr.data-required]="dataRequired()"
+            [attr.data-error-message]="dataErrorMessage()"
+            #input />
+        </mat-chip-grid>
+        @if (_hideInlineError && _errorMessage && formControl.touched) {
+          <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
+        }
+        @if (_hideInlineError && _errorMessage && formControl.touched) {
+          <span class="sd-visually-hidden" matSuffix>{{ _errorMessage }}</span>
+
+        }
+
+        @if (!_hideInlineError && _errorMessage && formControl.touched) {
+          <mat-error>{{ _errorMessage }}</mat-error>
+        }
+      </mat-form-field>
+    }
+  </div>
+}

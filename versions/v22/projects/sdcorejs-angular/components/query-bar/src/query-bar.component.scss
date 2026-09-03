@@ -1,0 +1,471 @@
+// sd-query-bar — design tokens mirror refs/design_handoff_sd_query_bar/README.md
+
+// Brand colors map to theme CSS vars (--sd-*) so changing the portal theme
+// re-tints the query-bar automatically.
+$qb-primary:       var(--sd-primary);
+$qb-primary-light: var(--sd-primary-light);
+$qb-primary-faint: var(--sd-primary-light);
+$qb-primary-hover: var(--sd-primary-dark);
+$qb-primary-dark:  var(--sd-primary-dark);
+
+$qb-text:           #212121;
+$qb-text-secondary: #5f6368;
+$qb-text-muted:     #7a7a7a;
+
+$qb-border:      #d6d8db;
+$qb-border-soft: #e2e4e7;
+
+$qb-bg:        #ffffff;
+$qb-bg-soft:   #f5f6f7;
+$qb-bg-active: #eef2ff;
+
+$qb-danger: #dc2626;
+
+$qb-radius-chip:    999px;
+$qb-radius-popover: 8px;
+$qb-radius-input:   6px;
+
+:host {
+  display: block;
+  font-family: Roboto, system-ui, sans-serif;
+}
+
+.c-query-bar {
+  // why: two real columns — the filter area (flex:1, wraps its own chips) and the action
+  // toolbar (fixed, pinned right). The bar itself does NOT wrap, so the toolbar stays
+  // anchored top-right no matter how many chip rows the filter area grows to.
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  gap: 8px;
+
+  background: $qb-bg;
+  border: 1px solid $qb-border-soft;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+
+  &.c-density-compact { padding: 8px; }
+  &.c-density-comfortable { padding: 10px; }
+}
+
+// Filter area — grows to fill the bar and wraps its chips internally.
+.c-query-bar__main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+// ---------------------------------------------------------------------------
+// Search
+// ---------------------------------------------------------------------------
+.c-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 220px;
+  padding: 0 10px;
+  border: 1px solid $qb-border;
+  border-radius: $qb-radius-input;
+  background: $qb-bg;
+
+  .c-density-compact & { height: 28px; }
+  .c-density-comfortable & { height: 32px; }
+
+  .c-search-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: $qb-text-muted;
+  }
+  .c-search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 13px;
+    color: $qb-text;
+    &::placeholder { color: $qb-text-muted; }
+    // why: ô này không có border riêng nên `outline: none` xoá SẠCH mọi chỉ báo focus — người dùng
+    // bàn phím không biết con trỏ đang ở đâu. Trả lại vòng focus khi điều hướng bằng phím.
+    &:focus-visible {
+      outline: 2px solid $qb-primary;
+      outline-offset: 1px;
+      border-radius: 4px;
+    }
+  }
+  .c-search-kbd {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 10px;
+    padding: 1px 4px;
+    border: 1px solid $qb-border-soft;
+    border-radius: 3px;
+    color: $qb-text-muted;
+  }
+}
+
+.c-divider {
+  width: 1px;
+  height: 16px;
+  background: $qb-border-soft;
+  margin: 0 2px;
+}
+
+// ---------------------------------------------------------------------------
+// Inline mode (GitLab-style token builder) — flat completed chips
+// ---------------------------------------------------------------------------
+.c-token {
+  // why: mirrors the seamless string/number chip (.c-seamless) so every inline chip shares
+  // one visual language — pill outline, leading field icon, segmented × with a faint divider.
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 0 0 12px;
+  border: 1px solid $qb-primary-light;
+  border-radius: $qb-radius-chip;
+  background: $qb-primary-faint;
+  font-size: 13px;
+  // grey label/icon/operator/×; the value text overrides to primary (see .c-token-value)
+  color: $qb-text-secondary;
+  white-space: nowrap;
+  overflow: hidden; // clips the square × segment corners to the pill curve
+
+  .c-density-compact & { height: 28px; }
+  .c-density-comfortable & { height: 32px; }
+}
+
+.c-token-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+  line-height: 14px;
+  color: inherit;
+}
+.c-token-field { font-weight: 500; line-height: 1; }
+
+.c-token-op {
+  display: inline-flex;
+  align-items: center;
+  color: inherit; // grey, grouped with the label
+}
+
+// Align + size the embedded <sd-operator> icon to the chip's other glyphs (14px) and
+// follow the chip's grey via currentColor (sd-operator's trigger hardcodes its own color/padding).
+// (Popover-mode chip face owns its own copy in popover-chip.component.scss.)
+.c-token-op {
+  ::ng-deep .c-op-trigger { padding: 0; color: inherit; }
+  ::ng-deep .c-op-icon svg { width: 14px; height: 14px; display: block; }
+}
+
+// Bare value controls sit flush in the chip — strip the inline-flex baseline gap so the
+// value text lines up with the leading icon + label.
+.c-token-value-edit {
+  sd-select, sd-date, sd-datetime { display: inline-flex; align-items: center; line-height: 1; }
+}
+
+// Chip-level overrides for the bare pickers inside .c-token.
+// why: bare sd-* hosts strip the mat-form-field outline but the inner MDC paddings/line-heights
+// still push the baseline. Force every wrapper to 0 padding + line-height:1 so each child sits
+// flush on the 28/32px chip row. Scoped to .c-token so the standalone sd-* controls elsewhere
+// keep their default sizing.
+.c-token ::ng-deep {
+  .mat-mdc-form-field { line-height: 1; }
+  .mat-mdc-text-field-wrapper,
+  .mat-mdc-form-field-flex { padding: 0; min-height: 0; background: transparent; }
+  .mat-mdc-form-field-infix { padding: 0; min-height: 0; width: auto; border: 0; display: inline-flex; align-items: center; }
+  .mat-mdc-select-value,
+  .mat-mdc-input-element,
+  input { line-height: 1; font-size: 13px; padding: 0; height: auto; color: inherit; }
+
+  // sd-select bare's selected text — make it visible (primary, weight, ellipsized) and avoid
+  // collapsing inside the inline-flex chip. Without min-width:0 + max-width it can render at
+  // 0 width inside the flex container.
+  .mat-mdc-select-value {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: $qb-primary;
+    font-weight: 500;
+  }
+
+  // why: sd-select / sd-date render a `.sd-suffix-icon` (cancel) to clear the value.
+  // Inside a filter chip the chip's own × handles removal — the inner icon is a
+  // duplicate affordance and visually misaligns the chip baseline.
+  .sd-suffix-icon { display: none; }
+}
+
+.c-token-sep { color: $qb-text-muted; }
+
+// why: dấu gạch ngang nhỏ giữa 2 picker BETWEEN (Từ — Đến) inline, không chiếm baseline
+.c-token-dash {
+  color: $qb-text-muted;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.c-token-value {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-weight: 500; // value reads as bold as the popover chip value
+  color: $qb-primary; // value pops in primary against the grey label
+  cursor: pointer;
+
+  &:hover { text-decoration: underline; }
+}
+
+// Inline text/number editor sits flush in the token — small + no extra frame.
+.c-token-value-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 240px;
+
+  sd-input, sd-input-number { display: inline-flex; max-width: 140px; }
+
+  // why: sd-date-range wider than other pickers — cap so nó không đè lên nút × close.
+  sd-date-range {
+    display: inline-flex;
+    max-width: 220px;
+    min-width: 0;
+    flex: 0 1 auto;
+  }
+}
+
+// First-label segment of the multi "head +N" view — ellipsize when long.
+.c-token-multi-head {
+  display: inline-block;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+// .c-token-building lives in build-chip.component.scss (sub-component).
+
+// × segment — mirrors .c-seamless__x (faint left divider, square, flush to the pill edge).
+.c-token-remove {
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-left: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+
+  .c-density-compact & { width: 26px; }
+  .c-density-comfortable & { width: 28px; }
+
+  sd-icon { font-size: 14px; width: 14px; height: 14px; }
+  &:hover { background: rgba(0, 0, 0, 0.05); }
+}
+
+// ---------------------------------------------------------------------------
+// Add filter (dashed pill)
+// ---------------------------------------------------------------------------
+// Add filter — icon-only dashed pill (text dropped; tooltip carries the label).
+.c-add-filter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: $qb-radius-chip;
+  border: 1px dashed $qb-border;
+  background: transparent;
+  cursor: pointer;
+  color: $qb-text-secondary;
+  transition: border-color 120ms ease, color 120ms ease, background-color 120ms ease;
+
+  .c-density-compact & { width: 28px; height: 28px; }
+  .c-density-comfortable & { width: 32px; height: 32px; }
+
+  sd-icon { font-size: 18px; width: 18px; height: 18px; }
+
+  &:hover:not([disabled]) {
+    border-color: $qb-primary;
+    color: $qb-primary;
+  }
+
+  &[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Spacer + right-aligned controls
+// ---------------------------------------------------------------------------
+.c-or-connector {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: $qb-text-muted;
+  padding: 0 2px;
+}
+
+// ---------------------------------------------------------------------------
+// Chip popover — operator + value editor
+// ---------------------------------------------------------------------------
+::ng-deep .mat-mdc-menu-panel.c-chip-popover {
+  min-width: 280px;
+  max-width: 320px;
+
+  .c-pop-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-bottom: 1px solid $qb-border-soft;
+    font-size: 13px;
+    font-weight: 500;
+    color: $qb-text;
+
+    sd-icon { font-size: 16px; width: 16px; height: 16px; color: $qb-primary; }
+
+    // why: operator nudged to the far right of the header row.
+    .c-pop-header-operator { margin-left: auto; }
+  }
+
+  .c-pop-header-field {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 4px 2px 6px;
+    margin-left: -4px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    font: inherit;
+    font-weight: 500;
+    color: $qb-text;
+    cursor: pointer;
+    transition: background-color 120ms ease, border-color 120ms ease;
+    sd-icon {
+      font-size: 14px !important;
+      width: 14px !important;
+      height: 14px !important;
+      color: $qb-text-muted !important;
+    }
+    &:hover {
+      background: $qb-bg-soft;
+      border-color: $qb-border-soft;
+    }
+  }
+
+  .c-pop-body {
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .c-pop-input {
+    width: 100%;
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid $qb-border;
+    border-radius: $qb-radius-input;
+    background: $qb-bg;
+    font-family: inherit;
+    font-size: 13px;
+    color: $qb-text;
+    outline: none;
+
+    &:focus { border-color: $qb-primary; }
+    // why: đổi màu border là chỉ báo yếu (mất hẳn với người khó phân biệt màu). Bổ sung vòng focus
+    // thật cho điều hướng bàn phím.
+    &:focus-visible {
+      outline: 2px solid $qb-primary;
+      outline-offset: 1px;
+    }
+  }
+
+  .c-pop-between {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .c-pop-boolean {
+    display: flex;
+    gap: 8px;
+    button {
+      flex: 1;
+      height: 32px;
+      border: 1px solid $qb-border;
+      border-radius: $qb-radius-input;
+      background: $qb-bg;
+      font: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      &.c-pop-boolean-active {
+        background: $qb-primary-faint;
+        border-color: $qb-primary;
+        color: $qb-primary;
+      }
+    }
+  }
+
+  .c-pop-values {
+    max-height: 220px;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 4px;
+      font-size: 13px;
+      cursor: pointer;
+      user-select: none;
+
+      &:hover { background: $qb-bg-soft; }
+      &.c-pop-value-selected { background: $qb-primary-faint; color: $qb-primary; }
+
+      input[type='checkbox'],
+      input[type='radio'] {
+        accent-color: $qb-primary;
+      }
+    }
+  }
+
+  .c-pop-values-loading,
+  .c-pop-values-empty {
+    padding: 10px 8px;
+    font-size: 12px;
+    color: $qb-text-muted;
+  }
+
+}
+
+// Boolean true/false toggle — pill-round + tight; sd-button carries the semantic
+// colour (success/warning), so this only restyles geometry (radius, padding, gap).
+.c-bool-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  ::ng-deep .mdc-button,
+  ::ng-deep button[mat-button],
+  ::ng-deep button[mat-stroked-button],
+  ::ng-deep button[mat-flat-button] {
+    border-radius: 999px;
+    min-width: 0;
+    padding: 0 12px;
+  }
+}

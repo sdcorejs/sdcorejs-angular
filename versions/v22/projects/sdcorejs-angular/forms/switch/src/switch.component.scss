@@ -1,0 +1,77 @@
+:host ::ng-deep {
+  // NOTE: Bootstrap reboot adds margin-bottom to label; keep this override while Bootstrap is used.
+  label {
+    margin-bottom: 0 !important;
+  }
+}
+
+// why: --sd-c is the current control accent. Default = primary; .sd-c-<x> overrides it.
+:host {
+  --sd-c: var(--sd-primary);
+  --sd-switch-handle: var(--sd-surface, #fff);
+  --sd-switch-track-off: var(--sd-surface-muted, #e7e8ed);
+  --sd-switch-track-off-hover: var(--sd-border, #c4c6d0);
+  --sd-switch-handle-off: var(--sd-text-secondary, #44474f);
+}
+:host(.sd-c-secondary) { --sd-c: var(--sd-secondary); }
+:host(.sd-c-info)      { --sd-c: var(--sd-info); }
+:host(.sd-c-success)   { --sd-c: var(--sd-success); }
+:host(.sd-c-warning)   { --sd-c: var(--sd-warning); }
+:host(.sd-c-error)     { --sd-c: var(--sd-error); }
+
+// why: Angular Material exposes two switch token tiers across supported versions:
+//   - `--mdc-switch-*` on `.mdc-switch`
+//   - `--mat-slide-toggle-*` on `.mat-mdc-slide-toggle`
+// Override both tiers so SD color inputs win over consumer Material theme defaults.
+:host ::ng-deep .mat-mdc-slide-toggle,
+:host ::ng-deep .mdc-switch {
+  --mdc-switch-selected-handle-color: var(--sd-switch-handle) !important;
+  --mdc-switch-selected-focus-handle-color: var(--sd-switch-handle) !important;
+  --mdc-switch-selected-hover-handle-color: var(--sd-switch-handle) !important;
+  --mdc-switch-selected-pressed-handle-color: var(--sd-switch-handle) !important;
+  --mdc-switch-selected-icon-color: var(--sd-c) !important;
+  --mdc-switch-selected-focus-icon-color: var(--sd-c) !important;
+  --mdc-switch-selected-hover-icon-color: var(--sd-c) !important;
+  --mdc-switch-selected-pressed-icon-color: var(--sd-c) !important;
+  --mdc-switch-selected-track-color: var(--sd-c) !important;
+  --mdc-switch-selected-focus-track-color: var(--sd-c) !important;
+  --mdc-switch-selected-hover-track-color: var(--sd-c) !important;
+  --mdc-switch-selected-pressed-track-color: var(--sd-c) !important;
+  --mdc-switch-selected-focus-state-layer-color: var(--sd-c) !important;
+  --mdc-switch-selected-hover-state-layer-color: var(--sd-c) !important;
+  --mdc-switch-selected-pressed-state-layer-color: var(--sd-c) !important;
+  --mdc-switch-unselected-track-color: var(--sd-switch-track-off) !important;
+  --mdc-switch-unselected-focus-track-color: var(--sd-switch-track-off-hover) !important;
+  --mdc-switch-unselected-hover-track-color: var(--sd-switch-track-off-hover) !important;
+  --mdc-switch-unselected-pressed-track-color: var(--sd-switch-track-off-hover) !important;
+  --mdc-switch-unselected-handle-color: var(--sd-switch-handle-off) !important;
+  --mdc-switch-unselected-focus-handle-color: var(--sd-switch-handle-off) !important;
+  --mdc-switch-unselected-hover-handle-color: var(--sd-switch-handle-off) !important;
+  --mdc-switch-unselected-pressed-handle-color: var(--sd-switch-handle-off) !important;
+
+  --mat-slide-toggle-selected-handle-color: var(--sd-switch-handle) !important;
+  --mat-slide-toggle-selected-focus-handle-color: var(--sd-switch-handle) !important;
+  --mat-slide-toggle-selected-hover-handle-color: var(--sd-switch-handle) !important;
+  --mat-slide-toggle-selected-pressed-handle-color: var(--sd-switch-handle) !important;
+  --mat-slide-toggle-selected-icon-color: var(--sd-c) !important;
+  --mat-slide-toggle-selected-focus-icon-color: var(--sd-c) !important;
+  --mat-slide-toggle-selected-hover-icon-color: var(--sd-c) !important;
+  --mat-slide-toggle-selected-pressed-icon-color: var(--sd-c) !important;
+  --mat-slide-toggle-selected-track-color: var(--sd-c) !important;
+  --mat-slide-toggle-selected-focus-track-color: var(--sd-c) !important;
+  --mat-slide-toggle-selected-hover-track-color: var(--sd-c) !important;
+  --mat-slide-toggle-selected-pressed-track-color: var(--sd-c) !important;
+  --mat-slide-toggle-selected-focus-state-layer-color: var(--sd-c) !important;
+  --mat-slide-toggle-selected-hover-state-layer-color: var(--sd-c) !important;
+  --mat-slide-toggle-selected-pressed-state-layer-color: var(--sd-c) !important;
+  --mat-slide-toggle-unselected-track-color: var(--sd-switch-track-off) !important;
+  --mat-slide-toggle-unselected-focus-track-color: var(--sd-switch-track-off-hover) !important;
+  --mat-slide-toggle-unselected-hover-track-color: var(--sd-switch-track-off-hover) !important;
+  --mat-slide-toggle-unselected-pressed-track-color: var(--sd-switch-track-off-hover) !important;
+  --mat-slide-toggle-unselected-handle-color: var(--sd-switch-handle-off) !important;
+  --mat-slide-toggle-unselected-focus-handle-color: var(--sd-switch-handle-off) !important;
+  --mat-slide-toggle-unselected-hover-handle-color: var(--sd-switch-handle-off) !important;
+  --mat-slide-toggle-unselected-pressed-handle-color: var(--sd-switch-handle-off) !important;
+  --mat-slide-toggle-track-outline-color: transparent !important;
+  --mat-slide-toggle-selected-track-outline-color: transparent !important;
+}

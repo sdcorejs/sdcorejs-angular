@@ -1,0 +1,61 @@
+@use '../../../../../assets/scss/core/color.scss' as color;
+@use 'sass:map';
+
+.c-anchor-list {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .c-anchor-list-item {
+    border-left: 2px solid map.get(color.$color_map, 'secondary-light');
+    color: map.get(color.$color_map, 'text');
+    padding: 0.5rem 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    // why: chặn item con (icon + text) tràn ra ngoài bề rộng sidebar khi
+    // ellipsis bật + title dài → border-left active không bị text che, icon
+    // không bị compress.
+    min-width: 0;
+    overflow: hidden;
+
+    .c-anchor-list-item-icon {
+      // why: giữ kích thước icon Material mặc định 24px khi text dài + ellipsis;
+      // không có flex-shrink:0 thì flexbox sẽ co icon lại để nhường chỗ cho text.
+      flex: 0 0 auto;
+    }
+
+    .c-anchor-list-item-text {
+      // why: cho phép flex child shrink dưới min-content (default `min-width: auto`
+      // = nội dung) — điều kiện bắt buộc để `text-overflow: ellipsis` thực sự clip.
+      flex: 1 1 0;
+      min-width: 0;
+      // Ngăn user click nhiều bị bôi đen
+      user-select: none;
+      -webkit-user-select: none; // Chrome, Safari
+      -moz-user-select: none; // Firefox
+      -ms-user-select: none; // IE/Edge
+      &.ellipsis {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+
+    &.active {
+      // Active highlight dùng CSS var bind từ TS — map SdColor → --sd-{color}
+      border-left: 2px solid var(--anchor-active-color, #{map.get(color.$color_map, 'primary')});
+      color: var(--anchor-active-color, #{map.get(color.$color_map, 'primary')});
+      font-weight: 700;
+
+      .c-anchor-list-item-icon {
+        color: var(--anchor-active-color, #{map.get(color.$color_map, 'primary')});
+      }
+    }
+    &:not(.active) {
+      border-left: 2px solid map.get(color.$color_map, 'secondary-light');
+      font-weight: 400;
+    }
+  }
+}

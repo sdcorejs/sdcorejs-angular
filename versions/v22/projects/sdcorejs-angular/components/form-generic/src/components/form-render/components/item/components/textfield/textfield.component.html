@@ -1,0 +1,16 @@
+@if (component && entity) {
+  <sd-input
+    [form]="form()"
+    [label]="component.label || component.key"
+    [helperText]="component.helperText"
+    [name]="component.key"
+    [autoId]="component.key"
+    [(model)]="entity[component.key!]"
+    [required]="required"
+    [validator]="validator"
+    [maxlength]="component.validate?.maxlength"
+    [pattern]="component.validate?.pattern"
+    [patternErrorMessage]="component.validate?.patternErrorMessage"
+    [disabled]="disabled"
+    [viewed]="viewed || component.properties?.viewed"></sd-input>
+}

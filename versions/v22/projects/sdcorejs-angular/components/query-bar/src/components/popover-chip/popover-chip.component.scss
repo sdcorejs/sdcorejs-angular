@@ -1,0 +1,95 @@
+// Local tokens (in sync with query-bar.component.scss).
+$qb-primary:       var(--sd-primary);
+$qb-primary-light: var(--sd-primary-light);
+$qb-primary-faint: var(--sd-primary-light);
+$qb-border:        #d6d8db;
+$qb-bg:            #ffffff;
+$qb-text-secondary:#5f6368;
+$qb-text-muted:    #7a7a7a;
+$qb-radius-chip:   999px;
+
+:host { display: contents; } // chip is laid out by the parent flex row directly.
+
+.c-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 4px 0 10px;
+  border-radius: $qb-radius-chip;
+  border: 1px solid $qb-border;
+  background: $qb-bg;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: $qb-text-secondary;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+
+  // why: density classes live on .c-query-bar (parent); read them with `:host-context`
+  // since the host's `display: contents` doesn't preserve the cascade for our chip
+  // children otherwise.
+  :host-context(.c-density-compact) & { height: 28px; }
+  :host-context(.c-density-comfortable) & { height: 32px; }
+
+  &:hover { border-color: $qb-primary; }
+
+  // why: active chip keeps a grey label/icon — only the value text turns primary, matching
+  // the inline chips' "grey label : primary value" scheme.
+  &.c-chip-active {
+    border-color: $qb-primary-light;
+    background: $qb-primary-faint;
+    .c-chip-value { color: $qb-primary; }
+  }
+
+  &.c-chip-inactive {
+    padding-right: 10px;
+  }
+
+  .c-chip-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+  .c-chip-label {
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .c-chip-operator {
+    display: inline-flex;
+    align-items: center;
+    color: inherit; // sd-operator icon, grey with the label
+  }
+  .c-chip-sep { color: $qb-text-muted; }
+  .c-chip-value {
+    font-weight: 500;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .c-chip-chevron {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: currentColor;
+  }
+  .c-chip-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    color: $qb-text-muted;
+    sd-icon { font-size: 14px; width: 14px; height: 14px; }
+    &:hover { background: rgba(0, 0, 0, 0.06); }
+  }
+}
+
+// Embedded <sd-operator> icon — size to 14px + follow currentColor (sd-operator
+// hardcodes a teal default + 4px padding on its trigger).
+.c-chip-operator {
+  ::ng-deep .c-op-trigger { padding: 0; color: inherit; }
+  ::ng-deep .c-op-icon svg { width: 14px; height: 14px; display: block; }
+}

@@ -1,0 +1,59 @@
+@if (!component.properties!.hidden) {
+  <details class="fb-section" open>
+    <summary class="fb-section__head">
+      <span class="msi">info</span>
+      <span class="fb-section__title">{{ 'core.component.form-builder.general' | sdTranslate }}</span>
+      <span class="msi chev">chevron_right</span>
+    </summary>
+    <div class="fb-section__body">
+    <attribute-select
+      [label]="'core.component.form-builder.template-data' | sdTranslate"
+      [(model)]="component.template"
+      [items]="definitionHtmls"
+      (sdChange)="onChangeDefinition($event)"></attribute-select>
+    <attribute-input [form]="form" [label]="'core.component.form-builder.field-key' | sdTranslate" [(model)]="component.key"></attribute-input>
+    <attribute-textarea [form]="form" [label]="'core.component.form-builder.content' | sdTranslate" [(model)]="component.content"></attribute-textarea>
+    @if (component.properties?.queries?.length) {
+      <build-queries
+        [label]="'core.component.form-builder.query-condition' | sdTranslate"
+        [queries]="component.properties?.queries"
+        [components]="components()"
+        [variables]="variables()"
+        [(model)]="component.properties!.query"></build-queries>
+    }
+    </div>
+  </details>
+  @if (component.properties?.variables?.length) {
+    <details class="fb-section" open>
+      <summary class="fb-section__head">
+        <span class="msi">format_list_bulleted</span>
+        <span class="fb-section__title">{{ 'core.component.form-builder.parameter' | sdTranslate }}</span>
+        <span class="msi chev">chevron_right</span>
+      </summary>
+      <div class="fb-section__body">
+      @for (variable of component.properties?.variables; track variable.key) {
+        <attribute-input [form]="form" [label]="variable.label" [(model)]="variable.value"></attribute-input>
+      }
+      </div>
+    </details>
+  }
+  <details class="fb-section" open>
+    <summary class="fb-section__head">
+      <span class="msi">visibility</span>
+      <span class="fb-section__title">{{ 'core.component.form-builder.display' | sdTranslate }}</span>
+      <span class="msi chev">chevron_right</span>
+    </summary>
+    <div class="fb-section__body">
+    <attribute-expression
+      [label]="'core.component.form-builder.visible-when' | sdTranslate"
+      [components]="components()"
+      [variables]="variables()"
+      [(model)]="component.properties!.visibleWhenExpression"></attribute-expression>
+    <attribute-expression
+      [label]="'core.component.form-builder.hidden-when' | sdTranslate"
+      [components]="components()"
+      [variables]="variables()"
+      [(model)]="component.properties!.hiddenWhenExpression"></attribute-expression>
+    </div>
+  </details>
+}

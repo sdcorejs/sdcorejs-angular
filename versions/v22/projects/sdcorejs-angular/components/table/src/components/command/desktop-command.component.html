@@ -1,0 +1,62 @@
+@let _autoId = autoId();
+@let _item = item();
+@let filteredCommands = _item | filter: _commands() | async;
+
+@if (filteredCommands?.length) {
+  @for (command of filteredCommands; track command.key) {
+    @let _meta = _item | command: command;
+    @if (command.type === 'normal') {
+      <!-- why: bỏ aria-hidden="true" — đây là <button> THẬT, vẫn nhận tab focus nhưng screen reader
+           không đọc được gì (nút chỉ có icon, không có text). Thay bằng aria-label lấy từ chính
+           tiêu đề command đang hiển thị ở tooltip. -->
+      <button
+        type="button"
+        [attr.data-autoid]="_autoId + '-' + command.key"
+        (click)="command.click(_item.data)"
+        [matTooltip]="_meta.title"
+        [attr.aria-label]="_meta.title"
+        [disabled]="_meta.disabled"
+        mat-icon-button>
+        <sd-icon class="c-icon" [color]="command.color || 'secondary'" [fontSet]="command.fontSet" [name]="_meta.icon"></sd-icon>
+      </button>
+    } @else {
+      <!-- why: nút mở menu con — cũng bỏ aria-hidden và gắn aria-label + aria-haspopup="menu". -->
+      <button
+        type="button"
+        [attr.data-autoid]="_autoId + '-' + command.key"
+        [matMenuTriggerFor]="menu"
+        [attr.aria-label]="_meta.title"
+        aria-haspopup="menu"
+        mat-icon-button>
+        @if (_meta.icon) {
+          <sd-icon class="c-icon" [fontSet]="command.fontSet" [name]="_meta.icon"></sd-icon>
+        } @else {
+          <sd-icon class="c-icon" [fontSet]="command.fontSet" name="more_vert"></sd-icon>
+        }
+      </button>
+      <mat-menu #menu="matMenu" [attr.data-autoid]="_autoId + '-' + command.key + '-menu'">
+        <span>
+          @for (childCommand of command.children; track childCommand.key) {
+            @let _childMeta = _item | command: childCommand;
+            <button
+              [attr.data-autoid]="_autoId + '-' + command.key + '-' + childCommand.key"
+              mat-menu-item
+              (click)="childCommand.click(_item.data)"
+              [disabled]="_childMeta.disabled">
+              @if (_childMeta.htmlTemplate) {
+                <div [innerHTML]="_childMeta.htmlTemplate"></div>
+              } @else {
+                <span class="sd-command-menu-item__content">
+                  <sd-icon class="sd-command-menu-item__icon"
+                    [color]="childCommand.color || 'secondary'"
+                    [fontSet]="childCommand.fontSet" [name]="_childMeta.icon"></sd-icon>
+                  <span class="sd-command-menu-item__title">{{ _childMeta.title }}</span>
+                </span>
+              }
+            </button>
+          }
+        </span>
+      </mat-menu>
+    }
+  }
+}

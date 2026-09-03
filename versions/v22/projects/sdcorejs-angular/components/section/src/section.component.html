@@ -1,0 +1,61 @@
+@let _hideHeader = hideHeader();
+@let _collapsible = collapsible();
+@let _collapsed = collapsed();
+@let _title = title();
+@let _subTitle = subTitle();
+@let _icon = icon();
+@let _iconColor = iconColor();
+<div class="sd-section c-shadow-section">
+  @if (!_hideHeader) {
+    <div class="sd-section-header" [class.cursor-pointer]="_collapsible">
+      <div class="sd-section-header-left">
+        <ng-content select="[sdHeaderLeft]">
+          @if (_icon) {
+            <span
+              class="mr-8 material-icons-outlined"
+              [class.text-primary]="_iconColor === 'primary'"
+              [class.text-secondary]="_iconColor === 'secondary'"
+              [class.text-error]="_iconColor === 'error'"
+              [class.text-warning]="_iconColor === 'warning'"
+              [class.text-success]="_iconColor === 'success'">
+              {{ _icon }}
+            </span>
+          }
+          <div class="sd-section-title-block">
+            @if (_title) {
+              <div class="sd-section-title T16M">{{ _title }}</div>
+            }
+            @if (_subTitle) {
+              <div class="sd-section-subtitle T12R text-secondary">{{ _subTitle }}</div>
+            }
+          </div>
+        </ng-content>
+      </div>
+      <div class="sd-section-header-right">
+        <ng-content select="[sdHeaderRight]"></ng-content>
+        @if (_collapsible) {
+          <button
+            type="button"
+            class="sd-section-collapse-toggle d-flex align-items-center"
+            [attr.aria-label]="
+              (_collapsed ? 'core.component.section.expand' : 'core.component.section.collapse') | sdTranslate: { title: _title || '' }
+            "
+            [attr.aria-expanded]="!_collapsed"
+            [attr.aria-controls]="bodyId"
+            (click)="onCollapseButtonClick($event)">
+            <sd-icon aria-hidden="true" [name]="_collapsed ? 'expand_more' : 'expand_less'"></sd-icon>
+          </button>
+        }
+      </div>
+    </div>
+  }
+  @if (!_collapsed || _hideHeader) {
+    <div class="sd-section-body" [id]="bodyId" [class.sd-section-body--with-header]="!_hideHeader">
+      <ng-content></ng-content>
+    </div>
+  }
+  <div class="sd-section-footer">
+    <div class="sd-section-footer-left"><ng-content select="[sdFooterLeft]"></ng-content></div>
+    <div class="sd-section-footer-right"><ng-content select="[sdFooterRight]"></ng-content></div>
+  </div>
+</div>

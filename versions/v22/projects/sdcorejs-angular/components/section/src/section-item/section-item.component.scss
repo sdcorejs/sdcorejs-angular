@@ -1,0 +1,17 @@
+:host {
+  width: 100%;
+  display: block;
+}
+.c-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  column-gap: 8px;
+  padding: 8px 16px;
+  border-bottom: 1px solid #f2f2f2;
+}
+
+.c-item-content {
+  flex: 1;
+  min-width: 0;
+}

@@ -1,0 +1,135 @@
+// Saved-filters trigger button — matches the other toolbar icon buttons.
+$qb-primary:       var(--sd-primary);
+$qb-border:        #d6d8db;
+$qb-text-secondary:#5f6368;
+$qb-text-muted:    #7a7a7a;
+$qb-border-soft:   #e2e4e7;
+$qb-bg:            #ffffff;
+$qb-danger:        #d23535;
+
+:host {
+  display: inline-flex;
+}
+
+.c-saved-filters {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid $qb-border;
+  border-radius: 6px;
+  background: $qb-bg;
+  color: $qb-text-secondary;
+  cursor: pointer;
+  padding: 0;
+
+  sd-icon { font-size: 18px; width: 18px; height: 18px; }
+
+  &:hover:not([disabled]) { border-color: $qb-primary; color: $qb-primary; }
+  &[disabled] { opacity: 0.5; cursor: not-allowed; }
+}
+
+// Menu renders into a document.body overlay — pierce via the panel class.
+::ng-deep .mat-mdc-menu-panel.c-saved-filters-menu {
+  min-width: 220px;
+  max-width: 320px;
+
+  // why: mat-menu-item template wrap content trong `<span.mat-mdc-menu-item-text>`
+  // (Material 19 source: `<ng-content select="sd-icon">` + `<span class="mat-mdc-menu-item-text">
+  // <ng-content></ng-content></span>`). Default base CSS đặt `.mat-mdc-menu-item-text {flex:1}`
+  // nhưng KHÔNG set display:flex → name và × ngồi inline-flow trong span, `margin-left:auto`
+  // trên × KHÔNG đẩy được. Fix: force flex layout vào span đó.
+  //
+  // Cũng override padding mat-menu-item-with-icon-trailing-spacing để × sát mép phải hơn
+  // (default 12px → 4px), kết hợp gap để name/× tách rõ.
+  .mat-mdc-menu-item.c-sf-row {
+    min-height: 40px;
+    padding-left: 16px;
+    padding-right: 4px;
+  }
+
+  .mat-mdc-menu-item.c-sf-row .mat-mdc-menu-item-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    line-height: 1.4;
+  }
+
+  // why: hàng này tự lo khoảng cách bằng `gap: 8px` trên `.mat-mdc-menu-item-text` ở trên, nên phải
+  // tắt margin mặc định của leading icon trong menu (core/menu.scss) — nếu không icon cách nhãn
+  // 8px + 12px.
+  .c-sf-lead {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0;
+    font-size: 18px !important;
+    width: 18px !important;
+    height: 18px !important;
+    line-height: 1;
+  }
+
+  .c-sf-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .c-sf-del {
+    flex: 0 0 auto;
+    margin-left: auto;       // why: pin × sát mép phải. Combined với padding-right:4px của row,
+                             // × cách mép phải đúng 4px — visually flush.
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    color: $qb-text-muted;
+    cursor: pointer;
+    padding: 0;
+
+    // why: base mat-menu-item CSS đặt `.mat-mdc-menu-item sd-icon { margin-right: 12px }`
+    // (giả định icon là leading) — leak vào × icon → bị đẩy lệch trái trong vòng tròn hover.
+    // Zero ra margin + đảm bảo box vuông 16×16 + line-height: 16px để glyph nằm chính giữa.
+    sd-icon {
+      margin: 0 !important;
+      padding: 0;
+      font-size: 16px !important;
+      width: 16px !important;
+      height: 16px !important;
+      line-height: 16px !important;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    // Material applies its menu-item spacing to the renderer inside the SdIcon
+    // host, so reset the nested mat-icon as well as the facade element.
+    sd-icon mat-icon {
+      margin: 0 !important;
+    }
+
+    &:hover { background: rgba(0, 0, 0, 0.06); color: $qb-danger; }
+  }
+
+  .c-sf-empty {
+    padding: 12px 16px;
+    font-size: 13px;
+    color: $qb-text-muted;
+  }
+
+  // why: ngăn list saved-filter và footer save action — visual cue 2 nhóm khác nhau.
+  .c-sf-divider {
+    border: 0;
+    border-top: 1px solid $qb-border-soft;
+    margin: 4px 0;
+  }
+
+  .c-sf-save sd-icon {
+    margin-right: 8px;
+  }
+}

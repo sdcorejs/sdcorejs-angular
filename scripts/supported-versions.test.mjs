@@ -3,12 +3,14 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { applyAngular22EagerMigration } from './check-version-sync.mjs';
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SUPPORTED_MAJORS = [19, 20, 21, 22];
 const SUPPORTED_WORKSPACES = SUPPORTED_MAJORS.map(major => `v${major}`);
 const SHARED_ANGULAR_PEERS = '^19.0.0 || ^20.0.0 || ^21.0.0';
 const V22_NODE_ENGINES = '^22.22.3 || ^24.15.0 || ^26.0.0';
+const CANONICAL_PRETTIER = '3.8.3';
 const ANGULAR_PEER_NAMES = [
   '@angular/animations',
   '@angular/cdk',
@@ -36,6 +38,10 @@ const V22_ROOT_ANGULAR_PACKAGES = [
   '@angular/cli',
   '@angular/compiler-cli',
 ];
+const ANGULAR_DEVKIT_ZERO_MAJOR_PACKAGES = new Set([
+  '@angular-devkit/architect',
+  '@angular-devkit/build-webpack',
+]);
 const LOCAL_OR_GIT_SPEC = /^(?:file:|link:|workspace:|github:|gitlab:|bitbucket:|gist:|git(?:\+[^:]+)?:|ssh:|\.\.?[\\/]|~[\\/]|[a-z]:[\\/]|[\\/]{1,2}|[a-z0-9_.-]+\/[a-z0-9_.-]+(?:#.*)?$)|\.git(?:#|$)/iu;
 
 function readText(relativePath) {
@@ -44,6 +50,13 @@ function readText(relativePath) {
 
 function readJson(relativePath) {
   return JSON.parse(readText(relativePath));
+}
+
+function walkFiles(root) {
+  return readdirSync(root, { withFileTypes: true }).flatMap(entry => {
+    const path = join(root, entry.name);
+    return entry.isDirectory() ? walkFiles(path) : [path];
+  });
 }
 
 function orderedWorkspaceRecords(source) {
@@ -65,9 +78,11 @@ function assertV22RegistryLock(packages) {
   for (const [packagePath, packageEntry] of Object.entries(packages)) {
     const packageName = packagePath.slice(packagePath.lastIndexOf('node_modules/') + 'node_modules/'.length);
     let expectedVersion;
-    if (packageName.startsWith('@angular/') || packageName.startsWith('@angular-devkit/')) expectedVersion = /^22\./u;
+    if (packageName.startsWith('@angular/')) expectedVersion = /^22\./u;
+    else if (ANGULAR_DEVKIT_ZERO_MAJOR_PACKAGES.has(packageName)) expectedVersion = /^0\.2201\./u;
+    else if (packageName.startsWith('@angular-devkit/')) expectedVersion = /^22\./u;
     else if (packageName === 'angular-eslint' || packageName.startsWith('@angular-eslint/')) expectedVersion = /^22\./u;
-    else if (packageName === 'typescript-eslint' || packageName.startsWith('@typescript-eslint/')) expectedVersion = /^8\.60\.0$/u;
+    else if (packageName === 'typescript-eslint') expectedVersion = /^8\.60\.0$/u;
     else if (packageName === 'typescript') expectedVersion = /^6\.0\./u;
     else if (packageName === 'zone.js') expectedVersion = /^0\.16\./u;
 
@@ -192,6 +207,66 @@ test('[workspace] Angular 22 manifest pins the reviewed toolchain without peer b
   assert.equal(manifest.overrides, undefined);
 });
 
+test('[workspace] every generated line pins the canonical formatter used by the shared source', () => {
+  for (const workspace of SUPPORTED_WORKSPACES) {
+    const manifest = readJson(`versions/${workspace}/package.json`);
+    assert.equal(manifest.devDependencies.prettier, CANONICAL_PRETTIER, workspace);
+  }
+});
+
+test('[workspace] Angular 22 removes the TypeScript 6 baseUrl deprecation without suppressing it', () => {
+  const config = readText('versions/v22/projects/sdcorejs-angular/tsconfig.spec.json');
+  assert.doesNotMatch(config, /"baseUrl"\s*:/u);
+  assert.doesNotMatch(config, /"ignoreDeprecations"\s*:/u);
+  assert.match(config, /"@sdcorejs\/angular"\s*:\s*\["\.\/src\/public-api"\]/u);
+  assert.match(config, /"@sdcorejs\/angular\/\*"\s*:\s*\["\.\/\*"\]/u);
+});
+
+test('[workspace] Angular 22 generated text has deterministic Git line-ending attributes', () => {
+  const attributes = readText('versions/v22/.gitattributes');
+  const syncScript = readText('scripts/sync-multi-version-workspaces.ps1');
+
+  assert.match(attributes, /^\* text=auto eol=lf$/mu);
+  for (const extension of ['html', 'scss', 'svg']) {
+    assert.match(attributes, new RegExp(`^\\*\\.${extension} text eol=lf$`, 'mu'));
+  }
+  assert.match(attributes, /^\*\.woff2 -text$/mu);
+  assert.match(syncScript, /\/XF CHANGELOG\.md package-lock\.json \.gitattributes/u);
+});
+
+test('[workspace] coverage bootstrap keeps the direct webpack-analyzable import.meta call', () => {
+  for (const workspace of ['v19', 'v20', 'v21']) {
+    const source = readText(`versions/${workspace}/projects/sdcorejs-angular/coverage-includes.spec.ts`);
+    assert.match(source, /const webpackMeta\s*=\s*import\.meta\s+as\s+unknown/u, workspace);
+    assert.match(source, /const sources\s*=\s*webpackMeta\.webpackContext\('\.\/'/u, workspace);
+  }
+
+  const source = readText('versions/v22/projects/sdcorejs-angular/coverage-includes.spec.ts');
+  assert.doesNotMatch(source, /\bwebpackMeta\.webpackContext\s*\(/u, 'v22');
+  assert.match(
+    source,
+    /const sources\s*=\s*\(\s*import\.meta\s+as\s+unknown\s+as\s+\{[\s\S]*?\}\s*\)\.webpackContext\('\.\/'/u,
+    'v22',
+  );
+});
+
+test('[workspace] every Angular 22 component explicitly preserves or reviews change detection', () => {
+  const projectRoot = join(REPO_ROOT, 'versions/v22/projects/sdcorejs-angular');
+  const componentFiles = walkFiles(projectRoot)
+    .filter(path => path.endsWith('.ts'))
+    .filter(path => /@Component\s*\(/u.test(readFileSync(path, 'utf8')));
+
+  assert.ok(componentFiles.length > 200, 'the guard must cover the complete component and test-host surface');
+  for (const path of componentFiles) {
+    const source = readFileSync(path, 'utf8');
+    assert.equal(
+      applyAngular22EagerMigration(source),
+      source,
+      `${path} still relies on Angular 22's implicit OnPush default`,
+    );
+  }
+});
+
 test('[workspace] package manifests retain shared peers for v19-v21 and use v22-only peers for v22', () => {
   for (const major of [19, 20, 21]) {
     const manifest = readJson(`versions/v${major}/projects/sdcorejs-angular/package.json`);
@@ -246,6 +321,9 @@ test('[workspace] Angular 22 lock guard rejects nested old Angular packages and 
     },
   }), /21\.2\.0/u);
   assert.throws(() => assertV22RegistryLock({
+    'node_modules/@angular-devkit/architect': { version: '0.2102.4' },
+  }), /0\.2102\.4/u);
+  assert.throws(() => assertV22RegistryLock({
     'node_modules/local-package': { version: 'file:../local-package', link: true },
   }), /local link|file:/u);
   assert.throws(() => assertV22RegistryLock({
@@ -257,7 +335,7 @@ test('[workspace] Angular 22 lock guard rejects nested old Angular packages and 
     }), /local-or-git-package\.version/u);
   }
   assert.throws(() => assertV22RegistryLock({
-    'node_modules/tool/node_modules/@typescript-eslint/parser': { version: '8.26.0' },
+    'node_modules/tool/node_modules/typescript-eslint': { version: '8.26.0' },
   }), /8\.26\.0/u);
 });
 

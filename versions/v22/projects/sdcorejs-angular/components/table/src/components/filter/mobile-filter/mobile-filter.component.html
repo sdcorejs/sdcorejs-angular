@@ -1,0 +1,193 @@
+@let _autoId = autoId();
+@let _externalFilterItems = externalFilterItems();
+@let _columnItems = columnItems();
+@let _filterDefItems = filterDefItems();
+@let _workingColumnFilter = workingColumnFilter();
+@let _workingColumnOperator = workingColumnOperator();
+@let _workingExternalFilter = workingExternalFilter();
+@let _cacheValues = cacheValues();
+
+<sd-side-drawer
+  #drawer
+  [title]="'core.component.table.filter' | sdTranslate"
+  width="90vw">
+  <div class="mobile-filter-body">
+    <!-- ============================ -->
+    <!-- 1. External filters (inline) -->
+    <!-- ============================ -->
+    @if (_externalFilterItems.length) {
+      <section class="mobile-filter-section">
+        @for (item of _externalFilterItems; track item.field) {
+          <div class="mobile-filter-row">
+            @if (item.type === 'string') {
+              <sd-input
+                [autoId]="_autoId + 'ext-' + item.field"
+                size="sm"
+                [label]="item.title"
+                type="text"
+                [(model)]="_workingExternalFilter[item.field]"
+                appearance="outline"
+                [required]="item.required"
+                hideInlineError>
+              </sd-input>
+            } @else if (item.type === 'number') {
+              <sd-input-number
+                [autoId]="_autoId + 'ext-' + item.field"
+                size="sm"
+                [label]="item.title"
+                [(model)]="_workingExternalFilter[item.field]"
+                appearance="outline"
+                [required]="item.required"
+                hideInlineError>
+              </sd-input-number>
+            } @else if (item.type === 'boolean') {
+              <sd-select
+                [autoId]="_autoId + 'ext-' + item.field"
+                size="sm"
+                [label]="item.title"
+                [items]="[
+                  { value: true, display: item.option?.displayOnTrue || 'True' },
+                  { value: false, display: item.option?.displayOnFalse || 'False' },
+                ]"
+                valueField="value"
+                displayField="display"
+                [(model)]="_workingExternalFilter[item.field]"
+                appearance="outline"
+                [required]="item.required"
+                hideInlineError>
+              </sd-select>
+            } @else if (item.type === 'date') {
+              <sd-date
+                [autoId]="_autoId + 'ext-' + item.field"
+                size="sm"
+                [label]="item.title"
+                [(model)]="_workingExternalFilter[item.field]"
+                appearance="outline"
+                [required]="item.required"
+                [min]="item.minDate"
+                [max]="item.maxDate"
+                hideInlineError>
+              </sd-date>
+            } @else if (item.type === 'datetime') {
+              <sd-datetime
+                [autoId]="_autoId + 'ext-' + item.field"
+                size="sm"
+                [label]="item.title"
+                [(model)]="_workingExternalFilter[item.field]"
+                appearance="outline"
+                [required]="item.required"
+                [min]="item.minDate"
+                [max]="item.maxDate"
+                hideInlineError>
+              </sd-datetime>
+            } @else if (item.type === 'daterange') {
+              <sd-date-range
+                [autoId]="_autoId + 'ext-' + item.field"
+                size="sm"
+                [label]="item.title"
+                [(model)]="_workingExternalFilter[item.field]"
+                [required]="item.required"
+                [min]="item.minDate"
+                [max]="item.maxDate"
+                appearance="outline"
+                hideInlineError>
+              </sd-date-range>
+            } @else if (item.type === 'values') {
+              <sd-select
+                [autoId]="_autoId + 'ext-' + item.field"
+                size="sm"
+                [label]="item.title"
+                [items]="item.option.items | filterValues | async"
+                [valueField]="item.option.valueField"
+                [displayField]="item.option.displayField"
+                [(model)]="_workingExternalFilter[item.field]"
+                appearance="outline"
+                [multiple]="item.option.selection === 'MULTIPLE' || item.option.selection === 'MULTIPLEAUTOCOMPLETE'"
+                [required]="item.required"
+                hideInlineError>
+              </sd-select>
+            } @else if (item.type === 'lazy-values') {
+              <sd-select
+                [autoId]="_autoId + 'ext-' + item.field"
+                size="sm"
+                [label]="item.title"
+                [items]="item.option.items"
+                [valueField]="item.option.valueField"
+                [displayField]="item.option.displayField"
+                [(model)]="_workingExternalFilter[item.field]"
+                appearance="outline"
+                [multiple]="item.option.selection === 'MULTIPLE'"
+                [required]="item.required"
+                hideInlineError>
+              </sd-select>
+            } @else if (item.type === 'custom' && item.filterDef) {
+              <ng-container
+                *ngTemplateOutlet="
+                  item.filterDef;
+                  context: { externalFilter: _workingExternalFilter, autoId: _autoId + 'ext-' + item.field }
+                ">
+              </ng-container>
+            }
+          </div>
+        }
+      </section>
+    }
+
+    <!-- ============================ -->
+    <!-- 2. Custom filterDef templates -->
+    <!-- ============================ -->
+    @if (_filterDefItems.length) {
+      <section class="mobile-filter-section">
+        @for (def of _filterDefItems; track def.sdTableFilterDef()) {
+          <div class="mobile-filter-row" [attr.data-autoid]="_autoId + 'def-' + def.sdTableFilterDef()">
+            <ng-container
+              *ngTemplateOutlet="def.templateRef!; context: { externalFilter: _workingExternalFilter }">
+            </ng-container>
+          </div>
+        }
+      </section>
+    }
+
+    <!-- ============================ -->
+    <!-- 3. Column filters             -->
+    <!-- ============================ -->
+    @if (_columnItems.length) {
+      <section class="mobile-filter-section">
+        @for (column of _columnItems; track column.field) {
+          <div class="mobile-filter-row" [attr.data-autoid]="_autoId + 'col-' + column.field">
+            <column-filter
+              [autoId]="_autoId + 'col'"
+              [column]="column"
+              [columnFilter]="_workingColumnFilter"
+              [operator]="$any(_workingColumnOperator[column.field])"
+              (operatorChange)="_workingColumnOperator[column.field] = $event!"
+              [cacheValues]="_cacheValues"
+              isMobile>
+            </column-filter>
+          </div>
+        }
+      </section>
+    }
+  </div>
+
+  <ng-container sdFooterRight>
+    <div class="mobile-filter-footer">
+      <sd-button
+        [autoId]="_autoId + 'cancel'"
+        class="mobile-filter-action"
+        (click)="onCancel()"
+        [title]="'core.confirm.no' | sdTranslate"
+        type="text"
+        color="secondary">
+      </sd-button>
+      <sd-button
+        [autoId]="_autoId + 'apply'"
+        class="mobile-filter-action"
+        (click)="onApply()"
+        [title]="'core.confirm.yes' | sdTranslate"
+        type="fill"
+        color="primary">
+      </sd-button>
+    </div>
+  </ng-container>
+</sd-side-drawer>

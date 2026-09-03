@@ -1,0 +1,142 @@
+// Seamless string/number chip — tokens mirror query-bar.component.scss.
+// Brand colors follow the theme via --sd-* so the chip re-tints with the portal.
+$primary:       var(--sd-primary);
+$primary-light: var(--sd-primary-light);
+$primary-faint: var(--sd-primary-light);
+$primary-dark:  var(--sd-primary-dark);
+
+$text:           #212121;
+$text-secondary: #5f6368;
+$text-muted:     #7a7a7a;
+$border:         #d6d8db;
+$bg:             #ffffff;
+$danger:         #d23535;
+
+:host {
+  display: inline-flex;
+}
+
+.c-seamless {
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: 999px;
+  overflow: hidden;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1;
+  cursor: text;
+  border: 1px solid $border;
+  background: $bg;
+  color: $text-secondary;
+  transition: border-color 120ms ease, background-color 120ms ease, box-shadow 120ms ease,
+    color 120ms ease;
+
+  &--compact { height: 28px; }
+  &--comfortable { height: 32px; }
+
+  // hover only when not focused / not error
+  &:hover:not([data-state='focus']):not([data-state='error']) {
+    border-color: $primary;
+  }
+
+  // ── States ────────────────────────────────────────────────────────────────
+  // why: the value text colour per state now lives in <sd-inline-text> (chrome="seamless"),
+  // since the field input is encapsulated inside that primitive — the pill only owns the
+  // border / background / overall text colour. "Grey label : brand value" still reads right.
+  &[data-state='pending'] {
+    border-style: dashed;
+    border-color: $border;
+    background: $bg;
+    color: $text-secondary;
+  }
+
+  &[data-state='active'] {
+    border-color: $primary-light;
+    background: $primary-faint;
+  }
+
+  &[data-state='focus'] {
+    border-color: $primary;
+    background: $bg;
+    box-shadow: 0 0 0 3px $primary-faint;
+  }
+
+  &[data-state='error'] {
+    border-color: $danger;
+    background: #fff5f5;
+    color: $danger;
+    box-shadow: 0 0 0 3px rgba(210, 53, 53, 0.12);
+  }
+}
+
+.c-seamless__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: text;
+  color: inherit;
+
+  // why: padding-right = 0 để tránh cộng dồn với padding-left của __input.
+  // Khoảng cách giữa `:` và value dùng chung 1 nguồn (input padding-left), giữ
+  // đồng nhất với gap nội bộ của label (4px / 6px). Trước: total gap = 4+4=8px
+  // gây trông "rộng + không đồng đều" so với icon-field gap 4px.
+  .c-seamless--compact & { padding: 0 0 0 12px; }
+  .c-seamless--comfortable & { padding: 0 0 0 14px; }
+}
+
+.c-seamless__icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+  color: inherit;
+}
+
+.c-seamless__field {
+  color: inherit;
+}
+
+.c-seamless__op {
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+}
+
+.c-seamless__sep {
+  color: $text-muted;
+}
+
+.c-seamless__input {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  // why: padding-left = gap mặc định (4px compact / 6px comfortable) — duy
+  // nhất 1 nguồn khoảng cách giữa `:` (label) và input đầu tiên, đồng nhất với
+  // gap internal label.
+  .c-seamless--compact & { padding: 0 8px 0 4px; }
+  .c-seamless--comfortable & { padding: 0 10px 0 6px; }
+}
+
+.c-seamless__dash {
+  color: $text-muted;
+}
+
+.c-seamless__x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-left: 1px solid rgba(0, 0, 0, 0.04);
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+
+  .c-seamless--compact & { width: 26px; }
+  .c-seamless--comfortable & { width: 28px; }
+
+  sd-icon { font-size: 14px; width: 14px; height: 14px; }
+
+  &:hover { background: rgba(0, 0, 0, 0.05); }
+}

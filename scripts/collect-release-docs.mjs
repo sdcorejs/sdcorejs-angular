@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Collect AI-readable API docs for one release suffix across all supported
 // Angular workspaces. A tag like `v1.0` produces:
-//   19.1.0, 20.1.0, 21.1.0
+//   19.1.0, 20.1.0, 21.1.0, 22.1.0
 //
 // This script is meant to run from the tag publish workflow after npm publish
 // succeeds, then commit the generated `published-docs/**` archive back to main.
@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = join(__dirname, '..');
-const MAJORS = [19, 20, 21];
+const MAJORS = [19, 20, 21, 22];
 
 function getArg(name) {
   const i = process.argv.indexOf(`--${name}`);

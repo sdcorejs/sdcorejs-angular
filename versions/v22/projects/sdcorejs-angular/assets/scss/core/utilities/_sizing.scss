@@ -1,0 +1,28 @@
+// --------------------------------------------------------------------------
+// Sizing – Width & Height  (px-based, 0–200)
+//   w-0 … w-200 | h-0 … h-200
+// --------------------------------------------------------------------------
+@for $i from 0 through 200 {
+  .w-#{$i} { width: #{$i}px !important; }
+  .h-#{$i} { height: #{$i}px !important; }
+}
+
+// Percentage / keyword shorthands
+.w-full   { width: 100% !important; }
+.w-100    { width: 100% !important; } // alias of w-full
+.w-auto   { width: auto !important; }
+.w-screen { width: 100vw !important; }
+.w-fit    { width: fit-content !important; }
+
+.h-full   { height: 100% !important; }
+.h-100    { height: 100% !important; } // alias of h-full
+.h-auto   { height: auto !important; }
+.h-screen { height: 100vh !important; }
+.h-fit    { height: fit-content !important; }
+
+.min-h-full   { min-height: 100% !important; }
+.min-h-screen { min-height: 100vh !important; }
+.min-w-full   { min-width: 100% !important; }
+
+.max-h-full   { max-height: 100% !important; }
+.max-w-full   { max-width: 100% !important; }

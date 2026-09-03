@@ -1,0 +1,93 @@
+<!--
+  Seamless string/number chip — the pill IS the input. One border, three flush
+  segments: label · input(s) · ×. State styling driven by [data-state]. The value
+  field is the shared <sd-inline-text> primitive (chrome="seamless") so width hugs
+  content; the chip keeps the envelope + parse/commit logic.
+-->
+@let _state = state();
+@let _autoId = autoId();
+@let _isNoData = isNoData();
+@let _density = density();
+@let _operator = operator();
+
+<!-- why: vỏ chip là một NHÓM control (nhãn + ô nhập + nút ×), không phải nút → role="group" +
+     aria-label mô tả đúng cấu trúc và cũng cho biết vì sao nó KHÔNG nhận tabindex (tab đi thẳng
+     vào input bên trong). `focusFromShell` đã tự loại click trên input và trên nút × nên gắn thêm
+     Enter dùng chung handler là an toàn và phản chiếu đúng hành vi click. -->
+<span
+  class="c-seamless"
+  role="group"
+  [attr.aria-label]="field().label"
+  [attr.data-state]="_state"
+  [class.c-seamless--compact]="_density === 'compact'"
+  [class.c-seamless--comfortable]="_density === 'comfortable'"
+  (click)="focusFromShell($event)"
+  (keydown.enter)="focusFromShell($event)">
+
+  <!-- Label segment: icon + field name (+ optional operator pill) -->
+  <span class="c-seamless__label">
+    <sd-icon class="c-seamless__icon" [name]="icon()"></sd-icon>
+    <span class="c-seamless__field">{{ field().label }}</span>
+    @if (showOperator() && !_isNoData) {
+      <sd-operator class="c-seamless__op" [operators]="[_operator]" [model]="_operator" [disabled]="true" />
+    } @else if (!_isNoData) {
+      <span class="c-seamless__sep">:</span>
+    }
+  </span>
+
+  <!-- Input segment — seamless borderless primitive; hidden for NULL / NOT_NULL -->
+  @if (!_isNoData) {
+    <span class="c-seamless__input">
+      @if (isBetween()) {
+        <sd-inline-text
+          #firstInput
+          chrome="seamless"
+          [clearable]="false"
+          [autofocus]="autofocus()"
+          [state]="_state"
+          [value]="draftFrom()"
+          (valueChange)="draftFrom.set($event)"
+          [placeholder]="phFrom()"
+          [autoId]="_autoId ? _autoId + '-from' : undefined"
+          (sdFocus)="onFocus()"
+          (sdBlur)="commitRange()"
+          (keyupEnter)="firstInput.blur()"
+          (keydownEscape)="revertAndBlur(firstInput)" />
+        <span class="c-seamless__dash" aria-hidden="true">—</span>
+        <sd-inline-text
+          #secondInput
+          chrome="seamless"
+          [clearable]="false"
+          [state]="_state"
+          [value]="draftTo()"
+          (valueChange)="draftTo.set($event)"
+          [placeholder]="phTo()"
+          [autoId]="_autoId ? _autoId + '-to' : undefined"
+          (sdFocus)="onFocus()"
+          (sdBlur)="commitRange()"
+          (keyupEnter)="secondInput.blur()"
+          (keydownEscape)="revertAndBlur(secondInput)" />
+      } @else {
+        <sd-inline-text
+          #firstInput
+          chrome="seamless"
+          [clearable]="false"
+          [autofocus]="autofocus()"
+          [state]="_state"
+          [value]="draft()"
+          (valueChange)="draft.set($event)"
+          [placeholder]="ph()"
+          [autoId]="_autoId ?? undefined"
+          (sdFocus)="onFocus()"
+          (sdBlur)="commitSingle()"
+          (keyupEnter)="firstInput.blur()"
+          (keydownEscape)="revertAndBlur(firstInput)" />
+      }
+    </span>
+  }
+
+  <!-- × segment -->
+  <button type="button" class="c-seamless__x" aria-label="Remove filter" (click)="onRemove($event)">
+    <sd-icon name="close"></sd-icon>
+  </button>
+</span>

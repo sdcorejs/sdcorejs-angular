@@ -22,6 +22,7 @@
 //   node scripts/collect-docs.mjs --workspace v19 --version 19.1.0
 //   node scripts/collect-docs.mjs --workspace v20 --version 20.1.0 --date 2026-07-10
 //   node scripts/collect-docs.mjs --workspace v21 --version 21.1.0 --skip-existing
+//   node scripts/collect-docs.mjs --workspace v22 --version 22.2.5 --skip-existing
 
 import {
   existsSync,
@@ -44,6 +45,7 @@ const WORKSPACES = new Map([
   ['v19', 19],
   ['v20', 20],
   ['v21', 21],
+  ['v22', 22],
 ]);
 
 // A release archive must stay readable forever, so it may not depend on the CURRENT

@@ -1,0 +1,44 @@
+<ng-template #projectedContent>
+  <ng-content></ng-content>
+</ng-template>
+
+@let _userInfo = userInfo();
+@let _sidebarV1 = sidebarV1();
+@let _sidebarV2 = sidebarV2();
+@let _sidebarV3 = sidebarV3();
+
+@if (_userInfo && _sidebarV1) {
+  @if (!isMobile()) {
+    <sd-sidebar-v1 [menus]="menus()" [userInfo]="_userInfo" [sidebar]="_sidebarV1" [isMobile]="false">
+      <ng-container [ngTemplateOutlet]="projectedContent"></ng-container>
+    </sd-sidebar-v1>
+  } @else {
+    <sd-sidebar-mobile-v1 [menus]="menus()" [userInfo]="_userInfo" [sidebar]="_sidebarV1">
+      <ng-container [ngTemplateOutlet]="projectedContent"></ng-container>
+    </sd-sidebar-mobile-v1>
+  }
+}
+
+@if (_userInfo && _sidebarV3) {
+  @if (!isMobile()) {
+    <sd-sidebar-v3 [menus]="menus()" [userInfo]="_userInfo" [sidebar]="_sidebarV3">
+      <ng-container [ngTemplateOutlet]="projectedContent"></ng-container>
+    </sd-sidebar-v3>
+  } @else {
+    <sd-sidebar-mobile-v3 [menus]="menus()" [userInfo]="_userInfo" [sidebar]="_sidebarV3">
+      <ng-container [ngTemplateOutlet]="projectedContent"></ng-container>
+    </sd-sidebar-mobile-v3>
+  }
+}
+
+@if (_userInfo && _sidebarV2) {
+  @if (!isMobile()) {
+    <sd-sidebar-v2 [menus]="menus()" [userInfo]="_userInfo" [sidebar]="_sidebarV2">
+      <ng-container [ngTemplateOutlet]="projectedContent"></ng-container>
+    </sd-sidebar-v2>
+  } @else {
+    <sd-sidebar-mobile-v2 [menus]="menus()" [userInfo]="_userInfo" [sidebar]="_sidebarV2">
+      <ng-container [ngTemplateOutlet]="projectedContent"></ng-container>
+    </sd-sidebar-mobile-v2>
+  }
+}

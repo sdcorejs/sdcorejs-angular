@@ -131,12 +131,13 @@ function compare(compareNormalizedWorkspaceContent, {
   sourceContent,
   targetContent,
   relativePath,
+  targetWorkspace = 'v22',
 }) {
   return compareNormalizedWorkspaceContent({
     sourceContent,
     sourceWorkspace: 'v19',
     targetContent,
-    targetWorkspace: 'v22',
+    targetWorkspace,
     relativePath,
   });
 }
@@ -279,6 +280,338 @@ test('[workspace] normalizes only the known side-drawer constructor shim', async
     ),
     relativePath,
   }), false, 'no second constructor shim is approved');
+
+  assert.equal(compare(compareNormalizedWorkspaceContent, {
+    sourceContent,
+    targetContent: sourceContent,
+    relativePath,
+  }), false, 'v22 must not retain the Angular 19 four-argument constructor');
+});
+
+test('[workspace] requires the Angular 22 eager-change-detection compatibility migration', async () => {
+  const { compareNormalizedWorkspaceContent } = await syncHelpers();
+  const relativePath = 'projects/sdcorejs-angular/components/example/src/example.component.ts';
+  const sourceContent = [
+    "import { Component } from '@angular/core';",
+    '',
+    '@Component({',
+    "  selector: 'sd-example',",
+    "  template: '',",
+    '})',
+    'export class SdExample {}',
+    '',
+  ].join('\n');
+  const targetContent = [
+    "import { ChangeDetectionStrategy as SdAngular22ChangeDetectionStrategy } from '@angular/core';",
+    "import { Component } from '@angular/core';",
+    '',
+    '@Component({',
+    '  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,',
+    "  selector: 'sd-example',",
+    "  template: '',",
+    '})',
+    'export class SdExample {}',
+    '',
+  ].join('\n');
+
+  assert.equal(compare(compareNormalizedWorkspaceContent, {
+    sourceContent,
+    targetContent,
+    relativePath,
+  }), true, 'v22 generated components must explicitly preserve the pre-v22 eager behavior');
+
+  assert.equal(compare(compareNormalizedWorkspaceContent, {
+    sourceContent,
+    targetContent: sourceContent,
+    relativePath,
+  }), false, 'an implicit v22 component would silently switch to OnPush');
+
+  assert.equal(compare(compareNormalizedWorkspaceContent, {
+    sourceContent,
+    targetContent: targetContent.replace(
+      'SdAngular22ChangeDetectionStrategy.Eager',
+      'SdAngular22ChangeDetectionStrategy.OnPush',
+    ),
+    relativePath,
+  }), false, 'the compatibility migration must not change existing runtime behavior');
+});
+
+test('[workspace] Angular 22 eager migration handles real component-file shapes and is idempotent', async () => {
+  const { applyAngular22EagerMigration } = await syncHelpers();
+  assert.equal(typeof applyAngular22EagerMigration, 'function');
+
+  const source = [
+    '/* retained file header */',
+    'import {',
+    '  ChangeDetectionStrategy,',
+    '  Component,',
+    "} from '@angular/core';",
+    '',
+    '@Component({',
+    "  selector: 'sd-first',",
+    '  template: `{{ label }} { literal brace }`,',
+    '  providers: [{ useFactory: () => ({ label: /a{2}/u }) }],',
+    '})',
+    'class FirstComponent {}',
+    '',
+    '@Component({',
+    '  changeDetection: ChangeDetectionStrategy.OnPush,',
+    "  template: '',",
+    '})',
+    'class AlreadyOnPushComponent {}',
+    '',
+    "@Component({ template: '' })",
+    'class InlineComponent {}',
+    '',
+    '@Component({',
+    '  providers: [{ useValue: { changeDetection: true } }],',
+    "  template: '',",
+    '})',
+    'class NestedPropertyComponent {}',
+    '',
+    '@Component({',
+    "  'changeDetection': ChangeDetectionStrategy.OnPush,",
+    "  template: '',",
+    '})',
+    'class SingleQuotedStrategyComponent {}',
+    '',
+    '@Component({',
+    '  "changeDetection": ChangeDetectionStrategy.OnPush,',
+    "  template: '',",
+    '})',
+    'class DoubleQuotedStrategyComponent {}',
+    '',
+  ].join('\n');
+
+  const migrated = applyAngular22EagerMigration(source);
+  assert.match(migrated, /^\/\* retained file header \*\/\nimport \{ ChangeDetectionStrategy as SdAngular22ChangeDetectionStrategy \} from '@angular\/core';\n/u);
+  assert.equal(
+    [...migrated.matchAll(/changeDetection: SdAngular22ChangeDetectionStrategy\.Eager,/gu)].length,
+    3,
+    'a nested provider property must not masquerade as component changeDetection metadata',
+  );
+  assert.equal(
+    [...migrated.matchAll(/ChangeDetectionStrategy\.OnPush,/gu)].length,
+    3,
+    'explicitly reviewed identifier and quoted-key strategies must remain untouched',
+  );
+  assert.match(
+    migrated,
+    /@Component\(\{\n  changeDetection: SdAngular22ChangeDetectionStrategy\.Eager,\n  template: '',\n\}\)\nclass InlineComponent/u,
+    'an inline decorator must expand to the formatter-stable multiline form',
+  );
+  assert.equal(applyAngular22EagerMigration(migrated), migrated, 'the generated migration must be idempotent');
+});
+
+test('[workspace] Angular 22 eager migration ignores decorator-shaped comments and strings', async () => {
+  const { applyAngular22EagerMigration } = await syncHelpers();
+  const documentationOnly = [
+    '/**',
+    " * @Component({ template: '<sd-button></sd-button>' })",
+    ' * class DocumentationHost {}',
+    ' */',
+    "const example = \"@Component({ template: '' })\";",
+    "const template = `@Component({ template: '' })`;",
+    '',
+  ].join('\n');
+
+  assert.equal(
+    applyAngular22EagerMigration(documentationOnly),
+    documentationOnly,
+    'documentation and string literals must remain byte-identical',
+  );
+
+  const withRealDecorator = [
+    "import { Component } from '@angular/core';",
+    documentationOnly,
+    '@Component({',
+    "  template: '',",
+    '})',
+    'class RealHost {}',
+    '',
+  ].join('\n');
+  const migrated = applyAngular22EagerMigration(withRealDecorator);
+  assert.equal(
+    [...migrated.matchAll(/SdAngular22ChangeDetectionStrategy\.Eager/gu)].length,
+    1,
+    'only the executable decorator may be migrated',
+  );
+  assert.match(migrated, /\* @Component\(\{ template: '<sd-button><\/sd-button>' \}\)/u);
+});
+
+test('[workspace] keeps Angular 22 generated shims out of v20 and v21', async () => {
+  const { compareNormalizedWorkspaceContent, applyAngular22EagerMigration, applyAngular22CoverageBootstrap } =
+    await syncHelpers();
+  const componentPath = 'projects/sdcorejs-angular/components/example/src/example.component.ts';
+  const component = [
+    "import { Component } from '@angular/core';",
+    '@Component({',
+    "  template: '',",
+    '})',
+    'export class ExampleComponent {}',
+    '',
+  ].join('\n');
+  const coveragePath = 'projects/sdcorejs-angular/coverage-includes.spec.ts';
+  const coverage = [
+    'interface WebpackModuleContext {',
+    '  keys(): string[];',
+    '  (id: string): unknown;',
+    '}',
+    '',
+    'const webpackMeta = import.meta as unknown as {',
+    '  webpackContext(path: string, options?: { recursive?: boolean; regExp?: RegExp }): WebpackModuleContext;',
+    '};',
+    '',
+    "const sources = webpackMeta.webpackContext('./', {",
+    '  recursive: true,',
+    '});',
+    '',
+  ].join('\n');
+  const specConfig = json({
+    compilerOptions: {
+      baseUrl: '../../',
+      paths: {
+        '@sdcorejs/angular': ['./projects/sdcorejs-angular/src/public-api'],
+        '@sdcorejs/angular/*': ['./projects/sdcorejs-angular/*'],
+      },
+    },
+  });
+  const leakedSpecConfig = specConfig.replace('    "baseUrl": "../../",\n', '');
+  assert.notEqual(leakedSpecConfig, specConfig, 'the fixture must remove the legacy baseUrl');
+
+  for (const targetWorkspace of ['v20', 'v21']) {
+    assert.equal(compare(compareNormalizedWorkspaceContent, {
+      sourceContent: component,
+      targetContent: applyAngular22EagerMigration(component),
+      relativePath: componentPath,
+      targetWorkspace,
+    }), false, `${targetWorkspace} must not receive the v22 Eager marker`);
+    assert.equal(compare(compareNormalizedWorkspaceContent, {
+      sourceContent: coverage,
+      targetContent: applyAngular22CoverageBootstrap(coverage),
+      relativePath: coveragePath,
+      targetWorkspace,
+    }), false, `${targetWorkspace} must retain its working legacy webpack bootstrap`);
+    assert.equal(compare(compareNormalizedWorkspaceContent, {
+      sourceContent: specConfig,
+      targetContent: leakedSpecConfig,
+      relativePath: 'projects/sdcorejs-angular/tsconfig.spec.json',
+      targetWorkspace,
+    }), false, `${targetWorkspace} must retain the legacy baseUrl mapping`);
+  }
+});
+
+test('[workspace] Angular 22 coverage migration keeps dominant CRLF formatting stable', async () => {
+  const { applyAngular22CoverageBootstrap } = await syncHelpers();
+  const source = [
+    'const webpackMeta = import.meta as unknown as {',
+    '  webpackContext(path: string, options?: { recursive?: boolean; regExp?: RegExp }): WebpackModuleContext;',
+    '};',
+    '',
+    "const sources = webpackMeta.webpackContext('./', {",
+    '  recursive: true,',
+    '});',
+  ].join('\r\n') + '\n';
+
+  const migrated = applyAngular22CoverageBootstrap(source);
+  assert.doesNotMatch(migrated, /(?<!\r)\n/u);
+  assert.match(migrated, /const sources = \(\r\n  import\.meta as unknown as \{\r\n/u);
+});
+
+test('[workspace] Angular 22 generated templates and styles remove inherited whitespace-only Git noise', async () => {
+  const { applyAngular22GeneratedCompatibility } = await syncHelpers();
+  const inherited = '<section>  \r\n  <span>Value</span>\r\r\n</section>\t\r\n\r\n';
+  const expected = '<section>\n  <span>Value</span>\n\n</section>\n';
+
+  for (const relativePath of [
+    'projects/sdcorejs-angular/components/example/src/example.component.html',
+    'projects/sdcorejs-angular/components/example/src/example.component.scss',
+    'projects/sdcorejs-angular/assets/images/example.svg',
+  ]) {
+    assert.equal(applyAngular22GeneratedCompatibility(inherited, relativePath), expected, relativePath);
+  }
+  assert.equal(
+    applyAngular22GeneratedCompatibility(inherited, 'projects/sdcorejs-angular/components/example/src/example.component.ts'),
+    inherited,
+    'TypeScript formatting remains governed by the targeted Angular compatibility transforms',
+  );
+});
+
+test('[workspace] normalizes only the Angular 22 compiled-style namespace assertion', async () => {
+  const { compareNormalizedWorkspaceContent } = await syncHelpers();
+  const relativePath =
+    'projects/sdcorejs-angular/components/form-generic/src/components/form-builder/form-builder.component.spec.ts';
+  const sourceContent = [
+    "const styles = ((SdFormBuilder as any).ɵcmp.styles as string[]).join('\\n');",
+    "expect(styles).toContain('--fb-placeholder-columns');",
+    '',
+  ].join('\n');
+  const targetContent = sourceContent.replace(
+    "expect(styles).toContain('--fb-placeholder-columns');",
+    "expect(styles).toMatch(/--(?:%NS%)?fb-placeholder-columns/);",
+  );
+
+  assert.equal(compare(compareNormalizedWorkspaceContent, {
+    sourceContent,
+    targetContent,
+    relativePath,
+  }), true);
+  assert.equal(compare(compareNormalizedWorkspaceContent, {
+    sourceContent,
+    targetContent: sourceContent,
+    relativePath,
+  }), false, 'v22 must accept Angular compiler namespace placeholders without weakening the assertion');
+  assert.equal(compare(compareNormalizedWorkspaceContent, {
+    sourceContent,
+    targetContent: targetContent.replace('fb-placeholder-columns', 'anything'),
+    relativePath,
+  }), false, 'unrelated assertion drift must remain fatal');
+});
+
+test('[workspace] normalizes only the TypeScript 6 spec-path migration required by v22', async () => {
+  const { compareNormalizedWorkspaceContent } = await syncHelpers();
+  const relativePath = 'projects/sdcorejs-angular/tsconfig.spec.json';
+  const source = {
+    extends: '../../tsconfig.json',
+    compilerOptions: {
+      outDir: '../../out-tsc/spec',
+      types: ['jasmine'],
+      baseUrl: '../../',
+      paths: {
+        '@sdcorejs/angular': ['./projects/sdcorejs-angular/src/public-api'],
+        '@sdcorejs/angular/*': ['./projects/sdcorejs-angular/*'],
+      },
+    },
+    include: ['**/*.ts'],
+  };
+  const target = structuredClone(source);
+  delete target.compilerOptions.baseUrl;
+  target.compilerOptions.paths = {
+    '@sdcorejs/angular': ['./src/public-api'],
+    '@sdcorejs/angular/*': ['./*'],
+  };
+
+  assert.equal(compare(compareNormalizedWorkspaceContent, {
+    sourceContent: json(source),
+    targetContent: json(target),
+    relativePath,
+  }), true);
+
+  const suppressed = structuredClone(target);
+  suppressed.compilerOptions.ignoreDeprecations = '6.0';
+  assert.equal(compare(compareNormalizedWorkspaceContent, {
+    sourceContent: json(source),
+    targetContent: json(suppressed),
+    relativePath,
+  }), false, 'the v22 migration must remove the deprecated option instead of suppressing it');
+
+  const wrongPath = structuredClone(target);
+  wrongPath.compilerOptions.paths['@sdcorejs/angular'] = ['./dist/sdcorejs-angular'];
+  assert.equal(compare(compareNormalizedWorkspaceContent, {
+    sourceContent: json(source),
+    targetContent: json(wrongPath),
+    relativePath,
+  }), false, 'the v22 test build must keep resolving the working source tree');
 });
 
 test('[workspace] keeps ordinary source and public-barrel differences fatal', async () => {

@@ -1,0 +1,81 @@
+@let _resolvedItems = resolvedItems();
+@let _resolvedItemTemplate = resolvedItemTemplate();
+
+<div class="sd-org-chart" role="tree">
+  <ul class="sd-org-chart__tree">
+    @for (item of _resolvedItems; track trackByItem($index, item)) {
+      <ng-container
+        *ngTemplateOutlet="nodeTemplate; context: { $implicit: item, item: item, depth: 0, parent: null, templateRef: _resolvedItemTemplate }" />
+    }
+  </ul>
+</div>
+
+<ng-template #nodeTemplate let-item let-depth="depth" let-parent="parent" let-templateRef="templateRef">
+  @let _children = childrenOf(item);
+  @let _hasChildren = _children.length > 0;
+  @let _expanded = isExpanded(item);
+  @let _context = createContext(item, depth, parent);
+
+  <!-- why: role="treeitem" BẮT BUỘC phải có aria-selected — thiếu nó screen reader không biết
+       node đang ở trạng thái nào và bỏ qua luôn ngữ nghĩa tree. Org-chart là sơ đồ chỉ-đọc, không
+       có khái niệm chọn node, nên khai báo tĩnh "false" (đúng sự thật) thay vì bỏ trống.
+       aria-level bổ sung để screen reader đọc được độ sâu của node trong sơ đồ. -->
+  <li
+    class="sd-org-chart__node"
+    [class.sd-org-chart__node--expanded]="_hasChildren && _expanded"
+    [class.sd-org-chart__node--collapsed]="_hasChildren && !_expanded"
+    role="treeitem"
+    [attr.aria-level]="depth + 1"
+    [attr.aria-expanded]="_hasChildren ? _expanded : null"
+    aria-selected="false">
+    <div class="sd-org-chart__node-shell">
+      <div
+        class="sd-org-chart__card"
+        [class.sd-org-chart__card--no-image]="!item.image"
+        [class.sd-org-chart__card--compact]="!item.image && !item.description"
+        [attr.data-node-id]="item.id"
+        [attr.data-autoid]="nodeAutoId(item, 'node')"
+        [attr.data-depth]="depth"
+        [style.--sd-org-node-color]="item.color || null">
+        @if (templateRef) {
+          <ng-container *ngTemplateOutlet="templateRef; context: _context" />
+        } @else {
+          @if (item.image) {
+            <img class="sd-org-chart__image" [src]="item.image" [alt]="item.title" [attr.data-autoid]="nodeAutoId(item, 'image')" />
+          }
+          <div class="sd-org-chart__title" [attr.data-autoid]="nodeAutoId(item, 'title')">{{ item.title }}</div>
+          @if (item.description) {
+            <div class="sd-org-chart__description" [attr.data-autoid]="nodeAutoId(item, 'description')">{{ item.description }}</div>
+          }
+        }
+      </div>
+
+      <!-- why: gate theo resolvedCollapsible() chứ KHÔNG theo input thô collapsible(). Với
+           `[option]="{ collapsible: false }"` thì input thô vẫn là mặc định true → chevron vẫn
+           render nhưng toggle() đã chặn nên bấm không có tác dụng. -->
+      @if (_hasChildren && resolvedCollapsible()) {
+        <button
+          type="button"
+          class="sd-org-chart__toggle"
+          [attr.aria-label]="_expanded ? 'Collapse children' : 'Expand children'"
+          [attr.aria-expanded]="_expanded"
+          [attr.data-autoid]="nodeAutoId(item, 'toggle')"
+          (click)="toggle(item, $event)">
+          <sd-icon [name]="_expanded ? 'expand_more' : 'chevron_right'"></sd-icon>
+        </button>
+      }
+    </div>
+
+    @if (_hasChildren && _expanded) {
+      <ul class="sd-org-chart__children" role="group">
+        @for (child of _children; track trackByItem($index, child)) {
+          <ng-container
+            *ngTemplateOutlet="
+              nodeTemplate;
+              context: { $implicit: child, item: child, depth: depth + 1, parent: item, templateRef: templateRef }
+            " />
+        }
+      </ul>
+    }
+  </li>
+</ng-template>
