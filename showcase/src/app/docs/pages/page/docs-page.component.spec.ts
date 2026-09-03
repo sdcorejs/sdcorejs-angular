@@ -186,11 +186,11 @@ describe('DocsPageComponent', () => {
   it('skips unavailable historical documents in Previous and Next navigation', async () => {
     await setup({
       category: 'pipes-utilities',
-      slug: 'empty',
+      slug: 'time-different',
       tab: 'overview',
       version: '19.0.4',
       latestVersion: '21.1.2',
-      publishedIds: ['pipes/src/empty', 'pipes/src/view'],
+      publishedIds: ['pipes/src/time-different', 'pipes/src/view'],
     });
 
     expect(fixture?.componentInstance.nextPage()?.slug).toBe('view');
@@ -202,7 +202,7 @@ describe('DocsPageComponent', () => {
   it('finds adjacent historical documents even when the current reference is unavailable', async () => {
     await setup({
       category: 'pipes-utilities',
-      slug: 'empty',
+      slug: 'time-different',
       tab: 'overview',
       version: '19.0.4',
       latestVersion: '21.1.2',

@@ -31,6 +31,11 @@ export class SdApiModule {
     //
     // Chỉ cảnh báo (không ném) vì đây là thư viện: có app cấu hình HttpClient ở injector con hoặc
     // trong test harness riêng, ném ở đây sẽ chặn cả những setup hợp lệ đó.
+    //
+    // Angular 21 cung cấp HttpClient ở root mặc định, nên check này cố ý im lặng trên v21. Consumer
+    // vẫn phải gọi `provideHttpClient(withInterceptorsFromDi())` nếu muốn HTTP_INTERCEPTORS dạng
+    // class (bao gồm SdHttpInterceptor) tham gia request chain; public API không có token để module
+    // phân biệt cấu hình đó với HttpClient mặc định.
     if (isDevMode() && inject(HttpClient, { optional: true }) === null) {
       console.error(SD_API_MISSING_HTTP_CLIENT_MESSAGE);
     }

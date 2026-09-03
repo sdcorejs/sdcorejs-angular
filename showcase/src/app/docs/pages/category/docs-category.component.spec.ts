@@ -62,7 +62,7 @@ describe('DocsCategoryComponent', () => {
   });
 
   it('labels and disables references that are absent from the selected version', async () => {
-    await create('directives', []);
+    await create('guides', []);
 
     const card = (fixture.nativeElement as HTMLElement).querySelector<HTMLAnchorElement>('.page-card');
     expect(card?.classList).toContain('page-card--unavailable');

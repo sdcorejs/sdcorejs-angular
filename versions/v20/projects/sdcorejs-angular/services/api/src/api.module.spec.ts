@@ -7,6 +7,7 @@ import {
   withInterceptorsFromDi,
 } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { VERSION } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ISdApiConfiguration, SD_API_CONFIG } from './api.model';
 import { SD_API_MISSING_HTTP_CLIENT_MESSAGE, SdApiModule } from './api.module';
@@ -21,14 +22,29 @@ import { SdHttpInterceptor } from './interceptors/api.interceptor';
 describe('SdApiModule', () => {
   beforeEach(() => TestBed.resetTestingModule());
 
-  it('does not provide HttpClient itself — the application owns provideHttpClient()', () => {
-    TestBed.configureTestingModule({ imports: [SdApiModule] });
+  it('does not change the HttpClient availability owned by Angular and the application', () => {
+    // why: Angular 21 provides HttpClient in root by default, while Angular 19/20 do not.
+    // Comparing against a bare TestBed proves module ownership without baking a framework-major
+    // assumption into this cross-version regression.
+    TestBed.configureTestingModule({});
+    const availableWithoutModule = TestBed.inject(HttpClient, null) !== null;
 
-    expect(() => TestBed.inject(HttpClient)).toThrow();
+    TestBed.resetTestingModule();
+    const errorSpy = spyOn(console, 'error');
+    TestBed.configureTestingModule({ imports: [SdApiModule] });
+    const availableWithModule = TestBed.inject(HttpClient, null) !== null;
+
+    expect(availableWithoutModule).toBe(Number(VERSION.major) >= 21);
+    expect(availableWithModule).toBe(availableWithoutModule);
+    if (availableWithoutModule) {
+      expect(errorSpy).not.toHaveBeenCalled();
+    } else {
+      expect(errorSpy).toHaveBeenCalledOnceWith(SD_API_MISSING_HTTP_CLIENT_MESSAGE);
+    }
   });
 
   it('contributes SdHttpInterceptor through HTTP_INTERCEPTORS', () => {
-    TestBed.configureTestingModule({ imports: [SdApiModule] });
+    TestBed.configureTestingModule({ imports: [SdApiModule], providers: [provideHttpClient()] });
 
     const interceptors = TestBed.inject(HTTP_INTERCEPTORS);
     expect(interceptors.some(interceptor => interceptor instanceof SdHttpInterceptor)).toBeTrue();
@@ -77,16 +93,25 @@ describe('SdApiModule', () => {
   // ─── dev-mode assertion for the dropped provideHttpClient() ─────────────────
 
   describe('missing provideHttpClient() assertion', () => {
-    it('names the missing provideHttpClient() call in dev mode when HttpClient is absent', () => {
+    it('names the missing provideHttpClient() call exactly when HttpClient is absent', () => {
       // why: bỏ `provideHttpClient(...)` khỏi module là đúng, nhưng nó phá consumer NgModule đang
       // dùng đúng hướng dẫn cũ `imports: [SdApiModule]` — và phá lúc RUNTIME (`NullInjectorError:
-      // No provider for HttpClient` ở lời gọi API đầu tiên), không phải lúc build.
+      // No provider for HttpClient` ở lời gọi API đầu tiên), không phải lúc build. Angular 21 cung
+      // cấp HttpClient mặc định, nên trước hết phải đo contract của Angular thay vì giả định absent.
+      TestBed.configureTestingModule({});
+      const angularProvidesHttpClient = TestBed.inject(HttpClient, null) !== null;
+      TestBed.resetTestingModule();
+
       const errorSpy = spyOn(console, 'error');
       TestBed.configureTestingModule({ imports: [SdApiModule] });
 
       TestBed.inject(HTTP_INTERCEPTORS);
 
-      expect(errorSpy).toHaveBeenCalledWith(SD_API_MISSING_HTTP_CLIENT_MESSAGE);
+      if (angularProvidesHttpClient) {
+        expect(errorSpy).not.toHaveBeenCalled();
+      } else {
+        expect(errorSpy).toHaveBeenCalledOnceWith(SD_API_MISSING_HTTP_CLIENT_MESSAGE);
+      }
       expect(SD_API_MISSING_HTTP_CLIENT_MESSAGE).toContain('provideHttpClient(withInterceptorsFromDi())');
     });
 
