@@ -121,6 +121,38 @@ test('release workflow delegates the validated four-target plan to one sequentia
   lacks(commands, /npm dist-tag (?:add|set|rm)/u, 'release must not mutate dist-tags separately');
 });
 
+test('every release entry path requires the immutable v2.5 tag to point at main', () => {
+  const verifySource = jobEntries(workflow).find(job => job.id === 'verify_source');
+  assert.ok(verifySource, 'verify_source job must exist');
+
+  has(workflow, /^\s{2}workflow_dispatch:\s*$/mu, 'manual recovery dispatch must remain available');
+  has(
+    verifySource.source,
+    /ref:\s*\$\{\{\s*github\.event_name == 'workflow_dispatch' && 'refs\/tags\/v2\.5' \|\| github\.ref\s*\}\}/u,
+    'manual dispatch must check out the immutable release tag',
+  );
+
+  const mainGuard = stepEntries(verifySource).find(step => /git fetch origin main --no-tags/u.test(step));
+  assert.ok(mainGuard, 'verify_source must compare the checked-out release SHA with origin/main');
+  lacks(mainGuard, /^\s*if:\s*/mu, 'the main-lineage guard must run for push and workflow_dispatch');
+  has(mainGuard, /git merge-base --is-ancestor HEAD origin\/main/u);
+});
+
+test('matrix target selection persists both values through GitHub step outputs', () => {
+  const packer = oneJobMatching(/\bnpm pack\b/u, 'build/pack');
+  const targetStep = stepEntries(packer).find(step => /^\s*id:\s*target\s*$/mu.test(step));
+  assert.ok(targetStep, 'build/pack must declare the target output step');
+
+  has(targetStep, /GITHUB_OUTPUT/u, 'target selection must write to the GitHub step-output file');
+  has(targetStep, /version=/u);
+  has(targetStep, /target_json=/u);
+  lacks(
+    targetStep,
+    /process\.stdout\.write\(['"]version=/u,
+    'printing target metadata to stdout does not create GitHub step outputs',
+  );
+});
+
 test('all four packages are built and verified as immutable artifacts before publication', () => {
   const packer = oneJobMatching(/\bnpm pack\b/u, 'build/pack');
   const verifier = oneJobMatching(/release-package-contract\.mjs[^\r\n]*--compile-consumers/u, 'package verifier');
@@ -219,6 +251,27 @@ test('postpublish materializes verified v19, clean-installs Showcase and commits
   const installIndex = postpublishCommands.indexOf('npm --prefix showcase ci --legacy-peer-deps');
   const buildIndex = postpublishCommands.indexOf('npm run build:page -- --suffix');
   assert.ok(installIndex >= 0 && installIndex < buildIndex, 'Showcase must be clean-installed before page generation');
+
+  has(postpublishCommands, /git fetch origin main --no-tags/u);
+  has(postpublishCommands, /git merge-base --is-ancestor ["']?\$SOURCE_SHA["']? origin\/main/u);
+  has(postpublishCommands, /git rebase --onto origin\/main ["']?\$SOURCE_SHA["']? HEAD/u);
+  has(
+    postpublishCommands,
+    /test "\$\(git rev-parse HEAD\^\)" = "\$SOURCE_SHA"/u,
+    'postpublish must prove that the generated docs commit is the only commit above the release source',
+  );
+  lacks(postpublishCommands, /git rebase origin\/main/u);
+  const commitIndex = postpublishCommands.indexOf('git commit -m');
+  const parentGuardIndex = postpublishCommands.indexOf('test "$(git rev-parse HEAD^)" = "$SOURCE_SHA"');
+  const fetchIndex = postpublishCommands.indexOf('git fetch origin main --no-tags');
+  const ancestryIndex = postpublishCommands.indexOf('git merge-base --is-ancestor');
+  const rebaseIndex = postpublishCommands.indexOf('git rebase --onto origin/main');
+  const pushIndex = postpublishCommands.indexOf('git push origin HEAD:main');
+  assert.ok(
+    commitIndex >= 0 && commitIndex < parentGuardIndex && parentGuardIndex < fetchIndex && fetchIndex < ancestryIndex &&
+      ancestryIndex < rebaseIndex && rebaseIndex < pushIndex,
+    'postpublish must recheck source ancestry and replay only its docs commit onto current main before pushing',
+  );
 
   const deployBuildOrInstallCommand = /(?:^|(?:&&|\|\||;)\s*|\b(?:if|then|while|until|do)\s+)(?:[A-Za-z_][A-Za-z0-9_]*=\S+\s+)*(?:(?:node\b[^\r\n;&|]*\b|npx\s+)?ng\s+build\b|npm(?:\s+--prefix\s+\S+)?\s+(?:run\s+build(?::[^\s;&|]+)?|ci|install)\b)/mu;
   lacks(

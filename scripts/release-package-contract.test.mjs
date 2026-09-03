@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 
@@ -9,6 +11,7 @@ import {
   executePublishTransaction,
   publishTarballWithNpm,
   publishValidatedBundle,
+  readPublicSurface,
   releaseTargets,
   resolveNpmInvocation,
   runReleaseCli,
@@ -536,6 +539,59 @@ test('public surface validation rejects source, export and declaration changes',
         ...candidate,
         declarations: { ...candidate.declarations, 'index.d.ts': `${candidate.declarations['index.d.ts']}export type NewApi = true;\n` },
       },
+    }),
+  );
+});
+
+test('production public-surface reader captures normalized authored sources from packed sourcemaps', () => {
+  const packageRoot = mkdtempSync(join(tmpdir(), 'sdcorejs-public-surface-'));
+  try {
+    mkdirSync(join(packageRoot, 'fesm2022'), { recursive: true });
+    writeFileSync(
+      join(packageRoot, 'package.json'),
+      JSON.stringify({ exports: { '.': { types: './index.d.ts', default: './fesm2022/sdcorejs-angular.mjs' } } }),
+    );
+    writeFileSync(join(packageRoot, 'index.d.ts'), 'export declare class SdButton {}\n');
+    writeFileSync(
+      join(packageRoot, 'fesm2022', 'sdcorejs-angular.mjs.map'),
+      JSON.stringify({
+        version: 3,
+        file: 'sdcorejs-angular.mjs',
+        sources: ['../../../projects/sdcorejs-angular/components/button/src/button.component.ts'],
+        sourcesContent: ['export class SdButton {}\r\n'],
+        names: [],
+        mappings: '',
+      }),
+    );
+
+    const surface = readPublicSurface(packageRoot, '19.2.5', 19);
+    assert.deepEqual(surface.sourceFiles, {
+      'components/button/src/button.component.ts': 'export class SdButton {}\n',
+    });
+  }
+  finally {
+    rmSync(packageRoot, { recursive: true, force: true });
+  }
+});
+
+test('v22 source comparison permits only the deterministic Angular 22 component migration', () => {
+  const target = releaseTargets('2.5')[3];
+  const baseline = publicSurfaceFor({ ...target, version: target.baselineVersion, major: target.baselineMajor });
+  const candidate = publicSurfaceFor(target);
+  const path = 'components/example/src/example.component.ts';
+  baseline.sourceFiles = {
+    [path]: "import { Component } from '@angular/core';\n@Component({\n  selector: 'sd-example',\n})\nexport class Example {}\n",
+  };
+  candidate.sourceFiles = {
+    [path]: "import { ChangeDetectionStrategy as SdAngular22ChangeDetectionStrategy } from '@angular/core';\nimport { Component } from '@angular/core';\n@Component({\n  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,\n  selector: 'sd-example',\n})\nexport class Example {}\n",
+  };
+
+  assert.doesNotThrow(() => validatePublicSurface({ candidate, baseline, target }));
+  assert.throws(() =>
+    validatePublicSurface({
+      candidate: { ...candidate, sourceFiles: { ...candidate.sourceFiles, [path]: `${candidate.sourceFiles[path]}export const drift = true;\n` } },
+      baseline,
+      target,
     }),
   );
 });

@@ -8,6 +8,11 @@ import { applyAngular22EagerMigration } from './check-version-sync.mjs';
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SUPPORTED_MAJORS = [19, 20, 21, 22];
 const SUPPORTED_WORKSPACES = SUPPORTED_MAJORS.map(major => `v${major}`);
+const LOCKFILES = [
+  'package-lock.json',
+  'showcase/package-lock.json',
+  ...SUPPORTED_WORKSPACES.map(workspace => `versions/${workspace}/package-lock.json`),
+];
 const SHARED_ANGULAR_PEERS = '^19.0.0 || ^20.0.0 || ^21.0.0';
 const V22_NODE_ENGINES = '^22.22.3 || ^24.15.0 || ^26.0.0';
 const CANONICAL_PRETTIER = '3.8.3';
@@ -180,6 +185,26 @@ test('[workspace] every lockfile retains complete cross-platform dependency clos
           );
         }
       }
+    }
+  }
+});
+
+test('[workspace] every registry package is pinned by URL and integrity in every lockfile', () => {
+  for (const lockfile of LOCKFILES) {
+    const packages = readJson(lockfile).packages ?? {};
+    for (const [packagePath, packageEntry] of Object.entries(packages)) {
+      if (!packagePath.startsWith('node_modules/') || packageEntry.link || !packageEntry.version) continue;
+
+      assert.match(
+        packageEntry.resolved ?? '',
+        /^https:\/\/registry\.npmjs\.org\//u,
+        `${lockfile}:${packagePath} must pin its npm registry tarball URL`,
+      );
+      assert.match(
+        packageEntry.integrity ?? '',
+        /^sha512-[A-Za-z0-9+/]+={0,2}$/u,
+        `${lockfile}:${packagePath} must pin a SHA-512 integrity digest`,
+      );
     }
   }
 });

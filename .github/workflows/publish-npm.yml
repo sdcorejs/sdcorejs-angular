@@ -29,11 +29,10 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.event_name == 'workflow_dispatch' && 'refs/tags/v2.5' || github.ref }}
 
-      - name: Require the release tag to point at main
-        if: ${{ github.event_name == 'push' }}
+      - name: Require the release tag commit to be on main
         run: |
-          git fetch origin main --depth=1
-          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          git fetch origin main --no-tags
+          git merge-base --is-ancestor HEAD origin/main
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -159,7 +158,19 @@ jobs:
         env:
           TARGETS_JSON: ${{ needs.verify_source.outputs.targets_json }}
           TARGET_WORKSPACE: ${{ matrix.version }}
-        run: node -e "const targets=JSON.parse(process.env.TARGETS_JSON);const target=targets.find(item=>item.workspace===process.env.TARGET_WORKSPACE);if(!target)throw new Error('matrix target is absent from the validated plan');process.stdout.write('version='+target.version+'\ntarget_json='+JSON.stringify(target)+'\n')"
+        run: |
+          node --input-type=module <<'NODE'
+          import { appendFileSync } from 'node:fs';
+          const targets = JSON.parse(process.env.TARGETS_JSON);
+          const target = targets.find(item => item.workspace === process.env.TARGET_WORKSPACE);
+          if (!target) throw new Error('matrix target is absent from the validated plan');
+          if (!process.env.GITHUB_OUTPUT) throw new Error('GITHUB_OUTPUT is unavailable');
+          appendFileSync(
+            process.env.GITHUB_OUTPUT,
+            `version=${target.version}\ntarget_json=${JSON.stringify(target)}\n`,
+            'utf8',
+          );
+          NODE
 
       - name: Stamp exact release version
         run: node -e "const fs=require('node:fs');const p='projects/sdcorejs-angular/package.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));j.version='${{ steps.target.outputs.version }}';fs.writeFileSync(p,JSON.stringify(j,null,2)+'\n');"
@@ -350,4 +361,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add published-docs published-pages
           git commit -m "docs: publish Angular 22 release 2.5"
+          SOURCE_SHA="${{ needs.verify_source.outputs.source_sha }}"
+          test "$(git rev-parse HEAD^)" = "$SOURCE_SHA"
+          git fetch origin main --no-tags
+          git merge-base --is-ancestor "$SOURCE_SHA" origin/main
+          git rebase --onto origin/main "$SOURCE_SHA" HEAD
           git push origin HEAD:main

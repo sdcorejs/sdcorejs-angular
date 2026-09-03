@@ -228,4 +228,3 @@ Karma suites run sequentially because they share port 9876. Memory-heavy builds 
 - Preserve npm trusted-publishing/OIDC invariants and publish prebuilt checksummed tarballs without rebuilding.
 - Require an officially supported Node runtime instead of bypassing Angular's engine constraint.
 - Treat design/implementation approval and irreversible release authorization as separate decisions.
-

@@ -18,6 +18,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { isDeepStrictEqual } from 'node:util';
 
+import { compareNormalizedWorkspaceContent } from './check-version-sync.mjs';
+
 const PACKAGE_NAME = '@sdcorejs/angular';
 const REPOSITORY = {
   type: 'git',
@@ -182,11 +184,53 @@ export function validatePublicSurface({ candidate, baseline, target }) {
   invariant(candidate?.frameworkMajor === target.major, `${target.version}: candidate surface has the wrong framework major.`);
   invariant(baseline?.version === target.baselineVersion, `${target.version}: expected exact baseline ${target.baselineVersion}.`);
   invariant(baseline?.frameworkMajor === target.baselineMajor, `${target.version}: baseline framework major is invalid.`);
+  const candidateNormalized = withoutReleaseMetadata(candidate);
+  const baselineNormalized = withoutReleaseMetadata(baseline);
+  const candidateSources = candidateNormalized.sourceFiles;
+  const baselineSources = baselineNormalized.sourceFiles;
+  delete candidateNormalized.sourceFiles;
+  delete baselineNormalized.sourceFiles;
   assertExact(
-    withoutReleaseMetadata(candidate),
-    withoutReleaseMetadata(baseline),
+    candidateNormalized,
+    baselineNormalized,
     `${target.version} normalized public surface against ${target.baselineVersion}`,
   );
+  validatePackedSources({ candidateSources, baselineSources, target });
+}
+
+const APPROVED_API_MODULE_DOCUMENTATION = [
+  '    //',
+  '    // Angular 21 cung cấp HttpClient ở root mặc định, nên check này cố ý im lặng trên v21. Consumer',
+  '    // vẫn phải gọi `provideHttpClient(withInterceptorsFromDi())` nếu muốn HTTP_INTERCEPTORS dạng',
+  '    // class (bao gồm SdHttpInterceptor) tham gia request chain; public API không có token để module',
+  '    // phân biệt cấu hình đó với HttpClient mặc định.',
+].join('\n');
+
+function normalizeApprovedSourceDocumentation(content, path) {
+  const normalized = content.replace(/\r\n?/gu, '\n');
+  return path === 'services/api/src/api.module.ts'
+    ? normalized.replace(`${APPROVED_API_MODULE_DOCUMENTATION}\n`, '')
+    : normalized;
+}
+
+function validatePackedSources({ candidateSources, baselineSources, target }) {
+  invariant(candidateSources && typeof candidateSources === 'object', `${target.version}: packed sources are missing.`);
+  invariant(baselineSources && typeof baselineSources === 'object', `${target.baselineVersion}: baseline packed sources are missing.`);
+  const candidatePaths = Object.keys(candidateSources).sort();
+  const baselinePaths = Object.keys(baselineSources).sort();
+  assertExact(candidatePaths, baselinePaths, `${target.version} packed source inventory`);
+
+  for (const path of candidatePaths) {
+    const relativePath = `projects/sdcorejs-angular/${path}`;
+    const matches = compareNormalizedWorkspaceContent({
+      sourceContent: normalizeApprovedSourceDocumentation(baselineSources[path], path),
+      sourceWorkspace: `v${target.baselineMajor}`,
+      targetContent: normalizeApprovedSourceDocumentation(candidateSources[path], path),
+      targetWorkspace: `v${target.major}`,
+      relativePath,
+    });
+    invariant(matches, `${target.version}: packed source differs from ${target.baselineVersion}: ${path}.`);
+  }
 }
 
 function validIntegrity(value) {
@@ -405,7 +449,53 @@ function extractTarball(tarballPath, outputRoot) {
   return packageRoot;
 }
 
-function readPublicSurface(packageRoot, version, frameworkMajor) {
+function normalizePackedSourcePath(source, mapPath) {
+  invariant(typeof source === 'string', `Packed sourcemap ${mapPath} has a non-string source path.`);
+  const normalized = source.replaceAll('\\', '/');
+  const marker = 'projects/sdcorejs-angular/';
+  const markerIndex = normalized.lastIndexOf(marker);
+  invariant(markerIndex >= 0, `Packed sourcemap ${mapPath} contains an external source: ${source}.`);
+  const path = normalized.slice(markerIndex + marker.length);
+  invariant(path.length > 0 && !path.split('/').includes('..'), `Packed sourcemap ${mapPath} contains an invalid source: ${source}.`);
+  return path;
+}
+
+function readPackedSources(packageRoot) {
+  const sourceFiles = {};
+  const mapFiles = walkFiles(packageRoot).filter(file => file.endsWith('.mjs.map'));
+  invariant(mapFiles.length > 0, `Package ${packageRoot} has no FESM sourcemaps.`);
+
+  for (const file of mapFiles) {
+    const mapPath = relative(packageRoot, file).replaceAll('\\', '/');
+    let map;
+    try {
+      map = JSON.parse(readFileSync(file, 'utf8'));
+    }
+    catch (error) {
+      throw new Error(`Packed sourcemap ${mapPath} is invalid JSON.`, { cause: error });
+    }
+    invariant(Array.isArray(map.sources), `Packed sourcemap ${mapPath} has no sources array.`);
+    invariant(Array.isArray(map.sourcesContent), `Packed sourcemap ${mapPath} has no sourcesContent array.`);
+    invariant(map.sources.length === map.sourcesContent.length, `Packed sourcemap ${mapPath} source arrays differ in length.`);
+
+    for (let index = 0; index < map.sources.length; index += 1) {
+      const path = normalizePackedSourcePath(map.sources[index], mapPath);
+      const content = map.sourcesContent[index];
+      invariant(typeof content === 'string', `Packed sourcemap ${mapPath} has no source content for ${path}.`);
+      const normalizedContent = content.replace(/\r\n?/gu, '\n');
+      invariant(
+        sourceFiles[path] === undefined || sourceFiles[path] === normalizedContent,
+        `Packed sourcemaps contain conflicting content for ${path}.`,
+      );
+      sourceFiles[path] = normalizedContent;
+    }
+  }
+
+  invariant(Object.keys(sourceFiles).length > 0, `Package ${packageRoot} exposes no authored sources through sourcemaps.`);
+  return Object.fromEntries(Object.entries(sourceFiles).sort(([left], [right]) => left.localeCompare(right)));
+}
+
+export function readPublicSurface(packageRoot, version, frameworkMajor) {
   const manifest = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'));
   const declarations = {};
   for (const file of walkFiles(packageRoot).filter(file => file.endsWith('.d.ts'))) {
@@ -417,7 +507,7 @@ function readPublicSurface(packageRoot, version, frameworkMajor) {
     frameworkMajor,
     exports: manifest.exports,
     declarations,
-    sourceFiles: {},
+    sourceFiles: readPackedSources(packageRoot),
   };
 }
 
