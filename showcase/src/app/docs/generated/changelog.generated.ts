@@ -58,8 +58,24 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
     "unreleased": true,
     "packageVersions": [],
     "summaryMarkdown": "",
-    "markdown": "",
-    "sections": []
+    "markdown": "### Added\n\n- **`<sd-card>` and `<sd-card-group>`** are available from `@sdcorejs/angular/components/card`. The standalone, generic-content card supports accessible pointer/keyboard toggle behavior, read-only `selected()` state, semantic Core UI colors, stable `autoId` selectors, disabled states, and the same 300 ms leading click throttle as `SdButton`. Groups provide single or immutable multiple selection through `[(model)]`, user-only `(sdChange)`, object-aware `compareWith`, direct nearest-group injection, and no imposed application layout.",
+    "sections": [
+      {
+        "key": "added",
+        "title": "Added",
+        "level": 3,
+        "anchor": "unreleased-added",
+        "markdown": "- **`<sd-card>` and `<sd-card-group>`** are available from `@sdcorejs/angular/components/card`. The standalone, generic-content card supports accessible pointer/keyboard toggle behavior, read-only `selected()` state, semantic Core UI colors, stable `autoId` selectors, disabled states, and the same 300 ms leading click throttle as `SdButton`. Groups provide single or immutable multiple selection through `[(model)]`, user-only `(sdChange)`, object-aware `compareWith`, direct nearest-group injection, and no imposed application layout.",
+        "items": [
+          {
+            "text": "**`<sd-card>` and `<sd-card-group>`** are available from `@sdcorejs/angular/components/card`. The standalone, generic-content card supports accessible pointer/keyboard toggle behavior, read-only `selected()` state, semantic Core UI colors, stable `autoId` selectors, disabled states, and the same 300 ms leading click throttle as `SdButton`. Groups provide single or immutable multiple selection through `[(model)]`, user-only `(sdChange)`, object-aware `compareWith`, direct nearest-group injection, and no imposed application layout.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      }
+    ]
   },
   {
     "id": "release-2-5",

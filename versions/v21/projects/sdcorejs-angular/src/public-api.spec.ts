@@ -59,6 +59,7 @@ import type {
   SdBreadcrumbRouteConfig,
   SdDataStateKind,
   SdDataStateTemplateContext,
+  SdCardCompareWith,
   SdJobProgressMode,
   SdPdfBrowserAdapter,
   SdPdfDestination,
@@ -318,6 +319,7 @@ type Release14PublicTypes = readonly [
   SdAuditDiffRow,
   SdAuditDiffMode,
   SdAuditDiffValueTemplateContext,
+  SdCardCompareWith<unknown>,
 ];
 
 describe('sd-angular public API', () => {
@@ -499,6 +501,17 @@ describe('sd-angular public API', () => {
     expect(components.SdDataStateTemplateDirective).toBeDefined();
     expect(breadcrumb.label).toBe('Orders');
     expect(state).toBe('empty');
+  });
+
+  it('exposes Card from its leaf entrypoint and the components barrel', async () => {
+    const leaf = await import('../components/card');
+    const components = await import('../components');
+
+    expect(leaf.SdCard).toBeDefined();
+    expect(leaf.SdCardGroup).toBeDefined();
+    expect(Object.keys(leaf).sort()).toEqual(['SdCard', 'SdCardGroup']);
+    expect(components.SdCard).toBe(leaf.SdCard);
+    expect(components.SdCardGroup).toBe(leaf.SdCardGroup);
   });
 
   it('exposes entity-picker and tree-select form entrypoints with generic key models', async () => {

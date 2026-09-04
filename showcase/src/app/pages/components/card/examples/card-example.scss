@@ -1,0 +1,42 @@
+:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.example-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+// The consumer owns layout; SdCardGroup deliberately provides no grid or gap.
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.demo-card {
+  max-width: 360px;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-content span,
+.card-content small,
+.model-readout {
+  color: var(--sd-text-secondary, #5f6368);
+}
+
+.model-readout {
+  margin: 0;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+}

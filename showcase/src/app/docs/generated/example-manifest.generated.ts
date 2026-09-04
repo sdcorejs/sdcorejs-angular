@@ -42,6 +42,11 @@ export type ShowcaseExampleSourceKey =
   | "components/button/example-secondary-vs-black"
   | "components/button/example-toggle-icon-set-bang-alias"
   | "components/button/example-trang-thai"
+  | "components/card/example-disabled-va-color"
+  | "components/card/example-multiple-selection"
+  | "components/card/example-object-comparewith"
+  | "components/card/example-single-selection"
+  | "components/card/example-standalone-card"
   | "components/chart/example-bieu-do-bar"
   | "components/chart/example-bieu-do-line"
   | "components/chart/example-bieu-do-pie-doughnut"
@@ -636,6 +641,41 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-trang-thai",
     title: "Trạng thái",
     description: "Existing “Trạng thái” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/card/example-standalone-card",
+    pageKey: "components/card",
+    sectionId: "example-standalone-card",
+    title: "Standalone card",
+    description: "Click card để toggle state; consumer đọc state mới qua #card=sdCard.",
+  },
+  {
+    sourceKey: "components/card/example-single-selection",
+    pageKey: "components/card",
+    sectionId: "example-single-selection",
+    title: "Single selection",
+    description: "Click lại card đang chọn để clear model về null.",
+  },
+  {
+    sourceKey: "components/card/example-multiple-selection",
+    pageKey: "components/card",
+    sectionId: "example-multiple-selection",
+    title: "Multiple selection",
+    description: "Existing “Multiple selection” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/card/example-object-comparewith",
+    pageKey: "components/card",
+    sectionId: "example-object-comparewith",
+    title: "Object compareWith",
+    description: "Model và option là hai object khác reference nhưng card ACTIVE vẫn selected theo code.",
+  },
+  {
+    sourceKey: "components/card/example-disabled-va-color",
+    pageKey: "components/card",
+    sectionId: "example-disabled-va-color",
+    title: "Disabled và color",
+    description: "Gồm selected+disabled, group disabled, inherited color, override color và standalone selected state.",
   },
   {
     sourceKey: "components/chart/example-bieu-do-line",

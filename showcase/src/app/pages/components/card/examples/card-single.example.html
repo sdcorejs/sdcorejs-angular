@@ -1,0 +1,14 @@
+<div class="example-stack">
+  <sd-card-group class="card-grid" autoId="single-selection" [(model)]="selectedStatus" (sdChange)="onStatusChange($event)">
+    @for (status of statuses; track status.code) {
+      <sd-card #card="sdCard" [value]="status" [autoId]="'single-' + status.code">
+        <div class="card-content">
+          <strong>{{ status.name }}</strong>
+          <span>Code: {{ status.code }}</span>
+          <small>{{ card.selected() ? 'Đã chọn' : 'Chưa chọn' }}</small>
+        </div>
+      </sd-card>
+    }
+  </sd-card-group>
+  <p class="model-readout">sdChange gần nhất: {{ lastChange() }}</p>
+</div>

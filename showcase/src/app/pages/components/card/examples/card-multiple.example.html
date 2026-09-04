@@ -1,0 +1,14 @@
+<div class="example-stack">
+  <sd-card-group class="card-grid" autoId="multiple-selection" multiple [(model)]="selectedChannels" (sdChange)="onChannelsChange($event)">
+    @for (channel of channels; track channel.code) {
+      <sd-card #card="sdCard" [value]="channel" [autoId]="'multiple-' + channel.code">
+        <div class="card-content">
+          <strong>{{ channel.name }}</strong>
+          <span>{{ channel.code }}</span>
+          <small>{{ card.selected() ? 'Included' : 'Not included' }}</small>
+        </div>
+      </sd-card>
+    }
+  </sd-card-group>
+  <p class="model-readout">Model: {{ selectedCodes() }} · sdChange: {{ lastChange() }}</p>
+</div>
