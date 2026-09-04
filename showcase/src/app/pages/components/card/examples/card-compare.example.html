@@ -1,0 +1,14 @@
+<div class="example-stack">
+  <sd-card-group class="card-grid" autoId="object-compare" [(model)]="selectedStatus" [compareWith]="compareStatus">
+    @for (status of statuses; track status.code) {
+      <sd-card #card="sdCard" [value]="status" [autoId]="'compare-' + status.code">
+        <div class="card-content">
+          <strong>{{ status.code }}</strong>
+          <span>{{ status.name }}</span>
+          <small>{{ card.selected() ? 'Selected by code' : 'Not selected' }}</small>
+        </div>
+      </sd-card>
+    }
+  </sd-card-group>
+  <p class="model-readout">Model object name: {{ selectedStatus()?.name ?? 'none' }}</p>
+</div>

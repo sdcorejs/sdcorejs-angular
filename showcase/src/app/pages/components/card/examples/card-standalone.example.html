@@ -1,0 +1,10 @@
+<div class="example-stack">
+  <sd-card #card="sdCard" class="demo-card" value="participating" autoId="standalone" (click)="onCardClick(card.selected())">
+    <div class="card-content">
+      <strong>Participation</strong>
+      <span>Toàn bộ nội dung này do consumer project vào.</span>
+      <small>{{ card.selected() ? 'Đã chọn' : 'Click để chọn' }}</small>
+    </div>
+  </sd-card>
+  <p class="model-readout">selected(): {{ lastSelected() }}</p>
+</div>

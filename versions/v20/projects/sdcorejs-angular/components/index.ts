@@ -1,5 +1,6 @@
 export * from '@sdcorejs/angular/components/avatar';
 export * from '@sdcorejs/angular/components/button';
+export * from '@sdcorejs/angular/components/card';
 export * from '@sdcorejs/angular/components/badge';
 export * from '@sdcorejs/angular/components/tab-router';
 export * from '@sdcorejs/angular/components/side-drawer';

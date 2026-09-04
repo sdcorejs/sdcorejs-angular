@@ -1,0 +1,40 @@
+<div class="example-stack">
+  <sd-card-group class="card-grid" autoId="state-colors" color="info" [(model)]="selection">
+    <sd-card value="inherited" autoId="state-inherited">
+      <div class="card-content"><strong>Group color</strong><span>Kế thừa info.</span></div>
+    </sd-card>
+    <sd-card value="override" autoId="state-override" color="warning">
+      <div class="card-content"><strong>Card override</strong><span>Đổi sang warning.</span></div>
+    </sd-card>
+    <sd-card value="locked" autoId="state-locked" disabled>
+      <div class="card-content"><strong>Selected + disabled</strong><span>State vẫn hiển thị.</span></div>
+    </sd-card>
+  </sd-card-group>
+
+  <sd-card-group
+    class="card-grid"
+    autoId="state-disabled-group"
+    disabled
+    color="error"
+    [(model)]="disabledGroupSelection"
+    aria-label="Disabled group">
+    <sd-card value="group-disabled" autoId="state-group-disabled">
+      <div class="card-content"><strong>Disabled group</strong><span>Không thể activate.</span></div>
+    </sd-card>
+  </sd-card-group>
+
+  <sd-card
+    #standalone="sdCard"
+    class="demo-card"
+    value="standalone-state"
+    autoId="state-standalone"
+    color="success"
+    (click)="standaloneSelected.set(standalone.selected())">
+    <div class="card-content">
+      <strong>Standalone selected</strong>
+      <span>Click để xem selected style độc lập.</span>
+      <small>{{ standalone.selected() ? 'Selected' : 'Not selected' }}</small>
+    </div>
+  </sd-card>
+  <p class="model-readout">Standalone selected(): {{ standaloneSelected() }}</p>
+</div>

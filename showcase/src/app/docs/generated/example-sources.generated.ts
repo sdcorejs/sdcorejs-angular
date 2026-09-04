@@ -1082,6 +1082,349 @@ export class ButtonStatesExampleComponent {
   min-width: 0;
 }`,
   },
+  "components/card/example-disabled-va-color": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdCard, SdCardGroup } from '@sdcorejs/angular/components/card';
+
+@Component({
+  selector: 'app-card-states-example',
+  standalone: true,
+  imports: [SdCard, SdCardGroup],
+  templateUrl: './card-states.example.html',
+  styleUrl: './card-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CardStatesExampleComponent {
+  readonly selection = signal<string | null>('locked');
+  readonly disabledGroupSelection = signal<string | null>(null);
+  readonly standaloneSelected = signal(false);
+}`,
+    scss: `:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.example-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+// The consumer owns layout; SdCardGroup deliberately provides no grid or gap.
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.demo-card {
+  max-width: 360px;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-content span,
+.card-content small,
+.model-readout {
+  color: var(--sd-text-secondary, #5f6368);
+}
+
+.model-readout {
+  margin: 0;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+}`,
+  },
+  "components/card/example-multiple-selection": {
+    typescript: `import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { SdCard, SdCardGroup } from '@sdcorejs/angular/components/card';
+
+interface ChannelOption {
+  code: string;
+  name: string;
+}
+
+@Component({
+  selector: 'app-card-multiple-example',
+  standalone: true,
+  imports: [SdCard, SdCardGroup],
+  templateUrl: './card-multiple.example.html',
+  styleUrl: './card-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CardMultipleExampleComponent {
+  readonly channels: ChannelOption[] = [
+    { code: 'email', name: 'Email' },
+    { code: 'sms', name: 'SMS' },
+    { code: 'push', name: 'Push notification' },
+  ];
+  readonly selectedChannels = signal<ChannelOption[]>([]);
+  readonly lastChange = signal('none');
+  readonly selectedCodes = computed(() => {
+    const selection = this.selectedChannels();
+    return selection.map(item => item.code).join(', ') || 'none';
+  });
+
+  onChannelsChange(value: ChannelOption | ChannelOption[] | null): void {
+    this.lastChange.set(Array.isArray(value) ? value.map(item => item.code).join(', ') || 'none' : 'invalid');
+  }
+}`,
+    scss: `:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.example-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+// The consumer owns layout; SdCardGroup deliberately provides no grid or gap.
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.demo-card {
+  max-width: 360px;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-content span,
+.card-content small,
+.model-readout {
+  color: var(--sd-text-secondary, #5f6368);
+}
+
+.model-readout {
+  margin: 0;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+}`,
+  },
+  "components/card/example-object-comparewith": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdCard, SdCardGroup, type SdCardCompareWith } from '@sdcorejs/angular/components/card';
+
+interface StatusOption {
+  code: string;
+  name: string;
+}
+
+@Component({
+  selector: 'app-card-compare-example',
+  standalone: true,
+  imports: [SdCard, SdCardGroup],
+  templateUrl: './card-compare.example.html',
+  styleUrl: './card-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CardCompareExampleComponent {
+  readonly statuses: StatusOption[] = [
+    { code: 'active', name: 'Option reference' },
+    { code: 'paused', name: 'Paused' },
+  ];
+  readonly selectedStatus = signal<StatusOption | null>({
+    code: 'active',
+    name: 'Different model reference',
+  });
+  readonly compareStatus: SdCardCompareWith<StatusOption> = (modelValue, cardValue) => modelValue.code === cardValue.code;
+}`,
+    scss: `:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.example-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+// The consumer owns layout; SdCardGroup deliberately provides no grid or gap.
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.demo-card {
+  max-width: 360px;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-content span,
+.card-content small,
+.model-readout {
+  color: var(--sd-text-secondary, #5f6368);
+}
+
+.model-readout {
+  margin: 0;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+}`,
+  },
+  "components/card/example-single-selection": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdCard, SdCardGroup } from '@sdcorejs/angular/components/card';
+
+interface StatusOption {
+  code: string;
+  name: string;
+}
+
+@Component({
+  selector: 'app-card-single-example',
+  standalone: true,
+  imports: [SdCard, SdCardGroup],
+  templateUrl: './card-single.example.html',
+  styleUrl: './card-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CardSingleExampleComponent {
+  readonly statuses: StatusOption[] = [
+    { code: 'active', name: 'Đang hoạt động' },
+    { code: 'paused', name: 'Tạm dừng' },
+    { code: 'archived', name: 'Đã lưu trữ' },
+  ];
+  readonly selectedStatus = signal<StatusOption | null>(null);
+  readonly lastChange = signal('Chưa có interaction');
+
+  onStatusChange(value: StatusOption | StatusOption[] | null): void {
+    this.lastChange.set(Array.isArray(value) ? 'invalid' : (value?.code ?? 'null'));
+  }
+}`,
+    scss: `:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.example-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+// The consumer owns layout; SdCardGroup deliberately provides no grid or gap.
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.demo-card {
+  max-width: 360px;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-content span,
+.card-content small,
+.model-readout {
+  color: var(--sd-text-secondary, #5f6368);
+}
+
+.model-readout {
+  margin: 0;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+}`,
+  },
+  "components/card/example-standalone-card": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdCard } from '@sdcorejs/angular/components/card';
+
+@Component({
+  selector: 'app-card-standalone-example',
+  standalone: true,
+  imports: [SdCard],
+  templateUrl: './card-standalone.example.html',
+  styleUrl: './card-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CardStandaloneExampleComponent {
+  readonly lastSelected = signal(false);
+
+  onCardClick(selected: boolean): void {
+    this.lastSelected.set(selected);
+  }
+}`,
+    scss: `:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.example-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+// The consumer owns layout; SdCardGroup deliberately provides no grid or gap.
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.demo-card {
+  max-width: 360px;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-content span,
+.card-content small,
+.model-readout {
+  color: var(--sd-text-secondary, #5f6368);
+}
+
+.model-readout {
+  margin: 0;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+}`,
+  },
   "components/chart": {
     typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ChartData, ChartOptions } from 'chart.js';
@@ -14066,6 +14409,113 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
 <sd-button type="fill" color="primary" title="disabled" [disabled]="true"></sd-button>
 <div style="width: 240px;">
   <sd-button type="fill" color="primary" title="block" [block]="true"></sd-button>
+</div>`,
+  },
+  "components/card/example-disabled-va-color": {
+    ...SHOWCASE_PAGE_SOURCES["components/card/example-disabled-va-color"],
+    html: `<div class="example-stack">
+  <sd-card-group class="card-grid" autoId="state-colors" color="info" [(model)]="selection">
+    <sd-card value="inherited" autoId="state-inherited">
+      <div class="card-content"><strong>Group color</strong><span>Kế thừa info.</span></div>
+    </sd-card>
+    <sd-card value="override" autoId="state-override" color="warning">
+      <div class="card-content"><strong>Card override</strong><span>Đổi sang warning.</span></div>
+    </sd-card>
+    <sd-card value="locked" autoId="state-locked" disabled>
+      <div class="card-content"><strong>Selected + disabled</strong><span>State vẫn hiển thị.</span></div>
+    </sd-card>
+  </sd-card-group>
+
+  <sd-card-group
+    class="card-grid"
+    autoId="state-disabled-group"
+    disabled
+    color="error"
+    [(model)]="disabledGroupSelection"
+    aria-label="Disabled group">
+    <sd-card value="group-disabled" autoId="state-group-disabled">
+      <div class="card-content"><strong>Disabled group</strong><span>Không thể activate.</span></div>
+    </sd-card>
+  </sd-card-group>
+
+  <sd-card
+    #standalone="sdCard"
+    class="demo-card"
+    value="standalone-state"
+    autoId="state-standalone"
+    color="success"
+    (click)="standaloneSelected.set(standalone.selected())">
+    <div class="card-content">
+      <strong>Standalone selected</strong>
+      <span>Click để xem selected style độc lập.</span>
+      <small>{{ standalone.selected() ? 'Selected' : 'Not selected' }}</small>
+    </div>
+  </sd-card>
+  <p class="model-readout">Standalone selected(): {{ standaloneSelected() }}</p>
+</div>`,
+  },
+  "components/card/example-multiple-selection": {
+    ...SHOWCASE_PAGE_SOURCES["components/card/example-multiple-selection"],
+    html: `<div class="example-stack">
+  <sd-card-group class="card-grid" autoId="multiple-selection" multiple [(model)]="selectedChannels" (sdChange)="onChannelsChange($event)">
+    @for (channel of channels; track channel.code) {
+      <sd-card #card="sdCard" [value]="channel" [autoId]="'multiple-' + channel.code">
+        <div class="card-content">
+          <strong>{{ channel.name }}</strong>
+          <span>{{ channel.code }}</span>
+          <small>{{ card.selected() ? 'Included' : 'Not included' }}</small>
+        </div>
+      </sd-card>
+    }
+  </sd-card-group>
+  <p class="model-readout">Model: {{ selectedCodes() }} · sdChange: {{ lastChange() }}</p>
+</div>`,
+  },
+  "components/card/example-object-comparewith": {
+    ...SHOWCASE_PAGE_SOURCES["components/card/example-object-comparewith"],
+    html: `<div class="example-stack">
+  <sd-card-group class="card-grid" autoId="object-compare" [(model)]="selectedStatus" [compareWith]="compareStatus">
+    @for (status of statuses; track status.code) {
+      <sd-card #card="sdCard" [value]="status" [autoId]="'compare-' + status.code">
+        <div class="card-content">
+          <strong>{{ status.code }}</strong>
+          <span>{{ status.name }}</span>
+          <small>{{ card.selected() ? 'Selected by code' : 'Not selected' }}</small>
+        </div>
+      </sd-card>
+    }
+  </sd-card-group>
+  <p class="model-readout">Model object name: {{ selectedStatus()?.name ?? 'none' }}</p>
+</div>`,
+  },
+  "components/card/example-single-selection": {
+    ...SHOWCASE_PAGE_SOURCES["components/card/example-single-selection"],
+    html: `<div class="example-stack">
+  <sd-card-group class="card-grid" autoId="single-selection" [(model)]="selectedStatus" (sdChange)="onStatusChange($event)">
+    @for (status of statuses; track status.code) {
+      <sd-card #card="sdCard" [value]="status" [autoId]="'single-' + status.code">
+        <div class="card-content">
+          <strong>{{ status.name }}</strong>
+          <span>Code: {{ status.code }}</span>
+          <small>{{ card.selected() ? 'Đã chọn' : 'Chưa chọn' }}</small>
+        </div>
+      </sd-card>
+    }
+  </sd-card-group>
+  <p class="model-readout">sdChange gần nhất: {{ lastChange() }}</p>
+</div>`,
+  },
+  "components/card/example-standalone-card": {
+    ...SHOWCASE_PAGE_SOURCES["components/card/example-standalone-card"],
+    html: `<div class="example-stack">
+  <sd-card #card="sdCard" class="demo-card" value="participating" autoId="standalone" (click)="onCardClick(card.selected())">
+    <div class="card-content">
+      <strong>Participation</strong>
+      <span>Toàn bộ nội dung này do consumer project vào.</span>
+      <small>{{ card.selected() ? 'Đã chọn' : 'Click để chọn' }}</small>
+    </div>
+  </sd-card>
+  <p class="model-readout">selected(): {{ lastSelected() }}</p>
 </div>`,
   },
   "components/chart/example-bieu-do-bar": {
