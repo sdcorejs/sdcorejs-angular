@@ -16,7 +16,7 @@ function jobEntries(source) {
   }));
 }
 
-function executableCommands(source) {
+function executableCommandLines(source) {
   const lines = source.split(/\r?\n/u);
   const commands = [];
 
@@ -43,7 +43,22 @@ function executableCommands(source) {
     }
   }
 
-  return commands.join('\n');
+  return commands;
+}
+
+function executableCommands(source) {
+  return executableCommandLines(source).join('\n');
+}
+
+function assertExactCommandSequence(source, expectedCommands) {
+  const commands = executableCommandLines(source);
+  let previousIndex = -1;
+
+  for (const command of expectedCommands) {
+    const commandIndex = commands.indexOf(command, previousIndex + 1);
+    assert.ok(commandIndex > previousIndex, `expected exact executable command after prior command: ${command}`);
+    previousIndex = commandIndex;
+  }
 }
 
 function sourceWithoutComments(source) {
@@ -252,32 +267,35 @@ test('postpublish materializes verified v19, clean-installs Showcase and commits
   const buildIndex = postpublishCommands.indexOf('npm run build:page -- --suffix');
   assert.ok(installIndex >= 0 && installIndex < buildIndex, 'Showcase must be clean-installed before page generation');
 
-  has(postpublishCommands, /git fetch origin main --no-tags/u);
-  has(postpublishCommands, /git merge-base --is-ancestor ["']?\$SOURCE_SHA["']? origin\/main/u);
-  has(postpublishCommands, /git rebase --onto origin\/main ["']?\$SOURCE_SHA["']? HEAD/u);
-  has(
-    postpublishCommands,
-    /test "\$\(git rev-parse HEAD\^\)" = "\$SOURCE_SHA"/u,
-    'postpublish must prove that the generated docs commit is the only commit above the release source',
-  );
   lacks(postpublishCommands, /git rebase origin\/main/u);
-  const commitIndex = postpublishCommands.indexOf('git commit -m');
-  const parentGuardIndex = postpublishCommands.indexOf('test "$(git rev-parse HEAD^)" = "$SOURCE_SHA"');
-  const fetchIndex = postpublishCommands.indexOf('git fetch origin main --no-tags');
-  const ancestryIndex = postpublishCommands.indexOf('git merge-base --is-ancestor');
-  const rebaseIndex = postpublishCommands.indexOf('git rebase --onto origin/main');
-  const pushIndex = postpublishCommands.indexOf('git push origin HEAD:main');
-  assert.ok(
-    commitIndex >= 0 && commitIndex < parentGuardIndex && parentGuardIndex < fetchIndex && fetchIndex < ancestryIndex &&
-      ancestryIndex < rebaseIndex && rebaseIndex < pushIndex,
-    'postpublish must recheck source ancestry and replay only its docs commit onto current main before pushing',
-  );
+  assertExactCommandSequence(postpublish.source, [
+    'git commit -m "docs: publish Angular 22 release 2.5"',
+    'SOURCE_SHA="${{ needs.verify_source.outputs.source_sha }}"',
+    'test "$(git rev-parse HEAD^)" = "$SOURCE_SHA"',
+    'git fetch origin main --no-tags',
+    'git merge-base --is-ancestor "$SOURCE_SHA" origin/main',
+    'git rebase --onto origin/main "$SOURCE_SHA" HEAD',
+    'git push origin HEAD:main',
+  ]);
 
   const deployBuildOrInstallCommand = /(?:^|(?:&&|\|\||;)\s*|\b(?:if|then|while|until|do)\s+)(?:[A-Za-z_][A-Za-z0-9_]*=\S+\s+)*(?:(?:node\b[^\r\n;&|]*\b|npx\s+)?ng\s+build\b|npm(?:\s+--prefix\s+\S+)?\s+(?:run\s+build(?::[^\s;&|]+)?|ci|install)\b)/mu;
   lacks(
     executableCommands(deployPagesWorkflow),
     deployBuildOrInstallCommand,
     'deploy-pages must remain a build-free copier',
+  );
+});
+
+test('postpublish parent guard cannot be replaced by a no-op command containing the expected text', () => {
+  const exactGuard = 'test "$(git rev-parse HEAD^)" = "$SOURCE_SHA"';
+  const tamperedWorkflow = workflow.replace(exactGuard, `echo '${exactGuard}'`);
+  assert.notEqual(tamperedWorkflow, workflow, 'fixture must replace the production parent guard');
+  const postpublish = jobEntries(tamperedWorkflow).find(job => /npm run build:page\s+--\s+--suffix/u.test(executableCommands(job.source)));
+  assert.ok(postpublish, 'tampered fixture must retain the postpublish job');
+
+  assert.throws(
+    () => assertExactCommandSequence(postpublish.source, [exactGuard]),
+    /expected exact executable command/u,
   );
 });
 
