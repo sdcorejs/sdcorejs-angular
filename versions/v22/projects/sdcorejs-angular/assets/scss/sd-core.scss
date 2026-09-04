@@ -1,0 +1,18 @@
+@use '../fonts/fonts.scss';
+@use './core/utilities/base';  // Reset / Reboot — phải load trước tất cả
+@use './core/utilities';
+@use './core/color.scss';
+@use './core/form.scss';
+@use './core/image.scss';
+@use './core/menu.scss';
+@use './core/scrollbar.scss';
+@use './themes/default.scss';
+@use './themes/material-theme.scss';
+
+html {
+  @include default.theme(default.$default-theme);
+}
+
+html, body {
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+}

@@ -1,0 +1,133 @@
+@let _label = label();
+@let _appearance = appearance();
+@let _hideInlineError = hideInlineError();
+@let _errorMessage = errorMessage();
+@let _helperText = helperText();
+@let _format = format();
+@let _required = required();
+@let _isInline = isInline();
+<!-- why: một cổng gate duy nhất cho <mat-error>, aria-invalid và aria-describedby — trước đây
+     message hiện nhưng control không báo invalid nên screen reader không biết ô đang lỗi. -->
+@let _errorVisible = !!_errorMessage && formControl.touched;
+@let _showInlineError = !_hideInlineError && _errorVisible;
+
+@if (isViewed()) {
+  <sd-view
+    [label]="_label"
+    [labelTemplate]="sdLabelTemplate()"
+    [value]="formControl.value"
+    [display]="formControl.value | sdFormatNumber: undefined : _format"
+    [hyperlink]="hyperlink()"
+    [valueTemplate]="viewTemplate()">
+  </sd-view>
+} @else if (_isInline) {
+  <sd-inline-text
+    [control]="inputControl"
+    [placeholder]="placeholder() || _label || ''"
+    [clearable]="clearable() && !_required"
+    [autoId]="autoId()"
+    [state]="formControl.invalid && formControl.touched ? 'error' : 'auto'"
+    (sdFocus)="onFocus()"
+    (sdBlur)="onBlur()"
+    (keyupEnter)="onKeyupEnter()"
+    (sdKeydown)="onKeydown($event)"
+    (sdPaste)="onPaste($event)"
+    (sdCompositionStart)="onCompositionStart($event)"
+    (sdCompositionEnd)="onCompositionEnd($event)"
+    (cleared)="cleared.emit()">
+  </sd-inline-text>
+} @else {
+  @if (!_appearance) {
+    <ng-content select="[sdLabel]">
+      @if (_label) {
+        <sd-label [label]="_label" [required]="_required"></sd-label>
+      }
+    </ng-content>
+  }
+
+  <!-- why: div chỉ là hộp layout. aria-hidden="true" cũ ẩn CẢ cây con (label + <input> +
+       <mat-error> + nút clear) khỏi accessibility tree. role="presentation" chỉ vô hiệu hoá
+       chính div, không lan xuống con; (click) là tiện ích chuột mà bàn phím đã có sẵn qua Tab. -->
+  <div
+    class="d-flex align-items-center"
+    role="presentation"
+    [class.c-focused]="isFocused"
+    [class.c-disabled]="formControl.disabled"
+    (click)="onClick()">
+    <mat-form-field
+      [class.sd-md]="size() === 'md'"
+      [class.sd-sm]="size() === 'sm'"
+      [class.hide-inline-error]="_hideInlineError"
+      [appearance]="_appearance!"
+      [floatLabel]="floatLabel()">
+      @if (_appearance && _label) {
+        <mat-label class="sd-form-field-label">
+          <span>{{ _label }}</span>
+          @if (_helperText) {
+            <sd-icon [matTooltip]="_helperText" matTooltipPosition="below" name="info"></sd-icon>
+          }
+        </mat-label>
+      }
+
+      <!-- why: BỎ aria-hidden trên chính <input> — ô vẫn nhận focus bằng Tab, aria-hidden chỉ
+           làm screen reader đọc ra khoảng lặng. -->
+      <input
+        [id]="id"
+        [formControl]="inputControl"
+        #control
+        matInput
+        [placeholder]="placeholder() || _label || ''"
+        [errorStateMatcher]="matcher"
+        (keyup.enter)="onKeyupEnter()"
+        (focus)="onFocus()"
+        (blur)="onBlur()"
+        (keydown)="onKeydown($event)"
+        (compositionstart)="onCompositionStart($event)"
+        (compositionend)="onCompositionEnd($event)"
+        [required]="_required"
+        [readonly]="readonly()"
+        [autocomplete]="id"
+        (paste)="onPaste($event)"
+        autocorrect="off"
+        [attr.data-autoId]="autoId()"
+        [attr.data-disabled]="dataDisabled()"
+        [attr.data-invalid]="dataInvalid()"
+        [attr.data-empty]="dataEmpty()"
+        [attr.data-value]="dataValue()"
+        [attr.data-required]="dataRequired()"
+        [attr.data-error-message]="dataErrorMessage()"
+        [attr.aria-invalid]="_errorVisible ? 'true' : null"
+        [attr.aria-describedby]="_errorMessage ? errorId : null" />
+
+      @if (_showInlineError) {
+        <mat-error [id]="errorId">{{ _errorMessage }}</mat-error>
+      }
+
+      <!-- why: nút clear render TRƯỚC error icon. Clear hover-gated (visibility:hidden) vẫn
+             chiếm chỗ trong layout -> nếu đứng sau sẽ đẩy error icon "tụt vào trong". Đứng trước
+             thì error icon nằm sát mép phải, clear giữ slot vô hình bên trái. -->
+      @if (showClear()) {
+        <button type="button" class="sd-clear-btn sd-hover" matSuffix (click)="clear($event)" title="Xóa" aria-label="Xóa">
+          <sd-icon name="close"></sd-icon>
+        </button>
+      }
+
+      @if (_hideInlineError && _errorMessage && formControl.touched) {
+        <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
+      }
+      @if (_hideInlineError && _errorMessage && formControl.touched) {
+        <span class="sd-visually-hidden" [id]="errorId" matSuffix>{{ _errorMessage }}</span>
+
+      }
+
+      @if (sdSuffixDef()?.templateRef; as suffixRef) {
+        <ng-container matSuffix>
+          <ng-container [ngTemplateOutlet]="suffixRef"></ng-container>
+        </ng-container>
+      }
+      <!-- <ng-container matSuffix>
+          <ng-content select="[sdSuffix]"></ng-content>
+        </ng-container> -->
+    </mat-form-field>
+  </div>
+}

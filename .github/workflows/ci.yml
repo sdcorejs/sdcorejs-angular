@@ -1,14 +1,5 @@
 name: CI
 
-# why: until now the ONLY workflow that touched the library ran on a `v<suffix>` tag,
-# and even that one did not run the tests. A regression therefore surfaced at publish
-# time, after the release decision had already been made. This runs the same gates the
-# release ritual depends on — lint, build, unit tests, and the version-sync check — on
-# every push and pull request, so `main` is known-good before anyone tags it.
-#
-# Deliberately v19-only: v19 is the source of truth and v20/v21 are generated from it
-# by `npm run sync`. `check:sync` is what proves the generated workspaces still match.
-
 on:
   push:
     branches:
@@ -25,7 +16,7 @@ concurrency:
 
 jobs:
   verify-version-sync:
-    name: Verify v19 rollout to v20/v21
+    name: Verify four-line workspace sync
     runs-on: ubuntu-latest
 
     steps:
@@ -37,14 +28,33 @@ jobs:
         with:
           node-version: 20
 
-      - name: Check generated version workspaces
+      - name: Verify generated workspaces
         run: npm run check:sync
 
-  lint-build-test:
-    name: Lint, build and test (v19)
+  scripts:
+    name: Repository script tests
     runs-on: ubuntu-latest
-    # The suite is ~4.6k specs and finishes in a couple of minutes; the cap only exists
-    # so a wedged headless browser cannot burn a full job allowance.
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install orchestrator dependencies
+        run: npm ci
+
+      - name: Run repository contracts
+        run: npm run test:scripts
+
+  canonical-v19:
+    name: Canonical v19 lint, build and coverage
+    runs-on: ubuntu-latest
     timeout-minutes: 30
 
     steps:
@@ -54,38 +64,37 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: '22.22.3'
           cache: npm
           cache-dependency-path: versions/v19/package-lock.json
 
-      - name: Install dependencies
-        # npm install, not npm ci: the checked-in lockfiles can lag behind the manifests
-        # after a sync rollout (see the "Known issues" section of CLAUDE.md).
-        run: npm install --legacy-peer-deps
+      - name: Install v19 exactly
+        run: npm ci --legacy-peer-deps
         working-directory: versions/v19
 
-      - name: Lint
-        # `npm run lint:release` is a documented pre-release step and it was red on a
-        # clean `main` before this branch. Gating it here stops that recurring.
-        run: npx ng lint
+      - name: Lint v19
+        run: npm run lint
         working-directory: versions/v19
 
-      - name: Build the library
-        # ng-packagr is the real typecheck gate for the published surface.
+      - name: Build v19
         run: npm run build
         working-directory: versions/v19
 
-      - name: Unit tests
-        # --code-coverage is REQUIRED, not a nicety: the karma coverage thresholds are
-        # only evaluated when coverage is collected, so without it they gate nothing.
-        # karma.conf.js prints the Jasmine random seed at the top of the run; quote it
-        # when reporting a red run (replay caveat documented in that file).
+      - name: Run v19 coverage suite
         run: npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadlessCI --code-coverage
         working-directory: versions/v19
 
-  scripts:
-    name: Repo script tests
+  compatibility:
+    name: Angular compatibility (${{ matrix.version }})
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - version: v20
+          - version: v21
+          - version: v22
 
     steps:
       - name: Checkout
@@ -94,12 +103,29 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '22.22.3'
+          cache: npm
+          cache-dependency-path: versions/${{ matrix.version }}/package-lock.json
 
-      - name: Install orchestrator dependencies
-        run: npm install
+      - name: Install historical workspace exactly
+        if: ${{ matrix.version != 'v22' }}
+        run: npm ci --legacy-peer-deps
+        working-directory: versions/${{ matrix.version }}
 
-      - name: Run generator and docs script tests
-        # Covers the showcase generators, the branding guard, collect-docs (which
-        # fail-closes on unpinned `blob/main` links) and the published-page builder.
-        run: npm run test:scripts
+      - name: Install Angular 22 workspace exactly
+        if: ${{ matrix.version == 'v22' }}
+        run: npm ci
+        working-directory: versions/${{ matrix.version }}
+
+      - name: Lint package line
+        run: npm run lint
+        working-directory: versions/${{ matrix.version }}
+
+      - name: Build package line
+        run: npm run build
+        working-directory: versions/${{ matrix.version }}
+
+      - name: Run new-major Angular 22 coverage suite
+        if: ${{ matrix.version == 'v22' }}
+        run: npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadlessCI --code-coverage
+        working-directory: versions/${{ matrix.version }}

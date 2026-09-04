@@ -1,0 +1,1 @@
+export * from './image-upload/image-upload.plugin';

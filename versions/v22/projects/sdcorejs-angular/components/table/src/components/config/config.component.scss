@@ -1,0 +1,173 @@
+// why: đường kẻ của mat-table mặc định là on-surface ~12% — trên một bảng 7+ dòng toàn control
+// nó đọc thành lưới kẻ đậm. Hạ xuống outline-variant (đường phân cách chuẩn của M3) và chỉ giữ kẻ
+// ngang, để mắt bám theo dòng chứ không phải khung.
+$config-border: var(--mat-sys-outline-variant, rgba(0, 0, 0, 0.08));
+
+// why: .sd-modal-body cố ý để padding 0 (mỗi nội dung tự quyết), nên bảng bo góc sẽ dính sát mép
+// modal nếu ở đây không tự chừa lề.
+.c-container {
+  position: relative;
+  min-height: 200px;
+  padding: 16px;
+}
+
+.c-hint {
+  margin: 0 0 12px;
+  color: var(--sd-text-secondary, #6b7280);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.c-table {
+  position: relative;
+  overflow: auto;
+  max-height: 60vh;
+  border: 1px solid $config-border;
+  border-radius: 8px;
+
+  table {
+    width: 100%;
+    background: transparent;
+  }
+
+  // Header: nền phẳng, chữ nhẹ hơn tiêu đề modal để không tranh chấp thị giác.
+  .c-th {
+    font-weight: 500;
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--sd-text-secondary, #6b7280);
+    background: var(--mat-sys-surface-container-low, #f7f8fa);
+    white-space: nowrap;
+  }
+
+  // why: mat-table dựng chiều cao ô theo nội dung, mà nội dung ở đây là input 32px → chữ dính sát
+  // mép trên. Padding dọc cho mỗi ô một khoảng thở đều nhau.
+  .mat-mdc-header-cell,
+  .mat-mdc-cell {
+    padding: 8px 12px;
+    border-bottom-color: $config-border;
+  }
+
+  .mat-mdc-header-cell:first-of-type,
+  .mat-mdc-cell:first-of-type {
+    padding-left: 12px;
+  }
+
+  // Dòng cuối không cần kẻ — viền ngoài của .c-table đã đóng khung.
+  .mat-mdc-row:last-of-type .mat-mdc-cell {
+    border-bottom: none;
+  }
+
+  .mat-mdc-row:hover .mat-mdc-cell {
+    background: var(--mat-sys-surface-container-low, rgba(0, 0, 0, 0.02));
+  }
+
+  // Cột width/toggle chỉ chứa một control nhỏ → co về đúng nội dung, nhường chỗ cho cột tiêu đề.
+  .c-col-width {
+    width: 104px;
+  }
+
+  .c-col-toggle {
+    width: 88px;
+    text-align: center;
+  }
+}
+
+.c-display-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+// why: handle phải là <button> để bắt được bàn phím/AT, nhưng không được nhìn như một nút bấm —
+// strip toàn bộ chrome của button và chỉ giữ con trỏ "move".
+.c-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--sd-text-disabled, #b6bcc6);
+  cursor: grab;
+  transition: color 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--sd-text-secondary, #6b7280);
+    outline: none;
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+// Cột tắt hiển thị: mờ đi + khoá editor, nhưng ô "Hiển thị" và handle vẫn dùng được.
+.c-row-hidden {
+  .mat-mdc-cell {
+    background: var(--mat-sys-surface-container-low, rgba(0, 0, 0, 0.015));
+  }
+
+  sd-input,
+  .c-col-toggle sd-checkbox {
+    opacity: 0.55;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Kéo - thả
+// ---------------------------------------------------------------------------
+
+// why: CDK nhấc <tr> ra khỏi <table> để làm preview, nên nó mất luôn table layout và các ô sẽ
+// xẹp lại. `display: table` trả lại layout đó; phần còn lại làm cho dòng trông như đang được
+// nhấc lên khỏi mặt bảng: bo góc, viền theo màu primary, đổ bóng sâu hơn hover.
+.cdk-drag-preview {
+  display: table;
+  border-radius: 8px;
+  background: var(--mat-sys-surface, #fff);
+  outline: 1px solid var(--sd-primary, #2a66f4);
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.16),
+    0 2px 8px rgba(0, 0, 0, 0.08);
+  opacity: 0.98;
+
+  .mat-mdc-cell {
+    border-bottom: none;
+    padding: 8px 12px;
+  }
+
+  .c-handle {
+    color: var(--sd-primary, #2a66f4);
+    cursor: grabbing;
+  }
+}
+
+// Chỗ trống nơi dòng sẽ rơi xuống: một khe rỗng, không phải bản sao mờ của dòng đang kéo.
+.cdk-drag-placeholder {
+  .mat-mdc-cell {
+    background: var(--sd-primary-light, rgba(42, 102, 244, 0.06));
+    border-bottom: none;
+    // why: kẻ trên/dưới bằng inset shadow — border trên <tr> không render được với table layout.
+    box-shadow:
+      inset 0 1px 0 var(--sd-primary, #2a66f4),
+      inset 0 -1px 0 var(--sd-primary, #2a66f4);
+
+    // why: ẩn NỘI DUNG chứ không ẩn ô — visibility trên chính ô sẽ xoá luôn nền và viền vừa vẽ,
+    // còn display:none làm bảng giật vì mất chiều cao.
+    > * {
+      visibility: hidden;
+    }
+  }
+}
+
+// Các dòng còn lại trượt sang chỗ mới thay vì nhảy cóc.
+.cdk-drag-animating,
+.c-table.cdk-drop-list-dragging .mat-mdc-row:not(.cdk-drag-placeholder) {
+  transition: transform 220ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+// Trong lúc kéo, khoá hover của các dòng khác để chỉ còn placeholder chỉ ra điểm rơi.
+.c-table.cdk-drop-list-dragging .mat-mdc-row:hover .mat-mdc-cell {
+  background: transparent;
+}

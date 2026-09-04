@@ -1,0 +1,222 @@
+@let _column = column();
+@let _columnFilter = columnFilter();
+@let _autoId = autoId();
+@let _templateRef = templateRef();
+@let _operators = operators();
+@let _items = items();
+@let _label = label();
+@let _context = { columnFilter: _columnFilter, autoId: _autoId };
+
+<div class="d-flex c-inline-column align-items-center" style="width: 100%; max-width: 100%">
+  @if (
+    _column.type === 'string' ||
+    _column.type === 'number' ||
+    _column.type === 'boolean' ||
+    _column.type === 'values' ||
+    _column.type === 'lazy-values' ||
+    _column.type === 'date' ||
+    _column.type === 'datetime' ||
+    _column.type === 'time'
+  ) {
+    <!-- Operator filter -->
+    @if (_operators.length) {
+      <sd-operator class="mr-4" [(model)]="operator" [operators]="operatorValues()" />
+    }
+
+    <!-- Nếu filter nhận vào template -->
+    @if (_templateRef) {
+      <ng-container *ngTemplateOutlet="_templateRef; context: _context"></ng-container>
+    }
+    <!-- Mặc định theo type và giá trị values defined của column -->
+    @else {
+      @if (_column.type === 'string') {
+        <sd-input
+          [autoId]="_autoId"
+          style="flex: 1 1 0%; min-width: 0"
+          size="sm"
+          type="text"
+          [label]="_label"
+          [(model)]="_columnFilter[_column.field]"
+          (keyupEnter)="onFilterChange()"
+          (sdBlur)="onFilterCommit()"
+          (cleared)="onFilterChange()"
+          [disabled]="_column.filter?.disabled"
+          clearable
+          hideInlineError>
+        </sd-input>
+      } @else if (_column.type === 'number') {
+        @if (!_column.filter?.type) {
+          <sd-input-number
+            [autoId]="_autoId"
+            style="flex: 1 1 0%; min-width: 0"
+            size="sm"
+            [label]="_label"
+            [(model)]="_columnFilter[_column.field]"
+            (keyupEnter)="onFilterChange()"
+            (sdBlur)="onFilterCommit()"
+            (cleared)="onFilterChange()"
+            [disabled]="_column.filter?.disabled"
+            clearable
+            hideInlineError>
+          </sd-input-number>
+        } @else if (_column.filter?.type === 'split-number') {
+          <ng-container *ngTemplateOutlet="splitNumberTpl; context: { field: _column.field, disabled: _column.filter?.disabled }">
+          </ng-container>
+        }
+      } @else if (_column.type === 'boolean') {
+        <sd-select
+          minWidthPanel="200px"
+          [autoId]="_autoId"
+          style="flex: 1 1 0%; min-width: 0"
+          [style.width]="'100%'"
+          size="sm"
+          [label]="_label"
+          [items]="[
+            { value: '1', display: _column.option?.displayOnTrue || 'True' },
+            { value: '0', display: _column.option?.displayOnFalse || 'False' },
+          ]"
+          valueField="value"
+          displayField="display"
+          [(model)]="_columnFilter[_column.field]"
+          (sdChange)="onFilterChange()"
+          [disabled]="_column.filter?.disabled"
+          hideInlineError>
+          <ng-template sdItemDef let-item="item">
+            @if (item.value === '1') {
+              <sd-badge color="success" [title]="_column.option?.displayOnTrue || 'True'"> </sd-badge>
+            } @else {
+              <sd-badge color="error" [title]="_column.option?.displayOnFalse || 'False'"> </sd-badge>
+            }
+          </ng-template>
+        </sd-select>
+      } @else if (_column.type === 'values') {
+        <sd-select
+          minWidthPanel="200px"
+          [autoId]="_autoId"
+          style="flex: 1 1 0%; min-width: 0"
+          [style.width]="'100%'"
+          size="sm"
+          [label]="_label"
+          [items]="_items"
+          [valueField]="_column.option.valueField"
+          [displayField]="_column.option.displayField"
+          [(model)]="_columnFilter[_column.field]"
+          (sdChange)="onFilterChange()"
+          [disabled]="_column.filter?.disabled"
+          [multiple]="_column.option.selection === 'MULTIPLE'"
+          hideInlineError>
+        </sd-select>
+      } @else if (_column.type === 'lazy-values') {
+        <sd-select
+          minWidthPanel="200px"
+          [autoId]="_autoId"
+          style="flex: 1 1 0%; min-width: 0"
+          [style.width]="'100%'"
+          size="sm"
+          [label]="_label"
+          [items]="_items"
+          [valueField]="_column.option.valueField"
+          [displayField]="_column.option.displayField"
+          [(model)]="_columnFilter[_column.field]"
+          (sdChange)="onFilterChange()"
+          [disabled]="_column.filter?.disabled"
+          [multiple]="_column.option.selection === 'MULTIPLE'"
+          hideInlineError>
+        </sd-select>
+      } @else if (_column.type === 'date' || _column.type === 'datetime' || _column.type === 'time') {
+        @if (!_column.filter?.type || _column.filter?.type === 'daterange') {
+          <sd-date-range
+            style="flex: 1 1 0%; min-width: 0"
+            size="sm"
+            [label]="_label"
+            [(model)]="_columnFilter[_column.field]"
+            (sdChange)="onFilterChange()"
+            [disabled]="_column.filter?.disabled"
+            hideInlineError>
+          </sd-date-range>
+        } @else if (_column.filter?.type === 'date') {
+          <sd-date
+            [autoId]="_autoId"
+            style="flex: 1 1 0%; min-width: 0"
+            type="date"
+            size="sm"
+            [label]="_label"
+            [(model)]="_columnFilter[_column.field]"
+            (sdChange)="onFilterChange()"
+            [disabled]="_column.filter?.disabled"
+            clearable
+            hideInlineError>
+          </sd-date>
+        } @else if (_column.filter?.type === 'split-date') {
+          <ng-container *ngTemplateOutlet="splitDateTpl; context: { field: _column.field, disabled: _column.filter?.disabled }">
+          </ng-container>
+        }
+      }
+    }
+  } @else {
+    <sd-input [autoId]="_autoId" style="flex: 1 1 0%; min-width: 0" type="text" size="sm" disabled></sd-input>
+  }
+</div>
+
+<!-- ================================================ -->
+<!-- Split from/to templates (đưa xuống cuối file)    -->
+<!-- ================================================ -->
+<ng-template #splitNumberTpl let-field="field" let-disabled="disabled">
+  <div class="d-flex align-items-center" style="flex: 1 1 0%; min-width: 0">
+    <sd-input-number
+      [autoId]="_autoId + '-from'"
+      style="flex: 1 1 0%; min-width: 0"
+      size="sm"
+      [label]="_label"
+      [(model)]="_columnFilter[field].from"
+      (sdChange)="onFilterChange()"
+      (sdBlur)="onFilterCommit()"
+      (cleared)="onFilterChange()"
+      [disabled]="disabled"
+      clearable
+      hideInlineError>
+    </sd-input-number>
+    <div class="mx-4">-</div>
+    <sd-input-number
+      [autoId]="_autoId + '-to'"
+      style="flex: 1 1 0%; min-width: 0"
+      size="sm"
+      [(model)]="_columnFilter[field].to"
+      (sdChange)="onFilterChange()"
+      (sdBlur)="onFilterCommit()"
+      (cleared)="onFilterChange()"
+      [disabled]="disabled"
+      clearable
+      hideInlineError>
+    </sd-input-number>
+  </div>
+</ng-template>
+
+<ng-template #splitDateTpl let-field="field" let-disabled="disabled">
+  <div class="d-flex align-items-center" style="flex: 1 1 0%; min-width: 0">
+    <sd-date
+      [autoId]="_autoId + '-from'"
+      style="flex: 1 1 0%; min-width: 0"
+      type="date"
+      size="sm"
+      [label]="_label"
+      [(model)]="_columnFilter[field].from"
+      (sdChange)="onFilterChange()"
+      [disabled]="disabled"
+      clearable
+      hideInlineError>
+    </sd-date>
+    <div class="mx-4">-</div>
+    <sd-date
+      [autoId]="_autoId + '-to'"
+      style="flex: 1 1 0%; min-width: 0"
+      type="date"
+      size="sm"
+      [(model)]="_columnFilter[field].to"
+      (sdChange)="onFilterChange()"
+      [disabled]="disabled"
+      clearable
+      hideInlineError>
+    </sd-date>
+  </div>
+</ng-template>

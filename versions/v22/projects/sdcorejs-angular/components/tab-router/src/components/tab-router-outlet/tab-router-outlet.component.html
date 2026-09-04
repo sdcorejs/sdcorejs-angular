@@ -1,0 +1,18 @@
+@if (disabled()) {
+  <div class="tab-router__disabled-outlet">
+    <router-outlet></router-outlet>
+  </div>
+} @else {
+  <sd-tab-router-nav [tabs]="tabs()" #tabRouterNav></sd-tab-router-nav>
+  <div class="tab-router__list">
+    @for (tab of tabs(); track tab.injector ?? tab.key) {
+      <div class="tab-router__pane" [class.active]="tab.isActive" [id]="tab.key">
+        <div class="tab-router__content">
+          <ng-container *ngComponentOutlet="tab.component; injector: tab.injector"></ng-container>
+        </div>
+      </div>
+    } @empty {
+      <div class="tab-router__empty"></div>
+    }
+  </div>
+}

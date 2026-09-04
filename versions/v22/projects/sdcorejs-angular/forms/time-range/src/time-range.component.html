@@ -1,0 +1,93 @@
+@let _label = label();
+<!-- why: bản đã gate theo tương tác, KHÔNG dùng `errorMessage()` thô — range `[required]`
+     trước đây bung lỗi ngay lần paint đầu, khi người dùng còn chưa chạm vào ô nào. -->
+@let _errorMessage = visibleError();
+@let _required = required();
+
+@if (isViewed()) {
+  <sd-view
+    [label]="_label"
+    [labelTemplate]="sdLabelTemplate()"
+    [value]="valueModel()"
+    [display]="displayValue()"
+    [hyperlink]="hyperlink()"
+    [valueTemplate]="viewTemplate()">
+  </sd-view>
+} @else {
+  <ng-content select="[sdLabel]">
+    @if (_label) {
+      <sd-label [label]="_label" [helperText]="helperText()" [required]="_required"></sd-label>
+    }
+  </ng-content>
+
+  <div
+    class="sd-time-range-fields"
+    role="group"
+    [attr.aria-label]="groupAriaLabel()"
+    [attr.aria-invalid]="dataInvalid()"
+    [attr.data-autoId]="autoId()"
+    [attr.data-disabled]="dataDisabled()"
+    [attr.data-invalid]="dataInvalid()"
+    [attr.data-empty]="dataEmpty()"
+    [attr.data-value]="dataValue()"
+    [attr.data-required]="dataRequired()"
+    [attr.data-error-message]="dataErrorMessage()">
+    <!-- why: KHÔNG truyền [form] xuống endpoint. Trước đây mỗi endpoint tự đăng ký vào FormGroup
+         của consumer dưới tên `from-<uuid>` / `to-<uuid>`, nên `form.value` mọc thêm 2 key đổi
+         theo từng instance — vỡ shape giá trị và `form.reset(obj)`. Chỉ control tổng được đăng ký;
+         trạng thái invalid của endpoint được kéo lên control tổng qua `#validators`. -->
+    <sd-time
+      #fromTime
+      class="sd-time-range-endpoint"
+      [name]="fromName"
+      [autoId]="fromAutoId()"
+      [placeholder]="fromPlaceholder() || 'HH:mm'"
+      [ariaLabel]="fromAriaLabel()"
+      [size]="size()"
+      [min]="min()"
+      [max]="max()"
+      [step]="step()"
+      [required]="_required"
+      [clearable]="clearable()"
+      [disabled]="disabled()"
+      [readonly]="isReadonly()"
+      [viewed]="isInline() ? 'inline' : false"
+      [hideInlineError]="true"
+      [model]="fromValue()"
+      (modelChange)="onFromChange($event)"
+      (sdFocus)="onFocus()"
+      (sdBlur)="onBlur()">
+    </sd-time>
+
+    <!-- why: GIỮ aria-hidden — mũi tên chỉ là trang trí, ý nghĩa "từ → đến" đã nằm trong
+         aria-label của hai <sd-time> con; đọc thêm "mũi tên phải" chỉ gây nhiễu. -->
+    <span class="sd-time-range-separator" aria-hidden="true">→</span>
+
+    <sd-time
+      #toTime
+      class="sd-time-range-endpoint"
+      [name]="toName"
+      [autoId]="toAutoId()"
+      [placeholder]="toPlaceholder() || 'HH:mm'"
+      [ariaLabel]="toAriaLabel()"
+      [size]="size()"
+      [min]="min()"
+      [max]="max()"
+      [step]="step()"
+      [required]="_required"
+      [clearable]="clearable()"
+      [disabled]="disabled()"
+      [readonly]="isReadonly()"
+      [viewed]="isInline() ? 'inline' : false"
+      [hideInlineError]="true"
+      [model]="toValue()"
+      (modelChange)="onToChange($event)"
+      (sdFocus)="onFocus()"
+      (sdBlur)="onBlur()">
+    </sd-time>
+  </div>
+
+  @if (!hideInlineError() && _errorMessage) {
+    <div class="sd-time-range-error" role="alert">{{ _errorMessage }}</div>
+  }
+}

@@ -9,12 +9,25 @@ import {
   previousArchiveVersion,
   releaseTagFor,
 } from './collect-docs.mjs';
+import { releaseMajorsForSuffix } from './collect-release-docs.mjs';
+
+test('[release] Angular 22 docs start at suffix 2.5 without fabricating historical archives', () => {
+  assert.deepEqual(releaseMajorsForSuffix('1.0'), [19, 20, 21]);
+  assert.deepEqual(releaseMajorsForSuffix('2.4'), [19, 20, 21]);
+  assert.deepEqual(releaseMajorsForSuffix('2.5-beta.1'), [19, 20, 21]);
+  assert.deepEqual(releaseMajorsForSuffix('2.5'), [19, 20, 21, 22]);
+  assert.deepEqual(releaseMajorsForSuffix('2.6'), [19, 20, 21, 22]);
+});
 
 test('releaseTagFor derives the release tag from an archive version', () => {
   assert.equal(releaseTagFor('19.1.5'), 'v1.5');
   assert.equal(releaseTagFor('20.1.5'), 'v1.5');
   assert.equal(releaseTagFor('21.0.10'), 'v0.10');
   assert.equal(releaseTagFor('19.0.4'), 'v0.4');
+});
+
+test('[workspace] releaseTagFor maps the Angular 22 inception version to v2.5', () => {
+  assert.equal(releaseTagFor('22.2.5'), 'v2.5');
 });
 
 test('releaseTagFor rejects a version that is not <major>.<suffix>', () => {

@@ -1,0 +1,114 @@
+:host ::ng-deep {
+  .ck-content {
+    img {
+      max-width: 100% !important;
+      height: auto !important;
+      object-fit: contain;
+    }
+
+    figure.image {
+      position: relative;
+      display: block;
+      width: fit-content;
+      max-width: 100%;
+      margin: 0 auto;
+      overflow: visible;
+
+      &:hover {
+        z-index: 99999 !important;
+      }
+
+      &.image-style-align-left {
+        float: left;
+        margin: 0 1em 0 0;
+
+        &[style*='width:100'] {
+          float: none;
+          margin: 0 auto 0 0;
+        }
+      }
+
+      &.image-style-align-right {
+        float: right;
+        margin: 0 0 0 1em;
+
+        &[style*='width:100'] {
+          float: none;
+          margin: 0 0 0 auto;
+        }
+      }
+
+      &.image-style-block-align-left {
+        margin: 0 auto 0 0;
+      }
+
+      &.image-style-block-align-right {
+        margin: 0 0 0 auto;
+      }
+
+      .ck-progress-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 30% !important;
+        height: 3px;
+        background: var(--sd-primary, #005cbb);
+        border-radius: 2px;
+        z-index: 10;
+        pointer-events: none;
+        animation: sd-progress-indeterminate 1.4s ease-in-out infinite;
+      }
+
+      &:has(.ck-progress-bar) {
+        overflow: hidden;
+        img {
+          filter: blur(1px) brightness(0.85);
+          transition: filter 0.3s ease;
+        }
+
+        &::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 9;
+          background: rgba(255, 255, 255, 0.25);
+          border-radius: inherit;
+        }
+
+        &::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 28px;
+          height: 28px;
+          margin: -14px 0 0 -14px;
+          border: 3px solid rgba(255, 255, 255, 0.5);
+          border-top-color: var(--sd-primary, #005cbb);
+          border-radius: 50%;
+          animation: sd-spinner 0.75s linear infinite;
+          z-index: 11;
+          pointer-events: none;
+        }
+      }
+    }
+  }
+}
+
+@keyframes sd-spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes sd-progress-indeterminate {
+  0% {
+    left: -30%;
+  }
+  100% {
+    left: 100%;
+  }
+}

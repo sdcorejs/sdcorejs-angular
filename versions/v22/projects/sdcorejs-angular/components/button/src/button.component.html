@@ -1,0 +1,106 @@
+@let _type = type();
+@let _loading = loading();
+@let _title = title();
+@let _prefixIcon = prefixIcon();
+@let _suffixIcon = suffixIcon();
+@let _fontSet = fontSet();
+@let _htmlType = htmlType();
+@let _disabled = disabled();
+@let _color = color();
+@let _autoId = autoId();
+@let _width = width();
+@let _tooltip = tooltip();
+
+@if (_type === 'fill') {
+  <button
+    mat-flat-button
+    class="c-button c-fill"
+    [type]="_htmlType"
+    [ngClass]="buttonClasses()"
+    [disabled]="_disabled"
+    [color]="_color"
+    [attr.data-autoId]="_autoId"
+    [attr.data-disabled]="_disabled ? 'true' : 'false'"
+    [attr.data-loading]="_loading ? 'true' : 'false'"
+    [style.width]="_width"
+    [matTooltip]="_tooltip || ''"
+    matTooltipPosition="above"
+    (click)="onInternalClick($event)">
+    <ng-container *ngTemplateOutlet="contentTpl"></ng-container>
+  </button>
+} @else if (_type === 'light') {
+  <button
+    mat-flat-button
+    class="c-button c-light"
+    [type]="_htmlType"
+    [ngClass]="buttonClasses()"
+    [disabled]="_disabled"
+    [color]="_color"
+    [attr.data-autoId]="_autoId"
+    [attr.data-disabled]="_disabled ? 'true' : 'false'"
+    [attr.data-loading]="_loading ? 'true' : 'false'"
+    [style.width]="_width"
+    [matTooltip]="_tooltip || ''"
+    matTooltipPosition="above"
+    (click)="onInternalClick($event)">
+    <ng-container *ngTemplateOutlet="contentTpl"></ng-container>
+  </button>
+} @else if (_type === 'outline') {
+  <button
+    mat-stroked-button
+    class="c-button c-outline"
+    [type]="_htmlType"
+    [ngClass]="buttonClasses()"
+    [disabled]="_disabled"
+    [color]="_color"
+    [attr.data-autoId]="_autoId"
+    [attr.data-disabled]="_disabled ? 'true' : 'false'"
+    [attr.data-loading]="_loading ? 'true' : 'false'"
+    [style.width]="_width"
+    [matTooltip]="_tooltip || ''"
+    matTooltipPosition="above"
+    (click)="onInternalClick($event)">
+    <ng-container *ngTemplateOutlet="contentTpl"></ng-container>
+  </button>
+} @else if (_type === 'text') {
+  <button
+    mat-button
+    class="c-button c-text"
+    [type]="_htmlType"
+    [ngClass]="buttonClasses()"
+    [disabled]="_disabled"
+    [color]="_color"
+    [attr.data-autoId]="_autoId"
+    [attr.data-disabled]="_disabled ? 'true' : 'false'"
+    [attr.data-loading]="_loading ? 'true' : 'false'"
+    [style.width]="_width"
+    [matTooltip]="_tooltip || ''"
+    matTooltipPosition="above"
+    (click)="onInternalClick($event)">
+    <ng-container *ngTemplateOutlet="contentTpl"></ng-container>
+  </button>
+}
+
+<ng-template #contentTpl>
+  <div class="c-button-content-wrapper">
+    @if (_loading) {
+      <mat-spinner mode="indeterminate" diameter="18" strokeWidth="2" class="c-spinner"></mat-spinner>
+    } @else if (_prefixIcon) {
+      <sd-icon [name]="_prefixIcon" [fontSet]="_fontSet" [size]="size()" class="c-icon-prefix"></sd-icon>
+    }
+
+    @if (_title) {
+      <span class="c-title" [class.ml-8]="_loading || _prefixIcon" [class.mr-8]="_suffixIcon && !_loading">
+        {{ _title }}
+      </span>
+    }
+
+    @if (_suffixIcon && !_loading) {
+      <sd-icon [name]="_suffixIcon" [fontSet]="_fontSet" [size]="size()" class="c-icon-suffix"></sd-icon>
+    }
+
+    @if (!_title && !_prefixIcon && !_loading && _suffixIcon) {
+      <sd-icon [name]="_suffixIcon" [fontSet]="_fontSet" [size]="size()"></sd-icon>
+    }
+  </div>
+</ng-template>

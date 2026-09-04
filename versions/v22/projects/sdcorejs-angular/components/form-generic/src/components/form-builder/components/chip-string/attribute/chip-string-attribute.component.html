@@ -1,0 +1,64 @@
+<details class="fb-section" open>
+  <summary class="fb-section__head">
+    <span class="msi">info</span>
+    <span class="fb-section__title">{{ 'core.component.form-builder.general' | sdTranslate }}</span>
+    <span class="msi chev">chevron_right</span>
+  </summary>
+  <div class="fb-section__body">
+  <attribute-template [component]="component" (sdChange)="onChangeTemplate($event)"></attribute-template>
+  <attribute-input [label]="'core.component.form-builder.field-key' | sdTranslate" [(model)]="component.key" [disabled]="!!component.template"></attribute-input>
+  <attribute-input [form]="form" [label]="'core.component.form-builder.label' | sdTranslate" [(model)]="component.label"></attribute-input>
+  @if (component.properties!.viewed) {
+    <attribute-input label="Hyperlink" [(model)]="component.properties!.hyperlink"></attribute-input>
+  }
+  </div>
+</details>
+
+@if (!component.properties!.hidden && !component.properties!.viewed) {
+  <details class="fb-section" open>
+    <summary class="fb-section__head">
+      <span class="msi">visibility</span>
+      <span class="fb-section__title">{{ 'core.component.form-builder.display' | sdTranslate }}</span>
+      <span class="msi chev">chevron_right</span>
+    </summary>
+    <div class="fb-section__body">
+    <attribute-switch [label]="'core.component.form-builder.disabled' | sdTranslate" [(model)]="component.disabled"></attribute-switch>
+    <attribute-expression
+      [label]="'core.component.form-builder.visible-when' | sdTranslate"
+      [components]="components()"
+      [variables]="variables()"
+      [(model)]="component.properties!.visibleWhenExpression"></attribute-expression>
+    <attribute-expression
+      [label]="'core.component.form-builder.hidden-when' | sdTranslate"
+      [components]="components()"
+      [variables]="variables()"
+      [(model)]="component.properties!.hiddenWhenExpression"></attribute-expression>
+    @if (!component.disabled) {
+      <attribute-expression
+        [label]="'core.component.form-builder.disabled-when' | sdTranslate"
+        [components]="components()"
+        [variables]="variables()"
+        [(model)]="component.properties!.disabledWhenExpression"></attribute-expression>
+    }
+    </div>
+  </details>
+  @if (!component.properties!.viewed) {
+    <details class="fb-section" open>
+      <summary class="fb-section__head">
+        <span class="msi">verified</span>
+        <span class="fb-section__title">{{ 'core.component.form-builder.validation' | sdTranslate }}</span>
+        <span class="msi chev">chevron_right</span>
+      </summary>
+      <div class="fb-section__body">
+      <attribute-switch [form]="form" [label]="'core.component.form-builder.required' | sdTranslate" [(model)]="component.validate!.required"></attribute-switch>
+      @if (!component.validate!.required) {
+        <attribute-expression
+          [label]="'core.component.form-builder.required-when' | sdTranslate"
+          [components]="components()"
+          [variables]="variables()"
+          [(model)]="component.properties!.requiredWhenExpression"></attribute-expression>
+      }
+      </div>
+    </details>
+  }
+}

@@ -1,0 +1,1970 @@
+// Builder canvas keeps its internal M3-shaped variables, but sources them from
+// the public Core UI tokens (--sd-primary, --sd-primary-light, --sd-border, ...).
+// Brand = primary.
+// All canvas-side classes are defined here under :host so children components
+// (attribute panels) inherit the CSS custom properties via DOM; class definitions
+// that need to reach child component templates live under :host::ng-deep.
+
+:host {
+  // ── M3 baseline · brand = primary ────────────────────────────────────
+  --md-sys-color-primary: var(--sd-primary, #005cbb);
+  --md-sys-color-on-primary: var(--sd-primary-contrast, #ffffff);
+  --md-sys-color-primary-container: var(--sd-primary-light, #d7e3ff);
+  --md-sys-color-on-primary-container: var(--sd-primary-dark, #001b3f);
+  --md-sys-color-info: var(--sd-info, #006a6a);
+  --md-sys-color-info-container: var(--sd-info-light, #d4f7f6);
+
+  --md-sys-color-secondary: #625b71;
+  --md-sys-color-secondary-container: #e8def8;
+  --md-sys-color-on-secondary-container: #1d192b;
+
+  --md-sys-color-surface: var(--sd-surface, #fdfbff);
+  --md-sys-color-surface-container-lowest: var(--mat-sys-surface-container-lowest, #ffffff);
+  --md-sys-color-surface-container-low: var(--mat-sys-surface-container-low, #f7f8fc);
+  --md-sys-color-surface-container: var(--sd-surface-muted, #f0f0f4);
+  --md-sys-color-surface-container-high: var(--mat-sys-surface-container-high, #e9e9ee);
+  --md-sys-color-surface-container-highest: var(--sd-surface-muted, #e7e8ed);
+
+  --md-sys-color-on-surface: var(--sd-text, #1a1b1f);
+  --md-sys-color-on-surface-variant: var(--sd-secondary, #44474f);
+  --md-sys-color-outline: var(--sd-border-strong, #74777f);
+  --md-sys-color-outline-variant: var(--sd-border, #c4c6d0);
+
+  --md-sys-color-error: var(--sd-error, #ba1a1a);
+  --md-sys-color-error-container: var(--sd-error-light, #ffdad6);
+  --md-sys-color-warning: #8a5400;
+  --md-sys-color-warning-container: #ffddb1;
+  --md-sys-color-success: #1f6f43;
+  --md-sys-color-success-container: #b7f0cb;
+
+  // ── Compact density ─────────────────────────────────────────────────
+  --h-row: 28px;
+  --h-field: 32px;
+  --h-palette: 36px;
+  --h-header: 36px;
+  --h-section: 28px;
+  --h-action-btn: 24px;
+  --gap-1: 4px;
+  --gap-2: 8px;
+  --gap-3: 12px;
+  --gap-4: 16px;
+  --gap-5: 24px;
+  --r-xs: 4px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 28px;
+  --r-pill: 999px;
+
+  --elev-1: 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --elev-2: 0 2px 6px 0 rgba(0, 0, 0, 0.08), 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --elev-3: 0 6px 14px 0 rgba(0, 0, 0, 0.1), 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+
+  display: block;
+  width: 100%;
+  height: 100%;
+  font-family: 'Roboto', system-ui, sans-serif;
+  font-size: 13px;
+  color: var(--md-sys-color-on-surface);
+  background: var(--md-sys-color-surface);
+}
+
+// ── Material Icons Outlined + builder primitives (need ::ng-deep so attribute child components reach them) ──
+:host ::ng-deep {
+  .msi {
+    font-family: 'Material Icons Outlined';
+    font-weight: normal;
+    font-style: normal;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    font-feature-settings: 'liga';
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+  }
+  .msi.filled {
+    font-family: 'Material Icons';
+  }
+  .mono {
+    font-family: 'Roboto Mono', ui-monospace, monospace;
+  }
+
+  // ── Generic icon button (palette/header/canvas toolbar) ─────────────
+  .fb-icon-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--r-sm);
+    border: none;
+    background: transparent;
+    color: var(--md-sys-color-on-surface-variant);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition:
+      background 0.12s ease,
+      color 0.12s ease;
+
+    // why: nút mang badge phải là mốc định vị, nếu không badge sẽ neo theo toolbar.
+    &--badged {
+      position: relative;
+      overflow: visible;
+    }
+
+    // Badge đếm: cho biết form đã cấu hình bao nhiêu biến / bao nhiêu xác thực mà không phải mở dialog.
+    &__badge {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      min-width: 14px;
+      height: 14px;
+      padding: 0 3px;
+      border-radius: 7px;
+      background: var(--md-sys-color-error, #b3261e);
+      color: var(--md-sys-color-on-error, #fff);
+      font-size: 9px;
+      font-weight: 600;
+      line-height: 14px;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    &:hover {
+      background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
+      color: var(--md-sys-color-on-surface);
+    }
+    &.is-active {
+      color: var(--md-sys-color-primary);
+      background: var(--md-sys-color-primary-container);
+    }
+    &.danger:hover {
+      color: var(--md-sys-color-error);
+      background: var(--md-sys-color-error-container);
+    }
+    &.warning.on {
+      color: var(--md-sys-color-warning);
+      background: var(--md-sys-color-warning-container);
+    }
+    .msi {
+      font-size: 18px;
+    }
+  }
+
+  // ── Field / Section / Switch / Expression — reused in attribute panel ──
+  .fb-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .fb-field__label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+  .fb-field__input {
+    height: var(--h-row);
+    padding: 0 10px;
+    border-radius: var(--r-xs);
+    background: var(--md-sys-color-surface-container-lowest);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--md-sys-color-on-surface);
+    &.placeholder {
+      color: var(--md-sys-color-on-surface-variant);
+    }
+    &:focus-within,
+    &.focused {
+      border-color: var(--md-sys-color-primary);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent);
+    }
+    .msi {
+      font-size: 16px;
+      color: var(--md-sys-color-on-surface-variant);
+    }
+  }
+  .fb-field-row {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-2);
+    justify-content: space-between;
+  }
+  .fb-switch {
+    display: inline-flex;
+    width: 34px;
+    height: 18px;
+    border-radius: 999px;
+    background: var(--md-sys-color-surface-container-highest);
+    border: 1.5px solid var(--md-sys-color-outline);
+    padding: 1px;
+    align-items: center;
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+    .fb-switch__thumb {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--md-sys-color-outline);
+    }
+    &.on {
+      background: var(--md-sys-color-primary);
+      border-color: var(--md-sys-color-primary);
+      justify-content: flex-end;
+      .fb-switch__thumb {
+        background: var(--md-sys-color-on-primary);
+        width: 14px;
+        height: 14px;
+      }
+    }
+  }
+  .fb-expr {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: var(--h-row);
+    padding: 0 6px 0 0;
+    border-radius: var(--r-xs);
+    background: var(--md-sys-color-surface-container-lowest);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    font-size: 12px;
+    color: var(--md-sys-color-on-surface-variant);
+
+    &__badge {
+      height: 100%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 6px;
+      background: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-primary);
+      font-family: 'Roboto Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      border-radius: var(--r-xs) 0 0 var(--r-xs);
+    }
+    &__code {
+      font-family: 'Roboto Mono', monospace;
+      flex: 1;
+      font-size: 11px;
+      color: var(--md-sys-color-on-surface);
+      .var {
+        color: var(--md-sys-color-primary);
+        font-weight: 500;
+      }
+      .op {
+        color: var(--md-sys-color-error);
+      }
+      .lit {
+        color: var(--md-sys-color-success);
+      }
+    }
+    .empty {
+      color: var(--md-sys-color-on-surface-variant);
+      font-style: italic;
+      padding-left: 6px;
+      flex: 1;
+    }
+  }
+
+  // ── fb-section (native <details>) — replaces <sd-section> in attribute panels ──
+  // Compact M3 density, không có border/box xung quanh; separator chỉ là 1px outline-variant.
+  details.fb-section {
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    & > summary {
+      list-style: none;
+      &::-webkit-details-marker {
+        display: none;
+      }
+    }
+  }
+  .fb-section__head {
+    height: var(--h-section);
+    padding: 0 var(--gap-4);
+    display: flex;
+    align-items: center;
+    gap: var(--gap-2);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+    user-select: none;
+    .msi {
+      font-size: 16px;
+      color: var(--md-sys-color-on-surface-variant);
+    }
+    .fb-section__title {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .chev {
+      margin-left: auto;
+      transition: transform 0.16s ease;
+    }
+  }
+  details.fb-section[open] .fb-section__head .chev {
+    transform: rotate(90deg);
+  }
+  .fb-section__body {
+    padding: 4px var(--gap-4) var(--gap-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-2);
+  }
+
+  // ── Table column editor (attribute-table) ──────────────────────────
+  .fb-columns-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-1);
+    padding-top: var(--gap-1);
+  }
+  .fb-column-row {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-2);
+    height: 40px;
+    padding: 6px 10px;
+    border-radius: var(--r-sm);
+    background: var(--md-sys-color-surface-container-lowest);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    font-size: 12px;
+    cursor: pointer;
+    transition:
+      background 0.12s ease,
+      border-color 0.12s ease,
+      box-shadow 0.12s ease;
+    &:hover {
+      background: color-mix(in srgb, var(--md-sys-color-primary) 4%, transparent);
+      border-color: color-mix(in srgb, var(--md-sys-color-primary) 30%, transparent);
+    }
+    &.is-active {
+      border-color: var(--md-sys-color-primary);
+      background: color-mix(in srgb, var(--md-sys-color-primary) 10%, transparent);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--md-sys-color-primary) 30%, transparent);
+    }
+    .fb-column-row__type-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--r-sm);
+      background: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      .msi {
+        font-size: 16px;
+      }
+    }
+    .fb-column-row__meta {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      .fb-column-row__label {
+        font-size: 13px;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: var(--md-sys-color-on-surface);
+      }
+      .fb-column-row__req {
+        color: var(--md-sys-color-error);
+        margin-left: 2px;
+        font-weight: 600;
+      }
+      .fb-column-row__sub {
+        font-size: 11px;
+        color: var(--md-sys-color-on-surface-variant);
+        font-family: 'Roboto Mono', ui-monospace, monospace;
+        letter-spacing: 0.02em;
+      }
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  // CDK Drag & Drop — visual layer
+  // ══════════════════════════════════════════════════════════════════
+  //
+  // Triết lý mới:
+  //   - Drag preview = M3 pill chip thống nhất (dùng *cdkDragPreview),
+  //     KHÔNG còn clone element gốc xấu (palette pill méo / fb-item full content).
+  //   - Drop placeholder = dashed content zone with the dragged element icon/name.
+  //   - Source slot trống hoàn toàn khi drag (display:none placeholder mặc định).
+  //
+  // ── 1) Drag preview: text-free skeleton — generic cho mọi loại item ─────
+  .cdk-drag-preview.fb-drag-preview,
+  .fb-drag-preview {
+    width: 132px;
+    height: 44px;
+    box-sizing: border-box;
+    border-radius: 14px;
+    background: var(--md-sys-color-surface-container-lowest, #ffffff);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    box-shadow:
+      0 14px 32px rgba(0, 0, 0, 0.24),
+      0 5px 14px rgba(0, 0, 0, 0.16);
+    border: 1.5px solid color-mix(in srgb, var(--md-sys-color-primary) 46%, var(--md-sys-color-outline-variant));
+    cursor: grabbing;
+    pointer-events: none;
+    user-select: none;
+    opacity: 1;
+    overflow: hidden;
+    z-index: 10000;
+
+    .fb-drag-preview__glyph {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--md-sys-color-primary);
+      flex-shrink: 0;
+      box-shadow: inset 0 0 0 5px color-mix(in srgb, var(--md-sys-color-on-primary) 18%, transparent);
+    }
+
+    .fb-drag-preview__body {
+      flex: 1;
+      min-width: 0;
+      display: grid;
+      gap: 7px;
+    }
+
+    .fb-drag-preview__line {
+      height: 7px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--md-sys-color-outline-variant) 72%, transparent);
+    }
+
+    .fb-drag-preview__line.is-strong {
+      width: 74%;
+      background: color-mix(in srgb, var(--md-sys-color-primary) 26%, var(--md-sys-color-outline-variant));
+    }
+  }
+
+  // ── 2) Drop placeholder: dashed content zone, matches the eventual slot ───
+  .cdk-drag-placeholder.fb-drop-placeholder,
+  .fb-drop-placeholder {
+    box-sizing: border-box;
+    min-height: 46px;
+    border: 1.5px dashed color-mix(in srgb, var(--md-sys-color-primary) 76%, var(--md-sys-color-outline-variant));
+    border-radius: var(--r-sm);
+    background:
+      linear-gradient(135deg, color-mix(in srgb, var(--md-sys-color-primary) 10%, transparent), transparent 62%),
+      color-mix(in srgb, var(--md-sys-color-primary) 4%, var(--md-sys-color-surface-container-lowest));
+    color: var(--md-sys-color-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--gap-2);
+    padding: 8px 10px;
+    pointer-events: none;
+    user-select: none;
+    opacity: 1 !important;
+    animation: none !important;
+    position: relative;
+    z-index: 6;
+    isolation: isolate;
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--md-sys-color-primary) 10%, transparent),
+      0 2px 8px color-mix(in srgb, var(--md-sys-color-primary) 10%, transparent);
+  }
+
+  .fb-drop-placeholder__icon {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--r-sm);
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 28px;
+    .msi {
+      font-size: 17px;
+    }
+  }
+
+  .fb-drop-placeholder__body {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .fb-drop-placeholder__title {
+    color: var(--md-sys-color-on-surface);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .fb-drop-placeholder__meta {
+    color: var(--md-sys-color-primary);
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0;
+  }
+
+  .fb-palette__list > .fb-drop-placeholder {
+    display: none !important;
+  }
+
+  // why: CDK still needs measurable placeholder geometry while the custom canvas preview is the only visible authority.
+  .fb-palette-native-placeholder {
+    display: block !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    width: 1px !important;
+    min-width: 1px !important;
+    height: 1px !important;
+    min-height: 1px !important;
+    flex: 0 0 1px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+  }
+
+  .fb-row__items > .fb-drop-placeholder,
+  .fb-group__body > .fb-drop-placeholder {
+    flex: 0 0 calc(var(--fb-placeholder-columns, 6) / 12 * 100% - var(--gap-2));
+    min-width: min(144px, 100%);
+    max-width: 100%;
+    align-self: stretch;
+    margin: 0 2px;
+  }
+
+  [cdkDropListOrientation='vertical'] > .fb-drop-placeholder {
+    width: auto;
+    min-height: 50px;
+    margin: 6px 14px;
+    align-self: stretch;
+  }
+
+  .fb-drop-placeholder--row {
+    min-height: 56px;
+  }
+
+  .fb-row-insert-placeholder {
+    --fb-placeholder-columns: 12;
+    box-sizing: border-box;
+    min-height: 58px;
+    margin: 0 var(--gap-2) var(--gap-2);
+    border: 1.5px dashed color-mix(in srgb, var(--md-sys-color-primary) 68%, var(--md-sys-color-outline-variant));
+    border-radius: var(--r-sm);
+    background:
+      linear-gradient(135deg, color-mix(in srgb, var(--md-sys-color-primary) 9%, transparent), transparent 68%),
+      color-mix(in srgb, var(--md-sys-color-primary) 3%, var(--md-sys-color-surface-container-lowest));
+    color: var(--md-sys-color-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--gap-2);
+    padding: 8px 10px;
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent),
+      0 1px 6px color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
+    pointer-events: none;
+    position: relative;
+    z-index: 6;
+    isolation: isolate;
+  }
+
+  // ── 3) Drop zone highlight khi nhận drag ──
+  .cdk-drop-list-receiving {
+    background: color-mix(in srgb, var(--md-sys-color-primary) 3%, transparent);
+    transition: background 0.16s ease;
+  }
+  .fb-group__body.cdk-drop-list-receiving,
+  .fb-group__body.cdk-drop-list-dragging {
+    background: color-mix(in srgb, var(--md-sys-color-primary) 7%, transparent) !important;
+    outline: 1px solid color-mix(in srgb, var(--md-sys-color-primary) 72%, transparent);
+    outline-offset: -6px;
+    border-radius: var(--r-sm);
+  }
+
+  // Resize handle khi đang drag — không cần preview floating, user chỉ cần
+  // visual feedback bằng item width thay đổi.
+  .fb-resize.cdk-drag-preview {
+    display: none !important;
+  }
+
+  // ── 3.5) Khi đang drag — ẨN hover/actions/resize toàn diện ──
+  // JS-driven `.fb-shell--dragging` class (chính) + `:has(.cdk-drag-dragging)` (fallback).
+  // CDK preview clone được teleport ra body → :has() đôi khi không match nếu
+  // original element bị detach tạm thời; class-based đáng tin hơn.
+  .fb-shell--dragging,
+  .fb-shell:has(.cdk-drag-dragging) {
+    // Hover dashed border trên item — biến mất
+    .fb-item:hover,
+    .fb-group:hover {
+      border-color: transparent !important;
+      background: transparent !important;
+    }
+    // Row hover outline + drag handle
+    .fb-row:hover {
+      outline-color: transparent !important;
+      background: transparent !important;
+      .fb-row__drag {
+        opacity: 0 !important;
+      }
+    }
+    .fb-row.is-drag-target {
+      outline-color: color-mix(in srgb, var(--md-sys-color-info) 44%, transparent) !important;
+      background: color-mix(in srgb, var(--md-sys-color-info) 4%, transparent) !important;
+    }
+    .fb-row__drag {
+      opacity: 0 !important;
+    }
+    // Floating action toolbar (.fb-actions) — ẨN
+    .fb-actions {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transform: translateY(-2px) !important;
+    }
+    // Resize handle pill — ẨN trong lúc drag (luôn nhìn rất xấu)
+    .fb-resize {
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+    .fb-status-chip,
+    .fb-resize-chip {
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+    // Quick-add break button — ẨN trong drag
+    .fb-row-break-btn {
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+    // Palette item hover state
+    .fb-palette-item:hover {
+      background: transparent !important;
+      .fb-palette-item__drag {
+        opacity: 0 !important;
+      }
+    }
+    // ── Group body trở thành VISIBLE DROP ZONE khi đang drag ──
+    // Cho user thấy rõ "đây là vùng drop để thêm vào group", min-height cao,
+    // dashed outline primary + bg primary tint nhẹ + transition glow.
+    .fb-group__body {
+      min-height: 72px !important;
+      background: color-mix(in srgb, var(--md-sys-color-primary) 4%, transparent) !important;
+      outline: 1px dashed color-mix(in srgb, var(--md-sys-color-primary) 48%, transparent) !important;
+      outline-offset: -6px;
+      border-radius: var(--r-sm);
+      transition:
+        background 0.16s ease,
+        outline 0.16s ease,
+        min-height 0.16s ease;
+    }
+    .fb-group__empty {
+      opacity: 1;
+      border-color: color-mix(in srgb, var(--md-sys-color-primary) 55%, transparent);
+      background: color-mix(in srgb, var(--md-sys-color-primary) 7%, transparent);
+      color: var(--md-sys-color-primary);
+    }
+    // Group body khi pointer đang ở trên → highlight đậm hơn (drop sẽ chính xác).
+    .fb-group__body.cdk-drop-list-receiving,
+    .fb-group__body.cdk-drop-list-dragging {
+      background: color-mix(in srgb, var(--md-sys-color-primary) 9%, transparent) !important;
+      outline: 1.5px solid var(--md-sys-color-primary) !important;
+    }
+  }
+
+  .fb-shell--resizing {
+    .fb-row.is-resizing-row {
+      outline-color: color-mix(in srgb, var(--md-sys-color-primary) 42%, transparent);
+      background: color-mix(in srgb, var(--md-sys-color-primary) 3%, transparent);
+    }
+
+    .fb-row.is-resizing-row .fb-row__items::before {
+      content: '';
+      position: absolute;
+      inset: -3px 0;
+      border-radius: var(--r-sm);
+      background:
+        repeating-linear-gradient(
+          90deg,
+          transparent 0,
+          transparent calc(8.333% - 1px),
+          color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent) calc(8.333% - 1px),
+          color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent) 8.333%
+        ),
+        color-mix(in srgb, var(--md-sys-color-primary) 3%, transparent);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .fb-row.is-resizing-row .fb-row__items > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .fb-item.is-resizing {
+      border-color: var(--md-sys-color-primary) !important;
+      background: color-mix(in srgb, var(--md-sys-color-primary) 6%, var(--md-sys-color-surface-container-lowest));
+      box-shadow:
+        0 0 0 2px color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent),
+        inset 0 0 0 1px color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent);
+      cursor: col-resize;
+      z-index: 2;
+    }
+
+    .fb-item.is-resizing .fb-resize {
+      opacity: 1 !important;
+      pointer-events: auto !important;
+      background: var(--md-sys-color-primary);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--md-sys-color-primary) 16%, transparent);
+    }
+  }
+
+  // ── 4) Smooth animations ──
+  // Sort animation khi items reorder để chừa chỗ — M3 standard easing.
+  .cdk-drag-animating {
+    transition: transform 220ms cubic-bezier(0.2, 0, 0, 1) !important;
+  }
+  // Element đang follow chuột — disable mọi transition (chuyển động native).
+  .cdk-drag-dragging {
+    transition: none !important;
+  }
+  // Item width transition khi user resize → mượt thay vì snap cứng.
+  .fb-item:not(.cdk-drag-dragging) {
+    transition:
+      flex 120ms cubic-bezier(0.2, 0, 0, 1),
+      max-width 120ms cubic-bezier(0.2, 0, 0, 1),
+      border-color 0.12s,
+      background 0.12s;
+  }
+}
+
+::ng-deep .cdk-drag-preview.fb-drag-preview {
+  width: 132px;
+  height: 44px;
+  box-sizing: border-box;
+  border-radius: 14px;
+  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  box-shadow:
+    0 14px 32px rgba(0, 0, 0, 0.24),
+    0 5px 14px rgba(0, 0, 0, 0.16);
+  border: 1.5px solid color-mix(in srgb, var(--sd-primary, #005cbb) 46%, #d6d2da);
+  cursor: grabbing;
+  pointer-events: none;
+  user-select: none;
+  opacity: 1;
+  overflow: hidden;
+  z-index: 10000;
+
+  .fb-drag-preview__glyph {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--sd-primary, #005cbb);
+    flex-shrink: 0;
+    box-shadow: inset 0 0 0 5px rgba(255, 255, 255, 0.18);
+  }
+
+  .fb-drag-preview__body {
+    flex: 1;
+    min-width: 0;
+    display: grid;
+    gap: 7px;
+  }
+
+  .fb-drag-preview__line {
+    height: 7px;
+    border-radius: 999px;
+    background: rgba(214, 210, 218, 0.72);
+  }
+
+  .fb-drag-preview__line.is-strong {
+    width: 74%;
+    background: color-mix(in srgb, var(--sd-primary, #005cbb) 26%, #d6d2da);
+  }
+}
+
+::ng-deep .sd-form-builder-dialog {
+  .mat-mdc-dialog-surface,
+  .mdc-dialog__surface,
+  .mat-dialog-container {
+    max-height: calc(100vh - 40px);
+  }
+
+  .sd-modal-body {
+    padding: 16px;
+    overscroll-behavior: contain;
+    scroll-padding-bottom: 24px;
+  }
+
+  // why: sd-modal đã tự kẻ đường phân cách phía trên footer; thêm `box-shadow: 0 -1px 0` ở đây là
+  // vẽ chồng lên đúng đường đó, thành ra viền dày gấp đôi và đậm hơn hẳn phần còn lại của dialog.
+  .sd-modal-footer {
+    min-height: 64px;
+    padding: 12px 16px;
+    background: var(--sd-surface, #fff);
+  }
+
+  // ── Dialog "Cấu hình biến" ────────────────────────────────────────────
+  // why: các hàng trước đây là d-flex trần với gap 8px — hai ô input giãn hết cỡ, nút xoá tròn đỏ
+  // to ngang nút chính, và không có gì phân tách hàng này với hàng kia. Cho mỗi hàng một khung
+  // riêng, khoá bề rộng cột và hạ nút xoá xuống dạng text.
+  .fb-variables {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    // why: hai trường cùng kiểu lặp theo hàng — dạng bảng đọc nhanh hơn danh sách thẻ, và nhãn cột
+    // chỉ cần xuất hiện một lần ở header thay vì nổi trên từng ô của từng hàng.
+    &__table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      border: 1px solid var(--sd-border, #e6e6e6);
+      border-radius: 8px;
+      overflow: hidden;
+
+      th {
+        padding: 8px 12px;
+        background: var(--md-sys-color-surface-container-low, #f7f8fa);
+        border-bottom: 1px solid var(--sd-border, #e6e6e6);
+        color: var(--sd-text-secondary, #6b7280);
+        font-size: 12px;
+        font-weight: 500;
+        text-align: left;
+        white-space: nowrap;
+      }
+
+      td {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--sd-border, #e6e6e6);
+        vertical-align: middle;
+      }
+
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+    }
+
+    // Cột thao tác co theo nội dung; hai cột dữ liệu chia phần còn lại.
+    &__actions-col {
+      width: 1px;
+      white-space: nowrap;
+      text-align: right;
+    }
+
+    &__empty {
+      margin: 0;
+      padding: 16px;
+      border: 1px dashed var(--sd-border, #e6e6e6);
+      border-radius: 8px;
+      color: var(--sd-text-secondary, #6b7280);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    &__add {
+      align-self: flex-start;
+    }
+  }
+
+  // Editor JSON cần khung riêng: sd-code-editor tự cuộn, đừng để modal cuộn lồng thêm một lớp nữa.
+}
+
+::ng-deep .fb-validation-menu.mat-mdc-menu-panel {
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
+  overflow: hidden;
+}
+
+// ── Builder shell (3 panels) ────────────────────────────────────────────
+.fb-shell {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  background: var(--md-sys-color-surface);
+  overflow: hidden;
+  // Cố định chiều cao: nếu host parent giới hạn height, panels phải shrink theo.
+  min-height: 0;
+}
+
+// ── Panel header (palette / attributes) ─────────────────────────────────
+.fb-panel-header {
+  height: var(--h-header);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--gap-3);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface-container-low);
+  flex-shrink: 0;
+}
+.fb-panel-header__title {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--md-sys-color-on-surface-variant);
+}
+.fb-panel-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+// ── LEFT PALETTE ────────────────────────────────────────────────────────
+.fb-palette {
+  width: 220px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--md-sys-color-surface-container-low);
+  border-right: 1px solid var(--md-sys-color-outline-variant);
+}
+.fb-palette__scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: var(--gap-3);
+}
+.fb-palette__search {
+  margin: var(--gap-3);
+  height: 32px;
+  display: flex;
+  align-items: center;
+  gap: var(--gap-2);
+  padding: 0 var(--gap-3);
+  border-radius: var(--r-pill);
+  background: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 13px;
+  flex-shrink: 0;
+  .msi {
+    font-size: 18px;
+  }
+  input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--md-sys-color-on-surface);
+    font-size: 13px;
+    font-family: inherit;
+    &::placeholder {
+      color: var(--md-sys-color-on-surface-variant);
+    }
+  }
+  .kbd {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: var(--r-xs);
+    background: var(--md-sys-color-surface-container-lowest);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    color: var(--md-sys-color-on-surface-variant);
+  }
+}
+.fb-palette__group-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--md-sys-color-on-surface-variant);
+  padding: var(--gap-3) var(--gap-4) var(--gap-1);
+  text-transform: uppercase;
+}
+.fb-palette__list {
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--gap-2);
+}
+.fb-palette-item {
+  height: var(--h-palette);
+  display: flex;
+  align-items: center;
+  gap: var(--gap-3);
+  padding: 0 var(--gap-3);
+  border-radius: var(--r-sm);
+  cursor: grab;
+  color: var(--md-sys-color-on-surface);
+  position: relative;
+  user-select: none;
+  &:hover {
+    background: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
+  }
+  .fb-palette-item__icon {
+    width: 24px;
+    height: 24px;
+    border-radius: var(--r-xs);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--md-sys-color-primary);
+    background: var(--md-sys-color-primary-container);
+    flex-shrink: 0;
+    .msi {
+      font-size: 16px;
+    }
+  }
+  .fb-palette-item__name {
+    font-size: 13px;
+    font-weight: 400;
+  }
+  .fb-palette-item__drag {
+    margin-left: auto;
+    color: var(--md-sys-color-outline);
+    opacity: 0;
+    transition: opacity 0.12s ease;
+    .msi {
+      font-size: 16px;
+    }
+  }
+  &:hover .fb-palette-item__drag {
+    opacity: 1;
+  }
+}
+
+// ── CENTER CANVAS ───────────────────────────────────────────────────────
+.fb-canvas {
+  flex: 1 1 0;
+  min-width: 0; // chống horizontal overflow khi item content rộng hơn canvas
+  display: flex;
+  flex-direction: column;
+  background: var(--md-sys-color-surface);
+  overflow: hidden;
+}
+.fb-canvas__header {
+  height: var(--h-header);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--gap-4);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface);
+  gap: var(--gap-3);
+  flex-shrink: 0;
+}
+.fb-canvas__title {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-2);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--md-sys-color-on-surface-variant);
+  .breadcrumb-sep {
+    color: var(--md-sys-color-outline);
+  }
+}
+.fb-canvas__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-2);
+}
+.fb-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--md-sys-color-outline-variant);
+}
+.fb-canvas__body {
+  flex: 1 1 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--gap-4);
+  position: relative;
+  background: var(--md-sys-color-surface);
+  min-width: 0;
+  &.is-preview {
+    background: var(--md-sys-color-surface-container-low);
+    padding: 32px;
+  }
+}
+
+// why: the outer CDK canvas list must cover an empty canvas before its first child is rendered.
+.fb-canvas__body > .cdk-drop-list {
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+// ── M3 segmented Design/Preview toggle ──────────────────────────────────
+.fb-mode-toggle {
+  display: inline-flex;
+  height: 32px;
+  padding: 2px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--r-pill);
+  background: var(--md-sys-color-surface-container-lowest);
+  flex-shrink: 0;
+  gap: 2px;
+  box-shadow: var(--elev-1);
+
+  button {
+    border: 0;
+    background: transparent;
+    border-radius: var(--r-pill);
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--md-sys-color-on-surface-variant);
+    cursor: pointer;
+    transition:
+      background 0.12s ease,
+      color 0.12s ease,
+      box-shadow 0.12s ease;
+
+    .msi {
+      font-size: 16px;
+    }
+
+    &:hover {
+      background: color-mix(in srgb, var(--md-sys-color-primary) 7%, transparent);
+      color: var(--md-sys-color-on-surface);
+    }
+
+    &:focus-visible {
+      outline: 2px solid color-mix(in srgb, var(--md-sys-color-primary) 48%, transparent);
+      outline-offset: 1px;
+    }
+
+    &.is-active {
+      background: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-primary);
+      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent);
+    }
+  }
+}
+
+// ── Row (horizontal group of items) ─────────────────────────────────────
+.fb-row {
+  position: relative;
+  display: flex;
+  gap: var(--gap-2);
+  padding: 6px var(--gap-2);
+  border-radius: var(--r-sm);
+  margin-bottom: 6px;
+  min-width: 0;
+  transition:
+    outline 0.12s ease,
+    background 0.12s ease;
+  outline: 1px dashed transparent;
+  outline-offset: -1px;
+  &:hover {
+    outline-color: var(--md-sys-color-outline-variant);
+    background: color-mix(in srgb, var(--md-sys-color-primary) 3%, transparent);
+    .fb-row__drag {
+      opacity: 1;
+    }
+  }
+  &.is-drag-target {
+    outline-color: color-mix(in srgb, var(--md-sys-color-info) 44%, transparent);
+    background: color-mix(in srgb, var(--md-sys-color-info) 4%, transparent);
+  }
+}
+.fb-row__items {
+  position: relative;
+  min-width: 0;
+}
+.fb-row__drag {
+  position: absolute;
+  left: -22px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 22px;
+  border-radius: var(--r-xs);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--md-sys-color-on-surface-variant);
+  background: var(--md-sys-color-surface-container-high);
+  opacity: 0;
+  cursor: grab;
+  z-index: 2;
+  .msi {
+    font-size: 14px;
+  }
+}
+
+// Quick-add break button — xuất hiện bên phải row khi hover (giống fb-row__drag bên trái).
+.fb-row-break-btn {
+  position: absolute;
+  right: -28px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  border-radius: var(--r-pill);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--md-sys-color-on-surface-variant);
+  background: var(--md-sys-color-surface-container-high);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  cursor: pointer;
+  opacity: 0;
+  z-index: 2;
+  transition:
+    opacity 0.12s ease,
+    background 0.12s ease,
+    color 0.12s ease;
+  .msi {
+    font-size: 14px;
+  }
+  &:hover {
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-primary);
+    border-color: transparent;
+  }
+}
+.fb-row:hover .fb-row-break-btn {
+  opacity: 1;
+}
+
+// ── Canvas item (form component on stage) ───────────────────────────────
+.fb-item {
+  position: relative;
+  border: 1.5px dashed transparent;
+  border-radius: var(--r-md);
+  padding: var(--gap-2) var(--gap-3);
+  min-height: 56px;
+  min-width: 0;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease;
+  background: transparent;
+  cursor: grab;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  // KHÔNG dùng overflow:hidden — sẽ cắt floating .fb-actions (top:-14px) và .fb-status-chip (top:-9px).
+  // Horizontal overflow đã được giải quyết ở .fb-canvas / .fb-canvas__body level.
+  &:hover {
+    border-color: color-mix(in srgb, var(--md-sys-color-primary) 60%, transparent);
+  }
+  &.is-selected {
+    border: 1.5px solid var(--md-sys-color-primary);
+    background: color-mix(in srgb, var(--md-sys-color-primary) 4%, transparent);
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent),
+      inset 3px 0 0 var(--md-sys-color-primary);
+  }
+  &.is-hidden {
+    opacity: 0.45;
+  }
+  &.is-readonly::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--r-md);
+    background: repeating-linear-gradient(
+      135deg,
+      transparent 0 6px,
+      color-mix(in srgb, var(--md-sys-color-on-surface) 4%, transparent) 6px 7px
+    );
+    pointer-events: none;
+  }
+}
+
+// Column widths (12-grid)
+.fb-item.column-2 {
+  flex: 0 0 calc(2 / 12 * 100% - var(--gap-2));
+  max-width: calc(2 / 12 * 100% - var(--gap-2));
+}
+.fb-item.column-3 {
+  flex: 0 0 calc(3 / 12 * 100% - var(--gap-2));
+  max-width: calc(3 / 12 * 100% - var(--gap-2));
+}
+.fb-item.column-4 {
+  flex: 0 0 calc(4 / 12 * 100% - var(--gap-2));
+  max-width: calc(4 / 12 * 100% - var(--gap-2));
+}
+.fb-item.column-5 {
+  flex: 0 0 calc(5 / 12 * 100% - var(--gap-2));
+  max-width: calc(5 / 12 * 100% - var(--gap-2));
+}
+.fb-item.column-6 {
+  flex: 0 0 calc(6 / 12 * 100% - var(--gap-2));
+  max-width: calc(6 / 12 * 100% - var(--gap-2));
+}
+.fb-item.column-7 {
+  flex: 0 0 calc(7 / 12 * 100% - var(--gap-2));
+  max-width: calc(7 / 12 * 100% - var(--gap-2));
+}
+.fb-item.column-8 {
+  flex: 0 0 calc(8 / 12 * 100% - var(--gap-2));
+  max-width: calc(8 / 12 * 100% - var(--gap-2));
+}
+.fb-item.column-9 {
+  flex: 0 0 calc(9 / 12 * 100% - var(--gap-2));
+  max-width: calc(9 / 12 * 100% - var(--gap-2));
+}
+.fb-item.column-10 {
+  flex: 0 0 calc(10 / 12 * 100% - var(--gap-2));
+  max-width: calc(10 / 12 * 100% - var(--gap-2));
+}
+.fb-item.column-11 {
+  flex: 0 0 calc(11 / 12 * 100% - var(--gap-2));
+  max-width: calc(11 / 12 * 100% - var(--gap-2));
+}
+.fb-item.column-12 {
+  flex: 1 1 100%;
+  max-width: 100%;
+}
+
+// ── Floating action toolbar pill ────────────────────────────────────────
+.fb-actions {
+  position: absolute;
+  top: -14px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--r-pill);
+  background: var(--md-sys-color-surface-container-lowest);
+  box-shadow: var(--elev-2);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  z-index: 4;
+  opacity: 0;
+  transform: translateY(-2px);
+  pointer-events: none;
+  transition:
+    opacity 0.12s ease,
+    transform 0.12s ease;
+  .fb-icon-btn {
+    width: 24px;
+    height: 24px;
+    .msi {
+      font-size: 16px;
+    }
+  }
+}
+.fb-item:hover .fb-actions,
+.fb-item.is-selected .fb-actions {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+table-control {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+.fb-group > .fb-actions {
+  top: 6px;
+  right: 8px;
+}
+.fb-group:hover > .fb-actions,
+.fb-group.is-selected > .fb-actions {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+// ── Status chips ────────────────────────────────────────────────────────
+.fb-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  height: 18px;
+  border-radius: var(--r-pill);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  position: absolute;
+  top: -9px;
+  left: 12px;
+  z-index: 3;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface-container-lowest);
+  color: var(--md-sys-color-on-surface-variant);
+  .msi {
+    font-size: 12px;
+  }
+  &.readonly {
+    color: var(--md-sys-color-warning);
+    background: var(--md-sys-color-warning-container);
+    border-color: transparent;
+  }
+  &.hidden {
+    color: var(--md-sys-color-on-surface-variant);
+  }
+  &.conditional {
+    color: var(--md-sys-color-primary);
+    background: var(--md-sys-color-primary-container);
+    border-color: transparent;
+  }
+}
+
+.fb-resize-chip {
+  position: absolute;
+  right: 14px;
+  bottom: -18px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: var(--r-pill);
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  box-shadow: var(--elev-2);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0;
+  pointer-events: none;
+}
+
+// ── Resize handle (replaces blue rectangle) ─────────────────────────────
+.fb-resize {
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  right: -6px;
+  width: 8px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-primary) 28%, transparent);
+  background: var(--md-sys-color-surface-container-lowest);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: col-resize;
+  opacity: 0;
+  transition:
+    opacity 0.12s ease,
+    background 0.12s ease,
+    box-shadow 0.12s ease;
+  z-index: 3;
+  &::before {
+    content: '';
+    width: 2px;
+    height: 20px;
+    background: var(--md-sys-color-primary);
+    border-radius: 999px;
+  }
+  &:hover {
+    background: var(--md-sys-color-primary-container);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
+  }
+}
+.fb-item:hover .fb-resize {
+  opacity: 1;
+}
+
+// ── Break component (row separator) ─────────────────────────────────────
+.fb-item.is-break {
+  min-height: 28px;
+  padding: 8px var(--gap-3);
+  justify-content: center;
+}
+.fb-break-line {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-2);
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  // Đường ngang trải hai bên label, dùng pseudo elements + flex-grow.
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--md-sys-color-outline-variant);
+  }
+  .msi {
+    display: none;
+  } // text "BREAK" đủ rõ, không cần icon duplicate
+  .fb-break-label {
+    color: var(--md-sys-color-on-surface-variant);
+  }
+}
+
+// ── Drop hint (replaces CDK insertion bar) ──────────────────────────────
+.fb-drop-hint {
+  height: 36px;
+  border-radius: var(--r-sm);
+  border: 1.5px dashed var(--md-sys-color-primary);
+  background: color-mix(in srgb, var(--md-sys-color-primary) 6%, transparent);
+  color: var(--md-sys-color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 500;
+  gap: 6px;
+  margin: 4px 0;
+  .msi {
+    font-size: 16px;
+  }
+}
+
+// ── Group component card ────────────────────────────────────────────────
+.fb-group {
+  background: var(--md-sys-color-surface-container-lowest);
+  border-radius: var(--r-lg);
+  border: 1.5px dashed transparent;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  cursor: default; // chỉ header có cursor grab (cdkDragHandle)
+  &:hover {
+    border-color: color-mix(in srgb, var(--md-sys-color-primary) 60%, transparent);
+  }
+  &.is-selected {
+    border: 1.5px solid var(--md-sys-color-primary);
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent),
+      inset 3px 0 0 var(--md-sys-color-primary);
+  }
+  &.is-hidden {
+    opacity: 0.55;
+  }
+}
+.fb-group__header {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-2);
+  padding: 8px 12px;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  cursor: grab; // riêng header có drag handle (cdkDragHandle)
+  &:active {
+    cursor: grabbing;
+  }
+  .fb-group__icon {
+    .msi {
+      font-size: 18px;
+    }
+  }
+  .fb-group__label {
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .fb-group__count {
+    margin-left: auto;
+    font-size: 10px;
+    opacity: 0.75;
+  }
+}
+.fb-group__conditional-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+.fb-group__body {
+  padding: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-2);
+  min-height: 60px;
+  position: relative;
+  // children dùng .column-N để chiếm width tương ứng; flex-wrap cho phép xếp đa cột.
+}
+.fb-group__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 56px;
+  border-radius: var(--r-sm);
+  border: 1.5px dashed var(--md-sys-color-outline-variant);
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 12px;
+  font-style: italic;
+}
+
+// ── Empty state ─────────────────────────────────────────────────────────
+.fb-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-3);
+  color: var(--md-sys-color-on-surface-variant);
+  text-align: center;
+  padding: 24px;
+  pointer-events: none;
+}
+.fb-empty__art {
+  width: 96px;
+  height: 96px;
+  border-radius: var(--r-xl);
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  .msi {
+    font-size: 44px;
+  }
+}
+.fb-empty__title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+}
+.fb-empty__hint {
+  font-size: 13px;
+  max-width: 320px;
+  line-height: 1.5;
+}
+.fb-empty__kbd {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: var(--r-xs);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface-container);
+  color: var(--md-sys-color-on-surface-variant);
+  .msi {
+    font-size: 12px;
+  }
+}
+
+// ── RIGHT ATTRIBUTES PANEL ──────────────────────────────────────────────
+.fb-attrs {
+  width: 320px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--md-sys-color-surface-container-low);
+  border-left: 1px solid var(--md-sys-color-outline-variant);
+}
+.fb-attrs__selection {
+  padding: var(--gap-3) var(--gap-4);
+  display: flex;
+  align-items: center;
+  gap: var(--gap-2);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+.fb-attrs__sel-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-sm);
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  .msi {
+    font-size: 18px;
+  }
+}
+.fb-attrs__sel-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.fb-attrs__sel-name {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fb-attrs__sel-key {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 11px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+.fb-attrs__body {
+  flex: 1 1 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-width: 0;
+}
+.fb-attrs__placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-2);
+  padding: 32px;
+  color: var(--md-sys-color-on-surface-variant);
+  text-align: center;
+  .msi {
+    font-size: 32px;
+    color: var(--md-sys-color-outline);
+  }
+  .title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+  }
+  .hint {
+    font-size: 12px;
+    max-width: 220px;
+    line-height: 1.5;
+  }
+}
+
+// ── Preview mode card ───────────────────────────────────────────────────
+.fb-preview-card {
+  max-width: 760px;
+  margin: 0 auto;
+  background: var(--md-sys-color-surface-container-lowest);
+  border-radius: var(--r-lg);
+  padding: 32px;
+  box-shadow: var(--elev-1);
+}
+.fb-preview-card__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  height: 22px;
+  border-radius: var(--r-pill);
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-primary);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: var(--gap-3);
+}
+.fb-preview-card__title {
+  font-size: 20px;
+  font-weight: 500;
+  margin: 0 0 var(--gap-4);
+  color: var(--md-sys-color-on-surface);
+}
+.fb-preview-card__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--gap-2);
+  margin-top: var(--gap-4);
+  padding-top: var(--gap-4);
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+
+// ── Icon picker grid (group attribute) ──────────────────────────────────
+.fb-icon-picker {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+  margin-top: 4px;
+  .fb-icon-picker__btn {
+    height: 28px;
+    border-radius: var(--r-xs);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    background: var(--md-sys-color-surface-container-lowest);
+    color: var(--md-sys-color-on-surface-variant);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    .msi {
+      font-size: 16px;
+    }
+    &.is-active {
+      border-color: var(--md-sys-color-primary);
+      background: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-primary);
+    }
+    &:hover {
+      background: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
+    }
+  }
+}
+.fb-color-swatches {
+  display: flex;
+  gap: var(--gap-2);
+  margin-top: 4px;
+  // why: đổi từ <span> sang <button type="button"> để bàn phím chọn được màu → reset padding mặc
+  // định của button (giữ hình tròn 24px) và bổ sung focus ring.
+  .fb-color-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    padding: 0;
+    border: 2px solid transparent;
+    &.is-active {
+      border-color: var(--md-sys-color-on-surface);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--sd-primary, #005cbb);
+      outline-offset: 2px;
+    }
+    &.primary {
+      background: var(--md-sys-color-primary);
+    }
+    &.secondary {
+      background: var(--md-sys-color-secondary);
+    }
+    &.success {
+      background: var(--md-sys-color-success);
+    }
+    &.warning {
+      background: var(--md-sys-color-warning);
+    }
+    &.error {
+      background: var(--md-sys-color-error);
+    }
+  }
+}
+
+// ── Child list (group attribute panel) ──────────────────────────────────
+.fb-children-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.fb-child-row {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-2);
+  height: 30px;
+  padding: 0 8px;
+  border-radius: var(--r-xs);
+  background: var(--md-sys-color-surface-container-lowest);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  font-size: 12px;
+  .fb-child-row__icon {
+    width: 22px;
+    height: 22px;
+    border-radius: var(--r-xs);
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    .msi {
+      font-size: 14px;
+    }
+  }
+  .fb-child-row__label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .fb-child-row__key {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 10px;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+  &:hover {
+    background: color-mix(in srgb, var(--md-sys-color-primary) 4%, transparent);
+  }
+}
+// why: .fb-add-link đổi từ <a> sang <button type="button"> (bàn phím phải thêm được cột) → reset
+// chrome mặc định của button để giữ nguyên diện mạo "link", và thêm focus ring khi tab tới.
+.fb-add-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--md-sys-color-primary);
+  cursor: pointer;
+  padding: 4px 0;
+  text-decoration: none;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  .msi {
+    font-size: 14px;
+  }
+  &:hover {
+    text-decoration: underline;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--sd-primary, #005cbb);
+    outline-offset: 2px;
+  }
+}
+
+/* ══════════ Group drill-in (Detail) — static preview + edit header ══════════ */
+// why: trên canvas chính, body group chỉ là PREVIEW tĩnh — children render read-only,
+// pointer-events tắt để mọi click rơi xuống body → mở Detail (enterGroupEdit).
+.fb-group__body--static {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-2, 8px);
+  cursor: pointer;
+  min-height: 48px;
+
+  .fb-item--static {
+    // Children không tương tác: không drag, không resize, không actions, không select.
+    pointer-events: none;
+    position: relative;
+
+    // Tắt mọi handle/action lỡ render bên trong control template.
+    .fb-resize,
+    .fb-actions,
+    .fb-status-chip {
+      display: none !important;
+    }
+  }
+}
+
+// Header khi đang Detail 1 group — breadcrumb trái + OK/Cancel phải.
+.fb-canvas__header--group {
+  .fb-groupedit__crumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+  }
+  .fb-groupedit__icon .msi {
+    font-size: 18px;
+    color: var(--md-sys-color-primary);
+  }
+  .fb-groupedit__hint {
+    font-weight: 400;
+    font-size: 12px;
+    color: var(--md-sys-color-on-surface-variant, #6b6b6b);
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
+  }
+}

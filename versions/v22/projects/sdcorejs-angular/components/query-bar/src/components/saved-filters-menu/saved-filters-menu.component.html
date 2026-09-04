@@ -1,0 +1,36 @@
+<button
+  type="button"
+  class="c-saved-filters"
+  [disabled]="!key()"
+  [matMenuTriggerFor]="menu"
+  [matTooltip]="key() ? tooltipLabel() : tooltipDisabledLabel()">
+  <sd-icon name="bookmark_border"></sd-icon>
+</button>
+
+<mat-menu #menu="matMenu" class="c-saved-filters-menu" xPosition="before" yPosition="below">
+  @for (f of savedFilters(); track f.id) {
+    <button type="button" mat-menu-item class="c-sf-row" (click)="pick(f)">
+      <sd-icon class="c-sf-lead" name="filter_alt"></sd-icon>
+      <span class="c-sf-name">{{ f.name }}</span>
+      <span
+        role="button"
+        tabindex="0"
+        class="c-sf-del"
+        [attr.aria-label]="deleteLabel()"
+        (click)="remove(f.id, $event)"
+        (keydown.enter)="remove(f.id, $event)">
+        <sd-icon name="close"></sd-icon>
+      </span>
+    </button>
+  } @empty {
+    <div class="c-sf-empty">{{ emptyLabel() }}</div>
+  }
+  <!-- why: footer save action sống trong mat-menu để dropdown gom 1 vùng (list +
+       save) — user mở dropdown thấy ngay cả 2 hành động, không phải tìm nút lưu
+       ở chỗ khác trên toolbar. -->
+  <hr class="c-sf-divider" aria-hidden="true" />
+  <button type="button" mat-menu-item class="c-sf-save" [disabled]="!key()" (click)="promptSave()">
+    <sd-icon name="bookmark_add"></sd-icon>
+    <span>{{ saveLabel() }}</span>
+  </button>
+</mat-menu>

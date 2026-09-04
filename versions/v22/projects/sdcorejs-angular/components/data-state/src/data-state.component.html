@@ -1,0 +1,41 @@
+@let currentState = state();
+@let template = customTemplate();
+
+@if (currentState === 'success') {
+  @if (template) {
+    <ng-container [ngTemplateOutlet]="template.template" [ngTemplateOutletContext]="templateContext()"></ng-container>
+  } @else {
+    <ng-content></ng-content>
+  }
+} @else if (template) {
+  <ng-container [ngTemplateOutlet]="template.template" [ngTemplateOutletContext]="templateContext()"></ng-container>
+} @else {
+  <section
+    class="sd-data-state"
+    [class.sd-data-state--compact]="compact()"
+    [class.sd-data-state--full-page]="fullPage()"
+    [attr.data-state]="currentState"
+    [attr.role]="role()"
+    [attr.aria-busy]="currentState === 'loading' ? 'true' : null"
+    [attr.aria-live]="role() === 'alert' ? 'assertive' : 'polite'">
+    @if (effectiveIcon(); as currentIcon) {
+      <sd-icon class="sd-data-state__icon" aria-hidden="true" [name]="currentIcon" [fontSet]="fontSet()"></sd-icon>
+    }
+
+    <div class="sd-data-state__title">{{ title() ?? (titleKey() | sdTranslate) }}</div>
+    <div class="sd-data-state__message">{{ message() ?? (messageKey() | sdTranslate) }}</div>
+
+    @if (retryable() || actionLabel()) {
+      <div class="sd-data-state__actions">
+        @if (retryable()) {
+          <button type="button" data-state-retry (click)="retry()">
+            {{ retryLabel() || ('core.component.data-state.retry' | sdTranslate) }}
+          </button>
+        }
+        @if (actionLabel(); as label) {
+          <button type="button" data-state-action (click)="action()">{{ label }}</button>
+        }
+      </div>
+    }
+  </section>
+}

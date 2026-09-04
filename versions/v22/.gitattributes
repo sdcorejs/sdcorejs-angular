@@ -1,0 +1,5 @@
+* text=auto eol=lf
+*.html text eol=lf
+*.scss text eol=lf
+*.svg text eol=lf
+*.woff2 -text

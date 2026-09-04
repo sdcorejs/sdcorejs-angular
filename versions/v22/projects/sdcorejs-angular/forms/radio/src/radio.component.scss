@@ -1,0 +1,66 @@
+:host {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+:host ::ng-deep {
+  // NOTE: Bootstrap reboot thêm margin-bottom vào label — giữ override này khi còn dùng Bootstrap
+  label.mdc-label {
+    margin-bottom: 0;
+  }
+}
+
+// why: --sd-c là màu hiện tại của control. Default = primary. Host class .sd-c-<x>
+// override. Material [color] không nhận giá trị ngoài ThemePalette → override token vars.
+:host {
+  --sd-c: var(--sd-primary);
+}
+:host(.sd-c-secondary) { --sd-c: var(--sd-secondary); }
+:host(.sd-c-info)      { --sd-c: var(--sd-info); }
+:host(.sd-c-success)   { --sd-c: var(--sd-success); }
+:host(.sd-c-warning)   { --sd-c: var(--sd-warning); }
+:host(.sd-c-error)     { --sd-c: var(--sd-error); }
+
+// why: Angular Material radio still layers MDC tokens with Material wrapper tokens.
+// Theme rules can set `.mat-mdc-radio-button.mat-accent` at higher specificity,
+// so override both `--mat-radio-*` and `--mdc-radio-*` through the Core UI token.
+:host ::ng-deep .mat-mdc-radio-button,
+:host ::ng-deep .mat-mdc-radio-group,
+:host ::ng-deep .mdc-radio {
+  // MDC layer (selected-*-icon-color)
+  --mdc-radio-selected-icon-color: var(--sd-c) !important;
+  --mdc-radio-selected-focus-icon-color: var(--sd-c) !important;
+  --mdc-radio-selected-hover-icon-color: var(--sd-c) !important;
+  --mdc-radio-selected-pressed-icon-color: var(--sd-c) !important;
+  --mdc-radio-selected-focus-state-layer-color: var(--sd-c) !important;
+  --mdc-radio-selected-hover-state-layer-color: var(--sd-c) !important;
+
+  // Material wrapper tokens: keep these in sync with the MDC layer above.
+  --mat-radio-selected-icon-color: var(--sd-c) !important;
+  --mat-radio-selected-focus-icon-color: var(--sd-c) !important;
+  --mat-radio-selected-hover-icon-color: var(--sd-c) !important;
+  --mat-radio-selected-pressed-icon-color: var(--sd-c) !important;
+  --mat-radio-checked-ripple-color: var(--sd-c) !important;
+  --mat-radio-checked-state-layer-color: var(--sd-c) !important;
+}
+
+.c-section {
+  /* display: flex; */
+  align-content: center;
+  align-items: center;
+}
+
+.c-radio-group-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.c-radio-group-row {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}

@@ -1,0 +1,370 @@
+@use '../../../assets/scss/core/color.scss' as color;
+@use 'sass:map';
+
+$button-outline-border-color: #d3d3d3;
+$button-disabled-border-color: #a6a6a6;
+$button-disabled-background-color: #e9e9e9;
+$sd-button-black-color: map.get(color.$basic_color_map, 'black');
+
+:host {
+  display: inline-block;
+
+  // [FIX QUAN TRỌNG] Đặt là auto để Host hứng được sự kiện click
+  // Giúp HostListener trong TS có thể stopPropagation (chặn lan ra Header)
+  pointer-events: auto;
+
+  // 1. KHI DISABLED THẬT
+  &.sd-disabled {
+    cursor: not-allowed;
+  }
+
+  // 2. KHI LOADING
+  &.sd-loading {
+    cursor: wait;
+  }
+
+  // 3. KHI BLOCK
+  &.sd-block {
+    display: block;
+    width: 100%;
+
+    button {
+      width: 100%;
+    }
+  }
+}
+
+:host ::ng-deep {
+  button.c-button {
+    // Mặc định button nhận click
+    pointer-events: auto;
+    min-width: auto;
+
+    // why: button height fixed (32/40/48px). Default mat-button cho text wrap → khi
+    // host container giới hạn width sẽ xuống dòng, đè khít height → text bị cắt.
+    // Nowrap + ellipsis: giữ 1 dòng, vượt thì hiển thị '…'. Caller muốn wrap có thể
+    // override class hoặc bỏ width constraint từ container.
+    white-space: nowrap;
+
+    // Layout content
+    .mdc-button__label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-width: 0; // why: cho phép .c-title flex con shrink + ellipsis trong wrapper.
+    }
+
+    // --- TRẠNG THÁI DISABLED (Attribute disabled thật) ---
+    // Chặn click và đổi màu xám
+    &[disabled] {
+      pointer-events: none;
+      color: $button-disabled-border-color !important;
+      background-color: $button-disabled-background-color !important;
+    }
+
+    // --- STYLE SIZES ---
+    &.c-square {
+      min-width: auto !important;
+      padding: 0 !important;
+    }
+
+    &.c-sm {
+      font-size: 14px !important;
+      height: 32px;
+      padding: 2px 12px !important;
+
+      sd-icon {
+        height: 16px !important;
+        width: 16px !important;
+        font-size: 16px !important;
+      }
+      &.c-square {
+        width: 32px !important;
+      }
+    }
+
+    &.c-md {
+      font-size: 16px;
+      height: 40px;
+      padding: 2px 16px !important;
+
+      sd-icon {
+        height: 20px !important;
+        width: 20px !important;
+        font-size: 20px !important;
+      }
+      &.c-square {
+        width: 40px !important;
+      }
+    }
+
+    &.c-lg {
+      font-size: 16px !important;
+      padding: 2px 16px !important;
+      height: 48px;
+
+      &.c-square {
+        width: 48px !important;
+      }
+
+      sd-icon {
+        height: 24px !important;
+        width: 24px !important;
+        font-size: 24px !important;
+      }
+    }
+
+    // why: `outline: none` xoá vòng focus của CHÍNH nút chủ lực của thư viện — người dùng bàn phím
+    // tab qua form mà không thấy mình đang ở nút nào. Giữ `:focus` sạch cho chuột, nhưng trả lại
+    // vòng focus cho điều hướng bàn phím bằng :focus-visible.
+    &:focus {
+      outline: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--sd-primary, #005cbb);
+      outline-offset: 2px;
+    }
+
+    &.c-disabled {
+      opacity: 0.5;
+    }
+
+    // --- BLOCK MODE ---
+    &.c-block {
+      width: 100% !important;
+    }
+
+    // --- STYLE TYPES (Fill, Light, Outline, Link) ---
+    // Giữ nguyên logic màu sắc của bạn
+
+    // 1. FILL
+    &.c-fill {
+      &.mat-mdc-unelevated-button {
+        &.mat-primary {
+          background-color: map.get(color.$color_map, 'primary');
+          color: #fff;
+        }
+        &.mat-info {
+          background-color: map.get(color.$color_map, 'info');
+          color: #fff;
+        }
+        &.mat-success {
+          background-color: map.get(color.$color_map, 'success');
+          color: #fff;
+        }
+        &.mat-warning {
+          background-color: map.get(color.$color_map, 'warning');
+          color: #fff;
+        }
+        &.mat-error {
+          background-color: map.get(color.$color_map, 'error');
+          color: #fff;
+        }
+        &.mat-secondary {
+          background-color: map.get(color.$color_map, 'secondary');
+          color: #fff;
+        }
+        &.c-black {
+          background-color: $sd-button-black-color !important;
+          color: #fff;
+        }
+      }
+      .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
+        stroke: #fff !important;
+      }
+    }
+
+    // 2. LIGHT
+    &.c-light {
+      &.mat-mdc-unelevated-button {
+        &.mat-primary {
+          background-color: map.get(color.$color_map, 'primary-light');
+          color: map.get(color.$color_map, 'primary');
+          .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
+            stroke: map.get(color.$color_map, 'primary') !important;
+          }
+        }
+        &.mat-info {
+          background-color: map.get(color.$color_map, 'info-light');
+          color: map.get(color.$color_map, 'info');
+          .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
+            stroke: map.get(color.$color_map, 'info') !important;
+          }
+        }
+        &.mat-success {
+          background-color: map.get(color.$color_map, 'success-light');
+          color: map.get(color.$color_map, 'success');
+          .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
+            stroke: map.get(color.$color_map, 'success') !important;
+          }
+        }
+        &.mat-warning {
+          background-color: map.get(color.$color_map, 'warning-light');
+          color: map.get(color.$color_map, 'warning');
+          .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
+            stroke: map.get(color.$color_map, 'warning') !important;
+          }
+        }
+        &.mat-error {
+          background-color: map.get(color.$color_map, 'error-light');
+          color: map.get(color.$color_map, 'error');
+          .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
+            stroke: map.get(color.$color_map, 'error') !important;
+          }
+        }
+        &.mat-secondary {
+          background-color: map.get(color.$color_map, 'secondary-light');
+          color: map.get(color.$color_map, 'secondary') !important;
+          .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
+            stroke: map.get(color.$color_map, 'secondary') !important;
+          }
+        }
+        &.c-black {
+          background-color: map.get(color.$color_map, 'surface-muted');
+          color: $sd-button-black-color !important;
+          .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
+            stroke: $sd-button-black-color !important;
+          }
+        }
+      }
+    }
+
+    // 3. OUTLINE
+    &.c-outline {
+      &.mat-mdc-outlined-button {
+        border-color: $button-outline-border-color;
+        &.mat-primary {
+          color: map.get(color.$color_map, 'primary');
+          .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
+            stroke: map.get(color.$color_map, 'primary') !important;
+          }
+        }
+        &.mat-info {
+          color: map.get(color.$color_map, 'info');
+          .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
+            stroke: map.get(color.$color_map, 'info') !important;
+          }
+        }
+        &.mat-success {
+          color: map.get(color.$color_map, 'success');
+          .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
+            stroke: map.get(color.$color_map, 'success') !important;
+          }
+        }
+        &.mat-warning {
+          color: map.get(color.$color_map, 'warning');
+          .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
+            stroke: map.get(color.$color_map, 'warning') !important;
+          }
+        }
+        &.mat-error {
+          color: map.get(color.$color_map, 'error');
+          .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
+            stroke: map.get(color.$color_map, 'error') !important;
+          }
+        }
+        &.mat-secondary {
+          color: map.get(color.$color_map, 'secondary') !important;
+          .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
+            stroke: map.get(color.$color_map, 'secondary') !important;
+          }
+        }
+        &.c-black {
+          color: $sd-button-black-color !important;
+          .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
+            stroke: $sd-button-black-color !important;
+          }
+        }
+        &[disabled] {
+          background: transparent !important;
+        }
+      }
+    }
+
+    // 4. TEXT
+    &.c-text {
+      &.mat-mdc-button {
+        &.mat-primary {
+          color: map.get(color.$color_map, 'primary');
+          .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
+            stroke: map.get(color.$color_map, 'primary') !important;
+          }
+        }
+        &.mat-info {
+          color: map.get(color.$color_map, 'info');
+          .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
+            stroke: map.get(color.$color_map, 'info') !important;
+          }
+        }
+        &.mat-success {
+          color: map.get(color.$color_map, 'success');
+          .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
+            stroke: map.get(color.$color_map, 'success') !important;
+          }
+        }
+        &.mat-warning {
+          color: map.get(color.$color_map, 'warning');
+          .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
+            stroke: map.get(color.$color_map, 'warning') !important;
+          }
+        }
+        &.mat-error {
+          color: map.get(color.$color_map, 'error');
+          .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
+            stroke: map.get(color.$color_map, 'error') !important;
+          }
+        }
+        &.mat-secondary {
+          color: map.get(color.$color_map, 'secondary') !important;
+          .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
+            stroke: map.get(color.$color_map, 'secondary') !important;
+          }
+        }
+        &.c-black {
+          color: $sd-button-black-color !important;
+          .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
+            stroke: $sd-button-black-color !important;
+          }
+        }
+      }
+    }
+  }
+
+  // --- HELPER CLASSES ---
+  .c-button-content-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-width: 0; // why: flex con (c-title) chỉ ellipsize được khi parent cho phép shrink.
+    pointer-events: none;
+  }
+
+  // why: title là phần text duy nhất có thể vượt — flex shrink + ellipsis để khi
+  // container hẹp text không xuống dòng (gây cắt height) mà hiện '…' cuối.
+  .c-title {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .c-spinner {
+    display: inline-block;
+  }
+
+  sd-icon {
+    display: inline-flex;
+  }
+}
+
+// --- LOGIC LOADING ---
+// Khi host có class .sd-loading thì tác động vào button con
+:host.sd-loading ::ng-deep button.c-button {
+  // Chặn click nhưng KHÔNG đổi màu xám (không áp dụng style disabled)
+  pointer-events: none;
+  opacity: 0.85;
+}

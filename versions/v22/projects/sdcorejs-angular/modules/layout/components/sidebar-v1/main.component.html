@@ -1,0 +1,32 @@
+<mat-sidenav-container class="c-layout-wrapper">
+  <mat-sidenav
+    #sidenav
+    [opened]="!isMobile() || isShowSidebar()"
+    (openedChange)="onSidenavOpenedChange($event)"
+    class="c-layout-sidebar"
+    [class.is-expanded]="isShowSidebar()"
+    (click)="openSidebar()"
+    (mouseleave)="onMouseleaveSideBar()"
+    [mode]="isMobile() ? 'over' : 'side'"
+    [fixedInViewport]="isMobile()">
+    <sd-sidebar-v1-panel
+      [menus]="menus()"
+      [userInfo]="userInfo()"
+      [sidebar]="sidebar()"
+      [isMobile]="isMobile()"
+      [isShowSidebar]="isShowSidebar()"
+      (showSideBar)="onToggle($event)"
+      (expandSideBar)="onExpandSideBar()"
+      (popupUserMenuOpened)="onPopupOfSideBarOpened()"
+      (popupUserMenuClosed)="onPopupOfSideBarClosed()">
+    </sd-sidebar-v1-panel>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="c-layout-content" [class.isShowSidebar]="isMenuLock()">
+    <mat-drawer-container class="c-mat-drawer-container">
+      <mat-drawer-content>
+        <ng-content></ng-content>
+      </mat-drawer-content>
+    </mat-drawer-container>
+  </mat-sidenav-content>
+</mat-sidenav-container>

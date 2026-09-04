@@ -1,0 +1,55 @@
+@if (resolvedState()) {
+  <section class="sd-job-progress" [attr.aria-label]="progressLabel()">
+    <div class="sd-job-progress__header">
+      <div class="sd-job-progress__identity">
+        @if (effectiveTitle()) {
+          <strong class="sd-job-progress__title">{{ effectiveTitle() }}</strong>
+        }
+        <span class="sd-job-progress__status">{{ statusLabel() }}</span>
+      </div>
+
+      @if (progress() !== undefined) {
+        <span class="sd-job-progress__percentage">{{ progress() }}%</span>
+      }
+    </div>
+
+    @if (active() || progress() !== undefined) {
+      <div
+        class="sd-job-progress__track"
+        role="progressbar"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        [attr.aria-valuenow]="progress()"
+        [attr.aria-label]="progressLabel()"
+        [attr.data-indeterminate]="progress() === undefined ? 'true' : 'false'">
+        <span
+          class="sd-job-progress__fill"
+          [class.sd-job-progress__fill--indeterminate]="progress() === undefined"
+          [style.width.%]="progress() ?? 30"></span>
+      </div>
+    }
+
+    @if (mode() === 'details' && effectiveMessage()) {
+      <p class="sd-job-progress__message" data-task-details>{{ effectiveMessage() }}</p>
+    }
+
+    @if (displayedError()) {
+      <p class="sd-job-progress__error" role="alert">{{ displayedError() }}</p>
+    }
+
+    @if (canCancel() || canRetry()) {
+      <div class="sd-job-progress__actions">
+        @if (canCancel()) {
+          <button type="button" data-task-cancel (click)="onCancel()">
+            {{ cancelLabel() }}
+          </button>
+        }
+        @if (canRetry()) {
+          <button type="button" data-task-retry (click)="onRetry()">
+            {{ retryLabel() }}
+          </button>
+        }
+      </div>
+    }
+  </section>
+}

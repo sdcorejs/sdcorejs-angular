@@ -1,0 +1,65 @@
+<ng-template cdkPortal>
+  @let _isOpened = isOpened();
+  <div
+    [id]="id"
+    class="sd-side-drawer"
+    [ngStyle]="{ width: width() }"
+    [ngClass]="drawerClass()"
+    [class.sd-side-drawer-active]="_isOpened"
+    [attr.data-autoId]="autoId()"
+    [attr.data-opened]="dataOpened()"
+    [attr.data-loading]="dataLoading()"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="title() || null"
+    (keydown.escape)="disableBackdropClose() ? null : close()"
+    #drawerContainer>
+    @if (_isOpened) {
+      <ng-container>
+        <div class="sd-side-drawer-header">
+          <div class="sd-side-drawer-header-left">
+            <ng-content select="[sdHeaderLeft]">
+              <div class="sd-side-drawer-title">{{ title() }}</div>
+            </ng-content>
+          </div>
+          <div class="sd-side-drawer-header-right">
+            <ng-content select="[sdHeaderRight]"></ng-content>
+            @if (!hideClose()) {
+              <!-- why: aria-label="Close" là chuỗi tiếng Anh cứng trong một thư viện đã có i18n. -->
+              <button
+                type="button"
+                class="sd-side-drawer-close-btn"
+                (click)="close()"
+                [attr.aria-label]="'core.common.close' | sdTranslate">
+                <sd-icon name="close"></sd-icon>
+              </button>
+            }
+          </div>
+        </div>
+        @if (_isOpened) {
+          <div class="sd-side-drawer-body">
+            <div class="sd-side-drawer-content">
+              <ng-content></ng-content>
+            </div>
+          </div>
+        }
+        <div class="sd-side-drawer-footer">
+          <div class="sd-side-drawer-footer-left"><ng-content select="[sdFooterLeft]"></ng-content></div>
+          <div class="sd-side-drawer-footer-right"><ng-content select="[sdFooterRight]"></ng-content></div>
+        </div>
+      </ng-container>
+    }
+  </div>
+  <!-- why: backdrop là lớp phủ bắt click thuần trang trí, không có nội dung — nhưng aria-hidden
+       không phải là cách khai báo đúng cho nó. `role="presentation"` mới là tín hiệu chính xác
+       (phần tử này không mang ngữ nghĩa), và quan trọng hơn: trước đây "đóng bằng cách click ra
+       ngoài" KHÔNG có tương đương bàn phím nào cả. Escape được thêm ở drawer container. -->
+  @if (_isOpened) {
+    <div
+      role="presentation"
+      class="sd-side-drawer-backdrop"
+      (click)="disableBackdropClose() ? null : close()"
+      (wheel)="preventScroll($event)"
+      (touchmove)="preventScroll($event)"></div>
+  }
+</ng-template>

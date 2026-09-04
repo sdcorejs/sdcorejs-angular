@@ -1,0 +1,25 @@
+.c-ellipsis-html {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.c-collapse {
+  background: none;
+  color: rgb(0, 0, 238);
+  border: none;
+  padding: 0;
+  font-size: 12px;
+  cursor: pointer;
+  outline: none;
+
+  // why: `outline: none` xoá vòng focus mặc định của nút → người dùng bàn phím mất dấu. Trả lại
+  // bằng :focus-visible (chuột vẫn không thấy viền).
+  &:focus-visible {
+    outline: 2px solid var(--sd-primary, #005cbb);
+    outline-offset: 2px;
+  }
+}

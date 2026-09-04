@@ -1,0 +1,37 @@
+.c-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.c-ellipsis-html {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.c-collapse {
+  background: none;
+  color: rgb(0, 0, 238);
+  border: none;
+  padding: 0;
+  font-size: 12px;
+  cursor: pointer;
+  outline: none;
+
+  // why: `outline: none` ở trên xoá luôn vòng focus mặc định → người dùng bàn phím mất dấu.
+  // Trả lại bằng :focus-visible (chuột vẫn không thấy viền).
+  &:focus-visible {
+    outline: 2px solid var(--sd-primary, #005cbb);
+    outline-offset: 2px;
+  }
+}
+
+// why: ô HTML clickable nay có tabindex="0" nên phải có vòng focus thấy được.
+:host [role='button']:focus-visible {
+  outline: 2px solid var(--sd-primary, #005cbb);
+  outline-offset: -2px;
+}

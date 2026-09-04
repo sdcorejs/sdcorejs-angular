@@ -1,0 +1,79 @@
+.c-op-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: none;
+  background: transparent;
+  color: var(--sd-primary, #0f766e);
+  cursor: pointer;
+  border-radius: 4px;
+
+  &:hover:not([disabled]) { background: rgba(0, 0, 0, 0.04); }
+  &[disabled] { color: rgba(0, 0, 0, 0.26); cursor: default; }
+}
+
+// Trigger icon (in :host).
+.c-op-icon {
+  display: inline-flex;
+  align-items: center;
+
+  svg { display: block; }
+}
+
+// Menu rows render in a document.body overlay, so component-scoped styles can't
+// reach them — target the panel class (forwarded by <mat-menu class="c-op-menu">)
+// via ::ng-deep. why: Material wraps projected content in `.mat-mdc-menu-item-text`,
+// so the flex row + alignment must live on that wrapper, not on the button.
+::ng-deep .c-op-menu {
+  // why: hàng có 2 dòng (label + code) nên phải bỏ khung 1 dòng của mat-menu-item —
+  // min-height/height 48px + line-height 48px sẽ crop dòng thứ hai.
+  .c-op-row.mat-mdc-menu-item {
+    min-height: 0;
+    height: auto;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    line-height: normal;
+  }
+
+  .mat-mdc-menu-item-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .c-op-icon {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+
+    svg { display: block; }
+  }
+
+  // Label dòng 1, code dòng 2. why: trước đây label và code nằm cùng một hàng ngang, nên trong
+  // filter cột hẹp label dài ('Lớn hơn, hoặc bằng') bị wrap thành 2 dòng và hàng cao lệch nhau.
+  .c-op-text {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+  }
+
+  .c-op-label {
+    font-weight: 400;
+    line-height: 1.3;
+    white-space: nowrap;
+  }
+
+  .c-op-code {
+    color: var(--sd-text-muted, #7a7a7a);
+    font-size: 11px;
+    line-height: 1.2;
+    font-family: monospace;
+    white-space: nowrap;
+  }
+
+  .c-op-row.c-op-active { background: var(--sd-primary-light, rgba(15, 118, 110, 0.08)); }
+}

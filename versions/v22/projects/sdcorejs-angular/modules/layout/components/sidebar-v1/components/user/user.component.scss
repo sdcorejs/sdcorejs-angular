@@ -1,0 +1,35 @@
+.c-layout-user-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 60px;
+  height: 80px;
+}
+
+// why: The legacy V1 rail reserves a fixed avatar slot independent of the shared disclosure internals.
+.c-layout-user-avatar {
+  display: block;
+  width: 56px;
+  height: 52px;
+}
+
+// why: The rail pin control keeps the legacy footer geometry while using a semantic button.
+.c-layout-icon-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-top: 1px solid var(--sd-black200, #f0f0f0);
+  background: transparent;
+  color: var(--sd-black400, #8c8c8c);
+  cursor: pointer;
+}
+
+.c-layout-icon-toggle:focus-visible {
+  outline: 2px solid var(--sd-primary);
+  outline-offset: 2px;
+}

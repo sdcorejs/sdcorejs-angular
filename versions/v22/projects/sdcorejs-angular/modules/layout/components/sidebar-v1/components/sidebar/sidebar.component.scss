@@ -1,0 +1,260 @@
+// Sử dụng ng-deep do mat-tooltip sinh ra element ở lớp layout ở body (nằm ngoài component hiện tại nên k dùng được :host ::ng-deep)
+// Note: Đã định danh class bằng uuid nên sẽ không bị ghi đè css vào mat-tooltip khác
+::ng-deep {
+  .mat-mdc-tooltip-panel:has(.c-tooltip-menu-group-7a22ab15-0083-4d4c-9c0c-00a30bc8c140) {
+    pointer-events: none;
+  }
+}
+
+// Margin-left 16px mỗi cấp menu - hardcode 3 cấp
+:host ::ng-deep {
+  .mat-nested-tree-node {
+    .c-menu-node-group {
+      .c-menu-node-description-content {
+        margin-left: 16px !important;
+      }
+
+      .mat-nested-tree-node {
+        .c-menu-node-group {
+          .c-menu-node-description-content {
+            margin-left: 32px !important;
+          }
+
+          .mat-nested-tree-node {
+            .c-menu-node-group {
+              .c-menu-node-description-content {
+                margin-left: 48px !important;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+.c-menu-node-group {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+// End
+
+// Css Sidebar
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 290px;
+  background-color: #fff;
+
+  .c-header {
+    display: flex;
+    align-items: center;
+    height: 52px;
+    padding: 3px;
+    gap: 16px;
+
+    .c-logo {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 52px;
+      height: 52px;
+
+      a {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        color: var(--sd-text-secondary, #44474f);
+      }
+
+      img {
+        width: 32px;
+        height: 32px;
+        object-fit: contain;
+      }
+    }
+
+    .c-title-menu-group {
+      display: flex;
+      align-items: center;
+      font-size: 18px;
+      font-weight: 500;
+      flex: 1;
+    }
+  }
+
+  .c-body {
+    flex: 1;
+    overflow-y: hidden;
+
+    .c-menu {
+      height: 100%;
+      display: flex;
+
+      .c-menu-group {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 0 0 60px;
+        min-width: 60px;
+        width: 60px;
+        overflow-y: scroll;
+        scrollbar-width: none;
+
+        .c-menu-group-icon {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 50px;
+          width: 52px;
+          border-radius: 8px;
+          transition: all 0.15s;
+
+          img {
+            height: 24px;
+            width: 24px;
+            object-fit: contain;
+          }
+        }
+      }
+
+      .c-menu-tree {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 3px 4px 3px 3px;
+
+        .c-menu-tree-search {
+          .c-search-prefix-icon {
+            cursor: pointer;
+            color: #757575;
+            padding: 0px;
+
+            &.search {
+              width: 20px;
+              height: 20px;
+              font-size: 18px;
+            }
+
+            &.cancel {
+              width: 16px;
+              height: 16px;
+              font-size: 16px;
+            }
+          }
+        }
+
+        .c-menu-tree-container {
+          flex: 1;
+          overflow-y: scroll;
+          scrollbar-width: none;
+
+          .c-menu-node {
+            width: 100%;
+            display: flex;
+            cursor: pointer;
+            min-height: 44px;
+            padding: 8px;
+            border-radius: 8px;
+
+            .c-menu-node-icon {
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              height: 100%;
+            }
+
+            button.c-menu-node-description {
+              width: 100%;
+              padding: 0;
+              border: 0;
+              background: transparent;
+              color: inherit;
+              text-align: left;
+              cursor: pointer;
+            }
+
+            .c-menu-node-description {
+              flex: 1;
+              display: flex;
+              align-items: center;
+
+              .c-menu-node-description-content {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                white-space: pre-wrap;
+                font-size: 15px;
+              }
+
+              .c-menu-node-description-icon-expand {
+                display: flex;
+                align-items: center;
+                justify-content: start;
+                background-color: transparent;
+                border: none;
+                font-size: 20px;
+              }
+
+              // why: nút ghim đổi từ <sd-icon> sang <button> để bàn phím ghim được → reset padding
+              // mặc định của button + thêm focus ring. opacity:0 giữ hành vi hiện-khi-hover, nhưng
+              // PHẢI hiện lại khi nhận focus bàn phím — nếu không nó là "nút vô hình mà tab tới được".
+              .c-menu-node-description-icon-pin {
+                display: flex;
+                align-items: center;
+                justify-content: start;
+                background-color: transparent;
+                border: none;
+                padding: 0;
+                font-size: 18px;
+                opacity: 0;
+
+                &:focus-visible {
+                  opacity: 1;
+                  outline: 2px solid var(--sd-primary, #005cbb);
+                  outline-offset: 2px;
+                }
+              }
+            }
+
+            a.c-menu-node-description-content {
+              color: inherit;
+              text-decoration: none;
+            }
+
+            .c-menu-node-description-content:focus-visible,
+            button.c-menu-node-description:focus-visible {
+              outline: 2px solid var(--sd-primary, #005cbb);
+              outline-offset: -2px;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .c-footer {
+    height: 80px;
+  }
+
+  .c-vertical {
+    position: fixed;
+    height: 100vh;
+    left: 58px;
+    width: 2px;
+    background-color: #f8f9fa;
+    pointer-events: none;
+  }
+}
+
+// why: Keep the V1 search focus visible without inheriting thick consumer-wide rings.
+:host ::ng-deep .c-menu-tree-search input:focus-visible {
+  outline: 1px solid var(--sd-primary, #005cbb);
+  outline-offset: 1px;
+}
+
+// End

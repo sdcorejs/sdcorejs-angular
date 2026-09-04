@@ -25,13 +25,14 @@ if (!(Test-Path -LiteralPath $RootPath)) {
 # --- WORKSPACE ROLLOUT RULE ---
 # After the final legacy sync from vn-angular@d12478a1 (2026-06-24), v19 is the
 # repo-owned primary workspace. Build features, docs, tests, and showcase in v19,
-# then use this script to roll the same surface to v20 and v21. Direct edits in
-# v20/v21 should be limited to Angular-major-specific dependency/shim work.
-# Order: v19 → v20 → v21. Never change this order.
+# then use this script to roll the same surface to v20, v21 and v22. Direct edits
+# in derived workspaces should be limited to Angular-major-specific dependency/shim work.
+# Order: v19 -> v20 -> v21 -> v22. Never change this order.
 $versions = @(
   @{ Folder = "v19"; Major = "19" },
   @{ Folder = "v20"; Major = "20" },
-  @{ Folder = "v21"; Major = "21" }
+  @{ Folder = "v21"; Major = "21" },
+  @{ Folder = "v22"; Major = "22" }
 )
 
 $syncDate = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
@@ -72,7 +73,8 @@ if (!(Test-Path -LiteralPath $v19LibraryPackagePath)) {
 $canonicalLibraryVersion = (Get-Content -LiteralPath $v19LibraryPackagePath -Raw -Encoding UTF8 | ConvertFrom-Json).version
 $managedWorkspaceScripts = @(
   "check-i18n-parity.mjs",
-  "check-i18n.mjs"
+  "check-i18n.mjs",
+  "generate-pdf-worker-inline.mjs"
 )
 
 function Sync-ManagedWorkspaceScripts {
@@ -129,6 +131,7 @@ function Update-MajorInPackageJson {
   $typescriptVersion = switch ($Major) {
     "20" { "~5.8.3" }
     "21" { "~5.9.3" }
+    "22" { "~6.0.3" }
     default { "~5.7.2" }
   }
 
@@ -164,6 +167,41 @@ function Update-MajorInPackageJson {
     $updated = Set-PackageVersion -Content $updated -PackageName "typescript-eslint" -Version "^8.60.0"
   }
 
+  if ($Major -eq "22") {
+    $frameworkPackages = @(
+      "@angular/animations",
+      "@angular/cdk",
+      "@angular/common",
+      "@angular/compiler",
+      "@angular/core",
+      "@angular/forms",
+      "@angular/material",
+      "@angular/material-date-fns-adapter",
+      "@angular/material-moment-adapter",
+      "@angular/platform-browser",
+      "@angular/platform-browser-dynamic",
+      "@angular/router",
+      "@angular/compiler-cli"
+    )
+    foreach ($pkg in $frameworkPackages) {
+      $updated = Set-PackageVersion -Content $updated -PackageName $pkg -Version "~22.1.4"
+    }
+    $updated = Set-PackageVersion -Content $updated -PackageName "@angular-devkit/build-angular" -Version "~22.1.6"
+    $updated = Set-PackageVersion -Content $updated -PackageName "@angular/cli" -Version "~22.1.6"
+    $updated = Set-PackageVersion -Content $updated -PackageName "ng-packagr" -Version "~22.1.1"
+    $updated = Set-PackageVersion -Content $updated -PackageName "angular-eslint" -Version "~22.1.0"
+    $updated = Set-PackageVersion -Content $updated -PackageName "typescript-eslint" -Version "8.60.0"
+    $updated = Set-PackageVersion -Content $updated -PackageName "zone.js" -Version "~0.16.2"
+
+    $nodeEngine = '^22.22.3 || ^24.15.0 || ^26.0.0'
+    if ($updated -match '"engines"\s*:') {
+      $updated = $updated -replace '"node"\s*:\s*"[^"]+"', ('"node": "' + $nodeEngine + '"')
+    }
+    else {
+      $updated = $updated -replace '("private"\s*:\s*true,)', ('$1' + "`r`n" + '  "engines": {' + "`r`n" + '    "node": "' + $nodeEngine + '"' + "`r`n" + '  },')
+    }
+  }
+
   if ($updated -ne $content) {
     Write-Utf8NoBom -Path $PackagePath -Content $updated
   }
@@ -182,6 +220,39 @@ function Update-LibraryPackageVersion {
   $content = Get-Content -LiteralPath $PackagePath -Raw -Encoding UTF8
   $versionPattern = New-Object System.Text.RegularExpressions.Regex('"version"\s*:\s*"[^"]+"')
   $updated = $versionPattern.Replace($content, ('"version": "' + $Version + '"'), 1)
+  if ($updated -ne $content) {
+    Write-Utf8NoBom -Path $PackagePath -Content $updated
+  }
+}
+
+function Update-LibraryPackageContract {
+  param(
+    [string]$PackagePath,
+    [string]$Major
+  )
+
+  if ($Major -ne "22") {
+    return
+  }
+
+  $content = Get-Content -LiteralPath $PackagePath -Raw -Encoding UTF8
+  $updated = $content
+  $angularPeers = @(
+    "@angular/animations",
+    "@angular/cdk",
+    "@angular/common",
+    "@angular/core",
+    "@angular/forms",
+    "@angular/material",
+    "@angular/material-date-fns-adapter",
+    "@angular/platform-browser",
+    "@angular/router"
+  )
+  foreach ($peer in $angularPeers) {
+    $updated = Set-PackageVersion -Content $updated -PackageName $peer -Version "^22.0.0"
+  }
+  $updated = $updated -replace '"node"\s*:\s*"[^"]+"', '"node": "^22.22.3 || ^24.15.0 || ^26.0.0"'
+
   if ($updated -ne $content) {
     Write-Utf8NoBom -Path $PackagePath -Content $updated
   }
@@ -241,6 +312,89 @@ function Update-VersionTsConfig {
   }
 }
 
+function Update-SpecTsConfig {
+  param(
+    [string]$TsConfigPath,
+    [string]$Major
+  )
+
+  if ($Major -ne "22" -or !(Test-Path -LiteralPath $TsConfigPath)) {
+    return
+  }
+
+  $content = Get-Content -LiteralPath $TsConfigPath -Raw -Encoding UTF8
+  $updated = $content
+  # why: TypeScript 6 reports baseUrl as an error. Paths no longer require it, but
+  # without baseUrl their values resolve from this project-level config directory.
+  $updated = $updated -replace '(?m)^[ \t]*"baseUrl"\s*:\s*"\.\./\.\./",\r?\n', ''
+  $updated = $updated.Replace(
+    '"@sdcorejs/angular": ["./projects/sdcorejs-angular/src/public-api"]',
+    '"@sdcorejs/angular": ["./src/public-api"]'
+  )
+  $updated = $updated.Replace(
+    '"@sdcorejs/angular/*": ["./projects/sdcorejs-angular/*"]',
+    '"@sdcorejs/angular/*": ["./*"]'
+  )
+
+  if ($updated -ne $content) {
+    Write-Utf8NoBom -Path $TsConfigPath -Content $updated
+  }
+}
+
+function Update-Angular22GeneratedCompatibility {
+  param(
+    [string]$WorkspacePath,
+    [string]$Major
+  )
+
+  if ($Major -ne "22") {
+    return
+  }
+
+  $projectPath = Join-Path $WorkspacePath "projects/sdcorejs-angular"
+  $checkerPath = Join-Path $RootPath "scripts/check-version-sync.mjs"
+  if (!(Test-Path -LiteralPath $projectPath)) {
+    throw "Angular 22 project path not found: $projectPath"
+  }
+  if (!(Test-Path -LiteralPath $checkerPath)) {
+    throw "Angular 22 compatibility transformer not found: $checkerPath"
+  }
+
+  # why: Angular 22 changes an omitted component strategy from eager to OnPush. The official
+  # migration makes the old behavior explicit; this deterministic generated-only transform does
+  # the same after every v19 -> v22 mirror without changing canonical v19-v21 source.
+  $transformScript = @'
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, extname, join, relative, resolve, sep } from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+const [checkerPath, projectPath] = process.argv.slice(2);
+const { applyAngular22GeneratedCompatibility } = await import(pathToFileURL(resolve(checkerPath)).href);
+const workspacePath = resolve(projectPath, '..', '..');
+const generatedExtensions = new Set(['.ts', '.html', '.scss', '.svg']);
+
+function walk(directory) {
+  return readdirSync(directory, { withFileTypes: true }).flatMap(entry => {
+    const path = join(directory, entry.name);
+    if (entry.isDirectory()) return walk(path);
+    return entry.isFile() && generatedExtensions.has(extname(entry.name)) ? [path] : [];
+  });
+}
+
+for (const filePath of walk(projectPath)) {
+  const relativePath = relative(workspacePath, filePath).split(sep).join('/');
+  const content = readFileSync(filePath, 'utf8');
+  const migrated = applyAngular22GeneratedCompatibility(content, relativePath);
+  if (migrated !== content) writeFileSync(filePath, migrated, 'utf8');
+}
+'@
+
+  $transformScript | & node --input-type=module - $checkerPath $projectPath
+  if ($LASTEXITCODE -ne 0) {
+    throw "Angular 22 generated compatibility transform failed with exit code $LASTEXITCODE"
+  }
+}
+
 $step = 0
 foreach ($v in $versions) {
   $step++
@@ -250,13 +404,13 @@ foreach ($v in $versions) {
     New-Item -ItemType Directory -Path $dest | Out-Null
   }
 
-  Write-Host "[$step/3] Syncing $($v.Folder) (Angular $($v.Major))..." -ForegroundColor Cyan
+  Write-Host "[$step/$($versions.Count)] Syncing $($v.Folder) (Angular $($v.Major))..." -ForegroundColor Cyan
 
   if ($v.Folder -ne "v19") {
     # Mirror copy from versions/v19 to the target version folder
     # why: package-lock.json stays major-specific after each workspace install.
     # CHANGELOG.md is independent at the root repo and is not rolled into versions/.
-    robocopy $v19Path $dest /MIR /XD .git .sdcorejs node_modules dist .angular coverage versions scripts demo /XF CHANGELOG.md package-lock.json /R:1 /W:1 /NFL /NDL /NP | Out-Null
+    robocopy $v19Path $dest /MIR /XD .git .sdcorejs node_modules dist .angular coverage versions scripts demo /XF CHANGELOG.md package-lock.json .gitattributes /R:1 /W:1 /NFL /NDL /NP | Out-Null
   }
 
   # scripts/ is otherwise workspace-specific; only these quality gates are
@@ -275,12 +429,18 @@ foreach ($v in $versions) {
   $libraryPackagePath = Join-Path $dest "projects/sdcorejs-angular/package.json"
   $targetLibraryVersion = $canonicalLibraryVersion -replace '^\d+\.', "$($v.Major)."
   Update-LibraryPackageVersion -PackagePath $libraryPackagePath -Version $targetLibraryVersion
+  Update-LibraryPackageContract -PackagePath $libraryPackagePath -Major $v.Major
 
   $rootTsConfigPath = Join-Path $dest "tsconfig.json"
   Update-VersionTsConfig -TsConfigPath $rootTsConfigPath
 
+  $specTsConfigPath = Join-Path $dest "projects/sdcorejs-angular/tsconfig.spec.json"
+  Update-SpecTsConfig -TsConfigPath $specTsConfigPath -Major $v.Major
+
   $sideDrawerPath = Join-Path $dest "projects/sdcorejs-angular/components/side-drawer/src/side-drawer.component.ts"
   Update-SideDrawerPortalCall -FilePath $sideDrawerPath -Major $v.Major
+
+  Update-Angular22GeneratedCompatibility -WorkspacePath $dest -Major $v.Major
 
   # Write workspace status
   # why: build the arrow at runtime ([char]0x2192) instead of embedding a literal `→`.
@@ -305,13 +465,13 @@ foreach ($v in $versions) {
     "",
     "## Notes",
     "- Final legacy sync was confirmed from vn-angular@d12478a1 on 2026-06-24.",
-    "- Normal development happens in this repo: change v19 first, then roll out to v20/v21.",
+    "- Normal development happens in this repo: change v19 first, then roll out to v20/v21/v22.",
     "- DomPortalOutlet: $domNote"
   )
   Write-Utf8NoBom -Path (Join-Path $dest "SYNC-STATUS.md") -Content (($statusLines -join "`n") + "`n")
 }
 
-Write-Host "Done. Version workspaces synchronized: v19, v20, v21" -ForegroundColor Green
+Write-Host "Done. Version workspaces synchronized: v19, v20, v21, v22" -ForegroundColor Green
 if ($syncCommit -ne "unknown") {
   Write-Host "Source commit: $syncCommit" -ForegroundColor Yellow
 }

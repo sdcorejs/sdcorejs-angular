@@ -1,0 +1,68 @@
+<div mat-dialog-title class="">
+  @if (data.icon) {
+    <sd-icon [name]="data.icon"></sd-icon>
+  }
+  <span class="T24M" [innerHtml]="data.title || 'Confirm'"></span>
+</div>
+<div mat-dialog-content class="sd-dialog-confirm__content" [class.sd-dialog-confirm__content--radio]="data.radio">
+  <div class="T14R mb-4" [innerHtml]="data.message"></div>
+  @if (data.input) {
+    <sd-textarea [placeholder]="data.input.placeholder" [(model)]="value" [rows]="5" [maxlength]="data.input.maxlength!" />
+  }
+  @if (data.select) {
+    <sd-select
+      [placeholder]="data.select.placeholder"
+      [items]="data.select.items"
+      [valueField]="data.select.valueField"
+      [displayField]="data.select.displayField"
+      [multiple]="data.select.multiple"
+      [(model)]="value"
+      [required]="data.select.required">
+    </sd-select>
+  }
+  @if (data.date) {
+    <sd-date
+      [placeholder]="data.date.placeholder"
+      [(model)]="value"
+      type="date"
+      [min]="data.date.min!"
+      [max]="data.date.max!"
+      [required]="data.date.required">
+    </sd-date>
+  }
+  @if (data.datetime) {
+    <sd-datetime
+      [placeholder]="data.datetime.placeholder"
+      [(model)]="value"
+      [min]="data.datetime.min!"
+      [max]="data.datetime.max!"
+      [showSeconds]="data.datetime.showSeconds"
+      [required]="data.datetime.required">
+    </sd-datetime>
+  }
+  @if (data.radio) {
+    <sd-radio
+      [items]="data.radio.items"
+      [valueField]="data.radio.valueField"
+      [displayField]="data.radio.displayField"
+      [display]="data.radio.display || 'column'"
+      [(model)]="value"
+      [required]="data.radio.required">
+    </sd-radio>
+  }
+</div>
+<div mat-dialog-actions align="end">
+  @if (data.noTitle) {
+    <sd-button type="text" [color]="data.noButtonColor || 'secondary'" [title]="data.noTitle" (click)="onCancel()"></sd-button>
+  }
+  @if (data.yesTitle) {
+    <sd-button
+      class="ml-8"
+      type="fill"
+      [color]="data.yesButtonColor || 'primary'"
+      [disabled]="required && (value === undefined || value === null || value === '' || (value.length !== undefined && value.length === 0))"
+      cdkFocusInitial
+      [title]="data.yesTitle"
+      (click)="onAccept()"></sd-button>
+  }
+</div>

@@ -18,7 +18,9 @@ const DEFAULT_OUTPUT_PATH = join(
   'changelog.generated.ts',
 );
 const DEFAULT_START_SUFFIX = '1.2';
-const DEFAULT_ANGULAR_MAJORS = [19, 20, 21];
+const DEFAULT_ANGULAR_MAJORS = [19, 20, 21, 22];
+// A framework line must not be projected onto releases that predate its first package.
+const ANGULAR_MAJOR_INCEPTION_SUFFIXES = new Map([[22, '2.5']]);
 
 const RELEASE_HEADING = /^##\s+\[([^\]]+)](?:\s*-\s*(\d{4}-\d{2}-\d{2}))?\s*$/;
 const SECTION_HEADING = /^(#{3,6})\s+(.+?)\s*$/;
@@ -224,6 +226,12 @@ function parseRelease(lines, heading, options) {
   const suffix = isUnreleased ? null : heading.label;
   const anchor = isUnreleased ? 'unreleased' : `release-${slugify(suffix)}`;
   const parsedSections = parseSectionTree(lines, anchor);
+  const releaseAngularMajors = isUnreleased
+    ? []
+    : options.angularMajors.filter(angularMajor => {
+        const inceptionSuffix = ANGULAR_MAJOR_INCEPTION_SUFFIXES.get(angularMajor);
+        return inceptionSuffix === undefined || compareReleaseSuffix(suffix, inceptionSuffix) >= 0;
+      });
 
   return {
     id: anchor,
@@ -234,7 +242,7 @@ function parseRelease(lines, heading, options) {
     unreleased: isUnreleased,
     packageVersions: isUnreleased
       ? []
-      : options.angularMajors.map(angularMajor => ({
+      : releaseAngularMajors.map(angularMajor => ({
           angularMajor,
           version: `${angularMajor}.${suffix}`,
         })),

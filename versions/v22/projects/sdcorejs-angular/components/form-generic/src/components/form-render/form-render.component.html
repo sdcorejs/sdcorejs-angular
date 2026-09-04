@@ -1,0 +1,44 @@
+@if (form && loadCompleted && hashedValues) {
+  <div class="row mx-0">
+    @for (component of configuration.components; track component.id) {
+      @let expression = hashedValues | whenExpression: component : formValue;
+      @if (!expression.hidden) {
+        @if (component.type === 'group') {
+          @if (!!component.components.length) {
+            <div class="col-12 mt-16">
+              <sd-section [title]="component.label" [icon]="component.properties.icon">
+                <!-- why: `.sd-section-body` để padding 0 (mỗi nội dung tự quyết), nên các field chỉ
+                     còn px-8/py-8 của riêng chúng và dính sát khung section. Group tự chừa lề. -->
+                <div class="row mx-0 c-group-body">
+                  @for (childComponent of component.components; track childComponent.id) {
+                    @let childExpression = hashedValues | whenExpression: childComponent : formValue;
+                    @if (!childExpression.hidden) {
+                      <lib-item
+                        [setVariables]="setVariables"
+                        [form]="form"
+                        [entity]="entity"
+                        [component]="childComponent"
+                        [required]="childExpression.required"
+                        [disabled]="childExpression.disabled"
+                        [viewed]="viewed"></lib-item>
+                    }
+                  }
+                </div>
+              </sd-section>
+            </div>
+          }
+        } @else {
+          <lib-item
+            [setVariables]="setVariables"
+            [form]="form"
+            [entity]="entity"
+            [component]="component"
+            [required]="expression.required"
+            [disabled]="expression.disabled"
+            [viewed]="viewed"></lib-item>
+        }
+      }
+    }
+    <variable [variables]="configuration.variables" [setVariables]="setVariables" [form]="form" [entity]="entity" ></variable>
+  </div>
+}

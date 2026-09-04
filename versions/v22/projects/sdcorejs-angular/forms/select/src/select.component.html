@@ -1,0 +1,400 @@
+@let _label = label();
+@let _appearance = appearance();
+@let _hideInlineError = hideInlineError();
+@let _errorMessage = errorMessage();
+@let _helperText = helperText();
+@let _multiple = multiple();
+@let _required = required();
+@let _normalizedValue = $any(normalizedValue());
+@let _focused = $any(focused());
+@let _isInline = isInline();
+@let _bare = _isInline;
+@let _hasValue = _multiple ? !!_normalizedValue?.length : _normalizedValue !== undefined && _normalizedValue !== null;
+@let _display = display();
+@let _size = size();
+@let _floatLabel = floatLabel();
+@let _valueField = valueField();
+@let _displayField = displayField();
+@let _autoId = autoId();
+<!-- why: một cổng gate duy nhất cho <mat-error>, aria-invalid và aria-describedby. -->
+@let _errorVisible = !!_errorMessage && formControl.touched;
+@let _showInlineError = !_hideInlineError && _errorVisible;
+
+@if (isViewed()) {
+  <sd-view
+    [label]="_label"
+    [labelTemplate]="sdLabelTemplate()"
+    [value]="_normalizedValue"
+    [display]="_display"
+    [hyperlink]="hyperlink()"
+    [valueTemplate]="viewTemplate()"
+    [selectedItems]="selectedItems()">
+  </sd-view>
+} @else {
+  @if (_isInline) {
+    <!-- why: inline — sd-view text là "mặt" + trigger; editor vẫn render bên dưới (chrome ẩn qua
+         .sd-inline-editor) để mở panel. Text giữ nguyên, chỉ đổi khi commit giá trị mới. -->
+    <span class="sd-inline-view" role="button" tabindex="0" (click)="enterInlineEdit()" (keydown.enter)="enterInlineEdit()">
+      <sd-view
+        [label]="_label"
+        [labelTemplate]="sdLabelTemplate()"
+        [value]="_normalizedValue"
+        [display]="_display"
+        [hyperlink]="hyperlink()"
+        [valueTemplate]="viewTemplate()"
+        [selectedItems]="selectedItems()">
+      </sd-view>
+
+      <!-- why: clear-× chỉ hiện khi hover (CSS), đặt CUỐI face + clear($event) stopPropagation →
+           xoá giá trị mà KHÔNG mở panel; tránh bug cũ (× sát trigger bị bấm nhầm lúc đóng panel). -->
+      @if (clearable() && _hasValue && !_required && !formControl.disabled) {
+        <button type="button" class="sd-inline-clear" (click)="clear($event)" title="Xóa" aria-label="Xóa">
+          <sd-icon name="close"></sd-icon>
+        </button>
+      }
+    </span>
+  }
+
+  @if (!_appearance) {
+    <ng-content select="[sdLabel]">
+      @if (_label) {
+        <sd-label [label]="_label" [required]="_required"></sd-label>
+      }
+    </ng-content>
+  }
+
+  <!-- why: div chỉ là hộp layout. aria-hidden="true" cũ ẩn CẢ cây con — label, <mat-select>,
+       <mat-error>, nút clear — khỏi accessibility tree. role="presentation" chỉ vô hiệu hoá
+       chính div, KHÔNG lan xuống con; (click) là tiện ích chuột, bàn phím Tab thẳng vào
+       <mat-select> và (focusin) đã lo phần updatePanelWidth() tương ứng. -->
+  <div
+    class="d-flex align-items-center"
+    role="presentation"
+    [class.sd-inline-editor]="_isInline"
+    [class.c-focused]="_focused"
+    [class.c-disabled]="formControl.disabled"
+    (click)="onClick()"
+    (mouseenter)="updatePanelWidth()"
+    (focusin)="updatePanelWidth()">
+    @if (_multiple) {
+      <mat-form-field
+        [class.sd-md]="_size === 'md'"
+        [class.sd-sm]="_size === 'sm'"
+        [class.hide-inline-error]="_hideInlineError"
+        [appearance]="_appearance!"
+        [floatLabel]="_floatLabel">
+        @if (_appearance && _label) {
+          <mat-label class="sd-form-field-label">
+            <span>{{ _label }}</span>
+            @if (_helperText) {
+              <sd-icon [matTooltip]="_helperText" matTooltipPosition="below" name="info"></sd-icon>
+            }
+          </mat-label>
+        }
+
+        <mat-select
+          #select
+          multiple
+          [formControl]="formControl"
+          [placeholder]="placeholder() || _label || ''"
+          (selectionChange)="onSelectionChange($event)"
+          disableOptionCentering="true"
+          [panelWidth]="calculatedPanelWidth()"
+          [panelClass]="['sd-select-panel', 'sd-multiple']"
+          [class.sd-selected]="!_required && _normalizedValue?.length"
+          [required]="_required"
+          (openedChange)="onOpenedChange($event)"
+          [attr.data-autoId]="_autoId"
+          [attr.data-disabled]="dataDisabled()"
+          [attr.data-invalid]="dataInvalid()"
+          [attr.data-empty]="dataEmpty()"
+          [attr.data-value]="dataValue()"
+          [attr.data-loading]="dataLoading()"
+          [attr.data-required]="dataRequired()"
+          [attr.data-error-message]="dataErrorMessage()"
+          matTooltipClass="sd-multiline-tooltip"
+          [matTooltipDisabled]="!formControl.disabled || !_normalizedValue?.length"
+          [matTooltip]="tooltip() || ''">
+          <mat-select-trigger>
+            @if (sdSelectedTemplate(); as _selTpl) {
+              <ng-container
+                *ngTemplateOutlet="
+                  _selTpl;
+                  context: { $implicit: selectedItems(), item: selectedItems(), items: selectedItems(), display: _display, multiple: true }
+                ">
+              </ng-container>
+            } @else {
+              <div class="sd-trigger-text" [matTooltip]="_display || ''" matTooltipPosition="above">
+                {{ _display }}
+              </div>
+            }
+          </mat-select-trigger>
+
+          @if (filtered()) {
+            <div class="c-filter-input-container">
+              <div class="filter-input-wrapper">
+                <sd-icon name="search" aria-hidden="true"></sd-icon>
+                <!-- why: BỎ aria-hidden — đây là ô lọc THẬT, người dùng focus và gõ vào được, nên
+                     aria-hidden chỉ làm screen reader câm. Panel không có <label> nào, nên phải
+                     tự đặt tên bằng aria-label, nếu không AT chỉ đọc "edit text" trống trơn. -->
+                <input
+                  [formControl]="inputControl"
+                  matInput
+                  autocomplete="off"
+                  class="c-search-input"
+                  [attr.aria-label]="'core.form.select.search' | sdTranslate"
+                  (keydown)="$event.stopPropagation()" />
+              </div>
+            </div>
+          }
+
+          <!-- why: row "Tất cả" KHÔNG phải mat-option thật — nếu là option, giá trị của nó lọt vào
+               formControl.value và keyboard navigation của mat-select. Nhưng nó phải TRÔNG y hệt một
+               option: dùng chính <mat-pseudo-checkbox> + .mdc-list-item__primary-text mà mat-option
+               render, nên ăn cùng scale/margin (rule .sd-multiple) và cùng màu theme (panel mang
+               class mat-primary) — mat-checkbox MDC thật thì lệch cột và ăn accent của theme.
+               Vì pseudo-checkbox là decorative + aria-hidden, chính div mang role/aria/keyboard. -->
+          @if (selectAllVisible()) {
+            @let _selectAllState = selectAllState();
+            <div
+              class="sd-select-all-row"
+              role="checkbox"
+              tabindex="0"
+              [attr.aria-checked]="_selectAllState === 'indeterminate' ? 'mixed' : _selectAllState === 'checked'"
+              [attr.data-autoid]="_autoId ? _autoId + '-select-all' : null"
+              (click)="toggleSelectAll()"
+              (keydown.enter)="toggleSelectAll(); $event.preventDefault()"
+              (keydown.space)="toggleSelectAll(); $event.preventDefault()"
+              (keydown)="$event.stopPropagation()">
+              <mat-pseudo-checkbox class="mat-mdc-option-pseudo-checkbox" [state]="_selectAllState" aria-hidden="true"></mat-pseudo-checkbox>
+              <span class="mdc-list-item__primary-text">{{ 'core.form.select.selectAll' | sdTranslate }}</span>
+            </div>
+          }
+
+          @let _filteredItems = filteredItems();
+          @if (_filteredItems) {
+            @if (!_filteredItems.length && !loading()) {
+              <mat-option class="sd-empty" disabled>
+                <img class="sd-image-data-empty" alt="empty-image" style="width: 95px" />
+              </mat-option>
+            } @else {
+              @let iDefTpl = itemDef()?.templateRef;
+              @if (_valueField && _displayField) {
+                @for (item of _filteredItems; track itemValue(item)) {
+                  <mat-option [value]="itemValue(item)" [disabled]="itemDisabled(item)">
+                    <div>
+                      @if (iDefTpl) {
+                        <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { item: item }"> </ng-container>
+                      } @else {
+                        {{ itemDisplay(item) }}
+                      }
+                    </div>
+                  </mat-option>
+                }
+              } @else if (!_valueField && !_displayField) {
+                @for (item of _filteredItems; track item) {
+                  <mat-option [value]="item">
+                    <div>
+                      @if (iDefTpl) {
+                        <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { item: item }"> </ng-container>
+                      } @else {
+                        {{ item }}
+                      }
+                    </div>
+                  </mat-option>
+                }
+              }
+            }
+          }
+
+          @if (loading()) {
+            <mat-option disabled class="sd-loading-option">
+              <mat-spinner diameter="24"></mat-spinner>
+            </mat-option>
+          }
+
+          @let _visibleFooterActions = visibleFooterActions();
+          @if (_visibleFooterActions.length) {
+            <div class="sd-select-footer-actions">
+              @for (action of _visibleFooterActions; track action) {
+                <ng-container *ngTemplateOutlet="action.templateRef; context: footerActionContext()"> </ng-container>
+              }
+            </div>
+          }
+        </mat-select>
+
+        @if (_hideInlineError && _errorVisible) {
+          <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
+        }
+        @if (_hideInlineError && _errorVisible) {
+          <span class="sd-visually-hidden" matSuffix>{{ _errorMessage }}</span>
+        }
+
+        <!-- why: <mat-error> phải có id ỔN ĐỊNH. MatFormField tự nối id này vào aria-describedby
+             của <mat-select> (và host binding của MatSelect lo aria-invalid), nhưng chỉ khi id
+             tồn tại — id auto-gen của Material đổi theo từng instance nên test/AT không bám được. -->
+        @if (_showInlineError) {
+          <mat-error [id]="errorId">{{ _errorMessage }}</mat-error>
+        }
+
+        @if (_normalizedValue?.length && !_required && !formControl.disabled && !_bare) {
+          <button type="button" class="sd-clear-btn" matSuffix (click)="clear($event)" title="Xóa" aria-label="Xóa">
+            <sd-icon name="close"></sd-icon>
+          </button>
+        } @else {
+          <sd-icon class="cursor-pointer sd-suffix-icon" matSuffix name="keyboard_arrow_down"></sd-icon>
+        }
+      </mat-form-field>
+    } @else {
+      <mat-form-field
+        [class.sd-md]="_size === 'md'"
+        [class.sd-sm]="_size === 'sm'"
+        [class.hide-inline-error]="_hideInlineError"
+        [appearance]="_appearance!"
+        [floatLabel]="_floatLabel">
+        @if (_appearance && _label) {
+          <mat-label class="sd-form-field-label">
+            <span>{{ _label }}</span>
+            @if (_helperText) {
+              <sd-icon [matTooltip]="_helperText" matTooltipPosition="below" name="info"></sd-icon>
+            }
+          </mat-label>
+        }
+
+        <mat-select
+          #select
+          [formControl]="formControl"
+          [placeholder]="placeholder() || _label || ''"
+          (selectionChange)="onSelectionChange($event)"
+          disableOptionCentering="true"
+          [panelWidth]="calculatedPanelWidth()"
+          [panelClass]="'sd-select-panel'"
+          [class.sd-selected]="!_required && _normalizedValue !== undefined && _normalizedValue !== null"
+          [required]="_required"
+          (openedChange)="onOpenedChange($event)"
+          [attr.data-autoId]="_autoId"
+          [attr.data-disabled]="dataDisabled()"
+          [attr.data-invalid]="dataInvalid()"
+          [attr.data-empty]="dataEmpty()"
+          [attr.data-value]="dataValue()"
+          [attr.data-loading]="dataLoading()"
+          [attr.data-required]="dataRequired()"
+          [attr.data-error-message]="dataErrorMessage()"
+          matTooltipClass="sd-multiline-tooltip"
+          [matTooltipDisabled]="!formControl.disabled || !_normalizedValue?.length"
+          [matTooltip]="tooltip() || ''">
+          <mat-select-trigger>
+            @if (sdSelectedTemplate(); as _selTpl) {
+              <ng-container
+                *ngTemplateOutlet="
+                  _selTpl;
+                  context: {
+                    $implicit: selectedItems()[0],
+                    item: selectedItems()[0],
+                    items: selectedItems(),
+                    display: _display,
+                    multiple: false,
+                  }
+                ">
+              </ng-container>
+            } @else {
+              {{ _display }}
+            }
+          </mat-select-trigger>
+
+          @if (filtered()) {
+            <div class="c-filter-input-container">
+              <div class="filter-input-wrapper">
+                <sd-icon name="search" aria-hidden="true"></sd-icon>
+                <!-- why: BỎ aria-hidden — đây là ô lọc THẬT, người dùng focus và gõ vào được, nên
+                     aria-hidden chỉ làm screen reader câm. Panel không có <label> nào, nên phải
+                     tự đặt tên bằng aria-label, nếu không AT chỉ đọc "edit text" trống trơn. -->
+                <input
+                  [formControl]="inputControl"
+                  matInput
+                  autocomplete="off"
+                  class="c-search-input"
+                  [attr.aria-label]="'core.form.select.search' | sdTranslate"
+                  (keydown)="$event.stopPropagation()" />
+              </div>
+            </div>
+          }
+
+          @let _filteredItems = filteredItems();
+          @if (_filteredItems) {
+            @if (!_filteredItems.length && !loading()) {
+              <mat-option class="sd-empty" disabled>
+                <img class="sd-image-data-empty" alt="empty-image" style="width: 95px" />
+              </mat-option>
+            } @else {
+              @let iDefTpl = itemDef()?.templateRef;
+
+              @if (_valueField && _displayField) {
+                @for (item of _filteredItems; track itemValue(item)) {
+                  <mat-option [value]="itemValue(item)" [disabled]="itemDisabled(item)">
+                    <div>
+                      @if (iDefTpl) {
+                        <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { item: item }"> </ng-container>
+                      } @else {
+                        {{ itemDisplay(item) }}
+                      }
+                    </div>
+                  </mat-option>
+                }
+              } @else if (!_valueField && !_displayField) {
+                @for (item of _filteredItems; track item) {
+                  <mat-option [value]="item">
+                    <div>
+                      @if (iDefTpl) {
+                        <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { item: item }"> </ng-container>
+                      } @else {
+                        {{ item }}
+                      }
+                    </div>
+                  </mat-option>
+                }
+              }
+            }
+          }
+
+          @if (loading()) {
+            <mat-option disabled class="sd-loading-option">
+              <mat-spinner diameter="24"></mat-spinner>
+            </mat-option>
+          }
+
+          @let _visibleFooterActions = visibleFooterActions();
+          @if (_visibleFooterActions.length) {
+            <div class="sd-select-footer-actions">
+              @for (action of _visibleFooterActions; track action) {
+                <ng-container *ngTemplateOutlet="action.templateRef; context: footerActionContext()"> </ng-container>
+              }
+            </div>
+          }
+        </mat-select>
+
+        @if (_hideInlineError && _errorVisible) {
+          <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
+        }
+        @if (_hideInlineError && _errorVisible) {
+          <span class="sd-visually-hidden" matSuffix>{{ _errorMessage }}</span>
+        }
+
+        <!-- why: <mat-error> phải có id ỔN ĐỊNH. MatFormField tự nối id này vào aria-describedby
+             của <mat-select> (và host binding của MatSelect lo aria-invalid), nhưng chỉ khi id
+             tồn tại — id auto-gen của Material đổi theo từng instance nên test/AT không bám được. -->
+        @if (_showInlineError) {
+          <mat-error [id]="errorId">{{ _errorMessage }}</mat-error>
+        }
+
+        @if (_normalizedValue !== undefined && _normalizedValue !== null && !_required && !formControl.disabled && !_bare) {
+          <button type="button" class="sd-clear-btn" matSuffix (click)="clear($event)" title="Xóa" aria-label="Xóa">
+            <sd-icon name="close"></sd-icon>
+          </button>
+        } @else {
+          <sd-icon class="cursor-pointer sd-suffix-icon" matSuffix name="keyboard_arrow_down"></sd-icon>
+        }
+      </mat-form-field>
+    }
+  </div>
+}

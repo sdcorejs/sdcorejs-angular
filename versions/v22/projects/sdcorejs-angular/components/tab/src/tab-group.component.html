@@ -1,0 +1,43 @@
+<mat-tab-group
+  class="sd-tab-group"
+  [(selectedIndex)]="selectedIndex"
+  [headerPosition]="headerPosition()"
+  [mat-align-tabs]="alignTabs()"
+  [mat-stretch-tabs]="stretchTabs()"
+  [animationDuration]="animationDuration()"
+  [disableRipple]="disableRipple()"
+  [dynamicHeight]="dynamicHeight()">
+  @for (tab of tabs(); track tab; let i = $index) {
+    <mat-tab [disabled]="tab.disabled()">
+      <ng-template mat-tab-label>
+        <span class="sd-tab__label">
+          @if (tab.icon(); as ic) {
+            <sd-icon class="sd-tab__icon" [name]="ic"></sd-icon>
+          }
+          <span class="sd-tab__text">{{ tab.label() }}</span>
+          @let _badge = tab.badge();
+          @if (_badge !== null && _badge !== undefined) {
+            <span class="sd-tab__badge">{{ _badge }}</span>
+          }
+          <!-- why: trước đây là <sd-icon role="button"> — khai role nút nhưng KHÔNG có tabindex và
+               KHÔNG có handler bàn phím, tức người dùng bàn phím không đóng được tab; custom
+               element cũng không tự focusable. Đổi sang <button type="button"> thật, kèm nhãn i18n
+               (aria-label="Close tab" là chuỗi tiếng Anh cứng trong thư viện đã có i18n). -->
+          @if (tab.closable()) {
+            <button
+              type="button"
+              class="sd-tab__close"
+              [attr.aria-label]="'core.common.close' | sdTranslate"
+              (click)="onClose(tab, i, $event)">
+              <sd-icon name="close"></sd-icon>
+            </button>
+          }
+        </span>
+      </ng-template>
+
+      <ng-template matTabContent>
+        <ng-container [ngTemplateOutlet]="tab.bodyTpl()"></ng-container>
+      </ng-template>
+    </mat-tab>
+  }
+</mat-tab-group>

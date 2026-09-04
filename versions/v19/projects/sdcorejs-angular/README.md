@@ -1,10 +1,10 @@
 # @sdcorejs/angular
 
-Angular Material-based UI building blocks for data-heavy business applications. The package combines standalone components, consistent form controls, workflow primitives, application services, theming, and localization for Angular 19, 20, and 21.
+Angular Material-based UI building blocks for data-heavy business applications. The package combines standalone components, consistent form controls, workflow primitives, application services, theming, and localization for Angular 19, 20, 21, and 22.
 
 [![npm version](https://img.shields.io/npm/v/@sdcorejs/angular.svg)](https://www.npmjs.com/package/@sdcorejs/angular)
 [![monthly npm downloads](https://img.shields.io/npm/dm/@sdcorejs/angular.svg)](https://www.npmjs.com/package/@sdcorejs/angular)
-[![Angular 19, 20, and 21](https://img.shields.io/badge/Angular-19%20%7C%2020%20%7C%2021-DD0031?logo=angular&logoColor=white)](#compatibility)
+[![Angular 19, 20, 21, and 22](https://img.shields.io/badge/Angular-19%20%7C%2020%20%7C%2021%20%7C%2022-DD0031?logo=angular&logoColor=white)](#compatibility)
 [![MIT license](https://img.shields.io/github/license/sdcorejs/sdcorejs-angular.svg)](https://github.com/sdcorejs/sdcorejs-angular/blob/main/LICENSE)
 
 [Showcase](https://sdcorejs.github.io/sdcorejs-angular/) · [Quick start](#quick-start) · [API manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json) · [Source](https://github.com/sdcorejs/sdcorejs-angular) · [Changelog](https://github.com/sdcorejs/sdcorejs-angular/blob/main/CHANGELOG.md) · [Issues](https://github.com/sdcorejs/sdcorejs-angular/issues)
@@ -18,18 +18,20 @@ Install the package major that matches your Angular application.
 | 19.x    | `@sdcorejs/angular@^19` | `npm install @sdcorejs/angular@^19 @angular/material@^19 @angular/material-date-fns-adapter@^19` |
 | 20.x    | `@sdcorejs/angular@^20` | `npm install @sdcorejs/angular@^20 @angular/material@^20 @angular/material-date-fns-adapter@^20` |
 | 21.x    | `@sdcorejs/angular@^21` | `npm install @sdcorejs/angular@^21 @angular/material@^21 @angular/material-date-fns-adapter@^21` |
+| 22.x    | `@sdcorejs/angular@^22` | `npm install @sdcorejs/angular@^22 @angular/material@^22 @angular/material-date-fns-adapter@^22` |
 
-The package manifests accept Angular 19–21 peers, while releases provide an Angular-aligned package line for each major. The first version number is reserved for Angular compatibility, so read the [changelog](https://github.com/sdcorejs/sdcorejs-angular/blob/main/CHANGELOG.md) for explicitly labeled breaking changes before upgrading.
+The Angular 19–21 packages share one peer range, while the Angular 22 package accepts Angular 22 peers only. The first version number is reserved for Angular compatibility, so read the [changelog](https://github.com/sdcorejs/sdcorejs-angular/blob/main/CHANGELOG.md) for explicitly labeled breaking changes before upgrading. Angular 22 begins at `@sdcorejs/angular@22.2.5`; no earlier Angular 22 package version is implied.
 
 ### Peer dependencies
 
 The package declares these peers. A standard Angular CLI application already provides all of them except `@angular/material` and `@angular/material-date-fns-adapter`, which is why only those two appear in the install commands above.
 
-| Peer | Range |
-| --- | --- |
-| `@angular/animations` · `@angular/cdk` · `@angular/common` · `@angular/core` · `@angular/forms` · `@angular/platform-browser` · `@angular/router` | `^19.0.0 \|\| ^20.0.0 \|\| ^21.0.0` |
-| `@angular/material` · `@angular/material-date-fns-adapter` | `^19.0.0 \|\| ^20.0.0 \|\| ^21.0.0` |
-| `rxjs` | `^7.8.0` |
+| Package line | Peer | Range |
+| --- | --- | --- |
+| `@sdcorejs/angular@^19`, `@sdcorejs/angular@^20`, `@sdcorejs/angular@^21` | `@angular/animations` · `@angular/cdk` · `@angular/common` · `@angular/core` · `@angular/forms` · `@angular/platform-browser` · `@angular/router` | `^19.0.0 \|\| ^20.0.0 \|\| ^21.0.0` |
+| `@sdcorejs/angular@^19`, `@sdcorejs/angular@^20`, `@sdcorejs/angular@^21` | `@angular/material` · `@angular/material-date-fns-adapter` | `^19.0.0 \|\| ^20.0.0 \|\| ^21.0.0` |
+| `@sdcorejs/angular@^22` | All Angular/CDK/Material peers listed above | `^22.0.0` |
+| All maintained lines | `rxjs` | `^7.8.0` |
 
 ## Installation and setup
 
@@ -190,7 +192,7 @@ export const appConfig: ApplicationConfig = {
 
 ## Versioning
 
-- Use `@sdcorejs/angular@^19`, `@^20`, or `@^21` to match the application's Angular major.
+- Use `@sdcorejs/angular@^19`, `@sdcorejs/angular@^20`, `@sdcorejs/angular@^21`, or `@sdcorejs/angular@^22` to match the application's Angular major.
 - Maintained package lines are released from the same feature surface with required Angular-major adaptations.
 - Consumer-breaking changes and migration notes are recorded in the [changelog](https://github.com/sdcorejs/sdcorejs-angular/blob/main/CHANGELOG.md).
 - Version-pinned reference docs remain available under `https://sdcorejs.github.io/sdcorejs-angular/docs/<package-version>/`.

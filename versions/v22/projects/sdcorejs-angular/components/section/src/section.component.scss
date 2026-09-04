@@ -1,0 +1,96 @@
+:host {
+  width: 100%;
+  display: block;
+}
+
+.sd-section {
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+.sd-section-header,
+.sd-section-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 8px 16px;
+}
+
+.sd-section-collapse-toggle {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+// why: native collapse trigger needs a visible focus indicator inside the section header.
+.sd-section-collapse-toggle:focus-visible {
+  outline: 2px solid var(--sd-primary, #005cbb);
+  outline-offset: -2px;
+}
+
+.sd-section-header-left,
+.sd-section-header-right,
+.sd-section-footer-left,
+.sd-section-footer-right {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.sd-section-header-left,
+.sd-section-footer-left {
+  flex: 1 1 auto;
+}
+
+.sd-section-header-right,
+.sd-section-footer-right {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.sd-section-footer-right {
+  margin-left: auto;
+}
+
+.sd-section-title-block,
+.sd-section-title,
+.sd-section-subtitle {
+  min-width: 0;
+}
+
+.sd-section-body {
+  padding: 0;
+}
+
+.sd-section-body--with-header,
+.sd-section-footer {
+  border-top: 1px solid #e6e6e6;
+}
+
+.sd-section-footer-left:empty,
+.sd-section-footer-right:empty {
+  display: none;
+}
+
+.sd-section-footer:has(.sd-section-footer-left:empty):has(.sd-section-footer-right:empty) {
+  display: none;
+}
+
+.c-shadow-section {
+  box-shadow:
+    -1px 0px 0px 0px #f2f2f2 inset,
+    1px 0px 0px 0px #f2f2f2 inset,
+    0px 1px 0px 0px #f2f2f2 inset,
+    0px -1px 0px 0px #f2f2f2 inset,
+    0px 1px 2px 0px #2f31361a;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}

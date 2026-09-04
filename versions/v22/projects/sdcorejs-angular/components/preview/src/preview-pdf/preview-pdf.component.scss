@@ -1,0 +1,1059 @@
+// =============================================================================
+// sd-preview-pdf — dark-theme PDF viewer shell.
+//
+// Same sizing contract as sd-preview-image: sizes to its parent container.
+// All design tokens exposed as CSS custom properties on :host for per-instance
+// overrides without rewriting the SCSS.
+// =============================================================================
+
+:host {
+  // Surfaces — dark theme defaults.
+  --sd-pdf-shell-bg: #1a1c1f;
+  --sd-pdf-sidebar-bg: #22252a;
+  --sd-pdf-toolbar-bg: rgba(20, 22, 25, 0.94);
+  --sd-pdf-page-bg: #ffffff;
+  --sd-pdf-page-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --sd-pdf-divider: rgba(255, 255, 255, 0.08);
+
+  // Foreground
+  --sd-pdf-fg: #f5f6f7;
+  --sd-pdf-fg-muted: rgba(255, 255, 255, 0.6);
+  --sd-pdf-fg-subtle: rgba(255, 255, 255, 0.4);
+
+  // Primary + status. WHY var() with fallback: consumer apps define
+  // --sd-primary / --sd-error / --sd-success at :root via the design system.
+  // Fallbacks keep the viewer usable when those tokens aren't defined.
+  --sd-pdf-primary: var(--sd-pdf-accent, var(--sd-primary, #005cbb));
+  --sd-pdf-primary-soft: var(--sd-pdf-accent-soft, rgba(0, 92, 187, 0.18));
+  --sd-pdf-danger: var(--sd-error, #ba1a1a);
+  --sd-pdf-success: var(--sd-success, #2e7d32);
+
+  // Derived danger surfaces — rgba() transparency lives separately from the
+  // consumer-overridable hex (CSS can't compose rgba on top of a var()).
+  --sd-pdf-danger-soft: rgba(186, 26, 26, 0.1);
+  --sd-pdf-danger-border: rgba(186, 26, 26, 0.3);
+  --sd-pdf-danger-tint: rgba(186, 26, 26, 0.15);
+
+  // Hover surface — flipped to a black overlay in light theme below.
+  --sd-pdf-hover-bg: rgba(255, 255, 255, 0.1);
+
+  // Search highlight tokens — yellow stays readable on white pages regardless
+  // of the surrounding theme, so light + dark themes share the same values.
+  --sd-pdf-search-hi: rgba(250, 204, 21, 0.55);
+  --sd-pdf-search-hi-active: rgba(249, 115, 22, 0.85);
+
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  // tabindex outline removal — descendant buttons keep their :focus-visible ring.
+  outline: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--sd-pdf-primary);
+    outline-offset: 2px;
+  }
+}
+
+// =============================================================================
+// Light theme — token overrides via [data-theme="light"] host attribute.
+// =============================================================================
+:host([data-theme='light']) {
+  --sd-pdf-shell-bg: #f7f8fa;
+  --sd-pdf-sidebar-bg: #ffffff;
+  --sd-pdf-toolbar-bg: rgba(255, 255, 255, 0.94);
+  --sd-pdf-page-bg: #ffffff;
+  --sd-pdf-page-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  --sd-pdf-divider: rgba(0, 0, 0, 0.08);
+
+  --sd-pdf-fg: #1a1c1f;
+  --sd-pdf-fg-muted: rgba(0, 0, 0, 0.62);
+  --sd-pdf-fg-subtle: rgba(0, 0, 0, 0.42);
+
+  --sd-pdf-primary: var(--sd-pdf-accent, var(--sd-primary, #005cbb));
+  --sd-pdf-primary-soft: var(--sd-pdf-accent-soft, rgba(0, 92, 187, 0.16));
+  --sd-pdf-danger: var(--sd-error, #ba1a1a);
+  --sd-pdf-success: var(--sd-success, #2e7d32);
+
+  --sd-pdf-danger-soft: rgba(186, 26, 26, 0.08);
+  --sd-pdf-danger-border: rgba(186, 26, 26, 0.25);
+  --sd-pdf-danger-tint: rgba(186, 26, 26, 0.12);
+
+  --sd-pdf-hover-bg: rgba(0, 0, 0, 0.06);
+
+  // Search highlights stay yellow regardless of theme — keep readable on
+  // white pages.
+  --sd-pdf-search-hi: rgba(250, 204, 21, 0.55);
+  --sd-pdf-search-hi-active: rgba(250, 204, 21, 0.9);
+}
+
+:host(.sd-preview-pdf-host--fullscreen) {
+  width: 100vw;
+  height: 100vh;
+  min-height: 0;
+}
+
+// =============================================================================
+// Shell — outer column (header / body)
+// =============================================================================
+.sd-preview-pdf-shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: var(--sd-pdf-shell-bg);
+  color: var(--sd-pdf-fg);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+  font-family: inherit;
+}
+
+// =============================================================================
+// Header bar
+// =============================================================================
+.sd-preview-pdf-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 57px;
+  padding: 0 12px;
+  background: var(--sd-pdf-toolbar-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--sd-pdf-divider);
+  flex: 0 0 auto;
+  z-index: 2;
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  &__divider {
+    display: inline-block;
+    width: 1px;
+    height: 20px;
+    background: var(--sd-pdf-divider);
+  }
+
+  &__meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--sd-pdf-fg);
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__sub {
+    font-size: 11px;
+    color: var(--sd-pdf-fg-muted);
+    margin-top: 2px;
+  }
+}
+
+// PDF file icon tile — the red square next to the filename.
+.sd-preview-pdf-fileicon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: var(--sd-pdf-danger-tint);
+  border: 1px solid var(--sd-pdf-danger-border);
+  // WHY var(--sd-error-light, ...): the tile foreground should track the
+  // light variant of the danger token when the consumer theme defines one;
+  // otherwise we fall back to the original Tailwind red-400 used in design.
+  color: var(--sd-error-light, #f87171);
+  font:
+    700 10px / 1 ui-monospace,
+    'SFMono-Regular',
+    Menlo,
+    monospace;
+}
+
+// =============================================================================
+// Shared icon button (header + sidebar + status actions)
+// =============================================================================
+.sd-preview-pdf-iconbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  background: transparent;
+  border: none;
+  color: var(--sd-pdf-fg);
+  border-radius: 6px;
+  cursor: pointer;
+  transition:
+    background 120ms,
+    color 120ms;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  sd-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &__label {
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--sd-pdf-hover-bg);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--sd-pdf-primary);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  // Active-tab style (e.g. hamburger when sidebar is open).
+  &--active {
+    background: var(--sd-pdf-primary-soft);
+    color: var(--sd-pdf-primary);
+  }
+}
+
+// =============================================================================
+// Search bar (sits between header and body when openSearch() is active)
+// =============================================================================
+.sd-preview-pdf-searchbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 46px;
+  padding: 0 12px;
+  background: var(--sd-pdf-toolbar-bg);
+  border-bottom: 1px solid var(--sd-pdf-divider);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  flex: 0 0 auto;
+  z-index: 2;
+
+  &__icon {
+    color: var(--sd-pdf-fg-muted);
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  &__input {
+    flex: 0 1 360px;
+    min-width: 160px;
+    height: 30px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--sd-pdf-fg);
+    border-radius: 6px;
+    padding: 0 10px;
+    font-size: 13px;
+    outline: none;
+
+    &::placeholder {
+      color: var(--sd-pdf-fg-subtle);
+    }
+
+    &:focus {
+      border-color: var(--sd-pdf-primary);
+      background: rgba(255, 255, 255, 0.09);
+    }
+  }
+
+  &__counter {
+    color: var(--sd-pdf-fg-muted);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    min-width: 48px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  &__divider {
+    width: 1px;
+    height: 20px;
+    background: var(--sd-pdf-divider);
+    flex-shrink: 0;
+  }
+
+  &__spacer {
+    flex: 1 1 auto;
+  }
+}
+
+// =============================================================================
+// In-page search highlight overlay — DOM-overlay strategy (not text layer)
+// =============================================================================
+.sd-pdf-search-overlay {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 80%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.sd-pdf-search-hi {
+  display: inline-block;
+  padding: 1px 4px;
+  border-radius: 2px;
+  background: var(--sd-pdf-search-hi);
+  color: black;
+  font-size: 12px;
+  font-weight: 500;
+
+  &--active {
+    background: var(--sd-pdf-search-hi-active);
+    color: white;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4);
+  }
+}
+
+// (page-wrap position-relative declared with the wrap rule above.)
+
+// =============================================================================
+// Body — flex row (sidebar + stage)
+// =============================================================================
+.sd-preview-pdf-body {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+}
+
+// =============================================================================
+// Sidebar
+// =============================================================================
+.sd-preview-pdf-sidebar {
+  width: 240px;
+  display: flex;
+  flex-direction: column;
+  background: var(--sd-pdf-sidebar-bg);
+  border-right: 1px solid var(--sd-pdf-divider);
+  flex-shrink: 0;
+  min-height: 0;
+
+  &__tabs {
+    display: flex;
+    gap: 4px;
+    padding: 8px;
+    border-bottom: 1px solid var(--sd-pdf-divider);
+  }
+
+  &__tab {
+    flex: 1 1 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 32px;
+    padding: 0 4px;
+    background: transparent;
+    border: none;
+    color: var(--sd-pdf-fg-muted);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition:
+      background 120ms,
+      color 120ms;
+
+    sd-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--sd-pdf-fg);
+    }
+
+    &--active {
+      background: var(--sd-pdf-primary-soft);
+      color: var(--sd-pdf-primary);
+    }
+  }
+
+  &__content {
+    flex: 1 1 auto;
+    overflow: auto;
+    padding: 12px;
+  }
+
+  &__message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 32px 16px;
+    text-align: center;
+    color: var(--sd-pdf-fg-subtle);
+
+    sd-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+      opacity: 0.6;
+    }
+
+    p {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+  }
+}
+
+// =============================================================================
+// Document outline
+// =============================================================================
+.sd-preview-pdf-outline-tree {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  &__node {
+    margin: 0;
+    padding: 0;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+  }
+
+  &__toggle,
+  &__toggle-placeholder {
+    width: 24px;
+    height: 28px;
+    flex: 0 0 24px;
+  }
+
+  &__toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--sd-pdf-fg-muted);
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--sd-pdf-fg);
+    }
+
+    sd-icon {
+      width: 16px;
+      height: 16px;
+      font-size: 16px;
+    }
+  }
+
+  &__item {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--sd-pdf-fg-muted);
+    font: inherit;
+    font-size: 12px;
+    line-height: 1.35;
+    text-align: left;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--sd-pdf-fg);
+    }
+
+    &[aria-current='page'] {
+      background: var(--sd-pdf-primary-soft);
+      color: var(--sd-pdf-primary);
+      font-weight: 600;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--sd-pdf-primary);
+      outline-offset: -2px;
+    }
+  }
+}
+
+// =============================================================================
+// Thumbnails list
+// =============================================================================
+.sd-preview-pdf-thumb-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  &__spacer {
+    flex: 0 0 auto;
+    pointer-events: none;
+  }
+}
+
+.sd-preview-pdf-search-limit {
+  margin: 0 0 8px;
+  color: var(--sd-pdf-fg-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.sd-preview-pdf-thumb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+
+  &__page {
+    width: 152px;
+    aspect-ratio: 612 / 792;
+    background: var(--sd-pdf-page-bg);
+    border-radius: 2px;
+    outline: 1px solid rgba(255, 255, 255, 0.08);
+    outline-offset: -1px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    user-select: none;
+    // Subtle pulse while the canvas is blank — gives the lazy renderer some
+    // perceived motion instead of looking like a broken page.
+    background-image: linear-gradient(90deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.04) 50%, rgba(0, 0, 0, 0) 100%);
+    background-size: 200% 100%;
+    animation: sd-preview-pdf-thumb-skel 1.6s ease-in-out infinite;
+  }
+
+  &__canvas {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    background: var(--sd-pdf-page-bg);
+  }
+
+  &__label {
+    font-size: 11px;
+    color: var(--sd-pdf-fg-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &--active &__page {
+    outline: 2px solid var(--sd-pdf-primary);
+    outline-offset: -2px;
+  }
+
+  &--active &__label {
+    color: var(--sd-pdf-primary);
+    font-weight: 600;
+  }
+
+  &:focus-visible &__page {
+    outline: 2px solid var(--sd-pdf-primary);
+    outline-offset: 2px;
+  }
+}
+
+// =============================================================================
+// Stage
+// =============================================================================
+.sd-preview-pdf-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  background: var(--sd-pdf-shell-bg);
+  background-image:
+    linear-gradient(45deg, rgba(255, 255, 255, 0.015) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(255, 255, 255, 0.015) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.015) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.015) 75%);
+  background-size: 24px 24px;
+  background-position:
+    0 0,
+    0 12px,
+    12px -12px,
+    -12px 0;
+  overflow: auto;
+  padding: 32px 24px 96px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+// Light-theme checkerboard: flip the subtle whites to subtle blacks so the
+// pattern remains visible against the new white shell background.
+:host([data-theme='light']) .sd-preview-pdf-stage {
+  background-image:
+    linear-gradient(45deg, rgba(0, 0, 0, 0.015) 25%, transparent 25%), linear-gradient(-45deg, rgba(0, 0, 0, 0.015) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(0, 0, 0, 0.015) 75%), linear-gradient(-45deg, transparent 75%, rgba(0, 0, 0, 0.015) 75%);
+}
+
+.sd-preview-pdf-page-wrap {
+  display: inline-block;
+  // Search overlay positions itself absolutely against the page wrapper.
+  position: relative;
+}
+
+.sd-preview-pdf-page {
+  display: block;
+  background: var(--sd-pdf-page-bg);
+  border-radius: 2px;
+  // Lighter / heavier shadow per theme — see :host token defaults.
+  box-shadow: var(--sd-pdf-page-shadow);
+  max-width: 100%;
+}
+
+.sd-preview-pdf-continuous-content {
+  width: 100%;
+  min-height: 100%;
+}
+
+.sd-preview-pdf-continuous-spacer {
+  width: 1px;
+}
+
+.sd-preview-pdf-continuous-slot {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  & + & {
+    margin-top: 24px;
+  }
+}
+
+.sd-preview-pdf-continuous-page {
+  display: block;
+  max-width: 100%;
+  background: var(--sd-pdf-page-bg);
+  border-radius: 2px;
+  box-shadow: var(--sd-pdf-page-shadow);
+}
+
+// =============================================================================
+// Floating page-toolbar
+// =============================================================================
+.sd-preview-pdf-toolbar {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 5px 6px;
+  background: var(--sd-pdf-toolbar-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--sd-pdf-divider);
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  z-index: 4;
+  max-width: calc(100% - 32px);
+  overflow-x: auto;
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 30px;
+    height: 28px;
+    padding: 0 6px;
+    background: transparent;
+    border: none;
+    color: var(--sd-pdf-fg);
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition:
+      background 120ms,
+      color 120ms;
+
+    sd-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    span {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    &--with-label {
+      padding: 0 10px;
+    }
+
+    &--active {
+      background: var(--sd-pdf-primary-soft);
+      color: var(--sd-pdf-primary);
+    }
+
+    &:hover:not(:disabled):not(.sd-preview-pdf-toolbar__btn--active) {
+      background: var(--sd-pdf-hover-bg);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--sd-pdf-primary);
+      outline-offset: 2px;
+    }
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+  }
+
+  &__page {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 6px;
+    flex-shrink: 0;
+  }
+
+  &__page-input {
+    width: 36px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--sd-pdf-fg);
+    border-radius: 4px;
+    text-align: center;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    outline: none;
+
+    &:focus {
+      border-color: var(--sd-pdf-primary);
+    }
+  }
+
+  &__page-total {
+    font-size: 13px;
+    color: var(--sd-pdf-fg-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__zoom {
+    min-width: 56px;
+    text-align: center;
+    color: var(--sd-pdf-fg);
+    font-size: 13px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    padding: 2px 8px;
+  }
+
+  &__divider {
+    width: 1px;
+    height: 20px;
+    background: var(--sd-pdf-divider);
+    margin: 0 4px;
+    flex-shrink: 0;
+  }
+}
+
+// =============================================================================
+// Status states (empty / loading / error)
+// =============================================================================
+.sd-preview-pdf-status {
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  text-align: center;
+  padding: 32px;
+  max-width: 420px;
+
+  &__tile {
+    width: 96px;
+    height: 96px;
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--sd-pdf-divider);
+
+    sd-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+    }
+
+    &--muted {
+      background: rgba(255, 255, 255, 0.05);
+
+      sd-icon {
+        color: var(--sd-pdf-fg-subtle);
+      }
+    }
+
+    &--danger {
+      background: var(--sd-pdf-danger-soft);
+      border-color: var(--sd-pdf-danger-border);
+
+      sd-icon {
+        color: var(--sd-pdf-danger);
+      }
+    }
+  }
+
+  &__title {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--sd-pdf-fg);
+  }
+
+  &__hint {
+    font-size: 13px;
+    color: var(--sd-pdf-fg-muted);
+    line-height: 1.5;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+}
+
+.sd-preview-pdf-progress-pct {
+  font-variant-numeric: tabular-nums;
+  color: var(--sd-pdf-fg-muted);
+}
+
+.sd-preview-pdf-progress {
+  width: 240px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+
+  &__fill {
+    height: 100%;
+    background: var(--sd-pdf-primary);
+    transition: width 120ms linear;
+  }
+}
+
+.sd-preview-pdf-spinner {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  border: 3px solid rgba(255, 255, 255, 0.08);
+  border-top-color: var(--sd-pdf-primary);
+  animation: sd-preview-pdf-spin 0.9s linear infinite;
+}
+
+@keyframes sd-preview-pdf-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes sd-preview-pdf-thumb-skel {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+// =============================================================================
+// Sidebar search-result list (when search tab has hits)
+// =============================================================================
+.sd-preview-pdf-search-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sd-preview-pdf-search-result {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--sd-pdf-fg);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background 120ms,
+    border-color 120ms;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.07);
+  }
+
+  &--active {
+    background: var(--sd-pdf-primary-soft);
+    border-color: rgba(0, 92, 187, 0.45);
+  }
+
+  &__snippet {
+    flex: 1 1 auto;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--sd-pdf-fg);
+    word-break: break-word;
+
+    mark {
+      background: var(--sd-pdf-search-hi);
+      color: black;
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+  }
+
+  &__page {
+    flex: 0 0 auto;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    color: var(--sd-pdf-fg-muted);
+    background: rgba(255, 255, 255, 0.06);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+}
+
+.sd-preview-pdf-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 16px;
+  background: var(--sd-pdf-primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: filter 120ms;
+
+  sd-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    filter: brightness(1.1);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+}
+
+.sd-preview-pdf-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 16px;
+  background: transparent;
+  color: var(--sd-pdf-fg);
+  border: 1px solid var(--sd-pdf-divider);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 120ms;
+
+  sd-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--sd-pdf-primary);
+    outline-offset: 2px;
+  }
+}

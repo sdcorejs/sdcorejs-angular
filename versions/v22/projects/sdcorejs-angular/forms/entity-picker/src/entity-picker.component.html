@@ -1,0 +1,80 @@
+@let _selectedTemplate = selectedTemplate();
+@let _detailTemplate = detailTemplate();
+@let _errorMessage = visibleErrorMessage();
+
+<div class="sd-entity-picker__control">
+  @if (connectorState().isViewed) {
+    <div data-entity-picker-view class="sd-entity-picker__view">
+      @if (_selectedTemplate) {
+        <ng-container [ngTemplateOutlet]="_selectedTemplate.template" [ngTemplateOutletContext]="selectedTemplateContext()"></ng-container>
+      } @else {
+        {{ displayText() || '—' }}
+      }
+    </div>
+  } @else {
+    <button
+      #trigger
+      type="button"
+      data-entity-picker-trigger
+      class="sd-entity-picker__trigger"
+      aria-haspopup="dialog"
+      [attr.aria-label]="ariaLabel() || label() || effectivePlaceholder()"
+      [attr.aria-expanded]="modal()?.isOpened() ?? false"
+      [attr.aria-invalid]="_errorMessage ? 'true' : null"
+      [attr.aria-describedby]="_errorMessage ? errorId : null"
+      [disabled]="formControl.disabled || readonly()"
+      (click)="open()">
+      @if (_selectedTemplate) {
+        <ng-container [ngTemplateOutlet]="_selectedTemplate.template" [ngTemplateOutletContext]="selectedTemplateContext()"></ng-container>
+      } @else {
+        <span [class.sd-entity-picker__placeholder]="!displayText()">{{ displayText() || effectivePlaceholder() }}</span>
+      }
+    </button>
+    @if (clearable() && modelKeys().length > 0 && !formControl.disabled && !readonly()) {
+      <button
+        type="button"
+        class="sd-entity-picker__clear"
+        [attr.aria-label]="'core.form.entity-picker.clear' | sdTranslate"
+        (click)="clear($event)">
+        ×
+      </button>
+    }
+  }
+</div>
+
+@if (_errorMessage) {
+  <div [id]="errorId" data-entity-picker-error class="sd-entity-picker__error" role="alert">{{ _errorMessage }}</div>
+}
+
+<sd-modal [autoId]="autoId()" [title]="effectiveModalTitle()" width="lg" (sdClosed)="onModalClosed()">
+  <div class="sd-entity-picker__body">
+    <sd-query-bar
+      [fields]="queryFields()"
+      [filters]="query().filters"
+      [search]="query().search ?? ''"
+      showSearch
+      (queryChange)="onQueryChange($event)" />
+
+    @if (loadErrorState()) {
+      <sd-data-state state="error" compact retryable (sdRetry)="retry()"></sd-data-state>
+    } @else {
+      <sd-table [option]="tableOption()"></sd-table>
+    }
+
+    @if (_detailTemplate) {
+      <div class="sd-entity-picker__detail">
+        <ng-container [ngTemplateOutlet]="_detailTemplate.template" [ngTemplateOutletContext]="detailTemplateContext()"></ng-container>
+      </div>
+    }
+  </div>
+
+  @if (addable()) {
+    <button type="button" sdFooterLeft data-entity-picker-add (click)="add()">{{ 'core.form.entity-picker.add' | sdTranslate }}</button>
+  }
+  <button type="button" sdFooterRight data-entity-picker-cancel (click)="cancel()">
+    {{ 'core.form.entity-picker.cancel' | sdTranslate }}
+  </button>
+  <button type="button" sdFooterRight data-entity-picker-apply (click)="applySelection()">
+    {{ 'core.form.entity-picker.apply' | sdTranslate }}
+  </button>
+</sd-modal>

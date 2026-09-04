@@ -1,0 +1,42 @@
+<div class="sd-code-wrapper" [class.is-editable]="!viewed()">
+
+  <div class="sd-code-header">
+    <div class="mac-dots">
+      <span class="dot red"></span>
+      <span class="dot yellow"></span>
+      <span class="dot green"></span>
+    </div>
+
+    <div class="lang-badge">
+      {{ language().toUpperCase() }}
+      <span style="opacity: 0.6; margin-left: 4px; font-weight: normal;">
+        {{ viewed() ? '(READ ONLY)' : '(EDITING)' }}
+      </span>
+    </div>
+
+    <button class="copy-btn" [matTooltip]="copied() ? ('core.component.code-editor.copied' | sdTranslate) : 'Copy code'" (click)="copyToClipboard()">
+      <sd-icon [class.text-success]="copied()" [name]="copied() ? 'check' : 'content_copy'"></sd-icon>
+      <span>{{ copied() ? 'Copied' : 'Copy' }}</span>
+    </button>
+  </div>
+
+  <div class="sd-code-content" [style.maxHeight]="maxHeight()">
+    <div class="editor-overlay-container">
+
+      @if (!viewed()) {
+        <textarea
+          class="code-textarea"
+          [value]="textValue()"
+          (input)="onTextChange($any($event.target).value)"
+          spellcheck="false"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off">
+        </textarea>
+      }
+
+      <pre aria-hidden="true" class="code-display"><code [class]="'language-' + prismLang()" [innerHTML]="highlightedCode()"></code></pre>
+
+    </div>
+  </div>
+</div>

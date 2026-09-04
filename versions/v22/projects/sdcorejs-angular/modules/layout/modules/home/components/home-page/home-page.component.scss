@@ -1,0 +1,257 @@
+// WHY: dùng Material 3 system token --mat-sys-primary để theme đồng bộ với portal,
+// fallback #005cbb khi token chưa được provide (vd. test env hoặc theme cũ).
+:host {
+  display: contents;
+}
+
+.wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  height: 100%;
+  width: 100%;
+  background:
+    radial-gradient(circle at 15% 25%, color-mix(in srgb, var(--mat-sys-primary, #005cbb) 14%, transparent), transparent 55%),
+    radial-gradient(circle at 85% 75%, color-mix(in srgb, var(--mat-sys-primary, #005cbb) 10%, transparent), transparent 55%),
+    linear-gradient(135deg, #fafbfc 0%, #f4f6fa 100%);
+  overflow: auto;
+}
+
+.bento {
+  display: grid;
+  width: 100%;
+  max-width: 1080px;
+  gap: 16px;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(3, minmax(140px, 1fr));
+  grid-template-areas:
+    "hero hero data   report"
+    "hero hero users  flow"
+    "audit audit integ integ";
+}
+
+.card {
+  position: relative;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 20px;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: card-in 0.5s ease-out forwards;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow:
+      0 16px 40px color-mix(in srgb, var(--mat-sys-primary, #005cbb) 18%, transparent),
+      0 4px 12px rgba(0, 0, 0, 0.06);
+  }
+}
+
+/* ---------- HERO ---------- */
+.hero-card {
+  grid-area: hero;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--mat-sys-primary, #005cbb) 18%, white), white 60%),
+    #fff;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-primary, #005cbb) 15%, transparent);
+
+  .hero-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--mat-sys-primary, #005cbb) 25%, transparent);
+    animation: hero-pulse 3s ease-in-out infinite;
+    pointer-events: none;
+
+    // WHY: mỗi ring căn giữa qua inset = calc(50% - R), R lớn dần tạo 3 vòng đồng tâm
+    &.ring-1 { inset: calc(50% - 70px); animation-delay: 0s; }
+    &.ring-2 { inset: calc(50% - 105px); animation-delay: 0.6s; }
+    &.ring-3 { inset: calc(50% - 140px); animation-delay: 1.2s; }
+  }
+
+  .hero-core {
+    position: relative;
+    z-index: 1;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle, color-mix(in srgb, var(--mat-sys-primary, #005cbb) 22%, white), white);
+    box-shadow:
+      0 0 60px color-mix(in srgb, var(--mat-sys-primary, #005cbb) 30%, transparent),
+      0 10px 30px color-mix(in srgb, var(--mat-sys-primary, #005cbb) 20%, transparent);
+  }
+
+  .hero-icon {
+    font-size: 72px;
+    width: 72px;
+    height: 72px;
+    color: var(--mat-sys-primary, #005cbb);
+  }
+
+  // Chấm trang trí ở các góc — thêm sinh động nhưng không rối
+  .hero-decoration {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+
+    .dot {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--mat-sys-primary, #005cbb) 50%, transparent);
+      animation: dot-float 4s ease-in-out infinite;
+    }
+    .d1 { top: 16%; left: 12%; animation-delay: 0s; }
+    .d2 { bottom: 20%; right: 14%; animation-delay: 1s; }
+    .d3 { top: 60%; left: 80%; animation-delay: 2s; width: 5px; height: 5px; }
+  }
+}
+
+/* ---------- FEATURE CARDS ---------- */
+.feature-card {
+  display: flex;
+  align-items: stretch;
+  cursor: default;
+
+  .feature-accent {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg,
+      color-mix(in srgb, var(--mat-sys-primary, #005cbb) 60%, transparent),
+      var(--mat-sys-primary, #005cbb),
+      color-mix(in srgb, var(--mat-sys-primary, #005cbb) 60%, transparent));
+  }
+
+  .feature-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px 18px;
+    gap: 10px;
+  }
+
+  .feature-icon-wrap {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--mat-sys-primary, #005cbb) 12%, white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .feature-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+    color: var(--mat-sys-primary, #005cbb);
+  }
+
+  .feature-label {
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    color: rgba(0, 0, 0, 0.78);
+    line-height: 20px;
+  }
+
+  // Card 2×1 dùng layout ngang (icon trái, label phải) — phân biệt visual với 4 card vuông
+  &.feature-wide .feature-content {
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 18px 24px;
+    gap: 18px;
+  }
+
+  &.feature-wide .feature-icon-wrap {
+    width: 64px;
+    height: 64px;
+  }
+
+  &.feature-wide .feature-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+  }
+
+  &.feature-wide .feature-label {
+    text-align: left;
+    font-size: 16px;
+  }
+}
+
+/* ---------- ANIMATIONS ---------- */
+@keyframes card-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes hero-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50%      { transform: scale(1.06); opacity: 0.3; }
+}
+
+@keyframes dot-float {
+  0%, 100% { transform: translateY(0); opacity: 0.8; }
+  50%      { transform: translateY(-8px); opacity: 0.4; }
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 1024px) {
+  .bento {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(4, minmax(120px, 1fr));
+    grid-template-areas:
+      "hero hero data"
+      "hero hero report"
+      "users flow audit"
+      "integ integ integ";
+  }
+
+  .hero-card .hero-core { width: 120px; height: 120px; }
+  .hero-card .hero-icon { font-size: 60px; width: 60px; height: 60px; }
+}
+
+@media (max-width: 640px) {
+  .wrapper { padding: 16px 12px; }
+  .bento {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    grid-template-areas:
+      "hero"
+      "data"
+      "report"
+      "users"
+      "flow"
+      "audit"
+      "integ";
+    gap: 12px;
+  }
+  .hero-card {
+    min-height: 220px;
+  }
+  .hero-card .hero-core { width: 100px; height: 100px; }
+  .hero-card .hero-icon { font-size: 52px; width: 52px; height: 52px; }
+}
+
+/* ---------- A11Y ---------- */
+// WHY: respect prefers-reduced-motion để không gây khó chịu cho user
+// có thiết lập giảm animation (a11y).
+@media (prefers-reduced-motion: reduce) {
+  .card { animation: none; opacity: 1; transform: none; }
+  .hero-card .hero-ring { animation: none; opacity: 0.4; }
+  .hero-card .hero-decoration .dot { animation: none; }
+}

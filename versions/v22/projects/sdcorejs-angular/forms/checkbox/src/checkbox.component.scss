@@ -1,0 +1,42 @@
+@use '../../../assets/scss/core/color.scss' as color;
+@use 'sass:map';
+
+:host ::ng-deep {
+  .mdc-label {
+    margin-bottom: 0;
+  }
+}
+
+// why: --sd-c là màu hiện tại của control. Default = primary. Host class .sd-c-<x>
+// override. Một biến trung gian giúp inspect dễ + giảm CSS payload.
+:host {
+  --sd-c: var(--sd-primary);
+}
+:host(.sd-c-secondary) { --sd-c: var(--sd-secondary); }
+:host(.sd-c-info)      { --sd-c: var(--sd-info); }
+:host(.sd-c-success)   { --sd-c: var(--sd-success); }
+:host(.sd-c-warning)   { --sd-c: var(--sd-warning); }
+:host(.sd-c-error)     { --sd-c: var(--sd-error); }
+
+// why: Angular Material 19 song song dùng cả `--mdc-checkbox-*` (legacy MDC) lẫn
+// `--mat-checkbox-*` (M2/M3 wrapper). Theme có thể set sẵn `.mat-mdc-checkbox.mat-accent {
+// --mat-checkbox-selected-icon-color: green }` ở specificity (0,2,1) — phải ép cả 2 tier
+// + `!important` trên custom properties để chắc thắng.
+:host ::ng-deep .mat-mdc-checkbox,
+:host ::ng-deep .mdc-checkbox {
+  --mdc-checkbox-selected-icon-color: var(--sd-c) !important;
+  --mdc-checkbox-selected-focus-icon-color: var(--sd-c) !important;
+  --mdc-checkbox-selected-hover-icon-color: var(--sd-c) !important;
+  --mdc-checkbox-selected-pressed-icon-color: var(--sd-c) !important;
+  --mdc-checkbox-selected-focus-state-layer-color: var(--sd-c) !important;
+  --mdc-checkbox-selected-hover-state-layer-color: var(--sd-c) !important;
+  --mdc-checkbox-selected-pressed-state-layer-color: var(--sd-c) !important;
+
+  --mat-checkbox-selected-icon-color: var(--sd-c) !important;
+  --mat-checkbox-selected-focus-icon-color: var(--sd-c) !important;
+  --mat-checkbox-selected-hover-icon-color: var(--sd-c) !important;
+  --mat-checkbox-selected-pressed-icon-color: var(--sd-c) !important;
+  --mat-checkbox-selected-focus-state-layer-color: var(--sd-c) !important;
+  --mat-checkbox-selected-hover-state-layer-color: var(--sd-c) !important;
+  --mat-checkbox-selected-pressed-state-layer-color: var(--sd-c) !important;
+}

@@ -1,0 +1,104 @@
+<details class="fb-section" open>
+  <summary class="fb-section__head">
+    <span class="msi">view_column</span>
+    <span class="fb-section__title">{{ 'core.component.form-builder.column-list' | sdTranslate }}</span>
+    <span class="msi chev">chevron_right</span>
+  </summary>
+  <div class="fb-section__body">
+    @if (tables.length) {
+      <sd-autocomplete
+          class="py-8"
+          [label]="'core.component.form-builder.column-data' | sdTranslate"
+          [(model)]="columnsKey"
+          [items]="tables"
+          valueField="value"
+          displayField="display"
+          (sdChange)="onChangeColumnsKey($event)"
+          hideInlineError></sd-autocomplete>
+    }
+    @if (!columnsKey) {
+      <div class="fb-columns-list">
+        @for (item of columns; track item.key; let idx = $index) {
+          <div class="fb-column-row" [class.is-active]="idx === selectedIdx">
+            <span class="fb-column-row__type-icon"><span class="msi">{{ columnTypeSymbol(item.type) }}</span></span>
+            <div class="fb-column-row__meta">
+              <div class="fb-column-row__label">
+                {{ item.label }}
+                @if (item.validate?.required) {
+                  <span class="fb-column-row__req">*</span>
+                }
+              </div>
+              <div class="fb-column-row__sub mono">{{ item.key }} · {{ item.type }}</div>
+            </div>
+            <button type="button" class="fb-icon-btn" [attr.aria-label]="'core.component.form-builder.column-config' | sdTranslate" (click)="editColumn(idx)">
+              <span class="msi">edit</span>
+            </button>
+            <button type="button" class="fb-icon-btn danger" [attr.aria-label]="'core.component.form-builder.delete' | sdTranslate" (click)="removeColumn(idx)">
+              <span class="msi">delete</span>
+            </button>
+          </div>
+        }
+        <!-- why: <a> KHÔNG có href không phải là control — nó không nhận focus bàn phím và Enter
+             không kích hoạt được, tức người dùng bàn phím không thêm được cột. Đây là một HÀNH
+             ĐỘNG chứ không phải điều hướng → <button type="button"> mới đúng ngữ nghĩa. -->
+        <button type="button" class="fb-add-link" (click)="addColumn()">
+          <span class="msi">add</span>
+          {{ 'core.component.form-builder.add-column' | sdTranslate }}
+        </button>
+      </div>
+    }
+  </div>
+</details>
+
+<sd-modal [title]="'core.component.form-builder.column-config' | sdTranslate" width="600px" modalClass="sd-form-builder-dialog">
+  @if (column) {
+    <details class="fb-section" open>
+      <summary class="fb-section__head">
+        <span class="msi">info</span>
+        <span class="fb-section__title">{{ 'core.component.form-builder.general' | sdTranslate }}</span>
+        <span class="msi chev">chevron_right</span>
+      </summary>
+      <div class="fb-section__body">
+        <attribute-input [form]="form" [label]="'core.component.form-builder.field-key' | sdTranslate" [(model)]="column.key"></attribute-input>
+        <attribute-input [form]="form" [label]="'core.component.form-builder.column-name' | sdTranslate" [(model)]="column.label"></attribute-input>
+        <attribute-input [form]="form" [label]="'core.component.form-builder.width' | sdTranslate" [(model)]="column.width"></attribute-input>
+        <attribute-switch [form]="form" [label]="'core.component.form-builder.required' | sdTranslate" [(model)]="column.validate!.required"></attribute-switch>
+        <attribute-select [form]="form" [label]="'core.component.form-builder.data-type' | sdTranslate" [(model)]="column.type" [items]="types"></attribute-select>
+      </div>
+    </details>
+    @if (column.type === 'boolean') {
+      <details class="fb-section" open>
+        <summary class="fb-section__head">
+          <span class="msi">visibility</span>
+          <span class="fb-section__title">{{ 'core.component.form-builder.display' | sdTranslate }}</span>
+          <span class="msi chev">chevron_right</span>
+        </summary>
+        <div class="fb-section__body">
+          <attribute-input [form]="form" [label]="'core.component.form-builder.show-when-true' | sdTranslate" [(model)]="column.displayOnTrue"></attribute-input>
+          <attribute-input [form]="form" [label]="'core.component.form-builder.show-when-false' | sdTranslate" [(model)]="column.displayOnFalse"></attribute-input>
+        </div>
+      </details>
+    } @else if (column.type === 'values') {
+      <attribute-selection
+        [components]="components()"
+        [variables]="variables()"
+        [component]="column"
+        [(valuesKey)]="column.valuesKey"
+        [(values)]="column.values"></attribute-selection>
+    } @else if (column.type === 'file' || column.type === 'image') {
+      <details class="fb-section" open>
+        <summary class="fb-section__head">
+          <span class="msi">settings</span>
+          <span class="fb-section__title">{{ 'core.component.form-builder.parameter' | sdTranslate }}</span>
+          <span class="msi chev">chevron_right</span>
+        </summary>
+        <div class="fb-section__body">
+          <attribute-parameter [label]="'core.component.form-builder.assign-parameter' | sdTranslate" [components]="components()" [(model)]="column!.args"></attribute-parameter>
+        </div>
+      </details>
+    }
+  }
+  <ng-container sdFooterRight>
+    <sd-button prefixIcon="save" [title]="'core.component.form-builder.save' | sdTranslate" (click)="onConfirm()" color="primary"></sd-button>
+  </ng-container>
+</sd-modal>

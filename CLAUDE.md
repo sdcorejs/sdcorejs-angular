@@ -9,33 +9,29 @@ Multi-version source + publish pipeline cho npm package `@sdcorejs/angular`.
 ## Khái niệm cốt lõi
 
 ```
-                  versions/v19/  ← primary repo-owned Angular 19 workspace
+                  versions/v19/  ← canonical repo-owned Angular 19 workspace
                               │
                               │  scripts/sync-multi-version-workspaces.ps1
-                              ├──────────────────────┐
-                              ▼                      ▼
-                       versions/v20/         versions/v21/
-                       (Angular 20)          (Angular 21)
-                              │                      │
-                              │  scripts/deploy.ps1  │
-                              ▼                      ▼
-                @sdcorejs/angular@20.x.y     @sdcorejs/angular@21.x.y
-                          (npm)                    (npm)
-                              ▲
-                              │
-                       @sdcorejs/angular@19.x.y (npm, from v19)
+                              ├──────────────────────┬──────────────────────┐
+                              ▼                      ▼                      ▼
+                       versions/v20/         versions/v21/         versions/v22/
+                       (Angular 20)          (Angular 21)          (Angular 22)
+                              └──────────────────────┴──────────────────────┘
+                                                     │
+                                                     ▼
+                     @sdcorejs/angular@{19,20,21,22}.x.y (npm, cùng public API)
 ```
 
-- **Source of truth**: `versions/v19` trong repo này. Sống code, test, docs npm-facing và showcase ở đây sau final sync.
-- **Rollout layer**: `versions/v20` + `versions/v21` dẫn xuất từ v19 — chỉ khác peerDeps Angular major + shim cần thiết.
-- **Publish artifact**: 3 phiên bản npm cùng tên `@sdcorejs/angular`, version theo Angular major (19.x.y / 20.x.y / 21.x.y).
+- **Source of truth**: `versions/v19` trong repo này. Shared library code, test và package documentation bắt đầu ở đây; `showcase/` là workspace độc lập ở root.
+- **Rollout layer**: `versions/v20` + `versions/v21` + `versions/v22` dẫn xuất từ v19 — chỉ khác dependency/peer Angular-major và shim đã duyệt. Dòng v22 bắt đầu tại `22.2.5`, không có lịch sử v22 trước suffix `2.5`.
+- **Publish artifact**: 4 phiên bản npm cùng tên `@sdcorejs/angular`, version theo Angular major (19.x.y / 20.x.y / 21.x.y / 22.x.y).
 
 ## Anti-patterns — TUYỆT ĐỐI KHÔNG
 
-- ❌ Sửa trực tiếp `versions/v20/**` hoặc `versions/v21/**` cho logic chung — sửa `versions/v19/**` trước rồi rollout bằng `scripts/sync-multi-version-workspaces.ps1`.
+- ❌ Sửa trực tiếp `versions/v20/**`, `versions/v21/**` hoặc `versions/v22/**` cho logic chung — sửa `versions/v19/**` trước rồi rollout bằng `scripts/sync-multi-version-workspaces.ps1`.
 - ❌ Chạy sync legacy từ `vn-angular` cho phát triển bình thường — script đã bị guard vì có thể ghi đè thay đổi độc lập.
 - ❌ Đổi tên package trong từng version để có `@sdcorejs/angular-v19`/`-v20` — strategy hiện tại là 1 package name, version Angular major.
-- ❌ Publish từ workspace nào KHÔNG khớp Angular major (vd build v20 → publish 21.x.y) — deploy.ps1 đã ràng buộc nhưng đừng workaround.
+- ❌ Gán artifact từ workspace nào sang package major khác (vd build v20 → stamp/publish 21.x.y) — release contract ràng buộc mapping này, đừng workaround.
 - ❌ Tạo `product/`, `design/`, hoặc `docs/` ở root repo — xem "Layout thư mục" dưới.
 
 ## Layout thư mục
@@ -48,7 +44,7 @@ Ranh giới: **agent sinh ra → `.sdcorejs/`; repo-owned public → root.**
   persona.md        #   persona
   memories/         #   memory bền, có MEMORY.md làm index
 
-versions/v{19,20,21}/   # CHỈ còn library. Không còn showcase, docs, refs, .sdcorejs
+versions/v{19,20,21,22}/ # CHỈ còn library. Không còn showcase, docs, refs, .sdcorejs
 showcase/           # Angular workspace ĐỘC LẬP: dev/test component local. KHÔNG publish,
                     #   KHÔNG mirror theo version. Có package.json + node_modules riêng.
 published-pages/    # site đã build, COMMITTED, mỗi release suffix 1 thư mục (xem dưới)
@@ -76,27 +72,35 @@ Skill pack chạy lại sẽ tự dựng `specs/`, `plans/`, `docs/` dưới `.s
 | Script | Mục đích | Khi chạy |
 | --- | --- | --- |
 | `scripts/sync-from-vn-angular.ps1` | Legacy recovery only: copy code từ `vn-angular` → `versions/v19` | Không chạy mặc định; cần `-AllowLegacySync` trên clean branch |
-| `scripts/sync-multi-version-workspaces.ps1` | Dẫn xuất `v19` → `v20` + `v21` (đổi peerDeps Angular major, ghi workspace status) | Sau khi thay đổi repo-owned trong `v19` cần rollout |
-| `scripts/check-version-sync.mjs` | Verify `v20` + `v21` vẫn khớp source `v19` cho library/showcase surface | Trước release; CI publish chạy guard này trước npm publish |
-| `scripts/deploy.ps1` | Build + publish 3 phiên bản npm | Khi release stable hoặc beta |
+| `scripts/sync-multi-version-workspaces.ps1` | Dẫn xuất `v19` → `v20` + `v21` + `v22` (đổi dependency/peer Angular-major, áp dụng shim đã duyệt, ghi workspace status) | Sau khi thay đổi repo-owned trong `v19` cần rollout |
+| `scripts/check-version-sync.mjs` | Verify `v20` + `v21` + `v22` vẫn khớp source `v19` ngoài các transform được duyệt | Trước release; CI publish chạy guard này trước npm publish |
+| `scripts/deploy.ps1` | Build/pack dry-run bốn line vào `-OutputPath`, ghi checksum/metadata và luôn khôi phục version tạm | Release preflight local; script không publish npm |
 | `scripts/build-published-page.mjs` | Build `showcase/` → `published-pages/<suffix>/` + prune retention (`npm run build:page -- --suffix 1.6`) | Mỗi release, sau khi lib đã build |
 | `scripts/collect-docs.mjs` | Sinh 1 archive `published-docs/<version>/` (pin link theo tag + per-version CHANGELOG) | Qua `collect-release-docs`, hoặc debug đơn lẻ |
 
-`npm run sync` là entry point rollout bình thường: lấy `versions/v19` làm nguồn rồi đồng bộ sang `versions/v20` và `versions/v21`. `npm run check:sync` là release guard read-only; nếu fail thì chạy lại `npm run sync`, review diff, rồi commit đầy đủ trước khi tag. Nếu cần tái hiện mirror cũ để điều tra lịch sử, dùng `npm run legacy:sync-from-vn-angular` trên một branch sạch.
+`npm run sync` là entry point rollout bình thường: lấy `versions/v19` làm nguồn rồi đồng bộ sang `versions/v20`, `versions/v21` và `versions/v22`. `npm run check:sync` là release guard read-only; nếu fail thì chạy lại `npm run sync`, review diff, rồi commit đầy đủ trước khi tag. Nếu cần tái hiện mirror cũ để điều tra lịch sử, dùng `npm run legacy:sync-from-vn-angular` trên một branch sạch.
 
 ### Quy trình phát triển độc lập
 
+Các install/build Angular workspace dùng exact Node `22.22.3`; không tiếp tục nếu shell đang chạy runtime khác.
+
 ```powershell
-# 1. Sửa code/docs/test/showcase trong versions/v19
+# 1. Sửa shared code/docs/test trong versions/v19 (showcase sống ở root)
 cd versions/v19
+npm ci --legacy-peer-deps
 npm test -- --watch=false
 
-# 2. Lan toả v19 → v20 + v21
+# 2. Lan toả v19 → v20 + v21 + v22
 cd ../..
 npm run sync
 npm run check:sync
 
-# 3. Verify/build rồi commit
+# 3. Verify install policy bằng exact Node 22.22.3
+npm --prefix versions/v20 ci --legacy-peer-deps
+npm --prefix versions/v21 ci --legacy-peer-deps
+npm --prefix versions/v22 ci
+
+# 4. Verify/build rồi commit
 git add -A
 git commit -m "<type>: <summary>"
 git push
@@ -104,53 +108,44 @@ git push
 
 ### Quy trình deploy npm — qua GitHub Actions (khuyến nghị)
 
-Workflow: `.github/workflows/publish-npm.yml`. Auth qua **npm trusted publishing (OIDC)** — không dùng `NPM_TOKEN` nữa, không cần `npm login` local. Job publish chạy với `permissions: id-token: write`, Node 22 + `npm@latest` (OIDC cần npm >= 11.5.1, Node >= 22.14.0) và **cố tình không set `NODE_AUTH_TOKEN`**: nếu có token, npm dùng token thay OIDC và package 2FA policy trả 403 `an automation token was specified`. Trusted publisher trên npmjs.com pin theo repo + tên file workflow, nên đổi tên `publish-npm.yml` là phải khai báo lại bên npm.
+Workflow: `.github/workflows/publish-npm.yml`. Auth qua **npm trusted publishing (OIDC)** — không dùng `NPM_TOKEN`, `NODE_AUTH_TOKEN` hay `npm login` local. Mọi release build/verify/publish job pin exact Node `22.22.3`; publisher cài exact `npm@11.5.1`, dùng `registry-url: https://registry.npmjs.org` và là job duy nhất có `permissions: id-token: write`. Trusted publisher trên npmjs.com pin theo repo + tên file workflow, nên đổi tên `publish-npm.yml` là phải khai báo lại bên npm.
 
 **Trigger**:
-- Push tag `v<release-suffix>` → publish 19.<release-suffix> / 20.<release-suffix> / 21.<release-suffix>.
-  - `v1.0` → 19.1.0 / 20.1.0 / 21.1.0 (npm tag=latest).
-  - `v1.0-beta.1` → 19.1.0-beta.1 / 20.1.0-beta.1 / 21.1.0-beta.1 (npm tag=beta).
-- Manual dispatch trên Actions tab → nhập release suffix vào field `patch`. Nhánh này chỉ dùng cho publish/debug thủ công; `published-docs` public được buộc vào tag flow.
+- Push tag `v<release-suffix>` → tạo đúng bốn version `19.<suffix>` / `20.<suffix>` / `21.<suffix>` / `22.<suffix>`.
+  - `v2.5` → `19.2.5`, `20.2.5`, `21.2.5`, `22.2.5`.
+- Angular 22 bắt đầu tại `22.2.5`; generator/release plan không được dựng version 22 trước suffix `2.5`.
+- `@sdcorejs/angular-material-datetime@1.0.4` phải được publish và verify trước transaction Core UI `2.5`.
 
-Trước publish matrix có **2 gate**, matrix `needs:` cả hai — đỏ một cái là không publish gì hết:
-- `verify-version-sync` — `npm run check:sync`, chặn tag release nếu `v20`/`v21` lệch khỏi `v19`.
-- `test` — chạy full suite của `versions/v19` (`npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadlessCI --code-coverage`). **`--code-coverage` là bắt buộc**: threshold trong `projects/sdcorejs-angular/karma.conf.js` chỉ được đánh giá khi có coverage; thiếu cờ đó thì threshold không gate gì cả. `ChromeHeadlessCI` = `ChromeHeadless` + `--no-sandbox --disable-gpu --disable-dev-shm-usage` (custom launcher khai trong karma.conf.js).
-
-⚠️ Hai gate này chỉ chạy trên **tag/dispatch**, chưa có workflow chạy test trên PR/push `main`. Suite đỏ vẫn chỉ lộ ra lúc release.
+Các gate trước artifact gồm `npm run check:sync`, root script/release-contract tests và full suite canonical v19 (`npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadlessCI --code-coverage`). **`--code-coverage` là bắt buộc**: threshold trong `projects/sdcorejs-angular/karma.conf.js` chỉ được đánh giá khi coverage được thu thập. `ChromeHeadlessCI` là launcher CI khai trong `karma.conf.js`.
 
 Karma in seed random của Jasmine ở đầu mỗi run (`[karma] Jasmine random seed = <n>`); ép seed bằng env `JASMINE_SEED`. **Pin seed KHÔNG đủ để replay**: `spec.id` gán theo thứ tự module trong bundle, mà bundle không ổn định giữa các build — chi tiết trong comment đầu `karma.conf.js`.
 
-Workflow matrix [v19/v20/v21] chạy song song, mỗi job:
-1. Resolve release suffix + dist-tag từ tag/dispatch input.
-2. Ghi `${major}.${releaseSuffix}` vào `versions/v<N>/projects/sdcorejs-angular/package.json`.
-3. `npm install --legacy-peer-deps` trong workspace.
-4. `ng build sdcorejs-angular`.
-5. `npm publish --tag <beta|latest>` từ `dist/sdcorejs-angular`.
+Transaction không interleave build và publish:
 
-Sau khi cả 3 matrix job publish thành công, job `publish-docs` chạy một lần trên tag:
-1. Verify tag đang trỏ đúng `origin/main` để docs snapshot khớp source release.
-2. Chạy `npm run collect-release-docs -- --patch <release-suffix> --date <UTC-date> --skip-existing`.
-3. Sinh đủ `published-docs/19.<release-suffix>/`, `published-docs/20.<release-suffix>/`, `published-docs/21.<release-suffix>/`.
-4. Commit archive về `main`; push này kích hoạt `deploy-pages.yml` copy docs lên Pages.
+1. Resolve một release plan gồm bốn target và source SHA.
+2. Build/pack cả bốn line trước khi publish: `npm ci --legacy-peer-deps` cho v19/v20/v21, clean `npm ci` cho v22. Mỗi artifact giữ `.tgz`, npm integrity/shasum, SHA-256, file inventory và source SHA.
+3. Một verification job tải cả bốn artifact và kiểm tra checksum, manifest/peer/engine, APF/declaration, baseline public surface và strict consumer compile.
+4. Một publisher **không matrix** tải lại đúng artifact đã verify, preflight đủ bốn registry version, rồi publish tuần tự v19 → v20 → v21 bằng recovery tag `angular19` / `angular20` / `angular21`. Sau mỗi bước, `latest` phải chưa đổi.
+5. Publish v22 cuối cùng với `latest`, rồi verify exact registry integrity/shasum/SHA-256 và provenance. Không rebuild, không `npm dist-tag add`.
+6. Chỉ sau postpublish GREEN mới sinh đủ bốn `published-docs`, build `published-pages/<suffix>`, áp retention và commit docs/page về `main`.
 
-**Tag stable 19.1.0/20.1.0/21.1.0**:
+**Tag stable 19.2.5/20.2.5/21.2.5/22.2.5**:
 ```bash
-git tag v1.0
-git push origin v1.0
+git tag v2.5
+git push origin v2.5
 ```
 
-### Quy trình deploy npm — local fallback (deploy.ps1)
+### Release preflight local — `deploy.ps1`
 
-Khi không thể đẩy qua Actions (vd debug):
+Local script chỉ dùng để tái hiện build/pack/checksum; publication vẫn thuộc GitHub trusted-publishing workflow:
 ```powershell
-powershell -ExecutionPolicy Bypass -File ./scripts/deploy.ps1 -PatchVersion "1.0"
-
-# -DryRun: chạy full flow (write version + install + build) nhưng SKIP `npm publish`.
-# Để verify build pass + version đúng trước khi push thật. Log có dòng "[DRY RUN] No changes will be made."
-powershell -ExecutionPolicy Bypass -File ./scripts/deploy.ps1 -PatchVersion "1.0" -DryRun
+powershell -ExecutionPolicy Bypass -File ./scripts/deploy.ps1 `
+  -PatchVersion "2.5" `
+  -OutputPath "$env:TEMP\sdcorejs-angular-2.5" `
+  -DryRun
 ```
-`PatchVersion` là tên tham số legacy; giá trị truyền vào là release suffix chung cho cả ba Angular line.
-Yêu cầu auth local: `npm login --scope=@sdcorejs`.
+
+`PatchVersion` là tên tham số legacy; giá trị là release suffix chung cho cả bốn Angular line. `-DryRun` phải non-interactive, build/pack đủ bốn artifact và khôi phục mọi version tạm trong `finally`; script không gọi `npm publish` và không cần npm auth.
 
 ### GitHub Pages — mỗi release 1 page, deploy KHÔNG build
 
@@ -189,19 +184,19 @@ Cờ khác: `--force` (rebuild suffix đã có), `--skip-build` (chỉ copy lạ
 
 #### Route shell chỉ pre-render 1 release
 
-Nội dung docs của app nằm dưới route `v/:version/`, nên page **vẫn** có segment version bên trong. Nhưng vì thư mục page đã gắn với một release, `build:page` truyền `--suffix <x.y>` xuống route-shell generator và nó chỉ phát shell cho **một** npm version: `canonicalReleaseForSuffix('1.6')` → `21.1.6` (Angular major cao nhất).
+Nội dung docs của app nằm dưới route `v/:version/`, nên page **vẫn** có segment version bên trong. Nhưng vì thư mục page đã gắn với một release, `build:page` truyền `--suffix <x.y>` xuống route-shell generator và nó chỉ phát shell cho **một** npm version. Từ inception suffix `2.5`, `canonicalReleaseForSuffix('2.5')` → `22.2.5`; suffix cũ vẫn chọn line cao nhất thực sự tồn tại khi release đó được phát hành.
 
 Lý do — số đo thật với 97 doc page:
 
 | Shell scope | Shell | HTML | Page |
 | --- | --- | --- | --- |
 | mọi release đã publish (mặc định cũ) | 5941 | 87 MB | 99 MB |
-| 3 release của suffix | 1486 | 22 MB | 34 MB |
+| 3 release của suffix (phép đo trước khi có v22) | 1486 | 22 MB | 34 MB |
 | **1 release (đang dùng)** | **496** | **7 MB** | **~19 MB** |
 
 Phát shell cho mọi release nhân HTML ~12× và 10 page sẽ là ~0.97 GB, đụng **hard limit 1 GB của Pages**.
 
-**Đánh đổi đã chấp nhận**: deep link tới `v/19.1.6/…` hay `v/20.1.6/…` trong page vẫn chạy **client-side** qua version switcher, chỉ **không được pre-render** → không index. URL được index của mỗi page là `v/21.<suffix>/…`.
+**Đánh đổi đã chấp nhận**: deep link tới các line không canonical trong page vẫn chạy **client-side** qua version switcher, chỉ **không được pre-render** → không index. Với suffix từ `2.5`, URL được index là `v/22.<suffix>/…`; release cũ không bị gán ngược một version 22 chưa từng tồn tại.
 
 Muốn URL sạch hẳn (`/1.6/components/button`, ~14 MB/page) thì phải bỏ segment `v/:version` trong `app.routes.ts` + `docs-route.guards.ts` + `docs-version.service.ts` — chưa làm.
 
@@ -209,7 +204,7 @@ Muốn URL sạch hẳn (`/1.6/components/button`, ~14 MB/page) thì phải bỏ
 
 `published-pages/` giữ **5 suffix mới nhất theo chữ số đầu**, mỗi nhóm prune độc lập — `1.x` và `0.x` không đá nhau. Prune tự chạy mỗi lần `build:page`. Test: `npm run test:published-page`.
 
-`published-docs/` dùng luật KHÁC: **5 version mới nhất mỗi Angular major** (15 archive). Prune 2026-08-06 đã đưa 40 → 15 (46 MB → 19 MB); URL của version bị bỏ (`docs/19.0.4/…`) sẽ 404.
+`published-docs/` dùng luật KHÁC: **5 version mới nhất mỗi Angular major** (tối đa 20 archive với bốn line). Lần prune 2026-08-06 từng đưa ba line từ 40 → 15 archive (46 MB → 19 MB); đó là số đo lịch sử trước v22. URL của version bị bỏ (`docs/19.0.4/…`) sẽ 404.
 
 ⚠️ **Đừng để deploy build lại.** Cả điểm của model này là docs-only hay page-only change không kích hoạt Angular build. Muốn đổi showcase lên Pages thì build page mới, đừng thêm bước build vào workflow.
 
@@ -217,8 +212,8 @@ Muốn URL sạch hẳn (`/1.6/components/button`, ~14 MB/page) thì phải bỏ
 
 Toàn bộ API docs (`*.md`) của lib được publish dạng raw Markdown trên Pages, namespaced theo version, để AI agent fetch qua URL mà KHÔNG cần clone local.
 
-- **Nguồn**: `versions/v19|v20|v21/projects/sdcorejs-angular/**/*.md`. Loại `HANDOFF.md` (nội bộ).
-- **Generator release**: `scripts/collect-release-docs.mjs` (`npm run collect-release-docs -- --patch 1.0`) → gọi collector cho đủ 3 workspace và ghi **`published-docs/19.1.0/`**, **`published-docs/20.1.0/`**, **`published-docs/21.1.0/`** + refresh **`published-docs/versions.json`** registry.
+- **Nguồn**: `versions/v19|v20|v21|v22/projects/sdcorejs-angular/**/*.md`. Loại `HANDOFF.md` (nội bộ).
+- **Generator release**: `scripts/collect-release-docs.mjs` (`npm run collect-release-docs -- --patch 2.5`) → gọi collector cho đủ 4 workspace và ghi **`published-docs/19.2.5/`**, **`published-docs/20.2.5/`**, **`published-docs/21.2.5/`**, **`published-docs/22.2.5/`** + refresh **`published-docs/versions.json`** registry.
 - **Generator đơn lẻ/debug**: `scripts/collect-docs.mjs --workspace v19 --version 19.1.0`. Mặc định KHÔNG overwrite archive đã tồn tại; dùng `--force` chỉ khi cố ý rebuild, `--skip-existing` cho CI idempotent.
 - **URL** (sau deploy):
   - `…/docs/versions.json` — registry mọi version + `latest`
@@ -234,7 +229,7 @@ Toàn bộ API docs (`*.md`) của lib được publish dạng raw Markdown trê
 `@sdcorejs/angular` là pack public MIT, wording công khai, và hiện là pack độc lập. README/CHANGELOG do repo này tự sở hữu.
 
 - **CHANGELOG**: canonical = `CHANGELOG.md` ở root repo. Các entry cũ giữ `Synced from vn-angular@...`; entry mới ghi thay đổi repo-owned.
-- **README npm-facing**: canonical là **`README.npm.md`** ở root repo. Khi rollout, copy nội dung này vào `versions/v19/projects/sdcorejs-angular/README.md`, rồi lan sang v20/v21. **Muốn đổi README npm → sửa `README.npm.md`**.
+- **README npm-facing**: canonical là **`README.npm.md`** ở root repo. Khi rollout, copy nội dung này vào `versions/v19/projects/sdcorejs-angular/README.md`, rồi lan sang v20/v21/v22. **Muốn đổi README npm → sửa `README.npm.md`**.
 - **README root** `README.md`: GitHub landing, repo tự sở hữu.
 - Component docs (`sd-*.md`) sống trong source workspace và được publish qua `collect-docs`.
 
@@ -243,7 +238,7 @@ Toàn bộ API docs (`*.md`) của lib được publish dạng raw Markdown trê
 **CHANGELOG độc lập.** `@sdcorejs/angular` deploy theo nhịp riêng → có **CHANGELOG.md riêng ở root repo này**. Sau final sync, không dùng changelog của `vn-angular`.
 
 - **Canonical**: `sdcorejs-angular/CHANGELOG.md` (root). Keyed theo **release suffix tag** (`0.11`, `1.0`, …) — đơn vị release thực. Entry trước 2026-06-24 ghi `Synced from vn-angular@<commit>` để truy vết; entry mới ghi source là repo-owned.
-- **Một entry cho cả 3 major.** Tag `v<release-suffix>` publish 19.x.y / 20.x.y / 21.x.y **cùng nội dung feature** — chỉ khác Angular shim. Không tách entry theo major.
+- **Một entry cho cả 4 major từ suffix `2.5`.** Tag `v<release-suffix>` publish 19.x.y / 20.x.y / 21.x.y / 22.x.y **cùng public API** — chỉ khác dependency/peer/shim Angular-major. Các entry lịch sử trước `2.5` vẫn chỉ thuộc ba line đã tồn tại khi đó.
 - **Legacy sync KHÔNG đụng changelog.** Không còn `versions/v<N>/CHANGELOG.md`. Per-version tra `SYNC-STATUS.md` / workspace status.
 - **Đừng đưa shim per-major vào changelog** (vd `DomPortalOutlet` 4-arg vs 3-arg) — plumbing của sync, không phải API consumer.
 
@@ -253,19 +248,17 @@ Changelog viết TRỰC TIẾP ở repo này:
 
 ```
 1. sdcorejs-angular: sửa code/docs/test trong versions/v19
-                     → rollout v19 sang v20/v21 bằng sync-multi-version-workspaces.ps1
+                     → rollout v19 sang v20/v21/v22 bằng sync-multi-version-workspaces.ps1
 2. sdcorejs-angular: sửa root CHANGELOG.md
                      ## [Unreleased]  →  ## [<release-suffix>] - YYYY-MM-DD
-                     thêm: Published 19.<release-suffix>/20.<release-suffix>/21.<release-suffix> + repo-owned summary
+                     thêm: Published 19.<suffix>/20.<suffix>/21.<suffix>/22.<suffix> + repo-owned summary
                      thêm ## [Unreleased] rỗng mới ở trên
-3. sdcorejs-angular: build page cho release này
-                     cd versions/v19 && npx ng build sdcorejs-angular   (showcase ăn dist)
-                     npm run build:page -- --suffix <release-suffix>
-                     → published-pages/<suffix>/ + prune + pages.json
-4. sdcorejs-angular: git add -A && commit && push
+3. sdcorejs-angular: full test/lint/build/package-contract trên bốn line + Showcase
+4. sdcorejs-angular: git add -A && commit, merge vào main
                      git tag v<release-suffix> && git push origin v<release-suffix>
-                     → CI publish npm 19/20/21
-                     → nếu publish thành công: CI sinh published-docs 19/20/21 và commit về main
+                     → CI build/verify đủ bốn artifact rồi publish tuần tự 19/20/21/22
+                     → chỉ khi postpublish thành công: CI sinh published-docs 19/20/21/22,
+                       build published-pages/<suffix>, prune retention và commit docs/page về main
                      → commit đó kích hoạt deploy-pages (assemble, KHÔNG build)
 ```
 
@@ -294,7 +287,7 @@ Tag format `^\d+\.\d+$` (vd `1.0`) — major digit **bị khoá theo Angular lin
 
 ## Known issues
 
-- **package-lock.json v20/v21 stale (pin Angular 19)**: sync rollout bump Angular major trong `package.json` nhưng KHÔNG regen lockfile → lock vẫn Angular 19. Vì vậy CI publish dùng `npm install --legacy-peer-deps` (KHÔNG `npm ci`) để resolve lại tree theo manifest. Nếu muốn quay lại `npm ci`: phải regen lock mỗi version sau bump (`npm install --package-lock-only --legacy-peer-deps` trong từng `versions/v<N>`) và commit — thêm bước network/slow vào sync.
+- **Install policy khác nhau có chủ đích**: v19/v20/v21 dùng exact `npm ci --legacy-peer-deps`; v22 dùng clean `npm ci` và cấm `--legacy-peer-deps`, `--force`, override, local tarball hay Git dependency. Mọi Angular workspace install/build của release chạy trên exact Node `22.22.3`.
 
 - **Legacy sync archived**: `scripts/sync-from-vn-angular.ps1` chỉ chạy khi truyền `-AllowLegacySync`; không dùng cho phát triển thường ngày.
 - **BOM UTF-8 trong md files**: file md có BOM (`﻿`) ở đầu — không ảnh hưởng render, nhưng nếu có script đọc file bằng latin1 thì lại sinh mojibake. Cẩn thận với encoding khi viết tool xử lý docs.

@@ -1,0 +1,512 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  width: 100%;
+  height: 100%;
+
+  // CSS này mục đích là để title 1 dòng hay 2 dòng cũng sẽ chiếm diện tích
+  .c-header-title {
+    height: 40px;
+    display: flex;
+    align-items: center;
+  }
+
+  .c-container {
+    position: relative;
+    min-height: 50px; // Xóa CSS này sẽ khiến table ko tự scroll
+    display: flex;
+    flex-direction: column;
+    // overflow: auto;
+    flex: 1;
+
+    .c-table {
+      // min-height: 300px;
+      position: relative;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+
+      table {
+        border-collapse: separate;
+        width: 100%;
+
+        tr.c-first-header.mat-mdc-header-row {
+          height: 40px;
+        }
+
+        tr.c-second-header.mat-mdc-header-row {
+          height: 40px;
+        }
+
+        tr.c-detail-row {
+          height: 0;
+        }
+
+        tr.c-row {
+          &.activated {
+            background-color: #e5ecff;
+          }
+
+          &.selected {
+            background-color: #eef2ff;
+          }
+
+          &:not(.selected):not(.activated) {
+            &:hover {
+              background-color: #f5f5f5;
+            }
+          }
+
+          td {
+            border-bottom-width: 0;
+          }
+
+          &.c-expandable {
+            cursor: pointer;
+
+            &:hover {
+              background: #f5f5f5;
+            }
+          }
+        }
+
+        th.mat-mdc-header-cell {
+          background-color: #f2f3f4;
+          border-bottom: 0 !important;
+        }
+
+        td.mat-mdc-cell,
+        td.mat-mdc-footer-cell,
+        th.mat-mdc-header-cell {
+          border-bottom-color: #f2f2f2 !important;
+        }
+      }
+
+      .c-th {
+        vertical-align: middle;
+        font-weight: 500;
+        font-size: 14px;
+        line-height: 20px;
+        color: #212121;
+
+        &.sd-col-resize-host {
+          position: relative;
+        }
+
+        &.sd-resizing {
+          user-select: none;
+        }
+
+        .sd-col-resize-handle {
+          position: absolute;
+          top: 0;
+          right: 0;
+          width: 6px;
+          height: 100%;
+          cursor: col-resize;
+          user-select: none;
+          z-index: 2;
+
+          &:hover {
+            background: rgba(0, 0, 0, 0.08);
+          }
+        }
+      }
+
+      .c-td {
+        &:first {
+          padding-left: 10px;
+        }
+      }
+
+      .c-no-data-row {
+        flex: 1;
+        width: 100%;
+        position: sticky;
+        left: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        .c-image {
+          margin-bottom: 16px;
+          width: 96px; // Ảnh nhỏ thôi để trong các màn nhỏ nhiều table không chiếm quá cao
+        }
+
+      }
+    }
+
+    .c-loading {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 56px;
+      right: 0;
+      background: rgba(0, 0, 0, 0.15);
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .c-paginator {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #fff;
+
+      // why: mat-paginator tự vẽ nền `--mat-paginator-container-background-color` (mặc định
+      // `--mat-sys-surface` của M3 — KHÔNG phải trắng), nên nó phủ một mảng màu khác lên đúng nửa
+      // phải của footer. Nó là một phần của footer chứ không phải surface riêng → để trong suốt và
+      // ăn nền của .c-paginator.
+      .mat-mdc-paginator {
+        background: transparent;
+
+        // why: chiều cao footer bị hai thứ đẩy lên — `--mat-paginator-container-size` (min-height
+        // 56px của .mat-mdc-paginator-container) và state layer 40px của hai nút chuyển trang, tức
+        // vòng hover tròn quanh icon. Bảng ở đây là UI dày đặc, dòng chỉ 36px, nên hạ cả hai bằng
+        // token của Material thay vì đè width/height lên chính element.
+        --mat-paginator-container-size: 40px;
+        // Angular Material 20+ dùng token --mat-* cho width/height, còn v19 dùng --mdc-*.
+        // Giữ cả hai để paginator compact nhất quán trên mọi major đang co-publish.
+        --mat-icon-button-state-layer-size: 32px;
+        --mdc-icon-button-state-layer-size: 32px;
+        --mdc-icon-button-icon-size: 20px;
+      }
+
+      // why: footer là một hàng flex chứa ba loại nội dung rất khác nhau — cụm nút, mat-paginator,
+      // và dòng "Đang hiển thị". Trước đây khoảng đệm chỉ đặt trên .c-action, tức SAI CHỖ, gây hai
+      // lỗi ngược nhau: cụm nút rỗng vẫn giữ 10px (dải trắng dưới hàng cuối khi bảng không phân
+      // trang), còn dòng "Đang hiển thị" thì không có đệm nào nên dính sát mép. Mỗi nội dung tự
+      // mang đệm của nó, còn container không tự dựng chiều cao.
+      .c-action {
+        padding: 0;
+
+        // Nút text cao 32px nhưng Material giữ touch target 48px; margin dọc 8px (32+16) dựng lại
+        // đúng 48px đó — phần bù này trước nằm ở padding container.
+        sd-button {
+          margin: 8px 5px;
+        }
+      }
+
+      // Dòng "Đang hiển thị 1-N/N" khi bảng đủ ngắn để ẩn paginator: cần đệm riêng, nếu không nó
+      // là nội dung DUY NHẤT trong footer và bị bó sát mép.
+      .c-summary {
+        padding: 8px 16px;
+      }
+    }
+
+    .c-empty {
+      text-align: center;
+      background-color: #fff;
+      border: none !important;
+
+      sd-icon {
+        font-size: 150px;
+        margin-top: 30px;
+        margin-bottom: 30px;
+        opacity: 0.2;
+        width: auto;
+        height: auto;
+      }
+    }
+  }
+
+  button {
+    &.c-btn-add {
+      background-color: #fff;
+      box-shadow: 0px 2px 4px rgba(47, 49, 54, 0.16);
+    }
+  }
+
+  .lds-ring {
+    display: inline-block;
+    position: relative;
+    width: 40px;
+    height: 40px;
+  }
+
+  .lds-ring div {
+    box-sizing: border-box;
+    display: block;
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    margin: 4px;
+    border: 4px solid #cef;
+    border-radius: 50%;
+    animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    border-color: #cef transparent transparent transparent;
+  }
+
+  .lds-ring div:nth-child(1) {
+    animation-delay: -0.45s;
+  }
+
+  .lds-ring div:nth-child(2) {
+    animation-delay: -0.3s;
+  }
+
+  .lds-ring div:nth-child(3) {
+    animation-delay: -0.15s;
+  }
+
+  @keyframes lds-ring {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  .sd-reorder-header,
+  .sd-reorder-cell {
+    width: 40px;
+    min-width: 40px;
+    padding: 0 4px;
+    box-sizing: border-box;
+  }
+
+  .sd-reorder-cell {
+    sd-icon {
+      cursor: grab;
+      color: rgba(0, 0, 0, 0.38);
+      display: flex;
+      align-items: center;
+
+      &:active {
+        cursor: grabbing;
+      }
+
+      &.sd-reorder-disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+    }
+  }
+}
+
+:host ::ng-deep {
+  .mat-select-arrow {
+    color: #a6a6a6;
+  }
+
+  // Sort control chỉ chứa title; inline filter vẫn là sibling focusable độc lập.
+  // - none: hiện icon 2 chiều (placeholder) khi cột có thể sort
+  // - ascending / descending: hiện mũi tên tương ứng với hướng sort hiện tại
+  .sd-table-sort-header {
+    cursor: pointer;
+    outline: none;
+
+    &:focus-visible {
+      border-bottom: solid 1px currentColor;
+    }
+  }
+
+  th[aria-sort] .sd-table-sort-header {
+      background-repeat: no-repeat;
+      background-position: center right 0;
+      background-size: 16px 16px;
+      padding-right: 24px;
+  }
+
+  th[aria-sort='none'] .sd-table-sort-header {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 0 24 24' width='24px' fill='%23000000'%3E%3Cpath d='M0 0h24v24H0V0z' fill='none'/%3E%3Cpath fill='%237A7A7A' d='M12 5.83L15.17 9l1.41-1.41L12 3 7.41 7.59 8.83 9 12 5.83zm0 12.34L8.83 15l-1.41 1.41L12 21l4.59-4.59L15.17 15 12 18.17z'/%3E%3C/svg%3E");
+  }
+
+  th[aria-sort='ascending'] .sd-table-sort-header {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 0 24 24' width='24px' fill='%23000000'%3E%3Cpath d='M0 0h24v24H0V0z' fill='none'/%3E%3Cpath fill='%237A7A7A' d='M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z'/%3E%3C/svg%3E");
+  }
+
+  th[aria-sort='descending'] .sd-table-sort-header {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 0 24 24' width='24px' fill='%23000000'%3E%3Cpath d='M0 0h24v24H0V0z' fill='none'/%3E%3Cpath fill='%237A7A7A' d='M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z'/%3E%3C/svg%3E");
+  }
+}
+
+:host ::ng-deep {
+  .c-paginator {
+    // Xử lý CSS của dropdown chọn pageSize của paginator
+    .mat-mdc-paginator {
+      .mdc-text-field--outlined .mat-mdc-form-field-infix,
+      .mdc-text-field--no-label .mat-mdc-form-field-infix {
+        padding-top: 2px;
+        padding-bottom: 2px;
+        min-height: 32px;
+      }
+    }
+    // Giảm bớt margin của thông tin trang 1-20/20
+    .mat-mdc-paginator-range-label {
+      margin: 0 4px;
+    }
+    .mat-mdc-paginator-page-size-select {
+      mat-select {
+        margin-top: 2px !important;
+      }
+    }
+  }
+}
+
+:host ::ng-deep {
+  // CDK drag visual feedback
+  .cdk-drag-preview {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: white;
+    display: table;
+    width: 100%;
+
+    td {
+      padding: 0 8px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    }
+  }
+
+  .cdk-drag-placeholder {
+    opacity: 0;
+  }
+
+  .cdk-drop-list-dragging tr.c-row:not(.cdk-drag-placeholder) {
+    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+  }
+
+  .sd-selection-cell {
+    width: 42px;
+    min-width: 42px;
+    max-width: 42px;
+  }
+
+  // why: filler column hấp thụ leftover space — width auto + không có border/padding để vô hình.
+  // Đặt ở cuối row (sau data columns / command-right) — browser sẽ dồn extra width vào đây thay vì
+  // stretch selection / STT / command. Footer cũng có cell tương ứng để giữ width đồng bộ.
+  .sd-filler-cell {
+    width: auto;
+    min-width: 0;
+    padding: 0 !important;
+    border: 0;
+  }
+
+  // why: group header cell có colspan span phần phải của row. Style để dễ nhận biết
+  // (background nhạt + border-top); content render trong .sd-group-row inner.
+  .sd-group-header-cell {
+    background: #f5f7fc;
+    border-top: 1px solid #e6e9f2;
+    border-bottom: 1px solid #e6e9f2;
+  }
+  .sd-group-row {
+    min-height: 36px;
+  }
+  // why: slot 42px = width sd-selection-cell data row → checkbox group căn trục dọc đúng
+  // với checkbox data (cả hai có cùng vị trí horizontal center: 21px).
+  .sd-group-selection-slot {
+    width: 42px;
+    min-width: 42px;
+    max-width: 42px;
+  }
+
+  // why: thu nhỏ checkbox/radio selection (MDC mặc định khá to) cho gọn trong cột 42px.
+  .c-selection {
+    transform: scale(0.85);
+    transform-origin: center;
+  }
+
+
+  // Tree (icon expand đã nhúng vào cột đầu / cột Index) —
+  // dòng chứa indent + chevron-slot + nội dung (STT hoặc cell), căn trục dọc.
+  .sd-tree-line {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+  }
+
+  // Spacer thụt lề theo cấp (width set inline = level * indentSize).
+  .sd-tree-indent {
+    flex: 0 0 auto;
+  }
+
+  // Slot cố định cho chevron — giữ width kể cả node lá (không chevron) để nội
+  // dung các dòng cùng cấp luôn thẳng hàng.
+  .sd-tree-toggle-slot {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+  }
+
+  // Nút chevron — hover có nền TRÒN NHỎ (đúng kích thước icon).
+  .sd-tree-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--sd-text-secondary, #5b6472);
+    transition: background-color 0.15s ease;
+
+    sd-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      line-height: 18px;
+    }
+
+    &:hover {
+      background-color: rgba(15, 23, 42, 0.08);
+    }
+  }
+
+  .sd-tree-spinner {
+    transform: scale(0.45);
+  }
+
+  // STT trong cột Index khi tree — chừa khoảng cách nhẹ với chevron.
+  .sd-tree-stt {
+    margin-left: 2px;
+    white-space: nowrap;
+  }
+
+  // Cột Index ở chế độ tree: căn trái + không wrap + co sát nội dung (width:1px ở
+  // template) + chừa gutter trái nhỏ.
+  .sd-tree-index-cell {
+    text-align: left !important;
+    white-space: nowrap;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  // Header "#" của cột Index khi tree — lùi vào cho thẳng hàng với số cấp gốc
+  // (gutter 8px + slot chevron 24px). Đặt SAU .sd-tree-index-cell để thắng padding.
+  .sd-tree-index-header {
+    padding-left: 32px;
+  }
+
+  // why: tree row visual cues —
+  // root (level 0) đậm hơn để mắt nhận ranh giới cha/con dễ; child levels tint nền
+  // nhạt dần theo depth.
+  tr.c-row.sd-tree-row.sd-tree-level-0 {
+    background: #fbfcfe;
+    & > td {
+      font-weight: 500;
+    }
+  }
+  tr.c-row.sd-tree-row.sd-tree-level-1 { background: #ffffff; }
+  tr.c-row.sd-tree-row.sd-tree-level-2 { background: #fafbfd; }
+  tr.c-row.sd-tree-row.sd-tree-level-3 { background: #f6f8fb; }
+
+  // STT root level — bold đậm rõ.
+  .sd-stt-root {
+    font-weight: 700;
+    color: #1f2330;
+  }
+}

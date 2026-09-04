@@ -1,0 +1,20 @@
+@if (isViewed()) {
+  @if (label()) {
+    <div class="T14R text-secondary">{{ label() }}</div>
+  }
+  <div class="T14M">{{ (model() ? 'core.form.checkbox.checked' : 'core.form.checkbox.unchecked') | sdTranslate }}</div>
+} @else {
+  <mat-checkbox
+    [formControl]="formControl"
+    [attr.data-autoId]="autoId()"
+    [attr.data-disabled]="dataDisabled()"
+    [attr.data-empty]="dataEmpty()"
+    [attr.data-value]="dataValue()">
+    {{ label() }}
+  </mat-checkbox>
+  @if (formControl.errors?.['inlineError'] && formControl.touched) {
+    <mat-error>
+      {{ inlineError() }}
+    </mat-error>
+  }
+}

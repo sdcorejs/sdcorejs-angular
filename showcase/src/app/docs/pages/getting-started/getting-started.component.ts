@@ -20,7 +20,7 @@ import { DOC_NAV_GROUPS } from '../../core/documentation.registry';
         <span>Start here</span>
         <h1>Get started with &#64;sdcorejs/angular</h1>
         <p>Install Core UI, load its shared theme and configure Angular animations before choosing your first building block.</p>
-        <div class="intro__requirements"><span>Angular 19–21</span><span>Angular Material</span><span>Standalone ready</span></div>
+        <div class="intro__requirements"><span>Angular 19–22</span><span>Angular Material</span><span>Standalone ready</span></div>
       </header>
 
       <ol class="setup" aria-label="Installation steps">

@@ -140,6 +140,7 @@ export class ChangelogComponent {
   readonly majorFilter = signal<MajorFilter>('all');
   readonly filters: readonly { value: MajorFilter; label: string }[] = [
     { value: 'all', label: 'All maintained lines' },
+    { value: 22, label: 'Angular 22' },
     { value: 21, label: 'Angular 21' },
     { value: 20, label: 'Angular 20' },
     { value: 19, label: 'Angular 19' },

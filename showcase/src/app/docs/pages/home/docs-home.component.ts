@@ -21,7 +21,7 @@ import { MarkdownRendererComponent } from '../../shared/markdown-renderer.compon
         <div class="hero__content">
           <span class="hero__eyebrow">Angular Core UI library</span>
           <h1 id="home-title">Build consistent Angular portals with <span>&#64;sdcorejs/angular</span></h1>
-          <p>Production-ready components, forms and utilities with versioned API references and runnable examples for Angular 19–21.</p>
+          <p>Production-ready components, forms and utilities with versioned API references and runnable examples for Angular 19–22.</p>
           <div class="hero__actions">
             <a class="primary" [routerLink]="gettingStartedLink()">Get started</a>
             <a [routerLink]="componentsLink()">Browse components</a>
@@ -162,7 +162,7 @@ export class DocsHomeComponent {
       this.versions
         .versionGroups()
         .map(group => group.major)
-        .join('–') || '19–21'
+        .join('–') || '19–22'
   );
 
   #copyRequestId = 0;

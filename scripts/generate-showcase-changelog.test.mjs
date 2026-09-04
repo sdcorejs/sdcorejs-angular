@@ -49,6 +49,29 @@ Boundary release summary.
 - Older release that must be filtered out
 `;
 
+const ANGULAR_22_INCEPTION_CHANGELOG_FIXTURE = `# Changelog
+
+## [Unreleased]
+
+## [2.6] - 2026-09-09
+
+### Added
+
+- Post-inception release
+
+## [2.5] - 2026-09-02
+
+### Added
+
+- Angular 22 support
+
+## [2.4] - 2026-08-31
+
+### Fixed
+
+- Historical release
+`;
+
 test('retains Unreleased and filters releases before suffix 1.2', () => {
   const changelog = parseChangelog(CHANGELOG_FIXTURE, { startSuffix: '1.2' });
 
@@ -71,6 +94,30 @@ test('derives Angular 19/20/21 package versions and stable release anchors', () 
     { angularMajor: 20, version: '20.1.2' },
     { angularMajor: 21, version: '21.1.2' },
   ]);
+});
+
+test('adds Angular 22 package versions only from release suffix 2.5 onward', () => {
+  const changelog = parseChangelog(ANGULAR_22_INCEPTION_CHANGELOG_FIXTURE, { startSuffix: '2.4' });
+  const packageVersions = suffix => changelog.releases.find(release => release.suffix === suffix)?.packageVersions;
+
+  assert.deepEqual(packageVersions('2.4'), [
+    { angularMajor: 19, version: '19.2.4' },
+    { angularMajor: 20, version: '20.2.4' },
+    { angularMajor: 21, version: '21.2.4' },
+  ]);
+  assert.deepEqual(packageVersions('2.5'), [
+    { angularMajor: 19, version: '19.2.5' },
+    { angularMajor: 20, version: '20.2.5' },
+    { angularMajor: 21, version: '21.2.5' },
+    { angularMajor: 22, version: '22.2.5' },
+  ]);
+  assert.deepEqual(packageVersions('2.6'), [
+    { angularMajor: 19, version: '19.2.6' },
+    { angularMajor: 20, version: '20.2.6' },
+    { angularMajor: 21, version: '21.2.6' },
+    { angularMajor: 22, version: '22.2.6' },
+  ]);
+  assert.deepEqual(changelog.angularMajors, [19, 20, 21, 22]);
 });
 
 test('parses nested subsections and nested Markdown list items', () => {

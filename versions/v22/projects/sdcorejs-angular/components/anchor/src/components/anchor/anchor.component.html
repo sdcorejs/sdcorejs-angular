@@ -1,0 +1,19 @@
+﻿<div class="c-anchor-vertical" [ngClass]="{ 'c-stop-scroll-propagation': !overScroll() }" #wrapper>
+  <div class="c-anchor-content">
+    <ng-content></ng-content>
+  </div>
+
+  @if (!navHidden()) {
+    <div class="c-anchor-list" [style.flex-basis]="sidebarWidth()">
+      <anchor-nav
+        [sections]="sections()"
+        [ellipsis]="ellipsis()"
+        [sidebarWidth]="sidebarWidth()"
+        [activeSectionId]="activeSectionId()"
+        [parentAutoId]="autoId()"
+        [color]="color()"
+        (clickSection)="scrollSectionByClick($event)">
+      </anchor-nav>
+    </div>
+  }
+</div>

@@ -1,0 +1,77 @@
+<div class="sd-sidebar-mobile-v2 d-flex flex-column">
+  <main class="sd-sidebar-mobile-v2__content flex-1 overflow-auto">
+    <ng-content></ng-content>
+  </main>
+
+  <nav class="sd-sidebar-mobile-v2__bar d-flex align-items-stretch bg-white border-top border-black200" [attr.aria-label]="'core.module.layout.sidebar.primary-nav' | sdTranslate">
+    @for (menu of primaryMenus(); track menu.id || menu.title) {
+      <button
+        type="button"
+        class="sd-sidebar-mobile-v2__bar-action d-flex flex-column align-items-center justify-content-center gap-4 flex-1"
+        [attr.data-mobile-menu-key]="menu.id ? 'id:' + menu.id : null"
+        [attr.aria-label]="menu.tooltipTitle || menu.title || 'Menu'"
+        [attr.aria-expanded]="sheetGroupKey() === (menu.id ? 'id:' + menu.id : '') && isSheetOpen()"
+        (click)="activateMenu(menu, $event.currentTarget)">
+        @if (menu.iconUrl) {
+          <img class="sd-sidebar-mobile-v2__icon" [src]="menu.iconUrl" alt="" />
+        } @else {
+          <sd-icon [name]="menu.icon || 'widgets'"></sd-icon>
+        }
+        <span class="sd-sidebar-mobile-v2__label text-ellipsis">{{ menu.tooltipTitle || menu.title }}</span>
+      </button>
+    }
+    @if (overflowMenus().length) {
+      <button
+        type="button"
+        class="sd-sidebar-mobile-v2__bar-action d-flex flex-column align-items-center justify-content-center gap-4 flex-1"
+        [attr.aria-label]="'core.module.layout.sidebar.more-menu' | sdTranslate"
+        [attr.aria-expanded]="sheetGroupKey() === 'more' && isSheetOpen()"
+        (click)="openMore($event.currentTarget)">
+        <sd-icon name="more_horiz"></sd-icon>
+        <span class="sd-sidebar-mobile-v2__label">{{ 'core.module.layout.sidebar.more' | sdTranslate }}</span>
+      </button>
+    }
+  </nav>
+
+  @if (isSheetOpen()) {
+    <button type="button" class="sd-sidebar-mobile-v2__backdrop" [attr.aria-label]="'core.module.layout.sidebar.close-menu' | sdTranslate" (click)="closeSheet()"></button>
+    <section
+      data-v2-sheet
+      class="sd-sidebar-mobile-v2__sheet d-flex flex-column bg-white rounded-top-16 mat-elevation-z8"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="sheetTitle()"
+      cdkTrapFocus
+      [cdkTrapFocusAutoCapture]="true"
+      (keydown)="onSheetKeydown($event)">
+      <header class="d-flex align-items-center justify-content-between gap-8 px-16 py-12 border-bottom border-black200">
+        <span class="T16M text-ellipsis">{{ sheetTitle() }}</span>
+        <button
+          type="button"
+          class="sd-sidebar-mobile-v2__close d-flex align-items-center justify-content-center"
+          [attr.aria-label]="'core.common.close' | sdTranslate"
+          (click)="closeSheet()">
+          <sd-icon name="close"></sd-icon>
+        </button>
+      </header>
+      <div class="d-flex flex-column gap-12 p-12 overflow-auto">
+        <sd-layout-user-menu presentation="mobile-inline" [userInfo]="userInfo()"></sd-layout-user-menu>
+        <sd-layout-search-field
+          [placeholder]="'core.module.layout.sidebar.search-in-menu' | sdTranslate"
+          [autoId]="'layout-v2-mobile-search'"
+          [model]="searchText()"
+          (sdChange)="searchText.set($event)">
+        </sd-layout-search-field>
+        <sd-layout-menu-tree
+          [menus]="sheetMenus()"
+          [query]="searchText()"
+          [activePath]="activePath()"
+          [pinnedKeys]="pinnedKeys()"
+          pinVisibility="always"
+          (navigate)="onNavigate($event)"
+          (togglePinned)="onTogglePinned($event)">
+        </sd-layout-menu-tree>
+      </div>
+    </section>
+  }
+</div>

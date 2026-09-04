@@ -1,0 +1,85 @@
+@use 'sass:map';
+
+$public-colors:
+  'primary',
+  'primary-light',
+  'primary-dark',
+  'primary-contrast',
+  'secondary',
+  'secondary-light',
+  'secondary-dark',
+  'secondary-contrast',
+  'info',
+  'info-light',
+  'info-dark',
+  'info-contrast',
+  'success',
+  'success-light',
+  'success-dark',
+  'success-contrast',
+  'warning',
+  'warning-light',
+  'warning-dark',
+  'warning-contrast',
+  'error',
+  'error-light',
+  'error-dark',
+  'error-contrast',
+  'surface',
+  'surface-muted',
+  'text',
+  'text-secondary',
+  'text-muted',
+  'border',
+  'border-strong',
+  'disabled-bg',
+  'disabled-text';
+
+@function create_var_map($colors) {
+  $var-map: ();
+  @each $color in $colors {
+    $var-name: $color;
+    $var-value: var(--sd-#{$var-name});
+    $var-map: map.merge($var-map, ($color: $var-value));
+  }
+  @return $var-map;
+}
+
+$color_map: create_var_map($public-colors);
+$basic_color_map: (
+  'white': #fff,
+  'black': #000,
+);
+
+$disabled-bg: map.get($color-map, 'disabled-bg');
+$disabled-text: map.get($color-map, 'disabled-text');
+
+@each $color, $value in map.merge($color_map, $basic_color_map) {
+  .text-#{$color} {
+    color: $value !important;
+  }
+
+  .bg-#{$color} {
+    background: $value !important;
+  }
+
+  .border-#{$color} {
+    border-color: $value !important;
+  }
+}
+
+.text-secondary {
+  color: map.get($color_map, 'text-secondary') !important;
+}
+
+.text-muted {
+  color: map.get($color_map, 'text-muted') !important;
+}
+
+.text-body {
+  color: map.get($color_map, 'text') !important;
+}
+
+.bg-muted {
+  background: map.get($color_map, 'surface-muted') !important;
+}

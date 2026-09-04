@@ -1,0 +1,55 @@
+<!-- Vertical separator between the wrapping filter area (left) and the pinned toolbar. -->
+<span class="c-bar-divider" aria-hidden="true"></span>
+
+<div class="c-query-bar__actions">
+  <!-- AND / OR toggle -->
+  @if (showLogicToggle() && filtersCount() >= 2) {
+    <div class="c-logic-toggle" role="group" [attr.aria-label]="logicGroupLabel()">
+      <button
+        type="button"
+        class="c-logic-segment"
+        [class.c-logic-active]="logic() === 'AND'"
+        (click)="setLogic('AND')">
+        AND
+      </button>
+      <button
+        type="button"
+        class="c-logic-segment"
+        [class.c-logic-active]="logic() === 'OR'"
+        (click)="setLogic('OR')">
+        OR
+      </button>
+    </div>
+  }
+
+  @if (showClearAll() && filtersCount() > 0) {
+    <button
+      type="button"
+      class="c-clear-all"
+      [matTooltip]="clearAllLabel()"
+      (click)="clear.emit()">
+      <sd-icon name="delete_sweep"></sd-icon>
+    </button>
+  }
+
+  <!-- why: saved-filters dropdown đặt sát ngay trước Search — gom toàn bộ
+       hành động về bộ lọc (apply view cũ / lưu view hiện tại) cạnh nút submit,
+       user thấy 1 cụm. Footer "Lưu bộ lọc hiện tại" sống trong mat-menu của
+       saved-filters-menu, không tách ra nút riêng nữa. -->
+  @if (showSavedFilters()) {
+    <sd-query-saved-filters-menu
+      [key]="savedFiltersKey()"
+      [query]="query()"
+      (apply)="applyFilter.emit($event)" />
+  }
+
+  <!-- why: far-right "submit at the end of the toolbar" position; sole query trigger. -->
+  <button
+    type="button"
+    class="c-search-trigger"
+    [disabled]="!canSearch()"
+    [matTooltip]="searchLabel()"
+    (click)="search.emit()">
+    <sd-icon name="search"></sd-icon>
+  </button>
+</div>

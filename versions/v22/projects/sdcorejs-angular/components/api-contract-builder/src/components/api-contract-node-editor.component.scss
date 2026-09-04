@@ -1,0 +1,23 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+// why chỉ còn mấy chục dòng: hàng node trước đây là một grid bảy cột kèm container query để không cắt
+// chữ. Cả bộ đó đi cùng các control — biên tập chuyển vào drawer, nên danh sách chỉ còn là danh sách.
+.sd-acb-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sd-acb-list__empty {
+  margin: 0;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--sd-text-secondary, #6b6b6b);
+}
+
+.sd-acb-list__add {
+  align-self: flex-start;
+}

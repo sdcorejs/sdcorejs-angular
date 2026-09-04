@@ -18,15 +18,15 @@ describe('DocsHomeComponent', () => {
       value: { writeText: clipboardWrite },
     });
 
-    const paramMap = convertToParamMap({ version: '21.1.2' });
+    const paramMap = convertToParamMap({ version: '22.2.5' });
     const versions = {
-      selectedVersion: signal<string | null>('21.1.2'),
-      latestVersion: signal('21.1.2'),
+      selectedVersion: signal<string | null>('22.2.5'),
+      latestVersion: signal('22.2.5'),
       invalidVersion: signal<string | null>(null),
       error: signal<string | null>(null),
-      versionGroups: signal([{ major: 21, versions: ['21.1.2'] }]),
+      versionGroups: signal([{ major: 22, versions: ['22.2.5'] }]),
       load: jasmine.createSpy().and.resolveTo(undefined),
-      resolve: jasmine.createSpy().and.resolveTo('21.1.2'),
+      resolve: jasmine.createSpy().and.resolveTo('22.2.5'),
     };
 
     await TestBed.configureTestingModule({
@@ -53,10 +53,10 @@ describe('DocsHomeComponent', () => {
   it('uses task-first entry points instead of arbitrary component pages', () => {
     const actions = [...fixture.nativeElement.querySelectorAll('.hero__actions a')] as HTMLAnchorElement[];
 
-    expect(actions[0]?.getAttribute('href')).toBe('/v/21.1.2/getting-started');
-    expect(actions[1]?.getAttribute('href')).toBe('/v/21.1.2/components');
+    expect(actions[0]?.getAttribute('href')).toBe('/v/22.2.5/getting-started');
+    expect(actions[1]?.getAttribute('href')).toBe('/v/22.2.5/components');
     const categoryLinks = [...fixture.nativeElement.querySelectorAll('.category-grid article > a')] as HTMLAnchorElement[];
-    expect(categoryLinks.every(link => /^\/v\/21\.1\.2\/[a-z-]+$/.test(link.getAttribute('href') ?? ''))).toBeTrue();
+    expect(categoryLinks.every(link => /^\/v\/22\.2\.5\/[a-z-]+$/.test(link.getAttribute('href') ?? ''))).toBeTrue();
   });
 
   it('renders category icons through the Core UI icon facade', () => {
@@ -78,6 +78,7 @@ describe('DocsHomeComponent', () => {
     expect(copy).not.toContain('hard-coded');
     expect(copy).not.toContain('typed configuration');
     expect(copy).toContain('interactive examples');
+    expect(copy).toContain('angular 19–22');
   });
 
   it('presents the configured maintainer profile and public contact links', () => {
@@ -95,7 +96,7 @@ describe('DocsHomeComponent', () => {
   });
 
   it('pins the install command to the selected Angular major', () => {
-    expect(fixture.nativeElement.querySelector('.install code')?.textContent?.trim()).toBe('npm install @sdcorejs/angular@^21');
+    expect(fixture.nativeElement.querySelector('.install code')?.textContent?.trim()).toBe('npm install @sdcorejs/angular@^22');
   });
 
   it('announces installation copy success only after the version-pinned command is written, then resets', fakeAsync(() => {
@@ -107,7 +108,7 @@ describe('DocsHomeComponent', () => {
     copyButton.click();
     fixture.detectChanges();
 
-    expect(clipboardWrite).toHaveBeenCalledOnceWith('npm install @sdcorejs/angular@^21');
+    expect(clipboardWrite).toHaveBeenCalledOnceWith('npm install @sdcorejs/angular@^22');
     expect(liveRegion.textContent?.trim()).toBe('');
 
     resolveWrite();

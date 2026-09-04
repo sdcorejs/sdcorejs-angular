@@ -1,0 +1,32 @@
+.mobile-filter-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.mobile-filter-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mobile-filter-row {
+  display: flex;
+  flex-direction: column;
+}
+
+// Footer 2 button chia đôi 50/50
+.mobile-filter-footer {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.mobile-filter-action {
+  flex: 1 1 50%;
+
+  ::ng-deep button {
+    width: 100%;
+  }
+}

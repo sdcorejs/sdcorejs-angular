@@ -1,0 +1,69 @@
+@let _actions = actions();
+@let _selectedTableItems = selectedTableItems();
+@let _autoId = autoId();
+
+<sd-quick-action [opened]="opened()">
+  <div class="d-flex align-items-center" sdMessage>
+    <div class="c-bg-length">
+      <span class="c-length">{{ _selectedTableItems?.length }}</span>
+    </div>
+    <div class="c-message">
+      {{ message() }}
+    </div>
+  </div>
+
+  <div class="d-flex align-items-center mr-8" sdAction>
+    @for (action of _actions; track $index) {
+      @if (action.variant === 'normal') {
+        <sd-button
+          [autoId]="_autoId ? _autoId + '-action-' + $index : null"
+          class="ml-4"
+          [tooltip]="action.tooltip"
+          [prefixIcon]="action.icon"
+          [color]="action.color"
+          [type]="action.type || 'light'"
+          [fontSet]="action.fontSet"
+          [title]="action.title"
+          (click)="onClickAction(action)"></sd-button>
+      } @else if (action.variant === 'children') {
+        @let _actionIndex = $index;
+        <sd-button
+          [autoId]="_autoId ? _autoId + '-action-' + _actionIndex : null"
+          class="ml-4"
+          [tooltip]="action.tooltip"
+          [prefixIcon]="action.icon || 'more_vert'"
+          [color]="action.color || 'secondary'"
+          [type]="action.type || 'light'"
+          [fontSet]="action.fontSet"
+          [title]="action.title"
+          [matMenuTriggerFor]="menu">
+        </sd-button>
+        <mat-menu #menu="matMenu">
+          <span>
+            @for (child of action.children; track $index) {
+              <button
+                mat-menu-item
+                [attr.data-autoid]="_autoId ? _autoId + '-action-' + _actionIndex + '-' + $index : null"
+                (click)="onClickAction(child)">
+                @if (child.icon) {
+                  <sd-icon [fontSet]="child.fontSet" class="c-icon" [name]="child.icon"></sd-icon>
+                }
+                <span> {{ child.title }}</span>
+              </button>
+            }
+          </span>
+        </mat-menu>
+      }
+    }
+    <!-- why: thanh này chỉ mở khi CÓ action (xem `opened`), nên nút ✕ luôn đi kèm ít nhất một
+         action — nó là lối thoát nhanh, không còn là nội dung duy nhất của thanh. -->
+    <sd-button
+      [autoId]="_autoId ? _autoId + '-clear-selection' : null"
+      class="ml-4"
+      prefixIcon="close"
+      color="secondary"
+      type="outline"
+      (click)="onClear()"
+      width="35px"></sd-button>
+  </div>
+</sd-quick-action>

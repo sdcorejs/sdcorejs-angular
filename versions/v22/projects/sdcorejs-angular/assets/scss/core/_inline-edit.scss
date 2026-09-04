@@ -1,0 +1,105 @@
+// Shared `viewed='inline'` styles for sd-form-controls.
+// why: 1 nguồn cho text-face + editor ẩn (panel control) và input borderless, tránh lặp ~40 dòng/control.
+// Bare-flatten (mat-* internals) KHÔNG nằm ở đây — khác nhau theo control, giữ trong scss riêng.
+
+// Clear-× — hover-gated, đặt cuối "mặt". Include BÊN TRONG rule của phần tử hover (face/input).
+@mixin _inline-clear {
+  .sd-inline-clear {
+    display: none;
+    align-items: center;
+    margin-left: 4px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    line-height: 0;
+    color: var(--sd-text-secondary, #6b7280);
+    transition: color 0.15s ease;
+
+    sd-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+
+    &:hover {
+      color: var(--sd-error, #b32626);
+    }
+  }
+
+  &:hover .sd-inline-clear {
+    display: inline-flex;
+  }
+}
+
+// Panel-based controls (select / date / datetime / date-range / autocomplete):
+// `<sd-view>` text là "mặt" + trigger; editor render ẩn (overlay) chỉ để neo + mở panel.
+@mixin sd-inline-panel {
+  // Neo cho .sd-inline-editor (absolute). Bare flatten + display nằm ở :host(.sd-bare) riêng của control.
+  :host(.sd-bare) {
+    position: relative;
+  }
+
+  .sd-inline-view {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    width: 100%;
+    // why: nền nhẹ + đậm hơn khi hover → tín hiệu "viewed có thể bấm để sửa".
+    padding: 1px 6px;
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.04);
+    transition: background-color 0.15s ease;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.08);
+    }
+
+    @include _inline-clear;
+  }
+
+  // why: editor vô hình phủ lên face. Tắt pointer-events CẢ cây con (mat-* tự bật lại ở trigger)
+  // để hover/click rơi xuống .sd-inline-view ở mọi chỗ. Panel mở qua enterInlineEdit() → open().
+  .sd-inline-editor {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+
+    ::ng-deep * {
+      pointer-events: none !important;
+    }
+  }
+}
+
+// NOTE: the former `sd-inline-input` mixin (mat-form-field flatten for the input/input-number
+// inline variant) was removed when those controls moved to the <sd-inline-text> primitive
+// (forms/inline-text), which owns its own borderless styling. The panel mixin above stays.
+
+// Multiline input (textarea): no panel, no single-line `<sd-inline-text>` — flatten the
+// mat-form-field so the `<textarea>` reads like text, transparent with a hover/focus affordance.
+@mixin sd-inline-textarea {
+  .sd-inline-textarea {
+    cursor: text;
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.04);
+    transition: background-color 0.15s ease;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.08);
+    }
+
+    &:focus-within {
+      background-color: rgba(0, 0, 0, 0.06);
+      box-shadow: inset 0 0 0 1px var(--sd-primary, #1f6feb);
+    }
+
+    ::ng-deep {
+      .mat-mdc-text-field-wrapper { padding: 0 6px; background: transparent; }
+      .mat-mdc-form-field-flex { padding: 0; }
+      .mdc-notched-outline { display: none; }
+      .mat-mdc-form-field-subscript-wrapper { display: none; }
+      .mat-mdc-form-field-infix { padding: 4px 0; min-height: 0; border: 0; }
+    }
+  }
+}

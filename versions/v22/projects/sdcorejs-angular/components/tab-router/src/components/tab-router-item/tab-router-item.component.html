@@ -1,0 +1,37 @@
+<!-- why: [href] là thuộc tính DOM kiểu CHUỖI. Bản cũ bind `[tab.url]` — một MẢNG — và chỉ "chạy
+     được" nhờ mảng 1 phần tử tự stringify lúc Angular sanitize URL. Bind thẳng chuỗi: đúng kiểu,
+     bỏ một slot pure-function thừa, và giá trị bind khớp đúng thứ render ra DOM.
+     why: `[title]="info.icon"` ngay trên `[title]="info.name"` đã bị xoá — binding chết do
+     copy-paste, luôn bị ghi đè ngay và bắt sd-badge nhận hai giá trị title mỗi lần CD. -->
+<a
+  [href]="tab.url"
+  class="tab-router__item d-flex align-items-center gap-8"
+  [class.tab-router__item--active]="tab.isActive"
+  (click)="onTabClick($event)"
+  (mousedown)="onMousedown($event)"
+  (mouseup)="onMouseup($event)">
+  @let info = tabInfo | sdTabInfo: tab;
+  @if (info) {
+    <!-- why: bỏ `(click)="onTabClick($event)"` khỏi <sd-badge>. Nó chỉ tồn tại vì badge luôn
+         stopPropagation, nên click trên badge không bao giờ tới <a> cha. Badge nay chỉ nuốt event
+         khi thật sự có consumer → click bọt lên <a> như bình thường, và badge không còn phải trở
+         thành role="button" lồng bên trong một <a> (interactive lồng interactive). -->
+    <sd-badge
+      style="overflow: hidden;white-space: nowrap;"
+      [icon]="info.icon"
+      [tooltip]="info.tooltip || info.name"
+      [title]="info.name"
+      [color]="info.color"></sd-badge>
+    <!-- why: bỏ aria-hidden="true" khỏi nút đóng — nó là <button> thật, vẫn nhận tab focus nhưng
+         screen reader không đọc được gì (nút chỉ có icon). Gắn type + aria-label i18n. -->
+    <button
+      type="button"
+      class="tab-router__close d-flex align-items-center justify-content-center ml-auto p-0"
+      [attr.aria-label]="'core.common.close' | sdTranslate"
+      (click)="close($event)"
+      (mousedown)="$event.stopPropagation()">
+      <!-- Icon thuần trang trí — nút đã có aria-label nên giữ aria-hidden ở đây là đúng. -->
+      <sd-icon aria-hidden="true" fontIcon="close"></sd-icon>
+    </button>
+  }
+</a>

@@ -50,7 +50,7 @@ import { RouterLink } from '@angular/router';
         <aside aria-label="Compatibility and project links">
           <section>
             <h2>Compatibility</h2>
-            <p>Maintained for Angular 19, 20, and 21. Choose the package major that matches your Angular application.</p>
+            <p>Maintained for Angular 19, 20, 21, and 22. Choose the package major that matches your Angular application.</p>
           </section>
           <section>
             <h2>Project links</h2>

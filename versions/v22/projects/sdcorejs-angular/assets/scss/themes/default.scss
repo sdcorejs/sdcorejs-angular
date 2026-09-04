@@ -1,0 +1,59 @@
+@use "sass:map";
+@use "../core/color";
+
+$default-theme: (
+  primary: var(--mat-sys-primary, #005cbb),
+  primary-light: color-mix(in srgb, var(--sd-primary) 14%, white),
+  primary-dark: color-mix(in srgb, var(--sd-primary) 84%, black),
+  primary-contrast: #ffffff,
+
+  secondary: var(--mat-sys-secondary, #5c6270),
+  secondary-light: color-mix(in srgb, var(--sd-secondary) 12%, white),
+  secondary-dark: color-mix(in srgb, var(--sd-secondary) 84%, black),
+  secondary-contrast: #ffffff,
+
+  info: #006a6a,
+  info-light: color-mix(in srgb, var(--sd-info) 14%, white),
+  info-dark: color-mix(in srgb, var(--sd-info) 84%, black),
+  info-contrast: #ffffff,
+
+  success: #2e7d32,
+  success-light: color-mix(in srgb, var(--sd-success) 14%, white),
+  success-dark: color-mix(in srgb, var(--sd-success) 84%, black),
+  success-contrast: #ffffff,
+
+  warning: #a66300,
+  warning-light: color-mix(in srgb, var(--sd-warning) 14%, white),
+  warning-dark: color-mix(in srgb, var(--sd-warning) 84%, black),
+  warning-contrast: #ffffff,
+
+  error: var(--mat-sys-error, #ba1a1a),
+  error-light: color-mix(in srgb, var(--sd-error) 14%, white),
+  error-dark: color-mix(in srgb, var(--sd-error) 84%, black),
+  error-contrast: #ffffff,
+
+  surface: var(--mat-sys-surface, #fdfbff),
+  surface-muted: var(--mat-sys-surface-container-highest, #e7e8ed),
+  text: var(--mat-sys-on-surface, #1a1b1f),
+  text-secondary: var(--mat-sys-on-surface-variant, #44474f),
+  text-muted: color-mix(in srgb, var(--sd-text) 62%, transparent),
+  border: var(--mat-sys-outline-variant, #c4c6d0),
+  border-strong: var(--mat-sys-outline, #74777f),
+  disabled-bg: color-mix(in srgb, var(--sd-text) 8%, transparent),
+  disabled-text: color-mix(in srgb, var(--sd-text) 60%, transparent),
+);
+
+// Keep Material form-field trailing icons aligned with the Core error palette.
+:root {
+  --mat-form-field-error-trailing-icon-color: var(--sd-error, #{map.get($default-theme, 'error')});
+  --mat-form-field-error-hover-trailing-icon-color: var(--sd-error-dark, #{map.get($default-theme, 'error-dark')});
+  --mat-form-field-error-focus-trailing-icon-color: var(--sd-error-dark, #{map.get($default-theme, 'error-dark')});
+}
+
+@mixin theme($theme: ()) {
+  $theme: map.merge($default-theme, $theme);
+
+  @each $color in color.$public-colors {
+    --sd-#{$color}: #{map.get($theme, $color)};
+  }
+}

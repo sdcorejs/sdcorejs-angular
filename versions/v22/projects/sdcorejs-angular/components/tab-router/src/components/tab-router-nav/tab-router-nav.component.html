@@ -1,0 +1,12 @@
+<div
+  #tabRouterNav
+  cdkDropList
+  cdkDropListLockAxis="x"
+  cdkDropListOrientation="horizontal"
+  (cdkDropListDropped)="onDrop($event)"
+  class="tab-router__nav tab-router__nav--{{ mode }} d-flex align-items-center flex-nowrap"
+  [class.d-none]="tabs().length > 1">
+  @for (tab of tabs(); track tab.injector ?? tab.key) {
+    <sd-tab-router-item [tab]="tab" cdkDrag [cdkDragBoundary]="elementRef.nativeElement"></sd-tab-router-item>
+  }
+</div>

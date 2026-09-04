@@ -6,7 +6,7 @@ import { execSync, spawnSync } from 'node:child_process';
 
 const rootPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const lintExtensions = /\.(ts|js|mjs|html)$/i;
-const versionFolders = new Set(['v19', 'v20', 'v21']);
+const versionFolders = new Set(['v19', 'v20', 'v21', 'v22']);
 
 const phasePaths = {
   forms: ['projects/sdcorejs-angular/forms'],

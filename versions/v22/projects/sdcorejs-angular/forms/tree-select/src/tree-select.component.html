@@ -1,0 +1,125 @@
+@let _errorMessage = visibleErrorMessage();
+@let _label = label();
+@let _appearance = appearance();
+@let _required = required();
+@let _helperText = helperText();
+@let _hideInlineError = hideInlineError();
+@let _displayText = displayText();
+@let _size = size();
+@let _autoId = autoId();
+@let _disabled = formControl.disabled;
+@let _readonly = readonly();
+
+@if (connectorState().isViewed) {
+  <sd-view data-tree-select-view [label]="_label" [value]="model()" [display]="_displayText"></sd-view>
+} @else {
+  @if (!_appearance) {
+    <ng-content select="[sdLabel]">
+      @if (_label) {
+        <sd-label [label]="_label" [required]="_required"></sd-label>
+      }
+    </ng-content>
+  }
+
+  <mat-form-field
+    [class.sd-md]="_size === 'md'"
+    [class.sd-sm]="_size === 'sm'"
+    [class.hide-inline-error]="_hideInlineError"
+    [appearance]="_appearance!">
+    @if (_appearance && _label) {
+      <mat-label class="sd-form-field-label">
+        <span>{{ _label }}</span>
+        @if (_helperText) {
+          <sd-icon [matTooltip]="_helperText" matTooltipPosition="below" name="info"></sd-icon>
+        }
+      </mat-label>
+    }
+
+    <!-- why: trigger là <input matInput readonly> chứ không phải <button>. Bản cũ tự dựng khung
+         viền riêng nên lệch hẳn khỏi sd-select (chiều cao, bo góc, vị trí label, chỗ để message).
+         Dùng chính mat-form-field + matInput thì tree-select ăn nguyên bộ shell của các control
+         Material khác; `readonly` chặn gõ và chặn bàn phím ảo mobile, click/Enter/Space mở modal. -->
+    <input
+      #trigger
+      matInput
+      readonly
+      type="text"
+      data-tree-select-trigger
+      class="sd-tree-select__trigger"
+      [formControl]="displayControl"
+      [placeholder]="effectivePlaceholder()"
+      [required]="_required"
+      [errorStateMatcher]="errorStateMatcher"
+      [attr.aria-haspopup]="'dialog'"
+      [attr.aria-expanded]="modal()?.isOpened() ?? false"
+      [attr.aria-label]="ariaLabel() || null"
+      [attr.data-autoId]="_autoId"
+      [attr.data-disabled]="_disabled ? 'true' : 'false'"
+      [attr.data-invalid]="_errorMessage ? 'true' : 'false'"
+      [attr.data-empty]="_displayText ? 'false' : 'true'"
+      [attr.data-required]="_required ? 'true' : 'false'"
+      [attr.data-error-message]="_errorMessage ?? null"
+      (click)="open()"
+      (keydown.enter)="open($event)"
+      (keydown.space)="open($event)" />
+
+    @if (_hideInlineError && _errorMessage) {
+      <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
+    }
+
+    @if (!_hideInlineError && _errorMessage) {
+      <mat-error [id]="errorId" data-tree-select-error>{{ _errorMessage }}</mat-error>
+    }
+
+    <!-- why: clear thay CHỖ của icon mở popup (giống sd-select đổi caret ↔ ×), nên chỉ một trong
+         hai hiện. Icon `account_tree` là dấu hiệu duy nhất phân biệt với sd-select. -->
+    @if (clearable() && modelKeys().length > 0 && !_required && !_disabled && !_readonly) {
+      <button
+        type="button"
+        class="sd-clear-btn"
+        matSuffix
+        [attr.data-autoId]="_autoId ? _autoId + '-clear' : null"
+        [attr.aria-label]="'core.form.tree-select.clear' | sdTranslate"
+        [title]="'core.form.tree-select.clear' | sdTranslate"
+        (click)="clear($event)">
+        <sd-icon name="close"></sd-icon>
+      </button>
+    } @else {
+      <sd-icon class="cursor-pointer sd-suffix-icon" matSuffix name="account_tree"></sd-icon>
+    }
+  </mat-form-field>
+}
+
+<sd-modal [autoId]="autoId()" [title]="effectiveModalTitle()" width="md" (sdClosed)="onModalClosed()">
+  <div class="sd-tree-select__body">
+    <sd-input
+      class="sd-tree-select__search"
+      hideInlineError
+      clearable
+      [size]="_size"
+      [label]="'core.form.tree-select.search' | sdTranslate"
+      [autoId]="autoIdInput() ? autoIdInput() + '-search' : undefined"
+      (sdChange)="filter($any($event) ?? '')"></sd-input>
+
+    <div class="sd-tree-select__tree">
+      <sd-tree [option]="treeOption()" (selectChange)="onTreeSelection($event)" (loadError)="loadError.emit($event)" />
+    </div>
+  </div>
+
+  <sd-button
+    sdFooterRight
+    data-tree-select-cancel
+    type="outline"
+    color="secondary"
+    [autoId]="autoIdInput() ? autoIdInput() + '-cancel' : undefined"
+    [title]="'core.form.tree-select.cancel' | sdTranslate"
+    (click)="cancel()"></sd-button>
+  <sd-button
+    sdFooterRight
+    data-tree-select-apply
+    type="fill"
+    color="primary"
+    [autoId]="autoIdInput() ? autoIdInput() + '-apply' : undefined"
+    [title]="'core.form.tree-select.apply' | sdTranslate"
+    (click)="applySelection()"></sd-button>
+</sd-modal>

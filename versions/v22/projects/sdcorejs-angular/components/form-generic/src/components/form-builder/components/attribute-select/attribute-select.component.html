@@ -1,0 +1,28 @@
+<!-- <div class="d-flex align-items-center py-4">
+  @if (label) {
+    <div class="T14R" style="flex: 1">{{ label }}</div>
+  }
+  <sd-select
+    style="width: 200px"
+    size="sm"
+    [form]="form"
+    [(model)]="model"
+    [items]="items"
+    valueField="value"
+    displayField="display"
+    [disabled]="disabled"
+    (sdChange)="onChange($event)"
+    hideInlineError></sd-select>
+</div> -->
+<sd-select
+    class="py-8"
+    size="sm"
+    [label]="label!"
+    [form]="form()"
+    [(model)]="model"
+    [items]="items"
+    valueField="value"
+    displayField="display"
+    [disabled]="disabled"
+    (sdChange)="onChange($event)"
+    hideInlineError></sd-select>

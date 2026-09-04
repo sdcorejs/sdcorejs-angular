@@ -1,0 +1,18 @@
+<mat-menu #m="matMenu" xPosition="after" yPosition="below" class="c-field-picker-menu">
+  @for (field of fields(); track $index) {
+    <button
+      type="button"
+      mat-menu-item
+      [disabled]="isDisabled(field)"
+      (click)="pick.emit(field)">
+      <sd-icon class="c-field-item-icon" [name]="iconFor(field)"></sd-icon>
+      <span class="c-field-item-label">{{ field.label }}</span>
+      <span class="c-field-item-type">{{ field.type }}</span>
+      @if (isCurrent(field) || isUsed(field)) {
+        <sd-icon class="c-field-item-check" name="check"></sd-icon>
+      }
+    </button>
+  } @empty {
+    <div class="c-field-empty">{{ emptyLabel() }}</div>
+  }
+</mat-menu>

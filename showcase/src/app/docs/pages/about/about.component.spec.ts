@@ -20,7 +20,7 @@ describe('AboutComponent', () => {
     expect(fixture.nativeElement.querySelector('h1')?.textContent).toContain('@sdcorejs/angular');
     const logo = fixture.nativeElement.querySelector('.about__mark') as HTMLImageElement | null;
     expect(logo?.getAttribute('src')).toBe('assets/brand/sdcorejs-logo.png');
-    expect(text).toContain('Angular 19, 20, and 21');
+    expect(text).toContain('Angular 19, 20, 21, and 22');
     expect(text).not.toContain('has not been configured');
     expect(text).not.toContain('source-of-truth');
     expect(text).not.toContain('sync workflow');
