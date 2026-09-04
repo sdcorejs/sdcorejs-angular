@@ -116,7 +116,7 @@ Workflow: `.github/workflows/publish-npm.yml`. Auth qua **npm trusted publishing
 - Angular 22 bắt đầu tại `22.2.5`; generator/release plan không được dựng version 22 trước suffix `2.5`.
 - `@sdcorejs/angular-material-datetime@1.0.4` phải được publish và verify trước transaction Core UI `2.5`.
 
-Các gate trước artifact gồm `npm run check:sync`, root script/release-contract tests và full suite canonical v19 (`npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadlessCI --code-coverage`). **`--code-coverage` là bắt buộc**: threshold trong `projects/sdcorejs-angular/karma.conf.js` chỉ được đánh giá khi coverage được thu thập. `ChromeHeadlessCI` là launcher CI khai trong `karma.conf.js`.
+Các gate trước artifact gồm `npm run check:sync`, root script/release-contract tests và full suite canonical v19 cục bộ (`npm run test:ci`; wrapper tự tắt disk cache). **`--code-coverage` là bắt buộc**: threshold trong `projects/sdcorejs-angular/karma.conf.js` chỉ được đánh giá khi coverage được thu thập. GitHub Actions chạy cùng target bằng launcher `ChromeHeadlessCI` khai trong `karma.conf.js`.
 
 Karma in seed random của Jasmine ở đầu mỗi run (`[karma] Jasmine random seed = <n>`); ép seed bằng env `JASMINE_SEED`. **Pin seed KHÔNG đủ để replay**: `spec.id` gán theo thứ tự module trong bundle, mà bundle không ổn định giữa các build — chi tiết trong comment đầu `karma.conf.js`.
 

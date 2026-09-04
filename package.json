@@ -13,6 +13,8 @@
     "lint:release": "npm run lint:v19 && npm run lint:v20 && npm run lint:v21 && npm run lint:v22",
     "lint:phase": "node scripts/lint-phase.mjs",
     "lint:phase:release": "node scripts/lint-phase.mjs --workspace v19 --phase release-touched",
+    "cache:report": "node scripts/cache-maintenance.mjs report",
+    "cache:prune": "node scripts/cache-maintenance.mjs prune",
     "check:sync": "node scripts/check-version-sync.mjs",
     "collect-docs": "node scripts/collect-docs.mjs",
     "collect-release-docs": "node scripts/collect-release-docs.mjs",
@@ -31,11 +33,12 @@
     "test:version-sync-contract": "node --test scripts/check-version-sync.test.mjs",
     "test:release-package-contract": "node --test scripts/release-package-contract.test.mjs",
     "test:publish-npm-workflow": "node --test scripts/publish-npm-workflow.test.mjs",
+    "test:cache-tools": "node --test scripts/cache-maintenance.test.mjs scripts/run-ng-test-no-cache.test.mjs scripts/cache-policy.test.mjs",
     "test:showcase-angular22-contract": "node --test scripts/generate-showcase-changelog.test.mjs scripts/generate-showcase-route-shells.test.mjs && npm --prefix versions/v19 ci --legacy-peer-deps && npm --prefix versions/v19 run build && npm --prefix showcase ci --legacy-peer-deps && npm --prefix showcase run link:library && npm --prefix showcase run test -- --include=src/app/docs/core/docs-version.utils.spec.ts --include=src/app/docs/core/docs-version.service.spec.ts --include=src/app/docs/shared/version-selector.component.spec.ts --include=src/app/docs/pages/about/about.component.spec.ts --include=src/app/docs/pages/changelog/changelog.component.spec.ts --include=src/app/docs/pages/getting-started/getting-started.component.spec.ts --include=src/app/docs/pages/home/docs-home.component.spec.ts",
     "build:page": "node scripts/build-published-page.mjs",
     "prune:pages": "node scripts/build-published-page.mjs --prune-only",
     "test:showcase-generators": "npm run test:showcase-changelog && npm run test:showcase-examples && npm run test:showcase-route-shells",
-    "test:scripts": "npm run test:showcase-generators && npm run test:showcase-branding && npm run test:collect-docs && npm run test:published-page && npm run test:check-i18n && npm run test:supported-versions && npm run test:version-sync-contract && npm run test:release-package-contract && npm run test:publish-npm-workflow",
+    "test:scripts": "npm run test:showcase-generators && npm run test:showcase-branding && npm run test:collect-docs && npm run test:published-page && npm run test:check-i18n && npm run test:supported-versions && npm run test:version-sync-contract && npm run test:release-package-contract && npm run test:publish-npm-workflow && npm run test:cache-tools",
     "changeset": "changeset"
   },
   "devDependencies": {
