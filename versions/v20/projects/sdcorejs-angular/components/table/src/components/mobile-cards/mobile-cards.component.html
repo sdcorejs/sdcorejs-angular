@@ -34,7 +34,6 @@
         [attr.aria-label]="card.label"
         [attr.data-autoid]="card.context.autoId"
         [class.selected]="_meta.selector?.isSelected"
-        [class.sd-mobile-card-selectable]="_option.selector?.visible && _meta.selector?.visible"
         [class.sd-mobile-card-commandable]="!_selectionMode && _commands.get(_row)?.length"
         [class.sd-mobile-card-active]="_active?.row === _row"
         [ngStyle]="_meta.rowStyle"
@@ -96,43 +95,45 @@
             </button>
           }
           <span class="flex-1"></span>
-          @if (!_selectionMode && _commands.get(_row)?.length) {
-            <button
-              mat-icon-button
-              type="button"
-              class="sd-mobile-command-trigger"
-              aria-haspopup="dialog"
-              (click)="openCommand(card, $event)"
-              [attr.aria-label]="card.commandLabel"
-              [attr.aria-expanded]="_active?.row === _row"
-              [attr.data-autoid]="card.context.autoId ? card.context.autoId + '-commands' : null">
-              <sd-icon name="more_horiz"></sd-icon>
-            </button>
-          }
         </div>
         <div class="sd-mobile-card-body">
           <ng-container *ngTemplateOutlet="_table.sdRowMobileDef()!.templateRef; context: card.context"></ng-container>
         </div>
-        @if (_expandTemplate) {
-          @if (!_option.expand?.always) {
-            <button
-              mat-button
-              type="button"
-              [disabled]="card.expandDisabled || _meta.expand?.isExpanding"
-              [attr.aria-expanded]="_meta.expand?.isExpanded"
-              [attr.aria-label]="card.expandLabel"
-              [attr.data-autoid]="_autoId ? _autoId + '-expand-' + _meta.id : null"
-              (click)="_table.onExpand(_row)">
-              <sd-icon
-                [name]="_meta.expand?.isExpanding ? 'hourglass_empty' : _meta.expand?.isExpanded ? 'expand_less' : 'expand_more'"></sd-icon>
-              {{ 'core.component.table.mobile.details' | sdTranslate }}
-            </button>
-          }
-          @if (_option.expand?.always || _meta.expand?.isExpanded) {
-            <div class="sd-mobile-expand">
-              <ng-container *ngTemplateOutlet="_expandTemplate.templateRef; context: { item: _row }"></ng-container>
-            </div>
-          }
+        @if ((_expandTemplate && !_option.expand?.always) || (!_selectionMode && _commands.get(_row)?.length)) {
+          <div class="sd-mobile-card-actions">
+            @if (_expandTemplate && !_option.expand?.always) {
+              <button
+                mat-button
+                type="button"
+                [disabled]="card.expandDisabled || _meta.expand?.isExpanding"
+                [attr.aria-expanded]="_meta.expand?.isExpanded"
+                [attr.aria-label]="card.expandLabel"
+                [attr.data-autoid]="_autoId ? _autoId + '-expand-' + _meta.id : null"
+                (click)="_table.onExpand(_row)">
+                <sd-icon
+                  [name]="_meta.expand?.isExpanding ? 'hourglass_empty' : _meta.expand?.isExpanded ? 'expand_less' : 'expand_more'"></sd-icon>
+                {{ 'core.component.table.mobile.details' | sdTranslate }}
+              </button>
+            }
+            @if (!_selectionMode && _commands.get(_row)?.length) {
+              <button
+                mat-icon-button
+                type="button"
+                class="sd-mobile-command-trigger"
+                aria-haspopup="dialog"
+                (click)="openCommand(card, $event)"
+                [attr.aria-label]="card.commandLabel"
+                [attr.aria-expanded]="_active?.row === _row"
+                [attr.data-autoid]="card.context.autoId ? card.context.autoId + '-commands' : null">
+                <sd-icon name="more_horiz"></sd-icon>
+              </button>
+            }
+          </div>
+        }
+        @if (_expandTemplate && (_option.expand?.always || _meta.expand?.isExpanded)) {
+          <div class="sd-mobile-expand">
+            <ng-container *ngTemplateOutlet="_expandTemplate.templateRef; context: { item: _row }"></ng-container>
+          </div>
         }
       </article>
     }

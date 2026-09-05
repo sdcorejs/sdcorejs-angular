@@ -6051,7 +6051,7 @@ const TASKS: Task[] = [
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-the-mobile-va-thao-tac') {
       <demo-section heading="Thẻ mobile và thao tác"
         [props]="[{ name: 'sdTableRowMobileDef', value: 'template' }, { name: 'mobile.rowLabel', value: 'callback' }, { name: 'selector.actions', value: '[…]' }, { name: 'command.commands', value: '[…]' }]"
-        note="Nút Thêm canh giữa phía trên card. Checkbox tròn nhỏ nằm đè góc phải của border; chọn dòng để dùng thanh action gọn. Chạm card mở sheet thao tác dòng; nút Công cụ ở footer mở sheet tải lại, xuất, lọc và sắp xếp.">
+        note="Nút Thêm canh giữa phía trên card. Lề card hai bên cố định, checkbox nhỏ nằm đè góc phải border. Thanh chọn chừa 16px hai đầu; nhiều action tự xuống hàng đều. Chạm card mở sheet thao tác dòng; nút Công cụ ở footer mở sheet tải lại, xuất, lọc và sắp xếp.">
         <sd-table autoId="mobile-employees" [option]="mobileOption">
           <ng-template sdTableCommandHeaderDef>
             <sd-button title="Thêm" prefixIcon="add" type="text" (click)="recordMobile('Thêm dòng', [])"></sd-button>
@@ -6973,6 +6973,7 @@ export class TableDemoComponent {
           this.recordMobile('Duyệt selection', rows?.map(row => row.id) ?? []);
         } },
         { title: 'Xuất', icon: 'download', click: rows => this.recordMobile('Xuất selection', rows?.map(row => row.id) ?? []) },
+        { title: 'Gắn nhãn', icon: 'label', click: rows => this.recordMobile('Gắn nhãn selection', rows?.map(row => row.id) ?? []) },
         { title: 'Báo cáo', icon: 'folder', children: [
           { title: 'Tổng hợp theo phòng ban', icon: 'summarize', click: rows => this.recordMobile('Báo cáo phòng ban', rows?.map(row => row.id) ?? []) },
           { title: 'Đối chiếu dữ liệu nhân viên đã chọn', icon: 'compare', click: rows => this.recordMobile('Đối chiếu', rows?.map(row => row.id) ?? []) },
@@ -16572,7 +16573,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     ...SHOWCASE_PAGE_SOURCES["components/table"],
     html: `<demo-section heading="Thẻ mobile và thao tác"
     [props]="[{ name: 'sdTableRowMobileDef', value: 'template' }, { name: 'mobile.rowLabel', value: 'callback' }, { name: 'selector.actions', value: '[…]' }, { name: 'command.commands', value: '[…]' }]"
-    note="Nút Thêm canh giữa phía trên card. Checkbox tròn nhỏ nằm đè góc phải của border; chọn dòng để dùng thanh action gọn. Chạm card mở sheet thao tác dòng; nút Công cụ ở footer mở sheet tải lại, xuất, lọc và sắp xếp.">
+    note="Nút Thêm canh giữa phía trên card. Lề card hai bên cố định, checkbox nhỏ nằm đè góc phải border. Thanh chọn chừa 16px hai đầu; nhiều action tự xuống hàng đều. Chạm card mở sheet thao tác dòng; nút Công cụ ở footer mở sheet tải lại, xuất, lọc và sắp xếp.">
     <sd-table autoId="mobile-employees" [option]="mobileOption">
       <ng-template sdTableCommandHeaderDef>
         <sd-button title="Thêm" prefixIcon="add" type="text" (click)="recordMobile('Thêm dòng', [])"></sd-button>

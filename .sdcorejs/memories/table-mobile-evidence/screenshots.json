@@ -7,8 +7,8 @@
   "capture_tool": "Playwright with installed Chrome",
   "browser": "151.0.7922.174",
   "captured_at": [
-    "2026-09-05T10:04:30.483Z",
-    "2026-09-05T10:04:48.450Z"
+    "2026-09-05T17:31:40.988Z",
+    "2026-09-05T17:32:55.881Z"
   ],
   "route": "/v/22.2.5/components/table/examples",
   "ui_capture_context": {
@@ -16,8 +16,8 @@
     "authentication": "public local example; no user account or auth state",
     "pii_screening": "PASS: fictional employee fixtures already defined in the public showcase",
     "containment": "PASS: captured image bounds fit recorded viewport; no mobile table horizontal overflow",
-    "source_manifest_sha256": "259d7af49585192d8f8dd62e215eed11f50ceed4e697817a96df98898ed62cbd",
-    "layout": "One footer Tools trigger and titled SdModal sheets for tools/row commands; centered command header; top-right border selectors (14px graphic, 24px circle, 40px hit target); compact selection count/actions/clear; no mobile page selector or message."
+    "source_manifest_sha256": "faa3fcc8ff95d6a9b4642dffaa186e2382948a7ed980ca9092b736c18f9cae8e",
+    "layout": "Titled SdModal tools/row sheets; centered header; 20px equal card gutters unaffected by corner selectors; selection QuickAction with 16px horizontal padding, evenly aligned wrapping actions and a centered close glyph/count in separate side columns."
   },
   "captures": [
     {
@@ -52,8 +52,8 @@
     },
     {
       "path": "320-dark-browsing.png",
-      "sha256": "bb36e5d77916bc580556130e735a0e1f09fd794209ac5a21100518e2b03ab0b9",
-      "bytes": 28060,
+      "sha256": "2f3e9f03615204d471114eef62a6a0687e02029a3021ff8193901f64b423ab47",
+      "bytes": 28130,
       "image_size": [
         279,
         685
@@ -67,8 +67,8 @@
     },
     {
       "path": "320-dark-more.png",
-      "sha256": "06f3ea308d2fc27a93af79af76c7dbc09b4494cb5ba47824ee3c7b74d90f2069",
-      "bytes": 46937,
+      "sha256": "1966f073111a3ce4dfc8e43ceb7901d5095c78536643c8d969b0fcf2e1ecc12c",
+      "bytes": 47970,
       "image_size": [
         320,
         960
@@ -82,8 +82,8 @@
     },
     {
       "path": "320-dark-row-command.png",
-      "sha256": "46c9de3d07276b8726be3613a584fd6ffb5e0145d1d9615e82dbc26bca2594c2",
-      "bytes": 49087,
+      "sha256": "4cd5a90022f24df0037f5ded7958772555c96a545f50413fe072380e8d0deab0",
+      "bytes": 50235,
       "image_size": [
         320,
         960
@@ -97,8 +97,8 @@
     },
     {
       "path": "320-dark-selection.png",
-      "sha256": "e7cd0cfbe5c4bb10a31796af3d9d4182dd2cd0ea40eb0aebb2be66cbe367f823",
-      "bytes": 28297,
+      "sha256": "a46b92506173d2770b0d31ccf1b23c0bc71a17793908df9c1a012038d78db9d0",
+      "bytes": 27542,
       "image_size": [
         279,
         685
@@ -112,8 +112,8 @@
     },
     {
       "path": "320-dark-tools.png",
-      "sha256": "b68c190038df2a71b2501eedb38ae7793ec8fd6f434a14a6dfbd86fdfa2eff39",
-      "bytes": 42144,
+      "sha256": "c482a5ea82805193acc0c8d5c822fe2b25928e34feb4fa471af7a3cfc775e88f",
+      "bytes": 43291,
       "image_size": [
         320,
         960
@@ -127,8 +127,8 @@
     },
     {
       "path": "320-light-browsing.png",
-      "sha256": "fdc58e50877c22d4ab92584b00ab2b39aff33ba9486f87c0f4119139ccd88d36",
-      "bytes": 27861,
+      "sha256": "8a1cfc835fe57609ee70080c495121ddbc65aae5e38d9ea3002e21c9e829cc68",
+      "bytes": 27993,
       "image_size": [
         279,
         685
@@ -142,8 +142,8 @@
     },
     {
       "path": "320-light-more.png",
-      "sha256": "0228006e36e45a21cb17411472f6626f53d853f1be53ab50e5c3852cf38bd70b",
-      "bytes": 47075,
+      "sha256": "46652980014fde61abd1e4a89d19cc464bc9416e0febc64b87500508bb48d965",
+      "bytes": 48123,
       "image_size": [
         320,
         960
@@ -157,8 +157,8 @@
     },
     {
       "path": "320-light-row-command.png",
-      "sha256": "8e8296880df9464fec25a432d650635effd256935ced5be824be504e858c2fce",
-      "bytes": 49045,
+      "sha256": "83653e617504b754914d0a60c6fa11d8986af6654877cecceaea89eeb706eba6",
+      "bytes": 50062,
       "image_size": [
         320,
         960
@@ -172,8 +172,8 @@
     },
     {
       "path": "320-light-selection.png",
-      "sha256": "800ec4b098ff6dad3b09148a6bcdd4043ec93d9a9ea036b9e667f3ae0a14b306",
-      "bytes": 28285,
+      "sha256": "7ac9dcc66c43452bdfc0ed6a849885e9f3acb09fa806082f256595876a89ce1c",
+      "bytes": 27560,
       "image_size": [
         279,
         685
@@ -187,8 +187,8 @@
     },
     {
       "path": "320-light-tools.png",
-      "sha256": "293c1cd372ec3e8993d706c141dbb02db3f500ab5cd94f5cf4112cf0c747d54d",
-      "bytes": 42059,
+      "sha256": "e690232840c963d14369be55f69594f02f85beacd58a72461e3877d26775906b",
+      "bytes": 43153,
       "image_size": [
         320,
         960
@@ -202,8 +202,8 @@
     },
     {
       "path": "390-dark-browsing.png",
-      "sha256": "043b27d6c2b73e167270751af845450430897970dd703d38a82143ce6292f48d",
-      "bytes": 28563,
+      "sha256": "7a5a62f80b828120ddf3ef7680b77843fc3d661a61cde05bc102d09451905f9f",
+      "bytes": 28629,
       "image_size": [
         349,
         685
@@ -217,8 +217,8 @@
     },
     {
       "path": "390-dark-more.png",
-      "sha256": "dcd438ef1897365fd5e5f3da9ecef14ff782fafb0b947e85153d74473d9bac72",
-      "bytes": 48117,
+      "sha256": "43ec5f41b83b3948c06f26dc5a86abd97eb7e10ba5cfcbbe688164c2249dedb2",
+      "bytes": 50336,
       "image_size": [
         390,
         960
@@ -232,8 +232,8 @@
     },
     {
       "path": "390-dark-row-command.png",
-      "sha256": "88049a17e6ec011b45419e811c90814b7a3ccfa22b6485126fe4a09d20042df2",
-      "bytes": 51457,
+      "sha256": "60030b410fab5f06d8339da7bc35b4624c502e24d929f781cf1c035cfa0131bb",
+      "bytes": 53093,
       "image_size": [
         390,
         960
@@ -247,8 +247,8 @@
     },
     {
       "path": "390-dark-selection.png",
-      "sha256": "0c4eb2b5e984dabc45609feb4a28ff1e8d6e7a189fb33aa9b90adee3f1dcef83",
-      "bytes": 29676,
+      "sha256": "18937eba8a1ceffc1110c95a6d281b0c7ca4e19d72d123bdec083764ef316b54",
+      "bytes": 28014,
       "image_size": [
         349,
         685
@@ -262,8 +262,8 @@
     },
     {
       "path": "390-dark-tools.png",
-      "sha256": "c4186a3844bc549bdfdeb8a396f1f675a83e55f376bf2362b9b11327de5ed1e0",
-      "bytes": 43190,
+      "sha256": "e0881f20e3bb8d8873dee6eefe4cc8ffb95e9e8f6522bbf3a99518e7bf061d0e",
+      "bytes": 45571,
       "image_size": [
         390,
         960
@@ -277,8 +277,8 @@
     },
     {
       "path": "390-drawer-selection.png",
-      "sha256": "9a0f0ec7eae9b8f08bf801fa9e1c553dce88e510464e6b30ca6aaa142a67273c",
-      "bytes": 27483,
+      "sha256": "9453b92e3d4f720a15e168ea7f351252a765b67f526a1eecbf2cb0ba44bb5f34",
+      "bytes": 28807,
       "image_size": [
         390,
         960
@@ -292,8 +292,8 @@
     },
     {
       "path": "390-light-browsing.png",
-      "sha256": "0f9443fdae2ee8c811336b4cd9e0afd065f1ef4f373052adfcc5bebb145eefe5",
-      "bytes": 28319,
+      "sha256": "c0527164031c099ed14c373381c4236e98ce4c73bc6320ddbc40b2a2552a9215",
+      "bytes": 28445,
       "image_size": [
         349,
         685
@@ -307,8 +307,8 @@
     },
     {
       "path": "390-light-more.png",
-      "sha256": "c3412495f7974de35260f6e16491727220c08e7ae068e4835a4cc78fef3936c8",
-      "bytes": 49022,
+      "sha256": "caa3174655025556a9e55e230e0314d6ccb6ac5ab2ca147ec5fc42509b72bd43",
+      "bytes": 50370,
       "image_size": [
         390,
         960
@@ -322,8 +322,8 @@
     },
     {
       "path": "390-light-row-command.png",
-      "sha256": "09be7d1d16f27230d95a9cb8a110d1df180236e51a2d12787dc820c20d544ddf",
-      "bytes": 52000,
+      "sha256": "7c6e8bb377a4627351d96a736df1edf31062183b102f8eecd0ac8d6e51b2e58e",
+      "bytes": 52821,
       "image_size": [
         390,
         960
@@ -337,8 +337,8 @@
     },
     {
       "path": "390-light-selection.png",
-      "sha256": "439a4110724e88171f0a06ea6763aa34b1949284ecf0a4045b94cfd145fa2c04",
-      "bytes": 29627,
+      "sha256": "85b88223521105a4e6e1493d338a73884176a2c899247315f879412af8a13484",
+      "bytes": 28061,
       "image_size": [
         349,
         685
@@ -352,8 +352,8 @@
     },
     {
       "path": "390-light-tools.png",
-      "sha256": "817a8d18dfe01b3a40deeb6c292db581588be9534274dab2db9f5368053bd964",
-      "bytes": 43834,
+      "sha256": "0bc459df16501f16c245c8fcf218cc8372f5e244bf966e8735010bb00d195871",
+      "bytes": 45369,
       "image_size": [
         390,
         960
@@ -367,8 +367,8 @@
     },
     {
       "path": "390-modal-more.png",
-      "sha256": "fbf5ab92d360c0b59be5edc5432e56cd9408cff80e3c04638b3ca0d658690408",
-      "bytes": 51555,
+      "sha256": "33915cada17fa9096a0906050aea047454d61b14cfad833ec0989eb13231bd55",
+      "bytes": 53786,
       "image_size": [
         390,
         960
@@ -382,11 +382,11 @@
     },
     {
       "path": "390-server-preservation.png",
-      "sha256": "3e92f463c1cf38f677acbe02ed51f7cc356e6b97cf8ae9902fa2b9809faa6836",
-      "bytes": 21251,
+      "sha256": "8088e07c0dd14b3e6e4a57d7653e4677f0b5dd0b6ecb57737aa6752a8444ed7d",
+      "bytes": 22688,
       "image_size": [
         349,
-        411
+        463
       ],
       "viewport": [
         390,

@@ -889,7 +889,9 @@ For `preserveSelection`, provide a stable `rowKey` with server data. The summary
 
 Row commands open directly in `SdModal` with `view="bottom-sheet"`, titled **Row actions: <row label>**. The sheet lists commands in declaration order, with group headings, disabled states, icons, semantic colors and supported HTML content. Closing it leaves selection unchanged and returns focus to the row trigger.
 
-Only selection uses a contained `SdQuickAction`. It is a compact single row with a highlighted selected count, up to two actions when space permits, **More**, and a labelled clear icon. `selector.message` is omitted on mobile. The full total/on-page summary remains available through the bar's accessible name and a polite live region. The count and clear route remain available without bulk actions. Overflow actions open a titled `SdModal` bottom sheet; closing it preserves selection.
+Only selection uses a contained `SdQuickAction`, with 16px horizontal padding. A highlighted selected count and a labelled clear icon stay centered in separate side columns; flat actions wrap into evenly aligned columns between them. **More** opens a titled `SdModal` bottom sheet for grouped or HTML actions and subsequent actions, preserving declaration order. `selector.message` is omitted on mobile. The full total/on-page summary remains available through the bar's accessible name and a polite live region. The count and clear route remain available without bulk actions. Closing the sheet preserves selection.
+
+Card lists keep equal 20px side gutters and symmetric content padding with or without selection controls. The corner checkbox does not reduce the content width. Row commands share a separate action row with the expand control, so they do not overlap the consumer's content.
 
 The footer has one **Tools** button and the shared paginator. **Table tools** opens a separate Core bottom sheet containing enabled reload, export, filter, sort and configuration controls. Filter/configuration close the sheet before opening their existing drawer/dialog. Sort choices use the same `MatSort` state and cycle ascending, descending and clear.
 

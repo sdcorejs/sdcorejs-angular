@@ -28,7 +28,7 @@ try{
  const summary=await table.locator('.sd-mobile-selection-summary').getAttribute('aria-label'); assert.match(summary,/2.*1/s);
  assert.equal((await table.locator('.sd-mobile-selection-count').innerText()).trim(),'2');
  assert.equal(await table.locator('.sd-mobile-select-page').count(),0);
- const bar=await table.locator('.sd-mobile-actions').boundingBox();assert.ok(bar.height<=64,JSON.stringify(bar));
+ const visibleActions=table.locator('.sd-mobile-action-direct button');assert.equal(await visibleActions.count(),3);for(const action of await visibleActions.all())assert.equal(await action.isVisible(),true);
  await page.mouse.move(0,0);await table.screenshot({path:join(output,'390-server-preservation.png')});
  await table.evaluate(el=>el.style.setProperty('--sd-table-mobile-bottom-offset','60px'));
  await table.locator('.c-table').evaluate(el=>el.scrollTop=el.scrollHeight);
@@ -66,6 +66,7 @@ try{
  const noActions=tables.nth(1);await noActions.locator('.sd-mobile-card').first().locator('.sd-mobile-card-body').click();
  assert.equal(await noActions.locator('.sd-mobile-clear').count(),1);assert.equal(await noActions.locator('sd-quick-action .sd-mobile-selection-summary').count(),1);assert.equal(await noActions.locator('.sd-mobile-action-direct,.sd-mobile-more').count(),0);
  assert.equal(await tables.nth(2).locator('input[type=checkbox],input[type=radio]').count(),0);
+ for(const candidate of await tables.all()){const gap=await candidate.locator('.sd-mobile-card').first().evaluate(el=>{const a=el.getBoundingClientRect(),b=el.parentElement.getBoundingClientRect(),c=el.querySelector('.sd-mobile-card-body').getBoundingClientRect();return {left:a.left-b.left,right:b.right-a.right,insideLeft:c.left-a.left,insideRight:a.right-c.right};});assert.ok(Math.abs(gap.left-20)<1&&Math.abs(gap.right-20)<1&&Math.abs(gap.insideLeft-gap.insideRight)<1,JSON.stringify(gap));}
  assert.equal(await single.locator('input[type=radio]:checked').count(),1);checks.push('three tables: single/default, selection without actions, selector off; independent state');
 
  e=await example('example-mobile-trong-hop-thoai');await e.getByRole('button',{name:'Mở modal',exact:true}).click();

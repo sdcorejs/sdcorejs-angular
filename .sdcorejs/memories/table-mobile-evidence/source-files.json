@@ -29,11 +29,11 @@
   },
   {
     "path": "showcase/src/app/docs/generated/example-manifest.generated.ts",
-    "sha256": "593c48a2662392733224475937905c862ed1c9e45e1887c9f4c82f158b542700"
+    "sha256": "52f7e94e2d8f5d2cc3d68414ad6fa770f6958da9a8d974b31018eff84178f9dc"
   },
   {
     "path": "showcase/src/app/docs/generated/example-sources.generated.ts",
-    "sha256": "d341428bc130fabad88baca8263e87e5261162f143101d66cfc749ca970a96f3"
+    "sha256": "0a5d65b4b56d02056389bc6d4b1e7d826d973f471e4b8a8be7b0ec202a51dc1c"
   },
   {
     "path": "showcase/src/app/docs/shared/example-viewer.component.spec.ts",
@@ -49,11 +49,11 @@
   },
   {
     "path": "showcase/src/app/pages/components/table/table-demo.component.ts",
-    "sha256": "15f845d81f8bdc5441b8190f4bbcd424c281650253efec6fec123ca64f0f9a91"
+    "sha256": "9e3e2a7645766a1377566a0a4e3a3700ff5dcc01882f4e79bc5ffec38caf56e9"
   },
   {
     "path": "versions/v19/SYNC-STATUS.md",
-    "sha256": "cb2788a416720edd7ba9b9271aee8bdafe27f99907c32fee451b7862aa3bcc87"
+    "sha256": "519fb61ebcbac04c3ccd0abed172b143eb313fddbeda803f022dd07ec26db685"
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/modal/sd-modal.md",
@@ -97,7 +97,7 @@
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/table/sd-table.md",
-    "sha256": "9cbcc8811fb7844f10d385ef29a6241f39d18da412ccd385e706bd83e45775f7"
+    "sha256": "7ce246c3399b7b651a42bfd4a080378667a04bd7b0ac219c8fbfb0e9d47b2a40"
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/table/src/components/command/pipes/filter.pipe.ts",
@@ -109,23 +109,23 @@
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/table/src/components/mobile-cards/mobile-actions.component.html",
-    "sha256": "0acf131e92b81a72e4d265dea557278ee54be9acaf77d051127a074e289b7b4f"
+    "sha256": "90477927a632554c51b11b043fa50ecbcbba29067f28bc17a17e4c21e3582f1a"
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/table/src/components/mobile-cards/mobile-actions.component.scss",
-    "sha256": "95de98f2a414e6b73f5b9162b2623bdcbc1d4a4c66a94c114b9376c6c487a4b6"
+    "sha256": "63a976ea93a63e1cdb3dea38ac5058a1183f33ca6904aedfccfb58a3bca18167"
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/table/src/components/mobile-cards/mobile-actions.component.ts",
-    "sha256": "2d63eb044f4e6cf43c39b461737674e04e6053d9c9a37ad86942368ada5a6d39"
+    "sha256": "a725d6e063f2705ad4dd59cd414a2d08a60dce45adfeab2eed2af3e1cea6bf57"
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/table/src/components/mobile-cards/mobile-cards.component.html",
-    "sha256": "ab2184d176c85524b00710c9b12fba9211548881621a2a3538e0b5b290e831cd"
+    "sha256": "df6ec4323e1e168144463de7e954c6e4070ad6fbb68d19b87ff06c090dfd0752"
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/table/src/components/mobile-cards/mobile-cards.component.scss",
-    "sha256": "a6782e96ed3f684f9cdbcdb604141b9ae470c495a8cb673f82c44378f1d97185"
+    "sha256": "772b4bf6e87f59f0d54fa51fbf06b8ebe67fa574a25cbfefcb023a0bf61fc04d"
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/table/src/components/mobile-cards/mobile-cards.component.ts",
@@ -173,7 +173,7 @@
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/table/src/table.component.mobile.spec.ts",
-    "sha256": "e56ab227b5477e9b75c272cb5c2123d9604cacda713609bfff96beea5f60d916"
+    "sha256": "7dc0e3075aec67ffcc24d027ab5210a4e632abb6f3fbe664e9c87ed3b3753edf"
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/table/src/table.component.scss",

@@ -5,7 +5,6 @@ import {
   OnDestroy,
   afterRenderEffect,
   computed,
-  effect,
   inject,
   input,
   output,
@@ -40,23 +39,16 @@ export class SdTableMobileActionsComponent implements OnDestroy {
   readonly error = signal('');
   readonly sheet = viewChild<SdModal>('sheet');
   readonly sheetOpen = computed(() => this.sheet()?.isOpened() ?? false);
-  readonly bar = viewChild<ElementRef<HTMLElement>>('bar');
   readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly #i18n = inject(I18nService);
-  readonly #width = signal(0);
-  #resize?: ResizeObserver;
   #destroyed = false;
   #pending?: SdTableMobileAction;
 
-  // why: reserve count, More and clear in the same compact row, measured in the actual table.
+  // why: flat actions wrap in the toolbar; groups keep their declaration order in More.
   readonly direct = computed(() => {
-    const available = this.#width() - 164 - Math.max(0, String(this.count()).length * 8 + 12 - 28);
     const result: SdTableMobileAction[] = [];
-    let used = 0;
     for (const action of this.actions()) {
-      const estimate = 44 + action.title.length * 7;
-      if (action.children || action.htmlTemplate || result.length === 2 || used + estimate > available) break;
-      used += estimate;
+      if (action.children || action.htmlTemplate) break;
       result.push(action);
     }
     return result;
@@ -65,16 +57,6 @@ export class SdTableMobileActionsComponent implements OnDestroy {
   readonly sheetActions = computed(() => (this.selection() ? this.overflow() : this.actions()));
 
   constructor() {
-    effect(onCleanup => {
-      const bar = this.bar()?.nativeElement;
-      if (!bar) return;
-      this.#width.set(bar.getBoundingClientRect().width);
-      if (typeof ResizeObserver !== 'undefined') {
-        this.#resize = new ResizeObserver(entries => this.#width.set(entries[0].contentRect.width));
-        this.#resize.observe(bar);
-        onCleanup(() => this.#resize?.disconnect());
-      }
-    });
     // why: opening a newly created SdModal requires its title/dismiss bindings to be rendered first.
     afterRenderEffect(() => {
       const actions = this.actions();
@@ -136,7 +118,6 @@ export class SdTableMobileActionsComponent implements OnDestroy {
   ngOnDestroy(): void {
     this.#destroyed = true;
     this.#pending = undefined;
-    this.#resize?.disconnect();
     const wasOpen = this.sheetOpen();
     this.sheet()?.forceClose();
     const owner = this.#host.nativeElement.closest<HTMLElement>('sd-table');

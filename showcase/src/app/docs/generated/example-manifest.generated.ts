@@ -1422,7 +1422,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "components/table",
     sectionId: "example-the-mobile-va-thao-tac",
     title: "Thẻ mobile và thao tác",
-    description: "Nút Thêm canh giữa phía trên card. Checkbox tròn nhỏ nằm đè góc phải của border; chọn dòng để dùng thanh action gọn. Chạm card mở sheet thao tác dòng; nút Công cụ ở footer mở sheet tải lại, xuất, lọc và sắp xếp.",
+    description: "Nút Thêm canh giữa phía trên card. Lề card hai bên cố định, checkbox nhỏ nằm đè góc phải border. Thanh chọn chừa 16px hai đầu; nhiều action tự xuống hàng đều. Chạm card mở sheet thao tác dòng; nút Công cụ ở footer mở sheet tải lại, xuất, lọc và sắp xếp.",
   },
   {
     sourceKey: "components/table/example-mobile-qua-nhieu-trang",

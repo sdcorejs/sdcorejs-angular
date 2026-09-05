@@ -7,7 +7,7 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
-  padding: 20px 20px 8px 4px;
+  padding: 20px 20px 8px;
 }
 .sd-mobile-card {
   position: relative;
@@ -31,13 +31,8 @@ button:focus-visible {
   outline: 2px solid var(--sd-primary);
   outline-offset: 2px;
 }
-// why: góc chọn không dựng thêm hàng trống; vùng chạm vẫn đủ 44px.
-.sd-mobile-card-selectable {
-  padding-inline-end: 24px;
-}
 .sd-mobile-card-commandable {
   min-height: 76px;
-  padding-inline-end: 44px;
 }
 // The 24px circular surface straddles the border; the transparent hit area is 40px.
 .sd-mobile-card-selector {
@@ -63,10 +58,15 @@ button:focus-visible {
   border-radius: 50%;
   background: var(--sd-surface);
 }
+.sd-mobile-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
 .sd-mobile-command-trigger {
-  position: absolute;
-  inset-inline-end: 0;
-  bottom: 0;
+  flex: 0 0 44px;
+  margin-inline-start: auto;
   width: 44px;
   height: 44px;
 }

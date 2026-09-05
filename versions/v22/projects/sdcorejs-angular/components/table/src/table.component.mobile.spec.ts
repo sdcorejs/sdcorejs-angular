@@ -740,6 +740,23 @@ describe('SdTable mobile cards', () => {
     expect(table.selectedItems.map(row => row.id)).toEqual([1]);
   }));
 
+  it('keeps flat selection actions visible in declaration order when they need multiple rows', fakeAsync(() => {
+    create(h => {
+      h.option.selector!.actions = Array.from({ length: 5 }, (_, index) => ({
+        title: `Action ${index + 1}`,
+        click: h.bulkClick,
+      }));
+    });
+    select(0);
+    const buttons = Array.from(fixture.nativeElement.querySelectorAll('.sd-mobile-action-direct button')) as HTMLButtonElement[];
+    expect(buttons.map(button => button.textContent?.trim())).toEqual(['Action 1', 'Action 2', 'Action 3', 'Action 4', 'Action 5']);
+    expect(fixture.nativeElement.querySelector('.sd-mobile-more')).toBeNull();
+    buttons.at(-1)?.click();
+    settle();
+    expect(host.bulkClick).toHaveBeenCalledOnceWith([host.rows[0]]);
+    expect(table.selectedItems.map(row => row.id)).toEqual([1]);
+  }));
+
   it('retains selection while More closes, preserves command groups and invokes a child once', fakeAsync(() => {
     create(h => {
       h.option.selector!.actions = [{ title: 'Reports', children: [{ title: 'Export long report', click: h.bulkClick }] }];
