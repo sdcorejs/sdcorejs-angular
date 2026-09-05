@@ -33,6 +33,8 @@ import { SdMaterialFooterDefDirective } from './directives/sd-table-footer-def.d
 import { SdTableTitleDefDirective } from './directives/sd-table-title-def.directive';
 import { SdTableCommandHeaderDefDirective } from './directives/sd-table-command-header-def.directive';
 import { SdTableRowMobileDefDirective } from './directives/sd-table-row-mobile-def.directive';
+import { SdTableMobileActionsComponent } from './components/mobile-cards/mobile-actions.component';
+import { SdTableMobileAction } from './components/mobile-cards/mobile-action.model';
 import { SdTableMobileCardsComponent } from './components/mobile-cards/mobile-cards.component';
 import { SdViewportService } from '@sdcorejs/angular/services/viewport';
 import { SdTableColumn } from './models/table-column.model';
@@ -236,6 +238,7 @@ const EMPTY_COMMANDS: SdTableCommand[] = [];
     SdTableSortHeaderDirective,
     SdTranslatePipe,
     SdTableMobileCardsComponent,
+    SdTableMobileActionsComponent,
   ],
 })
 export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
@@ -340,6 +343,55 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
         title: typeof column.title === 'string' ? column.title : column.title.title,
         direction: state.active === column.field ? state.direction : '',
       }));
+  });
+
+  readonly mobileToolsActions = computed<SdTableMobileAction[]>(() => {
+    const option = this.tableOption();
+    if (!option) return [];
+    const t = (key: string) => this.#i18n.t('core.component.table.' + key);
+    const actions: SdTableMobileAction[] = [];
+    if (option.reload?.visible) actions.push({ key: 'tool-reload', title: t('reload'), icon: 'refresh', run: () => this.reload() });
+    const exporting = option.export;
+    if (exporting && this.items().length) {
+      if (exporting.type === 'custom')
+        actions.push({ key: 'tool-export', title: this.exportTitle(), icon: 'download', run: () => this.exportCustom() });
+      else if (exporting.visible) {
+        const children: SdTableMobileAction[] = [];
+        if (exporting.visible === 'ALL' || exporting.visible === 'EXCEL')
+          children.push({ key: 'tool-export-excel', title: t('export-excel'), icon: 'table_view', run: () => this.exportExcel() });
+        if (exporting.visible === 'ALL' || exporting.visible === 'CSV')
+          children.push({ key: 'tool-export-csv', title: t('export-csv'), icon: 'description', run: () => this.exportCSV() });
+        actions.push({ key: 'tool-export', title: this.exportTitle(), disabled: this.exporting(), children });
+      }
+    }
+    if (!option.filter?.disabled && this.mobileFilter())
+      actions.push({
+        key: 'tool-filter',
+        title: t('filter'),
+        icon: 'filter_alt',
+        closeBeforeRun: true,
+        run: () => this.mobileFilter()?.open(),
+      });
+    if (option.sort?.enable && this.mobileSortColumns().length)
+      actions.push({
+        key: 'tool-sort',
+        title: t('mobile.sort'),
+        children: this.mobileSortColumns().map(column => ({
+          key: 'tool-sort-' + column.field,
+          title: column.title,
+          icon: column.direction === 'asc' ? 'arrow_upward' : column.direction === 'desc' ? 'arrow_downward' : 'sort',
+          run: () => this.sort()?.sort({ id: column.field, start: 'asc', disableClear: false }),
+        })),
+      });
+    if (this.configComponent())
+      actions.push({
+        key: 'tool-config',
+        title: t('setup-short'),
+        icon: 'settings',
+        closeBeforeRun: true,
+        run: () => this.configComponent()?.open(),
+      });
+    return actions;
   });
 
   readonly pageRevision = signal(0);

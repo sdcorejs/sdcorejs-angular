@@ -1,14 +1,12 @@
 <ng-template #templateRef>
-  <div
-    class="sd-modal-root"
-    [attr.data-autoId]="autoId()"
-    [attr.data-opened]="dataOpened()">
+  @let _title = title();
+  <div #modal class="sd-modal-root" [attr.data-autoId]="autoId()" [attr.data-opened]="dataOpened()">
     @if (!lazyLoadContent() || alreadyOpened()) {
-      @if (title()) {
+      @if (_title) {
         <div class="sd-modal-header">
-          <div class="sd-modal-header-left">
+          <div class="sd-modal-header-left" [id]="titleId">
             <ng-content select="[sdHeaderLeft]">
-              <div class="sd-modal-title T18M">{{ title() }}</div>
+              <div class="sd-modal-title T18M">{{ _title }}</div>
             </ng-content>
           </div>
           <div class="sd-modal-header-right">

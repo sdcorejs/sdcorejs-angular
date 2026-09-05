@@ -8,6 +8,7 @@ import {
   TemplateRef,
   booleanAttribute,
   computed,
+  effect,
   inject,
   input,
   output,
@@ -24,6 +25,8 @@ import { BrowserUtilities } from '@sdcorejs/utils/fns';
 import { Color, Size } from '@sdcorejs/utils/models';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { Observable } from 'rxjs';
+
+let nextModalTitleId = 0;
 
 export type SdModalBeforeClose = () => boolean | Promise<boolean>;
 
@@ -43,6 +46,7 @@ interface SdModalDismissRef {
 })
 export class SdModal implements OnDestroy {
   static index = signal(0);
+  protected readonly titleId = `sd-modal-title-${nextModalTitleId++}`;
 
   templateRef = viewChild.required<TemplateRef<any>>('templateRef');
   modal = viewChild<ElementRef>('modal');
@@ -87,6 +91,13 @@ export class SdModal implements OnDestroy {
 
   constructor() {
     this.#isMobile = BrowserUtilities.isMobile();
+    // BottomSheetConfig has no ariaLabelledBy; bind its real container to the live heading.
+    effect(() => {
+      const title = this.title();
+      const container = (this.modal()?.nativeElement as HTMLElement | undefined)?.closest('[role="dialog"]');
+      if (title) container?.setAttribute('aria-labelledby', this.titleId);
+      else container?.removeAttribute('aria-labelledby');
+    });
   }
 
   // why: PHẢI là ngOnDestroy, KHÔNG phải #destroyRef.onDestroy. Angular chạy executeOnDestroys
@@ -144,6 +155,7 @@ export class SdModal implements OnDestroy {
     if ((!this.view() && this.#isMobile) || this.view() === 'bottom-sheet') {
       this.#bottomSheetRef = this.#bottomSheet.open(this.templateRef(), {
         panelClass: this.#resolvePanelClass('sd-modal-bottom-sheet-panel'),
+        ariaLabel: this.title() || undefined,
         disableClose: this.disableBackdropClose() || !!this.beforeClose(),
       });
       this.#bindGuardedDismiss(this.#bottomSheetRef);
@@ -153,6 +165,7 @@ export class SdModal implements OnDestroy {
         width: this.#resolvedWidth,
         maxWidth: this.#resolvedWidth,
         panelClass: this.#resolvePanelClass('sd-modal-panel'),
+        ariaLabelledBy: this.title() ? this.titleId : undefined,
         disableClose: this.disableBackdropClose() || !!this.beforeClose(),
       });
       this.#bindGuardedDismiss(this.#dialogRef);

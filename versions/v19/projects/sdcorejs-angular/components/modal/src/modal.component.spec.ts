@@ -577,6 +577,7 @@ describe('SdModal', () => {
       expect(bsBottomSheetSpy).toHaveBeenCalledTimes(1);
       const opts = bsBottomSheetSpy.calls.mostRecent().args[1] as any;
       expect(opts.panelClass).toEqual(['sd-modal-bottom-sheet-panel']);
+      expect(opts.ariaLabel).toBe('BS Modal');
     });
 
     it('sets isOpened to true after bottom-sheet open()', () => {
@@ -811,6 +812,25 @@ describe('SdModal — real overlay teardown', () => {
     flush();
 
     expect(overlayPanes().length).toBe(1);
+  }));
+
+  it('names a real bottom sheet from its live heading', fakeAsync(() => {
+    const ownFixture = TestBed.createComponent(SdModal);
+    ownFixture.componentRef.setInput('view', 'bottom-sheet');
+    ownFixture.componentRef.setInput('title', 'Row One');
+    ownFixture.detectChanges();
+    ownFixture.componentInstance.open();
+    ownFixture.detectChanges();
+    flush();
+    ownFixture.detectChanges();
+    const dialog = document.querySelector('.cdk-overlay-container [role="dialog"]')!;
+    const titleId = dialog.getAttribute('aria-labelledby')!;
+    expect(document.getElementById(titleId)?.textContent).toContain('Row One');
+    ownFixture.componentRef.setInput('title', 'Row Two');
+    ownFixture.detectChanges();
+    expect(document.getElementById(titleId)?.textContent).toContain('Row Two');
+    ownFixture.destroy();
+    flush();
   }));
 
   it('leaves no orphaned overlay or backdrop in the CDK container after the host is destroyed', fakeAsync(() => {

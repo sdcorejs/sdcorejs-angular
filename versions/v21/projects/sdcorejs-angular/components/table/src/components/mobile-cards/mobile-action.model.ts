@@ -13,5 +13,6 @@ export interface SdTableMobileAction {
   disabled?: boolean;
   htmlTemplate?: string;
   children?: SdTableMobileAction[];
+  closeBeforeRun?: boolean;
   run?: () => unknown;
 }

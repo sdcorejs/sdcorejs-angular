@@ -301,28 +301,34 @@
   white-space: nowrap;
 }
 
+:host .sd-mobile-command-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px;
+}
 :host .c-container.sd-table-mobile {
   .c-paginator {
     flex-wrap: wrap;
+    gap: 4px;
   }
-
   .c-action {
-    flex: 1 1 100%;
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 0 4px;
     min-width: 0;
-
-    sd-button {
-      margin: 0;
-    }
   }
-
+  .sd-mobile-tools-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 44px;
+  }
   .sd-mobile-paginator {
     margin-inline-start: auto;
   }
-
   .c-paginator,
   .c-empty {
     background-color: var(--sd-surface);
@@ -562,4 +568,10 @@
     font-weight: 700;
     color: #1f2330;
   }
+}
+
+:host ::ng-deep .sd-mobile-tools-trigger .mdc-button__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }

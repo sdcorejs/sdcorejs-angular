@@ -4,6 +4,7 @@
 @let _autoId = _table.autoId();
 @let _commands = resolvedCommands();
 @let _actions = actions();
+@let _active = active();
 @let _expandTemplate = _table.sdSubInformation();
 
 @if (_option.selector?.visible) {
@@ -35,7 +36,7 @@
         [class.selected]="_meta.selector?.isSelected"
         [class.sd-mobile-card-selectable]="_option.selector?.visible && _meta.selector?.visible"
         [class.sd-mobile-card-commandable]="!_selectionMode && _commands.get(_row)?.length"
-        [class.sd-mobile-card-active]="active()?.row === _row"
+        [class.sd-mobile-card-active]="_active?.row === _row"
         [ngStyle]="_meta.rowStyle"
         [style.margin-inline-start.px]="_option.tree ? (_meta.tree?.level ?? 0) * (_option.tree?.indentSize ?? 20) : 0"
         (click)="onCardClick(card, $event)"
@@ -100,9 +101,10 @@
               mat-icon-button
               type="button"
               class="sd-mobile-command-trigger"
+              aria-haspopup="dialog"
               (click)="openCommand(card, $event)"
               [attr.aria-label]="card.commandLabel"
-              [attr.aria-expanded]="active()?.row === _row"
+              [attr.aria-expanded]="_active?.row === _row"
               [attr.data-autoid]="card.context.autoId ? card.context.autoId + '-commands' : null">
               <sd-icon name="more_horiz"></sd-icon>
             </button>
@@ -138,15 +140,11 @@
 </div>
 @if (containerOpen() && (_actions.length || _selectionMode)) {
   <sd-table-mobile-actions
-    class="sd-mobile-floating"
+    [class.sd-mobile-floating]="_selectionMode"
     [actions]="_actions"
     [title]="actionTitle()"
     [selection]="_selectionMode"
     [autoId]="_autoId"
-    [message]="_selectionMode ? selectionMessage() : undefined"
-    [showSelectPage]="_selectionMode && _table.visibleSelectAll()"
-    [pageChecked]="_table.isSelectAll()"
-    [pageIndeterminate]="_table.isSelectIndeterminate()"
-    (selectPage)="_table.isSelectAll.set($event); _table.onSelectAll()"
+    [count]="selected().length"
     (end)="endActions()"></sd-table-mobile-actions>
 }

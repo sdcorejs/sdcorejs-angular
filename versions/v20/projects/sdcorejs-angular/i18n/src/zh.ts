@@ -1,6 +1,9 @@
 import type { EN_MESSAGES } from './en';
 
 export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
+  'core.component.table.mobile.tools': '工具',
+  'core.component.table.mobile.tools-title': '表格工具',
+  'core.component.table.mobile.row-commands': '行操作：{row}',
   'core.component.table.mobile.row': '第 {index} 行',
   'core.component.table.mobile.select-row': '选择 {row}',
   'core.component.table.mobile.commands-for': '{row} 的操作',

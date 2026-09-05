@@ -96,3 +96,5 @@ Two implementation constraints are load-bearing here, so do not "simplify" them:
 
 - `<sd-modal>` uses `ViewEncapsulation.None`, so its stylesheet is **global**. The rule `.sd-modal-root button:focus { outline: none !important }` therefore stripped the focus ring from every consumer-projected button inside any modal, and `!important` meant consumers could not win it back. A matching `.sd-modal-root button:focus-visible { outline: 2px solid var(--sd-primary) !important }` now restores a visible ring for keyboard navigation while mouse clicks stay borderless.
 - The built-in close button already had its own `:focus-visible` ring; it is unchanged.
+
+The real dialog/bottom-sheet container is associated with its visible heading using a unique `aria-labelledby` target. The accessible name follows title changes while the overlay is open, including projected header-left content.

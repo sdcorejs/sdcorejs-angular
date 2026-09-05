@@ -1,6 +1,9 @@
 import type { EN_MESSAGES } from './en';
 
 export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
+  'core.component.table.mobile.tools': 'Công cụ',
+  'core.component.table.mobile.tools-title': 'Công cụ bảng',
+  'core.component.table.mobile.row-commands': 'Thao tác dòng: {row}',
   'core.component.table.mobile.row': 'Dòng {index}',
   'core.component.table.mobile.select-row': 'Chọn {row}',
   'core.component.table.mobile.commands-for': 'Thao tác với {row}',

@@ -1,6 +1,9 @@
 import type { EN_MESSAGES } from './en';
 
 export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
+  'core.component.table.mobile.tools': '도구',
+  'core.component.table.mobile.tools-title': '테이블 도구',
+  'core.component.table.mobile.row-commands': '행 작업: {row}',
   'core.component.table.mobile.row': '행 {index}',
   'core.component.table.mobile.select-row': '{row} 선택',
   'core.component.table.mobile.commands-for': '{row} 작업',

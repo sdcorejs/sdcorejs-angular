@@ -166,11 +166,11 @@ export class SdTableMobileCardsComponent<T = unknown> implements OnDestroy {
     if (!active) return [];
     return (this.activeCommands() ?? []).map((command, index) => this.#rowAction(command, active.row, index));
   });
-  readonly actionTitle = computed(() => (this.selectionMode() ? this.selectionSummary() : (this.active()?.label ?? '')));
-  readonly selectionMessage = computed(() => {
-    const message = this.option().selector?.message;
-    return typeof message === 'function' ? message(this.selected().map(row => row.data)) : message;
-  });
+  readonly actionTitle = computed(() =>
+    this.selectionMode()
+      ? this.selectionSummary()
+      : this.#i18n.t('core.component.table.mobile.row-commands', { row: this.active()?.label ?? '' })
+  );
 
   constructor() {
     effect(onCleanup => {

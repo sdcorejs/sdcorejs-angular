@@ -1,7 +1,7 @@
 [
   {
     "path": "CHANGELOG.md",
-    "sha256": "c64cf8ca151ea02e5a0dd7754fbeeb1e2fdfe948f1a562d158334875f9becb31"
+    "sha256": "fefcb78d7923c1e68e7b5ff4b4133c0560f2317342be99986c2c3ac506130775"
   },
   {
     "path": "package.json",
@@ -25,15 +25,15 @@
   },
   {
     "path": "showcase/src/app/docs/generated/changelog.generated.ts",
-    "sha256": "185490e2c1b66f4af9678572a1b54c9423f434e01b1a221ab09e2d96d019feb7"
+    "sha256": "ce88e0a72eb481c1c9a30eeecda73533126d3af06404aa1dcb98b82433aa07ff"
   },
   {
     "path": "showcase/src/app/docs/generated/example-manifest.generated.ts",
-    "sha256": "179039a0f9d0677d76ea90a219b47e8f55605f0c8b6551b5e28afe14eba505d5"
+    "sha256": "593c48a2662392733224475937905c862ed1c9e45e1887c9f4c82f158b542700"
   },
   {
     "path": "showcase/src/app/docs/generated/example-sources.generated.ts",
-    "sha256": "9be8b6462536680d24d7631bc0c9c04c0fa047bc59e334dea66f2b63acf9fcf4"
+    "sha256": "d341428bc130fabad88baca8263e87e5261162f143101d66cfc749ca970a96f3"
   },
   {
     "path": "showcase/src/app/docs/shared/example-viewer.component.spec.ts",
@@ -49,15 +49,31 @@
   },
   {
     "path": "showcase/src/app/pages/components/table/table-demo.component.ts",
-    "sha256": "6079cd8771d51dfce4528dc1cf71ff664137e3900b57faf9d894affa78b291f8"
+    "sha256": "15f845d81f8bdc5441b8190f4bbcd424c281650253efec6fec123ca64f0f9a91"
   },
   {
     "path": "versions/v19/SYNC-STATUS.md",
-    "sha256": "3ed1c74a09124f83333f34299ce67f8f4ae14f75161230090a5fdcb3df5b7263"
+    "sha256": "cb2788a416720edd7ba9b9271aee8bdafe27f99907c32fee451b7862aa3bcc87"
+  },
+  {
+    "path": "versions/v19/projects/sdcorejs-angular/components/modal/sd-modal.md",
+    "sha256": "c91af7ec1c5c81e87f645fefc98ee62c7b770d44e2198f7b664df02ba8c4007a"
+  },
+  {
+    "path": "versions/v19/projects/sdcorejs-angular/components/modal/src/modal.component.html",
+    "sha256": "26c1a78943c0eb6a04a32542969901018c972e7f24969122458035b6c84fc15d"
+  },
+  {
+    "path": "versions/v19/projects/sdcorejs-angular/components/modal/src/modal.component.spec.ts",
+    "sha256": "053d915fe786d29ed0b1f910deef3bdff557e04e523226c64ec1041f2bd836f1"
+  },
+  {
+    "path": "versions/v19/projects/sdcorejs-angular/components/modal/src/modal.component.ts",
+    "sha256": "eac2465d4319cd5cfc3c3f5ff9ad2fc6cba88bbf539faa8da9aba0cff3705290"
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/quick-action/sd-quick-action.md",
-    "sha256": "47dd85a9895d667dbd5a845c19abe85645c3919b665d83fc7b2614a5c5ea95d1"
+    "sha256": "a97cad51917abf452a5212d06ce996d347d3f95770b6f47c8629b05bf608c5d0"
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/quick-action/src/quick-action.component.html",
@@ -81,7 +97,7 @@
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/table/sd-table.md",
-    "sha256": "8ff017d0af8fe0257bd35395a3a6bf9b016b3bc37a547b9159243619c3c5b4e5"
+    "sha256": "9cbcc8811fb7844f10d385ef29a6241f39d18da412ccd385e706bd83e45775f7"
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/table/src/components/command/pipes/filter.pipe.ts",
@@ -89,31 +105,31 @@
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/table/src/components/mobile-cards/mobile-action.model.ts",
-    "sha256": "b2dc6dddd3a2613722e90567f5d56128618dfc2899b9cfc23f93cbb91efa0f1d"
+    "sha256": "aa334b6746504c011d9d5cefeeaa27e25e5731c31868501e844090edd91a2d17"
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/table/src/components/mobile-cards/mobile-actions.component.html",
-    "sha256": "a4f0b444b8d34af261159847fab965524b0d7692b9242d78cf001bd0771a66c8"
+    "sha256": "0acf131e92b81a72e4d265dea557278ee54be9acaf77d051127a074e289b7b4f"
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/table/src/components/mobile-cards/mobile-actions.component.scss",
-    "sha256": "41ac1f592a95110b9faf7a8ddfc588bd5d6c6936e88a7ae947267dfcdce729a2"
+    "sha256": "95de98f2a414e6b73f5b9162b2623bdcbc1d4a4c66a94c114b9376c6c487a4b6"
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/table/src/components/mobile-cards/mobile-actions.component.ts",
-    "sha256": "d2731bb123b7e5d77643adc91d04bc42c743679ff2ac68e5f47994b2f8c4eb7c"
+    "sha256": "2d63eb044f4e6cf43c39b461737674e04e6053d9c9a37ad86942368ada5a6d39"
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/table/src/components/mobile-cards/mobile-cards.component.html",
-    "sha256": "406b50dcaea15f9466d92a73b5dac2682d4e2dc25dd6888597b71fadeaab16a6"
+    "sha256": "ab2184d176c85524b00710c9b12fba9211548881621a2a3538e0b5b290e831cd"
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/table/src/components/mobile-cards/mobile-cards.component.scss",
-    "sha256": "68f27f6499500edf36cb8dbd47af9f96a13ddf1aec300080e641ae96f059c05b"
+    "sha256": "a6782e96ed3f684f9cdbcdb604141b9ae470c495a8cb673f82c44378f1d97185"
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/table/src/components/mobile-cards/mobile-cards.component.ts",
-    "sha256": "241f69dc501ecbbd3f5f01938058afd71f3fffa156197f2a3a81a1db02b5b2e0"
+    "sha256": "3b404020c992b16674aadfa6d4c82870dba2d86f2820d471e5fe0780c9bf07f9"
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/table/src/components/selector-action/action-filter.pipe.ts",
@@ -153,15 +169,15 @@
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/table/src/table.component.html",
-    "sha256": "30b0a333a51810bd552a2cdfc1738173beeda6dedd01e9cfde93135d722ed42c"
+    "sha256": "e8dac3e5978a5610284545c7d853f6dbfacbaabdb639d4473fe0170e4757d181"
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/table/src/table.component.mobile.spec.ts",
-    "sha256": "b586e9f2641d2510bea468283b6d42fb72cc4ab286524231c8223411740cfb4f"
+    "sha256": "e56ab227b5477e9b75c272cb5c2123d9604cacda713609bfff96beea5f60d916"
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/table/src/table.component.scss",
-    "sha256": "40deb67de6135c90185877039086d9bdcc72c0d44274ec22941861e80f9e92c5"
+    "sha256": "3da81707aff0072ae9f9445117291b85dbcf9cb4905dbaf4384d7d58cef98aff"
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/table/src/table.component.spec.ts",
@@ -169,26 +185,26 @@
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/components/table/src/table.component.ts",
-    "sha256": "bd51604baa3a305bc4c29b67f62f0f286b47936d594a6b6446e65059b4de16e5"
+    "sha256": "769376a6c26eb55917c37bff62d08f78a2a54ca4a0d13b488c6fd727ce21fad1"
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/i18n/src/en.ts",
-    "sha256": "7b39738b16a2f26811e1f68cb90513ad8242c3c7324a51afab3ea838564a8ae5"
+    "sha256": "896ad0887a8dd69010ca700825d5f9cacb221b51bb9d00234b5db2095d3fbee5"
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/i18n/src/ja.ts",
-    "sha256": "8092010b7d5e26241b7d785c1d2a579d4f1489121728a28fb3c8c22a73f18718"
+    "sha256": "a6b1ff28dda3eade6de99ee98f7612b3778c6488386078314c160b6d1cee4d14"
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/i18n/src/ko.ts",
-    "sha256": "26d07ca1b8d4c4d3f9a09dfeef815869d47b4a52620036fda9f8f2ce0adadb60"
+    "sha256": "c51478a5b3bf930270dbbae1b526a67d219ea3ed891b7c016c1ac89bdbd358c8"
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/i18n/src/vi.ts",
-    "sha256": "c4851982c7e6d23ab88e74bb5bc4e61b71a3f66176bc898df32c3aefea2fb65d"
+    "sha256": "ee620b8906a577ca22c7906f69f21a8c5779975c85c2953bc33ab73fb9b6de23"
   },
   {
     "path": "versions/v19/projects/sdcorejs-angular/i18n/src/zh.ts",
-    "sha256": "5a330cfa679f094cb3534a12e22179630065cd048c387c0ead2cdb4441b206a6"
+    "sha256": "126c2154d3d4c2eb93d391e4558b5a2068f7d887c92b04c985dee8f3491a0712"
   }
 ]

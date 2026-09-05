@@ -1,70 +1,153 @@
-// why: actions keep a real footprint inside the owning table, including safe-area/bottom navigation.
 :host {
   display: block;
   min-width: 0;
 }
 .sd-mobile-actions {
   min-width: 0;
-  padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+  padding: 4px 0 max(4px, env(safe-area-inset-bottom));
 }
-.sd-mobile-action-heading {
+.sd-mobile-selection-summary {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 0 4px;
 }
-.sd-mobile-action-title {
-  flex: 1 1 0;
-  min-width: 0;
-  overflow-wrap: anywhere;
+.sd-mobile-selection-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border-radius: 8px;
+  background: var(--sd-primary);
+  color: var(--mat-sys-on-primary, var(--sd-primary-contrast, #fff));
+  font-variant-numeric: tabular-nums;
 }
 .sd-mobile-action-buttons {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   width: 100%;
+  min-width: 0;
+  gap: 2px;
+}
+.sd-mobile-action-direct {
+  min-width: 0;
+}
+.sd-mobile-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   gap: 4px;
+  padding: 0 6px;
+  min-width: 0;
 }
 .sd-mobile-end {
-  flex: 0 0 44px;
-  width: 44px;
-  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
   margin-inline-start: auto;
 }
-.sd-mobile-selection-message {
-  flex: 1 1 100%;
-  overflow-wrap: anywhere;
-}
 button {
-  min-height: 44px;
-  height: auto;
+  min-height: 40px;
   white-space: normal;
 }
 button:focus-visible {
   outline: 2px solid var(--sd-primary);
   outline-offset: 2px;
 }
-.sd-mobile-action-direct {
-  min-width: 0;
+:host ::ng-deep .sd-mobile-quick-action {
+  .c-quick-action.contained {
+    flex-wrap: nowrap;
+    gap: 6px;
+    padding: 4px 6px;
+    border-radius: 12px;
+  }
+  .c-quick-action-message {
+    flex: 0 0 auto;
+  }
+  .c-quick-action-action {
+    flex: 1 1 auto;
+  }
+  .sd-mobile-more .mdc-button__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .sd-mobile-action-direct button {
+    min-height: 36px;
+    padding-inline: 8px;
+  }
+  .mat-mdc-button-touch-target {
+    height: 40px;
+  }
+  sd-icon,
+  sd-icon mat-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+    line-height: 18px;
+  }
 }
 .sd-mobile-sheet {
-  padding-bottom: env(safe-area-inset-bottom);
+  padding: 0 12px max(12px, env(safe-area-inset-bottom));
   overflow-wrap: anywhere;
-}
-.sd-mobile-sheet h2,
-.sd-mobile-sheet h3 {
-  margin: 8px 0;
 }
 .sd-mobile-action-group {
   padding: 8px 0;
   border-top: 1px solid var(--sd-border);
 }
+.sd-mobile-action-group:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.sd-mobile-action-group h3 {
+  margin: 8px 12px 4px;
+  color: var(--sd-text-secondary);
+}
 .sd-mobile-sheet-action {
-  width: 100%;
+  display: flex;
+  align-items: center;
   justify-content: flex-start;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
   padding: 12px;
   text-align: start;
+  border-radius: 10px;
 }
-.sd-mobile-sheet-action span {
+.sd-mobile-sheet-label {
+  min-width: 0;
+  white-space: normal;
   overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+.sd-mobile-sheet-action sd-icon {
+  flex: 0 0 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+::ng-deep .sd-table-mobile-sheet-panel .sd-mobile-sheet-action .mdc-button__label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+::ng-deep .sd-table-mobile-sheet-panel {
+  .sd-modal-title {
+    overflow-wrap: anywhere;
+    font-size: 16px;
+    line-height: 1.4;
+  }
+  .sd-modal-header {
+    min-height: 64px;
+    padding: 12px 20px;
+  }
+  .sd-modal-close-btn {
+    width: 40px;
+    height: 40px;
+  }
 }

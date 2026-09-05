@@ -25,10 +25,10 @@ try{
  await cards.first().filter({hasText:'NV-4'}).waitFor();
  await cards.first().locator('input[type=checkbox]').check();
  await page.waitForTimeout(150);
- const summary=await table.locator('.sd-mobile-selection-summary').innerText(); assert.match(summary,/2.*1/s);
- const clearBox=await table.locator('.sd-mobile-clear').boundingBox();
- const pageSelectBox=await table.locator('.sd-mobile-selection-summary .sd-mobile-select-page').boundingBox();
- assert.ok(Math.abs(clearBox.y-pageSelectBox.y)<8,JSON.stringify({clearBox,pageSelectBox}));
+ const summary=await table.locator('.sd-mobile-selection-summary').getAttribute('aria-label'); assert.match(summary,/2.*1/s);
+ assert.equal((await table.locator('.sd-mobile-selection-count').innerText()).trim(),'2');
+ assert.equal(await table.locator('.sd-mobile-select-page').count(),0);
+ const bar=await table.locator('.sd-mobile-actions').boundingBox();assert.ok(bar.height<=64,JSON.stringify(bar));
  await page.mouse.move(0,0);await table.screenshot({path:join(output,'390-server-preservation.png')});
  await table.evaluate(el=>el.style.setProperty('--sd-table-mobile-bottom-offset','60px'));
  await table.locator('.c-table').evaluate(el=>el.scrollTop=el.scrollHeight);
@@ -42,7 +42,8 @@ try{
  await table.locator('.sd-mobile-clear').click();checks.push('server fresh-object paging preserves rowKey and total/on-page summary; 60px bottom clearance without a footer');
 
  e=await example('example-the-mobile-va-thao-tac');table=e.locator('sd-table').first();cards=table.locator('.sd-mobile-card');await cards.first().waitFor();
- await table.locator('[data-autoid$="-mobile-filter-open"]').click();
+ await table.locator('[data-autoid$="-mobile-tools"]').click();
+ await page.locator('[data-autoid$="-mobile-tool-filter"]').click();
  let drawer=page.locator('.sd-side-drawer-active');await drawer.waitFor();
  await drawer.locator('column-filter input').first().fill('Nguyễn');
  await drawer.locator('button[data-autoid$="-apply"]').click();
@@ -52,9 +53,10 @@ try{
  assert.equal(await table.locator('table .c-row').count(),1);
  await page.setViewportSize({width:390,height:960});await cards.first().waitFor();
  assert.equal(await cards.count(),1);checks.push('mobile filter commits and survives renderer change');
- await table.locator('[data-autoid$="-mobile-sort"]').click();
- await page.locator('.mat-mdc-menu-panel').getByRole('menuitem').first().click();
- await page.waitForTimeout(300);checks.push('mobile sort menu reaches shared sort');
+ await table.locator('[data-autoid$="-mobile-tools"]').click();
+ await page.locator('[data-autoid$="-mobile-tool-sort-name"]').click();
+ await page.locator('mat-bottom-sheet-container').waitFor({state:'detached'});
+ await page.waitForTimeout(300);checks.push('mobile sort sheet reaches shared sort');
 
  e=await example('example-mobile-chon-du-lieu');await e.locator('sd-table').first().locator('.sd-mobile-card').first().waitFor();
  const tables=e.locator('sd-table');assert.equal(await tables.count(),3);
@@ -62,22 +64,19 @@ try{
  await single.locator('.sd-mobile-card').first().locator('.sd-mobile-card-body').click();
  assert.equal(await single.locator('input[type=radio]:checked').count(),1);
  const noActions=tables.nth(1);await noActions.locator('.sd-mobile-card').first().locator('.sd-mobile-card-body').click();
- assert.equal(await noActions.locator('.sd-mobile-clear').count(),1);assert.equal(await noActions.locator('sd-quick-action .sd-mobile-selection-summary').count(),1);assert.equal(await noActions.locator('.sd-mobile-action-buttons').count(),0);
+ assert.equal(await noActions.locator('.sd-mobile-clear').count(),1);assert.equal(await noActions.locator('sd-quick-action .sd-mobile-selection-summary').count(),1);assert.equal(await noActions.locator('.sd-mobile-action-direct,.sd-mobile-more').count(),0);
  assert.equal(await tables.nth(2).locator('input[type=checkbox],input[type=radio]').count(),0);
  assert.equal(await single.locator('input[type=radio]:checked').count(),1);checks.push('three tables: single/default, selection without actions, selector off; independent state');
 
  e=await example('example-mobile-trong-hop-thoai');await e.getByRole('button',{name:'Mở modal',exact:true}).click();
  const modal=page.locator('.sd-modal-root[data-opened="true"]');await modal.waitFor();
  table=modal.locator('sd-table');cards=table.locator('.sd-mobile-card');await cards.first().waitFor();
- await cards.first().locator('.sd-mobile-card-body').click();await table.locator('.sd-mobile-more').click();
+ await cards.first().locator('.sd-mobile-card-body').click();
  await page.locator('mat-bottom-sheet-container').waitFor();await page.waitForTimeout(300);
  await page.mouse.move(0,0);await page.screenshot({path:join(output,'390-modal-more.png')});
  await page.keyboard.press('Escape');await page.locator('mat-bottom-sheet-container').waitFor({state:'detached'});
  assert.equal(await modal.isVisible(),true);
- await cards.first().focus();await page.keyboard.press('Escape');
- await table.locator('.sd-mobile-actions').waitFor({state:'detached'});
  assert.equal(await table.locator('.sd-mobile-actions').count(),0);
- assert.equal(await modal.isVisible(),true);
  await modal.locator('.sd-modal-close-btn').click();await modal.waitFor({state:'detached'});
  assert.equal(await page.locator('mat-bottom-sheet-container').count(),0);
  await e.getByRole('button',{name:'Mở drawer',exact:true}).click();drawer=page.locator('.sd-side-drawer-active');await drawer.waitFor();

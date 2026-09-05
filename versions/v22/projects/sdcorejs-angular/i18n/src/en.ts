@@ -1,4 +1,7 @@
 export const EN_MESSAGES = {
+  'core.component.table.mobile.tools': 'Tools',
+  'core.component.table.mobile.tools-title': 'Table tools',
+  'core.component.table.mobile.row-commands': 'Row actions: {row}',
   'core.component.table.mobile.row': 'Row {index}',
   'core.component.table.mobile.select-row': 'Select {row}',
   'core.component.table.mobile.commands-for': 'Commands for {row}',

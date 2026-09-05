@@ -1,6 +1,9 @@
 import type { EN_MESSAGES } from './en';
 
 export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
+  'core.component.table.mobile.tools': 'ツール',
+  'core.component.table.mobile.tools-title': 'テーブルツール',
+  'core.component.table.mobile.row-commands': '行の操作: {row}',
   'core.component.table.mobile.row': '行 {index}',
   'core.component.table.mobile.select-row': '{row} を選択',
   'core.component.table.mobile.commands-for': '{row} の操作',

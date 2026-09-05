@@ -121,6 +121,9 @@
       [style.max-height]="_tableOption.style?.maxHeight"
       [style.min-height]="_tableOption.style?.minHeight">
       @if (_mobileCards) {
+        @if (_commandHeaderDef) {
+          <div class="sd-mobile-command-header"><ng-container *ngTemplateOutlet="_commandHeaderDef.templateRef"></ng-container></div>
+        }
         <sd-table-mobile-cards [table]="this" [rows]="groupedItems" [groupTemplate]="sdGroupHeader"></sd-table-mobile-cards>
         @if (hasFooter()) {
           <div class="sd-mobile-footer p-12" role="region" [attr.aria-label]="'core.component.table.mobile.summary' | sdTranslate">
@@ -565,140 +568,130 @@
     <div class="c-paginator">
       <div class="c-action">
         @if (_mobileCards) {
-          @if (_commandHeaderDef) {
-            <ng-container *ngTemplateOutlet="_commandHeaderDef.templateRef"></ng-container>
-          }
-          @if (_tableOption.selector?.visible && !_selectedTableItems.length && _visibleSelectAll) {
-            <mat-checkbox
-              class="sd-mobile-select-page"
-              [checked]="_isSelectAll"
-              [indeterminate]="_isSelectIndeterminate"
-              (change)="isSelectAll.set($event.checked); onSelectAll()"
-              [attr.data-autoid]="_autoId ? _autoId + '-mobile-select-page' : null">
-              {{ 'core.component.table.mobile.select-page' | sdTranslate }}
-            </mat-checkbox>
-          }
-          @let _sortColumns = mobileSortColumns();
-          @if (_tableOption.sort?.enable && _sortColumns.length) {
+          @let _tools = mobileToolsActions();
+          @if (_tools.length) {
             <button
               mat-button
               type="button"
-              [matMenuTriggerFor]="mobileSortMenu"
-              [attr.data-autoid]="_autoId ? _autoId + '-mobile-sort' : null">
-              <sd-icon name="sort"></sd-icon>{{ 'core.component.table.mobile.sort' | sdTranslate }}
+              class="sd-mobile-tools-trigger"
+              aria-haspopup="dialog"
+              [attr.data-autoid]="_autoId ? _autoId + '-mobile-tools' : null"
+              (click)="mobileTools.openMore()">
+              <sd-icon name="tune"></sd-icon><span>{{ 'core.component.table.mobile.tools' | sdTranslate }}</span>
             </button>
-            <mat-menu #mobileSortMenu="matMenu">
-              @for (column of _sortColumns; track column.field) {
-                <button mat-menu-item type="button" (click)="sort()?.sort({ id: column.field, start: 'asc', disableClear: false })">
-                  <span>{{ column.title }}</span>
-                  @if (column.direction) {
-                    <sd-icon [name]="column.direction === 'asc' ? 'arrow_upward' : 'arrow_downward'"></sd-icon>
-                  }
-                </button>
-              }
-            </mat-menu>
+            <sd-table-mobile-actions
+              #mobileTools
+              [actions]="_tools"
+              [autoOpen]="false"
+              [title]="'core.component.table.mobile.tools-title' | sdTranslate"
+              [autoId]="_autoId"></sd-table-mobile-actions>
           }
-        }
-        @if (_tableOption.reload?.visible) {
-          <sd-button
-            [autoId]="_autoId ? _autoId + '-reload' : null"
-            class="mr-8"
-            [title]="'core.component.table.reload' | sdTranslate"
-            prefixIcon="refresh"
-            (click)="reload()"
-            type="text">
-          </sd-button>
-        }
-        @if (_export && _items.length) {
-          @if (_export.type === 'custom') {
+        } @else {
+          @if (_tableOption.reload?.visible) {
             <sd-button
-              [autoId]="_autoId ? _autoId + '-export' : null"
+              [autoId]="_autoId ? _autoId + '-reload' : null"
               class="mr-8"
-              [title]="_exportTitle"
-              prefixIcon="get_app"
-              (click)="exportCustom()"
+              [title]="'core.component.table.reload' | sdTranslate"
+              prefixIcon="refresh"
+              (click)="reload()"
               type="text">
             </sd-button>
-          } @else {
-            @if (_export.visible) {
-              @if (_exporting) {
-                <sd-button
-                  [autoId]="_autoId ? _autoId + '-export' : null"
-                  class="mr-8"
-                  [loading]="_exporting"
-                  [title]="_exportTitle"
-                  prefixIcon="get_app"
-                  type="text">
-                </sd-button>
-              } @else {
-                @if (_export.visible === 'ALL' || !_export.visible) {
+          }
+          @if (_export && _items.length) {
+            @if (_export.type === 'custom') {
+              <sd-button
+                [autoId]="_autoId ? _autoId + '-export' : null"
+                class="mr-8"
+                [title]="_exportTitle"
+                prefixIcon="get_app"
+                (click)="exportCustom()"
+                type="text">
+              </sd-button>
+            } @else {
+              @if (_export.visible) {
+                @if (_exporting) {
                   <sd-button
                     [autoId]="_autoId ? _autoId + '-export' : null"
                     class="mr-8"
+                    [loading]="_exporting"
                     [title]="_exportTitle"
                     prefixIcon="get_app"
-                    [matMenuTriggerFor]="menu"
                     type="text">
                   </sd-button>
-                  <mat-menu #menu="matMenu">
-                    <button
-                      mat-menu-item
-                      [attr.data-autoid]="_autoId ? _autoId + '-export-excel' : null"
+                } @else {
+                  @if (_export.visible === 'ALL' || !_export.visible) {
+                    <sd-button
+                      [autoId]="_autoId ? _autoId + '-export' : null"
+                      class="mr-8"
+                      [title]="_exportTitle"
+                      prefixIcon="get_app"
+                      [matMenuTriggerFor]="menu"
+                      type="text">
+                    </sd-button>
+                    <mat-menu #menu="matMenu">
+                      <button
+                        mat-menu-item
+                        [attr.data-autoid]="_autoId ? _autoId + '-export-excel' : null"
+                        (click)="exportExcel()"
+                        type="button">
+                        <sd-icon name="file_download"></sd-icon>
+                        <span> {{ 'core.component.table.export-excel' | sdTranslate }}</span>
+                      </button>
+                      <button
+                        mat-menu-item
+                        [attr.data-autoid]="_autoId ? _autoId + '-export-csv' : null"
+                        (click)="exportCSV()"
+                        type="button">
+                        <sd-icon name="file_download"></sd-icon>
+                        <span> {{ 'core.component.table.export-csv' | sdTranslate }}</span>
+                      </button>
+                    </mat-menu>
+                  } @else if (_export.visible === 'EXCEL') {
+                    <sd-button
+                      [autoId]="_autoId ? _autoId + '-export-excel' : null"
+                      class="mr-8"
+                      [title]="_exportTitle"
+                      prefixIcon="get_app"
                       (click)="exportExcel()"
-                      type="button">
-                      <sd-icon name="file_download"></sd-icon>
-                      <span> {{ 'core.component.table.export-excel' | sdTranslate }}</span>
-                    </button>
-                    <button mat-menu-item [attr.data-autoid]="_autoId ? _autoId + '-export-csv' : null" (click)="exportCSV()" type="button">
-                      <sd-icon name="file_download"></sd-icon>
-                      <span> {{ 'core.component.table.export-csv' | sdTranslate }}</span>
-                    </button>
-                  </mat-menu>
-                } @else if (_export.visible === 'EXCEL') {
-                  <sd-button
-                    [autoId]="_autoId ? _autoId + '-export-excel' : null"
-                    class="mr-8"
-                    [title]="_exportTitle"
-                    prefixIcon="get_app"
-                    (click)="exportExcel()"
-                    type="text">
-                  </sd-button>
-                } @else if (_export.visible === 'CSV') {
-                  <sd-button
-                    [autoId]="_autoId ? _autoId + '-export-csv' : null"
-                    class="mr-8"
-                    [title]="_exportTitle"
-                    prefixIcon="get_app"
-                    (click)="exportCSV()"
-                    type="text">
-                  </sd-button>
+                      type="text">
+                    </sd-button>
+                  } @else if (_export.visible === 'CSV') {
+                    <sd-button
+                      [autoId]="_autoId ? _autoId + '-export-csv' : null"
+                      class="mr-8"
+                      [title]="_exportTitle"
+                      prefixIcon="get_app"
+                      (click)="exportCSV()"
+                      type="text">
+                    </sd-button>
+                  }
                 }
               }
             }
           }
-        }
 
-        @if (_configComponent) {
-          <sd-button
-            [autoId]="_autoId ? _autoId + '-config' : null"
-            class="mr-8"
-            [title]="'core.component.table.setup-short' | sdTranslate"
-            prefixIcon="settings"
-            (click)="_configComponent.open()"
-            type="text">
-          </sd-button>
-        }
-        <!-- Mobile: nút Filter mở mobile-filter drawer (inline filter ẩn trên mobile) -->
-        @if (_isMobile) {
-          @if (!_tableOption.filter?.disabled && _mobileFilter) {
+          @if (_configComponent) {
             <sd-button
-              [autoId]="_autoId ? _autoId + '-mobile-filter-open' : null"
+              [autoId]="_autoId ? _autoId + '-config' : null"
               class="mr-8"
-              prefixIcon="filter_alt"
-              [title]="_mobileCards ? ('core.component.table.filter' | sdTranslate) : undefined"
-              (click)="_mobileFilter.open()"
+              [title]="'core.component.table.setup-short' | sdTranslate"
+              prefixIcon="settings"
+              (click)="_configComponent.open()"
               type="text">
             </sd-button>
+          }
+          <!-- Mobile: nút Filter mở mobile-filter drawer (inline filter ẩn trên mobile) -->
+          @if (_isMobile) {
+            @if (!_tableOption.filter?.disabled && _mobileFilter) {
+              <sd-button
+                [autoId]="_autoId ? _autoId + '-mobile-filter-open' : null"
+                class="mr-8"
+                prefixIcon="filter_alt"
+                [title]="_mobileCards ? ('core.component.table.filter' | sdTranslate) : undefined"
+                (click)="_mobileFilter.open()"
+                type="text">
+              </sd-button>
+            }
           }
         }
       </div>

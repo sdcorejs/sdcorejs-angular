@@ -1,36 +1,14 @@
 @let _busy = busy();
+@let _error = error();
 @let _autoId = autoId();
 @let _title = title();
 @let _selection = selection();
-<div #bar class="sd-mobile-actions" role="region" [attr.aria-label]="_title" (keydown)="onEscape($event)">
-  <sd-quick-action opened contained>
-    <div sdMessage class="sd-mobile-action-heading" [class.sd-mobile-selection-summary]="_selection">
-      <span class="T14M sd-mobile-action-title">{{ _title }}</span>
-      @if (showSelectPage()) {
-        <mat-checkbox
-          class="sd-mobile-select-page"
-          [checked]="pageChecked()"
-          [indeterminate]="pageIndeterminate()"
-          (change)="selectPage.emit($event.checked)"
-          [attr.data-autoid]="_autoId ? _autoId + '-mobile-select-page' : null">
-          {{ 'core.component.table.mobile.select-page' | sdTranslate }}
-        </mat-checkbox>
-      }
-      <button
-        mat-icon-button
-        type="button"
-        class="sd-mobile-end"
-        [class.sd-mobile-clear]="_selection"
-        [attr.aria-label]="(_selection ? 'core.component.table.clear-selection' : 'core.common.close') | sdTranslate"
-        (click)="end.emit()"
-        [attr.data-autoid]="_autoId ? _autoId + '-mobile-end' : null">
-        <sd-icon name="close"></sd-icon>
-      </button>
-      @if (message(); as message) {
-        <span class="T14R sd-mobile-selection-message">{{ message }}</span>
-      }
-    </div>
-    @if (actions().length) {
+@if (_selection) {
+  <div #bar class="sd-mobile-actions" role="region" [attr.aria-label]="_title">
+    <sd-quick-action opened contained class="sd-mobile-quick-action">
+      <span sdMessage class="sd-mobile-selection-summary" [attr.aria-label]="_title">
+        <span class="sd-mobile-selection-count T14M">{{ count() }}</span>
+      </span>
       <div sdAction class="sd-mobile-action-buttons">
         @for (action of direct(); track action.key) {
           <span class="sd-mobile-action-direct">
@@ -40,8 +18,8 @@
               [prefixIcon]="action.icon"
               [fontSet]="action.fontSet"
               [color]="action.color"
-              size="lg"
-              [type]="action.type || 'light'"
+              size="sm"
+              [type]="action.type || 'text'"
               [disabled]="_busy || action.disabled"
               (click)="run(action)"></sd-button>
           </span>
@@ -58,10 +36,73 @@
             <sd-icon name="more_horiz"></sd-icon><span>{{ 'core.component.table.mobile.more' | sdTranslate }}</span>
           </button>
         }
+        <button
+          mat-icon-button
+          type="button"
+          class="sd-mobile-end sd-mobile-clear"
+          [attr.aria-label]="'core.component.table.clear-selection' | sdTranslate"
+          (click)="end.emit()"
+          [attr.data-autoid]="_autoId ? _autoId + '-mobile-end' : null">
+          <sd-icon name="close"></sd-icon>
+        </button>
       </div>
+    </sd-quick-action>
+    @if (_error; as message) {
+      <p role="alert">{{ message }}</p>
     }
-  </sd-quick-action>
-  @if (error(); as message) {
-    <p role="alert">{{ message }}</p>
-  }
-</div>
+  </div>
+}
+<sd-modal
+  #sheet
+  [autoId]="_autoId ? _autoId + '-mobile-sheet' : undefined"
+  [title]="_title"
+  view="bottom-sheet"
+  [disableBackdropClose]="false"
+  modalClass="sd-table-mobile-sheet-panel"
+  (sdClosed)="onSheetClosed()">
+  <div class="sd-mobile-sheet">
+    @for (action of sheetActions(); track action.key) {
+      @if (action.children; as children) {
+        <section [attr.aria-label]="action.title" class="sd-mobile-action-group">
+          <h3 class="T12M">{{ action.title }}</h3>
+          @for (child of children; track child.key) {
+            <button
+              mat-button
+              type="button"
+              class="sd-mobile-sheet-action"
+              [attr.data-autoid]="_autoId ? _autoId + '-mobile-' + child.key : null"
+              [disabled]="_busy || action.disabled || child.disabled"
+              (click)="runSheet(child)">
+              <sd-icon [name]="child.icon || 'chevron_right'" [fontSet]="child.fontSet" [color]="child.color"></sd-icon>
+              <span class="sd-mobile-sheet-label"
+                >{{ child.title }}
+                @if (child.htmlTemplate) {
+                  <span [innerHTML]="child.htmlTemplate"></span>
+                }
+              </span>
+            </button>
+          }
+        </section>
+      } @else {
+        <button
+          mat-button
+          type="button"
+          class="sd-mobile-sheet-action"
+          [attr.data-autoid]="_autoId ? _autoId + '-mobile-' + action.key : null"
+          [disabled]="_busy || action.disabled"
+          (click)="runSheet(action)">
+          <sd-icon [name]="action.icon || 'chevron_right'" [fontSet]="action.fontSet" [color]="action.color"></sd-icon>
+          <span class="sd-mobile-sheet-label"
+            >{{ action.title }}
+            @if (action.htmlTemplate) {
+              <span [innerHTML]="action.htmlTemplate"></span>
+            }
+          </span>
+        </button>
+      }
+    }
+    @if (_error; as message) {
+      <p role="alert">{{ message }}</p>
+    }
+  </div>
+</sd-modal>
