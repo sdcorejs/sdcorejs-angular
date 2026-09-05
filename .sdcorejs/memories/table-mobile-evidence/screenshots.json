@@ -1,0 +1,338 @@
+{
+  "artifact_id": "sd-table-mobile-cards-captures",
+  "change_ref": "sd-table-mobile-cards",
+  "owner": "sdcorejs-angular",
+  "source_plan": ".sdcorejs/plans/angular/2026-09-05-sd-table-mobile-cards.md",
+  "referenced_by": "README.md",
+  "capture_tool": "Playwright with installed Chrome",
+  "browser": "151.0.7922.174",
+  "captured_at": [
+    "2026-09-05T06:18:16.129Z",
+    "2026-09-05T06:17:51.504Z"
+  ],
+  "route": "/v/22.2.5/components/table/examples",
+  "ui_capture_context": {
+    "origin": "built showcase using canonical v19 library",
+    "authentication": "public local example; no user account or auth state",
+    "pii_screening": "PASS: fictional employee fixtures already defined in the public showcase",
+    "containment": "PASS: captured image bounds fit recorded viewport; no mobile table horizontal overflow",
+    "source_manifest_sha256": "3d9047d7ec537babbfbeeb76aaaa91f9c645fecc4eace61ae3551da3f0ef36cb"
+  },
+  "captures": [
+    {
+      "path": "1440-dark-desktop.png",
+      "sha256": "cf70666312ff8431485847d0e1f428010420b64780d5c8bb9777444cc212be1a",
+      "bytes": 23694,
+      "image_size": [
+        1359,
+        347
+      ],
+      "viewport": [
+        1440,
+        960
+      ],
+      "theme": "dark",
+      "target_state": "dark-desktop"
+    },
+    {
+      "path": "1440-light-desktop.png",
+      "sha256": "d0daea9545fc0894ea0625b0880933671b02fb95fb92db8155ad712439c9cd48",
+      "bytes": 23742,
+      "image_size": [
+        1359,
+        347
+      ],
+      "viewport": [
+        1440,
+        960
+      ],
+      "theme": "light",
+      "target_state": "light-desktop"
+    },
+    {
+      "path": "320-dark-browsing.png",
+      "sha256": "0010b2f55c01b36cd044f742828203c79d2922e499691aa469c3490eb65ee857",
+      "bytes": 26865,
+      "image_size": [
+        279,
+        761
+      ],
+      "viewport": [
+        320,
+        960
+      ],
+      "theme": "dark",
+      "target_state": "dark-browsing"
+    },
+    {
+      "path": "320-dark-more.png",
+      "sha256": "6417004c68726b4cc5e46b2b555444a44aae931aafa623fd888bc7b7746fbf7b",
+      "bytes": 44053,
+      "image_size": [
+        320,
+        960
+      ],
+      "viewport": [
+        320,
+        960
+      ],
+      "theme": "dark",
+      "target_state": "dark-more"
+    },
+    {
+      "path": "320-dark-row-command.png",
+      "sha256": "619edd9c341cb93df6c8ffd424dba18e2cabf770a86d3ad82a98b91b212ca357",
+      "bytes": 28927,
+      "image_size": [
+        279,
+        761
+      ],
+      "viewport": [
+        320,
+        960
+      ],
+      "theme": "dark",
+      "target_state": "dark-row-command"
+    },
+    {
+      "path": "320-dark-selection.png",
+      "sha256": "6f91c70e77176d338692440149935a6461110b75e3e08421f0e1c1e9fe402125",
+      "bytes": 27550,
+      "image_size": [
+        279,
+        761
+      ],
+      "viewport": [
+        320,
+        960
+      ],
+      "theme": "dark",
+      "target_state": "dark-selection"
+    },
+    {
+      "path": "320-light-browsing.png",
+      "sha256": "5917bdb1a2b1c9e8810aaac7e84f770e1378b39f489646c53b48570ced91311c",
+      "bytes": 26443,
+      "image_size": [
+        279,
+        761
+      ],
+      "viewport": [
+        320,
+        960
+      ],
+      "theme": "light",
+      "target_state": "light-browsing"
+    },
+    {
+      "path": "320-light-more.png",
+      "sha256": "f8a80c45816fc0aefa651298c5adaff591bb7fa5ab455140cf4c1d14885eda9e",
+      "bytes": 44626,
+      "image_size": [
+        320,
+        960
+      ],
+      "viewport": [
+        320,
+        960
+      ],
+      "theme": "light",
+      "target_state": "light-more"
+    },
+    {
+      "path": "320-light-row-command.png",
+      "sha256": "b70e662b49fbf88e7e7cb2ff1e567eaa930ac4075201ef448ba034b08aaf2828",
+      "bytes": 28578,
+      "image_size": [
+        279,
+        761
+      ],
+      "viewport": [
+        320,
+        960
+      ],
+      "theme": "light",
+      "target_state": "light-row-command"
+    },
+    {
+      "path": "320-light-selection.png",
+      "sha256": "6b4a846146bf3e5719014169e1fec1067361d3b7555b516e9c2fadff089f2bcd",
+      "bytes": 27209,
+      "image_size": [
+        279,
+        761
+      ],
+      "viewport": [
+        320,
+        960
+      ],
+      "theme": "light",
+      "target_state": "light-selection"
+    },
+    {
+      "path": "390-dark-browsing.png",
+      "sha256": "3869da78b61a2e7a09970274fa4ea54c2a9d9baf807f04bf56755e784c7975d9",
+      "bytes": 27701,
+      "image_size": [
+        349,
+        761
+      ],
+      "viewport": [
+        390,
+        960
+      ],
+      "theme": "dark",
+      "target_state": "dark-browsing"
+    },
+    {
+      "path": "390-dark-more.png",
+      "sha256": "526ece918559ac7785182ee9867040945d363e9e5bc199d87dc8ad4f463a19b9",
+      "bytes": 47757,
+      "image_size": [
+        390,
+        960
+      ],
+      "viewport": [
+        390,
+        960
+      ],
+      "theme": "dark",
+      "target_state": "dark-more"
+    },
+    {
+      "path": "390-dark-row-command.png",
+      "sha256": "fa4ff5d3d39da92fd0fe75800ff91f98fce82ee7dc160169dd9e28c5c80d6d9c",
+      "bytes": 30169,
+      "image_size": [
+        349,
+        761
+      ],
+      "viewport": [
+        390,
+        960
+      ],
+      "theme": "dark",
+      "target_state": "dark-row-command"
+    },
+    {
+      "path": "390-dark-selection.png",
+      "sha256": "9ef2a12f31d634b8d31f274d94ee8f36b0cea0ca52dca47e296b9fcea320bee0",
+      "bytes": 31746,
+      "image_size": [
+        349,
+        761
+      ],
+      "viewport": [
+        390,
+        960
+      ],
+      "theme": "dark",
+      "target_state": "dark-selection"
+    },
+    {
+      "path": "390-drawer-selection.png",
+      "sha256": "0f3f235d9cb02daf8cb398d636e1eaeec3525e90e2b1a50cd681cd1df5d61506",
+      "bytes": 36224,
+      "image_size": [
+        390,
+        960
+      ],
+      "viewport": [
+        390,
+        960
+      ],
+      "theme": "light",
+      "target_state": "drawer-selection"
+    },
+    {
+      "path": "390-light-browsing.png",
+      "sha256": "929e7bb2a79cdb8910482c686260051281ce2bec10273756bc69aac59dbfc783",
+      "bytes": 27258,
+      "image_size": [
+        349,
+        761
+      ],
+      "viewport": [
+        390,
+        960
+      ],
+      "theme": "light",
+      "target_state": "light-browsing"
+    },
+    {
+      "path": "390-light-more.png",
+      "sha256": "c63148ed6a5183d5e7dde05205f65839e46f62805b47e431cfdf7589f7751aaa",
+      "bytes": 48531,
+      "image_size": [
+        390,
+        960
+      ],
+      "viewport": [
+        390,
+        960
+      ],
+      "theme": "light",
+      "target_state": "light-more"
+    },
+    {
+      "path": "390-light-row-command.png",
+      "sha256": "22353cf0c087b56d915a0527f9c53d95768ea59926612015e440e07a66b1a935",
+      "bytes": 29722,
+      "image_size": [
+        349,
+        761
+      ],
+      "viewport": [
+        390,
+        960
+      ],
+      "theme": "light",
+      "target_state": "light-row-command"
+    },
+    {
+      "path": "390-light-selection.png",
+      "sha256": "b94335fe22a4794e8fd43d528dce89dad626de8c396dc1ac159cb4341cd0bec4",
+      "bytes": 31415,
+      "image_size": [
+        349,
+        761
+      ],
+      "viewport": [
+        390,
+        960
+      ],
+      "theme": "light",
+      "target_state": "light-selection"
+    },
+    {
+      "path": "390-modal-more.png",
+      "sha256": "7097aaa9488a3cb45e491aa0a647ca8cd5645056cdf23ce1e1350bafe92cfe90",
+      "bytes": 45000,
+      "image_size": [
+        390,
+        960
+      ],
+      "viewport": [
+        390,
+        960
+      ],
+      "theme": "light",
+      "target_state": "modal-more"
+    },
+    {
+      "path": "390-server-preservation.png",
+      "sha256": "1a48bbe132e730a3752bccd638ffab4ec04e52bc5759f42736da74958b86eede",
+      "bytes": 33983,
+      "image_size": [
+        349,
+        761
+      ],
+      "viewport": [
+        390,
+        960
+      ],
+      "theme": "light",
+      "target_state": "server-preservation"
+    }
+  ]
+}

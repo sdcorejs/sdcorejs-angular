@@ -152,6 +152,28 @@ describe('ExampleViewerComponent', () => {
     container.remove();
   });
 
+  it('keeps pre-created Core portals interactive and lets their overlay own Escape and Tab', () => {
+    const portal = document.createElement('div');
+    portal.className = 'sd-side-drawer';
+    const input = document.createElement('input');
+    portal.appendChild(input);
+    document.body.appendChild(portal);
+    try {
+      (fixture.nativeElement.querySelector('[aria-label="Expand live example"]') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(portal.hasAttribute('inert')).toBeFalse();
+      input.focus();
+      for (const key of ['Tab', 'Escape']) {
+        const event = new KeyboardEvent('keydown', { key, cancelable: true, bubbles: true });
+        input.dispatchEvent(event);
+        expect(event.defaultPrevented).toBeFalse();
+      }
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.example--expanded')).not.toBeNull();
+      expect(document.activeElement).toBe(input);
+    } finally { portal.remove(); }
+  });
+
   it('selects generated source tabs and copies the displayed source', async () => {
     const sourceToggle = fixture.nativeElement.querySelector('[aria-label="Expand source"]') as HTMLButtonElement;
     const sourceId = sourceToggle.getAttribute('aria-controls');

@@ -1,6 +1,20 @@
 import type { EN_MESSAGES } from './en';
 
 export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
+  'core.component.table.mobile.row': '행 {index}',
+  'core.component.table.mobile.select-row': '{row} 선택',
+  'core.component.table.mobile.commands-for': '{row} 작업',
+  'core.component.table.mobile.expand-row': '{row} 세부 정보 열기/닫기',
+  'core.component.table.mobile.level': '수준 {level}',
+  'core.component.table.mobile.selected-across-pages': '{count}개 선택 — 이 페이지 {here}개',
+  'core.component.table.mobile.selected': '{count}개 선택',
+  'core.component.table.mobile.action': '작업 {index}',
+  'core.component.table.mobile.sort': '정렬',
+  'core.component.table.mobile.more': '더 보기',
+  'core.component.table.mobile.select-page': '이 페이지 선택',
+  'core.component.table.mobile.reorder': '드래그하여 행 순서 변경',
+  'core.component.table.mobile.details': '세부 정보',
+  'core.component.table.mobile.summary': '요약',
   'core.common.cancel': '취소',
   'core.common.close': '닫기',
   'core.common.reload': '페이지 새로고침',

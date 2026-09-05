@@ -1,0 +1,97 @@
+const { chromium } = await import(process.env.SD_PLAYWRIGHT_MODULE ?? 'playwright');
+import assert from 'node:assert/strict';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+const output=dirname(fileURLToPath(import.meta.url));
+const browser=await chromium.launch({headless:true,channel:'chrome'});
+const errors=[]; const evidence=[];
+async function scenario(width,theme){
+ const page=await browser.newPage({viewport:{width,height:960}});
+ page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('http://127.0.0.1:4300/v/22.2.5/components/table/examples',{waitUntil:'networkidle'});
+ await page.addScriptTag({path:join(output,'../../../versions/v19/node_modules/axe-core/axe.min.js')});
+ if(theme==='dark'){
+  await page.addStyleTag({content:readFileSync(join(output,'dark-theme.css'),'utf8')});
+  await page.locator('html').evaluate(el=>el.classList.add('sd-mobile-review-dark'));
+ }
+ const example=page.locator('#components-table-example-the-mobile-va-thao-tac');
+ await example.scrollIntoViewIfNeeded();
+ await example.getByRole('button',{name:'Expand live example',exact:true}).click();
+ const table=example.locator('sd-table').first();
+ const cards=table.locator('.sd-mobile-card');
+ const shot=async state=>{await table.locator('.c-table').evaluate(el=>el.scrollTop=0); await page.waitForTimeout(350); return table.screenshot({path:join(output,`${width}-${theme}-${state}.png`)});};
+ if(width>=768){
+  await table.locator('table.mat-mdc-table').waitFor();
+  assert.equal(await cards.count(),0);
+  await shot('desktop');
+  evidence.push({width,theme,desktop:true}); await page.close(); return;
+ }
+ await cards.first().waitFor();
+ assert.equal(await cards.count(),3);
+ assert.equal(await table.locator('table.mat-mdc-table').count(),0);
+ const audit=async()=>{const result=await table.evaluate(el=>globalThis.axe.run(el,{runOnly:['wcag2a','wcag2aa','wcag21aa']})); assert.deepEqual(result.violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)})),[]);};
+ await audit();
+ const dimensions=await table.evaluate(el=>({width:el.clientWidth,scroll:el.scrollWidth}));
+ assert.ok(dimensions.scroll<=dimensions.width+1,JSON.stringify(dimensions));
+ const inputs=cards.locator('input[type=checkbox]');
+ assert.equal(await inputs.nth(2).isDisabled(),true);
+ await shot('browsing');
+ await cards.first().getByRole('button',{name:'Ghi chú',exact:true}).click();
+ assert.equal(await table.locator('.sd-mobile-actions').count(),0);
+ await cards.first().locator('.sd-mobile-card-body strong').click();
+ await table.locator('.sd-mobile-actions').waitFor();
+ assert.equal(await inputs.first().isChecked(),false);
+ assert.match(await table.locator('.sd-mobile-action-title').innerText(),/NV-1/);
+ await shot('row-command');
+ await table.locator('.sd-mobile-more').click();
+ const sheet=page.locator('mat-bottom-sheet-container');
+ await sheet.waitFor();
+ assert.match(await sheet.innerText(),/Hồ sơ/);
+ await page.waitForTimeout(350);
+ await page.screenshot({path:join(output,`${width}-${theme}-more.png`)});
+ await page.keyboard.press('Escape');
+ await sheet.waitFor({state:'detached'});
+ assert.equal(await inputs.first().isChecked(),false);
+ await inputs.first().check();
+ await page.waitForTimeout(100);
+ assert.equal(await table.locator('.sd-mobile-command-trigger').count(),0);
+ await cards.nth(1).locator('.sd-mobile-card-body strong').click();
+ assert.equal(await inputs.nth(1).isChecked(),true);
+ await shot('selection');
+ await audit();
+ await table.evaluate(el=>el.style.setProperty('--sd-table-mobile-bottom-offset','60px'));
+ await table.locator('.c-table').evaluate(el=>el.scrollTop=el.scrollHeight);
+ await page.waitForTimeout(200);
+ const finalCard=await cards.last().boundingBox();const actionBox=await table.locator('.c-quick-action').boundingBox();
+ assert.ok(finalCard.y+finalCard.height<=actionBox.y+1,JSON.stringify({finalCard,actionBox,offset:60}));
+ await table.evaluate(el=>el.style.removeProperty('--sd-table-mobile-bottom-offset'));
+ const selected=await table.locator('.sd-mobile-selection-summary').innerText();
+ assert.match(selected,/2/);
+ await page.setViewportSize({width:1440,height:960});
+ await table.locator('table.mat-mdc-table').waitFor();
+ assert.equal(await cards.count(),0);
+ assert.equal(await table.locator('table tbody input[type=checkbox]:checked').count(),2);
+ await page.setViewportSize({width,height:960});
+ await cards.first().waitFor();
+ assert.equal(await inputs.first().isChecked(),true);
+ await table.locator('.sd-mobile-clear').click();
+ assert.equal(await table.locator('.sd-mobile-actions').count(),0);
+ const last=cards.last();
+ await last.scrollIntoViewIfNeeded();
+ await last.getByRole('button',{name:/Chi tiết|chi tiết/}).click();
+ await last.locator('.sd-mobile-expand').waitFor();
+ assert.match(await last.innerText(),/@company.vn/);
+ const paginator=table.locator('mat-paginator');
+ await paginator.scrollIntoViewIfNeeded(); assert.ok(await paginator.isVisible());
+ const paginatorTarget=await paginator.locator('.mat-mdc-paginator-navigation-next').boundingBox();
+ assert.ok(paginatorTarget.height>=44 && paginatorTarget.width>=44,JSON.stringify(paginatorTarget));
+ evidence.push({width,theme,dimensions,selected,paginatorTarget,checks:['renderer','disabled row','child button','row command','More groups/Escape','multi selection','resize preservation','expand','paginator reachable with 44px targets','Axe WCAG 2.1 A/AA browsing and selection: zero violations','60px bottom navigation clearance']});
+ await page.close();
+}
+try{
+ for(const width of [320,390,1440]) for(const theme of ['light','dark']) await scenario(width,theme);
+ assert.deepEqual(errors,[]);
+ writeFileSync(join(output,'browser-results.json'),JSON.stringify({at:new Date().toISOString(),browser:browser.version(),evidence,errors},null,2));
+ console.log(JSON.stringify(evidence,null,2));
+} finally {await browser.close();}

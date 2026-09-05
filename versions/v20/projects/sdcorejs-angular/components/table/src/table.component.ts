@@ -32,6 +32,9 @@ import { SdTableFilterDefDirective } from './directives/sd-table-filter-def.dire
 import { SdMaterialFooterDefDirective } from './directives/sd-table-footer-def.directive';
 import { SdTableTitleDefDirective } from './directives/sd-table-title-def.directive';
 import { SdTableCommandHeaderDefDirective } from './directives/sd-table-command-header-def.directive';
+import { SdTableRowMobileDefDirective } from './directives/sd-table-row-mobile-def.directive';
+import { SdTableMobileCardsComponent } from './components/mobile-cards/mobile-cards.component';
+import { SdViewportService } from '@sdcorejs/angular/services/viewport';
 import { SdTableColumn } from './models/table-column.model';
 import { SdTableCommand } from './models/table-command.model';
 import { SdTableOption } from './models/table-option.model';
@@ -52,7 +55,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdQuickAction } from '@sdcorejs/angular/components/quick-action';
-import { SdDesktopDirective, SdHoverCopyDirective, SdMobileDirective, SdScrollDirective } from '@sdcorejs/angular/directives';
+import { SdHoverCopyDirective, SdScrollDirective } from '@sdcorejs/angular/directives';
 import { SdSafeHtmlPipe } from '@sdcorejs/angular/pipes';
 
 import { Operator } from '@sdcorejs/utils/models';
@@ -71,8 +74,6 @@ import { SdTableItem } from './models/table-item.model';
 import { ConfiguredTableResult } from './models/table-option-config.model';
 import { SdGroupPipe } from './pipes/sd-group.pipe';
 import { SdTreePipe } from './pipes/sd-tree.pipe';
-import { SdSelectionDisabledPipe } from './pipes/selection-disabled.pipe';
-import { SdSelectionVisiblePipe } from './pipes/selection-visible.pipe';
 import { SdTableExportContext, TableExportService, TableFormatService } from './services';
 import { ConfigService } from './services/config.service';
 import { buildColumnWidthMap } from './services/column-width.util';
@@ -89,7 +90,7 @@ import {
   syncGroupSelectionMeta,
   syncPreservedSelection,
 } from './services/table-selection/table-selection.util';
-import { resolveSelectAllVisible } from './services/table-selection/selection-action.util';
+import { prepareTableSelection, resolveSelectAllVisible } from './services/table-selection/selection-action.util';
 import { SdTableFilterService } from './services/table-filter/table-filter.service';
 import {
   clearTreeChildCache,
@@ -186,6 +187,7 @@ const EMPTY_COMMANDS: SdTableCommand[] = [];
   ],
   host: {
     '[attr.data-autoid]': 'autoId()',
+    tabindex: '0',
     '[attr.data-loading]': 'loading() ? "true" : "false"',
   },
   providers: [
@@ -223,18 +225,15 @@ const EMPTY_COMMANDS: SdTableCommand[] = [];
     MobileFilterComponent,
     SdGroupPipe,
     SdTreePipe,
-    SdSelectionVisiblePipe,
     SdSafeHtmlPipe,
-    SdSelectionDisabledPipe,
     SdScrollDirective,
-    SdDesktopDirective,
-    SdMobileDirective,
     SdHoverCopyDirective,
     SelectorActionComponent,
     StickyShadowDirective,
     SdColumnResizeDirective,
     SdTableSortHeaderDirective,
     SdTranslatePipe,
+    SdTableMobileCardsComponent,
   ],
 })
 export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
@@ -267,6 +266,9 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   sdFooterDefs = contentChildren(SdMaterialFooterDefDirective);
   sdFilterDefs = contentChildren(SdTableFilterDefDirective);
   sdTitleDefs = contentChildren(SdTableTitleDefDirective);
+  readonly sdRowMobileDef = contentChild<SdTableRowMobileDefDirective<T>>(SdTableRowMobileDefDirective, { descendants: false });
+  readonly isMobile = inject(SdViewportService).isMobile;
+  readonly mobileCards = computed(() => this.isMobile() && !!this.sdRowMobileDef());
 
   // ==========================================
   // 3. COMPUTED FROM QUERIES
@@ -290,6 +292,17 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   });
 
   hasFooter = computed(() => Object.keys(this.footerDef()).length > 0);
+  readonly mobileColumns = computed<SdTableColumn[]>(() => {
+    const config = this.configuration();
+    return [...(config?.firstColumns ?? []), ...(config?.secondColumns ?? [])].filter(column => column.type !== 'children');
+  });
+  readonly mobileFooterColumns = computed(() => {
+    const config = this.configuration();
+    const footers = this.footerDef();
+    return [...(config?.firstColumns ?? []), ...(config?.secondColumns ?? [])].filter(
+      column => !!footers[column.field] && config?.displayedFooters.includes(column.field)
+    );
+  });
 
   titleDef = computed(() => {
     const map: Record<string, SdTableTitleDefDirective> = {};
@@ -311,7 +324,12 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   total = signal<number | undefined>(undefined);
 
   loading = signal(false);
+  loadError = signal(false);
   isSelectAll = signal(false);
+  isSelectIndeterminate = signal(false);
+  readonly sortState = signal<{ active: string; direction: SortDirection }>({ active: '', direction: '' });
+  readonly pageRevision = signal(0);
+  readonly dataRevision = signal(0);
 
   /**
    * Checkbox "chọn tất cả" ở header có hiển thị không.
@@ -324,7 +342,14 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
    * trả một Promise mới + đặt thêm một timer không ai dọn. Computed tự tính từ
    * `items()` + `selector` nên không phụ thuộc pipe nào chạy trước → bỏ hẳn timer.
    */
-  visibleSelectAll = computed(() => resolveSelectAllVisible(this.items(), this.tableOption()?.selector));
+  visibleSelectAll = computed(() => {
+    this.selectedTableItems();
+    this.treeRevision();
+    return resolveSelectAllVisible(
+      this.#getSelectionRows().filter(row => row.meta.selector?.selectable),
+      this.tableOption()?.selector
+    );
+  });
 
   /**
    * Danh sách command của row, memoize theo option.
@@ -361,6 +386,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   #itemIndexMap = new WeakMap<SdTableItem<T>, number>();
   #treeExpandState = new Map<string, boolean>();
   treeRevision = signal(0);
+  readonly expandRevision = signal(0);
   // Search ở cấp con (static tree + type 'local'): predicate khớp 1 dòng theo
   // column filter hiện hành. Set ở #filterLocal khi có filter active, đọc lại ở
   // #render/#ensureChildItemsFormatted dùng predicate này để prune + auto-expand các
@@ -371,6 +397,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
   // 1. Private Services
   #ref = inject(ChangeDetectorRef);
+  #destroyed = false;
   #configService = inject(ConfigService);
   #gridFilterService = inject(SdTableFilterService);
   #notifyService = inject(SdNotifyService);
@@ -430,27 +457,36 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       }
     });
 
-    effect(() => {
+    effect(onCleanup => {
       const paginator = this.paginator();
       if (paginator) {
         untracked(() => {
-          this.#subscription.add(paginator.page.subscribe(() => this.#requestReload(false)));
+          const subscription = paginator.page.subscribe(() => {
+            this.pageRevision.update(n => n + 1);
+            this.#requestReload(false);
+          });
+          onCleanup(() => subscription.unsubscribe());
+        });
+      }
+    });
+
+    effect(onCleanup => {
+      const sort = this.sort();
+      if (sort) {
+        untracked(() => {
+          const subscription = sort.sortChange.subscribe(state => {
+            this.sortState.set(state);
+            this.#ref.markForCheck();
+            this.#requestReload(false);
+          });
+          onCleanup(() => subscription.unsubscribe());
         });
       }
     });
 
     effect(() => {
-      const sort = this.sort();
-      if (sort) {
-        untracked(() => {
-          this.#subscription.add(
-            sort.sortChange.subscribe(() => {
-              this.#ref.markForCheck();
-              this.#requestReload(false);
-            })
-          );
-        });
-      }
+      this.mobileCards();
+      untracked(() => this.mobileFilter()?.close());
     });
 
     effect(() => {
@@ -488,7 +524,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
             const filterInfo = this.getFilterRequest();
             const result = await this.#load(filterInfo, !this.#loadCompleted || data.force);
             if (data.revision !== this.#optionRevision) return undefined;
-            this.#loadCompleted = true;
+            this.#loadCompleted = !this.loadError();
             return {
               result,
               revision: data.revision,
@@ -503,6 +539,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.#destroyed = true;
     this.#subscription.unsubscribe();
   }
 
@@ -544,6 +581,10 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     this.total.set(undefined);
     this.loading.set(false);
     this.isSelectAll.set(false);
+    this.isSelectIndeterminate.set(false);
+    this.loadError.set(false);
+    this.sortState.set({ active: '', direction: '' });
+    this.pageRevision.update(n => n + 1);
     this.isFiltered.set(false);
     this.requireFiltered.set(false);
 
@@ -738,6 +779,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     total: number;
   }> => {
     this.loading.set(true);
+    if (force || this.tableOption()?.type === 'server') this.loadError.set(false);
     this.#ref.detectChanges();
     this.#checkFilter(filterReq);
 
@@ -763,35 +805,36 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
         columns: opt.columns,
         externalFilters: opt.filter?.externalFilters,
       });
-      const data = await items(filterReq, pagingReq).catch(err => {
-        console.error(err);
-        return {
-          items: [] as T[],
-          total: 0,
-        };
-      });
+      const data = await Promise.resolve()
+        .then(() => items(filterReq, pagingReq))
+        .catch(err => {
+          this.loadError.set(true);
+          console.error(err);
+          return {
+            items: [] as T[],
+            total: 0,
+          };
+        });
       return {
         items: await this.#tableFormatService
           .format(data?.items, opt.columns, this.cacheValues, this.#cacheObjValues, opt.rowKey)
           .finally(() => {
             this.loading.set(false);
-            this.#ref.detectChanges();
+            if (!this.#destroyed) this.#ref.detectChanges();
           }),
         total: data?.total || 0,
       };
     }
     if (force) {
       const { items } = opt;
-      const results = items();
-      let data: T[] = [];
-      if (results instanceof Promise) {
-        data = await results.catch(err => {
-          this.#notifyService.warning(this.#i18n.t('core.component.table.error-occurred'));
-          console.error(err);
-          return [];
-        });
-      } else {
-        data = results;
+      let data: T[];
+      try {
+        data = await items();
+      } catch (err) {
+        this.loadError.set(true);
+        this.#notifyService.warning(this.#i18n.t('core.component.table.error-occurred'));
+        console.error(err);
+        data = [];
       }
       if (!Array.isArray(data)) {
         this.#notifyService.warning(this.#i18n.t('core.component.table.not-an-array'));
@@ -800,7 +843,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       this.#localItems = await this.#tableFormatService.format(data, opt.columns, this.cacheValues, this.#cacheObjValues, opt.rowKey);
     }
     this.loading.set(false);
-    this.#ref.detectChanges();
+    if (!this.#destroyed) this.#ref.detectChanges();
     return this.#filterLocal(this.#localItems, filterReq);
   };
 
@@ -809,6 +852,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     scrollTop = true,
     additionArgs?: { fromSource?: 'PAGING' | 'RELOAD' }
   ) => {
+    if (this.#destroyed) return;
     if (scrollTop) {
       this.scroll()?.scrollTop();
     }
@@ -841,12 +885,14 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     }
     this.#treeSearchActive = searchNow;
 
-    // Restore selection từ preservedSelectedMap (chỉ khi preserveSelection bật).
-    // Phải chạy TRƯỚC applyDefaultSelected để user-selection ưu tiên hơn default.
-    this.#restorePreservedSelection();
-
-    // Áp dụng defaultSelected: pre-select các item thỏa predicate
+    // why: lựa chọn được giữ qua các trang ưu tiên hơn default của lần tải mới.
     this.#applyDefaultSelected();
+    this.#restorePreservedSelection();
+    if (this.tableOption()?.selector?.single) {
+      const rows = collectFormattedTreeRows(this.items());
+      const chosen = this.#preservedSelectedMap.values().next().value ?? rows.find(row => row.meta.selector?.isSelected);
+      for (const row of rows) row.meta.selector!.isSelected = row.meta.id === chosen?.meta.id;
+    }
 
     // Resolve style.rowCss 1 lần/row cho lần render này (xem #applyRowStyles).
     this.#applyRowStyles();
@@ -870,7 +916,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       notReload: true,
     });
     const data = await this.#load(this.getFilterRequest(), force);
-    this.#render(data, scrollTop, { fromSource: 'RELOAD' });
+    await this.#render(data, scrollTop, { fromSource: 'RELOAD' });
   };
 
   #exportedItems = async (pageNumber = 0, pageSize = 100) => {
@@ -989,6 +1035,8 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       // style của trạng thái đang mở.
       this.#applyRowStyles();
       this.treeRevision.update(n => n + 1);
+      this.#updateSelectedItems();
+      this.#syncSelectAllState();
       this.#ref.markForCheck();
       return;
     }
@@ -1025,6 +1073,9 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       // Children mới format + level/isExpanded vừa đổi → refresh cache rowStyle.
       this.#applyRowStyles();
       this.treeRevision.update(n => n + 1);
+      this.#restorePreservedSelection();
+      this.#updateSelectedItems();
+      this.#syncSelectAllState();
       this.#ref.markForCheck();
     }
   };
@@ -1047,85 +1098,81 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     });
   };
 
-  onExpand = async (rowData: SdTableItem<T>) => {
-    const opt = this.tableOption()!;
-    if (opt.expand?.always || rowData.meta.expand?.isExpanding) {
+  onExpand = async (row: SdTableItem<T>) => {
+    const option = this.tableOption()?.expand;
+    const meta = row.meta.expand!;
+    if (option?.always || meta.isExpanding || option?.disabled?.(row.data)) return;
+    if (meta.isExpanded) {
+      meta.isExpanded = false;
+      this.expandRevision.update(n => n + 1);
+      this.#ref.markForCheck();
       return;
     }
-    if (rowData.meta.expand?.isExpanded) {
-      rowData.meta.expand.isExpanded = false;
-      return;
+    if (!option?.multiple) {
+      collectFormattedTreeRows(this.items()).forEach(item => (item.meta.expand!.isExpanded = false));
     }
-    const data = opt.expand?.onExpand?.(rowData.data);
-    if (!opt.expand?.multiple) {
-      this.items().forEach(item => (item.meta.expand!.isExpanding = item.meta.expand!.isExpanded = false));
-    }
-    if (data instanceof Promise) {
-      rowData.meta.expand!.isExpanding = true;
-      data
-        .then(res => {
-          rowData.meta.expand!.data = res;
-          rowData.meta.expand!.isExpanded = true;
-        })
-        .finally(() => (rowData.meta.expand!.isExpanding = false));
-    } else {
-      rowData.meta.expand!.data = data;
-      rowData.meta.expand!.isExpanded = true;
+    try {
+      const result = option?.onExpand?.(row.data);
+      meta.isExpanding = result instanceof Promise;
+      this.expandRevision.update(n => n + 1);
+      this.#ref.markForCheck();
+      meta.data = await result;
+      meta.isExpanded = true;
+    } catch (error) {
+      console.error(error);
+      this.#notifyService.warning(this.#i18n.t('core.component.table.error-occurred'));
+    } finally {
+      meta.isExpanding = false;
+      this.expandRevision.update(n => n + 1);
+      this.#ref.markForCheck();
     }
   };
 
   onSelect = (rowData: SdTableItem<T>) => {
     const opt = this.tableOption()!;
-    const selectedData = () => this.#getSelectedRowData();
     if (rowData.meta.group?.items?.length) {
-      rowData.meta.group.items.forEach(e => (e.meta.selector!.isSelected = rowData.meta.selector!.isSelected));
-      opt.selector?.onSelect?.(rowData.data, selectedData());
-      this.#updateSelectedItems();
-      this.#syncSelectAllState();
-    } else {
-      if (opt.selector?.single) {
-        this.#getSelectionRows()
-          .filter(e => e !== rowData)
-          .forEach(e => (e.meta.selector!.isSelected = false));
-        // single + preserve: chỉ giữ MỘT item trong map (item vừa chọn nếu isSelected,
-        // hoặc empty nếu vừa bỏ chọn). Off-page items có thể đã ở trong map → xoá hết
-        // trước khi #updateSelectedItems sync entry mới.
-        if (this.#preserveEnabled()) {
-          this.#preservedSelectedMap.clear();
-        }
-        opt.selector?.onSelect?.(rowData.data, selectedData());
-        this.isSelectAll.set(false);
-        this.#updateSelectedItems();
-        return;
-      }
-      opt.selector?.onSelect?.(rowData.data, selectedData());
-      this.#updateSelectedItems();
-      this.#syncSelectAllState();
+      this.onSelectGroup(rowData, !!rowData.meta.selector?.isSelected);
+      opt.selector?.onSelect?.(rowData.data, this.selectedItems);
+      return;
     }
+    if (opt.selector?.single) {
+      this.#getSelectionRows()
+        .filter(row => row !== rowData)
+        .forEach(row => (row.meta.selector!.isSelected = false));
+      this.#preservedSelectedMap.clear();
+    }
+    if (this.#preserveEnabled()) {
+      if (rowData.meta.selector?.isSelected) this.#preservedSelectedMap.set(rowData.meta.id, rowData);
+      else this.#preservedSelectedMap.delete(rowData.meta.id);
+    }
+    this.#updateSelectedItems();
+    this.#syncSelectAllState();
+    opt.selector?.onSelect?.(rowData.data, this.selectedItems);
   };
 
   onSelectAll = () => {
-    const opt = this.tableOption();
-    const isSelected = this.isSelectAll();
-    this.#getSelectionRows().forEach(e => {
-      if (e.meta.selector!.selectable && (!opt?.selector?.actions?.length || e.meta.selector!.actions?.length)) {
-        e.meta.selector!.isSelected = isSelected;
+    const checked = this.isSelectAll();
+    this.#getSelectionRows().forEach(row => {
+      if (row.meta.selector?.selectable || (!checked && row.meta.selector?.isSelected)) {
+        row.meta.selector!.isSelected = checked;
       }
     });
-    opt?.selector?.onSelectAll?.(this.#getSelectedRowData());
     this.#updateSelectedItems();
     this.#syncSelectAllState();
+    this.tableOption()?.selector?.onSelectAll?.(this.selectedItems);
   };
 
-  onClearSelection = (items?: SdTableItem<T>[]) => {
-    items = items || this.items();
-    this.isSelectAll.set(false);
-    items?.forEach(e => (e.meta.selector!.isSelected = false));
-    // User explicit X — clear toàn bộ preserved map (bao gồm cả off-page items).
-    if (this.#preserveEnabled()) {
-      this.#preservedSelectedMap.clear();
-    }
+  onClearSelection = (_items?: SdTableItem<T>[]) => {
+    // why: clear is global, including cached tree children and rows outside this page.
+    const rows = [
+      ...collectFormattedTreeRows(this.items()),
+      ...collectFormattedTreeRows(this.#localItems),
+      ...this.#preservedSelectedMap.values(),
+    ];
+    rows.forEach(row => (row.meta.selector!.isSelected = false));
+    this.#preservedSelectedMap.clear();
     this.#updateSelectedItems();
+    this.#syncSelectAllState();
   };
 
   #getSelectionRows = (): SdTableItem<T>[] => {
@@ -1139,7 +1186,10 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   };
 
   #syncSelectAllState = () => {
-    this.isSelectAll.set(resolveSelectAllState(this.#getSelectionRows()));
+    const rows = this.#getSelectionRows().filter(row => row.meta.selector?.selectable);
+    const all = resolveSelectAllState(rows);
+    this.isSelectAll.set(all);
+    this.isSelectIndeterminate.set(!all && rows.some(row => row.meta.selector?.isSelected));
   };
 
   // ==========================================
@@ -1172,9 +1222,9 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     const sel = this.#groupSelectableChildren(header);
     sel.forEach(c => (c.meta.selector!.isSelected = checked));
     const opt = this.tableOption();
-    opt?.selector?.onSelectAll?.(this.#getSelectedRowData());
     this.#updateSelectedItems();
     this.#syncSelectAllState();
+    opt?.selector?.onSelectAll?.(this.selectedItems);
   };
 
   // Map<groupKey, isExpanded> — table own state, pass vào SdGroupPipe arg 3.
@@ -1306,8 +1356,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
   #updateSelectedItems = () => {
     const rows = this.#getSelectionRows();
-    // Selection vừa đổi → cập nhật checkbox state cache của mọi group header.
-    this.#syncGroupSelectionState();
+
     if (this.#preserveEnabled()) {
       // Sync map theo state visible: add nếu selected, remove nếu deselected.
       // Off-page items giữ nguyên trong map (không bị visit ở đây).
@@ -1315,6 +1364,8 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     } else {
       this.selectedTableItems.set(rows.filter(item => item.meta.selector!.isSelected));
     }
+    prepareTableSelection(collectFormattedTreeRows(this.items()), this.selectedTableItems(), this.tableOption()?.selector);
+    this.#syncGroupSelectionState();
     this.#ref.detectChanges();
   };
 
@@ -1342,7 +1393,11 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     return this.selectedTableItems().map(item => item.data);
   }
 
-  detectChanges = () => this.#ref.detectChanges();
+  detectChanges = () => {
+    this.dataRevision.update(value => value + 1);
+    this.#updateSelectedItems();
+    this.#syncSelectAllState();
+  };
 
   onColumnResize = (field: string, width: string) => {
     // persistColumnWidth ghi storage (silent) và emit widthChange$,
@@ -1374,6 +1429,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   // Offset STT theo paging — computed memoize, không tính lại trừ khi paginator đổi.
   // Template chỉ cần đọc pageOffset() rồi cộng `i + 1` (rẻ hơn gọi function).
   pageOffset = computed(() => {
+    this.pageRevision();
     const p = this.paginator();
     return (p?.pageIndex ?? 0) * (p?.pageSize ?? 0);
   });

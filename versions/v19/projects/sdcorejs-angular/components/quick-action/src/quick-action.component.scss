@@ -28,6 +28,26 @@
     visibility: visible;
     pointer-events: all;
   }
+
+  // why: vị trí sticky thuộc container của consumer; toolbar giữ chỗ để không che nội dung.
+  &.contained {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    max-width: 100%;
+    flex-wrap: wrap;
+    box-sizing: border-box;
+    background: var(--sd-surface, #fff);
+    color: var(--sd-text-primary);
+    transform: none;
+    gap: 8px;
+    padding: 8px;
+
+    .c-quick-action-action {
+      flex: 1 1 100%;
+      min-width: 0;
+    }
+  }
 }
 
 .c-quick-action-message {

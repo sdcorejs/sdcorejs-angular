@@ -4596,6 +4596,14 @@ import { SdButton } from '@sdcorejs/angular/components/button';
         </sd-quick-action>
       </demo-section>
       }
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trong-container') {
+        <demo-section heading="Trong container" [props]="[{ name: 'contained', value: 'true' }]">
+          <sd-quick-action opened contained>
+            <span sdMessage>Thanh thao tác nằm trong vùng cuộn của bảng mobile.</span>
+            <sd-button sdAction title="Bỏ chọn" (click)="clearSelection()"></sd-button>
+          </sd-quick-action>
+        </demo-section>
+      }
     </demo-page>
   \`,
   styles: [\`
@@ -5878,10 +5886,13 @@ code { background: #f4f4f4; padding: 1px 4px; border-radius: 3px; font-size: 12p
 import { DecimalPipe } from '@angular/common';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdModal } from '@sdcorejs/angular/components/modal';
+import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
 import {
   SdTable,
   SdTableOption,
   SdTableCellDefDirective,
+  SdTableRowMobileDefDirective,
   SdTableCommandHeaderDefDirective,
   SdTableExpandDefDirective,
   SdTableGroupDefDirective,
@@ -6023,16 +6034,94 @@ const TASKS: Task[] = [
     DecimalPipe,
     SdTable,
     SdTableCellDefDirective,
+    SdTableRowMobileDefDirective,
     SdTableCommandHeaderDefDirective,
     SdTableExpandDefDirective,
     SdTableGroupDefDirective,
     SdMaterialFooterDefDirective,
     SdButton,
+    SdModal,
+    SdSideDrawer,
   ],
   template: \`
     <demo-page #demoPage
       title="Table"
       description="Bảng dữ liệu mặc định của SDCoreJS — phân trang, sắp xếp, lọc, chọn nhiều, lệnh dòng, export Excel/CSV. Hỗ trợ chế độ local và server.">
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-the-mobile-va-thao-tac') {
+      <demo-section heading="Thẻ mobile và thao tác"
+        [props]="[{ name: 'sdTableRowMobileDef', value: 'template' }, { name: 'mobile.rowLabel', value: 'callback' }, { name: 'selector.actions', value: '[…]' }, { name: 'command.commands', value: '[…]' }]"
+        note="Thu hẹp cửa sổ để xem card. Chạm nội dung để mở lệnh; tick checkbox để chọn nhiều. Dòng thử việc không được chọn. Nút và liên kết trong card hoạt động riêng.">
+        <sd-table autoId="mobile-employees" [option]="mobileOption">
+          <ng-template sdTableCommandHeaderDef>
+            <sd-button title="Thêm" prefixIcon="add" type="text" (click)="recordMobile('Thêm dòng', [])"></sd-button>
+          </ng-template>
+          <ng-template [sdTableRowMobileDef]="mobileOption" let-row="item" let-selected="selected" let-disabled="selectionDisabled">
+            <div class="T12M text-secondary">NV-{{ row.id }} · {{ row.department }}</div>
+            <strong class="T16M d-block mt-4">{{ row.name }}</strong>
+            <div class="T14R mt-4">{{ row.position }}</div>
+            <div class="T14M mt-8">{{ row.salary | number }} ₫</div>
+            @if (disabled && !selected) { <p class="T12R text-secondary">Chỉ xem — chưa đủ điều kiện chọn</p> }
+            <a [href]="'#employee-' + row.id" (click)="recordMobile('Liên kết hồ sơ', [row.id]); $event.preventDefault()">Hồ sơ</a>
+            <sd-button title="Ghi chú" type="text" prefixIcon="edit_note" (click)="recordMobile('Ghi chú trong card', [row.id])"></sd-button>
+          </ng-template>
+          <ng-template sdTableExpandDef let-item="item"><div class="p-12">{{ item.data.email }} · {{ item.data.status }}</div></ng-template>
+          <ng-template sdTableFooterDef="salary" let-items="items"><strong>{{ totalSalary(items) | number }} ₫ / trang</strong></ng-template>
+        </sd-table>
+        <p class="T14R mt-12" role="status">{{ mobileLog() }}</p>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-mobile-qua-nhieu-trang') {
+      <demo-section heading="Mobile qua nhiều trang"
+        [props]="[{ name: 'type', value: 'server' }, { name: 'rowKey', value: 'id' }, { name: 'preserveSelection', value: 'true' }, { name: 'sdTableRowMobileDef', value: 'template' }]"
+        note="API giả lập trả object mới sau mỗi request. Chọn ở trang 1 rồi sang trang 2; summary và callback giữ toàn bộ selection.">
+        <sd-table autoId="mobile-server" [option]="mobileServerOption">
+          <ng-template [sdTableRowMobileDef]="mobileServerOption" let-row="item">
+            <strong class="T16M">NV-{{ row.id }} · {{ row.name }}</strong>
+            <div class="T14R mt-8">{{ row.department }} · {{ row.salary | number }} ₫</div>
+          </ng-template>
+        </sd-table>
+        <p role="status">{{ mobileLog() }}</p>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-mobile-chon-du-lieu') {
+      <demo-section heading="Mobile chọn dữ liệu"
+        [props]="[{ name: 'selector.single', value: 'true' }, { name: 'selector.actions', value: '[]' }, { name: 'selector.visible', value: 'false' }, { name: 'defaultSelected', value: 'callback' }]"
+        note="Ba table độc lập: chọn đơn có mặc định; chọn nhiều không có bulk action; chỉ có lệnh dòng.">
+        <sd-table autoId="mobile-single" [option]="mobileSingleOption">
+          <ng-template [sdTableRowMobileDef]="mobileSingleOption" let-row="item"><strong>{{ row.name }}</strong><div>{{ row.department }}</div></ng-template>
+        </sd-table>
+        <sd-table class="mt-16" autoId="mobile-no-actions" [option]="mobileNoActionsOption">
+          <ng-template [sdTableRowMobileDef]="mobileNoActionsOption" let-row="item"><strong>{{ row.name }}</strong><div>{{ row.position }}</div></ng-template>
+        </sd-table>
+        <sd-table class="mt-16" autoId="mobile-commands-only" [option]="mobileCommandsOnlyOption">
+          <ng-template [sdTableRowMobileDef]="mobileCommandsOnlyOption" let-row="item"><strong>{{ row.name }}</strong><div>Chỉ thao tác theo dòng</div></ng-template>
+        </sd-table>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-mobile-trong-hop-thoai') {
+      <demo-section heading="Mobile trong hộp thoại"
+        [props]="[{ name: 'sdTableRowMobileDef', value: 'template' }, { name: 'sd-modal', value: 'container' }, { name: 'sd-side-drawer', value: 'container' }]"
+        note="Card và thanh thao tác nằm trong vùng cuộn của từng table. Đóng hộp thoại hoặc drawer sẽ dọn các overlay con.">
+        <div class="d-flex gap-8 flex-wrap">
+          <sd-button title="Mở modal" (click)="mobileModal.open()"></sd-button>
+          <sd-button title="Mở drawer" (click)="mobileDrawer.open()"></sd-button>
+        </div>
+        <sd-modal #mobileModal title="Nhân viên trong modal" width="md">
+          <sd-table class="p-12" autoId="mobile-modal" [option]="mobileOption">
+            <ng-template [sdTableRowMobileDef]="mobileOption" let-row="item"><strong>{{ row.name }}</strong><div>{{ row.position }}</div></ng-template>
+          </sd-table>
+        </sd-modal>
+        <sd-side-drawer #mobileDrawer title="Nhân viên trong drawer" width="480px">
+          <sd-table class="p-12" autoId="mobile-drawer" [option]="mobileOption">
+            <ng-template [sdTableRowMobileDef]="mobileOption" let-row="item"><strong>{{ row.name }}</strong><div>{{ row.position }}</div></ng-template>
+          </sd-table>
+        </sd-side-drawer>
+      </demo-section>
+      }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-full-demo-local') {
       <demo-section heading="Full demo (local)" [props]="[{ name: 'selector', value: 'true' }, { name: 'command', value: 'true' }, { name: 'export', value: 'true' }, { name: 'index', value: 'true' }, { name: 'filler', value: 'true' }, { name: 'paginate', value: 'true' }]">
@@ -6071,7 +6160,7 @@ const TASKS: Task[] = [
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chon-mot-dong') {
       <demo-section heading="Chọn một dòng" [props]="[{ name: 'selector.single', value: 'true' }]">
         <div class="table-box">
-          <sd-table [option]="singleSelectOption"></sd-table>
+          <sd-table [option]="singleSelectOption"><ng-template [sdTableRowMobileDef]="singleSelectOption" let-row="item"><strong>{{ row.name }}</strong><div>{{ row.position }}</div></ng-template></sd-table>
         </div>
       </demo-section>
       }
@@ -6087,7 +6176,7 @@ const TASKS: Task[] = [
         ]"
         note="Search trên table 'local' + tree 'static' lọc cả cấp con: giữ nhánh cha của node khớp, prune sibling không khớp, tự bung tới node khớp.">
         <div class="table-box">
-          <sd-table [option]="treeOption"></sd-table>
+          <sd-table [option]="treeOption"><ng-template [sdTableRowMobileDef]="treeOption" let-row="item"><strong>{{ row.name }}</strong><div>{{ row.role }}</div></ng-template></sd-table>
         </div>
       </demo-section>
       }
@@ -6102,7 +6191,7 @@ const TASKS: Task[] = [
         ]"
         note="loadType 'lazy': bung dòng → gọi onExpandChildren (giả lập trễ 800ms) → spinner loading hiện trong ô chevron tới khi nạp xong. hasChildren quyết định dòng nào có icon expand (Nhóm/Team là lá → không icon).">
         <div class="table-box">
-          <sd-table [option]="treeLazyOption"></sd-table>
+          <sd-table [option]="treeLazyOption"><ng-template [sdTableRowMobileDef]="treeLazyOption" let-row="item"><strong>{{ row.name }}</strong><div>{{ row.role }}</div></ng-template></sd-table>
         </div>
       </demo-section>
       }
@@ -6116,7 +6205,7 @@ const TASKS: Task[] = [
         ]"
         note="Không bật index → icon expand + indent nhúng thẳng vào cột data đầu tiên (kiểu file explorer).">
         <div class="table-box">
-          <sd-table [option]="treeNoIndexOption"></sd-table>
+          <sd-table [option]="treeNoIndexOption"><ng-template [sdTableRowMobileDef]="treeNoIndexOption" let-row="item"><strong>{{ row.name }}</strong><div>{{ row.role }}</div></ng-template></sd-table>
         </div>
       </demo-section>
       }
@@ -6150,7 +6239,7 @@ const TASKS: Task[] = [
               (click)="increaseTreeCommandIndent()">
             </sd-button>
           </div>
-          <sd-table [option]="treeCommandOption()"></sd-table>
+          <sd-table [option]="treeCommandOption()"><ng-template [sdTableRowMobileDef]="treeCommandOption()" let-row="item"><strong>{{ row.name }}</strong><div>{{ row.role }}</div></ng-template></sd-table>
         </div>
       </demo-section>
       }
@@ -6159,6 +6248,7 @@ const TASKS: Task[] = [
       <demo-section heading="Nhóm dòng" [props]="[{ name: 'group', value: 'true' }, { name: 'sdTableGroupDef', value: 'template' }]">
         <div class="table-box">
           <sd-table [option]="groupOption">
+            <ng-template [sdTableRowMobileDef]="groupOption" let-row="item"><strong>{{ row.name }}</strong><div>{{ row.department }}</div></ng-template>
             <ng-template sdTableGroupDef let-values="values" let-data="data" let-isExpanded="isExpanded">
               <div class="group-header-cell">
                 <span class="group-label">Phòng <b>{{ values['department'] }}</b></span>
@@ -6174,6 +6264,7 @@ const TASKS: Task[] = [
       <demo-section heading="Nhóm đơn hàng theo khách" [props]="[{ name: 'group', value: 'true' }, { name: 'sdTableGroupDef', value: 'template' }]">
         <div class="table-box">
           <sd-table [option]="customerOrderOption">
+            <ng-template [sdTableRowMobileDef]="customerOrderOption" let-row="item"><strong>{{ row.code }}</strong><div>{{ row.product }}</div><div>{{ row.amount | number }} ₫</div></ng-template>
             <ng-template sdTableGroupDef let-values="values" let-data="data">
               <div class="group-header-cell">
                 <span class="group-label">
@@ -6193,6 +6284,7 @@ const TASKS: Task[] = [
       <demo-section heading="Dòng mở rộng" [props]="[{ name: 'expand', value: 'true' }, { name: 'sdTableExpandDef', value: 'template' }]">
         <div class="table-box">
           <sd-table [option]="expandOption">
+            <ng-template [sdTableRowMobileDef]="expandOption" let-row="item"><strong>{{ row.title }}</strong><div>{{ row.assignee }} · {{ row.progress }}%</div></ng-template>
             <ng-template sdTableExpandDef let-item="item">
               <div class="expand-box">
                 <div class="expand-title">Mô tả task #{{ item.data.id }}</div>
@@ -6224,7 +6316,7 @@ const TASKS: Task[] = [
         ]"
         note="Command có children sẽ render thành nút menu; các child command vẫn hỗ trợ icon, title, color, disabled, hidden và click theo từng row.">
         <div class="table-box">
-          <sd-table [option]="commandChildrenOption"></sd-table>
+          <sd-table [option]="commandChildrenOption"><ng-template [sdTableRowMobileDef]="commandChildrenOption" let-row="item"><strong>{{ row.code }}</strong><div>{{ row.name }}</div></ng-template></sd-table>
         </div>
       </demo-section>
       }
@@ -6232,7 +6324,7 @@ const TASKS: Task[] = [
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-keo-tha-doi-thu-tu') {
       <demo-section heading="Kéo thả đổi thứ tự" [props]="[{ name: 'rowReorder', value: 'true' }]">
         <div class="table-box">
-          <sd-table [option]="reorderOption"></sd-table>
+          <sd-table [option]="reorderOption"><ng-template [sdTableRowMobileDef]="reorderOption" let-row="item"><strong>{{ row.code }}</strong><div>{{ row.name }}</div></ng-template></sd-table>
         </div>
       </demo-section>
       }
@@ -6244,6 +6336,7 @@ const TASKS: Task[] = [
         note="Ô header của cột command vốn để trống. Chiếu nội dung vào đó để đặt một hành động cấp bảng (ở đây là thêm dòng) ngay trên cụm sửa/xoá của từng dòng, khỏi cần thêm một dải riêng dưới bảng.">
         <div class="table-box">
           <sd-table [option]="commandHeaderOption">
+            <ng-template [sdTableRowMobileDef]="commandHeaderOption" let-row="item"><strong>{{ row.name }}</strong><div>{{ row.department }}</div></ng-template>
             <ng-template sdTableCommandHeaderDef>
               <sd-button prefixIcon="add" type="text" color="primary" tooltip="Thêm dòng" (click)="addCommandHeaderRow()"></sd-button>
             </ng-template>
@@ -6277,6 +6370,7 @@ const TASKS: Task[] = [
       <demo-section heading="Footer tổng hợp" [props]="[{ name: 'sdTableFooterDef', value: 'template' }]">
         <div class="table-box">
           <sd-table [option]="footerOption">
+            <ng-template [sdTableRowMobileDef]="footerOption" let-row="item"><strong>{{ row.name }}</strong><div>{{ row.salary | number }} ₫</div></ng-template>
             <ng-template [sdTableFooterDef]="'salary'" let-items="items">
               <b>Tổng: {{ totalSalary(items) | number: '1.0-0' }} ₫</b>
             </ng-template>
@@ -6864,6 +6958,72 @@ export class TableDemoComponent {
     ],
     style: { shadow: true },
   };
+
+  readonly mobileLog = signal('Chưa có thao tác.');
+  readonly mobileOption: SdTableOption<Employee> = {
+    type: 'local', rowKey: 'id', items: () => EMPLOYEES,
+    mobile: { rowLabel: row => \`NV-\${row.id} · \${row.name}\` },
+    sort: { enable: true }, paginate: { pageSize: 3, pages: [3, 5, 8] },
+    reload: { visible: true }, export: { visible: 'ALL' },
+    selector: {
+      visible: true, preserveSelection: true, disabled: row => row?.status === 'PROBATION',
+      actions: [
+        { title: 'Duyệt', icon: 'check', color: 'success', hidden: row => row?.status === 'RESIGNED', click: async rows => {
+          await new Promise(resolve => setTimeout(resolve, 350));
+          this.recordMobile('Duyệt selection', rows?.map(row => row.id) ?? []);
+        } },
+        { title: 'Xuất', icon: 'download', click: rows => this.recordMobile('Xuất selection', rows?.map(row => row.id) ?? []) },
+        { title: 'Báo cáo', icon: 'folder', children: [
+          { title: 'Tổng hợp theo phòng ban', icon: 'summarize', click: rows => this.recordMobile('Báo cáo phòng ban', rows?.map(row => row.id) ?? []) },
+          { title: 'Đối chiếu dữ liệu nhân viên đã chọn', icon: 'compare', click: rows => this.recordMobile('Đối chiếu', rows?.map(row => row.id) ?? []) },
+        ] },
+      ],
+    },
+    command: { commands: [
+      { title: 'Xem', icon: 'visibility', click: row => this.recordMobile('Xem dòng', [row.id]) },
+      { title: 'Duyệt', icon: 'check', color: 'success', disabled: row => row.id === 2, click: row => this.recordMobile('Duyệt dòng', [row.id]) },
+      { title: 'Hồ sơ', icon: 'folder', children: [
+        { title: 'Lịch sử điều chuyển và thay đổi chức vụ', icon: 'history', click: row => this.recordMobile('Lịch sử', [row.id]) },
+        { title: 'Hợp đồng', icon: 'description', disabled: row => !row.active, click: row => this.recordMobile('Hợp đồng', [row.id]) },
+      ] },
+      { title: 'Lệnh có điều kiện bất đồng bộ', icon: 'schedule', hidden: async row => row.id !== 1, click: row => this.recordMobile('Lệnh async', [row.id]) },
+    ] },
+    columns: [
+      { field: 'name', title: 'Họ tên', type: 'string', sortable: true },
+      { field: 'department', title: 'Phòng ban', type: 'string' },
+      { field: 'salary', title: 'Lương', type: 'number', sortable: true },
+    ],
+    expand: { multiple: true, onExpand: row => row },
+    style: { maxHeight: '640px' },
+  };
+
+  readonly mobileServerOption: SdTableOption<Employee> = {
+    ...this.mobileOption, type: 'server',
+    items: async request => {
+      await new Promise(resolve => setTimeout(resolve, 250));
+      const name = String(request.rawColumnFilter.name ?? '').toLocaleLowerCase();
+      const rows = EMPLOYEES.filter(row => row.name.toLocaleLowerCase().includes(name));
+      if (request.orderDirection && request.orderBy) {
+        const direction = request.orderDirection === 'ASC' ? 1 : -1;
+        if (request.orderBy === 'salary') rows.sort((a, b) => direction * (a.salary - b.salary));
+        if (request.orderBy === 'name') rows.sort((a, b) => direction * a.name.localeCompare(b.name));
+      }
+      return { items: rows.slice(request.pageNumber * request.pageSize, (request.pageNumber + 1) * request.pageSize).map(row => ({ ...row })), total: rows.length };
+    },
+  };
+  readonly mobileSingleOption: SdTableOption<Employee> = {
+    ...this.mobileOption, type: 'local', items: () => EMPLOYEES.slice(0, 2), command: undefined,
+    selector: { visible: true, single: true, defaultSelected: row => row.id === 2 },
+    filter: { disabled: true }, reload: { visible: false }, export: undefined,
+  };
+  readonly mobileNoActionsOption: SdTableOption<Employee> = {
+    ...this.mobileSingleOption, selector: { visible: true },
+  };
+  readonly mobileCommandsOnlyOption: SdTableOption<Employee> = {
+    ...this.mobileSingleOption, selector: { visible: false }, command: this.mobileOption.command,
+  };
+
+  recordMobile(action: string, ids: number[]): void { this.mobileLog.set(\`\${action}: [\${ids.join(', ')}]\`); }
 
   addCommandHeaderRow(): void {
     this.commandHeaderRows.update(rows => {
@@ -15381,6 +15541,15 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     </sd-quick-action>
   </demo-section>`,
   },
+  "components/quick-action/example-trong-container": {
+    ...SHOWCASE_PAGE_SOURCES["components/quick-action"],
+    html: `<demo-section heading="Trong container" [props]="[{ name: 'contained', value: 'true' }]">
+      <sd-quick-action opened contained>
+        <span sdMessage>Thanh thao tác nằm trong vùng cuộn của bảng mobile.</span>
+        <sd-button sdAction title="Bỏ chọn" (click)="clearSelection()"></sd-button>
+      </sd-quick-action>
+    </demo-section>`,
+  },
   "components/quick-action/example-undo-toast": {
     ...SHOWCASE_PAGE_SOURCES["components/quick-action"],
     html: `<demo-section heading="Undo toast" [props]="[{ name: 'opened', value: 'true' }, { name: 'sdAction', value: 'template' }]">
@@ -16177,7 +16346,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     ...SHOWCASE_PAGE_SOURCES["components/table"],
     html: `<demo-section heading="Chọn một dòng" [props]="[{ name: 'selector.single', value: 'true' }]">
     <div class="table-box">
-      <sd-table [option]="singleSelectOption"></sd-table>
+      <sd-table [option]="singleSelectOption"><ng-template [sdTableRowMobileDef]="singleSelectOption" let-row="item"><strong>{{ row.name }}</strong><div>{{ row.position }}</div></ng-template></sd-table>
     </div>
   </demo-section>`,
   },
@@ -16186,6 +16355,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     html: `<demo-section heading="Dòng mở rộng" [props]="[{ name: 'expand', value: 'true' }, { name: 'sdTableExpandDef', value: 'template' }]">
     <div class="table-box">
       <sd-table [option]="expandOption">
+        <ng-template [sdTableRowMobileDef]="expandOption" let-row="item"><strong>{{ row.title }}</strong><div>{{ row.assignee }} · {{ row.progress }}%</div></ng-template>
         <ng-template sdTableExpandDef let-item="item">
           <div class="expand-box">
             <div class="expand-title">Mô tả task #{{ item.data.id }}</div>
@@ -16222,6 +16392,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     html: `<demo-section heading="Footer tổng hợp" [props]="[{ name: 'sdTableFooterDef', value: 'template' }]">
     <div class="table-box">
       <sd-table [option]="footerOption">
+        <ng-template [sdTableRowMobileDef]="footerOption" let-row="item"><strong>{{ row.name }}</strong><div>{{ row.salary | number }} ₫</div></ng-template>
         <ng-template [sdTableFooterDef]="'salary'" let-items="items">
           <b>Tổng: {{ totalSalary(items) | number: '1.0-0' }} ₫</b>
         </ng-template>
@@ -16256,6 +16427,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     note="Ô header của cột command vốn để trống. Chiếu nội dung vào đó để đặt một hành động cấp bảng (ở đây là thêm dòng) ngay trên cụm sửa/xoá của từng dòng, khỏi cần thêm một dải riêng dưới bảng.">
     <div class="table-box">
       <sd-table [option]="commandHeaderOption">
+        <ng-template [sdTableRowMobileDef]="commandHeaderOption" let-row="item"><strong>{{ row.name }}</strong><div>{{ row.department }}</div></ng-template>
         <ng-template sdTableCommandHeaderDef>
           <sd-button prefixIcon="add" type="text" color="primary" tooltip="Thêm dòng" (click)="addCommandHeaderRow()"></sd-button>
         </ng-template>
@@ -16267,7 +16439,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     ...SHOWCASE_PAGE_SOURCES["components/table"],
     html: `<demo-section heading="Kéo thả đổi thứ tự" [props]="[{ name: 'rowReorder', value: 'true' }]">
     <div class="table-box">
-      <sd-table [option]="reorderOption"></sd-table>
+      <sd-table [option]="reorderOption"><ng-template [sdTableRowMobileDef]="reorderOption" let-row="item"><strong>{{ row.code }}</strong><div>{{ row.name }}</div></ng-template></sd-table>
     </div>
   </demo-section>`,
   },
@@ -16289,7 +16461,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     ]"
     note="Command có children sẽ render thành nút menu; các child command vẫn hỗ trợ icon, title, color, disabled, hidden và click theo từng row.">
     <div class="table-box">
-      <sd-table [option]="commandChildrenOption"></sd-table>
+      <sd-table [option]="commandChildrenOption"><ng-template [sdTableRowMobileDef]="commandChildrenOption" let-row="item"><strong>{{ row.code }}</strong><div>{{ row.name }}</div></ng-template></sd-table>
     </div>
   </demo-section>`,
   },
@@ -16301,11 +16473,63 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     </div>
   </demo-section>`,
   },
+  "components/table/example-mobile-chon-du-lieu": {
+    ...SHOWCASE_PAGE_SOURCES["components/table"],
+    html: `<demo-section heading="Mobile chọn dữ liệu"
+    [props]="[{ name: 'selector.single', value: 'true' }, { name: 'selector.actions', value: '[]' }, { name: 'selector.visible', value: 'false' }, { name: 'defaultSelected', value: 'callback' }]"
+    note="Ba table độc lập: chọn đơn có mặc định; chọn nhiều không có bulk action; chỉ có lệnh dòng.">
+    <sd-table autoId="mobile-single" [option]="mobileSingleOption">
+      <ng-template [sdTableRowMobileDef]="mobileSingleOption" let-row="item"><strong>{{ row.name }}</strong><div>{{ row.department }}</div></ng-template>
+    </sd-table>
+    <sd-table class="mt-16" autoId="mobile-no-actions" [option]="mobileNoActionsOption">
+      <ng-template [sdTableRowMobileDef]="mobileNoActionsOption" let-row="item"><strong>{{ row.name }}</strong><div>{{ row.position }}</div></ng-template>
+    </sd-table>
+    <sd-table class="mt-16" autoId="mobile-commands-only" [option]="mobileCommandsOnlyOption">
+      <ng-template [sdTableRowMobileDef]="mobileCommandsOnlyOption" let-row="item"><strong>{{ row.name }}</strong><div>Chỉ thao tác theo dòng</div></ng-template>
+    </sd-table>
+  </demo-section>`,
+  },
+  "components/table/example-mobile-qua-nhieu-trang": {
+    ...SHOWCASE_PAGE_SOURCES["components/table"],
+    html: `<demo-section heading="Mobile qua nhiều trang"
+    [props]="[{ name: 'type', value: 'server' }, { name: 'rowKey', value: 'id' }, { name: 'preserveSelection', value: 'true' }, { name: 'sdTableRowMobileDef', value: 'template' }]"
+    note="API giả lập trả object mới sau mỗi request. Chọn ở trang 1 rồi sang trang 2; summary và callback giữ toàn bộ selection.">
+    <sd-table autoId="mobile-server" [option]="mobileServerOption">
+      <ng-template [sdTableRowMobileDef]="mobileServerOption" let-row="item">
+        <strong class="T16M">NV-{{ row.id }} · {{ row.name }}</strong>
+        <div class="T14R mt-8">{{ row.department }} · {{ row.salary | number }} ₫</div>
+      </ng-template>
+    </sd-table>
+    <p role="status">{{ mobileLog() }}</p>
+  </demo-section>`,
+  },
+  "components/table/example-mobile-trong-hop-thoai": {
+    ...SHOWCASE_PAGE_SOURCES["components/table"],
+    html: `<demo-section heading="Mobile trong hộp thoại"
+    [props]="[{ name: 'sdTableRowMobileDef', value: 'template' }, { name: 'sd-modal', value: 'container' }, { name: 'sd-side-drawer', value: 'container' }]"
+    note="Card và thanh thao tác nằm trong vùng cuộn của từng table. Đóng hộp thoại hoặc drawer sẽ dọn các overlay con.">
+    <div class="d-flex gap-8 flex-wrap">
+      <sd-button title="Mở modal" (click)="mobileModal.open()"></sd-button>
+      <sd-button title="Mở drawer" (click)="mobileDrawer.open()"></sd-button>
+    </div>
+    <sd-modal #mobileModal title="Nhân viên trong modal" width="md">
+      <sd-table class="p-12" autoId="mobile-modal" [option]="mobileOption">
+        <ng-template [sdTableRowMobileDef]="mobileOption" let-row="item"><strong>{{ row.name }}</strong><div>{{ row.position }}</div></ng-template>
+      </sd-table>
+    </sd-modal>
+    <sd-side-drawer #mobileDrawer title="Nhân viên trong drawer" width="480px">
+      <sd-table class="p-12" autoId="mobile-drawer" [option]="mobileOption">
+        <ng-template [sdTableRowMobileDef]="mobileOption" let-row="item"><strong>{{ row.name }}</strong><div>{{ row.position }}</div></ng-template>
+      </sd-table>
+    </sd-side-drawer>
+  </demo-section>`,
+  },
   "components/table/example-nhom-don-hang-theo-khach": {
     ...SHOWCASE_PAGE_SOURCES["components/table"],
     html: `<demo-section heading="Nhóm đơn hàng theo khách" [props]="[{ name: 'group', value: 'true' }, { name: 'sdTableGroupDef', value: 'template' }]">
     <div class="table-box">
       <sd-table [option]="customerOrderOption">
+        <ng-template [sdTableRowMobileDef]="customerOrderOption" let-row="item"><strong>{{ row.code }}</strong><div>{{ row.product }}</div><div>{{ row.amount | number }} ₫</div></ng-template>
         <ng-template sdTableGroupDef let-values="values" let-data="data">
           <div class="group-header-cell">
             <span class="group-label">
@@ -16325,6 +16549,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     html: `<demo-section heading="Nhóm dòng" [props]="[{ name: 'group', value: 'true' }, { name: 'sdTableGroupDef', value: 'template' }]">
     <div class="table-box">
       <sd-table [option]="groupOption">
+        <ng-template [sdTableRowMobileDef]="groupOption" let-row="item"><strong>{{ row.name }}</strong><div>{{ row.department }}</div></ng-template>
         <ng-template sdTableGroupDef let-values="values" let-data="data" let-isExpanded="isExpanded">
           <div class="group-header-cell">
             <span class="group-label">Phòng <b>{{ values['department'] }}</b></span>
@@ -16341,6 +16566,30 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     <div class="table-box">
       <sd-table [option]="serverOption"></sd-table>
     </div>
+  </demo-section>`,
+  },
+  "components/table/example-the-mobile-va-thao-tac": {
+    ...SHOWCASE_PAGE_SOURCES["components/table"],
+    html: `<demo-section heading="Thẻ mobile và thao tác"
+    [props]="[{ name: 'sdTableRowMobileDef', value: 'template' }, { name: 'mobile.rowLabel', value: 'callback' }, { name: 'selector.actions', value: '[…]' }, { name: 'command.commands', value: '[…]' }]"
+    note="Thu hẹp cửa sổ để xem card. Chạm nội dung để mở lệnh; tick checkbox để chọn nhiều. Dòng thử việc không được chọn. Nút và liên kết trong card hoạt động riêng.">
+    <sd-table autoId="mobile-employees" [option]="mobileOption">
+      <ng-template sdTableCommandHeaderDef>
+        <sd-button title="Thêm" prefixIcon="add" type="text" (click)="recordMobile('Thêm dòng', [])"></sd-button>
+      </ng-template>
+      <ng-template [sdTableRowMobileDef]="mobileOption" let-row="item" let-selected="selected" let-disabled="selectionDisabled">
+        <div class="T12M text-secondary">NV-{{ row.id }} · {{ row.department }}</div>
+        <strong class="T16M d-block mt-4">{{ row.name }}</strong>
+        <div class="T14R mt-4">{{ row.position }}</div>
+        <div class="T14M mt-8">{{ row.salary | number }} ₫</div>
+        @if (disabled && !selected) { <p class="T12R text-secondary">Chỉ xem — chưa đủ điều kiện chọn</p> }
+        <a [href]="'#employee-' + row.id" (click)="recordMobile('Liên kết hồ sơ', [row.id]); $event.preventDefault()">Hồ sơ</a>
+        <sd-button title="Ghi chú" type="text" prefixIcon="edit_note" (click)="recordMobile('Ghi chú trong card', [row.id])"></sd-button>
+      </ng-template>
+      <ng-template sdTableExpandDef let-item="item"><div class="p-12">{{ item.data.email }} · {{ item.data.status }}</div></ng-template>
+      <ng-template sdTableFooterDef="salary" let-items="items"><strong>{{ totalSalary(items) | number }} ₫ / trang</strong></ng-template>
+    </sd-table>
+    <p class="T14R mt-12" role="status">{{ mobileLog() }}</p>
   </demo-section>`,
   },
   "components/table/example-toi-gian": {
@@ -16361,7 +16610,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     ]"
     note="Không bật index → icon expand + indent nhúng thẳng vào cột data đầu tiên (kiểu file explorer).">
     <div class="table-box">
-      <sd-table [option]="treeNoIndexOption"></sd-table>
+      <sd-table [option]="treeNoIndexOption"><ng-template [sdTableRowMobileDef]="treeNoIndexOption" let-row="item"><strong>{{ row.name }}</strong><div>{{ row.role }}</div></ng-template></sd-table>
     </div>
   </demo-section>`,
   },
@@ -16376,7 +16625,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     ]"
     note="loadType 'lazy': bung dòng → gọi onExpandChildren (giả lập trễ 800ms) → spinner loading hiện trong ô chevron tới khi nạp xong. hasChildren quyết định dòng nào có icon expand (Nhóm/Team là lá → không icon).">
     <div class="table-box">
-      <sd-table [option]="treeLazyOption"></sd-table>
+      <sd-table [option]="treeLazyOption"><ng-template [sdTableRowMobileDef]="treeLazyOption" let-row="item"><strong>{{ row.name }}</strong><div>{{ row.role }}</div></ng-template></sd-table>
     </div>
   </demo-section>`,
   },
@@ -16392,7 +16641,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     ]"
     note="Search trên table 'local' + tree 'static' lọc cả cấp con: giữ nhánh cha của node khớp, prune sibling không khớp, tự bung tới node khớp.">
     <div class="table-box">
-      <sd-table [option]="treeOption"></sd-table>
+      <sd-table [option]="treeOption"><ng-template [sdTableRowMobileDef]="treeOption" let-row="item"><strong>{{ row.name }}</strong><div>{{ row.role }}</div></ng-template></sd-table>
     </div>
   </demo-section>`,
   },
@@ -16426,7 +16675,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
           (click)="increaseTreeCommandIndent()">
         </sd-button>
       </div>
-      <sd-table [option]="treeCommandOption()"></sd-table>
+      <sd-table [option]="treeCommandOption()"><ng-template [sdTableRowMobileDef]="treeCommandOption()" let-row="item"><strong>{{ row.name }}</strong><div>{{ row.role }}</div></ng-template></sd-table>
     </div>
   </demo-section>`,
   },

@@ -1,6 +1,20 @@
 import type { EN_MESSAGES } from './en';
 
 export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
+  'core.component.table.mobile.row': '第 {index} 行',
+  'core.component.table.mobile.select-row': '选择 {row}',
+  'core.component.table.mobile.commands-for': '{row} 的操作',
+  'core.component.table.mobile.expand-row': '展开/收起 {row} 的详情',
+  'core.component.table.mobile.level': '第 {level} 级',
+  'core.component.table.mobile.selected-across-pages': '已选择 {count} 项 — 本页 {here} 项',
+  'core.component.table.mobile.selected': '已选择 {count} 项',
+  'core.component.table.mobile.action': '操作 {index}',
+  'core.component.table.mobile.sort': '排序',
+  'core.component.table.mobile.more': '更多',
+  'core.component.table.mobile.select-page': '选择本页',
+  'core.component.table.mobile.reorder': '拖动以调整行顺序',
+  'core.component.table.mobile.details': '详情',
+  'core.component.table.mobile.summary': '汇总',
   'core.common.cancel': '取消',
   'core.common.close': '关闭',
   'core.common.reload': '重新加载页面',

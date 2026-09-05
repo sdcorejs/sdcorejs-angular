@@ -23,6 +23,7 @@ export const collectRowActionKeys = <T>(
   groupedActions: string[]
 ): void => {
   for (const action of selection?.actions ?? []) {
+    if (!isActionVisible(action.hidden, rowData.data)) continue;
     if ('children' in action) {
       let flag = false;
       let hasGroup = false;
@@ -85,5 +86,58 @@ export const resolveSelectAllVisible = <T>(items: SdTableItem<T>[], selection: S
   }
   if (!keysPerRow.length) return false;
   // Có ít nhất 1 action chung cho MỌI row còn action → cho phép select all.
-  return keysPerRow[0].some(action => keysPerRow.every(keys => keys.includes(action)));
+  const leafKeys = (selection.actions ?? []).flatMap(action =>
+    'children' in action ? action.children.map(child => Utilities.hash(child)) : [Utilities.hash(action)]
+  );
+  return leafKeys.some(action => keysPerRow.every(keys => keys.includes(action)));
 };
+
+/** Same grouped-action visibility contract for both renderers and the legacy pipe. */
+export function prepareRowSelectionVisibility<T>(row: SdTableItem<T>, selection?: SdTableOptionSelector<T>): boolean {
+  const meta = row.meta.selector!;
+  const keys = (meta.actions ??= []);
+  keys.length = 0;
+  const grouped: string[] = [];
+  collectRowActionKeys(row, selection, keys, grouped);
+  meta.selectable = !selection?.actions?.length || keys.length > 0;
+  meta.visible =
+    !!meta.isSelected ||
+    (meta.selectable && (!grouped.length || !!row.meta.group?.items?.length || keys.some(key => !grouped.includes(key))));
+  return meta.visible;
+}
+
+/** A selected row remains removable even if its eligibility changed after a reload. */
+export function resolveRowSelectionDisabled<T>(
+  selected: SdTableItem<T>[],
+  row: SdTableItem<T>,
+  selection?: SdTableOptionSelector<T>
+): boolean {
+  if (row.meta.selector!.isSelected) return false;
+  if (
+    selection?.disabled?.(
+      row.data,
+      selected.map(item => item.data)
+    )
+  )
+    return true;
+  if (!selection?.actions?.length) return false;
+  // why: chọn đơn thay thế lựa chọn cũ, không cần action chung với dòng cũ.
+  const comparison = selection.single ? [] : selected;
+  const leafKeys = selection.actions.flatMap(action =>
+    'children' in action ? action.children.map(child => Utilities.hash(child)) : [Utilities.hash(action)]
+  );
+  return !leafKeys.some(
+    key => row.meta.selector?.actions?.includes(key) && comparison.every(item => item.meta.selector?.actions?.includes(key))
+  );
+}
+
+/** Prepare ALL action keys first so no row depends on another cell's rendering order. */
+export function prepareTableSelection<T>(rows: SdTableItem<T>[], selected: SdTableItem<T>[], selection?: SdTableOptionSelector<T>): void {
+  const all = [...new Set([...rows, ...selected])];
+  for (const row of all) prepareRowSelectionVisibility(row, selection);
+  for (const row of all) {
+    const meta = row.meta.selector!;
+    meta.disabled = resolveRowSelectionDisabled(selected, row, selection);
+    meta.selectable = (!!meta.isSelected || !selection?.actions?.length || !!meta.actions?.length) && !meta.disabled;
+  }
+}

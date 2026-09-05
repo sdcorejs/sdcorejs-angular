@@ -466,7 +466,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/quick-action/sd-quick-action',
     keywords: ['bulk action', 'floating toolbar', 'selection', 'command'],
     status: 'stable',
-    demoSectionCount: 3,
+    demoSectionCount: 4,
     loadComponent: () => import('../../pages/components/quick-action/quick-action-demo.component').then(m => m.QuickActionDemoComponent),
   }),
   defineDocPage({
@@ -557,7 +557,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/table/sd-table',
     keywords: ['data grid', 'pagination', 'filter', 'selection', 'server side', 'command header'],
     status: 'stable',
-    demoSectionCount: 20,
+    demoSectionCount: 24,
     loadComponent: () => import('../../pages/components/table/table-demo.component').then(m => m.TableDemoComponent),
   }),
   defineDocPage({

@@ -12,4 +12,6 @@ export class SdQuickAction {
    * Toggle visibility of the floating toolbar. Bare attribute = true.
    */
   readonly opened = input(false, { transform: booleanAttribute });
+  /** Keep the toolbar in its owner's layout (for a sticky table footer or a drawer). */
+  readonly contained = input(false, { transform: booleanAttribute });
 }

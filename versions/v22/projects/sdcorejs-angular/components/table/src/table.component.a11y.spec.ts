@@ -10,6 +10,7 @@ import { SdTableOption } from './models/table-option.model';
 import { SdTableColumn } from './models/table-column.model';
 import { SdTableTitleDefDirective } from './directives/sd-table-title-def.directive';
 import { SdColumnResizeDirective } from './directives/sd-column-resize.directive';
+import { SdViewportService } from '@sdcorejs/angular/services/viewport';
 
 interface EmployeeRow {
   id: number;
@@ -94,7 +95,10 @@ describe('SdTable sort accessibility', () => {
   let host: TableA11yHost;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ imports: [TableA11yHost, NoopAnimationsModule] });
+    TestBed.configureTestingModule({
+      imports: [TableA11yHost, NoopAnimationsModule],
+      providers: [{ provide: SdViewportService, useValue: { isMobile: signal(false) } }],
+    });
     fixture = TestBed.createComponent(TableA11yHost);
     host = fixture.componentInstance;
   });

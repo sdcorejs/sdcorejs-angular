@@ -113,6 +113,7 @@ export type ShowcaseExampleSourceKey =
   | "components/query-builder/example-so-sanh-giua-cac-truong"
   | "components/quick-action/example-bulk-action-nhieu-dong"
   | "components/quick-action/example-thong-bao-trang-thai"
+  | "components/quick-action/example-trong-container"
   | "components/quick-action/example-undo-toast"
   | "components/section/example-basic-info-rows"
   | "components/section/example-collapsible-section"
@@ -163,9 +164,13 @@ export type ShowcaseExampleSourceKey =
   | "components/table/example-khong-co-filler"
   | "components/table/example-lenh-dong-co-menu-con"
   | "components/table/example-lenh-dong-phai"
+  | "components/table/example-mobile-chon-du-lieu"
+  | "components/table/example-mobile-qua-nhieu-trang"
+  | "components/table/example-mobile-trong-hop-thoai"
   | "components/table/example-nhom-don-hang-theo-khach"
   | "components/table/example-nhom-dong"
   | "components/table/example-server-side"
+  | "components/table/example-the-mobile-va-thao-tac"
   | "components/table/example-toi-gian"
   | "components/table/example-tree-khong-cot-stt-chevron-nam-trong-cot-dau-don-vi"
   | "components/table/example-tree-lazy-nap-con-khi-bung-co-loading"
@@ -1147,6 +1152,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Existing “Undo toast” scenario preserved from the showcase.",
   },
   {
+    sourceKey: "components/quick-action/example-trong-container",
+    pageKey: "components/quick-action",
+    sectionId: "example-trong-container",
+    title: "Trong container",
+    description: "Existing “Trong container” scenario preserved from the showcase.",
+  },
+  {
     sourceKey: "components/section/example-basic-info-rows",
     pageKey: "components/section",
     sectionId: "example-basic-info-rows",
@@ -1404,6 +1416,34 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-replacetab-beforeclose",
     title: "replaceTab + beforeClose",
     description: "Existing “replaceTab + beforeClose” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/table/example-the-mobile-va-thao-tac",
+    pageKey: "components/table",
+    sectionId: "example-the-mobile-va-thao-tac",
+    title: "Thẻ mobile và thao tác",
+    description: "Thu hẹp cửa sổ để xem card. Chạm nội dung để mở lệnh; tick checkbox để chọn nhiều. Dòng thử việc không được chọn. Nút và liên kết trong card hoạt động riêng.",
+  },
+  {
+    sourceKey: "components/table/example-mobile-qua-nhieu-trang",
+    pageKey: "components/table",
+    sectionId: "example-mobile-qua-nhieu-trang",
+    title: "Mobile qua nhiều trang",
+    description: "API giả lập trả object mới sau mỗi request. Chọn ở trang 1 rồi sang trang 2; summary và callback giữ toàn bộ selection.",
+  },
+  {
+    sourceKey: "components/table/example-mobile-chon-du-lieu",
+    pageKey: "components/table",
+    sectionId: "example-mobile-chon-du-lieu",
+    title: "Mobile chọn dữ liệu",
+    description: "Ba table độc lập: chọn đơn có mặc định; chọn nhiều không có bulk action; chỉ có lệnh dòng.",
+  },
+  {
+    sourceKey: "components/table/example-mobile-trong-hop-thoai",
+    pageKey: "components/table",
+    sectionId: "example-mobile-trong-hop-thoai",
+    title: "Mobile trong hộp thoại",
+    description: "Card và thanh thao tác nằm trong vùng cuộn của từng table. Đóng hộp thoại hoặc drawer sẽ dọn các overlay con.",
   },
   {
     sourceKey: "components/table/example-full-demo-local",
