@@ -7,8 +7,8 @@
   "capture_tool": "Playwright with installed Chrome",
   "browser": "151.0.7922.174",
   "captured_at": [
-    "2026-09-05T06:18:16.129Z",
-    "2026-09-05T06:17:51.504Z"
+    "2026-09-05T08:25:35.220Z",
+    "2026-09-05T08:25:58.736Z"
   ],
   "route": "/v/22.2.5/components/table/examples",
   "ui_capture_context": {
@@ -16,7 +16,8 @@
     "authentication": "public local example; no user account or auth state",
     "pii_screening": "PASS: fictional employee fixtures already defined in the public showcase",
     "containment": "PASS: captured image bounds fit recorded viewport; no mobile table horizontal overflow",
-    "source_manifest_sha256": "3d9047d7ec537babbfbeeb76aaaa91f9c645fecc4eace61ae3551da3f0ef36cb"
+    "source_manifest_sha256": "ef21bbb200a6e659a014936dbd72237a5e24ea194dd575c5e326ec126be53b05",
+    "layout": "Cards first; 16px corner selectors with 44px touch targets; footer tools; selection controls in contained QuickAction."
   },
   "captures": [
     {
@@ -51,11 +52,11 @@
     },
     {
       "path": "320-dark-browsing.png",
-      "sha256": "0010b2f55c01b36cd044f742828203c79d2922e499691aa469c3490eb65ee857",
-      "bytes": 26865,
+      "sha256": "5fbbbf08115fb8dc43cd7b5006f1b7839cc7a9cecf0cadfc81ec6e947173e5cd",
+      "bytes": 34436,
       "image_size": [
         279,
-        761
+        849
       ],
       "viewport": [
         320,
@@ -66,8 +67,8 @@
     },
     {
       "path": "320-dark-more.png",
-      "sha256": "6417004c68726b4cc5e46b2b555444a44aae931aafa623fd888bc7b7746fbf7b",
-      "bytes": 44053,
+      "sha256": "7e2f1412444f535d41a1255f722df2463ccda4c4ca6c071bbf30dbe280f247ac",
+      "bytes": 44674,
       "image_size": [
         320,
         960
@@ -81,11 +82,11 @@
     },
     {
       "path": "320-dark-row-command.png",
-      "sha256": "619edd9c341cb93df6c8ffd424dba18e2cabf770a86d3ad82a98b91b212ca357",
-      "bytes": 28927,
+      "sha256": "ccddbf86bc53ee6ae1ff7b93f6f602b9636c84e9ec8dcb54333f10a938017fbb",
+      "bytes": 35634,
       "image_size": [
         279,
-        761
+        849
       ],
       "viewport": [
         320,
@@ -96,11 +97,11 @@
     },
     {
       "path": "320-dark-selection.png",
-      "sha256": "6f91c70e77176d338692440149935a6461110b75e3e08421f0e1c1e9fe402125",
-      "bytes": 27550,
+      "sha256": "871997b41709c78dcbbf902577c9ff2b1702bda9a8bc43f6c7b6b62e7de3bcf3",
+      "bytes": 34469,
       "image_size": [
         279,
-        761
+        849
       ],
       "viewport": [
         320,
@@ -111,11 +112,11 @@
     },
     {
       "path": "320-light-browsing.png",
-      "sha256": "5917bdb1a2b1c9e8810aaac7e84f770e1378b39f489646c53b48570ced91311c",
-      "bytes": 26443,
+      "sha256": "0c895267f307a324452032423b75c12babf637c86a178ee51c5dc6c4960917ec",
+      "bytes": 34259,
       "image_size": [
         279,
-        761
+        849
       ],
       "viewport": [
         320,
@@ -126,8 +127,8 @@
     },
     {
       "path": "320-light-more.png",
-      "sha256": "f8a80c45816fc0aefa651298c5adaff591bb7fa5ab455140cf4c1d14885eda9e",
-      "bytes": 44626,
+      "sha256": "d1f9153b9925e5b46f66550cc32a34a57d9e981bc6b99040ca4bdc9222e02097",
+      "bytes": 45003,
       "image_size": [
         320,
         960
@@ -141,11 +142,11 @@
     },
     {
       "path": "320-light-row-command.png",
-      "sha256": "b70e662b49fbf88e7e7cb2ff1e567eaa930ac4075201ef448ba034b08aaf2828",
-      "bytes": 28578,
+      "sha256": "b43faf02cba54d37b6f27154948b19f2052c62b868284ced7c5ce33f512542c3",
+      "bytes": 35401,
       "image_size": [
         279,
-        761
+        849
       ],
       "viewport": [
         320,
@@ -156,11 +157,11 @@
     },
     {
       "path": "320-light-selection.png",
-      "sha256": "6b4a846146bf3e5719014169e1fec1067361d3b7555b516e9c2fadff089f2bcd",
-      "bytes": 27209,
+      "sha256": "60b57e66f56bd7e6b9a86e5a24c3693a47ca38259a4898f3edc3348f7eee6e39",
+      "bytes": 33854,
       "image_size": [
         279,
-        761
+        849
       ],
       "viewport": [
         320,
@@ -171,11 +172,11 @@
     },
     {
       "path": "390-dark-browsing.png",
-      "sha256": "3869da78b61a2e7a09970274fa4ea54c2a9d9baf807f04bf56755e784c7975d9",
-      "bytes": 27701,
+      "sha256": "58fc4c1ef24f1f075c0fa75e3f05816928bd2e748be2597a59b2fa79541863f1",
+      "bytes": 34723,
       "image_size": [
         349,
-        761
+        789
       ],
       "viewport": [
         390,
@@ -186,8 +187,8 @@
     },
     {
       "path": "390-dark-more.png",
-      "sha256": "526ece918559ac7785182ee9867040945d363e9e5bc199d87dc8ad4f463a19b9",
-      "bytes": 47757,
+      "sha256": "3cfc25354767d0468cbd90bc9a4febb2ab0149404fb6482a0d41f0eee5a41993",
+      "bytes": 50993,
       "image_size": [
         390,
         960
@@ -201,11 +202,11 @@
     },
     {
       "path": "390-dark-row-command.png",
-      "sha256": "fa4ff5d3d39da92fd0fe75800ff91f98fce82ee7dc160169dd9e28c5c80d6d9c",
-      "bytes": 30169,
+      "sha256": "16210b5ca5825212409d8e36e24ab340eb477fb46d355240a9e256dc61f22a2a",
+      "bytes": 36966,
       "image_size": [
         349,
-        761
+        789
       ],
       "viewport": [
         390,
@@ -216,11 +217,11 @@
     },
     {
       "path": "390-dark-selection.png",
-      "sha256": "9ef2a12f31d634b8d31f274d94ee8f36b0cea0ca52dca47e296b9fcea320bee0",
-      "bytes": 31746,
+      "sha256": "9b09f4655590df186a86f8270c7841f6c909131dbb3661c18f547157701dca2d",
+      "bytes": 36411,
       "image_size": [
         349,
-        761
+        805
       ],
       "viewport": [
         390,
@@ -231,8 +232,8 @@
     },
     {
       "path": "390-drawer-selection.png",
-      "sha256": "0f3f235d9cb02daf8cb398d636e1eaeec3525e90e2b1a50cd681cd1df5d61506",
-      "bytes": 36224,
+      "sha256": "e56af15cbd839f4310d8924bb52772c9949a548a8ea168bbf19c6602c1578247",
+      "bytes": 33752,
       "image_size": [
         390,
         960
@@ -246,11 +247,11 @@
     },
     {
       "path": "390-light-browsing.png",
-      "sha256": "929e7bb2a79cdb8910482c686260051281ce2bec10273756bc69aac59dbfc783",
-      "bytes": 27258,
+      "sha256": "9305f8103870d2a6050c14d7b23d109d77b56fb54c20008442994ee993a93443",
+      "bytes": 34396,
       "image_size": [
         349,
-        761
+        789
       ],
       "viewport": [
         390,
@@ -261,8 +262,8 @@
     },
     {
       "path": "390-light-more.png",
-      "sha256": "c63148ed6a5183d5e7dde05205f65839e46f62805b47e431cfdf7589f7751aaa",
-      "bytes": 48531,
+      "sha256": "ac82a423c090486e221e5698d3549a69e8176cc9840a772902098957ae145819",
+      "bytes": 51740,
       "image_size": [
         390,
         960
@@ -276,11 +277,11 @@
     },
     {
       "path": "390-light-row-command.png",
-      "sha256": "22353cf0c087b56d915a0527f9c53d95768ea59926612015e440e07a66b1a935",
-      "bytes": 29722,
+      "sha256": "8bc936004bc6d820492be370155ca03fb8e8dd3976e8acc6c6d318e7148d70ac",
+      "bytes": 36462,
       "image_size": [
         349,
-        761
+        789
       ],
       "viewport": [
         390,
@@ -291,11 +292,11 @@
     },
     {
       "path": "390-light-selection.png",
-      "sha256": "b94335fe22a4794e8fd43d528dce89dad626de8c396dc1ac159cb4341cd0bec4",
-      "bytes": 31415,
+      "sha256": "8d84838d479e695a808b3ce33aebe751009540370c310cc23ca523576ed5c22d",
+      "bytes": 35855,
       "image_size": [
         349,
-        761
+        805
       ],
       "viewport": [
         390,
@@ -306,8 +307,8 @@
     },
     {
       "path": "390-modal-more.png",
-      "sha256": "7097aaa9488a3cb45e491aa0a647ca8cd5645056cdf23ce1e1350bafe92cfe90",
-      "bytes": 45000,
+      "sha256": "9e1ed970a21c42d01c46d4a1cfca49f0877a9525f8042ec71b22d3d5f3898efe",
+      "bytes": 53624,
       "image_size": [
         390,
         960
@@ -321,11 +322,11 @@
     },
     {
       "path": "390-server-preservation.png",
-      "sha256": "1a48bbe132e730a3752bccd638ffab4ec04e52bc5759f42736da74958b86eede",
-      "bytes": 33983,
+      "sha256": "46cc95c3e36120bd70d1721a5a9bbdda47dcfa101a654307802c5b3810c264d5",
+      "bytes": 29124,
       "image_size": [
         349,
-        761
+        563
       ],
       "viewport": [
         390,

@@ -1422,7 +1422,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "components/table",
     sectionId: "example-the-mobile-va-thao-tac",
     title: "Thẻ mobile và thao tác",
-    description: "Thu hẹp cửa sổ để xem card. Chạm nội dung để mở lệnh; tick checkbox để chọn nhiều. Dòng thử việc không được chọn. Nút và liên kết trong card hoạt động riêng.",
+    description: "Mobile bắt đầu ngay bằng card: lọc, sắp xếp và thêm dòng nằm ở footer. Checkbox nhỏ ở góc trái; khi chọn, số đã chọn và chọn trang nằm trong sd-quick-action. Chạm nội dung để mở lệnh; nút và liên kết trong card hoạt động riêng.",
   },
   {
     sourceKey: "components/table/example-mobile-qua-nhieu-trang",

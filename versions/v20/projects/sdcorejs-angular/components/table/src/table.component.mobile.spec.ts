@@ -152,7 +152,10 @@ describe('SdTable mobile cards', () => {
     expect(tables[0].selectedItems).toEqual([]);
     expect(tables[1].selectedItems.map(row => row.id)).toEqual([11]);
     expect(tables[2].selectedItems).toEqual([]);
-    expect(fixture.nativeElement.querySelector('.sd-mobile-actions')).toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('.sd-mobile-actions').length).toBe(1);
+    expect(fixture.nativeElement.querySelector('.sd-mobile-actions').closest('sd-table')).toBe(
+      fixture.debugElement.queryAll(By.directive(SdTable))[1].nativeElement
+    );
     expect(tables[0].sdRowMobileDef()).not.toBe(tables[1].sdRowMobileDef());
   }));
 
@@ -160,6 +163,56 @@ describe('SdTable mobile cards', () => {
     create(h => h.withTemplate.set(false));
     expect(cards().length).toBe(0);
     expect(table.table()).toBeDefined();
+  }));
+
+  it('keeps mobile tools in the footer and moves page selection into QuickAction only while selected', fakeAsync(() => {
+    create(h => {
+      h.features = true;
+    });
+    const element: HTMLElement = fixture.nativeElement;
+    const footer = element.querySelector('.c-paginator')!;
+    expect(element.querySelector('.sd-mobile-toolbar')).toBeNull();
+    expect(element.querySelector('.sd-mobile-selection-summary')).toBeNull();
+    expect(footer.querySelector('.command-header')).not.toBeNull();
+    expect(footer.querySelector('[data-autoid$="mobile-test-mobile-sort"]')).not.toBeNull();
+    expect(footer.querySelector('[data-autoid$="mobile-test-mobile-filter-open"]')).not.toBeNull();
+    footer.querySelector<HTMLInputElement>('[data-autoid$="mobile-test-mobile-select-page"] input')!.click();
+    settle();
+    expect(table.selectedItems.map(row => row.id)).toEqual([1, 2]);
+    expect(footer.querySelector('[data-autoid$="mobile-test-mobile-select-page"]')).toBeNull();
+    const quickAction = element.querySelector('sd-quick-action')!;
+    expect(quickAction.querySelector('.sd-mobile-selection-summary')?.textContent).toContain('2');
+    expect(quickAction.querySelector<HTMLInputElement>('[data-autoid$="mobile-test-mobile-select-page"] input')?.checked).toBeTrue();
+    quickAction.querySelector<HTMLButtonElement>('.sd-mobile-clear')!.click();
+    settle();
+    expect(element.querySelector('sd-quick-action')).toBeNull();
+    expect(footer.querySelector<HTMLInputElement>('[data-autoid$="mobile-test-mobile-select-page"] input')?.checked).toBeFalse();
+    expect(element.querySelector('[role="status"]')?.textContent).toContain('0');
+  }));
+
+  it('keeps external filters in the mobile drawer and restores the desktop filter form on resize', fakeAsync(() => {
+    create(h => {
+      h.option.filter = { externalFilters: [{ field: 'name', type: 'string', title: 'Customer name' }] };
+    });
+    expect(fixture.nativeElement.querySelector('external-filter')).toBeNull();
+    expect(
+      table
+        .mobileFilter()!
+        .externalFilters()
+        ?.map(filter => filter.field)
+    ).toEqual(['name']);
+    table.filterRegister!.value.set({ externalFilter: { name: 'One' } });
+    settle();
+    mobile.set(false);
+    settle();
+    expect(fixture.nativeElement.querySelector('external-filter')).not.toBeNull();
+    expect(table.getFilterRequest().rawExternalFilter?.['name']).toBe('One');
+    mobile.set(true);
+    settle();
+    expect(fixture.nativeElement.querySelector('external-filter')).toBeNull();
+    table.mobileFilter()!.open();
+    settle();
+    expect(table.mobileFilter()!.workingExternalFilter()['name']).toBe('One');
   }));
 
   it('opens a row command without selecting, then enters and exits selection mode', fakeAsync(() => {
@@ -270,7 +323,8 @@ describe('SdTable mobile cards', () => {
     });
     expect(table.selectedItems.map(row => row.id)).toEqual([3]);
     expect(cards()[2].querySelector<HTMLInputElement>('input[type=checkbox]')!.disabled).toBeFalse();
-    expect(fixture.nativeElement.querySelector('.sd-mobile-actions')).toBeNull();
+    expect(fixture.nativeElement.querySelector('sd-quick-action .sd-mobile-selection-summary')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.sd-mobile-action-buttons')).toBeNull();
     fixture.nativeElement.querySelector('.sd-mobile-clear').click();
     settle();
     expect(table.selectedItems).toEqual([]);
@@ -363,7 +417,8 @@ describe('SdTable mobile cards', () => {
       };
     });
     expect(table.selectedItems.length).toBe(3);
-    expect(fixture.nativeElement.querySelector('.sd-mobile-actions')).toBeNull();
+    expect(fixture.nativeElement.querySelector('sd-quick-action .sd-mobile-selection-summary')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.sd-mobile-action-buttons')).toBeNull();
     expect(fixture.nativeElement.querySelector('.sd-mobile-clear')).not.toBeNull();
     expect(host.bulkClick).not.toHaveBeenCalled();
   }));
@@ -604,16 +659,20 @@ describe('SdTable mobile cards', () => {
 
   it('cycles mobile sort through ascending, descending and clear on the shared pipeline', fakeAsync(() => {
     create();
-    const renderer = fixture.debugElement.query(By.directive(SdTableMobileCardsComponent))
-      .componentInstance as SdTableMobileCardsComponent<MobileRow>;
-    renderer.sort('name');
+    const sort = () => {
+      fixture.nativeElement.querySelector('.c-paginator [data-autoid$="mobile-test-mobile-sort"]').click();
+      settle();
+      const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+      overlay.querySelector<HTMLButtonElement>('[mat-menu-item]')!.click();
+    };
+    sort();
     settle();
     expect(cards()[0].textContent).toContain('Locked');
     expect(table.getFilterRequest().orderDirection).toBe('ASC');
-    renderer.sort('name');
+    sort();
     settle();
     expect(cards()[0].textContent).toContain('Two');
-    renderer.sort('name');
+    sort();
     settle();
     expect(table.getFilterRequest().orderDirection).toBeUndefined();
     expect(host.fetch).toHaveBeenCalledTimes(1);

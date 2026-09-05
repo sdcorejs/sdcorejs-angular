@@ -167,7 +167,7 @@ const TASKS: Task[] = [
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-the-mobile-va-thao-tac') {
       <demo-section heading="Thẻ mobile và thao tác"
         [props]="[{ name: 'sdTableRowMobileDef', value: 'template' }, { name: 'mobile.rowLabel', value: 'callback' }, { name: 'selector.actions', value: '[…]' }, { name: 'command.commands', value: '[…]' }]"
-        note="Thu hẹp cửa sổ để xem card. Chạm nội dung để mở lệnh; tick checkbox để chọn nhiều. Dòng thử việc không được chọn. Nút và liên kết trong card hoạt động riêng.">
+        note="Mobile bắt đầu ngay bằng card: lọc, sắp xếp và thêm dòng nằm ở footer. Checkbox nhỏ ở góc trái; khi chọn, số đã chọn và chọn trang nằm trong sd-quick-action. Chạm nội dung để mở lệnh; nút và liên kết trong card hoạt động riêng.">
         <sd-table autoId="mobile-employees" [option]="mobileOption">
           <ng-template sdTableCommandHeaderDef>
             <sd-button title="Thêm" prefixIcon="add" type="text" (click)="recordMobile('Thêm dòng', [])"></sd-button>

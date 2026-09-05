@@ -26,7 +26,10 @@ try{
  await cards.first().locator('input[type=checkbox]').check();
  await page.waitForTimeout(150);
  const summary=await table.locator('.sd-mobile-selection-summary').innerText(); assert.match(summary,/2.*1/s);
- await table.screenshot({path:join(output,'390-server-preservation.png')});
+ const clearBox=await table.locator('.sd-mobile-clear').boundingBox();
+ const pageSelectBox=await table.locator('.sd-mobile-selection-summary .sd-mobile-select-page').boundingBox();
+ assert.ok(Math.abs(clearBox.y-pageSelectBox.y)<8,JSON.stringify({clearBox,pageSelectBox}));
+ await page.mouse.move(0,0);await table.screenshot({path:join(output,'390-server-preservation.png')});
  await table.evaluate(el=>el.style.setProperty('--sd-table-mobile-bottom-offset','60px'));
  await table.locator('.c-table').evaluate(el=>el.scrollTop=el.scrollHeight);
  await page.waitForTimeout(200);
@@ -59,7 +62,7 @@ try{
  await single.locator('.sd-mobile-card').first().locator('.sd-mobile-card-body').click();
  assert.equal(await single.locator('input[type=radio]:checked').count(),1);
  const noActions=tables.nth(1);await noActions.locator('.sd-mobile-card').first().locator('.sd-mobile-card-body').click();
- assert.equal(await noActions.locator('.sd-mobile-clear').count(),1);assert.equal(await noActions.locator('.sd-mobile-actions').count(),0);
+ assert.equal(await noActions.locator('.sd-mobile-clear').count(),1);assert.equal(await noActions.locator('sd-quick-action .sd-mobile-selection-summary').count(),1);assert.equal(await noActions.locator('.sd-mobile-action-buttons').count(),0);
  assert.equal(await tables.nth(2).locator('input[type=checkbox],input[type=radio]').count(),0);
  assert.equal(await single.locator('input[type=radio]:checked').count(),1);checks.push('three tables: single/default, selection without actions, selector off; independent state');
 
@@ -68,7 +71,7 @@ try{
  table=modal.locator('sd-table');cards=table.locator('.sd-mobile-card');await cards.first().waitFor();
  await cards.first().locator('.sd-mobile-card-body').click();await table.locator('.sd-mobile-more').click();
  await page.locator('mat-bottom-sheet-container').waitFor();await page.waitForTimeout(300);
- await page.screenshot({path:join(output,'390-modal-more.png')});
+ await page.mouse.move(0,0);await page.screenshot({path:join(output,'390-modal-more.png')});
  await page.keyboard.press('Escape');await page.locator('mat-bottom-sheet-container').waitFor({state:'detached'});
  assert.equal(await modal.isVisible(),true);
  await cards.first().focus();await page.keyboard.press('Escape');
@@ -81,7 +84,7 @@ try{
  table=drawer.locator('sd-table');await table.locator('.sd-mobile-card').first().waitFor();
  const bounds=await table.boundingBox();assert.ok(bounds.width<=390);
  await table.locator('.sd-mobile-card').first().locator('input[type=checkbox]').check();
- await page.waitForTimeout(300);await page.screenshot({path:join(output,'390-drawer-selection.png')});
+ await page.waitForTimeout(300);await page.mouse.move(0,0);await page.screenshot({path:join(output,'390-drawer-selection.png')});
  await drawer.locator('.sd-side-drawer-close-btn').click();await drawer.waitFor({state:'detached'});
  assert.equal(await page.locator('mat-bottom-sheet-container').count(),0);checks.push('modal/drawer containment, nested sheet Escape, focus and cleanup');
 

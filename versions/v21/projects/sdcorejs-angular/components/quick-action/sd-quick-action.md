@@ -111,3 +111,5 @@ The empty `[sdAction]` slot is handled by `:has()` + `:empty` CSS rules — the 
 ```
 
 `contained` reserves layout space, wraps content, uses the Core surface token, and avoids viewport-wide fixed positioning. Existing callers retain the default floating behavior. The owning component handles scroll bounds, safe area and overlay lifecycle.
+
+In mobile table cards, the contained message slot holds the selected count, page-selection control and labelled clear icon. When there are no bulk actions, the empty action slot collapses and this compact selection row remains available.

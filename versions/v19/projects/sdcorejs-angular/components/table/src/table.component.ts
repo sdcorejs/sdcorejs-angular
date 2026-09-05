@@ -49,6 +49,7 @@ import { CdkColumnDef } from '@angular/cdk/table';
 import { CdkDrag, CdkDragDrop, CdkDropList, DragDropModule } from '@angular/cdk/drag-drop';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatMenuModule } from '@angular/material/menu';
@@ -212,6 +213,7 @@ const EMPTY_COMMANDS: SdTableCommand[] = [];
     MatTableModule,
     MatSortModule,
     MatProgressSpinnerModule,
+    MatButtonModule,
     MatCheckboxModule,
     MatRadioModule,
     DragDropModule,
@@ -328,6 +330,18 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   isSelectAll = signal(false);
   isSelectIndeterminate = signal(false);
   readonly sortState = signal<{ active: string; direction: SortDirection }>({ active: '', direction: '' });
+  readonly mobileSortColumns = computed(() => {
+    const config = this.configuration();
+    const state = this.sortState();
+    return [...(config?.firstColumns ?? []), ...(config?.secondColumns ?? [])]
+      .filter(column => column.type !== 'children' && column.sortable)
+      .map(column => ({
+        field: column.field,
+        title: typeof column.title === 'string' ? column.title : column.title.title,
+        direction: state.active === column.field ? state.direction : '',
+      }));
+  });
+
   readonly pageRevision = signal(0);
   readonly dataRevision = signal(0);
 

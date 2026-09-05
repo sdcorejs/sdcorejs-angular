@@ -1,44 +1,65 @@
 @let _busy = busy();
 @let _autoId = autoId();
-<div #bar class="sd-mobile-actions" role="region" [attr.aria-label]="title()" (keydown)="onEscape($event)">
+@let _title = title();
+@let _selection = selection();
+<div #bar class="sd-mobile-actions" role="region" [attr.aria-label]="_title" (keydown)="onEscape($event)">
   <sd-quick-action opened contained>
-    <div sdMessage class="T14M sd-mobile-action-title">{{ title() }}</div>
-    <div sdAction class="sd-mobile-action-buttons">
-      @for (action of direct(); track action.key) {
-        <span class="sd-mobile-action-direct">
-          <sd-button
-            [autoId]="_autoId ? _autoId + '-mobile-action-' + action.key : null"
-            [title]="action.title"
-            [prefixIcon]="action.icon"
-            [fontSet]="action.fontSet"
-            [color]="action.color"
-            size="lg"
-            [type]="action.type || 'light'"
-            [disabled]="_busy || action.disabled"
-            (click)="run(action)"></sd-button>
-        </span>
-      }
-      @if (overflow().length) {
-        <button
-          mat-button
-          type="button"
-          class="sd-mobile-more"
-          [disabled]="_busy"
-          aria-haspopup="dialog"
-          [attr.data-autoid]="_autoId ? _autoId + '-mobile-more' : null"
-          (click)="openMore()">
-          <sd-icon name="more_horiz"></sd-icon><span>{{ 'core.component.table.mobile.more' | sdTranslate }}</span>
-        </button>
+    <div sdMessage class="sd-mobile-action-heading" [class.sd-mobile-selection-summary]="_selection">
+      <span class="T14M sd-mobile-action-title">{{ _title }}</span>
+      @if (showSelectPage()) {
+        <mat-checkbox
+          class="sd-mobile-select-page"
+          [checked]="pageChecked()"
+          [indeterminate]="pageIndeterminate()"
+          (change)="selectPage.emit($event.checked)"
+          [attr.data-autoid]="_autoId ? _autoId + '-mobile-select-page' : null">
+          {{ 'core.component.table.mobile.select-page' | sdTranslate }}
+        </mat-checkbox>
       }
       <button
-        mat-button
+        mat-icon-button
         type="button"
         class="sd-mobile-end"
+        [class.sd-mobile-clear]="_selection"
+        [attr.aria-label]="(_selection ? 'core.component.table.clear-selection' : 'core.common.close') | sdTranslate"
         (click)="end.emit()"
         [attr.data-autoid]="_autoId ? _autoId + '-mobile-end' : null">
-        {{ (selection() ? 'core.component.table.clear-selection' : 'core.common.close') | sdTranslate }}
+        <sd-icon name="close"></sd-icon>
       </button>
+      @if (message(); as message) {
+        <span class="T14R sd-mobile-selection-message">{{ message }}</span>
+      }
     </div>
+    @if (actions().length) {
+      <div sdAction class="sd-mobile-action-buttons">
+        @for (action of direct(); track action.key) {
+          <span class="sd-mobile-action-direct">
+            <sd-button
+              [autoId]="_autoId ? _autoId + '-mobile-action-' + action.key : null"
+              [title]="action.title"
+              [prefixIcon]="action.icon"
+              [fontSet]="action.fontSet"
+              [color]="action.color"
+              size="lg"
+              [type]="action.type || 'light'"
+              [disabled]="_busy || action.disabled"
+              (click)="run(action)"></sd-button>
+          </span>
+        }
+        @if (overflow().length) {
+          <button
+            mat-button
+            type="button"
+            class="sd-mobile-more"
+            [disabled]="_busy"
+            aria-haspopup="dialog"
+            [attr.data-autoid]="_autoId ? _autoId + '-mobile-more' : null"
+            (click)="openMore()">
+            <sd-icon name="more_horiz"></sd-icon><span>{{ 'core.component.table.mobile.more' | sdTranslate }}</span>
+          </button>
+        }
+      </div>
+    }
   </sd-quick-action>
   @if (error(); as message) {
     <p role="alert">{{ message }}</p>

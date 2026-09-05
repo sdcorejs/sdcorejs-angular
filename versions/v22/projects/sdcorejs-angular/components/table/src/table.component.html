@@ -1,3 +1,6 @@
+@let _visibleSelectAll = visibleSelectAll();
+@let _isSelectIndeterminate = isSelectIndeterminate();
+@let _isSelectAll = isSelectAll();
 @let _configuration = configuration();
 @let _tableOption = tableOption()!;
 @let _loading = loading();
@@ -19,12 +22,13 @@
 @let _rowCommands = rowCommands();
 @let _mobileCards = mobileCards();
 @let _isMobile = isMobile();
+@let _commandHeaderDef = sdCommandHeaderDef();
 <!-- why: tree không còn cột riêng — khi KHÔNG có cột Index, icon expand nhúng vào
      cột data đầu tiên. Đây là field của cột đó (null nếu có Index hoặc không tree). -->
 @let _treeFirstField = _tableOption?.tree && !_tableOption.index?.enabled ? _configuration?.firstColumns?.[0]?.field : null;
 
 @if (_configuration) {
-  @if (!_tableOption.filter?.disabled && !!_tableOption.filter?.externalFilters?.length && filterRegister) {
+  @if (!_mobileCards && !_tableOption.filter?.disabled && !!_tableOption.filter?.externalFilters?.length && filterRegister) {
     <external-filter
       class="mb-16"
       [autoId]="_autoId"
@@ -202,12 +206,12 @@
 
           <ng-container matColumnDef="sdSelection" sticky>
             <th class="sd-selection-cell p-0" mat-header-cell *matHeaderCellDef [attr.rowspan]="_configuration.multipleHeader ? 2 : 1">
-              @if (visibleSelectAll()) {
+              @if (_visibleSelectAll) {
                 <mat-checkbox
                   class="c-selection px-8"
                   color="primary"
-                  [indeterminate]="isSelectIndeterminate()"
-                  [ngModel]="isSelectAll()"
+                  [indeterminate]="_isSelectIndeterminate"
+                  [ngModel]="_isSelectAll"
                   (ngModelChange)="isSelectAll.set($event)"
                   (change)="onSelectAll()">
                 </mat-checkbox>
@@ -300,7 +304,7 @@
                `sdTableCommandHeaderDef` (thường là nút thêm dòng) thì hành động cấp bảng nằm ngay
                trên cụm nút của từng dòng, thay vì phải dựng thêm một dải riêng dưới bảng. -->
             <th class="p-0" mat-header-cell *matHeaderCellDef style="width: 50px" [attr.rowspan]="_configuration.multipleHeader ? 2 : 1">
-              @if (sdCommandHeaderDef(); as _commandHeaderDef) {
+              @if (_commandHeaderDef) {
                 <div class="sd-command-header d-flex align-items-center justify-content-center">
                   <ng-container *ngTemplateOutlet="_commandHeaderDef.templateRef"></ng-container>
                 </div>
@@ -560,6 +564,41 @@
     </div>
     <div class="c-paginator">
       <div class="c-action">
+        @if (_mobileCards) {
+          @if (_commandHeaderDef) {
+            <ng-container *ngTemplateOutlet="_commandHeaderDef.templateRef"></ng-container>
+          }
+          @if (_tableOption.selector?.visible && !_selectedTableItems.length && _visibleSelectAll) {
+            <mat-checkbox
+              class="sd-mobile-select-page"
+              [checked]="_isSelectAll"
+              [indeterminate]="_isSelectIndeterminate"
+              (change)="isSelectAll.set($event.checked); onSelectAll()"
+              [attr.data-autoid]="_autoId ? _autoId + '-mobile-select-page' : null">
+              {{ 'core.component.table.mobile.select-page' | sdTranslate }}
+            </mat-checkbox>
+          }
+          @let _sortColumns = mobileSortColumns();
+          @if (_tableOption.sort?.enable && _sortColumns.length) {
+            <button
+              mat-button
+              type="button"
+              [matMenuTriggerFor]="mobileSortMenu"
+              [attr.data-autoid]="_autoId ? _autoId + '-mobile-sort' : null">
+              <sd-icon name="sort"></sd-icon>{{ 'core.component.table.mobile.sort' | sdTranslate }}
+            </button>
+            <mat-menu #mobileSortMenu="matMenu">
+              @for (column of _sortColumns; track column.field) {
+                <button mat-menu-item type="button" (click)="sort()?.sort({ id: column.field, start: 'asc', disableClear: false })">
+                  <span>{{ column.title }}</span>
+                  @if (column.direction) {
+                    <sd-icon [name]="column.direction === 'asc' ? 'arrow_upward' : 'arrow_downward'"></sd-icon>
+                  }
+                </button>
+              }
+            </mat-menu>
+          }
+        }
         @if (_tableOption.reload?.visible) {
           <sd-button
             [autoId]="_autoId ? _autoId + '-reload' : null"
@@ -650,12 +689,13 @@
           </sd-button>
         }
         <!-- Mobile: nút Filter mở mobile-filter drawer (inline filter ẩn trên mobile) -->
-        @if (_isMobile && !_mobileCards) {
+        @if (_isMobile) {
           @if (!_tableOption.filter?.disabled && _mobileFilter) {
             <sd-button
               [autoId]="_autoId ? _autoId + '-mobile-filter-open' : null"
               class="mr-8"
               prefixIcon="filter_alt"
+              [title]="_mobileCards ? ('core.component.table.filter' | sdTranslate) : undefined"
               (click)="_mobileFilter.open()"
               type="text">
             </sd-button>

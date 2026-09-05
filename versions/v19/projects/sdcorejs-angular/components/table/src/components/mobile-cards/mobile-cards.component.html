@@ -3,58 +3,11 @@
 @let _selectionMode = selectionMode();
 @let _autoId = _table.autoId();
 @let _commands = resolvedCommands();
-@let _selected = selected();
-@let _sortColumns = sortColumns();
 @let _actions = actions();
 @let _expandTemplate = _table.sdSubInformation();
 
-<div class="sd-mobile-toolbar d-flex align-items-center flex-wrap gap-8">
-  @if (_table.sdCommandHeaderDef(); as header) {
-    <ng-container *ngTemplateOutlet="header.templateRef"></ng-container>
-  }
-  @if (!_option.filter?.disabled && _table.mobileFilter(); as filter) {
-    <button mat-button type="button" [attr.data-autoid]="_autoId ? _autoId + '-mobile-filter-open' : null" (click)="filter.open()">
-      <sd-icon name="filter_alt"></sd-icon>{{ 'core.component.table.filter' | sdTranslate }}
-    </button>
-  }
-  @if (_option.sort?.enable && _sortColumns.length) {
-    <button mat-button type="button" [matMenuTriggerFor]="sortMenu" [attr.data-autoid]="_autoId ? _autoId + '-mobile-sort' : null">
-      <sd-icon name="sort"></sd-icon>{{ 'core.component.table.mobile.sort' | sdTranslate }}
-    </button>
-    <mat-menu #sortMenu="matMenu">
-      @for (column of _sortColumns; track column.field) {
-        <button mat-menu-item type="button" (click)="sort(column.field)">
-          <span>{{ column.title }}</span>
-          @if (column.direction) {
-            <sd-icon [name]="column.direction === 'asc' ? 'arrow_upward' : 'arrow_downward'"></sd-icon>
-          }
-        </button>
-      }
-    </mat-menu>
-  }
-</div>
-
 @if (_option.selector?.visible) {
-  <div class="sd-mobile-selection-summary d-flex align-items-center flex-wrap gap-8">
-    <span role="status" aria-live="polite" aria-atomic="true" class="T14M flex-1">{{ selectionSummary() }}</span>
-    @if (selectionMessage(); as message) {
-      <span class="T14R">{{ message }}</span>
-    }
-    @if (_table.visibleSelectAll()) {
-      <mat-checkbox
-        [checked]="_table.isSelectAll()"
-        [indeterminate]="_table.isSelectIndeterminate()"
-        (change)="_table.isSelectAll.set($event.checked); _table.onSelectAll()"
-        [attr.data-autoid]="_autoId ? _autoId + '-mobile-select-page' : null">
-        {{ 'core.component.table.mobile.select-page' | sdTranslate }}
-      </mat-checkbox>
-    }
-    @if (_selected.length) {
-      <button mat-button type="button" class="sd-mobile-clear" (click)="_table.onClearSelection()">
-        {{ 'core.component.table.clear-selection' | sdTranslate }}
-      </button>
-    }
-  </div>
+  <span class="sd-mobile-sr-only" role="status" aria-live="polite" aria-atomic="true">{{ selectionSummary() }}</span>
 }
 
 <div
@@ -80,6 +33,8 @@
         [attr.aria-label]="card.label"
         [attr.data-autoid]="card.context.autoId"
         [class.selected]="_meta.selector?.isSelected"
+        [class.sd-mobile-card-selectable]="_option.selector?.visible && _meta.selector?.visible"
+        [class.sd-mobile-card-commandable]="!_selectionMode && _commands.get(_row)?.length"
         [class.sd-mobile-card-active]="active()?.row === _row"
         [ngStyle]="_meta.rowStyle"
         [style.margin-inline-start.px]="_option.tree ? (_meta.tree?.level ?? 0) * (_option.tree?.indentSize ?? 20) : 0"
@@ -96,12 +51,14 @@
           @if (_option.selector?.visible && _meta.selector?.visible) {
             @if (_option.selector?.single) {
               <mat-radio-button
+                class="sd-mobile-card-selector"
                 [checked]="_meta.selector?.isSelected"
                 [disabled]="_meta.selector?.disabled"
                 [aria-label]="card.selectLabel"
                 (change)="select(card)"></mat-radio-button>
             } @else {
               <mat-checkbox
+                class="sd-mobile-card-selector"
                 [checked]="_meta.selector?.isSelected"
                 [disabled]="_meta.selector?.disabled"
                 [aria-label]="card.selectLabel"
@@ -179,12 +136,17 @@
     }
   }
 </div>
-@if (_actions.length) {
+@if (containerOpen() && (_actions.length || _selectionMode)) {
   <sd-table-mobile-actions
     class="sd-mobile-floating"
     [actions]="_actions"
     [title]="actionTitle()"
     [selection]="_selectionMode"
     [autoId]="_autoId"
+    [message]="_selectionMode ? selectionMessage() : undefined"
+    [showSelectPage]="_selectionMode && _table.visibleSelectAll()"
+    [pageChecked]="_table.isSelectAll()"
+    [pageIndeterminate]="_table.isSelectIndeterminate()"
+    (selectPage)="_table.isSelectAll.set($event); _table.onSelectAll()"
     (end)="endActions()"></sd-table-mobile-actions>
 }

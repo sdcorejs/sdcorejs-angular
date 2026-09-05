@@ -7,7 +7,15 @@
   min-width: 0;
   padding: 8px 0 max(8px, env(safe-area-inset-bottom));
 }
+.sd-mobile-action-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 4px;
+}
 .sd-mobile-action-title {
+  flex: 1 1 0;
+  min-width: 0;
   overflow-wrap: anywhere;
 }
 .sd-mobile-action-buttons {
@@ -18,7 +26,14 @@
   gap: 4px;
 }
 .sd-mobile-end {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
   margin-inline-start: auto;
+}
+.sd-mobile-selection-message {
+  flex: 1 1 100%;
+  overflow-wrap: anywhere;
 }
 button {
   min-height: 44px;

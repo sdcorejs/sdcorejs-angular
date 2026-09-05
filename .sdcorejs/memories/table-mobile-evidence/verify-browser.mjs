@@ -20,7 +20,7 @@ async function scenario(width,theme){
  await example.getByRole('button',{name:'Expand live example',exact:true}).click();
  const table=example.locator('sd-table').first();
  const cards=table.locator('.sd-mobile-card');
- const shot=async state=>{await table.locator('.c-table').evaluate(el=>el.scrollTop=0); await page.waitForTimeout(350); return table.screenshot({path:join(output,`${width}-${theme}-${state}.png`)});};
+ const shot=async state=>{await page.mouse.move(0,0); await table.locator('.c-table').evaluate(el=>el.scrollTop=0); await page.waitForTimeout(350); return table.screenshot({path:join(output,`${width}-${theme}-${state}.png`)});};
  if(width>=768){
   await table.locator('table.mat-mdc-table').waitFor();
   assert.equal(await cards.count(),0);
@@ -34,6 +34,25 @@ async function scenario(width,theme){
  await audit();
  const dimensions=await table.evaluate(el=>({width:el.clientWidth,scroll:el.scrollWidth}));
  assert.ok(dimensions.scroll<=dimensions.width+1,JSON.stringify(dimensions));
+ assert.equal(await table.locator('.sd-mobile-toolbar,.sd-mobile-selection-summary').count(),0);
+ const footer=table.locator('.c-paginator');
+ assert.equal(await footer.locator('[data-autoid$="-mobile-filter-open"],[data-autoid$="-mobile-sort"]').count(),2);
+ assert.equal(await footer.locator('[data-autoid$="-mobile-select-page"]').count(),1);
+ const footerLayout=await footer.evaluate(el=>{
+  const group=el.querySelector('.c-action').getBoundingClientRect();
+  return {width:el.clientWidth,toolsWidth:group.width,height:el.getBoundingClientRect().height};
+ });
+ assert.ok(footerLayout.toolsWidth>=footerLayout.width-2 && footerLayout.height<=220,JSON.stringify(footerLayout));
+ const compactCard=await cards.first().evaluate(el=>{
+  const rect=node=>{const b=node.getBoundingClientRect();return {x:b.x,y:b.y,width:b.width,height:b.height};};
+  const selector=el.querySelector('.sd-mobile-card-selector');
+  return {card:rect(el),selector:rect(selector),glyph:rect(selector.querySelector('.mdc-checkbox__background')),touch:rect(selector.querySelector('.mat-mdc-checkbox-touch-target')),body:rect(el.querySelector('.sd-mobile-card-body')),list:rect(el.closest('sd-table'))};
+ });
+ assert.equal(compactCard.glyph.width,16);assert.equal(compactCard.glyph.height,16);
+ assert.ok(compactCard.touch.width>=44 && compactCard.touch.height>=44,JSON.stringify(compactCard));
+ assert.ok(compactCard.selector.x-compactCard.card.x<=2 && compactCard.selector.y-compactCard.card.y<=2,JSON.stringify(compactCard));
+ assert.ok(compactCard.body.y-compactCard.card.y<16 && compactCard.card.y-compactCard.list.y<16,JSON.stringify(compactCard));
+ assert.ok(compactCard.body.x>=compactCard.selector.x+compactCard.selector.width-1,JSON.stringify(compactCard));
  const inputs=cards.locator('input[type=checkbox]');
  assert.equal(await inputs.nth(2).isDisabled(),true);
  await shot('browsing');
@@ -58,6 +77,8 @@ async function scenario(width,theme){
  assert.equal(await table.locator('.sd-mobile-command-trigger').count(),0);
  await cards.nth(1).locator('.sd-mobile-card-body strong').click();
  assert.equal(await inputs.nth(1).isChecked(),true);
+ assert.equal(await footer.locator('[data-autoid$="-mobile-select-page"]').count(),0);
+ assert.equal(await table.locator('sd-quick-action .sd-mobile-selection-summary [data-autoid$="-mobile-select-page"]').count(),1);
  await shot('selection');
  await audit();
  await table.evaluate(el=>el.style.setProperty('--sd-table-mobile-bottom-offset','60px'));
@@ -86,7 +107,7 @@ async function scenario(width,theme){
  await paginator.scrollIntoViewIfNeeded(); assert.ok(await paginator.isVisible());
  const paginatorTarget=await paginator.locator('.mat-mdc-paginator-navigation-next').boundingBox();
  assert.ok(paginatorTarget.height>=44 && paginatorTarget.width>=44,JSON.stringify(paginatorTarget));
- evidence.push({width,theme,dimensions,selected,paginatorTarget,checks:['renderer','disabled row','child button','row command','More groups/Escape','multi selection','resize preservation','expand','paginator reachable with 44px targets','Axe WCAG 2.1 A/AA browsing and selection: zero violations','60px bottom navigation clearance']});
+ evidence.push({width,theme,dimensions,footerLayout,compactCard,selected,paginatorTarget,checks:['card-first layout; filter/sort in footer; page selection in QuickAction when selected; 16px corner checkbox with 44px touch target','renderer','disabled row','child button','row command','More groups/Escape','multi selection','resize preservation','expand','paginator reachable with 44px targets','Axe WCAG 2.1 A/AA browsing and selection: zero violations','60px bottom navigation clearance']});
  await page.close();
 }
 try{

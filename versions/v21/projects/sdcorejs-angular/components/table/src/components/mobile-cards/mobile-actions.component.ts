@@ -15,6 +15,7 @@ import {
 } from '@angular/core';
 import { MatBottomSheet, MatBottomSheetModule, MatBottomSheetRef, MAT_BOTTOM_SHEET_DATA } from '@angular/material/bottom-sheet';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { SdQuickAction } from '@sdcorejs/angular/components/quick-action';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
@@ -91,7 +92,7 @@ class SdTableMobileActionSheet {
 @Component({
   selector: 'sd-table-mobile-actions',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdQuickAction, SdButton, MatButtonModule, MatBottomSheetModule, SdIcon, SdTranslatePipe],
+  imports: [SdQuickAction, SdButton, MatButtonModule, MatCheckboxModule, MatBottomSheetModule, SdIcon, SdTranslatePipe],
   templateUrl: './mobile-actions.component.html',
   styleUrl: './mobile-actions.component.scss',
 })
@@ -100,6 +101,11 @@ export class SdTableMobileActionsComponent implements OnDestroy {
   readonly title = input.required<string>();
   readonly selection = input(false);
   readonly autoId = input<string>();
+  readonly message = input<string>();
+  readonly showSelectPage = input(false);
+  readonly pageChecked = input(false);
+  readonly pageIndeterminate = input(false);
+  readonly selectPage = output<boolean>();
   readonly end = output<void>();
   readonly busy = signal(false);
   readonly error = signal('');
@@ -115,7 +121,7 @@ export class SdTableMobileActionsComponent implements OnDestroy {
 
   // why: đo container thật (kể cả drawer), không dùng thêm một breakpoint riêng.
   readonly direct = computed(() => {
-    const available = this.#width() - 152; // More + end controls and gaps.
+    const available = this.#width() - 88; // More control and gaps; the close control lives in the header.
     const result: SdTableMobileAction[] = [];
     let used = 0;
     for (const action of this.actions()) {

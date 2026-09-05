@@ -302,6 +302,27 @@
 }
 
 :host .c-container.sd-table-mobile {
+  .c-paginator {
+    flex-wrap: wrap;
+  }
+
+  .c-action {
+    flex: 1 1 100%;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0 4px;
+    min-width: 0;
+
+    sd-button {
+      margin: 0;
+    }
+  }
+
+  .sd-mobile-paginator {
+    margin-inline-start: auto;
+  }
+
   .c-paginator,
   .c-empty {
     background-color: var(--sd-surface);

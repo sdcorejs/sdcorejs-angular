@@ -16,7 +16,6 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
-import { MatMenuModule } from '@angular/material/menu';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
@@ -57,7 +56,6 @@ const INTERACTIVE =
     MatButtonModule,
     MatCheckboxModule,
     MatRadioModule,
-    MatMenuModule,
     SdIcon,
     SdTranslatePipe,
     SdTableMobileActionsComponent,
@@ -144,18 +142,6 @@ export class SdTableMobileCardsComponent<T = unknown> implements OnDestroy {
       count: total,
       here,
     });
-  });
-
-  readonly sortColumns = computed(() => {
-    const config = this.table().configuration();
-    const state = this.table().sortState();
-    return [...(config?.firstColumns ?? []), ...(config?.secondColumns ?? [])]
-      .filter(column => column.type !== 'children' && column.sortable)
-      .map(column => ({
-        field: column.field,
-        title: typeof column.title === 'string' ? column.title : column.title.title,
-        direction: state.active === column.field ? state.direction : '',
-      }));
   });
 
   // Keep B's action array stable when only A's async hidden predicate resolves.
@@ -326,9 +312,6 @@ export class SdTableMobileCardsComponent<T = unknown> implements OnDestroy {
   dragStart(): void {
     this.#dragged = true;
     this.closeCommand(false);
-  }
-  sort(field: string): void {
-    this.table().sort()?.sort({ id: field, start: 'asc', disableClear: false });
   }
 
   ngOnDestroy(): void {
