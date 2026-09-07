@@ -10,6 +10,8 @@
 
 Use it for back-office portals that need permission-aware navigation, responsive desktop/mobile composition, pinned or recent destinations, and persistent sidebar preferences. Do not mount it inside a modal, drawer, widget, or another layout shell, and do not use it as an authentication mechanism.
 
+The V1 desktop menu tree scrolls to the bottom of the sidebar. Only the icon rail reserves space for the fixed user avatar and collapse controls; long lists in both columns remain independently scrollable.
+
 ## Public surface
 
 | API                                                | Purpose                                                                                        |

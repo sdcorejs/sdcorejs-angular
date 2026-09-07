@@ -42,12 +42,14 @@
 
 // Css Sidebar
 .wrapper {
+  position: relative;
   display: flex;
   flex-direction: column;
   width: 290px;
   background-color: #fff;
 
   .c-header {
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     height: 52px;
@@ -88,6 +90,7 @@
 
   .c-body {
     flex: 1;
+    min-height: 0;
     overflow-y: hidden;
 
     .c-menu {
@@ -95,6 +98,8 @@
       display: flex;
 
       .c-menu-group {
+        // why: Chỉ cột icon dành chỗ cho avatar, danh sách menu dùng hết chiều cao.
+        margin-bottom: 80px;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -123,11 +128,13 @@
 
       .c-menu-tree {
         flex: 1;
+        min-height: 0;
         display: flex;
         flex-direction: column;
         padding: 3px 4px 3px 3px;
 
         .c-menu-tree-search {
+          flex-shrink: 0;
           .c-search-prefix-icon {
             cursor: pointer;
             color: #757575;
@@ -149,6 +156,7 @@
 
         .c-menu-tree-container {
           flex: 1;
+          min-height: 0;
           overflow-y: scroll;
           scrollbar-width: none;
 
@@ -238,6 +246,10 @@
   }
 
   .c-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60px;
     height: 80px;
   }
 

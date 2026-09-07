@@ -444,6 +444,51 @@ describe('SdSidebarV1Panel', () => {
 
     beforeEach(async () => createRealTemplate());
 
+    it('uses the full menu height while keeping the user footer below the icon rail', () => {
+      const children: SdLayoutMenu[] = Array.from({ length: 30 }, (_, index) => ({
+        id: `item-${index}`,
+        title: `Menu ${index}`,
+        path: `/item-${index}`,
+        permission: true,
+      }));
+      const groups: SdLayoutMenu[] = Array.from({ length: 20 }, (_, index) => ({
+        id: `group-${index}`,
+        title: `Group ${index}`,
+        children,
+      }));
+      fixture.componentRef.setInput('menus', groups);
+      fixture.detectChanges();
+      component.expandMenuGroup(groups[0]);
+      fixture.detectChanges();
+
+      const root = fixture.nativeElement as HTMLElement;
+      root.style.cssText = 'display:block;height:640px;width:290px';
+      const wrapper = root.querySelector<HTMLElement>('.wrapper')!;
+      const tree = root.querySelector<HTMLElement>('.c-menu-tree-container')!;
+      const rail = root.querySelector<HTMLElement>('.c-menu-group')!;
+      const footer = root.querySelector<HTMLElement>('.c-footer')!;
+      const search = root.querySelector<HTMLElement>('.c-menu-tree-search')!;
+
+      for (const height of [640, 400]) {
+        root.style.height = `${height}px`;
+        const searchTop = search.getBoundingClientRect().top;
+        expect(wrapper.getBoundingClientRect().bottom - tree.getBoundingClientRect().bottom).toBeLessThanOrEqual(4);
+        expect(rail.getBoundingClientRect().bottom).toBeLessThanOrEqual(footer.getBoundingClientRect().top + 1);
+        expect(footer.getBoundingClientRect().right).toBeLessThanOrEqual(tree.getBoundingClientRect().left);
+        expect(footer.getBoundingClientRect().bottom).toBeCloseTo(wrapper.getBoundingClientRect().bottom, 0);
+        expect(tree.scrollHeight).toBeGreaterThan(tree.clientHeight);
+        expect(rail.scrollHeight).toBeGreaterThan(rail.clientHeight);
+
+        tree.scrollTop = tree.scrollHeight;
+        rail.scrollTop = rail.scrollHeight;
+        const lastMenu = tree.querySelectorAll<HTMLElement>('.c-menu-node');
+        expect(lastMenu[lastMenu.length - 1].getBoundingClientRect().bottom).toBeLessThanOrEqual(tree.getBoundingClientRect().bottom + 1);
+        const lastGroup = rail.querySelectorAll<HTMLElement>('button');
+        expect(lastGroup[lastGroup.length - 1].getBoundingClientRect().bottom).toBeLessThanOrEqual(footer.getBoundingClientRect().top + 1);
+        expect(search.getBoundingClientRect().top).toBe(searchTop);
+      }
+    });
+
     it('gives every rendered control and link an accessible name source', () => {
       const root = fixture.nativeElement as HTMLElement;
       const controls = root.querySelectorAll<HTMLElement>('button, a[href], [role="button"]');
