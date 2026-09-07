@@ -299,3 +299,8 @@
   // và panel mở qua click toàn vùng trigger.
   .mat-mdc-select-arrow-wrapper { display: none; }
 }
+
+// why: Giữ mỗi giá trị đã chọn trên một dòng, kể cả nhãn có dấu phẩy.
+.sd-select-tooltip {
+  white-space: pre-line;
+}

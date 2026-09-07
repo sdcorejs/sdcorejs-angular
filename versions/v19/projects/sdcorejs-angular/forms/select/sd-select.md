@@ -11,6 +11,8 @@
 
 Dropdown picker — single OR multi-select from a static array OR an async API. Built-in search/filter (auto-enabled when items > 10 or when `items` is a search function), `[multiple]` mode with checkboxes, paging via `[limit]`, label/value field accessors with nested-key support, and DETAIL `[viewed]` read-only mode. After `<sd-input>` this is the most-used form control.
 
+For `[multiple]=true`, hovering the field shows an `SdTooltipDirective` tooltip with a localized selection count and each selected display label on its own line. Labels containing commas stay intact. This also works for disabled controls, custom selected templates, and the inline text face; empty selections show no tooltip.
+
 ## When to use
 
 - Pick from a known list (status, currency, country, partner, ...) — static `items` array

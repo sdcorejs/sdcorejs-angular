@@ -1,3 +1,5 @@
+@let _selectedItems = selectedItems();
+@let _tooltip = tooltip();
 @let _label = label();
 @let _appearance = appearance();
 @let _hideInlineError = hideInlineError();
@@ -20,6 +22,10 @@
 @let _errorVisible = !!_errorMessage && formControl.touched;
 @let _showInlineError = !_hideInlineError && _errorVisible;
 
+<ng-template #selectionTooltip>
+  <div class="sd-select-tooltip">{{ _tooltip }}</div>
+</ng-template>
+
 @if (isViewed()) {
   <sd-view
     [label]="_label"
@@ -28,13 +34,20 @@
     [display]="_display"
     [hyperlink]="hyperlink()"
     [valueTemplate]="viewTemplate()"
-    [selectedItems]="selectedItems()">
+    [selectedItems]="_selectedItems">
   </sd-view>
 } @else {
   @if (_isInline) {
     <!-- why: inline — sd-view text là "mặt" + trigger; editor vẫn render bên dưới (chrome ẩn qua
          .sd-inline-editor) để mở panel. Text giữ nguyên, chỉ đổi khi commit giá trị mới. -->
-    <span class="sd-inline-view" role="button" tabindex="0" (click)="enterInlineEdit()" (keydown.enter)="enterInlineEdit()">
+    <span
+      class="sd-inline-view"
+      [sdTooltip]="_multiple && _tooltip ? selectionTooltip : ''"
+      sdTooltipPosition="top"
+      role="button"
+      tabindex="0"
+      (click)="enterInlineEdit()"
+      (keydown.enter)="enterInlineEdit()">
       <sd-view
         [label]="_label"
         [labelTemplate]="sdLabelTemplate()"
@@ -42,7 +55,7 @@
         [display]="_display"
         [hyperlink]="hyperlink()"
         [valueTemplate]="viewTemplate()"
-        [selectedItems]="selectedItems()">
+        [selectedItems]="_selectedItems">
       </sd-view>
 
       <!-- why: clear-× chỉ hiện khi hover (CSS), đặt CUỐI face + clear($event) stopPropagation →
@@ -78,6 +91,8 @@
     (focusin)="updatePanelWidth()">
     @if (_multiple) {
       <mat-form-field
+        [sdTooltip]="_tooltip ? selectionTooltip : ''"
+        sdTooltipPosition="top"
         [class.sd-md]="_size === 'md'"
         [class.sd-sm]="_size === 'sm'"
         [class.hide-inline-error]="_hideInlineError"
@@ -111,20 +126,17 @@
           [attr.data-value]="dataValue()"
           [attr.data-loading]="dataLoading()"
           [attr.data-required]="dataRequired()"
-          [attr.data-error-message]="dataErrorMessage()"
-          matTooltipClass="sd-multiline-tooltip"
-          [matTooltipDisabled]="!formControl.disabled || !_normalizedValue?.length"
-          [matTooltip]="tooltip() || ''">
+          [attr.data-error-message]="dataErrorMessage()">
           <mat-select-trigger>
             @if (sdSelectedTemplate(); as _selTpl) {
               <ng-container
                 *ngTemplateOutlet="
                   _selTpl;
-                  context: { $implicit: selectedItems(), item: selectedItems(), items: selectedItems(), display: _display, multiple: true }
+                  context: { $implicit: _selectedItems, item: _selectedItems, items: _selectedItems, display: _display, multiple: true }
                 ">
               </ng-container>
             } @else {
-              <div class="sd-trigger-text" [matTooltip]="_display || ''" matTooltipPosition="above">
+              <div class="sd-trigger-text">
                 {{ _display }}
               </div>
             }
@@ -282,16 +294,16 @@
           [attr.data-error-message]="dataErrorMessage()"
           matTooltipClass="sd-multiline-tooltip"
           [matTooltipDisabled]="!formControl.disabled || !_normalizedValue?.length"
-          [matTooltip]="tooltip() || ''">
+          [matTooltip]="_tooltip || ''">
           <mat-select-trigger>
             @if (sdSelectedTemplate(); as _selTpl) {
               <ng-container
                 *ngTemplateOutlet="
                   _selTpl;
                   context: {
-                    $implicit: selectedItems()[0],
-                    item: selectedItems()[0],
-                    items: selectedItems(),
+                    $implicit: _selectedItems[0],
+                    item: _selectedItems[0],
+                    items: _selectedItems,
                     display: _display,
                     multiple: false,
                   }

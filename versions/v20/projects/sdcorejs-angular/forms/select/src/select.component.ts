@@ -32,6 +32,7 @@ import { MatSelect, MatSelectChange, MatSelectModule } from '@angular/material/s
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { SdView } from '@sdcorejs/angular/components/view';
+import { SdTooltipDirective } from '@sdcorejs/angular/directives';
 import { SdItemDefDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import {
@@ -68,6 +69,7 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   standalone: true,
   host: { '[class.sd-bare]': 'isInline()', '[class.sd-viewed]': 'isViewed() || isInline()', '[class.sd-has-label]': '!!label()' },
   imports: [
+    SdTooltipDirective,
     SdIcon,
     CommonModule,
     FormsModule,
@@ -422,6 +424,12 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   tooltip = computed(() => {
     const items = this.selectedItems();
     if (!items || !items.length) return '';
+    if (this.multiple()) {
+      return [
+        this.#i18n.t('core.form.select.selected-count', { count: items.length }),
+        ...items.map(item => `• ${this.itemDisplay(item)}`),
+      ].join('\n');
+    }
     const vF = this.valueField();
     return items.map(item => (vF ? `• ${this.itemValue(item)} - ${this.itemDisplay(item)}` : `• ${item}`)).join('\n');
   });

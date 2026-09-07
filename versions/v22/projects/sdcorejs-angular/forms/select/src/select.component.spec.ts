@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy as SdAngular22ChangeDetectionStrategy } from '@angular/core';
+import { OverlayContainer } from '@angular/cdk/overlay';
 import { Component, signal, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, flushMicrotasks, tick } from '@angular/core/testing';
 import { AsyncValidatorFn, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
@@ -486,6 +487,41 @@ describe('SdSelect', () => {
 // ---------------------------------------------------------------------------
 
 describe('SdSelect (multi-select mode)', () => {
+  for (const disabled of [false, true]) {
+    it(`shows a count and one label per line on hover (disabled=${disabled})`, fakeAsync(() => {
+      host.items = [{ id: 1, name: 'Apple, green' }, { id: 2, name: 'Banana' }];
+      host.model = [1, 2];
+      fixture.detectChanges();
+      tick();
+      if (disabled) comp.formControl.disable();
+      fixture.detectChanges();
+      const trigger = fixture.nativeElement.querySelector('mat-form-field') as HTMLElement;
+      trigger.dispatchEvent(new MouseEvent('mouseenter'));
+      tick(100);
+      fixture.detectChanges();
+      const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+      const tooltip = overlay.querySelector('.sd-select-tooltip') as HTMLElement;
+      expect(tooltip).not.toBeNull();
+      const lines = tooltip?.textContent?.trim().split('\n') ?? [];
+      expect(lines.length).toBe(3);
+      expect(lines[0]).toContain('2');
+      expect(lines.slice(1)).toEqual(['• Apple, green', '• Banana']);
+      if (tooltip) expect(getComputedStyle(tooltip).whiteSpace).toBe('pre-line');
+      trigger.dispatchEvent(new MouseEvent('mouseleave'));
+      tick(300);
+    }));
+  }
+
+  it('does not show a selection tooltip for an empty selection', fakeAsync(() => {
+    const trigger = fixture.nativeElement.querySelector('mat-form-field') as HTMLElement;
+    trigger.dispatchEvent(new MouseEvent('mouseenter'));
+    tick(100);
+    fixture.detectChanges();
+    expect(TestBed.inject(OverlayContainer).getContainerElement().querySelector('.c-sd-tooltip-container')).toBeNull();
+    trigger.dispatchEvent(new MouseEvent('mouseleave'));
+    tick(300);
+  }));
+
   let fixture: ComponentFixture<MultiHostComponent>;
   let host: MultiHostComponent;
   let comp: SdSelect;

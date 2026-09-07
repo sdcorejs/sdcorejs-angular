@@ -263,6 +263,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   // ---- Forms: select ----
   'core.form.select.required': 'Vui lòng nhập thông tin',
   'core.form.select.selectAll': 'Tất cả',
+  'core.form.select.selected-count': 'Đã chọn {count} phần tử',
 
   // ---- Forms: textarea ----
   'core.form.textarea.required': 'Vui lòng nhập thông tin',

@@ -151,7 +151,7 @@ Both range fields are `matStartDate` / `matEndDate`, so Angular Material re-pars
 ## Visual cues (helps agent map screenshots → component)
 
 - A single Material outlined field with TWO date inputs side-by-side separated by an "→" / dash, each in `dd/MM/yyyy` format (e.g. `01/01/2025  →  31/12/2025`)
-- Trailing icons: a calendar icon to open the picker; an ✕ clear button (`cancel` icon) when a value is set. **In `viewed='inline'` the edit chrome is flattened/hidden** (the text face is shown instead); the inline clear-× on the face is gated by `clearable`.
+- Trailing icons: an outlined calendar opens the picker. The shared `close` (×) clear button appears on hover or keyboard focus when a value is set, `clearable=true`, and the field is neither required nor disabled. It clears both endpoints without opening the picker. Inline mode uses the matching clear-× on its text face.
 - Clicking the calendar icon opens a 2-month side-by-side calendar popup; user clicks start date, then end date — the range fills in
 - When focused, both inputs share a single underline/outline (visually one field, not two)
 - Helper-text shows as an info icon next to the label
@@ -280,7 +280,7 @@ All five attributes live on the **`<mat-date-range-input>`** element — the sin
 
 | API           | Type                  | Notes                                                                                                                                                                                                                                                                                              |
 | ------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `[clearable]` | `boolean`             | In `'inline'`, show a hover clear (cancel) icon on the text face. `false` where the host owns removal (chips). Default `true`.                                                                                                                                                                     |
+| `[clearable]` | `boolean`             | Show the clear-× in edit and inline modes when optional and enabled; edit mode reveals it on hover/focus. Default `true`.                                                                                                                                                                     |
 | `[viewed]`    | `boolean \| 'inline'` | `false` edit · `true` static `<sd-view>` (`dd/MM/yyyy → dd/MM/yyyy`) · `'inline'` click-to-edit range picker (text retained until commit). Project `<ng-template #sdValue>` to override the display. Default `false`. (The old `[bare]` input was removed — inline flattens the field internally.) |
 | `open()`      | method                | Programmatically opens the range picker panel (anchors to the trigger). Used by query-bar chip's auto-open after the user enters edit mode.                                                                                                                                                        |
 

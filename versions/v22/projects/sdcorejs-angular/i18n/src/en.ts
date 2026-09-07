@@ -262,6 +262,7 @@ export const EN_MESSAGES = {
   // ---- Forms: select ----
   'core.form.select.required': 'Please enter information',
   'core.form.select.selectAll': 'All',
+  'core.form.select.selected-count': '{count} items selected',
 
   // ---- Forms: textarea ----
   'core.form.textarea.required': 'Please enter information',

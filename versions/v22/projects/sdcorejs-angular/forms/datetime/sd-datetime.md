@@ -11,6 +11,8 @@
 
 Single date + time-of-day picker — user picks a calendar date AND an `HH:mm` (optionally `HH:mm:ss`) time in a CDK Overlay popup. Reuses the native-Date adapter and picker primitives from `@sdcorejs/angular-material-datetime@1.0.4` with SDCoreJS label, validators, and `[viewed]` read-only support.
 
+The calendar trigger uses `SdIcon`, matching the outlined default used by `sd-date`, `sd-date-range`, and the `sd-time` clock. It respects the application icon configuration.
+
 ## When to use
 
 - Capturing a precise moment (start time of a meeting, scheduled job, posting timestamp)

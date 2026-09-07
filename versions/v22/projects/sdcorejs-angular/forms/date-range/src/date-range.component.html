@@ -10,6 +10,7 @@
 @let _size = size();
 @let _isInline = isInline();
 @let _bare = _isInline;
+@let _clearable = clearable();
 @let _hasValue = !!(control1.value || control2.value);
 @let _labelTemplate = _sdLabelDef?.templateRef ?? undefined;
 <!-- why: một cổng gate duy nhất cho <mat-error>, aria-invalid và aria-describedby — trước đây
@@ -36,7 +37,7 @@
         [display]="formatted()"
         [valueTemplate]="sdValueTemplate()">
       </sd-view>
-      @if (clearable() && _hasValue && !_required && !formControl.disabled) {
+      @if (_clearable && _hasValue && !_required && !formControl.disabled) {
         <button type="button" class="sd-inline-clear" (click)="$event.stopPropagation(); clear()" title="Xóa" aria-label="Xóa">
           <sd-icon name="close"></sd-icon>
         </button>
@@ -130,14 +131,14 @@
       <!-- why: hai nút suffix trước đây là <sd-icon (click)> trần — không Tab tới được, không có
            accessible name, và lint bỏ qua vì <sd-icon> không phải phần tử DOM chuẩn. <button
            type="button"> lấy sẵn Enter/Space + role; nhãn lấy từ i18n (xem mục compromise). -->
-      @if ((control1.value || control2.value) && !_bare) {
+      @if (_clearable && _hasValue && !_required && !formControl.disabled && !_bare) {
         <button
           type="button"
           matSuffix
-          class="cursor-pointer sd-suffix-icon sd-suffix-btn"
+          class="sd-clear-btn sd-hover"
           [attr.aria-label]="'core.form.date-range.clear' | sdTranslate"
-          (click)="clear()">
-          <sd-icon name="cancel"></sd-icon>
+          (click)="$event.stopPropagation(); clear()">
+          <sd-icon name="close"></sd-icon>
         </button>
       }
 
