@@ -241,7 +241,16 @@ test('trusted publishing is OIDC-only, least-privilege and pinned to Node/npm', 
 
   for (const job of jobEntries(workflow).filter(job => /(?:\bnpm pack\b|release-package-contract\.mjs)/u.test(executableCommands(job.source)))) {
     has(job.source, /node-version:\s*['"]?22\.22\.3['"]?/u, `${job.id} must pin Node 22.22.3`);
-    has(job.source, /registry-url:\s*['"]?https:\/\/registry\.npmjs\.org['"]?/u, `${job.id} must configure npm registry for OIDC`);
+    if (job.id === publisher.id) {
+      has(job.source, /^    env:\s*\r?\n      NPM_CONFIG_REGISTRY:\s*['"]?https:\/\/registry\.npmjs\.org['"]?\s*$/mu,
+        'publisher must configure the public registry without creating token authentication');
+      const setupSteps = stepEntries(job).filter(step => /uses:\s*actions\/setup-node@/u.test(step));
+      assert.equal(setupSteps.length, 1);
+      lacks(sourceWithoutComments(setupSteps[0]), /^\s*registry-url:/mu,
+        'setup-node registry-url injects a placeholder NODE_AUTH_TOKEN and an _authToken npmrc entry');
+    } else {
+      has(job.source, /registry-url:\s*['"]?https:\/\/registry\.npmjs\.org['"]?/u, `${job.id} must configure npm registry`);
+    }
     has(executableCommands(job.source), /npm install -g npm@11\.5\.1/u, `${job.id} must pin npm 11.5.1`);
   }
 });
