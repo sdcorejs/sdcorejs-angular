@@ -63,6 +63,42 @@ function assertExact(actual, expected, label) {
   }
 }
 
+export function fingerprintReleaseValue(value) {
+  const canonical = value => Array.isArray(value)
+    ? value.map(canonical)
+    : value && typeof value === 'object'
+      ? Object.fromEntries(Object.keys(value).sort().map(key => [key, canonical(value[key])]))
+      : value;
+  return createHash('sha256').update(JSON.stringify(canonical(value))).digest('hex');
+}
+
+function assertReleaseSnapshot(actual, baseline, target, section, approvedContract) {
+  invariant(approvedContract.version === target.version, `${target.version}: snapshot version mismatch.`);
+  invariant(approvedContract.baselineVersion === target.baselineVersion, `${target.version}: snapshot baseline mismatch.`);
+  for (const [side, value] of [['baseline', baseline], ['candidate', actual]]) {
+    const expected = approvedContract[section]?.[side];
+    invariant(/^[a-f0-9]{64}$/u.test(expected ?? ''), `${target.version}: missing ${section} ${side} snapshot.`);
+    assertExact(fingerprintReleaseValue(value), expected, `${target.version} reviewed ${section} ${side} snapshot`);
+  }
+}
+
+// Repository-owned snapshots are reviewed with the release; never load expectations from artifacts.
+export function loadReleaseContract(suffix) {
+  parseSuffix(suffix);
+  const path = join(REPO_ROOT, 'scripts', 'release-contracts', `${suffix}.json`);
+  if (!existsSync(path)) return undefined;
+  const contract = JSON.parse(readFileSync(path, 'utf8'));
+  invariant(contract.schemaVersion === 1 && contract.suffix === suffix, `Invalid release snapshot for ${suffix}.`);
+  const targets = releaseTargets(suffix);
+  assertExact(Object.keys(contract.targets).sort(), targets.map(target => target.version).sort(), `${suffix} snapshot targets`);
+  for (const target of targets) {
+    const snapshot = contract.targets[target.version];
+    invariant(snapshot.version === target.version && snapshot.baselineVersion === target.baselineVersion,
+      `${target.version}: invalid snapshot release binding.`);
+  }
+  return contract;
+}
+
 function parseSuffix(suffix) {
   const match = /^(\d+)\.(\d+)$/u.exec(String(suffix));
   invariant(match, `Invalid stable release suffix "${suffix}"; expected <minor>.<patch>, for example 2.5.`);
@@ -118,6 +154,7 @@ export function validatePackedManifest({
   expectedExports,
   expectedFiles,
   packedFiles,
+  approvedContract,
 }) {
   invariant(manifest && typeof manifest === 'object', `${target?.version ?? 'package'} manifest is missing.`);
   invariant(target && typeof target === 'object', 'Release target is missing.');
@@ -144,10 +181,15 @@ export function validatePackedManifest({
   );
   if (expectedDependencies) assertExact(manifest.dependencies, expectedDependencies, `${target.version} dependencies`);
 
-  assertExact(manifest.exports, expectedExports, `${target.version} exports`);
   const actualFiles = normalizedFileList(packedFiles);
   const baselineFiles = normalizedFileList(expectedFiles);
-  assertExact(actualFiles, baselineFiles, `${target.version} packed files`);
+  if (approvedContract) {
+    assertReleaseSnapshot(manifest.exports, expectedExports, target, 'exports', approvedContract);
+    assertReleaseSnapshot(actualFiles, baselineFiles, target, 'files', approvedContract);
+  } else {
+    assertExact(manifest.exports, expectedExports, `${target.version} exports`);
+    assertExact(actualFiles, baselineFiles, `${target.version} packed files`);
+  }
   invariant(actualFiles.includes('package.json'), `${target.version}: package.json is absent from the tarball.`);
   const typingsPath = normalizedManifestPath(manifest.typings, `${target.version}: typings entry`);
   invariant(actualFiles.includes(typingsPath), `${target.version}: typings entry ${typingsPath} is absent from the tarball.`);
@@ -179,13 +221,18 @@ function withoutReleaseMetadata(surface) {
   return copy;
 }
 
-export function validatePublicSurface({ candidate, baseline, target }) {
+export function validatePublicSurface({ candidate, baseline, target, approvedContract }) {
   invariant(candidate?.version === target.version, `${target.version}: candidate surface has the wrong version.`);
   invariant(candidate?.frameworkMajor === target.major, `${target.version}: candidate surface has the wrong framework major.`);
   invariant(baseline?.version === target.baselineVersion, `${target.version}: expected exact baseline ${target.baselineVersion}.`);
   invariant(baseline?.frameworkMajor === target.baselineMajor, `${target.version}: baseline framework major is invalid.`);
   const candidateNormalized = withoutReleaseMetadata(candidate);
   const baselineNormalized = withoutReleaseMetadata(baseline);
+  if (approvedContract) {
+    // Pin all declarations AND authored sourcemap content, including approved runtime fixes.
+    assertReleaseSnapshot(candidateNormalized, baselineNormalized, target, 'publicSurface', approvedContract);
+    return;
+  }
   const candidateSources = candidateNormalized.sourceFiles;
   const baselineSources = baselineNormalized.sourceFiles;
   delete candidateNormalized.sourceFiles;
@@ -237,7 +284,7 @@ function validIntegrity(value) {
   return /^sha512-[A-Za-z0-9+/]+={0,2}$/u.test(value ?? '');
 }
 
-export function validateReleaseBundle({ suffix, datetimeVersion, sourceSha, artifacts }) {
+export function validateReleaseBundle({ suffix, datetimeVersion, sourceSha, artifacts, releaseContract }) {
   const targets = releaseTargets(suffix);
   invariant(/^[a-f0-9]{40}$/iu.test(sourceSha ?? ''), 'Release bundle must contain one full source SHA.');
   invariant(Array.isArray(artifacts) && artifacts.length === targets.length, 'Release bundle must contain all four artifacts.');
@@ -262,8 +309,10 @@ export function validateReleaseBundle({ suffix, datetimeVersion, sourceSha, arti
       expectedExports: artifact.baseline?.exports,
       expectedFiles: artifact.expectedFiles ?? artifact.baseline?.files ?? packedFiles,
       packedFiles,
+      approvedContract: releaseContract?.targets[target.version],
     });
-    validatePublicSurface({ candidate: artifact.publicSurface, baseline: artifact.baseline, target });
+    validatePublicSurface({ candidate: artifact.publicSurface, baseline: artifact.baseline, target,
+      approvedContract: releaseContract?.targets[target.version] });
 
     return {
       major: target.major,
@@ -539,6 +588,7 @@ function loadArtifactMetadata(artifactRoot) {
 
 function materializeValidatedBundle({ artifactRoot, suffix, baselineSuffix, datetimeVersion }) {
   const targets = releaseTargets(suffix);
+  const releaseContract = loadReleaseContract(suffix);
   invariant(baselineSuffix === suffix.replace(/\d+$/u, value => String(Number(value) - 1)), `Expected baseline suffix derived from ${suffix}.`);
   const records = loadArtifactMetadata(artifactRoot);
   const tempRoot = mkdtempSync(join(tmpdir(), 'sdcorejs-release-contract-'));
@@ -583,8 +633,10 @@ function materializeValidatedBundle({ artifactRoot, suffix, baselineSuffix, date
         expectedExports: baseline.manifest.exports,
         expectedFiles,
         packedFiles: extractedFiles,
+        approvedContract: releaseContract?.targets[target.version],
       });
-      validatePublicSurface({ candidate: publicSurface, baseline: baseline.publicSurface, target });
+      validatePublicSurface({ candidate: publicSurface, baseline: baseline.publicSurface, target,
+        approvedContract: releaseContract?.targets[target.version] });
 
       return {
         target,
@@ -604,7 +656,7 @@ function materializeValidatedBundle({ artifactRoot, suffix, baselineSuffix, date
     const sourceSha = artifacts[0].sourceSha;
     const checkoutSha = command('git', ['rev-parse', 'HEAD']).stdout.trim();
     invariant(sourceSha === checkoutSha, `Artifact source ${sourceSha} does not match checkout ${checkoutSha}.`);
-    const plan = validateReleaseBundle({ suffix, datetimeVersion, sourceSha, artifacts });
+    const plan = validateReleaseBundle({ suffix, datetimeVersion, sourceSha, artifacts, releaseContract });
     return { plan, artifacts, tarballPaths, cleanup: () => rmSync(tempRoot, { recursive: true, force: true }) };
   } catch (cause) {
     rmSync(tempRoot, { recursive: true, force: true });
