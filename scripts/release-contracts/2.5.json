@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "suffix": "2.5",
+  "reviewedSourceSha": "b5aa8d4481c071575aeebcb2176f1e0e34b368b5",
+  "artifactRun": "https://github.com/sdcorejs/sdcorejs-angular/actions/runs/34086515229",
+  "targets": {
+    "19.2.5": {
+      "version": "19.2.5",
+      "baselineVersion": "19.2.4",
+      "exports": {
+        "baseline": "f20d6f0f040794a9acda40ed26576dab91dc6d882b5fcb660b999ef282cb21a4",
+        "candidate": "e9230b441276528fdfaee1191da359ae65c850a9059f200e2cbc9154149a8cfc"
+      },
+      "files": {
+        "baseline": "43199697eb09a7b7416ca891950033a2a18864f648f8a9c5aa80c0243d21ab6a",
+        "candidate": "a8c58498c39c1b9e61be6c09537dfab064b6ef59efc9290d8671e17cfbb8fd90"
+      },
+      "publicSurface": {
+        "baseline": "5f993e120c949efc217de2c208807ed03659d225d2dba62fe94769e35910ce82",
+        "candidate": "e6ec9acd276f42485283248afeb342b44c15930cfc78c0a560db2fe7e5cbea87"
+      }
+    },
+    "20.2.5": {
+      "version": "20.2.5",
+      "baselineVersion": "20.2.4",
+      "exports": {
+        "baseline": "f20d6f0f040794a9acda40ed26576dab91dc6d882b5fcb660b999ef282cb21a4",
+        "candidate": "e9230b441276528fdfaee1191da359ae65c850a9059f200e2cbc9154149a8cfc"
+      },
+      "files": {
+        "baseline": "1c42dbf8380dfad9fdc45e3168c3068815167491613fe4efba1518ade585d3c1",
+        "candidate": "542a6f75be06a1b7043392006524c3a81108f76c895d73747a5fdd154f691df3"
+      },
+      "publicSurface": {
+        "baseline": "f0b2099a87bded357ea8fd244c1d5384c6dc31c30087f38e312027c2e145567a",
+        "candidate": "380d199bc7ee2aa4455a81619d86656c64fcee6528f8664cfaa5ce0a729421e0"
+      }
+    },
+    "21.2.5": {
+      "version": "21.2.5",
+      "baselineVersion": "21.2.4",
+      "exports": {
+        "baseline": "2151b143f01e3833ddea8b2fba97ab7445b3d4c5b482eb5b634cf1873c3a6ec8",
+        "candidate": "3986b8034a3d92775d4e72ed101f2b8aa2df57698ee359c20fcd2745dea4de0e"
+      },
+      "files": {
+        "baseline": "683a40bd72cfe68b5bf0a77939890c535f95d4638fc5e03055fa92d349192b1f",
+        "candidate": "7ee3fc3253357e14a60e0f72cf6ef109e46b574dc8a4e49c12d71743ec573ee9"
+      },
+      "publicSurface": {
+        "baseline": "e6f1cf1425f644a57da141eca86eaa2acd4e26f5a0765cbbd4a882c1880be507",
+        "candidate": "cf59fc8e6e9aa4d0ef0b8f94db1bab5f39be05a7cb2984c60b3f8ecba7d30e73"
+      }
+    },
+    "22.2.5": {
+      "version": "22.2.5",
+      "baselineVersion": "21.2.4",
+      "exports": {
+        "baseline": "2151b143f01e3833ddea8b2fba97ab7445b3d4c5b482eb5b634cf1873c3a6ec8",
+        "candidate": "3986b8034a3d92775d4e72ed101f2b8aa2df57698ee359c20fcd2745dea4de0e"
+      },
+      "files": {
+        "baseline": "683a40bd72cfe68b5bf0a77939890c535f95d4638fc5e03055fa92d349192b1f",
+        "candidate": "7ee3fc3253357e14a60e0f72cf6ef109e46b574dc8a4e49c12d71743ec573ee9"
+      },
+      "publicSurface": {
+        "baseline": "e6f1cf1425f644a57da141eca86eaa2acd4e26f5a0765cbbd4a882c1880be507",
+        "candidate": "ac92169c4bd8af5507ff065e0eefc8d21109f512ec63b3c6fd83c5715a14622e"
+      }
+    }
+  }
+}

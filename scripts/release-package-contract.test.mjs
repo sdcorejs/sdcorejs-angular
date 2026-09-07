@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -9,6 +10,8 @@ import test from 'node:test';
 import {
   createConsumerPackageJson,
   executePublishTransaction,
+  fingerprintReleaseValue,
+  loadReleaseContract,
   publishTarballWithNpm,
   publishValidatedBundle,
   readPublicSurface,
@@ -274,6 +277,120 @@ function artifactFor(target, index) {
     },
   };
 }
+
+// Independent fixture serializer: snapshot keys are sorted recursively; array order is significant.
+function snapshotHash(value) {
+  const sorted = value => Array.isArray(value)
+    ? value.map(sorted)
+    : value && typeof value === 'object'
+      ? Object.fromEntries(Object.keys(value).sort().map(key => [key, sorted(value[key])]))
+      : value;
+  return createHash('sha256').update(JSON.stringify(sorted(value))).digest('hex');
+}
+
+function additiveReleaseFixture(target) {
+  const artifact = artifactFor(target, 0);
+  const candidate = artifact.publicSurface;
+  candidate.exports['./components/card'] = {
+    types: './components/card/index.d.ts',
+    default: './fesm2022/sdcorejs-angular-components-card.mjs',
+  };
+  candidate.declarations['components/card/index.d.ts'] = 'export declare class SdCard {}\n';
+  candidate.sourceFiles['components/card/src/card.component.ts'] = 'export class SdCard {}\n';
+  candidate.sourceFiles['forms/date-range/src/date-range.component.ts'] = 'approved runtime fix';
+  artifact.manifest.exports = structuredClone(candidate.exports);
+  artifact.pack.files.push(
+    { path: 'components/card/index.d.ts' },
+    { path: 'fesm2022/sdcorejs-angular-components-card.mjs' },
+  );
+  const content = ({ version, frameworkMajor, ...rest }) => rest;
+  const pair = (baseline, candidate) => ({ baseline: snapshotHash(baseline), candidate: snapshotHash(candidate) });
+  const approvedContract = {
+    version: target.version,
+    baselineVersion: target.baselineVersion,
+    exports: pair(artifact.baseline.exports, candidate.exports),
+    files: pair([...EXPECTED_FILES].sort(), artifact.pack.files.map(file => file.path).sort()),
+    publicSurface: pair(content(artifact.baseline), content(candidate)),
+  };
+  return {
+    artifact,
+    approvedContract,
+    manifestOptions: {
+      manifest: artifact.manifest, target, datetimeVersion: '1.0.4',
+      expectedExports: artifact.baseline.exports, expectedFiles: EXPECTED_FILES,
+      packedFiles: artifact.pack.files, approvedContract,
+    },
+    surfaceOptions: { candidate, baseline: artifact.baseline, target, approvedContract },
+  };
+}
+
+test('reviewed release snapshots allow card exports and runtime fixes on all four lines', () => {
+  for (const target of releaseTargets('2.5')) {
+    const { manifestOptions, surfaceOptions } = additiveReleaseFixture(target);
+    assert.doesNotThrow(() => validatePackedManifest(manifestOptions));
+    assert.doesNotThrow(() => validatePublicSurface(surfaceOptions));
+    // An unrecorded release still uses exact baseline comparison.
+    assert.throws(() => validatePackedManifest({ ...manifestOptions, approvedContract: undefined }));
+    assert.throws(() => validatePublicSurface({ ...surfaceOptions, approvedContract: undefined }));
+  }
+});
+
+test('reviewed snapshots reject drift, missing approved additions and wrong release bindings', () => {
+  const target = releaseTargets('2.5')[0];
+  for (const mutate of [
+    f => { f.manifestOptions.manifest.exports['./unexpected'] = './unexpected.js'; },
+    f => { delete f.manifestOptions.manifest.exports['./components/card']; },
+    f => { f.manifestOptions.packedFiles.push({ path: 'unexpected.txt' }); },
+    f => { f.manifestOptions.expectedFiles = [...EXPECTED_FILES, 'baseline-drift.txt']; },
+    f => { f.approvedContract.version = '19.2.6'; },
+    f => { f.approvedContract.baselineVersion = '19.2.3'; },
+    f => { delete f.approvedContract.exports.candidate; },
+  ]) {
+    const fixture = additiveReleaseFixture(target);
+    mutate(fixture);
+    assert.throws(() => validatePackedManifest(fixture.manifestOptions));
+  }
+  for (const section of ['exports', 'declarations', 'sourceFiles']) {
+    for (const side of ['candidate', 'baseline']) {
+      const { surfaceOptions } = additiveReleaseFixture(target);
+      surfaceOptions[side][section].unexpected = 'unreviewed change';
+      assert.throws(() => validatePublicSurface(surfaceOptions), `${side} ${section}`);
+    }
+  }
+});
+
+test('release snapshot fingerprints ignore object insertion order but retain all content', () => {
+  const value = { z: { b: 2, a: 1 }, a: ['first', 'second'] };
+  assert.equal(fingerprintReleaseValue(value), snapshotHash(value));
+  assert.equal(fingerprintReleaseValue(value), fingerprintReleaseValue({ a: value.a, z: { a: 1, b: 2 } }));
+  assert.notEqual(fingerprintReleaseValue(value), fingerprintReleaseValue({ ...value, a: [...value.a].reverse() }));
+});
+
+test('repository snapshot binds 2.5 to all four exact baselines and does not apply to other releases', () => {
+  const contract = loadReleaseContract('2.5');
+  for (const target of releaseTargets('2.5')) {
+    const snapshot = contract.targets[target.version];
+    assert.equal(snapshot.version, target.version);
+    assert.equal(snapshot.baselineVersion, target.baselineVersion);
+    for (const section of ['exports', 'files', 'publicSurface']) {
+      for (const side of ['baseline', 'candidate']) assert.match(snapshot[section][side], /^[a-f0-9]{64}$/u);
+    }
+  }
+  assert.equal(loadReleaseContract('2.6'), undefined);
+  assert.throws(() => loadReleaseContract('../2.5'));
+});
+
+test('bundle revalidation retains approved snapshots for every artifact and rejects subsequent drift', () => {
+  const fixtures = releaseTargets('2.5').map(additiveReleaseFixture);
+  const options = {
+    suffix: '2.5', datetimeVersion: '1.0.4', sourceSha: 'a'.repeat(40),
+    artifacts: fixtures.map(f => ({ ...f.artifact, expectedFiles: EXPECTED_FILES })),
+    releaseContract: { targets: Object.fromEntries(fixtures.map(f => [f.artifact.target.version, f.approvedContract])) },
+  };
+  assert.equal(validateReleaseBundle(options).publishOrder.length, 4);
+  options.artifacts[3].publicSurface.sourceFiles.unexpected = 'unreviewed runtime change';
+  assert.throws(() => validateReleaseBundle(options), /reviewed publicSurface candidate snapshot/u);
+});
 
 function bundleForPublication() {
   const targets = releaseTargets('2.5');
