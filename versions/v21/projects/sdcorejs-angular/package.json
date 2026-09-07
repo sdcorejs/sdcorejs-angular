@@ -1,6 +1,6 @@
 {
   "name": "@sdcorejs/angular",
-  "version": "21.1.4",
+  "version": "21.2.5",
   "description": "Angular component library: data table, query bar/builder, 20+ signal-based form controls, layout, auth and workflow services. Standalone, OnPush, signals-first. Published in parallel lines for Angular 19, 20, 21 and 22.",
   "keywords": [
     "angular",
