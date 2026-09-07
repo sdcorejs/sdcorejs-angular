@@ -6,6 +6,9 @@ import type { SdTableGroupDefContext } from '../directives/sd-table-group-def.di
 // import hash from 'object-hash';
 export interface SdTableMetaSelector {
   selectable?: boolean;
+  /** Prepared by the shared selection pipeline, before either row renderer runs. */
+  visible?: boolean;
+  disabled?: boolean;
   isSelected?: boolean;
   actions?: string[];
 }

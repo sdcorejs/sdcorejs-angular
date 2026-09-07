@@ -34,6 +34,11 @@ interface SdTableBaseOption<T = any> {
    * cần autoId theo dòng ổn định cho E2E.
    */
   rowKey?: string;
+  /** Mobile cards activate automatically when sdTableRowMobileDef is projected. */
+  mobile?: {
+    /** Row command title and accessible labels; falls back to rowKey, then row number. */
+    rowLabel?: (row: T) => string;
+  };
   /**
    * Cấu hình hiển thị/phục hồi config của table.
    * Xem thêm kiểu chi tiết tại `TableOptionConfig`.

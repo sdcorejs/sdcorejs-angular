@@ -1,0 +1,101 @@
+const { chromium } = await import(process.env.SD_PLAYWRIGHT_MODULE ?? 'playwright');
+import assert from 'node:assert/strict';
+import { writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+const output=dirname(fileURLToPath(import.meta.url));
+const browser=await chromium.launch({headless:true,channel:'chrome'});
+const page=await browser.newPage({viewport:{width:390,height:960}});
+page.setDefaultTimeout(10000);
+const errors=[];const checks=[];page.on('pageerror',e=>errors.push(e.message));
+let current;
+async function example(id){
+ if(current) await current.getByRole('button',{name:'Collapse live example',exact:true}).click();
+ current=page.locator('#components-table-'+id); await current.scrollIntoViewIfNeeded();
+ await current.getByRole('button',{name:'Expand live example',exact:true}).click();
+ const load=current.getByRole('button',{name:'Load live preview'}); if(await load.count()) await load.click();
+ await current.locator('app-table-demo').waitFor(); return current;
+}
+try{
+ await page.goto('http://127.0.0.1:4300/v/22.2.5/components/table/examples',{waitUntil:'networkidle'});
+ let e=await example('example-mobile-qua-nhieu-trang'); let table=e.locator('sd-table').first();
+ let cards=table.locator('.sd-mobile-card'); await cards.first().waitFor();
+ await cards.first().locator('input[type=checkbox]').check();
+ await table.locator('.mat-mdc-paginator-navigation-next').click();
+ await cards.first().filter({hasText:'NV-4'}).waitFor();
+ await cards.first().locator('input[type=checkbox]').check();
+ await page.waitForTimeout(150);
+ const summary=await table.locator('.sd-mobile-selection-summary').getAttribute('aria-label'); assert.match(summary,/2.*1/s);
+ assert.equal((await table.locator('.sd-mobile-selection-count').innerText()).trim(),'2');
+ assert.equal(await table.locator('.sd-mobile-select-page').count(),0);
+ const visibleActions=table.locator('.sd-mobile-action-direct button');assert.equal(await visibleActions.count(),3);for(const action of await visibleActions.all())assert.equal(await action.isVisible(),true);
+ await page.mouse.move(0,0);await table.screenshot({path:join(output,'390-server-preservation.png')});
+ await table.evaluate(el=>el.style.setProperty('--sd-table-mobile-bottom-offset','60px'));
+ await table.locator('.c-table').evaluate(el=>el.scrollTop=el.scrollHeight);
+ await page.waitForTimeout(200);
+ const lastCard=await cards.last().boundingBox();const floatingBar=await table.locator('.c-quick-action').boundingBox();
+ assert.ok(lastCard.y+lastCard.height<=floatingBar.y+1,JSON.stringify({lastCard,floatingBar,offset:60}));
+ await table.evaluate(el=>el.style.removeProperty('--sd-table-mobile-bottom-offset'));
+ await table.locator('.mat-mdc-paginator-navigation-previous').click();
+ await cards.first().filter({hasText:'NV-1'}).waitFor();
+ assert.equal(await cards.first().locator('input[type=checkbox]').isChecked(),true);
+ await table.locator('.sd-mobile-clear').click();checks.push('server fresh-object paging preserves rowKey and total/on-page summary; 60px bottom clearance without a footer');
+
+ e=await example('example-the-mobile-va-thao-tac');table=e.locator('sd-table').first();cards=table.locator('.sd-mobile-card');await cards.first().waitFor();
+ await table.locator('[data-autoid$="-mobile-tools"]').click();
+ await page.locator('[data-autoid$="-mobile-tool-filter"]').click();
+ let drawer=page.locator('.sd-side-drawer-active');await drawer.waitFor();
+ await drawer.locator('column-filter input').first().fill('Nguyễn');
+ await drawer.locator('button[data-autoid$="-apply"]').click();
+ await cards.first().filter({hasText:'Nguyễn Văn An'}).waitFor();await cards.nth(1).waitFor({state:'detached'});
+ assert.equal(await cards.count(),1);
+ await page.setViewportSize({width:1440,height:960});await table.locator('table.mat-mdc-table').waitFor();
+ assert.equal(await table.locator('table .c-row').count(),1);
+ await page.setViewportSize({width:390,height:960});await cards.first().waitFor();
+ assert.equal(await cards.count(),1);checks.push('mobile filter commits and survives renderer change');
+ await table.locator('[data-autoid$="-mobile-tools"]').click();
+ await page.locator('[data-autoid$="-mobile-tool-sort-name"]').click();
+ await page.locator('mat-bottom-sheet-container').waitFor({state:'detached'});
+ await page.waitForTimeout(300);checks.push('mobile sort sheet reaches shared sort');
+
+ e=await example('example-mobile-chon-du-lieu');await e.locator('sd-table').first().locator('.sd-mobile-card').first().waitFor();
+ const tables=e.locator('sd-table');assert.equal(await tables.count(),3);
+ const single=tables.nth(0);assert.equal(await single.locator('input[type=radio]:checked').count(),1);
+ await single.locator('.sd-mobile-card').first().locator('.sd-mobile-card-body').click();
+ assert.equal(await single.locator('input[type=radio]:checked').count(),1);
+ const noActions=tables.nth(1);await noActions.locator('.sd-mobile-card').first().locator('.sd-mobile-card-body').click();
+ assert.equal(await noActions.locator('.sd-mobile-clear').count(),1);assert.equal(await noActions.locator('sd-quick-action .sd-mobile-selection-summary').count(),1);assert.equal(await noActions.locator('.sd-mobile-action-direct,.sd-mobile-more').count(),0);
+ assert.equal(await tables.nth(2).locator('input[type=checkbox],input[type=radio]').count(),0);
+ for(const candidate of await tables.all()){const gap=await candidate.locator('.sd-mobile-card').first().evaluate(el=>{const a=el.getBoundingClientRect(),b=el.parentElement.getBoundingClientRect(),c=el.querySelector('.sd-mobile-card-body').getBoundingClientRect();return {left:a.left-b.left,right:b.right-a.right,insideLeft:c.left-a.left,insideRight:a.right-c.right};});assert.ok(Math.abs(gap.left-20)<1&&Math.abs(gap.right-20)<1&&Math.abs(gap.insideLeft-gap.insideRight)<1,JSON.stringify(gap));}
+ assert.equal(await single.locator('input[type=radio]:checked').count(),1);checks.push('three tables: single/default, selection without actions, selector off; independent state');
+
+ e=await example('example-mobile-trong-hop-thoai');await e.getByRole('button',{name:'Mở modal',exact:true}).click();
+ const modal=page.locator('.sd-modal-root[data-opened="true"]');await modal.waitFor();
+ table=modal.locator('sd-table');cards=table.locator('.sd-mobile-card');await cards.first().waitFor();
+ await cards.first().locator('.sd-mobile-card-body').click();
+ await page.locator('mat-bottom-sheet-container').waitFor();await page.waitForTimeout(300);
+ await page.mouse.move(0,0);await page.screenshot({path:join(output,'390-modal-more.png')});
+ await page.keyboard.press('Escape');await page.locator('mat-bottom-sheet-container').waitFor({state:'detached'});
+ assert.equal(await modal.isVisible(),true);
+ assert.equal(await table.locator('.sd-mobile-actions').count(),0);
+ await modal.locator('.sd-modal-close-btn').click();await modal.waitFor({state:'detached'});
+ assert.equal(await page.locator('mat-bottom-sheet-container').count(),0);
+ await e.getByRole('button',{name:'Mở drawer',exact:true}).click();drawer=page.locator('.sd-side-drawer-active');await drawer.waitFor();
+ table=drawer.locator('sd-table');await table.locator('.sd-mobile-card').first().waitFor();
+ const bounds=await table.boundingBox();assert.ok(bounds.width<=390);
+ await table.locator('.sd-mobile-card').first().locator('input[type=checkbox]').check();
+ await page.waitForTimeout(300);await page.mouse.move(0,0);await page.screenshot({path:join(output,'390-drawer-selection.png')});
+ await drawer.locator('.sd-side-drawer-close-btn').click();await drawer.waitFor({state:'detached'});
+ assert.equal(await page.locator('mat-bottom-sheet-container').count(),0);checks.push('modal/drawer containment, nested sheet Escape, focus and cleanup');
+
+ e=await example('example-tree-lazy-nap-con-khi-bung-co-loading');table=e.locator('sd-table').first();cards=table.locator('.sd-mobile-card');await cards.first().waitFor();
+ const count=await cards.count();await cards.first().locator('.sd-mobile-card-controls button[aria-expanded]').first().click();
+ await cards.nth(count).waitFor();assert.ok(await cards.count()>count);checks.push('lazy tree expands only after the separate toggle');
+ e=await example('example-nhom-dong');table=e.locator('sd-table').first();await table.locator('.sd-mobile-group').first().waitFor();
+ assert.ok(await table.locator('.sd-mobile-group').count()>0);assert.ok(await table.locator('.sd-mobile-card').count()>0);checks.push('group headers and row templates render separately');
+ e=await example('example-keo-tha-doi-thu-tu');table=e.locator('sd-table').first();cards=table.locator('.sd-mobile-card');await cards.first().waitFor();
+ const before=await cards.first().innerText();const handle=cards.first().locator('[cdkDragHandle]');const a=await handle.boundingBox();const b=await cards.nth(1).boundingBox();
+ await page.mouse.move(a.x+a.width/2,a.y+a.height/2);await page.mouse.down();await page.mouse.move(a.x+a.width/2,a.y+a.height/2+10,{steps:4});await page.mouse.move(a.x+a.width/2,b.y+b.height-3,{steps:18});await page.mouse.up();await page.waitForTimeout(350);
+ assert.notEqual(await cards.first().innerText(),before);checks.push('mobile drag handle reorders rows without card activation');
+ assert.deepEqual(errors,[]);writeFileSync(join(output,'integration-results.json'),JSON.stringify({at:new Date().toISOString(),checks,errors},null,2));console.log(JSON.stringify(checks,null,2));
+} finally {await browser.close();}

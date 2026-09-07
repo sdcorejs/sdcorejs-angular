@@ -1,4 +1,4 @@
-# `<sd-quick-action>`
+﻿# `<sd-quick-action>`
 
 **Type**: Component
 **Selector**: `sd-quick-action`
@@ -31,6 +31,7 @@ Floating bottom toolbar that slides up to reveal a message (left) and optional a
 ## Inputs
 | Name | Type | Default | Notes |
 | --- | --- | --- | --- |
+| `contained` | `boolean` (booleanAttribute) | `false` | Opt into relative positioning, full container width and wrapping. The owner supplies sticky positioning and bottom offset; used by table mobile cards. |
 | `opened` | `boolean` (signal input with `booleanAttribute` transform) | `false` | Bare attribute (`<sd-quick-action opened>`) = true. When true, the host gets the `.active` class which triggers the slide-up animation. |
 
 ## Outputs
@@ -97,3 +98,18 @@ The empty `[sdAction]` slot is handled by `:has()` + `:empty` CSS rules — the 
 - `<sd-button>` — typical content of `[sdAction]`
 - `<sd-notify>` — for transient toast notifications (different pattern: top-right, auto-dismiss, no message+action structure)
 - `<sd-modal>` — for blocking dialogs
+
+### Contained action bar
+
+```html
+<div style="position: sticky; bottom: 0">
+  <sd-quick-action opened contained>
+    <span sdMessage>Selected rows</span>
+    <sd-button sdAction title="Process" (click)="process()"></sd-button>
+  </sd-quick-action>
+</div>
+```
+
+`contained` reserves layout space, wraps content, uses the Core surface token, and avoids viewport-wide fixed positioning. Existing callers retain the default floating behavior. The owning component handles scroll bounds, safe area and overlay lifecycle.
+
+Mobile table cards use a compact contained row: the message slot holds only a highlighted count, followed by fitting selection actions, More and the labelled clear icon. Table selector messages and page-selection checkboxes are omitted. Count and clear remain available without bulk actions; row commands and table tools use SdModal bottom sheets.

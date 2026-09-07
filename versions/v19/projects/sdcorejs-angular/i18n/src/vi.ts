@@ -1,6 +1,23 @@
 import type { EN_MESSAGES } from './en';
 
 export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
+  'core.component.table.mobile.tools': 'Công cụ',
+  'core.component.table.mobile.tools-title': 'Công cụ bảng',
+  'core.component.table.mobile.row-commands': 'Thao tác dòng: {row}',
+  'core.component.table.mobile.row': 'Dòng {index}',
+  'core.component.table.mobile.select-row': 'Chọn {row}',
+  'core.component.table.mobile.commands-for': 'Thao tác với {row}',
+  'core.component.table.mobile.expand-row': 'Mở/đóng chi tiết {row}',
+  'core.component.table.mobile.level': 'Cấp {level}',
+  'core.component.table.mobile.selected-across-pages': 'Đã chọn {count} — {here} ở trang này',
+  'core.component.table.mobile.selected': 'Đã chọn {count}',
+  'core.component.table.mobile.action': 'Thao tác {index}',
+  'core.component.table.mobile.sort': 'Sắp xếp',
+  'core.component.table.mobile.more': 'Thêm',
+  'core.component.table.mobile.select-page': 'Chọn trang này',
+  'core.component.table.mobile.reorder': 'Kéo để đổi thứ tự dòng',
+  'core.component.table.mobile.details': 'Chi tiết',
+  'core.component.table.mobile.summary': 'Tổng hợp',
   'core.common.cancel': 'Hủy',
   'core.common.close': 'Đóng',
   'core.common.reload': 'Tải lại trang',

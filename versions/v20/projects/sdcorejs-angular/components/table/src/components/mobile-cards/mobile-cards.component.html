@@ -1,0 +1,151 @@
+@let _table = table();
+@let _option = option();
+@let _selectionMode = selectionMode();
+@let _autoId = _table.autoId();
+@let _commands = resolvedCommands();
+@let _actions = actions();
+@let _active = active();
+@let _expandTemplate = _table.sdSubInformation();
+
+@if (_option.selector?.visible) {
+  <span class="sd-mobile-sr-only" role="status" aria-live="polite" aria-atomic="true">{{ selectionSummary() }}</span>
+}
+
+<div
+  class="sd-mobile-list"
+  role="list"
+  cdkDropList
+  [cdkDropListData]="rows()"
+  [cdkDropListDisabled]="!_option.rowReorder?.enabled"
+  [cdkDropListSortPredicate]="_table.reorderSortPredicate"
+  (cdkDropListDropped)="_table.onReorderDrop($event)">
+  @for (card of cards(); track card.row.meta.id) {
+    @let _row = card.row;
+    @let _meta = _row.meta;
+    @if (_meta.group?.isGroupHeader) {
+      <div class="sd-mobile-group" role="listitem">
+        <ng-container *ngTemplateOutlet="groupTemplate(); context: { item: _row }"></ng-container>
+      </div>
+    } @else {
+      <article
+        class="sd-mobile-card"
+        role="listitem"
+        tabindex="0"
+        [attr.aria-label]="card.label"
+        [attr.data-autoid]="card.context.autoId"
+        [class.selected]="_meta.selector?.isSelected"
+        [class.sd-mobile-card-commandable]="!_selectionMode && _commands.get(_row)?.length"
+        [class.sd-mobile-card-active]="_active?.row === _row"
+        [ngStyle]="_meta.rowStyle"
+        [style.margin-inline-start.px]="_option.tree ? (_meta.tree?.level ?? 0) * (_option.tree?.indentSize ?? 20) : 0"
+        (click)="onCardClick(card, $event)"
+        (keydown)="onCardKey(card, $event)"
+        (pointerdown)="pointerStart($event)"
+        (pointermove)="pointerMove($event)"
+        (pointercancel)="cancelPointer()"
+        cdkDrag
+        [cdkDragData]="_row"
+        [cdkDragDisabled]="!_option.rowReorder?.enabled || card.reorderDisabled"
+        (cdkDragStarted)="dragStart()">
+        <div class="sd-mobile-card-controls d-flex align-items-center gap-8">
+          @if (_option.selector?.visible && _meta.selector?.visible) {
+            @if (_option.selector?.single) {
+              <mat-radio-button
+                class="sd-mobile-card-selector"
+                [checked]="_meta.selector?.isSelected"
+                [disabled]="_meta.selector?.disabled"
+                [aria-label]="card.selectLabel"
+                (change)="select(card)"></mat-radio-button>
+            } @else {
+              <mat-checkbox
+                class="sd-mobile-card-selector"
+                [checked]="_meta.selector?.isSelected"
+                [disabled]="_meta.selector?.disabled"
+                [aria-label]="card.selectLabel"
+                (change)="select(card)"></mat-checkbox>
+            }
+          }
+          @if (_option.tree) {
+            <span class="sd-mobile-sr-only">{{ card.treeLabel }}</span>
+            @if (_meta.tree?.hasChildren) {
+              <button
+                mat-icon-button
+                type="button"
+                [disabled]="_meta.tree?.isExpanding"
+                [attr.aria-label]="card.expandLabel"
+                [attr.aria-expanded]="_meta.tree?.isExpanded"
+                [attr.data-autoid]="_autoId ? _autoId + '-tree-toggle-' + _meta.id : null"
+                (click)="_table.onTreeToggle(_row)">
+                <sd-icon
+                  [name]="_meta.tree?.isExpanding ? 'hourglass_empty' : _meta.tree?.isExpanded ? 'expand_more' : 'chevron_right'"></sd-icon>
+              </button>
+            }
+            @if (_option.index?.enabled) {
+              <span>{{ _meta.tree?.indexPath?.join('.') }}</span>
+            }
+          }
+          @if (_option.rowReorder?.enabled) {
+            <button
+              mat-icon-button
+              type="button"
+              cdkDragHandle
+              [disabled]="card.reorderDisabled"
+              [attr.aria-label]="'core.component.table.mobile.reorder' | sdTranslate">
+              <sd-icon [name]="_option.rowReorder?.icon || 'drag_indicator'"></sd-icon>
+            </button>
+          }
+          <span class="flex-1"></span>
+        </div>
+        <div class="sd-mobile-card-body">
+          <ng-container *ngTemplateOutlet="_table.sdRowMobileDef()!.templateRef; context: card.context"></ng-container>
+        </div>
+        @if ((_expandTemplate && !_option.expand?.always) || (!_selectionMode && _commands.get(_row)?.length)) {
+          <div class="sd-mobile-card-actions">
+            @if (_expandTemplate && !_option.expand?.always) {
+              <button
+                mat-button
+                type="button"
+                [disabled]="card.expandDisabled || _meta.expand?.isExpanding"
+                [attr.aria-expanded]="_meta.expand?.isExpanded"
+                [attr.aria-label]="card.expandLabel"
+                [attr.data-autoid]="_autoId ? _autoId + '-expand-' + _meta.id : null"
+                (click)="_table.onExpand(_row)">
+                <sd-icon
+                  [name]="_meta.expand?.isExpanding ? 'hourglass_empty' : _meta.expand?.isExpanded ? 'expand_less' : 'expand_more'"></sd-icon>
+                {{ 'core.component.table.mobile.details' | sdTranslate }}
+              </button>
+            }
+            @if (!_selectionMode && _commands.get(_row)?.length) {
+              <button
+                mat-icon-button
+                type="button"
+                class="sd-mobile-command-trigger"
+                aria-haspopup="dialog"
+                (click)="openCommand(card, $event)"
+                [attr.aria-label]="card.commandLabel"
+                [attr.aria-expanded]="_active?.row === _row"
+                [attr.data-autoid]="card.context.autoId ? card.context.autoId + '-commands' : null">
+                <sd-icon name="more_horiz"></sd-icon>
+              </button>
+            }
+          </div>
+        }
+        @if (_expandTemplate && (_option.expand?.always || _meta.expand?.isExpanded)) {
+          <div class="sd-mobile-expand">
+            <ng-container *ngTemplateOutlet="_expandTemplate.templateRef; context: { item: _row }"></ng-container>
+          </div>
+        }
+      </article>
+    }
+  }
+</div>
+@if (containerOpen() && (_actions.length || _selectionMode)) {
+  <sd-table-mobile-actions
+    [class.sd-mobile-floating]="_selectionMode"
+    [actions]="_actions"
+    [title]="actionTitle()"
+    [selection]="_selectionMode"
+    [autoId]="_autoId"
+    [count]="selected().length"
+    (end)="endActions()"></sd-table-mobile-actions>
+}

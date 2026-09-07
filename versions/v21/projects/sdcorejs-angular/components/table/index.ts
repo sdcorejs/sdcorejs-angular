@@ -1,4 +1,5 @@
 export * from './src/directives/sd-table-cell-def.directive';
+export * from './src/directives/sd-table-row-mobile-def.directive';
 export * from './src/directives/sd-table-command-header-def.directive';
 export * from './src/directives/sd-table-expand-def.directive';
 export * from './src/directives/sd-table-filter-def.directive';

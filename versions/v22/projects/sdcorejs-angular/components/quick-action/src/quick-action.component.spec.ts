@@ -18,7 +18,7 @@ import { SdQuickAction } from './quick-action.component';
   standalone: true,
   imports: [SdQuickAction],
   template: `
-    <sd-quick-action [opened]="opened">
+    <sd-quick-action [opened]="opened" [contained]="contained">
       <span sdMessage>Test message</span>
       <button sdAction>Action</button>
     </sd-quick-action>
@@ -26,6 +26,7 @@ import { SdQuickAction } from './quick-action.component';
 })
 class HostComponent {
   opened: '' | boolean | undefined | null = false;
+  contained = false;
 }
 
 // ---------------------------------------------------------------------------
@@ -67,6 +68,14 @@ describe('SdQuickAction', () => {
   // -------------------------------------------------------------------------
 
   describe('creation & rendering', () => {
+    it('opts into container positioning while keeping the default floating layout', () => {
+      const inner = getHostEl(fixture).querySelector<HTMLElement>('.c-quick-action')!;
+      expect(getComputedStyle(inner).position).toBe('fixed');
+      host.contained = true;
+      fixture.detectChanges();
+      expect(getComputedStyle(inner).position).toBe('relative');
+      expect(inner.textContent).toContain('Test message');
+    });
     it('creates the component', () => {
       expect(component).toBeTruthy();
     });

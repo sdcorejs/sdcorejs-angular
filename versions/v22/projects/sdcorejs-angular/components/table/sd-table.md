@@ -1,4 +1,4 @@
-# `<sd-table>`
+﻿# `<sd-table>`
 
 **Type**: Component (generic over `T`)
 **Selector**: `sd-table`
@@ -60,7 +60,11 @@ Everything is configured via the `SdTableOption<T>` object passed to `[option]`.
 | `rowReorder`        | `{ enabled?, onChange?, icon?, disabled?(row,i) }`               | no           | Drag-and-drop row reordering. Respects groups.                                                                                                                                                                                               |
 | `index`             | `{ enabled?, title?, width? }`                                   | no           | Adds a leading STT (row-number) column. Default `title: '#'`, `width: '50px'`. Numbering is global across pages — `pageIndex * pageSize + i + 1`. Placed after selector/tree/command(left)/group, before data columns. Hidden on group rows. |
 
+| `mobile` | `{ rowLabel?: (row: T) => string }` | no | Accessible label and command-bar title for mobile cards; falls back to `rowKey`, then row ordinal. |
+
 ### Row identity (`rowKey` → `SdTableItem.meta.id`)
+
+See also [Mobile row cards](#mobile-row-cards-sdtablerowmobiledef) for the template and accessible row-label API.
 
 Every row the table renders is wrapped in an `SdTableItem` whose `meta.id` is the row's identity. It is used for:
 
@@ -769,3 +773,163 @@ All interactive children derive their autoId from the table base `components-tab
 - `SdSearch<T>` (forms autocomplete pattern) — used by `'lazy-values'` columns
 - `PagingReq`, `Operator` — request payload contract for server-mode tables
 - Skill ref `30-list-page.md` (if present) — the recommended page-level scaffold using `<sd-table>`
+
+
+## Mobile row cards (`sdTableRowMobileDef`)
+
+Import `SdTableRowMobileDefDirective` with `SdTable` from `@sdcorejs/angular/components/table` (both are also exported by the components barrel). Project **one** mobile template directly into each table. No provider or additional mobile flag is required. Nested tables own their templates and selection independently.
+
+With a template, `SdViewportService.isMobile()` selects the card renderer; its configured Core breakpoint is shared with the rest of the application (default: width below 768px). Without a template, the existing table renderer remains in use at every width. Only one renderer exists at a time. `MatSort`, paginator, filters, data, selection and expanded rows belong to the same table instance: resizing neither fetches data nor reapplies `defaultSelected`.
+
+### Complete standalone consumer
+
+```ts
+import { DecimalPipe } from '@angular/common';
+import { Component, signal } from '@angular/core';
+import {
+  SdTable,
+  SdTableOption,
+  SdTableRowMobileDefDirective,
+} from '@sdcorejs/angular/components/table';
+
+interface Order {
+  id: string;
+  customerName: string;
+  total: number | null;
+  locked: boolean;
+}
+
+@Component({
+  selector: 'app-orders',
+  standalone: true,
+  imports: [DecimalPipe, SdTable, SdTableRowMobileDefDirective],
+  template: `
+    <sd-table autoId="orders" [option]="tableOption">
+      <ng-template
+        [sdTableRowMobileDef]="tableOption"
+        let-row="item"
+        let-index="index"
+        let-selected="selected"
+        let-selectionDisabled="selectionDisabled"
+        let-autoId="autoId">
+        <strong>{{ row.id }} · {{ row.customerName }}</strong>
+        <p>{{ row.total == null ? '—' : (row.total | number) }} ₫</p>
+        <small>{{ index + 1 }} · {{ selected ? 'Đã chọn' : 'Chưa chọn' }}</small>
+        @if (selectionDisabled) { <p>Không thể chọn đơn này</p> }
+        <button type="button" (click)="message.set('Ghi chú: ' + row.id)">Ghi chú</button>
+      </ng-template>
+    </sd-table>
+    <p role="status">{{ message() }}</p>
+  `,
+})
+export class OrdersComponent {
+  readonly message = signal('');
+  readonly orders: Order[] = [
+    { id: 'DH-001', customerName: 'An', total: 250000, locked: false },
+    { id: 'DH-002', customerName: 'Bình', total: null, locked: true },
+  ];
+  readonly tableOption: SdTableOption<Order> = {
+    type: 'local',
+    rowKey: 'id',
+    items: () => this.orders,
+    mobile: { rowLabel: row => `${row.id} · ${row.customerName}` },
+    columns: [
+      { field: 'id', type: 'string', title: 'Mã đơn', sortable: true },
+      { field: 'customerName', type: 'string', title: 'Khách hàng' },
+      { field: 'total', type: 'number', title: 'Tổng tiền' },
+    ],
+    sort: { enable: true },
+    paginate: { pageSize: 10 },
+    selector: {
+      visible: true,
+      preserveSelection: true,
+      disabled: row => !!row?.locked,
+      actions: [{ title: 'Xử lý', click: (rows = []) => this.process(rows) }],
+    },
+    command: {
+      commands: [{ title: 'Xem', click: row => this.message.set(`Xem ${row.id}`) }],
+    },
+  };
+
+  async process(rows: Order[]): Promise<void> {
+    // Replace this demonstration with the application's request and outcome handling.
+    await new Promise<void>(resolve => setTimeout(resolve, 300));
+    this.message.set(`Đã xử lý: ${rows.map(row => row.id).join(', ')}`);
+  }
+}
+```
+
+The bare attribute `sdTableRowMobileDef` is supported, including under `strictTemplates`, but its `item` type defaults to **`any`**: Angular cannot infer a projected directive's generic from the parent's `[option]`. Bind `[sdTableRowMobileDef]="tableOption"` as above to infer `Order` and reject nonexistent properties at compilation. The binding is a type witness, not a separate source of rows. Always pass the owning table's option. Other context properties retain their declared types in both forms.
+
+### Template context
+
+The exported `SdTableRowMobileDefContext<T>` contains:
+
+| Property | Type | Meaning |
+| --- | --- | --- |
+| `item` | `T` | Business data, not `SdTableItem<T>`. |
+| `index` | `number` | Zero-based position among rendered data rows in this page, excluding group headers and expanded-detail blocks. Visible tree children count as data rows. |
+| `selected` | `boolean` | Current table selection. |
+| `selectionDisabled` | `boolean` | Whether this row can currently be selected. A selected row remains removable even if its eligibility later changes. |
+| `autoId` | `string \| undefined` | Table auto-id prefix plus `-mobile-row-<rowId>`; also assigned to the card's `data-autoid`. Absent when table `autoId` is absent. |
+
+Core renders the card frame, selector, command trigger, tree/group/expand controls and action bar. The 14px checkbox/radio sits on a 24px circular surface centered over the top-right border, with a 40px hit area. The row-command trigger sits at the bottom-right. No separate selector row is needed. A projected `sdTableCommandHeaderDef` is centered above the cards; otherwise there is no header banner. Do not duplicate selection state or add a wrapping button. Links, buttons, inputs, labels, selects, contenteditable controls and nested tables work independently, without consumer `stopPropagation()`. Enter/Space on a focused card matches body activation; pointer scrolling, drag handles and text selection do not activate it.
+
+`mobile.rowLabel(row)` supplies the command title and accessible selector/command labels. Empty/nullish labels fall back to a primitive `rowKey` value and then a one-based row ordinal across pages. Internal generated identities and guessed business fields are never used as visible labels.
+
+### Browsing, selection and actions
+
+With commands configured and no selection, tapping non-interactive card content or `⋯` opens that row's commands without selecting it. Ticking a selector closes row commands and enters selection mode, even for one selected row. Body taps then toggle selection; `⋯` is hidden. Clearing the final row returns to browsing without reopening an old command.
+
+Without row commands, body taps select immediately. `selector.single` uses radio controls and replaces the old selection; selecting the active radio again leaves it selected. Use **Clear selection** to clear it. A hidden selector has no selection control or body-selection behavior. `defaultSelected` is reflected on the first mobile render.
+
+Mobile cards do not display **Select this page**. The shared selection API and desktop page checkbox retain their existing scope and eligibility: current-page group members and visible, loaded tree rows only. Empty eligibility remains unchecked, and page deselection retains off-page rows. **Clear selection** (`table.onClearSelection()`) clears the complete selection, including preserved rows and cached tree children.
+
+For `preserveSelection`, provide a stable `rowKey` with server data. The summary reports the total selected count and the count on this page when they differ. Callbacks receive the complete selection, including preserved rows. Bulk eligibility is intersected over all selected rows; a bulk callback never silently receives a filtered subset. Incompatible grouped actions do not become compatible merely because they share a parent title. A row with disabled selection can still expose eligible row commands.
+
+Row commands open directly in `SdModal` with `view="bottom-sheet"`, titled **Row actions: <row label>**. The sheet lists commands in declaration order, with group headings, disabled states, icons, semantic colors and supported HTML content. Closing it leaves selection unchanged and returns focus to the row trigger.
+
+Only selection uses a contained `SdQuickAction`, with 16px horizontal padding. A highlighted selected count and a labelled clear icon stay centered in separate side columns; flat actions wrap into evenly aligned columns between them. **More** opens a titled `SdModal` bottom sheet for grouped or HTML actions and subsequent actions, preserving declaration order. `selector.message` is omitted on mobile. The full total/on-page summary remains available through the bar's accessible name and a polite live region. The count and clear route remain available without bulk actions. Closing the sheet preserves selection.
+
+Card lists keep equal 20px side gutters and symmetric content padding with or without selection controls. The corner checkbox does not reduce the content width. Row commands share a separate action row with the expand control, so they do not overlap the consumer's content.
+
+The footer has one **Tools** button and the shared paginator. **Table tools** opens a separate Core bottom sheet containing enabled reload, export, filter, sort and configuration controls. Filter/configuration close the sheet before opening their existing drawer/dialog. Sort choices use the same `MatSort` state and cycle ascending, descending and clear.
+
+Changing data, filtering, paging or calling `table.detectChanges()` after an in-place edit invalidates row commands. Async `hidden` results are tied to their row and render revision. Renderer changes, owner destruction and enclosing Core modal/drawer closure dismiss owned sheets. Tables keep independent state even when Material replaces a previously open sheet.
+
+### Async results belong to the consumer
+
+Row callbacks still receive `row`; bulk callbacks receive `selectedRows`. Existing `void` callbacks remain supported. If a callback returns a Promise, duplicate actions are disabled until it settles; rejection shows an error and retains selection. Core does not interpret success or clear selection automatically, even after a resolved Promise.
+
+After successful processing, update your business data and `await table.reload()`; use `table.detectChanges()` if only in-place display/eligibility values changed. Call `table.onClearSelection()` only when the application intends to clear everything. For partial success with preservation, remove only confirmed successes using the existing selection API before reloading:
+
+```ts
+const succeededIds = new Set(result.succeededIds); // authoritative server outcome
+for (const row of table.selectedTableItems()) {
+  if (succeededIds.has(row.data.id)) {
+    row.meta.selector!.isSelected = false;
+    table.onSelect(row); // updates the preserved map, including rows outside this page
+  }
+}
+await table.reload(); // failed rows remain selected when preserveSelection is enabled
+```
+
+The consumer owns error reporting, retries and `defaultSelected` predicates; update a default predicate too if it would otherwise reselect a processed row on a new load.
+
+### Desktop-to-mobile mapping
+
+| Feature / slot | Card view |
+| --- | --- |
+| Columns, `sdTableCellDef`, `sdTableTitleDef` | Columns continue to define filters, sort, configuration and export. The mobile row template supplies the body instead of desktop cell templates. Custom titles remain in footer/configuration; the sort menu uses column title text. |
+| `sdTableFilterDef`, inline filters | Existing mobile filter drawer, sharing the same filter register and operators. External filters also move into this drawer; there is no separate filter form above the card list. |
+| Sort | The Table tools bottom sheet cycles ascending → descending → clear through the same `MatSort` and request fields. Only configured sortable leaf columns are listed. |
+| Pagination, reload, configuration, export | Paginator and one Tools button below the list; enabled tools live in the titled Core sheet. Export uses business rows and configured columns, never card DOM. |
+| `sdTableCommandHeaderDef` | Centered above the card list. |
+| `sdTableFooterDef` | Labelled summary below cards; the original `{ items, column }` scope is unchanged (`items` are current-page `SdTableItem` wrappers). |
+| `sdTableExpandDef` | Dedicated Details button and inline detail block; keeps its existing `{ item: SdTableItem }` context, `always`, `multiple`, disabled and async behavior. |
+| `sdTableGroupDef` | Separate group header using the existing group context and selection/expand controls. |
+| Tree | Indentation, level labels and separate expand/collapse controls; lazy children are fetched only on expansion. |
+| Reorder | Dedicated CDK drag handle; respects existing disabled/group/tree scope and callbacks. |
+| `[sdTableTop]` | Remains above the table content. |
+
+The action bar keeps a layout footprint inside the owning scroll container, so the final card and paginator remain reachable. It follows Core theme tokens and safe-area insets. Applications with their own bottom navigation may set `--sd-table-mobile-bottom-offset` on the table to the occupied height. Template authors should allow wrapping and provide their own null-value presentation, as in the example.

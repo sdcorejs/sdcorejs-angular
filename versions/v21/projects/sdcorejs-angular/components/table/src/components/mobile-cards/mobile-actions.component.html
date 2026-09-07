@@ -1,0 +1,109 @@
+@let _busy = busy();
+@let _error = error();
+@let _autoId = autoId();
+@let _title = title();
+@let _selection = selection();
+@if (_selection) {
+  <div class="sd-mobile-actions" role="region" [attr.aria-label]="_title">
+    <sd-quick-action opened contained class="sd-mobile-quick-action">
+      <span sdMessage class="sd-mobile-selection-summary" [attr.aria-label]="_title">
+        <span class="sd-mobile-selection-count T14M">{{ count() }}</span>
+      </span>
+      <div sdAction class="sd-mobile-action-buttons">
+        <div class="sd-mobile-action-list">
+          @for (action of direct(); track action.key) {
+            <span class="sd-mobile-action-direct">
+              <sd-button
+                [autoId]="_autoId ? _autoId + '-mobile-action-' + action.key : null"
+                [title]="action.title"
+                [prefixIcon]="action.icon"
+                [fontSet]="action.fontSet"
+                [color]="action.color"
+                size="sm"
+                [type]="action.type || 'text'"
+                [disabled]="_busy || action.disabled"
+                (click)="run(action)"></sd-button>
+            </span>
+          }
+          @if (overflow().length) {
+            <button
+              mat-button
+              type="button"
+              class="sd-mobile-more"
+              [disabled]="_busy"
+              aria-haspopup="dialog"
+              [attr.data-autoid]="_autoId ? _autoId + '-mobile-more' : null"
+              (click)="openMore()">
+              <sd-icon name="more_horiz"></sd-icon><span>{{ 'core.component.table.mobile.more' | sdTranslate }}</span>
+            </button>
+          }
+        </div>
+        <button
+          type="button"
+          class="sd-mobile-end sd-mobile-clear"
+          [attr.aria-label]="'core.component.table.clear-selection' | sdTranslate"
+          (click)="end.emit()"
+          [attr.data-autoid]="_autoId ? _autoId + '-mobile-end' : null">
+          <sd-icon name="close"></sd-icon>
+        </button>
+      </div>
+    </sd-quick-action>
+    @if (_error; as message) {
+      <p role="alert">{{ message }}</p>
+    }
+  </div>
+}
+<sd-modal
+  #sheet
+  [autoId]="_autoId ? _autoId + '-mobile-sheet' : undefined"
+  [title]="_title"
+  view="bottom-sheet"
+  [disableBackdropClose]="false"
+  modalClass="sd-table-mobile-sheet-panel"
+  (sdClosed)="onSheetClosed()">
+  <div class="sd-mobile-sheet">
+    @for (action of sheetActions(); track action.key) {
+      @if (action.children; as children) {
+        <section [attr.aria-label]="action.title" class="sd-mobile-action-group">
+          <h3 class="T12M">{{ action.title }}</h3>
+          @for (child of children; track child.key) {
+            <button
+              mat-button
+              type="button"
+              class="sd-mobile-sheet-action"
+              [attr.data-autoid]="_autoId ? _autoId + '-mobile-' + child.key : null"
+              [disabled]="_busy || action.disabled || child.disabled"
+              (click)="runSheet(child)">
+              <sd-icon [name]="child.icon || 'chevron_right'" [fontSet]="child.fontSet" [color]="child.color"></sd-icon>
+              <span class="sd-mobile-sheet-label"
+                >{{ child.title }}
+                @if (child.htmlTemplate) {
+                  <span [innerHTML]="child.htmlTemplate"></span>
+                }
+              </span>
+            </button>
+          }
+        </section>
+      } @else {
+        <button
+          mat-button
+          type="button"
+          class="sd-mobile-sheet-action"
+          [attr.data-autoid]="_autoId ? _autoId + '-mobile-' + action.key : null"
+          [disabled]="_busy || action.disabled"
+          (click)="runSheet(action)">
+          <sd-icon [name]="action.icon || 'chevron_right'" [fontSet]="action.fontSet" [color]="action.color"></sd-icon>
+          <span class="sd-mobile-sheet-label"
+            >{{ action.title }}
+            @if (action.htmlTemplate) {
+              <span [innerHTML]="action.htmlTemplate"></span>
+            }
+          </span>
+        </button>
+      }
+    }
+    @if (_error; as message) {
+      <p role="alert">{{ message }}</p>
+    }
+  </div>
+</sd-modal>

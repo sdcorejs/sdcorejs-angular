@@ -8,6 +8,7 @@ import { SdTableItem } from './models/table-item.model';
 import { SdGroupPipe } from './pipes/sd-group.pipe';
 import { buildColumnWidthMap } from './services/column-width.util';
 import { SdTableCommandHeaderDefDirective } from './directives/sd-table-command-header-def.directive';
+import { SdViewportService } from '@sdcorejs/angular/services/viewport';
 
 describe('buildColumnWidthMap', () => {
   it('trả map field → width cho mọi field có width', () => {
@@ -1601,7 +1602,10 @@ describe('hidden paginator footer height', () => {
   }
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ imports: [HiddenPaginatorHeightHostComponent] });
+    TestBed.configureTestingModule({
+      imports: [HiddenPaginatorHeightHostComponent],
+      providers: [{ provide: SdViewportService, useValue: { isMobile: signal(false) } }],
+    });
   });
 
   function createLoadedFixture(): ComponentFixture<HiddenPaginatorHeightHostComponent> {

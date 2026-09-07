@@ -1,4 +1,8 @@
 :host {
+  &:focus-visible {
+    outline: 2px solid var(--sd-primary);
+    outline-offset: 2px;
+  }
   display: flex;
   flex-direction: column;
   overflow: auto;
@@ -134,7 +138,6 @@
           margin-bottom: 16px;
           width: 96px; // Ảnh nhỏ thôi để trong các màn nhỏ nhiều table không chiếm quá cao
         }
-
       }
     }
 
@@ -292,6 +295,57 @@
   }
 }
 
+// why: ở card 320px, giữ nhãn phạm vi trên một dòng để còn chỗ cho nút chuyển trang.
+:host ::ng-deep .sd-mobile-paginator .mat-mdc-paginator-range-label {
+  margin-inline: 4px;
+  white-space: nowrap;
+}
+
+:host .sd-mobile-command-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px;
+}
+:host .c-container.sd-table-mobile {
+  .c-paginator {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .c-action {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+  }
+  .sd-mobile-tools-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 44px;
+  }
+  .sd-mobile-paginator {
+    margin-inline-start: auto;
+  }
+  .c-paginator,
+  .c-empty {
+    background-color: var(--sd-surface);
+    color: var(--sd-text);
+  }
+}
+
+:host ::ng-deep .sd-table-mobile .c-paginator button {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+:host .c-container.sd-table-mobile .c-paginator .sd-mobile-paginator {
+  --mat-icon-button-state-layer-size: 44px;
+  --mdc-icon-button-state-layer-size: 44px;
+}
+
 :host ::ng-deep {
   .mat-select-arrow {
     color: #a6a6a6;
@@ -310,10 +364,10 @@
   }
 
   th[aria-sort] .sd-table-sort-header {
-      background-repeat: no-repeat;
-      background-position: center right 0;
-      background-size: 16px 16px;
-      padding-right: 24px;
+    background-repeat: no-repeat;
+    background-position: center right 0;
+    background-size: 16px 16px;
+    padding-right: 24px;
   }
 
   th[aria-sort='none'] .sd-table-sort-header {
@@ -414,7 +468,6 @@
     transform-origin: center;
   }
 
-
   // Tree (icon expand đã nhúng vào cột đầu / cột Index) —
   // dòng chứa indent + chevron-slot + nội dung (STT hoặc cell), căn trục dọc.
   .sd-tree-line {
@@ -500,13 +553,25 @@
       font-weight: 500;
     }
   }
-  tr.c-row.sd-tree-row.sd-tree-level-1 { background: #ffffff; }
-  tr.c-row.sd-tree-row.sd-tree-level-2 { background: #fafbfd; }
-  tr.c-row.sd-tree-row.sd-tree-level-3 { background: #f6f8fb; }
+  tr.c-row.sd-tree-row.sd-tree-level-1 {
+    background: #ffffff;
+  }
+  tr.c-row.sd-tree-row.sd-tree-level-2 {
+    background: #fafbfd;
+  }
+  tr.c-row.sd-tree-row.sd-tree-level-3 {
+    background: #f6f8fb;
+  }
 
   // STT root level — bold đậm rõ.
   .sd-stt-root {
     font-weight: 700;
     color: #1f2330;
   }
+}
+
+:host ::ng-deep .sd-mobile-tools-trigger .mdc-button__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }

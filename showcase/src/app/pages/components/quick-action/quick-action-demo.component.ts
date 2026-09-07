@@ -52,6 +52,14 @@ import { SdButton } from '@sdcorejs/angular/components/button';
         </sd-quick-action>
       </demo-section>
       }
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trong-container') {
+        <demo-section heading="Trong container" [props]="[{ name: 'contained', value: 'true' }]">
+          <sd-quick-action opened contained>
+            <span sdMessage>Thanh thao tác nằm trong vùng cuộn của bảng mobile.</span>
+            <sd-button sdAction title="Bỏ chọn" (click)="clearSelection()"></sd-button>
+          </sd-quick-action>
+        </demo-section>
+      }
     </demo-page>
   `,
   styles: [`

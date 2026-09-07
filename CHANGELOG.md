@@ -1,4 +1,4 @@
-# Changelog — `@sdcorejs/angular`
+﻿# Changelog — `@sdcorejs/angular`
 
 Changelog cho npm package `@sdcorejs/angular`, tập trung vào thay đổi public API, hành vi runtime, tài liệu sử dụng, tooling release, và các migration cần consumer chú ý.
 
@@ -7,6 +7,8 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 ## [Unreleased]
 
 ### Added
+
+- **`sd-table` mobile row cards** via `SdTableRowMobileDefDirective<T>` and `SdTableRowMobileDefContext<T>`, with optional `mobile.rowLabel`, typed template binding, shared selection/filter/sort/page/expand state, row and bulk commands in one contained `SdQuickAction`, grouped More sheets, and independent interactive card content. Canonical docs, consumer compilation fixtures and showcase cover local/server data, selection preservation, group/tree and responsive controls. `SdQuickAction.contained` enables an action bar inside an owning scroll container. Mobile tools and row commands use clearly titled SdModal bottom sheets. Selection uses one compact QuickAction row with a highlighted count, fitting actions and clear; selector messages/page checkboxes are omitted. A small circular selector straddles the top-right card border, and command-header content is centered above the cards. Modal overlays are named from their live headings.
 
 - **`<sd-card>` and `<sd-card-group>`** are available from `@sdcorejs/angular/components/card`. The standalone, generic-content card supports accessible pointer/keyboard toggle behavior, read-only `selected()` state, semantic Core UI colors, stable `autoId` selectors, disabled states, and the same 300 ms leading click throttle as `SdButton`. Groups provide single or immutable multiple selection through `[(model)]`, user-only `(sdChange)`, object-aware `compareWith`, direct nearest-group injection, and no imposed application layout.
 

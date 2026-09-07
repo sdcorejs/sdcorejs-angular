@@ -1,0 +1,399 @@
+{
+  "artifact_id": "sd-table-mobile-cards-captures",
+  "change_ref": "sd-table-mobile-cards",
+  "owner": "sdcorejs-angular",
+  "source_plan": ".sdcorejs/plans/angular/2026-09-05-sd-table-mobile-cards.md",
+  "referenced_by": "README.md",
+  "capture_tool": "Playwright with installed Chrome",
+  "browser": "151.0.7922.174",
+  "captured_at": [
+    "2026-09-05T17:31:40.988Z",
+    "2026-09-05T17:32:55.881Z"
+  ],
+  "route": "/v/22.2.5/components/table/examples",
+  "ui_capture_context": {
+    "origin": "built showcase using canonical v19 library",
+    "authentication": "public local example; no user account or auth state",
+    "pii_screening": "PASS: fictional employee fixtures already defined in the public showcase",
+    "containment": "PASS: captured image bounds fit recorded viewport; no mobile table horizontal overflow",
+    "source_manifest_sha256": "faa3fcc8ff95d6a9b4642dffaa186e2382948a7ed980ca9092b736c18f9cae8e",
+    "layout": "Titled SdModal tools/row sheets; centered header; 20px equal card gutters unaffected by corner selectors; selection QuickAction with 16px horizontal padding, evenly aligned wrapping actions and a centered close glyph/count in separate side columns."
+  },
+  "captures": [
+    {
+      "path": "1440-dark-desktop.png",
+      "sha256": "cf70666312ff8431485847d0e1f428010420b64780d5c8bb9777444cc212be1a",
+      "bytes": 23694,
+      "image_size": [
+        1359,
+        347
+      ],
+      "viewport": [
+        1440,
+        960
+      ],
+      "theme": "dark",
+      "target_state": "dark-desktop"
+    },
+    {
+      "path": "1440-light-desktop.png",
+      "sha256": "d0daea9545fc0894ea0625b0880933671b02fb95fb92db8155ad712439c9cd48",
+      "bytes": 23742,
+      "image_size": [
+        1359,
+        347
+      ],
+      "viewport": [
+        1440,
+        960
+      ],
+      "theme": "light",
+      "target_state": "light-desktop"
+    },
+    {
+      "path": "320-dark-browsing.png",
+      "sha256": "2f3e9f03615204d471114eef62a6a0687e02029a3021ff8193901f64b423ab47",
+      "bytes": 28130,
+      "image_size": [
+        279,
+        685
+      ],
+      "viewport": [
+        320,
+        960
+      ],
+      "theme": "dark",
+      "target_state": "dark-browsing"
+    },
+    {
+      "path": "320-dark-more.png",
+      "sha256": "1966f073111a3ce4dfc8e43ceb7901d5095c78536643c8d969b0fcf2e1ecc12c",
+      "bytes": 47970,
+      "image_size": [
+        320,
+        960
+      ],
+      "viewport": [
+        320,
+        960
+      ],
+      "theme": "dark",
+      "target_state": "dark-more"
+    },
+    {
+      "path": "320-dark-row-command.png",
+      "sha256": "4cd5a90022f24df0037f5ded7958772555c96a545f50413fe072380e8d0deab0",
+      "bytes": 50235,
+      "image_size": [
+        320,
+        960
+      ],
+      "viewport": [
+        320,
+        960
+      ],
+      "theme": "dark",
+      "target_state": "dark-row-command"
+    },
+    {
+      "path": "320-dark-selection.png",
+      "sha256": "a46b92506173d2770b0d31ccf1b23c0bc71a17793908df9c1a012038d78db9d0",
+      "bytes": 27542,
+      "image_size": [
+        279,
+        685
+      ],
+      "viewport": [
+        320,
+        960
+      ],
+      "theme": "dark",
+      "target_state": "dark-selection"
+    },
+    {
+      "path": "320-dark-tools.png",
+      "sha256": "c482a5ea82805193acc0c8d5c822fe2b25928e34feb4fa471af7a3cfc775e88f",
+      "bytes": 43291,
+      "image_size": [
+        320,
+        960
+      ],
+      "viewport": [
+        320,
+        960
+      ],
+      "theme": "dark",
+      "target_state": "dark-tools"
+    },
+    {
+      "path": "320-light-browsing.png",
+      "sha256": "8a1cfc835fe57609ee70080c495121ddbc65aae5e38d9ea3002e21c9e829cc68",
+      "bytes": 27993,
+      "image_size": [
+        279,
+        685
+      ],
+      "viewport": [
+        320,
+        960
+      ],
+      "theme": "light",
+      "target_state": "light-browsing"
+    },
+    {
+      "path": "320-light-more.png",
+      "sha256": "46652980014fde61abd1e4a89d19cc464bc9416e0febc64b87500508bb48d965",
+      "bytes": 48123,
+      "image_size": [
+        320,
+        960
+      ],
+      "viewport": [
+        320,
+        960
+      ],
+      "theme": "light",
+      "target_state": "light-more"
+    },
+    {
+      "path": "320-light-row-command.png",
+      "sha256": "83653e617504b754914d0a60c6fa11d8986af6654877cecceaea89eeb706eba6",
+      "bytes": 50062,
+      "image_size": [
+        320,
+        960
+      ],
+      "viewport": [
+        320,
+        960
+      ],
+      "theme": "light",
+      "target_state": "light-row-command"
+    },
+    {
+      "path": "320-light-selection.png",
+      "sha256": "7ac9dcc66c43452bdfc0ed6a849885e9f3acb09fa806082f256595876a89ce1c",
+      "bytes": 27560,
+      "image_size": [
+        279,
+        685
+      ],
+      "viewport": [
+        320,
+        960
+      ],
+      "theme": "light",
+      "target_state": "light-selection"
+    },
+    {
+      "path": "320-light-tools.png",
+      "sha256": "e690232840c963d14369be55f69594f02f85beacd58a72461e3877d26775906b",
+      "bytes": 43153,
+      "image_size": [
+        320,
+        960
+      ],
+      "viewport": [
+        320,
+        960
+      ],
+      "theme": "light",
+      "target_state": "light-tools"
+    },
+    {
+      "path": "390-dark-browsing.png",
+      "sha256": "7a5a62f80b828120ddf3ef7680b77843fc3d661a61cde05bc102d09451905f9f",
+      "bytes": 28629,
+      "image_size": [
+        349,
+        685
+      ],
+      "viewport": [
+        390,
+        960
+      ],
+      "theme": "dark",
+      "target_state": "dark-browsing"
+    },
+    {
+      "path": "390-dark-more.png",
+      "sha256": "43ec5f41b83b3948c06f26dc5a86abd97eb7e10ba5cfcbbe688164c2249dedb2",
+      "bytes": 50336,
+      "image_size": [
+        390,
+        960
+      ],
+      "viewport": [
+        390,
+        960
+      ],
+      "theme": "dark",
+      "target_state": "dark-more"
+    },
+    {
+      "path": "390-dark-row-command.png",
+      "sha256": "60030b410fab5f06d8339da7bc35b4624c502e24d929f781cf1c035cfa0131bb",
+      "bytes": 53093,
+      "image_size": [
+        390,
+        960
+      ],
+      "viewport": [
+        390,
+        960
+      ],
+      "theme": "dark",
+      "target_state": "dark-row-command"
+    },
+    {
+      "path": "390-dark-selection.png",
+      "sha256": "18937eba8a1ceffc1110c95a6d281b0c7ca4e19d72d123bdec083764ef316b54",
+      "bytes": 28014,
+      "image_size": [
+        349,
+        685
+      ],
+      "viewport": [
+        390,
+        960
+      ],
+      "theme": "dark",
+      "target_state": "dark-selection"
+    },
+    {
+      "path": "390-dark-tools.png",
+      "sha256": "e0881f20e3bb8d8873dee6eefe4cc8ffb95e9e8f6522bbf3a99518e7bf061d0e",
+      "bytes": 45571,
+      "image_size": [
+        390,
+        960
+      ],
+      "viewport": [
+        390,
+        960
+      ],
+      "theme": "dark",
+      "target_state": "dark-tools"
+    },
+    {
+      "path": "390-drawer-selection.png",
+      "sha256": "9453b92e3d4f720a15e168ea7f351252a765b67f526a1eecbf2cb0ba44bb5f34",
+      "bytes": 28807,
+      "image_size": [
+        390,
+        960
+      ],
+      "viewport": [
+        390,
+        960
+      ],
+      "theme": "light",
+      "target_state": "drawer-selection"
+    },
+    {
+      "path": "390-light-browsing.png",
+      "sha256": "c0527164031c099ed14c373381c4236e98ce4c73bc6320ddbc40b2a2552a9215",
+      "bytes": 28445,
+      "image_size": [
+        349,
+        685
+      ],
+      "viewport": [
+        390,
+        960
+      ],
+      "theme": "light",
+      "target_state": "light-browsing"
+    },
+    {
+      "path": "390-light-more.png",
+      "sha256": "caa3174655025556a9e55e230e0314d6ccb6ac5ab2ca147ec5fc42509b72bd43",
+      "bytes": 50370,
+      "image_size": [
+        390,
+        960
+      ],
+      "viewport": [
+        390,
+        960
+      ],
+      "theme": "light",
+      "target_state": "light-more"
+    },
+    {
+      "path": "390-light-row-command.png",
+      "sha256": "7c6e8bb377a4627351d96a736df1edf31062183b102f8eecd0ac8d6e51b2e58e",
+      "bytes": 52821,
+      "image_size": [
+        390,
+        960
+      ],
+      "viewport": [
+        390,
+        960
+      ],
+      "theme": "light",
+      "target_state": "light-row-command"
+    },
+    {
+      "path": "390-light-selection.png",
+      "sha256": "85b88223521105a4e6e1493d338a73884176a2c899247315f879412af8a13484",
+      "bytes": 28061,
+      "image_size": [
+        349,
+        685
+      ],
+      "viewport": [
+        390,
+        960
+      ],
+      "theme": "light",
+      "target_state": "light-selection"
+    },
+    {
+      "path": "390-light-tools.png",
+      "sha256": "0bc459df16501f16c245c8fcf218cc8372f5e244bf966e8735010bb00d195871",
+      "bytes": 45369,
+      "image_size": [
+        390,
+        960
+      ],
+      "viewport": [
+        390,
+        960
+      ],
+      "theme": "light",
+      "target_state": "light-tools"
+    },
+    {
+      "path": "390-modal-more.png",
+      "sha256": "33915cada17fa9096a0906050aea047454d61b14cfad833ec0989eb13231bd55",
+      "bytes": 53786,
+      "image_size": [
+        390,
+        960
+      ],
+      "viewport": [
+        390,
+        960
+      ],
+      "theme": "light",
+      "target_state": "row-command-sheet-inside-parent-dialog"
+    },
+    {
+      "path": "390-server-preservation.png",
+      "sha256": "8088e07c0dd14b3e6e4a57d7653e4677f0b5dd0b6ecb57737aa6752a8444ed7d",
+      "bytes": 22688,
+      "image_size": [
+        349,
+        463
+      ],
+      "viewport": [
+        390,
+        960
+      ],
+      "theme": "light",
+      "target_state": "server-preservation"
+    }
+  ]
+}

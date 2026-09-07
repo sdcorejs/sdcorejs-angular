@@ -1,0 +1,132 @@
+// why: cards are a renderer primitive; token colors follow both Core UI themes.
+:host {
+  display: block;
+  min-width: 0;
+}
+.sd-mobile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 20px 20px 8px;
+}
+.sd-mobile-card {
+  position: relative;
+  border: 1px solid var(--sd-border);
+  border-radius: 8px;
+  background: var(--sd-surface);
+  color: var(--sd-text);
+  min-width: 0;
+  padding: 8px 12px;
+  overflow-wrap: anywhere;
+}
+.sd-mobile-card.selected {
+  border-color: var(--sd-primary);
+  background: color-mix(in srgb, var(--sd-primary) 10%, var(--sd-surface));
+}
+.sd-mobile-card-active {
+  border-color: var(--sd-primary);
+}
+.sd-mobile-card:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--sd-primary);
+  outline-offset: 2px;
+}
+.sd-mobile-card-commandable {
+  min-height: 76px;
+}
+// The 24px circular surface straddles the border; the transparent hit area is 40px.
+.sd-mobile-card-selector {
+  position: absolute;
+  z-index: 1;
+  top: -20px;
+  inset-inline-end: -20px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  --mdc-checkbox-state-layer-size: 40px;
+  --mat-checkbox-state-layer-size: 40px;
+  --mdc-radio-state-layer-size: 40px;
+  --mat-radio-state-layer-size: 40px;
+}
+.sd-mobile-card-selector::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border: 1px solid var(--sd-border);
+  border-radius: 50%;
+  background: var(--sd-surface);
+}
+.sd-mobile-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.sd-mobile-command-trigger {
+  flex: 0 0 44px;
+  margin-inline-start: auto;
+  width: 44px;
+  height: 44px;
+}
+:host ::ng-deep .sd-mobile-card-selector {
+  .mdc-checkbox__background {
+    width: 14px;
+    height: 14px;
+    top: 13px;
+    left: 13px;
+  }
+  .mdc-radio__background {
+    transform: scale(0.7);
+  }
+  .mat-mdc-checkbox-touch-target,
+  .mat-mdc-radio-touch-target {
+    width: 40px;
+    height: 40px;
+  }
+  .mdc-checkbox__ripple,
+  .mat-mdc-checkbox-ripple,
+  .mat-mdc-radio-ripple {
+    width: 24px;
+    height: 24px;
+    inset: 8px;
+  }
+}
+.sd-mobile-card-body {
+  padding: 4px 0;
+  min-width: 0;
+}
+.sd-mobile-group {
+  overflow-wrap: anywhere;
+}
+.sd-mobile-expand {
+  padding: 12px 0;
+  border-top: 1px solid var(--sd-border);
+}
+.sd-mobile-floating {
+  position: sticky;
+  bottom: 0;
+  // why: khoảng chừa cũng phải nằm trong flow để card cuối cuộn lên trên thanh action.
+  padding-bottom: var(--sd-table-mobile-bottom-offset, 0px);
+  z-index: 2;
+}
+button {
+  min-width: 44px;
+  min-height: 44px;
+  height: auto;
+}
+[cdkDragHandle] {
+  touch-action: none;
+  cursor: grab;
+}
+.sd-mobile-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.cdk-drag-placeholder {
+  opacity: 0.3;
+}

@@ -273,6 +273,9 @@ export class ExampleViewerComponent implements OnDestroy {
   @HostListener('document:keydown', ['$event'])
   onDocumentKeydown(event: KeyboardEvent): void {
     if (!this.previewExpanded()) return;
+    const target = event.target instanceof Element ? event.target : this.#document.activeElement;
+    // why: overlay con sở hữu Escape/Tab; preview không được đóng hoặc giành focus của nó.
+    if (event.defaultPrevented || target?.closest('.cdk-overlay-container, .sd-side-drawer')) return;
     if (event.key === 'Escape') {
       event.preventDefault();
       this.#closeExpandedPreview(true);
@@ -397,6 +400,8 @@ export class ExampleViewerComponent implements OnDestroy {
       const parent = branch.parentElement;
       for (const sibling of parent.children) {
         if (sibling === branch || !(sibling instanceof HTMLElement) || sibling.hasAttribute('inert')) continue;
+        // why: Core drawer tạo portal ở body trước khi mở; inert làm filter nhìn thấy nhưng không bấm được.
+        if (sibling.matches('.cdk-overlay-container, .sd-side-drawer, .sd-side-drawer-backdrop')) continue;
         sibling.setAttribute('inert', '');
         this.#backgroundElementsMadeInert.push(sibling);
       }
