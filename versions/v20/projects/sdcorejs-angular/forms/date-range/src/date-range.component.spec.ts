@@ -62,6 +62,34 @@ class NgFormHost {
 // ---------------------------------------------------------------------------
 
 describe('SdDateRange', () => {
+  it('clears both endpoints with the shared clear button without opening the picker', () => {
+    host.model = { from: '2026/09/08', to: '2026/09/18' };
+    fixture.detectChanges();
+    const picker = comp.picker()!;
+    spyOn(picker, 'open');
+    const clear = fixture.nativeElement.querySelector('button.sd-clear-btn.sd-hover') as HTMLButtonElement;
+    expect(clear).not.toBeNull();
+    clear?.click();
+    expect(comp.control1.value).toBeNull();
+    expect(comp.control2.value).toBeNull();
+    expect(host.changes).toEqual([{ from: null, to: null }]);
+    expect(picker.open).not.toHaveBeenCalled();
+  });
+
+  it('hides the clear action when disabled', () => {
+    host.model = { from: '2026/09/08', to: '2026/09/18' };
+    host.disabled = true;
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.sd-clear-btn')).toBeNull();
+  });
+
+  it('renders the picker icon using the outlined font by default', () => {
+    const suffix = fixture.nativeElement.querySelector('.sd-suffix-icon');
+    const icon = suffix?.matches('mat-icon') ? suffix : suffix?.querySelector('mat-icon');
+    expect(icon).not.toBeNull();
+    expect(icon?.classList.contains('material-icons-outlined')).toBeTrue();
+  });
+
   it('exposes a named value type for consumer form contracts', () => {
     const value: SdDateRangeValue = { from: '2026/07/01', to: '2026/07/21' };
     expect(value.from).toBe('2026/07/01');
@@ -437,10 +465,10 @@ describe('SdDateRange', () => {
   describe('viewed + open()', () => {
     const hasClearIcon = () =>
       Array.from(fixture.nativeElement.querySelectorAll('mat-icon') as NodeListOf<HTMLElement>).some(
-        i => i.textContent?.trim() === 'cancel'
+        i => i.textContent?.trim() === 'close'
       );
 
-    it('renders the clear (cancel) icon when a range is set (edit mode)', () => {
+    it('renders the clear (close) icon when a range is set (edit mode)', () => {
       host.model = { from: '2026/01/01', to: '2026/01/31' };
       fixture.detectChanges();
       expect(hasClearIcon()).toBe(true);

@@ -83,6 +83,13 @@ class NgFormHost {
 // ---------------------------------------------------------------------------
 
 describe('SdDatetime', () => {
+  it('renders the picker icon using the outlined font by default', () => {
+    const suffix = fixture.nativeElement.querySelector('.sd-suffix-icon');
+    const icon = suffix?.matches('mat-icon') ? suffix : suffix?.querySelector('mat-icon');
+    expect(icon).not.toBeNull();
+    expect(icon?.classList.contains('material-icons-outlined')).toBeTrue();
+  });
+
   let fixture: ComponentFixture<HostComponent>;
   let host: HostComponent;
   let comp: SdDatetime;
