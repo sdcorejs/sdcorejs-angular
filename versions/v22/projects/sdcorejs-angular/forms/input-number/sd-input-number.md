@@ -212,6 +212,14 @@ When this control is rendered in dashboard cards, filter bars, external filter p
 <sd-input-number size="sm" hideInlineError type="positive" [(model)]="filter.amount"></sd-input-number>
 ```
 
+## Clipboard paste
+
+- Paste accepts both `1.234.567,89` and `1,234,567.89`, with or without thousands separators. All whitespace is removed, including tabs, newlines, NBSP (`U+00A0`) and narrow NBSP (`U+202F`).
+- Ambiguous values use the configured format first: `1.234` means 1234 with the VN format and 1.234 with the ISO format. The other format is tried only when the configured format cannot parse the complete text. Grouped integers require exactly three digits per group; malformed values such as `1.2.3` are rejected.
+- Excess fractional digits are **truncated toward zero** to `precision`: `1.234.567,89` becomes 1234567 at precision 0; `12,349` becomes 12.34 at precision 2 with VN format. This normalization applies to paste; ordinary typing still enforces precision immediately.
+- Paste replaces the selected text (or inserts at the caret), formats the result using the configured separators, and updates the numeric model and `sdChange` through the normal input pipeline. Invalid/non-finite numbers or values incompatible with `type` leave the control unchanged.
+- `min`/`max` remain validators, just as for typed input: out-of-range values are retained and reported as validation errors, without clamping. Ctrl+V and Cmd+V both reach the paste handler.
+
 ## Examples
 
 ### 1. VND amount with currency suffix

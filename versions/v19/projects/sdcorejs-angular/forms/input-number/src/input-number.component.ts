@@ -271,7 +271,7 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
     const escDecimal = decimal === '.' ? '\\.' : decimal;
     const escThousand = thousand === '.' ? '\\.' : thousand;
 
-    const integerPart = `(([0-9]+(${escThousand}[0-9])?)+)`;
+    const integerPart = `([0-9]+|[0-9]{1,3}(${escThousand}[0-9]{3})+)`;
     const decimalPart = this.precision() > 0 ? `(${escDecimal}[0-9]{0,${this.precision()}})?` : '';
 
     const baseReg = `${integerPart}${decimalPart}$`;
@@ -462,10 +462,7 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   };
 
   onKeydown = (event: KeyboardEvent) => {
-    if (event.ctrlKey && event.key == 'v') {
-      this.#checkValue(event, '');
-      return;
-    }
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'v') return;
     const key = event.keyCode || event.charCode;
     if (key == 8 || key == 46 || key == 37 || key == 39 || key == 35 || key == 36 || key == 9) return;
     if (event.ctrlKey && (event.key == 'c' || event.key == 'x' || event.key == 'a')) return;
@@ -475,8 +472,55 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   };
 
   onPaste(event: ClipboardEvent) {
-    const nextKey = event?.clipboardData?.getData('text');
-    this.#checkValue(event, nextKey);
+    event.preventDefault();
+    if (this.disabled() || this.readonly()) return;
+    const next = this.#normalizeClipboard(event.clipboardData?.getData('text') ?? '');
+    if (next === undefined) return;
+
+    const target = event.target as HTMLInputElement;
+    const start = target.selectionStart ?? target.value.length;
+    const end = target.selectionEnd ?? start;
+    const ungroup = (text: string) => text.split(this.thousandsSeparator()).join('');
+    const prefix = ungroup(target.value.slice(0, start));
+    const candidate = prefix + next + ungroup(target.value.slice(end));
+    const decimal = this.decimalSeparator();
+    const escapedDecimal = decimal === '.' ? '\\.' : decimal;
+    if (!new RegExp(`^-?[0-9]+(${escapedDecimal}[0-9]*)?$`).test(candidate)) return;
+    if (!Number.isFinite(this.#toNumber(candidate))) return;
+
+    // why: cắt trên chuỗi để bỏ phần lẻ vượt precision, không phát sinh sai số làm tròn nhị phân.
+    const [integer, fraction = ''] = candidate.split(decimal);
+    const digits = fraction.slice(0, Math.max(0, this.precision()));
+    const value = integer + (digits ? decimal + digits : '');
+    if (!new RegExp(`^${this.regexPattern()}`).test(value)) return;
+
+    this.inputControl.markAsDirty();
+    // why: dùng cùng subscription với nhập tay để cập nhật model, sdChange và validator min/max.
+    this.inputControl.setValue(value);
+
+    const formatted = String(this.inputControl.value);
+    let remaining = Math.min(prefix.length + next.length, value.length);
+    let caret = 0;
+    while (caret < formatted.length && remaining > 0) {
+      if (formatted[caret] !== this.thousandsSeparator()) remaining--;
+      caret++;
+    }
+    target.setSelectionRange(caret, caret);
+  }
+
+  #normalizeClipboard(text: string): string | undefined {
+    const compact = text.replace(/\s/g, '');
+    // why: số chỉ có một dấu phân cách có thể mơ hồ; ưu tiên format cấu hình rồi thử format còn lại.
+    for (const decimal of [this.decimalSeparator(), this.thousandsSeparator()]) {
+      const thousand = decimal === '.' ? ',' : '.';
+      const escDecimal = decimal === '.' ? '\\.' : decimal;
+      const escThousand = thousand === '.' ? '\\.' : thousand;
+      const pattern = new RegExp(`^-?(?:[0-9]+|[0-9]{1,3}(?:${escThousand}[0-9]{3})+)(?:${escDecimal}[0-9]+)?$`);
+      if (pattern.test(compact)) {
+        return compact.split(thousand).join('').replace(decimal, this.decimalSeparator());
+      }
+    }
+    return undefined;
   }
 
   onCompositionEnd(event: CompositionEvent) {
@@ -496,7 +540,12 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
     const current: string = event?.target?.value;
     const curval_arr = current.split('');
     curval_arr.splice(event.target.selectionStart, event.target.selectionEnd - event.target.selectionStart, nextKey || '');
-    const newval = curval_arr.join('');
+    let newval = curval_arr.join('');
+
+    // why: dấu nhóm do control tự chèn phải được tính lại khi gõ thêm chữ số.
+    if (/^[0-9]$/.test(nextKey ?? '') && new RegExp(`^${this.regexPattern()}`).test(current)) {
+      newval = newval.split(this.thousandsSeparator()).join('');
+    }
 
     if (this.type() !== 'positive' && newval === '-') return;
 
