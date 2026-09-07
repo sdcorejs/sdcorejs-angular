@@ -489,7 +489,10 @@ describe('SdSelect', () => {
 describe('SdSelect (multi-select mode)', () => {
   for (const disabled of [false, true]) {
     it(`shows a count and one label per line on hover (disabled=${disabled})`, fakeAsync(() => {
-      host.items = [{ id: 1, name: 'Apple, green' }, { id: 2, name: 'Banana' }];
+      host.items = [
+        { id: 1, name: 'Apple, green' },
+        { id: 2, name: 'Banana' },
+      ];
       host.model = [1, 2];
       fixture.detectChanges();
       tick();
