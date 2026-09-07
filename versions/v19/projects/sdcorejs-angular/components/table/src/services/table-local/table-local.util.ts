@@ -5,6 +5,7 @@ import { SdTableItem } from '../../models/table-item.model';
 import { SdTableOptionTree } from '../../models/table-option-tree.model';
 import { SdTableFilterRequest } from '../table-filter/table-filter.model';
 import { subtreeMatches } from '../tree/tree.util';
+import { compareLocalValues } from './table-local-sort.util';
 
 export interface FilterLocalItemsOption<T> {
   type: 'local' | 'server';
@@ -145,27 +146,8 @@ export const filterLocalItems = <T, TItem extends LocalFilterItem<T>>(
         const dataVal = Utilities.getNestedValue(resolveItemData<T>(tableItemCurrent), field);
         const nextVal = Utilities.getNestedValue(resolveItemData<T>(tableItemNext), field);
 
-        if (type === 'number') {
-          return (dataVal || 0) - (nextVal || 0);
-        }
-        if (type === 'date' || type === 'datetime' || type === 'time') {
-          const d1 = new Date(dataVal || '').getTime();
-          const d2 = new Date(nextVal || '').getTime();
-          return d1 - d2;
-        }
-        const s1 = (dataVal || '').toString();
-        const s2 = (nextVal || '').toString();
-        if (s1 > s2) {
-          return 1;
-        }
-        if (s1 < s2) {
-          return -1;
-        }
-        return 0;
+        return compareLocalValues(dataVal, nextVal, type, orderDirection);
       });
-      if (orderDirection === 'DESC') {
-        items.reverse();
-      }
     }
   }
 

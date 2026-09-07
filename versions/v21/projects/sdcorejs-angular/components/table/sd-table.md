@@ -92,6 +92,15 @@ Without `rowKey`, the same data object always maps back to the same id (so local
 >
 > Everything else works unchanged with no option edit. A side effect of the fix: two rows with identical content are now rendered as two distinct rows (previously the second one could be swallowed by the tree flattener).
 
+### Local sorting
+
+When `items` supplies the full array, local sorting places `null`, `undefined` and `''` **last in both ASC and DESC**.
+For `date`, `datetime` and `time`, values are compared as timestamps: valid `Date` objects, numeric epoch milliseconds (including `0`) and strings accepted by JavaScript `Date` are supported. Invalid dates are treated as empty. Bare time strings such as `'12:30'` are not parsed as clock times; supply a valid date/time value.
+For `number`, numeric strings are compared numerically; `0` is a real value, distinct from empty. `NaN` and nonnumeric strings are treated as empty. Infinities retain their numeric order.
+For `string`, nonempty values use case-sensitive string comparison; `0` and `false` are preserved as `'0'` and `'false'`.
+
+Equal values and empty/invalid values retain their input row order in either direction. Sorting happens before pagination and does not mutate the supplied array. The comparator returns only `-1`, `0` or `1`; direction is applied to nonempty comparisons, without reversing the sorted array. Server sorting remains the server's responsibility. Column types and `filter: { type: 'daterange' }` keep their existing filter behavior.
+
 ### Column schema (`SdTableColumn<T>`)
 
 A discriminated union over `type`. All variants share `SdTableColumnBase`:
