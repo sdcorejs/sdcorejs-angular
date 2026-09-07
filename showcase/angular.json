@@ -19,7 +19,7 @@
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": ["src/assets"],
-            "styles": ["src/styles.scss", "../versions/v19/dist/sdcorejs-angular/assets/scss/sd-core.scss"],
+            "styles": ["src/styles.scss", "node_modules/@sdcorejs/angular/assets/scss/sd-core.scss"],
             "scripts": []
           },
           "configurations": {
