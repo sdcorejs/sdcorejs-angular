@@ -119,7 +119,7 @@ Thứ tự bắt buộc:
 
 **Transaction release fail-closed.** Trước publish phải qua `check:sync`, script/release-contract tests và full Karma coverage của canonical v19. Bốn artifact được build/pack trước (`npm ci --legacy-peer-deps` cho v19/v20/v21; clean `npm ci` cho v22), upload, tải lại và verify hash/manifest/declaration/consumer. Một job publisher không matrix mới publish tuần tự v19 → v20 → v21 dưới `angular19`/`angular20`/`angular21`, rồi v22 cuối cùng dưới `latest`; không rebuild và không gọi `npm dist-tag add`.
 
-**Auth npm = trusted publishing (OIDC), không còn `NPM_TOKEN`.** Release jobs dùng exact Node `22.22.3`; publisher cài exact `npm@11.5.1`, có `permissions: contents: read` + `id-token: write`, dùng `registry-url: https://registry.npmjs.org`, và **không set `NODE_AUTH_TOKEN`**. Trusted publisher bên npmjs.com pin theo repo + **tên file workflow**, nên đổi tên `publish-npm.yml` là phải khai lại bên npm.
+**Auth npm = trusted publishing (OIDC), không còn `NPM_TOKEN`.** Release jobs dùng exact Node `22.22.3`; publisher cài exact `npm@11.5.1`, có `permissions: contents: read` + `id-token: write`, dùng job env `NPM_CONFIG_REGISTRY: https://registry.npmjs.org`, và **không set `NODE_AUTH_TOKEN`**. Không truyền `registry-url` cho `setup-node` trong job publisher: action tự tạo token giả và `.npmrc` chứa `_authToken`, làm guard OIDC chặn publish. Trusted publisher bên npmjs.com pin theo repo + **tên file workflow**, nên đổi tên `publish-npm.yml` là phải khai lại bên npm.
 
 ⚠️ **Major digit khoá theo Angular line, không phải semver.** Breaking change KHÔNG tăng được major. Breaking phải ghi rõ mục `### Changed (BREAKING for consumers)` + migration diff trong changelog. Version number một mình không signal được breaking.
 

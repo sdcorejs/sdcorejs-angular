@@ -108,7 +108,7 @@ git push
 
 ### Quy trình deploy npm — qua GitHub Actions (khuyến nghị)
 
-Workflow: `.github/workflows/publish-npm.yml`. Auth qua **npm trusted publishing (OIDC)** — không dùng `NPM_TOKEN`, `NODE_AUTH_TOKEN` hay `npm login` local. Mọi release build/verify/publish job pin exact Node `22.22.3`; publisher cài exact `npm@11.5.1`, dùng `registry-url: https://registry.npmjs.org` và là job duy nhất có `permissions: id-token: write`. Trusted publisher trên npmjs.com pin theo repo + tên file workflow, nên đổi tên `publish-npm.yml` là phải khai báo lại bên npm.
+Workflow: `.github/workflows/publish-npm.yml`. Auth qua **npm trusted publishing (OIDC)** — không dùng `NPM_TOKEN`, `NODE_AUTH_TOKEN` hay `npm login` local. Mọi release build/verify/publish job pin exact Node `22.22.3`; publisher cài exact `npm@11.5.1`, dùng job env `NPM_CONFIG_REGISTRY: https://registry.npmjs.org` và là job duy nhất có `permissions: id-token: write`. Không truyền `registry-url` cho `setup-node` trong job publisher vì action tự tạo token giả cùng `.npmrc` chứa `_authToken`, làm guard OIDC chặn publish. Trusted publisher trên npmjs.com pin theo repo + tên file workflow, nên đổi tên `publish-npm.yml` là phải khai báo lại bên npm.
 
 **Trigger**:
 - Push tag `v<release-suffix>` → tạo đúng bốn version `19.<suffix>` / `20.<suffix>` / `21.<suffix>` / `22.<suffix>`.

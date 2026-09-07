@@ -137,7 +137,12 @@ test('CLI enforces exact runtime, provenance pairing, OIDC and token-free truste
     () => runReleaseCli({ ...base, nodeVersion: 'v22.22.3', argv: [...argv, '--publish'], env: { GITHUB_ACTIONS: 'true' } }),
     /GitHub OIDC environment is unavailable/u,
   );
-  for (const tokenName of ['NODE_AUTH_TOKEN', 'NPM_TOKEN']) {
+  // The workflow must avoid creating setup-node's placeholder, rather than exempt it here.
+  for (const [tokenName, tokenValue] of [
+    ['NODE_AUTH_TOKEN', 'long-lived-token'],
+    ['NPM_TOKEN', 'long-lived-token'],
+    ['NODE_AUTH_TOKEN', 'XXXXX-XXXXX-XXXXX-XXXXX'],
+  ]) {
     await assert.rejects(
       () =>
         runReleaseCli({
@@ -148,7 +153,7 @@ test('CLI enforces exact runtime, provenance pairing, OIDC and token-free truste
             GITHUB_ACTIONS: 'true',
             ACTIONS_ID_TOKEN_REQUEST_URL: 'https://actions.example/oidc',
             ACTIONS_ID_TOKEN_REQUEST_TOKEN: 'oidc-request-token',
-            [tokenName]: 'long-lived-token',
+            [tokenName]: tokenValue,
           },
         }),
       /Long-lived npm credentials are prohibited/u,
@@ -203,6 +208,7 @@ test('CLI validation compiles consumers without publishing and authorized mode d
     ...common,
     argv: [...argv, '--publish', '--require-provenance'],
     env: {
+      NPM_CONFIG_REGISTRY: 'https://registry.npmjs.org',
       GITHUB_ACTIONS: 'true',
       ACTIONS_ID_TOKEN_REQUEST_URL: 'https://actions.example/oidc',
       ACTIONS_ID_TOKEN_REQUEST_TOKEN: 'oidc-request-token',
