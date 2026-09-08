@@ -116,8 +116,8 @@ export function releaseTargets(suffix) {
     workspace: `v${major}`,
     version: `${major}.${suffix}`,
     tag: major === 22 ? 'latest' : `angular${major}`,
-    baselineVersion: `${major === 22 ? 21 : major}.${baselineSuffix}`,
-    baselineMajor: major === 22 ? 21 : major,
+    baselineVersion: `${major === 22 && suffix === '2.5' ? 21 : major}.${baselineSuffix}`,
+    baselineMajor: major === 22 && suffix === '2.5' ? 21 : major,
   }));
 }
 

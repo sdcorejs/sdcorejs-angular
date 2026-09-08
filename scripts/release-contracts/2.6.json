@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "suffix": "2.6",
+  "reviewedSourceSha": "4ce4d7fa9ca819ed82a1af26fffe690d37cd9481",
+  "artifactSource": "Local locked-workspace builds with package versions stamped to 2.6; Node 22.22.3 and npm pack 11.5.1.",
+  "targets": {
+    "19.2.6": {
+      "version": "19.2.6",
+      "baselineVersion": "19.2.5",
+      "exports": {
+        "baseline": "e9230b441276528fdfaee1191da359ae65c850a9059f200e2cbc9154149a8cfc",
+        "candidate": "10a73eb26c3856128552b3c9c4b76269dc15138f95ded4d081a8708a49d3f967"
+      },
+      "files": {
+        "baseline": "a8c58498c39c1b9e61be6c09537dfab064b6ef59efc9290d8671e17cfbb8fd90",
+        "candidate": "037d16e627317dfd79fda800fd94c0c788d70da4996df06f487009ab11de2546"
+      },
+      "publicSurface": {
+        "baseline": "e6ec9acd276f42485283248afeb342b44c15930cfc78c0a560db2fe7e5cbea87",
+        "candidate": "82d5143c5632bc712768cf4a3310e2600aebcc637154ca5518596d71fd6c10d7"
+      }
+    },
+    "20.2.6": {
+      "version": "20.2.6",
+      "baselineVersion": "20.2.5",
+      "exports": {
+        "baseline": "e9230b441276528fdfaee1191da359ae65c850a9059f200e2cbc9154149a8cfc",
+        "candidate": "10a73eb26c3856128552b3c9c4b76269dc15138f95ded4d081a8708a49d3f967"
+      },
+      "files": {
+        "baseline": "542a6f75be06a1b7043392006524c3a81108f76c895d73747a5fdd154f691df3",
+        "candidate": "a13b4695df5c7d65cb3ad304d3abc7350419a5af05844d9972b8d6715461b780"
+      },
+      "publicSurface": {
+        "baseline": "380d199bc7ee2aa4455a81619d86656c64fcee6528f8664cfaa5ce0a729421e0",
+        "candidate": "0b16b75920ccd494e450f660eee13358faa755561a953b5a0f929d535b2fab54"
+      }
+    },
+    "21.2.6": {
+      "version": "21.2.6",
+      "baselineVersion": "21.2.5",
+      "exports": {
+        "baseline": "3986b8034a3d92775d4e72ed101f2b8aa2df57698ee359c20fcd2745dea4de0e",
+        "candidate": "3d95cae9b4b9c4f70cea1cb2e557b203891ab331351f66b0b27823d79a6724e3"
+      },
+      "files": {
+        "baseline": "7ee3fc3253357e14a60e0f72cf6ef109e46b574dc8a4e49c12d71743ec573ee9",
+        "candidate": "6339e8e8f9c883fe95b981b19674167979383ce98bfb82ba858094b7e261897d"
+      },
+      "publicSurface": {
+        "baseline": "cf59fc8e6e9aa4d0ef0b8f94db1bab5f39be05a7cb2984c60b3f8ecba7d30e73",
+        "candidate": "b714abec2aac12b7e96ff488d6d80c628ac20290f5116812b6bf7b9af646642e"
+      }
+    },
+    "22.2.6": {
+      "version": "22.2.6",
+      "baselineVersion": "22.2.5",
+      "exports": {
+        "baseline": "3986b8034a3d92775d4e72ed101f2b8aa2df57698ee359c20fcd2745dea4de0e",
+        "candidate": "3d95cae9b4b9c4f70cea1cb2e557b203891ab331351f66b0b27823d79a6724e3"
+      },
+      "files": {
+        "baseline": "7ee3fc3253357e14a60e0f72cf6ef109e46b574dc8a4e49c12d71743ec573ee9",
+        "candidate": "6339e8e8f9c883fe95b981b19674167979383ce98bfb82ba858094b7e261897d"
+      },
+      "publicSurface": {
+        "baseline": "ac92169c4bd8af5507ff065e0eefc8d21109f512ec63b3c6fd83c5715a14622e",
+        "candidate": "29a41b6dd18b3bc59e2f79331e98ca13d81a30632717cd8e583a60ae19bf2d50"
+      }
+    }
+  }
+}
