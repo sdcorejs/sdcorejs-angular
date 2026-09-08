@@ -1,5 +1,27 @@
 # Reviewed release snapshots
 
+## Release 2.6
+
+`2.6.json` compares each candidate with its own published Angular-line baseline
+(`19.2.5`, `20.2.5`, `21.2.5`, `22.2.5`). The Angular 21 baseline fallback applies
+only to the inception release `22.2.5`.
+
+The candidates were built locally from `4ce4d7fa9ca819ed82a1af26fffe690d37cd9481`
+with package versions set to `*.2.6`, locked workspace dependencies, Node
+`22.22.3`, and `npm pack` `11.5.1`. The only new export is
+`./utilities/read-state`; no existing exports, declaration files or packed files
+are removed. Declaration changes add read-state/retry APIs, upload appearance,
+confirmation icon/input options, table selection helpers and Excel validation
+helpers. The optional autocomplete blur event and optional paginator preserve
+existing call sites. Authored-source changes correspond to the reviewed UI,
+read-state, focus, date-control and notification changes since `v2.5`.
+
+The snapshot must stay repository-owned and reviewed. The publisher still checks
+retained tarball integrity, exact source SHA, peers, engines, dependencies and
+strict consumer compilation independently; it never regenerates the snapshot.
+
+## Release 2.5
+
 The original 2.5 gate assumed that Angular 22 support was the only change since
 2.4, requiring identical exports, declarations, packed paths and authored source.
 Before tagging, PRs [33](https://github.com/sdcorejs/sdcorejs-angular/pull/33),

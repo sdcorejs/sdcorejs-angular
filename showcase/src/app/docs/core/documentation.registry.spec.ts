@@ -9,22 +9,22 @@ const EXPECTED_CATEGORY_COUNTS = {
   directives: 6,
   services: 11,
   'modules-integrations': 10,
-  'pipes-utilities': 9,
+  'pipes-utilities': 10,
 } as const;
 
 describe('documentation registry', () => {
-  it('exposes every latest published document exactly once', () => {
+  it('exposes every document shipped by the current source exactly once', () => {
     const publishedIds = DOC_PAGES.map(page => page.publishedDocId).filter(id => id !== null);
     const localOnlyPages = DOC_PAGES.filter(page => page.publishedDocId === null);
 
-    expect(DOC_PAGES).toHaveSize(98);
-    expect(new Set(publishedIds).size).toBe(98);
+    expect(DOC_PAGES).toHaveSize(99);
+    expect(new Set(publishedIds).size).toBe(99);
     expect(localOnlyPages).toHaveSize(0);
     expect(DOC_CATEGORIES).toHaveSize(7);
     for (const category of DOC_CATEGORIES) {
       expect(getDocPagesByCategory(category)).withContext(category).toHaveSize(EXPECTED_CATEGORY_COUNTS[category]);
     }
-    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(355);
+    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(356);
   });
 
   it('uses unique stable page ids and category/slug pairs', () => {
@@ -46,7 +46,7 @@ describe('documentation registry', () => {
     const exampleIds = DOC_PAGES.flatMap(page => page.examples.map(example => example.id));
 
     expect(new Set(exampleIds).size).toBe(exampleIds.length);
-    expect(exampleIds).toHaveSize(355);
+    expect(exampleIds).toHaveSize(356);
     for (const page of DOC_PAGES) {
       expect(page.examples).toHaveSize(page.demoSectionCount);
       for (const example of page.examples) {
@@ -59,7 +59,7 @@ describe('documentation registry', () => {
   });
 
   it('derives navigation groups and canonical/legacy lookup helpers from the registry', () => {
-    expect(DOC_NAV_GROUPS.map(group => group.pages.length)).toEqual([3, 37, 22, 6, 11, 10, 9]);
+    expect(DOC_NAV_GROUPS.map(group => group.pages.length)).toEqual([3, 37, 22, 6, 11, 10, 10]);
     expect(findDocPage('components', 'button')?.title).toBe('Button');
     expect(findDocPage('directives', 'tooltip')?.publishedDocId).toBe('directives/src/sd-tooltip');
     expect(findDocPage('components', 'generic')?.title).toBe('Form Generic');
@@ -78,7 +78,9 @@ describe('documentation registry', () => {
     expect(findDocPage('components', 'job-progress')?.selector).toBe('sd-job-progress');
     expect(findDocPage('components', 'audit-diff')?.demoSectionCount).toBe(4);
     expect(findDocPage('components', 'breadcrumb')?.demoSectionCount).toBe(3);
-    expect(findDocPage('components', 'data-state')?.demoSectionCount).toBe(5);
+    expect(findDocPage('components', 'data-state')?.demoSectionCount).toBe(6);
+    expect(findDocPage('pipes-utilities', 'read-state')?.publishedDocId).toBe('utilities/read-state/sd-read-state');
+    expect(findDocPage('pipes-utilities', 'read-state')?.importPath).toBe('@sdcorejs/angular/utilities/read-state');
     expect(findDocPage('services', 'missing')).toBeUndefined();
   });
 

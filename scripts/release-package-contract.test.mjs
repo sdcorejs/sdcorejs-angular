@@ -372,17 +372,19 @@ test('release snapshot fingerprints ignore object insertion order but retain all
   assert.notEqual(fingerprintReleaseValue(value), fingerprintReleaseValue({ ...value, a: [...value.a].reverse() }));
 });
 
-test('repository snapshot binds 2.5 to all four exact baselines and does not apply to other releases', () => {
-  const contract = loadReleaseContract('2.5');
-  for (const target of releaseTargets('2.5')) {
-    const snapshot = contract.targets[target.version];
-    assert.equal(snapshot.version, target.version);
-    assert.equal(snapshot.baselineVersion, target.baselineVersion);
-    for (const section of ['exports', 'files', 'publicSurface']) {
-      for (const side of ['baseline', 'candidate']) assert.match(snapshot[section][side], /^[a-f0-9]{64}$/u);
+test('repository snapshots bind reviewed releases to exact baselines without authorizing future releases', () => {
+  for (const suffix of ['2.5', '2.6']) {
+    const contract = loadReleaseContract(suffix);
+    for (const target of releaseTargets(suffix)) {
+      const snapshot = contract.targets[target.version];
+      assert.equal(snapshot.version, target.version);
+      assert.equal(snapshot.baselineVersion, target.baselineVersion);
+      for (const section of ['exports', 'files', 'publicSurface']) {
+        for (const side of ['baseline', 'candidate']) assert.match(snapshot[section][side], /^[a-f0-9]{64}$/u);
+      }
     }
   }
-  assert.equal(loadReleaseContract('2.6'), undefined);
+  assert.equal(loadReleaseContract('2.7'), undefined);
   assert.throws(() => loadReleaseContract('../2.5'));
 });
 
@@ -398,12 +400,12 @@ test('bundle revalidation retains approved snapshots for every artifact and reje
   assert.throws(() => validateReleaseBundle(options), /reviewed publicSurface candidate snapshot/u);
 });
 
-function bundleForPublication() {
-  const targets = releaseTargets('2.5');
+function bundleForPublication(suffix = '2.5') {
+  const targets = releaseTargets(suffix);
   const artifacts = targets.map(artifactFor);
   return {
     plan: validateReleaseBundle({
-      suffix: '2.5',
+      suffix,
       datetimeVersion: '1.0.4',
       sourceSha: '0123456789abcdef0123456789abcdef01234567',
       artifacts,
@@ -465,6 +467,33 @@ test('releaseTargets returns the immutable 19/20/21/22 publish order and final-o
     { major: 21, workspace: 'v21', version: '21.2.5', tag: 'angular21', baselineVersion: '21.2.4', baselineMajor: 21 },
     { major: 22, workspace: 'v22', version: '22.2.5', tag: 'latest', baselineVersion: '21.2.4', baselineMajor: 21 },
   ]);
+});
+
+test('subsequent releases compare each Angular line against its own published baseline', () => {
+  assert.deepEqual(releaseTargets('2.6'), [
+    { major: 19, workspace: 'v19', version: '19.2.6', tag: 'angular19', baselineVersion: '19.2.5', baselineMajor: 19 },
+    { major: 20, workspace: 'v20', version: '20.2.6', tag: 'angular20', baselineVersion: '20.2.5', baselineMajor: 20 },
+    { major: 21, workspace: 'v21', version: '21.2.6', tag: 'angular21', baselineVersion: '21.2.5', baselineMajor: 21 },
+    { major: 22, workspace: 'v22', version: '22.2.6', tag: 'latest', baselineVersion: '22.2.5', baselineMajor: 22 },
+  ]);
+  assert.equal(releaseTargets('2.7').at(-1).baselineVersion, '22.2.6');
+});
+
+test('2.6 publication starts from Angular 22 latest and promotes latest only after all historical lines', async () => {
+  const registry = createRegistryHarness({ tags: { latest: '22.2.5' } });
+  const result = await publishValidatedBundle(bundleForPublication('2.6'), true, registry.adapter);
+  assert.equal(result.initialLatest, '22.2.5');
+  assert.deepEqual([...registry.publishCounts.keys()], ['19.2.6', '20.2.6', '21.2.6', '22.2.6']);
+  assert.deepEqual(registry.tags, {
+    latest: '22.2.6', angular19: '19.2.6', angular20: '20.2.6', angular21: '21.2.6',
+  });
+
+  const wrongLatest = createRegistryHarness({ tags: { latest: '21.2.5' } });
+  await assert.rejects(
+    () => publishValidatedBundle(bundleForPublication('2.6'), true, wrongLatest.adapter),
+    /unexpected initial latest/u,
+  );
+  assert.equal(wrongLatest.publishCounts.size, 0);
 });
 
 test('packed manifests keep historical peers and enforce the v22-only peer and engine contract', () => {
