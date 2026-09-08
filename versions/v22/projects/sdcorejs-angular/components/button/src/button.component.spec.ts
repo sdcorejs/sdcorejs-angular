@@ -287,5 +287,4 @@ describe('SdButton', () => {
       expect(getComputedStyle(filled).backgroundColor).toBe('rgb(43, 51, 66)');
     });
   });
-
 });
