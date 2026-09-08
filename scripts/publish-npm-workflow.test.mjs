@@ -285,6 +285,8 @@ test('postpublish materializes verified v19, clean-installs Showcase and commits
     'test "$(git rev-parse HEAD^)" = "$SOURCE_SHA"',
     'git fetch origin main --no-tags',
     'git merge-base --is-ancestor "$SOURCE_SHA" origin/main',
+    'git restore --worktree -- showcase/src/app/docs/generated/changelog.generated.ts showcase/src/app/docs/generated/example-manifest.generated.ts showcase/src/app/docs/generated/example-sources.generated.ts',
+    'git diff --exit-code',
     'git rebase --onto origin/main "$SOURCE_SHA" HEAD',
     'git push origin HEAD:main',
   ]);
