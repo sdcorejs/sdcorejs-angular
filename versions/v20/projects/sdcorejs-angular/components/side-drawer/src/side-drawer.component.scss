@@ -1,6 +1,6 @@
 .sd-side-drawer {
   --sd-side-drawer-inset: 10px;
-  --sd-side-drawer-radius: var(--sd-overlay-radius, 24px);
+  --sd-side-drawer-radius: var(--sd-overlay-radius, 8px);
   --sd-side-drawer-surface: var(--sd-surface, #fff);
   --sd-side-drawer-border: var(--sd-border, #dde0e5);
   --sd-side-drawer-shadow: 0 6px 18px rgba(15, 23, 42, 0.18), 0 1px 3px rgba(15, 23, 42, 0.12);
@@ -18,7 +18,10 @@
   opacity: 0;
   visibility: hidden;
   transform: translate3d(calc(100% + var(--sd-side-drawer-inset)), 0, 0);
-  transition: all 0.3s ease-in-out;
+  transition:
+    transform 180ms ease,
+    opacity 180ms ease,
+    visibility 180ms ease;
   pointer-events: none;
   overflow: hidden;
   border-radius: var(--sd-side-drawer-radius);
@@ -78,7 +81,9 @@
     cursor: pointer;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
-    transition: background-color 80ms ease, color 80ms ease;
+    transition:
+      background-color 80ms ease,
+      color 80ms ease;
 
     &:hover {
       background: var(--sd-surface-muted);
@@ -173,4 +178,60 @@
   width: 100%;
   height: 100%;
   transition: all 0.3s ease-in-out;
+}
+
+.sd-side-drawer-focus {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.sd-side-drawer-title {
+  font-size: 18px;
+  line-height: 25px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.sd-side-drawer-header,
+.sd-side-drawer-footer {
+  flex-shrink: 0;
+  padding: 20px 24px;
+}
+.sd-side-drawer-content {
+  padding: 0 24px 20px;
+}
+@media (max-width: 600px) {
+  .sd-side-drawer {
+    --sd-side-drawer-inset: 8px;
+  }
+  .sd-side-drawer-header {
+    padding: 16px;
+    gap: 8px;
+  }
+  .sd-side-drawer-content {
+    padding: 0 16px 16px;
+  }
+  .sd-side-drawer-footer {
+    padding: 12px 16px max(12px, env(safe-area-inset-bottom));
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .sd-side-drawer-footer-left,
+  .sd-side-drawer-footer-right {
+    flex-wrap: wrap;
+  }
+  .sd-side-drawer-close-btn {
+    width: 44px;
+    height: 44px;
+  }
+  ::ng-deep .sd-side-drawer-footer button {
+    min-height: 44px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-side-drawer,
+  .sd-side-drawer-backdrop,
+  .sd-side-drawer-close-btn {
+    transition: none;
+  }
 }

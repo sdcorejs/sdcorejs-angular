@@ -40,6 +40,7 @@ export class SdConfirmService {
     message: string,
     option: {
       title?: string;
+      icon?: string;
       yesTitle?: string;
       noTitle?: string;
       yesButtonColor?: Color;
@@ -49,9 +50,14 @@ export class SdConfirmService {
     } = {}
   ) => {
     const dialogRef = this.dialog.open(DialogConfirmComponent, {
-      width: option?.width || '400px',
+      width: option?.width || '440px',
+      panelClass: 'sd-confirm-panel',
+      maxWidth: 'calc(100vw - 32px)',
+      maxHeight: 'calc(100dvh - 32px)',
+      autoFocus: '[data-confirm-cancel] button',
       disableClose: option?.disableBackdropClose ?? true,
       data: {
+        icon: option?.icon,
         title: option?.title || this.#i18n.t('core.confirm.title'),
         message,
         yesTitle: option?.yesTitle || this.#i18n.t('core.confirm.yes'),
@@ -67,10 +73,13 @@ export class SdConfirmService {
     message?: string,
     option?: {
       title?: string;
+      icon?: string;
       yesTitle?: string;
       noTitle?: string;
       required?: boolean;
       maxlength?: number;
+      label?: string;
+      placeholder?: string;
       yesButtonColor?: Color;
       noButtonColor?: Color;
       defaultValue?: string;
@@ -78,9 +87,14 @@ export class SdConfirmService {
     }
   ): Promise<string> => {
     const dialogRef = this.dialog.open(DialogConfirmComponent, {
-      width: '400px',
+      width: '440px',
+      panelClass: 'sd-confirm-panel',
+      maxWidth: 'calc(100vw - 32px)',
+      maxHeight: 'calc(100dvh - 32px)',
+      autoFocus: 'textarea',
       disableClose: option?.disableBackdropClose ?? true,
       data: {
+        icon: option?.icon,
         title: option?.title || this.#i18n.t('core.confirm.title'),
         message,
         yesTitle: option?.yesTitle || this.#i18n.t('core.confirm.yes-short'),
@@ -88,6 +102,8 @@ export class SdConfirmService {
         noButtonColor: option?.noButtonColor || 'secondary',
         yesButtonColor: option?.yesButtonColor || 'primary',
         input: {
+          label: option?.label,
+          placeholder: option?.placeholder,
           maxlength: option?.maxlength || 255,
           required: option?.required,
           defaultValue: option?.defaultValue || '',
@@ -101,6 +117,7 @@ export class SdConfirmService {
     message?: string,
     option?: {
       title?: string;
+      icon?: string;
       yesTitle?: string;
       noTitle?: string;
       required?: boolean;
@@ -115,9 +132,14 @@ export class SdConfirmService {
     }
   ): Promise<string> => {
     const dialogRef = this.dialog.open(DialogConfirmComponent, {
-      width: '400px',
+      width: '440px',
+      panelClass: 'sd-confirm-panel',
+      maxWidth: 'calc(100vw - 32px)',
+      maxHeight: 'calc(100dvh - 32px)',
+      autoFocus: 'first-tabbable',
       disableClose: option?.disableBackdropClose ?? true,
       data: {
+        icon: option?.icon,
         title: option?.title || this.#i18n.t('core.confirm.title'),
         message,
         yesTitle: option?.yesTitle || this.#i18n.t('core.confirm.yes-short'),
@@ -141,6 +163,7 @@ export class SdConfirmService {
     message?: string,
     option?: {
       title?: string;
+      icon?: string;
       yesTitle?: string;
       noTitle?: string;
       required?: boolean;
@@ -156,9 +179,14 @@ export class SdConfirmService {
     }
   ): Promise<string | number | (string | number)[]> => {
     const dialogRef = this.dialog.open(DialogConfirmComponent, {
-      width: '400px',
+      width: '440px',
+      panelClass: 'sd-confirm-panel',
+      maxWidth: 'calc(100vw - 32px)',
+      maxHeight: 'calc(100dvh - 32px)',
+      autoFocus: 'first-tabbable',
       disableClose: option?.disableBackdropClose ?? true,
       data: {
+        icon: option?.icon,
         title: option?.title || this.#i18n.t('core.confirm.title'),
         message,
         yesTitle: option?.yesTitle || this.#i18n.t('core.confirm.yes-short'),
@@ -183,6 +211,7 @@ export class SdConfirmService {
     message?: string,
     option?: {
       title?: string;
+      icon?: string;
 
       yesTitle?: string;
       noTitle?: string;
@@ -197,9 +226,14 @@ export class SdConfirmService {
     }
   ): Promise<string | Date> => {
     const dialogRef = this.dialog.open(DialogConfirmComponent, {
-      width: '400px',
+      width: '440px',
+      panelClass: 'sd-confirm-panel',
+      maxWidth: 'calc(100vw - 32px)',
+      maxHeight: 'calc(100dvh - 32px)',
+      autoFocus: 'first-tabbable',
       disableClose: option?.disableBackdropClose ?? true,
       data: {
+        icon: option?.icon,
         title: option?.title || this.#i18n.t('core.confirm.title'),
         message,
         yesTitle: option?.yesTitle || this.#i18n.t('core.confirm.yes-short'),
@@ -222,6 +256,7 @@ export class SdConfirmService {
     message?: string,
     option?: {
       title?: string;
+      icon?: string;
 
       yesTitle?: string;
       noTitle?: string;
@@ -237,9 +272,14 @@ export class SdConfirmService {
     }
   ): Promise<string | Date> => {
     const dialogRef = this.dialog.open(DialogConfirmComponent, {
-      width: '400px',
+      width: '440px',
+      panelClass: 'sd-confirm-panel',
+      maxWidth: 'calc(100vw - 32px)',
+      maxHeight: 'calc(100dvh - 32px)',
+      autoFocus: 'first-tabbable',
       disableClose: option?.disableBackdropClose ?? true,
       data: {
+        icon: option?.icon,
         title: option?.title || this.#i18n.t('core.confirm.title'),
         message,
         yesTitle: option?.yesTitle || this.#i18n.t('core.confirm.yes-short'),

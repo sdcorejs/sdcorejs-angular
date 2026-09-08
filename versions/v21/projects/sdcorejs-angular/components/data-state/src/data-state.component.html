@@ -1,5 +1,10 @@
+@let _compact = compact();
 @let currentState = state();
 @let template = customTemplate();
+@let _role = role();
+@let _retryable = retryable();
+@let _actionLabel = actionLabel();
+@let currentIcon = effectiveIcon();
 
 @if (currentState === 'success') {
   @if (template) {
@@ -12,28 +17,47 @@
 } @else {
   <section
     class="sd-data-state"
-    [class.sd-data-state--compact]="compact()"
+    [class.sd-data-state--compact]="_compact"
     [class.sd-data-state--full-page]="fullPage()"
+    [class.sd-data-state--with-icon]="!!currentIcon"
     [attr.data-state]="currentState"
-    [attr.role]="role()"
+    [attr.role]="_role"
     [attr.aria-busy]="currentState === 'loading' ? 'true' : null"
-    [attr.aria-live]="role() === 'alert' ? 'assertive' : 'polite'">
-    @if (effectiveIcon(); as currentIcon) {
-      <sd-icon class="sd-data-state__icon" aria-hidden="true" [name]="currentIcon" [fontSet]="fontSet()"></sd-icon>
+    [attr.aria-live]="_role === 'alert' ? 'assertive' : 'polite'">
+    @if (currentIcon) {
+      <span class="sd-data-state__symbol" aria-hidden="true">
+        <sd-icon class="sd-data-state__icon" [name]="currentIcon" [fontSet]="fontSet()" [size]="_compact ? '22px' : '32px'"></sd-icon>
+      </span>
     }
 
     <div class="sd-data-state__title">{{ title() ?? (titleKey() | sdTranslate) }}</div>
     <div class="sd-data-state__message">{{ message() ?? (messageKey() | sdTranslate) }}</div>
 
-    @if (retryable() || actionLabel()) {
+    @if (_retryable || _actionLabel) {
       <div class="sd-data-state__actions">
-        @if (retryable()) {
-          <button type="button" data-state-retry (click)="retry()">
-            {{ retryLabel() || ('core.component.data-state.retry' | sdTranslate) }}
-          </button>
+        @if (_retryable) {
+          <sd-button
+            data-state-retry
+            type="light"
+            color="primary"
+            size="sm"
+            htmlType="button"
+            width="100%"
+            prefixIcon="refresh"
+            fontSet="material-icons-outlined"
+            [title]="retryLabel() || ('core.component.data-state.retry' | sdTranslate)"
+            (click)="retry()"></sd-button>
         }
-        @if (actionLabel(); as label) {
-          <button type="button" data-state-action (click)="action()">{{ label }}</button>
+        @if (_actionLabel; as label) {
+          <sd-button
+            data-state-action
+            type="fill"
+            color="primary"
+            size="sm"
+            htmlType="button"
+            width="100%"
+            [title]="label"
+            (click)="action()"></sd-button>
         }
       </div>
     }

@@ -55,10 +55,20 @@ None — text comes from `title` input. The button is intentionally not slot-bas
 - A rectangular pill button with rounded corners; height varies by `size`
 - `fill` variant: solid background in `color`, white text
 - `light` variant: tinted background (10% alpha of `color`), `color` text — DEFAULT, what most buttons look like
-- `outline` variant: transparent background, 1px border in `color`, `color` text
+- `outline` variant: transparent background, 1px neutral border from the theme, `color` text. Hover uses the Material state layer; border width stays 1px.
 - `text` variant: no background, no border, just text in `color`
-- When `prefixIcon` only and no `title` → square icon-only button (`.c-square` class)
+- A single `prefixIcon` or `suffixIcon` without `title` renders one centered icon in a square footprint (`.c-square`); the corner shape still follows the Material theme.
 - Spinner mode (loading): replaces prefix icon with a small Material spinner
+
+## Theme and compact layout
+
+- Keeps Material 3 corner shape and label typography. No pill-radius override is applied.
+- Icon/text spacing is local to the button: 6px for `sm`, 8px for `md`/`lg`. Prefix, suffix and loading layouts do not depend on global margin utilities.
+- Outline uses `--sd-border-strong` (falling back to Material `--mat-sys-outline`). Disabled text/background use `--sd-disabled-text` / `--sd-disabled-bg` with existing-theme fallbacks. Outlined and text-style disabled actions stay transparent. Theme colors are not faded a second time with button opacity.
+- Keyboard focus shows a 2px primary outline with a 2px offset. Hover preserves the native Material state layer and does not change button dimensions.
+- Loading keeps the existing click suppression and semantic color. Spinner animation respects `prefers-reduced-motion`.
+- Use `fill` + `primary` for the principal action, `outline` + `secondary` for secondary toolbar actions, and `text` for less prominent actions. Existing defaults stay unchanged.
+- Desktop `sm` stays 32px; mobile hosts should keep enough space between controls and allow toolbar wrapping. There is no new `xs` size.
 
 ## Permission gating
 The button itself does NOT enforce permission — wrap with the `*sdPermission` directive:

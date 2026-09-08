@@ -127,14 +127,14 @@ describe('DialogConfirmComponent', () => {
 
   it('renders the title (innerHTML)', () => {
     const { fix } = setup({ title: 'My <em>Title</em>', message: 'msg', yesTitle: 'Y', noTitle: 'N' });
-    const title = fix.nativeElement.querySelector('.T24M');
+    const title = fix.nativeElement.querySelector('.sd-dialog-confirm__title');
     expect(title.textContent).toContain('My');
     expect(title.innerHTML).toContain('<em>Title</em>');
   });
 
   it('falls back to "Confirm" when no title is provided', () => {
     const { fix } = setup({ message: 'msg', yesTitle: 'Y', noTitle: 'N' });
-    expect(fix.nativeElement.querySelector('.T24M').textContent).toContain('Confirm');
+    expect(fix.nativeElement.querySelector('.sd-dialog-confirm__title').textContent).toContain('Confirm');
   });
 
   it('renders icon element when data.icon is set', () => {
@@ -160,9 +160,9 @@ describe('DialogConfirmComponent', () => {
     expect(content.classList).toContain('sd-dialog-confirm__content--radio');
   });
 
-  it('omits icon element when data.icon is absent', () => {
+  it('renders the default icon when data.icon is absent', () => {
     const { fix } = setup({ title: 'T', message: 'M', yesTitle: 'Y', noTitle: 'N' });
-    expect(fix.nativeElement.querySelector('mat-icon')).toBeNull();
+    expect(fix.nativeElement.querySelector('.sd-dialog-confirm__icon')?.getAttribute('data-icon')).toBe('check_circle');
   });
 
   it('omits yes button when yesTitle is absent', () => {

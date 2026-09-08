@@ -19,9 +19,6 @@
       [errorMessage]="step.errorMessage() ?? ''">
       <ng-template matStepLabel>
         <span class="sd-step__label">
-          @if (step.icon(); as ic) {
-            <sd-icon class="sd-step__icon" [name]="ic"></sd-icon>
-          }
           <span class="sd-step__text">{{ step.label() }}</span>
         </span>
       </ng-template>
@@ -31,4 +28,13 @@
       </ng-template>
     </mat-step>
   }
+  <ng-template matStepperIcon="number" let-index="index">
+    @if (steps()[index]?.icon(); as icon) {
+      <sd-icon class="sd-step__icon" [name]="icon" size="18px"></sd-icon>
+    } @else {
+      {{ index + 1 }}
+    }
+  </ng-template>
+  <ng-template matStepperIcon="edit"><sd-icon class="sd-step__icon" name="check" size="18px"></sd-icon></ng-template>
+  <ng-template matStepperIcon="done"><sd-icon class="sd-step__icon" name="check" size="18px"></sd-icon></ng-template>
 </mat-stepper>

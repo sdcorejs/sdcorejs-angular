@@ -1,69 +1,107 @@
-@let _actions = actions();
-@let _selectedTableItems = selectedTableItems();
 @let _autoId = autoId();
-
-<sd-quick-action [opened]="opened()">
-  <div class="d-flex align-items-center" sdMessage>
-    <div class="c-bg-length">
-      <span class="c-length">{{ _selectedTableItems?.length }}</span>
+@let _direct = directActions();
+@let _overflow = overflowActions();
+@if (opened()) {
+  <sd-quick-action opened contained>
+    <div class="sd-selection-message" sdMessage role="status">
+      <span class="sd-selection-icon" aria-hidden="true"><sd-icon name="check_circle_outline" /></span>
+      <span>{{ message() }}</span>
     </div>
-    <div class="c-message">
-      {{ message() }}
-    </div>
-  </div>
-
-  <div class="d-flex align-items-center mr-8" sdAction>
-    @for (action of _actions; track $index) {
-      @if (action.variant === 'normal') {
-        <sd-button
-          [autoId]="_autoId ? _autoId + '-action-' + $index : null"
-          class="ml-4"
-          [tooltip]="action.tooltip"
-          [prefixIcon]="action.icon"
-          [color]="action.color"
-          [type]="action.type || 'light'"
-          [fontSet]="action.fontSet"
-          [title]="action.title"
-          (click)="onClickAction(action)"></sd-button>
-      } @else if (action.variant === 'children') {
-        @let _actionIndex = $index;
-        <sd-button
-          [autoId]="_autoId ? _autoId + '-action-' + _actionIndex : null"
-          class="ml-4"
-          [tooltip]="action.tooltip"
-          [prefixIcon]="action.icon || 'more_vert'"
-          [color]="action.color || 'secondary'"
-          [type]="action.type || 'light'"
-          [fontSet]="action.fontSet"
-          [title]="action.title"
-          [matMenuTriggerFor]="menu">
-        </sd-button>
-        <mat-menu #menu="matMenu">
-          <span>
+    <div class="sd-selection-actions" sdAction>
+      @for (entry of _direct; track entry.index) {
+        @let action = entry.action;
+        @if (action.variant === 'normal') {
+          <sd-button
+            class="sd-selection-direct"
+            size="sm"
+            [autoId]="_autoId ? _autoId + '-action-' + entry.index : null"
+            [tooltip]="action.tooltip"
+            [prefixIcon]="action.icon"
+            [color]="action.color"
+            [type]="action.type || 'light'"
+            [fontSet]="action.fontSet"
+            [title]="action.title"
+            (click)="onClickAction(action)" />
+        } @else {
+          <sd-button
+            class="sd-selection-direct"
+            size="sm"
+            [autoId]="_autoId ? _autoId + '-action-' + entry.index : null"
+            [tooltip]="action.tooltip"
+            [prefixIcon]="action.icon || 'more_horiz'"
+            [color]="action.color || 'secondary'"
+            [type]="action.type || 'light'"
+            [fontSet]="action.fontSet"
+            [title]="action.title"
+            [matMenuTriggerFor]="childrenMenu" />
+          <mat-menu #childrenMenu="matMenu">
             @for (child of action.children; track $index) {
               <button
                 mat-menu-item
-                [attr.data-autoid]="_autoId ? _autoId + '-action-' + _actionIndex + '-' + $index : null"
+                type="button"
+                [attr.data-autoid]="_autoId ? _autoId + '-action-' + entry.index + '-' + $index : null"
                 (click)="onClickAction(child)">
                 @if (child.icon) {
-                  <sd-icon [fontSet]="child.fontSet" class="c-icon" [name]="child.icon"></sd-icon>
+                  <sd-icon class="sd-selection-menu-icon" [fontSet]="child.fontSet" [name]="child.icon" [color]="child.color" />
                 }
-                <span> {{ child.title }}</span>
+                <span>{{ child.title }}</span>
               </button>
             }
-          </span>
+          </mat-menu>
+        }
+      }
+      @if (_overflow.length) {
+        <sd-button
+          class="sd-selection-more"
+          size="sm"
+          prefixIcon="more_horiz"
+          [title]="moreLabel()"
+          color="secondary"
+          type="light"
+          [autoId]="_autoId ? _autoId + '-more-actions' : null"
+          [matMenuTriggerFor]="moreMenu" />
+        <mat-menu #moreMenu="matMenu">
+          @for (entry of _overflow; track entry.index) {
+            @let action = entry.action;
+            @if (action.variant === 'normal') {
+              <button
+                mat-menu-item
+                type="button"
+                [attr.data-autoid]="_autoId ? _autoId + '-action-' + entry.index : null"
+                (click)="onClickAction(action)">
+                @if (action.icon) {
+                  <sd-icon class="sd-selection-menu-icon" [fontSet]="action.fontSet" [name]="action.icon" [color]="action.color" />
+                }
+                <span>{{ action.title }}</span>
+              </button>
+            } @else {
+              <div role="group" [attr.aria-label]="action.title">
+                <div class="sd-selection-menu-heading">{{ action.title }}</div>
+                @for (child of action.children; track $index) {
+                  <button
+                    mat-menu-item
+                    type="button"
+                    [attr.data-autoid]="_autoId ? _autoId + '-action-' + entry.index + '-' + $index : null"
+                    (click)="onClickAction(child)">
+                    @if (child.icon) {
+                      <sd-icon class="sd-selection-menu-icon" [fontSet]="child.fontSet" [name]="child.icon" [color]="child.color" />
+                    }
+                    <span>{{ child.title }}</span>
+                  </button>
+                }
+              </div>
+            }
+          }
         </mat-menu>
       }
-    }
-    <!-- why: thanh này chỉ mở khi CÓ action (xem `opened`), nên nút ✕ luôn đi kèm ít nhất một
-         action — nó là lối thoát nhanh, không còn là nội dung duy nhất của thanh. -->
-    <sd-button
-      [autoId]="_autoId ? _autoId + '-clear-selection' : null"
-      class="ml-4"
-      prefixIcon="close"
-      color="secondary"
-      type="outline"
-      (click)="onClear()"
-      width="35px"></sd-button>
-  </div>
-</sd-quick-action>
+      <button
+        type="button"
+        class="sd-selection-clear"
+        [attr.aria-label]="clearLabel()"
+        [attr.data-autoid]="_autoId ? 'components-button-' + _autoId + '-clear-selection' : null"
+        (click)="onClear()">
+        <sd-icon name="close" aria-hidden="true" />
+      </button>
+    </div>
+  </sd-quick-action>
+}

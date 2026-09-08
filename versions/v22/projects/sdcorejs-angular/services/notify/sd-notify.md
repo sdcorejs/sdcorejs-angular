@@ -272,3 +272,9 @@ Covers:
 - `SdConfirmService` (`@sdcorejs/angular/services/confirm`) — modal alternative for blocking interactions.
 - `ToastContainerComponent` / `ToastComponent` — internal, not exported. Customize via global CSS on the `toast-container` / `toast` selectors.
 - `Utilities.generateUuid` (`@sdcorejs/utils/fns`) — used internally for toast ids.
+
+## Status icon presentation
+
+The status icon uses an outlined SVG (22px) centered in a 32px rounded tile (6px radius), matching the compact data-state presentation. Success, info, warning and error use their existing semantic `--sd-<type>-dark` / `--sd-<type>-light` tokens. The decorative icon is hidden from assistive technology; the visible title and message convey the status. Long messages wrap beside the fixed-size tile.
+
+Notification timing, grouping, actions and sanitized HTML behavior are unchanged. Enter/leave animations continue to respect `prefers-reduced-motion: reduce`.

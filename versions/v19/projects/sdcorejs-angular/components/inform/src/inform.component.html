@@ -7,9 +7,15 @@
     [ngClass]="colorClasses()"
     [attr.data-autoId]="autoId() || null"
     [attr.data-autoid]="autoId() || null">
-
     @if (_effectiveIcon) {
-      <sd-icon class="c-inform-icon c-material-icon" aria-hidden="true" [fontSet]="_fontSet" [name]="_effectiveIcon"></sd-icon>
+      <span class="c-inform-icon-tile" aria-hidden="true"
+        ><sd-icon
+          class="c-inform-icon c-material-icon"
+          size="20px"
+          aria-hidden="true"
+          [fontSet]="_fontSet"
+          [name]="_effectiveIcon"></sd-icon
+      ></span>
     }
 
     @let _actionLabel = actionLabel();
@@ -18,11 +24,7 @@
         <div class="c-inform-title">{{ t }}</div>
       }
       @if (description(); as d) {
-        <div
-          #body
-          class="c-inform-body"
-          [class.is-clamped]="clampLines() !== null"
-          [style.-webkit-line-clamp]="clampLines()">
+        <div #body class="c-inform-body" [class.is-clamped]="clampLines() !== null" [style.-webkit-line-clamp]="clampLines()">
           {{ d }}
         </div>
       }
@@ -37,18 +39,19 @@
           <ng-content select="[sdInformAction]"></ng-content>
         </div>
       } @else if (_actionLabel) {
-        <button type="button" class="c-inform-action c-inform-action-link" (click)="onAction($event)">
-          {{ _actionLabel }}
-        </button>
+        <sd-button
+          class="c-inform-action c-inform-action-link"
+          size="sm"
+          type="light"
+          color="primary"
+          htmlType="button"
+          [title]="_actionLabel"
+          (click)="onAction($event)"></sd-button>
       }
     </div>
 
     @if (closable()) {
-      <button
-        type="button"
-        class="c-inform-close"
-        [attr.aria-label]="'core.common.close' | sdTranslate"
-        (click)="onClose($event)">
+      <button type="button" class="c-inform-close" [attr.aria-label]="'core.common.close' | sdTranslate" (click)="onClose($event)">
         <sd-icon aria-hidden="true" name="close"></sd-icon>
       </button>
     }

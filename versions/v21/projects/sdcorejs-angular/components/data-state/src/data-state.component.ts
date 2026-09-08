@@ -12,6 +12,7 @@ import {
   output,
 } from '@angular/core';
 import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdIcon, SdIconSet } from '@sdcorejs/angular/modules/icon';
 
 export type SdDataStateKind = 'loading' | 'empty' | 'error' | 'forbidden' | 'success';
@@ -36,7 +37,7 @@ export class SdDataStateTemplateDirective {
 }
 
 const DEFAULT_ICON: Readonly<Record<SdDataStateKind, string | null>> = {
-  loading: 'progress_activity',
+  loading: 'autorenew',
   empty: 'inbox',
   error: 'error_outline',
   forbidden: 'lock',
@@ -46,7 +47,7 @@ const DEFAULT_ICON: Readonly<Record<SdDataStateKind, string | null>> = {
 @Component({
   selector: 'sd-data-state',
   standalone: true,
-  imports: [NgTemplateOutlet, SdTranslatePipe, SdIcon],
+  imports: [NgTemplateOutlet, SdTranslatePipe, SdIcon, SdButton],
   templateUrl: './data-state.component.html',
   styleUrl: './data-state.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

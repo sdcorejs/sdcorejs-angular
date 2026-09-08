@@ -37,7 +37,7 @@ import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
 | `[sdFooterLeft]`  | Footer left action group.                           |
 | `[sdFooterRight]` | Footer right action group.                          |
 
-Header/footer padding is `16px`. Body padding is `0`; add your own wrapper when content needs spacing. The footer is hidden when both footer slots are empty.
+Header, body and footer align to 24px horizontal insets (16px on mobile). Body content scrolls, while the footer remains available and wraps on narrow screens. The footer is hidden when both footer slots are empty.
 
 ## Public API
 
@@ -98,3 +98,9 @@ Do not write `document.body.style.overflow` yourself while a drawer is open; the
 - **Escape closes the drawer** (new). Previously "click the backdrop" was the only dismissal besides the close button, and it had no keyboard equivalent at all. Escape is gated on the same `disableBackdropClose` flag: with `[disableBackdropClose]="true"` neither the backdrop click nor Escape dismisses the drawer.
 - The backdrop declares `role="presentation"` instead of `aria-hidden="true"` — it is a decorative click-catcher with no content, and `role="presentation"` is the accurate signal for that.
 - The close button uses an i18n `aria-label` (`core.common.close`, previously the hard-coded English string `"Close"`) and keeps a `:focus-visible` ring.
+
+## Focus and responsive presentation
+
+Each open creates a CDK focus trap around the drawer content. Focus moves inside, Tab/Shift+Tab cycle within it, and closing/destroying the content restores the opener. A rejected beforeClose guard keeps the content and focus trap active. Escape/backdrop behavior still follows disableBackdropClose and beforeClose.
+
+The default radius is 8px, overridable through --sd-overlay-radius. Header/body/footer align at 24px horizontally (16px below 600px); the body scrolls while footer actions remain available. Close/actions are at least 44px on mobile, footer groups wrap, and reduced motion is enforced by the component itself.

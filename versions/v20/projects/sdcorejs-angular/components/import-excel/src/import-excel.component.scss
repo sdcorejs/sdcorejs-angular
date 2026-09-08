@@ -1,123 +1,230 @@
-@use '@angular/material' as mat;
-
-// --- 1. TABLE & STICKY STYLES ---
-.table-responsive {
-  position: relative;
-  min-height: 50vh;
-  height: 50vh;
-  overflow: auto;
-  border: 1px solid #dee2e6;
+:host {
+  display: block;
 }
 
+.sd-import-workspace {
+  min-width: 0;
+  color: var(--sd-text, #24272b);
+}
+.sd-import-entry {
+  padding: 24px 0 32px;
+}
+.sd-import-entry-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 12px;
+}
+.sd-import-file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 16px;
+}
+.sd-import-file-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 36px;
+  height: 36px;
+  border-radius: 10px;
+  color: var(--sd-primary, #005cbb);
+  background: var(--sd-primary-light, #e5effa);
+}
+.sd-import-file-info {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+  strong {
+    font-size: 14px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+  > span {
+    font-size: 12px;
+    color: var(--sd-text-secondary, #62676d);
+  }
+}
+.sd-import-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 16px;
+}
+.sd-import-filter {
+  --filter-color: var(--sd-primary, #005cbb);
+  --filter-bg: var(--sd-primary-light, #e5effa);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid var(--sd-border, #dfe2e7);
+  border-radius: 8px;
+  background: var(--sd-surface, #fff);
+  color: var(--sd-text-secondary, #62676d);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  &--success {
+    --filter-color: var(--sd-success, #2b7d39);
+    --filter-bg: var(--sd-success-light, #e4f3e6);
+  }
+  &--warning {
+    --filter-color: var(--sd-warning-dark, #8a5700);
+    --filter-bg: var(--sd-warning-light, #fff3d8);
+  }
+  &--error {
+    --filter-color: var(--sd-error, #bc3030);
+    --filter-bg: var(--sd-error-light, #fce8e8);
+  }
+  &[aria-pressed='true'] {
+    background: var(--filter-bg);
+    color: var(--filter-color);
+    border-color: var(--filter-color);
+    font-weight: 600;
+  }
+  &:hover {
+    background: var(--filter-bg);
+    color: var(--filter-color);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--sd-primary, #005cbb);
+    outline-offset: 2px;
+  }
+  sd-icon,
+  mat-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+  }
+}
+.sd-import-filter-count {
+  font-variant-numeric: tabular-nums;
+  min-width: 16px;
+  text-align: center;
+}
+.table-responsive {
+  position: relative;
+  max-height: 50vh;
+  overflow: auto;
+  border: 1px solid var(--sd-border, #dfe2e7);
+  border-radius: 8px;
+  &:focus-visible {
+    outline: 2px solid var(--sd-primary, #005cbb);
+    outline-offset: 2px;
+  }
+}
 .sd-table {
   width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 0;
-  font-size: 14px;
-
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
   thead th {
     position: sticky;
     top: 0;
-    background-color: #f8f9fa;
-    border-bottom: 2px solid #dee2e6;
-    border-top: 1px solid #dee2e6;
-    padding: 8px 6px;
+    padding: 10px 8px;
     white-space: nowrap;
-    z-index: 10;
+    z-index: 2;
     font-weight: 600;
-
+    background: var(--sd-surface-variant, #f6f7f9);
+    border-bottom: 1px solid var(--sd-border, #dfe2e7);
     &.c-sticky-left {
-      z-index: 20;
+      z-index: 3;
     }
   }
-
   tbody td {
-    vertical-align: middle;
-    padding: 6px;
-    border-top: 1px solid #dee2e6;
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--sd-border, #e8eaed);
+    vertical-align: top;
   }
-
-  // Striped rows
-  tbody tr:nth-of-type(odd) {
-    background-color: rgba(0, 0, 0, 0.04);
+  tbody tr:last-child td {
+    border-bottom: 0;
   }
-  tbody tr:nth-of-type(even) {
-    background-color: #ffffff;
+  tbody tr {
+    background: var(--sd-surface, #fff);
   }
-
-  // Hover rows
   tbody tr:hover {
-    background-color: #ececec;
-
-    .c-sticky-left {
-      background-color: #ececec;
-    }
-  }
-
-  // Override sticky bg for striped
-  tbody tr:nth-of-type(odd) .c-sticky-left {
-    background-color: #f2f2f2;
-  }
-  tbody tr:nth-of-type(even) .c-sticky-left {
-    background-color: #ffffff;
+    background: var(--sd-surface-variant, #f6f7f9);
   }
 }
-// Cột dính bên trái (Index)
 .c-sticky-left {
   position: sticky;
   left: 0;
-  border-right: 1px solid #dee2e6 !important;
-  border-left: none !important;
-  z-index: 5;
+  background: inherit;
+  z-index: 1;
+  border-right: 1px solid var(--sd-border, #e8eaed);
 }
-
-// --- 2. EMPTY STATE ---
-.empty-state-wrapper {
-  height: 100%;
-  min-height: 40vh; // Chiều cao tối thiểu vùng trống
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  background-color: #f8f9fa;
-  border: 2px dashed #cbd5e0; // Viền nét đứt
+.sd-import-status {
+  min-width: 240px;
+  width: 240px;
+  max-width: 320px;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+}
+.sd-import-issues {
+  summary {
+    cursor: pointer;
+    line-height: 1.5;
+  }
+  summary:focus-visible {
+    outline: 2px solid var(--sd-primary, #005cbb);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+  ul {
+    padding-left: 18px;
+    margin: 8px 0 0;
+  }
+  li + li {
+    margin-top: 6px;
+  }
+}
+.sd-import-issue-count {
+  display: block;
+  color: var(--sd-primary, #005cbb);
+  font-size: 12px;
+  margin-top: 4px;
+}
+.sd-import-issue-label {
+  font-weight: 600;
+}
+.sd-import-error,
+.sd-import-blocked {
+  color: var(--sd-error, #bc3030);
+}
+.sd-import-warning {
+  color: var(--sd-warning-dark, #8a5700);
+}
+.sd-import-valid,
+.sd-import-submitted {
+  color: var(--sd-success, #2b7d39);
+}
+.sd-import-no-results {
+  display: block;
+  padding: 24px 0;
+  border: 1px solid var(--sd-border, #dfe2e7);
   border-radius: 8px;
-  margin: 16px;
-  transition: all 0.2s ease-in-out;
-  color: #6c757d;
-
-  &:hover {
-    background-color: var(--sd-primary-light, #d7e3ff);
-    border-color: var(--sd-primary, #005cbb);
-    color: var(--sd-primary, #005cbb);
-
-    .empty-icon {
-      transform: scale(1.1);
-      color: var(--sd-primary, #005cbb);
-    }
-
-    .text-link {
-      text-decoration: underline;
-    }
-  }
-
-  .empty-icon {
-    font-size: 64px;
-    height: 64px;
-    width: 64px;
-    margin-bottom: 16px;
-    color: #a0aec0;
-    transition: transform 0.2s;
-  }
-
-  h4 {
-    font-weight: 500;
-    margin-bottom: 4px;
-  }
 }
-
-// --- 3. UTILITIES ---
+.sd-import-footer {
+  padding: 12px 0 0;
+  border-top: 1px solid var(--sd-border, #dfe2e7);
+}
+.sd-import-footer p {
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.sd-import-footer-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 .c-ellipsis {
   white-space: nowrap;
   overflow: hidden;
@@ -125,40 +232,61 @@
   display: block;
   padding: 0 4px;
 }
-
 .c-mat-menu {
   border: none;
   min-width: unset;
   padding: 0 8px;
-
-  sd-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-    line-height: 18px;
-    vertical-align: middle;
+}
+.sd-import-paginator {
+  background: transparent;
+}
+.sd-import-paginator ::ng-deep {
+  .mat-mdc-paginator-container {
+    padding: 0;
+    min-height: 48px;
+  }
+  .mat-mdc-paginator-range-label {
+    white-space: nowrap;
+    margin: 0 12px 0 0;
+  }
+}
+@media (max-width: 600px) {
+  .sd-import-entry {
+    padding: 4px 0 16px;
+  }
+  .sd-import-file {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .sd-import-file > sd-button {
+    margin-left: auto;
+  }
+  .sd-import-filters {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sd-import-filter {
+    min-height: 40px;
+    padding: 6px;
+    gap: 5px;
+  }
+  .sd-import-footer-actions sd-button {
+    flex: 1;
+    min-width: 0;
+  }
+  .sd-import-footer-actions ::ng-deep sd-button button {
+    width: 100%;
+    min-height: 40px;
   }
 }
 
-.cursor-pointer {
-  cursor: pointer;
-}
-
-// --- 4. PAGINATOR OVERRIDES ---
-:host ::ng-deep {
-  .mat-paginator-container {
-    min-height: 36px; // Tăng nhẹ để thoáng hơn
-    height: 36px;
-    padding: 0 8px;
+@media (max-width: 400px) {
+  .sd-import-footer-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
   }
-
-  .mat-paginator-range-label {
-    margin: 0 10px 0 10px;
-  }
-
-  .mat-icon-button {
-    width: 32px;
-    height: 32px;
-    line-height: 32px;
+  .sd-import-status {
+    min-width: 180px;
+    width: 180px;
   }
 }

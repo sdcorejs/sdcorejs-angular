@@ -1,3 +1,4 @@
+import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { CdkPortal, DomPortalOutlet, PortalModule } from '@angular/cdk/portal';
 import { CommonModule } from '@angular/common';
 import {
@@ -34,7 +35,7 @@ export type SdSideDrawerBeforeClose = () => boolean | Promise<boolean>;
   styleUrl: './side-drawer.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [SdIcon, CommonModule, PortalModule, SdTranslatePipe],
+  imports: [CdkTrapFocus, SdIcon, CommonModule, PortalModule, SdTranslatePipe],
 })
 export class SdSideDrawer {
   id = `I${Utilities.generateUuid()}`;

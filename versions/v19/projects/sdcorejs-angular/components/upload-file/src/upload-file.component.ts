@@ -115,6 +115,7 @@ export class SdUploadFile<TArgs = unknown> {
   readonly label = input<string>();
   readonly key = input<string | undefined>(undefined);
   readonly description = input<string>();
+  readonly appearance = input<'dropzone' | 'compact'>('dropzone');
   readonly previewWidth = input<string>('50px');
   readonly previewHeight = input<string>('50px');
   readonly align = input<'left' | 'center'>('left');

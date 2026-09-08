@@ -45,12 +45,13 @@ Plain confirm dialog. Resolves with `result.value` on accept, rejects with the s
 confirm(
   message: string,
   option?: {
+    icon?: string;                   // optional; blank uses the contextual default
     title?: string;                  // default: 'Xác nhận'
     yesTitle?: string;               // default: 'Đồng ý'
     noTitle?: string;                // default: 'Hủy bỏ'
     yesButtonColor?: Color;        // default: 'primary'
     noButtonColor?: Color;         // default: 'secondary'
-    width?: string;                  // default: '400px'
+    width?: string;                  // default: '440px'
     disableBackdropClose?: boolean;  // default: true
   }
 ): Promise<unknown>;
@@ -63,10 +64,13 @@ Confirm dialog with a text input. Resolves with the entered string on accept; re
 withInput(
   message?: string,
   option?: {
+    icon?: string;                   // optional; blank uses the contextual default
     title?: string;                  // default: 'Xác nhận'
     yesTitle?: string;               // default: 'Có'
     noTitle?: string;                // default: 'Không'
     required?: boolean;
+    label?: string;                  // label for the textarea
+    placeholder?: string;            // placeholder for the textarea
     maxlength?: number;              // default: 255
     yesButtonColor?: Color;
     noButtonColor?: Color;
@@ -83,6 +87,7 @@ Confirm dialog with a radio group.
 withRadio(
   message?: string,
   option?: {
+    icon?: string;                   // optional; blank uses the contextual default
     title?: string;
     yesTitle?: string;               // default: 'Có'
     noTitle?: string;                // default: 'Không'
@@ -106,6 +111,7 @@ Confirm dialog with a date picker.
 withDate(
   message?: string,
   option?: {
+    icon?: string;                   // optional; blank uses the contextual default
     title?: string;
     yesTitle?: string;               // default: 'Có'
     noTitle?: string;                // default: 'Không'
@@ -128,6 +134,7 @@ Confirm dialog with an `sd-select`.
 withSelect(
   message?: string,
   option?: {
+    icon?: string;                   // optional; blank uses the contextual default
     title?: string;
     yesTitle?: string;               // default: 'Có'
     noTitle?: string;                // default: 'Không'
@@ -152,6 +159,7 @@ Confirm dialog with an `sd-datetime` picker.
 withDatetime(
   message?: string,
   option?: {
+    icon?: string;                   // optional; blank uses the contextual default
     title?: string;
     yesTitle?: string;               // default: 'Có'
     noTitle?: string;                // default: 'Không'
@@ -175,7 +183,7 @@ None. The service depends on `MatDialog` from `@angular/material/dialog`, so the
 - **Default labels are Vietnamese**: "Xác nhận", "Đồng ý", "Hủy bỏ", "Có", "Không". Override with `title` / `yesTitle` / `noTitle`.
 - **Backdrop click**: disabled by default (`disableBackdropClose: true`). Pass `false` to allow clicking outside to dismiss.
 - **Cancel rejects, not resolves**: every method returns a `Promise` that **rejects** (with the string `'CANCEL'`) when the user cancels — wrap calls in `try/catch` (or `.then(...).catch(...)`).
-- **Width**: only `confirm()` exposes `width`. The other variants are fixed at `'400px'`.
+- **Width**: only `confirm()` exposes `width`. The other variants are fixed at `'440px'`.
 - **`Color`** comes from `@sdcorejs/utils/models` (theme color tokens like `'primary'`, `'secondary'`, etc.).
 
 ## Examples
@@ -320,3 +328,33 @@ Covers (15 specs total):
 - `SdNotifyService` (`@sdcorejs/angular/services/notify`) — for non-blocking confirmations / toasts.
 - `MatDialog` (`@angular/material/dialog`) — underlying dialog driver.
 - `Color` (`@sdcorejs/utils/models`) — color token type for the buttons.
+
+## Confirm presentation and icons
+
+All six methods accept `icon?: string`. The icon is always shown in a decorative 40px rounded tile, with an outlined 22px glyph. A custom nonblank icon name takes priority; omitted, empty or whitespace-only values use the defaults below. Custom names are trimmed. Rendering uses SdIcon and respects the configured Material/Lucide icon provider.
+
+| Context (in priority order) | Default icon |
+|---|---|
+| `yesButtonColor: error` | `delete` |
+| `yesButtonColor: warning` | `warning_amber` |
+| Text input | `edit_note` |
+| Date / datetime | `today` |
+| Radio / select | `list` |
+| Other confirmation | `check_circle` |
+
+Icon color follows the primary action tone (primary, success, info, warning or error), with a light background. Dialogs use 18px left-aligned titles, 14px descriptions, 24px padding, an 8px radius and 440px default width. Explicit `confirm(..., { width })` still wins, constrained to the viewport with 16px side gutters. Long content scrolls above the action row.
+
+Actions reuse `SdButton size="sm"`: cancel uses light, accept uses fill, both native type button. Mobile uses 20px padding and actions at least44px tall. Focus begins on cancel for plain confirmation, on the textarea for text input, and on the first focusable control for choices/date/datetime. Backdrop/Escape behavior remains controlled by `disableBackdropClose`; the default remains true. Reduced motion disables the panel transitions.
+
+`withInput()` additionally accepts `label` and `placeholder`. Required whitespace-only text cannot be submitted from the UI; numeric zero remains a valid choice. Returned values and existing Promise semantics are preserved. Default button labels remain backward-compatible; callers should set specific labels such as `yesTitle: 'Xóa bản ghi'` or `yesTitle: 'Gửi lý do'`, with `noTitle: 'Hủy'`.
+
+Example custom icon:
+
+```typescript
+confirm.confirm('Kiểm tra thông tin trước khi tiếp tục.', {
+  icon: 'info_outline',
+  title: 'Xác nhận thông tin',
+  yesTitle: 'Tiếp tục',
+  noTitle: 'Hủy',
+});
+```

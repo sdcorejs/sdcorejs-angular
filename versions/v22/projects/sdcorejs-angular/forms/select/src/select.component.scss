@@ -14,7 +14,9 @@
 }
 
 // why: viewed mode hiển thị sd-view (text only) → không cần đệm trên cho form-field.
-:host(.sd-viewed) { padding-top: 0; }
+:host(.sd-viewed) {
+  padding-top: 0;
+}
 
 // Start: Xử lý loading
 ::ng-deep {
@@ -271,19 +273,31 @@
 // Bóc từng lớp visual quanh trigger của mat-select.
 :host(.sd-bare) ::ng-deep {
   // Mặc định form-field rộng 100% — co về auto để vừa nội dung.
-  .mat-mdc-form-field { width: auto; }
+  .mat-mdc-form-field {
+    width: auto;
+  }
 
   // Wrapper outline/nền: bỏ đệm + nền để text ngồi sát viền chip.
-  .mat-mdc-text-field-wrapper { padding: 0; background: transparent; }
+  .mat-mdc-text-field-wrapper {
+    padding: 0;
+    background: transparent;
+  }
 
   // Flex row chứa prefix/infix/suffix: bỏ đệm, canh giữa dọc.
-  .mat-mdc-form-field-flex { padding: 0; align-items: center; }
+  .mat-mdc-form-field-flex {
+    padding: 0;
+    align-items: center;
+  }
 
   // Viền outline ("notched"): ẩn — chip đã có viền riêng.
-  .mdc-notched-outline { display: none; }
+  .mdc-notched-outline {
+    display: none;
+  }
 
   // Vùng hint/error dưới control: ẩn — chip không có chỗ cho subscript.
-  .mat-mdc-form-field-subscript-wrapper { display: none; }
+  .mat-mdc-form-field-subscript-wrapper {
+    display: none;
+  }
 
   // Infix là vùng input thật: bỏ đệm + min-height, canh giữa, bỏ border.
   .mat-mdc-form-field-infix {
@@ -297,10 +311,17 @@
 
   // Mũi tên dropdown của mat-select: ẩn — chip có affordance × riêng để xóa,
   // và panel mở qua click toàn vùng trigger.
-  .mat-mdc-select-arrow-wrapper { display: none; }
+  .mat-mdc-select-arrow-wrapper {
+    display: none;
+  }
 }
 
 // why: Giữ mỗi giá trị đã chọn trên một dòng, kể cả nhãn có dấu phẩy.
 .sd-select-tooltip {
   white-space: pre-line;
+}
+
+// why: Material yêu cầu có option để mở panel; anchor không hiển thị hay tham gia chọn.
+::ng-deep .sd-select-panel .sd-read-state-anchor {
+  display: none;
 }

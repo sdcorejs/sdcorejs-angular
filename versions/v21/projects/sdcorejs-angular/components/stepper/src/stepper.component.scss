@@ -78,3 +78,73 @@
     background-color: rgba(0, 0, 0, 0.02);
   }
 }
+
+// why: current step is filled; completed is a quiet check; pending remains neutral.
+:host ::ng-deep {
+  .mat-step-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+  }
+  .mat-step-icon-state-done,
+  .mat-step-icon-state-edit {
+    background: color-mix(in srgb, var(--sd-stepper-completed-color) 12%, var(--sd-surface, #fff)) !important;
+    color: var(--sd-stepper-completed-color) !important;
+  }
+  .mat-step-icon-selected {
+    background: var(--sd-stepper-active-bg) !important;
+    color: #fff !important;
+  }
+  .mat-step-header {
+    border-radius: 8px;
+  }
+  .mat-step-header:focus-visible {
+    outline: 2px solid var(--sd-stepper-active-color);
+    outline-offset: -2px;
+  }
+  .mat-step-label {
+    min-width: 0;
+  }
+  .mat-horizontal-content-container {
+    padding-bottom: 16px;
+  }
+  .mat-stepper-horizontal-line {
+    min-width: 16px;
+  }
+  @media (max-width: 600px) {
+    .mat-horizontal-stepper-header-container {
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+    .mat-horizontal-stepper-header {
+      padding: 12px;
+      min-height: 64px;
+      flex-shrink: 0;
+    }
+    .mat-horizontal-content-container {
+      padding: 0 12px 16px;
+    }
+    .mat-vertical-stepper-header {
+      padding: 16px 12px;
+    }
+    .mat-vertical-content-container {
+      margin-left: 28px;
+    }
+    .sd-step__text {
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+    .mat-vertical-stepper-header .mat-step-label {
+      white-space: normal;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mat-stepper-horizontal-line,
+    .mat-horizontal-content-container,
+    .mat-horizontal-stepper-content,
+    .mat-vertical-content-container {
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+}

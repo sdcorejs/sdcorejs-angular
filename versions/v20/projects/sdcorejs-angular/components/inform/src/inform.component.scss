@@ -1,114 +1,129 @@
-@use '../../../assets/scss/core/color.scss' as color;
-@use 'sass:map';
-
-$informColors: 'primary', 'secondary', 'info', 'success', 'warning', 'error';
-
+:host {
+  display: block;
+  min-width: 0;
+}
 .c-inform {
+  --inform-tone: var(--sd-primary);
+  --inform-soft: var(--sd-primary-light);
+  --inform-ink: var(--sd-primary-dark);
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  border: 1px solid transparent;
+  padding: 16px;
   border-radius: 8px;
-  padding: 12px 16px;
-  background: #fff;
-
-  // why: tint nền + viền + chữ theo color token, mượn pattern sd-badge.
-  @each $name in $informColors {
-    &.c-#{$name} {
-      border-color: map.get(color.$color_map, $name);
-      background: map.get(color.$color_map, '#{$name}-light');
-
-      .c-inform-icon,
-      .c-inform-title {
-        color: map.get(color.$color_map, $name);
-      }
+  border: 1px solid color-mix(in srgb, var(--inform-tone) 22%, var(--sd-surface, #fff));
+  background: color-mix(in srgb, var(--inform-soft) 28%, var(--sd-surface, #fff));
+  @each $tone in primary, secondary, info, success, warning, error {
+    &.c-#{$tone} {
+      --inform-tone: var(--sd-#{$tone});
+      --inform-soft: var(--sd-#{$tone}-light);
+      --inform-ink: var(--sd-#{$tone}-dark, var(--sd-#{$tone}));
     }
   }
-
-  .c-inform-icon {
-    flex: 0 0 auto;
-    width: 20px;
-    height: 20px;
-    font-size: 20px;
-    line-height: 20px;
+}
+.c-inform-icon-tile {
+  display: grid;
+  place-items: center;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--inform-soft);
+  color: var(--inform-ink);
+}
+.c-inform-icon {
+  width: 20px;
+  height: 20px;
+  font-size: 20px;
+  line-height: 20px;
+}
+.c-inform-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.c-inform-title {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--sd-text);
+  overflow-wrap: anywhere;
+}
+.c-inform-body {
+  font-size: 14px;
+  line-height: 21px;
+  color: var(--sd-text);
+  overflow-wrap: anywhere;
+  &.is-clamped {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
-
-  .c-inform-content {
-    flex: 1 1 auto;
-    min-width: 0; // cho phép clamp/wrap đúng trong flex
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .c-inform-title {
-    font-weight: 600;
-    font-size: 14px;
-    line-height: 20px;
-  }
-
-  .c-inform-body {
-    font-size: 14px;
-    line-height: 20px;
-    color: map.get(color.$color_map, 'text');
-    overflow-wrap: break-word;
-
-    &.is-clamped {
-      display: -webkit-box;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-  }
-
-  .c-inform-toggle,
-  .c-inform-action-link {
-    align-self: flex-start;
-    margin-top: 4px;
-    padding: 0;
-    border: none;
-    background: none;
-    cursor: pointer;
-    font-size: 14px;
-    line-height: 20px;
-  }
-
-  // why: action + toggle luôn dùng màu link xanh cố định (info), không theo color inform;
-  // không dùng primary vì primary hay bị custom theme.
-  .c-inform-toggle,
-  .c-inform-action-link {
-    color: map.get(color.$color_map, 'info');
-  }
-
-  .c-inform-action-link:hover {
+}
+.c-inform-action {
+  margin-top: 8px;
+  align-self: flex-start;
+}
+.c-inform-toggle {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  color: var(--sd-primary-dark);
+  cursor: pointer;
+  &:hover {
     text-decoration: underline;
   }
-
-  // why: hover mới hiện nền xám + chuyển đỏ, mượn pattern .sd-clear-btn (form.scss).
+}
+.c-inform-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--sd-text-secondary);
+  cursor: pointer;
+  &:hover {
+    background: var(--sd-black100, #f3f4f6);
+    color: var(--sd-text);
+  }
+  sd-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+    line-height: 18px;
+  }
+}
+button:focus-visible {
+  outline: 2px solid var(--sd-primary);
+  outline-offset: 2px;
+}
+@media (max-width: 600px) {
+  .c-inform {
+    padding: 12px;
+    gap: 10px;
+  }
   .c-inform-close {
-    flex: 0 0 auto;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    padding: 0;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    color: map.get(color.$color_map, 'text-secondary');
-    transition: background-color 80ms ease, color 80ms ease;
-
-    &:hover {
-      background: rgba(0, 0, 0, 0.06);
-      color: map.get(color.$color_map, 'error');
-    }
-
-    sd-icon {
-      width: 18px;
-      height: 18px;
-      font-size: 18px;
-      line-height: 18px;
-    }
+    flex-basis: 44px;
+    width: 44px;
+    height: 44px;
+    margin-top: -6px;
+    margin-right: -6px;
+  }
+  .c-inform-toggle {
+    min-height: 44px;
+  }
+  :host ::ng-deep .c-inform-action button {
+    min-height: 44px;
   }
 }

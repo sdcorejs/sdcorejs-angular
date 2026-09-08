@@ -256,4 +256,36 @@ describe('SdButton', () => {
       expect(btn.getAttribute('data-loading')).toBe('true');
     });
   });
+  describe('theme and icon layout', () => {
+    it('renders a suffix-only action once and replaces it while loading', () => {
+      setInput(fixture, 'suffixIcon', 'more_vert');
+      expect(fixture.nativeElement.querySelectorAll('sd-icon').length).toBe(1);
+      setInput(fixture, 'loading', true);
+      expect(fixture.nativeElement.querySelectorAll('sd-icon').length).toBe(0);
+      expect(fixture.nativeElement.querySelector('mat-spinner')).not.toBeNull();
+    });
+
+    it('updates outline and disabled colors when the containing theme changes', () => {
+      setInput(fixture, 'type', 'outline');
+      setInput(fixture, 'color', 'secondary');
+      setInput(fixture, 'title', 'Export');
+      const host = fixture.nativeElement as HTMLElement;
+      const button = host.querySelector('button')!;
+      host.style.setProperty('--sd-border-strong', 'rgb(92, 101, 120)');
+      expect(getComputedStyle(button).borderTopColor).toBe('rgb(92, 101, 120)');
+      host.style.setProperty('--sd-border-strong', 'rgb(190, 201, 220)');
+      expect(getComputedStyle(button).borderTopColor).toBe('rgb(190, 201, 220)');
+      host.style.setProperty('--sd-disabled-text', 'rgb(151, 162, 183)');
+      host.style.setProperty('--sd-disabled-bg', 'rgb(43, 51, 66)');
+      setInput(fixture, 'disabled', true);
+      expect(getComputedStyle(button).color).toBe('rgb(151, 162, 183)');
+      expect(getComputedStyle(button).opacity).toBe('1');
+      expect(getComputedStyle(button).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+      setInput(fixture, 'type', 'fill');
+      const filled = host.querySelector('button')!;
+      expect(getComputedStyle(filled).color).toBe('rgb(151, 162, 183)');
+      expect(getComputedStyle(filled).backgroundColor).toBe('rgb(43, 51, 66)');
+    });
+  });
+
 });

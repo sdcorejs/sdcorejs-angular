@@ -1,67 +1,96 @@
-<div mat-dialog-title class="">
-  @if (data.icon) {
-    <sd-icon [name]="data.icon"></sd-icon>
-  }
-  <span class="T24M" [innerHtml]="data.title || 'Confirm'"></span>
-</div>
 <div mat-dialog-content class="sd-dialog-confirm__content" [class.sd-dialog-confirm__content--radio]="data.radio">
-  <div class="T14R mb-4" [innerHtml]="data.message"></div>
-  @if (data.input) {
-    <sd-textarea [placeholder]="data.input.placeholder" [(model)]="value" [rows]="5" [maxlength]="data.input.maxlength!" />
-  }
-  @if (data.select) {
-    <sd-select
-      [placeholder]="data.select.placeholder"
-      [items]="data.select.items"
-      [valueField]="data.select.valueField"
-      [displayField]="data.select.displayField"
-      [multiple]="data.select.multiple"
-      [(model)]="value"
-      [required]="data.select.required">
-    </sd-select>
-  }
-  @if (data.date) {
-    <sd-date
-      [placeholder]="data.date.placeholder"
-      [(model)]="value"
-      type="date"
-      [min]="data.date.min!"
-      [max]="data.date.max!"
-      [required]="data.date.required">
-    </sd-date>
-  }
-  @if (data.datetime) {
-    <sd-datetime
-      [placeholder]="data.datetime.placeholder"
-      [(model)]="value"
-      [min]="data.datetime.min!"
-      [max]="data.datetime.max!"
-      [showSeconds]="data.datetime.showSeconds"
-      [required]="data.datetime.required">
-    </sd-datetime>
-  }
-  @if (data.radio) {
-    <sd-radio
-      [items]="data.radio.items"
-      [valueField]="data.radio.valueField"
-      [displayField]="data.radio.displayField"
-      [display]="data.radio.display || 'column'"
-      [(model)]="value"
-      [required]="data.radio.required">
-    </sd-radio>
+  <div class="sd-dialog-confirm__header">
+    <span class="sd-dialog-confirm__icon" aria-hidden="true" [attr.data-icon]="resolvedIcon" [attr.data-tone]="iconTone">
+      <sd-icon [name]="resolvedIcon" size="22px"></sd-icon>
+    </span>
+    <div class="sd-dialog-confirm__copy">
+      <h2 mat-dialog-title class="sd-dialog-confirm__title" [innerHtml]="data.title || 'Confirm'"></h2>
+      @if (data.message) {
+        <div class="sd-dialog-confirm__message" [innerHtml]="data.message"></div>
+      }
+    </div>
+  </div>
+  @if (hasFields) {
+    <div class="sd-dialog-confirm__fields">
+      @if (data.input) {
+        <sd-textarea
+          [label]="data.input.label"
+          [placeholder]="data.input.placeholder"
+          [(model)]="value"
+          [rows]="3"
+          [required]="data.input.required"
+          [maxlength]="data.input.maxlength!" />
+      }
+      @if (data.select) {
+        <sd-select
+          [placeholder]="data.select.placeholder"
+          [items]="data.select.items"
+          [valueField]="data.select.valueField"
+          [displayField]="data.select.displayField"
+          [multiple]="data.select.multiple"
+          [(model)]="value"
+          [required]="data.select.required">
+        </sd-select>
+      }
+      @if (data.date) {
+        <sd-date
+          [placeholder]="data.date.placeholder"
+          [(model)]="value"
+          type="date"
+          [min]="data.date.min!"
+          [max]="data.date.max!"
+          [required]="data.date.required">
+        </sd-date>
+      }
+      @if (data.datetime) {
+        <sd-datetime
+          [placeholder]="data.datetime.placeholder"
+          [(model)]="value"
+          [min]="data.datetime.min!"
+          [max]="data.datetime.max!"
+          [showSeconds]="data.datetime.showSeconds"
+          [required]="data.datetime.required">
+        </sd-datetime>
+      }
+      @if (data.radio) {
+        <sd-radio
+          [items]="data.radio.items"
+          [valueField]="data.radio.valueField"
+          [displayField]="data.radio.displayField"
+          [display]="data.radio.display || 'column'"
+          [(model)]="value"
+          [required]="data.radio.required">
+        </sd-radio>
+      }
+    </div>
   }
 </div>
-<div mat-dialog-actions align="end">
+<div mat-dialog-actions align="end" class="sd-dialog-confirm__actions">
   @if (data.noTitle) {
-    <sd-button type="text" [color]="data.noButtonColor || 'secondary'" [title]="data.noTitle" (click)="onCancel()"></sd-button>
+    <sd-button
+      data-confirm-cancel
+      size="sm"
+      type="light"
+      htmlType="button"
+      [color]="data.noButtonColor || 'secondary'"
+      [title]="data.noTitle"
+      (click)="onCancel()"></sd-button>
   }
   @if (data.yesTitle) {
     <sd-button
-      class="ml-8"
+      data-confirm-accept
+      size="sm"
       type="fill"
+      htmlType="button"
       [color]="data.yesButtonColor || 'primary'"
-      [disabled]="required && (value === undefined || value === null || value === '' || (value.length !== undefined && value.length === 0))"
-      cdkFocusInitial
+      [disabled]="
+        required &&
+        (value === undefined ||
+          value === null ||
+          value === '' ||
+          (data.input && !value.trim()) ||
+          (value.length !== undefined && value.length === 0))
+      "
       [title]="data.yesTitle"
       (click)="onAccept()"></sd-button>
   }

@@ -53,7 +53,7 @@ Column types: `'string' | 'number' | 'bool' | 'date' | 'time' | 'datetime' | 'va
 ## Public methods
 - `open()` — resets state and shows the modal.
 - `close()` — closes the modal.
-- `upload()` — programmatically triggers the file picker (also wired to the "Tải lên" footer button).
+- `upload()` — programmatically triggers the file picker (also wired to the "Chọn tệp Excel" and "Đổi tệp" buttons).
 - `accept()` — invokes `option.accept` with current valid rows and the source `File`.
 - `setValidation(validations: SdImportExcelValidation[])` — apply server-side validation results back onto rows (for delayed/asynchronous re-validation).
 - `view('ALL' | 'SUCCESS' | 'WARNING' | 'ERROR')` — filter the preview table.
@@ -64,14 +64,13 @@ Column types: `'string' | 'number' | 'bool' | 'date' | 'time' | 'datetime' | 'va
 None — UI is fully driven by `option`. The component already wraps its own `<sd-modal>`.
 
 ## Visual cues
-- A modal titled "Nhập dữ liệu Excel" (or `option.title`)
-- Top toolbar: 4 small buttons — "Xem tất cả" (refresh icon), success count (green), warning count (yellow), error count (red); each clickable to filter
-- Body: striped/bordered HTML table; first column is a sticky `#` row index showing an `<sd-badge>` whose color reflects row state, second column is the validation message ("Dữ liệu hợp lệ" in green, or red error HTML), then one column per `option.columns[]`
-- Cells are tinted yellow (warning) or red (error) when that field has an issue, with the message in a tooltip
-- Empty state: a centered cloud-download icon + "Chưa có dữ liệu tải lên — Nhấn vào đây để tải tệp mẫu" — clicking generates the template file
-- Footer-left: "Tải lên" (file_upload icon, info color) — opens file picker
-- Footer-right: "Tải về" (export of current rows) + "Xác nhận & Lưu" (primary, disabled until at least one valid row and zero errors)
-- Pagination at the bottom (no page-size selector, with first/last buttons)
+- Before a file is read, a compact `sd-data-state` introduces the Excel template and row limit. "Chọn tệp Excel" opens the picker; the separate "Tải mẫu" button downloads the template. No empty grid or paginator is rendered.
+- After reading, the filename and row count appear above labelled All / Valid / Warnings / Errors filters. The active filter has a visible selected style and `aria-pressed`.
+- The preview retains sticky headers, row index badges, field formatting and validation highlights. Each row's expandable status lists all error and warning messages, including cross-row validation. Native details/summary supports touch and keyboard.
+- A filter with no matching rows shows a separate empty state and "Xem tất cả" action; it does not ask the user to upload again.
+- Pagination uses 10 rows per page with previous/next controls. The initial view is computed before the paginator is created.
+- The footer explains how many erroneous rows must be fixed. Warning-only rows remain importable. After submitting, the UI says data was submitted for processing, without claiming the caller's asynchronous operation succeeded.
+- On narrow screens filters use two columns, controls wrap, and only the preview grid scrolls horizontally. The initial guidance stays outside that scroll area. This is local Import Excel layout; shared modal/drawer styling is unchanged.
 
 ## Examples
 

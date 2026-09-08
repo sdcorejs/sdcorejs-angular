@@ -1,23 +1,14 @@
+import { SdButton } from '@sdcorejs/angular/components/button';
 import { JsonPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdStep, SdStepper } from '@sdcorejs/angular/components/stepper';
 
 @Component({
   selector: 'app-stepper-demo',
   standalone: true,
-  imports: [
-    DemoPageComponent,
-    DemoSectionComponent,
-    SdStepper,
-    SdStep,
-    FormsModule,
-    ReactiveFormsModule,
-    MatButtonModule,
-    JsonPipe,
-  ],
+  imports: [SdButton, DemoPageComponent, DemoSectionComponent, SdStepper, SdStep, FormsModule, ReactiveFormsModule, JsonPipe],
   templateUrl: './stepper-demo.component.html',
   styleUrls: ['./stepper-demo.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -71,7 +62,7 @@ export class StepperDemoComponent {
   readonly errorState = signal<'error' | undefined>('error');
 
   toggleError() {
-    this.errorState.update((s) => (s === 'error' ? undefined : 'error'));
+    this.errorState.update(s => (s === 'error' ? undefined : 'error'));
   }
 
   // -------- 6. Custom labelPosition --------

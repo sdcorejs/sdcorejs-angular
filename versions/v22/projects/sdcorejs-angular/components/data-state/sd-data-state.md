@@ -63,3 +63,11 @@ Import `SdDataStateTemplateDirective` and use the `state`, `retry`, and `action`
 Error and forbidden defaults use `role="alert"` with assertive live announcements. Loading and empty defaults use `role="status"`; loading also exposes `aria-busy="true"`. Actions are native buttons with visible labels. Loading animation is removed when the user prefers reduced motion.
 
 This UI component is separate from `@sdcorejs/angular/utilities/data-state`, which contains data-state utilities rather than presentation.
+
+## Presentation and motion
+
+Icons use a soft rounded background: 56px tile / 32px icon in regular layout, 32px tile / 22px icon in compact layout. Compact presentation places the icon beside left-aligned title, message and actions; regular remains centered. Loading uses primary colors; empty uses warning colors; error/forbidden use error colors. Colors resolve through the current theme.
+
+Loading uses `autorenew` with a 1s linear rotation; the tile stays still. Reduced motion disables rotation. Rendering continues through `SdIcon`, preserving configured Material/Lucide icon sets. Retry uses `SdButton` with `size="sm"`, `type="light"`, `color="primary"`; the secondary action uses `type="fill"`. Both use `htmlType="button"` and emit one void event.
+
+Select, autocomplete and server tables expose read state/retry via their own public APIs. See [read-state](../../utilities/read-state/sd-read-state.md); this component remains presentation-only.

@@ -1,4 +1,4 @@
-﻿# `<sd-quick-action>`
+# `<sd-quick-action>`
 
 **Type**: Component
 **Selector**: `sd-quick-action`
@@ -8,7 +8,7 @@
 **Change detection**: `OnPush`
 
 ## One-line purpose
-Floating bottom toolbar that slides up to reveal a message (left) and optional action buttons (right). Designed for "selection action" patterns — e.g. when the user selects rows in `<sd-table>`, this bar appears at the bottom showing "N selected" + bulk action buttons.
+Message/action toolbar, floating by default, that slides up to reveal a message (left) and optional action buttons (right). Designed for "selection action" patterns — e.g. when the user selects rows in `<sd-table>`, this bar appears at the bottom showing "N selected" + bulk action buttons.
 
 ## When to use
 - Bulk-action toolbar for table row selection (current canonical use: `<sd-table>`'s selector slot)
@@ -16,7 +16,7 @@ Floating bottom toolbar that slides up to reveal a message (left) and optional a
 - Sticky undo / clipboard / multi-select toolbars
 
 ## When NOT to use
-- ❌ For an inline message+action row inside a card body → use a plain `<div class="d-flex align-items-center gap-16">` with `<sd-button>`.
+- For an inline message/action row, use `contained` to reserve space inside the owning component.
 - ❌ For a popover menu / dropdown → the component has no anchor logic; use `<sd-button>` + `mat-menu` or your own overlay.
 - ❌ For a top banner / system notification → use `<sd-notify>` (toast service) or build a banner component.
 - ❌ For modals → use `<sd-modal>`.
@@ -38,7 +38,7 @@ Floating bottom toolbar that slides up to reveal a message (left) and optional a
 None.
 
 ## Public API
-None. The component is driven entirely by the `opened` input — no imperative methods. (Previously had `open()` / `close()`; those were removed in the signal refactor since no consumer used them.)
+None. The component is driven entirely by the `opened` and `contained` inputs — no imperative methods. (Previously had `open()` / `close()`; those were removed in the signal refactor since no consumer used them.)
 
 ## Content projection (slots)
 | Slot selector | Purpose |
@@ -48,26 +48,20 @@ None. The component is driven entirely by the `opened` input — no imperative m
 
 ## Examples
 
-### 1. Canonical use — bulk actions in a table
+### 1. Contained selection actions
 ```html
-<!-- Inside sd-table's selector-action component -->
-<sd-quick-action [opened]="hasSelection() && actions().length > 0">
-  <div class="d-flex align-items-center" sdMessage>
-    <div class="c-bg-length"><span class="c-length">{{ selected().length }}</span></div>
-    <div class="c-message">{{ message() }}</div>
-  </div>
-  <div class="d-flex align-items-center" sdAction>
-    @for (action of actions(); track action.title) {
-      <sd-button class="ml-4" [title]="action.title" (click)="onAction(action)"></sd-button>
-    }
-    <sd-button class="ml-4" prefixIcon="close" type="outline" (click)="onClear()"></sd-button>
-  </div>
-</sd-quick-action>
+@if (hasSelection()) {
+  <sd-quick-action opened contained>
+    <span sdMessage>Đã chọn {{ selected().length }}</span>
+    <div sdAction>
+      <sd-button size="sm" title="Xử lý" (click)="process()"></sd-button>
+      <sd-button size="sm" title="Bỏ chọn" (click)="onClear()"></sd-button>
+    </div>
+  </sd-quick-action>
+}
 ```
 
-**Gate `opened` on the actions, not just on the selection.** A bar carrying a count and a lone `×` restates what the row checkboxes already show while floating over the content the user is trying to read — `<sd-table>` and `<sd-tree>` both keep it closed when the selection resolves to zero runnable actions, and `<sd-tree-select>` relies on that to keep its picker modal clean.
-
-A message-only bar is still legitimate when the message *is* the payload (example 2 below); the rule above is about selection bars specifically.
+Table places this toolbar above its own pagination footer and groups extra actions under More. Default floating notices and undo toasts retain their existing positioning.
 
 ### 2. Message-only floating notice
 ```html
@@ -87,8 +81,8 @@ The empty `[sdAction]` slot is handled by `:has()` + `:empty` CSS rules — the 
 ```
 
 ## Anti-patterns
-- ❌ **Stacking multiple `<sd-quick-action>`s** — they all use `position: fixed` at the same bottom slot, so they'll overlap. Only ONE should be open at a time per page.
-- ❌ **Using it inline inside a card** — the `position: fixed` will pull it out of normal flow to the bottom of the viewport. Use a plain flex row instead for inline cases.
+- ❌ **Stacking multiple `<sd-quick-action>`s** — default floating instances use `position: fixed` at the same bottom slot, so they'll overlap. Only ONE should be open at a time per page.
+- ❌ **Using the default floating mode for an inline card toolbar** — enable `contained` so it stays within its owner.
 - ❌ **Triggering `.open()` imperatively** — those methods were removed. Bind `[opened]` to a signal / variable instead.
 - ❌ **Putting very wide content in `[sdMessage]`** — the toolbar caps at `min(90vw, 720px)`. Long text will wrap (or be cut by your own `text-overflow: ellipsis`). Keep messages concise.
 - ❌ **Forgetting `sdMessage` / `sdAction` attributes** — content without those selectors falls into the default slot, but neither slot has a default rendering. Content is dropped silently.

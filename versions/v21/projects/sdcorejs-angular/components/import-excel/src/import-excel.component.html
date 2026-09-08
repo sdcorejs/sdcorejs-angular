@@ -1,66 +1,88 @@
 @if (option) {
-  <sd-modal [title]="option.title || ('core.component.import-excel.title' | sdTranslate)" (sdClosed)="onClosed()" #modal>
-    <div class="d-flex align-items-center mb-12" style="min-height: 32px">
-      @if (excelItems.length) {
-        <div class="d-flex">
-          <sd-button class="mr-2" (click)="view('ALL')" icon="cached" [title]="'core.component.import-excel.see-all' | sdTranslate" size="sm" type="outline"></sd-button>
-
-          <sd-button
-            class="mr-2"
-            (click)="view('SUCCESS')"
-            icon="done"
-            title="{{ numberOfSuccess }}"
-            [tooltip]="'core.component.import-excel.valid-rows' | sdTranslate"
-            size="sm"
-            color="success">
-          </sd-button>
-
-          <sd-button
-            class="mr-2"
-            (click)="view('WARNING')"
-            icon="warning"
-            title="{{ numberOfWarning }}"
-            [tooltip]="'core.component.import-excel.error-rows' | sdTranslate"
-            size="sm"
-            color="warning">
-          </sd-button>
-
-          <sd-button
-            (click)="view('ERROR')"
-            icon="error"
-            title="{{ numberOfError }}"
-            color="error"
-            [tooltip]="'core.component.import-excel.warning-rows' | sdTranslate"
-            size="sm">
-          </sd-button>
+  <sd-modal
+    [title]="option.title || ('core.component.import-excel.title' | sdTranslate)"
+    width="min(1120px, calc(100vw - 32px))"
+    (sdClosed)="onClosed()"
+    #modal>
+    <div class="sd-import-workspace" [attr.aria-busy]="uploading">
+      @if (uploading) {
+        <sd-data-state state="loading" [title]="'core.component.import-excel.loading' | sdTranslate" message="" />
+      } @else if (!excelItems.length) {
+        <div class="sd-import-entry">
+          <sd-data-state
+            state="empty"
+            icon="upload_file"
+            [title]="'core.component.import-excel.title' | sdTranslate"
+            [message]="'core.component.import-excel.choose-hint' | sdTranslate: { limit: option.limit || 1000 }" />
+          <div class="sd-import-entry-actions">
+            <sd-button
+              data-import-action="choose"
+              (click)="upload()"
+              prefixIcon="upload_file"
+              [title]="'core.component.import-excel.choose-file' | sdTranslate"
+              color="primary"
+              type="fill"
+              size="sm" />
+            <sd-button
+              data-import-action="template"
+              (click)="downloadTemplate()"
+              prefixIcon="download"
+              [title]="'core.component.import-excel.template' | sdTranslate"
+              color="secondary"
+              type="text"
+              size="sm"
+              [loading]="isDownloadTemplate" />
+          </div>
         </div>
-      }
-    </div>
+      } @else {
+        <div class="sd-import-file">
+          <span class="sd-import-file-icon" aria-hidden="true"><sd-icon name="description" /></span>
+          <div class="sd-import-file-info">
+            <strong>{{ file?.name || option.fileName || ('core.component.import-excel.title' | sdTranslate) }}</strong>
+            <span>{{ 'core.component.import-excel.row-count' | sdTranslate: { count: excelItems.length } }}</span>
+          </div>
+          <sd-button
+            (click)="upload()"
+            prefixIcon="upload_file"
+            [title]="'core.component.import-excel.replace-file' | sdTranslate"
+            color="secondary"
+            type="text"
+            size="sm" />
+        </div>
 
-    <div class="sd-box border rounded">
-      <div class="sd-box-body p-0">
-        <div class="table-responsive">
-          <table class="sd-table">
-            <thead>
-              <tr>
-                <th class="text-center c-sticky-left" style="width: 50px">#</th>
-                @if (filteredItems.length) {
-                  <th class="text-center" style="min-width: 250px; width: 250px">{{ 'core.component.import-excel.status' | sdTranslate }}</th>
-                }
-                @for (column of option.columns; track column.field) {
-                  @if (column | columnHidden) {
-                    <th [ngStyle]="{ 'min-width': column.width || '300px', width: column.width || '300px' }" [matTooltip]="column.title">
-                      <span class="c-ellipsis">
-                        {{ column.title }}
-                      </span>
-                    </th>
+        <div class="sd-import-filters" role="group" [attr.aria-label]="'core.component.import-excel.status' | sdTranslate">
+          @for (filter of filters; track filter.value) {
+            <button
+              type="button"
+              class="sd-import-filter"
+              [class]="'sd-import-filter sd-import-filter--' + filter.value.toLowerCase()"
+              [attr.data-import-filter]="filter.value"
+              [attr.aria-pressed]="showing === filter.value"
+              (click)="view(filter.value)">
+              <sd-icon [name]="filter.icon" aria-hidden="true" />
+              <span>{{ filter.label | sdTranslate }}</span
+              ><span class="sd-import-filter-count">{{ filterCount(filter.value) }}</span>
+            </button>
+          }
+        </div>
+
+        @if (viewItems.length) {
+          <div class="table-responsive" tabindex="0" role="region" [attr.aria-label]="'core.component.import-excel.preview' | sdTranslate">
+            <table class="sd-table">
+              <thead>
+                <tr>
+                  <th class="text-center c-sticky-left" style="width: 50px">#</th>
+                  <th class="sd-import-status">{{ 'core.component.import-excel.status' | sdTranslate }}</th>
+                  @for (column of option.columns; track column.field) {
+                    @if (column | columnHidden) {
+                      <th [ngStyle]="{ 'min-width': column.width || '300px', width: column.width || '300px' }" [matTooltip]="column.title">
+                        <span class="c-ellipsis">{{ column.title }}</span>
+                      </th>
+                    }
                   }
-                }
-              </tr>
-            </thead>
-
-            <tbody>
-              @if (viewItems.length) {
+                </tr>
+              </thead>
+              <tbody>
                 @for (item of viewItems; track item.meta.excelIndex) {
                   <tr>
                     <td class="text-center c-sticky-left px-4">
@@ -71,22 +93,43 @@
                         [warning]="!!item.meta.warningMessages.length && !item.meta.errorMessages.length"
                         [error]="!!item.meta.errorMessages.length" />
                     </td>
-
-                    <td style="min-width: 250px; width: 250px">
-                      <div
-                        class="text-wrap"
-                        [innerHTML]="
-                          item.meta.errorMessages[0] || item.meta.warningMessages[0] || ('<span class=\'text-success\'>' + ('core.component.import-excel.valid-data' | sdTranslate) + '</span>')
-                        "></div>
+                    <td class="sd-import-status">
+                      @let messages = validationMessages(item);
+                      @let issueCount = messages.errors.length + messages.warnings.length;
+                      @if (issueCount) {
+                        <details class="sd-import-issues">
+                          <summary>
+                            <span [innerHTML]="item.meta.errorMessages[0] || item.meta.warningMessages[0]"></span>
+                            <span class="sd-import-issue-count">{{
+                              'core.component.import-excel.issue-count' | sdTranslate: { count: issueCount }
+                            }}</span>
+                          </summary>
+                          <ul>
+                            @for (message of messages.errors; track $index) {
+                              <li class="sd-import-error">
+                                <span class="sd-import-issue-label">{{ 'core.component.import-excel.filter-error' | sdTranslate }}:</span>
+                                <span [innerHTML]="message"></span>
+                              </li>
+                            }
+                            @for (message of messages.warnings; track $index) {
+                              <li class="sd-import-warning">
+                                <span class="sd-import-issue-label">{{ 'core.component.import-excel.filter-warning' | sdTranslate }}:</span>
+                                <span [innerHTML]="message"></span>
+                              </li>
+                            }
+                          </ul>
+                        </details>
+                      } @else {
+                        <span class="sd-import-valid">{{ 'core.component.import-excel.valid-data' | sdTranslate }}</span>
+                      }
                     </td>
-
                     @for (column of option.columns; track column.field) {
                       @if (column | columnHidden) {
                         <td
                           class="align-middle"
                           [ngClass]="{
                             'bg-warning-light': item.meta.warning[column.field] && !item.meta.error[column.field],
-                            'bg-error-light': item.meta.error[column.field]
+                            'bg-error-light': item.meta.error[column.field],
                           }"
                           [matTooltip]="item.meta.error[column.field] || item.meta.warning[column.field]"
                           [ngStyle]="{ 'min-width': column.width || '300px' }"
@@ -94,30 +137,22 @@
                           <div class="c-ellipsis">
                             @if (column.type !== 'array') {
                               <span [innerHTML]="item | columnTransform: column | async"></span>
-                            }
-
-                            @if (column.type === 'array') {
+                            } @else {
                               @let arrayItems = item.data[column.field]?.split(column.divideString);
-
                               <div class="d-flex align-items-center justify-content-between">
                                 <span>{{ arrayItems?.length || 0 }} {{ column.unitString }}</span>
-
                                 @if (arrayItems?.length) {
                                   <button
                                     mat-icon-button
                                     [matMenuTriggerFor]="menu"
                                     class="c-mat-menu"
+                                    [attr.aria-label]="column.title"
                                     style="width: 24px; height: 24px; line-height: 24px">
-                                    <sd-icon style="font-size: 18px" name="open_in_new"></sd-icon>
+                                    <sd-icon style="font-size: 18px" name="open_in_new" />
                                   </button>
-
-                                  <!-- why: bỏ aria-hidden="true" — panel này CHÍNH LÀ nội dung của
-                                       menu (danh sách giá trị); ẩn nó đi thì menu mở ra rỗng với
-                                       screen reader. role="group" mô tả đúng và giữ panel không
-                                       nhận tabindex; stopPropagation chỉ để menu không tự đóng. -->
                                   <mat-menu #menu="matMenu">
                                     <div
-                                      class="px-3 py-2"
+                                      class="px-3 py-2 text-wrap"
                                       role="group"
                                       style="max-width: 300px; max-height: 250px; overflow: auto"
                                       (click)="$event.stopPropagation()"
@@ -136,62 +171,54 @@
                     }
                   </tr>
                 }
-              } @else {
-                <tr>
-                  <td [attr.colspan]="option.columns.length + 2" class="p-0 border-0 bg-white">
-                    <!-- why: bỏ aria-hidden="true" — đây vừa là THÔNG BÁO trạng thái rỗng vừa là
-                         control tải file mẫu. aria-hidden xoá cả thông báo lẫn control khỏi
-                         accessibility tree. Nay role="button" + tabindex="0" + Enter/Space; live
-                         region riêng cho spinner tải mẫu (tiến trình bất đồng bộ). -->
-                    <div
-                      class="empty-state-wrapper"
-                      role="button"
-                      tabindex="0"
-                      [attr.aria-label]="'core.component.import-excel.download-template-tooltip' | sdTranslate"
-                      (click)="downloadTemplate()"
-                      (keydown.enter)="onDownloadTemplateKeydown($event)"
-                      (keydown.space)="onDownloadTemplateKeydown($event)"
-                      [matTooltip]="'core.component.import-excel.download-template-tooltip' | sdTranslate">
-                      <sd-icon class="empty-icon" name="cloud_download"></sd-icon>
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <sd-data-state
+            class="sd-import-no-results"
+            state="empty"
+            compact
+            [title]="'core.component.import-excel.no-filter-results' | sdTranslate"
+            [message]="'core.component.import-excel.no-filter-results-hint' | sdTranslate"
+            [actionLabel]="'core.component.import-excel.see-all' | sdTranslate"
+            (sdAction)="view('ALL')" />
+        }
+        <mat-paginator
+          class="sd-import-paginator"
+          [hidden]="!filteredItems.length"
+          [length]="filteredItems.length"
+          [pageSize]="10"
+          hidePageSize />
 
-                      <h4>{{ 'core.component.import-excel.no-data-upload' | sdTranslate }}</h4>
-                      <span class="text-small text-link"> {{ 'core.component.import-excel.click-here-template' | sdTranslate }} </span>
-
-                      @if (isDownloadTemplate) {
-                        <div class="mt-3" role="status" aria-live="polite" [attr.aria-label]="'core.component.import-excel.loading' | sdTranslate">
-                          <mat-spinner diameter="24" mode="indeterminate"></mat-spinner>
-                        </div>
-                      }
-                    </div>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
+        <div class="sd-import-footer">
+          @if (numberOfError) {
+            <p class="sd-import-blocked" role="status">
+              {{ 'core.component.import-excel.blocked-errors' | sdTranslate: { count: numberOfError } }}
+            </p>
+          } @else if (isUploaded) {
+            <p class="sd-import-submitted" role="status">{{ 'core.component.import-excel.submitted' | sdTranslate }}</p>
+          }
+          <div class="sd-import-footer-actions">
+            <sd-button
+              (click)="export()"
+              prefixIcon="download"
+              [disabled]="!filteredItems.length"
+              [title]="'core.component.import-excel.download' | sdTranslate"
+              size="sm"
+              color="secondary"
+              type="text" />
+            <sd-button
+              data-import-action="accept"
+              (click)="accept()"
+              [title]="'core.component.import-excel.confirm-save' | sdTranslate"
+              [disabled]="(numberOfSuccess === 0 && numberOfWarning === 0) || numberOfError > 0 || isUploaded"
+              color="primary"
+              type="fill"
+              size="sm" />
+          </div>
         </div>
-      </div>
-
-      <div class="sd-box-footer border-top">
-        <div class="d-flex align-items-center justify-content-end">
-          <mat-paginator [length]="filteredItems.length || 0" hidePageSize showFirstLastButtons></mat-paginator>
-        </div>
-      </div>
-    </div>
-    <sd-button sdFooterLeft (click)="upload()" prefixIcon="file_upload" [title]="'core.component.import-excel.upload' | sdTranslate" size="sm" color="info" [loading]="uploading">
-    </sd-button>
-    <div class="d-flex align-items-center" sdFooterRight>
-      @if (filteredItems.length) {
-        <sd-button class="mr-4" (click)="export()" prefixIcon="get_app" [title]="'core.component.import-excel.download' | sdTranslate" size="sm" color="success" type="outline">
-        </sd-button>
       }
-      <sd-button
-        (click)="accept()"
-        [title]="'core.component.import-excel.confirm-save' | sdTranslate"
-        [disabled]="(numberOfSuccess === 0 && numberOfWarning === 0) || numberOfError > 0 || isUploaded"
-        color="primary"
-        type="fill"
-        size="sm">
-      </sd-button>
     </div>
   </sd-modal>
 }

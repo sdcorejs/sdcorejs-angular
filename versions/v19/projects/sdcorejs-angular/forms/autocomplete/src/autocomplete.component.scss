@@ -15,7 +15,9 @@
 }
 
 // why: viewed mode hiển thị sd-view (text only) → bỏ đệm trên.
-:host(.sd-viewed) { padding-top: 0; }
+:host(.sd-viewed) {
+  padding-top: 0;
+}
 
 :host ::ng-deep {
   // Form field color
@@ -114,13 +116,20 @@
   }
 }
 
-
 .sd__option--add {
   position: sticky;
   bottom: 0;
-  background-color: #fff;
+  background-color: var(--sd-light);
   z-index: 10;
-  color: rgba(0, 0, 0, 0.87);
+  color: var(--sd-black500);
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 0;
+  font: inherit;
+  text-align: left;
   cursor: pointer !important;
 }
 
@@ -142,4 +151,9 @@
   position: absolute;
   right: 5px;
   top: 5px;
+}
+
+// why: Material yêu cầu option để giữ panel mở; anchor không được render thành kết quả rỗng giả.
+::ng-deep .sd-autocomplete-panel .sd-read-state-anchor {
+  display: none;
 }

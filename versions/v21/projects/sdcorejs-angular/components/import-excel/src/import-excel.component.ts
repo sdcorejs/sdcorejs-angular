@@ -1,3 +1,4 @@
+import { SdDataState } from '@sdcorejs/angular/components/data-state';
 import { ChangeDetectorRef, Component, Input, OnDestroy, OnInit, ViewChild, inject, output } from '@angular/core';
 
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
@@ -26,6 +27,7 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   templateUrl: './import-excel.component.html',
   styleUrl: './import-excel.component.scss',
   imports: [
+    SdDataState,
     SdIcon,
     CommonModule,
     FormsModule,
@@ -58,15 +60,40 @@ export class SdImportExcel implements OnInit, OnDestroy {
   hasDescription = false;
 
   showing: 'ALL' | 'SUCCESS' | 'WARNING' | 'ERROR' = 'ALL';
+  readonly filters = [
+    { value: 'ALL', label: 'core.component.import-excel.filter-all', icon: 'list_alt' },
+    { value: 'SUCCESS', label: 'core.component.import-excel.filter-success', icon: 'check_circle_outline' },
+    { value: 'WARNING', label: 'core.component.import-excel.filter-warning', icon: 'warning_amber' },
+    { value: 'ERROR', label: 'core.component.import-excel.filter-error', icon: 'error_outline' },
+  ] as const;
+
+  filterCount = (value: 'ALL' | 'SUCCESS' | 'WARNING' | 'ERROR'): number => {
+    if (value === 'SUCCESS') return this.numberOfSuccess;
+    if (value === 'WARNING') return this.numberOfWarning;
+    if (value === 'ERROR') return this.numberOfError;
+    return this.excelItems.length;
+  };
+
+  // why: callback có thể trả cùng thông báo nhiều lần; chỉ gộp phần hiển thị, giữ nguyên kết quả validation.
+  protected validationMessages = (item: SdImportExcelItem) => ({
+    errors: [...new Set(item.meta.errorMessages)],
+    warnings: [...new Set(item.meta.warningMessages)],
+  });
+
   filteredItems: SdImportExcelItem[] = [];
   viewItems: SdImportExcelItem[] = [];
   numberOfSuccess = 0;
   numberOfError = 0;
   numberOfWarning = 0;
   file?: File;
-  #paginator!: MatPaginator;
+  #paginator?: MatPaginator;
   #paginatorSub?: Subscription;
-  @ViewChild(MatPaginator) set paginator(paginator: MatPaginator) {
+  @ViewChild(MatPaginator) set paginator(paginator: MatPaginator | undefined) {
+    if (!paginator) {
+      this.#paginatorSub?.unsubscribe();
+      this.#paginator = undefined;
+      return;
+    }
     if (paginator && this.#paginator !== paginator) {
       this.#paginator = paginator;
       this.#paginatorSub?.unsubscribe(); // Clear cũ
@@ -110,11 +137,14 @@ export class SdImportExcel implements OnInit, OnDestroy {
     this.numberOfError = 0;
     this.numberOfWarning = 0;
     this.showing = 'ALL';
+    this.file = undefined;
+    this.isUploaded = false;
   };
 
   #reload = () => {
-    const pageIndex = this.#paginator.pageIndex;
-    const pageSize = this.#paginator.pageSize;
+    const pageIndex = this.#paginator?.pageIndex ?? 0;
+    // why: lần đọc tệp đầu tiên chưa render paginator; dùng cùng pageSize của preview.
+    const pageSize = this.#paginator?.pageSize || 10;
     this.filteredItems = this.excelItems.filter(item => {
       const { errorMessages, warningMessages } = item.meta;
       if (this.showing === 'SUCCESS') {
@@ -196,7 +226,7 @@ export class SdImportExcel implements OnInit, OnDestroy {
           });
       }
 
-      this.#paginator.pageIndex = 0;
+      if (this.#paginator) this.#paginator.pageIndex = 0;
       this.#reload();
       this.ref.detectChanges();
 
@@ -400,7 +430,7 @@ export class SdImportExcel implements OnInit, OnDestroy {
 
   view = (showing: 'ALL' | 'SUCCESS' | 'WARNING' | 'ERROR' = 'ALL') => {
     this.showing = showing;
-    this.#paginator.pageIndex = 0;
+    if (this.#paginator) this.#paginator.pageIndex = 0;
     this.#reload();
   };
 

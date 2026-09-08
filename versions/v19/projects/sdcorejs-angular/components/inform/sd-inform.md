@@ -102,3 +102,10 @@ Applied when `icon` is falsy and `hideIcon` is `false`:
 - `<sd-badge>` — short inline status / label indicator
 - `NotifyService` — transient toast notifications
 - `<sd-modal>` / `ConfirmService` — blocking confirmation dialogs
+
+## Presentation refresh
+
+- Status icons sit in a decorative 32px rounded tile. Borders/backgrounds use quiet theme tints; title and body use text tokens. SdIcon respects the configured Material/Lucide renderer.
+- A blank custom icon uses the contextual default; hideIcon still removes the tile.
+- actionLabel renders SdButton size sm, type light, with native type button; sdAction, sdClosed, projected actions and line-clamp behavior are preserved.
+- Below 600px, close/action targets are at least 44px and long text wraps.

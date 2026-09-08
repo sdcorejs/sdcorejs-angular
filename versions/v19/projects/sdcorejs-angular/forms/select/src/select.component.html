@@ -1,3 +1,6 @@
+@let _loading = loading();
+@let _readState = readState();
+@let _hideReadError = hideReadError();
 @let _selectedItems = selectedItems();
 @let _tooltip = tooltip();
 @let _label = label();
@@ -155,7 +158,7 @@
                   autocomplete="off"
                   class="c-search-input"
                   [attr.aria-label]="'core.form.select.search' | sdTranslate"
-                  (keydown)="$event.stopPropagation()" />
+                  (keydown)="focusReadRetry($event); $event.stopPropagation()" />
               </div>
             </div>
           }
@@ -178,14 +181,22 @@
               (keydown.enter)="toggleSelectAll(); $event.preventDefault()"
               (keydown.space)="toggleSelectAll(); $event.preventDefault()"
               (keydown)="$event.stopPropagation()">
-              <mat-pseudo-checkbox class="mat-mdc-option-pseudo-checkbox" [state]="_selectAllState" aria-hidden="true"></mat-pseudo-checkbox>
+              <mat-pseudo-checkbox
+                class="mat-mdc-option-pseudo-checkbox"
+                [state]="_selectAllState"
+                aria-hidden="true"></mat-pseudo-checkbox>
               <span class="mdc-list-item__primary-text">{{ 'core.form.select.selectAll' | sdTranslate }}</span>
             </div>
           }
 
+          @if (!_loading && _readState.status === 'error') {
+            <!-- why: MatSelect cần option trực tiếp để giữ panel mở khi chỉ có lỗi. -->
+            <mat-option disabled class="sd-read-state-anchor" aria-hidden="true"></mat-option>
+          }
+          <ng-container [ngTemplateOutlet]="readRegion"></ng-container>
           @let _filteredItems = filteredItems();
           @if (_filteredItems) {
-            @if (!_filteredItems.length && !loading()) {
+            @if (!_filteredItems.length && !_loading && _readState.status !== 'error') {
               <mat-option class="sd-empty" disabled>
                 <img class="sd-image-data-empty" alt="empty-image" style="width: 95px" />
               </mat-option>
@@ -219,7 +230,7 @@
             }
           }
 
-          @if (loading()) {
+          @if (_loading) {
             <mat-option disabled class="sd-loading-option">
               <mat-spinner diameter="24"></mat-spinner>
             </mat-option>
@@ -327,14 +338,19 @@
                   autocomplete="off"
                   class="c-search-input"
                   [attr.aria-label]="'core.form.select.search' | sdTranslate"
-                  (keydown)="$event.stopPropagation()" />
+                  (keydown)="focusReadRetry($event); $event.stopPropagation()" />
               </div>
             </div>
           }
 
+          @if (!_loading && _readState.status === 'error') {
+            <!-- why: MatSelect cần option trực tiếp để giữ panel mở khi chỉ có lỗi. -->
+            <mat-option disabled class="sd-read-state-anchor" aria-hidden="true"></mat-option>
+          }
+          <ng-container [ngTemplateOutlet]="readRegion"></ng-container>
           @let _filteredItems = filteredItems();
           @if (_filteredItems) {
-            @if (!_filteredItems.length && !loading()) {
+            @if (!_filteredItems.length && !_loading && _readState.status !== 'error') {
               <mat-option class="sd-empty" disabled>
                 <img class="sd-image-data-empty" alt="empty-image" style="width: 95px" />
               </mat-option>
@@ -369,7 +385,7 @@
             }
           }
 
-          @if (loading()) {
+          @if (_loading) {
             <mat-option disabled class="sd-loading-option">
               <mat-spinner diameter="24"></mat-spinner>
             </mat-option>
@@ -410,3 +426,28 @@
     }
   </div>
 }
+
+<ng-template #readRegion>
+  <!-- why: VALUE/SEARCH giữ lỗi độc lập; trong lúc kênh khác đang đọc chỉ hiển thị loading. -->
+  @if (!_loading && _readState.status === 'error') {
+    <!-- why: nút retry nằm ngoài mat-option để không trở thành một lựa chọn/form value. -->
+    @if (!_hideReadError) {
+      <div
+        class="sd-read-state-region"
+        role="presentation"
+        (mousedown)="$event.preventDefault()"
+        (click)="$event.stopPropagation()"
+        (keydown)="onReadRegionKeydown($event)">
+        <sd-data-state state="error" compact retryable (sdRetry)="retryRead()">
+          @if (dataStateTemplate(); as custom) {
+            <ng-template sdDataStateTemplate let-current let-retry="retry" let-action="action">
+              <ng-container
+                [ngTemplateOutlet]="custom.template"
+                [ngTemplateOutletContext]="{ $implicit: current, state: current, retry: retry, action: action }"></ng-container>
+            </ng-template>
+          }
+        </sd-data-state>
+      </div>
+    }
+  }
+</ng-template>

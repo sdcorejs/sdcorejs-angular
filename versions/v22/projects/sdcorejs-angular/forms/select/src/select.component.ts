@@ -32,6 +32,8 @@ import { MatSelect, MatSelectChange, MatSelectModule } from '@angular/material/s
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { SdView } from '@sdcorejs/angular/components/view';
+import { SdDataState, SdDataStateTemplateDirective } from '@sdcorejs/angular/components/data-state';
+import { cloneReadRequest, combineReadStates, SdReadChannel, SdSearchReadState } from '@sdcorejs/angular/utilities/read-state';
 import { SdTooltipDirective } from '@sdcorejs/angular/directives';
 import { SdItemDefDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
@@ -43,6 +45,7 @@ import {
   sdFormControlState,
   SdInlineErrorValidator,
   SdSearch,
+  SdSearchReq,
   SdSelectionData,
   SdViewed,
   SdViewedInput,
@@ -57,9 +60,16 @@ import { ArrayUtilities, StringUtilities, Utilities } from '@sdcorejs/utils/fns'
 import { NestedKeyOf, Size } from '@sdcorejs/utils/models';
 
 import { combineLatest, timer } from 'rxjs';
-import { debounce, map, startWith, switchMap, tap } from 'rxjs/operators';
+import { debounce, filter, map, shareReplay, startWith, switchMap, tap } from 'rxjs/operators';
 import { SdSelectFooterActionDirective, SdSelectFooterActionWhenFn } from './select-footer-action.directive';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+
+interface SelectReadRequest {
+  loader: SdSearch;
+  args: SdSearchReq;
+  key: string;
+  valid: () => boolean;
+}
 
 @Component({
   selector: 'sd-select',
@@ -69,6 +79,8 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   standalone: true,
   host: { '[class.sd-bare]': 'isInline()', '[class.sd-viewed]': 'isViewed() || isInline()', '[class.sd-has-label]': '!!label()' },
   imports: [
+    SdDataState,
+    SdDataStateTemplateDirective,
     SdTooltipDirective,
     SdIcon,
     CommonModule,
@@ -187,6 +199,12 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   });
 
   hideInlineError = input(false, { transform: booleanAttribute });
+  readonly hideReadError = input(false, { transform: booleanAttribute });
+  readonly dataStateTemplate = contentChild(SdDataStateTemplateDirective);
+  readonly sdReadStateChange = output<SdSearchReadState>();
+  readonly #valueRead = new SdReadChannel('VALUE', () => this.#emitReadState());
+  readonly #searchRead = new SdReadChannel('SEARCH', () => this.#emitReadState());
+  readonly readState = computed(() => combineReadStates(this.#valueRead.state(), this.#searchRead.state()));
   required = input(false, { transform: booleanAttribute });
   disabled = input(false, { transform: booleanAttribute });
   /** Display mode: `false` edit · `true` static view · `'inline'` view + click-to-edit (bare editor). */
@@ -284,6 +302,13 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   #cache: Record<string, any[]> = {};
   #allItem: Record<string, any> = {};
   #searchRequestId = 0;
+  #destroyed = false;
+  #searchDebouncing = false;
+  #failedValue?: SelectReadRequest;
+  #failedSearch?: SelectReadRequest;
+  #pendingValue?: { request: SelectReadRequest; result: Promise<any[] | undefined> };
+  #pendingSearch?: { request: SelectReadRequest; result: Promise<any[] | undefined> };
+  #valueCache: Record<string, any[]> = {};
   #hashedValue?: string;
 
   // [NÂNG CẤP]: Xử lý Unwrap (Mở hộp) Signal lồng nhau nếu có
@@ -297,7 +322,14 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   });
 
   // Thay vì toObservable(this.items), ta observe cái actualItems đã được unwrap
-  #items$ = toObservable(this.actualItems);
+  #items$ = toObservable(
+    computed(() => ({
+      items: this.actualItems(),
+      checksum: this.cacheChecksum(),
+      valueField: this.valueField(),
+      displayField: this.displayField(),
+    }))
+  ).pipe(map(context => context.items));
   #valueModel$ = toObservable(this.valueModel);
 
   filteredItems = signal<T[]>([]);
@@ -462,6 +494,29 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   #destroyRef = inject(DestroyRef);
 
   constructor() {
+    // why: CDK dispatch keydown ở body capture; bắt Tab sớm hơn nhưng chỉ trong control/panel này.
+    this.#el.nativeElement.ownerDocument.addEventListener('keydown', this.focusReadRetry, true);
+    this.#destroyRef.onDestroy(() => {
+      this.#destroyed = true;
+      this.#el.nativeElement.ownerDocument.removeEventListener('keydown', this.focusReadRetry, true);
+      this.#valueRead.invalidate();
+      this.#searchRead.invalidate();
+      ++this.#searchRequestId;
+    });
+    effect(() => {
+      this.actualItems();
+      this.valueModel();
+      this.valueField();
+      this.displayField();
+      this.cacheChecksum();
+      untracked(() => {
+        if ((this.#failedValue && !this.#failedValue.valid()) || (this.#pendingValue && !this.#pendingValue.request.valid())) {
+          this.#failedValue = undefined;
+          this.#pendingValue = undefined;
+          this.#valueRead.invalidate();
+        }
+      });
+    });
     effect(() => {
       const val = this.normalizedValue();
       untracked(() => {
@@ -522,20 +577,38 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
     const cleanItems$ = this.#items$.pipe(
       tap(() => {
         this.#cache = {};
+        this.#allItem = {};
+        this.#valueCache = {};
+        this.#failedValue = this.#failedSearch = undefined;
+        this.#pendingValue = this.#pendingSearch = undefined;
+        this.#valueRead.invalidate();
+        this.#searchRead.invalidate();
+        ++this.#searchRequestId;
         this.inputControl.setValue('');
       }),
       map(items => {
         if (!items) return [];
         if (Array.isArray(items)) return items.filter(e => e !== null && e !== undefined);
         return items;
-      })
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
     );
 
     const search$ = this.inputControl.valueChanges.pipe(
       startWith(''),
-      tap(searchText => this.searchText.set(searchText?.toString() || '')),
+      tap(searchText => {
+        const text = searchText?.toString() || '';
+        if (text !== this.searchText()) {
+          ++this.#searchRequestId;
+          this.#failedSearch = undefined;
+          this.#pendingSearch = undefined;
+          this.#searchRead.invalidate();
+        }
+        this.searchText.set(text);
+      }),
       tap(() => {
         if (typeof this.actualItems() === 'function' && this.focused()) {
+          this.#searchDebouncing = true;
           this.loading.set(true);
           this.#ref.markForCheck();
         }
@@ -585,10 +658,8 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
           return flag2 - flag1;
         });
       }),
-      tap(() => {
-        this.loading.set(false);
-        this.#ref.markForCheck();
-      })
+      filter((items): items is any[] => items !== undefined),
+      tap(() => this.#syncReadLoading())
     );
 
     const selectedItems$ = combineLatest([cleanItems$, this.#valueModel$]).pipe(
@@ -596,7 +667,11 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
         const vField = this.valueField();
         const dField = this.displayField();
 
-        if (val === undefined || val === null || val === '') return [];
+        if (val === undefined || val === null || val === '') {
+          this.#failedValue = undefined;
+          this.#valueRead.invalidate();
+          return [];
+        }
 
         const values = Array.isArray(val) ? val : [val];
         if (!vField) return values;
@@ -613,36 +688,13 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
             }
           );
         });
-      })
+      }),
+      filter((items): items is any[] => items !== undefined),
+      // why: selectedItems và display cùng dùng một request VALUE, kể cả khi retry.
+      shareReplay({ bufferSize: 1, refCount: true })
     );
 
-    const filteredItems$ = allItems$.pipe(
-      map(allItems => {
-        const limit = this.limit();
-        const val = this.valueModel();
-        if (!this.multiple() || !Array.isArray(val) || val.length === 0) {
-          return ArrayUtilities.paging(allItems, limit);
-        }
-
-        // multiple mode: keep ALL selected items (for checkmarks) + limit unselected items
-        // why: if selected.length >= limit, paging would show only selected items → user can't pick new ones
-        const vField = this.valueField();
-        const selectedSet = new Set(val.map(String));
-        const selected: T[] = [];
-        const unselected: T[] = [];
-
-        for (const item of allItems) {
-          const itemVal = vField ? String(this.itemValue(item) ?? '') : String(item ?? '');
-          if (selectedSet.has(itemVal)) {
-            selected.push(item);
-          } else {
-            unselected.push(item);
-          }
-        }
-
-        return [...selected, ...ArrayUtilities.paging(unselected, limit)];
-      })
-    );
+    const filteredItems$ = allItems$.pipe(map(this.#pageReadItems));
 
     const display$ = selectedItems$.pipe(
       map(items => items?.map(item => (this.displayField() ? this.itemDisplay(item) : item))?.join(', ') || '')
@@ -662,29 +714,91 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
     });
   }
 
-  #loadSelectedItems = async (value: any, items: SdSearch) => {
+  #pageReadItems = (allItems: T[]): T[] => {
+    const limit = this.limit();
+    const val = this.valueModel();
+    if (!this.multiple() || !Array.isArray(val) || val.length === 0) return ArrayUtilities.paging(allItems, limit);
+    // why: giữ toàn bộ selection và thêm limit item chưa chọn, kể cả sau retry.
+    const selectedSet = new Set(val.map(String));
+    const selected: T[] = [];
+    const unselected: T[] = [];
+    for (const item of allItems) {
+      const value = this.valueField() ? String(this.itemValue(item) ?? '') : String(item ?? '');
+      (selectedSet.has(value) ? selected : unselected).push(item);
+    }
+    return [...selected, ...ArrayUtilities.paging(unselected, limit)];
+  };
+
+  #readRegion = (): HTMLElement | null => this.selectRef()?.panel?.nativeElement.querySelector('.sd-read-state-region') ?? null;
+
+  protected focusReadRetry = (event: KeyboardEvent): void => {
+    if (event.key !== 'Tab' || event.shiftKey || !this.selectRef()?.panelOpen) return;
+    const region = this.#readRegion();
+    if (!(event.target instanceof Node) || region?.contains(event.target)) return;
+    if (!this.#el.nativeElement.contains(event.target) && !this.selectRef()?.panel?.nativeElement.contains(event.target)) return;
+    const button = region?.querySelector<HTMLElement>('button:not([disabled]), [tabindex="0"]');
+    if (!button) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    button.focus();
+  };
+
+  protected onReadRegionKeydown = (event: KeyboardEvent): void => {
+    event.stopPropagation();
+    if (event.key === 'Escape' || event.key === 'Tab') {
+      if (event.key === 'Escape' || event.shiftKey) event.preventDefault();
+      this.selectRef()?.focus();
+      this.selectRef()?.close();
+    }
+  };
+
+  #loadSelectedItems = async (value: any, items: SdSearch, retry = false): Promise<any[] | undefined> => {
     if (value === undefined || value === null || value === '') return [];
 
-    const values = Array.isArray(value) ? value : [value];
+    const values = cloneReadRequest(Array.isArray(value) ? value : [value]);
     const vField = this.valueField();
     const dField = this.displayField();
 
     if (!vField && !dField) return values;
 
-    if (values.some(val => this.#allItem[val?.toString()] === undefined)) {
-      const results: any[] = await items({ type: 'VALUE', value }).catch(() => []);
-      this.#addToDict(results);
-
-      const objValue: Record<string, any> = {};
-      values.forEach(val => {
-        const dummy = {};
-        this.setNestedValue(dummy, vField, val);
-        if (dField) this.setNestedValue(dummy, dField, val);
-        objValue[String(val)] = dummy;
-      });
-
-      this.#allItem = { ...objValue, ...this.#allItem };
+    const request = this.#createReadRequest(items, { type: 'VALUE', value: cloneReadRequest(value) });
+    if (!request.valid()) return undefined;
+    if (this.#pendingValue?.request.key === request.key && this.#pendingValue.request.valid()) {
+      await this.#pendingValue.result;
+    } else if (!retry && this.#failedValue?.key === request.key && this.#failedValue.valid()) {
+      // why: mở panel/search không tự retry hoặc che lỗi VALUE còn hiệu lực.
+    } else {
+      const revision = this.#valueRead.begin(request.valid);
+      this.#failedValue = undefined;
+      const cached = this.#valueCache[request.key];
+      if (!retry && (cached !== undefined || values.every(val => this.#allItem[String(val)] !== undefined))) {
+        this.#valueRead.succeed(revision, cached?.length ?? values.length);
+      } else {
+        const result = (async () => {
+          try {
+            const results = (await items(cloneReadRequest(request.args))) || [];
+            if (!this.#valueRead.isCurrent(revision)) return undefined;
+            this.#addToDict(results);
+            this.#valueCache[request.key] = results;
+            this.#valueRead.succeed(revision, results.length);
+            return results;
+          } catch (error) {
+            if (this.#valueRead.isCurrent(revision)) {
+              this.#failedValue = request;
+              this.#valueRead.fail(revision, error);
+            }
+            return undefined;
+          } finally {
+            if (this.#pendingValue?.request === request) this.#pendingValue = undefined;
+            this.#syncReadLoading();
+          }
+        })();
+        this.#pendingValue = { request, result };
+        await result;
+        if (this.#pendingValue?.request === request) this.#pendingValue = undefined;
+      }
     }
+    if (!request.valid()) return undefined;
 
     return values.map(val => {
       if (this.#allItem[val?.toString()]) return this.#allItem[val?.toString()];
@@ -695,31 +809,57 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
     });
   };
 
-  #loadItems = async (searchText: string | undefined | null, items: SdSearch) => {
+  #loadItems = async (searchText: string | undefined | null, items: SdSearch, retry = false): Promise<any[] | undefined> => {
     searchText = searchText?.toString() || '';
     const key = Utilities.hash({ checksum: this.cacheChecksum() || null, searchText });
-
-    this.#searchRequestId++;
-    const currentRequestId = this.#searchRequestId;
-
-    if (this.#cache[key] === undefined && this.focused()) {
-      const results: any[] = await items({ type: 'SEARCH', searchText }).catch(() => []);
-
-      if (currentRequestId !== this.#searchRequestId) return [];
-
-      this.#addToDict(results);
-
-      const mapObj = new Map();
-      results.forEach(e => {
-        const k = this.itemValue(e);
-        if (k != null && !mapObj.has(k)) mapObj.set(k, e);
-      });
-      this.#cache[key] = Array.from(mapObj.values());
+    const request = this.#createReadRequest(items, { type: 'SEARCH', searchText });
+    if (!request.valid()) return undefined;
+    this.#searchDebouncing = false;
+    if (this.#pendingSearch?.request.key === request.key && this.#pendingSearch.request.valid()) {
+      await this.#pendingSearch.result;
+    } else if (!retry && this.#failedSearch?.key === request.key && this.#failedSearch.valid()) {
+      // why: thất bại không ghi [] vào cache và không tự retry do subscription khác.
+    } else if (this.#cache[key] !== undefined && !retry) {
+      const revision = this.#searchRead.begin(request.valid);
+      this.#searchRead.succeed(revision, this.#cache[key].length);
+    } else if (this.focused() || retry) {
+      const currentRequestId = ++this.#searchRequestId;
+      const revision = this.#searchRead.begin(() => request.valid() && currentRequestId === this.#searchRequestId);
+      this.#failedSearch = undefined;
+      const result = (async () => {
+        try {
+          const results = (await items(cloneReadRequest(request.args))) || [];
+          if (!this.#searchRead.isCurrent(revision)) return undefined;
+          this.#addToDict(results);
+          const unique = new Map();
+          results.forEach(item => {
+            const value = this.itemValue(item as T);
+            if (value != null && !unique.has(value)) unique.set(value, item);
+          });
+          this.#cache[key] = Array.from(unique.values());
+          this.#searchRead.succeed(revision, results.length);
+          return results;
+        } catch (error) {
+          if (this.#searchRead.isCurrent(revision)) {
+            this.#failedSearch = request;
+            this.#searchRead.fail(revision, error);
+          }
+          return undefined;
+        } finally {
+          if (this.#pendingSearch?.request === request) this.#pendingSearch = undefined;
+          this.#syncReadLoading();
+        }
+      })();
+      this.#pendingSearch = { request, result };
+      await result;
+      if (this.#pendingSearch?.request === request) this.#pendingSearch = undefined;
     }
 
+    // why: continuation của loader cũ không được mở revision VALUE sau khi đổi items/context.
+    if (!request.valid()) return undefined;
     const selectedItems = await this.#loadSelectedItems(this.valueModel(), items);
 
-    if (currentRequestId !== this.#searchRequestId) return [];
+    if (!request.valid() || selectedItems === undefined) return undefined;
 
     const finalMap = new Map();
     [...selectedItems, ...(this.#cache[key] || [])].forEach(e => {
@@ -727,6 +867,64 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
       if (k != null && !finalMap.has(k)) finalMap.set(k, e);
     });
     return Array.from(finalMap.values());
+  };
+
+  #createReadRequest = (loader: SdSearch, args: SdSearchReq): SelectReadRequest => {
+    const checksum = Utilities.hash({ checksum: this.cacheChecksum(), valueField: this.valueField(), displayField: this.displayField() });
+    const key = Utilities.hash({ checksum, args });
+    return {
+      loader,
+      args: cloneReadRequest(args),
+      key,
+      valid: () =>
+        !this.#destroyed &&
+        this.actualItems() === loader &&
+        checksum === Utilities.hash({ checksum: this.cacheChecksum(), valueField: this.valueField(), displayField: this.displayField() }) &&
+        key ===
+          Utilities.hash({
+            checksum,
+            args:
+              args.type === 'VALUE'
+                ? { type: 'VALUE', value: this.valueModel() }
+                : { type: 'SEARCH', searchText: this.inputControl.value || '' },
+          }),
+    };
+  };
+
+  #syncReadLoading = () => {
+    if (this.#destroyed) return;
+    this.loading.set(
+      this.#searchDebouncing || this.#valueRead.state().status === 'loading' || this.#searchRead.state().status === 'loading'
+    );
+    this.#ref.markForCheck();
+  };
+
+  #emitReadState = () => {
+    if (this.#destroyed) return;
+    this.#syncReadLoading();
+    this.sdReadStateChange.emit(this.readState());
+  };
+
+  /** Retry the error selected by readState; VALUE and SEARCH retain separate snapshots. */
+  retryRead = async (): Promise<void> => {
+    const state = this.readState();
+    if (state.status !== 'error') return;
+    const request = state.operation === 'VALUE' ? this.#failedValue : this.#failedSearch;
+    if (!request || !request.valid()) return;
+    if (this.#readRegion()?.contains(this.#el.nativeElement.ownerDocument.activeElement)) this.selectRef()?.focus();
+    if (state.operation === 'VALUE') {
+      const items = await this.#loadSelectedItems(request.args.value, request.loader, true);
+      if (!request.valid() || !items) return;
+      this.selectedItems.set(items);
+      this.display.set(items.map(item => this.itemDisplay(item)).join(', '));
+      const selectedKeys = new Set(items.map(item => this.itemValue(item)));
+      this.filteredItems.set([...items, ...this.filteredItems().filter(item => !selectedKeys.has(this.itemValue(item)))]);
+    } else {
+      const items = await this.#loadItems(request.args.searchText, request.loader, true);
+      if (!request.valid() || !items) return;
+      this.filteredItems.set(this.#pageReadItems(items));
+    }
+    this.#syncReadLoading();
   };
 
   onSelectionChange = (change: MatSelectChange) => {

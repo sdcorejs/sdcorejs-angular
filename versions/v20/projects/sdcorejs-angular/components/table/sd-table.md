@@ -1,5 +1,31 @@
 ﻿# `<sd-table>`
 
+## Trạng thái đọc server và retry
+
+`readState()` là signal readonly `SdReadState`; `(sdReadStateChange)` phát snapshot
+`TABLE` với status `idle/loading/ready/empty/error`. Chỉ `error` chứa exception
+nguyên bản (`unknown`). `retryRead(): Promise<void>` đọc lại đúng loader và snapshot
+filter/paging/sort thất bại, không reset trang hoặc chạy lại `onFilter`.
+Request cũ không ghi đè kết quả mới, kể cả trong formatter bất đồng bộ.
+
+Lỗi refresh giữ rows/total đã có và hiển thị `SdDataState`; không tạo response giả
+`{ items: [], total: 0 }`. Response thành công rỗng hiển thị empty.
+`hideReadError` (boolean transform, default `false`) ẩn toàn bộ vùng lỗi, bao gồm
+custom template, nhưng vẫn giữ signal/output/retry. Local mode giữ luồng hiện có.
+
+```html
+<sd-table #table [option]="option" (sdReadStateChange)="readState.set($event)">
+  <ng-template sdDataStateTemplate let-state let-retry="retry">
+    <p>{{ state }}</p>
+    <button type="button" (click)="retry()">Thử lại</button>
+  </ng-template>
+</sd-table>
+```
+
+Import directive từ `@sdcorejs/angular/components/data-state`; types từ
+`@sdcorejs/angular/utilities/read-state`. Xem
+[contract và migration](../../utilities/read-state/sd-read-state.md).
+
 **Type**: Component (generic over `T`)
 **Selector**: `sd-table`
 **Import path**: `@sdcorejs/angular/components/table` (or barrel: `@sdcorejs/angular/components`)
@@ -463,7 +489,7 @@ When rendering SD form controls in `sdTableFilterDef`, editable cells, external-
 - **Header row**: column titles, sort arrows on sortable columns, inline filter row beneath header (input/select/daterange depending on column `type`). Sticky on scroll.
 - **Body rows**: standard row height, hover highlight, per-row commands cell on the **right** (default) or `command.align='left'`. Tree expand toggle (`chevron_right` collapsed / `expand_more` expanded, light hover bg) is **embedded in the first column** — the `sdIndex` cell when `index.enabled`, otherwise the first data column — indented per depth (no separate toggle column). Expand caret for master-detail when `expand` configured.
 - **Selection column**: leftmost checkbox column when `selector.visible`. Header checkbox toggles select-all.
-- **Selection-action bar** (`<selector-action>`, floating): opens only when rows are selected **and** `selector.actions` resolves to at least one action the selection is allowed to run. A table with `selector.visible` but no `actions` never floats the bar — it would restate the checkbox state with `×` as its only control; deselect through the checkboxes instead. The per-row allow-list still applies, so a selection mixing rows with different permitted actions can resolve to zero and keep the bar closed.
+- **Selection-action bar** (`<selector-action>`, contained): opens only when rows are selected **and** `selector.actions` resolves to at least one action the selection is allowed to run. A table with `selector.visible` but no `actions` never opens the bar — it would restate the checkbox state with `×` as its only control; deselect through the checkboxes instead. The per-row allow-list still applies, so a selection mixing rows with different permitted actions can resolve to zero and keep the bar closed.
 - **Sticky columns**: any column with `fixed: true` stays pinned while horizontal scroll happens; rendered with a subtle box-shadow on the boundary (via `StickyShadowDirective`).
 - **Group rows**: spanning row with HTML rendered from `group.htmlTemplate`, separating sub-sections.
 - **Empty state**: shows blank body; loading state shows centered Material spinner.
@@ -942,3 +968,9 @@ The consumer owns error reporting, retries and `defaultSelected` predicates; upd
 | `[sdTableTop]` | Remains above the table content. |
 
 The action bar keeps a layout footprint inside the owning scroll container, so the final card and paginator remain reachable. It follows Core theme tokens and safe-area insets. Applications with their own bottom navigation may set `--sd-table-mobile-bottom-offset` on the table to the occupied height. Template authors should allow wrapping and provide their own null-value presentation, as in the example.
+
+### Selection toolbar layout
+
+The desktop selection toolbar reserves space inside its table, immediately above the pagination footer. It does not float over the page. A single message shows the selection count; a custom `selector.message` is preserved verbatim, without another count badge.
+
+The first two permitted actions remain visible as `sd-button size="sm"`; additional actions appear under More. Existing child groups keep their labels and allowed children. The action resolver and callbacks still use the complete selection. The clear-selection control has an accessible name, and action autoIds retain their filtered action indexes. The toolbar wraps on narrow screens. Existing row-command sizing is unchanged.

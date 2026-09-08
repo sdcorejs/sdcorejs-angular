@@ -411,3 +411,131 @@
     }
   }
 }
+
+// why: readable dropzone; compact keeps the existing preview dimensions.
+:host {
+  overflow: visible;
+  min-width: 0;
+  .c-upload-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 3px;
+  }
+  .c-area-upload {
+    display: flex;
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    margin: 0;
+    opacity: 1;
+    padding: 8px;
+    border: 1px dashed var(--sd-primary);
+    background: var(--sd-surface, #fff);
+    color: var(--sd-text);
+    &:hover {
+      opacity: 1;
+      background: var(--sd-primary-light);
+    }
+  }
+  .c-area-upload--dropzone {
+    flex: 1 0 100%;
+    width: 100%;
+    min-height: 144px;
+    flex-direction: column;
+    gap: 8px;
+    padding: 20px;
+  }
+  .c-upload-icon-tile {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    border-radius: 8px;
+    background: var(--sd-primary-light);
+    color: var(--sd-primary-dark);
+  }
+  .c-upload {
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+    line-height: 20px;
+    color: inherit;
+  }
+  .c-upload-copy {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+  }
+  .c-upload-hint {
+    font-size: 12px;
+    line-height: 18px;
+    color: var(--sd-text-secondary);
+    overflow-wrap: anywhere;
+  }
+  .c-area.c-view {
+    opacity: 1;
+    flex: 0 0 auto;
+  }
+  .c-img-container:focus-within .c-action {
+    display: flex;
+  }
+  .c-document-container {
+    max-width: 100%;
+    min-width: 0;
+    padding: 8px;
+    border-radius: 8px;
+    background: var(--sd-surface, #fff);
+    gap: 8px;
+  }
+  .c-document-container .c-close,
+  .c-zoom {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    cursor: pointer;
+    background: transparent;
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+  }
+  .c-document-container .c-close {
+    color: var(--sd-text-secondary);
+  }
+  [role='button']:focus-visible,
+  button:focus-visible,
+  a:focus-visible {
+    outline: 2px solid var(--sd-primary);
+    outline-offset: 2px;
+  }
+  @media (max-width: 600px) {
+    .c-area-upload--dropzone {
+      padding: 16px;
+      min-height: 136px;
+    }
+    .c-document-container .c-close,
+    .c-zoom {
+      width: 44px;
+      height: 44px;
+    }
+    .c-area .c-preview .c-btn-remove {
+      width: 44px;
+      height: 44px;
+      top: -8px;
+      right: -8px;
+    }
+    .c-upload-list {
+      gap: 16px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .c-drag-placeholder {
+      transition: none;
+    }
+  }
+}

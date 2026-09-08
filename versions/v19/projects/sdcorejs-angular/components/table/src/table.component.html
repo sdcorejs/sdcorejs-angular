@@ -528,14 +528,26 @@
           }
         </table>
       }
-      <!-- why: trạng thái rỗng cũng xuất hiện BẤT ĐỒNG BỘ sau khi fetch xong; không có live region
-           thì người dùng screen reader chờ mãi mà không biết bảng đã trả về 0 dòng. -->
-      @if (!_loading && loadError()) {
+      @let _readState = readState();
+      @if ((_readState.status === 'error' && !hideReadError()) || _readState.status === 'empty') {
+        <sd-data-state
+          [state]="_readState.status === 'error' ? 'error' : 'empty'"
+          [retryable]="_readState.status === 'error'"
+          (sdRetry)="retryRead()">
+          @if (dataStateTemplate(); as custom) {
+            <ng-template sdDataStateTemplate let-current let-retry="retry" let-action="action">
+              <ng-container
+                [ngTemplateOutlet]="custom.template"
+                [ngTemplateOutletContext]="{ $implicit: current, state: current, retry: retry, action: action }"></ng-container>
+            </ng-template>
+          }
+        </sd-data-state>
+      } @else if (!_loading && loadError() && !hideReadError()) {
         <div class="c-no-data-row" role="alert">
           <p>{{ 'core.component.table.error-occurred' | sdTranslate }}</p>
           <sd-button [title]="'core.component.table.reload' | sdTranslate" (click)="reload()"></sd-button>
         </div>
-      } @else if (!_loading && !_total) {
+      } @else if (!_loading && !_total && _readState.status !== 'error' && !loadError()) {
         <div class="c-no-data-row" role="status" aria-live="polite">
           @if (_isFiltered) {
             @if (tableConfiguration?.images?.filterEmpty) {
@@ -565,6 +577,13 @@
         </div>
       }
     </div>
+    @if (!_mobileCards) {
+      <selector-action
+        [autoId]="_autoId"
+        [tableOption]="_tableOption"
+        [selectedTableItems]="_selectedTableItems"
+        (clear)="onClearSelection()" />
+    }
     <div class="c-paginator">
       <div class="c-action">
         @if (_mobileCards) {
@@ -714,13 +733,7 @@
       }
     </div>
   </div>
-  @if (!_mobileCards) {
-    <selector-action
-      [autoId]="_autoId"
-      [tableOption]="_tableOption"
-      [selectedTableItems]="_selectedTableItems"
-      (clear)="onClearSelection()" />
-  }
+
   @if (_tableOption.config?.visible) {
     <config [autoId]="_autoId" [tableOption]="_tableOption" />
   }
