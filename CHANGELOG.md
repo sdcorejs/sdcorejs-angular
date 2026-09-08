@@ -6,13 +6,6 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
-### Fixed
-
-- Error state của select/autocomplete căn giữa, nằm dưới dữ liệu đang giữ lại; panel hẹp giảm khoảng đệm, icon và cho phép xuống dòng.
-- Confirm `withRadio` loại bỏ scroll dọc dư do baseline và vùng bấm M3 tràn khỏi hàng radio; giữ vùng bấm 48px, khả năng cuộn danh sách dài và wrap lựa chọn trên mobile.
-- Badge `type="icon"` giữ đúng kích thước icon, căn giữa với phần chữ và không co icon khi nội dung dài.
-- Chỉ báo selection của table dùng màu success, gồm icon desktop và số lượng đã chọn trên mobile.
-
 ## [2.6] - 2026-09-08
 
 Release suffix `2.6` publishes `19.2.6`, `20.2.6`, `21.2.6`, and `22.2.6`.
@@ -23,6 +16,7 @@ Release suffix `2.6` publishes `19.2.6`, `20.2.6`, `21.2.6`, and `22.2.6`.
 
 ### Changed
 
+- Sidebar V1 d?ng n?n s?ng, t?ng chi?u r?ng 304px v?i thanh module 56px, ti?u ?? ??m, kho?ng c?ch g?n v? Material Icons Outlined. Menu 1?3 c?p ph?n bi?t nh?nh cha v?i m?c ?ang ch?n; avatar v? n?t thu g?n nh? n?m ? cu?i thanh module. Gi? nguy?n API, d? li?u menu, routing, ph?n quy?n, t?m ki?m v? expand/collapse; kh?ng th?m v?ng tr?ng cho description.
 - Button cải thiện màu outline/disabled theo theme, khoảng cách icon và focus bàn phím; giữ bo tròn M3 và các kích thước 32/40/48px. Table gom thao tác chọn hàng trong QuickAction; Import Excel cải thiện bước chọn file, lọc và hiển thị lỗi, kể cả trên mobile.
 - Inform dùng icon nền nhẹ và SdButton nhỏ; Upload thêm appearance dropzone/compact và thao tác bàn phím; Stepper dùng icon trong chỉ báo và phân biệt bước hoàn tất. Modal/Drawer thống nhất khoảng cách, bo góc và mobile; Drawer giữ và khôi phục focus bằng CDK.
 - Confirm dùng layout gọn với icon nền nhẹ luôn hiển thị, tiêu đề 18px và nút SdButton nhỏ. Các phương thức hỗ trợ icon tùy chỉnh hoặc mặc định theo context; withInput thêm label/placeholder. Giữ các biến thể và kết quả Promise hiện có, cải thiện focus và bố cục mobile.
@@ -31,6 +25,10 @@ Release suffix `2.6` publishes `19.2.6`, `20.2.6`, `21.2.6`, and `22.2.6`.
 
 ### Fixed
 
+- Error state của select/autocomplete căn giữa, nằm dưới dữ liệu đang giữ lại; panel hẹp giảm khoảng đệm, icon và cho phép xuống dòng.
+- Confirm `withRadio` loại bỏ scroll dọc dư do baseline và vùng bấm M3 tràn khỏi hàng radio; giữ vùng bấm 48px, khả năng cuộn danh sách dài và wrap lựa chọn trên mobile.
+- Badge `type="icon"` giữ đúng kích thước icon, căn giữa với phần chữ và không co icon khi nội dung dài.
+- Chỉ báo selection của table dùng màu success, gồm icon desktop và số lượng đã chọn trên mobile.
 - Button chỉ hiển thị một icon khi dùng suffix mà không truyền icon đầu. SideDrawer nhận focus ngay khi mở, giữ hiệu ứng đóng và thiết lập giảm chuyển động.
 - Date-range áp dụng đúng `clearable`, required và disabled cho nút xóa; datetime dùng icon picker đồng nhất. Multiple-select hiển thị số lượng đã chọn và tooltip với mỗi lựa chọn trên một dòng. Sidebar dùng hết chiều cao khả dụng để cuộn menu dài.
 - Release `2.6` dùng bản đối chiếu `22.2.5` cho Angular 22; pipeline pin đúng tag, artifact và quy tắc giữ năm trang release gần nhất.

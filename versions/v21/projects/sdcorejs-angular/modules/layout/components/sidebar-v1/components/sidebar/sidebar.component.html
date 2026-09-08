@@ -1,8 +1,17 @@
 @let _userInfo = userInfo();
 @let _sidebar = sidebar();
+@let _isShowSidebar = isShowSidebar();
+@let _searchText = searchText();
+@let _currentPath = currentPath();
+@let _activeMenuPath = activeMenuPath();
+@let _idMenuGroupActive = idMenuGroupActive();
+@let _pinnedMenuGroup = pinnedMenuGroup();
 
 @if (_userInfo && _sidebar) {
-  <div class="wrapper" [style.height]="isMobile() ? '100dvh' : '100%'">
+  <div
+    class="wrapper"
+    [style.--sidebar-accent]="_sidebar.brandColor || 'var(--sd-primary, #005cbb)'"
+    [style.height]="isMobile() ? '100dvh' : '100%'">
     <div class="c-header">
       <div class="c-logo">
         <a
@@ -12,30 +21,32 @@
           @if (logoUrl(); as _logoUrl) {
             <img alt="" [src]="_logoUrl" />
           } @else {
-            <sd-icon name="apps"></sd-icon>
+            <sd-icon fontSet="material-icons-outlined" name="apps"></sd-icon>
           }
         </a>
       </div>
-      <div class="c-title-menu-group" [class.d-none]="!isShowSidebar()">
+      <div class="c-title-menu-group" [class.d-none]="!_isShowSidebar">
         <span>{{ titleMenuGroup() || _sidebar.defaultTitle || 'Back Office' }}</span>
       </div>
     </div>
     <div class="c-body">
       <div class="c-menu">
         <div class="c-menu-group">
-          @if (_sidebar?.pin?.enabled && pinnedMenuGroup().children?.length) {
+          @if (_sidebar?.pin?.enabled && _pinnedMenuGroup.children?.length) {
             <button
               type="button"
               [attr.aria-label]="'core.module.layout.sidebar.pinned' | sdTranslate"
-              (mouseenter)="onMouseOverMenuGroupNode($event, pinnedMenuGroup())"
-              (mouseleave)="onMouseLeaveMenuGroupNode($event, pinnedMenuGroup())"
+              (mouseenter)="onMouseOverMenuGroupNode($event, _pinnedMenuGroup)"
+              (mouseleave)="onMouseLeaveMenuGroupNode($event, _pinnedMenuGroup)"
               (click)="expandPinnedGroup()"
               [matTooltip]="'core.module.layout.sidebar.pinned' | sdTranslate"
               [matTooltipClass]="'c-tooltip-menu-group-7a22ab15-0083-4d4c-9c0c-00a30bc8c140'"
               [matTooltipPosition]="'right'"
               style="padding: 0; margin: 0; border: none; background-color: transparent">
               <sd-icon
+                fontSet="material-icons-outlined"
                 class="c-menu-group-icon"
+                size="22px"
                 [ngStyle]="{
                   color: isPinnedMenuGroupActive()
                     ? _sidebar.brandColor || 'var(--sd-primary, #005cbb)'
@@ -61,9 +72,10 @@
               @if (nodeMenuGroup.iconUrl) {
                 <span
                   class="c-menu-group-icon"
+                  size="22px"
                   [ngStyle]="{
                     backgroundColor:
-                      idMenuGroupActive() === nodeMenuGroup?.id
+                      _idMenuGroupActive === nodeMenuGroup?.id
                         ? _sidebar.brandLightColor || 'var(--sd-primary-light, #d7e3ff)'
                         : 'transparent',
                   }">
@@ -71,14 +83,16 @@
                 </span>
               } @else {
                 <sd-icon
+                  fontSet="material-icons-outlined"
                   class="c-menu-group-icon"
+                  size="22px"
                   [ngStyle]="{
                     color:
-                      idMenuGroupActive() === nodeMenuGroup?.id
+                      _idMenuGroupActive === nodeMenuGroup?.id
                         ? _sidebar.brandColor || 'var(--sd-primary, #005cbb)'
                         : 'var(--sd-text-secondary, #44474f)',
                     backgroundColor:
-                      idMenuGroupActive() === nodeMenuGroup?.id
+                      _idMenuGroupActive === nodeMenuGroup?.id
                         ? _sidebar.brandLightColor || 'var(--sd-primary-light, #d7e3ff)'
                         : 'transparent',
                   }"
@@ -87,20 +101,25 @@
             </button>
           }
         </div>
-        <div class="c-menu-tree" [class.d-none]="!isShowSidebar()" [attr.inert]="!isShowSidebar() ? '' : null">
+        <div class="c-menu-tree" [class.d-none]="!_isShowSidebar" [attr.inert]="!_isShowSidebar ? '' : null">
           @if (totalMenuInMenusByGroup() > 10) {
-            <div style="padding: 0px 4px" class="c-menu-tree-search">
+            <div class="c-menu-tree-search">
               <sd-input
                 size="sm"
+                hideInlineError
                 [placeholder]="'core.module.layout.sidebar.search' | sdTranslate"
                 [autoId]="'layout-v1-menu-search'"
-                [model]="searchText()"
+                [model]="_searchText"
                 (sdChange)="onFilterSearchText($event)">
                 <ng-template sdSuffixDef>
-                  @if (searchText()) {
-                    <sd-icon class="c-search-prefix-icon cancel" (click)="onClearSearchText()" name="cancel"></sd-icon>
+                  @if (_searchText) {
+                    <sd-icon
+                      fontSet="material-icons-outlined"
+                      class="c-search-prefix-icon cancel"
+                      (click)="onClearSearchText()"
+                      name="cancel"></sd-icon>
                   } @else {
-                    <sd-icon class="c-search-prefix-icon search" name="search"></sd-icon>
+                    <sd-icon fontSet="material-icons-outlined" class="c-search-prefix-icon search" name="search"></sd-icon>
                   }
                 </ng-template>
               </sd-input>
@@ -111,27 +130,36 @@
               <mat-nested-tree-node *matTreeNodeDef="let node; when: !hasChild">
                 <div
                   class="c-menu-node"
+                  [class.is-active]="_currentPath | menuFocus: node : _activeMenuPath"
                   (mouseenter)="onMouseOverMenuNode($event, node)"
                   (mouseleave)="onMouseLeaveMenuNode($event, node)"
                   [ngStyle]="{
                     backgroundColor:
-                      (currentPath() | menuFocus: node : activeMenuPath()) ? _sidebar.brandLightColor || 'var(--sd-primary-light, #d7e3ff)' : 'transparent',
+                      (_currentPath | menuFocus: node : _activeMenuPath)
+                        ? _sidebar.brandLightColor || 'var(--sd-primary-light, #d7e3ff)'
+                        : 'transparent',
                   }">
-                  <div class="c-menu-node-description" [class.d-none]="!isShowSidebar()">
+                  <div class="c-menu-node-description" [class.d-none]="!_isShowSidebar">
                     <a
                       class="c-menu-node-description-content"
                       [href]="menuNodeHref(node)"
-                      [attr.aria-current]="(currentPath() | menuFocus: node : activeMenuPath()) ? 'page' : null"
+                      [attr.aria-current]="(_currentPath | menuFocus: node : _activeMenuPath) ? 'page' : null"
                       (click)="onMenuNodeClick($event, node)"
                       [ngStyle]="{
                         color:
-                          (currentPath() | menuFocus: node : activeMenuPath())
+                          (_currentPath | menuFocus: node : _activeMenuPath)
                             ? _sidebar.brandColor || 'var(--sd-primary, #005cbb)'
                             : 'var(--sd-text, #1a1b1f)',
-                      }"
-                      [innerHTML]="node.title | highLightSearch: searchText() | sdSafeHtml"></a>
+                      }">
+                      @if (node.iconUrl) {
+                        <img class="c-menu-node-icon" [src]="node.iconUrl" alt="" />
+                      } @else if (node.icon) {
+                        <sd-icon class="c-menu-node-icon" [name]="node.icon" size="20px" fontSet="material-icons-outlined"></sd-icon>
+                      }
+                      <span class="c-menu-node-label" [innerHTML]="node.title | highLightSearch: _searchText | sdSafeHtml"></span>
+                    </a>
 
-                    <!-- why: nút ghim trước đây là <sd-icon (click)> — custom element không nhận
+                    <!-- why: nút ghim trước đây là <sd-icon fontSet="material-icons-outlined" (click)> — custom element không nhận
                          focus bàn phím và không có tên khả truy cập, nên không ghim được bằng phím.
                          Đổi sang <button type="button"> + aria-pressed, giống pattern đã dùng ở
                          `shared/menu-tree`. -->
@@ -141,7 +169,7 @@
                         class="c-menu-node-description-icon-pin"
                         [style.opacity]="isPinnedNode(node) || isHoveredNode(node) ? '1' : null"
                         [style.color]="
-                          isPinnedNode(node) || isHoveredNode(node) ? sidebar().brandColor || 'var(--sd-primary, #005cbb)' : null
+                          isPinnedNode(node) || isHoveredNode(node) ? _sidebar.brandColor || 'var(--sd-primary, #005cbb)' : null
                         "
                         [attr.aria-pressed]="isPinnedNode(node)"
                         [attr.aria-label]="
@@ -149,7 +177,7 @@
                             | sdTranslate: { title: node.title }
                         "
                         (click)="onTogglePin($event, node)">
-                        <sd-icon name="push_pin"></sd-icon>
+                        <sd-icon fontSet="material-icons-outlined" size="18px" name="push_pin"></sd-icon>
                       </button>
                     }
                   </div>
@@ -158,26 +186,37 @@
 
               <mat-nested-tree-node
                 *matTreeNodeDef="let node; when: hasChild"
-                [class]="{ expanded: treeControl.isExpanded(node), isfocus: currentPath() | menuFocus: node : activeMenuPath() }">
-                <div class="c-menu-node" (mouseenter)="onMouseOverMenuNode($event, node)" (mouseleave)="onMouseLeaveMenuNode($event, node)">
+                [class]="{ expanded: treeControl.isExpanded(node), isfocus: _currentPath | menuFocus: node : _activeMenuPath }">
+                <div
+                  class="c-menu-node"
+                  [class.is-ancestor]="_currentPath | menuFocus: node : _activeMenuPath"
+                  (mouseenter)="onMouseOverMenuNode($event, node)"
+                  (mouseleave)="onMouseLeaveMenuNode($event, node)">
                   <div class="d-flex align-items-center" style="gap: 10px; width: 100%">
                     <button
                       type="button"
-                      [class.d-none]="!isShowSidebar()"
+                      [class.d-none]="!_isShowSidebar"
                       class="c-menu-node-description"
                       [attr.aria-expanded]="treeControl.isExpanded(node)"
                       (click)="onToggleMenuNode(node)">
-                      <span
-                        class="c-menu-node-description-content"
-                        [innerHTML]="node.title | highLightSearch: searchText() | sdSafeHtml"></span>
+                      <span class="c-menu-node-description-content">
+                        @if (node.iconUrl) {
+                          <img class="c-menu-node-icon" [src]="node.iconUrl" alt="" />
+                        } @else if (node.icon) {
+                          <sd-icon class="c-menu-node-icon" [name]="node.icon" size="20px" fontSet="material-icons-outlined"></sd-icon>
+                        }
+                        <span class="c-menu-node-label" [innerHTML]="node.title | highLightSearch: _searchText | sdSafeHtml"></span>
+                      </span>
                       <sd-icon
+                        fontSet="material-icons-outlined"
                         aria-hidden="true"
+                        size="18px"
                         class="c-menu-node-description-icon-expand"
-                        [name]="treeControl.isExpanded(node) ? 'keyboard_arrow_up' : 'keyboard_arrow_down'"></sd-icon>
+                        [name]="treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'"></sd-icon>
                     </button>
                   </div>
                 </div>
-                <div class="c-menu-node-group p-0" role="group" [class.d-none]="!treeControl.isExpanded(node)">
+                <div class="c-menu-node-group" role="group" [class.d-none]="!treeControl.isExpanded(node)">
                   <ng-container matTreeNodeOutlet></ng-container>
                 </div>
               </mat-nested-tree-node>
@@ -193,11 +232,9 @@
         [isMobileOrTablet]="isMobile()"
         (menuOpened)="onUserMenuOpened()"
         (menuClosed)="onUserMenuClosed()"
-        [isShowSidebar]="isShowSidebar()"
+        [isShowSidebar]="_isShowSidebar"
         (toggleMenuLock)="toggleMenuLock($event)">
       </lib-layout-user>
     </div>
-
-    <div class="c-vertical"></div>
   </div>
 }
