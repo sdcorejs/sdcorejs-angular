@@ -19,12 +19,15 @@ describe('Drawer focus lifecycle', () => {
     const f = TestBed.createComponent(FocusHost);
     f.detectChanges();
     tick();
+    const root = document.getElementById(f.componentInstance.drawer().id)!;
+    // why: Chốt layout đóng để kiểm tra cả trường hợp CSS transition đã được trình duyệt khởi tạo.
+    expect(getComputedStyle(root).visibility).toBe('hidden');
     const opener = f.nativeElement.querySelector('#opener') as HTMLButtonElement;
     opener.focus();
     opener.click();
     f.detectChanges();
     tick();
-    const root = document.getElementById(f.componentInstance.drawer().id)!;
+    expect(getComputedStyle(root).visibility).toBe('visible');
     expect(root.contains(document.activeElement)).toBeTrue();
     const anchors = root.querySelectorAll<HTMLElement>('.cdk-focus-trap-anchor');
     expect(anchors.length).toBe(2);
@@ -50,6 +53,8 @@ describe('Drawer focus lifecycle', () => {
     f.componentInstance.guard = () => false;
     f.detectChanges();
     tick();
+    const root = document.getElementById(f.componentInstance.drawer().id)!;
+    expect(getComputedStyle(root).visibility).toBe('hidden');
     const opener = f.nativeElement.querySelector('#opener') as HTMLButtonElement;
     opener.focus();
     opener.click();
@@ -58,7 +63,7 @@ describe('Drawer focus lifecycle', () => {
     f.componentInstance.drawer().close();
     tick();
     f.detectChanges();
-    const root = document.getElementById(f.componentInstance.drawer().id)!;
+    expect(getComputedStyle(root).visibility).toBe('visible');
     expect(f.componentInstance.drawer().isOpened()).toBeTrue();
     expect(root.contains(document.activeElement)).toBeTrue();
     f.destroy();

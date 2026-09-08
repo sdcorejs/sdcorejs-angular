@@ -103,4 +103,6 @@ Do not write `document.body.style.overflow` yourself while a drawer is open; the
 
 Each open creates a CDK focus trap around the drawer content. Focus moves inside, Tab/Shift+Tab cycle within it, and closing/destroying the content restores the opener. A rejected beforeClose guard keeps the content and focus trap active. Escape/backdrop behavior still follows disableBackdropClose and beforeClose.
 
+Opening makes the drawer visible immediately so focus can enter before the slide/fade animation finishes. Closing delays the hidden state until that animation completes. Reduced motion removes these transitions.
+
 The default radius is 8px, overridable through --sd-overlay-radius. Header/body/footer align at 24px horizontally (16px below 600px); the body scrolls while footer actions remain available. Close/actions are at least 44px on mobile, footer groups wrap, and reduced motion is enforced by the component itself.

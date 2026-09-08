@@ -21,13 +21,15 @@
   transition:
     transform 180ms ease,
     opacity 180ms ease,
-    visibility 180ms ease;
+    visibility 0s linear 180ms;
   pointer-events: none;
   overflow: hidden;
   border-radius: var(--sd-side-drawer-radius);
   box-shadow: var(--sd-side-drawer-shadow);
 
   &-active {
+    // why: CDK nhận focus ngay sau render; visibility không được chờ khung animation đầu tiên.
+    transition-delay: 0s;
     opacity: 1;
     visibility: visible;
     pointer-events: all;
