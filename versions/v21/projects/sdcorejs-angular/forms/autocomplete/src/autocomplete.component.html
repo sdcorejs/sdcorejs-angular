@@ -1,3 +1,5 @@
+@let _readState = readState();
+@let _isTyping = isTyping();
 @let _label = label();
 @let _appearance = appearance();
 @let _hideInlineError = hideInlineError();
@@ -88,7 +90,7 @@
         [class.c-selected]="nVal"
         [matAutocomplete]="auto"
         (focus)="onFocus()"
-        (blur)="onBlur()"
+        (blur)="onBlur($event)"
         matInput
         [autocomplete]="id"
         autocorrect="off"
@@ -120,6 +122,22 @@
       <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onSelect($event.option.value)" class="sd-autocomplete-panel">
         @let _filteredItems = filteredItems();
 
+        <!-- why: không hiển thị lỗi kênh cũ cùng spinner của kênh đang đọc/retry. -->
+        @if (!_loading && _readState.status === 'error') {
+          <!-- why: anchor giữ panel mở khi không có option; nút retry không nằm trong mat-option. -->
+          <mat-option disabled class="sd-read-state-anchor" aria-hidden="true"></mat-option>
+          @if (!hideReadError()) {
+            <div
+              class="sd-read-state-region"
+              role="presentation"
+              (mousedown)="$event.preventDefault()"
+              (click)="$event.stopPropagation()"
+              (keydown)="onReadRegionKeydown($event)">
+              <ng-container [ngTemplateOutlet]="readRegion" [ngTemplateOutletContext]="{ state: 'error' }"></ng-container>
+            </div>
+          }
+        }
+
         @if (_filteredItems?.length) {
           @for (item of _filteredItems; track $index) {
             <mat-option
@@ -134,7 +152,12 @@
               }
             </mat-option>
           }
-        } @else if (!_filteredItems?.length && inputControl.value && !isTyping() && !_loading) {}
+        } @else if (_loading) {
+          <mat-option disabled><mat-spinner diameter="24"></mat-spinner></mat-option>
+        } @else if (hasSearched() && !_isTyping && _readState.status === 'empty') {
+          <mat-option disabled class="sd-read-state-anchor" aria-hidden="true"></mat-option>
+          <ng-container [ngTemplateOutlet]="readRegion" [ngTemplateOutletContext]="{ state: 'empty' }"></ng-container>
+        }
 
         @if (addable() && sdAdd.observed) {
           <mat-option class="sd__option--add" (keyup.Space)="$event.stopPropagation()" disabled="true">
@@ -153,7 +176,7 @@
         <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
       }
       @if (_hideInlineError && _errorVisible) {
-        <span class="sd-visually-hidden" [id]="errorId" matSuffix>{{ _errorMessage }}</span>
+        <span class="sd-visually-hidden" [id]="errorId" matSuffix>{{ _errorMessage }}</span>
       }
 
       @if (_showInlineError) {
@@ -162,3 +185,15 @@
     </mat-form-field>
   </div>
 }
+
+<ng-template #readRegion let-current="state">
+  <sd-data-state [state]="current" compact [retryable]="current === 'error'" (sdRetry)="retryRead()">
+    @if (dataStateTemplate(); as custom) {
+      <ng-template sdDataStateTemplate let-state let-retry="retry" let-action="action">
+        <ng-container
+          [ngTemplateOutlet]="custom.template"
+          [ngTemplateOutletContext]="{ $implicit: state, state: state, retry: retry, action: action }"></ng-container>
+      </ng-template>
+    }
+  </sd-data-state>
+</ng-template>

@@ -54,16 +54,28 @@
   }
 
   &__icon {
-    padding: 12px 0 0 12px;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    margin: 12px 0 0 12px;
+    border-radius: 6px;
     flex-shrink: 0;
 
     svg {
-      width: 24px;
-      height: 24px;
+      display: block;
+      width: 22px;
+      height: 22px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
   }
 
   &__content {
+    min-width: 0;
     flex-grow: 1;
     padding: 12px;
     display: flex;
@@ -107,6 +119,13 @@
     display: flex;
     justify-content: flex-end;
     margin-top: 8px;
+  }
+}
+
+@each $type in success, info, warning, error {
+  :host([data-type='#{$type}']) .sd-toast__icon {
+    color: var(--sd-#{$type}-dark);
+    background: var(--sd-#{$type}-light);
   }
 }
 

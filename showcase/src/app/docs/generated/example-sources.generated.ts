@@ -933,6 +933,14 @@ export class ButtonColorsExampleComponent {}`,
   align-items: center;
   gap: 12px;
   min-width: 0;
+}
+
+.button-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex-basis: 100%;
 }`,
   },
   "components/button/example-bien-the": {
@@ -954,6 +962,14 @@ export class ButtonVariantsExampleComponent {}`,
   align-items: center;
   gap: 12px;
   min-width: 0;
+}
+
+.button-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex-basis: 100%;
 }`,
   },
   "components/button/example-chi-icon": {
@@ -975,6 +991,14 @@ export class ButtonIconOnlyExampleComponent {}`,
   align-items: center;
   gap: 12px;
   min-width: 0;
+}
+
+.button-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex-basis: 100%;
 }`,
   },
   "components/button/example-kich-thuoc": {
@@ -996,6 +1020,14 @@ export class ButtonSizesExampleComponent {}`,
   align-items: center;
   gap: 12px;
   min-width: 0;
+}
+
+.button-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex-basis: 100%;
 }`,
   },
   "components/button/example-secondary-vs-black": {
@@ -1017,6 +1049,14 @@ export class ButtonSecondaryBlackExampleComponent {}`,
   align-items: center;
   gap: 12px;
   min-width: 0;
+}
+
+.button-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex-basis: 100%;
 }`,
   },
   "components/button/example-toggle-icon-set-bang-alias": {
@@ -1045,6 +1085,14 @@ export class ButtonIconSetExampleComponent {
   align-items: center;
   gap: 12px;
   min-width: 0;
+}
+
+.button-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex-basis: 100%;
 }`,
   },
   "components/button/example-trang-thai": {
@@ -1080,6 +1128,14 @@ export class ButtonStatesExampleComponent {
   align-items: center;
   gap: 12px;
   min-width: 0;
+}
+
+.button-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex-basis: 100%;
 }`,
   },
   "components/card/example-disabled-va-color": {
@@ -1668,12 +1724,23 @@ function isActive(emp: Employee): boolean {
   "components/data-state": {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { SdDataState, SdDataStateTemplateDirective } from '@sdcorejs/angular/components/data-state';
+import { SdTable, SdTableOption } from '@sdcorejs/angular/components/table';
+import { SdSelect } from '@sdcorejs/angular/forms/select';
+import { SdAutocomplete } from '@sdcorejs/angular/forms/autocomplete';
+import { SdSearch, SdSearchReq } from '@sdcorejs/angular/forms/models';
+import { SdReadState } from '@sdcorejs/angular/utilities/read-state';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+interface DemoRow {
+  id: number;
+  name: string;
+}
+type DemoControl = 'table' | 'select' | 'autocomplete';
 
 @Component({
   selector: 'app-data-state-demo',
   standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, SdDataState, SdDataStateTemplateDirective],
+  imports: [DemoPageComponent, DemoSectionComponent, SdDataState, SdDataStateTemplateDirective, SdTable, SdSelect, SdAutocomplete],
   template: \`
     <demo-page
       #demoPage
@@ -1687,6 +1754,7 @@ import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-pa
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-empty') {
         <demo-section heading="Empty" note="Custom template nhận state/retry/action context thay cho default presentation.">
+          <sd-data-state state="empty" compact></sd-data-state>
           <sd-data-state state="empty" compact>
             <ng-template sdDataStateTemplate let-state>
               <div class="custom-empty">Custom {{ state }}: chưa có đơn hàng phù hợp.</div>
@@ -1722,9 +1790,84 @@ import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-pa
           </sd-data-state>
         </demo-section>
       }
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-loi-va-retry-tren-ba-control') {
+      <demo-section
+        heading="Lỗi và retry trên ba control"
+        [props]="[{ name: 'readState / sdReadStateChange', value: 'idle → loading → ready / empty / error' }]">
+        <p>
+          Ban đầu máy chủ mô phỏng trả lỗi. Chọn “Có dữ liệu” hoặc “Rỗng hợp lệ”, rồi bấm Thử lại trên control. Chọn “Tiếp tục lỗi” để thử
+          lỗi liên tiếp. Select đọc riêng VALUE và SEARCH nên có thể cần retry từng kênh.
+        </p>
+        <div class="demo-actions">
+          <button type="button" [attr.aria-pressed]="mode() === 'ready'" (click)="mode.set('ready')">Có dữ liệu</button>
+          <button type="button" [attr.aria-pressed]="mode() === 'empty'" (click)="mode.set('empty')">Rỗng hợp lệ</button>
+          <button type="button" [attr.aria-pressed]="mode() === 'error'" (click)="mode.set('error')">Tiếp tục lỗi</button>
+        </div>
+        <p>
+          Chế độ phản hồi: {{ mode() }}. Số request: bảng {{ counts().table }}, select {{ counts().select }}, autocomplete
+          {{ counts().autocomplete }}.
+        </p>
+        <div class="table-demo">
+          <sd-table #table [option]="tableOption" (sdReadStateChange)="record('table', $event)"></sd-table>
+        </div>
+        <div class="demo-actions">
+          <button type="button" (click)="table.reload()">Đọc lại bảng</button>
+          <span>Output bảng: {{ latest().table }}</span>
+        </div>
+        <div class="control-grid">
+          <div>
+            <sd-select
+              #select
+              label="Select — template lỗi riêng"
+              [items]="loadSelect"
+              valueField="id"
+              displayField="name"
+              [(model)]="selected"
+              (sdReadStateChange)="record('select', $event)">
+              <ng-template sdDataStateTemplate let-state let-retry="retry">
+                <sd-data-state
+                  [state]="state"
+                  title="Chưa tải được lựa chọn"
+                  message="Vui lòng thử lại."
+                  compact
+                  retryable
+                  (sdRetry)="retry()"></sd-data-state>
+              </ng-template>
+            </sd-select>
+            <p>Giá trị: {{ selected() }}. Output: {{ latest().select }}</p>
+          </div>
+          <div>
+            <sd-autocomplete
+              #autocomplete
+              label="Autocomplete"
+              [items]="loadAutocomplete"
+              valueField="id"
+              displayField="name"
+              [(model)]="autocompleteValue"
+              [hideReadError]="hideReadError()"
+              (sdReadStateChange)="record('autocomplete', $event)">
+            </sd-autocomplete>
+            <p>Giá trị: {{ autocompleteValue() }}. Output: {{ latest().autocomplete }}</p>
+            <label
+              ><input type="checkbox" [checked]="hideReadError()" (change)="hideReadError.set(!hideReadError())" /> Host hiển thị lỗi bên
+              ngoài</label
+            >
+            @if (hideReadError() && !autocomplete.loading() && autocomplete.readState().status === 'error') {
+              <sd-data-state state="error" compact retryable (sdRetry)="autocomplete.retryRead()"></sd-data-state>
+            }
+          </div>
+        </div>
+        <p>
+          Mở panel lỗi và nhấn Tab để tới retry; Enter/Space để thử lại, Escape để đóng panel. Giá trị đã chọn không bị xóa khi đọc lỗi.
+        </p>
+      </demo-section>
+      }
     </demo-page>
   \`,
   styles: \`
+    .control-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 16px; }
+    .demo-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+    .table-demo { width: 100%; min-height: 320px; }
     .custom-empty,
     [data-success] {
       padding: 16px;
@@ -1752,9 +1895,52 @@ export class DataStateDemoComponent {
   onAction(): void {
     this.actionCount.update(value => value + 1);
   }
+  readonly mode = signal<'error' | 'ready' | 'empty'>('error');
+  readonly hideReadError = signal(false);
+  readonly selected = signal<number | undefined>(1);
+  readonly autocompleteValue = signal<number | undefined>(1);
+  readonly counts = signal<Record<DemoControl, number>>({ table: 0, select: 0, autocomplete: 0 });
+  readonly latest = signal<Record<DemoControl, string>>({ table: 'idle', select: 'idle', autocomplete: 'idle' });
+  readonly rows: DemoRow[] = [
+    { id: 1, name: 'Hà Nội' },
+    { id: 2, name: 'Đà Nẵng' },
+    { id: 3, name: 'TP. Hồ Chí Minh' },
+  ];
+  readonly loadSelect: SdSearch<DemoRow> = request => this.readRows('select', request);
+  readonly loadAutocomplete: SdSearch<DemoRow> = request => this.readRows('autocomplete', request);
+  readonly tableOption: SdTableOption<DemoRow> = {
+    type: 'server',
+    columns: [{ field: 'name', title: 'Địa điểm', type: 'string' }],
+    paginate: { pageSize: 10 },
+    items: async () => {
+      const items = await this.readRows('table');
+      return { items, total: items.length };
+    },
+  };
+
+  record(control: DemoControl, state: SdReadState): void {
+    this.latest.update(previous => ({ ...previous, [control]: state.operation + ': ' + state.status }));
+  }
+
+  private async readRows(control: DemoControl, request?: SdSearchReq): Promise<DemoRow[]> {
+    this.counts.update(previous => ({ ...previous, [control]: previous[control] + 1 }));
+    const mode = this.mode();
+    await new Promise(resolve => setTimeout(resolve, 400));
+    if (mode === 'error') throw new Error('Demo unavailable');
+    if (mode === 'empty') return [];
+    if (request?.type === 'VALUE') {
+      const values = Array.isArray(request.value) ? request.value : [request.value];
+      return this.rows.filter(row => values.some(value => String(value) === String(row.id)));
+    }
+    const query = request?.searchText?.toLocaleLowerCase() || '';
+    return this.rows.filter(row => row.name.toLocaleLowerCase().includes(query));
+  }
 }
 `,
-    scss: `.custom-empty,
+    scss: `.control-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 16px; }
+.demo-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.table-demo { width: 100%; min-height: 320px; }
+.custom-empty,
 [data-success] {
   padding: 16px;
   border: 1px dashed #98a2b3;
@@ -3044,62 +3230,89 @@ const LONG = \`Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec se
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, SdInform, SdInformActionDirective],
   template: \`
-    <demo-page #demoPage
+    <demo-page
+      #demoPage
       title="Inform"
-      description="Banner / alert neo trên page — báo lỗi, cảnh báo, thông tin. 6 màu, đóng được, action, line-clamp.">
-
+      description="Thông báo trong trang với icon nền nhẹ, 6 màu trạng thái, nút thao tác nhỏ và nội dung thu gọn.">
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bang-mau') {
-      <demo-section heading="Bảng màu" [props]="[{ name: 'color', value: 'primary / secondary / info / success / warning / error' }]">
-        <sd-inform primary title="primary" description="Message body."></sd-inform>
-        <sd-inform secondary title="secondary" description="Message body."></sd-inform>
-        <sd-inform info title="info" description="Message body."></sd-inform>
-        <sd-inform success title="success" description="Message body."></sd-inform>
-        <sd-inform warning title="warning" description="Message body."></sd-inform>
-        <sd-inform error title="error" description="Message body."></sd-inform>
-      </demo-section>
+        <demo-section heading="Bảng màu" [props]="[{ name: 'color', value: 'primary / secondary / info / success / warning / error' }]">
+          <sd-inform primary title="primary" description="Message body."></sd-inform>
+          <sd-inform secondary title="secondary" description="Message body."></sd-inform>
+          <sd-inform info title="info" description="Message body."></sd-inform>
+          <sd-inform success title="success" description="Message body."></sd-inform>
+          <sd-inform warning title="warning" description="Message body."></sd-inform>
+          <sd-inform error title="error" description="Message body."></sd-inform>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-dong-duoc-action') {
-      <demo-section heading="Đóng được + action" [props]="[{ name: 'closable', value: 'true' }, { name: 'actionLabel', value: 'text' }]">
-        <sd-inform error closable title="Không tải được dữ liệu" description="Máy chủ không phản hồi." actionLabel="Thử lại"></sd-inform>
-        <sd-inform info closable title="Bản nháp đã lưu" description="Tự động lưu lúc 14:30." actionLabel="Xem"></sd-inform>
-      </demo-section>
+        <demo-section
+          heading="Đóng được + action"
+          [props]="[
+            { name: 'closable', value: 'true' },
+            { name: 'actionLabel', value: 'text' },
+          ]">
+          <sd-inform error closable title="Không tải được dữ liệu" description="Máy chủ không phản hồi." actionLabel="Thử lại"></sd-inform>
+          <sd-inform info closable title="Bản nháp đã lưu" description="Tự động lưu lúc 14:30." actionLabel="Xem"></sd-inform>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-an-icon') {
-      <demo-section heading="Ẩn icon" [props]="[{ name: 'hideIcon', value: 'true' }]">
-        <sd-inform success hideIcon title="Đã lưu" description="Không có icon."></sd-inform>
-      </demo-section>
+        <demo-section heading="Ẩn icon" [props]="[{ name: 'hideIcon', value: 'true' }]">
+          <sd-inform success hideIcon title="Đã lưu" description="Không có icon."></sd-inform>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-line-clamp') {
-      <demo-section heading="Line-clamp" [props]="[{ name: 'lineClamp', value: '[số]' }]">
-        <sd-inform info title="Điều khoản" [description]="long" [lineClamp]="3"></sd-inform>
-        <sd-inform success [description]="long" [lineClamp]="2"></sd-inform>
-      </demo-section>
+        <demo-section heading="Line-clamp" [props]="[{ name: 'lineClamp', value: '[số]' }]">
+          <sd-inform info title="Điều khoản" [description]="long" [lineClamp]="3"></sd-inform>
+          <sd-inform success [description]="long" [lineClamp]="2"></sd-inform>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-action-custom-projection') {
-      <demo-section heading="Action custom (projection)" [props]="[{ name: 'sdInformAction', value: 'template' }]">
-        <sd-inform warning title="Chế độ chỉ đọc" description="Bạn không có quyền chỉnh sửa.">
-          <button sdInformAction class="demo-action-btn">Yêu cầu quyền</button>
-        </sd-inform>
-      </demo-section>
+        <demo-section heading="Action custom (projection)" [props]="[{ name: 'sdInformAction', value: 'template' }]">
+          <sd-inform warning title="Chế độ chỉ đọc" description="Bạn không có quyền chỉnh sửa.">
+            <button sdInformAction class="demo-action-btn">Yêu cầu quyền</button>
+          </sd-inform>
+        </demo-section>
       }
     </demo-page>
   \`,
-  styles: [\`
-    :host ::ng-deep demo-section > * { display: block; margin-bottom: 12px; }
-    .demo-action-btn { border: none; background: none; color: inherit; cursor: pointer; padding: 0; text-decoration: underline; }
-  \`],
+  styles: [
+    \`
+      :host ::ng-deep demo-section > * {
+        display: block;
+        margin-bottom: 12px;
+      }
+      .demo-action-btn {
+        border: none;
+        background: none;
+        color: inherit;
+        cursor: pointer;
+        padding: 0;
+        text-decoration: underline;
+      }
+    \`,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InformDemoComponent {
   readonly long = LONG;
 }
 `,
-    scss: `:host ::ng-deep demo-section > * { display: block; margin-bottom: 12px; }
-.demo-action-btn { border: none; background: none; color: inherit; cursor: pointer; padding: 0; text-decoration: underline; }`,
+    scss: `:host ::ng-deep demo-section > * {
+  display: block;
+  margin-bottom: 12px;
+}
+.demo-action-btn {
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}`,
   },
   "components/job-progress": {
     typescript: `import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
@@ -3309,224 +3522,280 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, SdBadge, SdButton, SdModal, SdSection, SdSectionItem],
   template: \`
-    <demo-page #demoPage
+    <demo-page
+      #demoPage
       title="Modal"
-      description="Dialog va bottom-sheet dung chung slot sdHeaderLeft/sdHeaderRight/sdFooterLeft/sdFooterRight. Body mac dinh padding 0 de consumer tu quyet dinh layout.">
-
+      description="Dialog va bottom-sheet dung chung slot sdHeaderLeft/sdHeaderRight/sdFooterLeft/sdFooterRight. Header, body và footer có lề thẳng hàng, tự điều chỉnh trên mobile.">
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-basic-modal-footer-right') {
-      <demo-section heading="Basic modal + footer right" [props]="[{ name: 'sdFooterRight', value: 'template' }, { name: 'body padding', value: 0 }]">
-        <sd-button type="fill" color="primary" prefixIcon="info" title="Open detail" (click)="basic.open()"></sd-button>
+        <demo-section
+          heading="Basic modal + footer right"
+          [props]="[
+            { name: 'sdFooterRight', value: 'template' },
+            { name: 'body inset', value: '24px / 16px' },
+          ]">
+          <sd-button type="fill" color="primary" prefixIcon="info" title="Open detail" (click)="basic.open()"></sd-button>
 
-        <sd-modal #basic title="Customer detail" width="md">
-          <div class="demo-stack">
-            <sd-section icon="person" title="Profile">
-              <sd-section-item label="Name">Nguyen Van An</sd-section-item>
-              <sd-section-item label="Email">an.nv&#64;onemount.com</sd-section-item>
-              <sd-section-item label="Status">
-                <sd-badge type="round" success title="Active"></sd-badge>
-              </sd-section-item>
-            </sd-section>
-          </div>
+          <sd-modal #basic title="Customer detail" width="md">
+            <div class="demo-stack">
+              <sd-section icon="person" title="Profile">
+                <sd-section-item label="Name">Nguyen Van An</sd-section-item>
+                <sd-section-item label="Email">an.nv&#64;onemount.com</sd-section-item>
+                <sd-section-item label="Status">
+                  <sd-badge type="round" success title="Active"></sd-badge>
+                </sd-section-item>
+              </sd-section>
+            </div>
 
-          <sd-button sdFooterRight type="fill" color="primary" title="Close" (click)="basic.close()"></sd-button>
-        </sd-modal>
-      </demo-section>
+            <sd-button sdFooterRight type="fill" color="primary" title="Close" (click)="basic.close()"></sd-button>
+          </sd-modal>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-confirm-modal-split-footer') {
-      <demo-section heading="Confirm modal + split footer" [props]="[{ name: 'sdFooterLeft', value: 'template' }, { name: 'sdFooterRight', value: 'template' }]">
-        <sd-button type="fill" color="error" prefixIcon="delete" title="Delete record" (click)="confirm.open()"></sd-button>
+        <demo-section
+          heading="Confirm modal + split footer"
+          [props]="[
+            { name: 'sdFooterLeft', value: 'template' },
+            { name: 'sdFooterRight', value: 'template' },
+          ]">
+          <sd-button type="fill" color="error" prefixIcon="delete" title="Delete record" (click)="confirm.open()"></sd-button>
 
-        <sd-modal #confirm title="Delete customer" width="sm">
-          <div class="demo-stack">
-            <p class="demo-copy">Delete <strong>Nguyen Van An</strong>? This action cannot be undone.</p>
-          </div>
+          <sd-modal #confirm title="Delete customer" width="sm">
+            <div class="demo-stack">
+              <p class="demo-copy">Delete <strong>Nguyen Van An</strong>? This action cannot be undone.</p>
+            </div>
 
-          <sd-button sdFooterLeft type="text" color="secondary" title="Cancel" (click)="confirm.close()"></sd-button>
-          <sd-button sdFooterRight type="fill" color="error" title="Delete" prefixIcon="delete" (click)="confirm.close()"></sd-button>
-        </sd-modal>
-      </demo-section>
+            <sd-button sdFooterLeft type="text" color="secondary" title="Cancel" (click)="confirm.close()"></sd-button>
+            <sd-button sdFooterRight type="fill" color="error" title="Delete" prefixIcon="delete" (click)="confirm.close()"></sd-button>
+          </sd-modal>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-custom-header-left-right') {
-      <demo-section heading="Custom header left/right" [props]="[{ name: 'sdHeaderLeft', value: 'template' }, { name: 'sdHeaderRight', value: 'template' }]">
-        <sd-button type="light" color="primary" prefixIcon="history" title="Open activity" (click)="activity.open()"></sd-button>
+        <demo-section
+          heading="Custom header left/right"
+          [props]="[
+            { name: 'sdHeaderLeft', value: 'template' },
+            { name: 'sdHeaderRight', value: 'template' },
+          ]">
+          <sd-button type="light" color="primary" prefixIcon="history" title="Open activity" (click)="activity.open()"></sd-button>
 
-        <sd-modal #activity title="Activity log" width="lg">
-          <div sdHeaderLeft class="demo-title-block">
-            <strong>Activity log</strong>
-            <span>Last 7 days</span>
-          </div>
-          <sd-button sdHeaderRight type="text" color="primary" prefixIcon="refresh" tooltip="Refresh"></sd-button>
-
-          <div class="demo-stack">
-            <div class="demo-list">
-              @for (row of activityRows; track row.time) {
-                <div class="demo-list__row">
-                  <span>{{ row.time }}</span>
-                  <strong>{{ row.actor }}</strong>
-                  <span>{{ row.action }}</span>
-                </div>
-              }
+          <sd-modal #activity title="Activity log" width="lg">
+            <div sdHeaderLeft class="demo-title-block">
+              <strong>Activity log</strong>
+              <span>Last 7 days</span>
             </div>
-          </div>
+            <sd-button sdHeaderRight type="text" color="primary" prefixIcon="refresh" tooltip="Refresh"></sd-button>
 
-          <sd-button sdFooterRight type="text" color="secondary" title="Close" (click)="activity.close()"></sd-button>
-        </sd-modal>
-      </demo-section>
+            <div class="demo-stack">
+              <div class="demo-list">
+                @for (row of activityRows; track row.time) {
+                  <div class="demo-list__row">
+                    <span>{{ row.time }}</span>
+                    <strong>{{ row.actor }}</strong>
+                    <span>{{ row.action }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <sd-button sdFooterRight type="text" color="secondary" title="Close" (click)="activity.close()"></sd-button>
+          </sd-modal>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-long-scroll-body') {
-      <demo-section heading="Long scroll body" [props]="[{ name: 'max-height', value: '80vh' }, { name: 'body', value: 'scrollable' }]">
-        <sd-button type="outline" color="primary" prefixIcon="list" title="Open long content" (click)="longContent.open()"></sd-button>
+        <demo-section
+          heading="Long scroll body"
+          [props]="[
+            { name: 'max-height', value: '80vh' },
+            { name: 'body', value: 'scrollable' },
+          ]">
+          <sd-button type="outline" color="primary" prefixIcon="list" title="Open long content" (click)="longContent.open()"></sd-button>
 
-        <sd-modal #longContent title="Long approval checklist" width="md">
-          <div class="demo-stack">
-            <div class="demo-list">
-              @for (item of checklist; track item) {
-                <div class="demo-list__row">
-                  <span>{{ item }}</span>
-                  <sd-badge type="round" info title="Required"></sd-badge>
-                </div>
-              }
+          <sd-modal #longContent title="Long approval checklist" width="600px">
+            <div class="demo-stack">
+              <div class="demo-list">
+                @for (item of checklist; track item) {
+                  <div class="demo-list__row">
+                    <span>{{ item }}</span>
+                    <sd-badge type="round" info title="Required"></sd-badge>
+                  </div>
+                }
+              </div>
             </div>
-          </div>
 
-          <sd-button sdFooterLeft type="text" color="secondary" title="Skip"></sd-button>
-          <sd-button sdFooterRight type="fill" color="primary" title="Done" (click)="longContent.close()"></sd-button>
-        </sd-modal>
-      </demo-section>
+            <sd-button sdFooterLeft type="text" color="secondary" title="Skip"></sd-button>
+            <sd-button sdFooterRight type="fill" color="primary" title="Done" (click)="longContent.close()"></sd-button>
+          </sd-modal>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-read-only-modal-without-footer') {
-      <demo-section heading="Read-only modal without footer" [props]="[{ name: 'footer', value: 'empty hidden' }]">
-        <sd-button type="outline" color="primary" prefixIcon="visibility" title="Preview note" (click)="preview.open()"></sd-button>
+        <demo-section heading="Read-only modal without footer" [props]="[{ name: 'footer', value: 'empty hidden' }]">
+          <sd-button type="outline" color="primary" prefixIcon="visibility" title="Preview note" (click)="preview.open()"></sd-button>
 
-        <sd-modal #preview title="Internal note" width="sm">
-          <div class="demo-stack">
-            <p class="demo-copy">This modal has no footer slots. The footer container stays hidden so read-only content can remain compact.</p>
-          </div>
-        </sd-modal>
-      </demo-section>
+          <sd-modal #preview title="Internal note" width="sm">
+            <div class="demo-stack">
+              <p class="demo-copy">
+                This modal has no footer slots. The footer container stays hidden so read-only content can remain compact.
+              </p>
+            </div>
+          </sd-modal>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bottom-sheet-actions') {
-      <demo-section heading="Bottom-sheet actions" [props]="[{ name: 'view', value: 'bottom-sheet' }, { name: 'sdFooterRight', value: 'template' }]">
-        <sd-button type="outline" color="primary" prefixIcon="more_vert" title="Open actions" (click)="sheetActions.open()"></sd-button>
+        <demo-section
+          heading="Bottom-sheet actions"
+          [props]="[
+            { name: 'view', value: 'bottom-sheet' },
+            { name: 'sdFooterRight', value: 'template' },
+          ]">
+          <sd-button type="outline" color="primary" prefixIcon="more_vert" title="Open actions" (click)="sheetActions.open()"></sd-button>
 
-        <sd-modal #sheetActions title="Quick actions" view="bottom-sheet" width="100%">
-          <div class="sheet-stack">
-            <sd-button type="text" color="primary" prefixIcon="edit" title="Edit" (click)="sheetActions.close()"></sd-button>
-            <sd-button type="text" color="primary" prefixIcon="share" title="Share" (click)="sheetActions.close()"></sd-button>
-            <sd-button type="text" color="error" prefixIcon="delete" title="Delete" (click)="sheetActions.close()"></sd-button>
-          </div>
+          <sd-modal #sheetActions title="Quick actions" view="bottom-sheet" width="100%">
+            <div class="sheet-stack">
+              <sd-button type="text" color="primary" prefixIcon="edit" title="Edit" (click)="sheetActions.close()"></sd-button>
+              <sd-button type="text" color="primary" prefixIcon="share" title="Share" (click)="sheetActions.close()"></sd-button>
+              <sd-button type="text" color="error" prefixIcon="delete" title="Delete" (click)="sheetActions.close()"></sd-button>
+            </div>
 
-          <sd-button sdFooterRight type="text" color="secondary" title="Cancel" (click)="sheetActions.close()"></sd-button>
-        </sd-modal>
-      </demo-section>
+            <sd-button sdFooterRight type="text" color="secondary" title="Cancel" (click)="sheetActions.close()"></sd-button>
+          </sd-modal>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bottom-sheet-form') {
-      <demo-section heading="Bottom-sheet form" [props]="[{ name: 'view', value: 'bottom-sheet' }, { name: 'sdFooterLeft/right', value: 'template' }]">
-        <sd-button type="light" color="primary" prefixIcon="schedule" title="Pick time" (click)="sheetForm.open()"></sd-button>
+        <demo-section
+          heading="Bottom-sheet form"
+          [props]="[
+            { name: 'view', value: 'bottom-sheet' },
+            { name: 'sdFooterLeft/right', value: 'template' },
+          ]">
+          <sd-button type="light" color="primary" prefixIcon="schedule" title="Pick time" (click)="sheetForm.open()"></sd-button>
 
-        <sd-modal #sheetForm title="Pick a delivery time" view="bottom-sheet" width="100%">
-          <div class="sheet-stack">
-            @for (slot of deliverySlots; track slot.time) {
-              <button type="button" class="time-option" (click)="sheetForm.close()">
-                <strong>{{ slot.time }}</strong>
-                <span>{{ slot.note }}</span>
-              </button>
-            }
-          </div>
+          <sd-modal #sheetForm title="Pick a delivery time" view="bottom-sheet" width="100%">
+            <div class="sheet-stack">
+              @for (slot of deliverySlots; track slot.time) {
+                <button type="button" class="time-option" (click)="sheetForm.close()">
+                  <strong>{{ slot.time }}</strong>
+                  <span>{{ slot.note }}</span>
+                </button>
+              }
+            </div>
 
-          <sd-button sdFooterLeft type="text" color="secondary" title="Cancel" (click)="sheetForm.close()"></sd-button>
-          <sd-button sdFooterRight type="fill" color="primary" title="Confirm" (click)="sheetForm.close()"></sd-button>
-        </sd-modal>
-      </demo-section>
+            <sd-button sdFooterLeft type="text" color="secondary" title="Cancel" (click)="sheetForm.close()"></sd-button>
+            <sd-button sdFooterRight type="fill" color="primary" title="Confirm" (click)="sheetForm.close()"></sd-button>
+          </sd-modal>
+        </demo-section>
       }
     </demo-page>
   \`,
-  styles: [\`
-    :host ::ng-deep demo-section .demo-section__body {
-      align-items: flex-start;
-    }
+  styles: [
+    \`
+      :host ::ng-deep demo-section .demo-section__body {
+        align-items: flex-start;
+      }
 
-    .demo-stack,
-    .sheet-stack {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      padding: 16px;
-    }
+      .demo-stack,
+      .sheet-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 0;
+      }
 
-    .sheet-stack {
-      padding-top: 4px;
-    }
+      .sheet-stack {
+        padding-top: 4px;
+      }
 
-    .demo-copy {
-      margin: 0;
-      color: #334155;
-      line-height: 1.5;
-    }
+      .demo-copy {
+        margin: 0;
+        color: #334155;
+        line-height: 1.5;
+      }
 
-    .demo-title-block {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      min-width: 0;
-    }
+      .demo-title-block {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
 
-    .demo-title-block span {
-      color: #667085;
-      font-size: 12px;
-    }
+      .demo-title-block span {
+        color: #667085;
+        font-size: 12px;
+      }
 
-    .demo-list {
-      display: flex;
-      flex-direction: column;
-      border: 1px solid #e6e6e6;
-      border-radius: 8px;
-      overflow: hidden;
-    }
+      .demo-list {
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #e6e6e6;
+        border-radius: 8px;
+        overflow: hidden;
+      }
 
-    .demo-list__row {
-      display: grid;
-      grid-template-columns: minmax(90px, max-content) minmax(110px, max-content) minmax(0, 1fr);
-      gap: 12px;
-      align-items: center;
-      padding: 10px 12px;
-      border-bottom: 1px solid #f2f2f2;
-      color: #475467;
-    }
+      .demo-list__row {
+        display: grid;
+        grid-template-columns: minmax(90px, max-content) minmax(110px, max-content) minmax(0, 1fr);
+        gap: 12px;
+        align-items: center;
+        padding: 10px 12px;
+        border-bottom: 1px solid #f2f2f2;
+        color: #475467;
+      }
 
-    .demo-list__row:last-child {
-      border-bottom: 0;
-    }
+      .demo-list__row:last-child {
+        border-bottom: 0;
+      }
 
-    .time-option {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 4px;
-      width: 100%;
-      padding: 14px 16px;
-      border: 1px solid #e6e6e6;
-      border-radius: 8px;
-      background: #fff;
-      color: #1f2937;
-      cursor: pointer;
-      text-align: left;
-    }
+      .time-option {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid #e6e6e6;
+        border-radius: 8px;
+        background: #fff;
+        color: #1f2937;
+        cursor: pointer;
+        text-align: left;
+      }
 
-    .time-option:hover {
-      border-color: var(--sd-primary, #005cbb);
-    }
+      .time-option:hover {
+        border-color: var(--sd-primary, #005cbb);
+      }
 
-    .time-option span {
-      color: #667085;
-    }
-  \`],
+      .time-option span {
+        color: #667085;
+      }
+      @media (max-width: 600px) {
+        .demo-stack {
+          min-width: 0;
+          overflow-wrap: anywhere;
+        }
+        .demo-stack ::ng-deep sd-section-item .c-item {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 4px;
+        }
+        .demo-stack ::ng-deep sd-section-item .c-item-label {
+          width: auto !important;
+        }
+        .demo-list__row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+        .sheet-stack ::ng-deep sd-button button {
+          min-height: 44px;
+        }
+      }
+    \`,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ModalDemoComponent {
@@ -3554,7 +3823,7 @@ export class ModalDemoComponent {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 16px;
+  padding: 0;
 }
 
 .sheet-stack {
@@ -3622,6 +3891,28 @@ export class ModalDemoComponent {
 
 .time-option span {
   color: #667085;
+}
+@media (max-width: 600px) {
+  .demo-stack {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .demo-stack ::ng-deep sd-section-item .c-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+  .demo-stack ::ng-deep sd-section-item .c-item-label {
+    width: auto !important;
+  }
+  .demo-list__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .sheet-stack ::ng-deep sd-button button {
+    min-height: 44px;
+  }
 }`,
   },
   "components/operator": {
@@ -4954,188 +5245,242 @@ import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, SdBadge, SdButton, SdSection, SdSectionItem, SdSideDrawer],
   template: \`
-    <demo-page #demoPage
+    <demo-page
+      #demoPage
       title="Side Drawer"
-      description="Right-side panel cho form/detail/filter. Header va footer dung slot sdHeaderLeft/sdHeaderRight/sdFooterLeft/sdFooterRight; content padding mac dinh bang 0.">
-
+      description="Right-side panel cho form/detail/filter. Header va footer dung slot sdHeaderLeft/sdHeaderRight/sdFooterLeft/sdFooterRight; nội dung có lề thống nhất và hỗ trợ mobile.">
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-create-drawer-split-footer') {
-      <demo-section heading="Create drawer + split footer" [props]="[{ name: 'sdFooterLeft', value: 'template' }, { name: 'sdFooterRight', value: 'template' }]">
-        <sd-button type="fill" color="primary" prefixIcon="add" title="Create employee" (click)="createDrawer.open()"></sd-button>
+        <demo-section
+          heading="Create drawer + split footer"
+          [props]="[
+            { name: 'sdFooterLeft', value: 'template' },
+            { name: 'sdFooterRight', value: 'template' },
+          ]">
+          <sd-button type="fill" color="primary" prefixIcon="add" title="Create employee" (click)="createDrawer.open()"></sd-button>
 
-        <sd-side-drawer #createDrawer title="Create employee" width="480px">
-          <div class="drawer-stack">
-            <sd-section icon="person" title="Personal info">
-              <sd-section-item label="Name">Nguyen Van An</sd-section-item>
-              <sd-section-item label="Email">an.nv&#64;onemount.com</sd-section-item>
-              <sd-section-item label="Phone">0901 234 567</sd-section-item>
-            </sd-section>
-          </div>
+          <sd-side-drawer #createDrawer title="Create employee" width="480px">
+            <div class="drawer-stack">
+              <sd-section icon="person" title="Personal info">
+                <sd-section-item label="Name">Nguyen Van An</sd-section-item>
+                <sd-section-item label="Email">an.nv&#64;onemount.com</sd-section-item>
+                <sd-section-item label="Phone">0901 234 567</sd-section-item>
+              </sd-section>
+            </div>
 
-          <sd-button sdFooterLeft type="text" color="secondary" title="Reset"></sd-button>
-          <sd-button sdFooterRight type="text" color="secondary" title="Cancel" (click)="createDrawer.close()"></sd-button>
-          <sd-button sdFooterRight type="fill" color="primary" title="Save" prefixIcon="save" (click)="createDrawer.close()"></sd-button>
-        </sd-side-drawer>
-      </demo-section>
+            <sd-button sdFooterLeft type="text" color="secondary" title="Reset"></sd-button>
+            <sd-button sdFooterRight type="text" color="secondary" title="Cancel" (click)="createDrawer.close()"></sd-button>
+            <sd-button sdFooterRight type="fill" color="primary" title="Save" prefixIcon="save" (click)="createDrawer.close()"></sd-button>
+          </sd-side-drawer>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-custom-header-left-right') {
-      <demo-section heading="Custom header left/right" [props]="[{ name: 'sdHeaderLeft', value: 'template' }, { name: 'sdHeaderRight', value: 'template' }]">
-        <sd-button type="outline" color="primary" prefixIcon="visibility" title="Open profile" (click)="profileDrawer.open()"></sd-button>
+        <demo-section
+          heading="Custom header left/right"
+          [props]="[
+            { name: 'sdHeaderLeft', value: 'template' },
+            { name: 'sdHeaderRight', value: 'template' },
+          ]">
+          <sd-button type="outline" color="primary" prefixIcon="visibility" title="Open profile" (click)="profileDrawer.open()"></sd-button>
 
-        <sd-side-drawer #profileDrawer title="Profile" width="560px">
-          <div sdHeaderLeft class="drawer-title-block">
-            <strong>Employee profile</strong>
-            <span>EMP-2026-0012</span>
-          </div>
-          <sd-button sdHeaderRight type="text" color="primary" prefixIcon="print" tooltip="Print"></sd-button>
-          <sd-button sdHeaderRight type="text" color="primary" prefixIcon="refresh" tooltip="Refresh"></sd-button>
+          <sd-side-drawer #profileDrawer title="Profile" width="560px">
+            <div sdHeaderLeft class="drawer-title-block">
+              <strong>Employee profile</strong>
+              <span>EMP-2026-0012</span>
+            </div>
+            <sd-button sdHeaderRight type="text" color="primary" prefixIcon="print" tooltip="Print"></sd-button>
+            <sd-button sdHeaderRight type="text" color="primary" prefixIcon="refresh" tooltip="Refresh"></sd-button>
 
-          <div class="drawer-stack">
-            <sd-section icon="badge" title="Overview">
-              <sd-section-item label="Department">Sales</sd-section-item>
-              <sd-section-item label="Manager">Tran Thi Bich</sd-section-item>
-              <sd-section-item label="Status">
-                <sd-badge type="round" success title="Active"></sd-badge>
-              </sd-section-item>
-            </sd-section>
-            <sd-section icon="notes" title="Note">
-              <div class="drawer-copy">The drawer body has no built-in padding, so this demo uses a .drawer-stack wrapper.</div>
-            </sd-section>
-          </div>
+            <div class="drawer-stack">
+              <sd-section icon="badge" title="Overview">
+                <sd-section-item label="Department">Sales</sd-section-item>
+                <sd-section-item label="Manager">Tran Thi Bich</sd-section-item>
+                <sd-section-item label="Status">
+                  <sd-badge type="round" success title="Active"></sd-badge>
+                </sd-section-item>
+              </sd-section>
+              <sd-section icon="notes" title="Note">
+                <div class="drawer-copy">The drawer provides content insets; the wrapper only controls spacing between sections.</div>
+              </sd-section>
+            </div>
 
-          <sd-button sdFooterRight type="text" color="secondary" title="Close" (click)="profileDrawer.close()"></sd-button>
-        </sd-side-drawer>
-      </demo-section>
+            <sd-button sdFooterRight type="text" color="secondary" title="Close" (click)="profileDrawer.close()"></sd-button>
+          </sd-side-drawer>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-filter-drawer') {
-      <demo-section heading="Filter drawer" [props]="[{ name: 'disableBackdropClose', value: false }, { name: 'footer', value: 'left/right' }]">
-        <sd-button type="outline" color="primary" prefixIcon="filter_list" title="Open filters" (click)="filterDrawer.open()"></sd-button>
+        <demo-section
+          heading="Filter drawer"
+          [props]="[
+            { name: 'disableBackdropClose', value: false },
+            { name: 'footer', value: 'left/right' },
+          ]">
+          <sd-button type="outline" color="primary" prefixIcon="filter_list" title="Open filters" (click)="filterDrawer.open()"></sd-button>
 
-        <sd-side-drawer #filterDrawer title="Advanced filters" width="420px">
-          <sd-button sdHeaderRight type="text" color="primary" prefixIcon="refresh" tooltip="Reset filters"></sd-button>
+          <sd-side-drawer #filterDrawer title="Advanced filters" width="420px">
+            <sd-button sdHeaderRight type="text" color="primary" prefixIcon="refresh" tooltip="Reset filters"></sd-button>
 
-          <div class="drawer-stack">
-            <sd-section icon="tune" title="Criteria">
-              <sd-section-item label="Date range">01/01/2026 - 31/12/2026</sd-section-item>
-              <sd-section-item label="Status">Active</sd-section-item>
-              <sd-section-item label="Department">Sales, Marketing</sd-section-item>
-            </sd-section>
-          </div>
+            <div class="drawer-stack">
+              <sd-section icon="tune" title="Criteria">
+                <sd-section-item label="Date range">01/01/2026 - 31/12/2026</sd-section-item>
+                <sd-section-item label="Status">Active</sd-section-item>
+                <sd-section-item label="Department">Sales, Marketing</sd-section-item>
+              </sd-section>
+            </div>
 
-          <sd-button sdFooterLeft type="text" color="secondary" title="Clear"></sd-button>
-          <sd-button sdFooterRight type="fill" color="primary" title="Apply" (click)="filterDrawer.close()"></sd-button>
-        </sd-side-drawer>
-      </demo-section>
+            <sd-button sdFooterLeft type="text" color="secondary" title="Clear"></sd-button>
+            <sd-button sdFooterRight type="fill" color="primary" title="Apply" (click)="filterDrawer.close()"></sd-button>
+          </sd-side-drawer>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-long-scroll-content') {
-      <demo-section heading="Long scroll content" [props]="[{ name: 'content', value: 'overflow auto' }, { name: 'width', value: '520px' }]">
-        <sd-button type="light" color="primary" prefixIcon="list" title="Open checklist" (click)="checklistDrawer.open()"></sd-button>
+        <demo-section
+          heading="Long scroll content"
+          [props]="[
+            { name: 'content', value: 'overflow auto' },
+            { name: 'width', value: '520px' },
+          ]">
+          <sd-button type="light" color="primary" prefixIcon="list" title="Open checklist" (click)="checklistDrawer.open()"></sd-button>
 
-        <sd-side-drawer #checklistDrawer title="Approval checklist" width="520px">
-          <div class="drawer-stack">
-            <div class="drawer-list">
-              @for (item of checklist; track item) {
-                <div class="drawer-list__row">
-                  <span>{{ item }}</span>
-                  <sd-badge type="round" info title="Required"></sd-badge>
-                </div>
-              }
+          <sd-side-drawer #checklistDrawer title="Approval checklist" width="520px">
+            <div class="drawer-stack">
+              <div class="drawer-list">
+                @for (item of checklist; track item) {
+                  <div class="drawer-list__row">
+                    <span>{{ item }}</span>
+                    <sd-badge type="round" info title="Required"></sd-badge>
+                  </div>
+                }
+              </div>
             </div>
-          </div>
 
-          <sd-button sdFooterLeft type="text" color="secondary" title="Back" (click)="checklistDrawer.close()"></sd-button>
-          <sd-button sdFooterRight type="fill" color="primary" title="Submit" (click)="checklistDrawer.close()"></sd-button>
-        </sd-side-drawer>
-      </demo-section>
+            <sd-button sdFooterLeft type="text" color="secondary" title="Back" (click)="checklistDrawer.close()"></sd-button>
+            <sd-button sdFooterRight type="fill" color="primary" title="Submit" (click)="checklistDrawer.close()"></sd-button>
+          </sd-side-drawer>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-read-only-drawer-without-footer') {
-      <demo-section heading="Read-only drawer without footer" [props]="[{ name: 'footer', value: 'empty hidden' }]">
-        <sd-button type="outline" color="primary" prefixIcon="description" title="Open detail" (click)="readonlyDrawer.open()"></sd-button>
+        <demo-section heading="Read-only drawer without footer" [props]="[{ name: 'footer', value: 'empty hidden' }]">
+          <sd-button
+            type="outline"
+            color="primary"
+            prefixIcon="description"
+            title="Open detail"
+            (click)="readonlyDrawer.open()"></sd-button>
 
-        <sd-side-drawer #readonlyDrawer title="Request detail" width="500px">
-          <div class="drawer-stack">
-            <sd-section icon="description" title="Request">
-              <sd-section-item label="Code">REQ-2026-0042</sd-section-item>
-              <sd-section-item label="Owner">Tran Thi Bich</sd-section-item>
-              <sd-section-item label="Created at">09/05/2026</sd-section-item>
-            </sd-section>
-            <p class="drawer-copy">No footer slots are projected here, so the action bar is hidden.</p>
-          </div>
-        </sd-side-drawer>
-      </demo-section>
+          <sd-side-drawer #readonlyDrawer title="Request detail" width="500px">
+            <div class="drawer-stack">
+              <sd-section icon="description" title="Request">
+                <sd-section-item label="Code">REQ-2026-0042</sd-section-item>
+                <sd-section-item label="Owner">Tran Thi Bich</sd-section-item>
+                <sd-section-item label="Created at">09/05/2026</sd-section-item>
+              </sd-section>
+              <p class="drawer-copy">No footer slots are projected here, so the action bar is hidden.</p>
+            </div>
+          </sd-side-drawer>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-locked-drawer-with-explicit-actions') {
-      <demo-section heading="Locked drawer with explicit actions" [props]="[{ name: 'disableBackdropClose', value: true }, { name: 'hideClose', value: true }]">
-        <sd-button type="fill" color="primary" prefixIcon="lock" title="Open locked drawer" (click)="lockedDrawer.open()"></sd-button>
+        <demo-section
+          heading="Locked drawer with explicit actions"
+          [props]="[
+            { name: 'disableBackdropClose', value: true },
+            { name: 'hideClose', value: true },
+          ]">
+          <sd-button type="fill" color="primary" prefixIcon="lock" title="Open locked drawer" (click)="lockedDrawer.open()"></sd-button>
 
-        <sd-side-drawer #lockedDrawer title="Required decision" width="460px" disableBackdropClose hideClose>
-          <div class="drawer-stack">
-            <p class="drawer-copy">Backdrop and close icon are disabled. The user must choose one explicit footer action.</p>
-          </div>
+          <sd-side-drawer #lockedDrawer title="Required decision" width="460px" disableBackdropClose hideClose>
+            <div class="drawer-stack">
+              <p class="drawer-copy">Backdrop and close icon are disabled. The user must choose one explicit footer action.</p>
+            </div>
 
-          <sd-button sdFooterLeft type="text" color="secondary" title="Reject" (click)="lockedDrawer.close()"></sd-button>
-          <sd-button sdFooterRight type="fill" color="primary" title="Approve" (click)="lockedDrawer.close()"></sd-button>
-        </sd-side-drawer>
-      </demo-section>
+            <sd-button sdFooterLeft type="text" color="secondary" title="Reject" (click)="lockedDrawer.close()"></sd-button>
+            <sd-button sdFooterRight type="fill" color="primary" title="Approve" (click)="lockedDrawer.close()"></sd-button>
+          </sd-side-drawer>
+        </demo-section>
       }
     </demo-page>
   \`,
-  styles: [\`
-    :host ::ng-deep demo-section .demo-section__body {
-      align-items: flex-start;
-    }
+  styles: [
+    \`
+      :host ::ng-deep demo-section .demo-section__body {
+        align-items: flex-start;
+      }
 
-    .drawer-stack {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      padding: 16px;
-    }
+      .drawer-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 0;
+      }
 
-    .drawer-title-block {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      min-width: 0;
-    }
+      .drawer-title-block {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
 
-    .drawer-title-block span {
-      color: #667085;
-      font-size: 12px;
-    }
+      .drawer-title-block span {
+        color: #667085;
+        font-size: 12px;
+      }
 
-    .drawer-copy {
-      margin: 0;
-      color: #334155;
-      line-height: 1.5;
-    }
+      .drawer-copy {
+        margin: 0;
+        color: #334155;
+        line-height: 1.5;
+      }
 
-    .drawer-list {
-      display: flex;
-      flex-direction: column;
-      border: 1px solid #e6e6e6;
-      border-radius: 8px;
-      overflow: hidden;
-    }
+      .drawer-list {
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #e6e6e6;
+        border-radius: 8px;
+        overflow: hidden;
+      }
 
-    .drawer-list__row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 10px 12px;
-      border-bottom: 1px solid #f2f2f2;
-      color: #475467;
-    }
+      .drawer-list__row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 12px;
+        border-bottom: 1px solid #f2f2f2;
+        color: #475467;
+      }
 
-    .drawer-list__row:last-child {
-      border-bottom: 0;
-    }
-  \`],
+      .drawer-list__row:last-child {
+        border-bottom: 0;
+      }
+      @media (max-width: 600px) {
+        .drawer-stack {
+          min-width: 0;
+          overflow-wrap: anywhere;
+        }
+        .drawer-stack ::ng-deep sd-section-item .c-item {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 4px;
+        }
+        .drawer-stack ::ng-deep sd-section-item .c-item-label {
+          width: auto !important;
+        }
+        .drawer-list__row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+        .sheet-stack ::ng-deep sd-button button {
+          min-height: 44px;
+        }
+      }
+    \`,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SideDrawerDemoComponent {
@@ -5150,7 +5495,7 @@ export class SideDrawerDemoComponent {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 16px;
+  padding: 0;
 }
 
 .drawer-title-block {
@@ -5191,6 +5536,28 @@ export class SideDrawerDemoComponent {
 
 .drawer-list__row:last-child {
   border-bottom: 0;
+}
+@media (max-width: 600px) {
+  .drawer-stack {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .drawer-stack ::ng-deep sd-section-item .c-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+  .drawer-stack ::ng-deep sd-section-item .c-item-label {
+    width: auto !important;
+  }
+  .drawer-list__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .sheet-stack ::ng-deep sd-button button {
+    min-height: 44px;
+  }
 }`,
   },
   "components/splitter": {
@@ -5317,26 +5684,17 @@ export class SplitterDemoComponent {
 .bg-grey { background: #f5f5f5; color: #424242; }`,
   },
   "components/stepper": {
-    typescript: `import { JsonPipe } from '@angular/common';
+    typescript: `import { SdButton } from '@sdcorejs/angular/components/button';
+import { JsonPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdStep, SdStepper } from '@sdcorejs/angular/components/stepper';
 
 @Component({
   selector: 'app-stepper-demo',
   standalone: true,
-  imports: [
-    DemoPageComponent,
-    DemoSectionComponent,
-    SdStepper,
-    SdStep,
-    FormsModule,
-    ReactiveFormsModule,
-    MatButtonModule,
-    JsonPipe,
-  ],
+  imports: [SdButton, DemoPageComponent, DemoSectionComponent, SdStepper, SdStep, FormsModule, ReactiveFormsModule, JsonPipe],
   templateUrl: './stepper-demo.component.html',
   styleUrls: ['./stepper-demo.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -5390,7 +5748,7 @@ export class StepperDemoComponent {
   readonly errorState = signal<'error' | undefined>('error');
 
   toggleError() {
-    this.errorState.update((s) => (s === 'error' ? undefined : 'error'));
+    this.errorState.update(s => (s === 'error' ? undefined : 'error'));
   }
 
   // -------- 6. Custom labelPosition --------
@@ -5502,6 +5860,27 @@ code {
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 12px;
+}
+
+.step-body > sd-button {
+  align-self: flex-end;
+}
+.step-body > .row,
+.step-form > .row {
+  justify-content: flex-end;
+}
+.step-form input {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+@media (max-width: 600px) {
+  .step-form label {
+    flex-wrap: wrap;
+  }
+  :host ::ng-deep .step-body button,
+  :host ::ng-deep .step-form button {
+    min-height: 44px;
+  }
 }`,
   },
   "components/tab": {
@@ -7718,7 +8097,8 @@ function lazyTreeItem(data: TreeDemoItem, hasChildren?: boolean, icon?: string):
 }`,
   },
   "components/upload-file": {
-    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+    typescript: `import { SdButton } from '@sdcorejs/angular/components/button';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdUploadFile } from '@sdcorejs/angular/components/upload-file';
@@ -7726,84 +8106,124 @@ import { SdUploadFile } from '@sdcorejs/angular/components/upload-file';
 @Component({
   selector: 'app-upload-file-demo',
   standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, SdUploadFile],
+  imports: [SdButton, DemoPageComponent, DemoSectionComponent, SdUploadFile],
   template: \`
-    <demo-page #demoPage
+    <demo-page
+      #demoPage
       title="Upload File"
       description="Tải lên tệp tin / hình ảnh — kéo thả, đa file, validate đuôi và dung lượng, có preview thumbnail. Hỗ trợ FormGroup và two-way [(model)].">
-
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tai-nhieu-anh-co-gioi-han') {
-      <demo-section heading="Tải nhiều ảnh có giới hạn" [props]="[{ name: 'type', value: 'image' }, { name: 'max', value: '5' }, { name: 'maxSize', value: '2' }, { name: 'model', value: 'two-way' }]">
-        <div class="control-box">
-          <sd-upload-file
-            label="Ảnh sản phẩm"
-            type="image"
-            helperText="Ảnh sẽ hiển thị trên trang chi tiết sản phẩm."
-            [extensions]="['jpg', 'jpeg', 'png']"
-            [maxSize]="2"
-            [max]="5"
-            [(model)]="productImages">
-          </sd-upload-file>
-        </div>
-      </demo-section>
+        <demo-section
+          heading="Tải nhiều ảnh có giới hạn"
+          [props]="[
+            { name: 'appearance', value: 'dropzone / compact' },
+            { name: 'type', value: 'image' },
+            { name: 'max', value: '5' },
+            { name: 'maxSize', value: '2' },
+            { name: 'model', value: 'two-way' },
+          ]">
+          <div class="control-box">
+            <div class="upload-appearance">
+              <sd-button title="Vùng thả" size="sm" type="light" htmlType="button" (click)="uploadAppearance.set('dropzone')"></sd-button>
+              <sd-button title="Compact" size="sm" type="light" htmlType="button" (click)="uploadAppearance.set('compact')"></sd-button>
+            </div>
+            <sd-upload-file
+              [appearance]="uploadAppearance()"
+              label="Ảnh sản phẩm"
+              type="image"
+              helperText="Ảnh sẽ hiển thị trên trang chi tiết sản phẩm."
+              [extensions]="['jpg', 'jpeg', 'png']"
+              [maxSize]="2"
+              [max]="5"
+              [(model)]="productImages">
+            </sd-upload-file>
+          </div>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tai-tai-lieu-bao-loi-required') {
-      <demo-section
-        heading="Tải tài liệu + báo lỗi required"
-        [props]="[{ name: 'type', value: 'document' }, { name: 'required', value: 'true' }, { name: '[form]', value: 'FormGroup' }]"
-        note="Bấm Kiểm tra (mô phỏng submit → markAllAsTouched) khi chưa đính kèm file: message lỗi đỏ 'Vui lòng tải tệp' hiện ngay dưới vùng upload. Đính kèm 1 file rồi Kiểm tra lại → lỗi biến mất.">
-        <div class="control-box" style="display:flex; flex-direction:column; gap:12px">
-          <sd-upload-file
-            label="Tài liệu đính kèm"
-            type="document"
-            helperText="Đính kèm hợp đồng / phụ lục / biên bản."
-            [extensions]="['pdf', 'doc', 'docx', 'xlsx']"
-            [maxSize]="10"
-            [max]="3"
-            required
-            [form]="form"
-            name="attachments">
-          </sd-upload-file>
-          <div style="display:flex; gap:8px">
-            <button type="button" (click)="check()">Kiểm tra</button>
-            <button type="button" (click)="resetForm()">Đặt lại</button>
+        <demo-section
+          heading="Tải tài liệu + báo lỗi required"
+          [props]="[
+            { name: 'type', value: 'document' },
+            { name: 'required', value: 'true' },
+            { name: '[form]', value: 'FormGroup' },
+          ]"
+          note="Bấm Kiểm tra (mô phỏng submit → markAllAsTouched) khi chưa đính kèm file: message lỗi đỏ 'Vui lòng tải tệp' hiện ngay dưới vùng upload. Đính kèm 1 file rồi Kiểm tra lại → lỗi biến mất.">
+          <div class="control-box" style="display:flex; flex-direction:column; gap:12px">
+            <sd-upload-file
+              label="Tài liệu đính kèm"
+              type="document"
+              helperText="Đính kèm hợp đồng / phụ lục / biên bản."
+              [extensions]="['pdf', 'doc', 'docx', 'xlsx']"
+              [maxSize]="10"
+              [max]="3"
+              required
+              [form]="form"
+              name="attachments">
+            </sd-upload-file>
+            <div style="display:flex; gap:8px">
+              <sd-button (click)="check()" size="sm" type="light" color="secondary" htmlType="button" title="Kiểm tra"></sd-button>
+              <sd-button (click)="resetForm()" size="sm" type="light" color="secondary" htmlType="button" title="Đặt lại"></sd-button>
+            </div>
           </div>
-        </div>
-      </demo-section>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-vo-hieu-hoa-chi-doc') {
-      <demo-section heading="Vô hiệu hóa (chỉ đọc)" [props]="[{ name: 'disabled', value: 'true' }]">
-        <div class="control-box">
-          <sd-upload-file
-            label="Đã đính kèm"
-            type="file"
-            [disabled]="true"
-            [model]="['demo-file-id']">
-          </sd-upload-file>
-        </div>
-      </demo-section>
+        <demo-section heading="Vô hiệu hóa (chỉ đọc)" [props]="[{ name: 'disabled', value: 'true' }]">
+          <div class="control-box">
+            <sd-upload-file label="Đã đính kèm" type="file" [disabled]="true" [model]="['demo-file-id']"> </sd-upload-file>
+          </div>
+        </demo-section>
       }
     </demo-page>
   \`,
-  styles: [\`
-    .control-box {
-      width: 100%;
-      max-width: 560px;
-    }
-  \`],
+  styles: [
+    \`
+      .upload-appearance {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+      @media (max-width: 600px) {
+        :host ::ng-deep sd-button button {
+          min-height: 44px;
+        }
+      }
+      .control-box {
+        width: 100%;
+        max-width: 560px;
+      }
+    \`,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UploadFileDemoComponent {
+  readonly uploadAppearance = signal<'dropzone' | 'compact'>('dropzone');
   readonly productImages = signal<(string | number)[]>([]);
   readonly form = new FormGroup({});
 
-  check() { this.form.markAllAsTouched(); }
-  resetForm() { this.form.reset(); this.form.markAsUntouched(); }
+  check() {
+    this.form.markAllAsTouched();
+  }
+  resetForm() {
+    this.form.reset();
+    this.form.markAsUntouched();
+  }
 }
 `,
-    scss: `.control-box {
+    scss: `.upload-appearance {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+@media (max-width: 600px) {
+  :host ::ng-deep sd-button button {
+    min-height: 44px;
+  }
+}
+.control-box {
   width: 100%;
   max-width: 560px;
 }`,
@@ -12712,59 +13132,92 @@ import { SdConfirmService } from '@sdcorejs/angular/services/confirm';
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, MatButtonModule],
   template: \`
-    <demo-page #demoPage title="Confirm" description="SdConfirmService – mở hộp thoại xác nhận trả về Promise. Hỗ trợ confirm cơ bản, nhập input, chọn radio/select, chọn ngày và ngày giờ.">
+    <demo-page
+      #demoPage
+      title="Confirm"
+      description="SdConfirmService – mở hộp thoại xác nhận trả về Promise. Hỗ trợ confirm cơ bản, nhập input, chọn radio/select, chọn ngày và ngày giờ.">
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-xac-nhan-co-ban') {
-      <demo-section heading="Xác nhận cơ bản" [props]="[{ name: 'confirm()', value: 'method' }]" note="confirm(message) – Promise resolve khi bấm OK, reject khi Hủy.">
-        <button mat-flat-button color="primary" (click)="onBasic()">Xác nhận thao tác</button>
-      </demo-section>
+        <demo-section
+          heading="Xác nhận cơ bản"
+          [props]="[
+            { name: 'confirm()', value: 'method' },
+            { name: 'icon', value: 'default / info_outline' },
+          ]"
+          note="Không truyền icon sẽ dùng icon mặc định. Truyền icon để thay biểu tượng trong cùng ô nền nhẹ.">
+          <button mat-flat-button color="primary" (click)="onBasic()">Xác nhận thao tác</button>
+          <button mat-stroked-button color="primary" (click)="onCustomIcon()">Icon tùy chỉnh</button>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-xac-nhan-xoa') {
-      <demo-section heading="Xác nhận xóa" [props]="[{ name: 'confirm()', value: 'method' }]" note="Tùy chỉnh tiêu đề, nhãn nút và màu nút.">
-        <button mat-flat-button color="warn" (click)="onDelete()">Xóa bản ghi</button>
-      </demo-section>
+        <demo-section
+          heading="Xác nhận xóa"
+          [props]="[{ name: 'confirm()', value: 'method' }]"
+          note="Tùy chỉnh tiêu đề, nhãn nút và màu nút.">
+          <button mat-flat-button color="warn" (click)="onDelete()">Xóa bản ghi</button>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-nhap-ly-do') {
-      <demo-section heading="Nhập lý do" [props]="[{ name: 'withInput()', value: 'method' }]" note="withInput() – yêu cầu nhập nội dung trước khi xác nhận.">
-        <button mat-stroked-button color="primary" (click)="onInput()">Nhập lý do từ chối</button>
-      </demo-section>
+        <demo-section
+          heading="Nhập lý do"
+          [props]="[{ name: 'withInput()', value: 'method' }]"
+          note="withInput() – yêu cầu nhập nội dung trước khi xác nhận.">
+          <button mat-stroked-button color="primary" (click)="onInput()">Nhập lý do từ chối</button>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chon-muc-do') {
-      <demo-section heading="Chọn mức độ" [props]="[{ name: 'withRadio()', value: 'method' }]" note="withRadio() – chọn từ danh sách radio.">
-        <button mat-stroked-button color="primary" (click)="onRadio()">Chọn mức độ</button>
-      </demo-section>
+        <demo-section
+          heading="Chọn mức độ"
+          [props]="[{ name: 'withRadio()', value: 'method' }]"
+          note="withRadio() – chọn từ danh sách radio.">
+          <button mat-stroked-button color="primary" (click)="onRadio()">Chọn mức độ</button>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chon-radio-dang-doc') {
-      <demo-section heading="Chọn radio dạng dọc" [props]="[{ name: 'display', value: 'column' }]" note="withRadio(..., { display: 'column' }) – hiển thị danh sách radio theo chiều dọc.">
-        <button mat-stroked-button color="primary" (click)="onRadioColumn()">Chọn phòng ban dạng dọc</button>
-      </demo-section>
+        <demo-section
+          heading="Chọn radio dạng dọc"
+          [props]="[{ name: 'display', value: 'column' }]"
+          note="withRadio(..., { display: 'column' }) – hiển thị danh sách radio theo chiều dọc.">
+          <button mat-stroked-button color="primary" (click)="onRadioColumn()">Chọn phòng ban dạng dọc</button>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chon-phong-ban') {
-      <demo-section heading="Chọn phòng ban" [props]="[{ name: 'withSelect()', value: 'method' }]" note="withSelect() – chọn một giá trị bằng sd-select.">
-        <button mat-stroked-button color="primary" (click)="onSelect()">Chọn phòng ban</button>
-      </demo-section>
+        <demo-section
+          heading="Chọn phòng ban"
+          [props]="[{ name: 'withSelect()', value: 'method' }]"
+          note="withSelect() – chọn một giá trị bằng sd-select.">
+          <button mat-stroked-button color="primary" (click)="onSelect()">Chọn phòng ban</button>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chon-ngay') {
-      <demo-section heading="Chọn ngày" [props]="[{ name: 'withDate()', value: 'method' }]" note="withDate() – chọn ngày với min/max nếu cần.">
-        <button mat-stroked-button color="primary" (click)="onDate()">Chọn ngày hiệu lực</button>
-      </demo-section>
+        <demo-section
+          heading="Chọn ngày"
+          [props]="[{ name: 'withDate()', value: 'method' }]"
+          note="withDate() – chọn ngày với min/max nếu cần.">
+          <button mat-stroked-button color="primary" (click)="onDate()">Chọn ngày hiệu lực</button>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chon-ngay-gio') {
-      <demo-section heading="Chọn ngày giờ" [props]="[{ name: 'withDatetime()', value: 'method' }]" note="withDatetime() – chọn ngày và giờ.">
-        <button mat-stroked-button color="primary" (click)="onDatetime()">Chọn lịch xử lý</button>
-      </demo-section>
+        <demo-section
+          heading="Chọn ngày giờ"
+          [props]="[{ name: 'withDatetime()', value: 'method' }]"
+          note="withDatetime() – chọn ngày và giờ.">
+          <button mat-stroked-button color="primary" (click)="onDatetime()">Chọn lịch xử lý</button>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-nhat-ky-gan-nhat') {
-      <demo-section heading="Nhật ký gần nhất">
-        <pre style="margin:0;font-size:12px;background:#f5f5f5;padding:8px 12px;border-radius:6px;width:100%">{{ log() || '(chưa có thao tác)' }}</pre>
-      </demo-section>
+        <demo-section heading="Nhật ký gần nhất">
+          <pre style="margin:0;font-size:12px;background:#f5f5f5;padding:8px 12px;border-radius:6px;width:100%">{{
+            log() || '(chưa có thao tác)'
+          }}</pre>
+        </demo-section>
       }
     </demo-page>
   \`,
@@ -12775,32 +13228,56 @@ export class ConfirmDemoComponent {
   readonly log = signal('');
 
   onBasic() {
-    this.#confirm.confirm('Bạn có chắc muốn tiếp tục thao tác này?').then(
-      () => this.log.set('Cơ bản: ĐỒNG Ý'),
-      () => this.log.set('Cơ bản: HỦY'),
-    );
+    this.#confirm
+      .confirm('Bạn có chắc muốn thực hiện thao tác này?', { title: 'Tiếp tục thao tác?', yesTitle: 'Tiếp tục', noTitle: 'Hủy' })
+      .then(
+        () => this.log.set('Cơ bản: ĐỒNG Ý'),
+        () => this.log.set('Cơ bản: HỦY')
+      );
+  }
+
+  onCustomIcon() {
+    this.#confirm
+      .confirm('Kiểm tra lại thông tin trước khi tiếp tục.', {
+        icon: 'info_outline',
+        title: 'Xác nhận thông tin',
+        yesTitle: 'Tiếp tục',
+        noTitle: 'Hủy',
+      })
+      .then(
+        () => this.log.set('Icon tùy chỉnh: ĐỒNG Ý'),
+        () => this.log.set('Icon tùy chỉnh: HỦY')
+      );
   }
 
   onDelete() {
     this.#confirm
-      .confirm('Bản ghi sẽ bị xóa vĩnh viễn. Tiếp tục?', {
-        title: 'Xác nhận xóa',
-        yesTitle: 'Xóa',
+      .confirm('Bản ghi sẽ bị xóa vĩnh viễn. Bạn không thể hoàn tác thao tác này.', {
+        title: 'Xóa bản ghi này?',
+        yesTitle: 'Xóa bản ghi',
         noTitle: 'Hủy',
         yesButtonColor: 'error',
       })
       .then(
         () => this.log.set('Xóa: ĐÃ XÓA'),
-        () => this.log.set('Xóa: HỦY'),
+        () => this.log.set('Xóa: HỦY')
       );
   }
 
   onInput() {
     this.#confirm
-      .withInput('Vui lòng nhập lý do:', { title: 'Nhập lý do', required: true, maxlength: 200 })
+      .withInput('Cho người gửi biết lý do để họ có thể điều chỉnh.', {
+        title: 'Lý do từ chối',
+        label: 'Lý do',
+        placeholder: 'Nhập lý do từ chối…',
+        yesTitle: 'Gửi lý do',
+        noTitle: 'Hủy',
+        required: true,
+        maxlength: 200,
+      })
       .then(
-        (v) => this.log.set('Input: ' + v),
-        () => this.log.set('Input: HỦY'),
+        v => this.log.set('Input: ' + v),
+        () => this.log.set('Input: HỦY')
       );
   }
 
@@ -12820,8 +13297,8 @@ export class ConfirmDemoComponent {
         required: true,
       })
       .then(
-        (v) => this.log.set('Radio: ' + v),
-        () => this.log.set('Radio: HỦY'),
+        v => this.log.set('Radio: ' + v),
+        () => this.log.set('Radio: HỦY')
       );
   }
 
@@ -12841,8 +13318,8 @@ export class ConfirmDemoComponent {
         required: true,
       })
       .then(
-        (v) => this.log.set('Radio dọc: ' + v),
-        () => this.log.set('Radio dọc: HỦY'),
+        v => this.log.set('Radio dọc: ' + v),
+        () => this.log.set('Radio dọc: HỦY')
       );
   }
 
@@ -12862,8 +13339,8 @@ export class ConfirmDemoComponent {
         placeholder: 'Phòng ban',
       })
       .then(
-        (v) => this.log.set('Select: ' + v),
-        () => this.log.set('Select: HỦY'),
+        v => this.log.set('Select: ' + v),
+        () => this.log.set('Select: HỦY')
       );
   }
 
@@ -12877,8 +13354,8 @@ export class ConfirmDemoComponent {
         max: new Date('2026-12-31'),
       })
       .then(
-        (v) => this.log.set('Date: ' + v),
-        () => this.log.set('Date: HỦY'),
+        v => this.log.set('Date: ' + v),
+        () => this.log.set('Date: HỦY')
       );
   }
 
@@ -12892,8 +13369,8 @@ export class ConfirmDemoComponent {
         max: new Date('2026-12-31T23:59:59'),
       })
       .then(
-        (v) => this.log.set('Datetime: ' + v),
-        () => this.log.set('Datetime: HỦY'),
+        v => this.log.set('Datetime: ' + v),
+        () => this.log.set('Datetime: HỦY')
       );
   }
 }
@@ -14523,12 +15000,19 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     html: `<sd-button type="fill" color="primary" title="fill"></sd-button>
 <sd-button type="light" color="primary" title="light"></sd-button>
 <sd-button type="outline" color="primary" title="outline"></sd-button>
-<sd-button type="text" color="primary" title="text"></sd-button>`,
+<sd-button type="text" color="primary" title="text"></sd-button>
+
+<div class="button-toolbar" aria-label="Ví dụ thao tác danh sách">
+  <sd-button type="outline" color="secondary" title="Bộ lọc" prefixIcon="filter_list" suffixIcon="expand_more" autoId="toolbar-filter"></sd-button>
+  <sd-button type="outline" color="secondary" title="Xuất Excel" prefixIcon="download" autoId="toolbar-export"></sd-button>
+  <sd-button type="fill" color="primary" title="Thêm mới" prefixIcon="add" autoId="toolbar-create"></sd-button>
+</div>`,
   },
   "components/button/example-chi-icon": {
     ...SHOWCASE_PAGE_SOURCES["components/button/example-chi-icon"],
     html: `<sd-button type="light" color="primary" prefixIcon="edit" tooltip="edit"></sd-button>
-<sd-button type="light" color="error" prefixIcon="delete" tooltip="delete"></sd-button>`,
+<sd-button type="light" color="error" prefixIcon="delete" tooltip="delete"></sd-button>
+<sd-button type="outline" color="secondary" suffixIcon="more_vert" tooltip="Thêm thao tác" autoId="suffix-only"></sd-button>`,
   },
   "components/button/example-kich-thuoc": {
     ...SHOWCASE_PAGE_SOURCES["components/button/example-kich-thuoc"],
@@ -14570,7 +15054,8 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
 <sd-button type="fill" color="primary" title="disabled" [disabled]="true"></sd-button>
 <div style="width: 240px;">
   <sd-button type="fill" color="primary" title="block" [block]="true"></sd-button>
-</div>`,
+</div>
+<sd-button type="outline" color="secondary" title="Không khả dụng" prefixIcon="download" disabled autoId="disabled-outline"></sd-button>`,
   },
   "components/card/example-disabled-va-color": {
     ...SHOWCASE_PAGE_SOURCES["components/card/example-disabled-va-color"],
@@ -14735,6 +15220,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
   "components/data-state/example-empty": {
     ...SHOWCASE_PAGE_SOURCES["components/data-state"],
     html: `<demo-section heading="Empty" note="Custom template nhận state/retry/action context thay cho default presentation.">
+      <sd-data-state state="empty" compact></sd-data-state>
       <sd-data-state state="empty" compact>
         <ng-template sdDataStateTemplate let-state>
           <div class="custom-empty">Custom {{ state }}: chưa có đơn hàng phù hợp.</div>
@@ -14767,6 +15253,79 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     html: `<demo-section heading="Loading" [props]="[{ name: 'compact', value: 'true' }]">
       <sd-data-state state="loading" compact></sd-data-state>
     </demo-section>`,
+  },
+  "components/data-state/example-loi-va-retry-tren-ba-control": {
+    ...SHOWCASE_PAGE_SOURCES["components/data-state"],
+    html: `<demo-section
+    heading="Lỗi và retry trên ba control"
+    [props]="[{ name: 'readState / sdReadStateChange', value: 'idle → loading → ready / empty / error' }]">
+    <p>
+      Ban đầu máy chủ mô phỏng trả lỗi. Chọn “Có dữ liệu” hoặc “Rỗng hợp lệ”, rồi bấm Thử lại trên control. Chọn “Tiếp tục lỗi” để thử
+      lỗi liên tiếp. Select đọc riêng VALUE và SEARCH nên có thể cần retry từng kênh.
+    </p>
+    <div class="demo-actions">
+      <button type="button" [attr.aria-pressed]="mode() === 'ready'" (click)="mode.set('ready')">Có dữ liệu</button>
+      <button type="button" [attr.aria-pressed]="mode() === 'empty'" (click)="mode.set('empty')">Rỗng hợp lệ</button>
+      <button type="button" [attr.aria-pressed]="mode() === 'error'" (click)="mode.set('error')">Tiếp tục lỗi</button>
+    </div>
+    <p>
+      Chế độ phản hồi: {{ mode() }}. Số request: bảng {{ counts().table }}, select {{ counts().select }}, autocomplete
+      {{ counts().autocomplete }}.
+    </p>
+    <div class="table-demo">
+      <sd-table #table [option]="tableOption" (sdReadStateChange)="record('table', $event)"></sd-table>
+    </div>
+    <div class="demo-actions">
+      <button type="button" (click)="table.reload()">Đọc lại bảng</button>
+      <span>Output bảng: {{ latest().table }}</span>
+    </div>
+    <div class="control-grid">
+      <div>
+        <sd-select
+          #select
+          label="Select — template lỗi riêng"
+          [items]="loadSelect"
+          valueField="id"
+          displayField="name"
+          [(model)]="selected"
+          (sdReadStateChange)="record('select', $event)">
+          <ng-template sdDataStateTemplate let-state let-retry="retry">
+            <sd-data-state
+              [state]="state"
+              title="Chưa tải được lựa chọn"
+              message="Vui lòng thử lại."
+              compact
+              retryable
+              (sdRetry)="retry()"></sd-data-state>
+          </ng-template>
+        </sd-select>
+        <p>Giá trị: {{ selected() }}. Output: {{ latest().select }}</p>
+      </div>
+      <div>
+        <sd-autocomplete
+          #autocomplete
+          label="Autocomplete"
+          [items]="loadAutocomplete"
+          valueField="id"
+          displayField="name"
+          [(model)]="autocompleteValue"
+          [hideReadError]="hideReadError()"
+          (sdReadStateChange)="record('autocomplete', $event)">
+        </sd-autocomplete>
+        <p>Giá trị: {{ autocompleteValue() }}. Output: {{ latest().autocomplete }}</p>
+        <label
+          ><input type="checkbox" [checked]="hideReadError()" (change)="hideReadError.set(!hideReadError())" /> Host hiển thị lỗi bên
+          ngoài</label
+        >
+        @if (hideReadError() && !autocomplete.loading() && autocomplete.readState().status === 'error') {
+          <sd-data-state state="error" compact retryable (sdRetry)="autocomplete.retryRead()"></sd-data-state>
+        }
+      </div>
+    </div>
+    <p>
+      Mở panel lỗi và nhấn Tab để tới retry; Enter/Space để thử lại, Escape để đóng panel. Giá trị đã chọn không bị xóa khi đọc lỗi.
+    </p>
+  </demo-section>`,
   },
   "components/data-state/example-success": {
     ...SHOWCASE_PAGE_SOURCES["components/data-state"],
@@ -14970,41 +15529,46 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
   "components/inform/example-action-custom-projection": {
     ...SHOWCASE_PAGE_SOURCES["components/inform"],
     html: `<demo-section heading="Action custom (projection)" [props]="[{ name: 'sdInformAction', value: 'template' }]">
-    <sd-inform warning title="Chế độ chỉ đọc" description="Bạn không có quyền chỉnh sửa.">
-      <button sdInformAction class="demo-action-btn">Yêu cầu quyền</button>
-    </sd-inform>
-  </demo-section>`,
+      <sd-inform warning title="Chế độ chỉ đọc" description="Bạn không có quyền chỉnh sửa.">
+        <button sdInformAction class="demo-action-btn">Yêu cầu quyền</button>
+      </sd-inform>
+    </demo-section>`,
   },
   "components/inform/example-an-icon": {
     ...SHOWCASE_PAGE_SOURCES["components/inform"],
     html: `<demo-section heading="Ẩn icon" [props]="[{ name: 'hideIcon', value: 'true' }]">
-    <sd-inform success hideIcon title="Đã lưu" description="Không có icon."></sd-inform>
-  </demo-section>`,
+      <sd-inform success hideIcon title="Đã lưu" description="Không có icon."></sd-inform>
+    </demo-section>`,
   },
   "components/inform/example-bang-mau": {
     ...SHOWCASE_PAGE_SOURCES["components/inform"],
     html: `<demo-section heading="Bảng màu" [props]="[{ name: 'color', value: 'primary / secondary / info / success / warning / error' }]">
-    <sd-inform primary title="primary" description="Message body."></sd-inform>
-    <sd-inform secondary title="secondary" description="Message body."></sd-inform>
-    <sd-inform info title="info" description="Message body."></sd-inform>
-    <sd-inform success title="success" description="Message body."></sd-inform>
-    <sd-inform warning title="warning" description="Message body."></sd-inform>
-    <sd-inform error title="error" description="Message body."></sd-inform>
-  </demo-section>`,
+      <sd-inform primary title="primary" description="Message body."></sd-inform>
+      <sd-inform secondary title="secondary" description="Message body."></sd-inform>
+      <sd-inform info title="info" description="Message body."></sd-inform>
+      <sd-inform success title="success" description="Message body."></sd-inform>
+      <sd-inform warning title="warning" description="Message body."></sd-inform>
+      <sd-inform error title="error" description="Message body."></sd-inform>
+    </demo-section>`,
   },
   "components/inform/example-dong-duoc-action": {
     ...SHOWCASE_PAGE_SOURCES["components/inform"],
-    html: `<demo-section heading="Đóng được + action" [props]="[{ name: 'closable', value: 'true' }, { name: 'actionLabel', value: 'text' }]">
-    <sd-inform error closable title="Không tải được dữ liệu" description="Máy chủ không phản hồi." actionLabel="Thử lại"></sd-inform>
-    <sd-inform info closable title="Bản nháp đã lưu" description="Tự động lưu lúc 14:30." actionLabel="Xem"></sd-inform>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Đóng được + action"
+      [props]="[
+        { name: 'closable', value: 'true' },
+        { name: 'actionLabel', value: 'text' },
+      ]">
+      <sd-inform error closable title="Không tải được dữ liệu" description="Máy chủ không phản hồi." actionLabel="Thử lại"></sd-inform>
+      <sd-inform info closable title="Bản nháp đã lưu" description="Tự động lưu lúc 14:30." actionLabel="Xem"></sd-inform>
+    </demo-section>`,
   },
   "components/inform/example-line-clamp": {
     ...SHOWCASE_PAGE_SOURCES["components/inform"],
     html: `<demo-section heading="Line-clamp" [props]="[{ name: 'lineClamp', value: '[số]' }]">
-    <sd-inform info title="Điều khoản" [description]="long" [lineClamp]="3"></sd-inform>
-    <sd-inform success [description]="long" [lineClamp]="2"></sd-inform>
-  </demo-section>`,
+      <sd-inform info title="Điều khoản" [description]="long" [lineClamp]="3"></sd-inform>
+      <sd-inform success [description]="long" [lineClamp]="2"></sd-inform>
+    </demo-section>`,
   },
   "components/job-progress/example-details-va-error": {
     ...SHOWCASE_PAGE_SOURCES["components/job-progress"],
@@ -15082,136 +15646,168 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
   },
   "components/modal/example-basic-modal-footer-right": {
     ...SHOWCASE_PAGE_SOURCES["components/modal"],
-    html: `<demo-section heading="Basic modal + footer right" [props]="[{ name: 'sdFooterRight', value: 'template' }, { name: 'body padding', value: 0 }]">
-    <sd-button type="fill" color="primary" prefixIcon="info" title="Open detail" (click)="basic.open()"></sd-button>
+    html: `<demo-section
+      heading="Basic modal + footer right"
+      [props]="[
+        { name: 'sdFooterRight', value: 'template' },
+        { name: 'body inset', value: '24px / 16px' },
+      ]">
+      <sd-button type="fill" color="primary" prefixIcon="info" title="Open detail" (click)="basic.open()"></sd-button>
 
-    <sd-modal #basic title="Customer detail" width="md">
-      <div class="demo-stack">
-        <sd-section icon="person" title="Profile">
-          <sd-section-item label="Name">Nguyen Van An</sd-section-item>
-          <sd-section-item label="Email">an.nv&#64;onemount.com</sd-section-item>
-          <sd-section-item label="Status">
-            <sd-badge type="round" success title="Active"></sd-badge>
-          </sd-section-item>
-        </sd-section>
-      </div>
+      <sd-modal #basic title="Customer detail" width="md">
+        <div class="demo-stack">
+          <sd-section icon="person" title="Profile">
+            <sd-section-item label="Name">Nguyen Van An</sd-section-item>
+            <sd-section-item label="Email">an.nv&#64;onemount.com</sd-section-item>
+            <sd-section-item label="Status">
+              <sd-badge type="round" success title="Active"></sd-badge>
+            </sd-section-item>
+          </sd-section>
+        </div>
 
-      <sd-button sdFooterRight type="fill" color="primary" title="Close" (click)="basic.close()"></sd-button>
-    </sd-modal>
-  </demo-section>`,
+        <sd-button sdFooterRight type="fill" color="primary" title="Close" (click)="basic.close()"></sd-button>
+      </sd-modal>
+    </demo-section>`,
   },
   "components/modal/example-bottom-sheet-actions": {
     ...SHOWCASE_PAGE_SOURCES["components/modal"],
-    html: `<demo-section heading="Bottom-sheet actions" [props]="[{ name: 'view', value: 'bottom-sheet' }, { name: 'sdFooterRight', value: 'template' }]">
-    <sd-button type="outline" color="primary" prefixIcon="more_vert" title="Open actions" (click)="sheetActions.open()"></sd-button>
+    html: `<demo-section
+      heading="Bottom-sheet actions"
+      [props]="[
+        { name: 'view', value: 'bottom-sheet' },
+        { name: 'sdFooterRight', value: 'template' },
+      ]">
+      <sd-button type="outline" color="primary" prefixIcon="more_vert" title="Open actions" (click)="sheetActions.open()"></sd-button>
 
-    <sd-modal #sheetActions title="Quick actions" view="bottom-sheet" width="100%">
-      <div class="sheet-stack">
-        <sd-button type="text" color="primary" prefixIcon="edit" title="Edit" (click)="sheetActions.close()"></sd-button>
-        <sd-button type="text" color="primary" prefixIcon="share" title="Share" (click)="sheetActions.close()"></sd-button>
-        <sd-button type="text" color="error" prefixIcon="delete" title="Delete" (click)="sheetActions.close()"></sd-button>
-      </div>
+      <sd-modal #sheetActions title="Quick actions" view="bottom-sheet" width="100%">
+        <div class="sheet-stack">
+          <sd-button type="text" color="primary" prefixIcon="edit" title="Edit" (click)="sheetActions.close()"></sd-button>
+          <sd-button type="text" color="primary" prefixIcon="share" title="Share" (click)="sheetActions.close()"></sd-button>
+          <sd-button type="text" color="error" prefixIcon="delete" title="Delete" (click)="sheetActions.close()"></sd-button>
+        </div>
 
-      <sd-button sdFooterRight type="text" color="secondary" title="Cancel" (click)="sheetActions.close()"></sd-button>
-    </sd-modal>
-  </demo-section>`,
+        <sd-button sdFooterRight type="text" color="secondary" title="Cancel" (click)="sheetActions.close()"></sd-button>
+      </sd-modal>
+    </demo-section>`,
   },
   "components/modal/example-bottom-sheet-form": {
     ...SHOWCASE_PAGE_SOURCES["components/modal"],
-    html: `<demo-section heading="Bottom-sheet form" [props]="[{ name: 'view', value: 'bottom-sheet' }, { name: 'sdFooterLeft/right', value: 'template' }]">
-    <sd-button type="light" color="primary" prefixIcon="schedule" title="Pick time" (click)="sheetForm.open()"></sd-button>
+    html: `<demo-section
+      heading="Bottom-sheet form"
+      [props]="[
+        { name: 'view', value: 'bottom-sheet' },
+        { name: 'sdFooterLeft/right', value: 'template' },
+      ]">
+      <sd-button type="light" color="primary" prefixIcon="schedule" title="Pick time" (click)="sheetForm.open()"></sd-button>
 
-    <sd-modal #sheetForm title="Pick a delivery time" view="bottom-sheet" width="100%">
-      <div class="sheet-stack">
-        @for (slot of deliverySlots; track slot.time) {
-          <button type="button" class="time-option" (click)="sheetForm.close()">
-            <strong>{{ slot.time }}</strong>
-            <span>{{ slot.note }}</span>
-          </button>
-        }
-      </div>
+      <sd-modal #sheetForm title="Pick a delivery time" view="bottom-sheet" width="100%">
+        <div class="sheet-stack">
+          @for (slot of deliverySlots; track slot.time) {
+            <button type="button" class="time-option" (click)="sheetForm.close()">
+              <strong>{{ slot.time }}</strong>
+              <span>{{ slot.note }}</span>
+            </button>
+          }
+        </div>
 
-      <sd-button sdFooterLeft type="text" color="secondary" title="Cancel" (click)="sheetForm.close()"></sd-button>
-      <sd-button sdFooterRight type="fill" color="primary" title="Confirm" (click)="sheetForm.close()"></sd-button>
-    </sd-modal>
-  </demo-section>`,
+        <sd-button sdFooterLeft type="text" color="secondary" title="Cancel" (click)="sheetForm.close()"></sd-button>
+        <sd-button sdFooterRight type="fill" color="primary" title="Confirm" (click)="sheetForm.close()"></sd-button>
+      </sd-modal>
+    </demo-section>`,
   },
   "components/modal/example-confirm-modal-split-footer": {
     ...SHOWCASE_PAGE_SOURCES["components/modal"],
-    html: `<demo-section heading="Confirm modal + split footer" [props]="[{ name: 'sdFooterLeft', value: 'template' }, { name: 'sdFooterRight', value: 'template' }]">
-    <sd-button type="fill" color="error" prefixIcon="delete" title="Delete record" (click)="confirm.open()"></sd-button>
+    html: `<demo-section
+      heading="Confirm modal + split footer"
+      [props]="[
+        { name: 'sdFooterLeft', value: 'template' },
+        { name: 'sdFooterRight', value: 'template' },
+      ]">
+      <sd-button type="fill" color="error" prefixIcon="delete" title="Delete record" (click)="confirm.open()"></sd-button>
 
-    <sd-modal #confirm title="Delete customer" width="sm">
-      <div class="demo-stack">
-        <p class="demo-copy">Delete <strong>Nguyen Van An</strong>? This action cannot be undone.</p>
-      </div>
+      <sd-modal #confirm title="Delete customer" width="sm">
+        <div class="demo-stack">
+          <p class="demo-copy">Delete <strong>Nguyen Van An</strong>? This action cannot be undone.</p>
+        </div>
 
-      <sd-button sdFooterLeft type="text" color="secondary" title="Cancel" (click)="confirm.close()"></sd-button>
-      <sd-button sdFooterRight type="fill" color="error" title="Delete" prefixIcon="delete" (click)="confirm.close()"></sd-button>
-    </sd-modal>
-  </demo-section>`,
+        <sd-button sdFooterLeft type="text" color="secondary" title="Cancel" (click)="confirm.close()"></sd-button>
+        <sd-button sdFooterRight type="fill" color="error" title="Delete" prefixIcon="delete" (click)="confirm.close()"></sd-button>
+      </sd-modal>
+    </demo-section>`,
   },
   "components/modal/example-custom-header-left-right": {
     ...SHOWCASE_PAGE_SOURCES["components/modal"],
-    html: `<demo-section heading="Custom header left/right" [props]="[{ name: 'sdHeaderLeft', value: 'template' }, { name: 'sdHeaderRight', value: 'template' }]">
-    <sd-button type="light" color="primary" prefixIcon="history" title="Open activity" (click)="activity.open()"></sd-button>
+    html: `<demo-section
+      heading="Custom header left/right"
+      [props]="[
+        { name: 'sdHeaderLeft', value: 'template' },
+        { name: 'sdHeaderRight', value: 'template' },
+      ]">
+      <sd-button type="light" color="primary" prefixIcon="history" title="Open activity" (click)="activity.open()"></sd-button>
 
-    <sd-modal #activity title="Activity log" width="lg">
-      <div sdHeaderLeft class="demo-title-block">
-        <strong>Activity log</strong>
-        <span>Last 7 days</span>
-      </div>
-      <sd-button sdHeaderRight type="text" color="primary" prefixIcon="refresh" tooltip="Refresh"></sd-button>
-
-      <div class="demo-stack">
-        <div class="demo-list">
-          @for (row of activityRows; track row.time) {
-            <div class="demo-list__row">
-              <span>{{ row.time }}</span>
-              <strong>{{ row.actor }}</strong>
-              <span>{{ row.action }}</span>
-            </div>
-          }
+      <sd-modal #activity title="Activity log" width="lg">
+        <div sdHeaderLeft class="demo-title-block">
+          <strong>Activity log</strong>
+          <span>Last 7 days</span>
         </div>
-      </div>
+        <sd-button sdHeaderRight type="text" color="primary" prefixIcon="refresh" tooltip="Refresh"></sd-button>
 
-      <sd-button sdFooterRight type="text" color="secondary" title="Close" (click)="activity.close()"></sd-button>
-    </sd-modal>
-  </demo-section>`,
+        <div class="demo-stack">
+          <div class="demo-list">
+            @for (row of activityRows; track row.time) {
+              <div class="demo-list__row">
+                <span>{{ row.time }}</span>
+                <strong>{{ row.actor }}</strong>
+                <span>{{ row.action }}</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <sd-button sdFooterRight type="text" color="secondary" title="Close" (click)="activity.close()"></sd-button>
+      </sd-modal>
+    </demo-section>`,
   },
   "components/modal/example-long-scroll-body": {
     ...SHOWCASE_PAGE_SOURCES["components/modal"],
-    html: `<demo-section heading="Long scroll body" [props]="[{ name: 'max-height', value: '80vh' }, { name: 'body', value: 'scrollable' }]">
-    <sd-button type="outline" color="primary" prefixIcon="list" title="Open long content" (click)="longContent.open()"></sd-button>
+    html: `<demo-section
+      heading="Long scroll body"
+      [props]="[
+        { name: 'max-height', value: '80vh' },
+        { name: 'body', value: 'scrollable' },
+      ]">
+      <sd-button type="outline" color="primary" prefixIcon="list" title="Open long content" (click)="longContent.open()"></sd-button>
 
-    <sd-modal #longContent title="Long approval checklist" width="md">
-      <div class="demo-stack">
-        <div class="demo-list">
-          @for (item of checklist; track item) {
-            <div class="demo-list__row">
-              <span>{{ item }}</span>
-              <sd-badge type="round" info title="Required"></sd-badge>
-            </div>
-          }
+      <sd-modal #longContent title="Long approval checklist" width="600px">
+        <div class="demo-stack">
+          <div class="demo-list">
+            @for (item of checklist; track item) {
+              <div class="demo-list__row">
+                <span>{{ item }}</span>
+                <sd-badge type="round" info title="Required"></sd-badge>
+              </div>
+            }
+          </div>
         </div>
-      </div>
 
-      <sd-button sdFooterLeft type="text" color="secondary" title="Skip"></sd-button>
-      <sd-button sdFooterRight type="fill" color="primary" title="Done" (click)="longContent.close()"></sd-button>
-    </sd-modal>
-  </demo-section>`,
+        <sd-button sdFooterLeft type="text" color="secondary" title="Skip"></sd-button>
+        <sd-button sdFooterRight type="fill" color="primary" title="Done" (click)="longContent.close()"></sd-button>
+      </sd-modal>
+    </demo-section>`,
   },
   "components/modal/example-read-only-modal-without-footer": {
     ...SHOWCASE_PAGE_SOURCES["components/modal"],
     html: `<demo-section heading="Read-only modal without footer" [props]="[{ name: 'footer', value: 'empty hidden' }]">
-    <sd-button type="outline" color="primary" prefixIcon="visibility" title="Preview note" (click)="preview.open()"></sd-button>
+      <sd-button type="outline" color="primary" prefixIcon="visibility" title="Preview note" (click)="preview.open()"></sd-button>
 
-    <sd-modal #preview title="Internal note" width="sm">
-      <div class="demo-stack">
-        <p class="demo-copy">This modal has no footer slots. The footer container stays hidden so read-only content can remain compact.</p>
-      </div>
-    </sd-modal>
-  </demo-section>`,
+      <sd-modal #preview title="Internal note" width="sm">
+        <div class="demo-stack">
+          <p class="demo-copy">
+            This modal has no footer slots. The footer container stays hidden so read-only content can remain compact.
+          </p>
+        </div>
+      </sd-modal>
+    </demo-section>`,
   },
   "components/operator/example-toan-tu-chuoi": {
     ...SHOWCASE_PAGE_SOURCES["components/operator"],
@@ -15682,128 +16278,158 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
   },
   "components/side-drawer/example-create-drawer-split-footer": {
     ...SHOWCASE_PAGE_SOURCES["components/side-drawer"],
-    html: `<demo-section heading="Create drawer + split footer" [props]="[{ name: 'sdFooterLeft', value: 'template' }, { name: 'sdFooterRight', value: 'template' }]">
-    <sd-button type="fill" color="primary" prefixIcon="add" title="Create employee" (click)="createDrawer.open()"></sd-button>
+    html: `<demo-section
+      heading="Create drawer + split footer"
+      [props]="[
+        { name: 'sdFooterLeft', value: 'template' },
+        { name: 'sdFooterRight', value: 'template' },
+      ]">
+      <sd-button type="fill" color="primary" prefixIcon="add" title="Create employee" (click)="createDrawer.open()"></sd-button>
 
-    <sd-side-drawer #createDrawer title="Create employee" width="480px">
-      <div class="drawer-stack">
-        <sd-section icon="person" title="Personal info">
-          <sd-section-item label="Name">Nguyen Van An</sd-section-item>
-          <sd-section-item label="Email">an.nv&#64;onemount.com</sd-section-item>
-          <sd-section-item label="Phone">0901 234 567</sd-section-item>
-        </sd-section>
-      </div>
+      <sd-side-drawer #createDrawer title="Create employee" width="480px">
+        <div class="drawer-stack">
+          <sd-section icon="person" title="Personal info">
+            <sd-section-item label="Name">Nguyen Van An</sd-section-item>
+            <sd-section-item label="Email">an.nv&#64;onemount.com</sd-section-item>
+            <sd-section-item label="Phone">0901 234 567</sd-section-item>
+          </sd-section>
+        </div>
 
-      <sd-button sdFooterLeft type="text" color="secondary" title="Reset"></sd-button>
-      <sd-button sdFooterRight type="text" color="secondary" title="Cancel" (click)="createDrawer.close()"></sd-button>
-      <sd-button sdFooterRight type="fill" color="primary" title="Save" prefixIcon="save" (click)="createDrawer.close()"></sd-button>
-    </sd-side-drawer>
-  </demo-section>`,
+        <sd-button sdFooterLeft type="text" color="secondary" title="Reset"></sd-button>
+        <sd-button sdFooterRight type="text" color="secondary" title="Cancel" (click)="createDrawer.close()"></sd-button>
+        <sd-button sdFooterRight type="fill" color="primary" title="Save" prefixIcon="save" (click)="createDrawer.close()"></sd-button>
+      </sd-side-drawer>
+    </demo-section>`,
   },
   "components/side-drawer/example-custom-header-left-right": {
     ...SHOWCASE_PAGE_SOURCES["components/side-drawer"],
-    html: `<demo-section heading="Custom header left/right" [props]="[{ name: 'sdHeaderLeft', value: 'template' }, { name: 'sdHeaderRight', value: 'template' }]">
-    <sd-button type="outline" color="primary" prefixIcon="visibility" title="Open profile" (click)="profileDrawer.open()"></sd-button>
+    html: `<demo-section
+      heading="Custom header left/right"
+      [props]="[
+        { name: 'sdHeaderLeft', value: 'template' },
+        { name: 'sdHeaderRight', value: 'template' },
+      ]">
+      <sd-button type="outline" color="primary" prefixIcon="visibility" title="Open profile" (click)="profileDrawer.open()"></sd-button>
 
-    <sd-side-drawer #profileDrawer title="Profile" width="560px">
-      <div sdHeaderLeft class="drawer-title-block">
-        <strong>Employee profile</strong>
-        <span>EMP-2026-0012</span>
-      </div>
-      <sd-button sdHeaderRight type="text" color="primary" prefixIcon="print" tooltip="Print"></sd-button>
-      <sd-button sdHeaderRight type="text" color="primary" prefixIcon="refresh" tooltip="Refresh"></sd-button>
+      <sd-side-drawer #profileDrawer title="Profile" width="560px">
+        <div sdHeaderLeft class="drawer-title-block">
+          <strong>Employee profile</strong>
+          <span>EMP-2026-0012</span>
+        </div>
+        <sd-button sdHeaderRight type="text" color="primary" prefixIcon="print" tooltip="Print"></sd-button>
+        <sd-button sdHeaderRight type="text" color="primary" prefixIcon="refresh" tooltip="Refresh"></sd-button>
 
-      <div class="drawer-stack">
-        <sd-section icon="badge" title="Overview">
-          <sd-section-item label="Department">Sales</sd-section-item>
-          <sd-section-item label="Manager">Tran Thi Bich</sd-section-item>
-          <sd-section-item label="Status">
-            <sd-badge type="round" success title="Active"></sd-badge>
-          </sd-section-item>
-        </sd-section>
-        <sd-section icon="notes" title="Note">
-          <div class="drawer-copy">The drawer body has no built-in padding, so this demo uses a .drawer-stack wrapper.</div>
-        </sd-section>
-      </div>
+        <div class="drawer-stack">
+          <sd-section icon="badge" title="Overview">
+            <sd-section-item label="Department">Sales</sd-section-item>
+            <sd-section-item label="Manager">Tran Thi Bich</sd-section-item>
+            <sd-section-item label="Status">
+              <sd-badge type="round" success title="Active"></sd-badge>
+            </sd-section-item>
+          </sd-section>
+          <sd-section icon="notes" title="Note">
+            <div class="drawer-copy">The drawer provides content insets; the wrapper only controls spacing between sections.</div>
+          </sd-section>
+        </div>
 
-      <sd-button sdFooterRight type="text" color="secondary" title="Close" (click)="profileDrawer.close()"></sd-button>
-    </sd-side-drawer>
-  </demo-section>`,
+        <sd-button sdFooterRight type="text" color="secondary" title="Close" (click)="profileDrawer.close()"></sd-button>
+      </sd-side-drawer>
+    </demo-section>`,
   },
   "components/side-drawer/example-filter-drawer": {
     ...SHOWCASE_PAGE_SOURCES["components/side-drawer"],
-    html: `<demo-section heading="Filter drawer" [props]="[{ name: 'disableBackdropClose', value: false }, { name: 'footer', value: 'left/right' }]">
-    <sd-button type="outline" color="primary" prefixIcon="filter_list" title="Open filters" (click)="filterDrawer.open()"></sd-button>
+    html: `<demo-section
+      heading="Filter drawer"
+      [props]="[
+        { name: 'disableBackdropClose', value: false },
+        { name: 'footer', value: 'left/right' },
+      ]">
+      <sd-button type="outline" color="primary" prefixIcon="filter_list" title="Open filters" (click)="filterDrawer.open()"></sd-button>
 
-    <sd-side-drawer #filterDrawer title="Advanced filters" width="420px">
-      <sd-button sdHeaderRight type="text" color="primary" prefixIcon="refresh" tooltip="Reset filters"></sd-button>
+      <sd-side-drawer #filterDrawer title="Advanced filters" width="420px">
+        <sd-button sdHeaderRight type="text" color="primary" prefixIcon="refresh" tooltip="Reset filters"></sd-button>
 
-      <div class="drawer-stack">
-        <sd-section icon="tune" title="Criteria">
-          <sd-section-item label="Date range">01/01/2026 - 31/12/2026</sd-section-item>
-          <sd-section-item label="Status">Active</sd-section-item>
-          <sd-section-item label="Department">Sales, Marketing</sd-section-item>
-        </sd-section>
-      </div>
+        <div class="drawer-stack">
+          <sd-section icon="tune" title="Criteria">
+            <sd-section-item label="Date range">01/01/2026 - 31/12/2026</sd-section-item>
+            <sd-section-item label="Status">Active</sd-section-item>
+            <sd-section-item label="Department">Sales, Marketing</sd-section-item>
+          </sd-section>
+        </div>
 
-      <sd-button sdFooterLeft type="text" color="secondary" title="Clear"></sd-button>
-      <sd-button sdFooterRight type="fill" color="primary" title="Apply" (click)="filterDrawer.close()"></sd-button>
-    </sd-side-drawer>
-  </demo-section>`,
+        <sd-button sdFooterLeft type="text" color="secondary" title="Clear"></sd-button>
+        <sd-button sdFooterRight type="fill" color="primary" title="Apply" (click)="filterDrawer.close()"></sd-button>
+      </sd-side-drawer>
+    </demo-section>`,
   },
   "components/side-drawer/example-locked-drawer-with-explicit-actions": {
     ...SHOWCASE_PAGE_SOURCES["components/side-drawer"],
-    html: `<demo-section heading="Locked drawer with explicit actions" [props]="[{ name: 'disableBackdropClose', value: true }, { name: 'hideClose', value: true }]">
-    <sd-button type="fill" color="primary" prefixIcon="lock" title="Open locked drawer" (click)="lockedDrawer.open()"></sd-button>
+    html: `<demo-section
+      heading="Locked drawer with explicit actions"
+      [props]="[
+        { name: 'disableBackdropClose', value: true },
+        { name: 'hideClose', value: true },
+      ]">
+      <sd-button type="fill" color="primary" prefixIcon="lock" title="Open locked drawer" (click)="lockedDrawer.open()"></sd-button>
 
-    <sd-side-drawer #lockedDrawer title="Required decision" width="460px" disableBackdropClose hideClose>
-      <div class="drawer-stack">
-        <p class="drawer-copy">Backdrop and close icon are disabled. The user must choose one explicit footer action.</p>
-      </div>
+      <sd-side-drawer #lockedDrawer title="Required decision" width="460px" disableBackdropClose hideClose>
+        <div class="drawer-stack">
+          <p class="drawer-copy">Backdrop and close icon are disabled. The user must choose one explicit footer action.</p>
+        </div>
 
-      <sd-button sdFooterLeft type="text" color="secondary" title="Reject" (click)="lockedDrawer.close()"></sd-button>
-      <sd-button sdFooterRight type="fill" color="primary" title="Approve" (click)="lockedDrawer.close()"></sd-button>
-    </sd-side-drawer>
-  </demo-section>`,
+        <sd-button sdFooterLeft type="text" color="secondary" title="Reject" (click)="lockedDrawer.close()"></sd-button>
+        <sd-button sdFooterRight type="fill" color="primary" title="Approve" (click)="lockedDrawer.close()"></sd-button>
+      </sd-side-drawer>
+    </demo-section>`,
   },
   "components/side-drawer/example-long-scroll-content": {
     ...SHOWCASE_PAGE_SOURCES["components/side-drawer"],
-    html: `<demo-section heading="Long scroll content" [props]="[{ name: 'content', value: 'overflow auto' }, { name: 'width', value: '520px' }]">
-    <sd-button type="light" color="primary" prefixIcon="list" title="Open checklist" (click)="checklistDrawer.open()"></sd-button>
+    html: `<demo-section
+      heading="Long scroll content"
+      [props]="[
+        { name: 'content', value: 'overflow auto' },
+        { name: 'width', value: '520px' },
+      ]">
+      <sd-button type="light" color="primary" prefixIcon="list" title="Open checklist" (click)="checklistDrawer.open()"></sd-button>
 
-    <sd-side-drawer #checklistDrawer title="Approval checklist" width="520px">
-      <div class="drawer-stack">
-        <div class="drawer-list">
-          @for (item of checklist; track item) {
-            <div class="drawer-list__row">
-              <span>{{ item }}</span>
-              <sd-badge type="round" info title="Required"></sd-badge>
-            </div>
-          }
+      <sd-side-drawer #checklistDrawer title="Approval checklist" width="520px">
+        <div class="drawer-stack">
+          <div class="drawer-list">
+            @for (item of checklist; track item) {
+              <div class="drawer-list__row">
+                <span>{{ item }}</span>
+                <sd-badge type="round" info title="Required"></sd-badge>
+              </div>
+            }
+          </div>
         </div>
-      </div>
 
-      <sd-button sdFooterLeft type="text" color="secondary" title="Back" (click)="checklistDrawer.close()"></sd-button>
-      <sd-button sdFooterRight type="fill" color="primary" title="Submit" (click)="checklistDrawer.close()"></sd-button>
-    </sd-side-drawer>
-  </demo-section>`,
+        <sd-button sdFooterLeft type="text" color="secondary" title="Back" (click)="checklistDrawer.close()"></sd-button>
+        <sd-button sdFooterRight type="fill" color="primary" title="Submit" (click)="checklistDrawer.close()"></sd-button>
+      </sd-side-drawer>
+    </demo-section>`,
   },
   "components/side-drawer/example-read-only-drawer-without-footer": {
     ...SHOWCASE_PAGE_SOURCES["components/side-drawer"],
     html: `<demo-section heading="Read-only drawer without footer" [props]="[{ name: 'footer', value: 'empty hidden' }]">
-    <sd-button type="outline" color="primary" prefixIcon="description" title="Open detail" (click)="readonlyDrawer.open()"></sd-button>
+      <sd-button
+        type="outline"
+        color="primary"
+        prefixIcon="description"
+        title="Open detail"
+        (click)="readonlyDrawer.open()"></sd-button>
 
-    <sd-side-drawer #readonlyDrawer title="Request detail" width="500px">
-      <div class="drawer-stack">
-        <sd-section icon="description" title="Request">
-          <sd-section-item label="Code">REQ-2026-0042</sd-section-item>
-          <sd-section-item label="Owner">Tran Thi Bich</sd-section-item>
-          <sd-section-item label="Created at">09/05/2026</sd-section-item>
-        </sd-section>
-        <p class="drawer-copy">No footer slots are projected here, so the action bar is hidden.</p>
-      </div>
-    </sd-side-drawer>
-  </demo-section>`,
+      <sd-side-drawer #readonlyDrawer title="Request detail" width="500px">
+        <div class="drawer-stack">
+          <sd-section icon="description" title="Request">
+            <sd-section-item label="Code">REQ-2026-0042</sd-section-item>
+            <sd-section-item label="Owner">Tran Thi Bich</sd-section-item>
+            <sd-section-item label="Created at">09/05/2026</sd-section-item>
+          </sd-section>
+          <p class="drawer-copy">No footer slots are projected here, so the action bar is hidden.</p>
+        </div>
+      </sd-side-drawer>
+    </demo-section>`,
   },
   "components/splitter/example-doc-3-panel-px-co-dinh": {
     ...SHOWCASE_PAGE_SOURCES["components/splitter"],
@@ -15863,256 +16489,382 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
   },
   "components/stepper/example-bang-mau": {
     ...SHOWCASE_PAGE_SOURCES["components/stepper"],
-    html: `<demo-section heading="Bảng màu" [props]="[{ name: 'color', value: 'primary / success / warning / error' }]"
-                note="primary / success / warning / error — driving indicator + connector màu.">
-    <div class="color-stack">
-      <sd-stepper color="primary">
-        <sd-step label="primary"><p>...</p></sd-step>
-        <sd-step label="primary"><p>...</p></sd-step>
-        <sd-step label="primary"><p>...</p></sd-step>
-      </sd-stepper>
-      <sd-stepper color="success">
-        <sd-step label="success"><p>...</p></sd-step>
-        <sd-step label="success"><p>...</p></sd-step>
-        <sd-step label="success"><p>...</p></sd-step>
-      </sd-stepper>
-      <sd-stepper color="warning">
-        <sd-step label="warning"><p>...</p></sd-step>
-        <sd-step label="warning"><p>...</p></sd-step>
-        <sd-step label="warning"><p>...</p></sd-step>
-      </sd-stepper>
-      <sd-stepper color="error">
-        <sd-step label="error"><p>...</p></sd-step>
-        <sd-step label="error"><p>...</p></sd-step>
-        <sd-step label="error"><p>...</p></sd-step>
-      </sd-stepper>
-    </div>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Bảng màu"
+      [props]="[{ name: 'color', value: 'primary / success / warning / error' }]"
+      note="primary / success / warning / error — driving indicator + connector màu.">
+      <div class="color-stack">
+        <sd-stepper color="primary">
+          <sd-step label="primary"><p>...</p></sd-step>
+          <sd-step label="primary"><p>...</p></sd-step>
+          <sd-step label="primary"><p>...</p></sd-step>
+        </sd-stepper>
+        <sd-stepper color="success">
+          <sd-step label="success"><p>...</p></sd-step>
+          <sd-step label="success"><p>...</p></sd-step>
+          <sd-step label="success"><p>...</p></sd-step>
+        </sd-stepper>
+        <sd-stepper color="warning">
+          <sd-step label="warning"><p>...</p></sd-step>
+          <sd-step label="warning"><p>...</p></sd-step>
+          <sd-step label="warning"><p>...</p></sd-step>
+        </sd-stepper>
+        <sd-stepper color="error">
+          <sd-step label="error"><p>...</p></sd-step>
+          <sd-step label="error"><p>...</p></sd-step>
+          <sd-step label="error"><p>...</p></sd-step>
+        </sd-stepper>
+      </div>
+    </demo-section>`,
   },
   "components/stepper/example-co-ban-horizontal": {
     ...SHOWCASE_PAGE_SOURCES["components/stepper"],
-    html: `<demo-section heading="Cơ bản: horizontal" [props]="[{ name: 'orientation', value: 'horizontal' }, { name: 'selectedIndex', value: 'two-way' }]">
-    <div class="full">
-      <sd-stepper [(selectedIndex)]="basicIndex">
-        <sd-step label="Chọn dịch vụ" icon="storefront">
-          <div class="step-body">
-            <p>Khách hàng chọn dịch vụ muốn đăng ký.</p>
-            <button mat-flat-button color="primary" (click)="basicIndex.set(1)">Tiếp tục</button>
-          </div>
-        </sd-step>
-        <sd-step label="Cung cấp thông tin" icon="person">
-          <div class="step-body">
-            <p>Nhập thông tin liên hệ.</p>
-            <div class="row">
-              <button mat-stroked-button (click)="basicIndex.set(0)">Quay lại</button>
-              <button mat-flat-button color="primary" (click)="basicIndex.set(2)">Tiếp tục</button>
+    html: `<demo-section
+      heading="Cơ bản: horizontal"
+      [props]="[
+        { name: 'orientation', value: 'horizontal' },
+        { name: 'selectedIndex', value: 'two-way' },
+      ]">
+      <div class="full">
+        <sd-stepper [(selectedIndex)]="basicIndex">
+          <sd-step label="Chọn dịch vụ" icon="storefront">
+            <div class="step-body">
+              <p>Khách hàng chọn dịch vụ muốn đăng ký.</p>
+              <sd-button (click)="basicIndex.set(1)" size="sm" type="fill" color="primary" htmlType="button" title="Tiếp tục"></sd-button>
             </div>
-          </div>
-        </sd-step>
-        <sd-step label="Xác nhận" icon="check_circle">
-          <div class="step-body">
-            <p>Kiểm tra thông tin trước khi xác nhận.</p>
-            <button mat-stroked-button (click)="basicIndex.set(0)">Bắt đầu lại</button>
-          </div>
-        </sd-step>
-      </sd-stepper>
-    </div>
-  </demo-section>`,
+          </sd-step>
+          <sd-step label="Cung cấp thông tin" icon="person">
+            <div class="step-body">
+              <p>Nhập thông tin liên hệ.</p>
+              <div class="row">
+                <sd-button
+                  (click)="basicIndex.set(0)"
+                  size="sm"
+                  type="light"
+                  color="secondary"
+                  htmlType="button"
+                  title="Quay lại"></sd-button>
+                <sd-button (click)="basicIndex.set(2)" size="sm" type="fill" color="primary" htmlType="button" title="Tiếp tục"></sd-button>
+              </div>
+            </div>
+          </sd-step>
+          <sd-step label="Xác nhận" icon="check_circle">
+            <div class="step-body">
+              <p>Kiểm tra thông tin trước khi xác nhận.</p>
+              <sd-button
+                (click)="basicIndex.set(0)"
+                size="sm"
+                type="light"
+                color="secondary"
+                htmlType="button"
+                title="Bắt đầu lại"></sd-button>
+            </div>
+          </sd-step>
+        </sd-stepper>
+      </div>
+    </demo-section>`,
   },
   "components/stepper/example-dieu-khien-tu-ngoai": {
     ...SHOWCASE_PAGE_SOURCES["components/stepper"],
-    html: `<demo-section heading="Điều khiển từ ngoài" [props]="[{ name: 'next()', value: 'method' }, { name: 'previous()', value: 'method' }, { name: 'goTo()', value: 'method' }, { name: 'reset()', value: 'method' }]">
-    <div class="row" style="margin-bottom: 12px;">
-      <button mat-stroked-button (click)="externalPrev()">Prev</button>
-      <button mat-stroked-button (click)="externalNext()">Next</button>
-      <button mat-stroked-button (click)="externalGoLast()">Đến cuối</button>
-      <button mat-stroked-button color="warn" (click)="externalReset()">Reset</button>
-    </div>
-    <div class="full">
-      <sd-stepper #external [(selectedIndex)]="externalIndex">
-        <sd-step label="Step A"><p>Step A.</p></sd-step>
-        <sd-step label="Step B"><p>Step B.</p></sd-step>
-        <sd-step label="Step C"><p>Step C.</p></sd-step>
-      </sd-stepper>
-    </div>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Điều khiển từ ngoài"
+      [props]="[
+        { name: 'next()', value: 'method' },
+        { name: 'previous()', value: 'method' },
+        { name: 'goTo()', value: 'method' },
+        { name: 'reset()', value: 'method' },
+      ]">
+      <div class="row" style="margin-bottom: 12px">
+        <sd-button (click)="externalPrev()" size="sm" type="light" color="secondary" htmlType="button" title="Prev"></sd-button>
+        <sd-button (click)="externalNext()" size="sm" type="light" color="secondary" htmlType="button" title="Next"></sd-button>
+        <sd-button (click)="externalGoLast()" size="sm" type="light" color="secondary" htmlType="button" title="Đến cuối"></sd-button>
+        <sd-button (click)="externalReset()" size="sm" type="light" color="warning" htmlType="button" title="Reset"></sd-button>
+      </div>
+      <div class="full">
+        <sd-stepper #external [(selectedIndex)]="externalIndex">
+          <sd-step label="Step A"><p>Step A.</p></sd-step>
+          <sd-step label="Step B"><p>Step B.</p></sd-step>
+          <sd-step label="Step C"><p>Step C.</p></sd-step>
+        </sd-stepper>
+      </div>
+    </demo-section>`,
   },
   "components/stepper/example-editable-false": {
     ...SHOWCASE_PAGE_SOURCES["components/stepper"],
-    html: `<demo-section heading="Editable = false" [props]="[{ name: 'editable', value: 'false' }]"
-                note="Step 1 đặt editable=false. Sau khi qua step 2, click vào step 1 sẽ không trở lại.">
-    <div class="full">
-      <sd-stepper [(selectedIndex)]="nonEditableIndex">
-        <sd-step label="Bước 1 (locked sau khi qua)" icon="lock" [editable]="false">
-          <div class="step-body">
-            <p>Sau khi bấm Tiếp tục, bước này sẽ không click lại được.</p>
-            <button mat-flat-button color="primary" (click)="nonEditableIndex.set(1)">Tiếp tục</button>
-          </div>
-        </sd-step>
-        <sd-step label="Bước 2">
-          <p>Đã ở bước 2. Thử click vào bước 1 trên header — sẽ không quay lại được.</p>
-        </sd-step>
-      </sd-stepper>
-    </div>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Editable = false"
+      [props]="[{ name: 'editable', value: 'false' }]"
+      note="Step 1 đặt editable=false. Sau khi qua step 2, click vào step 1 sẽ không trở lại.">
+      <div class="full">
+        <sd-stepper [(selectedIndex)]="nonEditableIndex">
+          <sd-step label="Bước 1 (locked sau khi qua)" icon="lock" [editable]="false">
+            <div class="step-body">
+              <p>Sau khi bấm Tiếp tục, bước này sẽ không click lại được.</p>
+              <sd-button
+                (click)="nonEditableIndex.set(1)"
+                size="sm"
+                type="fill"
+                color="primary"
+                htmlType="button"
+                title="Tiếp tục"></sd-button>
+            </div>
+          </sd-step>
+          <sd-step label="Bước 2">
+            <p>Đã ở bước 2. Thử click vào bước 1 trên header — sẽ không quay lại được.</p>
+          </sd-step>
+        </sd-stepper>
+      </div>
+    </demo-section>`,
   },
   "components/stepper/example-error-state": {
     ...SHOWCASE_PAGE_SOURCES["components/stepper"],
-    html: `<demo-section heading="Error state" [props]="[{ name: 'state', value: 'error' }, { name: 'errorMessage', value: 'text' }]"
-                note="Step có thể override state='error' để hiện icon X đỏ + errorMessage.">
-    <div class="row" style="margin-bottom: 12px;">
-      <button mat-stroked-button color="warn" (click)="toggleError()">
-        {{ errorState() === 'error' ? 'Bỏ lỗi step 2' : 'Đặt lỗi step 2' }}
-      </button>
-    </div>
-    <div class="full">
-      <sd-stepper [(selectedIndex)]="errorIndex" color="error">
-        <sd-step label="Step OK" icon="check">
-          <p>OK.</p>
-        </sd-step>
-        <sd-step label="Validate fail" icon="warning" [state]="errorState()" errorMessage="Mã đơn không hợp lệ">
-          <div class="step-body">
-            <p>Mã đơn không khớp với hệ thống. Vui lòng kiểm tra lại.</p>
-            <button mat-stroked-button (click)="errorIndex.set(0)">Quay lại</button>
-          </div>
-        </sd-step>
-        <sd-step label="Step 3" icon="done">
-          <p>Step cuối.</p>
-        </sd-step>
-      </sd-stepper>
-    </div>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Error state"
+      [props]="[
+        { name: 'state', value: 'error' },
+        { name: 'errorMessage', value: 'text' },
+      ]"
+      note="Step có thể override state='error' để hiện icon X đỏ + errorMessage.">
+      <div class="row" style="margin-bottom: 12px">
+        <sd-button
+          (click)="toggleError()"
+          size="sm"
+          type="light"
+          color="warning"
+          htmlType="button"
+          title="{{ errorState() === 'error' ? 'Bỏ lỗi step 2' : 'Đặt lỗi step 2' }}"></sd-button>
+      </div>
+      <div class="full">
+        <sd-stepper [(selectedIndex)]="errorIndex" color="error">
+          <sd-step label="Step OK" icon="check">
+            <p>OK.</p>
+          </sd-step>
+          <sd-step label="Validate fail" icon="warning" [state]="errorState()" errorMessage="Mã đơn không hợp lệ">
+            <div class="step-body">
+              <p>Mã đơn không khớp với hệ thống. Vui lòng kiểm tra lại.</p>
+              <sd-button
+                (click)="errorIndex.set(0)"
+                size="sm"
+                type="light"
+                color="secondary"
+                htmlType="button"
+                title="Quay lại"></sd-button>
+            </div>
+          </sd-step>
+          <sd-step label="Step 3" icon="done">
+            <p>Step cuối.</p>
+          </sd-step>
+        </sd-stepper>
+      </div>
+    </demo-section>`,
   },
   "components/stepper/example-huong-doc": {
     ...SHOWCASE_PAGE_SOURCES["components/stepper"],
-    html: `<demo-section heading="Hướng dọc" [props]="[{ name: 'orientation', value: 'vertical' }, { name: 'selectedIndex', value: 'two-way' }]">
-    <div class="full">
-      <sd-stepper orientation="vertical" [(selectedIndex)]="verticalIndex">
-        <sd-step label="Tạo tài khoản" icon="account_circle">
-          <p>Form tạo tài khoản đặt ở đây.</p>
-        </sd-step>
-        <sd-step label="Liên kết ngân hàng" icon="account_balance">
-          <p>Form liên kết tài khoản ngân hàng.</p>
-        </sd-step>
-        <sd-step label="Hoàn tất" icon="done_all">
-          <p>Setup xong, bắt đầu sử dụng.</p>
-        </sd-step>
-      </sd-stepper>
-    </div>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Hướng dọc"
+      [props]="[
+        { name: 'orientation', value: 'vertical' },
+        { name: 'selectedIndex', value: 'two-way' },
+      ]">
+      <div class="full">
+        <sd-stepper orientation="vertical" [(selectedIndex)]="verticalIndex">
+          <sd-step label="Tạo tài khoản" icon="account_circle">
+            <p>Form tạo tài khoản đặt ở đây.</p>
+          </sd-step>
+          <sd-step label="Liên kết ngân hàng" icon="account_balance">
+            <p>Form liên kết tài khoản ngân hàng.</p>
+          </sd-step>
+          <sd-step label="Hoàn tất" icon="done_all">
+            <p>Setup xong, bắt đầu sử dụng.</p>
+          </sd-step>
+        </sd-stepper>
+      </div>
+    </demo-section>`,
   },
   "components/stepper/example-linear-wizard": {
     ...SHOWCASE_PAGE_SOURCES["components/stepper"],
-    html: `<demo-section heading="Linear wizard" [props]="[{ name: 'linear', value: 'true' }, { name: 'stepControl', value: 'FormGroup' }]"
-                note="Linear=true: chỉ qua được step sau khi step trước hợp lệ. Mỗi sd-step bind stepControl tới 1 FormGroup.">
-    <div class="full">
-      <sd-stepper #linear linear="true" color="primary">
-        <sd-step label="Tài khoản" icon="badge" [stepControl]="accountForm">
-          <form [formGroup]="accountForm" class="step-form">
-            <label>Tên đăng nhập</label>
-            <input formControlName="username" placeholder="ít nhất 3 ký tự" />
-            <label>Email</label>
-            <input formControlName="email" placeholder="user@onemount.com" />
-            <div class="row">
-              <button mat-flat-button color="primary" (click)="linear.next()" [disabled]="accountForm.invalid">
-                Tiếp tục
-              </button>
-            </div>
-          </form>
-        </sd-step>
+    html: `<demo-section
+      heading="Linear wizard"
+      [props]="[
+        { name: 'linear', value: 'true' },
+        { name: 'stepControl', value: 'FormGroup' },
+      ]"
+      note="Linear=true: chỉ qua được step sau khi step trước hợp lệ. Mỗi sd-step bind stepControl tới 1 FormGroup.">
+      <div class="full">
+        <sd-stepper #linear linear="true" color="primary">
+          <sd-step label="Tài khoản" icon="badge" [stepControl]="accountForm">
+            <form [formGroup]="accountForm" class="step-form">
+              <label>Tên đăng nhập</label>
+              <input formControlName="username" placeholder="ít nhất 3 ký tự" />
+              <label>Email</label>
+              <input formControlName="email" placeholder="user@onemount.com" />
+              <div class="row">
+                <sd-button
+                  (click)="linear.next()"
+                  [disabled]="accountForm.invalid"
+                  size="sm"
+                  type="fill"
+                  color="primary"
+                  htmlType="button"
+                  title="Tiếp tục"></sd-button>
+              </div>
+            </form>
+          </sd-step>
 
-        <sd-step label="Hồ sơ" icon="contact_page" [stepControl]="profileForm">
-          <form [formGroup]="profileForm" class="step-form">
-            <label>Họ và tên</label>
-            <input formControlName="fullName" />
-            <label>Số điện thoại</label>
-            <input formControlName="phone" placeholder="09xx xxx xxx" />
-            <div class="row">
-              <button mat-stroked-button (click)="linear.previous()">Quay lại</button>
-              <button mat-flat-button color="primary" (click)="linear.next()" [disabled]="profileForm.invalid">
-                Tiếp tục
-              </button>
-            </div>
-          </form>
-        </sd-step>
+          <sd-step label="Hồ sơ" icon="contact_page" [stepControl]="profileForm">
+            <form [formGroup]="profileForm" class="step-form">
+              <label>Họ và tên</label>
+              <input formControlName="fullName" />
+              <label>Số điện thoại</label>
+              <input formControlName="phone" placeholder="09xx xxx xxx" />
+              <div class="row">
+                <sd-button
+                  (click)="linear.previous()"
+                  size="sm"
+                  type="light"
+                  color="secondary"
+                  htmlType="button"
+                  title="Quay lại"></sd-button>
+                <sd-button
+                  (click)="linear.next()"
+                  [disabled]="profileForm.invalid"
+                  size="sm"
+                  type="fill"
+                  color="primary"
+                  htmlType="button"
+                  title="Tiếp tục"></sd-button>
+              </div>
+            </form>
+          </sd-step>
 
-        <sd-step label="Xác nhận" icon="task_alt" [stepControl]="confirmForm">
-          <form [formGroup]="confirmForm" class="step-form">
-            <label>
-              <input type="checkbox" formControlName="agree" />
-              Tôi đồng ý với điều khoản dịch vụ
-            </label>
-            <div class="row">
-              <button mat-stroked-button (click)="linear.previous()">Quay lại</button>
-              <button mat-flat-button color="primary" (click)="submitWizard()" [disabled]="confirmForm.invalid">
-                Hoàn tất
-              </button>
-              <button mat-stroked-button (click)="resetWizard()">Bắt đầu lại</button>
-            </div>
-          </form>
-        </sd-step>
+          <sd-step label="Xác nhận" icon="task_alt" [stepControl]="confirmForm">
+            <form [formGroup]="confirmForm" class="step-form">
+              <label>
+                <input type="checkbox" formControlName="agree" />
+                Tôi đồng ý với điều khoản dịch vụ
+              </label>
+              <div class="row">
+                <sd-button
+                  (click)="linear.previous()"
+                  size="sm"
+                  type="light"
+                  color="secondary"
+                  htmlType="button"
+                  title="Quay lại"></sd-button>
+                <sd-button
+                  (click)="submitWizard()"
+                  [disabled]="confirmForm.invalid"
+                  size="sm"
+                  type="fill"
+                  color="primary"
+                  htmlType="button"
+                  title="Hoàn tất"></sd-button>
+                <sd-button
+                  (click)="resetWizard()"
+                  size="sm"
+                  type="light"
+                  color="secondary"
+                  htmlType="button"
+                  title="Bắt đầu lại"></sd-button>
+              </div>
+            </form>
+          </sd-step>
 
-        <sd-step label="Kết quả" icon="celebration">
-          <div class="step-body">
-            @if (submittedData()) {
-              <p>Đã gửi dữ liệu:</p>
-              <pre class="output">{{ submittedData() | json }}</pre>
-              <button mat-stroked-button (click)="resetWizard()">Bắt đầu lại</button>
-            } @else {
-              <p class="hint">Bấm Hoàn tất ở bước Xác nhận để xem dữ liệu tổng hợp.</p>
-            }
-          </div>
-        </sd-step>
-      </sd-stepper>
-    </div>
-  </demo-section>`,
+          <sd-step label="Kết quả" icon="celebration">
+            <div class="step-body">
+              @if (submittedData()) {
+                <p>Đã gửi dữ liệu:</p>
+                <pre class="output">{{ submittedData() | json }}</pre>
+                <sd-button
+                  (click)="resetWizard()"
+                  size="sm"
+                  type="light"
+                  color="secondary"
+                  htmlType="button"
+                  title="Bắt đầu lại"></sd-button>
+              } @else {
+                <p class="hint">Bấm Hoàn tất ở bước Xác nhận để xem dữ liệu tổng hợp.</p>
+              }
+            </div>
+          </sd-step>
+        </sd-stepper>
+      </div>
+    </demo-section>`,
   },
   "components/stepper/example-optional-step": {
     ...SHOWCASE_PAGE_SOURCES["components/stepper"],
-    html: `<demo-section heading="Optional step" [props]="[{ name: 'optional', value: 'true' }]"
-                note="Step 2 đánh dấu optional — user có thể qua step 3 mà không cần điền.">
-    <div class="full">
-      <sd-stepper [(selectedIndex)]="optionalIndex">
-        <sd-step label="Cơ bản" icon="info">
-          <div class="step-body">
-            <p>Thông tin bắt buộc.</p>
-            <button mat-flat-button color="primary" (click)="optionalIndex.set(1)">Tiếp tục</button>
-          </div>
-        </sd-step>
-        <sd-step label="Khuyến mãi" icon="local_offer" [optional]="true">
-          <div class="step-body">
-            <p>Mã giới thiệu (tùy chọn — có thể bỏ qua).</p>
-            <div class="row">
-              <button mat-stroked-button (click)="optionalIndex.set(0)">Quay lại</button>
-              <button mat-stroked-button (click)="optionalIndex.set(2)">Bỏ qua</button>
-              <button mat-flat-button color="primary" (click)="optionalIndex.set(2)">Áp dụng</button>
+    html: `<demo-section
+      heading="Optional step"
+      [props]="[{ name: 'optional', value: 'true' }]"
+      note="Step 2 đánh dấu optional — user có thể qua step 3 mà không cần điền.">
+      <div class="full">
+        <sd-stepper [(selectedIndex)]="optionalIndex">
+          <sd-step label="Cơ bản" icon="info">
+            <div class="step-body">
+              <p>Thông tin bắt buộc.</p>
+              <sd-button
+                (click)="optionalIndex.set(1)"
+                size="sm"
+                type="fill"
+                color="primary"
+                htmlType="button"
+                title="Tiếp tục"></sd-button>
             </div>
-          </div>
-        </sd-step>
-        <sd-step label="Hoàn tất" icon="done">
-          <p>Xong.</p>
-        </sd-step>
-      </sd-stepper>
-    </div>
-  </demo-section>`,
+          </sd-step>
+          <sd-step label="Khuyến mãi" icon="local_offer" [optional]="true">
+            <div class="step-body">
+              <p>Mã giới thiệu (tùy chọn — có thể bỏ qua).</p>
+              <div class="row">
+                <sd-button
+                  (click)="optionalIndex.set(0)"
+                  size="sm"
+                  type="light"
+                  color="secondary"
+                  htmlType="button"
+                  title="Quay lại"></sd-button>
+                <sd-button
+                  (click)="optionalIndex.set(2)"
+                  size="sm"
+                  type="light"
+                  color="secondary"
+                  htmlType="button"
+                  title="Bỏ qua"></sd-button>
+                <sd-button
+                  (click)="optionalIndex.set(2)"
+                  size="sm"
+                  type="fill"
+                  color="primary"
+                  htmlType="button"
+                  title="Áp dụng"></sd-button>
+              </div>
+            </div>
+          </sd-step>
+          <sd-step label="Hoàn tất" icon="done">
+            <p>Xong.</p>
+          </sd-step>
+        </sd-stepper>
+      </div>
+    </demo-section>`,
   },
   "components/stepper/example-vi-tri-nhan": {
     ...SHOWCASE_PAGE_SOURCES["components/stepper"],
     html: `<demo-section heading="Vị trí nhãn" [props]="[{ name: 'labelPosition', value: 'end / bottom' }]">
-    <div class="row" style="margin-bottom: 12px;">
-      <button mat-stroked-button (click)="labelPos.set('end')">end</button>
-      <button mat-stroked-button (click)="labelPos.set('bottom')">bottom</button>
-      <span class="hint">Đang chọn: <code>{{ labelPos() }}</code></span>
-    </div>
-    <div class="full">
-      <sd-stepper [labelPosition]="labelPos()">
-        <sd-step label="Đăng ký"><p>Bước 1.</p></sd-step>
-        <sd-step label="Xác minh"><p>Bước 2.</p></sd-step>
-        <sd-step label="Thanh toán"><p>Bước 3.</p></sd-step>
-        <sd-step label="Hoàn tất"><p>Xong.</p></sd-step>
-      </sd-stepper>
-    </div>
-  </demo-section>`,
+      <div class="row" style="margin-bottom: 12px">
+        <sd-button (click)="labelPos.set('end')" size="sm" type="light" color="secondary" htmlType="button" title="end"></sd-button>
+        <sd-button (click)="labelPos.set('bottom')" size="sm" type="light" color="secondary" htmlType="button" title="bottom"></sd-button>
+        <span class="hint"
+          >Đang chọn: <code>{{ labelPos() }}</code></span
+        >
+      </div>
+      <div class="full">
+        <sd-stepper [labelPosition]="labelPos()">
+          <sd-step label="Đăng ký"><p>Bước 1.</p></sd-step>
+          <sd-step label="Xác minh"><p>Bước 2.</p></sd-step>
+          <sd-step label="Thanh toán"><p>Bước 3.</p></sd-step>
+          <sd-step label="Hoàn tất"><p>Xong.</p></sd-step>
+        </sd-stepper>
+      </div>
+    </demo-section>`,
   },
   "components/tab-router/example-preview-dai-tab": {
     ...SHOWCASE_PAGE_SOURCES["components/tab-router"],
@@ -16792,57 +17544,69 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
   },
   "components/upload-file/example-tai-nhieu-anh-co-gioi-han": {
     ...SHOWCASE_PAGE_SOURCES["components/upload-file"],
-    html: `<demo-section heading="Tải nhiều ảnh có giới hạn" [props]="[{ name: 'type', value: 'image' }, { name: 'max', value: '5' }, { name: 'maxSize', value: '2' }, { name: 'model', value: 'two-way' }]">
-    <div class="control-box">
-      <sd-upload-file
-        label="Ảnh sản phẩm"
-        type="image"
-        helperText="Ảnh sẽ hiển thị trên trang chi tiết sản phẩm."
-        [extensions]="['jpg', 'jpeg', 'png']"
-        [maxSize]="2"
-        [max]="5"
-        [(model)]="productImages">
-      </sd-upload-file>
-    </div>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Tải nhiều ảnh có giới hạn"
+      [props]="[
+        { name: 'appearance', value: 'dropzone / compact' },
+        { name: 'type', value: 'image' },
+        { name: 'max', value: '5' },
+        { name: 'maxSize', value: '2' },
+        { name: 'model', value: 'two-way' },
+      ]">
+      <div class="control-box">
+        <div class="upload-appearance">
+          <sd-button title="Vùng thả" size="sm" type="light" htmlType="button" (click)="uploadAppearance.set('dropzone')"></sd-button>
+          <sd-button title="Compact" size="sm" type="light" htmlType="button" (click)="uploadAppearance.set('compact')"></sd-button>
+        </div>
+        <sd-upload-file
+          [appearance]="uploadAppearance()"
+          label="Ảnh sản phẩm"
+          type="image"
+          helperText="Ảnh sẽ hiển thị trên trang chi tiết sản phẩm."
+          [extensions]="['jpg', 'jpeg', 'png']"
+          [maxSize]="2"
+          [max]="5"
+          [(model)]="productImages">
+        </sd-upload-file>
+      </div>
+    </demo-section>`,
   },
   "components/upload-file/example-tai-tai-lieu-bao-loi-required": {
     ...SHOWCASE_PAGE_SOURCES["components/upload-file"],
     html: `<demo-section
-    heading="Tải tài liệu + báo lỗi required"
-    [props]="[{ name: 'type', value: 'document' }, { name: 'required', value: 'true' }, { name: '[form]', value: 'FormGroup' }]"
-    note="Bấm Kiểm tra (mô phỏng submit → markAllAsTouched) khi chưa đính kèm file: message lỗi đỏ 'Vui lòng tải tệp' hiện ngay dưới vùng upload. Đính kèm 1 file rồi Kiểm tra lại → lỗi biến mất.">
-    <div class="control-box" style="display:flex; flex-direction:column; gap:12px">
-      <sd-upload-file
-        label="Tài liệu đính kèm"
-        type="document"
-        helperText="Đính kèm hợp đồng / phụ lục / biên bản."
-        [extensions]="['pdf', 'doc', 'docx', 'xlsx']"
-        [maxSize]="10"
-        [max]="3"
-        required
-        [form]="form"
-        name="attachments">
-      </sd-upload-file>
-      <div style="display:flex; gap:8px">
-        <button type="button" (click)="check()">Kiểm tra</button>
-        <button type="button" (click)="resetForm()">Đặt lại</button>
+      heading="Tải tài liệu + báo lỗi required"
+      [props]="[
+        { name: 'type', value: 'document' },
+        { name: 'required', value: 'true' },
+        { name: '[form]', value: 'FormGroup' },
+      ]"
+      note="Bấm Kiểm tra (mô phỏng submit → markAllAsTouched) khi chưa đính kèm file: message lỗi đỏ 'Vui lòng tải tệp' hiện ngay dưới vùng upload. Đính kèm 1 file rồi Kiểm tra lại → lỗi biến mất.">
+      <div class="control-box" style="display:flex; flex-direction:column; gap:12px">
+        <sd-upload-file
+          label="Tài liệu đính kèm"
+          type="document"
+          helperText="Đính kèm hợp đồng / phụ lục / biên bản."
+          [extensions]="['pdf', 'doc', 'docx', 'xlsx']"
+          [maxSize]="10"
+          [max]="3"
+          required
+          [form]="form"
+          name="attachments">
+        </sd-upload-file>
+        <div style="display:flex; gap:8px">
+          <sd-button (click)="check()" size="sm" type="light" color="secondary" htmlType="button" title="Kiểm tra"></sd-button>
+          <sd-button (click)="resetForm()" size="sm" type="light" color="secondary" htmlType="button" title="Đặt lại"></sd-button>
+        </div>
       </div>
-    </div>
-  </demo-section>`,
+    </demo-section>`,
   },
   "components/upload-file/example-vo-hieu-hoa-chi-doc": {
     ...SHOWCASE_PAGE_SOURCES["components/upload-file"],
     html: `<demo-section heading="Vô hiệu hóa (chỉ đọc)" [props]="[{ name: 'disabled', value: 'true' }]">
-    <div class="control-box">
-      <sd-upload-file
-        label="Đã đính kèm"
-        type="file"
-        [disabled]="true"
-        [model]="['demo-file-id']">
-      </sd-upload-file>
-    </div>
-  </demo-section>`,
+      <div class="control-box">
+        <sd-upload-file label="Đã đính kèm" type="file" [disabled]="true" [model]="['demo-file-id']"> </sd-upload-file>
+      </div>
+    </demo-section>`,
   },
   "components/view/example-gia-tri-co-sieu-lien-ket": {
     ...SHOWCASE_PAGE_SOURCES["components/view"],
@@ -18779,57 +19543,87 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
   },
   "services/confirm/example-chon-muc-do": {
     ...SHOWCASE_PAGE_SOURCES["services/confirm"],
-    html: `<demo-section heading="Chọn mức độ" [props]="[{ name: 'withRadio()', value: 'method' }]" note="withRadio() – chọn từ danh sách radio.">
-    <button mat-stroked-button color="primary" (click)="onRadio()">Chọn mức độ</button>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Chọn mức độ"
+      [props]="[{ name: 'withRadio()', value: 'method' }]"
+      note="withRadio() – chọn từ danh sách radio.">
+      <button mat-stroked-button color="primary" (click)="onRadio()">Chọn mức độ</button>
+    </demo-section>`,
   },
   "services/confirm/example-chon-ngay": {
     ...SHOWCASE_PAGE_SOURCES["services/confirm"],
-    html: `<demo-section heading="Chọn ngày" [props]="[{ name: 'withDate()', value: 'method' }]" note="withDate() – chọn ngày với min/max nếu cần.">
-    <button mat-stroked-button color="primary" (click)="onDate()">Chọn ngày hiệu lực</button>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Chọn ngày"
+      [props]="[{ name: 'withDate()', value: 'method' }]"
+      note="withDate() – chọn ngày với min/max nếu cần.">
+      <button mat-stroked-button color="primary" (click)="onDate()">Chọn ngày hiệu lực</button>
+    </demo-section>`,
   },
   "services/confirm/example-chon-ngay-gio": {
     ...SHOWCASE_PAGE_SOURCES["services/confirm"],
-    html: `<demo-section heading="Chọn ngày giờ" [props]="[{ name: 'withDatetime()', value: 'method' }]" note="withDatetime() – chọn ngày và giờ.">
-    <button mat-stroked-button color="primary" (click)="onDatetime()">Chọn lịch xử lý</button>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Chọn ngày giờ"
+      [props]="[{ name: 'withDatetime()', value: 'method' }]"
+      note="withDatetime() – chọn ngày và giờ.">
+      <button mat-stroked-button color="primary" (click)="onDatetime()">Chọn lịch xử lý</button>
+    </demo-section>`,
   },
   "services/confirm/example-chon-phong-ban": {
     ...SHOWCASE_PAGE_SOURCES["services/confirm"],
-    html: `<demo-section heading="Chọn phòng ban" [props]="[{ name: 'withSelect()', value: 'method' }]" note="withSelect() – chọn một giá trị bằng sd-select.">
-    <button mat-stroked-button color="primary" (click)="onSelect()">Chọn phòng ban</button>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Chọn phòng ban"
+      [props]="[{ name: 'withSelect()', value: 'method' }]"
+      note="withSelect() – chọn một giá trị bằng sd-select.">
+      <button mat-stroked-button color="primary" (click)="onSelect()">Chọn phòng ban</button>
+    </demo-section>`,
   },
   "services/confirm/example-chon-radio-dang-doc": {
     ...SHOWCASE_PAGE_SOURCES["services/confirm"],
-    html: `<demo-section heading="Chọn radio dạng dọc" [props]="[{ name: 'display', value: 'column' }]" note="withRadio(..., { display: 'column' }) – hiển thị danh sách radio theo chiều dọc.">
-    <button mat-stroked-button color="primary" (click)="onRadioColumn()">Chọn phòng ban dạng dọc</button>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Chọn radio dạng dọc"
+      [props]="[{ name: 'display', value: 'column' }]"
+      note="withRadio(..., { display: 'column' }) – hiển thị danh sách radio theo chiều dọc.">
+      <button mat-stroked-button color="primary" (click)="onRadioColumn()">Chọn phòng ban dạng dọc</button>
+    </demo-section>`,
   },
   "services/confirm/example-nhap-ly-do": {
     ...SHOWCASE_PAGE_SOURCES["services/confirm"],
-    html: `<demo-section heading="Nhập lý do" [props]="[{ name: 'withInput()', value: 'method' }]" note="withInput() – yêu cầu nhập nội dung trước khi xác nhận.">
-    <button mat-stroked-button color="primary" (click)="onInput()">Nhập lý do từ chối</button>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Nhập lý do"
+      [props]="[{ name: 'withInput()', value: 'method' }]"
+      note="withInput() – yêu cầu nhập nội dung trước khi xác nhận.">
+      <button mat-stroked-button color="primary" (click)="onInput()">Nhập lý do từ chối</button>
+    </demo-section>`,
   },
   "services/confirm/example-nhat-ky-gan-nhat": {
     ...SHOWCASE_PAGE_SOURCES["services/confirm"],
     html: `<demo-section heading="Nhật ký gần nhất">
-    <pre style="margin:0;font-size:12px;background:#f5f5f5;padding:8px 12px;border-radius:6px;width:100%">{{ log() || '(chưa có thao tác)' }}</pre>
-  </demo-section>`,
+      <pre style="margin:0;font-size:12px;background:#f5f5f5;padding:8px 12px;border-radius:6px;width:100%">{{
+        log() || '(chưa có thao tác)'
+      }}</pre>
+    </demo-section>`,
   },
   "services/confirm/example-xac-nhan-co-ban": {
     ...SHOWCASE_PAGE_SOURCES["services/confirm"],
-    html: `<demo-section heading="Xác nhận cơ bản" [props]="[{ name: 'confirm()', value: 'method' }]" note="confirm(message) – Promise resolve khi bấm OK, reject khi Hủy.">
-    <button mat-flat-button color="primary" (click)="onBasic()">Xác nhận thao tác</button>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Xác nhận cơ bản"
+      [props]="[
+        { name: 'confirm()', value: 'method' },
+        { name: 'icon', value: 'default / info_outline' },
+      ]"
+      note="Không truyền icon sẽ dùng icon mặc định. Truyền icon để thay biểu tượng trong cùng ô nền nhẹ.">
+      <button mat-flat-button color="primary" (click)="onBasic()">Xác nhận thao tác</button>
+      <button mat-stroked-button color="primary" (click)="onCustomIcon()">Icon tùy chỉnh</button>
+    </demo-section>`,
   },
   "services/confirm/example-xac-nhan-xoa": {
     ...SHOWCASE_PAGE_SOURCES["services/confirm"],
-    html: `<demo-section heading="Xác nhận xóa" [props]="[{ name: 'confirm()', value: 'method' }]" note="Tùy chỉnh tiêu đề, nhãn nút và màu nút.">
-    <button mat-flat-button color="warn" (click)="onDelete()">Xóa bản ghi</button>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Xác nhận xóa"
+      [props]="[{ name: 'confirm()', value: 'method' }]"
+      note="Tùy chỉnh tiêu đề, nhãn nút và màu nút.">
+      <button mat-flat-button color="warn" (click)="onDelete()">Xóa bản ghi</button>
+    </demo-section>`,
   },
   "services/excel/example-tai-template-trong": {
     ...SHOWCASE_PAGE_SOURCES["services/excel"],

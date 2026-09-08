@@ -1,4 +1,6 @@
 <div class="d-flex flex-column" style="gap: 4px">
+  @let _dropzone = appearance() === 'dropzone';
+  @let _description = generatedDescription();
   @let _sdLabelDef = sdLabelDef();
   @let _label = label();
   @let _align = align();
@@ -9,13 +11,17 @@
   @if (!!_sdLabelDef?.templateRef) {
     <ng-container *ngTemplateOutlet="_sdLabelDef?.templateRef!"> </ng-container>
   } @else if (_label) {
-    <sd-label [label]="_label!" [description]="generatedDescription()" [helperText]="helperText()" [required]="required()"></sd-label>
+    <sd-label
+      [label]="_label!"
+      [description]="_dropzone ? undefined : _description"
+      [helperText]="helperText()"
+      [required]="required()"></sd-label>
   }
   <div
     cdkDropList
     (cdkDropListDropped)="onDrop($event)"
     cdkDropListOrientation="horizontal"
-    class="d-flex"
+    class="c-upload-list"
     [class.justify-content-center]="_align === 'center'"
     [class.justify-content-start]="_align === 'left'">
     @if (_previewFiles.length < max() && !formControl.disabled) {
@@ -24,11 +30,12 @@
            Nay là role="button" + tabindex="0" + nhãn i18n + Enter/Space chạy đúng như click. -->
       <div
         class="d-flex justify-content-center align-items-center cursor-pointer c-area-upload"
+        [class.c-area-upload--dropzone]="_dropzone"
         role="button"
         tabindex="0"
         [attr.aria-label]="'core.component.upload-file.upload' | sdTranslate"
-        [style.width]="_previewWidth"
-        [style.height]="_previewHeight"
+        [style.width]="_dropzone ? null : _previewWidth"
+        [style.height]="_dropzone ? null : _previewHeight"
         (click)="onUpload()"
         (keydown.enter)="onUploadKeydown($event)"
         (keydown.space)="onUploadKeydown($event)"
@@ -37,13 +44,25 @@
         [attr.data-empty]="dataEmpty()"
         [attr.data-count]="dataCount()"
         #dropElement>
-        <sd-icon class="c-upload" name="file_upload"></sd-icon>
+        <span class="c-upload-icon-tile" aria-hidden="true"><sd-icon class="c-upload" name="file_upload"></sd-icon></span>
+        @if (_dropzone) {
+          <span class="c-upload-copy">{{ 'core.component.upload-file.choose-or-drop' | sdTranslate }}</span>
+          @if (_description) {
+            <span class="c-upload-hint">{{ _description }}</span>
+          }
+        }
       </div>
     }
     @let previewImages = _previewFiles | filterImage;
     @for (image of previewImages; track $index; let idx = $index) {
       @if (!formControl.disabled || idx < _maxOfImage) {
-        <div class="c-area c-view" [class.c-loading]="!image.previewSrc && !image.src" [class.c-area-error]="image.isImgError" [style.width]="_previewWidth" [style.height]="_previewHeight" cdkDrag>
+        <div
+          class="c-area c-view"
+          [class.c-loading]="!image.previewSrc && !image.src"
+          [class.c-area-error]="image.isImgError"
+          [style.width]="_previewWidth"
+          [style.height]="_previewHeight"
+          cdkDrag>
           <div class="c-drag-placeholder" [style.width]="_previewWidth" [style.height]="_previewHeight" *cdkDragPlaceholder></div>
           <div *cdkDragPreview [style]="{ width: _previewWidth, height: _previewHeight }" class="c-drag-preview">
             <div class="c-container">
@@ -63,22 +82,26 @@
               [attr.role]="isTouchDevice ? 'button' : null"
               [attr.tabindex]="isTouchDevice ? 0 : null"
               [attr.aria-pressed]="isTouchDevice ? selectedFile() === image : null"
-              [attr.aria-label]="isTouchDevice ? (image.fileName || ('core.component.upload-file.preview-title' | sdTranslate)) : null"
+              [attr.aria-label]="isTouchDevice ? image.fileName || ('core.component.upload-file.preview-title' | sdTranslate) : null"
               (click)="onSelect(image)"
               (keydown.enter)="onSelectKeydown(image, $event)"
               (keydown.space)="onSelectKeydown(image, $event)">
               @if (image.isImgError) {
-                <img class="sd-image-image-error" alt="Image Error" style="max-width: 100%;" [style.max-height]="_previewHeight" />
-              } @else if(image.previewSrc) {
+                <img class="sd-image-image-error" alt="Image Error" style="max-width: 100%" [style.max-height]="_previewHeight" />
+              } @else if (image.previewSrc) {
                 <img class="c-img" [src]="image.previewSrc" alt="Preview" [style.max-height]="_previewHeight" (error)="onImgError(image)" />
-              } @else if(image.src) {
+              } @else if (image.src) {
                 <img class="c-img" [src]="image.src" alt="Preview" [style.max-height]="_previewHeight" (error)="onImgError(image)" />
               } @else {
                 <!-- why: ảnh đang tải lên là thay đổi trạng thái BẤT ĐỒNG BỘ; trước đây spinner
                      không được thông báo ở đâu cả. role="status" + aria-live="polite" để screen
                      reader biết đang có tiến trình. -->
-                <div class="c-uploading" role="status" aria-live="polite" [attr.aria-label]="'core.component.upload-file.loading' | sdTranslate">
-                  <mat-spinner style="justify-self: center;" strokeWidth="2" mode="indeterminate" diameter="18" value="100"></mat-spinner>
+                <div
+                  class="c-uploading"
+                  role="status"
+                  aria-live="polite"
+                  [attr.aria-label]="'core.component.upload-file.loading' | sdTranslate">
+                  <mat-spinner style="justify-self: center" strokeWidth="2" mode="indeterminate" diameter="18" value="100"></mat-spinner>
                 </div>
               }
               @if (idx === _maxOfImage - 1 && formControl.disabled && previewImages.length > _maxOfImage) {
@@ -140,7 +163,7 @@
           psd: document.extension === 'psd',
           xml: document.extension === 'xml',
           zip: document.extension === 'zip',
-          tiff: document.extension === 'tiff'
+          tiff: document.extension === 'tiff',
         }"
         alt="Preview" />
       <a href="javascript:;" class="c-file-name T14M" (click)="onDownload(document)">{{ document.fileName || 'file' }}</a>
@@ -166,7 +189,7 @@
   @if (showRequiredError()) {
     <!-- why: thông báo lỗi xuất hiện BẤT ĐỒNG BỘ (sau submit/validator) nên trước đây screen
          reader không được báo gì. role="alert" đọc ngay khi message xuất hiện. -->
-    <div class="text-error T12R" role="alert" style="padding: 4px 8px">{{ ('core.component.upload-file.please-upload' | sdTranslate) }}</div>
+    <div class="text-error T12R" role="alert" style="padding: 4px 8px">{{ 'core.component.upload-file.please-upload' | sdTranslate }}</div>
   }
 </div>
 <preview (download)="onDownload($event)"></preview>

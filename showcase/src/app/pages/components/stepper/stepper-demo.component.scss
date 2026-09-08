@@ -81,3 +81,24 @@ code {
   border-radius: 4px;
   font-size: 12px;
 }
+
+.step-body > sd-button {
+  align-self: flex-end;
+}
+.step-body > .row,
+.step-form > .row {
+  justify-content: flex-end;
+}
+.step-form input {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+@media (max-width: 600px) {
+  .step-form label {
+    flex-wrap: wrap;
+  }
+  :host ::ng-deep .step-body button,
+  :host ::ng-deep .step-form button {
+    min-height: 44px;
+  }
+}

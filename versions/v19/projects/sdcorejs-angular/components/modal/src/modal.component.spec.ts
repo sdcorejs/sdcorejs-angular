@@ -231,6 +231,14 @@ describe('SdModal', () => {
   // -------------------------------------------------------------------------
 
   describe('open() — lifecycle', () => {
+    it('caps a custom dialog width to the viewport while preserving its requested width', () => {
+      host.width = '600px';
+      fixture.detectChanges();
+      component.open();
+      const opts = dialogOpenSpy.calls.mostRecent().args[1];
+      expect(opts.width).toBe('600px');
+      expect(opts.maxWidth).toBe('calc(100vw - 32px)');
+    });
     it('sets isOpened to true', () => {
       component.open();
       expect(component.isOpened()).toBeTrue();
@@ -750,7 +758,7 @@ describe('SdModal', () => {
     it('limits the dialog surface to viewport height so body scroll does not hide footer actions', () => {
       const styles = ((SdModal as any).ɵcmp.styles as string[]).join('\n');
 
-      expect(styles).toContain('max-height: calc(100vh - 32px)');
+      expect(styles).toContain('max-height: calc(100dvh - 32px)');
     });
 
     it('keeps right-only footer actions aligned to the end when the left slot is empty', () => {

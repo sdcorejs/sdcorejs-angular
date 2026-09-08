@@ -90,7 +90,7 @@
     }
 
     @if (_title) {
-      <span class="c-title" [class.ml-8]="_loading || _prefixIcon" [class.mr-8]="_suffixIcon && !_loading">
+      <span class="c-title">
         {{ _title }}
       </span>
     }
@@ -99,8 +99,5 @@
       <sd-icon [name]="_suffixIcon" [fontSet]="_fontSet" [size]="size()" class="c-icon-suffix"></sd-icon>
     }
 
-    @if (!_title && !_prefixIcon && !_loading && _suffixIcon) {
-      <sd-icon [name]="_suffixIcon" [fontSet]="_fontSet" [size]="size()"></sd-icon>
-    }
   </div>
 </ng-template>

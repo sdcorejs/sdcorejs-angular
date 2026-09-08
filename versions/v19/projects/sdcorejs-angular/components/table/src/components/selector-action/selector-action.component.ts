@@ -37,7 +37,7 @@ export class SelectorActionComponent {
   // ==========================================
   message = computed<string>(() => {
     const msg = this.tableOption()?.selector?.message;
-    if (!msg) return this.#i18n.t('core.component.table.selector-action.default-msg');
+    if (!msg) return this.#i18n.t('core.component.table.selector-action.selected', { count: this.selectedTableItems()?.length || 0 });
     if (typeof msg === 'function') {
       return msg(this.selectedTableItems()?.map(e => e.data));
     }
@@ -55,6 +55,19 @@ export class SelectorActionComponent {
   // ==========================================
   // 4. HANDLERS
   // ==========================================
+  readonly directActions = computed(() =>
+    this.actions()
+      .map((action, index) => ({ action, index }))
+      .slice(0, 2)
+  );
+  readonly overflowActions = computed(() =>
+    this.actions()
+      .map((action, index) => ({ action, index }))
+      .slice(2)
+  );
+  readonly moreLabel = computed(() => this.#i18n.t('core.component.table.selector-action.more'));
+  readonly clearLabel = computed(() => this.#i18n.t('core.component.table.clear-selection'));
+
   onClear = () => this.clear.emit();
 
   onClickAction = (action: Action) => {

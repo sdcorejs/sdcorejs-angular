@@ -24,7 +24,7 @@ describe('SdDataState', () => {
     });
   });
 
-  it('emits retry and action events from native buttons', () => {
+  it('emits retry and action once through small SdButton controls without submitting a form', () => {
     let retries = 0;
     let actions = 0;
     fixture.componentRef.setInput('state', 'error');
@@ -34,8 +34,12 @@ describe('SdDataState', () => {
     fixture.componentInstance.sdAction.subscribe(() => (actions += 1));
     fixture.detectChanges();
 
-    (fixture.nativeElement.querySelector('[data-state-retry]') as HTMLButtonElement).click();
-    (fixture.nativeElement.querySelector('[data-state-action]') as HTMLButtonElement).click();
+    for (const selector of ['sd-button[data-state-retry] button', 'sd-button[data-state-action] button']) {
+      const button = fixture.nativeElement.querySelector(selector) as HTMLButtonElement;
+      expect(button).not.toBeNull();
+      expect(button.type).toBe('button');
+      button.click();
+    }
 
     expect(retries).toBe(1);
     expect(actions).toBe(1);

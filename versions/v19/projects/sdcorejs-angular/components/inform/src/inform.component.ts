@@ -1,3 +1,4 @@
+import { SdButton } from '@sdcorejs/angular/components/button';
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -34,7 +35,7 @@ const SD_INFORM_DEFAULT_ICON: Record<Color, string> = {
   styleUrl: './inform.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [SdIcon, CommonModule, SdTranslatePipe],
+  imports: [SdButton, SdIcon, CommonModule, SdTranslatePipe],
 })
 export class SdInform {
   // 1. INPUTS
@@ -100,7 +101,7 @@ export class SdInform {
 
   effectiveIcon = computed<string | null>(() => {
     if (this.hideIcon()) return null;
-    return this.icon() || SD_INFORM_DEFAULT_ICON[this.effectiveColor()];
+    return this.icon()?.trim() || SD_INFORM_DEFAULT_ICON[this.effectiveColor()];
   });
 
   hasActionSlot = computed(() => !!this.actionSlot());

@@ -47,17 +47,11 @@ describe('SelectorActionComponent autoId propagation', () => {
     expect(anyClear).toBeNull();
   });
 
-  it('rounds the count badge with the same radius as the quick-action bar', () => {
-    const bar = fixture.nativeElement.querySelector('.c-quick-action') as HTMLElement;
-    const badge = fixture.nativeElement.querySelector('.c-bg-length') as HTMLElement;
-    const barStyle = getComputedStyle(bar);
-    const badgeStyle = getComputedStyle(badge);
-
-    expect(badgeStyle.borderTopLeftRadius).toBe(barStyle.borderTopLeftRadius);
-    expect(badgeStyle.borderBottomLeftRadius).toBe(barStyle.borderBottomLeftRadius);
-    // Cạnh phải của badge nằm giữa thanh nên phải vuông.
-    expect(badgeStyle.borderTopRightRadius).toBe('0px');
-    expect(badgeStyle.borderBottomRightRadius).toBe('0px');
+  it('keeps the selection message inside the contained toolbar', () => {
+    const bar = fixture.nativeElement.querySelector('.c-quick-action.contained');
+    expect(bar).toBeTruthy();
+    expect(bar.querySelector('.sd-selection-message').textContent).toContain('1');
+    expect(bar.querySelector('.c-bg-length')).toBeNull();
   });
 });
 

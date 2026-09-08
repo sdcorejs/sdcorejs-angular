@@ -1,6 +1,7 @@
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import {
   AfterViewInit,
+  booleanAttribute,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
@@ -15,6 +16,7 @@ import {
   effect,
   inject,
   input,
+  output,
   signal,
   untracked,
   viewChild,
@@ -57,6 +59,8 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdDataState, SdDataStateTemplateDirective } from '@sdcorejs/angular/components/data-state';
+import { cloneReadRequest, SdReadChannel, SdReadState } from '@sdcorejs/angular/utilities/read-state';
 import { SdQuickAction } from '@sdcorejs/angular/components/quick-action';
 import { SdHoverCopyDirective, SdScrollDirective } from '@sdcorejs/angular/directives';
 import { SdSafeHtmlPipe } from '@sdcorejs/angular/pipes';
@@ -153,6 +157,13 @@ class SdTableSortHeaderDirective implements MatSortable, OnInit, OnDestroy {
 // why: tên cũ `MatPaginatorIntlCro` là vết copy-paste từ ví dụ locale Croatia — lớp này chỉ phục vụ
 // nhãn phân trang của `<sd-table>` (VI/EN), không liên quan gì tới tiếng Croatia. Tên cũ lại còn
 // mang tiền tố `Mat`, dễ bị hiểu nhầm là API của Angular Material thay vì export public của lib này.
+interface ServerReadRequest<T> {
+  filter: SdTableFilterRequest;
+  paging: Parameters<Extract<SdTableOption<T>, { type: 'server' }>['items']>[1];
+  option: Extract<SdTableOption<T>, { type: 'server' }>;
+  valid: () => boolean;
+}
+
 @Injectable()
 export class SdTablePaginatorIntl extends MatPaginatorIntl {
   // i18n labels resolved at construction. Reads VI/EN from I18nService.
@@ -208,6 +219,8 @@ const EMPTY_COMMANDS: SdTableCommand[] = [];
   ],
   imports: [
     SdIcon,
+    SdDataState,
+    SdDataStateTemplateDirective,
     CommonModule,
     FormsModule,
     MatMenuModule,
@@ -249,6 +262,19 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
   autoId = computed(() => (this.autoIdInput() ? `components-table-${this.autoIdInput()}` : undefined));
   option = input.required<SdTableOption<T>>();
+  /** Hide the integrated error region while retaining read state, events and retry. */
+  readonly hideReadError = input(false, { transform: booleanAttribute });
+  readonly sdReadStateChange = output<SdReadState>();
+  readonly #read = new SdReadChannel('TABLE', state => {
+    if (!this.#destroyed) {
+      this.loadError.set(state.status === 'error');
+      this.sdReadStateChange.emit(state);
+    }
+  });
+  readonly readState = this.#read.state;
+  readonly dataStateTemplate = contentChild(SdDataStateTemplateDirective);
+  #destroyed = false;
+  #failedRead?: ServerReadRequest<T>;
 
   // ==========================================
   // 2. SIGNAL QUERIES
@@ -463,7 +489,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
   // 1. Private Services
   #ref = inject(ChangeDetectorRef);
-  #destroyed = false;
+
   #configService = inject(ConfigService);
   #gridFilterService = inject(SdTableFilterService);
   #notifyService = inject(SdNotifyService);
@@ -589,8 +615,8 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
             if (data.revision !== this.#optionRevision || !this.filterRegister) return undefined;
             const filterInfo = this.getFilterRequest();
             const result = await this.#load(filterInfo, !this.#loadCompleted || data.force);
-            if (data.revision !== this.#optionRevision) return undefined;
-            this.#loadCompleted = !this.loadError();
+            if (data.revision !== this.#optionRevision || !result) return undefined;
+            this.#loadCompleted = true;
             return {
               result,
               revision: data.revision,
@@ -606,6 +632,8 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
   ngOnDestroy() {
     this.#destroyed = true;
+    this.#read.invalidate();
+    this.#failedRead = undefined;
     this.#subscription.unsubscribe();
   }
 
@@ -625,10 +653,15 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   };
 
   #requestReload = (force: boolean) => {
+    this.#read.invalidate();
+    this.#failedRead = undefined;
+    this.loading.set(false);
     this.#reload.next({ force, revision: this.#optionRevision });
   };
 
   #resetStateForNewOption = () => {
+    this.#read.invalidate();
+    this.#failedRead = undefined;
     this.#optionRevision += 1;
     this.#configurationSubscription?.unsubscribe();
     this.#configurationSubscription = undefined;
@@ -840,10 +873,14 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   #load = async (
     filterReq: SdTableFilterRequest,
     force = true
-  ): Promise<{
-    items: SdTableItem<T>[];
-    total: number;
-  }> => {
+  ): Promise<
+    | {
+        items: SdTableItem<T>[];
+        total: number;
+        readRevision?: number;
+      }
+    | undefined
+  > => {
     this.loading.set(true);
     if (force || this.tableOption()?.type === 'server') this.loadError.set(false);
     this.#ref.detectChanges();
@@ -860,6 +897,8 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
         console.error(err);
       }
       if (this.externalFilter()?.form?.invalid) {
+        this.#read.invalidate();
+        this.#failedRead = undefined;
         this.loading.set(false);
         this.#ref.detectChanges();
         return {
@@ -867,29 +906,22 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
           total: 0,
         };
       }
-      const pagingReq = SdConvertToPagingReq(filterReq, {
+      const snapshot = cloneReadRequest(filterReq);
+      const pagingReq = SdConvertToPagingReq(snapshot, {
         columns: opt.columns,
         externalFilters: opt.filter?.externalFilters,
       });
-      const data = await Promise.resolve()
-        .then(() => items(filterReq, pagingReq))
-        .catch(err => {
-          this.loadError.set(true);
-          console.error(err);
-          return {
-            items: [] as T[],
-            total: 0,
-          };
-        });
-      return {
-        items: await this.#tableFormatService
-          .format(data?.items, opt.columns, this.cacheValues, this.#cacheObjValues, opt.rowKey)
-          .finally(() => {
-            this.loading.set(false);
-            if (!this.#destroyed) this.#ref.detectChanges();
-          }),
-        total: data?.total || 0,
-      };
+      const optionRevision = this.#optionRevision;
+      const sourceOption = this.option();
+      const context = this.#readContext();
+      const valid = () =>
+        !this.#destroyed &&
+        optionRevision === this.#optionRevision &&
+        this.tableOption()?.items === items &&
+        this.option() === sourceOption &&
+        this.option().items === items &&
+        context === this.#readContext();
+      return this.#runServerRead({ filter: snapshot, paging: cloneReadRequest(pagingReq), option: { ...opt, items }, valid });
     }
     if (force) {
       const { items } = opt;
@@ -913,12 +945,69 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     return this.#filterLocal(this.#localItems, filterReq);
   };
 
+  #readContext = () => {
+    const request = this.getFilterRequest();
+    // why: resize/đổi nhãn cột không reload dữ liệu; chỉ field ảnh hưởng nội dung truy vấn.
+    return Utilities.hash({ ...request, visibledColumns: request.visibledColumns?.map(column => column.field) });
+  };
+
+  #runServerRead = async (request: ServerReadRequest<T>) => {
+    const revision = this.#read.begin(request.valid);
+    this.#failedRead = undefined;
+    this.loading.set(true);
+    try {
+      // why: mỗi lần gọi nhận bản sao riêng; loader không được sửa snapshot dành cho retry.
+      const data = await request.option.items(cloneReadRequest(request.filter), cloneReadRequest(request.paging));
+      if (!this.#read.isCurrent(revision)) return undefined;
+      // why: formatter có await và ghi cache; chỉ commit bản riêng khi request còn hiện hành.
+      const values = cloneReadRequest(this.cacheValues);
+      const objectValues = cloneReadRequest(this.#cacheObjValues);
+      const formatted = await this.#tableFormatService.format(
+        data?.items,
+        request.option.columns,
+        values,
+        objectValues,
+        request.option.rowKey
+      );
+      if (!this.#read.succeed(revision, data?.items?.length || 0)) return undefined;
+      if (!this.#read.isCurrent(revision)) return undefined;
+      this.cacheValues = values;
+      this.#cacheObjValues = objectValues;
+      return { items: formatted, total: data?.total || 0, readRevision: revision };
+    } catch (error) {
+      if (this.#read.isCurrent(revision)) {
+        this.#failedRead = request;
+        this.#read.fail(revision, error);
+      }
+      return undefined;
+    } finally {
+      if (this.#read.isCurrent(revision)) {
+        this.loading.set(false);
+        this.#ref.markForCheck();
+      }
+    }
+  };
+
+  /** Retry only the still-valid failed server request, without resetting filters or paging. */
+  retryRead = async (): Promise<void> => {
+    const request = this.#failedRead;
+    if (!request || this.readState().status !== 'error') return;
+    if (!request.valid()) {
+      this.#failedRead = undefined;
+      this.#read.invalidate();
+      return;
+    }
+    const result = await this.#runServerRead(request);
+    if (result) await this.#render(result, false, { fromSource: 'RELOAD' });
+  };
+
   #render = async (
-    args: { items: SdTableItem<T>[]; total: number },
+    args: { items: SdTableItem<T>[]; total: number; readRevision?: number } | undefined,
     scrollTop = true,
     additionArgs?: { fromSource?: 'PAGING' | 'RELOAD' }
   ) => {
     if (this.#destroyed) return;
+    if (!args || (args.readRevision !== undefined && !this.#read.isCurrent(args.readRevision))) return;
     if (scrollTop) {
       this.scroll()?.scrollTop();
     }
@@ -947,6 +1036,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
         treeSearchPredicate: this.#treeSearchPredicate,
       });
       await this.#expandDefaultBranches(this.items(), treeOpt);
+      if (args.readRevision !== undefined && !this.#read.isCurrent(args.readRevision)) return;
       this.treeRevision.update(n => n + 1);
     }
     this.#treeSearchActive = searchNow;
@@ -964,10 +1054,12 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     this.#applyRowStyles();
 
     await this.tableOption()?.reload?.onReload?.(this.items(), additionArgs);
+    if (args.readRevision !== undefined && !this.#read.isCurrent(args.readRevision)) return;
     this.#updateSelectedItems();
     this.#syncSelectAllState();
 
     setTimeout(() => {
+      if (this.#destroyed || (args.readRevision !== undefined && !this.#read.isCurrent(args.readRevision))) return;
       this.table()?.updateStickyColumnStyles();
     }, 0);
   };

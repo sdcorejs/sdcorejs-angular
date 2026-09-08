@@ -1,5 +1,39 @@
 # `<sd-autocomplete>`
 
+## Trạng thái đọc và retry
+
+`readState()` là signal readonly `SdSearchReadState`; `(sdReadStateChange)` phát
+snapshot SEARCH/VALUE với `channels` độc lập. Chỉ nhánh `error` chứa exception
+nguyên bản (`unknown`). `retryRead(): void` đọc lại snapshot lỗi ngay, bỏ qua debounce
+và cache; gọi trùng khi đang retry không tạo request thứ hai.
+
+Promise reject, Observable error của runtime hiện có và throw đồng bộ đều thành
+`error`; chữ ký public `SdSearch` giữ nguyên. Lỗi không vào cache, thành công `[]`
+vẫn được cache. Search mới tiếp tục hoạt động sau lỗi; request cũ không tắt loading
+của request mới hoặc ghi đè label/danh sách. Lỗi không xóa model hay phát change giả.
+
+Trong lúc còn loading/debounce/retry, panel tạm ẩn vùng lỗi mặc định và custom;
+không hiển thị lỗi đồng thời với spinner. Khi loading kết thúc, lỗi còn hiệu lực
+được hiển thị lại. Các snapshot VALUE/SEARCH vẫn giữ nguyên quy tắc ưu tiên.
+Panel có `SdDataState` compact cho lỗi hoặc empty sau tương tác; không báo empty
+khi chưa tương tác hoặc đang typing. `hideReadError` (boolean transform, default
+`false`) ẩn cả error UI mặc định lẫn template custom nhưng giữ state/output/retry.
+Tab từ input tới nút retry giữ nguyên query; Enter/Space retry giữ panel và selection.
+
+```html
+<sd-autocomplete #lookup [items]="loadOptions" valueField="id" displayField="name"
+  (sdReadStateChange)="readState.set($event)">
+  <ng-template sdDataStateTemplate let-state let-retry="retry">
+    <p>{{ state }}</p>
+    <button type="button" (click)="retry()">Thử lại</button>
+  </ng-template>
+</sd-autocomplete>
+```
+
+Import directive từ `@sdcorejs/angular/components/data-state`; types từ
+`@sdcorejs/angular/utilities/read-state`. Xem
+[contract và migration](../../utilities/read-state/sd-read-state.md).
+
 **Type**: Component (form input)
 **Selector**: `sd-autocomplete`
 **Import path**: `@sdcorejs/angular/forms/autocomplete` (or barrel: `@sdcorejs/angular/forms`)

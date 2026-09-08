@@ -70,16 +70,16 @@ describe('ToastComponent', () => {
 
   // ─── icon / type rendering ────────────────────────────────────────────────
 
-  it('renders success icon/colour classes when type=success', () => {
+  it('renders a decorative status icon and success accent when type=success', () => {
     init(makeData({ type: 'success' }));
     expect(fix.nativeElement.querySelector('.sd-toast__bar.bg-success')).not.toBeNull();
-    expect(fix.nativeElement.querySelector('.sd-toast__icon.text-success')).not.toBeNull();
+    expect(fix.nativeElement.querySelector('.sd-toast__icon[aria-hidden="true"] svg')).not.toBeNull();
   });
 
-  it('renders info colour classes when type=info', () => {
+  it('renders a decorative status icon and info accent when type=info', () => {
     init(makeData({ type: 'info' }));
     expect(fix.nativeElement.querySelector('.sd-toast__bar.bg-info')).not.toBeNull();
-    expect(fix.nativeElement.querySelector('.sd-toast__icon.text-info')).not.toBeNull();
+    expect(fix.nativeElement.querySelector('.sd-toast__icon[aria-hidden="true"] svg')).not.toBeNull();
   });
 
   it('renders warning colour classes when type=warning', () => {

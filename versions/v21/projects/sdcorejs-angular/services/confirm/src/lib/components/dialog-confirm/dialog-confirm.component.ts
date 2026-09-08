@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { SdButton } from '@sdcorejs/angular/components/button';
@@ -21,6 +21,7 @@ export interface DialogData {
   yesButtonColor?: Color;
   noButtonColor?: Color;
   input?: {
+    label?: string;
     placeholder?: string;
     minlength?: number;
     maxlength?: number;
@@ -63,6 +64,7 @@ export interface DialogData {
 
 @Component({
   selector: 'sd-dialog-confirm',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: 'dialog-confirm.component.html',
   styleUrl: './dialog-confirm.component.scss',
   imports: [SdIcon, CommonModule, FormsModule, MatDialogModule, SdButton, SdDate, SdDatetime, SdRadio, SdSelect, SdTextarea],
@@ -73,6 +75,22 @@ export class DialogConfirmComponent {
   id = `I${Utilities.generateUuid()}`;
   public readonly dialogRef = inject(MatDialogRef<DialogConfirmComponent>);
   public readonly data = inject<DialogData>(MAT_DIALOG_DATA);
+
+  readonly iconTone = this.data.yesButtonColor || 'primary';
+  readonly resolvedIcon =
+    this.data.icon?.trim() ||
+    (this.iconTone === 'error'
+      ? 'delete'
+      : this.iconTone === 'warning'
+        ? 'warning_amber'
+        : this.data.input
+          ? 'edit_note'
+          : this.data.date || this.data.datetime
+            ? 'today'
+            : this.data.radio || this.data.select
+              ? 'list'
+              : 'check_circle');
+  readonly hasFields = !!(this.data.input || this.data.date || this.data.radio || this.data.datetime || this.data.select);
 
   constructor() {
     if (this.data?.input) {

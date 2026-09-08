@@ -41,7 +41,7 @@ import { SdModal } from '@sdcorejs/angular/components/modal';
 | `[sdFooterLeft]`  | Footer left action group.                           |
 | `[sdFooterRight]` | Footer right action group.                          |
 
-Header/footer padding is `16px`. Body padding is `0`; add your own body wrapper when content needs spacing. The footer is hidden when both footer slots are empty.
+Header, body and footer align to 24px horizontal insets (16px on mobile). Body content scrolls, while the footer remains available and wraps on narrow screens. The footer is hidden when both footer slots are empty.
 
 ## Public API
 
@@ -98,3 +98,7 @@ Two implementation constraints are load-bearing here, so do not "simplify" them:
 - The built-in close button already had its own `:focus-visible` ring; it is unchanged.
 
 The real dialog/bottom-sheet container is associated with its visible heading using a unique `aria-labelledby` target. The accessible name follows title changes while the overlay is open, including projected header-left content.
+
+## Overlay presentation refresh
+
+Default dialog radius is 8px and bottom-sheet radius is 12px; existing --sd-overlay-radius and --sd-overlay-bottom-sheet-radius overrides remain supported. Header/body/footer use aligned 24px horizontal insets (16px on narrow screens), 18px titles and 44px mobile action targets. Long content scrolls in the body and footer actions wrap; safe-area bottom padding and reduced-motion transitions are handled locally. Existing projected slots, width/view options and guarded dismissal remain available.

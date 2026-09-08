@@ -1,5 +1,37 @@
 # `<sd-select>`
 
+## Trạng thái đọc lazy và retry
+
+`readState()` là signal readonly `SdSearchReadState`; `(sdReadStateChange)` phát
+snapshot có `status`, `operation` và hai kênh độc lập `channels.VALUE/SEARCH`.
+Lỗi VALUE không bị SEARCH thành công che mất. Khi hai kênh lỗi, `retryRead()` ưu tiên
+VALUE rồi SEARCH. Retry trả `Promise<void>`, giữ nguyên value/text và loader;
+không reset model/selection hoặc phát change giả. Chỉ kết quả thành công được cache,
+kể cả `[]`. Multiple-select giữ tất cả item đã chọn cộng thêm `limit` item chưa chọn.
+
+Panel ưu tiên loading trong lúc đang debounce, đọc hoặc retry; không hiện vùng lỗi
+cùng spinner, kể cả khi kênh còn lại vẫn giữ lỗi. Khi loading kết thúc, lỗi còn hiệu
+lực mới hiển thị qua `SdDataState` compact. Áp dụng cho cả chế độ thường và inline.
+`readState()` vẫn giữ snapshot lỗi độc lập trong thời gian này.
+`hideReadError` (boolean transform,
+default `false`) ẩn cả UI mặc định và custom, vẫn giữ state/output/retry.
+Tab từ trigger hoặc input tìm kiếm tới nút retry; Enter/Space retry không chọn option,
+không submit form và không đóng panel. Mảng `items` local giữ hành vi hiện có.
+
+```html
+<sd-select [items]="loadOptions" valueField="id" displayField="name"
+  (sdReadStateChange)="readState.set($event)">
+  <ng-template sdDataStateTemplate let-state let-retry="retry">
+    <p>{{ state }}</p>
+    <button type="button" (click)="retry()">Thử lại</button>
+  </ng-template>
+</sd-select>
+```
+
+Import directive từ `@sdcorejs/angular/components/data-state`; types từ
+`@sdcorejs/angular/utilities/read-state`. Xem
+[contract và migration](../../utilities/read-state/sd-read-state.md).
+
 **Type**: Component (form input)
 **Selector**: `sd-select`
 **Import path**: `@sdcorejs/angular/forms/select` (or barrel: `@sdcorejs/angular/forms`)

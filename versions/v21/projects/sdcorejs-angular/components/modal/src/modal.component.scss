@@ -15,8 +15,8 @@
 
 .sd-modal-panel,
 .sd-modal-bottom-sheet-panel {
-  --sd-modal-radius: var(--sd-overlay-radius, 24px);
-  --sd-modal-bottom-sheet-radius: var(--sd-overlay-bottom-sheet-radius, 28px);
+  --sd-modal-radius: var(--sd-overlay-radius, 8px);
+  --sd-modal-bottom-sheet-radius: var(--sd-overlay-bottom-sheet-radius, 12px);
   --sd-modal-surface: var(--sd-surface, #fff);
   --sd-modal-border: var(--sd-border, #dde0e5);
   --sd-modal-shadow: 0 6px 18px rgba(15, 23, 42, 0.18), 0 1px 3px rgba(15, 23, 42, 0.12);
@@ -34,7 +34,7 @@
     padding: 0 !important; // Loi touchUi date picker
     border-radius: var(--sd-modal-radius) !important;
     background: var(--sd-modal-surface);
-    max-height: calc(100vh - 32px);
+    max-height: calc(100dvh - 32px);
     overflow: hidden;
     box-shadow: var(--sd-modal-shadow);
   }
@@ -119,7 +119,9 @@
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-  transition: background-color 80ms ease, color 80ms ease;
+  transition:
+    background-color 80ms ease,
+    color 80ms ease;
 
   &:hover {
     background: var(--sd-surface-muted);
@@ -148,15 +150,21 @@
   }
 }
 
+.cdk-overlay-pane.sd-modal-bottom-sheet-panel {
+  width: 100%;
+}
+
 .sd-modal-bottom-sheet-panel.mat-bottom-sheet-container,
 .sd-modal-bottom-sheet-panel.mat-mdc-bottom-sheet-container,
 .sd-modal-bottom-sheet-panel .mat-bottom-sheet-container,
 .sd-modal-bottom-sheet-panel .mat-mdc-bottom-sheet-container {
   padding: 0;
-  min-width: 100vw;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   box-sizing: border-box;
   outline: 0;
-  max-height: min(80vh, calc(100vh - 16px));
+  max-height: min(80vh, calc(100dvh - 16px));
   overflow: hidden;
   border-radius: var(--sd-modal-bottom-sheet-radius) var(--sd-modal-bottom-sheet-radius) 0 0 !important;
   background: var(--sd-modal-surface);
@@ -200,4 +208,53 @@
 
 .sd-modal-footer:has(.sd-modal-footer-left:empty):has(.sd-modal-footer-right:empty) {
   display: none;
+}
+
+.sd-modal-header,
+.sd-modal-footer {
+  flex-shrink: 0;
+  padding: 20px 24px;
+}
+.sd-modal-title {
+  font-size: 18px;
+  line-height: 25px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.sd-modal-body {
+  padding: 0 24px 20px;
+  box-sizing: border-box;
+}
+@media (max-width: 600px) {
+  .sd-modal-header {
+    padding: 16px;
+    gap: 8px;
+  }
+  .sd-modal-body {
+    padding: 0 16px 16px;
+  }
+  .sd-modal-footer {
+    padding: 12px 16px max(12px, env(safe-area-inset-bottom));
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .sd-modal-footer-left,
+  .sd-modal-footer-right {
+    flex-wrap: wrap;
+  }
+  .sd-modal-footer button,
+  .sd-modal-close-btn {
+    min-height: 44px;
+  }
+  .sd-modal-close-btn {
+    width: 44px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-modal-panel .mat-mdc-dialog-container,
+  .sd-modal-panel .mat-mdc-dialog-surface,
+  .sd-modal-bottom-sheet-panel {
+    transition: none !important;
+    animation: none !important;
+  }
 }

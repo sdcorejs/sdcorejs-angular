@@ -238,7 +238,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/data-state/sd-data-state',
     keywords: ['loading', 'empty', 'error', 'forbidden', 'retry'],
     status: 'stable',
-    demoSectionCount: 5,
+    demoSectionCount: 6,
     loadComponent: () => import('../../pages/components/data-state/data-state-demo.component').then(m => m.DataStateDemoComponent),
   }),
   defineDocPage({
@@ -1333,6 +1333,15 @@ const PUBLISHED_ONLY_PAGES = [
     importPath: '@sdcorejs/angular/utilities/extensions',
     publishedDocId: 'utilities/extensions/extensions',
     keywords: ['utilities', 'extensions', 'helpers'],
+  }),
+  definePublishedDocPage({
+    category: 'pipes-utilities',
+    slug: 'read-state',
+    title: 'Read State',
+    description: 'Trạng thái đọc TABLE/VALUE/SEARCH, snapshot lỗi và retry của các control.',
+    importPath: '@sdcorejs/angular/utilities/read-state',
+    publishedDocId: 'utilities/read-state/sd-read-state',
+    keywords: ['readState', 'retryRead', 'loading', 'error', 'snapshot'],
   }),
   definePublishedDocPage({
     category: 'pipes-utilities',

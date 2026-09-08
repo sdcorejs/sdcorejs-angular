@@ -163,7 +163,7 @@ export class SdModal implements OnDestroy {
     } else {
       this.#dialogRef = this.#dialog.open(this.templateRef(), {
         width: this.#resolvedWidth,
-        maxWidth: this.#resolvedWidth,
+        maxWidth: 'calc(100vw - 32px)',
         panelClass: this.#resolvePanelClass('sd-modal-panel'),
         ariaLabelledBy: this.title() ? this.titleId : undefined,
         disableClose: this.disableBackdropClose() || !!this.beforeClose(),

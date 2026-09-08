@@ -57,6 +57,7 @@ export type ShowcaseExampleSourceKey =
   | "components/data-state/example-error"
   | "components/data-state/example-forbidden"
   | "components/data-state/example-loading"
+  | "components/data-state/example-loi-va-retry-tren-ba-control"
   | "components/data-state/example-success"
   | "components/editor/example-chi-doc"
   | "components/editor/example-soan-noi-dung"
@@ -758,6 +759,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-success",
     title: "Success",
     description: "Không có presentation wrapper dư thừa; content được project trực tiếp.",
+  },
+  {
+    sourceKey: "components/data-state/example-loi-va-retry-tren-ba-control",
+    pageKey: "components/data-state",
+    sectionId: "example-loi-va-retry-tren-ba-control",
+    title: "Lỗi và retry trên ba control",
+    description: "Existing “Lỗi và retry trên ba control” scenario preserved from the showcase.",
   },
   {
     sourceKey: "components/editor/example-soan-noi-dung",
@@ -2591,7 +2599,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "services/confirm",
     sectionId: "example-xac-nhan-co-ban",
     title: "Xác nhận cơ bản",
-    description: "confirm(message) – Promise resolve khi bấm OK, reject khi Hủy.",
+    description: "Không truyền icon sẽ dùng icon mặc định. Truyền icon để thay biểu tượng trong cùng ô nền nhẹ.",
   },
   {
     sourceKey: "services/confirm/example-xac-nhan-xoa",

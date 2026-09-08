@@ -1,18 +1,29 @@
 <div class="sd-toast__bar" [class]="'bg-' + data.type"></div>
 
-<div class="sd-toast__icon" [class]="'text-' + data.type">
+<div class="sd-toast__icon" aria-hidden="true">
   @switch (data.type) {
     @case ('success') {
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+      <svg viewBox="0 0 24 24" focusable="false">
+        <circle cx="12" cy="12" r="9" />
+        <path d="m8 12 2.5 2.5L16 9" />
+      </svg>
     }
     @case ('info') {
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+      <svg viewBox="0 0 24 24" focusable="false">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 11v5M12 8h.01" />
+      </svg>
     }
     @case ('warning') {
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+      <svg viewBox="0 0 24 24" focusable="false">
+        <path d="M10.3 3.9a2 2 0 0 1 3.4 0l8 13.8a2 2 0 0 1-1.7 3H4a2 2 0 0 1-1.7-3zM12 9v4M12 17h.01" />
+      </svg>
     }
     @case ('error') {
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+      <svg viewBox="0 0 24 24" focusable="false">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v6M12 17h.01" />
+      </svg>
     }
   }
 </div>
@@ -43,11 +54,7 @@
       </ul>
 
       @if (hasMore) {
-        <button
-          type="button"
-          class="toggle-more btn-link"
-          [class]="'text-' + data.type"
-          (click)="toggleExpand()">
+        <button type="button" class="toggle-more btn-link" [class]="'text-' + data.type" (click)="toggleExpand()">
           {{ isExpanded() ? ('core.notify.show-less' | sdTranslate) : ('core.notify.show-more' | sdTranslate: { count: restCount }) }}
         </button>
       }
@@ -56,10 +63,7 @@
 
   @if (data.actionLabel) {
     <div class="sd-toast__actions">
-      <button
-        class="btn-action"
-        [class]="'bg-' + data.type + '-light text-' + data.type"
-        (click)="onActionClick()">
+      <button class="btn-action" [class]="'bg-' + data.type + '-light text-' + data.type" (click)="onActionClick()">
         {{ data.actionLabel }}
       </button>
     </div>

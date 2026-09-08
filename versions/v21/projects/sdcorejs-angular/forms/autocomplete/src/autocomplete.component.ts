@@ -30,6 +30,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdView } from '@sdcorejs/angular/components/view';
+import { SdDataState, SdDataStateTemplateDirective } from '@sdcorejs/angular/components/data-state';
+import { cloneReadRequest, combineReadStates, SdReadChannel, SdSearchReadState } from '@sdcorejs/angular/utilities/read-state';
 import { SdItemDefDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import {
@@ -39,6 +41,7 @@ import {
   SdFormControl,
   SdInlineErrorValidator,
   SdSearch,
+  SdSearchReq,
   SdSelectionData,
   sdFormControlState,
   SdViewed,
@@ -53,8 +56,15 @@ import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/dat
 import { ArrayUtilities } from '@sdcorejs/utils/fns';
 import { Size } from '@sdcorejs/utils/models';
 import { Utilities } from '@sdcorejs/utils/fns';
-import { Observable, Subscription, combineLatest, defer, from, of, timer } from 'rxjs';
-import { catchError, debounce, map, startWith, switchMap, tap } from 'rxjs/operators';
+import { EMPTY, Observable, Subject, Subscription, combineLatest, defer, from, merge, of, timer } from 'rxjs';
+import { catchError, debounce, filter, finalize, map, shareReplay, startWith, switchMap, takeUntil, tap } from 'rxjs/operators';
+
+interface AutocompleteReadRequest<T> {
+  loader: SdSearch<T>;
+  args: SdSearchReq;
+  key: string;
+  valid: () => boolean;
+}
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 class SdAutocompleteErrotStateMatcher implements ErrorStateMatcher {
@@ -74,6 +84,8 @@ class SdAutocompleteErrotStateMatcher implements ErrorStateMatcher {
   host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'isViewed() || isInline()', '[class.sd-bare]': 'isInline()' },
   imports: [
     SdIcon,
+    SdDataState,
+    SdDataStateTemplateDirective,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
@@ -112,6 +124,7 @@ export class SdAutocomplete<T = unknown> implements OnInit, OnDestroy {
   // why: focus() (và open() gọi lại nó) hoãn 100ms rồi mới openPanel(). Không giữ handle thì
   // panel overlay có thể mở SAU khi control đã destroy và không còn ai đóng nó.
   readonly #timers = ɵsdTimerScope();
+  readonly #element = inject<ElementRef<HTMLElement>>(ElementRef);
 
   // ==========================================
   // 3. SIGNAL INPUTS & MODEL
@@ -164,6 +177,13 @@ export class SdAutocomplete<T = unknown> implements OnInit, OnDestroy {
   items = input<undefined | null | T[] | SdSearch<T>>();
 
   hideInlineError = input(false, { transform: booleanAttribute });
+  readonly hideReadError = input(false, { transform: booleanAttribute });
+  readonly dataStateTemplate = contentChild(SdDataStateTemplateDirective);
+  readonly sdReadStateChange = output<SdSearchReadState>();
+  readonly #valueRead = new SdReadChannel('VALUE', () => this.#emitReadState());
+  readonly #searchRead = new SdReadChannel('SEARCH', () => this.#emitReadState());
+  readonly readState = computed(() => combineReadStates(this.#valueRead.state(), this.#searchRead.state()));
+  readonly hasSearched = signal(false);
   addable = input(false, { transform: booleanAttribute });
   required = input(false, { transform: booleanAttribute });
   disabled = input(false, { transform: booleanAttribute });
@@ -244,9 +264,27 @@ export class SdAutocomplete<T = unknown> implements OnInit, OnDestroy {
   #cache: Record<string, T[]> = {};
   #item: Record<string, T> = {};
   #subscription = new Subscription();
+  #destroyed = false;
+  #searchDebouncing = false;
+  #lastSearchText = '';
+  #restoringReadFocus = false;
+  #valueCache: Record<string, T[]> = {};
+  #failedValue?: AutocompleteReadRequest<T>;
+  #failedSearch?: AutocompleteReadRequest<T>;
+  #valueRetryRequest?: AutocompleteReadRequest<T>;
+  #searchRetryRequest?: AutocompleteReadRequest<T>;
+  #retrySearch = new Subject<string>();
+  #retryValue = new Subject<void>();
 
   // RXJS STREAMS
-  #items$ = toObservable(this.items);
+  #items$ = toObservable(
+    computed(() => ({
+      items: this.items(),
+      checksum: this.cacheChecksum(),
+      valueField: this.valueField(),
+      displayField: this.displayField(),
+    }))
+  ).pipe(map(context => context.items));
   #valueModel$ = toObservable(this.valueModel);
 
   // PUBLIC SIGNALS (Render View)
@@ -272,6 +310,19 @@ export class SdAutocomplete<T = unknown> implements OnInit, OnDestroy {
   };
 
   constructor() {
+    effect(() => {
+      this.items();
+      this.valueModel();
+      this.cacheChecksum();
+      this.valueField();
+      this.displayField();
+      untracked(() => {
+        if (this.#failedValue && !this.#failedValue.valid()) {
+          this.#failedValue = undefined;
+          this.#valueRead.invalidate();
+        }
+      });
+    });
     effect(() => {
       const val = this.normalizedValue();
       untracked(() => {
@@ -310,31 +361,60 @@ export class SdAutocomplete<T = unknown> implements OnInit, OnDestroy {
     this.#subscription.add(this.formControl.sdChanges.subscribe(() => this.ref.markForCheck()));
     this.#subscription.add(this.inputControl.sdChanges.subscribe(() => this.ref.markForCheck()));
 
-    this.#subscription.add(this.inputControl.valueChanges.subscribe(() => this.isTyping.set(true)));
+    this.#element.nativeElement.addEventListener('keydown', this.focusReadRetry, true);
+    this.#subscription.add(
+      this.inputControl.valueChanges.subscribe(value => {
+        this.isTyping.set(true);
+        this.hasSearched.set(true);
+        this.#searchDebouncing = typeof this.items() === 'function';
+        const text = value || '';
+        if (text !== this.#lastSearchText) {
+          this.#failedSearch = undefined;
+          this.#searchRead.invalidate();
+          this.#lastSearchText = text;
+        }
+        this.#syncReadLoading();
+      })
+    );
 
     const cleanItems$ = this.#items$.pipe(
       tap(() => {
         this.#cache = {};
+        this.#item = {};
+        this.#valueCache = {};
+        this.#failedValue = this.#failedSearch = undefined;
+        this.#valueRetryRequest = this.#searchRetryRequest = undefined;
+        this.#valueRead.invalidate();
+        this.#searchRead.invalidate();
       }),
       map(items => {
         if (!items) return [];
         if (Array.isArray(items)) return items.filter(e => e !== null && e !== undefined);
         return items;
-      })
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
     );
 
     const filteredItems$ = combineLatest([
       cleanItems$,
-      this.inputControl.valueChanges.pipe(
-        startWith(''),
-        debounce(() => timer(typeof this.items() === 'function' ? 500 : 0))
+      merge(
+        this.inputControl.valueChanges.pipe(
+          startWith(''),
+          // why: retry thay thế debounce đang chờ; text cũ không được phát thêm một request sau retry.
+          debounce(() => timer(typeof this.items() === 'function' ? 500 : 0).pipe(takeUntil(this.#retrySearch)))
+        ),
+        this.#retrySearch
       ),
     ]).pipe(
-      tap(() => this.isTyping.set(false)),
+      tap(() => {
+        this.isTyping.set(false);
+        this.#searchDebouncing = false;
+      }),
       switchMap(([items, searchText]) => {
         const sText = searchText || '';
 
         if (typeof items !== 'function') {
+          this.#syncReadLoading();
           // [UPDATED]: Hỗ trợ search lồng nhau (nested) local
           const filtered = items.filter((e: any) => {
             const v = String(this.getNestedValue(e, this.valueField()) || '').toLowerCase();
@@ -345,78 +425,44 @@ export class SdAutocomplete<T = unknown> implements OnInit, OnDestroy {
           return of(ArrayUtilities.paging(filtered, this.limit()));
         }
 
-        const key = Utilities.hash({
-          checksum: this.cacheChecksum() || null,
-          searchText: sText,
-        });
-
-        if (this.#cache[key] !== undefined) {
-          return of(this.#cache[key]);
-        }
-
-        this.loading.set(true);
-
-        let obs: Observable<T[]>;
-        const func = items({ type: 'SEARCH', searchText: sText });
-        if (func instanceof Promise) obs = defer(() => from(func));
-        else obs = func;
-
-        return obs.pipe(
-          map(data => {
-            this.#cache[key] = data || [];
-            // [UPDATED]: Lưu cache #item theo nested value
-            (this.#cache[key] || []).forEach((e: any) => {
-              const valKey = this.getNestedValue(e, this.valueField());
-              if (valKey != null) {
-                this.#item[valKey] = e;
-              }
-            });
-            return this.#cache[key];
-          }),
-          catchError(() => of([]))
-        );
-      }),
-      tap(() => this.loading.set(false))
+        const retry = this.#searchRetryRequest;
+        this.#searchRetryRequest = undefined;
+        const request = retry?.valid() ? retry : this.#createReadRequest(items, { type: 'SEARCH', searchText: sText });
+        return this.#readItems(request, retry === request);
+      })
     );
 
-    const selected$ = combineLatest([cleanItems$, this.#valueModel$]).pipe(
+    const selected$ = combineLatest([cleanItems$, this.#valueModel$, this.#retryValue.pipe(startWith(undefined))]).pipe(
       switchMap(([items, val]) => {
         const vField = this.valueField();
         const dField = this.displayField();
 
-        if (!vField) return of(val);
+        if (!vField) {
+          this.#valueRead.invalidate();
+          return of(val);
+        }
 
         if (val || val === 0) {
           if (typeof items === 'function') {
-            if (this.#item[val as any]) return of(this.#item[val as any]);
-
-            this.loading.set(true);
-
-            let obs: Observable<T[]>;
-            const func = items({ type: 'VALUE', value: val as any });
-            if (func instanceof Promise) obs = defer(() => from(func));
-            else obs = func;
-
-            return obs.pipe(
-              map(data => {
-                // [UPDATED]: Lưu cache #item theo nested value
-                (data || []).forEach((e: any) => {
-                  const valKey = this.getNestedValue(e, vField);
-                  if (valKey != null) {
-                    this.#item[valKey] = e;
-                  }
-                });
-                return this.#item[val as any] || { [vField]: val, [dField!]: val };
-              }),
-              catchError(() => of({ [vField]: val, [dField!]: val }))
-            );
+            const retry = this.#valueRetryRequest;
+            this.#valueRetryRequest = undefined;
+            const request = retry?.valid() ? retry : this.#createReadRequest(items, { type: 'VALUE', value: val as any });
+            if (!retry && this.#item[val as any] && !this.#failedValue?.valid()) {
+              const revision = this.#valueRead.begin(request.valid);
+              this.#valueRead.succeed(revision, 1);
+              return of(this.#item[val as any]);
+            }
+            return this.#readItems(request, retry === request).pipe(map(() => this.#item[val as any] || { [vField]: val, [dField!]: val }));
           }
           // [UPDATED]: Tìm local theo nested field
           return of((items as any[]).find((e: any) => this.getNestedValue(e, vField) === val));
         }
+        this.#failedValue = undefined;
+        this.#valueRead.invalidate();
         return of('');
       }),
-      tap(() => this.loading.set(false))
+      // why: ba subscriber (selected/display/placeholder) dùng chung một request VALUE.
+      shareReplay({ bufferSize: 1, refCount: true })
     );
 
     const controlPlaceHolder$ = selected$.pipe(
@@ -469,6 +515,10 @@ export class SdAutocomplete<T = unknown> implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.#destroyed = true;
+    this.#element.nativeElement.removeEventListener('keydown', this.focusReadRetry, true);
+    this.#valueRead.invalidate();
+    this.#searchRead.invalidate();
     this.#subscription.unsubscribe();
     this.#cache = {};
     this.#item = {};
@@ -502,11 +552,13 @@ export class SdAutocomplete<T = unknown> implements OnInit, OnDestroy {
         this.sdSelection.emit({ values: [val], selectedItems: [item], value: val, selectedItem: item });
       }
     }
-    this.inputControl.setValue('', { emitEvent: false });
+    this.#resetSearchText();
   };
 
   onFocus = () => {
+    this.hasSearched.set(true);
     this.isFocused = true;
+    if (this.#restoringReadFocus || this.#failedSearch?.valid()) return;
     this.filteredItems.set([]);
 
     if (typeof this.items() === 'function') {
@@ -516,9 +568,54 @@ export class SdAutocomplete<T = unknown> implements OnInit, OnDestroy {
     this.inputControl.setValue('', { emitEvent: true });
   };
 
-  onBlur = () => {
+  onBlur = (event?: FocusEvent) => {
+    // why: Tab vào retry thuộc cùng control, không đổi snapshot text hoặc selection.
+    if (event?.relatedTarget instanceof Node && this.#readRegion()?.contains(event.relatedTarget)) return;
     this.isFocused = false;
+    this.#resetSearchText();
+  };
+
+  #resetSearchText = () => {
+    const changed = !!this.inputControl.value;
     this.inputControl.setValue('', { emitEvent: false });
+    this.#lastSearchText = '';
+    this.#searchDebouncing = false;
+    this.isTyping.set(false);
+    if (changed) {
+      this.#failedSearch = undefined;
+      this.#searchRead.invalidate();
+    }
+    this.#syncReadLoading();
+  };
+
+  #readRegion = (): HTMLElement | null =>
+    this.autocompleteTrigger()?.autocomplete.panel?.nativeElement.querySelector('.sd-read-state-region') ?? null;
+
+  protected focusReadRetry = (event: KeyboardEvent): void => {
+    if (event.key !== 'Tab' || event.shiftKey || !this.autocompleteTrigger()?.panelOpen) return;
+    const button = this.#readRegion()?.querySelector<HTMLElement>('button:not([disabled]), [tabindex="0"]');
+    if (!button) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    button.focus();
+  };
+
+  protected onReadRegionKeydown = (event: KeyboardEvent): void => {
+    event.stopPropagation();
+    if (event.key === 'Escape' || (event.key === 'Tab' && event.shiftKey)) {
+      event.preventDefault();
+      this.#restoreReadFocus();
+      if (event.key === 'Escape') this.autocompleteTrigger()?.closePanel();
+    } else if (event.key === 'Tab') {
+      this.autocompleteTrigger()?.closePanel();
+      this.#restoreReadFocus();
+    }
+  };
+
+  #restoreReadFocus = () => {
+    this.#restoringReadFocus = true;
+    this.inputRef()?.nativeElement.focus();
+    this.#restoringReadFocus = false;
   };
 
   onClick = () => {
@@ -581,5 +678,106 @@ export class SdAutocomplete<T = unknown> implements OnInit, OnDestroy {
     // inputControl chỉ giữ text search và KHÔNG có validator nào. Gọi trên inputControl là no-op,
     // tức API public reValidate() trước đây không validate gì cả.
     this.formControl.updateValueAndValidity({ emitEvent: true });
+  };
+
+  #createReadRequest = (loader: SdSearch<T>, args: SdSearchReq): AutocompleteReadRequest<T> => {
+    const checksum = Utilities.hash({ checksum: this.cacheChecksum(), valueField: this.valueField(), displayField: this.displayField() });
+    const key = Utilities.hash({ checksum, args });
+    return {
+      loader,
+      args: cloneReadRequest(args),
+      key,
+      valid: () =>
+        !this.#destroyed &&
+        this.items() === loader &&
+        checksum === Utilities.hash({ checksum: this.cacheChecksum(), valueField: this.valueField(), displayField: this.displayField() }) &&
+        key ===
+          Utilities.hash({
+            checksum,
+            args:
+              args.type === 'VALUE'
+                ? { type: 'VALUE', value: this.valueModel() }
+                : { type: 'SEARCH', searchText: this.inputControl.value || '' },
+          }),
+    };
+  };
+
+  #readItems = (request: AutocompleteReadRequest<T>, retry: boolean): Observable<T[]> =>
+    defer(() => {
+      const valueRequest = request.args.type === 'VALUE';
+      const channel = valueRequest ? this.#valueRead : this.#searchRead;
+      const failed = valueRequest ? this.#failedValue : this.#failedSearch;
+      if (!request.valid()) return EMPTY;
+      if (!retry && failed?.key === request.key && failed.valid()) {
+        this.#syncReadLoading();
+        return EMPTY;
+      }
+      const revision = channel.begin(request.valid);
+      if (valueRequest) this.#failedValue = undefined;
+      else this.#failedSearch = undefined;
+      const cache = valueRequest ? this.#valueCache : this.#cache;
+      if (!retry && cache[request.key] !== undefined) {
+        channel.succeed(revision, cache[request.key].length);
+        return of(cache[request.key]);
+      }
+      // why: defer bao quanh chính lời gọi loader để bắt cả throw đồng bộ; from giữ Promise/Observable.
+      return defer(() => from(request.loader(cloneReadRequest(request.args)))).pipe(
+        filter(() => channel.isCurrent(revision)),
+        map(data => data || []),
+        tap(data => {
+          cache[request.key] = data;
+          data.forEach(item => {
+            const key = this.getNestedValue(item, this.valueField());
+            if (key != null) this.#item[key] = item;
+          });
+          channel.succeed(revision, data.length);
+        }),
+        filter(() => channel.isCurrent(revision)),
+        catchError(error => {
+          if (channel.isCurrent(revision)) {
+            if (valueRequest) this.#failedValue = request;
+            else this.#failedSearch = request;
+            channel.fail(revision, error);
+          }
+          return EMPTY;
+        }),
+        finalize(() => {
+          // why: cleanup của request cũ không đổi state/loading của request mới.
+          if (channel.isCurrent(revision)) {
+            if (channel.state().status === 'loading') channel.invalidate();
+            this.#syncReadLoading();
+          }
+        })
+      );
+    });
+
+  #syncReadLoading = () => {
+    if (this.#destroyed) return;
+    this.loading.set(
+      this.#searchDebouncing || this.#valueRead.state().status === 'loading' || this.#searchRead.state().status === 'loading'
+    );
+    this.ref.markForCheck();
+  };
+
+  #emitReadState = () => {
+    if (this.#destroyed) return;
+    this.#syncReadLoading();
+    this.sdReadStateChange.emit(this.readState());
+  };
+
+  /** Retry bypasses text debounce/distinctness while using the original loader and request snapshot. */
+  retryRead = (): void => {
+    const state = this.readState();
+    if (state.status !== 'error') return;
+    const request = state.operation === 'VALUE' ? this.#failedValue : this.#failedSearch;
+    if (!request?.valid()) return;
+    if (this.#readRegion()?.contains(this.#element.nativeElement.ownerDocument.activeElement)) this.#restoreReadFocus();
+    if (state.operation === 'VALUE') {
+      this.#valueRetryRequest = request;
+      this.#retryValue.next();
+    } else {
+      this.#searchRetryRequest = request;
+      this.#retrySearch.next(request.args.searchText || '');
+    }
   };
 }

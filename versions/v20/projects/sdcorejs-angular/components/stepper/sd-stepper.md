@@ -234,3 +234,9 @@ A child of `<sd-stepper>` that declares one step — its label, icon, optional/e
 - `<sd-tab-router>` — for route-driven sequences (each step owns a URL)
 - `<sd-input>`, `<sd-select>`, `<sd-checkbox>` — common form controls inside step bodies
 - `@angular/cdk/stepper.StepperSelectionEvent` — the type emitted by `selectionChange`
+
+## Indicator and responsive presentation
+
+A step icon, when supplied, replaces the number inside its indicator instead of appearing again in the label. Steps without icons keep their number. The current indicator uses a filled accent; completed/editable steps use a check on a light accent background. Existing selection, optional steps, validation gates, outputs and keyboard behavior remain owned by Material.
+
+On narrow screens, the horizontal header strip may scroll independently while the body stays within its container; vertical labels wrap. Transitions respect reduced motion. Showcase actions use SdButton size sm and group at the end of each step.
