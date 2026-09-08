@@ -27,6 +27,7 @@ Release suffix `2.6` publishes `19.2.6`, `20.2.6`, `21.2.6`, and `22.2.6`.
 
 - Release verification refreshes npm pack metadata and retries only transient `ETARGET`/`E404` visibility failures after publication (up to 12 attempts, 5 seconds apart). Recovery and sequential publication await the downloaded tarball's exact SHA-256; access, integrity, provenance and immutable-version checks remain fail-closed.
 - Postpublish clears only the three generated Showcase input files after retaining the page, so the artifact commit can rebase onto current `main`; unexpected tracked changes still stop the release.
+- Manual recovery accepts an original artifact run ID and revalidates those exact tarballs instead of repacking: Angular's generated export ordering can otherwise change package bytes between builds of the same source. Source, hash, package-contract, consumer and provenance checks remain mandatory.
 
 - Error state của select/autocomplete căn giữa, nằm dưới dữ liệu đang giữ lại; panel hẹp giảm khoảng đệm, icon và cho phép xuống dòng.
 - Confirm `withRadio` loại bỏ scroll dọc dư do baseline và vùng bấm M3 tràn khỏi hàng radio; giữ vùng bấm 48px, khả năng cuộn danh sách dài và wrap lựa chọn trên mobile.

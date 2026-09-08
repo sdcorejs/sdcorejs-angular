@@ -236,6 +236,8 @@ test('trusted publishing is OIDC-only, least-privilege and pinned to Node/npm', 
       assert.deepEqual(permissions, { contents: 'read', 'id-token': 'write' });
     } else if (job.id === postpublish.id) {
       assert.deepEqual(permissions, { contents: 'write' });
+    } else if (job.id === 'build-pack') {
+      assert.deepEqual(permissions, { contents: 'read', actions: 'read' });
     } else {
       assert.deepEqual(permissions, { contents: 'read' });
     }
@@ -255,6 +257,27 @@ test('trusted publishing is OIDC-only, least-privilege and pinned to Node/npm', 
     }
     has(executableCommands(job.source), /npm install -g npm@11\.5\.1/u, `${job.id} must pin npm 11.5.1`);
   }
+});
+
+test('manual recovery retains the original tarballs without repacking them', () => {
+  has(workflow, /^      artifact_run_id:\s*$/mu);
+  const packer = oneJobMatching(/\bnpm pack\b/u, 'build/pack');
+  const steps = stepEntries(packer);
+  const packStep = steps.find(step => /\bnpm pack\b/u.test(executableCommands(step)));
+  const recoveryStep = steps.find(step => /uses:\s*actions\/download-artifact@/u.test(step));
+  const uploadStep = steps.find(step => /uses:\s*actions\/upload-artifact@/u.test(step));
+  assert.ok(packStep && recoveryStep && uploadStep);
+  has(packStep, /^        if:\s*\$\{\{ inputs\.artifact_run_id == '' \}\}\s*$/mu);
+  has(recoveryStep, /^        if:\s*\$\{\{ inputs\.artifact_run_id != '' \}\}\s*$/mu);
+  has(recoveryStep, /name:\s*sdcorejs-angular-\$\{\{ matrix\.version \}\}-2\.6/u);
+  has(recoveryStep, /run-id:\s*\$\{\{ inputs\.artifact_run_id \}\}/u);
+  has(recoveryStep, /github-token:\s*\$\{\{ github\.token \}\}/u);
+  has(recoveryStep, /repository:\s*\$\{\{ github\.repository \}\}/u);
+  has(recoveryStep, /path:\s*release-stage/u);
+  has(uploadStep, /path:\s*release-stage/u);
+  lacks(recoveryStep, /continue-on-error/u, 'expired or missing originals must stop recovery');
+  assert.ok(packer.source.indexOf(recoveryStep) < packer.source.indexOf(uploadStep));
+  has(packer.source, /needs:\s*\[verify_source, test-v19\]/u);
 });
 
 test('postpublish materializes verified v19, clean-installs Showcase and commits docs plus page retention', () => {
