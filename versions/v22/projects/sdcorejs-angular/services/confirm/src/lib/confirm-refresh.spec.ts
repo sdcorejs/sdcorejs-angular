@@ -79,10 +79,10 @@ describe('Confirm refreshed presentation', () => {
         display: 'row',
       },
     });
-    // why: tái hiện mật độ 28px của theme trong dialog thay vì phụ thuộc CSS toàn cục của app.
+    // why: giữ cùng mật độ 28px trên cả tên token MDC cũ và Material mới (Angular 22).
     for (const radio of fixture.nativeElement.querySelectorAll('.mdc-radio') as NodeListOf<HTMLElement>) {
       radio.style.cssText =
-        '--mdc-radio-state-layer-size:28px;--mat-radio-touch-target-display:none;padding:4px;width:20px;height:20px;box-sizing:content-box;line-height:20px';
+        '--mdc-radio-state-layer-size:28px;--mat-radio-state-layer-size:28px;--mat-radio-touch-target-display:none;padding:4px;width:20px;height:20px;box-sizing:content-box;line-height:20px';
       expect(radio.scrollHeight).toBeLessThanOrEqual(radio.clientHeight);
     }
   });
@@ -103,7 +103,7 @@ describe('Confirm refreshed presentation', () => {
       for (const radio of fixture.nativeElement.querySelectorAll('.mdc-radio') as NodeListOf<HTMLElement>) {
         // M3 uses a 40px state layer and a 48px pointer target.
         radio.style.cssText =
-          '--mdc-radio-state-layer-size:40px;--mat-radio-touch-target-display:block;padding:10px;width:20px;height:20px;box-sizing:content-box';
+          '--mdc-radio-state-layer-size:40px;--mat-radio-state-layer-size:40px;--mat-radio-touch-target-display:block;padding:10px;width:20px;height:20px;box-sizing:content-box';
         const target = radio.querySelector<HTMLElement>('.mat-mdc-radio-touch-target')!;
         const bounds = radio.closest('mat-radio-button')!.getBoundingClientRect();
         expect(target.getBoundingClientRect().top).toBeGreaterThanOrEqual(bounds.top);
