@@ -86,12 +86,12 @@
     (keydown.space)="onActivateKey($event)">
     <div class="c-icon d-flex align-items-center">
       <sd-icon
-        class="c-material-icon mr-4"
+        class="c-material-icon"
         [name]="iconName"
         [fontSet]="_fontSet"
         [size]="_iconCssSize"
         [ngClass]="iconCombinedClasses()"></sd-icon>
-      <div class="d-flex flex-column">
+      <div class="c-badge-copy">
         <span class="T14R c-badge-title">{{ _title }}</span>
         @if (_description) {
           <span class="T10R c-badge-description">{{ _description }}</span>

@@ -58,22 +58,142 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
     "unreleased": true,
     "packageVersions": [],
     "summaryMarkdown": "",
-    "markdown": "### Added\n\n- **`sd-table` mobile row cards** via `SdTableRowMobileDefDirective<T>` and `SdTableRowMobileDefContext<T>`, with optional `mobile.rowLabel`, typed template binding, shared selection/filter/sort/page/expand state, row and bulk commands in one contained `SdQuickAction`, grouped More sheets, and independent interactive card content. Canonical docs, consumer compilation fixtures and showcase cover local/server data, selection preservation, group/tree and responsive controls. `SdQuickAction.contained` enables an action bar inside an owning scroll container. Mobile tools and row commands use clearly titled SdModal bottom sheets. Selection uses one compact QuickAction row with a highlighted count, fitting actions and clear; selector messages/page checkboxes are omitted. A small circular selector straddles the top-right card border, and command-header content is centered above the cards. Modal overlays are named from their live headings.\n\n- **`<sd-card>` and `<sd-card-group>`** are available from `@sdcorejs/angular/components/card`. The standalone, generic-content card supports accessible pointer/keyboard toggle behavior, read-only `selected()` state, semantic Core UI colors, stable `autoId` selectors, disabled states, and the same 300 ms leading click throttle as `SdButton`. Groups provide single or immutable multiple selection through `[(model)]`, user-only `(sdChange)`, object-aware `compareWith`, direct nearest-group injection, and no imposed application layout.",
+    "markdown": "### Fixed\n\n- Error state của select/autocomplete căn giữa, nằm dưới dữ liệu đang giữ lại; panel hẹp giảm khoảng đệm, icon và cho phép xuống dòng.\n- Confirm `withRadio` loại bỏ scroll dọc dư do baseline và vùng bấm M3 tràn khỏi hàng radio; giữ vùng bấm 48px, khả năng cuộn danh sách dài và wrap lựa chọn trên mobile.\n- Badge `type=\"icon\"` giữ đúng kích thước icon, căn giữa với phần chữ và không co icon khi nội dung dài.\n- Chỉ báo selection của table dùng màu success, gồm icon desktop và số lượng đã chọn trên mobile.",
+    "sections": [
+      {
+        "key": "fixed",
+        "title": "Fixed",
+        "level": 3,
+        "anchor": "unreleased-fixed",
+        "markdown": "- Error state của select/autocomplete căn giữa, nằm dưới dữ liệu đang giữ lại; panel hẹp giảm khoảng đệm, icon và cho phép xuống dòng.\n- Confirm `withRadio` loại bỏ scroll dọc dư do baseline và vùng bấm M3 tràn khỏi hàng radio; giữ vùng bấm 48px, khả năng cuộn danh sách dài và wrap lựa chọn trên mobile.\n- Badge `type=\"icon\"` giữ đúng kích thước icon, căn giữa với phần chữ và không co icon khi nội dung dài.\n- Chỉ báo selection của table dùng màu success, gồm icon desktop và số lượng đã chọn trên mobile.",
+        "items": [
+          {
+            "text": "Error state của select/autocomplete căn giữa, nằm dưới dữ liệu đang giữ lại; panel hẹp giảm khoảng đệm, icon và cho phép xuống dòng.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Confirm `withRadio` loại bỏ scroll dọc dư do baseline và vùng bấm M3 tràn khỏi hàng radio; giữ vùng bấm 48px, khả năng cuộn danh sách dài và wrap lựa chọn trên mobile.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Badge `type=\"icon\"` giữ đúng kích thước icon, căn giữa với phần chữ và không co icon khi nội dung dài.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Chỉ báo selection của table dùng màu success, gồm icon desktop và số lượng đã chọn trên mobile.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      }
+    ]
+  },
+  {
+    "id": "release-2-6",
+    "title": "Release 2.6",
+    "suffix": "2.6",
+    "date": "2026-09-08",
+    "anchor": "release-2-6",
+    "unreleased": false,
+    "packageVersions": [
+      {
+        "angularMajor": 19,
+        "version": "19.2.6"
+      },
+      {
+        "angularMajor": 20,
+        "version": "20.2.6"
+      },
+      {
+        "angularMajor": 21,
+        "version": "21.2.6"
+      },
+      {
+        "angularMajor": 22,
+        "version": "22.2.6"
+      }
+    ],
+    "summaryMarkdown": "Release suffix `2.6` publishes `19.2.6`, `20.2.6`, `21.2.6`, and `22.2.6`.",
+    "markdown": "Release suffix `2.6` publishes `19.2.6`, `20.2.6`, `21.2.6`, and `22.2.6`.\n\n### Added\n\n- Select, autocomplete và server table có `readState`, `sdReadStateChange`, `retryRead()`, `hideReadError` và template `sdDataStateTemplate`. VALUE/SEARCH độc lập; retry dùng snapshot request đã lỗi, giữ model và dữ liệu thành công, bỏ qua response cũ. Public entry point `utilities/read-state` tách biệt với `utilities/data-state`.\n\n### Changed\n\n- Button cải thiện màu outline/disabled theo theme, khoảng cách icon và focus bàn phím; giữ bo tròn M3 và các kích thước 32/40/48px. Table gom thao tác chọn hàng trong QuickAction; Import Excel cải thiện bước chọn file, lọc và hiển thị lỗi, kể cả trên mobile.\n- Inform dùng icon nền nhẹ và SdButton nhỏ; Upload thêm appearance dropzone/compact và thao tác bàn phím; Stepper dùng icon trong chỉ báo và phân biệt bước hoàn tất. Modal/Drawer thống nhất khoảng cách, bo góc và mobile; Drawer giữ và khôi phục focus bằng CDK.\n- Confirm dùng layout gọn với icon nền nhẹ luôn hiển thị, tiêu đề 18px và nút SdButton nhỏ. Các phương thức hỗ trợ icon tùy chỉnh hoặc mặc định theo context; withInput thêm label/placeholder. Giữ các biến thể và kết quả Promise hiện có, cải thiện focus và bố cục mobile.\n- Data-state dùng icon nền nhẹ, loading primary, empty warning, compact căn ngang và nút retry/action `SdButton size=\"sm\"`. Loading ưu tiên hiển thị so với lỗi khi VALUE/SEARCH đọc xen kẽ; giảm chuyển động tiếp tục tắt animation.\n- Notify dùng icon SVG nét trong ô nền nhạt theo màu trạng thái, đồng nhất với data-state; giữ timing/grouping/action và cơ chế sanitize HTML.\n\n### Fixed\n\n- Button chỉ hiển thị một icon khi dùng suffix mà không truyền icon đầu. SideDrawer nhận focus ngay khi mở, giữ hiệu ứng đóng và thiết lập giảm chuyển động.\n- Date-range áp dụng đúng `clearable`, required và disabled cho nút xóa; datetime dùng icon picker đồng nhất. Multiple-select hiển thị số lượng đã chọn và tooltip với mỗi lựa chọn trên một dòng. Sidebar dùng hết chiều cao khả dụng để cuộn menu dài.\n- Release `2.6` dùng bản đối chiếu `22.2.5` cho Angular 22; pipeline pin đúng tag, artifact và quy tắc giữ năm trang release gần nhất.\n- **Showcase release pages resolve library styles from the installed package.** Global Core UI SCSS now loads from `showcase/node_modules/@sdcorejs/angular`, so Angular Material resolves from Showcase's own dependencies when postpublish materializes a tarball without installing the v19 workspace.",
     "sections": [
       {
         "key": "added",
         "title": "Added",
         "level": 3,
-        "anchor": "unreleased-added",
-        "markdown": "- **`sd-table` mobile row cards** via `SdTableRowMobileDefDirective<T>` and `SdTableRowMobileDefContext<T>`, with optional `mobile.rowLabel`, typed template binding, shared selection/filter/sort/page/expand state, row and bulk commands in one contained `SdQuickAction`, grouped More sheets, and independent interactive card content. Canonical docs, consumer compilation fixtures and showcase cover local/server data, selection preservation, group/tree and responsive controls. `SdQuickAction.contained` enables an action bar inside an owning scroll container. Mobile tools and row commands use clearly titled SdModal bottom sheets. Selection uses one compact QuickAction row with a highlighted count, fitting actions and clear; selector messages/page checkboxes are omitted. A small circular selector straddles the top-right card border, and command-header content is centered above the cards. Modal overlays are named from their live headings.\n\n- **`<sd-card>` and `<sd-card-group>`** are available from `@sdcorejs/angular/components/card`. The standalone, generic-content card supports accessible pointer/keyboard toggle behavior, read-only `selected()` state, semantic Core UI colors, stable `autoId` selectors, disabled states, and the same 300 ms leading click throttle as `SdButton`. Groups provide single or immutable multiple selection through `[(model)]`, user-only `(sdChange)`, object-aware `compareWith`, direct nearest-group injection, and no imposed application layout.",
+        "anchor": "release-2-6-added",
+        "markdown": "- Select, autocomplete và server table có `readState`, `sdReadStateChange`, `retryRead()`, `hideReadError` và template `sdDataStateTemplate`. VALUE/SEARCH độc lập; retry dùng snapshot request đã lỗi, giữ model và dữ liệu thành công, bỏ qua response cũ. Public entry point `utilities/read-state` tách biệt với `utilities/data-state`.",
         "items": [
           {
-            "text": "**`sd-table` mobile row cards** via `SdTableRowMobileDefDirective<T>` and `SdTableRowMobileDefContext<T>`, with optional `mobile.rowLabel`, typed template binding, shared selection/filter/sort/page/expand state, row and bulk commands in one contained `SdQuickAction`, grouped More sheets, and independent interactive card content. Canonical docs, consumer compilation fixtures and showcase cover local/server data, selection preservation, group/tree and responsive controls. `SdQuickAction.contained` enables an action bar inside an owning scroll container. Mobile tools and row commands use clearly titled SdModal bottom sheets. Selection uses one compact QuickAction row with a highlighted count, fitting actions and clear; selector messages/page checkboxes are omitted. A small circular selector straddles the top-right card border, and command-header content is centered above the cards. Modal overlays are named from their live headings.",
+            "text": "Select, autocomplete và server table có `readState`, `sdReadStateChange`, `retryRead()`, `hideReadError` và template `sdDataStateTemplate`. VALUE/SEARCH độc lập; retry dùng snapshot request đã lỗi, giữ model và dữ liệu thành công, bỏ qua response cũ. Public entry point `utilities/read-state` tách biệt với `utilities/data-state`.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      },
+      {
+        "key": "changed",
+        "title": "Changed",
+        "level": 3,
+        "anchor": "release-2-6-changed",
+        "markdown": "- Button cải thiện màu outline/disabled theo theme, khoảng cách icon và focus bàn phím; giữ bo tròn M3 và các kích thước 32/40/48px. Table gom thao tác chọn hàng trong QuickAction; Import Excel cải thiện bước chọn file, lọc và hiển thị lỗi, kể cả trên mobile.\n- Inform dùng icon nền nhẹ và SdButton nhỏ; Upload thêm appearance dropzone/compact và thao tác bàn phím; Stepper dùng icon trong chỉ báo và phân biệt bước hoàn tất. Modal/Drawer thống nhất khoảng cách, bo góc và mobile; Drawer giữ và khôi phục focus bằng CDK.\n- Confirm dùng layout gọn với icon nền nhẹ luôn hiển thị, tiêu đề 18px và nút SdButton nhỏ. Các phương thức hỗ trợ icon tùy chỉnh hoặc mặc định theo context; withInput thêm label/placeholder. Giữ các biến thể và kết quả Promise hiện có, cải thiện focus và bố cục mobile.\n- Data-state dùng icon nền nhẹ, loading primary, empty warning, compact căn ngang và nút retry/action `SdButton size=\"sm\"`. Loading ưu tiên hiển thị so với lỗi khi VALUE/SEARCH đọc xen kẽ; giảm chuyển động tiếp tục tắt animation.\n- Notify dùng icon SVG nét trong ô nền nhạt theo màu trạng thái, đồng nhất với data-state; giữ timing/grouping/action và cơ chế sanitize HTML.",
+        "items": [
+          {
+            "text": "Button cải thiện màu outline/disabled theo theme, khoảng cách icon và focus bàn phím; giữ bo tròn M3 và các kích thước 32/40/48px. Table gom thao tác chọn hàng trong QuickAction; Import Excel cải thiện bước chọn file, lọc và hiển thị lỗi, kể cả trên mobile.",
             "ordered": false,
             "children": []
           },
           {
-            "text": "**`<sd-card>` and `<sd-card-group>`** are available from `@sdcorejs/angular/components/card`. The standalone, generic-content card supports accessible pointer/keyboard toggle behavior, read-only `selected()` state, semantic Core UI colors, stable `autoId` selectors, disabled states, and the same 300 ms leading click throttle as `SdButton`. Groups provide single or immutable multiple selection through `[(model)]`, user-only `(sdChange)`, object-aware `compareWith`, direct nearest-group injection, and no imposed application layout.",
+            "text": "Inform dùng icon nền nhẹ và SdButton nhỏ; Upload thêm appearance dropzone/compact và thao tác bàn phím; Stepper dùng icon trong chỉ báo và phân biệt bước hoàn tất. Modal/Drawer thống nhất khoảng cách, bo góc và mobile; Drawer giữ và khôi phục focus bằng CDK.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Confirm dùng layout gọn với icon nền nhẹ luôn hiển thị, tiêu đề 18px và nút SdButton nhỏ. Các phương thức hỗ trợ icon tùy chỉnh hoặc mặc định theo context; withInput thêm label/placeholder. Giữ các biến thể và kết quả Promise hiện có, cải thiện focus và bố cục mobile.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Data-state dùng icon nền nhẹ, loading primary, empty warning, compact căn ngang và nút retry/action `SdButton size=\"sm\"`. Loading ưu tiên hiển thị so với lỗi khi VALUE/SEARCH đọc xen kẽ; giảm chuyển động tiếp tục tắt animation.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Notify dùng icon SVG nét trong ô nền nhạt theo màu trạng thái, đồng nhất với data-state; giữ timing/grouping/action và cơ chế sanitize HTML.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      },
+      {
+        "key": "fixed",
+        "title": "Fixed",
+        "level": 3,
+        "anchor": "release-2-6-fixed",
+        "markdown": "- Button chỉ hiển thị một icon khi dùng suffix mà không truyền icon đầu. SideDrawer nhận focus ngay khi mở, giữ hiệu ứng đóng và thiết lập giảm chuyển động.\n- Date-range áp dụng đúng `clearable`, required và disabled cho nút xóa; datetime dùng icon picker đồng nhất. Multiple-select hiển thị số lượng đã chọn và tooltip với mỗi lựa chọn trên một dòng. Sidebar dùng hết chiều cao khả dụng để cuộn menu dài.\n- Release `2.6` dùng bản đối chiếu `22.2.5` cho Angular 22; pipeline pin đúng tag, artifact và quy tắc giữ năm trang release gần nhất.\n- **Showcase release pages resolve library styles from the installed package.** Global Core UI SCSS now loads from `showcase/node_modules/@sdcorejs/angular`, so Angular Material resolves from Showcase's own dependencies when postpublish materializes a tarball without installing the v19 workspace.",
+        "items": [
+          {
+            "text": "Button chỉ hiển thị một icon khi dùng suffix mà không truyền icon đầu. SideDrawer nhận focus ngay khi mở, giữ hiệu ứng đóng và thiết lập giảm chuyển động.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Date-range áp dụng đúng `clearable`, required và disabled cho nút xóa; datetime dùng icon picker đồng nhất. Multiple-select hiển thị số lượng đã chọn và tooltip với mỗi lựa chọn trên một dòng. Sidebar dùng hết chiều cao khả dụng để cuộn menu dài.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Release `2.6` dùng bản đối chiếu `22.2.5` cho Angular 22; pipeline pin đúng tag, artifact và quy tắc giữ năm trang release gần nhất.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "**Showcase release pages resolve library styles from the installed package.** Global Core UI SCSS now loads from `showcase/node_modules/@sdcorejs/angular`, so Angular Material resolves from Showcase's own dependencies when postpublish materializes a tarball without installing the v19 workspace.",
             "ordered": false,
             "children": []
           }
@@ -86,7 +206,7 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
     "id": "release-2-5",
     "title": "Release 2.5",
     "suffix": "2.5",
-    "date": "2026-09-02",
+    "date": "2026-09-07",
     "anchor": "release-2-5",
     "unreleased": false,
     "packageVersions": [
@@ -108,17 +228,27 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
       }
     ],
     "summaryMarkdown": "Release suffix `2.5` publishes `19.2.5`, `20.2.5`, `21.2.5`, and `22.2.5`.",
-    "markdown": "Release suffix `2.5` publishes `19.2.5`, `20.2.5`, `21.2.5`, and `22.2.5`.\n\n### Added\n\n- **Angular 22 is now a first-class package line.** `22.2.5` is the inception release for that line; no earlier Angular 22 package history is implied. It is built from the same canonical v19 source as the generated v20 and v21 workspaces and is published as the stable `latest` target only after the three maintained recovery lines have been verified.\n\n### Changed\n\n- **Release compatibility remains dependency-first and public-API compatible.** The Angular 22 line consumes `@sdcorejs/angular-material-datetime@1.0.4`, which is released and verified first for Angular 22 peer compatibility. The four `@sdcorejs/angular` packages keep the existing public API, entry points, selectors and consumer syntax; this release adds framework compatibility rather than a consumer migration.",
+    "markdown": "Release suffix `2.5` publishes `19.2.5`, `20.2.5`, `21.2.5`, and `22.2.5`.\n\n### Added\n\n- **Angular 22 is now a first-class package line.** `22.2.5` is the inception release for that line; no earlier Angular 22 package history is implied. It is built from the same canonical v19 source as the generated v20 and v21 workspaces and is published as the stable `latest` target only after the three maintained recovery lines have been verified.\n\n- **`sd-table` mobile row cards** via `SdTableRowMobileDefDirective<T>` and `SdTableRowMobileDefContext<T>`, with optional `mobile.rowLabel`, typed template binding, shared selection/filter/sort/page/expand state, row and bulk commands in one contained `SdQuickAction`, grouped More sheets, and independent interactive card content. Canonical docs, consumer compilation fixtures and showcase cover local/server data, selection preservation, group/tree and responsive controls. `SdQuickAction.contained` enables an action bar inside an owning scroll container. Mobile tools and row commands use clearly titled SdModal bottom sheets. Selection uses one compact QuickAction row with a highlighted count, fitting actions and clear; selector messages/page checkboxes are omitted. A small circular selector straddles the top-right card border, and command-header content is centered above the cards. Modal overlays are named from their live headings.\n\n- **`<sd-card>` and `<sd-card-group>`** are available from `@sdcorejs/angular/components/card`. The standalone, generic-content card supports accessible pointer/keyboard toggle behavior, read-only `selected()` state, semantic Core UI colors, stable `autoId` selectors, disabled states, and the same 300 ms leading click throttle as `SdButton`. Groups provide single or immutable multiple selection through `[(model)]`, user-only `(sdChange)`, object-aware `compareWith`, direct nearest-group injection, and no imposed application layout.\n\n### Changed\n\n- **Release compatibility remains dependency-first and public-API compatible.** The Angular 22 line consumes `@sdcorejs/angular-material-datetime@1.0.4`, which is released and verified first for Angular 22 peer compatibility. The four `@sdcorejs/angular` packages keep the existing public API, entry points, selectors and consumer syntax; this release adds framework compatibility rather than a consumer migration.\n\n### Fixed\n\n- **OIDC publication avoids setup-node's placeholder token.** The publisher configures the public npm registry through `NPM_CONFIG_REGISTRY`, leaving setup-node token authentication disabled so the token-free release guard can reach trusted publishing.\n- **Release package validation recognizes the reviewed 2.5 changes.** Per-line snapshots pin both the 2.4 baseline and the exact 2.5 exports, packed paths, declarations and authored sources, allowing the card/mobile-table additions and runtime fixes while still rejecting unreviewed drift. Artifact integrity, source-commit binding and strict consumer compilation remain required.\n- **`sd-input-number` accepts pasted table amounts across both supported number formats.** Clipboard whitespace, including newlines, NBSP (`U+00A0`) and narrow NBSP (`U+202F`), is removed before parsing. Excess fractional digits are truncated toward zero to the configured `precision`; for example, `1.234.567,89` becomes 1234567 at precision 0. Ambiguous single-separator values prefer the configured format. Paste replaces the selected text and updates the model and `sdChange` through the normal input pipeline, retaining min/max validation without clamping. Invalid input remains blocked. Thousands groups require three digits, Cmd+V works like Ctrl+V, and ordinary typing keeps its precision checks.\n- **`sd-table` local sorting keeps empty values last in both directions.** Null, undefined and empty strings, plus invalid numeric and date/time values for their corresponding column types, no longer produce inconsistent comparisons or change position unpredictably when switching ASC/DESC. Equal values keep their relative order, zero remains valid, and sorting runs before pagination. This applies to local `number`, `date`, `datetime`, `time` and `string` columns.",
     "sections": [
       {
         "key": "added",
         "title": "Added",
         "level": 3,
         "anchor": "release-2-5-added",
-        "markdown": "- **Angular 22 is now a first-class package line.** `22.2.5` is the inception release for that line; no earlier Angular 22 package history is implied. It is built from the same canonical v19 source as the generated v20 and v21 workspaces and is published as the stable `latest` target only after the three maintained recovery lines have been verified.",
+        "markdown": "- **Angular 22 is now a first-class package line.** `22.2.5` is the inception release for that line; no earlier Angular 22 package history is implied. It is built from the same canonical v19 source as the generated v20 and v21 workspaces and is published as the stable `latest` target only after the three maintained recovery lines have been verified.\n\n- **`sd-table` mobile row cards** via `SdTableRowMobileDefDirective<T>` and `SdTableRowMobileDefContext<T>`, with optional `mobile.rowLabel`, typed template binding, shared selection/filter/sort/page/expand state, row and bulk commands in one contained `SdQuickAction`, grouped More sheets, and independent interactive card content. Canonical docs, consumer compilation fixtures and showcase cover local/server data, selection preservation, group/tree and responsive controls. `SdQuickAction.contained` enables an action bar inside an owning scroll container. Mobile tools and row commands use clearly titled SdModal bottom sheets. Selection uses one compact QuickAction row with a highlighted count, fitting actions and clear; selector messages/page checkboxes are omitted. A small circular selector straddles the top-right card border, and command-header content is centered above the cards. Modal overlays are named from their live headings.\n\n- **`<sd-card>` and `<sd-card-group>`** are available from `@sdcorejs/angular/components/card`. The standalone, generic-content card supports accessible pointer/keyboard toggle behavior, read-only `selected()` state, semantic Core UI colors, stable `autoId` selectors, disabled states, and the same 300 ms leading click throttle as `SdButton`. Groups provide single or immutable multiple selection through `[(model)]`, user-only `(sdChange)`, object-aware `compareWith`, direct nearest-group injection, and no imposed application layout.",
         "items": [
           {
             "text": "**Angular 22 is now a first-class package line.** `22.2.5` is the inception release for that line; no earlier Angular 22 package history is implied. It is built from the same canonical v19 source as the generated v20 and v21 workspaces and is published as the stable `latest` target only after the three maintained recovery lines have been verified.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "**`sd-table` mobile row cards** via `SdTableRowMobileDefDirective<T>` and `SdTableRowMobileDefContext<T>`, with optional `mobile.rowLabel`, typed template binding, shared selection/filter/sort/page/expand state, row and bulk commands in one contained `SdQuickAction`, grouped More sheets, and independent interactive card content. Canonical docs, consumer compilation fixtures and showcase cover local/server data, selection preservation, group/tree and responsive controls. `SdQuickAction.contained` enables an action bar inside an owning scroll container. Mobile tools and row commands use clearly titled SdModal bottom sheets. Selection uses one compact QuickAction row with a highlighted count, fitting actions and clear; selector messages/page checkboxes are omitted. A small circular selector straddles the top-right card border, and command-header content is centered above the cards. Modal overlays are named from their live headings.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "**`<sd-card>` and `<sd-card-group>`** are available from `@sdcorejs/angular/components/card`. The standalone, generic-content card supports accessible pointer/keyboard toggle behavior, read-only `selected()` state, semantic Core UI colors, stable `autoId` selectors, disabled states, and the same 300 ms leading click throttle as `SdButton`. Groups provide single or immutable multiple selection through `[(model)]`, user-only `(sdChange)`, object-aware `compareWith`, direct nearest-group injection, and no imposed application layout.",
             "ordered": false,
             "children": []
           }
@@ -134,6 +264,36 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
         "items": [
           {
             "text": "**Release compatibility remains dependency-first and public-API compatible.** The Angular 22 line consumes `@sdcorejs/angular-material-datetime@1.0.4`, which is released and verified first for Angular 22 peer compatibility. The four `@sdcorejs/angular` packages keep the existing public API, entry points, selectors and consumer syntax; this release adds framework compatibility rather than a consumer migration.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      },
+      {
+        "key": "fixed",
+        "title": "Fixed",
+        "level": 3,
+        "anchor": "release-2-5-fixed",
+        "markdown": "- **OIDC publication avoids setup-node's placeholder token.** The publisher configures the public npm registry through `NPM_CONFIG_REGISTRY`, leaving setup-node token authentication disabled so the token-free release guard can reach trusted publishing.\n- **Release package validation recognizes the reviewed 2.5 changes.** Per-line snapshots pin both the 2.4 baseline and the exact 2.5 exports, packed paths, declarations and authored sources, allowing the card/mobile-table additions and runtime fixes while still rejecting unreviewed drift. Artifact integrity, source-commit binding and strict consumer compilation remain required.\n- **`sd-input-number` accepts pasted table amounts across both supported number formats.** Clipboard whitespace, including newlines, NBSP (`U+00A0`) and narrow NBSP (`U+202F`), is removed before parsing. Excess fractional digits are truncated toward zero to the configured `precision`; for example, `1.234.567,89` becomes 1234567 at precision 0. Ambiguous single-separator values prefer the configured format. Paste replaces the selected text and updates the model and `sdChange` through the normal input pipeline, retaining min/max validation without clamping. Invalid input remains blocked. Thousands groups require three digits, Cmd+V works like Ctrl+V, and ordinary typing keeps its precision checks.\n- **`sd-table` local sorting keeps empty values last in both directions.** Null, undefined and empty strings, plus invalid numeric and date/time values for their corresponding column types, no longer produce inconsistent comparisons or change position unpredictably when switching ASC/DESC. Equal values keep their relative order, zero remains valid, and sorting runs before pagination. This applies to local `number`, `date`, `datetime`, `time` and `string` columns.",
+        "items": [
+          {
+            "text": "**OIDC publication avoids setup-node's placeholder token.** The publisher configures the public npm registry through `NPM_CONFIG_REGISTRY`, leaving setup-node token authentication disabled so the token-free release guard can reach trusted publishing.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "**Release package validation recognizes the reviewed 2.5 changes.** Per-line snapshots pin both the 2.4 baseline and the exact 2.5 exports, packed paths, declarations and authored sources, allowing the card/mobile-table additions and runtime fixes while still rejecting unreviewed drift. Artifact integrity, source-commit binding and strict consumer compilation remain required.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "**`sd-input-number` accepts pasted table amounts across both supported number formats.** Clipboard whitespace, including newlines, NBSP (`U+00A0`) and narrow NBSP (`U+202F`), is removed before parsing. Excess fractional digits are truncated toward zero to the configured `precision`; for example, `1.234.567,89` becomes 1234567 at precision 0. Ambiguous single-separator values prefer the configured format. Paste replaces the selected text and updates the model and `sdChange` through the normal input pipeline, retaining min/max validation without clamping. Invalid input remains blocked. Thousands groups require three digits, Cmd+V works like Ctrl+V, and ordinary typing keeps its precision checks.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "**`sd-table` local sorting keeps empty values last in both directions.** Null, undefined and empty strings, plus invalid numeric and date/time values for their corresponding column types, no longer produce inconsistent comparisons or change position unpredictably when switching ASC/DESC. Equal values keep their relative order, zero remains valid, and sorting runs before pagination. This applies to local `number`, `date`, `datetime`, `time` and `string` columns.",
             "ordered": false,
             "children": []
           }

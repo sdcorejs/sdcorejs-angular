@@ -24,6 +24,7 @@ export type ShowcaseExampleSourceKey =
   | "components/avatar/example-fallback-khi-thieu-du-lieu"
   | "components/badge/example-ba-dang"
   | "components/badge/example-fontset-switch"
+  | "components/badge/example-icon-va-noi-dung-dai"
   | "components/badge/example-kem-mo-ta"
   | "components/badge/example-kich-thuoc-round"
   | "components/badge/example-kich-thuoc-tag"
@@ -58,6 +59,7 @@ export type ShowcaseExampleSourceKey =
   | "components/data-state/example-forbidden"
   | "components/data-state/example-loading"
   | "components/data-state/example-loi-va-retry-tren-ba-control"
+  | "components/data-state/example-panel-hep-va-lua-chon-dang-giu"
   | "components/data-state/example-success"
   | "components/editor/example-chi-doc"
   | "components/editor/example-soan-noi-dung"
@@ -579,6 +581,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Existing “Số đếm” scenario preserved from the showcase.",
   },
   {
+    sourceKey: "components/badge/example-icon-va-noi-dung-dai",
+    pageKey: "components/badge",
+    sectionId: "example-icon-va-noi-dung-dai",
+    title: "Icon và nội dung dài",
+    description: "Icon giữ nguyên kích thước và căn giữa với toàn bộ phần chữ khi nội dung xuống dòng.",
+  },
+  {
     sourceKey: "components/breadcrumb/example-danh-sach-tinh",
     pageKey: "components/breadcrumb",
     sectionId: "example-danh-sach-tinh",
@@ -766,6 +775,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-loi-va-retry-tren-ba-control",
     title: "Lỗi và retry trên ba control",
     description: "Existing “Lỗi và retry trên ba control” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/data-state/example-panel-hep-va-lua-chon-dang-giu",
+    pageKey: "components/data-state",
+    sectionId: "example-panel-hep-va-lua-chon-dang-giu",
+    title: "Panel hẹp và lựa chọn đang giữ",
+    description: "Lỗi nằm giữa, dưới các mục đã chọn. Panel 180px vẫn đọc được thông báo và bấm Thử lại.",
   },
   {
     sourceKey: "components/editor/example-soan-noi-dung",

@@ -709,129 +709,188 @@ interface FontSetOption {
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdBadge, SdRadio],
   template: \`
-    <demo-page #demoPage
-      title="Badge"
-      description="Nhãn trạng thái / số đếm — có 3 dạng (type): icon, round, tag.">
-
+    <demo-page #demoPage title="Badge" description="Nhãn trạng thái / số đếm — có 3 dạng (type): icon, round, tag.">
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-ba-dang') {
-      <demo-section heading="Ba dạng" [props]="[{ name: 'type', value: 'icon / round / tag' }]">
-        <sd-badge type="icon" primary icon="check_circle" title="icon"></sd-badge>
-        <sd-badge type="round" primary title="round"></sd-badge>
-        <sd-badge type="tag" primary icon="label" title="tag"></sd-badge>
-      </demo-section>
+        <demo-section heading="Ba dạng" [props]="[{ name: 'type', value: 'icon / round / tag' }]">
+          <sd-badge type="icon" primary icon="check_circle" title="icon"></sd-badge>
+          <sd-badge type="round" primary title="round"></sd-badge>
+          <sd-badge type="tag" primary icon="label" title="tag"></sd-badge>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-fontset-switch') {
-      <demo-section
-        heading="fontSet switch"
-        [props]="[{ name: 'fontSet', value: 'material-icons / material-icons-outlined / lucide' }, { name: 'type', value: 'icon / round / tag' }]"
-        note="Chon fontSet bang radio de so sanh alignment cua cung mot bo badge icon.">
-        <div class="d-flex flex-column gap-16 w-full">
-          <sd-radio
-            label="fontSet"
-            [items]="fontSetOptions"
-            valueField="value"
-            displayField="display"
-            [(model)]="selectedFontSet"
-            [form]="fontSetForm"></sd-radio>
+        <demo-section
+          heading="fontSet switch"
+          [props]="[
+            { name: 'fontSet', value: 'material-icons / material-icons-outlined / lucide' },
+            { name: 'type', value: 'icon / round / tag' },
+          ]"
+          note="Chon fontSet bang radio de so sanh alignment cua cung mot bo badge icon.">
+          <div class="d-flex flex-column gap-16 w-full">
+            <sd-radio
+              label="fontSet"
+              [items]="fontSetOptions"
+              valueField="value"
+              displayField="display"
+              [(model)]="selectedFontSet"
+              [form]="fontSetForm"></sd-radio>
 
-          <div class="d-flex flex-wrap align-items-center gap-16">
-            <sd-badge type="icon" success icon="check_circle" [fontSet]="selectedFontSet()" title="Approved"></sd-badge>
-            <sd-badge type="icon" info icon="visibility" [fontSet]="selectedFontSet()" title="Visible"></sd-badge>
-            <sd-badge type="icon" warning icon="warning" [fontSet]="selectedFontSet()" title="Warning"></sd-badge>
-          </div>
+            <div class="d-flex flex-wrap align-items-center gap-16">
+              <sd-badge type="icon" success icon="check_circle" [fontSet]="selectedFontSet()" title="Approved"></sd-badge>
+              <sd-badge type="icon" info icon="visibility" [fontSet]="selectedFontSet()" title="Visible"></sd-badge>
+              <sd-badge type="icon" warning icon="warning" [fontSet]="selectedFontSet()" title="Warning"></sd-badge>
+            </div>
 
-          <div class="d-flex flex-wrap align-items-center gap-16">
-            <sd-badge type="round" success icon="check_circle" [fontSet]="selectedFontSet()" title="Round success"></sd-badge>
-            <sd-badge type="round" info icon="local_offer" [fontSet]="selectedFontSet()" title="Round offer"></sd-badge>
-            <sd-badge type="round" error icon="delete" [fontSet]="selectedFontSet()" title="Round error"></sd-badge>
-          </div>
+            <div class="d-flex flex-wrap align-items-center gap-16">
+              <sd-badge type="round" success icon="check_circle" [fontSet]="selectedFontSet()" title="Round success"></sd-badge>
+              <sd-badge type="round" info icon="local_offer" [fontSet]="selectedFontSet()" title="Round offer"></sd-badge>
+              <sd-badge type="round" error icon="delete" [fontSet]="selectedFontSet()" title="Round error"></sd-badge>
+            </div>
 
-          <div class="d-flex flex-wrap align-items-center gap-16">
-            <sd-badge type="tag" primary icon="local_offer" [fontSet]="selectedFontSet()" title="Tag primary"></sd-badge>
-            <sd-badge type="tag" warning icon="warning" [fontSet]="selectedFontSet()" title="Tag warning"></sd-badge>
-            <sd-badge type="tag" secondary icon="visibility" [fontSet]="selectedFontSet()" title="Tag secondary"></sd-badge>
+            <div class="d-flex flex-wrap align-items-center gap-16">
+              <sd-badge type="tag" primary icon="local_offer" [fontSet]="selectedFontSet()" title="Tag primary"></sd-badge>
+              <sd-badge type="tag" warning icon="warning" [fontSet]="selectedFontSet()" title="Tag warning"></sd-badge>
+              <sd-badge type="tag" secondary icon="visibility" [fontSet]="selectedFontSet()" title="Tag secondary"></sd-badge>
+            </div>
           </div>
-        </div>
-      </demo-section>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-mau-sac-round') {
-      <demo-section heading="Màu sắc round" [props]="[{ name: 'type', value: 'round' }, { name: 'color', value: 'primary / secondary / success / info / warning / error' }]">
-        <sd-badge type="round" primary title="primary"></sd-badge>
-        <sd-badge type="round" secondary title="secondary"></sd-badge>
-        <sd-badge type="round" success title="success"></sd-badge>
-        <sd-badge type="round" info title="info"></sd-badge>
-        <sd-badge type="round" warning title="warning"></sd-badge>
-        <sd-badge type="round" error title="error"></sd-badge>
-      </demo-section>
+        <demo-section
+          heading="Màu sắc round"
+          [props]="[
+            { name: 'type', value: 'round' },
+            { name: 'color', value: 'primary / secondary / success / info / warning / error' },
+          ]">
+          <sd-badge type="round" primary title="primary"></sd-badge>
+          <sd-badge type="round" secondary title="secondary"></sd-badge>
+          <sd-badge type="round" success title="success"></sd-badge>
+          <sd-badge type="round" info title="info"></sd-badge>
+          <sd-badge type="round" warning title="warning"></sd-badge>
+          <sd-badge type="round" error title="error"></sd-badge>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-mau-sac-tag') {
-      <demo-section heading="Màu sắc tag" [props]="[{ name: 'type', value: 'tag' }, { name: 'color', value: 'primary / secondary / success / info / warning / error' }]">
-        <sd-badge type="tag" primary icon="label" title="primary"></sd-badge>
-        <sd-badge type="tag" secondary icon="label" title="secondary"></sd-badge>
-        <sd-badge type="tag" success icon="label" title="success"></sd-badge>
-        <sd-badge type="tag" info icon="label" title="info"></sd-badge>
-        <sd-badge type="tag" warning icon="label" title="warning"></sd-badge>
-        <sd-badge type="tag" error icon="label" title="error"></sd-badge>
-      </demo-section>
+        <demo-section
+          heading="Màu sắc tag"
+          [props]="[
+            { name: 'type', value: 'tag' },
+            { name: 'color', value: 'primary / secondary / success / info / warning / error' },
+          ]">
+          <sd-badge type="tag" primary icon="label" title="primary"></sd-badge>
+          <sd-badge type="tag" secondary icon="label" title="secondary"></sd-badge>
+          <sd-badge type="tag" success icon="label" title="success"></sd-badge>
+          <sd-badge type="tag" info icon="label" title="info"></sd-badge>
+          <sd-badge type="tag" warning icon="label" title="warning"></sd-badge>
+          <sd-badge type="tag" error icon="label" title="error"></sd-badge>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-mau-sac-icon') {
-      <demo-section heading="Màu sắc icon" [props]="[{ name: 'type', value: 'icon' }, { name: 'color', value: 'primary / secondary / success / info / warning / error' }]">
-        <sd-badge type="icon" primary icon="circle" title="primary"></sd-badge>
-        <sd-badge type="icon" secondary icon="circle" title="secondary"></sd-badge>
-        <sd-badge type="icon" success icon="circle" title="success"></sd-badge>
-        <sd-badge type="icon" info icon="circle" title="info"></sd-badge>
-        <sd-badge type="icon" warning icon="circle" title="warning"></sd-badge>
-        <sd-badge type="icon" error icon="circle" title="error"></sd-badge>
-      </demo-section>
+        <demo-section
+          heading="Màu sắc icon"
+          [props]="[
+            { name: 'type', value: 'icon' },
+            { name: 'color', value: 'primary / secondary / success / info / warning / error' },
+          ]">
+          <sd-badge type="icon" primary icon="circle" title="primary"></sd-badge>
+          <sd-badge type="icon" secondary icon="circle" title="secondary"></sd-badge>
+          <sd-badge type="icon" success icon="circle" title="success"></sd-badge>
+          <sd-badge type="icon" info icon="circle" title="info"></sd-badge>
+          <sd-badge type="icon" warning icon="circle" title="warning"></sd-badge>
+          <sd-badge type="icon" error icon="circle" title="error"></sd-badge>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-kich-thuoc-round') {
-      <demo-section heading="Kích thước round" [props]="[{ name: 'type', value: 'round' }, { name: 'size', value: 'sm / md / lg' }]">
-        <sd-badge type="round" primary title="sm" size="sm"></sd-badge>
-        <sd-badge type="round" primary title="md" size="md"></sd-badge>
-        <sd-badge type="round" primary title="lg" size="lg"></sd-badge>
-      </demo-section>
+        <demo-section
+          heading="Kích thước round"
+          [props]="[
+            { name: 'type', value: 'round' },
+            { name: 'size', value: 'sm / md / lg' },
+          ]">
+          <sd-badge type="round" primary title="sm" size="sm"></sd-badge>
+          <sd-badge type="round" primary title="md" size="md"></sd-badge>
+          <sd-badge type="round" primary title="lg" size="lg"></sd-badge>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-round-voi-icon') {
-      <demo-section heading="Round với icon" [props]="[{ name: 'type', value: 'round' }, { name: 'icon', value: 'name' }, { name: 'size', value: 'sm / md / lg' }]">
-        <sd-badge type="round" success icon="check_circle" title="sm" size="sm"></sd-badge>
-        <sd-badge type="round" success icon="check_circle" title="md" size="md"></sd-badge>
-        <sd-badge type="round" success icon="check_circle" title="lg" size="lg"></sd-badge>
-      </demo-section>
+        <demo-section
+          heading="Round với icon"
+          [props]="[
+            { name: 'type', value: 'round' },
+            { name: 'icon', value: 'name' },
+            { name: 'size', value: 'sm / md / lg' },
+          ]">
+          <sd-badge type="round" success icon="check_circle" title="sm" size="sm"></sd-badge>
+          <sd-badge type="round" success icon="check_circle" title="md" size="md"></sd-badge>
+          <sd-badge type="round" success icon="check_circle" title="lg" size="lg"></sd-badge>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-kich-thuoc-tag') {
-      <demo-section heading="Kích thước tag" [props]="[{ name: 'type', value: 'tag' }, { name: 'size', value: 'sm / md / lg' }]">
-        <sd-badge type="tag" info icon="label" title="sm" size="sm"></sd-badge>
-        <sd-badge type="tag" info icon="label" title="md" size="md"></sd-badge>
-        <sd-badge type="tag" info icon="label" title="lg" size="lg"></sd-badge>
-      </demo-section>
+        <demo-section
+          heading="Kích thước tag"
+          [props]="[
+            { name: 'type', value: 'tag' },
+            { name: 'size', value: 'sm / md / lg' },
+          ]">
+          <sd-badge type="tag" info icon="label" title="sm" size="sm"></sd-badge>
+          <sd-badge type="tag" info icon="label" title="md" size="md"></sd-badge>
+          <sd-badge type="tag" info icon="label" title="lg" size="lg"></sd-badge>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-kem-mo-ta') {
-      <demo-section heading="Kèm mô tả" [props]="[{ name: 'description', value: 'text' }]">
-        <sd-badge type="icon" success icon="check_circle" title="title" description="description"></sd-badge>
-        <sd-badge type="tag" primary icon="star" title="title" description="description"></sd-badge>
-      </demo-section>
+        <demo-section heading="Kèm mô tả" [props]="[{ name: 'description', value: 'text' }]">
+          <sd-badge type="icon" success icon="check_circle" title="title" description="description"></sd-badge>
+          <sd-badge type="tag" primary icon="star" title="title" description="description"></sd-badge>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-so-dem') {
-      <demo-section heading="Số đếm" [props]="[{ name: 'type', value: 'round' }, { name: 'title', value: 'number' }]">
-        <sd-badge type="round" primary [title]="unreadCount()"></sd-badge>
-        <sd-badge type="round" error [title]="errorsCount()"></sd-badge>
-        <sd-badge type="round" warning title="99+"></sd-badge>
-      </demo-section>
+        <demo-section
+          heading="Số đếm"
+          [props]="[
+            { name: 'type', value: 'round' },
+            { name: 'title', value: 'number' },
+          ]">
+          <sd-badge type="round" primary [title]="unreadCount()"></sd-badge>
+          <sd-badge type="round" error [title]="errorsCount()"></sd-badge>
+          <sd-badge type="round" warning title="99+"></sd-badge>
+        </demo-section>
+      }
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-icon-va-noi-dung-dai') {
+        <demo-section
+          heading="Icon và nội dung dài"
+          [props]="[
+            { name: 'type', value: 'icon' },
+            { name: 'size', value: 'sm / md / lg' },
+          ]"
+          note="Icon giữ nguyên kích thước và căn giữa với toàn bộ phần chữ khi nội dung xuống dòng.">
+          <div style="display:flex;flex-wrap:wrap;gap:24px">
+            @for (size of iconSizes; track size) {
+              <sd-badge
+                style="display:block;width:140px"
+                type="icon"
+                [size]="size"
+                icon="check_circle"
+                color="success"
+                title="Đã xác nhận thông tin khách hàng"
+                description="Nội dung bổ sung" />
+            }
+          </div>
+        </demo-section>
       }
     </demo-page>
   \`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BadgeDemoComponent {
+  readonly iconSizes = ['sm', 'md', 'lg'] as const;
   readonly fontSetForm = new FormGroup({});
   readonly selectedFontSet = signal<SdIconSet>('lucide');
   readonly fontSetOptions: FontSetOption[] = [
@@ -1791,83 +1850,123 @@ type DemoControl = 'table' | 'select' | 'autocomplete';
         </demo-section>
       }
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-loi-va-retry-tren-ba-control') {
-      <demo-section
-        heading="Lỗi và retry trên ba control"
-        [props]="[{ name: 'readState / sdReadStateChange', value: 'idle → loading → ready / empty / error' }]">
-        <p>
-          Ban đầu máy chủ mô phỏng trả lỗi. Chọn “Có dữ liệu” hoặc “Rỗng hợp lệ”, rồi bấm Thử lại trên control. Chọn “Tiếp tục lỗi” để thử
-          lỗi liên tiếp. Select đọc riêng VALUE và SEARCH nên có thể cần retry từng kênh.
-        </p>
-        <div class="demo-actions">
-          <button type="button" [attr.aria-pressed]="mode() === 'ready'" (click)="mode.set('ready')">Có dữ liệu</button>
-          <button type="button" [attr.aria-pressed]="mode() === 'empty'" (click)="mode.set('empty')">Rỗng hợp lệ</button>
-          <button type="button" [attr.aria-pressed]="mode() === 'error'" (click)="mode.set('error')">Tiếp tục lỗi</button>
-        </div>
-        <p>
-          Chế độ phản hồi: {{ mode() }}. Số request: bảng {{ counts().table }}, select {{ counts().select }}, autocomplete
-          {{ counts().autocomplete }}.
-        </p>
-        <div class="table-demo">
-          <sd-table #table [option]="tableOption" (sdReadStateChange)="record('table', $event)"></sd-table>
-        </div>
-        <div class="demo-actions">
-          <button type="button" (click)="table.reload()">Đọc lại bảng</button>
-          <span>Output bảng: {{ latest().table }}</span>
-        </div>
-        <div class="control-grid">
-          <div>
+        <demo-section
+          heading="Lỗi và retry trên ba control"
+          [props]="[{ name: 'readState / sdReadStateChange', value: 'idle → loading → ready / empty / error' }]">
+          <p>
+            Ban đầu máy chủ mô phỏng trả lỗi. Chọn “Có dữ liệu” hoặc “Rỗng hợp lệ”, rồi bấm Thử lại trên control. Chọn “Tiếp tục lỗi” để thử
+            lỗi liên tiếp. Select đọc riêng VALUE và SEARCH nên có thể cần retry từng kênh.
+          </p>
+          <div class="demo-actions">
+            <button type="button" [attr.aria-pressed]="mode() === 'ready'" (click)="mode.set('ready')">Có dữ liệu</button>
+            <button type="button" [attr.aria-pressed]="mode() === 'empty'" (click)="mode.set('empty')">Rỗng hợp lệ</button>
+            <button type="button" [attr.aria-pressed]="mode() === 'error'" (click)="mode.set('error')">Tiếp tục lỗi</button>
+          </div>
+          <p>
+            Chế độ phản hồi: {{ mode() }}. Số request: bảng {{ counts().table }}, select {{ counts().select }}, autocomplete
+            {{ counts().autocomplete }}.
+          </p>
+          <div class="table-demo">
+            <sd-table #table [option]="tableOption" (sdReadStateChange)="record('table', $event)"></sd-table>
+          </div>
+          <div class="demo-actions">
+            <button type="button" (click)="table.reload()">Đọc lại bảng</button>
+            <span>Output bảng: {{ latest().table }}</span>
+          </div>
+          <div class="control-grid">
+            <div>
+              <sd-select
+                #select
+                label="Select — template lỗi riêng"
+                [items]="loadSelect"
+                valueField="id"
+                displayField="name"
+                [(model)]="selected"
+                (sdReadStateChange)="record('select', $event)">
+                <ng-template sdDataStateTemplate let-state let-retry="retry">
+                  <sd-data-state
+                    [state]="state"
+                    title="Chưa tải được lựa chọn"
+                    message="Vui lòng thử lại."
+                    compact
+                    retryable
+                    (sdRetry)="retry()"></sd-data-state>
+                </ng-template>
+              </sd-select>
+              <p>Giá trị: {{ selected() }}. Output: {{ latest().select }}</p>
+            </div>
+            <div>
+              <sd-autocomplete
+                #autocomplete
+                label="Autocomplete"
+                [items]="loadAutocomplete"
+                valueField="id"
+                displayField="name"
+                [(model)]="autocompleteValue"
+                [hideReadError]="hideReadError()"
+                (sdReadStateChange)="record('autocomplete', $event)">
+              </sd-autocomplete>
+              <p>Giá trị: {{ autocompleteValue() }}. Output: {{ latest().autocomplete }}</p>
+              <label
+                ><input type="checkbox" [checked]="hideReadError()" (change)="hideReadError.set(!hideReadError())" /> Host hiển thị lỗi bên
+                ngoài</label
+              >
+              @if (hideReadError() && !autocomplete.loading() && autocomplete.readState().status === 'error') {
+                <sd-data-state state="error" compact retryable (sdRetry)="autocomplete.retryRead()"></sd-data-state>
+              }
+            </div>
+          </div>
+          <p>
+            Mở panel lỗi và nhấn Tab để tới retry; Enter/Space để thử lại, Escape để đóng panel. Giá trị đã chọn không bị xóa khi đọc lỗi.
+          </p>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-panel-hep-va-lua-chon-dang-giu') {
+        <demo-section
+          heading="Panel hẹp và lựa chọn đang giữ"
+          [props]="[
+            { name: 'multiple', value: 'true' },
+            { name: 'minWidthPanel', value: '180px' },
+          ]"
+          note="Lỗi nằm giữa, dưới các mục đã chọn. Panel 180px vẫn đọc được thông báo và bấm Thử lại.">
+          <div style="display:flex;flex-wrap:wrap;gap:24px;width:100%">
             <sd-select
-              #select
-              label="Select — template lỗi riêng"
-              [items]="loadSelect"
+              style="width:180px;max-width:100%"
+              label="Giữ hai lựa chọn"
+              multiple
+              minWidthPanel="180px"
+              [items]="narrowSelectItems"
               valueField="id"
               displayField="name"
-              [(model)]="selected"
-              (sdReadStateChange)="record('select', $event)">
-              <ng-template sdDataStateTemplate let-state let-retry="retry">
-                <sd-data-state
-                  [state]="state"
-                  title="Chưa tải được lựa chọn"
-                  message="Vui lòng thử lại."
-                  compact
-                  retryable
-                  (sdRetry)="retry()"></sd-data-state>
-              </ng-template>
-            </sd-select>
-            <p>Giá trị: {{ selected() }}. Output: {{ latest().select }}</p>
-          </div>
-          <div>
+              [model]="[1, 2]" />
             <sd-autocomplete
-              #autocomplete
-              label="Autocomplete"
-              [items]="loadAutocomplete"
+              style="width:180px;max-width:100%"
+              label="Tìm kiếm 180px"
+              [items]="narrowAutocompleteItems"
               valueField="id"
-              displayField="name"
-              [(model)]="autocompleteValue"
-              [hideReadError]="hideReadError()"
-              (sdReadStateChange)="record('autocomplete', $event)">
-            </sd-autocomplete>
-            <p>Giá trị: {{ autocompleteValue() }}. Output: {{ latest().autocomplete }}</p>
-            <label
-              ><input type="checkbox" [checked]="hideReadError()" (change)="hideReadError.set(!hideReadError())" /> Host hiển thị lỗi bên
-              ngoài</label
-            >
-            @if (hideReadError() && !autocomplete.loading() && autocomplete.readState().status === 'error') {
-              <sd-data-state state="error" compact retryable (sdRetry)="autocomplete.retryRead()"></sd-data-state>
-            }
+              displayField="name" />
           </div>
-        </div>
-        <p>
-          Mở panel lỗi và nhấn Tab để tới retry; Enter/Space để thử lại, Escape để đóng panel. Giá trị đã chọn không bị xóa khi đọc lỗi.
-        </p>
-      </demo-section>
+        </demo-section>
       }
     </demo-page>
   \`,
   styles: \`
-    .control-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 16px; }
-    .demo-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
-    .table-demo { width: 100%; min-height: 320px; }
+    .control-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+      gap: 16px;
+    }
+    .demo-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
+    .table-demo {
+      width: 100%;
+      min-height: 320px;
+    }
     .custom-empty,
     [data-success] {
       padding: 16px;
@@ -1885,6 +1984,15 @@ type DemoControl = 'table' | 'select' | 'autocomplete';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DataStateDemoComponent {
+  readonly narrowSelectItems: SdSearch<DemoRow> = request =>
+    request.type === 'VALUE'
+      ? Promise.resolve([
+          { id: 1, name: 'Đã chọn A' },
+          { id: 2, name: 'Đã chọn B' },
+        ])
+      : Promise.reject(new Error('Demo search error'));
+  readonly narrowAutocompleteItems: SdSearch<DemoRow> = () => Promise.reject(new Error('Demo search error'));
+
   readonly retryCount = signal(0);
   readonly actionCount = signal(0);
 
@@ -1937,9 +2045,21 @@ export class DataStateDemoComponent {
   }
 }
 `,
-    scss: `.control-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 16px; }
-.demo-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
-.table-demo { width: 100%; min-height: 320px; }
+    scss: `.control-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 16px;
+}
+.demo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.table-demo {
+  width: 100%;
+  min-height: 320px;
+}
 .custom-empty,
 [data-success] {
   padding: 16px;
@@ -14842,117 +14962,179 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
   "components/badge/example-ba-dang": {
     ...SHOWCASE_PAGE_SOURCES["components/badge"],
     html: `<demo-section heading="Ba dạng" [props]="[{ name: 'type', value: 'icon / round / tag' }]">
-    <sd-badge type="icon" primary icon="check_circle" title="icon"></sd-badge>
-    <sd-badge type="round" primary title="round"></sd-badge>
-    <sd-badge type="tag" primary icon="label" title="tag"></sd-badge>
-  </demo-section>`,
+      <sd-badge type="icon" primary icon="check_circle" title="icon"></sd-badge>
+      <sd-badge type="round" primary title="round"></sd-badge>
+      <sd-badge type="tag" primary icon="label" title="tag"></sd-badge>
+    </demo-section>`,
   },
   "components/badge/example-fontset-switch": {
     ...SHOWCASE_PAGE_SOURCES["components/badge"],
     html: `<demo-section
-    heading="fontSet switch"
-    [props]="[{ name: 'fontSet', value: 'material-icons / material-icons-outlined / lucide' }, { name: 'type', value: 'icon / round / tag' }]"
-    note="Chon fontSet bang radio de so sanh alignment cua cung mot bo badge icon.">
-    <div class="d-flex flex-column gap-16 w-full">
-      <sd-radio
-        label="fontSet"
-        [items]="fontSetOptions"
-        valueField="value"
-        displayField="display"
-        [(model)]="selectedFontSet"
-        [form]="fontSetForm"></sd-radio>
+      heading="fontSet switch"
+      [props]="[
+        { name: 'fontSet', value: 'material-icons / material-icons-outlined / lucide' },
+        { name: 'type', value: 'icon / round / tag' },
+      ]"
+      note="Chon fontSet bang radio de so sanh alignment cua cung mot bo badge icon.">
+      <div class="d-flex flex-column gap-16 w-full">
+        <sd-radio
+          label="fontSet"
+          [items]="fontSetOptions"
+          valueField="value"
+          displayField="display"
+          [(model)]="selectedFontSet"
+          [form]="fontSetForm"></sd-radio>
 
-      <div class="d-flex flex-wrap align-items-center gap-16">
-        <sd-badge type="icon" success icon="check_circle" [fontSet]="selectedFontSet()" title="Approved"></sd-badge>
-        <sd-badge type="icon" info icon="visibility" [fontSet]="selectedFontSet()" title="Visible"></sd-badge>
-        <sd-badge type="icon" warning icon="warning" [fontSet]="selectedFontSet()" title="Warning"></sd-badge>
-      </div>
+        <div class="d-flex flex-wrap align-items-center gap-16">
+          <sd-badge type="icon" success icon="check_circle" [fontSet]="selectedFontSet()" title="Approved"></sd-badge>
+          <sd-badge type="icon" info icon="visibility" [fontSet]="selectedFontSet()" title="Visible"></sd-badge>
+          <sd-badge type="icon" warning icon="warning" [fontSet]="selectedFontSet()" title="Warning"></sd-badge>
+        </div>
 
-      <div class="d-flex flex-wrap align-items-center gap-16">
-        <sd-badge type="round" success icon="check_circle" [fontSet]="selectedFontSet()" title="Round success"></sd-badge>
-        <sd-badge type="round" info icon="local_offer" [fontSet]="selectedFontSet()" title="Round offer"></sd-badge>
-        <sd-badge type="round" error icon="delete" [fontSet]="selectedFontSet()" title="Round error"></sd-badge>
-      </div>
+        <div class="d-flex flex-wrap align-items-center gap-16">
+          <sd-badge type="round" success icon="check_circle" [fontSet]="selectedFontSet()" title="Round success"></sd-badge>
+          <sd-badge type="round" info icon="local_offer" [fontSet]="selectedFontSet()" title="Round offer"></sd-badge>
+          <sd-badge type="round" error icon="delete" [fontSet]="selectedFontSet()" title="Round error"></sd-badge>
+        </div>
 
-      <div class="d-flex flex-wrap align-items-center gap-16">
-        <sd-badge type="tag" primary icon="local_offer" [fontSet]="selectedFontSet()" title="Tag primary"></sd-badge>
-        <sd-badge type="tag" warning icon="warning" [fontSet]="selectedFontSet()" title="Tag warning"></sd-badge>
-        <sd-badge type="tag" secondary icon="visibility" [fontSet]="selectedFontSet()" title="Tag secondary"></sd-badge>
+        <div class="d-flex flex-wrap align-items-center gap-16">
+          <sd-badge type="tag" primary icon="local_offer" [fontSet]="selectedFontSet()" title="Tag primary"></sd-badge>
+          <sd-badge type="tag" warning icon="warning" [fontSet]="selectedFontSet()" title="Tag warning"></sd-badge>
+          <sd-badge type="tag" secondary icon="visibility" [fontSet]="selectedFontSet()" title="Tag secondary"></sd-badge>
+        </div>
       </div>
-    </div>
-  </demo-section>`,
+    </demo-section>`,
+  },
+  "components/badge/example-icon-va-noi-dung-dai": {
+    ...SHOWCASE_PAGE_SOURCES["components/badge"],
+    html: `<demo-section
+      heading="Icon và nội dung dài"
+      [props]="[
+        { name: 'type', value: 'icon' },
+        { name: 'size', value: 'sm / md / lg' },
+      ]"
+      note="Icon giữ nguyên kích thước và căn giữa với toàn bộ phần chữ khi nội dung xuống dòng.">
+      <div style="display:flex;flex-wrap:wrap;gap:24px">
+        @for (size of iconSizes; track size) {
+          <sd-badge
+            style="display:block;width:140px"
+            type="icon"
+            [size]="size"
+            icon="check_circle"
+            color="success"
+            title="Đã xác nhận thông tin khách hàng"
+            description="Nội dung bổ sung" />
+        }
+      </div>
+    </demo-section>`,
   },
   "components/badge/example-kem-mo-ta": {
     ...SHOWCASE_PAGE_SOURCES["components/badge"],
     html: `<demo-section heading="Kèm mô tả" [props]="[{ name: 'description', value: 'text' }]">
-    <sd-badge type="icon" success icon="check_circle" title="title" description="description"></sd-badge>
-    <sd-badge type="tag" primary icon="star" title="title" description="description"></sd-badge>
-  </demo-section>`,
+      <sd-badge type="icon" success icon="check_circle" title="title" description="description"></sd-badge>
+      <sd-badge type="tag" primary icon="star" title="title" description="description"></sd-badge>
+    </demo-section>`,
   },
   "components/badge/example-kich-thuoc-round": {
     ...SHOWCASE_PAGE_SOURCES["components/badge"],
-    html: `<demo-section heading="Kích thước round" [props]="[{ name: 'type', value: 'round' }, { name: 'size', value: 'sm / md / lg' }]">
-    <sd-badge type="round" primary title="sm" size="sm"></sd-badge>
-    <sd-badge type="round" primary title="md" size="md"></sd-badge>
-    <sd-badge type="round" primary title="lg" size="lg"></sd-badge>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Kích thước round"
+      [props]="[
+        { name: 'type', value: 'round' },
+        { name: 'size', value: 'sm / md / lg' },
+      ]">
+      <sd-badge type="round" primary title="sm" size="sm"></sd-badge>
+      <sd-badge type="round" primary title="md" size="md"></sd-badge>
+      <sd-badge type="round" primary title="lg" size="lg"></sd-badge>
+    </demo-section>`,
   },
   "components/badge/example-kich-thuoc-tag": {
     ...SHOWCASE_PAGE_SOURCES["components/badge"],
-    html: `<demo-section heading="Kích thước tag" [props]="[{ name: 'type', value: 'tag' }, { name: 'size', value: 'sm / md / lg' }]">
-    <sd-badge type="tag" info icon="label" title="sm" size="sm"></sd-badge>
-    <sd-badge type="tag" info icon="label" title="md" size="md"></sd-badge>
-    <sd-badge type="tag" info icon="label" title="lg" size="lg"></sd-badge>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Kích thước tag"
+      [props]="[
+        { name: 'type', value: 'tag' },
+        { name: 'size', value: 'sm / md / lg' },
+      ]">
+      <sd-badge type="tag" info icon="label" title="sm" size="sm"></sd-badge>
+      <sd-badge type="tag" info icon="label" title="md" size="md"></sd-badge>
+      <sd-badge type="tag" info icon="label" title="lg" size="lg"></sd-badge>
+    </demo-section>`,
   },
   "components/badge/example-mau-sac-icon": {
     ...SHOWCASE_PAGE_SOURCES["components/badge"],
-    html: `<demo-section heading="Màu sắc icon" [props]="[{ name: 'type', value: 'icon' }, { name: 'color', value: 'primary / secondary / success / info / warning / error' }]">
-    <sd-badge type="icon" primary icon="circle" title="primary"></sd-badge>
-    <sd-badge type="icon" secondary icon="circle" title="secondary"></sd-badge>
-    <sd-badge type="icon" success icon="circle" title="success"></sd-badge>
-    <sd-badge type="icon" info icon="circle" title="info"></sd-badge>
-    <sd-badge type="icon" warning icon="circle" title="warning"></sd-badge>
-    <sd-badge type="icon" error icon="circle" title="error"></sd-badge>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Màu sắc icon"
+      [props]="[
+        { name: 'type', value: 'icon' },
+        { name: 'color', value: 'primary / secondary / success / info / warning / error' },
+      ]">
+      <sd-badge type="icon" primary icon="circle" title="primary"></sd-badge>
+      <sd-badge type="icon" secondary icon="circle" title="secondary"></sd-badge>
+      <sd-badge type="icon" success icon="circle" title="success"></sd-badge>
+      <sd-badge type="icon" info icon="circle" title="info"></sd-badge>
+      <sd-badge type="icon" warning icon="circle" title="warning"></sd-badge>
+      <sd-badge type="icon" error icon="circle" title="error"></sd-badge>
+    </demo-section>`,
   },
   "components/badge/example-mau-sac-round": {
     ...SHOWCASE_PAGE_SOURCES["components/badge"],
-    html: `<demo-section heading="Màu sắc round" [props]="[{ name: 'type', value: 'round' }, { name: 'color', value: 'primary / secondary / success / info / warning / error' }]">
-    <sd-badge type="round" primary title="primary"></sd-badge>
-    <sd-badge type="round" secondary title="secondary"></sd-badge>
-    <sd-badge type="round" success title="success"></sd-badge>
-    <sd-badge type="round" info title="info"></sd-badge>
-    <sd-badge type="round" warning title="warning"></sd-badge>
-    <sd-badge type="round" error title="error"></sd-badge>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Màu sắc round"
+      [props]="[
+        { name: 'type', value: 'round' },
+        { name: 'color', value: 'primary / secondary / success / info / warning / error' },
+      ]">
+      <sd-badge type="round" primary title="primary"></sd-badge>
+      <sd-badge type="round" secondary title="secondary"></sd-badge>
+      <sd-badge type="round" success title="success"></sd-badge>
+      <sd-badge type="round" info title="info"></sd-badge>
+      <sd-badge type="round" warning title="warning"></sd-badge>
+      <sd-badge type="round" error title="error"></sd-badge>
+    </demo-section>`,
   },
   "components/badge/example-mau-sac-tag": {
     ...SHOWCASE_PAGE_SOURCES["components/badge"],
-    html: `<demo-section heading="Màu sắc tag" [props]="[{ name: 'type', value: 'tag' }, { name: 'color', value: 'primary / secondary / success / info / warning / error' }]">
-    <sd-badge type="tag" primary icon="label" title="primary"></sd-badge>
-    <sd-badge type="tag" secondary icon="label" title="secondary"></sd-badge>
-    <sd-badge type="tag" success icon="label" title="success"></sd-badge>
-    <sd-badge type="tag" info icon="label" title="info"></sd-badge>
-    <sd-badge type="tag" warning icon="label" title="warning"></sd-badge>
-    <sd-badge type="tag" error icon="label" title="error"></sd-badge>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Màu sắc tag"
+      [props]="[
+        { name: 'type', value: 'tag' },
+        { name: 'color', value: 'primary / secondary / success / info / warning / error' },
+      ]">
+      <sd-badge type="tag" primary icon="label" title="primary"></sd-badge>
+      <sd-badge type="tag" secondary icon="label" title="secondary"></sd-badge>
+      <sd-badge type="tag" success icon="label" title="success"></sd-badge>
+      <sd-badge type="tag" info icon="label" title="info"></sd-badge>
+      <sd-badge type="tag" warning icon="label" title="warning"></sd-badge>
+      <sd-badge type="tag" error icon="label" title="error"></sd-badge>
+    </demo-section>`,
   },
   "components/badge/example-round-voi-icon": {
     ...SHOWCASE_PAGE_SOURCES["components/badge"],
-    html: `<demo-section heading="Round với icon" [props]="[{ name: 'type', value: 'round' }, { name: 'icon', value: 'name' }, { name: 'size', value: 'sm / md / lg' }]">
-    <sd-badge type="round" success icon="check_circle" title="sm" size="sm"></sd-badge>
-    <sd-badge type="round" success icon="check_circle" title="md" size="md"></sd-badge>
-    <sd-badge type="round" success icon="check_circle" title="lg" size="lg"></sd-badge>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Round với icon"
+      [props]="[
+        { name: 'type', value: 'round' },
+        { name: 'icon', value: 'name' },
+        { name: 'size', value: 'sm / md / lg' },
+      ]">
+      <sd-badge type="round" success icon="check_circle" title="sm" size="sm"></sd-badge>
+      <sd-badge type="round" success icon="check_circle" title="md" size="md"></sd-badge>
+      <sd-badge type="round" success icon="check_circle" title="lg" size="lg"></sd-badge>
+    </demo-section>`,
   },
   "components/badge/example-so-dem": {
     ...SHOWCASE_PAGE_SOURCES["components/badge"],
-    html: `<demo-section heading="Số đếm" [props]="[{ name: 'type', value: 'round' }, { name: 'title', value: 'number' }]">
-    <sd-badge type="round" primary [title]="unreadCount()"></sd-badge>
-    <sd-badge type="round" error [title]="errorsCount()"></sd-badge>
-    <sd-badge type="round" warning title="99+"></sd-badge>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Số đếm"
+      [props]="[
+        { name: 'type', value: 'round' },
+        { name: 'title', value: 'number' },
+      ]">
+      <sd-badge type="round" primary [title]="unreadCount()"></sd-badge>
+      <sd-badge type="round" error [title]="errorsCount()"></sd-badge>
+      <sd-badge type="round" warning title="99+"></sd-badge>
+    </demo-section>`,
   },
   "components/breadcrumb/example-danh-sach-tinh": {
     ...SHOWCASE_PAGE_SOURCES["components/breadcrumb"],
@@ -15257,75 +15439,103 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
   "components/data-state/example-loi-va-retry-tren-ba-control": {
     ...SHOWCASE_PAGE_SOURCES["components/data-state"],
     html: `<demo-section
-    heading="Lỗi và retry trên ba control"
-    [props]="[{ name: 'readState / sdReadStateChange', value: 'idle → loading → ready / empty / error' }]">
-    <p>
-      Ban đầu máy chủ mô phỏng trả lỗi. Chọn “Có dữ liệu” hoặc “Rỗng hợp lệ”, rồi bấm Thử lại trên control. Chọn “Tiếp tục lỗi” để thử
-      lỗi liên tiếp. Select đọc riêng VALUE và SEARCH nên có thể cần retry từng kênh.
-    </p>
-    <div class="demo-actions">
-      <button type="button" [attr.aria-pressed]="mode() === 'ready'" (click)="mode.set('ready')">Có dữ liệu</button>
-      <button type="button" [attr.aria-pressed]="mode() === 'empty'" (click)="mode.set('empty')">Rỗng hợp lệ</button>
-      <button type="button" [attr.aria-pressed]="mode() === 'error'" (click)="mode.set('error')">Tiếp tục lỗi</button>
-    </div>
-    <p>
-      Chế độ phản hồi: {{ mode() }}. Số request: bảng {{ counts().table }}, select {{ counts().select }}, autocomplete
-      {{ counts().autocomplete }}.
-    </p>
-    <div class="table-demo">
-      <sd-table #table [option]="tableOption" (sdReadStateChange)="record('table', $event)"></sd-table>
-    </div>
-    <div class="demo-actions">
-      <button type="button" (click)="table.reload()">Đọc lại bảng</button>
-      <span>Output bảng: {{ latest().table }}</span>
-    </div>
-    <div class="control-grid">
-      <div>
+      heading="Lỗi và retry trên ba control"
+      [props]="[{ name: 'readState / sdReadStateChange', value: 'idle → loading → ready / empty / error' }]">
+      <p>
+        Ban đầu máy chủ mô phỏng trả lỗi. Chọn “Có dữ liệu” hoặc “Rỗng hợp lệ”, rồi bấm Thử lại trên control. Chọn “Tiếp tục lỗi” để thử
+        lỗi liên tiếp. Select đọc riêng VALUE và SEARCH nên có thể cần retry từng kênh.
+      </p>
+      <div class="demo-actions">
+        <button type="button" [attr.aria-pressed]="mode() === 'ready'" (click)="mode.set('ready')">Có dữ liệu</button>
+        <button type="button" [attr.aria-pressed]="mode() === 'empty'" (click)="mode.set('empty')">Rỗng hợp lệ</button>
+        <button type="button" [attr.aria-pressed]="mode() === 'error'" (click)="mode.set('error')">Tiếp tục lỗi</button>
+      </div>
+      <p>
+        Chế độ phản hồi: {{ mode() }}. Số request: bảng {{ counts().table }}, select {{ counts().select }}, autocomplete
+        {{ counts().autocomplete }}.
+      </p>
+      <div class="table-demo">
+        <sd-table #table [option]="tableOption" (sdReadStateChange)="record('table', $event)"></sd-table>
+      </div>
+      <div class="demo-actions">
+        <button type="button" (click)="table.reload()">Đọc lại bảng</button>
+        <span>Output bảng: {{ latest().table }}</span>
+      </div>
+      <div class="control-grid">
+        <div>
+          <sd-select
+            #select
+            label="Select — template lỗi riêng"
+            [items]="loadSelect"
+            valueField="id"
+            displayField="name"
+            [(model)]="selected"
+            (sdReadStateChange)="record('select', $event)">
+            <ng-template sdDataStateTemplate let-state let-retry="retry">
+              <sd-data-state
+                [state]="state"
+                title="Chưa tải được lựa chọn"
+                message="Vui lòng thử lại."
+                compact
+                retryable
+                (sdRetry)="retry()"></sd-data-state>
+            </ng-template>
+          </sd-select>
+          <p>Giá trị: {{ selected() }}. Output: {{ latest().select }}</p>
+        </div>
+        <div>
+          <sd-autocomplete
+            #autocomplete
+            label="Autocomplete"
+            [items]="loadAutocomplete"
+            valueField="id"
+            displayField="name"
+            [(model)]="autocompleteValue"
+            [hideReadError]="hideReadError()"
+            (sdReadStateChange)="record('autocomplete', $event)">
+          </sd-autocomplete>
+          <p>Giá trị: {{ autocompleteValue() }}. Output: {{ latest().autocomplete }}</p>
+          <label
+            ><input type="checkbox" [checked]="hideReadError()" (change)="hideReadError.set(!hideReadError())" /> Host hiển thị lỗi bên
+            ngoài</label
+          >
+          @if (hideReadError() && !autocomplete.loading() && autocomplete.readState().status === 'error') {
+            <sd-data-state state="error" compact retryable (sdRetry)="autocomplete.retryRead()"></sd-data-state>
+          }
+        </div>
+      </div>
+      <p>
+        Mở panel lỗi và nhấn Tab để tới retry; Enter/Space để thử lại, Escape để đóng panel. Giá trị đã chọn không bị xóa khi đọc lỗi.
+      </p>
+    </demo-section>`,
+  },
+  "components/data-state/example-panel-hep-va-lua-chon-dang-giu": {
+    ...SHOWCASE_PAGE_SOURCES["components/data-state"],
+    html: `<demo-section
+      heading="Panel hẹp và lựa chọn đang giữ"
+      [props]="[
+        { name: 'multiple', value: 'true' },
+        { name: 'minWidthPanel', value: '180px' },
+      ]"
+      note="Lỗi nằm giữa, dưới các mục đã chọn. Panel 180px vẫn đọc được thông báo và bấm Thử lại.">
+      <div style="display:flex;flex-wrap:wrap;gap:24px;width:100%">
         <sd-select
-          #select
-          label="Select — template lỗi riêng"
-          [items]="loadSelect"
+          style="width:180px;max-width:100%"
+          label="Giữ hai lựa chọn"
+          multiple
+          minWidthPanel="180px"
+          [items]="narrowSelectItems"
           valueField="id"
           displayField="name"
-          [(model)]="selected"
-          (sdReadStateChange)="record('select', $event)">
-          <ng-template sdDataStateTemplate let-state let-retry="retry">
-            <sd-data-state
-              [state]="state"
-              title="Chưa tải được lựa chọn"
-              message="Vui lòng thử lại."
-              compact
-              retryable
-              (sdRetry)="retry()"></sd-data-state>
-          </ng-template>
-        </sd-select>
-        <p>Giá trị: {{ selected() }}. Output: {{ latest().select }}</p>
-      </div>
-      <div>
+          [model]="[1, 2]" />
         <sd-autocomplete
-          #autocomplete
-          label="Autocomplete"
-          [items]="loadAutocomplete"
+          style="width:180px;max-width:100%"
+          label="Tìm kiếm 180px"
+          [items]="narrowAutocompleteItems"
           valueField="id"
-          displayField="name"
-          [(model)]="autocompleteValue"
-          [hideReadError]="hideReadError()"
-          (sdReadStateChange)="record('autocomplete', $event)">
-        </sd-autocomplete>
-        <p>Giá trị: {{ autocompleteValue() }}. Output: {{ latest().autocomplete }}</p>
-        <label
-          ><input type="checkbox" [checked]="hideReadError()" (change)="hideReadError.set(!hideReadError())" /> Host hiển thị lỗi bên
-          ngoài</label
-        >
-        @if (hideReadError() && !autocomplete.loading() && autocomplete.readState().status === 'error') {
-          <sd-data-state state="error" compact retryable (sdRetry)="autocomplete.retryRead()"></sd-data-state>
-        }
+          displayField="name" />
       </div>
-    </div>
-    <p>
-      Mở panel lỗi và nhấn Tab để tới retry; Enter/Space để thử lại, Escape để đóng panel. Giá trị đã chọn không bị xóa khi đọc lỗi.
-    </p>
-  </demo-section>`,
+    </demo-section>`,
   },
   "components/data-state/example-success": {
     ...SHOWCASE_PAGE_SOURCES["components/data-state"],

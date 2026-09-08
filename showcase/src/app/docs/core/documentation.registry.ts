@@ -160,7 +160,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/badge/sd-badge',
     keywords: ['status', 'count', 'tag', 'label'],
     status: 'stable',
-    demoSectionCount: 10,
+    demoSectionCount: 11,
     loadComponent: () => import('../../pages/components/badge/badge-demo.component').then(m => m.BadgeDemoComponent),
   }),
   defineDocPage({
@@ -238,7 +238,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/data-state/sd-data-state',
     keywords: ['loading', 'empty', 'error', 'forbidden', 'retry'],
     status: 'stable',
-    demoSectionCount: 6,
+    demoSectionCount: 7,
     loadComponent: () => import('../../pages/components/data-state/data-state-demo.component').then(m => m.DataStateDemoComponent),
   }),
   defineDocPage({

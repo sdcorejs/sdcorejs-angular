@@ -147,27 +147,54 @@ $badges: '';
 }
 
 .c-badge-icon {
-  min-width: 50px;
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+
+  .c-icon {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    max-width: 100%;
+  }
+
   .c-material-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
+    flex: 0 0 auto;
     padding: 0;
     line-height: 1;
     @each $name, $size in $badgeIconSize {
       &.c-#{$name} {
-        width: #{$size + 4}px;
-        height: #{$size + 4}px;
+        width: #{$size}px;
+        height: #{$size}px;
         font-size: #{$size}px;
       }
     }
-
     @each $name, $color in $badgeIconColor {
       &.c-#{$name} {
         color: $color;
       }
     }
+  }
+
+  .c-badge-copy {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .c-badge-title {
+    line-height: 20px;
+  }
+
+  .c-badge-description {
+    line-height: 14px;
   }
 }
 

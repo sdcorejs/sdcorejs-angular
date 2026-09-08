@@ -1,3 +1,4 @@
+@use '../../../assets/scss/core/read-state-panel' as readState;
 @use '../../../assets/scss/core/color.scss' as color;
 @use '../../../assets/scss/core/inline-edit' as inline;
 @use 'sass:map';
@@ -156,4 +157,8 @@
 // why: Material yêu cầu option để giữ panel mở; anchor không được render thành kết quả rỗng giả.
 ::ng-deep .sd-autocomplete-panel .sd-read-state-anchor {
   display: none;
+}
+
+::ng-deep .sd-autocomplete-panel {
+  @include readState.read-state-panel;
 }

@@ -122,22 +122,6 @@
       <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onSelect($event.option.value)" class="sd-autocomplete-panel">
         @let _filteredItems = filteredItems();
 
-        <!-- why: không hiển thị lỗi kênh cũ cùng spinner của kênh đang đọc/retry. -->
-        @if (!_loading && _readState.status === 'error') {
-          <!-- why: anchor giữ panel mở khi không có option; nút retry không nằm trong mat-option. -->
-          <mat-option disabled class="sd-read-state-anchor" aria-hidden="true"></mat-option>
-          @if (!hideReadError()) {
-            <div
-              class="sd-read-state-region"
-              role="presentation"
-              (mousedown)="$event.preventDefault()"
-              (click)="$event.stopPropagation()"
-              (keydown)="onReadRegionKeydown($event)">
-              <ng-container [ngTemplateOutlet]="readRegion" [ngTemplateOutletContext]="{ state: 'error' }"></ng-container>
-            </div>
-          }
-        }
-
         @if (_filteredItems?.length) {
           @for (item of _filteredItems; track $index) {
             <mat-option
@@ -157,6 +141,22 @@
         } @else if (hasSearched() && !_isTyping && _readState.status === 'empty') {
           <mat-option disabled class="sd-read-state-anchor" aria-hidden="true"></mat-option>
           <ng-container [ngTemplateOutlet]="readRegion" [ngTemplateOutletContext]="{ state: 'empty' }"></ng-container>
+        }
+
+        <!-- why: không hiển thị lỗi kênh cũ cùng spinner của kênh đang đọc/retry. -->
+        @if (!_loading && _readState.status === 'error') {
+          <!-- why: anchor giữ panel mở khi không có option; nút retry không nằm trong mat-option. -->
+          <mat-option disabled class="sd-read-state-anchor" aria-hidden="true"></mat-option>
+          @if (!hideReadError()) {
+            <div
+              class="sd-read-state-region"
+              role="presentation"
+              (mousedown)="$event.preventDefault()"
+              (click)="$event.stopPropagation()"
+              (keydown)="onReadRegionKeydown($event)">
+              <ng-container [ngTemplateOutlet]="readRegion" [ngTemplateOutletContext]="{ state: 'error' }"></ng-container>
+            </div>
+          }
         }
 
         @if (addable() && sdAdd.observed) {

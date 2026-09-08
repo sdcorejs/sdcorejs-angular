@@ -1,3 +1,4 @@
+@use '../../../assets/scss/core/read-state-panel' as readState;
 @use '../../../assets/scss/core/color.scss' as color;
 @use '../../../assets/scss/core/inline-edit' as inline;
 @use 'sass:map';
@@ -139,6 +140,8 @@
         color: #dadada;
       }
       .c-search-input {
+        min-width: 0;
+        width: 100%;
         background-color: #fff;
         border: none;
         outline: none;
@@ -324,4 +327,8 @@
 // why: Material yêu cầu có option để mở panel; anchor không hiển thị hay tham gia chọn.
 ::ng-deep .sd-select-panel .sd-read-state-anchor {
   display: none;
+}
+
+::ng-deep .sd-select-panel {
+  @include readState.read-state-panel;
 }

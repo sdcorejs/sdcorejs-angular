@@ -447,8 +447,8 @@ describe('SdBadge', () => {
       expect(style.justifyContent).toBe('center');
       expect(style.paddingLeft).toBe('0px');
       expect(style.paddingRight).toBe('0px');
-      expect(style.width).toBe('20px');
-      expect(style.height).toBe('20px');
+      expect(style.width).toBe('16px');
+      expect(style.height).toBe('16px');
     });
 
     it('centers tag icon within the declared badge icon box', () => {

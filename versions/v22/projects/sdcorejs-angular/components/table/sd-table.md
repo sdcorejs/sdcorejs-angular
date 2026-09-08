@@ -971,6 +971,8 @@ The action bar keeps a layout footprint inside the owning scroll container, so t
 
 ### Selection toolbar layout
 
+The selected-state icon and the mobile selection count use the success color.
+
 The desktop selection toolbar reserves space inside its table, immediately above the pagination footer. It does not float over the page. A single message shows the selection count; a custom `selector.message` is preserved verbatim, without another count badge.
 
 The first two permitted actions remain visible as `sd-button size="sm"`; additional actions appear under More. Existing child groups keep their labels and allowed children. The action resolver and callbacks still use the complete selection. The clear-selection control has an accessible name, and action autoIds retain their filtered action indexes. The toolbar wraps on narrow screens. Existing row-command sizing is unchanged.

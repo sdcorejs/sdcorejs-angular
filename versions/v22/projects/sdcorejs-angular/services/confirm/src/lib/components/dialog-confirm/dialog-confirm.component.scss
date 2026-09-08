@@ -82,6 +82,25 @@
   sd-radio {
     height: auto;
   }
+
+  // why: inline-block của vòng radio tạo phần dư baseline 2px ở density nhỏ, gây scroll giả.
+  ::ng-deep .mdc-radio {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  // why: vùng bấm M3 cao 48px phải nằm trong hàng, không tràn khỏi content cuộn.
+  ::ng-deep .mat-mdc-radio-button {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+  }
+
+  ::ng-deep .c-radio-group-row {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
 }
 
 .sd-dialog-confirm__actions {

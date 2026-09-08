@@ -1,5 +1,7 @@
 # `<sd-select>`
 
+Vùng lỗi trong panel được căn giữa và nằm sau danh sách dữ liệu đang giữ lại, bao gồm các mục đã chọn ở chế độ multiple. Panel hẹp tự giảm khoảng đệm và kích thước icon, cho phép thông báo xuống dòng; nút Thử lại vẫn dùng SdButton nhỏ. Bố cục compact ngoài panel không đổi.
+
 ## Trạng thái đọc lazy và retry
 
 `readState()` là signal readonly `SdSearchReadState`; `(sdReadStateChange)` phát
