@@ -193,7 +193,6 @@
             <!-- why: MatSelect cần option trực tiếp để giữ panel mở khi chỉ có lỗi. -->
             <mat-option disabled class="sd-read-state-anchor" aria-hidden="true"></mat-option>
           }
-          <ng-container [ngTemplateOutlet]="readRegion"></ng-container>
           @let _filteredItems = filteredItems();
           @if (_filteredItems) {
             @if (!_filteredItems.length && !_loading && _readState.status !== 'error') {
@@ -229,6 +228,8 @@
               }
             }
           }
+
+          <ng-container [ngTemplateOutlet]="readRegion"></ng-container>
 
           @if (_loading) {
             <mat-option disabled class="sd-loading-option">
@@ -347,7 +348,6 @@
             <!-- why: MatSelect cần option trực tiếp để giữ panel mở khi chỉ có lỗi. -->
             <mat-option disabled class="sd-read-state-anchor" aria-hidden="true"></mat-option>
           }
-          <ng-container [ngTemplateOutlet]="readRegion"></ng-container>
           @let _filteredItems = filteredItems();
           @if (_filteredItems) {
             @if (!_filteredItems.length && !_loading && _readState.status !== 'error') {
@@ -384,6 +384,8 @@
               }
             }
           }
+
+          <ng-container [ngTemplateOutlet]="readRegion"></ng-container>
 
           @if (_loading) {
             <mat-option disabled class="sd-loading-option">

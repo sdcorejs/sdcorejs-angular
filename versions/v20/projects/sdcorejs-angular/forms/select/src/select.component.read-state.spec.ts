@@ -143,6 +143,27 @@ describe('SdSelect read channels', () => {
     f.destroy();
   }));
 
+  it('centers a narrow error panel below retained multiple selections', fakeAsync(() => {
+    const loader = jasmine
+      .createSpy('loader')
+      .and.callFake(req => (req.type === 'VALUE' ? Promise.resolve([{ id: '1', name: 'Selected item' }]) : Promise.reject('failed')));
+    const { f, comp, selection } = setup(loader, ['1']);
+    f.componentRef.setInput('minWidthPanel', '180px');
+    f.detectChanges();
+    comp.open();
+    tick(600);
+    f.detectChanges();
+    const panel = comp.selectRef()!.panel.nativeElement as HTMLElement;
+    const option = panel.querySelector<HTMLElement>('mat-option:not(.sd-read-state-anchor)')!;
+    const state = panel.querySelector<HTMLElement>('.sd-data-state')!;
+    expect(option.compareDocumentPosition(state) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(getComputedStyle(state).textAlign).toBe('center');
+    expect(state.scrollWidth).toBeLessThanOrEqual(panel.clientWidth);
+    expect(comp.valueModel()).toEqual(['1']);
+    expect(selection).not.toHaveBeenCalled();
+    f.destroy();
+  }));
+
   it('retains all selected items plus the unselected limit after SEARCH retry', fakeAsync(() => {
     const selected = [
       { id: '1', name: 'One' },

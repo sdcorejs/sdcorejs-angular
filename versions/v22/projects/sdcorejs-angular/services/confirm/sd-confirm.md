@@ -358,3 +358,7 @@ confirm.confirm('Kiểm tra thông tin trước khi tiếp tục.', {
   noTitle: 'Hủy',
 });
 ```
+
+### Radio layout in constrained dialogs
+
+`withRadio` contains the full 48px M3 touch target in each choice row and removes inline baseline overflow. Row choices wrap when the dialog is narrow. Long choice lists and messages still scroll inside the content area when they exceed the viewport; the action footer remains reachable.

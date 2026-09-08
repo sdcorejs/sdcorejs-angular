@@ -112,6 +112,24 @@ describe('SdAutocomplete read requests', () => {
     f.destroy();
   }));
 
+  it('centers errors below retained autocomplete results without overflowing a narrow panel', fakeAsync(() => {
+    const loader = jasmine
+      .createSpy('loader')
+      .and.callFake(req => (req.type === 'VALUE' ? Promise.reject('failed') : Promise.resolve([{ id: '2', name: 'Available item' }])));
+    const { f, comp } = setup(loader, '1');
+    comp.autocompleteTrigger()!.openPanel();
+    f.detectChanges();
+    const panel = comp.autocompleteTrigger()!.autocomplete.panel!.nativeElement as HTMLElement;
+    panel.style.width = '180px';
+    const option = panel.querySelector<HTMLElement>('mat-option:not(.sd-read-state-anchor)')!;
+    const state = panel.querySelector<HTMLElement>('.sd-data-state')!;
+    expect(option.compareDocumentPosition(state) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(getComputedStyle(state).textAlign).toBe('center');
+    expect(state.scrollWidth).toBeLessThanOrEqual(panel.clientWidth);
+    expect(comp.valueModel()).toBe('1');
+    f.destroy();
+  }));
+
   it('caches successful empty responses and keeps search alive after error', fakeAsync(() => {
     const loader = jasmine.createSpy('loader').and.returnValue(of([]));
     const { f, comp } = setup(loader);

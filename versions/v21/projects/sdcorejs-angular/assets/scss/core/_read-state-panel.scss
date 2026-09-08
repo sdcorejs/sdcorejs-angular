@@ -1,0 +1,57 @@
+// why: panel hẹp dùng state căn giữa; compact ở trang/bảng vẫn giữ bố cục riêng.
+@mixin read-state-panel {
+  .sd-read-state-region {
+    container: sd-read-panel / inline-size;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    text-align: center;
+
+    .sd-data-state.sd-data-state--compact {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 120px;
+      padding: 20px 16px;
+      text-align: center;
+    }
+
+    .sd-data-state.sd-data-state--compact .sd-data-state__symbol {
+      margin: 0 0 8px;
+    }
+
+    .sd-data-state.sd-data-state--compact .sd-data-state__message {
+      max-width: 100%;
+    }
+
+    .sd-data-state.sd-data-state--compact .sd-data-state__actions {
+      justify-content: center;
+    }
+  }
+
+  @container sd-read-panel (max-width: 220px) {
+    .sd-read-state-region .sd-data-state.sd-data-state--compact {
+      padding: 8px 10px;
+    }
+
+    .sd-read-state-region .sd-data-state.sd-data-state--compact .sd-data-state__symbol {
+      width: 24px;
+      height: 24px;
+      margin-bottom: 4px;
+    }
+
+    .sd-read-state-region .sd-data-state.sd-data-state--compact .sd-data-state__icon {
+      width: 18px;
+      height: 18px;
+      font-size: 18px;
+    }
+
+    .sd-read-state-region .sd-data-state.sd-data-state--compact .sd-data-state__message {
+      line-height: 18px;
+    }
+
+    .sd-read-state-region .sd-data-state.sd-data-state--compact .sd-data-state__actions {
+      margin-top: 6px;
+    }
+  }
+}

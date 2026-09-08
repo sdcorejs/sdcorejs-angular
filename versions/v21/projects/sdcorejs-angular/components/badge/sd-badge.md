@@ -135,3 +135,7 @@ None — content is driven by `title`, `description`, and `icon`.
 - `<sd-tag>` — for tag/chip inputs in forms
 - `<sd-avatar>` — for user identity (often paired beside a status badge)
 - `<sd-quick-action>` — icon-only action with popover (when you need actual interaction)
+
+### Icon alignment
+
+For `type="icon"`, the glyph keeps its declared 16/18/24px size (sm/md/lg), does not shrink, and is vertically centered against the complete title/description block. Long text wraps within the available width. The icon-to-text gap is 4px without asymmetric icon padding. Round and tag variants retain their sizing.

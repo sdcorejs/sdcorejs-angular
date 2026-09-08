@@ -18,8 +18,8 @@
   height: 28px;
   padding: 0 6px;
   border-radius: 8px;
-  background: var(--sd-primary);
-  color: var(--mat-sys-on-primary, var(--sd-primary-contrast, #fff));
+  background: var(--sd-success-dark, #2e7d32);
+  color: var(--sd-success-contrast, #fff);
   font-variant-numeric: tabular-nums;
 }
 .sd-mobile-action-buttons {
