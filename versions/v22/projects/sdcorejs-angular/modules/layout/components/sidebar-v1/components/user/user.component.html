@@ -1,3 +1,4 @@
+@let _isShowSidebar = isShowSidebar();
 <div class="c-layout-user-wrapper">
   <sd-layout-user-menu
     class="c-layout-user-avatar"
@@ -10,9 +11,10 @@
     <button
       type="button"
       class="c-layout-icon-toggle"
+      [attr.aria-expanded]="_isShowSidebar"
       [attr.aria-label]="'core.module.layout.sidebar.toggle' | sdTranslate"
       (click)="onToggleMenuLock($event)">
-      <sd-icon [name]="isShowSidebar() ? 'keyboard_arrow_right' : 'keyboard_arrow_left'"></sd-icon>
+      <sd-icon size="18px" fontSet="material-icons-outlined" [name]="_isShowSidebar ? 'chevron_left' : 'chevron_right'"></sd-icon>
     </button>
   }
 </div>

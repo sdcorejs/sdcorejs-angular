@@ -12,6 +12,8 @@ Use it for back-office portals that need permission-aware navigation, responsive
 
 The V1 desktop menu tree scrolls to the bottom of the sidebar. Only the icon rail reserves space for the fixed user avatar and collapse controls; long lists in both columns remain independently scrollable.
 
+V1 uses a light 304px sidebar with a 56px module rail, a bold neutral title, and compact Material Icons Outlined from the existing menu `icon` / `iconUrl` fields. Child branches have guide lines and a separate active-page marker; the existing route matching, search, permissions, pinning and expand/collapse behavior are unchanged. The avatar and compact collapse control occupy only the bottom of the rail. No footer is reserved below the menu tree. Menu/sidebar configuration has no description field, so the header renders only its title without a placeholder or reserved description space. The existing mobile layout remains selected by the same responsive rules.
+
 ## Public surface
 
 | API                                                | Purpose                                                                                        |

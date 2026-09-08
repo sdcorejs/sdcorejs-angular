@@ -1,272 +1,352 @@
-// Sử dụng ng-deep do mat-tooltip sinh ra element ở lớp layout ở body (nằm ngoài component hiện tại nên k dùng được :host ::ng-deep)
-// Note: Đã định danh class bằng uuid nên sẽ không bị ghi đè css vào mat-tooltip khác
-::ng-deep {
-  .mat-mdc-tooltip-panel:has(.c-tooltip-menu-group-7a22ab15-0083-4d4c-9c0c-00a30bc8c140) {
-    pointer-events: none;
-  }
+// Tooltip lives in the document overlay; keep this selector specific to V1.
+::ng-deep .mat-mdc-tooltip-panel:has(.c-tooltip-menu-group-7a22ab15-0083-4d4c-9c0c-00a30bc8c140) {
+  pointer-events: none;
 }
 
-// Margin-left 16px mỗi cấp menu - hardcode 3 cấp
-:host ::ng-deep {
-  .mat-nested-tree-node {
-    .c-menu-node-group {
-      .c-menu-node-description-content {
-        margin-left: 16px !important;
-      }
-
-      .mat-nested-tree-node {
-        .c-menu-node-group {
-          .c-menu-node-description-content {
-            margin-left: 32px !important;
-          }
-
-          .mat-nested-tree-node {
-            .c-menu-node-group {
-              .c-menu-node-description-content {
-                margin-left: 48px !important;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+:host {
+  display: block;
+  height: 100%;
 }
 
-.c-menu-node-group {
-  margin-top: 0;
-  margin-bottom: 0;
-}
-
-// End
-
-// Css Sidebar
 .wrapper {
+  --sidebar-surface: var(--sd-white, #fff);
+  --sidebar-rail: color-mix(in srgb, var(--sd-surface-muted, #e7e8ed) 35%, var(--sidebar-surface));
+  --sidebar-line: color-mix(in srgb, var(--sd-border, #c4c6d0) 45%, var(--sidebar-surface));
+  --sidebar-ink: var(--sd-text, #252c38);
+  --sidebar-muted: var(--sd-text-secondary, #6b7280);
   position: relative;
   display: flex;
   flex-direction: column;
-  width: 290px;
-  background-color: #fff;
+  width: min(304px, 100vw);
+  color: var(--sidebar-ink);
+  background: linear-gradient(to right, var(--sidebar-rail) 56px, var(--sidebar-surface) 56px);
 
-  .c-header {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    height: 52px;
-    padding: 3px;
-    gap: 16px;
-
-    .c-logo {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 52px;
-      height: 52px;
-
-      a {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        height: 100%;
-        color: var(--sd-text-secondary, #44474f);
-      }
-
-      img {
-        width: 32px;
-        height: 32px;
-        object-fit: contain;
-      }
-    }
-
-    .c-title-menu-group {
-      display: flex;
-      align-items: center;
-      font-size: 18px;
-      font-weight: 500;
-      flex: 1;
-    }
+  &,
+  * {
+    box-sizing: border-box;
   }
 
-  .c-body {
-    flex: 1;
-    min-height: 0;
-    overflow-y: hidden;
-
-    .c-menu {
-      height: 100%;
-      display: flex;
-
-      .c-menu-group {
-        // why: Chỉ cột icon dành chỗ cho avatar, danh sách menu dùng hết chiều cao.
-        margin-bottom: 80px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        flex: 0 0 60px;
-        min-width: 60px;
-        width: 60px;
-        overflow-y: scroll;
-        scrollbar-width: none;
-
-        .c-menu-group-icon {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          min-height: 50px;
-          width: 52px;
-          border-radius: 8px;
-          transition: all 0.15s;
-
-          img {
-            height: 24px;
-            width: 24px;
-            object-fit: contain;
-          }
-        }
-      }
-
-      .c-menu-tree {
-        flex: 1;
-        min-height: 0;
-        display: flex;
-        flex-direction: column;
-        padding: 3px 4px 3px 3px;
-
-        .c-menu-tree-search {
-          flex-shrink: 0;
-          .c-search-prefix-icon {
-            cursor: pointer;
-            color: #757575;
-            padding: 0px;
-
-            &.search {
-              width: 20px;
-              height: 20px;
-              font-size: 18px;
-            }
-
-            &.cancel {
-              width: 16px;
-              height: 16px;
-              font-size: 16px;
-            }
-          }
-        }
-
-        .c-menu-tree-container {
-          flex: 1;
-          min-height: 0;
-          overflow-y: scroll;
-          scrollbar-width: none;
-
-          .c-menu-node {
-            width: 100%;
-            display: flex;
-            cursor: pointer;
-            min-height: 44px;
-            padding: 8px;
-            border-radius: 8px;
-
-            .c-menu-node-icon {
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              height: 100%;
-            }
-
-            button.c-menu-node-description {
-              width: 100%;
-              padding: 0;
-              border: 0;
-              background: transparent;
-              color: inherit;
-              text-align: left;
-              cursor: pointer;
-            }
-
-            .c-menu-node-description {
-              flex: 1;
-              display: flex;
-              align-items: center;
-
-              .c-menu-node-description-content {
-                flex: 1;
-                display: flex;
-                align-items: center;
-                flex-wrap: wrap;
-                white-space: pre-wrap;
-                font-size: 15px;
-              }
-
-              .c-menu-node-description-icon-expand {
-                display: flex;
-                align-items: center;
-                justify-content: start;
-                background-color: transparent;
-                border: none;
-                font-size: 20px;
-              }
-
-              // why: nút ghim đổi từ <sd-icon> sang <button> để bàn phím ghim được → reset padding
-              // mặc định của button + thêm focus ring. opacity:0 giữ hành vi hiện-khi-hover, nhưng
-              // PHẢI hiện lại khi nhận focus bàn phím — nếu không nó là "nút vô hình mà tab tới được".
-              .c-menu-node-description-icon-pin {
-                display: flex;
-                align-items: center;
-                justify-content: start;
-                background-color: transparent;
-                border: none;
-                padding: 0;
-                font-size: 18px;
-                opacity: 0;
-
-                &:focus-visible {
-                  opacity: 1;
-                  outline: 2px solid var(--sd-primary, #005cbb);
-                  outline-offset: 2px;
-                }
-              }
-            }
-
-            a.c-menu-node-description-content {
-              color: inherit;
-              text-decoration: none;
-            }
-
-            .c-menu-node-description-content:focus-visible,
-            button.c-menu-node-description:focus-visible {
-              outline: 2px solid var(--sd-primary, #005cbb);
-              outline-offset: -2px;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  .c-footer {
+  &::before {
+    content: '';
     position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 60px;
-    height: 80px;
-  }
-
-  .c-vertical {
-    position: fixed;
-    height: 100vh;
-    left: 58px;
-    width: 2px;
-    background-color: #f8f9fa;
+    inset: 0 auto 0 55px;
+    width: 1px;
+    background: var(--sidebar-line);
     pointer-events: none;
   }
 }
 
-// why: Keep the V1 search focus visible without inheriting thick consumer-wide rings.
+.c-header {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  min-height: 42px;
+}
+
+.c-logo {
+  grid-column: 1;
+  display: grid;
+  place-items: center;
+  height: 42px;
+
+  a {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 40px;
+    border-radius: 9px;
+    color: var(--sidebar-muted);
+  }
+
+  img {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+  }
+}
+
+.c-title-menu-group {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 10px 14px 12px;
+  color: var(--sidebar-ink);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+  letter-spacing: -0.2px;
+  overflow-wrap: anywhere;
+}
+
+.c-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.c-menu {
+  display: flex;
+  height: 100%;
+}
+
+.c-menu-group {
+  display: flex;
+  flex: 0 0 56px;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 56px;
+  min-height: 0;
+  margin-bottom: 86px;
+  padding: 5px 0 8px;
+  overflow-y: auto;
+  scrollbar-width: none;
+
+  > button {
+    flex: 0 0 auto;
+    border-radius: 9px;
+  }
+
+  .c-menu-group-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 40px;
+    min-height: 40px;
+    border-radius: 9px;
+    font-size: 22px;
+
+    img {
+      width: 22px;
+      height: 22px;
+      object-fit: contain;
+    }
+  }
+}
+
+.c-menu-tree {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.c-menu-tree-search {
+  flex: 0 0 auto;
+  padding: 0 14px 12px;
+  border-bottom: 1px solid var(--sidebar-line);
+
+  .c-search-prefix-icon {
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    font-size: 18px;
+    color: var(--sidebar-muted);
+    &.cancel {
+      cursor: pointer;
+    }
+  }
+}
+
+.c-menu-tree-container {
+  flex: 1;
+  min-height: 0;
+  padding: 10px 8px 14px;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sidebar-line) transparent;
+  overscroll-behavior: contain;
+}
+
+.c-menu-node {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 40px;
+  margin: 2px 0;
+  padding: 0;
+  border-radius: 7px;
+  cursor: pointer;
+  color: var(--sidebar-ink);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.c-menu-node-description {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.c-menu-node-description-content {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  align-self: stretch;
+  gap: 9px;
+  min-width: 0;
+  padding: 8px;
+  color: inherit;
+  font: inherit;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.c-menu-node-label {
+  flex: 1;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.c-menu-node-icon {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  font-size: 20px;
+  object-fit: contain;
+  color: var(--sidebar-muted);
+}
+
+.c-menu-node-description-icon-expand,
+.c-menu-node-description-icon-pin {
+  display: flex;
+  flex: 0 0 20px;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 24px;
+  margin-right: 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--sidebar-muted);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.c-menu-node-description-icon-pin {
+  opacity: 0;
+  &:focus-visible {
+    opacity: 1 !important;
+  }
+}
+
+.c-menu-node.is-ancestor {
+  color: var(--sidebar-accent);
+  .c-menu-node-description-content,
+  .c-menu-node-icon,
+  .c-menu-node-description-icon-expand {
+    color: inherit;
+  }
+}
+
+.c-menu-node.is-active {
+  color: var(--sidebar-accent);
+
+  .c-menu-node-icon {
+    color: inherit;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 9px;
+    bottom: 9px;
+    width: 3px;
+    border-radius: 2px;
+    background: var(--sidebar-accent);
+  }
+}
+
+// Each child outlet owns its own indent; labels never accumulate fixed margins.
+.c-menu-node-group {
+  position: relative;
+  margin: 0 0 7px 19px;
+  padding: 1px 0 1px 16px;
+  border-left: 1px solid var(--sidebar-line);
+
+  .c-menu-node {
+    min-height: 34px;
+    border-radius: 6px;
+  }
+  .c-menu-node-description-content {
+    padding: 7px 8px;
+    font-weight: 400;
+  }
+  .c-menu-node-description {
+    min-height: 34px;
+  }
+  .c-menu-node-icon {
+    display: none;
+  }
+  .c-menu-node.is-active::before {
+    left: -18px;
+  }
+  .c-menu-node.is-active .c-menu-node-description-content,
+  .c-menu-node.is-ancestor .c-menu-node-description-content {
+    font-weight: 500;
+  }
+
+  .c-menu-node-group {
+    margin-left: 8px;
+    padding-left: 7px;
+    .c-menu-node.is-active::before {
+      left: -9px;
+    }
+  }
+}
+
+.c-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 56px;
+  height: 86px;
+  background: var(--sidebar-rail);
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--sidebar-accent, var(--sd-primary, #005cbb));
+  outline-offset: -2px;
+}
+
 :host ::ng-deep .c-menu-tree-search input:focus-visible {
   outline: 1px solid var(--sd-primary, #005cbb);
   outline-offset: 1px;
 }
 
-// End
+@media (pointer: coarse) {
+  .c-menu-node,
+  .c-menu-node-group .c-menu-node,
+  .c-menu-node-description,
+  .c-menu-node-group .c-menu-node-description {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .c-menu-group-icon,
+  .c-menu-node,
+  .c-menu-node * {
+    transition: none !important;
+  }
+}

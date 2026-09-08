@@ -2,34 +2,57 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 60px;
-  height: 80px;
-}
-
-// why: The legacy V1 rail reserves a fixed avatar slot independent of the shared disclosure internals.
-.c-layout-user-avatar {
-  display: block;
+  justify-content: flex-end;
+  gap: 4px;
   width: 56px;
-  height: 52px;
+  height: 86px;
+  padding-bottom: 6px;
+  box-sizing: border-box;
 }
-
-// why: The rail pin control keeps the legacy footer geometry while using a semantic button.
+.c-layout-user-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 40px;
+  cursor: pointer;
+}
 .c-layout-icon-toggle {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 32px;
   height: 28px;
+  min-height: 28px;
   margin: 0;
   padding: 0;
   border: 0;
-  border-top: 1px solid var(--sd-black200, #f0f0f0);
+  border-radius: 6px;
   background: transparent;
-  color: var(--sd-black400, #8c8c8c);
+  color: var(--sd-text-secondary, #6b7280);
   cursor: pointer;
+  mat-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+  }
 }
-
+.c-layout-icon-toggle:hover {
+  background: color-mix(in srgb, var(--sd-text, #252c38) 5%, transparent);
+  color: var(--sd-text, #252c38);
+}
 .c-layout-icon-toggle:focus-visible {
-  outline: 2px solid var(--sd-primary);
+  outline: 2px solid var(--sd-primary, #005cbb);
   outline-offset: 2px;
+}
+@media (pointer: coarse) {
+  .c-layout-icon-toggle {
+    width: 44px;
+    min-height: 44px;
+  }
+}
+// Scope compact disclosure sizing to the V1 rail; other layouts keep their geometry.
+:host ::ng-deep .sd-layout-user-menu__trigger--compact {
+  min-height: 40px;
+  height: 40px;
 }
