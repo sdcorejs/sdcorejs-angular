@@ -16,7 +16,7 @@ Release suffix `2.6` publishes `19.2.6`, `20.2.6`, `21.2.6`, and `22.2.6`.
 
 ### Changed
 
-- Sidebar V1 d?ng n?n s?ng, t?ng chi?u r?ng 304px v?i thanh module 56px, ti?u ?? ??m, kho?ng c?ch g?n v? Material Icons Outlined. Menu 1?3 c?p ph?n bi?t nh?nh cha v?i m?c ?ang ch?n; avatar v? n?t thu g?n nh? n?m ? cu?i thanh module. Gi? nguy?n API, d? li?u menu, routing, ph?n quy?n, t?m ki?m v? expand/collapse; kh?ng th?m v?ng tr?ng cho description.
+- Sidebar V1 dùng nền sáng, tổng chiều rộng 304px với thanh module 56px, tiêu đề đậm, khoảng cách gọn và Material Icons Outlined. Menu 1–3 cấp phân biệt nhánh cha với mục đang chọn; avatar và nút thu gọn nhỏ nằm ở cuối thanh module. Giữ nguyên API, dữ liệu menu, routing, phân quyền, tìm kiếm và expand/collapse; không thêm vùng trống cho description.
 - Button cải thiện màu outline/disabled theo theme, khoảng cách icon và focus bàn phím; giữ bo tròn M3 và các kích thước 32/40/48px. Table gom thao tác chọn hàng trong QuickAction; Import Excel cải thiện bước chọn file, lọc và hiển thị lỗi, kể cả trên mobile.
 - Inform dùng icon nền nhẹ và SdButton nhỏ; Upload thêm appearance dropzone/compact và thao tác bàn phím; Stepper dùng icon trong chỉ báo và phân biệt bước hoàn tất. Modal/Drawer thống nhất khoảng cách, bo góc và mobile; Drawer giữ và khôi phục focus bằng CDK.
 - Confirm dùng layout gọn với icon nền nhẹ luôn hiển thị, tiêu đề 18px và nút SdButton nhỏ. Các phương thức hỗ trợ icon tùy chỉnh hoặc mặc định theo context; withInput thêm label/placeholder. Giữ các biến thể và kết quả Promise hiện có, cải thiện focus và bố cục mobile.
