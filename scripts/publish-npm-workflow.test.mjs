@@ -132,6 +132,8 @@ test('release workflow delegates the validated four-target plan to one sequentia
   has(publishInvocations[0], /--baseline-suffix\s+["']?2\.5["']?/u);
   has(publishInvocations[0], /--datetime-version\s+["']?1\.0\.4["']?/u);
   has(publishInvocations[0], /--require-provenance\b/u);
+  has(publisher.source, /NPM_CONFIG_PREFER_ONLINE:\s*['"]true['"]/u,
+    'manual recovery must refresh npm pack metadata even when the immutable tag predates the retry fix');
   lacks(commands, /^npm publish\b/mu, 'workflow shell must not bypass the unit-tested publish transaction');
   lacks(commands, /npm dist-tag (?:add|set|rm)/u, 'release must not mutate dist-tags separately');
 });

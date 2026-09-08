@@ -25,6 +25,8 @@ Release suffix `2.6` publishes `19.2.6`, `20.2.6`, `21.2.6`, and `22.2.6`.
 
 ### Fixed
 
+- Release verification refreshes npm pack metadata and retries only transient `ETARGET`/`E404` visibility failures after publication (up to 12 attempts, 5 seconds apart). Recovery and sequential publication await the downloaded tarball's exact SHA-256; access, integrity, provenance and immutable-version checks remain fail-closed.
+
 - Error state của select/autocomplete căn giữa, nằm dưới dữ liệu đang giữ lại; panel hẹp giảm khoảng đệm, icon và cho phép xuống dòng.
 - Confirm `withRadio` loại bỏ scroll dọc dư do baseline và vùng bấm M3 tràn khỏi hàng radio; giữ vùng bấm 48px, khả năng cuộn danh sách dài và wrap lựa chọn trên mobile.
 - Badge `type="icon"` giữ đúng kích thước icon, căn giữa với phần chữ và không co icon khi nội dung dài.

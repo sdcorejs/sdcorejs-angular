@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -23,6 +23,7 @@ import {
   validatePackedManifest,
   validatePublicSurface,
   validateReleaseBundle,
+  verifyDownloadedRegistryTarball,
 } from './release-package-contract.mjs';
 
 const SHARED_ANGULAR_PEER = '^19.0.0 || ^20.0.0 || ^21.0.0';
@@ -418,6 +419,120 @@ function bundleForPublication(suffix = '2.5') {
 function commandResult(status, stderr = '') {
   return { status, stdout: '', stderr, error: undefined };
 }
+
+function registryDownloadHarness(failures = [], contents = Buffer.from('verified registry tarball')) {
+  const calls = [];
+  const sleeps = [];
+  const target = {
+    ...releaseTargets('2.6')[1],
+    sha256: createHash('sha256').update('verified registry tarball').digest('hex'),
+  };
+  return {
+    target, calls, sleeps,
+    options: {
+      attempts: 3,
+      sleep: async milliseconds => { sleeps.push(milliseconds); },
+      npmRunner: (args, options = {}) => {
+        calls.push({ args, options });
+        const failure = failures[calls.length - 1];
+        if (failure) {
+          if (!options.allowFailure) throw new Error(failure);
+          return commandResult(1, failure);
+        }
+        const filename = 'sdcorejs-angular-20.2.6.tgz';
+        const destination = args[args.indexOf('--pack-destination') + 1];
+        writeFileSync(join(destination, filename), contents);
+        return { ...commandResult(0), stdout: JSON.stringify([{ filename }]) };
+      },
+    },
+  };
+}
+
+test('registry download refreshes metadata and retries bounded version visibility failures', async () => {
+  for (const code of ['ETARGET', 'E404']) {
+    const harness = registryDownloadHarness([`npm error code ${code}`, `npm error code ${code}`]);
+    await verifyDownloadedRegistryTarball(harness.target, harness.options);
+    assert.equal(harness.calls.length, 3);
+    assert.deepEqual(harness.sleeps, [5_000, 5_000]);
+    for (const { args, options } of harness.calls) {
+      assert.equal(args[0], 'pack');
+      assert.equal(args[1], '@sdcorejs/angular@20.2.6');
+      assert.ok(args.includes('--prefer-online'));
+      assert.equal(options.allowFailure, true);
+    }
+    const args = harness.calls[0].args;
+    assert.equal(existsSync(args[args.indexOf('--pack-destination') + 1]), false);
+  }
+});
+
+test('registry download fails closed after bounded missing-version retries and cleans up', async () => {
+  const harness = registryDownloadHarness(Array(3).fill('npm error code ETARGET'));
+  await assert.rejects(
+    async () => verifyDownloadedRegistryTarball(harness.target, harness.options),
+    /20\.2\.6.*3 attempts[\s\S]*ETARGET/u,
+  );
+  assert.equal(harness.calls.length, 3);
+  assert.deepEqual(harness.sleeps, [5_000, 5_000]);
+  const args = harness.calls[0].args;
+  assert.equal(existsSync(args[args.indexOf('--pack-destination') + 1]), false);
+});
+
+test('registry download never retries access, integrity, or unexpected command failures', async () => {
+  for (const code of ['E401', 'E403', 'EINTEGRITY', 'EUNKNOWN']) {
+    const harness = registryDownloadHarness([`npm error code ${code}`]);
+    await assert.rejects(async () => verifyDownloadedRegistryTarball(harness.target, harness.options), new RegExp(code));
+    assert.equal(harness.calls.length, 1);
+    assert.deepEqual(harness.sleeps, []);
+  }
+  const mismatch = registryDownloadHarness([], Buffer.from('different registry bytes'));
+  await assert.rejects(async () => verifyDownloadedRegistryTarball(mismatch.target, mismatch.options), /SHA-256 differs/u);
+  assert.equal(mismatch.calls.length, 1);
+  assert.deepEqual(mismatch.sleeps, []);
+});
+
+test('registry transaction awaits downloaded bytes before publishing the next Angular line', async () => {
+  const bundle = bundleForPublication('2.6');
+  const registry = createRegistryHarness({ tags: { latest: '22.2.5' } });
+  registry.adapter.verifyDownloaded = async target => {
+    await new Promise(resolve => setImmediate(resolve));
+    registry.events.push(`verified:${target.version}`);
+  };
+  await publishValidatedBundle(bundle, true, registry.adapter);
+  for (let index = 0; index < bundle.plan.publishOrder.length; index += 1) {
+    const target = bundle.plan.publishOrder[index];
+    const verified = registry.events.indexOf(`verified:${target.version}`);
+    assert.ok(verified >= 0, `${target.version}: download must finish before transaction succeeds`);
+    const next = bundle.plan.publishOrder[index + 1];
+    if (next) assert.ok(verified < registry.events.findIndex(event => event.startsWith(`publish:${next.version}:`)));
+  }
+});
+
+test('asynchronous download failures stop recovery preflight and preserve only verified publication successes', async () => {
+  const bundle = bundleForPublication('2.6');
+  const first = bundle.plan.publishOrder[0];
+  for (const recovering of [false, true]) {
+    const registry = createRegistryHarness({
+      tags: { latest: '22.2.5', ...(recovering ? { angular19: first.version } : {}) },
+      dists: recovering ? {
+        [first.version]: { integrity: first.integrity, shasum: first.shasum, provenance: true },
+      } : {},
+    });
+    registry.adapter.verifyDownloaded = async target => {
+      await new Promise(resolve => setImmediate(resolve));
+      if (recovering || target.major === 20) throw new Error('registry download exhausted ETARGET retries');
+    };
+    await assert.rejects(() => publishValidatedBundle(bundle, true, registry.adapter), error => {
+      assert.match(error.message, /registry download exhausted ETARGET retries/u);
+      if (!recovering) {
+        assert.equal(error.failedTarget, '20.2.6');
+        assert.deepEqual(error.completedResults, [{ version: '19.2.6', action: 'publish', verified: true }]);
+      }
+      return true;
+    });
+    assert.deepEqual([...registry.publishCounts.keys()], recovering ? [] : ['19.2.6', '20.2.6']);
+    assert.ok([...registry.publishCounts.values()].every(count => count === 1));
+  }
+});
 
 function createRegistryHarness({ dists = {}, tags = { latest: '21.2.4' }, publishOnce } = {}) {
   const registryDists = new Map(Object.entries(dists));

@@ -269,6 +269,8 @@ jobs:
       id-token: write
     env:
       NPM_CONFIG_REGISTRY: https://registry.npmjs.org
+      # Recovery checks out the immutable tag, which can predate the download retry fix.
+      NPM_CONFIG_PREFER_ONLINE: 'true'
 
     steps:
       - name: Checkout immutable release source
