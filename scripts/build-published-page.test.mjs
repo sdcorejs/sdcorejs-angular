@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { isAbsolute, relative, resolve } from 'node:path';
 import { test } from 'node:test';
 
 import {
@@ -8,6 +10,17 @@ import {
   selectSuffixesToPrune,
   sortSuffixesDesc,
 } from './build-published-page.mjs';
+
+test('Showcase loads library styles from its installed package beside its Angular dependencies', () => {
+  const workspace = JSON.parse(readFileSync(new URL('../showcase/angular.json', import.meta.url), 'utf8'));
+  const libraryStyles = workspace.projects.showcase.architect.build.options.styles
+    .filter(style => typeof style === 'string' && style.endsWith('/sd-core.scss'));
+  assert.equal(libraryStyles.length, 1);
+  const packageRoot = resolve('showcase/node_modules/@sdcorejs/angular');
+  const fromPackage = relative(packageRoot, resolve('showcase', libraryStyles[0]));
+  assert.ok(!isAbsolute(fromPackage) && !fromPackage.startsWith('..'),
+    'library SCSS must resolve peers from Showcase, without versions/v19/node_modules');
+});
 
 test('parseSuffix accepts a release suffix and rejects anything else', () => {
   assert.deepEqual(parseSuffix('1.6'), { major: 1, minor: 6 });
