@@ -607,6 +607,7 @@ export const EN_MESSAGES = {
   'core.module.layout.user.setting': 'Settings',
   'core.module.layout.user.notification': 'Notifications',
   'core.module.layout.sidebar.search': 'Search',
+  'core.module.layout.sidebar.clear-search': 'Clear search',
   'core.module.layout.sidebar.toggle': 'Toggle sidebar',
   'core.module.layout.sidebar.menu-groups': 'Menu groups',
   'core.module.layout.sidebar.close-menu': 'Close menu',

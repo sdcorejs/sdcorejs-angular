@@ -3,12 +3,10 @@ import { CommonModule, DOCUMENT } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
 import { NavigationEnd, Params, Router, RouterModule } from '@angular/router';
 
-import { SdInput, SdSuffixDefDirective } from '@sdcorejs/angular/forms';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdSafeHtmlPipe } from '@sdcorejs/angular/pipes';
 import { sdIsExternalHttpUrl, sdOpenExternal } from '@sdcorejs/angular/utilities';
@@ -27,17 +25,14 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   standalone: true,
   imports: [
     SdIcon,
-    SdInput,
     FormsModule,
     CommonModule,
     RouterModule,
     MatTreeModule,
     SdSafeHtmlPipe,
-    MatInputModule,
     MenuFocusPipe,
     MatTooltipModule,
     HighlightSearchPipe,
-    SdSuffixDefDirective,
     LayoutUserComponent,
     SdTranslatePipe,
   ],

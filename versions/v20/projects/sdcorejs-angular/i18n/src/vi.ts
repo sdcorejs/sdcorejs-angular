@@ -609,6 +609,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.module.layout.user.setting': 'Thiết lập',
   'core.module.layout.user.notification': 'Thông báo',
   'core.module.layout.sidebar.search': 'Tìm kiếm',
+  'core.module.layout.sidebar.clear-search': 'Xóa tìm kiếm',
   'core.module.layout.sidebar.toggle': 'Thu gọn hoặc mở rộng thanh điều hướng',
   'core.module.layout.sidebar.menu-groups': 'Nhóm menu',
   'core.module.layout.sidebar.close-menu': 'Đóng menu',

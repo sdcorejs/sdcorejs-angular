@@ -104,25 +104,35 @@
         <div class="c-menu-tree" [class.d-none]="!_isShowSidebar" [attr.inert]="!_isShowSidebar ? '' : null">
           @if (totalMenuInMenusByGroup() > 10) {
             <div class="c-menu-tree-search">
-              <sd-input
-                size="sm"
-                hideInlineError
-                [placeholder]="'core.module.layout.sidebar.search' | sdTranslate"
-                [autoId]="'layout-v1-menu-search'"
-                [model]="_searchText"
-                (sdChange)="onFilterSearchText($event)">
-                <ng-template sdSuffixDef>
-                  @if (_searchText) {
-                    <sd-icon
-                      fontSet="material-icons-outlined"
-                      class="c-search-prefix-icon cancel"
-                      (click)="onClearSearchText()"
-                      name="cancel"></sd-icon>
-                  } @else {
-                    <sd-icon fontSet="material-icons-outlined" class="c-search-prefix-icon search" name="search"></sd-icon>
-                  }
-                </ng-template>
-              </sd-input>
+              @let _searchLabel = 'core.module.layout.sidebar.search' | sdTranslate;
+              <div class="c-menu-search-field">
+                <sd-icon
+                  class="c-menu-search-icon"
+                  fontSet="material-icons-outlined"
+                  name="search"
+                  size="18px"
+                  aria-hidden="true"></sd-icon>
+                <input
+                  #menuSearch
+                  class="c-menu-search-input"
+                  type="search"
+                  autocomplete="off"
+                  [attr.aria-label]="_searchLabel"
+                  [placeholder]="_searchLabel"
+                  data-autoId="layout-v1-menu-search"
+                  [ngModel]="_searchText"
+                  [ngModelOptions]="{ standalone: true }"
+                  (ngModelChange)="onFilterSearchText($event)" />
+                @if (_searchText) {
+                  <button
+                    type="button"
+                    class="c-menu-search-clear"
+                    [attr.aria-label]="'core.module.layout.sidebar.clear-search' | sdTranslate"
+                    (click)="onClearSearchText(); menuSearch.focus()">
+                    <sd-icon fontSet="material-icons-outlined" name="close" size="18px" aria-hidden="true"></sd-icon>
+                  </button>
+                }
+              </div>
             </div>
           }
           <div class="c-menu-tree-container">

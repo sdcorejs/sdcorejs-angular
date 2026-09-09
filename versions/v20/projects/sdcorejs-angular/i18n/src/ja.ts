@@ -610,6 +610,7 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.module.layout.user.setting': '設定',
   'core.module.layout.user.notification': '通知',
   'core.module.layout.sidebar.search': '検索',
+  'core.module.layout.sidebar.clear-search': '検索をクリア',
   'core.module.layout.sidebar.toggle': 'サイドバーを切り替える',
   'core.module.layout.sidebar.menu-groups': 'メニューグループ',
   'core.module.layout.sidebar.close-menu': 'メニューを閉じる',
