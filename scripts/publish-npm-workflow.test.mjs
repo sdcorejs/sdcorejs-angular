@@ -132,6 +132,8 @@ test('release workflow delegates the validated four-target plan to one sequentia
   has(publishInvocations[0], /--baseline-suffix\s+["']?2\.5["']?/u);
   has(publishInvocations[0], /--datetime-version\s+["']?1\.0\.4["']?/u);
   has(publishInvocations[0], /--require-provenance\b/u);
+  has(publisher.source, /NPM_CONFIG_PREFER_ONLINE:\s*['"]true['"]/u,
+    'manual recovery must refresh npm pack metadata even when the immutable tag predates the retry fix');
   lacks(commands, /^npm publish\b/mu, 'workflow shell must not bypass the unit-tested publish transaction');
   lacks(commands, /npm dist-tag (?:add|set|rm)/u, 'release must not mutate dist-tags separately');
 });
@@ -234,6 +236,8 @@ test('trusted publishing is OIDC-only, least-privilege and pinned to Node/npm', 
       assert.deepEqual(permissions, { contents: 'read', 'id-token': 'write' });
     } else if (job.id === postpublish.id) {
       assert.deepEqual(permissions, { contents: 'write' });
+    } else if (job.id === 'build-pack') {
+      assert.deepEqual(permissions, { contents: 'read', actions: 'read' });
     } else {
       assert.deepEqual(permissions, { contents: 'read' });
     }
@@ -253,6 +257,27 @@ test('trusted publishing is OIDC-only, least-privilege and pinned to Node/npm', 
     }
     has(executableCommands(job.source), /npm install -g npm@11\.5\.1/u, `${job.id} must pin npm 11.5.1`);
   }
+});
+
+test('manual recovery retains the original tarballs without repacking them', () => {
+  has(workflow, /^      artifact_run_id:\s*$/mu);
+  const packer = oneJobMatching(/\bnpm pack\b/u, 'build/pack');
+  const steps = stepEntries(packer);
+  const packStep = steps.find(step => /\bnpm pack\b/u.test(executableCommands(step)));
+  const recoveryStep = steps.find(step => /uses:\s*actions\/download-artifact@/u.test(step));
+  const uploadStep = steps.find(step => /uses:\s*actions\/upload-artifact@/u.test(step));
+  assert.ok(packStep && recoveryStep && uploadStep);
+  has(packStep, /^        if:\s*\$\{\{ inputs\.artifact_run_id == '' \}\}\s*$/mu);
+  has(recoveryStep, /^        if:\s*\$\{\{ inputs\.artifact_run_id != '' \}\}\s*$/mu);
+  has(recoveryStep, /name:\s*sdcorejs-angular-\$\{\{ matrix\.version \}\}-2\.6/u);
+  has(recoveryStep, /run-id:\s*\$\{\{ inputs\.artifact_run_id \}\}/u);
+  has(recoveryStep, /github-token:\s*\$\{\{ github\.token \}\}/u);
+  has(recoveryStep, /repository:\s*\$\{\{ github\.repository \}\}/u);
+  has(recoveryStep, /path:\s*release-stage/u);
+  has(uploadStep, /path:\s*release-stage/u);
+  lacks(recoveryStep, /continue-on-error/u, 'expired or missing originals must stop recovery');
+  assert.ok(packer.source.indexOf(recoveryStep) < packer.source.indexOf(uploadStep));
+  has(packer.source, /needs:\s*\[verify_source, test-v19\]/u);
 });
 
 test('postpublish materializes verified v19, clean-installs Showcase and commits docs plus page retention', () => {
@@ -283,6 +308,8 @@ test('postpublish materializes verified v19, clean-installs Showcase and commits
     'test "$(git rev-parse HEAD^)" = "$SOURCE_SHA"',
     'git fetch origin main --no-tags',
     'git merge-base --is-ancestor "$SOURCE_SHA" origin/main',
+    'git restore --worktree -- showcase/src/app/docs/generated/changelog.generated.ts showcase/src/app/docs/generated/example-manifest.generated.ts showcase/src/app/docs/generated/example-sources.generated.ts',
+    'git diff --exit-code',
     'git rebase --onto origin/main "$SOURCE_SHA" HEAD',
     'git push origin HEAD:main',
   ]);

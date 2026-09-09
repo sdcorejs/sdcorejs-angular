@@ -5,6 +5,12 @@ on:
     tags:
       - 'v2.6'
   workflow_dispatch:
+    inputs:
+      artifact_run_id:
+        description: 'Recovery only: run ID containing the original four immutable package artifacts'
+        required: false
+        type: string
+        default: ''
 
 permissions: {}
 
@@ -111,6 +117,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      actions: read
     strategy:
       fail-fast: false
       matrix:
@@ -185,6 +192,7 @@ jobs:
         working-directory: versions/${{ matrix.version }}
 
       - name: Pack once and record immutable metadata
+        if: ${{ inputs.artifact_run_id == '' }}
         shell: bash
         env:
           SOURCE_SHA: ${{ needs.verify_source.outputs.source_sha }}
@@ -214,6 +222,16 @@ jobs:
             pack,
           }, null, 2)}\n`);
           NODE
+
+      - name: Download original package artifact for recovery
+        if: ${{ inputs.artifact_run_id != '' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: sdcorejs-angular-${{ matrix.version }}-2.6
+          path: release-stage
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.artifact_run_id }}
 
       - name: Upload immutable package artifact
         uses: actions/upload-artifact@v4
@@ -269,6 +287,8 @@ jobs:
       id-token: write
     env:
       NPM_CONFIG_REGISTRY: https://registry.npmjs.org
+      # Recovery checks out the immutable tag, which can predate the download retry fix.
+      NPM_CONFIG_PREFER_ONLINE: 'true'
 
     steps:
       - name: Checkout immutable release source
@@ -368,5 +388,9 @@ jobs:
           test "$(git rev-parse HEAD^)" = "$SOURCE_SHA"
           git fetch origin main --no-tags
           git merge-base --is-ancestor "$SOURCE_SHA" origin/main
+          # The page already contains these build-time inputs. Keep the archive
+          # commit limited to published artifacts and fail on any other tracked change.
+          git restore --worktree -- showcase/src/app/docs/generated/changelog.generated.ts showcase/src/app/docs/generated/example-manifest.generated.ts showcase/src/app/docs/generated/example-sources.generated.ts
+          git diff --exit-code
           git rebase --onto origin/main "$SOURCE_SHA" HEAD
           git push origin HEAD:main

@@ -767,13 +767,36 @@ async function observeExactDistAfterUncertainPublish(
   return null;
 }
 
-function verifyDownloadedRegistryTarball(target) {
+export async function verifyDownloadedRegistryTarball(
+  target,
+  { attempts = 12, npmRunner = runNpmCli, sleep = delay } = {},
+) {
+  invariant(Number.isInteger(attempts) && attempts > 0, 'Registry download attempts must be a positive integer.');
   const tempRoot = mkdtempSync(join(tmpdir(), `sdcorejs-registry-${target.major}-`));
   try {
-    const result = runNpmCli(['pack', `${PACKAGE_NAME}@${target.version}`, '--json', '--pack-destination', tempRoot]);
-    const pack = parseJsonOutput(result.stdout, `npm pack ${PACKAGE_NAME}@${target.version}`)[0];
-    const hash = sha256File(join(tempRoot, pack.filename));
-    invariant(hash === target.sha256, `${target.version}: downloaded registry SHA-256 differs from staged artifact.`);
+    for (let attempt = 1; attempt <= attempts; attempt += 1) {
+      // npm view refreshes full metadata; npm pack can still see cached/lagging install metadata.
+      // Retry only version visibility failures, never a different artifact or an access failure.
+      const result = npmRunner(
+        ['pack', `${PACKAGE_NAME}@${target.version}`, '--json', '--pack-destination', tempRoot, '--prefer-online', '--ignore-scripts'],
+        { allowFailure: true },
+      );
+      if (result.status !== 0) {
+        const missingVersion = /(?:^|\n)npm (?:error|ERR!) code (?:ETARGET|E404)(?:\s|$)/u.test(result.stderr ?? '');
+        if (missingVersion && attempt < attempts) {
+          await sleep(5_000);
+          continue;
+        }
+        const diagnostic = result.stderr || result.stdout || result.error?.message || 'No npm diagnostic was returned.';
+        throw new Error(`${target.version}: registry download failed after ${attempt} attempt${attempt === 1 ? '' : 's'}.\n${diagnostic}`);
+      }
+      const pack = parseJsonOutput(result.stdout, `npm pack ${PACKAGE_NAME}@${target.version}`)[0];
+      invariant(typeof pack?.filename === 'string' && basename(pack.filename) === pack.filename,
+        `${target.version}: npm pack returned an invalid tarball filename.`);
+      const hash = sha256File(join(tempRoot, pack.filename));
+      invariant(hash === target.sha256, `${target.version}: downloaded registry SHA-256 differs from staged artifact.`);
+      return;
+    }
   } finally {
     rmSync(tempRoot, { recursive: true, force: true });
   }
@@ -832,7 +855,7 @@ export async function publishValidatedBundle(
       }
       const tags = viewTags();
       invariant(tags[target.tag] === target.version, `${target.version}: existing recovery tag ${target.tag} is incorrect.`);
-      verifyDownloaded(target);
+      await verifyDownloaded(target);
       const decision = { action: 'reuse' };
       decisions.set(target.version, decision);
       return decision;
@@ -874,7 +897,7 @@ export async function publishValidatedBundle(
         invariant(tags.latest === target.version, `${target.version}: final latest tag was not promoted.`);
       }
       if (requireProvenance) invariant(dist.attestations || dist.provenance, `${target.version}: provenance/attestation metadata is missing.`);
-      verifyDownloaded(target);
+      await verifyDownloaded(target);
     },
   });
 
