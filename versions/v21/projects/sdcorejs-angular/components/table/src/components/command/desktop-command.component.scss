@@ -13,6 +13,12 @@ button[mat-icon-button] {
   padding: 0;
 }
 
+// Keep Material's 48px touch target from intercepting adjacent 24px commands.
+:host ::ng-deep button[mat-icon-button] .mat-mdc-button-touch-target {
+  width: 100%;
+  height: 100%;
+}
+
 sd-icon {
   &.c-icon {
     color: map.get(color.$color_map, 'text-secondary') !important;
@@ -21,6 +27,11 @@ sd-icon {
     font-size: 16px;
     line-height: 16px;
   }
+}
+
+// Let Material's disabled color reach the glyph instead of the active icon color.
+button[mat-icon-button]:disabled sd-icon.c-icon {
+  color: inherit !important;
 }
 
 .sd-command-menu-item__content {

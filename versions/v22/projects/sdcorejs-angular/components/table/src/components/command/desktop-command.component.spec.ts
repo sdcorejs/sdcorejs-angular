@@ -91,4 +91,42 @@ describe('DesktopCommand', () => {
     expect(button.hasAttribute('aria-hidden')).toBe(false);
     expect(button.getAttribute('aria-label')).toBe('Sửa');
   });
+
+  it('keeps adjacent command hit areas inside their buttons, including the menu trigger', async () => {
+    // Hit testing needs a visible fixture regardless of scroll position or other suite fixtures.
+    Object.assign((fixture.nativeElement as HTMLElement).style, {
+      position: 'fixed',
+      top: '24px',
+      left: '24px',
+      zIndex: '2147483647',
+    });
+    const clicked = jasmine.createSpy('command clicked');
+    fixture.componentInstance.commands = [
+      { icon: 'visibility', title: 'View', click: () => clicked('view') },
+      { icon: 'edit', title: 'Edit', click: () => clicked('edit') },
+      { title: 'More', children: [{ icon: 'history', title: 'History', click: () => clicked('history') }] },
+    ];
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const buttons = Array.from(fixture.nativeElement.querySelectorAll('button[mat-icon-button]')) as HTMLButtonElement[];
+    expect(buttons.length).toBe(3);
+    for (const button of buttons) {
+      const bounds = button.getBoundingClientRect();
+      const target = button.querySelector('.mat-mdc-button-touch-target')!.getBoundingClientRect();
+      expect(bounds.width).toBeGreaterThan(0);
+      expect(target.left).withContext(button.ariaLabel!).toBeGreaterThanOrEqual(bounds.left);
+      expect(target.right).withContext(button.ariaLabel!).toBeLessThanOrEqual(bounds.right);
+      expect(target.top).withContext(button.ariaLabel!).toBeGreaterThanOrEqual(bounds.top);
+      expect(target.bottom).withContext(button.ariaLabel!).toBeLessThanOrEqual(bounds.bottom);
+      for (const fraction of [0.25, 0.5, 0.75]) {
+        const hit = document.elementFromPoint(bounds.left + bounds.width * fraction, bounds.top + bounds.height / 2);
+        expect(hit?.closest('button')).withContext(`${button.ariaLabel} at ${fraction}`).toBe(button);
+      }
+    }
+    const middle = buttons[1].getBoundingClientRect();
+    (document.elementFromPoint(middle.left + middle.width / 2, middle.top + middle.height / 2) as HTMLElement).click();
+    expect(clicked).toHaveBeenCalledOnceWith('edit');
+  });
 });

@@ -1,0 +1,70 @@
+@let _option = option();
+@let _value = value();
+@let _valid = valid();
+@let _autoId = autoId();
+@let _inputId = inputId();
+@let _term = term();
+@let _enterHint = 'core.component.table.quick-search.enter' | sdTranslate;
+<div class="sd-quick-search-row">
+  <div class="sd-quick-search-controls" role="search" [attr.aria-label]="'core.component.table.search' | sdTranslate">
+    @for (control of controls(); track control.item.field) {
+      @let item = control.item;
+      @let items = item.type === 'values' ? (item.option.items | filterValues | async) : item.option.items;
+      <sd-select
+        class="sd-quick-search-dropdown"
+        [autoId]="_autoId ? _autoId + '-quick-search-' + item.field : undefined"
+        [label]="item.title"
+        [items]="items"
+        [valueField]="item.option.valueField"
+        [displayField]="item.option.displayField"
+        [model]="_value.filters[item.field]"
+        [multiple]="item.option.selection === 'MULTIPLE' || item.option.selection === 'MULTIPLEAUTOCOMPLETE'"
+        [required]="!!item.required"
+        [disabled]="control.disabled"
+        (sdChange)="onFilterChange(item, $event)"
+        appearance="outline"
+        [size]="isMobile() ? 'md' : 'sm'"
+        hideInlineError />
+    }
+    <div class="sd-quick-search-keyword">
+      <div class="sd-quick-search-field" [class.sd-quick-search-disabled]="!_valid">
+        <sd-icon name="search" size="18px" aria-hidden="true" />
+        <input
+          #searchInput
+          [id]="_inputId"
+          type="text"
+          enterkeyhint="search"
+          autocomplete="off"
+          [attr.data-autoid]="_autoId ? _autoId + '-quick-search-term' : null"
+          [attr.aria-label]="'core.component.table.search' | sdTranslate"
+          [attr.aria-describedby]="_inputId + (_valid ? '-hint' : '-required')"
+          [placeholder]="_option.placeholder || ('core.component.table.quick-search.placeholder' | sdTranslate)"
+          [disabled]="!_valid"
+          [value]="_term"
+          (input)="onInput($event)"
+          (keydown)="onKeydown($event)" />
+        @if (_term) {
+          <button
+            class="sd-quick-search-clear"
+            type="button"
+            [disabled]="!_valid"
+            [attr.data-autoid]="_autoId ? _autoId + '-quick-search-clear' : null"
+            [attr.aria-label]="'core.component.table.quick-search.clear' | sdTranslate"
+            (click)="clear(searchInput)">
+            <sd-icon name="close" size="16px" aria-hidden="true" />
+          </button>
+        }
+        <span class="sd-quick-search-enter" [matTooltip]="_enterHint" aria-hidden="true">↵</span>
+      </div>
+    </div>
+  </div>
+  @if (rightTemplate(); as template) {
+    <div class="sd-quick-search-right"><ng-container [ngTemplateOutlet]="template" /></div>
+  }
+</div>
+<span [id]="_inputId + '-hint'" hidden>{{ _enterHint }}</span>
+@if (!_valid) {
+  <p class="sd-quick-search-hint" [id]="_inputId + '-required'">
+    {{ 'core.component.table.quick-search.required' | sdTranslate }}
+  </p>
+}

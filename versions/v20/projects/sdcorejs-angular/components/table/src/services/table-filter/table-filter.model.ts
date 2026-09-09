@@ -4,6 +4,14 @@ import { DateUtilities } from '@sdcorejs/utils/fns';
 import { Filter, NestedKeyOf, Operator, Order, PagingReq } from '@sdcorejs/utils/models';
 import { Observable } from 'rxjs';
 import { SdTableColumn, SdTableColumnAnyRow } from '../../models/table-column.model';
+import { SdTableOptionQuickSearch, SdTableQuickSearchValue } from './table-quick-search.model';
+import { quickSearchConditions } from './table-quick-search.util';
+export type {
+  SdTableOptionQuickSearch,
+  SdTableQuickSearchFilter,
+  SdTableQuickSearchFilterValue,
+  SdTableQuickSearchValue,
+} from './table-quick-search.model';
 
 export interface SdTableQuickFilter {
   code: string;
@@ -20,6 +28,7 @@ export interface TableFilterConfiguration {
 }
 
 export interface TableFilterValue {
+  quickSearch?: SdTableQuickSearchValue;
   columnOperator?: Record<string, Operator>;
 
   columnFilter?: Record<string, any>; // Giá trị filter column
@@ -32,6 +41,8 @@ export interface TableFilterValue {
 }
 
 export interface SdTableFilterRequest<T = unknown> {
+  /** Applied quick-search keyword and dropdown values; omitted when quick search is disabled. */
+  quickSearch?: SdTableQuickSearchValue;
   columnOperator: Record<NestedKeyOf<T>, Operator>;
   rawColumnFilter: Record<NestedKeyOf<T>, any>;
   rawExternalFilter: Record<string, any>;
@@ -44,6 +55,8 @@ export interface SdTableFilterRequest<T = unknown> {
 }
 
 export interface SdTableOptionFilter<T = unknown> {
+  /** Optional compact search row above the table. */
+  quickSearch?: SdTableOptionQuickSearch;
   /** Key định danh nếu muốn lưu cache */
   key?: string;
 
@@ -87,6 +100,7 @@ export const SdConvertToPagingReq = (
   args: {
     columns?: SdTableColumnAnyRow[];
     externalFilters?: SdTableExternalFilter[];
+    quickSearch?: SdTableOptionQuickSearch;
     fieldMapping?: Record<string, string>;
     orders?: Order[];
   }
@@ -300,6 +314,7 @@ export const SdConvertToPagingReq = (
       }
     }
   }
+  filters!.push(...quickSearchConditions(args.quickSearch, filterRequest.quickSearch, fieldMapping));
   // Xử lý orders
   if (orderBy && orderDirection) {
     req.orders!.push({

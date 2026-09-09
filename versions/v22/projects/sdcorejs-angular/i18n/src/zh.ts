@@ -1,6 +1,10 @@
 import type { EN_MESSAGES } from './en';
 
 export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
+  'core.component.table.quick-search.placeholder': '搜索…',
+  'core.component.table.quick-search.enter': '按 Enter 键搜索。',
+  'core.component.table.quick-search.required': '请先选择必填筛选条件。',
+  'core.component.table.quick-search.clear': '清除搜索词',
   'core.component.table.mobile.tools': '工具',
   'core.component.table.mobile.tools-title': '表格工具',
   'core.component.table.mobile.row-commands': '行操作：{row}',

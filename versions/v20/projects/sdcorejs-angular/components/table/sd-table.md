@@ -282,6 +282,95 @@ tree: {
 
 **Filter placement rule for generated pages:** treat inline column filters and `filter.externalFilters` as mutually exclusive per field. If a field already has an enabled column filter, do not repeat that same field in `externalFilters`. Use `externalFilters` only for global search, fields that are not rendered as columns, or fields whose column filter is disabled/hidden intentionally.
 
+Built-in `filter.externalFilters` controls use `size="sm"` and `hideInlineError`. Their section body provides 16px spacing around the filter grid and manual Search action, aligned with the section header. Custom filter templates own their control size and error presentation.
+
+#### Quick search (`filter.quickSearch`)
+
+Optional row above the table: dropdowns on the left, one keyword input, and an optional consumer template on the right. No search button; **Enter** commits the trimmed term. Typing or blurring does not submit it. Clearing the input removes only the term. Table utilities stay in the footer. The row and its custom slot are absent when `quickSearch` is undefined or `filter.disabled` is true.
+
+The input uses its placeholder without a separate visible label. Hovering the Enter icon shows the submission hint; the input retains an accessible name and description for screen readers. A missing required dropdown value still shows a visible explanation below the row.
+
+| Option | Type | Behavior |
+| --- | --- | --- |
+| `containFields` | `string[]` | Fields matched with `CONTAIN`. |
+| `equalFields` | `string[]` | Fields matched with `EQUAL`. |
+| `placeholder` | `string` | Explain the accepted keyword, e.g. name, complete phone number or code. |
+| `filters` | `SdTableQuickSearchFilter[]` | Only external-filter-style `values` and `lazy-values` dropdowns; use the same `option.items`, `valueField`, `displayField` and `selection` contracts. |
+
+The fields in both arrays form **one OR group**, ANDed with dropdowns and existing column/external filters. Paths can refer to fields absent from `columns`. Avoid putting the same field in both arrays: the OR would also allow partial matches. Dropdown scalars use `defaultOperator` (default `EQUAL`); arrays use `IN`. Local keyword matching is case-insensitive; server case sensitivity follows the backend's implementation of these operators.
+
+Both arrays are optional. With neither array populated, no automatic keyword condition is generated, but the applied value is still present in **`filterReq.quickSearch`**:
+
+```ts
+{
+  term: 'KH-001',
+  filters: { tenantId: 'north' },
+}
+```
+
+For server tables, `items(filterReq, pagingReq)` receives this state plus the generated `pagingReq.filters`. Consumers can implement custom keyword logic from `filterReq.quickSearch?.term`. When invoking `SdConvertToPagingReq` manually, pass the option as `{ quickSearch: option.filter?.quickSearch }`. Local tables automatically apply configured field/dropdown predicates before pagination; empty field arrays leave keyword handling to the consumer. Pagination, reload, retry and export use the **applied** term, never a draft still being typed.
+
+Dropdowns apply on change using the table's existing reload debounce, independently of Enter and `manualFilter`. They keep the previous applied term and preserve the input draft. Supported additions to the external-dropdown contract:
+
+- `default?: SdTableQuickSearchFilterValue | Signal<SdTableQuickSearchFilterValue>`: a signal is read before the first request and stays reactive. Its latest value wins per-table cache, including `null` to clear. A plain default is used when no cached field exists; an explicitly cached clear remains cleared.
+- `hidden?: boolean | Signal<boolean>` and `disabled?: boolean | Signal<boolean>` control the UI. Hiding retains the value and required constraint. Consumers own permission checks and backend authorization.
+- `required?: boolean`: missing values block data loading and disable the keyword input, including when hidden. `0` and `false` are valid values. `onFilter` still receives the request with `context.quickSearchValid === false`.
+- `onChange?: (value: SdTableQuickSearchFilterValue) => void`: fires once for a user change, after storing the dropdown value. Initialization, signal synchronization, `setFilter` and reset do not emit it. The table reads a signal default; the consumer writes shared state in this callback.
+
+For a tenant shared across screens, inject the same application-owned store into both consumers:
+
+```ts
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { SdTableOption } from '@sdcorejs/angular/components/table';
+
+@Injectable({ providedIn: 'root' })
+export class TenantSelection {
+  readonly id = signal<string | null>('north');
+  readonly canChoose = signal(true);
+}
+
+// Inside each standalone table consumer:
+readonly tenant = inject(TenantSelection);
+readonly tenantHidden = computed(() => !this.tenant.canChoose());
+readonly option: SdTableOption<Customer> = {
+  type: 'server',
+  items: (filterReq, pagingReq) => this.api.search(pagingReq),
+  columns: [{ field: 'name', title: 'Name', type: 'string' }],
+  filter: {
+    quickSearch: {
+      containFields: ['name', 'email'],
+      equalFields: ['phone', 'code'],
+      placeholder: 'Name, email, complete phone number or code…',
+      filters: [{
+        field: 'tenantId', title: 'Tenant', type: 'values', required: true,
+        default: this.tenant.id,
+        hidden: this.tenantHidden,
+        option: {
+          valueField: 'id', displayField: 'name',
+          items: [{ id: 'north', name: 'North' }, { id: 'south', name: 'South' }],
+        },
+        onChange: value => this.tenant.id.set(typeof value === 'string' ? value : null),
+      }],
+    },
+  },
+};
+```
+
+Replace `Customer` and `this.api` with application types/services. A table on screen B resolves `tenant.id()` on creation, so a tenant selected on screen A is already selected. Keeping a screen mounted also follows later signal changes. For remote dropdowns, use `type: 'lazy-values'` and the existing `SdSearch` loader in `option.items`.
+
+Import **`SdTableQuickSearchRightDefDirective`** in the consumer's standalone `imports` to project optional controls. No wrapper is rendered when the template is absent; on narrow containers the custom UI wraps below the search controls.
+
+```html
+<sd-table [option]="option" autoId="customers">
+  <ng-template sdTableQuickSearchRightDef>
+    <sd-checkbox label="Only active" size="sm" [model]="onlyActive()"
+      (sdChange)="applyActiveFilter($event)" />
+  </ng-template>
+</sd-table>
+```
+
+The projected checkbox is consumer-owned; it does not automatically add a predicate. Also import `SdCheckbox` and implement its state/handler. Native keyword/clear controls expose `data-autoid="customers-quick-search-term"` and `customers-quick-search-clear`; dropdowns receive `autoId="customers-quick-search-<field>"`. The keyword has a label, placeholder, Enter hint and IME-safe submission.
+
 #### Inline column filter — commit semantics
 
 - **Enter** trên `sd-input` / `sd-input-number` → commit value vào `filterRegister` **và** trigger reload (debounce 500ms + 200ms).
@@ -309,6 +398,10 @@ Client-side matching sống ở `matchesColumnFilter` (`services/table-local/tab
 `{ color?, icon?: string \| (row)=>string, fontSet?, title?: string \| (row)=>string, disabled?: boolean \| (row)=>boolean, hidden?: boolean \| (row)=>boolean \| Promise<boolean>, click(row), htmlTemplate?(row)=>string }`. Group via `{ ... children: SdTableCommandNormal<T>[] }`.
 
 Command icons default to Material Symbols Outlined (`material-icons-outlined`). Child command menu items use the same default unless `child.fontSet` is provided. Use icon + title for child commands so menu rows align consistently.
+
+Desktop row commands keep their touch targets within each 24px button so adjacent actions and menu triggers remain independently clickable. Mobile action controls retain their existing sizing.
+
+Disabled desktop row-command icons inherit the button's disabled color from the Material theme, making them visibly muted instead of retaining the active icon color. Child menu items retain Material's disabled opacity.
 
 ```ts
 command: {
@@ -348,8 +441,8 @@ None. All callbacks live inside the `option` object (`onSelect`, `onReload`, `co
 - `tableRef.reload(force = true, scrollTop = true)` — re-fetch (server) or re-filter (local)
 - `tableRef.dataItems: T[]` — current rendered rows (data only)
 - `tableRef.selectedItems: T[]` — current selection
-- `tableRef.clearFilter()` — clears column + external filters
-- `tableRef.setFilter({ columnFilter?, externalFilter? })` — programmatically set filter values
+- `tableRef.clearFilter()` — resets column, external and quick-search filters to defaults; quick-search term becomes empty and signal defaults are read again
+- `tableRef.setFilter({ columnFilter?, externalFilter?, quickSearch? })` — programmatically set filter values; omitting `quickSearch` preserves its applied state
 - `tableRef.exportExcel(columns?)` / `exportCSV(columns?)` / `exportCustom()` — trigger export
 - `tableRef.onClearSelection(items?)` — clear selected rows (defaults to all)
 - `tableRef.detectChanges()` — force CD
@@ -360,6 +453,7 @@ None. All callbacks live inside the `option` object (`onSelect`, `onReload`, `co
 - `[sdTableTitleDef]="'<field>'"` — custom header template per column.
 - `[sdTableFooterDef]="'<field>'"` — custom footer cell (totals row). Presence of any footer def turns on the footer row.
 - `[sdTableFilterDef]="'<field>'"` — custom inline-filter template per column.
+- `sdTableQuickSearchRightDef` — optional template to the right of `filter.quickSearch`; only rendered when quick search is enabled.
 - `[sdTableExpandDef]` — custom row-expansion (sub-information) template.
 - `[sdTableCommandHeaderDef]` — content for the **header cell of the command column**, which is otherwise empty. No field argument (there is only one command column). Use it for a table-level action — typically "add row" — so it sits directly above the per-row command buttons instead of needing its own strip below the table. Rendered centered; the cell stays 50px wide, so keep it to one icon button. Nothing is rendered (no wrapper element) when the template is absent.
 
@@ -484,6 +578,8 @@ When rendering SD form controls in `sdTableFilterDef`, editable cells, external-
 ```
 
 ## Visual cues (helps agent map screenshots → component)
+
+The desktop table uses subtle 6px outer corners: the existing scroll area rounds the top corners and the paginator rounds the bottom corners. No additional clipping or scroll container is introduced, preserving sticky headers and columns. Mobile cards retain their existing shape.
 
 - **Toolbar** (top): external-filter form (collapsible), reload button, column-config gear, export menu, selection-action bar (when rows selected).
 - **Header row**: column titles, sort arrows on sortable columns, inline filter row beneath header (input/select/daterange depending on column `type`). Sticky on scroll.

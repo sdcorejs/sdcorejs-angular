@@ -1,6 +1,10 @@
 import type { EN_MESSAGES } from './en';
 
 export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
+  'core.component.table.quick-search.placeholder': '検索…',
+  'core.component.table.quick-search.enter': 'Enterキーで検索します。',
+  'core.component.table.quick-search.required': '検索する前に必須フィルターを選択してください。',
+  'core.component.table.quick-search.clear': '検索語をクリア',
   'core.component.table.mobile.tools': 'ツール',
   'core.component.table.mobile.tools-title': 'テーブルツール',
   'core.component.table.mobile.row-commands': '行の操作: {row}',

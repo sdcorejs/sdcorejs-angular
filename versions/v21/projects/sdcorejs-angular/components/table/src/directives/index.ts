@@ -4,5 +4,6 @@ export * from './sd-table-title-def.directive';
 export * from './sd-table-cell-def.directive';
 export * from './sd-table-row-mobile-def.directive';
 export * from './sd-table-command-header-def.directive';
+export * from './sd-table-quick-search-right-def.directive';
 export * from './sd-table-group-def.directive';
 export * from './sd-column-resize.directive';

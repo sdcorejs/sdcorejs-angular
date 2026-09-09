@@ -3,8 +3,12 @@
   padding-left: 0;
   padding-right: 0;
 }
+.sd-external-filter-body {
+  // Each grid column adds 8px, matching the section header's 16px inset.
+  padding: 16px 8px;
+}
 ::ng-deep .sd-custom-panel-filter-configuration {
-  width: 240px;        // đặt chiều rộng
-  max-height: 550px;   // hoặc height cố định: height: 200px;
-  overflow-y: auto;    // bật scroll nếu nội dung vượt quá
+  width: 240px; // đặt chiều rộng
+  max-height: 550px; // hoặc height cố định: height: 200px;
+  overflow-y: auto; // bật scroll nếu nội dung vượt quá
 }

@@ -58,32 +58,67 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
     "unreleased": true,
     "packageVersions": [],
     "summaryMarkdown": "",
-    "markdown": "### Fixed\n\n- Error state của select/autocomplete căn giữa, nằm dưới dữ liệu đang giữ lại; panel hẹp giảm khoảng đệm, icon và cho phép xuống dòng.\n- Confirm `withRadio` loại bỏ scroll dọc dư do baseline và vùng bấm M3 tràn khỏi hàng radio; giữ vùng bấm 48px, khả năng cuộn danh sách dài và wrap lựa chọn trên mobile.\n- Badge `type=\"icon\"` giữ đúng kích thước icon, căn giữa với phần chữ và không co icon khi nội dung dài.\n- Chỉ báo selection của table dùng màu success, gồm icon desktop và số lượng đã chọn trên mobile.",
+    "markdown": "### Added\n\n- Table supports an optional `filter.quickSearch` row: Enter commits the keyword, `containFields` and `equalFields` generate an OR group, and `values`/`lazy-values` dropdowns apply immediately. Dropdowns support signal defaults, reactive visibility/disabled state, required values and user-only `onChange`. The applied `{ term, filters }` is available in `filterReq.quickSearch` even without search fields. `sdTableQuickSearchRightDef` lets consumers project optional UI on the right.\n\n### Changed\n\n- Table external filters use small controls with inline errors hidden and a padded section body. Desktop tables use subtle 6px outer corners while retaining their existing scroll and sticky behavior.\n- Confirm, Notify, Inform and Data-state now use circular status icon backgrounds, including compact Data-state. Existing icon sizes, semantic colors, layouts and interactions are preserved.\n- Section header icons use a 32px circular soft background with a centered 20px glyph, matching `iconColor` across all six color tokens. Custom header slots and collapse behavior are preserved.\n\n### Fixed\n\n- Disabled table row-command icons use the button's muted disabled color instead of retaining the active icon color.\n- Table desktop command touch targets stay within each button, preventing adjacent commands from intercepting clicks.\n- Sidebar V1 search uses a compact light native input with a leading icon and a single thin focus border. Keep existing search matching and IME buffering; make clear accessible by keyboard and restore input focus after clearing.",
     "sections": [
+      {
+        "key": "added",
+        "title": "Added",
+        "level": 3,
+        "anchor": "unreleased-added",
+        "markdown": "- Table supports an optional `filter.quickSearch` row: Enter commits the keyword, `containFields` and `equalFields` generate an OR group, and `values`/`lazy-values` dropdowns apply immediately. Dropdowns support signal defaults, reactive visibility/disabled state, required values and user-only `onChange`. The applied `{ term, filters }` is available in `filterReq.quickSearch` even without search fields. `sdTableQuickSearchRightDef` lets consumers project optional UI on the right.",
+        "items": [
+          {
+            "text": "Table supports an optional `filter.quickSearch` row: Enter commits the keyword, `containFields` and `equalFields` generate an OR group, and `values`/`lazy-values` dropdowns apply immediately. Dropdowns support signal defaults, reactive visibility/disabled state, required values and user-only `onChange`. The applied `{ term, filters }` is available in `filterReq.quickSearch` even without search fields. `sdTableQuickSearchRightDef` lets consumers project optional UI on the right.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      },
+      {
+        "key": "changed",
+        "title": "Changed",
+        "level": 3,
+        "anchor": "unreleased-changed",
+        "markdown": "- Table external filters use small controls with inline errors hidden and a padded section body. Desktop tables use subtle 6px outer corners while retaining their existing scroll and sticky behavior.\n- Confirm, Notify, Inform and Data-state now use circular status icon backgrounds, including compact Data-state. Existing icon sizes, semantic colors, layouts and interactions are preserved.\n- Section header icons use a 32px circular soft background with a centered 20px glyph, matching `iconColor` across all six color tokens. Custom header slots and collapse behavior are preserved.",
+        "items": [
+          {
+            "text": "Table external filters use small controls with inline errors hidden and a padded section body. Desktop tables use subtle 6px outer corners while retaining their existing scroll and sticky behavior.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Confirm, Notify, Inform and Data-state now use circular status icon backgrounds, including compact Data-state. Existing icon sizes, semantic colors, layouts and interactions are preserved.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Section header icons use a 32px circular soft background with a centered 20px glyph, matching `iconColor` across all six color tokens. Custom header slots and collapse behavior are preserved.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      },
       {
         "key": "fixed",
         "title": "Fixed",
         "level": 3,
         "anchor": "unreleased-fixed",
-        "markdown": "- Error state của select/autocomplete căn giữa, nằm dưới dữ liệu đang giữ lại; panel hẹp giảm khoảng đệm, icon và cho phép xuống dòng.\n- Confirm `withRadio` loại bỏ scroll dọc dư do baseline và vùng bấm M3 tràn khỏi hàng radio; giữ vùng bấm 48px, khả năng cuộn danh sách dài và wrap lựa chọn trên mobile.\n- Badge `type=\"icon\"` giữ đúng kích thước icon, căn giữa với phần chữ và không co icon khi nội dung dài.\n- Chỉ báo selection của table dùng màu success, gồm icon desktop và số lượng đã chọn trên mobile.",
+        "markdown": "- Disabled table row-command icons use the button's muted disabled color instead of retaining the active icon color.\n- Table desktop command touch targets stay within each button, preventing adjacent commands from intercepting clicks.\n- Sidebar V1 search uses a compact light native input with a leading icon and a single thin focus border. Keep existing search matching and IME buffering; make clear accessible by keyboard and restore input focus after clearing.",
         "items": [
           {
-            "text": "Error state của select/autocomplete căn giữa, nằm dưới dữ liệu đang giữ lại; panel hẹp giảm khoảng đệm, icon và cho phép xuống dòng.",
+            "text": "Disabled table row-command icons use the button's muted disabled color instead of retaining the active icon color.",
             "ordered": false,
             "children": []
           },
           {
-            "text": "Confirm `withRadio` loại bỏ scroll dọc dư do baseline và vùng bấm M3 tràn khỏi hàng radio; giữ vùng bấm 48px, khả năng cuộn danh sách dài và wrap lựa chọn trên mobile.",
+            "text": "Table desktop command touch targets stay within each button, preventing adjacent commands from intercepting clicks.",
             "ordered": false,
             "children": []
           },
           {
-            "text": "Badge `type=\"icon\"` giữ đúng kích thước icon, căn giữa với phần chữ và không co icon khi nội dung dài.",
-            "ordered": false,
-            "children": []
-          },
-          {
-            "text": "Chỉ báo selection của table dùng màu success, gồm icon desktop và số lượng đã chọn trên mobile.",
+            "text": "Sidebar V1 search uses a compact light native input with a leading icon and a single thin focus border. Keep existing search matching and IME buffering; make clear accessible by keyboard and restore input focus after clearing.",
             "ordered": false,
             "children": []
           }
@@ -118,7 +153,7 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
       }
     ],
     "summaryMarkdown": "Release suffix `2.6` publishes `19.2.6`, `20.2.6`, `21.2.6`, and `22.2.6`.",
-    "markdown": "Release suffix `2.6` publishes `19.2.6`, `20.2.6`, `21.2.6`, and `22.2.6`.\n\n### Added\n\n- Select, autocomplete và server table có `readState`, `sdReadStateChange`, `retryRead()`, `hideReadError` và template `sdDataStateTemplate`. VALUE/SEARCH độc lập; retry dùng snapshot request đã lỗi, giữ model và dữ liệu thành công, bỏ qua response cũ. Public entry point `utilities/read-state` tách biệt với `utilities/data-state`.\n\n### Changed\n\n- Button cải thiện màu outline/disabled theo theme, khoảng cách icon và focus bàn phím; giữ bo tròn M3 và các kích thước 32/40/48px. Table gom thao tác chọn hàng trong QuickAction; Import Excel cải thiện bước chọn file, lọc và hiển thị lỗi, kể cả trên mobile.\n- Inform dùng icon nền nhẹ và SdButton nhỏ; Upload thêm appearance dropzone/compact và thao tác bàn phím; Stepper dùng icon trong chỉ báo và phân biệt bước hoàn tất. Modal/Drawer thống nhất khoảng cách, bo góc và mobile; Drawer giữ và khôi phục focus bằng CDK.\n- Confirm dùng layout gọn với icon nền nhẹ luôn hiển thị, tiêu đề 18px và nút SdButton nhỏ. Các phương thức hỗ trợ icon tùy chỉnh hoặc mặc định theo context; withInput thêm label/placeholder. Giữ các biến thể và kết quả Promise hiện có, cải thiện focus và bố cục mobile.\n- Data-state dùng icon nền nhẹ, loading primary, empty warning, compact căn ngang và nút retry/action `SdButton size=\"sm\"`. Loading ưu tiên hiển thị so với lỗi khi VALUE/SEARCH đọc xen kẽ; giảm chuyển động tiếp tục tắt animation.\n- Notify dùng icon SVG nét trong ô nền nhạt theo màu trạng thái, đồng nhất với data-state; giữ timing/grouping/action và cơ chế sanitize HTML.\n\n### Fixed\n\n- Button chỉ hiển thị một icon khi dùng suffix mà không truyền icon đầu. SideDrawer nhận focus ngay khi mở, giữ hiệu ứng đóng và thiết lập giảm chuyển động.\n- Date-range áp dụng đúng `clearable`, required và disabled cho nút xóa; datetime dùng icon picker đồng nhất. Multiple-select hiển thị số lượng đã chọn và tooltip với mỗi lựa chọn trên một dòng. Sidebar dùng hết chiều cao khả dụng để cuộn menu dài.\n- Release `2.6` dùng bản đối chiếu `22.2.5` cho Angular 22; pipeline pin đúng tag, artifact và quy tắc giữ năm trang release gần nhất.\n- **Showcase release pages resolve library styles from the installed package.** Global Core UI SCSS now loads from `showcase/node_modules/@sdcorejs/angular`, so Angular Material resolves from Showcase's own dependencies when postpublish materializes a tarball without installing the v19 workspace.",
+    "markdown": "Release suffix `2.6` publishes `19.2.6`, `20.2.6`, `21.2.6`, and `22.2.6`.\n\n### Added\n\n- Select, autocomplete và server table có `readState`, `sdReadStateChange`, `retryRead()`, `hideReadError` và template `sdDataStateTemplate`. VALUE/SEARCH độc lập; retry dùng snapshot request đã lỗi, giữ model và dữ liệu thành công, bỏ qua response cũ. Public entry point `utilities/read-state` tách biệt với `utilities/data-state`.\n\n### Changed\n\n- Sidebar V1 dùng nền sáng, tổng chiều rộng 304px với thanh module 56px, tiêu đề đậm, khoảng cách gọn và Material Icons Outlined. Menu 1–3 cấp phân biệt nhánh cha với mục đang chọn; avatar và nút thu gọn nhỏ nằm ở cuối thanh module. Giữ nguyên API, dữ liệu menu, routing, phân quyền, tìm kiếm và expand/collapse; không thêm vùng trống cho description.\n- Button cải thiện màu outline/disabled theo theme, khoảng cách icon và focus bàn phím; giữ bo tròn M3 và các kích thước 32/40/48px. Table gom thao tác chọn hàng trong QuickAction; Import Excel cải thiện bước chọn file, lọc và hiển thị lỗi, kể cả trên mobile.\n- Inform dùng icon nền nhẹ và SdButton nhỏ; Upload thêm appearance dropzone/compact và thao tác bàn phím; Stepper dùng icon trong chỉ báo và phân biệt bước hoàn tất. Modal/Drawer thống nhất khoảng cách, bo góc và mobile; Drawer giữ và khôi phục focus bằng CDK.\n- Confirm dùng layout gọn với icon nền nhẹ luôn hiển thị, tiêu đề 18px và nút SdButton nhỏ. Các phương thức hỗ trợ icon tùy chỉnh hoặc mặc định theo context; withInput thêm label/placeholder. Giữ các biến thể và kết quả Promise hiện có, cải thiện focus và bố cục mobile.\n- Data-state dùng icon nền nhẹ, loading primary, empty warning, compact căn ngang và nút retry/action `SdButton size=\"sm\"`. Loading ưu tiên hiển thị so với lỗi khi VALUE/SEARCH đọc xen kẽ; giảm chuyển động tiếp tục tắt animation.\n- Notify dùng icon SVG nét trong ô nền nhạt theo màu trạng thái, đồng nhất với data-state; giữ timing/grouping/action và cơ chế sanitize HTML.\n\n### Fixed\n\n- Release verification refreshes npm pack metadata and retries only transient `ETARGET`/`E404` visibility failures after publication (up to 12 attempts, 5 seconds apart). Recovery and sequential publication await the downloaded tarball's exact SHA-256; access, integrity, provenance and immutable-version checks remain fail-closed.\n- Postpublish clears only the three generated Showcase input files after retaining the page, so the artifact commit can rebase onto current `main`; unexpected tracked changes still stop the release.\n- Manual recovery accepts an original artifact run ID and revalidates those exact tarballs instead of repacking: Angular's generated export ordering can otherwise change package bytes between builds of the same source. Source, hash, package-contract, consumer and provenance checks remain mandatory.\n\n- Error state của select/autocomplete căn giữa, nằm dưới dữ liệu đang giữ lại; panel hẹp giảm khoảng đệm, icon và cho phép xuống dòng.\n- Confirm `withRadio` loại bỏ scroll dọc dư do baseline và vùng bấm M3 tràn khỏi hàng radio; giữ vùng bấm 48px, khả năng cuộn danh sách dài và wrap lựa chọn trên mobile.\n- Badge `type=\"icon\"` giữ đúng kích thước icon, căn giữa với phần chữ và không co icon khi nội dung dài.\n- Chỉ báo selection của table dùng màu success, gồm icon desktop và số lượng đã chọn trên mobile.\n- Button chỉ hiển thị một icon khi dùng suffix mà không truyền icon đầu. SideDrawer nhận focus ngay khi mở, giữ hiệu ứng đóng và thiết lập giảm chuyển động.\n- Date-range áp dụng đúng `clearable`, required và disabled cho nút xóa; datetime dùng icon picker đồng nhất. Multiple-select hiển thị số lượng đã chọn và tooltip với mỗi lựa chọn trên một dòng. Sidebar dùng hết chiều cao khả dụng để cuộn menu dài.\n- Release `2.6` dùng bản đối chiếu `22.2.5` cho Angular 22; pipeline pin đúng tag, artifact và quy tắc giữ năm trang release gần nhất.\n- **Showcase release pages resolve library styles from the installed package.** Global Core UI SCSS now loads from `showcase/node_modules/@sdcorejs/angular`, so Angular Material resolves from Showcase's own dependencies when postpublish materializes a tarball without installing the v19 workspace.",
     "sections": [
       {
         "key": "added",
@@ -140,8 +175,13 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
         "title": "Changed",
         "level": 3,
         "anchor": "release-2-6-changed",
-        "markdown": "- Button cải thiện màu outline/disabled theo theme, khoảng cách icon và focus bàn phím; giữ bo tròn M3 và các kích thước 32/40/48px. Table gom thao tác chọn hàng trong QuickAction; Import Excel cải thiện bước chọn file, lọc và hiển thị lỗi, kể cả trên mobile.\n- Inform dùng icon nền nhẹ và SdButton nhỏ; Upload thêm appearance dropzone/compact và thao tác bàn phím; Stepper dùng icon trong chỉ báo và phân biệt bước hoàn tất. Modal/Drawer thống nhất khoảng cách, bo góc và mobile; Drawer giữ và khôi phục focus bằng CDK.\n- Confirm dùng layout gọn với icon nền nhẹ luôn hiển thị, tiêu đề 18px và nút SdButton nhỏ. Các phương thức hỗ trợ icon tùy chỉnh hoặc mặc định theo context; withInput thêm label/placeholder. Giữ các biến thể và kết quả Promise hiện có, cải thiện focus và bố cục mobile.\n- Data-state dùng icon nền nhẹ, loading primary, empty warning, compact căn ngang và nút retry/action `SdButton size=\"sm\"`. Loading ưu tiên hiển thị so với lỗi khi VALUE/SEARCH đọc xen kẽ; giảm chuyển động tiếp tục tắt animation.\n- Notify dùng icon SVG nét trong ô nền nhạt theo màu trạng thái, đồng nhất với data-state; giữ timing/grouping/action và cơ chế sanitize HTML.",
+        "markdown": "- Sidebar V1 dùng nền sáng, tổng chiều rộng 304px với thanh module 56px, tiêu đề đậm, khoảng cách gọn và Material Icons Outlined. Menu 1–3 cấp phân biệt nhánh cha với mục đang chọn; avatar và nút thu gọn nhỏ nằm ở cuối thanh module. Giữ nguyên API, dữ liệu menu, routing, phân quyền, tìm kiếm và expand/collapse; không thêm vùng trống cho description.\n- Button cải thiện màu outline/disabled theo theme, khoảng cách icon và focus bàn phím; giữ bo tròn M3 và các kích thước 32/40/48px. Table gom thao tác chọn hàng trong QuickAction; Import Excel cải thiện bước chọn file, lọc và hiển thị lỗi, kể cả trên mobile.\n- Inform dùng icon nền nhẹ và SdButton nhỏ; Upload thêm appearance dropzone/compact và thao tác bàn phím; Stepper dùng icon trong chỉ báo và phân biệt bước hoàn tất. Modal/Drawer thống nhất khoảng cách, bo góc và mobile; Drawer giữ và khôi phục focus bằng CDK.\n- Confirm dùng layout gọn với icon nền nhẹ luôn hiển thị, tiêu đề 18px và nút SdButton nhỏ. Các phương thức hỗ trợ icon tùy chỉnh hoặc mặc định theo context; withInput thêm label/placeholder. Giữ các biến thể và kết quả Promise hiện có, cải thiện focus và bố cục mobile.\n- Data-state dùng icon nền nhẹ, loading primary, empty warning, compact căn ngang và nút retry/action `SdButton size=\"sm\"`. Loading ưu tiên hiển thị so với lỗi khi VALUE/SEARCH đọc xen kẽ; giảm chuyển động tiếp tục tắt animation.\n- Notify dùng icon SVG nét trong ô nền nhạt theo màu trạng thái, đồng nhất với data-state; giữ timing/grouping/action và cơ chế sanitize HTML.",
         "items": [
+          {
+            "text": "Sidebar V1 dùng nền sáng, tổng chiều rộng 304px với thanh module 56px, tiêu đề đậm, khoảng cách gọn và Material Icons Outlined. Menu 1–3 cấp phân biệt nhánh cha với mục đang chọn; avatar và nút thu gọn nhỏ nằm ở cuối thanh module. Giữ nguyên API, dữ liệu menu, routing, phân quyền, tìm kiếm và expand/collapse; không thêm vùng trống cho description.",
+            "ordered": false,
+            "children": []
+          },
           {
             "text": "Button cải thiện màu outline/disabled theo theme, khoảng cách icon và focus bàn phím; giữ bo tròn M3 và các kích thước 32/40/48px. Table gom thao tác chọn hàng trong QuickAction; Import Excel cải thiện bước chọn file, lọc và hiển thị lỗi, kể cả trên mobile.",
             "ordered": false,
@@ -175,8 +215,43 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
         "title": "Fixed",
         "level": 3,
         "anchor": "release-2-6-fixed",
-        "markdown": "- Button chỉ hiển thị một icon khi dùng suffix mà không truyền icon đầu. SideDrawer nhận focus ngay khi mở, giữ hiệu ứng đóng và thiết lập giảm chuyển động.\n- Date-range áp dụng đúng `clearable`, required và disabled cho nút xóa; datetime dùng icon picker đồng nhất. Multiple-select hiển thị số lượng đã chọn và tooltip với mỗi lựa chọn trên một dòng. Sidebar dùng hết chiều cao khả dụng để cuộn menu dài.\n- Release `2.6` dùng bản đối chiếu `22.2.5` cho Angular 22; pipeline pin đúng tag, artifact và quy tắc giữ năm trang release gần nhất.\n- **Showcase release pages resolve library styles from the installed package.** Global Core UI SCSS now loads from `showcase/node_modules/@sdcorejs/angular`, so Angular Material resolves from Showcase's own dependencies when postpublish materializes a tarball without installing the v19 workspace.",
+        "markdown": "- Release verification refreshes npm pack metadata and retries only transient `ETARGET`/`E404` visibility failures after publication (up to 12 attempts, 5 seconds apart). Recovery and sequential publication await the downloaded tarball's exact SHA-256; access, integrity, provenance and immutable-version checks remain fail-closed.\n- Postpublish clears only the three generated Showcase input files after retaining the page, so the artifact commit can rebase onto current `main`; unexpected tracked changes still stop the release.\n- Manual recovery accepts an original artifact run ID and revalidates those exact tarballs instead of repacking: Angular's generated export ordering can otherwise change package bytes between builds of the same source. Source, hash, package-contract, consumer and provenance checks remain mandatory.\n\n- Error state của select/autocomplete căn giữa, nằm dưới dữ liệu đang giữ lại; panel hẹp giảm khoảng đệm, icon và cho phép xuống dòng.\n- Confirm `withRadio` loại bỏ scroll dọc dư do baseline và vùng bấm M3 tràn khỏi hàng radio; giữ vùng bấm 48px, khả năng cuộn danh sách dài và wrap lựa chọn trên mobile.\n- Badge `type=\"icon\"` giữ đúng kích thước icon, căn giữa với phần chữ và không co icon khi nội dung dài.\n- Chỉ báo selection của table dùng màu success, gồm icon desktop và số lượng đã chọn trên mobile.\n- Button chỉ hiển thị một icon khi dùng suffix mà không truyền icon đầu. SideDrawer nhận focus ngay khi mở, giữ hiệu ứng đóng và thiết lập giảm chuyển động.\n- Date-range áp dụng đúng `clearable`, required và disabled cho nút xóa; datetime dùng icon picker đồng nhất. Multiple-select hiển thị số lượng đã chọn và tooltip với mỗi lựa chọn trên một dòng. Sidebar dùng hết chiều cao khả dụng để cuộn menu dài.\n- Release `2.6` dùng bản đối chiếu `22.2.5` cho Angular 22; pipeline pin đúng tag, artifact và quy tắc giữ năm trang release gần nhất.\n- **Showcase release pages resolve library styles from the installed package.** Global Core UI SCSS now loads from `showcase/node_modules/@sdcorejs/angular`, so Angular Material resolves from Showcase's own dependencies when postpublish materializes a tarball without installing the v19 workspace.",
         "items": [
+          {
+            "text": "Release verification refreshes npm pack metadata and retries only transient `ETARGET`/`E404` visibility failures after publication (up to 12 attempts, 5 seconds apart). Recovery and sequential publication await the downloaded tarball's exact SHA-256; access, integrity, provenance and immutable-version checks remain fail-closed.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Postpublish clears only the three generated Showcase input files after retaining the page, so the artifact commit can rebase onto current `main`; unexpected tracked changes still stop the release.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Manual recovery accepts an original artifact run ID and revalidates those exact tarballs instead of repacking: Angular's generated export ordering can otherwise change package bytes between builds of the same source. Source, hash, package-contract, consumer and provenance checks remain mandatory.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Error state của select/autocomplete căn giữa, nằm dưới dữ liệu đang giữ lại; panel hẹp giảm khoảng đệm, icon và cho phép xuống dòng.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Confirm `withRadio` loại bỏ scroll dọc dư do baseline và vùng bấm M3 tràn khỏi hàng radio; giữ vùng bấm 48px, khả năng cuộn danh sách dài và wrap lựa chọn trên mobile.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Badge `type=\"icon\"` giữ đúng kích thước icon, căn giữa với phần chữ và không co icon khi nội dung dài.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Chỉ báo selection của table dùng màu success, gồm icon desktop và số lượng đã chọn trên mobile.",
+            "ordered": false,
+            "children": []
+          },
           {
             "text": "Button chỉ hiển thị một icon khi dùng suffix mà không truyền icon đầu. SideDrawer nhận focus ngay khi mở, giữ hiệu ứng đóng và thiết lập giảm chuyển động.",
             "ordered": false,

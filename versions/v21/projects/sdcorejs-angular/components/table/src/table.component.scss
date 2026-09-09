@@ -301,6 +301,19 @@
   white-space: nowrap;
 }
 
+:host .c-container:not(.sd-table-mobile) {
+  > .c-table {
+    // Round the existing scroll surface without adding another scrolling ancestor.
+    border-radius: 6px 6px 0 0;
+  }
+  > .c-paginator {
+    border-radius: 0 0 6px 6px;
+  }
+  > .c-loading {
+    border-radius: 6px 6px 0 0;
+  }
+}
+
 :host .sd-mobile-command-header {
   display: flex;
   align-items: center;

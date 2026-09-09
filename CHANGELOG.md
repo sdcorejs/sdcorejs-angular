@@ -6,13 +6,20 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+### Added
+
+- Table supports an optional `filter.quickSearch` row: Enter commits the keyword, `containFields` and `equalFields` generate an OR group, and `values`/`lazy-values` dropdowns apply immediately. Dropdowns support signal defaults, reactive visibility/disabled state, required values and user-only `onChange`. The applied `{ term, filters }` is available in `filterReq.quickSearch` even without search fields. `sdTableQuickSearchRightDef` lets consumers project optional UI on the right.
+
 ### Changed
 
+- Table external filters use small controls with inline errors hidden and a padded section body. Desktop tables use subtle 6px outer corners while retaining their existing scroll and sticky behavior.
 - Confirm, Notify, Inform and Data-state now use circular status icon backgrounds, including compact Data-state. Existing icon sizes, semantic colors, layouts and interactions are preserved.
 - Section header icons use a 32px circular soft background with a centered 20px glyph, matching `iconColor` across all six color tokens. Custom header slots and collapse behavior are preserved.
 
 ### Fixed
 
+- Disabled table row-command icons use the button's muted disabled color instead of retaining the active icon color.
+- Table desktop command touch targets stay within each button, preventing adjacent commands from intercepting clicks.
 - Sidebar V1 search uses a compact light native input with a leading icon and a single thin focus border. Keep existing search matching and IME buffering; make clear accessible by keyboard and restore input focus after clearing.
 
 ## [2.6] - 2026-09-08

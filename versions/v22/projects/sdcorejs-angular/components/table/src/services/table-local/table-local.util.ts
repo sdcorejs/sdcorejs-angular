@@ -3,7 +3,8 @@ import { Utilities } from '@sdcorejs/utils/fns';
 import { SdTableColumn, SdTableColumnLazyValues, SdTableColumnValues } from '../../models/table-column.model';
 import { SdTableItem } from '../../models/table-item.model';
 import { SdTableOptionTree } from '../../models/table-option-tree.model';
-import { SdTableFilterRequest } from '../table-filter/table-filter.model';
+import { SdTableFilterRequest, SdTableOptionFilter } from '../table-filter/table-filter.model';
+import { matchesQuickSearch, quickSearchConditions } from '../table-filter/table-quick-search.util';
 import { subtreeMatches } from '../tree/tree.util';
 import { compareLocalValues } from './table-local-sort.util';
 
@@ -11,6 +12,7 @@ export interface FilterLocalItemsOption<T> {
   type: 'local' | 'server';
   columns: SdTableColumn<T>[];
   tree?: SdTableOptionTree<T>;
+  filter?: SdTableOptionFilter;
 }
 
 export interface FilterLocalItemsResult<T, TItem> {
@@ -129,9 +131,14 @@ export const filterLocalItems = <T, TItem extends LocalFilterItem<T>>(
 ): FilterLocalItemsResult<T, TItem> => {
   const { columns } = option;
   const { rawColumnFilter, orderBy, orderDirection, pageSize, pageNumber } = filterInfo;
-  const matchesData = (data: T) => matchesColumnFilter(data, columns, rawColumnFilter);
+  const quickSearch = option.filter?.disabled ? undefined : option.filter?.quickSearch;
+  const matchesData = (data: T) =>
+    matchesColumnFilter(data, columns, rawColumnFilter) && matchesQuickSearch(data, quickSearch, filterInfo.quickSearch);
   const treeOpt = option.tree;
-  const treeSearch = option.type === 'local' && treeOpt?.loadType === 'static' && hasActiveColumnFilter(rawColumnFilter, columns);
+  const treeSearch =
+    option.type === 'local' &&
+    treeOpt?.loadType === 'static' &&
+    (hasActiveColumnFilter(rawColumnFilter, columns) || quickSearchConditions(quickSearch, filterInfo.quickSearch).length > 0);
   const treeSearchPredicate = treeSearch ? matchesData : undefined;
 
   const items = treeSearch

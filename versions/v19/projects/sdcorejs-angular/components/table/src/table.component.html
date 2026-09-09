@@ -102,6 +102,14 @@
   </ng-template>
 
   <ng-content select="[sdTableTop]"></ng-content>
+  @if (quickSearchOption(); as quickSearch) {
+    <sd-table-quick-search
+      [option]="quickSearch"
+      [value]="quickSearchValue()"
+      [autoId]="_autoId"
+      [rightTemplate]="sdQuickSearchRightDef()?.templateRef"
+      (valueChange)="onQuickSearchChange($event)" />
+  }
   <div class="c-container" [class.sd-table-mobile]="_mobileCards">
     <!-- why: bảng tải dữ liệu BẤT ĐỒNG BỘ nhưng trước đây chỉ có spinner thuần hình ảnh — screen
          reader không được báo gì cả. role="status" + aria-live="polite" đọc trạng thái ngay khi
