@@ -374,7 +374,7 @@ test('release snapshot fingerprints ignore object insertion order but retain all
 });
 
 test('repository snapshots bind reviewed releases to exact baselines without authorizing future releases', () => {
-  for (const suffix of ['2.5', '2.6']) {
+  for (const suffix of ['2.5', '2.6', '2.7']) {
     const contract = loadReleaseContract(suffix);
     for (const target of releaseTargets(suffix)) {
       const snapshot = contract.targets[target.version];
@@ -385,7 +385,7 @@ test('repository snapshots bind reviewed releases to exact baselines without aut
       }
     }
   }
-  assert.equal(loadReleaseContract('2.7'), undefined);
+  assert.equal(loadReleaseContract('2.8'), undefined);
   assert.throws(() => loadReleaseContract('../2.5'));
 });
 

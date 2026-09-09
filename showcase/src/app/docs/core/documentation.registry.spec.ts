@@ -24,7 +24,7 @@ describe('documentation registry', () => {
     for (const category of DOC_CATEGORIES) {
       expect(getDocPagesByCategory(category)).withContext(category).toHaveSize(EXPECTED_CATEGORY_COUNTS[category]);
     }
-    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(358);
+    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(360);
   });
 
   it('uses unique stable page ids and category/slug pairs', () => {
@@ -46,7 +46,9 @@ describe('documentation registry', () => {
     const exampleIds = DOC_PAGES.flatMap(page => page.examples.map(example => example.id));
 
     expect(new Set(exampleIds).size).toBe(exampleIds.length);
-    expect(exampleIds).toHaveSize(358);
+    expect(exampleIds).toHaveSize(360);
+    expect(findDocPage('components', 'table')?.examples.map(example => example.sectionId)).toContain('example-quick-search');
+    expect(findDocPage('components', 'table')?.examples.map(example => example.sectionId)).toContain('example-external-filters');
     for (const page of DOC_PAGES) {
       expect(page.examples).toHaveSize(page.demoSectionCount);
       for (const example of page.examples) {

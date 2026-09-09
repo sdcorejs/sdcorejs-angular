@@ -214,7 +214,7 @@ try {
     }
     Write-Utf8NoBom -Path (Join-Path $stageDir "sha256.txt") -Content "$sha256  $($pack.filename)$([Environment]::NewLine)"
 
-    $baselineMajor = if ($major -eq "22") { "21" } else { $major }
+    $baselineMajor = if ($major -eq "22" -and $PatchVersion -eq "2.5") { "21" } else { $major }
     $tag = if ($major -eq "22") { "latest" } else { "angular$major" }
     $artifact = [ordered]@{
       target = [ordered]@{

@@ -79,9 +79,10 @@ describe('LayoutDemoComponent', () => {
     expect(workspace && 'children' in workspace ? workspace.children?.length : 0).toBeGreaterThan(10);
     expect(insights?.icon).toBe('bar_chart');
     expect(v1Showcase?.querySelector('.c-menu-tree-search')).not.toBeNull();
-    expect(v1Showcase?.querySelector<HTMLInputElement>('input[data-autoid="forms-input-layout-v1-menu-search"]')?.placeholder).toBe(
-      'Search menu'
-    );
+    const search = v1Showcase?.querySelector<HTMLInputElement>('input[data-autoid="layout-v1-menu-search"]');
+    expect(search?.placeholder).toBe('Search menu');
+    expect(search?.type).toBe('search');
+    expect(search?.getAttribute('aria-label')).toBe('Search menu');
   });
 
   it('keeps the V1 desktop account avatar inside the live preview', () => {
