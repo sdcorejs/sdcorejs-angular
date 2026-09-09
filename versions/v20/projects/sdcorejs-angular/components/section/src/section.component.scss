@@ -18,6 +18,24 @@
   padding: 8px 16px;
 }
 
+.sd-section-header-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 20px;
+  line-height: 1;
+  background: var(--sd-primary-light);
+
+  @each $tone in primary, secondary, info, success, warning, error {
+    &.text-#{$tone} {
+      background: var(--sd-#{$tone}-light);
+    }
+  }
+}
+
 .sd-section-collapse-toggle {
   padding: 0;
   border: 0;

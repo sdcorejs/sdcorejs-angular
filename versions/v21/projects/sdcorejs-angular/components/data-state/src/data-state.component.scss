@@ -22,7 +22,7 @@
   width: 56px;
   height: 56px;
   margin-bottom: 16px;
-  border-radius: 8px;
+  border-radius: 50%;
   background: var(--sd-surface-muted);
 }
 .sd-data-state__icon {
@@ -104,7 +104,6 @@
   width: 32px;
   height: 32px;
   margin: 0;
-  border-radius: 6px;
 }
 .sd-data-state--compact .sd-data-state__icon {
   width: 22px;

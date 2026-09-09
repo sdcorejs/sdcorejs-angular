@@ -12,9 +12,10 @@
         <ng-content select="[sdHeaderLeft]">
           @if (_icon) {
             <span
-              class="mr-8 material-icons-outlined"
+              class="sd-section-header-icon mr-8 material-icons-outlined"
               [class.text-primary]="_iconColor === 'primary'"
               [class.text-secondary]="_iconColor === 'secondary'"
+              [class.text-info]="_iconColor === 'info'"
               [class.text-error]="_iconColor === 'error'"
               [class.text-warning]="_iconColor === 'warning'"
               [class.text-success]="_iconColor === 'success'">

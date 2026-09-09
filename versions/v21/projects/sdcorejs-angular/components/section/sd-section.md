@@ -14,8 +14,8 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
 | --- | --- | --- | --- |
 | `title` | `string \| null \| undefined` | `undefined` | Header title. |
 | `subTitle` | `string \| null \| undefined` | `undefined` | Optional secondary line below the title. |
-| `icon` | `string \| null \| undefined` | `undefined` | Material icon name shown before the title. |
-| `iconColor` | `Color` | `'primary'` | Icon color token. |
+| `icon` | `string \| null \| undefined` | `undefined` | Material icon name shown before the title, centered at 20px inside a 32px circular soft background. |
+| `iconColor` | `Color` | `'primary'` | Icon color token; the circular background uses the matching light tone. |
 | `collapsed` | `boolean` model | `false` | Two-way bindable through `[(collapsed)]`. |
 | `collapsible` | `boolean` | `false` | Enables header click collapse. Bare attribute = true. |
 | `hideHeader` | `boolean` | `false` | Hides the header row. Bare attribute = true. |

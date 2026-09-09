@@ -331,7 +331,7 @@ Covers (15 specs total):
 
 ## Confirm presentation and icons
 
-All six methods accept `icon?: string`. The icon is always shown in a decorative 40px rounded tile, with an outlined 22px glyph. A custom nonblank icon name takes priority; omitted, empty or whitespace-only values use the defaults below. Custom names are trimmed. Rendering uses SdIcon and respects the configured Material/Lucide icon provider.
+All six methods accept `icon?: string`. The icon is always shown in a decorative 40px circular background, with an outlined 22px glyph. A custom nonblank icon name takes priority; omitted, empty or whitespace-only values use the defaults below. Custom names are trimmed. Rendering uses SdIcon and respects the configured Material/Lucide icon provider.
 
 | Context (in priority order) | Default icon |
 |---|---|
