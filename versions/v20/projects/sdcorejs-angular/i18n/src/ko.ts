@@ -1,6 +1,10 @@
 import type { EN_MESSAGES } from './en';
 
 export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
+  'core.component.table.quick-search.placeholder': '검색…',
+  'core.component.table.quick-search.enter': 'Enter 키를 눌러 검색하세요.',
+  'core.component.table.quick-search.required': '검색하기 전에 필수 필터를 선택하세요.',
+  'core.component.table.quick-search.clear': '검색어 지우기',
   'core.component.table.mobile.tools': '도구',
   'core.component.table.mobile.tools-title': '테이블 도구',
   'core.component.table.mobile.row-commands': '행 작업: {row}',

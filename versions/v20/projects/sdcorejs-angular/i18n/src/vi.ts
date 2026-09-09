@@ -1,6 +1,10 @@
 import type { EN_MESSAGES } from './en';
 
 export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
+  'core.component.table.quick-search.placeholder': 'Tìm kiếm…',
+  'core.component.table.quick-search.enter': 'Nhấn Enter để tìm kiếm.',
+  'core.component.table.quick-search.required': 'Chọn các bộ lọc bắt buộc trước khi tìm kiếm.',
+  'core.component.table.quick-search.clear': 'Xóa từ khóa tìm kiếm',
   'core.component.table.mobile.tools': 'Công cụ',
   'core.component.table.mobile.tools-title': 'Công cụ bảng',
   'core.component.table.mobile.row-commands': 'Thao tác dòng: {row}',

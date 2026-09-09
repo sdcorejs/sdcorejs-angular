@@ -9,10 +9,12 @@ import { SdTableColumnAnyRow } from '../../models/table-column.model';
 import {
   SdTableExternalFilter,
   SdTableOptionFilter,
+  SdTableOptionQuickSearch,
   TableFilterConfiguration,
   TableFilterRegister,
   TableFilterValue,
 } from './table-filter.model';
+import { hasQuickSearchValue, initialQuickSearchValue } from './table-quick-search.util';
 
 @Injectable()
 export class SdTableFilterService {
@@ -48,6 +50,7 @@ export class SdTableFilterService {
       id: string;
       columns: SdTableColumnAnyRow[] | undefined;
       externalFilters: SdTableExternalFilter[] | undefined;
+      quickSearch?: SdTableOptionQuickSearch;
     }
   ) => {
     const { id, columns, externalFilters } = args;
@@ -55,6 +58,15 @@ export class SdTableFilterService {
       id,
       columns: columns?.map(e => e.field).filter(field => !!field) || [],
       externalFilters: externalFilters?.map(e => e.field).filter(field => !!field) || [],
+      ...(args.quickSearch
+        ? {
+            quickSearch: {
+              containFields: args.quickSearch.containFields,
+              equalFields: args.quickSearch.equalFields,
+              filters: args.quickSearch.filters?.map(item => item.field),
+            },
+          }
+        : {}),
     });
     return {
       tempKey,
@@ -75,9 +87,11 @@ export class SdTableFilterService {
       externalFilters: SdTableExternalFilter[] | undefined;
       filterDefs: SdTableFilterDefDirective[] | undefined;
       columnOperator?: Record<string, Operator>;
+      quickSearch?: SdTableOptionQuickSearch;
       force?: boolean;
     }
   ) => {
+    args = { ...args, quickSearch: filter?.disabled ? undefined : (args.quickSearch ?? filter?.quickSearch) };
     const { key, tempKey, cacheSession } = this.#resolveKey(filter, args);
     if (args.force) {
       this.#destroyStorageHandles(key);
@@ -156,13 +170,20 @@ export class SdTableFilterService {
               columnFilter: keys.includes('columnFilter') ? value?.columnFilter || {} : columnFilter,
               // Filter external
               externalFilter: keys.includes('externalFilter') ? value?.externalFilter || {} : externalFilter,
+              ...(args.quickSearch
+                ? {
+                    quickSearch: keys.includes('quickSearch')
+                      ? value.quickSearch || initialQuickSearchValue(args.quickSearch)
+                      : current.quickSearch,
+                  }
+                : {}),
               // Force
               notReload: !!value?.notReload,
             };
             activeFilterValue.set({
               ...updatedFilter,
               // Kiểm tra có đang lọc hay không
-              filtered: this.#filtered(value),
+              filtered: this.#filtered(updatedFilter),
             });
             return updatedFilter;
           },
@@ -190,6 +211,7 @@ export class SdTableFilterService {
 
   #filtered = (filterReq: Partial<TableFilterValue>): boolean => {
     const { columnFilter, externalFilter } = filterReq;
+    if (filterReq.quickSearch?.term?.trim() || Object.values(filterReq.quickSearch?.filters || {}).some(hasQuickSearchValue)) return true;
     if (
       Object.values({ ...columnFilter, ...externalFilter }).some(val => {
         // Nếu là mảng và mảng có phần tử thì xem như là có filter
@@ -234,6 +256,7 @@ export class SdTableFilterService {
     columns: SdTableColumnAnyRow[] | undefined;
     externalFilters: SdTableExternalFilter[] | undefined;
     columnOperator?: Record<string, Operator>;
+    quickSearch?: SdTableOptionQuickSearch;
   }): TableFilterValue => {
     const columnFilter: Record<string, unknown> = {};
     const externalFilter: Record<string, unknown> = {};
@@ -259,12 +282,10 @@ export class SdTableFilterService {
       // externalFilter[item.field] = item?.default;
     }
     return {
-      // Filter column
       columnFilter,
-      // Filter external
       externalFilter,
-      // columnOperator
       columnOperator,
+      ...(args.quickSearch ? { quickSearch: initialQuickSearchValue(args.quickSearch) } : {}),
     };
   };
 
@@ -294,6 +315,7 @@ export class SdTableFilterService {
       externalFilters: SdTableExternalFilter[] | undefined;
       filterDefs: SdTableFilterDefDirective[] | undefined;
       columnOperator?: Record<string, Operator>;
+      quickSearch?: SdTableOptionQuickSearch;
     },
     value: TableFilterValue
   ): TableFilterValue => {
@@ -324,12 +346,10 @@ export class SdTableFilterService {
       }
     }
     return {
-      // Filter column
       columnFilter,
-      // Filter external
       externalFilter,
-      // columnOperator
       columnOperator,
+      ...(args.quickSearch ? { quickSearch: initialQuickSearchValue(args.quickSearch, value?.quickSearch) } : {}),
     };
   };
 }

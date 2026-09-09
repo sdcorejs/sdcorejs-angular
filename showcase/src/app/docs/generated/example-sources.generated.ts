@@ -6387,6 +6387,7 @@ import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-pa
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
+import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
 import {
   SdTable,
   SdTableOption,
@@ -6397,7 +6398,23 @@ import {
   SdTableGroupDefDirective,
   SdMaterialFooterDefDirective,
   SdTableItem,
+  SdTableQuickSearchRightDefDirective,
 } from '@sdcorejs/angular/components/table';
+
+interface QuickSearchCustomer {
+  code: string;
+  name: string;
+  phone: string;
+  email: string;
+  tenantId: string;
+}
+
+const QUICK_SEARCH_CUSTOMERS: QuickSearchCustomer[] = [
+  { code: 'KH-001', name: 'Nguyễn Minh An', phone: '0900000001', email: 'an@example.com', tenantId: 'north' },
+  { code: 'KH-002', name: 'Trần Thanh Bình', phone: '0900000002', email: 'binh@example.com', tenantId: 'north' },
+  { code: 'KH-003', name: 'Lê Hoàng An', phone: '0900000003', email: 'hoang@example.com', tenantId: 'south' },
+  { code: 'KH-004', name: 'Phạm Thu Dung', phone: '0900000004', email: 'an.dung@example.com', tenantId: 'south' },
+];
 
 interface Employee {
   id: number;
@@ -6541,11 +6558,42 @@ const TASKS: Task[] = [
     SdButton,
     SdModal,
     SdSideDrawer,
+    SdCheckbox,
+    SdTableQuickSearchRightDefDirective,
   ],
   template: \`
     <demo-page #demoPage
       title="Table"
       description="Bảng dữ liệu mặc định của SDCoreJS — phân trang, sắp xếp, lọc, chọn nhiều, lệnh dòng, export Excel/CSV. Hỗ trợ chế độ local và server.">
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-quick-search') {
+      <demo-section heading="Quick search"
+        [props]="[{ name: 'filter.quickSearch', value: 'containFields / equalFields / filters' }, { name: 'default', value: 'Signal' }, { name: 'sdTableQuickSearchRightDef', value: 'template' }]"
+        note="Chọn tenant áp dụng ngay; nhập từ khóa rồi nhấn Enter. Tên/email tìm chứa, mã/SĐT tìm chính xác; email không cần có cột. Đổi tenant ở màn A rồi chuyển màn B để thấy lựa chọn được giữ bằng signal chung. Checkbox bên phải là UI do consumer chèn vào.">
+        <div class="d-flex gap-8 mb-16">
+          <sd-button title="Màn A" size="sm" [type]="quickScreen() === 'A' ? 'fill' : 'outline'" (click)="quickScreen.set('A')" />
+          <sd-button title="Màn B" size="sm" [type]="quickScreen() === 'B' ? 'fill' : 'outline'" (click)="quickScreen.set('B')" />
+        </div>
+        @for (screen of quickScreens; track screen) {
+          @if (quickScreen() === screen) {
+            <sd-table [autoId]="'quick-search-' + screen" [option]="quickSearchOptions[screen]">
+              <ng-template sdTableQuickSearchRightDef>
+                <sd-checkbox label="Ẩn bộ chọn tenant" size="sm" [model]="hideQuickTenant()" (sdChange)="hideQuickTenant.set(!!$event)" />
+              </ng-template>
+            </sd-table>
+          }
+        }
+        <p class="T12R text-secondary mt-12" role="status">{{ quickSearchLog() }}</p>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-external-filters') {
+      <demo-section heading="External filters"
+        [props]="[{ name: 'filter.externalFilters', value: 'string / values / number / daterange' }, { name: 'filter.manualFilter', value: 'true' }]"
+        note="Bộ lọc gọn, có khoảng đệm với mép section. Nhập điều kiện rồi nhấn Tìm kiếm; nút xóa và thiết lập nằm trên header. Bảng bo nhẹ ở các góc ngoài, vẫn cuộn và giữ header cố định.">
+        <sd-table autoId="external-filters" [option]="externalFilterOption" />
+      </demo-section>
+      }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-the-mobile-va-thao-tac') {
       <demo-section heading="Thẻ mobile và thao tác"
@@ -6799,7 +6847,9 @@ const TASKS: Task[] = [
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-lenh-dong-phai') {
-      <demo-section heading="Lệnh dòng phải" [props]="[{ name: 'command.align', value: 'right' }]">
+      <demo-section heading="Lệnh dòng phải"
+        [props]="[{ name: 'command.align', value: 'right' }, { name: 'command.commands[].disabled', value: '(row) => boolean' }]"
+        note="SP-003 minh họa lệnh Sửa và Xóa bị vô hiệu hóa: icon nhạt màu, lệnh Xem vẫn sử dụng được.">
         <div class="table-box">
           <sd-table [option]="commandRightOption"></sd-table>
         </div>
@@ -6987,6 +7037,78 @@ const TASKS: Task[] = [
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TableDemoComponent {
+  readonly quickScreens = ['A', 'B'] as const;
+  readonly quickScreen = signal<'A' | 'B'>('A');
+  readonly quickTenant = signal<string | null>('north');
+  readonly hideQuickTenant = signal(false);
+  readonly quickSearchLog = signal('Tenant dùng chung: Miền Bắc. Dữ liệu minh họa.');
+  readonly quickSearchOptions = { A: this.createQuickSearchOption('A'), B: this.createQuickSearchOption('B') };
+  private createQuickSearchOption(screen: 'A' | 'B'): SdTableOption<QuickSearchCustomer> {
+    return {
+    type: 'local', rowKey: 'code', items: () => QUICK_SEARCH_CUSTOMERS,
+    filter: { key: \`demo-quick-search-\${screen}\`, cacheable: true, quickSearch: {
+      containFields: ['name', 'email'], equalFields: ['code', 'phone'],
+      placeholder: 'Tên, email, mã KH hoặc số điện thoại…',
+      filters: [{
+        field: 'tenantId', title: 'Tenant', type: 'values', required: true,
+        default: this.quickTenant, hidden: this.hideQuickTenant,
+        option: { valueField: 'id', displayField: 'name', items: [{ id: 'north', name: 'Miền Bắc' }, { id: 'south', name: 'Miền Nam' }] },
+        onChange: value => {
+          this.quickTenant.set(typeof value === 'string' ? value : null);
+          this.quickSearchLog.set(\`Màn \${screen} đã chọn tenant: \${value || '(chưa chọn)'}. Màn còn lại sẽ dùng lựa chọn này.\`);
+        },
+      }],
+    } },
+    columns: [
+      { field: 'code', title: 'Mã KH', type: 'string', width: '120px' },
+      { field: 'name', title: 'Khách hàng', type: 'string', width: '240px' },
+      { field: 'phone', title: 'Số điện thoại', type: 'string', width: '180px' },
+    ],
+    reload: { visible: true }, export: { visible: 'ALL', fileName: 'quick-search-customers' },
+    };
+  }
+
+  readonly externalFilterOption: SdTableOption<Employee> = {
+    type: 'server',
+    items: async ({ rawExternalFilter, pageNumber, pageSize }) => {
+      // Mock API: consumer xử lý external filters từ request của table.
+      const { name, department, salary, joinDate } = rawExternalFilter;
+      const term = String(name ?? '').trim().toLocaleLowerCase();
+      const from = joinDate?.from ? new Date(joinDate.from).setHours(0, 0, 0, 0) : undefined;
+      const to = joinDate?.to ? new Date(joinDate.to).setHours(23, 59, 59, 999) : undefined;
+      const rows = EMPLOYEES.filter(row =>
+        (!term || row.name.toLocaleLowerCase().includes(term)) &&
+        (!department || row.department === department) &&
+        (salary === undefined || salary === null || salary === '' || row.salary === Number(salary)) &&
+        (from === undefined || row.joinDate.getTime() >= from) &&
+        (to === undefined || row.joinDate.getTime() <= to)
+      );
+      return { items: rows.slice(pageNumber * pageSize, (pageNumber + 1) * pageSize), total: rows.length };
+    },
+    filter: {
+      hideInlineFilter: true, manualFilter: true, externalFilterPerRow: 4,
+      externalFilters: [
+        { field: 'name', title: 'Họ và tên', type: 'string', defaultShowing: true },
+        { field: 'department', title: 'Phòng ban', type: 'values', defaultShowing: true,
+          option: { valueField: 'value', displayField: 'display', items: [
+            { value: 'TECH', display: 'Công nghệ' }, { value: 'SALES', display: 'Kinh doanh' },
+            { value: 'HR', display: 'Nhân sự' }, { value: 'FINANCE', display: 'Tài chính' },
+            { value: 'MARKETING', display: 'Marketing' },
+          ] } },
+        { field: 'salary', title: 'Lương', type: 'number', defaultShowing: true },
+        { field: 'joinDate', title: 'Ngày vào làm', type: 'daterange', defaultShowing: true },
+      ],
+    },
+    columns: [
+      { field: 'name', title: 'Họ và tên', type: 'string', width: '220px', fixed: true },
+      { field: 'department', title: 'Phòng ban', type: 'string', width: '180px' },
+      { field: 'position', title: 'Chức vụ', type: 'string', width: '220px' },
+      { field: 'salary', title: 'Lương', type: 'number', width: '180px' },
+      { field: 'joinDate', title: 'Ngày vào làm', type: 'date', width: '180px' },
+    ],
+    reload: { visible: true }, style: { maxHeight: '240px' },
+  };
+
   readonly filterOnChangeEvent = signal('Chưa có thay đổi');
 
   readonly employeeOption: SdTableOption<Employee> = {
@@ -7292,8 +7414,8 @@ export class TableDemoComponent {
       align: 'right',
       commands: [
         { icon: 'visibility', title: 'Xem', click: (p: Product) => alert(\`Xem \${p.code}\`) },
-        { icon: 'edit', title: 'Sửa', click: (p: Product) => alert(\`Sửa \${p.code}\`) },
-        { icon: 'delete', title: 'Xóa', color: 'error', click: (p: Product) => alert(\`Xóa \${p.code}\`) },
+        { icon: 'edit', title: 'Sửa', disabled: (p: Product) => !p.active, click: (p: Product) => alert(\`Sửa \${p.code}\`) },
+        { icon: 'delete', title: 'Xóa', color: 'error', disabled: (p: Product) => !p.active, click: (p: Product) => alert(\`Xóa \${p.code}\`) },
       ],
     },
     columns: [
@@ -17332,6 +17454,14 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     </div>
   </demo-section>`,
   },
+  "components/table/example-external-filters": {
+    ...SHOWCASE_PAGE_SOURCES["components/table"],
+    html: `<demo-section heading="External filters"
+    [props]="[{ name: 'filter.externalFilters', value: 'string / values / number / daterange' }, { name: 'filter.manualFilter', value: 'true' }]"
+    note="Bộ lọc gọn, có khoảng đệm với mép section. Nhập điều kiện rồi nhấn Tìm kiếm; nút xóa và thiết lập nằm trên header. Bảng bo nhẹ ở các góc ngoài, vẫn cuộn và giữ header cố định.">
+    <sd-table autoId="external-filters" [option]="externalFilterOption" />
+  </demo-section>`,
+  },
   "components/table/example-filter-onchange": {
     ...SHOWCASE_PAGE_SOURCES["components/table"],
     html: `<demo-section
@@ -17430,7 +17560,9 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
   },
   "components/table/example-lenh-dong-phai": {
     ...SHOWCASE_PAGE_SOURCES["components/table"],
-    html: `<demo-section heading="Lệnh dòng phải" [props]="[{ name: 'command.align', value: 'right' }]">
+    html: `<demo-section heading="Lệnh dòng phải"
+    [props]="[{ name: 'command.align', value: 'right' }, { name: 'command.commands[].disabled', value: '(row) => boolean' }]"
+    note="SP-003 minh họa lệnh Sửa và Xóa bị vô hiệu hóa: icon nhạt màu, lệnh Xem vẫn sử dụng được.">
     <div class="table-box">
       <sd-table [option]="commandRightOption"></sd-table>
     </div>
@@ -17521,6 +17653,27 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
         </ng-template>
       </sd-table>
     </div>
+  </demo-section>`,
+  },
+  "components/table/example-quick-search": {
+    ...SHOWCASE_PAGE_SOURCES["components/table"],
+    html: `<demo-section heading="Quick search"
+    [props]="[{ name: 'filter.quickSearch', value: 'containFields / equalFields / filters' }, { name: 'default', value: 'Signal' }, { name: 'sdTableQuickSearchRightDef', value: 'template' }]"
+    note="Chọn tenant áp dụng ngay; nhập từ khóa rồi nhấn Enter. Tên/email tìm chứa, mã/SĐT tìm chính xác; email không cần có cột. Đổi tenant ở màn A rồi chuyển màn B để thấy lựa chọn được giữ bằng signal chung. Checkbox bên phải là UI do consumer chèn vào.">
+    <div class="d-flex gap-8 mb-16">
+      <sd-button title="Màn A" size="sm" [type]="quickScreen() === 'A' ? 'fill' : 'outline'" (click)="quickScreen.set('A')" />
+      <sd-button title="Màn B" size="sm" [type]="quickScreen() === 'B' ? 'fill' : 'outline'" (click)="quickScreen.set('B')" />
+    </div>
+    @for (screen of quickScreens; track screen) {
+      @if (quickScreen() === screen) {
+        <sd-table [autoId]="'quick-search-' + screen" [option]="quickSearchOptions[screen]">
+          <ng-template sdTableQuickSearchRightDef>
+            <sd-checkbox label="Ẩn bộ chọn tenant" size="sm" [model]="hideQuickTenant()" (sdChange)="hideQuickTenant.set(!!$event)" />
+          </ng-template>
+        </sd-table>
+      }
+    }
+    <p class="T12R text-secondary mt-12" role="status">{{ quickSearchLog() }}</p>
   </demo-section>`,
   },
   "components/table/example-server-side": {

@@ -16,6 +16,7 @@ import {
   effect,
   inject,
   input,
+  isSignal,
   output,
   signal,
   untracked,
@@ -26,7 +27,7 @@ import { MatSort, MatSortable, MatSortModule, SortDirection } from '@angular/mat
 import { MatTable, MatTableModule } from '@angular/material/table';
 import { SdExcelColumn, SdNotifyService } from '@sdcorejs/angular/services';
 import { Subject, Subscription, firstValueFrom, isObservable } from 'rxjs';
-import { debounceTime, map, startWith, switchMap } from 'rxjs/operators';
+import { debounceTime, map, startWith, switchMap, tap } from 'rxjs/operators';
 import { SdTableCellDefDirective } from './directives/sd-table-cell-def.directive';
 import { SdTableExpandDefDirective } from './directives/sd-table-expand-def.directive';
 import { SdTableGroupDefDirective, SdTableGroupDefContext } from './directives/sd-table-group-def.directive';
@@ -34,6 +35,10 @@ import { SdTableFilterDefDirective } from './directives/sd-table-filter-def.dire
 import { SdMaterialFooterDefDirective } from './directives/sd-table-footer-def.directive';
 import { SdTableTitleDefDirective } from './directives/sd-table-title-def.directive';
 import { SdTableCommandHeaderDefDirective } from './directives/sd-table-command-header-def.directive';
+import { SdTableQuickSearchRightDefDirective } from './directives/sd-table-quick-search-right-def.directive';
+import { TableQuickSearchComponent } from './components/filter/quick-search/quick-search.component';
+import { SdTableQuickSearchValue } from './services/table-filter/table-quick-search.model';
+import { hasQuickSearchValue, quickSearchValid, sameQuickSearchValue } from './services/table-filter/table-quick-search.util';
 import { SdTableRowMobileDefDirective } from './directives/sd-table-row-mobile-def.directive';
 import { SdTableMobileActionsComponent } from './components/mobile-cards/mobile-actions.component';
 import { SdTableMobileAction } from './components/mobile-cards/mobile-action.model';
@@ -237,6 +242,7 @@ const EMPTY_COMMANDS: SdTableCommand[] = [];
     DesktopCellComponent,
     ColumnTitleComponent,
     ExternalFilterComponent,
+    TableQuickSearchComponent,
     ConfigComponent,
     ColumnFilterComponent,
     MobileFilterComponent,
@@ -294,6 +300,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   sdCellDefs = contentChildren(SdTableCellDefDirective);
   /** Nội dung tuỳ chọn cho ô header của cột command (mặc định ô này để trống). */
   sdCommandHeaderDef = contentChild(SdTableCommandHeaderDefDirective);
+  readonly sdQuickSearchRightDef = contentChild(SdTableQuickSearchRightDefDirective);
   sdFooterDefs = contentChildren(SdMaterialFooterDefDirective);
   sdFilterDefs = contentChildren(SdTableFilterDefDirective);
   sdTitleDefs = contentChildren(SdTableTitleDefDirective);
@@ -459,6 +466,11 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
   #tableId = Utilities.generateUuid();
   filterRegister!: TableFilterRegister;
+  readonly quickSearchOption = computed(() => (this.tableOption()?.filter?.disabled ? undefined : this.tableOption()?.filter?.quickSearch));
+  readonly quickSearchValue = signal<SdTableQuickSearchValue>({ term: '', filters: {} });
+  private readonly quickSearchControl = viewChild(TableQuickSearchComponent);
+  readonly quickSearchValid = computed(() => quickSearchValid(this.quickSearchOption(), this.quickSearchValue()));
+  readonly #filterRegisterRevision = signal(0);
   key = Utilities.generateUuid();
 
   columnOperator: Record<string, Operator> = {};
@@ -549,6 +561,23 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       }
     });
 
+    effect(() => {
+      this.#filterRegisterRevision();
+      const values = (this.quickSearchOption()?.filters || [])
+        .filter(item => isSignal(item.default))
+        .map(item => ({ field: item.field, value: isSignal(item.default) ? item.default() : undefined }));
+      untracked(() => {
+        if (!this.filterRegister || !values.length) return;
+        const current = this.filterRegister.value.get().quickSearch || { term: '', filters: {} };
+        const changed = values.filter(item => !sameQuickSearchValue(current.filters[item.field], item.value));
+        if (!changed.length) return;
+        const filters = { ...current.filters };
+        for (const item of changed) filters[item.field] = Array.isArray(item.value) ? [...item.value] : item.value;
+        // why: đồng bộ từ store không phát onChange, tránh vòng lặp giữa hai màn dùng chung tenant.
+        this.filterRegister.value.set({ quickSearch: { ...current, filters } });
+      });
+    });
+
     effect(onCleanup => {
       const paginator = this.paginator();
       if (paginator) {
@@ -616,7 +645,8 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
             const filterInfo = this.getFilterRequest();
             const result = await this.#load(filterInfo, !this.#loadCompleted || data.force);
             if (data.revision !== this.#optionRevision || !result) return undefined;
-            this.#loadCompleted = true;
+            // why: a blocked initial local read must still load its source after required values arrive.
+            if (quickSearchValid(this.quickSearchOption(), filterInfo.quickSearch)) this.#loadCompleted = true;
             return {
               result,
               revision: data.revision,
@@ -639,11 +669,12 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
   // --- GIỮ NGUYÊN TẤT CẢ CÁC HÀM FILTER VÀ EXPORT CŨ CỦA BẠN ---
   #filterExportInfo = (pageNumber: number, pageSize: number): SdTableFilterRequest => {
-    const { columnOperator, columnFilter, externalFilter } = this.filterRegister.value.get();
+    const { columnOperator, columnFilter, externalFilter, quickSearch } = this.filterRegister.value.get();
     return {
       columnOperator: columnOperator || {},
       rawColumnFilter: columnFilter || {},
       rawExternalFilter: externalFilter || {},
+      ...(this.quickSearchOption() ? { quickSearch: quickSearch || { term: '', filters: {} } } : {}),
       orderBy: this.sort()?.active || '',
       orderDirection: this.sort()?.direction === 'asc' ? 'ASC' : this.sort()?.direction === 'desc' ? 'DESC' : undefined,
       pageNumber,
@@ -668,6 +699,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     this.#filterRegisterSubscription?.unsubscribe();
     this.#filterRegisterSubscription = undefined;
     this.filterRegister = undefined!;
+    this.quickSearchValue.set({ term: '', filters: {} });
 
     this.#tableId = Utilities.generateUuid();
     this.key = Utilities.generateUuid();
@@ -750,6 +782,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       id: this.#tableId,
       columns: opt?.columns,
       externalFilters: opt?.filter?.externalFilters,
+      quickSearch: this.quickSearchOption(),
       filterDefs: [...this.sdFilterDefs()],
       columnOperator: this.columnOperator,
       force: true,
@@ -762,6 +795,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     this.#filterRegisterSubscription?.unsubscribe();
     this.#filterRegisterSubscription = this.filterRegister.value.observer
       .pipe(
+        tap(value => this.quickSearchValue.set(value.quickSearch || { term: '', filters: {} })),
         debounceTime(500),
         map(filterValue => {
           const { columnOperator, columnFilter, notReload } = filterValue;
@@ -782,6 +816,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       )
       .subscribe();
     this.#subscription.add(this.#filterRegisterSubscription);
+    this.#filterRegisterRevision.update(value => value + 1);
   };
 
   // Đồng bộ this.columnFilter với `next` mà GIỮ NGUYÊN reference object.
@@ -806,11 +841,12 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   };
 
   getFilterRequest = (): SdTableFilterRequest => {
-    const { columnOperator, columnFilter, externalFilter } = this.filterRegister.value.get();
+    const { columnOperator, columnFilter, externalFilter, quickSearch } = this.filterRegister.value.get();
     return {
       columnOperator: columnOperator || {},
       rawColumnFilter: columnFilter || {},
       rawExternalFilter: externalFilter || {},
+      ...(this.quickSearchOption() ? { quickSearch: quickSearch || { term: '', filters: {} } } : {}),
       orderBy: this.sort()?.active || '',
       orderDirection: this.sort()?.direction === 'asc' ? 'ASC' : this.sort()?.direction === 'desc' ? 'DESC' : undefined,
       pageNumber: this.paginator()?.pageIndex || 0,
@@ -820,6 +856,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   };
 
   #isFiltered = (filterReq: SdTableFilterRequest) => {
+    if (filterReq.quickSearch?.term?.trim() || Object.values(filterReq.quickSearch?.filters || {}).some(hasQuickSearchValue)) return true;
     const { pageNumber, rawColumnFilter, rawExternalFilter } = filterReq;
     if (pageNumber !== 0) {
       return true;
@@ -867,7 +904,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
   #checkFilter = (filterReq: SdTableFilterRequest) => {
     this.isFiltered.set(this.#isFiltered(filterReq));
-    this.requireFiltered.set(!!this.tableOption()?.filter?.externalFilters?.some(e => e.required));
+    this.requireFiltered.set(!!this.tableOption()?.filter?.externalFilters?.some(e => e.required) || !this.quickSearchValid());
   };
 
   #load = async (
@@ -887,16 +924,22 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     this.#checkFilter(filterReq);
 
     const opt = this.tableOption()!;
+    const validQuickSearch = quickSearchValid(this.quickSearchOption(), filterReq.quickSearch);
+    if (opt.type === 'local' && !validQuickSearch) {
+      this.loading.set(false);
+      return { items: [], total: 0 };
+    }
     if (opt.type === 'server') {
       const { items, onFilter } = opt;
       try {
         onFilter?.(filterReq, {
           externalFilterValid: !this.externalFilter()?.form?.invalid,
+          quickSearchValid: validQuickSearch,
         });
       } catch (err) {
         console.error(err);
       }
-      if (this.externalFilter()?.form?.invalid) {
+      if (this.externalFilter()?.form?.invalid || !validQuickSearch) {
         this.#read.invalidate();
         this.#failedRead = undefined;
         this.loading.set(false);
@@ -910,6 +953,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       const pagingReq = SdConvertToPagingReq(snapshot, {
         columns: opt.columns,
         externalFilters: opt.filter?.externalFilters,
+        quickSearch: this.quickSearchOption(),
       });
       const optionRevision = this.#optionRevision;
       const sourceOption = this.option();
@@ -1079,6 +1123,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
   #exportedItems = async (pageNumber = 0, pageSize = 100) => {
     const opt = this.tableOption()!;
+    if (!this.quickSearchValid()) return { items: [], total: 0 };
     if (opt.export?.type === 'default' && opt.export?.items) {
       let result = opt.export?.items(this.#filterExportInfo(pageNumber, pageSize));
       if (Array.isArray(result)) {
@@ -1097,6 +1142,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
         const pagingReq = SdConvertToPagingReq(filterReq, {
           columns: opt.columns,
           externalFilters: opt.filter?.externalFilters,
+          quickSearch: this.quickSearchOption(),
         });
         const result = opt.items(filterReq, pagingReq);
         return await result;
@@ -1244,6 +1290,10 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       columnOperator: this.columnOperator || {},
       columnFilter: this.columnFilter,
     });
+  };
+
+  onQuickSearchChange = (value: SdTableQuickSearchValue): void => {
+    this.filterRegister.value.set({ quickSearch: value });
   };
 
   // Blur input filter: chỉ commit giá trị vào filterRegister, KHÔNG trigger reload.
@@ -1529,9 +1579,10 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
   clearFilter = () => {
     this.filterRegister.value.remove();
+    this.quickSearchControl()?.term.set('');
   };
 
-  setFilter = (args?: Pick<TableFilterValue, 'columnFilter' | 'externalFilter'>) => {
+  setFilter = (args?: Pick<TableFilterValue, 'columnFilter' | 'externalFilter' | 'quickSearch'>) => {
     const { columnFilter, externalFilter } = args || {};
     if (columnFilter) {
       // Giữ reference ổn định cho column-filter (xem #syncColumnFilterInPlace).
@@ -1540,7 +1591,9 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     this.filterRegister.value.set({
       columnFilter,
       externalFilter,
+      ...(args && 'quickSearch' in args ? { quickSearch: args.quickSearch } : {}),
     });
+    if (args && 'quickSearch' in args) this.quickSearchControl()?.term.set(args.quickSearch?.term || '');
   };
 
   get dataItems(): T[] {

@@ -158,6 +158,7 @@ export type ShowcaseExampleSourceKey =
   | "components/table/example-cell-template-tuy-chinh"
   | "components/table/example-chon-mot-dong"
   | "components/table/example-dong-mo-rong"
+  | "components/table/example-external-filters"
   | "components/table/example-filter-onchange"
   | "components/table/example-footer-tong-hop"
   | "components/table/example-full-demo-local"
@@ -172,6 +173,7 @@ export type ShowcaseExampleSourceKey =
   | "components/table/example-mobile-trong-hop-thoai"
   | "components/table/example-nhom-don-hang-theo-khach"
   | "components/table/example-nhom-dong"
+  | "components/table/example-quick-search"
   | "components/table/example-server-side"
   | "components/table/example-the-mobile-va-thao-tac"
   | "components/table/example-toi-gian"
@@ -1442,6 +1444,20 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Existing “replaceTab + beforeClose” scenario preserved from the showcase.",
   },
   {
+    sourceKey: "components/table/example-quick-search",
+    pageKey: "components/table",
+    sectionId: "example-quick-search",
+    title: "Quick search",
+    description: "Chọn tenant áp dụng ngay; nhập từ khóa rồi nhấn Enter. Tên/email tìm chứa, mã/SĐT tìm chính xác; email không cần có cột. Đổi tenant ở màn A rồi chuyển màn B để thấy lựa chọn được giữ bằng signal chung. Checkbox bên phải là UI do consumer chèn vào.",
+  },
+  {
+    sourceKey: "components/table/example-external-filters",
+    pageKey: "components/table",
+    sectionId: "example-external-filters",
+    title: "External filters",
+    description: "Bộ lọc gọn, có khoảng đệm với mép section. Nhập điều kiện rồi nhấn Tìm kiếm; nút xóa và thiết lập nằm trên header. Bảng bo nhẹ ở các góc ngoài, vẫn cuộn và giữ header cố định.",
+  },
+  {
     sourceKey: "components/table/example-the-mobile-va-thao-tac",
     pageKey: "components/table",
     sectionId: "example-the-mobile-va-thao-tac",
@@ -1551,7 +1567,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "components/table",
     sectionId: "example-lenh-dong-phai",
     title: "Lệnh dòng phải",
-    description: "Existing “Lệnh dòng phải” scenario preserved from the showcase.",
+    description: "SP-003 minh họa lệnh Sửa và Xóa bị vô hiệu hóa: icon nhạt màu, lệnh Xem vẫn sử dụng được.",
   },
   {
     sourceKey: "components/table/example-lenh-dong-co-menu-con",

@@ -196,6 +196,8 @@ interface SdTableServerOption<T = any> extends SdTableBaseOption<T> {
     args: {
       /** Cho biết toàn bộ external filter hiện tại có hợp lệ để trigger filter hay không. */
       externalFilterValid: boolean;
+      /** Whether all required quick-search dropdowns have values, including hidden controls. */
+      quickSearchValid?: boolean;
     }
   ) => void;
 }

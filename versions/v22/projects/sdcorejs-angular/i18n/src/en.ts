@@ -1,4 +1,8 @@
 export const EN_MESSAGES = {
+  'core.component.table.quick-search.placeholder': 'Search…',
+  'core.component.table.quick-search.enter': 'Press Enter to search.',
+  'core.component.table.quick-search.required': 'Select the required filters before searching.',
+  'core.component.table.quick-search.clear': 'Clear search term',
   'core.component.table.mobile.tools': 'Tools',
   'core.component.table.mobile.tools-title': 'Table tools',
   'core.component.table.mobile.row-commands': 'Row actions: {row}',

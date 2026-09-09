@@ -14,7 +14,7 @@
       iconColor="secondary"
       [title]="'core.component.table.filter' | sdTranslate"
       [collapsible]="_filter?.collapsible ?? true">
-      <div class="d-flex mr-4" sdHeaderRight>
+      <div class="d-flex gap-8 mr-4" sdHeaderRight>
         <sd-button
           [autoId]="_autoId + 'clear'"
           [disabled]="!_filtered"
@@ -45,116 +45,49 @@
           }
         </mat-menu>
       </div>
-      <div class="row mx-0" style="row-gap: 16px">
-        @for (item of _filterItems; track item.field) {
-          @if (_inlineExternal[item.field]) {
-            <div class="col-md-3 col-sm-6 px-8" [class.col-lg-2]="_col === 2" [class.col-lg-3]="_col === 3">
-              @if (item.type === 'string') {
-                <sd-input
-                  [autoId]="_autoId + item.field"
-                  [label]="item.title"
-                  type="text"
-                  [(model)]="_externalFilter[item.field]"
-                  (keyupEnter)="onKeyupEnter()"
-                  appearance="outline"
-                  [form]="form"
-                  [required]="item.required"
-                  clearable
-                  hideInlineError>
-                </sd-input>
-              } @else if (item.type === 'number') {
-                <sd-input-number
-                  [autoId]="_autoId + item.field"
-                  [label]="item.title"
-                  [(model)]="_externalFilter[item.field]"
-                  (keyupEnter)="onKeyupEnter()"
-                  appearance="outline"
-                  [form]="form"
-                  [required]="item.required"
-                  clearable
-                  hideInlineError>
-                </sd-input-number>
-              } @else if (item.type === 'boolean') {
-                <sd-select
-                  [autoId]="_autoId + item.field"
-                  [label]="item.title"
-                  [items]="[
-                    { value: true, display: item.option?.displayOnTrue || 'True' },
-                    { value: false, display: item.option?.displayOnFalse || 'False' },
-                  ]"
-                  valueField="value"
-                  displayField="display"
-                  [(model)]="_externalFilter[item.field]"
-                  (sdChange)="onFilter(item)"
-                  appearance="outline"
-                  [form]="form"
-                  [required]="item.required"
-                  hideInlineError>
-                </sd-select>
-              } @else if (item.type === 'date') {
-                <sd-date
-                  [autoId]="_autoId + item.field"
-                  [label]="item.title"
-                  [(model)]="_externalFilter[item.field]"
-                  (sdChange)="onFilter(item)"
-                  appearance="outline"
-                  [form]="form"
-                  [required]="item.required"
-                  [min]="item.minDate"
-                  [max]="item.maxDate"
-                  clearable
-                  hideInlineError>
-                </sd-date>
-              } @else if (item.type === 'datetime') {
-                <sd-datetime
-                  [autoId]="_autoId + item.field"
-                  [label]="item.title"
-                  [(model)]="_externalFilter[item.field]"
-                  (sdChange)="onFilter(item)"
-                  appearance="outline"
-                  [form]="form"
-                  [required]="item.required"
-                  [min]="item.minDate"
-                  [max]="item.maxDate"
-                  clearable
-                  hideInlineError>
-                </sd-datetime>
-              } @else if (item.type === 'daterange') {
-                <sd-date-range
-                  [autoId]="_autoId + item.field"
-                  [label]="item.title"
-                  [(model)]="_externalFilter[item.field]"
-                  (sdChange)="onFilter(item)"
-                  [form]="form"
-                  [required]="item.required"
-                  [min]="item.minDate"
-                  [max]="item.maxDate"
-                  appearance="outline"
-                  hideInlineError>
-                </sd-date-range>
-              } @else if (item.type === 'values') {
-                @if (item.option.selection === 'MULTIPLE') {
-                  <sd-select
+      <div class="sd-external-filter-body">
+        <div class="row mx-0" style="row-gap: 16px">
+          @for (item of _filterItems; track item.field) {
+            @if (_inlineExternal[item.field]) {
+              <div class="col-md-3 col-sm-6 px-8" [class.col-lg-2]="_col === 2" [class.col-lg-3]="_col === 3">
+                @if (item.type === 'string') {
+                  <sd-input
                     [autoId]="_autoId + item.field"
+                    size="sm"
                     [label]="item.title"
-                    [items]="item.option.items | filterValues | async"
-                    [valueField]="item.option.valueField"
-                    [displayField]="item.option.displayField"
+                    type="text"
                     [(model)]="_externalFilter[item.field]"
-                    (sdChange)="onFilter(item)"
+                    (keyupEnter)="onKeyupEnter()"
                     appearance="outline"
-                    multiple
                     [form]="form"
                     [required]="item.required"
+                    clearable
                     hideInlineError>
-                  </sd-select>
-                } @else if (item.option.selection === 'AUTOCOMPLETE') {
+                  </sd-input>
+                } @else if (item.type === 'number') {
+                  <sd-input-number
+                    [autoId]="_autoId + item.field"
+                    size="sm"
+                    [label]="item.title"
+                    [(model)]="_externalFilter[item.field]"
+                    (keyupEnter)="onKeyupEnter()"
+                    appearance="outline"
+                    [form]="form"
+                    [required]="item.required"
+                    clearable
+                    hideInlineError>
+                  </sd-input-number>
+                } @else if (item.type === 'boolean') {
                   <sd-select
                     [autoId]="_autoId + item.field"
+                    size="sm"
                     [label]="item.title"
-                    [items]="item.option.items | filterValues | async"
-                    [valueField]="item.option.valueField"
-                    [displayField]="item.option.displayField"
+                    [items]="[
+                      { value: true, display: item.option?.displayOnTrue || 'True' },
+                      { value: false, display: item.option?.displayOnFalse || 'False' },
+                    ]"
+                    valueField="value"
+                    displayField="display"
                     [(model)]="_externalFilter[item.field]"
                     (sdChange)="onFilter(item)"
                     appearance="outline"
@@ -162,92 +95,173 @@
                     [required]="item.required"
                     hideInlineError>
                   </sd-select>
-                } @else if (item.option.selection === 'MULTIPLEAUTOCOMPLETE') {
-                  <sd-select
+                } @else if (item.type === 'date') {
+                  <sd-date
                     [autoId]="_autoId + item.field"
+                    size="sm"
                     [label]="item.title"
-                    [items]="item.option.items | filterValues | async"
-                    [valueField]="item.option.valueField"
-                    [displayField]="item.option.displayField"
-                    [(model)]="_externalFilter[item.field]"
-                    (sdChange)="onFilter(item)"
-                    appearance="outline"
-                    multiple
-                    [form]="form"
-                    [required]="item.required"
-                    hideInlineError>
-                  </sd-select>
-                } @else {
-                  <sd-select
-                    [autoId]="_autoId + item.field"
-                    [label]="item.title"
-                    [items]="item.option.items | filterValues | async"
-                    [valueField]="item.option.valueField"
-                    [displayField]="item.option.displayField"
                     [(model)]="_externalFilter[item.field]"
                     (sdChange)="onFilter(item)"
                     appearance="outline"
                     [form]="form"
                     [required]="item.required"
+                    [min]="item.minDate"
+                    [max]="item.maxDate"
+                    clearable
                     hideInlineError>
-                  </sd-select>
+                  </sd-date>
+                } @else if (item.type === 'datetime') {
+                  <sd-datetime
+                    [autoId]="_autoId + item.field"
+                    size="sm"
+                    [label]="item.title"
+                    [(model)]="_externalFilter[item.field]"
+                    (sdChange)="onFilter(item)"
+                    appearance="outline"
+                    [form]="form"
+                    [required]="item.required"
+                    [min]="item.minDate"
+                    [max]="item.maxDate"
+                    clearable
+                    hideInlineError>
+                  </sd-datetime>
+                } @else if (item.type === 'daterange') {
+                  <sd-date-range
+                    [autoId]="_autoId + item.field"
+                    size="sm"
+                    [label]="item.title"
+                    [(model)]="_externalFilter[item.field]"
+                    (sdChange)="onFilter(item)"
+                    [form]="form"
+                    [required]="item.required"
+                    [min]="item.minDate"
+                    [max]="item.maxDate"
+                    appearance="outline"
+                    hideInlineError>
+                  </sd-date-range>
+                } @else if (item.type === 'values') {
+                  @if (item.option.selection === 'MULTIPLE') {
+                    <sd-select
+                      [autoId]="_autoId + item.field"
+                      size="sm"
+                      [label]="item.title"
+                      [items]="item.option.items | filterValues | async"
+                      [valueField]="item.option.valueField"
+                      [displayField]="item.option.displayField"
+                      [(model)]="_externalFilter[item.field]"
+                      (sdChange)="onFilter(item)"
+                      appearance="outline"
+                      multiple
+                      [form]="form"
+                      [required]="item.required"
+                      hideInlineError>
+                    </sd-select>
+                  } @else if (item.option.selection === 'AUTOCOMPLETE') {
+                    <sd-select
+                      [autoId]="_autoId + item.field"
+                      size="sm"
+                      [label]="item.title"
+                      [items]="item.option.items | filterValues | async"
+                      [valueField]="item.option.valueField"
+                      [displayField]="item.option.displayField"
+                      [(model)]="_externalFilter[item.field]"
+                      (sdChange)="onFilter(item)"
+                      appearance="outline"
+                      [form]="form"
+                      [required]="item.required"
+                      hideInlineError>
+                    </sd-select>
+                  } @else if (item.option.selection === 'MULTIPLEAUTOCOMPLETE') {
+                    <sd-select
+                      [autoId]="_autoId + item.field"
+                      size="sm"
+                      [label]="item.title"
+                      [items]="item.option.items | filterValues | async"
+                      [valueField]="item.option.valueField"
+                      [displayField]="item.option.displayField"
+                      [(model)]="_externalFilter[item.field]"
+                      (sdChange)="onFilter(item)"
+                      appearance="outline"
+                      multiple
+                      [form]="form"
+                      [required]="item.required"
+                      hideInlineError>
+                    </sd-select>
+                  } @else {
+                    <sd-select
+                      [autoId]="_autoId + item.field"
+                      size="sm"
+                      [label]="item.title"
+                      [items]="item.option.items | filterValues | async"
+                      [valueField]="item.option.valueField"
+                      [displayField]="item.option.displayField"
+                      [(model)]="_externalFilter[item.field]"
+                      (sdChange)="onFilter(item)"
+                      appearance="outline"
+                      [form]="form"
+                      [required]="item.required"
+                      hideInlineError>
+                    </sd-select>
+                  }
+                } @else if (item.type === 'lazy-values') {
+                  @if (item.option.selection === 'MULTIPLE') {
+                    <sd-select
+                      [autoId]="_autoId + item.field"
+                      size="sm"
+                      [label]="item.title"
+                      [items]="item.option.items"
+                      [valueField]="item.option.valueField"
+                      [displayField]="item.option.displayField"
+                      [(model)]="_externalFilter[item.field]"
+                      (sdChange)="onFilter(item)"
+                      appearance="outline"
+                      multiple
+                      [form]="form"
+                      [required]="item.required"
+                      hideInlineError>
+                    </sd-select>
+                  } @else {
+                    <sd-select
+                      [autoId]="_autoId + item.field"
+                      size="sm"
+                      [label]="item.title"
+                      [items]="item.option.items"
+                      [valueField]="item.option.valueField"
+                      [displayField]="item.option.displayField"
+                      [(model)]="_externalFilter[item.field]"
+                      (sdChange)="onFilter(item)"
+                      appearance="outline"
+                      [form]="form"
+                      [required]="item.required"
+                      hideInlineError>
+                    </sd-select>
+                  }
+                } @else if (item.type === 'custom' && item.filterDef) {
+                  <ng-container
+                    *ngTemplateOutlet="
+                      item.filterDef;
+                      context: { form: form, externalFilter: _externalFilter, autoId: _autoId + item.field }
+                    ">
+                  </ng-container>
                 }
-              } @else if (item.type === 'lazy-values') {
-                @if (item.option.selection === 'MULTIPLE') {
-                  <sd-select
-                    [autoId]="_autoId + item.field"
-                    [label]="item.title"
-                    [items]="item.option.items"
-                    [valueField]="item.option.valueField"
-                    [displayField]="item.option.displayField"
-                    [(model)]="_externalFilter[item.field]"
-                    (sdChange)="onFilter(item)"
-                    appearance="outline"
-                    multiple
-                    [form]="form"
-                    [required]="item.required"
-                    hideInlineError>
-                  </sd-select>
-                } @else {
-                  <sd-select
-                    [autoId]="_autoId + item.field"
-                    [label]="item.title"
-                    [items]="item.option.items"
-                    [valueField]="item.option.valueField"
-                    [displayField]="item.option.displayField"
-                    [(model)]="_externalFilter[item.field]"
-                    (sdChange)="onFilter(item)"
-                    appearance="outline"
-                    [form]="form"
-                    [required]="item.required"
-                    hideInlineError>
-                  </sd-select>
-                }
-              } @else if (item.type === 'custom' && item.filterDef) {
-                <ng-container
-                  *ngTemplateOutlet="
-                    item.filterDef;
-                    context: { form: form, externalFilter: _externalFilter, autoId: _autoId + item.field }
-                  ">
-                </ng-container>
-              }
-            </div>
+              </div>
+            }
           }
+        </div>
+        @if (_filter?.manualFilter) {
+          <div class="d-flex justify-content-end mt-16 px-8">
+            <sd-button
+              [autoId]="_autoId + 'submit'"
+              [disabled]="form.invalid"
+              type="fill"
+              color="primary"
+              [title]="'core.component.table.search' | sdTranslate"
+              prefixIcon="filter_alt"
+              (click)="onSubmit()">
+            </sd-button>
+          </div>
         }
       </div>
-      @if (_filter?.manualFilter) {
-        <div class="d-flex justify-content-end mt-16 px-8">
-          <sd-button
-            [autoId]="_autoId + 'submit'"
-            [disabled]="form.invalid"
-            type="fill"
-            color="primary"
-            [title]="'core.component.table.search' | sdTranslate"
-            prefixIcon="filter_alt"
-            (click)="onSubmit()">
-          </sd-button>
-        </div>
-      }
     </sd-section>
   }
 }
