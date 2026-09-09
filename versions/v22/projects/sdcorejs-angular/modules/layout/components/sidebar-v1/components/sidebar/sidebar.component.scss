@@ -137,16 +137,103 @@
   flex: 0 0 auto;
   padding: 0 14px 12px;
   border-bottom: 1px solid var(--sidebar-line);
+}
 
-  .c-search-prefix-icon {
+.c-menu-search-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 9px;
+  border: 1px solid var(--sidebar-line);
+  border-radius: 7px;
+  background: var(--sidebar-rail);
+  color: var(--sidebar-muted);
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--sidebar-muted) 35%, var(--sidebar-surface));
+  }
+
+  // One thin boundary marks focus; the native input adds no second ring.
+  &:focus-within {
+    border-color: color-mix(in srgb, var(--sidebar-accent, var(--sd-primary, #005cbb)) 75%, var(--sidebar-surface));
+    background: var(--sidebar-surface);
+  }
+}
+
+.c-menu-search-icon {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+  pointer-events: none;
+}
+
+.c-menu-search-input {
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  outline: none;
+  box-shadow: none;
+  appearance: none;
+  background: transparent;
+  color: var(--sidebar-ink);
+  font: inherit;
+  font-size: 13px;
+  line-height: 20px;
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+
+  &::placeholder {
+    color: var(--sidebar-muted);
+    opacity: 1;
+  }
+
+  &::-webkit-search-decoration,
+  &::-webkit-search-cancel-button {
+    appearance: none;
+  }
+}
+
+.c-menu-search-clear {
+  display: grid;
+  flex: 0 0 24px;
+  place-items: center;
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--sidebar-muted);
+  cursor: pointer;
+
+  sd-icon,
+  mat-icon {
     width: 18px;
     height: 18px;
-    padding: 0;
     font-size: 18px;
-    color: var(--sidebar-muted);
-    &.cancel {
-      cursor: pointer;
-    }
+  }
+
+  &:hover {
+    background: color-mix(in srgb, var(--sidebar-ink) 7%, transparent);
+    color: var(--sidebar-ink);
+  }
+
+  &:focus-visible {
+    outline: 1px solid var(--sidebar-accent, var(--sd-primary, #005cbb));
+    outline-offset: 1px;
   }
 }
 
@@ -327,11 +414,6 @@ a:focus-visible,
 button:focus-visible {
   outline: 2px solid var(--sidebar-accent, var(--sd-primary, #005cbb));
   outline-offset: -2px;
-}
-
-:host ::ng-deep .c-menu-tree-search input:focus-visible {
-  outline: 1px solid var(--sd-primary, #005cbb);
-  outline-offset: 1px;
 }
 
 @media (pointer: coarse) {

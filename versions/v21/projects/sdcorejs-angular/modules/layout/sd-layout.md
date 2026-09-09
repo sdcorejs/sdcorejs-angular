@@ -14,6 +14,8 @@ The V1 desktop menu tree scrolls to the bottom of the sidebar. Only the icon rai
 
 V1 uses a light 304px sidebar with a 56px module rail, a bold neutral title, and compact Material Icons Outlined from the existing menu `icon` / `iconUrl` fields. Child branches have guide lines and a separate active-page marker; the existing route matching, search, permissions, pinning and expand/collapse behavior are unchanged. The avatar and compact collapse control occupy only the bottom of the rail. No footer is reserved below the menu tree. Menu/sidebar configuration has no description field, so the header renders only its title without a placeholder or reserved description space. The existing mobile layout remains selected by the same responsive rules.
 
+The V1 menu search uses a native search input with a leading Material Icons Outlined icon, a 36px light field and a single thin focus border. Its translated clear button supports keyboard activation and returns focus to the input. Search matching, the existing menu-count threshold, IME composition handling and selected-path restoration remain unchanged.
+
 ## Public surface
 
 | API                                                | Purpose                                                                                        |

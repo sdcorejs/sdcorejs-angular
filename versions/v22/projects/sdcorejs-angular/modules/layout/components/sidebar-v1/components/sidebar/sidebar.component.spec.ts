@@ -154,6 +154,61 @@ describe('SdSidebarV1Panel', () => {
 
   afterEach(() => TestBed.resetTestingModule());
 
+  async function createSearchInput() {
+    await createRealTemplate();
+    const searchGroup: SdLayoutMenu = {
+      id: 'search-group',
+      title: 'Search group',
+      children: [
+        { id: 'product', title: 'Sản phẩm', path: '/product', permission: true },
+        ...Array.from({ length: 10 }, (_, index) => ({
+          id: `search-${index}`,
+          title: `Other ${index}`,
+          path: `/other-${index}`,
+          permission: true,
+        })),
+      ],
+    };
+    fixture.componentRef.setInput('menus', [searchGroup]);
+    fixture.detectChanges();
+    component.expandMenuGroup(searchGroup);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    return (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>('.c-menu-search-input')!;
+  }
+
+  it('filters from the native search input and restores the menu and input focus when cleared', async () => {
+    const input = await createSearchInput();
+    input.value = 'san pham';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    fixture.detectChanges();
+    expect(component.searchText()).toBe('san pham');
+    expect(component.dataSource.data.map(menu => menu.id)).toEqual(['product']);
+
+    const clear = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('.c-menu-search-clear')!;
+    expect(clear.getAttribute('aria-label')).toBeTruthy();
+    clear.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(input.value).toBe('');
+    expect(component.searchText()).toBe('');
+    expect(component.dataSource.data.length).toBe(11);
+    expect(document.activeElement).toBe(input);
+  });
+
+  it('buffers native search input during IME composition', async () => {
+    const input = await createSearchInput();
+    input.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
+    input.value = 'san pham';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(component.searchText()).toBe('');
+    expect(component.dataSource.data.length).toBe(11);
+    input.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true, data: 'san pham' }));
+    fixture.detectChanges();
+    expect(component.searchText()).toBe('san pham');
+    expect(component.dataSource.data.map(menu => menu.id)).toEqual(['product']);
+  });
+
   it('hydrates menus and binds the active group from the current nested path', async () => {
     await create({ path: '/admin/users/detail' });
 

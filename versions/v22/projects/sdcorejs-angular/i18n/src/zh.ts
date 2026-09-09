@@ -607,6 +607,7 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.module.layout.user.setting': '设置',
   'core.module.layout.user.notification': '通知',
   'core.module.layout.sidebar.search': '搜索',
+  'core.module.layout.sidebar.clear-search': '清除搜索',
   'core.module.layout.sidebar.toggle': '切换侧边栏',
   'core.module.layout.sidebar.menu-groups': '菜单分组',
   'core.module.layout.sidebar.close-menu': '关闭菜单',

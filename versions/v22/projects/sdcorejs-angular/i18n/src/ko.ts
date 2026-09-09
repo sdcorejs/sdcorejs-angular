@@ -608,6 +608,7 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.module.layout.user.setting': '설정',
   'core.module.layout.user.notification': '알림',
   'core.module.layout.sidebar.search': '검색',
+  'core.module.layout.sidebar.clear-search': '검색 지우기',
   'core.module.layout.sidebar.toggle': '사이드바 전환',
   'core.module.layout.sidebar.menu-groups': '메뉴 그룹',
   'core.module.layout.sidebar.close-menu': '메뉴 닫기',
