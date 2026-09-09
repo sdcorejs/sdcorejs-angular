@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "suffix": "2.7",
+  "reviewedSourceSha": "3e3b27989f899713285757013fd0d8c7c7ff5aca",
+  "artifactSource": "Local builds of main 3e3b27989f899713285757013fd0d8c7c7ff5aca with package manifests updated to 2.7; locked Angular/compiler/TypeScript toolchains, Node 22.22.3 and npm pack 11.5.1.",
+  "targets": {
+    "19.2.7": {
+      "version": "19.2.7",
+      "baselineVersion": "19.2.6",
+      "exports": {
+        "baseline": "10a73eb26c3856128552b3c9c4b76269dc15138f95ded4d081a8708a49d3f967",
+        "candidate": "10a73eb26c3856128552b3c9c4b76269dc15138f95ded4d081a8708a49d3f967"
+      },
+      "files": {
+        "baseline": "037d16e627317dfd79fda800fd94c0c788d70da4996df06f487009ab11de2546",
+        "candidate": "84f9f2773785800887f080996a569e1d8509ce7cbaa38c884121d3f7bfac5c81"
+      },
+      "publicSurface": {
+        "baseline": "82d5143c5632bc712768cf4a3310e2600aebcc637154ca5518596d71fd6c10d7",
+        "candidate": "a5eb5532a794c2f1157a3d267834a0b600ae8cb1ad311a82cc47d90f15e7f18c"
+      }
+    },
+    "20.2.7": {
+      "version": "20.2.7",
+      "baselineVersion": "20.2.6",
+      "exports": {
+        "baseline": "10a73eb26c3856128552b3c9c4b76269dc15138f95ded4d081a8708a49d3f967",
+        "candidate": "10a73eb26c3856128552b3c9c4b76269dc15138f95ded4d081a8708a49d3f967"
+      },
+      "files": {
+        "baseline": "a13b4695df5c7d65cb3ad304d3abc7350419a5af05844d9972b8d6715461b780",
+        "candidate": "c4baac4a733cf9ba274dfe795a3309c599e8b3c59f2b3eba04b8d31c1ae1be95"
+      },
+      "publicSurface": {
+        "baseline": "0b16b75920ccd494e450f660eee13358faa755561a953b5a0f929d535b2fab54",
+        "candidate": "ced3a4d78b0080f83d7c6e11d128a64152f11a620c146e1fc9088d88ccc2a7c2"
+      }
+    },
+    "21.2.7": {
+      "version": "21.2.7",
+      "baselineVersion": "21.2.6",
+      "exports": {
+        "baseline": "3d95cae9b4b9c4f70cea1cb2e557b203891ab331351f66b0b27823d79a6724e3",
+        "candidate": "3d95cae9b4b9c4f70cea1cb2e557b203891ab331351f66b0b27823d79a6724e3"
+      },
+      "files": {
+        "baseline": "6339e8e8f9c883fe95b981b19674167979383ce98bfb82ba858094b7e261897d",
+        "candidate": "964bc74addc358648fca8db6cf22afc4b62eef44b0549614689fc24f65d250ac"
+      },
+      "publicSurface": {
+        "baseline": "b714abec2aac12b7e96ff488d6d80c628ac20290f5116812b6bf7b9af646642e",
+        "candidate": "8823abc88cf4155011f213da6d3d824056771bf77a352a0d3fb6a82074e9a240"
+      }
+    },
+    "22.2.7": {
+      "version": "22.2.7",
+      "baselineVersion": "22.2.6",
+      "exports": {
+        "baseline": "3d95cae9b4b9c4f70cea1cb2e557b203891ab331351f66b0b27823d79a6724e3",
+        "candidate": "3d95cae9b4b9c4f70cea1cb2e557b203891ab331351f66b0b27823d79a6724e3"
+      },
+      "files": {
+        "baseline": "6339e8e8f9c883fe95b981b19674167979383ce98bfb82ba858094b7e261897d",
+        "candidate": "964bc74addc358648fca8db6cf22afc4b62eef44b0549614689fc24f65d250ac"
+      },
+      "publicSurface": {
+        "baseline": "29a41b6dd18b3bc59e2f79331e98ca13d81a30632717cd8e583a60ae19bf2d50",
+        "candidate": "f4dd6095324785899181acf6e094bdf58c9491f7e9f6b757fc76ac5b6d43b6e8"
+      }
+    }
+  }
+}

@@ -1,5 +1,29 @@
 # Reviewed release snapshots
 
+## Release 2.7
+
+`2.7.json` compares each candidate with the published `*.2.6` package from
+the same Angular major. Candidates were built from main
+`3e3b27989f899713285757013fd0d8c7c7ff5aca` with only package versions changed
+to `*.2.7`, using the locked Angular/compiler/TypeScript toolchains, Node
+`22.22.3` and npm pack `11.5.1`.
+
+The export map is unchanged and no packed file, declaration file or authored
+source is removed. Table declarations add the optional quick-search options,
+request/cache values, validity flag and projected right-side directive; existing
+call signatures remain compatible. i18n declarations add quick-search and
+clear-search messages. Angular 19 adds four declaration files; later majors
+include those declarations in their existing table bundle. The shared
+`_read-state-panel.scss` file is the only other new packed path. Runtime/style
+changes cover quick search, compact filters and commands, circular status icons,
+Sidebar V1, centered read states, radio layout, badge alignment and selection
+colors.
+
+UI fixes merged after tag `v2.6` were moved from the root changelog's 2.6 section
+to 2.7 after checking the actual npm baselines. Existing published archives and
+2.5/2.6 snapshots remain unchanged. Integrity, manifest/dependency/engine checks,
+source binding and strict consumer compilation still run independently.
+
 ## Release 2.6
 
 `2.6.json` compares each candidate with its own published Angular-line baseline

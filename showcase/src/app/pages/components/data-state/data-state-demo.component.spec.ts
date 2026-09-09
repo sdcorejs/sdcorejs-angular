@@ -9,7 +9,11 @@ describe('DataStateDemoComponent', () => {
     fixture.detectChanges();
 
     const element = fixture.nativeElement as HTMLElement;
-    expect(element.querySelectorAll('demo-section')).toHaveSize(6);
+    expect(element.querySelectorAll('demo-section')).toHaveSize(7);
+    const retainedSelection = element.querySelector('sd-select[label="Giữ hai lựa chọn"]');
+    expect(retainedSelection?.hasAttribute('multiple')).toBeTrue();
+    expect(retainedSelection?.getAttribute('minWidthPanel')).toBe('180px');
+    expect(element.querySelector('sd-autocomplete[label="Tìm kiếm 180px"]')).not.toBeNull();
     expect(element.querySelector('[data-state="loading"]')).not.toBeNull();
     expect(element.querySelector('.custom-empty')).not.toBeNull();
     expect(element.querySelector('[data-state="forbidden"].sd-data-state--full-page')).not.toBeNull();
