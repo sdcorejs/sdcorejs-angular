@@ -320,6 +320,7 @@ describe('SdLoadingService', () => {
     expect(host.getAttribute('aria-busy')).toBe('true');
     expect(overlay).toBeTruthy();
     expect(overlay?.hasAttribute('id')).toBeFalse();
+    expect(overlay?.hasAttribute('data-sd-loading-overlay')).toBeTrue();
     expect(overlay?.getAttribute('role')).toBe('status');
     expect(overlay?.getAttribute('aria-live')).toBe('polite');
     expect(overlay?.querySelector(':scope > .sd-loading-spinner')).toBeTruthy();
@@ -425,7 +426,7 @@ describe('SdLoadingService', () => {
 
     ownedService.start();
     expect(externalStyle.textContent).toContain(externalContent);
-    expect(externalStyle.textContent).toContain('.sd-loading {');
+    expect(externalStyle.textContent).toContain('.sd-loading[data-sd-loading-overlay] {');
     expect(externalStyle.textContent).toContain('.sd-loading-spinner');
     expect(externalStyle.textContent).toContain('@keyframes sd-loading-spin');
 

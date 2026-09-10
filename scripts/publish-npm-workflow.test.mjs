@@ -128,8 +128,8 @@ test('release workflow delegates the validated four-target plan to one sequentia
   assert.equal(publishInvocations.length, 1, 'publisher must use one direct, testable publish-transaction CLI invocation');
   has(publishInvocations[0], /^node\s+scripts\/release-package-contract\.mjs\b/u);
   has(publishInvocations[0], /--artifact-root\s+\S+/u, 'publisher must revalidate the retained bundle');
-  has(publishInvocations[0], /--suffix\s+["']?2\.7["']?/u);
-  has(publishInvocations[0], /--baseline-suffix\s+["']?2\.6["']?/u);
+  has(publishInvocations[0], /--suffix\s+["']?2\.8["']?/u);
+  has(publishInvocations[0], /--baseline-suffix\s+["']?2\.7["']?/u);
   has(publishInvocations[0], /--datetime-version\s+["']?1\.0\.4["']?/u);
   has(publishInvocations[0], /--require-provenance\b/u);
   has(publisher.source, /NPM_CONFIG_PREFER_ONLINE:\s*['"]true['"]/u,
@@ -138,14 +138,14 @@ test('release workflow delegates the validated four-target plan to one sequentia
   lacks(commands, /npm dist-tag (?:add|set|rm)/u, 'release must not mutate dist-tags separately');
 });
 
-test('every release entry path requires the immutable v2.7 tag to point at main', () => {
+test('every release entry path requires the immutable v2.8 tag to point at main', () => {
   const verifySource = jobEntries(workflow).find(job => job.id === 'verify_source');
   assert.ok(verifySource, 'verify_source job must exist');
 
   has(workflow, /^\s{2}workflow_dispatch:\s*$/mu, 'manual recovery dispatch must remain available');
   has(
     verifySource.source,
-    /ref:\s*\$\{\{\s*github\.event_name == 'workflow_dispatch' && 'refs\/tags\/v2\.7' \|\| github\.ref\s*\}\}/u,
+    /ref:\s*\$\{\{\s*github\.event_name == 'workflow_dispatch' && 'refs\/tags\/v2\.8' \|\| github\.ref\s*\}\}/u,
     'manual dispatch must check out the immutable release tag',
   );
 
@@ -187,7 +187,7 @@ test('all four packages are built and verified as immutable artifacts before pub
   has(packerCommands, /shasum/iu);
 
   has(verifier.source, /actions\/download-artifact@/u);
-  has(verifierCommands, /--baseline-suffix\s+["']?2\.6["']?/u);
+  has(verifierCommands, /--baseline-suffix\s+["']?2\.7["']?/u);
   has(verifierCommands, /--datetime-version\s+["']?1\.0\.4["']?/u);
   has(verifierCommands, /(?:19|v19)[^\r\n]*(?:20|v20)[^\r\n]*(?:21|v21)[^\r\n]*(?:22|v22)/u);
   has(verifierCommands, /(?:sha256|integrity|shasum)/iu);
@@ -269,7 +269,7 @@ test('manual recovery retains the original tarballs without repacking them', () 
   assert.ok(packStep && recoveryStep && uploadStep);
   has(packStep, /^        if:\s*\$\{\{ inputs\.artifact_run_id == '' \}\}\s*$/mu);
   has(recoveryStep, /^        if:\s*\$\{\{ inputs\.artifact_run_id != '' \}\}\s*$/mu);
-  has(recoveryStep, /name:\s*sdcorejs-angular-\$\{\{ matrix\.version \}\}-2\.7/u);
+  has(recoveryStep, /name:\s*sdcorejs-angular-\$\{\{ matrix\.version \}\}-2\.8/u);
   has(recoveryStep, /run-id:\s*\$\{\{ inputs\.artifact_run_id \}\}/u);
   has(recoveryStep, /github-token:\s*\$\{\{ github\.token \}\}/u);
   has(recoveryStep, /repository:\s*\$\{\{ github\.repository \}\}/u);
@@ -292,8 +292,8 @@ test('postpublish materializes verified v19, clean-installs Showcase and commits
   has(postpublishCommands, /(?:sha256|integrity)/iu);
   has(postpublishCommands, /npm --prefix showcase ci --legacy-peer-deps/u);
   has(postpublishCommands, /npm run collect-release-docs/u);
-  has(postpublishCommands, /npm run build:page -- --suffix ["']?2\.7["']?/u);
-  has(postpublishCommands, /published-pages\/2\.7/u);
+  has(postpublishCommands, /npm run build:page -- --suffix ["']?2\.8["']?/u);
+  has(postpublishCommands, /published-pages\/2\.8/u);
   has(postpublishCommands, /published-pages\/2\.2/u);
   has(postpublishCommands, /git add[^\r\n]*published-docs[^\r\n]*published-pages/u);
 
@@ -303,7 +303,7 @@ test('postpublish materializes verified v19, clean-installs Showcase and commits
 
   lacks(postpublishCommands, /git rebase origin\/main/u);
   assertExactCommandSequence(postpublish.source, [
-    'git commit -m "docs: publish Angular 22 release 2.7"',
+    'git commit -m "docs: publish Angular 22 release 2.8"',
     'SOURCE_SHA="${{ needs.verify_source.outputs.source_sha }}"',
     'test "$(git rev-parse HEAD^)" = "$SOURCE_SHA"',
     'git fetch origin main --no-tags',
@@ -338,8 +338,8 @@ test('postpublish parent guard cannot be replaced by a no-op command containing 
 test('publisher revalidates exact versions, recovery tags, latest and provenance through the tested transaction', () => {
   const publisher = oneJobMatching(/release-package-contract\.mjs[^\r\n]*--publish\b/u, 'publisher');
   const publisherCommands = executableCommands(publisher.source);
-  has(publisherCommands, /--suffix\s+["']?2\.7["']?/u);
-  has(publisherCommands, /--baseline-suffix\s+["']?2\.6["']?/u);
+  has(publisherCommands, /--suffix\s+["']?2\.8["']?/u);
+  has(publisherCommands, /--baseline-suffix\s+["']?2\.7["']?/u);
   has(publisherCommands, /--datetime-version\s+["']?1\.0\.4["']?/u);
   has(publisherCommands, /--require-provenance\b/u);
 });

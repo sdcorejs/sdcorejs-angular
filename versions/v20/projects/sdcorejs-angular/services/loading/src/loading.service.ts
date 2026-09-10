@@ -40,8 +40,12 @@ interface SdLoadingStyleRecord {
 }
 
 const SD_LOADING_STYLE_ATTRIBUTE = 'data-sd-loading-styles';
+const SD_LOADING_OVERLAY_ATTRIBUTE = 'data-sd-loading-overlay';
+// why: SdButton cũng dùng .sd-loading; chỉ overlay do service tạo được nhận CSS phủ vùng.
+const SD_LOADING_OVERLAY_SELECTOR = `.sd-loading[${SD_LOADING_OVERLAY_ATTRIBUTE}]`;
+const SD_LOADING_SPINNER_SELECTOR = `${SD_LOADING_OVERLAY_SELECTOR} > .sd-loading-spinner`;
 const SD_LOADING_STYLES = `
-.sd-loading {
+${SD_LOADING_OVERLAY_SELECTOR} {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -51,7 +55,7 @@ const SD_LOADING_STYLES = `
   z-index: 99999;
 }
 
-.sd-loading-spinner {
+${SD_LOADING_SPINNER_SELECTOR} {
   position: absolute;
   top: calc(50% - 2.5rem);
   left: calc(50% - 2.5rem);
@@ -290,6 +294,7 @@ export class SdLoadingService {
     const spinner = this.#document.createElement('div');
 
     container.classList.add('sd-loading');
+    container.setAttribute(SD_LOADING_OVERLAY_ATTRIBUTE, '');
     container.setAttribute('role', 'status');
     container.setAttribute('aria-live', 'polite');
     container.setAttribute('aria-label', 'Loading');
@@ -346,8 +351,8 @@ export class SdLoadingService {
   #ensureRequiredStyleText(record: SdLoadingStyleRecord): void {
     const currentText = record.element.textContent ?? '';
     const hasRequiredRules =
-      currentText.includes('.sd-loading {') &&
-      currentText.includes('.sd-loading-spinner') &&
+      currentText.includes(`${SD_LOADING_OVERLAY_SELECTOR} {`) &&
+      currentText.includes(`${SD_LOADING_SPINNER_SELECTOR} {`) &&
       currentText.includes('@keyframes sd-loading-spin');
     if (hasRequiredRules) return;
 
