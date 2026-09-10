@@ -1,0 +1,131 @@
+diff --git a/node_modules/@sdcorejs/angular/configurations/index.d.ts b/node_modules/@sdcorejs/angular/configurations/index.d.ts
+index 1156d4f..54cb6a4 100644
+--- a/node_modules/@sdcorejs/angular/configurations/index.d.ts
++++ b/node_modules/@sdcorejs/angular/configurations/index.d.ts
+@@ -1,5 +1,6 @@
+ import { InjectionToken } from '@angular/core';
+ import { Language } from '@sdcorejs/utils/models';
++import type { ISdLayoutConfiguration } from '@sdcorejs/angular/modules/layout';
+ 
+ interface ISdCoreConfiguration {
+     format?: {
+@@ -8,6 +9,7 @@ interface ISdCoreConfiguration {
+     language?: Language | (() => Record<string, string>);
+ }
+ declare const SD_CORE_CONFIGURATION: InjectionToken<ISdCoreConfiguration>;
++declare const SD_LAYOUT_CONFIGURATION: InjectionToken<ISdLayoutConfiguration>;
+ 
+-export { SD_CORE_CONFIGURATION };
++export { SD_CORE_CONFIGURATION, SD_LAYOUT_CONFIGURATION };
+ export type { ISdCoreConfiguration };
+diff --git a/node_modules/@sdcorejs/angular/fesm2022/sdcorejs-angular-components-tab-router.mjs b/node_modules/@sdcorejs/angular/fesm2022/sdcorejs-angular-components-tab-router.mjs
+index fe3a185..cc9246f 100644
+--- a/node_modules/@sdcorejs/angular/fesm2022/sdcorejs-angular-components-tab-router.mjs
++++ b/node_modules/@sdcorejs/angular/fesm2022/sdcorejs-angular-components-tab-router.mjs
+@@ -420,6 +420,12 @@ class SdTabRouterOutletComponent {
+             await this.#activeRoute(fullUrl, route, state);
+         });
+     };
++    // A route may opt into one tab per path when query parameters are view state.
++    // Other routes retain the package's URL + query-parameter identity.
++    #tabKey = (url, route) => Utilities.hash({
++        url,
++        queryParams: route.data?.['tabIdentity'] === 'path' ? {} : { ...(route.queryParams || {}) },
++    });
+     // Bù initial navigation nếu NavigationEnd đã fire trước khi outlet subscribe.
+     #syncCurrentRoute = () => {
+         if (this.disabled() || !this.#router.navigated) {
+@@ -430,10 +436,7 @@ class SdTabRouterOutletComponent {
+             return Promise.resolve();
+         }
+         const [urlPath] = this.#router.url.split('?');
+-        const key = Utilities.hash({
+-            url: urlPath,
+-            queryParams: { ...(route.queryParams || {}) },
+-        });
++        const key = this.#tabKey(urlPath, route);
+         if (this.tabs().some(tab => tab.key === key)) {
+             return Promise.resolve();
+         }
+@@ -492,8 +495,8 @@ class SdTabRouterOutletComponent {
+         const params = { ...(route.params || {}) };
+         const data = { ...(route.data || {}) };
+         const [url] = fullUrl.split('?');
+-        // Tab identity = hash(url + queryParams). Cùng key mặc định giữ tab cũ; forceReload mới tạo lại.
+-        const key = Utilities.hash({ url, queryParams });
++        // Query identity is unchanged unless this route explicitly opts into path identity.
++        const key = this.#tabKey(url, route);
+         let existedIndex = -1;
+         let activatedIndex = -1;
+         const currentTabs = this.tabs();
+@@ -578,8 +581,12 @@ class SdTabRouterOutletComponent {
+         // re-evaluate không cần thiết). Với tab cần đổi isActive: tạo object mới qua spread,
+         // các nested fields (component, injector) vẫn giữ same reference nên component không bị recreate.
+         let updatedTabs = currentTabs.map(tab => {
+-            if (tab.key === key)
++            if (tab.key === key) {
++                // Preserve the component injector and its view state while keeping tab links current.
++                if (data['tabIdentity'] === 'path')
++                    return { ...tab, isActive: true, queryParams };
+                 return tab.isActive ? tab : { ...tab, isActive: true };
++            }
+             return tab.isActive ? { ...tab, isActive: false } : tab;
+         });
+         // replaceTab: thay vì mở tab mới song song, xoá tab đang active rồi mở tab mới ở cuối.
+diff --git a/node_modules/@sdcorejs/angular/fesm2022/sdcorejs-angular-configurations.mjs b/node_modules/@sdcorejs/angular/fesm2022/sdcorejs-angular-configurations.mjs
+index a634ad1..177373e 100644
+--- a/node_modules/@sdcorejs/angular/fesm2022/sdcorejs-angular-configurations.mjs
++++ b/node_modules/@sdcorejs/angular/fesm2022/sdcorejs-angular-configurations.mjs
+@@ -1,10 +1,11 @@
+ import { InjectionToken } from '@angular/core';
+ 
+ const SD_CORE_CONFIGURATION = new InjectionToken('sd-core.configuration');
++const SD_LAYOUT_CONFIGURATION = new InjectionToken('sd.layout.configuration');
+ 
+ /**
+  * Generated bundle index. Do not edit.
+  */
+ 
+-export { SD_CORE_CONFIGURATION };
++export { SD_CORE_CONFIGURATION, SD_LAYOUT_CONFIGURATION };
+ //# sourceMappingURL=sdcorejs-angular-configurations.mjs.map
+diff --git a/node_modules/@sdcorejs/angular/fesm2022/sdcorejs-angular-modules-layout.mjs b/node_modules/@sdcorejs/angular/fesm2022/sdcorejs-angular-modules-layout.mjs
+index bcc004f..17464fa 100644
+--- a/node_modules/@sdcorejs/angular/fesm2022/sdcorejs-angular-modules-layout.mjs
++++ b/node_modules/@sdcorejs/angular/fesm2022/sdcorejs-angular-modules-layout.mjs
+@@ -28,7 +28,8 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
+ import { isObservable } from 'rxjs';
+ import { SdInput } from '@sdcorejs/angular/forms';
+ import * as i1$2 from '@angular/cdk/a11y';
+ import { A11yModule } from '@angular/cdk/a11y';
++import { SD_LAYOUT_CONFIGURATION } from '@sdcorejs/angular/configurations';
+ 
+ class SdPageComponent {
+     el = inject(ElementRef);
+@@ -336,7 +337,6 @@ function normalizeSidebarConfiguration(sidebar) {
+     }
+     return sidebar;
+ }
+-const SD_LAYOUT_CONFIGURATION = new InjectionToken('sd.layout.configuration');
+ 
+ const SD_LAYOUT_VIEWPORT = SD_VIEWPORT;
+ /** @deprecated Prefer `SdViewportService` from `@sdcorejs/angular/services/viewport`. */
+diff --git a/node_modules/@sdcorejs/angular/modules/layout/index.d.ts b/node_modules/@sdcorejs/angular/modules/layout/index.d.ts
+index 06f2ad0..5248797 100644
+--- a/node_modules/@sdcorejs/angular/modules/layout/index.d.ts
++++ b/node_modules/@sdcorejs/angular/modules/layout/index.d.ts
+@@ -1,5 +1,6 @@
+ import * as _angular_core from '@angular/core';
+ import { InjectionToken, Signal, PipeTransform } from '@angular/core';
++import { SD_LAYOUT_CONFIGURATION } from '@sdcorejs/angular/configurations';
+ import * as i1$1 from '@angular/common';
+ import * as i1 from '@angular/router';
+ import { Params } from '@angular/router';
+@@ -272,7 +273,6 @@ declare function resolveSidebarV3Recent(sidebar: SidebarConfigurationV3): Resolv
+ declare function normalizeSidebarConfiguration(_sidebar: SidebarConfigurationV1): SidebarConfigurationV1;
+ declare function normalizeSidebarConfiguration(_sidebar: SidebarConfigurationV2): SidebarConfigurationV2;
+ declare function normalizeSidebarConfiguration(_sidebar: SidebarConfigurationV3): SidebarConfigurationV3;
+-declare const SD_LAYOUT_CONFIGURATION: InjectionToken<ISdLayoutConfiguration>;
+ 
+ declare class SdLayoutNavigationStateService {
+     #private;

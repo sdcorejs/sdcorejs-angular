@@ -1,4 +1,4 @@
-﻿# Changelog — `@sdcorejs/angular`
+# Changelog — `@sdcorejs/angular`
 
 Changelog cho npm package `@sdcorejs/angular`, tập trung vào thay đổi public API, hành vi runtime, tài liệu sử dụng, tooling release, và các migration cần consumer chú ý.
 
@@ -10,6 +10,18 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 - Table settings use compact rows with centered checkboxes and share the modal footer gutters, removing the extra content inset.
 - Small form controls center their resting floating labels consistently with the focused placeholder and value, including select, input, date/time and textarea controls.
+
+## [2.8] - 2026-09-10
+
+Release suffix `2.8` targets `19.2.8`, `20.2.8`, `21.2.8`, and `22.2.8`.
+
+### Fixed
+
+- Loading service overlay CSS now requires `.sd-loading[data-sd-loading-overlay]`; its spinner rules are scoped to the overlay's direct child. Loading `SdButton` hosts keep their header position and size, Material spinner and click protection. Existing classes, API, reference ownership, stylesheet sharing and synchronous cleanup remain unchanged. Chrome rendering regressions cover page/drawer headers, close-button hit testing, unrelated class names and overlapping refs/services.
+
+### Consumer upgrade
+
+- Enterprise Console: after `20.2.8` is published and verified, pin `@sdcorejs/angular` to `20.2.8`, update the lockfile and rebase `patch-package`. Remove only the `fesm2022/sdcorejs-angular-services-loading.mjs` diff block introduced by Console commit `4a36177`. Retain the configuration/layout token and tab-router hunks, rename the patch to `@sdcorejs+angular+20.2.8.patch`, and update the exact-version guard in `scripts/apply-core-ui-patches.mjs` to describe the remaining layout/tab-router patches. Verify clean install, Console loading-layout/shell regressions and the production bundle budget before deploying.
 
 ### Changed
 
