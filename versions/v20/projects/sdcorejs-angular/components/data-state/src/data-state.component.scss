@@ -47,12 +47,6 @@
 .sd-data-state[data-state='loading'] .sd-data-state__symbol {
   background: var(--sd-primary-light);
 }
-.sd-data-state[data-state='empty'] .sd-data-state__symbol {
-  background: var(--sd-warning-light);
-}
-.sd-data-state[data-state='empty'] .sd-data-state__icon {
-  color: var(--sd-warning-dark);
-}
 .sd-data-state__title {
   max-width: 100%;
   font-size: 16px;
