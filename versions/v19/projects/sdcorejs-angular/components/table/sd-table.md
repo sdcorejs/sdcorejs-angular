@@ -286,6 +286,8 @@ Built-in `filter.externalFilters` controls use `size="sm"` and `hideInlineError`
 
 #### Quick search (`filter.quickSearch`)
 
+Quick search, table content and the paginator share one white surface (theme token `--sd-surface`) with 6px outer corners. Quick search has 8px padding on all sides; consumers can render `<sd-table>` directly without an extra background/padding wrapper. The existing table scroll area, sticky headers and loading overlay remain scoped to the table body. Tables without quick search reserve no extra toolbar space.
+
 Optional row above the table: dropdowns on the left, one keyword input, and an optional consumer template on the right. No search button; **Enter** commits the trimmed term. Typing or blurring does not submit it. Clearing the input removes only the term. Table utilities stay in the footer. The row and its custom slot are absent when `quickSearch` is undefined or `filter.disabled` is true.
 
 The input uses its placeholder without a separate visible label. Hovering the Enter icon shows the submission hint; the input retains an accessible name and description for screen readers. A missing required dropdown value still shows a visible explanation below the row.

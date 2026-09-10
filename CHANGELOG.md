@@ -6,6 +6,10 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+### Changed
+
+- Table now contains quick search, rows and pagination in one white surface with 6px outer corners and 8px quick-search padding. Consumers no longer need an extra presentation wrapper; scrolling and sticky headers stay on the existing table scroll area.
+
 ### Changed (BREAKING for consumers)
 
 - Restore the compact `sd-upload-file` tile (default 50x50px) for table cells. Remove the expanded dropzone and `appearance` input; file drag/drop, keyboard access, preview and sorting remain supported.

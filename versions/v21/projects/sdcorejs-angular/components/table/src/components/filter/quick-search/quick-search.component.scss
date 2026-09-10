@@ -2,7 +2,8 @@
   display: block;
   flex: 0 0 auto;
   container-type: inline-size;
-  padding-bottom: 12px;
+  box-sizing: border-box;
+  padding: 8px;
 }
 .sd-quick-search-row {
   display: flex;
