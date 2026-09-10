@@ -47,6 +47,8 @@ isLoading(selector = 'body'): Element | false | null;
 
 - Busy hosts receive `aria-busy="true"`; their previous value is restored after the final owner closes.
 - The overlay uses `role="status"`, `aria-live="polite"` and one spinner hidden from assistive technology.
+- Service-created overlays carry `.sd-loading[data-sd-loading-overlay]`. Overlay layout rules target this ownership marker; spinner rules target only its direct `.sd-loading-spinner` child. The existing class names remain available. `SdButton` keeps its separate `.sd-loading` state, Material spinner and click blocking without receiving overlay positioning or sizing.
+- Choose a positioned content host (for example a drawer's `.sd-side-drawer-body`) when header actions must remain interactive. The default `start()` covers the whole document body and intentionally blocks interactions beneath that overlay.
 - One shared `style[data-sd-loading-styles]` is maintained per document. The service adopts an existing consumer style element without deleting consumer-owned content.
 - Removing/reparenting an overlay is repaired on the next acquisition.
 - Injector teardown closes all owned refs, removes library-owned overlays/style content and clears bookkeeping.
@@ -71,4 +73,4 @@ Existing balanced `start()` / `stop()` calls remain valid. For concurrency safet
   }
 ```
 
-Focused coverage lives in `loading.service.spec.ts`.
+Focused lifecycle coverage lives in `loading.service.spec.ts`. `loading-rendering.spec.ts` runs real Chrome rendering through Karma: page/drawer header geometry, spinner and click behavior, close-button hit testing, foreign class isolation and overlapping service/ref cleanup.
