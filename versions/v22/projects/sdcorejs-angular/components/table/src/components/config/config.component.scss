@@ -83,6 +83,11 @@ sd-checkbox {
     display: flex;
   }
 
+  // why: Material 22 dùng label làm wrapper; reset margin của reboot để tránh lệch dọc 4px.
+  ::ng-deep .mat-internal-form-field {
+    margin: 0;
+  }
+
   // why: các checkbox trong bảng không có label; đệm label rỗng làm icon lệch ngang 2px.
   ::ng-deep .mdc-label {
     padding: 0;

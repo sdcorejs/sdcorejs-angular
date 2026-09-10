@@ -581,7 +581,7 @@ When rendering SD form controls in `sdTableFilterDef`, editable cells, external-
 
 ## Visual cues (helps agent map screenshots → component)
 
-The column settings dialog uses compact rows with 4px vertical cell padding and checkboxes centered with the input editors. Its table uses the modal body's existing gutters, aligning the outer border with the footer actions.
+The column settings dialog uses compact rows with 4px vertical cell padding and checkboxes centered with the input editors, including the label wrapper used by Angular Material 22. Its table uses the modal body's existing gutters, aligning the outer border with the footer actions.
 
 The desktop table uses subtle 6px outer corners: the existing scroll area rounds the top corners and the paginator rounds the bottom corners. No additional clipping or scroll container is introduced, preserving sticky headers and columns. Mobile cards retain their existing shape.
 
