@@ -14,5 +14,6 @@ export class SdLayoutSearchFieldComponent {
   model = input('');
   placeholder = input.required<string>();
   autoId = input.required<string>();
+  appearance = input<'pill' | 'compact'>('pill');
   sdChange = output<string>();
 }

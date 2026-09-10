@@ -12057,6 +12057,11 @@ export const LAYOUT_DEMO_NOTIFICATION_COUNT = signal(6);
 const LAYOUT_DEMO_TRANSLATIONS: Readonly<Record<string, string>> = {
   'core.module.layout.sidebar.search': 'Search menu',
   'core.module.layout.sidebar.more-menu': 'More menu',
+  'core.module.layout.sidebar.all-menu': 'All menus',
+  'core.module.layout.sidebar.pinned': 'Pinned',
+  'core.module.layout.sidebar.recent': 'Recent',
+  'core.module.layout.menu.pin': 'Pin {title}',
+  'core.module.layout.menu.unpin': 'Unpin {title}',
   'core.module.layout.user.update-profile': 'Update profile',
   'core.module.layout.user.setting': 'Settings',
   'core.module.layout.user.notification': 'Notifications',
@@ -12078,6 +12083,7 @@ const SIDEBAR_CONFIGURATIONS: Readonly<Record<LayoutDemoVersion, ISdSidebarConfi
   },
   3: {
     version: 3,
+    defaultTitle: 'Operations Portal',
     defaultCollapsed: false,
     recent: { enabled: true, maxItems: 5 },
     pin: { enabled: true },
@@ -12142,7 +12148,13 @@ class LayoutDemoViewport implements SdLayoutViewport {
     SdLayoutResponsiveService,
     SdLayoutStorageService,
     SdLayoutNavigationStateService,
-    { provide: I18nService, useValue: { t: (key: string) => LAYOUT_DEMO_TRANSLATIONS[key] ?? key } },
+    {
+      provide: I18nService,
+      useValue: {
+        t: (key: string, params?: Record<string, unknown>) =>
+          (LAYOUT_DEMO_TRANSLATIONS[key] ?? key).replace('{title}', String(params?.['title'] ?? '')),
+      },
+    },
     { provide: SD_PERMISSION_CONFIGURATION, useValue: { loadPermissions: () => [] } },
     { provide: SD_LAYOUT_CONFIGURATION, useValue: DEMO_CONFIGURATION },
     { provide: SD_LAYOUT_VIEWPORT, useExisting: LayoutDemoViewport },
@@ -12245,6 +12257,19 @@ class LayoutDemoViewport implements SdLayoutViewport {
 
       .layout-demo__preview--mobile {
         width: min(100%, 390px);
+      }
+
+      /* Keep the desktop V3 shell inside this transformed fixture: a viewport-sized inner shell can scroll the clipped preview when a deep link receives keyboard focus. */
+      :host ::ng-deep .layout-demo__preview sd-sidebar-v3,
+      :host ::ng-deep .layout-demo__preview .sd-sidebar-v3,
+      :host ::ng-deep .layout-demo__preview .sd-sidebar-v3__content {
+        display: block;
+        height: 100%;
+        min-height: 0;
+      }
+
+      :host ::ng-deep .layout-demo__preview:has(sd-sidebar-v3) sd-layout {
+        height: 100%;
       }
 
       /* why: V1 normally follows the browser viewport; constrain its legacy 100vh shell to the live preview so the account footer stays visible. */
@@ -12390,7 +12415,7 @@ export class LayoutVersionPreviewComponent {
         <demo-section
           data-layout-showcase="3"
           heading="Sidebar V3 - Collapsible"
-          note="Collapsible desktop navigation and a unified mobile drawer with pinned and recent menus."
+          note="Root icons, text-only nested branches and a compact search field on desktop; shared pinned and recent menus."
           [props]="[
             { name: 'version', value: '3' },
             { name: 'mobileBreakpoint', value: '900' },
@@ -12445,7 +12470,15 @@ export class LayoutDemoComponent {
       icon: 'settings',
       children: [
         { id: 'profile', title: 'Profile', path: '/layout-demo/profile', icon: 'person', permission: true },
-        { id: 'access', title: 'Access control', path: '/layout-demo/access', icon: 'security', permission: true },
+        {
+          id: 'access-group',
+          title: 'Access control',
+          icon: 'security',
+          children: [
+            { id: 'access', title: 'Roles & permissions', path: '/layout-demo/access', icon: 'admin_panel_settings', permission: true },
+            { id: 'audit', title: 'Audit log', path: '/layout-demo/audit', icon: 'history', permission: true },
+          ],
+        },
       ],
     },
     {
@@ -19605,7 +19638,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     html: `<demo-section
       data-layout-showcase="3"
       heading="Sidebar V3 - Collapsible"
-      note="Collapsible desktop navigation and a unified mobile drawer with pinned and recent menus."
+      note="Root icons, text-only nested branches and a compact search field on desktop; shared pinned and recent menus."
       [props]="[
         { name: 'version', value: '3' },
         { name: 'mobileBreakpoint', value: '900' },

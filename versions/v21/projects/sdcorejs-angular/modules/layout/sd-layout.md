@@ -261,7 +261,9 @@ External destinations open through the shared `sdOpenExternal` helper, so every 
 
 V2's desktop rail and V3's collapsed desktop drawer center the avatar as the account-menu trigger without rendering a separate disclosure chevron. Collapsed V3 also hides the brand block and keeps only the centered expand control; the expanded drawer and both mobile variants retain the full account identity presentation.
 
-V2/V3 desktop and mobile menu searches share the same internal Soft-pill field: a gray token-based surface, leading search icon and primary focus ring. Placeholder text, `autoId` hooks, accent-insensitive filtering and parent-owned search signals keep their existing contracts.
+V2 and the mobile variants retain the shared Soft-pill search surface. V3 desktop uses the same `SdInput` control in a compact 7px-radius field with a subtle border, matching V1. Placeholder text, `autoId` hooks, accent-insensitive filtering and parent-owned search signals keep their existing contracts.
+
+V3 desktop renders navigation icons only for first-level menu entries (including `iconUrl`). Nested groups and routes use text, 16px indentation steps and subtle ancestor rails; the current route has a primary marker and `aria-current="page"`. Long titles wrap. Search results, Pinned and Recent are text-only shortcuts. Pin/search/collapse/account icons remain action controls. Keyboard focus reveals pin actions; coarse-pointer route and pin targets are at least 44px. The shared tree's default presentation leaves V2/mobile styling unchanged.
 
 ## Built-in page tabs
 

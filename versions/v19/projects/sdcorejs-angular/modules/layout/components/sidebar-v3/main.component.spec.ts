@@ -16,8 +16,14 @@ describe('SdSidebarV3', () => {
     localStorage.clear();
     // The library test target omits consumer global styles; load the Core utility declarations under test.
     utilityStyles = document.createElement('style');
-    utilityStyles.textContent =
-      '.d-flex { display: flex !important; } .justify-content-between { justify-content: space-between !important; } .justify-content-center { justify-content: center !important; }';
+    utilityStyles.textContent = `
+      .d-flex { display: flex !important; } .flex-column { flex-direction: column !important; }
+      .flex-1 { flex: 1 !important; } .align-items-center { align-items: center !important; }
+      .justify-content-between { justify-content: space-between !important; }
+      .justify-content-center { justify-content: center !important; }
+      .overflow-auto { overflow: auto !important; } .gap-8 { gap: 8px !important; }
+      .text-ellipsis { white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+    `;
     document.head.appendChild(utilityStyles);
     await TestBed.configureTestingModule({ imports: [SdSidebarV3], providers: [provideRouter([])] }).compileComponents();
   });
@@ -143,6 +149,114 @@ describe('SdSidebarV3', () => {
     ) as HTMLInputElement;
     expect(input).not.toBeNull();
     expect(input.placeholder).toBe('Tìm trong tất cả menu');
+  });
+
+  it('renders menu icons only at the first level, with text and branch guides below', () => {
+    create();
+    fixture.componentRef.setInput('menus', [
+      { ...dashboard, icon: 'dashboard' },
+      {
+        id: 'admin',
+        title: 'Quản trị',
+        icon: 'admin_panel_settings',
+        children: [
+          {
+            id: 'tenant-group',
+            title: 'Tenant & ứng dụng',
+            icon: 'business',
+            children: [{ ...reports, icon: 'language', iconUrl: '/nested-icon.svg' }],
+          },
+        ],
+      },
+    ]);
+    fixture.componentInstance.activePath.set('/reports');
+    fixture.detectChanges();
+
+    const tree = fixture.nativeElement.querySelector('[data-v3-all] sd-layout-menu-tree') as HTMLElement;
+    expect(tree.querySelectorAll('[data-menu-icon]').length).toBe(2);
+    expect(tree.querySelector('img[src="/nested-icon.svg"]')).toBeNull();
+    const groups = tree.querySelectorAll<HTMLElement>('.sd-layout-menu-tree__group');
+    expect(groups[1].querySelector('sd-icon')).toBeNull();
+    const leaf = tree.querySelector<HTMLButtonElement>('[data-menu-key="id:reports"]')!;
+    expect(leaf.querySelector('sd-icon, img')).toBeNull();
+    expect(leaf.getAttribute('aria-current')).toBe('page');
+    expect(leaf.parentElement!.querySelectorAll('[data-menu-branch]').length).toBe(2);
+    expect(getComputedStyle(leaf).minHeight).toBe('34px');
+    expect(getComputedStyle(leaf).fontSize).toBe('13px');
+    const rootLabel = tree.querySelector('[data-menu-key="id:dashboard"] .sd-layout-menu-tree__label')!;
+    const nestedLabel = leaf.querySelector('.sd-layout-menu-tree__label')!;
+    expect(nestedLabel.getBoundingClientRect().left).toBeGreaterThan(rootLabel.getBoundingClientRect().left);
+  });
+
+  it('keeps flattened search, pinned and recent results text-only without losing navigation', () => {
+    create();
+    const state = TestBed.inject(SdLayoutNavigationStateService);
+    state.togglePinned(dashboard);
+    state.recordRecent(reports, fixture.componentInstance.recentConfiguration());
+    fixture.componentInstance.searchText.set('BAO CAO');
+    fixture.detectChanges();
+
+    for (const section of ['[data-v3-all]', '[data-v3-pinned]', '[data-v3-recent]']) {
+      const tree = fixture.nativeElement.querySelector(`${section} sd-layout-menu-tree`) as HTMLElement;
+      expect(tree).withContext(section).not.toBeNull();
+      expect(tree.querySelectorAll('[data-menu-route] sd-icon, [data-menu-route] img').length).toBe(0);
+    }
+    const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+    fixture.nativeElement.querySelector('[data-v3-all] [data-menu-route]').click();
+    expect(navigate).toHaveBeenCalledWith(['/reports'], jasmine.any(Object));
+  });
+
+  it('uses the compact V1 search surface while preserving the SdInput control', () => {
+    create();
+    const search = fixture.nativeElement.querySelector('[data-layout-search]') as HTMLElement;
+    expect(getComputedStyle(search).borderRadius).toBe('7px');
+    expect(getComputedStyle(search).borderTopWidth).toBe('1px');
+    expect(search.querySelector('sd-input input')).not.toBeNull();
+  });
+
+  it('wraps long labels and scrolls deep navigation independently of the account footer', () => {
+    create();
+    const host = fixture.nativeElement as HTMLElement;
+    host.style.cssText = 'display:block; position:relative; width:1024px; height:420px; transform:translateZ(0)';
+    fixture.componentRef.setInput('menus', [
+      {
+        id: 'root',
+        title: 'Quản trị',
+        icon: 'settings',
+        children: [
+          {
+            id: 'group',
+            title: 'Tài khoản',
+            children: Array.from({ length: 24 }, (_, index) => ({
+              id: `long-${index}`,
+              title: 'Quản lý tài khoản và phân quyền cho tất cả đơn vị trong hệ thống',
+              path: `/long/${index}`,
+              permission: true,
+            })),
+          },
+        ],
+      },
+    ]);
+    fixture.detectChanges();
+
+    const drawer = host.querySelector<HTMLElement>('[data-v3-sidebar]')!;
+    const navigation = host.querySelector<HTMLElement>('.sd-sidebar-v3__navigation')!;
+    const footer = host.querySelector<HTMLElement>('[data-v3-footer]')!;
+    const label = host.querySelector<HTMLElement>('[data-menu-route] .sd-layout-menu-tree__label')!;
+    const initialFooter = footer.getBoundingClientRect();
+    expect(drawer.getBoundingClientRect().width).toBe(304);
+    expect(navigation.scrollHeight).toBeGreaterThan(navigation.clientHeight);
+    expect(getComputedStyle(label).whiteSpace).toBe('normal');
+    expect(label.getBoundingClientRect().height).toBeGreaterThan(26);
+    expect(label.scrollWidth).toBeLessThanOrEqual(label.clientWidth + 1);
+    navigation.scrollTop = navigation.scrollHeight;
+    expect(navigation.scrollTop).toBeGreaterThan(0);
+    expect(footer.getBoundingClientRect().top).toBe(initialFooter.top);
+    expect(initialFooter.bottom).toBeLessThanOrEqual(drawer.getBoundingClientRect().bottom + 1);
+    const account = footer.querySelector<HTMLButtonElement>('[data-user-trigger]')!;
+    account.click();
+    fixture.detectChanges();
+    expect(account.getAttribute('aria-expanded')).toBe('true');
   });
 
   // why: ba tiêu đề section trước đây là literal tiếng Việt trong template, không dịch được.

@@ -10,6 +10,10 @@ interface SdLayoutMenuTreeNode {
   title: string;
   depth: number;
   paddingLeft: number;
+  inset: number;
+  branchOffsets: number[];
+  showIcon: boolean;
+  isRoot: boolean;
   isGroup: boolean;
   isActive: boolean;
   isPinned: boolean;
@@ -38,6 +42,10 @@ export class SdLayoutMenuTreeComponent {
   pinnedKeys = input<string[]>([]);
   showPin = input(true);
   pinVisibility = input<'hover' | 'always'>('hover');
+  /** V3 hierarchy and flat shortcuts are opt-in; V2/mobile retain the default presentation. */
+  presentation = input<'default' | 'hierarchy' | 'shortcuts'>('default');
+  structured = computed(() => this.presentation() !== 'default');
+  iconFontSet = computed(() => (this.structured() ? ('material-icons-outlined' as const) : undefined));
   navigate = output<SdLayoutRootMenu>();
   togglePinned = output<SdLayoutMenu>();
 
@@ -46,6 +54,8 @@ export class SdLayoutMenuTreeComponent {
     const hoveredPinKey = this.#hoveredPinKey();
     const alwaysShowPin = this.pinVisibility() === 'always';
     const query = this.query().trim();
+    const structured = this.structured();
+    const hierarchy = this.presentation() === 'hierarchy' && !query;
     const menus = query ? searchMenuLeaves(this.menus(), query) : this.menus();
     // Nhiều menu cùng khớp route thì chỉ path sát nhất sáng: ở '/appointment/cs' thì '/appointment' không sáng nữa
     const activeMenuPath = resolveActiveMenuPath(menus, this.activePath());
@@ -64,7 +74,11 @@ export class SdLayoutMenuTreeComponent {
           key,
           title,
           depth,
-          paddingLeft: 12 + depth * 16,
+          paddingLeft: structured ? (depth ? 38 + (depth - 1) * 16 : 10) : 12 + depth * 16,
+          inset: structured && depth ? 28 + (depth - 1) * 16 : 0,
+          branchOffsets: hierarchy ? Array.from({ length: depth }, (_, index) => 19 + index * 16) : [],
+          showIcon: !structured || (hierarchy && depth === 0),
+          isRoot: depth === 0 && (!structured || hierarchy),
           isGroup,
           isActive: !!path && path === activeMenuPath,
           isPinned,

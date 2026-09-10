@@ -86,5 +86,11 @@ Logs local nằm trong `tmp/` (git-ignored). Các lần red/diagnostic được 
 - Local tarballs: `C:/Users/Admin/AppData/Local/Temp/sdcorejs-angular-loading-main-2.8/v{19,20,21,22}/`.
 - SHA-256 tarball `sdcorejs-angular-20.2.8.tgz`: `6388c80a5d50bc19b3835a891854a7f3160b93eb777740b41a8710ec36656997`.
 - Local staging được build từ commit tích hợp `48629b1b`, chứa loading fix `e2b324c8` và main `f53358d7`. CI phải build lại từ release commit được gắn tag.
-- Source loading đã commit (`e2b324c8`) và được chuẩn bị push/merge theo yêu cầu người dùng. **Chưa tạo tag hay publish npm.** Chưa nâng cấp/deploy Console; npm 20.2.8 chỉ được xem là phát hành sau postpublish GREEN.
+- Source loading đã commit (`e2b324c8`), push và merge vào `main` tại PR #53 (`f65ba0fa`); toàn bộ sáu CI jobs của PR đã GREEN. **Chưa tạo tag hay publish npm.** Chưa nâng cấp/deploy Console; npm 20.2.8 chỉ được xem là phát hành sau postpublish GREEN.
 - Bước phát hành tiếp theo: merge bản tích hợp vào `main`, tạo/push `v2.8`, để trusted-publishing CI verify/build/publish bốn dòng. Chỉ sau postpublish GREEN mới sinh docs/page và triển khai nâng cấp Console.
+
+## Tiếp nối Sidebar V3
+
+Nhánh `feat/sidebar-v3-hierarchy` được tạo từ main `f65ba0fa` sau khi merge loading. Candidate của nhánh này thêm hierarchy V3 và cập nhật snapshot 2.8; đây vẫn là preflight chưa publish. Kết quả và thiết kế ở `.sdcorejs/docs/design/sidebar-v3-hierarchy.md`.
+
+Năm diff block Console còn lại đã được apply-check với build có Sidebar V3. File patch giữ nguyên các hunk; `.gitattributes` cục bộ giữ LF để checkout Windows không chuyển context của npm bundles sang CRLF.

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "suffix": "2.8",
-  "reviewedSourceSha": "48629b1b44ad860e3075209688f0f9ea3fef3e50",
-  "artifactSource": "Local 2.8 candidate builds from the loading-overlay fix working tree based on 48629b1b44ad860e3075209688f0f9ea3fef3e50; Node 22.22.3. Compared against exact npm *.2.7 baselines: exports and file inventories unchanged. Loading API unchanged. Includes reviewed main table/upload/data-state changes; upload-file declaration removal is documented as breaking in CHANGELOG. Unpublished preflight artifacts; CI must rebuild from the release commit.",
+  "reviewedSourceSha": "f65ba0fab2d5c14721d11c4f8a2dc68763c8b278",
+  "artifactSource": "Local 2.8 candidate builds from the loading-overlay and Sidebar V3 hierarchy working tree based on f65ba0fab2d5c14721d11c4f8a2dc68763c8b278; Node 22.22.3. Compared against exact npm *.2.7 baselines: exports and file inventories unchanged. Loading API unchanged. Includes reviewed main table/upload/data-state changes; upload-file declaration removal is documented as breaking in CHANGELOG. Layout adds default-preserving shared tree/search presentation inputs and V3-only hierarchy markup; no existing layout input or output was removed. Unpublished preflight artifacts; CI must rebuild from the release commit.",
   "targets": {
     "19.2.8": {
       "version": "19.2.8",
@@ -17,7 +17,7 @@
       },
       "publicSurface": {
         "baseline": "a5eb5532a794c2f1157a3d267834a0b600ae8cb1ad311a82cc47d90f15e7f18c",
-        "candidate": "c5d73eea53d1b1fdbc3aa316846154d2b2606813412414a4b4c4c0f52e9d5e26"
+        "candidate": "1a4de4982c80224841e5d7596de7a7d8c70c9028920bbbb2d7cc9a05bfc71759"
       }
     },
     "20.2.8": {
@@ -33,7 +33,7 @@
       },
       "publicSurface": {
         "baseline": "ced3a4d78b0080f83d7c6e11d128a64152f11a620c146e1fc9088d88ccc2a7c2",
-        "candidate": "07adf3c8e87081900880b9db6fbf51e7cae8c700f02998a3af0aa4f797f97d91"
+        "candidate": "97c8cc80846f5ac969b0df814a496aa5785c8e066a7e98ca5ef766bbbfcf273c"
       }
     },
     "21.2.8": {
@@ -49,7 +49,7 @@
       },
       "publicSurface": {
         "baseline": "8823abc88cf4155011f213da6d3d824056771bf77a352a0d3fb6a82074e9a240",
-        "candidate": "549c527683d4efd413bcda00dc65ee1bd74fba2567e2e63610ee916fd6e911b3"
+        "candidate": "cdfb7f478c074950e80b58f541816dec2d4cba204a666316b761cf2ed785ed09"
       }
     },
     "22.2.8": {
@@ -65,7 +65,7 @@
       },
       "publicSurface": {
         "baseline": "f4dd6095324785899181acf6e094bdf58c9491f7e9f6b757fc76ac5b6d43b6e8",
-        "candidate": "b2c895717a92b894cec9019428d29107cc58de92a843a616c7c6ef2a7b60ab25"
+        "candidate": "6b323ab4a5a1d22295cfd3924932e30d9e63556ab1d3c4e2ac6efb419abffedf"
       }
     }
   }

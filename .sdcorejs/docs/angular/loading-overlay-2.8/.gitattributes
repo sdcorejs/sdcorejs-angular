@@ -1,0 +1,2 @@
+# Keep patch context byte-compatible with npm's LF bundles on Windows checkouts.
+*.patch text eol=lf

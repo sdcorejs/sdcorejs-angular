@@ -1,5 +1,9 @@
 // why: V3 is a viewport-height app shell whose unified drawer controls the content offset.
 .sd-sidebar-v3 {
+  --sidebar-surface: var(--sd-white, #fff);
+  --sidebar-line: color-mix(in srgb, var(--sd-border, #c4c6d0) 45%, var(--sidebar-surface));
+  --sidebar-ink: var(--sd-text, #252c38);
+  --sidebar-muted: var(--sd-text-secondary, #6b7280);
   min-height: 100vh;
   background: var(--sd-light);
 }
@@ -10,7 +14,54 @@
   z-index: 20;
   inset: 0 auto 0 0;
   width: 304px;
+  box-sizing: border-box;
+  background: var(--sidebar-surface);
+  border-right: 1px solid var(--sidebar-line);
+  color: var(--sidebar-ink);
   transition: width 160ms ease;
+}
+
+.sd-sidebar-v3__header {
+  flex-shrink: 0;
+  min-height: 64px;
+  box-sizing: border-box;
+}
+
+.sd-sidebar-v3__title {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 22px;
+  letter-spacing: -0.2px;
+}
+
+.sd-sidebar-v3__search {
+  flex-shrink: 0;
+}
+
+.sd-sidebar-v3__navigation {
+  min-height: 0;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sidebar-line) transparent;
+
+  section {
+    flex-shrink: 0;
+  }
+}
+
+.sd-sidebar-v3__section-title {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 0.3px;
+  color: var(--sidebar-muted);
+}
+
+.sd-sidebar-v3__footer {
+  flex-shrink: 0;
+  border-top: 1px solid var(--sidebar-line);
+  background: var(--sidebar-surface);
 }
 
 // why: Collapsed mode reduces the same drawer to an icon rail without replacing component state.
@@ -34,12 +85,21 @@
 .sd-sidebar-v3__icon-action,
 .sd-sidebar-v3__collapsed-action {
   width: 40px;
+  flex-shrink: 0;
   height: 40px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 7px;
   background: transparent;
-  color: var(--sd-black400);
+  color: var(--sidebar-muted);
   cursor: pointer;
+}
+
+@media (pointer: coarse) {
+  .sd-sidebar-v3__icon-action,
+  .sd-sidebar-v3__collapsed-action {
+    width: 44px;
+    height: 44px;
+  }
 }
 
 // why: Navigation controls need token-based hover feedback.

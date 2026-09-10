@@ -20,6 +20,8 @@ Release suffix `2.8` targets `19.2.8`, `20.2.8`, `21.2.8`, and `22.2.8`.
 
 ### Changed
 
+- **Sidebar V3:** match V1 navigation density and compact search, show menu icons only at the first level, and use text, ancestor rails and a current-route marker for deeper levels. Flat search/Pinned/Recent shortcuts are text-only; preserve collapse, route, pin, storage and mobile behavior.
+
 - Table now contains quick search, rows and pagination in one white surface with 6px outer corners and 8px quick-search padding. Consumers no longer need an extra presentation wrapper; scrolling and sticky headers stay on the existing table scroll area.
 
 ### Changed (BREAKING for consumers)

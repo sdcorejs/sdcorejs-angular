@@ -2512,7 +2512,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "modules/layout",
     sectionId: "example-sidebar-v3-collapsible",
     title: "Sidebar V3 - Collapsible",
-    description: "Collapsible desktop navigation and a unified mobile drawer with pinned and recent menus.",
+    description: "Root icons, text-only nested branches and a compact search field on desktop; shared pinned and recent menus.",
   },
   {
     sourceKey: "pipes-utilities/empty/example-gia-tri-rong-hien-thi-dau-gach",

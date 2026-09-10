@@ -28,6 +28,32 @@ describe('SdLayoutMenuTreeComponent', () => {
     expect(fixture.nativeElement.querySelector('[data-menu-key="id:reports"]').getAttribute('aria-current')).toBe('page');
   });
 
+  it('preserves nested menu icons and spacing in the default V2/mobile presentation', () => {
+    const route = fixture.nativeElement.querySelector('[data-menu-key="id:reports"]') as HTMLElement;
+    expect(route.querySelector('sd-icon')).not.toBeNull();
+    expect(getComputedStyle(route).paddingLeft).toBe('28px');
+    expect(getComputedStyle(route).minHeight).toBe('40px');
+    expect(fixture.nativeElement.querySelector('[data-menu-branch]')).toBeNull();
+  });
+
+  it('keeps a keyboard-focused pin reachable in the hierarchy presentation without activating the route', () => {
+    fixture.componentRef.setInput('presentation', 'hierarchy');
+    fixture.detectChanges();
+    const route = fixture.nativeElement.querySelector('[data-menu-key="id:reports"]') as HTMLButtonElement;
+    const pin = fixture.nativeElement.querySelector('[data-pin-key="id:reports"]') as HTMLButtonElement;
+    const navigate = jasmine.createSpy('navigate');
+    const toggle = jasmine.createSpy('toggle');
+    fixture.componentInstance.navigate.subscribe(navigate);
+    fixture.componentInstance.togglePinned.subscribe(toggle);
+    pin.focus();
+    expect(document.activeElement).toBe(pin);
+    pin.click();
+    expect(toggle).toHaveBeenCalledOnceWith(reports);
+    expect(navigate).not.toHaveBeenCalled();
+    route.click();
+    expect(navigate).toHaveBeenCalledOnceWith(reports);
+  });
+
   it('activates only the most exact route when a parent path also matches', () => {
     const appointment: SdLayoutRootMenu = { id: 'appointment', title: 'Lịch hẹn', path: '/appointment', permission: true };
     const appointmentCs: SdLayoutRootMenu = { id: 'appointment-cs', title: 'Lịch hẹn CS', path: '/appointment/cs', permission: true };
