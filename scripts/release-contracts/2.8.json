@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "suffix": "2.8",
-  "reviewedSourceSha": "a2baadbc3182535ba7749a6c163851d4e97a5705",
-  "artifactSource": "Local 2.8 candidate builds from the loading-overlay fix working tree based on a2baadbc3182535ba7749a6c163851d4e97a5705; Node 22.22.3. Compared against exact npm *.2.7 baselines: all declarations, exports and file inventories unchanged; only services/loading/src/loading.service.ts differs in authored sources. Unpublished preflight artifacts; CI must rebuild from the release commit.",
+  "reviewedSourceSha": "48629b1b44ad860e3075209688f0f9ea3fef3e50",
+  "artifactSource": "Local 2.8 candidate builds from the loading-overlay fix working tree based on 48629b1b44ad860e3075209688f0f9ea3fef3e50; Node 22.22.3. Compared against exact npm *.2.7 baselines: exports and file inventories unchanged. Loading API unchanged. Includes reviewed main table/upload/data-state changes; upload-file declaration removal is documented as breaking in CHANGELOG. Unpublished preflight artifacts; CI must rebuild from the release commit.",
   "targets": {
     "19.2.8": {
       "version": "19.2.8",
@@ -17,7 +17,7 @@
       },
       "publicSurface": {
         "baseline": "a5eb5532a794c2f1157a3d267834a0b600ae8cb1ad311a82cc47d90f15e7f18c",
-        "candidate": "a9f211fed03b175e219e4901a7fc32e77ef92938eb915e407ff36fe1567a6f20"
+        "candidate": "c5d73eea53d1b1fdbc3aa316846154d2b2606813412414a4b4c4c0f52e9d5e26"
       }
     },
     "20.2.8": {
@@ -33,7 +33,7 @@
       },
       "publicSurface": {
         "baseline": "ced3a4d78b0080f83d7c6e11d128a64152f11a620c146e1fc9088d88ccc2a7c2",
-        "candidate": "6f57e6bc63472d54f1e33f23dd4cdb22752393489d0e678c15bb3797df716e23"
+        "candidate": "07adf3c8e87081900880b9db6fbf51e7cae8c700f02998a3af0aa4f797f97d91"
       }
     },
     "21.2.8": {
@@ -49,7 +49,7 @@
       },
       "publicSurface": {
         "baseline": "8823abc88cf4155011f213da6d3d824056771bf77a352a0d3fb6a82074e9a240",
-        "candidate": "ec28a6374785c823c50e13f48123e3582acaf7f62262f5c84f620710def7890a"
+        "candidate": "549c527683d4efd413bcda00dc65ee1bd74fba2567e2e63610ee916fd6e911b3"
       }
     },
     "22.2.8": {
@@ -65,7 +65,7 @@
       },
       "publicSurface": {
         "baseline": "f4dd6095324785899181acf6e094bdf58c9491f7e9f6b757fc76ac5b6d43b6e8",
-        "candidate": "65205efb585ad072e15fdf8aead7eb9db85d192b8525ef1d8698989757719b99"
+        "candidate": "b2c895717a92b894cec9019428d29107cc58de92a843a616c7c6ef2a7b60ab25"
       }
     }
   }

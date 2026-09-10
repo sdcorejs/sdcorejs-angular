@@ -14,11 +14,20 @@ Sửa canonical `versions/v19/projects/sdcorejs-angular/services/loading/src/loa
 - Scope spinner thành `.sd-loading[data-sd-loading-overlay] > .sd-loading-spinner`.
 - Đồng bộ kiểm tra rule trong cơ chế nhận diện/augment stylesheet.
 
-Không đổi code `SdButton`, API, class hiện hữu, keyframes, contribution/ref counting, ownership giữa các injector, phục hồi `aria-busy`, SSR hay cleanup đồng bộ. So sánh package với npm `*.2.7` xác nhận cả bốn dòng giữ nguyên declarations, exports và danh sách file; authored runtime source chỉ đổi `loading.service.ts`.
+Không đổi code `SdButton`, API, class hiện hữu, keyframes, contribution/ref counting, ownership giữa các injector, phục hồi `aria-busy`, SSR hay cleanup đồng bộ. Preflight riêng loading fix giữ nguyên declarations, exports và danh sách file. Khi tích hợp `main` (`f53358d7`), candidate 2.8 còn bao gồm các sửa table, data-state và upload-file có sẵn trên main: upload-file bỏ input `appearance`/type liên quan theo mục Breaking của CHANGELOG. Việc bỏ API này không thuộc loading fix; Console cần bỏ binding upload appearance nếu đang dùng.
 
 Overlay ở vùng nội dung được định vị riêng vẫn để header và nút đóng drawer tương tác. `start()` mặc định phủ document body vẫn giữ hành vi overlay toàn trang hiện có; bản vá không đổi mô hình định vị/scroll của overlay.
 
 ## Kiểm chứng
+
+### Sau khi tích hợp main
+
+- Full canonical Chrome: 5.336/5.336 pass.
+- Build/pack bốn dòng và `check:sync`, 158 script tests: pass.
+- Package-contract và strict consumer compile của cả bốn tarball tích hợp: pass. Patch layout/tab-router Console còn lại apply-check thành công trên build mới.
+- Snapshot 2.8 được tái sinh từ build ở `48629b1b`; exports và inventory giữ nguyên, khác biệt declaration chỉ thuộc upload-file đã được main ghi Breaking.
+
+### Preflight loading độc lập trước tích hợp
 
 - Red trước sửa: 4/8 test rendering mới fail. Header button dịch x từ khoảng 611px về 32px, rộng từ khoảng 75px thành 670px và nhận z-index 99999.
 - Focused Chrome suite: 129/129 pass (loading lifecycle, rendering, button, side drawer).
@@ -74,8 +83,8 @@ Logs local nằm trong `tmp/` (git-ignored). Các lần red/diagnostic được 
 
 - Candidate: `19.2.8`, **`20.2.8` cho Console**, `21.2.8`, `22.2.8`.
 - Đã chuẩn bị package manifests, CHANGELOG section 2.8, workflow pin `v2.8`, baseline 2.7 và snapshot `scripts/release-contracts/2.8.json`. Không sửa archive `published-docs`/`published-pages`.
-- Local tarballs: `C:/Users/Admin/AppData/Local/Temp/sdcorejs-angular-loading-2.8/v{19,20,21,22}/`.
-- SHA-256 tarball `sdcorejs-angular-20.2.8.tgz`: `ae6353f1a129b593e16492a2eb0ad663af67144df9d315a85c75dec8d4bb124b`.
-- Đây là preflight từ working tree dựa trên `a2baadbc3182535ba7749a6c163851d4e97a5705`; metadata source SHA của local staging là base HEAD, chưa phải release commit chứa fix. CI phải build lại từ release commit đã merge.
-- **Chưa commit, push, tạo tag hay publish npm.** Chưa nâng cấp/deploy Console. Không gọi bản npm đã phát hành là có fix.
-- Bước phát hành tiếp theo: review/commit patch, merge vào `main`, tạo/push `v2.8`, để trusted-publishing CI verify/build/publish bốn dòng. Chỉ sau postpublish GREEN mới sinh docs/page và triển khai nâng cấp Console.
+- Local tarballs: `C:/Users/Admin/AppData/Local/Temp/sdcorejs-angular-loading-main-2.8/v{19,20,21,22}/`.
+- SHA-256 tarball `sdcorejs-angular-20.2.8.tgz`: `6388c80a5d50bc19b3835a891854a7f3160b93eb777740b41a8710ec36656997`.
+- Local staging được build từ commit tích hợp `48629b1b`, chứa loading fix `e2b324c8` và main `f53358d7`. CI phải build lại từ release commit được gắn tag.
+- Source loading đã commit (`e2b324c8`) và được chuẩn bị push/merge theo yêu cầu người dùng. **Chưa tạo tag hay publish npm.** Chưa nâng cấp/deploy Console; npm 20.2.8 chỉ được xem là phát hành sau postpublish GREEN.
+- Bước phát hành tiếp theo: merge bản tích hợp vào `main`, tạo/push `v2.8`, để trusted-publishing CI verify/build/publish bốn dòng. Chỉ sau postpublish GREEN mới sinh docs/page và triển khai nâng cấp Console.
