@@ -175,6 +175,38 @@ describe('SdTable quick search integration', () => {
   }
   beforeEach(() => TestBed.configureTestingModule({ imports: [QuickSearchHost] }));
 
+  it('keeps quick search, the table and its footer on one padded surface', fakeAsync(() => {
+    mount();
+    const element: HTMLElement = fixture.nativeElement.querySelector('sd-table');
+    element.style.setProperty('--sd-surface', 'rgb(255, 255, 255)');
+    const search: HTMLElement = element.querySelector('sd-table-quick-search')!;
+    const surface = search.parentElement!;
+    const container: HTMLElement = element.querySelector('.c-container')!;
+    expect(surface.classList.contains('sd-table-surface')).toBeTrue();
+    expect(container.parentElement).toBe(surface);
+    expect(surface.contains(element.querySelector('.c-paginator'))).toBeTrue();
+    expect(getComputedStyle(surface).backgroundColor).toBe('rgb(255, 255, 255)');
+    expect(getComputedStyle(search).padding).toBe('8px');
+    expect(getComputedStyle(surface).overflow).toBe('visible');
+    expect(getComputedStyle(container.querySelector('.c-table')!).borderTopLeftRadius).toBe('0px');
+    fixture.destroy();
+  }));
+
+  it('keeps the plain table on its own surface without an empty quick-search gap', fakeAsync(() => {
+    mount(host => {
+      host.option.filter = {};
+    });
+    const element: HTMLElement = fixture.nativeElement.querySelector('sd-table');
+    const container = element.querySelector('.c-container')!;
+    const surface = container.parentElement!;
+    expect(surface.classList.contains('sd-table-surface')).toBeTrue();
+    expect(element.querySelector('sd-table-quick-search')).toBeNull();
+    expect(surface.firstElementChild).toBe(container);
+    expect(getComputedStyle(surface).padding).toBe('0px');
+    expect(getComputedStyle(container.querySelector('.c-table')!).borderTopLeftRadius).toBe('6px');
+    fixture.destroy();
+  }));
+
   it('resolves a signal default before the first table request without emitting onChange', fakeAsync(() => {
     mount();
     expect(host.loader).toHaveBeenCalled();

@@ -16,6 +16,16 @@
     align-items: center;
   }
 
+  .sd-table-surface {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    background: var(--sd-surface, #fff);
+    border-radius: 6px;
+  }
+
   .c-container {
     position: relative;
     min-height: 50px; // Xóa CSS này sẽ khiến table ko tự scroll
@@ -587,4 +597,12 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+:host .sd-table-surface--quick-search > .c-container:not(.sd-table-mobile) {
+  > .c-table,
+  > .c-loading {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
 }

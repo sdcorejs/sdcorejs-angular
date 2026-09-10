@@ -412,73 +412,8 @@
   }
 }
 
-// why: readable dropzone; compact keeps the existing preview dimensions.
+// why: retain keyboard access without expanding the compact upload tile.
 :host {
-  overflow: visible;
-  min-width: 0;
-  .c-upload-list {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 12px;
-    padding: 3px;
-  }
-  .c-area-upload {
-    display: flex;
-    flex: 0 0 auto;
-    box-sizing: border-box;
-    margin: 0;
-    opacity: 1;
-    padding: 8px;
-    border: 1px dashed var(--sd-primary);
-    background: var(--sd-surface, #fff);
-    color: var(--sd-text);
-    &:hover {
-      opacity: 1;
-      background: var(--sd-primary-light);
-    }
-  }
-  .c-area-upload--dropzone {
-    flex: 1 0 100%;
-    width: 100%;
-    min-height: 144px;
-    flex-direction: column;
-    gap: 8px;
-    padding: 20px;
-  }
-  .c-upload-icon-tile {
-    display: grid;
-    place-items: center;
-    width: 32px;
-    height: 32px;
-    flex: 0 0 32px;
-    border-radius: 8px;
-    background: var(--sd-primary-light);
-    color: var(--sd-primary-dark);
-  }
-  .c-upload {
-    width: 20px;
-    height: 20px;
-    font-size: 20px;
-    line-height: 20px;
-    color: inherit;
-  }
-  .c-upload-copy {
-    font-size: 14px;
-    line-height: 20px;
-    font-weight: 500;
-    overflow-wrap: anywhere;
-  }
-  .c-upload-hint {
-    font-size: 12px;
-    line-height: 18px;
-    color: var(--sd-text-secondary);
-    overflow-wrap: anywhere;
-  }
-  .c-area.c-view {
-    opacity: 1;
-    flex: 0 0 auto;
-  }
   .c-img-container:focus-within .c-action {
     display: flex;
   }
@@ -514,10 +449,6 @@
     outline-offset: 2px;
   }
   @media (max-width: 600px) {
-    .c-area-upload--dropzone {
-      padding: 16px;
-      min-height: 136px;
-    }
     .c-document-container .c-close,
     .c-zoom {
       width: 44px;
@@ -528,9 +459,6 @@
       height: 44px;
       top: -8px;
       right: -8px;
-    }
-    .c-upload-list {
-      gap: 16px;
     }
   }
   @media (prefers-reduced-motion: reduce) {

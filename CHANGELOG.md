@@ -1,4 +1,4 @@
-﻿# Changelog — `@sdcorejs/angular`
+# Changelog — `@sdcorejs/angular`
 
 Changelog cho npm package `@sdcorejs/angular`, tập trung vào thay đổi public API, hành vi runtime, tài liệu sử dụng, tooling release, và các migration cần consumer chú ý.
 
@@ -17,6 +17,21 @@ Release suffix `2.8` targets `19.2.8`, `20.2.8`, `21.2.8`, and `22.2.8`.
 ### Consumer upgrade
 
 - Enterprise Console: after `20.2.8` is published and verified, pin `@sdcorejs/angular` to `20.2.8`, update the lockfile and rebase `patch-package`. Remove only the `fesm2022/sdcorejs-angular-services-loading.mjs` diff block introduced by Console commit `4a36177`. Retain the configuration/layout token and tab-router hunks, rename the patch to `@sdcorejs+angular+20.2.8.patch`, and update the exact-version guard in `scripts/apply-core-ui-patches.mjs` to describe the remaining layout/tab-router patches. Verify clean install, Console loading-layout/shell regressions and the production bundle budget before deploying.
+
+### Changed
+
+- Table now contains quick search, rows and pagination in one white surface with 6px outer corners and 8px quick-search padding. Consumers no longer need an extra presentation wrapper; scrolling and sticky headers stay on the existing table scroll area.
+
+### Changed (BREAKING for consumers)
+
+- Restore the compact `sd-upload-file` tile (default 50x50px) for table cells. Remove the expanded dropzone and `appearance` input; file drag/drop, keyboard access, preview and sorting remain supported.
+
+  ```diff
+  - <sd-upload-file appearance="compact" ...></sd-upload-file>
+  + <sd-upload-file ...></sd-upload-file>
+  ```
+
+  Remove `appearance="dropzone"` or `[appearance]` bindings in the same way. `previewWidth` and `previewHeight` size the tile and thumbnails.
 
 ## [2.7] - 2026-09-09
 

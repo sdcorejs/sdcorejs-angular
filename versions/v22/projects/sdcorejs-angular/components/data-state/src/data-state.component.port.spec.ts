@@ -36,9 +36,11 @@ describe('SdDataState port contract', () => {
       const fixture = TestBed.createComponent(SdDataState);
       fixture.componentRef.setInput('state', state);
       fixture.nativeElement.style.setProperty('--sd-error', 'rgb(200, 20, 30)');
-      fixture.nativeElement.style.setProperty('--sd-black400', 'rgb(90, 90, 90)');
+      fixture.nativeElement.style.setProperty('--sd-text-secondary', 'rgb(90, 90, 90)');
       fixture.nativeElement.style.setProperty('--sd-primary', 'rgb(42, 102, 244)');
       fixture.nativeElement.style.setProperty('--sd-warning-dark', 'rgb(191, 112, 0)');
+      fixture.nativeElement.style.setProperty('--sd-surface-muted', 'rgb(245, 245, 245)');
+      fixture.nativeElement.style.setProperty('--sd-warning-light', 'rgb(255, 235, 205)');
       fixture.detectChanges();
       const section: HTMLElement = fixture.nativeElement.querySelector('section');
       const icon: HTMLElement = section.querySelector('sd-icon')!;
@@ -49,9 +51,11 @@ describe('SdDataState port contract', () => {
       expect(icon.querySelector('mat-icon')?.textContent?.trim()).toBe(
         { loading: 'autorenew', empty: 'inbox', error: 'error', forbidden: 'lock' }[state]
       );
-      expect(getComputedStyle(icon).color).toBe(
-        alert ? 'rgb(200, 20, 30)' : state === 'loading' ? 'rgb(42, 102, 244)' : 'rgb(191, 112, 0)'
-      );
+      expect(getComputedStyle(icon).color).toBe(alert ? 'rgb(200, 20, 30)' : state === 'loading' ? 'rgb(42, 102, 244)' : 'rgb(90, 90, 90)');
+      if (state === 'empty') {
+        const symbol = section.querySelector('.sd-data-state__symbol')!;
+        expect(getComputedStyle(symbol).backgroundColor).toBe('rgb(245, 245, 245)');
+      }
       const animated = state === 'loading' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (animated) {
         expect(getComputedStyle(icon).animationName).toContain('sd-data-state-spin');

@@ -66,7 +66,7 @@ This UI component is separate from `@sdcorejs/angular/utilities/data-state`, whi
 
 ## Presentation and motion
 
-Icons use a soft circular background: 56px background / 32px icon in regular layout, 32px background / 22px icon in compact layout. Compact presentation places the icon beside left-aligned title, message and actions; regular remains centered. Loading uses primary colors; empty uses warning colors; error/forbidden use error colors. Colors resolve through the current theme.
+Icons use a soft circular background: 56px background / 32px icon in regular layout, 32px background / 22px icon in compact layout. Compact presentation places the icon beside left-aligned title, message and actions; regular remains centered. Loading uses primary colors; empty uses a neutral icon (`--sd-text-secondary`) on a muted background (`--sd-surface-muted`); error/forbidden use error colors. Colors resolve through the current theme.
 
 Loading uses `autorenew` with a 1s linear rotation; the tile stays still. Reduced motion disables rotation. Rendering continues through `SdIcon`, preserving configured Material/Lucide icon sets. Retry uses `SdButton` with `size="sm"`, `type="light"`, `color="primary"`; the secondary action uses `type="fill"`. Both use `htmlType="button"` and emit one void event.
 

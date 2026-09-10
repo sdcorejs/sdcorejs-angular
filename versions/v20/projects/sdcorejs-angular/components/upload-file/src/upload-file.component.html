@@ -1,6 +1,4 @@
 <div class="d-flex flex-column" style="gap: 4px">
-  @let _dropzone = appearance() === 'dropzone';
-  @let _description = generatedDescription();
   @let _sdLabelDef = sdLabelDef();
   @let _label = label();
   @let _align = align();
@@ -11,17 +9,13 @@
   @if (!!_sdLabelDef?.templateRef) {
     <ng-container *ngTemplateOutlet="_sdLabelDef?.templateRef!"> </ng-container>
   } @else if (_label) {
-    <sd-label
-      [label]="_label!"
-      [description]="_dropzone ? undefined : _description"
-      [helperText]="helperText()"
-      [required]="required()"></sd-label>
+    <sd-label [label]="_label!" [description]="generatedDescription()" [helperText]="helperText()" [required]="required()"></sd-label>
   }
   <div
     cdkDropList
     (cdkDropListDropped)="onDrop($event)"
     cdkDropListOrientation="horizontal"
-    class="c-upload-list"
+    class="d-flex"
     [class.justify-content-center]="_align === 'center'"
     [class.justify-content-start]="_align === 'left'">
     @if (_previewFiles.length < max() && !formControl.disabled) {
@@ -30,12 +24,11 @@
            Nay là role="button" + tabindex="0" + nhãn i18n + Enter/Space chạy đúng như click. -->
       <div
         class="d-flex justify-content-center align-items-center cursor-pointer c-area-upload"
-        [class.c-area-upload--dropzone]="_dropzone"
         role="button"
         tabindex="0"
         [attr.aria-label]="'core.component.upload-file.upload' | sdTranslate"
-        [style.width]="_dropzone ? null : _previewWidth"
-        [style.height]="_dropzone ? null : _previewHeight"
+        [style.width]="_previewWidth"
+        [style.height]="_previewHeight"
         (click)="onUpload()"
         (keydown.enter)="onUploadKeydown($event)"
         (keydown.space)="onUploadKeydown($event)"
@@ -44,13 +37,7 @@
         [attr.data-empty]="dataEmpty()"
         [attr.data-count]="dataCount()"
         #dropElement>
-        <span class="c-upload-icon-tile" aria-hidden="true"><sd-icon class="c-upload" name="file_upload"></sd-icon></span>
-        @if (_dropzone) {
-          <span class="c-upload-copy">{{ 'core.component.upload-file.choose-or-drop' | sdTranslate }}</span>
-          @if (_description) {
-            <span class="c-upload-hint">{{ _description }}</span>
-          }
-        }
+        <sd-icon class="c-upload" name="file_upload"></sd-icon>
       </div>
     }
     @let previewImages = _previewFiles | filterImage;

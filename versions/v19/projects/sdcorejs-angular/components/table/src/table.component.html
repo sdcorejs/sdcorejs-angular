@@ -23,6 +23,7 @@
 @let _mobileCards = mobileCards();
 @let _isMobile = isMobile();
 @let _commandHeaderDef = sdCommandHeaderDef();
+@let _quickSearch = quickSearchOption();
 <!-- why: tree không còn cột riêng — khi KHÔNG có cột Index, icon expand nhúng vào
      cột data đầu tiên. Đây là field của cột đó (null nếu có Index hoặc không tree). -->
 @let _treeFirstField = _tableOption?.tree && !_tableOption.index?.enabled ? _configuration?.firstColumns?.[0]?.field : null;
@@ -102,276 +103,353 @@
   </ng-template>
 
   <ng-content select="[sdTableTop]"></ng-content>
-  @if (quickSearchOption(); as quickSearch) {
-    <sd-table-quick-search
-      [option]="quickSearch"
-      [value]="quickSearchValue()"
-      [autoId]="_autoId"
-      [rightTemplate]="sdQuickSearchRightDef()?.templateRef"
-      (valueChange)="onQuickSearchChange($event)" />
-  }
-  <div class="c-container" [class.sd-table-mobile]="_mobileCards">
-    <!-- why: bảng tải dữ liệu BẤT ĐỒNG BỘ nhưng trước đây chỉ có spinner thuần hình ảnh — screen
-         reader không được báo gì cả. role="status" + aria-live="polite" đọc trạng thái ngay khi
-         spinner xuất hiện; aria-busy trên vùng bảng cho biết nội dung đang được thay thế. -->
-    @if (_loading) {
-      <div class="c-loading" role="status" aria-live="polite" [attr.aria-label]="'core.component.table.loading' | sdTranslate">
-        <mat-spinner></mat-spinner>
-      </div>
+  <div class="sd-table-surface" [class.sd-table-surface--quick-search]="!!_quickSearch">
+    @if (_quickSearch) {
+      <sd-table-quick-search
+        [option]="_quickSearch"
+        [value]="quickSearchValue()"
+        [autoId]="_autoId"
+        [rightTemplate]="sdQuickSearchRightDef()?.templateRef"
+        (valueChange)="onQuickSearchChange($event)" />
     }
-    <div
-      class="c-table"
-      sdScroll
-      stickyShadow
-      matSort
-      [matSortDisabled]="!_tableOption.sort?.enable"
-      [attr.aria-busy]="_loading ? 'true' : null"
-      [style.max-height]="_tableOption.style?.maxHeight"
-      [style.min-height]="_tableOption.style?.minHeight">
-      @if (_mobileCards) {
-        @if (_commandHeaderDef) {
-          <div class="sd-mobile-command-header"><ng-container *ngTemplateOutlet="_commandHeaderDef.templateRef"></ng-container></div>
-        }
-        <sd-table-mobile-cards [table]="this" [rows]="groupedItems" [groupTemplate]="sdGroupHeader"></sd-table-mobile-cards>
-        @if (hasFooter()) {
-          <div class="sd-mobile-footer p-12" role="region" [attr.aria-label]="'core.component.table.mobile.summary' | sdTranslate">
-            @for (column of mobileFooterColumns(); track column.field) {
-              <div class="d-flex align-items-center flex-wrap gap-8 py-8">
-                <column-title [column]="column" [titleDef]="_titleDef[column.field]"></column-title>
-                <ng-container
-                  *ngTemplateOutlet="_footerDef[column.field].templateRef; context: { items: _items, column: column }"></ng-container>
-              </div>
+    <div class="c-container" [class.sd-table-mobile]="_mobileCards">
+      <!-- why: bảng tải dữ liệu BẤT ĐỒNG BỘ nhưng trước đây chỉ có spinner thuần hình ảnh — screen
+           reader không được báo gì cả. role="status" + aria-live="polite" đọc trạng thái ngay khi
+           spinner xuất hiện; aria-busy trên vùng bảng cho biết nội dung đang được thay thế. -->
+      @if (_loading) {
+        <div class="c-loading" role="status" aria-live="polite" [attr.aria-label]="'core.component.table.loading' | sdTranslate">
+          <mat-spinner></mat-spinner>
+        </div>
+      }
+      <div
+        class="c-table"
+        sdScroll
+        stickyShadow
+        matSort
+        [matSortDisabled]="!_tableOption.sort?.enable"
+        [attr.aria-busy]="_loading ? 'true' : null"
+        [style.max-height]="_tableOption.style?.maxHeight"
+        [style.min-height]="_tableOption.style?.minHeight">
+        @if (_mobileCards) {
+          @if (_commandHeaderDef) {
+            <div class="sd-mobile-command-header"><ng-container *ngTemplateOutlet="_commandHeaderDef.templateRef"></ng-container></div>
+          }
+          <sd-table-mobile-cards [table]="this" [rows]="groupedItems" [groupTemplate]="sdGroupHeader"></sd-table-mobile-cards>
+          @if (hasFooter()) {
+            <div class="sd-mobile-footer p-12" role="region" [attr.aria-label]="'core.component.table.mobile.summary' | sdTranslate">
+              @for (column of mobileFooterColumns(); track column.field) {
+                <div class="d-flex align-items-center flex-wrap gap-8 py-8">
+                  <column-title [column]="column" [titleDef]="_titleDef[column.field]"></column-title>
+                  <ng-container
+                    *ngTemplateOutlet="_footerDef[column.field].templateRef; context: { items: _items, column: column }"></ng-container>
+                </div>
+              }
+            </div>
+          }
+        } @else {
+          <table
+            mat-table
+            [dataSource]="groupedItems"
+            [trackBy]="trackBy"
+            multiTemplateDataRows
+            cdkDropList
+            [cdkDropListData]="groupedItems"
+            [cdkDropListDisabled]="!_tableOption.rowReorder?.enabled"
+            [cdkDropListSortPredicate]="reorderSortPredicate"
+            (cdkDropListDropped)="onReorderDrop($event)">
+            @if (_tableOption.rowReorder?.enabled) {
+              <ng-container matColumnDef="sdReorder">
+                <th mat-header-cell *matHeaderCellDef class="sd-reorder-header" [attr.rowspan]="_configuration.multipleHeader ? 2 : 1"></th>
+                <td mat-cell *matCellDef="let row" class="sd-reorder-cell">
+                  @if (!row.meta?.group?.items?.length) {
+                    <sd-icon
+                      cdkDragHandle
+                      [class.sd-reorder-disabled]="isReorderDisabled(row)"
+                      [name]="_tableOption.rowReorder?.icon || 'drag_indicator'"></sd-icon>
+                  }
+                </td>
+                <td mat-footer-cell *matFooterCellDef></td>
+              </ng-container>
             }
-          </div>
-        }
-      } @else {
-        <table
-          mat-table
-          [dataSource]="groupedItems"
-          [trackBy]="trackBy"
-          multiTemplateDataRows
-          cdkDropList
-          [cdkDropListData]="groupedItems"
-          [cdkDropListDisabled]="!_tableOption.rowReorder?.enabled"
-          [cdkDropListSortPredicate]="reorderSortPredicate"
-          (cdkDropListDropped)="onReorderDrop($event)">
-          @if (_tableOption.rowReorder?.enabled) {
-            <ng-container matColumnDef="sdReorder">
-              <th mat-header-cell *matHeaderCellDef class="sd-reorder-header" [attr.rowspan]="_configuration.multipleHeader ? 2 : 1"></th>
-              <td mat-cell *matCellDef="let row" class="sd-reorder-cell">
-                @if (!row.meta?.group?.items?.length) {
-                  <sd-icon
-                    cdkDragHandle
-                    [class.sd-reorder-disabled]="isReorderDisabled(row)"
-                    [name]="_tableOption.rowReorder?.icon || 'drag_indicator'"></sd-icon>
+
+            <ng-container matColumnDef="sdSubInformation" sticky>
+              <td class="p-0" mat-cell *matCellDef="let item" [attr.colspan]="_configuration.displayedColumns.length">
+                @if (_sdSubInformation?.templateRef) {
+                  @if (_tableOption.expand?.always) {
+                    <ng-container *ngTemplateOutlet="_sdSubInformation?.templateRef!; context: { item: item }"> </ng-container>
+                  } @else {
+                    <div [@detailExpand]="item.meta.expand?.isExpanded ? 'expanded' : 'collapsed'">
+                      @if (item.meta.expand?.isExpanded) {
+                        <ng-container *ngTemplateOutlet="_sdSubInformation?.templateRef!; context: { item: item }"> </ng-container>
+                      }
+                    </div>
+                  }
                 }
               </td>
               <td mat-footer-cell *matFooterCellDef></td>
             </ng-container>
-          }
 
-          <ng-container matColumnDef="sdSubInformation" sticky>
-            <td class="p-0" mat-cell *matCellDef="let item" [attr.colspan]="_configuration.displayedColumns.length">
-              @if (_sdSubInformation?.templateRef) {
-                @if (_tableOption.expand?.always) {
-                  <ng-container *ngTemplateOutlet="_sdSubInformation?.templateRef!; context: { item: item }"> </ng-container>
-                } @else {
-                  <div [@detailExpand]="item.meta.expand?.isExpanded ? 'expanded' : 'collapsed'">
-                    @if (item.meta.expand?.isExpanded) {
-                      <ng-container *ngTemplateOutlet="_sdSubInformation?.templateRef!; context: { item: item }"> </ng-container>
-                    }
+            <ng-container matColumnDef="sdSubInformationAction" stickyEnd>
+              <th
+                class="p-0"
+                mat-header-cell
+                *matHeaderCellDef
+                style="width: 1px"
+                [attr.rowspan]="_configuration.multipleHeader ? 2 : 1"></th>
+              <td mat-cell *matCellDef="let element">
+                @if (!element.meta.expand?.isExpanding && !_tableOption.expand?.always) {
+                  <sd-button
+                    [autoId]="_autoId ? _autoId + '-expand-' + element.meta.id : null"
+                    type="text"
+                    [prefixIcon]="element.meta.expand?.isExpanded ? 'expand_less' : 'expand_more'"
+                    (click)="onExpand(element)"
+                    width="35px">
+                  </sd-button>
+                }
+                @if (element.meta.expand?.isExpanding) {
+                  <div class="lds-ring">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
                   </div>
                 }
-              }
-            </td>
-            <td mat-footer-cell *matFooterCellDef></td>
-          </ng-container>
+              </td>
+            </ng-container>
 
-          <ng-container matColumnDef="sdSubInformationAction" stickyEnd>
-            <th
-              class="p-0"
-              mat-header-cell
-              *matHeaderCellDef
-              style="width: 1px"
-              [attr.rowspan]="_configuration.multipleHeader ? 2 : 1"></th>
-            <td mat-cell *matCellDef="let element">
-              @if (!element.meta.expand?.isExpanding && !_tableOption.expand?.always) {
-                <sd-button
-                  [autoId]="_autoId ? _autoId + '-expand-' + element.meta.id : null"
-                  type="text"
-                  [prefixIcon]="element.meta.expand?.isExpanded ? 'expand_less' : 'expand_more'"
-                  (click)="onExpand(element)"
-                  width="35px">
-                </sd-button>
-              }
-              @if (element.meta.expand?.isExpanding) {
-                <div class="lds-ring">
-                  <div></div>
-                  <div></div>
-                  <div></div>
-                  <div></div>
-                </div>
-              }
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="sdSelection" sticky>
-            <th class="sd-selection-cell p-0" mat-header-cell *matHeaderCellDef [attr.rowspan]="_configuration.multipleHeader ? 2 : 1">
-              @if (_visibleSelectAll) {
-                <mat-checkbox
-                  class="c-selection px-8"
-                  color="primary"
-                  [indeterminate]="_isSelectIndeterminate"
-                  [ngModel]="_isSelectAll"
-                  (ngModelChange)="isSelectAll.set($event)"
-                  (change)="onSelectAll()">
-                </mat-checkbox>
-              }
-            </th>
-
-            <td class="sd-selection-cell p-0" mat-cell *matCellDef="let item">
-              @let visible = item.meta.selector?.visible;
-              @if (visible) {
-                @if (_tableOption.selector?.single) {
-                  <mat-radio-button
-                    class="c-selection px-8"
-                    color="primary"
-                    [checked]="item.meta.selector.isSelected"
-                    (change)="item.meta.selector.isSelected = true; onSelect(item)"
-                    [disabled]="item.meta.selector?.disabled">
-                  </mat-radio-button>
-                } @else {
+            <ng-container matColumnDef="sdSelection" sticky>
+              <th class="sd-selection-cell p-0" mat-header-cell *matHeaderCellDef [attr.rowspan]="_configuration.multipleHeader ? 2 : 1">
+                @if (_visibleSelectAll) {
                   <mat-checkbox
                     class="c-selection px-8"
                     color="primary"
-                    [(ngModel)]="item.meta.selector.isSelected"
-                    (change)="onSelect(item)"
-                    [disabled]="item.meta.selector?.disabled">
+                    [indeterminate]="_isSelectIndeterminate"
+                    [ngModel]="_isSelectAll"
+                    (ngModelChange)="isSelectAll.set($event)"
+                    (change)="onSelectAll()">
                   </mat-checkbox>
                 }
-              }
-            </td>
-            <td mat-footer-cell *matFooterCellDef></td>
-          </ng-container>
-          @if (_tableOption.index?.enabled) {
-            @let _pageOffset = pageOffset();
-            @let _indexWidth = _tableOption.index?.width || '50px';
-            <!-- why: khi tree, cột Index "ôm" thêm chevron + indent. Dùng width:1px +
-               nowrap (.sd-tree-index-cell) để cột co SÁT nội dung, không chiếm chỗ
-               thừa; header "#" canh trái lùi vào (.sd-tree-index-header) cho thẳng số. -->
-            @let _treeIndex = !!_tableOption.tree;
-            <ng-container matColumnDef="sdIndex" sticky>
-              <th
-                [class.p-0]="!_treeIndex"
-                [class.text-center]="!_treeIndex"
-                [class.sd-tree-index-cell]="_treeIndex"
-                [class.sd-tree-index-header]="_treeIndex"
-                mat-header-cell
-                *matHeaderCellDef
-                [style.width]="_treeIndex ? '1px' : _indexWidth"
-                [style.min-width]="_treeIndex ? null : _indexWidth"
-                [style.max-width]="_treeIndex ? null : _indexWidth"
-                [attr.rowspan]="_configuration.multipleHeader ? 2 : 1">
-                {{ _tableOption.index?.title || '#' }}
               </th>
-              <td
-                [class.px-4]="!_treeIndex"
-                [class.text-center]="!_treeIndex"
-                [class.sd-tree-index-cell]="_treeIndex"
-                mat-cell
-                *matCellDef="let item; let i = dataIndex"
-                [style.width]="_treeIndex ? '1px' : null"
-                [style.min-width]="_treeIndex ? null : _indexWidth"
-                [style.max-width]="_treeIndex ? null : _indexWidth">
-                @if (!item?.meta?.group?.isGroupHeader) {
-                  @if (_treeIndex) {
-                    <!-- why: tree → chevron + indent + STT phân cấp (1, 1.2, 1.2.1). Tô đậm root (level 0). -->
-                    <span class="sd-tree-line">
-                      <ng-container *ngTemplateOutlet="sdTreeToggle; context: { row: item }"></ng-container>
-                      @if (item?.meta?.tree?.indexPath?.length) {
-                        <span class="sd-tree-stt" [class.sd-stt-root]="(item.meta.tree.level ?? 0) === 0">
-                          {{ item.meta.tree.indexPath.join('.') }}
-                        </span>
-                      }
-                    </span>
+
+              <td class="sd-selection-cell p-0" mat-cell *matCellDef="let item">
+                @let visible = item.meta.selector?.visible;
+                @if (visible) {
+                  @if (_tableOption.selector?.single) {
+                    <mat-radio-button
+                      class="c-selection px-8"
+                      color="primary"
+                      [checked]="item.meta.selector.isSelected"
+                      (change)="item.meta.selector.isSelected = true; onSelect(item)"
+                      [disabled]="item.meta.selector?.disabled">
+                    </mat-radio-button>
                   } @else {
-                    {{ _pageOffset + i + 1 }}
+                    <mat-checkbox
+                      class="c-selection px-8"
+                      color="primary"
+                      [(ngModel)]="item.meta.selector.isSelected"
+                      (change)="onSelect(item)"
+                      [disabled]="item.meta.selector?.disabled">
+                    </mat-checkbox>
                   }
                 }
               </td>
-              <td
-                mat-footer-cell
-                *matFooterCellDef
-                [style.width]="_treeIndex ? '1px' : null"
-                [style.min-width]="_treeIndex ? null : _indexWidth"
-                [style.max-width]="_treeIndex ? null : _indexWidth"></td>
+              <td mat-footer-cell *matFooterCellDef></td>
             </ng-container>
-          }
-          <ng-container
-            matColumnDef="sdCommand"
-            [sticky]="_tableOption.command?.align !== 'right'"
-            [stickyEnd]="_tableOption.command?.align === 'right'">
-            <!-- why: ô header của cột command vốn để trống. Cho consumer chiếm chỗ đó bằng
-               `sdTableCommandHeaderDef` (thường là nút thêm dòng) thì hành động cấp bảng nằm ngay
-               trên cụm nút của từng dòng, thay vì phải dựng thêm một dải riêng dưới bảng. -->
-            <th class="p-0" mat-header-cell *matHeaderCellDef style="width: 50px" [attr.rowspan]="_configuration.multipleHeader ? 2 : 1">
-              @if (_commandHeaderDef) {
-                <div class="sd-command-header d-flex align-items-center justify-content-center">
-                  <ng-container *ngTemplateOutlet="_commandHeaderDef.templateRef"></ng-container>
-                </div>
-              }
-            </th>
-            <!-- why: `dataIndex` do CDK cấp sẵn. Bản cũ dùng `groupedItems.indexOf(item)` —
-               quét toàn mảng cho MỖI dòng render ở MỖI CD pass (O(n²) trên đường render),
-               và còn trả sai index khi 2 dòng trùng reference. -->
-            <td class="px-8" mat-cell *matCellDef="let item; let i = dataIndex">
-              <desktop-command [autoId]="_autoId" [commands]="_rowCommands" [item]="item" [itemIndex]="i"></desktop-command>
-            </td>
-            <td mat-footer-cell *matFooterCellDef></td>
-          </ng-container>
-          <!-- why: group header row dùng matRowDef RIÊNG với column list ['sdGroupHeader']
-             qua predicate when:isGroupHeaderRow. Cell colspan = displayedColumns.length để
-             span TOÀN BỘ width data row. Tránh colspan trick overflow row khi các TD khác render. -->
-          <ng-container matColumnDef="sdGroupHeader">
-            <td class="p-0 sd-group-header-cell" mat-cell *matCellDef="let item" [attr.colspan]="sdGroupColspan()">
-              <ng-container *ngTemplateOutlet="sdGroupHeader; context: { item: item }"></ng-container>
-            </td>
-          </ng-container>
-          <!-- why: filler column ở cuối hấp thụ leftover space khi tổng width các cột data < container — giữ cho selection/STT/command không bị dãn. -->
-          <ng-container matColumnDef="sdFiller">
-            <th class="sd-filler-cell p-0" mat-header-cell *matHeaderCellDef [attr.rowspan]="_configuration.multipleHeader ? 2 : 1"></th>
-            <td class="sd-filler-cell p-0" mat-cell *matCellDef="let item"></td>
-            <td class="sd-filler-cell p-0" mat-footer-cell *matFooterCellDef></td>
-          </ng-container>
-          @for (column of _configuration.firstColumns; track column.field) {
-            <ng-container [matColumnDef]="column.field" [sticky]="_configuration.fixedColumn[column.field]">
-              <th
-                mat-header-cell
-                *matHeaderCellDef
-                class="px-8 py-8 c-th"
-                [sdColumnResize]="!!_tableOption.config?.resizable && column.type !== 'children'"
-                [minWidth]="column.minWidth"
-                [maxWidth]="column.maxWidth"
-                (resizeEnd)="onColumnResize(column.field, $event)"
-                [style.width]="column.width"
-                [style.min-width]="column.minWidth || column.width"
-                [style.max-width]="column.maxWidth"
-                [attr.rowspan]="_configuration.multipleHeader && column.type !== 'children' ? 2 : 1"
-                [attr.colspan]="column.type === 'children' ? column.children.length : 1"
-                [attr.aria-sort]="
-                  _tableOption.sort?.enable && column.type !== 'children' && column.sortable ? getSortAria(column.field) : null
-                ">
-                <div>
-                  <!-- why: sort control chỉ ôm title; filter là sibling nên không thành interactive
-                     descendant. aria-sort thuộc semantic <th>, không thuộc control này. -->
-                  @if (column.type === 'children') {
-                    <div
-                      class="c-header-title"
-                      [class.justify-content-end]="column.align === 'right'"
-                      [class.text-right]="column.align === 'right'">
-                      <column-title [column]="column" [titleDef]="_titleDef[column.field]"></column-title>
-                    </div>
-                  } @else {
+            @if (_tableOption.index?.enabled) {
+              @let _pageOffset = pageOffset();
+              @let _indexWidth = _tableOption.index?.width || '50px';
+              <!-- why: khi tree, cột Index "ôm" thêm chevron + indent. Dùng width:1px +
+                 nowrap (.sd-tree-index-cell) để cột co SÁT nội dung, không chiếm chỗ
+                 thừa; header "#" canh trái lùi vào (.sd-tree-index-header) cho thẳng số. -->
+              @let _treeIndex = !!_tableOption.tree;
+              <ng-container matColumnDef="sdIndex" sticky>
+                <th
+                  [class.p-0]="!_treeIndex"
+                  [class.text-center]="!_treeIndex"
+                  [class.sd-tree-index-cell]="_treeIndex"
+                  [class.sd-tree-index-header]="_treeIndex"
+                  mat-header-cell
+                  *matHeaderCellDef
+                  [style.width]="_treeIndex ? '1px' : _indexWidth"
+                  [style.min-width]="_treeIndex ? null : _indexWidth"
+                  [style.max-width]="_treeIndex ? null : _indexWidth"
+                  [attr.rowspan]="_configuration.multipleHeader ? 2 : 1">
+                  {{ _tableOption.index?.title || '#' }}
+                </th>
+                <td
+                  [class.px-4]="!_treeIndex"
+                  [class.text-center]="!_treeIndex"
+                  [class.sd-tree-index-cell]="_treeIndex"
+                  mat-cell
+                  *matCellDef="let item; let i = dataIndex"
+                  [style.width]="_treeIndex ? '1px' : null"
+                  [style.min-width]="_treeIndex ? null : _indexWidth"
+                  [style.max-width]="_treeIndex ? null : _indexWidth">
+                  @if (!item?.meta?.group?.isGroupHeader) {
+                    @if (_treeIndex) {
+                      <!-- why: tree → chevron + indent + STT phân cấp (1, 1.2, 1.2.1). Tô đậm root (level 0). -->
+                      <span class="sd-tree-line">
+                        <ng-container *ngTemplateOutlet="sdTreeToggle; context: { row: item }"></ng-container>
+                        @if (item?.meta?.tree?.indexPath?.length) {
+                          <span class="sd-tree-stt" [class.sd-stt-root]="(item.meta.tree.level ?? 0) === 0">
+                            {{ item.meta.tree.indexPath.join('.') }}
+                          </span>
+                        }
+                      </span>
+                    } @else {
+                      {{ _pageOffset + i + 1 }}
+                    }
+                  }
+                </td>
+                <td
+                  mat-footer-cell
+                  *matFooterCellDef
+                  [style.width]="_treeIndex ? '1px' : null"
+                  [style.min-width]="_treeIndex ? null : _indexWidth"
+                  [style.max-width]="_treeIndex ? null : _indexWidth"></td>
+              </ng-container>
+            }
+            <ng-container
+              matColumnDef="sdCommand"
+              [sticky]="_tableOption.command?.align !== 'right'"
+              [stickyEnd]="_tableOption.command?.align === 'right'">
+              <!-- why: ô header của cột command vốn để trống. Cho consumer chiếm chỗ đó bằng
+                 `sdTableCommandHeaderDef` (thường là nút thêm dòng) thì hành động cấp bảng nằm ngay
+                 trên cụm nút của từng dòng, thay vì phải dựng thêm một dải riêng dưới bảng. -->
+              <th class="p-0" mat-header-cell *matHeaderCellDef style="width: 50px" [attr.rowspan]="_configuration.multipleHeader ? 2 : 1">
+                @if (_commandHeaderDef) {
+                  <div class="sd-command-header d-flex align-items-center justify-content-center">
+                    <ng-container *ngTemplateOutlet="_commandHeaderDef.templateRef"></ng-container>
+                  </div>
+                }
+              </th>
+              <!-- why: `dataIndex` do CDK cấp sẵn. Bản cũ dùng `groupedItems.indexOf(item)` —
+                 quét toàn mảng cho MỖI dòng render ở MỖI CD pass (O(n²) trên đường render),
+                 và còn trả sai index khi 2 dòng trùng reference. -->
+              <td class="px-8" mat-cell *matCellDef="let item; let i = dataIndex">
+                <desktop-command [autoId]="_autoId" [commands]="_rowCommands" [item]="item" [itemIndex]="i"></desktop-command>
+              </td>
+              <td mat-footer-cell *matFooterCellDef></td>
+            </ng-container>
+            <!-- why: group header row dùng matRowDef RIÊNG với column list ['sdGroupHeader']
+               qua predicate when:isGroupHeaderRow. Cell colspan = displayedColumns.length để
+               span TOÀN BỘ width data row. Tránh colspan trick overflow row khi các TD khác render. -->
+            <ng-container matColumnDef="sdGroupHeader">
+              <td class="p-0 sd-group-header-cell" mat-cell *matCellDef="let item" [attr.colspan]="sdGroupColspan()">
+                <ng-container *ngTemplateOutlet="sdGroupHeader; context: { item: item }"></ng-container>
+              </td>
+            </ng-container>
+            <!-- why: filler column ở cuối hấp thụ leftover space khi tổng width các cột data < container — giữ cho selection/STT/command không bị dãn. -->
+            <ng-container matColumnDef="sdFiller">
+              <th class="sd-filler-cell p-0" mat-header-cell *matHeaderCellDef [attr.rowspan]="_configuration.multipleHeader ? 2 : 1"></th>
+              <td class="sd-filler-cell p-0" mat-cell *matCellDef="let item"></td>
+              <td class="sd-filler-cell p-0" mat-footer-cell *matFooterCellDef></td>
+            </ng-container>
+            @for (column of _configuration.firstColumns; track column.field) {
+              <ng-container [matColumnDef]="column.field" [sticky]="_configuration.fixedColumn[column.field]">
+                <th
+                  mat-header-cell
+                  *matHeaderCellDef
+                  class="px-8 py-8 c-th"
+                  [sdColumnResize]="!!_tableOption.config?.resizable && column.type !== 'children'"
+                  [minWidth]="column.minWidth"
+                  [maxWidth]="column.maxWidth"
+                  (resizeEnd)="onColumnResize(column.field, $event)"
+                  [style.width]="column.width"
+                  [style.min-width]="column.minWidth || column.width"
+                  [style.max-width]="column.maxWidth"
+                  [attr.rowspan]="_configuration.multipleHeader && column.type !== 'children' ? 2 : 1"
+                  [attr.colspan]="column.type === 'children' ? column.children.length : 1"
+                  [attr.aria-sort]="
+                    _tableOption.sort?.enable && column.type !== 'children' && column.sortable ? getSortAria(column.field) : null
+                  ">
+                  <div>
+                    <!-- why: sort control chỉ ôm title; filter là sibling nên không thành interactive
+                       descendant. aria-sort thuộc semantic <th>, không thuộc control này. -->
+                    @if (column.type === 'children') {
+                      <div
+                        class="c-header-title"
+                        [class.justify-content-end]="column.align === 'right'"
+                        [class.text-right]="column.align === 'right'">
+                        <column-title [column]="column" [titleDef]="_titleDef[column.field]"></column-title>
+                      </div>
+                    } @else {
+                      @if (_tableOption.sort?.enable && column.sortable) {
+                        <div
+                          [sdTableSortHeader]="column.field"
+                          class="c-header-title"
+                          [class.justify-content-end]="column.align === 'right'"
+                          [class.text-right]="column.align === 'right'">
+                          <column-title [column]="column" [titleDef]="_titleDef[column.field]"></column-title>
+                        </div>
+                      } @else {
+                        <div
+                          class="c-header-title"
+                          [class.justify-content-end]="column.align === 'right'"
+                          [class.text-right]="column.align === 'right'">
+                          <column-title [column]="column" [titleDef]="_titleDef[column.field]"></column-title>
+                        </div>
+                      }
+                      @let hideInlineFilter =
+                        _tableOption.filter?.disabled ||
+                        _tableOption.filter?.hideInlineFilter === true ||
+                        (_tableOption.filter?.hideInlineFilter === 'auto' && !_isFiltered && _total! <= 10);
+                      @if (!hideInlineFilter) {
+                        @if (!_isMobile) {
+                          <column-filter
+                            [autoId]="_autoId"
+                            [value]="columnFilter?.[column.field!]!"
+                            [operator]="columnOperator[column.field]"
+                            (operatorChange)="columnOperator[column.field] = $event!; onOperatorChange(column, $event)"
+                            [columnFilter]="columnFilter!"
+                            [cacheValues]="cacheValues"
+                            [column]="column"
+                            (filterChange)="onFilterChange()"
+                            (filterCommit)="onFilterCommit()">
+                          </column-filter>
+                        }
+                      }
+                    }
+                  </div>
+                </th>
+                <td
+                  class="c-td px-0"
+                  [class.d-none]="column.type === 'children'"
+                  mat-cell
+                  *matCellDef="let item"
+                  [sdHoverCopy]="(item.data && item.data[column.field]) || ''"
+                  [sdHoverCopyDisabled]="!column.cell?.copiable">
+                  @if (column.type !== 'children' && !item?.meta?.group?.isGroupHeader) {
+                    @if (_treeFirstField && column.field === _treeFirstField) {
+                      <!-- why: không có cột Index → chevron + indent nhúng vào cột data đầu (như file explorer). -->
+                      <span class="sd-tree-line px-8">
+                        <ng-container *ngTemplateOutlet="sdTreeToggle; context: { row: item }"></ng-container>
+                        <desktop-cell class="d-block" [column]="column" [item]="item" [cellDef]="_cellDef"></desktop-cell>
+                      </span>
+                    } @else {
+                      <desktop-cell class="d-block px-8" [column]="column" [item]="item" [cellDef]="_cellDef"> </desktop-cell>
+                    }
+                  }
+                </td>
+                <td mat-footer-cell *matFooterCellDef>
+                  <ng-container *ngIf="_footerDef[column.field]">
+                    <ng-container *ngTemplateOutlet="_footerDef[column.field].templateRef; context: { items: _items, column: column }">
+                    </ng-container>
+                  </ng-container>
+                </td>
+              </ng-container>
+            }
+            @for (column of _configuration.secondColumns; track column.field) {
+              <ng-container [matColumnDef]="column.field">
+                <th
+                  mat-header-cell
+                  *matHeaderCellDef
+                  class="c-th px-8"
+                  [style.width]="column.width"
+                  [style.min-width]="column.minWidth || column.width"
+                  [style.max-width]="column.maxWidth"
+                  [attr.aria-sort]="_tableOption.sort?.enable && column.sortable ? getSortAria(column.field) : null">
+                  <div>
                     @if (_tableOption.sort?.enable && column.sortable) {
                       <div
                         [sdTableSortHeader]="column.field"
@@ -388,357 +466,282 @@
                         <column-title [column]="column" [titleDef]="_titleDef[column.field]"></column-title>
                       </div>
                     }
-                    @let hideInlineFilter =
-                      _tableOption.filter?.disabled ||
-                      _tableOption.filter?.hideInlineFilter === true ||
-                      (_tableOption.filter?.hideInlineFilter === 'auto' && !_isFiltered && _total! <= 10);
-                    @if (!hideInlineFilter) {
+                    @if (!_tableOption.filter?.disabled && !_tableOption.filter?.hideInlineFilter && columnOperator) {
                       @if (!_isMobile) {
                         <column-filter
                           [autoId]="_autoId"
                           [value]="columnFilter?.[column.field!]!"
                           [operator]="columnOperator[column.field]"
-                          (operatorChange)="columnOperator[column.field] = $event!; onOperatorChange(column, $event)"
                           [columnFilter]="columnFilter!"
                           [cacheValues]="cacheValues"
                           [column]="column"
+                          (operatorChange)="columnOperator[column.field] = $event!; onOperatorChange(column, $event)"
                           (filterChange)="onFilterChange()"
                           (filterCommit)="onFilterCommit()">
                         </column-filter>
                       }
                     }
-                  }
-                </div>
-              </th>
-              <td
-                class="c-td px-0"
-                [class.d-none]="column.type === 'children'"
-                mat-cell
-                *matCellDef="let item"
-                [sdHoverCopy]="(item.data && item.data[column.field]) || ''"
-                [sdHoverCopyDisabled]="!column.cell?.copiable">
-                @if (column.type !== 'children' && !item?.meta?.group?.isGroupHeader) {
-                  @if (_treeFirstField && column.field === _treeFirstField) {
-                    <!-- why: không có cột Index → chevron + indent nhúng vào cột data đầu (như file explorer). -->
-                    <span class="sd-tree-line px-8">
-                      <ng-container *ngTemplateOutlet="sdTreeToggle; context: { row: item }"></ng-container>
-                      <desktop-cell class="d-block" [column]="column" [item]="item" [cellDef]="_cellDef"></desktop-cell>
-                    </span>
-                  } @else {
+                  </div>
+                </th>
+                <td
+                  class="c-td px-0"
+                  mat-cell
+                  *matCellDef="let item"
+                  [sdHoverCopy]="item[column.field]"
+                  [sdHoverCopyDisabled]="!column.cell?.copiable">
+                  @if (column.type !== 'children') {
                     <desktop-cell class="d-block px-8" [column]="column" [item]="item" [cellDef]="_cellDef"> </desktop-cell>
                   }
-                }
-              </td>
-              <td mat-footer-cell *matFooterCellDef>
-                <ng-container *ngIf="_footerDef[column.field]">
-                  <ng-container *ngTemplateOutlet="_footerDef[column.field].templateRef; context: { items: _items, column: column }">
+                </td>
+                <td mat-footer-cell *matFooterCellDef>
+                  <ng-container *ngIf="_footerDef[column.field]">
+                    <ng-container *ngTemplateOutlet="_footerDef[column.field].templateRef; context: { items: _items, column: column }">
+                    </ng-container>
                   </ng-container>
-                </ng-container>
-              </td>
-            </ng-container>
-          }
-          @for (column of _configuration.secondColumns; track column.field) {
-            <ng-container [matColumnDef]="column.field">
-              <th
-                mat-header-cell
-                *matHeaderCellDef
-                class="c-th px-8"
-                [style.width]="column.width"
-                [style.min-width]="column.minWidth || column.width"
-                [style.max-width]="column.maxWidth"
-                [attr.aria-sort]="_tableOption.sort?.enable && column.sortable ? getSortAria(column.field) : null">
-                <div>
-                  @if (_tableOption.sort?.enable && column.sortable) {
-                    <div
-                      [sdTableSortHeader]="column.field"
-                      class="c-header-title"
-                      [class.justify-content-end]="column.align === 'right'"
-                      [class.text-right]="column.align === 'right'">
-                      <column-title [column]="column" [titleDef]="_titleDef[column.field]"></column-title>
-                    </div>
-                  } @else {
-                    <div
-                      class="c-header-title"
-                      [class.justify-content-end]="column.align === 'right'"
-                      [class.text-right]="column.align === 'right'">
-                      <column-title [column]="column" [titleDef]="_titleDef[column.field]"></column-title>
-                    </div>
-                  }
-                  @if (!_tableOption.filter?.disabled && !_tableOption.filter?.hideInlineFilter && columnOperator) {
-                    @if (!_isMobile) {
-                      <column-filter
-                        [autoId]="_autoId"
-                        [value]="columnFilter?.[column.field!]!"
-                        [operator]="columnOperator[column.field]"
-                        [columnFilter]="columnFilter!"
-                        [cacheValues]="cacheValues"
-                        [column]="column"
-                        (operatorChange)="columnOperator[column.field] = $event!; onOperatorChange(column, $event)"
-                        (filterChange)="onFilterChange()"
-                        (filterCommit)="onFilterCommit()">
-                      </column-filter>
-                    }
-                  }
-                </div>
-              </th>
-              <td
-                class="c-td px-0"
-                mat-cell
-                *matCellDef="let item"
-                [sdHoverCopy]="item[column.field]"
-                [sdHoverCopyDisabled]="!column.cell?.copiable">
-                @if (column.type !== 'children') {
-                  <desktop-cell class="d-block px-8" [column]="column" [item]="item" [cellDef]="_cellDef"> </desktop-cell>
-                }
-              </td>
-              <td mat-footer-cell *matFooterCellDef>
-                <ng-container *ngIf="_footerDef[column.field]">
-                  <ng-container *ngTemplateOutlet="_footerDef[column.field].templateRef; context: { items: _items, column: column }">
-                  </ng-container>
-                </ng-container>
-              </td>
-            </ng-container>
-          }
-          <tr class="c-first-header" mat-header-row *matHeaderRowDef="_configuration.firstHeaders; sticky: true"></tr>
-          @if (!!_configuration.secondHeaders.length) {
-            <tr class="c-second-header" mat-header-row *matHeaderRowDef="_configuration.secondHeaders; sticky: true"></tr>
-          }
-          <!-- Group header row — chỉ 1 cell sdGroupHeader colspan toàn width. -->
-          <tr mat-row *matRowDef="let row; columns: ['sdGroupHeader']; when: isGroupHeaderRow" class="c-group-row-tr"></tr>
-
-          <!-- Data row — dùng displayedColumns đầy đủ; when isDataRow để loại trừ group header. -->
-          <!-- why: [ngStyle] đọc meta.rowStyle — style.rowCss đã được resolve 1 lần mỗi lần
-             render. Bản cũ gọi rowStyle(row) ngay trong binding → chạy callback của consumer
-             cho TỪNG dòng ở MỖI CD pass, và vì trả object MỚI nên NgStyle phải chạy lại
-             KeyValueDiffer trên mọi dòng ở mọi pass. -->
-          <tr
-            mat-row
-            cdkDrag
-            [cdkDragData]="row"
-            [cdkDragDisabled]="
-              !_tableOption.rowReorder?.enabled ||
-              !!row.meta?.group?.items?.length ||
-              (row.meta?.tree?.level ?? 0) > 0 ||
-              isReorderDisabled(row)
-            "
-            *matRowDef="let row; columns: _configuration.displayedColumns; when: isDataRow"
-            matRipple
-            class="c-row"
-            [class.sd-tree-row]="!!_tableOption.tree"
-            [ngClass]="_tableOption.tree ? 'sd-tree-level-' + (row.meta?.tree?.level ?? 0) : null"
-            [ngStyle]="row.meta.rowStyle"
-            [class.selected]="row.meta.selector.isSelected"></tr>
-
-          <!-- Sub-information row — also gated bởi isDataRow để KHÔNG render empty expand row dưới group header. -->
-          <tr mat-row *matRowDef="let row; columns: ['sdSubInformation']; when: isDataRow" class="c-detail-row"></tr>
-          @if (hasFooter() && !!_configuration.displayedFooters.length) {
-            <tr mat-footer-row *matFooterRowDef="_configuration.displayedFooters; sticky: true"></tr>
-          }
-        </table>
-      }
-      @let _readState = readState();
-      @if ((_readState.status === 'error' && !hideReadError()) || _readState.status === 'empty') {
-        <sd-data-state
-          [state]="_readState.status === 'error' ? 'error' : 'empty'"
-          [retryable]="_readState.status === 'error'"
-          (sdRetry)="retryRead()">
-          @if (dataStateTemplate(); as custom) {
-            <ng-template sdDataStateTemplate let-current let-retry="retry" let-action="action">
-              <ng-container
-                [ngTemplateOutlet]="custom.template"
-                [ngTemplateOutletContext]="{ $implicit: current, state: current, retry: retry, action: action }"></ng-container>
-            </ng-template>
-          }
-        </sd-data-state>
-      } @else if (!_loading && loadError() && !hideReadError()) {
-        <div class="c-no-data-row" role="alert">
-          <p>{{ 'core.component.table.error-occurred' | sdTranslate }}</p>
-          <sd-button [title]="'core.component.table.reload' | sdTranslate" (click)="reload()"></sd-button>
-        </div>
-      } @else if (!_loading && !_total && _readState.status !== 'error' && !loadError()) {
-        <div class="c-no-data-row" role="status" aria-live="polite">
-          @if (_isFiltered) {
-            @if (tableConfiguration?.images?.filterEmpty) {
-              <img class="c-image" [src]="tableConfiguration!.images!.filterEmpty" alt="filter-empty" />
-            } @else {
-              <img class="c-image sd-image-filter-empty" alt="filter-empty" />
+                </td>
+              </ng-container>
             }
-            <div class="T16M">{{ 'core.component.table.no-results' | sdTranslate }}</div>
-            <div class="T16R text-secondary">{{ 'core.component.table.no-results-hint' | sdTranslate }}</div>
+            <tr class="c-first-header" mat-header-row *matHeaderRowDef="_configuration.firstHeaders; sticky: true"></tr>
+            @if (!!_configuration.secondHeaders.length) {
+              <tr class="c-second-header" mat-header-row *matHeaderRowDef="_configuration.secondHeaders; sticky: true"></tr>
+            }
+            <!-- Group header row — chỉ 1 cell sdGroupHeader colspan toàn width. -->
+            <tr mat-row *matRowDef="let row; columns: ['sdGroupHeader']; when: isGroupHeaderRow" class="c-group-row-tr"></tr>
+
+            <!-- Data row — dùng displayedColumns đầy đủ; when isDataRow để loại trừ group header. -->
+            <!-- why: [ngStyle] đọc meta.rowStyle — style.rowCss đã được resolve 1 lần mỗi lần
+               render. Bản cũ gọi rowStyle(row) ngay trong binding → chạy callback của consumer
+               cho TỪNG dòng ở MỖI CD pass, và vì trả object MỚI nên NgStyle phải chạy lại
+               KeyValueDiffer trên mọi dòng ở mọi pass. -->
+            <tr
+              mat-row
+              cdkDrag
+              [cdkDragData]="row"
+              [cdkDragDisabled]="
+                !_tableOption.rowReorder?.enabled ||
+                !!row.meta?.group?.items?.length ||
+                (row.meta?.tree?.level ?? 0) > 0 ||
+                isReorderDisabled(row)
+              "
+              *matRowDef="let row; columns: _configuration.displayedColumns; when: isDataRow"
+              matRipple
+              class="c-row"
+              [class.sd-tree-row]="!!_tableOption.tree"
+              [ngClass]="_tableOption.tree ? 'sd-tree-level-' + (row.meta?.tree?.level ?? 0) : null"
+              [ngStyle]="row.meta.rowStyle"
+              [class.selected]="row.meta.selector.isSelected"></tr>
+
+            <!-- Sub-information row — also gated bởi isDataRow để KHÔNG render empty expand row dưới group header. -->
+            <tr mat-row *matRowDef="let row; columns: ['sdSubInformation']; when: isDataRow" class="c-detail-row"></tr>
+            @if (hasFooter() && !!_configuration.displayedFooters.length) {
+              <tr mat-footer-row *matFooterRowDef="_configuration.displayedFooters; sticky: true"></tr>
+            }
+          </table>
+        }
+        @let _readState = readState();
+        @if ((_readState.status === 'error' && !hideReadError()) || _readState.status === 'empty') {
+          <sd-data-state
+            [state]="_readState.status === 'error' ? 'error' : 'empty'"
+            [retryable]="_readState.status === 'error'"
+            (sdRetry)="retryRead()">
+            @if (dataStateTemplate(); as custom) {
+              <ng-template sdDataStateTemplate let-current let-retry="retry" let-action="action">
+                <ng-container
+                  [ngTemplateOutlet]="custom.template"
+                  [ngTemplateOutletContext]="{ $implicit: current, state: current, retry: retry, action: action }"></ng-container>
+              </ng-template>
+            }
+          </sd-data-state>
+        } @else if (!_loading && loadError() && !hideReadError()) {
+          <div class="c-no-data-row" role="alert">
+            <p>{{ 'core.component.table.error-occurred' | sdTranslate }}</p>
+            <sd-button [title]="'core.component.table.reload' | sdTranslate" (click)="reload()"></sd-button>
+          </div>
+        } @else if (!_loading && !_total && _readState.status !== 'error' && !loadError()) {
+          <div class="c-no-data-row" role="status" aria-live="polite">
+            @if (_isFiltered) {
+              @if (tableConfiguration?.images?.filterEmpty) {
+                <img class="c-image" [src]="tableConfiguration!.images!.filterEmpty" alt="filter-empty" />
+              } @else {
+                <img class="c-image sd-image-filter-empty" alt="filter-empty" />
+              }
+              <div class="T16M">{{ 'core.component.table.no-results' | sdTranslate }}</div>
+              <div class="T16R text-secondary">{{ 'core.component.table.no-results-hint' | sdTranslate }}</div>
+            } @else {
+              @if (_requireFiltered) {
+                @if (tableConfiguration?.images?.filterRequired) {
+                  <img class="c-image" [src]="tableConfiguration!.images!.filterRequired" alt="filter-required" />
+                } @else {
+                  <img class="c-image sd-image-filter-required" alt="filter-required" />
+                }
+                <div class="T16R text-secondary">{{ 'core.component.table.choose-filter-hint' | sdTranslate }}</div>
+              } @else {
+                @if (tableConfiguration?.images?.dataEmpty) {
+                  <img class="c-image" [src]="tableConfiguration!.images!.dataEmpty" alt="data-empty" />
+                } @else {
+                  <img class="c-image sd-image-data-empty" alt="data-empty" />
+                }
+                <div class="T16R text-secondary">{{ 'core.component.table.no-data' | sdTranslate }}</div>
+              }
+            }
+          </div>
+        }
+      </div>
+      @if (!_mobileCards) {
+        <selector-action
+          [autoId]="_autoId"
+          [tableOption]="_tableOption"
+          [selectedTableItems]="_selectedTableItems"
+          (clear)="onClearSelection()" />
+      }
+      <div class="c-paginator">
+        <div class="c-action">
+          @if (_mobileCards) {
+            @let _tools = mobileToolsActions();
+            @if (_tools.length) {
+              <button
+                mat-button
+                type="button"
+                class="sd-mobile-tools-trigger"
+                aria-haspopup="dialog"
+                [attr.data-autoid]="_autoId ? _autoId + '-mobile-tools' : null"
+                (click)="mobileTools.openMore()">
+                <sd-icon name="tune"></sd-icon><span>{{ 'core.component.table.mobile.tools' | sdTranslate }}</span>
+              </button>
+              <sd-table-mobile-actions
+                #mobileTools
+                [actions]="_tools"
+                [autoOpen]="false"
+                [title]="'core.component.table.mobile.tools-title' | sdTranslate"
+                [autoId]="_autoId"></sd-table-mobile-actions>
+            }
           } @else {
-            @if (_requireFiltered) {
-              @if (tableConfiguration?.images?.filterRequired) {
-                <img class="c-image" [src]="tableConfiguration!.images!.filterRequired" alt="filter-required" />
-              } @else {
-                <img class="c-image sd-image-filter-required" alt="filter-required" />
-              }
-              <div class="T16R text-secondary">{{ 'core.component.table.choose-filter-hint' | sdTranslate }}</div>
-            } @else {
-              @if (tableConfiguration?.images?.dataEmpty) {
-                <img class="c-image" [src]="tableConfiguration!.images!.dataEmpty" alt="data-empty" />
-              } @else {
-                <img class="c-image sd-image-data-empty" alt="data-empty" />
-              }
-              <div class="T16R text-secondary">{{ 'core.component.table.no-data' | sdTranslate }}</div>
-            }
-          }
-        </div>
-      }
-    </div>
-    @if (!_mobileCards) {
-      <selector-action
-        [autoId]="_autoId"
-        [tableOption]="_tableOption"
-        [selectedTableItems]="_selectedTableItems"
-        (clear)="onClearSelection()" />
-    }
-    <div class="c-paginator">
-      <div class="c-action">
-        @if (_mobileCards) {
-          @let _tools = mobileToolsActions();
-          @if (_tools.length) {
-            <button
-              mat-button
-              type="button"
-              class="sd-mobile-tools-trigger"
-              aria-haspopup="dialog"
-              [attr.data-autoid]="_autoId ? _autoId + '-mobile-tools' : null"
-              (click)="mobileTools.openMore()">
-              <sd-icon name="tune"></sd-icon><span>{{ 'core.component.table.mobile.tools' | sdTranslate }}</span>
-            </button>
-            <sd-table-mobile-actions
-              #mobileTools
-              [actions]="_tools"
-              [autoOpen]="false"
-              [title]="'core.component.table.mobile.tools-title' | sdTranslate"
-              [autoId]="_autoId"></sd-table-mobile-actions>
-          }
-        } @else {
-          @if (_tableOption.reload?.visible) {
-            <sd-button
-              [autoId]="_autoId ? _autoId + '-reload' : null"
-              class="mr-8"
-              [title]="'core.component.table.reload' | sdTranslate"
-              prefixIcon="refresh"
-              (click)="reload()"
-              type="text">
-            </sd-button>
-          }
-          @if (_export && _items.length) {
-            @if (_export.type === 'custom') {
+            @if (_tableOption.reload?.visible) {
               <sd-button
-                [autoId]="_autoId ? _autoId + '-export' : null"
+                [autoId]="_autoId ? _autoId + '-reload' : null"
                 class="mr-8"
-                [title]="_exportTitle"
-                prefixIcon="get_app"
-                (click)="exportCustom()"
+                [title]="'core.component.table.reload' | sdTranslate"
+                prefixIcon="refresh"
+                (click)="reload()"
                 type="text">
               </sd-button>
-            } @else {
-              @if (_export.visible) {
-                @if (_exporting) {
-                  <sd-button
-                    [autoId]="_autoId ? _autoId + '-export' : null"
-                    class="mr-8"
-                    [loading]="_exporting"
-                    [title]="_exportTitle"
-                    prefixIcon="get_app"
-                    type="text">
-                  </sd-button>
-                } @else {
-                  @if (_export.visible === 'ALL' || !_export.visible) {
+            }
+            @if (_export && _items.length) {
+              @if (_export.type === 'custom') {
+                <sd-button
+                  [autoId]="_autoId ? _autoId + '-export' : null"
+                  class="mr-8"
+                  [title]="_exportTitle"
+                  prefixIcon="get_app"
+                  (click)="exportCustom()"
+                  type="text">
+                </sd-button>
+              } @else {
+                @if (_export.visible) {
+                  @if (_exporting) {
                     <sd-button
                       [autoId]="_autoId ? _autoId + '-export' : null"
                       class="mr-8"
+                      [loading]="_exporting"
                       [title]="_exportTitle"
                       prefixIcon="get_app"
-                      [matMenuTriggerFor]="menu"
                       type="text">
                     </sd-button>
-                    <mat-menu #menu="matMenu">
-                      <button
-                        mat-menu-item
-                        [attr.data-autoid]="_autoId ? _autoId + '-export-excel' : null"
+                  } @else {
+                    @if (_export.visible === 'ALL' || !_export.visible) {
+                      <sd-button
+                        [autoId]="_autoId ? _autoId + '-export' : null"
+                        class="mr-8"
+                        [title]="_exportTitle"
+                        prefixIcon="get_app"
+                        [matMenuTriggerFor]="menu"
+                        type="text">
+                      </sd-button>
+                      <mat-menu #menu="matMenu">
+                        <button
+                          mat-menu-item
+                          [attr.data-autoid]="_autoId ? _autoId + '-export-excel' : null"
+                          (click)="exportExcel()"
+                          type="button">
+                          <sd-icon name="file_download"></sd-icon>
+                          <span> {{ 'core.component.table.export-excel' | sdTranslate }}</span>
+                        </button>
+                        <button
+                          mat-menu-item
+                          [attr.data-autoid]="_autoId ? _autoId + '-export-csv' : null"
+                          (click)="exportCSV()"
+                          type="button">
+                          <sd-icon name="file_download"></sd-icon>
+                          <span> {{ 'core.component.table.export-csv' | sdTranslate }}</span>
+                        </button>
+                      </mat-menu>
+                    } @else if (_export.visible === 'EXCEL') {
+                      <sd-button
+                        [autoId]="_autoId ? _autoId + '-export-excel' : null"
+                        class="mr-8"
+                        [title]="_exportTitle"
+                        prefixIcon="get_app"
                         (click)="exportExcel()"
-                        type="button">
-                        <sd-icon name="file_download"></sd-icon>
-                        <span> {{ 'core.component.table.export-excel' | sdTranslate }}</span>
-                      </button>
-                      <button
-                        mat-menu-item
-                        [attr.data-autoid]="_autoId ? _autoId + '-export-csv' : null"
+                        type="text">
+                      </sd-button>
+                    } @else if (_export.visible === 'CSV') {
+                      <sd-button
+                        [autoId]="_autoId ? _autoId + '-export-csv' : null"
+                        class="mr-8"
+                        [title]="_exportTitle"
+                        prefixIcon="get_app"
                         (click)="exportCSV()"
-                        type="button">
-                        <sd-icon name="file_download"></sd-icon>
-                        <span> {{ 'core.component.table.export-csv' | sdTranslate }}</span>
-                      </button>
-                    </mat-menu>
-                  } @else if (_export.visible === 'EXCEL') {
-                    <sd-button
-                      [autoId]="_autoId ? _autoId + '-export-excel' : null"
-                      class="mr-8"
-                      [title]="_exportTitle"
-                      prefixIcon="get_app"
-                      (click)="exportExcel()"
-                      type="text">
-                    </sd-button>
-                  } @else if (_export.visible === 'CSV') {
-                    <sd-button
-                      [autoId]="_autoId ? _autoId + '-export-csv' : null"
-                      class="mr-8"
-                      [title]="_exportTitle"
-                      prefixIcon="get_app"
-                      (click)="exportCSV()"
-                      type="text">
-                    </sd-button>
+                        type="text">
+                      </sd-button>
+                    }
                   }
                 }
               }
             }
-          }
 
-          @if (_configComponent) {
-            <sd-button
-              [autoId]="_autoId ? _autoId + '-config' : null"
-              class="mr-8"
-              [title]="'core.component.table.setup-short' | sdTranslate"
-              prefixIcon="settings"
-              (click)="_configComponent.open()"
-              type="text">
-            </sd-button>
-          }
-          <!-- Mobile: nút Filter mở mobile-filter drawer (inline filter ẩn trên mobile) -->
-          @if (_isMobile) {
-            @if (!_tableOption.filter?.disabled && _mobileFilter) {
+            @if (_configComponent) {
               <sd-button
-                [autoId]="_autoId ? _autoId + '-mobile-filter-open' : null"
+                [autoId]="_autoId ? _autoId + '-config' : null"
                 class="mr-8"
-                prefixIcon="filter_alt"
-                [title]="_mobileCards ? ('core.component.table.filter' | sdTranslate) : undefined"
-                (click)="_mobileFilter.open()"
+                [title]="'core.component.table.setup-short' | sdTranslate"
+                prefixIcon="settings"
+                (click)="_configComponent.open()"
                 type="text">
               </sd-button>
             }
+            <!-- Mobile: nút Filter mở mobile-filter drawer (inline filter ẩn trên mobile) -->
+            @if (_isMobile) {
+              @if (!_tableOption.filter?.disabled && _mobileFilter) {
+                <sd-button
+                  [autoId]="_autoId ? _autoId + '-mobile-filter-open' : null"
+                  class="mr-8"
+                  prefixIcon="filter_alt"
+                  [title]="_mobileCards ? ('core.component.table.filter' | sdTranslate) : undefined"
+                  (click)="_mobileFilter.open()"
+                  type="text">
+                </sd-button>
+              }
+            }
+          }
+        </div>
+        @let hidePaginator = !_tableOption.paginate?.pageSize || _total === undefined || _total <= _tableOption.paginate?.pageSize!;
+        <mat-paginator
+          [class.sd-mobile-paginator]="_mobileCards"
+          [class.d-none]="_tableOption.paginate?.hidden || hidePaginator"
+          [length]="_total"
+          [pageSize]="_tableOption.paginate?.pageSize"
+          [pageSizeOptions]="_tableOption.paginate?.pages!"
+          [showFirstLastButtons]="!_isMobile && _tableOption.paginate?.showFirstLastButtons"
+          [hidePageSize]="_isMobile || _tableOption.paginate?.hidePageSize"></mat-paginator>
+        <!-- "Đang hiển thị..." chỉ desktop -->
+        @if (!_isMobile) {
+          @if (!_tableOption.paginate?.hidden && hidePaginator && _total !== undefined && _total > 0) {
+            <div class="T14R c-summary">
+              {{ 'core.component.table.showing' | sdTranslate }} <span class="T14M ml-2">1-{{ _total }}/{{ _total }}</span>
+            </div>
           }
         }
       </div>
-      @let hidePaginator = !_tableOption.paginate?.pageSize || _total === undefined || _total <= _tableOption.paginate?.pageSize!;
-      <mat-paginator
-        [class.sd-mobile-paginator]="_mobileCards"
-        [class.d-none]="_tableOption.paginate?.hidden || hidePaginator"
-        [length]="_total"
-        [pageSize]="_tableOption.paginate?.pageSize"
-        [pageSizeOptions]="_tableOption.paginate?.pages!"
-        [showFirstLastButtons]="!_isMobile && _tableOption.paginate?.showFirstLastButtons"
-        [hidePageSize]="_isMobile || _tableOption.paginate?.hidePageSize"></mat-paginator>
-      <!-- "Đang hiển thị..." chỉ desktop -->
-      @if (!_isMobile) {
-        @if (!_tableOption.paginate?.hidden && hidePaginator && _total !== undefined && _total > 0) {
-          <div class="T14R c-summary">
-            {{ 'core.component.table.showing' | sdTranslate }} <span class="T14M ml-2">1-{{ _total }}/{{ _total }}</span>
-          </div>
-        }
-      }
     </div>
   </div>
 
