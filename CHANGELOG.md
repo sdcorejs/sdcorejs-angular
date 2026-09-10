@@ -6,6 +6,17 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+### Changed (BREAKING for consumers)
+
+- Restore the compact `sd-upload-file` tile (default 50x50px) for table cells. Remove the expanded dropzone and `appearance` input; file drag/drop, keyboard access, preview and sorting remain supported.
+
+  ```diff
+  - <sd-upload-file appearance="compact" ...></sd-upload-file>
+  + <sd-upload-file ...></sd-upload-file>
+  ```
+
+  Remove `appearance="dropzone"` or `[appearance]` bindings in the same way. `previewWidth` and `previewHeight` size the tile and thumbnails.
+
 ## [2.7] - 2026-09-09
 
 Release suffix `2.7` publishes `19.2.7`, `20.2.7`, `21.2.7`, and `22.2.7`.
