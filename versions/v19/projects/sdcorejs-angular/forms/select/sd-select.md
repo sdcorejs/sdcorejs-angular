@@ -49,6 +49,8 @@ For `[multiple]=true`, hovering the field shows an `SdTooltipDirective` tooltip 
 
 ## When to use
 
+With `size="sm"`, the resting floating label is vertically centered in the 32px field, matching the focused placeholder and selected text. This uses the shared small-control label style, so other Core form controls align consistently.
+
 - Pick from a known list (status, currency, country, partner, ...) — static `items` array
 - Pick from an API-loaded list — pass an async `SdSearch` function as `[items]`
 - Multi-select with checkboxes via `[multiple]="true"`

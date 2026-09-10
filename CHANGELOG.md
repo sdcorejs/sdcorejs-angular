@@ -6,6 +6,11 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+### Fixed
+
+- Table settings use compact rows with centered checkboxes and share the modal footer gutters, removing the extra content inset.
+- Small form controls center their resting floating labels consistently with the focused placeholder and value, including select, input, date/time and textarea controls.
+
 ### Changed
 
 - Table now contains quick search, rows and pagination in one white surface with 6px outer corners and 8px quick-search padding. Consumers no longer need an extra presentation wrapper; scrolling and sticky headers stay on the existing table scroll area.

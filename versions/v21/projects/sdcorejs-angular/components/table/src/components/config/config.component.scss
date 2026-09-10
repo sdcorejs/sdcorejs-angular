@@ -3,12 +3,10 @@
 // ngang, để mắt bám theo dòng chứ không phải khung.
 $config-border: var(--mat-sys-outline-variant, rgba(0, 0, 0, 0.08));
 
-// why: .sd-modal-body cố ý để padding 0 (mỗi nội dung tự quyết), nên bảng bo góc sẽ dính sát mép
-// modal nếu ở đây không tự chừa lề.
+// why: modal đã chừa lề giống footer; thêm padding ở đây làm viền bảng thụt vào hai lần.
 .c-container {
   position: relative;
   min-height: 200px;
-  padding: 16px;
 }
 
 .c-hint {
@@ -26,6 +24,8 @@ $config-border: var(--mat-sys-outline-variant, rgba(0, 0, 0, 0.08));
   border-radius: 8px;
 
   table {
+    --mat-table-header-container-height: 40px;
+    --mat-table-row-item-container-height: 48px;
     width: 100%;
     background: transparent;
   }
@@ -40,11 +40,11 @@ $config-border: var(--mat-sys-outline-variant, rgba(0, 0, 0, 0.08));
     white-space: nowrap;
   }
 
-  // why: mat-table dựng chiều cao ô theo nội dung, mà nội dung ở đây là input 32px → chữ dính sát
-  // mép trên. Padding dọc cho mỗi ô một khoảng thở đều nhau.
+  // why: input 32px và vùng checkbox 40px chỉ cần đệm 4px mỗi phía.
   .mat-mdc-header-cell,
   .mat-mdc-cell {
-    padding: 8px 12px;
+    padding: 4px 12px;
+    vertical-align: middle;
     border-bottom-color: $config-border;
   }
 
@@ -70,6 +70,22 @@ $config-border: var(--mat-sys-outline-variant, rgba(0, 0, 0, 0.08));
   .c-col-toggle {
     width: 88px;
     text-align: center;
+  }
+}
+
+// why: bỏ baseline của inline host để cả ba checkbox nằm cùng trục giữa với input.
+sd-checkbox {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+
+  ::ng-deep .mat-mdc-checkbox {
+    display: flex;
+  }
+
+  // why: các checkbox trong bảng không có label; đệm label rỗng làm icon lệch ngang 2px.
+  ::ng-deep .mdc-label {
+    padding: 0;
   }
 }
 
@@ -134,7 +150,8 @@ $config-border: var(--mat-sys-outline-variant, rgba(0, 0, 0, 0.08));
 
   .mat-mdc-cell {
     border-bottom: none;
-    padding: 8px 12px;
+    padding: 4px 12px;
+    vertical-align: middle;
   }
 
   .c-handle {
