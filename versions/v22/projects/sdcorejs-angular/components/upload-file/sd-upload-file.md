@@ -145,9 +145,9 @@ export class AttachmentComponent {
 
 ## Visual cues (helps agent map screenshots → component)
 
-- **Drop zone**: a labelled, full-width dashed area with a tinted upload icon tile and format/size guidance. Click, Enter, or Space opens the native file picker. Set `appearance="compact"` for the previous square tile; `previewWidth` / `previewHeight` size that tile and image thumbnails.
+- **Upload tile**: a small dashed box, sized by `previewWidth` / `previewHeight` (default 50x50px). Click, Enter or Space opens the native file picker; desktop drag/drop remains supported.
 - **Drag listener lifecycle**: the `dragover` / `dragenter` / `dragleave` / `drop` handlers are bound to the drop container after first render (desktop only) and removed in `DestroyRef.onDestroy`. Holding a reference to the drop element after the component is destroyed no longer replays uploads or restyles the element.
-- **Image type**: wrapping row of square thumbnails below the dropzone (or alongside the compact tile). Hover reveals zoom-in icon + close (X) button. Drag handle to reorder.
+- **Image type**: thumbnails sit beside the compact upload tile. Hover reveals preview and remove controls; drag handles reorder images.
 - **Document type**: stacked rows below images. Each row = file-type icon (extension-colored: pdf/doc/xls/png/…) + filename as a link + size in KB + close icon.
 - **Disabled / viewed mode**: drop zone hidden; for image type, only first `maxOfImage` thumbnails shown; if more, an overlay `+N` count appears on the last to open the gallery popup.
 - **Required error**: red text `Vui lòng tải lên tệp/ảnh` below the row when touched and empty. Gated by the reactive `showRequiredError()` computed, so it appears as soon as the parent form is submitted (`markAllAsTouched()`) — not only after a direct upload/remove interaction.
@@ -317,10 +317,6 @@ interface SdUploadFileDetail {
 
 ## Presentation and keyboard access
 
-| Input | Type | Default | Purpose |
-|---|---|---|---|
-| appearance | 'dropzone' &#124; 'compact' | 'dropzone' | A labelled full-width dropzone, or the compact upload tile. |
+The upload tile uses `previewWidth` and `previewHeight` (default 50x50px), including inside table cells. Format/size guidance is shown with the label. The full-width dropzone and `appearance` input have been removed; remove existing `appearance` bindings.
 
-The dropzone displays an icon tile, localized choose/drop copy, and existing format/size guidance. previewWidth and previewHeight continue to size image thumbnails; with appearance=compact they also size the upload tile. Consumers requiring the previous tile layout should set appearance=compact.
-
-The upload control supports Tab, Enter and Space. Preview/remove controls have accessible button semantics and localized names. Disabled/max-count rules, upload callbacks, model values, validation and sorting are unchanged. The list wraps on narrow screens; document actions have 44px mobile targets.
+The upload control supports Tab, Enter and Space. Preview/remove controls have accessible button semantics and localized names. Disabled/max-count rules, upload callbacks, model values, validation and sorting are unchanged. Document actions have 44px mobile targets.

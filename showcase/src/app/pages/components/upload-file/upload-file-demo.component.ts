@@ -17,19 +17,13 @@ import { SdUploadFile } from '@sdcorejs/angular/components/upload-file';
         <demo-section
           heading="Tải nhiều ảnh có giới hạn"
           [props]="[
-            { name: 'appearance', value: 'dropzone / compact' },
             { name: 'type', value: 'image' },
             { name: 'max', value: '5' },
             { name: 'maxSize', value: '2' },
             { name: 'model', value: 'two-way' },
           ]">
           <div class="control-box">
-            <div class="upload-appearance">
-              <sd-button title="Vùng thả" size="sm" type="light" htmlType="button" (click)="uploadAppearance.set('dropzone')"></sd-button>
-              <sd-button title="Compact" size="sm" type="light" htmlType="button" (click)="uploadAppearance.set('compact')"></sd-button>
-            </div>
             <sd-upload-file
-              [appearance]="uploadAppearance()"
               label="Ảnh sản phẩm"
               type="image"
               helperText="Ảnh sẽ hiển thị trên trang chi tiết sản phẩm."
@@ -82,11 +76,6 @@ import { SdUploadFile } from '@sdcorejs/angular/components/upload-file';
   `,
   styles: [
     `
-      .upload-appearance {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 16px;
-      }
       @media (max-width: 600px) {
         :host ::ng-deep sd-button button {
           min-height: 44px;
@@ -101,7 +90,6 @@ import { SdUploadFile } from '@sdcorejs/angular/components/upload-file';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UploadFileDemoComponent {
-  readonly uploadAppearance = signal<'dropzone' | 'compact'>('dropzone');
   readonly productImages = signal<(string | number)[]>([]);
   readonly form = new FormGroup({});
 
