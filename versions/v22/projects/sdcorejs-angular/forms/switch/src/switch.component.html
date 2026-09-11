@@ -1,6 +1,7 @@
+@let _label = label();
 @if (isViewed()) {
-  @if (label()) {
-    <div class="T14R text-secondary">{{ label() }}</div>
+  @if (_label) {
+    <div class="T14R text-secondary">{{ _label }}</div>
   }
   <div class="T14M">{{ (model() ? 'core.form.switch.on' : 'core.form.switch.off') | sdTranslate }}</div>
 } @else {
@@ -11,7 +12,7 @@
     [attr.data-empty]="dataEmpty()"
     [attr.data-value]="dataValue()"
     [attr.data-required]="dataRequired()">
-    <sd-label [label]="label()" [required]="required()"></sd-label>
+    <sd-label [label]="_label" [required]="required()"></sd-label>
   </mat-slide-toggle>
   @let _errorMessage = visibleErrorMessage();
   @if (_errorMessage) {

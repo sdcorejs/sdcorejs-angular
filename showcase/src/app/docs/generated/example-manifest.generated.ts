@@ -281,9 +281,11 @@ export type ShowcaseExampleSourceKey =
   | "forms/select/example-snippet-mau"
   | "forms/select/example-trang-thai"
   | "forms/select/example-validator"
+  | "forms/switch/example-ben-trong-bang"
   | "forms/switch/example-che-do-xem"
   | "forms/switch/example-co-ban"
   | "forms/switch/example-danh-sach-cau-hinh"
+  | "forms/switch/example-kich-thuoc"
   | "forms/switch/example-mau-sac"
   | "forms/switch/example-trang-thai"
   | "forms/textarea/example-chinh-sua-noi-tuyen"
@@ -2328,6 +2330,20 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-co-ban",
     title: "Cơ bản",
     description: "Bind hai chiều, hiển thị trạng thái ngay bên cạnh.",
+  },
+  {
+    sourceKey: "forms/switch/example-kich-thuoc",
+    pageKey: "forms/switch",
+    sectionId: "example-kich-thuoc",
+    title: "Kích thước",
+    description: "Mặc định md. Track lần lượt 36×20px, 52×32px và 60×36px.",
+  },
+  {
+    sourceKey: "forms/switch/example-ben-trong-bang",
+    pageKey: "forms/switch",
+    sectionId: "example-ben-trong-bang",
+    title: "Bên trong bảng",
+    description: "Switch trong sd-table tự hiển thị cỡ sm, kể cả khi cell template không truyền size.",
   },
   {
     sourceKey: "forms/switch/example-danh-sach-cau-hinh",

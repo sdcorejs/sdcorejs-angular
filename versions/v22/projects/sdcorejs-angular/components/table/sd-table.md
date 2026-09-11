@@ -425,6 +425,10 @@ command: {
 }
 ```
 
+### Switches in cells
+
+Switches (`sd-switch`) rendered within the table use the compact `sm` appearance (36×20px track), including projected consumer cell templates and mobile cards. This table styling takes precedence over the switch size; switches outside the table still default to `md`.
+
 ## Inputs (the host element)
 
 | Name     | Type                          | Default     | Notes                                                                 |

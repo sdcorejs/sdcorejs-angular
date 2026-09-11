@@ -1,4 +1,76 @@
+@use 'sass:math';
+
+@mixin switch-size($width, $height, $handle, $off-handle, $pressed, $icon, $state-layer) {
+  --sd-switch-width: #{$width};
+  --sd-switch-height: #{$height};
+  --sd-switch-handle-size: #{$handle};
+  --sd-switch-off-handle-size: #{$off-handle};
+  --sd-switch-pressed-size: #{$pressed};
+  --sd-switch-icon-size: #{$icon};
+  --sd-switch-state-layer-size: #{$state-layer};
+  --sd-switch-selected-margin: 0 #{$width - math.div($height + $handle, 2)};
+  --sd-switch-unselected-margin: 0 #{math.div($height - $off-handle, 2)};
+  --sd-switch-unselected-icon-margin: 0 #{math.div($height - $handle, 2)};
+  --sd-switch-selected-pressed-margin: 0 #{$width - math.div($height + $pressed, 2)};
+  --sd-switch-unselected-pressed-margin: 0 #{math.div($height - $pressed, 2)};
+}
+
+:host {
+  @include switch-size(52px, 32px, 24px, 16px, 28px, 16px, 40px);
+}
+
+:host([data-size='lg']) {
+  @include switch-size(60px, 36px, 28px, 20px, 32px, 20px, 44px);
+}
+
+// why: cell templates thuộc consumer nên dùng ngữ cảnh DOM để switch trong bảng luôn gọn,
+// kể cả template được chiếu qua nhiều lớp component hoặc chuyển sang mobile card.
+:host([data-size='sm']),
+:host-context(sd-table)[data-size] {
+  @include switch-size(36px, 20px, 16px, 12px, 18px, 12px, 28px);
+}
+
+:host ::ng-deep .mat-mdc-slide-toggle,
+:host ::ng-deep .mdc-switch {
+  // why: v19 dùng mdc-switch/mat-switch, các major mới dùng mat-slide-toggle.
+  @each $prefix in mdc-switch, mat-slide-toggle {
+    --#{$prefix}-track-width: var(--sd-switch-width) !important;
+    --#{$prefix}-track-height: var(--sd-switch-height) !important;
+    --#{$prefix}-track-shape: 999px !important;
+    --#{$prefix}-state-layer-size: var(--sd-switch-state-layer-size) !important;
+    --#{$prefix}-selected-icon-size: var(--sd-switch-icon-size) !important;
+    --#{$prefix}-unselected-icon-size: var(--sd-switch-icon-size) !important;
+  }
+  @each $prefix in mat-switch, mat-slide-toggle {
+    --#{$prefix}-selected-handle-size: var(--sd-switch-handle-size) !important;
+    --#{$prefix}-unselected-handle-size: var(--sd-switch-off-handle-size) !important;
+    --#{$prefix}-with-icon-handle-size: var(--sd-switch-handle-size) !important;
+    --#{$prefix}-pressed-handle-size: var(--sd-switch-pressed-size) !important;
+    --#{$prefix}-selected-handle-horizontal-margin: var(--sd-switch-selected-margin) !important;
+    --#{$prefix}-selected-with-icon-handle-horizontal-margin: var(--sd-switch-selected-margin) !important;
+    --#{$prefix}-unselected-handle-horizontal-margin: var(--sd-switch-unselected-margin) !important;
+    --#{$prefix}-unselected-with-icon-handle-horizontal-margin: var(--sd-switch-unselected-icon-margin) !important;
+    --#{$prefix}-selected-pressed-handle-horizontal-margin: var(--sd-switch-selected-pressed-margin) !important;
+    --#{$prefix}-unselected-pressed-handle-horizontal-margin: var(--sd-switch-unselected-pressed-margin) !important;
+  }
+}
+
 :host ::ng-deep {
+  .mdc-switch {
+    min-height: max(28px, var(--sd-switch-height));
+  }
+
+  .mat-mdc-slide-toggle-touch-target {
+    height: max(28px, var(--sd-switch-height));
+  }
+
+  @media (pointer: coarse) {
+    .mdc-switch,
+    .mat-mdc-slide-toggle-touch-target {
+      min-height: 44px;
+    }
+  }
+
   // NOTE: Bootstrap reboot adds margin-bottom to label; keep this override while Bootstrap is used.
   label {
     margin-bottom: 0 !important;
@@ -13,11 +85,21 @@
   --sd-switch-track-off-hover: var(--sd-border, #c4c6d0);
   --sd-switch-handle-off: var(--sd-text-secondary, #44474f);
 }
-:host(.sd-c-secondary) { --sd-c: var(--sd-secondary); }
-:host(.sd-c-info)      { --sd-c: var(--sd-info); }
-:host(.sd-c-success)   { --sd-c: var(--sd-success); }
-:host(.sd-c-warning)   { --sd-c: var(--sd-warning); }
-:host(.sd-c-error)     { --sd-c: var(--sd-error); }
+:host(.sd-c-secondary) {
+  --sd-c: var(--sd-secondary);
+}
+:host(.sd-c-info) {
+  --sd-c: var(--sd-info);
+}
+:host(.sd-c-success) {
+  --sd-c: var(--sd-success);
+}
+:host(.sd-c-warning) {
+  --sd-c: var(--sd-warning);
+}
+:host(.sd-c-error) {
+  --sd-c: var(--sd-error);
+}
 
 // why: Angular Material exposes two switch token tiers across supported versions:
 //   - `--mdc-switch-*` on `.mdc-switch`
