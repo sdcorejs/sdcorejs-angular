@@ -29,7 +29,7 @@ import {
   ɵSdFormControlParent,
 } from '@sdcorejs/angular/forms/models';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
-import { Color } from '@sdcorejs/utils/models';
+import { Color, Size } from '@sdcorejs/utils/models';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -38,6 +38,7 @@ import { Subscription } from 'rxjs';
   styleUrl: './switch.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
+    '[attr.data-size]': 'size()',
     // why: dùng host class .sd-c-<x> (thay vì data-attr) để reactivity host-binding với
     // signal chắc chắn áp dụng + có default fallback `sd-c-primary` khi color() là 'primary'.
     // Test cũ assert data-sd-color đã được thay bằng class assert tương ứng.
@@ -71,6 +72,7 @@ export class SdSwitch implements OnInit, OnDestroy {
   readonly label = input<string | undefined, string | null | undefined>(undefined, {
     transform: (v): string | undefined => v ?? undefined,
   });
+  readonly size = input<Size>('md');
   // why: legacy callers pass `null` to mean "fallback to primary" — keep that contract
   readonly color = input<Color, Color | null | undefined>('primary', {
     transform: (v): Color => v || 'primary',

@@ -22,6 +22,7 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ### Added
 
+- `sd-switch` supports `size="sm | md | lg"` (default `md`) with matching track, handle, icon and focus-layer dimensions. Switches rendered inside `sd-table`, including consumer cell templates, use the compact `sm` appearance automatically.
 - Sidebar V3 supports independent expand/collapse of menu groups at every depth, with keyboard-accessible disclosure buttons. Group state survives search and sidebar rail toggles; navigation opens the active branch, and selecting a group icon in the rail opens that group.
 - Form builder groups support `properties.collapsible` (default `false`), matching `sd-section`. Enable it to expand/collapse groups in preview and form render while preserving child values and validation. Group conditions remain limited to visibility; disabled-when rules belong to child fields.
 

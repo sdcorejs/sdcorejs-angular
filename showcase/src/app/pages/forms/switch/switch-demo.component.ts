@@ -2,13 +2,14 @@ import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdSwitch } from '@sdcorejs/angular/forms/switch';
+import { SdTable, SdTableCellDefDirective, SdTableOption } from '@sdcorejs/angular/components/table';
 
 @Component({
   selector: 'app-switch-demo',
   standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdSwitch],
+  imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdSwitch, SdTable, SdTableCellDefDirective],
   template: `
-    <demo-page #demoPage title="Switch" description="sd-switch – công tắc bật/tắt boolean. Hỗ trợ màu chủ đề, disabled / viewed.">
+    <demo-page #demoPage title="Switch" description="sd-switch – công tắc bật/tắt boolean. Ba kích thước, màu chủ đề, disabled / viewed.">
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-co-ban') {
       <demo-section heading="Cơ bản" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Bind hai chiều, hiển thị trạng thái ngay bên cạnh.">
         <div style="display:flex; flex-direction:column; gap:8px; width:100%">
@@ -17,6 +18,35 @@ import { SdSwitch } from '@sdcorejs/angular/forms/switch';
             Trạng thái: <b>{{ notify() ? 'BẬT' : 'TẮT' }}</b>
           </div>
         </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-kich-thuoc') {
+      <demo-section heading="Kích thước" [props]="[{ name: 'size', value: 'sm / md / lg' }]" note="Mặc định md. Track lần lượt 36×20px, 52×32px và 60×36px.">
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:24px">
+          <div style="display:flex; flex-direction:column; gap:12px">
+            <sd-switch size="sm" label="sm · Bật" [model]="true" />
+            <sd-switch size="sm" label="sm · Tắt" [model]="false" />
+          </div>
+          <div style="display:flex; flex-direction:column; gap:12px">
+            <sd-switch size="md" label="md · Bật" [model]="true" />
+            <sd-switch size="md" label="md · Tắt" [model]="false" />
+          </div>
+          <div style="display:flex; flex-direction:column; gap:12px">
+            <sd-switch size="lg" label="lg · Bật" [model]="true" />
+            <sd-switch size="lg" label="lg · Tắt" [model]="false" />
+          </div>
+        </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-ben-trong-bang') {
+      <demo-section heading="Bên trong bảng" [props]="[{ name: 'sdTableCellDef', value: 'template' }]" note="Switch trong sd-table tự hiển thị cỡ sm, kể cả khi cell template không truyền size.">
+        <sd-table [option]="switchTable" style="width:100%">
+          <ng-template sdTableCellDef="active" let-item="item">
+            <sd-switch label="Hoạt động" [(model)]="item.active" hideInlineError />
+          </ng-template>
+        </sd-table>
       </demo-section>
       }
 
@@ -67,6 +97,19 @@ import { SdSwitch } from '@sdcorejs/angular/forms/switch';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SwitchDemoComponent {
+  readonly switchRows = [
+    { id: 1, name: 'Thông báo email', active: true },
+    { id: 2, name: 'Tự động lưu', active: false },
+  ];
+  readonly switchTable: SdTableOption<(typeof this.switchRows)[number]> = {
+    type: 'local',
+    items: () => this.switchRows,
+    columns: [
+      { field: 'name', title: 'Tính năng', type: 'string' },
+      { field: 'active', title: 'Trạng thái', type: 'boolean' },
+    ],
+  };
+
   form = new FormGroup({});
 
   notify = signal<boolean>(true);

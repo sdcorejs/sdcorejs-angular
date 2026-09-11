@@ -30,7 +30,7 @@ iOS-style toggle switch — boolean ON/OFF in a single tap. Use for feature flag
 | ----------------- | ------------------------------------------ | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `autoId`          | `string \| null \| undefined`              | `undefined` | Generates `data-autoId="forms-switch-<value>"` for E2E selectors.                                                                                                                                                                                                                         |
 | `name`            | `string`                                   | random uuid | FormGroup control name when bound via `[form]`.                                                                                                                                                                                                                                           |
-| `size`            | `Size` (`'sm' \| 'md' \| 'lg'`)            | `'md'`      | Reserved; current template does not branch on this, so `size="sm"` does not compact switch UI yet.                                                                                                                                                                                        |
+| `size`            | `Size` (`'sm' \| 'md' \| 'lg'`)            | `'md'`      | Track, handle, icon and focus-layer sizing. `sm`: 36×20px; `md`: 52×32px; `lg`: 60×36px. Inside `sd-table`, the compact `sm` appearance takes precedence.                                                                                                                                                                                        |
 | `form`            | `NgForm \| FormGroup \| undefined \| null` | `undefined` | Parent form. `NgForm` is auto-unwrapped to its inner `FormGroup`.                                                                                                                                                                                                                         |
 | `label`           | `string \| undefined`                      | `undefined` | Label rendered to the right of the toggle (via `<sd-label>`).                                                                                                                                                                                                                             |
 | `color`           | `Color`                                    | `'primary'` | Material color for the ON state knob/track.                                                                                                                                                                                                                                               |
@@ -94,6 +94,16 @@ None — label comes from the `[label]` input.
 - Inline error message (`<mat-error>`) appears below the row in red once the control is touched/dirty and `formControl.errors?.required` is set (i.e. `required` was set and the value is still `null`/`undefined`); suppressed when `[hideInlineError]="true"`
 - No outlined `mat-form-field` chrome — visually denser and lighter than `<sd-input>` / `<sd-select>`
 
+## Sizes
+
+`size` can be a literal or a reactive binding. Changing it preserves the model, validators, disabled state and form registration. Read-only `viewed` text keeps its existing typography. On touch devices the interactive control retains a minimum 44px height.
+
+```html
+<sd-switch size="sm" label="Compact" [(model)]="compact"></sd-switch>
+<sd-switch label="Default (md)" [(model)]="normal"></sd-switch>
+<sd-switch size="lg" label="Large" [(model)]="large"></sd-switch>
+```
+
 ## Standalone imports and table-cell usage
 
 Every standalone host that uses `<sd-switch>` must import `SdSwitch`.
@@ -108,8 +118,8 @@ import { SdSwitch } from '@sdcorejs/angular/forms';
   imports: [SdTable, SdTableCellDefDirective, SdSwitch],
   template: `
     <sd-table [option]="tableOption">
-      <ng-template sdTableCellDef="active" let-row>
-        <sd-switch hideInlineError [(model)]="row.active"> </sd-switch>
+      <ng-template sdTableCellDef="active" let-row="item">
+        <sd-switch size="sm" label="Active" hideInlineError [(model)]="row.active"> </sd-switch>
       </ng-template>
     </sd-table>
   `,
@@ -119,20 +129,20 @@ export class ActiveTableComponent {
 }
 ```
 
-`size="sm"` is currently reserved for future switch sizing and does not compact switch UI yet. In table cells, use `hideInlineError` and keep labels short or omit the label.
+Switches rendered inside `sd-table` automatically use the compact `sm` appearance, including consumer cell templates and mobile cards. This table appearance takes precedence over the `size` input; outside tables the default remains `md`. Use `hideInlineError` when the cell must not grow to show inline validation, and provide a concise label.
 
 ```html
-<ng-template sdTableCellDef="active" let-row>
-  <sd-switch hideInlineError [(model)]="row.active"></sd-switch>
+<ng-template sdTableCellDef="active" let-row="item">
+  <sd-switch size="sm" label="Active" hideInlineError [(model)]="row.active"></sd-switch>
 </ng-template>
 ```
 
 ## Dense dashboard/filter usage
 
-When this control is rendered in dashboard cards, filter bars, external filter panels, table toolbars, query bars, or other compact non-form surfaces, prefer `hideInlineError` so Material does not reserve the inline error/subscript row under the field. Pair it with `size="sm"` when the component supports `size`. Validation remains visible through the compact error icon/tooltip without increasing the control height, and the message is also exposed to assistive tech through a screen-reader-only element (`span.sd-visually-hidden`) referenced by `aria-describedby`.
+Use `size="sm"` in compact filter bars, dashboard cards and toolbars. Add `hideInlineError` only when inline validation feedback is shown elsewhere: it suppresses the message, while validation still runs. The switch does not render a replacement error icon or tooltip.
 
 ```html
-<sd-switch hideInlineError [(model)]="filter.active"></sd-switch>
+<sd-switch size="sm" label="Active only" hideInlineError [(model)]="filter.active"></sd-switch>
 ```
 
 ## Examples

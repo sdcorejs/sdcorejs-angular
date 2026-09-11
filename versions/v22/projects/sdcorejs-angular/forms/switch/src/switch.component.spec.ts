@@ -3,6 +3,7 @@ import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormGroup, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { MAT_SLIDE_TOGGLE_DEFAULT_OPTIONS } from '@angular/material/slide-toggle';
 import { SdSwitch } from './switch.component';
 
 @Component({
@@ -382,5 +383,99 @@ describe('SdSwitch (viewed inline mode)', () => {
     fixture.componentRef.setInput('disabled', true);
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('mat-slide-toggle')).toBeNull();
+  });
+});
+
+describe('SdSwitch sizes', () => {
+  let fixture: ComponentFixture<SdSwitch>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [SdSwitch, NoopAnimationsModule],
+      providers: [{ provide: MAT_SLIDE_TOGGLE_DEFAULT_OPTIONS, useValue: {} }],
+    }).compileComponents();
+    fixture = TestBed.createComponent(SdSwitch);
+    fixture.componentRef.setInput('label', 'Notifications');
+  });
+
+  it('keeps the default medium track at 52 × 32px', () => {
+    fixture.detectChanges();
+    const track = fixture.nativeElement.querySelector('.mdc-switch__track') as HTMLElement;
+    expect(track.getBoundingClientRect().width).toBe(52);
+    expect(track.getBoundingClientRect().height).toBe(32);
+    expect(fixture.nativeElement.getAttribute('data-size')).toBe('md');
+  });
+
+  for (const [size, width, height, handleSize] of [
+    ['sm', 36, 20, 16],
+    ['md', 52, 32, 24],
+    ['lg', 60, 36, 28],
+  ] as const) {
+    it(`renders ${size} with centered handles in both states and preserves toggling/disabled behavior`, () => {
+      fixture.componentRef.setInput('size', size);
+      fixture.detectChanges();
+      const change = spyOn(fixture.componentInstance.sdChange, 'emit').and.callThrough();
+      const button = fixture.nativeElement.querySelector('button[role="switch"]') as HTMLButtonElement;
+      const track = fixture.nativeElement.querySelector('.mdc-switch__track') as HTMLElement;
+      const handle = fixture.nativeElement.querySelector('.mdc-switch__handle') as HTMLElement;
+      for (const checked of [false, true]) {
+        fixture.componentRef.setInput('model', checked);
+        fixture.detectChanges();
+        const t = track.getBoundingClientRect();
+        const h = handle.getBoundingClientRect();
+        expect(t.width).toBe(width);
+        expect(t.height).toBe(height);
+        expect(h.width).toBe(handleSize);
+        expect(h.height).toBe(handleSize);
+        expect(h.top + h.height / 2).toBeCloseTo(t.top + t.height / 2, 0);
+        expect(h.left).toBeGreaterThanOrEqual(t.left);
+        expect(h.right).toBeLessThanOrEqual(t.right);
+        expect(button.getAttribute('aria-checked')).toBe(String(checked));
+      }
+      change.calls.reset();
+      button.click();
+      fixture.detectChanges();
+      expect(fixture.componentInstance.model()).toBeFalse();
+      expect(change).toHaveBeenCalledOnceWith(false);
+      fixture.componentRef.setInput('disabled', true);
+      fixture.detectChanges();
+      button.click();
+      expect(change).toHaveBeenCalledTimes(1);
+      expect(track.getBoundingClientRect().width).toBe(width);
+    });
+  }
+
+  it('updates size dynamically without emitting a value change', () => {
+    fixture.detectChanges();
+    const change = spyOn(fixture.componentInstance.sdChange, 'emit');
+    for (const [size, width] of [
+      ['sm', 36],
+      ['lg', 60],
+      ['md', 52],
+    ] as const) {
+      fixture.componentRef.setInput('size', size);
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.mdc-switch__track').getBoundingClientRect().width).toBe(width);
+    }
+    expect(change).not.toHaveBeenCalled();
+  });
+
+  it('keeps the small handle inside its track with hidden icons and RTL direction', async () => {
+    TestBed.inject(MAT_SLIDE_TOGGLE_DEFAULT_OPTIONS).hideIcon = true;
+    fixture.componentRef.setInput('size', 'sm');
+    fixture.detectChanges();
+    fixture.nativeElement.setAttribute('dir', 'rtl');
+    for (const checked of [false, true]) {
+      fixture.componentRef.setInput('model', checked);
+      fixture.detectChanges();
+      const track = fixture.nativeElement.querySelector('.mdc-switch__track').getBoundingClientRect();
+      const handleElement = fixture.nativeElement.querySelector('.mdc-switch__handle') as HTMLElement;
+      // why: Material vẫn transition kích thước núm gạt khi tắt icon dù dùng NoopAnimationsModule.
+      await Promise.all(handleElement.getAnimations().map(animation => animation.finished));
+      const handle = handleElement.getBoundingClientRect();
+      expect(handle.width).toBe(checked ? 16 : 12);
+      expect(handle.left).toBeGreaterThanOrEqual(track.left);
+      expect(handle.right).toBeLessThanOrEqual(track.right);
+    }
   });
 });
