@@ -342,6 +342,51 @@ test('reviewed release snapshots allow card exports and runtime fixes on all fou
   }
 });
 
+function dependencyReleaseFixture(target) {
+  const fixture = additiveReleaseFixture(target);
+  const expectedDependencies = { ...fixture.artifact.manifest.dependencies, 'chart.js': '^4.5.1' };
+  fixture.manifestOptions.expectedDependencies = expectedDependencies;
+  fixture.artifact.expectedDependencies = expectedDependencies;
+  fixture.approvedContract.dependencies = {
+    baseline: snapshotHash(expectedDependencies),
+    candidate: snapshotHash(fixture.artifact.manifest.dependencies),
+  };
+  return fixture;
+}
+
+test('reviewed dependency removal requires exact baseline and candidate snapshots on every line', () => {
+  for (const target of releaseTargets('2.9')) {
+    const { manifestOptions } = dependencyReleaseFixture(target);
+    assert.doesNotThrow(() => validatePackedManifest(manifestOptions));
+    for (const mutate of [
+      f => { delete f.approvedContract.dependencies; },
+      f => { delete f.approvedContract.dependencies.baseline; },
+      f => { delete f.approvedContract.dependencies.candidate; },
+      f => { delete f.manifestOptions.expectedDependencies; },
+      f => { f.manifestOptions.expectedDependencies['chart.js'] = '^5.0.0'; },
+      f => { f.artifact.manifest.dependencies['chart.js'] = '^4.5.1'; },
+      f => { f.artifact.manifest.dependencies.unreviewed = '1.0.0'; },
+      f => { f.approvedContract.version = `${target.major}.2.10`; },
+    ]) {
+      const fixture = dependencyReleaseFixture(target);
+      mutate(fixture);
+      assert.throws(() => validatePackedManifest(fixture.manifestOptions));
+    }
+  }
+});
+
+test('bundle revalidation preserves reviewed dependency baselines and rejects subsequent drift', () => {
+  const fixtures = releaseTargets('2.9').map(dependencyReleaseFixture);
+  const options = {
+    suffix: '2.9', datetimeVersion: '1.0.4', sourceSha: 'a'.repeat(40),
+    artifacts: fixtures.map(f => ({ ...f.artifact, expectedFiles: EXPECTED_FILES })),
+    releaseContract: { targets: Object.fromEntries(fixtures.map(f => [f.artifact.target.version, f.approvedContract])) },
+  };
+  assert.equal(validateReleaseBundle(options).publishOrder.length, 4);
+  options.artifacts[3].manifest.dependencies.unreviewed = '1.0.0';
+  assert.throws(() => validateReleaseBundle(options), /reviewed dependencies candidate snapshot/u);
+});
+
 test('reviewed snapshots reject drift, missing approved additions and wrong release bindings', () => {
   const target = releaseTargets('2.5')[0];
   for (const mutate of [
@@ -374,18 +419,18 @@ test('release snapshot fingerprints ignore object insertion order but retain all
 });
 
 test('repository snapshots bind reviewed releases to exact baselines without authorizing future releases', () => {
-  for (const suffix of ['2.5', '2.6', '2.7', '2.8']) {
+  for (const suffix of ['2.5', '2.6', '2.7', '2.8', '2.9']) {
     const contract = loadReleaseContract(suffix);
     for (const target of releaseTargets(suffix)) {
       const snapshot = contract.targets[target.version];
       assert.equal(snapshot.version, target.version);
       assert.equal(snapshot.baselineVersion, target.baselineVersion);
-      for (const section of ['exports', 'files', 'publicSurface']) {
+      for (const section of ['exports', 'files', 'publicSurface', ...(suffix === '2.9' ? ['dependencies'] : [])]) {
         for (const side of ['baseline', 'candidate']) assert.match(snapshot[section][side], /^[a-f0-9]{64}$/u);
       }
     }
   }
-  assert.equal(loadReleaseContract('2.9'), undefined);
+  assert.equal(loadReleaseContract('2.10'), undefined);
   assert.throws(() => loadReleaseContract('../2.5'));
 });
 

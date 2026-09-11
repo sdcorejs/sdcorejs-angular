@@ -179,7 +179,12 @@ export function validatePackedManifest({
     /^\d+\.\d+\.\d+$/u.test(manifest.dependencies?.['@sdcorejs/utils'] ?? ''),
     `${target.version}: @sdcorejs/utils must be a direct exact dependency.`,
   );
-  if (expectedDependencies) assertExact(manifest.dependencies, expectedDependencies, `${target.version} dependencies`);
+  if (approvedContract?.dependencies) {
+    invariant(expectedDependencies, `${target.version}: reviewed dependencies require an exact baseline.`);
+    assertReleaseSnapshot(manifest.dependencies, expectedDependencies, target, 'dependencies', approvedContract);
+  } else if (expectedDependencies) {
+    assertExact(manifest.dependencies, expectedDependencies, `${target.version} dependencies`);
+  }
 
   const actualFiles = normalizedFileList(packedFiles);
   const baselineFiles = normalizedFileList(expectedFiles);
@@ -306,6 +311,7 @@ export function validateReleaseBundle({ suffix, datetimeVersion, sourceSha, arti
       manifest: artifact.manifest,
       target,
       datetimeVersion,
+      expectedDependencies: artifact.expectedDependencies,
       expectedExports: artifact.baseline?.exports,
       expectedFiles: artifact.expectedFiles ?? artifact.baseline?.files ?? packedFiles,
       packedFiles,
@@ -621,15 +627,16 @@ function materializeValidatedBundle({ artifactRoot, suffix, baselineSuffix, date
       }
       const baseline = baselines.get(target.baselineVersion);
       const expectedFiles = normalizedFileList(baseline.pack.files);
+      const expectedDependencies = {
+        ...baseline.manifest.dependencies,
+        '@sdcorejs/angular-material-datetime': datetimeVersion,
+      };
       const publicSurface = readPublicSurface(candidateRoot, target.version, target.major);
       validatePackedManifest({
         manifest,
         target,
         datetimeVersion,
-        expectedDependencies: {
-          ...baseline.manifest.dependencies,
-          '@sdcorejs/angular-material-datetime': datetimeVersion,
-        },
+        expectedDependencies,
         expectedExports: baseline.manifest.exports,
         expectedFiles,
         packedFiles: extractedFiles,
@@ -647,6 +654,7 @@ function materializeValidatedBundle({ artifactRoot, suffix, baselineSuffix, date
         publicSurface,
         baseline: baseline.publicSurface,
         expectedFiles,
+        expectedDependencies,
         sourceSha: record.metadata.sourceSha,
       };
     });

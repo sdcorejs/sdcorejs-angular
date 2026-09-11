@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "suffix": "2.9",
+  "reviewedSourceSha": "05b4e8a000741b3b984080329e94e58aba1c933f",
+  "artifactSource": "Local unpublished 2.9 candidate artifacts built from main 05b4e8a000741b3b984080329e94e58aba1c933f with version stamping on exact Node 22.22.3. Compared against the exact npm 19.2.8/20.2.8/21.2.8/22.2.8 baselines. Reviewed changes include the single initial table read lifecycle, compact table menus and switch sizes, collapsible form groups and sidebar groups, and overlay/layout fixes already merged into main. The chart entry point and chart.js dependency removal are explicitly documented as breaking in CHANGELOG.md. Dependency, export, file inventory and authored/declaration surface fingerprints bind both baseline and candidate; CI must rebuild from the release commit.",
+  "targets": {
+    "19.2.9": {
+      "version": "19.2.9",
+      "baselineVersion": "19.2.8",
+      "dependencies": {
+        "baseline": "932b5eae2ba638991c645e83fbda97ebf577cf5e65fae7f935d60904947288f3",
+        "candidate": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f"
+      },
+      "exports": {
+        "baseline": "10a73eb26c3856128552b3c9c4b76269dc15138f95ded4d081a8708a49d3f967",
+        "candidate": "078a9f3619580b6017cb8b5ecc21d40f3876e8bf560774fde5b305fb235e10f1"
+      },
+      "files": {
+        "baseline": "84f9f2773785800887f080996a569e1d8509ce7cbaa38c884121d3f7bfac5c81",
+        "candidate": "4f834ba2aeb981ec64b83064433680cd2d85fa7d1386ff4417a5d7adc87839da"
+      },
+      "publicSurface": {
+        "baseline": "1a4de4982c80224841e5d7596de7a7d8c70c9028920bbbb2d7cc9a05bfc71759",
+        "candidate": "e47dfec641ac2fd66123ff11a34d3ec57e6ba54ac092d9f33e384d2473c5b279"
+      }
+    },
+    "20.2.9": {
+      "version": "20.2.9",
+      "baselineVersion": "20.2.8",
+      "dependencies": {
+        "baseline": "932b5eae2ba638991c645e83fbda97ebf577cf5e65fae7f935d60904947288f3",
+        "candidate": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f"
+      },
+      "exports": {
+        "baseline": "10a73eb26c3856128552b3c9c4b76269dc15138f95ded4d081a8708a49d3f967",
+        "candidate": "078a9f3619580b6017cb8b5ecc21d40f3876e8bf560774fde5b305fb235e10f1"
+      },
+      "files": {
+        "baseline": "c4baac4a733cf9ba274dfe795a3309c599e8b3c59f2b3eba04b8d31c1ae1be95",
+        "candidate": "025c0d5ffb6e287a670f7fd4dab3447ec22cb39fb5c1a79043ef7cbf256a2497"
+      },
+      "publicSurface": {
+        "baseline": "97c8cc80846f5ac969b0df814a496aa5785c8e066a7e98ca5ef766bbbfcf273c",
+        "candidate": "d358113819be9bf1045d0acdfa2d4b40c0568fc20be934a2bd91d41fbd24c85f"
+      }
+    },
+    "21.2.9": {
+      "version": "21.2.9",
+      "baselineVersion": "21.2.8",
+      "dependencies": {
+        "baseline": "932b5eae2ba638991c645e83fbda97ebf577cf5e65fae7f935d60904947288f3",
+        "candidate": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f"
+      },
+      "exports": {
+        "baseline": "3d95cae9b4b9c4f70cea1cb2e557b203891ab331351f66b0b27823d79a6724e3",
+        "candidate": "a995f16666247c07e3f08c79714d334bb3e30930d18315708ca5cacd4135fcce"
+      },
+      "files": {
+        "baseline": "964bc74addc358648fca8db6cf22afc4b62eef44b0549614689fc24f65d250ac",
+        "candidate": "29e0d97b40e6de03a29074676b55e4606f696db4231167e35bd942887790b2f5"
+      },
+      "publicSurface": {
+        "baseline": "cdfb7f478c074950e80b58f541816dec2d4cba204a666316b761cf2ed785ed09",
+        "candidate": "7d1ee2323ef965cd77e0e8085a548f0bc5adab34751b90bd734e786790c69a4b"
+      }
+    },
+    "22.2.9": {
+      "version": "22.2.9",
+      "baselineVersion": "22.2.8",
+      "dependencies": {
+        "baseline": "932b5eae2ba638991c645e83fbda97ebf577cf5e65fae7f935d60904947288f3",
+        "candidate": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f"
+      },
+      "exports": {
+        "baseline": "3d95cae9b4b9c4f70cea1cb2e557b203891ab331351f66b0b27823d79a6724e3",
+        "candidate": "a995f16666247c07e3f08c79714d334bb3e30930d18315708ca5cacd4135fcce"
+      },
+      "files": {
+        "baseline": "964bc74addc358648fca8db6cf22afc4b62eef44b0549614689fc24f65d250ac",
+        "candidate": "29e0d97b40e6de03a29074676b55e4606f696db4231167e35bd942887790b2f5"
+      },
+      "publicSurface": {
+        "baseline": "6b323ab4a5a1d22295cfd3924932e30d9e63556ab1d3c4e2ac6efb419abffedf",
+        "candidate": "4a637284fd0a6c0fffedd419b70933135d4a70da43cafc5cc376084784794ede"
+      }
+    }
+  }
+}
