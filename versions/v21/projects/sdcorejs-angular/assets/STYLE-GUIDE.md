@@ -39,6 +39,8 @@
 
 `sd-core.scss` là entry point duy nhất — auto-load reset, utilities, color theme, form overrides, scrollbar, Angular Material theme. Không cần import partial nào riêng lẻ.
 
+Control `size="sm"` dùng khung 32px. Floating label ở trạng thái rỗng/chưa focus được căn giữa dòng đầu bằng style dùng chung, kể cả label có wrapper `sd-form-field-label`. Khi focus hoặc có giá trị, label vẫn nổi theo Angular Material; textarea nhiều dòng giữ label ở dòng đầu.
+
 > Convention chung: **mọi utility class đều có `!important`** để đảm bảo override được Angular Material (thường có specificity cao).
 
 ---

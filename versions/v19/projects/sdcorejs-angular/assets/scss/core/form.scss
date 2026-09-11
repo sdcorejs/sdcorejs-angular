@@ -224,6 +224,12 @@
     --mat-form-field-container-height: 32px;
     --mat-form-field-container-vertical-padding: 3px;
 
+    // why: inline-flex + vertical-align: middle tạo khoảng baseline dưới label,
+    // khiến chữ thấp hơn tâm của field 32px. Flex block giữ nguyên transform float của Material.
+    .sd-form-field-label {
+      display: flex;
+    }
+
     &.mat-form-field-appearance-outline {
       .mat-mdc-form-field-infix {
         border-top-width: 6px;

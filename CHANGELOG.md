@@ -6,6 +6,11 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+### Fixed
+
+- Table settings use compact rows with centered checkboxes and share the modal footer gutters, removing the extra content inset.
+- Small form controls center their resting floating labels consistently with the focused placeholder and value, including select, input, date/time and textarea controls.
+
 ## [2.8] - 2026-09-10
 
 Release suffix `2.8` targets `19.2.8`, `20.2.8`, `21.2.8`, and `22.2.8`.
