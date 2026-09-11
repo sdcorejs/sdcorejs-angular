@@ -279,6 +279,7 @@ export interface SdFormGenericGroup {
   properties: {
     icon: string;
     color: Color;
+    collapsible?: boolean;
     hidden?: boolean;
     hiddenWhenExpression?: SdFormGenericExpression;
     visibleWhenExpression?: SdFormGenericExpression;

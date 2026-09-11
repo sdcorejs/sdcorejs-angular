@@ -6,6 +6,33 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+### Changed (BREAKING for consumers)
+
+- Remove `@sdcorejs/angular/components/chart` and its `SdLineChartComponent`, `SdBarChartComponent`, `SdPieChartComponent`, and `SdDoughnutChartComponent` exports (also removed from the root/components barrels). Chart.js is no longer a Core UI dependency; consumers choose, install, and configure their own chart library. `sd-org-chart` remains available.
+
+  Migration: remove the Core UI chart imports and replace `<sd-line-chart>`, `<sd-bar-chart>`, `<sd-pie-chart>`, and `<sd-doughnut-chart>` in consumer templates. If retaining Chart.js, declare `chart.js` as a direct application dependency and own its canvas lifecycle and registration:
+
+  ```diff
+  - import { SdLineChartComponent } from '@sdcorejs/angular/components/chart';
+  - // Component imports: [SdLineChartComponent]
+  + import { Chart, registerables } from 'chart.js'; // installed by the consumer
+  + Chart.register(...registerables);
+  + // Create a Chart on the application's canvas and destroy it during teardown.
+  ```
+
+### Added
+
+- Sidebar V3 supports independent expand/collapse of menu groups at every depth, with keyboard-accessible disclosure buttons. Group state survives search and sidebar rail toggles; navigation opens the active branch, and selecting a group icon in the rail opens that group.
+- Form builder groups support `properties.collapsible` (default `false`), matching `sd-section`. Enable it to expand/collapse groups in preview and form render while preserving child values and validation. Group conditions remain limited to visibility; disabled-when rules belong to child fields.
+
+### Fixed
+
+- Table row-command children and selection-action menus use a compact white CDK menu with 36px rows, 18px icons and 8px corners. Preserve child filtering, disabled commands, callbacks, keyboard navigation, focus restoration and overlay placement outside clipped cells; touch targets remain 44px.
+- Side drawer, dialog and bottom-sheet headers/footers share a white background and use compact 12px vertical and 16px horizontal padding. Body content also uses `12px 16px` padding on desktop and mobile, including its own top spacing below the separate header surface; mobile safe-area spacing and touch targets remain supported.
+- Tab group pills clip hover/ripple effects to their rounded shape and retain the active fill on hover. Segmented tabs have a 4px gap so adjacent hover backgrounds remain separate.
+- Hover-copy confirmation tooltips render in a CDK overlay above table rows and outside clipped cells. Scrolling, disabling and teardown clean up the overlay; initial rendering creates only one copy button.
+- Query builder's add-condition/group menu renders outside ancestor overflow, keeping both actions visible in short modal bodies. Backdrop/Escape dismissal and focus restoration keep the surrounding modal open.
+
 ## [2.8] - 2026-09-11
 
 Release suffix `2.8` targets `19.2.8`, `20.2.8`, `21.2.8`, and `22.2.8`.

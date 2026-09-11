@@ -8,6 +8,10 @@
   </summary>
   <div class="fb-section__body">
     <attribute-input [form]="form" [(model)]="_group.label" [label]="'core.component.form-builder.label' | sdTranslate"></attribute-input>
+    <attribute-switch
+      [form]="form"
+      [(model)]="_group.properties.collapsible"
+      [label]="'core.component.form-builder.collapsible' | sdTranslate"></attribute-switch>
 
     <div class="fb-field">
       <div class="fb-field__label">{{ 'core.component.form-builder.group-icon' | sdTranslate }}</div>

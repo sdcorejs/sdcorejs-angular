@@ -419,6 +419,7 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.form-builder.group-children': '子项',
   'core.component.form-builder.group-icon': '图标',
   'core.component.form-builder.group-accent-color': '强调色',
+  'core.component.form-builder.collapsible': '允许展开/折叠',
   'core.component.form-builder.group-no-children': '尚无字段。请向此分组添加或拖入字段。',
   'core.component.form-builder.break': '换行',
 

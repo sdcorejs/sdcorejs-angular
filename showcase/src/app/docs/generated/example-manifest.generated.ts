@@ -48,9 +48,6 @@ export type ShowcaseExampleSourceKey =
   | "components/card/example-object-comparewith"
   | "components/card/example-single-selection"
   | "components/card/example-standalone-card"
-  | "components/chart/example-bieu-do-bar"
-  | "components/chart/example-bieu-do-line"
-  | "components/chart/example-bieu-do-pie-doughnut"
   | "components/code-editor/example-che-do-xem-json"
   | "components/code-editor/example-ngon-ngu-html"
   | "components/code-editor/example-ngon-ngu-typescript"
@@ -695,27 +692,6 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Gồm selected+disabled, group disabled, inherited color, override color và standalone selected state.",
   },
   {
-    sourceKey: "components/chart/example-bieu-do-line",
-    pageKey: "components/chart",
-    sectionId: "example-bieu-do-line",
-    title: "Biểu đồ Line",
-    description: "Existing “Biểu đồ Line” scenario preserved from the showcase.",
-  },
-  {
-    sourceKey: "components/chart/example-bieu-do-bar",
-    pageKey: "components/chart",
-    sectionId: "example-bieu-do-bar",
-    title: "Biểu đồ Bar",
-    description: "Existing “Biểu đồ Bar” scenario preserved from the showcase.",
-  },
-  {
-    sourceKey: "components/chart/example-bieu-do-pie-doughnut",
-    pageKey: "components/chart",
-    sectionId: "example-bieu-do-pie-doughnut",
-    title: "Biểu đồ Pie & Doughnut",
-    description: "Existing “Biểu đồ Pie & Doughnut” scenario preserved from the showcase.",
-  },
-  {
     sourceKey: "components/code-editor/example-ngon-ngu-typescript",
     pageKey: "components/code-editor",
     sectionId: "example-ngon-ngu-typescript",
@@ -804,7 +780,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "components/form-generic",
     sectionId: "example-builder-render",
     title: "Builder + Render",
-    description: "Existing “Builder + Render” scenario preserved from the showcase.",
+    description: "Group có thể thu gọn/mở rộng trong preview; điều kiện vô hiệu hóa được cấu hình trên từng trường con.",
   },
   {
     sourceKey: "components/history/example-luong-phe-duyet",
@@ -1574,7 +1550,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "components/table",
     sectionId: "example-lenh-dong-co-menu-con",
     title: "Lệnh dòng có menu con",
-    description: "Command có children sẽ render thành nút menu; các child command vẫn hỗ trợ icon, title, color, disabled, hidden và click theo từng row.",
+    description: "Command và action children dùng menu gọn nền trắng. Chọn dòng để thử action nhóm; các child command vẫn hỗ trợ icon, title, color, disabled, hidden và click theo từng row.",
   },
   {
     sourceKey: "components/table/example-keo-tha-doi-thu-tu",
@@ -2512,7 +2488,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "modules/layout",
     sectionId: "example-sidebar-v3-collapsible",
     title: "Sidebar V3 - Collapsible",
-    description: "Root icons, text-only nested branches and a compact search field on desktop; shared pinned and recent menus.",
+    description: "Bấm từng nhóm menu để đóng/mở các mục con trên desktop. Tìm kiếm vẫn thấy mục trong nhóm đã đóng; thu gọn cả sidebar giữ trạng thái từng nhóm.",
   },
   {
     sourceKey: "pipes-utilities/empty/example-gia-tri-rong-hien-thi-dau-gach",

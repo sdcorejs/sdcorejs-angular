@@ -480,7 +480,7 @@ const TASKS: Task[] = [
           { name: 'command.commands[].children', value: 'SdTableCommandNormal[]' },
           { name: 'command.align', value: 'right' }
         ]"
-        note="Command có children sẽ render thành nút menu; các child command vẫn hỗ trợ icon, title, color, disabled, hidden và click theo từng row.">
+        note="Command và action children dùng menu gọn nền trắng. Chọn dòng để thử action nhóm; các child command vẫn hỗ trợ icon, title, color, disabled, hidden và click theo từng row.">
         <div class="table-box">
           <sd-table [option]="commandChildrenOption"><ng-template [sdTableRowMobileDef]="commandChildrenOption" let-row="item"><strong>{{ row.code }}</strong><div>{{ row.name }}</div></ng-template></sd-table>
         </div>
@@ -1047,6 +1047,15 @@ export class TableDemoComponent {
     type: 'local',
     items: () => PRODUCTS,
     filler: { enabled: true },
+    selector: {
+      visible: true,
+      actions: [{
+        title: 'Xử lý đã chọn', icon: 'checklist', children: [
+          { title: 'Kiểm kho', icon: 'inventory_2', click: rows => alert('Kiểm kho ' + rows?.length + ' sản phẩm') },
+          { title: 'Xóa', icon: 'delete', color: 'error', click: rows => alert('Xóa ' + rows?.length + ' sản phẩm') },
+        ],
+      }],
+    },
     command: {
       align: 'right',
       commands: [

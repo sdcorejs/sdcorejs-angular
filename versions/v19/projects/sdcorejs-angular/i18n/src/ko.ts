@@ -419,6 +419,7 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.form-builder.group-children': '하위 요소',
   'core.component.form-builder.group-icon': '아이콘',
   'core.component.form-builder.group-accent-color': '강조 색상',
+  'core.component.form-builder.collapsible': '펼치기/접기 허용',
   'core.component.form-builder.group-no-children': '필드가 아직 없습니다. 이 그룹에 필드를 추가하거나 드래그하세요.',
   'core.component.form-builder.break': '줄 바꿈',
 

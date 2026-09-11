@@ -102,6 +102,14 @@
   opacity: 0 !important;
 }
 
+// Material renders hover and click ripples in a separate rectangular layer.
+// Clip that layer to the tab shape without clipping the label's focus indicator.
+:host(.sd-tab-group--pills) ::ng-deep .mat-mdc-tab .mat-mdc-tab-ripple,
+:host(.sd-tab-group--segmented) ::ng-deep .mat-mdc-tab .mat-mdc-tab-ripple {
+  border-radius: inherit;
+  overflow: hidden;
+}
+
 // =============================================================================
 // Variant: pills — rounded pill tabs, active filled with primary.
 // Good for nested tab groups, filter bars, light contexts.
@@ -132,7 +140,7 @@
     background: transparent;
     transition: background-color 120ms ease, color 120ms ease;
 
-    &:hover:not(.mat-mdc-tab-disabled) {
+    &:hover:not(.mat-mdc-tab-disabled):not(.mdc-tab--active) {
       background: var(--sd-tab-badge-bg);
     }
 
@@ -142,12 +150,6 @@
     &.mdc-tab--active {
       background: var(--sd-tab-label-active-color);
       .mdc-tab__text-label { color: #ffffff; }
-    }
-
-    // why: active pill darken on hover instead of the default whitish state-layer.
-    // box-shadow inset > filter because filter would dim text + icons too.
-    &.mdc-tab--active:hover:not(.mat-mdc-tab-disabled) {
-      box-shadow: inset 0 0 0 9999px rgba(0, 0, 0, 0.12);
     }
   }
 
@@ -166,7 +168,7 @@
 }
 
 // =============================================================================
-// Variant: segmented — single bordered container, tabs sit flush.
+// Variant: segmented — shared container with a small gap between tabs.
 // iOS-style segmented control.
 // =============================================================================
 :host(.sd-tab-group--segmented) ::ng-deep {
@@ -185,7 +187,7 @@
     padding: 3px;
   }
 
-  .mat-mdc-tab-labels { gap: 0; }
+  .mat-mdc-tab-labels { gap: 4px; }
 
   .mat-mdc-tab {
     min-width: 0;

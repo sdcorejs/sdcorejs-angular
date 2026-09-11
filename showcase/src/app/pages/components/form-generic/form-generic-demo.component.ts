@@ -146,7 +146,7 @@ const SEED: SdFormGeneric = {
       type: 'group',
       label: 'Địa chỉ giao hàng',
       layout: { columns: '12' },
-      properties: { icon: 'inventory_2', color: 'secondary' },
+      properties: { icon: 'inventory_2', color: 'secondary', collapsible: true },
       components: [
         {
           id: 'g1c1',
@@ -323,7 +323,9 @@ const DRAG_DROP_POPUP_SEED: SdFormGeneric = {
       title="Form Generic"
       description="Dynamic form builder and renderer with schema-safe drag/drop, group detail editing, query-builder conditions, and runtime preview.">
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-builder-render') {
-      <demo-section heading="Builder + Render" [props]="[{ name: 'formGeneric', value: 'SdFormGeneric' }]">
+      <demo-section heading="Builder + Render"
+        [props]="[{ name: 'formGeneric', value: 'SdFormGeneric' }, { name: 'properties.collapsible', value: 'true' }]"
+        note="Group có thể thu gọn/mở rộng trong preview; điều kiện vô hiệu hóa được cấu hình trên từng trường con.">
         <div class="row-actions">
           <sd-button type="outline" color="primary" title="Đặt lại" prefixIcon="restart_alt" (click)="reset()"></sd-button>
           <sd-button type="outline" color="secondary" title="Tải form rỗng" prefixIcon="layers_clear" (click)="loadEmpty()"></sd-button>

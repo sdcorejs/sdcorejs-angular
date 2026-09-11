@@ -420,6 +420,7 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.form-builder.group-children': '子要素',
   'core.component.form-builder.group-icon': 'アイコン',
   'core.component.form-builder.group-accent-color': 'アクセントカラー',
+  'core.component.form-builder.collapsible': '展開・折りたたみを許可',
   'core.component.form-builder.group-no-children': 'フィールドがまだありません。このグループにフィールドを追加またはドラッグしてください。',
   'core.component.form-builder.break': '改行',
 

@@ -5,6 +5,7 @@ import { SD_COMPONENT_ICONS, SdFormGenericComponent, SdFormGenericGroup } from '
 import { BuilderService } from '../../../services';
 import { AttributeExpression } from '../../attribute-expression/attribute-expression.component';
 import { AttributeInput } from '../../attribute-input/attribute-input.component';
+import { AttributeSwitch } from '../../attribute-switch/attribute-switch.component';
 
 const ICON_PRESETS = ['category', 'folder', 'inventory_2', 'group_work', 'workspaces', 'view_quilt'] as const;
 const COLOR_PRESETS = ['primary', 'secondary', 'success', 'warning', 'error'] as const;
@@ -14,7 +15,7 @@ const COLOR_PRESETS = ['primary', 'secondary', 'success', 'warning', 'error'] as
   templateUrl: './group-attribute.component.html',
   styleUrl: './group-attribute.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AttributeInput, AttributeExpression, SdTranslatePipe],
+  imports: [AttributeInput, AttributeExpression, AttributeSwitch, SdTranslatePipe],
 })
 export class GroupAttribute {
   // ── constants ────────────────────────────────────────────────────────

@@ -87,6 +87,8 @@
           <h2 class="sd-sidebar-v3__section-title m-0">{{ 'core.module.layout.sidebar.all-menu' | sdTranslate }}</h2>
           <sd-layout-menu-tree
             presentation="hierarchy"
+            [collapsible]="true"
+            [(collapsedGroupKeys)]="collapsedGroupKeys"
             [menus]="menus()"
             [query]="searchText()"
             [activePath]="activePath()"

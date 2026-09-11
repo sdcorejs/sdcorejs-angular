@@ -36,7 +36,7 @@
 
 | Area                 | What the library provides                                                                                                                  |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| UI components        | Navigation/data state, PDF preview, job progress, audit diff, modals, drawers, tabs, charts, and editors                                   |
+| UI components        | Navigation/data state, PDF preview, job progress, audit diff, modals, drawers, tabs, and editors                                           |
 | Data and workflow    | Local/server tables, query builders, entity/tree pickers, unsaved-change guards, background tasks, file upload, and Excel import           |
 | Form controls        | Text/mask, number, time/time range, date/date range, datetime, select, autocomplete, checkbox, radio, switch, chip, color, and inline text |
 | Application services | Typed API/retry/cancel, ref-counted loading, graph-safe storage/cache/persistence, viewport signals, notifications, and Excel               |

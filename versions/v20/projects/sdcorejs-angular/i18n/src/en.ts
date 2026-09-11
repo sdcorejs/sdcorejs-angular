@@ -418,6 +418,7 @@ export const EN_MESSAGES = {
   'core.component.form-builder.group-children': 'Children',
   'core.component.form-builder.group-icon': 'Icon',
   'core.component.form-builder.group-accent-color': 'Accent color',
+  'core.component.form-builder.collapsible': 'Allow expand/collapse',
   'core.component.form-builder.group-no-children': 'No fields yet. Add or drag fields into this group.',
   'core.component.form-builder.break': 'Break',
 

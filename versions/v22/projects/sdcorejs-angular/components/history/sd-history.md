@@ -20,7 +20,7 @@ Vertical timeline that renders a list of history/audit events — each with titl
 ## When NOT to use
 - For a list of records the user can act on → use a table / list component
 - For chat/messaging → use a dedicated chat thread component
-- For a chart of events over time → use `<sd-chart>` with a time axis
+- For a chart of events over time → use a chart library selected and installed by the consuming application
 - For a single most-recent event → just render plain text with a `<sd-badge>`
 
 ## Inputs

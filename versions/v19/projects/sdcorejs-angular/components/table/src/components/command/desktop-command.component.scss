@@ -1,5 +1,6 @@
 @use '../../../../../assets/scss/core/color.scss' as color;
 @use 'sass:map';
+@use '../action-menu/action-menu';
 
 :host {
   display: flex;
@@ -42,20 +43,8 @@ button[mat-icon-button]:disabled sd-icon.c-icon {
   width: 100%;
 }
 
-// why: `margin-right: 0 !important` ở đây từng để chặn margin Material gắn vào `.mat-icon` trong
-// mat-menu. sd-icon đã trung hoà ở component nên bỏ được; khoảng cách với nhãn là `gap` của
-// .sd-command-menu-item__content.
-.sd-command-menu-item__icon {
-  color: map.get(color.$color_map, 'text-secondary') !important;
-  width: 24px;
-  height: 24px;
-  font-size: 18px;
-  line-height: 24px !important;
-  flex: 0 0 24px;
-}
-
 .sd-command-menu-item__title {
   min-width: 0;
   line-height: 20px;
-  white-space: nowrap;
+  white-space: normal;
 }

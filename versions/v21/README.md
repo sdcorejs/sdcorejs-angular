@@ -176,7 +176,7 @@ Mỗi component / form control / service / module là 1 entry point độc lập
 
 | Group | Items |
 | --- | --- |
-| Display | `badge` · `avatar` · `chart` · `section` · `view` · `inform` |
+| Display | `badge` · `avatar` · `section` · `view` · `inform` |
 | Action | `button` · `quick-action` · `operator` |
 | Layout | `splitter` · `side-drawer` · `tab` · `tab-router` · `stepper` · `modal` · `anchor` |
 | Data | `table` · `tree` · `org-chart` · `query-bar` · `query-builder` · `preview` · `history` |

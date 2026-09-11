@@ -29,6 +29,7 @@ describe('SdLayoutMenuTreeComponent', () => {
   });
 
   it('preserves nested menu icons and spacing in the default V2/mobile presentation', () => {
+    expect(fixture.nativeElement.querySelector('[data-menu-group]')).toBeNull();
     const route = fixture.nativeElement.querySelector('[data-menu-key="id:reports"]') as HTMLElement;
     expect(route.querySelector('sd-icon')).not.toBeNull();
     expect(getComputedStyle(route).paddingLeft).toBe('28px');

@@ -25,26 +25,39 @@
 <!-- Recursive group node -->
 <ng-template #groupTpl let-group let-isRoot="isRoot" let-parent="parent" let-index="index">
   @let _removeGroupLabel = removeGroupLabel();
+  @let _addNodeLabel = addNodeLabel();
+  @let _disabled = resolvedDisabled();
   <div class="qb-group" [class.is-root]="isRoot">
-    <div class="qb-header" [class.is-open]="group.open">
+    <div class="qb-header">
       <div class="qb-logic-switch">
-        <button type="button" [class.active]="group.logic === 'AND'" [disabled]="resolvedDisabled()" (click)="setGroupLogic(group, 'AND')">AND</button>
-        <button type="button" [class.active]="group.logic === 'OR'" [disabled]="resolvedDisabled()" (click)="setGroupLogic(group, 'OR')">OR</button>
+        <button type="button" [class.active]="group.logic === 'AND'" [disabled]="_disabled" (click)="setGroupLogic(group, 'AND')">AND</button>
+        <button type="button" [class.active]="group.logic === 'OR'" [disabled]="_disabled" (click)="setGroupLogic(group, 'OR')">OR</button>
       </div>
 
       <div class="qb-actions">
-        <button type="button" class="qb-btn qb-btn-add" [title]="addLabel()" [attr.aria-label]="addNodeLabel()" [disabled]="resolvedDisabled()" (click)="toggleDropdown(group, $event)">+</button>
-        @if (group.open) {
-          <!-- why: dropdown là NHÓM hai nút (role="group"), không phải nút — không nhận tabindex,
-               tab đi thẳng vào hai nút. stopPropagation cho cả click lẫn Enter để thao tác bên
-               trong dropdown không kích hoạt handler "đóng tất cả" của container. -->
-          <div class="qb-dropdown" role="group" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()">
+        <button type="button" class="qb-btn qb-btn-add" [title]="addLabel()" [attr.aria-label]="_addNodeLabel" [disabled]="_disabled"
+          cdkOverlayOrigin #addOrigin="cdkOverlayOrigin" [attr.aria-expanded]="!!group.open && !_disabled"
+          (click)="toggleDropdown(group, $event)">+</button>
+        <!-- why: overlay nằm ngoài ancestor overflow; focus trap trả focus về nút + khi đóng. -->
+        <ng-template cdkConnectedOverlay
+          [cdkConnectedOverlayOrigin]="addOrigin"
+          [cdkConnectedOverlayOpen]="!!group.open && !_disabled"
+          [cdkConnectedOverlayPositions]="addMenuPositions"
+          [cdkConnectedOverlayViewportMargin]="8"
+          [cdkConnectedOverlayFlexibleDimensions]="false"
+          [cdkConnectedOverlayPush]="true"
+          [cdkConnectedOverlayHasBackdrop]="true"
+          [cdkConnectedOverlayDisableClose]="true"
+          cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop"
+          (backdropClick)="closeAllDropdowns()"
+          (overlayKeydown)="onAddMenuKeydown($event)">
+          <div class="qb-dropdown" role="group" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" [attr.aria-label]="_addNodeLabel">
             <button type="button" (click)="addRule(group)">+ {{ conditionLabel() }}</button>
             <button type="button" (click)="addGroup(group)">+ {{ groupLabel() }}</button>
           </div>
-        }
+        </ng-template>
         @if (!isRoot) {
-          <button type="button" class="qb-btn qb-btn-remove" [title]="_removeGroupLabel" [attr.aria-label]="_removeGroupLabel" [disabled]="resolvedDisabled()" (click)="removeNode(parent, index)">✕</button>
+          <button type="button" class="qb-btn qb-btn-remove" [title]="_removeGroupLabel" [attr.aria-label]="_removeGroupLabel" [disabled]="_disabled" (click)="removeNode(parent, index)">✕</button>
         }
       </div>
     </div>

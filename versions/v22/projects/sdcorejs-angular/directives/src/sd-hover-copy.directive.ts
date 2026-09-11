@@ -1,4 +1,7 @@
 import { DestroyRef, Directive, ElementRef, inject, Renderer2, HostListener, OnInit, OnChanges, SimpleChanges, input } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { Overlay, OverlayRef } from '@angular/cdk/overlay';
+import { DomPortal } from '@angular/cdk/portal';
 import { BrowserUtilities } from '@sdcorejs/utils/fns';
 import { I18nService } from '@sdcorejs/angular/i18n';
 
@@ -14,9 +17,14 @@ export class SdHoverCopyDirective implements OnInit, OnChanges {
 
   readonly #i18n = inject(I18nService);
   readonly #destroyRef = inject(DestroyRef);
+  readonly #overlay = inject(Overlay);
+  readonly #document = inject(DOCUMENT);
 
   #copyButton: HTMLElement | null = null;
   #tooltip!: HTMLElement;
+  #tooltipOverlay: OverlayRef | null = null;
+  #unlistenCopy: (() => void) | null = null;
+  readonly #onScroll = () => this.#hideTooltip();
   #hideTooltipTimer: ReturnType<typeof setTimeout> | null = null;
   get #defaultTooltip(): string {
     return this.#i18n.t('core.directive.hover-copy.tooltip');
@@ -34,7 +42,7 @@ export class SdHoverCopyDirective implements OnInit, OnChanges {
     // why: timeout 1s ẩn tooltip trước đây không được lưu lại cũng không huỷ, mà directive lại
     // không có teardown nào. Host bị destroy trong vòng 1s đó thì callback vẫn chạy và ghi style
     // lên node đã tháo khỏi DOM (timer sống lâu hơn view).
-    this.#destroyRef.onDestroy(() => this.#clearHideTooltipTimer());
+    this.#destroyRef.onDestroy(() => this.#removeCopyButton());
   }
 
   // https://onemount.atlassian.net/browse/SM-2287
@@ -61,6 +69,8 @@ export class SdHoverCopyDirective implements OnInit, OnChanges {
   }
 
   #createAndAppendCopyButton(): void {
+    // why: ngOnChanges có thể tạo nút trước ngOnInit; chỉ giữ một nút và một overlay owner.
+    if (this.#copyButton) return;
     const parent = this.el.nativeElement;
     this.renderer.setStyle(parent, 'position', 'relative');
 
@@ -102,12 +112,9 @@ export class SdHoverCopyDirective implements OnInit, OnChanges {
 
     // Tooltip
     this.#tooltip = this.renderer.createElement('span');
+    this.renderer.setAttribute(this.#tooltip, 'role', 'tooltip');
     this.renderer.setProperty(this.#tooltip, 'innerText', this.#defaultTooltip);
-    this.renderer.setStyle(this.#tooltip, 'position', 'absolute');
-    this.renderer.setStyle(this.#tooltip, 'bottom', '100%');
-    this.renderer.setStyle(this.#tooltip, 'left', '50%');
-    this.renderer.setStyle(this.#tooltip, 'transform', 'translateX(-50%)');
-    this.renderer.setStyle(this.#tooltip, 'marginBottom', '4px');
+    this.renderer.setStyle(this.#tooltip, 'display', 'none');
     this.renderer.setStyle(this.#tooltip, 'background', '#333');
     this.renderer.setStyle(this.#tooltip, 'color', '#fff');
     this.renderer.setStyle(this.#tooltip, 'padding', '2px 6px');
@@ -123,7 +130,7 @@ export class SdHoverCopyDirective implements OnInit, OnChanges {
     this.renderer.appendChild(parent, this.#copyButton);
 
     // Listen click
-    this.renderer.listen(this.#copyButton, 'click', () => {
+    this.#unlistenCopy = this.renderer.listen(this.#copyButton, 'click', () => {
       const copyText = this.copyText();
       if (copyText && !this.sdHoverCopyDisabled()) {
         BrowserUtilities.copyToClipboard(String(copyText));
@@ -144,8 +151,12 @@ export class SdHoverCopyDirective implements OnInit, OnChanges {
   }
 
   #removeCopyButton(): void {
-    // why: tooltip nằm trong button — bỏ button mà để timer chạy tiếp là ghi style lên node đã gỡ.
     this.#clearHideTooltipTimer();
+    this.#document.removeEventListener('scroll', this.#onScroll, true);
+    this.#tooltipOverlay?.dispose();
+    this.#tooltipOverlay = null;
+    this.#unlistenCopy?.();
+    this.#unlistenCopy = null;
     if (this.#copyButton) {
       this.renderer.removeChild(this.el.nativeElement, this.#copyButton);
       this.#copyButton = null;
@@ -153,13 +164,41 @@ export class SdHoverCopyDirective implements OnInit, OnChanges {
   }
 
   #showTooltip(message: string) {
+    if (!this.#copyButton) return;
+    if (!this.#tooltipOverlay) {
+      // why: portal thoát khỏi overflow/stacking context của table cell và modal body.
+      this.#tooltipOverlay = this.#overlay.create({
+        positionStrategy: this.#overlay
+          .position()
+          .flexibleConnectedTo(this.#copyButton)
+          .withPositions([
+            { originX: 'center', originY: 'top', overlayX: 'center', overlayY: 'bottom', offsetY: -4 },
+            { originX: 'center', originY: 'bottom', overlayX: 'center', overlayY: 'top', offsetY: 4 },
+          ])
+          .withFlexibleDimensions(false)
+          .withViewportMargin(8)
+          .withPush(true),
+      });
+    }
     this.renderer.setProperty(this.#tooltip, 'innerText', message);
+    this.renderer.setStyle(this.#tooltip, 'display', 'block');
     this.renderer.setStyle(this.#tooltip, 'opacity', '1');
+    if (!this.#tooltipOverlay.hasAttached()) {
+      this.#tooltipOverlay.attach(new DomPortal(this.#tooltip));
+    }
+    this.renderer.setStyle(this.#tooltipOverlay.overlayElement, 'pointerEvents', 'none');
+    this.#tooltipOverlay.updatePosition();
+    // why: capture bắt cả scroll ở ancestor không khai cdkScrollable, tránh tooltip trôi khỏi cell.
+    this.#document.addEventListener('scroll', this.#onScroll, true);
   }
 
   #hideTooltip() {
+    this.#clearHideTooltipTimer();
+    this.#document.removeEventListener('scroll', this.#onScroll, true);
+    this.#tooltipOverlay?.detach();
     this.renderer.setProperty(this.#tooltip, 'innerText', this.#defaultTooltip);
     this.renderer.setStyle(this.#tooltip, 'opacity', '0');
+    this.renderer.setStyle(this.#tooltip, 'display', 'none');
   }
 
   @HostListener('mouseenter')

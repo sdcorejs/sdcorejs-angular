@@ -22,7 +22,6 @@ export * from '@sdcorejs/angular/components/import-excel';
 export * from '@sdcorejs/angular/components/mini-editor';
 export * from '@sdcorejs/angular/components/view';
 export * from '@sdcorejs/angular/components/code-editor';
-export * from '@sdcorejs/angular/components/chart';
 export * from '@sdcorejs/angular/components/editor';
 export * from '@sdcorejs/angular/components/splitter';
 export * from '@sdcorejs/angular/components/preview';

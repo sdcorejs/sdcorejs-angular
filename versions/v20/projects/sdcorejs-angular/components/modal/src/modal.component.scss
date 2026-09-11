@@ -66,8 +66,7 @@
 }
 
 .sd-modal-header {
-  min-height: 64px;
-  padding: 16px;
+  min-height: 56px;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -175,7 +174,6 @@
 
 .sd-modal-footer {
   min-height: 56px;
-  padding: 16px;
   border-top: 1px solid var(--sd-modal-border);
   display: flex;
   align-items: center;
@@ -213,7 +211,8 @@
 .sd-modal-header,
 .sd-modal-footer {
   flex-shrink: 0;
-  padding: 20px 24px;
+  padding: 12px 16px;
+  background: var(--sd-white, #fff);
 }
 .sd-modal-title {
   font-size: 18px;
@@ -222,16 +221,12 @@
   overflow-wrap: anywhere;
 }
 .sd-modal-body {
-  padding: 0 24px 20px;
+  padding: 12px 16px;
   box-sizing: border-box;
 }
 @media (max-width: 600px) {
   .sd-modal-header {
-    padding: 16px;
     gap: 8px;
-  }
-  .sd-modal-body {
-    padding: 0 16px 16px;
   }
   .sd-modal-footer {
     padding: 12px 16px max(12px, env(safe-area-inset-bottom));

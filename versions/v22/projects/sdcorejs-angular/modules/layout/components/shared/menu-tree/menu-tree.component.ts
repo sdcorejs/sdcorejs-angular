@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, input, output, signal } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, input, model, output, signal } from '@angular/core';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { SdLayoutMenu, SdLayoutRootMenu, getMenuStableKey, searchMenuLeaves } from '../../../services';
@@ -15,6 +16,8 @@ interface SdLayoutMenuTreeNode {
   showIcon: boolean;
   isRoot: boolean;
   isGroup: boolean;
+  isCollapsible: boolean;
+  isExpanded: boolean;
   isActive: boolean;
   isPinned: boolean;
   isPinVisible: boolean;
@@ -25,7 +28,7 @@ interface SdLayoutMenuTreeNode {
 @Component({
   selector: 'sd-layout-menu-tree',
   standalone: true,
-  imports: [SdIcon],
+  imports: [SdIcon, NgTemplateOutlet],
   templateUrl: './menu-tree.component.html',
   styleUrl: './menu-tree.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -44,6 +47,8 @@ export class SdLayoutMenuTreeComponent {
   pinVisibility = input<'hover' | 'always'>('hover');
   /** V3 hierarchy and flat shortcuts are opt-in; V2/mobile retain the default presentation. */
   presentation = input<'default' | 'hierarchy' | 'shortcuts'>('default');
+  collapsible = input(false);
+  collapsedGroupKeys = model<string[]>([]);
   structured = computed(() => this.presentation() !== 'default');
   iconFontSet = computed(() => (this.structured() ? ('material-icons-outlined' as const) : undefined));
   navigate = output<SdLayoutRootMenu>();
@@ -56,6 +61,8 @@ export class SdLayoutMenuTreeComponent {
     const query = this.query().trim();
     const structured = this.structured();
     const hierarchy = this.presentation() === 'hierarchy' && !query;
+    const collapsible = this.collapsible() && !query;
+    const collapsedKeys = new Set(this.collapsedGroupKeys());
     const menus = query ? searchMenuLeaves(this.menus(), query) : this.menus();
     // Nhiều menu cùng khớp route thì chỉ path sát nhất sáng: ở '/appointment/cs' thì '/appointment' không sáng nữa
     const activeMenuPath = resolveActiveMenuPath(menus, this.activePath());
@@ -69,6 +76,7 @@ export class SdLayoutMenuTreeComponent {
         const path = 'path' in menu ? menu.path : '';
         const title = menu.title ?? menu.tooltipTitle ?? '';
         const isPinned = pinnedKeys.has(key);
+        const isExpanded = !collapsible || !collapsedKeys.has(key);
         nodes.push({
           menu,
           key,
@@ -80,6 +88,8 @@ export class SdLayoutMenuTreeComponent {
           showIcon: !structured || (hierarchy && depth === 0),
           isRoot: depth === 0 && (!structured || hierarchy),
           isGroup,
+          isCollapsible: isGroup && collapsible,
+          isExpanded,
           isActive: !!path && path === activeMenuPath,
           isPinned,
           isPinVisible: alwaysShowPin || isPinned || hoveredPinKey === key,
@@ -88,7 +98,7 @@ export class SdLayoutMenuTreeComponent {
           // quyết định vị trí. Tính trong `nodes` computed nên tự cập nhật khi đổi ngôn ngữ.
           pinLabel: this.#i18n.t(isPinned ? 'core.module.layout.menu.unpin' : 'core.module.layout.menu.pin', { title }),
         });
-        if (isGroup && 'children' in menu) append(menu.children ?? [], depth + 1, [...ancestors, menu.title ?? key]);
+        if (isGroup && isExpanded && 'children' in menu) append(menu.children ?? [], depth + 1, [...ancestors, menu.title ?? key]);
       }
     };
 
@@ -102,6 +112,10 @@ export class SdLayoutMenuTreeComponent {
 
   onNavigate(menu: SdLayoutMenu): void {
     if ('path' in menu) this.navigate.emit(menu);
+  }
+
+  onToggleGroup(key: string): void {
+    this.collapsedGroupKeys.update(keys => (keys.includes(key) ? keys.filter(value => value !== key) : [...keys, key]));
   }
 
   onTogglePinned(event: MouseEvent, menu: SdLayoutMenu): void {

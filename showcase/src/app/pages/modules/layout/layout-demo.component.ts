@@ -384,7 +384,7 @@ export class LayoutVersionPreviewComponent {
         <demo-section
           data-layout-showcase="3"
           heading="Sidebar V3 - Collapsible"
-          note="Root icons, text-only nested branches and a compact search field on desktop; shared pinned and recent menus."
+          note="Bấm từng nhóm menu để đóng/mở các mục con trên desktop. Tìm kiếm vẫn thấy mục trong nhóm đã đóng; thu gọn cả sidebar giữ trạng thái từng nhóm."
           [props]="[
             { name: 'version', value: '3' },
             { name: 'mobileBreakpoint', value: '900' },

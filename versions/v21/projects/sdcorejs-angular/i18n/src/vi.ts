@@ -419,6 +419,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.form-builder.group-children': 'Thành phần con',
   'core.component.form-builder.group-icon': 'Icon',
   'core.component.form-builder.group-accent-color': 'Màu nhấn',
+  'core.component.form-builder.collapsible': 'Cho phép thu gọn/mở rộng',
   'core.component.form-builder.group-no-children': 'Chưa có trường nào. Thêm hoặc kéo trường vào group này.',
   'core.component.form-builder.break': 'Ngắt dòng',
 

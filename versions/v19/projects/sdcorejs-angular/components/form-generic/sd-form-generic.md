@@ -113,6 +113,25 @@ interface SdFormGenericComponentBase {
 
 `SdFormGenericGroup` is not a field — it is a titled container with its own `layout`, a nested `components` array, and required `properties.{icon, color}`. Groups do not nest: the builder hides `group` from the palette while you are editing one.
 
+Groups support `properties.hidden`, `hiddenWhenExpression` and `visibleWhenExpression` for visibility. They have **no disabled-when option** (`disabledWhenExpression`) or required rule; configure those on individual child fields. Legacy group-level disable conditions are ignored by the renderer.
+
+| Group property | Type | Default | Behaviour |
+| --- | --- | --- | --- |
+| `properties.collapsible` | `boolean` | `false` | Allows expanding/collapsing the group in builder preview and `<sd-form-render>`, including viewed mode. Uses the same `collapsible` property as `<sd-section>`. |
+
+```ts
+const group: SdFormGenericGroup = {
+  id: 'details',
+  type: 'group',
+  label: 'Details',
+  layout: { columns: '12' },
+  properties: { icon: 'category', color: 'primary', collapsible: true },
+  components: [/* child fields */],
+};
+```
+
+Groups start expanded. Collapsing changes presentation only: child controls keep their values, touched state and validation. The expanded/collapsed state belongs to the rendered section instance and is not saved to the schema. The design canvas remains available for editing group contents through Details.
+
 `SdFormGenericValues` is a convenience alias for `SdFormGenericRadio | SdFormGenericSelect | SdFormGenericChecklist`. Their inline `values` entries are `SdFormGenericSelectionStaticItem` — `{ value: string; label: string }` (note `label`, not `display`; the `display` spelling belongs to `SdFormGenericSelectionItem`, which is what a `valuesKey` lookup returns).
 
 ### Expressions

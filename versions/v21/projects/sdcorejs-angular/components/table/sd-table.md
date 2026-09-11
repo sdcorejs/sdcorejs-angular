@@ -401,9 +401,11 @@ Client-side matching sống ở `matchesColumnFilter` (`services/table-local/tab
 
 Command icons default to Material Symbols Outlined (`material-icons-outlined`). Child command menu items use the same default unless `child.fontSet` is provided. Use icon + title for child commands so menu rows align consistently.
 
+Desktop command `children`, selection action `children` and the selection toolbar More menu use a compact CDK overlay menu: white background, 8px corners, 36px minimum rows, 18px icons and a 4px gap from the trigger. Touch/narrow-screen menu rows remain at least 44px. Menus escape clipped table cells, support arrow-key/typeahead navigation and restore trigger focus on Escape or selection. Existing child visibility, disabled state, custom HTML and callbacks remain supported; no consumer configuration changes are required.
+
 Desktop row commands keep their touch targets within each 24px button so adjacent actions and menu triggers remain independently clickable. Mobile action controls retain their existing sizing.
 
-Disabled desktop row-command icons inherit the button's disabled color from the Material theme, making them visibly muted instead of retaining the active icon color. Child menu items retain Material's disabled opacity.
+Disabled desktop row-command icons inherit the button's disabled color from the Material theme, making them visibly muted instead of retaining the active icon color. Disabled child menu items are muted and cannot be activated.
 
 ```ts
 command: {

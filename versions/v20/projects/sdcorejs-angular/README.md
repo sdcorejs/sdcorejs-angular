@@ -91,18 +91,20 @@ Replace the timer with your typed service call and reset `saving` in a `finally`
 
 | Area              | Representative APIs                                                                                                             |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| UI components     | Navigation/data state, PDF preview, job progress, audit diff, modals, drawers, tabs, charts, editors, and document tooling      |
+| UI components     | Navigation/data state, PDF preview, job progress, audit diff, modals, drawers, tabs, editors, and document tooling              |
 | Data and workflow | Local/server tables, entity/tree pickers, query builders, unsaved-change guards, background tasks, upload, and Excel import     |
 | Form controls     | Text/mask, number, time/time range, date/date range, datetime, select, autocomplete, checkbox, radio, switch, chip, and color   |
 | Services          | Typed API/retry/cancel, ref-counted loading, graph-safe persistence/cache/storage, viewport signals, notifications, and exports |
 | Portal modules    | Auth, Keycloak, permission, layout, and icon modules                                                                            |
 | Localization      | Built-in `vi`, `en`, `ja`, `ko`, and `zh` catalogs, plus a synchronous custom-catalog provider                                  |
 
+Charting libraries are selected, installed, and configured by the consuming application. Core UI does not bundle a chart engine; `sd-org-chart` remains available for organizational hierarchies.
+
 The [live showcase](https://sdcorejs.github.io/sdcorejs-angular/) demonstrates components, forms, and services. The [latest API manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json) lists every published reference document without duplicating the full API here.
 
 ## Standalone and subpath imports
 
-Prefer public leaf entry points so dependencies stay explicit and unused entry points can be removed from the application graph. The package declares `sideEffects: false`.
+Prefer public leaf entry points so dependencies stay explicit and unused entry points can be removed from the application graph. Stylesheets and editor registration entry points are retained as side effects.
 
 ```ts
 import { SdButton } from '@sdcorejs/angular/components/button';

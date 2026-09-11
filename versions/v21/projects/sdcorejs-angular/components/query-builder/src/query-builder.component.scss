@@ -87,9 +87,6 @@ $node-gap: 12px;
   position: relative;
   z-index: 1;
 
-  &.is-open {
-    z-index: 1000;
-  }
 }
 
 // AND / OR segmented toggle — active side uses primary.
@@ -167,16 +164,11 @@ $node-gap: 12px;
 }
 
 .qb-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  margin-top: 4px;
   background: #fff;
   border: 1px solid $border;
   box-shadow: 0 4px 12px rgba(16, 24, 40, 0.12);
   border-radius: 6px;
   min-width: 150px;
-  z-index: 100;
   overflow: hidden;
 
   button {

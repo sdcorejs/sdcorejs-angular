@@ -45,7 +45,6 @@
     "@lucide/angular": "^1.22.0",
     "@ckeditor/ckeditor5-angular": "11.1.2",
     "ckeditor5": "48.0.0",
-    "chart.js": "^4.5.1",
     "date-fns": "^3.6.0",
     "exceljs": "^4.4.0",
     "keycloak-js": "^26.0.0",
@@ -56,7 +55,6 @@
   "sideEffects": [
     "**/*.css",
     "**/*.scss",
-    "./fesm2022/sdcorejs-angular-components-chart.mjs",
     "./fesm2022/sdcorejs-angular-components-code-editor.mjs",
     "./fesm2022/sdcorejs-angular-components-ckeditor-styles.mjs"
   ]

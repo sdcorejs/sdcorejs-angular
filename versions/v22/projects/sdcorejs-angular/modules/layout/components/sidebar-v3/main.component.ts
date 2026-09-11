@@ -9,6 +9,7 @@ import { SdLayoutMenuTreeComponent } from '../shared/menu-tree/menu-tree.compone
 import { SdLayoutSearchFieldComponent } from '../shared/search-field/search-field.component';
 import { SdLayoutUserMenuComponent } from '../shared/user-menu/user-menu.component';
 import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import { containsMenuPath, resolveActiveMenuPath } from '../../utils';
 
 @Component({
   selector: 'sd-sidebar-v3',
@@ -28,6 +29,7 @@ export class SdSidebarV3 {
   userInfo = input.required<SdLayoutUserInfo>();
   sidebar = input.required<SidebarConfigurationV3>();
   isCollapsed = signal(false);
+  protected readonly collapsedGroupKeys = signal<string[]>([]);
   searchText = signal('');
   activePath = signal(this.#router.url.split(/[?#]/, 1)[0] ?? '');
   searchResults = computed<SdLayoutRootMenu[]>(() => searchMenuLeaves(this.menus(), this.searchText()));
@@ -55,6 +57,23 @@ export class SdSidebarV3 {
     this.#router.events.pipe(takeUntilDestroyed(this.#destroyRef)).subscribe(event => {
       if (event instanceof NavigationEnd) this.activePath.set(event.urlAfterRedirects.split(/[?#]/, 1)[0] ?? '');
     });
+    effect(() => {
+      const menus = this.menus();
+      const activeMenuPath = resolveActiveMenuPath(menus, this.activePath());
+      if (!activeMenuPath) return;
+      const activeGroupKeys = new Set<string>();
+      const visit = (items: SdLayoutMenu[], ancestors: string[]): void => {
+        for (const menu of items) {
+          if (!('children' in menu) || !containsMenuPath(menu, activeMenuPath)) continue;
+          const key = getMenuStableKey(menu, ancestors);
+          activeGroupKeys.add(key);
+          visit(menu.children ?? [], [...ancestors, menu.title ?? key]);
+        }
+      };
+      visit(menus, []);
+      // why: Chỉ mở nhánh khi route/menu đổi; người dùng vẫn được đóng nhánh đang active.
+      untracked(() => this.collapsedGroupKeys.update(keys => keys.filter(key => !activeGroupKeys.has(key))));
+    });
   }
 
   toggleCollapsed(): void {
@@ -66,6 +85,7 @@ export class SdSidebarV3 {
     if ('path' in menu) this.navigateMenu(menu);
     else {
       this.isCollapsed.set(false);
+      this.collapsedGroupKeys.update(keys => keys.filter(key => key !== getMenuStableKey(menu)));
       this.#navigationState.patchVersionState(3, { collapsed: false });
     }
   }
