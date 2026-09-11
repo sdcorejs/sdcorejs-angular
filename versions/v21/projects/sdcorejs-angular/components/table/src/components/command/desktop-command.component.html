@@ -53,8 +53,7 @@
               [cdkMenuItemDisabled]="_childMeta.disabled"
               [cdkMenuitemTypeaheadLabel]="_childMeta.title"
               [style.color]="childCommand.color ? 'var(--sd-' + childCommand.color + ')' : null"
-              (cdkMenuItemTriggered)="childCommand.click(_item.data)"
-              [disabled]="_childMeta.disabled">
+              (cdkMenuItemTriggered)="childCommand.click(_item.data)">
               @if (_childMeta.htmlTemplate) {
                 <div [innerHTML]="_childMeta.htmlTemplate"></div>
               } @else {

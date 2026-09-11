@@ -35,7 +35,7 @@
     overflow-wrap: anywhere;
     cursor: pointer;
 
-    &:hover:not(:disabled),
+    &:hover:not(:disabled):not([aria-disabled='true']),
     &:focus-visible {
       background: var(--sd-black100, #f3f3f3);
     }
@@ -45,7 +45,8 @@
       outline-offset: -2px;
     }
 
-    &:disabled {
+    &:disabled,
+    &[aria-disabled='true'] {
       opacity: 0.45;
       cursor: default;
     }

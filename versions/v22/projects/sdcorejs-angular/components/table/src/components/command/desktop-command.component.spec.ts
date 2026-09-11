@@ -91,8 +91,15 @@ describe('DesktopCommand', () => {
     const menu = document.body.querySelector('[role="menu"]') as HTMLElement;
     expect(menu.textContent).not.toContain('Hidden');
     const items = Array.from(menu.querySelectorAll<HTMLButtonElement>('button'));
+    expect(items[0].getAttribute('aria-disabled')).toBe('true');
+    expect(getComputedStyle(items[0]).opacity).toBe('0.45');
+    expect(menu.contains(document.activeElement)).toBeTrue();
     items[0].click();
+    items[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true }));
+    items[0].dispatchEvent(new KeyboardEvent('keydown', { key: ' ', keyCode: 32, bubbles: true }));
     expect(clicked).not.toHaveBeenCalled();
+    // CDK 22 focuses disabled menu items; earlier CDK versions skip them. Both must reach the enabled action.
+    document.activeElement!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', keyCode: 40, bubbles: true }));
     expect(document.activeElement).toBe(items[1]);
     const escape = new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, bubbles: true });
     items[1].dispatchEvent(escape);
