@@ -26,8 +26,8 @@ import { MatPaginator, MatPaginatorIntl, MatPaginatorModule } from '@angular/mat
 import { MatSort, MatSortable, MatSortModule, SortDirection } from '@angular/material/sort';
 import { MatTable, MatTableModule } from '@angular/material/table';
 import { SdExcelColumn, SdNotifyService } from '@sdcorejs/angular/services';
-import { Subject, Subscription, firstValueFrom, isObservable } from 'rxjs';
-import { debounceTime, map, startWith, switchMap, tap } from 'rxjs/operators';
+import { EMPTY, Subject, Subscription, firstValueFrom, isObservable, timer } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { SdTableCellDefDirective } from './directives/sd-table-cell-def.directive';
 import { SdTableExpandDefDirective } from './directives/sd-table-expand-def.directive';
 import { SdTableGroupDefDirective, SdTableGroupDefContext } from './directives/sd-table-group-def.directive';
@@ -83,7 +83,7 @@ import { SelectorActionComponent } from './components/selector-action/selector-a
 import { DEFAULT_TABLE_CONFIG, ISdTableConfiguration, SD_TABLE_CONFIGURATION } from './configurations';
 import { SdColumnResizeDirective, StickyShadowDirective } from './directives';
 import { SdTableItem } from './models/table-item.model';
-import { ConfiguredTableResult } from './models/table-option-config.model';
+import { ConfiguredTable, ConfiguredTableResult } from './models/table-option-config.model';
 import { SdGroupPipe } from './pipes/sd-group.pipe';
 import { SdTreePipe } from './pipes/sd-tree.pipe';
 import { SdTableExportContext, TableExportService, TableFormatService } from './services';
@@ -167,6 +167,13 @@ interface ServerReadRequest<T> {
   paging: Parameters<Extract<SdTableOption<T>, { type: 'server' }>['items']>[1];
   option: Extract<SdTableOption<T>, { type: 'server' }>;
   valid: () => boolean;
+}
+
+interface ScheduledTableRead {
+  force: boolean;
+  revision: number;
+  delay: number;
+  source: 'filter' | 'read';
 }
 
 @Injectable()
@@ -482,7 +489,12 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   #filterRegisterSubscription?: Subscription;
   #optionInstance?: SdTableOption<T>;
   #optionRevision = 0;
-  #reload = new Subject<{ force: boolean; revision: number }>();
+  #configurationRevision = 0;
+  #configurationReady = false;
+  #hydration?: Promise<void>;
+  #retryConfiguration?: () => Promise<void>;
+  #pendingReload?: ScheduledTableRead;
+  #reload = new Subject<ScheduledTableRead | undefined>();
   #loadCompleted = false;
 
   cacheValues: Record<string, unknown[]> = {};
@@ -532,29 +544,14 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
           const storage = this.#configService.init(initOpt);
           this.#configurationSubscription?.unsubscribe();
-          this.#configurationSubscription = storage.observer.pipe(startWith(storage.subject.getValue())).subscribe(() => {
-            if (optionRevision !== this.#optionRevision) return;
-            const configurationResult = this.#configService.loadConfigurationResult(initOpt, storage.get());
-            const displayColumns = configurationResult.displayedColumns || [];
-            this.#ref.detectChanges();
-            this.#tableFormatService
-              .loadValues(
-                initOpt.columns.filter(column => displayColumns.includes(column.field)),
-                this.cacheValues,
-                this.#cacheObjValues
-              )
-              .then(() => {
-                if (optionRevision !== this.#optionRevision) return;
-                this.configuration.set(configurationResult);
-                this.#loadFilterRegister();
-                if (this.filterRegister) {
-                  this.#requestReload(true);
-                }
-              })
-              .finally(() => {
-                if (optionRevision !== this.#optionRevision) return;
-                this.#ref.detectChanges();
-              });
+          this.#configurationSubscription = storage.observer.subscribe(configuration => {
+            const configurationRevision = ++this.#configurationRevision;
+            const valid = () =>
+              !this.#destroyed &&
+              optionRevision === this.#optionRevision &&
+              configurationRevision === this.#configurationRevision &&
+              this.option() === option;
+            this.#hydration = this.#hydrateConfiguration(initOpt, configuration, valid);
           });
           this.#subscription.add(this.#configurationSubscription);
         });
@@ -639,19 +636,24 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     this.#subscription.add(
       this.#reload
         .pipe(
-          debounceTime(200),
-          switchMap(async data => {
-            if (data.revision !== this.#optionRevision || !this.filterRegister) return undefined;
-            const filterInfo = this.getFilterRequest();
-            const result = await this.#load(filterInfo, !this.#loadCompleted || data.force);
-            if (data.revision !== this.#optionRevision || !result) return undefined;
-            // why: a blocked initial local read must still load its source after required values arrive.
-            if (quickSearchValid(this.quickSearchOption(), filterInfo.quickSearch)) this.#loadCompleted = true;
-            return {
-              result,
-              revision: data.revision,
-            };
-          })
+          // why: mọi ý định đọc dùng chung lịch; filter mới hoặc refresh hủy được cả initial read đang chờ.
+          switchMap(data =>
+            data
+              ? timer(data.delay).pipe(
+                  switchMap(async () => {
+                    if (data !== this.#pendingReload || data.revision !== this.#optionRevision || !this.#configurationReady)
+                      return undefined;
+                    this.#pendingReload = undefined;
+                    const filterInfo = this.getFilterRequest();
+                    const result = await this.#load(filterInfo, !this.#loadCompleted || data.force);
+                    if (data.revision !== this.#optionRevision || !result) return undefined;
+                    // why: a blocked initial local read must still load its source after required values arrive.
+                    if (quickSearchValid(this.quickSearchOption(), filterInfo.quickSearch)) this.#loadCompleted = true;
+                    return { result, revision: data.revision };
+                  })
+                )
+              : EMPTY
+          )
         )
         .subscribe(loadResult => {
           if (!loadResult || loadResult.revision !== this.#optionRevision) return;
@@ -662,6 +664,8 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
   ngOnDestroy() {
     this.#destroyed = true;
+    this.#cancelReload();
+    this.#retryConfiguration = undefined;
     this.#read.invalidate();
     this.#failedRead = undefined;
     this.#subscription.unsubscribe();
@@ -683,14 +687,25 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     };
   };
 
-  #requestReload = (force: boolean) => {
+  #cancelReload = () => {
+    this.#pendingReload = undefined;
+    this.#reload.next(undefined);
+  };
+
+  #requestReload = (force: boolean, delay = 200, source: 'filter' | 'read' = 'read') => {
+    if (this.#destroyed || !this.#configurationReady) return;
     this.#read.invalidate();
     this.#failedRead = undefined;
     this.loading.set(false);
-    this.#reload.next({ force, revision: this.#optionRevision });
+    this.#pendingReload = { force: force || !!this.#pendingReload?.force, revision: this.#optionRevision, delay, source };
+    this.#reload.next(this.#pendingReload);
   };
 
   #resetStateForNewOption = () => {
+    this.#configurationReady = false;
+    this.#cancelReload();
+    this.#hydration = undefined;
+    this.#retryConfiguration = undefined;
     this.#read.invalidate();
     this.#failedRead = undefined;
     this.#optionRevision += 1;
@@ -774,6 +789,45 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     return option;
   };
 
+  #hydrateConfiguration = async (option: SdTableOption, configuration: ConfiguredTable, valid: () => boolean): Promise<void> => {
+    if (!valid()) return;
+    this.#configurationReady = false;
+    this.#cancelReload();
+    this.#failedRead = undefined;
+    this.#retryConfiguration = undefined;
+    this.#read.invalidate();
+    this.loading.set(false);
+    try {
+      const result = this.#configService.loadConfigurationResult(option, configuration);
+      // why: lookup cũ có thể hoàn tất sau cấu hình/scope mới; chỉ commit cache của lần hydrate còn hiệu lực.
+      const values = cloneReadRequest(this.cacheValues);
+      const objectValues = cloneReadRequest(this.#cacheObjValues);
+      await this.#tableFormatService.loadValues(
+        option.columns.filter(column => result.displayedColumns.includes(column.field)),
+        values,
+        objectValues
+      );
+      if (!valid()) return;
+      this.cacheValues = values;
+      this.#cacheObjValues = objectValues;
+      this.configuration.set(result);
+      this.#loadFilterRegister();
+      // why: form/required controls phải nhận snapshot đã hydrate trước khi cho phép đọc.
+      this.#ref.detectChanges();
+      if (!valid()) return;
+      this.#configurationReady = true;
+      this.#requestReload(true);
+    } catch (error) {
+      if (!valid()) return;
+      this.#retryConfiguration = () => (this.#hydration = this.#hydrateConfiguration(option, configuration, valid));
+      const revision = this.#read.begin(valid);
+      this.#read.fail(revision, error);
+      this.loading.set(false);
+    } finally {
+      if (valid()) this.#ref.markForCheck();
+    }
+  };
+
   #loadFilterRegister = () => {
     const opt = this.tableOption();
     if (!opt || this.filterRegister) return;
@@ -788,33 +842,21 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       force: true,
     });
 
-    const { columnOperator, columnFilter } = this.filterRegister.value.get();
-    this.columnOperator = columnOperator || {};
-    this.#syncColumnFilterInPlace(columnFilter || {});
-
     this.#filterRegisterSubscription?.unsubscribe();
-    this.#filterRegisterSubscription = this.filterRegister.value.observer
-      .pipe(
-        tap(value => this.quickSearchValue.set(value.quickSearch || { term: '', filters: {} })),
-        debounceTime(500),
-        map(filterValue => {
-          const { columnOperator, columnFilter, notReload } = filterValue;
-          this.columnOperator = columnOperator || {};
-          // Sync IN PLACE — không gán object clone mới. column-filter chia sẻ
-          // reference this.columnFilter qua [columnFilter] input; nếu gán clone
-          // mới, cf giữ ref cũ (do OnPush + reload async lag) → ghi clear vào
-          // object orphan → giá trị cũ persist. Giữ ref ổn định để cf + table
-          // luôn trỏ cùng 1 object.
-          this.#syncColumnFilterInPlace(columnFilter || {});
-          if (!notReload) {
-            if (this.paginator()) {
-              this.paginator()!.pageIndex = 0;
-            }
-            this.#requestReload(false);
-          }
-        })
-      )
-      .subscribe();
+    this.#filterRegisterSubscription = this.filterRegister.value.observer.subscribe(value => {
+      this.quickSearchValue.set(value.quickSearch || { term: '', filters: {} });
+      this.columnOperator = value.columnOperator || {};
+      this.#syncColumnFilterInPlace(value.columnFilter || {});
+      // why: snapshot ban đầu chỉ hydrate state; cấu hình sở hữu initial read sau khi lookup và form sẵn sàng.
+      if (!this.#configurationReady) return;
+      if (value.notReload) {
+        if (this.#pendingReload?.source === 'filter' && !this.#pendingReload.force) this.#cancelReload();
+        return;
+      }
+      if (this.paginator()) this.paginator()!.pageIndex = 0;
+      // Giữ thời gian chờ tương tác cũ: filter 500ms + reload 200ms, trên cùng một lịch có thể hủy.
+      this.#requestReload(false, 700, 'filter');
+    });
     this.#subscription.add(this.#filterRegisterSubscription);
     this.#filterRegisterRevision.update(value => value + 1);
   };
@@ -1032,8 +1074,13 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     }
   };
 
-  /** Retry only the still-valid failed server request, without resetting filters or paging. */
+  /** Retry current hydration or the still-valid failed server request, without resetting filters or paging. */
   retryRead = async (): Promise<void> => {
+    if (this.#destroyed) return;
+    if (this.#retryConfiguration) {
+      await this.#retryConfiguration();
+      return;
+    }
     const request = this.#failedRead;
     if (!request || this.readState().status !== 'error') return;
     if (!request.valid()) {
@@ -1109,12 +1156,31 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   };
 
   reload = async (force = true, scrollTop = true) => {
+    if (this.#destroyed) return;
+    const optionRevision = this.#optionRevision;
+    const sourceOption = this.option();
+    if (!this.#configurationReady) {
+      if (this.#retryConfiguration) await this.#retryConfiguration();
+      while (
+        !this.#configurationReady &&
+        this.#hydration &&
+        !this.#retryConfiguration &&
+        !this.#destroyed &&
+        optionRevision === this.#optionRevision &&
+        sourceOption === this.option()
+      )
+        await this.#hydration;
+    }
+    if (this.#destroyed || optionRevision !== this.#optionRevision || sourceOption !== this.option() || !this.#configurationReady) return;
+    this.#cancelReload();
+    const columnFilter = { ...this.columnFilter };
+    const columnOperator = { ...this.columnOperator };
     this.externalFilter()?.updateFilter?.();
     // Commit pending column filter value (input/input-number gõ dở chưa enter/blur)
     // vào filterRegister trước khi đọc filter request — tránh storage stale.
     this.filterRegister?.value.set({
-      columnOperator: this.columnOperator || {},
-      columnFilter: this.columnFilter,
+      columnOperator,
+      columnFilter,
       notReload: true,
     });
     const data = await this.#load(this.getFilterRequest(), force);
@@ -1285,10 +1351,12 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   };
 
   onFilterChange = () => {
+    const columnFilter = { ...this.columnFilter };
+    const columnOperator = { ...this.columnOperator };
     this.externalFilter()?.updateFilter?.();
     this.filterRegister.value.set({
-      columnOperator: this.columnOperator || {},
-      columnFilter: this.columnFilter,
+      columnOperator,
+      columnFilter,
     });
   };
 
