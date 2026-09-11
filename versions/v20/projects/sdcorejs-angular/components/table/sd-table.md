@@ -1,5 +1,27 @@
 ﻿# `<sd-table>`
 
+## Khởi tạo và lịch đọc
+
+Table chờ snapshot cấu hình, lookup của các cột hiển thị và filter mặc định/đã lưu
+hydrate xong trước khi phát **một initial read**. Giá trị từ URL được truyền qua
+default hoặc `filterRegister.value.set(...)` được đưa vào request khi áp dụng;
+Core không tự đọc URL. Snapshot đầu của storage chỉ khởi tạo state, không phải
+một thao tác đổi filter. Cấu hình hoặc lookup đến bất đồng bộ cũng theo cùng
+lifecycle; kết quả cũ không được ghi vào cấu hình/cache khi option đổi hoặc table
+bị destroy.
+
+Các thao tác tự động dùng chung một lịch đọc có thể hủy: paging/sort/cấu hình chờ
+200 ms; thay đổi filter giữ tổng thời gian chờ cũ 500 + 200 ms. Thay đổi liên tiếp
+thay thế lịch đang chờ. `notReload` chỉ commit giá trị; manual external filter vẫn
+chờ Apply. Required external filter/tenant chưa hợp lệ tiếp tục chặn loader.
+
+`reload()` hủy lịch tự động đang chờ và đọc lại chủ động, kể cả payload giống lần
+trước. Refresh trong lúc lookup khởi tạo đang chạy chờ hydrate rồi dùng chính lần
+đọc đó. Lỗi lookup hiển thị error state/Retry kể cả trước khi có cấu hình, tuân theo
+`hideReadError` và custom error template; `retryRead()` thực hiện hydrate lại.
+Lỗi đọc paging vẫn retry đúng snapshot thất bại như bên dưới. Không cần bật
+auto-cache/dedupe cho POST để bảo đảm một initial read.
+
 ## Trạng thái đọc server và retry
 
 `readState()` là signal readonly `SdReadState`; `(sdReadStateChange)` phát snapshot

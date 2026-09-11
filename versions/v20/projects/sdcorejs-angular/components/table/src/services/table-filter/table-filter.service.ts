@@ -3,7 +3,7 @@ import { DestroyRef, Injectable, inject } from '@angular/core';
 import { SdStorageService, SdStorageWithDefault } from '@sdcorejs/angular/services';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { Operator } from '@sdcorejs/utils/models';
-import { map, startWith } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 import { SdTableFilterDefDirective } from '../../directives/sd-table-filter-def.directive';
 import { SdTableColumnAnyRow } from '../../models/table-column.model';
 import {
@@ -151,7 +151,6 @@ export class SdTableFilterService {
             filterConfiguration.set(this.#defaultConfiguration(args));
           },
           observer: filterConfiguration.observer.pipe(
-            startWith(filterConfiguration.get()),
             // Sử dụng mặc định nếu bị reset
             map(configuration => configuration || this.#defaultConfiguration(args))
           ),
@@ -191,7 +190,6 @@ export class SdTableFilterService {
             activeFilterValue.set(this.#defaultValue(args));
           },
           observer: activeFilterValue.observer.pipe(
-            startWith(activeFilterValue.get()),
             // Sử dụng mặc định nếu bị reset
             map(value => value || this.#defaultValue(args))
           ),

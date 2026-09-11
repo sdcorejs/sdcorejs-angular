@@ -4,6 +4,9 @@
 @let _configuration = configuration();
 @let _tableOption = tableOption()!;
 @let _loading = loading();
+@let _readState = readState();
+@let _hideReadError = hideReadError();
+@let _dataStateTemplate = dataStateTemplate();
 @let _items = items();
 @let _total = total();
 @let _isFiltered = isFiltered();
@@ -538,13 +541,12 @@
             }
           </table>
         }
-        @let _readState = readState();
-        @if ((_readState.status === 'error' && !hideReadError()) || _readState.status === 'empty') {
+        @if ((_readState.status === 'error' && !_hideReadError) || _readState.status === 'empty') {
           <sd-data-state
             [state]="_readState.status === 'error' ? 'error' : 'empty'"
             [retryable]="_readState.status === 'error'"
             (sdRetry)="retryRead()">
-            @if (dataStateTemplate(); as custom) {
+            @if (_dataStateTemplate; as custom) {
               <ng-template sdDataStateTemplate let-current let-retry="retry" let-action="action">
                 <ng-container
                   [ngTemplateOutlet]="custom.template"
@@ -552,7 +554,7 @@
               </ng-template>
             }
           </sd-data-state>
-        } @else if (!_loading && loadError() && !hideReadError()) {
+        } @else if (!_loading && loadError() && !_hideReadError) {
           <div class="c-no-data-row" role="alert">
             <p>{{ 'core.component.table.error-occurred' | sdTranslate }}</p>
             <sd-button [title]="'core.component.table.reload' | sdTranslate" (click)="reload()"></sd-button>
@@ -760,4 +762,15 @@
       [cacheValues]="cacheValues">
     </mobile-filter>
   }
+} @else if (_readState.status === 'error' && !_hideReadError) {
+  <!-- why: lookup có thể lỗi trước khi có configuration; vẫn phải có lối retry và custom error template. -->
+  <sd-data-state state="error" [retryable]="true" (sdRetry)="retryRead()">
+    @if (_dataStateTemplate; as custom) {
+      <ng-template sdDataStateTemplate let-current let-retry="retry" let-action="action">
+        <ng-container
+          [ngTemplateOutlet]="custom.template"
+          [ngTemplateOutletContext]="{ $implicit: current, state: current, retry: retry, action: action }"></ng-container>
+      </ng-template>
+    }
+  </sd-data-state>
 }
