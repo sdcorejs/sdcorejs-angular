@@ -29,11 +29,13 @@ None.
 
 ## Behavior
 - `ngOnChanges` (fires before `ngOnInit`): if `sdHoverCopyDisabled` changes to `false` and no button exists yet, creates one; if it changes to `true`, removes the existing button from the DOM.
-- `ngOnInit`: if not disabled, creates a small `<button>` (with inline copy SVG) absolutely positioned at the right of the host (`top: 50%, right: 4px, translateY(-50%)`), initially `display: none`. Forces host to `position: relative`. Also appends a tooltip `<span>` seeded from `core.directive.hover-copy.tooltip`.
+- `ngOnInit`: if not disabled and no button exists, creates a small `<button>` (with inline copy SVG) absolutely positioned at the right of the host (`top: 50%, right: 4px, translateY(-50%)`), initially `display: none`. Forces host to `position: relative`. The tooltip starts hidden inside the button; creation is idempotent across `ngOnChanges` and `ngOnInit`.
 - `mouseenter` on host: shows the button (`display: block`); skipped when `sdHoverCopyDisabled` is `true` or the button was never created.
 - `mouseleave` on host: hides the button (`display: none`) and resets the tooltip to `core.directive.hover-copy.tooltip` with `opacity: 0`.
 - Clicking the copy button: calls `BrowserUtilities.copyToClipboard(String(copyText))`, swaps the tooltip to `core.directive.hover-copy.copied` with `opacity: 1`, then auto-hides after 1000 ms by resetting to `core.directive.hover-copy.tooltip` with `opacity: 0`.
-- **Teardown**: the 1000 ms auto-hide timer is stored and cleared via `DestroyRef.onDestroy`, and also when the button is removed (`sdHoverCopyDisabled` → `true`). A host destroyed within that second no longer runs the reset against a detached node, and clicking twice restarts the timer instead of leaving the first one pending.
+- The visible tooltip is portalled into the CDK overlay container on the document body, outside table row stacking contexts and ancestor overflow. It anchors above the copy button, falls back below near the viewport edge, and stays within an 8px viewport margin. It does not intercept pointer events.
+- Scrolling any ancestor hides the tooltip, including scroll containers without `cdkScrollable`. Mouse leave and the auto-hide timer also detach it from the overlay.
+- **Teardown**: disabling or destroying the host clears the timer, removes the scroll/click listeners, disposes the overlay and removes the copy button. A host destroyed within that second no longer runs the reset against a detached node, and clicking twice restarts the timer instead of leaving the first one pending.
 
 ## i18n
 Both tooltip strings resolve through `I18nService` at the moment they are shown, so they follow the
@@ -45,7 +47,6 @@ active language (VI `Sao chép` / `Đã sao chép`, EN `Copy` / `Copied`, …):
 | Confirmation after a copy | `core.directive.hover-copy.copied` |
 
 ## Known issues
-- **Double-button creation on first render**: because `ngOnChanges` fires before `ngOnInit`, both hooks create a copy button when `sdHoverCopyDisabled` starts as `false`. The directive's internal reference points to the second button (created in `ngOnInit`), so behaviour is correct, but an orphaned first button element stays in the host's DOM. Tracked as a follow-up to SM-2287.
 - **No `aria-label`**: the generated `<button>` has no accessible label. Screen-reader users cannot identify its purpose. A future fix should add `aria-label="Sao chép"` (or the localised equivalent) to the button element.
 
 ## Examples

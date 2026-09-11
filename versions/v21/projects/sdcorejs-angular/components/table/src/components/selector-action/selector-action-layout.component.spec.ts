@@ -58,6 +58,54 @@ describe('Table selection toolbar layout and overflow', () => {
     expect(clear).toHaveBeenCalledTimes(1);
   });
 
+  it('opens compact child actions from the native button and returns focus after Escape', async () => {
+    const group = { title: 'Reports', children: actions.slice(2) };
+    fixture.componentRef.setInput('tableOption', { type: 'local', columns: [], selector: { actions: [group] } });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const trigger = fixture.nativeElement.querySelector('.sd-selection-direct button') as HTMLButtonElement;
+    expect(trigger.getAttribute('aria-haspopup')).toBe('menu');
+    trigger.focus();
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', keyCode: 40, bubbles: true }));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const menu = TestBed.inject(OverlayContainer).getContainerElement().querySelector('[role="menu"]') as HTMLElement;
+    expect(menu.classList).toContain('sd-table-action-menu');
+    expect(trigger.getAttribute('aria-expanded')).toBe('true');
+    expect(trigger.getAttribute('aria-controls')).toBe(menu.id);
+    const first = menu.querySelector('button')!;
+    expect(first.getBoundingClientRect().height).toBeLessThanOrEqual(36);
+    expect(document.activeElement).toBe(first);
+    first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, bubbles: true }));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(document.activeElement).toBe(trigger);
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+    expect(TestBed.inject(OverlayContainer).getContainerElement().querySelector('[role="menu"]')).toBeNull();
+  });
+
+  it('dismisses child actions after running them and removes an open menu when selection clears', async () => {
+    const group = { title: 'Reports', children: actions.slice(2) };
+    fixture.componentRef.setInput('tableOption', { type: 'local', columns: [], selector: { actions: [group] } });
+    fixture.detectChanges();
+    const trigger = fixture.nativeElement.querySelector('.sd-selection-direct button') as HTMLButtonElement;
+    trigger.click();
+    fixture.detectChanges();
+    const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+    overlay.querySelector<HTMLButtonElement>('button')!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(callbacks[2]).toHaveBeenCalledOnceWith([{ id: 1 }, { id: 2 }]);
+    expect(overlay.querySelector('[role="menu"]')).toBeNull();
+    // SdButton throttles repeated pointer clicks; ArrowDown opens immediately.
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', keyCode: 40, bubbles: true }));
+    fixture.detectChanges();
+    expect(overlay.querySelector('[role="menu"]')).toBeTruthy();
+    fixture.componentRef.setInput('selectedTableItems', []);
+    fixture.detectChanges();
+    expect(overlay.querySelector('[role="menu"]')).toBeNull();
+  });
+
   it('keeps grouped overflow actions and excludes children unavailable to one selected row', () => {
     const group = { title: 'Reports', children: actions.slice(2) };
     fixture.componentRef.setInput('tableOption', { type: 'local', columns: [], selector: { actions: [...actions.slice(0, 2), group] } });

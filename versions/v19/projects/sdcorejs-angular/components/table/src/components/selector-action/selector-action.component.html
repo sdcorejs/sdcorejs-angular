@@ -1,4 +1,5 @@
 @let _autoId = autoId();
+@let _moreLabel = moreLabel();
 @let _direct = directActions();
 @let _overflow = overflowActions();
 @if (opened()) {
@@ -33,21 +34,30 @@
             [type]="action.type || 'light'"
             [fontSet]="action.fontSet"
             [title]="action.title"
-            [matMenuTriggerFor]="childrenMenu" />
-          <mat-menu #childrenMenu="matMenu">
-            @for (child of action.children; track $index) {
-              <button
-                mat-menu-item
-                type="button"
-                [attr.data-autoid]="_autoId ? _autoId + '-action-' + entry.index + '-' + $index : null"
-                (click)="onClickAction(child)">
-                @if (child.icon) {
-                  <sd-icon class="sd-selection-menu-icon" [fontSet]="child.fontSet" [name]="child.icon" [color]="child.color" />
-                }
-                <span>{{ child.title }}</span>
-              </button>
-            }
-          </mat-menu>
+            [sdTableMenuButton]="childrenMenu" />
+          <ng-template #childrenMenu>
+            <div
+              cdkMenu
+              tabindex="-1"
+              class="sd-table-action-menu"
+              [attr.aria-label]="action.title || _moreLabel"
+              (keydown.escape)="$event.stopPropagation()">
+              @for (child of action.children; track $index) {
+                <button
+                  cdkMenuItem
+                  type="button"
+                  [attr.data-autoid]="_autoId ? _autoId + '-action-' + entry.index + '-' + $index : null"
+                  [cdkMenuitemTypeaheadLabel]="child.title || ''"
+                  [style.color]="child.color ? 'var(--sd-' + child.color + ')' : null"
+                  (cdkMenuItemTriggered)="onClickAction(child)">
+                  @if (child.icon) {
+                    <sd-icon class="sd-table-action-menu__icon" [fontSet]="child.fontSet" [name]="child.icon" [color]="child.color" />
+                  }
+                  <span>{{ child.title }}</span>
+                </button>
+              }
+            </div>
+          </ng-template>
         }
       }
       @if (_overflow.length) {
@@ -55,44 +65,55 @@
           class="sd-selection-more"
           size="sm"
           prefixIcon="more_horiz"
-          [title]="moreLabel()"
+          [title]="_moreLabel"
           color="secondary"
           type="light"
           [autoId]="_autoId ? _autoId + '-more-actions' : null"
-          [matMenuTriggerFor]="moreMenu" />
-        <mat-menu #moreMenu="matMenu">
-          @for (entry of _overflow; track entry.index) {
-            @let action = entry.action;
-            @if (action.variant === 'normal') {
-              <button
-                mat-menu-item
-                type="button"
-                [attr.data-autoid]="_autoId ? _autoId + '-action-' + entry.index : null"
-                (click)="onClickAction(action)">
-                @if (action.icon) {
-                  <sd-icon class="sd-selection-menu-icon" [fontSet]="action.fontSet" [name]="action.icon" [color]="action.color" />
-                }
-                <span>{{ action.title }}</span>
-              </button>
-            } @else {
-              <div role="group" [attr.aria-label]="action.title">
-                <div class="sd-selection-menu-heading">{{ action.title }}</div>
-                @for (child of action.children; track $index) {
-                  <button
-                    mat-menu-item
-                    type="button"
-                    [attr.data-autoid]="_autoId ? _autoId + '-action-' + entry.index + '-' + $index : null"
-                    (click)="onClickAction(child)">
-                    @if (child.icon) {
-                      <sd-icon class="sd-selection-menu-icon" [fontSet]="child.fontSet" [name]="child.icon" [color]="child.color" />
-                    }
-                    <span>{{ child.title }}</span>
-                  </button>
-                }
-              </div>
+          [sdTableMenuButton]="moreMenu" />
+        <ng-template #moreMenu>
+          <div
+            cdkMenu
+            tabindex="-1"
+            class="sd-table-action-menu"
+            [attr.aria-label]="_moreLabel"
+            (keydown.escape)="$event.stopPropagation()">
+            @for (entry of _overflow; track entry.index) {
+              @let action = entry.action;
+              @if (action.variant === 'normal') {
+                <button
+                  cdkMenuItem
+                  type="button"
+                  [attr.data-autoid]="_autoId ? _autoId + '-action-' + entry.index : null"
+                  [cdkMenuitemTypeaheadLabel]="action.title || ''"
+                  [style.color]="action.color ? 'var(--sd-' + action.color + ')' : null"
+                  (cdkMenuItemTriggered)="onClickAction(action)">
+                  @if (action.icon) {
+                    <sd-icon class="sd-table-action-menu__icon" [fontSet]="action.fontSet" [name]="action.icon" [color]="action.color" />
+                  }
+                  <span>{{ action.title }}</span>
+                </button>
+              } @else {
+                <div role="group" [attr.aria-label]="action.title">
+                  <div class="sd-selection-menu-heading">{{ action.title }}</div>
+                  @for (child of action.children; track $index) {
+                    <button
+                      cdkMenuItem
+                      type="button"
+                      [attr.data-autoid]="_autoId ? _autoId + '-action-' + entry.index + '-' + $index : null"
+                      [cdkMenuitemTypeaheadLabel]="child.title || ''"
+                      [style.color]="child.color ? 'var(--sd-' + child.color + ')' : null"
+                      (cdkMenuItemTriggered)="onClickAction(child)">
+                      @if (child.icon) {
+                        <sd-icon class="sd-table-action-menu__icon" [fontSet]="child.fontSet" [name]="child.icon" [color]="child.color" />
+                      }
+                      <span>{{ child.title }}</span>
+                    </button>
+                  }
+                </div>
+              }
             }
-          }
-        </mat-menu>
+          </div>
+        </ng-template>
       }
       <button
         type="button"

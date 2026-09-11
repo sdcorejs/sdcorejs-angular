@@ -29,7 +29,6 @@
     "@lucide/angular": "^1.22.0",
     "@sdcorejs/angular-material-datetime": "1.0.4",
     "@sdcorejs/utils": "1.1.4",
-    "chart.js": "^4.5.1",
     "ckeditor5": "48.0.0",
     "date-fns": "^3.6.0",
     "exceljs": "^4.4.0",

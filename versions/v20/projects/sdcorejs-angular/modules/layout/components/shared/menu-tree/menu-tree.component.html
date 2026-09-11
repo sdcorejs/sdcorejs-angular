@@ -1,30 +1,38 @@
+@let _structured = structured();
+@let _showPin = showPin();
+@let _iconFontSet = iconFontSet();
 <nav
   class="sd-layout-menu-tree d-flex flex-column gap-4"
-  [class.sd-layout-menu-tree--structured]="structured()"
-  [class.sd-layout-menu-tree--pinnable]="showPin()"
+  [class.sd-layout-menu-tree--structured]="_structured"
+  [class.sd-layout-menu-tree--pinnable]="_showPin"
   aria-label="Navigation menu">
   @for (node of nodes(); track node.key) {
     @if (node.isGroup) {
-      <div
-        class="sd-layout-menu-tree__group d-flex align-items-center gap-8 T12M text-black400"
-        [class.sd-layout-menu-tree__root]="node.isRoot"
-        [style.padding-left.px]="node.paddingLeft">
-        @for (offset of node.branchOffsets; track offset) {
-          <span data-menu-branch class="sd-layout-menu-tree__branch" [style.left.px]="offset" aria-hidden="true"></span>
-        }
-        @if (node.showIcon) {
-          @if (structured() && node.menu.iconUrl) {
-            <img data-menu-icon class="sd-layout-menu-tree__icon-image" [src]="node.menu.iconUrl" alt="" />
-          } @else {
-            <sd-icon
-              data-menu-icon
-              [name]="node.menu.icon || 'folder'"
-              [fontSet]="iconFontSet()"
-              [size]="structured() ? '20px' : undefined"></sd-icon>
-          }
-        }
-        <span class="sd-layout-menu-tree__label" [class.text-ellipsis]="!structured()">{{ node.title }}</span>
-      </div>
+      @if (node.isCollapsible) {
+        <button
+          type="button"
+          class="sd-layout-menu-tree__group sd-layout-menu-tree__group-toggle d-flex align-items-center gap-8 T12M text-black400"
+          [attr.data-menu-group]="node.key"
+          [attr.aria-label]="node.title"
+          [attr.aria-expanded]="node.isExpanded"
+          [class.sd-layout-menu-tree__root]="node.isRoot"
+          [style.padding-left.px]="node.paddingLeft"
+          (click)="onToggleGroup(node.key)">
+          <ng-container [ngTemplateOutlet]="groupContent" [ngTemplateOutletContext]="{ $implicit: node }"></ng-container>
+          <sd-icon
+            class="sd-layout-menu-tree__disclosure"
+            [name]="node.isExpanded ? 'expand_more' : 'chevron_right'"
+            size="18px"
+            aria-hidden="true"></sd-icon>
+        </button>
+      } @else {
+        <div
+          class="sd-layout-menu-tree__group d-flex align-items-center gap-8 T12M text-black400"
+          [class.sd-layout-menu-tree__root]="node.isRoot"
+          [style.padding-left.px]="node.paddingLeft">
+          <ng-container [ngTemplateOutlet]="groupContent" [ngTemplateOutletContext]="{ $implicit: node }"></ng-container>
+        </div>
+      }
     } @else {
       <div
         class="sd-layout-menu-tree__route d-flex align-items-center gap-4"
@@ -52,13 +60,13 @@
               <sd-icon
                 data-menu-icon
                 [name]="node.menu.icon || 'chevron_right'"
-                [fontSet]="iconFontSet()"
-                [size]="structured() ? '20px' : undefined"></sd-icon>
+              [fontSet]="_iconFontSet"
+              [size]="_structured ? '20px' : undefined"></sd-icon>
             }
           }
-          <span class="sd-layout-menu-tree__label" [class.text-ellipsis]="!structured()">{{ node.title }}</span>
+          <span class="sd-layout-menu-tree__label" [class.text-ellipsis]="!_structured">{{ node.title }}</span>
         </button>
-        @if (showPin()) {
+        @if (_showPin) {
           <button
             type="button"
             class="sd-layout-menu-tree__pin d-flex align-items-center justify-content-center"
@@ -78,3 +86,17 @@
     </div>
   }
 </nav>
+
+<ng-template #groupContent let-node>
+  @for (offset of node.branchOffsets; track offset) {
+    <span data-menu-branch class="sd-layout-menu-tree__branch" [style.left.px]="offset" aria-hidden="true"></span>
+  }
+  @if (node.showIcon) {
+    @if (_structured && node.menu.iconUrl) {
+      <img data-menu-icon class="sd-layout-menu-tree__icon-image" [src]="node.menu.iconUrl" alt="" />
+    } @else {
+      <sd-icon data-menu-icon [name]="node.menu.icon || 'folder'" [fontSet]="_iconFontSet" [size]="_structured ? '20px' : undefined"></sd-icon>
+    }
+  }
+  <span class="sd-layout-menu-tree__label" [class.text-ellipsis]="!_structured">{{ node.title }}</span>
+</ng-template>

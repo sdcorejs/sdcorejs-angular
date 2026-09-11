@@ -44,6 +44,139 @@ describe('SdSidebarV3', () => {
     expect(fixture.componentInstance.isCollapsed()).toBeFalse();
   });
 
+  const groupButton = (key: string): HTMLButtonElement | null =>
+    fixture.nativeElement.querySelector(`[data-v3-all] [data-menu-group="${key}"]`);
+  const allRoute = (key: string): HTMLButtonElement | null => fixture.nativeElement.querySelector(`[data-v3-all] [data-menu-key="${key}"]`);
+
+  it('toggles a group with a focusable disclosure without navigating or pinning', () => {
+    create();
+    const navigate = spyOn(TestBed.inject(Router), 'navigate');
+    const pin = spyOn(TestBed.inject(SdLayoutNavigationStateService), 'togglePinned');
+    const group = groupButton('id:work');
+    expect(group).not.toBeNull();
+    if (!group) return;
+    expect(group.tagName).toBe('BUTTON');
+    expect(group.type).toBe('button');
+    expect(group.getAttribute('aria-expanded')).toBe('true');
+    group.focus();
+    group.click();
+    fixture.detectChanges();
+    expect(document.activeElement).toBe(group);
+    expect(group.getAttribute('aria-expanded')).toBe('false');
+    expect(allRoute('id:reports')).toBeNull();
+    expect(navigate).not.toHaveBeenCalled();
+    expect(pin).not.toHaveBeenCalled();
+    group.click();
+    fixture.detectChanges();
+    expect(group.getAttribute('aria-expanded')).toBe('true');
+    expect(allRoute('id:reports')).not.toBeNull();
+  });
+
+  it('preserves independent nested disclosures when a parent is closed and reopened', () => {
+    create();
+    fixture.componentRef.setInput('menus', [
+      { id: 'work', title: 'Work', children: [{ id: 'nested', title: 'Nested', children: [reports] }, dashboard] },
+      { id: 'other', title: 'Other', children: [{ ...dashboard, id: 'other-leaf' }] },
+    ]);
+    fixture.detectChanges();
+    const nested = groupButton('id:nested');
+    expect(nested).not.toBeNull();
+    if (!nested) return;
+    nested.click();
+    fixture.detectChanges();
+    expect(allRoute('id:reports')).toBeNull();
+    expect(allRoute('id:dashboard')).not.toBeNull();
+    groupButton('id:work')!.click();
+    fixture.detectChanges();
+    expect(groupButton('id:nested')).toBeNull();
+    expect(allRoute('id:other-leaf')).not.toBeNull();
+    groupButton('id:work')!.click();
+    fixture.detectChanges();
+    expect(groupButton('id:nested')!.getAttribute('aria-expanded')).toBe('false');
+    expect(allRoute('id:reports')).toBeNull();
+    expect(allRoute('id:dashboard')).not.toBeNull();
+  });
+
+  it('searches closed groups and preserves disclosures through query and rail toggles', () => {
+    create();
+    const group = groupButton('id:work');
+    expect(group).not.toBeNull();
+    if (!group) return;
+    group.click();
+    fixture.detectChanges();
+    fixture.componentInstance.searchText.set('BAO CAO');
+    fixture.detectChanges();
+    expect(allRoute('id:reports')).not.toBeNull();
+    expect(groupButton('id:work')).toBeNull();
+    fixture.componentInstance.toggleCollapsed();
+    fixture.detectChanges();
+    fixture.componentInstance.toggleCollapsed();
+    fixture.detectChanges();
+    expect(allRoute('id:reports')).not.toBeNull();
+    fixture.componentInstance.searchText.set('');
+    fixture.detectChanges();
+    expect(groupButton('id:work')!.getAttribute('aria-expanded')).toBe('false');
+    expect(allRoute('id:reports')).toBeNull();
+  });
+
+  it('reveals the exact active branch on navigation without reopening unrelated branches', async () => {
+    create();
+    fixture.componentRef.setInput('menus', [
+      { id: 'work', title: 'Work', children: [{ id: 'nested', title: 'Nested', children: [reports] }] },
+      { id: 'other', title: 'Other', children: [dashboard] },
+    ]);
+    fixture.detectChanges();
+    expect(groupButton('id:nested')).not.toBeNull();
+    if (!groupButton('id:nested')) return;
+    for (const key of ['id:nested', 'id:work', 'id:other']) {
+      groupButton(key)!.click();
+      fixture.detectChanges();
+    }
+    const router = TestBed.inject(Router);
+    router.resetConfig([{ path: 'reports/:id', children: [] }]);
+    await router.navigateByUrl('/reports/42?source=test#details');
+    fixture.detectChanges();
+    expect(groupButton('id:work')!.getAttribute('aria-expanded')).toBe('true');
+    expect(groupButton('id:nested')!.getAttribute('aria-expanded')).toBe('true');
+    expect(allRoute('id:reports')!.getAttribute('aria-current')).toBe('page');
+    expect(groupButton('id:other')!.getAttribute('aria-expanded')).toBe('false');
+    // An explicit close remains respected while the current route stays unchanged.
+    groupButton('id:work')!.click();
+    fixture.detectChanges();
+    expect(allRoute('id:reports')).toBeNull();
+  });
+
+  it('opens a closed root group when its compact rail icon is activated', () => {
+    create();
+    const group = groupButton('id:work');
+    expect(group).not.toBeNull();
+    if (!group) return;
+    group.click();
+    fixture.componentInstance.toggleCollapsed();
+    fixture.detectChanges();
+    fixture.nativeElement.querySelector('.sd-sidebar-v3__collapsed-action').click();
+    fixture.detectChanges();
+    expect(groupButton('id:work')!.getAttribute('aria-expanded')).toBe('true');
+    expect(allRoute('id:reports')).not.toBeNull();
+  });
+
+  it('distinguishes same-title groups by their ancestor fallback keys', () => {
+    create();
+    fixture.componentRef.setInput('menus', [
+      { title: 'First', children: [{ title: 'Shared', children: [dashboard] }] },
+      { title: 'Second', children: [{ title: 'Shared', children: [reports] }] },
+    ]);
+    fixture.detectChanges();
+    const first = groupButton('group:first/shared');
+    expect(first).not.toBeNull();
+    if (!first) return;
+    first.click();
+    fixture.detectChanges();
+    expect(allRoute('id:dashboard')).toBeNull();
+    expect(allRoute('id:reports')).not.toBeNull();
+    expect(groupButton('group:second/shared')!.getAttribute('aria-expanded')).toBe('true');
+  });
+
   it('uses defaultCollapsed when no preference exists', () => {
     create({ version: 3, defaultCollapsed: true });
 
@@ -176,7 +309,8 @@ describe('SdSidebarV3', () => {
     expect(tree.querySelectorAll('[data-menu-icon]').length).toBe(2);
     expect(tree.querySelector('img[src="/nested-icon.svg"]')).toBeNull();
     const groups = tree.querySelectorAll<HTMLElement>('.sd-layout-menu-tree__group');
-    expect(groups[1].querySelector('sd-icon')).toBeNull();
+    expect(groups[1].querySelector('[data-menu-icon]')).toBeNull();
+    expect(groups[1].querySelector('.sd-layout-menu-tree__disclosure')).not.toBeNull();
     const leaf = tree.querySelector<HTMLButtonElement>('[data-menu-key="id:reports"]')!;
     expect(leaf.querySelector('sd-icon, img')).toBeNull();
     expect(leaf.getAttribute('aria-current')).toBe('page');

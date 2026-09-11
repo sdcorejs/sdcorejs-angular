@@ -54,7 +54,7 @@ describe('DesktopCommand', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const menu = document.body.querySelector('.mat-mdc-menu-panel') as HTMLElement;
+    const menu = document.body.querySelector('[role="menu"]') as HTMLElement;
     const content = menu.querySelector('.sd-command-menu-item__content') as HTMLElement;
     const icon = menu.querySelector('mat-icon') as HTMLElement;
     const title = menu.querySelector('.sd-command-menu-item__title') as HTMLElement;
@@ -62,6 +62,78 @@ describe('DesktopCommand', () => {
     expect(content).not.toBeNull();
     expect(icon.classList).toContain('material-icons-outlined');
     expect(title.textContent?.trim()).toBe('Edit');
+    expect(menu.classList).toContain('sd-table-action-menu');
+    expect(menu.querySelector('button')!.getBoundingClientRect().height).toBeLessThanOrEqual(36);
+  });
+
+  it('keeps hidden/disabled child rules and restores the command trigger after Escape', async () => {
+    const clicked = jasmine.createSpy('clicked');
+    fixture.componentInstance.commands = [
+      {
+        title: 'More',
+        children: [
+          { title: 'Hidden', hidden: async () => true, click: clicked },
+          { title: 'Disabled', disabled: true, click: clicked },
+          { title: 'Allowed', click: clicked },
+        ],
+      },
+    ];
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const trigger = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
+    trigger.focus();
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', keyCode: 40, bubbles: true }));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const menu = document.body.querySelector('[role="menu"]') as HTMLElement;
+    expect(menu.textContent).not.toContain('Hidden');
+    const items = Array.from(menu.querySelectorAll<HTMLButtonElement>('button'));
+    expect(items[0].getAttribute('aria-disabled')).toBe('true');
+    expect(getComputedStyle(items[0]).opacity).toBe('0.45');
+    expect(menu.contains(document.activeElement)).toBeTrue();
+    items[0].click();
+    items[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true }));
+    items[0].dispatchEvent(new KeyboardEvent('keydown', { key: ' ', keyCode: 32, bubbles: true }));
+    expect(clicked).not.toHaveBeenCalled();
+    // CDK 22 focuses disabled menu items; earlier CDK versions skip them. Both must reach the enabled action.
+    document.activeElement!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', keyCode: 40, bubbles: true }));
+    expect(document.activeElement).toBe(items[1]);
+    const escape = new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, bubbles: true });
+    items[1].dispatchEvent(escape);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(document.body.querySelector('[role="menu"]')).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it('renders outside a clipped row and invokes the child once with its row data', async () => {
+    const clicked = jasmine.createSpy('clicked');
+    Object.assign(fixture.nativeElement.style, {
+      position: 'fixed',
+      top: '32px',
+      left: '32px',
+      width: '80px',
+      height: '24px',
+      overflow: 'hidden',
+    });
+    fixture.componentInstance.commands = [{ title: 'More', children: [{ title: 'Run', click: clicked }] }];
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    fixture.nativeElement.querySelector('button').click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const menu = document.body.querySelector('[role="menu"]') as HTMLElement;
+    expect(fixture.nativeElement.contains(menu)).toBeFalse();
+    const item = menu.querySelector('button')!;
+    const bounds = item.getBoundingClientRect();
+    expect(document.elementFromPoint(bounds.left + bounds.width / 2, bounds.top + bounds.height / 2)?.closest('button')).toBe(item);
+    item.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(clicked).toHaveBeenCalledOnceWith(fixture.componentInstance.item.data);
+    expect(document.body.querySelector('[role="menu"]')).toBeNull();
   });
 
   // why: hai nút command từng mang aria-hidden="true" — chúng là <button> THẬT, vẫn nhận tab focus

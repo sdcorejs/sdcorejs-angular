@@ -1540,165 +1540,6 @@ export class CardStandaloneExampleComponent {
   font-size: 12px;
 }`,
   },
-  "components/chart": {
-    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { ChartData, ChartOptions } from 'chart.js';
-import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
-import {
-  SdLineChartComponent,
-  SdBarChartComponent,
-  SdPieChartComponent,
-  SdDoughnutChartComponent,
-} from '@sdcorejs/angular/components/chart';
-
-@Component({
-  selector: 'app-chart-demo',
-  standalone: true,
-  imports: [
-    DemoPageComponent,
-    DemoSectionComponent,
-    SdLineChartComponent,
-    SdBarChartComponent,
-    SdPieChartComponent,
-    SdDoughnutChartComponent,
-  ],
-  template: \`
-    <demo-page #demoPage
-      title="Chart"
-      description="Bộ biểu đồ dựa trên Chart.js — line / bar / pie / doughnut. Thường dùng trên dashboard và báo cáo.">
-
-      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bieu-do-line') {
-      <demo-section heading="Biểu đồ Line" [props]="[{ name: 'type', value: 'line' }]">
-        <div class="chart-box">
-          <sd-line-chart [data]="lineData" [options]="lineOptions"></sd-line-chart>
-        </div>
-      </demo-section>
-      }
-
-      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bieu-do-bar') {
-      <demo-section heading="Biểu đồ Bar" [props]="[{ name: 'type', value: 'bar' }]">
-        <div class="chart-box">
-          <sd-bar-chart [data]="barData" [options]="barOptions"></sd-bar-chart>
-        </div>
-      </demo-section>
-      }
-
-      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bieu-do-pie-doughnut') {
-      <demo-section heading="Biểu đồ Pie & Doughnut" [props]="[{ name: 'type', value: 'pie / doughnut' }]">
-        <div class="row">
-          <div class="chart-box small">
-            <sd-pie-chart [data]="pieData"></sd-pie-chart>
-          </div>
-          <div class="chart-box small">
-            <sd-doughnut-chart [data]="doughnutData"></sd-doughnut-chart>
-          </div>
-        </div>
-      </demo-section>
-      }
-    </demo-page>
-  \`,
-  styles: [\`
-    .chart-box {
-      width: 100%;
-      height: 320px;
-    }
-    .chart-box.small {
-      height: 280px;
-      flex: 1;
-      min-width: 280px;
-    }
-    .row {
-      display: flex;
-      gap: 24px;
-      width: 100%;
-      flex-wrap: wrap;
-    }
-  \`],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class ChartDemoComponent {
-  readonly lineData: ChartData<'line'> = {
-    labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'],
-    datasets: [
-      {
-        label: 'Doanh thu (tỷ VND)',
-        data: [12.5, 14.2, 13.8, 16.4, 18.1, 19.5],
-        borderColor: '#005cbb',
-        backgroundColor: 'rgba(0, 92, 187, 0.14)',
-        fill: true,
-        tension: 0.35,
-      },
-      {
-        label: 'Chi phí (tỷ VND)',
-        data: [9.4, 10.1, 10.6, 11.0, 11.8, 12.3],
-        borderColor: '#e64a19',
-        backgroundColor: 'rgba(230, 74, 25, 0.10)',
-        fill: true,
-        tension: 0.35,
-      },
-    ],
-  };
-
-  readonly lineOptions: ChartOptions<'line'> = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { position: 'bottom' } },
-  };
-
-  readonly barData: ChartData<'bar'> = {
-    labels: ['Công nghệ', 'Kinh doanh', 'Nhân sự', 'Tài chính', 'Marketing'],
-    datasets: [
-      {
-        label: 'KPI đạt được (%)',
-        data: [92, 110, 85, 96, 102],
-        backgroundColor: ['#005cbb', '#2e7d32', '#f9a825', '#6a1b9a', '#0277bd'],
-      },
-    ],
-  };
-
-  readonly barOptions: ChartOptions<'bar'> = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-  };
-
-  readonly pieData: ChartData<'pie'> = {
-    labels: ['Nhân sự', 'Marketing', 'Vận hành', 'Khác'],
-    datasets: [
-      {
-        data: [42, 23, 25, 10],
-        backgroundColor: ['#005cbb', '#e64a19', '#2e7d32', '#9e9e9e'],
-      },
-    ],
-  };
-
-  readonly doughnutData: ChartData<'doughnut'> = {
-    labels: ['Nhân sự', 'Marketing', 'Vận hành', 'Khác'],
-    datasets: [
-      {
-        data: [42, 23, 25, 10],
-        backgroundColor: ['#005cbb', '#e64a19', '#2e7d32', '#9e9e9e'],
-      },
-    ],
-  };
-}
-`,
-    scss: `.chart-box {
-  width: 100%;
-  height: 320px;
-}
-.chart-box.small {
-  height: 280px;
-  flex: 1;
-  min-width: 280px;
-}
-.row {
-  display: flex;
-  gap: 24px;
-  width: 100%;
-  flex-wrap: wrap;
-}`,
-  },
   "components/code-editor": {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
@@ -2284,7 +2125,7 @@ const SEED: SdFormGeneric = {
       type: 'group',
       label: 'Địa chỉ giao hàng',
       layout: { columns: '12' },
-      properties: { icon: 'inventory_2', color: 'secondary' },
+      properties: { icon: 'inventory_2', color: 'secondary', collapsible: true },
       components: [
         {
           id: 'g1c1',
@@ -2461,7 +2302,9 @@ const DRAG_DROP_POPUP_SEED: SdFormGeneric = {
       title="Form Generic"
       description="Dynamic form builder and renderer with schema-safe drag/drop, group detail editing, query-builder conditions, and runtime preview.">
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-builder-render') {
-      <demo-section heading="Builder + Render" [props]="[{ name: 'formGeneric', value: 'SdFormGeneric' }]">
+      <demo-section heading="Builder + Render"
+        [props]="[{ name: 'formGeneric', value: 'SdFormGeneric' }, { name: 'properties.collapsible', value: 'true' }]"
+        note="Group có thể thu gọn/mở rộng trong preview; điều kiện vô hiệu hóa được cấu hình trên từng trường con.">
         <div class="row-actions">
           <sd-button type="outline" color="primary" title="Đặt lại" prefixIcon="restart_alt" (click)="reset()"></sd-button>
           <sd-button type="outline" color="secondary" title="Tải form rỗng" prefixIcon="layers_clear" (click)="loadEmpty()"></sd-button>
@@ -3651,7 +3494,7 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
           heading="Basic modal + footer right"
           [props]="[
             { name: 'sdFooterRight', value: 'template' },
-            { name: 'body inset', value: '24px / 16px' },
+            { name: 'body padding', value: '12px 16px' },
           ]">
           <sd-button type="fill" color="primary" prefixIcon="info" title="Open detail" (click)="basic.open()"></sd-button>
 
@@ -6863,7 +6706,7 @@ const TASKS: Task[] = [
           { name: 'command.commands[].children', value: 'SdTableCommandNormal[]' },
           { name: 'command.align', value: 'right' }
         ]"
-        note="Command có children sẽ render thành nút menu; các child command vẫn hỗ trợ icon, title, color, disabled, hidden và click theo từng row.">
+        note="Command và action children dùng menu gọn nền trắng. Chọn dòng để thử action nhóm; các child command vẫn hỗ trợ icon, title, color, disabled, hidden và click theo từng row.">
         <div class="table-box">
           <sd-table [option]="commandChildrenOption"><ng-template [sdTableRowMobileDef]="commandChildrenOption" let-row="item"><strong>{{ row.code }}</strong><div>{{ row.name }}</div></ng-template></sd-table>
         </div>
@@ -7430,6 +7273,15 @@ export class TableDemoComponent {
     type: 'local',
     items: () => PRODUCTS,
     filler: { enabled: true },
+    selector: {
+      visible: true,
+      actions: [{
+        title: 'Xử lý đã chọn', icon: 'checklist', children: [
+          { title: 'Kiểm kho', icon: 'inventory_2', click: rows => alert('Kiểm kho ' + rows?.length + ' sản phẩm') },
+          { title: 'Xóa', icon: 'delete', color: 'error', click: rows => alert('Xóa ' + rows?.length + ' sản phẩm') },
+        ],
+      }],
+    },
     command: {
       align: 'right',
       commands: [
@@ -12415,7 +12267,7 @@ export class LayoutVersionPreviewComponent {
         <demo-section
           data-layout-showcase="3"
           heading="Sidebar V3 - Collapsible"
-          note="Root icons, text-only nested branches and a compact search field on desktop; shared pinned and recent menus."
+          note="Bấm từng nhóm menu để đóng/mở các mục con trên desktop. Tìm kiếm vẫn thấy mục trong nhóm đã đóng; thu gọn cả sidebar giữ trạng thái từng nhóm."
           [props]="[
             { name: 'version', value: '3' },
             { name: 'mobileBreakpoint', value: '900' },
@@ -15484,35 +15336,6 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
   <p class="model-readout">selected(): {{ lastSelected() }}</p>
 </div>`,
   },
-  "components/chart/example-bieu-do-bar": {
-    ...SHOWCASE_PAGE_SOURCES["components/chart"],
-    html: `<demo-section heading="Biểu đồ Bar" [props]="[{ name: 'type', value: 'bar' }]">
-    <div class="chart-box">
-      <sd-bar-chart [data]="barData" [options]="barOptions"></sd-bar-chart>
-    </div>
-  </demo-section>`,
-  },
-  "components/chart/example-bieu-do-line": {
-    ...SHOWCASE_PAGE_SOURCES["components/chart"],
-    html: `<demo-section heading="Biểu đồ Line" [props]="[{ name: 'type', value: 'line' }]">
-    <div class="chart-box">
-      <sd-line-chart [data]="lineData" [options]="lineOptions"></sd-line-chart>
-    </div>
-  </demo-section>`,
-  },
-  "components/chart/example-bieu-do-pie-doughnut": {
-    ...SHOWCASE_PAGE_SOURCES["components/chart"],
-    html: `<demo-section heading="Biểu đồ Pie & Doughnut" [props]="[{ name: 'type', value: 'pie / doughnut' }]">
-    <div class="row">
-      <div class="chart-box small">
-        <sd-pie-chart [data]="pieData"></sd-pie-chart>
-      </div>
-      <div class="chart-box small">
-        <sd-doughnut-chart [data]="doughnutData"></sd-doughnut-chart>
-      </div>
-    </div>
-  </demo-section>`,
-  },
   "components/code-editor/example-che-do-xem-json": {
     ...SHOWCASE_PAGE_SOURCES["components/code-editor"],
     html: `<demo-section heading="Chế độ xem JSON" [props]="[{ name: 'language', value: 'json' }, { name: 'viewed', value: 'true' }]">
@@ -15713,7 +15536,9 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
   },
   "components/form-generic/example-builder-render": {
     ...SHOWCASE_PAGE_SOURCES["components/form-generic"],
-    html: `<demo-section heading="Builder + Render" [props]="[{ name: 'formGeneric', value: 'SdFormGeneric' }]">
+    html: `<demo-section heading="Builder + Render"
+    [props]="[{ name: 'formGeneric', value: 'SdFormGeneric' }, { name: 'properties.collapsible', value: 'true' }]"
+    note="Group có thể thu gọn/mở rộng trong preview; điều kiện vô hiệu hóa được cấu hình trên từng trường con.">
     <div class="row-actions">
       <sd-button type="outline" color="primary" title="Đặt lại" prefixIcon="restart_alt" (click)="reset()"></sd-button>
       <sd-button type="outline" color="secondary" title="Tải form rỗng" prefixIcon="layers_clear" (click)="loadEmpty()"></sd-button>
@@ -15998,7 +15823,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
       heading="Basic modal + footer right"
       [props]="[
         { name: 'sdFooterRight', value: 'template' },
-        { name: 'body inset', value: '24px / 16px' },
+        { name: 'body padding', value: '12px 16px' },
       ]">
       <sd-button type="fill" color="primary" prefixIcon="info" title="Open detail" (click)="basic.open()"></sd-button>
 
@@ -17568,7 +17393,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
       { name: 'command.commands[].children', value: 'SdTableCommandNormal[]' },
       { name: 'command.align', value: 'right' }
     ]"
-    note="Command có children sẽ render thành nút menu; các child command vẫn hỗ trợ icon, title, color, disabled, hidden và click theo từng row.">
+    note="Command và action children dùng menu gọn nền trắng. Chọn dòng để thử action nhóm; các child command vẫn hỗ trợ icon, title, color, disabled, hidden và click theo từng row.">
     <div class="table-box">
       <sd-table [option]="commandChildrenOption"><ng-template [sdTableRowMobileDef]="commandChildrenOption" let-row="item"><strong>{{ row.code }}</strong><div>{{ row.name }}</div></ng-template></sd-table>
     </div>
@@ -19638,7 +19463,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     html: `<demo-section
       data-layout-showcase="3"
       heading="Sidebar V3 - Collapsible"
-      note="Root icons, text-only nested branches and a compact search field on desktop; shared pinned and recent menus."
+      note="Bấm từng nhóm menu để đóng/mở các mục con trên desktop. Tìm kiếm vẫn thấy mục trong nhóm đã đóng; thu gọn cả sidebar giữ trạng thái từng nhóm."
       [props]="[
         { name: 'version', value: '3' },
         { name: 'mobileBreakpoint', value: '900' },

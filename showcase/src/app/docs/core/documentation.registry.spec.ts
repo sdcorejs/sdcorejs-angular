@@ -4,7 +4,7 @@ import { SHOWCASE_EXAMPLE_SOURCES } from '../generated/example-sources.generated
 
 const EXPECTED_CATEGORY_COUNTS = {
   guides: 3,
-  components: 37,
+  components: 36,
   forms: 22,
   directives: 6,
   services: 11,
@@ -17,14 +17,15 @@ describe('documentation registry', () => {
     const publishedIds = DOC_PAGES.map(page => page.publishedDocId).filter(id => id !== null);
     const localOnlyPages = DOC_PAGES.filter(page => page.publishedDocId === null);
 
-    expect(DOC_PAGES).toHaveSize(99);
-    expect(new Set(publishedIds).size).toBe(99);
+    expect(DOC_PAGES).toHaveSize(98);
+    expect(new Set(publishedIds).size).toBe(98);
+    expect(DOC_PAGES.some(page => page.category === 'components' && page.slug === 'chart')).toBeFalse();
     expect(localOnlyPages).toHaveSize(0);
     expect(DOC_CATEGORIES).toHaveSize(7);
     for (const category of DOC_CATEGORIES) {
       expect(getDocPagesByCategory(category)).withContext(category).toHaveSize(EXPECTED_CATEGORY_COUNTS[category]);
     }
-    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(360);
+    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(357);
   });
 
   it('uses unique stable page ids and category/slug pairs', () => {
@@ -46,7 +47,7 @@ describe('documentation registry', () => {
     const exampleIds = DOC_PAGES.flatMap(page => page.examples.map(example => example.id));
 
     expect(new Set(exampleIds).size).toBe(exampleIds.length);
-    expect(exampleIds).toHaveSize(360);
+    expect(exampleIds).toHaveSize(357);
     expect(findDocPage('components', 'table')?.examples.map(example => example.sectionId)).toContain('example-quick-search');
     expect(findDocPage('components', 'table')?.examples.map(example => example.sectionId)).toContain('example-external-filters');
     for (const page of DOC_PAGES) {
@@ -61,7 +62,7 @@ describe('documentation registry', () => {
   });
 
   it('derives navigation groups and canonical/legacy lookup helpers from the registry', () => {
-    expect(DOC_NAV_GROUPS.map(group => group.pages.length)).toEqual([3, 37, 22, 6, 11, 10, 10]);
+    expect(DOC_NAV_GROUPS.map(group => group.pages.length)).toEqual([3, 36, 22, 6, 11, 10, 10]);
     expect(findDocPage('components', 'button')?.title).toBe('Button');
     expect(findDocPage('directives', 'tooltip')?.publishedDocId).toBe('directives/src/sd-tooltip');
     expect(findDocPage('components', 'generic')?.title).toBe('Form Generic');

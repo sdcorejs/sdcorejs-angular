@@ -184,7 +184,8 @@ test('matches the canonical v19 runtime registry and expected deployment route c
       .map(category => [category, pages.filter(page => page.category === category).length])
   );
 
-  assert.equal(pages.length, 99);
+  assert.equal(pages.length, 98);
+  assert.ok(!pages.some(page => page.category === 'components' && page.slug === 'chart'));
   assert.ok(pages.some(page => page.category === 'pipes-utilities' && page.slug === 'read-state'));
 
   // why: `routes.length` từng là hằng số 5941 và đã mục ngay khi release 1.6 ra (thực tế 7426).
@@ -201,7 +202,7 @@ test('matches the canonical v19 runtime registry and expected deployment route c
     'total = 1 root redirect + one identical block per release'
   );
   assert.deepEqual(categoryCounts, {
-    components: 37,
+    components: 36,
     directives: 6,
     forms: 22,
     guides: 3,

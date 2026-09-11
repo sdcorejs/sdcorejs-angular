@@ -1,4 +1,6 @@
 import { NgTemplateOutlet } from '@angular/common';
+import { CdkConnectedOverlay, CdkOverlayOrigin, ConnectedPosition } from '@angular/cdk/overlay';
+import { CdkTrapFocus } from '@angular/cdk/a11y';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -70,12 +72,31 @@ const QB_EMPTY_FIELDS: SdQueryBuilderField[] = [];
   selector: 'sd-query-builder',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdIcon, NgTemplateOutlet, SdOperator, SdSelect, SdInput, SdInputNumber, SdDate, SdDatetime, SdItemDefDefDirective],
+  imports: [
+    SdIcon,
+    NgTemplateOutlet,
+    SdOperator,
+    SdSelect,
+    SdInput,
+    SdInputNumber,
+    SdDate,
+    SdDatetime,
+    SdItemDefDefDirective,
+    CdkConnectedOverlay,
+    CdkOverlayOrigin,
+    CdkTrapFocus,
+  ],
   templateUrl: './query-builder.component.html',
   styleUrl: './query-builder.component.scss',
 })
 export class SdQueryBuilder {
   readonly #i18n = inject(I18nService);
+  protected readonly addMenuPositions: ConnectedPosition[] = [
+    { originX: 'start', originY: 'bottom', overlayX: 'start', overlayY: 'top', offsetY: 4 },
+    { originX: 'start', originY: 'top', overlayX: 'start', overlayY: 'bottom', offsetY: -4 },
+    { originX: 'end', originY: 'bottom', overlayX: 'end', overlayY: 'top', offsetY: 4 },
+    { originX: 'end', originY: 'top', overlayX: 'end', overlayY: 'bottom', offsetY: -4 },
+  ];
 
   // -------------------------------------------------------------------------
   // Inputs
@@ -232,6 +253,11 @@ export class SdQueryBuilder {
   readonly fieldIcon = sdQbFieldIcon;
 
   constructor() {
+    effect(() => {
+      if (this.resolvedDisabled() || this.isView()) {
+        untracked(() => this.closeAllDropdowns());
+      }
+    });
     // Inbound seeding: an EXTERNAL write to value / filters rebuilds the tree.
     // Our own emits are recognised via #lastEmitted and skipped (no echo loop).
     effect(() => {
@@ -309,6 +335,13 @@ export class SdQueryBuilder {
     if (!this.#hasOpenDropdown(this.#tree())) return; // avoid a re-render on every container click
     this.#closeAllDropdowns(this.#tree());
     this.#bumpTree();
+  }
+
+  protected onAddMenuKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'Escape') return;
+    event.preventDefault();
+    event.stopPropagation();
+    this.closeAllDropdowns();
   }
 
   #hasOpenDropdown(node: SdQbNode): boolean {

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
-import { MatMenuModule } from '@angular/material/menu';
+import { CdkMenu, CdkMenuItem } from '@angular/cdk/menu';
+import { SdTableMenuButtonDirective } from '../action-menu/action-menu';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdQuickAction } from '@sdcorejs/angular/components/quick-action';
@@ -13,7 +14,7 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   templateUrl: './selector-action.component.html',
   styleUrl: './selector-action.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdIcon, MatMenuModule, SdButton, SdQuickAction],
+  imports: [SdIcon, CdkMenu, CdkMenuItem, SdTableMenuButtonDirective, SdButton, SdQuickAction],
 })
 export class SelectorActionComponent {
   // ==========================================

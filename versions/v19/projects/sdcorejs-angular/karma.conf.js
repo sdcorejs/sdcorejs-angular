@@ -98,7 +98,7 @@ module.exports = function (config) {
     reporters: ['progress', 'kjhtml', 'coverage'],
     // why: từ khi `coverage-includes.spec.ts` kéo TOÀN BỘ source vào bundle (để mẫu số coverage
     // gồm cả file không spec nào import), page load đầu tiên nặng hẳn lên — bundle đã instrument,
-    // cộng ckeditor/pdfjs/exceljs/chart.js. Với default (`browserNoActivityTimeout` 30s,
+    // cộng ckeditor/pdfjs/exceljs. Với default (`browserNoActivityTimeout` 30s,
     // `browserDisconnectTimeout` 2s, `pingTimeout` 5s) Chrome bị coi là chết TRƯỚC KHI chạy
     // spec đầu tiên: "Disconnected reconnect failed before timeout of 2000ms (ping timeout)",
     // 0 spec chạy, exit 0 — tức là một run rỗng trông như run xanh. Các mốc dưới đây là để chờ

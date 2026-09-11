@@ -24,7 +24,9 @@
       <button
         type="button"
         [attr.data-autoid]="_autoId + '-' + command.key"
-        [matMenuTriggerFor]="menu"
+        [cdkMenuTriggerFor]="menu"
+        [cdkMenuPosition]="menuPositions"
+        [disabled]="_meta.disabled"
         [attr.aria-label]="_meta.title"
         aria-haspopup="menu"
         mat-icon-button>
@@ -34,29 +36,40 @@
           <sd-icon class="c-icon" [fontSet]="command.fontSet" name="more_vert"></sd-icon>
         }
       </button>
-      <mat-menu #menu="matMenu" [attr.data-autoid]="_autoId + '-' + command.key + '-menu'">
-        <span>
+      <ng-template #menu>
+        <div
+          cdkMenu
+          tabindex="-1"
+          class="sd-table-action-menu"
+          [attr.aria-label]="_meta.title"
+          [attr.data-autoid]="_autoId + '-' + command.key + '-menu'"
+          (keydown.escape)="$event.stopPropagation()">
           @for (childCommand of command.children; track childCommand.key) {
             @let _childMeta = _item | command: childCommand;
             <button
               [attr.data-autoid]="_autoId + '-' + command.key + '-' + childCommand.key"
-              mat-menu-item
-              (click)="childCommand.click(_item.data)"
-              [disabled]="_childMeta.disabled">
+              type="button"
+              cdkMenuItem
+              [cdkMenuItemDisabled]="_childMeta.disabled"
+              [cdkMenuitemTypeaheadLabel]="_childMeta.title"
+              [style.color]="childCommand.color ? 'var(--sd-' + childCommand.color + ')' : null"
+              (cdkMenuItemTriggered)="childCommand.click(_item.data)">
               @if (_childMeta.htmlTemplate) {
                 <div [innerHTML]="_childMeta.htmlTemplate"></div>
               } @else {
                 <span class="sd-command-menu-item__content">
-                  <sd-icon class="sd-command-menu-item__icon"
+                  <sd-icon
+                    class="sd-table-action-menu__icon"
                     [color]="childCommand.color || 'secondary'"
-                    [fontSet]="childCommand.fontSet" [name]="_childMeta.icon"></sd-icon>
+                    [fontSet]="childCommand.fontSet"
+                    [name]="_childMeta.icon"></sd-icon>
                   <span class="sd-command-menu-item__title">{{ _childMeta.title }}</span>
                 </span>
               }
             </button>
           }
-        </span>
-      </mat-menu>
+        </div>
+      </ng-template>
     }
   }
 }

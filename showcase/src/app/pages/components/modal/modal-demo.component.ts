@@ -19,7 +19,7 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
           heading="Basic modal + footer right"
           [props]="[
             { name: 'sdFooterRight', value: 'template' },
-            { name: 'body inset', value: '24px / 16px' },
+            { name: 'body padding', value: '12px 16px' },
           ]">
           <sd-button type="fill" color="primary" prefixIcon="info" title="Open detail" (click)="basic.open()"></sd-button>
 

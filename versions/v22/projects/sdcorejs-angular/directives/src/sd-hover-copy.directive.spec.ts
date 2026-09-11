@@ -1,19 +1,10 @@
-/**
- * SdHoverCopyDirective spec
- *
- * Note: the directive creates its copy button both in `ngOnChanges` (for the
- * initial-value change on the `sdHoverCopyDisabled` input) and again in
- * `ngOnInit`.  The directive's internal `#copyButton` reference always points
- * to the LAST button created (the one from `ngOnInit`).  Tests that care about
- * the button managed by the directive use `getDirectiveButton()` which finds
- * the element whose listener and style are wired to `#copyButton`.
- */
 import { ChangeDetectionStrategy as SdAngular22ChangeDetectionStrategy } from '@angular/core';
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { BrowserUtilities } from '@sdcorejs/utils/fns';
 import { I18nService } from '@sdcorejs/angular/i18n';
+import { OverlayContainer } from '@angular/cdk/overlay';
 import { SdHoverCopyDirective } from './sd-hover-copy.directive';
 
 @Component({
@@ -49,19 +40,13 @@ describe('SdHoverCopyDirective', () => {
     directiveInstance = fixture.debugElement.query(By.directive(SdHoverCopyDirective)).injector.get(SdHoverCopyDirective);
   });
 
-  /**
-   * The directive keeps `#copyButton` as its last-created button.
-   * `querySelectorAll('button')` returns all buttons; the directive manages the
-   * LAST one appended (ngOnInit fires after ngOnChanges creates the first).
-   */
   function getDirectiveButton(): HTMLElement | null {
-    const all = hostEl.querySelectorAll('button');
-    return all.length ? (all[all.length - 1] as HTMLElement) : null;
+    return hostEl.querySelector('button');
   }
 
   function getTooltip(): HTMLElement | null {
     const btn = getDirectiveButton();
-    return btn ? (btn.querySelector('span') as HTMLElement) : null;
+    return btn?.querySelector('span') ?? TestBed.inject(OverlayContainer).getContainerElement().querySelector('[role="tooltip"]');
   }
 
   // ─── creation ────────────────────────────────────────────────────────────────
@@ -71,8 +56,8 @@ describe('SdHoverCopyDirective', () => {
       expect(host).toBeTruthy();
     });
 
-    it('appends at least one copy button inside the host element on init', () => {
-      expect(hostEl.querySelector('button')).not.toBeNull();
+    it('appends exactly one copy button inside the host element on init', () => {
+      expect(hostEl.querySelectorAll('button').length).toBe(1);
     });
 
     it('sets host element position to relative', () => {

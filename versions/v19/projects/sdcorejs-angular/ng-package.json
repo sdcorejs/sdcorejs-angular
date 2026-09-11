@@ -14,7 +14,6 @@
     "@bjorn3/browser_wasi_shim",
     "keycloak-js",
     "prismjs",
-    "chart.js",
     "pdfjs-dist",
     "@lucide/angular"
   ],

@@ -1,5 +1,6 @@
 // why: Route and pin actions need a navigation-specific hit area not provided by a Core UI component.
 .sd-layout-menu-tree__route-button,
+.sd-layout-menu-tree__group-toggle,
 .sd-layout-menu-tree__pin {
   min-height: 40px;
   border: 0;
@@ -21,6 +22,7 @@
 
 // why: Navigation rows need a token-based hover surface without adding a second button component.
 .sd-layout-menu-tree__route-button:hover,
+.sd-layout-menu-tree__group-toggle:hover,
 .sd-layout-menu-tree__pin:hover {
   background: var(--sd-black100, var(--sd-surface-muted, #f3f3f3));
   color: var(--sd-primary, #005cbb);
@@ -32,6 +34,7 @@
 
 // why: Keyboard users need a visible focus indicator on custom navigation actions.
 .sd-layout-menu-tree__route-button:focus-visible,
+.sd-layout-menu-tree__group-toggle:focus-visible,
 .sd-layout-menu-tree__pin:focus-visible {
   outline: 2px solid var(--sd-primary);
   outline-offset: 2px;
@@ -59,6 +62,17 @@
 // why: Group labels separate nested branches without behaving like routes.
 .sd-layout-menu-tree__group {
   min-height: 32px;
+}
+
+.sd-layout-menu-tree__group-toggle {
+  text-align: left;
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+
+.sd-layout-menu-tree__disclosure {
+  flex: 0 0 18px;
+  margin-left: auto;
 }
 
 // why: Consumer-provided image icons need the same footprint as SdIcon glyphs.
@@ -144,7 +158,8 @@
     color: var(--menu-muted);
   }
 
-  .sd-layout-menu-tree__route-button:hover {
+  .sd-layout-menu-tree__route-button:hover,
+  .sd-layout-menu-tree__group-toggle:hover {
     background: color-mix(in srgb, var(--sd-surface-muted, #e7e8ed) 35%, var(--menu-surface));
   }
 
@@ -190,12 +205,14 @@
   }
 
   .sd-layout-menu-tree__route-button:focus-visible,
+  .sd-layout-menu-tree__group-toggle:focus-visible,
   .sd-layout-menu-tree__pin:focus-visible {
     outline-offset: -2px;
   }
 
   @media (pointer: coarse) {
     .sd-layout-menu-tree__route .sd-layout-menu-tree__route-button,
+    .sd-layout-menu-tree__group-toggle,
     .sd-layout-menu-tree__pin {
       min-height: 44px;
     }
@@ -212,6 +229,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .sd-layout-menu-tree__route-button,
+  .sd-layout-menu-tree__group-toggle,
   .sd-layout-menu-tree__pin {
     transition: none;
   }

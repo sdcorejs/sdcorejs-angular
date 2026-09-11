@@ -285,5 +285,6 @@ fields: SdQueryBuilderField[] = [
 ## Accessibility
 
 - The builder container is `role="group"` (a set of controls, not a widget) so it takes no tab stop of its own — Tab goes straight to the buttons and pickers inside.
-- "Click empty space to close open dropdowns" is a mouse-only affordance; **Escape** now does the same thing, so keyboard users can dismiss an open add-menu.
-- The add-menu dropdown is `role="group"` and swallows Enter as well as click, so activating a button inside it never reaches the container's "close all" handler.
+- The add-menu renders in a CDK connected overlay on the document body, so modal scroll regions, table cells and other ancestor overflow cannot clip its actions. It anchors to the group's `+` button, can flip above when space below is insufficient, and stays within the viewport.
+- Clicking the transparent backdrop or pressing **Escape** closes the menu. Escape is consumed before it reaches the surrounding modal; only the menu closes.
+- The add-menu is `role="group"` with two native buttons. Opening it focuses the first action, Tab stays within its actions, and closing it restores focus to the `+` trigger. `aria-expanded` on the trigger follows the menu state. Only one group's add-menu can be open at a time; adding a condition or group closes it.

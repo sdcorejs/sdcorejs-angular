@@ -1,3 +1,5 @@
+@use '../action-menu/action-menu';
+
 :host {
   display: block;
   flex-shrink: 0;
@@ -61,12 +63,8 @@
     font-size: 18px;
   }
 }
-.sd-selection-menu-icon {
-  margin-right: 12px;
-  vertical-align: middle;
-}
 .sd-selection-menu-heading {
-  padding: 8px 16px 4px;
+  padding: 6px 12px 4px;
   color: var(--sd-text-secondary, #62676d);
   font-size: 12px;
   font-weight: 600;

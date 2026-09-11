@@ -41,7 +41,7 @@ import { SdModal } from '@sdcorejs/angular/components/modal';
 | `[sdFooterLeft]`  | Footer left action group.                           |
 | `[sdFooterRight]` | Footer right action group.                          |
 
-Header, body and footer align to 24px horizontal insets (16px on mobile). Body content scrolls, while the footer remains available and wraps on narrow screens. The footer is hidden when both footer slots are empty.
+Header and footer use a white background (`--sd-white`, default `#fff`) and compact 12px vertical / 16px horizontal padding. Dialog and bottom-sheet body content uses `padding: 12px 16px` on desktop and mobile, giving it its own top and bottom spacing within the separate body surface. Body content scrolls, while the footer remains available and wraps on narrow screens. The footer is hidden when both footer slots are empty.
 
 ## Public API
 
@@ -101,4 +101,4 @@ The real dialog/bottom-sheet container is associated with its visible heading us
 
 ## Overlay presentation refresh
 
-Default dialog radius is 8px and bottom-sheet radius is 12px; existing --sd-overlay-radius and --sd-overlay-bottom-sheet-radius overrides remain supported. Header/body/footer use aligned 24px horizontal insets (16px on narrow screens), 18px titles and 44px mobile action targets. Long content scrolls in the body and footer actions wrap; safe-area bottom padding and reduced-motion transitions are handled locally. Existing projected slots, width/view options and guarded dismissal remain available.
+Default dialog radius is 8px and bottom-sheet radius is 12px; existing --sd-overlay-radius and --sd-overlay-bottom-sheet-radius overrides remain supported. Dialog and bottom-sheet header/footer share 12px vertical padding, 16px horizontal insets and a white background (`--sd-white`, default `#fff`). Body content aligns to the 16px inset; titles remain 18px and mobile action targets remain 44px. Long content scrolls in the body and footer actions wrap; safe-area bottom padding and reduced-motion transitions are handled locally. Existing projected slots, width/view options and guarded dismissal remain available.

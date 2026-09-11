@@ -37,7 +37,7 @@ import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
 | `[sdFooterLeft]`  | Footer left action group.                           |
 | `[sdFooterRight]` | Footer right action group.                          |
 
-Header, body and footer align to 24px horizontal insets (16px on mobile). Body content scrolls, while the footer remains available and wraps on narrow screens. The footer is hidden when both footer slots are empty.
+Header and footer use a white background (`--sd-white`, default `#fff`) and compact 12px vertical / 16px horizontal padding. Body content uses `padding: 12px 16px` on desktop and mobile, giving it its own top and bottom spacing within the separate body surface. Body content scrolls, while the footer remains available and wraps on narrow screens. The footer is hidden when both footer slots are empty.
 
 ## Public API
 
@@ -88,7 +88,7 @@ Do not write `document.body.style.overflow` yourself while a drawer is open; the
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 16px;
+  padding: 0; // The drawer supplies the content insets.
 }
 ```
 
@@ -105,4 +105,4 @@ Each open creates a CDK focus trap around the drawer content. Focus moves inside
 
 Opening makes the drawer visible immediately so focus can enter before the slide/fade animation finishes. Closing delays the hidden state until that animation completes. Reduced motion removes these transitions.
 
-The default radius is 8px, overridable through --sd-overlay-radius. Header/body/footer align at 24px horizontally (16px below 600px); the body scrolls while footer actions remain available. Close/actions are at least 44px on mobile, footer groups wrap, and reduced motion is enforced by the component itself.
+The default radius is 8px, overridable through --sd-overlay-radius. Header/footer use 12px vertical padding and header/body/footer align at 16px horizontally; the body scrolls while footer actions remain available. Close/actions are at least 44px on mobile, footer groups wrap, and reduced motion is enforced by the component itself.
