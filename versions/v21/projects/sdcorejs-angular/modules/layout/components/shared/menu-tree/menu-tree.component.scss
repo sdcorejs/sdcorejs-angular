@@ -68,6 +68,148 @@
   object-fit: contain;
 }
 
+// V3 opts into V1's quiet hierarchy; the shared default remains unchanged.
+.sd-layout-menu-tree--structured {
+  --menu-surface: var(--sd-white, #fff);
+  --menu-line: color-mix(in srgb, var(--sd-border, #c4c6d0) 45%, var(--menu-surface));
+  --menu-ink: var(--sd-text, #252c38);
+  --menu-muted: var(--sd-text-secondary, #6b7280);
+  gap: 0 !important;
+
+  .sd-layout-menu-tree__group,
+  .sd-layout-menu-tree__route {
+    position: relative;
+    min-width: 0;
+    margin: 2px 0;
+  }
+
+  .sd-layout-menu-tree__group {
+    min-height: 34px;
+    padding-right: 10px;
+    color: var(--menu-muted);
+    font-weight: 500;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .sd-layout-menu-tree__root {
+    min-height: 40px;
+    color: var(--menu-ink);
+  }
+
+  .sd-layout-menu-tree__group.sd-layout-menu-tree__root:not(:first-child) {
+    margin-top: 10px;
+  }
+
+  .sd-layout-menu-tree__branch {
+    position: absolute;
+    top: -2px;
+    bottom: -2px;
+    width: 1px;
+    background: var(--menu-line);
+    pointer-events: none;
+  }
+
+  .sd-layout-menu-tree__route-button {
+    position: relative;
+    min-width: 0;
+    min-height: 34px;
+    padding-top: 7px;
+    padding-right: 10px;
+    padding-bottom: 7px;
+    border-radius: 6px;
+    color: var(--menu-ink);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.4;
+  }
+
+  .sd-layout-menu-tree__root .sd-layout-menu-tree__route-button {
+    min-height: 40px;
+    border-radius: 7px;
+    font-weight: 500;
+  }
+
+  .sd-layout-menu-tree__label {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+    min-width: 0;
+  }
+
+  [data-menu-icon] {
+    flex: 0 0 20px;
+    color: var(--menu-muted);
+  }
+
+  .sd-layout-menu-tree__route-button:hover {
+    background: color-mix(in srgb, var(--sd-surface-muted, #e7e8ed) 35%, var(--menu-surface));
+  }
+
+  .sd-layout-menu-tree__route-button--active,
+  .sd-layout-menu-tree__route-button--active:hover {
+    color: var(--sd-primary, #005cbb);
+    background: var(--sd-primary-light, #eaf1fa);
+    font-weight: 500;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 9px;
+      bottom: 9px;
+      width: 3px;
+      border-radius: 2px;
+      background: var(--sd-primary, #005cbb);
+    }
+
+    [data-menu-icon] {
+      color: inherit;
+    }
+  }
+
+  .sd-layout-menu-tree__route-button--active.sd-layout-menu-tree__route-button--nested::before {
+    left: -10px;
+  }
+
+  .sd-layout-menu-tree__pin {
+    position: absolute;
+    right: 2px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    min-height: 32px;
+    border-radius: 6px;
+    color: var(--menu-muted);
+  }
+
+  &.sd-layout-menu-tree--pinnable .sd-layout-menu-tree__route-button {
+    padding-right: 38px;
+  }
+
+  .sd-layout-menu-tree__route-button:focus-visible,
+  .sd-layout-menu-tree__pin:focus-visible {
+    outline-offset: -2px;
+  }
+
+  @media (pointer: coarse) {
+    .sd-layout-menu-tree__route .sd-layout-menu-tree__route-button,
+    .sd-layout-menu-tree__pin {
+      min-height: 44px;
+    }
+    .sd-layout-menu-tree__pin {
+      width: 44px;
+      opacity: 1;
+      pointer-events: auto;
+    }
+    &.sd-layout-menu-tree--pinnable .sd-layout-menu-tree__route-button {
+      padding-right: 50px;
+    }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .sd-layout-menu-tree__route-button,
   .sd-layout-menu-tree__pin {

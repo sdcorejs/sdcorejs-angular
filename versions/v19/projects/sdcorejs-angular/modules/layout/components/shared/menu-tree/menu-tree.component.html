@@ -1,15 +1,39 @@
-<nav class="d-flex flex-column gap-4" aria-label="Navigation menu">
+<nav
+  class="sd-layout-menu-tree d-flex flex-column gap-4"
+  [class.sd-layout-menu-tree--structured]="structured()"
+  [class.sd-layout-menu-tree--pinnable]="showPin()"
+  aria-label="Navigation menu">
   @for (node of nodes(); track node.key) {
     @if (node.isGroup) {
-      <div class="sd-layout-menu-tree__group d-flex align-items-center gap-8 T12M text-black400" [style.padding-left.px]="node.paddingLeft">
-        <sd-icon [name]="node.menu.icon || 'folder'"></sd-icon>
-        <span class="text-ellipsis">{{ node.title }}</span>
+      <div
+        class="sd-layout-menu-tree__group d-flex align-items-center gap-8 T12M text-black400"
+        [class.sd-layout-menu-tree__root]="node.isRoot"
+        [style.padding-left.px]="node.paddingLeft">
+        @for (offset of node.branchOffsets; track offset) {
+          <span data-menu-branch class="sd-layout-menu-tree__branch" [style.left.px]="offset" aria-hidden="true"></span>
+        }
+        @if (node.showIcon) {
+          @if (structured() && node.menu.iconUrl) {
+            <img data-menu-icon class="sd-layout-menu-tree__icon-image" [src]="node.menu.iconUrl" alt="" />
+          } @else {
+            <sd-icon
+              data-menu-icon
+              [name]="node.menu.icon || 'folder'"
+              [fontSet]="iconFontSet()"
+              [size]="structured() ? '20px' : undefined"></sd-icon>
+          }
+        }
+        <span class="sd-layout-menu-tree__label" [class.text-ellipsis]="!structured()">{{ node.title }}</span>
       </div>
     } @else {
       <div
         class="sd-layout-menu-tree__route d-flex align-items-center gap-4"
+        [class.sd-layout-menu-tree__root]="node.isRoot"
         (mouseenter)="onPinHoverStart(node.key)"
         (mouseleave)="onPinHoverEnd(node.key)">
+        @for (offset of node.branchOffsets; track offset) {
+          <span data-menu-branch class="sd-layout-menu-tree__branch" [style.left.px]="offset" aria-hidden="true"></span>
+        }
         <button
           type="button"
           class="sd-layout-menu-tree__route-button d-flex align-items-center gap-8 flex-1 text-left T14R"
@@ -17,14 +41,22 @@
           [attr.data-menu-key]="node.key"
           [attr.aria-current]="node.isActive ? 'page' : null"
           [class.sd-layout-menu-tree__route-button--active]="node.isActive"
-          [style.padding-left.px]="node.paddingLeft"
+          [style.margin-left.px]="node.inset"
+          [style.padding-left.px]="node.paddingLeft - node.inset"
+          [class.sd-layout-menu-tree__route-button--nested]="node.depth > 0"
           (click)="onNavigate(node.menu)">
-          @if (node.menu.iconUrl) {
-            <img class="sd-layout-menu-tree__icon-image" [src]="node.menu.iconUrl" alt="" />
-          } @else {
-            <sd-icon [name]="node.menu.icon || 'chevron_right'"></sd-icon>
+          @if (node.showIcon) {
+            @if (node.menu.iconUrl) {
+              <img data-menu-icon class="sd-layout-menu-tree__icon-image" [src]="node.menu.iconUrl" alt="" />
+            } @else {
+              <sd-icon
+                data-menu-icon
+                [name]="node.menu.icon || 'chevron_right'"
+                [fontSet]="iconFontSet()"
+                [size]="structured() ? '20px' : undefined"></sd-icon>
+            }
           }
-          <span class="text-ellipsis">{{ node.title }}</span>
+          <span class="sd-layout-menu-tree__label" [class.text-ellipsis]="!structured()">{{ node.title }}</span>
         </button>
         @if (showPin()) {
           <button

@@ -41,3 +41,21 @@
 :host ::ng-deep .sd-layout-search-field__control input:focus-visible {
   outline: 0;
 }
+
+// V3 reuses the V1 search surface while SdInput retains composition/value handling.
+.sd-layout-search-field--compact {
+  min-height: 36px;
+  padding: 0 9px;
+  border: 1px solid color-mix(in srgb, var(--sd-border, #c4c6d0) 45%, var(--sd-white, #fff));
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--sd-surface-muted, #e7e8ed) 35%, var(--sd-white, #fff));
+  color: var(--sd-text-secondary, #6b7280);
+  outline: 0;
+  --mat-form-field-container-height: 34px;
+  --mat-form-field-container-vertical-padding: 6px;
+  --mat-form-field-container-text-size: 13px;
+
+  &:focus-within {
+    border-color: color-mix(in srgb, var(--sd-primary, #005cbb) 75%, var(--sd-white, #fff));
+  }
+}
