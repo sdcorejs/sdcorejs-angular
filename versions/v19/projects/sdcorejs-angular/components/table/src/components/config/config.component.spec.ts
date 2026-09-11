@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ConfigComponent } from './config.component';
 import { SdTableOption } from '../../models/table-option.model';
+import { LayoutTestTheme } from '../../../../../testing/layout-theme.spec';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -39,9 +40,11 @@ describe('ConfigComponent (table setup dialog)', () => {
     localStorage.clear();
     localStorage.setItem('sd-core.language', 'vi');
     await TestBed.configureTestingModule({
-      imports: [ConfigComponent, NoopAnimationsModule],
+      imports: [ConfigComponent, LayoutTestTheme, NoopAnimationsModule],
     }).compileComponents();
 
+    TestBed.createComponent(LayoutTestTheme).detectChanges();
+    await document.fonts.ready;
     fixture = TestBed.createComponent(ConfigComponent);
     component = fixture.componentInstance;
     fixture.componentRef.setInput('tableOption', makeOption());
@@ -88,6 +91,39 @@ describe('ConfigComponent (table setup dialog)', () => {
     expect(inputs.length).toBe(2);
     // sd-input đặt class size lên mat-form-field bên trong, không phải host.
     inputs.forEach(input => expect(input.querySelector('mat-form-field.sd-sm')).not.toBeNull());
+  }));
+
+  it('keeps rows compact and centers every checkbox with its input editors', fakeAsync(() => {
+    open();
+    rows().forEach(row => {
+      const rowRect = row.getBoundingClientRect();
+      expect(rowRect.height).withContext('settings row height').toBeLessThanOrEqual(49);
+      const inputRect = row.querySelector('.mat-mdc-text-field-wrapper')!.getBoundingClientRect();
+      row.querySelectorAll('.mdc-checkbox__background').forEach(checkbox => {
+        const rect = checkbox.getBoundingClientRect();
+        expect(Math.abs(rect.top + rect.height / 2 - inputRect.top - inputRect.height / 2))
+          .withContext('checkbox / input vertical centers')
+          .toBeLessThanOrEqual(1);
+        expect(Math.abs(rect.top + rect.height / 2 - rowRect.top - rowRect.height / 2))
+          .withContext('checkbox / row vertical centers')
+          .toBeLessThanOrEqual(1);
+      });
+      row.querySelectorAll('.c-col-toggle .mdc-checkbox__background').forEach(checkbox => {
+        const rect = checkbox.getBoundingClientRect();
+        const cell = checkbox.closest('td')!.getBoundingClientRect();
+        expect(Math.abs(rect.left + rect.width / 2 - cell.left - cell.width / 2))
+          .withContext('checkbox / toggle column horizontal centers')
+          .toBeLessThanOrEqual(1);
+      });
+    });
+  }));
+
+  it('aligns the table border with the modal footer buttons', fakeAsync(() => {
+    open();
+    const modal = panel().closest('.sd-modal-root')!;
+    const table = panel().querySelector('.c-table')!.getBoundingClientRect();
+    const footer = modal.querySelector('.sd-modal-footer-right')!.getBoundingClientRect();
+    expect(Math.abs(table.right - footer.right)).toBeLessThanOrEqual(1);
   }));
 
   // -------------------------------------------------------------------------

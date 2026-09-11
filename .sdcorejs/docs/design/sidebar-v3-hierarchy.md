@@ -1,5 +1,7 @@
 # Sidebar V3 implementation ledger
 
+Continuation 2026-09-11: integrate main `d16b5c81`, resolve generated sync metadata and release suffix 2.8. See [the release integration record](../releases/2.8.md) for current combined-source verification. Unpublished status and artifact hashes below describe the original 2026-09-10 preflight.
+
 Owner: sdcorejs-angular / core-ui-layout. Track: design. Source revision: f65ba0fab2d5c14721d11c4f8a2dc68763c8b278.
 Requirement: user request 2026-09-10, Sidebar V3 improvement using recent V1 and root-menu icons only. Status: implementation direction under direct user authorization; no separate approved spec/plan or approval hash is claimed.
 

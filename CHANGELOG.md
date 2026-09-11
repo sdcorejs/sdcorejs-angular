@@ -6,12 +6,14 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
-## [2.8] - 2026-09-10
+## [2.8] - 2026-09-11
 
 Release suffix `2.8` targets `19.2.8`, `20.2.8`, `21.2.8`, and `22.2.8`.
 
 ### Fixed
 
+- Table settings use compact rows with centered checkboxes and share the modal footer gutters, removing the extra content inset.
+- Small form controls center their resting floating labels consistently with the focused placeholder and value, including select, input, date/time and textarea controls.
 - Loading service overlay CSS now requires `.sd-loading[data-sd-loading-overlay]`; its spinner rules are scoped to the overlay's direct child. Loading `SdButton` hosts keep their header position and size, Material spinner and click protection. Existing classes, API, reference ownership, stylesheet sharing and synchronous cleanup remain unchanged. Chrome rendering regressions cover page/drawer headers, close-button hit testing, unrelated class names and overlapping refs/services.
 
 ### Consumer upgrade

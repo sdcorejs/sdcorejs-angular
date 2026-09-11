@@ -1,5 +1,7 @@
 # Core UI loading overlay — bản vá 2.8
 
+Tiếp nối ngày 2026-09-11: tích hợp Sidebar V3 và main mới nhất, chốt phát hành 2.8 theo [release integration record](../../releases/2.8.md). Các trạng thái chưa publish và hash bên dưới là lịch sử preflight ngày 2026-09-10; trạng thái phát hành thực tế theo workflow của tag `v2.8`.
+
 Ngày kiểm chứng: 2026-09-10. Repository sở hữu source và artifact: `sdcorejs-angular`.
 Phạm vi: lỗi CSS giữa `SdLoadingService` và `SdButton`; chuẩn bị bản vá cho bốn Angular major.
 

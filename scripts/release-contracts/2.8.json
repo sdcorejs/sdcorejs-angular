@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "suffix": "2.8",
-  "reviewedSourceSha": "f65ba0fab2d5c14721d11c4f8a2dc68763c8b278",
-  "artifactSource": "Local 2.8 candidate builds from the loading-overlay and Sidebar V3 hierarchy working tree based on f65ba0fab2d5c14721d11c4f8a2dc68763c8b278; Node 22.22.3. Compared against exact npm *.2.7 baselines: exports and file inventories unchanged. Loading API unchanged. Includes reviewed main table/upload/data-state changes; upload-file declaration removal is documented as breaking in CHANGELOG. Layout adds default-preserving shared tree/search presentation inputs and V3-only hierarchy markup; no existing layout input or output was removed. Unpublished preflight artifacts; CI must rebuild from the release commit.",
+  "reviewedSourceSha": "1d7236d1c38d56d6d2c0b866d5af77cde950bf57",
+  "artifactSource": "Local 2.8 candidate builds from the merged Sidebar V3 release working tree based on 1d7236d1c38d56d6d2c0b866d5af77cde950bf57 plus main d16b5c81; Node 22.22.3. Compared against exact npm *.2.7 baselines: exports and file inventories unchanged. Loading API unchanged. Includes reviewed main table/upload/data-state and table-settings/small-control alignment changes; upload-file declaration removal is documented as breaking in CHANGELOG. Layout adds default-preserving shared tree/search presentation inputs and V3-only hierarchy markup; no existing layout input or output was removed. Unpublished preflight artifacts; CI must rebuild from the release commit.",
   "targets": {
     "19.2.8": {
       "version": "19.2.8",
