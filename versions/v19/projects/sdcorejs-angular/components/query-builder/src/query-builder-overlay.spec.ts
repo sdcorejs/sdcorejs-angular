@@ -43,6 +43,9 @@ describe('SdQueryBuilder add-menu overlay', () => {
   }
 
   it('renders both actions outside the clipped container and keeps the lower action clickable', fakeAsync(() => {
+    // why: giữ chỗ cho menu phía dưới, không phụ thuộc vị trí host trong trang runner hoặc scroll từ spec trước.
+    const clip = fixture.nativeElement.querySelector('[data-clip]') as HTMLElement;
+    Object.assign(clip.style, { position: 'fixed', top: '80px', left: '24px', margin: '0' });
     open();
     const menu = overlays.querySelector('.qb-dropdown');
     expect(menu).not.toBeNull();

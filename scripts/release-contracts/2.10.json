@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "suffix": "2.10",
+  "reviewedSourceSha": "60bd602d314c59395d95e798ee2280cf02220b8b",
+  "artifactSource": "Local unpublished 2.10 artifacts built from main 60bd602d314c59395d95e798ee2280cf02220b8b with version stamping on exact Node 22.22.3. Compared against exact npm 19.2.9/20.2.9/21.2.9/22.2.9 baselines. The only runtime change is atomic sd-table onFilter request preparation and form validation, retaining the first response render while preserving required tenant, stale-response guards and explicit refresh/retry. Dependencies, exports and file inventory are unchanged. Fingerprints bind baseline and candidate source/declaration surfaces; CI rebuilds from the release commit.",
+  "targets": {
+    "19.2.10": {
+      "version": "19.2.10",
+      "baselineVersion": "19.2.9",
+      "dependencies": {
+        "baseline": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f",
+        "candidate": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f"
+      },
+      "exports": {
+        "baseline": "078a9f3619580b6017cb8b5ecc21d40f3876e8bf560774fde5b305fb235e10f1",
+        "candidate": "078a9f3619580b6017cb8b5ecc21d40f3876e8bf560774fde5b305fb235e10f1"
+      },
+      "files": {
+        "baseline": "4f834ba2aeb981ec64b83064433680cd2d85fa7d1386ff4417a5d7adc87839da",
+        "candidate": "4f834ba2aeb981ec64b83064433680cd2d85fa7d1386ff4417a5d7adc87839da"
+      },
+      "publicSurface": {
+        "baseline": "e47dfec641ac2fd66123ff11a34d3ec57e6ba54ac092d9f33e384d2473c5b279",
+        "candidate": "e449c7ab3df2ed44d9b6618370c65d3f67cee5de947bc9636b0d0f3e906be2bd"
+      }
+    },
+    "20.2.10": {
+      "version": "20.2.10",
+      "baselineVersion": "20.2.9",
+      "dependencies": {
+        "baseline": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f",
+        "candidate": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f"
+      },
+      "exports": {
+        "baseline": "078a9f3619580b6017cb8b5ecc21d40f3876e8bf560774fde5b305fb235e10f1",
+        "candidate": "078a9f3619580b6017cb8b5ecc21d40f3876e8bf560774fde5b305fb235e10f1"
+      },
+      "files": {
+        "baseline": "025c0d5ffb6e287a670f7fd4dab3447ec22cb39fb5c1a79043ef7cbf256a2497",
+        "candidate": "025c0d5ffb6e287a670f7fd4dab3447ec22cb39fb5c1a79043ef7cbf256a2497"
+      },
+      "publicSurface": {
+        "baseline": "d358113819be9bf1045d0acdfa2d4b40c0568fc20be934a2bd91d41fbd24c85f",
+        "candidate": "4112a5f16564ced848d8809f38dc1e73d104cbfed5be5c5fb2816fd6bde11552"
+      }
+    },
+    "21.2.10": {
+      "version": "21.2.10",
+      "baselineVersion": "21.2.9",
+      "dependencies": {
+        "baseline": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f",
+        "candidate": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f"
+      },
+      "exports": {
+        "baseline": "a995f16666247c07e3f08c79714d334bb3e30930d18315708ca5cacd4135fcce",
+        "candidate": "a995f16666247c07e3f08c79714d334bb3e30930d18315708ca5cacd4135fcce"
+      },
+      "files": {
+        "baseline": "29e0d97b40e6de03a29074676b55e4606f696db4231167e35bd942887790b2f5",
+        "candidate": "29e0d97b40e6de03a29074676b55e4606f696db4231167e35bd942887790b2f5"
+      },
+      "publicSurface": {
+        "baseline": "7d1ee2323ef965cd77e0e8085a548f0bc5adab34751b90bd734e786790c69a4b",
+        "candidate": "29014fbbebc5b3284d15393ceb8fb0581ee87f08c37147559eb7e000550c483b"
+      }
+    },
+    "22.2.10": {
+      "version": "22.2.10",
+      "baselineVersion": "22.2.9",
+      "dependencies": {
+        "baseline": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f",
+        "candidate": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f"
+      },
+      "exports": {
+        "baseline": "a995f16666247c07e3f08c79714d334bb3e30930d18315708ca5cacd4135fcce",
+        "candidate": "a995f16666247c07e3f08c79714d334bb3e30930d18315708ca5cacd4135fcce"
+      },
+      "files": {
+        "baseline": "29e0d97b40e6de03a29074676b55e4606f696db4231167e35bd942887790b2f5",
+        "candidate": "29e0d97b40e6de03a29074676b55e4606f696db4231167e35bd942887790b2f5"
+      },
+      "publicSurface": {
+        "baseline": "4a637284fd0a6c0fffedd419b70933135d4a70da43cafc5cc376084784794ede",
+        "candidate": "115d3c47dbcea99c21dbeb0afd0ba2d91e79d71c57595aedb6fa23617715dd3e"
+      }
+    }
+  }
+}

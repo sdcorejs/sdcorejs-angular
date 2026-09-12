@@ -3,7 +3,7 @@ name: Publish @sdcorejs/angular to npm
 on:
   push:
     tags:
-      - 'v2.9'
+      - 'v2.10'
   workflow_dispatch:
     inputs:
       artifact_run_id:
@@ -15,7 +15,7 @@ on:
 permissions: {}
 
 concurrency:
-  group: publish-npm-v2.9
+  group: publish-npm-v2.10
   cancel-in-progress: false
 
 jobs:
@@ -33,7 +33,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.event_name == 'workflow_dispatch' && 'refs/tags/v2.9' || github.ref }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && 'refs/tags/v2.10' || github.ref }}
 
       - name: Require the release tag commit to be on main
         run: |
@@ -52,7 +52,7 @@ jobs:
         id: release_plan
         run: |
           echo "source_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-          node --input-type=module -e "import {releaseTargets} from './scripts/release-package-contract.mjs';process.stdout.write('targets_json='+JSON.stringify(releaseTargets('2.9'))+'\n')" >> "$GITHUB_OUTPUT"
+          node --input-type=module -e "import {releaseTargets} from './scripts/release-package-contract.mjs';process.stdout.write('targets_json='+JSON.stringify(releaseTargets('2.10'))+'\n')" >> "$GITHUB_OUTPUT"
 
       - name: Pin npm used by the release contract
         run: |
@@ -227,7 +227,7 @@ jobs:
         if: ${{ inputs.artifact_run_id != '' }}
         uses: actions/download-artifact@v4
         with:
-          name: sdcorejs-angular-${{ matrix.version }}-2.9
+          name: sdcorejs-angular-${{ matrix.version }}-2.10
           path: release-stage
           github-token: ${{ github.token }}
           repository: ${{ github.repository }}
@@ -236,7 +236,7 @@ jobs:
       - name: Upload immutable package artifact
         uses: actions/upload-artifact@v4
         with:
-          name: sdcorejs-angular-${{ matrix.version }}-2.9
+          name: sdcorejs-angular-${{ matrix.version }}-2.10
           path: release-stage
           if-no-files-found: error
           retention-days: 14
@@ -268,7 +268,7 @@ jobs:
       - name: Download every package artifact
         uses: actions/download-artifact@v4
         with:
-          pattern: sdcorejs-angular-v*-2.9
+          pattern: sdcorejs-angular-v*-2.10
           path: release-artifacts
           merge-multiple: true
 
@@ -276,7 +276,7 @@ jobs:
         run: echo "verify artifact workspaces v19 v20 v21 v22 with sha256 integrity shasum"
 
       - name: Validate baselines and compile unchanged strict consumers
-        run: node scripts/release-package-contract.mjs --artifact-root release-artifacts --suffix 2.9 --baseline-suffix 2.8 --datetime-version 1.0.4 --compile-consumers
+        run: node scripts/release-package-contract.mjs --artifact-root release-artifacts --suffix 2.10 --baseline-suffix 2.9 --datetime-version 1.0.4 --compile-consumers
 
   publish-packages:
     name: Publish the verified transaction
@@ -311,12 +311,12 @@ jobs:
       - name: Download the already verified package artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: sdcorejs-angular-v*-2.9
+          pattern: sdcorejs-angular-v*-2.10
           path: release-artifacts
           merge-multiple: true
 
       - name: Execute one fail-closed publish transaction
-        run: node scripts/release-package-contract.mjs --artifact-root release-artifacts --suffix 2.9 --baseline-suffix 2.8 --datetime-version 1.0.4 --publish --require-provenance
+        run: node scripts/release-package-contract.mjs --artifact-root release-artifacts --suffix 2.10 --baseline-suffix 2.9 --datetime-version 1.0.4 --publish --require-provenance
 
   publish-docs-and-page:
     name: Publish verified docs and static page
@@ -346,7 +346,7 @@ jobs:
       - name: Download the verified package artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: sdcorejs-angular-v*-2.9
+          pattern: sdcorejs-angular-v*-2.10
           path: release-artifacts
           merge-multiple: true
 
@@ -354,7 +354,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node scripts/release-package-contract.mjs --artifact-root release-artifacts --suffix 2.9 --baseline-suffix 2.8 --datetime-version 1.0.4 > verified-release.json
+          node scripts/release-package-contract.mjs --artifact-root release-artifacts --suffix 2.10 --baseline-suffix 2.9 --datetime-version 1.0.4 > verified-release.json
           V19_TARBALL="$(find release-artifacts/v19 -type f -name '*.tgz' -print -quit)"
           test -n "$V19_TARBALL"
           sha256sum "$V19_TARBALL"
@@ -366,15 +366,15 @@ jobs:
         run: npm --prefix showcase ci --legacy-peer-deps
 
       - name: Generate all four API-doc archives
-        run: npm run collect-release-docs -- --patch 2.9 --date "$(date -u +%F)" --commit "${{ needs.verify_source.outputs.source_sha }}" --skip-existing
+        run: npm run collect-release-docs -- --patch 2.10 --date "$(date -u +%F)" --commit "${{ needs.verify_source.outputs.source_sha }}" --skip-existing
 
       - name: Build and retain static release page
         shell: bash
         run: |
-          npm run build:page -- --suffix 2.9
-          test -d published-pages/2.9
-          test ! -d published-pages/2.4
-          node -e "const p=require('./published-pages/pages.json');const retained2x=p.suffixes.filter(s=>s.startsWith('2.'));if(p.latest!=='2.9'||retained2x.join(',')!=='2.9,2.8,2.7,2.6,2.5'||!p.suffixes.some(s=>s.startsWith('1.')))throw new Error('published-pages retention mismatch')"
+          npm run build:page -- --suffix 2.10
+          test -d published-pages/2.10
+          test ! -d published-pages/2.5
+          node -e "const p=require('./published-pages/pages.json');const retained2x=p.suffixes.filter(s=>s.startsWith('2.'));if(p.latest!=='2.10'||retained2x.join(',')!=='2.10,2.9,2.8,2.7,2.6'||!p.suffixes.some(s=>s.startsWith('1.')))throw new Error('published-pages retention mismatch')"
 
       - name: Commit generated docs and page
         shell: bash
@@ -383,7 +383,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add published-docs published-pages
-          git commit -m "docs: publish Angular 22 release 2.9"
+          git commit -m "docs: publish Angular 22 release 2.10"
           SOURCE_SHA="${{ needs.verify_source.outputs.source_sha }}"
           test "$(git rev-parse HEAD^)" = "$SOURCE_SHA"
           git fetch origin main --no-tags
