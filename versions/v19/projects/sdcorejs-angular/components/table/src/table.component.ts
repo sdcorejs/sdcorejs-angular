@@ -491,6 +491,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   #optionRevision = 0;
   #configurationRevision = 0;
   #configurationReady = false;
+  #preparingFilterRequest?: SdTableFilterRequest;
   #hydration?: Promise<void>;
   #retryConfiguration?: () => Promise<void>;
   #pendingReload?: ScheduledTableRead;
@@ -694,6 +695,10 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
   #requestReload = (force: boolean, delay = 200, source: 'filter' | 'read' = 'read') => {
     if (this.#destroyed || !this.#configurationReady) return;
+    if (this.#preparingFilterRequest) {
+      Object.assign(this.#preparingFilterRequest, this.getFilterRequest());
+      return;
+    }
     this.#read.invalidate();
     this.#failedRead = undefined;
     this.loading.set(false);
@@ -847,8 +852,12 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       this.quickSearchValue.set(value.quickSearch || { term: '', filters: {} });
       this.columnOperator = value.columnOperator || {};
       this.#syncColumnFilterInPlace(value.columnFilter || {});
-      // why: snapshot ban đầu chỉ hydrate state; cấu hình sở hữu initial read sau khi lookup và form sẵn sàng.
+      // why: hydrate ban đầu và onFilter chuẩn bị chính request hiện tại; không phát lịch đọc tự hủy nhánh đang chờ render.
       if (!this.#configurationReady) return;
+      if (this.#preparingFilterRequest) {
+        Object.assign(this.#preparingFilterRequest, this.getFilterRequest());
+        return;
+      }
       if (value.notReload) {
         if (this.#pendingReload?.source === 'filter' && !this.#pendingReload.force) this.#cancelReload();
         return;
@@ -966,21 +975,31 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     this.#checkFilter(filterReq);
 
     const opt = this.tableOption()!;
-    const validQuickSearch = quickSearchValid(this.quickSearchOption(), filterReq.quickSearch);
+    let validQuickSearch = quickSearchValid(this.quickSearchOption(), filterReq.quickSearch);
     if (opt.type === 'local' && !validQuickSearch) {
       this.loading.set(false);
       return { items: [], total: 0 };
     }
     if (opt.type === 'server') {
       const { items, onFilter } = opt;
+      this.#preparingFilterRequest = filterReq;
       try {
-        onFilter?.(filterReq, {
-          externalFilterValid: !this.externalFilter()?.form?.invalid,
-          quickSearchValid: validQuickSearch,
-        });
-      } catch (err) {
-        console.error(err);
+        try {
+          onFilter?.(filterReq, {
+            externalFilterValid: !this.externalFilter()?.form?.invalid,
+            quickSearchValid: validQuickSearch,
+          });
+        } catch (err) {
+          console.error(err);
+        }
+        // why: form phải nhận model vừa hydrate trước khi kiểm tra required; emission từ control vẫn thuộc request này.
+        if (onFilter) this.#ref.detectChanges();
+      } finally {
+        this.#preparingFilterRequest = undefined;
       }
+      // why: onFilter có thể hydrate tenant/filter từ URL trước khi chụp snapshot; kiểm tra giá trị đã áp dụng.
+      validQuickSearch = quickSearchValid(this.quickSearchOption(), filterReq.quickSearch);
+      this.#checkFilter(filterReq);
       if (this.externalFilter()?.form?.invalid || !validQuickSearch) {
         this.#read.invalidate();
         this.#failedRead = undefined;

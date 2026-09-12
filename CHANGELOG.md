@@ -6,6 +6,10 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+### Fixed
+
+- `sd-table` renders its first successful response when `onFilter` restores URL/saved filters, including the `setFilter()` followed by `notReload` sequence used by Enterprise Console's tenant list. Synchronous hook updates now hydrate the current request and controls before validation instead of cancelling their own read/render subscription. Recheck required tenant validity after hydration; preserve later filter/scope cancellation and explicit refresh/retry. Real-table HTTP regressions verify row DOM and totals as well as loader/request counts with POST dedupe disabled.
+
 ## [2.9] - 2026-09-11
 
 Release suffix `2.9` targets `19.2.9`, `20.2.9`, `21.2.9`, and `22.2.9`.

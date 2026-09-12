@@ -88,6 +88,55 @@ describe('SdTable initial read lifecycle with real HTTP loaders', () => {
     http.expectNone('/table/paging');
   }
 
+  for (const transport of ['http', 'api-no-dedupe'] as const) {
+    for (const saved of [false, true]) {
+      it(`renders the first ${transport} response after onFilter restores ${saved ? 'saved' : 'empty'} URL state`, fakeAsync(() => {
+        prepare(transport);
+        option.filter = { quickSearch: { containFields: ['name'], filters: [] } };
+        let pendingQuery = true;
+        option.onFilter = request => {
+          if (!pendingQuery) return;
+          pendingQuery = false;
+          // Enterprise Console restores its tenant URL before Core captures the request.
+          table.setFilter({
+            columnFilter: saved ? { name: 'Saved tenant' } : {},
+            externalFilter: {},
+            quickSearch: { term: saved ? 'Saved search' : '', filters: {} },
+          });
+          table.filterRegister.value.set({ columnOperator: {}, notReload: true });
+          table.paginator()!.pageIndex = saved ? 2 : 0;
+          Object.assign(request, table.getFilterRequest());
+        };
+        start();
+        tick(saved ? 1500 : 250);
+        const request = paging();
+        expect(request.request.body.pageNumber).toBe(saved ? 2 : 0);
+        expect(loader.calls.first().args[0].rawColumnFilter['name']).toBe(saved ? 'Saved tenant' : undefined);
+        expect(loader.calls.first().args[0].quickSearch?.term).toBe(saved ? 'Saved search' : '');
+        respond(request, 'Visible tenant');
+        tick(1500);
+        expect(loadValues).toHaveBeenCalledTimes(1);
+        expect(loader).toHaveBeenCalledTimes(1);
+        http.expectNone('/table/paging');
+        expect(table.readState().status).toBe('ready');
+        expect(table.loading()).toBeFalse();
+        expect(table.dataItems).toEqual([{ id: 1, name: 'Visible tenant' }]);
+        expect(fixture.nativeElement.querySelector('tbody')?.textContent).toContain('Visible tenant');
+        expect(table.total()).toBe(30);
+
+        table.reload();
+        flushMicrotasks();
+        const refreshed = paging();
+        expect(refreshed.request.body).toEqual(request.request.body);
+        respond(refreshed, 'Refreshed tenant');
+        tick(1000);
+        expect(loader).toHaveBeenCalledTimes(2);
+        expect(fixture.nativeElement.querySelector('tbody')?.textContent).toContain('Refreshed tenant');
+        http.expectNone('/table/paging');
+      }));
+    }
+  }
+
   for (const transport of ['http', 'api-default', 'api-no-dedupe'] as const) {
     for (const slow of [false, true]) {
       it(`reads once through ${transport} with a ${slow ? 'slow' : 'fast'} initial response`, fakeAsync(() => {
@@ -105,6 +154,162 @@ describe('SdTable initial read lifecycle with real HTTP loaders', () => {
       }));
     }
   }
+
+  it('renders after async lookup and onFilter hydration, then rejects a response superseded by a real filter change', fakeAsync(() => {
+    prepare();
+    const client = TestBed.inject(HttpClient);
+    option.columns.push({
+      field: 'status',
+      title: 'Status',
+      type: 'values',
+      option: { valueField: 'id', displayField: 'name', items: () => firstValueFrom(client.get<Row[]>('/table/statuses')) },
+    });
+    option.onFilter = request => {
+      table.setFilter({ columnFilter: request.rawColumnFilter });
+      table.filterRegister.value.set({ notReload: true });
+      Object.assign(request, table.getFilterRequest());
+    };
+    start();
+    tick(1500);
+    http.expectNone('/table/paging');
+    http.expectOne('/table/statuses').flush([{ id: 1, name: 'Active' }]);
+    flushMicrotasks();
+    fixture.detectChanges();
+    tick(250);
+    const old = paging();
+    table.setFilter({ columnFilter: { name: 'New tenant' } });
+    respond(old, 'Stale tenant');
+    expect(table.dataItems).toEqual([]);
+    tick(800);
+    const current = paging();
+    expect(current.request.body.filters).toContain(jasmine.objectContaining({ field: 'name', data: 'New tenant' }));
+    respond(current, 'New tenant');
+    tick(1000);
+    expect(loader).toHaveBeenCalledTimes(2);
+    expect(loadValues).toHaveBeenCalledTimes(1);
+    expect(table.readState().status).toBe('ready');
+    expect(table.loading()).toBeFalse();
+    expect(fixture.nativeElement.querySelector('tbody')?.textContent).toContain('New tenant');
+    http.expectNone('/table/paging');
+  }));
+
+  it('checks required tenant validity after onFilter hydrates the current request', fakeAsync(() => {
+    prepare();
+    option.filter = {
+      quickSearch: {
+        filters: [
+          {
+            field: 'tenantId',
+            title: 'Tenant',
+            type: 'values',
+            required: true,
+            option: { valueField: 'id', displayField: 'name', items: [{ id: 'Current tenant', name: 'Current tenant' }] },
+          },
+        ],
+      },
+    };
+    option.onFilter = request => {
+      table.setFilter({ quickSearch: { term: '', filters: { tenantId: 'Current tenant' } } });
+      table.filterRegister.value.set({ notReload: true });
+      Object.assign(request, table.getFilterRequest());
+    };
+    start();
+    tick(1000);
+    const request = paging();
+    expect(request.request.body.filters).toContain(jasmine.objectContaining({ field: 'tenantId', data: 'Current tenant' }));
+    respond(request, 'Current tenant');
+    tick(1000);
+    expect(loader).toHaveBeenCalledTimes(1);
+    expect(table.requireFiltered()).toBeFalse();
+    expect(fixture.nativeElement.querySelector('tbody')?.textContent).toContain('Current tenant');
+    http.expectNone('/table/paging');
+  }));
+
+  it('includes filter commits made inside onFilter without requiring the consumer to copy the request', fakeAsync(() => {
+    prepare();
+    option.onFilter = () => {
+      table.setFilter({ columnFilter: { name: 'Hydrated' } });
+      table.filterRegister.value.set({ notReload: true });
+    };
+    start();
+    tick(1000);
+    const request = paging();
+    expect(request.request.body.filters).toContain(jasmine.objectContaining({ field: 'name', data: 'Hydrated' }));
+    respond(request, 'Hydrated');
+    tick(1000);
+    expect(loader).toHaveBeenCalledTimes(1);
+    expect(table.readState().status).toBe('ready');
+    expect(table.loading()).toBeFalse();
+    expect(fixture.nativeElement.querySelector('tbody')?.textContent).toContain('Hydrated');
+    http.expectNone('/table/paging');
+  }));
+
+  for (const valid of [false, true]) {
+    it(`validates the external form after onFilter ${valid ? 'restores' : 'clears'} a required tenant`, fakeAsync(() => {
+      prepare();
+      option.filter = {
+        externalFilters: [
+          {
+            field: 'tenantId',
+            title: 'Tenant',
+            type: 'string',
+            required: true,
+            defaultShowing: true,
+            default: valid ? undefined : 'Previous tenant',
+          },
+        ],
+      };
+      option.onFilter = () => {
+        table.filterRegister.value.set({ externalFilter: { tenantId: valid ? 'Current tenant' : undefined }, notReload: true });
+      };
+      start();
+      tick(1000);
+      const requests = http.match('/table/paging');
+      expect(requests.length).toBe(valid ? 1 : 0);
+      expect(loader).toHaveBeenCalledTimes(valid ? 1 : 0);
+      for (const request of requests) {
+        expect(request.request.body.filters).toContain(jasmine.objectContaining({ field: 'tenantId', data: 'Current tenant' }));
+        respond(request, 'Current tenant');
+      }
+      tick(1000);
+      expect(table.externalFilter()!.form.valid).toBe(valid);
+      expect(table.dataItems.length).toBe(valid ? 1 : 0);
+      expect(table.loading()).toBeFalse();
+      http.expectNone('/table/paging');
+    }));
+  }
+
+  it('ends filter preparation even when onFilter throws, preserving later reads and retry', fakeAsync(() => {
+    prepare();
+    const error = new Error('consumer hook failed');
+    const logged = spyOn(console, 'error');
+    option.onFilter = request => {
+      table.setFilter({ columnFilter: request.rawColumnFilter });
+      table.filterRegister.value.set({ notReload: true });
+      throw error;
+    };
+    initial();
+    expect(logged).toHaveBeenCalledWith(error);
+    expect(fixture.nativeElement.querySelector('tbody')?.textContent).toContain('Current');
+    table.setFilter({ columnFilter: { name: 'Changed' } });
+    tick(1000);
+    const failed = paging();
+    failed.flush('Unavailable', { status: 503, statusText: 'Unavailable' });
+    flushMicrotasks();
+    fixture.detectChanges();
+    expect(table.readState().status).toBe('error');
+    expect(table.loading()).toBeFalse();
+    expect(table.dataItems).toEqual([{ id: 1, name: 'Current' }]);
+    table.retryRead();
+    flushMicrotasks();
+    const retry = paging();
+    expect(retry.request.body).toEqual(failed.request.body);
+    respond(retry, 'Recovered');
+    tick(1000);
+    expect(loader).toHaveBeenCalledTimes(3);
+    expect(fixture.nativeElement.querySelector('tbody')?.textContent).toContain('Recovered');
+    http.expectNone('/table/paging');
+  }));
 
   it('waits for async lookup before hydrating filters and making the only initial read', fakeAsync(() => {
     prepare();

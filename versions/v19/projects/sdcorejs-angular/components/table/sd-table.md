@@ -15,6 +15,13 @@ Các thao tác tự động dùng chung một lịch đọc có thể hủy: pag
 thay thế lịch đang chờ. `notReload` chỉ commit giá trị; manual external filter vẫn
 chờ Apply. Required external filter/tenant chưa hợp lệ tiếp tục chặn loader.
 
+`onFilter` chạy đồng bộ trong bước chuẩn bị request. Nếu hook hydrate URL/saved
+filter qua `setFilter()` hoặc `filterRegister.value.set(...)`, các giá trị đó
+được đưa vào chính request hiện tại; không tạo một lịch đọc khác để tự hủy lần
+đọc đang chạy. Cặp `setFilter()` rồi `notReload: true` vẫn render response đầu
+tiên, bao gồm khi URL không có filter. Required tenant được kiểm tra lại sau
+hook. Thay đổi filter sau bước chuẩn bị vẫn hủy hiệu lực response cũ như thường.
+
 `reload()` hủy lịch tự động đang chờ và đọc lại chủ động, kể cả payload giống lần
 trước. Refresh trong lúc lookup khởi tạo đang chạy chờ hydrate rồi dùng chính lần
 đọc đó. Lỗi lookup hiển thị error state/Retry kể cả trước khi có cấu hình, tuân theo
