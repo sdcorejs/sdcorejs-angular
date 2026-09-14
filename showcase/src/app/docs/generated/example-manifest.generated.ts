@@ -210,6 +210,7 @@ export type ShowcaseExampleSourceKey =
   | "forms/checkbox/example-bao-loi-inlineerror"
   | "forms/checkbox/example-che-do-xem"
   | "forms/checkbox/example-co-ban"
+  | "forms/checkbox/example-kich-thuoc"
   | "forms/checkbox/example-mau-sac"
   | "forms/checkbox/example-nhom-tuy-chon"
   | "forms/checkbox/example-trang-thai"
@@ -1812,6 +1813,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-co-ban",
     title: "Cơ bản",
     description: "Bind [(model)] với boolean — hiển thị giá trị bên dưới.",
+  },
+  {
+    sourceKey: "forms/checkbox/example-kich-thuoc",
+    pageKey: "forms/checkbox",
+    sectionId: "example-kich-thuoc",
+    title: "Kích thước",
+    description: "Cùng kích thước chữ; ô chọn và khoảng cách nhãn thay đổi theo size. md là mặc định.",
   },
   {
     sourceKey: "forms/checkbox/example-nhom-tuy-chon",

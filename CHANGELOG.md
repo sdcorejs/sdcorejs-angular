@@ -6,6 +6,10 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+### Added
+
+- Add `size` to `sd-checkbox` using the shared `Size` type and `data-size` pattern from `sd-switch`: `sm` / `md` / `lg` (default `md`), with proportional box/icons and label spacing, retained touch targets, and showcase examples.
+
 ## [2.10] - 2026-09-12
 
 Release suffix `2.10` targets `19.2.10`, `20.2.10`, `21.2.10`, and `22.2.10`.

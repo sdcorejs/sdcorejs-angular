@@ -15,7 +15,7 @@ import {
   ɵsdFormControlConnector,
   ɵSdFormControlParent,
 } from '@sdcorejs/angular/forms/models';
-import { Color } from '@sdcorejs/utils/models';
+import { Color, Size } from '@sdcorejs/utils/models';
 import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
@@ -28,6 +28,7 @@ import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
   // toàn app — vô ích, và lệch với mọi control khác trong forms/**.
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
+    '[attr.data-size]': 'size()',
     // why: host class .sd-c-<x> + default sd-c-primary cho fallback. Thay data-sd-color
     // để tránh edge case host-attr-binding không reactive trong vài cảnh build pipeline.
     '[class.sd-c-primary]': "color() === 'primary'",
@@ -61,6 +62,7 @@ export class SdCheckbox {
     transform: (v): Color => v || 'primary',
   });
   readonly disabled = input(false, { transform: booleanAttribute });
+  readonly size = input<Size>('md');
   /** Display mode: `false` edit · `true` static view · `'inline'` interactive (disabled `'inline'` → static). */
   readonly viewed = input<SdViewed, SdViewedInput>(false, { transform: sdViewedTransform });
 

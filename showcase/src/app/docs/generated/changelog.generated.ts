@@ -58,13 +58,390 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
     "unreleased": true,
     "packageVersions": [],
     "summaryMarkdown": "",
-    "markdown": "### Added\n\n- Table supports an optional `filter.quickSearch` row: Enter commits the keyword, `containFields` and `equalFields` generate an OR group, and `values`/`lazy-values` dropdowns apply immediately. Dropdowns support signal defaults, reactive visibility/disabled state, required values and user-only `onChange`. The applied `{ term, filters }` is available in `filterReq.quickSearch` even without search fields. `sdTableQuickSearchRightDef` lets consumers project optional UI on the right.\n\n### Changed\n\n- Table external filters use small controls with inline errors hidden and a padded section body. Desktop tables use subtle 6px outer corners while retaining their existing scroll and sticky behavior.\n- Confirm, Notify, Inform and Data-state now use circular status icon backgrounds, including compact Data-state. Existing icon sizes, semantic colors, layouts and interactions are preserved.\n- Section header icons use a 32px circular soft background with a centered 20px glyph, matching `iconColor` across all six color tokens. Custom header slots and collapse behavior are preserved.\n\n### Fixed\n\n- Disabled table row-command icons use the button's muted disabled color instead of retaining the active icon color.\n- Table desktop command touch targets stay within each button, preventing adjacent commands from intercepting clicks.\n- Sidebar V1 search uses a compact light native input with a leading icon and a single thin focus border. Keep existing search matching and IME buffering; make clear accessible by keyboard and restore input focus after clearing.",
+    "markdown": "### Added\n\n- Add `size` to `sd-checkbox` using the shared `Size` type and `data-size` pattern from `sd-switch`: `sm` / `md` / `lg` (default `md`), with proportional box/icons and label spacing, retained touch targets, and showcase examples.",
     "sections": [
       {
         "key": "added",
         "title": "Added",
         "level": 3,
         "anchor": "unreleased-added",
+        "markdown": "- Add `size` to `sd-checkbox` using the shared `Size` type and `data-size` pattern from `sd-switch`: `sm` / `md` / `lg` (default `md`), with proportional box/icons and label spacing, retained touch targets, and showcase examples.",
+        "items": [
+          {
+            "text": "Add `size` to `sd-checkbox` using the shared `Size` type and `data-size` pattern from `sd-switch`: `sm` / `md` / `lg` (default `md`), with proportional box/icons and label spacing, retained touch targets, and showcase examples.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      }
+    ]
+  },
+  {
+    "id": "release-2-10",
+    "title": "Release 2.10",
+    "suffix": "2.10",
+    "date": "2026-09-12",
+    "anchor": "release-2-10",
+    "unreleased": false,
+    "packageVersions": [
+      {
+        "angularMajor": 19,
+        "version": "19.2.10"
+      },
+      {
+        "angularMajor": 20,
+        "version": "20.2.10"
+      },
+      {
+        "angularMajor": 21,
+        "version": "21.2.10"
+      },
+      {
+        "angularMajor": 22,
+        "version": "22.2.10"
+      }
+    ],
+    "summaryMarkdown": "Release suffix `2.10` targets `19.2.10`, `20.2.10`, `21.2.10`, and `22.2.10`.",
+    "markdown": "Release suffix `2.10` targets `19.2.10`, `20.2.10`, `21.2.10`, and `22.2.10`.\n\n### Fixed\n\n- `sd-table` renders its first successful response when `onFilter` restores URL/saved filters, including the `setFilter()` followed by `notReload` sequence used by Enterprise Console's tenant list. Synchronous hook updates now hydrate the current request and controls before validation instead of cancelling their own read/render subscription. Recheck required tenant validity after hydration; preserve later filter/scope cancellation and explicit refresh/retry. Real-table HTTP regressions verify row DOM and totals as well as loader/request counts with POST dedupe disabled.\n\n- Stabilize the existing Query Builder overlay test fixture's viewport position while retaining clipping, clickability and flip-above assertions. Query Builder runtime behavior is unchanged.\n\n### Consumer upgrade\n\n- Enterprise Console: upgrade Core to `20.2.10` to fix the tenant list staying empty after a successful initial paging response. No table or POST-dedupe workaround is required. Keep the independent layout/configuration and tab-router patch hunks, rebasing only their package version/guard as part of the dependency upgrade; the initial-read duplication patch removed for `20.2.9` stays removed.",
+    "sections": [
+      {
+        "key": "fixed",
+        "title": "Fixed",
+        "level": 3,
+        "anchor": "release-2-10-fixed",
+        "markdown": "- `sd-table` renders its first successful response when `onFilter` restores URL/saved filters, including the `setFilter()` followed by `notReload` sequence used by Enterprise Console's tenant list. Synchronous hook updates now hydrate the current request and controls before validation instead of cancelling their own read/render subscription. Recheck required tenant validity after hydration; preserve later filter/scope cancellation and explicit refresh/retry. Real-table HTTP regressions verify row DOM and totals as well as loader/request counts with POST dedupe disabled.\n\n- Stabilize the existing Query Builder overlay test fixture's viewport position while retaining clipping, clickability and flip-above assertions. Query Builder runtime behavior is unchanged.",
+        "items": [
+          {
+            "text": "`sd-table` renders its first successful response when `onFilter` restores URL/saved filters, including the `setFilter()` followed by `notReload` sequence used by Enterprise Console's tenant list. Synchronous hook updates now hydrate the current request and controls before validation instead of cancelling their own read/render subscription. Recheck required tenant validity after hydration; preserve later filter/scope cancellation and explicit refresh/retry. Real-table HTTP regressions verify row DOM and totals as well as loader/request counts with POST dedupe disabled.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Stabilize the existing Query Builder overlay test fixture's viewport position while retaining clipping, clickability and flip-above assertions. Query Builder runtime behavior is unchanged.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      },
+      {
+        "key": "consumer-upgrade",
+        "title": "Consumer upgrade",
+        "level": 3,
+        "anchor": "release-2-10-consumer-upgrade",
+        "markdown": "- Enterprise Console: upgrade Core to `20.2.10` to fix the tenant list staying empty after a successful initial paging response. No table or POST-dedupe workaround is required. Keep the independent layout/configuration and tab-router patch hunks, rebasing only their package version/guard as part of the dependency upgrade; the initial-read duplication patch removed for `20.2.9` stays removed.",
+        "items": [
+          {
+            "text": "Enterprise Console: upgrade Core to `20.2.10` to fix the tenant list staying empty after a successful initial paging response. No table or POST-dedupe workaround is required. Keep the independent layout/configuration and tab-router patch hunks, rebasing only their package version/guard as part of the dependency upgrade; the initial-read duplication patch removed for `20.2.9` stays removed.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      }
+    ]
+  },
+  {
+    "id": "release-2-9",
+    "title": "Release 2.9",
+    "suffix": "2.9",
+    "date": "2026-09-11",
+    "anchor": "release-2-9",
+    "unreleased": false,
+    "packageVersions": [
+      {
+        "angularMajor": 19,
+        "version": "19.2.9"
+      },
+      {
+        "angularMajor": 20,
+        "version": "20.2.9"
+      },
+      {
+        "angularMajor": 21,
+        "version": "21.2.9"
+      },
+      {
+        "angularMajor": 22,
+        "version": "22.2.9"
+      }
+    ],
+    "summaryMarkdown": "Release suffix `2.9` targets `19.2.9`, `20.2.9`, `21.2.9`, and `22.2.9`.",
+    "markdown": "Release suffix `2.9` targets `19.2.9`, `20.2.9`, `21.2.9`, and `22.2.9`.\n\n### Changed (BREAKING for consumers)\n\n- Remove `@sdcorejs/angular/components/chart` and its `SdLineChartComponent`, `SdBarChartComponent`, `SdPieChartComponent`, and `SdDoughnutChartComponent` exports (also removed from the root/components barrels). Chart.js is no longer a Core UI dependency; consumers choose, install, and configure their own chart library. `sd-org-chart` remains available.\n\n  Migration: remove the Core UI chart imports and replace `<sd-line-chart>`, `<sd-bar-chart>`, `<sd-pie-chart>`, and `<sd-doughnut-chart>` in consumer templates. If retaining Chart.js, declare `chart.js` as a direct application dependency and own its canvas lifecycle and registration:\n\n  ```diff\n  - import { SdLineChartComponent } from '@sdcorejs/angular/components/chart';\n  - // Component imports: [SdLineChartComponent]\n  + import { Chart, registerables } from 'chart.js'; // installed by the consumer\n  + Chart.register(...registerables);\n  + // Create a Chart on the application's canvas and destroy it during teardown.\n  ```\n\n### Added\n\n- `sd-switch` supports `size=\"sm | md | lg\"` (default `md`) with matching track, handle, icon and focus-layer dimensions. Switches rendered inside `sd-table`, including consumer cell templates, use the compact `sm` appearance automatically.\n- Sidebar V3 supports independent expand/collapse of menu groups at every depth, with keyboard-accessible disclosure buttons. Group state survives search and sidebar rail toggles; navigation opens the active branch, and selecting a group icon in the rail opens that group.\n- Form builder groups support `properties.collapsible` (default `false`), matching `sd-section`. Enable it to expand/collapse groups in preview and form render while preserving child values and validation. Group conditions remain limited to visibility; disabled-when rules belong to child fields.\n\n### Fixed\n\n- `sd-table` hydrates configuration, asynchronous lookups and filters before one initial read. Remove duplicate initial BehaviorSubject emissions and coordinate subsequent reads through one cancellable scheduler. Preserve manual/notReload filters, required tenant, quick search, inline/saved/URL filters, paging/sort, explicit refresh/retry and loading/error states; discard stale scope/destroy responses. POST caching and deduplication remain opt-in. Real-table HTTP regressions count both loader calls and requests with dedupe disabled.\n\n- Table row-command children and selection-action menus use a compact white CDK menu with 36px rows, 18px icons and 8px corners. Preserve child filtering, disabled commands, callbacks, keyboard navigation, focus restoration and overlay placement outside clipped cells; touch targets remain 44px.\n- Side drawer, dialog and bottom-sheet headers/footers share a white background and use compact 12px vertical and 16px horizontal padding. Body content also uses `12px 16px` padding on desktop and mobile, including its own top spacing below the separate header surface; mobile safe-area spacing and touch targets remain supported.\n- Tab group pills clip hover/ripple effects to their rounded shape and retain the active fill on hover. Segmented tabs have a 4px gap so adjacent hover backgrounds remain separate.\n- Hover-copy confirmation tooltips render in a CDK overlay above table rows and outside clipped cells. Scrolling, disabling and teardown clean up the overlay; initial rendering creates only one copy button.\n- Query builder's add-condition/group menu renders outside ancestor overflow, keeping both actions visible in short modal bodies. Backdrop/Escape dismissal and focus restoration keep the surrounding modal open.\n\n### Consumer upgrade\n\n- Enterprise Console: after `20.2.9` is published and verified, update Core and the lockfile, then remove only the temporary patch that suppresses duplicate initial table reads/paging. Remove POST dedupe only where it was added solely to mask this duplication; explicit refresh/retry must still send a new request. Rebase remaining Core patches independently and verify loader/request counts after a clean install.",
+    "sections": [
+      {
+        "key": "changed",
+        "title": "Changed (BREAKING for consumers)",
+        "level": 3,
+        "anchor": "release-2-9-changed-breaking-for-consumers",
+        "markdown": "- Remove `@sdcorejs/angular/components/chart` and its `SdLineChartComponent`, `SdBarChartComponent`, `SdPieChartComponent`, and `SdDoughnutChartComponent` exports (also removed from the root/components barrels). Chart.js is no longer a Core UI dependency; consumers choose, install, and configure their own chart library. `sd-org-chart` remains available.\n\n  Migration: remove the Core UI chart imports and replace `<sd-line-chart>`, `<sd-bar-chart>`, `<sd-pie-chart>`, and `<sd-doughnut-chart>` in consumer templates. If retaining Chart.js, declare `chart.js` as a direct application dependency and own its canvas lifecycle and registration:\n\n  ```diff\n  - import { SdLineChartComponent } from '@sdcorejs/angular/components/chart';\n  - // Component imports: [SdLineChartComponent]\n  + import { Chart, registerables } from 'chart.js'; // installed by the consumer\n  + Chart.register(...registerables);\n  + // Create a Chart on the application's canvas and destroy it during teardown.\n  ```",
+        "items": [
+          {
+            "text": "Remove `@sdcorejs/angular/components/chart` and its `SdLineChartComponent`, `SdBarChartComponent`, `SdPieChartComponent`, and `SdDoughnutChartComponent` exports (also removed from the root/components barrels). Chart.js is no longer a Core UI dependency; consumers choose, install, and configure their own chart library. `sd-org-chart` remains available.",
+            "ordered": false,
+            "children": [
+              {
+                "text": "import { SdLineChartComponent } from '@sdcorejs/angular/components/chart';",
+                "ordered": false,
+                "children": []
+              },
+              {
+                "text": "// Component imports: [SdLineChartComponent]",
+                "ordered": false,
+                "children": []
+              },
+              {
+                "text": "import { Chart, registerables } from 'chart.js'; // installed by the consumer",
+                "ordered": false,
+                "children": []
+              },
+              {
+                "text": "Chart.register(...registerables);",
+                "ordered": false,
+                "children": []
+              },
+              {
+                "text": "// Create a Chart on the application's canvas and destroy it during teardown.",
+                "ordered": false,
+                "children": []
+              }
+            ]
+          }
+        ],
+        "children": []
+      },
+      {
+        "key": "added",
+        "title": "Added",
+        "level": 3,
+        "anchor": "release-2-9-added",
+        "markdown": "- `sd-switch` supports `size=\"sm | md | lg\"` (default `md`) with matching track, handle, icon and focus-layer dimensions. Switches rendered inside `sd-table`, including consumer cell templates, use the compact `sm` appearance automatically.\n- Sidebar V3 supports independent expand/collapse of menu groups at every depth, with keyboard-accessible disclosure buttons. Group state survives search and sidebar rail toggles; navigation opens the active branch, and selecting a group icon in the rail opens that group.\n- Form builder groups support `properties.collapsible` (default `false`), matching `sd-section`. Enable it to expand/collapse groups in preview and form render while preserving child values and validation. Group conditions remain limited to visibility; disabled-when rules belong to child fields.",
+        "items": [
+          {
+            "text": "`sd-switch` supports `size=\"sm | md | lg\"` (default `md`) with matching track, handle, icon and focus-layer dimensions. Switches rendered inside `sd-table`, including consumer cell templates, use the compact `sm` appearance automatically.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Sidebar V3 supports independent expand/collapse of menu groups at every depth, with keyboard-accessible disclosure buttons. Group state survives search and sidebar rail toggles; navigation opens the active branch, and selecting a group icon in the rail opens that group.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Form builder groups support `properties.collapsible` (default `false`), matching `sd-section`. Enable it to expand/collapse groups in preview and form render while preserving child values and validation. Group conditions remain limited to visibility; disabled-when rules belong to child fields.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      },
+      {
+        "key": "fixed",
+        "title": "Fixed",
+        "level": 3,
+        "anchor": "release-2-9-fixed",
+        "markdown": "- `sd-table` hydrates configuration, asynchronous lookups and filters before one initial read. Remove duplicate initial BehaviorSubject emissions and coordinate subsequent reads through one cancellable scheduler. Preserve manual/notReload filters, required tenant, quick search, inline/saved/URL filters, paging/sort, explicit refresh/retry and loading/error states; discard stale scope/destroy responses. POST caching and deduplication remain opt-in. Real-table HTTP regressions count both loader calls and requests with dedupe disabled.\n\n- Table row-command children and selection-action menus use a compact white CDK menu with 36px rows, 18px icons and 8px corners. Preserve child filtering, disabled commands, callbacks, keyboard navigation, focus restoration and overlay placement outside clipped cells; touch targets remain 44px.\n- Side drawer, dialog and bottom-sheet headers/footers share a white background and use compact 12px vertical and 16px horizontal padding. Body content also uses `12px 16px` padding on desktop and mobile, including its own top spacing below the separate header surface; mobile safe-area spacing and touch targets remain supported.\n- Tab group pills clip hover/ripple effects to their rounded shape and retain the active fill on hover. Segmented tabs have a 4px gap so adjacent hover backgrounds remain separate.\n- Hover-copy confirmation tooltips render in a CDK overlay above table rows and outside clipped cells. Scrolling, disabling and teardown clean up the overlay; initial rendering creates only one copy button.\n- Query builder's add-condition/group menu renders outside ancestor overflow, keeping both actions visible in short modal bodies. Backdrop/Escape dismissal and focus restoration keep the surrounding modal open.",
+        "items": [
+          {
+            "text": "`sd-table` hydrates configuration, asynchronous lookups and filters before one initial read. Remove duplicate initial BehaviorSubject emissions and coordinate subsequent reads through one cancellable scheduler. Preserve manual/notReload filters, required tenant, quick search, inline/saved/URL filters, paging/sort, explicit refresh/retry and loading/error states; discard stale scope/destroy responses. POST caching and deduplication remain opt-in. Real-table HTTP regressions count both loader calls and requests with dedupe disabled.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Table row-command children and selection-action menus use a compact white CDK menu with 36px rows, 18px icons and 8px corners. Preserve child filtering, disabled commands, callbacks, keyboard navigation, focus restoration and overlay placement outside clipped cells; touch targets remain 44px.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Side drawer, dialog and bottom-sheet headers/footers share a white background and use compact 12px vertical and 16px horizontal padding. Body content also uses `12px 16px` padding on desktop and mobile, including its own top spacing below the separate header surface; mobile safe-area spacing and touch targets remain supported.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Tab group pills clip hover/ripple effects to their rounded shape and retain the active fill on hover. Segmented tabs have a 4px gap so adjacent hover backgrounds remain separate.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Hover-copy confirmation tooltips render in a CDK overlay above table rows and outside clipped cells. Scrolling, disabling and teardown clean up the overlay; initial rendering creates only one copy button.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Query builder's add-condition/group menu renders outside ancestor overflow, keeping both actions visible in short modal bodies. Backdrop/Escape dismissal and focus restoration keep the surrounding modal open.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      },
+      {
+        "key": "consumer-upgrade",
+        "title": "Consumer upgrade",
+        "level": 3,
+        "anchor": "release-2-9-consumer-upgrade",
+        "markdown": "- Enterprise Console: after `20.2.9` is published and verified, update Core and the lockfile, then remove only the temporary patch that suppresses duplicate initial table reads/paging. Remove POST dedupe only where it was added solely to mask this duplication; explicit refresh/retry must still send a new request. Rebase remaining Core patches independently and verify loader/request counts after a clean install.",
+        "items": [
+          {
+            "text": "Enterprise Console: after `20.2.9` is published and verified, update Core and the lockfile, then remove only the temporary patch that suppresses duplicate initial table reads/paging. Remove POST dedupe only where it was added solely to mask this duplication; explicit refresh/retry must still send a new request. Rebase remaining Core patches independently and verify loader/request counts after a clean install.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      }
+    ]
+  },
+  {
+    "id": "release-2-8",
+    "title": "Release 2.8",
+    "suffix": "2.8",
+    "date": "2026-09-11",
+    "anchor": "release-2-8",
+    "unreleased": false,
+    "packageVersions": [
+      {
+        "angularMajor": 19,
+        "version": "19.2.8"
+      },
+      {
+        "angularMajor": 20,
+        "version": "20.2.8"
+      },
+      {
+        "angularMajor": 21,
+        "version": "21.2.8"
+      },
+      {
+        "angularMajor": 22,
+        "version": "22.2.8"
+      }
+    ],
+    "summaryMarkdown": "Release suffix `2.8` targets `19.2.8`, `20.2.8`, `21.2.8`, and `22.2.8`.",
+    "markdown": "Release suffix `2.8` targets `19.2.8`, `20.2.8`, `21.2.8`, and `22.2.8`.\n\n### Fixed\n\n- Table settings use compact rows with centered checkboxes and share the modal footer gutters, removing the extra content inset.\n- Small form controls center their resting floating labels consistently with the focused placeholder and value, including select, input, date/time and textarea controls.\n- Loading service overlay CSS now requires `.sd-loading[data-sd-loading-overlay]`; its spinner rules are scoped to the overlay's direct child. Loading `SdButton` hosts keep their header position and size, Material spinner and click protection. Existing classes, API, reference ownership, stylesheet sharing and synchronous cleanup remain unchanged. Chrome rendering regressions cover page/drawer headers, close-button hit testing, unrelated class names and overlapping refs/services.\n\n### Consumer upgrade\n\n- Enterprise Console: after `20.2.8` is published and verified, pin `@sdcorejs/angular` to `20.2.8`, update the lockfile and rebase `patch-package`. Remove only the `fesm2022/sdcorejs-angular-services-loading.mjs` diff block introduced by Console commit `4a36177`. Retain the configuration/layout token and tab-router hunks, rename the patch to `@sdcorejs+angular+20.2.8.patch`, and update the exact-version guard in `scripts/apply-core-ui-patches.mjs` to describe the remaining layout/tab-router patches. Verify clean install, Console loading-layout/shell regressions and the production bundle budget before deploying.\n\n### Changed\n\n- **Sidebar V3:** match V1 navigation density and compact search, show menu icons only at the first level, and use text, ancestor rails and a current-route marker for deeper levels. Flat search/Pinned/Recent shortcuts are text-only; preserve collapse, route, pin, storage and mobile behavior.\n\n- Table now contains quick search, rows and pagination in one white surface with 6px outer corners and 8px quick-search padding. Consumers no longer need an extra presentation wrapper; scrolling and sticky headers stay on the existing table scroll area.\n\n### Changed (BREAKING for consumers)\n\n- Restore the compact `sd-upload-file` tile (default 50x50px) for table cells. Remove the expanded dropzone and `appearance` input; file drag/drop, keyboard access, preview and sorting remain supported.\n\n  ```diff\n  - <sd-upload-file appearance=\"compact\" ...></sd-upload-file>\n  + <sd-upload-file ...></sd-upload-file>\n  ```\n\n  Remove `appearance=\"dropzone\"` or `[appearance]` bindings in the same way. `previewWidth` and `previewHeight` size the tile and thumbnails.",
+    "sections": [
+      {
+        "key": "fixed",
+        "title": "Fixed",
+        "level": 3,
+        "anchor": "release-2-8-fixed",
+        "markdown": "- Table settings use compact rows with centered checkboxes and share the modal footer gutters, removing the extra content inset.\n- Small form controls center their resting floating labels consistently with the focused placeholder and value, including select, input, date/time and textarea controls.\n- Loading service overlay CSS now requires `.sd-loading[data-sd-loading-overlay]`; its spinner rules are scoped to the overlay's direct child. Loading `SdButton` hosts keep their header position and size, Material spinner and click protection. Existing classes, API, reference ownership, stylesheet sharing and synchronous cleanup remain unchanged. Chrome rendering regressions cover page/drawer headers, close-button hit testing, unrelated class names and overlapping refs/services.",
+        "items": [
+          {
+            "text": "Table settings use compact rows with centered checkboxes and share the modal footer gutters, removing the extra content inset.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Small form controls center their resting floating labels consistently with the focused placeholder and value, including select, input, date/time and textarea controls.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Loading service overlay CSS now requires `.sd-loading[data-sd-loading-overlay]`; its spinner rules are scoped to the overlay's direct child. Loading `SdButton` hosts keep their header position and size, Material spinner and click protection. Existing classes, API, reference ownership, stylesheet sharing and synchronous cleanup remain unchanged. Chrome rendering regressions cover page/drawer headers, close-button hit testing, unrelated class names and overlapping refs/services.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      },
+      {
+        "key": "consumer-upgrade",
+        "title": "Consumer upgrade",
+        "level": 3,
+        "anchor": "release-2-8-consumer-upgrade",
+        "markdown": "- Enterprise Console: after `20.2.8` is published and verified, pin `@sdcorejs/angular` to `20.2.8`, update the lockfile and rebase `patch-package`. Remove only the `fesm2022/sdcorejs-angular-services-loading.mjs` diff block introduced by Console commit `4a36177`. Retain the configuration/layout token and tab-router hunks, rename the patch to `@sdcorejs+angular+20.2.8.patch`, and update the exact-version guard in `scripts/apply-core-ui-patches.mjs` to describe the remaining layout/tab-router patches. Verify clean install, Console loading-layout/shell regressions and the production bundle budget before deploying.",
+        "items": [
+          {
+            "text": "Enterprise Console: after `20.2.8` is published and verified, pin `@sdcorejs/angular` to `20.2.8`, update the lockfile and rebase `patch-package`. Remove only the `fesm2022/sdcorejs-angular-services-loading.mjs` diff block introduced by Console commit `4a36177`. Retain the configuration/layout token and tab-router hunks, rename the patch to `@sdcorejs+angular+20.2.8.patch`, and update the exact-version guard in `scripts/apply-core-ui-patches.mjs` to describe the remaining layout/tab-router patches. Verify clean install, Console loading-layout/shell regressions and the production bundle budget before deploying.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      },
+      {
+        "key": "changed",
+        "title": "Changed",
+        "level": 3,
+        "anchor": "release-2-8-changed",
+        "markdown": "- **Sidebar V3:** match V1 navigation density and compact search, show menu icons only at the first level, and use text, ancestor rails and a current-route marker for deeper levels. Flat search/Pinned/Recent shortcuts are text-only; preserve collapse, route, pin, storage and mobile behavior.\n\n- Table now contains quick search, rows and pagination in one white surface with 6px outer corners and 8px quick-search padding. Consumers no longer need an extra presentation wrapper; scrolling and sticky headers stay on the existing table scroll area.",
+        "items": [
+          {
+            "text": "**Sidebar V3:** match V1 navigation density and compact search, show menu icons only at the first level, and use text, ancestor rails and a current-route marker for deeper levels. Flat search/Pinned/Recent shortcuts are text-only; preserve collapse, route, pin, storage and mobile behavior.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Table now contains quick search, rows and pagination in one white surface with 6px outer corners and 8px quick-search padding. Consumers no longer need an extra presentation wrapper; scrolling and sticky headers stay on the existing table scroll area.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      },
+      {
+        "key": "changed",
+        "title": "Changed (BREAKING for consumers)",
+        "level": 3,
+        "anchor": "release-2-8-changed-breaking-for-consumers",
+        "markdown": "- Restore the compact `sd-upload-file` tile (default 50x50px) for table cells. Remove the expanded dropzone and `appearance` input; file drag/drop, keyboard access, preview and sorting remain supported.\n\n  ```diff\n  - <sd-upload-file appearance=\"compact\" ...></sd-upload-file>\n  + <sd-upload-file ...></sd-upload-file>\n  ```\n\n  Remove `appearance=\"dropzone\"` or `[appearance]` bindings in the same way. `previewWidth` and `previewHeight` size the tile and thumbnails.",
+        "items": [
+          {
+            "text": "Restore the compact `sd-upload-file` tile (default 50x50px) for table cells. Remove the expanded dropzone and `appearance` input; file drag/drop, keyboard access, preview and sorting remain supported.",
+            "ordered": false,
+            "children": [
+              {
+                "text": "<sd-upload-file appearance=\"compact\" ...></sd-upload-file>",
+                "ordered": false,
+                "children": []
+              },
+              {
+                "text": "<sd-upload-file ...></sd-upload-file>",
+                "ordered": false,
+                "children": []
+              }
+            ]
+          }
+        ],
+        "children": []
+      }
+    ]
+  },
+  {
+    "id": "release-2-7",
+    "title": "Release 2.7",
+    "suffix": "2.7",
+    "date": "2026-09-09",
+    "anchor": "release-2-7",
+    "unreleased": false,
+    "packageVersions": [
+      {
+        "angularMajor": 19,
+        "version": "19.2.7"
+      },
+      {
+        "angularMajor": 20,
+        "version": "20.2.7"
+      },
+      {
+        "angularMajor": 21,
+        "version": "21.2.7"
+      },
+      {
+        "angularMajor": 22,
+        "version": "22.2.7"
+      }
+    ],
+    "summaryMarkdown": "Release suffix `2.7` publishes `19.2.7`, `20.2.7`, `21.2.7`, and `22.2.7`.",
+    "markdown": "Release suffix `2.7` publishes `19.2.7`, `20.2.7`, `21.2.7`, and `22.2.7`.\n\n### Added\n\n- Table supports an optional `filter.quickSearch` row: Enter commits the keyword, `containFields` and `equalFields` generate an OR group, and `values`/`lazy-values` dropdowns apply immediately. Dropdowns support signal defaults, reactive visibility/disabled state, required values and user-only `onChange`. The applied `{ term, filters }` is available in `filterReq.quickSearch` even without search fields. `sdTableQuickSearchRightDef` lets consumers project optional UI on the right.\n\n### Changed\n\n- Sidebar V1 dùng nền sáng, tổng chiều rộng 304px với thanh module 56px, tiêu đề đậm, khoảng cách gọn và Material Icons Outlined. Menu 1–3 cấp phân biệt nhánh cha với mục đang chọn; avatar và nút thu gọn nhỏ nằm ở cuối thanh module. Giữ nguyên API, dữ liệu menu, routing, phân quyền, tìm kiếm và expand/collapse; không thêm vùng trống cho description.\n- Table external filters use small controls with inline errors hidden and a padded section body. Desktop tables use subtle 6px outer corners while retaining their existing scroll and sticky behavior.\n- Confirm, Notify, Inform and Data-state now use circular status icon backgrounds, including compact Data-state. Existing icon sizes, semantic colors, layouts and interactions are preserved.\n- Section header icons use a 32px circular soft background with a centered 20px glyph, matching `iconColor` across all six color tokens. Custom header slots and collapse behavior are preserved.\n\n### Fixed\n\n- Error state của select/autocomplete căn giữa, nằm dưới dữ liệu đang giữ lại; panel hẹp giảm khoảng đệm, icon và cho phép xuống dòng.\n- Confirm `withRadio` loại bỏ scroll dọc dư do baseline và vùng bấm M3 tràn khỏi hàng radio; giữ vùng bấm 48px, khả năng cuộn danh sách dài và wrap lựa chọn trên mobile.\n- Badge `type=\"icon\"` giữ đúng kích thước icon, căn giữa với phần chữ và không co icon khi nội dung dài.\n- Chỉ báo selection của table dùng màu success, gồm icon desktop và số lượng đã chọn trên mobile.\n- Local release staging selects the previous package from the same Angular major; the Angular 21 baseline fallback is limited to the Angular 22 inception release `22.2.5`.\n- Disabled table row-command icons use the button's muted disabled color instead of retaining the active icon color.\n- Table desktop command touch targets stay within each button, preventing adjacent commands from intercepting clicks.\n- Sidebar V1 search uses a compact light native input with a leading icon and a single thin focus border. Keep existing search matching and IME buffering; make clear accessible by keyboard and restore input focus after clearing.",
+    "sections": [
+      {
+        "key": "added",
+        "title": "Added",
+        "level": 3,
+        "anchor": "release-2-7-added",
         "markdown": "- Table supports an optional `filter.quickSearch` row: Enter commits the keyword, `containFields` and `equalFields` generate an OR group, and `values`/`lazy-values` dropdowns apply immediately. Dropdowns support signal defaults, reactive visibility/disabled state, required values and user-only `onChange`. The applied `{ term, filters }` is available in `filterReq.quickSearch` even without search fields. `sdTableQuickSearchRightDef` lets consumers project optional UI on the right.",
         "items": [
           {
@@ -79,9 +456,14 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
         "key": "changed",
         "title": "Changed",
         "level": 3,
-        "anchor": "unreleased-changed",
-        "markdown": "- Table external filters use small controls with inline errors hidden and a padded section body. Desktop tables use subtle 6px outer corners while retaining their existing scroll and sticky behavior.\n- Confirm, Notify, Inform and Data-state now use circular status icon backgrounds, including compact Data-state. Existing icon sizes, semantic colors, layouts and interactions are preserved.\n- Section header icons use a 32px circular soft background with a centered 20px glyph, matching `iconColor` across all six color tokens. Custom header slots and collapse behavior are preserved.",
+        "anchor": "release-2-7-changed",
+        "markdown": "- Sidebar V1 dùng nền sáng, tổng chiều rộng 304px với thanh module 56px, tiêu đề đậm, khoảng cách gọn và Material Icons Outlined. Menu 1–3 cấp phân biệt nhánh cha với mục đang chọn; avatar và nút thu gọn nhỏ nằm ở cuối thanh module. Giữ nguyên API, dữ liệu menu, routing, phân quyền, tìm kiếm và expand/collapse; không thêm vùng trống cho description.\n- Table external filters use small controls with inline errors hidden and a padded section body. Desktop tables use subtle 6px outer corners while retaining their existing scroll and sticky behavior.\n- Confirm, Notify, Inform and Data-state now use circular status icon backgrounds, including compact Data-state. Existing icon sizes, semantic colors, layouts and interactions are preserved.\n- Section header icons use a 32px circular soft background with a centered 20px glyph, matching `iconColor` across all six color tokens. Custom header slots and collapse behavior are preserved.",
         "items": [
+          {
+            "text": "Sidebar V1 dùng nền sáng, tổng chiều rộng 304px với thanh module 56px, tiêu đề đậm, khoảng cách gọn và Material Icons Outlined. Menu 1–3 cấp phân biệt nhánh cha với mục đang chọn; avatar và nút thu gọn nhỏ nằm ở cuối thanh module. Giữ nguyên API, dữ liệu menu, routing, phân quyền, tìm kiếm và expand/collapse; không thêm vùng trống cho description.",
+            "ordered": false,
+            "children": []
+          },
           {
             "text": "Table external filters use small controls with inline errors hidden and a padded section body. Desktop tables use subtle 6px outer corners while retaining their existing scroll and sticky behavior.",
             "ordered": false,
@@ -104,9 +486,34 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
         "key": "fixed",
         "title": "Fixed",
         "level": 3,
-        "anchor": "unreleased-fixed",
-        "markdown": "- Disabled table row-command icons use the button's muted disabled color instead of retaining the active icon color.\n- Table desktop command touch targets stay within each button, preventing adjacent commands from intercepting clicks.\n- Sidebar V1 search uses a compact light native input with a leading icon and a single thin focus border. Keep existing search matching and IME buffering; make clear accessible by keyboard and restore input focus after clearing.",
+        "anchor": "release-2-7-fixed",
+        "markdown": "- Error state của select/autocomplete căn giữa, nằm dưới dữ liệu đang giữ lại; panel hẹp giảm khoảng đệm, icon và cho phép xuống dòng.\n- Confirm `withRadio` loại bỏ scroll dọc dư do baseline và vùng bấm M3 tràn khỏi hàng radio; giữ vùng bấm 48px, khả năng cuộn danh sách dài và wrap lựa chọn trên mobile.\n- Badge `type=\"icon\"` giữ đúng kích thước icon, căn giữa với phần chữ và không co icon khi nội dung dài.\n- Chỉ báo selection của table dùng màu success, gồm icon desktop và số lượng đã chọn trên mobile.\n- Local release staging selects the previous package from the same Angular major; the Angular 21 baseline fallback is limited to the Angular 22 inception release `22.2.5`.\n- Disabled table row-command icons use the button's muted disabled color instead of retaining the active icon color.\n- Table desktop command touch targets stay within each button, preventing adjacent commands from intercepting clicks.\n- Sidebar V1 search uses a compact light native input with a leading icon and a single thin focus border. Keep existing search matching and IME buffering; make clear accessible by keyboard and restore input focus after clearing.",
         "items": [
+          {
+            "text": "Error state của select/autocomplete căn giữa, nằm dưới dữ liệu đang giữ lại; panel hẹp giảm khoảng đệm, icon và cho phép xuống dòng.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Confirm `withRadio` loại bỏ scroll dọc dư do baseline và vùng bấm M3 tràn khỏi hàng radio; giữ vùng bấm 48px, khả năng cuộn danh sách dài và wrap lựa chọn trên mobile.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Badge `type=\"icon\"` giữ đúng kích thước icon, căn giữa với phần chữ và không co icon khi nội dung dài.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Chỉ báo selection của table dùng màu success, gồm icon desktop và số lượng đã chọn trên mobile.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Local release staging selects the previous package from the same Angular major; the Angular 21 baseline fallback is limited to the Angular 22 inception release `22.2.5`.",
+            "ordered": false,
+            "children": []
+          },
           {
             "text": "Disabled table row-command icons use the button's muted disabled color instead of retaining the active icon color.",
             "ordered": false,
@@ -153,7 +560,7 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
       }
     ],
     "summaryMarkdown": "Release suffix `2.6` publishes `19.2.6`, `20.2.6`, `21.2.6`, and `22.2.6`.",
-    "markdown": "Release suffix `2.6` publishes `19.2.6`, `20.2.6`, `21.2.6`, and `22.2.6`.\n\n### Added\n\n- Select, autocomplete và server table có `readState`, `sdReadStateChange`, `retryRead()`, `hideReadError` và template `sdDataStateTemplate`. VALUE/SEARCH độc lập; retry dùng snapshot request đã lỗi, giữ model và dữ liệu thành công, bỏ qua response cũ. Public entry point `utilities/read-state` tách biệt với `utilities/data-state`.\n\n### Changed\n\n- Sidebar V1 dùng nền sáng, tổng chiều rộng 304px với thanh module 56px, tiêu đề đậm, khoảng cách gọn và Material Icons Outlined. Menu 1–3 cấp phân biệt nhánh cha với mục đang chọn; avatar và nút thu gọn nhỏ nằm ở cuối thanh module. Giữ nguyên API, dữ liệu menu, routing, phân quyền, tìm kiếm và expand/collapse; không thêm vùng trống cho description.\n- Button cải thiện màu outline/disabled theo theme, khoảng cách icon và focus bàn phím; giữ bo tròn M3 và các kích thước 32/40/48px. Table gom thao tác chọn hàng trong QuickAction; Import Excel cải thiện bước chọn file, lọc và hiển thị lỗi, kể cả trên mobile.\n- Inform dùng icon nền nhẹ và SdButton nhỏ; Upload thêm appearance dropzone/compact và thao tác bàn phím; Stepper dùng icon trong chỉ báo và phân biệt bước hoàn tất. Modal/Drawer thống nhất khoảng cách, bo góc và mobile; Drawer giữ và khôi phục focus bằng CDK.\n- Confirm dùng layout gọn với icon nền nhẹ luôn hiển thị, tiêu đề 18px và nút SdButton nhỏ. Các phương thức hỗ trợ icon tùy chỉnh hoặc mặc định theo context; withInput thêm label/placeholder. Giữ các biến thể và kết quả Promise hiện có, cải thiện focus và bố cục mobile.\n- Data-state dùng icon nền nhẹ, loading primary, empty warning, compact căn ngang và nút retry/action `SdButton size=\"sm\"`. Loading ưu tiên hiển thị so với lỗi khi VALUE/SEARCH đọc xen kẽ; giảm chuyển động tiếp tục tắt animation.\n- Notify dùng icon SVG nét trong ô nền nhạt theo màu trạng thái, đồng nhất với data-state; giữ timing/grouping/action và cơ chế sanitize HTML.\n\n### Fixed\n\n- Release verification refreshes npm pack metadata and retries only transient `ETARGET`/`E404` visibility failures after publication (up to 12 attempts, 5 seconds apart). Recovery and sequential publication await the downloaded tarball's exact SHA-256; access, integrity, provenance and immutable-version checks remain fail-closed.\n- Postpublish clears only the three generated Showcase input files after retaining the page, so the artifact commit can rebase onto current `main`; unexpected tracked changes still stop the release.\n- Manual recovery accepts an original artifact run ID and revalidates those exact tarballs instead of repacking: Angular's generated export ordering can otherwise change package bytes between builds of the same source. Source, hash, package-contract, consumer and provenance checks remain mandatory.\n\n- Error state của select/autocomplete căn giữa, nằm dưới dữ liệu đang giữ lại; panel hẹp giảm khoảng đệm, icon và cho phép xuống dòng.\n- Confirm `withRadio` loại bỏ scroll dọc dư do baseline và vùng bấm M3 tràn khỏi hàng radio; giữ vùng bấm 48px, khả năng cuộn danh sách dài và wrap lựa chọn trên mobile.\n- Badge `type=\"icon\"` giữ đúng kích thước icon, căn giữa với phần chữ và không co icon khi nội dung dài.\n- Chỉ báo selection của table dùng màu success, gồm icon desktop và số lượng đã chọn trên mobile.\n- Button chỉ hiển thị một icon khi dùng suffix mà không truyền icon đầu. SideDrawer nhận focus ngay khi mở, giữ hiệu ứng đóng và thiết lập giảm chuyển động.\n- Date-range áp dụng đúng `clearable`, required và disabled cho nút xóa; datetime dùng icon picker đồng nhất. Multiple-select hiển thị số lượng đã chọn và tooltip với mỗi lựa chọn trên một dòng. Sidebar dùng hết chiều cao khả dụng để cuộn menu dài.\n- Release `2.6` dùng bản đối chiếu `22.2.5` cho Angular 22; pipeline pin đúng tag, artifact và quy tắc giữ năm trang release gần nhất.\n- **Showcase release pages resolve library styles from the installed package.** Global Core UI SCSS now loads from `showcase/node_modules/@sdcorejs/angular`, so Angular Material resolves from Showcase's own dependencies when postpublish materializes a tarball without installing the v19 workspace.",
+    "markdown": "Release suffix `2.6` publishes `19.2.6`, `20.2.6`, `21.2.6`, and `22.2.6`.\n\n### Added\n\n- Select, autocomplete và server table có `readState`, `sdReadStateChange`, `retryRead()`, `hideReadError` và template `sdDataStateTemplate`. VALUE/SEARCH độc lập; retry dùng snapshot request đã lỗi, giữ model và dữ liệu thành công, bỏ qua response cũ. Public entry point `utilities/read-state` tách biệt với `utilities/data-state`.\n\n### Changed\n\n- Button cải thiện màu outline/disabled theo theme, khoảng cách icon và focus bàn phím; giữ bo tròn M3 và các kích thước 32/40/48px. Table gom thao tác chọn hàng trong QuickAction; Import Excel cải thiện bước chọn file, lọc và hiển thị lỗi, kể cả trên mobile.\n- Inform dùng icon nền nhẹ và SdButton nhỏ; Upload thêm appearance dropzone/compact và thao tác bàn phím; Stepper dùng icon trong chỉ báo và phân biệt bước hoàn tất. Modal/Drawer thống nhất khoảng cách, bo góc và mobile; Drawer giữ và khôi phục focus bằng CDK.\n- Confirm dùng layout gọn với icon nền nhẹ luôn hiển thị, tiêu đề 18px và nút SdButton nhỏ. Các phương thức hỗ trợ icon tùy chỉnh hoặc mặc định theo context; withInput thêm label/placeholder. Giữ các biến thể và kết quả Promise hiện có, cải thiện focus và bố cục mobile.\n- Data-state dùng icon nền nhẹ, loading primary, empty warning, compact căn ngang và nút retry/action `SdButton size=\"sm\"`. Loading ưu tiên hiển thị so với lỗi khi VALUE/SEARCH đọc xen kẽ; giảm chuyển động tiếp tục tắt animation.\n- Notify dùng icon SVG nét trong ô nền nhạt theo màu trạng thái, đồng nhất với data-state; giữ timing/grouping/action và cơ chế sanitize HTML.\n\n### Fixed\n\n- Release verification refreshes npm pack metadata and retries only transient `ETARGET`/`E404` visibility failures after publication (up to 12 attempts, 5 seconds apart). Recovery and sequential publication await the downloaded tarball's exact SHA-256; access, integrity, provenance and immutable-version checks remain fail-closed.\n- Postpublish clears only the three generated Showcase input files after retaining the page, so the artifact commit can rebase onto current `main`; unexpected tracked changes still stop the release.\n- Manual recovery accepts an original artifact run ID and revalidates those exact tarballs instead of repacking: Angular's generated export ordering can otherwise change package bytes between builds of the same source. Source, hash, package-contract, consumer and provenance checks remain mandatory.\n\n- Button chỉ hiển thị một icon khi dùng suffix mà không truyền icon đầu. SideDrawer nhận focus ngay khi mở, giữ hiệu ứng đóng và thiết lập giảm chuyển động.\n- Date-range áp dụng đúng `clearable`, required và disabled cho nút xóa; datetime dùng icon picker đồng nhất. Multiple-select hiển thị số lượng đã chọn và tooltip với mỗi lựa chọn trên một dòng. Sidebar dùng hết chiều cao khả dụng để cuộn menu dài.\n- Release `2.6` dùng bản đối chiếu `22.2.5` cho Angular 22; pipeline pin đúng tag, artifact và quy tắc giữ năm trang release gần nhất.\n- **Showcase release pages resolve library styles from the installed package.** Global Core UI SCSS now loads from `showcase/node_modules/@sdcorejs/angular`, so Angular Material resolves from Showcase's own dependencies when postpublish materializes a tarball without installing the v19 workspace.",
     "sections": [
       {
         "key": "added",
@@ -175,13 +582,8 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
         "title": "Changed",
         "level": 3,
         "anchor": "release-2-6-changed",
-        "markdown": "- Sidebar V1 dùng nền sáng, tổng chiều rộng 304px với thanh module 56px, tiêu đề đậm, khoảng cách gọn và Material Icons Outlined. Menu 1–3 cấp phân biệt nhánh cha với mục đang chọn; avatar và nút thu gọn nhỏ nằm ở cuối thanh module. Giữ nguyên API, dữ liệu menu, routing, phân quyền, tìm kiếm và expand/collapse; không thêm vùng trống cho description.\n- Button cải thiện màu outline/disabled theo theme, khoảng cách icon và focus bàn phím; giữ bo tròn M3 và các kích thước 32/40/48px. Table gom thao tác chọn hàng trong QuickAction; Import Excel cải thiện bước chọn file, lọc và hiển thị lỗi, kể cả trên mobile.\n- Inform dùng icon nền nhẹ và SdButton nhỏ; Upload thêm appearance dropzone/compact và thao tác bàn phím; Stepper dùng icon trong chỉ báo và phân biệt bước hoàn tất. Modal/Drawer thống nhất khoảng cách, bo góc và mobile; Drawer giữ và khôi phục focus bằng CDK.\n- Confirm dùng layout gọn với icon nền nhẹ luôn hiển thị, tiêu đề 18px và nút SdButton nhỏ. Các phương thức hỗ trợ icon tùy chỉnh hoặc mặc định theo context; withInput thêm label/placeholder. Giữ các biến thể và kết quả Promise hiện có, cải thiện focus và bố cục mobile.\n- Data-state dùng icon nền nhẹ, loading primary, empty warning, compact căn ngang và nút retry/action `SdButton size=\"sm\"`. Loading ưu tiên hiển thị so với lỗi khi VALUE/SEARCH đọc xen kẽ; giảm chuyển động tiếp tục tắt animation.\n- Notify dùng icon SVG nét trong ô nền nhạt theo màu trạng thái, đồng nhất với data-state; giữ timing/grouping/action và cơ chế sanitize HTML.",
+        "markdown": "- Button cải thiện màu outline/disabled theo theme, khoảng cách icon và focus bàn phím; giữ bo tròn M3 và các kích thước 32/40/48px. Table gom thao tác chọn hàng trong QuickAction; Import Excel cải thiện bước chọn file, lọc và hiển thị lỗi, kể cả trên mobile.\n- Inform dùng icon nền nhẹ và SdButton nhỏ; Upload thêm appearance dropzone/compact và thao tác bàn phím; Stepper dùng icon trong chỉ báo và phân biệt bước hoàn tất. Modal/Drawer thống nhất khoảng cách, bo góc và mobile; Drawer giữ và khôi phục focus bằng CDK.\n- Confirm dùng layout gọn với icon nền nhẹ luôn hiển thị, tiêu đề 18px và nút SdButton nhỏ. Các phương thức hỗ trợ icon tùy chỉnh hoặc mặc định theo context; withInput thêm label/placeholder. Giữ các biến thể và kết quả Promise hiện có, cải thiện focus và bố cục mobile.\n- Data-state dùng icon nền nhẹ, loading primary, empty warning, compact căn ngang và nút retry/action `SdButton size=\"sm\"`. Loading ưu tiên hiển thị so với lỗi khi VALUE/SEARCH đọc xen kẽ; giảm chuyển động tiếp tục tắt animation.\n- Notify dùng icon SVG nét trong ô nền nhạt theo màu trạng thái, đồng nhất với data-state; giữ timing/grouping/action và cơ chế sanitize HTML.",
         "items": [
-          {
-            "text": "Sidebar V1 dùng nền sáng, tổng chiều rộng 304px với thanh module 56px, tiêu đề đậm, khoảng cách gọn và Material Icons Outlined. Menu 1–3 cấp phân biệt nhánh cha với mục đang chọn; avatar và nút thu gọn nhỏ nằm ở cuối thanh module. Giữ nguyên API, dữ liệu menu, routing, phân quyền, tìm kiếm và expand/collapse; không thêm vùng trống cho description.",
-            "ordered": false,
-            "children": []
-          },
           {
             "text": "Button cải thiện màu outline/disabled theo theme, khoảng cách icon và focus bàn phím; giữ bo tròn M3 và các kích thước 32/40/48px. Table gom thao tác chọn hàng trong QuickAction; Import Excel cải thiện bước chọn file, lọc và hiển thị lỗi, kể cả trên mobile.",
             "ordered": false,
@@ -215,7 +617,7 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
         "title": "Fixed",
         "level": 3,
         "anchor": "release-2-6-fixed",
-        "markdown": "- Release verification refreshes npm pack metadata and retries only transient `ETARGET`/`E404` visibility failures after publication (up to 12 attempts, 5 seconds apart). Recovery and sequential publication await the downloaded tarball's exact SHA-256; access, integrity, provenance and immutable-version checks remain fail-closed.\n- Postpublish clears only the three generated Showcase input files after retaining the page, so the artifact commit can rebase onto current `main`; unexpected tracked changes still stop the release.\n- Manual recovery accepts an original artifact run ID and revalidates those exact tarballs instead of repacking: Angular's generated export ordering can otherwise change package bytes between builds of the same source. Source, hash, package-contract, consumer and provenance checks remain mandatory.\n\n- Error state của select/autocomplete căn giữa, nằm dưới dữ liệu đang giữ lại; panel hẹp giảm khoảng đệm, icon và cho phép xuống dòng.\n- Confirm `withRadio` loại bỏ scroll dọc dư do baseline và vùng bấm M3 tràn khỏi hàng radio; giữ vùng bấm 48px, khả năng cuộn danh sách dài và wrap lựa chọn trên mobile.\n- Badge `type=\"icon\"` giữ đúng kích thước icon, căn giữa với phần chữ và không co icon khi nội dung dài.\n- Chỉ báo selection của table dùng màu success, gồm icon desktop và số lượng đã chọn trên mobile.\n- Button chỉ hiển thị một icon khi dùng suffix mà không truyền icon đầu. SideDrawer nhận focus ngay khi mở, giữ hiệu ứng đóng và thiết lập giảm chuyển động.\n- Date-range áp dụng đúng `clearable`, required và disabled cho nút xóa; datetime dùng icon picker đồng nhất. Multiple-select hiển thị số lượng đã chọn và tooltip với mỗi lựa chọn trên một dòng. Sidebar dùng hết chiều cao khả dụng để cuộn menu dài.\n- Release `2.6` dùng bản đối chiếu `22.2.5` cho Angular 22; pipeline pin đúng tag, artifact và quy tắc giữ năm trang release gần nhất.\n- **Showcase release pages resolve library styles from the installed package.** Global Core UI SCSS now loads from `showcase/node_modules/@sdcorejs/angular`, so Angular Material resolves from Showcase's own dependencies when postpublish materializes a tarball without installing the v19 workspace.",
+        "markdown": "- Release verification refreshes npm pack metadata and retries only transient `ETARGET`/`E404` visibility failures after publication (up to 12 attempts, 5 seconds apart). Recovery and sequential publication await the downloaded tarball's exact SHA-256; access, integrity, provenance and immutable-version checks remain fail-closed.\n- Postpublish clears only the three generated Showcase input files after retaining the page, so the artifact commit can rebase onto current `main`; unexpected tracked changes still stop the release.\n- Manual recovery accepts an original artifact run ID and revalidates those exact tarballs instead of repacking: Angular's generated export ordering can otherwise change package bytes between builds of the same source. Source, hash, package-contract, consumer and provenance checks remain mandatory.\n\n- Button chỉ hiển thị một icon khi dùng suffix mà không truyền icon đầu. SideDrawer nhận focus ngay khi mở, giữ hiệu ứng đóng và thiết lập giảm chuyển động.\n- Date-range áp dụng đúng `clearable`, required và disabled cho nút xóa; datetime dùng icon picker đồng nhất. Multiple-select hiển thị số lượng đã chọn và tooltip với mỗi lựa chọn trên một dòng. Sidebar dùng hết chiều cao khả dụng để cuộn menu dài.\n- Release `2.6` dùng bản đối chiếu `22.2.5` cho Angular 22; pipeline pin đúng tag, artifact và quy tắc giữ năm trang release gần nhất.\n- **Showcase release pages resolve library styles from the installed package.** Global Core UI SCSS now loads from `showcase/node_modules/@sdcorejs/angular`, so Angular Material resolves from Showcase's own dependencies when postpublish materializes a tarball without installing the v19 workspace.",
         "items": [
           {
             "text": "Release verification refreshes npm pack metadata and retries only transient `ETARGET`/`E404` visibility failures after publication (up to 12 attempts, 5 seconds apart). Recovery and sequential publication await the downloaded tarball's exact SHA-256; access, integrity, provenance and immutable-version checks remain fail-closed.",
@@ -229,26 +631,6 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
           },
           {
             "text": "Manual recovery accepts an original artifact run ID and revalidates those exact tarballs instead of repacking: Angular's generated export ordering can otherwise change package bytes between builds of the same source. Source, hash, package-contract, consumer and provenance checks remain mandatory.",
-            "ordered": false,
-            "children": []
-          },
-          {
-            "text": "Error state của select/autocomplete căn giữa, nằm dưới dữ liệu đang giữ lại; panel hẹp giảm khoảng đệm, icon và cho phép xuống dòng.",
-            "ordered": false,
-            "children": []
-          },
-          {
-            "text": "Confirm `withRadio` loại bỏ scroll dọc dư do baseline và vùng bấm M3 tràn khỏi hàng radio; giữ vùng bấm 48px, khả năng cuộn danh sách dài và wrap lựa chọn trên mobile.",
-            "ordered": false,
-            "children": []
-          },
-          {
-            "text": "Badge `type=\"icon\"` giữ đúng kích thước icon, căn giữa với phần chữ và không co icon khi nội dung dài.",
-            "ordered": false,
-            "children": []
-          },
-          {
-            "text": "Chỉ báo selection của table dùng màu success, gồm icon desktop và số lượng đã chọn trên mobile.",
             "ordered": false,
             "children": []
           },

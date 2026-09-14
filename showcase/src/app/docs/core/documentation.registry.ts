@@ -428,7 +428,9 @@ const COMPONENT_PAGES = [
     status: 'stable',
     demoSectionCount: 10,
     loadComponent: () =>
-      import('../../pages/components/api-contract-builder/api-contract-builder-demo.component').then(m => m.ApiContractBuilderDemoComponent),
+      import('../../pages/components/api-contract-builder/api-contract-builder-demo.component').then(
+        m => m.ApiContractBuilderDemoComponent
+      ),
   }),
   defineDocPage({
     category: 'components',
@@ -612,7 +614,7 @@ const FORM_PAGES = [
     publishedDocId: 'forms/checkbox/sd-checkbox',
     keywords: ['boolean', 'checked', 'toggle', 'form'],
     status: 'stable',
-    demoSectionCount: 6,
+    demoSectionCount: 7,
     loadComponent: () => import('../../pages/forms/checkbox/checkbox-demo.component').then(m => m.CheckboxDemoComponent),
   }),
   defineDocPage({

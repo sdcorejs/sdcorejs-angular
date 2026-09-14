@@ -33,6 +33,7 @@ Boolean toggle — a single labeled checkbox bound to a form/model. Wraps Angula
 | `form`        | `NgForm \| FormGroup`         | `undefined` | Parent form. NgForm is auto-unwrapped.                                                                                                                                                                                                                                                   |
 | `label`       | `string \| undefined`         | `undefined` | Text shown to the right of the box.                                                                                                                                                                                                                                                      |
 | `color`       | `'primary' \| 'warn'`         | `'primary'` | Material color of the checked state.                                                                                                                                                                                                                                                     |
+| `size` | `Size` (`'sm' \| 'md' \| 'lg'`) | `'md'` | Same shared type and `data-size` host attribute as `sd-switch`. |
 | `disabled`    | `boolean \| ''`               | `false`     | Disables interaction. Empty string presence = `true`.                                                                                                                                                                                                                                    |
 | `model`       | `any`                         | `undefined` | Two-way bound boolean. Use `[(model)]`.                                                                                                                                                                                                                                                  |
 | `viewed`      | `boolean \| 'inline'`         | `false`     | Display mode. `false` = the interactive `mat-checkbox`. `true` = static read-only text ("Có" / "Không" via i18n, plus the label). `'inline'` = keeps the interactive checkbox (no separate face); a **disabled** `'inline'` falls back to `true` (static text). Bare attribute = `true`. |
@@ -145,6 +146,18 @@ export class CheckboxTableComponent {
 ```html
 <sd-checkbox label="Mặc định" [model]="model.isDefault" disabled></sd-checkbox>
 ```
+
+### 4. Sizes
+
+```html
+<sd-checkbox size="sm" label="Small" [(model)]="small"></sd-checkbox>
+<sd-checkbox size="md" label="Medium (default)" [(model)]="medium"></sd-checkbox>
+<sd-checkbox size="lg" label="Large" [(model)]="large"></sd-checkbox>
+```
+
+`Size` is the existing shared type from `@sdcorejs/utils/models`, as used by `sd-switch`; no checkbox-specific size type is introduced. The host exposes `data-size="sm|md|lg"`.
+
+The box is 14 / 18 / 22px, the state layer is 32 / 40 / 48px, and label padding is 2 / 4 / 6px. Check and Material indeterminate marks scale with the box. The default `md` retains the original geometry. The Material touch target remains 48px; coarse pointers reserve at least 44px vertically. Label typography, viewed rendering, model, validation and disabled behavior are unchanged. Unlike `sd-switch`, checkbox sizes are not implicitly overridden inside `sd-table`.
 
 ## Anti-patterns
 

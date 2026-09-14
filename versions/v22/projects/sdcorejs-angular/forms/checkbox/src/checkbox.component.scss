@@ -1,9 +1,57 @@
 @use '../../../assets/scss/core/color.scss' as color;
 @use 'sass:map';
 
+@mixin checkbox-size($box, $state-layer, $label-gap) {
+  --sd-checkbox-size: #{$box};
+  --sd-checkbox-state-layer-size: #{$state-layer};
+  --sd-checkbox-label-gap: #{$label-gap};
+}
+
+:host {
+  @include checkbox-size(18px, 40px, 4px);
+}
+
+:host([data-size='sm']) {
+  @include checkbox-size(14px, 32px, 2px);
+}
+
+:host([data-size='lg']) {
+  @include checkbox-size(22px, 48px, 6px);
+}
+
+:host ::ng-deep .mat-mdc-checkbox,
+:host ::ng-deep .mdc-checkbox {
+  --mdc-checkbox-state-layer-size: var(--sd-checkbox-state-layer-size) !important;
+  --mat-checkbox-state-layer-size: var(--sd-checkbox-state-layer-size) !important;
+}
+
 :host ::ng-deep {
+  // why: Material cố định box 18px; đổi geometry thay vì scale cả control/label.
+  .mdc-checkbox {
+    flex-basis: var(--sd-checkbox-size);
+    width: var(--sd-checkbox-size);
+    height: var(--sd-checkbox-size);
+    padding: calc((var(--sd-checkbox-state-layer-size) - var(--sd-checkbox-size)) / 2);
+  }
+
+  .mdc-checkbox__background {
+    width: var(--sd-checkbox-size);
+    height: var(--sd-checkbox-size);
+    top: calc((var(--sd-checkbox-state-layer-size) - var(--sd-checkbox-size)) / 2);
+    left: calc((var(--sd-checkbox-state-layer-size) - var(--sd-checkbox-size)) / 2);
+  }
+
+  // why: checkmark SVG và mixedmark của Material dùng width:100%, tự theo box.
+  // Giữ touch target 48px và dành chỗ theo chiều dọc trên màn hình cảm ứng.
+  @media (pointer: coarse) {
+    .mat-internal-form-field {
+      min-height: 44px;
+    }
+  }
+
   .mdc-label {
     margin-bottom: 0;
+    padding-inline-start: var(--sd-checkbox-label-gap);
   }
 }
 
