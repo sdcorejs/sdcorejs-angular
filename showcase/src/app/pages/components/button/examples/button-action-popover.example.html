@@ -1,0 +1,29 @@
+<div class="d-flex align-items-center gap-8 flex-wrap">
+  <sd-button type="text" prefixIcon="more_vert" tooltip="Action chỉ có icon" autoId="popover-icon-only">
+    <sd-button-item prefixIcon="edit" (click)="result.set('Đã chọn action từ icon button')">Chỉnh sửa</sd-button-item>
+  </sd-button>
+  <sd-button openOnHover title="Hover để mở" autoId="popover-hover">
+    <sd-button-item prefixIcon="edit" (click)="result.set('Đã chọn action từ menu hover')">Chỉnh sửa</sd-button-item>
+    <sd-button-item disabled>Không khả dụng</sd-button-item>
+  </sd-button>
+  <sd-button title="Nút thường" (click)="result.set('Click nút thường')" />
+  <sd-button color="primary" prefixIcon="edit" autoId="popover-basic">
+    Chỉnh sửa
+    <sd-button-item prefixIcon="check" color="success" (click)="result.set('Đã duyệt')">Duyệt</sd-button-item>
+    <sd-button-item prefixIcon="close" color="error" (click)="result.set('Đã từ chối')">Từ chối</sd-button-item>
+    <sd-button-item-divider />
+    <sd-button-item suffixIcon="chevron_right" (click)="result.set('Mở chi tiết')">Chi tiết</sd-button-item>
+    <sd-button-item prefixIcon="open_in_new" suffixIcon="chevron_right" (click)="result.set('Mở trang mới')">Mở trang mới</sd-button-item>
+    <sd-button-item prefixIcon="delete" color="error" disabled tooltip="Chưa đủ quyền">Không khả dụng</sd-button-item>
+  </sd-button>
+  <sd-button type="text" suffixIcon="edit" autoId="popover-dynamic" (click)="result.set('Không có item: click thường')">
+    Actions động
+    @if (showActions()) {
+      <sd-button-item prefixIcon="check" color="success" (click)="result.set('Action động đã chạy')">Xác nhận</sd-button-item>
+      <sd-button-item-divider />
+      <sd-button-item (click)="showActions.set(false)">Ẩn tất cả item</sd-button-item>
+    }
+  </sd-button>
+  <sd-button [title]="showActions() ? 'Ẩn item' : 'Thêm item'" (click)="showActions.set(!showActions())" />
+</div>
+<p role="status">{{ result() }}</p>

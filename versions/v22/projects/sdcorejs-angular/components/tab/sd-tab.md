@@ -258,3 +258,5 @@ A child of `<sd-tab-group>` that declares one tab — its label, icon, badge, di
 - `<sd-tab-router>` — route-driven tabs (each tab is an Angular route)
 - `<sd-section>` — when you need a single bordered card, not switchable views
 - `<sd-anchor>` — when you need a vertical jump-to-section nav instead of horizontal tabs
+
+Pills dùng nền light theo color, chữ/icon theo màu chủ đạo. Active, hover và focus giữ cùng màu chữ; hover tăng nhẹ nền và keyboard focus có viền rõ. Không thay đổi selectedIndex, disabled, badge, đóng tab hay các variant line/segmented.

@@ -36,6 +36,8 @@ describe('Table selection toolbar layout and overflow', () => {
 
   it('keeps two actions visible and invokes an overflow action with the whole selection', () => {
     expect(fixture.nativeElement.querySelectorAll('.sd-selection-direct').length).toBe(2);
+    expect(fixture.nativeElement.querySelector('.sd-selection-more .c-action-indicator')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.sd-selection-more .c-icon-suffix')).not.toBeNull();
     fixture.nativeElement.querySelector('.sd-selection-more button').click();
     fixture.detectChanges();
     const menu = TestBed.inject(OverlayContainer).getContainerElement();
@@ -46,6 +48,20 @@ describe('Table selection toolbar layout and overflow', () => {
     overflowAction.click();
     expect(callbacks[3]).toHaveBeenCalledOnceWith([{ id: 1 }, { id: 2 }]);
     expect(callbacks[0]).not.toHaveBeenCalled();
+  });
+
+  it('reads the updated selection when an already open overflow action runs', () => {
+    fixture.nativeElement.querySelector('.sd-selection-more button').click();
+    fixture.detectChanges();
+    fixture.componentRef.setInput('selectedTableItems', [
+      { data: { id: 9 }, meta: { selector: { actions: actions.map(action => Utilities.hash(action)) } } },
+    ]);
+    fixture.detectChanges();
+    const row = Array.from(TestBed.inject(OverlayContainer).getContainerElement().querySelectorAll<HTMLButtonElement>('button')).find(
+      button => button.textContent?.includes('Action 3')
+    )!;
+    row.click();
+    expect(callbacks[3]).toHaveBeenCalledOnceWith([{ id: 9 }]);
   });
 
   it('names the clear button and only clears when it is activated', () => {
@@ -65,16 +81,17 @@ describe('Table selection toolbar layout and overflow', () => {
     await fixture.whenStable();
     const trigger = fixture.nativeElement.querySelector('.sd-selection-direct button') as HTMLButtonElement;
     expect(trigger.getAttribute('aria-haspopup')).toBe('menu');
+    expect(trigger.querySelector('.c-action-indicator')).not.toBeNull();
     trigger.focus();
     trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', keyCode: 40, bubbles: true }));
     fixture.detectChanges();
     await fixture.whenStable();
     const menu = TestBed.inject(OverlayContainer).getContainerElement().querySelector('[role="menu"]') as HTMLElement;
-    expect(menu.classList).toContain('sd-table-action-menu');
+    expect(menu.classList).toContain('sd-action-popover');
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
     expect(trigger.getAttribute('aria-controls')).toBe(menu.id);
     const first = menu.querySelector('button')!;
-    expect(first.getBoundingClientRect().height).toBeLessThanOrEqual(36);
+    expect(first.getBoundingClientRect().height).toBeGreaterThanOrEqual(40);
     expect(document.activeElement).toBe(first);
     first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, bubbles: true }));
     fixture.detectChanges();

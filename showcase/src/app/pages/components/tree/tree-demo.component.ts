@@ -35,9 +35,10 @@ interface TreeDemoItem {
           { name: 'items', value: 'SdTreeItemStatic<T>[]' },
           { name: 'loadType', value: 'static' },
           { name: 'defaultExpanded', value: '1' },
+          { name: 'showLines', value: 'true' },
         ]">
         <div class="tree-demo-panel">
-          <sd-tree [option]="staticDemoOption"></sd-tree>
+          <sd-tree showLines [option]="staticDemoOption"></sd-tree>
         </div>
       </demo-section>
       }
@@ -86,6 +87,7 @@ interface TreeDemoItem {
         ]">
         <div class="tree-demo-panel">
           <sd-tree
+            showLines
             [option]="lazyDemoOption"
             (expandChange)="lastEvent = 'expand: ' + $event.item.title"
             (collapseChange)="lastEvent = 'collapse: ' + $event.item.title"

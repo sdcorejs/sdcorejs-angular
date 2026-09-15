@@ -25,7 +25,7 @@ describe('documentation registry', () => {
     for (const category of DOC_CATEGORIES) {
       expect(getDocPagesByCategory(category)).withContext(category).toHaveSize(EXPECTED_CATEGORY_COUNTS[category]);
     }
-    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(359);
+    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(362);
   });
 
   it('uses unique stable page ids and category/slug pairs', () => {
@@ -47,7 +47,7 @@ describe('documentation registry', () => {
     const exampleIds = DOC_PAGES.flatMap(page => page.examples.map(example => example.id));
 
     expect(new Set(exampleIds).size).toBe(exampleIds.length);
-    expect(exampleIds).toHaveSize(359);
+    expect(exampleIds).toHaveSize(362);
     const switchSections = findDocPage('forms', 'switch')?.examples.map(example => example.sectionId);
     expect(switchSections).toContain('example-kich-thuoc');
     expect(switchSections).toContain('example-ben-trong-bang');
@@ -95,7 +95,7 @@ describe('documentation registry', () => {
       findDocPage('components', 'button')
         ?.examples.slice(0, 4)
         .map(example => example.title)
-    ).toEqual(['Biến thể', 'Bảng màu', 'Secondary vs black', 'Kích thước']);
+    ).toEqual(['Action Popover', 'Biến thể', 'Bảng màu', 'Secondary vs black']);
     for (const slug of ['editor', 'upload-file']) {
       expect(findDocPage('components', slug)?.examples.every(example => example.activation === 'interaction')).toBeTrue();
     }

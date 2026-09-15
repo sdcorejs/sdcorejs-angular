@@ -580,7 +580,7 @@ import { SdAvatar } from '@sdcorejs/angular/components/avatar';
   template: \`
     <demo-page #demoPage
       title="Avatar"
-      description="Ảnh đại diện tròn — tự sinh chữ cái đầu với màu cố định theo tên khi không có URL ảnh.">
+      description="Ảnh đại diện tròn — chữ cái đầu đậm trên nền light, màu cố định theo tên khi không có URL ảnh.">
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chu-cai-dau-tu-ten') {
       <demo-section heading="Chữ cái đầu từ tên" [props]="[{ name: 'src', value: 'initials' }]">
@@ -972,6 +972,38 @@ export class BreadcrumbDemoComponent {
   }
 }
 `,
+  },
+  "components/button/example-action-popover": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdButton, SdButtonItem, SdButtonItemDivider } from '@sdcorejs/angular/components/button';
+
+@Component({
+  selector: 'app-button-action-popover-example',
+  standalone: true,
+  imports: [SdButton, SdButtonItem, SdButtonItemDivider],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  templateUrl: './button-action-popover.example.html',
+  styleUrl: './button-example.scss',
+})
+export class ButtonActionPopoverExampleComponent {
+  readonly showActions = signal(true);
+  readonly result = signal('Chọn một action để kiểm tra callback.');
+}`,
+    scss: `:host {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.button-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex-basis: 100%;
+}`,
   },
   "components/button/example-bang-mau": {
     typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
@@ -5935,7 +5967,7 @@ interface FileTab {
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-variant-pills') {
-      <demo-section heading="Variant pills" [props]="[{ name: 'variant', value: 'pills' }]" note="Pill rounded, active filled — nhẹ nhàng, không underline, lý tưởng cho nested tab.">
+      <demo-section heading="Variant pills" [props]="[{ name: 'variant', value: 'pills' }]" note="Pill nền light, chữ/icon theo màu chủ đạo. Bấm lại tab active hoặc điều hướng bàn phím để kiểm tra màu chữ ổn định.">
         <div class="full">
           <sd-tab-group variant="pills" [stretchTabs]="false">
             <sd-tab label="Tuần này" icon="today">Nội dung tuần này.</sd-tab>
@@ -6708,11 +6740,26 @@ const TASKS: Task[] = [
         ]"
         note="Command và action children dùng menu gọn nền trắng. Chọn dòng để thử action nhóm; các child command vẫn hỗ trợ icon, title, color, disabled, hidden và click theo từng row.">
         <div class="table-box">
-          <sd-table [option]="commandChildrenOption"><ng-template [sdTableRowMobileDef]="commandChildrenOption" let-row="item"><strong>{{ row.code }}</strong><div>{{ row.name }}</div></ng-template></sd-table>
+          <sd-table autoId="command-children-demo" [option]="commandChildrenOption"><ng-template [sdTableRowMobileDef]="commandChildrenOption" let-row="item"><strong>{{ row.code }}</strong><div>{{ row.name }}</div></ng-template></sd-table>
+          <p role="status">{{ commandChildrenEvent() }}</p>
         </div>
       </demo-section>
       }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-action-da-chon-co-menu-con') {
+      <demo-section
+        heading="Action đã chọn có menu con"
+        [props]="[
+          { name: 'selector.actions[].children', value: 'menu' },
+          { name: 'selector.defaultSelected', value: 'callback' }
+        ]"
+        note="Một dòng được chọn sẵn. Mở Xử lý đã chọn ở thanh dưới bảng để thử menu con; chọn thêm dòng để kiểm tra danh sách truyền vào callback.">
+        <div class="table-box">
+          <sd-table autoId="action-children-demo" [option]="actionChildrenOption"></sd-table>
+          <p role="status">{{ actionChildrenEvent() }}</p>
+        </div>
+      </demo-section>
+      }
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-keo-tha-doi-thu-tu') {
       <demo-section heading="Kéo thả đổi thứ tự" [props]="[{ name: 'rowReorder', value: 'true' }]">
         <div class="table-box">
@@ -7269,6 +7316,8 @@ export class TableDemoComponent {
     style: { shadow: true },
   };
 
+  readonly commandChildrenEvent = signal('Mở Thao tác thêm trên một dòng để thử menu con.');
+
   readonly commandChildrenOption: SdTableOption<Product> = {
     type: 'local',
     items: () => PRODUCTS,
@@ -7277,34 +7326,34 @@ export class TableDemoComponent {
       visible: true,
       actions: [{
         title: 'Xử lý đã chọn', icon: 'checklist', children: [
-          { title: 'Kiểm kho', icon: 'inventory_2', click: rows => alert('Kiểm kho ' + rows?.length + ' sản phẩm') },
-          { title: 'Xóa', icon: 'delete', color: 'error', click: rows => alert('Xóa ' + rows?.length + ' sản phẩm') },
+          { title: 'Kiểm kho', icon: 'inventory_2', click: rows => this.commandChildrenEvent.set('Kiểm kho ' + rows?.length + ' sản phẩm') },
+          { title: 'Xóa', icon: 'delete', color: 'error', click: rows => this.commandChildrenEvent.set('Xóa ' + rows?.length + ' sản phẩm') },
         ],
       }],
     },
     command: {
       align: 'right',
       commands: [
-        { icon: 'visibility', title: 'Xem nhanh', click: (p: Product) => alert(\`Xem nhanh \${p.code}\`) },
+        { icon: 'visibility', title: 'Xem nhanh', click: (p: Product) => this.commandChildrenEvent.set(\`Xem nhanh \${p.code}\`) },
         {
           icon: 'more_vert',
           title: 'Thao tác thêm',
           children: [
-            { icon: 'content_copy', title: 'Nhân bản', click: (p: Product) => alert(\`Nhân bản \${p.code}\`) },
+            { icon: 'content_copy', title: 'Nhân bản', click: (p: Product) => this.commandChildrenEvent.set(\`Nhân bản \${p.code}\`) },
             {
               icon: 'inventory_2',
               title: 'Kiểm kho',
               disabled: (p: Product) => p.stock === 0,
-              click: (p: Product) => alert(\`Kiểm kho \${p.code}: \${p.stock}\`),
+              click: (p: Product) => this.commandChildrenEvent.set(\`Kiểm kho \${p.code}: \${p.stock}\`),
             },
             {
               icon: 'block',
               title: 'Ngừng bán',
               color: 'warning',
               hidden: (p: Product) => !p.active,
-              click: (p: Product) => alert(\`Ngừng bán \${p.code}\`),
+              click: (p: Product) => this.commandChildrenEvent.set(\`Ngừng bán \${p.code}\`),
             },
-            { icon: 'delete', title: 'Xóa', color: 'error', click: (p: Product) => alert(\`Xóa \${p.code}\`) },
+            { icon: 'delete', title: 'Xóa', color: 'error', click: (p: Product) => this.commandChildrenEvent.set(\`Xóa \${p.code}\`) },
           ],
         },
       ],
@@ -7318,6 +7367,29 @@ export class TableDemoComponent {
     style: { shadow: true },
   };
 
+  readonly actionChildrenEvent = signal('Mở Xử lý đã chọn để thử action có children.');
+  readonly actionChildrenOption: SdTableOption<Product> = {
+    type: 'local',
+    items: () => PRODUCTS.slice(0, 4),
+    rowKey: 'id',
+    filler: { enabled: true },
+    columns: [
+      { field: 'code', type: 'string', title: 'Mã', width: '120px' },
+      { field: 'name', type: 'string', title: 'Tên sản phẩm', width: '320px' },
+      { field: 'stock', type: 'number', title: 'Tồn kho', width: '100px' },
+    ],
+    selector: {
+      visible: true,
+      defaultSelected: row => row.id === PRODUCTS[0].id,
+      message: rows => \`Đã chọn \${rows?.length ?? 0} sản phẩm\`,
+      actions: [{
+        title: 'Xử lý đã chọn', icon: 'checklist', children: [
+          { title: 'Kiểm kho', icon: 'inventory_2', click: rows => this.actionChildrenEvent.set('Kiểm kho: ' + rows?.map(row => row.code).join(', ')) },
+          { title: 'Xuất danh sách', icon: 'download', click: rows => this.actionChildrenEvent.set('Xuất danh sách: ' + rows?.map(row => row.code).join(', ')) },
+        ],
+      }],
+    },
+  };
   readonly reorderOption: SdTableOption<Product> = {
     type: 'local',
     items: () => [...PRODUCTS],
@@ -7656,9 +7728,10 @@ interface TreeDemoItem {
           { name: 'items', value: 'SdTreeItemStatic<T>[]' },
           { name: 'loadType', value: 'static' },
           { name: 'defaultExpanded', value: '1' },
+          { name: 'showLines', value: 'true' },
         ]">
         <div class="tree-demo-panel">
-          <sd-tree [option]="staticDemoOption"></sd-tree>
+          <sd-tree showLines [option]="staticDemoOption"></sd-tree>
         </div>
       </demo-section>
       }
@@ -7707,6 +7780,7 @@ interface TreeDemoItem {
         ]">
         <div class="tree-demo-panel">
           <sd-tree
+            showLines
             [option]="lazyDemoOption"
             (expandChange)="lastEvent = 'expand: ' + $event.item.title"
             (collapseChange)="lastEvent = 'collapse: ' + $event.item.title"
@@ -15247,6 +15321,38 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
       <sd-breadcrumb></sd-breadcrumb>
     </demo-section>`,
   },
+  "components/button/example-action-popover": {
+    ...SHOWCASE_PAGE_SOURCES["components/button/example-action-popover"],
+    html: `<div class="d-flex align-items-center gap-8 flex-wrap">
+  <sd-button type="text" prefixIcon="more_vert" tooltip="Action chỉ có icon" autoId="popover-icon-only">
+    <sd-button-item prefixIcon="edit" (click)="result.set('Đã chọn action từ icon button')">Chỉnh sửa</sd-button-item>
+  </sd-button>
+  <sd-button openOnHover title="Hover để mở" autoId="popover-hover">
+    <sd-button-item prefixIcon="edit" (click)="result.set('Đã chọn action từ menu hover')">Chỉnh sửa</sd-button-item>
+    <sd-button-item disabled>Không khả dụng</sd-button-item>
+  </sd-button>
+  <sd-button title="Nút thường" (click)="result.set('Click nút thường')" />
+  <sd-button color="primary" prefixIcon="edit" autoId="popover-basic">
+    Chỉnh sửa
+    <sd-button-item prefixIcon="check" color="success" (click)="result.set('Đã duyệt')">Duyệt</sd-button-item>
+    <sd-button-item prefixIcon="close" color="error" (click)="result.set('Đã từ chối')">Từ chối</sd-button-item>
+    <sd-button-item-divider />
+    <sd-button-item suffixIcon="chevron_right" (click)="result.set('Mở chi tiết')">Chi tiết</sd-button-item>
+    <sd-button-item prefixIcon="open_in_new" suffixIcon="chevron_right" (click)="result.set('Mở trang mới')">Mở trang mới</sd-button-item>
+    <sd-button-item prefixIcon="delete" color="error" disabled tooltip="Chưa đủ quyền">Không khả dụng</sd-button-item>
+  </sd-button>
+  <sd-button type="text" suffixIcon="edit" autoId="popover-dynamic" (click)="result.set('Không có item: click thường')">
+    Actions động
+    @if (showActions()) {
+      <sd-button-item prefixIcon="check" color="success" (click)="result.set('Action động đã chạy')">Xác nhận</sd-button-item>
+      <sd-button-item-divider />
+      <sd-button-item (click)="showActions.set(false)">Ẩn tất cả item</sd-button-item>
+    }
+  </sd-button>
+  <sd-button [title]="showActions() ? 'Ẩn item' : 'Thêm item'" (click)="showActions.set(!showActions())" />
+</div>
+<p role="status">{{ result() }}</p>`,
+  },
   "components/button/example-bang-mau": {
     ...SHOWCASE_PAGE_SOURCES["components/button/example-bang-mau"],
     html: `<sd-button type="fill" color="primary" title="primary"></sd-button>
@@ -15305,19 +15411,23 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
   },
   "components/button/example-trang-thai": {
     ...SHOWCASE_PAGE_SOURCES["components/button/example-trang-thai"],
-    html: `<sd-button
-  type="fill"
-  color="primary"
-  title="loading"
-  prefixIcon="send"
-  [loading]="submitting()"
-  (click)="onSubmit()">
-</sd-button>
+    html: `<sd-button type="fill" color="primary" title="loading" prefixIcon="send" [loading]="submitting()" (click)="onSubmit()"> </sd-button>
 <sd-button type="fill" color="primary" title="disabled" [disabled]="true"></sd-button>
-<div style="width: 240px;">
+<div style="width: 240px">
   <sd-button type="fill" color="primary" title="block" [block]="true"></sd-button>
 </div>
-<sd-button type="outline" color="secondary" title="Không khả dụng" prefixIcon="download" disabled autoId="disabled-outline"></sd-button>`,
+<sd-button type="outline" color="secondary" title="Không khả dụng" prefixIcon="download" disabled autoId="disabled-outline"></sd-button>
+<div style="display: flex; align-items: center; gap: 16px">
+  <span>Icon secondary:</span>
+  <sd-button type="text" color="secondary" prefixIcon="delete" tooltip="Có thể xóa" autoId="secondary-icon-enabled"></sd-button>
+  <sd-button
+    type="text"
+    color="secondary"
+    prefixIcon="delete"
+    tooltip="Không thể xóa"
+    disabled
+    autoId="secondary-icon-disabled"></sd-button>
+</div>`,
   },
   "components/card/example-disabled-va-color": {
     ...SHOWCASE_PAGE_SOURCES["components/card/example-disabled-va-color"],
@@ -17314,7 +17424,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
   },
   "components/tab/example-variant-pills": {
     ...SHOWCASE_PAGE_SOURCES["components/tab"],
-    html: `<demo-section heading="Variant pills" [props]="[{ name: 'variant', value: 'pills' }]" note="Pill rounded, active filled — nhẹ nhàng, không underline, lý tưởng cho nested tab.">
+    html: `<demo-section heading="Variant pills" [props]="[{ name: 'variant', value: 'pills' }]" note="Pill nền light, chữ/icon theo màu chủ đạo. Bấm lại tab active hoặc điều hướng bàn phím để kiểm tra màu chữ ổn định.">
     <div class="full">
       <sd-tab-group variant="pills" [stretchTabs]="false">
         <sd-tab label="Tuần này" icon="today">Nội dung tuần này.</sd-tab>
@@ -17334,6 +17444,21 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
         <sd-tab label="Bảng">Hiển thị dạng bảng.</sd-tab>
         <sd-tab label="Lưới">Hiển thị dạng lưới.</sd-tab>
       </sd-tab-group>
+    </div>
+  </demo-section>`,
+  },
+  "components/table/example-action-da-chon-co-menu-con": {
+    ...SHOWCASE_PAGE_SOURCES["components/table"],
+    html: `<demo-section
+    heading="Action đã chọn có menu con"
+    [props]="[
+      { name: 'selector.actions[].children', value: 'menu' },
+      { name: 'selector.defaultSelected', value: 'callback' }
+    ]"
+    note="Một dòng được chọn sẵn. Mở Xử lý đã chọn ở thanh dưới bảng để thử menu con; chọn thêm dòng để kiểm tra danh sách truyền vào callback.">
+    <div class="table-box">
+      <sd-table autoId="action-children-demo" [option]="actionChildrenOption"></sd-table>
+      <p role="status">{{ actionChildrenEvent() }}</p>
     </div>
   </demo-section>`,
   },
@@ -17485,7 +17610,8 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     ]"
     note="Command và action children dùng menu gọn nền trắng. Chọn dòng để thử action nhóm; các child command vẫn hỗ trợ icon, title, color, disabled, hidden và click theo từng row.">
     <div class="table-box">
-      <sd-table [option]="commandChildrenOption"><ng-template [sdTableRowMobileDef]="commandChildrenOption" let-row="item"><strong>{{ row.code }}</strong><div>{{ row.name }}</div></ng-template></sd-table>
+      <sd-table autoId="command-children-demo" [option]="commandChildrenOption"><ng-template [sdTableRowMobileDef]="commandChildrenOption" let-row="item"><strong>{{ row.code }}</strong><div>{{ row.name }}</div></ng-template></sd-table>
+      <p role="status">{{ commandChildrenEvent() }}</p>
     </div>
   </demo-section>`,
   },
@@ -17780,6 +17906,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     ]">
     <div class="tree-demo-panel">
       <sd-tree
+        showLines
         [option]="lazyDemoOption"
         (expandChange)="lastEvent = 'expand: ' + $event.item.title"
         (collapseChange)="lastEvent = 'collapse: ' + $event.item.title"
@@ -17830,9 +17957,10 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
       { name: 'items', value: 'SdTreeItemStatic<T>[]' },
       { name: 'loadType', value: 'static' },
       { name: 'defaultExpanded', value: '1' },
+      { name: 'showLines', value: 'true' },
     ]">
     <div class="tree-demo-panel">
-      <sd-tree [option]="staticDemoOption"></sd-tree>
+      <sd-tree showLines [option]="staticDemoOption"></sd-tree>
     </div>
   </demo-section>`,
   },

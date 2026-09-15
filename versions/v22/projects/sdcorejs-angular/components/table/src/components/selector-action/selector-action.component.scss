@@ -1,9 +1,9 @@
-@use '../action-menu/action-menu';
-
 :host {
   display: block;
   flex-shrink: 0;
   min-width: 0;
+  padding-inline: 8px;
+  box-sizing: border-box;
 }
 .sd-selection-message {
   display: flex;

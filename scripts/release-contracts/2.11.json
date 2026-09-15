@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "suffix": "2.11",
+  "reviewedSourceSha": "864789c8d1d76f393dcc834a4dab872c6eb18278",
+  "artifactSource": "Local 2.11 packages built on Node 22.22.3; compared against same-major npm 2.10 packages. Reviewed changes: checkbox size, Button Action Popover and table/tree adapters, tree lines, light pills and avatars, disabled icon buttons and toolbar spacing. No dependency or export-map changes intended. CI rebuilds from the tagged release commit.",
+  "targets": {
+    "19.2.11": {
+      "version": "19.2.11",
+      "baselineVersion": "19.2.10",
+      "dependencies": {
+        "baseline": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f",
+        "candidate": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f"
+      },
+      "exports": {
+        "baseline": "078a9f3619580b6017cb8b5ecc21d40f3876e8bf560774fde5b305fb235e10f1",
+        "candidate": "078a9f3619580b6017cb8b5ecc21d40f3876e8bf560774fde5b305fb235e10f1"
+      },
+      "files": {
+        "baseline": "4f834ba2aeb981ec64b83064433680cd2d85fa7d1386ff4417a5d7adc87839da",
+        "candidate": "4858001cd5d7c6b5f7ca63cea21a39540e399cbc7ac87db7a5b0f70333256925"
+      },
+      "publicSurface": {
+        "baseline": "e449c7ab3df2ed44d9b6618370c65d3f67cee5de947bc9636b0d0f3e906be2bd",
+        "candidate": "6c16c9ea53e93fa94035bae8f9d80abae8252d94b89e15456e719352711f3d13"
+      }
+    },
+    "20.2.11": {
+      "version": "20.2.11",
+      "baselineVersion": "20.2.10",
+      "dependencies": {
+        "baseline": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f",
+        "candidate": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f"
+      },
+      "exports": {
+        "baseline": "078a9f3619580b6017cb8b5ecc21d40f3876e8bf560774fde5b305fb235e10f1",
+        "candidate": "078a9f3619580b6017cb8b5ecc21d40f3876e8bf560774fde5b305fb235e10f1"
+      },
+      "files": {
+        "baseline": "025c0d5ffb6e287a670f7fd4dab3447ec22cb39fb5c1a79043ef7cbf256a2497",
+        "candidate": "025c0d5ffb6e287a670f7fd4dab3447ec22cb39fb5c1a79043ef7cbf256a2497"
+      },
+      "publicSurface": {
+        "baseline": "4112a5f16564ced848d8809f38dc1e73d104cbfed5be5c5fb2816fd6bde11552",
+        "candidate": "74a1008bdd2345cc0f8dc0910c3d8b8ff292390a96039d4a9f0313c6bd1fd806"
+      }
+    },
+    "21.2.11": {
+      "version": "21.2.11",
+      "baselineVersion": "21.2.10",
+      "dependencies": {
+        "baseline": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f",
+        "candidate": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f"
+      },
+      "exports": {
+        "baseline": "a995f16666247c07e3f08c79714d334bb3e30930d18315708ca5cacd4135fcce",
+        "candidate": "a995f16666247c07e3f08c79714d334bb3e30930d18315708ca5cacd4135fcce"
+      },
+      "files": {
+        "baseline": "29e0d97b40e6de03a29074676b55e4606f696db4231167e35bd942887790b2f5",
+        "candidate": "29e0d97b40e6de03a29074676b55e4606f696db4231167e35bd942887790b2f5"
+      },
+      "publicSurface": {
+        "baseline": "29014fbbebc5b3284d15393ceb8fb0581ee87f08c37147559eb7e000550c483b",
+        "candidate": "95347b0eeb98a1d483489d75fc6ffcb7d16f2e6a08e2073cbd2ef2db49a8af9c"
+      }
+    },
+    "22.2.11": {
+      "version": "22.2.11",
+      "baselineVersion": "22.2.10",
+      "dependencies": {
+        "baseline": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f",
+        "candidate": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f"
+      },
+      "exports": {
+        "baseline": "a995f16666247c07e3f08c79714d334bb3e30930d18315708ca5cacd4135fcce",
+        "candidate": "a995f16666247c07e3f08c79714d334bb3e30930d18315708ca5cacd4135fcce"
+      },
+      "files": {
+        "baseline": "29e0d97b40e6de03a29074676b55e4606f696db4231167e35bd942887790b2f5",
+        "candidate": "29e0d97b40e6de03a29074676b55e4606f696db4231167e35bd942887790b2f5"
+      },
+      "publicSurface": {
+        "baseline": "115d3c47dbcea99c21dbeb0afd0ba2d91e79d71c57595aedb6fa23617715dd3e",
+        "candidate": "87b0367970d0795303781f35eaaaa48d84634bf4017bdd2fe87683b1b3857112"
+      }
+    }
+  }
+}

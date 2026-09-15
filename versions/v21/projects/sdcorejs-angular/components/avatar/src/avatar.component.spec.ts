@@ -77,10 +77,11 @@ describe('SdAvatar', () => {
       expect(wrapper.style.backgroundColor).toBe('transparent');
     });
 
-    it('returns neutral #bdc3c7 for empty src', () => {
+    it('returns a neutral light background for empty src', () => {
       setInput(fixture, 'src', '');
       const wrapper = queryByCss<HTMLDivElement>(fixture, '.sd-avatar');
-      expect(wrapper.style.backgroundColor).toBe('rgb(189, 195, 199)');
+      expect(fixture.componentInstance.baseColor()).toBe('#bdc3c7');
+      expect(wrapper.style.backgroundColor).toContain('color-mix');
     });
 
     it('returns deterministic color from name (same name → same color)', () => {
@@ -104,6 +105,40 @@ describe('SdAvatar', () => {
 
       expect(colorA).not.toBe(colorZ);
     });
+  });
+
+  it('renders readable dark initials on light backgrounds for the existing name palette', () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 1;
+    const context = canvas.getContext('2d')!;
+    const luminance = (color: string) => {
+      context.fillStyle = color;
+      context.fillRect(0, 0, 1, 1);
+      const rgb = Array.from(context.getImageData(0, 0, 1, 1).data)
+        .slice(0, 3)
+        .map(value => {
+          const channel = value / 255;
+          return channel <= 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4);
+        });
+      return rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
+    };
+    for (const name of [
+      'Nguyễn Văn An',
+      'Trần Thị Bích',
+      'Lê Minh Hoàng',
+      'Phạm Quỳnh Anh',
+      '',
+      ...Array.from({ length: 40 }, (_, i) => 'Person ' + i),
+    ]) {
+      setInput(fixture, 'src', name);
+      const style = getComputedStyle(queryByCss(fixture, '.sd-avatar'));
+      const background = luminance(style.backgroundColor);
+      const foreground = luminance(style.color);
+      expect(background).withContext(name).toBeGreaterThan(0.7);
+      expect((background + 0.05) / (foreground + 0.05))
+        .withContext(name)
+        .toBeGreaterThanOrEqual(4.5);
+    }
   });
 
   describe('size', () => {
@@ -164,10 +199,11 @@ describe('SdAvatar', () => {
       expect(queryByCss(fixture, 'span.sd-avatar-text').textContent?.trim()).toBe('?');
     });
 
-    it('uses neutral #bdc3c7 background for undefined src', () => {
+    it('uses neutral light background for undefined src', () => {
       setInput(fixture, 'src', undefined);
       const wrapper = queryByCss<HTMLDivElement>(fixture, '.sd-avatar');
-      expect(wrapper.style.backgroundColor).toBe('rgb(189, 195, 199)');
+      expect(fixture.componentInstance.baseColor()).toBe('#bdc3c7');
+      expect(wrapper.style.backgroundColor).toContain('color-mix');
     });
   });
 

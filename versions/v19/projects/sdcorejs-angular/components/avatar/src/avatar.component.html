@@ -1,5 +1,11 @@
 @let _size = size();
-<div class="sd-avatar" [style.width.px]="_size" [style.height.px]="_size" [style.line-height.px]="_size" [style.backgroundColor]="bgColor()">
+<div
+  class="sd-avatar"
+  [style.width.px]="_size"
+  [style.height.px]="_size"
+  [style.line-height.px]="_size"
+  [style.backgroundColor]="bgColor()"
+  [style.color]="textColor()">
   @if (isUrl()) {
     <img [src]="src()" (error)="handleError()" alt="avatar" />
   } @else {

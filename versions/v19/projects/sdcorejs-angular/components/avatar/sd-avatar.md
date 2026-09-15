@@ -83,3 +83,5 @@ None.
 - `<sd-badge>` — for status indicators (e.g. online/offline dot beside the avatar)
 - `<sd-button>` — to make an avatar clickable, wrap or pair as needed
 - `<sd-tag>` — for non-user labels
+
+Avatar chữ dùng nền light và chữ đậm cùng tông (font-weight 600), giữ nguyên ánh xạ màu theo tên và cách lấy initials. Avatar ảnh, size và fallback khi lỗi ảnh giữ nguyên.

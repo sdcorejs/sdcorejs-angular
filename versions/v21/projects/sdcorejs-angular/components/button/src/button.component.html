@@ -4,7 +4,9 @@
 @let _prefixIcon = prefixIcon();
 @let _suffixIcon = suffixIcon();
 @let _fontSet = fontSet();
-@let _htmlType = htmlType();
+@let _hasActions = hasActions();
+@let _htmlType = _hasActions ? 'button' : htmlType();
+@let _opened = popover.opened();
 @let _disabled = disabled();
 @let _color = color();
 @let _autoId = autoId();
@@ -13,6 +15,14 @@
 
 @if (_type === 'fill') {
   <button
+    #trigger
+    [attr.aria-haspopup]="_hasActions ? 'menu' : null"
+    [attr.aria-expanded]="_hasActions ? _opened : null"
+    [attr.aria-controls]="_opened ? popover.id : null"
+    [attr.aria-label]="_hasActions ? _title || _tooltip || null : null"
+    (keydown)="onTriggerKeydown($event)"
+    (pointerenter)="onTriggerPointerEnter($event)"
+    (pointerleave)="popover.scheduleHoverClose()"
     mat-flat-button
     class="c-button c-fill"
     [type]="_htmlType"
@@ -30,6 +40,14 @@
   </button>
 } @else if (_type === 'light') {
   <button
+    #trigger
+    [attr.aria-haspopup]="_hasActions ? 'menu' : null"
+    [attr.aria-expanded]="_hasActions ? _opened : null"
+    [attr.aria-controls]="_opened ? popover.id : null"
+    [attr.aria-label]="_hasActions ? _title || _tooltip || null : null"
+    (keydown)="onTriggerKeydown($event)"
+    (pointerenter)="onTriggerPointerEnter($event)"
+    (pointerleave)="popover.scheduleHoverClose()"
     mat-flat-button
     class="c-button c-light"
     [type]="_htmlType"
@@ -47,6 +65,14 @@
   </button>
 } @else if (_type === 'outline') {
   <button
+    #trigger
+    [attr.aria-haspopup]="_hasActions ? 'menu' : null"
+    [attr.aria-expanded]="_hasActions ? _opened : null"
+    [attr.aria-controls]="_opened ? popover.id : null"
+    [attr.aria-label]="_hasActions ? _title || _tooltip || null : null"
+    (keydown)="onTriggerKeydown($event)"
+    (pointerenter)="onTriggerPointerEnter($event)"
+    (pointerleave)="popover.scheduleHoverClose()"
     mat-stroked-button
     class="c-button c-outline"
     [type]="_htmlType"
@@ -64,6 +90,14 @@
   </button>
 } @else if (_type === 'text') {
   <button
+    #trigger
+    [attr.aria-haspopup]="_hasActions ? 'menu' : null"
+    [attr.aria-expanded]="_hasActions ? _opened : null"
+    [attr.aria-controls]="_opened ? popover.id : null"
+    [attr.aria-label]="_hasActions ? _title || _tooltip || null : null"
+    (keydown)="onTriggerKeydown($event)"
+    (pointerenter)="onTriggerPointerEnter($event)"
+    (pointerleave)="popover.scheduleHoverClose()"
     mat-button
     class="c-button c-text"
     [type]="_htmlType"
@@ -95,9 +129,61 @@
       </span>
     }
 
+    <span #projectedLabel class="c-title c-projected-label" [hidden]="!!_title"><ng-content /></span>
+
     @if (_suffixIcon && !_loading) {
       <sd-icon [name]="_suffixIcon" [fontSet]="_fontSet" [size]="size()" class="c-icon-suffix"></sd-icon>
     }
 
+    @if (_hasActions && !isIconOnly() && !_suffixIcon) {
+      <sd-icon name="expand_more" fontSet="material-icons-outlined" class="c-action-indicator" aria-hidden="true" />
+    }
+  </div>
+</ng-template>
+
+<div #definitions hidden></div>
+<ng-template #actionMenu>
+  <div
+    class="sd-action-popover"
+    role="menu"
+    tabindex="-1"
+    [id]="popover.id"
+    [attr.aria-label]="_title || _tooltip || null"
+    (pointerenter)="popover.cancelHoverClose()"
+    (pointerleave)="popover.scheduleHoverClose()"
+    (focusin)="popover.retainForKeyboard()"
+    (keydown)="popover.keydown($event)">
+    @for (entry of entries(); track entry) {
+      @if (entry.kind === 'divider') {
+        <div class="sd-action-divider" role="separator"></div>
+        @if (entry.title()) {
+          <div class="sd-action-heading">{{ entry.title() }}</div>
+        }
+      } @else {
+        @let _prefix = entry.prefixIcon();
+        @let _suffix = entry.suffixIcon();
+        @let _entryColor = entry.color();
+        @let _entryDisabled = entry.disabled();
+        @let _entryFontSet = entry.fontSet();
+        <button
+          type="button"
+          role="menuitem"
+          class="sd-action-item"
+          [disabled]="_entryDisabled"
+          [attr.aria-disabled]="_entryDisabled"
+          [attr.data-autoid]="entry.autoId()"
+          [style.--sd-action-accent]="_entryColor ? 'var(--sd-' + _entryColor + ')' : null"
+          [matTooltip]="entry.tooltip() || ''"
+          (click)="activateItem(entry, $event)">
+          @if (_prefix) {
+            <sd-icon [name]="_prefix" [fontSet]="_entryFontSet" />
+          }
+          <span class="sd-action-label"><ng-container [ngTemplateOutlet]="entry.template()" /></span>
+          @if (_suffix) {
+            <sd-icon [name]="_suffix" [fontSet]="_entryFontSet" />
+          }
+        </button>
+      }
+    }
   </div>
 </ng-template>

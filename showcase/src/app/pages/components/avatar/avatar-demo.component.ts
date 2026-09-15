@@ -9,7 +9,7 @@ import { SdAvatar } from '@sdcorejs/angular/components/avatar';
   template: `
     <demo-page #demoPage
       title="Avatar"
-      description="Ảnh đại diện tròn — tự sinh chữ cái đầu với màu cố định theo tên khi không có URL ảnh.">
+      description="Ảnh đại diện tròn — chữ cái đầu đậm trên nền light, màu cố định theo tên khi không có URL ảnh.">
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chu-cai-dau-tu-ten') {
       <demo-section heading="Chữ cái đầu từ tên" [props]="[{ name: 'src', value: 'initials' }]">

@@ -36,6 +36,7 @@ export type ShowcaseExampleSourceKey =
   | "components/breadcrumb/example-danh-sach-tinh"
   | "components/breadcrumb/example-nhan-async"
   | "components/breadcrumb/example-router-generated"
+  | "components/button/example-action-popover"
   | "components/button/example-bang-mau"
   | "components/button/example-bien-the"
   | "components/button/example-chi-icon"
@@ -152,6 +153,7 @@ export type ShowcaseExampleSourceKey =
   | "components/tab/example-tab-long-tab"
   | "components/tab/example-variant-pills"
   | "components/tab/example-variant-segmented"
+  | "components/table/example-action-da-chon-co-menu-con"
   | "components/table/example-cell-template-tuy-chinh"
   | "components/table/example-chon-mot-dong"
   | "components/table/example-dong-mo-rong"
@@ -609,6 +611,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-nhan-async",
     title: "Nhãn async",
     description: "Observable label được cập nhật trực tiếp và tự unsubscribe khi source/component bị thay thế.",
+  },
+  {
+    sourceKey: "components/button/example-action-popover",
+    pageKey: "components/button",
+    sectionId: "example-action-popover",
+    title: "Action Popover",
+    description: "Existing “Action Popover” scenario preserved from the showcase.",
   },
   {
     sourceKey: "components/button/example-bien-the",
@@ -1371,7 +1380,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "components/tab",
     sectionId: "example-variant-pills",
     title: "Variant pills",
-    description: "Pill rounded, active filled — nhẹ nhàng, không underline, lý tưởng cho nested tab.",
+    description: "Pill nền light, chữ/icon theo màu chủ đạo. Bấm lại tab active hoặc điều hướng bàn phím để kiểm tra màu chữ ổn định.",
   },
   {
     sourceKey: "components/tab/example-variant-segmented",
@@ -1554,6 +1563,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-lenh-dong-co-menu-con",
     title: "Lệnh dòng có menu con",
     description: "Command và action children dùng menu gọn nền trắng. Chọn dòng để thử action nhóm; các child command vẫn hỗ trợ icon, title, color, disabled, hidden và click theo từng row.",
+  },
+  {
+    sourceKey: "components/table/example-action-da-chon-co-menu-con",
+    pageKey: "components/table",
+    sectionId: "example-action-da-chon-co-menu-con",
+    title: "Action đã chọn có menu con",
+    description: "Một dòng được chọn sẵn. Mở Xử lý đã chọn ở thanh dưới bảng để thử menu con; chọn thêm dòng để kiểm tra danh sách truyền vào callback.",
   },
   {
     sourceKey: "components/table/example-keo-tha-doi-thu-tu",

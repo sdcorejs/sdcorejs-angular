@@ -1,7 +1,8 @@
 import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { LucideDownload } from '@lucide/angular';
+import { provideSdIcon, SdIcon } from '@sdcorejs/angular/modules/icon';
 import { SdButton } from './button.component';
 import { queryByCss, setInput } from '../../../testing/test-utils';
 
@@ -11,6 +12,7 @@ describe('SdButton', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [SdButton, NoopAnimationsModule],
+      providers: [provideSdIcon({ lucideIcons: [LucideDownload] })],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SdButton);
@@ -263,6 +265,38 @@ describe('SdButton', () => {
       setInput(fixture, 'loading', true);
       expect(fixture.nativeElement.querySelectorAll('sd-icon').length).toBe(0);
       expect(fixture.nativeElement.querySelector('mat-spinner')).not.toBeNull();
+    });
+
+    it('visually mutes only disabled secondary icon-only text buttons', () => {
+      setInput(fixture, 'type', 'text');
+      setInput(fixture, 'color', 'secondary');
+      setInput(fixture, 'prefixIcon', 'download');
+      const host = fixture.nativeElement as HTMLElement;
+      const icon = () => host.querySelector('sd-icon')!;
+      expect(getComputedStyle(icon()).opacity).toBe('1');
+
+      setInput(fixture, 'disabled', true);
+      expect(host.querySelector('button')!.disabled).toBeTrue();
+      expect(getComputedStyle(icon()).opacity).toBe('0.5');
+      setInput(fixture, 'prefixIcon', undefined);
+      setInput(fixture, 'suffixIcon', 'download');
+      setInput(fixture, 'fontSet', 'lucide');
+      expect(getComputedStyle(icon()).opacity).toBe('0.5');
+
+      setInput(fixture, 'type', 'light');
+      expect(getComputedStyle(icon()).opacity).toBe('1');
+      setInput(fixture, 'type', 'text');
+      setInput(fixture, 'title', 'Download');
+      expect(getComputedStyle(icon()).opacity).toBe('1');
+      setInput(fixture, 'title', undefined);
+      setInput(fixture, 'color', 'primary');
+      expect(getComputedStyle(icon()).opacity).toBe('1');
+      setInput(fixture, 'color', 'secondary');
+      setInput(fixture, 'disabled', false);
+      expect(getComputedStyle(icon()).opacity).toBe('1');
+      setInput(fixture, 'loading', true);
+      expect(host.querySelector('sd-icon')).toBeNull();
+      expect(getComputedStyle(host.querySelector('mat-spinner')!).opacity).toBe('1');
     });
 
     it('updates outline and disabled colors when the containing theme changes', () => {

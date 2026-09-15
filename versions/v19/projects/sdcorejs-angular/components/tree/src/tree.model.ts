@@ -110,6 +110,7 @@ export interface SdTreeComponentOptionBase<T = unknown, TItem extends SdTreeItem
   commands?: SdTreeCommand<T>[] | null;
   itemTemplate?: SdTreeItemTemplate<T> | null;
   selectable?: boolean;
+  showLines?: boolean;
   onSelectedItemsChange?: (items: T[]) => void;
   onSelect?: (event: SdTreeSelectionEvent<T>) => void;
   onExpand?: (event: SdTreeToggleEvent<T>) => void;

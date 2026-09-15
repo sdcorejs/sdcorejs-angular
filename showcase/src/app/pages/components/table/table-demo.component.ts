@@ -482,11 +482,26 @@ const TASKS: Task[] = [
         ]"
         note="Command và action children dùng menu gọn nền trắng. Chọn dòng để thử action nhóm; các child command vẫn hỗ trợ icon, title, color, disabled, hidden và click theo từng row.">
         <div class="table-box">
-          <sd-table [option]="commandChildrenOption"><ng-template [sdTableRowMobileDef]="commandChildrenOption" let-row="item"><strong>{{ row.code }}</strong><div>{{ row.name }}</div></ng-template></sd-table>
+          <sd-table autoId="command-children-demo" [option]="commandChildrenOption"><ng-template [sdTableRowMobileDef]="commandChildrenOption" let-row="item"><strong>{{ row.code }}</strong><div>{{ row.name }}</div></ng-template></sd-table>
+          <p role="status">{{ commandChildrenEvent() }}</p>
         </div>
       </demo-section>
       }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-action-da-chon-co-menu-con') {
+      <demo-section
+        heading="Action đã chọn có menu con"
+        [props]="[
+          { name: 'selector.actions[].children', value: 'menu' },
+          { name: 'selector.defaultSelected', value: 'callback' }
+        ]"
+        note="Một dòng được chọn sẵn. Mở Xử lý đã chọn ở thanh dưới bảng để thử menu con; chọn thêm dòng để kiểm tra danh sách truyền vào callback.">
+        <div class="table-box">
+          <sd-table autoId="action-children-demo" [option]="actionChildrenOption"></sd-table>
+          <p role="status">{{ actionChildrenEvent() }}</p>
+        </div>
+      </demo-section>
+      }
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-keo-tha-doi-thu-tu') {
       <demo-section heading="Kéo thả đổi thứ tự" [props]="[{ name: 'rowReorder', value: 'true' }]">
         <div class="table-box">
@@ -1043,6 +1058,8 @@ export class TableDemoComponent {
     style: { shadow: true },
   };
 
+  readonly commandChildrenEvent = signal('Mở Thao tác thêm trên một dòng để thử menu con.');
+
   readonly commandChildrenOption: SdTableOption<Product> = {
     type: 'local',
     items: () => PRODUCTS,
@@ -1051,34 +1068,34 @@ export class TableDemoComponent {
       visible: true,
       actions: [{
         title: 'Xử lý đã chọn', icon: 'checklist', children: [
-          { title: 'Kiểm kho', icon: 'inventory_2', click: rows => alert('Kiểm kho ' + rows?.length + ' sản phẩm') },
-          { title: 'Xóa', icon: 'delete', color: 'error', click: rows => alert('Xóa ' + rows?.length + ' sản phẩm') },
+          { title: 'Kiểm kho', icon: 'inventory_2', click: rows => this.commandChildrenEvent.set('Kiểm kho ' + rows?.length + ' sản phẩm') },
+          { title: 'Xóa', icon: 'delete', color: 'error', click: rows => this.commandChildrenEvent.set('Xóa ' + rows?.length + ' sản phẩm') },
         ],
       }],
     },
     command: {
       align: 'right',
       commands: [
-        { icon: 'visibility', title: 'Xem nhanh', click: (p: Product) => alert(`Xem nhanh ${p.code}`) },
+        { icon: 'visibility', title: 'Xem nhanh', click: (p: Product) => this.commandChildrenEvent.set(`Xem nhanh ${p.code}`) },
         {
           icon: 'more_vert',
           title: 'Thao tác thêm',
           children: [
-            { icon: 'content_copy', title: 'Nhân bản', click: (p: Product) => alert(`Nhân bản ${p.code}`) },
+            { icon: 'content_copy', title: 'Nhân bản', click: (p: Product) => this.commandChildrenEvent.set(`Nhân bản ${p.code}`) },
             {
               icon: 'inventory_2',
               title: 'Kiểm kho',
               disabled: (p: Product) => p.stock === 0,
-              click: (p: Product) => alert(`Kiểm kho ${p.code}: ${p.stock}`),
+              click: (p: Product) => this.commandChildrenEvent.set(`Kiểm kho ${p.code}: ${p.stock}`),
             },
             {
               icon: 'block',
               title: 'Ngừng bán',
               color: 'warning',
               hidden: (p: Product) => !p.active,
-              click: (p: Product) => alert(`Ngừng bán ${p.code}`),
+              click: (p: Product) => this.commandChildrenEvent.set(`Ngừng bán ${p.code}`),
             },
-            { icon: 'delete', title: 'Xóa', color: 'error', click: (p: Product) => alert(`Xóa ${p.code}`) },
+            { icon: 'delete', title: 'Xóa', color: 'error', click: (p: Product) => this.commandChildrenEvent.set(`Xóa ${p.code}`) },
           ],
         },
       ],
@@ -1092,6 +1109,29 @@ export class TableDemoComponent {
     style: { shadow: true },
   };
 
+  readonly actionChildrenEvent = signal('Mở Xử lý đã chọn để thử action có children.');
+  readonly actionChildrenOption: SdTableOption<Product> = {
+    type: 'local',
+    items: () => PRODUCTS.slice(0, 4),
+    rowKey: 'id',
+    filler: { enabled: true },
+    columns: [
+      { field: 'code', type: 'string', title: 'Mã', width: '120px' },
+      { field: 'name', type: 'string', title: 'Tên sản phẩm', width: '320px' },
+      { field: 'stock', type: 'number', title: 'Tồn kho', width: '100px' },
+    ],
+    selector: {
+      visible: true,
+      defaultSelected: row => row.id === PRODUCTS[0].id,
+      message: rows => `Đã chọn ${rows?.length ?? 0} sản phẩm`,
+      actions: [{
+        title: 'Xử lý đã chọn', icon: 'checklist', children: [
+          { title: 'Kiểm kho', icon: 'inventory_2', click: rows => this.actionChildrenEvent.set('Kiểm kho: ' + rows?.map(row => row.code).join(', ')) },
+          { title: 'Xuất danh sách', icon: 'download', click: rows => this.actionChildrenEvent.set('Xuất danh sách: ' + rows?.map(row => row.code).join(', ')) },
+        ],
+      }],
+    },
+  };
   readonly reorderOption: SdTableOption<Product> = {
     type: 'local',
     items: () => [...PRODUCTS],

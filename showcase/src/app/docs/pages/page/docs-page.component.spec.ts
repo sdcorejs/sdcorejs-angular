@@ -143,7 +143,7 @@ describe('DocsPageComponent', () => {
     await setup();
 
     expect(fixture?.nativeElement.querySelector('.historical-notice')).toBeNull();
-    expect(fixture?.nativeElement.querySelector('.examples-summary strong')?.textContent?.trim()).toBe('7');
+    expect(fixture?.nativeElement.querySelector('.examples-summary strong')?.textContent?.trim()).toBe('8');
     expect(fixture?.nativeElement.querySelector('.examples-summary span')?.textContent?.trim()).toBe('interactive examples');
     expect(fixture?.nativeElement.textContent).not.toContain('preserved');
     expect(fixture?.nativeElement.querySelector('.page-header > a')?.textContent?.trim()).toBe('View demo source');

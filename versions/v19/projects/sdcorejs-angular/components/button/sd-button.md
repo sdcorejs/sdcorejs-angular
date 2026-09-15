@@ -49,7 +49,7 @@ Standard action button — used everywhere a user triggers an action (save, canc
 | `click` | `Event` | Throttled to 300ms (leading edge) and suppressed when `disabled` or `loading` is true. Click events are also intercepted in capture phase to prevent re-emission to parents. |
 
 ## Content projection (slots)
-None — text comes from `title` input. The button is intentionally not slot-based to enforce consistent typography.
+`title` has priority; otherwise projected non-interactive content supplies the trigger label. `sd-button-item` and `sd-button-item-divider` define actions rendered in the Action Popover, outside the native trigger.
 
 ## Visual cues (helps agent map screenshots → component)
 - A rectangular pill button with rounded corners; height varies by `size`
@@ -64,7 +64,7 @@ None — text comes from `title` input. The button is intentionally not slot-bas
 
 - Keeps Material 3 corner shape and label typography. No pill-radius override is applied.
 - Icon/text spacing is local to the button: 6px for `sm`, 8px for `md`/`lg`. Prefix, suffix and loading layouts do not depend on global margin utilities.
-- Outline uses `--sd-border-strong` (falling back to Material `--mat-sys-outline`). Disabled text/background use `--sd-disabled-text` / `--sd-disabled-bg` with existing-theme fallbacks. Outlined and text-style disabled actions stay transparent. Theme colors are not faded a second time with button opacity.
+- Outline uses `--sd-border-strong` (falling back to Material `--mat-sys-outline`). Disabled text/background use `--sd-disabled-text` / `--sd-disabled-bg` with existing-theme fallbacks. Outlined and text-style disabled actions stay transparent. The button itself is not faded with opacity. For secondary icon-only text buttons, disabled icons render at 50% opacity on top of the disabled color so their neutral gray is visibly distinct from enabled icons; the background stays transparent. This applies to prefix/suffix icons and Material/Lucide sets, without changing loading spinners or buttons with titles.
 - Keyboard focus shows a 2px primary outline with a 2px offset. Hover preserves the native Material state layer and does not change button dimensions.
 - Loading keeps the existing click suppression and semantic color. Spinner animation respects `prefers-reduced-motion`.
 - Use `fill` + `primary` for the principal action, `outline` + `secondary` for secondary toolbar actions, and `text` for less prominent actions. Existing defaults stay unchanged.
@@ -161,3 +161,46 @@ await expect(btn).toHaveAttribute('data-loading', 'false');
 - `<sd-badge>` — status indicator (not clickable)
 - `<sd-tab>` — tab-bar selector
 - `*sdPermission` directive — for permission gating
+
+
+## Action Popover
+
+Import `SdButton`, `SdButtonItem`, `SdButtonItemDivider` từ `@sdcorejs/angular/components/button` vào standalone imports.
+
+Có ít nhất một `sd-button-item` thì button tự mở Action Popover bằng CDK Overlay, không cần menu/trigger/template ref riêng. Chỉ divider không kích hoạt menu. `title` ưu tiên; khi không có title, projected content là label trigger. Label chỉ chứa nội dung trình bày, không chứa button/link/input tương tác.
+
+```html
+<sd-button color="primary" prefixIcon="edit">
+  Chỉnh sửa
+  <sd-button-item prefixIcon="check" color="success" (click)="approve()">Duyệt</sd-button-item>
+  <sd-button-item prefixIcon="close" color="error" (click)="reject()">Từ chối</sd-button-item>
+  <sd-button-item-divider />
+  <sd-button-item prefixIcon="open_in_new" suffixIcon="chevron_right" (click)="openDetails()">Chi tiết</sd-button-item>
+  @if (canDelete()) {
+    <sd-button-item prefixIcon="delete" color="error" [disabled]="busy()" (click)="remove()">Xóa</sd-button-item>
+  }
+</sd-button>
+```
+
+| Item API | Type / mặc định | Ý nghĩa |
+|---|---|---|
+| color | SdButtonColor, không truyền = neutral | Cùng type/vocabulary với SdButton; destructive dùng error |
+| prefixIcon / suffixIcon | string nullable | SdIcon renderer hiện có, icon trái/phải |
+| fontSet | SdIconSet, default provider | Hỗ trợ provider/registry hiện có, gồm Material và Lucide |
+| disabled | boolean, false | Không chạy và bỏ qua khi điều hướng bàn phím |
+| tooltip | string nullable | Tooltip Material hiện có |
+| autoId | string nullable | Giá trị data-autoid trên native menuitem, giữ nguyên chuỗi |
+| click | Event output | Phát một lần sau khi popover đóng |
+| projected content | nội dung trình bày | Label menuitem |
+
+Divider có `title` tùy chọn để đặt heading cho nhóm; không focus/click. Item và divider là definitions, các native menuitem chỉ xuất hiện trong overlay. Các khối @if/@for cập nhật tự động; khi không còn item thì đóng popover và trở về button thường. Không thêm API visible/permission/loading; dùng điều kiện Angular và disabled.
+
+Action trigger chỉ có chevron mặc định khi có label và không có suffixIcon. Icon-only trigger giữ footprint vuông và không thêm chevron. Trigger vẫn có ARIA menu/expanded/controls và mở/đóng qua click. Icon-only trigger nên có tooltip làm accessible name. ArrowDown/ArrowUp mở và focus item đầu/cuối; menu hỗ trợ Up/Down/Home/End, Enter/Space, Escape và Tab. Escape phục hồi focus; outside click giữ focus đích; menu không trap focus. Menu reposition khi scroll/resize, flip/fallback theo viewport, và dispose khi trigger bị destroy.
+
+Với item children, trigger luôn dùng native type button và không phát normal click/submit. Không có item, `htmlType="submit"`/reset và click throttle hiện có giữ nguyên. `type` vẫn là fill/light/outline/text, không phải HTML type. Callback mở dialog được gọi sau khi đóng menu để không tranh focus.
+
+### Mở Action Popover bằng hover
+
+`openOnHover` là boolean input với `booleanAttribute`, mặc định `false`, chỉ áp dụng khi có `sd-button-item`. Dùng `<sd-button openOnHover>` hoặc `[openOnHover]="true"`; `openOnHover="false"` tắt tính năng.
+
+Hover chuột mở ngay, không chuyển focus; rời nút và panel sẽ đóng sau 150 ms. Di chuyển sang panel hủy đóng. Click vẫn bật/tắt; phím mũi tên chuyển focus vào menu, Escape đóng và Tab tiếp tục điều hướng. Touch vẫn dùng click. Disabled/loading hoặc bỏ toàn bộ item sẽ đóng menu.

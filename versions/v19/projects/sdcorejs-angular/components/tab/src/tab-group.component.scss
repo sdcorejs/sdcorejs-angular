@@ -110,10 +110,26 @@
   overflow: hidden;
 }
 
+// why: Material paints hover on a separate pseudo-element, outside the click ripple.
+:host(.sd-tab-group--pills) ::ng-deep .mat-mdc-tab .mdc-tab__ripple,
+:host(.sd-tab-group--pills) ::ng-deep .mat-mdc-tab .mdc-tab__ripple::before {
+  border-radius: inherit;
+}
+
 // =============================================================================
-// Variant: pills — rounded pill tabs, active filled with primary.
+// Variant: pills — rounded pill tabs, active uses a light background and matching foreground.
 // Good for nested tab groups, filter bars, light contexts.
 // =============================================================================
+:host(.sd-tab-group--pills) {
+  --mat-tab-header-active-label-text-color: var(--sd-tab-label-active-color);
+  --mat-tab-header-active-hover-label-text-color: var(--sd-tab-label-active-color);
+  --mat-tab-header-active-focus-label-text-color: var(--sd-tab-label-active-color);
+  --mat-tab-header-inactive-label-text-color: var(--sd-tab-label-color);
+  --mat-tab-header-inactive-hover-label-text-color: var(--sd-tab-label-color);
+  --mat-tab-header-inactive-focus-label-text-color: var(--sd-tab-label-color);
+  --mat-tab-header-active-ripple-color: var(--sd-tab-label-active-color);
+}
+
 :host(.sd-tab-group--pills) ::ng-deep {
   // Hide the underline indicator entirely.
   .mat-mdc-tab .mdc-tab-indicator { display: none; }
@@ -138,25 +154,34 @@
     flex-grow: 0 !important;
     flex-basis: auto !important;
     background: transparent;
-    transition: background-color 120ms ease, color 120ms ease;
+    transition: background-color 120ms ease;
 
     &:hover:not(.mat-mdc-tab-disabled):not(.mdc-tab--active) {
-      background: var(--sd-tab-badge-bg);
+      background: color-mix(in srgb, var(--sd-tab-label-active-color) 7%, transparent);
     }
 
     .mdc-tab__text-label { color: var(--sd-tab-label-color); font-weight: 500; }
     .mdc-tab__content { height: 100%; }
 
     &.mdc-tab--active {
-      background: var(--sd-tab-label-active-color);
-      .mdc-tab__text-label { color: #ffffff; }
+      background: var(--sd-tab-badge-bg);
+      .mdc-tab__text-label { color: var(--sd-tab-label-active-color); font-weight: 600; }
+
+      &:hover:not(.mat-mdc-tab-disabled), &:active:not(.mat-mdc-tab-disabled) {
+        background: color-mix(in srgb, var(--sd-tab-label-active-color) 10%, var(--sd-tab-badge-bg));
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--sd-tab-label-active-color);
+      outline-offset: -2px;
     }
   }
 
   // Inside the pill we still allow the sd-tab__label inline-flex with icon/badge/close.
   .sd-tab__label .sd-tab__icon { color: inherit; }
   .sd-tab__label .sd-tab__badge {
-    background: rgba(255, 255, 255, 0.25);
+    background: color-mix(in srgb, var(--sd-tab-label-active-color) 12%, var(--sd-tab-badge-bg));
     color: inherit;
   }
 

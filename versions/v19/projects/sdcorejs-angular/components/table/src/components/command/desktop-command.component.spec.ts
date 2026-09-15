@@ -43,6 +43,39 @@ describe('DesktopCommand', () => {
     document.querySelectorAll('.cdk-overlay-container').forEach(element => element.remove());
   });
 
+  it('uses the current row after replacing data while a menu is open and when reopening', async () => {
+    const clicked = jasmine.createSpy('row');
+    fixture.componentInstance.commands = [{ title: 'More', children: [{ title: 'Run', click: clicked }] }];
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.c-action-indicator')).toBeNull();
+    expect(fixture.nativeElement.querySelector('button').classList).toContain('c-square');
+    (fixture.nativeElement.querySelector('button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    fixture.componentInstance.item.data = { id: 'row-2', status: 'READY' };
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    (document.querySelector('[role="menuitem"]') as HTMLButtonElement).click();
+    expect(clicked).toHaveBeenCalledOnceWith({ id: 'row-2', status: 'READY' });
+    (fixture.nativeElement.querySelector('button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    (document.querySelector('[role="menuitem"]') as HTMLButtonElement).click();
+    expect(clicked.calls.mostRecent().args[0].id).toBe('row-2');
+    (fixture.nativeElement.querySelector('button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    fixture.componentInstance.item = MapToSdTableItem({ id: 'row-3', status: 'DRAFT' });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(document.querySelector('[role="menuitem"]')).toBeNull();
+    (fixture.nativeElement.querySelector('button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    (document.querySelector('[role="menuitem"]') as HTMLButtonElement).click();
+    expect(clicked.calls.mostRecent().args[0].id).toBe('row-3');
+  });
+
   it('renders child command menu items with aligned icon/text content and outlined icons by default', async () => {
     await fixture.whenStable();
     fixture.detectChanges();
@@ -55,15 +88,15 @@ describe('DesktopCommand', () => {
     await fixture.whenStable();
 
     const menu = document.body.querySelector('[role="menu"]') as HTMLElement;
-    const content = menu.querySelector('.sd-command-menu-item__content') as HTMLElement;
+    const content = menu.querySelector('.sd-action-item') as HTMLElement;
     const icon = menu.querySelector('mat-icon') as HTMLElement;
-    const title = menu.querySelector('.sd-command-menu-item__title') as HTMLElement;
+    const title = menu.querySelector('.sd-action-label') as HTMLElement;
 
     expect(content).not.toBeNull();
     expect(icon.classList).toContain('material-icons-outlined');
     expect(title.textContent?.trim()).toBe('Edit');
-    expect(menu.classList).toContain('sd-table-action-menu');
-    expect(menu.querySelector('button')!.getBoundingClientRect().height).toBeLessThanOrEqual(36);
+    expect(menu.classList).toContain('sd-action-popover');
+    expect(menu.querySelector('button')!.getBoundingClientRect().height).toBeGreaterThanOrEqual(40);
   });
 
   it('keeps hidden/disabled child rules and restores the command trigger after Escape', async () => {
@@ -96,8 +129,6 @@ describe('DesktopCommand', () => {
     items[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true }));
     items[0].dispatchEvent(new KeyboardEvent('keydown', { key: ' ', keyCode: 32, bubbles: true }));
     expect(clicked).not.toHaveBeenCalled();
-    // CDK 22 focuses disabled menu items; earlier CDK versions skip them. Both must reach the enabled action.
-    document.activeElement!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', keyCode: 40, bubbles: true }));
     expect(document.activeElement).toBe(items[1]);
     const escape = new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, bubbles: true });
     items[1].dispatchEvent(escape);
@@ -180,12 +211,12 @@ describe('DesktopCommand', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    const buttons = Array.from(fixture.nativeElement.querySelectorAll('button[mat-icon-button]')) as HTMLButtonElement[];
+    const buttons = Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[];
     expect(buttons.length).toBe(3);
     for (const button of buttons) {
       const bounds = button.getBoundingClientRect();
       const target = button.querySelector('.mat-mdc-button-touch-target')!.getBoundingClientRect();
-      expect(bounds.width).toBeGreaterThan(0);
+      expect(bounds.width).toBe(24);
       expect(target.left).withContext(button.ariaLabel!).toBeGreaterThanOrEqual(bounds.left);
       expect(target.right).withContext(button.ariaLabel!).toBeLessThanOrEqual(bounds.right);
       expect(target.top).withContext(button.ariaLabel!).toBeGreaterThanOrEqual(bounds.top);

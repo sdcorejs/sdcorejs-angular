@@ -620,42 +620,46 @@ describe('SdTree', () => {
     );
   });
 
-  it('opens command menu with centered icon, compact label spacing and working click callback', async () => {
+  it('uses the shared button popover with an icon-only trigger and preserves command callbacks', async () => {
     const fixture = await createFixture(StaticHostComponent);
-    const component = fixture.componentInstance;
     const overlay = TestBed.inject(OverlayContainer).getContainerElement();
-    const trigger = fixture.nativeElement.querySelector('[data-autoid="components-tree-static-command-receivable"]') as HTMLButtonElement;
-
+    const trigger = fixture.nativeElement.querySelector(
+      '[data-autoid="components-tree-static-command-receivable"] button'
+    ) as HTMLButtonElement;
+    expect(trigger.querySelector('.c-action-indicator')).toBeNull();
+    expect(trigger.getBoundingClientRect().width).toBe(24);
     trigger.click();
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
-
+    expect(overlay.querySelector('.sd-action-popover')).not.toBeNull();
+    expect(trigger.getAttribute('aria-expanded')).toBe('true');
     const editButton = overlay.querySelector('[data-autoid="components-tree-static-command-receivable-edit"]') as HTMLButtonElement;
-    const content = editButton.querySelector('.sd-tree__command-menu-content') as HTMLElement;
-    const iconEl = editButton.querySelector('.sd-tree__command-menu-icon') as HTMLElement;
-    const title = editButton.querySelector('.sd-tree__command-title') as HTMLElement;
-
-    expect(editButton).toBeTruthy();
-    expect(content).toBeTruthy();
-    expect(iconEl).toBeTruthy();
-    expect(title).toBeTruthy();
-    expect(content.children[0]).toBe(iconEl);
-    expect(content.children[1]).toBe(title);
-    expect(title.textContent?.trim()).toBe(`Edit ${RECEIVABLE_DATA.title}`);
-    expect(getComputedStyle(content).display).toBe('flex');
-    expect(getComputedStyle(content).alignItems).toBe('center');
-    expect(getComputedStyle(content).gap).toBe('6px');
-    expect(getComputedStyle(iconEl).display).toBe('flex');
-    expect(getComputedStyle(iconEl).alignItems).toBe('center');
-    expect(getComputedStyle(iconEl).justifyContent).toBe('center');
-    expect(getComputedStyle(iconEl).marginRight).toBe('0px');
-    expect(getComputedStyle(title).lineHeight).toBe('20px');
-
+    expect(editButton.getAttribute('role')).toBe('menuitem');
+    expect(editButton.querySelector('sd-icon')).not.toBeNull();
+    expect(editButton.querySelector('.sd-action-label')?.textContent?.trim()).toBe('Edit ' + RECEIVABLE_DATA.title);
+    expect(editButton.getBoundingClientRect().height).toBeGreaterThanOrEqual(40);
     editButton.click();
     fixture.detectChanges();
+    expect(fixture.componentInstance.editSpy).toHaveBeenCalledOnceWith(RECEIVABLE_DATA);
+    expect(overlay.querySelector('[role="menu"]')).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+  });
 
-    expect(component.editSpy).toHaveBeenCalledOnceWith(RECEIVABLE_DATA);
+  it('skips disabled tree commands on the keyboard and disposes the shared popover with the tree', async () => {
+    const fixture = await createFixture(StaticHostComponent);
+    const trigger = fixture.nativeElement.querySelector('[data-autoid="components-tree-static-command-root"] button') as HTMLButtonElement;
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    fixture.detectChanges();
+    const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+    const disabled = overlay.querySelector('[data-autoid="components-tree-static-command-root-delete"]') as HTMLButtonElement;
+    expect(disabled.disabled).toBeTrue();
+    const active = document.activeElement as HTMLButtonElement;
+    expect(active.getAttribute('data-autoid')).toBe('components-tree-static-command-root-edit');
+    active.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    expect(document.activeElement).toBe(active);
+    fixture.destroy();
+    expect(overlay.querySelector('[role="menu"]')).toBeNull();
   });
 
   it('uses sdTreeItemDef context and lets the projected template toggle the row', async () => {

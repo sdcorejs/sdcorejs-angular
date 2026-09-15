@@ -63,6 +63,11 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
       background-color: $button-disabled-background-color !important;
       border-color: var(--sd-border, var(--mat-sys-outline-variant, #c4c6d0)) !important;
 
+      // why: secondary và disabled đều là xám; icon đơn cần thêm độ nhạt để phân biệt.
+      &.c-text.c-square.mat-secondary sd-icon {
+        opacity: 0.5;
+      }
+
       &.c-outline,
       &.c-text {
         background-color: transparent !important;
@@ -385,4 +390,9 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
     animation: none !important;
     transition: none !important;
   }
+}
+
+.c-projected-label:empty,
+.c-projected-label[hidden] {
+  display: none;
 }

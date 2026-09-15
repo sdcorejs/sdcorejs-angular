@@ -33,87 +33,58 @@
             [color]="action.color || 'secondary'"
             [type]="action.type || 'light'"
             [fontSet]="action.fontSet"
-            [title]="action.title"
-            [sdTableMenuButton]="childrenMenu" />
-          <ng-template #childrenMenu>
-            <div
-              cdkMenu
-              tabindex="-1"
-              class="sd-table-action-menu"
-              [attr.aria-label]="action.title || _moreLabel"
-              (keydown.escape)="$event.stopPropagation()">
-              @for (child of action.children; track $index) {
-                <button
-                  cdkMenuItem
-                  type="button"
-                  [attr.data-autoid]="_autoId ? _autoId + '-action-' + entry.index + '-' + $index : null"
-                  [cdkMenuitemTypeaheadLabel]="child.title || ''"
-                  [style.color]="child.color ? 'var(--sd-' + child.color + ')' : null"
-                  (cdkMenuItemTriggered)="onClickAction(child)">
-                  @if (child.icon) {
-                    <sd-icon class="sd-table-action-menu__icon" [fontSet]="child.fontSet" [name]="child.icon" [color]="child.color" />
-                  }
-                  <span>{{ child.title }}</span>
-                </button>
-              }
-            </div>
-          </ng-template>
+            [title]="action.title">
+            @for (child of action.children; track $index) {
+              <sd-button-item
+                [autoId]="_autoId ? _autoId + '-action-' + entry.index + '-' + $index : null"
+                [prefixIcon]="child.icon"
+                [fontSet]="child.fontSet"
+                [color]="child.color"
+                [tooltip]="child.tooltip"
+                (click)="onClickAction(child)"
+                >{{ child.title }}</sd-button-item
+              >
+            }
+          </sd-button>
         }
       }
       @if (_overflow.length) {
         <sd-button
           class="sd-selection-more"
           size="sm"
-          prefixIcon="more_horiz"
+          suffixIcon="more_horiz"
           [title]="_moreLabel"
           color="secondary"
           type="light"
-          [autoId]="_autoId ? _autoId + '-more-actions' : null"
-          [sdTableMenuButton]="moreMenu" />
-        <ng-template #moreMenu>
-          <div
-            cdkMenu
-            tabindex="-1"
-            class="sd-table-action-menu"
-            [attr.aria-label]="_moreLabel"
-            (keydown.escape)="$event.stopPropagation()">
-            @for (entry of _overflow; track entry.index) {
-              @let action = entry.action;
-              @if (action.variant === 'normal') {
-                <button
-                  cdkMenuItem
-                  type="button"
-                  [attr.data-autoid]="_autoId ? _autoId + '-action-' + entry.index : null"
-                  [cdkMenuitemTypeaheadLabel]="action.title || ''"
-                  [style.color]="action.color ? 'var(--sd-' + action.color + ')' : null"
-                  (cdkMenuItemTriggered)="onClickAction(action)">
-                  @if (action.icon) {
-                    <sd-icon class="sd-table-action-menu__icon" [fontSet]="action.fontSet" [name]="action.icon" [color]="action.color" />
-                  }
-                  <span>{{ action.title }}</span>
-                </button>
-              } @else {
-                <div role="group" [attr.aria-label]="action.title">
-                  <div class="sd-selection-menu-heading">{{ action.title }}</div>
-                  @for (child of action.children; track $index) {
-                    <button
-                      cdkMenuItem
-                      type="button"
-                      [attr.data-autoid]="_autoId ? _autoId + '-action-' + entry.index + '-' + $index : null"
-                      [cdkMenuitemTypeaheadLabel]="child.title || ''"
-                      [style.color]="child.color ? 'var(--sd-' + child.color + ')' : null"
-                      (cdkMenuItemTriggered)="onClickAction(child)">
-                      @if (child.icon) {
-                        <sd-icon class="sd-table-action-menu__icon" [fontSet]="child.fontSet" [name]="child.icon" [color]="child.color" />
-                      }
-                      <span>{{ child.title }}</span>
-                    </button>
-                  }
-                </div>
+          [autoId]="_autoId ? _autoId + '-more-actions' : null">
+          @for (entry of _overflow; track entry.index) {
+            @let action = entry.action;
+            @if (action.variant === 'normal') {
+              <sd-button-item
+                [autoId]="_autoId ? _autoId + '-action-' + entry.index : null"
+                [prefixIcon]="action.icon"
+                [fontSet]="action.fontSet"
+                [color]="action.color"
+                [tooltip]="action.tooltip"
+                (click)="onClickAction(action)"
+                >{{ action.title }}</sd-button-item
+              >
+            } @else {
+              <sd-button-item-divider [title]="action.title" />
+              @for (child of action.children; track $index) {
+                <sd-button-item
+                  [autoId]="_autoId ? _autoId + '-action-' + entry.index + '-' + $index : null"
+                  [prefixIcon]="child.icon"
+                  [fontSet]="child.fontSet"
+                  [color]="child.color"
+                  [tooltip]="child.tooltip"
+                  (click)="onClickAction(child)"
+                  >{{ child.title }}</sd-button-item
+                >
               }
             }
-          </div>
-        </ng-template>
+          }
+        </sd-button>
       }
       <button
         type="button"

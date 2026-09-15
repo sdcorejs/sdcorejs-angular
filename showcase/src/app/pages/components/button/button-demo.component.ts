@@ -1,3 +1,4 @@
+import { ButtonActionPopoverExampleComponent } from './examples/button-action-popover.example';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { ButtonColorsExampleComponent } from './examples/button-colors.example';
@@ -21,11 +22,21 @@ import { ButtonVariantsExampleComponent } from './examples/button-variants.examp
     ButtonIconOnlyExampleComponent,
     ButtonIconSetExampleComponent,
     ButtonStatesExampleComponent,
+    ButtonActionPopoverExampleComponent,
   ],
   template: `<demo-page
     #demoPage
     title="Button"
     description="Nút thao tác chuẩn: 4 biến thể (fill / light / outline / text), 3 kích thước, hỗ trợ icon và trạng thái loading.">
+    @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-action-popover') {
+      <demo-section heading="Action Popover"
+        data-example-typescript="./examples/button-action-popover.example.ts"
+        data-example-template="./examples/button-action-popover.example.html"
+        data-example-style="./examples/button-example.scss"
+        [props]="[{ name: 'children', value: 'sd-button-item / sd-button-item-divider' }]">
+        <app-button-action-popover-example />
+      </demo-section>
+    }
     @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bien-the') {
       <demo-section
         heading="Biến thể"

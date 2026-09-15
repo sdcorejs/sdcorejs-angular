@@ -39,7 +39,7 @@ export class SdAvatar {
     return urlPattern.test(val);
   });
 
-  readonly bgColor = computed(() => {
+  readonly baseColor = computed(() => {
     if (this.isUrl()) {
       return 'transparent';
     }
@@ -49,6 +49,9 @@ export class SdAvatar {
     }
     return this.#generateColor(val);
   });
+
+  readonly bgColor = computed(() => (this.isUrl() ? 'transparent' : 'color-mix(in srgb, ' + this.baseColor() + ' 14%, white)'));
+  readonly textColor = computed(() => 'color-mix(in srgb, ' + this.baseColor() + ' 45%, black)');
 
   readonly initials = computed(() => {
     if (this.isUrl()) {

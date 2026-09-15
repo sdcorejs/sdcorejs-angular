@@ -5,6 +5,7 @@
 @let _selectionActionViews = selectionActionViews();
 @let _selectionQuickActionOpened = selectionQuickActionOpened();
 @let _rootError = rootError();
+@let _treeLines = treeLines();
 
 @if (rootLoading()) {
   <div class="sd-tree__root-loading" role="status" aria-live="polite">
@@ -18,6 +19,7 @@
 } @else {
   <div class="sd-tree" role="tree" [attr.aria-busy]="rootLoading()" [style.--sd-tree-indent-size]="indentSize() + 'px'">
     @for (node of visibleViewNodes(); track node.id) {
+      @let _lines = _treeLines.get(node.id);
       <!-- why: `[tabIndex]` là property DOM (camelCase) — nó set đúng giá trị nhưng KHÔNG sinh
            attribute `tabindex` trong markup, nên mọi thứ đọc markup (lint a11y, snapshot test,
            devtools inspect) đều thấy row là không focusable. Đổi sang `[attr.tabindex]`. -->
@@ -26,6 +28,7 @@
         role="treeitem"
         [attr.tabindex]="node.tabIndex"
         [class.sd-tree__row--selected]="node.selected"
+        [class.sd-tree__row--parent]="node.hasChildren"
         [style.--sd-tree-level]="node.level"
         [attr.aria-level]="node.level + 1"
         [attr.aria-expanded]="node.ariaExpanded"
@@ -34,6 +37,20 @@
         [attr.data-autoid]="node.autoIds.row"
         (focus)="onRowFocus(node)"
         (keydown)="onRowKeydown(node, $event)">
+        @if (_lines) {
+          <span class="sd-tree__lines" aria-hidden="true">
+            @for (line of _lines.segments; track line.level) {
+              <span
+                class="sd-tree__line"
+                [class.sd-tree__line--branch]="line.branch"
+                [class.sd-tree__line--last]="line.last"
+                [style.--sd-tree-line-level]="line.level"></span>
+            }
+            @if (_lines.children) {
+              <span class="sd-tree__line sd-tree__line--children" [style.--sd-tree-line-level]="node.level"></span>
+            }
+          </span>
+        }
         <div class="sd-tree__main">
           <button
             type="button"
@@ -79,7 +96,11 @@
           }
 
           @if (node.icon) {
-            <sd-icon class="sd-tree__item-icon" color="primary" [attr.data-autoid]="node.autoIds.icon" [name]="node.icon"></sd-icon>
+            <sd-icon
+              class="sd-tree__item-icon"
+              [color]="node.selected ? 'primary' : undefined"
+              [attr.data-autoid]="node.autoIds.icon"
+              [name]="node.icon"></sd-icon>
           }
 
           <div class="sd-tree__content" [class.sd-tree__content--custom]="_resolvedItemTemplate" [attr.data-autoid]="node.autoIds.label">
@@ -92,36 +113,25 @@
         </div>
 
         @if (node.commands.length) {
-          <button
-            type="button"
+          <sd-button
             class="sd-tree__command-trigger"
-            mat-icon-button
-            [matMenuTriggerFor]="commandMenu"
-            [attr.data-autoid]="node.autoIds.command"
-            (click)="$event.stopPropagation()">
-            <sd-icon class="c-icon" name="more_vert"></sd-icon>
-          </button>
-          <mat-menu #commandMenu="matMenu" class="sd-tree__command-menu">
+            type="text"
+            size="sm"
+            prefixIcon="more_vert"
+            [tooltip]="node.label"
+            [attr.data-autoid]="node.autoIds.command">
             @for (command of node.commands; track command.key) {
-              <button
-                type="button"
-                class="sd-tree__command-menu-item"
-                mat-menu-item
+              <sd-button-item
                 [disabled]="command.disabled"
-                [attr.data-autoid]="command.autoId"
-                (click)="command.command.click(node.data)">
-                <span class="sd-tree__command-menu-content">
-                  <sd-icon
-                    class="c-icon sd-tree__command-menu-icon"
-                    [class.sd-tree__command-menu-icon--default]="command.defaultColor"
-                    [color]="command.color"
-                    [fontSet]="command.fontSet"
-                    [name]="command.icon"></sd-icon>
-                  <span class="sd-tree__command-title">{{ command.title }}</span>
-                </span>
-              </button>
+                [autoId]="command.autoId"
+                [prefixIcon]="command.icon"
+                [color]="command.color"
+                [fontSet]="command.fontSet"
+                (click)="command.command.click(node.data)"
+                >{{ command.title }}</sd-button-item
+              >
             }
-          </mat-menu>
+          </sd-button>
         }
       </div>
     }

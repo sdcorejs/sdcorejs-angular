@@ -1,3 +1,5 @@
+import { SD_BUTTON_ENTRY, SdActionPopover } from './action-popover';
+import { SdButtonItem } from './button-item.component';
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -10,6 +12,12 @@ import {
   inject,
   input,
   output,
+  contentChildren,
+  viewChild,
+  TemplateRef,
+  afterRenderEffect,
+  signal,
+  untracked,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -28,7 +36,7 @@ export type SdButtonColor = Color | 'black';
 @Component({
   selector: 'sd-button',
   templateUrl: './button.component.html',
-  styleUrl: './button.component.scss',
+  styleUrls: ['./button.component.scss', './action-popover.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [CommonModule, MatButtonModule, MatProgressSpinnerModule, MatTooltipModule, SdIcon],
@@ -40,6 +48,43 @@ export type SdButtonColor = Color | 'black';
   },
 })
 export class SdButton implements OnInit, OnDestroy {
+  readonly entries = contentChildren(SD_BUTTON_ENTRY);
+  readonly hasActions = computed(() => this.entries().some(entry => entry.kind === 'item'));
+  readonly trigger = viewChild<ElementRef<HTMLButtonElement>, ElementRef<HTMLButtonElement>>('trigger', { read: ElementRef });
+  readonly definitions = viewChild.required<ElementRef<HTMLElement>>('definitions');
+  readonly projectedLabel = viewChild<ElementRef<HTMLElement>>('projectedLabel');
+  readonly hasProjectedLabel = signal(false);
+  readonly isIconOnly = computed(() => !!(this.prefixIcon() || this.suffixIcon()) && !this.title() && !this.hasProjectedLabel());
+  readonly menuTemplate = viewChild.required<TemplateRef<unknown>>('actionMenu');
+  readonly popover = new SdActionPopover();
+
+  onTriggerPointerEnter(event: PointerEvent): void {
+    if (event.pointerType !== 'mouse' || !this.openOnHover() || !this.hasActions() || this.disabled() || this.loading()) return;
+    const trigger = this.trigger()?.nativeElement;
+    if (trigger) this.popover.open(this.menuTemplate(), trigger, false, true);
+  }
+
+  onTriggerKeydown(event: KeyboardEvent): void {
+    if (!this.hasActions() || this.disabled() || this.loading()) return;
+    if (this.popover.opened() && (event.key === 'Escape' || event.key === 'Tab')) {
+      this.popover.keydown(event);
+      return;
+    }
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      event.stopPropagation();
+      const trigger = this.trigger()?.nativeElement;
+      if (trigger) this.popover.open(this.menuTemplate(), trigger, event.key === 'ArrowUp');
+    }
+  }
+
+  activateItem(item: SdButtonItem, event: Event): void {
+    event.stopPropagation();
+    if (item.disabled()) return;
+    this.popover.close(true);
+    item.click.emit(event);
+  }
+
   // ==========================================
   // 1. INJECTS
   // ==========================================
@@ -73,6 +118,7 @@ export class SdButton implements OnInit, OnDestroy {
   suffixIcon = input<string | undefined | null>(undefined);
 
   disabled = input(false, { transform: booleanAttribute });
+  readonly openOnHover = input(false, { transform: booleanAttribute });
   loading = input(false, { transform: booleanAttribute });
   block = input(false, { transform: booleanAttribute });
 
@@ -86,7 +132,7 @@ export class SdButton implements OnInit, OnDestroy {
   autoId = computed(() => (this.autoIdInput() ? `components-button-${this.autoIdInput()}` : undefined));
 
   buttonClasses = computed(() => ({
-    'c-square': (this.prefixIcon() || this.suffixIcon()) && !this.title(),
+    'c-square': this.isIconOnly(),
     'c-sm': this.size() === 'sm',
     'c-md': this.size() === 'md',
     'c-lg': this.size() === 'lg',
@@ -104,6 +150,40 @@ export class SdButton implements OnInit, OnDestroy {
   #subscription = new Subscription();
 
   constructor() {
+    // Projected text can change without changing our content queries or inputs.
+    afterRenderEffect(onCleanup => {
+      const label = this.trigger()?.nativeElement.querySelector<HTMLElement>('.c-projected-label');
+      if (!label) return;
+      const update = () => this.hasProjectedLabel.set(!!label.textContent?.trim());
+      update();
+      const observer = new MutationObserver(update);
+      observer.observe(label, { childList: true, characterData: true, subtree: true });
+      onCleanup(() => observer.disconnect());
+    });
+    afterRenderEffect(() => {
+      const entries = this.entries();
+      const definitions = this.definitions().nativeElement;
+      // Angular projects multi-root @if blocks into the default slot. Relocate only
+      // our inert definition hosts; their Angular views and label templates stay owned by the consumer.
+      for (const entry of entries) {
+        if (entry.kind === 'item') {
+          entry.disabled();
+          entry.color();
+          entry.prefixIcon();
+          entry.suffixIcon();
+        }
+        const host = entry.element.nativeElement;
+        if (host.parentElement !== definitions) definitions.appendChild(host);
+      }
+      const actionable = this.hasActions() && !this.disabled() && !this.loading();
+      const hover = this.openOnHover();
+      const trigger = this.trigger()?.nativeElement;
+      untracked(() => {
+        if (!hover) this.popover.disableHover();
+        if (!actionable) this.popover.close();
+        else this.popover.reconcile(trigger);
+      });
+    });
     // Kỹ thuật Đánh chặn sự kiện (Capture Phase)
     // Tóm sống mọi sự kiện click ngay khi nó vừa chạm vào component
     this.el.nativeElement.addEventListener(
@@ -141,6 +221,13 @@ export class SdButton implements OnInit, OnDestroy {
       return;
     }
 
+    if (this.hasActions()) {
+      event.preventDefault();
+      const trigger = this.trigger()?.nativeElement;
+      if (this.popover.opened()) this.popover.close(true);
+      else if (trigger) this.popover.open(this.menuTemplate(), trigger);
+      return;
+    }
     this.#clickSubject.next(event);
   }
 

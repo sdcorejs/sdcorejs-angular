@@ -89,7 +89,7 @@ sd-checkbox {
   }
 
   // why: các checkbox trong bảng không có label; đệm label rỗng làm icon lệch ngang 2px.
-  ::ng-deep .mdc-label {
+  ::ng-deep .mat-mdc-checkbox .mdc-label {
     padding: 0;
   }
 }

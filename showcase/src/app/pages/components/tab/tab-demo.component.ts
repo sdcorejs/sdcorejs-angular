@@ -86,7 +86,7 @@ interface FileTab {
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-variant-pills') {
-      <demo-section heading="Variant pills" [props]="[{ name: 'variant', value: 'pills' }]" note="Pill rounded, active filled — nhẹ nhàng, không underline, lý tưởng cho nested tab.">
+      <demo-section heading="Variant pills" [props]="[{ name: 'variant', value: 'pills' }]" note="Pill nền light, chữ/icon theo màu chủ đạo. Bấm lại tab active hoặc điều hướng bàn phím để kiểm tra màu chữ ổn định.">
         <div class="full">
           <sd-tab-group variant="pills" [stretchTabs]="false">
             <sd-tab label="Tuần này" icon="today">Nội dung tuần này.</sd-tab>

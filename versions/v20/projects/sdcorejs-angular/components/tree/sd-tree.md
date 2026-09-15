@@ -377,3 +377,11 @@ When `autoId: 'category'` is set, the host renders `data-autoid="components-tree
 - `<sd-table>` — use for tabular data, including tree rows when data must stay table-shaped.
 - `<sd-query-bar>` / `<sd-query-builder>` — filtering surfaces that may drive the tree's data source.
 - `<sd-button>` / `<sd-quick-action>` — command/action controls used by the tree.
+
+### Đường nối phân cấp
+
+`showLines` là input boolean dùng `booleanAttribute`, mặc định `false`. Dùng `<sd-tree showLines [option]="option" />` để hiển thị đường nối cha/con; `showLines="false"` tắt. Có thể đặt `option.showLines` (ưu tiên hơn input trực tiếp, cùng quy ước với selectable).
+
+Line dùng token `--sd-border`, bám theo `tree.indentSize`, kết thúc tại con cuối đang hiển thị và tự cập nhật khi filter, collapse hoặc lazy load. Không thay đổi khoảng thụt lề, vùng click hay layout command. Title mặc định của node cha đậm 600, node lá 400; custom template tự quyết định typography. Icon expand/collapse giữ màu trung tính; icon nội dung chỉ dùng primary khi node được chọn.
+
+Menu command của tree dùng chung Action Popover của sd-button và sd-button-item. Trigger ba chấm không kèm chevron; giữ nguyên command API, autoId, disabled, color/fontSet và callback theo node. Menu hỗ trợ bàn phím và phục hồi focus về trigger sau khi đóng.

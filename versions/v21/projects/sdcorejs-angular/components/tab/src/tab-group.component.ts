@@ -36,7 +36,7 @@ export class SdTabGroup {
 
   selectedIndex = model<number>(0);
   // why: visual style preset. 'line' = Material default (underline ink-bar);
-  // 'pills' = rounded pill, active filled (good for nested tab groups + filter bars);
+  // 'pills' = rounded pill, active light (good for nested tab groups + filter bars);
   // 'segmented' = single bordered container, iOS-style.
   variant = input<'line' | 'pills' | 'segmented'>('line');
   // why: drives the active/indicator color via Core CSS vars (--sd-<color>, --sd-<color>-light).

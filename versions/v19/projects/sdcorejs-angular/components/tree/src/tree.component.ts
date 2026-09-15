@@ -15,13 +15,10 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
-import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdButton, SdButtonItem } from '@sdcorejs/angular/components/button';
 import { SdQuickAction } from '@sdcorejs/angular/components/quick-action';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdTreeItemDefDirective } from './tree-item-def.directive';
@@ -95,13 +92,11 @@ const EMPTY_DESCENDANT_COUNTS: ReadonlyMap<string, number> = new Map<string, num
   imports: [
     SdIcon,
     CommonModule,
-    MatButtonModule,
     MatCheckboxModule,
-    MatMenuModule,
     MatProgressSpinnerModule,
     MatRadioModule,
-    MatTooltipModule,
     SdButton,
+    SdButtonItem,
     SdQuickAction,
     SdTranslatePipe,
   ],
@@ -125,6 +120,7 @@ export class SdTree<T = unknown> {
   readonly selectedItemsInput = input<T[] | undefined | null>(undefined, { alias: 'selectedItems' });
   readonly commands = input<SdTreeCommand<T>[] | undefined | null>([]);
   readonly selectable = input(true, { transform: booleanAttribute });
+  readonly showLines = input(false, { transform: booleanAttribute });
   readonly selector = input<SdTreeSelectorOption<T> | undefined | null>(undefined);
   readonly itemTemplate = input<TemplateRef<SdTreeItemContext<T>> | undefined | null>(undefined);
 
@@ -142,6 +138,7 @@ export class SdTree<T = unknown> {
   readonly resolvedSelector = computed(() => this.option()?.selector ?? this.selector());
   readonly resolvedCommands = computed(() => this.option()?.commands ?? this.commands() ?? []);
   readonly resolvedSelectable = computed(() => this.option()?.selectable ?? this.selectable());
+  readonly resolvedShowLines = computed(() => this.option()?.showLines ?? this.showLines());
   readonly autoId = computed(() => {
     const scope = this.option()?.autoId ?? this.autoIdInput();
     return scope ? `components-tree-${scope}` : undefined;
@@ -207,6 +204,26 @@ export class SdTree<T = unknown> {
     return result;
   });
   readonly selectedItems = computed(() => this.#selectedItemsFromIds(this.selectedIdSet()));
+  /** Use visible siblings so filtering and collapsed/lazy branches leave no dangling connectors. */
+  readonly treeLines = computed(() => {
+    const result = new Map<string, { children: boolean; segments: { level: number; branch: boolean; last: boolean }[] }>();
+    if (!this.resolvedShowLines()) return result;
+    const nodes = this.visibleNodes();
+    const lastChild = new Map<string, string>();
+    for (const node of nodes) {
+      if (node.parent) lastChild.set(node.parent.id, node.id);
+    }
+    for (const node of nodes) {
+      const segments: { level: number; branch: boolean; last: boolean }[] = [];
+      for (let current = node; current.parent; current = current.parent) {
+        const last = lastChild.get(current.parent.id) === current.id;
+        const branch = current === node;
+        if (branch || !last) segments.push({ level: current.level - 1, branch, last });
+      }
+      result.set(node.id, { children: lastChild.has(node.id), segments });
+    }
+    return result;
+  });
   readonly selectedCount = computed(() => this.selectedItems().length);
   readonly selectionMessage = computed(() => {
     const items = this.selectedItems();

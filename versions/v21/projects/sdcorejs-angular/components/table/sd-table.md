@@ -247,6 +247,8 @@ The table adds these special columns conditionally — **do not** define a data 
 | `defaultSelected` | `(rowData) => boolean`                | Pre-select after each load.                                                                                                                                                                  |
 | `preserveSelection` | `boolean`                           | Keep the selection across paging / filtering / sorting / reload; `selectedTableItems()` then returns every selected row including off-page ones. Matching is by `meta.id` — **set `option.rowKey`** when the table is `type: 'server'`, otherwise a re-fetch produces new row objects with new ids and the selection is not restored. See **Row identity**. |
 
+The selection message/action toolbar is inset 8px from both horizontal table edges, including when its actions wrap on narrow screens. Its visibility, selection callbacks and clear-selection behavior are unchanged.
+
 Header select-all operates only on visible rows that are selectable. Rows disabled by `disabled` or incompatible with the currently available `actions` are skipped. The header is checked only when every selectable visible row is selected; when no visible row is selectable, it stays unchecked. A row that is already selected remains enabled so the user can deselect it.
 
 ### Expand option (`SdTableOptionExpand<T>`)
@@ -1111,3 +1113,12 @@ The selected-state icon and the mobile selection count use the success color.
 The desktop selection toolbar reserves space inside its table, immediately above the pagination footer. It does not float over the page. A single message shows the selection count; a custom `selector.message` is preserved verbatim, without another count badge.
 
 The first two permitted actions remain visible as `sd-button size="sm"`; additional actions appear under More. Existing child groups keep their labels and allowed children. The action resolver and callbacks still use the complete selection. The clear-selection control has an accessible name, and action autoIds retain their filtered action indexes. The toolbar wraps on narrow screens. Existing row-command sizing is unchanged.
+
+
+### Action Popover dùng chung
+
+Desktop command children, selection actions (children/overflow) và menu export Excel/CSV dùng capability Action Popover của SdButton. Consumer giữ nguyên option/model: icon ánh xạ prefixIcon, title thành label, color/fontSet/tooltip và callback dùng dữ liệu row/selection hiện tại. Command hidden/disabled và selection eligibility vẫn do Table xử lý; primitive không giữ row context. Popup riêng sd-table-action-menu đã được bỏ.
+
+Mobile action modal vẫn giữ busy/error/closeBeforeRun và responsive behavior hiện có. Menu cấu hình filter không thuộc thay đổi này. Vùng thông báo/action khi chọn dòng vẫn có padding ngang 8px.
+
+Command có menu con dùng icon-only trigger không kèm chevron, giữ footprint 24px. Action overflow dùng suffixIcon more_horiz thay chevron; action có label và không có suffixIcon vẫn dùng chevron mặc định của sd-button.

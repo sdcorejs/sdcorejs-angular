@@ -336,6 +336,36 @@ describe('SdTabGroup', () => {
   // -------------------------------------------------------------------------
 
   describe('color', () => {
+    it('rounds the hover state layer to the pill shape without clipping label focus', () => {
+      host.variant = 'pills';
+      fixture.detectChanges();
+      const tab = fixture.nativeElement.querySelectorAll('.mat-mdc-tab')[1] as HTMLElement;
+      const layer = tab.querySelector('.mdc-tab__ripple') as HTMLElement;
+      expect(getComputedStyle(layer, '::before').borderTopLeftRadius).toBe(getComputedStyle(tab).borderTopLeftRadius);
+      expect(getComputedStyle(tab).overflow).not.toBe('hidden');
+    });
+    it('keeps pills labels on the accent color when selected, focused and clicked again', async () => {
+      host.variant = 'pills';
+      fixture.detectChanges();
+      const element = fixture.nativeElement.querySelector('sd-tab-group') as HTMLElement;
+      element.style.setProperty('--sd-primary', '#005cbb');
+      element.style.setProperty('--sd-primary-light', '#d7e3ff');
+      const tab = getTabLabels(fixture)[0];
+      tab.style.transition = 'none';
+      const label = tab.querySelector('.mdc-tab__text-label')!;
+      expect(getComputedStyle(tab).backgroundColor).toBe('rgb(215, 227, 255)');
+      expect(getComputedStyle(label).color).toBe('rgb(0, 92, 187)');
+      tab.focus();
+      tab.click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(host.selectedIndex).toBe(0);
+      expect(getComputedStyle(label).color).toBe('rgb(0, 92, 187)');
+      const style = getComputedStyle(element);
+      expect(style.getPropertyValue('--mat-tab-header-active-hover-label-text-color').trim()).toBe('#005cbb');
+      expect(style.getPropertyValue('--mat-tab-header-active-focus-label-text-color').trim()).toBe('#005cbb');
+    });
+
     it('defaults color CSS vars to primary', () => {
       const el = getHostEl(fixture);
       expect(el.style.getPropertyValue('--sd-tab-indicator-color')).toBe('var(--sd-primary)');

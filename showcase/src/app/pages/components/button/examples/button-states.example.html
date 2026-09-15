@@ -1,13 +1,17 @@
-<sd-button
-  type="fill"
-  color="primary"
-  title="loading"
-  prefixIcon="send"
-  [loading]="submitting()"
-  (click)="onSubmit()">
-</sd-button>
+<sd-button type="fill" color="primary" title="loading" prefixIcon="send" [loading]="submitting()" (click)="onSubmit()"> </sd-button>
 <sd-button type="fill" color="primary" title="disabled" [disabled]="true"></sd-button>
-<div style="width: 240px;">
+<div style="width: 240px">
   <sd-button type="fill" color="primary" title="block" [block]="true"></sd-button>
 </div>
 <sd-button type="outline" color="secondary" title="Không khả dụng" prefixIcon="download" disabled autoId="disabled-outline"></sd-button>
+<div style="display: flex; align-items: center; gap: 16px">
+  <span>Icon secondary:</span>
+  <sd-button type="text" color="secondary" prefixIcon="delete" tooltip="Có thể xóa" autoId="secondary-icon-enabled"></sd-button>
+  <sd-button
+    type="text"
+    color="secondary"
+    prefixIcon="delete"
+    tooltip="Không thể xóa"
+    disabled
+    autoId="secondary-icon-disabled"></sd-button>
+</div>

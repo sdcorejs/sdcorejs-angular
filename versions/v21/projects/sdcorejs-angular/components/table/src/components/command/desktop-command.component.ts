@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
-import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
-import { TABLE_ACTION_MENU_POSITIONS } from '../action-menu/action-menu';
+import { SdButton, SdButtonItem } from '@sdcorejs/angular/components/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdTableCommand } from '../../models/table-command.model';
 import { SdTableItem } from '../../models/table-item.model';
@@ -19,10 +18,9 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   host: {
     '[attr.data-autoid]': 'autoId()',
   },
-  imports: [SdIcon, CommonModule, MatTooltipModule, CdkMenu, CdkMenuItem, CdkMenuTrigger, MatButtonModule, CommandPipe, CommandFilterPipe],
+  imports: [SdIcon, CommonModule, MatTooltipModule, SdButton, SdButtonItem, MatButtonModule, CommandPipe, CommandFilterPipe],
 })
 export class DesktopCommand {
-  readonly menuPositions = TABLE_ACTION_MENU_POSITIONS;
   readonly autoIdInput = input<string | null | undefined>(undefined, { alias: 'autoId' });
   readonly item = input.required<SdTableItem>();
   readonly itemIndex = input.required<number>();

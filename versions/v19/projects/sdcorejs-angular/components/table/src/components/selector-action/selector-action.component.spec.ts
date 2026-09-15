@@ -49,6 +49,9 @@ describe('SelectorActionComponent autoId propagation', () => {
 
   it('keeps the selection message inside the contained toolbar', () => {
     const bar = fixture.nativeElement.querySelector('.c-quick-action.contained');
+    const host = fixture.nativeElement.querySelector('selector-action') as HTMLElement;
+    expect(getComputedStyle(host).paddingLeft).toBe('8px');
+    expect(getComputedStyle(host).paddingRight).toBe('8px');
     expect(bar).toBeTruthy();
     expect(bar.querySelector('.sd-selection-message').textContent).toContain('1');
     expect(bar.querySelector('.c-bg-length')).toBeNull();

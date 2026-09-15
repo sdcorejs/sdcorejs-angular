@@ -58,17 +58,116 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
     "unreleased": true,
     "packageVersions": [],
     "summaryMarkdown": "",
-    "markdown": "### Added\n\n- Add `size` to `sd-checkbox` using the shared `Size` type and `data-size` pattern from `sd-switch`: `sm` / `md` / `lg` (default `md`), with proportional box/icons and label spacing, retained touch targets, and showcase examples.",
+    "markdown": "",
+    "sections": []
+  },
+  {
+    "id": "release-2-11",
+    "title": "Release 2.11",
+    "suffix": "2.11",
+    "date": "2026-09-15",
+    "anchor": "release-2-11",
+    "unreleased": false,
+    "packageVersions": [
+      {
+        "angularMajor": 19,
+        "version": "19.2.11"
+      },
+      {
+        "angularMajor": 20,
+        "version": "20.2.11"
+      },
+      {
+        "angularMajor": 21,
+        "version": "21.2.11"
+      },
+      {
+        "angularMajor": 22,
+        "version": "22.2.11"
+      }
+    ],
+    "summaryMarkdown": "Release suffix `2.11` targets `19.2.11`, `20.2.11`, `21.2.11`, and `22.2.11`.",
+    "markdown": "Release suffix `2.11` targets `19.2.11`, `20.2.11`, `21.2.11`, and `22.2.11`.\n\n### Added\n\n- Add `size` to `sd-checkbox` using the shared `Size` type and `data-size` pattern from `sd-switch`: `sm` / `md` / `lg` (default `md`), with proportional box/icons and label spacing, retained touch targets, and showcase examples.\n\n- Tree: optional `showLines` boolean attribute and option for visible parent/child connectors; stronger parent titles and neutral expansion icons.\n- Button: declarative `sd-button-item` / `sd-button-item-divider` Action Popover, keyboard/focus support and dynamic children.\n- Button: optional `openOnHover` boolean attribute (default false), with delayed pointer exit and preserved keyboard navigation.\n\n### Changed\n\n- Pills tabs use a light active background with consistent accent text on hover/focus; text avatars use light backgrounds and darker initials while retaining name colors and image behavior.\n- Tree: reuse the shared Button Action Popover for node commands, retaining command metadata and node callbacks.\n- Button: omit the Action Popover chevron for icon-only triggers or triggers with `suffixIcon`; table commands and overflow actions reuse this rule.\n- Table: reuse Button Action Popover for desktop command children, selection actions and export menus; retain consumer models and current row/selection context.\n\n### Fixed\n\n- Preserve checkbox size-specific label spacing with Angular Material 22 markup and keep unlabeled table-configuration checkboxes centered.\n\n- Make disabled secondary icon-only text buttons visibly dimmer while preserving enabled, loading and labeled-button styles.\n\n- Inset the `sd-table` selection message/action toolbar by 8px on both sides so it does not touch the table edges.",
     "sections": [
       {
         "key": "added",
         "title": "Added",
         "level": 3,
-        "anchor": "unreleased-added",
-        "markdown": "- Add `size` to `sd-checkbox` using the shared `Size` type and `data-size` pattern from `sd-switch`: `sm` / `md` / `lg` (default `md`), with proportional box/icons and label spacing, retained touch targets, and showcase examples.",
+        "anchor": "release-2-11-added",
+        "markdown": "- Add `size` to `sd-checkbox` using the shared `Size` type and `data-size` pattern from `sd-switch`: `sm` / `md` / `lg` (default `md`), with proportional box/icons and label spacing, retained touch targets, and showcase examples.\n\n- Tree: optional `showLines` boolean attribute and option for visible parent/child connectors; stronger parent titles and neutral expansion icons.\n- Button: declarative `sd-button-item` / `sd-button-item-divider` Action Popover, keyboard/focus support and dynamic children.\n- Button: optional `openOnHover` boolean attribute (default false), with delayed pointer exit and preserved keyboard navigation.",
         "items": [
           {
             "text": "Add `size` to `sd-checkbox` using the shared `Size` type and `data-size` pattern from `sd-switch`: `sm` / `md` / `lg` (default `md`), with proportional box/icons and label spacing, retained touch targets, and showcase examples.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Tree: optional `showLines` boolean attribute and option for visible parent/child connectors; stronger parent titles and neutral expansion icons.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Button: declarative `sd-button-item` / `sd-button-item-divider` Action Popover, keyboard/focus support and dynamic children.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Button: optional `openOnHover` boolean attribute (default false), with delayed pointer exit and preserved keyboard navigation.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      },
+      {
+        "key": "changed",
+        "title": "Changed",
+        "level": 3,
+        "anchor": "release-2-11-changed",
+        "markdown": "- Pills tabs use a light active background with consistent accent text on hover/focus; text avatars use light backgrounds and darker initials while retaining name colors and image behavior.\n- Tree: reuse the shared Button Action Popover for node commands, retaining command metadata and node callbacks.\n- Button: omit the Action Popover chevron for icon-only triggers or triggers with `suffixIcon`; table commands and overflow actions reuse this rule.\n- Table: reuse Button Action Popover for desktop command children, selection actions and export menus; retain consumer models and current row/selection context.",
+        "items": [
+          {
+            "text": "Pills tabs use a light active background with consistent accent text on hover/focus; text avatars use light backgrounds and darker initials while retaining name colors and image behavior.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Tree: reuse the shared Button Action Popover for node commands, retaining command metadata and node callbacks.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Button: omit the Action Popover chevron for icon-only triggers or triggers with `suffixIcon`; table commands and overflow actions reuse this rule.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Table: reuse Button Action Popover for desktop command children, selection actions and export menus; retain consumer models and current row/selection context.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      },
+      {
+        "key": "fixed",
+        "title": "Fixed",
+        "level": 3,
+        "anchor": "release-2-11-fixed",
+        "markdown": "- Preserve checkbox size-specific label spacing with Angular Material 22 markup and keep unlabeled table-configuration checkboxes centered.\n\n- Make disabled secondary icon-only text buttons visibly dimmer while preserving enabled, loading and labeled-button styles.\n\n- Inset the `sd-table` selection message/action toolbar by 8px on both sides so it does not touch the table edges.",
+        "items": [
+          {
+            "text": "Preserve checkbox size-specific label spacing with Angular Material 22 markup and keep unlabeled table-configuration checkboxes centered.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Make disabled secondary icon-only text buttons visibly dimmer while preserving enabled, loading and labeled-button styles.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Inset the `sd-table` selection message/action toolbar by 8px on both sides so it does not touch the table edges.",
             "ordered": false,
             "children": []
           }

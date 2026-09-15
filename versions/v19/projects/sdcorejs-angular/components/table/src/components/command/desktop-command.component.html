@@ -20,56 +20,32 @@
         <sd-icon class="c-icon" [color]="command.color || 'secondary'" [fontSet]="command.fontSet" [name]="_meta.icon"></sd-icon>
       </button>
     } @else {
-      <!-- why: nút mở menu con — cũng bỏ aria-hidden và gắn aria-label + aria-haspopup="menu". -->
-      <button
-        type="button"
+      <sd-button
+        class="sd-command-trigger"
+        type="text"
+        size="sm"
         [attr.data-autoid]="_autoId + '-' + command.key"
-        [cdkMenuTriggerFor]="menu"
-        [cdkMenuPosition]="menuPositions"
+        [tooltip]="_meta.title"
         [disabled]="_meta.disabled"
-        [attr.aria-label]="_meta.title"
-        aria-haspopup="menu"
-        mat-icon-button>
-        @if (_meta.icon) {
-          <sd-icon class="c-icon" [fontSet]="command.fontSet" [name]="_meta.icon"></sd-icon>
-        } @else {
-          <sd-icon class="c-icon" [fontSet]="command.fontSet" name="more_vert"></sd-icon>
+        [prefixIcon]="_meta.icon || 'more_vert'"
+        [fontSet]="command.fontSet">
+        @for (childCommand of command.children; track childCommand.key) {
+          @let _childMeta = _item | command: childCommand;
+          <sd-button-item
+            [autoId]="_autoId + '-' + command.key + '-' + childCommand.key"
+            [disabled]="_childMeta.disabled"
+            [color]="childCommand.color"
+            [prefixIcon]="_childMeta.htmlTemplate ? null : _childMeta.icon"
+            [fontSet]="childCommand.fontSet"
+            (click)="childCommand.click(item().data)">
+            @if (_childMeta.htmlTemplate) {
+              <span [innerHTML]="_childMeta.htmlTemplate"></span>
+            } @else {
+              {{ _childMeta.title }}
+            }
+          </sd-button-item>
         }
-      </button>
-      <ng-template #menu>
-        <div
-          cdkMenu
-          tabindex="-1"
-          class="sd-table-action-menu"
-          [attr.aria-label]="_meta.title"
-          [attr.data-autoid]="_autoId + '-' + command.key + '-menu'"
-          (keydown.escape)="$event.stopPropagation()">
-          @for (childCommand of command.children; track childCommand.key) {
-            @let _childMeta = _item | command: childCommand;
-            <button
-              [attr.data-autoid]="_autoId + '-' + command.key + '-' + childCommand.key"
-              type="button"
-              cdkMenuItem
-              [cdkMenuItemDisabled]="_childMeta.disabled"
-              [cdkMenuitemTypeaheadLabel]="_childMeta.title"
-              [style.color]="childCommand.color ? 'var(--sd-' + childCommand.color + ')' : null"
-              (cdkMenuItemTriggered)="childCommand.click(_item.data)">
-              @if (_childMeta.htmlTemplate) {
-                <div [innerHTML]="_childMeta.htmlTemplate"></div>
-              } @else {
-                <span class="sd-command-menu-item__content">
-                  <sd-icon
-                    class="sd-table-action-menu__icon"
-                    [color]="childCommand.color || 'secondary'"
-                    [fontSet]="childCommand.fontSet"
-                    [name]="_childMeta.icon"></sd-icon>
-                  <span class="sd-command-menu-item__title">{{ _childMeta.title }}</span>
-                </span>
-              }
-            </button>
-          }
-        </div>
-      </ng-template>
+      </sd-button>
     }
   }
 }

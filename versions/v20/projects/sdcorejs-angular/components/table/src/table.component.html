@@ -656,27 +656,20 @@
                         class="mr-8"
                         [title]="_exportTitle"
                         prefixIcon="get_app"
-                        [matMenuTriggerFor]="menu"
                         type="text">
-                      </sd-button>
-                      <mat-menu #menu="matMenu">
-                        <button
-                          mat-menu-item
-                          [attr.data-autoid]="_autoId ? _autoId + '-export-excel' : null"
+                        <sd-button-item
+                          [autoId]="_autoId ? _autoId + '-export-excel' : null"
+                          prefixIcon="file_download"
                           (click)="exportExcel()"
-                          type="button">
-                          <sd-icon name="file_download"></sd-icon>
-                          <span> {{ 'core.component.table.export-excel' | sdTranslate }}</span>
-                        </button>
-                        <button
-                          mat-menu-item
-                          [attr.data-autoid]="_autoId ? _autoId + '-export-csv' : null"
+                          >{{ 'core.component.table.export-excel' | sdTranslate }}</sd-button-item
+                        >
+                        <sd-button-item
+                          [autoId]="_autoId ? _autoId + '-export-csv' : null"
+                          prefixIcon="file_download"
                           (click)="exportCSV()"
-                          type="button">
-                          <sd-icon name="file_download"></sd-icon>
-                          <span> {{ 'core.component.table.export-csv' | sdTranslate }}</span>
-                        </button>
-                      </mat-menu>
+                          >{{ 'core.component.table.export-csv' | sdTranslate }}</sd-button-item
+                        >
+                      </sd-button>
                     } @else if (_export.visible === 'EXCEL') {
                       <sd-button
                         [autoId]="_autoId ? _autoId + '-export-excel' : null"

@@ -1,5 +1,3 @@
-@use '../../../assets/scss/core/color.scss' as color;
-@use 'sass:map';
 
 :host {
   --sd-tree-row-height: 44px;
@@ -49,6 +47,38 @@
 
 .sd-tree__row--selected {
   background: var(--sd-tree-selected-bg);
+}
+
+.sd-tree__lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  color: var(--sd-border, #dce1e9);
+}
+
+.sd-tree__line {
+  position: absolute;
+  left: calc(4px + var(--sd-tree-line-level) * var(--sd-tree-indent-size) + var(--sd-tree-control-size) / 2);
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid currentcolor;
+}
+
+.sd-tree__line--branch::after {
+  content: '';
+  position: absolute;
+  top: calc(8px + var(--sd-tree-control-size) / 2);
+  width: max(0px, calc(var(--sd-tree-indent-size) - 8px));
+  border-top: 1px solid currentcolor;
+}
+
+.sd-tree__line--last {
+  bottom: auto;
+  height: calc(8px + var(--sd-tree-control-size) / 2);
+}
+
+.sd-tree__line--children {
+  top: calc(8px + var(--sd-tree-control-size) / 2 + 8px);
 }
 
 .sd-tree__main {
@@ -206,7 +236,11 @@
 
 .sd-tree__label {
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
+}
+
+.sd-tree__row--parent .sd-tree__label {
+  font-weight: 600;
 }
 
 .sd-tree__command-trigger {
@@ -226,62 +260,20 @@
 }
 
 .sd-tree__row:hover .sd-tree__command-trigger,
-.sd-tree__command-trigger[aria-expanded='true'] {
+.sd-tree__command-trigger:focus-within,
+.sd-tree__command-trigger:has(button[aria-expanded='true']) {
   opacity: 1;
 }
 
-.sd-tree__command-trigger sd-icon.c-icon,
-.sd-tree__command-menu-icon {
-  width: 16px;
-  height: 16px;
-  font-size: 16px;
-  line-height: 16px;
-}
+:host ::ng-deep .sd-tree__command-trigger button.c-button {
+  height: var(--sd-tree-control-size);
+  max-width: 24px;
+  padding: 0 !important;
 
-.sd-tree__command-trigger sd-icon.c-icon,
-.sd-tree__command-menu-icon--default {
-  color: map.get(color.$color_map, 'text-secondary') !important;
-}
-
-::ng-deep .mat-mdc-menu-panel.sd-tree__command-menu .mat-mdc-menu-item.sd-tree__command-menu-item,
-::ng-deep .mat-menu-panel.sd-tree__command-menu .mat-menu-item.sd-tree__command-menu-item {
-  min-height: 40px;
-  padding: 0 12px;
-}
-
-::ng-deep .mat-mdc-menu-panel.sd-tree__command-menu .mat-mdc-menu-item.sd-tree__command-menu-item .mat-mdc-menu-item-text,
-::ng-deep .mat-mdc-menu-panel.sd-tree__command-menu .mat-mdc-menu-item.sd-tree__command-menu-item .mdc-list-item__primary-text,
-::ng-deep .mat-menu-panel.sd-tree__command-menu .mat-menu-item.sd-tree__command-menu-item {
-  width: 100%;
-  min-width: 0;
-}
-
-.sd-tree__command-menu-content {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  width: 100%;
-  min-width: 0;
-  line-height: 20px;
-}
-
-// why: khoảng cách với nhãn do `gap` của .sd-tree__command-menu-content lo, nên icon không cần
-// margin riêng. Trước đây ô này còn phải `overflow: hidden` + `margin: 0 !important` để chặn glyph
-// 24px mà Material ép vào `.mat-icon` bên trong mat-menu; sd-icon đã tự trung hoà nên bỏ được cả hai
-// (giữ overflow sẽ âm thầm xén icon nếu sau này lệch kích thước, thà thấy nó tràn).
-.sd-tree__command-menu-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 16px;
-  padding: 0;
-  text-align: center;
-}
-
-.sd-tree__command-title {
-  display: block;
-  min-width: 0;
-  line-height: 20px;
+  .mat-mdc-button-touch-target {
+    width: 100%;
+    height: 100%;
+  }
 }
 
 .c-bg-length {

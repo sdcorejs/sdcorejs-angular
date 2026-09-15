@@ -173,7 +173,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/button/sd-button',
     keywords: ['action', 'submit', 'loading', 'icon'],
     status: 'stable',
-    demoSectionCount: 7,
+    demoSectionCount: 8,
     loadComponent: () => import('../../pages/components/button/button-demo.component').then(m => m.ButtonDemoComponent),
   }),
   defineDocPage({
@@ -546,7 +546,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/table/sd-table',
     keywords: ['data grid', 'pagination', 'filter', 'quick search', 'selection', 'server side', 'command header'],
     status: 'stable',
-    demoSectionCount: 26,
+    demoSectionCount: 27,
     loadComponent: () => import('../../pages/components/table/table-demo.component').then(m => m.TableDemoComponent),
   }),
   defineDocPage({

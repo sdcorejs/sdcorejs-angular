@@ -61,9 +61,8 @@ import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
-import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdButton, SdButtonItem } from '@sdcorejs/angular/components/button';
 import { SdDataState, SdDataStateTemplateDirective } from '@sdcorejs/angular/components/data-state';
 import { cloneReadRequest, SdReadChannel, SdReadState } from '@sdcorejs/angular/utilities/read-state';
 import { SdQuickAction } from '@sdcorejs/angular/components/quick-action';
@@ -235,7 +234,7 @@ const EMPTY_COMMANDS: SdTableCommand[] = [];
     SdDataStateTemplateDirective,
     CommonModule,
     FormsModule,
-    MatMenuModule,
+
     MatPaginatorModule,
     MatTableModule,
     MatSortModule,
@@ -245,6 +244,7 @@ const EMPTY_COMMANDS: SdTableCommand[] = [];
     MatRadioModule,
     DragDropModule,
     SdButton,
+    SdButtonItem,
     DesktopCommand,
     DesktopCellComponent,
     ColumnTitleComponent,
