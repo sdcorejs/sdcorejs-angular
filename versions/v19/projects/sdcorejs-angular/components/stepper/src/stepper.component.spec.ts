@@ -244,6 +244,57 @@ describe('SdStepper', () => {
   });
 
   describe('color', () => {
+    it('uses a round filled active indicator and aligned connectors with bottom labels', () => {
+      host.labelPosition = 'bottom';
+      fixture.detectChanges();
+      const el = getHostEl(fixture);
+      el.style.setProperty('--sd-primary', '#005cbb');
+      el.style.setProperty('--sd-primary-light', '#d7e3ff');
+      el.style.setProperty('--sd-primary-contrast', '#ffffff');
+      const headers = el.querySelectorAll<HTMLElement>('.mat-horizontal-stepper-header');
+      const selected = el.querySelector('.mat-step-icon-selected')!;
+      expect(getComputedStyle(el.querySelector('.mat-step-label-selected .mat-step-text-label')!).fontWeight).toBe('600');
+      expect(getComputedStyle(selected).backgroundColor).toBe('rgb(0, 92, 187)');
+      expect(getComputedStyle(selected).color).toBe('rgb(255, 255, 255)');
+      el.querySelectorAll('.mat-step-icon').forEach(icon => expect(getComputedStyle(icon).borderRadius).toBe('50%'));
+      const line = el.querySelector<HTMLElement>('.mat-stepper-horizontal-line')!;
+      for (const [header, pseudo] of [
+        [headers[0], '::after'],
+        [headers[1], '::before'],
+      ] as const) {
+        const style = getComputedStyle(header, pseudo);
+        expect(style.borderTopColor).toBe(getComputedStyle(line).borderTopColor);
+        const iconRect = header.querySelector('.mat-step-icon')!.getBoundingClientRect();
+        const center = iconRect.top + iconRect.height / 2;
+        expect(Math.abs(header.getBoundingClientRect().top + parseFloat(style.top) - center)).toBeLessThanOrEqual(1);
+        expect(Math.abs(line.getBoundingClientRect().top - center)).toBeLessThanOrEqual(1);
+      }
+    });
+    it('keeps completed steps light, prioritizes active on revisit, and preserves error colors', () => {
+      const el = getHostEl(fixture);
+      el.style.setProperty('--sd-primary', '#005cbb');
+      el.style.setProperty('--sd-primary-light', '#d7e3ff');
+      el.style.setProperty('--sd-primary-contrast', '#ffffff');
+      el.style.setProperty('--sd-error', '#ba1a1a');
+      el.style.setProperty('--sd-error-light', '#ffdad6');
+      host.ctrl1.setValue('valid');
+      stepper.next();
+      fixture.detectChanges();
+      const completed = el.querySelector('.mat-step-icon-state-edit')!;
+      expect(completed).toBeTruthy();
+      expect(getComputedStyle(completed).backgroundColor).toBe('rgb(215, 227, 255)');
+      stepper.previous();
+      fixture.detectChanges();
+      const active = el.querySelector('.mat-step-icon-selected')!;
+      expect(getComputedStyle(active).backgroundColor).toBe('rgb(0, 92, 187)');
+      expect(getComputedStyle(active).color).toBe('rgb(255, 255, 255)');
+      // Exercise overlapping Material state classes to guard the cascade priority.
+      active.classList.add('mat-step-icon-state-edit');
+      expect(getComputedStyle(active).backgroundColor).toBe('rgb(0, 92, 187)');
+      active.classList.add('mat-step-icon-state-error');
+      expect(getComputedStyle(active).backgroundColor).toBe('rgb(255, 218, 214)');
+      expect(getComputedStyle(active).color).toBe('rgb(186, 26, 26)');
+    });
     it('defaults color CSS vars to primary', () => {
       const el = getHostEl(fixture);
       expect(el.style.getPropertyValue('--sd-stepper-active-color')).toBe('var(--sd-primary)');
@@ -273,6 +324,8 @@ describe('SdStepper', () => {
         host.color = c;
         fixture.detectChanges();
         expect(el.style.getPropertyValue('--sd-stepper-active-color')).toBe(`var(--sd-${c})`);
+        expect(el.style.getPropertyValue('--sd-stepper-active-contrast')).toBe(`var(--sd-${c}-contrast)`);
+        expect(el.style.getPropertyValue('--sd-stepper-completed-bg')).toBe(`var(--sd-${c}-light)`);
       }
     });
   });

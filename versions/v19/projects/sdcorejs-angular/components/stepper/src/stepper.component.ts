@@ -57,6 +57,12 @@ export class SdStepper {
   @HostBinding('style.--sd-stepper-active-bg') get cssActiveBg(): string {
     return `var(--sd-${this.color()})`;
   }
+  @HostBinding('style.--sd-stepper-active-contrast') get cssActiveContrast(): string {
+    return `var(--sd-${this.color()}-contrast)`;
+  }
+  @HostBinding('style.--sd-stepper-completed-bg') get cssCompletedBg(): string {
+    return `var(--sd-${this.color()}-light)`;
+  }
   @HostBinding('style.--sd-stepper-completed-color') get cssCompleted(): string {
     return `var(--sd-${this.color()})`;
   }

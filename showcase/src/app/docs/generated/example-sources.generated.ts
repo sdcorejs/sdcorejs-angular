@@ -17221,7 +17221,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
   },
   "components/stepper/example-vi-tri-nhan": {
     ...SHOWCASE_PAGE_SOURCES["components/stepper"],
-    html: `<demo-section heading="Vị trí nhãn" [props]="[{ name: 'labelPosition', value: 'end / bottom' }]">
+    html: `<demo-section heading="Vị trí nhãn" note="Bước hiện tại dùng nền fill và icon tương phản; bước hoàn thành dùng nền light. Đường nối thẳng hàng với tâm icon khi nhãn nằm dưới." [props]="[{ name: 'labelPosition', value: 'end / bottom' }]">
       <div class="row" style="margin-bottom: 12px">
         <sd-button (click)="labelPos.set('end')" size="sm" type="light" color="secondary" htmlType="button" title="end"></sd-button>
         <sd-button (click)="labelPos.set('bottom')" size="sm" type="light" color="secondary" htmlType="button" title="bottom"></sd-button>

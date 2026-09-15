@@ -1324,7 +1324,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "components/stepper",
     sectionId: "example-vi-tri-nhan",
     title: "Vị trí nhãn",
-    description: "Existing “Vị trí nhãn” scenario preserved from the showcase.",
+    description: "Bước hiện tại dùng nền fill và icon tương phản; bước hoàn thành dùng nền light. Đường nối thẳng hàng với tâm icon khi nhãn nằm dưới.",
   },
   {
     sourceKey: "components/stepper/example-bang-mau",

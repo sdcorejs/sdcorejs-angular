@@ -62,6 +62,51 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
     "sections": []
   },
   {
+    "id": "release-2-12",
+    "title": "Release 2.12",
+    "suffix": "2.12",
+    "date": "2026-09-15",
+    "anchor": "release-2-12",
+    "unreleased": false,
+    "packageVersions": [
+      {
+        "angularMajor": 19,
+        "version": "19.2.12"
+      },
+      {
+        "angularMajor": 20,
+        "version": "20.2.12"
+      },
+      {
+        "angularMajor": 21,
+        "version": "21.2.12"
+      },
+      {
+        "angularMajor": 22,
+        "version": "22.2.12"
+      }
+    ],
+    "summaryMarkdown": "",
+    "markdown": "### Fixed\n\n- Stepper: use round indicators with active fill/contrast, completed light and neutral pending states; align and unify bottom-label connector segments to remove the short dark lines.",
+    "sections": [
+      {
+        "key": "fixed",
+        "title": "Fixed",
+        "level": 3,
+        "anchor": "release-2-12-fixed",
+        "markdown": "- Stepper: use round indicators with active fill/contrast, completed light and neutral pending states; align and unify bottom-label connector segments to remove the short dark lines.",
+        "items": [
+          {
+            "text": "Stepper: use round indicators with active fill/contrast, completed light and neutral pending states; align and unify bottom-label connector segments to remove the short dark lines.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      }
+    ]
+  },
+  {
     "id": "release-2-11",
     "title": "Release 2.11",
     "suffix": "2.11",

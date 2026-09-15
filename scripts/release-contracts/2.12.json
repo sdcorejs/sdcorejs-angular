@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "suffix": "2.12",
+  "reviewedSourceSha": "b8eab91fd8be7f676a5801c3e125b685d533f8d4",
+  "artifactSource": "Local 2.12 packages built on Node 22.22.3; compared against same-major npm 2.11 packages. Reviewed changes: round stepper indicators, active fill/contrast and bold label, completed light states, aligned neutral connectors. No dependency or export-map changes intended. CI rebuilds from the tagged release commit.",
+  "targets": {
+    "19.2.12": {
+      "version": "19.2.12",
+      "baselineVersion": "19.2.11",
+      "dependencies": {
+        "baseline": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f",
+        "candidate": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f"
+      },
+      "exports": {
+        "baseline": "078a9f3619580b6017cb8b5ecc21d40f3876e8bf560774fde5b305fb235e10f1",
+        "candidate": "078a9f3619580b6017cb8b5ecc21d40f3876e8bf560774fde5b305fb235e10f1"
+      },
+      "files": {
+        "baseline": "4858001cd5d7c6b5f7ca63cea21a39540e399cbc7ac87db7a5b0f70333256925",
+        "candidate": "4858001cd5d7c6b5f7ca63cea21a39540e399cbc7ac87db7a5b0f70333256925"
+      },
+      "publicSurface": {
+        "baseline": "6c16c9ea53e93fa94035bae8f9d80abae8252d94b89e15456e719352711f3d13",
+        "candidate": "4c6daff89bd390c6526041b8ec65f5c1bf3326c4ec1d9cf0219a98e0fadc1d83"
+      }
+    },
+    "20.2.12": {
+      "version": "20.2.12",
+      "baselineVersion": "20.2.11",
+      "dependencies": {
+        "baseline": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f",
+        "candidate": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f"
+      },
+      "exports": {
+        "baseline": "078a9f3619580b6017cb8b5ecc21d40f3876e8bf560774fde5b305fb235e10f1",
+        "candidate": "078a9f3619580b6017cb8b5ecc21d40f3876e8bf560774fde5b305fb235e10f1"
+      },
+      "files": {
+        "baseline": "025c0d5ffb6e287a670f7fd4dab3447ec22cb39fb5c1a79043ef7cbf256a2497",
+        "candidate": "025c0d5ffb6e287a670f7fd4dab3447ec22cb39fb5c1a79043ef7cbf256a2497"
+      },
+      "publicSurface": {
+        "baseline": "74a1008bdd2345cc0f8dc0910c3d8b8ff292390a96039d4a9f0313c6bd1fd806",
+        "candidate": "decdcc085b83511cf673782ce48c1566180e5164a09cee1de1895bbef1a04a1d"
+      }
+    },
+    "21.2.12": {
+      "version": "21.2.12",
+      "baselineVersion": "21.2.11",
+      "dependencies": {
+        "baseline": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f",
+        "candidate": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f"
+      },
+      "exports": {
+        "baseline": "a995f16666247c07e3f08c79714d334bb3e30930d18315708ca5cacd4135fcce",
+        "candidate": "a995f16666247c07e3f08c79714d334bb3e30930d18315708ca5cacd4135fcce"
+      },
+      "files": {
+        "baseline": "29e0d97b40e6de03a29074676b55e4606f696db4231167e35bd942887790b2f5",
+        "candidate": "29e0d97b40e6de03a29074676b55e4606f696db4231167e35bd942887790b2f5"
+      },
+      "publicSurface": {
+        "baseline": "95347b0eeb98a1d483489d75fc6ffcb7d16f2e6a08e2073cbd2ef2db49a8af9c",
+        "candidate": "2e7032d046c451a642f75e914001296722f486565e1415dbd7e0344b30337de7"
+      }
+    },
+    "22.2.12": {
+      "version": "22.2.12",
+      "baselineVersion": "22.2.11",
+      "dependencies": {
+        "baseline": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f",
+        "candidate": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f"
+      },
+      "exports": {
+        "baseline": "a995f16666247c07e3f08c79714d334bb3e30930d18315708ca5cacd4135fcce",
+        "candidate": "a995f16666247c07e3f08c79714d334bb3e30930d18315708ca5cacd4135fcce"
+      },
+      "files": {
+        "baseline": "29e0d97b40e6de03a29074676b55e4606f696db4231167e35bd942887790b2f5",
+        "candidate": "29e0d97b40e6de03a29074676b55e4606f696db4231167e35bd942887790b2f5"
+      },
+      "publicSurface": {
+        "baseline": "87b0367970d0795303781f35eaaaa48d84634bf4017bdd2fe87683b1b3857112",
+        "candidate": "d3b156ba0b63e0e27e102ac5eb5eb8a21b1abf2ef452714aafe7734b471c61fe"
+      }
+    }
+  }
+}

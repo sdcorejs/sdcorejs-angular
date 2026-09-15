@@ -237,6 +237,6 @@ A child of `<sd-stepper>` that declares one step — its label, icon, optional/e
 
 ## Indicator and responsive presentation
 
-A step icon, when supplied, replaces the number inside its indicator instead of appearing again in the label. Steps without icons keep their number. The current indicator uses a filled accent; completed/editable steps use a check on a light accent background. Existing selection, optional steps, validation gates, outputs and keyboard behavior remain owned by Material.
+A step icon, when supplied, replaces the number inside its indicator instead of appearing again in the label. Steps without icons keep their number. Indicators are round: the current step uses the selected Core fill color with its contrast token and a bold label; completed/editable steps use the light background with the Core color. The active fill takes priority when revisiting a completed step. Error indicators retain the error light background and error foreground, taking priority over active fill; pending steps remain neutral. Bottom labels share one connector color and align every connector segment with the 32px indicator center. Existing selection, optional steps, validation gates, outputs and keyboard behavior remain owned by Material.
 
 On narrow screens, the horizontal header strip may scroll independently while the body stays within its container; vertical labels wrap. Transitions respect reduced motion. Showcase actions use SdButton size sm and group at the end of each step.

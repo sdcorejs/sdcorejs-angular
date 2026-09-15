@@ -3,6 +3,9 @@
 
   --sd-stepper-active-color: var(--sd-primary, #005cbb);
   --sd-stepper-active-bg: var(--sd-primary, #005cbb);
+  --sd-stepper-active-contrast: var(--sd-primary-contrast, #ffffff);
+  --sd-stepper-completed-bg: var(--sd-primary-light, #d7e3ff);
+  --sd-stepper-line-color: var(--sd-border, rgba(0, 0, 0, 0.12));
   --sd-stepper-completed-color: var(--sd-primary, #005cbb);
   --sd-stepper-line-active-color: var(--sd-primary, #005cbb);
   --sd-stepper-error-color: var(--sd-error, #ba1a1a);
@@ -39,20 +42,21 @@
     color: var(--sd-stepper-pending-color);
   }
 
-  .mat-step-icon-selected {
-    background-color: var(--sd-stepper-active-bg) !important;
-    color: #ffffff !important;
-  }
-
   .mat-step-icon-state-done,
   .mat-step-icon-state-edit {
-    background-color: var(--sd-stepper-completed-color) !important;
-    color: #ffffff !important;
+    background-color: var(--sd-stepper-completed-bg) !important;
+    color: var(--sd-stepper-completed-color) !important;
+  }
+
+  // why: active must stand out even when revisiting a completed step.
+  .mat-step-icon-selected {
+    background-color: var(--sd-stepper-active-bg) !important;
+    color: var(--sd-stepper-active-contrast) !important;
   }
 
   .mat-step-icon-state-error {
-    background-color: var(--sd-stepper-error-color) !important;
-    color: #ffffff !important;
+    background-color: var(--sd-error-light, #ffdad6) !important;
+    color: var(--sd-stepper-error-color) !important;
   }
 
   // Active label text color
@@ -60,40 +64,45 @@
     color: var(--sd-stepper-text-color);
     font-weight: 500;
   }
-  .mat-step-label-selected .mat-step-text-label {
+  .mat-step-label.mat-step-label-selected .mat-step-text-label {
     color: var(--sd-stepper-active-color);
     font-weight: 600;
   }
 
   // Connector line (horizontal + vertical)
   .mat-stepper-horizontal-line,
-  .mat-stepper-vertical-line::before {
-    border-color: rgba(0, 0, 0, 0.12);
+  .mat-stepper-vertical-line::before,
+  .mat-stepper-label-position-bottom .mat-horizontal-stepper-header::before,
+  .mat-stepper-label-position-bottom .mat-horizontal-stepper-header::after {
+    border-color: var(--sd-stepper-line-color);
   }
 
-  // Suppress hover state-layer on active step header so dark fill stays clean
-  // (same pattern used in <sd-tab-group>).
+  // why: Material centers bottom-label connectors on a 24px icon; ours is 32px.
+  .mat-stepper-label-position-bottom {
+    .mat-stepper-horizontal-line,
+    .mat-horizontal-stepper-header::before,
+    .mat-horizontal-stepper-header::after {
+      top: calc((var(--mat-stepper-header-height, 72px) - 24px) / 2 + 16px);
+    }
+    .mat-horizontal-stepper-header::before,
+    .mat-horizontal-stepper-header::after {
+      width: calc(50% - 24px);
+    }
+  }
+
+  // Keep header hover subtle alongside the light indicators.
   .mat-step-header.cdk-program-focused,
   .mat-step-header:hover {
     background-color: rgba(0, 0, 0, 0.02);
   }
 }
 
-// why: current step is filled; completed is a quiet check; pending remains neutral.
+// why: round indicators keep the shared icon shape; fill identifies the active step.
 :host ::ng-deep {
   .mat-step-icon {
     width: 32px;
     height: 32px;
-    border-radius: 8px;
-  }
-  .mat-step-icon-state-done,
-  .mat-step-icon-state-edit {
-    background: color-mix(in srgb, var(--sd-stepper-completed-color) 12%, var(--sd-surface, #fff)) !important;
-    color: var(--sd-stepper-completed-color) !important;
-  }
-  .mat-step-icon-selected {
-    background: var(--sd-stepper-active-bg) !important;
-    color: #fff !important;
+    border-radius: 50%;
   }
   .mat-step-header {
     border-radius: 8px;

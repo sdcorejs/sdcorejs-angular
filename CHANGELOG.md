@@ -6,6 +6,12 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+## [2.12] - 2026-09-15
+
+### Fixed
+
+- Stepper: use round indicators with active fill/contrast, completed light and neutral pending states; align and unify bottom-label connector segments to remove the short dark lines.
+
 ## [2.11] - 2026-09-15
 
 Release suffix `2.11` targets `19.2.11`, `20.2.11`, `21.2.11`, and `22.2.11`.
