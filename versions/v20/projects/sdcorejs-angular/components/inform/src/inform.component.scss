@@ -38,6 +38,8 @@
   line-height: 20px;
 }
 .c-inform-content {
+  min-height: 32px;
+  justify-content: center;
   flex: 1;
   min-width: 0;
   display: flex;
@@ -50,6 +52,11 @@
   font-weight: 600;
   color: var(--sd-text);
   overflow-wrap: anywhere;
+}
+.c-inform-content-without-description .c-inform-title {
+  min-height: 32px;
+  display: flex;
+  align-items: center;
 }
 .c-inform-body {
   font-size: 14px;
@@ -125,5 +132,92 @@ button:focus-visible {
   }
   :host ::ng-deep .c-inform-action button {
     min-height: 44px;
+  }
+}
+
+// why: scoped overrides preserve the standard banner, including its mobile rules.
+.c-inform.c-inform-tip {
+  padding: 8px 12px;
+  gap: 8px;
+  border: 0;
+  border-inline-start: 3px solid var(--inform-tone);
+  border-radius: 4px;
+  color: var(--sd-text);
+  font-size: 13px;
+  line-height: 20px;
+
+  .c-inform-icon-tile {
+    flex-basis: 16px;
+    width: 16px;
+    height: 16px;
+    margin-top: 2px;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .c-inform-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    line-height: 16px;
+  }
+
+  .c-inform-content {
+    display: block;
+    min-height: 20px;
+    font-size: inherit;
+    line-height: inherit;
+    overflow-wrap: anywhere;
+  }
+
+  .c-inform-title,
+  .c-inform-body {
+    min-height: 0;
+    font-size: inherit;
+    line-height: inherit;
+  }
+
+  .c-inform-title {
+    display: block;
+  }
+
+  .c-inform-action {
+    display: block;
+    margin-top: 4px;
+  }
+
+  .c-inform-close {
+    // why: retain the touch target without forcing a short tip to become taller.
+    margin-block: -6px;
+    margin-inline-end: -6px;
+    @media (max-width: 600px) {
+      margin-block: -8px;
+    }
+  }
+}
+
+// why: projected inline elements belong to the consumer's view, so scope deep rules to tips only.
+:host ::ng-deep .c-inform-tip .c-inform-content {
+  strong,
+  b {
+    font-weight: 600;
+  }
+  code {
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: var(--inform-soft);
+    color: inherit;
+    font-size: 0.92em;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  a {
+    color: var(--inform-ink);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    &:focus-visible {
+      outline: 2px solid var(--inform-tone);
+      outline-offset: 2px;
+    }
   }
 }

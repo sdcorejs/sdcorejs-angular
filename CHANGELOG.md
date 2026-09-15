@@ -6,6 +6,15 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+## [2.13] - 2026-09-15
+
+### Added
+- Inform: add compact `type="tip"` guidance with theme tokens, optional title, projected rich text and Angular bindings; include API documentation and five showcase examples.
+
+### Fixed
+- Inform: use outline warning/error icons by default and center title-only content with the status icon.
+- Inform: prioritize projected content within the title/description/action region while preserving the status icon and close button; retain existing action-only projection behavior.
+
 ## [2.12] - 2026-09-15
 
 ### Fixed

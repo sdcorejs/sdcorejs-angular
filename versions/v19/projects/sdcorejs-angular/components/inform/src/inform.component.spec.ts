@@ -134,13 +134,13 @@ describe('SdInform', () => {
       setInput(fixture, 'success', true);
       expect(queryByCss(fixture, 'sd-icon.c-inform-icon mat-icon').textContent?.trim()).toBe('check_circle');
     });
-    it('auto icon "warning" for warning', () => {
+    it('auto outline icon for warning', () => {
       setInput(fixture, 'warning', true);
-      expect(queryByCss(fixture, 'sd-icon.c-inform-icon mat-icon').textContent?.trim()).toBe('warning');
+      expect(queryByCss(fixture, 'sd-icon.c-inform-icon mat-icon').textContent?.trim()).toBe('warning_amber');
     });
-    it('auto icon "error" for error', () => {
+    it('auto outline icon for error', () => {
       setInput(fixture, 'error', true);
-      expect(queryByCss(fixture, 'sd-icon.c-inform-icon mat-icon').textContent?.trim()).toBe('error');
+      expect(queryByCss(fixture, 'sd-icon.c-inform-icon mat-icon').textContent?.trim()).toBe('report_gmailerrorred');
     });
     it('explicit icon overrides the auto map', () => {
       setInput(fixture, 'icon', 'campaign');

@@ -62,6 +62,71 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
     "sections": []
   },
   {
+    "id": "release-2-13",
+    "title": "Release 2.13",
+    "suffix": "2.13",
+    "date": "2026-09-15",
+    "anchor": "release-2-13",
+    "unreleased": false,
+    "packageVersions": [
+      {
+        "angularMajor": 19,
+        "version": "19.2.13"
+      },
+      {
+        "angularMajor": 20,
+        "version": "20.2.13"
+      },
+      {
+        "angularMajor": 21,
+        "version": "21.2.13"
+      },
+      {
+        "angularMajor": 22,
+        "version": "22.2.13"
+      }
+    ],
+    "summaryMarkdown": "",
+    "markdown": "### Added\n- Inform: add compact `type=\"tip\"` guidance with theme tokens, optional title, projected rich text and Angular bindings; include API documentation and five showcase examples.\n\n### Fixed\n- Inform: use outline warning/error icons by default and center title-only content with the status icon.\n- Inform: prioritize projected content within the title/description/action region while preserving the status icon and close button; retain existing action-only projection behavior.",
+    "sections": [
+      {
+        "key": "added",
+        "title": "Added",
+        "level": 3,
+        "anchor": "release-2-13-added",
+        "markdown": "- Inform: add compact `type=\"tip\"` guidance with theme tokens, optional title, projected rich text and Angular bindings; include API documentation and five showcase examples.",
+        "items": [
+          {
+            "text": "Inform: add compact `type=\"tip\"` guidance with theme tokens, optional title, projected rich text and Angular bindings; include API documentation and five showcase examples.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      },
+      {
+        "key": "fixed",
+        "title": "Fixed",
+        "level": 3,
+        "anchor": "release-2-13-fixed",
+        "markdown": "- Inform: use outline warning/error icons by default and center title-only content with the status icon.\n- Inform: prioritize projected content within the title/description/action region while preserving the status icon and close button; retain existing action-only projection behavior.",
+        "items": [
+          {
+            "text": "Inform: use outline warning/error icons by default and center title-only content with the status icon.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Inform: prioritize projected content within the title/description/action region while preserving the status icon and close button; retain existing action-only projection behavior.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      }
+    ]
+  },
+  {
     "id": "release-2-12",
     "title": "Release 2.12",
     "suffix": "2.12",

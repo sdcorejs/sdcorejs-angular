@@ -66,3 +66,5 @@ Spacing between a leading icon and its label belongs to the menu item, not the g
 ```
 
 It sits in `:where()`, so its specificity is zero: a menu that lays its own row out — a flex wrapper with `gap`, or its own `margin-right` on the icon — wins with any ordinary selector, no `!important` needed. A menu that supplies spacing through `gap` should set `margin-right: 0` on the icon so the two do not stack.
+
+`warning_amber` and `report_gmailerrorred` preserve explicit outline glyphs in Material and map to `triangle-alert` and `circle-alert` in Lucide. These names are used by the default warning/error status icons in `SdInform`.

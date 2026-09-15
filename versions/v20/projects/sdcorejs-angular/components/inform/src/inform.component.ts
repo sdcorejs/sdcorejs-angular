@@ -19,14 +19,16 @@ import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdInformActionDirective } from './inform-action.directive';
 import { SdIcon, type SdIconSet } from '@sdcorejs/angular/modules/icon';
 
+export type SdInformType = 'default' | 'tip';
+
 // why: mỗi color có icon trạng thái mặc định khi consumer không truyền [icon].
 const SD_INFORM_DEFAULT_ICON: Record<Color, string> = {
   primary: 'info',
   secondary: 'info',
   info: 'info',
   success: 'check_circle',
-  warning: 'warning',
-  error: 'error',
+  warning: 'warning_amber',
+  error: 'report_gmailerrorred',
 };
 
 @Component({
@@ -39,6 +41,11 @@ const SD_INFORM_DEFAULT_ICON: Record<Color, string> = {
 })
 export class SdInform {
   // 1. INPUTS
+  /** Compact non-live guidance; omitted type preserves the standard banner. */
+  type = input<SdInformType, SdInformType | undefined | null>('default', {
+    transform: value => value ?? 'default',
+  });
+
   color = input<Color, Color | undefined | null>('primary', {
     transform: value => value || 'primary',
   });
@@ -120,7 +127,8 @@ export class SdInform {
   });
 
   // why: error/warning là cảnh báo → assertive 'alert'; các màu còn lại là thông tin → polite 'status'.
-  liveRole = computed<'alert' | 'status'>(() => {
+  liveRole = computed<'alert' | 'status' | 'note'>(() => {
+    if (this.type() === 'tip') return 'note';
     const c = this.effectiveColor();
     return c === 'error' || c === 'warning' ? 'alert' : 'status';
   });

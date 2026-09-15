@@ -76,8 +76,15 @@ export type ShowcaseExampleSourceKey =
   | "components/inform/example-action-custom-projection"
   | "components/inform/example-an-icon"
   | "components/inform/example-bang-mau"
+  | "components/inform/example-chi-co-tieu-de"
   | "components/inform/example-dong-duoc-action"
   | "components/inform/example-line-clamp"
+  | "components/inform/example-noi-dung-tuy-bien"
+  | "components/inform/example-tip-bang-mau"
+  | "components/inform/example-tip-co-tieu-de"
+  | "components/inform/example-tip-mot-dong"
+  | "components/inform/example-tip-noi-dung-phong-phu"
+  | "components/inform/example-tip-trong-form-va-bang"
   | "components/job-progress/example-details-va-error"
   | "components/job-progress/example-determinate-bar"
   | "components/job-progress/example-indeterminate-compact"
@@ -879,6 +886,20 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Existing “Bảng màu” scenario preserved from the showcase.",
   },
   {
+    sourceKey: "components/inform/example-chi-co-tieu-de",
+    pageKey: "components/inform",
+    sectionId: "example-chi-co-tieu-de",
+    title: "Chỉ có tiêu đề",
+    description: "Tiêu đề căn giữa với icon kể cả khi không có mô tả hoặc có thêm action.",
+  },
+  {
+    sourceKey: "components/inform/example-noi-dung-tuy-bien",
+    pageKey: "components/inform",
+    sectionId: "example-noi-dung-tuy-bien",
+    title: "Nội dung tùy biến",
+    description: "Nội dung truyền vào thay title, description và action mặc định; icon và nút đóng vẫn giữ nguyên.",
+  },
+  {
     sourceKey: "components/inform/example-dong-duoc-action",
     pageKey: "components/inform",
     sectionId: "example-dong-duoc-action",
@@ -905,6 +926,41 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-action-custom-projection",
     title: "Action custom (projection)",
     description: "Existing “Action custom (projection)” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/inform/example-tip-mot-dong",
+    pageKey: "components/inform",
+    sectionId: "example-tip-mot-dong",
+    title: "Tip một dòng",
+    description: "Existing “Tip một dòng” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/inform/example-tip-co-tieu-de",
+    pageKey: "components/inform",
+    sectionId: "example-tip-co-tieu-de",
+    title: "Tip có tiêu đề",
+    description: "Existing “Tip có tiêu đề” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/inform/example-tip-noi-dung-phong-phu",
+    pageKey: "components/inform",
+    sectionId: "example-tip-noi-dung-phong-phu",
+    title: "Tip nội dung phong phú",
+    description: "Chữ đậm, inline code, liên kết và binding Angular giữ nguyên trong cùng luồng văn bản.",
+  },
+  {
+    sourceKey: "components/inform/example-tip-bang-mau",
+    pageKey: "components/inform",
+    sectionId: "example-tip-bang-mau",
+    title: "Tip bảng màu",
+    description: "Tất cả tip dùng role note, kể cả màu warning và error.",
+  },
+  {
+    sourceKey: "components/inform/example-tip-trong-form-va-bang",
+    pageKey: "components/inform",
+    sectionId: "example-tip-trong-form-va-bang",
+    title: "Tip trong form và bảng",
+    description: "Existing “Tip trong form và bảng” scenario preserved from the showcase.",
   },
   {
     sourceKey: "components/job-progress/example-determinate-bar",

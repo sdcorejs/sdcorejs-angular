@@ -146,6 +146,7 @@ export const SD_DEFAULT_LUCIDE_ALIASES: Record<string, string> = {
   refresh: 'refresh-cw',
   remove: 'minus',
   remove_circle: 'circle-minus',
+  report_gmailerrorred: 'circle-alert',
   restart_alt: 'rotate-ccw',
   rotate_right: 'rotate-cw',
   search_off: 'search-x',

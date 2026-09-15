@@ -1,8 +1,11 @@
 @if (!dismissed()) {
   @let _effectiveIcon = effectiveIcon();
   @let _fontSet = fontSet();
+  @let _description = description();
+  @let _isTip = type() === 'tip';
   <div
     class="c-inform"
+    [class.c-inform-tip]="_isTip"
     [attr.role]="liveRole()"
     [ngClass]="colorClasses()"
     [attr.data-autoId]="autoId() || null"
@@ -11,7 +14,7 @@
       <span class="c-inform-icon-tile" aria-hidden="true"
         ><sd-icon
           class="c-inform-icon c-material-icon"
-          size="20px"
+          [size]="_isTip ? '16px' : '20px'"
           aria-hidden="true"
           [fontSet]="_fontSet"
           [name]="_effectiveIcon"></sd-icon
@@ -19,35 +22,37 @@
     }
 
     @let _actionLabel = actionLabel();
-    <div class="c-inform-content">
-      @if (title(); as t) {
-        <div class="c-inform-title">{{ t }}</div>
-      }
-      @if (description(); as d) {
-        <div #body class="c-inform-body" [class.is-clamped]="clampLines() !== null" [style.-webkit-line-clamp]="clampLines()">
-          {{ d }}
-        </div>
-      }
-      @if (showToggle()) {
-        <button type="button" class="c-inform-toggle" (click)="toggleExpanded()">
-          {{ (expanded() ? 'core.component.inform.show-less' : 'core.component.inform.show-more') | sdTranslate }}
-        </button>
-      }
+    <div class="c-inform-content" [class.c-inform-content-without-description]="!_description">
+      <ng-content>
+        @if (title(); as t) {
+          <div class="c-inform-title">{{ t }}</div>
+        }
+        @if (_description; as d) {
+          <div #body class="c-inform-body" [class.is-clamped]="clampLines() !== null" [style.-webkit-line-clamp]="clampLines()">
+            {{ d }}
+          </div>
+        }
+        @if (showToggle()) {
+          <button type="button" class="c-inform-toggle" (click)="toggleExpanded()">
+            {{ (expanded() ? 'core.component.inform.show-less' : 'core.component.inform.show-more') | sdTranslate }}
+          </button>
+        }
 
-      @if (hasActionSlot()) {
-        <div class="c-inform-action">
-          <ng-content select="[sdInformAction]"></ng-content>
-        </div>
-      } @else if (_actionLabel) {
-        <sd-button
-          class="c-inform-action c-inform-action-link"
-          size="sm"
-          type="light"
-          color="primary"
-          htmlType="button"
-          [title]="_actionLabel"
-          (click)="onAction($event)"></sd-button>
-      }
+        @if (hasActionSlot()) {
+          <div class="c-inform-action">
+            <ng-content select="[sdInformAction]"></ng-content>
+          </div>
+        } @else if (_actionLabel) {
+          <sd-button
+            class="c-inform-action c-inform-action-link"
+            size="sm"
+            type="light"
+            color="primary"
+            htmlType="button"
+            [title]="_actionLabel"
+            (click)="onAction($event)"></sd-button>
+        }
+      </ng-content>
     </div>
 
     @if (closable()) {

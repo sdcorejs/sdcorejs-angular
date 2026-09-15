@@ -322,7 +322,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/inform/sd-inform',
     keywords: ['alert', 'banner', 'warning', 'message'],
     status: 'stable',
-    demoSectionCount: 5,
+    demoSectionCount: 12,
     loadComponent: () => import('../../pages/components/inform/inform-demo.component').then(m => m.InformDemoComponent),
   }),
   defineDocPage({
