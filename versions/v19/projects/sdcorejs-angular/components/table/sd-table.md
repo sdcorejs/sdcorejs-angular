@@ -574,20 +574,47 @@ export class InvoiceListComponent {
 
 ### Dense editable controls inside table cells
 
-When rendering form controls inside cells, custom inline filters, external-filter templates, dashboard filter bars, or table toolbars, always use `size="sm"` where supported and `hideInlineError`. `size="sm"` keeps dense surfaces compact; `hideInlineError` prevents `<mat-error>` text from expanding the row, header, or toolbar and instead uses the compact error icon/tooltip.
+When rendering form controls inside cells, custom inline filters, external-filter templates, dashboard filter bars, or table toolbars, always use `size="sm"` where supported and `hideInlineError`. This keeps dense surfaces compact and uses the error icon/tooltip instead of expanding the row with inline error text.
+
+**Quy tắc label, required và hướng dẫn trong cell:**
+
+- Input, dropdown/select, date/datetime và các control khác trong cell dùng `size="sm"`; **không truyền label hiển thị** vì title của cột đã mô tả dữ liệu. Không dùng placeholder để lặp lại title; chỉ dùng khi cần gợi ý định dạng hoặc giá trị.
+- Cột có dữ liệu bắt buộc hiển thị **`*` màu error ngay sau title**, cùng một hàng. Dùng token Core qua `text-error`; không viết title dài như “Họ và tên (bắt buộc)” hoặc lặp chữ “Bắt buộc” trong mỗi cell.
+- Guide/help của cột dùng **icon `info` kèm tooltip ở header**, sau title và dấu `*` nếu có. Không đặt đoạn hướng dẫn dài trong header/cell hoặc lặp lại `helperText` cho mọi hàng. Tooltip cần truy cập được bằng bàn phím và icon có tên truy cập; thao tác xem trợ giúp không được kích hoạt sort.
+- Vẫn giữ `required`/validator trên từng control; dấu `*` ở header chỉ là thông tin hiển thị, không thay thế validation. Không bỏ tên truy cập của control khi bỏ label hiển thị; bảo đảm người dùng screen reader vẫn nhận biết trường và hàng đang chỉnh sửa.
+- Quy tắc không lặp label áp dụng cho cell có title cột tương ứng. Filter/toolbar độc lập và mobile card không có header cột hiển thị vẫn cần nhãn/ngữ cảnh nhận diện trường.
+
+Dùng API hiện có: `<ng-template sdTableTitleDef="field">` hoặc `column.title.templateRef` cho header và `sdTableCellDef` cho cell. Giữ `column.title` (hoặc `column.title.title`) là tên dữ liệu ngắn, ví dụ `Số lượng`; không thêm API `column.required`/`headerTooltip` vì các field này chưa tồn tại.
+
+Ví dụ dưới đây dùng `SdTableTitleDefDirective`, `SdTableCellDefDirective`, `SdIcon` và `MatTooltipModule` trong imports của consumer, cùng các control tương ứng. Cột `quantity` có title `Số lượng` trong `tableOption`.
 
 ```html
 <sd-table [option]="tableOption">
+  <ng-template sdTableTitleDef="quantity">
+    <span style="display: inline-flex; align-items: center; gap: 4px">
+      <span>Số lượng <span class="text-error" aria-hidden="true">*</span></span>
+      <sd-icon
+        name="info"
+        size="16px"
+        tabindex="0"
+        role="img"
+        aria-label="Hướng dẫn số lượng"
+        matTooltip="Nhập số nguyên dương. Đây là dữ liệu bắt buộc."
+        (click)="$event.stopPropagation()"
+        (keydown)="$event.stopPropagation()"></sd-icon>
+    </span>
+  </ng-template>
+
   <ng-template sdTableCellDef="quantity" let-row>
-    <sd-input-number size="sm" hideInlineError type="positive" [precision]="0" [(model)]="row.quantity"> </sd-input-number>
+    <sd-input-number size="sm" hideInlineError required type="positive" [precision]="0" [(model)]="row.quantity"></sd-input-number>
   </ng-template>
 
   <ng-template sdTableCellDef="status" let-row>
-    <sd-select size="sm" hideInlineError [items]="statusList" valueField="code" displayField="name" [(model)]="row.status"> </sd-select>
+    <sd-select size="sm" hideInlineError [items]="statusList" valueField="code" displayField="name" [(model)]="row.status"></sd-select>
   </ng-template>
 
   <ng-template sdTableCellDef="note" let-row>
-    <sd-input size="sm" hideInlineError [(model)]="row.note"> </sd-input>
+    <sd-input size="sm" hideInlineError [(model)]="row.note"></sd-input>
   </ng-template>
 </sd-table>
 ```
@@ -879,6 +906,7 @@ The drag handle hides automatically for columns excluded from resize. Widths rel
 - ❌ Mutating `columnWidth` object inside `onResize` callback expecting it to affect rendering — the snapshot is read-only intent; to push new widths back into the table, set them via `option.columns[i].width` AND clear the user storage (or write your own keyed storage).
 - ❌ Rendering statuses with custom pill CSS inside cells — use `useBadge` or a projected `<sd-badge>`.
 - ❌ Placing default `md`/`lg` form controls inside table filters or editable cells — use `size="sm"` for dense table UI.
+- ❌ Repeating a column title as the visible label of every cell editor, writing “(bắt buộc)” in the title, or repeating long guide text in cells — use a label-free editor, a `text-error` asterisk after the header title, and a header info icon with tooltip.
 - Built-in inline column filters and external filters opt their input/number/date/datetime controls into `clearable`, so users can clear an active filter even though those controls default `clearable` to `false` elsewhere.
 
 - ❌ Forgetting to import projected-template directives (`SdTableCellDefDirective`, `SdTableFilterDefDirective`, `SdTableTitleDefDirective`, `SdTableFooterDefDirective`, `SdTableExpandDefDirective`) in a standalone host component.

@@ -95,6 +95,14 @@ Applied automatically on `<sd-input>` for styling hooks:
 - `<ng-template sdSuffixDef>` — custom suffix (e.g. icon button) rendered at the trailing edge of the field
 - `<ng-template sdViewDef>` — read-only display template used in `[viewed]` mode
 
+## Compact required labels
+
+With `size="sm"`, the label, `helperText` icon and required `*` stay on one line, including focused and invalid states. Long labels truncate in narrow fields while the helper icon and required marker remain visible. This shared theme behavior also applies to the other Material-backed Core form controls; no consumer CSS override is needed.
+
+```html
+<sd-input size="sm" label="Họ và tên" helperText="Nhập họ và tên đầy đủ" required></sd-input>
+```
+
 ## Form integration
 
 - **Does NOT implement `ControlValueAccessor`.** Forms use the SDCoreJS pattern: pass the parent form via `[form]="formGroup"` (or `[form]="ngForm"`) plus a `name`. On `ngAfterViewInit`, the component calls `formGroup.addControl(name, formControl)` and removes it in `ngOnDestroy`.

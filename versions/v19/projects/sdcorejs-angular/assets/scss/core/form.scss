@@ -224,10 +224,26 @@
     --mat-form-field-container-height: 32px;
     --mat-form-field-container-vertical-padding: 3px;
 
-    // why: inline-flex + vertical-align: middle tạo khoảng baseline dưới label,
-    // khiến chữ thấp hơn tâm của field 32px. Flex block giữ nguyên transform float của Material.
+    // why: Material renders the required marker beside mat-label. Keep the complete
+    // floating label in one row, without the inline baseline gap in a 32px field.
+    .mdc-floating-label {
+      display: inline-flex;
+      align-items: center;
+      vertical-align: top;
+    }
+
     .sd-form-field-label {
       display: flex;
+      min-width: 0;
+
+      > span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+
+    .mat-mdc-form-field-required-marker {
+      flex-shrink: 0;
     }
 
     &.mat-form-field-appearance-outline {

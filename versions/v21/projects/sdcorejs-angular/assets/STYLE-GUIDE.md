@@ -41,6 +41,8 @@
 
 Control `size="sm"` dùng khung 32px. Floating label ở trạng thái rỗng/chưa focus được căn giữa dòng đầu bằng style dùng chung, kể cả label có wrapper `sd-form-field-label`. Khi focus hoặc có giá trị, label vẫn nổi theo Angular Material; textarea nhiều dòng giữ label ở dòng đầu.
 
+Label, icon trợ giúp và dấu required của Material nằm cùng một hàng ở `sm`, cả outline/fill và khi focus. Label dài được cắt bằng dấu ba chấm trong ô hẹp; icon và dấu `*` vẫn hiển thị. Quy tắc dùng chung cho input/input-number/input-color, select (đơn/đa lựa chọn), autocomplete, date/datetime/date-range/time, textarea và tree-select; chip/chip-calendar giữ label Material mặc định.
+
 > Convention chung: **mọi utility class đều có `!important`** để đảm bảo override được Angular Material (thường có specificity cao).
 
 ---
@@ -606,3 +608,4 @@ Khi sinh UI mới, agent phải rà docs Core UI trước và ưu tiên componen
 - **View/read-only label + value**: dùng `<sd-view>` hoặc `[viewed]="true"` trên form component. Không tự dựng cặp label/value bằng class riêng cho các màn hình DETAIL.
 - **Trạng thái, nhãn, counter**: dùng `<sd-badge>` hoặc `useBadge` của `<sd-table>`. Không tự viết badge/pill/status class trong component nếu chỉ để thể hiện trạng thái.
 - **Input trong table hoặc vùng dense**: trong `<sd-table>`, inline filter, editable cell, toolbar/cell dày đặc, truyền `size="sm"` cho các form component hỗ trợ size như `<sd-input>`, `<sd-select>`, `<sd-autocomplete>`, `<sd-date>`, `<sd-date-range>`, `<sd-datetime>`, `<sd-input-number>`, `<sd-textarea>`, `<sd-chip>`, `<sd-chip-calendar>`, `<sd-input-color>`.
+- **Label/required/help trong cell của `sd-table`**: control `sm` không lặp label đã có ở title cột. Cột bắt buộc thêm `*` với `text-error` ngay sau title; guide/help đặt ở icon `info` kèm tooltip trong header, không viết dài hoặc lặp từng hàng. Giữ validator trên control và tên truy cập cho screen reader. Filter/toolbar độc lập và mobile card không có header vẫn cần nhãn nhận diện. Xem quy tắc và mẫu `sdTableTitleDef` trong [sd-table](../components/table/sd-table.md#dense-editable-controls-inside-table-cells).

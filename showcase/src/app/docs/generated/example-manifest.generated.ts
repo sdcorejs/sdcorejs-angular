@@ -2206,7 +2206,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "forms/input",
     sectionId: "example-kich-thuoc",
     title: "Kích thước",
-    description: "size='sm' cho UI gọn hơn.",
+    description: "Label, tooltip và dấu bắt buộc cùng hàng ở size sm, kể cả khi có lỗi.",
   },
   {
     sourceKey: "forms/input/example-chinh-sua-noi-tuyen",

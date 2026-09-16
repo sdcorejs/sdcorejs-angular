@@ -10634,9 +10634,14 @@ import { SdInput } from '@sdcorejs/angular/forms/input';
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-kich-thuoc') {
-        <demo-section heading="Kích thước" [props]="[{ name: 'size', value: 'sm' }]" note="size='sm' cho UI gọn hơn.">
-          <div style="width: 320px">
+        <demo-section
+          heading="Kích thước"
+          [props]="[{ name: 'size', value: 'sm' }, { name: 'required', value: 'true' }, { name: 'helperText', value: 'string' }]"
+          note="Label, tooltip và dấu bắt buộc cùng hàng ở size sm, kể cả khi có lỗi.">
+          <div style="width: 320px; max-width: 100%; display: grid; gap: 16px">
             <sd-input label="sm" size="sm" placeholder="VD: NV001" [(model)]="codeSm" [form]="form"></sd-input>
+            <sd-input size="sm" label="Họ và tên" helperText="Nhập họ và tên đầy đủ" required inlineError="Vui lòng nhập thông tin"></sd-input>
+            <sd-input size="sm" label="Trường bắt buộc" required></sd-input>
           </div>
         </demo-section>
       }
@@ -19398,9 +19403,14 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
   },
   "forms/input/example-kich-thuoc": {
     ...SHOWCASE_PAGE_SOURCES["forms/input"],
-    html: `<demo-section heading="Kích thước" [props]="[{ name: 'size', value: 'sm' }]" note="size='sm' cho UI gọn hơn.">
-      <div style="width: 320px">
+    html: `<demo-section
+      heading="Kích thước"
+      [props]="[{ name: 'size', value: 'sm' }, { name: 'required', value: 'true' }, { name: 'helperText', value: 'string' }]"
+      note="Label, tooltip và dấu bắt buộc cùng hàng ở size sm, kể cả khi có lỗi.">
+      <div style="width: 320px; max-width: 100%; display: grid; gap: 16px">
         <sd-input label="sm" size="sm" placeholder="VD: NV001" [(model)]="codeSm" [form]="form"></sd-input>
+        <sd-input size="sm" label="Họ và tên" helperText="Nhập họ và tên đầy đủ" required inlineError="Vui lòng nhập thông tin"></sd-input>
+        <sd-input size="sm" label="Trường bắt buộc" required></sd-input>
       </div>
     </demo-section>`,
   },
