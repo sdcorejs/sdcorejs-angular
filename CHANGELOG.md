@@ -6,6 +6,12 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+### Added
+- Tab group: add per-instance `headerClass`, `headerStyle`, `bodyClass` and `bodyStyle` inputs with reactive cleanup and separate header/body styling.
+
+### Fixed
+- Table: use fixed white backgrounds for quick search and pagination with square corners and no toolbar divider; balance toolbar spacing and retain compact stacking on narrow containers.
+
 ## [2.13] - 2026-09-15
 
 ### Added

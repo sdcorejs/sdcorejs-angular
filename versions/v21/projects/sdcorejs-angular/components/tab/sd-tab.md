@@ -31,6 +31,30 @@ Declarative tab container that wraps Angular Material's `mat-tab-group` with a s
 
 ### Inputs
 
+Per-instance region customization:
+
+| Name | Type | Default | Target |
+| --- | --- | --- | --- |
+| `headerClass` | `string \| null \| undefined` | `undefined` | Space-separated classes on this group's tab header. |
+| `headerStyle` | `SdTabRegionStyle \| null \| undefined` | `undefined` | Inline styles on this group's tab header. |
+| `bodyClass` | `string \| null \| undefined` | `undefined` | Space-separated classes on this group's shared body wrapper. |
+| `bodyStyle` | `SdTabRegionStyle \| null \| undefined` | `undefined` | Inline styles on this group's shared body wrapper. |
+
+`SdTabRegionStyle` is a readonly map of CSS property names to `string | number | null | undefined`. Camel-case names, kebab-case names and CSS custom properties are supported. Include units in dimensional values (`padding: '16px'`); numbers are suitable for unitless properties (`opacity: 0.9`). Null/undefined values omit a property. Replace the object to update styles. Replacing/clearing inputs removes previous customizations while preserving existing Material classes and inline styles.
+
+```html
+<sd-tab-group
+  headerClass="bg-white"
+  bodyClass="p-16"
+  [headerStyle]="{ paddingInline: '8px' }"
+  [bodyStyle]="{ backgroundColor: 'var(--sd-surface)' }">
+  <sd-tab label="Thông tin">Nội dung</sd-tab>
+  <sd-tab label="Lịch sử">Lịch sử</sd-tab>
+</sd-tab-group>
+```
+
+These inputs target only the owning group's regions, across all variants and both header positions. They do not assign classes/styles to nested or sibling groups; inheritable CSS properties still follow normal CSS inheritance. `bodyClass`/`bodyStyle` affect the shared body wrapper, not each tab panel. Classes must be global utilities or declared in global `styles.scss`; consumer component-scoped styles do not cross Material's view encapsulation. Styles apply after browser rendering; they are not included in server-rendered HTML. Avoid overriding layout/animation properties such as `display`, `transform` or `height` unless intentionally changing Material layout.
+
 | Name                | Type                                                                                  | Default     | Notes                                                                                                                                                                                                                                                                                                                                                         |
 | ------------------- | ------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `selectedIndex`     | `number` (model — two-way)                                                            | `0`         | Index of the active tab. Two-way bindable via `[(selectedIndex)]`. Auto-clamped to `[0, tabs.length-1]` when the tab count shrinks.                                                                                                                                                                                                                           |

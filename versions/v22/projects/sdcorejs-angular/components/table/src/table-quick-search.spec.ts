@@ -186,9 +186,26 @@ describe('SdTable quick search integration', () => {
     expect(container.parentElement).toBe(surface);
     expect(surface.contains(element.querySelector('.c-paginator'))).toBeTrue();
     expect(getComputedStyle(surface).backgroundColor).toBe('rgb(255, 255, 255)');
-    expect(getComputedStyle(search).padding).toBe('8px');
+    expect(getComputedStyle(search).padding).toBe('12px 16px');
+    expect(getComputedStyle(search).backgroundColor).toBe('rgb(255, 255, 255)');
+    expect(getComputedStyle(search).borderBottomWidth).toBe('0px');
+    expect(getComputedStyle(search).borderTopLeftRadius).toBe('0px');
     expect(getComputedStyle(surface).overflow).toBe('visible');
     expect(getComputedStyle(container.querySelector('.c-table')!).borderTopLeftRadius).toBe('0px');
+    fixture.destroy();
+  }));
+
+  it('keeps quick search and pagination white even with a consumer-themed surface', fakeAsync(() => {
+    mount();
+    const element: HTMLElement = fixture.nativeElement.querySelector('sd-table');
+    element.style.setProperty('--sd-surface', 'rgb(248, 250, 252)');
+    const search = element.querySelector('sd-table-quick-search')!;
+    const footer = element.querySelector('.c-paginator')!;
+    expect(getComputedStyle(search).backgroundColor).toBe('rgb(255, 255, 255)');
+    expect(getComputedStyle(footer).backgroundColor).toBe(getComputedStyle(search).backgroundColor);
+    expect(getComputedStyle(footer).borderBottomLeftRadius).toBe('0px');
+    element.querySelector('.c-container')!.classList.add('sd-table-mobile');
+    expect(getComputedStyle(footer).backgroundColor).toBe('rgb(255, 255, 255)');
     fixture.destroy();
   }));
 

@@ -317,7 +317,7 @@ Built-in `filter.externalFilters` controls use `size="sm"` and `hideInlineError`
 
 #### Quick search (`filter.quickSearch`)
 
-Quick search, table content and the paginator share one white surface (theme token `--sd-surface`) with 6px outer corners. Quick search has 8px padding on all sides; consumers can render `<sd-table>` directly without an extra background/padding wrapper. The existing table scroll area, sticky headers and loading overlay remain scoped to the table body. Tables without quick search reserve no extra toolbar space.
+Quick search and the paginator use a fixed white background, independent of `--sd-surface`, on desktop and mobile. Quick search has 12px vertical / 16px horizontal padding; its toolbar and the paginator have square corners, with no divider below the toolbar. At container widths of 550px or less, the controls stack while keeping the same outer inset. The table body retains its theme surface. The existing table scroll area, sticky headers and loading overlay remain scoped to the table body. Tables without quick search reserve no extra toolbar space.
 
 Optional row above the table: dropdowns on the left, one keyword input, and an optional consumer template on the right. No search button; **Enter** commits the trimmed term. Typing or blurring does not submit it. Clearing the input removes only the term. Table utilities stay in the footer. The row and its custom slot are absent when `quickSearch` is undefined or `filter.disabled` is true.
 

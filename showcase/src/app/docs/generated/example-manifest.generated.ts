@@ -1408,7 +1408,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "components/tab",
     sectionId: "example-tab-co-ban",
     title: "Tab cơ bản",
-    description: "Existing “Tab cơ bản” scenario preserved from the showcase.",
+    description: "Nền trắng chỉ áp dụng cho header của group này; body giữ nền theme và có khoảng đệm riêng.",
   },
   {
     sourceKey: "components/tab/example-tab-co-icon-badge-disabled",

@@ -3,7 +3,8 @@
   flex: 0 0 auto;
   container-type: inline-size;
   box-sizing: border-box;
-  padding: 8px;
+  padding: 12px 16px;
+  background: #fff;
 }
 .sd-quick-search-row {
   display: flex;
@@ -39,7 +40,7 @@
   padding: 0 8px;
   border: 1px solid var(--sd-border, #e0e3e8);
   border-radius: 6px;
-  background: var(--sd-surface, #fff);
+  background: #fff;
   color: var(--sd-text-secondary, #626872);
 }
 .sd-quick-search-field > sd-icon {

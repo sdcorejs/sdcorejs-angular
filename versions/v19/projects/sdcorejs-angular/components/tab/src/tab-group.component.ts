@@ -1,10 +1,12 @@
 import { NgTemplateOutlet } from '@angular/common';
 import {
+  afterRenderEffect,
   booleanAttribute,
   ChangeDetectionStrategy,
   Component,
   contentChildren,
   effect,
+  ElementRef,
   HostBinding,
   input,
   model,
@@ -22,6 +24,8 @@ export interface SdTabClosedEvent {
   index: number;
   tab: SdTab;
 }
+
+export type SdTabRegionStyle = Readonly<Record<string, string | number | null | undefined>>;
 
 @Component({
   selector: 'sd-tab-group',
@@ -43,6 +47,10 @@ export class SdTabGroup {
   // Same palette consumers use on <sd-badge>, <sd-button>, etc — keeps theming consistent.
   color = input<Color>('primary');
   headerPosition = input<'above' | 'below'>('above');
+  headerClass = input<string | null>();
+  headerStyle = input<SdTabRegionStyle | null>();
+  bodyClass = input<string | null>();
+  bodyStyle = input<SdTabRegionStyle | null>();
   alignTabs = input<'start' | 'center' | 'end'>('start');
   // why: mat-tab-group defaults stretchTabs=true, which makes labels fill the row
   // and overrides alignTabs. Expose this so consumers can opt out and let alignTabs take effect.
@@ -57,6 +65,7 @@ export class SdTabGroup {
   readonly #closeRequests = new WeakMap<SdTab, Promise<boolean>>();
 
   protected matTabGroup = viewChild(MatTabGroup);
+  private readonly matTabElement = viewChild(MatTabGroup, { read: ElementRef<HTMLElement> });
 
   @HostBinding('attr.data-autoId') get autoIdAttr(): string | null {
     return this.autoId() ?? null;
@@ -86,6 +95,21 @@ export class SdTabGroup {
   }
 
   constructor() {
+    // why: Material không có input style cho hai vùng; chỉ chọn con trực tiếp để không chạm group lồng nhau.
+    afterRenderEffect(onCleanup => {
+      const element = this.matTabElement()?.nativeElement;
+      const headerClass = this.headerClass();
+      const headerStyle = this.headerStyle();
+      const bodyClass = this.bodyClass();
+      const bodyStyle = this.bodyStyle();
+      if (!element) return;
+      const restoreHeader = this.#customizeRegion(element.querySelector(':scope > mat-tab-header'), headerClass, headerStyle);
+      const restoreBody = this.#customizeRegion(element.querySelector(':scope > .mat-mdc-tab-body-wrapper'), bodyClass, bodyStyle);
+      onCleanup(() => {
+        restoreHeader();
+        restoreBody();
+      });
+    });
     // why: when the active tab is removed (e.g. parent splices the tabs array),
     // selectedIndex may point past the end. Clamp it back to the last valid index
     // so MatTabGroup doesn't render with a stale selection.
@@ -96,6 +120,35 @@ export class SdTabGroup {
         this.selectedIndex.set(Math.max(0, len - 1));
       }
     });
+  }
+
+  #customizeRegion(
+    element: HTMLElement | null,
+    classes: string | null | undefined,
+    styles: SdTabRegionStyle | null | undefined
+  ): () => void {
+    if (!element) return () => {};
+    const addedClasses = [...new Set(classes?.split(/\s+/).filter(Boolean) ?? [])].filter(name => !element.classList.contains(name));
+    addedClasses.forEach(name => element.classList.add(name));
+    const previousStyles = new Map<string, { value: string; priority: string }>();
+    for (const [key, value] of Object.entries(styles ?? {})) {
+      if (value == null) continue;
+      const property = key.startsWith('--') ? key : key.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`);
+      if (!previousStyles.has(property)) {
+        previousStyles.set(property, {
+          value: element.style.getPropertyValue(property),
+          priority: element.style.getPropertyPriority(property),
+        });
+      }
+      element.style.setProperty(property, String(value));
+    }
+    return () => {
+      addedClasses.forEach(name => element.classList.remove(name));
+      for (const [property, previous] of previousStyles) {
+        if (previous.value) element.style.setProperty(property, previous.value, previous.priority);
+        else element.style.removeProperty(property);
+      }
+    };
   }
 
   selectTab(index: number): void {

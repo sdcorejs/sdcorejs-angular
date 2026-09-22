@@ -6077,9 +6077,12 @@ interface FileTab {
       description="Container tab khai báo — hỗ trợ icon, badge, disabled, closable. Nội dung tab được lazy mount.">
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tab-co-ban') {
-      <demo-section heading="Tab cơ bản" [props]="[{ name: 'label', value: 'text' }]">
+      <demo-section heading="Tab cơ bản" [props]="[{ name: 'label', value: 'text' }, { name: 'headerClass', value: 'bg-white' }, { name: 'bodyClass', value: 'p-16' }]"
+        note="Nền trắng chỉ áp dụng cho header của group này; body giữ nền theme và có khoảng đệm riêng.">
         <div class="full">
-          <sd-tab-group>
+          <sd-tab-group headerClass="bg-white" bodyClass="p-16"
+            [headerStyle]="{ paddingInline: '8px' }"
+            [bodyStyle]="{ backgroundColor: 'var(--sd-surface)' }">
             <sd-tab label="Thông tin">
               <p>Thông tin chung của bản ghi sẽ hiển thị ở đây.</p>
             </sd-tab>
@@ -17649,9 +17652,12 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
   },
   "components/tab/example-tab-co-ban": {
     ...SHOWCASE_PAGE_SOURCES["components/tab"],
-    html: `<demo-section heading="Tab cơ bản" [props]="[{ name: 'label', value: 'text' }]">
+    html: `<demo-section heading="Tab cơ bản" [props]="[{ name: 'label', value: 'text' }, { name: 'headerClass', value: 'bg-white' }, { name: 'bodyClass', value: 'p-16' }]"
+    note="Nền trắng chỉ áp dụng cho header của group này; body giữ nền theme và có khoảng đệm riêng.">
     <div class="full">
-      <sd-tab-group>
+      <sd-tab-group headerClass="bg-white" bodyClass="p-16"
+        [headerStyle]="{ paddingInline: '8px' }"
+        [bodyStyle]="{ backgroundColor: 'var(--sd-surface)' }">
         <sd-tab label="Thông tin">
           <p>Thông tin chung của bản ghi sẽ hiển thị ở đây.</p>
         </sd-tab>

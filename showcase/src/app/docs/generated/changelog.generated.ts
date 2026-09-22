@@ -58,8 +58,39 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
     "unreleased": true,
     "packageVersions": [],
     "summaryMarkdown": "",
-    "markdown": "",
-    "sections": []
+    "markdown": "### Added\n- Tab group: add per-instance `headerClass`, `headerStyle`, `bodyClass` and `bodyStyle` inputs with reactive cleanup and separate header/body styling.\n\n### Fixed\n- Table: use fixed white backgrounds for quick search and pagination with square corners and no toolbar divider; balance toolbar spacing and retain compact stacking on narrow containers.",
+    "sections": [
+      {
+        "key": "added",
+        "title": "Added",
+        "level": 3,
+        "anchor": "unreleased-added",
+        "markdown": "- Tab group: add per-instance `headerClass`, `headerStyle`, `bodyClass` and `bodyStyle` inputs with reactive cleanup and separate header/body styling.",
+        "items": [
+          {
+            "text": "Tab group: add per-instance `headerClass`, `headerStyle`, `bodyClass` and `bodyStyle` inputs with reactive cleanup and separate header/body styling.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      },
+      {
+        "key": "fixed",
+        "title": "Fixed",
+        "level": 3,
+        "anchor": "unreleased-fixed",
+        "markdown": "- Table: use fixed white backgrounds for quick search and pagination with square corners and no toolbar divider; balance toolbar spacing and retain compact stacking on narrow containers.",
+        "items": [
+          {
+            "text": "Table: use fixed white backgrounds for quick search and pagination with square corners and no toolbar divider; balance toolbar spacing and retain compact stacking on narrow containers.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      }
+    ]
   },
   {
     "id": "release-2-13",

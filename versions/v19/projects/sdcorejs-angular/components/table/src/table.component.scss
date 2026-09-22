@@ -317,7 +317,7 @@
     border-radius: 6px 6px 0 0;
   }
   > .c-paginator {
-    border-radius: 0 0 6px 6px;
+    border-radius: 0;
   }
   > .c-loading {
     border-radius: 6px 6px 0 0;
@@ -356,6 +356,9 @@
   .c-empty {
     background-color: var(--sd-surface);
     color: var(--sd-text);
+  }
+  .c-paginator {
+    background-color: #fff;
   }
 }
 
