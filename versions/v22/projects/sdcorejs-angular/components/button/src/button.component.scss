@@ -1,9 +1,9 @@
 @use '../../../assets/scss/core/color.scss' as color;
 @use 'sass:map';
 
-$button-outline-border-color: var(--sd-border-strong, var(--mat-sys-outline, #74777f));
-$button-disabled-border-color: var(--sd-disabled-text, var(--mat-sys-on-surface-variant, #74777f));
-$button-disabled-background-color: var(--sd-disabled-bg, var(--mat-sys-surface-container-highest, #e7e8ed));
+$button-outline-border-color: var(--sd-border-strong, #74777f);
+$button-disabled-border-color: var(--sd-disabled-text, #74777f);
+$button-disabled-background-color: var(--sd-disabled-bg, #e7e8ed);
 $sd-button-black-color: map.get(color.$basic_color_map, 'black');
 
 :host {
@@ -61,7 +61,7 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
       pointer-events: none;
       color: $button-disabled-border-color !important;
       background-color: $button-disabled-background-color !important;
-      border-color: var(--sd-border, var(--mat-sys-outline-variant, #c4c6d0)) !important;
+      border-color: var(--sd-border, #c4c6d0) !important;
 
       // why: secondary và disabled đều là xám; icon đơn cần thêm độ nhạt để phân biệt.
       &.c-text.c-square.mat-secondary sd-icon {

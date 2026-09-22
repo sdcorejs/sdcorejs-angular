@@ -6,6 +6,17 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+### Changed (BREAKING for consumers)
+- Core UI now owns its default colors instead of implicitly inheriting Material system colors. Core styles consume `--sd-*`; Material-only controls retain their own theme configuration.
+- Apps relying on Material-owned Core colors must opt in after loading Core styles:
+
+```diff
+- @include sd.theme();
++ @include sd.theme($source: 'material');
+```
+
+  Existing `sd.theme((...))` overrides remain supported and take precedence over either source.
+
 ### Added
 - Tab group: add per-instance `headerClass`, `headerStyle`, `bodyClass` and `bodyStyle` inputs with reactive cleanup and separate header/body styling.
 

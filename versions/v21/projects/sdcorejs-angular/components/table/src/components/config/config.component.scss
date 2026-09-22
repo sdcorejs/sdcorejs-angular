@@ -1,7 +1,7 @@
 // why: đường kẻ của mat-table mặc định là on-surface ~12% — trên một bảng 7+ dòng toàn control
 // nó đọc thành lưới kẻ đậm. Hạ xuống outline-variant (đường phân cách chuẩn của M3) và chỉ giữ kẻ
 // ngang, để mắt bám theo dòng chứ không phải khung.
-$config-border: var(--mat-sys-outline-variant, rgba(0, 0, 0, 0.08));
+$config-border: var(--sd-border, rgba(0, 0, 0, 0.08));
 
 // why: modal đã chừa lề giống footer; thêm padding ở đây làm viền bảng thụt vào hai lần.
 .c-container {
@@ -36,7 +36,7 @@ $config-border: var(--mat-sys-outline-variant, rgba(0, 0, 0, 0.08));
     font-size: 13px;
     line-height: 18px;
     color: var(--sd-text-secondary, #6b7280);
-    background: var(--mat-sys-surface-container-low, #f7f8fa);
+    background: var(--sd-surface, #f7f8fa);
     white-space: nowrap;
   }
 
@@ -59,7 +59,7 @@ $config-border: var(--mat-sys-outline-variant, rgba(0, 0, 0, 0.08));
   }
 
   .mat-mdc-row:hover .mat-mdc-cell {
-    background: var(--mat-sys-surface-container-low, rgba(0, 0, 0, 0.02));
+    background: var(--sd-surface, rgba(0, 0, 0, 0.02));
   }
 
   // Cột width/toggle chỉ chứa một control nhỏ → co về đúng nội dung, nhường chỗ cho cột tiêu đề.
@@ -127,7 +127,7 @@ sd-checkbox {
 // Cột tắt hiển thị: mờ đi + khoá editor, nhưng ô "Hiển thị" và handle vẫn dùng được.
 .c-row-hidden {
   .mat-mdc-cell {
-    background: var(--mat-sys-surface-container-low, rgba(0, 0, 0, 0.015));
+    background: var(--sd-surface, rgba(0, 0, 0, 0.015));
   }
 
   sd-input,
@@ -146,7 +146,7 @@ sd-checkbox {
 .cdk-drag-preview {
   display: table;
   border-radius: 8px;
-  background: var(--mat-sys-surface, #fff);
+  background: var(--sd-surface, #fff);
   outline: 1px solid var(--sd-primary, #2a66f4);
   box-shadow:
     0 12px 28px rgba(0, 0, 0, 0.16),

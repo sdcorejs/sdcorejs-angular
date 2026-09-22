@@ -105,17 +105,17 @@ projects/sdcorejs-angular/assets/
 
 ## 3. Hệ thống màu sắc
 
-Màu được định nghĩa dưới dạng **CSS custom properties** với prefix `--sd-*`, cho phép override runtime (không cần recompile SCSS). Default theme bridge các token nền tảng sang Angular Material M3 `--mat-sys-*` khi có thể.
+Màu được định nghĩa dưới dạng **CSS custom properties** với prefix `--sd-*`, cho phép override runtime (không cần recompile SCSS). Default theme sở hữu màu độc lập. Dùng `$source: 'material'` để chủ động bật nguồn màu tương thích cũ.
 
 ### 3.1 Color tokens
 
 | Token | CSS variable | Default bridge / fallback | Use for |
 |---|---|---|---|
-| `primary` | `--sd-primary` | `var(--mat-sys-primary, #005cbb)` | Main action color |
+| `primary` | `--sd-primary` | `#005cbb` | Main action color |
 | `primary-light` | `--sd-primary-light` | `color-mix(in srgb, var(--sd-primary) 14%, white)` | Soft primary background |
 | `primary-dark` | `--sd-primary-dark` | `color-mix(in srgb, var(--sd-primary) 84%, black)` | Primary hover/active shade |
 | `primary-contrast` | `--sd-primary-contrast` | `#ffffff` | Text/icon on primary |
-| `secondary` | `--sd-secondary` | `var(--mat-sys-secondary, #5c6270)` | Secondary action/accent |
+| `secondary` | `--sd-secondary` | `#5c6270` | Secondary action/accent |
 | `secondary-light` | `--sd-secondary-light` | `color-mix(in srgb, var(--sd-secondary) 12%, white)` | Soft secondary background |
 | `secondary-dark` | `--sd-secondary-dark` | `color-mix(in srgb, var(--sd-secondary) 84%, black)` | Secondary hover/active shade |
 | `secondary-contrast` | `--sd-secondary-contrast` | `#ffffff` | Text/icon on secondary |
@@ -123,13 +123,13 @@ Màu được định nghĩa dưới dạng **CSS custom properties** với pref
 | `*-light` | `--sd-info-light`, ... | `color-mix(in srgb, var(--sd-*) 14%, white)` | Soft semantic background |
 | `*-dark` | `--sd-info-dark`, ... | `color-mix(in srgb, var(--sd-*) 84%, black)` | Semantic hover/active shade |
 | `*-contrast` | `--sd-info-contrast`, ... | `#ffffff` | Text/icon on semantic color |
-| `surface` | `--sd-surface` | `var(--mat-sys-surface, #fdfbff)` | Page/component surface |
-| `surface-muted` | `--sd-surface-muted` | `var(--mat-sys-surface-container-highest, #e7e8ed)` | Muted neutral background |
-| `text` | `--sd-text` | `var(--mat-sys-on-surface, #1a1b1f)` | Primary text |
-| `text-secondary` | `--sd-text-secondary` | `var(--mat-sys-on-surface-variant, #44474f)` | Secondary text |
+| `surface` | `--sd-surface` | `#fdfbff` | Page/component surface |
+| `surface-muted` | `--sd-surface-muted` | `#e7e8ed` | Muted neutral background |
+| `text` | `--sd-text` | `#1a1b1f` | Primary text |
+| `text-secondary` | `--sd-text-secondary` | `#44474f` | Secondary text |
 | `text-muted` | `--sd-text-muted` | `color-mix(in srgb, var(--sd-text) 62%, transparent)` | Muted text |
-| `border` | `--sd-border` | `var(--mat-sys-outline-variant, #c4c6d0)` | Divider/subtle border |
-| `border-strong` | `--sd-border-strong` | `var(--mat-sys-outline, #74777f)` | Strong border/focus outline |
+| `border` | `--sd-border` | `#c4c6d0` | Divider/subtle border |
+| `border-strong` | `--sd-border-strong` | `#74777f` | Strong border/focus outline |
 | `disabled-bg` | `--sd-disabled-bg` | `color-mix(in srgb, var(--sd-text) 8%, transparent)` | Disabled background |
 | `disabled-text` | `--sd-disabled-text` | `color-mix(in srgb, var(--sd-text) 60%, transparent)` | Disabled text/icon |
 ### 3.2 Color utility classes
@@ -489,7 +489,7 @@ CSS shadow tĩnh, tương đương Angular Material `mat.elevation()` mixin như
 
 ## 14. Custom theme
 
-Host apps can override SDCoreJS semantic tokens with `sd.theme()`. When an app owns the global Angular Material theme, use the Material M3 token API with `mat.theme()`.
+Host apps own Core colors through `sd.theme()`. The default source is `core`: literal base colors and derived `--sd-*` colors. Material-only controls, typography and density remain configured through `mat.theme()`; Core does not globally overwrite Material system colors.
 
 ```scss
 @use '@sdcorejs/angular/assets/scss/themes/default' as sd;
@@ -524,6 +524,20 @@ Prefer Material M3 system variables for Material-facing styles:
 `--mat-sys-primary`, `--mat-sys-on-primary`, `--mat-sys-surface`,
 `--mat-sys-on-surface`, `--mat-sys-error`, `--mat-sys-outline`, and
 `--mat-sys-outline-variant`.
+
+### Material-owned colors (compatibility)
+
+Apps previously relying on Material to recolor Core must opt in explicitly, after loading `sd-core.scss`:
+
+```scss
+html {
+  @include sd.theme($source: 'material');
+  // Consumer overrides take precedence over the selected source:
+  // @include sd.theme((primary: #AE7129), $source: 'material');
+}
+```
+
+Omit `$source` (or use `'core'`) for independent Core colors. Scoped calls emit the full palette within that selector; runtime overrides can use `--sd-primary`, `--sd-surface`, etc. Unknown source names fail Sass compilation. This change does not add presets or dark mode. Overlay content must also be inside the themed scope.
 
 > `sd.theme()` only needs the tokens you want to override; omitted tokens keep their defaults.
 > Keep Material theme configuration in a global stylesheet, not component SCSS.

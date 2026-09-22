@@ -19,10 +19,10 @@
   --md-sys-color-on-secondary-container: #1d192b;
 
   --md-sys-color-surface: var(--sd-surface, #fdfbff);
-  --md-sys-color-surface-container-lowest: var(--mat-sys-surface-container-lowest, #ffffff);
-  --md-sys-color-surface-container-low: var(--mat-sys-surface-container-low, #f7f8fc);
+  --md-sys-color-surface-container-lowest: var(--sd-surface, #ffffff);
+  --md-sys-color-surface-container-low: var(--sd-surface, #f7f8fc);
   --md-sys-color-surface-container: var(--sd-surface-muted, #f0f0f4);
-  --md-sys-color-surface-container-high: var(--mat-sys-surface-container-high, #e9e9ee);
+  --md-sys-color-surface-container-high: var(--sd-surface-muted, #e9e9ee);
   --md-sys-color-surface-container-highest: var(--sd-surface-muted, #e7e8ed);
 
   --md-sys-color-on-surface: var(--sd-text, #1a1b1f);

@@ -178,7 +178,7 @@
     // why: KHÔNG set background — mat-option để trong suốt (`background: rgba(0,0,0,0)`) và ăn nền
     // panel, vốn là surface-container của M3 chứ không phải trắng. Hardcode #fff làm row nổi lên
     // như một mảng trắng giữa danh sách xám.
-    border-bottom: 1px solid var(--mat-sys-outline-variant, #f2f2f2);
+    border-bottom: 1px solid var(--sd-border, #f2f2f2);
 
     // why: mượn đúng state-layer token mà Material dùng cho option hover, để row sáng lên y hệt
     // các dòng bên dưới; fallback cho theme M2 chưa có token M3.
