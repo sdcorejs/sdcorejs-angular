@@ -499,6 +499,35 @@ describe('SdSidebarV1Panel', () => {
 
     beforeEach(async () => createRealTemplate());
 
+    it('keeps the focused Material branch exposed through collapse and expansion', () => {
+      const parent = fixture.nativeElement.querySelector('mat-nested-tree-node.expanded') as HTMLElement;
+      const toggle = parent.querySelector('button[aria-expanded]') as HTMLButtonElement;
+      parent.focus();
+      expect(document.activeElement).toBe(parent);
+      expect(parent.closest('[aria-hidden="true"]')).toBeNull();
+      expect(toggle.getAttribute('aria-expanded')).toBe('true');
+
+      toggle.click();
+      fixture.detectChanges();
+      expect(toggle.getAttribute('aria-expanded')).toBe('false');
+      expect(document.activeElement).toBe(parent);
+      expect(parent.closest('[aria-hidden="true"]')).toBeNull();
+
+      toggle.click();
+      fixture.detectChanges();
+      expect(toggle.getAttribute('aria-expanded')).toBe('true');
+      expect(parent.closest('[aria-hidden="true"]')).toBeNull();
+    });
+
+    it('exposes the focused nested route and its visible label', () => {
+      const parent = fixture.nativeElement.querySelector('mat-nested-tree-node.expanded') as HTMLElement;
+      const route = parent.querySelector('mat-nested-tree-node a[href]') as HTMLAnchorElement;
+      route.focus();
+      expect(document.activeElement).toBe(route);
+      expect(route.closest('[aria-hidden="true"]')).toBeNull();
+      expect(route.textContent).toContain(users.title);
+    });
+
     it('uses the full menu height while keeping the user footer below the icon rail', () => {
       const children: SdLayoutMenu[] = Array.from({ length: 30 }, (_, index) => ({
         id: `item-${index}`,

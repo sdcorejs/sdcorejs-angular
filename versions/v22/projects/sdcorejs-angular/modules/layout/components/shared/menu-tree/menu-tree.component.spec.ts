@@ -22,6 +22,19 @@ describe('SdLayoutMenuTreeComponent', () => {
     fixture.detectChanges();
   });
 
+  it('keeps V2 nested route and pin controls exposed while focused', () => {
+    const root = fixture.nativeElement as HTMLElement;
+    const controls = root.querySelectorAll<HTMLElement>('button');
+    expect(controls.length).toBeGreaterThan(0);
+    for (const control of controls) {
+      control.focus();
+      expect(document.activeElement).toBe(control);
+      expect(control.closest('[aria-hidden="true"]')).toBeNull();
+      const label = control.querySelector('.sd-layout-menu-tree__label');
+      if (label) expect(label.closest('[aria-hidden="true"]')).toBeNull();
+    }
+  });
+
   it('renders hierarchical route items with active-route semantics', () => {
     const routeItems = fixture.nativeElement.querySelectorAll('[data-menu-route]');
     expect(routeItems.length).toBe(2);

@@ -269,6 +269,8 @@ V2 and the mobile variants retain the shared Soft-pill search surface. V3 deskto
 
 V3 desktop renders navigation icons only for first-level menu entries (including `iconUrl`). Nested groups and routes use text, 16px indentation steps and subtle ancestor rails; the current route has a primary marker and `aria-current="page"`. Long titles wrap. Search results, Pinned and Recent are text-only shortcuts. Pin/search/collapse/account icons remain action controls. Keyboard focus reveals pin actions; coarse-pointer route and pin targets are at least 44px. The shared tree's default presentation leaves V2/mobile styling unchanged.
 
+Visible V1 Material tree items and V2 shared menu controls remain exposed to assistive technology while focused. Do not put `aria-hidden="true"` on an interactive node, its route label, or an ancestor. Decorative disclosure icons may remain hidden. Regression tests cover V1 branch expansion/collapse and nested routes, plus V2 route and pin focus.
+
 ## Built-in page tabs
 
 All three built-in pages register themselves with `<sd-tab-router>` via `@SdTabComponent`, so opening them in a tabbed shell shows a proper icon + localized label instead of an empty tab:

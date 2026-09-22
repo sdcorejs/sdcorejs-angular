@@ -1281,6 +1281,8 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     if (this.#destroyed) return;
     const optionRevision = this.#optionRevision;
     const sourceOption = this.option();
+    // why: input có thể đã đổi trước khi effect reset cấu hình/filter của option cũ.
+    if (this.#optionInstance !== sourceOption) return;
     if (!this.#configurationReady) {
       if (this.#retryConfiguration) await this.#retryConfiguration();
       while (

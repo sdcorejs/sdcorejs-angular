@@ -29,6 +29,11 @@ trước. Refresh trong lúc lookup khởi tạo đang chạy chờ hydrate rồ
 Lỗi đọc paging vẫn retry đúng snapshot thất bại như bên dưới. Không cần bật
 auto-cache/dedupe cho POST để bảo đảm một initial read.
 
+Nếu gọi `reload()` trước effect khởi tạo hoặc ngay sau khi input `option` đổi,
+lời gọi kết thúc an toàn và lần khởi tạo option mới sẽ tải dữ liệu. Không gọi
+loader của option cũ trong khoảng chờ effect; reload đang chờ lookup cũng bị bỏ
+qua khi option đổi hoặc component bị hủy.
+
 ## Trạng thái đọc server và retry
 
 `readState()` là signal readonly `SdReadState`; `(sdReadStateChange)` phát snapshot
