@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ErrorHandler } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, flush, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -79,6 +79,39 @@ describe('SdTabRouterOutletComponent (integration)', () => {
     fixture.detectChanges();
 
     outletCmp = fixture.debugElement.query(By.directive(SdTabRouterOutletComponent)).componentInstance as SdTabRouterOutletComponent;
+  });
+
+  describe('activation error recovery', () => {
+    for (const retrySameUrl of [false, true]) {
+      it(`keeps navigation alive after an activation rejects (${retrySameUrl ? 'same URL retry' : 'another menu'})`, async () => {
+        await navigateAndStabilize(router, fixture, '/a');
+        const service = TestBed.inject(SdTabRouterService);
+        const originalSetCurrentTab = service.setCurrentTab.bind(service);
+        const failure = new Error('Synthetic tab activation failure');
+        let failOnce = true;
+        spyOn(service, 'setCurrentTab').and.callFake(tab => {
+          if (tab?.url === '/b' && failOnce) {
+            failOnce = false;
+            throw failure;
+          }
+          originalSetCurrentTab(tab);
+        });
+        const reportError = spyOn(TestBed.inject(ErrorHandler), 'handleError');
+
+        await navigateAndStabilize(router, fixture, '/b');
+        expect(reportError).toHaveBeenCalledOnceWith(failure);
+        expect(outletCmp.tabs().filter(tab => tab.isActive).map(tab => tab.url)).toEqual(['/a']);
+
+        const destination = retrySameUrl ? '/b' : '/c';
+        await navigateAndStabilize(router, fixture, destination, {
+          state: retrySameUrl ? { forceReload: true } : { replaceTab: true },
+        });
+        expect(outletCmp.tabs().filter(tab => tab.isActive).map(tab => tab.url)).toEqual([destination]);
+        expect(fixture.nativeElement.querySelector(`.tab-router__pane.active [data-cy="page-${retrySameUrl ? 'b' : 'c'}"]`)).not.toBeNull();
+        expect(reportError).toHaveBeenCalledTimes(1);
+        expect(outletCmp.tabs().length).toBe(retrySameUrl ? 2 : 1);
+      });
+    }
   });
 
   describe('navigation → tab creation', () => {

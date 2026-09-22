@@ -48,6 +48,7 @@ Browser-style multi-tab router shell — every navigated route becomes a tab; ta
 None.
 
 ### Behaviors
+- A failed router-event activation is reported through Angular's `ErrorHandler` without terminating the router subscription. Later menu navigation and explicit same-URL retries continue to work; the failed activation is not retried automatically.
 
 - Listens to raw router events only (it never unwraps `Scroll`): `RoutesRecognized` captures `extras.state`, `NavigationEnd` applies the route after redirects, `NavigationSkipped` handles an explicitly forced same-URL reload, and `NavigationCancel` / `NavigationError` discard pending state
 - Navigation state is snapshotted synchronously before serialized async handling. In-flight state is stored by navigation id so overlapping navigations cannot overwrite one another

@@ -2,6 +2,7 @@ import {
   afterNextRender,
   booleanAttribute,
   Component,
+  ErrorHandler,
   Injector,
   OnDestroy,
   Type,
@@ -26,8 +27,8 @@ import {
 } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { from, Subject, Subscription, isObservable, lastValueFrom } from 'rxjs';
-import { concatMap, filter, map } from 'rxjs/operators';
+import { defer, EMPTY, Subject, Subscription, isObservable, lastValueFrom } from 'rxjs';
+import { catchError, concatMap, filter, map } from 'rxjs/operators';
 
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
 import { I18nService } from '@sdcorejs/angular/i18n';
@@ -62,6 +63,7 @@ export class SdTabRouterOutletComponent implements OnDestroy {
   tabs = signal<SdTabRouterTab[]>([]);
 
   #router = inject(Router);
+  #errorHandler = inject(ErrorHandler);
   #injector = inject(Injector);
   #tabRouterService = inject(SdTabRouterService);
   #sdNotifyService = inject(SdNotifyService);
@@ -108,7 +110,15 @@ export class SdTabRouterOutletComponent implements OnDestroy {
           ),
           // Serialize: #handleEvent async (await getBestInjector). 2 nav liên tiếp
           // không await xen kẽ → tránh race đọc this.tabs() = [] khi tab đầu chưa kịp set.
-          concatMap(context => from(this.#handleEvent(context)))
+          concatMap(context =>
+            defer(() => this.#handleEvent(context)).pipe(
+              // why: Cô lập lỗi từng lần chuyển tab để router.events tiếp tục nhận menu sau đó.
+              catchError(error => {
+                this.#errorHandler.handleError(error);
+                return EMPTY;
+              })
+            )
+          )
         )
         .subscribe()
     );
