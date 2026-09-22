@@ -1,0 +1,52 @@
+// Core-owned light palettes. Semantic state colors are inherited from default.
+$presets: (
+  'default': (),
+  'ocean': (
+    primary: #005cbb, primary-light: #e6f0fa, primary-dark: #004a96,
+    surface: #ffffff, surface-muted: #f1f5f9,
+    text: #182230, text-secondary: #475569,
+    border: #cbd5e1, border-strong: #64748b,
+  ),
+  'indigo': (
+    primary: #4f46e5, primary-light: #eeecfd, primary-dark: #3730a3,
+    surface: #ffffff, surface-muted: #f4f4fa,
+    text: #232238, text-secondary: #56546c,
+    border: #d5d3e3, border-strong: #76738d,
+  ),
+  'teal': (
+    primary: #0f766e, primary-light: #e5f3f1, primary-dark: #115e59,
+    surface: #ffffff, surface-muted: #f0f7f6,
+    text: #18302d, text-secondary: #47635f,
+    border: #c9dcd8, border-strong: #637f79,
+  ),
+  'copper': (
+    primary: #9a6324, primary-light: #f8efe4, primary-dark: #6b4414,
+    surface: #ffffff, surface-muted: #f4f2f1,
+    text: #302820, text-secondary: #665a4d,
+    border: #dcd3c9, border-strong: #8c7a67,
+  ),
+  'slate': (
+    primary: #475569, primary-light: #e9edf2, primary-dark: #334155,
+    surface: #ffffff, surface-muted: #f5f6f8,
+    text: #1e293b, text-secondary: #526174,
+    border: #cdd4dd, border-strong: #6b7a8e,
+  ),
+  'forest': (
+    primary: #356447, primary-light: #e8f0e9, primary-dark: #244831,
+    surface: #ffffff, surface-muted: #f3f6f0,
+    text: #253128, text-secondary: #53634f,
+    border: #cfd9c9, border-strong: #72826c,
+  ),
+  'plum': (
+    primary: #7b3f80, primary-light: #f2eaf4, primary-dark: #592b60,
+    surface: #ffffff, surface-muted: #f7f3f8,
+    text: #302334, text-secondary: #68576d,
+    border: #dccfdf, border-strong: #8c7492,
+  ),
+  'rose': (
+    primary: #a33d62, primary-light: #faeaf0, primary-dark: #7d2849,
+    surface: #ffffff, surface-muted: #faf4f5,
+    text: #35262c, text-secondary: #70565f,
+    border: #e1cfd6, border-strong: #997480,
+  ),
+);

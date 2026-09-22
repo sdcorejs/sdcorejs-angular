@@ -1,5 +1,6 @@
 @use "sass:map";
 @use "../core/color";
+@use "./presets";
 
 $default-theme: (
   primary: #005cbb,
@@ -63,14 +64,21 @@ $material-source-theme: (
   border-strong: var(--mat-sys-outline, #74777f),
 );
 
-@mixin theme($theme: (), $source: 'core') {
+@mixin theme($theme: (), $source: 'core', $preset: 'default') {
   @if $source != 'core' and $source != 'material' {
     @error "Unknown Core UI theme source '#{$source}'. Use 'core' or 'material'.";
+  }
+  @if not map.has-key(presets.$presets, $preset) {
+    @error "Unknown Core UI preset '#{$preset}'. Available: #{map.keys(presets.$presets)}.";
+  }
+  @if $source == 'material' and $preset != 'default' {
+    @error "Core UI presets require $source: 'core'. Material source only supports $preset: 'default'.";
   }
   $base: $default-theme;
   @if $source == 'material' {
     $base: map.merge($base, $material-source-theme);
   }
+  $base: map.merge($base, map.get(presets.$presets, $preset));
   $theme: map.merge($base, $theme);
 
   @each $color in color.$public-colors {

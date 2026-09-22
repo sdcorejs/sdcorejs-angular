@@ -18,6 +18,7 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
   Existing `sd.theme((...))` overrides remain supported and take precedence over either source.
 
 ### Added
+- Theme: add eight Core-owned light presets (`ocean`, `indigo`, `teal`, `copper`, `slate`, `forest`, `plum`, `rose`) through `sd.theme($preset: ...)`, with consumer override precedence, invalid-argument guards, palette contrast tests and complete style-guide usage/migration guidance. The default palette and existing mixin calls remain unchanged.
 - Tab group: add per-instance `headerClass`, `headerStyle`, `bodyClass` and `bodyStyle` inputs with reactive cleanup and separate header/body styling.
 
 ### Fixed

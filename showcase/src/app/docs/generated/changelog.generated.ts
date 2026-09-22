@@ -58,7 +58,7 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
     "unreleased": true,
     "packageVersions": [],
     "summaryMarkdown": "",
-    "markdown": "### Changed (BREAKING for consumers)\n- Core UI now owns its default colors instead of implicitly inheriting Material system colors. Core styles consume `--sd-*`; Material-only controls retain their own theme configuration.\n- Apps relying on Material-owned Core colors must opt in after loading Core styles:\n\n```diff\n- @include sd.theme();\n+ @include sd.theme($source: 'material');\n```\n\n  Existing `sd.theme((...))` overrides remain supported and take precedence over either source.\n\n### Added\n- Tab group: add per-instance `headerClass`, `headerStyle`, `bodyClass` and `bodyStyle` inputs with reactive cleanup and separate header/body styling.\n\n### Fixed\n- Table: use fixed white backgrounds for quick search and pagination with square corners and no toolbar divider; balance toolbar spacing and retain compact stacking on narrow containers.",
+    "markdown": "### Changed (BREAKING for consumers)\n- Core UI now owns its default colors instead of implicitly inheriting Material system colors. Core styles consume `--sd-*`; Material-only controls retain their own theme configuration.\n- Apps relying on Material-owned Core colors must opt in after loading Core styles:\n\n```diff\n- @include sd.theme();\n+ @include sd.theme($source: 'material');\n```\n\n  Existing `sd.theme((...))` overrides remain supported and take precedence over either source.\n\n### Added\n- Theme: add eight Core-owned light presets (`ocean`, `indigo`, `teal`, `copper`, `slate`, `forest`, `plum`, `rose`) through `sd.theme($preset: ...)`, with consumer override precedence, invalid-argument guards, palette contrast tests and complete style-guide usage/migration guidance. The default palette and existing mixin calls remain unchanged.\n- Tab group: add per-instance `headerClass`, `headerStyle`, `bodyClass` and `bodyStyle` inputs with reactive cleanup and separate header/body styling.\n\n### Fixed\n- Table: use fixed white backgrounds for quick search and pagination with square corners and no toolbar divider; balance toolbar spacing and retain compact stacking on narrow containers.",
     "sections": [
       {
         "key": "changed",
@@ -95,8 +95,13 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
         "title": "Added",
         "level": 3,
         "anchor": "unreleased-added",
-        "markdown": "- Tab group: add per-instance `headerClass`, `headerStyle`, `bodyClass` and `bodyStyle` inputs with reactive cleanup and separate header/body styling.",
+        "markdown": "- Theme: add eight Core-owned light presets (`ocean`, `indigo`, `teal`, `copper`, `slate`, `forest`, `plum`, `rose`) through `sd.theme($preset: ...)`, with consumer override precedence, invalid-argument guards, palette contrast tests and complete style-guide usage/migration guidance. The default palette and existing mixin calls remain unchanged.\n- Tab group: add per-instance `headerClass`, `headerStyle`, `bodyClass` and `bodyStyle` inputs with reactive cleanup and separate header/body styling.",
         "items": [
+          {
+            "text": "Theme: add eight Core-owned light presets (`ocean`, `indigo`, `teal`, `copper`, `slate`, `forest`, `plum`, `rose`) through `sd.theme($preset: ...)`, with consumer override precedence, invalid-argument guards, palette contrast tests and complete style-guide usage/migration guidance. The default palette and existing mixin calls remain unchanged.",
+            "ordered": false,
+            "children": []
+          },
           {
             "text": "Tab group: add per-instance `headerClass`, `headerStyle`, `bodyClass` and `bodyStyle` inputs with reactive cleanup and separate header/body styling.",
             "ordered": false,

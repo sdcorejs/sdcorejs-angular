@@ -537,10 +537,121 @@ html {
 }
 ```
 
-Omit `$source` (or use `'core'`) for independent Core colors. Scoped calls emit the full palette within that selector; runtime overrides can use `--sd-primary`, `--sd-surface`, etc. Unknown source names fail Sass compilation. This change does not add presets or dark mode. Overlay content must also be inside the themed scope.
+Omit `$source` (or use `'core'`) for independent Core colors. Scoped calls emit the full palette within that selector; runtime overrides can use `--sd-primary`, `--sd-surface`, etc. Unknown source names fail Sass compilation. Overlay content must also be inside the themed scope.
 
 > `sd.theme()` only needs the tokens you want to override; omitted tokens keep their defaults.
 > Keep Material theme configuration in a global stylesheet, not component SCSS.
+
+### 14.1 Choose a preset
+
+Core ships eight **light** presets in addition to the unchanged `default` palette. They change colors only; typography, spacing, density and corner radius remain unchanged. No dark palette is included.
+
+In the consumer's global `styles.scss`, load Core first, then emit the selected palette:
+
+```scss
+@use '@sdcorejs/angular/assets/scss/sd-core';
+@use '@sdcorejs/angular/assets/scss/themes/default' as sd;
+
+html {
+  color-scheme: light;
+  @include sd.theme($preset: 'ocean');
+}
+```
+
+If `sd-core.scss` is already configured in `angular.json`, do not import it a second time. Keep your override stylesheet after the Core stylesheet in the styles list so that Core defaults do not overwrite it. Importing `themes/default` alone does not install the complete Core component stylesheet.
+
+| Preset | Direction | Primary | Primary light | Primary dark | Surface muted |
+|---|---|---|---|---|---|
+| `ocean` | Clear, familiar blue | `#005CBB` | `#E6F0FA` | `#004A96` | `#F1F5F9` |
+| `indigo` | Distinctive blue-violet | `#4F46E5` | `#EEECFD` | `#3730A3` | `#F4F4FA` |
+| `teal` | Calm blue-green | `#0F766E` | `#E5F3F1` | `#115E59` | `#F0F7F6` |
+| `copper` | Warm brown | `#9A6324` | `#F8EFE4` | `#6B4414` | `#F4F2F1` |
+| `slate` | Minimal neutral | `#475569` | `#E9EDF2` | `#334155` | `#F5F6F8` |
+| `forest` | Muted natural green | `#356447` | `#E8F0E9` | `#244831` | `#F3F6F0` |
+| `plum` | Restrained purple | `#7B3F80` | `#F2EAF4` | `#592B60` | `#F7F3F8` |
+| `rose` | Warm muted pink | `#A33D62` | `#FAEAF0` | `#7D2849` | `#FAF4F5` |
+
+All eight presets use `surface: #FFFFFF` and `primary-contrast: #FFFFFF`.
+
+| Preset | Text | Text secondary | Border | Border strong |
+|---|---|---|---|---|
+| `ocean` | `#182230` | `#475569` | `#CBD5E1` | `#64748B` |
+| `indigo` | `#232238` | `#56546C` | `#D5D3E3` | `#76738D` |
+| `teal` | `#18302D` | `#47635F` | `#C9DCD8` | `#637F79` |
+| `copper` | `#302820` | `#665A4D` | `#DCD3C9` | `#8C7A67` |
+| `slate` | `#1E293B` | `#526174` | `#CDD4DD` | `#6B7A8E` |
+| `forest` | `#253128` | `#53634F` | `#CFD9C9` | `#72826C` |
+| `plum` | `#302334` | `#68576D` | `#DCCFDF` | `#8C7492` |
+| `rose` | `#35262C` | `#70565F` | `#E1CFD6` | `#997480` |
+
+Unlisted tokens inherit the default map in section 3: secondary, info, success, warning, error and their variants keep the same meaning across presets. `text-muted`, `disabled-bg` and `disabled-text` remain derived from `--sd-text`. A preset emits the entire public color token set, not just its differences.
+
+### 14.2 Mixin contract and overrides
+
+```scss
+@mixin theme($theme: (), $source: 'core', $preset: 'default');
+```
+
+| Parameter | Accepted values | Default |
+|---|---|---|
+| `$theme` | Map of public color tokens from section 3 | `()` |
+| `$source` | `'core'`, `'material'` | `'core'` |
+| `$preset` | `'default'` and the eight lowercase names above | `'default'` |
+
+For the Core source, precedence is **default → preset → consumer overrides**. Existing `sd.theme()`, `sd.theme((...))`, and positional `sd.theme((), 'material')` calls remain valid. Unknown preset/source names fail Sass compilation. Combining `$source: 'material'` with any non-default preset also fails: choose one palette owner.
+
+```scss
+html {
+  @include sd.theme((
+    primary: #6B4414,
+    primary-light: #F4F2F1,
+    primary-dark: #4A2F0E,
+    surface-muted: #F7F5F2,
+  ), $preset: 'copper');
+}
+```
+
+Preset `primary-light` and `primary-dark` are explicit designed values. Overriding only `primary` does **not** recalculate those two colors; override all three when changing the brand family. The `default` palette retains its existing `color-mix()` variants. Runtime `--sd-primary` overrides have the same rule. Do not pass `sd.$default-theme` as your override map when selecting a preset: that full map intentionally overrides the preset values.
+
+### 14.3 Per-screen and runtime switching
+
+Emit one palette per selector in a global stylesheet, then toggle that selector. Sass itself does not run in the browser.
+
+```scss
+html { @include sd.theme($preset: 'ocean'); }
+html[data-core-theme='forest'] { @include sd.theme($preset: 'forest'); }
+html[data-core-theme='plum'] { @include sd.theme($preset: 'plum'); }
+
+// Optional per-screen override; sibling screens keep the root palette.
+.customer-screen { @include sd.theme($preset: 'copper'); }
+```
+
+```ts
+// Browser event handler; guard DOM access when using SSR.
+document.documentElement.dataset['coreTheme'] = 'forest';
+// Restore the root Ocean palette:
+delete document.documentElement.dataset['coreTheme'];
+```
+
+Root switching also reaches overlays attached under `body`. A local screen class does not reach dialogs/select panels rendered outside that screen; apply the theme at the root or arrange the same theme scope on the overlay container. A nested full palette overrides inherited parent tokens.
+
+### 14.4 Material integration and accessibility
+
+These presets own **Core color tokens**, not the full Material palette. They do not rewrite global `--mat-sys-*`. Core styling that consumes `--sd-*` changes immediately; Material-only styles still follow the consumer's `mat.theme()` configuration. Keep that distinction when testing focus, ripples, calendars, dialogs and third-party controls. Font/density configuration remains separate.
+
+Table quick-search/footer backgrounds intentionally remain fixed white; a global `surface` override does not change those regions. Tab header/body classes and inline styles also take precedence where supplied.
+
+The preset tests verify white text against primary and primary-dark at **at least 4.5:1**, primary/secondary body text against surface and surface-muted at **at least 4.5:1**, and strong control borders against those surfaces at **at least 3:1**. Subtle `border` is for dividers, not the sole boundary of an interactive control. These checks are palette checks, not a claim that every component/state is accessibility-certified. Recheck actual rendered states after consumer overrides; retain labels/icons for status information.
+
+### 14.5 Troubleshooting and verification
+
+- **Unknown preset:** names are lowercase and case-sensitive; use `'ocean'`, not `'Ocean'`.
+- **No color change:** verify stylesheet order and inspect `--sd-primary` on the affected element; check local classes, inline styles and nested theme scopes.
+- **Material control differs:** its remaining Material styles need separate Material configuration; presets do not implicitly synchronize the two systems.
+- **Unexpected hover tint after override:** set `primary-light` and `primary-dark` as well as `primary`.
+- **Overlay differs from screen:** use a root theme or theme the overlay container in the global stylesheet.
+
+Library maintainers can run `npm run test:theme` from the repository root after installing canonical `versions/v19` dependencies. It compiles consumer Sass and covers all eight presets, token completeness, contrast pairs, override precedence, isolated selectors, legacy Material mode and invalid arguments. Edit only v19 and run `npm run sync` for derived versions.
 
 ---
 
