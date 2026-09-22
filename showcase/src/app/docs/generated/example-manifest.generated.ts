@@ -163,6 +163,7 @@ export type ShowcaseExampleSourceKey =
   | "components/table/example-action-da-chon-co-menu-con"
   | "components/table/example-cell-template-tuy-chinh"
   | "components/table/example-chon-mot-dong"
+  | "components/table/example-column-aggregate"
   | "components/table/example-dong-mo-rong"
   | "components/table/example-external-filters"
   | "components/table/example-filter-onchange"
@@ -1647,6 +1648,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-cell-template-tuy-chinh",
     title: "Cell template tùy chỉnh",
     description: "Existing “Cell template tùy chỉnh” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/table/example-column-aggregate",
+    pageKey: "components/table",
+    sectionId: "example-column-aggregate",
+    title: "Column aggregate",
+    description: "Tổng độc lập phía trên footer: local page/filtered, COUNT, grouped headers, row groups, tree và lazy children. Server filtered không được hỗ trợ; chỉ tính page hoặc tự cung cấp nghiệp vụ tổng bên ngoài table.",
   },
   {
     sourceKey: "components/table/example-footer-tong-hop",

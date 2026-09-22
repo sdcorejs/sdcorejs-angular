@@ -12,10 +12,20 @@ import { SdTableOptionSelector } from './table-option-selector.model';
 import { SdTableOptionSort } from './table-option-sort.model';
 import { SdTableOptionStyle } from './table-option-style.model';
 import { SdTableOptionTree } from './table-option-tree.model';
+import type { SdTableOptionAggregate } from './table-aggregate.model';
 
 export type SdTableOption<T = any> = SdTableLocalOption<T> | SdTableServerOption<T>;
 
 interface SdTableBaseOption<T = any> {
+  /**
+   * Data scope and optional group/tree subtotals for column.aggregate. Independent of sdTableFooterDef.
+   * @defaultValue page scope, no subtotals, tree items='leaves'
+   * @remarks A visible aggregate column enables the total row automatically. Server filtered scope is incomplete
+   * and never silently falls back to page; missing lazy descendants also remain incomplete.
+   * @example `{ aggregate: { scope: 'filtered', group: true } }` summarizes all matching local rows.
+   * @see SdTableOptionAggregate
+   */
+  aggregate?: SdTableOptionAggregate;
   /**
    * Key định danh của table option.
    * Thường dùng khi một số tính năng con cần lưu trạng thái riêng theo table,

@@ -486,6 +486,234 @@ None. All callbacks live inside the `option` object (`onSelect`, `onReload`, `co
 - `tableRef.onClearSelection(items?)` — clear selected rows (defaults to all)
 - `tableRef.detectChanges()` — force CD
 
+## Column aggregate — tổng và subtotal độc lập với footer
+
+Khai báo `aggregate` trên ít nhất một **leaf column đang hiển thị** để tự hiện hàng
+tổng ngay phía trên footer. Không cần khai báo `option.aggregate` cho trường hợp
+thông thường. Footer `sdTableFooterDef` vẫn nhận `{ items: SdTableItem<T>[], column }`;
+aggregate nhận **raw `T`**, không có wrapper, group header hay summary row.
+Paginator giữ nguyên vị trí và số bản ghi. Aggregate không tham gia selection,
+row click, command, drag/drop, sort hoặc export dữ liệu nghiệp vụ.
+
+```ts
+const option: SdTableOption<Order> = {
+  type: 'local', items: () => orders,
+  columns: [
+    { field: 'name', title: 'Tên', type: 'string', aggregate: 'COUNT' },
+    { field: 'amount', title: 'Số tiền', type: 'number', aggregate: 'SUM' },
+    { field: 'active', title: 'Active', type: 'boolean', aggregate: 'COUNT' },
+    { field: 'date', title: 'Ngày đầu tiên', type: 'date', aggregate: 'MIN' },
+    { field: 'updated', title: 'Cập nhật cuối', type: 'datetime', aggregate: 'MAX' },
+  ],
+};
+```
+
+### Built-in, COUNT và dữ liệu rỗng
+
+| Loại cột | Built-in hợp lệ |
+| --- | --- |
+| `number` | `SUM`, `AVERAGE`, `COUNT`, `MIN`, `MAX` |
+| `date`, `datetime` | `COUNT`, `MIN`, `MAX` |
+| `string`, `boolean`, `time`, `values`, `lazy-values` | `COUNT` |
+
+Mọi data column đều dùng được callback hoặc template. Cột cha `type: 'children'`
+chỉ nhóm header; cấu hình aggregate trên từng con. Selection/STT/command/filler
+không nhận aggregate và luôn để trống. TypeScript từ chối built-in sai loại cột,
+`time` với MIN/MAX, callback async và object `{}` rỗng. Runtime cũng kiểm tra
+phép tính; cấu hình sai/callback ném lỗi được báo qua `console.error`, cell hiển
+thị placeholder `--`, `isComplete=false`, không che lỗi bằng số 0.
+
+`COUNT` đếm **số dòng có raw field được xem là có giá trị**, độc lập với type,
+label lookup, HTML, `column.transform` hay format:
+
+- Bỏ qua `null`, `undefined`, chuỗi rỗng/whitespace, `[]`, `NaN`, `Infinity`,
+  `-Infinity`, `Invalid Date`.
+- Vẫn đếm `0`, `false`, `{}`, `[null]`, mảng không rỗng và chuỗi không rỗng.
+  Mỗi dòng tối đa một lần, không đếm phần tử mảng hoặc duyệt sâu.
+- `values`/`lazy-values` đếm raw key/mảng key, không chờ label để quyết định có giá trị.
+- `aggregate: items => items.length` đếm tất cả bản ghi trong scope; khác COUNT.
+
+Ví dụ raw values `[null, undefined, '', '  ', [], 0, false, {}, [null]]`:
+COUNT = **4**, `items.length` = **9**. Chuỗi `'invalid date'` vẫn được COUNT đếm;
+COUNT không parse ngày hay kiểm tra nghiệp vụ theo type.
+
+SUM/AVERAGE/MIN/MAX number dùng number hữu hạn hoặc numeric string được
+`NumberUtilities.isNumber`/number formatter hiện có chấp nhận. Loại boolean,
+chuỗi trống và chuỗi locale như `'1.200.000 đ'`; không tự parse tiền tệ.
+AVERAGE chia cho **số number hợp lệ**, không lấy COUNT làm mẫu số.
+MIN/MAX date/datetime nhận `Date`, epoch milliseconds hoặc date string mà native
+`Date` parse được, cùng semantics với local sort. ISO kèm timezone so sánh theo
+instant; hiển thị theo date/datetime formatter hiện có của ứng dụng. Không thêm
+parser cho ngày địa phương hoặc so sánh chuỗi đã format.
+
+Sau khi tải thành công tập hợp rỗng: SUM/COUNT = `0`; AVERAGE/MIN/MAX = `null`.
+Renderer dùng `SdFormatNumberPipe`, `SdFormatDatePipe` hoặc `SdFormatDatetimePipe`;
+COUNT luôn là số nguyên. `null`/`undefined` hiển thị `--` theo convention table.
+Callback trả string được escape thành text. Không gọi `column.transform` với
+row giả; custom HTML phải đi qua `templateRef`.
+
+### Callback và TemplateRef có typed context
+
+`column.aggregate` nhận một trong các dạng sau:
+
+```ts
+aggregate: 'SUM'
+aggregate: (items, context) => `${context.scope}: ${items.length} bản ghi`
+aggregate: { calculate: items => items.filter(item => item.active).length }
+aggregate: { templateRef: summaryTemplate }
+aggregate: { calculate: 'SUM', templateRef: summaryTemplate }
+aggregate: { calculate: items => items.length, templateRef: summaryTemplate }
+```
+
+Callback đồng bộ, thuần, không mutate array/data hoặc gọi API. Result public là
+`string | number | boolean | Date | null | undefined`; Promise/Observable không
+được hỗ trợ. `calculate` quyết định giá trị, `templateRef` quyết định cách render.
+Template-only có `value=undefined`; dùng `items` và context để hiển thị.
+
+| Context | Ý nghĩa |
+| --- | --- |
+| `column` | Leaf data column đang tính |
+| `kind` | `'total'`, `'group'`, `'tree'` |
+| `scope` | Scope yêu cầu `'page'` hoặc `'filtered'` |
+| `group` | Khi subtotal nhóm: `{ key, values }`, values là raw group fields |
+| `parent` | Khi subtotal nhánh: raw parent, không nằm trong subtotal items |
+| `isComplete` | Đầy đủ trong scope/node set yêu cầu, không phải toàn database |
+| `$implicit`, `items` | Chỉ trên template: cùng readonly raw item array |
+| `value` | Chỉ trên template: kết quả calculate, hoặc undefined |
+
+Imports public từ `@sdcorejs/angular/components/table`:
+`SdTableAggregateOperation`, `SdTableAggregateResult`, `SdTableAggregateCallback`,
+`SdTableAggregateContext`, `SdTableAggregateTemplateContext<T, R>`,
+`SdTableAggregateGroup`, `SdTableAggregateDefinition`, `SdTableColumnAggregate`,
+`SdTableOptionAggregate`.
+
+Ví dụ standalone hoàn chỉnh; static query được resolve trước `ngOnInit`, tránh
+đọc `viewChild.required()` trước khi template sẵn sàng:
+
+```ts
+import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
+import {
+  SdTable, SdTableOption, SdTableAggregateTemplateContext, SdMaterialFooterDefDirective,
+} from '@sdcorejs/angular/components/table';
+
+interface Order { name: string; amount: number | null; }
+
+@Component({
+  selector: 'app-order-totals',
+  imports: [SdTable, DecimalPipe, SdMaterialFooterDefDirective],
+  template: `
+    <ng-template #summary let-items let-value="value" let-kind="kind" let-isComplete="isComplete">
+      @if (isComplete) {
+        <strong>{{ value | number:'1.0-2' }}</strong>
+        <small>{{ kind }} · {{ items.length }} bản ghi</small>
+      } @else { <span>Chưa đủ dữ liệu</span> }
+    </ng-template>
+    @if (option) {
+      <sd-table [option]="option">
+        <ng-template sdTableFooterDef="amount" let-items="items">
+          Footer riêng: {{ items.length }} dòng trên trang
+        </ng-template>
+      </sd-table>
+    }
+  `,
+})
+export class OrderTotals implements OnInit {
+  @ViewChild('summary', { static: true }) summary!: TemplateRef<SdTableAggregateTemplateContext<Order, number | null>>;
+  option?: SdTableOption<Order>;
+  ngOnInit(): void {
+    this.option = {
+      type: 'local', items: () => [{ name: 'A', amount: 40 }, { name: 'B', amount: 60 }],
+      aggregate: { scope: 'filtered' },
+      columns: [
+        { field: 'name', title: 'Tên', type: 'string', aggregate: (items, ctx) =>
+          ctx.kind === 'group' ? 'Tổng nhóm' : ctx.scope === 'page' ? 'Tổng trang' : 'Tổng sau lọc' },
+        { field: 'amount', title: 'Số tiền', type: 'number',
+          aggregate: { calculate: 'SUM', templateRef: this.summary } },
+      ],
+    };
+  }
+}
+```
+
+Để dùng template-only, bỏ `calculate` và đổi nội dung template sang hiển thị
+`items/context`; `value` sẽ undefined. Table không tự chèn label vào cell đã có
+aggregate. Callback ở cột `name` trong ví dụ trên minh họa label do consumer chọn.
+
+### Scope, grouping, tree và dữ liệu chưa đầy đủ
+
+```ts
+aggregate: {
+  scope: 'page',       // default; hoặc 'filtered' cho local
+  group: false,        // default; true để thêm subtotal nhóm
+  tree: {
+    items: 'leaves',   // default; hoặc 'roots', 'all'
+    subtotal: false,   // default; true để thêm subtotal nhánh
+  },
+}
+```
+
+- `page`: raw rows thuộc trang hiện tại sau filter/sort/pagination. Không lấy
+  selected rows hoặc DOM viewport làm nguồn tính.
+- `filtered`: toàn bộ kết quả local sau filter, trước pagination. Ví dụ 50 bản
+  ghi khớp, pageSize 10: page có tối đa 10 giá trị, filtered tối đa 50.
+- Server: trang tải xong có thể complete với scope page. Không lấy pagination
+  `total` làm COUNT, không tự tải thêm trang. Server filtered báo diagnostic và
+  `isComplete=false`; built-in trả undefined, **không fallback thành page**.
+  Callback/template nhận phần dữ liệu sẵn có và cờ incomplete. Chưa có contract
+  backend aggregate trong API này.
+- Loading ẩn snapshot cũ; lỗi hoặc required filter chưa hợp lệ không trở thành
+  tổng 0 của một dataset rỗng thành công. `isComplete` mô tả dữ liệu trong scope.
+- `group:true` thêm subtotal cuối nội dung nhóm đang mở. Thu gọn ẩn subtotal
+  của nhóm, không đổi grand total hay tính lại callback. Nhóm theo nhiều fields
+  hiện là **combined bucket**, không phải nested row groups. Group AVERAGE và
+  grand AVERAGE luôn tính từ raw items, không average-of-averages.
+- Grouped headers hiện hỗ trợ một cấp `children`. Chỉ leaf đang hiển thị tham
+  gia aggregate, theo thứ tự/visibility của grid. Parent không có merged summary.
+  Hidden/invisible child bị loại khỏi cả header/body/aggregate; sticky child
+  đồng bộ với body. Không mở rộng thêm nested header/group capability.
+- `option.aggregate.tree` không bật tree mode. Khi có `option.tree`, tree ưu
+  tiên hơn row grouping theo hành vi table hiện tại.
+
+| `tree.items` | Grand total | Subtotal nhánh |
+| --- | --- | --- |
+| `roots` | Các root thuộc scope | Các con trực tiếp của parent |
+| `leaves` | Các leaf đã xác định | Leaf bên dưới parent |
+| `all` | Mọi node, gồm cha và con | Mọi descendant, loại parent |
+
+Cha 100, hai con 40 và 60: grand roots=100, leaves=100, all=200. Shared descendants
+được tính một lần trong từng phép tính; không cộng lại subtotal vào tổng. Collapse
+hoặc `maxDepth` hiển thị không loại raw node đã có. Static tree filter giữ/prune
+nhánh theo pipeline hiện có; parent đã biết có children không trở thành leaf chỉ
+vì các con bị filter ẩn.
+
+Lazy node chưa tải children và chưa được xác định là leaf không được tính như
+leaf. Thiếu descendants cần dùng khiến leaves/all incomplete; roots vẫn complete
+nếu các root cần tính đã có. Subtotal roots cần children trực tiếp đã tải.
+Built-in incomplete trả undefined và placeholder; callback/template có thể ghi
+“Chưa đủ dữ liệu”. Mở nhánh tải children (kể cả kết quả rỗng) cập nhật snapshot;
+aggregate không tự gọi loader.
+
+### Lifecycle, sticky và mobile
+
+Kết quả, text và context được tính một lần theo data/config lifecycle. Filter,
+paging, `reload()`, đổi option/cấu hình và lazy load cập nhật aggregate. Sau khi
+sửa data tại chỗ, gọi API hiện có `table.detectChanges()` để invalidation; dùng
+`reload(false)` để áp lại filter/pagination hoặc `reload()` để tải nguồn mới.
+Chỉ resize/reposition, selection, collapse/expand dữ liệu đã có hoặc một lần
+Angular change detection không chạy lại reducer/callback.
+
+Aggregate và footer là hai Material footer rows hợp lệ, tổng đứng trước footer.
+Sticky offset đo theo chiều cao thực tế, có theo dõi thay đổi kích thước template
+nhiều dòng. Mobile card mode dùng cùng snapshot cho vùng tổng và subtotal; không
+có engine tính riêng. Table hiện không có virtual-scroll viewport; aggregate
+không phụ thuộc số DOM rows đang render.
+
+Showcase **Column aggregate** có bộ dữ liệu với `null`, `undefined`, `''`, `[]`,
+`0`, `false`, lựa chọn numeric operation và page/filtered, COUNT string/boolean/
+array, date MIN/datetime MAX, callback, template-only, built-in + template,
+footer cùng tổng, grouped headers, nhóm dòng, static tree và lazy caveat.
+
 ## Content projection (slots / directive children)
 
 - `[sdTableCellDef]="'<field>'"` — custom cell template per column. Inside `<ng-template sdTableCellDef="fieldName" let-row>...</ng-template>`.

@@ -16,6 +16,7 @@
     "check:sync": "node scripts/check-version-sync.mjs",
     "test:theme": "node --test scripts/core-theme.test.mjs",
     "check:table-mobile-consumer": "node scripts/check-table-mobile-consumer.mjs",
+    "check:table-aggregate-consumer": "node scripts/check-table-aggregate-consumer.mjs",
     "collect-docs": "node scripts/collect-docs.mjs",
     "collect-release-docs": "node scripts/collect-release-docs.mjs",
     "generate:showcase-changelog": "node scripts/generate-showcase-changelog.mjs",

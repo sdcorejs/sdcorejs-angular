@@ -1,0 +1,41 @@
+<ng-template #amountSummary let-items let-value="value" let-kind="kind" let-isComplete="isComplete">
+  @if (isComplete) {
+    <strong>{{ value | number: '1.0-2' }}</strong>
+    <div class="T12R">{{ kind === 'group' ? 'Nhóm' : 'Tổng' }} · {{ items.length }} bản ghi</div>
+  } @else {
+    <span>Chưa đủ dữ liệu</span>
+  }
+</ng-template>
+<ng-template #labelSummary let-items let-scope="scope" let-kind="kind" let-value="value">
+  <strong>{{ kind === 'group' ? 'Tổng nhóm' : scope === 'page' ? 'Tổng trang' : 'Tổng sau lọc' }}</strong>
+  <div class="T12R">{{ items.length }} bản ghi · template-only</div>
+</ng-template>
+<div class="d-flex flex-wrap gap-8 mb-12">
+  <sd-button title="Scope: trang" (click)="scope.set('page')" />
+  <sd-button title="Scope: sau lọc" (click)="scope.set('filtered')" />
+  @for (op of operations; track op) {
+    <sd-button [title]="op" (click)="operation.set(op)" />
+  }
+</div>
+<p>Cột Số tiền: {{ operation() }}. COUNT đếm ô có giá trị, vẫn tính 0 và false; mảng rỗng không được tính.</p>
+@if (option(); as current) {
+  <sd-table autoId="aggregate" [option]="current">
+    <ng-template sdTableFooterDef="name" let-items="items">
+      <div>Footer riêng: {{ items.length }} dòng</div>
+      <small>Chỉ dữ liệu của trang hiện tại.</small>
+    </ng-template>
+    <ng-template [sdTableRowMobileDef]="current" let-item="item">
+      <strong>{{ item.name }}</strong>
+      <div>{{ item.amount ?? '—' }}</div>
+    </ng-template>
+  </sd-table>
+}
+<div class="d-flex flex-wrap gap-8 mt-16 mb-12">
+  <sd-button title="Tree: leaves" (click)="treeMode.set('leaves')" />
+  <sd-button title="Tree: roots" (click)="treeMode.set('roots')" />
+  <sd-button title="Tree: all" (click)="treeMode.set('all')" />
+</div>
+<p>Cha 100, con 40 + 60: roots/leaves = 100, all = 200. Thu gọn nhánh không đổi tổng.</p>
+<sd-table autoId="aggregate-tree" [option]="treeOption()" />
+<p class="mt-16">Lazy: tổng leaves chưa đầy đủ cho đến khi mở nhánh tải dữ liệu. Aggregate không tự gọi API.</p>
+<sd-table autoId="aggregate-lazy" [option]="lazyOption" />

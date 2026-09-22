@@ -30,6 +30,7 @@ import { CommandPipe } from '../command/pipes/command.pipe';
 import { SdTableMobileAction } from './mobile-action.model';
 import { SdTableMobileActionsComponent } from './mobile-actions.component';
 import { collectFormattedTreeRows } from '../../services/tree/tree.util';
+import type { AggregateRow } from '../../services/table-aggregate.util';
 
 interface Card<T> {
   row: SdTableItem<T>;
@@ -66,6 +67,8 @@ const INTERACTIVE =
 export class SdTableMobileCardsComponent<T = unknown> implements OnDestroy {
   readonly table = input.required<SdTable<T>>();
   readonly rows = input.required<SdTableItem<T>[]>();
+  readonly dataRows = input<SdTableItem<T>[]>();
+  readonly aggregateTemplate = input<TemplateRef<{ summary: AggregateRow<T> }>>();
   readonly groupTemplate = input.required<TemplateRef<{ item: SdTableItem<T> }>>();
   readonly #i18n = inject(I18nService);
   readonly #document = inject(DOCUMENT);
@@ -92,8 +95,8 @@ export class SdTableMobileCardsComponent<T = unknown> implements OnDestroy {
     const option = this.option();
     let index = 0;
     return this.rows().map(row => {
-      const dataIndex = row.meta.group?.isGroupHeader ? -1 : index++;
-      if (row.meta.group?.isGroupHeader)
+      const dataIndex = table.isDataRow(0, row) ? index++ : -1;
+      if (dataIndex === -1)
         return {
           row,
           label: '',
@@ -183,7 +186,7 @@ export class SdTableMobileCardsComponent<T = unknown> implements OnDestroy {
         this.resolvedCommands.set(new Map());
       });
       for (const row of rows) {
-        if (row.meta.group?.isGroupHeader) continue;
+        if (!this.table().isDataRow(0, row)) continue;
         sdResolveTableCommands(row, commands)
           .then(resolved => {
             if (revision !== this.#commandRevision) return;

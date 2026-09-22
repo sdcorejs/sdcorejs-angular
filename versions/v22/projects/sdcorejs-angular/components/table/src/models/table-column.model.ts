@@ -3,12 +3,14 @@ import { SdBadge } from '@sdcorejs/angular/components/badge';
 import type { SdSearch } from '@sdcorejs/angular/forms/models';
 import { NestedKeyOf, Operator } from '@sdcorejs/utils/models';
 import { SdUnwrapSignal } from '@sdcorejs/angular/utilities/models';
+import type { SdTableAggregateOperation, SdTableColumnAggregate } from './table-aggregate.model';
 
 export type SdTableColumn<T = unknown> =
   | SdTableColumnText<T>
   | SdTableColumnNumber<T>
   | SdTableColumnBool<T>
   | SdTableColumnDate<T>
+  | SdTableColumnTime<T>
   | SdTableColumnValues<T>
   | SdTableColumnLazyValues<T>
   | SdTableColumnChildren<T>;
@@ -70,7 +72,20 @@ interface ColumnCellOption {
   };
 }
 
-interface SdTableColumnBase<T = unknown> {
+interface SdTableColumnBase<T = unknown, O extends SdTableAggregateOperation = 'COUNT'> {
+  /**
+   * Independent summary above the existing footer. Omit to leave this column's summary cell empty.
+   * Number: SUM/AVERAGE/COUNT/MIN/MAX; date/datetime: COUNT/MIN/MAX; other data columns: COUNT.
+   * Callbacks receive raw readonly items and scope/completeness context; strings render as escaped text.
+   * @defaultValue undefined
+   * @remarks COUNT counts nonempty raw field values, not items.length. It excludes null/undefined,
+   * blank strings, empty arrays, nonfinite numbers and invalid Dates, but includes 0/false/{}/[null].
+   * Configure data scope/subtotals with option.aggregate; templates and calculations can be combined.
+   * @example `aggregate: 'SUM'`
+   * @example `aggregate: items => items.length`
+   * @see SdTableAggregateDefinition.templateRef for a complete Angular example.
+   */
+  aggregate?: SdTableColumnAggregate<T, O>;
   title: string | ColumnTitleOption;
   cell?: ColumnCellOption;
   width?: string;
@@ -109,7 +124,7 @@ interface SdTableColumnText<T = unknown> extends SdTableColumnBase<T> {
   useBadge?: UseBadgeFunc<T>;
 }
 
-interface SdTableColumnNumber<T = unknown> extends SdTableColumnBase<T> {
+interface SdTableColumnNumber<T = unknown> extends SdTableColumnBase<T, SdTableAggregateOperation> {
   field: NestedKeyOf<T>;
   type: 'number';
   useBadge?: UseBadgeFunc<T>;
@@ -126,9 +141,16 @@ interface SdTableColumnBool<T = unknown> extends SdTableColumnBase<T> {
   };
 }
 
-interface SdTableColumnDate<T = unknown> extends SdTableColumnBase<T> {
+interface SdTableColumnDate<T = unknown> extends SdTableColumnBase<T, 'COUNT' | 'MIN' | 'MAX'> {
   field: NestedKeyOf<T>;
-  type: 'date' | 'datetime' | 'time';
+  type: 'date' | 'datetime';
+  useBadge?: UseBadgeFunc<T>;
+  filter?: SdTableColumnBase<T>['filter'] & { type?: 'daterange' | 'date' | 'split-date' };
+}
+
+interface SdTableColumnTime<T = unknown> extends SdTableColumnBase<T> {
+  field: NestedKeyOf<T>;
+  type: 'time';
   useBadge?: UseBadgeFunc<T>;
   filter?: SdTableColumnBase<T>['filter'] & { type?: 'daterange' | 'date' | 'split-date' };
 }
@@ -168,6 +190,8 @@ export interface SdTableColumnLazyValues<T = unknown, K = Record<string, any>> e
 export type SdTableColumnNormal<T = unknown> = Exclude<SdTableColumn<T>, SdTableColumnChildren<T>>;
 
 export interface SdTableColumnChildren<T = unknown> extends SdTableColumnBase<T> {
+  /** Parent headers have no data value; configure aggregates on their leaf children. */
+  aggregate?: never;
   field: string;
   type: 'children';
   children: SdTableColumnNormal<T>[];

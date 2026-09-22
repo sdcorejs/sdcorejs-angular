@@ -5,6 +5,14 @@ import { ConfiguredColumn, ConfiguredTable, ConfiguredTableResult } from '../mod
 import { SdTableOption } from '../models/table-option.model';
 import { ISdTableConfiguration, SD_TABLE_CONFIGURATION } from '../configurations';
 import { Utilities } from '@sdcorejs/utils/fns';
+import { SdTableColumn } from '../models/table-column.model';
+
+// Aggregate templates contain Angular view references; they must never enter the storage-key hash.
+function storageColumns(columns: SdTableColumn[]): SdTableColumn[] {
+  return columns.map(({ aggregate: _aggregate, ...column }) =>
+    column.type === 'children' ? { ...column, children: storageColumns(column.children) as typeof column.children } : column
+  );
+}
 
 @Injectable()
 export class ConfigService {
@@ -35,7 +43,7 @@ export class ConfigService {
   #loadConfiguredTable = (option: SdTableOption): SdStorageWithDefault<ConfiguredTable> => {
     // Nếu không có key thì không lấy được setting
     if (!option?.key) {
-      return this.storageService.create<ConfiguredTable>(Utilities.hash(option), {
+      return this.storageService.create<ConfiguredTable>(Utilities.hash({ ...option, columns: storageColumns(option.columns) }), {
         type: 'session', // Nếu không có key thì lưu theo session
         default: this.#default(option),
       });
@@ -77,7 +85,11 @@ export class ConfigService {
     const { selector, group } = option || {};
     const commands = option?.command?.commands || option?.commands || [];
     const isCommandRight = option?.command?.align === 'right' || false; // 👈 thêm dòng này
-    const columns = option?.columns?.filter(e => !e.hidden) || [];
+    const columns = (option?.columns?.filter(e => !e.hidden) || [])
+      .map(column =>
+        column.type === 'children' ? { ...column, children: column.children.filter(child => !child.hidden && !child.invisible) } : column
+      )
+      .filter(column => column.type !== 'children' || column.children.length > 0);
     if (selector?.visible) {
       result.firstHeaders.push(this.#COLUMNS.SELECTION);
       result.displayedColumns.push(this.#COLUMNS.SELECTION);
@@ -139,6 +151,7 @@ export class ConfigService {
 
           if (column.type === 'children') {
             column.children?.forEach(childColumn => {
+              if (col.fixed || childColumn.fixed) result.fixedColumn[childColumn.field] = { width: childColumn.width };
               result.secondColumns.push(childColumn);
               result.secondHeaders.push(childColumn.field);
               result.displayedColumns.push(childColumn.field);
@@ -159,6 +172,7 @@ export class ConfigService {
         result.displayedColumns.push(column.field);
         if (column.type === 'children') {
           column.children?.forEach(childColumn => {
+            if (column.fixed || childColumn.fixed) result.fixedColumn[childColumn.field] = { width: childColumn.width };
             result.secondColumns.push(childColumn);
             result.secondHeaders.push(childColumn.field);
             result.displayedColumns.push(childColumn.field);

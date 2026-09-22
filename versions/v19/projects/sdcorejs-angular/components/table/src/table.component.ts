@@ -44,7 +44,7 @@ import { SdTableMobileActionsComponent } from './components/mobile-cards/mobile-
 import { SdTableMobileAction } from './components/mobile-cards/mobile-action.model';
 import { SdTableMobileCardsComponent } from './components/mobile-cards/mobile-cards.component';
 import { SdViewportService } from '@sdcorejs/angular/services/viewport';
-import { SdTableColumn } from './models/table-column.model';
+import { SdTableColumn, SdTableColumnNormal } from './models/table-column.model';
 import { SdTableCommand } from './models/table-command.model';
 import { SdTableOption } from './models/table-option.model';
 import {
@@ -67,7 +67,12 @@ import { SdDataState, SdDataStateTemplateDirective } from '@sdcorejs/angular/com
 import { cloneReadRequest, SdReadChannel, SdReadState } from '@sdcorejs/angular/utilities/read-state';
 import { SdQuickAction } from '@sdcorejs/angular/components/quick-action';
 import { SdHoverCopyDirective, SdScrollDirective } from '@sdcorejs/angular/directives';
-import { SdSafeHtmlPipe } from '@sdcorejs/angular/pipes';
+import { SdSafeHtmlPipe, SdFormatDatePipe, SdFormatDatetimePipe, SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
+import { EMPTY_STR } from '@sdcorejs/utils/constants';
+import { AggregateRenderHost, SdAggregateRowsPipe } from './pipes/sd-aggregate-rows.pipe';
+import { AggregateSnapshot, buildAggregateSnapshot } from './services/table-aggregate.util';
+import { SdTableAggregateOperation, SdTableAggregateResult } from './models/table-aggregate.model';
+import { SdAggregateLayoutDirective, SdTableFooterRowDefDirective } from './directives/sd-aggregate-layout.directive';
 
 import { Operator } from '@sdcorejs/utils/models';
 import { Utilities } from '@sdcorejs/utils/fns';
@@ -255,6 +260,9 @@ const EMPTY_COMMANDS: SdTableCommand[] = [];
     MobileFilterComponent,
     SdGroupPipe,
     SdTreePipe,
+    SdAggregateRowsPipe,
+    SdAggregateLayoutDirective,
+    SdTableFooterRowDefDirective,
     SdSafeHtmlPipe,
     SdScrollDirective,
     SdHoverCopyDirective,
@@ -370,6 +378,27 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
   loading = signal(false);
   loadError = signal(false);
+  readonly aggregateSnapshot = signal<AggregateSnapshot<T>>({ groups: new Map(), branches: new Map() });
+  readonly aggregateRenderHost: AggregateRenderHost<T> = { rows: new WeakMap(), indices: new WeakMap() };
+  #aggregateFilteredItems: SdTableItem<T>[] = [];
+  #aggregateReady = false;
+  #aggregateScopeComplete = false;
+  readonly #aggregateLoadedChildren = new Set<T>();
+  readonly aggregateColumns = computed(() => {
+    const config = this.configuration();
+    if (!config) return [];
+    const commandRight = this.tableOption()?.command?.align === 'right';
+    const columns = new Map([...config.firstColumns, ...config.secondColumns].map(column => [column.field, column]));
+    return config.displayedColumns.map(field => ({
+      id: `sdAggregate-${field}`,
+      field,
+      column: columns.get(field),
+      hidden: columns.get(field)?.type === 'children',
+      sticky: !!config.fixedColumn[field] || field === 'sdSelection' || field === 'sdIndex' || (field === 'sdCommand' && !commandRight),
+      stickyEnd: field === 'sdSubInformationAction' || (field === 'sdCommand' && commandRight),
+    }));
+  });
+  readonly aggregateColumnIds = computed(() => this.aggregateColumns().map(column => column.id));
   isSelectAll = signal(false);
   isSelectIndeterminate = signal(false);
   readonly sortState = signal<{ active: string; direction: SortDirection }>({ active: '', direction: '' });
@@ -521,6 +550,52 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   readonly #i18n = inject(I18nService);
   #tableFormatService = inject(TableFormatService);
   #tableExportService = inject(TableExportService);
+  readonly #aggregateNumber = inject(SdFormatNumberPipe);
+  readonly #aggregateDate = inject(SdFormatDatePipe);
+  readonly #aggregateDatetime = inject(SdFormatDatetimePipe);
+
+  #refreshAggregate(): void {
+    const configuredOption = this.tableOption();
+    if (!configuredOption || !this.#aggregateReady) return;
+    const inputOption = this.option();
+    const option = { ...configuredOption, aggregate: inputOption.aggregate };
+    const config = this.configuration();
+    const sourceColumns = new Map<string, SdTableColumnNormal<T>>(
+      inputOption.columns.flatMap(column => (column.type === 'children' ? column.children : [column])).map(column => [column.field, column])
+    );
+    const leaves = [...(config?.firstColumns ?? []), ...(config?.secondColumns ?? [])]
+      .filter(column => column.type !== 'children')
+      .map(column => ({ ...column, aggregate: sourceColumns.get(column.field)?.aggregate })) as SdTableColumnNormal<T>[];
+    const roots = (option.aggregate?.scope === 'filtered' && option.type === 'local' ? this.#aggregateFilteredItems : this.items()).map(
+      row => row.data
+    );
+    this.aggregateSnapshot.set(
+      buildAggregateSnapshot({
+        columns: leaves,
+        roots,
+        option,
+        complete: !this.loadError() && this.#aggregateScopeComplete,
+        loadedChildren: this.#aggregateLoadedChildren,
+        predicate: this.#treeSearchPredicate,
+        format: (value, column, operation) => this.#formatAggregate(value, column, operation),
+        diagnose: error => console.error(error),
+      })
+    );
+    this.#ref.markForCheck();
+  }
+
+  #formatAggregate(value: SdTableAggregateResult, column: SdTableColumnNormal<T>, operation?: SdTableAggregateOperation): string {
+    if (value == null) return EMPTY_STR;
+    if (typeof value === 'number') return this.#aggregateNumber.transform(value, operation === 'COUNT' ? 0 : undefined) ?? EMPTY_STR;
+    if (value instanceof Date)
+      return (column.type === 'datetime' ? this.#aggregateDatetime.transform(value) : this.#aggregateDate.transform(value)) ?? EMPTY_STR;
+    return String(value);
+  }
+
+  #clearAggregate(): void {
+    this.#aggregateReady = false;
+    this.aggregateSnapshot.set({ groups: new Map(), branches: new Map() });
+  }
 
   // Expose state signals từ TableExportService cho template binding.
   exporting = this.#tableExportService.exporting;
@@ -707,6 +782,9 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   };
 
   #resetStateForNewOption = () => {
+    this.#clearAggregate();
+    this.#aggregateLoadedChildren.clear();
+    this.#aggregateFilteredItems = [];
     this.#configurationReady = false;
     this.#cancelReload();
     this.#hydration = undefined;
@@ -796,6 +874,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
   #hydrateConfiguration = async (option: SdTableOption, configuration: ConfiguredTable, valid: () => boolean): Promise<void> => {
     if (!valid()) return;
+    this.#clearAggregate();
     this.#configurationReady = false;
     this.#cancelReload();
     this.#failedRead = undefined;
@@ -887,6 +966,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     this.#treeSearchPredicate = result.treeSearchPredicate;
     return {
       items: result.items,
+      filteredItems: result.filteredItems,
       total: result.total,
     };
   };
@@ -964,11 +1044,14 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   ): Promise<
     | {
         items: SdTableItem<T>[];
+        filteredItems?: SdTableItem<T>[];
+        aggregateComplete?: boolean;
         total: number;
         readRevision?: number;
       }
     | undefined
   > => {
+    this.#clearAggregate();
     this.loading.set(true);
     if (force || this.tableOption()?.type === 'server') this.loadError.set(false);
     this.#ref.detectChanges();
@@ -978,7 +1061,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     let validQuickSearch = quickSearchValid(this.quickSearchOption(), filterReq.quickSearch);
     if (opt.type === 'local' && !validQuickSearch) {
       this.loading.set(false);
-      return { items: [], total: 0 };
+      return { items: [], total: 0, aggregateComplete: false };
     }
     if (opt.type === 'server') {
       const { items, onFilter } = opt;
@@ -1008,6 +1091,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
         return {
           items: [],
           total: 0,
+          aggregateComplete: false,
         };
       }
       const snapshot = cloneReadRequest(filterReq);
@@ -1040,6 +1124,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
         data = [];
       }
       if (!Array.isArray(data)) {
+        this.loadError.set(true);
         this.#notifyService.warning(this.#i18n.t('core.component.table.not-an-array'));
         data = [];
       }
@@ -1057,6 +1142,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   };
 
   #runServerRead = async (request: ServerReadRequest<T>) => {
+    this.#clearAggregate();
     const revision = this.#read.begin(request.valid);
     this.#failedRead = undefined;
     this.loading.set(true);
@@ -1112,12 +1198,15 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   };
 
   #render = async (
-    args: { items: SdTableItem<T>[]; total: number; readRevision?: number } | undefined,
+    args:
+      | { items: SdTableItem<T>[]; filteredItems?: SdTableItem<T>[]; aggregateComplete?: boolean; total: number; readRevision?: number }
+      | undefined,
     scrollTop = true,
     additionArgs?: { fromSource?: 'PAGING' | 'RELOAD' }
   ) => {
     if (this.#destroyed) return;
     if (!args || (args.readRevision !== undefined && !this.#read.isCurrent(args.readRevision))) return;
+    const optionRevision = this.#optionRevision;
     if (scrollTop) {
       this.scroll()?.scrollTop();
     }
@@ -1146,6 +1235,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
         treeSearchPredicate: this.#treeSearchPredicate,
       });
       await this.#expandDefaultBranches(this.items(), treeOpt);
+      if (optionRevision !== this.#optionRevision) return;
       if (args.readRevision !== undefined && !this.#read.isCurrent(args.readRevision)) return;
       this.treeRevision.update(n => n + 1);
     }
@@ -1164,13 +1254,19 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     this.#applyRowStyles();
 
     await this.tableOption()?.reload?.onReload?.(this.items(), additionArgs);
+    if (optionRevision !== this.#optionRevision) return;
     if (args.readRevision !== undefined && !this.#read.isCurrent(args.readRevision)) return;
+    this.#aggregateFilteredItems = args.filteredItems ?? args.items;
+    this.#aggregateScopeComplete = args.aggregateComplete !== false;
+    this.#aggregateReady = true;
+    this.#refreshAggregate();
     this.#updateSelectedItems();
     this.#syncSelectAllState();
 
     setTimeout(() => {
       if (this.#destroyed || (args.readRevision !== undefined && !this.#read.isCurrent(args.readRevision))) return;
       this.table()?.updateStickyColumnStyles();
+      this.table()?.updateStickyFooterRowStyles();
     }, 0);
   };
 
@@ -1330,6 +1426,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       return;
     }
 
+    let loadedChildren = false;
     try {
       // isLazyTree() narrow treeOpt về TableOptionTreeLazy → truy cập onExpandChildren an toàn.
       if (isLazyTree(treeOpt) && hasLazyChildren(row, treeOpt)) {
@@ -1337,7 +1434,10 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
         this.#ref.markForCheck();
         const key = getChildrenKey(treeOpt);
         const result = await Promise.resolve(treeOpt.onExpandChildren(row.data));
+        if (this.#destroyed || treeOpt !== this.tableOption()?.tree) return;
         (row.data as Record<string, unknown>)[key] = Array.isArray(result) ? result : [];
+        this.#aggregateLoadedChildren.add(row.data);
+        loadedChildren = true;
         row.meta.tree.hasChildren = resolveHasChildren(row, treeOpt);
       }
       await this.#ensureChildItemsFormatted(row);
@@ -1362,6 +1462,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       // Children mới format + level/isExpanded vừa đổi → refresh cache rowStyle.
       this.#applyRowStyles();
       this.treeRevision.update(n => n + 1);
+      if (loadedChildren) this.#refreshAggregate();
       this.#restorePreservedSelection();
       this.#updateSelectedItems();
       this.#syncSelectAllState();
@@ -1575,7 +1676,8 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
    * Data row dùng displayedColumns nguyên vẹn.
    */
   isGroupHeaderRow = (_idx: number, row: SdTableItem<T>): boolean => row?.meta?.group?.isGroupHeader === true;
-  isDataRow = (_idx: number, row: SdTableItem<T>): boolean => row?.meta?.group?.isGroupHeader !== true;
+  isAggregateRow = (_idx: number, row: SdTableItem<T>): boolean => this.aggregateRenderHost.rows.has(row);
+  isDataRow = (_idx: number, row: SdTableItem<T>): boolean => row?.meta?.group?.isGroupHeader !== true && !this.isAggregateRow(_idx, row);
 
   /**
    * Colspan cho cell sdGroupHeader trên group row = displayedColumns.length.
@@ -1693,6 +1795,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
   detectChanges = () => {
     this.dataRevision.update(value => value + 1);
+    this.#refreshAggregate();
     this.#updateSelectedItems();
     this.#syncSelectAllState();
   };
@@ -1770,5 +1873,6 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       result.fromIndex,
       result.toIndex
     );
+    this.#refreshAggregate();
   }
 }

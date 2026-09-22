@@ -609,3 +609,16 @@
     border-top-right-radius: 0;
   }
 }
+// Summaries use Core surface tokens and share the table grid, including sticky cells.
+.sd-aggregate-row,
+.sd-aggregate-total,
+.sd-mobile-aggregate {
+  background: color-mix(in srgb, var(--sd-surface-muted) 35%, var(--sd-surface));
+  color: var(--sd-text);
+  font-weight: 500;
+}
+
+.sd-aggregate-cell {
+  background: inherit;
+  border-top: 1px solid var(--sd-border);
+}

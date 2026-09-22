@@ -17,6 +17,7 @@ export interface FilterLocalItemsOption<T> {
 
 export interface FilterLocalItemsResult<T, TItem> {
   items: TItem[];
+  filteredItems: TItem[];
   total: number;
   treeSearchPredicate?: (data: T) => boolean;
 }
@@ -159,6 +160,7 @@ export const filterLocalItems = <T, TItem extends LocalFilterItem<T>>(
   }
 
   return {
+    filteredItems: items,
     items: items.filter((item, index) => index >= pageNumber * pageSize && index < (pageNumber + 1) * pageSize),
     total: items.length,
     treeSearchPredicate,

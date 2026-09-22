@@ -15,14 +15,18 @@
   class="sd-mobile-list"
   role="list"
   cdkDropList
-  [cdkDropListData]="rows()"
+  [cdkDropListData]="dataRows() ?? rows()"
   [cdkDropListDisabled]="!_option.rowReorder?.enabled"
   [cdkDropListSortPredicate]="_table.reorderSortPredicate"
   (cdkDropListDropped)="_table.onReorderDrop($event)">
   @for (card of cards(); track card.row.meta.id) {
     @let _row = card.row;
     @let _meta = _row.meta;
-    @if (_meta.group?.isGroupHeader) {
+    @if (_table.aggregateRenderHost.rows.get(_row); as summary) {
+      <div role="listitem">
+        <ng-container *ngTemplateOutlet="aggregateTemplate() ?? null; context: { summary: summary }"></ng-container>
+      </div>
+    } @else if (_meta.group?.isGroupHeader) {
       <div class="sd-mobile-group" role="listitem">
         <ng-container *ngTemplateOutlet="groupTemplate(); context: { item: _row }"></ng-container>
       </div>
@@ -111,7 +115,9 @@
                 [attr.data-autoid]="_autoId ? _autoId + '-expand-' + _meta.id : null"
                 (click)="_table.onExpand(_row)">
                 <sd-icon
-                  [name]="_meta.expand?.isExpanding ? 'hourglass_empty' : _meta.expand?.isExpanded ? 'expand_less' : 'expand_more'"></sd-icon>
+                  [name]="
+                    _meta.expand?.isExpanding ? 'hourglass_empty' : _meta.expand?.isExpanded ? 'expand_less' : 'expand_more'
+                  "></sd-icon>
                 {{ 'core.component.table.mobile.details' | sdTranslate }}
               </button>
             }

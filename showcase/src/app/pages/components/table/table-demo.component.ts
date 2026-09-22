@@ -5,6 +5,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
 import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
+import { TableAggregateDemoComponent } from './table-aggregate-example.component';
 import {
   SdTable,
   SdTableOption,
@@ -177,6 +178,7 @@ const TASKS: Task[] = [
     SdSideDrawer,
     SdCheckbox,
     SdTableQuickSearchRightDefDirective,
+    TableAggregateDemoComponent,
   ],
   template: `
     <demo-page #demoPage
@@ -544,6 +546,14 @@ const TASKS: Task[] = [
             </ng-template>
           </sd-table>
         </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-column-aggregate') {
+      <demo-section heading="Column aggregate" [props]="[{ name: 'column.aggregate', value: 'built-in / callback / template' }]"
+        data-example-typescript="./table-aggregate-example.component.ts" data-example-template="./table-aggregate-example.component.html"
+        note="Tổng độc lập phía trên footer: local page/filtered, COUNT, grouped headers, row groups, tree và lazy children. Server filtered không được hỗ trợ; chỉ tính page hoặc tự cung cấp nghiệp vụ tổng bên ngoài table.">
+        <app-table-aggregate-demo />
       </demo-section>
       }
 

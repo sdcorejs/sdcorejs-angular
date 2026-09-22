@@ -6444,6 +6444,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
 import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
+import { TableAggregateDemoComponent } from './table-aggregate-example.component';
 import {
   SdTable,
   SdTableOption,
@@ -6616,6 +6617,7 @@ const TASKS: Task[] = [
     SdSideDrawer,
     SdCheckbox,
     SdTableQuickSearchRightDefDirective,
+    TableAggregateDemoComponent,
   ],
   template: \`
     <demo-page #demoPage
@@ -6983,6 +6985,14 @@ const TASKS: Task[] = [
             </ng-template>
           </sd-table>
         </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-column-aggregate') {
+      <demo-section heading="Column aggregate" [props]="[{ name: 'column.aggregate', value: 'built-in / callback / template' }]"
+        data-example-typescript="./table-aggregate-example.component.ts" data-example-template="./table-aggregate-example.component.html"
+        note="Tổng độc lập phía trên footer: local page/filtered, COUNT, grouped headers, row groups, tree và lazy children. Server filtered không được hỗ trợ; chỉ tính page hoặc tự cung cấp nghiệp vụ tổng bên ngoài table.">
+        <app-table-aggregate-demo />
       </demo-section>
       }
 
@@ -7869,6 +7879,164 @@ export class TableDemoComponent {
 .filter-change-log__label {
   color: #6b7280;
   font-weight: 600;
+}`,
+  },
+  "components/table/example-column-aggregate": {
+    typescript: `import { ChangeDetectionStrategy, Component, TemplateRef, computed, signal, viewChild } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import {
+  SdTable,
+  SdTableOption,
+  SdTableAggregateOperation,
+  SdTableAggregateTemplateContext,
+  SdMaterialFooterDefDirective,
+  SdTableRowMobileDefDirective,
+} from '@sdcorejs/angular/components/table';
+
+interface AggregateRecord {
+  name: string;
+  code?: string | null;
+  group: string;
+  amount?: number | null;
+  average?: number | null;
+  active?: boolean | null;
+  tags?: number[] | null;
+  date?: string | null;
+  updated?: string | null;
+  children?: AggregateRecord[];
+}
+
+const RECORDS: AggregateRecord[] = [
+  {
+    name: 'Đơn A',
+    code: 'A',
+    group: 'Miền Bắc',
+    amount: 40,
+    average: 40,
+    active: true,
+    tags: [1, 2],
+    date: '2026-01-01',
+    updated: '2026-01-03T09:00:00+07:00',
+  },
+  { name: 'Đơn B', code: '', group: 'Miền Bắc', amount: 0, average: 0, active: false, tags: [], date: null },
+  { name: 'Đơn C', code: null, group: 'Miền Nam', amount: null, average: null, active: null, tags: null, date: '' },
+  { name: 'Đơn D', group: 'Miền Nam', amount: undefined, average: undefined, active: undefined, tags: undefined },
+  {
+    name: 'Đơn E',
+    code: 'E',
+    group: 'Miền Nam',
+    amount: 60,
+    average: 60,
+    active: false,
+    tags: [2],
+    date: '2026-01-02',
+    updated: '2026-01-04T10:00:00+07:00',
+  },
+];
+
+@Component({
+  selector: 'app-table-aggregate-demo',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [SdTable, SdButton, DecimalPipe, SdMaterialFooterDefDirective, SdTableRowMobileDefDirective],
+  templateUrl: './table-aggregate-example.component.html',
+})
+export class TableAggregateDemoComponent {
+  readonly operations: SdTableAggregateOperation[] = ['SUM', 'AVERAGE', 'MIN', 'MAX', 'COUNT'];
+  readonly operation = signal<SdTableAggregateOperation>('SUM');
+  readonly scope = signal<'page' | 'filtered'>('page');
+  readonly treeMode = signal<'roots' | 'leaves' | 'all'>('leaves');
+  readonly amountSummary = viewChild<TemplateRef<SdTableAggregateTemplateContext<AggregateRecord>>>('amountSummary');
+  readonly labelSummary = viewChild<TemplateRef<SdTableAggregateTemplateContext<AggregateRecord>>>('labelSummary');
+  readonly option = computed<SdTableOption<AggregateRecord> | undefined>(() => {
+    const amount = this.amountSummary(),
+      label = this.labelSummary();
+    if (!amount || !label) return undefined;
+    return {
+      type: 'local',
+      items: () => RECORDS,
+      rowKey: 'name',
+      paginate: { pageSize: 3 },
+      filter: { quickSearch: { containFields: ['name', 'group'] } },
+      group: { fields: ['group'], collapsible: true },
+      aggregate: { scope: this.scope(), group: true },
+      columns: [
+        { field: 'name', type: 'string', title: 'Tên', width: '200px', aggregate: { templateRef: label } },
+        { field: 'code', type: 'string', title: 'Mã (COUNT)', aggregate: 'COUNT' },
+        {
+          field: 'money',
+          type: 'children',
+          title: 'Số liệu',
+          children: [
+            {
+              field: 'amount',
+              type: 'number',
+              title: 'Số tiền',
+              minWidth: '140px',
+              align: 'right',
+              aggregate: { calculate: this.operation(), templateRef: amount },
+            },
+            { field: 'average', type: 'number', title: 'Bình quân', aggregate: 'AVERAGE' },
+          ],
+        },
+        { field: 'active', type: 'boolean', title: 'Active (COUNT)', aggregate: 'COUNT' },
+        {
+          field: 'tags',
+          type: 'values',
+          title: 'Tags (COUNT)',
+          aggregate: 'COUNT',
+          option: {
+            items: [
+              { id: 1, label: 'A' },
+              { id: 2, label: 'B' },
+            ],
+            valueField: 'id',
+            displayField: 'label',
+            selection: 'MULTIPLE',
+          },
+        },
+        { field: 'date', type: 'date', title: 'Ngày (MIN)', aggregate: 'MIN' },
+        { field: 'updated', type: 'datetime', title: 'Cập nhật (MAX)', aggregate: 'MAX' },
+        { field: 'group', type: 'string', title: 'Khu vực', aggregate: items => \`\${items.length} bản ghi trong scope\` },
+      ],
+    };
+  });
+  readonly treeOption = computed<SdTableOption<AggregateRecord>>(() => ({
+    type: 'local',
+    items: () => [{ name: 'Tổng hợp', group: '', amount: 100, children: [RECORDS[0], RECORDS[4]] }],
+    columns: [
+      {
+        field: 'name',
+        title: 'Nhánh',
+        type: 'string',
+        aggregate: (items, context) => (context.kind === 'tree' ? \`Nhánh \${context.parent?.name}\` : \`\${items.length} node\`),
+      },
+      { field: 'amount', title: 'Số tiền', type: 'number', aggregate: 'SUM' },
+    ],
+    tree: { loadType: 'static', defaultExpanded: true },
+    aggregate: { tree: { items: this.treeMode(), subtotal: true } },
+    filter: { disabled: true },
+  }));
+  readonly lazyOption: SdTableOption<AggregateRecord> = {
+    type: 'local',
+    items: () => [{ name: 'Mở để tải children', group: '', amount: 100 }],
+    columns: [
+      {
+        field: 'name',
+        title: 'Nhánh lazy',
+        type: 'string',
+        aggregate: (items, context) => (context.isComplete ? \`\${items.length} node lá\` : 'Chưa đủ dữ liệu'),
+      },
+      { field: 'amount', title: 'Số tiền', type: 'number', aggregate: 'SUM' },
+    ],
+    tree: {
+      loadType: 'lazy',
+      hasChildren: row => row.name === 'Mở để tải children',
+      onExpandChildren: async () => [RECORDS[0], RECORDS[4]],
+    },
+    aggregate: { tree: { subtotal: true } },
+    filter: { disabled: true },
+  };
 }`,
   },
   "components/tree": {
@@ -17804,6 +17972,50 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
       <sd-table [option]="singleSelectOption"><ng-template [sdTableRowMobileDef]="singleSelectOption" let-row="item"><strong>{{ row.name }}</strong><div>{{ row.position }}</div></ng-template></sd-table>
     </div>
   </demo-section>`,
+  },
+  "components/table/example-column-aggregate": {
+    ...SHOWCASE_PAGE_SOURCES["components/table/example-column-aggregate"],
+    html: `<ng-template #amountSummary let-items let-value="value" let-kind="kind" let-isComplete="isComplete">
+  @if (isComplete) {
+    <strong>{{ value | number: '1.0-2' }}</strong>
+    <div class="T12R">{{ kind === 'group' ? 'Nhóm' : 'Tổng' }} · {{ items.length }} bản ghi</div>
+  } @else {
+    <span>Chưa đủ dữ liệu</span>
+  }
+</ng-template>
+<ng-template #labelSummary let-items let-scope="scope" let-kind="kind" let-value="value">
+  <strong>{{ kind === 'group' ? 'Tổng nhóm' : scope === 'page' ? 'Tổng trang' : 'Tổng sau lọc' }}</strong>
+  <div class="T12R">{{ items.length }} bản ghi · template-only</div>
+</ng-template>
+<div class="d-flex flex-wrap gap-8 mb-12">
+  <sd-button title="Scope: trang" (click)="scope.set('page')" />
+  <sd-button title="Scope: sau lọc" (click)="scope.set('filtered')" />
+  @for (op of operations; track op) {
+    <sd-button [title]="op" (click)="operation.set(op)" />
+  }
+</div>
+<p>Cột Số tiền: {{ operation() }}. COUNT đếm ô có giá trị, vẫn tính 0 và false; mảng rỗng không được tính.</p>
+@if (option(); as current) {
+  <sd-table autoId="aggregate" [option]="current">
+    <ng-template sdTableFooterDef="name" let-items="items">
+      <div>Footer riêng: {{ items.length }} dòng</div>
+      <small>Chỉ dữ liệu của trang hiện tại.</small>
+    </ng-template>
+    <ng-template [sdTableRowMobileDef]="current" let-item="item">
+      <strong>{{ item.name }}</strong>
+      <div>{{ item.amount ?? '—' }}</div>
+    </ng-template>
+  </sd-table>
+}
+<div class="d-flex flex-wrap gap-8 mt-16 mb-12">
+  <sd-button title="Tree: leaves" (click)="treeMode.set('leaves')" />
+  <sd-button title="Tree: roots" (click)="treeMode.set('roots')" />
+  <sd-button title="Tree: all" (click)="treeMode.set('all')" />
+</div>
+<p>Cha 100, con 40 + 60: roots/leaves = 100, all = 200. Thu gọn nhánh không đổi tổng.</p>
+<sd-table autoId="aggregate-tree" [option]="treeOption()" />
+<p class="mt-16">Lazy: tổng leaves chưa đầy đủ cho đến khi mở nhánh tải dữ liệu. Aggregate không tự gọi API.</p>
+<sd-table autoId="aggregate-lazy" [option]="lazyOption" />`,
   },
   "components/table/example-dong-mo-rong": {
     ...SHOWCASE_PAGE_SOURCES["components/table"],

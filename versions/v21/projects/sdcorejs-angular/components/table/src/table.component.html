@@ -27,6 +27,9 @@
 @let _isMobile = isMobile();
 @let _commandHeaderDef = sdCommandHeaderDef();
 @let _quickSearch = quickSearchOption();
+@let _aggregate = aggregateSnapshot();
+@let _aggregateColumns = aggregateColumns();
+@let _aggregateColumnIds = aggregateColumnIds();
 <!-- why: tree không còn cột riêng — khi KHÔNG có cột Index, icon expand nhúng vào
      cột data đầu tiên. Đây là field của cột đó (null nếu có Index hoặc không tree). -->
 @let _treeFirstField = _tableOption?.tree && !_tableOption.index?.enabled ? _configuration?.firstColumns?.[0]?.field : null;
@@ -42,6 +45,30 @@
     </external-filter>
   }
   @let groupedItems = _items | sdTree: _tableOption.tree : treeRevision() | sdGroup: _tableOption : groupExpandState : groupHost;
+  @let renderItems = groupedItems | sdAggregateRows: _aggregate : _tableOption : aggregateRenderHost;
+
+  <ng-template #aggregateCell let-cell>
+    @if (cell) {
+      @if (cell.templateRef) {
+        <ng-container *ngTemplateOutlet="cell.templateRef; context: cell.context"></ng-container>
+      } @else {
+        <span [attr.data-complete]="cell.context.isComplete">{{ cell.text }}</span>
+      }
+    }
+  </ng-template>
+  <ng-template #mobileAggregate let-summary="summary">
+    <div class="sd-mobile-aggregate p-12" role="region" [attr.aria-label]="'core.component.table.mobile.summary' | sdTranslate">
+      @for (entry of _aggregateColumns; track entry.field) {
+        @let cell = summary.cells.get(entry.field);
+        @if (cell && entry.column) {
+          <div class="d-flex align-items-center flex-wrap gap-8 py-8">
+            <column-title [column]="entry.column" [titleDef]="_titleDef[entry.field]"></column-title>
+            <ng-container *ngTemplateOutlet="aggregateCell; context: { $implicit: cell }"></ng-container>
+          </div>
+        }
+      }
+    </div>
+  </ng-template>
 
   <!-- Tree toggle dùng chung: indent (theo cấp) + slot chevron/spinner. Nhúng vào
        cột Index hoặc cột data đầu qua *ngTemplateOutlet (context: { row }). -->
@@ -137,7 +164,15 @@
           @if (_commandHeaderDef) {
             <div class="sd-mobile-command-header"><ng-container *ngTemplateOutlet="_commandHeaderDef.templateRef"></ng-container></div>
           }
-          <sd-table-mobile-cards [table]="this" [rows]="groupedItems" [groupTemplate]="sdGroupHeader"></sd-table-mobile-cards>
+          <sd-table-mobile-cards
+            [table]="this"
+            [rows]="renderItems"
+            [dataRows]="groupedItems"
+            [groupTemplate]="sdGroupHeader"
+            [aggregateTemplate]="mobileAggregate"></sd-table-mobile-cards>
+          @if (_aggregate.total; as summary) {
+            <ng-container *ngTemplateOutlet="mobileAggregate; context: { summary: summary }"></ng-container>
+          }
           @if (hasFooter()) {
             <div class="sd-mobile-footer p-12" role="region" [attr.aria-label]="'core.component.table.mobile.summary' | sdTranslate">
               @for (column of mobileFooterColumns(); track column.field) {
@@ -152,7 +187,8 @@
         } @else {
           <table
             mat-table
-            [dataSource]="groupedItems"
+            sdAggregateLayout
+            [dataSource]="renderItems"
             [trackBy]="trackBy"
             multiTemplateDataRows
             cdkDropList
@@ -300,7 +336,7 @@
                         }
                       </span>
                     } @else {
-                      {{ _pageOffset + i + 1 }}
+                      {{ _pageOffset + (aggregateRenderHost.indices.get(item) ?? i) + 1 }}
                     }
                   }
                 </td>
@@ -330,7 +366,11 @@
                  quét toàn mảng cho MỖI dòng render ở MỖI CD pass (O(n²) trên đường render),
                  và còn trả sai index khi 2 dòng trùng reference. -->
               <td class="px-8" mat-cell *matCellDef="let item; let i = dataIndex">
-                <desktop-command [autoId]="_autoId" [commands]="_rowCommands" [item]="item" [itemIndex]="i"></desktop-command>
+                <desktop-command
+                  [autoId]="_autoId"
+                  [commands]="_rowCommands"
+                  [item]="item"
+                  [itemIndex]="aggregateRenderHost.indices.get(item) ?? i"></desktop-command>
               </td>
               <td mat-footer-cell *matFooterCellDef></td>
             </ng-container>
@@ -434,7 +474,7 @@
                     }
                   }
                 </td>
-                <td mat-footer-cell *matFooterCellDef>
+                <td mat-footer-cell *matFooterCellDef [class.d-none]="column.type === 'children'">
                   <ng-container *ngIf="_footerDef[column.field]">
                     <ng-container *ngTemplateOutlet="_footerDef[column.field].templateRef; context: { items: _items, column: column }">
                     </ng-container>
@@ -443,7 +483,7 @@
               </ng-container>
             }
             @for (column of _configuration.secondColumns; track column.field) {
-              <ng-container [matColumnDef]="column.field">
+              <ng-container [matColumnDef]="column.field" [sticky]="_configuration.fixedColumn[column.field]">
                 <th
                   mat-header-cell
                   *matHeaderCellDef
@@ -505,6 +545,36 @@
               </ng-container>
             }
             <tr class="c-first-header" mat-header-row *matHeaderRowDef="_configuration.firstHeaders; sticky: true"></tr>
+            @for (entry of _aggregateColumns; track entry.id) {
+              <ng-container [matColumnDef]="entry.id" [sticky]="entry.sticky" [stickyEnd]="entry.stickyEnd">
+                <td
+                  mat-cell
+                  *matCellDef="let row"
+                  class="sd-aggregate-cell px-8 py-8"
+                  [class.d-none]="entry.hidden"
+                  [style.text-align]="entry.column?.align"
+                  [style.width]="entry.column?.width"
+                  [style.min-width]="entry.column?.minWidth || entry.column?.width">
+                  <ng-container
+                    *ngTemplateOutlet="
+                      aggregateCell;
+                      context: { $implicit: aggregateRenderHost.rows.get(row)?.cells?.get(entry.field) }
+                    "></ng-container>
+                </td>
+                <td
+                  mat-footer-cell
+                  *matFooterCellDef
+                  class="sd-aggregate-cell px-8 py-8"
+                  [class.d-none]="entry.hidden"
+                  [style.text-align]="entry.column?.align"
+                  [style.width]="entry.column?.width"
+                  [style.min-width]="entry.column?.minWidth || entry.column?.width">
+                  <ng-container
+                    *ngTemplateOutlet="aggregateCell; context: { $implicit: _aggregate.total?.cells?.get(entry.field) }"></ng-container>
+                </td>
+              </ng-container>
+            }
+            <tr mat-row *matRowDef="let row; columns: _aggregateColumnIds; when: isAggregateRow" class="sd-aggregate-row"></tr>
             @if (!!_configuration.secondHeaders.length) {
               <tr class="c-second-header" mat-header-row *matHeaderRowDef="_configuration.secondHeaders; sticky: true"></tr>
             }
@@ -536,8 +606,11 @@
 
             <!-- Sub-information row — also gated bởi isDataRow để KHÔNG render empty expand row dưới group header. -->
             <tr mat-row *matRowDef="let row; columns: ['sdSubInformation']; when: isDataRow" class="c-detail-row"></tr>
+            @if (_aggregate.total) {
+              <tr mat-footer-row *sdTableFooterRowDef="_aggregateColumnIds; sticky: true" class="sd-aggregate-total"></tr>
+            }
             @if (hasFooter() && !!_configuration.displayedFooters.length) {
-              <tr mat-footer-row *matFooterRowDef="_configuration.displayedFooters; sticky: true"></tr>
+              <tr mat-footer-row *sdTableFooterRowDef="_configuration.displayedFooters; sticky: true"></tr>
             }
           </table>
         }
