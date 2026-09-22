@@ -25,11 +25,17 @@
 @let _rowCommands = rowCommands();
 @let _mobileCards = mobileCards();
 @let _isMobile = isMobile();
+@let _showInlineFilter =
+  !_isMobile &&
+  !_tableOption?.filter?.disabled &&
+  _tableOption?.filter?.hideInlineFilter !== true &&
+  !(_tableOption?.filter?.hideInlineFilter === 'auto' && !_isFiltered && _total! <= 10);
 @let _commandHeaderDef = sdCommandHeaderDef();
 @let _quickSearch = quickSearchOption();
 @let _aggregate = aggregateSnapshot();
 @let _aggregateColumns = aggregateColumns();
 @let _aggregateColumnIds = aggregateColumnIds();
+@let _headerFilterColumns = headerFilterColumns();
 <!-- why: tree không còn cột riêng — khi KHÔNG có cột Index, icon expand nhúng vào
      cột data đầu tiên. Đây là field của cột đó (null nếu có Index hoặc không tree). -->
 @let _treeFirstField = _tableOption?.tree && !_tableOption.index?.enabled ? _configuration?.firstColumns?.[0]?.field : null;
@@ -55,6 +61,19 @@
         <span [attr.data-complete]="cell.context.isComplete">{{ cell.text }}</span>
       }
     }
+  </ng-template>
+  <ng-template #inlineColumnFilter let-column>
+    <column-filter
+      [autoId]="_autoId"
+      [value]="columnFilter?.[column.field!]!"
+      [operator]="columnOperator[column.field]"
+      (operatorChange)="columnOperator[column.field] = $event!; onOperatorChange(column, $event)"
+      [columnFilter]="columnFilter!"
+      [cacheValues]="cacheValues"
+      [column]="column"
+      (filterChange)="onFilterChange()"
+      (filterCommit)="onFilterCommit()">
+    </column-filter>
   </ng-template>
   <ng-template #mobileAggregate let-summary="summary">
     <div class="sd-mobile-aggregate p-12" role="region" [attr.aria-label]="'core.component.table.mobile.summary' | sdTranslate">
@@ -187,6 +206,7 @@
         } @else {
           <table
             mat-table
+            [class.sd-table-grouped-header]="_configuration.multipleHeader"
             sdAggregateLayout
             [dataSource]="renderItems"
             [trackBy]="trackBy"
@@ -393,7 +413,9 @@
                 <th
                   mat-header-cell
                   *matHeaderCellDef
-                  class="px-8 py-8 c-th"
+                  class="px-8 c-th"
+                  [class.sd-column-group]="column.type === 'children'"
+                  [attr.scope]="column.type === 'children' ? 'colgroup' : 'col'"
                   [sdColumnResize]="!!_tableOption.config?.resizable && column.type !== 'children'"
                   [minWidth]="column.minWidth"
                   [maxWidth]="column.maxWidth"
@@ -410,10 +432,7 @@
                     <!-- why: sort control chỉ ôm title; filter là sibling nên không thành interactive
                        descendant. aria-sort thuộc semantic <th>, không thuộc control này. -->
                     @if (column.type === 'children') {
-                      <div
-                        class="c-header-title"
-                        [class.justify-content-end]="column.align === 'right'"
-                        [class.text-right]="column.align === 'right'">
+                      <div class="c-header-title sd-column-group-title">
                         <column-title [column]="column" [titleDef]="_titleDef[column.field]"></column-title>
                       </div>
                     } @else {
@@ -433,24 +452,8 @@
                           <column-title [column]="column" [titleDef]="_titleDef[column.field]"></column-title>
                         </div>
                       }
-                      @let hideInlineFilter =
-                        _tableOption.filter?.disabled ||
-                        _tableOption.filter?.hideInlineFilter === true ||
-                        (_tableOption.filter?.hideInlineFilter === 'auto' && !_isFiltered && _total! <= 10);
-                      @if (!hideInlineFilter) {
-                        @if (!_isMobile) {
-                          <column-filter
-                            [autoId]="_autoId"
-                            [value]="columnFilter?.[column.field!]!"
-                            [operator]="columnOperator[column.field]"
-                            (operatorChange)="columnOperator[column.field] = $event!; onOperatorChange(column, $event)"
-                            [columnFilter]="columnFilter!"
-                            [cacheValues]="cacheValues"
-                            [column]="column"
-                            (filterChange)="onFilterChange()"
-                            (filterCommit)="onFilterCommit()">
-                          </column-filter>
-                        }
+                      @if (_showInlineFilter && !_configuration.multipleHeader) {
+                        <ng-container *ngTemplateOutlet="inlineColumnFilter; context: { $implicit: column }"></ng-container>
                       }
                     }
                   </div>
@@ -488,6 +491,7 @@
                   mat-header-cell
                   *matHeaderCellDef
                   class="c-th px-8"
+                  scope="col"
                   [style.width]="column.width"
                   [style.min-width]="column.minWidth || column.width"
                   [style.max-width]="column.maxWidth"
@@ -508,21 +512,6 @@
                         [class.text-right]="column.align === 'right'">
                         <column-title [column]="column" [titleDef]="_titleDef[column.field]"></column-title>
                       </div>
-                    }
-                    @if (!_tableOption.filter?.disabled && !_tableOption.filter?.hideInlineFilter && columnOperator) {
-                      @if (!_isMobile) {
-                        <column-filter
-                          [autoId]="_autoId"
-                          [value]="columnFilter?.[column.field!]!"
-                          [operator]="columnOperator[column.field]"
-                          [columnFilter]="columnFilter!"
-                          [cacheValues]="cacheValues"
-                          [column]="column"
-                          (operatorChange)="columnOperator[column.field] = $event!; onOperatorChange(column, $event)"
-                          (filterChange)="onFilterChange()"
-                          (filterCommit)="onFilterCommit()">
-                        </column-filter>
-                      }
                     }
                   </div>
                 </th>
@@ -577,6 +566,30 @@
             <tr mat-row *matRowDef="let row; columns: _aggregateColumnIds; when: isAggregateRow" class="sd-aggregate-row"></tr>
             @if (!!_configuration.secondHeaders.length) {
               <tr class="c-second-header" mat-header-row *matHeaderRowDef="_configuration.secondHeaders; sticky: true"></tr>
+            }
+            @if (_configuration.multipleHeader) {
+              @for (entry of _headerFilterColumns; track entry.id) {
+                <ng-container [matColumnDef]="entry.id" [sticky]="entry.sticky" [stickyEnd]="entry.stickyEnd">
+                  <th
+                    mat-header-cell
+                    *matHeaderCellDef
+                    class="c-th sd-filter-header"
+                    [class.px-8]="!!entry.column"
+                    [class.p-0]="!entry.column"
+                    [class.sd-filler-cell]="entry.field === 'sdFiller'"
+                    scope="col">
+                    @if (_showInlineFilter && entry.column) {
+                      <ng-container *ngTemplateOutlet="inlineColumnFilter; context: { $implicit: entry.column }"></ng-container>
+                    }
+                  </th>
+                </ng-container>
+              }
+              <!-- why: giữ row definition ổn định; CDK cập nhật columns để bỏ controls/sticky offsets khi ẩn filter. -->
+              <tr
+                class="c-filter-header"
+                [style.display]="_showInlineFilter ? null : 'none'"
+                mat-header-row
+                *matHeaderRowDef="_showInlineFilter ? headerFilterColumnIds() : []; sticky: _showInlineFilter"></tr>
             }
             <!-- Group header row — chỉ 1 cell sdGroupHeader colspan toàn width. -->
             <tr mat-row *matRowDef="let row; columns: ['sdGroupHeader']; when: isGroupHeaderRow" class="c-group-row-tr"></tr>

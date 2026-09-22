@@ -53,6 +53,48 @@
           height: 40px;
         }
 
+        &.sd-table-grouped-header {
+          // why: title căn giữa hai tầng; filter nằm ở hàng riêng nên luôn thẳng hàng.
+          th.c-th {
+            vertical-align: middle;
+            padding-block: 4px;
+          }
+
+          tr.c-first-header.mat-mdc-header-row {
+            height: 32px;
+          }
+
+          tr.c-filter-header.mat-mdc-header-row {
+            height: auto;
+          }
+
+          th.sd-filter-header {
+            padding-block: 0 8px;
+            vertical-align: bottom;
+          }
+
+          column-filter {
+            display: flex;
+            align-items: center;
+            min-height: 36px;
+          }
+
+          th.sd-column-group {
+            padding-block: 4px;
+            vertical-align: middle;
+            background-color: color-mix(in srgb, var(--sd-border, #c4c6d0) 18%, #f2f3f4);
+            box-shadow: inset 0 -1px var(--sd-border, #c4c6d0);
+
+            .sd-column-group-title {
+              height: auto;
+              min-height: 24px;
+              justify-content: center;
+              text-align: center;
+              font-weight: 600;
+            }
+          }
+        }
+
         tr.c-detail-row {
           height: 0;
         }
@@ -99,6 +141,7 @@
 
       .c-th {
         vertical-align: middle;
+        padding-block: 8px;
         font-weight: 500;
         font-size: 14px;
         line-height: 20px;

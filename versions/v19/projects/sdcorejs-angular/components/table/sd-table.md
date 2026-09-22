@@ -193,6 +193,8 @@ A discriminated union over `type`. All variants share `SdTableColumnBase`:
 
 `Badge` shape: `{ type?, color?, icon?, title? }` — maps to a `<sd-badge>` rendered in the cell.
 
+**Grouped column headers:** `type: 'children'` uses a compact group title with a subtle background and divider above its child columns. Standalone titles are vertically centered across both title rows. Filters occupy a separate aligned sticky row; `filter.hideInlineFilter` (including `'auto'`) shows or hides that row consistently for all columns. No consumer CSS is required. Numeric child titles keep their configured alignment.
+
 **Rendering convention:** status/state columns should use `useBadge` or a projected `<sd-badge>`. Do not hand-roll `.status-*`, `.pill-*`, or badge-like CSS classes for plain state display.
 
 ### Config option (`TableOptionConfig`) — gear button + column resize

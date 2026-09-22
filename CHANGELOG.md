@@ -23,6 +23,7 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 - Tab group: add per-instance `headerClass`, `headerStyle`, `bodyClass` and `bodyStyle` inputs with reactive cleanup and separate header/body styling.
 
 ### Fixed
+- Table: use compact parent headers and vertically centered standalone titles, align filters in a separate sticky row for grouped columns, and apply automatic filter visibility consistently at both levels.
 - Table: use fixed white backgrounds for quick search and pagination with square corners and no toolbar divider; balance toolbar spacing and retain compact stacking on narrow containers.
 
 ## [2.13] - 2026-09-15

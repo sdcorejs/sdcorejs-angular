@@ -384,13 +384,12 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   #aggregateReady = false;
   #aggregateScopeComplete = false;
   readonly #aggregateLoadedChildren = new Set<T>();
-  readonly aggregateColumns = computed(() => {
+  readonly #layoutColumns = computed(() => {
     const config = this.configuration();
     if (!config) return [];
     const commandRight = this.tableOption()?.command?.align === 'right';
     const columns = new Map([...config.firstColumns, ...config.secondColumns].map(column => [column.field, column]));
     return config.displayedColumns.map(field => ({
-      id: `sdAggregate-${field}`,
       field,
       column: columns.get(field),
       hidden: columns.get(field)?.type === 'children',
@@ -398,7 +397,15 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       stickyEnd: field === 'sdSubInformationAction' || (field === 'sdCommand' && commandRight),
     }));
   });
+  readonly aggregateColumns = computed(() => this.#layoutColumns().map(column => ({ ...column, id: `sdAggregate-${column.field}` })));
   readonly aggregateColumnIds = computed(() => this.aggregateColumns().map(column => column.id));
+  // why: filter có hàng riêng để title rowspan căn giữa mà không kéo control lệch theo.
+  readonly headerFilterColumns = computed(() =>
+    this.#layoutColumns()
+      .filter(column => !column.hidden)
+      .map(column => ({ ...column, id: `sdFilter-${column.field}` }))
+  );
+  readonly headerFilterColumnIds = computed(() => this.headerFilterColumns().map(column => column.id));
   isSelectAll = signal(false);
   isSelectIndeterminate = signal(false);
   readonly sortState = signal<{ active: string; direction: SortDirection }>({ active: '', direction: '' });
