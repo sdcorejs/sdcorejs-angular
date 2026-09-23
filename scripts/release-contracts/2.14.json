@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "suffix": "2.14",
+  "reviewedSourceSha": "0b2068a88a8ce9010274b3de8ea4ce4672b5e131",
+  "artifactSource": "Local 2.14 packages built on Node 22.22.3 and packed with npm 11.5.1; compared against same-major npm 2.13 packages. Reviewed changes: typed table aggregates and subtotals, table header/filter layout, early reload readiness, tab-router error recovery, optional tab-region styles, Core-owned theme colors and presets. Theme migration is documented in CHANGELOG.md. Dependencies and export maps are unchanged; no packed paths or declarations are removed. CI rebuilds from the tagged release commit.",
+  "targets": {
+    "19.2.14": {
+      "version": "19.2.14",
+      "baselineVersion": "19.2.13",
+      "dependencies": {
+        "baseline": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f",
+        "candidate": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f"
+      },
+      "exports": {
+        "baseline": "078a9f3619580b6017cb8b5ecc21d40f3876e8bf560774fde5b305fb235e10f1",
+        "candidate": "078a9f3619580b6017cb8b5ecc21d40f3876e8bf560774fde5b305fb235e10f1"
+      },
+      "files": {
+        "baseline": "4858001cd5d7c6b5f7ca63cea21a39540e399cbc7ac87db7a5b0f70333256925",
+        "candidate": "b0ac48f976da07ffbf85a1b3f4d885e2cc7a3fa0987f7816f850023305ccd37e"
+      },
+      "publicSurface": {
+        "baseline": "0681dce82e2203333ec1e81d803edc6706de0cd39108806641943d8a0307c916",
+        "candidate": "1fb404757dd6ba068f5207f558ebd50cf7d9c2294c6bb004b813e7386a71d5d7"
+      }
+    },
+    "20.2.14": {
+      "version": "20.2.14",
+      "baselineVersion": "20.2.13",
+      "dependencies": {
+        "baseline": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f",
+        "candidate": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f"
+      },
+      "exports": {
+        "baseline": "078a9f3619580b6017cb8b5ecc21d40f3876e8bf560774fde5b305fb235e10f1",
+        "candidate": "078a9f3619580b6017cb8b5ecc21d40f3876e8bf560774fde5b305fb235e10f1"
+      },
+      "files": {
+        "baseline": "025c0d5ffb6e287a670f7fd4dab3447ec22cb39fb5c1a79043ef7cbf256a2497",
+        "candidate": "fe53ba3bf86bde548c5f0225520b8e822b78a77a8b57e692b7490864f032d52e"
+      },
+      "publicSurface": {
+        "baseline": "150cadfb29985c6356402a48f1c1b346075f2dfb4bd2b413e78875aaf6f602f8",
+        "candidate": "f9236170110aa267c2de39ebf4c601a0fdea75f30bf6afab69ae281029b1dba2"
+      }
+    },
+    "21.2.14": {
+      "version": "21.2.14",
+      "baselineVersion": "21.2.13",
+      "dependencies": {
+        "baseline": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f",
+        "candidate": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f"
+      },
+      "exports": {
+        "baseline": "a995f16666247c07e3f08c79714d334bb3e30930d18315708ca5cacd4135fcce",
+        "candidate": "a995f16666247c07e3f08c79714d334bb3e30930d18315708ca5cacd4135fcce"
+      },
+      "files": {
+        "baseline": "29e0d97b40e6de03a29074676b55e4606f696db4231167e35bd942887790b2f5",
+        "candidate": "2568176d9a2a2cbf801a4be60f955be5e8074dadb9c09441fac6efc73b09c4d6"
+      },
+      "publicSurface": {
+        "baseline": "76ac8813c5fc1e4855d522874e91fcabc5fe139a39344f758b24edbc56ee39e5",
+        "candidate": "24e309229580baa009a306ec4c81b52bbad2d7e55db8a40cf2f3fff5b367fa49"
+      }
+    },
+    "22.2.14": {
+      "version": "22.2.14",
+      "baselineVersion": "22.2.13",
+      "dependencies": {
+        "baseline": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f",
+        "candidate": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f"
+      },
+      "exports": {
+        "baseline": "a995f16666247c07e3f08c79714d334bb3e30930d18315708ca5cacd4135fcce",
+        "candidate": "a995f16666247c07e3f08c79714d334bb3e30930d18315708ca5cacd4135fcce"
+      },
+      "files": {
+        "baseline": "29e0d97b40e6de03a29074676b55e4606f696db4231167e35bd942887790b2f5",
+        "candidate": "2568176d9a2a2cbf801a4be60f955be5e8074dadb9c09441fac6efc73b09c4d6"
+      },
+      "publicSurface": {
+        "baseline": "60db933a4f09557de082d25da1bee2df49888e2495f8f72d83732640eff94a78",
+        "candidate": "950d1d5a03e5d977e90e5be74b722e762854a911fcf2f3947f52cd9132ae0cfc"
+      }
+    }
+  }
+}

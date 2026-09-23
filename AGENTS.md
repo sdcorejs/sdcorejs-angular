@@ -103,12 +103,12 @@ cd ../.. && npm run build:page -- --suffix 1.6
 
 ## Release
 
-Release đang chuẩn bị: `v2.13` → `19.2.13` / `20.2.13` / `21.2.13` / `22.2.13`.
-Workflow `publish-npm.yml` pin đúng tag `v2.13`; snapshot `scripts/release-contracts/2.13.json`
-đối chiếu từng line với bản `*.2.12` cùng Angular major. Fallback từ Angular 22 sang 21
+Release đang chuẩn bị: `v2.14` → `19.2.14` / `20.2.14` / `21.2.14` / `22.2.14`.
+Workflow `publish-npm.yml` pin đúng tag `v2.14`; snapshot `scripts/release-contracts/2.14.json`
+đối chiếu từng line với bản `*.2.13` cùng Angular major. Fallback từ Angular 22 sang 21
 chỉ áp dụng cho release khởi đầu `22.2.5`.
 
-Tag `v<release-suffix>` (vd `v2.13`) → CI chuẩn bị `19.2.13` / `20.2.13` / `21.2.13` / `22.2.13`, rồi sinh `published-docs` và commit về `main` sau khi toàn bộ transaction thành công.
+Tag `v<release-suffix>` (vd `v2.14`) → CI chuẩn bị `19.2.14` / `20.2.14` / `21.2.14` / `22.2.14`, rồi sinh `published-docs` và commit về `main` sau khi toàn bộ transaction thành công.
 
 Thứ tự bắt buộc:
 

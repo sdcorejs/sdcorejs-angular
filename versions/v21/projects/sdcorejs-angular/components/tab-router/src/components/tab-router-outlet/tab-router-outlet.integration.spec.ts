@@ -100,13 +100,23 @@ describe('SdTabRouterOutletComponent (integration)', () => {
 
         await navigateAndStabilize(router, fixture, '/b');
         expect(reportError).toHaveBeenCalledOnceWith(failure);
-        expect(outletCmp.tabs().filter(tab => tab.isActive).map(tab => tab.url)).toEqual(['/a']);
+        expect(
+          outletCmp
+            .tabs()
+            .filter(tab => tab.isActive)
+            .map(tab => tab.url)
+        ).toEqual(['/a']);
 
         const destination = retrySameUrl ? '/b' : '/c';
         await navigateAndStabilize(router, fixture, destination, {
           state: retrySameUrl ? { forceReload: true } : { replaceTab: true },
         });
-        expect(outletCmp.tabs().filter(tab => tab.isActive).map(tab => tab.url)).toEqual([destination]);
+        expect(
+          outletCmp
+            .tabs()
+            .filter(tab => tab.isActive)
+            .map(tab => tab.url)
+        ).toEqual([destination]);
         expect(fixture.nativeElement.querySelector(`.tab-router__pane.active [data-cy="page-${retrySameUrl ? 'b' : 'c'}"]`)).not.toBeNull();
         expect(reportError).toHaveBeenCalledTimes(1);
         expect(outletCmp.tabs().length).toBe(retrySameUrl ? 2 : 1);
