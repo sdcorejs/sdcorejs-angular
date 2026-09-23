@@ -737,12 +737,16 @@ async function delay(milliseconds) {
 async function waitForExactDist(
   target,
   {
-    attempts = 12,
+    // npm scans accepted publications before making them installable (typically 5,
+    // sometimes 15+ minutes). Allow 20 minutes of polling delay without republishing.
+    // https://github.blog/changelog/2026-07-28-npm-publish-time-malware-scanning-and-dual-use-metadata/
+    attempts = 241,
     requireProvenance = false,
     viewDist = npmViewDist,
     sleep = delay,
   } = {},
 ) {
+  let lastObservation = 'version metadata not visible';
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     const dist = viewDist(target.version, { allowMissing: true });
     if (
@@ -753,9 +757,15 @@ async function waitForExactDist(
     if (dist && (dist.integrity !== target.integrity || dist.shasum !== target.shasum)) {
       throw new Error(`${target.version}: immutable registry collision after publish.`);
     }
+    lastObservation = dist
+      ? 'matching artifact visible; provenance/attestation metadata missing'
+      : 'version metadata not visible';
     if (attempt < attempts) await sleep(5_000);
   }
-  throw new Error(`${target.version}: registry did not expose the verified artifact in time.`);
+  throw new Error(
+    `${target.version}: registry did not expose the verified artifact after ${attempts} attempts: ${lastObservation}. ` +
+    'The version may already be published; recover using the retained artifacts instead of rebuilding.',
+  );
 }
 
 async function observeExactDistAfterUncertainPublish(

@@ -1086,6 +1086,76 @@ test('registry transaction preflights all artifacts, publishes exact tags in ord
   assert.deepEqual(result.results.map(item => item.action), ['publish', 'publish', 'publish', 'publish']);
 });
 
+test('postpublish tolerates delayed version and provenance visibility without republishing', async () => {
+  for (const missing of ['version', 'provenance']) {
+    const bundle = bundleForPublication('2.6');
+    const registry = createRegistryHarness({ tags: { latest: '22.2.5' } });
+    const first = bundle.plan.publishOrder[0];
+    const read = registry.adapter.viewDist;
+    const sleeps = [];
+    let polls = 0;
+    registry.adapter.sleep = async milliseconds => { sleeps.push(milliseconds); };
+    registry.adapter.viewDist = version => {
+      const dist = read(version);
+      if (version !== first.version || !registry.publishCounts.has(version)) return dist;
+      if (++polls > 200) return dist;
+      return missing === 'version' ? null : { integrity: dist.integrity, shasum: dist.shasum };
+    };
+
+    const result = await publishValidatedBundle(bundle, true, registry.adapter);
+    assert.equal(polls, 201, missing);
+    assert.deepEqual(sleeps, Array(200).fill(5_000), missing);
+    assert.equal(result.results.length, 4, missing);
+    assert.deepEqual([...registry.publishCounts.values()], [1, 1, 1, 1], missing);
+  }
+});
+
+test('postpublish visibility timeout is bounded, diagnostic and stops later targets', async () => {
+  for (const missing of ['version', 'provenance']) {
+    const bundle = bundleForPublication('2.6');
+    const registry = createRegistryHarness({ tags: { latest: '22.2.5' } });
+    const first = bundle.plan.publishOrder[0];
+    const read = registry.adapter.viewDist;
+    const sleeps = [];
+    let polls = 0;
+    registry.adapter.sleep = async milliseconds => { sleeps.push(milliseconds); };
+    registry.adapter.viewDist = version => {
+      const dist = read(version);
+      if (version !== first.version || !registry.publishCounts.has(version)) return dist;
+      polls++;
+      return missing === 'version' ? null : { integrity: dist.integrity, shasum: dist.shasum };
+    };
+
+    await assert.rejects(() => publishValidatedBundle(bundle, true, registry.adapter), error => {
+      assert.match(error.message, /after 241 attempts/u);
+      assert.match(error.message, missing === 'version' ? /version metadata not visible/u : /provenance\/attestation metadata missing/u);
+      assert.equal(error.failedTarget, first.version);
+      assert.deepEqual(error.completedResults, []);
+      return true;
+    });
+    assert.equal(polls, 241, missing);
+    assert.deepEqual(sleeps, Array(240).fill(5_000), missing);
+    assert.deepEqual([...registry.publishCounts.keys()], [first.version], missing);
+    assert.equal(registry.tags.latest, '22.2.5', missing);
+    assert.ok(!registry.events.some(event => event.startsWith('download:')), missing);
+  }
+});
+
+test('postpublish rejects an immutable collision immediately even while provenance is pending', async () => {
+  const bundle = bundleForPublication('2.6');
+  const registry = createRegistryHarness({ tags: { latest: '22.2.5' } });
+  const first = bundle.plan.publishOrder[0];
+  const read = registry.adapter.viewDist;
+  const sleeps = [];
+  registry.adapter.sleep = async milliseconds => { sleeps.push(milliseconds); };
+  registry.adapter.viewDist = version => registry.publishCounts.has(version)
+    ? { integrity: 'sha512-different', shasum: first.shasum }
+    : read(version);
+  await assert.rejects(() => publishValidatedBundle(bundle, true, registry.adapter), /immutable registry collision after publish/u);
+  assert.deepEqual(sleeps, []);
+  assert.deepEqual([...registry.publishCounts.keys()], [first.version]);
+});
+
 test('registry transaction rejects a final immutable collision before publishing anything', async () => {
   const bundle = bundleForPublication();
   const registry = createRegistryHarness({
