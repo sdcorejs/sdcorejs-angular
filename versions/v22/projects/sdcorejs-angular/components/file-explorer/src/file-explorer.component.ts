@@ -6,6 +6,8 @@ import {
   ElementRef,
   Injector,
   NgZone,
+  Signal,
+  WritableSignal,
   afterNextRender,
   computed,
   effect,
@@ -50,9 +52,11 @@ import {
   sdFileExplorerSafeId,
 } from './file-explorer.utils';
 import type {
+  SdFileExplorerContentState,
   SdFileExplorerItemView,
   SdFileExplorerMetaRow,
   SdFileExplorerPreviewState,
+  SdFileExplorerShareFeedback,
   SdFileExplorerShareState,
   SdFileExplorerTransferView,
   SdFileExplorerTreeNode,
@@ -182,7 +186,9 @@ export class SdFileExplorer {
   protected readonly shareItem = signal<SdFileExplorerItem | null>(null);
   protected readonly shareState = signal<SdFileExplorerShareState>({ status: 'loading' });
   /** Result of the last copy attempt: copied to the clipboard, or selected for a manual Ctrl+C. */
-  protected readonly shareFeedback = signal<'' | 'copied' | 'manual'>('');
+  // why: kiểu khai báo tường minh bằng alias — union tự suy ra được in vào d.ts theo thứ tự nội bộ của TypeScript,
+  // thứ tự này đổi theo máy build (v22/TS 6 in khác nhau giữa checkout LF và CRLF) làm lệch snapshot release.
+  protected readonly shareFeedback: WritableSignal<SdFileExplorerShareFeedback> = signal<SdFileExplorerShareFeedback>('');
 
   /**
    * Uploads and downloads started in this explorer, oldest first. Read-only; use it for example to warn
@@ -273,7 +279,8 @@ export class SdFileExplorer {
     return sdFileExplorerFoldersFirst(this.#visibleItems()).map(format);
   });
 
-  protected readonly contentState = computed<'loading' | 'error' | 'empty' | 'items'>(() => {
+  // why: như shareFeedback — kiểu tường minh để d.ts ổn định giữa các máy build.
+  protected readonly contentState: Signal<SdFileExplorerContentState> = computed<SdFileExplorerContentState>(() => {
     const keyword = this.#trimmedKeyword();
     if (keyword && this.#serverSearch()) {
       const search = this.#search();
