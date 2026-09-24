@@ -1,11 +1,13 @@
 <ng-template cdkPortal>
   @let _isOpened = isOpened();
+  @let _contained = contained();
   <div
     [id]="id"
     class="sd-side-drawer"
     [ngStyle]="{ width: width() }"
     [ngClass]="drawerClass()"
     [class.sd-side-drawer-active]="_isOpened"
+    [class.sd-side-drawer-contained]="_contained"
     [attr.data-autoId]="autoId()"
     [attr.data-opened]="dataOpened()"
     [attr.data-loading]="dataLoading()"
@@ -58,6 +60,7 @@
     <div
       role="presentation"
       class="sd-side-drawer-backdrop"
+      [class.sd-side-drawer-backdrop-contained]="_contained"
       (click)="disableBackdropClose() ? null : close()"
       (wheel)="preventScroll($event)"
       (touchmove)="preventScroll($event)"></div>

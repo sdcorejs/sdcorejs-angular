@@ -1,0 +1,200 @@
+:host {
+  display: block;
+}
+
+.panel {
+  padding: 12px 20px 18px;
+}
+
+:host(.sd-file-explorer-transfer-panel--compact) .panel {
+  padding: 10px 14px 14px;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+}
+
+.head-icon {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  color: var(--sd-fe-accent);
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 22px;
+  color: var(--sd-fe-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cards {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  // why: auto-fit (không phải auto-fill) để 2 thẻ chia đôi chiều ngang như thiết kế thay vì chừa cột trống.
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 12px 20px;
+  max-height: 188px;
+  overflow-y: auto;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--sd-fe-border);
+  border-radius: 10px;
+  background: var(--sd-fe-surface);
+}
+
+.card-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 22px;
+}
+
+.direction {
+  flex: none;
+  color: var(--sd-fe-accent);
+}
+
+.name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sd-fe-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status {
+  flex: none;
+  font-size: 13px;
+  color: var(--sd-fe-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.bar {
+  position: relative;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--sd-fe-track);
+}
+
+.bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: var(--sd-fe-accent);
+  transition: width 200ms ease;
+}
+
+.bar--indeterminate .bar-fill {
+  width: 36% !important;
+  animation: sd-file-explorer-indeterminate 1.3s ease-in-out infinite;
+}
+
+.card--success .bar-fill {
+  background: var(--sd-fe-success);
+}
+
+.card--error {
+  border-color: color-mix(in srgb, var(--sd-fe-error) 35%, var(--sd-fe-border));
+
+  .bar-fill {
+    background: var(--sd-fe-error);
+  }
+
+  .status {
+    color: var(--sd-fe-error);
+    font-weight: 600;
+  }
+}
+
+.card--muted .bar-fill {
+  background: var(--sd-fe-border-strong);
+}
+
+.error {
+  margin: -4px 0 0;
+  overflow: hidden;
+  font-size: 12px;
+  color: var(--sd-fe-error);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icon-button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--sd-fe-text-secondary);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--sd-fe-hover-strong);
+    color: var(--sd-fe-text);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--sd-fe-accent);
+    outline-offset: 1px;
+  }
+}
+
+// why: sd-button sm cao 32px — kéo lề âm để thẻ vẫn gọn như thiết kế (hàng tên cao 22px).
+.card-action {
+  flex: none;
+  margin: -5px -6px -5px -2px;
+}
+
+.clear-button {
+  flex: none;
+}
+
+@keyframes sd-file-explorer-indeterminate {
+  0% {
+    left: -36%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar--indeterminate .bar-fill {
+    animation-duration: 3s;
+  }
+
+  .bar-fill {
+    transition: none;
+  }
+}

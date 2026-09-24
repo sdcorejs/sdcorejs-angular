@@ -1,0 +1,388 @@
+@let _option = option();
+@let _compact = compact();
+@let _autoId = autoId();
+@let _canUpload = canUpload();
+@let _canDownload = canDownload();
+@let _view = view();
+@let _state = contentState();
+@let _keyword = keyword();
+@let _sidebarOpen = sidebarOpen();
+@let _preview = previewView();
+@let _transfers = transferViews();
+@let _heading = heading();
+@let _searching = searching();
+@let _collapsed = transfersCollapsed();
+@let _dialogOpen = folderDialogOpen();
+@let _shareItem = shareItem();
+@let _canShare = canShare();
+@let _modalOpen = _dialogOpen || !!_shareItem;
+
+<header class="header" [attr.inert]="_modalOpen ? '' : null">
+  @if (_option.title) {
+    <div class="brand">
+      <span class="brand-icon" aria-hidden="true">
+        <sd-icon name="folder" size="20px" />
+      </span>
+      <div class="brand-text">
+        <h2 class="brand-title" [title]="_option.title">{{ _option.title }}</h2>
+        @if (_option.description) {
+          <p class="brand-description">{{ _option.description }}</p>
+        }
+      </div>
+    </div>
+  }
+
+  <div class="search" role="search">
+    <sd-icon class="search-icon" name="search" size="20px" />
+    <input
+      #searchInput
+      type="search"
+      class="search-input"
+      autocomplete="off"
+      [value]="_keyword"
+      [placeholder]="'core.component.file-explorer.search-placeholder' | sdTranslate"
+      [attr.aria-label]="'core.component.file-explorer.search-placeholder' | sdTranslate"
+      [attr.data-autoid]="_autoId ? _autoId + '-search' : null"
+      (input)="onKeywordInput(searchInput.value)" />
+    @if (_keyword) {
+      <button
+        type="button"
+        class="search-clear"
+        [attr.aria-label]="'core.component.file-explorer.search-clear' | sdTranslate"
+        [title]="'core.component.file-explorer.search-clear' | sdTranslate"
+        (click)="clearSearch()">
+        <sd-icon name="close" size="18px" />
+      </button>
+    }
+  </div>
+
+  @if (_canUpload) {
+    <sd-button
+      class="upload-button"
+      type="fill"
+      color="primary"
+      size="md"
+      prefixIcon="file_upload"
+      [title]="_compact ? undefined : ('core.component.file-explorer.upload' | sdTranslate)"
+      [tooltip]="_compact ? ('core.component.file-explorer.upload' | sdTranslate) : undefined"
+      [attr.data-autoid]="_autoId ? _autoId + '-upload' : null"
+      (click)="fileInput.click()" />
+    <input
+      #fileInput
+      type="file"
+      class="file-input"
+      multiple
+      tabindex="-1"
+      aria-hidden="true"
+      [attr.data-autoid]="_autoId ? _autoId + '-file-input' : null"
+      (change)="onFilesPicked(fileInput)" />
+  }
+</header>
+
+<!-- why: dialog phủ cả explorer nên làm inert cả vùng này, kể cả drawer chi tiết đang nằm trong .main. -->
+<div class="body" [attr.inert]="_modalOpen ? '' : null">
+  @if (_compact && _sidebarOpen) {
+    <div class="scrim scrim--sidebar" aria-hidden="true" (click)="sidebarOpen.set(false)"></div>
+  }
+  <aside
+    #sidebar
+    class="sidebar"
+    [class.sidebar--open]="_sidebarOpen"
+    [id]="instanceId + '-sidebar'"
+    [attr.aria-label]="'core.component.file-explorer.folders' | sdTranslate"
+    [attr.inert]="_compact && !_sidebarOpen ? '' : null">
+    <p class="sidebar-label">{{ 'core.component.file-explorer.folders' | sdTranslate }}</p>
+    <div class="sidebar-tree">
+      <sd-file-explorer-folder-tree
+        [nodes]="treeNodes()"
+        [label]="'core.component.file-explorer.tree-label' | sdTranslate"
+        (select)="onTreeSelect($event)"
+        (toggle)="onTreeToggle($event)"
+        (retry)="onTreeRetry($event)" />
+    </div>
+    @if (canCreateFolder()) {
+      <div class="sidebar-footer">
+        <sd-button
+          #newFolderButton
+          class="new-folder-button"
+          type="outline"
+          color="secondary"
+          size="md"
+          prefixIcon="add"
+          block
+          [title]="'core.component.file-explorer.new-folder' | sdTranslate"
+          [attr.data-autoid]="_autoId ? _autoId + '-new-folder' : null"
+          (click)="openFolderDialog()" />
+      </div>
+    }
+  </aside>
+
+  <!-- why: .main là [container] của drawer chi tiết — backdrop chỉ phủ vùng bên phải, cây thư mục vẫn dùng được.
+       Drawer nằm TRONG phần tử này nên inert đặt trên từng khối con, không đặt trên .main. -->
+  <section #mainRegion class="main" [attr.aria-label]="_heading">
+    @if (refreshing()) {
+      <div class="refresh-bar" aria-hidden="true"></div>
+    }
+    <div class="toolbar" [attr.inert]="_preview ? '' : null">
+      @if (_compact) {
+        <button
+          type="button"
+          class="icon-button"
+          [attr.aria-expanded]="_sidebarOpen"
+          [attr.aria-controls]="instanceId + '-sidebar'"
+          [attr.aria-label]="
+            (_sidebarOpen ? 'core.component.file-explorer.close-folders' : 'core.component.file-explorer.open-folders') | sdTranslate
+          "
+          [attr.data-autoid]="_autoId ? _autoId + '-menu' : null"
+          (click)="toggleSidebar()">
+          <sd-icon name="menu" size="24px" />
+        </button>
+      }
+      <sd-breadcrumb
+        class="breadcrumb"
+        [items]="breadcrumb().items"
+        [maxItems]="_compact ? 3 : 5"
+        [ariaLabel]="'core.component.file-explorer.breadcrumb' | sdTranslate"
+        (sdItemActivate)="onBreadcrumb($event)" />
+      <div class="view-toggle" role="group" [attr.aria-label]="'core.component.file-explorer.view' | sdTranslate">
+        <button
+          type="button"
+          class="icon-button icon-button--toggle"
+          [class.icon-button--active]="_view === 'list'"
+          [attr.aria-pressed]="_view === 'list'"
+          [attr.aria-label]="'core.component.file-explorer.view-list' | sdTranslate"
+          [title]="'core.component.file-explorer.view-list' | sdTranslate"
+          [attr.data-autoid]="_autoId ? _autoId + '-view-list' : null"
+          (click)="setView('list')">
+          <sd-icon name="format_list_bulleted" size="24px" />
+        </button>
+        <button
+          type="button"
+          class="icon-button icon-button--toggle"
+          [class.icon-button--active]="_view === 'grid'"
+          [attr.aria-pressed]="_view === 'grid'"
+          [attr.aria-label]="'core.component.file-explorer.view-grid' | sdTranslate"
+          [title]="'core.component.file-explorer.view-grid' | sdTranslate"
+          [attr.data-autoid]="_autoId ? _autoId + '-view-grid' : null"
+          (click)="setView('grid')">
+          <sd-icon name="grid_view" size="24px" />
+        </button>
+      </div>
+    </div>
+
+    <div class="heading-row" [attr.inert]="_preview ? '' : null">
+      <h3 class="heading" [title]="_heading">{{ _heading }}</h3>
+      @if (_state === 'items') {
+        <span class="count">{{ itemCountLabel() }}</span>
+      }
+    </div>
+
+    <div class="scroller" [attr.inert]="_preview ? '' : null">
+      @switch (_state) {
+        @case ('loading') {
+          <sd-data-state
+            state="loading"
+            compact
+            [title]="(_searching ? 'core.component.file-explorer.search-loading' : 'core.component.file-explorer.loading') | sdTranslate" />
+        }
+        @case ('error') {
+          <sd-data-state
+            state="error"
+            retryable
+            [title]="(_searching ? 'core.component.file-explorer.search-error' : 'core.component.file-explorer.load-error') | sdTranslate"
+            [message]="errorMessage()"
+            [retryLabel]="'core.component.file-explorer.retry' | sdTranslate"
+            (sdRetry)="retryContent()" />
+        }
+        @case ('empty') {
+          <sd-data-state
+            state="empty"
+            [icon]="_searching ? 'search_off' : 'folder_open'"
+            [title]="emptyTitle()"
+            [message]="emptyMessage()" />
+        }
+        @default {
+          <sd-file-explorer-item-list
+            [items]="itemViews()"
+            [view]="_view"
+            [canDownload]="_canDownload"
+            [canShare]="_canShare"
+            [compact]="_compact"
+            [activeId]="_preview ? _preview.item.id : null"
+            [label]="_heading"
+            (activate)="onActivate($event)"
+            (download)="downloadItem($event.item)"
+            (share)="openShare($event.item)" />
+        }
+      }
+    </div>
+  </section>
+</div>
+
+@if (_transfers.length) {
+  <sd-file-explorer-transfer-panel
+    class="transfers"
+    [attr.inert]="_modalOpen ? '' : null"
+    [transfers]="_transfers"
+    [title]="transfersTitle()"
+    [collapsed]="_collapsed"
+    [canClear]="canClearTransfers()"
+    [compact]="_compact"
+    [autoId]="_autoId ? _autoId + '-transfers' : undefined"
+    (toggleCollapsed)="transfersCollapsed.set(!_collapsed)"
+    (clear)="clearFinishedTransfers()"
+    (cancel)="cancelTransfer($event)"
+    (retry)="retryTransfer($event)"
+    (dismiss)="dismissTransfer($event)" />
+}
+
+<!-- why: chi tiết file là sd-side-drawer thật, mở gọn trong vùng danh sách bên phải nhờ [container]:
+     header (tìm kiếm, tải lên), cây thư mục và hàng chờ truyền tải vẫn dùng được khi drawer mở. -->
+<sd-file-explorer-preview-panel
+  [view]="_preview"
+  [state]="previewState()"
+  [meta]="previewMeta()"
+  [canDownload]="_canDownload"
+  [canShare]="_canShare"
+  [container]="mainRegion"
+  [autoId]="_autoId ? _autoId + '-preview' : undefined"
+  (close)="closePreview()"
+  (download)="downloadPreview()"
+  (share)="sharePreview()"
+  (retry)="retryPreview()"
+  (imageError)="onPreviewImageError()" />
+
+@if (dragActive()) {
+  <div class="drop-overlay" aria-hidden="true">
+    <div class="drop-card">
+      <sd-icon name="file_upload" size="40px" />
+      <p class="drop-title">{{ dropTitle() }}</p>
+    </div>
+  </div>
+}
+
+@if (_dialogOpen) {
+  @let _folderName = folderName();
+  @let _folderError = folderError();
+  <div class="dialog-backdrop" aria-hidden="true" (click)="closeFolderDialog()"></div>
+  <form
+    class="dialog"
+    role="dialog"
+    aria-modal="true"
+    novalidate
+    [attr.aria-labelledby]="instanceId + '-folder-title'"
+    [attr.data-autoid]="_autoId ? _autoId + '-folder-dialog' : null"
+    (submit)="submitFolder($event)">
+    <h3 class="dialog-title" [id]="instanceId + '-folder-title'">{{ folderDialogTitle() }}</h3>
+    <label class="field-label" [for]="instanceId + '-folder-name'">{{
+      'core.component.file-explorer.new-folder-name' | sdTranslate
+    }}</label>
+    <input
+      #folderInput
+      class="field-input"
+      autocomplete="off"
+      maxlength="255"
+      [id]="instanceId + '-folder-name'"
+      [value]="_folderName"
+      [attr.aria-invalid]="_folderError ? true : null"
+      [attr.aria-describedby]="_folderError ? instanceId + '-folder-error' : null"
+      [attr.data-autoid]="_autoId ? _autoId + '-folder-name' : null"
+      (input)="folderName.set(folderInput.value)" />
+    @if (_folderError) {
+      <p class="field-error" role="alert" [id]="instanceId + '-folder-error'">{{ _folderError }}</p>
+    }
+    <div class="dialog-actions">
+      <sd-button
+        class="cancel-button"
+        type="text"
+        color="secondary"
+        size="md"
+        [title]="'core.component.file-explorer.cancel' | sdTranslate"
+        (click)="closeFolderDialog()" />
+      <sd-button
+        class="submit-button"
+        type="fill"
+        color="primary"
+        size="md"
+        htmlType="submit"
+        [title]="'core.component.file-explorer.create' | sdTranslate"
+        [disabled]="!_folderName.trim()"
+        [loading]="folderSubmitting()"
+        [attr.data-autoid]="_autoId ? _autoId + '-folder-submit' : null" />
+    </div>
+  </form>
+}
+
+@if (_shareItem) {
+  @let _shareState = shareState();
+  <div class="dialog-backdrop" aria-hidden="true" (click)="closeShare()"></div>
+  <div
+    #shareDialog
+    class="dialog"
+    role="dialog"
+    aria-modal="true"
+    tabindex="-1"
+    [attr.aria-labelledby]="instanceId + '-share-title'"
+    [attr.aria-busy]="_shareState.status === 'loading' ? true : null"
+    [attr.data-autoid]="_autoId ? _autoId + '-share-dialog' : null">
+    <h3 class="dialog-title" [id]="instanceId + '-share-title'" [title]="_shareItem.name">{{ shareTitle() }}</h3>
+    @switch (_shareState.status) {
+      @case ('loading') {
+        <p class="share-status" role="status">
+          <span class="spinner" aria-hidden="true"></span>
+          {{ 'core.component.file-explorer.share.loading' | sdTranslate }}
+        </p>
+      }
+      @case ('error') {
+        <p class="field-error" role="alert">{{ _shareState.message }}</p>
+      }
+      @case ('ready') {
+        <label class="field-label" [for]="instanceId + '-share-link'">{{ 'core.component.file-explorer.share.link' | sdTranslate }}</label>
+        <input
+          #shareInput
+          class="field-input"
+          readonly
+          [id]="instanceId + '-share-link'"
+          [value]="_shareState.url"
+          [attr.aria-describedby]="instanceId + '-share-feedback'"
+          [attr.data-autoid]="_autoId ? _autoId + '-share-link' : null"
+          (focus)="shareInput.select()" />
+        <p class="share-feedback" role="status" aria-live="polite" [id]="instanceId + '-share-feedback'">{{ shareFeedbackLabel() }}</p>
+      }
+    }
+    <div class="dialog-actions">
+      <sd-button
+        class="close-button"
+        type="text"
+        color="secondary"
+        size="md"
+        [title]="'core.component.file-explorer.close' | sdTranslate"
+        (click)="closeShare()" />
+      @if (_shareState.status === 'error') {
+        <sd-button
+          class="retry-button"
+          type="outline"
+          color="primary"
+          size="md"
+          prefixIcon="refresh"
+          [title]="'core.component.file-explorer.retry' | sdTranslate"
+          (click)="retryShare()" />
+      } @else {
+        <sd-button
+          #copyButton
+          class="copy-button"
+          type="fill"
+          color="primary"
+          size="md"
+          prefixIcon="content_copy"
+          [title]="
+            (shareFeedback() === 'copied' ? 'core.component.file-explorer.share.copied' : 'core.component.file-explorer.share.copy')
+              | sdTranslate
+          "
+          [disabled]="_shareState.status !== 'ready'"
+          [attr.data-autoid]="_autoId ? _autoId + '-share-copy' : null"
+          (click)="copyShareLink()" />
+      }
+    </div>
+  </div>
+}

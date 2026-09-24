@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy as SdAngular22ChangeDetectionStrategy } from '@angular/core';
-import { Component } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -642,4 +642,180 @@ describe('SdSideDrawer — stacked body scroll lock', () => {
     inner.close();
     expect(document.body.style.overflow).toBe('');
   });
+});
+
+// ---------------------------------------------------------------------------
+// [container]: drawer mở gọn trong một vùng thay vì phủ cả viewport
+// ---------------------------------------------------------------------------
+
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  standalone: true,
+  imports: [SdSideDrawer],
+  template: `
+    <div #area class="area" [style.position]="areaPosition" style="width: 400px; height: 300px">
+      <p>region content</p>
+    </div>
+    <sd-side-drawer title="Scoped" [container]="scoped ? (useRef ? areaRef : area) : null">
+      <span id="scoped-body">scoped body</span>
+      <button sdFooterRight type="button">Save</button>
+    </sd-side-drawer>
+  `,
+})
+class ContainedHostComponent {
+  @ViewChild('area', { static: true, read: ElementRef }) areaRef!: ElementRef<HTMLElement>;
+  scoped = true;
+  useRef = false;
+  areaPosition: string | null = null;
+}
+
+describe('SdSideDrawer — [container]', () => {
+  let fixture: ComponentFixture<ContainedHostComponent>;
+  let drawer: SdSideDrawer;
+
+  const area = (): HTMLElement => fixture.nativeElement.querySelector('.area');
+  const panel = (): HTMLElement => document.getElementById(drawer.id) as HTMLElement;
+
+  function create(setup: (host: ContainedHostComponent) => void = () => undefined): void {
+    fixture = TestBed.createComponent(ContainedHostComponent);
+    setup(fixture.componentInstance);
+    fixture.detectChanges();
+    tick();
+    drawer = fixture.debugElement.query(By.directive(SdSideDrawer)).componentInstance as SdSideDrawer;
+  }
+
+  function open(): void {
+    drawer.open();
+    fixture.detectChanges();
+    tick();
+  }
+
+  function close(): void {
+    drawer.close();
+    fixture.detectChanges();
+    tick();
+  }
+
+  beforeEach(async () => {
+    document.body.style.overflow = '';
+    await TestBed.configureTestingModule({
+      imports: [ContainedHostComponent, NoopAnimationsModule],
+    }).compileComponents();
+  });
+
+  afterEach(() => {
+    fixture?.destroy();
+    document.body.style.overflow = '';
+  });
+
+  it('renders the panel and its backdrop inside the container, positioned against it', fakeAsync(() => {
+    create();
+    const layer = area().querySelector(':scope > .sd-side-drawer-layer') as HTMLElement;
+    expect(layer).not.toBeNull();
+    expect(panel().parentElement).toBe(layer);
+    expect(panel().classList).toContain('sd-side-drawer-contained');
+    expect(getComputedStyle(panel()).position).toBe('absolute');
+    // why: lớp bọc cắt phần panel đang trượt và để click xuyên xuống vùng chứa khi drawer đóng.
+    expect(getComputedStyle(layer).overflow).toBe('clip');
+    expect(getComputedStyle(layer).pointerEvents).toBe('none');
+
+    open();
+    const backdrop = panel().nextElementSibling as HTMLElement;
+    expect(backdrop.classList).toContain('sd-side-drawer-backdrop-contained');
+    expect(getComputedStyle(backdrop).position).toBe('absolute');
+    expect(getComputedStyle(backdrop).pointerEvents).toBe('auto');
+    expect(layer.querySelector('#scoped-body')).not.toBeNull();
+    close();
+  }));
+
+  it('slides in without scrolling its layer when focus enters the panel', fakeAsync(() => {
+    create();
+    open();
+    const layer = panel().parentElement as HTMLElement;
+    // why: CDK focuses the close button while the panel is still translated outside the layer. A layer
+    // that can scroll (overflow: hidden) scrolls to reveal it, which shifts the backdrop from the left and
+    // makes the panel jump instead of sliding in from the right.
+    expect(panel().contains(document.activeElement)).toBeTrue();
+    expect(layer.scrollLeft).toBe(0);
+    expect((panel().nextElementSibling as HTMLElement).getBoundingClientRect().left).toBe(area().getBoundingClientRect().left);
+    close();
+  }));
+
+  it('sizes the panel and its touch targets from the container width, not the viewport', fakeAsync(() => {
+    create();
+    open();
+    // 400px container → narrow layout: 8px inset on both sides and 44px close button.
+    expect(Math.round(panel().getBoundingClientRect().width)).toBe(400 - 16);
+    const closeButton = panel().querySelector('.sd-side-drawer-close-btn') as HTMLElement;
+    expect(closeButton.getBoundingClientRect().width).toBe(44);
+    close();
+  }));
+
+  it('does not lock page scroll while open inside a container', fakeAsync(() => {
+    create();
+    open();
+    expect(document.body.style.overflow).toBe('');
+    close();
+    expect(document.body.style.overflow).toBe('');
+  }));
+
+  it('closes from its backdrop and with Escape inside the container', fakeAsync(() => {
+    create();
+    open();
+    (panel().nextElementSibling as HTMLElement).click();
+    fixture.detectChanges();
+    tick();
+    expect(drawer.isOpened()).toBeFalse();
+
+    open();
+    panel().dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    fixture.detectChanges();
+    tick();
+    expect(drawer.isOpened()).toBeFalse();
+  }));
+
+  it('makes a static container its positioning context and restores it on destroy', fakeAsync(() => {
+    create();
+    const region = area();
+    expect(region.style.position).toBe('relative');
+    fixture.destroy();
+    expect(region.style.position).toBe('');
+    expect(region.querySelector('.sd-side-drawer-layer')).toBeNull();
+  }));
+
+  it('leaves an already positioned container untouched', fakeAsync(() => {
+    create(host => (host.areaPosition = 'absolute'));
+    const region = area();
+    expect(region.style.position).toBe('absolute');
+    fixture.destroy();
+    expect(region.style.position).toBe('absolute');
+  }));
+
+  it('accepts an ElementRef', fakeAsync(() => {
+    create(host => (host.useRef = true));
+    expect(panel().parentElement?.parentElement).toBe(area());
+  }));
+
+  it('moves between the container and the viewport when [container] changes, locking scroll only in the viewport', fakeAsync(() => {
+    create();
+    open();
+    const host = fixture.componentInstance;
+
+    host.scoped = false;
+    fixture.detectChanges();
+    tick();
+    expect(panel().parentElement).toBe(document.body);
+    expect(panel().classList).not.toContain('sd-side-drawer-contained');
+    expect(panel().nextElementSibling?.classList).toContain('sd-side-drawer-backdrop');
+    expect(area().querySelector('.sd-side-drawer-layer')).toBeNull();
+    expect(area().style.position).toBe('');
+    expect(document.body.style.overflow).toBe('hidden');
+
+    host.scoped = true;
+    fixture.detectChanges();
+    tick();
+    expect(panel().parentElement?.parentElement).toBe(area());
+    expect(document.body.style.overflow).toBe('');
+    close();
+  }));
 });

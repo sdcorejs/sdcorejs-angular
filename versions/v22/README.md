@@ -181,7 +181,7 @@ Mỗi component / form control / service / module là 1 entry point độc lập
 | Layout | `splitter` · `side-drawer` · `tab` · `tab-router` · `stepper` · `modal` · `anchor` |
 | Data | `table` · `tree` · `org-chart` · `query-bar` · `query-builder` · `preview` · `history` |
 | Editor | `editor` · `mini-editor` · `code-editor` · `document-builder` |
-| Workflow | `form-generic` · `upload-file` · `import-excel` |
+| Workflow | `form-generic` · `upload-file` · `import-excel` · `file-explorer` |
 
 **Table highlights**: server/local mode · paginate · sort · column filter · external filter · row selection (single/multi/preserve cross-page) · row reorder · row group (collapsible, select-all-in-group, sdTableGroupDef template) · tree rows (hierarchical STT 1/1.1/1.2.1) · expandable sub-info · custom cell template · footer aggregation · export Excel/CSV.
 

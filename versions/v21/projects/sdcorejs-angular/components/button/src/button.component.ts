@@ -131,6 +131,16 @@ export class SdButton implements OnInit, OnDestroy {
   // ==========================================
   autoId = computed(() => (this.autoIdInput() ? `components-button-${this.autoIdInput()}` : undefined));
 
+  /**
+   * Accessible name of the trigger. Menu triggers use title/tooltip; icon-only buttons use the tooltip
+   * because their icon is `aria-hidden` and they have no visible text.
+   */
+  readonly ariaLabel = computed(() => {
+    if (this.hasActions()) return this.title() || this.tooltip() || null;
+    // why: nút chỉ có icon thì icon bị aria-hidden → không set aria-label là nút không có tên với screen reader.
+    return this.isIconOnly() ? this.tooltip() || null : null;
+  });
+
   buttonClasses = computed(() => ({
     'c-square': this.isIconOnly(),
     'c-sm': this.size() === 'sm',

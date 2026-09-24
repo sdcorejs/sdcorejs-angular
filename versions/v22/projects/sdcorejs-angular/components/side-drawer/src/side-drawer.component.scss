@@ -36,6 +36,12 @@
     transform: translate3d(0, 0, 0);
   }
 
+  // Mở trong [container]: định vị theo lớp bọc phủ vùng chứa thay vì theo viewport.
+  &-contained {
+    position: absolute;
+    max-width: calc(100% - var(--sd-side-drawer-inset) - var(--sd-side-drawer-inset));
+  }
+
   &-header {
     min-height: 56px;
     display: flex;
@@ -177,6 +183,12 @@
   width: 100%;
   height: 100%;
   transition: all 0.3s ease-in-out;
+
+  &-contained {
+    position: absolute;
+    // why: lớp bọc đặt pointer-events: none cho cả vùng chứa; backdrop phải tự bắt click để đóng drawer.
+    pointer-events: auto;
+  }
 }
 
 .sd-side-drawer-focus {
@@ -200,7 +212,7 @@
 .sd-side-drawer-content {
   padding: 12px 16px;
 }
-@media (max-width: 600px) {
+@mixin sd-side-drawer-narrow {
   .sd-side-drawer {
     --sd-side-drawer-inset: 8px;
   }
@@ -223,6 +235,13 @@
   ::ng-deep .sd-side-drawer-footer button {
     min-height: 44px;
   }
+}
+@media (max-width: 600px) {
+  @include sd-side-drawer-narrow;
+}
+// Drawer mở trong [container] co giãn theo bề rộng vùng chứa (lớp bọc khai báo container sd-side-drawer).
+@container sd-side-drawer (max-width: 600px) {
+  @include sd-side-drawer-narrow;
 }
 @media (prefers-reduced-motion: reduce) {
   .sd-side-drawer,

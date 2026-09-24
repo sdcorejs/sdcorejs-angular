@@ -77,6 +77,7 @@ Skill pack chạy lại sẽ tự dựng `specs/`, `plans/`, `docs/` dưới `.s
 | `scripts/deploy.ps1` | Build/pack dry-run bốn line vào `-OutputPath`, ghi checksum/metadata và luôn khôi phục version tạm | Release preflight local; script không publish npm |
 | `scripts/build-published-page.mjs` | Build `showcase/` → `published-pages/<suffix>/` + prune retention (`npm run build:page -- --suffix 1.6`) | Mỗi release, sau khi lib đã build |
 | `scripts/collect-docs.mjs` | Sinh 1 archive `published-docs/<version>/` (pin link theo tag + per-version CHANGELOG) | Qua `collect-release-docs`, hoặc debug đơn lẻ |
+| `scripts/generate-file-explorer-icons.mjs` | Nhúng bộ icon SVG của `file-explorer` (`versions/v19/.../file-explorer/src/assets/icons`) thành `file-explorer-icons.generated.ts` (`npm run generate:file-explorer-icons`) | Sau khi sửa SVG/`manifest.json`, rồi `npm run sync`; `test:scripts` fail nếu file sinh cũ |
 
 `npm run sync` là entry point rollout bình thường: lấy `versions/v19` làm nguồn rồi đồng bộ sang `versions/v20`, `versions/v21` và `versions/v22`. `npm run check:sync` là release guard read-only; nếu fail thì chạy lại `npm run sync`, review diff, rồi commit đầy đủ trước khi tag. Nếu cần tái hiện mirror cũ để điều tra lịch sử, dùng `npm run legacy:sync-from-vn-angular` trên một branch sạch.
 
@@ -108,16 +109,16 @@ git push
 
 ### Quy trình deploy npm — qua GitHub Actions (khuyến nghị)
 
-Release đang chuẩn bị: `v2.14` → `19.2.14` / `20.2.14` / `21.2.14` / `22.2.14`.
-Workflow `publish-npm.yml` pin đúng tag `v2.14`; snapshot `scripts/release-contracts/2.14.json`
-đối chiếu từng line với bản `*.2.13` cùng Angular major. Fallback từ Angular 22 sang 21
+Release đang chuẩn bị: `v2.15` → `19.2.15` / `20.2.15` / `21.2.15` / `22.2.15`.
+Workflow `publish-npm.yml` pin đúng tag `v2.15`; snapshot `scripts/release-contracts/2.15.json`
+đối chiếu từng line với bản `*.2.14` cùng Angular major. Fallback từ Angular 22 sang 21
 chỉ áp dụng cho release khởi đầu `22.2.5`.
 
 Workflow: `.github/workflows/publish-npm.yml`. Auth qua **npm trusted publishing (OIDC)** — không dùng `NPM_TOKEN`, `NODE_AUTH_TOKEN` hay `npm login` local. Mọi release build/verify/publish job pin exact Node `22.22.3`; publisher cài exact `npm@11.5.1`, dùng job env `NPM_CONFIG_REGISTRY: https://registry.npmjs.org` và là job duy nhất có `permissions: id-token: write`. Không truyền `registry-url` cho `setup-node` trong job publisher vì action tự tạo token giả cùng `.npmrc` chứa `_authToken`, làm guard OIDC chặn publish. Trusted publisher trên npmjs.com pin theo repo + tên file workflow, nên đổi tên `publish-npm.yml` là phải khai báo lại bên npm.
 
 **Trigger**:
 - Push tag `v<release-suffix>` → tạo đúng bốn version `19.<suffix>` / `20.<suffix>` / `21.<suffix>` / `22.<suffix>`.
-  - `v2.14` → `19.2.14`, `20.2.14`, `21.2.14`, `22.2.14`.
+  - `v2.15` → `19.2.15`, `20.2.15`, `21.2.15`, `22.2.15`.
 - Angular 22 bắt đầu tại `22.2.5`; generator/release plan không được dựng version 22 trước suffix `2.5`.
 - `@sdcorejs/angular-material-datetime@1.0.4` phải được publish và verify trước transaction Core UI `2.5`.
 
@@ -134,10 +135,10 @@ Transaction không interleave build và publish:
 5. Publish v22 cuối cùng với `latest`, rồi verify exact registry integrity/shasum/SHA-256 và provenance. Không rebuild, không `npm dist-tag add`.
 6. Chỉ sau postpublish GREEN mới sinh đủ bốn `published-docs`, build `published-pages/<suffix>`, áp retention và commit docs/page về `main`.
 
-**Tag stable 19.2.14/20.2.14/21.2.14/22.2.14 sau khi release commit đã merge vào main**:
+**Tag stable 19.2.15/20.2.15/21.2.15/22.2.15 sau khi release commit đã merge vào main**:
 ```bash
-git tag v2.14
-git push origin v2.14
+git tag v2.15
+git push origin v2.15
 ```
 
 ### Release preflight local — `deploy.ps1`
@@ -145,8 +146,8 @@ git push origin v2.14
 Local script chỉ dùng để tái hiện build/pack/checksum; publication vẫn thuộc GitHub trusted-publishing workflow:
 ```powershell
 powershell -ExecutionPolicy Bypass -File ./scripts/deploy.ps1 `
-  -PatchVersion "2.14" `
-  -OutputPath "$env:TEMP\sdcorejs-angular-2.14" `
+  -PatchVersion "2.15" `
+  -OutputPath "$env:TEMP\sdcorejs-angular-2.15" `
   -DryRun
 ```
 

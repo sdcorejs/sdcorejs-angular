@@ -61,6 +61,10 @@ export type ShowcaseExampleSourceKey =
   | "components/data-state/example-success"
   | "components/editor/example-chi-doc"
   | "components/editor/example-soan-noi-dung"
+  | "components/file-explorer/example-chi-xem-va-tai-xuong"
+  | "components/file-explorer/example-day-du-tinh-nang"
+  | "components/file-explorer/example-khung-hep-mobile"
+  | "components/file-explorer/example-loading-rong-va-loi"
   | "components/form-generic/example-builder-render"
   | "components/history/example-lich-su-cap-nhat"
   | "components/history/example-luong-phe-duyet"
@@ -135,6 +139,7 @@ export type ShowcaseExampleSourceKey =
   | "components/side-drawer/example-filter-drawer"
   | "components/side-drawer/example-locked-drawer-with-explicit-actions"
   | "components/side-drawer/example-long-scroll-content"
+  | "components/side-drawer/example-open-inside-a-container"
   | "components/side-drawer/example-read-only-drawer-without-footer"
   | "components/splitter/example-doc-3-panel-px-co-dinh"
   | "components/splitter/example-ngang-2-panel-flex"
@@ -796,6 +801,34 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Existing “Chỉ đọc” scenario preserved from the showcase.",
   },
   {
+    sourceKey: "components/file-explorer/example-day-du-tinh-nang",
+    pageKey: "components/file-explorer",
+    sectionId: "example-day-du-tinh-nang",
+    title: "Đầy đủ tính năng",
+    description: "Kéo thả tệp vào explorer hoặc bấm Tải tệp lên. Tên tệp có chữ “loi” sẽ mô phỏng lỗi để thử nút Thử lại; hủy được khi đang chuẩn bị hoặc đang truyền.",
+  },
+  {
+    sourceKey: "components/file-explorer/example-chi-xem-va-tai-xuong",
+    pageKey: "components/file-explorer",
+    sectionId: "example-chi-xem-va-tai-xuong",
+    title: "Chỉ xem và tải xuống",
+    description: "Callback nào không được cung cấp thì UI tương ứng biến mất. Không có search nên ô tìm kiếm lọc danh sách đã tải của thư mục hiện tại. Download trả void: explorer chỉ ghi nhận đã chuyển cho trình duyệt, không giả lập phần trăm.",
+  },
+  {
+    sourceKey: "components/file-explorer/example-khung-hep-mobile",
+    pageKey: "components/file-explorer",
+    sectionId: "example-khung-hep-mobile",
+    title: "Khung hẹp / mobile",
+    description: "Layout đổi theo độ rộng của chính explorer (ResizeObserver), không theo viewport — đặt trong sidebar hẹp cũng tự chuyển.",
+  },
+  {
+    sourceKey: "components/file-explorer/example-loading-rong-va-loi",
+    pageKey: "components/file-explorer",
+    sectionId: "example-loading-rong-va-loi",
+    title: "Loading, rỗng và lỗi",
+    description: "Thư mục “Lỗi lần đầu” reject ở lần gọi đầu tiên; bấm Thử lại (trong nội dung hoặc biểu tượng trên cây) sẽ thành công.",
+  },
+  {
     sourceKey: "components/form-generic/example-builder-render",
     pageKey: "components/form-generic",
     sectionId: "example-builder-render",
@@ -1319,6 +1352,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-locked-drawer-with-explicit-actions",
     title: "Locked drawer with explicit actions",
     description: "Existing “Locked drawer with explicit actions” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/side-drawer/example-open-inside-a-container",
+    pageKey: "components/side-drawer",
+    sectionId: "example-open-inside-a-container",
+    title: "Open inside a container",
+    description: "Existing “Open inside a container” scenario preserved from the showcase.",
   },
   {
     sourceKey: "components/splitter/example-ngang-2-panel-flex",

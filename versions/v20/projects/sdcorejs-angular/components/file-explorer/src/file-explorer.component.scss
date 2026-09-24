@@ -1,0 +1,623 @@
+// Public override hooks: set `--sd-file-explorer-*` on `sd-file-explorer` (or any ancestor).
+// Internal `--sd-fe-*` tokens resolve them with fallbacks to the Core theme, so the component follows
+// `--sd-primary`, `--sd-surface`, `--sd-border`… when no override is given.
+:host {
+  --sd-fe-accent: var(--sd-file-explorer-accent, var(--sd-primary, #005cbb));
+  --sd-fe-accent-strong: var(--sd-file-explorer-accent-strong, color-mix(in srgb, var(--sd-fe-accent) 84%, #000000));
+  --sd-fe-accent-contrast: var(--sd-file-explorer-accent-contrast, var(--sd-primary-contrast, #ffffff));
+  --sd-fe-accent-soft: var(--sd-file-explorer-accent-soft, color-mix(in srgb, var(--sd-fe-accent) 10%, #ffffff));
+  --sd-fe-surface: var(--sd-file-explorer-surface, #ffffff);
+  --sd-fe-sidebar-bg: var(--sd-file-explorer-sidebar-bg, color-mix(in srgb, var(--sd-surface-muted, #e7e8ed) 26%, var(--sd-fe-surface)));
+  --sd-fe-muted-surface: var(
+    --sd-file-explorer-muted-surface,
+    color-mix(in srgb, var(--sd-surface-muted, #e7e8ed) 50%, var(--sd-fe-surface))
+  );
+  --sd-fe-preview-bg: var(--sd-file-explorer-preview-bg, color-mix(in srgb, var(--sd-fe-accent) 9%, #ffffff));
+  --sd-fe-border: var(--sd-file-explorer-border, color-mix(in srgb, var(--sd-border, #c4c6d0) 55%, #ffffff));
+  --sd-fe-border-strong: var(--sd-file-explorer-border-strong, var(--sd-border, #c4c6d0));
+  --sd-fe-text: var(--sd-file-explorer-text, var(--sd-text, #1a1b1f));
+  --sd-fe-text-secondary: var(--sd-file-explorer-text-secondary, color-mix(in srgb, var(--sd-text-secondary, #44474f) 84%, #ffffff));
+  --sd-fe-hover: color-mix(in srgb, var(--sd-fe-text) 4%, transparent);
+  --sd-fe-hover-strong: color-mix(in srgb, var(--sd-fe-text) 8%, transparent);
+  --sd-fe-track: color-mix(in srgb, var(--sd-fe-text) 7%, var(--sd-fe-surface));
+  --sd-fe-success: var(--sd-file-explorer-success, var(--sd-success, #2e7d32));
+  --sd-fe-error: var(--sd-file-explorer-error, var(--sd-error, #ba1a1a));
+  --sd-fe-radius: var(--sd-file-explorer-radius, 16px);
+  // why: cùng lớp phủ với backdrop của sd-side-drawer (rgba(0, 0, 0, 0.4)) — drawer chi tiết, panel thư mục và dialog nhìn như một họ.
+  --sd-fe-scrim: var(--sd-file-explorer-scrim, rgba(0, 0, 0, 0.4));
+  // Drawer chi tiết (sd-side-drawer [container]) nằm trên nội dung, dưới lớp kéo-thả (10) và dialog (20/21).
+  --sd-side-drawer-contained-z-index: 9;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 480px;
+  overflow: hidden;
+  border: 1px solid var(--sd-fe-border);
+  border-radius: var(--sd-fe-radius);
+  background: var(--sd-fe-surface);
+  color: var(--sd-fe-text);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+// ---- Header ----
+
+.header {
+  display: grid;
+  // why: cột brand co theo nội dung (tối đa 320px) để tiêu đề không bị "…" khi explorer hẹp; ô tìm kiếm lấy phần còn lại.
+  grid-template-columns: fit-content(320px) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px 20px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--sd-fe-border);
+}
+
+.brand {
+  grid-column: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+// Same treatment as the sd-section header icon: outline glyph on a round primary tint.
+.brand-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--sd-fe-accent) 14%, #ffffff);
+  color: var(--sd-fe-accent);
+}
+
+.brand-text {
+  min-width: 0;
+}
+
+.brand-title {
+  margin: 0;
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 22px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.brand-description {
+  margin: 0;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--sd-fe-text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search {
+  grid-column: 2;
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 520px;
+  height: 36px;
+  padding: 0 6px 0 12px;
+  border: 1px solid var(--sd-fe-border);
+  border-radius: 999px;
+  background: var(--sd-fe-muted-surface);
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+
+  &:focus-within {
+    border-color: var(--sd-fe-accent);
+    background: var(--sd-fe-surface);
+    box-shadow: 0 0 0 3px var(--sd-fe-accent-soft);
+  }
+}
+
+.search-icon {
+  flex: none;
+  color: var(--sd-fe-text-secondary);
+}
+
+.search-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--sd-fe-text);
+  font: inherit;
+  font-size: 14px;
+
+  &::placeholder {
+    color: var(--sd-fe-text-secondary);
+  }
+
+  &::-webkit-search-cancel-button {
+    display: none;
+  }
+}
+
+.search-clear {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--sd-fe-text-secondary);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--sd-fe-hover-strong);
+  }
+}
+
+.upload-button {
+  grid-column: 3;
+  justify-self: end;
+}
+
+.file-input {
+  display: none;
+}
+
+// ---- Body ----
+
+.body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 238px minmax(0, 1fr);
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 22px 14px 32px 12px;
+  border-right: 1px solid var(--sd-fe-border);
+  background: var(--sd-fe-sidebar-bg);
+}
+
+.sidebar-label {
+  margin: 0 0 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sd-fe-text-secondary);
+}
+
+.sidebar-tree {
+  flex: 1;
+  min-height: 0;
+  margin: 0 -4px;
+  padding: 2px 4px;
+  overflow-y: auto;
+}
+
+.sidebar-footer {
+  margin: 12px 4px 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--sd-fe-border);
+}
+
+.new-folder-button {
+  display: block;
+}
+
+.main {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding-top: 14px;
+}
+
+.refresh-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  overflow: hidden;
+  background: var(--sd-fe-accent-soft);
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 30%;
+    background: var(--sd-fe-accent);
+    animation: sd-file-explorer-refresh 1.2s ease-in-out infinite;
+  }
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+  padding: 0 32px;
+}
+
+.breadcrumb {
+  flex: 1;
+  min-width: 0;
+  margin-left: -4px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+// M3-style segmented toggle: pill container, round segments, tinted selected segment.
+.view-toggle {
+  flex: none;
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--sd-fe-border);
+  border-radius: 999px;
+  background: var(--sd-fe-surface);
+}
+
+.icon-button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--sd-fe-text-secondary);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--sd-fe-hover-strong);
+    color: var(--sd-fe-text);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--sd-fe-accent);
+    outline-offset: 1px;
+  }
+}
+
+.icon-button--toggle {
+  width: 40px;
+  height: 32px;
+}
+
+.icon-button--active,
+.icon-button--active:hover {
+  background: var(--sd-fe-accent-soft);
+  color: var(--sd-fe-accent);
+}
+
+.heading-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 0 32px;
+}
+
+.heading {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 26px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.count {
+  flex: none;
+  padding-bottom: 12px;
+  font-size: 13px;
+  color: var(--sd-fe-text-secondary);
+}
+
+.scroller {
+  flex: 1;
+  min-height: 0;
+  padding: 8px 28px 16px;
+  overflow-y: auto;
+}
+
+// ---- Scrim (compact folder panel) ----
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--sd-fe-scrim);
+  animation: sd-file-explorer-fade 180ms ease;
+}
+
+// ---- Transfers ----
+
+.transfers {
+  flex: none;
+  border-top: 1px solid var(--sd-fe-border);
+  background: var(--sd-fe-surface);
+}
+
+// ---- Drop overlay ----
+
+.drop-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  border: 2px dashed var(--sd-fe-accent);
+  border-radius: var(--sd-fe-radius);
+  background: color-mix(in srgb, var(--sd-fe-accent) 8%, rgb(255 255 255 / 86%));
+  pointer-events: none;
+}
+
+.drop-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: var(--sd-fe-accent);
+  text-align: center;
+}
+
+.drop-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+// ---- New folder dialog ----
+
+.dialog-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  background: var(--sd-fe-scrim);
+}
+
+.dialog {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 21;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(400px, calc(100% - 32px));
+  padding: 20px;
+  border-radius: 14px;
+  background: var(--sd-fe-surface);
+  box-shadow: 0 18px 48px rgb(15 23 42 / 18%);
+  transform: translate(-50%, -50%);
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.dialog-title {
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.field-label {
+  font-size: 13px;
+  color: var(--sd-fe-text-secondary);
+}
+
+.field-input {
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--sd-fe-border-strong);
+  border-radius: 8px;
+  background: var(--sd-fe-surface);
+  color: var(--sd-fe-text);
+  font: inherit;
+  font-size: 15px;
+  outline: none;
+
+  &:focus {
+    border-color: var(--sd-fe-accent);
+    box-shadow: 0 0 0 3px var(--sd-fe-accent-soft);
+  }
+
+  &[aria-invalid='true'] {
+    border-color: var(--sd-fe-error);
+  }
+}
+
+.field-error {
+  margin: 0;
+  font-size: 13px;
+  color: var(--sd-fe-error);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.share-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0;
+  font-size: 14px;
+  color: var(--sd-fe-text-secondary);
+}
+
+.share-feedback {
+  min-height: 18px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--sd-fe-success);
+}
+
+.spinner {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid color-mix(in srgb, var(--sd-fe-accent) 20%, transparent);
+  border-top-color: var(--sd-fe-accent);
+  border-radius: 50%;
+  animation: sd-file-explorer-spin 0.8s linear infinite;
+}
+
+// ---- Compact (narrow container) ----
+
+:host(.sd-file-explorer--compact) {
+  .header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px 12px;
+    padding: 12px 14px;
+  }
+
+  .brand {
+    grid-row: 1;
+    gap: 10px;
+  }
+
+  .upload-button {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .search {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    max-width: none;
+  }
+
+  .header:not(:has(.brand)) .search {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sidebar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 5;
+    width: min(300px, 86%);
+    border-right: 1px solid var(--sd-fe-border);
+    box-shadow: 12px 0 32px rgb(15 23 42 / 12%);
+    visibility: hidden;
+    transform: translateX(-100%);
+    transition:
+      transform 200ms ease,
+      visibility 200ms;
+  }
+
+  .sidebar--open {
+    visibility: visible;
+    transform: none;
+  }
+
+  .scrim--sidebar {
+    z-index: 4;
+  }
+
+  .main {
+    padding-top: 8px;
+  }
+
+  .toolbar {
+    gap: 6px;
+    min-height: 36px;
+    padding: 0 12px 0 10px;
+  }
+
+  .breadcrumb {
+    margin-left: 0;
+  }
+
+  .icon-button--toggle {
+    width: 36px;
+  }
+
+  .heading-row {
+    margin-top: 13px;
+    padding: 0 14px;
+  }
+
+  .count {
+    padding-bottom: 8px;
+  }
+
+  .scroller {
+    padding: 0 12px 12px;
+  }
+}
+
+@keyframes sd-file-explorer-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes sd-file-explorer-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes sd-file-explorer-refresh {
+  0% {
+    left: -30%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scrim {
+    animation: none;
+  }
+
+  .search,
+  :host(.sd-file-explorer--compact) .sidebar {
+    transition: none;
+  }
+}

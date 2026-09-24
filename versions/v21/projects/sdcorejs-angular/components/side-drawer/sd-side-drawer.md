@@ -1,6 +1,6 @@
 # `<sd-side-drawer>`
 
-Right-edge slide-in panel rendered into `document.body` via CDK Portal. Use it for create/edit/detail/filter workflows that need more room than a modal without leaving the current page.
+Right-edge slide-in panel. By default it is rendered into `document.body` via CDK Portal and covers the viewport; set `container` to open it inside one element instead. Use it for create/edit/detail/filter workflows that need more room than a modal without leaving the current page.
 
 ## Import
 
@@ -19,6 +19,7 @@ import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
 | `drawerClass`          | `any`                                  | `''`        | Extra class(es) bound to the root drawer element through `ngClass`.     |
 | `autoId`               | `string \| null \| undefined`          | `undefined` | Renders `data-autoid="components-side-drawer-<autoId>"`.                |
 | `beforeClose`          | `SdSideDrawerBeforeClose \| undefined` | `undefined` | Optional sync/async guard. Only `true` closes; errors fail closed.      |
+| `container`            | `SdSideDrawerContainer \| null`        | `null`      | Element to open inside instead of the viewport (see below).             |
 
 ## Outputs
 
@@ -43,7 +44,7 @@ Header and footer use a white background (`--sd-white`, default `#fff`) and comp
 
 | Method           | Notes                                                                          |
 | ---------------- | ------------------------------------------------------------------------------ |
-| `open()`         | Opens the drawer and locks background body scroll.                             |
+| `open()`         | Opens the drawer; a viewport drawer also locks background body scroll.         |
 | `close()`        | Closes the drawer, emits `sdClosed`, stops loading, and restores body scroll.  |
 | `requestClose()` | Runs/coalesces `beforeClose`, closes when allowed, and resolves to the result. |
 | `forceClose()`   | Bypasses `beforeClose`; reserve for successful save/discard workflows.         |
@@ -63,6 +64,8 @@ The lock is **ref-counted and shared across every `<sd-side-drawer>` instance** 
 - `open()` / `close()` are idempotent per instance — repeated calls cannot unbalance the counter.
 
 Do not write `document.body.style.overflow` yourself while a drawer is open; the value is restored from the snapshot taken at the first lock.
+
+A drawer opened inside a `container` never takes the lock: the rest of the page stays usable.
 
 ## Example
 
@@ -91,6 +94,30 @@ Do not write `document.body.style.overflow` yourself while a drawer is open; the
   padding: 0; // The drawer supplies the content insets.
 }
 ```
+
+## Open inside an element (`container`)
+
+Pass an element to `container` to open the drawer inside that region instead of over the whole page, for example the file detail of a file browser or one pane of a split view, so the rest of the page stays usable.
+
+```html
+<section #orders class="orders">
+  <!-- region content -->
+  <sd-button title="Detail" (click)="detail.open()"></sd-button>
+</section>
+
+<sd-side-drawer #detail title="Order SO-1024" width="360px" [container]="orders">
+  <div class="drawer-body">…</div>
+  <sd-button sdFooterRight type="fill" color="primary" title="Approve" (click)="detail.close()"></sd-button>
+</sd-side-drawer>
+```
+
+- `SdSideDrawerContainer` is `HTMLElement | ElementRef<HTMLElement>`: a template reference such as `#orders`, or an `ElementRef`. `null` (default) keeps the viewport drawer. The value may change at runtime; the drawer moves with it.
+- Panel and backdrop live in a layer appended to the container. The backdrop dims only the container; the panel keeps the inset, radius, shadow, header/body/footer layout and slide-in of the viewport drawer, clipped to the container. Its `max-width` follows the container width.
+- A container with `position: static` becomes `position: relative` while the drawer lives in it; the original value is restored when the container changes or the drawer is destroyed. Other positions are left untouched.
+- Page scroll is **not** locked. The narrow layout (8px inset, 44px close button, wrapping footer) follows the container width (600px or less) through a container query, not the viewport width.
+- The layer stacks at `z-index: var(--sd-side-drawer-contained-z-index, 100)` inside the container. Lower it when the container has its own overlays (dialogs, drop zones) that must stay above the drawer.
+- Focus trap, Escape, backdrop click, `beforeClose` and `sdClosed` work as in the viewport drawer. Content outside the container stays interactive; mark sibling content inside the container `inert` yourself when it must not be reachable while the drawer is open.
+- Use a container that does not scroll itself (scroll a child instead); otherwise the layer scrolls away with the content.
 
 ## Accessibility
 
