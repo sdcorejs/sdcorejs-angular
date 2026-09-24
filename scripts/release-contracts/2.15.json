@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "suffix": "2.15",
+  "reviewedSourceSha": "e76158c2e64d52ee98aac94d03439c01abd3fd9a",
+  "artifactSource": "Local 2.15 packages built on Node 22.22.3 and packed with npm 11.5.1; compared against same-major npm 2.14 packages. Reviewed changes: new SdFileExplorer entry point, sd-side-drawer container input, accessible names for icon-only sd-button, legible light-theme PDF tile in sd-preview-pdf, file-explorer i18n keys and Lucide icon aliases. Export maps only add ./components/file-explorer; dependencies are unchanged; no packed paths or declarations are removed. CI rebuilds from the tagged release commit.",
+  "targets": {
+    "19.2.15": {
+      "version": "19.2.15",
+      "baselineVersion": "19.2.14",
+      "dependencies": {
+        "baseline": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f",
+        "candidate": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f"
+      },
+      "exports": {
+        "baseline": "078a9f3619580b6017cb8b5ecc21d40f3876e8bf560774fde5b305fb235e10f1",
+        "candidate": "12cc1dff513c11e62cf60fb81bb166b4c149baf1eb8d46f4572c186e1e292cc0"
+      },
+      "files": {
+        "baseline": "b0ac48f976da07ffbf85a1b3f4d885e2cc7a3fa0987f7816f850023305ccd37e",
+        "candidate": "4f2d775865c6c5fb8bea96a5d5086c83ffdeac711f29d1600996c128b9285c84"
+      },
+      "publicSurface": {
+        "baseline": "1fb404757dd6ba068f5207f558ebd50cf7d9c2294c6bb004b813e7386a71d5d7",
+        "candidate": "afc41a3c5cfdfe73a867a56d7be5fbb9037213d3ddaa573cd6ca1b0a917b39c4"
+      }
+    },
+    "20.2.15": {
+      "version": "20.2.15",
+      "baselineVersion": "20.2.14",
+      "dependencies": {
+        "baseline": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f",
+        "candidate": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f"
+      },
+      "exports": {
+        "baseline": "078a9f3619580b6017cb8b5ecc21d40f3876e8bf560774fde5b305fb235e10f1",
+        "candidate": "12cc1dff513c11e62cf60fb81bb166b4c149baf1eb8d46f4572c186e1e292cc0"
+      },
+      "files": {
+        "baseline": "fe53ba3bf86bde548c5f0225520b8e822b78a77a8b57e692b7490864f032d52e",
+        "candidate": "66e93be3f293afadf8b4ab33589bebab52f0aa015193eb934c8a2ad6e0b4b7e2"
+      },
+      "publicSurface": {
+        "baseline": "f9236170110aa267c2de39ebf4c601a0fdea75f30bf6afab69ae281029b1dba2",
+        "candidate": "0fe17eb00a8a45a13e684d1ff2c5b9d2232f27e8b987d30c344af96deb97c5cf"
+      }
+    },
+    "21.2.15": {
+      "version": "21.2.15",
+      "baselineVersion": "21.2.14",
+      "dependencies": {
+        "baseline": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f",
+        "candidate": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f"
+      },
+      "exports": {
+        "baseline": "a995f16666247c07e3f08c79714d334bb3e30930d18315708ca5cacd4135fcce",
+        "candidate": "aeee56b3e807faa54510988e99faef10ae683cda45c58a5839c640e1a48fca98"
+      },
+      "files": {
+        "baseline": "2568176d9a2a2cbf801a4be60f955be5e8074dadb9c09441fac6efc73b09c4d6",
+        "candidate": "aad258ab5fdd885aaf99e65e0fd3c0206ae1e9dd20ec0fa07e2a7ea2fc3a535d"
+      },
+      "publicSurface": {
+        "baseline": "24e309229580baa009a306ec4c81b52bbad2d7e55db8a40cf2f3fff5b367fa49",
+        "candidate": "f1b9f2af2817121cb93ce85c500d2232de1f266fd481ab1ff4641e0a094f211b"
+      }
+    },
+    "22.2.15": {
+      "version": "22.2.15",
+      "baselineVersion": "22.2.14",
+      "dependencies": {
+        "baseline": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f",
+        "candidate": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f"
+      },
+      "exports": {
+        "baseline": "a995f16666247c07e3f08c79714d334bb3e30930d18315708ca5cacd4135fcce",
+        "candidate": "aeee56b3e807faa54510988e99faef10ae683cda45c58a5839c640e1a48fca98"
+      },
+      "files": {
+        "baseline": "2568176d9a2a2cbf801a4be60f955be5e8074dadb9c09441fac6efc73b09c4d6",
+        "candidate": "aad258ab5fdd885aaf99e65e0fd3c0206ae1e9dd20ec0fa07e2a7ea2fc3a535d"
+      },
+      "publicSurface": {
+        "baseline": "950d1d5a03e5d977e90e5be74b722e762854a911fcf2f3947f52cd9132ae0cfc",
+        "candidate": "659cc4cbd9c4a187848de32ddc5cad9c8d839808ae95dcc5b24e75b9c28cae44"
+      }
+    }
+  }
+}
