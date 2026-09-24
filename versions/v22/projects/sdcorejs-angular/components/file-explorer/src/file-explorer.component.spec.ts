@@ -1128,6 +1128,24 @@ describe('SdFileExplorer', () => {
   });
 
   describe('share', () => {
+    let restoreClipboard: (() => void) | null = null;
+
+    // why: other specs may leave `navigator.clipboard` as an own data property, so spyOnProperty('get') is not
+    // reliable in the full suite — define the property for one test and put the previous descriptor back.
+    function stubClipboard(value: Pick<Clipboard, 'writeText'> | undefined): void {
+      const own = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
+      Object.defineProperty(navigator, 'clipboard', { configurable: true, get: () => value });
+      restoreClipboard = () => {
+        if (own) Object.defineProperty(navigator, 'clipboard', own);
+        else delete (navigator as { clipboard?: unknown }).clipboard;
+      };
+    }
+
+    afterEach(() => {
+      restoreClipboard?.();
+      restoreClipboard = null;
+    });
+
     it('offers share actions for files only, and only with a share callback', async () => {
       await setup({ download: () => undefined });
       expect(q('.row-share')).toBeNull();
@@ -1149,7 +1167,7 @@ describe('SdFileExplorer', () => {
       const pending = deferred<string>();
       const share = jasmine.createSpy('share').and.returnValue(pending.promise);
       const writeText = jasmine.createSpy('writeText').and.returnValue(Promise.resolve());
-      spyOnProperty(navigator, 'clipboard', 'get').and.returnValue({ writeText } as unknown as Clipboard);
+      stubClipboard({ writeText });
       await setup({ share });
 
       press(row('Guide.pdf').querySelector('.row-share'));
@@ -1173,7 +1191,7 @@ describe('SdFileExplorer', () => {
     });
 
     it('selects the link and asks for a manual copy when the clipboard cannot be used', async () => {
-      spyOnProperty(navigator, 'clipboard', 'get').and.returnValue(undefined as unknown as Clipboard);
+      stubClipboard(undefined);
       spyOn(document, 'execCommand').and.returnValue(false);
       await setup({ share: () => 'https://s.example/a' });
       press(row('Guide.pdf').querySelector('.row-share'));
