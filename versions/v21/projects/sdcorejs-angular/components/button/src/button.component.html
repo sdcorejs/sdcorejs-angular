@@ -12,6 +12,7 @@
 @let _autoId = autoId();
 @let _width = width();
 @let _tooltip = tooltip();
+@let _ariaLabel = ariaLabel();
 
 @if (_type === 'fill') {
   <button
@@ -19,7 +20,7 @@
     [attr.aria-haspopup]="_hasActions ? 'menu' : null"
     [attr.aria-expanded]="_hasActions ? _opened : null"
     [attr.aria-controls]="_opened ? popover.id : null"
-    [attr.aria-label]="_hasActions ? _title || _tooltip || null : null"
+    [attr.aria-label]="_ariaLabel"
     (keydown)="onTriggerKeydown($event)"
     (pointerenter)="onTriggerPointerEnter($event)"
     (pointerleave)="popover.scheduleHoverClose()"
@@ -44,7 +45,7 @@
     [attr.aria-haspopup]="_hasActions ? 'menu' : null"
     [attr.aria-expanded]="_hasActions ? _opened : null"
     [attr.aria-controls]="_opened ? popover.id : null"
-    [attr.aria-label]="_hasActions ? _title || _tooltip || null : null"
+    [attr.aria-label]="_ariaLabel"
     (keydown)="onTriggerKeydown($event)"
     (pointerenter)="onTriggerPointerEnter($event)"
     (pointerleave)="popover.scheduleHoverClose()"
@@ -69,7 +70,7 @@
     [attr.aria-haspopup]="_hasActions ? 'menu' : null"
     [attr.aria-expanded]="_hasActions ? _opened : null"
     [attr.aria-controls]="_opened ? popover.id : null"
-    [attr.aria-label]="_hasActions ? _title || _tooltip || null : null"
+    [attr.aria-label]="_ariaLabel"
     (keydown)="onTriggerKeydown($event)"
     (pointerenter)="onTriggerPointerEnter($event)"
     (pointerleave)="popover.scheduleHoverClose()"
@@ -94,7 +95,7 @@
     [attr.aria-haspopup]="_hasActions ? 'menu' : null"
     [attr.aria-expanded]="_hasActions ? _opened : null"
     [attr.aria-controls]="_opened ? popover.id : null"
-    [attr.aria-label]="_hasActions ? _title || _tooltip || null : null"
+    [attr.aria-label]="_ariaLabel"
     (keydown)="onTriggerKeydown($event)"
     (pointerenter)="onTriggerPointerEnter($event)"
     (pointerleave)="popover.scheduleHoverClose()"

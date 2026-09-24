@@ -1,0 +1,120 @@
+:host {
+  display: block;
+}
+
+.tree {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.node {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 10px;
+  border-radius: 8px;
+  color: var(--sd-fe-text);
+  font-size: 15px;
+  line-height: 20px;
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+
+  &:hover {
+    background: var(--sd-fe-hover);
+  }
+
+  &:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--sd-fe-accent);
+  }
+}
+
+.node--selected {
+  background: var(--sd-fe-accent-soft);
+  color: var(--sd-fe-accent);
+  font-weight: 600;
+
+  &:hover {
+    background: var(--sd-fe-accent-soft);
+  }
+}
+
+.indent {
+  flex: none;
+  width: var(--sd-file-explorer-tree-indent, 0);
+  margin-right: -8px;
+}
+
+.toggle {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 24px;
+  margin-right: -1px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--sd-fe-text-secondary);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--sd-fe-text);
+  }
+}
+
+.label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.retry {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--sd-fe-error);
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--sd-fe-error) 10%, transparent);
+  }
+}
+
+.spinner {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border: 2px solid color-mix(in srgb, var(--sd-fe-accent) 25%, transparent);
+  border-top-color: var(--sd-fe-accent);
+  border-radius: 50%;
+  animation: sd-file-explorer-tree-spin 0.8s linear infinite;
+}
+
+@keyframes sd-file-explorer-tree-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2.4s;
+  }
+}

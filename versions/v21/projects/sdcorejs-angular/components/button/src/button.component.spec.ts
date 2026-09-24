@@ -121,6 +121,24 @@ describe('SdButton', () => {
       const btn = queryByCss<HTMLButtonElement>(fixture, 'button.c-button');
       expect(btn.classList.contains('c-square')).toBe(false);
     });
+
+    it('names an icon-only button with its tooltip for every variant', () => {
+      setInput(fixture, 'prefixIcon', 'file_download');
+      setInput(fixture, 'tooltip', 'Download report');
+      for (const type of ['fill', 'light', 'outline', 'text']) {
+        setInput(fixture, 'type', type);
+        expect(queryByCss<HTMLButtonElement>(fixture, 'button.c-button').getAttribute('aria-label'))
+          .withContext(type)
+          .toBe('Download report');
+      }
+    });
+
+    it('keeps the visible title as the accessible name when a title is present', () => {
+      setInput(fixture, 'prefixIcon', 'add');
+      setInput(fixture, 'title', 'New');
+      setInput(fixture, 'tooltip', 'Create a record');
+      expect(queryByCss<HTMLButtonElement>(fixture, 'button.c-button').hasAttribute('aria-label')).toBe(false);
+    });
   });
 
   describe('size class', () => {
