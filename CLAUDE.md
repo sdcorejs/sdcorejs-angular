@@ -77,6 +77,7 @@ Skill pack chạy lại sẽ tự dựng `specs/`, `plans/`, `docs/` dưới `.s
 | `scripts/deploy.ps1` | Build/pack dry-run bốn line vào `-OutputPath`, ghi checksum/metadata và luôn khôi phục version tạm | Release preflight local; script không publish npm |
 | `scripts/build-published-page.mjs` | Build `showcase/` → `published-pages/<suffix>/` + prune retention (`npm run build:page -- --suffix 1.6`) | Mỗi release, sau khi lib đã build |
 | `scripts/collect-docs.mjs` | Sinh 1 archive `published-docs/<version>/` (pin link theo tag + per-version CHANGELOG) | Qua `collect-release-docs`, hoặc debug đơn lẻ |
+| `scripts/generate-file-explorer-icons.mjs` | Nhúng bộ icon SVG của `file-explorer` (`versions/v19/.../file-explorer/src/assets/icons`) thành `file-explorer-icons.generated.ts` (`npm run generate:file-explorer-icons`) | Sau khi sửa SVG/`manifest.json`, rồi `npm run sync`; `test:scripts` fail nếu file sinh cũ |
 
 `npm run sync` là entry point rollout bình thường: lấy `versions/v19` làm nguồn rồi đồng bộ sang `versions/v20`, `versions/v21` và `versions/v22`. `npm run check:sync` là release guard read-only; nếu fail thì chạy lại `npm run sync`, review diff, rồi commit đầy đủ trước khi tag. Nếu cần tái hiện mirror cũ để điều tra lịch sử, dùng `npm run legacy:sync-from-vn-angular` trên một branch sạch.
 

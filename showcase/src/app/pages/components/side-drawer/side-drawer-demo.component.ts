@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdBadge } from '@sdcorejs/angular/components/badge';
 import { SdButton } from '@sdcorejs/angular/components/button';
@@ -168,6 +168,47 @@ import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
           </sd-side-drawer>
         </demo-section>
       }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-open-inside-a-container') {
+        <demo-section
+          heading="Open inside a container"
+          [props]="[
+            { name: 'container', value: 'HTMLElement' },
+            { name: 'width', value: '320px' },
+          ]">
+          <div #ordersArea class="drawer-area">
+            <div class="drawer-area__header">
+              <strong>Orders</strong>
+              <span>The drawer opens inside this frame only; the rest of the page stays usable and scrollable.</span>
+            </div>
+            <div class="drawer-list drawer-area__list">
+              @for (order of orders; track order.code) {
+                <div class="drawer-list__row">
+                  <span>{{ order.code }} · {{ order.customer }}</span>
+                  <sd-button
+                    type="text"
+                    color="primary"
+                    title="Detail"
+                    (click)="selectedOrder.set(order); areaDrawer.open()"></sd-button>
+                </div>
+              }
+            </div>
+          </div>
+
+          <sd-side-drawer #areaDrawer [title]="selectedOrder().code" width="320px" [container]="ordersArea">
+            <div class="drawer-stack">
+              <sd-section icon="inventory_2" title="Order">
+                <sd-section-item label="Customer">{{ selectedOrder().customer }}</sd-section-item>
+                <sd-section-item label="Total">{{ selectedOrder().total }}</sd-section-item>
+                <sd-section-item label="Status">{{ selectedOrder().status }}</sd-section-item>
+              </sd-section>
+            </div>
+
+            <sd-button sdFooterRight type="text" color="secondary" title="Close" (click)="areaDrawer.close()"></sd-button>
+            <sd-button sdFooterRight type="fill" color="primary" title="Approve" (click)="areaDrawer.close()"></sd-button>
+          </sd-side-drawer>
+        </demo-section>
+      }
     </demo-page>
   `,
   styles: [
@@ -222,6 +263,38 @@ import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
       .drawer-list__row:last-child {
         border-bottom: 0;
       }
+
+      .drawer-area {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        box-sizing: border-box;
+        width: 100%;
+        max-width: 720px;
+        height: 400px;
+        padding: 16px;
+        border: 1px solid #e6e6e6;
+        border-radius: 12px;
+        background: #f8fafc;
+      }
+
+      .drawer-area__header {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .drawer-area__header span {
+        color: #667085;
+        font-size: 12px;
+      }
+
+      .drawer-area__list {
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
+        background: #fff;
+      }
       @media (max-width: 600px) {
         .drawer-stack {
           min-width: 0;
@@ -250,4 +323,11 @@ import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
 })
 export class SideDrawerDemoComponent {
   readonly checklist = Array.from({ length: 22 }, (_, index) => `Checklist item ${index + 1}`);
+  readonly orders = [
+    { code: 'SO-1024', customer: 'Nguyen Van An', total: '12.500.000 ₫', status: 'Waiting for approval' },
+    { code: 'SO-1025', customer: 'Tran Thi Bich', total: '4.200.000 ₫', status: 'Paid' },
+    { code: 'SO-1026', customer: 'Le Hoang Nam', total: '860.000 ₫', status: 'Shipping' },
+    { code: 'SO-1027', customer: 'Pham Minh Chau', total: '2.150.000 ₫', status: 'Draft' },
+  ];
+  readonly selectedOrder = signal(this.orders[0]);
 }

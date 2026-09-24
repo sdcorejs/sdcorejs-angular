@@ -2213,6 +2213,21 @@ describe('SdPreviewPdf', () => {
       expect(host.getAttribute('data-theme')).toBe('light');
     });
 
+    it('keeps the "PDF" file tile label in the danger colour on the light header', async () => {
+      fixture.componentRef.setInput('theme', 'light');
+      fixture.componentRef.setInput('source', 'https://example.com/a.pdf');
+      await flush(fixture);
+      lib.resolveNext(makeFakeDoc(1));
+      await flush(fixture);
+      const host = fixture.nativeElement as HTMLElement;
+      const tile = host.querySelector('.sd-preview-pdf-fileicon') as HTMLElement;
+      const probe = document.createElement('span');
+      probe.style.color = 'var(--sd-pdf-danger)';
+      host.appendChild(probe);
+      expect(getComputedStyle(tile).color).toBe(getComputedStyle(probe).color);
+      probe.remove();
+    });
+
     it('restores data-theme="dark" when reverted', () => {
       fixture.detectChanges();
       fixture.componentRef.setInput('theme', 'light');

@@ -39,6 +39,7 @@ const phasePaths = {
     'projects/sdcorejs-angular/components/mini-editor',
   ],
   'components-data': [
+    'projects/sdcorejs-angular/components/file-explorer',
     'projects/sdcorejs-angular/components/import-excel',
     'projects/sdcorejs-angular/components/operator',
     'projects/sdcorejs-angular/components/query-bar',

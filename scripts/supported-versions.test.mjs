@@ -224,6 +224,7 @@ test('[workspace] root lint and script gates enumerate every line in order', () 
   assert.equal(scripts['test:version-sync-contract'], 'node --test scripts/check-version-sync.test.mjs');
   assert.equal(scripts['test:release-package-contract'], 'node --test scripts/release-package-contract.test.mjs');
   assert.equal(scripts['test:publish-npm-workflow'], 'node --test scripts/publish-npm-workflow.test.mjs');
+  assert.equal(scripts['test:file-explorer-icons'], 'node --test scripts/generate-file-explorer-icons.test.mjs');
 
   assert.deepEqual(scripts['test:scripts'].split(' && '), [
     'npm run test:showcase-generators',
@@ -235,6 +236,7 @@ test('[workspace] root lint and script gates enumerate every line in order', () 
     'npm run test:version-sync-contract',
     'npm run test:release-package-contract',
     'npm run test:publish-npm-workflow',
+    'npm run test:file-explorer-icons',
   ]);
 });
 

@@ -195,6 +195,12 @@
     monospace;
 }
 
+// WHY: in the Core theme `--sd-error-light` is a pale background tint (14 % error on white). On the light
+// header it made the "PDF" label nearly invisible, leaving an empty pink tile — use the danger colour itself.
+:host([data-theme='light']) .sd-preview-pdf-fileicon {
+  color: var(--sd-pdf-danger);
+}
+
 // =============================================================================
 // Shared icon button (header + sidebar + status actions)
 // =============================================================================
