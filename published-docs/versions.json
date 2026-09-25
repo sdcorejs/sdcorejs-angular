@@ -1,8 +1,14 @@
 {
   "package": "@sdcorejs/angular",
-  "latest": "22.2.14",
+  "latest": "22.2.15",
   "baseUrl": "https://sdcorejs.github.io/sdcorejs-angular/docs",
   "versions": [
+    {
+      "version": "22.2.15",
+      "index": "https://sdcorejs.github.io/sdcorejs-angular/docs/22.2.15/index.json",
+      "released": "2026-09-25",
+      "count": 99
+    },
     {
       "version": "22.2.14",
       "index": "https://sdcorejs.github.io/sdcorejs-angular/docs/22.2.14/index.json",
@@ -62,6 +68,12 @@
       "index": "https://sdcorejs.github.io/sdcorejs-angular/docs/22.2.5/index.json",
       "released": "2026-09-07",
       "count": 98
+    },
+    {
+      "version": "21.2.15",
+      "index": "https://sdcorejs.github.io/sdcorejs-angular/docs/21.2.15/index.json",
+      "released": "2026-09-25",
+      "count": 99
     },
     {
       "version": "21.2.14",
@@ -190,6 +202,12 @@
       "count": 84
     },
     {
+      "version": "20.2.15",
+      "index": "https://sdcorejs.github.io/sdcorejs-angular/docs/20.2.15/index.json",
+      "released": "2026-09-25",
+      "count": 99
+    },
+    {
       "version": "20.2.14",
       "index": "https://sdcorejs.github.io/sdcorejs-angular/docs/20.2.14/index.json",
       "released": "2026-09-23",
@@ -314,6 +332,12 @@
       "index": "https://sdcorejs.github.io/sdcorejs-angular/docs/20.1.1/index.json",
       "released": "2026-07-10",
       "count": 84
+    },
+    {
+      "version": "19.2.15",
+      "index": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.2.15/index.json",
+      "released": "2026-09-25",
+      "count": 99
     },
     {
       "version": "19.2.14",
