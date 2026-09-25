@@ -68,6 +68,12 @@ export type SdFileExplorerPreviewState =
   | { readonly status: 'unavailable' }
   | { readonly status: 'error'; readonly message: string };
 
+/** What the item area shows. */
+export type SdFileExplorerContentState = 'loading' | 'error' | 'empty' | 'items';
+
+/** Result of the last copy attempt in the share dialog: copied, or selected for a manual Ctrl+C. */
+export type SdFileExplorerShareFeedback = '' | 'copied' | 'manual';
+
 /** State of the share dialog. */
 export type SdFileExplorerShareState =
   | { readonly status: 'loading' }

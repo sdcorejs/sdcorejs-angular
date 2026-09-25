@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "suffix": "2.15",
-  "reviewedSourceSha": "e76158c2e64d52ee98aac94d03439c01abd3fd9a",
-  "artifactSource": "Local 2.15 packages built on Node 22.22.3 and packed with npm 11.5.1; compared against same-major npm 2.14 packages. Reviewed changes: new SdFileExplorer entry point, sd-side-drawer container input, accessible names for icon-only sd-button, legible light-theme PDF tile in sd-preview-pdf, file-explorer i18n keys and Lucide icon aliases. Export maps only add ./components/file-explorer; dependencies are unchanged; no packed paths or declarations are removed. CI rebuilds from the tagged release commit.",
+  "reviewedSourceSha": "3b7716a49805a13148f20df120bf6effbada91bc",
+  "artifactSource": "Local 2.15 packages built from an LF checkout of the release commit (the CI line endings) on Node 22.22.3 and packed with npm 11.5.1; compared against same-major npm 2.14 packages. Reviewed changes: new SdFileExplorer entry point, sd-side-drawer container input, accessible names for icon-only sd-button, legible light-theme PDF tile in sd-preview-pdf, file-explorer i18n keys and Lucide icon aliases. Export maps only add ./components/file-explorer; dependencies are unchanged; no packed paths or declarations are removed. CI rebuilds from the tagged release commit.",
   "targets": {
     "19.2.15": {
       "version": "19.2.15",
@@ -21,7 +21,7 @@
       },
       "publicSurface": {
         "baseline": "1fb404757dd6ba068f5207f558ebd50cf7d9c2294c6bb004b813e7386a71d5d7",
-        "candidate": "afc41a3c5cfdfe73a867a56d7be5fbb9037213d3ddaa573cd6ca1b0a917b39c4"
+        "candidate": "814a86d18732071ff2038eb07f8c05560d1c335dbd71efee1de70a4cae8ddc0d"
       }
     },
     "20.2.15": {
@@ -41,7 +41,7 @@
       },
       "publicSurface": {
         "baseline": "f9236170110aa267c2de39ebf4c601a0fdea75f30bf6afab69ae281029b1dba2",
-        "candidate": "0fe17eb00a8a45a13e684d1ff2c5b9d2232f27e8b987d30c344af96deb97c5cf"
+        "candidate": "89304fc7b664a9d900481594481dbb69abf6f460bdecf9ea123b07b1740d67dc"
       }
     },
     "21.2.15": {
@@ -61,7 +61,7 @@
       },
       "publicSurface": {
         "baseline": "24e309229580baa009a306ec4c81b52bbad2d7e55db8a40cf2f3fff5b367fa49",
-        "candidate": "f1b9f2af2817121cb93ce85c500d2232de1f266fd481ab1ff4641e0a094f211b"
+        "candidate": "4cd9819619dd3590111448a0ff310dd27388cbbd4eb2fadfcb468d51da0b26bf"
       }
     },
     "22.2.15": {
@@ -81,7 +81,7 @@
       },
       "publicSurface": {
         "baseline": "950d1d5a03e5d977e90e5be74b722e762854a911fcf2f3947f52cd9132ae0cfc",
-        "candidate": "659cc4cbd9c4a187848de32ddc5cad9c8d839808ae95dcc5b24e75b9c28cae44"
+        "candidate": "dddfd107dca3a0cc57a228c1a2cfddd2684f18de066f74a39aa9401f441bdba5"
       }
     }
   }
