@@ -6,6 +6,9 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+### Fixed
+- File explorer: let the detail preview shrink (down to 140 px for images and 240 px for PDFs) so the name, type, size and date stay visible without scrolling on short explorers.
+
 ## [2.15] - 2026-09-24
 
 Release suffix `2.15` targets `19.2.15`, `20.2.15`, `21.2.15`, and `22.2.15`.
