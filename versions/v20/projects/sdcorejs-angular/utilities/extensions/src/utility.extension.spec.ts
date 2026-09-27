@@ -466,7 +466,55 @@ describe('SdUtilities', () => {
       SdUtilities.download('javascript:alert(1)//http', 'x.pdf');
 
       expect(openSpy).not.toHaveBeenCalled();
+      // why: nhánh anchor trước đây vẫn gán `javascript:` vào `a.href` rồi click — chạy script trong origin app.
+      expect(clickSpy).not.toHaveBeenCalled();
     });
+
+    for (const blocked of [
+      'vbscript:msgbox(1)',
+      'data:text/html,<script>alert(1)</script>',
+      'file:///etc/passwd',
+      'mailto:someone@example.com',
+    ]) {
+      it(`refuses to click an anchor for a blocked URL: ${blocked.slice(0, 24)}`, () => {
+        const clickSpy = jasmine.createSpy('click');
+        const anchor = { href: '', download: '', style: { visibility: '' }, click: clickSpy, remove: () => {} } as any;
+        spyOn(document, 'createElement').and.callFake((tag: string) => {
+          if (tag === 'a') return anchor;
+          return document.createElement(tag);
+        });
+        spyOn(document.body, 'appendChild').and.stub();
+        spyOn(window, 'open').and.returnValue(null);
+        spyOn(console, 'warn');
+
+        SdUtilities.download(blocked, 'x.pdf');
+
+        expect(clickSpy).not.toHaveBeenCalled();
+        expect(anchor.href).toBe('');
+      });
+    }
+
+    for (const allowed of [
+      'blob:https://app.example.com/0f8e2c4a',
+      'data:application/pdf;base64,JVBERi0=',
+      'data:image/png;base64,iVBORw0KGgo=',
+    ]) {
+      it(`still downloads an allowed non-http URL: ${allowed.slice(0, 24)}`, () => {
+        const clickSpy = jasmine.createSpy('click');
+        const anchor = { href: '', download: '', style: { visibility: '' }, click: clickSpy, remove: () => {} } as any;
+        spyOn(document, 'createElement').and.callFake((tag: string) => {
+          if (tag === 'a') return anchor;
+          return document.createElement(tag);
+        });
+        spyOn(document.body, 'appendChild').and.stub();
+
+        SdUtilities.download(allowed, 'x.pdf');
+
+        expect(anchor.href).toBe(allowed);
+        expect(anchor.download).toBe('x.pdf');
+        expect(clickSpy).toHaveBeenCalled();
+      });
+    }
 
     it('handles File objects by creating object URL', () => {
       const createURLSpy = spyOn(URL, 'createObjectURL').and.returnValue('blob:fake-url');
