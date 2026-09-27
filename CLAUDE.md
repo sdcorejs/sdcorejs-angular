@@ -153,6 +153,8 @@ powershell -ExecutionPolicy Bypass -File ./scripts/deploy.ps1 `
 
 `PatchVersion` là tên tham số legacy; giá trị là release suffix chung cho cả bốn Angular line. `-DryRun` phải non-interactive, build/pack đủ bốn artifact và khôi phục mọi version tạm trong `finally`; script không gọi `npm publish` và không cần npm auth.
 
+Suffix `x.0` (vd `3.0`) không có patch trước để suy baseline, nên phải truyền baseline tường minh có minor nhỏ hơn — `-PatchVersion "3.0" -BaselineSuffix "2.15"` (cùng giá trị cho `--baseline-suffix` của `release-package-contract.mjs` và field `baselineSuffix` của snapshot `scripts/release-contracts/3.0.json`). Suffix patch vẫn tự suy `patch - 1`; `-BaselineSuffix` khác giá trị đó bị từ chối.
+
 ### GitHub Pages — mỗi release 1 page, deploy KHÔNG build
 
 Workflow: `.github/workflows/deploy-pages.yml`. **Không có Angular build trong workflow.** Nó chỉ assemble từ artifact đã commit rồi upload.

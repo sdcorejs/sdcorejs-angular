@@ -108,6 +108,12 @@ Workflow `publish-npm.yml` pin đúng tag `v2.15`; snapshot `scripts/release-con
 đối chiếu từng line với bản `*.2.14` cùng Angular major. Fallback từ Angular 22 sang 21
 chỉ áp dụng cho release khởi đầu `22.2.5`.
 
+**Suffix `x.0`** (vd `3.0` → `19.3.0` / `20.3.0` / `21.3.0` / `22.3.0`) không có patch trước để suy baseline,
+nên tooling bắt buộc baseline tường minh có minor nhỏ hơn: `releaseTargets('3.0', { baselineSuffix: '2.15' })`,
+`--baseline-suffix 2.15` cho `scripts/release-package-contract.mjs`, `deploy.ps1 -BaselineSuffix 2.15`, và field
+`baselineSuffix` trong snapshot `scripts/release-contracts/<suffix>.json`. Suffix patch (vd `2.6`) vẫn tự suy
+`patch - 1`; baseline tường minh khác giá trị đó bị từ chối.
+
 Tag `v<release-suffix>` (vd `v2.15`) → CI chuẩn bị `19.2.15` / `20.2.15` / `21.2.15` / `22.2.15`, rồi sinh `published-docs` và commit về `main` sau khi toàn bộ transaction thành công.
 
 Thứ tự bắt buộc:

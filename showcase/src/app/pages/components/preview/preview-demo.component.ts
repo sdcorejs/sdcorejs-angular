@@ -1,17 +1,17 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
-import { SdPreviewImage, SdPreviewPdf } from '@sdcorejs/angular/components/preview';
+import { SdPreviewImage, SdPreviewPdf, SdPreviewVideo } from '@sdcorejs/angular/components/preview';
 import { createPreviewPdfFixture } from './preview-pdf.fixture';
 
 @Component({
   selector: 'app-preview-demo',
   standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, SdPreviewImage, SdPreviewPdf],
+  imports: [DemoPageComponent, DemoSectionComponent, SdPreviewImage, SdPreviewPdf, SdPreviewVideo],
   template: `
     <demo-page
       #demoPage
       title="Preview"
-      description="Bộ xem ảnh và PDF dạng lightbox — tự co theo container, hỗ trợ zoom / rotate / fullscreen / tải xuống. Có thể nhúng inline, trong sd-modal hoặc trong sd-side-drawer.">
+      description="Bộ xem ảnh, PDF và video dạng lightbox — tự co theo container, hỗ trợ zoom / rotate / fullscreen / tải xuống. Có thể nhúng inline, trong sd-modal hoặc trong sd-side-drawer.">
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-thu-vien-anh') {
         <demo-section heading="Thư viện ảnh" [props]="[{ name: 'items', value: '[…]' }]">
           <div class="preview-box">
@@ -55,6 +55,30 @@ import { createPreviewPdfFixture } from './preview-pdf.fixture';
           </div>
         </demo-section>
       }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-xem-video') {
+        <demo-section
+          heading="Xem video"
+          [props]="[
+            { name: 'source', value: 'URL | Blob' },
+            { name: 'fileName', value: 'flower.mp4' },
+          ]"
+          note="Trình phát native: có controls, không tự phát, chỉ tải metadata khi mở.">
+          <div class="preview-box preview-box--video">
+            <sd-preview-video [source]="videoSource" fileName="flower.mp4" autoId="demo"></sd-preview-video>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-nguon-video-bi-chan') {
+        <demo-section
+          heading="Nguồn video bị chặn"
+          note="URL không qua sdIsSafeResourceUrl không được gắn vào trình phát — hiện thông báo lỗi.">
+          <div class="preview-box preview-box--video">
+            <sd-preview-video source="javascript:alert(1)"></sd-preview-video>
+          </div>
+        </demo-section>
+      }
     </demo-page>
   `,
   styles: [
@@ -69,6 +93,11 @@ import { createPreviewPdfFixture } from './preview-pdf.fixture';
 
       .preview-box--advanced-pdf {
         height: 640px;
+      }
+
+      .preview-box--video {
+        height: auto;
+        min-height: 240px;
       }
     `,
   ],
@@ -86,4 +115,7 @@ export class PreviewDemoComponent {
   readonly singleImage = 'https://picsum.photos/seed/single/1920/1080';
 
   readonly pdfSource = signal<Uint8Array>(createPreviewPdfFixture());
+
+  // Video mẫu CC0 của MDN (interactive-examples) — đủ nhỏ để phát ngay trong demo.
+  readonly videoSource = 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4';
 }

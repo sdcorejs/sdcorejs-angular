@@ -3,13 +3,13 @@ import { DOC_NAV_GROUPS, DOC_PAGES, findDocPage, getDocPagesByCategory } from '.
 import { SHOWCASE_EXAMPLE_SOURCES } from '../generated/example-sources.generated';
 
 const EXPECTED_CATEGORY_COUNTS = {
-  guides: 3,
-  components: 37,
+  guides: 4,
+  components: 38,
   forms: 22,
   directives: 6,
   services: 11,
   'modules-integrations': 10,
-  'pipes-utilities': 10,
+  'pipes-utilities': 11,
 } as const;
 
 describe('documentation registry', () => {
@@ -17,15 +17,15 @@ describe('documentation registry', () => {
     const publishedIds = DOC_PAGES.map(page => page.publishedDocId).filter(id => id !== null);
     const localOnlyPages = DOC_PAGES.filter(page => page.publishedDocId === null);
 
-    expect(DOC_PAGES).toHaveSize(99);
-    expect(new Set(publishedIds).size).toBe(99);
+    expect(DOC_PAGES).toHaveSize(102);
+    expect(new Set(publishedIds).size).toBe(102);
     expect(DOC_PAGES.some(page => page.category === 'components' && page.slug === 'chart')).toBeFalse();
     expect(localOnlyPages).toHaveSize(0);
     expect(DOC_CATEGORIES).toHaveSize(7);
     for (const category of DOC_CATEGORIES) {
       expect(getDocPagesByCategory(category)).withContext(category).toHaveSize(EXPECTED_CATEGORY_COUNTS[category]);
     }
-    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(375);
+    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(385);
   });
 
   it('uses unique stable page ids and category/slug pairs', () => {
@@ -47,7 +47,7 @@ describe('documentation registry', () => {
     const exampleIds = DOC_PAGES.flatMap(page => page.examples.map(example => example.id));
 
     expect(new Set(exampleIds).size).toBe(exampleIds.length);
-    expect(exampleIds).toHaveSize(375);
+    expect(exampleIds).toHaveSize(385);
     const switchSections = findDocPage('forms', 'switch')?.examples.map(example => example.sectionId);
     expect(switchSections).toContain('example-kich-thuoc');
     expect(switchSections).toContain('example-ben-trong-bang');
@@ -66,7 +66,7 @@ describe('documentation registry', () => {
   });
 
   it('derives navigation groups and canonical/legacy lookup helpers from the registry', () => {
-    expect(DOC_NAV_GROUPS.map(group => group.pages.length)).toEqual([3, 37, 22, 6, 11, 10, 10]);
+    expect(DOC_NAV_GROUPS.map(group => group.pages.length)).toEqual([4, 38, 22, 6, 11, 10, 11]);
     expect(findDocPage('components', 'button')?.title).toBe('Button');
     expect(findDocPage('directives', 'tooltip')?.publishedDocId).toBe('directives/src/sd-tooltip');
     expect(findDocPage('components', 'generic')?.title).toBe('Form Generic');

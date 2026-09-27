@@ -639,6 +639,88 @@ test('subsequent releases compare each Angular line against its own published ba
   assert.equal(releaseTargets('2.7').at(-1).baselineVersion, '22.2.6');
 });
 
+test('an x.0 release compares every line against an explicit baseline with a lower minor (3.0 against 2.15)', () => {
+  assert.deepEqual(releaseTargets('3.0', { baselineSuffix: '2.15' }), [
+    { major: 19, workspace: 'v19', version: '19.3.0', tag: 'angular19', baselineVersion: '19.2.15', baselineMajor: 19 },
+    { major: 20, workspace: 'v20', version: '20.3.0', tag: 'angular20', baselineVersion: '20.2.15', baselineMajor: 20 },
+    { major: 21, workspace: 'v21', version: '21.3.0', tag: 'angular21', baselineVersion: '21.2.15', baselineMajor: 21 },
+    { major: 22, workspace: 'v22', version: '22.3.0', tag: 'latest', baselineVersion: '22.2.15', baselineMajor: 22 },
+  ]);
+  assert.throws(() => releaseTargets('3.0'), /explicit baseline/u);
+  assert.throws(() => releaseTargets('3.0', { baselineSuffix: '3.0' }), /lower minor/u);
+  assert.throws(() => releaseTargets('3.0', { baselineSuffix: '4.2' }), /lower minor/u);
+  assert.throws(() => releaseTargets('3.0', { baselineSuffix: '2.x' }), /Invalid/u);
+  // Patch releases keep the derived baseline; an explicit one must agree with it.
+  assert.equal(releaseTargets('2.6', { baselineSuffix: '2.5' })[0].baselineVersion, '19.2.5');
+  assert.throws(() => releaseTargets('2.6', { baselineSuffix: '2.4' }), /compares with 2\.5/u);
+  assert.equal(releaseTargets('3.1').at(-1).baselineVersion, '22.3.0');
+});
+
+test('loadReleaseContract reads an x.0 baselineSuffix from the reviewed snapshot and binds its targets', () => {
+  const contractsRoot = mkdtempSync(join(tmpdir(), 'sd-release-contracts-'));
+  try {
+    const targets = releaseTargets('3.0', { baselineSuffix: '2.15' });
+    const contract = {
+      schemaVersion: 1,
+      suffix: '3.0',
+      baselineSuffix: '2.15',
+      targets: Object.fromEntries(targets.map(target => [target.version, { version: target.version, baselineVersion: target.baselineVersion }])),
+    };
+    writeFileSync(join(contractsRoot, '3.0.json'), JSON.stringify(contract));
+    assert.equal(loadReleaseContract('3.0', { contractsRoot }).baselineSuffix, '2.15');
+    assert.equal(loadReleaseContract('3.0', { contractsRoot, baselineSuffix: '2.15' }).suffix, '3.0');
+    assert.throws(() => loadReleaseContract('3.0', { contractsRoot, baselineSuffix: '2.14' }), /baseline/u);
+
+    const { baselineSuffix, ...withoutBaseline } = contract;
+    assert.equal(baselineSuffix, '2.15');
+    writeFileSync(join(contractsRoot, '3.0.json'), JSON.stringify(withoutBaseline));
+    assert.throws(() => loadReleaseContract('3.0', { contractsRoot }), /explicit baseline/u);
+    assert.equal(loadReleaseContract('3.1', { contractsRoot }), undefined);
+  } finally {
+    rmSync(contractsRoot, { recursive: true, force: true });
+  }
+});
+
+test('bundle validation accepts a 3.0 bundle only with its explicit 2.15 baseline', () => {
+  const targets = releaseTargets('3.0', { baselineSuffix: '2.15' });
+  const options = {
+    suffix: '3.0',
+    datetimeVersion: '1.0.4',
+    sourceSha: 'b'.repeat(40),
+    artifacts: targets.map(artifactFor),
+  };
+  assert.deepEqual(
+    validateReleaseBundle({ ...options, baselineSuffix: '2.15' }).publishOrder.map(entry => entry.version),
+    ['19.3.0', '20.3.0', '21.3.0', '22.3.0'],
+  );
+  assert.equal(validateReleaseBundle({ ...options, releaseContract: { baselineSuffix: '2.15', targets: {} } }).publishOrder.length, 4);
+  assert.throws(() => validateReleaseBundle(options), /explicit baseline/u);
+});
+
+test('CLI passes an x.0 baseline through and reports the targets it validated', async () => {
+  const targets = releaseTargets('3.0', { baselineSuffix: '2.15' });
+  const artifacts = targets.map(artifactFor);
+  const events = [];
+  const output = await runReleaseCli({
+    argv: ['node', 'release-package-contract.mjs', '--artifact-root', 'release-artifacts', '--suffix', '3.0', '--baseline-suffix', '2.15', '--datetime-version', '1.0.4'],
+    env: {},
+    nodeVersion: 'v22.22.3',
+    pathExists: () => true,
+    materialize: options => {
+      events.push(`materialize:${options.suffix}:${options.baselineSuffix}`);
+      return {
+        plan: validateReleaseBundle({ suffix: '3.0', baselineSuffix: options.baselineSuffix, datetimeVersion: '1.0.4', sourceSha: 'b'.repeat(40), artifacts }),
+        artifacts,
+        tarballPaths: new Map(),
+        cleanup: () => events.push('cleanup'),
+      };
+    },
+    writeOutput: () => {},
+  });
+  assert.deepEqual(events, ['materialize:3.0:2.15', 'cleanup']);
+  assert.deepEqual(output.targets.map(target => target.baselineVersion), ['19.2.15', '20.2.15', '21.2.15', '22.2.15']);
+});
+
 test('2.6 publication starts from Angular 22 latest and promotes latest only after all historical lines', async () => {
   const registry = createRegistryHarness({ tags: { latest: '22.2.5' } });
   const result = await publishValidatedBundle(bundleForPublication('2.6'), true, registry.adapter);

@@ -14,7 +14,10 @@
     "lint:phase": "node scripts/lint-phase.mjs",
     "lint:phase:release": "node scripts/lint-phase.mjs --workspace v19 --phase release-touched",
     "check:sync": "node scripts/check-version-sync.mjs",
-    "test:theme": "node --test scripts/core-theme.test.mjs",
+    "test:theme": "node --test scripts/core-theme.test.mjs scripts/theme-contrast.test.mjs",
+    "test:theme-token-list": "node --test scripts/theme-token-list.test.mjs",
+    "check:scss-hex": "node scripts/check-scss-hex.mjs",
+    "test:check-scss-hex": "node --test scripts/check-scss-hex.test.mjs",
     "check:table-mobile-consumer": "node scripts/check-table-mobile-consumer.mjs",
     "check:table-aggregate-consumer": "node scripts/check-table-aggregate-consumer.mjs",
     "collect-docs": "node scripts/collect-docs.mjs",
@@ -41,7 +44,7 @@
     "build:page": "node scripts/build-published-page.mjs",
     "prune:pages": "node scripts/build-published-page.mjs --prune-only",
     "test:showcase-generators": "npm run test:showcase-changelog && npm run test:showcase-examples && npm run test:showcase-route-shells",
-    "test:scripts": "npm run test:showcase-generators && npm run test:showcase-branding && npm run test:collect-docs && npm run test:published-page && npm run test:check-i18n && npm run test:supported-versions && npm run test:version-sync-contract && npm run test:release-package-contract && npm run test:publish-npm-workflow && npm run test:file-explorer-icons",
+    "test:scripts": "npm run test:showcase-generators && npm run test:showcase-branding && npm run test:collect-docs && npm run test:published-page && npm run test:check-i18n && npm run test:supported-versions && npm run test:version-sync-contract && npm run test:release-package-contract && npm run test:publish-npm-workflow && npm run test:file-explorer-icons && npm run test:theme && npm run test:theme-token-list && npm run test:check-scss-hex",
     "changeset": "changeset"
   },
   "devDependencies": {

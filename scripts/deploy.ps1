@@ -1,5 +1,6 @@
 param(
   [string]$PatchVersion = "",
+  [string]$BaselineSuffix = "",
   [switch]$SkipInstall,
   [switch]$DryRun,
   [string]$OutputPath = "",
@@ -66,10 +67,29 @@ if ($PatchVersion -notmatch '^\d+\.\d+$') {
   throw "Invalid release suffix '$PatchVersion'. Expected <minor>.<patch>, for example 2.5."
 }
 $releaseParts = $PatchVersion.Split('.')
-if ([int]$releaseParts[1] -le 0) {
-  throw "Release suffix '$PatchVersion' has no automatic previous-patch baseline."
+# D-028: a patch release compares with the previous patch (2.5 against 2.4) and -BaselineSuffix may only
+# repeat it; an x.0 release has no previous patch and needs -BaselineSuffix with a lower minor (3.0
+# against 2.15). PowerShell names are case-insensitive, so $baselineSuffix below is this parameter,
+# overwritten with the validated value.
+if ([int]$releaseParts[1] -gt 0) {
+  $derivedBaseline = "$([int]$releaseParts[0]).$([int]$releaseParts[1] - 1)"
+  if (-not [string]::IsNullOrWhiteSpace($BaselineSuffix) -and $BaselineSuffix -ne $derivedBaseline) {
+    throw "Release suffix '$PatchVersion' compares with $derivedBaseline, not $BaselineSuffix."
+  }
+  $baselineSuffix = $derivedBaseline
 }
-$baselineSuffix = "$([int]$releaseParts[0]).$([int]$releaseParts[1] - 1)"
+else {
+  if ([string]::IsNullOrWhiteSpace($BaselineSuffix)) {
+    throw "Release suffix '$PatchVersion' has no previous patch; pass -BaselineSuffix with a lower minor, for example 2.15."
+  }
+  if ($BaselineSuffix -notmatch '^\d+\.\d+$') {
+    throw "Invalid baseline suffix '$BaselineSuffix'. Expected <minor>.<patch>, for example 2.15."
+  }
+  if ([int]$BaselineSuffix.Split('.')[0] -ge [int]$releaseParts[0]) {
+    throw "Baseline suffix '$BaselineSuffix' must have a lower minor than release suffix '$PatchVersion'."
+  }
+  $baselineSuffix = $BaselineSuffix
+}
 if ([string]::IsNullOrWhiteSpace($OutputPath)) {
   throw "-OutputPath is required so staged artifacts never land in a source workspace."
 }

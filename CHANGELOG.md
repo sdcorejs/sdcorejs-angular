@@ -6,7 +6,59 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+Planned release suffix `3.0` targets `19.3.0`, `20.3.0`, `21.3.0`, and `22.3.0`, validated against `*.2.15`.
+
+### Changed (BREAKING for consumers)
+- Table: `export.max` is now enforced for Excel and CSV export (it was declared but never read). The table total is checked before any data is fetched, and the `{ items, total }` totals and fetched row count are checked again while exporting; above the limit no file is written and a warning toast shows `core.component.table.export-max-exceeded`. Only a positive finite number is a limit — unset, `0`, negative or `NaN` stays unlimited; `export.type: 'custom'` is unaffected.
+
+```diff
+  export: {
+-   max: 5000, // ignored before 3.0
++   max: 5000, // now blocks exports above 5,000 rows
+  }
+```
+
+- Editor and mini-editor: output HTML (`[(model)]`, the form value, `sdChange`, `upload()`) goes through the allowlist filter `sdSanitizeEditorHtml`. CKEditor formatting is kept; `<script>`, `<style>`, `<iframe>`, form controls, every `on*` attribute, links outside http/https/mailto/tel/relative/`#` and image sources outside http/https/`blob:`/relative/`data:image/*` are removed. Loaded content that needs filtering is written back once and the control is marked dirty. The mini-editor link dialog only accepts `https`, `http`, `mailto` and `tel` (`link.allowedProtocols`). Filter stored HTML rendered elsewhere with the same function:
+
+```diff
+- <div [innerHTML]="article.body | sdSafeHtml"></div>
++ <div [innerHTML]="sanitize(article.body) | sdSafeHtml"></div>
++ // sanitize = sdSanitizeEditorHtml from '@sdcorejs/angular/utilities/extensions'
+```
+
+- Downloads: `SdUtilities.download(url)` with a string that is not an absolute http(s) URL now requires a safe resource URL — relative paths, `blob:`, `data:image/*` and `data:application/pdf`. `javascript:`, `vbscript:` and other `data:` URLs are refused with a dev-mode warning. Preview image/PDF downloads and the upload-file document link apply the same guard.
+
+```diff
+- SdUtilities.download('data:text/html,...');
++ SdUtilities.download(URL.createObjectURL(new Blob([html], { type: 'text/html' })), 'report.html');
+```
+
+- Tooltip (`sdTooltip`): the bubble has `role="tooltip"` and an id referenced by the trigger's `aria-describedby` while it is shown; it opens on keyboard focus, stays open while the pointer is over the trigger or the bubble, and `Escape` hides it. E2E selectors that assumed the old bubble markup may need updating. `MatTooltip` usages are unchanged.
+- Notify: the toast container keeps two visually hidden live regions (`data-autoid="services-notify-live-polite"` and `services-notify-live-assertive`) that announce each toast; toasts no longer carry `aria-live`. The close button is `type="button"` with the i18n label `core.notify.close`, and a toast pauses its timer while hovered or focused. Selectors that count the container's children must skip the two regions.
+- Upload file: the document name is a `<button type="button" class="c-file-name">` instead of `<a href="javascript:;">`; the link look is unchanged.
+- i18n: new catalog keys `core.notify.close`, `core.form.select.clear`, `core.component.table.export-max-exceeded`, `core.component.preview-video.error`, `.retry`, `.download` and `.unsupported`. A custom typed `I18nCatalog` must add them.
+
+### Added
+- Theme tokens: `sd.theme()` also emits colour ramps `--sd-{primary,secondary,info,success,warning,error,neutral}-{50…950}`, semantic roles (`--sd-status-*-bg/fg`, `--sd-link`, `--sd-surface-inverse`, `--sd-text-on-solid`, `--sd-border-focus`, `--sd-border-danger`, `--sd-overlay-backdrop`, `--sd-focus-ring-color`), non-colour scales (`--sd-space-*`, `--sd-radius-*`, `--sd-shadow-*`, `--sd-z-*`, `--sd-duration-*`, `--sd-ease-standard`, `--sd-font-size-*`, `--sd-font-weight-*`, `--sd-line-height-*`, `--sd-focus-ring-width/offset`) and per-component tokens (`--sd-{component}-{part}`). The light output keeps every 2.15 declaration and value.
+- Theme modes: `sd.theme($mode: 'light' | 'dark' | 'auto')` for the default palette, with Material's dark colour tokens and `color-scheme`; `sd-core.scss` switches with `data-sd-theme="dark"` / `"light"` on `<html>`. Named presets stay light — combining them with dark or auto stops the Sass build. New guide `assets/THEME.md` and a showcase *Theme & tokens* page (swatches, ramps, scales, measured contrast table, dark toggle).
+- `@sdcorejs/angular/utilities/theme`: `readSdTokens()`, `SdColorToken`, `SD_COLOR_TOKENS` for reading resolved colours from TypeScript.
+- `sd-highlight` (`@sdcorejs/angular/components/highlight`): highlights a term in text without diacritics or case (including đ/Đ), rendering only text and `<mark>`; `sdNormalizeSearchText()` and `sdFindHighlightRanges()` in `@sdcorejs/angular/utilities/extensions`.
+- `sd-preview-video` in `@sdcorejs/angular/components/preview`: native video preview from a URL or `Blob`, with poster, error/unsupported states, retry and a guarded download.
+- Select and autocomplete: opt-in `virtualScroll` and `itemSize`. Only the rows in view are rendered, the list is not cut at `limit`, and the keyboard reaches every row (select: arrows, PageUp/PageDown, Home/End, typeahead; autocomplete: arrows with wrap). In virtual mode `sd-select` owns its value, so selected rows scrolled out of view are kept. Default off: the non-virtual panels are unchanged.
+- `I18nService.locale()`: BCP 47 locale of the current language (`vi-VN`, `en-US`, `ja-JP`, `ko-KR`, `zh-CN`).
+- `sdIsSafeResourceUrl()` and `sdSanitizeEditorHtml()` exported from `@sdcorejs/angular/utilities/extensions`.
+- Tooling: `npm run check:scss-hex` (raw hex and focus-outline check for library SCSS/TS, `--report --literals` for scale literals), an ESLint rule for hex colours in library TS and templates, `test:theme` now includes the contrast matrix, `test:theme-token-list`, and a CI scripts job on Node 22.22.3. Release tooling accepts an `x.0` suffix with an explicit lower-minor baseline (`--baseline-suffix`, `deploy.ps1 -BaselineSuffix`, `baselineSuffix` in the release snapshot).
+
+### Changed
+- Components read colours, radii, font sizes/weights, line heights, motion and z-index layers from the new tokens, each with its 2.15 value as fallback; light rendering is unchanged.
+- Focus rings use `--sd-focus-ring-color` (a component's own colour hook keeps priority). The breadcrumb focus ring now uses the primary colour instead of the info colour; controls whose hook was unset now show the primary ring.
+- Dates and numbers formatted by the library (date/datetime min/max messages, query-bar values, home page, 403/404 pages) follow `I18nService.locale()` instead of always `vi-VN`.
+- File explorer: video files (`mp4`, `mov`, `webm`, …) play in `sd-preview-video` in the file detail, so `option.preview` is now also called for them. For large videos return a URL (signed or streamed) rather than a `Blob`.
+
 ### Fixed
+- Side drawer: locking page scroll adds the scrollbar width as right padding, so the page no longer shifts when a drawer opens.
+- Tooltip: meets WCAG 1.4.13 (hoverable, dismissible with Escape, persistent while hovered or focused).
+- Notify: toast announcements are reliable (persistent live regions) and the close button has an accessible name.
 - File explorer: let the detail preview shrink (down to 140 px for images and 240 px for PDFs) so the name, type, size and date stay visible without scrolling on short explorers.
 
 ## [2.15] - 2026-09-24

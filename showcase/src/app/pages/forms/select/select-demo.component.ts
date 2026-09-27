@@ -229,6 +229,27 @@ interface Option { value: string; display: string; }
         <pre class="select-demo-code">{{ footerActionSnippet }}</pre>
       </demo-section>
       }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-cuon-ao') {
+      <demo-section
+        heading="Cuộn ảo"
+        [props]="[{ name: 'virtualScroll', value: 'true' }, { name: 'itemSize', value: '36' }]"
+        note="10.000 nhân viên. Panel chỉ render các dòng đang thấy — kể cả sau khi tick 'Tất cả' — và danh sách không bị cắt theo limit. Trong ô tìm kiếm: mũi tên, PageUp/PageDown, Home/End đi hết danh sách, Enter để chọn. Mặc định tắt.">
+        <div class="select-demo-column">
+          <sd-select
+            label="Nhân viên (chọn một)" virtualScroll
+            [items]="virtualEmployees" valueField="value" displayField="display"
+            [(model)]="virtualEmployee" [form]="form"></sd-select>
+          <sd-select
+            label="Nhóm dự án (chọn nhiều)" multiple showSelectAll virtualScroll
+            [items]="virtualEmployees" valueField="value" displayField="display"
+            [(model)]="virtualTeam" [form]="form"></sd-select>
+          <div style="font-size:12px; color:#555">
+            Chọn một: <b>{{ virtualEmployee() ?? '(trống)' }}</b> · Chọn nhiều: <b>{{ virtualTeam()?.length ?? 0 }}</b> người
+          </div>
+        </div>
+      </demo-section>
+      }
     </demo-page>
   `,
   styles: [`
@@ -427,6 +448,13 @@ export class SelectDemoComponent {
   inlineDept = signal<string | null>('IT');
   quick = signal<string | null>(null);
   selectAllDepts = signal<string[] | null>(null);
+  /** 10.000 dòng cho demo cuộn ảo. */
+  readonly virtualEmployees: Option[] = Array.from({ length: 10_000 }, (_, index) => ({
+    value: `NV${String(index + 1).padStart(5, '0')}`,
+    display: `Nhân viên ${index + 1}`,
+  }));
+  virtualEmployee = signal<string | null>(null);
+  virtualTeam = signal<string[] | null>(null);
   footerDept = signal<string | null>(null);
   footerActionDept = signal<string | null>(null);
   footerItemDept = signal<string | null>(null);
