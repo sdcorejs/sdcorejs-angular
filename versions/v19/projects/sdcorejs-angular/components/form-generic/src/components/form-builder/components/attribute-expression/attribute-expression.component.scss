@@ -11,8 +11,8 @@
 
 .fb-field__label {
   color: var(--md-sys-color-on-surface-variant);
-  font-size: 11px;
-  font-weight: 500;
+  font-size: var(--sd-font-size-11, 11px);
+  font-weight: var(--sd-font-weight-medium, 500);
 }
 
 .fb-expr {
@@ -29,7 +29,7 @@
 }
 
 .fb-expr:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--md-sys-color-primary) 72%, transparent);
+  outline: var(--sd-focus-ring-width, 2px) solid color-mix(in srgb, var(--sd-focus-ring-color, var(--sd-primary)) 72%, transparent);
   outline-offset: 2px;
 }
 
@@ -43,8 +43,8 @@
   background: var(--md-sys-color-primary-container);
   color: var(--md-sys-color-primary);
   font-family: 'Roboto Mono', monospace;
-  font-size: 10px;
-  font-weight: 600;
+  font-size: var(--sd-font-size-10, 10px);
+  font-weight: var(--sd-font-weight-semibold, 600);
 }
 
 .fb-expr__code,
@@ -59,18 +59,18 @@
 .fb-expr__code {
   color: var(--md-sys-color-on-surface);
   font-family: 'Roboto Mono', monospace;
-  font-size: 11px;
+  font-size: var(--sd-font-size-11, 11px);
 }
 
 .empty {
-  font-size: 12px;
+  font-size: var(--sd-font-size-12, 12px);
 }
 
 .fb-icon-btn {
   width: 28px;
   height: 28px;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--sd-radius-999, 999px);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -83,7 +83,7 @@
 
 .msi {
   font-family: 'Material Icons Outlined';
-  font-size: 18px;
+  font-size: var(--sd-font-size-18, 18px);
   font-weight: normal;
   line-height: 1;
   letter-spacing: normal;

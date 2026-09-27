@@ -53,7 +53,7 @@
         width: 30% !important;
         height: 3px;
         background: var(--sd-primary, #005cbb);
-        border-radius: 2px;
+        border-radius: var(--sd-radius-2, 2px);
         z-index: 10;
         pointer-events: none;
         animation: sd-progress-indeterminate 1.4s ease-in-out infinite;
@@ -63,7 +63,7 @@
         overflow: hidden;
         img {
           filter: blur(1px) brightness(0.85);
-          transition: filter 0.3s ease;
+          transition: filter var(--sd-duration-slow, 300ms) ease;
         }
 
         &::after {

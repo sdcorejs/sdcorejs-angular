@@ -6,7 +6,7 @@
   overflow: auto;
   padding: 4px;
   border: 1px solid var(--sd-border, #dde0e5);
-  border-radius: 8px;
+  border-radius: var(--sd-radius-8, 8px);
   background: var(--sd-surface, var(--sd-white, #fff));
   color: var(--sd-text, #1a1b1f);
   box-shadow:
@@ -22,12 +22,12 @@
     min-height: 40px;
     padding: 8px 12px;
     border: 0;
-    border-radius: 4px;
+    border-radius: var(--sd-radius-4, 4px);
     background: transparent;
     color: inherit;
     font: inherit;
-    font-size: 14px;
-    line-height: 20px;
+    font-size: var(--sd-font-size-14, 14px);
+    line-height: var(--sd-line-height-20, 20px);
     text-align: start;
     overflow-wrap: anywhere;
     cursor: pointer;
@@ -37,7 +37,7 @@
       background: color-mix(in srgb, var(--sd-action-accent, var(--sd-text, #1a1b1f)) 8%, transparent);
     }
     &:focus-visible {
-      outline: 2px solid var(--sd-primary, #005cbb);
+      outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
       outline-offset: -2px;
     }
     &:disabled {
@@ -53,7 +53,7 @@
     flex: 0 0 18px;
     width: 18px;
     height: 18px;
-    font-size: 18px;
+    font-size: var(--sd-font-size-18, 18px);
     color: var(--sd-action-accent, inherit);
   }
   .sd-action-divider {
@@ -62,7 +62,7 @@
   }
   .sd-action-heading {
     padding: 4px 12px;
-    font-size: 12px;
+    font-size: var(--sd-font-size-12, 12px);
     color: var(--sd-text-secondary, #555);
   }
 }

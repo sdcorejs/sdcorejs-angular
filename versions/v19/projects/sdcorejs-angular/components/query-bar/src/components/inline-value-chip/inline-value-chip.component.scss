@@ -5,12 +5,12 @@ $primary-light: var(--sd-primary-light);
 $primary-faint: var(--sd-primary-light);
 $primary-dark:  var(--sd-primary-dark);
 
-$text:           #212121;
-$text-secondary: #5f6368;
-$text-muted:     #7a7a7a;
-$border:         #d6d8db;
-$bg:             #ffffff;
-$danger:         #d23535;
+$text:           var(--sd-query-bar-text, #212121);
+$text-secondary: var(--sd-query-bar-text-secondary, #5f6368);
+$text-muted:     var(--sd-query-bar-text-muted, #7a7a7a);
+$border:         var(--sd-query-bar-border, #d6d8db);
+$bg:             var(--sd-query-bar-bg, #ffffff);
+$danger:         var(--sd-query-bar-chip-danger, #d23535);
 
 :host {
   display: inline-flex;
@@ -19,17 +19,17 @@ $danger:         #d23535;
 .c-seamless {
   display: inline-flex;
   align-items: stretch;
-  border-radius: 999px;
+  border-radius: var(--sd-radius-999, 999px);
   overflow: hidden;
   font-family: inherit;
-  font-size: 13px;
+  font-size: var(--sd-font-size-13, 13px);
   line-height: 1;
   cursor: text;
   border: 1px solid $border;
   background: $bg;
   color: $text-secondary;
-  transition: border-color 120ms ease, background-color 120ms ease, box-shadow 120ms ease,
-    color 120ms ease;
+  transition: border-color var(--sd-duration-fast, 120ms) ease, background-color var(--sd-duration-fast, 120ms) ease, box-shadow var(--sd-duration-fast, 120ms) ease,
+    color var(--sd-duration-fast, 120ms) ease;
 
   &--compact { height: 28px; }
   &--comfortable { height: 32px; }
@@ -63,7 +63,7 @@ $danger:         #d23535;
 
   &[data-state='error'] {
     border-color: $danger;
-    background: #fff5f5;
+    background: var(--sd-query-bar-chip-danger-bg, #fff5f5);
     color: $danger;
     box-shadow: 0 0 0 3px rgba(210, 53, 53, 0.12);
   }
@@ -73,7 +73,7 @@ $danger:         #d23535;
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-weight: 500;
+  font-weight: var(--sd-font-weight-medium, 500);
   white-space: nowrap;
   cursor: text;
   color: inherit;
@@ -87,7 +87,7 @@ $danger:         #d23535;
 }
 
 .c-seamless__icon {
-  font-size: 14px;
+  font-size: var(--sd-font-size-14, 14px);
   width: 14px;
   height: 14px;
   color: inherit;
@@ -136,7 +136,7 @@ $danger:         #d23535;
   .c-seamless--compact & { width: 26px; }
   .c-seamless--comfortable & { width: 28px; }
 
-  sd-icon { font-size: 14px; width: 14px; height: 14px; }
+  sd-icon { font-size: var(--sd-font-size-14, 14px); width: 14px; height: 14px; }
 
   &:hover { background: rgba(0, 0, 0, 0.05); }
 }

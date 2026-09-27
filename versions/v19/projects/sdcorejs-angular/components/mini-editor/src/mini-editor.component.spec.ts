@@ -1,6 +1,8 @@
 import { Component, input, output } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { FormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { By } from '@angular/platform-browser';
+import { ClassicEditor } from 'ckeditor5';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
 
@@ -21,6 +23,16 @@ class FakeCKEditorComponent {
   readonly config = input<any>();
   readonly disabled = input(false);
   readonly ready = output<any>();
+}
+
+@Component({
+  standalone: true,
+  imports: [SdMiniEditor, ReactiveFormsModule],
+  template: `<sd-mini-editor [option]="option" [formControl]="control"></sd-mini-editor>`,
+})
+class MiniEditorFormHostComponent {
+  option: SdMiniEditorOption = { placeholder: 'x' };
+  control = new FormControl('<p>Hi <a href="javascript:alert(1)">x</a></p>');
 }
 
 // ---------------------------------------------------------------------------
@@ -101,7 +113,7 @@ function makeFakeEditor() {
 describe('SdMiniEditor', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [SdMiniEditor, NoopAnimationsModule, FormsModule],
+      imports: [SdMiniEditor, NoopAnimationsModule, FormsModule, MiniEditorFormHostComponent],
     })
       .overrideComponent(SdMiniEditor, {
         remove: { imports: [CKEditorModule] },
@@ -464,6 +476,94 @@ describe('SdMiniEditor', () => {
     it('does not throw on destroy when editor was never initialised', () => {
       const fixture = buildFixture();
       expect(() => fixture.destroy()).not.toThrow();
+    });
+  });
+  // ─── 10. Output sanitization (D-032) ─────────────────────────────────────
+
+  describe('output sanitization (D-032)', () => {
+    const UNSAFE = '<p>Hi <a href="javascript:alert(1)">x</a> <img src="/a.png" onerror="alert(1)"></p>';
+    const CLEANED = '<p>Hi <a>x</a> <img src="/a.png"></p>';
+
+    it('limits link protocols to https, http, mailto and tel', () => {
+      const fixture = buildFixture();
+      expect(fixture.componentInstance.editorConfig.link?.allowedProtocols).toEqual(['https', 'http', 'mailto', 'tel']);
+    });
+
+    it('emits filtered HTML through valueChange, contentChange, option.onChange and the form callback', fakeAsync(() => {
+      const onChangeOption = jasmine.createSpy('option.onChange');
+      const fixture = buildFixture({ onChange: onChangeOption });
+      const comp = fixture.componentInstance;
+      const valueSpy = jasmine.createSpy('valueChange');
+      const contentSpy = jasmine.createSpy('contentChange');
+      const formSpy = jasmine.createSpy('onChange');
+      comp.valueChange.subscribe(valueSpy);
+      comp.contentChange.subscribe(contentSpy);
+      comp.registerOnChange(formSpy);
+      const fakeEditor = makeFakeEditor();
+      fakeEditor._data = UNSAFE;
+      comp.onReady(fakeEditor);
+
+      fakeEditor.triggerDataChange();
+      tick(600);
+
+      for (const spy of [valueSpy, contentSpy, formSpy, onChangeOption]) expect(spy).toHaveBeenCalledOnceWith(CLEANED);
+      expect(comp.value).toBe(CLEANED);
+    }));
+
+    it('filters getContent() and getHtmlContent()', () => {
+      const fixture = buildFixture();
+      const comp = fixture.componentInstance;
+      const fakeEditor = makeFakeEditor();
+      fakeEditor._data = UNSAFE;
+      comp.onReady(fakeEditor);
+
+      expect(comp.getContent()).toBe(CLEANED);
+      expect(comp.getHtmlContent()).toBe(CLEANED);
+    });
+
+    it('writes filtered content back once and marks the form control dirty', fakeAsync(() => {
+      const fixture = TestBed.createComponent(MiniEditorFormHostComponent);
+      fixture.detectChanges();
+      const control = fixture.componentInstance.control;
+      const comp = fixture.debugElement.query(By.directive(SdMiniEditor)).componentInstance as SdMiniEditor;
+      const fakeEditor = makeFakeEditor();
+      comp.onReady(fakeEditor); // nạp giá trị ban đầu vào editor qua setData
+      expect(control.dirty).toBeFalse();
+
+      fakeEditor.triggerDataChange(); // CKEditor phát change:data sau setData
+      tick(600);
+
+      expect(control.value).toBe('<p>Hi <a>x</a></p>');
+      expect(control.dirty).toBeTrue();
+    }));
+  });
+
+  // ─── 11. Markdown output with a real CKEditor ────────────────────────────
+
+  describe('Markdown output (real CKEditor)', () => {
+    it('filters the HTML before converting it to Markdown', async () => {
+      const fixture = buildFixture({ outputFormat: 'markdown' });
+      const comp = fixture.componentInstance;
+      const element = document.createElement('div');
+      document.body.appendChild(element);
+      const editor = await ClassicEditor.create(element, comp.editorConfig as never);
+      try {
+        comp.onReady(editor);
+        editor.setData('[safe](https://example.com) and [bad](javascript:alert(1))');
+
+        const markdown = comp.getContent();
+        expect(markdown).toContain('[safe](https://example.com)');
+        expect(markdown).toContain('bad');
+        expect(markdown).not.toContain('javascript:');
+
+        const html = comp.getHtmlContent();
+        expect(html).toContain('href="https://example.com"');
+        expect(html).not.toContain('javascript:');
+        expect(html.startsWith('<p>')).toBeTrue();
+      } finally {
+        await editor.destroy();
+        element.remove();
+      }
     });
   });
 });

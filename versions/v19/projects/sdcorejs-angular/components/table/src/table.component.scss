@@ -1,6 +1,6 @@
 :host {
   &:focus-visible {
-    outline: 2px solid var(--sd-primary);
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
     outline-offset: 2px;
   }
   display: flex;
@@ -23,7 +23,7 @@
     min-width: 0;
     min-height: 0;
     background: var(--sd-surface, #fff);
-    border-radius: 6px;
+    border-radius: var(--sd-radius-6, 6px);
   }
 
   .c-container {
@@ -82,7 +82,7 @@
           th.sd-column-group {
             padding-block: 4px;
             vertical-align: middle;
-            background-color: color-mix(in srgb, var(--sd-border, #c4c6d0) 18%, #f2f3f4);
+            background-color: color-mix(in srgb, var(--sd-border, #c4c6d0) 18%, var(--sd-table-group-header-mix, #f2f3f4));
             box-shadow: inset 0 -1px var(--sd-border, #c4c6d0);
 
             .sd-column-group-title {
@@ -90,7 +90,7 @@
               min-height: 24px;
               justify-content: center;
               text-align: center;
-              font-weight: 600;
+              font-weight: var(--sd-font-weight-semibold, 600);
             }
           }
         }
@@ -101,16 +101,16 @@
 
         tr.c-row {
           &.activated {
-            background-color: #e5ecff;
+            background-color: var(--sd-table-row-activated-bg, #e5ecff);
           }
 
           &.selected {
-            background-color: #eef2ff;
+            background-color: var(--sd-table-row-selected-bg, #eef2ff);
           }
 
           &:not(.selected):not(.activated) {
             &:hover {
-              background-color: #f5f5f5;
+              background-color: var(--sd-table-row-hover-bg, #f5f5f5);
             }
           }
 
@@ -122,30 +122,30 @@
             cursor: pointer;
 
             &:hover {
-              background: #f5f5f5;
+              background: var(--sd-table-row-hover-bg, #f5f5f5);
             }
           }
         }
 
         th.mat-mdc-header-cell {
-          background-color: #f2f3f4;
+          background-color: var(--sd-table-header-bg, #f2f3f4);
           border-bottom: 0 !important;
         }
 
         td.mat-mdc-cell,
         td.mat-mdc-footer-cell,
         th.mat-mdc-header-cell {
-          border-bottom-color: #f2f2f2 !important;
+          border-bottom-color: var(--sd-table-row-divider, #f2f2f2) !important;
         }
       }
 
       .c-th {
         vertical-align: middle;
         padding-block: 8px;
-        font-weight: 500;
-        font-size: 14px;
-        line-height: 20px;
-        color: #212121;
+        font-weight: var(--sd-font-weight-medium, 500);
+        font-size: var(--sd-font-size-14, 14px);
+        line-height: var(--sd-line-height-20, 20px);
+        color: var(--sd-table-header-text, #212121);
 
         &.sd-col-resize-host {
           position: relative;
@@ -212,7 +212,7 @@
       flex-direction: row;
       justify-content: space-between;
       align-items: center;
-      background-color: #fff;
+      background-color: var(--sd-table-bg, #ffffff);
 
       // why: mat-paginator tự vẽ nền `--mat-paginator-container-background-color` (mặc định
       // `--mat-sys-surface` của M3 — KHÔNG phải trắng), nên nó phủ một mảng màu khác lên đúng nửa
@@ -257,7 +257,7 @@
 
     .c-empty {
       text-align: center;
-      background-color: #fff;
+      background-color: var(--sd-table-bg, #ffffff);
       border: none !important;
 
       sd-icon {
@@ -273,7 +273,7 @@
 
   button {
     &.c-btn-add {
-      background-color: #fff;
+      background-color: var(--sd-table-bg, #ffffff);
       box-shadow: 0px 2px 4px rgba(47, 49, 54, 0.16);
     }
   }
@@ -292,10 +292,10 @@
     width: 32px;
     height: 32px;
     margin: 4px;
-    border: 4px solid #cef;
+    border: 4px solid var(--sd-table-spinner, #cceeff);
     border-radius: 50%;
     animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-    border-color: #cef transparent transparent transparent;
+    border-color: var(--sd-table-spinner, #cceeff) transparent transparent transparent;
   }
 
   .lds-ring div:nth-child(1) {
@@ -401,7 +401,7 @@
     color: var(--sd-text);
   }
   .c-paginator {
-    background-color: #fff;
+    background-color: var(--sd-table-bg, #ffffff);
   }
 }
 
@@ -417,7 +417,7 @@
 
 :host ::ng-deep {
   .mat-select-arrow {
-    color: #a6a6a6;
+    color: var(--sd-table-select-arrow, #a6a6a6);
   }
 
   // Sort control chỉ chứa title; inline filter vẫn là sibling focusable độc lập.
@@ -516,9 +516,9 @@
   // why: group header cell có colspan span phần phải của row. Style để dễ nhận biết
   // (background nhạt + border-top); content render trong .sd-group-row inner.
   .sd-group-header-cell {
-    background: #f5f7fc;
-    border-top: 1px solid #e6e9f2;
-    border-bottom: 1px solid #e6e9f2;
+    background: var(--sd-table-group-row-bg, #f5f7fc);
+    border-top: 1px solid var(--sd-table-group-row-border, #e6e9f2);
+    border-bottom: 1px solid var(--sd-table-group-row-border, #e6e9f2);
   }
   .sd-group-row {
     min-height: 36px;
@@ -577,10 +577,10 @@
     transition: background-color 0.15s ease;
 
     sd-icon {
-      font-size: 18px;
+      font-size: var(--sd-font-size-18, 18px);
       width: 18px;
       height: 18px;
-      line-height: 18px;
+      line-height: var(--sd-line-height-18, 18px);
     }
 
     &:hover {
@@ -617,25 +617,25 @@
   // root (level 0) đậm hơn để mắt nhận ranh giới cha/con dễ; child levels tint nền
   // nhạt dần theo depth.
   tr.c-row.sd-tree-row.sd-tree-level-0 {
-    background: #fbfcfe;
+    background: var(--sd-table-tree-level-0-bg, #fbfcfe);
     & > td {
-      font-weight: 500;
+      font-weight: var(--sd-font-weight-medium, 500);
     }
   }
   tr.c-row.sd-tree-row.sd-tree-level-1 {
-    background: #ffffff;
+    background: var(--sd-table-tree-level-1-bg, #ffffff);
   }
   tr.c-row.sd-tree-row.sd-tree-level-2 {
-    background: #fafbfd;
+    background: var(--sd-table-tree-level-2-bg, #fafbfd);
   }
   tr.c-row.sd-tree-row.sd-tree-level-3 {
-    background: #f6f8fb;
+    background: var(--sd-table-tree-level-3-bg, #f6f8fb);
   }
 
   // STT root level — bold đậm rõ.
   .sd-stt-root {
-    font-weight: 700;
-    color: #1f2330;
+    font-weight: var(--sd-font-weight-bold, 700);
+    color: var(--sd-table-tree-root-text, #1f2330);
   }
 }
 
@@ -658,7 +658,7 @@
 .sd-mobile-aggregate {
   background: color-mix(in srgb, var(--sd-surface-muted) 35%, var(--sd-surface));
   color: var(--sd-text);
-  font-weight: 500;
+  font-weight: var(--sd-font-weight-medium, 500);
 }
 
 .sd-aggregate-cell {

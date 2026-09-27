@@ -1,10 +1,10 @@
 .c-input {
   width: 100%;
-  background: #fff;
+  background: var(--sd-form-builder-control-bg, #ffffff);
   height: 30px;
   border: 1px solid var(--md-sys-color-outline-variant);
-  border-radius: 4px;
+  border-radius: var(--sd-radius-4, 4px);
   position: relative;
   padding: 0 8px;
-  color: #BFBFBF;
+  color: var(--sd-form-builder-hint, #bfbfbf);
 }

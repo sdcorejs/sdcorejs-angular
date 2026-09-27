@@ -2,6 +2,54 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { SdAvatar } from './avatar.component';
 import { queryByCss, setInput } from '../../../testing/test-utils';
 
+/** WCAG relative luminance of any CSS colour the canvas understands (computed styles included). */
+function luminance(color: string): number {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 1;
+  const context = canvas.getContext('2d')!;
+  context.fillStyle = color;
+  context.fillRect(0, 0, 1, 1);
+  const rgb = Array.from(context.getImageData(0, 0, 1, 1).data)
+    .slice(0, 3)
+    .map(value => {
+      const channel = value / 255;
+      return channel <= 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4);
+    });
+  return rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
+}
+
+// 2.15 name palette in hash order: each colour is now the fallback of `--sd-avatar-color-{n}`.
+const PALETTE_215 = [
+  '#1abc9c',
+  '#2ecc71',
+  '#3498db',
+  '#9b59b6',
+  '#34495e',
+  '#16a085',
+  '#27ae60',
+  '#2980b9',
+  '#8e44ad',
+  '#2c3e50',
+  '#f1c40f',
+  '#e67e22',
+  '#e74c3c',
+  '#95a5a6',
+  '#f39c12',
+  '#d35400',
+  '#c0392b',
+  '#bdc3c7',
+  '#7f8c8d',
+];
+const NAMES = ['Nguyễn Văn An', 'Trần Thị Bích', 'Lê Minh Hoàng', 'Phạm Quỳnh Anh', ...Array.from({ length: 40 }, (_, i) => 'Person ' + i)];
+
+function paletteIndex(name: string): number {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash) % PALETTE_215.length;
+}
+
 describe('SdAvatar', () => {
   let fixture: ComponentFixture<SdAvatar>;
 
@@ -80,7 +128,7 @@ describe('SdAvatar', () => {
     it('returns a neutral light background for empty src', () => {
       setInput(fixture, 'src', '');
       const wrapper = queryByCss<HTMLDivElement>(fixture, '.sd-avatar');
-      expect(fixture.componentInstance.baseColor()).toBe('#bdc3c7');
+      expect(fixture.componentInstance.baseColor()).toBe('var(--sd-avatar-neutral, #bdc3c7)');
       expect(wrapper.style.backgroundColor).toContain('color-mix');
     });
 
@@ -108,28 +156,7 @@ describe('SdAvatar', () => {
   });
 
   it('renders readable dark initials on light backgrounds for the existing name palette', () => {
-    const canvas = document.createElement('canvas');
-    canvas.width = canvas.height = 1;
-    const context = canvas.getContext('2d')!;
-    const luminance = (color: string) => {
-      context.fillStyle = color;
-      context.fillRect(0, 0, 1, 1);
-      const rgb = Array.from(context.getImageData(0, 0, 1, 1).data)
-        .slice(0, 3)
-        .map(value => {
-          const channel = value / 255;
-          return channel <= 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4);
-        });
-      return rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
-    };
-    for (const name of [
-      'Nguyễn Văn An',
-      'Trần Thị Bích',
-      'Lê Minh Hoàng',
-      'Phạm Quỳnh Anh',
-      '',
-      ...Array.from({ length: 40 }, (_, i) => 'Person ' + i),
-    ]) {
+    for (const name of [...NAMES, '']) {
       setInput(fixture, 'src', name);
       const style = getComputedStyle(queryByCss(fixture, '.sd-avatar'));
       const background = luminance(style.backgroundColor);
@@ -139,6 +166,60 @@ describe('SdAvatar', () => {
         .withContext(name)
         .toBeGreaterThanOrEqual(4.5);
     }
+  });
+
+  describe('theme tokens', () => {
+    it('maps each name to its 2.15 palette slot as var(--sd-avatar-color-{n}, <2.15 hex>)', () => {
+      for (const name of NAMES) {
+        setInput(fixture, 'src', name);
+        const index = paletteIndex(name);
+        expect(fixture.componentInstance.baseColor())
+          .withContext(name)
+          .toBe(`var(--sd-avatar-color-${index + 1}, ${PALETTE_215[index]})`);
+      }
+    });
+
+    it('mixes the palette colour with the avatar tint and ink tokens', () => {
+      setInput(fixture, 'src', 'Nguyễn Văn An');
+      const base = fixture.componentInstance.baseColor();
+      expect(fixture.componentInstance.bgColor()).toBe(`color-mix(in srgb, ${base} 14%, var(--sd-avatar-tint, #ffffff))`);
+      expect(fixture.componentInstance.textColor()).toBe(`color-mix(in srgb, ${base} 45%, var(--sd-avatar-ink, #000000))`);
+    });
+
+    it('renders exactly the 2.15 colours when no theme defines the avatar tokens', () => {
+      const probe = document.createElement('div');
+      document.body.appendChild(probe);
+      try {
+        for (const name of [...NAMES, '']) {
+          setInput(fixture, 'src', name);
+          const hex = name ? PALETTE_215[paletteIndex(name)] : '#bdc3c7';
+          probe.style.backgroundColor = `color-mix(in srgb, ${hex} 14%, white)`;
+          probe.style.color = `color-mix(in srgb, ${hex} 45%, black)`;
+          const actual = getComputedStyle(queryByCss(fixture, '.sd-avatar'));
+          const expected = getComputedStyle(probe);
+          expect(actual.backgroundColor).withContext(name).toBe(expected.backgroundColor);
+          expect(actual.color).withContext(name).toBe(expected.color);
+        }
+      } finally {
+        probe.remove();
+      }
+    });
+
+    it('keeps the initials readable with the dark tint and ink of the default theme', () => {
+      const host = fixture.nativeElement as HTMLElement;
+      host.style.setProperty('--sd-avatar-tint', '#2b2d33');
+      host.style.setProperty('--sd-avatar-ink', '#ffffff');
+      for (const name of [...NAMES, '']) {
+        setInput(fixture, 'src', name);
+        const style = getComputedStyle(queryByCss(fixture, '.sd-avatar'));
+        const background = luminance(style.backgroundColor);
+        const foreground = luminance(style.color);
+        expect(background).withContext(name).toBeLessThan(0.1);
+        expect((foreground + 0.05) / (background + 0.05))
+          .withContext(name)
+          .toBeGreaterThanOrEqual(4.5);
+      }
+    });
   });
 
   describe('size', () => {
@@ -202,7 +283,7 @@ describe('SdAvatar', () => {
     it('uses neutral light background for undefined src', () => {
       setInput(fixture, 'src', undefined);
       const wrapper = queryByCss<HTMLDivElement>(fixture, '.sd-avatar');
-      expect(fixture.componentInstance.baseColor()).toBe('#bdc3c7');
+      expect(fixture.componentInstance.baseColor()).toBe('var(--sd-avatar-neutral, #bdc3c7)');
       expect(wrapper.style.backgroundColor).toContain('color-mix');
     });
   });

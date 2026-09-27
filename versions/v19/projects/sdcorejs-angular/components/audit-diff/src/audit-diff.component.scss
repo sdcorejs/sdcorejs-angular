@@ -5,7 +5,7 @@
 .sd-audit-diff__table-scroll {
   overflow-x: auto;
   border: 1px solid var(--sd-border-color, #dfe3e8);
-  border-radius: 8px;
+  border-radius: var(--sd-radius-8, 8px);
 }
 
 .sd-audit-diff__table {
@@ -43,7 +43,7 @@
   margin-top: 2px;
   color: var(--sd-text-muted, #5f6772);
   font-size: 0.75rem;
-  font-weight: 400;
+  font-weight: var(--sd-font-weight-regular, 400);
 }
 
 .sd-audit-diff__details {
@@ -58,7 +58,7 @@
   gap: 12px;
   padding: 12px;
   border: 1px solid var(--sd-border-color, #dfe3e8);
-  border-radius: 8px;
+  border-radius: var(--sd-radius-8, 8px);
   background: var(--sd-surface, #fff);
 }
 
@@ -73,7 +73,7 @@
   margin: 0;
   padding: 16px;
   border: 1px dashed var(--sd-border-color, #dfe3e8);
-  border-radius: 8px;
+  border-radius: var(--sd-radius-8, 8px);
   color: var(--sd-text-muted, #5f6772);
   text-align: center;
 }

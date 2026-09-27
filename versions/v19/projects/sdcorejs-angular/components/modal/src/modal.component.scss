@@ -8,7 +8,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--sd-primary, #005cbb) !important;
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary)) !important;
     outline-offset: 2px;
   }
 }
@@ -136,7 +136,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--sd-primary) !important;
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary)) !important;
     outline-offset: 2px;
   }
 
@@ -144,8 +144,8 @@
     display: block;
     width: 20px;
     height: 20px;
-    font-size: 20px;
-    line-height: 20px;
+    font-size: var(--sd-font-size-20, 20px);
+    line-height: var(--sd-line-height-20, 20px);
   }
 }
 
@@ -215,9 +215,9 @@
   background: var(--sd-white, #fff);
 }
 .sd-modal-title {
-  font-size: 18px;
+  font-size: var(--sd-font-size-18, 18px);
   line-height: 25px;
-  font-weight: 600;
+  font-weight: var(--sd-font-weight-semibold, 600);
   overflow-wrap: anywhere;
 }
 .sd-modal-body {

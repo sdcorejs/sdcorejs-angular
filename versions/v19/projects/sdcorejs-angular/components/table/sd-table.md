@@ -922,6 +922,25 @@ The export button's label comes from the i18n catalog, so it follows the app lan
 
 `TableExportService.exportTitle` is a `computed()` over the current language plus the export progress; drive progress with `setExportProgress(percent | null)` (`null` restores the idle label). Do not assign to `exportTitle` — it is no longer writable.
 
+## Export row limit (`export.max`) — BREAKING
+
+`export.max` used to be declared on `SdTableOptionExportDefault` but never read, so an export with
+100 000 rows went ahead even with `max: 5000`. It is now enforced for Excel and CSV export:
+
+- Before any data is fetched, the table total (server total, or the filtered row count of a local table)
+  is compared with `max`.
+- While exporting, the total reported by `items` / `export.items` (`{ items, total }`) and the number
+  of rows fetched so far are checked again, so a stale table total cannot slip through.
+- When the limit is exceeded, no file is written, the export button returns to its idle state and a
+  warning toast shows `core.component.table.export-max-exceeded` with `{max}` and `{total}`.
+- Only a positive finite number is a limit. Leaving `max` unset (or `0`, a negative number, `NaN`)
+  keeps the export unlimited, as before.
+- `export.type: 'custom'` is not affected — `onExport` owns its own limits.
+
+| Key | vi | en |
+|---|---|---|
+| `core.component.table.export-max-exceeded` | Không thể xuất {total} dòng. Giới hạn là {max} dòng — hãy thu hẹp bộ lọc rồi thử lại. | Cannot export {total} rows. The limit is {max} rows — narrow the filter and try again. |
+
 ## Permission gating
 
 None built in. The package ships no license or permission gate of its own. Bulk actions (`selector.actions`) and per-row `commands` are gated at the application level (hide via the `hidden(row)` predicate, or omit the option when composing it). To gate the whole table, wrap the host with `*sdPermission`.

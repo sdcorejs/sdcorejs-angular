@@ -9,7 +9,7 @@
 
 ## One-line purpose
 
-Google-Drive-like file browser in a single element: folder tree, breadcrumb, list / grid, search in the current folder, a file detail drawer (image and PDF preview, metadata, download, share link), multi-file upload with drag-and-drop, downloads and a transfer queue. It is storage-agnostic — every read and write goes through the callbacks of `SdFileExplorerOption`.
+Google-Drive-like file browser in a single element: folder tree, breadcrumb, list / grid, search in the current folder, a file detail drawer (image, PDF and video preview, metadata, download, share link), multi-file upload with drag-and-drop, downloads and a transfer queue. It is storage-agnostic — every read and write goes through the callbacks of `SdFileExplorerOption`.
 
 ## When to use
 
@@ -21,7 +21,7 @@ Google-Drive-like file browser in a single element: folder tree, breadcrumb, lis
 
 - A single upload field in a form → use `<sd-upload-file>`. The explorer does not depend on it and does not replace it.
 - Full document management (rename, move, delete, permissions, versions) — not in this component yet; build those around it or wait for an iteration that adds them. Sharing is limited to creating a link through `share`.
-- Standalone image or PDF viewing → use `<sd-preview-image>` / `<sd-preview-pdf>` directly.
+- Standalone image, PDF or video viewing → use `<sd-preview-image>` / `<sd-preview-pdf>` / `<sd-preview-video>` directly.
 
 ## Sizing
 
@@ -171,7 +171,7 @@ readonly busy = computed(() => this.explorer().transfers().some(t => ['queued', 
 | -------------- | ------------------------------------------------------------------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `list`         | `({ parentId, signal }) => SdFileExplorerItem[] \| Promise<…>`                       | yes      | Direct children of a folder; `parentId` is `null` for the root. Called lazily once per folder (first open or first expand in the tree), then cached until `reload()` or a successful upload / folder creation there.                                                                                                   |
 | `search`       | `({ parentId, keyword, signal }) => SdFileExplorerItem[] \| Promise<…>`              | no       | Server-side search in the current folder. Called 300 ms after the last keystroke for a non-empty keyword; stale requests are aborted and ignored. **Omitted** → the box filters the loaded children of the current folder by name (case- and Vietnamese-accent-insensitive).                                           |
-| `preview`      | `({ item, signal }) => string \| Blob \| null \| undefined \| Promise<…>`            | no       | Content of the detail drawer's preview. `string` = caller-owned URL (never revoked); `Blob`/`File` = object URL created and revoked by the explorer. Only called for images and PDFs; `null`/omitted → image `thumbnailUrl` or the "no preview" fallback.                                                              |
+| `preview`      | `({ item, signal }) => string \| Blob \| null \| undefined \| Promise<…>`            | no       | Content of the detail drawer's preview. `string` = caller-owned URL (never revoked); `Blob`/`File` = object URL created and revoked by the explorer. Only called for images, PDFs and videos; `null`/omitted → image `thumbnailUrl` or the "no preview" fallback.                                                      |
 | `download`     | `({ item, progress, signal }) => Blob \| void \| Promise<Blob \| void>`              | no       | Enables download buttons (list rows and detail drawer). Return a `Blob` → saved under `item.name`. Return nothing → you handed the file to the browser; the transfer shows "Sent to browser" without a percentage.                                                                                                     |
 | `share`        | `({ item, signal }) => string \| Promise<string>`                                    | no       | Enables "Share" on files (list row action and detail drawer). Resolve the link to share: the dialog shows it in a read-only field with a copy button. Whitespace is trimmed; an empty or non-string result, a throw or a rejection shows an error with retry. Called each time the dialog opens; never emits `(open)`. |
 | `upload`       | `({ file, parentId, progress, signal }) => SdFileExplorerItem \| void \| Promise<…>` | no       | Enables the upload button and drag-and-drop. One call per file, **at most 3 at a time**; the destination folder is listed again after success. Throw/reject to fail the transfer (the error `message` is shown).                                                                                                       |
@@ -228,7 +228,8 @@ Opening a file shows its detail in an **`<sd-side-drawer>` opened in the item ar
 - Width 420 px; when the item area is 600 px wide or less (compact layout, or a desktop explorer narrower than about 840 px) the drawer fills it minus an 8 px inset and uses 44 px touch targets.
 - The drawer keeps the `<sd-side-drawer>` focus trap: `Tab` stays inside it and `Esc` leaves it. On a wide explorer the folder tree stays reachable with the pointer; in the compact layout the tree opens from the toolbar, which the drawer covers, so close the drawer first.
 - Images render as `<img>` from the returned URL or object URL; a broken image switches to the error state with retry.
-- PDFs render with `<sd-preview-pdf>` in light theme, without sidebar and floating toolbar (its header keeps search, print and fullscreen). It is **imported on demand** (`import('@sdcorejs/angular/components/preview')`), so applications that never preview a PDF do not download PDF.js.
+- PDFs render with `<sd-preview-pdf>` in light theme, without sidebar and floating toolbar (its header keeps search, print and fullscreen). It is **imported on demand** (`import('@sdcorejs/angular/components/preview')`), so applications that never preview a PDF or a video do not download PDF.js.
+- Videos render with `<sd-preview-video>`: native controls, no autoplay, metadata-only preload, and an error state with retry (a separate message for formats the browser cannot play). Its own download button is hidden because the drawer footer has **Download**. A returned `Blob` becomes an object URL that the player creates and revokes, but it must be fully downloaded first, so return a URL (signed or streamed) for large videos. Only `http(s)`, relative and `blob:` URLs are played; any other scheme shows the error state. Unlike image and PDF previews, which shrink on short explorers, a video keeps its full height so its controls stay visible. The player comes from the same on-demand import as the PDF viewer, so the first PDF or video preview downloads that chunk once.
 - Other formats never call `preview`; they show a "no preview" fallback (with a download hint when `download` is set).
 - Object URLs created from returned Blobs are revoked when the drawer closes, another file opens, or the explorer is destroyed. Saved downloads revoke their object URL 40 s after the save starts (timer outside the Angular zone).
 - Closing: the close button, a click on the backdrop, or `Esc`. Focus returns to the row or card that opened the file.
@@ -270,7 +271,7 @@ Override these custom properties on `sd-file-explorer` or an ancestor. Defaults 
 
 ## i18n
 
-All strings use `core.component.file-explorer.*` keys (`root`, `search-placeholder`, `upload`, `new-folder`, `column.*`, `type.*`, `preview.*`, `meta.*`, `share.*`, `transfers.*`, …) in the five bundled catalogs. Sizes and dates follow the current language (`2,4 MB` in Vietnamese, `2.4 MB` in English).
+All strings use `core.component.file-explorer.*` keys (`root`, `search-placeholder`, `upload`, `new-folder`, `column.*`, `type.*`, `preview.*`, `meta.*`, `share.*`, `transfers.*`, …) in the five bundled catalogs. Sizes and dates are formatted with `I18nService.locale()` (`2,4 MB` in Vietnamese, `2.4 MB` in English).
 
 ## Icons
 
@@ -349,11 +350,11 @@ With `option.autoId = 'drive'` the host is `components-file-explorer-drive`, and
 | `-share-dialog`, `-share-link`, `-share-copy`                                                         | Share dialog, link field, copy button          |
 | `-transfers-toggle`, `-transfers-clear`, `-transfer-{transferId}` (+ `-cancel`, `-retry`, `-dismiss`) | Transfer queue                                 |
 
-`{id}` is the item id with characters outside `[A-Za-z0-9_-]` replaced by `-`. The detail drawer itself carries the `<sd-side-drawer>` attribute `components-side-drawer-file-explorer-drive-preview`; its close button is `.sd-side-drawer-close-btn` inside it.
+`{id}` is the item id with characters outside `[A-Za-z0-9_-]` replaced by `-`. The detail drawer itself carries the `<sd-side-drawer>` attribute `components-side-drawer-file-explorer-drive-preview`; its close button is `.sd-side-drawer-close-btn` inside it. A video preview is an `<sd-preview-video>` with `components-preview-video-file-explorer-drive-preview` (children `-video`, `-error`, `-retry`).
 
 ## Related
 
-- `<sd-preview-pdf>` / `<sd-preview-image>` — standalone viewers (`@sdcorejs/angular/components/preview`).
+- `<sd-preview-pdf>` / `<sd-preview-image>` / `<sd-preview-video>` — standalone viewers (`@sdcorejs/angular/components/preview`).
 - `<sd-tree>` — general-purpose tree with selection and commands.
 - `<sd-side-drawer>` — the file detail; its `container` input keeps the drawer inside the explorer.
 - `<sd-breadcrumb>`, `<sd-data-state>` — used internally for the path and the loading / empty / error states.

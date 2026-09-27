@@ -1,7 +1,7 @@
 /* FORM KHAI BÁO */
 .input {
   width: 100%;
-  background: #fff;
+  background: var(--sd-form-builder-control-bg, #ffffff);
   height: 30px;
   border: 1px solid var(--md-sys-color-outline-variant);
   position: relative;
@@ -9,9 +9,9 @@
 
 .c-checkbox {
   .c-box{
-    border: 2px solid #828282;
+    border: 2px solid var(--sd-form-builder-control-border, #828282);
     width: 16px;
     height: 16px;
-    border-radius: 2px;
+    border-radius: var(--sd-radius-2, 2px);
   }
 }
