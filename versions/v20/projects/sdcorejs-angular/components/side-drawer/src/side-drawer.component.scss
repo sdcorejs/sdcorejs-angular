@@ -12,7 +12,7 @@
   max-width: calc(100vw - var(--sd-side-drawer-inset) - var(--sd-side-drawer-inset));
   background-color: var(--sd-side-drawer-surface);
   color: var(--sd-text);
-  z-index: 999;
+  z-index: var(--sd-z-drawer, 999);
   display: flex;
   flex-direction: column;
   opacity: 0;
@@ -65,9 +65,9 @@
   }
 
   &-title {
-    font-size: 20px;
-    line-height: 28px;
-    font-weight: 500;
+    font-size: var(--sd-font-size-20, 20px);
+    line-height: var(--sd-line-height-28, 28px);
+    font-weight: var(--sd-font-weight-medium, 500);
     min-width: 0;
   }
 
@@ -106,7 +106,7 @@
     }
 
     &:focus-visible {
-      outline: 2px solid var(--sd-primary);
+      outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
       outline-offset: 2px;
     }
 
@@ -114,8 +114,8 @@
       display: block;
       width: 20px;
       height: 20px;
-      font-size: 20px;
-      line-height: 20px;
+      font-size: var(--sd-font-size-20, 20px);
+      line-height: var(--sd-line-height-20, 20px);
     }
   }
 
@@ -179,10 +179,10 @@
   right: 0;
   bottom: 0;
   left: 0;
-  z-index: 99;
+  z-index: var(--sd-z-floating, 99);
   width: 100%;
   height: 100%;
-  transition: all 0.3s ease-in-out;
+  transition: all var(--sd-duration-slow, 300ms) ease-in-out;
 
   &-contained {
     position: absolute;
@@ -198,9 +198,9 @@
   min-height: 0;
 }
 .sd-side-drawer-title {
-  font-size: 18px;
+  font-size: var(--sd-font-size-18, 18px);
   line-height: 25px;
-  font-weight: 600;
+  font-weight: var(--sd-font-weight-semibold, 600);
   overflow-wrap: anywhere;
 }
 .sd-side-drawer-header,

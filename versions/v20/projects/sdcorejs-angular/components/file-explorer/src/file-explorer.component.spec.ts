@@ -205,6 +205,14 @@ function wait(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+/** Polls with change detection until `check` passes, for content rendered after a lazy import. */
+async function waitFor(check: () => boolean, tries = 60): Promise<void> {
+  for (let i = 0; i < tries && !check(); i++) {
+    await wait(50);
+    fixture.detectChanges();
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Specs
 // ---------------------------------------------------------------------------
@@ -238,6 +246,14 @@ describe('SdFileExplorer', () => {
       expect(row('Plan.xlsx').querySelector('.cell--size')?.textContent?.trim()).toBe('846 KB');
       expect(row('Projects').querySelector('.cell--size')?.textContent?.trim()).toBe('—');
       expect(row('Cover.jpg').querySelector('.cell--modified')?.textContent?.trim()).toBe('—');
+    });
+
+    it('formats sizes with I18nService.locale()', async () => {
+      // why: language() stays 'vi' here, so only an explorer that reads locale() switches to the English format.
+      Object.defineProperty(i18n, 'locale', { value: signal('en-US') });
+      await setup();
+      expect(row('Guide.pdf').querySelector('.cell--size')?.textContent?.trim()).toBe('2.4 MB');
+      expect(row('Plan.xlsx').querySelector('.cell--size')?.textContent?.trim()).toBe('846 KB');
     });
 
     it('draws built-in file-type icons for rows and tree folders as unsanitized data: images', async () => {
@@ -777,6 +793,81 @@ describe('SdFileExplorer', () => {
         fixture.detectChanges();
       }
       expect(inDetail('sd-preview-pdf')).not.toBeNull();
+    });
+
+    it('renders videos with the lazily imported sd-preview-video and keeps Download in the drawer footer', async () => {
+      const preview = jasmine
+        .createSpy('preview')
+        .and.callFake(({ item }: { item: SdFileExplorerItem }) => `https://cdn.example/${item.id}.mp4`);
+      await setup({
+        autoId: 'drive',
+        preview,
+        download: () => new Blob(['v']),
+        list: () => [file('clip', null, 'Clip.mp4', { mimeType: 'video/mp4' })],
+      });
+      row('Clip.mp4').click();
+      await settle();
+      expect(preview).toHaveBeenCalledTimes(1);
+      expect(inDetail('.stage--video')).not.toBeNull();
+      await waitFor(() => !!inDetail('sd-preview-video video'));
+      const video = inDetail<HTMLVideoElement>('sd-preview-video video');
+      expect(video?.getAttribute('src')).toBe('https://cdn.example/clip.mp4');
+      expect(video?.getAttribute('aria-label')).toBe('Clip.mp4');
+      expect(video?.autoplay).toBeFalse();
+      expect(inDetail('sd-preview-video')?.getAttribute('data-autoId')).toBe('components-preview-video-file-explorer-drive-preview');
+      // why: the explorer footer owns Download (option.download), so the player hides its own button.
+      expect(inDetail('.sd-preview-video-actions')).toBeNull();
+      expect(inDetail('.download-button')).not.toBeNull();
+      expect(inDetail('.placeholder-title')).toBeNull();
+    });
+
+    it('hands Blob videos to sd-preview-video, which creates and revokes the object URL', async () => {
+      const created: string[] = [];
+      spyOn(URL, 'createObjectURL').and.callFake(() => {
+        const url = `blob:video-${created.length}`;
+        created.push(url);
+        return url;
+      });
+      const revoke = spyOn(URL, 'revokeObjectURL');
+      await setup({ preview: () => new Blob(['v'], { type: 'video/mp4' }), list: () => [file('clip', null, 'Clip.webm')] });
+      row('Clip.webm').click();
+      await settle();
+      await waitFor(() => !!inDetail('sd-preview-video video'));
+      expect(created).toEqual(['blob:video-0']);
+      expect(inDetail('sd-preview-video video')?.getAttribute('src')).toBe('blob:video-0');
+      press(inDetail('.sd-side-drawer-close-btn'));
+      expect(revoke).toHaveBeenCalledWith('blob:video-0');
+    });
+
+    it('refuses unsafe video URLs through the sd-preview-video guard', async () => {
+      await setup({ preview: () => 'javascript:alert(1)', list: () => [file('clip', null, 'Clip.mov')] });
+      row('Clip.mov').click();
+      await settle();
+      await waitFor(() => !!inDetail('sd-preview-video'));
+      expect(inDetail('sd-preview-video video')).toBeNull();
+      expect(inDetail('sd-preview-video [role="alert"]')).not.toBeNull();
+    });
+
+    it('shows the "no preview" state for videos when no preview callback is given', async () => {
+      await setup({ list: () => [file('clip', null, 'Clip.mp4')] });
+      row('Clip.mp4').click();
+      await settle();
+      expect(inDetail('sd-preview-video')).toBeNull();
+      expect(inDetail('.placeholder-title')?.textContent?.trim()).toBe(t('preview.unavailable'));
+    });
+
+    it('lets the video stage grow with the player instead of shrinking it in the flex detail layout', async () => {
+      await setup({ preview: () => 'https://cdn.example/clip.mp4', list: () => [file('clip', null, 'Clip.mp4')] });
+      row('Clip.mp4').click();
+      await settle();
+      await waitFor(() => !!inDetail('sd-preview-video'));
+      const stage = inDetail<HTMLElement>('.stage--video') as HTMLElement;
+      // why: a portrait video, or one in a wide compact drawer, is taller than the 216 px stage basis that
+      // images and PDFs shrink from; clipping it would hide the native controls.
+      (inDetail<HTMLElement>('sd-preview-video') as HTMLElement).style.height = '400px';
+      fixture.detectChanges();
+      expect(getComputedStyle(stage).flexShrink).toBe('0');
+      expect(stage.getBoundingClientRect().height).toBeGreaterThanOrEqual(400);
     });
 
     it('closes with Escape and the backdrop and moves focus back to the opener', async () => {

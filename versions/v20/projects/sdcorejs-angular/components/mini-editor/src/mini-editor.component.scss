@@ -9,10 +9,10 @@
   .ck-mentions {
     .ck-button.ck-on {
       background: var(--sd-primary) !important;
-      color: #fff !important;
+      color: var(--sd-text-on-solid, #ffffff) !important;
 
       * {
-        color: #fff !important;
+        color: var(--sd-text-on-solid, #ffffff) !important;
       }
     }
   }
@@ -57,7 +57,7 @@
   }
 
   .ck-custom-mention {
-    font-weight: 600;
+    font-weight: var(--sd-font-weight-semibold, 600);
     padding: 0 2px;
     display: inline-block;
     pointer-events: none;

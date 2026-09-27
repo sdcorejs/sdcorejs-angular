@@ -120,6 +120,7 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.notify.type.error': '错误',
   'core.notify.show-more': '显示更多 ({count})',
   'core.notify.show-less': '收起',
+  'core.notify.close': '关闭通知',
 
   // ---- Service: confirm ----
   'core.confirm.title': '确认',
@@ -268,6 +269,7 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.select.required': '请选择',
   'core.form.select.selectAll': '全部',
   'core.form.select.selected-count': '已选择 {count} 项',
+  'core.form.select.clear': '清除',
 
   // ---- Forms: textarea ----
   'core.form.textarea.required': '请输入内容',
@@ -545,6 +547,12 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.preview-pdf.search-next': '下一个结果',
   'core.component.preview-pdf.search-close': '关闭搜索',
 
+  // ---- Component: preview-video ----
+  'core.component.preview-video.error': '无法播放此视频',
+  'core.component.preview-video.retry': '重试',
+  'core.component.preview-video.download': '下载',
+  'core.component.preview-video.unsupported': '您的浏览器无法播放此视频格式',
+
   // ---- Component: table ----
   'core.component.table.setup': '表格设置',
   'core.component.table.column-header': '列标题',
@@ -567,6 +575,7 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.exporting': '正在导出...{percent}%',
   'core.component.table.export': '导出数据',
   'core.component.table.export-csv': '导出 CSV',
+  'core.component.table.export-max-exceeded': '无法导出 {total} 行。上限为 {max} 行，请缩小筛选范围后重试。',
   'core.component.table.showing': '显示:',
   'core.component.table.paginator.first-page': '首页',
   'core.component.table.paginator.last-page': '末页',

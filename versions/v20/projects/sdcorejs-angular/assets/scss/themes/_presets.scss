@@ -1,4 +1,7 @@
 // Core-owned light palettes. Semantic state colors are inherited from default.
+// Named presets are light-only: theme() refuses $preset + $mode: 'dark' | 'auto'. Only the default
+// preset has a dark palette ($default-dark-theme in default.scss); pass your own colours through $theme
+// on the default preset to get a dark variant (D-022).
 $presets: (
   'default': (),
   'ocean': (

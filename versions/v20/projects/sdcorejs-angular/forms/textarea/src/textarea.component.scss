@@ -52,17 +52,17 @@
   right: 4px;
   top: calc(100% - 16px);
   opacity: 0;
-  font-size: 10px;
+  font-size: var(--sd-font-size-10, 10px);
   line-height: 1.1;
   color: rgba(0, 0, 0, 0.38);
   pointer-events: none;
-  transition: opacity 120ms ease;
+  transition: opacity var(--sd-duration-fast, 120ms) ease;
   z-index: 1;
 }
 
 .sd-maxlength-counter--exceeded {
   color: map.get(color.$color_map, 'error');
-  font-weight: 600;
+  font-weight: var(--sd-font-weight-semibold, 600);
 }
 
 :host ::ng-deep .sd-textarea-container.c-focused .sd-maxlength-counter,

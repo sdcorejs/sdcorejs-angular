@@ -28,7 +28,7 @@
 .sd-data-state__icon {
   width: 32px;
   height: 32px;
-  font-size: 32px;
+  font-size: var(--sd-font-size-32, 32px);
   line-height: 1;
   color: var(--sd-text-secondary);
 }
@@ -49,17 +49,17 @@
 }
 .sd-data-state__title {
   max-width: 100%;
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 24px;
+  font-size: var(--sd-font-size-16, 16px);
+  font-weight: var(--sd-font-weight-semibold, 600);
+  line-height: var(--sd-line-height-24, 24px);
   overflow-wrap: anywhere;
 }
 .sd-data-state__message {
   max-width: 440px;
   margin-top: 4px;
   color: var(--sd-text-secondary);
-  font-size: 14px;
-  line-height: 22px;
+  font-size: var(--sd-font-size-14, 14px);
+  line-height: var(--sd-line-height-22, 22px);
   overflow-wrap: anywhere;
 }
 .sd-data-state__message:empty,
@@ -102,7 +102,7 @@
 .sd-data-state--compact .sd-data-state__icon {
   width: 22px;
   height: 22px;
-  font-size: 22px;
+  font-size: var(--sd-font-size-22, 22px);
 }
 .sd-data-state--compact .sd-data-state__title,
 .sd-data-state--compact .sd-data-state__message,
@@ -110,13 +110,13 @@
   grid-column: -2;
 }
 .sd-data-state--compact .sd-data-state__title {
-  font-size: 14px;
-  line-height: 20px;
+  font-size: var(--sd-font-size-14, 14px);
+  line-height: var(--sd-line-height-20, 20px);
 }
 .sd-data-state--compact .sd-data-state__message {
   margin-top: 2px;
-  font-size: 13px;
-  line-height: 20px;
+  font-size: var(--sd-font-size-13, 13px);
+  line-height: var(--sd-line-height-20, 20px);
 }
 .sd-data-state--compact .sd-data-state__actions {
   justify-content: flex-start;

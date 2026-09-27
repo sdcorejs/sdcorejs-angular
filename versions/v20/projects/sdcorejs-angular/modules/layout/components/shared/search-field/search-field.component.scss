@@ -17,7 +17,7 @@
 
 // why: Keyboard focus must remain visible after the Material outline is hidden.
 .sd-layout-search-field:focus-within {
-  outline-color: var(--sd-primary);
+  outline-color: var(--sd-focus-ring-color, var(--sd-primary));
 }
 
 .sd-layout-search-field__icon {

@@ -107,6 +107,8 @@ projects/sdcorejs-angular/assets/
 
 Màu được định nghĩa dưới dạng **CSS custom properties** với prefix `--sd-*`, cho phép override runtime (không cần recompile SCSS). Default theme sở hữu màu độc lập. Dùng `$source: 'material'` để chủ động bật nguồn màu tương thích cũ.
 
+Bảng §3.1 là tầng **palette** (33 token của 2.15, không đổi). Từ 3.0 `sd.theme()` còn phát thêm: **ramp** `--sd-{family}-{50…950}`, **semantic role** (`--sd-status-*-bg/fg`, `--sd-link`, `--sd-text-on-solid`, `--sd-focus-ring-color`, …), **scale** không phải màu (`--sd-space-*`, `--sd-radius-*`, `--sd-shadow-*`, `--sd-z-*`, `--sd-duration-*`, `--sd-font-size-*`, …) và **component token** `--sd-{component}-{part}`; cùng chế độ dark cho palette default. Chi tiết tầng, cách đặt tên, dark/auto, focus ring và contrast: [THEME.md](./THEME.md).
+
 ### 3.1 Color tokens
 
 | Token | CSS variable | Default bridge / fallback | Use for |
@@ -544,7 +546,7 @@ Omit `$source` (or use `'core'`) for independent Core colors. Scoped calls emit 
 
 ### 14.1 Choose a preset
 
-Core ships eight **light** presets in addition to the unchanged `default` palette. They change colors only; typography, spacing, density and corner radius remain unchanged. No dark palette is included.
+Core ships eight **light** presets in addition to the unchanged `default` palette. They change colors only; typography, spacing, density and corner radius remain unchanged. Only the `default` palette has a dark variant (`$mode`, see [THEME.md](./THEME.md)); combining a named preset with `$mode: 'dark'` or `'auto'` stops the Sass build.
 
 In the consumer's global `styles.scss`, load Core first, then emit the selected palette:
 
@@ -589,7 +591,7 @@ Unlisted tokens inherit the default map in section 3: secondary, info, success, 
 ### 14.2 Mixin contract and overrides
 
 ```scss
-@mixin theme($theme: (), $source: 'core', $preset: 'default');
+@mixin theme($theme: (), $source: 'core', $preset: 'default', $mode: 'light');
 ```
 
 | Parameter | Accepted values | Default |
@@ -597,6 +599,7 @@ Unlisted tokens inherit the default map in section 3: secondary, info, success, 
 | `$theme` | Map of public color tokens from section 3 | `()` |
 | `$source` | `'core'`, `'material'` | `'core'` |
 | `$preset` | `'default'` and the eight lowercase names above | `'default'` |
+| `$mode` | `'light'`, `'dark'`, `'auto'` — dark and auto only with `$preset: 'default'` (see [THEME.md](./THEME.md)) | `'light'` |
 
 For the Core source, precedence is **default → preset → consumer overrides**. Existing `sd.theme()`, `sd.theme((...))`, and positional `sd.theme((), 'material')` calls remain valid. Unknown preset/source names fail Sass compilation. Combining `$source: 'material'` with any non-default preset also fails: choose one palette owner.
 
@@ -639,7 +642,7 @@ Root switching also reaches overlays attached under `body`. A local screen class
 
 These presets own **Core color tokens**, not the full Material palette. They do not rewrite global `--mat-sys-*`. Core styling that consumes `--sd-*` changes immediately; Material-only styles still follow the consumer's `mat.theme()` configuration. Keep that distinction when testing focus, ripples, calendars, dialogs and third-party controls. Font/density configuration remains separate.
 
-Table quick-search/footer backgrounds intentionally remain fixed white; a global `surface` override does not change those regions. Tab header/body classes and inline styles also take precedence where supplied.
+Table quick-search/footer backgrounds follow the component token `--sd-table-bg` (white in every light palette, dark with `$mode: 'dark'`); a global `surface` override does not change those regions — override `--sd-table-bg` instead. Tab header/body classes and inline styles also take precedence where supplied.
 
 The preset tests verify white text against primary and primary-dark at **at least 4.5:1**, primary/secondary body text against surface and surface-muted at **at least 4.5:1**, and strong control borders against those surfaces at **at least 3:1**. Subtle `border` is for dividers, not the sole boundary of an interactive control. These checks are palette checks, not a claim that every component/state is accessibility-certified. Recheck actual rendered states after consumer overrides; retain labels/icons for status information.
 

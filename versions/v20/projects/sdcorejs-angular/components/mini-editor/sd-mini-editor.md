@@ -76,7 +76,7 @@ type SdMiniEditorOutputFormat = 'html' | 'markdown';
 ## Public methods
 - `setContent(content: string)` — set HTML/Markdown into the editor.
 - `getContent(): string` — get current content (formatted per `outputFormat`).
-- `getHtmlContent(): string` — always returns raw HTML, ignoring `outputFormat`.
+- `getHtmlContent(): string` — always returns HTML (filtered), ignoring `outputFormat`.
 - `focusEditor()` — programmatic focus.
 - `insertMention({ id, name, marker? })` — programmatically insert a mention at the cursor.
 - `getMentions()` — returns array of mentions currently in the content.
@@ -87,11 +87,31 @@ None — toolbar and editor are fully managed by CKEditor.
 ## Behavior notes
 - **ControlValueAccessor**: the component implements `ControlValueAccessor` and works with both template-driven (`[(ngModel)]`) and reactive (`[formControl]`) forms. `writeValue` sets the internal `value` and, if the editor is already initialised, calls `setData` on it. `setDisabledState` is NOT yet implemented — use the `[disabled]` input directly.
 - **Throttle on content change**: the `change:data` event from CKEditor is funnelled through an RxJS `Subject` throttled at 500 ms (leading + trailing). Both `valueChange` and `contentChange` fire on the same throttled tick. `option.onChange` is also called inside the same subscriber.
-- **Output format**: when `option.outputFormat === 'markdown'`, the CKEditor `Markdown` plugin is loaded and `getData()` returns Markdown automatically. No manual conversion happens inside the component — `#convertOutput` is a pass-through.
+- **Output format**: when `option.outputFormat === 'markdown'`, the CKEditor `Markdown` plugin is loaded. The component reads the HTML from the editor's data view, filters it, then converts the filtered HTML to Markdown with the plugin's data processor (see *Output sanitization*).
 - **Mention plugin**: loaded dynamically only when `option.enableMention === true`. A custom `downcast` converter renders mentions as `<span class="ck-custom-mention" data-id="..." data-marker="...">` (marker-prefixed id is split: `id[0]` = marker, `id.slice(1)` = clean id). Backspace/Delete on a mention node removes the entire text node in one keypress.
 - **focusEditor()** and **setContent()** are safe to call before the editor is initialised (they no-op silently).
 - **Host CSS variable**: `--sd-mini-editor-max-height` is set on the host element via `@HostBinding` from `option.maxHeight`. The SCSS uses it to cap `.ck-editor__editable_inline`.
 - **Lifecycle**: `ngOnDestroy` unsubscribes the RxJS subscription and calls `editor.destroy()` to release CKEditor memory.
+
+## Output sanitization (BREAKING)
+
+Everything the component emits goes through `sdSanitizeEditorHtml`
+(`@sdcorejs/angular/utilities/extensions`): `[(value)]` / `valueChange`, `contentChange`, the form
+value (`ControlValueAccessor`), `option.onChange`, `getContent()` and `getHtmlContent()`.
+
+- Kept: the formatting the toolbar produces, links to `https:`, `http:`, `mailto:`, `tel:`, relative URLs
+  and `#fragment`, mention chips (`<span class="ck-custom-mention" data-id data-marker contenteditable="false">`).
+- Removed: `<script>` / `<style>` / `<iframe>` and other dangerous elements, every `on*` attribute,
+  `javascript:` / `vbscript:` / `data:` links (the link text stays).
+- **Markdown** (`outputFormat: 'markdown'`): the HTML is filtered **before** it is converted, so
+  `[text](javascript:…)` can no longer reach the Markdown string.
+- `link.allowedProtocols` is `['https', 'http', 'mailto', 'tel']` (CKEditor's default also allowed
+  `ftp`/`ftps`).
+- `getHtmlContent()` now returns HTML in Markdown mode too (it used to return the Markdown from
+  `getData()`, contrary to its description).
+
+Content written in from outside (`writeValue`, `setContent`) that needs filtering is emitted back once
+with the filtered HTML; through a form this marks the control dirty.
 
 ## Visual cues
 - A compact rich-text box: a small toolbar at the top (Bold | Italic | Underline | Font color | Bulleted list | Numbered list | Link), then a single editing region below

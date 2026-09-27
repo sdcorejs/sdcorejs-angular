@@ -34,8 +34,8 @@ html {
 body {
   margin: 0;
   font-family: Roboto, 'Helvetica Neue', Arial, sans-serif;
-  font-size: 14px;
-  font-weight: 400;
+  font-size: var(--sd-font-size-14, 14px);
+  font-weight: var(--sd-font-weight-regular, 400);
   line-height: 1.5;
   color: var(--sd-text, #1a1b1f);
   background-color: var(--sd-surface, #fdfbff);
@@ -98,7 +98,7 @@ ol ol, ul ul, ol ul, ul ol {
   margin-bottom: 0;
 }
 
-dt { font-weight: 700; }
+dt { font-weight: var(--sd-font-weight-bold, 700); }
 
 dd {
   margin-bottom: 0.5rem;
@@ -187,13 +187,13 @@ table {
 caption {
   padding-top: 0.75rem;
   padding-bottom: 0.75rem;
-  color: #6c757d;
+  color: var(--sd-reboot-caption, #6c757d);
   text-align: left;
   caption-side: bottom;
 }
 
 th {
-  font-weight: 600; // Không dùng bold mặc định của browser
+  font-weight: var(--sd-font-weight-semibold, 600); // Không dùng bold mặc định của browser
   text-align: inherit;
   text-align: -webkit-match-parent;
 }

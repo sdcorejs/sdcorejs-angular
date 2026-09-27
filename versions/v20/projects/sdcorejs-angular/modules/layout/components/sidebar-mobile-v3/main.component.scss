@@ -19,7 +19,7 @@
   width: 40px;
   height: 40px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--sd-radius-8, 8px);
   background: transparent;
   color: var(--sd-black500);
   cursor: pointer;
@@ -33,7 +33,7 @@
 
 // why: Custom drawer controls need a visible keyboard focus ring.
 .sd-sidebar-mobile-v3__icon-action:focus-visible {
-  outline: 2px solid var(--sd-primary);
+  outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
   outline-offset: 2px;
 }
 
@@ -47,7 +47,7 @@
 // why: The modal backdrop isolates the navigation drawer and captures outside clicks.
 .sd-sidebar-mobile-v3__backdrop {
   position: fixed;
-  z-index: 40;
+  z-index: var(--sd-z-popover, 40);
   inset: 0;
   border: 0;
   background: color-mix(in srgb, var(--sd-black) 40%, transparent);
@@ -56,7 +56,7 @@
 // why: The unified mobile drawer slides from the left and cannot exceed the viewport width.
 .sd-sidebar-mobile-v3__drawer {
   position: fixed;
-  z-index: 50;
+  z-index: var(--sd-z-drawer-mobile, 50);
   inset: 0 auto 0 0;
   width: min(88vw, 360px);
   max-width: 100%;

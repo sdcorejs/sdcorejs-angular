@@ -1,18 +1,18 @@
 .c-input {
   width: 100%;
-  background: #fff;
+  background: var(--sd-form-builder-control-bg, #ffffff);
   height: 30px;
   border: 1px solid var(--md-sys-color-outline-variant);
   position: relative;
-  border-radius: 4px;
+  border-radius: var(--sd-radius-4, 4px);
 
   svg {
     position: absolute;
     top: 2px;
     right: 3px;
-    color: #999;
+    color: var(--sd-form-builder-placeholder, #999999);
   }
 }
 .label{
-  font-weight: 500;
+  font-weight: var(--sd-font-weight-medium, 500);
 }

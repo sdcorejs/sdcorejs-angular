@@ -34,6 +34,76 @@ Security helpers behind the sidebar/link handling and `SdKeycloakInterceptor` ro
 | `sdIsAllowedOrigin` | `(url, allowedOrigins, baseOrigin?) => boolean` | Origin allow-list check on parsed origins (no substring matching). |
 | `sdMatchesSecureRoute` | `(url, routes, baseOrigin?) => boolean` | Segment-aware path-prefix match for interceptor `secureRoutes`. |
 | `sdIsPathPrefix` | `(prefix, pathname) => boolean` | `/api` matches `/api/v1` but not `/api-evil`. |
+| `sdIsSafeResourceUrl` | `(value, baseOrigin?) => boolean` | Guard for download / media / navigation URLs — see below. |
+
+### `sdIsSafeResourceUrl` — URLs used for downloads, media and navigation
+
+```ts
+sdIsSafeResourceUrl(value: string | null | undefined, baseOrigin?: string): boolean
+```
+
+Use it before a URL reaches `<a href>` + `click()`, a media `src`, or `window.location`. Library call
+sites (`SdUtilities.download`, `sd-preview-image`, `sd-preview-pdf`, `sd-upload-file`,
+`sd-preview-video`) already do.
+
+| Allowed | Refused |
+| --- | --- |
+| `http:` / `https:` without embedded credentials | `https://real.com@evil.tld/…` (credentials) |
+| Relative URLs (`/files/a.pdf`, `files/a.pdf`), resolved against `baseOrigin` or the document origin (`SD_NON_BROWSER_ORIGIN` under SSR) | `javascript:`, `vbscript:` — including mixed case, leading spaces and embedded tabs/newlines |
+| `blob:` | `data:` of any other type (`data:text/html`, `data:,text`) |
+| `data:image/*`, `data:application/pdf` | `file:`, `mailto:`, `tel:` (not resources), blank or unparseable values |
+
+The value is parsed with `sdParseUrl`, so the check matches what the browser will do with the same
+string — there is no substring matching.
+
+---
+
+## `editor-html-sanitizer.ts` — `sdSanitizeEditorHtml`
+
+```ts
+sdSanitizeEditorHtml(html: string | null | undefined): string
+```
+
+Allowlist filter for the HTML that `sd-editor` and `sd-mini-editor` emit (form value, `sdChange`,
+`valueChange`, `contentChange`, `getContent()`, `getHtmlContent()`, `upload()`). Exported so an app can
+apply the same policy to HTML it receives from elsewhere before rendering it with `innerHTML`.
+
+| Area | Policy |
+| --- | --- |
+| Elements | CKEditor 5 output is kept: paragraphs, headings, inline formatting (`strong`, `b`, `i`, `em`, `u`, `s`, `sub`, `sup`, `code`, `mark`, `span`…), lists, tables, `figure`/`figcaption`, `img`, `a`, `blockquote`, `pre`, `hr`, `br`, `div`. Unknown elements are unwrapped and their text is kept. |
+| Removed with their content | `script`, `style`, `iframe`, `frame`, `object`, `embed`, `applet`, `base`, `meta`, `link`, `template`, `noscript`, `noembed`, `noframes`, `xmp`, `plaintext`, `title`, form controls (`form`, `input`, `button`, `select`, `option`, `textarea`…), and SVG `use` / `animate*` / `set` / `foreignObject`. SVG and MathML containers are always unwrapped. Comments are removed. |
+| Attributes | `class`, `style`, `id`, `title`, `lang`, `dir`, `align`, `width`, `height`, `colspan`, `rowspan`, `scope`, `headers`, `alt`, `href`, `src`, `srcset`, `sizes`, `loading`, `target`, `rel`, `start`, `reversed`, `type` (on `ol` only), `cite`, `datetime`, `contenteditable="false"`, `data-*`, `aria-*`. Everything else is removed — every `on*` handler, `srcdoc`, `formaction`, `xlink:href`, `poster`, `background`, `name`. |
+| `href`, `cite` | `http:`, `https:`, `mailto:`, `tel:`, relative URLs, `#fragment`. |
+| `img src`, every `srcset` candidate | `http:`, `https:`, `blob:` (images waiting for a deferred upload), relative URLs, `data:image/*`. A `srcset` with one unsafe candidate is removed as a whole. |
+| Clean input | Returned **unchanged** — the same string, not a re-serialisation — when nothing is removed and the markup is already in the browser's canonical form (which CKEditor output always is). The function is idempotent. |
+| No `DOMParser` (SSR) | Returns the input with HTML escaped, so nothing executable leaves the function. |
+
+`sizes`, `loading`, `contenteditable="false"` and `blob:` image sources are kept because the
+library's own editors emit them (responsive images, `imageConfig.lazyLoad`, mention chips, deferred
+uploads); none of them carries script or a navigable URL.
+
+---
+
+## `text-search.ts` — diacritic-insensitive search
+
+| Name | Signature | Purpose |
+| --- | --- | --- |
+| `sdNormalizeSearchText` | `(value) => string` | Lower-case and strip diacritics, including `đ`/`Đ` → `d`. Spaces, digits and punctuation are kept. `null`/`undefined` → `''`. |
+| `sdFindHighlightRanges` | `(text, term) => SdHighlightRange[]` | Every non-overlapping match of `term` in `text`, left to right, as `{ start, end }` (UTF-16, `end` exclusive) on the **original** text. |
+
+```ts
+sdNormalizeSearchText('Đà Nẵng'); // 'da nang'
+sdFindHighlightRanges('Nguyễn Văn Đức', 'duc'); // [{ start: 11, end: 14 }]
+```
+
+- Matching uses `indexOf` on the normalised text — no `RegExp` is built from the term, so `(`, `*`,
+  `[` and other metacharacters match literally and never throw.
+- The term is trimmed; an empty, blank or diacritic-only term returns `[]`.
+- Ranges never split a surrogate pair, and a combining mark stays inside the range of its letter.
+- Inner whitespace is compared as-is (`'a  b'` does not match `'a b'`).
+
+`sd-highlight` (`@sdcorejs/angular/components/highlight`) renders these ranges as `<mark>` without
+`innerHTML`.
 
 ---
 
@@ -44,7 +114,7 @@ General-purpose facade of this library (upload/download, clipboard, paging, hash
 | Name | Signature | Purpose |
 | --- | --- | --- |
 | `upload` | `(option?: { extensions?, maxSizeInMb?, validator?, multiple? }) => Promise<File \| File[] \| null>` | Programmatic file picker — injects a hidden `<input type=file>`, validates extension/size/custom rule. Resolves `null` when the OS dialog is cancelled or the change event carries no file. In `multiple` mode EVERY file is validated, so one bad file rejects the whole call. The hidden input is removed as soon as the call settles. |
-| `download` | `(fileOrPath: File \| string, fileName?) => void` | Trigger browser download of a `File` (blob URL) or a string path. Absolute `http:`/`https:` URLs open in a new tab through `sdOpenExternal` (`noopener,noreferrer`) instead of downloading. |
+| `download` | `(fileOrPath: File \| string, fileName?) => void` | Trigger browser download of a `File` (blob URL) or a string path. Absolute `http:`/`https:` URLs open in a new tab through `sdOpenExternal` (`noopener,noreferrer`) instead of downloading. Any other string must pass `sdIsSafeResourceUrl`, otherwise nothing happens (see below). |
 | `downloadBlob` | `(blob: Blob, fileName?) => void` | Trigger download of an arbitrary `Blob`. |
 | `changeAliasLowerCase` | `(value) => string` | Lower-case + strip Vietnamese diacritics (for search matching). |
 | `copyToClipboard` | `(text: string) => void` | `navigator.clipboard.writeText`. |
@@ -81,6 +151,14 @@ app unless the app asks for one** — prefer a first-party endpoint.
 
 To keep the old behaviour, name the third-party endpoint yourself and disclose it in your privacy
 policy: `SdUtilities.getClientPublicIp('https://api.ipify.org?format=json')`.
+
+### `SdUtilities.download` — unsafe URLs are refused (BREAKING)
+
+A string that is not an absolute `http:`/`https:` URL used to be assigned to a hidden `<a href>` and
+clicked, whatever its scheme — so `javascript:…`, `vbscript:…` or `data:text/html,…` ran in the
+app's origin. That branch now requires `sdIsSafeResourceUrl`: relative paths, `blob:`,
+`data:image/*` and `data:application/pdf` download as before; anything else is a no-op with a
+dev-mode warning. `mailto:`/`tel:` are not downloads — open them with a normal link.
 
 ### Developer logging is dev-mode only
 
