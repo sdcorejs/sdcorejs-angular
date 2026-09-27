@@ -11,16 +11,16 @@ $card-colors: 'primary', 'secondary', 'info', 'success', 'warning', 'error';
   display: block;
   box-sizing: border-box;
   border: 1px solid #{map.get(color.$color_map, 'border')};
-  border-radius: 8px;
+  border-radius: var(--sd-radius-8, 8px);
   padding: 16px;
   background: #{map.get(color.$color_map, 'surface')};
   color: #{map.get(color.$color_map, 'text')};
   cursor: pointer;
   outline: none;
   transition:
-    background-color 120ms ease,
-    border-color 120ms ease,
-    box-shadow 120ms ease,
+    background-color var(--sd-duration-fast, 120ms) ease,
+    border-color var(--sd-duration-fast, 120ms) ease,
+    box-shadow var(--sd-duration-fast, 120ms) ease,
     transform 80ms ease;
   user-select: none;
 }

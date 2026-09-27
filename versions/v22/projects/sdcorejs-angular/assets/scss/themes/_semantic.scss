@@ -1,0 +1,22 @@
+// Semantic tier: roles mapped onto the public palette (D-020, R-014).
+//
+// why: components ask for a role ("status error text", "text on a solid colour") instead of a
+// palette slot, so dark mode and custom palettes change the colour without touching the component.
+// Every value is a reference, so it follows whatever palette the scope declares.
+
+$states: info, success, warning, error;
+
+@mixin emit($scheme: light) {
+  @each $state in $states {
+    --sd-status-#{$state}-bg: var(--sd-#{$state}-light);
+    --sd-status-#{$state}-fg: var(--sd-#{$state}-dark);
+  }
+  --sd-link: var(--sd-primary);
+  --sd-surface-inverse: var(--sd-text);
+  --sd-text-on-solid: var(--sd-primary-contrast);
+  --sd-border-focus: var(--sd-primary);
+  --sd-border-danger: var(--sd-error);
+  // why: nền tối cần backdrop đậm hơn mới tách được lớp overlay khỏi trang.
+  --sd-overlay-backdrop: color-mix(in srgb, black #{if($scheme == dark, 60%, 32%)}, transparent);
+  --sd-focus-ring-color: var(--sd-primary);
+}

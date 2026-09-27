@@ -75,7 +75,9 @@ Typeahead single-select dropdown — user types to filter a static array OR an a
 | `valueField`      | `string \| undefined`                     | `undefined`                                 | Property of an item used as VALUE (supports nested path `a.b.c`).                                                                                                                                                                                               |
 | `displayField`    | `string \| undefined`                     | `undefined`                                 | Property used as DISPLAY label (supports nested path).                                                                                                                                                                                                          |
 | `disabledField`   | `string`                                  | `''`                                        | Property name marking an item as disabled.                                                                                                                                                                                                                      |
-| `limit`           | `number`                                  | `100`                                       | Max items rendered for static-array filter results.                                                                                                                                                                                                             |
+| `limit`           | `number`                                  | `100`                                       | Max items rendered for static-array filter results. Ignored when `virtualScroll` is on.                                                                                                                                                                                                             |
+| `virtualScroll`   | `boolean`                                 | `false`                                     | Opt-in virtual scrolling for long lists: the panel renders only the rows in view and a static array is **not** cut at `limit`. See *Virtual scroll*. Bare attribute = `true`. |
+| `itemSize`        | `number`                                  | `36`                                        | Fixed row height in px used by the virtual viewport (every row gets exactly this height; long labels end with an ellipsis). Only used with `virtualScroll`. |
 | `cacheChecksum`   | `any`                                     | `undefined`                                 | Bust per-search cache when this value changes (e.g. external filter context).                                                                                                                                                                                   |
 | `hyperlink`       | `string \| null \| undefined`             | `undefined`                                 | Render value as a link in `[viewed]` mode.                                                                                                                                                                                                                      |
 | `items`           | `T[] \| SdSearch<T> \| null \| undefined` | `undefined`                                 | Static array OR a function `({type:'SEARCH',searchText} \| {type:'VALUE',value}) => Observable<T[]> \| Promise<T[]>`.                                                                                                                                           |
@@ -91,6 +93,19 @@ Typeahead single-select dropdown — user types to filter a static array OR an a
 | `model`           | `string \| number \| null \| undefined`   | `undefined`                                 | Two-way bound selected VALUE (use `[(model)]`).                                                                                                                                                                                                                 |
 
 > **Coerce**: `addable`, `required`, `disabled`, `viewed`, `hideInlineError` use `booleanAttribute` — bare attribute = `true`.
+
+## Virtual scroll (`virtualScroll`, opt-in)
+
+For suggestion lists of thousands of rows. Off by default: without `virtualScroll` the panel, the DOM and every behaviour are exactly as before.
+
+```html
+<sd-autocomplete label="City" [items]="cities" valueField="id" displayField="name" virtualScroll [(model)]="cityId"></sd-autocomplete>
+```
+
+- **Rendering**: the rows sit in a CDK viewport (6 rows tall at most); only the rows in view — plus a small buffer — are in the DOM. Every row is `itemSize` px tall (default `36`); a label that does not fit ends with an ellipsis.
+- **No `limit` cut**: every row of a static array that matches the typed text is available; an `SdSearch` result renders as returned.
+- **Keyboard**: ArrowDown/ArrowUp walk the whole list, not only the rendered rows, and wrap at the ends like before; Enter chooses the active row and emits its value (`sdChange`, `sdSelection`). The input's `aria-activedescendant` points at the active row.
+- **Selection**: unchanged — clicking a row or pressing Enter selects exactly as without virtual scrolling.
 
 ## Outputs
 

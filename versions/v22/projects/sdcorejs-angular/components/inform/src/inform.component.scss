@@ -10,7 +10,7 @@
   align-items: flex-start;
   gap: 12px;
   padding: 16px;
-  border-radius: 8px;
+  border-radius: var(--sd-radius-8, 8px);
   border: 1px solid color-mix(in srgb, var(--inform-tone) 22%, var(--sd-surface, #fff));
   background: color-mix(in srgb, var(--inform-soft) 28%, var(--sd-surface, #fff));
   @each $tone in primary, secondary, info, success, warning, error {
@@ -34,8 +34,8 @@
 .c-inform-icon {
   width: 20px;
   height: 20px;
-  font-size: 20px;
-  line-height: 20px;
+  font-size: var(--sd-font-size-20, 20px);
+  line-height: var(--sd-line-height-20, 20px);
 }
 .c-inform-content {
   min-height: 32px;
@@ -47,9 +47,9 @@
   gap: 4px;
 }
 .c-inform-title {
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 600;
+  font-size: var(--sd-font-size-14, 14px);
+  line-height: var(--sd-line-height-20, 20px);
+  font-weight: var(--sd-font-weight-semibold, 600);
   color: var(--sd-text);
   overflow-wrap: anywhere;
 }
@@ -59,7 +59,7 @@
   align-items: center;
 }
 .c-inform-body {
-  font-size: 14px;
+  font-size: var(--sd-font-size-14, 14px);
   line-height: 21px;
   color: var(--sd-text);
   overflow-wrap: anywhere;
@@ -80,7 +80,7 @@
   border: 0;
   background: transparent;
   font: inherit;
-  font-size: 14px;
+  font-size: var(--sd-font-size-14, 14px);
   color: var(--sd-primary-dark);
   cursor: pointer;
   &:hover {
@@ -96,7 +96,7 @@
   height: 32px;
   padding: 0;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--sd-radius-6, 6px);
   background: transparent;
   color: var(--sd-text-secondary);
   cursor: pointer;
@@ -107,12 +107,12 @@
   sd-icon {
     width: 18px;
     height: 18px;
-    font-size: 18px;
-    line-height: 18px;
+    font-size: var(--sd-font-size-18, 18px);
+    line-height: var(--sd-line-height-18, 18px);
   }
 }
 button:focus-visible {
-  outline: 2px solid var(--sd-primary);
+  outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
   outline-offset: 2px;
 }
 @media (max-width: 600px) {
@@ -141,10 +141,10 @@ button:focus-visible {
   gap: 8px;
   border: 0;
   border-inline-start: 3px solid var(--inform-tone);
-  border-radius: 4px;
+  border-radius: var(--sd-radius-4, 4px);
   color: var(--sd-text);
-  font-size: 13px;
-  line-height: 20px;
+  font-size: var(--sd-font-size-13, 13px);
+  line-height: var(--sd-line-height-20, 20px);
 
   .c-inform-icon-tile {
     flex-basis: 16px;
@@ -158,8 +158,8 @@ button:focus-visible {
   .c-inform-icon {
     width: 16px;
     height: 16px;
-    font-size: 16px;
-    line-height: 16px;
+    font-size: var(--sd-font-size-16, 16px);
+    line-height: var(--sd-line-height-16, 16px);
   }
 
   .c-inform-content {
@@ -200,7 +200,7 @@ button:focus-visible {
 :host ::ng-deep .c-inform-tip .c-inform-content {
   strong,
   b {
-    font-weight: 600;
+    font-weight: var(--sd-font-weight-semibold, 600);
   }
   code {
     padding: 1px 4px;
@@ -216,7 +216,7 @@ button:focus-visible {
     text-decoration: underline;
     text-underline-offset: 2px;
     &:focus-visible {
-      outline: 2px solid var(--inform-tone);
+      outline: var(--sd-focus-ring-width, 2px) solid var(--inform-tone, var(--sd-focus-ring-color, var(--sd-primary)));
       outline-offset: 2px;
     }
   }

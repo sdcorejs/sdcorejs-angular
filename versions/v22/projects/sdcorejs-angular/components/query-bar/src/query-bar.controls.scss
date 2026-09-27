@@ -12,8 +12,8 @@
 //      panel-class selector.
 // ---------------------------------------------------------------------------
 
-$qbc-border:       #d6d8db;
-$qbc-border-hover: #b9bdc3;
+$qbc-border:       var(--sd-query-bar-border, #d6d8db);
+$qbc-border-hover: var(--sd-query-bar-border-hover, #b9bdc3);
 $qbc-primary:      var(--sd-primary);
 $qbc-primary-dark: var(--sd-primary-dark);
 $qbc-radius:       6px;
@@ -25,7 +25,7 @@ $qbc-radius:       6px;
     .mdc-notched-outline__notch,
     .mdc-notched-outline__trailing {
       border-color: $qbc-border !important;
-      transition: border-color 120ms ease;
+      transition: border-color var(--sd-duration-fast, 120ms) ease;
     }
     // Rounded corners to match chips / popover inputs
     .mdc-notched-outline__leading {
@@ -57,7 +57,7 @@ $qbc-radius:       6px;
     // Trailing chevron / clear icons → neutral, primary on focus
     .mat-mdc-select-arrow,
     .mat-mdc-form-field-icon-suffix sd-icon {
-      color: #5f6368;
+      color: var(--sd-query-bar-text-secondary, #5f6368);
     }
     &.mat-focused .mat-mdc-select-arrow {
       color: $qbc-primary;

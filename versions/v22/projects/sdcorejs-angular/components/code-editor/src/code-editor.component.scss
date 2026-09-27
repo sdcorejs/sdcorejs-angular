@@ -2,8 +2,8 @@
 // KHOANG CHỨA CHÍNH (DARK MODE WRAPPER)
 // ==========================================
 .sd-code-wrapper {
-  background-color: #1e1e1e; // Màu nền chuẩn VS Code Dark
-  border-radius: 8px;
+  background-color: var(--sd-code-editor-bg, #1e1e1e); // Màu nền chuẩn VS Code Dark
+  border-radius: var(--sd-radius-8, 8px);
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   margin: 16px 0;
@@ -16,9 +16,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background-color: #2d2d2d;
+    background-color: var(--sd-code-editor-header-bg, #2d2d2d);
     padding: 8px 16px;
-    border-bottom: 1px solid #404040;
+    border-bottom: 1px solid var(--sd-code-editor-border, #404040);
 
     .mac-dots {
       display: flex;
@@ -27,16 +27,16 @@
         width: 12px;
         height: 12px;
         border-radius: 50%;
-        &.red { background-color: #ff5f56; }
-        &.yellow { background-color: #ffbd2e; }
-        &.green { background-color: #27c93f; }
+        &.red { background-color: var(--sd-code-editor-dot-red, #ff5f56); }
+        &.yellow { background-color: var(--sd-code-editor-dot-yellow, #ffbd2e); }
+        &.green { background-color: var(--sd-code-editor-dot-green, #27c93f); }
       }
     }
 
     .lang-badge {
-      color: #858585;
-      font-size: 12px;
-      font-weight: 600;
+      color: var(--sd-code-editor-text-muted, #858585);
+      font-size: var(--sd-font-size-12, 12px);
+      font-weight: var(--sd-font-weight-semibold, 600);
       letter-spacing: 0.5px;
     }
 
@@ -46,26 +46,26 @@
       gap: 4px;
       background: none;
       border: none;
-      color: #cccccc;
+      color: var(--sd-code-editor-text, #cccccc);
       cursor: pointer;
-      font-size: 13px;
+      font-size: var(--sd-font-size-13, 13px);
       padding: 4px 8px;
-      border-radius: 4px;
-      transition: all 0.2s ease;
+      border-radius: var(--sd-radius-4, 4px);
+      transition: all var(--sd-duration-base, 200ms) ease;
 
       sd-icon {
-        font-size: 16px;
+        font-size: var(--sd-font-size-16, 16px);
         width: 16px;
         height: 16px;
       }
 
       &:hover {
-        background-color: #404040;
-        color: #ffffff;
+        background-color: var(--sd-code-editor-hover-bg, #404040);
+        color: var(--sd-code-editor-hover-text, #ffffff);
       }
 
       .text-success {
-        color: #27c93f !important;
+        color: var(--sd-code-editor-copied, #27c93f) !important;
       }
     }
   }
@@ -83,14 +83,14 @@
       height: 8px;
     }
     &::-webkit-scrollbar-thumb {
-      background: #555;
-      border-radius: 4px;
+      background: var(--sd-code-editor-scrollbar-thumb, #555555);
+      border-radius: var(--sd-radius-4, 4px);
       &:hover {
-        background: #777;
+        background: var(--sd-code-editor-scrollbar-thumb-hover, #777777);
       }
     }
     &::-webkit-scrollbar-track {
-      background: #1e1e1e;
+      background: var(--sd-code-editor-bg, #1e1e1e);
     }
 
     // --- PHÉP THUẬT XẾP CHỒNG (OVERLAY) TẠI ĐÂY ---
@@ -107,7 +107,7 @@
       width: 100%;
       min-height: 100%;
       font-family: inherit; // Kế thừa font Fira Code từ .sd-code-wrapper
-      font-size: 14px;
+      font-size: var(--sd-font-size-14, 14px);
       line-height: 1.5;
       white-space: pre-wrap; // Tự động rớt dòng
       word-break: break-all;
@@ -123,7 +123,7 @@
       background: transparent !important; // Trong suốt để thấy màu Prism bên dưới
       color: transparent !important;      // Giấu chữ thô đi
       -webkit-text-fill-color: transparent !important; // Chống bị override bởi global styles
-      caret-color: #ffffff;               // Chỉ giữ lại con trỏ chuột màu trắng
+      caret-color: var(--sd-code-editor-caret, #ffffff);               // Chỉ giữ lại con trỏ chuột màu trắng
       resize: none;
       outline: none;
       overflow: hidden;                   // Tắt cuộn riêng của textarea, dùng cuộn của khung ngoài
@@ -131,7 +131,7 @@
       // why: chữ và nền của textarea đều trong suốt nên `outline: none` khiến nó KHÔNG có bất kỳ
       // chỉ báo focus nào — chỉ còn caret, quá yếu. Trả lại vòng focus cho điều hướng bàn phím.
       &:focus-visible {
-        outline: 2px solid var(--sd-primary, #005cbb);
+        outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
         outline-offset: -2px;
       }
     }
@@ -143,7 +143,7 @@
       pointer-events: none; // Cho phép click xuyên qua lớp này để chạm tới Textarea
 
       code {
-        color: #d4d4d4; // Màu chữ trắng xám mặc định cho text thường
+        color: var(--sd-code-editor-syntax-text, #d4d4d4); // Màu chữ trắng xám mặc định cho text thường
         font-family: inherit;
       }
     }
@@ -158,35 +158,35 @@
   .token.prolog,
   .token.doctype,
   .token.cdata {
-    color: #999999;
+    color: var(--sd-code-editor-syntax-comment, #999999);
   }
 
   .token.punctuation {
-    color: #cccccc;
+    color: var(--sd-code-editor-syntax-punctuation, #cccccc);
   }
 
   .token.tag,
   .token.attr-name,
   .token.namespace,
   .token.deleted {
-    color: #e2777a; // Đỏ hồng cho thẻ HTML (vd: <div>)
+    color: var(--sd-code-editor-syntax-tag, #e2777a); // Đỏ hồng cho thẻ HTML (vd: <div>)
   }
 
   .token.function-name {
-    color: #6196cc;
+    color: var(--sd-code-editor-syntax-function-name, #6196cc);
   }
 
   .token.boolean,
   .token.number,
   .token.function {
-    color: #f08d49; // Cam cho function, number, boolean (true/false)
+    color: var(--sd-code-editor-syntax-number, #f08d49); // Cam cho function, number, boolean (true/false)
   }
 
   .token.property,
   .token.class-name,
   .token.constant,
   .token.symbol {
-    color: #f8c555; // Vàng cho tên thuộc tính (keys trong JSON)
+    color: var(--sd-code-editor-syntax-property, #f8c555); // Vàng cho tên thuộc tính (keys trong JSON)
   }
 
   .token.selector,
@@ -194,7 +194,7 @@
   .token.atrule,
   .token.keyword,
   .token.builtin {
-    color: #cc99cd; // Tím mộng mơ cho từ khóa (const, let, class, import)
+    color: var(--sd-code-editor-syntax-keyword, #cc99cd); // Tím mộng mơ cho từ khóa (const, let, class, import)
   }
 
   .token.string,
@@ -202,13 +202,13 @@
   .token.attr-value,
   .token.regex,
   .token.variable {
-    color: #7ec699; // Xanh lá cây cho chuỗi (String)
+    color: var(--sd-code-editor-syntax-string, #7ec699); // Xanh lá cây cho chuỗi (String)
   }
 
   .token.operator,
   .token.entity,
   .token.url {
-    color: #67cdcc; // Xanh ngọc cho các dấu (bằng, cộng trừ, v.v.)
+    color: var(--sd-code-editor-syntax-operator, #67cdcc); // Xanh ngọc cho các dấu (bằng, cộng trừ, v.v.)
   }
 
   .token.important,

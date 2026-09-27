@@ -129,6 +129,7 @@ export class SdNotifyService {
       const updated = [newToast, ...current];
       return updated.slice(0, this.#MAX_TOASTS);
     });
+    this.#announce(newToast);
   }
 
   #addToBuffer(type: ToastType, message: string | string[], option?: NotifyOption) {
@@ -177,6 +178,27 @@ export class SdNotifyService {
       const updated = [newToast, ...current];
       return updated.slice(0, this.#MAX_TOASTS);
     });
+    this.#announce(newToast);
+  }
+
+  /**
+   * Đọc toast qua live region của container (D-027): success/info lịch sự, warning/error khẩn.
+   * why: toast tự mang aria-live thường không được đọc vì phần tử mới chèn vào DOM; region có sẵn thì chắc chắn.
+   */
+  #announce(toast: ToastData): void {
+    const container = this.#containerRef?.instance;
+    if (!container || this.#destroyed) return;
+    const messages = (Array.isArray(toast.message) ? toast.message : [toast.message]).map(message =>
+      toast.html ? this.#textOf(message) : message
+    );
+    const title = toast.title ?? this.#i18n.t(`core.notify.type.${toast.type}`);
+    container.announce(toast.type === 'warning' || toast.type === 'error' ? 'assertive' : 'polite', `${title}: ${messages.join('. ')}`);
+  }
+
+  /** Text của một message HTML. why: DOMParser tạo document trơ — không tải ảnh, không chạy handler. */
+  #textOf(html: string): string {
+    if (typeof DOMParser === 'undefined') return html;
+    return (new DOMParser().parseFromString(html, 'text/html').body.textContent ?? '').replace(/\s+/g, ' ').trim();
   }
 
   #clearAllTimers() {

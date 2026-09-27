@@ -47,14 +47,14 @@ Form-bound rich-text editor (CKEditor 5 ClassicEditor) with bold/italic/underlin
 | Name | Type | Notes |
 | --- | --- | --- |
 | `model` (two-way) | `string` | Companion to `[(model)]`. |
-| `sdChange` | `string` | Debounced 100ms after editor data change. Already strips/normalizes inline image classes to inline styles. |
+| `sdChange` | `string` | Debounced 100ms after editor data change. Already strips/normalizes inline image classes to inline styles, and is filtered by `sdSanitizeEditorHtml` (see *Output sanitization*). |
 | `sdBlur` | `FocusEvent` | Editor lost focus; also marks the form control as touched. |
 | `sdFocus` | `FocusEvent` | Editor gained focus. |
 
 ## Public methods
 - `onReady(editor)` — internal CKEditor lifecycle hook (don't call manually).
 - `focusEditor()` — programmatic focus.
-- `upload(): Promise<string>` — runs deferred image uploads (see `imageConfig.uploadMode === 'deferred'`) and returns final HTML. Use this in your save handler when uploads are batched.
+- `upload(): Promise<string>` — runs deferred image uploads (see `imageConfig.uploadMode === 'deferred'`) and returns final HTML (filtered like every other output). Use this in your save handler when uploads are batched.
 
 ## Content projection
 None — label/error chrome is rendered by the component itself based on inputs.
@@ -67,6 +67,27 @@ None — label/error chrome is rendered by the component itself based on inputs.
 - Material `<mat-error>` line below for inline error (or a small red error icon with tooltip when `hideInlineError`)
 - Image upload feature: drag/drop or paste images; size resize toolbar (100/75/50/25/Original); align left/center/right
 - Disabled / readonly state greys out toolbar and content
+
+## Output sanitization (BREAKING)
+
+The HTML that leaves the editor — `[(model)]`, the form value, `sdChange` and the string returned by
+`upload()` — now goes through `sdSanitizeEditorHtml` (`@sdcorejs/angular/utilities/extensions`), an
+allowlist filter:
+
+- Formatting CKEditor produces is kept unchanged: paragraphs, bold/italic/underline, font colour and
+  size (`<span style>`), alignment, lists, images with their inline size/alignment styles and
+  `loading="lazy"`.
+- Removed: `<script>`, `<style>`, `<iframe>`, form controls and other dangerous elements (with their
+  content); every `on*` attribute; `href` outside http/https/mailto/tel/relative/`#`; image `src`
+  outside http/https/`blob:`/relative/`data:image/*`.
+- Clean output is returned as the exact same string, so a normal edit never changes shape.
+
+Content loaded from outside (the model, a form value) that needs filtering is written back **once** with
+the filtered HTML and the control is marked **dirty**, so an unsaved-changes guard sees that the stored
+value differs. The editor view itself is not rewritten (pending deferred image uploads are kept).
+
+Render stored HTML elsewhere through the same function when it may not have come from this editor:
+`sdSanitizeEditorHtml(html)`.
 
 ## Examples
 

@@ -46,9 +46,11 @@ $public-colors:
 }
 
 $color_map: create_var_map($public-colors);
+// why: `.text-white` / `.bg-black` mean literally white and black in every mode, so they use the colour
+// keywords (same computed value as #fff / #000) instead of a themeable token.
 $basic_color_map: (
-  'white': #fff,
-  'black': #000,
+  'white': white,
+  'black': black,
 );
 
 $disabled-bg: map.get($color-map, 'disabled-bg');

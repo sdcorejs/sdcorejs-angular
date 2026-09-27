@@ -7,7 +7,7 @@
   gap: 8px;
   padding: 12px;
   border: 1px solid var(--sd-border-color, #dfe3e8);
-  border-radius: 8px;
+  border-radius: var(--sd-radius-8, 8px);
   background: var(--sd-surface, #fff);
 }
 
@@ -45,7 +45,7 @@
   position: relative;
   height: 8px;
   overflow: hidden;
-  border-radius: 999px;
+  border-radius: var(--sd-radius-999, 999px);
   background: var(--sd-progress-track, #e8edf3);
 }
 
@@ -77,7 +77,7 @@
 .sd-job-progress__actions button {
   padding: 6px 10px;
   border: 1px solid currentColor;
-  border-radius: 6px;
+  border-radius: var(--sd-radius-6, 6px);
   color: var(--sd-primary, #1565c0);
   background: transparent;
   cursor: pointer;

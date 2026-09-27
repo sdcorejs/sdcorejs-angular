@@ -1,11 +1,11 @@
 // Saved-filters trigger button — matches the other toolbar icon buttons.
 $qb-primary:       var(--sd-primary);
-$qb-border:        #d6d8db;
-$qb-text-secondary:#5f6368;
-$qb-text-muted:    #7a7a7a;
-$qb-border-soft:   #e2e4e7;
-$qb-bg:            #ffffff;
-$qb-danger:        #d23535;
+$qb-border:        var(--sd-query-bar-border, #d6d8db);
+$qb-text-secondary:var(--sd-query-bar-text-secondary, #5f6368);
+$qb-text-muted:    var(--sd-query-bar-text-muted, #7a7a7a);
+$qb-border-soft:   var(--sd-query-bar-border-soft, #e2e4e7);
+$qb-bg:            var(--sd-query-bar-bg, #ffffff);
+$qb-danger:        var(--sd-query-bar-chip-danger, #d23535);
 
 :host {
   display: inline-flex;
@@ -18,13 +18,13 @@ $qb-danger:        #d23535;
   width: 28px;
   height: 28px;
   border: 1px solid $qb-border;
-  border-radius: 6px;
+  border-radius: var(--sd-radius-6, 6px);
   background: $qb-bg;
   color: $qb-text-secondary;
   cursor: pointer;
   padding: 0;
 
-  sd-icon { font-size: 18px; width: 18px; height: 18px; }
+  sd-icon { font-size: var(--sd-font-size-18, 18px); width: 18px; height: 18px; }
 
   &:hover:not([disabled]) { border-color: $qb-primary; color: $qb-primary; }
   &[disabled] { opacity: 0.5; cursor: not-allowed; }
@@ -65,7 +65,7 @@ $qb-danger:        #d23535;
     align-items: center;
     justify-content: center;
     margin-right: 0;
-    font-size: 18px !important;
+    font-size: var(--sd-font-size-18, 18px) !important;
     width: 18px !important;
     height: 18px !important;
     line-height: 1;
@@ -99,10 +99,10 @@ $qb-danger:        #d23535;
     sd-icon {
       margin: 0 !important;
       padding: 0;
-      font-size: 16px !important;
+      font-size: var(--sd-font-size-16, 16px) !important;
       width: 16px !important;
       height: 16px !important;
-      line-height: 16px !important;
+      line-height: var(--sd-line-height-16, 16px) !important;
       text-align: center;
       overflow: hidden;
     }
@@ -118,7 +118,7 @@ $qb-danger:        #d23535;
 
   .c-sf-empty {
     padding: 12px 16px;
-    font-size: 13px;
+    font-size: var(--sd-font-size-13, 13px);
     color: $qb-text-muted;
   }
 

@@ -1,5 +1,6 @@
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { inject, InjectionToken, PLATFORM_ID } from '@angular/core';
+import { sdIsSafeResourceUrl } from '@sdcorejs/angular/utilities/extensions';
 
 export interface SdPdfIntersectionEntry {
   readonly target: Element;
@@ -83,6 +84,8 @@ class SdPdfDocumentBrowserAdapter implements SdPdfBrowserAdapter {
 
   download(href: string, filename: string): boolean {
     if (!this.canDownloadUrl || !this.document.body) return false;
+    // why: lớp chặn thứ hai — adapter là API public (token có thể được gọi thẳng), không chỉ qua component.
+    if (!sdIsSafeResourceUrl(href)) return false;
     const anchor = this.document.createElement('a');
     anchor.href = href;
     anchor.download = filename;

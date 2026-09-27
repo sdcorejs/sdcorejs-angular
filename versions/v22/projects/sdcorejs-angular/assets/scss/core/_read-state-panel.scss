@@ -43,11 +43,11 @@
     .sd-read-state-region .sd-data-state.sd-data-state--compact .sd-data-state__icon {
       width: 18px;
       height: 18px;
-      font-size: 18px;
+      font-size: var(--sd-font-size-18, 18px);
     }
 
     .sd-read-state-region .sd-data-state.sd-data-state--compact .sd-data-state__message {
-      line-height: 18px;
+      line-height: var(--sd-line-height-18, 18px);
     }
 
     .sd-read-state-region .sd-data-state.sd-data-state--compact .sd-data-state__actions {

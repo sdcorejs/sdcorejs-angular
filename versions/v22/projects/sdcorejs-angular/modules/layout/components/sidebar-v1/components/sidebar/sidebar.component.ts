@@ -390,7 +390,7 @@ export class SdSidebarV1Panel {
 
         iconPin.style.transition = 'all 0.15s';
         if (!this.isPinnedNode(menuItem)) {
-          iconPin.style.color = '#8C8C8C';
+          iconPin.style.color = 'var(--sd-sidebar-icon, #8c8c8c)';
           iconPin.style.opacity = '0';
         }
       }
@@ -407,15 +407,15 @@ export class SdSidebarV1Panel {
 
         if (iconMenu) {
           iconMenu.style.transition = 'all 0.15s';
-          iconMenu.style.color = '#8C8C8C';
+          iconMenu.style.color = 'var(--sd-sidebar-icon, #8c8c8c)';
         }
         if (content) {
           content.style.transition = 'all 0.15s';
-          content.style.color = '#1F1F1F';
+          content.style.color = 'var(--sd-sidebar-text, #1f1f1f)';
         }
         if (iconExpand) {
           iconExpand.style.transition = 'all 0.15s';
-          iconExpand.style.color = '#8C8C8C';
+          iconExpand.style.color = 'var(--sd-sidebar-icon, #8c8c8c)';
         }
       }
     }

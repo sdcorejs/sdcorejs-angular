@@ -12,7 +12,7 @@
 .sd-mobile-card {
   position: relative;
   border: 1px solid var(--sd-border);
-  border-radius: 8px;
+  border-radius: var(--sd-radius-8, 8px);
   background: var(--sd-surface);
   color: var(--sd-text);
   min-width: 0;
@@ -28,7 +28,7 @@
 }
 .sd-mobile-card:focus-visible,
 button:focus-visible {
-  outline: 2px solid var(--sd-primary);
+  outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
   outline-offset: 2px;
 }
 .sd-mobile-card-commandable {

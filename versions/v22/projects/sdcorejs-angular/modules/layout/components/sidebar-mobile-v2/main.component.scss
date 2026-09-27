@@ -13,7 +13,7 @@
 // why: The bottom navigation stays reachable while projected content scrolls independently.
 .sd-sidebar-mobile-v2__bar {
   position: fixed;
-  z-index: 30;
+  z-index: var(--sd-z-header, 30);
   inset: auto 0 0;
   min-height: 64px;
   padding-bottom: env(safe-area-inset-bottom);
@@ -40,14 +40,14 @@
 // why: Custom mobile controls need a visible keyboard focus ring.
 .sd-sidebar-mobile-v2__bar-action:focus-visible,
 .sd-sidebar-mobile-v2__close:focus-visible {
-  outline: 2px solid var(--sd-primary);
+  outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
   outline-offset: -2px;
 }
 
 // why: Mobile navigation labels must fit five possible slots without changing bar width.
 .sd-sidebar-mobile-v2__label {
   max-width: 72px;
-  font-size: 11px;
+  font-size: var(--sd-font-size-11, 11px);
   line-height: 14px;
 }
 
@@ -61,7 +61,7 @@
 // why: The modal backdrop isolates the contextual sheet from projected content.
 .sd-sidebar-mobile-v2__backdrop {
   position: fixed;
-  z-index: 40;
+  z-index: var(--sd-z-popover, 40);
   inset: 0;
   border: 0;
   background: color-mix(in srgb, var(--sd-black) 40%, transparent);
@@ -70,7 +70,7 @@
 // why: The navigation sheet is bottom-anchored and capped so content never overflows the viewport.
 .sd-sidebar-mobile-v2__sheet {
   position: fixed;
-  z-index: 50;
+  z-index: var(--sd-z-drawer-mobile, 50);
   inset: auto 0 0;
   max-height: min(78dvh, 720px);
   padding-bottom: env(safe-area-inset-bottom);

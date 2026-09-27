@@ -3,14 +3,14 @@ $primary: var(--sd-primary, #005cbb);
 $primary-light: var(--sd-primary-light, #d7e3ff);
 $primary-dark: var(--sd-primary-dark, #1c4ad9);
 
-$line-color: #d0d5dd;
-$border: #e0e0e0;
+$line-color: var(--sd-query-builder-line, #d0d5dd);
+$border: var(--sd-query-builder-border, #e0e0e0);
 $indent: 24px;
 $node-gap: 12px;
 
 :host {
   display: block;
-  font-size: 14px;
+  font-size: var(--sd-font-size-14, 14px);
   color: var(--sd-text, #333);
 }
 
@@ -24,11 +24,11 @@ $node-gap: 12px;
   min-height: 38px;
   padding: 8px 12px;
   border: 1px solid $line-color;
-  border-radius: 6px;
+  border-radius: var(--sd-radius-6, 6px);
   background: var(--sd-disabled-bg, #f6f7f9);
   color: var(--sd-text, #333);
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-  font-size: 13px;
+  font-size: var(--sd-font-size-13, 13px);
   line-height: 1.7;
   cursor: default;
   user-select: text;
@@ -37,7 +37,7 @@ $node-gap: 12px;
 }
 
 .qb-view-empty {
-  color: #98a2b3;
+  color: var(--sd-query-builder-text-muted, #98a2b3);
 }
 
 .qb-tok {
@@ -45,22 +45,22 @@ $node-gap: 12px;
 
   &.qb-tok-field {
     color: var(--sd-text, #1d2939);
-    font-weight: 600;
+    font-weight: var(--sd-font-weight-semibold, 600);
   }
   &.qb-tok-op {
     color: $primary;
-    font-weight: 600;
+    font-weight: var(--sd-font-weight-semibold, 600);
   }
   &.qb-tok-value {
     color: var(--sd-success, #1a7f37);
   }
   &.qb-tok-logic {
-    color: #98a2b3;
-    font-weight: 700;
+    color: var(--sd-query-builder-text-muted, #98a2b3);
+    font-weight: var(--sd-font-weight-bold, 700);
     text-transform: uppercase;
   }
   &.qb-tok-paren {
-    color: #667085;
+    color: var(--sd-query-builder-text-secondary, #667085);
   }
 }
 
@@ -69,9 +69,9 @@ $node-gap: 12px;
 // ---------------------------------------------------------------------------
 .qb-container {
   padding: 16px;
-  background: #fff;
+  background: var(--sd-query-builder-bg, #ffffff);
   border: 1px solid $border;
-  border-radius: 6px;
+  border-radius: var(--sd-radius-6, 6px);
 
   &.is-disabled {
     opacity: 0.7;
@@ -93,7 +93,7 @@ $node-gap: 12px;
 .qb-logic-switch {
   display: inline-flex;
   border: 1px solid $border;
-  border-radius: 4px;
+  border-radius: var(--sd-radius-4, 4px);
   overflow: hidden;
   height: 30px;
 
@@ -101,15 +101,15 @@ $node-gap: 12px;
     border: none;
     background: transparent;
     padding: 0 14px;
-    font-weight: 600;
-    font-size: 12px;
+    font-weight: var(--sd-font-weight-semibold, 600);
+    font-size: var(--sd-font-size-12, 12px);
     cursor: pointer;
-    color: #667085;
+    color: var(--sd-query-builder-text-secondary, #667085);
     height: 100%;
 
     &.active {
       background: $primary;
-      color: #fff;
+      color: var(--sd-text-on-solid, #ffffff);
     }
     &:hover:not(.active):not([disabled]) {
       background: $primary-light;
@@ -132,14 +132,14 @@ $node-gap: 12px;
   background: transparent;
   border: none;
   cursor: pointer;
-  font-size: 16px;
-  color: #667085;
+  font-size: var(--sd-font-size-16, 16px);
+  color: var(--sd-query-builder-text-secondary, #667085);
   width: 28px;
   height: 28px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: var(--sd-radius-4, 4px);
 
   &:hover:not([disabled]) {
     background: $primary-light;
@@ -147,15 +147,15 @@ $node-gap: 12px;
   }
   &[disabled] {
     cursor: default;
-    color: #cbd2dc;
+    color: var(--sd-query-builder-placeholder, #cbd2dc);
   }
 }
 
 .qb-btn-remove,
 .qb-btn-remove-rule {
   &:hover:not([disabled]) {
-    background: #fee4e2;
-    color: #d92d20;
+    background: var(--sd-query-builder-danger-bg, #fee4e2);
+    color: var(--sd-query-builder-danger, #d92d20);
   }
 }
 
@@ -164,10 +164,10 @@ $node-gap: 12px;
 }
 
 .qb-dropdown {
-  background: #fff;
+  background: var(--sd-query-builder-bg, #ffffff);
   border: 1px solid $border;
   box-shadow: 0 4px 12px rgba(16, 24, 40, 0.12);
-  border-radius: 6px;
+  border-radius: var(--sd-radius-6, 6px);
   min-width: 150px;
   overflow: hidden;
 
@@ -179,8 +179,8 @@ $node-gap: 12px;
     border: none;
     padding: 9px 14px;
     cursor: pointer;
-    font-size: 13px;
-    color: #344054;
+    font-size: var(--sd-font-size-13, 13px);
+    color: var(--sd-query-builder-text, #344054);
 
     &:hover {
       background: $primary-light;
@@ -231,9 +231,9 @@ $node-gap: 12px;
 }
 
 .qb-empty {
-  color: #98a2b3;
+  color: var(--sd-query-builder-text-muted, #98a2b3);
   font-style: italic;
-  font-size: 13px;
+  font-size: var(--sd-font-size-13, 13px);
   padding: 4px 0;
 }
 
@@ -242,13 +242,13 @@ $node-gap: 12px;
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #fafbfc;
+  background: var(--sd-query-builder-bg-soft, #fafbfc);
   border: 1px solid $border;
-  border-radius: 6px;
+  border-radius: var(--sd-radius-6, 6px);
   padding: 6px 10px;
 
   &:hover {
-    border-color: #c2c8d0;
+    border-color: var(--sd-query-builder-border-strong, #c2c8d0);
   }
 }
 
@@ -295,11 +295,11 @@ $node-gap: 12px;
   // Huỷ margin-right:16px mặc định của `.mat-mdc-option sd-icon` — đây là nguồn gây hở lớn.
   // Selector 3 class (.qb-opt .qb-opt-iconsd-icon) thắng specificity, không cần !important.
   margin: 0;
-  font-size: 18px;
+  font-size: var(--sd-font-size-18, 18px);
   width: 18px;
   height: 18px;
   line-height: 1;
-  color: #667085;
+  color: var(--sd-query-builder-text-secondary, #667085);
 }
 
 ::ng-deep .qb-opt .qb-opt-label {
@@ -317,7 +317,7 @@ $node-gap: 12px;
 }
 
 .qb-dash {
-  color: #98a2b3;
+  color: var(--sd-query-builder-text-muted, #98a2b3);
 }
 
 .qb-divider {
@@ -330,9 +330,9 @@ $node-gap: 12px;
 .qb-treenode.is-group > .qb-group {
   border: 1px solid $border;
   border-left: 2px solid $primary;
-  border-radius: 6px;
+  border-radius: var(--sd-radius-6, 6px);
   padding: 12px;
-  background: #fff;
+  background: var(--sd-query-builder-bg, #ffffff);
 }
 
 // Relative date editor layout

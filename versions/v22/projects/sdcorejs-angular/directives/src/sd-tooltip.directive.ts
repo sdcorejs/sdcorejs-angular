@@ -13,11 +13,14 @@ import {
   ChangeDetectorRef,
   computed,
 } from '@angular/core';
+import { DOCUMENT, NgTemplateOutlet } from '@angular/common';
 import { Overlay, OverlayRef, ConnectionPositionPair } from '@angular/cdk/overlay';
 import { ComponentPortal } from '@angular/cdk/portal';
-import { NgTemplateOutlet } from '@angular/common';
 
 export type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
+
+/** Nền mặc định: token `--sd-tooltip-bg`, fallback là màu cũ để không đổi giao diện khi chưa có theme. */
+const SD_TOOLTIP_DEFAULT_COLOR = 'var(--sd-tooltip-bg, #616161)';
 
 // Component dùng để instance cho overlay
 @Component({
@@ -26,7 +29,7 @@ export type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
   standalone: true,
   imports: [NgTemplateOutlet],
   template: `
-    <div class="c-sd-tooltip-container" [style.background-color]="color()">
+    <div class="c-sd-tooltip-container" role="tooltip" [attr.id]="tooltipId() || null" [style.background-color]="color()">
       @if (isTemplate()) {
         <ng-container [ngTemplateOutlet]="templateContent()"></ng-container>
       } @else {
@@ -43,9 +46,9 @@ export type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
         font-size: 12px;
         font-family: Roboto, 'Helvetica Neue', sans-serif;
         box-shadow:
-          0 2px 4px -1px #0003,
-          0 4px 5px #00000024,
-          0 1px 10px #0000001f;
+          0 2px 4px -1px rgba(0, 0, 0, 0.2),
+          0 4px 5px rgba(0, 0, 0, 0.14),
+          0 1px 10px rgba(0, 0, 0, 0.12);
         max-width: 250px;
         word-wrap: break-word;
         pointer-events: auto;
@@ -62,7 +65,8 @@ class SdTooltipComponent {
   private cdr = inject(ChangeDetectorRef);
 
   content = input.required<string | TemplateRef<any>>();
-  color = input<string>('#616161');
+  color = input<string>(SD_TOOLTIP_DEFAULT_COLOR);
+  tooltipId = input<string>('');
 
   isTemplate = computed(() => this.content() instanceof TemplateRef);
   templateContent = computed(() => (this.isTemplate() ? (this.content() as TemplateRef<any>) : null));
@@ -84,6 +88,8 @@ class SdTooltipComponent {
 }
 // End
 
+let nextTooltipId = 0;
+
 // Directive
 @Directive({
   selector: '[sdTooltip]',
@@ -93,7 +99,7 @@ export class SdTooltipDirective {
   content = input.required<string | TemplateRef<any>>({ alias: 'sdTooltip' });
   sdTooltipPosition = input<TooltipPosition>('bottom');
   sdTooltipDelay = input<number>(100);
-  sdTooltipColor = input<string>('#616161');
+  sdTooltipColor = input<string>(SD_TOOLTIP_DEFAULT_COLOR);
 
   private static activeTooltip: SdTooltipDirective | null = null;
 
@@ -101,6 +107,7 @@ export class SdTooltipDirective {
   private readonly overlay = inject(Overlay);
   private readonly viewContainerRef = inject(ViewContainerRef);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly document = inject(DOCUMENT);
 
   private overlayRef: OverlayRef | null = null;
   private tooltipComponentRef: ComponentRef<SdTooltipComponent> | null = null;
@@ -108,6 +115,13 @@ export class SdTooltipDirective {
 
   private showTimeout: ReturnType<typeof setTimeout> | undefined;
   private hideTimeout: ReturnType<typeof setTimeout> | undefined;
+
+  /** Id của bubble, dùng cho `aria-describedby` của host. */
+  readonly #tooltipId = `sd-tooltip-${nextTooltipId++}`;
+  // why: hover và focus là hai trigger độc lập (WCAG 1.4.13 "persistent"): rời một trigger mà trigger
+  // kia còn giữ thì tooltip phải còn hiện.
+  #hovered = false;
+  #focused = false;
 
   constructor() {
     this.destroyRef.onDestroy(() => {
@@ -117,11 +131,8 @@ export class SdTooltipDirective {
 
   @HostListener('mouseenter')
   onMouseEnter() {
-    if (SdTooltipDirective.activeTooltip && SdTooltipDirective.activeTooltip !== this) {
-      SdTooltipDirective.activeTooltip.forceHide();
-    }
-    SdTooltipDirective.activeTooltip = this;
-
+    this.#hovered = true;
+    this.#activate();
     this.#clearTimeouts();
     this.showTimeout = setTimeout(() => {
       this.#show();
@@ -130,15 +141,47 @@ export class SdTooltipDirective {
 
   @HostListener('mouseleave')
   onMouseLeave() {
+    this.#hovered = false;
     this.#clearTimeouts();
+    if (this.#focused) return;
     this.hideTimeout = setTimeout(() => {
       this.#hide();
     }, 300);
   }
 
+  /**
+   * why: tooltip trước đây chỉ mở bằng chuột, người dùng bàn phím không bao giờ đọc được nội dung.
+   * Dùng `focusin`/`focusout` (có nổi bọt) để phủ cả trường hợp host bọc một phần tử focus được.
+   * Hiện ngay, không chờ delay, để `aria-describedby` đã có khi screen reader đọc phần tử vừa focus.
+   */
+  @HostListener('focusin')
+  onFocusIn() {
+    this.#focused = true;
+    this.#activate();
+    this.#clearTimeouts();
+    this.#show();
+  }
+
+  @HostListener('focusout', ['$event'])
+  onFocusOut(event: FocusEvent) {
+    const next = event.relatedTarget as Node | null;
+    if (next && (this.elementRef.nativeElement as HTMLElement).contains(next)) return;
+    this.#focused = false;
+    if (this.#hovered) return;
+    this.#clearTimeouts();
+    this.#hide();
+  }
+
   forceHide = (): void => {
     this.#clearTimeouts();
     this.#hide();
+  };
+
+  #activate = (): void => {
+    if (SdTooltipDirective.activeTooltip && SdTooltipDirective.activeTooltip !== this) {
+      SdTooltipDirective.activeTooltip.forceHide();
+    }
+    SdTooltipDirective.activeTooltip = this;
   };
 
   #show = (): void => {
@@ -156,21 +199,55 @@ export class SdTooltipDirective {
       this.tooltipInstance = this.tooltipComponentRef.instance;
 
       this.#setupTooltipInstance();
+      this.#addDescribedBy();
+      // why: listener chỉ sống trong lúc tooltip hiện, để phím Escape của trang không bị đụng tới.
+      this.document.addEventListener('keydown', this.#onDocumentKeydown, true);
     }
 
     if (this.tooltipComponentRef && this.tooltipInstance) {
       this.tooltipComponentRef.setInput('content', currentContent);
       this.tooltipComponentRef.setInput('color', this.sdTooltipColor());
+      this.tooltipComponentRef.setInput('tooltipId', this.#tooltipId);
       this.tooltipInstance.triggerChangeDetection();
     }
   };
 
   #hide = (): void => {
+    this.document.removeEventListener('keydown', this.#onDocumentKeydown, true);
+    this.#removeDescribedBy();
     if (this.tooltipInstance && this.overlayRef?.hasAttached()) {
       this.overlayRef.detach();
       this.tooltipInstance = null;
       this.tooltipComponentRef = null;
     }
+  };
+
+  /**
+   * why: WCAG 1.4.13 yêu cầu đóng được tooltip mà không dời chuột/focus. Pha capture để chạy trước
+   * handler Escape của dialog/drawer bên dưới; chỉ chặn lan sự kiện khi thực sự vừa ẩn một tooltip,
+   * nên lần Escape kế tiếp vẫn tới đích như bình thường.
+   */
+  #onDocumentKeydown = (event: KeyboardEvent): void => {
+    if (event.key !== 'Escape' && event.key !== 'Esc') return;
+    if (!this.overlayRef?.hasAttached()) return;
+    this.forceHide();
+    event.stopPropagation();
+  };
+
+  #addDescribedBy = (): void => {
+    const host = this.elementRef.nativeElement as HTMLElement;
+    const ids = (host.getAttribute('aria-describedby') ?? '').split(/\s+/).filter(Boolean);
+    if (!ids.includes(this.#tooltipId)) host.setAttribute('aria-describedby', [...ids, this.#tooltipId].join(' '));
+  };
+
+  // why: chỉ gỡ đúng id của mình — id do consumer/component khác đặt vào `aria-describedby` giữ nguyên.
+  #removeDescribedBy = (): void => {
+    const host = this.elementRef.nativeElement as HTMLElement;
+    const current = host.getAttribute('aria-describedby');
+    if (current == null) return;
+    const ids = current.split(/\s+/).filter(id => id && id !== this.#tooltipId);
+    if (ids.length) host.setAttribute('aria-describedby', ids.join(' '));
+    else host.removeAttribute('aria-describedby');
   };
 
   #createOverlay = (): void => {
@@ -196,6 +273,7 @@ export class SdTooltipDirective {
     };
 
     this.tooltipInstance.onMouseLeaveCb = () => {
+      if (this.#focused) return;
       this.hideTimeout = setTimeout(() => {
         this.#hide();
       }, 200);
@@ -209,6 +287,8 @@ export class SdTooltipDirective {
 
   #cleanup = (): void => {
     this.#clearTimeouts();
+    this.document.removeEventListener('keydown', this.#onDocumentKeydown, true);
+    this.#removeDescribedBy();
 
     if (SdTooltipDirective.activeTooltip === this) {
       SdTooltipDirective.activeTooltip = null;

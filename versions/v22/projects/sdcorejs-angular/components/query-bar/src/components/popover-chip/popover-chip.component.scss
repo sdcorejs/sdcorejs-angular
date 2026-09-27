@@ -2,10 +2,10 @@
 $qb-primary:       var(--sd-primary);
 $qb-primary-light: var(--sd-primary-light);
 $qb-primary-faint: var(--sd-primary-light);
-$qb-border:        #d6d8db;
-$qb-bg:            #ffffff;
-$qb-text-secondary:#5f6368;
-$qb-text-muted:    #7a7a7a;
+$qb-border:        var(--sd-query-bar-border, #d6d8db);
+$qb-bg:            var(--sd-query-bar-bg, #ffffff);
+$qb-text-secondary:var(--sd-query-bar-text-secondary, #5f6368);
+$qb-text-muted:    var(--sd-query-bar-text-muted, #7a7a7a);
 $qb-radius-chip:   999px;
 
 :host { display: contents; } // chip is laid out by the parent flex row directly.
@@ -20,10 +20,10 @@ $qb-radius-chip:   999px;
   background: $qb-bg;
   cursor: pointer;
   font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--sd-font-size-13, 13px);
+  font-weight: var(--sd-font-weight-medium, 500);
   color: $qb-text-secondary;
-  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+  transition: background-color var(--sd-duration-fast, 120ms) ease, border-color var(--sd-duration-fast, 120ms) ease, color var(--sd-duration-fast, 120ms) ease;
 
   // why: density classes live on .c-query-bar (parent); read them with `:host-context`
   // since the host's `display: contents` doesn't preserve the cascade for our chip
@@ -46,12 +46,12 @@ $qb-radius-chip:   999px;
   }
 
   .c-chip-icon {
-    font-size: 16px;
+    font-size: var(--sd-font-size-16, 16px);
     width: 16px;
     height: 16px;
   }
   .c-chip-label {
-    font-weight: 500;
+    font-weight: var(--sd-font-weight-medium, 500);
     white-space: nowrap;
   }
   .c-chip-operator {
@@ -61,14 +61,14 @@ $qb-radius-chip:   999px;
   }
   .c-chip-sep { color: $qb-text-muted; }
   .c-chip-value {
-    font-weight: 500;
+    font-weight: var(--sd-font-weight-medium, 500);
     max-width: 180px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
   .c-chip-chevron {
-    font-size: 18px;
+    font-size: var(--sd-font-size-18, 18px);
     width: 18px;
     height: 18px;
     color: currentColor;
@@ -82,7 +82,7 @@ $qb-radius-chip:   999px;
     border-radius: 50%;
     cursor: pointer;
     color: $qb-text-muted;
-    sd-icon { font-size: 14px; width: 14px; height: 14px; }
+    sd-icon { font-size: var(--sd-font-size-14, 14px); width: 14px; height: 14px; }
     &:hover { background: rgba(0, 0, 0, 0.06); }
   }
 }

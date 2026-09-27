@@ -77,7 +77,7 @@
 %icon-shared-style {
   font-weight: normal;
   font-style: normal;
-  font-size: 24px;
+  font-size: var(--sd-font-size-24, 24px);
   line-height: 1;
   letter-spacing: normal;
   text-transform: none;

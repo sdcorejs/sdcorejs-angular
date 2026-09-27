@@ -119,6 +119,7 @@ export const EN_MESSAGES = {
   'core.notify.type.error': 'Error',
   'core.notify.show-more': 'Show more ({count})',
   'core.notify.show-less': 'Show less',
+  'core.notify.close': 'Close notification',
 
   // ---- Service: confirm ----
   'core.confirm.title': 'Confirm',
@@ -267,6 +268,7 @@ export const EN_MESSAGES = {
   'core.form.select.required': 'Please enter information',
   'core.form.select.selectAll': 'All',
   'core.form.select.selected-count': '{count} items selected',
+  'core.form.select.clear': 'Clear',
 
   // ---- Forms: textarea ----
   'core.form.textarea.required': 'Please enter information',
@@ -544,6 +546,12 @@ export const EN_MESSAGES = {
   'core.component.preview-pdf.search-next': 'Next match',
   'core.component.preview-pdf.search-close': 'Close search',
 
+  // ---- Component: preview-video ----
+  'core.component.preview-video.error': 'Could not play this video',
+  'core.component.preview-video.retry': 'Retry',
+  'core.component.preview-video.download': 'Download',
+  'core.component.preview-video.unsupported': 'Your browser cannot play this video format',
+
   // ---- Component: table ----
   'core.component.table.setup': 'Table setup',
   'core.component.table.column-header': 'Column header',
@@ -566,6 +574,7 @@ export const EN_MESSAGES = {
   'core.component.table.exporting': 'Exporting...{percent}%',
   'core.component.table.export': 'Export',
   'core.component.table.export-csv': 'Export CSV',
+  'core.component.table.export-max-exceeded': 'Cannot export {total} rows. The limit is {max} rows — narrow the filter and try again.',
   'core.component.table.showing': 'Showing:',
   'core.component.table.paginator.first-page': 'First page',
   'core.component.table.paginator.last-page': 'Last page',

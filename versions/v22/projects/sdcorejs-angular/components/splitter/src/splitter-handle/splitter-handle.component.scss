@@ -34,12 +34,12 @@
   .sd-splitter__handle-bar {
     background: var(--sd-splitter-handle-color);
     border-radius: var(--sd-splitter-handle-radius);
-    transition: background-color 120ms ease;
+    transition: background-color var(--sd-duration-fast, 120ms) ease;
   }
 
   &:hover .sd-splitter__handle-bar { background: var(--sd-splitter-handle-hover-color); }
   &:focus-visible {
-    outline: 2px solid var(--sd-splitter-handle-active-color);
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-splitter-handle-active-color, var(--sd-focus-ring-color, var(--sd-primary)));
     outline-offset: 1px;
   }
 

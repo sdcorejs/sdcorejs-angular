@@ -9,7 +9,7 @@
 button[mat-icon-button] {
   width: 24px;
   height: 24px;
-  line-height: 24px;
+  line-height: var(--sd-line-height-24, 24px);
   padding: 0;
 }
 
@@ -24,8 +24,8 @@ sd-icon {
     color: map.get(color.$color_map, 'text-secondary') !important;
     width: 16px;
     height: 16px;
-    font-size: 16px;
-    line-height: 16px;
+    font-size: var(--sd-font-size-16, 16px);
+    line-height: var(--sd-line-height-16, 16px);
   }
 }
 
