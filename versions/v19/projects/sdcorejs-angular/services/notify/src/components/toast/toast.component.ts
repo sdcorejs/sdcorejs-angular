@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   HostListener,
   Input,
   OnDestroy,
@@ -37,6 +38,7 @@ const TOAST_EXIT_ANIMATION_MS = 200;
 export class ToastComponent implements OnInit, OnDestroy {
   private notifyService = inject(SdNotifyService);
   private sanitizer = inject(DomSanitizer);
+  readonly #host = inject(ElementRef);
 
   @Input({ required: true }) data!: ToastData;
 
@@ -46,6 +48,9 @@ export class ToastComponent implements OnInit, OnDestroy {
   readonly MAX_SHOW = 2;
 
   private timer: ReturnType<typeof setTimeout> | null = null;
+  // why: hover và focus giữ timer độc lập — chỉ chạy lại khi cả hai đều đã rời toast (WCAG 2.2.1).
+  #hovered = false;
+  #focused = false;
   private closeTimer: ReturnType<typeof setTimeout> | null = null;
   private start = 0;
   private remaining = 0;
@@ -66,6 +71,32 @@ export class ToastComponent implements OnInit, OnDestroy {
   }
 
   @HostListener('mouseenter')
+  onMouseEnter(): void {
+    this.#hovered = true;
+    this.pauseTimer();
+  }
+
+  @HostListener('mouseleave')
+  onMouseLeave(): void {
+    this.#hovered = false;
+    if (!this.#focused) this.resumeTimer();
+  }
+
+  /** Người dùng bàn phím đang đọc/thao tác trong toast — không để nó tự đóng. */
+  @HostListener('focusin')
+  onFocusIn(): void {
+    this.#focused = true;
+    this.pauseTimer();
+  }
+
+  @HostListener('focusout', ['$event'])
+  onFocusOut(event: FocusEvent): void {
+    const next = event.relatedTarget as Node | null;
+    if (next && (this.#host.nativeElement as HTMLElement).contains(next)) return;
+    this.#focused = false;
+    if (!this.#hovered) this.resumeTimer();
+  }
+
   pauseTimer(): void {
     if (!this.timer || this.isClosing()) {
       return;
@@ -76,7 +107,6 @@ export class ToastComponent implements OnInit, OnDestroy {
     this.remaining = Math.max(this.remaining - (Date.now() - this.start), 0);
   }
 
-  @HostListener('mouseleave')
   resumeTimer(): void {
     if (this.remaining <= 0 || this.timer || this.isClosing()) {
       return;

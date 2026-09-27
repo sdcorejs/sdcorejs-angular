@@ -6,6 +6,20 @@ import { I18nParams } from './i18n.types';
 import { SUPPORTED_LANGUAGES } from '@sdcorejs/utils/constants';
 import { Language } from '@sdcorejs/utils/models';
 
+/**
+ * Thẻ BCP-47 dùng cho `Intl` / `toLocale*` theo từng ngôn ngữ — bảng map DUY NHẤT của thư viện.
+ *
+ * why: trước đây 11 chỗ hardcode `'vi-VN'` (ngày trong message min/max, trang lỗi, chip số...) và hai
+ * bảng map trùng nhau (home page, file-explorer), nên app chạy tiếng Anh vẫn thấy ngày dạng 15/1/2026.
+ */
+const SD_LANGUAGE_LOCALES: Readonly<Record<Language, string>> = {
+  vi: 'vi-VN',
+  en: 'en-US',
+  ja: 'ja-JP',
+  ko: 'ko-KR',
+  zh: 'zh-CN',
+};
+
 @Injectable({ providedIn: 'root' })
 export class I18nService {
   readonly #config = inject<ISdCoreConfiguration | null>(SD_CORE_CONFIGURATION, { optional: true });
@@ -18,6 +32,11 @@ export class I18nService {
   readonly #warned = new Set<string>();
 
   readonly language: Signal<Language> = this.#language.asReadonly();
+  /**
+   * Thẻ BCP-47 của ngôn ngữ hiện tại (vd `'vi-VN'`, `'en-US'`) — truyền thẳng cho `Intl` / `toLocale*`.
+   * Ở chế độ custom catalog `language()` vẫn là `'vi'`, nên `locale()` là `'vi-VN'`.
+   */
+  readonly locale: Signal<string> = computed(() => SD_LANGUAGE_LOCALES[this.#language()] ?? SD_LANGUAGE_LOCALES.vi);
   readonly messages: Signal<Readonly<Record<string, string>>> = computed(() => {
     const custom = this.#customMessages();
     if (custom) return custom;

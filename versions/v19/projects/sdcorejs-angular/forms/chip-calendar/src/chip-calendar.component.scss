@@ -66,7 +66,7 @@
 .sd-view {
   &:not(.c-focused):not(.c-disabled) {
     &:hover {
-      background-color: #ebecf0;
+      background-color: var(--sd-chip-calendar-bg, #ebecf0);
     }
   }
 }
@@ -97,7 +97,7 @@ mat-chip-listbox {
   cursor: pointer;
 
   &:focus-visible {
-    outline: 2px solid var(--sd-primary, #1565c0);
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
     outline-offset: 2px;
   }
 }

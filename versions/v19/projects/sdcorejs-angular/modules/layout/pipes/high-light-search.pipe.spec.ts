@@ -12,14 +12,16 @@ describe('HighlightSearchPipe', () => {
   });
 
   it('highlights a contiguous, accent-insensitive substring match', () => {
-    expect(pipe.transform('Sản phẩm', 'san')).toBe('<mark style="background-color: #ffff00">Sản</mark> phẩm');
+    expect(pipe.transform('Sản phẩm', 'san')).toBe(
+      '<mark style="background-color: var(--sd-highlight-search-bg, #ffff00)">Sản</mark> phẩm'
+    );
   });
 
   it('highlights each matched initial letter (in order) when there is no contiguous substring match', () => {
     // "sp" không xuất hiện liền nhau trong "san pham" (bản alias của "Sản phẩm")
     // -> pipe phải fallback sang match theo ký tự đầu và highlight riêng "S" và "p"
     expect(pipe.transform('Sản phẩm', 'sp')).toBe(
-      '<mark style="background-color: #ffff00">S</mark>ản <mark style="background-color: #ffff00">p</mark>hẩm'
+      '<mark style="background-color: var(--sd-highlight-search-bg, #ffff00)">S</mark>ản <mark style="background-color: var(--sd-highlight-search-bg, #ffff00)">p</mark>hẩm'
     );
   });
 

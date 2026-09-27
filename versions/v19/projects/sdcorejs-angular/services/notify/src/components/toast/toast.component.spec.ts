@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdNotifyService } from '../../notify.service';
 import { ToastData } from '../../notify.model';
 import { ToastComponent } from './toast.component';
@@ -305,5 +306,70 @@ describe('ToastComponent', () => {
     fix.componentInstance.pauseTimer(); // pauses
     // calling again with no timer — must not throw
     expect(() => fix.componentInstance.pauseTimer()).not.toThrow();
+  });
+  // ─── Pause on focus, button semantics (WCAG 2.2.1 / 4.1.2) ───────────────
+
+  describe('focus and buttons', () => {
+    const focusIn = () => fix.nativeElement.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+    const focusOut = (relatedTarget: EventTarget | null = null) =>
+      fix.nativeElement.dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget }));
+
+    it('pauses the auto-dismiss while focus is inside the toast and resumes when it leaves', fakeAsync(() => {
+      init(makeData({ duration: 1000 }));
+      tick(400);
+      focusIn();
+      tick(5000);
+      expect(fix.componentInstance.isClosing()).toBeFalse();
+
+      focusOut();
+      tick(599);
+      expect(fix.componentInstance.isClosing()).toBeFalse();
+      tick(2);
+      expect(fix.componentInstance.isClosing()).toBeTrue();
+      tick(TOAST_EXIT_ANIMATION_MS);
+    }));
+
+    it('stays paused when focus moves between elements inside the toast', fakeAsync(() => {
+      init(makeData({ duration: 1000 }));
+      focusIn();
+      focusOut(fix.nativeElement.querySelector('.sd-toast__close'));
+      tick(5000);
+      expect(fix.componentInstance.isClosing()).toBeFalse();
+      focusOut();
+      tick(1001);
+      expect(fix.componentInstance.isClosing()).toBeTrue();
+      tick(TOAST_EXIT_ANIMATION_MS);
+    }));
+
+    it('stays paused while hovered even after focus leaves, and vice versa', fakeAsync(() => {
+      init(makeData({ duration: 1000 }));
+      fix.nativeElement.dispatchEvent(new MouseEvent('mouseenter'));
+      focusIn();
+      focusOut();
+      tick(5000);
+      expect(fix.componentInstance.isClosing()).toBeFalse();
+
+      focusIn();
+      fix.nativeElement.dispatchEvent(new MouseEvent('mouseleave'));
+      tick(5000);
+      expect(fix.componentInstance.isClosing()).toBeFalse();
+
+      focusOut();
+      tick(1001);
+      expect(fix.componentInstance.isClosing()).toBeTrue();
+      tick(TOAST_EXIT_ANIMATION_MS);
+    }));
+
+    it('gives the close button type="button" and a translated accessible name', () => {
+      init(makeData());
+      const close = fix.nativeElement.querySelector('.sd-toast__close') as HTMLButtonElement;
+      expect(close.getAttribute('type')).toBe('button');
+      expect(close.getAttribute('aria-label')).toBe(TestBed.inject(I18nService).t('core.notify.close'));
+    });
+
+    it('gives the action button type="button"', () => {
+      init(makeData({ actionLabel: 'Undo', onAction: () => undefined }));
+      expect((fix.nativeElement.querySelector('.btn-action') as HTMLButtonElement).getAttribute('type')).toBe('button');
+    });
   });
 });

@@ -7,17 +7,17 @@
 **Import path**: `@sdcorejs/angular/directives` (or direct: `@sdcorejs/angular/directives/sd-tooltip`)
 
 ## One-line purpose
-CDK-Overlay-based tooltip with template support, configurable position/color/delay, and "stays open while cursor is over the tooltip itself" behavior (single global active tooltip at a time).
+CDK-Overlay-based tooltip with template support, configurable position/color/delay, keyboard access (focus + Escape) and "stays open while cursor is over the tooltip itself" behavior (single global active tooltip at a time). Meets WCAG 2.1 SC 1.4.13 (dismissible, hoverable, persistent).
 
 ## When to use
-- Hover hints for icons, badges, table cells
+- Hover and keyboard-focus hints for icons, badges, table cells
 - Rich tooltips that contain templates/markup (not just text)
 - When the user needs to interact with tooltip content (hover the tooltip itself) — built-in mouse-tracking keeps it open
 
 ## When NOT to use
 - For Material's standard text-only tooltip semantics — `matTooltip` may be lighter.
 - For click-based popovers with multi-element content — use a popover/menu component.
-- On click-driven UI affordances — this is hover-only.
+- On click-driven UI affordances — the tooltip opens on hover and focus, not on click.
 
 ## Inputs
 | Name | Type | Default | Notes |
@@ -25,7 +25,7 @@ CDK-Overlay-based tooltip with template support, configurable position/color/del
 | `sdTooltip` (alias `content`) | `string \| TemplateRef<any>` | **required** | Tooltip body. String renders inside a `<span>`; `TemplateRef` renders via `ngTemplateOutlet`. |
 | `sdTooltipPosition` | `'top' \| 'bottom' \| 'left' \| 'right'` | `'bottom'` | Preferred edge. CDK falls back to alternative positions if the preferred doesn't fit. |
 | `sdTooltipDelay` | `number` (ms) | `100` | Delay after `mouseenter` before showing. |
-| `sdTooltipColor` | `string` (CSS color) | `'#616161'` | Background color of the tooltip surface. |
+| `sdTooltipColor` | `string` (CSS color) | `'var(--sd-tooltip-bg, #616161)'` | Background color of the tooltip surface. The default follows the theme token `--sd-tooltip-bg`; the fallback is the previous grey, so pages without the theme look the same. |
 
 ## Outputs
 None.
@@ -36,9 +36,12 @@ None.
   - Sets self as the singleton `activeTooltip`.
   - After `sdTooltipDelay` ms, opens an overlay (creates one lazily) and attaches a `SdTooltipComponent` portal with the supplied `content` and `color`.
 - `mouseleave` on host: schedules hide after 300 ms — but if the cursor enters the tooltip itself, the timer is cleared so the tooltip stays open. Leaving the tooltip schedules a 200 ms hide.
+- `focusin` on host (the host or any element inside it): shows the tooltip **immediately** (no delay) through the same singleton, so `aria-describedby` is already set when the screen reader announces the focused element.
+- `focusout` to an element outside the host: hides the tooltip — unless the pointer is still over the host. Hover and focus are tracked separately: the tooltip stays while either one still holds it.
+- `Escape` while the tooltip is visible: hides it without moving the pointer or focus. The listener runs on `document` in the capture phase, only while a tooltip is visible, and stops the key only when it actually hid a tooltip — so the same `Escape` does not also close a dialog or drawer underneath, and the next `Escape` reaches it normally. The tooltip does not come back until the pointer re-enters or focus returns.
 - Position strategy: `flexibleConnectedTo(host)` with prioritized fallbacks (preferred edge first, then opposites).
 - Scroll strategy: `close` — tooltip closes when the page scrolls.
-- `DestroyRef.onDestroy`: clears timeouts, disposes the overlay, releases the singleton slot if held.
+- `DestroyRef.onDestroy`: clears timeouts, removes the `Escape` listener and its `aria-describedby` id, disposes the overlay, releases the singleton slot if held.
 
 ## Examples
 
@@ -124,9 +127,10 @@ closeTooltip() {
 
 ## Accessibility
 
-- The directive is **hover-only** — keyboard users cannot trigger the tooltip. Add `title` or `aria-label` as a fallback for screen reader / keyboard access.
+- **Keyboard:** focusing the host (or an element inside it) shows the tooltip; `Escape` dismisses it. Put `sdTooltip` on a focusable element (button, link, input) or give the host `tabindex="0"` — a tooltip on a plain `<span>` still cannot be reached by keyboard.
+- **Screen readers:** the bubble has `role="tooltip"` and a unique id (`sd-tooltip-<n>`). While it is visible the directive appends that id to the host's `aria-describedby`, and removes only that id when it hides — ids set by the app or by other components stay untouched.
 - The overlay panel has `pointer-events: auto` — the cursor can move into the tooltip and interact with its content without dismissing it.
-- Color contrast: the default `#616161` on white text provides ~4.5:1 ratio. When supplying a custom `sdTooltipColor`, verify WCAG AA contrast.
+- Color contrast: the default `--sd-tooltip-bg` (`#616161` in the light theme) with white text is ~6.2:1. When supplying a custom `sdTooltipColor`, verify WCAG AA contrast.
 
 ## Theming / CSS surface
 
@@ -134,7 +138,7 @@ The internal `SdTooltipComponent` emits two stable CSS classes:
 
 | Class | Element | Purpose |
 | --- | --- | --- |
-| `.c-sd-tooltip-container` | Wrapper `<div>` | Background, padding, border-radius, box-shadow. `background-color` driven by `sdTooltipColor`. |
+| `.c-sd-tooltip-container` | Wrapper `<div role="tooltip">` | Background, padding, border-radius, box-shadow. `background-color` driven by `sdTooltipColor` (default `var(--sd-tooltip-bg, #616161)`). |
 | `.c-sd-tooltip-text` | `<span>` (text mode only) | Text content when `content` is a plain string. |
 
 The overlay panel itself carries the class `c-sd-tooltip-panel` (CDK `panelClass`), which can be used for global positioning overrides in `styles.scss`.
@@ -151,6 +155,7 @@ The overlay panel itself carries the class `c-sd-tooltip-panel` (CDK `panelClass
 - Using on transient elements that come/go — make sure `DestroyRef` cleanup runs (Angular handles this automatically when the host is removed).
 - Stacking many tooltips on adjacent siblings expecting all to be visible — only ONE tooltip is shown globally; entering a new one force-hides the previous.
 - Relying on tooltip for important info on touch devices — hover does not trigger reliably.
+- Putting the only copy of essential information in a tooltip on a non-focusable element — keyboard users cannot open it.
 
 ## Related
 - `[sdHoverCopy]` — hover-driven copy-to-clipboard helper.
