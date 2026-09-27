@@ -1,6 +1,35 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, input, signal } from '@angular/core';
 
+// Theme tokens (themes/_component-tokens.scss), each with its 2.15 colour as fallback so the avatar looks the same
+// when no theme is loaded. The name palette keeps the 2.15 order: a name hashes to the same slot as before.
+const SD_AVATAR_PALETTE = [
+  'var(--sd-avatar-color-1, #1abc9c)',
+  'var(--sd-avatar-color-2, #2ecc71)',
+  'var(--sd-avatar-color-3, #3498db)',
+  'var(--sd-avatar-color-4, #9b59b6)',
+  'var(--sd-avatar-color-5, #34495e)',
+  'var(--sd-avatar-color-6, #16a085)',
+  'var(--sd-avatar-color-7, #27ae60)',
+  'var(--sd-avatar-color-8, #2980b9)',
+  'var(--sd-avatar-color-9, #8e44ad)',
+  'var(--sd-avatar-color-10, #2c3e50)',
+  'var(--sd-avatar-color-11, #f1c40f)',
+  'var(--sd-avatar-color-12, #e67e22)',
+  'var(--sd-avatar-color-13, #e74c3c)',
+  'var(--sd-avatar-color-14, #95a5a6)',
+  'var(--sd-avatar-color-15, #f39c12)',
+  'var(--sd-avatar-color-16, #d35400)',
+  'var(--sd-avatar-color-17, #c0392b)',
+  'var(--sd-avatar-color-18, #bdc3c7)',
+  'var(--sd-avatar-color-19, #7f8c8d)',
+] as const;
+const SD_AVATAR_NEUTRAL = 'var(--sd-avatar-neutral, #bdc3c7)';
+/** Base the chip background mixes the palette colour into (white in light, a dark surface in dark). */
+const SD_AVATAR_TINT = 'var(--sd-avatar-tint, #ffffff)';
+/** Base the initials colour mixes the palette colour into (black in light, white in dark). */
+const SD_AVATAR_INK = 'var(--sd-avatar-ink, #000000)';
+
 @Component({
   selector: 'sd-avatar',
   standalone: true,
@@ -45,13 +74,15 @@ export class SdAvatar {
     }
     const val = this.src() || '';
     if (!val) {
-      return '#bdc3c7';
+      return SD_AVATAR_NEUTRAL;
     }
     return this.#generateColor(val);
   });
 
-  readonly bgColor = computed(() => (this.isUrl() ? 'transparent' : 'color-mix(in srgb, ' + this.baseColor() + ' 14%, white)'));
-  readonly textColor = computed(() => 'color-mix(in srgb, ' + this.baseColor() + ' 45%, black)');
+  readonly bgColor = computed(() =>
+    this.isUrl() ? 'transparent' : 'color-mix(in srgb, ' + this.baseColor() + ' 14%, ' + SD_AVATAR_TINT + ')'
+  );
+  readonly textColor = computed(() => 'color-mix(in srgb, ' + this.baseColor() + ' 45%, ' + SD_AVATAR_INK + ')');
 
   readonly initials = computed(() => {
     if (this.isUrl()) {
@@ -76,31 +107,10 @@ export class SdAvatar {
   };
 
   #generateColor = (name: string): string => {
-    const colors = [
-      '#1abc9c',
-      '#2ecc71',
-      '#3498db',
-      '#9b59b6',
-      '#34495e',
-      '#16a085',
-      '#27ae60',
-      '#2980b9',
-      '#8e44ad',
-      '#2c3e50',
-      '#f1c40f',
-      '#e67e22',
-      '#e74c3c',
-      '#95a5a6',
-      '#f39c12',
-      '#d35400',
-      '#c0392b',
-      '#bdc3c7',
-      '#7f8c8d',
-    ];
     let hash = 0;
     for (let i = 0; i < name.length; i++) {
       hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
-    return colors[Math.abs(hash) % colors.length];
+    return SD_AVATAR_PALETTE[Math.abs(hash) % SD_AVATAR_PALETTE.length];
   };
 }

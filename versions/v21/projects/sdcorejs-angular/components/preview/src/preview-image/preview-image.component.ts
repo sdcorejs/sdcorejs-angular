@@ -18,6 +18,7 @@ import { Utilities } from '@sdcorejs/utils/fns';
 import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { NormalizedImage, PreviewItem, PreviewStage, PreviewTheme, ThumbnailPosition } from './preview-image.types';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { sdIsSafeResourceUrl } from '@sdcorejs/angular/utilities/extensions';
 
 // why: bộ đếm module-level để mỗi instance có id stage riêng — consumer có thể mount nhiều viewer
 // trên cùng một trang và `aria-controls` của các chấm role="tab" phải trỏ đúng stage của mình.
@@ -287,6 +288,9 @@ export class SdPreviewImage implements OnDestroy {
     // Ưu tiên CDN URL nếu có để tận dụng Content-Disposition của server,
     // fallback về blob URL khi user upload File trực tiếp.
     const href = img.url || img.blobUrl;
+    // why: `url` do consumer truyền vào và trước đây được gán thẳng vào `<a href>` rồi click —
+    // `javascript:` hay `data:text/html` sẽ chạy script / mở trang lạ trong origin của app.
+    if (!sdIsSafeResourceUrl(href)) return;
     const a = this.#document.createElement('a');
     a.href = href;
     a.download = img.name || 'image';

@@ -70,8 +70,8 @@
   padding: 2px !important;
 
   /* Làm màu nền toolbar nhạt hơn cho hiện đại */
-  background: #f8f9fa !important;
-  border-bottom: 1px solid #e0e0e0 !important;
+  background: var(--sd-ckeditor-toolbar-bg, #f8f9fa) !important;
+  border-bottom: 1px solid var(--sd-ckeditor-toolbar-border, #e0e0e0) !important;
 }
 
 .ck-toolbar__items {

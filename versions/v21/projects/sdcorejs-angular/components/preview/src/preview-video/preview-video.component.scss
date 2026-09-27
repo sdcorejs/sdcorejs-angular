@@ -1,0 +1,71 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.sd-preview-video-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+  border-radius: var(--sd-radius-8, 8px);
+  overflow: hidden;
+  background: var(--sd-surface-muted);
+}
+
+.sd-preview-video-player {
+  display: block;
+  width: 100%;
+  max-height: 70vh;
+  background: var(--sd-black, black);
+}
+
+// why: giữ <video> trong DOM khi lỗi để "Thử lại" gọi được load() trên chính phần tử đó.
+.sd-preview-video-player--hidden {
+  visibility: hidden;
+  position: absolute;
+  inset: 0;
+}
+
+.sd-preview-video-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--sd-text);
+}
+
+.sd-preview-video-error-text {
+  margin: 0;
+}
+
+.sd-preview-video-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.sd-preview-video-button {
+  appearance: none;
+  border: 1px solid var(--sd-border);
+  border-radius: var(--sd-radius-4, 4px);
+  padding: 6px 12px;
+  background: var(--sd-surface);
+  color: var(--sd-primary);
+  font: inherit;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--sd-primary-light);
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
+    outline-offset: var(--sd-focus-ring-offset, 2px);
+  }
+}

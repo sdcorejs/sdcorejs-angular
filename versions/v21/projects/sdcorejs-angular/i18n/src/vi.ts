@@ -120,6 +120,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.notify.type.error': 'Lỗi',
   'core.notify.show-more': 'Hiện thêm ({count})',
   'core.notify.show-less': 'Thu gọn',
+  'core.notify.close': 'Đóng thông báo',
 
   // ---- Service: confirm ----
   'core.confirm.title': 'Xác nhận',
@@ -268,6 +269,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.select.required': 'Vui lòng nhập thông tin',
   'core.form.select.selectAll': 'Tất cả',
   'core.form.select.selected-count': 'Đã chọn {count} phần tử',
+  'core.form.select.clear': 'Xóa',
 
   // ---- Forms: textarea ----
   'core.form.textarea.required': 'Vui lòng nhập thông tin',
@@ -545,6 +547,12 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.preview-pdf.search-next': 'Kết quả tiếp',
   'core.component.preview-pdf.search-close': 'Đóng tìm kiếm',
 
+  // ---- Component: preview-video ----
+  'core.component.preview-video.error': 'Không phát được video này',
+  'core.component.preview-video.retry': 'Thử lại',
+  'core.component.preview-video.download': 'Tải xuống',
+  'core.component.preview-video.unsupported': 'Trình duyệt không hỗ trợ định dạng video này',
+
   // ---- Component: table ----
   'core.component.table.setup': 'Thiết lập bảng',
   'core.component.table.column-header': 'Tiêu đề cột',
@@ -567,6 +575,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.exporting': 'Đang xuất...{percent}%',
   'core.component.table.export': 'Xuất dữ liệu',
   'core.component.table.export-csv': 'Xuất CSV',
+  'core.component.table.export-max-exceeded': 'Không thể xuất {total} dòng. Giới hạn là {max} dòng — hãy thu hẹp bộ lọc rồi thử lại.',
   'core.component.table.showing': 'Đang hiển thị:',
   'core.component.table.paginator.first-page': 'Trang đầu',
   'core.component.table.paginator.last-page': 'Trang cuối',

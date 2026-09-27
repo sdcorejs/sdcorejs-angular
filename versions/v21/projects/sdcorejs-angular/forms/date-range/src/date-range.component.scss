@@ -65,7 +65,7 @@
     // Tránh lệch phần input, placeholder đối với size md
     mat-date-range-input {
       padding-top: 12px; // Tránh lêch
-      font-size: 14px; // Chữ nhỏ lại
+      font-size: var(--sd-font-size-14, 14px); // Chữ nhỏ lại
     }
   }
 
@@ -73,7 +73,7 @@
     // Tránh lệch phần input, placeholder đối với size sm
     mat-date-range-input {
       padding-top: 4px;
-      font-size: 14px; // Chữ nhỏ lại
+      font-size: var(--sd-font-size-14, 14px); // Chữ nhỏ lại
     }
   }
 }

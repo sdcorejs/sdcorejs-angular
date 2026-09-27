@@ -21,10 +21,10 @@
 }
 
 .sd-step__icon {
-  font-size: 18px;
+  font-size: var(--sd-font-size-18, 18px);
   width: 18px;
   height: 18px;
-  line-height: 18px;
+  line-height: var(--sd-line-height-18, 18px);
 }
 
 .sd-step__text {
@@ -62,11 +62,11 @@
   // Active label text color
   .mat-step-label.mat-step-label-active .mat-step-text-label {
     color: var(--sd-stepper-text-color);
-    font-weight: 500;
+    font-weight: var(--sd-font-weight-medium, 500);
   }
   .mat-step-label.mat-step-label-selected .mat-step-text-label {
     color: var(--sd-stepper-active-color);
-    font-weight: 600;
+    font-weight: var(--sd-font-weight-semibold, 600);
   }
 
   // Connector line (horizontal + vertical)
@@ -105,10 +105,10 @@
     border-radius: 50%;
   }
   .mat-step-header {
-    border-radius: 8px;
+    border-radius: var(--sd-radius-8, 8px);
   }
   .mat-step-header:focus-visible {
-    outline: 2px solid var(--sd-stepper-active-color);
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-stepper-active-color, var(--sd-focus-ring-color, var(--sd-primary)));
     outline-offset: -2px;
   }
   .mat-step-label {

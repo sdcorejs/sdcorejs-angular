@@ -10,7 +10,7 @@ export class ExpressionViewPipe implements PipeTransform {
       return '';
     }
     const { field, operator, value } = condition;
-    const containerStyle = `style="border: 1px solid #e6e6e6; border-radius: 4px; background-color: #e6e6e6; padding: 4px 8px;"`;
+    const containerStyle = `style="border: 1px solid var(--sd-form-builder-expression-bg, #e6e6e6); border-radius: 4px; background-color: var(--sd-form-builder-expression-bg, #e6e6e6); padding: 4px 8px;"`;
     const results: string[] = [];
     // Wording field
     results.push(`<div ${containerStyle}>${attributes.find(e => e.value === field)?.display || field}</div>`);

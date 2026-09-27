@@ -2,11 +2,11 @@
   box-shadow:
     0 0.4px 0.8px rgba(0, 0, 0, 0.1),
     0 3px 6px rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
+  border-radius: var(--sd-radius-8, 8px);
   position: fixed;
   width: max-content;
   max-width: min(90vw, 720px);
-  background-color: #fff;
+  background-color: var(--sd-quick-action-bg, #ffffff);
   bottom: 90px;
   left: 0;
   right: 0;
@@ -15,11 +15,11 @@
   opacity: 0;
   pointer-events: none;
   transition:
-    transform 0.2s ease-in-out,
-    opacity 0.2s ease-in-out,
-    visibility 0.2s ease-in-out;
+    transform var(--sd-duration-base, 200ms) ease-in-out,
+    opacity var(--sd-duration-base, 200ms) ease-in-out,
+    visibility var(--sd-duration-base, 200ms) ease-in-out;
   transform: translate3d(0, 100%, 0);
-  z-index: 99;
+  z-index: var(--sd-z-floating, 99);
   gap: 16px;
 
   &.active {

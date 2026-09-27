@@ -3,7 +3,7 @@
 
 // Form field
 .mat-mdc-form-field {
-  font-size: 16px;
+  font-size: var(--sd-font-size-16, 16px);
   width: 100%;
 
   .sd-form-field-label {
@@ -68,10 +68,10 @@
     }
 
     sd-icon {
-      font-size: 16px;
+      font-size: var(--sd-font-size-16, 16px);
       width: 16px;
       height: 16px;
-      line-height: 16px;
+      line-height: var(--sd-line-height-16, 16px);
     }
   }
 
@@ -118,7 +118,7 @@
       mat-date-range-input.mat-mdc-date-range-input,
       input.mat-mdc-input-element,
       textarea.mat-mdc-input-element {
-        font-size: 14px;
+        font-size: var(--sd-font-size-14, 14px);
         margin-top: 10px; // Text hiển thị trong auto complete
       }
     }
@@ -172,7 +172,7 @@
       }
 
       .mat-mdc-form-field-label-wrapper {
-        font-size: 14px;
+        font-size: var(--sd-font-size-14, 14px);
         padding-top: 12px;
         top: -18px;
       }
@@ -189,7 +189,7 @@
         .sd-error-icon {
           height: 20px;
           width: 20px;
-          font-size: 20px;
+          font-size: var(--sd-font-size-20, 20px);
           text-align: center;
           padding: 0;
         }
@@ -202,7 +202,7 @@
         .sd-prefix-icon {
           height: 20px;
           width: 20px;
-          font-size: 20px;
+          font-size: var(--sd-font-size-20, 20px);
           text-align: center;
           padding: 0;
         }
@@ -257,12 +257,12 @@
         input.mat-mdc-input-element,
         textarea.mat-mdc-input-element {
           margin-top: 2px; // Text hiển thị trong auto complete
-          font-size: 14px;
+          font-size: var(--sd-font-size-14, 14px);
         }
       }
 
       .mat-mdc-form-field-label-wrapper {
-        font-size: 14px;
+        font-size: var(--sd-font-size-14, 14px);
         padding-top: 8px;
         top: -14px;
       }
@@ -279,7 +279,7 @@
         .sd-error-icon {
           height: 16px;
           width: 16px;
-          font-size: 16px;
+          font-size: var(--sd-font-size-16, 16px);
           text-align: center;
           padding: 0;
         }
@@ -293,7 +293,7 @@
         .sd-prefix-icon {
           height: 16px;
           width: 16px;
-          font-size: 16px;
+          font-size: var(--sd-font-size-16, 16px);
           text-align: center;
           padding: 0;
         }
@@ -347,5 +347,5 @@ mat-checkbox {
 
 // Placeholder mặc định 1rem (16px), mong muốn nên là 14px
 .mat-mdc-floating-label {
-  font-size: 14px !important;
+  font-size: var(--sd-font-size-14, 14px) !important;
 }

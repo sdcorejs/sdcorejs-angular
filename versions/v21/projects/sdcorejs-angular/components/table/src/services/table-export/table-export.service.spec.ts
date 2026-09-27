@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { I18nService } from '@sdcorejs/angular/i18n';
-import { SdExcelService } from '@sdcorejs/angular/services';
+import { SdExcelService, SdNotifyService } from '@sdcorejs/angular/services';
 import { SdTableOption } from '../../models/table-option.model';
 import { SdTableExportContext, TableExportService } from './table-export.service';
 
@@ -10,14 +10,16 @@ describe('TableExportService', () => {
     export: jasmine.Spy;
     exportCSV: jasmine.Spy;
   };
+  let notify: { warning: jasmine.Spy };
 
   beforeEach(() => {
+    notify = { warning: jasmine.createSpy('warning') };
     excel = {
       export: jasmine.createSpy('export').and.resolveTo(),
       exportCSV: jasmine.createSpy('exportCSV').and.resolveTo(),
     };
     TestBed.configureTestingModule({
-      providers: [TableExportService, { provide: SdExcelService, useValue: excel }],
+      providers: [TableExportService, { provide: SdExcelService, useValue: excel }, { provide: SdNotifyService, useValue: notify }],
     });
     service = TestBed.inject(TableExportService);
   });
@@ -203,6 +205,63 @@ describe('TableExportService', () => {
     expect(service.exporting()).toBeFalse();
     // Nhãn nút giờ lấy từ i18n nên so với catalog thay vì chuỗi 'Export' cứng.
     expect(service.exportTitle()).toBe(TestBed.inject(I18nService).t('core.component.table.export'));
+  });
+
+  describe('export.max', () => {
+    const rows = (count: number) => Array.from({ length: count }, (_, index) => ({ id: index + 1 }));
+    const limited = (max: unknown, extra: Record<string, unknown> = {}) =>
+      ({ columns: [{ field: 'id', title: 'Id', type: 'number' }], export: { type: 'default', max, ...extra } }) as unknown as SdTableOption;
+    const expectedWarning = (max: number, total: number) =>
+      TestBed.inject(I18nService).t('core.component.table.export-max-exceeded', { max, total });
+
+    it('blocks the export before fetching when the table total is above max', async () => {
+      const fetchChunk = jasmine.createSpy('fetchChunk').and.resolveTo(rows(3));
+
+      await service.exportExcel(context(limited(2), { total: 3, fetchChunk }));
+
+      expect(fetchChunk).not.toHaveBeenCalled();
+      expect(excel.export).not.toHaveBeenCalled();
+      expect(notify.warning).toHaveBeenCalledOnceWith(expectedWarning(2, 3));
+      expect(service.exporting()).toBeFalse();
+    });
+
+    it('stops without writing a file when the source reports a larger total while exporting', async () => {
+      // Tổng của context đã cũ (1); server/nguồn local trả về tổng thật 5 ở chunk đầu.
+      const fetchChunk = jasmine.createSpy('fetchChunk').and.callFake(async () => ({ items: rows(1), total: 5 }));
+
+      await service.exportCSV(context(limited(2, { maxItemsPerRequest: 1 }), { total: 1, fetchChunk }));
+
+      expect(fetchChunk).toHaveBeenCalledTimes(1);
+      expect(excel.exportCSV).not.toHaveBeenCalled();
+      expect(notify.warning).toHaveBeenCalledOnceWith(expectedWarning(2, 5));
+      expect(service.exporting()).toBeFalse();
+      expect(service.exportTitle()).toBe(TestBed.inject(I18nService).t('core.component.table.export'));
+    });
+
+    it('stops when the fetched rows outgrow max even if no total is reported', async () => {
+      await service.exportExcel(context(limited(2), { total: 1, fetchChunk: async () => rows(3) }));
+
+      expect(excel.export).not.toHaveBeenCalled();
+      expect(notify.warning).toHaveBeenCalledOnceWith(expectedWarning(2, 3));
+      expect(service.exporting()).toBeFalse();
+    });
+
+    it('exports as before when the row count is within max', async () => {
+      await service.exportExcel(context(limited(2), { total: 2, fetchChunk: async () => ({ items: rows(2), total: 2 }) }));
+
+      expect(excel.export).toHaveBeenCalledTimes(1);
+      expect(excel.export.calls.mostRecent().args[0].items.length).toBe(2);
+      expect(notify.warning).not.toHaveBeenCalled();
+    });
+
+    for (const max of [undefined, 0, -1, Number.NaN]) {
+      it(`does not limit the export when max is ${max}`, async () => {
+        await service.exportExcel(context(limited(max), { total: 3, fetchChunk: async () => ({ items: rows(3), total: 3 }) }));
+
+        expect(excel.export).toHaveBeenCalledTimes(1);
+        expect(notify.warning).not.toHaveBeenCalled();
+      });
+    }
   });
 });
 

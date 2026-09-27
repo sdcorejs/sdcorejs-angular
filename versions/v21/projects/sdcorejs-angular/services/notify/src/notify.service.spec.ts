@@ -372,3 +372,53 @@ describe('SdNotifyService teardown', () => {
     expect(service.toasts().length).toBe(0);
   }));
 });
+
+// ─── Announcements through the container's live regions (D-027) ──────────────
+
+describe('SdNotifyService — screen reader announcements', () => {
+  let service: SdNotifyService;
+  let containerHost: HTMLElement;
+  let hostView: { detectChanges(): void; rootNodes: HTMLElement[] };
+
+  beforeEach(() => {
+    spyOn(document.body, 'appendChild').and.stub();
+    TestBed.configureTestingModule({ providers: [SdNotifyService] });
+    const appRef = TestBed.inject(ApplicationRef);
+    spyOn(appRef, 'attachView').and.callFake((view: unknown) => {
+      hostView = view as typeof hostView;
+    });
+    service = TestBed.inject(SdNotifyService);
+    containerHost = hostView.rootNodes[0];
+  });
+
+  afterEach(() => service.clearAll());
+
+  const regionText = (kind: 'polite' | 'assertive'): string => {
+    hostView.detectChanges();
+    return containerHost.querySelector(`[data-autoid="services-notify-live-${kind}"]`)?.textContent?.trim() ?? '';
+  };
+
+  it('announces success and info politely, with the type label and the message', fakeAsync(() => {
+    service.success('Saved');
+    tick(100);
+    expect(regionText('polite')).toBe(`${TestBed.inject(I18nService).t('core.notify.type.success')}: Saved`);
+    expect(regionText('assertive')).toBe('');
+  }));
+
+  it('announces buffered errors and warnings assertively once they flush', fakeAsync(() => {
+    service.error(['First', 'Second']);
+    tick(500);
+    tick(100);
+    const text = regionText('assertive');
+    expect(text).toContain('First');
+    expect(text).toContain('Second');
+    expect(regionText('polite')).toBe('');
+  }));
+
+  it('announces the text of an html toast, never its markup', fakeAsync(() => {
+    service.info('<b>Hồ sơ</b> <img src=x onerror="window.__sdNotifyXss = true">đã lưu', { html: true, title: 'OK' });
+    tick(100);
+    expect(regionText('polite')).toBe('OK: Hồ sơ đã lưu');
+    expect((window as { __sdNotifyXss?: boolean }).__sdNotifyXss).toBeUndefined();
+  }));
+});

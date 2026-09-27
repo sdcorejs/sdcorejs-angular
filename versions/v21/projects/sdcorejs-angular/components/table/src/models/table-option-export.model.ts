@@ -9,7 +9,13 @@ export interface SdTableOptionExportDefault<T = any> {
   visible?: 'ALL' | 'EXCEL' | 'CSV'; // Mặc định là ALL
   enableUpload?: boolean;
   fileName?: string;
-  max?: number; // Số dòng dữ liệu tối đa cho phép export
+  /**
+   * Số dòng tối đa được phép export (Excel/CSV). Khi tổng số dòng — tổng của server, số dòng local sau
+   * lọc, hoặc tổng/số dòng mà `items` trả về trong lúc export — vượt `max`, export bị chặn: không ghi
+   * file, hiện cảnh báo `core.component.table.export-max-exceeded`. Chỉ số dương hữu hạn mới là giới
+   * hạn; bỏ trống thì không giới hạn.
+   */
+  max?: number;
   maxItemsPerRequest?: number; // Page size, default: 1000
   batch?: number; // Số lượng request mỗi lần gọi, default: 1
   items?: (filterRequest: SdTableFilterRequest) => T[] | Promise<T[]> | Promise<{ items: any[]; total: number }>;
