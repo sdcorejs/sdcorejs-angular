@@ -1,6 +1,6 @@
 import { isDevMode } from '@angular/core';
 import { Utilities } from '@sdcorejs/utils/fns';
-import { sdIsExternalHttpUrl, sdOpenExternal, sdParseUrl } from './url-safety';
+import { sdIsExternalHttpUrl, sdIsSafeResourceUrl, sdOpenExternal, sdParseUrl } from './url-safety';
 
 // why: `console.*` trong code đã ship làm bẩn log của consumer và có thể lộ chi tiết nội bộ ở
 // production. Gate qua `isDevMode()` để chỉ nói chuyện với dev khi app chạy dev build.
@@ -196,6 +196,13 @@ const download = (fileOrPath: File | string | undefined | null, fileName?: strin
   // http:/https: và luôn truyền `noopener,noreferrer`.
   if (sdIsExternalHttpUrl(fileOrPath)) {
     sdOpenExternal(fileOrPath);
+    return;
+  }
+  // why: nhánh anchor trước đây nhận MỌI chuỗi — `javascript:`/`vbscript:` hay `data:text/html` được gán
+  // thẳng vào `a.href` rồi click, tức là chạy script hoặc mở trang lạ trong origin của app. Chỉ còn URL
+  // tương đối, `blob:`, `data:image/*`, `data:application/pdf` đi qua nhánh này.
+  if (!sdIsSafeResourceUrl(fileOrPath)) {
+    devWarn('[SdUtilities.download] Refused a URL with an unsafe scheme');
     return;
   }
   const a = document.createElement('a');

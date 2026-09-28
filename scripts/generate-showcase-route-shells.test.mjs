@@ -184,9 +184,13 @@ test('matches the canonical v19 runtime registry and expected deployment route c
       .map(category => [category, pages.filter(page => page.category === category).length])
   );
 
-  assert.equal(pages.length, 99);
+  assert.equal(pages.length, 102);
   assert.ok(!pages.some(page => page.category === 'components' && page.slug === 'chart'));
   assert.ok(pages.some(page => page.category === 'pipes-utilities' && page.slug === 'read-state'));
+  // 3.0 pages: sd-highlight, the Theme & tokens guide and the utilities/theme reference.
+  assert.ok(pages.some(page => page.category === 'components' && page.slug === 'highlight'));
+  assert.ok(pages.some(page => page.category === 'guides' && page.slug === 'theme-tokens'));
+  assert.ok(pages.some(page => page.category === 'pipes-utilities' && page.slug === 'theme'));
 
   // why: `routes.length` từng là hằng số 5941 và đã mục ngay khi release 1.6 ra (thực tế 7426).
   // Con số đó là TÍCH của hai thứ đã được kiểm ở nơi khác — số release được hỗ trợ và số route mỗi
@@ -202,12 +206,12 @@ test('matches the canonical v19 runtime registry and expected deployment route c
     'total = 1 root redirect + one identical block per release'
   );
   assert.deepEqual(categoryCounts, {
-    components: 37,
+    components: 38,
     directives: 6,
     forms: 22,
-    guides: 3,
+    guides: 4,
     'modules-integrations': 10,
-    'pipes-utilities': 10,
+    'pipes-utilities': 11,
     services: 11,
   });
   assert.equal(

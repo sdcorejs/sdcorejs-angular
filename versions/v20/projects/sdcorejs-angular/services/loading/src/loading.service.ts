@@ -51,7 +51,7 @@ ${SD_LOADING_OVERLAY_SELECTOR} {
   width: 100%;
   height: 100%;
   opacity: 0.6;
-  background: #fff;
+  background: var(--sd-loading-bg, #ffffff);
   z-index: 99999;
 }
 

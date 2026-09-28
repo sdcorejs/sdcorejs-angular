@@ -1,7 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { SdTabComponent } from '@sdcorejs/angular/components';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
-import { Language } from '@sdcorejs/utils/models';
 
 // NOTE: Import nội bộ trong module layout thì dùng path tương đối
 import { SdPageComponent } from '../../../../components';
@@ -29,16 +28,6 @@ export class HomePageComponent {
   // ==========================================
   readonly #layoutService = inject(SdLayoutService);
   readonly #i18n = inject(I18nService);
-
-  // Map Language code → BCP 47 locale tag dùng cho Intl date formatting
-  // WHY: must be declared before todayInfo — field init runs top-to-bottom; #getTodayInfo reads #localeMap.
-  readonly #localeMap: Record<Language, string> = {
-    vi: 'vi-VN',
-    en: 'en-US',
-    ja: 'ja-JP',
-    ko: 'ko-KR',
-    zh: 'zh-CN',
-  };
 
   // ==========================================
   // SIGNALS (STATE)
@@ -74,8 +63,7 @@ export class HomePageComponent {
     // WHY: weekday names i18n hóa qua key core.module.layout.weekday.<0..6>
     const weekday = this.#i18n.t(`core.module.layout.weekday.${date.getDay()}`);
     // WHY: dùng locale theo ngôn ngữ hiện tại để định dạng số (dd/mm/yyyy vs mm/dd/yyyy ...)
-    const locale = this.#localeMap[this.#i18n.language()] ?? 'vi-VN';
-    const dateStr = date.toLocaleDateString(locale, {
+    const dateStr = date.toLocaleDateString(this.#i18n.locale(), {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',

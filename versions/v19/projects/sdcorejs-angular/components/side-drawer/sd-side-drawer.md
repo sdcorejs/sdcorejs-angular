@@ -55,6 +55,8 @@ Header and footer use a white background (`--sd-white`, default `#fff`) and comp
 
 While a drawer is open, page scroll is locked by setting `document.body.style.overflow = 'hidden'`.
 
+Hiding the scrollbar widens the page by the scrollbar's width, which used to make the whole page jump sideways when a drawer opened or closed. The first lock now measures the vertical scrollbar (`window.innerWidth - document.documentElement.clientWidth`) **before** hiding it and adds that width to the body's computed `padding-right` as an inline style. The last release restores the inline `padding-right` the app had before. Overlay scrollbars (width 0) and non-browser platforms leave `padding-right` untouched.
+
 The lock is **ref-counted and shared across every `<sd-side-drawer>` instance** (root-provided `SdBodyScrollLockService`), so stacked drawers behave correctly:
 
 - The first drawer to open records the app's previous `overflow` value and applies the lock.
@@ -63,7 +65,7 @@ The lock is **ref-counted and shared across every `<sd-side-drawer>` instance** 
 - Destroying a drawer while it is open releases its lock too, so teardown can never strand the page in a permanently unscrollable state.
 - `open()` / `close()` are idempotent per instance — repeated calls cannot unbalance the counter.
 
-Do not write `document.body.style.overflow` yourself while a drawer is open; the value is restored from the snapshot taken at the first lock.
+Do not write `document.body.style.overflow` or `document.body.style.paddingRight` yourself while a drawer is open; both are restored from the snapshot taken at the first lock. Fixed-position elements that span the viewport (a top bar with `right: 0`) do not get the padding — give them the same compensation in your own CSS if the shift matters.
 
 A drawer opened inside a `container` never takes the lock: the rest of the page stays usable.
 

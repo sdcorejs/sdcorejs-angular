@@ -86,6 +86,20 @@ interface Country { code: string; name: string; }
         </div>
       </demo-section>
       }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-cuon-ao') {
+      <demo-section
+        heading="Cuộn ảo"
+        [props]="[{ name: 'virtualScroll', value: 'true' }, { name: 'itemSize', value: '36' }]"
+        note="10.000 địa điểm. Panel chỉ render các dòng đang thấy và danh sách không bị cắt theo limit; mũi tên lên/xuống đi hết danh sách (quay vòng ở hai đầu), Enter để chọn. Mặc định tắt.">
+        <div style="width: 320px; display:flex; flex-direction:column; gap:12px">
+          <sd-autocomplete [items]="virtualPlaces" valueField="code" displayField="name"
+            label="Địa điểm" placeholder="Gõ để lọc..." virtualScroll
+            [(model)]="virtualPlace" [form]="form"></sd-autocomplete>
+          <div style="font-size:12px; color:#555">Mã đã chọn: <b>{{ virtualPlace() ?? '(trống)' }}</b></div>
+        </div>
+      </demo-section>
+      }
     </demo-page>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -109,6 +123,12 @@ export class AutocompleteDemoComponent {
   tag = signal<string | null>(null);
   lockedA = signal<string | null>('VN');
   lockedB = signal<string | null>('JP');
+  /** 10.000 dòng cho demo cuộn ảo. */
+  readonly virtualPlaces: Country[] = Array.from({ length: 10_000 }, (_, index) => ({
+    code: `DD${String(index + 1).padStart(5, '0')}`,
+    name: `Địa điểm ${index + 1}`,
+  }));
+  virtualPlace = signal<string | null>(null);
 
   // Error-state demo
   errRequired = signal<string | null>(null);

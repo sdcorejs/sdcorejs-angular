@@ -1,8 +1,17 @@
 .c-upload-file {
   border: 1px solid var(--md-sys-color-outline-variant);
   padding: 5px;
-  color: #afafaf;
+  color: var(--sd-form-builder-upload-icon, #afafaf);
   .material-icons {
-    font-size: 20px !important;
+    font-size: var(--sd-font-size-20, 20px) !important;
   }
+}
+
+// Image placeholder drawn in both the viewed and the editable state.
+.c-upload-placeholder-bg {
+  fill: var(--sd-form-builder-upload-placeholder-bg, #e5e9ed);
+}
+
+.c-upload-placeholder-shape {
+  fill: var(--sd-form-builder-upload-placeholder-shape, #cad3db);
 }

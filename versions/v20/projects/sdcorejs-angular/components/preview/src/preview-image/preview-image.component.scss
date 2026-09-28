@@ -8,13 +8,13 @@
 
 :host {
   // Surfaces — dark theme defaults.
-  --sd-preview-shell-bg: #0d0e10;
-  --sd-preview-shell-bg-2: #17191c;
+  --sd-preview-shell-bg: var(--sd-preview-image-shell-bg, #0d0e10);
+  --sd-preview-shell-bg-2: var(--sd-preview-image-shell-bg-2, #17191c);
   --sd-preview-panel-bg: rgba(15, 17, 20, 0.92);
   --sd-preview-divider: rgba(255, 255, 255, 0.08);
 
   // Foreground
-  --sd-preview-fg: #f5f6f7;
+  --sd-preview-fg: var(--sd-preview-image-fg, #f5f6f7);
   --sd-preview-fg-muted: rgba(255, 255, 255, 0.6);
   --sd-preview-fg-subtle: rgba(255, 255, 255, 0.4);
 
@@ -54,12 +54,12 @@
 // Wired by the component's host binding: '[attr.data-theme]': 'theme()'.
 // =============================================================================
 :host([data-theme="light"]) {
-  --sd-preview-shell-bg: #f7f8fa;
-  --sd-preview-shell-bg-2: #ffffff;
+  --sd-preview-shell-bg: var(--sd-preview-image-light-shell-bg, #f7f8fa);
+  --sd-preview-shell-bg-2: var(--sd-preview-image-light-shell-bg-2, #ffffff);
   --sd-preview-panel-bg: rgba(255, 255, 255, 0.94);
   --sd-preview-divider: rgba(0, 0, 0, 0.08);
 
-  --sd-preview-fg: #1a1c1f;
+  --sd-preview-fg: var(--sd-preview-image-light-fg, #1a1c1f);
   --sd-preview-fg-muted: rgba(0, 0, 0, 0.62);
   --sd-preview-fg-subtle: rgba(0, 0, 0, 0.42);
 
@@ -85,7 +85,7 @@
   height: 100%;
   background: var(--sd-preview-shell-bg);
   color: var(--sd-preview-fg);
-  border-radius: 12px;
+  border-radius: var(--sd-radius-12, 12px);
   overflow: hidden;
   box-shadow:
     0 30px 80px rgba(0, 0, 0, 0.55),
@@ -139,7 +139,7 @@
 
   &__icon {
     color: var(--sd-preview-fg-muted);
-    font-size: 20px;
+    font-size: var(--sd-font-size-20, 20px);
     width: 20px;
     height: 20px;
   }
@@ -159,7 +159,7 @@
   }
 
   &__sub {
-    font-size: 12px;
+    font-size: var(--sd-font-size-12, 12px);
     color: var(--sd-preview-fg-muted);
     margin-top: 2px;
   }
@@ -169,12 +169,12 @@
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    font-size: 13px;
-    font-weight: 500;
+    font-size: var(--sd-font-size-13, 13px);
+    font-weight: var(--sd-font-weight-medium, 500);
     color: var(--sd-preview-fg-muted);
     background: rgba(255, 255, 255, 0.08);
     padding: 4px 12px;
-    border-radius: 999px;
+    border-radius: var(--sd-radius-999, 999px);
     font-variant-numeric: tabular-nums;
   }
 
@@ -241,7 +241,7 @@
   max-height: 100%;
   object-fit: contain;
   transform-origin: center center;
-  transition: transform 200ms ease;
+  transition: transform var(--sd-duration-base, 200ms) ease;
   // While the user is actively dragging we set CSS var --sd-image-transition
   // to none via class — but signal-driven transform updates are smooth enough
   // for the constant-fps case; keep transition for snap-back on zoom levels.
@@ -258,8 +258,8 @@
   padding: 6px 12px;
   background: rgba(15, 17, 20, 0.7);
   color: var(--sd-preview-fg);
-  border-radius: 8px;
-  font-size: 13px;
+  border-radius: var(--sd-radius-8, 8px);
+  font-size: var(--sd-font-size-13, 13px);
   text-align: center;
 }
 
@@ -290,7 +290,7 @@
   transform: translateY(-50%);
   width: 48px;
   height: 48px;
-  border-radius: 999px;
+  border-radius: var(--sd-radius-999, 999px);
   border: none;
   background: rgba(20, 20, 22, 0.6);
   backdrop-filter: blur(10px);
@@ -301,11 +301,11 @@
   justify-content: center;
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-  transition: background 120ms;
+  transition: background var(--sd-duration-fast, 120ms);
   z-index: 3;
 
   sd-icon {
-    font-size: 28px;
+    font-size: var(--sd-font-size-28, 28px);
     width: 28px;
     height: 28px;
   }
@@ -315,7 +315,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--sd-preview-primary);
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-preview-accent, var(--sd-focus-ring-color, var(--sd-primary)));
     outline-offset: 2px;
   }
 
@@ -345,7 +345,7 @@
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid var(--sd-preview-divider);
-  border-radius: 12px;
+  border-radius: var(--sd-radius-12, 12px);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
   z-index: 3;
 
@@ -360,12 +360,12 @@
     background: transparent;
     border: none;
     color: var(--sd-preview-fg);
-    border-radius: 8px;
+    border-radius: var(--sd-radius-8, 8px);
     cursor: pointer;
-    transition: background 120ms;
+    transition: background var(--sd-duration-fast, 120ms);
 
     sd-icon {
-      font-size: 20px;
+      font-size: var(--sd-font-size-20, 20px);
       width: 20px;
       height: 20px;
     }
@@ -379,22 +379,22 @@
     }
 
     &:focus-visible {
-      outline: 2px solid var(--sd-preview-primary);
+      outline: var(--sd-focus-ring-width, 2px) solid var(--sd-preview-accent, var(--sd-focus-ring-color, var(--sd-primary)));
       outline-offset: 2px;
     }
   }
 
   &__btn-label {
-    font-size: 13px;
-    font-weight: 500;
+    font-size: var(--sd-font-size-13, 13px);
+    font-weight: var(--sd-font-weight-medium, 500);
   }
 
   &__readout {
     min-width: 56px;
     text-align: center;
     color: var(--sd-preview-fg);
-    font-size: 13px;
-    font-weight: 500;
+    font-size: var(--sd-font-size-13, 13px);
+    font-weight: var(--sd-font-weight-medium, 500);
     font-variant-numeric: tabular-nums;
   }
 
@@ -437,13 +437,13 @@
   padding: 0;
   border: none;
   background: transparent;
-  border-radius: 8px;
+  border-radius: var(--sd-radius-8, 8px);
   outline: 1px solid var(--sd-preview-divider);
   outline-offset: -1px;
   opacity: 0.7;
   overflow: hidden;
   cursor: pointer;
-  transition: opacity 120ms, outline-color 120ms;
+  transition: opacity var(--sd-duration-fast, 120ms), outline-color var(--sd-duration-fast, 120ms);
 
   &:hover {
     opacity: 1;
@@ -458,7 +458,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--sd-preview-primary);
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-preview-accent, var(--sd-focus-ring-color, var(--sd-primary)));
     outline-offset: 2px;
   }
 
@@ -483,7 +483,7 @@
     pointer-events: none;
 
     sd-icon {
-      font-size: 24px;
+      font-size: var(--sd-font-size-24, 24px);
       width: 24px;
       height: 24px;
     }
@@ -494,11 +494,11 @@
     top: 4px;
     right: 4px;
     background: rgba(0, 0, 0, 0.7);
-    color: #fff;
-    font-size: 10px;
-    font-weight: 600;
+    color: var(--sd-preview-image-overlay-fg, #ffffff);
+    font-size: var(--sd-font-size-10, 10px);
+    font-weight: var(--sd-font-weight-semibold, 600);
     padding: 1px 5px;
-    border-radius: 4px;
+    border-radius: var(--sd-radius-4, 4px);
     pointer-events: none;
   }
 
@@ -509,7 +509,7 @@
     bottom: 0;
     padding: 14px 6px 4px;
     color: var(--sd-preview-fg);
-    font-size: 11px;
+    font-size: var(--sd-font-size-11, 11px);
     line-height: 1.3;
     background: linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent);
     overflow: hidden;
@@ -543,18 +543,18 @@
   height: 8px;
   border: none;
   background: rgba(255, 255, 255, 0.3);
-  border-radius: 999px;
+  border-radius: var(--sd-radius-999, 999px);
   padding: 0;
   cursor: pointer;
   transition: width 180ms, background 180ms;
 
   &--active {
     width: 24px;
-    background: #f5f6f7;
+    background: var(--sd-preview-image-dot-active, #f5f6f7);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--sd-preview-primary);
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-preview-accent, var(--sd-focus-ring-color, var(--sd-primary)));
     outline-offset: 2px;
   }
 }
@@ -574,7 +574,7 @@
   &__tile {
     width: 96px;
     height: 96px;
-    border-radius: 24px;
+    border-radius: var(--sd-radius-24, 24px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -582,7 +582,7 @@
     background: rgba(255, 255, 255, 0.05);
 
     sd-icon {
-      font-size: 48px;
+      font-size: var(--sd-font-size-48, 48px);
       width: 48px;
       height: 48px;
       color: var(--sd-preview-fg-subtle);
@@ -604,13 +604,13 @@
   }
 
   &__title {
-    font-size: 16px;
-    font-weight: 500;
+    font-size: var(--sd-font-size-16, 16px);
+    font-weight: var(--sd-font-weight-medium, 500);
     color: var(--sd-preview-fg);
   }
 
   &__hint {
-    font-size: 13px;
+    font-size: var(--sd-font-size-13, 13px);
     color: var(--sd-preview-fg-muted);
     max-width: 320px;
   }
@@ -620,7 +620,7 @@
 .sd-preview-spinner {
   width: 56px;
   height: 56px;
-  border-radius: 999px;
+  border-radius: var(--sd-radius-999, 999px);
   border: 3px solid rgba(255, 255, 255, 0.08);
   border-top-color: var(--sd-preview-primary);
   animation: sd-preview-spin 0.9s linear infinite;
@@ -638,16 +638,16 @@
   height: 36px;
   padding: 0 16px;
   background: var(--sd-preview-primary);
-  color: #fff;
+  color: var(--sd-text-on-solid, #ffffff);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--sd-radius-8, 8px);
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
-  transition: filter 120ms;
+  font-size: var(--sd-font-size-13, 13px);
+  font-weight: var(--sd-font-weight-medium, 500);
+  transition: filter var(--sd-duration-fast, 120ms);
 
   sd-icon {
-    font-size: 18px;
+    font-size: var(--sd-font-size-18, 18px);
     width: 18px;
     height: 18px;
   }
@@ -657,7 +657,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid #fff;
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-preview-image-focus-ring, white);
     outline-offset: 2px;
   }
 }
@@ -686,13 +686,13 @@
   border: 1px solid var(--sd-preview-divider);
   background: rgba(255, 255, 255, 0.04);
   color: var(--sd-preview-fg-muted);
-  border-radius: 4px;
+  border-radius: var(--sd-radius-4, 4px);
   font: 500 11px / 1 ui-monospace, "SFMono-Regular", Menlo, monospace;
 }
 
 .sd-preview-kbd-text,
 .sd-preview-kbd-dot {
-  font-size: 11px;
+  font-size: var(--sd-font-size-11, 11px);
   color: var(--sd-preview-fg-subtle);
 }
 

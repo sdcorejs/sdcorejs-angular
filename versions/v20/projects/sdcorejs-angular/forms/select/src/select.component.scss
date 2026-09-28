@@ -124,25 +124,25 @@
   .c-filter-input-container {
     position: sticky;
     top: 0;
-    background-color: #fff;
-    box-shadow: 0px 1px 0px 0px #f2f2f2;
+    background-color: var(--sd-select-panel-bg, #ffffff);
+    box-shadow: 0px 1px 0px 0px var(--sd-select-panel-divider, #f2f2f2);
     padding: 8px;
     margin-bottom: 8px;
-    z-index: 1000;
+    z-index: var(--sd-z-dropdown, 1000);
     .filter-input-wrapper {
       display: flex;
       align-items: center;
       padding: 4px 8px;
       border: 1px solid map.get(color.$color_map, 'border');
-      border-radius: 4px;
-      background-color: #fff;
+      border-radius: var(--sd-radius-4, 4px);
+      background-color: var(--sd-select-panel-bg, #ffffff);
       sd-icon {
-        color: #dadada;
+        color: var(--sd-select-icon-muted, #dadada);
       }
       .c-search-input {
         min-width: 0;
         width: 100%;
-        background-color: #fff;
+        background-color: var(--sd-select-panel-bg, #ffffff);
         border: none;
         outline: none;
         flex: 1;
@@ -154,12 +154,12 @@
   .sd-select-footer-actions {
     position: sticky;
     bottom: 0;
-    z-index: 1000;
+    z-index: var(--sd-z-dropdown, 1000);
     display: flex;
     flex-direction: column;
     gap: 4px;
-    border-top: 1px solid #f2f2f2;
-    background-color: #fff;
+    border-top: 1px solid var(--sd-select-panel-divider, #f2f2f2);
+    background-color: var(--sd-select-panel-bg, #ffffff);
   }
 
   // Row "Tất cả" — không phải mat-option, nhưng phải khớp từng pixel với một option multiple.
@@ -189,7 +189,7 @@
     }
 
     .mdc-list-item__primary-text {
-      font-size: 14px;
+      font-size: var(--sd-font-size-14, 14px);
       white-space: normal;
     }
   }
@@ -229,7 +229,7 @@
   }
 
   .mdc-list-item__primary-text {
-    font-size: 14px;
+    font-size: var(--sd-font-size-14, 14px);
     white-space: normal;
   }
 }
@@ -327,6 +327,52 @@
 // why: Material yêu cầu có option để mở panel; anchor không hiển thị hay tham gia chọn.
 ::ng-deep .sd-select-panel .sd-read-state-anchor {
   display: none;
+}
+
+// =============================================================================
+// Virtual scroll (opt-in, [virtualScroll]) — the CDK viewport scrolls, not the panel, and every row has
+// the fixed height the viewport computes with ([itemSize], set inline on each option).
+// =============================================================================
+::ng-deep .mat-mdc-select-panel.sd-select-panel.sd-select-virtual {
+  // why: the viewport is at most a few rows tall; a scrolling panel around it would fight with it and
+  // with Material's scroll-into-view of its active option.
+  max-height: none;
+  overflow: hidden;
+
+  .sd-select-virtual-viewport {
+    width: 100%;
+  }
+
+  .sd-select-virtual-viewport .mat-mdc-option {
+    min-height: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    box-sizing: border-box;
+  }
+
+  // why: a row cannot grow, so long labels end with an ellipsis instead of wrapping (overrides the
+  // panel's wrapping rule above).
+  .sd-select-virtual-viewport .mat-mdc-option .mdc-list-item__primary-text,
+  .sd-select-virtual-label {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    word-break: normal;
+  }
+
+  // The row the component made active. Material's own active class is re-applied only to rendered rows
+  // and is cleared whenever the rows re-render, so the component's class is the one that shows.
+  .mat-mdc-option.sd-virtual-active {
+    background-color: var(--mat-option-focus-state-layer-color, rgba(0, 0, 0, 0.12));
+  }
+
+  .mat-mdc-option.mat-mdc-option-active:not(.sd-virtual-active):not(:hover) {
+    background-color: transparent;
+  }
+
+  .sd-virtual-sentinel {
+    display: none !important;
+  }
 }
 
 ::ng-deep .sd-select-panel {

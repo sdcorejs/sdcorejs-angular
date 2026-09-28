@@ -18,8 +18,8 @@
   justify-content: space-between;
   padding: 0 16px;
   height: 56px;
-  background-color: #fff;
-  border-bottom: 1px solid #e0e0e0;
+  background-color: var(--sd-sidebar-mobile-header-bg, #ffffff);
+  border-bottom: 1px solid var(--sd-sidebar-mobile-header-border, #e0e0e0);
   flex-shrink: 0;
 
   .c-topbar-brand {
@@ -36,9 +36,9 @@
     }
 
     .c-topbar-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: #1f1f1f;
+      font-size: var(--sd-font-size-16, 16px);
+      font-weight: var(--sd-font-weight-semibold, 600);
+      color: var(--sd-sidebar-mobile-text, #1f1f1f);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -54,7 +54,7 @@
     cursor: pointer;
     padding: 6px;
     border-radius: 50%;
-    color: #333;
+    color: var(--sd-sidebar-mobile-text-secondary, #333333);
     flex-shrink: 0;
 
     &:hover {

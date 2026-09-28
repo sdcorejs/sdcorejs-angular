@@ -1,8 +1,8 @@
 :host {
-  --sd-org-line: #d9e2ef;
-  --sd-org-card-bg: #ffffff;
-  --sd-org-text: #102047;
-  --sd-org-text-muted: #4d5b73;
+  --sd-org-line: var(--sd-org-chart-line, #d9e2ef);
+  --sd-org-card-bg: var(--sd-org-chart-card-bg, #ffffff);
+  --sd-org-text: var(--sd-org-chart-text, #102047);
+  --sd-org-text-muted: var(--sd-org-chart-text-muted, #4d5b73);
   --sd-org-shadow: 0 8px 20px rgba(24, 39, 75, 0.08);
   --sd-org-gap-x: 20px;
   --sd-org-gap-y: 32px;
@@ -103,7 +103,7 @@
   color: var(--sd-org-text);
   background: var(--sd-org-node-color, var(--sd-org-card-bg));
   border: 1px solid color-mix(in srgb, var(--sd-org-node-color, var(--sd-org-line)) 36%, var(--sd-org-line));
-  border-radius: 6px;
+  border-radius: var(--sd-radius-6, 6px);
   box-shadow: var(--sd-org-shadow);
 }
 
@@ -130,8 +130,8 @@
   max-width: 150px;
   margin: 0 auto;
   overflow-wrap: anywhere;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: var(--sd-font-size-14, 14px);
+  font-weight: var(--sd-font-weight-bold, 700);
   line-height: 1.35;
 }
 
@@ -140,7 +140,7 @@
   margin: 5px auto 0;
   overflow-wrap: anywhere;
   color: var(--sd-org-text-muted);
-  font-size: 13px;
+  font-size: var(--sd-font-size-13, 13px);
   line-height: 1.3;
 }
 
@@ -154,25 +154,25 @@
   height: 22px;
   margin-top: -1px;
   padding: 0;
-  color: #52708f;
-  background: #ffffff;
+  color: var(--sd-org-chart-icon, #52708f);
+  background: var(--sd-org-chart-card-bg, #ffffff);
   border: 1px solid var(--sd-org-line);
   border-radius: 50%;
   cursor: pointer;
 }
 
 .sd-org-chart__toggle:hover {
-  background: #f4f7fb;
+  background: var(--sd-org-chart-toolbar-bg, #f4f7fb);
 }
 
 .sd-org-chart__toggle:focus-visible {
-  outline: 2px solid var(--sd-primary, #005cbb);
+  outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
   outline-offset: 2px;
 }
 
 .sd-org-chart__toggle sd-icon {
   width: 18px;
   height: 18px;
-  font-size: 18px;
-  line-height: 18px;
+  font-size: var(--sd-font-size-18, 18px);
+  line-height: var(--sd-line-height-18, 18px);
 }

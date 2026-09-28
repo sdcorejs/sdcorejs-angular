@@ -44,7 +44,7 @@ export class RootComponent {
   #getTodayInfo(date: Date): string {
     // WHY: weekday names i18n hóa qua key core.module.layout.weekday.<0..6>
     const weekday = this.#i18n.t(`core.module.layout.weekday.${date.getDay()}`);
-    const dateStr = date.toLocaleDateString('vi-VN', {
+    const dateStr = date.toLocaleDateString(this.#i18n.locale(), {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',

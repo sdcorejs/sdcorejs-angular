@@ -1,3 +1,4 @@
+import { CdkVirtualScrollViewport, ScrollingModule } from '@angular/cdk/scrolling';
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -16,6 +17,7 @@ import {
   inject,
   input,
   model,
+  numberAttribute,
   output,
   signal,
   untracked,
@@ -23,8 +25,8 @@ import {
 } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, FormGroupDirective, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
-import { MatAutocompleteModule, MatAutocompleteTrigger } from '@angular/material/autocomplete';
-import { ErrorStateMatcher } from '@angular/material/core';
+import { MatAutocomplete, MatAutocompleteModule, MatAutocompleteTrigger } from '@angular/material/autocomplete';
+import { ErrorStateMatcher, MatOption } from '@angular/material/core';
 import { MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -67,6 +69,35 @@ interface AutocompleteReadRequest<T> {
 }
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
+/** Rows the virtual viewport shows at most before it scrolls (the panel's max-height fits them). */
+const SD_AUTOCOMPLETE_VIRTUAL_ROWS = 6;
+
+/**
+ * why (D-026): the only code in sd-autocomplete that touches a Material internal for virtual scrolling —
+ * `MatAutocomplete._keyManager`. It makes the row the component chose Material's active option, so the
+ * input's `aria-activedescendant` and Material's own Enter handling use that row. Covered by
+ * autocomplete.virtual-scroll.spec.ts.
+ */
+class SdAutocompleteVirtualAdapter {
+  constructor(private readonly autocomplete: () => MatAutocomplete | undefined) {}
+
+  activeOption(): MatOption | null {
+    return this.autocomplete()?._keyManager?.activeItem ?? null;
+  }
+
+  setActive(option: MatOption | undefined): void {
+    const manager = this.autocomplete()?._keyManager;
+    if (!manager || manager.activeItem === (option ?? null)) return;
+    if (option) manager.setActiveItem(option);
+    else manager.setActiveItem(-1);
+  }
+
+  /** Emits whenever Material changes its active option (it resets it each time the rendered rows change). */
+  changes() {
+    return this.autocomplete()?._keyManager?.change;
+  }
+}
+
 class SdAutocompleteErrotStateMatcher implements ErrorStateMatcher {
   constructor(private formControl: FormControl) {}
   isErrorState(control: FormControl | null, form: FormGroupDirective | NgForm | null): boolean {
@@ -94,6 +125,7 @@ class SdAutocompleteErrotStateMatcher implements ErrorStateMatcher {
     MatFormFieldModule,
     MatAutocompleteModule,
     MatProgressSpinnerModule,
+    ScrollingModule,
     SdLabel,
     SdView,
   ],
@@ -109,6 +141,8 @@ export class SdAutocomplete<T = unknown> implements OnInit, OnDestroy {
   // ==========================================
   inputRef = viewChild<ElementRef<HTMLInputElement>>('input');
   autocompleteTrigger = viewChild(MatAutocompleteTrigger);
+  private readonly matAutocomplete = viewChild(MatAutocomplete);
+  private readonly virtualViewport = viewChild(CdkVirtualScrollViewport);
 
   sdLabelTemplate = contentChild<TemplateRef<any>>('sdLabel');
   sdValueTemplate = contentChild<TemplateRef<any>>('sdValue');
@@ -171,6 +205,13 @@ export class SdAutocomplete<T = unknown> implements OnInit, OnDestroy {
   displayField = input<string | undefined>();
   disabledField = input<string>('');
   limit = input<number>(100);
+  /**
+   * Virtual scrolling for long lists (opt-in, default `false`). When on, the panel renders only the rows
+   * in view and array items are no longer cut by `limit`. See sd-autocomplete.md, "Virtual scroll".
+   */
+  readonly virtualScroll = input(false, { transform: booleanAttribute });
+  /** Fixed row height in px for the virtual viewport. Default 36 = the panel's compact option row. */
+  readonly itemSize = input(36, { transform: numberAttribute });
   cacheChecksum = input<any>();
   hyperlink = input<string | null | undefined>();
 
@@ -283,6 +324,8 @@ export class SdAutocomplete<T = unknown> implements OnInit, OnDestroy {
       checksum: this.cacheChecksum(),
       valueField: this.valueField(),
       displayField: this.displayField(),
+      // why: switching virtualScroll re-runs the pipeline, since only the non-virtual list is cut at `limit`.
+      virtualScroll: this.virtualScroll(),
     }))
   ).pipe(map(context => context.items));
   #valueModel$ = toObservable(this.valueModel);
@@ -294,6 +337,22 @@ export class SdAutocomplete<T = unknown> implements OnInit, OnDestroy {
   controlPlaceHolder = signal<string>('');
 
   normalizedValue = computed(() => this.valueModel());
+
+  // ==========================================
+  // VIRTUAL SCROLL (opt-in) — D-026 / D-030 V1
+  // ==========================================
+  readonly #virtualAdapter = new SdAutocompleteVirtualAdapter(() => this.matAutocomplete());
+  /** Panel classes: the virtual one only adds `sd-autocomplete-virtual`. */
+  protected readonly panelClass = computed(() =>
+    this.virtualScroll() ? 'sd-autocomplete-panel sd-autocomplete-virtual' : 'sd-autocomplete-panel'
+  );
+  protected readonly virtualViewportHeight = computed(
+    () => Math.min(this.filteredItems().length, SD_AUTOCOMPLETE_VIRTUAL_ROWS) * this.itemSize()
+  );
+  /** Stable id per row index: Material's aria-activedescendant points at it and the adapter finds the row by it. */
+  protected readonly virtualOptionId = (index: number): string => `${this.id}-option-${index}`;
+  /** Row the keyboard made active in the full filtered list, or -1 (reset when the results change, like Material). */
+  readonly virtualActiveIndex = signal(-1);
 
   // ==========================================
   // [NEW]: Hàm đọc thuộc tính lồng nhau (a.b.c)
@@ -341,6 +400,30 @@ export class SdAutocomplete<T = unknown> implements OnInit, OnDestroy {
         this.formControl.enable({ emitEvent: false });
       }
     });
+
+    // Virtual scroll wiring.
+    effect(() => {
+      // New results reset the active row, as Material does when its options change — but a scroll that
+      // only re-renders rows must not, so this follows the results signal, not the option list.
+      this.filteredItems();
+      untracked(() => {
+        this.virtualActiveIndex.set(-1);
+        // The viewport height follows the row count; let the viewport measure itself again.
+        if (this.virtualScroll()) this.#timers.schedule(() => this.virtualViewport()?.checkViewportSize(), 0);
+      });
+    });
+    effect(onCleanup => {
+      const autocomplete = this.matAutocomplete();
+      if (!autocomplete || !this.virtualScroll()) return;
+      // why: MatAutocompleteTrigger resets the active option after every options change (a zero-delay
+      // tick) — with virtual scrolling that is every scroll. Put the component's row back each time.
+      const options = autocomplete.options.changes.subscribe(() => this.#timers.schedule(() => this.#syncVirtualKeyManager(), 0));
+      const active = this.#virtualAdapter.changes()?.subscribe(() => this.#syncVirtualKeyManager());
+      onCleanup(() => {
+        options.unsubscribe();
+        active?.unsubscribe();
+      });
+    });
   }
 
   ngOnInit() {
@@ -362,6 +445,8 @@ export class SdAutocomplete<T = unknown> implements OnInit, OnDestroy {
     this.#subscription.add(this.inputControl.sdChanges.subscribe(() => this.ref.markForCheck()));
 
     this.#element.nativeElement.addEventListener('keydown', this.focusReadRetry, true);
+    // why: capture on the host runs before MatAutocompleteTrigger's keydown listener on the input.
+    this.#element.nativeElement.addEventListener('keydown', this.#onVirtualKeydown, true);
     this.#subscription.add(
       this.inputControl.valueChanges.subscribe(value => {
         this.isTyping.set(true);
@@ -422,7 +507,8 @@ export class SdAutocomplete<T = unknown> implements OnInit, OnDestroy {
             const q = sText.toLowerCase();
             return v.includes(q) || d.includes(q);
           });
-          return of(ArrayUtilities.paging(filtered, this.limit()));
+          // Virtual lists are not cut at `limit` (D-026); the viewport renders only the rows in view.
+          return of(this.virtualScroll() ? filtered : ArrayUtilities.paging(filtered, this.limit()));
         }
 
         const retry = this.#searchRetryRequest;
@@ -517,6 +603,7 @@ export class SdAutocomplete<T = unknown> implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.#destroyed = true;
     this.#element.nativeElement.removeEventListener('keydown', this.focusReadRetry, true);
+    this.#element.nativeElement.removeEventListener('keydown', this.#onVirtualKeydown, true);
     this.#valueRead.invalidate();
     this.#searchRead.invalidate();
     this.#subscription.unsubscribe();
@@ -763,6 +850,59 @@ export class SdAutocomplete<T = unknown> implements OnInit, OnDestroy {
     if (this.#destroyed) return;
     this.#syncReadLoading();
     this.sdReadStateChange.emit(this.readState());
+  };
+
+  // ==========================================
+  // VIRTUAL SCROLL — keyboard and active row
+  // ==========================================
+  protected onVirtualOpened = (): void => {
+    // why: the viewport was created while the panel was detached (size 0); measure it once it is shown.
+    if (this.virtualScroll()) this.#timers.schedule(() => this.virtualViewport()?.checkViewportSize(), 0);
+  };
+
+  protected onVirtualClosed = (): void => {
+    this.virtualActiveIndex.set(-1);
+  };
+
+  /** Arrow keys walk the whole list (Material's key manager knows only the rendered rows) and wrap like it. */
+  #onVirtualKeydown = (event: KeyboardEvent): void => {
+    if (!this.virtualScroll() || event.defaultPrevented) return;
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+    // Material leaves modified arrows alone (Alt + ArrowUp closes the panel).
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    if (event.target !== this.inputRef()?.nativeElement || !this.autocompleteTrigger()?.panelOpen) return;
+    const count = this.filteredItems().length;
+    if (!count) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    const current = this.virtualActiveIndex();
+    const delta = event.key === 'ArrowDown' ? 1 : -1;
+    const index = current < 0 ? (delta > 0 ? 0 : count - 1) : (current + delta + count) % count;
+    this.virtualActiveIndex.set(index);
+    this.#scrollVirtualIntoView(index);
+    this.#syncVirtualKeyManager();
+  };
+
+  /** Scrolls the least distance that shows the whole row (Material's `_getOptionScrollPosition` rule). */
+  #scrollVirtualIntoView = (index: number): void => {
+    const viewport = this.virtualViewport();
+    if (!viewport) return;
+    const size = this.itemSize();
+    const top = index * size;
+    const offset = viewport.measureScrollOffset();
+    const height = viewport.getViewportSize() || this.virtualViewportHeight();
+    if (top < offset) viewport.scrollToOffset(top);
+    else if (top + size > offset + height) viewport.scrollToOffset(top + size - height);
+  };
+
+  /** Makes the component's row Material's active option once it is rendered. */
+  #syncVirtualKeyManager = (): void => {
+    const autocomplete = this.matAutocomplete();
+    const index = this.virtualActiveIndex();
+    if (!autocomplete || index < 0 || !this.virtualScroll() || !this.autocompleteTrigger()?.panelOpen) return;
+    const id = this.virtualOptionId(index);
+    const option = autocomplete.options.find(entry => entry.id === id);
+    if (option && this.#virtualAdapter.activeOption() !== option) this.#virtualAdapter.setActive(option);
   };
 
   /** Retry bypasses text debounce/distinctness while using the original loader and request snapshot. */

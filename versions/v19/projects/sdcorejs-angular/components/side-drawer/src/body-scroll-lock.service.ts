@@ -14,6 +14,8 @@ import { Injectable, inject } from '@angular/core';
 interface SdBodyScrollLockState {
   count: number;
   previousOverflow: string | null;
+  /** `padding-right` inline trước khi khoá; `null` khi lần khoá hiện tại không bù padding. */
+  previousPaddingRight: string | null;
 }
 
 /**
@@ -29,7 +31,7 @@ const scrollLockStates = new WeakMap<Document, SdBodyScrollLockState>();
 const stateFor = (doc: Document): SdBodyScrollLockState => {
   let state = scrollLockStates.get(doc);
   if (!state) {
-    state = { count: 0, previousOverflow: null };
+    state = { count: 0, previousOverflow: null, previousPaddingRight: null };
     scrollLockStates.set(doc, state);
   }
   return state;
@@ -50,7 +52,15 @@ export class SdBodyScrollLockService {
     if (!body) return;
     if (state.count === 0) {
       state.previousOverflow = body.style.overflow;
+      // why: đo TRƯỚC khi ẩn overflow — sau đó scrollbar đã biến mất và độ rộng đo được luôn là 0.
+      const scrollbarWidth = this.#scrollbarWidth();
       body.style.overflow = 'hidden';
+      // why: ẩn scrollbar làm vùng nội dung rộng thêm đúng bằng độ rộng của nó, khiến cả trang giật sang
+      // phải khi drawer mở/đóng. Bù lại bằng `padding-right`; overlay scrollbar (rộng 0) thì bỏ qua.
+      if (scrollbarWidth > 0) {
+        state.previousPaddingRight = body.style.paddingRight;
+        body.style.paddingRight = `${this.#computedPaddingRight(body) + scrollbarWidth}px`;
+      }
     }
     state.count++;
   }
@@ -63,7 +73,24 @@ export class SdBodyScrollLockService {
     state.count--;
     if (state.count > 0) return;
     const body = this.#document.body;
-    if (body) body.style.overflow = state.previousOverflow ?? '';
+    if (body) {
+      body.style.overflow = state.previousOverflow ?? '';
+      if (state.previousPaddingRight !== null) body.style.paddingRight = state.previousPaddingRight;
+    }
     state.previousOverflow = null;
+    state.previousPaddingRight = null;
+  }
+
+  /** Độ rộng scrollbar dọc của viewport; 0 khi không đo được (SSR) hoặc dùng overlay scrollbar. */
+  #scrollbarWidth(): number {
+    const view = this.#document.defaultView;
+    const root = this.#document.documentElement;
+    if (!view || !root) return 0;
+    return Math.max(0, view.innerWidth - root.clientWidth);
+  }
+
+  #computedPaddingRight(body: HTMLElement): number {
+    const value = this.#document.defaultView?.getComputedStyle(body).paddingRight;
+    return value ? parseFloat(value) || 0 : 0;
   }
 }

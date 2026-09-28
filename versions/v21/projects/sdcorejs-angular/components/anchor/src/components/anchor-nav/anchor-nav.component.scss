@@ -47,7 +47,7 @@
       // Active highlight dùng CSS var bind từ TS — map SdColor → --sd-{color}
       border-left: 2px solid var(--anchor-active-color, #{map.get(color.$color_map, 'primary')});
       color: var(--anchor-active-color, #{map.get(color.$color_map, 'primary')});
-      font-weight: 700;
+      font-weight: var(--sd-font-weight-bold, 700);
 
       .c-anchor-list-item-icon {
         color: var(--anchor-active-color, #{map.get(color.$color_map, 'primary')});
@@ -55,7 +55,7 @@
     }
     &:not(.active) {
       border-left: 2px solid map.get(color.$color_map, 'secondary-light');
-      font-weight: 400;
+      font-weight: var(--sd-font-weight-regular, 400);
     }
   }
 }

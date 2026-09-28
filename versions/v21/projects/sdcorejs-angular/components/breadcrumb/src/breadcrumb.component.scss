@@ -27,7 +27,7 @@
   max-width: 240px;
   padding: 4px;
   border: 0;
-  border-radius: 4px;
+  border-radius: var(--sd-radius-4, 4px);
   background: transparent;
   color: var(--sd-text-secondary, #667085);
   font: inherit;
@@ -41,7 +41,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--sd-info, #1677ff);
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
     outline-offset: 2px;
   }
 

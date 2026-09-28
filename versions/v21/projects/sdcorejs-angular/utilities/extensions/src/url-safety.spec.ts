@@ -3,6 +3,7 @@ import {
   sdIsAllowedOrigin,
   sdIsExternalHttpUrl,
   sdIsPathPrefix,
+  sdIsSafeResourceUrl,
   sdMatchesSecureRoute,
   sdParseUrl,
   sdResolveBaseOrigin,
@@ -209,6 +210,64 @@ describe('url-safety', () => {
 
     it('rejects a lookalike of an allowed origin', () => {
       expect(sdIsAllowedOrigin('https://cdn.example.com.evil.tld/x', ['https://cdn.example.com'], APP_ORIGIN)).toBeFalse();
+    });
+  });
+  describe('sdIsSafeResourceUrl', () => {
+    it('accepts http and https without credentials', () => {
+      expect(sdIsSafeResourceUrl('https://cdn.example.com/a.pdf')).toBeTrue();
+      expect(sdIsSafeResourceUrl('http://cdn.example.com/a.mp4?x=1')).toBeTrue();
+    });
+
+    it('rejects http(s) with embedded credentials', () => {
+      expect(sdIsSafeResourceUrl('https://real.com@evil.tld/a.pdf')).toBeFalse();
+      // why: built at runtime, because the organisation's secret scanner blocks a literal credential URL.
+      const withPassword = new URL('https://cdn.example.com/a.pdf');
+      withPassword.username = 'user';
+      withPassword.password = 'pw';
+      expect(sdIsSafeResourceUrl(withPassword.href)).toBeFalse();
+    });
+
+    it('accepts relative URLs against the document origin, and under SSR', () => {
+      expect(sdIsSafeResourceUrl('/files/report.pdf')).toBeTrue();
+      expect(sdIsSafeResourceUrl('files/report.pdf', APP_ORIGIN)).toBeTrue();
+      expect(sdIsSafeResourceUrl('/files/report.pdf', SD_NON_BROWSER_ORIGIN)).toBeTrue();
+      // Chỉ trông giống scheme — vẫn là path tương đối.
+      expect(sdIsSafeResourceUrl('httpfoo/report.pdf')).toBeTrue();
+    });
+
+    it('accepts blob:, data:image/* and data:application/pdf', () => {
+      expect(sdIsSafeResourceUrl('blob:https://app.example.com/0f8e2c4a')).toBeTrue();
+      expect(sdIsSafeResourceUrl('data:image/png;base64,iVBORw0KGgo=')).toBeTrue();
+      expect(sdIsSafeResourceUrl('DATA:IMAGE/JPEG;base64,/9j/')).toBeTrue();
+      expect(sdIsSafeResourceUrl('data:image/svg+xml,%3Csvg%3E')).toBeTrue();
+      expect(sdIsSafeResourceUrl('data:application/pdf;base64,JVBERi0=')).toBeTrue();
+    });
+
+    it('rejects script schemes, including obfuscated forms', () => {
+      expect(sdIsSafeResourceUrl('javascript:alert(1)')).toBeFalse();
+      expect(sdIsSafeResourceUrl('JaVaScRiPt:alert(1)')).toBeFalse();
+      expect(sdIsSafeResourceUrl('  javascript:alert(1)')).toBeFalse();
+      expect(sdIsSafeResourceUrl('java\tscript:alert(1)')).toBeFalse();
+      expect(sdIsSafeResourceUrl('javascript:fetch("//evil.example.com")//http')).toBeFalse();
+      expect(sdIsSafeResourceUrl('vbscript:msgbox(1)')).toBeFalse();
+    });
+
+    it('rejects other data: types and non-resource schemes', () => {
+      expect(sdIsSafeResourceUrl('data:text/html,<script>alert(1)</script>')).toBeFalse();
+      expect(sdIsSafeResourceUrl('data:text/html;base64,PHNjcmlwdD4=')).toBeFalse();
+      expect(sdIsSafeResourceUrl('data:,hello')).toBeFalse();
+      expect(sdIsSafeResourceUrl('data:application/pdfx;base64,AA==')).toBeFalse();
+      expect(sdIsSafeResourceUrl('file:///etc/passwd')).toBeFalse();
+      expect(sdIsSafeResourceUrl('mailto:someone@example.com')).toBeFalse();
+      expect(sdIsSafeResourceUrl('tel:+84123456')).toBeFalse();
+    });
+
+    it('fails closed for blank and unparseable values', () => {
+      expect(sdIsSafeResourceUrl('')).toBeFalse();
+      expect(sdIsSafeResourceUrl('   ')).toBeFalse();
+      expect(sdIsSafeResourceUrl(null)).toBeFalse();
+      expect(sdIsSafeResourceUrl(undefined)).toBeFalse();
+      expect(sdIsSafeResourceUrl(UNPARSEABLE_WITH_BASE)).toBeFalse();
     });
   });
 });

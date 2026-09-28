@@ -5,7 +5,7 @@
   border-radius: 50%;
   overflow: hidden;
 
-  font-weight: 600;
+  font-weight: var(--sd-font-weight-semibold, 600);
   user-select: none;
   background-size: cover;
 }

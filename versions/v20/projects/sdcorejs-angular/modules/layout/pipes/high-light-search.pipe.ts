@@ -12,7 +12,8 @@ export class HighlightSearchPipe implements PipeTransform {
       color?: string;
     }
   ): string {
-    const { color = '#ffff00' } = args ?? {};
+    // Default = the `--sd-highlight-search-bg` theme token, with its 2.15 colour as fallback.
+    const { color = 'var(--sd-highlight-search-bg, #ffff00)' } = args ?? {};
     keyword = this.#normalizeValue(keyword);
     if (!keyword || keyword.length < 2) {
       return value;

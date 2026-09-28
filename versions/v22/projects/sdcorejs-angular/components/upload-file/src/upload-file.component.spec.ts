@@ -537,6 +537,46 @@ describe('SdUploadFile', () => {
     });
   });
 
+  // ─── Download link / guard (D-033) ─────────────────────────────────────────
+
+  describe('document download', () => {
+    it('renders the document name as a real button instead of href="javascript:;"', async () => {
+      fixture.detectChanges();
+      await fixture.whenStable();
+      component.previewFiles.set([makePreviewFile({ fileName: 'hop-dong.pdf', extension: 'pdf', src: '/files/hop-dong.pdf' })]);
+      fixture.detectChanges();
+
+      const name = fixture.nativeElement.querySelector('.c-file-name') as HTMLElement;
+      expect(name.tagName).toBe('BUTTON');
+      expect(name.getAttribute('type')).toBe('button');
+      expect(name.textContent?.trim()).toBe('hop-dong.pdf');
+      expect(fixture.nativeElement.querySelector('a[href^="javascript"]')).toBeNull();
+    });
+
+    it('does not click an anchor or open a window for an unsafe src', () => {
+      const click = spyOn(HTMLAnchorElement.prototype, 'click').and.stub();
+      const open = spyOn(window, 'open').and.returnValue(null);
+      spyOn(console, 'warn');
+
+      component.onDownload(makePreviewFile({ fileName: 'x.pdf', src: 'javascript:alert(1)' }));
+      component.onDownload(makePreviewFile({ fileName: 'x.pdf', src: 'data:text/html,<p>x</p>' }));
+
+      expect(click).not.toHaveBeenCalled();
+      expect(open).not.toHaveBeenCalled();
+    });
+
+    it('still downloads a relative src and opens an external one with noopener', () => {
+      const click = spyOn(HTMLAnchorElement.prototype, 'click').and.stub();
+      const open = spyOn(window, 'open').and.returnValue(null);
+
+      component.onDownload(makePreviewFile({ fileName: 'a.pdf', src: '/files/a.pdf' }));
+      component.onDownload(makePreviewFile({ fileName: 'b.pdf', src: 'https://cdn.example.com/b.pdf' }));
+
+      expect(click).toHaveBeenCalledTimes(1);
+      expect(open).toHaveBeenCalledOnceWith('https://cdn.example.com/b.pdf', '_blank', 'noopener,noreferrer');
+    });
+  });
+
   // ─── onRemove ─────────────────────────────────────────────────────────────
 
   describe('onRemove', () => {

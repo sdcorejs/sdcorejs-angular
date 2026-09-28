@@ -38,6 +38,7 @@ import { ISdEditorConfiguration, SD_EDITOR_CONFIGURATION, SdEditorUploadFileFunc
 import { SdNotifyService } from '@sdcorejs/angular/services';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
+import { sdSanitizeEditorHtml } from '@sdcorejs/angular/utilities/extensions';
 import { EditorImageUploadPlugin } from './plugins/image-upload/image-upload.plugin';
 import { EditorOption, SdEditorOption } from './models';
 import { HandleSdCustomValidator, SdCustomValidator, SdFormControl, ɵsdFormControlConnector } from '@sdcorejs/angular/forms/models';
@@ -258,7 +259,8 @@ export class SdEditor {
   }
 
   #getFromEditor(): string {
-    return this.#editor ? this.#normalizeEditorToHtml(this.#editor.getData()) : '';
+    // why: `upload()` trả HTML cuối cùng cho consumer lưu — cùng bộ lọc với luồng soạn thảo (D-032).
+    return this.#editor ? sdSanitizeEditorHtml(this.#normalizeEditorToHtml(this.#editor.getData())) : '';
   }
 
   // Normalize HTML từ bên ngoài -> format CKEditor.
@@ -298,10 +300,15 @@ export class SdEditor {
 
   // Xử lý khi user soạn thảo
   #onEditorUserInput(rawHtml: string): void {
-    const out = imageClassesToInlineStyles(rawHtml);
+    const normalized = imageClassesToInlineStyles(rawHtml);
+    // why: HTML này đi thẳng vào form value, model và `sdChange`. Nội dung nạp từ ngoài (hoặc dán vào) có
+    // thể mang `javascript:`, `on*`, `data:text/html` — lọc theo allowlist (D-032) trước khi phát ra.
+    const out = sdSanitizeEditorHtml(normalized);
     this._textLength.set(countTextLength(out));
     if (this.formControl.value !== out) {
       this.formControl.setValue(out, { emitEvent: false });
+      // why: bộ lọc đã sửa nội dung so với dữ liệu nạp vào — đánh dấu dirty để consumer biết cần lưu lại.
+      if (out !== normalized) this.formControl.markAsDirty();
     }
     this.formControl.updateValueAndValidity({ emitEvent: false });
     this.formControl.sdChanges.next(true);

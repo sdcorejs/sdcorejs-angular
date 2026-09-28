@@ -45,7 +45,6 @@ import {
   sdFileExplorerFormatDateTime,
   sdFileExplorerFormatSize,
   sdFileExplorerIconName,
-  sdFileExplorerLocale,
   sdFileExplorerNormalize,
   sdFileExplorerPreviewKind,
   sdFileExplorerFoldersFirst,
@@ -236,7 +235,7 @@ export class SdFileExplorer {
     return scope ? `components-file-explorer-${scope}` : undefined;
   });
 
-  protected readonly locale = computed(() => sdFileExplorerLocale(this.#i18n.language()));
+  protected readonly locale = this.#i18n.locale;
   protected readonly rootLabel = computed(() => this.option().rootLabel || this.#i18n.t('core.component.file-explorer.root'));
   protected readonly canUpload = computed(() => typeof this.option().upload === 'function');
   protected readonly canDownload = computed(() => typeof this.option().download === 'function');
@@ -1050,6 +1049,9 @@ export class SdFileExplorer {
         this.previewState.set(fallback());
       } else if (kind === 'pdf') {
         this.previewState.set({ status: 'pdf', source });
+      } else if (kind === 'video') {
+        // why: sd-preview-video owns the object URL of a Blob and refuses unsafe URL schemes itself.
+        this.previewState.set({ status: 'video', source });
       } else if (typeof source === 'string') {
         this.previewState.set({ status: 'image', url: source });
       } else {

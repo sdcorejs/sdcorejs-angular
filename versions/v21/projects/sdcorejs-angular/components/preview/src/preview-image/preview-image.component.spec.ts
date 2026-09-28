@@ -293,6 +293,47 @@ describe('SdPreviewImage', () => {
       expect(host.closedCount).toBe(1);
     });
   });
+
+  // -------------------------------------------------------------------------
+  // Download guard (D-033)
+  // -------------------------------------------------------------------------
+
+  describe('download guard', () => {
+    // why: `fetch()` của data: URL không được zone theo dõi, nên `whenStable()` có thể trả về trước khi
+    // bản ghi ảnh được tạo. Chờ thật (tối đa ~2s) cho tới khi có ảnh.
+    const waitForImages = async (): Promise<void> => {
+      for (let i = 0; i < 100 && component.images().length === 0; i++) {
+        await new Promise(resolve => setTimeout(resolve, 20));
+      }
+    };
+
+    it('does not click an anchor or emit download for an unsafe image URL', async () => {
+      const click = spyOn(HTMLAnchorElement.prototype, 'click').and.stub();
+      const emitted: unknown[] = [];
+      component.download.subscribe(event => emitted.push(event));
+      // fetch() đọc được data: URL nên bản ghi không bị đánh dấu lỗi — chỉ guard mới chặn được.
+      host.items = ['data:text/html;base64,PGgxPng8L2gxPg=='];
+      fixture.detectChanges();
+      await waitForImages();
+      expect(component.activeImage()?.error).toBeFalse();
+
+      component.downloadCurrent();
+
+      expect(click).not.toHaveBeenCalled();
+      expect(emitted).toEqual([]);
+    });
+
+    it('still downloads a local image through its blob URL', async () => {
+      const click = spyOn(HTMLAnchorElement.prototype, 'click').and.stub();
+      host.items = [makeImageFile()];
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      component.downloadCurrent();
+
+      expect(click).toHaveBeenCalledTimes(1);
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------

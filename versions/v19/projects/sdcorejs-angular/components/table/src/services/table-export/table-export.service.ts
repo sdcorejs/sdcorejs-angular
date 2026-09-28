@@ -1,6 +1,6 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, Injector, computed, inject, signal } from '@angular/core';
 import { I18nService } from '@sdcorejs/angular/i18n';
-import { SdExcelColumn, SdExcelService } from '@sdcorejs/angular/services';
+import { SdExcelColumn, SdExcelService, SdNotifyService } from '@sdcorejs/angular/services';
 import { SdExcelSheet } from '@sdcorejs/angular/services/excel';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { DateUtilities } from '@sdcorejs/utils/fns';
@@ -36,6 +36,7 @@ export interface SdTableExportContext<T = any> {
 export class TableExportService {
   #excelService = inject(SdExcelService);
   #i18n = inject(I18nService);
+  #injector = inject(Injector);
 
   // ==========================================
   // SIGNAL STATE (Component sẽ bind trực tiếp vào đây)
@@ -98,6 +99,13 @@ export class TableExportService {
     if (option.export?.type === 'custom') return;
 
     const { isCSV } = args;
+    const limit = this.#exportLimit(option);
+    // why: `export.max` trước đây khai báo nhưng không ai đọc — export 100.000 dòng vẫn chạy dù đặt
+    // `max: 5000`. Chặn ngay khi tổng của bảng (server, hoặc số dòng local sau lọc) đã vượt.
+    if (limit !== undefined && total > limit) {
+      this.#warnExportLimit(limit, total);
+      return;
+    }
     try {
       const columns = this.#getExportColumns(context, args.columns);
       const pageSize = option.export?.maxItemsPerRequest || 1000;
@@ -110,6 +118,8 @@ export class TableExportService {
       this.exporting.set(true);
       const items: any[] = [];
       let promises: Promise<any[] | { items: any[]; total: number }>[] = [];
+      let fetchedCount = 0;
+      let exceededTotal: number | undefined;
 
       const handleData = async () => {
         const results = await Promise.all(promises);
@@ -123,6 +133,14 @@ export class TableExportService {
           } else if (Array.isArray(result)) {
             exportItems = [...exportItems, ...result];
           }
+        }
+        fetchedCount += exportItems.length;
+
+        // why: tổng thật chỉ biết sau khi nguồn trả về — `total` của context có thể đã cũ, và nguồn
+        // trả mảng thì không báo tổng. Vượt giới hạn thì dừng, không dựng thêm dòng nào.
+        if (limit !== undefined && Math.max(currentTotal, fetchedCount) > limit) {
+          exceededTotal = Math.max(currentTotal, fetchedCount);
+          return;
         }
 
         if (option.export?.type !== 'custom' && option.export?.mapping) {
@@ -209,10 +227,16 @@ export class TableExportService {
         pageNumber++;
         if (promises.length < batch) continue;
         await handleData();
+        if (exceededTotal !== undefined) break;
       }
 
-      if (promises.length > 0) {
+      if (exceededTotal === undefined && promises.length > 0) {
         await handleData();
+      }
+
+      if (limit !== undefined && exceededTotal !== undefined) {
+        this.#warnExportLimit(limit, exceededTotal);
+        return;
       }
 
       // Xuất file
@@ -248,6 +272,18 @@ export class TableExportService {
       this.exporting.set(false);
       this.setExportProgress(null);
     }
+  }
+
+  /** Giới hạn dòng của `export.max`; chỉ số dương hữu hạn mới là giới hạn. */
+  #exportLimit(option: SdTableOption): number | undefined {
+    const max = option.export?.type === 'custom' ? undefined : option.export?.max;
+    return typeof max === 'number' && Number.isFinite(max) && max > 0 ? max : undefined;
+  }
+
+  #warnExportLimit(limit: number, total: number): void {
+    // why: resolve lười qua Injector — inject sẵn sẽ buộc mọi sd-table dựng SdNotifyService (kèm toast
+    // container gắn vào <body>) ngay khi khởi tạo, dù không bao giờ vượt giới hạn.
+    this.#injector.get(SdNotifyService).warning(this.#i18n.t('core.component.table.export-max-exceeded', { max: limit, total }));
   }
 
   #getExportColumns(context: SdTableExportContext, explicitColumns?: SdExcelColumn[]): SdExcelColumn[] {

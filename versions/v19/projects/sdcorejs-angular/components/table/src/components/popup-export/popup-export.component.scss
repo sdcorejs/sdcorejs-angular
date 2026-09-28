@@ -17,8 +17,8 @@
   position: static;
   height: 116px;
 
-  background: #f6f6f6;
-  border-radius: 4px;
+  background: var(--sd-table-export-panel-bg, #f6f6f6);
+  border-radius: var(--sd-radius-4, 4px);
 }
 
 .c-table {
@@ -28,9 +28,9 @@
     width: 100%;
   }
   .c-th {
-    font-weight: 500;
-    font-size: 14px;
-    line-height: 20px;
-    color: #000000;
+    font-weight: var(--sd-font-weight-medium, 500);
+    font-size: var(--sd-font-size-14, 14px);
+    line-height: var(--sd-line-height-20, 20px);
+    color: var(--sd-table-export-text, #000000);
   }
 }

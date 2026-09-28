@@ -5,10 +5,10 @@
   background: transparent;
   color: var(--sd-black500, var(--sd-text, #1a1b1f));
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: var(--sd-radius-8, 8px);
   transition:
-    background-color 120ms ease,
-    color 120ms ease;
+    background-color var(--sd-duration-fast, 120ms) ease,
+    color var(--sd-duration-fast, 120ms) ease;
 }
 
 // why: Account actions need a token-based hover state inside the compact popup.
@@ -20,7 +20,7 @@
 // why: Custom disclosure controls need an explicit keyboard focus ring.
 .sd-layout-user-menu__trigger:focus-visible,
 .sd-layout-user-menu__action:focus-visible {
-  outline: 2px solid var(--sd-primary);
+  outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
   outline-offset: 2px;
 }
 
@@ -36,7 +36,7 @@
 // why: The account menu must overlay navigation content without changing sidebar geometry.
 .sd-layout-user-menu__popup {
   position: absolute;
-  z-index: 40;
+  z-index: var(--sd-z-popover, 40);
   left: 0;
   bottom: calc(100% + 8px);
   width: 272px;
@@ -70,7 +70,7 @@
 .sd-layout-user-menu__role sd-icon {
   width: 14px;
   height: 14px;
-  font-size: 14px;
+  font-size: var(--sd-font-size-14, 14px);
   flex: 0 0 auto;
 }
 
@@ -78,11 +78,11 @@
 .sd-layout-user-menu__badge {
   min-width: 20px;
   padding: 1px 6px;
-  border-radius: 999px;
+  border-radius: var(--sd-radius-999, 999px);
   background: var(--sd-error, #ba1a1a);
   color: var(--sd-white, #ffffff);
-  font-size: 11px;
-  line-height: 18px;
+  font-size: var(--sd-font-size-11, 11px);
+  line-height: var(--sd-line-height-18, 18px);
   text-align: center;
 }
 

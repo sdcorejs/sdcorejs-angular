@@ -39,7 +39,7 @@ It is the shared seamless primitive behind:
 
 `<sd-inline-text>` is intentionally **unopinionated about commit / parse / format**. It owns sizing,
 state styling and the clear-×, and forwards the raw DOM events. Each consumer keeps its own logic
-(e.g. `sd-input-number` keeps its vi-VN formatting; the chip keeps its parse/commit). Two binding
+(e.g. `sd-input-number` keeps its own number formatting; the chip keeps its parse/commit). Two binding
 modes:
 
 - **uncontrolled** — `[(value)]`, used by the chips' signal drafts;

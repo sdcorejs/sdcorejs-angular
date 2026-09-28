@@ -20,7 +20,7 @@
   min-height: 140px;
   padding: 14px;
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: var(--sd-radius-12, 12px);
   background: var(--sd-fe-preview-bg);
 }
 
@@ -37,11 +37,24 @@
   }
 }
 
+// The player keeps its own aspect ratio and native controls, so unlike the image and PDF stages the video stage
+// never shrinks in the flex detail layout: it grows with the player instead of clipping its controls.
+.stage--video {
+  flex: none;
+  min-height: 216px;
+  padding: 0;
+  background: var(--sd-fe-muted-surface);
+
+  > * {
+    width: 100%;
+  }
+}
+
 .image {
   display: block;
   max-width: 100%;
   max-height: 100%;
-  border-radius: 6px;
+  border-radius: var(--sd-radius-6, 6px);
   object-fit: contain;
 }
 
@@ -67,14 +80,14 @@
 .placeholder-title {
   margin: 4px 0 0;
   color: var(--sd-fe-text);
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--sd-font-size-14, 14px);
+  font-weight: var(--sd-font-weight-semibold, 600);
 }
 
 .placeholder-hint {
   margin: 0;
-  font-size: 13px;
-  line-height: 18px;
+  font-size: var(--sd-font-size-13, 13px);
+  line-height: var(--sd-line-height-18, 18px);
   color: var(--sd-fe-text-secondary);
 }
 
@@ -100,8 +113,8 @@
   align-items: baseline;
   gap: 12px;
   padding: 10px 0;
-  font-size: 13px;
-  line-height: 18px;
+  font-size: var(--sd-font-size-13, 13px);
+  line-height: var(--sd-line-height-18, 18px);
 
   dt {
     color: var(--sd-fe-text-secondary);

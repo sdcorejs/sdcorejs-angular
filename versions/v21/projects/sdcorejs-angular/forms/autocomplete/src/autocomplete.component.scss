@@ -35,19 +35,19 @@
       // Màu của place holder
       &.c-selected::placeholder {
         /* Chrome, Firefox, Opera, Safari 10.1+ */
-        color: #000;
+        color: var(--sd-autocomplete-selected-text, #000000);
         opacity: 1;
         /* Firefox */
       }
 
       &.c-selected:-ms-input-placeholder {
         /* Internet Explorer 10-11 */
-        color: #000;
+        color: var(--sd-autocomplete-selected-text, #000000);
       }
 
       &.c-selected::-ms-input-placeholder {
         /* Microsoft Edge */
-        color: #000;
+        color: var(--sd-autocomplete-selected-text, #000000);
       }
 
       // Disabled text input color
@@ -83,7 +83,7 @@
       width: 0.9em;
       height: 0.9em;
       fill: rgba(0, 0, 0, 0.5);
-      transition: opacity 0.2s linear;
+      transition: opacity var(--sd-duration-base, 200ms) linear;
       opacity: 0;
     }
   }
@@ -99,7 +99,7 @@
 
   // (Tùy chọn) Chỉnh lại cỡ chữ cho phù hợp với độ cao mới
   .mdc-list-item__primary-text {
-    font-size: 14px !important;
+    font-size: var(--sd-font-size-14, 14px) !important;
     line-height: normal;
   }
 
@@ -161,4 +161,32 @@
 
 ::ng-deep .sd-autocomplete-panel {
   @include readState.read-state-panel;
+}
+
+// =============================================================================
+// Virtual scroll (opt-in, [virtualScroll]) — the CDK viewport scrolls, not the panel, and every row has
+// the fixed height the viewport computes with ([itemSize], set inline on each option).
+// =============================================================================
+::ng-deep .mat-mdc-autocomplete-panel.sd-autocomplete-virtual {
+  // why: a scrolling panel around the viewport would fight with it and with Material's scroll-into-view.
+  max-height: none;
+  overflow: hidden;
+
+  .sd-autocomplete-virtual-viewport {
+    width: 100%;
+  }
+
+  .sd-autocomplete-virtual-viewport .mat-mdc-option {
+    min-height: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    box-sizing: border-box;
+  }
+
+  // why: a row cannot grow, so long labels end with an ellipsis instead of wrapping.
+  .sd-autocomplete-virtual-viewport .mdc-list-item__primary-text {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
 }

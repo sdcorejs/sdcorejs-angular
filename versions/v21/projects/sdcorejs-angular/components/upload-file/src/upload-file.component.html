@@ -153,7 +153,9 @@
           tiff: document.extension === 'tiff',
         }"
         alt="Preview" />
-      <a href="javascript:;" class="c-file-name T14M" (click)="onDownload(document)">{{ document.fileName || 'file' }}</a>
+      <!-- why: `href="javascript:;"` là link giả — screen reader đọc "link" dù không điều hướng, và bị CSP
+           chặn `javascript:` URL. Hành động tải xuống là button. -->
+      <button type="button" class="c-file-name T14M" (click)="onDownload(document)">{{ document.fileName || 'file' }}</button>
       @if (document.fileSize) {
         <span class="T12R text-secondary"> - </span>
         <span class="T12R text-secondary flex-shrink-0">{{ document.fileSize / 1024 | sdFormatNumber }}KB</span>

@@ -13,6 +13,18 @@ html {
   @include default.theme(default.$default-theme);
 }
 
+// Dark mode is opt-in: set data-sd-theme="dark" on <html> (the library never writes this attribute).
+// These two blocks cover the default preset from the core source; an app with its own colours or
+// $source: 'material' includes sd.theme(<same arguments>, $mode: 'dark') under its own dark selector.
+[data-sd-theme=dark] {
+  @include default.theme($mode: 'dark');
+}
+
+[data-sd-theme=light] {
+  @include default.theme(default.$default-theme);
+  color-scheme: light;
+}
+
 html, body {
   font-family: Roboto, 'Helvetica Neue', sans-serif;
 }

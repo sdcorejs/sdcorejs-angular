@@ -13,6 +13,14 @@ const angularTemplateRuleOverrides = {
   ...(angular.templatePlugin?.rules?.['prefer-control-flow'] ? { '@angular-eslint/template/prefer-control-flow': 'off' } : {}),
 };
 
+// why (R-018, D-016): colours come from `--sd-*` tokens so presets and dark mode reach every component.
+// Same heuristic as scripts/check-scss-hex.mjs: a hex that opens a string or follows `:` `(` `,` `=`,
+// except the fallback of `var(--x, #hex)`. Exempt like the scanner: specs, *.generated.ts and the
+// input-color data values; plus the static Keycloak fallback page, served outside the app without the theme.
+const COLOR_HEX = String.raw`(?<!var\(\s*--[\w-]+\s*)(?:^|[:(,=]\s*)#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})(?![\w-])`;
+const COLOR_HEX_MESSAGE = 'Raw colour hex: use a --sd-* token (a var(--sd-x, #hex) fallback is allowed). See THEME.md.';
+const colorHexIgnores = ['**/*.spec.ts', '**/*.generated.ts', '**/forms/input-color/**', '**/modules/keycloak/htmls/**'];
+
 module.exports = tseslint.config(
   {
     // why: Showcase generators own formatting for these deterministic build artifacts.
@@ -70,6 +78,30 @@ module.exports = tseslint.config(
       '@angular-eslint/template/label-has-associated-control': 'error',
       '@angular-eslint/template/role-has-required-aria': 'error',
       ...angularTemplateRuleOverrides,
+    },
+  },
+  {
+    files: ['**/*.ts'],
+    ignores: colorHexIgnores,
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        { selector: `Literal[value=/${COLOR_HEX}/]`, message: COLOR_HEX_MESSAGE },
+        { selector: `TemplateElement[value.raw=/${COLOR_HEX}/]`, message: COLOR_HEX_MESSAGE },
+      ],
+    },
+  },
+  {
+    files: ['**/*.html'],
+    ignores: colorHexIgnores,
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        // Anchors such as href="#fade" are not colours.
+        { selector: `TextAttribute[name!=/^(?:href|xlink:href|fragment|routerLink)$/][value=/${COLOR_HEX}/]`, message: COLOR_HEX_MESSAGE },
+        // Expression nodes carry no ESLint location, so report the bound attribute that contains one.
+        { selector: `BoundAttribute:has(LiteralPrimitive[value=/${COLOR_HEX}/])`, message: COLOR_HEX_MESSAGE },
+      ],
     },
   }
 );

@@ -32,7 +32,7 @@ export type SdInlineTextChrome = 'standalone' | 'seamless';
  *
  * It is intentionally unopinionated about commit/parse/format: it forwards the raw DOM events
  * (focus / blur / keydown / paste / composition / Enter / Escape) so each consumer keeps its own
- * logic (e.g. sd-input-number's vi-VN formatting). Two binding modes:
+ * logic (e.g. sd-input-number's number formatting). Two binding modes:
  *  - **uncontrolled** via `[(value)]` — used by the chips' signal drafts;
  *  - **controlled** via `[control]` (an external `SdFormControl`) — used by the form controls.
  */

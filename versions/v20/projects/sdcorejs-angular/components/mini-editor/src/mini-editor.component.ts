@@ -10,6 +10,7 @@ import {
   Link,
   List,
   FontColor,
+  HtmlDataProcessor,
   Markdown,
   Mention,
   Paragraph,
@@ -20,6 +21,8 @@ import {
 import { Subject, Subscription } from 'rxjs';
 import { throttleTime } from 'rxjs/operators';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+
+import { sdSanitizeEditorHtml } from '@sdcorejs/angular/utilities/extensions';
 
 import { SdMiniEditorOption, SdMiniEditorConfig, SdMiniEditorMentionItem } from './mini-editor.model';
 
@@ -80,7 +83,7 @@ export class SdMiniEditor implements ControlValueAccessor, OnDestroy {
   Editor = ClassicEditor;
   #editor!: ClassicEditor;
   #subscription = new Subscription();
-  #contentChangeSubject = new Subject<string>();
+  #contentChangeSubject = new Subject<void>();
 
   // Build editor config dynamically
   get editorConfig(): SdMiniEditorConfig {
@@ -111,6 +114,8 @@ export class SdMiniEditor implements ControlValueAccessor, OnDestroy {
       link: {
         addTargetToExternalLinks: true,
         defaultProtocol: 'https://',
+        // why: mặc định CKEditor cho cả ftp/ftps; link trong bình luận chỉ cần web, mail và điện thoại.
+        allowedProtocols: ['https', 'http', 'mailto', 'tel'],
       },
       fontColor: {
         columns: 5,
@@ -132,8 +137,8 @@ export class SdMiniEditor implements ControlValueAccessor, OnDestroy {
   constructor() {
     // Setup debounce cho content change
     this.#subscription.add(
-      this.#contentChangeSubject.pipe(throttleTime(500, undefined, { leading: true, trailing: true })).subscribe(content => {
-        const output = this.#convertOutput(content);
+      this.#contentChangeSubject.pipe(throttleTime(500, undefined, { leading: true, trailing: true })).subscribe(() => {
+        const output = this.#convertOutput();
         this.value = output;
         this.#onChange(output);
         this.valueChange.emit(output);
@@ -168,8 +173,7 @@ export class SdMiniEditor implements ControlValueAccessor, OnDestroy {
 
     // Lắng nghe sự kiện thay đổi nội dung
     editor.model.document.on('change:data', () => {
-      const content = editor.getData();
-      this.#contentChangeSubject.next(content);
+      this.#contentChangeSubject.next();
     });
 
     // Lắng nghe focus/blur events
@@ -191,8 +195,7 @@ export class SdMiniEditor implements ControlValueAccessor, OnDestroy {
         const mentionData = data[0];
         this.option?.onMentionSelect?.(mentionData.mention);
         // Trigger content change sau khi insert mention
-        const content = editor.getData();
-        this.#contentChangeSubject.next(content);
+        this.#contentChangeSubject.next();
       });
 
       // Custom downcast converter để thay đổi cấu trúc mention HTML
@@ -242,13 +245,32 @@ export class SdMiniEditor implements ControlValueAccessor, OnDestroy {
   }
 
   /**
-   * Convert output theo format (html hoặc markdown)
-   * Khi sử dụng CKEditor Markdown plugin, getData() tự động trả về Markdown
+   * Nội dung phát ra ngoài theo `outputFormat`: HTML đã lọc, hoặc Markdown dựng từ HTML đã lọc.
+   * Là điểm ra duy nhất cho cả luồng throttle (valueChange/contentChange/form) lẫn `getContent()` (D-032).
    */
-  #convertOutput(content: string): string {
-    // CKEditor Markdown plugin tự động xử lý conversion
-    // Không cần manual conversion nữa
-    return content;
+  #convertOutput(): string {
+    const editor = this.#editor;
+    if (!editor) return '';
+    const html = this.#readSanitizedHtml(editor);
+    if (!this.#isMarkdown()) return html;
+    // why: dựng Markdown từ HTML ĐÃ lọc, để `[text](javascript:...)` không thể lọt vào chuỗi Markdown.
+    const htmlProcessor = new HtmlDataProcessor(editor.data.viewDocument);
+    return editor.data.processor.toData(htmlProcessor.toView(html));
+  }
+
+  #isMarkdown(): boolean {
+    return this.option?.outputFormat === 'markdown';
+  }
+
+  /** HTML hiện tại của editor (kể cả ở chế độ Markdown), đã qua `sdSanitizeEditorHtml`. */
+  #readSanitizedHtml(editor: ClassicEditor): string {
+    if (!this.#isMarkdown()) return sdSanitizeEditorHtml(editor.getData());
+    // why: với plugin Markdown, `getData()` trả Markdown. Lấy HTML từ data view (đúng thứ getData() dùng)
+    // để lọc trước khi chuyển.
+    const root = editor.model.document.getRoot();
+    if (!root) return '';
+    const htmlProcessor = new HtmlDataProcessor(editor.data.viewDocument);
+    return sdSanitizeEditorHtml(htmlProcessor.toData(editor.data.toView(root)));
   }
 
   /**
@@ -262,18 +284,14 @@ export class SdMiniEditor implements ControlValueAccessor, OnDestroy {
    * Get nội dung từ editor
    */
   getContent(): string {
-    if (this.#editor) {
-      const html = this.#editor.getData();
-      return this.#convertOutput(html);
-    }
-    return '';
+    return this.#convertOutput();
   }
 
   /**
-   * Get nội dung HTML gốc (không convert)
+   * Nội dung dạng HTML (đã lọc), bất kể `outputFormat`.
    */
   getHtmlContent(): string {
-    return this.#editor?.getData?.() || '';
+    return this.#editor ? this.#readSanitizedHtml(this.#editor) : '';
   }
 
   /**

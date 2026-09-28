@@ -2,6 +2,7 @@ import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdDate } from './date.component';
 
 // ---------------------------------------------------------------------------
@@ -495,6 +496,32 @@ describe('SdDate', () => {
       fixture.detectChanges();
       const sdView = fixture.nativeElement.querySelector('sd-view');
       expect(sdView.textContent).toContain('15/05/2026');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  describe('min/max messages follow I18nService.locale()', () => {
+    const boundary = new Date(2026, 0, 15);
+
+    it('formats the min date with the Vietnamese locale by default', () => {
+      const i18n = TestBed.inject(I18nService);
+      host.min = boundary;
+      fixture.detectChanges();
+      comp.formControl.setErrors({ matDatepickerMin: true });
+      expect(comp.errorMessage()).toBe(i18n.t('core.form.date.min-date', { date: '15/1/2026' }));
+    });
+
+    it('formats the min and max dates with the current locale after a language switch', () => {
+      const i18n = TestBed.inject(I18nService);
+      i18n.setLanguage('en', { reload: false });
+      host.min = boundary;
+      host.max = boundary;
+      fixture.detectChanges();
+
+      comp.formControl.setErrors({ matDatepickerMin: true });
+      expect(comp.errorMessage()).toBe(i18n.t('core.form.date.min-date', { date: '1/15/2026' }));
+      comp.formControl.setErrors({ matDatepickerMax: true });
+      expect(comp.errorMessage()).toBe(i18n.t('core.form.date.max-date', { date: '1/15/2026' }));
     });
   });
 

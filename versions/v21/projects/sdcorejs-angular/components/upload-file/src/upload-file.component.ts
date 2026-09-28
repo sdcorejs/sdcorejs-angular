@@ -27,6 +27,7 @@ import { SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
 import { SdConfirmService, SdNotifyService } from '@sdcorejs/angular/services';
 import { BrowserUtilities, Utilities } from '@sdcorejs/utils/fns';
 import { sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
+import { SdUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { PreviewComponent } from './components/preview/preview.component';
 import {
   ISdUploadFileConfiguration,
@@ -703,7 +704,10 @@ export class SdUploadFile<TArgs = unknown> {
 
     // (2) Không có hàm download (hoặc file local chưa có idOrKey) → tải trực tiếp từ blob/URL.
     if (previewFile.file || previewFile.src) {
-      BrowserUtilities.download(previewFile.file! || previewFile.src!, previewFile.fileName);
+      // why: `BrowserUtilities.download` của @sdcorejs/utils gán mọi chuỗi vào `<a href>` rồi click, và mở
+      // link http bằng `target="_blank"` không có `noopener`. `SdUtilities.download` chặn scheme không an
+      // toàn (`sdIsSafeResourceUrl`) và mở link ngoài qua `sdOpenExternal`.
+      SdUtilities.download(previewFile.file! || previewFile.src!, previewFile.fileName);
       return;
     }
 

@@ -1,11 +1,11 @@
 // Local tokens (in sync with query-bar.component.scss).
 $qb-primary:        var(--sd-primary);
-$qb-text-secondary: #5f6368;
-$qb-border:         #d6d8db;
-$qb-border-soft:    #e2e4e7;
-$qb-bg:             #ffffff;
-$qb-bg-soft:        #f5f6f7;
-$qb-danger:         #dc2626;
+$qb-text-secondary: var(--sd-query-bar-text-secondary, #5f6368);
+$qb-border:         var(--sd-query-bar-border, #d6d8db);
+$qb-border-soft:    var(--sd-query-bar-border-soft, #e2e4e7);
+$qb-bg:             var(--sd-query-bar-bg, #ffffff);
+$qb-bg-soft:        var(--sd-query-bar-bg-soft, #f5f6f7);
+$qb-danger:         var(--sd-query-bar-danger, #dc2626);
 $qb-radius-input:   6px;
 
 // why: host is `display: contents` so the divider + actions row sit as direct flex
@@ -45,8 +45,8 @@ $qb-radius-input:   6px;
     border: none;
     background: transparent;
     font-family: 'Roboto Mono', monospace;
-    font-size: 11px;
-    font-weight: 600;
+    font-size: var(--sd-font-size-11, 11px);
+    font-weight: var(--sd-font-weight-semibold, 600);
     letter-spacing: 0.4px;
     color: $qb-text-secondary;
     cursor: pointer;
@@ -76,7 +76,7 @@ $qb-radius-input:   6px;
   :host-context(.c-density-compact) & { width: 28px; height: 28px; }
   :host-context(.c-density-comfortable) & { width: 32px; height: 32px; }
 
-  sd-icon { font-size: 18px; width: 18px; height: 18px; }
+  sd-icon { font-size: var(--sd-font-size-18, 18px); width: 18px; height: 18px; }
 
   &:hover:not([disabled]) { border-color: $qb-primary; color: $qb-primary; }
   &[disabled] { opacity: 0.5; cursor: not-allowed; }

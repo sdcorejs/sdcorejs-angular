@@ -81,7 +81,7 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
     }
 
     &.c-sm {
-      font-size: 14px !important;
+      font-size: var(--sd-font-size-14, 14px) !important;
       height: 32px;
       padding: 2px 12px !important;
 
@@ -92,7 +92,7 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
       sd-icon {
         height: 16px !important;
         width: 16px !important;
-        font-size: 16px !important;
+        font-size: var(--sd-font-size-16, 16px) !important;
       }
       &.c-square {
         width: 32px !important;
@@ -100,14 +100,14 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
     }
 
     &.c-md {
-      font-size: 16px;
+      font-size: var(--sd-font-size-16, 16px);
       height: 40px;
       padding: 2px 16px !important;
 
       sd-icon {
         height: 20px !important;
         width: 20px !important;
-        font-size: 20px !important;
+        font-size: var(--sd-font-size-20, 20px) !important;
       }
       &.c-square {
         width: 40px !important;
@@ -115,7 +115,7 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
     }
 
     &.c-lg {
-      font-size: 16px !important;
+      font-size: var(--sd-font-size-16, 16px) !important;
       padding: 2px 16px !important;
       height: 48px;
 
@@ -126,7 +126,7 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
       sd-icon {
         height: 24px !important;
         width: 24px !important;
-        font-size: 24px !important;
+        font-size: var(--sd-font-size-24, 24px) !important;
       }
     }
 
@@ -138,7 +138,7 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
     }
 
     &:focus-visible {
-      outline: 2px solid var(--sd-primary, #005cbb);
+      outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
       outline-offset: 2px;
     }
 
@@ -155,35 +155,35 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
       &.mat-mdc-unelevated-button {
         &.mat-primary:not([disabled]) {
           background-color: map.get(color.$color_map, 'primary');
-          color: #fff;
+          color: var(--sd-text-on-solid, #ffffff);
         }
         &.mat-info:not([disabled]) {
           background-color: map.get(color.$color_map, 'info');
-          color: #fff;
+          color: var(--sd-text-on-solid, #ffffff);
         }
         &.mat-success:not([disabled]) {
           background-color: map.get(color.$color_map, 'success');
-          color: #fff;
+          color: var(--sd-text-on-solid, #ffffff);
         }
         &.mat-warning:not([disabled]) {
           background-color: map.get(color.$color_map, 'warning');
-          color: #fff;
+          color: var(--sd-text-on-solid, #ffffff);
         }
         &.mat-error:not([disabled]) {
           background-color: map.get(color.$color_map, 'error');
-          color: #fff;
+          color: var(--sd-text-on-solid, #ffffff);
         }
         &.mat-secondary:not([disabled]) {
           background-color: map.get(color.$color_map, 'secondary');
-          color: #fff;
+          color: var(--sd-text-on-solid, #ffffff);
         }
         &.c-black:not([disabled]) {
           background-color: $sd-button-black-color !important;
-          color: #fff;
+          color: white;
         }
       }
       .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
-        stroke: #fff !important;
+        stroke: var(--sd-text-on-solid, #ffffff) !important;
       }
     }
 

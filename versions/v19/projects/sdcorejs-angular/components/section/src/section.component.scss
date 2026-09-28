@@ -4,8 +4,8 @@
 }
 
 .sd-section {
-  border-radius: 8px;
-  background-color: #fff;
+  border-radius: var(--sd-radius-8, 8px);
+  background-color: var(--sd-section-bg, #ffffff);
 }
 
 .sd-section-header,
@@ -25,7 +25,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  font-size: 20px;
+  font-size: var(--sd-font-size-20, 20px);
   line-height: 1;
   background: var(--sd-primary-light);
 
@@ -42,12 +42,12 @@
   background: transparent;
   color: inherit;
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: var(--sd-radius-8, 8px);
 }
 
 // why: native collapse trigger needs a visible focus indicator inside the section header.
 .sd-section-collapse-toggle:focus-visible {
-  outline: 2px solid var(--sd-primary, #005cbb);
+  outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
   outline-offset: -2px;
 }
 
@@ -88,7 +88,7 @@
 
 .sd-section-body--with-header,
 .sd-section-footer {
-  border-top: 1px solid #e6e6e6;
+  border-top: 1px solid var(--sd-section-divider, #e6e6e6);
 }
 
 .sd-section-footer-left:empty,
@@ -102,11 +102,11 @@
 
 .c-shadow-section {
   box-shadow:
-    -1px 0px 0px 0px #f2f2f2 inset,
-    1px 0px 0px 0px #f2f2f2 inset,
-    0px 1px 0px 0px #f2f2f2 inset,
-    0px -1px 0px 0px #f2f2f2 inset,
-    0px 1px 2px 0px #2f31361a;
+    -1px 0px 0px 0px var(--sd-section-outline, #f2f2f2) inset,
+    1px 0px 0px 0px var(--sd-section-outline, #f2f2f2) inset,
+    0px 1px 0px 0px var(--sd-section-outline, #f2f2f2) inset,
+    0px -1px 0px 0px var(--sd-section-outline, #f2f2f2) inset,
+    0px 1px 2px 0px var(--sd-section-shadow, rgba(47, 49, 54, 0.1019607843));
 }
 
 .cursor-pointer {

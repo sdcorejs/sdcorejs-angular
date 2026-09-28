@@ -7,17 +7,17 @@
   background: transparent;
   color: var(--sd-black500, var(--sd-text, #1a1b1f));
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: var(--sd-radius-8, 8px);
   transition:
-    background-color 120ms ease,
-    color 120ms ease;
+    background-color var(--sd-duration-fast, 120ms) ease,
+    color var(--sd-duration-fast, 120ms) ease;
 }
 
 // why: The active route needs persistent navigation emphasis independent of pointer hover.
 .sd-layout-menu-tree__route-button--active {
   color: var(--sd-primary);
   background: var(--sd-primary-light);
-  font-weight: 500;
+  font-weight: var(--sd-font-weight-medium, 500);
 }
 
 // why: Navigation rows need a token-based hover surface without adding a second button component.
@@ -36,7 +36,7 @@
 .sd-layout-menu-tree__route-button:focus-visible,
 .sd-layout-menu-tree__group-toggle:focus-visible,
 .sd-layout-menu-tree__pin:focus-visible {
-  outline: 2px solid var(--sd-primary);
+  outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
   outline-offset: 2px;
 }
 
@@ -47,9 +47,9 @@
   opacity: 0;
   pointer-events: none;
   transition:
-    opacity 120ms ease,
-    background-color 120ms ease,
-    color 120ms ease;
+    opacity var(--sd-duration-fast, 120ms) ease,
+    background-color var(--sd-duration-fast, 120ms) ease,
+    color var(--sd-duration-fast, 120ms) ease;
 }
 
 // why: Desktop pin actions appear after an intentional hover delay while pinned/mobile actions remain persistent.
@@ -101,9 +101,9 @@
     min-height: 34px;
     padding-right: 10px;
     color: var(--menu-muted);
-    font-weight: 500;
+    font-weight: var(--sd-font-weight-medium, 500);
     font-family: inherit;
-    font-size: 13px;
+    font-size: var(--sd-font-size-13, 13px);
     line-height: 1.4;
   }
 
@@ -132,18 +132,18 @@
     padding-top: 7px;
     padding-right: 10px;
     padding-bottom: 7px;
-    border-radius: 6px;
+    border-radius: var(--sd-radius-6, 6px);
     color: var(--menu-ink);
     font-family: inherit;
-    font-size: 13px;
-    font-weight: 400;
+    font-size: var(--sd-font-size-13, 13px);
+    font-weight: var(--sd-font-weight-regular, 400);
     line-height: 1.4;
   }
 
   .sd-layout-menu-tree__root .sd-layout-menu-tree__route-button {
     min-height: 40px;
     border-radius: 7px;
-    font-weight: 500;
+    font-weight: var(--sd-font-weight-medium, 500);
   }
 
   .sd-layout-menu-tree__label {
@@ -167,7 +167,7 @@
   .sd-layout-menu-tree__route-button--active:hover {
     color: var(--sd-primary, #005cbb);
     background: var(--sd-primary-light, #eaf1fa);
-    font-weight: 500;
+    font-weight: var(--sd-font-weight-medium, 500);
 
     &::before {
       content: '';
@@ -176,7 +176,7 @@
       top: 9px;
       bottom: 9px;
       width: 3px;
-      border-radius: 2px;
+      border-radius: var(--sd-radius-2, 2px);
       background: var(--sd-primary, #005cbb);
     }
 
@@ -196,7 +196,7 @@
     transform: translateY(-50%);
     width: 32px;
     min-height: 32px;
-    border-radius: 6px;
+    border-radius: var(--sd-radius-6, 6px);
     color: var(--menu-muted);
   }
 

@@ -12,8 +12,8 @@ $config-border: var(--sd-border, rgba(0, 0, 0, 0.08));
 .c-hint {
   margin: 0 0 12px;
   color: var(--sd-text-secondary, #6b7280);
-  font-size: 12px;
-  line-height: 18px;
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: var(--sd-line-height-18, 18px);
 }
 
 .c-table {
@@ -21,7 +21,7 @@ $config-border: var(--sd-border, rgba(0, 0, 0, 0.08));
   overflow: auto;
   max-height: 60vh;
   border: 1px solid $config-border;
-  border-radius: 8px;
+  border-radius: var(--sd-radius-8, 8px);
 
   table {
     --mat-table-header-container-height: 40px;
@@ -32,9 +32,9 @@ $config-border: var(--sd-border, rgba(0, 0, 0, 0.08));
 
   // Header: nền phẳng, chữ nhẹ hơn tiêu đề modal để không tranh chấp thị giác.
   .c-th {
-    font-weight: 500;
-    font-size: 13px;
-    line-height: 18px;
+    font-weight: var(--sd-font-weight-medium, 500);
+    font-size: var(--sd-font-size-13, 13px);
+    line-height: var(--sd-line-height-18, 18px);
     color: var(--sd-text-secondary, #6b7280);
     background: var(--sd-surface, #f7f8fa);
     white-space: nowrap;
@@ -145,7 +145,7 @@ sd-checkbox {
 // nhấc lên khỏi mặt bảng: bo góc, viền theo màu primary, đổ bóng sâu hơn hover.
 .cdk-drag-preview {
   display: table;
-  border-radius: 8px;
+  border-radius: var(--sd-radius-8, 8px);
   background: var(--sd-surface, #fff);
   outline: 1px solid var(--sd-primary, #2a66f4);
   box-shadow:

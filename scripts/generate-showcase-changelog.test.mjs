@@ -120,6 +120,43 @@ test('adds Angular 22 package versions only from release suffix 2.5 onward', () 
   assert.deepEqual(changelog.angularMajors, [19, 20, 21, 22]);
 });
 
+test('an x.0 release after 2.15 keeps numeric order and publishes 19/20/21/22.3.0', () => {
+  const fixture = `# Changelog
+
+## [Unreleased]
+
+## [3.0] - 2026-10-01
+
+### Added
+
+- Theme tokens
+
+## [2.15] - 2026-09-24
+
+### Fixed
+
+- Last 2.x release
+
+## [2.9] - 2026-09-15
+
+### Fixed
+
+- Older 2.x release
+`;
+  const changelog = parseChangelog(fixture, { startSuffix: '2.9' });
+  assert.deepEqual(changelog.releases.map(release => release.suffix), [null, '3.0', '2.15', '2.9']);
+  const release = changelog.releases.find(item => item.suffix === '3.0');
+  assert.equal(release?.anchor, 'release-3-0');
+  assert.deepEqual(release?.packageVersions, [
+    { angularMajor: 19, version: '19.3.0' },
+    { angularMajor: 20, version: '20.3.0' },
+    { angularMajor: 21, version: '21.3.0' },
+    { angularMajor: 22, version: '22.3.0' },
+  ]);
+  // The start boundary compares numerically: 2.9 is older than 2.15.
+  assert.deepEqual(parseChangelog(fixture, { startSuffix: '2.15' }).releases.map(item => item.suffix), [null, '3.0', '2.15']);
+});
+
 test('parses nested subsections and nested Markdown list items', () => {
   const changelog = parseChangelog(CHANGELOG_FIXTURE, { startSuffix: '1.2' });
   const release = changelog.releases.find(item => item.suffix === '1.3');

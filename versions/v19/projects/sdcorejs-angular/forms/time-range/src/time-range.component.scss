@@ -47,7 +47,7 @@
 .sd-time-range-error {
   padding: 0 16px;
   color: var(--mat-form-field-error-text-color, #ba1a1a);
-  font-size: 12px;
+  font-size: var(--sd-font-size-12, 12px);
 }
 
 @media (max-width: 599px) {

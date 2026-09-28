@@ -15,8 +15,8 @@
 }
 
 .fb-field__label {
-  font-size: 11px;
-  font-weight: 500;
+  font-size: var(--sd-font-size-11, 11px);
+  font-weight: var(--sd-font-weight-medium, 500);
   color: var(--md-sys-color-on-surface-variant, #5f6368);
 }
 
@@ -26,13 +26,13 @@
   gap: 6px;
   min-height: 32px;
   padding: 0 4px 0 0;
-  border-radius: 6px;
+  border-radius: var(--sd-radius-6, 6px);
   background: var(--md-sys-color-surface-container-lowest, #fff);
   border: 1px solid var(--md-sys-color-outline-variant, #e0e0e0);
-  font-size: 12px;
+  font-size: var(--sd-font-size-12, 12px);
   color: var(--md-sys-color-on-surface-variant, #5f6368);
   cursor: pointer;
-  transition: border-color 0.12s ease;
+  transition: border-color var(--sd-duration-fast, 120ms) ease;
 
   &:hover,
   &:focus-visible {
@@ -49,8 +49,8 @@
     background: var(--md-sys-color-primary-container, #eaf1ff);
     color: var(--md-sys-color-primary, #2a66f4);
     font-family: 'Roboto Mono', monospace;
-    font-size: 10px;
-    font-weight: 500;
+    font-size: var(--sd-font-size-10, 10px);
+    font-weight: var(--sd-font-weight-medium, 500);
     border-radius: 5px 0 0 5px;
   }
 
@@ -58,7 +58,7 @@
     flex: 1;
     min-width: 0;
     font-family: 'Roboto Mono', monospace;
-    font-size: 11px;
+    font-size: var(--sd-font-size-11, 11px);
     color: var(--md-sys-color-on-surface, #1f1f1f);
     overflow: hidden;
     text-overflow: ellipsis;
@@ -66,7 +66,7 @@
 
     .var {
       color: var(--md-sys-color-primary, #2a66f4);
-      font-weight: 500;
+      font-weight: var(--sd-font-weight-medium, 500);
     }
     .op {
       color: var(--md-sys-color-error, #b3261e);
@@ -92,7 +92,7 @@
     align-items: center;
     justify-content: center;
     border: none;
-    border-radius: 4px;
+    border-radius: var(--sd-radius-4, 4px);
     background: transparent;
     color: var(--md-sys-color-on-surface-variant, #5f6368);
     cursor: pointer;
@@ -104,7 +104,7 @@
 
     .msi {
       font-family: 'Material Symbols Outlined', 'Material Icons';
-      font-size: 18px;
+      font-size: var(--sd-font-size-18, 18px);
       line-height: 1;
     }
   }
@@ -117,7 +117,7 @@
     padding: 8px;
     width: 100%;
     border: 1px solid var(--sd-border, #e6e6e6);
-    border-radius: 8px;
+    border-radius: var(--sd-radius-8, 8px);
 
     .c-condition {
       width: 80px;
@@ -128,10 +128,10 @@
         border: 1px solid var(--sd-border, #e6e6e6);
         background-color: var(--sd-surface-variant, #f2f2f2);
         color: var(--sd-text-secondary, #757575);
-        border-radius: 4px;
+        border-radius: var(--sd-radius-4, 4px);
         padding: 4px;
         text-align: center;
-        font-size: 12px;
+        font-size: var(--sd-font-size-12, 12px);
       }
 
       .c-select {

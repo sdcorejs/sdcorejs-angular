@@ -115,8 +115,8 @@ export class SdHoverCopyDirective implements OnInit, OnChanges {
     this.renderer.setAttribute(this.#tooltip, 'role', 'tooltip');
     this.renderer.setProperty(this.#tooltip, 'innerText', this.#defaultTooltip);
     this.renderer.setStyle(this.#tooltip, 'display', 'none');
-    this.renderer.setStyle(this.#tooltip, 'background', '#333');
-    this.renderer.setStyle(this.#tooltip, 'color', '#fff');
+    this.renderer.setStyle(this.#tooltip, 'background', 'var(--sd-hover-copy-bg, #333333)');
+    this.renderer.setStyle(this.#tooltip, 'color', 'var(--sd-hover-copy-text, #ffffff)');
     this.renderer.setStyle(this.#tooltip, 'padding', '2px 6px');
     this.renderer.setStyle(this.#tooltip, 'borderRadius', '4px');
     this.renderer.setStyle(this.#tooltip, 'fontSize', '12px');

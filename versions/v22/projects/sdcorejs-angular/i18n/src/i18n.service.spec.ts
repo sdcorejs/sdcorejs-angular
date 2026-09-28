@@ -122,3 +122,41 @@ describe('I18nService — custom language provider', () => {
     expect(svc.t('core.common.cancel')).toBe('Cancel');
   });
 });
+
+describe('I18nService — locale', () => {
+  beforeEach(() => localStorage.removeItem(I18N_STORAGE_KEY));
+  afterEach(() => localStorage.removeItem(I18N_STORAGE_KEY));
+
+  const CASES: [Language, string][] = [
+    ['vi', 'vi-VN'],
+    ['en', 'en-US'],
+    ['ja', 'ja-JP'],
+    ['ko', 'ko-KR'],
+    ['zh', 'zh-CN'],
+  ];
+  for (const [language, tag] of CASES) {
+    it(`maps ${language} to the BCP-47 tag ${tag}`, () => {
+      TestBed.configureTestingModule({ providers: [{ provide: SD_CORE_CONFIGURATION, useValue: { language } }] });
+      const svc = TestBed.inject(I18nService);
+      expect(svc.locale()).toBe(tag);
+      expect(Intl.DateTimeFormat.supportedLocalesOf([svc.locale()])).toEqual([tag]);
+    });
+  }
+
+  it('follows setLanguage()', () => {
+    TestBed.configureTestingModule({});
+    const svc = TestBed.inject(I18nService);
+    expect(svc.locale()).toBe('vi-VN');
+    svc.setLanguage('ja', { reload: false });
+    expect(svc.locale()).toBe('ja-JP');
+  });
+
+  it('reports vi-VN in custom-catalog mode, like language()', () => {
+    TestBed.configureTestingModule({
+      providers: [{ provide: SD_CORE_CONFIGURATION, useValue: { language: () => ({ 'core.common.cancel': 'Annuler' }) } }],
+    });
+    const svc = TestBed.inject(I18nService);
+    expect(svc.language()).toBe('vi');
+    expect(svc.locale()).toBe('vi-VN');
+  });
+});

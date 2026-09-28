@@ -14,7 +14,7 @@
   background:
     radial-gradient(circle at 15% 25%, color-mix(in srgb, var(--sd-primary, #005cbb) 14%, transparent), transparent 55%),
     radial-gradient(circle at 85% 75%, color-mix(in srgb, var(--sd-primary, #005cbb) 10%, transparent), transparent 55%),
-    linear-gradient(135deg, #fafbfc 0%, #f4f6fa 100%);
+    linear-gradient(135deg, var(--sd-home-page-gradient-start, #fafbfc) 0%, var(--sd-home-page-gradient-end, #f4f6fa) 100%);
   overflow: auto;
 }
 
@@ -33,14 +33,14 @@
 
 .card {
   position: relative;
-  background: #fff;
+  background: var(--sd-home-page-card-bg, #ffffff);
   border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 20px;
   overflow: hidden;
   opacity: 0;
   transform: translateY(8px);
   animation: card-in 0.5s ease-out forwards;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform var(--sd-duration-slow, 300ms) ease, box-shadow var(--sd-duration-slow, 300ms) ease;
 
   &:hover {
     transform: translateY(-4px);
@@ -58,7 +58,7 @@
   justify-content: center;
   background:
     radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--sd-primary, #005cbb) 18%, white), white 60%),
-    #fff;
+    var(--sd-home-page-card-bg, #ffffff);
   border: 1px solid color-mix(in srgb, var(--sd-primary, #005cbb) 15%, transparent);
 
   .hero-ring {
@@ -155,18 +155,18 @@
   }
 
   .feature-icon {
-    font-size: 28px;
+    font-size: var(--sd-font-size-28, 28px);
     width: 28px;
     height: 28px;
     color: var(--sd-primary, #005cbb);
   }
 
   .feature-label {
-    font-size: 14px;
-    font-weight: 500;
+    font-size: var(--sd-font-size-14, 14px);
+    font-weight: var(--sd-font-weight-medium, 500);
     text-align: center;
     color: rgba(0, 0, 0, 0.78);
-    line-height: 20px;
+    line-height: var(--sd-line-height-20, 20px);
   }
 
   // Card 2×1 dùng layout ngang (icon trái, label phải) — phân biệt visual với 4 card vuông
@@ -183,14 +183,14 @@
   }
 
   &.feature-wide .feature-icon {
-    font-size: 32px;
+    font-size: var(--sd-font-size-32, 32px);
     width: 32px;
     height: 32px;
   }
 
   &.feature-wide .feature-label {
     text-align: left;
-    font-size: 16px;
+    font-size: var(--sd-font-size-16, 16px);
   }
 }
 

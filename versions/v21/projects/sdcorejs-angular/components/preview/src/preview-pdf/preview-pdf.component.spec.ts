@@ -1265,6 +1265,29 @@ describe('SdPreviewPdf', () => {
       expect(events[0].filename).toContain('.pdf');
     });
 
+    it('refuses to download an unsafe string source', async () => {
+      fixture.componentRef.setInput('source', 'javascript:alert(1)');
+      await flush(fixture);
+      lib.resolveNext(makeFakeDoc(1));
+      await flush(fixture);
+      const events: { filename: string }[] = [];
+      comp.download.subscribe(e => events.push(e));
+
+      expect(await comp.downloadFileAsync()).toBeFalse();
+      expect(browser.downloads).toEqual([]);
+      expect(events).toEqual([]);
+    });
+
+    it('refuses to download an unsafe { url } source', async () => {
+      fixture.componentRef.setInput('source', { url: 'data:text/html,<p>x</p>' });
+      await flush(fixture);
+      lib.resolveNext(makeFakeDoc(1));
+      await flush(fixture);
+
+      expect(await comp.downloadFileAsync()).toBeFalse();
+      expect(browser.downloads).toEqual([]);
+    });
+
     it('no-ops when downloadable=false', async () => {
       fixture.componentRef.setInput('downloadable', false);
       fixture.componentRef.setInput('source', 'https://example.com/test.pdf');
@@ -2279,5 +2302,21 @@ describe('SdPreviewPdf', () => {
       expect(comp.autoIdThumb(0)).toBe('components-preview-pdf-viewer-thumb-0');
       expect(comp.autoIdResult(2)).toBe('components-preview-pdf-viewer-result-2');
     });
+  });
+});
+
+describe('SD_PDF_BROWSER_ADAPTER download guard', () => {
+  it('refuses unsafe URLs without clicking an anchor, and still downloads safe ones', () => {
+    const adapter = TestBed.inject(SD_PDF_BROWSER_ADAPTER);
+    const click = spyOn(HTMLAnchorElement.prototype, 'click').and.stub();
+
+    expect(adapter.download('javascript:alert(1)', 'a.pdf')).toBeFalse();
+    expect(adapter.download('vbscript:msgbox(1)', 'a.pdf')).toBeFalse();
+    expect(adapter.download('data:text/html,<p>x</p>', 'a.pdf')).toBeFalse();
+    expect(click).not.toHaveBeenCalled();
+
+    expect(adapter.download('blob:https://app.example.com/0f8e2c4a', 'a.pdf')).toBeTrue();
+    expect(adapter.download('/files/a.pdf', 'a.pdf')).toBeTrue();
+    expect(click).toHaveBeenCalledTimes(2);
   });
 });

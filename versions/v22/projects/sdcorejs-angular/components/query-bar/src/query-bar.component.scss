@@ -8,18 +8,18 @@ $qb-primary-faint: var(--sd-primary-light);
 $qb-primary-hover: var(--sd-primary-dark);
 $qb-primary-dark:  var(--sd-primary-dark);
 
-$qb-text:           #212121;
-$qb-text-secondary: #5f6368;
-$qb-text-muted:     #7a7a7a;
+$qb-text:           var(--sd-query-bar-text, #212121);
+$qb-text-secondary: var(--sd-query-bar-text-secondary, #5f6368);
+$qb-text-muted:     var(--sd-query-bar-text-muted, #7a7a7a);
 
-$qb-border:      #d6d8db;
-$qb-border-soft: #e2e4e7;
+$qb-border:      var(--sd-query-bar-border, #d6d8db);
+$qb-border-soft: var(--sd-query-bar-border-soft, #e2e4e7);
 
-$qb-bg:        #ffffff;
-$qb-bg-soft:   #f5f6f7;
-$qb-bg-active: #eef2ff;
+$qb-bg:        var(--sd-query-bar-bg, #ffffff);
+$qb-bg-soft:   var(--sd-query-bar-bg-soft, #f5f6f7);
+$qb-bg-active: var(--sd-query-bar-bg-active, #eef2ff);
 
-$qb-danger: #dc2626;
+$qb-danger: var(--sd-query-bar-danger, #dc2626);
 
 $qb-radius-chip:    999px;
 $qb-radius-popover: 8px;
@@ -41,7 +41,7 @@ $qb-radius-input:   6px;
 
   background: $qb-bg;
   border: 1px solid $qb-border-soft;
-  border-radius: 8px;
+  border-radius: var(--sd-radius-8, 8px);
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 
   &.c-density-compact { padding: 8px; }
@@ -75,7 +75,7 @@ $qb-radius-input:   6px;
   .c-density-comfortable & { height: 32px; }
 
   .c-search-icon {
-    font-size: 16px;
+    font-size: var(--sd-font-size-16, 16px);
     width: 16px;
     height: 16px;
     color: $qb-text-muted;
@@ -85,20 +85,20 @@ $qb-radius-input:   6px;
     border: none;
     outline: none;
     background: transparent;
-    font-size: 13px;
+    font-size: var(--sd-font-size-13, 13px);
     color: $qb-text;
     &::placeholder { color: $qb-text-muted; }
     // why: ô này không có border riêng nên `outline: none` xoá SẠCH mọi chỉ báo focus — người dùng
     // bàn phím không biết con trỏ đang ở đâu. Trả lại vòng focus khi điều hướng bằng phím.
     &:focus-visible {
-      outline: 2px solid $qb-primary;
+      outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
       outline-offset: 1px;
-      border-radius: 4px;
+      border-radius: var(--sd-radius-4, 4px);
     }
   }
   .c-search-kbd {
     font-family: 'Roboto Mono', monospace;
-    font-size: 10px;
+    font-size: var(--sd-font-size-10, 10px);
     padding: 1px 4px;
     border: 1px solid $qb-border-soft;
     border-radius: 3px;
@@ -126,7 +126,7 @@ $qb-radius-input:   6px;
   border: 1px solid $qb-primary-light;
   border-radius: $qb-radius-chip;
   background: $qb-primary-faint;
-  font-size: 13px;
+  font-size: var(--sd-font-size-13, 13px);
   // grey label/icon/operator/×; the value text overrides to primary (see .c-token-value)
   color: $qb-text-secondary;
   white-space: nowrap;
@@ -137,13 +137,13 @@ $qb-radius-input:   6px;
 }
 
 .c-token-icon {
-  font-size: 14px;
+  font-size: var(--sd-font-size-14, 14px);
   width: 14px;
   height: 14px;
   line-height: 14px;
   color: inherit;
 }
-.c-token-field { font-weight: 500; line-height: 1; }
+.c-token-field { font-weight: var(--sd-font-weight-medium, 500); line-height: 1; }
 
 .c-token-op {
   display: inline-flex;
@@ -177,7 +177,7 @@ $qb-radius-input:   6px;
   .mat-mdc-form-field-infix { padding: 0; min-height: 0; width: auto; border: 0; display: inline-flex; align-items: center; }
   .mat-mdc-select-value,
   .mat-mdc-input-element,
-  input { line-height: 1; font-size: 13px; padding: 0; height: auto; color: inherit; }
+  input { line-height: 1; font-size: var(--sd-font-size-13, 13px); padding: 0; height: auto; color: inherit; }
 
   // sd-select bare's selected text — make it visible (primary, weight, ellipsized) and avoid
   // collapsing inside the inline-flex chip. Without min-width:0 + max-width it can render at
@@ -190,7 +190,7 @@ $qb-radius-input:   6px;
     overflow: hidden;
     text-overflow: ellipsis;
     color: $qb-primary;
-    font-weight: 500;
+    font-weight: var(--sd-font-weight-medium, 500);
   }
 
   // why: sd-select / sd-date render a `.sd-suffix-icon` (cancel) to clear the value.
@@ -213,7 +213,7 @@ $qb-radius-input:   6px;
   background: transparent;
   padding: 0;
   font: inherit;
-  font-weight: 500; // value reads as bold as the popover chip value
+  font-weight: var(--sd-font-weight-medium, 500); // value reads as bold as the popover chip value
   color: $qb-primary; // value pops in primary against the grey label
   cursor: pointer;
 
@@ -266,7 +266,7 @@ $qb-radius-input:   6px;
   .c-density-compact & { width: 26px; }
   .c-density-comfortable & { width: 28px; }
 
-  sd-icon { font-size: 14px; width: 14px; height: 14px; }
+  sd-icon { font-size: var(--sd-font-size-14, 14px); width: 14px; height: 14px; }
   &:hover { background: rgba(0, 0, 0, 0.05); }
 }
 
@@ -284,12 +284,12 @@ $qb-radius-input:   6px;
   background: transparent;
   cursor: pointer;
   color: $qb-text-secondary;
-  transition: border-color 120ms ease, color 120ms ease, background-color 120ms ease;
+  transition: border-color var(--sd-duration-fast, 120ms) ease, color var(--sd-duration-fast, 120ms) ease, background-color var(--sd-duration-fast, 120ms) ease;
 
   .c-density-compact & { width: 28px; height: 28px; }
   .c-density-comfortable & { width: 32px; height: 32px; }
 
-  sd-icon { font-size: 18px; width: 18px; height: 18px; }
+  sd-icon { font-size: var(--sd-font-size-18, 18px); width: 18px; height: 18px; }
 
   &:hover:not([disabled]) {
     border-color: $qb-primary;
@@ -307,8 +307,8 @@ $qb-radius-input:   6px;
 // ---------------------------------------------------------------------------
 .c-or-connector {
   font-family: 'Roboto Mono', monospace;
-  font-size: 10px;
-  font-weight: 700;
+  font-size: var(--sd-font-size-10, 10px);
+  font-weight: var(--sd-font-weight-bold, 700);
   letter-spacing: 0.6px;
   color: $qb-text-muted;
   padding: 0 2px;
@@ -327,11 +327,11 @@ $qb-radius-input:   6px;
     gap: 8px;
     padding: 10px 12px;
     border-bottom: 1px solid $qb-border-soft;
-    font-size: 13px;
-    font-weight: 500;
+    font-size: var(--sd-font-size-13, 13px);
+    font-weight: var(--sd-font-weight-medium, 500);
     color: $qb-text;
 
-    sd-icon { font-size: 16px; width: 16px; height: 16px; color: $qb-primary; }
+    sd-icon { font-size: var(--sd-font-size-16, 16px); width: 16px; height: 16px; color: $qb-primary; }
 
     // why: operator nudged to the far right of the header row.
     .c-pop-header-operator { margin-left: auto; }
@@ -345,14 +345,14 @@ $qb-radius-input:   6px;
     margin-left: -4px;
     background: transparent;
     border: 1px solid transparent;
-    border-radius: 4px;
+    border-radius: var(--sd-radius-4, 4px);
     font: inherit;
-    font-weight: 500;
+    font-weight: var(--sd-font-weight-medium, 500);
     color: $qb-text;
     cursor: pointer;
-    transition: background-color 120ms ease, border-color 120ms ease;
+    transition: background-color var(--sd-duration-fast, 120ms) ease, border-color var(--sd-duration-fast, 120ms) ease;
     sd-icon {
-      font-size: 14px !important;
+      font-size: var(--sd-font-size-14, 14px) !important;
       width: 14px !important;
       height: 14px !important;
       color: $qb-text-muted !important;
@@ -378,7 +378,7 @@ $qb-radius-input:   6px;
     border-radius: $qb-radius-input;
     background: $qb-bg;
     font-family: inherit;
-    font-size: 13px;
+    font-size: var(--sd-font-size-13, 13px);
     color: $qb-text;
     outline: none;
 
@@ -386,7 +386,7 @@ $qb-radius-input:   6px;
     // why: đổi màu border là chỉ báo yếu (mất hẳn với người khó phân biệt màu). Bổ sung vòng focus
     // thật cho điều hướng bàn phím.
     &:focus-visible {
-      outline: 2px solid $qb-primary;
+      outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
       outline-offset: 1px;
     }
   }
@@ -407,7 +407,7 @@ $qb-radius-input:   6px;
       border-radius: $qb-radius-input;
       background: $qb-bg;
       font: inherit;
-      font-size: 13px;
+      font-size: var(--sd-font-size-13, 13px);
       cursor: pointer;
       &.c-pop-boolean-active {
         background: $qb-primary-faint;
@@ -429,8 +429,8 @@ $qb-radius-input:   6px;
       align-items: center;
       gap: 8px;
       padding: 6px 8px;
-      border-radius: 4px;
-      font-size: 13px;
+      border-radius: var(--sd-radius-4, 4px);
+      font-size: var(--sd-font-size-13, 13px);
       cursor: pointer;
       user-select: none;
 
@@ -447,7 +447,7 @@ $qb-radius-input:   6px;
   .c-pop-values-loading,
   .c-pop-values-empty {
     padding: 10px 8px;
-    font-size: 12px;
+    font-size: var(--sd-font-size-12, 12px);
     color: $qb-text-muted;
   }
 
@@ -464,7 +464,7 @@ $qb-radius-input:   6px;
   ::ng-deep button[mat-button],
   ::ng-deep button[mat-stroked-button],
   ::ng-deep button[mat-flat-button] {
-    border-radius: 999px;
+    border-radius: var(--sd-radius-999, 999px);
     min-width: 0;
     padding: 0 12px;
   }

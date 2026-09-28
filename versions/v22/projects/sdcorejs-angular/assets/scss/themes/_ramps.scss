@@ -1,0 +1,56 @@
+// Colour ramps 50–950 (D-015, R-016).
+//
+// why: ramps are mixed at runtime with color-mix(), so an app that overrides `--sd-primary` (or a
+// whole palette through theme()) gets a matching ramp for free. Chromatic ramps are absolute — 50 is
+// the lightest step in light AND dark — use the semantic tier for mode-aware roles. `-light`, `-dark`
+// and `-contrast` keep their 2.15 values and are not part of the ramp.
+
+@use 'sass:map';
+
+$families: primary, secondary, info, success, warning, error;
+
+// Share of the base colour in the mix: tints mix with white, shades with black.
+$tints: (
+  50: 8%,
+  100: 16%,
+  200: 32%,
+  300: 48%,
+  400: 72%,
+);
+$shades: (
+  600: 86%,
+  700: 72%,
+  800: 58%,
+  900: 44%,
+  950: 30%,
+);
+
+// Neutral has no base token: an absolute grey ramp (share of black mixed into white).
+$neutral: (
+  50: 4%,
+  100: 8%,
+  200: 16%,
+  300: 28%,
+  400: 44%,
+  500: 55%,
+  600: 65%,
+  700: 74%,
+  800: 82%,
+  900: 89%,
+  950: 94%,
+);
+
+@mixin emit() {
+  @each $family in $families {
+    @each $step, $share in $tints {
+      --sd-#{$family}-#{$step}: color-mix(in srgb, var(--sd-#{$family}) #{$share}, white);
+    }
+    --sd-#{$family}-500: var(--sd-#{$family});
+    @each $step, $share in $shades {
+      --sd-#{$family}-#{$step}: color-mix(in srgb, var(--sd-#{$family}) #{$share}, black);
+    }
+  }
+  @each $step, $share in $neutral {
+    --sd-neutral-#{$step}: color-mix(in srgb, black #{$share}, white);
+  }
+}

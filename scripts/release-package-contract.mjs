@@ -83,13 +83,16 @@ function assertReleaseSnapshot(actual, baseline, target, section, approvedContra
 }
 
 // Repository-owned snapshots are reviewed with the release; never load expectations from artifacts.
-export function loadReleaseContract(suffix) {
+// An x.0 snapshot records its explicit `baselineSuffix` (D-028); `contractsRoot` exists for tests only.
+export function loadReleaseContract(suffix, { baselineSuffix, contractsRoot = join(REPO_ROOT, 'scripts', 'release-contracts') } = {}) {
   parseSuffix(suffix);
-  const path = join(REPO_ROOT, 'scripts', 'release-contracts', `${suffix}.json`);
+  const path = join(contractsRoot, `${suffix}.json`);
   if (!existsSync(path)) return undefined;
   const contract = JSON.parse(readFileSync(path, 'utf8'));
   invariant(contract.schemaVersion === 1 && contract.suffix === suffix, `Invalid release snapshot for ${suffix}.`);
-  const targets = releaseTargets(suffix);
+  invariant(baselineSuffix === undefined || contract.baselineSuffix === undefined || contract.baselineSuffix === baselineSuffix,
+    `${suffix}: the reviewed snapshot compares with baseline ${contract.baselineSuffix}, not ${baselineSuffix}.`);
+  const targets = releaseTargets(suffix, { baselineSuffix: contract.baselineSuffix ?? baselineSuffix });
   assertExact(Object.keys(contract.targets).sort(), targets.map(target => target.version).sort(), `${suffix} snapshot targets`);
   for (const target of targets) {
     const snapshot = contract.targets[target.version];
@@ -102,15 +105,32 @@ export function loadReleaseContract(suffix) {
 function parseSuffix(suffix) {
   const match = /^(\d+)\.(\d+)$/u.exec(String(suffix));
   invariant(match, `Invalid stable release suffix "${suffix}"; expected <minor>.<patch>, for example 2.5.`);
-  const releaseMinor = Number(match[1]);
-  const releasePatch = Number(match[2]);
-  invariant(releasePatch > 0, `Release suffix "${suffix}" has no automatic 2.4-style baseline.`);
-  return { releaseMinor, releasePatch };
+  return { releaseMinor: Number(match[1]), releasePatch: Number(match[2]) };
 }
 
-export function releaseTargets(suffix) {
+/**
+ * The published suffix a release is validated against (D-028). A patch release compares with the
+ * previous patch (2.5 against 2.4); an explicit baseline may only repeat that. An x.0 release has no
+ * previous patch, so it needs an explicit baseline with a lower minor (3.0 against 2.15).
+ */
+function resolveBaselineSuffix(suffix, baselineSuffix) {
   const { releaseMinor, releasePatch } = parseSuffix(suffix);
-  const baselineSuffix = `${releaseMinor}.${releasePatch - 1}`;
+  if (releasePatch > 0) {
+    const derived = `${releaseMinor}.${releasePatch - 1}`;
+    invariant(baselineSuffix === undefined || baselineSuffix === derived,
+      `Release suffix "${suffix}" compares with ${derived}, not ${baselineSuffix}.`);
+    return derived;
+  }
+  invariant(baselineSuffix !== undefined,
+    `Release suffix "${suffix}" has no previous patch; pass an explicit baseline suffix with a lower minor, for example 2.15.`);
+  const baseline = parseSuffix(baselineSuffix);
+  invariant(baseline.releaseMinor < releaseMinor,
+    `Baseline suffix "${baselineSuffix}" must have a lower minor than release suffix "${suffix}".`);
+  return String(baselineSuffix);
+}
+
+export function releaseTargets(suffix, { baselineSuffix: explicitBaseline } = {}) {
+  const baselineSuffix = resolveBaselineSuffix(suffix, explicitBaseline);
   return [19, 20, 21, 22].map(major => ({
     major,
     workspace: `v${major}`,
@@ -289,8 +309,8 @@ function validIntegrity(value) {
   return /^sha512-[A-Za-z0-9+/]+={0,2}$/u.test(value ?? '');
 }
 
-export function validateReleaseBundle({ suffix, datetimeVersion, sourceSha, artifacts, releaseContract }) {
-  const targets = releaseTargets(suffix);
+export function validateReleaseBundle({ suffix, baselineSuffix, datetimeVersion, sourceSha, artifacts, releaseContract }) {
+  const targets = releaseTargets(suffix, { baselineSuffix: baselineSuffix ?? releaseContract?.baselineSuffix });
   invariant(/^[a-f0-9]{40}$/iu.test(sourceSha ?? ''), 'Release bundle must contain one full source SHA.');
   invariant(Array.isArray(artifacts) && artifacts.length === targets.length, 'Release bundle must contain all four artifacts.');
 
@@ -593,9 +613,11 @@ function loadArtifactMetadata(artifactRoot) {
 }
 
 function materializeValidatedBundle({ artifactRoot, suffix, baselineSuffix, datetimeVersion }) {
-  const targets = releaseTargets(suffix);
-  const releaseContract = loadReleaseContract(suffix);
-  invariant(baselineSuffix === suffix.replace(/\d+$/u, value => String(Number(value) - 1)), `Expected baseline suffix derived from ${suffix}.`);
+  // releaseTargets accepts only the derived patch baseline, or for x.0 an explicit lower-minor one (D-028).
+  const targets = releaseTargets(suffix, { baselineSuffix });
+  const releaseContract = loadReleaseContract(suffix, { baselineSuffix });
+  invariant(targets.every(target => target.baselineVersion === `${target.baselineMajor}.${baselineSuffix}`),
+    `Expected every ${suffix} target to compare with baseline suffix ${baselineSuffix}.`);
   const records = loadArtifactMetadata(artifactRoot);
   const tempRoot = mkdtempSync(join(tmpdir(), 'sdcorejs-release-contract-'));
   const baselines = new Map();
@@ -664,7 +686,7 @@ function materializeValidatedBundle({ artifactRoot, suffix, baselineSuffix, date
     const sourceSha = artifacts[0].sourceSha;
     const checkoutSha = command('git', ['rev-parse', 'HEAD']).stdout.trim();
     invariant(sourceSha === checkoutSha, `Artifact source ${sourceSha} does not match checkout ${checkoutSha}.`);
-    const plan = validateReleaseBundle({ suffix, datetimeVersion, sourceSha, artifacts, releaseContract });
+    const plan = validateReleaseBundle({ suffix, baselineSuffix, datetimeVersion, sourceSha, artifacts, releaseContract });
     return { plan, artifacts, tarballPaths, cleanup: () => rmSync(tempRoot, { recursive: true, force: true }) };
   } catch (cause) {
     rmSync(tempRoot, { recursive: true, force: true });
@@ -955,7 +977,7 @@ export async function runReleaseCli({
     if (compileRequested) compileConsumers(bundle);
     const output = {
       ...bundle.plan,
-      targets: releaseTargets(suffix),
+      targets: releaseTargets(suffix, { baselineSuffix }),
       artifacts: bundle.plan.publishOrder,
       consumersCompiled: compileRequested,
     };

@@ -1,3 +1,6 @@
+import { LiveAnnouncer } from '@angular/cdk/a11y';
+import { Directionality } from '@angular/cdk/bidi';
+import { CdkVirtualScrollViewport, ScrollingModule } from '@angular/cdk/scrolling';
 import { CommonModule } from '@angular/common';
 import {
   booleanAttribute,
@@ -8,12 +11,14 @@ import {
   contentChild,
   contentChildren,
   DestroyRef,
+  DoCheck,
   effect,
   ElementRef,
   inject,
   input,
   isSignal,
   model,
+  numberAttribute,
   OnInit,
   output,
   signal, // THÊM IMPORT NÀY
@@ -23,8 +28,8 @@ import {
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
-import { MatPseudoCheckbox } from '@angular/material/core';
+import { FormControl, FormGroup, FormGroupDirective, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
+import { ErrorStateMatcher, MatOption, MatOptionSelectionChange, MatPseudoCheckbox } from '@angular/material/core';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
 import { MatInput, MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -71,6 +76,39 @@ interface SelectReadRequest {
   valid: () => boolean;
 }
 
+/**
+ * why (D-030 V1): value of the single hidden option of the virtual branch. `mat-select` renders its
+ * trigger — and so our labels — only while at least one option is selected, but with virtual scrolling
+ * most selected options are not rendered. `virtualCompareWith` lets this option stand in for them; it is
+ * disabled, hidden, and never reaches the model.
+ */
+const SD_SELECT_VIRTUAL_SENTINEL = Symbol('sd-select-virtual-sentinel');
+/** Rows the virtual viewport shows at most before it scrolls. */
+const SD_SELECT_VIRTUAL_ROWS = 6;
+/** Same step as Material's key manager (`withPageUpDown()`). */
+const SD_SELECT_VIRTUAL_PAGE = 10;
+/** Same window as Material's typeahead (`withTypeAhead()`). */
+const SD_SELECT_TYPEAHEAD_MS = 200;
+const SD_SELECT_VIRTUAL_NAV_KEYS = new Set(['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End']);
+
+/**
+ * why (D-026): the only code in sd-select that touches a Material internal for virtual scrolling —
+ * `MatSelect._keyManager`. It keeps Material's active option on the row the component made active, so
+ * the trigger's `aria-activedescendant` and Material's own Enter/Tab handling point at that row. Only the
+ * active item changes: no styles and no `change` event (which would make Material scroll its panel).
+ * Covered by select.virtual-scroll.spec.ts.
+ */
+class SdSelectVirtualAdapter {
+  constructor(private readonly select: () => MatSelect | undefined) {}
+
+  setActive(option: MatOption | undefined): void {
+    const manager = this.select()?._keyManager;
+    if (!manager || manager.activeItem === (option ?? null)) return;
+    if (option) manager.updateActiveItem(option);
+    else manager.updateActiveItem(-1);
+  }
+}
+
 @Component({
   selector: 'sd-select',
   templateUrl: './select.component.html',
@@ -96,9 +134,10 @@ interface SelectReadRequest {
     SdView,
     SdSelectFooterActionDirective,
     SdTranslatePipe,
+    ScrollingModule,
   ],
 })
-export class SdSelect<T extends object | string | number = Record<string, unknown>> implements OnInit {
+export class SdSelect<T extends object | string | number = Record<string, unknown>> implements OnInit, DoCheck {
   id = `I${Utilities.generateUuid()}`;
   /** why: id ổn định của <mat-error> để control trỏ `aria-describedby` sang — thông báo lỗi
    *  phải đọc được từ chính control, không chỉ hiện ra màn hình. */
@@ -109,6 +148,8 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   // ==========================================
   matInputRef = viewChild(MatInput);
   selectRef = viewChild<MatSelect>('select');
+  private readonly selectElement = viewChild('select', { read: ElementRef });
+  private readonly virtualViewport = viewChild(CdkVirtualScrollViewport);
 
   sdLabelTemplate = contentChild<TemplateRef<any>>('sdLabel');
   sdValueTemplate = contentChild<TemplateRef<any>>('sdValue');
@@ -139,6 +180,9 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   // why: focus/mở panel + focus ô search đều hoãn 100ms; handle phải bị clear khi destroy,
   // nếu không callback vẫn chạm selectRef/matInputRef của view đã tháo.
   readonly #timers = ɵsdTimerScope();
+  readonly #liveAnnouncer = inject(LiveAnnouncer);
+  readonly #dir = inject(Directionality, { optional: true });
+  readonly #virtualAdapter = new SdSelectVirtualAdapter(() => this.selectRef());
 
   // ==========================================
   // 2. SIGNAL INPUTS & MODEL
@@ -192,6 +236,14 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   cacheChecksum = input<any>();
 
   limit = input<number>(50);
+  /**
+   * Virtual scrolling for long lists (opt-in, default `false`). When on, the panel renders only the rows
+   * in view, array items are no longer cut by `limit`, and the component — not `mat-select` — owns the
+   * value. See sd-select.md, "Virtual scroll".
+   */
+  readonly virtualScroll = input(false, { transform: booleanAttribute });
+  /** Fixed row height in px for the virtual viewport. Default 36 = the panel's compact option row. */
+  readonly itemSize = input(36, { transform: numberAttribute });
   hyperlink = input<string | null | undefined>();
 
   minWidthPanel = input<string | number, string | number | undefined | null>('auto', {
@@ -328,6 +380,8 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
       checksum: this.cacheChecksum(),
       valueField: this.valueField(),
       displayField: this.displayField(),
+      // why: switching virtualScroll re-runs the pipeline, since only the non-virtual list is cut at `limit`.
+      virtualScroll: this.virtualScroll(),
     }))
   ).pipe(map(context => context.items));
   #valueModel$ = toObservable(this.valueModel);
@@ -345,6 +399,65 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   }));
   readonly #footerFnVisibility = signal<WeakMap<SdSelectFooterActionDirective, boolean>>(new WeakMap());
   readonly visibleFooterActions = computed(() => this.footerActions().filter(action => this.shouldRenderFooterAction(action)));
+
+  // ==========================================
+  // VIRTUAL SCROLL (opt-in) — D-026: the component owns the value; D-030 V1: Material shell + one sentinel
+  // ==========================================
+  /** Value bound one-way to the virtual shell; the shell never writes it back (no `formControl` on it). */
+  protected readonly virtualShellValue = computed(() => {
+    const value = this.normalizedValue();
+    if (this.multiple()) return Array.isArray(value) ? value : [];
+    return value ?? null;
+  });
+  protected readonly virtualSentinel = SD_SELECT_VIRTUAL_SENTINEL;
+  protected readonly virtualPanelClass = {
+    single: ['sd-select-panel', 'sd-select-virtual'],
+    multiple: ['sd-select-panel', 'sd-multiple', 'sd-select-virtual'],
+  };
+  /** A rendered option matches its own value; the sentinel matches any value whose option is not rendered. */
+  protected readonly virtualCompareWith = (optionValue: unknown, value: unknown): boolean =>
+    value != null && (optionValue === value || optionValue === SD_SELECT_VIRTUAL_SENTINEL);
+  /** The virtual shell cannot see `formControl`, so the component supplies Material's error state. */
+  protected readonly virtualErrorStateMatcher: ErrorStateMatcher = {
+    isErrorState: (_control: unknown, form: FormGroupDirective | NgForm | null) =>
+      !!(this.formControl.invalid && (this.formControl.touched || form?.submitted)),
+  };
+  /** Same rule as the non-virtual template: rows render when both fields are set, or neither. */
+  protected readonly virtualRenderable = computed(() => !this.valueField() === !this.displayField());
+  protected readonly virtualViewportHeight = computed(
+    () => Math.min(this.filteredItems().length, SD_SELECT_VIRTUAL_ROWS) * this.itemSize()
+  );
+  protected readonly virtualTrackBy = (_index: number, item: T): unknown => this.itemValue(item);
+  /** Stable id per row index: aria-activedescendant targets and finds the rendered option by it. */
+  protected readonly virtualOptionId = (index: number): string => `${this.id}-option-${index}`;
+  /** Context of `#sdSelected` in the virtual branch — the same shape as the non-virtual templates. */
+  protected readonly selectedTemplateContext = computed(() => {
+    const items = this.selectedItems();
+    const display = this.display();
+    return this.multiple()
+      ? { $implicit: items, item: items, items, display, multiple: true }
+      : { $implicit: items[0], item: items[0], items, display, multiple: false };
+  });
+
+  /** Row the keyboard made active, tracked by value so re-sorting the list keeps it. */
+  readonly #virtualActiveKey = signal<{ value: unknown } | null>(null);
+  /** Index of the active row in the full filtered list, or -1. */
+  readonly virtualActiveIndex = computed(() => {
+    const key = this.#virtualActiveKey();
+    if (!key || !this.virtualScroll()) return -1;
+    return this.filteredItems().findIndex(item => this.itemValue(item) === key.value);
+  });
+  readonly #virtualRange = signal({ start: 0, end: 0 });
+  /** `aria-activedescendant` of the search box: the active row, only while it is rendered. */
+  protected readonly virtualActiveDescendant = computed(() => {
+    const index = this.virtualActiveIndex();
+    const range = this.#virtualRange();
+    return index >= range.start && index < range.end ? this.virtualOptionId(index) : null;
+  });
+  /** Labels folded like the search box (no diacritics, lower case), computed once per list for typeahead. */
+  readonly #virtualLabels = computed(() => this.filteredItems().map(item => StringUtilities.changeAliasLowerCase(this.itemDisplay(item))));
+  #typeahead = '';
+  #typeaheadAt = 0;
 
   normalizedValue = computed(() => {
     const val = this.valueModel();
@@ -559,6 +672,40 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
         this.#ref.markForCheck();
       });
     });
+
+    // Virtual scroll wiring. Each effect removes its listener when the virtual branch goes away.
+    effect(onCleanup => {
+      const select = this.selectRef();
+      if (!select || !this.virtualScroll()) return;
+      const selections = select.optionSelectionChanges.subscribe(this.#onVirtualOptionSelection);
+      // why: Material re-syncs its selection in a microtask queued when the options change (and moves its
+      // active option there); queue after it so Material's active option points back at ours.
+      const options = select.options.changes.subscribe(() => Promise.resolve().then(() => this.#syncVirtualKeyManager()));
+      onCleanup(() => {
+        selections.unsubscribe();
+        options.unsubscribe();
+      });
+    });
+    effect(onCleanup => {
+      const element: HTMLElement | undefined = this.selectElement()?.nativeElement;
+      if (!element || !this.virtualScroll()) return;
+      // why: capture phase on the trigger runs before MatSelect's own keydown listener on the same element.
+      element.addEventListener('keydown', this.#onVirtualTriggerKeydown, true);
+      onCleanup(() => element.removeEventListener('keydown', this.#onVirtualTriggerKeydown, true));
+    });
+    effect(onCleanup => {
+      const viewport = this.virtualViewport();
+      if (!viewport) return;
+      this.#virtualRange.set(viewport.getRenderedRange());
+      const range = viewport.renderedRangeStream.subscribe(value => this.#virtualRange.set(value));
+      onCleanup(() => range.unsubscribe());
+    });
+  }
+
+  ngDoCheck(): void {
+    // why: MatSelect refreshes its error state in its own ngDoCheck only when it has an NgControl; the
+    // virtual shell has none, so refresh it at the same cadence here.
+    if (this.virtualScroll()) this.selectRef()?.updateErrorState();
   }
 
   ngOnInit() {
@@ -694,7 +841,7 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
       shareReplay({ bufferSize: 1, refCount: true })
     );
 
-    const filteredItems$ = allItems$.pipe(map(this.#pageReadItems));
+    const filteredItems$ = allItems$.pipe(map(this.#visibleItems));
 
     const display$ = selectedItems$.pipe(
       map(items => items?.map(item => (this.displayField() ? this.itemDisplay(item) : item))?.join(', ') || '')
@@ -713,6 +860,9 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
       this.#ref.markForCheck();
     });
   }
+
+  /** Rows the panel shows: the non-virtual list is cut at `limit`; the virtual list is not (D-026). */
+  #visibleItems = (allItems: T[]): T[] => (this.virtualScroll() ? allItems : this.#pageReadItems(allItems));
 
   #pageReadItems = (allItems: T[]): T[] => {
     const limit = this.limit();
@@ -922,7 +1072,7 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
     } else {
       const items = await this.#loadItems(request.args.searchText, request.loader, true);
       if (!request.valid() || !items) return;
-      this.filteredItems.set(this.#pageReadItems(items));
+      this.filteredItems.set(this.#visibleItems(items));
     }
     this.#syncReadLoading();
   };
@@ -1056,7 +1206,13 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
       // why: vẫn 100ms như cũ — chỉ scope handle theo DestroyRef.
       this.#timers.schedule(() => this.matInputRef()?.focus(), 100);
       this.#hashedValue = Utilities.hash({ value: this.formControl.value });
+      if (this.virtualScroll()) this.#onVirtualOpened();
     } else {
+      // why: the non-virtual shell marks the control touched through its value accessor when it closes.
+      if (this.virtualScroll()) {
+        this.formControl.markAsTouched();
+        this.#virtualActiveKey.set(null);
+      }
       this.focused.set(false);
       const hashedValue = Utilities.hash({ value: this.formControl.value });
 
@@ -1079,6 +1235,303 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
         }
       }
       this.#hashedValue = undefined;
+    }
+  };
+
+  // ==========================================
+  // VIRTUAL SCROLL — selection, keyboard, active row
+  // ==========================================
+  /** Mirrors MatSelect._onBlur: a blur while the panel is open is focus moving into the panel. */
+  protected onVirtualBlur = (): void => {
+    if (!this.selectRef()?.panelOpen) this.formControl.markAsTouched();
+  };
+
+  /** Keys in the search box: rows move with the arrows/Page/Home/End, Enter chooses the active row. */
+  protected onVirtualSearchKeydown = (event: KeyboardEvent): void => {
+    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+    if (SD_SELECT_VIRTUAL_NAV_KEYS.has(event.key)) {
+      // why: the search box only filters, so Home/End move through the rows instead of the caret (the
+      // MUI autocomplete default) — otherwise nothing past the first screen of 10,000 rows is reachable.
+      event.preventDefault();
+      this.#moveVirtualActive(event.key);
+    } else if (event.key === 'Enter' && this.virtualActiveIndex() >= 0) {
+      event.preventDefault();
+      this.#commitVirtualIndex(this.virtualActiveIndex());
+    }
+  };
+
+  /** Keys on the trigger. Material's own handling only reaches the rendered rows, so the list-wide keys are ours. */
+  #onVirtualTriggerKeydown = (event: KeyboardEvent): void => {
+    const select = this.selectRef();
+    if (!select || select.disabled || event.defaultPrevented) return;
+    const modified = event.altKey || event.ctrlKey || event.metaKey;
+    const printable = event.key.length === 1 && event.key !== ' ' && !modified;
+    let handled = false;
+    if (select.panelOpen) {
+      if (SD_SELECT_VIRTUAL_NAV_KEYS.has(event.key) && !modified) {
+        const previous = this.virtualActiveIndex();
+        const index = this.#moveVirtualActive(event.key);
+        // Material: Shift + arrow in a multiple select also toggles the row it lands on.
+        if (this.multiple() && event.shiftKey && event.key.startsWith('Arrow') && index !== previous) this.#commitVirtualIndex(index);
+        handled = true;
+      } else if ((event.key === 'Enter' || (event.key === ' ' && !this.#isTyping())) && !modified && this.virtualActiveIndex() >= 0) {
+        this.#commitVirtualIndex(this.virtualActiveIndex());
+        handled = true;
+      } else if (this.multiple() && event.ctrlKey && event.key.toLowerCase() === 'a' && !this.#isTyping()) {
+        // Material: Ctrl + A selects every option, or clears them when all are selected — here over the whole list.
+        this.#toggleAllVirtual();
+        handled = true;
+      } else if (printable) {
+        this.#typeaheadVirtual(event.key, false);
+        handled = true;
+      }
+    } else if (!this.multiple() && !modified) {
+      // Closed single select: Material changes the value with these keys, but only among the rendered rows.
+      if (SD_SELECT_VIRTUAL_NAV_KEYS.has(event.key) || event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        this.#stepClosedVirtual(event.key);
+        handled = true;
+      } else if (printable) {
+        this.#typeaheadVirtual(event.key, true);
+        handled = true;
+      }
+    }
+    if (handled) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }
+  };
+
+  /** A click (or Material's own keyboard selection) on a rendered row. */
+  #onVirtualOptionSelection = (event: MatOptionSelectionChange): void => {
+    const option = event.source;
+    if (!event.isUserInput || option.value === SD_SELECT_VIRTUAL_SENTINEL) return;
+    this.#virtualActiveKey.set({ value: option.value });
+    if (this.multiple()) {
+      this.#toggleVirtualValue(option.value, option.selected);
+    } else if (option.selected) {
+      // Material closes the panel and focuses the trigger itself after a single-select user choice.
+      this.clearSearch();
+      this.#commitVirtualValue(option.value);
+    }
+  };
+
+  #onVirtualOpened = (): void => {
+    // why: the viewport was created while the panel was detached (size 0). After the search box is cleared
+    // (a zero-delay search) measure it and bring the selected row — or the first enabled one — into view,
+    // like Material does for its active option.
+    this.#timers.schedule(() => {
+      this.virtualViewport()?.checkViewportSize();
+      const items = this.filteredItems();
+      let index = -1;
+      if (this.multiple()) {
+        const selected = new Set(this.#virtualValues());
+        index = items.findIndex(item => selected.has(this.itemValue(item)));
+      } else {
+        index = this.#virtualSelectedIndex();
+      }
+      if (index < 0) index = items.findIndex(item => !this.itemDisabled(item));
+      if (index >= 0) this.#activateVirtual(index);
+    }, 0);
+  };
+
+  /** Moves the active row like Material's open-panel key manager (no wrap; disabled rows stay reachable). */
+  #moveVirtualActive = (key: string): number => {
+    const count = this.filteredItems().length;
+    const current = this.virtualActiveIndex();
+    if (!count) return current;
+    let target: number;
+    switch (key) {
+      case 'Home':
+        target = 0;
+        break;
+      case 'End':
+        target = count - 1;
+        break;
+      case 'PageDown':
+        target = current + SD_SELECT_VIRTUAL_PAGE;
+        break;
+      case 'PageUp':
+        target = current - SD_SELECT_VIRTUAL_PAGE;
+        break;
+      case 'ArrowDown':
+        target = current + 1;
+        break;
+      default:
+        // ArrowUp with no active row does nothing, as in Material.
+        if (current < 0) return current;
+        target = current - 1;
+    }
+    const index = Math.min(count - 1, Math.max(0, target));
+    this.#activateVirtual(index);
+    return index;
+  };
+
+  #activateVirtual = (index: number): void => {
+    const item = this.filteredItems()[index];
+    if (item === undefined) return;
+    this.#virtualActiveKey.set({ value: this.itemValue(item) });
+    this.#scrollVirtualIntoView(index);
+    // The row may render only after the viewport scrolls; the options subscription syncs again then.
+    this.#syncVirtualKeyManager();
+  };
+
+  /** Scrolls the least distance that shows the whole row (Material's `_getOptionScrollPosition` rule). */
+  #scrollVirtualIntoView = (index: number): void => {
+    const viewport = this.virtualViewport();
+    if (!viewport) return;
+    const size = this.itemSize();
+    const top = index * size;
+    const offset = viewport.measureScrollOffset();
+    const height = viewport.getViewportSize() || this.virtualViewportHeight();
+    if (top < offset) viewport.scrollToOffset(top);
+    else if (top + size > offset + height) viewport.scrollToOffset(top + size - height);
+  };
+
+  #syncVirtualKeyManager = (): void => {
+    const select = this.selectRef();
+    if (!select?.panelOpen || !this.virtualScroll()) return;
+    const index = this.virtualActiveIndex();
+    const id = index >= 0 ? this.virtualOptionId(index) : null;
+    this.#virtualAdapter.setActive(id ? select.options.find(option => option.id === id) : undefined);
+  };
+
+  /** Chooses row `index`: toggles it in a multiple select; sets it and closes the panel in a single one. */
+  #commitVirtualIndex = (index: number): void => {
+    const item = this.filteredItems()[index];
+    // A disabled row can be active (ARIA listbox) but not chosen — same as a disabled mat-option.
+    if (item === undefined || this.itemDisabled(item)) return;
+    const value = this.itemValue(item);
+    this.#virtualActiveKey.set({ value });
+    if (this.multiple()) {
+      this.#toggleVirtualValue(value, !this.#virtualValues().includes(value));
+      return;
+    }
+    this.clearSearch();
+    this.#commitVirtualValue(value);
+    const select = this.selectRef();
+    select?.close();
+    select?.focus();
+  };
+
+  #toggleVirtualValue = (value: unknown, selected: boolean): void => {
+    const current = this.#virtualValues();
+    if (current.includes(value) === selected) return;
+    const next = selected ? [...current, value] : current.filter(entry => entry !== value);
+    this.#commitVirtualValue(this.#orderByList(next));
+  };
+
+  #toggleAllVirtual = (): void => {
+    const enabled = this.filteredItems()
+      .filter(item => !this.itemDisabled(item))
+      .map(item => this.itemValue(item));
+    const current = this.#virtualValues();
+    const selected = new Set(current);
+    if (enabled.some(value => !selected.has(value))) {
+      this.#commitVirtualValue(this.#orderByList([...current, ...enabled.filter(value => !selected.has(value))]));
+    } else {
+      const scope = new Set(enabled);
+      this.#commitVirtualValue(current.filter(value => !scope.has(value)));
+    }
+  };
+
+  #virtualValues = (): unknown[] => {
+    const value = this.normalizedValue();
+    return Array.isArray(value) ? value : [];
+  };
+
+  #virtualSelectedIndex = (): number => {
+    const value = this.normalizedValue();
+    if (value === undefined || value === null) return -1;
+    return this.filteredItems().findIndex(item => this.itemValue(item) === value);
+  };
+
+  /** The order the non-virtual branch emits: the order of the (pinned) filtered list; unknown values last. */
+  #orderByList = (values: unknown[]): unknown[] => {
+    const position = new Map<unknown, number>();
+    this.filteredItems().forEach((item, index) => {
+      const value = this.itemValue(item);
+      if (!position.has(value)) position.set(value, index);
+    });
+    return values
+      .map((value, index) => ({ value, index, position: position.get(value) ?? Number.MAX_SAFE_INTEGER }))
+      .sort((a, b) => a.position - b.position || a.index - b.index)
+      .map(entry => entry.value);
+  };
+
+  #commitVirtualValue = (next: unknown): void => {
+    // why: same rules as toggleSelectAll — setValue with its event (async validator kept) and the `!==`
+    // guard so one choice emits one valueChanges.
+    if (this.formControl.value !== next) this.formControl.setValue(next);
+    this.#onChange(next as boolean | number | string | (number | string)[]);
+  };
+
+  /** Closed single select: steps the value through the whole list, skipping disabled rows like Material. */
+  #stepClosedVirtual = (key: string): void => {
+    const items = this.filteredItems();
+    const count = items.length;
+    if (!count) return;
+    const rtl = this.#dir?.value === 'rtl';
+    const direction = key === 'ArrowLeft' ? (rtl ? 'ArrowDown' : 'ArrowUp') : key === 'ArrowRight' ? (rtl ? 'ArrowUp' : 'ArrowDown') : key;
+    const current = this.#virtualSelectedIndex();
+    const scan = (start: number, step: number): number => {
+      for (let index = start; index >= 0 && index < count; index += step) if (!this.itemDisabled(items[index])) return index;
+      return -1;
+    };
+    let target: number;
+    switch (direction) {
+      case 'ArrowDown':
+        target = scan(current + 1, 1);
+        break;
+      case 'ArrowUp':
+        target = current < 0 ? -1 : scan(current - 1, -1);
+        break;
+      case 'Home':
+        target = scan(0, 1);
+        break;
+      case 'End':
+        target = scan(count - 1, -1);
+        break;
+      case 'PageDown':
+        target = scan(Math.min(count - 1, current + SD_SELECT_VIRTUAL_PAGE), -1);
+        break;
+      default:
+        target = scan(Math.max(0, current - SD_SELECT_VIRTUAL_PAGE), 1);
+    }
+    if (target >= 0 && target !== current) this.#selectClosedVirtual(target);
+  };
+
+  #selectClosedVirtual = (index: number): void => {
+    const item = this.filteredItems()[index];
+    this.clearSearch();
+    this.#commitVirtualValue(this.itemValue(item));
+    // Material announces the new value itself when a closed select changes; do the same.
+    this.#liveAnnouncer.announce(this.itemDisplay(item), 10000);
+  };
+
+  #isTyping = (): boolean => !!this.#typeahead && performance.now() - this.#typeaheadAt <= SD_SELECT_TYPEAHEAD_MS;
+
+  /**
+   * Typeahead over the whole list, folded like the search box. Unlike Material's (debounced, rendered rows
+   * only) it moves on every key: a longer prefix keeps the current row if it still matches.
+   */
+  #typeaheadVirtual = (char: string, commit: boolean): void => {
+    const now = performance.now();
+    if (now - this.#typeaheadAt > SD_SELECT_TYPEAHEAD_MS) this.#typeahead = '';
+    this.#typeahead += char;
+    this.#typeaheadAt = now;
+    const query = StringUtilities.changeAliasLowerCase(this.#typeahead);
+    const labels = this.#virtualLabels();
+    const count = labels.length;
+    if (!query || !count) return;
+    const start = commit ? this.#virtualSelectedIndex() : this.virtualActiveIndex();
+    const first = start < 0 ? 0 : this.#typeahead.length > 1 ? start : start + 1;
+    for (let step = 0; step < count; step++) {
+      const index = (first + step) % count;
+      if (commit && this.itemDisabled(this.filteredItems()[index])) continue;
+      if (!labels[index].startsWith(query)) continue;
+      if (commit) this.#selectClosedVirtual(index);
+      else this.#activateVirtual(index);
+      return;
     }
   };
 }

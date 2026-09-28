@@ -8,15 +8,15 @@
 
 :host {
   // Surfaces — dark theme defaults.
-  --sd-pdf-shell-bg: #1a1c1f;
-  --sd-pdf-sidebar-bg: #22252a;
+  --sd-pdf-shell-bg: var(--sd-preview-pdf-shell-bg, #1a1c1f);
+  --sd-pdf-sidebar-bg: var(--sd-preview-pdf-sidebar-bg, #22252a);
   --sd-pdf-toolbar-bg: rgba(20, 22, 25, 0.94);
-  --sd-pdf-page-bg: #ffffff;
+  --sd-pdf-page-bg: var(--sd-preview-pdf-page-bg, #ffffff);
   --sd-pdf-page-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   --sd-pdf-divider: rgba(255, 255, 255, 0.08);
 
   // Foreground
-  --sd-pdf-fg: #f5f6f7;
+  --sd-pdf-fg: var(--sd-preview-pdf-fg, #f5f6f7);
   --sd-pdf-fg-muted: rgba(255, 255, 255, 0.6);
   --sd-pdf-fg-subtle: rgba(255, 255, 255, 0.4);
 
@@ -50,7 +50,7 @@
   outline: none;
 
   &:focus-visible {
-    outline: 2px solid var(--sd-pdf-primary);
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-pdf-accent, var(--sd-focus-ring-color, var(--sd-primary)));
     outline-offset: 2px;
   }
 }
@@ -59,14 +59,14 @@
 // Light theme — token overrides via [data-theme="light"] host attribute.
 // =============================================================================
 :host([data-theme='light']) {
-  --sd-pdf-shell-bg: #f7f8fa;
-  --sd-pdf-sidebar-bg: #ffffff;
+  --sd-pdf-shell-bg: var(--sd-preview-pdf-light-shell-bg, #f7f8fa);
+  --sd-pdf-sidebar-bg: var(--sd-preview-pdf-light-sidebar-bg, #ffffff);
   --sd-pdf-toolbar-bg: rgba(255, 255, 255, 0.94);
-  --sd-pdf-page-bg: #ffffff;
+  --sd-pdf-page-bg: var(--sd-preview-pdf-page-bg, #ffffff);
   --sd-pdf-page-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   --sd-pdf-divider: rgba(0, 0, 0, 0.08);
 
-  --sd-pdf-fg: #1a1c1f;
+  --sd-pdf-fg: var(--sd-preview-pdf-light-fg, #1a1c1f);
   --sd-pdf-fg-muted: rgba(0, 0, 0, 0.62);
   --sd-pdf-fg-subtle: rgba(0, 0, 0, 0.42);
 
@@ -104,7 +104,7 @@
   height: 100%;
   background: var(--sd-pdf-shell-bg);
   color: var(--sd-pdf-fg);
-  border-radius: 12px;
+  border-radius: var(--sd-radius-12, 12px);
   overflow: hidden;
   box-shadow:
     0 30px 80px rgba(0, 0, 0, 0.55),
@@ -158,8 +158,8 @@
   }
 
   &__name {
-    font-size: 14px;
-    font-weight: 500;
+    font-size: var(--sd-font-size-14, 14px);
+    font-weight: var(--sd-font-weight-medium, 500);
     color: var(--sd-pdf-fg);
     max-width: 320px;
     overflow: hidden;
@@ -168,7 +168,7 @@
   }
 
   &__sub {
-    font-size: 11px;
+    font-size: var(--sd-font-size-11, 11px);
     color: var(--sd-pdf-fg-muted);
     margin-top: 2px;
   }
@@ -181,7 +181,7 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  border-radius: 6px;
+  border-radius: var(--sd-radius-6, 6px);
   background: var(--sd-pdf-danger-tint);
   border: 1px solid var(--sd-pdf-danger-border);
   // WHY var(--sd-error-light, ...): the tile foreground should track the
@@ -215,23 +215,23 @@
   background: transparent;
   border: none;
   color: var(--sd-pdf-fg);
-  border-radius: 6px;
+  border-radius: var(--sd-radius-6, 6px);
   cursor: pointer;
   transition:
-    background 120ms,
-    color 120ms;
+    background var(--sd-duration-fast, 120ms),
+    color var(--sd-duration-fast, 120ms);
   white-space: nowrap;
   flex-shrink: 0;
 
   sd-icon {
-    font-size: 18px;
+    font-size: var(--sd-font-size-18, 18px);
     width: 18px;
     height: 18px;
   }
 
   &__label {
-    font-size: 13px;
-    font-weight: 500;
+    font-size: var(--sd-font-size-13, 13px);
+    font-weight: var(--sd-font-weight-medium, 500);
   }
 
   &:hover:not(:disabled) {
@@ -239,7 +239,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--sd-pdf-primary);
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-pdf-accent, var(--sd-focus-ring-color, var(--sd-primary)));
     outline-offset: 2px;
   }
 
@@ -273,7 +273,7 @@
 
   &__icon {
     color: var(--sd-pdf-fg-muted);
-    font-size: 18px;
+    font-size: var(--sd-font-size-18, 18px);
     width: 18px;
     height: 18px;
     flex-shrink: 0;
@@ -286,9 +286,9 @@
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.08);
     color: var(--sd-pdf-fg);
-    border-radius: 6px;
+    border-radius: var(--sd-radius-6, 6px);
     padding: 0 10px;
-    font-size: 13px;
+    font-size: var(--sd-font-size-13, 13px);
     outline: none;
 
     &::placeholder {
@@ -303,7 +303,7 @@
 
   &__counter {
     color: var(--sd-pdf-fg-muted);
-    font-size: 12px;
+    font-size: var(--sd-font-size-12, 12px);
     font-variant-numeric: tabular-nums;
     min-width: 48px;
     text-align: center;
@@ -341,11 +341,11 @@
 .sd-pdf-search-hi {
   display: inline-block;
   padding: 1px 4px;
-  border-radius: 2px;
+  border-radius: var(--sd-radius-2, 2px);
   background: var(--sd-pdf-search-hi);
   color: black;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: var(--sd-font-size-12, 12px);
+  font-weight: var(--sd-font-weight-medium, 500);
 
   &--active {
     background: var(--sd-pdf-search-hi-active);
@@ -398,18 +398,18 @@
     background: transparent;
     border: none;
     color: var(--sd-pdf-fg-muted);
-    border-radius: 6px;
+    border-radius: var(--sd-radius-6, 6px);
     cursor: pointer;
-    font-size: 12px;
-    font-weight: 500;
+    font-size: var(--sd-font-size-12, 12px);
+    font-weight: var(--sd-font-weight-medium, 500);
     white-space: nowrap;
     flex-shrink: 0;
     transition:
-      background 120ms,
-      color 120ms;
+      background var(--sd-duration-fast, 120ms),
+      color var(--sd-duration-fast, 120ms);
 
     sd-icon {
-      font-size: 14px;
+      font-size: var(--sd-font-size-14, 14px);
       width: 14px;
       height: 14px;
     }
@@ -442,7 +442,7 @@
     color: var(--sd-pdf-fg-subtle);
 
     sd-icon {
-      font-size: 28px;
+      font-size: var(--sd-font-size-28, 28px);
       width: 28px;
       height: 28px;
       opacity: 0.6;
@@ -450,7 +450,7 @@
 
     p {
       margin: 0;
-      font-size: 12px;
+      font-size: var(--sd-font-size-12, 12px);
       line-height: 1.5;
     }
   }
@@ -488,7 +488,7 @@
     justify-content: center;
     padding: 0;
     border: 0;
-    border-radius: 4px;
+    border-radius: var(--sd-radius-4, 4px);
     background: transparent;
     color: var(--sd-pdf-fg-muted);
     cursor: pointer;
@@ -501,7 +501,7 @@
     sd-icon {
       width: 16px;
       height: 16px;
-      font-size: 16px;
+      font-size: var(--sd-font-size-16, 16px);
     }
   }
 
@@ -515,7 +515,7 @@
     background: transparent;
     color: var(--sd-pdf-fg-muted);
     font: inherit;
-    font-size: 12px;
+    font-size: var(--sd-font-size-12, 12px);
     line-height: 1.35;
     text-align: left;
     text-decoration: none;
@@ -531,11 +531,11 @@
     &[aria-current='page'] {
       background: var(--sd-pdf-primary-soft);
       color: var(--sd-pdf-primary);
-      font-weight: 600;
+      font-weight: var(--sd-font-weight-semibold, 600);
     }
 
     &:focus-visible {
-      outline: 2px solid var(--sd-pdf-primary);
+      outline: var(--sd-focus-ring-width, 2px) solid var(--sd-pdf-accent, var(--sd-focus-ring-color, var(--sd-primary)));
       outline-offset: -2px;
     }
   }
@@ -561,7 +561,7 @@
 .sd-preview-pdf-search-limit {
   margin: 0 0 8px;
   color: var(--sd-pdf-fg-muted);
-  font-size: 11px;
+  font-size: var(--sd-font-size-11, 11px);
   line-height: 1.4;
 }
 
@@ -580,7 +580,7 @@
     width: 152px;
     aspect-ratio: 612 / 792;
     background: var(--sd-pdf-page-bg);
-    border-radius: 2px;
+    border-radius: var(--sd-radius-2, 2px);
     outline: 1px solid rgba(255, 255, 255, 0.08);
     outline-offset: -1px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
@@ -604,7 +604,7 @@
   }
 
   &__label {
-    font-size: 11px;
+    font-size: var(--sd-font-size-11, 11px);
     color: var(--sd-pdf-fg-muted);
     font-variant-numeric: tabular-nums;
   }
@@ -616,11 +616,11 @@
 
   &--active &__label {
     color: var(--sd-pdf-primary);
-    font-weight: 600;
+    font-weight: var(--sd-font-weight-semibold, 600);
   }
 
   &:focus-visible &__page {
-    outline: 2px solid var(--sd-pdf-primary);
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-pdf-accent, var(--sd-focus-ring-color, var(--sd-primary)));
     outline-offset: 2px;
   }
 }
@@ -669,7 +669,7 @@
 .sd-preview-pdf-page {
   display: block;
   background: var(--sd-pdf-page-bg);
-  border-radius: 2px;
+  border-radius: var(--sd-radius-2, 2px);
   // Lighter / heavier shadow per theme — see :host token defaults.
   box-shadow: var(--sd-pdf-page-shadow);
   max-width: 100%;
@@ -698,7 +698,7 @@
   display: block;
   max-width: 100%;
   background: var(--sd-pdf-page-bg);
-  border-radius: 2px;
+  border-radius: var(--sd-radius-2, 2px);
   box-shadow: var(--sd-pdf-page-shadow);
 }
 
@@ -718,7 +718,7 @@
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid var(--sd-pdf-divider);
-  border-radius: 10px;
+  border-radius: var(--sd-radius-10, 10px);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
   z-index: 4;
   max-width: calc(100% - 32px);
@@ -735,23 +735,23 @@
     background: transparent;
     border: none;
     color: var(--sd-pdf-fg);
-    border-radius: 6px;
+    border-radius: var(--sd-radius-6, 6px);
     cursor: pointer;
     white-space: nowrap;
     flex-shrink: 0;
     transition:
-      background 120ms,
-      color 120ms;
+      background var(--sd-duration-fast, 120ms),
+      color var(--sd-duration-fast, 120ms);
 
     sd-icon {
-      font-size: 18px;
+      font-size: var(--sd-font-size-18, 18px);
       width: 18px;
       height: 18px;
     }
 
     span {
-      font-size: 13px;
-      font-weight: 500;
+      font-size: var(--sd-font-size-13, 13px);
+      font-weight: var(--sd-font-weight-medium, 500);
     }
 
     &--with-label {
@@ -768,7 +768,7 @@
     }
 
     &:focus-visible {
-      outline: 2px solid var(--sd-pdf-primary);
+      outline: var(--sd-focus-ring-width, 2px) solid var(--sd-pdf-accent, var(--sd-focus-ring-color, var(--sd-primary)));
       outline-offset: 2px;
     }
 
@@ -792,9 +792,9 @@
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.08);
     color: var(--sd-pdf-fg);
-    border-radius: 4px;
+    border-radius: var(--sd-radius-4, 4px);
     text-align: center;
-    font-size: 13px;
+    font-size: var(--sd-font-size-13, 13px);
     font-variant-numeric: tabular-nums;
     outline: none;
 
@@ -804,7 +804,7 @@
   }
 
   &__page-total {
-    font-size: 13px;
+    font-size: var(--sd-font-size-13, 13px);
     color: var(--sd-pdf-fg-muted);
     font-variant-numeric: tabular-nums;
   }
@@ -813,11 +813,11 @@
     min-width: 56px;
     text-align: center;
     color: var(--sd-pdf-fg);
-    font-size: 13px;
-    font-weight: 500;
+    font-size: var(--sd-font-size-13, 13px);
+    font-weight: var(--sd-font-weight-medium, 500);
     font-variant-numeric: tabular-nums;
     background: rgba(255, 255, 255, 0.08);
-    border-radius: 4px;
+    border-radius: var(--sd-radius-4, 4px);
     padding: 2px 8px;
   }
 
@@ -847,14 +847,14 @@
   &__tile {
     width: 96px;
     height: 96px;
-    border-radius: 24px;
+    border-radius: var(--sd-radius-24, 24px);
     display: flex;
     align-items: center;
     justify-content: center;
     border: 1px solid var(--sd-pdf-divider);
 
     sd-icon {
-      font-size: 48px;
+      font-size: var(--sd-font-size-48, 48px);
       width: 48px;
       height: 48px;
     }
@@ -878,13 +878,13 @@
   }
 
   &__title {
-    font-size: 16px;
-    font-weight: 500;
+    font-size: var(--sd-font-size-16, 16px);
+    font-weight: var(--sd-font-weight-medium, 500);
     color: var(--sd-pdf-fg);
   }
 
   &__hint {
-    font-size: 13px;
+    font-size: var(--sd-font-size-13, 13px);
     color: var(--sd-pdf-fg-muted);
     line-height: 1.5;
   }
@@ -905,20 +905,20 @@
   width: 240px;
   height: 4px;
   background: rgba(255, 255, 255, 0.08);
-  border-radius: 999px;
+  border-radius: var(--sd-radius-999, 999px);
   overflow: hidden;
 
   &__fill {
     height: 100%;
     background: var(--sd-pdf-primary);
-    transition: width 120ms linear;
+    transition: width var(--sd-duration-fast, 120ms) linear;
   }
 }
 
 .sd-preview-pdf-spinner {
   width: 56px;
   height: 56px;
-  border-radius: 999px;
+  border-radius: var(--sd-radius-999, 999px);
   border: 3px solid rgba(255, 255, 255, 0.08);
   border-top-color: var(--sd-pdf-primary);
   animation: sd-preview-pdf-spin 0.9s linear infinite;
@@ -959,13 +959,13 @@
   padding: 8px 10px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: var(--sd-radius-6, 6px);
   color: var(--sd-pdf-fg);
   cursor: pointer;
   text-align: left;
   transition:
-    background 120ms,
-    border-color 120ms;
+    background var(--sd-duration-fast, 120ms),
+    border-color var(--sd-duration-fast, 120ms);
 
   &:hover {
     background: rgba(255, 255, 255, 0.07);
@@ -978,7 +978,7 @@
 
   &__snippet {
     flex: 1 1 auto;
-    font-size: 12px;
+    font-size: var(--sd-font-size-12, 12px);
     line-height: 1.4;
     color: var(--sd-pdf-fg);
     word-break: break-word;
@@ -987,18 +987,18 @@
       background: var(--sd-pdf-search-hi);
       color: black;
       padding: 0 2px;
-      border-radius: 2px;
+      border-radius: var(--sd-radius-2, 2px);
     }
   }
 
   &__page {
     flex: 0 0 auto;
-    font-size: 11px;
+    font-size: var(--sd-font-size-11, 11px);
     font-variant-numeric: tabular-nums;
     color: var(--sd-pdf-fg-muted);
     background: rgba(255, 255, 255, 0.06);
     padding: 2px 6px;
-    border-radius: 4px;
+    border-radius: var(--sd-radius-4, 4px);
   }
 }
 
@@ -1009,16 +1009,16 @@
   height: 36px;
   padding: 0 16px;
   background: var(--sd-pdf-primary);
-  color: #fff;
+  color: var(--sd-text-on-solid, #ffffff);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--sd-radius-8, 8px);
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
-  transition: filter 120ms;
+  font-size: var(--sd-font-size-13, 13px);
+  font-weight: var(--sd-font-weight-medium, 500);
+  transition: filter var(--sd-duration-fast, 120ms);
 
   sd-icon {
-    font-size: 18px;
+    font-size: var(--sd-font-size-18, 18px);
     width: 18px;
     height: 18px;
   }
@@ -1028,7 +1028,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid #fff;
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-preview-pdf-focus-ring, white);
     outline-offset: 2px;
   }
 }
@@ -1042,14 +1042,14 @@
   background: transparent;
   color: var(--sd-pdf-fg);
   border: 1px solid var(--sd-pdf-divider);
-  border-radius: 8px;
+  border-radius: var(--sd-radius-8, 8px);
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
-  transition: background 120ms;
+  font-size: var(--sd-font-size-13, 13px);
+  font-weight: var(--sd-font-weight-medium, 500);
+  transition: background var(--sd-duration-fast, 120ms);
 
   sd-icon {
-    font-size: 18px;
+    font-size: var(--sd-font-size-18, 18px);
     width: 18px;
     height: 18px;
   }
@@ -1059,7 +1059,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--sd-pdf-primary);
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-pdf-accent, var(--sd-focus-ring-color, var(--sd-primary)));
     outline-offset: 2px;
   }
 }

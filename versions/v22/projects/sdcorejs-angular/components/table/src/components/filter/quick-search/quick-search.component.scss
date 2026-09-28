@@ -4,7 +4,7 @@
   container-type: inline-size;
   box-sizing: border-box;
   padding: 12px 16px;
-  background: #fff;
+  background: var(--sd-table-bg, #ffffff);
 }
 .sd-quick-search-row {
   display: flex;
@@ -39,12 +39,12 @@
   min-height: 32px;
   padding: 0 8px;
   border: 1px solid var(--sd-border, #e0e3e8);
-  border-radius: 6px;
-  background: #fff;
+  border-radius: var(--sd-radius-6, 6px);
+  background: var(--sd-table-bg, #ffffff);
   color: var(--sd-text-secondary, #626872);
 }
 .sd-quick-search-field > sd-icon {
-  font-size: 18px;
+  font-size: var(--sd-font-size-18, 18px);
   width: 18px;
   flex: 0 0 18px;
 }
@@ -53,12 +53,12 @@
   width: 100%;
   flex: 1;
   border: 0;
-  border-radius: 2px;
+  border-radius: var(--sd-radius-2, 2px);
   background: transparent;
   color: var(--sd-text, #212121);
   font: inherit;
-  font-size: 14px;
-  line-height: 20px;
+  font-size: var(--sd-font-size-14, 14px);
+  line-height: var(--sd-line-height-20, 20px);
   padding: 4px 0;
 }
 .sd-quick-search-field input::placeholder {
@@ -86,15 +86,15 @@
   background: var(--sd-surface-muted, #f2f3f4);
 }
 .sd-quick-search-clear sd-icon {
-  font-size: 16px;
+  font-size: var(--sd-font-size-16, 16px);
   width: 16px;
 }
 .sd-quick-search-enter {
-  font-size: 12px;
-  line-height: 18px;
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: var(--sd-line-height-18, 18px);
   padding: 0 4px;
   border: 1px solid var(--sd-border, #e0e3e8);
-  border-radius: 4px;
+  border-radius: var(--sd-radius-4, 4px);
 }
 .sd-quick-search-right {
   margin-left: auto;
@@ -103,8 +103,8 @@
 }
 .sd-quick-search-hint {
   margin: 6px 0 0;
-  font-size: 12px;
-  line-height: 18px;
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: var(--sd-line-height-18, 18px);
   color: var(--sd-text-secondary, #626872);
 }
 @container (max-width: 550px) {
@@ -124,7 +124,7 @@
     min-height: 44px;
   }
   .sd-quick-search-field input {
-    font-size: 16px;
+    font-size: var(--sd-font-size-16, 16px);
   }
   .sd-quick-search-clear {
     width: 40px;
@@ -137,7 +137,7 @@
     min-height: 44px;
   }
   .sd-quick-search-field input {
-    font-size: 16px;
+    font-size: var(--sd-font-size-16, 16px);
   }
   .sd-quick-search-clear {
     width: 40px;
@@ -153,6 +153,6 @@
   outline: none;
 }
 .sd-quick-search-clear:focus-visible {
-  outline: 2px solid var(--sd-primary, #2563eb);
+  outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
   outline-offset: 2px;
 }

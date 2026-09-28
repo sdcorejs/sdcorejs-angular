@@ -1,0 +1,90 @@
+// Non-colour scales: space, radius, shadow, z-index, motion and typography (D-020).
+//
+// why: every value below equals a literal the library already uses (most of them the most frequent
+// one), so components can move to `var(--sd-*)` under the exact-value rule (D-014) without any visual
+// change. Values are the same in light and dark; theme() re-declares them in every scope anyway, so a
+// nested scope never inherits a stale computed value (INV-008).
+
+$scales: (
+  // Space — named by pixel value.
+  'space-0': 0,
+  'space-2': 2px,
+  'space-4': 4px,
+  'space-6': 6px,
+  'space-8': 8px,
+  'space-10': 10px,
+  'space-12': 12px,
+  'space-16': 16px,
+  'space-20': 20px,
+  'space-24': 24px,
+  'space-32': 32px,
+  'space-40': 40px,
+  'space-48': 48px,
+  // Radius — named by pixel value; 999px is the pill shape used across chips and badges.
+  'radius-2': 2px,
+  'radius-4': 4px,
+  'radius-6': 6px,
+  'radius-8': 8px,
+  'radius-10': 10px,
+  'radius-12': 12px,
+  'radius-16': 16px,
+  'radius-24': 24px,
+  'radius-999': 999px,
+  // Shadow — Material elevation 1, 2, 4, 8, 16 (the values of the elevation utilities).
+  'shadow-xs': (0px 2px 1px -1px rgba(0, 0, 0, 0.2), 0px 1px 1px 0px rgba(0, 0, 0, 0.14), 0px 1px 3px 0px rgba(0, 0, 0, 0.12)),
+  'shadow-sm': (0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12)),
+  'shadow-md': (0px 2px 4px -1px rgba(0, 0, 0, 0.2), 0px 4px 5px 0px rgba(0, 0, 0, 0.14), 0px 1px 10px 0px rgba(0, 0, 0, 0.12)),
+  'shadow-lg': (0px 5px 5px -3px rgba(0, 0, 0, 0.2), 0px 8px 10px 1px rgba(0, 0, 0, 0.14), 0px 3px 14px 2px rgba(0, 0, 0, 0.12)),
+  'shadow-xl': (0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)),
+  // Z-index layers, in stacking order — the values the library's own layers use.
+  'z-sidebar': 20,
+  'z-header': 30,
+  'z-popover': 40,
+  'z-drawer-mobile': 50,
+  'z-floating': 99,
+  'z-backdrop': 998,
+  'z-drawer': 999,
+  'z-dropdown': 1000,
+  'z-overlay': 9999,
+  'z-modal': 10000,
+  'z-devtools': 100000,
+  // Motion.
+  'duration-fast': 120ms,
+  'duration-base': 200ms,
+  'duration-slow': 300ms,
+  'ease-standard': cubic-bezier(0.4, 0, 0.2, 1),
+  // Typography — sizes and line heights named by pixel value.
+  'font-size-10': 10px,
+  'font-size-11': 11px,
+  'font-size-12': 12px,
+  'font-size-13': 13px,
+  'font-size-14': 14px,
+  'font-size-15': 15px,
+  'font-size-16': 16px,
+  'font-size-18': 18px,
+  'font-size-20': 20px,
+  'font-size-22': 22px,
+  'font-size-24': 24px,
+  'font-size-28': 28px,
+  'font-size-32': 32px,
+  'font-size-48': 48px,
+  'font-weight-regular': 400,
+  'font-weight-medium': 500,
+  'font-weight-semibold': 600,
+  'font-weight-bold': 700,
+  'line-height-16': 16px,
+  'line-height-18': 18px,
+  'line-height-20': 20px,
+  'line-height-22': 22px,
+  'line-height-24': 24px,
+  'line-height-28': 28px,
+  // Focus ring geometry (the colour lives in the semantic tier).
+  'focus-ring-width': 2px,
+  'focus-ring-offset': 2px,
+);
+
+@mixin emit() {
+  @each $name, $value in $scales {
+    --sd-#{$name}: #{$value};
+  }
+}

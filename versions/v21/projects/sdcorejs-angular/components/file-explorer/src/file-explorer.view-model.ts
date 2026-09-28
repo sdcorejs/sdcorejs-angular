@@ -65,6 +65,7 @@ export type SdFileExplorerPreviewState =
   | { readonly status: 'loading' }
   | { readonly status: 'image'; readonly url: string }
   | { readonly status: 'pdf'; readonly source: string | Blob }
+  | { readonly status: 'video'; readonly source: string | Blob }
   | { readonly status: 'unavailable' }
   | { readonly status: 'error'; readonly message: string };
 

@@ -134,7 +134,7 @@ $badges: '';
   }
 
   &.c-badge--tag {
-    border-radius: 4px;
+    border-radius: var(--sd-radius-4, 4px);
     padding: 1px 7px;
 
     // size modifier cho tag — override padding mặc định
@@ -190,7 +190,7 @@ $badges: '';
   }
 
   .c-badge-title {
-    line-height: 20px;
+    line-height: var(--sd-line-height-20, 20px);
   }
 
   .c-badge-description {
@@ -206,9 +206,9 @@ $badges: '';
 // không có thì người dùng bàn phím tab vào mà không biết mình đang đứng ở đâu. Dùng :focus-visible
 // để chuột không bị viền.
 :host [role='button']:focus-visible {
-  outline: 2px solid var(--sd-primary, #005cbb);
+  outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: var(--sd-radius-4, 4px);
 }
 
 // Css để sử dụng \n tooltip

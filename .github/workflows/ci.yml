@@ -42,15 +42,26 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '22.22.3'
           cache: npm
-          cache-dependency-path: package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            versions/v19/package-lock.json
 
       - name: Install orchestrator dependencies
         run: npm ci
 
+      # why: the theme, contrast, token-list and hex-rule tests compile the library SCSS and run ESLint
+      # with the canonical v19 toolchain.
+      - name: Install v19 exactly
+        run: npm ci --legacy-peer-deps
+        working-directory: versions/v19
+
       - name: Run repository contracts
         run: npm run test:scripts
+
+      - name: Check library colours use tokens
+        run: npm run check:scss-hex
 
   canonical-v19:
     name: Canonical v19 lint, build and coverage

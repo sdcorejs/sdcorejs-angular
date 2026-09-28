@@ -36,3 +36,4 @@ export * from '@sdcorejs/angular/components/operator';
 export * from '@sdcorejs/angular/components/stepper';
 export * from '@sdcorejs/angular/components/tab';
 export * from '@sdcorejs/angular/components/file-explorer';
+export * from '@sdcorejs/angular/components/highlight';

@@ -6,14 +6,14 @@
   right: 12px;
   top: 80px;
   bottom: 0;
-  background-color: #fff;
-  z-index: 998;
+  background-color: var(--sd-modal-resizable-bg, #ffffff);
+  z-index: var(--sd-z-backdrop, 998);
   display: flex;
   flex-direction: column;
   opacity: 0;
   visibility: hidden;
   transform: translate3d(0, 100%, 0);
-  transition: all 0.3s ease-in-out;
+  transition: all var(--sd-duration-slow, 300ms) ease-in-out;
   pointer-events: none;
   box-shadow:
     0px 0.4px 0.8px rgba(0, 0, 0, 0.1),
@@ -27,7 +27,7 @@
   }
 
   button.c-action--white:focus-visible {
-    outline: 2px solid #fff !important;
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-modal-resizable-focus-ring-on-dark, white) !important;
     outline-offset: 2px;
   }
 
@@ -42,7 +42,7 @@
 
   &.c-minium {
     top: auto !important;
-    z-index: 998 !important;
+    z-index: var(--sd-z-backdrop, 998) !important;
 
     .modal-resizable__body,
     .modal-resizable__footer {
@@ -52,7 +52,7 @@
 
   &.c-fullscreen {
     top: 0;
-    z-index: 999;
+    z-index: var(--sd-z-drawer, 999);
   }
 }
 
@@ -65,7 +65,7 @@
 
   // why: xoá outline mà không có gì thay thế thì người dùng bàn phím không thấy mình đang ở nút nào.
   &:focus-visible {
-    outline: 2px solid var(--sd-primary, #005cbb);
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
     outline-offset: 2px;
   }
 
@@ -85,13 +85,13 @@
 .modal-resizable__icon {
   border: 0;
   background: transparent;
-  color: #212121;
+  color: var(--sd-modal-resizable-title, #212121);
   overflow: hidden;
   outline: none;
 
   // why: nút icon không có nền/viền riêng nên `outline: none` xoá sạch chỉ báo focus.
   &:focus-visible {
-    outline: 2px solid var(--sd-primary, #005cbb);
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
     outline-offset: 2px;
   }
 
@@ -107,7 +107,7 @@
   gap: 4px;
   min-height: 40px;
   padding: 0 16px;
-  background-color: #5d6165;
+  background-color: var(--sd-modal-resizable-header-bg, #5d6165);
   color: map.get(color.$color_map, 'white');
   border-radius: 4px 4px 0 0;
 }
@@ -128,7 +128,7 @@
 }
 
 .modal-resizable__footer {
-  border-top: 1px solid #dde0e5;
+  border-top: 1px solid var(--sd-modal-resizable-divider, #dde0e5);
   padding: 5px 16px;
   display: flex;
   align-items: center;
@@ -158,9 +158,9 @@
   flex: 1 1 0;
   min-width: 0;
   color: map.get(color.$color_map, 'white');
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 500;
+  font-size: var(--sd-font-size-14, 14px);
+  line-height: var(--sd-line-height-20, 20px);
+  font-weight: var(--sd-font-weight-medium, 500);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

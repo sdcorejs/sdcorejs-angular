@@ -18,20 +18,20 @@
   color: rgb(0, 0, 238);
   border: none;
   padding: 0;
-  font-size: 12px;
+  font-size: var(--sd-font-size-12, 12px);
   cursor: pointer;
   outline: none;
 
   // why: `outline: none` ở trên xoá luôn vòng focus mặc định → người dùng bàn phím mất dấu.
   // Trả lại bằng :focus-visible (chuột vẫn không thấy viền).
   &:focus-visible {
-    outline: 2px solid var(--sd-primary, #005cbb);
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
     outline-offset: 2px;
   }
 }
 
 // why: ô HTML clickable nay có tabindex="0" nên phải có vòng focus thấy được.
 :host [role='button']:focus-visible {
-  outline: 2px solid var(--sd-primary, #005cbb);
+  outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
   outline-offset: -2px;
 }

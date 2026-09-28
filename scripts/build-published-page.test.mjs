@@ -84,6 +84,19 @@ test('buildPagesIndex stays valid with no published pages yet', () => {
   assert.deepEqual(index.suffixes, []);
 });
 
+test('publishing 3.0 opens a 3.x group, keeps the newest five 2.x pages and reports 3.0 as latest', () => {
+  const retained2x = ['2.15', '2.14', '2.13', '2.12', '2.11'];
+  const afterCopy = [...retained2x, '2.10', '3.0'];
+
+  const prune = selectSuffixesToPrune(afterCopy);
+  const index = buildPagesIndex(afterCopy.filter(suffix => !prune.includes(suffix)));
+
+  // 2.10 sorts below 2.15 numerically (lexicographic order would keep it and prune 2.15).
+  assert.deepEqual(prune, ['2.10']);
+  assert.equal(index.latest, '3.0');
+  assert.deepEqual(index.suffixes, ['3.0', ...retained2x]);
+});
+
 test('publishing 2.5 prunes exactly 2.0, retains 2.1-2.5 and leaves the 1.x group untouched', () => {
   const historical1x = ['1.6', '1.5', '1.4', '1.3', '1.2'];
   const beforeRelease = [...historical1x, '2.4', '2.3', '2.2', '2.1', '2.0'];

@@ -29,7 +29,7 @@
     }
 
     .c-layout-content {
-      background-color: #fff;
+      background-color: var(--sd-sidebar-bg, #ffffff);
       box-sizing: border-box;
       height: 100vh !important;
       margin-left: 56px !important;

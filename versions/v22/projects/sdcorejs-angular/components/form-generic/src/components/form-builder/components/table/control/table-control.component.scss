@@ -17,9 +17,9 @@
 }
 
 .fb-table-control__label {
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 600;
+  font-size: var(--sd-font-size-14, 14px);
+  line-height: var(--sd-line-height-20, 20px);
+  font-weight: var(--sd-font-weight-semibold, 600);
   color: var(--sd-text-secondary, #757575);
 
   span {
@@ -34,8 +34,8 @@
   overflow-x: auto;
   overflow-y: hidden;
   border: 1px solid var(--sd-border, #E6E6E6);
-  border-radius: 10px;
-  background: #fff;
+  border-radius: var(--sd-radius-10, 10px);
+  background: var(--sd-form-builder-control-bg, #ffffff);
   overscroll-behavior-x: contain;
 }
 
@@ -48,7 +48,7 @@
 
 .fb-table-control__header {
   min-height: 44px;
-  background: color-mix(in srgb, var(--sd-surface-muted, #F2F2F2) 70%, #fff);
+  background: color-mix(in srgb, var(--sd-surface-muted, #F2F2F2) 70%, var(--sd-form-builder-mix-tint, #ffffff));
   border-bottom: 1px solid var(--sd-border, #E6E6E6);
 }
 
@@ -70,9 +70,9 @@
   gap: 7px;
   padding: 10px 14px;
   color: var(--sd-text-secondary, #757575);
-  font-size: 13px;
-  line-height: 18px;
-  font-weight: 500;
+  font-size: var(--sd-font-size-13, 13px);
+  line-height: var(--sd-line-height-18, 18px);
+  font-weight: var(--sd-font-weight-medium, 500);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -85,7 +85,7 @@
 
 .fb-table-control__header .fb-table-control__cell {
   color: var(--sd-text-secondary, #757575);
-  font-weight: 700;
+  font-weight: var(--sd-font-weight-bold, 700);
 }
 
 .fb-table-control__icon {
@@ -97,7 +97,7 @@
   justify-content: center;
   color: var(--sd-text-secondary, #757575);
   font-family: 'Material Icons Outlined';
-  font-size: 16px;
+  font-size: var(--sd-font-size-16, 16px);
   line-height: 1;
   letter-spacing: normal;
   text-transform: none;
@@ -121,12 +121,12 @@
   align-items: center;
   gap: 8px;
   padding: 0 6px;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--sd-font-size-14, 14px);
+  font-weight: var(--sd-font-weight-semibold, 600);
   cursor: default;
 
   span {
-    font-size: 18px;
+    font-size: var(--sd-font-size-18, 18px);
     line-height: 1;
   }
 }

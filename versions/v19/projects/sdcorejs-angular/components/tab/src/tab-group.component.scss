@@ -21,10 +21,10 @@
 }
 
 .sd-tab__icon {
-  font-size: 18px;
+  font-size: var(--sd-font-size-18, 18px);
   width: 18px;
   height: 18px;
-  line-height: 18px;
+  line-height: var(--sd-line-height-18, 18px);
 }
 
 .sd-tab__text {
@@ -38,8 +38,8 @@
   min-width: var(--sd-tab-badge-min-width);
   height: 18px;
   padding: var(--sd-tab-badge-padding);
-  font-size: 11px;
-  font-weight: 500;
+  font-size: var(--sd-font-size-11, 11px);
+  font-weight: var(--sd-font-weight-medium, 500);
   line-height: 1;
   color: var(--sd-tab-badge-color);
   background: var(--sd-tab-badge-bg);
@@ -50,10 +50,10 @@
 // why: đổi từ <sd-icon> sang <button type="button"> để bàn phím đóng được tab → reset chrome mặc
 // định của button (nền/viền/padding) giữ nguyên diện mạo cũ, và thêm focus ring.
 .sd-tab__close {
-  font-size: 16px;
+  font-size: var(--sd-font-size-16, 16px);
   width: 16px;
   height: 16px;
-  line-height: 16px;
+  line-height: var(--sd-line-height-16, 16px);
   color: var(--sd-tab-close-color);
   cursor: pointer;
   opacity: 0.6;
@@ -64,13 +64,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 120ms ease, color 120ms ease;
+  transition: opacity var(--sd-duration-fast, 120ms) ease, color var(--sd-duration-fast, 120ms) ease;
 
   sd-icon {
-    font-size: 16px;
+    font-size: var(--sd-font-size-16, 16px);
     width: 16px;
     height: 16px;
-    line-height: 16px;
+    line-height: var(--sd-line-height-16, 16px);
   }
 
   &:hover {
@@ -80,7 +80,7 @@
 
   &:focus-visible {
     opacity: 1;
-    outline: 2px solid var(--sd-primary, #005cbb);
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
     outline-offset: 2px;
   }
 }
@@ -150,22 +150,22 @@
     min-width: 0;
     height: 32px;
     padding: 0 14px;
-    border-radius: 999px;
+    border-radius: var(--sd-radius-999, 999px);
     flex-grow: 0 !important;
     flex-basis: auto !important;
     background: transparent;
-    transition: background-color 120ms ease;
+    transition: background-color var(--sd-duration-fast, 120ms) ease;
 
     &:hover:not(.mat-mdc-tab-disabled):not(.mdc-tab--active) {
       background: color-mix(in srgb, var(--sd-tab-label-active-color) 7%, transparent);
     }
 
-    .mdc-tab__text-label { color: var(--sd-tab-label-color); font-weight: 500; }
+    .mdc-tab__text-label { color: var(--sd-tab-label-color); font-weight: var(--sd-font-weight-medium, 500); }
     .mdc-tab__content { height: 100%; }
 
     &.mdc-tab--active {
       background: var(--sd-tab-badge-bg);
-      .mdc-tab__text-label { color: var(--sd-tab-label-active-color); font-weight: 600; }
+      .mdc-tab__text-label { color: var(--sd-tab-label-active-color); font-weight: var(--sd-font-weight-semibold, 600); }
 
       &:hover:not(.mat-mdc-tab-disabled), &:active:not(.mat-mdc-tab-disabled) {
         background: color-mix(in srgb, var(--sd-tab-label-active-color) 10%, var(--sd-tab-badge-bg));
@@ -173,7 +173,7 @@
     }
 
     &:focus-visible {
-      outline: 2px solid var(--sd-tab-label-active-color);
+      outline: var(--sd-focus-ring-width, 2px) solid var(--sd-tab-label-active-color, var(--sd-focus-ring-color, var(--sd-primary)));
       outline-offset: -2px;
     }
   }
@@ -207,8 +207,8 @@
   .mat-mdc-tab-header {
     display: inline-flex;
     min-height: 34px;
-    background: #f0f3f7;
-    border-radius: 8px;
+    background: var(--sd-tab-group-header-bg, #f0f3f7);
+    border-radius: var(--sd-radius-8, 8px);
     padding: 3px;
   }
 
@@ -218,27 +218,27 @@
     min-width: 0;
     height: 28px;
     padding: 0 14px;
-    border-radius: 6px;
+    border-radius: var(--sd-radius-6, 6px);
     flex-grow: 0 !important;
     flex-basis: auto !important;
     background: transparent;
-    transition: background-color 120ms ease, box-shadow 120ms ease;
+    transition: background-color var(--sd-duration-fast, 120ms) ease, box-shadow var(--sd-duration-fast, 120ms) ease;
 
     &:hover:not(.mat-mdc-tab-disabled):not(.mdc-tab--active) {
       background: rgba(0, 0, 0, 0.04);
     }
 
-    .mdc-tab__text-label { color: var(--sd-tab-label-color); font-weight: 500; font-size: 13px; }
+    .mdc-tab__text-label { color: var(--sd-tab-label-color); font-weight: var(--sd-font-weight-medium, 500); font-size: var(--sd-font-size-13, 13px); }
 
     &.mdc-tab--active {
-      background: #ffffff;
+      background: var(--sd-tab-group-active-bg, #ffffff);
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-      .mdc-tab__text-label { color: var(--sd-tab-label-active-color); font-weight: 600; }
+      .mdc-tab__text-label { color: var(--sd-tab-label-active-color); font-weight: var(--sd-font-weight-semibold, 600); }
     }
 
     // why: keep the active "pill" inside the segmented container clean on hover.
     &.mdc-tab--active:hover:not(.mat-mdc-tab-disabled) {
-      background: #ffffff;
+      background: var(--sd-tab-group-active-bg, #ffffff);
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
     }
   }

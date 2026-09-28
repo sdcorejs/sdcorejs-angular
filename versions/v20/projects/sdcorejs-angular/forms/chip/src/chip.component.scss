@@ -67,7 +67,7 @@
 .sd-view {
   &:not(.c-focused):not(.c-disabled) {
     &:hover {
-      background-color: #ebecf0;
+      background-color: var(--sd-chip-bg, #ebecf0);
     }
   }
 }

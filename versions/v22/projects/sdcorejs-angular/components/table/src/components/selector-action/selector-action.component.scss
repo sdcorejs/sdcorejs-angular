@@ -10,8 +10,8 @@
   align-items: center;
   gap: 8px;
   min-width: 0;
-  font-size: 13px;
-  line-height: 20px;
+  font-size: var(--sd-font-size-13, 13px);
+  line-height: var(--sd-line-height-20, 20px);
 }
 .sd-selection-message > span:last-child {
   overflow-wrap: anywhere;
@@ -22,14 +22,14 @@
   justify-content: center;
   flex: 0 0 28px;
   height: 28px;
-  border-radius: 8px;
+  border-radius: var(--sd-radius-8, 8px);
   background: var(--sd-success-light, #e8f5e9);
   color: var(--sd-success-dark, #2e7d32);
   sd-icon,
   mat-icon {
     width: 18px;
     height: 18px;
-    font-size: 18px;
+    font-size: var(--sd-font-size-18, 18px);
   }
 }
 .sd-selection-actions {
@@ -45,7 +45,7 @@
   flex: 0 0 32px;
   height: 32px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--sd-radius-8, 8px);
   color: var(--sd-text-secondary, #62676d);
   background: transparent;
   cursor: pointer;
@@ -53,21 +53,21 @@
     background: var(--sd-surface-variant, #eef0f3);
   }
   &:focus-visible {
-    outline: 2px solid var(--sd-primary, #005cbb);
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
     outline-offset: 2px;
   }
   sd-icon,
   mat-icon {
     width: 18px;
     height: 18px;
-    font-size: 18px;
+    font-size: var(--sd-font-size-18, 18px);
   }
 }
 .sd-selection-menu-heading {
   padding: 6px 12px 4px;
   color: var(--sd-text-secondary, #62676d);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: var(--sd-font-size-12, 12px);
+  font-weight: var(--sd-font-weight-semibold, 600);
 }
 :host ::ng-deep sd-quick-action .c-quick-action.contained {
   flex-wrap: nowrap;
@@ -75,7 +75,7 @@
   padding: 10px 12px;
   margin: 8px 0;
   border: 1px solid var(--sd-border, #dfe2e7);
-  border-radius: 10px;
+  border-radius: var(--sd-radius-10, 10px);
   box-shadow: none;
   .c-quick-action-action {
     // why: scope của component con tăng specificity; toolbar này giữ action ở cạnh phải trên desktop.

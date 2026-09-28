@@ -8,8 +8,8 @@
   align-items: center;
   min-width: 0;
   border: 1px solid var(--sd-border, #d0d5dd);
-  border-radius: 6px;
-  background: #fff;
+  border-radius: var(--sd-radius-6, 6px);
+  background: var(--sd-entity-picker-bg, #ffffff);
 }
 
 .sd-entity-picker__trigger,
@@ -29,7 +29,7 @@
   cursor: pointer;
 
   &:focus-visible {
-    outline: 2px solid var(--sd-primary, #1677ff);
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
     outline-offset: 2px;
   }
 
@@ -57,8 +57,8 @@
 .sd-entity-picker__error {
   margin-top: 4px;
   color: var(--sd-error, #d92d20);
-  font-size: 12px;
-  line-height: 16px;
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: var(--sd-line-height-16, 16px);
 }
 
 .sd-entity-picker__body {

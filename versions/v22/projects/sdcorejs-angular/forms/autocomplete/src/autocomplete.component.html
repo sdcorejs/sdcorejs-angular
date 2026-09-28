@@ -119,22 +119,56 @@
         <sd-icon class="cursor-pointer sd-suffix-icon" matSuffix name="search"></sd-icon>
       }
 
-      <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onSelect($event.option.value)" class="sd-autocomplete-panel">
+      <mat-autocomplete
+        #auto="matAutocomplete"
+        (optionSelected)="onSelect($event.option.value)"
+        [class]="panelClass()"
+        (opened)="onVirtualOpened()"
+        (closed)="onVirtualClosed()">
         @let _filteredItems = filteredItems();
 
         @if (_filteredItems?.length) {
-          @for (item of _filteredItems; track $index) {
-            <mat-option
-              [value]="item"
-              matTooltipPosition="above"
-              [matTooltip]="_displayField ? getNestedValue(item, _displayField) : item"
-              [disabled]="_disabledField ? getNestedValue(item, _disabledField) : false">
-              @if (iDefTpl) {
-                <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { item: item }"> </ng-container>
-              } @else {
-                {{ _displayField ? getNestedValue(item, _displayField) : item }}
-              }
-            </mat-option>
+          @if (virtualScroll()) {
+            <!-- why (D-026, D-030 V1): real mat-options inside a CDK viewport; the component walks the
+                 whole list with the arrow keys and hands the active row to Material (adapter), so the
+                 input's aria-activedescendant and Material's Enter keep working. templateCacheSize 0:
+                 a recycled option would carry another row's state. -->
+            @let _itemSize = itemSize();
+            <cdk-virtual-scroll-viewport
+              class="sd-autocomplete-virtual-viewport"
+              [itemSize]="_itemSize"
+              [minBufferPx]="_itemSize * 5"
+              [maxBufferPx]="_itemSize * 10"
+              [style.height.px]="virtualViewportHeight()">
+              <mat-option
+                *cdkVirtualFor="let item of _filteredItems; let i = index; templateCacheSize: 0"
+                [id]="virtualOptionId(i)"
+                [value]="item"
+                matTooltipPosition="above"
+                [matTooltip]="_displayField ? getNestedValue(item, _displayField) : item"
+                [disabled]="_disabledField ? getNestedValue(item, _disabledField) : false"
+                [style.height.px]="_itemSize">
+                @if (iDefTpl) {
+                  <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { item: item }"> </ng-container>
+                } @else {
+                  {{ _displayField ? getNestedValue(item, _displayField) : item }}
+                }
+              </mat-option>
+            </cdk-virtual-scroll-viewport>
+          } @else {
+            @for (item of _filteredItems; track $index) {
+              <mat-option
+                [value]="item"
+                matTooltipPosition="above"
+                [matTooltip]="_displayField ? getNestedValue(item, _displayField) : item"
+                [disabled]="_disabledField ? getNestedValue(item, _disabledField) : false">
+                @if (iDefTpl) {
+                  <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { item: item }"> </ng-container>
+                } @else {
+                  {{ _displayField ? getNestedValue(item, _displayField) : item }}
+                }
+              </mat-option>
+            }
           }
         } @else if (_loading) {
           <mat-option disabled><mat-spinner diameter="24"></mat-spinner></mat-option>

@@ -92,7 +92,15 @@
     (click)="onClick()"
     (mouseenter)="updatePanelWidth()"
     (focusin)="updatePanelWidth()">
-    @if (_multiple) {
+    <!-- why: virtualScroll (opt-in) gets its own branch; the 2.15 branches below are unchanged. The
+         @if recreates the field when `multiple` changes, because mat-select cannot switch it later. -->
+    @if (virtualScroll()) {
+      @if (_multiple) {
+        <ng-container *ngTemplateOutlet="virtualField; context: { $implicit: true }"></ng-container>
+      } @else {
+        <ng-container *ngTemplateOutlet="virtualField; context: { $implicit: false }"></ng-container>
+      }
+    } @else if (_multiple) {
       <mat-form-field
         [sdTooltip]="_tooltip ? selectionTooltip : ''"
         sdTooltipPosition="top"
@@ -452,4 +460,177 @@
       </div>
     }
   }
+</ng-template>
+
+<!-- Virtual scroll branch (D-026, D-030 V1). mat-select is only the shell: it gets the value one way
+     ([value] + virtualCompareWith) and never a formControl — the component owns the value, the keyboard
+     over the whole list and aria-activedescendant. Rows are real mat-options inside a CDK viewport; one
+     hidden sentinel option keeps the trigger rendered while the selected rows are scrolled away. -->
+<ng-template #virtualField let-multiple>
+  <mat-form-field
+    [sdTooltip]="multiple && _tooltip ? selectionTooltip : ''"
+    sdTooltipPosition="top"
+    [class.sd-md]="_size === 'md'"
+    [class.sd-sm]="_size === 'sm'"
+    [class.hide-inline-error]="_hideInlineError"
+    [appearance]="_appearance!"
+    [floatLabel]="_floatLabel">
+    @if (_appearance && _label) {
+      <mat-label class="sd-form-field-label">
+        <span>{{ _label }}</span>
+        @if (_helperText) {
+          <sd-icon [matTooltip]="_helperText" matTooltipPosition="below" name="info"></sd-icon>
+        }
+      </mat-label>
+    }
+
+    <mat-select
+      #select
+      [multiple]="multiple"
+      [value]="virtualShellValue()"
+      [compareWith]="virtualCompareWith"
+      [errorStateMatcher]="virtualErrorStateMatcher"
+      [disabled]="formControl.disabled"
+      [placeholder]="placeholder() || _label || ''"
+      disableOptionCentering="true"
+      [panelWidth]="calculatedPanelWidth()"
+      [panelClass]="multiple ? virtualPanelClass.multiple : virtualPanelClass.single"
+      [class.sd-selected]="!_required && _hasValue"
+      [required]="_required"
+      (openedChange)="onOpenedChange($event)"
+      (blur)="onVirtualBlur()"
+      [attr.data-autoId]="_autoId"
+      [attr.data-disabled]="dataDisabled()"
+      [attr.data-invalid]="dataInvalid()"
+      [attr.data-empty]="dataEmpty()"
+      [attr.data-value]="dataValue()"
+      [attr.data-loading]="dataLoading()"
+      [attr.data-required]="dataRequired()"
+      [attr.data-error-message]="dataErrorMessage()"
+      matTooltipClass="sd-multiline-tooltip"
+      [matTooltipDisabled]="multiple || !formControl.disabled || !_normalizedValue?.length"
+      [matTooltip]="multiple ? '' : _tooltip || ''">
+      <mat-select-trigger>
+        @if (sdSelectedTemplate(); as _selTpl) {
+          <ng-container *ngTemplateOutlet="_selTpl; context: selectedTemplateContext()"></ng-container>
+        } @else if (multiple) {
+          <div class="sd-trigger-text">
+            {{ _display }}
+          </div>
+        } @else {
+          {{ _display }}
+        }
+      </mat-select-trigger>
+
+      @if (filtered()) {
+        <div class="c-filter-input-container">
+          <div class="filter-input-wrapper">
+            <sd-icon name="search" aria-hidden="true"></sd-icon>
+            <input
+              [formControl]="inputControl"
+              matInput
+              autocomplete="off"
+              class="c-search-input"
+              [attr.aria-label]="'core.form.select.search' | sdTranslate"
+              [attr.aria-activedescendant]="virtualActiveDescendant()"
+              (keydown)="focusReadRetry($event); onVirtualSearchKeydown($event); $event.stopPropagation()" />
+          </div>
+        </div>
+      }
+
+      @if (multiple && selectAllVisible()) {
+        @let _selectAllState = selectAllState();
+        <div
+          class="sd-select-all-row"
+          role="checkbox"
+          tabindex="0"
+          [attr.aria-checked]="_selectAllState === 'indeterminate' ? 'mixed' : _selectAllState === 'checked'"
+          [attr.data-autoid]="_autoId ? _autoId + '-select-all' : null"
+          (click)="toggleSelectAll()"
+          (keydown.enter)="toggleSelectAll(); $event.preventDefault()"
+          (keydown.space)="toggleSelectAll(); $event.preventDefault()"
+          (keydown)="$event.stopPropagation()">
+          <mat-pseudo-checkbox class="mat-mdc-option-pseudo-checkbox" [state]="_selectAllState" aria-hidden="true"></mat-pseudo-checkbox>
+          <span class="mdc-list-item__primary-text">{{ 'core.form.select.selectAll' | sdTranslate }}</span>
+        </div>
+      }
+
+      @if (!_loading && _readState.status === 'error') {
+        <mat-option disabled class="sd-read-state-anchor" aria-hidden="true"></mat-option>
+      }
+      @let _virtualItems = filteredItems();
+      @if (!_virtualItems.length && !_loading && _readState.status !== 'error') {
+        <mat-option class="sd-empty" disabled>
+          <img class="sd-image-data-empty" alt="empty-image" style="width: 95px" />
+        </mat-option>
+      } @else if (_virtualItems.length && virtualRenderable()) {
+        @let iDefTpl = itemDef()?.templateRef;
+        @let _itemSize = itemSize();
+        <!-- why: templateCacheSize 0 — a recycled mat-option would carry the previous row's selected
+             state until Material re-syncs; fresh options always start clean. -->
+        <cdk-virtual-scroll-viewport
+          class="sd-select-virtual-viewport"
+          [itemSize]="_itemSize"
+          [minBufferPx]="_itemSize * 5"
+          [maxBufferPx]="_itemSize * 10"
+          [style.height.px]="virtualViewportHeight()">
+          <mat-option
+            *cdkVirtualFor="let item of _virtualItems; let i = index; trackBy: virtualTrackBy; templateCacheSize: 0"
+            [id]="virtualOptionId(i)"
+            [value]="itemValue(item)"
+            [disabled]="itemDisabled(item)"
+            [class.sd-virtual-active]="i === virtualActiveIndex()"
+            [style.height.px]="_itemSize">
+            <div class="sd-select-virtual-label">
+              @if (iDefTpl) {
+                <ng-container *ngTemplateOutlet="iDefTpl; context: { item: item }"></ng-container>
+              } @else {
+                {{ itemDisplay(item) }}
+              }
+            </div>
+          </mat-option>
+        </cdk-virtual-scroll-viewport>
+      }
+
+      <ng-container [ngTemplateOutlet]="readRegion"></ng-container>
+
+      @if (_loading) {
+        <mat-option disabled class="sd-loading-option">
+          <mat-spinner diameter="24"></mat-spinner>
+        </mat-option>
+      }
+
+      <!-- why: declared after the rows, so a rendered row wins over the sentinel in virtualCompareWith. -->
+      <mat-option class="sd-virtual-sentinel" [value]="virtualSentinel" disabled aria-hidden="true"></mat-option>
+
+      @let _visibleFooterActions = visibleFooterActions();
+      @if (_visibleFooterActions.length) {
+        <div class="sd-select-footer-actions">
+          @for (action of _visibleFooterActions; track action) {
+            <ng-container *ngTemplateOutlet="action.templateRef; context: footerActionContext()"> </ng-container>
+          }
+        </div>
+      }
+    </mat-select>
+
+    @if (_hideInlineError && _errorVisible) {
+      <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
+    }
+    @if (_hideInlineError && _errorVisible) {
+      <span class="sd-visually-hidden" matSuffix>{{ _errorMessage }}</span>
+    }
+
+    @if (_showInlineError) {
+      <mat-error [id]="errorId">{{ _errorMessage }}</mat-error>
+    }
+
+    @if (_hasValue && !_required && !formControl.disabled && !_bare) {
+      @let _clearLabel = 'core.form.select.clear' | sdTranslate;
+      <button type="button" class="sd-clear-btn" matSuffix (click)="clear($event)" [title]="_clearLabel" [attr.aria-label]="_clearLabel">
+        <sd-icon name="close"></sd-icon>
+      </button>
+    } @else {
+      <sd-icon class="cursor-pointer sd-suffix-icon" matSuffix name="keyboard_arrow_down"></sd-icon>
+    }
+  </mat-form-field>
 </ng-template>

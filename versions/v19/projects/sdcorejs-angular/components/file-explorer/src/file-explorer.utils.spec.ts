@@ -9,7 +9,6 @@ import {
   sdFileExplorerIconName,
   sdFileExplorerIconUrl,
   sdFileExplorerIsAbort,
-  sdFileExplorerLocale,
   sdFileExplorerNormalize,
   sdFileExplorerParseDate,
   sdFileExplorerPreviewKind,
@@ -117,15 +116,10 @@ describe('file-explorer utils', () => {
   it('maps file types to preview renderers', () => {
     expect(sdFileExplorerPreviewKind('image')).toBe('image');
     expect(sdFileExplorerPreviewKind('pdf')).toBe('pdf');
+    expect(sdFileExplorerPreviewKind('video')).toBe('video');
+    expect(sdFileExplorerPreviewKind('audio')).toBe('none');
     expect(sdFileExplorerPreviewKind('document')).toBe('none');
     expect(sdFileExplorerPreviewKind('folder')).toBe('none');
-  });
-
-  it('maps Core UI languages to Intl locales with a Vietnamese fallback', () => {
-    expect(sdFileExplorerLocale('en')).toBe('en-US');
-    expect(sdFileExplorerLocale('vi')).toBe('vi-VN');
-    expect(sdFileExplorerLocale('zh')).toBe('zh-CN');
-    expect(sdFileExplorerLocale('xx')).toBe('vi-VN');
   });
 
   describe('sdFileExplorerFormatSize', () => {

@@ -156,6 +156,8 @@ html {
 }
 ```
 
+Dark mode for the default palette is opt-in: set `data-sd-theme="dark"` on `<html>`, or emit `@include sd.theme($mode: 'auto')` to follow the operating system. Besides the palette colors, `sd.theme()` emits color ramps, semantic roles, spacing/radius/shadow/z-index/motion/typography scales, and per-component tokens; read resolved colors from TypeScript with `readSdTokens()` from `@sdcorejs/angular/utilities/theme`. See the [theme and tokens guide](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/assets/THEME.md).
+
 See the [assets and SCSS reference](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/assets/STYLE-GUIDE.md) for supported `--sd-*` tokens, Material M3 guidance, utilities, fonts, and image assets.
 
 ## Internationalization
@@ -175,7 +177,7 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-`I18nService.setLanguage()` persists a built-in language and reloads by default. A complete custom catalog can be supplied through the synchronous `language: () => catalog` hook. See the [i18n reference](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/i18n/i18n.md) for catalog typing and fallback behavior.
+`I18nService.locale()` is a signal with the BCP 47 locale of the current language (`vi-VN`, `en-US`, `ja-JP`, `ko-KR`, or `zh-CN`); dates and numbers formatted by Core UI follow it. `I18nService.setLanguage()` persists a built-in language and reloads by default. A complete custom catalog can be supplied through the synchronous `language: () => catalog` hook. See the [i18n reference](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/i18n/i18n.md) for catalog typing and fallback behavior.
 
 ## Documentation and examples
 

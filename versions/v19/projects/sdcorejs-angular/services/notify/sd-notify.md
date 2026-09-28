@@ -131,6 +131,23 @@ export interface SdToastData {
   notify.error(userInput);                                        // default text → safe, escaped
   ```
 
+## Accessibility
+
+- **Live regions** — the container keeps two visually hidden regions in the DOM for its whole life:
+  `role="status" aria-live="polite"` (`data-autoid="services-notify-live-polite"`) and
+  `role="alert" aria-live="assertive"` (`data-autoid="services-notify-live-assertive"`). `success` / `info`
+  are announced politely, `warning` / `error` assertively, as `"<title>: <message>"` (the title
+  defaults to the translated type label; multi-message toasts join their messages). Regions that are
+  present before the text changes are announced reliably; a toast that appears with `aria-live` on
+  itself often is not. The region is cleared and rewritten, so the same message twice is read twice.
+  HTML toasts announce their text content only.
+- **Toasts carry no `aria-live`** — announcements go through the container only, so a message is never
+  read twice.
+- **Timing (WCAG 2.2.1)** — the auto-dismiss timer pauses while the pointer is over a toast **or focus
+  is inside it**, and resumes only when both have left.
+- **Buttons** — close and action buttons are `<button type="button">` (they never submit a surrounding
+  form); the close button's accessible name is the translated `core.notify.close`.
+
 ## E2E hooks (data-* attributes)
 
 Each rendered toast (`ToastComponent`, selector `toast`) exposes attributes on its host so `<sd-autoid-inspector>` and E2E suites can read the toast kind + content without scraping inner markup:

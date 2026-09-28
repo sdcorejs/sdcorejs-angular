@@ -46,6 +46,7 @@ import {
   SdPdfRenderTask,
   SdPdfViewport,
 } from './preview-pdf.pdfjs';
+import { sdIsSafeResourceUrl } from '@sdcorejs/angular/utilities/extensions';
 
 export { SD_PDFJS_LIB } from './preview-pdf.pdfjs';
 export type { SdPdfJsLib } from './preview-pdf.pdfjs';
@@ -800,7 +801,9 @@ export class SdPreviewPdf {
       temporaryHref = this.#trackTemporaryDownloadUrl(href);
     }
 
-    if (!href || !this.#isCurrentDownload(generation, src, doc)) {
+    // why: URL nguồn do consumer truyền (string hoặc `{ url }`) — chặn scheme nguy hiểm trước khi tới
+    // anchor tải xuống. Object URL do chính component tạo (`blob:`) luôn qua.
+    if (!href || !sdIsSafeResourceUrl(href) || !this.#isCurrentDownload(generation, src, doc)) {
       if (temporaryHref) this.#scheduleTemporaryDownloadUrlRelease(temporaryHref);
       return false;
     }

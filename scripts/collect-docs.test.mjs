@@ -172,6 +172,17 @@ test('previousArchiveVersion picks the closest lower version on the same major',
   assert.equal(previousArchiveVersion('20.1.4', known), null);
 });
 
+test('an x.0 release (3.0) tags as v3.0, keeps Angular 22 and diffs against the last 2.x archive', () => {
+  assert.equal(releaseTagFor('19.3.0'), 'v3.0');
+  assert.equal(releaseTagFor('22.3.0'), 'v3.0');
+  assert.deepEqual(releaseMajorsForSuffix('3.0'), [19, 20, 21, 22]);
+  const known = ['19.2.15', '19.2.9', '19.2.14', '22.2.15'];
+  assert.equal(previousArchiveVersion('19.3.0', known), '19.2.15');
+  assert.equal(previousArchiveVersion('22.3.0', known), '22.2.15');
+  const md = buildVersionChangelog({ version: '19.3.0', released: '2026-10-01', notes: null, previousVersion: '19.2.15' });
+  assert.match(md, /compare\/v2\.15\.\.\.v3\.0/);
+});
+
 test('previousArchiveVersion ignores the version being published', () => {
   assert.equal(previousArchiveVersion('19.1.4', ['19.1.4']), null);
 });

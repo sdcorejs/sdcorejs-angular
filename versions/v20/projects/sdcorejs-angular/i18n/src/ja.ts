@@ -121,6 +121,7 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.notify.type.error': 'エラー',
   'core.notify.show-more': 'もっと見る ({count})',
   'core.notify.show-less': '折りたたむ',
+  'core.notify.close': '通知を閉じる',
 
   // ---- Service: confirm ----
   'core.confirm.title': '確認',
@@ -269,6 +270,7 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.select.required': '選択してください',
   'core.form.select.selectAll': 'すべて',
   'core.form.select.selected-count': '{count} 件選択',
+  'core.form.select.clear': 'クリア',
 
   // ---- Forms: textarea ----
   'core.form.textarea.required': '入力してください',
@@ -546,6 +548,12 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.preview-pdf.search-next': '次の結果',
   'core.component.preview-pdf.search-close': '検索を閉じる',
 
+  // ---- Component: preview-video ----
+  'core.component.preview-video.error': 'この動画を再生できません',
+  'core.component.preview-video.retry': '再試行',
+  'core.component.preview-video.download': 'ダウンロード',
+  'core.component.preview-video.unsupported': 'この動画形式はお使いのブラウザーで再生できません',
+
   // ---- Component: table ----
   'core.component.table.setup': 'テーブル設定',
   'core.component.table.column-header': '列ヘッダー',
@@ -568,6 +576,8 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.exporting': 'エクスポート中...{percent}%',
   'core.component.table.export': 'エクスポート',
   'core.component.table.export-csv': 'CSVエクスポート',
+  'core.component.table.export-max-exceeded':
+    '{total} 行はエクスポートできません。上限は {max} 行です。フィルターで絞り込んでから再度お試しください。',
   'core.component.table.showing': '表示中:',
   'core.component.table.paginator.first-page': '最初のページ',
   'core.component.table.paginator.last-page': '最後のページ',

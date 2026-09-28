@@ -4,10 +4,10 @@
   --sd-tree-control-size: 28px;
   --sd-tree-checkbox-size: 16px;
   --sd-tree-indent-size: 20px;
-  --sd-tree-selected-bg: color-mix(in srgb, var(--sd-primary, #005cbb) 12%, #ffffff);
+  --sd-tree-selected-bg: color-mix(in srgb, var(--sd-primary, #005cbb) 12%, var(--sd-tree-selected-mix, #ffffff));
   --sd-tree-hover-bg: rgba(15, 23, 42, 0.04);
-  --sd-tree-text: #102047;
-  --sd-tree-muted: #5f6f89;
+  // why: --sd-tree-text / --sd-tree-muted are theme tokens of the same name now (light value unchanged,
+  // plus a dark value); declaring them here again would shadow the dark theme and consumer overrides.
 
   display: block;
 }
@@ -31,7 +31,7 @@
   min-height: var(--sd-tree-row-height);
   box-sizing: border-box;
   padding: 8px 4px 8px calc(4px + (var(--sd-tree-level) * var(--sd-tree-indent-size)));
-  color: var(--sd-tree-text);
+  color: var(--sd-tree-text, #102047);
   border-radius: 0;
 }
 
@@ -41,7 +41,7 @@
 
 .sd-tree__row:focus-visible {
   z-index: 1;
-  outline: 2px solid var(--sd-primary, #005cbb);
+  outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
   outline-offset: -2px;
 }
 
@@ -96,10 +96,10 @@
   width: var(--sd-tree-control-size);
   height: var(--sd-tree-control-size);
   padding: 0;
-  color: var(--sd-tree-muted);
+  color: var(--sd-tree-muted, #5f6f89);
   background: transparent;
   border: 0;
-  border-radius: 4px;
+  border-radius: var(--sd-radius-4, 4px);
   cursor: pointer;
 }
 
@@ -114,8 +114,8 @@
 .sd-tree__toggle sd-icon {
   width: 20px;
   height: 20px;
-  font-size: 20px;
-  line-height: 20px;
+  font-size: var(--sd-font-size-20, 20px);
+  line-height: var(--sd-line-height-20, 20px);
 }
 
 // why: chevron chiếm đúng một ô `--sd-tree-control-size`, còn checkbox thì không — nó chỉ được
@@ -132,7 +132,7 @@
   height: var(--sd-tree-control-size);
   margin: 0 4px 0 0;
   --mdc-checkbox-state-layer-size: var(--sd-tree-control-size);
-  --mdc-checkbox-selected-checkmark-color: #ffffff;
+  --mdc-checkbox-selected-checkmark-color: var(--sd-text-on-solid, #ffffff);
   --mdc-checkbox-selected-focus-icon-color: var(--sd-primary, #005cbb);
   --mdc-checkbox-selected-hover-icon-color: var(--sd-primary, #005cbb);
   --mdc-checkbox-selected-icon-color: var(--sd-primary, #005cbb);
@@ -212,8 +212,8 @@
   height: 20px;
   min-height: var(--sd-tree-control-size);
   margin: 0 8px 0 0;
-  font-size: 20px;
-  line-height: 20px;
+  font-size: var(--sd-font-size-20, 20px);
+  line-height: var(--sd-line-height-20, 20px);
 }
 
 .sd-tree__content {
@@ -225,7 +225,7 @@
   overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-  line-height: 20px;
+  line-height: var(--sd-line-height-20, 20px);
 }
 
 .sd-tree__content--custom {
@@ -235,12 +235,12 @@
 }
 
 .sd-tree__label {
-  font-size: 14px;
-  font-weight: 400;
+  font-size: var(--sd-font-size-14, 14px);
+  font-weight: var(--sd-font-weight-regular, 400);
 }
 
 .sd-tree__row--parent .sd-tree__label {
-  font-weight: 600;
+  font-weight: var(--sd-font-weight-semibold, 600);
 }
 
 .sd-tree__command-trigger {
@@ -254,9 +254,9 @@
   height: var(--sd-tree-control-size);
   padding: 0;
   margin-left: 8px;
-  line-height: 24px;
+  line-height: var(--sd-line-height-24, 24px);
   opacity: 0;
-  transition: opacity 120ms ease;
+  transition: opacity var(--sd-duration-fast, 120ms) ease;
 }
 
 .sd-tree__row:hover .sd-tree__command-trigger,
@@ -296,12 +296,12 @@
   width: auto;
   min-width: 32px;
   height: 24px;
-  color: #ffffff;
+  color: var(--sd-text-on-solid, #ffffff);
   font-family: Roboto, sans-serif;
-  font-size: 16px;
+  font-size: var(--sd-font-size-16, 16px);
   font-style: normal;
-  font-weight: 500;
-  line-height: 24px;
+  font-weight: var(--sd-font-weight-medium, 500);
+  line-height: var(--sd-line-height-24, 24px);
   text-align: center;
 }
 
@@ -310,12 +310,12 @@
   min-width: 200px;
   height: 20px;
   margin: 0 0 0 8px;
-  color: #000000;
+  color: var(--sd-tree-strong-text, #000000);
   font-family: Roboto, sans-serif;
-  font-size: 14px;
+  font-size: var(--sd-font-size-14, 14px);
   font-style: normal;
   font-weight: normal;
-  line-height: 20px;
+  line-height: var(--sd-line-height-20, 20px);
 }
 
 .sd-tree__qa-actions {
@@ -342,7 +342,7 @@
     min-height: 36px;
     padding: 6px 12px;
     border: 1px solid currentcolor;
-    border-radius: 6px;
+    border-radius: var(--sd-radius-6, 6px);
     background: transparent;
     color: inherit;
     font: inherit;

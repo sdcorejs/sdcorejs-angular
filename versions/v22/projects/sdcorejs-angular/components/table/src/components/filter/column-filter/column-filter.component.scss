@@ -2,7 +2,7 @@
 :host ::ng-deep {
   .c-inline-column {
     .mat-mdc-text-field-wrapper {
-      background-color: #fff;
+      background-color: var(--sd-table-bg, #ffffff);
     }
   }
 }

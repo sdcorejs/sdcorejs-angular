@@ -29,9 +29,9 @@
   min-width: 0;
   margin: 0;
   overflow: hidden;
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 22px;
+  font-size: var(--sd-font-size-16, 16px);
+  font-weight: var(--sd-font-weight-semibold, 600);
+  line-height: var(--sd-line-height-22, 22px);
   color: var(--sd-fe-text);
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -60,7 +60,7 @@
   min-width: 0;
   padding: 12px 14px;
   border: 1px solid var(--sd-fe-border);
-  border-radius: 10px;
+  border-radius: var(--sd-radius-10, 10px);
   background: var(--sd-fe-surface);
 }
 
@@ -80,8 +80,8 @@
   flex: 1;
   min-width: 0;
   overflow: hidden;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--sd-font-size-14, 14px);
+  font-weight: var(--sd-font-weight-semibold, 600);
   color: var(--sd-fe-text);
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -89,7 +89,7 @@
 
 .status {
   flex: none;
-  font-size: 13px;
+  font-size: var(--sd-font-size-13, 13px);
   color: var(--sd-fe-text-secondary);
   font-variant-numeric: tabular-nums;
 }
@@ -98,7 +98,7 @@
   position: relative;
   height: 6px;
   overflow: hidden;
-  border-radius: 999px;
+  border-radius: var(--sd-radius-999, 999px);
   background: var(--sd-fe-track);
 }
 
@@ -107,7 +107,7 @@
   inset: 0 auto 0 0;
   border-radius: inherit;
   background: var(--sd-fe-accent);
-  transition: width 200ms ease;
+  transition: width var(--sd-duration-base, 200ms) ease;
 }
 
 .bar--indeterminate .bar-fill {
@@ -128,7 +128,7 @@
 
   .status {
     color: var(--sd-fe-error);
-    font-weight: 600;
+    font-weight: var(--sd-font-weight-semibold, 600);
   }
 }
 
@@ -139,7 +139,7 @@
 .error {
   margin: -4px 0 0;
   overflow: hidden;
-  font-size: 12px;
+  font-size: var(--sd-font-size-12, 12px);
   color: var(--sd-fe-error);
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -154,7 +154,7 @@
   height: 32px;
   padding: 0;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--sd-radius-999, 999px);
   background: transparent;
   color: var(--sd-fe-text-secondary);
   cursor: pointer;
@@ -165,7 +165,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--sd-fe-accent);
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-file-explorer-accent, var(--sd-focus-ring-color, var(--sd-primary)));
     outline-offset: 1px;
   }
 }

@@ -1,5 +1,8 @@
 @use '@angular/material' as mat;
 
+// Light Material system tokens + typography + density for the whole document. The dark colour tokens are
+// emitted by `sd.theme($mode: 'dark' | 'auto')` (themes/default.scss) inside the dark scope only (D-024).
+
 html {
   color-scheme: light;
 

@@ -27,14 +27,14 @@
   margin: 0;
   padding: 0;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--sd-radius-6, 6px);
   background: transparent;
   color: var(--sd-text-secondary, #6b7280);
   cursor: pointer;
   mat-icon {
     width: 18px;
     height: 18px;
-    font-size: 18px;
+    font-size: var(--sd-font-size-18, 18px);
   }
 }
 .c-layout-icon-toggle:hover {
@@ -42,7 +42,7 @@
   color: var(--sd-text, #252c38);
 }
 .c-layout-icon-toggle:focus-visible {
-  outline: 2px solid var(--sd-primary, #005cbb);
+  outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
   outline-offset: 2px;
 }
 @media (pointer: coarse) {

@@ -1,0 +1,37 @@
+@let _src = src();
+@let _status = status();
+<div class="sd-preview-video-stage">
+  @if (_src) {
+    <!-- why: không autoplay, preload="metadata" để không tải cả file chỉ vì mở màn xem trước. -->
+    <video
+      #video
+      class="sd-preview-video-player"
+      [class.sd-preview-video-player--hidden]="_status === 'error'"
+      [src]="_src"
+      [attr.poster]="safePoster()"
+      [attr.aria-label]="fileName() || null"
+      [attr.data-autoId]="autoIdVideo()"
+      controls
+      preload="metadata"
+      playsinline
+      (loadeddata)="onLoaded()"
+      (error)="onMediaError()"></video>
+  }
+  @if (_status === 'error') {
+    <div class="sd-preview-video-error" role="alert" [attr.data-autoId]="autoIdError()">
+      <p class="sd-preview-video-error-text">{{ errorKey() | sdTranslate }}</p>
+      @if (_src) {
+        <button type="button" class="sd-preview-video-button" (click)="retry()" [attr.data-autoId]="autoIdRetry()">
+          {{ 'core.component.preview-video.retry' | sdTranslate }}
+        </button>
+      }
+    </div>
+  }
+</div>
+@if (canDownload()) {
+  <div class="sd-preview-video-actions">
+    <button type="button" class="sd-preview-video-button" (click)="downloadFile()" [attr.data-autoId]="autoIdDownload()">
+      {{ 'core.component.preview-video.download' | sdTranslate }}
+    </button>
+  </div>
+}

@@ -13,7 +13,7 @@
     bottom: 0;
     height: 16px;
     width: 1px;
-    background: #dde0e5;
+    background: var(--sd-tab-router-item-divider, #dde0e5);
     margin: auto;
   }
 
@@ -42,25 +42,25 @@
 }
 
 .tab-router__icon {
-  background-color: #5c6bc0;
+  background-color: var(--sd-tab-router-badge-bg, #5c6bc0);
   width: 16px;
   height: 16px;
-  line-height: 16px;
+  line-height: var(--sd-line-height-16, 16px);
   text-align: center;
-  font-size: 10px;
-  color: #fff;
-  border-radius: 2px;
+  font-size: var(--sd-font-size-10, 10px);
+  color: var(--sd-text-on-solid, #ffffff);
+  border-radius: var(--sd-radius-2, 2px);
   text-transform: uppercase;
 
   sd-icon {
     height: 10px;
     width: 10px;
-    font-size: 10px;
+    font-size: var(--sd-font-size-10, 10px);
   }
 }
 
 .tab-router__close {
-  color: #757575;
+  color: var(--sd-tab-router-item-text, #757575);
   outline: none;
   border: 0;
   background: none;
@@ -75,28 +75,28 @@
   // why: `outline: none` ở trên xoá vòng focus mặc định của nút đóng — nút này giờ đã khả truy
   // cập bằng bàn phím nên phải thấy được khi tab tới. :focus-visible không ảnh hưởng chuột.
   &:focus-visible {
-    outline: 2px solid var(--sd-primary, #005cbb);
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
     outline-offset: 1px;
   }
 
   sd-icon {
-    font-size: 12px;
+    font-size: var(--sd-font-size-12, 12px);
     height: 12px;
     width: 12px;
   }
 }
 
 .tab-router__item {
-  background: #f2f3f4;
+  background: var(--sd-tab-router-item-muted-bg, #f2f3f4);
   padding: 8px;
   color: inherit;
   text-decoration: none;
-  font-size: 12px;
-  line-height: 16px;
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: var(--sd-line-height-16, 16px);
   overflow: hidden;
 
   &:hover {
-    background-color: #fff;
+    background-color: var(--sd-tab-router-item-active-bg, #ffffff);
   }
 }
 
@@ -108,5 +108,5 @@
 
 .tab-router__item--active {
   border-radius: 8px 8px 0px 0px;
-  background-color: #fff;
+  background-color: var(--sd-tab-router-item-active-bg, #ffffff);
 }

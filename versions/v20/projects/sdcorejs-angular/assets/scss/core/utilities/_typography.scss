@@ -21,33 +21,33 @@ $fs-xxxl:   42px;
 //   Quy ước: T{size}{weight}  |  M = Medium (500), R = Regular (400)
 //   Mỗi class bao gồm font-size + font-weight + line-height chuẩn hóa
 // --------------------------------------------------------------------------
-.T48M { font-size: 48px; font-weight: 500; line-height: 56px; }
-.T48R { font-size: 48px; font-weight: 400; line-height: 56px; }
+.T48M { font-size: var(--sd-font-size-48, 48px); font-weight: var(--sd-font-weight-medium, 500); line-height: 56px; }
+.T48R { font-size: var(--sd-font-size-48, 48px); font-weight: var(--sd-font-weight-regular, 400); line-height: 56px; }
 
-.T32M { font-size: 32px; font-weight: 500; line-height: 48px; }
-.T32R { font-size: 32px; font-weight: 400; line-height: 48px; }
+.T32M { font-size: var(--sd-font-size-32, 32px); font-weight: var(--sd-font-weight-medium, 500); line-height: 48px; }
+.T32R { font-size: var(--sd-font-size-32, 32px); font-weight: var(--sd-font-weight-regular, 400); line-height: 48px; }
 
-.T24M { font-size: 24px; font-weight: 500; line-height: 28px; }
-.T24R { font-size: 20px; font-weight: 400; line-height: 28px; }
+.T24M { font-size: var(--sd-font-size-24, 24px); font-weight: var(--sd-font-weight-medium, 500); line-height: var(--sd-line-height-28, 28px); }
+.T24R { font-size: var(--sd-font-size-20, 20px); font-weight: var(--sd-font-weight-regular, 400); line-height: var(--sd-line-height-28, 28px); }
 
-.T20M { font-size: 20px; font-weight: 500; line-height: 28px; }
-.T20R { font-size: 20px; font-weight: 400; line-height: 28px; }
+.T20M { font-size: var(--sd-font-size-20, 20px); font-weight: var(--sd-font-weight-medium, 500); line-height: var(--sd-line-height-28, 28px); }
+.T20R { font-size: var(--sd-font-size-20, 20px); font-weight: var(--sd-font-weight-regular, 400); line-height: var(--sd-line-height-28, 28px); }
 
-.T18M { font-size: 18px; font-weight: 500; line-height: 28px; }
-.T18R { font-size: 18px; font-weight: 400; line-height: 28px; }
+.T18M { font-size: var(--sd-font-size-18, 18px); font-weight: var(--sd-font-weight-medium, 500); line-height: var(--sd-line-height-28, 28px); }
+.T18R { font-size: var(--sd-font-size-18, 18px); font-weight: var(--sd-font-weight-regular, 400); line-height: var(--sd-line-height-28, 28px); }
 
-.T16M { font-size: 16px; font-weight: 500; line-height: 24px; }
-.T16R { font-size: 16px; font-weight: 400; line-height: 24px; }
+.T16M { font-size: var(--sd-font-size-16, 16px); font-weight: var(--sd-font-weight-medium, 500); line-height: var(--sd-line-height-24, 24px); }
+.T16R { font-size: var(--sd-font-size-16, 16px); font-weight: var(--sd-font-weight-regular, 400); line-height: var(--sd-line-height-24, 24px); }
 
-.T14M { font-size: 14px; font-weight: 500; line-height: 20px; }
-.T14R { font-size: 14px; font-weight: 400; line-height: 20px; }
+.T14M { font-size: var(--sd-font-size-14, 14px); font-weight: var(--sd-font-weight-medium, 500); line-height: var(--sd-line-height-20, 20px); }
+.T14R { font-size: var(--sd-font-size-14, 14px); font-weight: var(--sd-font-weight-regular, 400); line-height: var(--sd-line-height-20, 20px); }
 
-.T12M { font-size: 12px; font-weight: 500; line-height: 16px; }
+.T12M { font-size: var(--sd-font-size-12, 12px); font-weight: var(--sd-font-weight-medium, 500); line-height: var(--sd-line-height-16, 16px); }
 // !important vì T12R thường bị override bởi material components
-.T12R { font-size: 12px !important; font-weight: 400; line-height: 16px; }
+.T12R { font-size: var(--sd-font-size-12, 12px) !important; font-weight: var(--sd-font-weight-regular, 400); line-height: var(--sd-line-height-16, 16px); }
 
-.T10M { font-size: 10px; font-weight: 500; line-height: 12px; }
-.T10R { font-size: 10px; font-weight: 400; line-height: 12px; }
+.T10M { font-size: var(--sd-font-size-10, 10px); font-weight: var(--sd-font-weight-medium, 500); line-height: 12px; }
+.T10R { font-size: var(--sd-font-size-10, 10px); font-weight: var(--sd-font-weight-regular, 400); line-height: 12px; }
 
 // --------------------------------------------------------------------------
 // Font-size utilities  (px-based, 0–200)
@@ -61,10 +61,10 @@ $fs-xxxl:   42px;
 // Font-weight utilities
 // --------------------------------------------------------------------------
 .font-weight-light   { font-weight: 300 !important; }
-.font-weight-normal  { font-weight: 400 !important; }
-.font-weight-medium  { font-weight: 500 !important; }
-.font-weight-bold    { font-weight: 600 !important; }
-.font-weight-bolder  { font-weight: 700 !important; }
+.font-weight-normal  { font-weight: var(--sd-font-weight-regular, 400) !important; }
+.font-weight-medium  { font-weight: var(--sd-font-weight-medium, 500) !important; }
+.font-weight-bold    { font-weight: var(--sd-font-weight-semibold, 600) !important; }
+.font-weight-bolder  { font-weight: var(--sd-font-weight-bold, 700) !important; }
 
 // --------------------------------------------------------------------------
 // Text alignment

@@ -15,10 +15,10 @@
   min-height: 62px;
   border-bottom: 1px solid var(--sd-fe-border);
   color: var(--sd-fe-text);
-  font-size: 15px;
+  font-size: var(--sd-font-size-15, 15px);
   cursor: pointer;
   outline: none;
-  transition: background-color 120ms ease;
+  transition: background-color var(--sd-duration-fast, 120ms) ease;
 
   &:hover {
     background: var(--sd-fe-hover);
@@ -37,7 +37,7 @@
 .row--head {
   min-height: 34px;
   color: var(--sd-fe-text-secondary);
-  font-size: 13px;
+  font-size: var(--sd-font-size-13, 13px);
   cursor: default;
 
   &:hover {
@@ -70,7 +70,7 @@
 .row:not(.row--head) .cell--modified,
 .row:not(.row--head) .cell--size {
   color: var(--sd-fe-text-secondary);
-  font-size: 13px;
+  font-size: var(--sd-font-size-13, 13px);
 }
 
 .cell--action {
@@ -94,7 +94,7 @@
   .row {
     grid-template-columns: minmax(0, 1fr) 66px var(--sd-fe-actions-width, 36px);
     min-height: 55px;
-    font-size: 14px;
+    font-size: var(--sd-font-size-14, 14px);
   }
 
   .list:not(:has(.cell--action)) .row {
@@ -103,7 +103,7 @@
 
   .row--head {
     min-height: 30px;
-    font-size: 12px;
+    font-size: var(--sd-font-size-12, 12px);
   }
 
   .cell--name {
@@ -137,14 +137,14 @@
   min-width: 0;
   padding: 12px 12px 14px;
   border: 1px solid var(--sd-fe-border);
-  border-radius: 12px;
+  border-radius: var(--sd-radius-12, 12px);
   background: var(--sd-fe-surface);
   color: var(--sd-fe-text);
   cursor: pointer;
   outline: none;
   transition:
-    border-color 120ms ease,
-    box-shadow 120ms ease;
+    border-color var(--sd-duration-fast, 120ms) ease,
+    box-shadow var(--sd-duration-fast, 120ms) ease;
 
   &:hover {
     border-color: var(--sd-fe-border-strong);
@@ -166,7 +166,7 @@
   justify-content: center;
   height: 104px;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: var(--sd-radius-8, 8px);
   background: var(--sd-fe-muted-surface);
 
   img {
@@ -179,8 +179,8 @@
 .card-name {
   padding: 0 2px;
   overflow: hidden;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--sd-font-size-14, 14px);
+  font-weight: var(--sd-font-weight-semibold, 600);
   text-overflow: ellipsis;
   white-space: nowrap;
 }

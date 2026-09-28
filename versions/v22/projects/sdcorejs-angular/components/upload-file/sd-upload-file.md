@@ -238,6 +238,12 @@ onSubmit = async () => {
 > handler — it does NOT open the `src` URL returned by `details()`. This lets you route downloads through an
 > authenticated/proxied endpoint instead of exposing the raw CDN URL. Without a handler, the click falls back
 > to downloading directly from `src` (or the local `File` blob for not-yet-uploaded picks).
+>
+> That fallback goes through `SdUtilities.download`: a relative path or `blob:` URL downloads, an absolute
+> `http(s)` URL opens in a new tab with `noopener,noreferrer`, and any other scheme (`javascript:`,
+> `vbscript:`, `data:text/html`, …) is refused — no navigation, only a dev-mode warning. It used to go
+> through `BrowserUtilities.download` from `@sdcorejs/utils`, which clicked any string and opened `http`
+> links without `noopener`.
 
 ### 4. Centered image gallery, larger thumbnails
 
@@ -309,6 +315,7 @@ interface SdUploadFileDetail {
 - **Image tile**: no longer `aria-hidden`. The tile wraps the remove and zoom buttons; hiding the container left those buttons tab-reachable but silent. `onSelect` is a touch-only affordance, so `role="button"` / `tabindex` / `aria-pressed` are applied **only** on touch devices — desktop keyboard users get no dead tab stop. Its keyboard handler ignores events bubbling from the nested buttons.
 - **Icon-only controls are real buttons**: the zoom-in affordance and the document remove affordance were `<sd-icon (click)>` (a custom element — not focusable, no accessible name); both are now `<button type="button">` with i18n `aria-label`s.
 - The image remove button's `aria-label` was the hard-coded English `"Close"` (also the wrong verb); it now uses an i18n delete label.
+- **Document name is a button**: the file name in a document row was `<a href="javascript:;">` — announced as a link that goes nowhere, and blocked outright by a CSP without `unsafe-inline` for `javascript:` URLs. It is now a `<button type="button">` that keeps the `.c-file-name` class and the link look.
 - **Live regions**: the per-image upload spinner is wrapped in `role="status" aria-live="polite"`, and the required-error message uses `role="alert"` so it is announced when validation fails after submit.
 
 ### i18n compromise

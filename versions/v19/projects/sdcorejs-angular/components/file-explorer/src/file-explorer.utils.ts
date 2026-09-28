@@ -21,7 +21,7 @@ export type SdFileExplorerFileType =
   | 'other';
 
 /** Renderer used by the detail drawer. */
-export type SdFileExplorerPreviewKind = 'image' | 'pdf' | 'none';
+export type SdFileExplorerPreviewKind = 'image' | 'pdf' | 'video' | 'none';
 
 const EXTENSIONS: Readonly<Record<Exclude<SdFileExplorerFileType, 'folder' | 'other'>, readonly string[]>> = {
   image: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'avif', 'ico', 'heic'],
@@ -34,13 +34,6 @@ const EXTENSIONS: Readonly<Record<Exclude<SdFileExplorerFileType, 'folder' | 'ot
   archive: ['zip', 'rar', '7z', 'tar', 'gz', 'tgz', 'bz2'],
   text: ['txt', 'md', 'json', 'xml', 'log', 'yml', 'yaml', 'html', 'css', 'js', 'ts'],
 };
-
-const LOCALES: Readonly<Record<string, string>> = { vi: 'vi-VN', en: 'en-US', ja: 'ja-JP', ko: 'ko-KR', zh: 'zh-CN' };
-
-/** Maps a Core UI language code to the locale used by `Intl` formatters. */
-export function sdFileExplorerLocale(language: string): string {
-  return LOCALES[language] ?? 'vi-VN';
-}
 
 /** Lower-cased extension of a file name, without the dot; empty when there is none. */
 export function sdFileExplorerExtension(name: string): string {
@@ -120,6 +113,7 @@ export function sdFileExplorerIconUrl(name: SdFileExplorerIconName): string {
 export function sdFileExplorerPreviewKind(type: SdFileExplorerFileType): SdFileExplorerPreviewKind {
   if (type === 'image') return 'image';
   if (type === 'pdf') return 'pdf';
+  if (type === 'video') return 'video';
   return 'none';
 }
 

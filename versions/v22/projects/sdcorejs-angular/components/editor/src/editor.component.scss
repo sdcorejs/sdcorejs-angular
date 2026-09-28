@@ -20,7 +20,7 @@
   margin-top: 4px;
 
   mat-error {
-    font-size: 12px;
+    font-size: var(--sd-font-size-12, 12px);
     color: var(--mdc-theme-error, #f44336);
   }
 }
@@ -33,7 +33,7 @@
   color: var(--mdc-theme-error, #f44336);
   height: 20px;
   width: 20px;
-  font-size: 20px;
+  font-size: var(--sd-font-size-20, 20px);
   cursor: default;
 }
 
@@ -43,7 +43,7 @@
 }
 
 .sd-editor-counter {
-  font-size: 12px;
+  font-size: var(--sd-font-size-12, 12px);
   color: rgba(0, 0, 0, 0.6);
 }
 

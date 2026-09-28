@@ -3,20 +3,20 @@
 // `--sd-primary`, `--sd-surface`, `--sd-border`… when no override is given.
 :host {
   --sd-fe-accent: var(--sd-file-explorer-accent, var(--sd-primary, #005cbb));
-  --sd-fe-accent-strong: var(--sd-file-explorer-accent-strong, color-mix(in srgb, var(--sd-fe-accent) 84%, #000000));
+  --sd-fe-accent-strong: var(--sd-file-explorer-accent-strong, color-mix(in srgb, var(--sd-fe-accent) 84%, var(--sd-file-explorer-mix-shade, #000000)));
   --sd-fe-accent-contrast: var(--sd-file-explorer-accent-contrast, var(--sd-primary-contrast, #ffffff));
-  --sd-fe-accent-soft: var(--sd-file-explorer-accent-soft, color-mix(in srgb, var(--sd-fe-accent) 10%, #ffffff));
+  --sd-fe-accent-soft: var(--sd-file-explorer-accent-soft, color-mix(in srgb, var(--sd-fe-accent) 10%, var(--sd-file-explorer-mix-tint, #ffffff)));
   --sd-fe-surface: var(--sd-file-explorer-surface, #ffffff);
   --sd-fe-sidebar-bg: var(--sd-file-explorer-sidebar-bg, color-mix(in srgb, var(--sd-surface-muted, #e7e8ed) 26%, var(--sd-fe-surface)));
   --sd-fe-muted-surface: var(
     --sd-file-explorer-muted-surface,
     color-mix(in srgb, var(--sd-surface-muted, #e7e8ed) 50%, var(--sd-fe-surface))
   );
-  --sd-fe-preview-bg: var(--sd-file-explorer-preview-bg, color-mix(in srgb, var(--sd-fe-accent) 9%, #ffffff));
-  --sd-fe-border: var(--sd-file-explorer-border, color-mix(in srgb, var(--sd-border, #c4c6d0) 55%, #ffffff));
+  --sd-fe-preview-bg: var(--sd-file-explorer-preview-bg, color-mix(in srgb, var(--sd-fe-accent) 9%, var(--sd-file-explorer-mix-tint, #ffffff)));
+  --sd-fe-border: var(--sd-file-explorer-border, color-mix(in srgb, var(--sd-border, #c4c6d0) 55%, var(--sd-file-explorer-mix-tint, #ffffff)));
   --sd-fe-border-strong: var(--sd-file-explorer-border-strong, var(--sd-border, #c4c6d0));
   --sd-fe-text: var(--sd-file-explorer-text, var(--sd-text, #1a1b1f));
-  --sd-fe-text-secondary: var(--sd-file-explorer-text-secondary, color-mix(in srgb, var(--sd-text-secondary, #44474f) 84%, #ffffff));
+  --sd-fe-text-secondary: var(--sd-file-explorer-text-secondary, color-mix(in srgb, var(--sd-text-secondary, #44474f) 84%, var(--sd-file-explorer-mix-tint, #ffffff)));
   --sd-fe-hover: color-mix(in srgb, var(--sd-fe-text) 4%, transparent);
   --sd-fe-hover-strong: color-mix(in srgb, var(--sd-fe-text) 8%, transparent);
   --sd-fe-track: color-mix(in srgb, var(--sd-fe-text) 7%, var(--sd-fe-surface));
@@ -38,8 +38,8 @@
   border-radius: var(--sd-fe-radius);
   background: var(--sd-fe-surface);
   color: var(--sd-fe-text);
-  font-size: 14px;
-  line-height: 20px;
+  font-size: var(--sd-font-size-14, 14px);
+  line-height: var(--sd-line-height-20, 20px);
 }
 
 // ---- Header ----
@@ -70,7 +70,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--sd-fe-accent) 14%, #ffffff);
+  background: color-mix(in srgb, var(--sd-fe-accent) 14%, var(--sd-file-explorer-mix-tint, #ffffff));
   color: var(--sd-fe-accent);
 }
 
@@ -81,9 +81,9 @@
 .brand-title {
   margin: 0;
   overflow: hidden;
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 22px;
+  font-size: var(--sd-font-size-16, 16px);
+  font-weight: var(--sd-font-weight-semibold, 600);
+  line-height: var(--sd-line-height-22, 22px);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -91,8 +91,8 @@
 .brand-description {
   margin: 0;
   overflow: hidden;
-  font-size: 12px;
-  line-height: 16px;
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: var(--sd-line-height-16, 16px);
   color: var(--sd-fe-text-secondary);
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -109,11 +109,11 @@
   height: 36px;
   padding: 0 6px 0 12px;
   border: 1px solid var(--sd-fe-border);
-  border-radius: 999px;
+  border-radius: var(--sd-radius-999, 999px);
   background: var(--sd-fe-muted-surface);
   transition:
-    border-color 120ms ease,
-    box-shadow 120ms ease;
+    border-color var(--sd-duration-fast, 120ms) ease,
+    box-shadow var(--sd-duration-fast, 120ms) ease;
 
   &:focus-within {
     border-color: var(--sd-fe-accent);
@@ -137,7 +137,7 @@
   background: transparent;
   color: var(--sd-fe-text);
   font: inherit;
-  font-size: 14px;
+  font-size: var(--sd-font-size-14, 14px);
 
   &::placeholder {
     color: var(--sd-fe-text-secondary);
@@ -157,7 +157,7 @@
   height: 26px;
   padding: 0;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--sd-radius-999, 999px);
   background: transparent;
   color: var(--sd-fe-text-secondary);
   cursor: pointer;
@@ -197,9 +197,9 @@
 
 .sidebar-label {
   margin: 0 0 6px 10px;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 16px;
+  font-size: var(--sd-font-size-12, 12px);
+  font-weight: var(--sd-font-weight-bold, 700);
+  line-height: var(--sd-line-height-16, 16px);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--sd-fe-text-secondary);
@@ -264,8 +264,8 @@
   flex: 1;
   min-width: 0;
   margin-left: -4px;
-  font-size: 15px;
-  font-weight: 600;
+  font-size: var(--sd-font-size-15, 15px);
+  font-weight: var(--sd-font-weight-semibold, 600);
 }
 
 // M3-style segmented toggle: pill container, round segments, tinted selected segment.
@@ -275,7 +275,7 @@
   gap: 2px;
   padding: 2px;
   border: 1px solid var(--sd-fe-border);
-  border-radius: 999px;
+  border-radius: var(--sd-radius-999, 999px);
   background: var(--sd-fe-surface);
 }
 
@@ -288,7 +288,7 @@
   height: 36px;
   padding: 0;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--sd-radius-999, 999px);
   background: transparent;
   color: var(--sd-fe-text-secondary);
   cursor: pointer;
@@ -299,7 +299,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--sd-fe-accent);
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-file-explorer-accent, var(--sd-focus-ring-color, var(--sd-primary)));
     outline-offset: 1px;
   }
 }
@@ -328,8 +328,8 @@
   min-width: 0;
   margin: 0;
   overflow: hidden;
-  font-size: 18px;
-  font-weight: 700;
+  font-size: var(--sd-font-size-18, 18px);
+  font-weight: var(--sd-font-weight-bold, 700);
   line-height: 26px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -338,7 +338,7 @@
 .count {
   flex: none;
   padding-bottom: 12px;
-  font-size: 13px;
+  font-size: var(--sd-font-size-13, 13px);
   color: var(--sd-fe-text-secondary);
 }
 
@@ -393,8 +393,8 @@
 
 .drop-title {
   margin: 0;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: var(--sd-font-size-16, 16px);
+  font-weight: var(--sd-font-weight-semibold, 600);
 }
 
 // ---- New folder dialog ----
@@ -429,12 +429,12 @@
 .dialog-title {
   margin: 0 0 8px;
   font-size: 17px;
-  font-weight: 600;
-  line-height: 24px;
+  font-weight: var(--sd-font-weight-semibold, 600);
+  line-height: var(--sd-line-height-24, 24px);
 }
 
 .field-label {
-  font-size: 13px;
+  font-size: var(--sd-font-size-13, 13px);
   color: var(--sd-fe-text-secondary);
 }
 
@@ -442,11 +442,11 @@
   height: 40px;
   padding: 0 12px;
   border: 1px solid var(--sd-fe-border-strong);
-  border-radius: 8px;
+  border-radius: var(--sd-radius-8, 8px);
   background: var(--sd-fe-surface);
   color: var(--sd-fe-text);
   font: inherit;
-  font-size: 15px;
+  font-size: var(--sd-font-size-15, 15px);
   outline: none;
 
   &:focus {
@@ -461,7 +461,7 @@
 
 .field-error {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--sd-font-size-13, 13px);
   color: var(--sd-fe-error);
 }
 
@@ -477,15 +477,15 @@
   align-items: center;
   gap: 10px;
   margin: 4px 0;
-  font-size: 14px;
+  font-size: var(--sd-font-size-14, 14px);
   color: var(--sd-fe-text-secondary);
 }
 
 .share-feedback {
   min-height: 18px;
   margin: 0;
-  font-size: 13px;
-  line-height: 18px;
+  font-size: var(--sd-font-size-13, 13px);
+  line-height: var(--sd-line-height-18, 18px);
   color: var(--sd-fe-success);
 }
 
@@ -545,8 +545,8 @@
     visibility: hidden;
     transform: translateX(-100%);
     transition:
-      transform 200ms ease,
-      visibility 200ms;
+      transform var(--sd-duration-base, 200ms) ease,
+      visibility var(--sd-duration-base, 200ms);
   }
 
   .sidebar--open {

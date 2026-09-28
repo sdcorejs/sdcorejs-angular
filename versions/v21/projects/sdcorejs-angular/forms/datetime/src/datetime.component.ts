@@ -252,11 +252,11 @@ export class SdDatetime implements OnDestroy, OnInit {
     if (errors['required']) return this.#i18n.t('core.form.datetime.required');
     if (errors['matDatepickerMin']) {
       const d = this.resolvedMin();
-      return this.#i18n.t('core.form.datetime.min-date', { date: d ? new Date(d).toLocaleDateString('vi-VN') : '' });
+      return this.#i18n.t('core.form.datetime.min-date', { date: d ? new Date(d).toLocaleDateString(this.#i18n.locale()) : '' });
     }
     if (errors['matDatepickerMax']) {
       const d = this.resolvedMax();
-      return this.#i18n.t('core.form.datetime.max-date', { date: d ? new Date(d).toLocaleDateString('vi-VN') : '' });
+      return this.#i18n.t('core.form.datetime.max-date', { date: d ? new Date(d).toLocaleDateString(this.#i18n.locale()) : '' });
     }
     if (errors['date']) return errors['date'] as string;
     if (errors['customValidator']) return errors['customValidator'] as string;

@@ -1,6 +1,12 @@
+@use "sass:list";
 @use "sass:map";
+@use "@angular/material" as mat;
 @use "../core/color";
 @use "./presets";
+@use "./scales";
+@use "./semantic";
+@use "./ramps";
+@use "./component-tokens";
 
 $default-theme: (
   primary: #005cbb,
@@ -44,12 +50,51 @@ $default-theme: (
   disabled-text: color-mix(in srgb, var(--sd-text) 60%, transparent),
 );
 
-// Keep Material form-field trailing icons aligned with the Core error palette.
-:root {
-  --mat-form-field-error-trailing-icon-color: var(--sd-error, #{map.get($default-theme, 'error')});
-  --mat-form-field-error-hover-trailing-icon-color: var(--sd-error-dark, #{map.get($default-theme, 'error-dark')});
-  --mat-form-field-error-focus-trailing-icon-color: var(--sd-error-dark, #{map.get($default-theme, 'error-dark')});
-}
+// Dark palette of the default preset (D-022). Only the default preset has one: named presets are light
+// palettes, and theme() refuses to combine them with $mode: 'dark' | 'auto'.
+// In dark, `-light` mixes with the surface and `-dark` mixes toward white, so the roles "tinted
+// background" and "strong text" still read correctly on a dark page.
+$default-dark-theme: (
+  primary: #abc7ff,
+  primary-light: color-mix(in srgb, var(--sd-primary) 16%, var(--sd-surface)),
+  primary-dark: color-mix(in srgb, var(--sd-primary) 72%, white),
+  primary-contrast: #002f65,
+
+  secondary: #c1c6d7,
+  secondary-light: color-mix(in srgb, var(--sd-secondary) 16%, var(--sd-surface)),
+  secondary-dark: color-mix(in srgb, var(--sd-secondary) 72%, white),
+  secondary-contrast: #2b303d,
+
+  info: #4cdada,
+  info-light: color-mix(in srgb, var(--sd-info) 16%, var(--sd-surface)),
+  info-dark: color-mix(in srgb, var(--sd-info) 72%, white),
+  info-contrast: #003737,
+
+  success: #7fd48a,
+  success-light: color-mix(in srgb, var(--sd-success) 16%, var(--sd-surface)),
+  success-dark: color-mix(in srgb, var(--sd-success) 72%, white),
+  success-contrast: #00390f,
+
+  warning: #ffb95c,
+  warning-light: color-mix(in srgb, var(--sd-warning) 16%, var(--sd-surface)),
+  warning-dark: color-mix(in srgb, var(--sd-warning) 72%, white),
+  warning-contrast: #472a00,
+
+  error: #ffb4ab,
+  error-light: color-mix(in srgb, var(--sd-error) 16%, var(--sd-surface)),
+  error-dark: color-mix(in srgb, var(--sd-error) 72%, white),
+  error-contrast: #690005,
+
+  surface: #121316,
+  surface-muted: #2e3035,
+  text: #e3e2e6,
+  text-secondary: #c4c6d0,
+  text-muted: color-mix(in srgb, var(--sd-text) 62%, transparent),
+  border: #44474f,
+  border-strong: #8e9099,
+  disabled-bg: color-mix(in srgb, var(--sd-text) 8%, transparent),
+  disabled-text: color-mix(in srgb, var(--sd-text) 60%, transparent),
+);
 
 // Opt-in compatibility for consumers whose palette is owned by Material.
 $material-source-theme: (
@@ -64,7 +109,17 @@ $material-source-theme: (
   border-strong: var(--mat-sys-outline, #74777f),
 );
 
-@mixin theme($theme: (), $source: 'core', $preset: 'default') {
+$modes: 'light', 'dark', 'auto';
+
+/// Emits the Core UI tokens on the current selector.
+///
+/// - `$mode: 'light'` (default) — the 2.15 declarations, unchanged, plus the ramp, semantic, scale and
+///   component tiers.
+/// - `$mode: 'dark'` — the full set again with the dark palette, `color-scheme: dark` and Material's
+///   dark colour tokens.
+/// - `$mode: 'auto'` — light on the selector, and the dark set under
+///   `@media (prefers-color-scheme: dark)` unless the element carries `data-sd-theme="light"`.
+@mixin theme($theme: (), $source: 'core', $preset: 'default', $mode: 'light') {
   @if $source != 'core' and $source != 'material' {
     @error "Unknown Core UI theme source '#{$source}'. Use 'core' or 'material'.";
   }
@@ -74,14 +129,62 @@ $material-source-theme: (
   @if $source == 'material' and $preset != 'default' {
     @error "Core UI presets require $source: 'core'. Material source only supports $preset: 'default'.";
   }
-  $base: $default-theme;
+  @if not list.index($modes, $mode) {
+    @error "Unknown Core UI theme mode '#{$mode}'. Use 'light', 'dark' or 'auto'.";
+  }
+  @if $mode != 'light' and $preset != 'default' {
+    @error "Core UI preset '#{$preset}' only has a light palette. For a dark variant, pass your colours through $theme on the default preset, e.g. sd.theme((primary: #7aa7ff), $mode: '#{$mode}').";
+  }
+
+  @if $mode == 'dark' {
+    @include -emit($theme, $source, $preset, dark);
+  } @else {
+    @include -emit($theme, $source, $preset, light);
+    @if $mode == 'auto' {
+      @media (prefers-color-scheme: dark) {
+        &:not([data-sd-theme="light"]) {
+          @include -emit($theme, $source, $preset, dark);
+        }
+      }
+    }
+  }
+}
+
+@mixin -emit($theme, $source, $preset, $scheme) {
+  $base: if($scheme == dark, $default-dark-theme, $default-theme);
   @if $source == 'material' {
     $base: map.merge($base, $material-source-theme);
   }
   $base: map.merge($base, map.get(presets.$presets, $preset));
-  $theme: map.merge($base, $theme);
+  $palette: map.merge($base, $theme);
 
   @each $color in color.$public-colors {
-    --sd-#{$color}: #{map.get($theme, $color)};
+    --sd-#{$color}: #{map.get($palette, $color)};
+  }
+
+  // why: khai báo dẫn xuất từ var(--sd-*) được giải ở chính phần tử khai báo nó. Trước đây chúng nằm
+  // trên :root nên scope con (vd scope dark) vẫn nhận giá trị tính theo palette của :root. Phát lại
+  // trong từng scope để mỗi scope dùng đúng palette của mình (D-021, INV-008).
+  --mat-form-field-error-trailing-icon-color: var(--sd-error, #{map.get($default-theme, 'error')});
+  --mat-form-field-error-hover-trailing-icon-color: var(--sd-error-dark, #{map.get($default-theme, 'error-dark')});
+  --mat-form-field-error-focus-trailing-icon-color: var(--sd-error-dark, #{map.get($default-theme, 'error-dark')});
+
+  @include ramps.emit();
+  @include semantic.emit($scheme);
+  @include scales.emit();
+  @include component-tokens.emit($scheme);
+
+  @if $scheme == dark {
+    color-scheme: dark;
+    // D-024: only the colour part — typography and density stay with material-theme.scss.
+    @include mat.theme(
+      (
+        color: (
+          theme-type: dark,
+          primary: mat.$azure-palette,
+          tertiary: mat.$green-palette,
+        ),
+      )
+    );
   }
 }

@@ -137,3 +137,41 @@ export function sdIsPathPrefix(prefix: string, pathname: string): boolean {
   if (pathname === normalizedPrefix) return true;
   return pathname.startsWith(`${normalizedPrefix}/`);
 }
+
+/**
+ * `data:` được coi là tài nguyên an toàn: ảnh và PDF. So trên `pathname` do URL parser trả về
+ * (tab/xuống dòng đã bị bỏ), tức đúng giá trị trình duyệt sẽ dùng.
+ */
+const SAFE_DATA_RESOURCE = /^(?:image\/[a-z0-9.+-]+|application\/pdf)\s*[;,]/i;
+
+/**
+ * True khi `value` an toàn để làm `href` tải xuống, `src` của media, hoặc đích điều hướng.
+ *
+ * why: các chỗ tải xuống/xem trước trước đây gán thẳng URL của consumer (hoặc của server) vào
+ * `<a href>` rồi `click()`, hay vào `src` của media. `javascript:`/`vbscript:` chạy script trong
+ * origin của app, còn `data:text/html` mở một trang do kẻ tấn công dựng.
+ *
+ * Cho phép:
+ *   - `http:`/`https:` không kèm credential nhúng (`https://real.com@evil.tld` bị từ chối);
+ *   - URL tương đối, resolve theo `baseOrigin` (mặc định là origin của document, hoặc
+ *     {@link SD_NON_BROWSER_ORIGIN} khi chạy SSR);
+ *   - `blob:`, `data:image/*`, `data:application/pdf`.
+ *
+ * Mọi thứ khác bị từ chối, kể cả `mailto:`/`tel:` (không phải tài nguyên), `file:` và giá trị
+ * không parse được.
+ */
+export function sdIsSafeResourceUrl(value: string | null | undefined, baseOrigin?: string): boolean {
+  const parsed = sdParseUrl(value, sdResolveBaseOrigin(baseOrigin));
+  if (!parsed) return false;
+  switch (parsed.protocol) {
+    case 'http:':
+    case 'https:':
+      return !parsed.username && !parsed.password;
+    case 'blob:':
+      return true;
+    case 'data:':
+      return SAFE_DATA_RESOURCE.test(parsed.pathname);
+    default:
+      return false;
+  }
+}

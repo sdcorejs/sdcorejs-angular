@@ -66,6 +66,8 @@ export type ShowcaseExampleSourceKey =
   | "components/file-explorer/example-khung-hep-mobile"
   | "components/file-explorer/example-loading-rong-va-loi"
   | "components/form-generic/example-builder-render"
+  | "components/highlight/example-du-lieu-chua-markup"
+  | "components/highlight/example-tim-kiem-khong-dau"
   | "components/history/example-lich-su-cap-nhat"
   | "components/history/example-luong-phe-duyet"
   | "components/history/example-timeline-rong"
@@ -111,9 +113,11 @@ export type ShowcaseExampleSourceKey =
   | "components/org-chart/example-custom-bang-templateref-input"
   | "components/org-chart/example-node-co-mau"
   | "components/preview/example-anh-don"
+  | "components/preview/example-nguon-video-bi-chan"
   | "components/preview/example-pdf-nang-cao"
   | "components/preview/example-thu-vien-anh"
   | "components/preview/example-xem-pdf"
+  | "components/preview/example-xem-video"
   | "components/query-bar/example-che-do-inline"
   | "components/query-bar/example-che-do-popover"
   | "components/query-builder/example-bat-dau-trong-dung-tu-dau"
@@ -219,6 +223,7 @@ export type ShowcaseExampleSourceKey =
   | "forms/autocomplete/example-cac-trang-thai-bao-loi"
   | "forms/autocomplete/example-chinh-sua-noi-tuyen"
   | "forms/autocomplete/example-co-ban"
+  | "forms/autocomplete/example-cuon-ao"
   | "forms/autocomplete/example-them-moi"
   | "forms/autocomplete/example-trang-thai"
   | "forms/autocomplete/example-validator"
@@ -290,6 +295,7 @@ export type ShowcaseExampleSourceKey =
   | "forms/select/example-chinh-sua-noi-tuyen"
   | "forms/select/example-chon-nhieu-voi-dong-tat-ca"
   | "forms/select/example-co-ban"
+  | "forms/select/example-cuon-ao"
   | "forms/select/example-footer-action-giong-dropdown-item"
   | "forms/select/example-footer-action-khi-khong-co-ket-qua"
   | "forms/select/example-kich-thuoc"
@@ -320,6 +326,10 @@ export type ShowcaseExampleSourceKey =
   | "forms/tree-select/example-multiple-cascade"
   | "forms/tree-select/example-static-single-select"
   | "forms/tree-select/example-unloaded-key-va-viewed"
+  | "guides/theme-tokens/example-bang-contrast"
+  | "guides/theme-tokens/example-palette-va-che-do-sang-toi"
+  | "guides/theme-tokens/example-ramp"
+  | "guides/theme-tokens/example-semantic-va-scale"
   | "modules/layout/example-sidebar-v1-classic"
   | "modules/layout/example-sidebar-v2-rail"
   | "modules/layout/example-sidebar-v3-collapsible"
@@ -836,6 +846,20 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Group có thể thu gọn/mở rộng trong preview; điều kiện vô hiệu hóa được cấu hình trên từng trường con.",
   },
   {
+    sourceKey: "components/highlight/example-tim-kiem-khong-dau",
+    pageKey: "components/highlight",
+    sectionId: "example-tim-kiem-khong-dau",
+    title: "Tìm kiếm không dấu",
+    description: "Gõ 'duc', 'ha noi' hoặc 'NGUYEN' — kết quả khớp cả chữ có dấu.",
+  },
+  {
+    sourceKey: "components/highlight/example-du-lieu-chua-markup",
+    pageKey: "components/highlight",
+    sectionId: "example-du-lieu-chua-markup",
+    title: "Dữ liệu chứa markup",
+    description: "Markup trong dữ liệu hiện nguyên dạng chữ — component không dùng innerHTML.",
+  },
+  {
     sourceKey: "components/history/example-luong-phe-duyet",
     pageKey: "components/history",
     sectionId: "example-luong-phe-duyet",
@@ -1170,6 +1194,20 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-pdf-nang-cao",
     title: "PDF nâng cao",
     description: "Existing “PDF nâng cao” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/preview/example-xem-video",
+    pageKey: "components/preview",
+    sectionId: "example-xem-video",
+    title: "Xem video",
+    description: "Trình phát native: có controls, không tự phát, chỉ tải metadata khi mở.",
+  },
+  {
+    sourceKey: "components/preview/example-nguon-video-bi-chan",
+    pageKey: "components/preview",
+    sectionId: "example-nguon-video-bi-chan",
+    title: "Nguồn video bị chặn",
+    description: "URL không qua sdIsSafeResourceUrl không được gắn vào trình phát — hiện thông báo lỗi.",
   },
   {
     sourceKey: "components/query-bar/example-che-do-popover",
@@ -1928,6 +1966,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Bấm vào để mở panel gõ/lọc; text giữ nguyên tới khi chọn. Hover hiện × để xoá.",
   },
   {
+    sourceKey: "forms/autocomplete/example-cuon-ao",
+    pageKey: "forms/autocomplete",
+    sectionId: "example-cuon-ao",
+    title: "Cuộn ảo",
+    description: "10.000 địa điểm. Panel chỉ render các dòng đang thấy và danh sách không bị cắt theo limit; mũi tên lên/xuống đi hết danh sách (quay vòng ở hai đầu), Enter để chọn. Mặc định tắt.",
+  },
+  {
     sourceKey: "forms/checkbox/example-co-ban",
     pageKey: "forms/checkbox",
     sectionId: "example-co-ban",
@@ -2453,6 +2498,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Mẫu tối thiểu cho case thêm nhanh item khi không tìm thấy kết quả.",
   },
   {
+    sourceKey: "forms/select/example-cuon-ao",
+    pageKey: "forms/select",
+    sectionId: "example-cuon-ao",
+    title: "Cuộn ảo",
+    description: "10.000 nhân viên. Panel chỉ render các dòng đang thấy — kể cả sau khi tick 'Tất cả' — và danh sách không bị cắt theo limit. Trong ô tìm kiếm: mũi tên, PageUp/PageDown, Home/End đi hết danh sách, Enter để chọn. Mặc định tắt.",
+  },
+  {
     sourceKey: "forms/switch/example-co-ban",
     pageKey: "forms/switch",
     sectionId: "example-co-ban",
@@ -2612,6 +2664,34 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-unloaded-key-va-viewed",
     title: "Unloaded key và viewed",
     description: "Key chưa load không bị xóa bởi filter/page/lazy state; viewed mode hiển thị fallback key ổn định.",
+  },
+  {
+    sourceKey: "guides/theme-tokens/example-palette-va-che-do-sang-toi",
+    pageKey: "guides/theme-tokens",
+    sectionId: "example-palette-va-che-do-sang-toi",
+    title: "Palette và chế độ sáng tối",
+    description: "Nút dưới đây đặt data-sd-theme trên thẻ html (thư viện không tự ghi thuộc tính này). Dark chỉ có cho palette default. Giá trị hiển thị đọc bằng readSdTokens().",
+  },
+  {
+    sourceKey: "guides/theme-tokens/example-ramp",
+    pageKey: "guides/theme-tokens",
+    sectionId: "example-ramp",
+    title: "Ramp",
+    description: "Pha bằng color-mix() lúc chạy từ màu gốc (bậc 500), nên đổi --sd-primary thì cả dải đổi theo. Ramp là tuyệt đối: 50 luôn nhạt nhất, kể cả ở chế độ tối.",
+  },
+  {
+    sourceKey: "guides/theme-tokens/example-semantic-va-scale",
+    pageKey: "guides/theme-tokens",
+    sectionId: "example-semantic-va-scale",
+    title: "Semantic và scale",
+    description: "Component hỏi theo vai trò (chữ trạng thái lỗi, chữ trên nền đậm) thay vì một ô palette; scale đặt tên theo giá trị px và giống nhau ở sáng lẫn tối.",
+  },
+  {
+    sourceKey: "guides/theme-tokens/example-bang-contrast",
+    pageKey: "guides/theme-tokens",
+    sectionId: "example-bang-contrast",
+    title: "Bảng contrast",
+    description: "Đo trên trình duyệt cho palette default ở chế độ sáng và tối, cùng cặp và ngưỡng với test:theme (test đó còn chạy cho 8 preset có tên). Đây là kiểm tra palette, không thay cho việc kiểm tra từng trạng thái component.",
   },
   {
     sourceKey: "modules/layout/example-sidebar-v1-classic",

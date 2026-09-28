@@ -120,6 +120,7 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.notify.type.error': '오류',
   'core.notify.show-more': '더 보기 ({count})',
   'core.notify.show-less': '접기',
+  'core.notify.close': '알림 닫기',
 
   // ---- Service: confirm ----
   'core.confirm.title': '확인',
@@ -268,6 +269,7 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.select.required': '선택해 주세요',
   'core.form.select.selectAll': '전체',
   'core.form.select.selected-count': '{count}개 선택됨',
+  'core.form.select.clear': '지우기',
 
   // ---- Forms: textarea ----
   'core.form.textarea.required': '정보를 입력해 주세요',
@@ -545,6 +547,12 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.preview-pdf.search-next': '다음 결과',
   'core.component.preview-pdf.search-close': '검색 닫기',
 
+  // ---- Component: preview-video ----
+  'core.component.preview-video.error': '이 동영상을 재생할 수 없습니다',
+  'core.component.preview-video.retry': '다시 시도',
+  'core.component.preview-video.download': '다운로드',
+  'core.component.preview-video.unsupported': '이 브라우저에서는 이 동영상 형식을 재생할 수 없습니다',
+
   // ---- Component: table ----
   'core.component.table.setup': '테이블 설정',
   'core.component.table.column-header': '열 머리글',
@@ -567,6 +575,8 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.exporting': '내보내는 중...{percent}%',
   'core.component.table.export': '내보내기',
   'core.component.table.export-csv': 'CSV 내보내기',
+  'core.component.table.export-max-exceeded':
+    '{total}개 행은 내보낼 수 없습니다. 최대 {max}개 행까지 가능하니 필터를 좁힌 후 다시 시도하세요.',
   'core.component.table.showing': '표시 중:',
   'core.component.table.paginator.first-page': '첫 페이지',
   'core.component.table.paginator.last-page': '마지막 페이지',

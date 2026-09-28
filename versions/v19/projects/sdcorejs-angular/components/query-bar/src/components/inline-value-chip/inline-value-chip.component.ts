@@ -172,14 +172,24 @@ export class SdQueryInlineValueChip {
     this.remove.emit();
   }
 
-  /** Format a stored value for display — number → vi-VN grouped digits. */
+  /** Format a stored value for display — number → digits grouped by `I18nService.locale()`. */
   #format(v: any): string {
     if (v == null || v === '') return '';
     if (this.isNumber()) {
-      const n = typeof v === 'number' ? v : Number(String(v).replace(/\./g, ''));
-      return Number.isFinite(n) ? n.toLocaleString('vi-VN') : String(v);
+      const n = typeof v === 'number' ? v : Number(this.#stripGrouping(String(v)));
+      return Number.isFinite(n) ? n.toLocaleString(this.#i18n.locale()) : String(v);
     }
     return String(v);
+  }
+
+  /**
+   * Remove the current locale's thousands separator (vi `.`, en/ja/ko/zh `,`) and whitespace.
+   * why: the separator depends on the language now that display follows `locale()`, so parsing must
+   * follow it too — a fixed `.` would turn an English `1,000` into an error.
+   */
+  #stripGrouping(s: string): string {
+    const group = new Intl.NumberFormat(this.#i18n.locale()).formatToParts(11111).find(part => part.type === 'group')?.value ?? '';
+    return (group ? s.split(group).join('') : s).replace(/\s/g, '');
   }
 
   /** Parse a draft back to a stored value. Number kind rejects non-numeric input. */
@@ -187,9 +197,9 @@ export class SdQueryInlineValueChip {
     const t = (s ?? '').trim();
     if (t === '') return { ok: true, value: this.isNumber() ? null : '' };
     if (this.isNumber()) {
-      // vi-VN groups thousands with '.', so strip dots + spaces, then require a plain
-      // (optionally negative) integer — anything else (letters, stray symbols) is an error.
-      const cleaned = t.replace(/[.\s]/g, '');
+      // Strip the locale's thousands separator + spaces, then require a plain (optionally
+      // negative) integer — anything else (letters, stray symbols) is an error.
+      const cleaned = this.#stripGrouping(t);
       if (!/^-?\d+$/.test(cleaned)) return { ok: false, value: t };
       const n = Number(cleaned);
       return Number.isFinite(n) ? { ok: true, value: n } : { ok: false, value: t };

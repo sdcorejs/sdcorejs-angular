@@ -214,11 +214,11 @@ export class SdDate implements OnDestroy, OnInit {
     if (errors['required']) return this.#i18n.t('core.form.date.required');
     if (errors['matDatepickerMin']) {
       const d = this.resolvedMin();
-      return this.#i18n.t('core.form.date.min-date', { date: d ? new Date(d).toLocaleDateString('vi-VN') : '' });
+      return this.#i18n.t('core.form.date.min-date', { date: d ? new Date(d).toLocaleDateString(this.#i18n.locale()) : '' });
     }
     if (errors['matDatepickerMax']) {
       const d = this.resolvedMax();
-      return this.#i18n.t('core.form.date.max-date', { date: d ? new Date(d).toLocaleDateString('vi-VN') : '' });
+      return this.#i18n.t('core.form.date.max-date', { date: d ? new Date(d).toLocaleDateString(this.#i18n.locale()) : '' });
     }
     // why: key thật do `MatDatepickerInput` bắn ra là `matDatepickerParse` (xem `_parseValidator`
     // trong @angular/material/datepicker). Trước đây code bắt `matDatetimePickerParse` — key này

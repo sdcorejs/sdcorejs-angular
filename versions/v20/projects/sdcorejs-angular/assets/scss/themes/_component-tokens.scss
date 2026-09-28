@@ -1,0 +1,258 @@
+// Component tier: `--sd-{component}-{role}` (D-020, D-029). The ONLY place component colours are declared.
+//
+// Each entry is `name: (light, dark)`.
+// - Light = the exact hex the component used in 2.15, so migrating a component to its token changes
+//   nothing on screen (D-014, INV-001).
+// - Dark = chosen for the default dark palette and checked in scripts/theme-contrast.test.mjs.
+// - Surfaces that are dark in both modes (code editor, image/PDF viewer shell, overlays) keep one
+//   value; the image/PDF viewers' own `theme="light"` variant keeps its colours too, because that input
+//   is an explicit choice independent of the app mode.
+//
+// Components reference these through `var(--sd-*)`; `:host` blocks may alias their existing local
+// names (`--sd-pdf-*`, `--sd-fe-*`, `--sd-preview-*`, `--sd-org-*`, `--sd-tree-*`) to them, so consumer
+// hooks keep working.
+
+@use 'sass:list';
+
+$component-tokens: (
+  // Global chrome
+  'scrollbar-track': (#f1f1f1, #1d1f23),
+  'scrollbar-thumb': (#c5c5c5, #5a5d66),
+  'reboot-caption': (#6c757d, #a4a6b0),
+  'ckeditor-toolbar-bg': (#f8f9fa, #25272c),
+  'ckeditor-toolbar-border': (#e0e0e0, #44474f),
+  'tooltip-bg': (#616161, #616161),
+  'highlight-search-bg': (#ffff00, #ffe066),
+  'loading-bg': (#ffffff, #1d1f23),
+  'hover-copy-bg': (#333333, #e3e2e6),
+  'hover-copy-text': (#ffffff, #1a1b1f),
+  // autoid-inspector (developer overlay)
+  'autoid-inspector-surface': (#ffffff, #1d1f23),
+  // avatar — bases the initials chip mixes its palette colour with
+  'avatar-tint': (#ffffff, #2b2d33),
+  'avatar-ink': (#000000, #ffffff),
+  // avatar — grey of an empty avatar and the name palette (picked by a hash of the name). Same value in
+  // both modes: the tint/ink mix above is what adapts the chip to dark.
+  'avatar-neutral': (#bdc3c7, #bdc3c7),
+  'avatar-color-1': (#1abc9c, #1abc9c),
+  'avatar-color-2': (#2ecc71, #2ecc71),
+  'avatar-color-3': (#3498db, #3498db),
+  'avatar-color-4': (#9b59b6, #9b59b6),
+  'avatar-color-5': (#34495e, #34495e),
+  'avatar-color-6': (#16a085, #16a085),
+  'avatar-color-7': (#27ae60, #27ae60),
+  'avatar-color-8': (#2980b9, #2980b9),
+  'avatar-color-9': (#8e44ad, #8e44ad),
+  'avatar-color-10': (#2c3e50, #2c3e50),
+  'avatar-color-11': (#f1c40f, #f1c40f),
+  'avatar-color-12': (#e67e22, #e67e22),
+  'avatar-color-13': (#e74c3c, #e74c3c),
+  'avatar-color-14': (#95a5a6, #95a5a6),
+  'avatar-color-15': (#f39c12, #f39c12),
+  'avatar-color-16': (#d35400, #d35400),
+  'avatar-color-17': (#c0392b, #c0392b),
+  'avatar-color-18': (#bdc3c7, #bdc3c7),
+  'avatar-color-19': (#7f8c8d, #7f8c8d),
+  // code-editor — always dark
+  'code-editor-bg': (#1e1e1e, #1e1e1e),
+  'code-editor-header-bg': (#2d2d2d, #2d2d2d),
+  'code-editor-border': (#404040, #404040),
+  'code-editor-hover-bg': (#404040, #404040),
+  'code-editor-hover-text': (#ffffff, #ffffff),
+  'code-editor-dot-red': (#ff5f56, #ff5f56),
+  'code-editor-dot-yellow': (#ffbd2e, #ffbd2e),
+  'code-editor-dot-green': (#27c93f, #27c93f),
+  'code-editor-copied': (#27c93f, #27c93f),
+  'code-editor-text': (#cccccc, #cccccc),
+  'code-editor-text-muted': (#858585, #858585),
+  'code-editor-caret': (#ffffff, #ffffff),
+  'code-editor-scrollbar-thumb': (#555555, #555555),
+  'code-editor-scrollbar-thumb-hover': (#777777, #777777),
+  'code-editor-syntax-text': (#d4d4d4, #d4d4d4),
+  'code-editor-syntax-comment': (#999999, #999999),
+  'code-editor-syntax-punctuation': (#cccccc, #cccccc),
+  'code-editor-syntax-tag': (#e2777a, #e2777a),
+  'code-editor-syntax-function-name': (#6196cc, #6196cc),
+  'code-editor-syntax-number': (#f08d49, #f08d49),
+  'code-editor-syntax-property': (#f8c555, #f8c555),
+  'code-editor-syntax-keyword': (#cc99cd, #cc99cd),
+  'code-editor-syntax-string': (#7ec699, #7ec699),
+  'code-editor-syntax-operator': (#67cdcc, #67cdcc),
+  // file-explorer — bases for the accent color-mix() shades and tints
+  'file-explorer-mix-shade': (#000000, #ffffff),
+  'file-explorer-mix-tint': (#ffffff, #1d1f23),
+  // form-builder (form-generic) and its attribute / control sub-components
+  'form-builder-panel-border': (#e6e6e6, #44474f),
+  'form-builder-panel-header-bg': (#f2f2f2, #25272c),
+  'form-builder-panel-header-text': (#757575, #a4a6b0),
+  'form-builder-control-bg': (#ffffff, #1d1f23),
+  'form-builder-control-border': (#828282, #8e9099),
+  'form-builder-chip-bg': (#e0e0e0, #34373d),
+  'form-builder-placeholder': (#999999, #8e9099),
+  'form-builder-hint': (#bfbfbf, #6f727b),
+  'form-builder-upload-icon': (#afafaf, #7c7f88),
+  'form-builder-upload-placeholder-bg': (#e5e9ed, #34373d),
+  'form-builder-upload-placeholder-shape': (#cad3db, #5a5d66),
+  'form-builder-html-bg': (#f4f4f4, #25272c),
+  'form-builder-canvas-bg': (#ffffff, #1d1f23),
+  'form-builder-outline-mix': (#d6d2da, #49454f),
+  'form-builder-mix-tint': (#ffffff, #1d1f23),
+  'form-builder-expression-bg': (#e6e6e6, #34373d),
+  'form-builder-md-secondary': (#625b71, #ccc2dc),
+  'form-builder-md-secondary-container': (#e8def8, #4a4458),
+  'form-builder-md-on-secondary-container': (#1d192b, #e8def8),
+  'form-builder-md-warning': (#8a5400, #ffb95c),
+  'form-builder-md-warning-container': (#ffddb1, #653e00),
+  'form-builder-md-success': (#1f6f43, #7fd8a2),
+  'form-builder-md-success-container': (#b7f0cb, #00522e),
+  // history
+  'history-line': (#94b0ff, #5d78c9),
+  'history-meta': (#757575, #a4a6b0),
+  'history-meta-strong': (#000000, #e3e2e6),
+  // modal-resizable
+  'modal-resizable-bg': (#ffffff, #1d1f23),
+  'modal-resizable-title': (#212121, #e3e2e6),
+  'modal-resizable-header-bg': (#5d6165, #3a3d44),
+  'modal-resizable-divider': (#dde0e5, #44474f),
+  'modal-resizable-focus-ring-on-dark': (#ffffff, #ffffff),
+  // org-chart
+  'org-chart-line': (#d9e2ef, #3c4452),
+  'org-chart-card-bg': (#ffffff, #1d1f23),
+  'org-chart-text': (#102047, #e3e2e6),
+  'org-chart-text-muted': (#4d5b73, #aab3c5),
+  'org-chart-icon': (#52708f, #9fb6cf),
+  'org-chart-toolbar-bg': (#f4f7fb, #25272c),
+  // page (layout)
+  'page-bg': (#f9f9f9, #121316),
+  'page-shadow': (#2f31361a, #0000004d),
+  // preview-image — dark shell by default, `theme="light"` variant; both independent of the app mode
+  'preview-image-shell-bg': (#0d0e10, #0d0e10),
+  'preview-image-shell-bg-2': (#17191c, #17191c),
+  'preview-image-fg': (#f5f6f7, #f5f6f7),
+  'preview-image-light-shell-bg': (#f7f8fa, #f7f8fa),
+  'preview-image-light-shell-bg-2': (#ffffff, #ffffff),
+  'preview-image-light-fg': (#1a1c1f, #1a1c1f),
+  'preview-image-dot-active': (#f5f6f7, #f5f6f7),
+  'preview-image-overlay-fg': (#ffffff, #ffffff),
+  'preview-image-focus-ring': (#ffffff, #ffffff),
+  // preview-pdf
+  'preview-pdf-shell-bg': (#1a1c1f, #1a1c1f),
+  'preview-pdf-sidebar-bg': (#22252a, #22252a),
+  'preview-pdf-page-bg': (#ffffff, #ffffff),
+  'preview-pdf-fg': (#f5f6f7, #f5f6f7),
+  'preview-pdf-light-shell-bg': (#f7f8fa, #f7f8fa),
+  'preview-pdf-light-sidebar-bg': (#ffffff, #ffffff),
+  'preview-pdf-light-fg': (#1a1c1f, #1a1c1f),
+  'preview-pdf-focus-ring': (#ffffff, #ffffff),
+  // query-bar and its chips, pickers, menus
+  'query-bar-text': (#212121, #e3e2e6),
+  'query-bar-text-secondary': (#5f6368, #c4c6d0),
+  'query-bar-text-muted': (#7a7a7a, #a4a6b0),
+  'query-bar-border': (#d6d8db, #44474f),
+  'query-bar-border-soft': (#e2e4e7, #34373d),
+  'query-bar-border-hover': (#b9bdc3, #6f727b),
+  'query-bar-bg': (#ffffff, #1d1f23),
+  'query-bar-bg-soft': (#f5f6f7, #25272c),
+  'query-bar-bg-active': (#eef2ff, #25324d),
+  'query-bar-danger': (#dc2626, #ffb4ab),
+  'query-bar-chip-danger': (#d23535, #ffb4ab),
+  'query-bar-chip-danger-bg': (#fff5f5, #3d2020),
+  // query-builder
+  'query-builder-line': (#d0d5dd, #44474f),
+  'query-builder-border': (#e0e0e0, #44474f),
+  'query-builder-border-strong': (#c2c8d0, #6f727b),
+  'query-builder-text': (#344054, #e3e2e6),
+  'query-builder-text-secondary': (#667085, #b8bac4),
+  'query-builder-text-muted': (#98a2b3, #8e9099),
+  'query-builder-placeholder': (#cbd2dc, #5f626b),
+  'query-builder-bg': (#ffffff, #1d1f23),
+  'query-builder-bg-soft': (#fafbfc, #25272c),
+  'query-builder-danger': (#d92d20, #ffb4ab),
+  'query-builder-danger-bg': (#fee4e2, #4a2424),
+  // quick-action
+  'quick-action-bg': (#ffffff, #1d1f23),
+  // section
+  'section-bg': (#ffffff, #1d1f23),
+  'section-divider': (#e6e6e6, #44474f),
+  'section-outline': (#f2f2f2, #34373d),
+  'section-shadow': (#2f31361a, #0000004d),
+  // select
+  'select-panel-bg': (#ffffff, #1d1f23),
+  'select-panel-divider': (#f2f2f2, #34373d),
+  'select-icon-muted': (#dadada, #5f626b),
+  // sidebar (v1) and sidebar-mobile (v1)
+  'sidebar-bg': (#ffffff, #1d1f23),
+  'sidebar-text': (#1f1f1f, #e3e2e6),
+  'sidebar-icon': (#8c8c8c, #a4a6b0),
+  'sidebar-mobile-bg': (#f2f2f6, #121316),
+  'sidebar-mobile-card-bg': (#ffffff, #1d1f23),
+  'sidebar-mobile-border': (#ebebeb, #34373d),
+  'sidebar-mobile-text': (#1f1f1f, #e3e2e6),
+  'sidebar-mobile-text-secondary': (#333333, #c4c6d0),
+  'sidebar-mobile-icon': (#8c8c8c, #a4a6b0),
+  'sidebar-mobile-item-active-bg': (#f5f5f5, #25272c),
+  'sidebar-mobile-hover-bg': (#fafafa, #202226),
+  'sidebar-mobile-pressed-bg': (#f0f0f0, #2b2d33),
+  'sidebar-mobile-header-bg': (#ffffff, #1d1f23),
+  'sidebar-mobile-header-border': (#e0e0e0, #34373d),
+  // home-page (layout)
+  'home-page-gradient-start': (#fafbfc, #1b1d21),
+  'home-page-gradient-end': (#f4f6fa, #16181b),
+  'home-page-card-bg': (#ffffff, #1d1f23),
+  // tab-group
+  'tab-group-header-bg': (#f0f3f7, #25272c),
+  'tab-group-active-bg': (#ffffff, #1d1f23),
+  // tab-router
+  'tab-router-item-divider': (#dde0e5, #44474f),
+  'tab-router-item-muted-bg': (#f2f3f4, #25272c),
+  'tab-router-item-active-bg': (#ffffff, #1d1f23),
+  'tab-router-item-text': (#757575, #a4a6b0),
+  'tab-router-badge-bg': (#5c6bc0, #9fa8da),
+  'tab-router-nav-bg': (#f9f9f9, #16171a),
+  // table
+  'table-bg': (#ffffff, #1d1f23),
+  'table-header-bg': (#f2f3f4, #25272c),
+  'table-header-text': (#212121, #e3e2e6),
+  'table-group-header-mix': (#f2f3f4, #25272c),
+  'table-row-divider': (#f2f2f2, #34373d),
+  'table-row-hover-bg': (#f5f5f5, #25272c),
+  'table-row-selected-bg': (#eef2ff, #25324d),
+  'table-row-activated-bg': (#e5ecff, #2b3a5a),
+  'table-spinner': (#cceeff, #4a6f8a),
+  'table-select-arrow': (#a6a6a6, #8e9099),
+  'table-group-row-bg': (#f5f7fc, #22252c),
+  'table-group-row-border': (#e6e9f2, #34373d),
+  'table-tree-level-0-bg': (#fbfcfe, #1b1d21),
+  'table-tree-level-1-bg': (#ffffff, #1d1f23),
+  'table-tree-level-2-bg': (#fafbfd, #202226),
+  'table-tree-level-3-bg': (#f6f8fb, #23252a),
+  'table-tree-root-text': (#1f2330, #e3e2e6),
+  'table-export-panel-bg': (#f6f6f6, #25272c),
+  'table-export-text': (#000000, #e3e2e6),
+  // tree
+  'tree-selected-mix': (#ffffff, #1d1f23),
+  'tree-text': (#102047, #e3e2e6),
+  'tree-muted': (#5f6f89, #aab3c5),
+  'tree-strong-text': (#000000, #e3e2e6),
+  // upload-file
+  'upload-file-overlay-fg': (#ffffff, #ffffff),
+  'upload-file-badge-bg': (#e6e6e6, #3a3d44),
+  'upload-file-badge-text': (#000000, #e3e2e6),
+  'upload-file-badge-border': (#ffffff, #1d1f23),
+  'upload-file-muted-bg': (#f9f9f9, #25272c),
+  // forms
+  'autocomplete-selected-text': (#000000, #e3e2e6),
+  'chip-bg': (#ebecf0, #34373d),
+  'chip-calendar-bg': (#ebecf0, #34373d),
+  'entity-picker-bg': (#ffffff, #1d1f23),
+  'input-color-checker': (#dddddd, #5a5d66),
+  'input-color-bg': (#ffffff, #1d1f23),
+  'input-number-copy-bg': (#e9e9e9, #34373d),
+);
+
+@mixin emit($scheme: light) {
+  $index: if($scheme == dark, 2, 1);
+  @each $name, $pair in $component-tokens {
+    --sd-#{$name}: #{list.nth($pair, $index)};
+  }
+}

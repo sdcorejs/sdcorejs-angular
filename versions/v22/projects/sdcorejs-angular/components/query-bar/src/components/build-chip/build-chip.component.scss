@@ -14,9 +14,9 @@
 $qb-primary:        var(--sd-primary);
 $qb-primary-light:  var(--sd-primary-light);
 $qb-primary-faint:  var(--sd-primary-light);
-$qb-border:         #d6d8db;
-$qb-text-secondary: #5f6368;
-$qb-text-muted:     #7a7a7a;
+$qb-border:         var(--sd-query-bar-border, #d6d8db);
+$qb-text-secondary: var(--sd-query-bar-text-secondary, #5f6368);
+$qb-text-muted:     var(--sd-query-bar-text-muted, #7a7a7a);
 $qb-radius-chip:    999px;
 
 :host { display: contents; }
@@ -30,7 +30,7 @@ $qb-radius-chip:    999px;
   border: 1px solid $qb-primary-light;
   border-radius: $qb-radius-chip;
   background: $qb-primary-faint;
-  font-size: 13px;
+  font-size: var(--sd-font-size-13, 13px);
   color: $qb-text-secondary;
   white-space: nowrap;
   overflow: hidden;
@@ -39,7 +39,7 @@ $qb-radius-chip:    999px;
   :host-context(.c-density-comfortable) & { height: 32px; }
 }
 
-.c-token-field { font-weight: 500; line-height: 1; }
+.c-token-field { font-weight: var(--sd-font-weight-medium, 500); line-height: 1; }
 
 .c-token-op {
   display: inline-flex;
@@ -57,7 +57,7 @@ $qb-radius-chip:    999px;
   background: transparent;
   padding: 0;
   font: inherit;
-  font-weight: 500;
+  font-weight: var(--sd-font-weight-medium, 500);
   color: $qb-primary; // value pops in primary against grey label
 }
 
@@ -89,7 +89,7 @@ $qb-radius-chip:    999px;
   .mat-mdc-form-field-infix { padding: 0; min-height: 0; width: auto; border: 0; display: inline-flex; align-items: center; }
   .mat-mdc-select-value,
   .mat-mdc-input-element,
-  input { line-height: 1; font-size: 13px; padding: 0; height: auto; color: inherit; }
+  input { line-height: 1; font-size: var(--sd-font-size-13, 13px); padding: 0; height: auto; color: inherit; }
 
   .mat-mdc-select-value {
     display: inline-flex;
@@ -99,7 +99,7 @@ $qb-radius-chip:    999px;
     overflow: hidden;
     text-overflow: ellipsis;
     color: $qb-primary;
-    font-weight: 500;
+    font-weight: var(--sd-font-weight-medium, 500);
   }
 
   // why: bare sd-select / sd-date phơi ra `.sd-suffix-icon` (cancel) — chip đã có nút ×
@@ -135,25 +135,25 @@ $qb-radius-chip:    999px;
   min-width: 0;
   padding: 0 8px;
   border: 1px solid currentColor;
-  border-radius: 999px;
+  border-radius: var(--sd-radius-999, 999px);
   background: transparent;
   font: inherit;
-  font-size: 11px;
-  font-weight: 500;
+  font-size: var(--sd-font-size-11, 11px);
+  font-weight: var(--sd-font-weight-medium, 500);
   line-height: 1;
   cursor: pointer;
   white-space: nowrap;
   user-select: none;
-  transition: background 120ms ease, color 120ms ease;
+  transition: background var(--sd-duration-fast, 120ms) ease, color var(--sd-duration-fast, 120ms) ease;
 
-  :host-context(.c-density-comfortable) & { height: 20px; padding: 0 10px; font-size: 12px; }
+  :host-context(.c-density-comfortable) & { height: 20px; padding: 0 10px; font-size: var(--sd-font-size-12, 12px); }
 }
 
 .c-bool-true  { color: var(--sd-success); }
 .c-bool-false { color: var(--sd-warning); }
 
-.c-bool-active.c-bool-true  { background: var(--sd-success); color: #fff; border-color: var(--sd-success); }
-.c-bool-active.c-bool-false { background: var(--sd-warning); color: #fff; border-color: var(--sd-warning); }
+.c-bool-active.c-bool-true  { background: var(--sd-success); color: var(--sd-text-on-solid, #ffffff); border-color: var(--sd-success); }
+.c-bool-active.c-bool-false { background: var(--sd-warning); color: var(--sd-text-on-solid, #ffffff); border-color: var(--sd-warning); }
 
 .c-bool-btn:hover:not(.c-bool-active).c-bool-true  { background: var(--sd-success-light); }
 .c-bool-btn:hover:not(.c-bool-active).c-bool-false { background: var(--sd-warning-light); }
@@ -174,6 +174,6 @@ $qb-radius-chip:    999px;
   :host-context(.c-density-compact) & { width: 26px; }
   :host-context(.c-density-comfortable) & { width: 28px; }
 
-  sd-icon { font-size: 14px; width: 14px; height: 14px; }
+  sd-icon { font-size: var(--sd-font-size-14, 14px); width: 14px; height: 14px; }
   &:hover { background: rgba(0, 0, 0, 0.05); }
 }
