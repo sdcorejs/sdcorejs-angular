@@ -392,7 +392,9 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
   }
 }
 
+// why: :empty covers the first render; after it the component marks a label that holds nothing but inert entry hosts.
 .c-projected-label:empty,
+.c-projected-label-empty,
 .c-projected-label[hidden] {
   display: none;
 }

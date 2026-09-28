@@ -60,6 +60,7 @@ Planned release suffix `3.0` targets `19.3.0`, `20.3.0`, `21.3.0`, and `22.3.0`,
 - Tooltip: meets WCAG 1.4.13 (hoverable, dismissible with Escape, persistent while hovered or focused).
 - Notify: toast announcements are reliable (persistent live regions) and the close button has an accessible name.
 - File explorer: let the detail preview shrink (down to 140 px for images and 240 px for PDFs) so the name, type, size and date stay visible without scrolling on short explorers.
+- Button: a keyed `@for` of `sd-button-item` / `sd-button-item-divider` (for example `track group.id`) no longer throws `NotFoundError` from `insertBefore` when the list is reordered or an entry is inserted before the last one. The button no longer moves entry hosts into a hidden container after rendering; they stay where Angular projects them, in the trigger's label slot, hidden and without text, so the label and the icon-only footprint are unchanged. `track $index` workarounds can go.
 
 ## [2.15] - 2026-09-24
 

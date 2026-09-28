@@ -164,26 +164,30 @@ export class SdButton implements OnInit, OnDestroy {
     afterRenderEffect(onCleanup => {
       const label = this.trigger()?.nativeElement.querySelector<HTMLElement>('.c-projected-label');
       if (!label) return;
-      const update = () => this.hasProjectedLabel.set(!!label.textContent?.trim());
+      const update = () => {
+        this.hasProjectedLabel.set(!!label.textContent?.trim());
+        // Entry hosts share this slot (the button has no other), directly or through @if/@for blocks. They must stay where
+        // Angular put them (moving them breaks keyed @for moves) and render nothing, so, as for `:empty`, only text or
+        // another element gives the label a place in the trigger.
+        const hosts = new Set<Node>(untracked(this.entries).map(entry => entry.element.nativeElement));
+        const isContent = (node: Node) =>
+          node.nodeType === Node.TEXT_NODE ? !!node.nodeValue : node.nodeType === Node.ELEMENT_NODE && !hosts.has(node);
+        label.classList.toggle('c-projected-label-empty', !Array.from(label.childNodes).some(isContent));
+      };
       update();
       const observer = new MutationObserver(update);
       observer.observe(label, { childList: true, characterData: true, subtree: true });
       onCleanup(() => observer.disconnect());
     });
     afterRenderEffect(() => {
-      const entries = this.entries();
-      const definitions = this.definitions().nativeElement;
-      // Angular projects multi-root @if blocks into the default slot. Relocate only
-      // our inert definition hosts; their Angular views and label templates stay owned by the consumer.
-      for (const entry of entries) {
+      // Re-run when an input the open menu renders changes, so it moves focus off disabled items and repositions.
+      for (const entry of this.entries()) {
         if (entry.kind === 'item') {
           entry.disabled();
           entry.color();
           entry.prefixIcon();
           entry.suffixIcon();
         }
-        const host = entry.element.nativeElement;
-        if (host.parentElement !== definitions) definitions.appendChild(host);
       }
       const actionable = this.hasActions() && !this.disabled() && !this.loading();
       const hover = this.openOnHover();
