@@ -1,4 +1,3 @@
-import { OverlayContainer } from '@angular/cdk/overlay';
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -62,7 +61,9 @@ function press(target: Element, key: string): void {
 
 const getComp = (fixture: ComponentFixture<unknown>) =>
   fixture.debugElement.query(d => d.componentInstance instanceof SdAutocomplete).componentInstance as SdAutocomplete;
-const overlay = () => TestBed.inject(OverlayContainer).getContainerElement();
+// why: from CDK 22 the autocomplete panel is a popover inserted next to its input, not inside OverlayContainer;
+// the document holds the open panel in every supported Angular version.
+const overlay = (): HTMLElement => document.body;
 const input = (fixture: ComponentFixture<unknown>) => fixture.nativeElement.querySelector('input') as HTMLInputElement;
 const renderedOptions = () =>
   Array.from(overlay().querySelectorAll<HTMLElement>('mat-option')).filter(option => !option.classList.contains('sd-read-state-anchor'));

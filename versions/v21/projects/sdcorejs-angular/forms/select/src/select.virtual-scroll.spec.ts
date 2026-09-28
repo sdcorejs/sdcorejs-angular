@@ -1,4 +1,3 @@
-import { OverlayContainer } from '@angular/cdk/overlay';
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -83,7 +82,9 @@ function press(target: Element, key: string): void {
 
 const getSelect = (fixture: ComponentFixture<unknown>) =>
   fixture.debugElement.query(d => d.componentInstance instanceof SdSelect).componentInstance as SdSelect<(typeof ITEMS)[number]>;
-const overlay = () => TestBed.inject(OverlayContainer).getContainerElement();
+// why: from CDK 22 the select panel is a popover inserted next to its trigger, not inside OverlayContainer;
+// the document holds the open panel in every supported Angular version.
+const overlay = (): HTMLElement => document.body;
 const trigger = (fixture: ComponentFixture<unknown>) => fixture.nativeElement.querySelector('mat-select') as HTMLElement;
 const searchInput = () => overlay().querySelector<HTMLInputElement>('input.c-search-input');
 const renderedOptions = () =>
