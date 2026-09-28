@@ -59,6 +59,39 @@ class IndicatorHost {
   label = signal('');
 }
 
+interface Group {
+  id: string;
+  label: string;
+}
+
+const groupsOf = (...labels: string[]): Group[] => labels.map(label => ({ id: label.toLowerCase(), label }));
+
+// Keyed @for entries directly under the button and inside a multi-root @if block (divider + @for), as in the Form Builder
+// item menu. Both reach the default slot next to the trigger label.
+@Component({
+  imports: [SdButton, SdButtonItem, SdButtonItemDivider],
+  template: `<sd-button prefixIcon="more_vert" tooltip="Move">
+    @if (caption()) {
+      {{ caption() }}
+    }
+    @for (group of groups(); track group.id) {
+      <sd-button-item (click)="move(group.id)">{{ group.label }}</sd-button-item>
+    }
+    @if (nested()) {
+      <sd-button-item-divider title="Nested" />
+      @for (group of groups(); track group.id) {
+        <sd-button-item (click)="move('nested-' + group.id)">Nested {{ group.label }}</sd-button-item>
+      }
+    }
+  </sd-button>`,
+})
+class KeyedHost {
+  caption = signal('');
+  groups = signal(groupsOf('A', 'B', 'C'));
+  nested = signal(true);
+  move = jasmine.createSpy('move');
+}
+
 describe('SdButton action popover', () => {
   it('shows the indicator only for labeled triggers without a suffix icon and updates the square footprint', async () => {
     TestBed.configureTestingModule({ imports: [IndicatorHost, NoopAnimationsModule] });
@@ -108,7 +141,7 @@ describe('SdButton action popover', () => {
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();
     const trigger: HTMLButtonElement = fixture.nativeElement.querySelector('sd-button button');
-    expect(trigger.querySelector('sd-button-item')).toBeNull();
+    expect(trigger.querySelector('button')).toBeNull();
     trigger.click();
     fixture.detectChanges();
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
@@ -293,7 +326,7 @@ describe('SdButton popover interaction and lifecycle', () => {
     fixture.detectChanges();
     open();
     expect(buttons().length).toBe(3);
-    expect(trigger().querySelector('sd-button-item')).toBeNull();
+    expect(trigger().querySelector('.c-projected-label')!.textContent!.trim()).toBe('Actions');
   });
 
   it('closes when disabled, loading or the native trigger changes', () => {
@@ -383,9 +416,90 @@ describe('SdButton popover interaction and lifecycle', () => {
     expect(bounds.top).toBeGreaterThanOrEqual(7);
   });
 
-  it('keeps all markers out of the trigger for multi-root conditional children', () => {
+  it('keeps multi-root conditional children inert in the trigger label slot', () => {
     expect(fixture.debugElement.query(By.directive(SdButton)).componentInstance.hasActions()).toBeTrue();
-    expect(trigger().textContent).toContain('Actions');
-    expect(trigger().querySelector('sd-button-item, sd-button-item-divider, button')).toBeNull();
+    const label = trigger().querySelector<HTMLElement>('.c-projected-label')!;
+    expect(label.textContent!.trim()).toBe('Actions');
+    expect(getComputedStyle(label).display).not.toBe('none');
+    // why: entry hosts stay where Angular projects them; moving them out of the label broke keyed @for moves.
+    const hosts = Array.from(label.querySelectorAll<HTMLElement>('sd-button-item, sd-button-item-divider'));
+    expect(hosts.length).toBe(4);
+    expect(hosts.every(host => !host.getClientRects().length)).toBeTrue();
+    expect(trigger().querySelector('button')).toBeNull();
+  });
+});
+
+describe('SdButton keyed @for entries', () => {
+  let fixture: ComponentFixture<KeyedHost>;
+  const trigger = () => fixture.nativeElement.querySelector('sd-button button') as HTMLButtonElement;
+  const label = () => trigger().querySelector<HTMLElement>('.c-projected-label')!;
+  const menuLabels = () => Array.from(document.querySelectorAll('[role="menu"] .sd-action-label'), node => node.textContent!.trim());
+  const reorder = (change: (groups: Group[]) => Group[]) => {
+    fixture.componentInstance.groups.update(change);
+    // why: relocated entry hosts made @for call insertBefore on a parent that no longer held them (NotFoundError).
+    expect(() => fixture.detectChanges()).not.toThrow();
+  };
+  const settle = async () => {
+    fixture.detectChanges();
+    await new Promise<void>(resolve => setTimeout(resolve, 0));
+    await fixture.whenStable();
+    fixture.detectChanges();
+  };
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ imports: [KeyedHost, NoopAnimationsModule] });
+    fixture = TestBed.createComponent(KeyedHost);
+    fixture.detectChanges();
+  });
+  afterEach(() => fixture.destroy());
+
+  it('reverses and splices keyed entries, top-level and inside a multi-root @if, and renders the menu in the new order', () => {
+    reorder(groups => [...groups].reverse());
+    reorder(groups => {
+      const next = [...groups];
+      next.splice(1, 1, ...groupsOf('D', 'E'));
+      return next;
+    });
+    trigger().click();
+    fixture.detectChanges();
+    expect(menuLabels()).toEqual(['C', 'D', 'E', 'A', 'Nested C', 'Nested D', 'Nested E', 'Nested A']);
+
+    reorder(groups => [...groups].reverse());
+    expect(menuLabels()).toEqual(['A', 'E', 'D', 'C', 'Nested A', 'Nested E', 'Nested D', 'Nested C']);
+    document.querySelectorAll<HTMLButtonElement>('[role="menu"] button')[5].click();
+    expect(fixture.componentInstance.move).toHaveBeenCalledOnceWith('nested-e');
+  });
+
+  it('keeps the icon-only footprint and the label detection while entries share the label slot', async () => {
+    const hosts = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('sd-button-item, sd-button-item-divider')
+    );
+    expect(hosts.length).toBe(7);
+    expect(hosts.every(host => !host.getClientRects().length && !host.textContent)).toBeTrue();
+    expect(trigger().querySelector('button')).toBeNull();
+    expect(trigger().classList).toContain('c-square');
+    expect(trigger().querySelector('.c-action-indicator')).toBeNull();
+    expect(getComputedStyle(label()).display).toBe('none');
+
+    fixture.componentInstance.caption.set('Move');
+    await settle();
+    expect(label().textContent!.trim()).toBe('Move');
+    expect(getComputedStyle(label()).display).not.toBe('none');
+    expect(trigger().classList).not.toContain('c-square');
+    expect(trigger().querySelector('.c-action-indicator')).not.toBeNull();
+
+    fixture.componentInstance.caption.set('');
+    reorder(groups => [...groups].reverse());
+    await settle();
+    expect(getComputedStyle(label()).display).toBe('none');
+    expect(trigger().classList).toContain('c-square');
+
+    // Entries re-created in the label slot must be recognised as inert as well.
+    fixture.componentInstance.nested.set(false);
+    await settle();
+    fixture.componentInstance.nested.set(true);
+    await settle();
+    expect(getComputedStyle(label()).display).toBe('none');
+    expect(trigger().classList).toContain('c-square');
   });
 });
