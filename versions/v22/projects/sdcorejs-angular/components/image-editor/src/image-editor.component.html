@@ -1,0 +1,447 @@
+@let _status = status();
+@let _autoId = autoId();
+@let _interactive = interactive();
+@let _busy = busy();
+@let _edits = edits();
+@let _crop = cropStyle();
+@let _image = imageBox();
+@let _output = outputSize();
+@let _limits = cropLimits();
+@let _max = resizeMax();
+@let _visible = _status === 'ready' || _status === 'exporting';
+@let _error = error();
+@let _locked = ratioLocked();
+@let _fixed = ratioFixed();
+
+<div class="toolbar">
+  <div class="toolbar-group" role="group" [attr.aria-label]="'core.component.image-editor.group-history' | sdTranslate">
+    <sd-button
+      type="text"
+      size="sm"
+      prefixIcon="undo"
+      [tooltip]="'core.component.image-editor.undo' | sdTranslate"
+      [disabled]="!canUndo()"
+      [attr.data-autoid]="_autoId ? _autoId + '-undo' : null"
+      (click)="undo()" />
+    <sd-button
+      type="text"
+      size="sm"
+      prefixIcon="redo"
+      [tooltip]="'core.component.image-editor.redo' | sdTranslate"
+      [disabled]="!canRedo()"
+      [attr.data-autoid]="_autoId ? _autoId + '-redo' : null"
+      (click)="redo()" />
+    <sd-button
+      type="text"
+      size="sm"
+      prefixIcon="restart_alt"
+      [tooltip]="'core.component.image-editor.reset' | sdTranslate"
+      [disabled]="!_interactive || !dirty()"
+      [attr.data-autoid]="_autoId ? _autoId + '-reset' : null"
+      (click)="reset()" />
+  </div>
+
+  <div class="toolbar-group" role="group" [attr.aria-label]="'core.component.image-editor.group-transform' | sdTranslate">
+    <sd-button
+      type="text"
+      size="sm"
+      prefixIcon="rotate_left"
+      [tooltip]="'core.component.image-editor.rotate-left' | sdTranslate"
+      [disabled]="!_interactive"
+      [attr.data-autoid]="_autoId ? _autoId + '-rotate-left' : null"
+      (click)="operate('rotate-ccw')" />
+    <sd-button
+      type="text"
+      size="sm"
+      prefixIcon="rotate_right"
+      [tooltip]="'core.component.image-editor.rotate-right' | sdTranslate"
+      [disabled]="!_interactive"
+      [attr.data-autoid]="_autoId ? _autoId + '-rotate-right' : null"
+      (click)="operate('rotate-cw')" />
+    <sd-button
+      type="text"
+      size="sm"
+      prefixIcon="flip"
+      [tooltip]="'core.component.image-editor.flip-horizontal' | sdTranslate"
+      [disabled]="!_interactive"
+      [attr.data-autoid]="_autoId ? _autoId + '-flip-horizontal' : null"
+      (click)="operate('flip-horizontal')" />
+    <sd-button
+      class="flip-vertical"
+      type="text"
+      size="sm"
+      prefixIcon="flip"
+      [tooltip]="'core.component.image-editor.flip-vertical' | sdTranslate"
+      [disabled]="!_interactive"
+      [attr.data-autoid]="_autoId ? _autoId + '-flip-vertical' : null"
+      (click)="operate('flip-vertical')" />
+  </div>
+
+  <div class="toolbar-group toolbar-group--zoom" role="group" [attr.aria-label]="'core.component.image-editor.group-zoom' | sdTranslate">
+    <sd-button
+      type="text"
+      size="sm"
+      prefixIcon="zoom_out"
+      [tooltip]="'core.component.image-editor.zoom-out' | sdTranslate"
+      [disabled]="!canZoomOut()"
+      [attr.data-autoid]="_autoId ? _autoId + '-zoom-out' : null"
+      (click)="zoomOut()" />
+    <span class="zoom-value" [attr.data-autoid]="_autoId ? _autoId + '-zoom-value' : null">{{ _visible ? zoomPercent() + '%' : '–' }}</span>
+    <sd-button
+      type="text"
+      size="sm"
+      prefixIcon="zoom_in"
+      [tooltip]="'core.component.image-editor.zoom-in' | sdTranslate"
+      [disabled]="!canZoomIn()"
+      [attr.data-autoid]="_autoId ? _autoId + '-zoom-in' : null"
+      (click)="zoomIn()" />
+    <sd-button
+      type="text"
+      size="sm"
+      prefixIcon="fit_screen"
+      [tooltip]="'core.component.image-editor.fit' | sdTranslate"
+      [disabled]="!_interactive || isFit()"
+      [attr.data-autoid]="_autoId ? _autoId + '-fit' : null"
+      (click)="fitToView()" />
+  </div>
+</div>
+
+<div class="body">
+  <div
+    #stage
+    class="stage"
+    role="group"
+    [id]="instanceId + '-stage'"
+    [class.stage--panning]="dragging() === 'pan'"
+    [attr.aria-label]="'core.component.image-editor.stage' | sdTranslate"
+    [attr.aria-describedby]="instanceId + '-hint'"
+    [attr.data-autoid]="_autoId ? _autoId + '-stage' : null"
+    (pointerdown)="onStagePointerDown($event)"
+    (pointermove)="onPointerMove($event)"
+    (pointerup)="onPointerUp($event)"
+    (pointercancel)="onPointerCancel($event)"
+    (lostpointercapture)="onPointerCancel($event)"
+    (wheel)="onWheel($event)">
+    @if (_visible && _image) {
+      <div
+        class="checker"
+        aria-hidden="true"
+        [style.left.px]="_image.x"
+        [style.top.px]="_image.y"
+        [style.width.px]="_image.width"
+        [style.height.px]="_image.height"></div>
+    }
+    <!-- why: canvas luôn nằm trong DOM để vẽ preview ngay khi decode xong; ẩn khi chưa có ảnh. -->
+    <canvas
+      #previewCanvas
+      class="preview"
+      aria-hidden="true"
+      [class.preview--hidden]="!_visible"
+      [style.width.px]="previewSize().width"
+      [style.height.px]="previewSize().height"
+      [style.transform]="previewTransform()"
+      [attr.data-autoid]="_autoId ? _autoId + '-preview' : null"></canvas>
+
+    @if (_visible && _crop && _edits) {
+      <div
+        #cropBox
+        class="crop"
+        tabindex="0"
+        role="group"
+        [attr.aria-roledescription]="'core.component.image-editor.crop-role' | sdTranslate"
+        [attr.aria-label]="cropLabel()"
+        [attr.aria-describedby]="instanceId + '-hint'"
+        [attr.data-autoid]="_autoId ? _autoId + '-crop' : null"
+        [style.left.px]="_crop.x"
+        [style.top.px]="_crop.y"
+        [style.width.px]="_crop.width"
+        [style.height.px]="_crop.height"
+        (pointerdown)="onCropPointerDown($event, null)"
+        (keydown)="onCropKeydown($event)">
+        <span class="crop-grid" aria-hidden="true"></span>
+        @for (handle of handles; track handle) {
+          <span
+            class="handle"
+            aria-hidden="true"
+            [attr.data-handle]="handle"
+            [attr.data-autoid]="_autoId ? _autoId + '-handle-' + handle : null"
+            (pointerdown)="onCropPointerDown($event, handle)"></span>
+        }
+      </div>
+    }
+
+    @switch (_status) {
+      @case ('empty') {
+        <div class="state">
+          <sd-icon name="image" size="32px" />
+          <p class="state-title">{{ 'core.component.image-editor.empty' | sdTranslate }}</p>
+          <p class="state-text">{{ 'core.component.image-editor.empty-hint' | sdTranslate }}</p>
+        </div>
+      }
+      @case ('loading') {
+        <div class="state" role="status">
+          <span class="spinner" aria-hidden="true"></span>
+          <p class="state-title">{{ 'core.component.image-editor.loading' | sdTranslate }}</p>
+        </div>
+      }
+      @case ('error') {
+        <div class="state state--error" role="alert" [attr.data-autoid]="_autoId ? _autoId + '-error' : null">
+          <sd-icon name="broken_image" size="32px" />
+          <p class="state-title">{{ 'core.component.image-editor.load-error' | sdTranslate }}</p>
+          <p class="state-text">{{ _error?.message }}</p>
+        </div>
+      }
+    }
+    @if (_busy) {
+      <div class="busy" aria-hidden="true"><span class="spinner"></span></div>
+    }
+    <p class="visually-hidden" [id]="instanceId + '-hint'">{{ 'core.component.image-editor.keyboard-hint' | sdTranslate }}</p>
+    <p class="visually-hidden" role="status" [attr.data-autoid]="_autoId ? _autoId + '-status' : null">{{ statusMessage() }}</p>
+  </div>
+
+  <aside class="panel" [attr.aria-label]="'core.component.image-editor.panel' | sdTranslate" [attr.inert]="_visible ? null : ''">
+    <section class="section">
+      <h3 class="section-title">
+        <sd-icon name="crop" size="18px" />
+        {{ 'core.component.image-editor.crop' | sdTranslate }}
+      </h3>
+      @if (showRatios()) {
+        <div class="chips" role="group" [attr.aria-label]="'core.component.image-editor.ratio' | sdTranslate">
+          @for (chip of ratioChips(); track chip.key) {
+            @let _active = sameRatio(_edits?.aspectRatio ?? null, chip.value);
+            <button
+              type="button"
+              class="chip"
+              [class.chip--active]="_active"
+              [attr.aria-pressed]="_active"
+              [disabled]="!_interactive"
+              [attr.data-autoid]="_autoId ? _autoId + '-ratio-' + chip.key : null"
+              (click)="selectRatio(chip.value)">
+              {{ chip.label }}
+            </button>
+          }
+        </div>
+      }
+      @if (_edits && _limits) {
+        <div class="option-row">
+          <span class="prop-label">
+            <span [id]="instanceId + '-keep-ratio'">{{ 'core.component.image-editor.keep-ratio' | sdTranslate }}</span>
+            @if (_fixed) {
+              @let _fixedText = 'core.component.image-editor.keep-ratio-fixed' | sdTranslate;
+              <!-- why: nút (không phải span) để bàn phím focus được; sdTooltip mở khi hover và focus, Escape đóng. -->
+              <button
+                type="button"
+                class="info"
+                sdTooltipPosition="top"
+                [sdTooltip]="_fixedText"
+                [attr.aria-label]="_fixedText"
+                [attr.data-autoid]="_autoId ? _autoId + '-ratio-fixed-info' : null">
+                <sd-icon name="info" size="16px" />
+              </button>
+            }
+            @if (_locked) {
+              <span class="prop-value" [attr.data-autoid]="_autoId ? _autoId + '-ratio-value' : null">{{ ratioText() }}</span>
+            }
+          </span>
+          <button
+            type="button"
+            class="lock"
+            [class.lock--on]="_locked"
+            [attr.aria-pressed]="_locked"
+            [attr.aria-labelledby]="instanceId + '-keep-ratio'"
+            [title]="'core.component.image-editor.keep-ratio' | sdTranslate"
+            [disabled]="!_interactive || _fixed"
+            [attr.data-autoid]="_autoId ? _autoId + '-keep-ratio' : null"
+            (click)="toggleKeepRatio()">
+            <sd-icon [name]="_locked ? 'lock' : 'lock_open'" size="18px" />
+          </button>
+        </div>
+        <div class="fields">
+          <sd-input-number
+            #cropX
+            size="sm"
+            type="positive"
+            hideInlineError
+            label="X"
+            [precision]="0"
+            [model]="_edits.crop.x"
+            [disabled]="!_interactive"
+            [attr.data-autoid]="_autoId ? _autoId + '-crop-x' : null"
+            (sdBlur)="onCropField('x', $event, cropX)"
+            (keyupEnter)="onCropField('x', cropX.valueModel(), cropX)" />
+          <sd-input-number
+            #cropY
+            size="sm"
+            type="positive"
+            hideInlineError
+            label="Y"
+            [precision]="0"
+            [model]="_edits.crop.y"
+            [disabled]="!_interactive"
+            [attr.data-autoid]="_autoId ? _autoId + '-crop-y' : null"
+            (sdBlur)="onCropField('y', $event, cropY)"
+            (keyupEnter)="onCropField('y', cropY.valueModel(), cropY)" />
+          <sd-input-number
+            #cropW
+            size="sm"
+            type="positive"
+            hideInlineError
+            [label]="'core.component.image-editor.width' | sdTranslate"
+            [precision]="0"
+            [model]="_edits.crop.width"
+            [disabled]="!_interactive"
+            [attr.data-autoid]="_autoId ? _autoId + '-crop-width' : null"
+            (sdBlur)="onCropField('width', $event, cropW)"
+            (keyupEnter)="onCropField('width', cropW.valueModel(), cropW)" />
+          <sd-input-number
+            #cropH
+            size="sm"
+            type="positive"
+            hideInlineError
+            [label]="'core.component.image-editor.height' | sdTranslate"
+            [precision]="0"
+            [model]="_edits.crop.height"
+            [disabled]="!_interactive"
+            [attr.data-autoid]="_autoId ? _autoId + '-crop-height' : null"
+            (sdBlur)="onCropField('height', $event, cropH)"
+            (keyupEnter)="onCropField('height', cropH.valueModel(), cropH)" />
+        </div>
+      }
+    </section>
+
+    <section class="section">
+      <h3 class="section-title">
+        <sd-icon name="photo_size_select_large" size="18px" />
+        {{ 'core.component.image-editor.resize' | sdTranslate }}
+      </h3>
+      @if (_output && _max) {
+        <div class="fields">
+          <sd-input-number
+            #outW
+            size="sm"
+            type="positive"
+            hideInlineError
+            [label]="'core.component.image-editor.width' | sdTranslate"
+            [precision]="0"
+            [model]="_output.width"
+            [disabled]="!_interactive"
+            [attr.data-autoid]="_autoId ? _autoId + '-output-width' : null"
+            (sdBlur)="onResizeField('width', $event, outW)"
+            (keyupEnter)="onResizeField('width', outW.valueModel(), outW)" />
+          <sd-input-number
+            #outH
+            size="sm"
+            type="positive"
+            hideInlineError
+            [label]="'core.component.image-editor.height' | sdTranslate"
+            [precision]="0"
+            [model]="_output.height"
+            [disabled]="!_interactive"
+            [attr.data-autoid]="_autoId ? _autoId + '-output-height' : null"
+            (sdBlur)="onResizeField('height', $event, outH)"
+            (keyupEnter)="onResizeField('height', outH.valueModel(), outH)" />
+        </div>
+        <p class="hint">
+          {{ 'core.component.image-editor.resize-max' | sdTranslate: { width: _max.width, height: _max.height } }}
+        </p>
+        @if (_edits?.resize) {
+          <button
+            type="button"
+            class="text-button"
+            [disabled]="!_interactive"
+            [attr.data-autoid]="_autoId ? _autoId + '-resize-reset' : null"
+            (click)="resetResize()">
+            {{ 'core.component.image-editor.resize-follow-crop' | sdTranslate }}
+          </button>
+        }
+        @if (resizeNotice()) {
+          <p class="notice" role="status">{{ resizeNotice() }}</p>
+        }
+        @if (_output.limited) {
+          <p class="notice" [attr.data-autoid]="_autoId ? _autoId + '-limited' : null">
+            {{ 'core.component.image-editor.output-limited' | sdTranslate }}
+          </p>
+        }
+      }
+    </section>
+
+    <section class="section">
+      <h3 class="section-title">
+        <sd-icon name="tune" size="18px" />
+        {{ 'core.component.image-editor.output' | sdTranslate }}
+      </h3>
+      @if (showFormatPicker()) {
+        <sd-select
+          size="sm"
+          required
+          hideInlineError
+          valueField="format"
+          displayField="label"
+          disabledField="disabled"
+          [label]="'core.component.image-editor.format' | sdTranslate"
+          [items]="formatChoices()"
+          [clearable]="false"
+          [model]="format()"
+          [disabled]="!_interactive"
+          [attr.data-autoid]="_autoId ? _autoId + '-format' : null"
+          (sdChange)="onFormatChange($event)" />
+      }
+      @if (formatUnsupported()) {
+        <p class="notice notice--error" role="alert">
+          {{ 'core.component.image-editor.error.format-unsupported' | sdTranslate: { format: formatLabel() } }}
+        </p>
+      }
+      @if (lossy()) {
+        <label class="prop">
+          <span class="prop-label prop-label--row">
+            {{ 'core.component.image-editor.quality' | sdTranslate }}
+            <span class="prop-value">{{ qualityPercent() }}%</span>
+          </span>
+          <input
+            #qualityInput
+            type="range"
+            min="1"
+            max="100"
+            step="1"
+            [value]="qualityPercent()"
+            [disabled]="!_interactive"
+            [attr.data-autoid]="_autoId ? _autoId + '-quality' : null"
+            (input)="onQualityInput(qualityInput.value)" />
+        </label>
+      }
+      @if (showBackground()) {
+        <label class="prop prop--inline">
+          <span class="prop-label">{{ 'core.component.image-editor.background' | sdTranslate }}</span>
+          <input
+            #backgroundInput
+            type="color"
+            [value]="backgroundHex()"
+            [disabled]="!_interactive"
+            [attr.data-autoid]="_autoId ? _autoId + '-background' : null"
+            (input)="onBackgroundInput(backgroundInput.value)" />
+        </label>
+        <p class="hint">{{ 'core.component.image-editor.background-hint' | sdTranslate }}</p>
+      }
+
+      @if (exportError(); as exportFailure) {
+        <p class="notice notice--error" role="alert" [attr.data-autoid]="_autoId ? _autoId + '-export-error' : null">
+          {{ exportFailure.message }}
+        </p>
+      }
+      <dl class="meta">
+        <div class="meta-row">
+          <dt>{{ 'core.component.image-editor.meta-source' | sdTranslate }}</dt>
+          <dd [attr.data-autoid]="_autoId ? _autoId + '-meta-source' : null">{{ sourceSummary() || '–' }}</dd>
+        </div>
+        <div class="meta-row">
+          <dt>{{ 'core.component.image-editor.meta-output' | sdTranslate }}</dt>
+          <dd [attr.data-autoid]="_autoId ? _autoId + '-meta-output' : null">{{ outputSummary() || '–' }}</dd>
+        </div>
+        <div class="meta-row">
+          <dt>{{ 'core.component.image-editor.meta-size' | sdTranslate }}</dt>
+          <dd [attr.data-autoid]="_autoId ? _autoId + '-meta-size' : null">{{ _visible ? estimateLabel() : '–' }}</dd>
+        </div>
+      </dl>
+    </section>
+  </aside>
+</div>
