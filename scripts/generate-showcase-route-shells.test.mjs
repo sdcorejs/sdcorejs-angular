@@ -184,11 +184,12 @@ test('matches the canonical v19 runtime registry and expected deployment route c
       .map(category => [category, pages.filter(page => page.category === category).length])
   );
 
-  assert.equal(pages.length, 102);
+  assert.equal(pages.length, 103);
   assert.ok(!pages.some(page => page.category === 'components' && page.slug === 'chart'));
   assert.ok(pages.some(page => page.category === 'pipes-utilities' && page.slug === 'read-state'));
   // 3.0 pages: sd-highlight, the Theme & tokens guide and the utilities/theme reference.
   assert.ok(pages.some(page => page.category === 'components' && page.slug === 'highlight'));
+  assert.ok(pages.some(page => page.category === 'components' && page.slug === 'image-editor'));
   assert.ok(pages.some(page => page.category === 'guides' && page.slug === 'theme-tokens'));
   assert.ok(pages.some(page => page.category === 'pipes-utilities' && page.slug === 'theme'));
 
@@ -206,7 +207,7 @@ test('matches the canonical v19 runtime registry and expected deployment route c
     'total = 1 root redirect + one identical block per release'
   );
   assert.deepEqual(categoryCounts, {
-    components: 38,
+    components: 39,
     directives: 6,
     forms: 22,
     guides: 4,

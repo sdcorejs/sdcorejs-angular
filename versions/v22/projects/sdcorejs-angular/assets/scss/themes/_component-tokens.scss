@@ -81,6 +81,9 @@ $component-tokens: (
   // file-explorer — bases for the accent color-mix() shades and tints
   'file-explorer-mix-shade': (#000000, #ffffff),
   'file-explorer-mix-tint': (#ffffff, #1d1f23),
+  // image-editor — the two squares of the checkerboard shown behind transparent pixels
+  'image-editor-checker-light': (#ffffff, #3a3d44),
+  'image-editor-checker-dark': (#e3e5ea, #2b2e33),
   // form-builder (form-generic) and its attribute / control sub-components
   'form-builder-panel-border': (#e6e6e6, #44474f),
   'form-builder-panel-header-bg': (#f2f2f2, #25272c),
