@@ -176,6 +176,16 @@ export const SD_DEFAULT_LUCIDE_ALIASES: Record<string, string> = {
   warning_amber: 'triangle-alert',
   widgets: 'layout-grid',
   zoom_in: 'zoom-in',
+  broken_image: 'image-off',
+  crop: 'crop',
+  flip: 'flip-horizontal-2',
+  lock_open: 'lock-keyhole-open',
+  photo_size_select_large: 'scaling',
+  redo: 'redo-2',
+  rotate_left: 'rotate-ccw',
+  tune: 'sliders-horizontal',
+  undo: 'undo-2',
+  zoom_out: 'zoom-out',
 };
 
 /**
@@ -273,6 +283,13 @@ export const SD_DEFAULT_MATERIAL_ALIASES: Record<string, string> = {
   workflow: 'account_tree',
   wrench: 'build',
   x: 'close',
+  'flip-horizontal-2': 'flip',
+  'lock-keyhole-open': 'lock_open',
+  'redo-2': 'redo',
+  scaling: 'photo_size_select_large',
+  'sliders-horizontal': 'tune',
+  'undo-2': 'undo',
+  'zoom-out': 'zoom_out',
 };
 
 /**

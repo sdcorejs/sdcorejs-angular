@@ -78,6 +78,12 @@ export type ShowcaseExampleSourceKey =
   | "components/icon/example-material-filled"
   | "components/icon/example-material-outlined"
   | "components/icon/example-sizes"
+  | "components/image-editor/example-anh-dai-dien-vuong-1-1"
+  | "components/image-editor/example-banner-16-9-va-resize-dau-ra"
+  | "components/image-editor/example-loi-va-gioi-han"
+  | "components/image-editor/example-mo-trong-modal"
+  | "components/image-editor/example-mo-tu-file-explorer"
+  | "components/image-editor/example-mo-tu-upload-file-anh-minh-chung"
   | "components/import-excel/example-import-nhan-vien"
   | "components/inform/example-action-custom-projection"
   | "components/inform/example-an-icon"
@@ -928,6 +934,48 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-core-ui-preview",
     title: "Core UI preview",
     description: "Change the radio and compare primitive icons, SdInput helper/clear icons, SdSelect suffix/search icons, and SdTable command/export/reorder icons.",
+  },
+  {
+    sourceKey: "components/image-editor/example-anh-dai-dien-vuong-1-1",
+    pageKey: "components/image-editor",
+    sectionId: "example-anh-dai-dien-vuong-1-1",
+    title: "Ảnh đại diện vuông 1:1",
+    description: "Ảnh mẫu là PNG có vùng trong suốt: chọn JPEG để thấy ô màu nền. Chọn ảnh của bạn bằng nút bên dưới — ảnh được đọc tại trình duyệt, không gửi đi đâu.",
+  },
+  {
+    sourceKey: "components/image-editor/example-banner-16-9-va-resize-dau-ra",
+    pageKey: "components/image-editor",
+    sectionId: "example-banner-16-9-va-resize-dau-ra",
+    title: "Banner 16:9 và resize đầu ra",
+    description: "Ảnh nguồn 3000 × 2000. Vùng cắt 16:9 được thu về 1600 px chiều rộng; gõ kích thước khác trong mục Kích thước. Dung lượng hiển thị là kết quả encode thật, không phải ước tính.",
+  },
+  {
+    sourceKey: "components/image-editor/example-mo-trong-modal",
+    pageKey: "components/image-editor",
+    sectionId: "example-mo-trong-modal",
+    title: "Mở trong modal",
+    description: "Nút Chỉnh sửa mô phỏng consumer tải ảnh có xác thực thành Blob (400 ms) rồi mới mở modal. Nút Hủy/Áp dụng nằm ở footer của modal (của consumer), Áp dụng gọi getResult(). Editor nằm trong @defer; Hủy không đổi ảnh trên thẻ.",
+  },
+  {
+    sourceKey: "components/image-editor/example-loi-va-gioi-han",
+    pageKey: "components/image-editor",
+    sectionId: "example-loi-va-gioi-han",
+    title: "Lỗi và giới hạn",
+    description: "Mỗi nút đưa vào editor một nguồn lỗi: GIF (định dạng không hỗ trợ), ảnh 3000 × 2000 vượt 2 MP (bị chặn trước khi decode), tệp PNG bị cắt cụt. Editor báo lỗi rõ và phát (failed).",
+  },
+  {
+    sourceKey: "components/image-editor/example-mo-tu-upload-file-anh-minh-chung",
+    pageKey: "components/image-editor",
+    sectionId: "example-mo-tu-upload-file-anh-minh-chung",
+    title: "Mở từ Upload File (ảnh minh chứng)",
+    description: "Biên lai chụp bị nằm ngang: bấm Sửa ảnh, xoay phải, cắt rồi Áp dụng. Consumer tải bản mới lên kho (key mới) và thay key trong model của sd-upload-file; bản gốc không bị ghi đè. sd-upload-file không import editor — chỉ trang này ghép hai component.",
+  },
+  {
+    sourceKey: "components/image-editor/example-mo-tu-file-explorer",
+    pageKey: "components/image-editor",
+    sectionId: "example-mo-tu-file-explorer",
+    title: "Mở từ File Explorer",
+    description: "Mở một ảnh trong explorer rồi bấm Chỉnh sửa. Kết quả được lưu thành tệp mới (tên có hậu tố -da-sua) và explorer.reload() hiện tệp đó; ảnh gốc giữ nguyên. sd-file-explorer không import editor.",
   },
   {
     sourceKey: "components/import-excel/example-import-nhan-vien",
