@@ -627,11 +627,12 @@
             }
           </table>
         }
-        @if ((_readState.status === 'error' && !_hideReadError) || _readState.status === 'empty') {
-          <sd-data-state
-            [state]="_readState.status === 'error' ? 'error' : 'empty'"
-            [retryable]="_readState.status === 'error'"
-            (sdRetry)="retryRead()">
+        @let _readError = _readState.status === 'error';
+        <!-- why: dòng cũ bị gỡ khi lần đọc hiện hành lỗi, nên vùng lỗi/empty chỉ hiện khi bảng không còn dòng nào
+             — end user không bao giờ thấy dữ liệu và lỗi cùng lúc (NSP-4877). -->
+        @let _noRows = !_readError && !_loading && !_total && !_items.length;
+        @if ((_readError && !_hideReadError) || (_noRows && _readState.status === 'empty' && !!_dataStateTemplate)) {
+          <sd-data-state [state]="_readError ? 'error' : 'empty'" [retryable]="_readError" (sdRetry)="retryRead()">
             @if (_dataStateTemplate; as custom) {
               <ng-template sdDataStateTemplate let-current let-retry="retry" let-action="action">
                 <ng-container
@@ -645,7 +646,9 @@
             <p>{{ 'core.component.table.error-occurred' | sdTranslate }}</p>
             <sd-button [title]="'core.component.table.reload' | sdTranslate" (click)="reload()"></sd-button>
           </div>
-        } @else if (!_loading && !_total && _readState.status !== 'error' && !loadError()) {
+        } @else if (_noRows && !loadError()) {
+          <!-- why: empty mặc định giữ 3 trạng thái (filter không có kết quả / chưa chọn filter bắt buộc / chưa có dữ liệu)
+               cùng ảnh cấu hình qua SD_TABLE_CONFIGURATION.images, cho cả bảng server (NSP-5551). -->
           <div class="c-no-data-row" role="status" aria-live="polite">
             @if (_isFiltered) {
               @if (tableConfiguration?.images?.filterEmpty) {

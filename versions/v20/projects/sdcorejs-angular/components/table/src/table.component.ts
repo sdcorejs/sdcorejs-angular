@@ -912,6 +912,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       if (!valid()) return;
       this.#retryConfiguration = () => (this.#hydration = this.#hydrateConfiguration(option, configuration, valid));
       const revision = this.#read.begin(valid);
+      this.#clearRowsForError();
       this.#read.fail(revision, error);
       this.loading.set(false);
     } finally {
@@ -1175,6 +1176,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     } catch (error) {
       if (this.#read.isCurrent(revision)) {
         this.#failedRead = request;
+        this.#clearRowsForError();
         this.#read.fail(revision, error);
       }
       return undefined;
@@ -1184,6 +1186,15 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
         this.#ref.markForCheck();
       }
     }
+  };
+
+  // why: end user thấy dòng dữ liệu là hiểu "không lỗi"; lần đọc hiện hành lỗi phải gỡ dòng/total của
+  // lần đọc trước để dữ liệu và vùng lỗi không bao giờ cùng hiển thị (NSP-4877). Retry vẫn dùng snapshot cũ.
+  #clearRowsForError = () => {
+    this.items.set([]);
+    this.total.set(undefined);
+    this.#updateSelectedItems();
+    this.#syncSelectAllState();
   };
 
   /** Retry current hydration or the still-valid failed server request, without resetting filters or paging. */

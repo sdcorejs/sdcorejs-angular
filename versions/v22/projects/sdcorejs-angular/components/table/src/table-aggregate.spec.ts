@@ -332,7 +332,8 @@ describe('sd-table column aggregate integration', () => {
     expect(fixture.nativeElement.querySelector('.sd-aggregate-total')).toBeNull();
     reject(new Error('server failure'));
     settle();
-    expect(fixture.componentInstance.table.items().length).toBe(3);
+    // why: lần đọc lỗi gỡ dòng cũ, nên cả dòng lẫn tổng đều không hiện cạnh vùng lỗi (NSP-4877).
+    expect(fixture.componentInstance.table.items().length).toBe(0);
     expect(value()).toBeUndefined();
     expect(fixture.nativeElement.querySelector('.sd-aggregate-total')).toBeNull();
   }));

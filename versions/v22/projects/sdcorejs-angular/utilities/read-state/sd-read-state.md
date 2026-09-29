@@ -58,8 +58,10 @@ autocomplete có đổi text sẽ vô hiệu SEARCH cũ; chuyển focus vào ret
 Cache lazy chỉ nhận kết quả thành công, kể cả `[]`. Lỗi không tạo cache entry hoặc
 placeholder entry để che lỗi VALUE. Retry bỏ qua cache của request thất bại.
 Core không tự xóa form value/selection và không phát `sdChange` do lỗi hoặc retry.
-Dữ liệu cũ có thể vẫn hiển thị khi lần đọc mới lỗi; host xem read-state để biết lần
-đọc hiện hành thất bại. Bảng giữ rows và total đã có cho đến lần đọc thành công.
+Select/autocomplete có thể vẫn hiển thị option cũ khi lần đọc mới lỗi; host xem
+read-state để biết lần đọc hiện hành thất bại. Bảng thì gỡ rows và total khi lần đọc
+hiện hành lỗi, để dữ liệu và lỗi không cùng hiển thị; lỗi của callback hiển thị cột
+không phải lỗi đọc (xem `sd-table.md`).
 
 ## Host sở hữu UI lỗi
 

@@ -86,6 +86,9 @@ describe('Control template forwarding through public directive', () => {
     f.detectChanges();
     [host.tableLoader, host.selectLoader, host.autoLoader].forEach((loader, index) => expect(loader.calls.count()).toBe(before[index] + 1));
     expect(host.table().readState().status).toBe('empty');
+    // why: consumer đã khai báo template thì empty của bảng vẫn đi qua template, không rơi về empty 3 nhánh mặc định.
+    expect(document.querySelector('.custom-table')?.textContent).toBe('empty / empty');
+    expect(f.nativeElement.querySelector('sd-table .c-no-data-row')).toBeNull();
     expect(host.select().readState().status).toBe('empty');
     expect(host.auto().readState().status).toBe('empty');
     f.destroy();

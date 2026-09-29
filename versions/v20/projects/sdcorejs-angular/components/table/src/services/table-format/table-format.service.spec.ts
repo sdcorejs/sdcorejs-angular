@@ -164,6 +164,22 @@ describe('TableFormatService.format', () => {
     expect(result[0].meta.display['createdAt'].isHtml).toBeFalse();
   });
 
+  // why: cột ngày của bảng hiện '--' cho timestamp BE có micro giây khi dùng @sdcorejs/utils 1.2.0–1.2.2;
+  // giữ test này để lần nâng utils sau không lặp lại lỗi (Core Legacy 19.0.36–19.0.39).
+  it('formats date, datetime and time columns from backend microsecond timestamps', async () => {
+    const reference = [{ at: '2026-07-09T08:49:29.851Z' }];
+    const backend = [{ at: '2026-07-09T08:49:29.851409Z' }, { at: '2026-07-09T15:49:29.851409+07:00' }];
+    for (const type of ['date', 'datetime', 'time'] as const) {
+      const cols: SdTableColumn<{ at: string }>[] = [{ field: 'at', title: 'At', type }];
+      const [expected] = await service.format(reference, cols, {}, {});
+      expect(expected.meta.display['at'].data).withContext(type).not.toBe(EMPTY_STR);
+      const result = await service.format(backend, cols, {}, {});
+      for (const item of result) {
+        expect(item.meta.display['at'].data).withContext(`${type} ${item.data.at}`).toBe(expected.meta.display['at'].data);
+      }
+    }
+  });
+
   it('formats a datetime column as HTML', async () => {
     const raw = [{ updatedAt: '2024-01-15T10:30:00' }];
     const cols: SdTableColumn[] = [{ field: 'updatedAt', title: 'Updated', type: 'datetime' }];
@@ -621,6 +637,41 @@ describe('TableFormatService.format', () => {
     const result = await service.format(raw, cols, {}, {});
     expect(result[0].meta.display['status'].badge).toBeUndefined();
   });
+
+  // -----------------------------------------------------------------------
+  // Display callbacks that fail (NSP-4877) — the cell falls back, format still resolves
+  // -----------------------------------------------------------------------
+  it('falls back to the raw value when transform rejects, logging once per column', async () => {
+    const errorSpy = spyOn(console, 'error');
+    const raw = [{ code: 'A' }, { code: ['B', 'C'] }, { code: null }];
+    const cols: SdTableColumn[] = [
+      { field: 'code', title: 'Code', type: 'string', transform: () => Promise.reject(new Error('lookup down')) },
+    ];
+
+    const result = await service.format(raw, cols, {}, {});
+    expect(result.map(item => item.meta.display['code'].data)).toEqual(['A', 'B, C', EMPTY_STR]);
+    expect(result.every(item => !item.meta.display['code'].isHtml)).toBeTrue();
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the formatted cell when only tooltip throws', async () => {
+    spyOn(console, 'error');
+    const raw = [{ amount: 1000 }];
+    const cols: SdTableColumn[] = [
+      {
+        field: 'amount',
+        title: 'Amount',
+        type: 'number',
+        tooltip: () => {
+          throw new Error('tooltip broke');
+        },
+      },
+    ];
+
+    const result = await service.format(raw, cols, {}, {});
+    expect(result[0].meta.display['amount'].tooltip).toBeUndefined();
+    expect(result[0].meta.display['amount'].data).toBe(TestBed.inject(SdFormatNumberPipe).transform(1000));
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -761,4 +812,35 @@ describe('TableFormatService.loadValues', () => {
     expect(cacheValues['type']).toBeDefined();
     expect(cacheValues['type'].length).toBe(0);
   });
+
+  for (const [name, items] of [
+    ['rejects', () => Promise.reject(new Error('lookup down'))],
+    [
+      'throws synchronously',
+      () => {
+        throw new Error('lookup down');
+      },
+    ],
+  ] as const) {
+    it(`resolves and leaves the cache empty when a lookup ${name}, so the next configuration retries it`, async () => {
+      const errorSpy = spyOn(console, 'error');
+      const cacheValues: Record<string, unknown[]> = {};
+      const cacheObjValues: Record<string, Record<string, string>> = {};
+      const cols: SdTableColumn[] = [
+        { field: 'type', title: 'Type', type: 'values', option: { items, valueField: 'id', displayField: 'name' } },
+        {
+          field: 'other',
+          title: 'Other',
+          type: 'values',
+          option: { items: [{ id: 1, name: 'One' }], valueField: 'id', displayField: 'name' },
+        },
+      ];
+
+      await expectAsync(service.loadValues(cols, cacheValues, cacheObjValues)).toBeResolved();
+      expect(cacheValues['type']).toBeUndefined();
+      expect(cacheObjValues['type']).toBeUndefined();
+      expect(cacheValues['other'].length).toBe(1);
+      expect(errorSpy).toHaveBeenCalledTimes(1);
+    });
+  }
 });

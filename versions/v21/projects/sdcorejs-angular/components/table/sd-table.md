@@ -24,7 +24,10 @@ hook. Thay đổi filter sau bước chuẩn bị vẫn hủy hiệu lực respo
 
 `reload()` hủy lịch tự động đang chờ và đọc lại chủ động, kể cả payload giống lần
 trước. Refresh trong lúc lookup khởi tạo đang chạy chờ hydrate rồi dùng chính lần
-đọc đó. Lỗi lookup hiển thị error state/Retry kể cả trước khi có cấu hình, tuân theo
+đọc đó. Lookup của cột `values` (`option.items`) lỗi — Promise reject hoặc lỗi đồng
+bộ — không chặn dữ liệu: bảng vẫn đọc, ô hiện mã thô và lỗi được `console.error`.
+Cột lỗi không được ghi cache nên lần cấu hình sau thử lại lookup. Lỗi khởi tạo cấu
+hình khác hiển thị error state/Retry kể cả trước khi có cấu hình, tuân theo
 `hideReadError` và custom error template; `retryRead()` thực hiện hydrate lại.
 Lỗi đọc paging vẫn retry đúng snapshot thất bại như bên dưới. Không cần bật
 auto-cache/dedupe cho POST để bảo đảm một initial read.
@@ -42,8 +45,19 @@ nguyên bản (`unknown`). `retryRead(): Promise<void>` đọc lại đúng load
 filter/paging/sort thất bại, không reset trang hoặc chạy lại `onFilter`.
 Request cũ không ghi đè kết quả mới, kể cả trong formatter bất đồng bộ.
 
-Lỗi refresh giữ rows/total đã có và hiển thị `SdDataState`; không tạo response giả
-`{ items: [], total: 0 }`. Response thành công rỗng hiển thị empty.
+Chỉ loader lỗi mới là lỗi đọc. Callback hiển thị của cột (`transform`, `htmlTemplate`,
+`tooltip`, `useBadge`, `lazy-values` `views`) ném lỗi hoặc reject thì chỉ ô đó rơi về
+giá trị thô (mảng nối bằng `, `, rỗng là `--`); lần đọc vẫn `ready`/`empty` và mỗi cột
+log một lần cho mỗi lượt format.
+
+Dữ liệu và lỗi không bao giờ cùng hiển thị: lần đọc hiện hành lỗi sẽ gỡ rows/total
+(và tổng aggregate) của lần đọc trước rồi mới hiện `SdDataState` lỗi; retry vẫn dùng
+đúng snapshot đã lỗi. Không tạo response giả `{ items: [], total: 0 }`.
+
+Response thành công rỗng dùng empty mặc định 3 nhánh như bảng local: filter không có
+kết quả, chưa chọn external filter bắt buộc, hoặc chưa có dữ liệu — ảnh thay được qua
+`SD_TABLE_CONFIGURATION.images`. Khi consumer khai báo `sdDataStateTemplate`, empty
+đi qua template đó. Vùng empty chỉ hiện khi bảng không có dòng nào.
 `hideReadError` (boolean transform, default `false`) ẩn toàn bộ vùng lỗi, bao gồm
 custom template, nhưng vẫn giữ signal/output/retry. Local mode giữ luồng hiện có.
 
@@ -891,7 +905,7 @@ The desktop table uses subtle 6px outer corners: the existing scroll area rounds
 - **Selection-action bar** (`<selector-action>`, contained): opens only when rows are selected **and** `selector.actions` resolves to at least one action the selection is allowed to run. A table with `selector.visible` but no `actions` never opens the bar — it would restate the checkbox state with `×` as its only control; deselect through the checkboxes instead. The per-row allow-list still applies, so a selection mixing rows with different permitted actions can resolve to zero and keep the bar closed.
 - **Sticky columns**: any column with `fixed: true` stays pinned while horizontal scroll happens; rendered with a subtle box-shadow on the boundary (via `StickyShadowDirective`).
 - **Group rows**: spanning row with HTML rendered from `group.htmlTemplate`, separating sub-sections.
-- **Empty state**: shows blank body; loading state shows centered Material spinner.
+- **Empty state**: one of three illustrated messages, for local and server tables alike — filter/search returned nothing (`images.filterEmpty`), a required external filter is still empty (`images.filterRequired`), or there is no data yet (`images.dataEmpty`). A projected `sdDataStateTemplate` replaces it for server reads. It only renders when the table has no rows; loading state shows centered Material spinner.
 - **Pagination bar** (bottom): "Đang hiển thị 1-50/1.234" + page-size selector + first/prev/next/last buttons. Vietnamese labels via `SdTablePaginatorIntl`.
 - **Drag handle** (when `rowReorder.enabled`): leftmost icon column `sdReorder` with the configured icon (default `drag_indicator`); rows can be reordered within the same group.
 - **Row-number (STT) column** (when `index.enabled`): sticky `sdIndex` column rendering the global row number (`pageIndex * pageSize + i + 1`). Sits after selector/tree/command(left)/group, before data columns. Title defaults to `'#'`, width `'50px'`. Hidden on group spanning rows.
@@ -904,6 +918,8 @@ provide: SD_TABLE_CONFIGURATION,
 useValue: {
   paginate: { pageSize: 50, pages: [10, 25, 50, 100], showFirstLastButtons: true },
   filter: { hideInlineFilter: false, operator: { default: { string: 'CONTAIN', ... }, list: { ... } } },
+  // Ảnh thay cho 3 trạng thái empty mặc định (bỏ trống thì dùng ảnh của core).
+  images: { dataEmpty: 'assets/empty.svg', filterEmpty: 'assets/no-results.svg', filterRequired: 'assets/choose-filter.svg' },
 } satisfies ISdTableConfiguration
 ```
 
