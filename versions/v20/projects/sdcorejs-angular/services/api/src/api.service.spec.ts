@@ -5,6 +5,8 @@ import { SdApiService } from './api.service';
 import { SdCacheService } from '@sdcorejs/angular/services/cache';
 import { ISdApiConfiguration, SD_API_CONFIG, SD_API_CONFIGURATION, SdApiError, SdApiHandler, SdGetOption } from './api.model';
 import { EMPTY, Observable, of, throwError } from 'rxjs';
+import { BrowserUtilities } from '@sdcorejs/utils/fns';
+import { FilePickerCancelledError } from '@sdcorejs/utils/errors';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -1103,6 +1105,19 @@ describe('SdApiService', () => {
     req.flush({ url: 'https://cdn.example.com/photo.png' });
     const result = await promise;
     expect(result).toEqual({ url: 'https://cdn.example.com/photo.png' });
+  });
+
+  // why: @sdcorejs/utils 1.2 báo huỷ/timeout hộp chọn file bằng FilePickerCancelledError thay vì resolve rỗng.
+  it('upload() resolves undefined without a request when the picker is cancelled', async () => {
+    spyOn(BrowserUtilities, 'upload').and.rejectWith(new FilePickerCancelledError());
+    await expectAsync(service.upload('/api/upload')).toBeResolvedTo(undefined);
+    httpMock.expectNone('/api/upload');
+  });
+
+  it('upload() propagates a picker validation error', async () => {
+    spyOn(BrowserUtilities, 'upload').and.rejectWith(new Error('too big'));
+    await expectAsync(service.upload('/api/upload')).toBeRejectedWithError('too big');
+    httpMock.expectNone('/api/upload');
   });
 });
 

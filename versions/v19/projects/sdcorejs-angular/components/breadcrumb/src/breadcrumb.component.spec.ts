@@ -61,6 +61,17 @@ describe('SdBreadcrumb static items', () => {
     expect(label.observed).toBeFalse();
   });
 
+  // why: `@sdcorejs/utils` 1.2 thay `Observable<T>` trong `MaybeAsync` bằng `SubscribableLike<T>`, kiểu này
+  // không nhận `Observable<string>` cho nhãn `string | null | undefined`. Mảng có kiểu để test đỏ ngay lúc compile.
+  it('accepts narrower RxJS observables for labels, as with @sdcorejs/utils 1.1.x', () => {
+    const label = new BehaviorSubject<string>('Typed label');
+    const items = [{ label }, { label: () => of('Route label') }] satisfies SdBreadcrumbItem[];
+    fixture.componentRef.setInput('items', items);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Typed label');
+    expect(fixture.nativeElement.textContent).toContain('Route label');
+  });
+
   it('collapses long trails while preserving the root and current context', () => {
     fixture.componentRef.setInput(
       'items',

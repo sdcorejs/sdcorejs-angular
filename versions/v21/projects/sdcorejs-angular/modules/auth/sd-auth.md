@@ -37,16 +37,20 @@ Provider-agnostic auth abstraction: app supplies sign-out / change-password acti
 ```ts
 interface ISdAuthConfiguration {
   action?: {
-    signout: () => MaybeAsync<void>;
-    changePassword?: () => MaybeAsync<void>;
+    signout: () => MaybeAsync<void> | Observable<void>;
+    changePassword?: () => MaybeAsync<void> | Observable<void>;
   };
   guard?: {
     auth?: CanActivate['canActivate'];     // optional canActivate fn for SdAuthGuard
     portal?: CanActivate['canActivate'];   // optional canActivate fn for SdPortalGuard
-    authInfo: () => MaybeAsync<SdAuthInfo>; // required if you want a real user
+    authInfo: () => MaybeAsync<SdAuthInfo> | Observable<SdAuthInfo>; // required if you want a real user
   };
 }
+```
 
+Every async slot also accepts an RxJS `Observable` of the same type or a narrower one (for example `Observable<string>` where `string | null | undefined` is expected), as it did with `@sdcorejs/utils` 1.1.x.
+
+```ts
 interface SdAuthInfo<T = any> {
   id?: string;
   username?: string;

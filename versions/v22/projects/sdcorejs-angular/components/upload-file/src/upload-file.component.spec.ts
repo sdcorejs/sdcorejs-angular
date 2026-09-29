@@ -12,6 +12,8 @@ import { UploadFileService } from './services';
 import { SdNotifyService } from '@sdcorejs/angular/services';
 import { SdConfirmService } from '@sdcorejs/angular/services';
 import { setInput } from '../../../testing/test-utils';
+import { BrowserUtilities } from '@sdcorejs/utils/fns';
+import { FilePickerCancelledError } from '@sdcorejs/utils/errors';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -129,6 +131,26 @@ describe('SdUploadFile', () => {
       const alert = fixture.nativeElement.querySelector('[role="alert"]');
       expect(alert).not.toBeNull();
     });
+  });
+
+  // why: @sdcorejs/utils 1.2 báo huỷ/timeout hộp chọn file bằng FilePickerCancelledError thay vì resolve rỗng.
+  describe('onUpload: picker outcome', () => {
+    it('does not show an error toast when the picker is cancelled', fakeAsync(() => {
+      spyOn(BrowserUtilities, 'upload').and.rejectWith(new FilePickerCancelledError());
+      const logged = spyOn(console, 'error');
+      component.onUpload();
+      tick();
+      expect(notifyService.error).not.toHaveBeenCalled();
+      expect(logged).not.toHaveBeenCalled();
+    }));
+
+    it('still shows the picker validation message', fakeAsync(() => {
+      spyOn(BrowserUtilities, 'upload').and.rejectWith(new Error('File too large'));
+      spyOn(console, 'error');
+      component.onUpload();
+      tick();
+      expect(notifyService.error).toHaveBeenCalledWith('File too large');
+    }));
   });
 
   // ─── Centralized state-image classes ─────────────────────────────────────

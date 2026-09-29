@@ -13,13 +13,47 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRouteSnapshot, NavigationEnd, PRIMARY_OUTLET, Router } from '@angular/router';
-import { MaybeAsync, normalizeAsync } from '@sdcorejs/utils/models';
+import { isPromiseLike, isSubscribableLike, MaybeAsync, SubscriptionLike } from '@sdcorejs/utils/models';
 import { SdIcon, SdIconSet } from '@sdcorejs/angular/modules/icon';
-import { catchError, combineLatest, defer, filter, map, of } from 'rxjs';
+import { catchError, combineLatest, defer, filter, from, isObservable, map, Observable, of } from 'rxjs';
 
+/**
+ * Chuyển nhãn `MaybeAsync` thành Observable thật của RxJS.
+ *
+ * why: từ `@sdcorejs/utils` 1.2, `normalizeAsync` trả về subscribable cấu trúc (`SubscribableLike`),
+ * không phải `ObservableInput`, nên `defer`/`combineLatest` không nhận. Bọc lại để nhãn là Observable
+ * phát lại nhiều lần vẫn cập nhật breadcrumb như trước.
+ */
+const toObservable = <T>(source: MaybeAsync<T>): Observable<T> => {
+  if (isObservable(source)) return source as Observable<T>;
+  if (isPromiseLike<T>(source)) return from(source);
+  if (isSubscribableLike<T>(source)) {
+    return new Observable<T>(subscriber => {
+      const teardown = source.subscribe({
+        next: value => subscriber.next(value),
+        error: error => subscriber.error(error),
+        complete: () => subscriber.complete(),
+      });
+      return () => {
+        if (typeof teardown === 'function') {
+          teardown();
+          return;
+        }
+        (teardown as SubscriptionLike | undefined)?.unsubscribe?.();
+      };
+    });
+  }
+  return of(source as T);
+};
+
+// why: `MaybeAsync` của `@sdcorejs/utils` 1.1.x là `T | Promise<T> | Observable<T>` (RxJS). Từ 1.2 nó dùng
+// `SubscribableLike<T>` cấu trúc, và kiểu này KHÔNG nhận `Observable` của kiểu hẹp hơn (vd `Observable<string>`
+// cho slot `string | null | undefined`, hay Observable của một subtype). Giữ `Observable<T>` tường minh để
+// consumer đang truyền Observable/BehaviorSubject vẫn compile như trước.
 export type SdBreadcrumbLabel =
   | MaybeAsync<string | null | undefined>
-  | ((route?: ActivatedRouteSnapshot) => MaybeAsync<string | null | undefined>);
+  | Observable<string | null | undefined>
+  | ((route?: ActivatedRouteSnapshot) => MaybeAsync<string | null | undefined> | Observable<string | null | undefined>);
 
 export interface SdBreadcrumbItem {
   readonly label: SdBreadcrumbLabel;
@@ -107,7 +141,7 @@ export class SdBreadcrumb {
 
       const subscription = combineLatest(
         sourceItems.map(item =>
-          defer(() => normalizeAsync(resolveLabelSource(item.label, item.route))).pipe(
+          defer(() => toObservable(resolveLabelSource(item.label, item.route))).pipe(
             map(label => ({
               ...item,
               label: String(label ?? '').trim(),
@@ -173,7 +207,10 @@ export class SdBreadcrumb {
   }
 }
 
-function resolveLabelSource(label: SdBreadcrumbLabel, route?: ActivatedRouteSnapshot): MaybeAsync<string | null | undefined> {
+function resolveLabelSource(
+  label: SdBreadcrumbLabel,
+  route?: ActivatedRouteSnapshot
+): MaybeAsync<string | null | undefined> | Observable<string | null | undefined> {
   return typeof label === 'function' ? label(route) : label;
 }
 

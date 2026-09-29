@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { SD_PERMISSION_PUBLIC, SdPermissionService } from './permission.service';
 import { ISdPermissionConfiguration, SD_PERMISSION_CONFIGURATION } from '../configurations';
 import { SdCacheService } from '@sdcorejs/angular/services/cache';
+import { Observable, of } from 'rxjs';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -348,6 +349,18 @@ describe('SdPermissionService', () => {
       });
       const token = await service.getToken();
       expect(token).toBe('async-token');
+    });
+
+    // why: `@sdcorejs/utils` 1.2 thay `Observable<T>` trong `MaybeAsync` bằng `SubscribableLike<T>`, kiểu này không
+    // nhận `Observable<string>` cho slot `string | undefined | null`. Config có kiểu để test đỏ ngay lúc compile.
+    it('resolves narrower RxJS observables for getToken and loadPermissions, as with @sdcorejs/utils 1.1.x', async () => {
+      const token$: Observable<string> = of('observable-token');
+      const configuration = {
+        loadPermissions: () => of(['A']),
+        getToken: () => token$,
+      } satisfies ISdPermissionConfiguration;
+      const service = makeService(configuration);
+      expect(await service.getToken()).toBe('observable-token');
     });
 
     it('returns undefined when getToken returns empty string', async () => {

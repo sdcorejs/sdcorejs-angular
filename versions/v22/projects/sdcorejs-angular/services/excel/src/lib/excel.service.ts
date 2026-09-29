@@ -3,6 +3,7 @@ import type { CellValue, Style } from 'exceljs';
 // import hash from 'object-hash';
 import { DateUtilities } from '@sdcorejs/utils/fns';
 import { BrowserUtilities } from '@sdcorejs/utils/fns';
+import { FilePickerCancelledError } from '@sdcorejs/utils/errors';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdExcelExportOption, SdExcelTemplate } from './excel.model';
 import { neutralizeSpreadsheetFormula } from './spreadsheet-formula-injection.util';
@@ -354,6 +355,9 @@ export class SdExcelService {
 
       return await this.parse(file);
     } catch (error) {
+      // why: từ `@sdcorejs/utils` 1.2, huỷ/timeout hộp chọn file reject `FilePickerCancelledError` thay vì
+      // resolve `null`. Huỷ không phải lỗi — giữ nguyên kết quả rỗng như trước.
+      if (error instanceof FilePickerCancelledError) return { items: [], file: null };
       console.error('Upload error:', error);
       throw error; // Hoặc return { items: [], file: null } tùy logic nghiệp vụ
     }

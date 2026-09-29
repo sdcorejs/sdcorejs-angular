@@ -19,7 +19,7 @@ Render an accessible breadcrumb from explicit items or the active primary router
 | `ariaLabel` | `string`                              | `Breadcrumb`    | Accessible name for the native `nav`.                                                   |
 | `separator` | `string`                              | `chevron_right` | Icon name used between entries.                                                         |
 
-`SdBreadcrumbItem` supports `label`, `url`, `icon`, `fontSet`, `disabled`, and `clickable`. A `url` string renders a native link. Router command arrays and action-only items render native buttons, preserving keyboard behavior.
+`SdBreadcrumbItem` supports `label`, `url`, `icon`, `fontSet`, `disabled`, and `clickable`. `label` (`SdBreadcrumbLabel`) is a string, a Promise, an RxJS `Observable` — including a narrower `Observable<string>` or `BehaviorSubject<string>` — or a function of the route returning one of those; an Observable label updates the trail on every emission. A `url` string renders a native link. Router command arrays and action-only items render native buttons, preserving keyboard behavior.
 
 ## Output
 

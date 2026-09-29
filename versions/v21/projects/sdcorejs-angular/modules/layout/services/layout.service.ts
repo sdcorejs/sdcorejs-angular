@@ -81,7 +81,7 @@ export class SdLayoutService {
   #initUserInfo(): void {
     const userInfoConfig = this.#layoutConfiguration!.userInfo;
     if (typeof userInfoConfig === 'function') {
-      resolveMaybeAsync(userInfoConfig()).then(userInfo => this.userInfo.set(userInfo));
+      resolveMaybeAsync<SdLayoutUserInfo>(userInfoConfig()).then(userInfo => this.userInfo.set(userInfo));
     } else {
       this.userInfo.set(userInfoConfig);
     }
@@ -90,7 +90,7 @@ export class SdLayoutService {
   #initSidebar(): void {
     const sidebarConfig = this.#layoutConfiguration!.sidebar;
     if (typeof sidebarConfig === 'function') {
-      resolveMaybeAsync(sidebarConfig()).then(config => this.sidebar.set(config));
+      resolveMaybeAsync<ISdSidebarConfiguration>(sidebarConfig()).then(config => this.sidebar.set(config));
     } else {
       this.sidebar.set(sidebarConfig);
     }
