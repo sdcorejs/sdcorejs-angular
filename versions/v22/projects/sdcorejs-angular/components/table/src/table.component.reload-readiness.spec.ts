@@ -99,6 +99,7 @@ describe('SdTable reload readiness', () => {
 
   for (const fail of [false, true]) {
     it(`ignores a pending lookup ${fail ? 'failure' : 'success'} after destroy, including waiting reload`, fakeAsync(() => {
+      spyOn(console, 'error');
       start();
       let settled = false;
       table.reload().then(() => (settled = true));
@@ -142,40 +143,71 @@ describe('SdTable reload readiness', () => {
     }));
   }
 
-  for (const retry of ['reload', 'retryRead'] as const) {
-    it(`contains lookup rejection during reload and recovers through ${retry}`, fakeAsync(() => {
-      start();
-      let settled = false;
-      table.reload().then(() => (settled = true));
-      const error = new Error('lookup unavailable');
-      lookup.reject(error);
-      flushMicrotasks();
-      fixture.detectChanges();
-      tick(1000);
-      expect(settled).toBeTrue();
-      expect(loader).not.toHaveBeenCalled();
-      expect(table.readState()).toEqual({ status: 'error', operation: 'TABLE', error });
-      expect(table.loading()).toBeFalse();
-      expect(fixture.nativeElement.querySelector('sd-data-state')).not.toBeNull();
-      lookup = deferred<Row[]>();
-      table[retry]();
-      ready();
-      expect(loader).toHaveBeenCalledTimes(1);
-      expect(table.items()[0].data.name).toBe('Ready');
-      expect(table.readState().status).toBe('ready');
-    }));
+  function settle() {
+    flushMicrotasks();
+    fixture.detectChanges();
+    tick(1000);
+    fixture.detectChanges();
   }
 
-  it('contains a synchronous lookup error and permits a later reload', fakeAsync(() => {
+  it('loads rows with raw codes when the lookup rejects, without an error state', fakeAsync(() => {
+    const consoleError = spyOn(console, 'error');
+    start();
+    let settled = false;
+    table.reload().then(() => (settled = true));
+    lookup.reject(new Error('lookup unavailable'));
+    settle();
+    expect(settled).toBeTrue();
+    expect(loader).toHaveBeenCalledTimes(1);
+    expect(table.readState().status).toBe('ready');
+    expect(table.items()[0].meta.display['status'].data).toBe('2');
+    expect(table.cacheValues['status']).toBeUndefined();
+    expect(fixture.nativeElement.querySelector('sd-data-state')).toBeNull();
+    expect(consoleError).toHaveBeenCalled();
+  }));
+
+  it('loads rows when the lookup throws synchronously', fakeAsync(() => {
+    spyOn(console, 'error');
     lookupLoader.and.throwError('sync lookup failure');
     start();
-    expect(table.readState().status).toBe('error');
-    expect(loader).not.toHaveBeenCalled();
-    lookupLoader.and.callFake(() => lookup.promise);
-    table.reload();
-    ready();
-    expect(table.readState().status).toBe('ready');
+    settle();
     expect(loader).toHaveBeenCalledTimes(1);
+    expect(table.readState().status).toBe('ready');
+    expect(table.items()[0].data.name).toBe('Ready');
+  }));
+
+  it('retries a failed lookup on the next configuration instead of caching the failure', fakeAsync(() => {
+    spyOn(console, 'error');
+    const init = spyOn(fixture.debugElement.injector.get(ConfigService), 'init').and.callThrough();
+    start();
+    lookup.reject(new Error('lookup unavailable'));
+    settle();
+    expect(table.readState().status).toBe('ready');
+    lookup = deferred<Row[]>();
+    const storage = init.calls.first().returnValue;
+    storage.set({ columns: storage.get().columns!.map(column => ({ ...column, title: 'Latest' })) });
+    ready();
+    expect(lookupLoader).toHaveBeenCalledTimes(2);
+    expect(table.cacheValues['status']).toEqual([{ id: 2, name: 'Active' }]);
+    expect(table.items()[0].meta.display['status'].data).toBe('Active');
+  }));
+
+  it('clears rows when a later configuration fails, so rows never sit beside the error', fakeAsync(() => {
+    const service = fixture.debugElement.injector.get(ConfigService);
+    const init = spyOn(service, 'init').and.callThrough();
+    start();
+    ready();
+    expect(table.items().length).toBe(1);
+    spyOn(service, 'loadConfigurationResult').and.throwError('broken configuration');
+    const storage = init.calls.first().returnValue;
+    storage.set({ columns: storage.get().columns });
+    flushMicrotasks();
+    fixture.detectChanges();
+    expect(table.readState().status).toBe('error');
+    expect(table.items()).toEqual([]);
+    expect(table.total()).toBeUndefined();
+    expect(fixture.nativeElement.querySelectorAll('tr.c-row').length).toBe(0);
+    expect(fixture.nativeElement.querySelector('sd-data-state [role="alert"]')).not.toBeNull();
   }));
 
   it('waits for the newest configuration and never commits an older lookup cache', fakeAsync(() => {

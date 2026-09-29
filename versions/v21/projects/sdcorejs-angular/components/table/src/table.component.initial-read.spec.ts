@@ -299,7 +299,9 @@ describe('SdTable initial read lifecycle with real HTTP loaders', () => {
     fixture.detectChanges();
     expect(table.readState().status).toBe('error');
     expect(table.loading()).toBeFalse();
-    expect(table.dataItems).toEqual([{ id: 1, name: 'Current' }]);
+    // why: lần đọc hiện hành lỗi gỡ dòng của filter cũ — dữ liệu và lỗi không cùng hiển thị (NSP-4877).
+    expect(table.dataItems).toEqual([]);
+    expect(fixture.nativeElement.querySelector('sd-data-state [role="alert"]')).not.toBeNull();
     table.retryRead();
     flushMicrotasks();
     const retry = paging();
@@ -412,9 +414,10 @@ describe('SdTable initial read lifecycle with real HTTP loaders', () => {
     }));
   }
 
-  it('reports lookup errors and allows retry to complete hydration once', fakeAsync(() => {
+  it('loads rows with raw codes when a lookup fails instead of failing hydration', fakeAsync(() => {
     prepare();
     const client = TestBed.inject(HttpClient);
+    const logged = spyOn(console, 'error');
     option.columns.push({
       field: 'status',
       title: 'Status',
@@ -423,6 +426,28 @@ describe('SdTable initial read lifecycle with real HTTP loaders', () => {
     });
     start();
     http.expectOne('/table/statuses').flush('Failed', { status: 500, statusText: 'Failed' });
+    flushMicrotasks();
+    fixture.detectChanges();
+    tick(250);
+    paging().flush({ items: [{ id: 1, name: 'Current', status: 2 }], total: 1 });
+    flushMicrotasks();
+    fixture.detectChanges();
+    tick(1000);
+    expect(loader).toHaveBeenCalledTimes(1);
+    expect(table.readState().status).toBe('ready');
+    expect(table.items()[0].meta.display['status'].data).toBe('2');
+    expect(table.cacheValues['status']).toBeUndefined();
+    expect(fixture.nativeElement.querySelector('sd-data-state')).toBeNull();
+    expect(logged).toHaveBeenCalled();
+    http.expectNone('/table/paging');
+  }));
+
+  it('reports configuration errors and allows retry to complete hydration once', fakeAsync(() => {
+    prepare();
+    const configuration = spyOn(fixture.debugElement.injector.get(ConfigService), 'loadConfigurationResult').and.throwError(
+      'broken configuration'
+    );
+    start();
     flushMicrotasks();
     expect(table.readState().status).toBe('error');
     expect(table.loading()).toBeFalse();
@@ -434,14 +459,15 @@ describe('SdTable initial read lifecycle with real HTTP loaders', () => {
     expect(fixture.nativeElement.querySelector('sd-data-state')).toBeNull();
     fixture.componentRef.setInput('hideReadError', false);
     fixture.detectChanges();
+    configuration.and.callThrough();
     (fixture.nativeElement.querySelector('[data-state-retry] button') as HTMLButtonElement).click();
-    http.expectOne('/table/statuses').flush([{ id: 1, name: 'Recovered' }]);
     flushMicrotasks();
     fixture.detectChanges();
     tick(1000);
     respond(paging());
     expect(loader).toHaveBeenCalledTimes(1);
     expect(table.loadError()).toBeFalse();
+    expect(table.readState().status).toBe('ready');
   }));
 
   it('folds explicit refresh during pending lookup into the initial read', fakeAsync(() => {
@@ -634,7 +660,8 @@ describe('SdTable initial read lifecycle with real HTTP loaders', () => {
     flushMicrotasks();
     expect(table.readState().status).toBe('error');
     expect(table.loading()).toBeFalse();
-    expect(table.items()[0].data.name).toBe('Current');
+    expect(table.items()).toEqual([]);
+    expect(table.total()).toBeUndefined();
     table.retryRead();
     flushMicrotasks();
     const retry = paging();

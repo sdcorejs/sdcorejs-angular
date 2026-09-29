@@ -52,12 +52,16 @@ Planned release suffix `3.0` targets `19.3.0`, `20.3.0`, `21.3.0`, and `22.3.0`,
 - Tooling: `npm run check:scss-hex` (raw hex and focus-outline check for library SCSS/TS, `--report --literals` for scale literals), an ESLint rule for hex colours in library TS and templates, `test:theme` now includes the contrast matrix, `test:theme-token-list`, and a CI scripts job on Node 22.22.3. Release tooling accepts an `x.0` suffix with an explicit lower-minor baseline (`--baseline-suffix`, `deploy.ps1 -BaselineSuffix`, `baselineSuffix` in the release snapshot).
 
 ### Changed
+- Table: a failed server read or configuration clears the rows, total, aggregate totals and non-preserved selection of the previous read before the error panel is shown, so rows and a load error are never displayed together and stale rows never look like the result of a new filter. `retryRead()` still replays the exact failed snapshot. This replaces keeping the old rows beside the error.
+- Table: a `values` column whose `option.items` lookup rejects or throws no longer fails the table. The lookup is logged and left uncached, so its cells show raw codes, the rows still load, and the next configuration retries the lookup.
 - Components read colours, radii, font sizes/weights, line heights, motion and z-index layers from the new tokens, each with its 2.15 value as fallback; light rendering is unchanged.
 - Focus rings use `--sd-focus-ring-color` (a component's own colour hook keeps priority). The breadcrumb focus ring now uses the primary colour instead of the info colour; controls whose hook was unset now show the primary ring.
 - Dates and numbers formatted by the library (date/datetime min/max messages, query-bar values, home page, 403/404 pages) follow `I18nService.locale()` instead of always `vi-VN`.
 - File explorer: video files (`mp4`, `mov`, `webm`, …) play in `sd-preview-video` in the file detail, so `option.preview` is now also called for them. For large videos return a URL (signed or streamed) rather than a `Blob`.
 
 ### Fixed
+- Table: a display callback that throws or rejects (`transform`, `htmlTemplate`, `tooltip`, `useBadge`, `lazy-values` `views`) no longer turns a successful server read into the "Không thể tải dữ liệu" error. Only that cell falls back to its raw value (arrays joined with `, `, empty values `--`); the error is logged once per column for each format pass and the read stays `ready`/`empty`. Only a failing loader is a read error.
+- Table: a successful empty server read shows the three illustrated empty states again, as local tables do: filter returned nothing, required external filter not chosen, or no data yet, with `SD_TABLE_CONFIGURATION.images` (`filterEmpty`, `filterRequired`, `dataEmpty`). It had shown a single generic "Chưa có dữ liệu" panel. A projected `sdDataStateTemplate` still renders the empty state, and the empty region only appears when the table has no rows.
 - Side drawer: locking page scroll adds the scrollbar width as right padding, so the page no longer shifts when a drawer opens.
 - Tooltip: meets WCAG 1.4.13 (hoverable, dismissible with Escape, persistent while hovered or focused).
 - Notify: toast announcements are reliable (persistent live regions) and the close button has an accessible name.

@@ -26,50 +26,68 @@ export class TableFormatService {
     cacheValues: Record<string, any[]>,
     cacheObjValues: Record<string, Record<string, string>>
   ): Promise<void> {
-    const promises: Promise<{
-      key: string;
-      valueField: string;
-      displayField: string;
-      data: any[];
-    }>[] = [];
+    const promises: Promise<
+      | {
+          key: string;
+          valueField: string;
+          displayField: string;
+          data: any[];
+        }
+      | undefined
+    >[] = [];
+
+    // why: lookup chỉ phục vụ nhãn hiển thị và ô lọc; lookup lỗi không được chặn dữ liệu của bảng.
+    // Không ghi cache cho cột lỗi để lần cấu hình sau thử lại, ô tạm hiện mã thô.
+    const reportLookupError = (field: string, error: unknown) =>
+      console.error(`[sd-table] Lookup for column "${field}" failed; showing raw values.`, error);
 
     for (const column of columns) {
       if (column.type === 'values' && !cacheValues[column.field]) {
-        // TRƯỜNG HỢP 1: Nếu items là một Signal
-        if (isSignal(column.option.items)) {
-          // Đọc giá trị hiện tại của Signal
-          const data = column.option.items();
+        try {
+          // TRƯỜNG HỢP 1: Nếu items là một Signal
+          if (isSignal(column.option.items)) {
+            // Đọc giá trị hiện tại của Signal
+            const data = column.option.items();
 
-          cacheValues[column.field] = (Array.isArray(data) ? data : []).map(e => ({
-            ...e,
-            [column.option.valueField]: Utilities.getNestedValue(e, column.option.valueField),
-            [column.option.displayField]: Utilities.getNestedValue(e, column.option.displayField),
-          }));
+            cacheValues[column.field] = (Array.isArray(data) ? data : []).map(e => ({
+              ...e,
+              [column.option.valueField]: Utilities.getNestedValue(e, column.option.valueField),
+              [column.option.displayField]: Utilities.getNestedValue(e, column.option.displayField),
+            }));
 
-          cacheObjValues[column.field] = ArrayUtilities.toObject(column.option.valueField, cacheValues[column.field]);
-        }
-        // TRƯỜNG HỢP 2: Nếu items là hàm trả về Promise (API Call)
-        else if (typeof column.option.items === 'function') {
-          promises.push(
-            column.option.items().then(data => ({
-              key: column.field,
-              valueField: column.option.valueField,
-              displayField: column.option.displayField,
-              data: Array.isArray(data) ? data : [],
-            }))
-            // ... catch error giữ nguyên
-          );
-        }
+            cacheObjValues[column.field] = ArrayUtilities.toObject(column.option.valueField, cacheValues[column.field]);
+          }
+          // TRƯỜNG HỢP 2: Nếu items là hàm trả về Promise (API Call)
+          else if (typeof column.option.items === 'function') {
+            const load = column.option.items;
+            const field = column.field;
+            const { valueField, displayField } = column.option;
+            promises.push(
+              // why: bọc trong async để cả lỗi đồng bộ lẫn Promise reject đều rơi vào cùng một catch.
+              (async () => {
+                const data = await load();
+                return { key: field, valueField, displayField, data: Array.isArray(data) ? data : [] };
+              })().catch(error => {
+                reportLookupError(field, error);
+                return undefined;
+              })
+            );
+          }
 
-        // TRƯỜNG HỢP 3: Mảng tĩnh (K[]) bình thường
-        else {
-          cacheValues[column.field] = column.option.items.map(e => ({
-            ...e,
-            [column.option.valueField]: Utilities.getNestedValue(e, column.option.valueField),
-            [column.option.displayField]: Utilities.getNestedValue(e, column.option.displayField),
-          }));
+          // TRƯỜNG HỢP 3: Mảng tĩnh (K[]) bình thường
+          else {
+            cacheValues[column.field] = column.option.items.map(e => ({
+              ...e,
+              [column.option.valueField]: Utilities.getNestedValue(e, column.option.valueField),
+              [column.option.displayField]: Utilities.getNestedValue(e, column.option.displayField),
+            }));
 
-          cacheObjValues[column.field] = ArrayUtilities.toObject(column.option.valueField, cacheValues[column.field]);
+            cacheObjValues[column.field] = ArrayUtilities.toObject(column.option.valueField, cacheValues[column.field]);
+          }
+        } catch (error) {
+          delete cacheValues[column.field];
+          delete cacheObjValues[column.field];
+          reportLookupError(column.field, error);
         }
       }
     }
@@ -77,6 +95,7 @@ export class TableFormatService {
     if (promises.length) {
       const results = await Promise.all(promises);
       for (const result of results) {
+        if (!result) continue;
         cacheValues[result.key] = result.data.map(e => ({
           ...e,
           [result.valueField]: Utilities.getNestedValue(e, result.valueField),
@@ -108,6 +127,15 @@ export class TableFormatService {
     const execute = async (column: SdTableColumnNormal<T>) => {
       const { field, click, tooltip, htmlTemplate, transform } = column;
       const fieldStr = field;
+      // why: callback hiển thị do consumer cung cấp; lỗi của nó chỉ được làm hỏng ô (hiện giá trị thô),
+      // không được biến một lần đọc API thành công thành "Không thể tải dữ liệu" (NSP-4877).
+      // Log một lần cho mỗi cột mỗi lượt format để không spam theo từng dòng.
+      let reported = false;
+      const report = (error: unknown) => {
+        if (reported) return;
+        reported = true;
+        console.error(`[sd-table] Column "${fieldStr}" failed to format; showing raw values.`, error);
+      };
 
       // Xử lý nạp từ điển động (lazy-values)
       if (!transform && !htmlTemplate && column.type === 'lazy-values' && typeof column.option.views === 'function') {
@@ -126,12 +154,13 @@ export class TableFormatService {
         );
 
         if (values.length) {
-          const lazyItems: any[] = (
-            await views(values).catch((err: any) => {
-              console.error(err);
-              return [];
-            })
-          )
+          let fetched: unknown = [];
+          try {
+            fetched = await views(values);
+          } catch (err) {
+            console.error(err);
+          }
+          const lazyItems: any[] = (Array.isArray(fetched) ? fetched : [])
             .filter((item: any) => values.includes(Utilities.getNestedValue(item, valueField)))
             .map((e: any) => ({
               [valueField]: Utilities.getNestedValue(e, valueField),
@@ -150,52 +179,27 @@ export class TableFormatService {
           cellStyle: column.align === 'right' ? { 'text-align': 'right!important' } : undefined,
           data: value,
           isHtml: false,
-          tooltip: typeof tooltip === 'function' ? tooltip(value, rowData) : undefined,
+          tooltip: undefined,
           click: typeof click === 'function' ? () => click(value, rowData) : undefined,
         };
 
         const display = item.meta.display[fieldStr];
 
-        if (typeof htmlTemplate === 'function') {
-          display.isHtml = true;
-          display.data = htmlTemplate(value, rowData);
-        } else if (typeof transform === 'function') {
-          const newValue = transform(value, rowData);
-          display.data = newValue instanceof Promise ? await newValue : newValue;
-        } else {
-          // Xử lý các type cơ bản
-          if (column.type === 'date' || column.type === 'datetime' || column.type === 'time') {
-            display.data = this.#formatDateDisplay(value, column.type);
-            display.isHtml = column.type === 'datetime';
+        if (typeof tooltip === 'function') {
+          try {
+            display.tooltip = tooltip(value, rowData);
+          } catch (error) {
+            report(error);
           }
-          if (column.type === 'values' || column.type === 'lazy-values') {
-            display.data = this.#processValuesDisplay(value, column, fieldStr, cacheObjValues);
-          }
-          if (column.type === 'number' && NumberUtilities.isNumber(value)) {
-            display.data = this.#formatNumberPipe.transform(value);
-          }
-          if (column.type === 'boolean') {
-            const { option } = column;
-            if (value != null && value !== '') {
-              display.data = value === true ? option?.displayOnTrue || 'True' : option?.displayOnFalse || 'False';
-            } else {
-              display.data = '';
-            }
-          }
+        }
 
-          // Xử lý Badge
-          const badgeResult = this.#createBadge(column, value, rowData, cacheValues);
-          if (badgeResult) {
-            display.badge = badgeResult.badge;
-            if (badgeResult.title) {
-              display.data = badgeResult.title;
-            }
-          }
-
-          if (display.data === null || display.data === undefined || display.data === '') {
-            display.data = EMPTY_STR;
-            display.badge = undefined;
-          }
+        try {
+          await this.#formatCell(display, column, value, rowData, cacheValues, cacheObjValues);
+        } catch (error) {
+          report(error);
+          display.isHtml = false;
+          display.badge = undefined;
+          display.data = this.#rawDisplay(value);
         }
       }
     };
@@ -216,6 +220,70 @@ export class TableFormatService {
   // ==========================================
   // PRIVATE HELPERS
   // ==========================================
+
+  /** Format một ô; ném lỗi nếu callback của consumer lỗi, để `format` rơi về giá trị thô. */
+  async #formatCell<T>(
+    display: SdTableDisplay,
+    column: SdTableColumnNormal<T>,
+    value: any,
+    rowData: T,
+    cacheValues: Record<string, any[]>,
+    cacheObjValues: Record<string, Record<string, string>>
+  ): Promise<void> {
+    const { htmlTemplate, transform } = column;
+    if (typeof htmlTemplate === 'function') {
+      display.isHtml = true;
+      display.data = htmlTemplate(value, rowData);
+      return;
+    }
+    if (typeof transform === 'function') {
+      const newValue = transform(value, rowData);
+      display.data = newValue instanceof Promise ? await newValue : newValue;
+      return;
+    }
+    // Xử lý các type cơ bản
+    if (column.type === 'date' || column.type === 'datetime' || column.type === 'time') {
+      display.data = this.#formatDateDisplay(value, column.type);
+      display.isHtml = column.type === 'datetime';
+    }
+    if (column.type === 'values' || column.type === 'lazy-values') {
+      display.data = this.#processValuesDisplay(value, column, column.field, cacheObjValues);
+    }
+    if (column.type === 'number' && NumberUtilities.isNumber(value)) {
+      display.data = this.#formatNumberPipe.transform(value);
+    }
+    if (column.type === 'boolean') {
+      const { option } = column;
+      if (value != null && value !== '') {
+        display.data = value === true ? option?.displayOnTrue || 'True' : option?.displayOnFalse || 'False';
+      } else {
+        display.data = '';
+      }
+    }
+
+    // Xử lý Badge
+    const badgeResult = this.#createBadge(column, value, rowData, cacheValues);
+    if (badgeResult) {
+      display.badge = badgeResult.badge;
+      if (badgeResult.title) {
+        display.data = badgeResult.title;
+      }
+    }
+
+    if (display.data === null || display.data === undefined || display.data === '') {
+      display.data = EMPTY_STR;
+      display.badge = undefined;
+    }
+  }
+
+  /** Giá trị thô an toàn để hiển thị khi callback format lỗi: primitive giữ nguyên, mảng nối bằng dấu phẩy. */
+  #rawDisplay(value: unknown): string {
+    const text = (Array.isArray(value) ? value : [value])
+      .filter(entry => entry !== null && entry !== undefined && entry !== '' && typeof entry !== 'object')
+      .map(entry => String(entry))
+      .join(', ');
+    return text || EMPTY_STR;
+  }
 
   #formatDateDisplay(value: any, type: 'date' | 'datetime' | 'time'): string {
     const date = this.#formatDatePipe.transform(value);
