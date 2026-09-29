@@ -45,13 +45,13 @@ interface ISdPermissionConfiguration {
   disabled?: boolean;
 
   /** Resolver returning the user's permission codes — sync, Promise, or Observable */
-  loadPermissions: () => MaybeAsync<string[]>;
+  loadPermissions: () => MaybeAsync<string[]> | Observable<string[]>;
 
   /** Called when canActivateChild denies — e.g. router.navigateByUrl('/layout/forbidden') */
   onForbiden?: () => void;
 
   /** Returns current access token — used by readUnverifiedTokenClaims() */
-  getToken?: () => MaybeAsync<string | undefined | null>;
+  getToken?: () => MaybeAsync<string | undefined | null> | Observable<string | undefined | null>;
 
   /**
    * Opt-in: mirror this key's permission codes to sessionStorage so they survive a reload.

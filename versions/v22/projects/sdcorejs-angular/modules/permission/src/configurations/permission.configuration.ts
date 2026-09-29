@@ -1,5 +1,6 @@
 import { InjectionToken } from '@angular/core';
 import { MaybeAsync } from '@sdcorejs/utils/models';
+import { Observable } from 'rxjs';
 
 /**
  * Cấu hình trung tâm cho module permission.
@@ -36,7 +37,7 @@ export interface ISdPermissionConfiguration {
    * Ví dụ giá trị trả về:
    * - `['PRODUCT_C_EMPLOYEE_VIEW', 'PRODUCT_C_EMPLOYEE_UPDATE']`
    */
-  loadPermissions: () => MaybeAsync<string[]>;
+  loadPermissions: () => MaybeAsync<string[]> | Observable<string[]>;
 
   /**
    * Callback xử lý khi user không có quyền truy cập URL hiện tại.
@@ -50,7 +51,11 @@ export interface ISdPermissionConfiguration {
    * Cung cấp access token hiện tại cho các tác vụ liên quan permission.
    * Hỗ trợ trả về đồng bộ, Promise hoặc Observable.
    */
-  getToken?: () => MaybeAsync<string | undefined | null>;
+  // why: `MaybeAsync` của `@sdcorejs/utils` 1.1.x là `T | Promise<T> | Observable<T>` (RxJS). Từ 1.2 nó dùng
+  // `SubscribableLike<T>` cấu trúc, và kiểu này KHÔNG nhận `Observable` của kiểu hẹp hơn (vd `Observable<string>`
+  // cho slot `string | null | undefined`, hay Observable của một subtype). Giữ `Observable<T>` tường minh để
+  // consumer đang truyền Observable/BehaviorSubject vẫn compile như trước.
+  getToken?: () => MaybeAsync<string | undefined | null> | Observable<string | undefined | null>;
 
   /**
    * Cho phép mirror danh sách mã quyền của key này xuống `sessionStorage` để sống qua reload.

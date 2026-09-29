@@ -26,6 +26,7 @@ import { SdFormControl, sdFormControlState, ɵsdFormControlConnector } from '@sd
 import { SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
 import { SdConfirmService, SdNotifyService } from '@sdcorejs/angular/services';
 import { BrowserUtilities, Utilities } from '@sdcorejs/utils/fns';
+import { FilePickerCancelledError } from '@sdcorejs/utils/errors';
 import { sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { SdUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { PreviewComponent } from './components/preview/preview.component';
@@ -451,6 +452,9 @@ export class SdUploadFile<TArgs = unknown> {
         }
       })
       .catch(error => {
+        // why: từ `@sdcorejs/utils` 1.2, huỷ/timeout hộp chọn file reject `FilePickerCancelledError`;
+        // huỷ là thao tác bình thường của user, không được hiện toast lỗi.
+        if (error instanceof FilePickerCancelledError) return;
         console.error(error);
         this.#notifyService.error(error?.message || this.#i18n.t('core.component.upload-file.upload-failed'));
       });

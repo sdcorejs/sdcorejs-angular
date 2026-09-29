@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { Subject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { SdAuthService } from './auth.service';
 import { ISdAuthConfiguration, SD_AUTH_CONFIGURATION } from '../configurations';
 import { SdAuthInfo } from './auth.model';
@@ -103,6 +103,20 @@ describe('SdAuthService', () => {
       pending.next({ id: 'u-7', username: 'bob' });
 
       expect(service.getAuthInfo!()).toEqual({ id: 'u-7', username: 'bob' });
+    });
+
+    // why: `@sdcorejs/utils` 1.2 thay `Observable<T>` trong `MaybeAsync` bằng `SubscribableLike<T>`, kiểu này không
+    // nhận Observable của một subtype. Config có kiểu để test đỏ ngay lúc compile.
+    it('accepts an Observable of an SdAuthInfo subtype and keeps emitting, as with @sdcorejs/utils 1.1.x', () => {
+      interface PortalUser extends SdAuthInfo {
+        tenant: string;
+      }
+      const user$ = new BehaviorSubject<PortalUser>({ id: 'u-1', username: 'carol', tenant: 'hq' });
+      const config = { guard: { authInfo: () => user$ } } satisfies ISdAuthConfiguration;
+      const service = makeService(config);
+      expect(service.getAuthInfo!()).toEqual({ id: 'u-1', username: 'carol', tenant: 'hq' } as SdAuthInfo);
+      user$.next({ id: 'u-1', username: 'carol', tenant: 'branch' });
+      expect(service.getAuthInfo!()).toEqual({ id: 'u-1', username: 'carol', tenant: 'branch' } as SdAuthInfo);
     });
   });
 

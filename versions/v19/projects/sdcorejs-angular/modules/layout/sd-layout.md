@@ -49,8 +49,8 @@ page, which is the usual `onForbiden` target and would otherwise deny itself.
 interface ISdLayoutConfiguration {
   homeUrl?: string;
   mobileBreakpoint?: number; // default: 1024; widths below this value use mobile
-  sidebar: ISdSidebarConfiguration | (() => MaybeAsync<ISdSidebarConfiguration>);
-  userInfo: SdLayoutUserInfo | (() => MaybeAsync<SdLayoutUserInfo>);
+  sidebar: ISdSidebarConfiguration | (() => MaybeAsync<ISdSidebarConfiguration> | Observable<ISdSidebarConfiguration>);
+  userInfo: SdLayoutUserInfo | (() => MaybeAsync<SdLayoutUserInfo> | Observable<SdLayoutUserInfo>);
   signout: () => void | Promise<void>;
   changePassword?: () => void | Promise<void>;
   updateProfile?: () => void | Promise<void>;
@@ -378,7 +378,7 @@ catalogue: those are developer diagnostics, not user-facing copy (marked `@i18n-
 
 ## Notes and anti-patterns
 
-- Do not pass an Observable directly to `userInfo` or `sidebar`; pass a value or a function returning a supported `MaybeAsync` value.
+- Do not pass an Observable directly to `userInfo` or `sidebar`; pass a value or a function returning a supported `MaybeAsync` value or an RxJS `Observable` (the first emitted value is used).
 - Do not use viewport user-agent detection or cache a one-time mobile boolean. Let `<sd-layout>` react to `mobileBreakpoint` changes in the viewport.
 - Do not mutate raw pinned/recent arrays or store full new menu objects. Stable ids keep state valid across labels, permissions, and versions.
 - Do not mount `<sd-layout>` under another layout route; it owns fixed navigation and the page content boundary.

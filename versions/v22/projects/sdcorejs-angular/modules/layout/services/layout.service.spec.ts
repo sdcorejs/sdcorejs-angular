@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
 import { ISdLayoutConfiguration, SD_LAYOUT_CONFIGURATION } from '../configurations';
 import { SD_LAYOUT_DEMO_FALLBACK, SdLayoutService } from './layout.service';
 
@@ -63,6 +64,23 @@ describe('SdLayoutService configuration contract', () => {
 
     expect(service.userInfo()?.email).toBe('async@company.example');
     expect(service.sidebar()?.defaultTitle).toBe('Async Portal');
+  });
+
+  // why: `@sdcorejs/utils` 1.2 thay `Observable<T>` trong `MaybeAsync` bằng `SubscribableLike<T>`, kiểu này không
+  // nhận Observable của một subtype (vd sidebar V3 cụ thể). Config có kiểu để test đỏ ngay lúc compile.
+  it('resolves Observable factories of narrower types, as with @sdcorejs/utils 1.1.x', async () => {
+    const configuration = baseConfiguration({
+      userInfo: () => of({ fullName: 'Observable User', email: 'observable@company.example' }),
+      sidebar: () => of({ version: 3 as const, defaultTitle: 'Observable Portal' }),
+    }) satisfies ISdLayoutConfiguration;
+    TestBed.configureTestingModule({ providers: [{ provide: SD_LAYOUT_CONFIGURATION, useValue: configuration }] });
+
+    const service = TestBed.inject(SdLayoutService);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(service.userInfo()?.email).toBe('observable@company.example');
+    expect(service.sidebar()?.defaultTitle).toBe('Observable Portal');
   });
 
   it('exposes the configured homeUrl and falls back to the app root', () => {

@@ -7,6 +7,15 @@ import { ArrayUtilities, NumberUtilities } from '@sdcorejs/utils/fns';
 import { SdTableColumn, SdTableColumnNormal } from '../../models/table-column.model';
 import { MapToSdTableItem, SdTableDisplay, SdTableItem } from '../../models/table-item.model';
 
+/**
+ * Giá trị thô của một ô, do consumer cung cấp nên lib không ràng buộc được kiểu.
+ *
+ * why: từ `@sdcorejs/utils` 1.2, `getNestedValue` trả về `T | undefined` với `T = unknown` thay vì
+ * `any`. Để mặc định thì mọi chỗ dùng giá trị đều phải ép kiểu; alias này giữ đúng kiểu cũ tại một
+ * nơi và đánh dấu rõ đây là ranh giới dữ liệu động (giống Core Legacy).
+ */
+type SdTableCellValue = any;
+
 @Injectable()
 export class TableFormatService {
   // Keep table display formatting aligned with the public template pipes.
@@ -51,8 +60,8 @@ export class TableFormatService {
 
             cacheValues[column.field] = (Array.isArray(data) ? data : []).map(e => ({
               ...e,
-              [column.option.valueField]: Utilities.getNestedValue(e, column.option.valueField),
-              [column.option.displayField]: Utilities.getNestedValue(e, column.option.displayField),
+              [column.option.valueField]: Utilities.getNestedValue<SdTableCellValue>(e, column.option.valueField),
+              [column.option.displayField]: Utilities.getNestedValue<SdTableCellValue>(e, column.option.displayField),
             }));
 
             cacheObjValues[column.field] = ArrayUtilities.toObject(column.option.valueField, cacheValues[column.field]);
@@ -78,8 +87,8 @@ export class TableFormatService {
           else {
             cacheValues[column.field] = column.option.items.map(e => ({
               ...e,
-              [column.option.valueField]: Utilities.getNestedValue(e, column.option.valueField),
-              [column.option.displayField]: Utilities.getNestedValue(e, column.option.displayField),
+              [column.option.valueField]: Utilities.getNestedValue<SdTableCellValue>(e, column.option.valueField),
+              [column.option.displayField]: Utilities.getNestedValue<SdTableCellValue>(e, column.option.displayField),
             }));
 
             cacheObjValues[column.field] = ArrayUtilities.toObject(column.option.valueField, cacheValues[column.field]);
@@ -98,8 +107,8 @@ export class TableFormatService {
         if (!result) continue;
         cacheValues[result.key] = result.data.map(e => ({
           ...e,
-          [result.valueField]: Utilities.getNestedValue(e, result.valueField),
-          [result.displayField]: Utilities.getNestedValue(e, result.displayField),
+          [result.valueField]: Utilities.getNestedValue<SdTableCellValue>(e, result.valueField),
+          [result.displayField]: Utilities.getNestedValue<SdTableCellValue>(e, result.displayField),
         }));
         cacheObjValues[result.key] = ArrayUtilities.toObject(result.valueField, cacheValues[result.key]);
       }
@@ -147,7 +156,7 @@ export class TableFormatService {
 
         const values = ArrayUtilities.distinct(
           items
-            .map(item => Utilities.getNestedValue(item.data, fieldStr))
+            .map(item => Utilities.getNestedValue<SdTableCellValue>(item.data, fieldStr))
             .filter(val => val?.toString())
             .reduce<string[]>((current, next) => [...current, ...(Array.isArray(next) ? next : [next])], [])
             .filter(val => !Object.keys(cacheObjValues[fieldStr]).includes(val))
@@ -161,10 +170,10 @@ export class TableFormatService {
             console.error(err);
           }
           const lazyItems: any[] = (Array.isArray(fetched) ? fetched : [])
-            .filter((item: any) => values.includes(Utilities.getNestedValue(item, valueField)))
+            .filter((item: any) => values.includes(Utilities.getNestedValue<SdTableCellValue>(item, valueField)))
             .map((e: any) => ({
-              [valueField]: Utilities.getNestedValue(e, valueField),
-              [displayField]: Utilities.getNestedValue(e, displayField),
+              [valueField]: Utilities.getNestedValue<SdTableCellValue>(e, valueField),
+              [displayField]: Utilities.getNestedValue<SdTableCellValue>(e, displayField),
             }));
           Object.assign(cacheObjValues[fieldStr], ArrayUtilities.toObject(valueField, lazyItems) || {});
         }
@@ -173,7 +182,7 @@ export class TableFormatService {
       // Format dữ liệu cho từng hàng
       for (const item of items) {
         const rowData = item.data;
-        const value = Utilities.getNestedValue(rowData, fieldStr);
+        const value = Utilities.getNestedValue<SdTableCellValue>(rowData, fieldStr);
         item.meta.display[fieldStr] = {
           badge: undefined,
           cellStyle: column.align === 'right' ? { 'text-align': 'right!important' } : undefined,
@@ -225,7 +234,7 @@ export class TableFormatService {
   async #formatCell<T>(
     display: SdTableDisplay,
     column: SdTableColumnNormal<T>,
-    value: any,
+    value: SdTableCellValue,
     rowData: T,
     cacheValues: Record<string, any[]>,
     cacheObjValues: Record<string, Record<string, string>>

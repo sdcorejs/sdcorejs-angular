@@ -16,6 +16,7 @@
 
 import { TestBed } from '@angular/core/testing';
 import { BrowserUtilities } from '@sdcorejs/utils/fns';
+import { FilePickerCancelledError } from '@sdcorejs/utils/errors';
 import { SdExcelService } from './excel.service';
 import { SdExcelExportOption, SdExcelTemplate } from './excel.model';
 
@@ -593,10 +594,13 @@ describe('SdExcelService', () => {
     expect(result.items).toEqual([{ code: 'B2' }]);
   });
 
+  // why: @sdcorejs/utils 1.2 báo huỷ/timeout bằng FilePickerCancelledError thay vì resolve null.
   it('upload returns an empty result when the picker is cancelled', async () => {
-    spyOn(BrowserUtilities, 'upload').and.resolveTo(null);
+    spyOn(BrowserUtilities, 'upload').and.rejectWith(new FilePickerCancelledError());
+    const logged = spyOn(console, 'error');
 
     await expectAsync(service.upload()).toBeResolvedTo({ items: [], file: null });
+    expect(logged).not.toHaveBeenCalled();
   });
 
   it('upload propagates a picker rejection', async () => {

@@ -3,6 +3,7 @@ import { DestroyRef, inject, Injectable } from '@angular/core';
 import { SdCacheService } from '@sdcorejs/angular/services/cache';
 import { digestSdPersistenceKey, SdGraphSerializer } from '@sdcorejs/angular/services/persistence';
 import { BrowserUtilities } from '@sdcorejs/utils/fns';
+import { FilePickerCancelledError } from '@sdcorejs/utils/errors';
 import { Observable, of, Subscription, throwError, timer, TimeoutError } from 'rxjs';
 import { filter, map, retry, timeout } from 'rxjs/operators';
 import { sdApiMatchesHandlerHosts } from './api-host';
@@ -92,7 +93,15 @@ export class SdApiService {
   };
 
   upload = async <T = unknown>(url: string, option?: { extensions?: string[]; maxSizeInMb?: number }): Promise<T | null | undefined> => {
-    const file = await BrowserUtilities.upload(option);
+    let file: File | File[];
+    try {
+      file = await BrowserUtilities.upload(option);
+    } catch (error) {
+      // why: từ `@sdcorejs/utils` 1.2, huỷ/timeout hộp chọn file reject `FilePickerCancelledError` thay vì
+      // resolve rỗng. Hợp đồng của `upload()` là huỷ thì trả `undefined` và không gửi request.
+      if (error instanceof FilePickerCancelledError) return undefined;
+      throw error;
+    }
     if (!Array.isArray(file) && file) {
       return this.uploadFile<T>(url, file);
     }

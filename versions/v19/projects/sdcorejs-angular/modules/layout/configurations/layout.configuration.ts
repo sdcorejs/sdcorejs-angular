@@ -21,8 +21,12 @@ export interface SdLayoutNotificationConfiguration {
 export interface ISdLayoutConfiguration {
   homeUrl?: string;
   mobileBreakpoint?: number;
-  sidebar: ISdSidebarConfiguration | (() => MaybeAsync<ISdSidebarConfiguration>);
-  userInfo: SdLayoutUserInfo | (() => MaybeAsync<SdLayoutUserInfo>);
+  // why: `MaybeAsync` của `@sdcorejs/utils` 1.1.x là `T | Promise<T> | Observable<T>` (RxJS). Từ 1.2 nó dùng
+  // `SubscribableLike<T>` cấu trúc, và kiểu này KHÔNG nhận `Observable` của kiểu hẹp hơn (vd `Observable<string>`
+  // cho slot `string | null | undefined`, hay Observable của một subtype). Giữ `Observable<T>` tường minh để
+  // consumer đang truyền Observable/BehaviorSubject vẫn compile như trước.
+  sidebar: ISdSidebarConfiguration | (() => MaybeAsync<ISdSidebarConfiguration> | Observable<ISdSidebarConfiguration>);
+  userInfo: SdLayoutUserInfo | (() => MaybeAsync<SdLayoutUserInfo> | Observable<SdLayoutUserInfo>);
   signout: SdLayoutAccountAction;
   changePassword?: SdLayoutAccountAction;
 

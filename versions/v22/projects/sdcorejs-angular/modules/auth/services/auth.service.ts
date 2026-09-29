@@ -1,9 +1,40 @@
 import { inject, Injectable, signal, Signal } from '@angular/core';
-import { Observable, Subject } from 'rxjs';
+import { from, isObservable, Observable, of, Subject } from 'rxjs';
 import { ISdAuthConfiguration, SD_AUTH_CONFIGURATION } from '../configurations';
-import { normalizeAsync, resolveMaybeAsync } from '@sdcorejs/utils/models';
+import { isPromiseLike, isSubscribableLike, MaybeAsync, resolveMaybeAsync, SubscriptionLike } from '@sdcorejs/utils/models';
 import { SdAuthInfo } from './auth.model';
 import { toSignal } from '@angular/core/rxjs-interop';
+
+/**
+ * Chuyển một `MaybeAsync` thành Observable thật của RxJS.
+ *
+ * why: từ `@sdcorejs/utils` 1.2, `normalizeAsync` trả về một subscribable cấu trúc
+ * (`SubscribableLike`) mà teardown có thể là `void`, trong khi `toSignal` đòi
+ * `Observable | Subscribable` với teardown là `Unsubscribable`. Bọc lại thay vì rút gọn
+ * bằng `resolveMaybeAsync`, để KHÔNG thu về đúng một giá trị đầu tiên: cấu hình nào phát
+ * lại mỗi khi claims đổi vẫn phải giữ được tính sống.
+ */
+const toObservable = <T>(source: MaybeAsync<T>): Observable<T> => {
+  if (isObservable(source)) return source as Observable<T>;
+  if (isPromiseLike<T>(source)) return from(source);
+  if (isSubscribableLike<T>(source)) {
+    return new Observable<T>(subscriber => {
+      const teardown = source.subscribe({
+        next: value => subscriber.next(value),
+        error: error => subscriber.error(error),
+        complete: () => subscriber.complete(),
+      });
+      return () => {
+        if (typeof teardown === 'function') {
+          teardown();
+          return;
+        }
+        (teardown as SubscriptionLike | undefined)?.unsubscribe?.();
+      };
+    });
+  }
+  return of(source as T);
+};
 
 @Injectable({ providedIn: 'root' })
 export class SdAuthService {
@@ -31,7 +62,7 @@ export class SdAuthService {
     // dù thực tế chưa ai đăng nhập. `undefined` là trạng thái trung thực duy nhất cho cả hai ca —
     // template bắt buộc phải xử lý nhánh chưa xác thực (`@if (user(); as u)`) thay vì tin vào user giả.
     if (this.authConfiguration?.guard?.authInfo) {
-      this.getAuthInfo = toSignal(normalizeAsync(this.authConfiguration.guard?.authInfo()));
+      this.getAuthInfo = toSignal(toObservable<SdAuthInfo>(this.authConfiguration.guard.authInfo()));
     } else {
       this.getAuthInfo = signal<SdAuthInfo | undefined>(undefined);
     }
