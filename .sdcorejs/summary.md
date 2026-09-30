@@ -13,7 +13,7 @@ stack_profiles: [core-ui-angular]
 profile_confidence: high
 source_roots:
   - versions/v19/projects/sdcorejs-angular
-  - versions/v19/projects/showcase
+  - showcase
 summary_scope: angular-library-showcase
 package_manager: npm
 package_manifest_hash: c466300a15176dfd1c0db3a41a05ef5e862a7aae
@@ -23,7 +23,7 @@ generated_from:
   - package.json
   - versions/v19/angular.json
   - versions/v19/projects/sdcorejs-angular
-  - versions/v19/projects/showcase
+  - showcase
 commands_run:
   - git rev-parse --show-toplevel
   - git status --short
@@ -56,7 +56,8 @@ contract cũ.
 
 - Canonical library source: `versions/v19/projects/sdcorejs-angular`.
 - Generated mirrors: `versions/v20` và `versions/v21`.
-- Canonical Showcase/docs source: `versions/v19/projects/showcase`.
+- Canonical Showcase/docs source: `showcase` (root workspace; resolves
+  `@sdcorejs/angular` from the built `versions/v19/dist/sdcorejs-angular`).
 - Layout sources:
   `versions/v19/projects/sdcorejs-angular/modules/layout/components`.
 - Root release source: `CHANGELOG.md`.
