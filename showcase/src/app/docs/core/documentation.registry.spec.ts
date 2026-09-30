@@ -104,10 +104,25 @@ describe('documentation registry', () => {
     expect(findDocPage('components', 'button')?.examples.every(example => example.activation === 'viewport')).toBeTrue();
   });
 
+  it('links every live demo to its source in the root showcase workspace', () => {
+    for (const page of DOC_PAGES) {
+      if (page.examples.length === 0) {
+        expect(page.sourcePath).withContext(page.id).toBeNull();
+      } else {
+        expect(page.sourcePath)
+          .withContext(page.id)
+          .toMatch(/^showcase\/src\/app\/pages\/[\w-]+\/[\w-]+\/[\w-]+-demo\.component\.ts$/);
+      }
+    }
+    expect(findDocPage('components', 'generic')?.sourcePath).toBe(
+      'showcase/src/app/pages/components/form-generic/form-generic-demo.component.ts'
+    );
+  });
+
   it('exposes the Layout live-demo loader from the modules registry entry', async () => {
     const layoutPage = findDocPage('modules-integrations', 'layout');
 
-    expect(layoutPage?.sourcePath).toContain('/pages/modules/layout/layout-demo.component.ts');
+    expect(layoutPage?.sourcePath).toBe('showcase/src/app/pages/modules/layout/layout-demo.component.ts');
     expect(layoutPage?.demoSectionCount).toBe(3);
     expect((await layoutPage?.examples[0]?.loadComponent())?.name).toBe('LayoutDemoComponent');
   });

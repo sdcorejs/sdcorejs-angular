@@ -147,6 +147,9 @@ describe('DocsPageComponent', () => {
     expect(fixture?.nativeElement.querySelector('.examples-summary span')?.textContent?.trim()).toBe('interactive examples');
     expect(fixture?.nativeElement.textContent).not.toContain('preserved');
     expect(fixture?.nativeElement.querySelector('.page-header > a')?.textContent?.trim()).toBe('View demo source');
+    expect(fixture?.nativeElement.querySelector('.page-header > a')?.getAttribute('href')).toBe(
+      'https://github.com/sdcorejs/sdcorejs-angular/blob/main/showcase/src/app/pages/components/button/button-demo.component.ts'
+    );
   });
 
   it('keeps stable status quiet and exposes copyable API identity on Overview', async () => {

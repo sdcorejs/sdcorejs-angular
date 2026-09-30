@@ -9,6 +9,7 @@ import {
   collectDemoSourceFiles,
   DEFAULT_MANIFEST_OUTPUT_FILE,
   DEFAULT_OUTPUT_FILE,
+  DEFAULT_PAGES_ROOT,
   extractExampleSource,
   extractExampleSources,
   generateExampleSourceModule,
@@ -508,4 +509,34 @@ test('documentation registry demo counts match extracted example records', () =>
     [...registeredDemoPaths].sort(),
     'Extracted example records and local registry definitions must contain the same demo paths'
   );
+});
+
+// why: `sourcePath` only feeds the docs page's GitHub "View demo source" link, so nothing broke
+// when the showcase moved from versions/v19/projects/showcase to the root showcase/ — the demos
+// kept rendering while every link 404ed. Each link must resolve on disk AND be the component the
+// page lazy-loads, so a move or a demo off the `<folder>/<folder>-demo.component.ts` naming fails here.
+test('documentation registry links every local demo to the source file the page renders', () => {
+  const registryFile = join(REPO_ROOT, 'showcase', 'src', 'app', 'docs', 'core', 'documentation.registry.ts');
+  const registry = readFileSync(registryFile, 'utf8');
+  const sourceRoot = registry.match(/const DEMO_SOURCE_ROOT = '([^']+)';/)?.[1];
+  const seedBlocks = [...registry.matchAll(/defineDocPage\(\{([\s\S]*?)\n  \}\),/g)].map(match => match[1]);
+
+  assert.ok(sourceRoot, 'Documentation registry must declare DEMO_SOURCE_ROOT');
+  assert.equal(join(REPO_ROOT, sourceRoot), DEFAULT_PAGES_ROOT, 'Demo source links must use the pages root the generator sweeps');
+  assert.ok(seedBlocks.length > 0, 'Documentation registry must contain local demo page definitions');
+  for (const seedBlock of seedBlocks) {
+    const category = seedBlock.match(/category:\s*'([^']+)'/)?.[1];
+    const slug = seedBlock.match(/slug:\s*'([^']+)'/)?.[1];
+    const demoPath = seedBlock.match(/demoPath:\s*'([^']+)'/)?.[1] ?? `${category}/${slug}`;
+    const loadedModule = seedBlock.match(/import\('([^']+)'\)/)?.[1];
+    const sourcePath = `${sourceRoot}/${demoPath}/${demoPath.split('/').at(-1)}-demo.component.ts`;
+
+    assert.ok(loadedModule, `Local demo page ${demoPath} must lazy-load its demo component`);
+    assert.ok(existsSync(join(REPO_ROOT, sourcePath)), `Demo source link for ${demoPath} points at a missing file: ${sourcePath}`);
+    assert.equal(
+      join(REPO_ROOT, sourcePath),
+      resolve(dirname(registryFile), `${loadedModule}.ts`),
+      `Demo source link for ${demoPath} must point at the component the page lazy-loads`
+    );
+  }
 });
