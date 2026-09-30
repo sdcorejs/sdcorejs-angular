@@ -37,7 +37,7 @@
     "@ckeditor/ckeditor5-angular": "11.1.2",
     "@lucide/angular": "^1.22.0",
     "@sdcorejs/angular-material-datetime": "1.0.4",
-    "@sdcorejs/utils": "1.2.3",
+    "@sdcorejs/utils": "1.2.4",
     "ckeditor5": "48.0.0",
     "date-fns": "^3.6.0",
     "exceljs": "^4.4.0",

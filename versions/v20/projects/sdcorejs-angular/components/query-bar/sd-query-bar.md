@@ -321,7 +321,7 @@ tableOption: SdTableOption<Order> = {
 ## Dependencies
 
 Internal: `@sdcorejs/angular/components/{operator, button}`, `@sdcorejs/angular/forms/{input, input-number, select, date, datetime, date-range}`, `@sdcorejs/angular/i18n`.
-External: `@sdcorejs/utils` `1.2.3` (`OPERATORS` table + `BETWEEN` icon).
+External: `@sdcorejs/utils` `1.2.4` (`OPERATORS` table + `BETWEEN` icon).
 
 ## Tests
 
