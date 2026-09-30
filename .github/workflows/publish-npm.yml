@@ -46,7 +46,9 @@ jobs:
           node-version: '22.22.3'
           registry-url: 'https://registry.npmjs.org'
           cache: npm
-          cache-dependency-path: package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            versions/v19/package-lock.json
 
       - name: Resolve the immutable four-target release plan
         id: release_plan
@@ -64,6 +66,12 @@ jobs:
 
       - name: Verify generated workspaces
         run: npm run check:sync
+
+      # why: the theme, contrast, token-list and hex-rule tests compile the library SCSS and run ESLint
+      # with the canonical v19 toolchain.
+      - name: Install v19 exactly
+        run: npm ci --legacy-peer-deps
+        working-directory: versions/v19
 
       - name: Run repository and release-contract tests
         run: npm run test:scripts
