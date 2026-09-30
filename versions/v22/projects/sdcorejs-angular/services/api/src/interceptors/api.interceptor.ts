@@ -2,12 +2,16 @@ import { HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest
 import { inject, Injectable } from '@angular/core';
 import { defer, from, Observable, of, throwError } from 'rxjs';
 import { catchError, concatMap, dematerialize, map, materialize, switchMap } from 'rxjs/operators';
-import { sdApiMatchesHandlerHosts } from '../api-host';
+import { SdApiHandlerRegistry } from '../api-handler-registry';
+import { sdResolveApiHandler } from '../api-host';
 import { ISdApiConfiguration, SD_API_CONFIG, SdApiHandler } from '../api.model';
 
 @Injectable()
 export class SdHttpInterceptor implements HttpInterceptor {
+  // why: interceptor sống ở root; handler của lazy scope chỉ đến qua registry, nên resolve MỖI request
+  // (hợp nhất list tĩnh với registry) thay vì cache một lần lúc construct.
   readonly #configurations = inject<ISdApiConfiguration[]>(SD_API_CONFIG, { optional: true }) ?? [];
+  readonly #registry = inject(SdApiHandlerRegistry);
 
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     if (!request.url) throw new Error('Invalid URL');
@@ -55,9 +59,9 @@ export class SdHttpInterceptor implements HttpInterceptor {
   }
 
   #findHandler(url: string): SdApiHandler | undefined {
-    const handlers = this.#configurations.flatMap(configuration => configuration.handlers ?? []);
     // why: `url.startsWith(host)` cho phép host nhìn-giống-thật (`https://api.example.com.attacker.tld`)
     // khớp handler của `https://api.example.com` và nhận trọn `intercept` — kể cả header auth.
-    return handlers.find(handler => sdApiMatchesHandlerHosts(url, handler.hosts));
+    // `sdResolveApiHandler` so origin + segment và chọn prefix khớp dài nhất.
+    return sdResolveApiHandler(url, [...this.#configurations, ...this.#registry.configurations()]);
   }
 }

@@ -387,6 +387,8 @@ describe('sd-angular public API', () => {
       forms.normalizeTreeSelectKeys,
       services.SD_API_CONFIG,
       services.SD_API_CONFIGURATION,
+      services.SdApiHandlerRegistry,
+      services.provideSdApiConfiguration,
       services.SdApiService,
       services.SdLoadingService,
       services.SD_GRAPH_FORMAT,

@@ -6,7 +6,8 @@ import { BrowserUtilities } from '@sdcorejs/utils/fns';
 import { FilePickerCancelledError } from '@sdcorejs/utils/errors';
 import { Observable, of, Subscription, throwError, timer, TimeoutError } from 'rxjs';
 import { filter, map, retry, timeout } from 'rxjs/operators';
-import { sdApiMatchesHandlerHosts } from './api-host';
+import { SdApiHandlerRegistry } from './api-handler-registry';
+import { sdResolveApiHandler } from './api-host';
 import {
   ISdApiConfiguration,
   SD_API_CONFIG,
@@ -55,6 +56,7 @@ export class SdApiService {
   readonly #maxRetryAttempts = 10;
   readonly #httpClient = inject(HttpClient);
   readonly #configurations = inject<ISdApiConfiguration[]>(SD_API_CONFIG, { optional: true }) ?? [];
+  readonly #registry = inject(SdApiHandlerRegistry);
   readonly #cacheService = inject(SdCacheService);
   readonly #destroyRef = inject(DestroyRef);
   readonly #sharedRequests = new Map<string, SharedRequest>();
@@ -364,8 +366,8 @@ export class SdApiService {
   }
 
   #getHandler(url: string): SdApiHandler | undefined {
-    const handlers = this.#configurations.flatMap(configuration => configuration.handlers ?? []);
-    return handlers.find(handler => sdApiMatchesHandlerHosts(url, handler.hosts));
+    // why: cùng quy tắc chọn handler với SdHttpInterceptor (prefix dài nhất, gồm cả handler lazy).
+    return sdResolveApiHandler(url, [...this.#configurations, ...this.#registry.configurations()]);
   }
 
   #generateKey(url: string, method: HttpMethod, body: unknown, option?: SdHttpOptions): string | undefined {

@@ -133,7 +133,26 @@ Before 1.5 the raw body object was thrown directly. It was not an `Error`, so `i
 
 ## Configuration and interceptors
 
-`SD_API_CONFIG` registers `SdApiHandler` values by host. `mapResponse` is applied by the service. `intercept`, `beforeRemote` and `afterRemote` are executed by `SdHttpInterceptor`.
+`SD_API_CONFIG` registers `SdApiHandler` values by host at the root injector. `mapResponse` is applied by the service. `intercept`, `beforeRemote` and `afterRemote` are executed by `SdHttpInterceptor`.
+
+### `provideSdApiConfiguration(configuration)`
+
+Registers handlers for the current scope, and works the same wherever it is placed: `bootstrapApplication` providers, an eagerly imported NgModule, a lazy `Route.providers`, or the NgModule a route loads with `loadChildren`. The configuration is registered in the root `SdApiHandlerRegistry` when the scope's injector is created, so before any request the scope makes, and it is removed when that injector is destroyed. A class is provided inside the scope, so it can inject the scope's own dependencies. Use it for a value or for a scope that the Router does not create, such as `createEnvironmentInjector`.
+
+```ts
+// library
+@NgModule({ providers: [provideSdApiConfiguration(OrdersApiConfiguration)] })
+export class OrdersModule {}
+
+// or a route
+{ path: 'orders', providers: [provideSdApiConfiguration({ handlers: [...] })], loadComponent: () => ... }
+```
+
+`SD_API_CONFIG` in a lazily loaded module works too. A library can keep `{ provide: SD_API_CONFIG, useClass: X, multi: true }` in its NgModule or in a `Route.providers`. When the Router creates that route's injector, `SdApiHandlerRegistry` reads the scope's own `SD_API_CONFIG` entries and registers them. This happens in the same navigation, after routes are recognized and before guards (`canActivate`), resolvers and components run. The entries are removed when the injector is destroyed, including by the router's injector cleanup in Angular 21+. The library does not need to know whether the shell mounts it eagerly or lazily. The Router has no public API for route injectors, so Core reads the Router's `_injector` / `_loadedInjector` fields. A `canMatch` guard inside the lazy module runs before its scope is registered.
+
+A handler from a lazy route exists only after its route has been navigated to. A request that the shell makes before that, for example a permission load in a guard on a parent route, is not handled by it. The shell must provide a handler at the root for its own hosts.
+
+`SdApiHandlerRegistry` (`providedIn: 'root'`) holds the runtime registrations: `register(configuration)` returns an unregister function, and `configurations()` is a signal of the current list. The interceptor and `SdApiService` resolve each request against the root `SD_API_CONFIG` list plus the registry.
 
 ### Host matching
 
@@ -148,6 +167,8 @@ Before 1.5 the raw body object was thrown directly. It was not an `Error`, so `i
 A raw `url.startsWith(host)` test made `https://api.example.com.attacker.tld/x` match a handler registered for `https://api.example.com`, so the lookalike host received that handler's `intercept` hook — including any credentials it attaches. Matching now parses both sides via the shared `sdMatchesSecureRoute` helper from `@sdcorejs/angular/utilities`.
 
 Under SSR there is no `window.location`, so relative hosts and relative URLs are resolved against a fixed synthetic origin. Relative-to-relative matching stays consistent; absolute hosts still require a real origin match.
+
+When several handlers match, the **longest** matching prefix (origin plus path) wins, so `https://gw.example/bpm` beats `https://gw.example` regardless of the order they were provided in. Equally long prefixes keep registration order, with root `SD_API_CONFIG` providers first. Blank hosts match nothing.
 
 ### `SdApiModule` (NgModule applications)
 
