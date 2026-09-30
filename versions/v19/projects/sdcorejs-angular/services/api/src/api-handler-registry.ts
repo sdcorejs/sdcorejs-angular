@@ -2,6 +2,7 @@ import {
   computed,
   DestroyRef,
   EnvironmentProviders,
+  ErrorHandler,
   inject,
   Injectable,
   makeEnvironmentProviders,
@@ -9,7 +10,9 @@ import {
   signal,
   Type,
 } from '@angular/core';
+import { Router, ROUTES } from '@angular/router';
 import { ISdApiConfiguration } from './api.model';
+import { sdTrackRouteApiConfigurations } from './api-route-configurations';
 
 /**
  * Handler API đăng ký lúc runtime, sống ở root injector.
@@ -20,6 +23,11 @@ import { ISdApiConfiguration } from './api.model';
  * `loadChildren` thì provider nằm ở child injector của lazy route — interceptor không
  * bao giờ thấy, nên mất `intercept` / `beforeRemote` / `afterRemote` trong im lặng.
  * Registry này là điểm hẹn ở root mà mọi scope (root, eager, lazy) đều ghi vào được.
+ *
+ * Registry tự nhặt `SD_API_CONFIG` khai trong injector của lazy route (`Route.providers`,
+ * NgModule của `loadChildren`) trong chính navigation Router tạo injector đó — trước guard,
+ * resolver và component — và gỡ khi injector bị huỷ;
+ * library giữ nguyên cách khai multi provider, không cần biết shell mount nó eager hay lazy.
  */
 @Injectable({ providedIn: 'root' })
 export class SdApiHandlerRegistry {
@@ -29,6 +37,14 @@ export class SdApiHandlerRegistry {
 
   /** Các configuration đang được đăng ký, theo thứ tự đăng ký. */
   readonly configurations = computed(() => this.#entries().map(entry => entry.configuration));
+
+  constructor() {
+    // why: chỉ theo dõi khi app có Router — inject `Router` ở app không cấu hình route sẽ dựng
+    // một Router thừa.
+    if (inject(ROUTES, { optional: true })) {
+      sdTrackRouteApiConfigurations(inject(Router), this, inject(ErrorHandler), inject(DestroyRef));
+    }
+  }
 
   /**
    * Đăng ký một configuration. Trả về hàm gỡ đăng ký (gọi nhiều lần vẫn an toàn); dùng

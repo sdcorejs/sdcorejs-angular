@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy as SdAngular22ChangeDetectionStrategy } from '@angular/core';
-import { HTTP_INTERCEPTORS, HttpClient, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, HttpClient, HttpErrorResponse, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Component, createEnvironmentInjector, EnvironmentInjector, inject, Injectable, InjectionToken, NgModule } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, Routes } from '@angular/router';
+import { provideRouter, Router, RouterModule, Routes } from '@angular/router';
+import { map } from 'rxjs/operators';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { provideSdApiConfiguration, SdApiHandlerRegistry } from './api-handler-registry';
 import { ISdApiConfiguration, SD_API_CONFIG, SD_API_CONFIGURATION, SdApiHandler } from './api.model';
@@ -40,6 +41,48 @@ class LazyScopedApiConfiguration implements ISdApiConfiguration {
 })
 class LazyLibraryModule {}
 
+/** Ghi lại mọi lần `beforeRemote` / `afterRemote` chạy để test đối chiếu. */
+const remoteLog: string[] = [];
+
+/**
+ * Library giữ nguyên cách khai cũ: `{ provide: SD_API_CONFIG, useClass, multi: true }` trong NgModule,
+ * không biết shell nạp nó eager hay lazy.
+ */
+@Injectable()
+class PlainLibraryApiConfiguration implements ISdApiConfiguration {
+  readonly #tenant = inject(LAZY_TENANT);
+  readonly handlers: SdApiHandler[] = [
+    tagging(`plain:${this.#tenant}`, ['https://gw.example/plain'], {
+      beforeRemote: ((request: any) => {
+        remoteLog.push(`before ${request.url}`);
+      }) as any,
+      afterRemote: ((result: any) => {
+        remoteLog.push(result instanceof HttpErrorResponse ? `error ${result.status}` : `after ${result.status}`);
+      }) as any,
+    }),
+  ];
+}
+
+/** Guard của route con trong library: gọi API trước khi route được kích hoạt. */
+const guardCallsApi = () =>
+  inject(HttpClient)
+    .get('https://gw.example/plain/guard')
+    .pipe(map(() => true));
+
+@NgModule({
+  imports: [
+    RouterModule.forChild([
+      { path: '', component: LazyPageComponent },
+      { path: 'guarded', canActivate: [guardCallsApi], component: LazyPageComponent },
+    ]),
+  ],
+  providers: [
+    { provide: LAZY_TENANT, useValue: 'tenant-p' },
+    { provide: SD_API_CONFIG, useClass: PlainLibraryApiConfiguration, multi: true },
+  ],
+})
+class PlainLibraryModule {}
+
 function configure(routes: Routes = [], extraProviders: any[] = []) {
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
@@ -59,6 +102,17 @@ function handlerFor(url: string): string | null {
   const request = TestBed.inject(HttpTestingController).expectOne(url);
   request.flush({});
   return request.request.headers.get('X-Handler');
+}
+
+/** Chờ request xuất hiện (guard chạy bất đồng bộ trong navigation). */
+async function waitForRequest(url: string) {
+  const controller = TestBed.inject(HttpTestingController);
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const pending = controller.match(url);
+    if (pending.length) return pending[0];
+    await new Promise(resolve => setTimeout(resolve));
+  }
+  return controller.expectOne(url);
 }
 
 describe('SdApiHandlerRegistry / provideSdApiConfiguration', () => {
@@ -171,6 +225,106 @@ describe('SdApiHandlerRegistry / provideSdApiConfiguration', () => {
 
   // why: host trống đã fail closed trong `sdMatchesSecureRoute` (bước này đã có ở @sdcorejs/angular); chỉ khẳng định
   // nó không nuốt request của handler khác và không làm hỏng việc chọn prefix dài nhất.
+  describe('plain SD_API_CONFIG providers in lazy scopes (no library change)', () => {
+    beforeEach(() => (remoteLog.length = 0));
+
+    /** Injector Router dựng cho route (`Route.providers` hoặc NgModule của `loadChildren`). */
+    const routeInjector = (path: string): EnvironmentInjector => {
+      const route = TestBed.inject(Router).config.find(candidate => candidate.path === path) as any;
+      return route._loadedInjector ?? route._injector;
+    };
+
+    const routeProvidedHandler = {
+      provide: SD_API_CONFIG,
+      multi: true,
+      useValue: { handlers: [tagging('route', ['https://gw.example/route'])] },
+    };
+
+    it('runs intercept, beforeRemote and afterRemote of a handler from a loadChildren NgModule like a root one', async () => {
+      configure([{ path: 'lib', loadChildren: () => Promise.resolve(PlainLibraryModule) }]);
+      expect(handlerFor('https://gw.example/plain/a')).toBeNull();
+      expect(remoteLog).toEqual([]);
+
+      const harness = await RouterTestingHarness.create();
+      await harness.navigateByUrl('/lib');
+
+      expect(handlerFor('https://gw.example/plain/a')).toBe('plain:tenant-p');
+      TestBed.inject(HttpClient)
+        .get('https://gw.example/plain/b')
+        .subscribe({ error: () => undefined });
+      TestBed.inject(HttpTestingController).expectOne('https://gw.example/plain/b').flush({}, { status: 500, statusText: 'Server Error' });
+      expect(remoteLog).toEqual(['before https://gw.example/plain/a', 'after 200', 'before https://gw.example/plain/b', 'error 500']);
+    });
+
+    it('applies the handler to a request made by a guard inside the lazy module, in the same navigation', async () => {
+      configure([{ path: 'lib', loadChildren: () => Promise.resolve(PlainLibraryModule) }]);
+      const harness = await RouterTestingHarness.create();
+
+      const navigation = harness.navigateByUrl('/lib/guarded');
+      const guardRequest = await waitForRequest('https://gw.example/plain/guard');
+      expect(guardRequest.request.headers.get('X-Handler')).toBe('plain:tenant-p');
+      guardRequest.flush({});
+      await navigation;
+
+      expect(TestBed.inject(Router).url).toBe('/lib/guarded');
+      expect(remoteLog).toEqual(['before https://gw.example/plain/guard', 'after 200']);
+    });
+
+    it('intercepts with a Route.providers handler even when the registry is created after the navigation', async () => {
+      configure([{ path: 'lazy', providers: [routeProvidedHandler], loadComponent: () => Promise.resolve(LazyPageComponent) }]);
+      const harness = await RouterTestingHarness.create();
+      await harness.navigateByUrl('/lazy');
+
+      // why: request đầu tiên mới dựng interceptor và registry, tức sau khi navigation đã xong.
+      expect(handlerFor('https://gw.example/route/1')).toBe('route');
+    });
+
+    it('drops the handlers of a route once its injector is destroyed', async () => {
+      configure([
+        { path: 'lazy', providers: [routeProvidedHandler], loadComponent: () => Promise.resolve(LazyPageComponent) },
+        { path: 'lib', loadChildren: () => Promise.resolve(PlainLibraryModule) },
+      ]);
+      const harness = await RouterTestingHarness.create();
+      await harness.navigateByUrl('/lazy');
+      await harness.navigateByUrl('/lib');
+      expect(handlerFor('https://gw.example/route/1')).toBe('route');
+      expect(handlerFor('https://gw.example/plain/1')).toBe('plain:tenant-p');
+
+      routeInjector('lazy').destroy();
+      expect(handlerFor('https://gw.example/route/1')).toBeNull();
+      expect(handlerFor('https://gw.example/plain/1')).toBe('plain:tenant-p');
+
+      routeInjector('lib').destroy();
+      expect(handlerFor('https://gw.example/plain/1')).toBeNull();
+      expect(TestBed.inject(SdApiHandlerRegistry).configurations()).toEqual([]);
+    });
+
+    it('registers each route injector once across repeated navigations', async () => {
+      configure([
+        { path: 'lib', loadChildren: () => Promise.resolve(PlainLibraryModule) },
+        { path: 'other', component: LazyPageComponent },
+      ]);
+      const harness = await RouterTestingHarness.create();
+      await harness.navigateByUrl('/lib');
+      await harness.navigateByUrl('/other');
+      await harness.navigateByUrl('/lib');
+
+      expect(TestBed.inject(SdApiHandlerRegistry).configurations().length).toBe(1);
+    });
+
+    it('does not register root SD_API_CONFIG providers a second time', async () => {
+      configure(
+        [{ path: 'other', component: LazyPageComponent }],
+        [{ provide: SD_API_CONFIG, multi: true, useValue: { handlers: [tagging('root', ['https://gw.example/root'])] } }]
+      );
+      const harness = await RouterTestingHarness.create();
+      await harness.navigateByUrl('/other');
+
+      expect(handlerFor('https://gw.example/root/1')).toBe('root');
+      expect(TestBed.inject(SdApiHandlerRegistry).configurations()).toEqual([]);
+    });
+  });
+
   describe('blank hosts', () => {
     it('matches nothing through a blank host and leaves other handlers untouched', () => {
       configure(
