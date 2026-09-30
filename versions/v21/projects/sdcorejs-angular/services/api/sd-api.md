@@ -133,7 +133,24 @@ Before 1.5 the raw body object was thrown directly. It was not an `Error`, so `i
 
 ## Configuration and interceptors
 
-`SD_API_CONFIG` registers `SdApiHandler` values by host. `mapResponse` is applied by the service. `intercept`, `beforeRemote` and `afterRemote` are executed by `SdHttpInterceptor`.
+`SD_API_CONFIG` registers `SdApiHandler` values by host at the root injector. `mapResponse` is applied by the service. `intercept`, `beforeRemote` and `afterRemote` are executed by `SdHttpInterceptor`.
+
+### `provideSdApiConfiguration(configuration)` — recommended for libraries
+
+Registers handlers for the current scope, and works the same wherever it is placed: `bootstrapApplication` providers, an eagerly imported NgModule, a lazy `Route.providers`, or the NgModule a route loads with `loadChildren`. The configuration is registered in the root `SdApiHandlerRegistry` when the scope's injector is created, so before any request the scope makes, and it is removed when that injector is destroyed. A class is provided inside the scope, so it can inject the scope's own dependencies.
+
+```ts
+// library
+@NgModule({ providers: [provideSdApiConfiguration(OrdersApiConfiguration)] })
+export class OrdersModule {}
+
+// or a route
+{ path: 'orders', providers: [provideSdApiConfiguration({ handlers: [...] })], loadComponent: () => ... }
+```
+
+`SdHttpInterceptor` is registered at the root injector, so it only sees `SD_API_CONFIG` providers there. A `{ provide: SD_API_CONFIG, multi: true }` inside a module that the shell loads with `loadChildren` lands in the lazy route's child injector and is never seen: no `intercept`, no `beforeRemote` / `afterRemote`, and no error. Use `provideSdApiConfiguration(X)` in the same `providers` array instead.
+
+`SdApiHandlerRegistry` (`providedIn: 'root'`) holds the runtime registrations: `register(configuration)` returns an unregister function, and `configurations()` is a signal of the current list. The interceptor and `SdApiService` resolve each request against the root `SD_API_CONFIG` list plus the registry.
 
 ### Host matching
 
@@ -148,6 +165,8 @@ Before 1.5 the raw body object was thrown directly. It was not an `Error`, so `i
 A raw `url.startsWith(host)` test made `https://api.example.com.attacker.tld/x` match a handler registered for `https://api.example.com`, so the lookalike host received that handler's `intercept` hook — including any credentials it attaches. Matching now parses both sides via the shared `sdMatchesSecureRoute` helper from `@sdcorejs/angular/utilities`.
 
 Under SSR there is no `window.location`, so relative hosts and relative URLs are resolved against a fixed synthetic origin. Relative-to-relative matching stays consistent; absolute hosts still require a real origin match.
+
+When several handlers match, the **longest** matching prefix (origin plus path) wins, so `https://gw.example/bpm` beats `https://gw.example` regardless of the order they were provided in. Equally long prefixes keep registration order, with root `SD_API_CONFIG` providers first. Blank hosts match nothing.
 
 ### `SdApiModule` (NgModule applications)
 
