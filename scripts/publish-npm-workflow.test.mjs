@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { posix } from 'node:path';
 import test from 'node:test';
 
 const workflow = readFileSync(new URL('../.github/workflows/publish-npm.yml', import.meta.url), 'utf8');
 const deployPagesWorkflow = readFileSync(new URL('../.github/workflows/deploy-pages.yml', import.meta.url), 'utf8');
+const ciWorkflow = readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8');
 
 function jobEntries(source) {
   const jobsIndex = source.search(/^jobs:\s*$/mu);
@@ -92,6 +94,42 @@ function oneJobMatching(pattern, label) {
   return matches[0];
 }
 
+function oneJobRunning(source, command) {
+  const matches = jobEntries(source).filter(job => executableCommandLines(job.source).includes(command));
+  assert.equal(matches.length, 1, `expected exactly one job running ${command}, got ${matches.map(job => job.id).join(', ')}`);
+  return matches[0];
+}
+
+function installsBefore(job, command) {
+  const steps = stepEntries(job);
+  const commandIndex = steps.findIndex(step => executableCommandLines(step).includes(command));
+  assert.ok(commandIndex >= 0, `${job.id} must run ${command}`);
+  return steps.slice(0, commandIndex).flatMap(step => {
+    const directory = /^        working-directory:\s*(\S+)\s*$/mu.exec(step)?.[1] ?? '.';
+    return executableCommandLines(step)
+      .filter(line => /^npm ci\b/u.test(line))
+      .map(line => ({ directory, command: line }));
+  });
+}
+
+function cachedLockfiles(job) {
+  const setupNode = stepEntries(job).find(step => /uses:\s*actions\/setup-node@/u.test(step));
+  assert.ok(setupNode, `${job.id} must set up Node.js`);
+  if (!/^\s*cache:\s*npm\s*$/mu.test(setupNode)) return null;
+  const lines = setupNode.split(/\r?\n/u);
+  const index = lines.findIndex(line => /^\s*cache-dependency-path:/u.test(line));
+  if (index < 0) return ['package-lock.json'];
+  const inline = lines[index].replace(/^\s*cache-dependency-path:\s*/u, '').trim();
+  if (!/^[|>][-+]?$/u.test(inline)) return [inline];
+  const indentation = /^\s*/u.exec(lines[index])[0].length;
+  const paths = [];
+  for (const line of lines.slice(index + 1)) {
+    if (/^\s*/u.exec(line)[0].length <= indentation) break;
+    paths.push(line.trim());
+  }
+  return paths;
+}
+
 function permissionMap(job) {
   const lines = job.source.split(/\r?\n/u);
   const permissionIndex = lines.findIndex(line => /^    permissions:\s*$/u.test(line));
@@ -153,6 +191,28 @@ test('every release entry path requires the immutable v2.15 tag to point at main
   assert.ok(mainGuard, 'verify_source must compare the checked-out release SHA with origin/main');
   lacks(mainGuard, /^\s*if:\s*/mu, 'the main-lineage guard must run for push and workflow_dispatch');
   has(mainGuard, /git merge-base --is-ancestor HEAD origin\/main/u);
+});
+
+test('verify_source installs what CI installs before running the repository tests', () => {
+  const ciJob = oneJobRunning(ciWorkflow, 'npm run test:scripts');
+  const releaseJob = oneJobRunning(workflow, 'npm run test:scripts');
+  assert.equal(releaseJob.id, 'verify_source');
+
+  const releaseInstalls = installsBefore(releaseJob, 'npm run test:scripts');
+  for (const install of installsBefore(ciJob, 'npm run test:scripts')) {
+    assert.ok(
+      releaseInstalls.some(release => release.directory === install.directory && release.command === install.command),
+      `verify_source must run "${install.command}" in ${install.directory} before npm run test:scripts, as CI does`,
+    );
+  }
+
+  const cached = cachedLockfiles(releaseJob);
+  if (cached) {
+    for (const { directory } of releaseInstalls) {
+      const lockfile = posix.join(directory, 'package-lock.json');
+      assert.ok(cached.includes(lockfile), `verify_source must key its npm cache on ${lockfile}`);
+    }
+  }
 });
 
 test('matrix target selection persists both values through GitHub step outputs', () => {
