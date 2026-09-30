@@ -12,6 +12,9 @@ import { SHOWCASE_EXAMPLE_MANIFEST } from '../generated/example-manifest.generat
 
 const INTERACTION_GATED_PREVIEWS = new Set(['components/editor', 'components/form-generic', 'components/upload-file']);
 
+/** Repo-relative folder of the showcase demo pages; "View demo source" links on GitHub resolve under it. */
+const DEMO_SOURCE_ROOT = 'showcase/src/app/pages';
+
 export const DOC_TABS: readonly DocTab[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'styling', label: 'Styling' },
@@ -60,7 +63,7 @@ function defineDocPage(seed: DocPageSeed): DocPageDefinition {
     keywords: [seed.title, seed.slug, seed.category, seed.importPath, ...(seed.selector ? [seed.selector] : []), ...seed.keywords],
     tabs: DOC_TABS,
     status: seed.status,
-    sourcePath: `versions/v19/projects/showcase/src/app/pages/${demoPath}/${demoPath.split('/').at(-1)}-demo.component.ts`,
+    sourcePath: `${DEMO_SOURCE_ROOT}/${demoPath}/${demoPath.split('/').at(-1)}-demo.component.ts`,
     legacyPath: demoPath,
     legacyPaths,
     demoSectionCount: seed.demoSectionCount,
