@@ -23,14 +23,10 @@ const colorHexIgnores = ['**/*.spec.ts', '**/*.generated.ts', '**/forms/input-co
 
 module.exports = tseslint.config(
   {
-    // why: Showcase generators own formatting for these deterministic build artifacts.
     // why: pdf-worker-inline.generated.ts is a ~1.4MB machine-generated string literal produced by
     // `npm run generate:pdf-worker`. Linting it is pure cost, and `--fix` previously rewrote its
     // `/* eslint-disable */` header, which broke `npm run check:pdf-worker`.
-    ignores: [
-      'projects/showcase/src/app/docs/generated/**/*.ts',
-      'projects/sdcorejs-angular/components/preview/src/preview-pdf/pdf-worker-inline.generated.ts',
-    ],
+    ignores: ['projects/sdcorejs-angular/components/preview/src/preview-pdf/pdf-worker-inline.generated.ts'],
   },
   {
     files: ['**/*.ts'],
