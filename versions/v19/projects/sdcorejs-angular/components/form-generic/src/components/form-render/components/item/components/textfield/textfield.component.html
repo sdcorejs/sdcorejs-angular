@@ -1,16 +1,28 @@
-@if (component && entity) {
+@let item = field();
+@if (isPassword() && viewed()) {
+  <!-- why: view mode never shows a password (not even its length) — it only tells that a value exists. -->
+  <sd-view [label]="item.label || item.key" [display]="value() ? passwordMask : null"></sd-view>
+} @else {
   <sd-input
     [form]="form()"
-    [label]="component.label || component.key"
-    [helperText]="component.helperText"
-    [name]="component.key"
-    [autoId]="component.key"
-    [(model)]="entity[component.key!]"
-    [required]="required"
-    [validator]="validator"
-    [maxlength]="component.validate?.maxlength"
-    [pattern]="component.validate?.pattern"
-    [patternErrorMessage]="component.validate?.patternErrorMessage"
-    [disabled]="disabled"
-    [viewed]="viewed || component.properties?.viewed"></sd-input>
+    [label]="item.label || item.key"
+    [helperText]="item.helperText"
+    [placeholder]="item.placeholder"
+    [labelPlacement]="labelPlacement()"
+    [type]="inputSpec().type"
+    [inputmode]="inputSpec().inputmode"
+    [autocomplete]="inputSpec().autocomplete"
+    [name]="item.key"
+    [autoId]="item.key"
+    [model]="value()"
+    (modelChange)="setValue($event)"
+    [required]="required()"
+    [validator]="effectiveValidator()"
+    [minlength]="viewed() ? undefined : item.validation?.minLength"
+    [maxlength]="viewed() ? undefined : item.validation?.maxLength"
+    [pattern]="pattern()"
+    [patternErrorMessage]="item.validation?.pattern?.message"
+    [disabled]="disabled()"
+    [hyperlink]="viewedHyperlink()"
+    [viewed]="viewed()"></sd-input>
 }

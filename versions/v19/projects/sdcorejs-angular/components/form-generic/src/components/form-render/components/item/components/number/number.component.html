@@ -1,19 +1,48 @@
-@if (component && entity) {
-  @if (viewed || component.properties?.viewed) {
-    <div class="text-secondary">{{ component.label || component.key }}</div>
-    <div class="T16M">{{ entity[component.key!] | componentViewed: entity : component | async }}</div>
-  } @else {
-    <sd-input-number
-      [form]="form()"
-      [label]="component.label || component.key"
-      [helperText]="component.helperText"
-      [name]="component.key"
-      [autoId]="component.key"
-      [(model)]="entity[component.key!]"
-      [required]="required"
-      [disabled]="disabled"
-      [max]="component.validate?.max"
-      [min]="component.validate?.min"
-      [viewed]="viewed || component.properties?.viewed"></sd-input-number>
-  }
+@let item = field();
+@if (viewed()) {
+  <!-- why: view mode uses sd-view (label + value) like the other controls; the value is formatted by
+       the preset precision with its currency/% suffix — not a disabled input. -->
+  <sd-view [label]="item.label || item.key" [display]="value() | componentViewed: item"></sd-view>
+} @else if (suffix()) {
+  <!-- why: two branches instead of wrapping <ng-template sdSuffixDef> in @if — the contentChild of
+       sd-input-number only sees statically projected templates, and an empty one still draws the suffix box. -->
+  <sd-input-number
+    [form]="form()"
+    [label]="item.label || item.key"
+    [helperText]="item.helperText"
+    [placeholder]="item.placeholder"
+    [labelPlacement]="labelPlacement()"
+    [inputmode]="inputmode()"
+    [name]="item.key"
+    [autoId]="item.key"
+    [model]="value()"
+    (modelChange)="setValue($event)"
+    [required]="required()"
+    [disabled]="disabled()"
+    [precision]="precision()"
+    [validator]="effectiveValidator()"
+    [max]="max()"
+    [min]="min()">
+    <ng-template sdSuffixDef
+      ><span class="sd-fg-number-suffix" aria-hidden="true">{{ suffix() }}</span></ng-template
+    >
+  </sd-input-number>
+} @else {
+  <sd-input-number
+    [form]="form()"
+    [label]="item.label || item.key"
+    [helperText]="item.helperText"
+    [placeholder]="item.placeholder"
+    [labelPlacement]="labelPlacement()"
+    [inputmode]="inputmode()"
+    [name]="item.key"
+    [autoId]="item.key"
+    [model]="value()"
+    (modelChange)="setValue($event)"
+    [required]="required()"
+    [disabled]="disabled()"
+    [precision]="precision()"
+    [validator]="effectiveValidator()"
+    [max]="max()"
+    [min]="min()"></sd-input-number>
 }

@@ -1,0 +1,128 @@
+@let _item = field();
+@let _type = _item.type;
+<!-- Toàn bộ khối này là hình minh hoạ (aria-hidden ở phía canvas) — tên truy cập nằm trên nút chọn field. -->
+@if (unsupported()) {
+  <div class="fbp-label">
+    <span class="fbp-label__text">{{ label() || ('core.component.form-builder.untitled' | sdTranslate) }}</span>
+  </div>
+  <div class="fbp-source">
+    <sd-icon name="help" size="16px"></sd-icon>{{ 'core.component.form-builder.unsupported' | sdTranslate }} · {{ _type }}
+  </div>
+} @else {
+  @if (_type !== 'checkbox' && _type !== 'html') {
+    <div class="fbp-label">
+      <span class="fbp-label__text">{{ label() || ('core.component.form-builder.untitled' | sdTranslate) }}</span>
+      @if (required()) {
+        <span class="fbp-label__req">*</span>
+      } @else if (requiredWhen()) {
+        <span class="fbp-label__req fbp-label__req--conditional">*</span>
+      }
+      <ng-container *ngTemplateOutlet="chips"></ng-container>
+    </div>
+  }
+
+  @switch (_type) {
+    @case ('textarea') {
+      <div class="fbp-control fbp-control--multiline" [class.is-disabled]="disabled()">
+        <span class="fbp-placeholder">{{ placeholder() }}</span>
+      </div>
+    }
+    @case ('number') {
+      <div class="fbp-control" [class.is-disabled]="disabled()">
+        <span class="fbp-placeholder">{{ placeholder() }}</span>
+        @if (suffix()) {
+          <span class="fbp-suffix">{{ suffix() }}</span>
+        }
+      </div>
+    }
+    @case ('select') {
+      <div class="fbp-control" [class.is-disabled]="disabled()">
+        <span class="fbp-placeholder">{{ placeholder() || catalog() }}</span>
+        <sd-icon class="fbp-trailing" name="expand_more" size="18px"></sd-icon>
+      </div>
+    }
+    @case ('datetime') {
+      <div class="fbp-control" [class.is-disabled]="disabled()">
+        <span class="fbp-placeholder">{{ placeholder() || dateFormat() }}</span>
+        <sd-icon class="fbp-trailing" name="today" size="18px"></sd-icon>
+      </div>
+    }
+    @case ('chip-string') {
+      <div class="fbp-control" [class.is-disabled]="disabled()">
+        <span class="fbp-placeholder">{{ placeholder() }}</span>
+      </div>
+    }
+    @case ('chip-calendar') {
+      <div class="fbp-control" [class.is-disabled]="disabled()">
+        <span class="fbp-placeholder">{{ placeholder() }}</span>
+        <sd-icon class="fbp-trailing" name="event_note" size="18px"></sd-icon>
+      </div>
+    }
+    @case ('radio') {
+      @if (options().length) {
+        <div class="fbp-options" [class.fbp-options--column]="direction() === 'column'">
+          @for (option of options(); track $index) {
+            <span class="fbp-option"><span class="fbp-radio"></span>{{ option.label || option.value }}</span>
+          }
+        </div>
+      } @else {
+        <div class="fbp-source"><sd-icon name="cloud_sync" size="16px"></sd-icon>{{ catalog() || ('core.component.form-builder.options.empty' | sdTranslate) }}</div>
+      }
+    }
+    @case ('checkbox') {
+      <div class="fbp-checkbox">
+        <span class="fbp-box"></span>
+        <span class="fbp-label__text">{{ label() || ('core.component.form-builder.untitled' | sdTranslate) }}</span>
+        <ng-container *ngTemplateOutlet="chips"></ng-container>
+      </div>
+    }
+    @case ('upload') {
+      <div class="fbp-upload">
+        <sd-icon [name]="uploadIsImage() ? 'add_photo_alternate' : 'upload_file'" size="20px"></sd-icon>
+        <span>{{ (uploadIsImage() ? 'core.component.form-builder.preview.upload-image' : 'core.component.form-builder.preview.upload-file') | sdTranslate }}</span>
+      </div>
+    }
+    @case ('html') {
+      <div class="fbp-html">
+        <ng-container *ngTemplateOutlet="chips"></ng-container>
+        @if (htmlContent()) {
+          <div class="fbp-html__content" [innerHTML]="htmlContent() | htmlPipe: htmlVariables()"></div>
+        } @else {
+          <div class="fbp-source"><sd-icon name="article" size="16px"></sd-icon>{{ htmlDefinition() || label() }}</div>
+        }
+      </div>
+    }
+    @default {
+      <div class="fbp-control" [class.is-disabled]="disabled()">
+        <span class="fbp-placeholder">
+          @if (isPassword()) {
+            <span class="fbp-password">••••••••</span>
+          } @else {
+            {{ placeholder() }}
+          }
+        </span>
+      </div>
+    }
+  }
+
+  @if (helperText() && _type !== 'html') {
+    <div class="fbp-hint">{{ helperText() }}</div>
+  }
+}
+
+<ng-template #chips>
+  <span class="fbp-chips">
+    @if (hidden()) {
+      <span class="fbp-chip fbp-chip--muted"><sd-icon name="visibility_off" size="14px"></sd-icon>{{ 'core.component.form-builder.hidden' | sdTranslate }}</span>
+    }
+    @if (readonly()) {
+      <span class="fbp-chip"><sd-icon name="edit_off" size="14px"></sd-icon>{{ 'core.component.form-builder.read-only' | sdTranslate }}</span>
+    }
+    @if (disabled()) {
+      <span class="fbp-chip"><sd-icon name="block" size="14px"></sd-icon>{{ 'core.component.form-builder.disabled' | sdTranslate }}</span>
+    }
+    @if (conditional()) {
+      <span class="fbp-chip fbp-chip--accent"><sd-icon name="bolt" size="14px"></sd-icon>{{ 'core.component.form-builder.conditional' | sdTranslate }}</span>
+    }
+  </span>
+</ng-template>

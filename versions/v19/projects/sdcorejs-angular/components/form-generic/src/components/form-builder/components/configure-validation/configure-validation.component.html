@@ -2,65 +2,64 @@
   [title]="'core.component.form-builder.config-validation-error-warning' | sdTranslate"
   view="dialog"
   width="800px"
-  modalClass="sd-form-builder-dialog"
-  #popupConfigureVariables>
-  <!-- why: trước đây mỗi luật là một khối mat-elevation-z2 với inline style, nút xoá là <sd-icon>
-       (không phải nút thật — không focus/Enter được), và không có trạng thái rỗng nên dialog mở ra
-       trống trơn không nói gì. -->
+  modalClass="sd-form-builder-dialog">
   <div class="fb-validations">
-    @if (validations.length) {
-      @for (validation of validations; track $index; let idx = $index) {
-        <div class="fb-validations__card">
-          <div class="fb-validations__head">
-            <sd-select
-              class="fb-validations__type"
+    @for (validation of validations(); track $index; let idx = $index) {
+      <div class="fb-validations__card">
+        <div class="fb-validations__head">
+          <sd-select
+            class="fb-validations__type"
+            size="sm"
+            [label]="'core.component.form-builder.message-type' | sdTranslate"
+            [model]="validation.alert"
+            (modelChange)="patch(idx, { alert: $event })"
+            [items]="alerts()"
+            valueField="value"
+            displayField="display"
+            required></sd-select>
+
+          @if (validation.type === 'filter') {
+            <sd-input
+              class="fb-validations__message"
               size="sm"
-              [label]="'core.component.form-builder.message-type' | sdTranslate"
-              [(model)]="validation.alert"
-              [items]="alerts"
+              [form]="form"
+              [label]="'core.component.form-builder.message-display' | sdTranslate"
+              [model]="validation.message"
+              (modelChange)="patch(idx, { message: $event })"
+              required></sd-input>
+          } @else {
+            <sd-select
+              class="fb-validations__message"
+              size="sm"
+              [form]="form"
+              [label]="'core.component.form-builder.available-methods' | sdTranslate"
+              [model]="validation.validator"
+              (modelChange)="patch(idx, { validator: $event })"
+              [items]="validators()"
               valueField="value"
               displayField="display"
               required></sd-select>
-
-            @if (validation.type === 'expression') {
-              <sd-input
-                class="fb-validations__message"
-                size="sm"
-                [form]="form"
-                [label]="'core.component.form-builder.message-display' | sdTranslate"
-                [(model)]="validation.message"
-                required></sd-input>
-            } @else if (validation.type === 'function') {
-              <sd-select
-                class="fb-validations__message"
-                size="sm"
-                [form]="form"
-                [label]="'core.component.form-builder.available-methods' | sdTranslate"
-                [(model)]="validation.code"
-                [items]="functions"
-                valueField="value"
-                displayField="display"
-                required></sd-select>
-            }
-
-            <sd-button
-              class="fb-validations__remove"
-              prefixIcon="delete"
-              type="text"
-              color="error"
-              [tooltip]="'core.component.form-builder.delete' | sdTranslate"
-              (click)="removaValidation(idx)"></sd-button>
-          </div>
-
-          @if (validation.type === 'expression') {
-            <expression-builder
-              [label]="'core.component.form-builder.condition-expression' | sdTranslate"
-              [(model)]="validation.expression"
-              [attributes]="attributes"></expression-builder>
           }
+
+          <sd-button
+            class="fb-validations__remove"
+            prefixIcon="delete"
+            type="text"
+            color="error"
+            [tooltip]="'core.component.form-builder.delete' | sdTranslate"
+            (click)="remove(idx)"></sd-button>
         </div>
-      }
-    } @else {
+
+        @if (validation.type === 'filter') {
+          <attribute-expression
+            [label]="'core.component.form-builder.condition-expression' | sdTranslate"
+            [elements]="elements()"
+            [variables]="variables()"
+            [model]="validation.filter"
+            (sdChange)="patch(idx, { filter: $event })"></attribute-expression>
+        }
+      </div>
+    } @empty {
       <p class="fb-validations__empty">{{ 'core.component.form-builder.no-validation' | sdTranslate }}</p>
     }
 
@@ -74,15 +73,15 @@
   </div>
 
   <mat-menu #menu="matMenu" yPosition="above" panelClass="fb-validation-menu">
-    <button (click)="addValidation('expression')" mat-menu-item type="button">
+    <button (click)="add('filter')" mat-menu-item type="button">
       <span>{{ 'core.component.form-builder.expression' | sdTranslate }}</span>
     </button>
-    <button (click)="addValidation('function')" mat-menu-item type="button">
+    <button (click)="add('function')" mat-menu-item type="button">
       <span>{{ 'core.component.form-builder.available-methods' | sdTranslate }}</span>
     </button>
   </mat-menu>
 
   <ng-container sdFooterRight>
-    <sd-button type="fill" [title]="'core.component.form-builder.save' | sdTranslate" (click)="updateValidations()" prefixIcon="save" color="primary"></sd-button>
+    <sd-button type="fill" [title]="'core.component.form-builder.save' | sdTranslate" (click)="save()" prefixIcon="save" color="primary"></sd-button>
   </ng-container>
 </sd-modal>

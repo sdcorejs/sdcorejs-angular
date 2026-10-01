@@ -2449,359 +2449,264 @@ export class FileExplorerDemoComponent {
 }`,
   },
   "components/form-generic": {
-    typescript: `import { ChangeDetectionStrategy, Component, computed, signal, viewChild } from '@angular/core';
-import { FormGroup } from '@angular/forms';
+    typescript: `import { JsonPipe } from '@angular/common';
+import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
 import { SdButton } from '@sdcorejs/angular/components/button';
-import { SdFormBuilder, SdFormGeneric, SdFormRender } from '@sdcorejs/angular/components/form-generic';
+import {
+  SdFormBuilder,
+  SdFormRender,
+  type SdFormGenericField,
+  type SdFormGenericPageElement,
+  type SdFormGenericSchema,
+} from '@sdcorejs/angular/components/form-generic';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 
-const SEED: SdFormGeneric = {
-  variables: [{ id: 'v1', key: 'currentUserId', label: 'Current user id' }],
-  components: [
+const SEED: SdFormGenericSchema = {
+  variables: [{ key: 'currentUserId', label: 'Current user id' }],
+  pages: [
     {
-      id: 'c1',
-      key: 'customerEmail',
-      type: 'textfield',
-      label: 'Email khách hàng',
-      helperText: 'Dùng cho thông báo tài khoản quan trọng.',
-      layout: { columns: '12' },
-      validate: { required: true },
-      properties: {},
-    },
-    {
-      id: 'c2',
-      key: 'firstName',
-      type: 'textfield',
-      label: 'Tên',
-      layout: { columns: '6' },
-      validate: { required: true },
-      properties: {},
-    },
-    {
-      id: 'c3',
-      key: 'lastName',
-      type: 'textfield',
-      label: 'Họ',
-      layout: { columns: '6' },
-      validate: { required: true },
-      properties: {},
-    },
-    {
-      id: 'c4',
-      key: 'birthDate',
-      type: 'datetime',
-      subtype: 'date',
-      label: 'Ngày sinh',
-      layout: { columns: '4' },
-      validate: {},
-      properties: {},
-    } as any,
-    {
-      id: 'c5',
-      key: 'seats',
-      type: 'number',
-      label: 'Số người dùng',
-      layout: { columns: '4' },
-      validate: { min: 1, max: 100 },
-      properties: {},
-    } as any,
-    {
-      id: 'c6',
-      key: 'agreedToTerms',
-      type: 'checkbox',
-      label: 'Đồng ý điều khoản',
-      layout: { columns: '4' },
-      validate: { required: true },
-      properties: {},
-    } as any,
-    {
-      id: 'c7',
-      key: 'plan',
-      type: 'select',
-      label: 'Gói dịch vụ',
-      layout: { columns: '6' },
-      validate: { required: true },
-      values: [
-        { value: 'free', label: 'Miễn phí' },
-        { value: 'pro', label: 'Pro' },
-        { value: 'enterprise', label: 'Doanh nghiệp' },
-      ],
-      properties: {},
-    } as any,
-    {
-      id: 'c8',
-      key: 'paymentMethod',
-      type: 'radio',
-      label: 'Phương thức thanh toán',
-      layout: { columns: '6' },
-      validate: {},
-      values: [
-        { value: 'card', label: 'Thẻ' },
-        { value: 'wire', label: 'Chuyển khoản' },
-      ],
-      properties: { direction: 'row' },
-    } as any,
-    {
-      id: 'c9',
-      key: 'tags',
-      type: 'chip-string',
-      label: 'Nhãn nội bộ',
-      layout: { columns: '6' },
-      validate: { maxOfItems: 5 },
-      properties: {},
-    } as any,
-    {
-      id: 'c10',
-      key: 'busyDates',
-      type: 'chip-calendar',
-      label: 'Ngày bận',
-      layout: { columns: '6' },
-      validate: {},
-      properties: {},
-    } as any,
-    {
-      id: 'c11',
-      key: 'notes',
-      type: 'textarea',
-      label: 'Ghi chú nội bộ',
-      layout: { columns: '12' },
-      validate: { maxlength: 500 },
-      properties: {},
-    },
-    {
-      id: 'c12',
-      key: 'summaryHtml',
-      type: 'html',
-      label: 'HTML tóm tắt',
-      content: '<strong>Thông tin hồ sơ</strong><br/>Có thể kéo thả, đổi vị trí và render lại an toàn.',
-      layout: { columns: '12' },
-      validate: {},
-      properties: {},
-    } as any,
-    {
-      id: 'c13',
-      key: 'lineItems',
-      type: 'table',
-      label: 'Dòng chi phí',
-      layout: { columns: '12' },
-      validate: {},
-      columns: [
-        { key: 'name', label: 'Tên', type: 'string' },
-        { key: 'quantity', label: 'Số lượng', type: 'number' },
-        { key: 'billable', label: 'Tính phí', type: 'boolean', displayOnTrue: 'Có', displayOnFalse: 'Không' },
-      ],
-      properties: { type: 'inline', titleButtonCreate: 'Thêm dòng' },
-    } as any,
-    {
-      id: 'g1',
-      type: 'group',
-      label: 'Địa chỉ giao hàng',
-      layout: { columns: '12' },
-      properties: { icon: 'inventory_2', color: 'secondary', collapsible: true },
-      components: [
+      id: 'main',
+      elements: [
         {
-          id: 'g1c1',
-          key: 'addressLine',
-          type: 'textfield',
-          label: 'Số nhà / Đường',
-          layout: { columns: '12' },
-          validate: { required: true },
-          properties: {},
-        } as any,
+          id: 'g-personal',
+          type: 'group',
+          label: 'Thông tin cá nhân',
+          icon: 'person',
+          color: 'primary',
+          collapsible: true,
+          elements: [
+            {
+              id: 'c-fullName',
+              key: 'fullName',
+              type: 'textfield',
+              subtype: 'text',
+              label: 'Họ và tên',
+              placeholder: 'Nhập họ và tên',
+              layout: { span: { desktop: 6 } },
+              validation: { required: true, maxLength: 120 },
+            },
+            {
+              id: 'c-email',
+              key: 'email',
+              type: 'textfield',
+              subtype: 'email',
+              label: 'Email',
+              placeholder: 'name@example.com',
+              helperText: 'Nhập địa chỉ email hợp lệ, ví dụ: name@domain.com',
+              layout: { span: { desktop: 6 } },
+              validation: { required: true },
+            },
+            {
+              id: 'c-phone',
+              key: 'phone',
+              type: 'textfield',
+              subtype: 'phone',
+              label: 'Số điện thoại',
+              placeholder: 'VD: 0912 345 678',
+              helperText: 'Giữ nguyên số 0 đầu và dấu +',
+              layout: { span: { desktop: 4, tablet: 6, mobile: 6 } },
+            },
+            {
+              id: 'c-birthDate',
+              key: 'birthDate',
+              type: 'datetime',
+              subtype: 'date',
+              label: 'Ngày sinh',
+              placeholder: 'Chọn ngày sinh',
+              layout: { span: { desktop: 4, tablet: 6, mobile: 6 } },
+              validation: { max: 'today' },
+            },
+            {
+              id: 'c-gender',
+              key: 'gender',
+              type: 'radio',
+              label: 'Giới tính',
+              direction: 'row',
+              layout: { span: { desktop: 4, tablet: 12 } },
+              options: {
+                source: 'static',
+                items: [
+                  { value: 'male', label: 'Nam' },
+                  { value: 'female', label: 'Nữ' },
+                  { value: 'other', label: 'Khác' },
+                ],
+              },
+            },
+          ],
+        },
         {
-          id: 'g1c2',
-          key: 'city',
-          type: 'textfield',
-          label: 'Thành phố',
-          layout: { columns: '6' },
-          validate: {},
-          properties: {},
-        } as any,
+          id: 'g-address',
+          type: 'group',
+          label: 'Địa chỉ',
+          icon: 'home',
+          color: 'primary',
+          elements: [
+            {
+              id: 'c-city',
+              key: 'city',
+              type: 'select',
+              label: 'Tỉnh/Thành phố',
+              placeholder: 'Chọn tỉnh/thành phố',
+              layout: { span: { desktop: 6 } },
+              validation: { required: true },
+              options: {
+                source: 'static',
+                items: [
+                  { value: 'hn', label: 'Hà Nội' },
+                  { value: 'hcm', label: 'TP. Hồ Chí Minh' },
+                  { value: 'dn', label: 'Đà Nẵng' },
+                ],
+              },
+            },
+            {
+              id: 'c-website',
+              key: 'website',
+              type: 'textfield',
+              subtype: 'url',
+              label: 'Website',
+              placeholder: 'https://',
+              layout: { span: { desktop: 6 } },
+            },
+            {
+              id: 'c-address',
+              key: 'addressLine',
+              type: 'textarea',
+              label: 'Địa chỉ chi tiết',
+              placeholder: 'Nhập địa chỉ chi tiết…',
+              validation: { maxLength: 300 },
+            },
+          ],
+        },
         {
-          id: 'g1c3',
-          key: 'zipCode',
-          type: 'textfield',
-          label: 'Mã bưu chính',
-          layout: { columns: '6' },
-          validate: { pattern: '\\\\d{5}' },
-          properties: {},
-        } as any,
+          id: 'c-budget',
+          key: 'budget',
+          type: 'number',
+          subtype: 'currency',
+          label: 'Ngân sách dự kiến',
+          layout: { span: { desktop: 4, tablet: 6 } },
+          validation: { min: 0 },
+          currency: 'VND',
+          precision: 0,
+        },
+        {
+          id: 'c-discount',
+          key: 'discount',
+          type: 'number',
+          subtype: 'percent',
+          label: 'Chiết khấu',
+          helperText: 'Nhập 10 nghĩa là 10%',
+          layout: { span: { desktop: 4, tablet: 6 } },
+          validation: { min: 0, max: 100 },
+          precision: 2,
+        },
+        {
+          id: 'c-agree',
+          key: 'agreedToTerms',
+          type: 'checkbox',
+          label: 'Tôi đồng ý với điều khoản sử dụng',
+          // why: luôn mở hàng mới dù hàng trên còn 4 cột ở desktop — thay cho phần tử ngắt dòng cũ.
+          layout: { newRow: true },
+        },
+        {
+          id: 'c-note',
+          key: 'note',
+          type: 'textarea',
+          label: 'Ghi chú nội bộ',
+          rules: {
+            visible: { field: 'agreedToTerms', operator: 'EQUAL', data: true },
+            required: { field: 'budget', operator: 'GREATER_THAN', data: 100000000 },
+          },
+        },
       ],
-    } as any,
-  ],
-  // why: badge đếm trên toolbar chỉ hiện khi có cấu hình — seed rỗng thì không có gì để nhìn.
-  validations: [
-    {
-      alert: 'warning',
-      type: 'function',
-      code: 'reviewBeforeSubmit',
-    } as any,
+    },
   ],
 };
 
-const DRAG_DROP_POPUP_SEED: SdFormGeneric = {
-  variables: Array.from({ length: 12 }, (_, index) => ({
-    id: \`stress-v\${index + 1}\`,
-    key: \`approvalValue\${index + 1}\`,
-    label: \`Approval value \${index + 1}\`,
-  })),
-  components: [
-    {
-      id: 'stress-a',
-      key: 'ownerName',
-      type: 'textfield',
-      label: 'Owner name',
-      layout: { columns: '6' },
-      validate: { required: true },
-      properties: {},
-    },
-    {
-      id: 'stress-b',
-      key: 'ownerEmail',
-      type: 'textfield',
-      label: 'Owner email',
-      layout: { columns: '6' },
-      validate: { required: true },
-      properties: {},
-    },
-    {
-      id: 'stress-c',
-      key: 'contractCode',
-      type: 'textfield',
-      label: 'Contract code',
-      layout: { columns: '4' },
-      validate: { required: true },
-      properties: {},
-    },
-    {
-      id: 'stress-d',
-      key: 'contractValue',
-      type: 'number',
-      label: 'Contract value',
-      layout: { columns: '4' },
-      validate: { min: 1 },
-      properties: {},
-    } as any,
-    {
-      id: 'stress-e',
-      key: 'goLiveDate',
-      type: 'datetime',
-      subtype: 'date',
-      label: 'Go-live date',
-      layout: { columns: '4' },
-      validate: {},
-      properties: {},
-    } as any,
-    {
-      id: 'stress-f',
-      key: 'approvalStatus',
-      type: 'select',
-      label: 'Approval status',
-      layout: { columns: '12' },
-      validate: { required: true },
-      values: [
-        { value: 'draft', label: 'Draft' },
-        { value: 'reviewing', label: 'Reviewing' },
-        { value: 'approved', label: 'Approved' },
-      ],
-      properties: {},
-    } as any,
-    {
-      id: 'stress-g',
-      key: 'riskNote',
-      type: 'textarea',
-      label: 'Risk note',
-      layout: { columns: '6' },
-      validate: { maxlength: 300 },
-      properties: {},
-    },
-    {
-      id: 'stress-h',
-      key: 'internalNote',
-      type: 'textarea',
-      label: 'Internal note',
-      layout: { columns: '6' },
-      validate: { maxlength: 300 },
-      properties: {},
-    },
-    {
-      id: 'stress-i',
-      type: 'group',
-      label: 'Nested review block',
-      layout: { columns: '12' },
-      properties: { icon: 'fact_check', color: 'primary' },
-      components: [
-        {
-          id: 'stress-i1',
-          key: 'reviewer',
-          type: 'textfield',
-          label: 'Reviewer',
-          layout: { columns: '6' },
-          validate: {},
-          properties: {},
-        } as any,
-        {
-          id: 'stress-i2',
-          key: 'reviewLevel',
+/** Form lớn để đo hiệu năng canvas/preview (field thường + group + control nặng). */
+const buildLargeForm = (fields: number): SdFormGenericSchema => {
+  const elements: SdFormGenericPageElement[] = [];
+  const kinds = ['text', 'email', 'phone', 'number', 'select', 'datetime', 'textarea', 'checkbox'] as const;
+  let index = 0;
+  while (index < fields) {
+    const children: SdFormGenericField[] = [];
+    for (let child = 0; child < 10 && index < fields; child += 1, index += 1) {
+      const kind = kinds[index % kinds.length];
+      const base = { id: \`f\${index}\`, key: \`field_\${index}\`, label: \`Trường \${index + 1}\`, layout: { span: { desktop: 6 } } };
+      if (kind === 'number') children.push({ ...base, type: 'number', subtype: 'decimal' });
+      else if (kind === 'select')
+        children.push({
+          ...base,
           type: 'select',
-          label: 'Review level',
-          layout: { columns: '6' },
-          validate: {},
-          values: [
-            { value: 'l1', label: 'Level 1' },
-            { value: 'l2', label: 'Level 2' },
-          ],
-          properties: {},
-        } as any,
-      ],
-    } as any,
-  ],
-  validations: [
-    {
-      alert: 'warning',
-      type: 'function',
-      code: 'reviewBeforeSubmit',
-    } as any,
-  ],
+          options: {
+            source: 'static',
+            items: [
+              { value: 'a', label: 'A' },
+              { value: 'b', label: 'B' },
+            ],
+          },
+        });
+      else if (kind === 'datetime') children.push({ ...base, type: 'datetime', subtype: 'date' });
+      else if (kind === 'textarea') children.push({ ...base, type: 'textarea' });
+      else if (kind === 'checkbox') children.push({ ...base, type: 'checkbox' });
+      else children.push({ ...base, type: 'textfield', subtype: kind });
+    }
+    elements.push({ id: \`g\${index}\`, type: 'group', label: \`Nhóm \${elements.length + 1}\`, icon: 'category', color: 'primary', elements: children });
+  }
+  return { pages: [{ id: 'main', elements }] };
 };
+
+const EMPTY: SdFormGenericSchema = { pages: [{ id: 'main', elements: [] }] };
+
+/** Bề rộng thử của vùng render — renderer chọn mức theo bề rộng FORM, không theo màn hình. */
+const PREVIEW_WIDTHS = [null, 1100, 800, 480] as const;
 
 @Component({
   selector: 'app-form-generic-demo',
   standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, SdFormBuilder, SdFormRender, SdButton],
+  imports: [JsonPipe, DemoPageComponent, DemoSectionComponent, SdFormBuilder, SdFormRender, SdButton],
   template: \`
     <demo-page #demoPage
       title="Form Generic"
-      description="Dynamic form builder and renderer with schema-safe drag/drop, group detail editing, query-builder conditions, and runtime preview.">
+      description="Form builder nhúng (Desktop | Tablet | Mobile, span theo mức, bắt đầu hàng mới, điều kiện Filter, preset Email/SĐT/Tiền tệ…, kéo-thả, undo/redo) và renderer dùng chung schema SdFormGenericSchema.">
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-builder-render') {
       <demo-section heading="Builder + Render"
-        [props]="[{ name: 'formGeneric', value: 'SdFormGeneric' }, { name: 'properties.collapsible', value: 'true' }]"
-        note="Group có thể thu gọn/mở rộng trong preview; điều kiện vô hiệu hóa được cấu hình trên từng trường con.">
+        [props]="[{ name: '[(schema)]', value: 'SdFormGenericSchema' }, { name: '[(value)]', value: 'Record<string, unknown>' }]"
+        note="Lưu/nháp/xuất bản thuộc về consumer — builder chỉ phát (schemaChange). Nút bên dưới là của trang demo.">
         <div class="row-actions">
-          <sd-button type="outline" color="primary" title="Đặt lại" prefixIcon="restart_alt" (click)="reset()"></sd-button>
-          <sd-button type="outline" color="secondary" title="Tải form rỗng" prefixIcon="layers_clear" (click)="loadEmpty()"></sd-button>
-          <sd-button
-            type="outline"
-            color="primary"
-            title="Demo drag/drop + popup"
-            prefixIcon="open_with"
-            (click)="loadDragDropPopupDemo()"></sd-button>
-          <sd-button type="fill" color="primary" title="Cập nhật preview" prefixIcon="visibility" (click)="refreshPreview()"></sd-button>
-          <sd-button type="outline" color="primary" title="Xuất JSON" prefixIcon="code" (click)="dumpJson()"></sd-button>
+          <sd-button type="outline" color="primary" title="Form mẫu" prefixIcon="restart_alt" (click)="load(seedForm())"></sd-button>
+          <sd-button type="outline" color="secondary" title="Form rỗng" prefixIcon="layers_clear" (click)="load(emptyForm())"></sd-button>
+          <sd-button type="outline" color="secondary" title="Form 100 trường" prefixIcon="speed" (click)="load(large(100))"></sd-button>
+          <sd-button type="outline" color="secondary" title="Form 300 trường" prefixIcon="speed" (click)="load(large(300))"></sd-button>
+          <span class="row-actions__meta">Thay đổi: {{ changes() }}</span>
         </div>
 
         <div class="builder-box">
-          <sd-form-builder [formGeneric]="seed()"></sd-form-builder>
+          <sd-form-builder [(schema)]="schema" (schemaChange)="onChange()"></sd-form-builder>
         </div>
 
         <div class="render-preview">
-          <div class="render-preview__title">Runtime render từ schema hiện tại</div>
-          <sd-form-render [configuration]="previewConfig()" [form]="form" [entity]="entity()"></sd-form-render>
+          <div class="render-preview__head">
+            <span class="render-preview__title">Runtime render từ [(schema)] · mức {{ renderer.level() }}</span>
+            <span class="render-preview__widths">
+              @for (width of widths; track $index) {
+                <sd-button
+                  size="sm"
+                  [type]="previewWidth() === width ? 'fill' : 'outline'"
+                  color="secondary"
+                  [title]="width ? width + 'px' : 'Tự do'"
+                  (click)="previewWidth.set(width)"></sd-button>
+              }
+              <sd-button size="sm" type="fill" color="primary" title="Kiểm tra" prefixIcon="task_alt" (click)="check()"></sd-button>
+            </span>
+          </div>
+          <div class="render-preview__frame" [style.max-width.px]="previewWidth()">
+            <sd-form-render #renderer [schema]="schema() ?? emptySchema" [(value)]="value" [variables]="variables"></sd-form-render>
+          </div>
+          @if (result(); as _result) {
+            <p class="render-preview__result">{{ _result }}</p>
+          }
+          <pre class="render-preview__value">{{ value() | json }}</pre>
         </div>
-
-        @if (output()) {
-          <pre class="json">{{ output() }}</pre>
-        }
       </demo-section>
       }
     </demo-page>
@@ -2812,105 +2717,94 @@ const DRAG_DROP_POPUP_SEED: SdFormGeneric = {
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
+        align-items: center;
         margin-bottom: 12px;
         width: 100%;
       }
+      .row-actions__meta {
+        margin-left: auto;
+        font-size: 12px;
+        color: var(--sd-text-secondary);
+      }
       .builder-box {
         width: 100%;
-        min-height: 560px;
+        height: 780px;
       }
       .render-preview {
         width: 100%;
         margin-top: 16px;
         padding-top: 12px;
-        border-top: 1px solid #e0e0e0;
+        border-top: 1px solid var(--sd-border);
+      }
+      .render-preview__head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 8px;
       }
       .render-preview__title {
         font-size: 13px;
         font-weight: 600;
-        margin-bottom: 8px;
       }
-      .json {
-        width: 100%;
-        max-height: 320px;
+      .render-preview__widths {
+        display: inline-flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .render-preview__frame {
+        border: 1px dashed var(--sd-border-strong);
+        border-radius: 8px;
+      }
+      .render-preview__result {
+        margin: 8px 0 0;
+        font-size: 13px;
+      }
+      .render-preview__value {
+        max-height: 200px;
         overflow: auto;
-        background: #f5f5f5;
-        padding: 12px;
+        margin: 8px 0 0;
+        padding: 8px;
         border-radius: 6px;
+        background: var(--sd-surface-muted);
         font-size: 12px;
-        margin: 12px 0 0;
       }
     \`,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FormGenericDemoComponent {
-  readonly builder = viewChild(SdFormBuilder);
-  readonly seed = signal<SdFormGeneric>(structuredClone(SEED));
-  readonly preview = signal<SdFormGeneric>(structuredClone(SEED));
-  readonly output = signal<string>('');
-  readonly form = new FormGroup({});
-  readonly entity = signal<Record<string, any>>({
-    customerEmail: 'customer@example.com',
-    firstName: 'An',
-    lastName: 'Nguyễn',
-    birthDate: '1994-06-25',
-    seats: 12,
-    agreedToTerms: true,
-    plan: 'pro',
-    paymentMethod: 'card',
-    tags: ['priority', 'enterprise'],
-    busyDates: ['2026-06-25'],
-    notes: 'Khách hàng cần onboarding nhanh.',
-    addressLine: '12 Lý Tự Trọng',
-    city: 'TP. Hồ Chí Minh',
-    zipCode: '70000',
-    lineItems: [
-      { name: 'Implementation', quantity: 1, billable: true },
-      { name: 'Training', quantity: 2, billable: true },
-    ],
-  });
+  readonly render = viewChild(SdFormRender);
+  readonly schema = signal<SdFormGenericSchema | undefined>(structuredClone(SEED));
+  readonly value = signal<Record<string, unknown>>({});
+  readonly variables = { currentUserId: 'u-001' };
+  readonly changes = signal(0);
+  readonly widths = PREVIEW_WIDTHS;
+  readonly emptySchema = EMPTY;
+  readonly previewWidth = signal<number | null>(null);
+  readonly result = signal('');
 
-  readonly previewConfig = computed(() => ({
-    components: this.preview().components,
-    variables: this.preview().variables,
-    validations: this.preview().validations,
-  }));
+  seedForm = (): SdFormGenericSchema => structuredClone(SEED);
+  emptyForm = (): SdFormGenericSchema => structuredClone(EMPTY);
+  large = (fields: number): SdFormGenericSchema => buildLargeForm(fields);
 
-  reset(): void {
-    const fresh = structuredClone(SEED);
-    this.seed.set(fresh);
-    this.preview.set(structuredClone(fresh));
-    this.output.set('');
+  load(schema: SdFormGenericSchema): void {
+    this.schema.set(schema);
+    this.value.set({});
+    this.result.set('');
+    this.changes.set(0);
   }
 
-  loadEmpty(): void {
-    const empty = { components: [], variables: [], validations: [] };
-    this.seed.set(empty);
-    this.preview.set(structuredClone(empty));
-    this.output.set('');
+  onChange(): void {
+    this.changes.update(value => value + 1);
   }
 
-  loadDragDropPopupDemo(): void {
-    const demo = structuredClone(DRAG_DROP_POPUP_SEED);
-    this.seed.set(demo);
-    this.preview.set(structuredClone(demo));
-    this.output.set('');
-  }
-
-  refreshPreview(): void {
-    const b = this.builder();
-    if (!b) return;
-    const form = b.getForm();
-    this.preview.set(form);
-  }
-
-  dumpJson(): void {
-    const b = this.builder();
-    if (!b) return;
-    const form = b.getForm();
-    this.preview.set(form);
-    this.output.set(JSON.stringify(form, null, 2));
+  async check(): Promise<void> {
+    const outcome = await this.render()?.validate();
+    if (!outcome) return;
+    const { error, warning } = outcome.messages;
+    this.result.set(outcome.valid ? \`Hợp lệ\${warning.length ? \` · \${warning.join('; ')}\` : ''}\` : \`Chưa hợp lệ\${error.length ? \`: \${error.join('; ')}\` : ''}\`);
   }
 }
 `,
@@ -2918,33 +2812,58 @@ export class FormGenericDemoComponent {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  align-items: center;
   margin-bottom: 12px;
   width: 100%;
 }
+.row-actions__meta {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--sd-text-secondary);
+}
 .builder-box {
   width: 100%;
-  min-height: 560px;
+  height: 780px;
 }
 .render-preview {
   width: 100%;
   margin-top: 16px;
   padding-top: 12px;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--sd-border);
+}
+.render-preview__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 .render-preview__title {
   font-size: 13px;
   font-weight: 600;
-  margin-bottom: 8px;
 }
-.json {
-  width: 100%;
-  max-height: 320px;
+.render-preview__widths {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.render-preview__frame {
+  border: 1px dashed var(--sd-border-strong);
+  border-radius: 8px;
+}
+.render-preview__result {
+  margin: 8px 0 0;
+  font-size: 13px;
+}
+.render-preview__value {
+  max-height: 200px;
   overflow: auto;
-  background: #f5f5f5;
-  padding: 12px;
+  margin: 8px 0 0;
+  padding: 8px;
   border-radius: 6px;
+  background: var(--sd-surface-muted);
   font-size: 12px;
-  margin: 12px 0 0;
 }`,
   },
   "components/highlight": {
@@ -18489,33 +18408,43 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
   "components/form-generic/example-builder-render": {
     ...SHOWCASE_PAGE_SOURCES["components/form-generic"],
     html: `<demo-section heading="Builder + Render"
-    [props]="[{ name: 'formGeneric', value: 'SdFormGeneric' }, { name: 'properties.collapsible', value: 'true' }]"
-    note="Group có thể thu gọn/mở rộng trong preview; điều kiện vô hiệu hóa được cấu hình trên từng trường con.">
+    [props]="[{ name: '[(schema)]', value: 'SdFormGenericSchema' }, { name: '[(value)]', value: 'Record<string, unknown>' }]"
+    note="Lưu/nháp/xuất bản thuộc về consumer — builder chỉ phát (schemaChange). Nút bên dưới là của trang demo.">
     <div class="row-actions">
-      <sd-button type="outline" color="primary" title="Đặt lại" prefixIcon="restart_alt" (click)="reset()"></sd-button>
-      <sd-button type="outline" color="secondary" title="Tải form rỗng" prefixIcon="layers_clear" (click)="loadEmpty()"></sd-button>
-      <sd-button
-        type="outline"
-        color="primary"
-        title="Demo drag/drop + popup"
-        prefixIcon="open_with"
-        (click)="loadDragDropPopupDemo()"></sd-button>
-      <sd-button type="fill" color="primary" title="Cập nhật preview" prefixIcon="visibility" (click)="refreshPreview()"></sd-button>
-      <sd-button type="outline" color="primary" title="Xuất JSON" prefixIcon="code" (click)="dumpJson()"></sd-button>
+      <sd-button type="outline" color="primary" title="Form mẫu" prefixIcon="restart_alt" (click)="load(seedForm())"></sd-button>
+      <sd-button type="outline" color="secondary" title="Form rỗng" prefixIcon="layers_clear" (click)="load(emptyForm())"></sd-button>
+      <sd-button type="outline" color="secondary" title="Form 100 trường" prefixIcon="speed" (click)="load(large(100))"></sd-button>
+      <sd-button type="outline" color="secondary" title="Form 300 trường" prefixIcon="speed" (click)="load(large(300))"></sd-button>
+      <span class="row-actions__meta">Thay đổi: {{ changes() }}</span>
     </div>
 
     <div class="builder-box">
-      <sd-form-builder [formGeneric]="seed()"></sd-form-builder>
+      <sd-form-builder [(schema)]="schema" (schemaChange)="onChange()"></sd-form-builder>
     </div>
 
     <div class="render-preview">
-      <div class="render-preview__title">Runtime render từ schema hiện tại</div>
-      <sd-form-render [configuration]="previewConfig()" [form]="form" [entity]="entity()"></sd-form-render>
+      <div class="render-preview__head">
+        <span class="render-preview__title">Runtime render từ [(schema)] · mức {{ renderer.level() }}</span>
+        <span class="render-preview__widths">
+          @for (width of widths; track $index) {
+            <sd-button
+              size="sm"
+              [type]="previewWidth() === width ? 'fill' : 'outline'"
+              color="secondary"
+              [title]="width ? width + 'px' : 'Tự do'"
+              (click)="previewWidth.set(width)"></sd-button>
+          }
+          <sd-button size="sm" type="fill" color="primary" title="Kiểm tra" prefixIcon="task_alt" (click)="check()"></sd-button>
+        </span>
+      </div>
+      <div class="render-preview__frame" [style.max-width.px]="previewWidth()">
+        <sd-form-render #renderer [schema]="schema() ?? emptySchema" [(value)]="value" [variables]="variables"></sd-form-render>
+      </div>
+      @if (result(); as _result) {
+        <p class="render-preview__result">{{ _result }}</p>
+      }
+      <pre class="render-preview__value">{{ value() | json }}</pre>
     </div>
-
-    @if (output()) {
-      <pre class="json">{{ output() }}</pre>
-    }
   </demo-section>`,
   },
   "components/highlight/example-du-lieu-chua-markup": {

@@ -6,6 +6,10 @@
 @let _errorMessage = visibleErrorMessage();
 @let _required = required();
 @let _isInline = isInline();
+<!-- why: labelPlacement='top' = nhãn <label for> tĩnh phía trên; placeholder KHÔNG còn lấy nhãn thay
+     thế (label và placeholder là hai nội dung riêng), helper text thành <mat-hint> dưới control. -->
+@let _labelTop = labelPlacement() === 'top';
+@let _placeholder = placeholder() || (_labelTop ? '' : _label) || '';
 <!-- why: cùng MỘT cổng gate cho cả 3 thứ — hiện <mat-error>, bật aria-invalid, và trỏ
      aria-describedby. Trước đây message hiện mà control không hề báo invalid, nên screen
      reader đọc xong ô nhập vẫn không biết là đang lỗi. -->
@@ -45,10 +49,14 @@
     }
   </div>
 } @else {
-  @if (!_appearance) {
+  @if (!_appearance || _labelTop) {
     <ng-content select="[sdLabel]">
       @if (_label) {
-        <sd-label [label]="_label" [required]="_required"></sd-label>
+        <sd-label
+          [label]="_label"
+          [required]="_required"
+          [for]="_labelTop ? id : null"
+          [labelId]="_labelTop ? labelId : null"></sd-label>
       }
     </ng-content>
   }
@@ -69,9 +77,10 @@
         [class.sd-md]="size() === 'md'"
         [class.sd-sm]="size() === 'sm'"
         [class.hide-inline-error]="_hideInlineError"
+        [class.sd-label-top]="_labelTop"
         [appearance]="_appearance!"
         [floatLabel]="floatLabel()">
-        @if (_appearance && _label) {
+        @if (_appearance && _label && !_labelTop) {
           <mat-label class="sd-form-field-label">
             <span>{{ _label }}</span>
             @if (_helperText) {
@@ -88,13 +97,13 @@
           [type]="effectiveType()"
           #control
           matInput
-          [placeholder]="placeholder() || _label || ''"
+          [placeholder]="_placeholder"
           (keyup.enter)="onKeyupEnter()"
           (focus)="onFocus()"
           (blur)="onBlur()"
           [required]="_required"
           [readonly]="isReadonly()"
-          [autocomplete]="id"
+          [autocomplete]="autocomplete() || id"
           autocorrect="off"
           [step]="1"
           [attr.inputmode]="inputMode()"
@@ -116,6 +125,10 @@
 
         @if (_showInlineError) {
           <mat-error [id]="errorId">{{ _errorMessage }}</mat-error>
+        } @else if (_labelTop && _helperText) {
+          <!-- why: helper text của nhãn rời là dòng chữ thật (không phải icon tooltip) và bị thay bằng
+               lỗi khi control lỗi. mat-form-field tự nối id của hint vào aria-describedby của input. -->
+          <mat-hint [id]="hintId">{{ _helperText }}</mat-hint>
         }
 
         <!-- why: nút clear render TRƯỚC error icon. Clear hover-gated (visibility:hidden) vẫn
