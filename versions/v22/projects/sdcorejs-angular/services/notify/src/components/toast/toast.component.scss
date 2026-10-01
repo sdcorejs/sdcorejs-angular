@@ -59,7 +59,7 @@
     width: 32px;
     height: 32px;
     margin: 12px 0 0 12px;
-    border-radius: 50%;
+    border-radius: var(--sd-icon-shape-radius, var(--sd-radius-8, 8px));
     flex-shrink: 0;
 
     svg {
@@ -127,6 +127,16 @@
     color: var(--sd-#{$type}-dark);
     background: var(--sd-#{$type}-light);
   }
+}
+
+// why: :host([data-type=…]) .sd-toast__icon mạnh hơn selector attribute đơn; cùng tiền tố :host([data-type])
+// và đặt sau vòng type để shape luôn thắng (D-008).
+:host([data-type]) .sd-toast__icon[data-icon-shape='circle'] {
+  border-radius: 50%;
+}
+
+:host([data-type]) .sd-toast__icon[data-icon-shape='none'] {
+  background: transparent;
 }
 
 .msg-list {

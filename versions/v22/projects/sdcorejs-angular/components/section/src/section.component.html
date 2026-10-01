@@ -13,6 +13,7 @@
           @if (_icon) {
             <span
               class="sd-section-header-icon mr-8 material-icons-outlined"
+              [attr.data-icon-shape]="resolvedIconShape()"
               [class.text-primary]="_iconColor === 'primary'"
               [class.text-secondary]="_iconColor === 'secondary'"
               [class.text-info]="_iconColor === 'info'"

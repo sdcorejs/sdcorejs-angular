@@ -3,6 +3,7 @@ import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdNotifyService } from '../../notify.service';
 import { ToastData } from '../../notify.model';
 import { ToastComponent } from './toast.component';
+import { resolveSdIconConfig, SD_ICON_CONFIGURATION, type SdIconShape } from '@sdcorejs/angular/modules/icon';
 
 const TOAST_EXIT_ANIMATION_MS = 200;
 
@@ -371,5 +372,67 @@ describe('ToastComponent', () => {
       init(makeData({ actionLabel: 'Undo', onAction: () => undefined }));
       expect((fix.nativeElement.querySelector('.btn-action') as HTMLButtonElement).getAttribute('type')).toBe('button');
     });
+  });
+});
+
+describe('ToastComponent icon shape', () => {
+  const TYPES: ToastData['type'][] = ['success', 'info', 'warning', 'error'];
+
+  function create(defaultShape?: SdIconShape): ComponentFixture<ToastComponent> {
+    TestBed.configureTestingModule({
+      imports: [ToastComponent],
+      providers: [
+        { provide: SdNotifyService, useValue: jasmine.createSpyObj<SdNotifyService>('SdNotifyService', ['remove']) },
+        ...(defaultShape ? [{ provide: SD_ICON_CONFIGURATION, useValue: resolveSdIconConfig({ defaultShape }) }] : []),
+      ],
+    });
+    const fixture = TestBed.createComponent(ToastComponent);
+    // why: the isolated test runner does not load the app-level theme, so give every type a visible background.
+    TYPES.forEach((type, index) =>
+      (fixture.nativeElement as HTMLElement).style.setProperty(`--sd-${type}-light`, `rgb(${10 + index}, 20, 30)`)
+    );
+    return fixture;
+  }
+
+  function render(fixture: ComponentFixture<ToastComponent>, over: Partial<ToastData>): HTMLElement {
+    fixture.componentRef.setInput('data', makeData({ duration: 0, ...over }));
+    fixture.detectChanges();
+    return (fixture.nativeElement as HTMLElement).querySelector('.sd-toast__icon') as HTMLElement;
+  }
+
+  it('resolves the option shape, then the app default, then square', () => {
+    expect(render(create(), {}).getAttribute('data-icon-shape')).toBe('square');
+    TestBed.resetTestingModule();
+    const configured = create('circle');
+    expect(render(configured, {}).getAttribute('data-icon-shape')).toBe('circle');
+    expect(render(configured, { iconShape: 'none' }).getAttribute('data-icon-shape')).toBe('none');
+  });
+
+  it('renders square with an 8px radius that the token can change', () => {
+    const fixture = create();
+    const icon = render(fixture, {});
+    expect(getComputedStyle(icon).borderTopLeftRadius).toBe('8px');
+    expect(getComputedStyle(icon).backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+    (fixture.nativeElement as HTMLElement).style.setProperty('--sd-icon-shape-radius', '4px');
+    expect(getComputedStyle(icon).borderTopLeftRadius).toBe('4px');
+  });
+
+  it('renders circle like before and none without a background at the same size, for every type', () => {
+    const fixture = create();
+    for (const type of TYPES) {
+      const square = render(fixture, { type, iconShape: 'square' });
+      const squareBackground = getComputedStyle(square).backgroundColor;
+      const squareSize = [getComputedStyle(square).width, getComputedStyle(square).height];
+
+      const circle = render(fixture, { type, iconShape: 'circle' });
+      expect(getComputedStyle(circle).borderTopLeftRadius).withContext(type).toBe('50%');
+      expect(getComputedStyle(circle).backgroundColor).withContext(type).toBe(squareBackground);
+
+      const none = render(fixture, { type, iconShape: 'none' });
+      expect(getComputedStyle(none).backgroundColor).withContext(type).toBe('rgba(0, 0, 0, 0)');
+      expect([getComputedStyle(none).width, getComputedStyle(none).height])
+        .withContext(type)
+        .toEqual(squareSize);
+    }
   });
 });

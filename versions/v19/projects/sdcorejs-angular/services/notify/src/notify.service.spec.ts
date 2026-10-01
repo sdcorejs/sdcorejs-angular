@@ -421,4 +421,25 @@ describe('SdNotifyService — screen reader announcements', () => {
     expect(regionText('polite')).toBe('OK: Hồ sơ đã lưu');
     expect((window as { __sdNotifyXss?: boolean }).__sdNotifyXss).toBeUndefined();
   }));
+
+  // ─── iconShape pass-through ────────────────────────────────────────────────
+
+  it('passes option.iconShape to immediate toasts and leaves it unset otherwise', () => {
+    service.success('a', { iconShape: 'circle' });
+    service.info('b');
+    const [info, success] = service.toasts();
+    expect(success.iconShape).toBe('circle');
+    expect(info.iconShape).toBeUndefined();
+  });
+
+  it('passes the last buffered call option.iconShape to warning and error toasts', fakeAsync(() => {
+    service.error('e1', { iconShape: 'circle' });
+    service.error('e2', { iconShape: 'none' });
+    service.warning('w1', { iconShape: 'square' });
+    tick(500);
+    const error = service.toasts().find(t => t.type === 'error')!;
+    const warning = service.toasts().find(t => t.type === 'warning')!;
+    expect(error.iconShape).toBe('none');
+    expect(warning.iconShape).toBe('square');
+  }));
 });

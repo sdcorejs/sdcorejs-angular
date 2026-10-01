@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy as SdAngular22ChangeDetectionStrategy } from '@angular/core';
-import { booleanAttribute, Component, effect, ElementRef, inject, input, model } from '@angular/core';
+import { booleanAttribute, Component, computed, effect, ElementRef, inject, input, model } from '@angular/core';
 import { Color } from '@sdcorejs/utils/models';
-import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { SD_ICON_CONFIGURATION, SdIcon, type SdIconShape } from '@sdcorejs/angular/modules/icon';
 import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 const SECTION_INTERACTIVE_SELECTOR =
@@ -27,11 +27,16 @@ export class SdSection {
   subTitle = input<string | undefined | null>(undefined);
   icon = input<string | undefined | null>(undefined);
   iconColor = input<Color>('primary', { alias: 'iconColor' });
+  /** Hình nền ô icon header; bỏ trống thì dùng `defaultShape` của `provideSdIcon` (mặc định `square`). */
+  iconShape = input<SdIconShape | null | undefined>(undefined);
 
   collapsed = model<boolean>(false, { alias: 'collapsed' });
   collapsible = input(false, { transform: booleanAttribute });
 
   hideHeader = input(false, { transform: booleanAttribute });
+
+  readonly #iconConfig = inject(SD_ICON_CONFIGURATION);
+  protected readonly resolvedIconShape = computed<SdIconShape>(() => this.iconShape() ?? this.#iconConfig.defaultShape);
 
   /** Id của vùng body, để header `aria-controls` trỏ tới khi section collapsible. */
   readonly bodyId = `sd-section-body-${++sectionBodyIdSeq}`;

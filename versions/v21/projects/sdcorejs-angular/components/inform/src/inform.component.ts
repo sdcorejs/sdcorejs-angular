@@ -9,6 +9,7 @@ import {
   computed,
   contentChild,
   effect,
+  inject,
   input,
   output,
   signal,
@@ -17,7 +18,7 @@ import {
 import { Color } from '@sdcorejs/utils/models';
 import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdInformActionDirective } from './inform-action.directive';
-import { SdIcon, type SdIconSet } from '@sdcorejs/angular/modules/icon';
+import { SD_ICON_CONFIGURATION, SdIcon, type SdIconSet, type SdIconShape } from '@sdcorejs/angular/modules/icon';
 
 export type SdInformType = 'default' | 'tip';
 
@@ -61,6 +62,8 @@ export class SdInform {
   description = input<string | undefined>();
   icon = input<string | undefined>();
   hideIcon = input(false, { transform: booleanAttribute });
+  /** Hình nền ô icon; bỏ trống thì dùng `defaultShape` của `provideSdIcon` (mặc định `square`). */
+  iconShape = input<SdIconShape | null | undefined>(undefined);
 
   fontSet = input<SdIconSet | undefined, SdIconSet | undefined | null>(undefined, {
     transform: value => value ?? undefined,
@@ -110,6 +113,9 @@ export class SdInform {
     if (this.hideIcon()) return null;
     return this.icon()?.trim() || SD_INFORM_DEFAULT_ICON[this.effectiveColor()];
   });
+
+  readonly #iconConfig = inject(SD_ICON_CONFIGURATION);
+  resolvedIconShape = computed<SdIconShape>(() => this.iconShape() ?? this.#iconConfig.defaultShape);
 
   hasActionSlot = computed(() => !!this.actionSlot());
 

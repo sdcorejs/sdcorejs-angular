@@ -3,6 +3,8 @@ import { Component, DebugElement } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { By } from '@angular/platform-browser';
+import { Color } from '@sdcorejs/utils/models';
+import { resolveSdIconConfig, SD_ICON_CONFIGURATION, type SdIconShape } from '@sdcorejs/angular/modules/icon';
 import { SdSection } from './section.component';
 import { SdSectionItem } from './section-item/section-item.component';
 
@@ -519,5 +521,94 @@ describe('SdSectionItem', () => {
       fixture.detectChanges();
       expect(component.labelWidth()).toBe('150px');
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Suite: header icon shape
+// ---------------------------------------------------------------------------
+
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  standalone: true,
+  imports: [SdSection],
+  template: `<sd-section title="Shape" icon="info" [iconColor]="iconColor" [iconShape]="iconShape"></sd-section>`,
+})
+class ShapeHostComponent {
+  iconColor: Color = 'primary';
+  iconShape: SdIconShape | null | undefined = undefined;
+}
+
+const SECTION_TONES: Color[] = ['primary', 'secondary', 'info', 'success', 'warning', 'error'];
+
+function createShapeHost(defaultShape?: SdIconShape): ComponentFixture<ShapeHostComponent> {
+  TestBed.configureTestingModule({
+    imports: [ShapeHostComponent, NoopAnimationsModule],
+    providers: defaultShape ? [{ provide: SD_ICON_CONFIGURATION, useValue: resolveSdIconConfig({ defaultShape }) }] : [],
+  });
+  const fixture = TestBed.createComponent(ShapeHostComponent);
+  // why: the isolated test runner does not load the app-level theme, so give every tone a visible background.
+  SECTION_TONES.forEach((tone, index) => fixture.nativeElement.style.setProperty(`--sd-${tone}-light`, `rgb(${10 + index}, 20, 30)`));
+  fixture.detectChanges();
+  return fixture;
+}
+
+function headerIcon(fixture: ComponentFixture<unknown>): HTMLElement {
+  return (fixture.nativeElement as HTMLElement).querySelector('.sd-section-header-icon') as HTMLElement;
+}
+
+describe('SdSection header icon shape', () => {
+  it('defaults to square without a provider', () => {
+    const fixture = createShapeHost();
+    expect(headerIcon(fixture).getAttribute('data-icon-shape')).toBe('square');
+  });
+
+  it('follows the app default', () => {
+    const fixture = createShapeHost('circle');
+    expect(headerIcon(fixture).getAttribute('data-icon-shape')).toBe('circle');
+  });
+
+  it('lets the instance input win over the app default', () => {
+    const fixture = createShapeHost('circle');
+    fixture.componentInstance.iconShape = 'none';
+    fixture.detectChanges();
+    expect(headerIcon(fixture).getAttribute('data-icon-shape')).toBe('none');
+    fixture.componentInstance.iconShape = null;
+    fixture.detectChanges();
+    expect(headerIcon(fixture).getAttribute('data-icon-shape')).toBe('circle');
+  });
+
+  it('renders square with an 8px radius that the token can change', () => {
+    const fixture = createShapeHost();
+    const icon = headerIcon(fixture);
+    expect(getComputedStyle(icon).borderTopLeftRadius).toBe('8px');
+    expect(getComputedStyle(icon).backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+    fixture.nativeElement.style.setProperty('--sd-icon-shape-radius', '4px');
+    expect(getComputedStyle(icon).borderTopLeftRadius).toBe('4px');
+  });
+
+  it('renders circle like before and none without a background at the same size, for every tone', () => {
+    const fixture = createShapeHost();
+    const icon = headerIcon(fixture);
+    for (const tone of SECTION_TONES) {
+      fixture.componentInstance.iconColor = tone;
+      fixture.componentInstance.iconShape = 'square';
+      fixture.detectChanges();
+      const square = getComputedStyle(icon);
+      const squareBackground = square.backgroundColor;
+      const squareSize = [square.width, square.height];
+
+      fixture.componentInstance.iconShape = 'circle';
+      fixture.detectChanges();
+      expect(getComputedStyle(icon).borderTopLeftRadius).withContext(tone).toBe('50%');
+      expect(getComputedStyle(icon).backgroundColor).withContext(tone).toBe(squareBackground);
+
+      fixture.componentInstance.iconShape = 'none';
+      fixture.detectChanges();
+      expect(getComputedStyle(icon).backgroundColor).withContext(tone).toBe('rgba(0, 0, 0, 0)');
+      expect([getComputedStyle(icon).width, getComputedStyle(icon).height])
+        .withContext(tone)
+        .toEqual(squareSize);
+    }
   });
 });

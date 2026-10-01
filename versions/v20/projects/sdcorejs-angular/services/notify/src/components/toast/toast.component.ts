@@ -14,6 +14,7 @@ import {
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import { SD_ICON_CONFIGURATION, type SdIconShape } from '@sdcorejs/angular/modules/icon';
 
 import { ToastData } from '../../notify.model';
 import { SdNotifyService } from '../../notify.service';
@@ -39,6 +40,7 @@ export class ToastComponent implements OnInit, OnDestroy {
   private notifyService = inject(SdNotifyService);
   private sanitizer = inject(DomSanitizer);
   readonly #host = inject(ElementRef);
+  readonly #iconConfig = inject(SD_ICON_CONFIGURATION);
 
   @Input({ required: true }) data!: ToastData;
 
@@ -171,6 +173,11 @@ export class ToastComponent implements OnInit, OnDestroy {
 
   get autoId(): string {
     return `services-notify-toast-${this.data.type}`;
+  }
+
+  // why: data là @Input thường (không phải signal) nên resolve trong getter, không qua computed().
+  get iconShape(): SdIconShape {
+    return this.data.iconShape ?? this.#iconConfig.defaultShape;
   }
 
   get dataMessage(): string {

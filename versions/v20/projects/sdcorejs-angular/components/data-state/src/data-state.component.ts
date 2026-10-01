@@ -13,7 +13,7 @@ import {
 } from '@angular/core';
 import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdButton } from '@sdcorejs/angular/components/button';
-import { SdIcon, SdIconSet } from '@sdcorejs/angular/modules/icon';
+import { SD_ICON_CONFIGURATION, SdIcon, SdIconSet, type SdIconShape } from '@sdcorejs/angular/modules/icon';
 
 export type SdDataStateKind = 'loading' | 'empty' | 'error' | 'forbidden' | 'success';
 
@@ -58,6 +58,8 @@ export class SdDataState {
   readonly message = input<string | null | undefined>();
   readonly icon = input<string | null | undefined>();
   readonly fontSet = input<SdIconSet | undefined>();
+  /** Hình nền ô icon; bỏ trống thì dùng `defaultShape` của `provideSdIcon` (mặc định `square`). */
+  readonly iconShape = input<SdIconShape | null | undefined>();
   readonly retryable = input(false, { transform: booleanAttribute });
   readonly retryLabel = input<string | null | undefined>();
   readonly actionLabel = input<string | null | undefined>();
@@ -68,6 +70,8 @@ export class SdDataState {
 
   protected readonly customTemplate = contentChild(SdDataStateTemplateDirective);
   protected readonly effectiveIcon = computed(() => this.icon() ?? DEFAULT_ICON[this.state()]);
+  readonly #iconConfig = inject(SD_ICON_CONFIGURATION);
+  protected readonly resolvedIconShape = computed<SdIconShape>(() => this.iconShape() ?? this.#iconConfig.defaultShape);
   protected readonly titleKey = computed(() => `core.component.data-state.${this.state()}.title`);
   protected readonly messageKey = computed(() => `core.component.data-state.${this.state()}.message`);
   protected readonly role = computed<'alert' | 'status'>(() =>

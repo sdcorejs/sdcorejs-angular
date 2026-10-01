@@ -96,6 +96,7 @@ export interface SdNotifyOption {
   actionLabel?: string;       // optional CTA button text
   onAction?: () => void;      // CTA click handler (app-authored — NOT untrusted input)
   html?: boolean;             // render message as sanitized HTML (default false = safe text)
+  iconShape?: SdIconShape;    // 'square' | 'circle' | 'none'; default: provideSdIcon({ defaultShape }) → 'square'
 }
 
 export type SdToastType = 'success' | 'info' | 'warning' | 'error';
@@ -109,8 +110,11 @@ export interface SdToastData {
   actionLabel?: string;
   onAction?: () => void;
   html?: boolean;
+  iconShape?: SdIconShape;
 }
 ```
+
+`SdIconShape` comes from `@sdcorejs/angular/modules/icon` — see [icon tile shape](../../modules/icon/sd-icon.md#icon-tile-shape). `warning`/`error` are buffered, so the toast uses the `iconShape` of the last call in the debounce window, like `title` and `duration`.
 
 ## Behavior notes
 - **Auto-mount**: the constructor creates the internal `ToastContainerComponent` once and appends its host node (`<toast-container>`) to `document.body`. Injecting the service anywhere triggers this — the container is global.

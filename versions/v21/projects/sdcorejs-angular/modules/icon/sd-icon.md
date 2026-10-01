@@ -20,6 +20,36 @@ export const appConfig = {
 };
 ```
 
+## Icon tile shape
+
+The decorative icon tile of `<sd-section>` (header), `<sd-inform>`, `<sd-data-state>`, `SdNotifyService` toasts and `SdConfirmService` dialogs takes one of three shapes:
+
+| `SdIconShape` | Result |
+| --- | --- |
+| `'square'` (default) | Soft background, corner radius `var(--sd-icon-shape-radius, var(--sd-radius-8, 8px))`. |
+| `'circle'` | Soft background, fully round (the look before this option existed). |
+| `'none'` | No background; the icon keeps its color and the tile keeps its size, so neighbouring text does not move. |
+
+Precedence: the instance `iconShape` input/option, then `provideSdIcon({ defaultShape })`, then `'square'`.
+
+```ts
+import { provideSdIcon, type SdIconShape } from '@sdcorejs/angular/modules/icon';
+
+export const appConfig = {
+  providers: [provideSdIcon({ defaultShape: 'circle' })], // keep round tiles app-wide
+};
+```
+
+```html
+<sd-section title="Hồ sơ" icon="person" iconShape="none"></sd-section>
+<sd-inform info title="Đã lưu" iconShape="circle"></sd-inform>
+```
+
+- `provideSdIcon` returns `EnvironmentProviders` (app or route level). To change the default for one component subtree, provide the token directly: `{ provide: SD_ICON_CONFIGURATION, useValue: resolveSdIconConfig({ defaultShape: 'none' }) }`. Toasts and confirm dialogs are created from the root injector, so they only see the app-level value.
+- Build hand-made `SD_ICON_CONFIGURATION` values with `resolveSdIconConfig(...)`; `ISdIconResolvedConfiguration` requires `defaultShape`.
+- Override the square radius with the CSS custom property `--sd-icon-shape-radius` (for example `:root { --sd-icon-shape-radius: 4px; }`).
+- Each tile carries `data-icon-shape="square|circle|none"` for styling and tests.
+
 ## Usage
 
 ```html

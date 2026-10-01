@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { resolveSdIconConfig, SD_ICON_CONFIGURATION, type SdIconShape } from '@sdcorejs/angular/modules/icon';
 import { SdDataState, SdDataStateKind, SdDataStateTemplateDirective } from './data-state.component';
 
 describe('SdDataState', () => {
@@ -108,5 +109,88 @@ describe('SdDataState success projection', () => {
     const host = fixture.nativeElement.querySelector('sd-data-state') as HTMLElement;
     expect(host.querySelector('[data-success]')?.textContent).toContain('Loaded content');
     expect(host.querySelector('.sd-data-state')).toBeNull();
+  });
+});
+
+describe('SdDataState icon shape', () => {
+  const STATES: SdDataStateKind[] = ['loading', 'empty', 'error', 'forbidden'];
+
+  function create(defaultShape?: SdIconShape): ComponentFixture<SdDataState> {
+    TestBed.configureTestingModule({
+      imports: [SdDataState],
+      providers: defaultShape ? [{ provide: SD_ICON_CONFIGURATION, useValue: resolveSdIconConfig({ defaultShape }) }] : [],
+    });
+    const fixture = TestBed.createComponent(SdDataState);
+    // why: the isolated test runner does not load the app-level theme, so give every state a visible background.
+    const host = fixture.nativeElement as HTMLElement;
+    host.style.setProperty('--sd-surface-muted', 'rgb(11, 20, 30)');
+    host.style.setProperty('--sd-error-light', 'rgb(12, 20, 30)');
+    host.style.setProperty('--sd-primary-light', 'rgb(13, 20, 30)');
+    fixture.componentRef.setInput('state', 'empty');
+    fixture.detectChanges();
+    return fixture;
+  }
+
+  const symbol = (fixture: ComponentFixture<SdDataState>) =>
+    (fixture.nativeElement as HTMLElement).querySelector('.sd-data-state__symbol') as HTMLElement;
+
+  it('follows square default, app default and instance input in both layouts', () => {
+    for (const compact of [false, true]) {
+      TestBed.resetTestingModule();
+      const plain = create();
+      plain.componentRef.setInput('compact', compact);
+      plain.detectChanges();
+      expect(symbol(plain).getAttribute('data-icon-shape')).withContext(`compact=${compact}`).toBe('square');
+
+      TestBed.resetTestingModule();
+      const configured = create('circle');
+      configured.componentRef.setInput('compact', compact);
+      configured.detectChanges();
+      expect(symbol(configured).getAttribute('data-icon-shape')).withContext(`compact=${compact}`).toBe('circle');
+      configured.componentRef.setInput('iconShape', 'none');
+      configured.detectChanges();
+      expect(symbol(configured).getAttribute('data-icon-shape')).withContext(`compact=${compact}`).toBe('none');
+    }
+  });
+
+  it('renders square with an 8px radius that the token can change', () => {
+    const fixture = create();
+    expect(getComputedStyle(symbol(fixture)).borderTopLeftRadius).toBe('8px');
+    expect(getComputedStyle(symbol(fixture)).backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+    (fixture.nativeElement as HTMLElement).style.setProperty('--sd-icon-shape-radius', '4px');
+    expect(getComputedStyle(symbol(fixture)).borderTopLeftRadius).toBe('4px');
+  });
+
+  it('renders circle like before and none without a background at the same size, for every state', () => {
+    const fixture = create();
+    for (const compact of [false, true]) {
+      fixture.componentRef.setInput('compact', compact);
+      for (const state of STATES) {
+        const context = `${state} compact=${compact}`;
+        fixture.componentRef.setInput('state', state);
+        fixture.componentRef.setInput('iconShape', 'square');
+        fixture.detectChanges();
+        const squareBackground = getComputedStyle(symbol(fixture)).backgroundColor;
+        const squareSize = [getComputedStyle(symbol(fixture)).width, getComputedStyle(symbol(fixture)).height];
+
+        fixture.componentRef.setInput('iconShape', 'circle');
+        fixture.detectChanges();
+        expect(getComputedStyle(symbol(fixture)).borderTopLeftRadius)
+          .withContext(context)
+          .toBe('50%');
+        expect(getComputedStyle(symbol(fixture)).backgroundColor)
+          .withContext(context)
+          .toBe(squareBackground);
+
+        fixture.componentRef.setInput('iconShape', 'none');
+        fixture.detectChanges();
+        expect(getComputedStyle(symbol(fixture)).backgroundColor)
+          .withContext(context)
+          .toBe('rgba(0, 0, 0, 0)');
+        expect([getComputedStyle(symbol(fixture)).width, getComputedStyle(symbol(fixture)).height])
+          .withContext(context)
+          .toEqual(squareSize);
+      }
+    }
   });
 });

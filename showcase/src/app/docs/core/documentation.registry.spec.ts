@@ -25,7 +25,7 @@ describe('documentation registry', () => {
     for (const category of DOC_CATEGORIES) {
       expect(getDocPagesByCategory(category)).withContext(category).toHaveSize(EXPECTED_CATEGORY_COUNTS[category]);
     }
-    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(391);
+    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(396);
   });
 
   it('uses unique stable page ids and category/slug pairs', () => {
@@ -47,7 +47,7 @@ describe('documentation registry', () => {
     const exampleIds = DOC_PAGES.flatMap(page => page.examples.map(example => example.id));
 
     expect(new Set(exampleIds).size).toBe(exampleIds.length);
-    expect(exampleIds).toHaveSize(391);
+    expect(exampleIds).toHaveSize(396);
     const switchSections = findDocPage('forms', 'switch')?.examples.map(example => example.sectionId);
     expect(switchSections).toContain('example-kich-thuoc');
     expect(switchSections).toContain('example-ben-trong-bang');
@@ -85,7 +85,7 @@ describe('documentation registry', () => {
     expect(findDocPage('components', 'job-progress')?.selector).toBe('sd-job-progress');
     expect(findDocPage('components', 'audit-diff')?.demoSectionCount).toBe(4);
     expect(findDocPage('components', 'breadcrumb')?.demoSectionCount).toBe(3);
-    expect(findDocPage('components', 'data-state')?.demoSectionCount).toBe(7);
+    expect(findDocPage('components', 'data-state')?.demoSectionCount).toBe(8);
     expect(findDocPage('pipes-utilities', 'read-state')?.publishedDocId).toBe('utilities/read-state/sd-read-state');
     expect(findDocPage('pipes-utilities', 'read-state')?.importPath).toBe('@sdcorejs/angular/utilities/read-state');
     expect(findDocPage('services', 'missing')).toBeUndefined();

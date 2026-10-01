@@ -24,7 +24,7 @@
   flex: 0 0 32px;
   width: 32px;
   height: 32px;
-  border-radius: 50%;
+  border-radius: var(--sd-icon-shape-radius, var(--sd-radius-8, 8px));
   font-size: var(--sd-font-size-20, 20px);
   line-height: 1;
   background: var(--sd-primary-light);
@@ -33,6 +33,15 @@
     &.text-#{$tone} {
       background: var(--sd-#{$tone}-light);
     }
+  }
+
+  // why: đặt sau vòng tone — cùng specificity với .text-<tone> nên thứ tự quyết định (D-008).
+  &[data-icon-shape='circle'] {
+    border-radius: 50%;
+  }
+
+  &[data-icon-shape='none'] {
+    background: transparent;
   }
 }
 

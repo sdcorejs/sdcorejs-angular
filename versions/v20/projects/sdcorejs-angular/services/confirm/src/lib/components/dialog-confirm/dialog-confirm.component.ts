@@ -10,10 +10,11 @@ import { SdSelect } from '@sdcorejs/angular/forms/select';
 import { SdTextarea } from '@sdcorejs/angular/forms/textarea';
 import { Color } from '@sdcorejs/utils/models';
 import { Utilities } from '@sdcorejs/utils/fns';
-import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { SD_ICON_CONFIGURATION, SdIcon, type SdIconShape } from '@sdcorejs/angular/modules/icon';
 
 export interface DialogData {
   icon?: string;
+  iconShape?: SdIconShape;
   title?: string;
   message?: string;
   yesTitle?: string;
@@ -77,6 +78,7 @@ export class DialogConfirmComponent {
   public readonly data = inject<DialogData>(MAT_DIALOG_DATA);
 
   readonly iconTone = this.data.yesButtonColor || 'primary';
+  readonly iconShape: SdIconShape = this.data.iconShape ?? inject(SD_ICON_CONFIGURATION).defaultShape;
   readonly resolvedIcon =
     this.data.icon?.trim() ||
     (this.iconTone === 'error'

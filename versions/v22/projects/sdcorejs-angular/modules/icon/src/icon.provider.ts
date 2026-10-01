@@ -58,6 +58,7 @@ export function provideSdIcon(config: ISdIconConfiguration = {}): EnvironmentPro
 export function resolveSdIconConfig(config: ISdIconConfiguration = {}): ISdIconResolvedConfiguration {
   return {
     defaultFontSet: config.defaultFontSet ?? SD_ICON_DEFAULT_CONFIG.defaultFontSet,
+    defaultShape: config.defaultShape ?? SD_ICON_DEFAULT_CONFIG.defaultShape,
     materialAliases: {
       ...SD_ICON_DEFAULT_CONFIG.materialAliases,
       ...config.materialAliases,
