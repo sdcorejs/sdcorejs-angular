@@ -57,3 +57,6 @@ GEMINI.md
 # Local sandbox workspace — an independent Angular app for eyeballing one component at a time.
 # Not part of the published package and not mirrored per version; keep it out of the repo.
 /sandbox
+
+# Scratch space for sdcorejs skill-pack runs — intermediate output, never an artifact.
+/.sdcorejs/tmp
