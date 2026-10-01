@@ -35,8 +35,10 @@ published-docs/<ver>/   raw API docs theo version, COMMITTED
 README.npm.md           canonical npm README
 ```
 
-`showcase/` resolve lib qua tsconfig path `@sdcorejs/angular → ../versions/v19/dist/sdcorejs-angular`
-tức **an lib da build** — phai `ng build sdcorejs-angular` trong `versions/v19` truoc.
+`showcase/` resolve lib qua tsconfig path `@sdcorejs/angular → ./node_modules/@sdcorejs/angular`;
+`npm run link:library` COPY `versions/v19/dist/sdcorejs-angular` vao do (khong symlink: tranh 2 ban Angular → NG0203),
+tức **an lib da build** — phai `ng build sdcorejs-angular` trong `versions/v19` truoc. `prestart`/`prebuild`/`build:page`
+tu link; `npm test` thi khong → chay `link:library` truoc khi test. Cai: `npm --prefix showcase ci --legacy-peer-deps`.
 
 ## Luật cứng
 

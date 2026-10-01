@@ -276,7 +276,7 @@ export class Toolbar {
 
 ## Related
 
-- [auth module](./sd-auth.md) — usually paired so `getToken` resolves to the auth provider's current access token; also the place to hook `signout$ → permissionService.reset()`.
-- [keycloak module](./sd-keycloak.md) or an app-owned provider — typical sources for `loadPermissions` (decode JWT roles or call a backend).
-- [layout module](./sd-layout.md) — sidebar `SdLayoutMenu` items carry `permission` / `permissionKey` and are filtered using the same service (a menu item with an empty `permission` is now hidden).
-- [sd-cache](../services/sd-cache.md) — backing store used only for the opt-in `persistCache` mirror (`type: 'session'`).
+- [auth module](../auth/sd-auth.md) — usually paired so `getToken` resolves to the auth provider's current access token; also the place to hook `signout$ → permissionService.reset()`.
+- [keycloak module](../keycloak/sd-keycloak.md) or an app-owned provider — typical sources for `loadPermissions` (decode JWT roles or call a backend).
+- [layout module](../layout/sd-layout.md) — sidebar `SdLayoutMenu` items carry `permission` / `permissionKey` and are filtered using the same service (a menu item with an empty `permission` is now hidden).
+- [sd-cache](../../services/cache/sd-cache.md) — backing store used only for the opt-in `persistCache` mirror (`type: 'session'`).
