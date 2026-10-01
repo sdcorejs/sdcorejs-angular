@@ -1,5 +1,6 @@
-// Shared fixtures for the image-editor specs. Images are drawn with a real canvas and encoded by the browser, so
-// the specs exercise real decoding and encoding — nothing about the canvas is mocked here.
+// Shared fixtures for the image-editor specs. Images are drawn with a real canvas and encoded by the browser (large
+// sources are written as PNG bytes, see `grayPng()`), so the specs exercise real decoding and encoding — nothing
+// about the canvas is mocked here.
 
 export type Rgba = readonly [number, number, number, number];
 
@@ -67,28 +68,88 @@ export async function transparentBlob(width = 20, height = 10, type = 'image/png
   );
 }
 
-export interface Decoded {
-  readonly width: number;
-  readonly height: number;
-  readonly data: ImageData;
+const CRC_TABLE = Uint32Array.from({ length: 256 }, (_, n) => {
+  let c = n;
+  for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+  return c >>> 0;
+});
+
+/** One PNG chunk: length, type, data, CRC-32 of type and data. */
+function pngChunk(type: string, data: Uint8Array) {
+  const out = new Uint8Array(12 + data.length);
+  const view = new DataView(out.buffer);
+  view.setUint32(0, data.length);
+  for (let i = 0; i < 4; i++) out[4 + i] = type.charCodeAt(i);
+  out.set(data, 8);
+  let crc = 0xffffffff;
+  for (const byte of out.subarray(4, 8 + data.length)) crc = CRC_TABLE[(crc ^ byte) & 0xff] ^ (crc >>> 8);
+  view.setUint32(8 + data.length, (crc ^ 0xffffffff) >>> 0);
+  return out;
 }
 
-/** Decodes a blob with the browser and reads its pixels. */
-export async function decode(blob: Blob): Promise<Decoded> {
+/**
+ * Opaque 8-bit grey PNG whose every row is `row` (one grey value per column), written byte by byte — for large
+ * sources. Chrome encodes `canvas.toBlob()` PNG on the main thread in idle time only: a busy run that leaves no idle
+ * time delays the start by up to 1 s and the end by up to 5.7 s more, so a multi-megapixel canvas encode can stall a
+ * spec for seconds. Writing the bytes needs only `CompressionStream`; the browser still decodes the image.
+ */
+export async function grayPng(row: Uint8Array, height: number): Promise<Blob> {
+  const stride = row.length + 1; // filter byte 0 (none), then the pixels
+  const raw = new Uint8Array(stride * height);
+  for (let y = 0; y < height; y++) raw.set(row, y * stride + 1);
+  const idat = new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream('deflate'))).arrayBuffer());
+  const ihdr = new Uint8Array(13);
+  const view = new DataView(ihdr.buffer);
+  view.setUint32(0, row.length);
+  view.setUint32(4, height);
+  ihdr[8] = 8; // bit depth; colour type 0 (grey), no interlace
+  const signature = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  return new Blob([signature, pngChunk('IHDR', ihdr), pngChunk('IDAT', idat), pngChunk('IEND', new Uint8Array(0))], {
+    type: 'image/png',
+  });
+}
+
+export interface Decoded {
+  /** Size of the decoded image. */
+  readonly width: number;
+  readonly height: number;
+  /** Pixels read back: the whole image, or only the region passed to `decode()`. */
+  readonly data: ImageData;
+  /** Position of `data` in the image. */
+  readonly left: number;
+  readonly top: number;
+}
+
+export interface Region {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+/**
+ * Decodes a blob with the browser and reads its pixels — all of them, or only `region`. For a multi-megapixel image
+ * pass the region the spec looks at: a full read-back copies tens of MB.
+ */
+export async function decode(blob: Blob, region?: Region): Promise<Decoded> {
   const bitmap = await createImageBitmap(blob);
   try {
-    const element = canvas(bitmap.width, bitmap.height, ctx => ctx.drawImage(bitmap, 0, 0));
+    const { x, y, width, height } = region ?? { x: 0, y: 0, width: bitmap.width, height: bitmap.height };
+    const element = canvas(width, height, ctx => ctx.drawImage(bitmap, x, y, width, height, 0, 0, width, height));
     const ctx = element.getContext('2d') as CanvasRenderingContext2D;
-    return { width: bitmap.width, height: bitmap.height, data: ctx.getImageData(0, 0, bitmap.width, bitmap.height) };
+    return { width: bitmap.width, height: bitmap.height, data: ctx.getImageData(0, 0, width, height), left: x, top: y };
   } finally {
     bitmap.close();
   }
 }
 
 export function pixel(decoded: Decoded, x: number, y: number): Rgba {
-  const i = (Math.floor(y) * decoded.width + Math.floor(x)) * 4;
-  const d = decoded.data.data;
-  return [d[i], d[i + 1], d[i + 2], d[i + 3]];
+  const column = Math.floor(x) - decoded.left;
+  const row = Math.floor(y) - decoded.top;
+  const { data, width, height } = decoded.data;
+  if (column < 0 || row < 0 || column >= width || row >= height) throw new Error(`pixel (${x}, ${y}) was not read back`);
+  const i = (row * width + column) * 4;
+  return [data[i], data[i + 1], data[i + 2], data[i + 3]];
 }
 
 export function near(actual: Rgba, expected: Rgba, tolerance = 2): boolean {
@@ -186,11 +247,23 @@ export function wait(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-/** Polls `check` until it returns true or `timeout` ms elapse. */
+let pollGeneration = 0;
+
+/**
+ * Stops every `until()` still polling: it never settles. Call it in `afterEach` — a spec that timed out keeps running,
+ * and Jasmine reports what it throws later on whichever spec is running then, so one timeout would fail two specs.
+ */
+export function stopPolling(): void {
+  pollGeneration++;
+}
+
+/** Polls `check` until it returns true or `timeout` ms elapse. Never settles once `stopPolling()` has been called. */
 export async function until(check: () => boolean, timeout = 4000, label = 'condition'): Promise<void> {
+  const generation = pollGeneration;
   const start = Date.now();
-  while (!check()) {
+  while (generation === pollGeneration && !check()) {
     if (Date.now() - start > timeout) throw new Error(`Timed out waiting for ${label}`);
     await wait(10);
   }
+  if (generation !== pollGeneration) await new Promise<never>(() => undefined);
 }

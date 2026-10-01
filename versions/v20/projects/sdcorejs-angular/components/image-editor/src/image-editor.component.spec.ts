@@ -14,16 +14,15 @@ import {
   WHITE,
   YELLOW,
   bytes,
-  canvas,
   corners,
   decode,
-  fill,
   gifBlob,
+  grayPng,
   near,
   pixel,
   quadrantBlob,
   sameCorners,
-  toBlob,
+  stopPolling,
   transparentBlob,
   truncatedPng,
   until,
@@ -31,7 +30,7 @@ import {
   withExifOrientation,
 } from './image-editor.fixtures.spec';
 import type { SdImageEditorError, SdImageEditorOption, SdImageEditorResult } from './image-editor.model';
-import { sdImageEditorFormatBytes } from './image-editor.export';
+import { sdImageEditorEncodableFormats, sdImageEditorFormatBytes } from './image-editor.export';
 import { sdImageEditorSniffFormat } from './image-editor.source';
 
 @Component({
@@ -69,7 +68,14 @@ function editor(): SdImageEditor {
   return instance;
 }
 
-async function setup(source: Blob | null, option: SdImageEditorOption = {}, width = 1000): Promise<void> {
+/**
+ * Budget of the spec that loads, previews and exports a 4.8 MP image. It takes about 0.5 s on an idle machine, up to
+ * 4 s when the main thread has no idle time (Chrome encodes `toBlob()` PNG in idle time only), and one decode of that
+ * size stalled for 6 s in a full-suite run on a loaded machine.
+ */
+const LARGE_IMAGE_TIMEOUT = 30_000;
+
+async function setup(source: Blob | null, option: SdImageEditorOption = {}, width = 1000, timeout?: number): Promise<void> {
   fixture = TestBed.createComponent(HostComponent);
   host = fixture.componentInstance;
   host.option.set({ autoId: 'test', ...option });
@@ -77,15 +83,15 @@ async function setup(source: Blob | null, option: SdImageEditorOption = {}, widt
   host.source.set(source);
   fixture.autoDetectChanges(true);
   fixture.detectChanges();
-  if (source) await ready();
+  if (source) await ready(timeout);
 }
 
-async function ready(): Promise<void> {
-  await until(() => editor().status() === 'ready' || editor().status() === 'error', 5000, 'editor ready');
+async function ready(timeout?: number): Promise<void> {
+  await until(() => editor().status() === 'ready' || editor().status() === 'error', timeout ?? 5000, 'editor ready');
   fixture.detectChanges();
   await fixture.whenStable();
   // ResizeObserver delivers the stage size asynchronously.
-  await until(() => !!query(id('crop')) || editor().status() === 'error', 2000, 'crop box');
+  await until(() => !!query(id('crop')) || editor().status() === 'error', timeout ?? 2000, 'crop box');
   fixture.detectChanges();
 }
 
@@ -164,12 +170,17 @@ function selectFormat(format: string): void {
 }
 
 describe('SdImageEditor', () => {
+  // The first load in a document waits for a probe of the encodable formats (1 × 1 encodes, cached per document).
+  // Probe here, so that wait never lands in whichever spec happens to load first.
+  beforeAll(() => sdImageEditorEncodableFormats(document));
+
   beforeEach(() => {
     TestBed.configureTestingModule({ imports: [HostComponent], providers: [provideNoopAnimations()] });
     TestBed.inject(I18nService).setLanguage('en', { reload: false });
   });
 
   afterEach(() => {
+    stopPolling();
     host?.shown.set(false);
     fixture?.detectChanges();
     fixture?.destroy();
@@ -379,22 +390,25 @@ describe('SdImageEditor', () => {
       expect(editor().edits()).toEqual(jasmine.objectContaining({ flip: false, rotate: 0, resize: null }));
     });
 
-    it('exports from the full-resolution source, not the downscaled preview', async () => {
-      // 2400 × 2000 is above the 4 MP preview budget; a 1 px black line only survives a full-resolution export.
-      const element = canvas(2400, 2000, ctx => {
-        fill(ctx, WHITE, 0, 0, 2400, 2000);
-        fill(ctx, BLACK, 1201, 0, 1, 2000);
-      });
-      await setup(await toBlob(element));
-      const preview = query<HTMLCanvasElement>(id('preview')) as HTMLCanvasElement;
-      expect(preview.width).toBeLessThan(2400);
-      const result = await apply();
-      expect([result.width, result.height]).toEqual([2400, 2000]);
-      const decoded = await decode(result.blob);
-      expect(pixel(decoded, 1201, 1000)).toEqual(BLACK);
-      expect(pixel(decoded, 1200, 1000)).toEqual(WHITE);
-      expect(pixel(decoded, 1202, 1000)).toEqual(WHITE);
-    });
+    it(
+      'exports from the full-resolution source, not the downscaled preview',
+      async () => {
+        // 2400 × 2000 is above the 4 MP preview budget; a 1 px black line only survives a full-resolution export.
+        const row = new Uint8Array(2400).fill(255);
+        row[1201] = 0;
+        await setup(await grayPng(row, 2000), {}, 1000, LARGE_IMAGE_TIMEOUT);
+        const preview = query<HTMLCanvasElement>(id('preview')) as HTMLCanvasElement;
+        expect(preview.width).toBeLessThan(2400);
+        const result = await apply();
+        expect([result.width, result.height]).toEqual([2400, 2000]);
+        const decoded = await decode(result.blob, { x: 1200, y: 1000, width: 3, height: 1 });
+        expect([decoded.width, decoded.height]).toEqual([2400, 2000]);
+        expect(pixel(decoded, 1201, 1000)).toEqual(BLACK);
+        expect(pixel(decoded, 1200, 1000)).toEqual(WHITE);
+        expect(pixel(decoded, 1202, 1000)).toEqual(WHITE);
+      },
+      LARGE_IMAGE_TIMEOUT
+    );
 
     it('does not rotate an EXIF-oriented photo twice', async () => {
       await setup(await withExifOrientation(await quadrantBlob(40, 20, 'image/jpeg'), 6));
