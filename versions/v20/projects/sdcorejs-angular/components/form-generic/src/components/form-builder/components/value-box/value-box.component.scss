@@ -1,0 +1,67 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+// why: cùng kiểu nhãn rời (sd-label labelPlacement="top") với các control khác trong inspector.
+.vb-label {
+  color: var(--sd-text);
+  font-size: var(--sd-font-size-14, 14px);
+  font-weight: var(--sd-font-weight-medium, 500);
+  line-height: var(--sd-line-height-20, 20px);
+}
+
+.vb {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  min-height: 36px;
+  padding: 7px 6px 7px 10px;
+  border-radius: var(--sd-radius-6, 6px);
+  background: var(--sd-surface-muted);
+  color: var(--sd-text);
+}
+
+.vb__content {
+  // why: điều kiện có thể rất dài — cắt ở 3 dòng để panel không bị đẩy dài; toàn văn ở tooltip.
+  display: -webkit-box;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: var(--sd-line-height-20, 20px);
+  overflow-wrap: anywhere;
+
+  .is-empty & {
+    color: var(--sd-text-secondary);
+  }
+}
+
+.vb__edit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  margin-top: -2px;
+  border: 0;
+  border-radius: var(--sd-radius-4, 4px);
+  background: transparent;
+  color: var(--sd-primary);
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--sd-primary) 10%, transparent);
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: 1px;
+  }
+}

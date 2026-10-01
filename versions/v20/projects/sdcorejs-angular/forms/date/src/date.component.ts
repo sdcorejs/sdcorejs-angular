@@ -44,6 +44,7 @@ import {
   ɵsdModelFacingControl,
   ɵsdTimerScope,
 } from '@sdcorejs/angular/forms/models';
+import type { SdLabelPlacement } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { sdFormControlState } from '@sdcorejs/angular/forms/models';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
@@ -83,7 +84,12 @@ function dateControlToModel(value: Date | null): SdDateModelValue {
   templateUrl: './date.component.html',
   styleUrl: './date.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { '[class.sd-bare]': 'isInline()', '[class.sd-viewed]': 'isViewed() || isInline()', '[class.sd-has-label]': '!!label()' },
+  host: {
+    '[class.sd-bare]': 'isInline()',
+    '[class.sd-viewed]': 'isViewed() || isInline()',
+    '[class.sd-has-label]': '!!label()',
+    '[class.sd-label-top]': "labelPlacement() === 'top'",
+  },
   providers: [
     // DateFnsAdapter inject MAT_DATE_LOCALE; nếu undefined sẽ throw khi format/parse.
     // Provide locale en-US tại scope component để hành vi giống Moment cũ (English default).
@@ -120,6 +126,9 @@ export class SdDate implements OnDestroy, OnInit {
   /** why: id ổn định của <mat-error> để control trỏ `aria-describedby` sang — thông báo lỗi
    *  phải đọc được từ chính control, không chỉ hiện ra màn hình. */
   readonly errorId = `${this.id}-error`;
+  /** id của nhãn/helper khi `labelPlacement='top'`. */
+  readonly labelId = `${this.id}-label`;
+  readonly hintId = `${this.id}-hint`;
 
   // ==========================================
   // 1. SIGNAL QUERIES
@@ -236,6 +245,8 @@ export class SdDate implements OnDestroy, OnInit {
   appearance = computed(() => this.appearanceInput() ?? this.formConfig?.appearance ?? 'outline');
 
   floatLabel = input<FloatLabelType>('auto');
+  /** `'float'` (mặc định) hoặc `'top'` — nhãn `<label for>` tĩnh phía trên, helper text dưới control. */
+  labelPlacement = input<SdLabelPlacement>('float');
 
   // Xử lý thông minh Gom min/minDate và max/maxDate
   minInput = input<any>(undefined, { alias: 'min' });

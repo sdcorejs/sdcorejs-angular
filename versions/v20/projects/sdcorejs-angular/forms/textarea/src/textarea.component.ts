@@ -42,6 +42,7 @@ import {
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { Size } from '@sdcorejs/utils/models';
 import { NumberUtilities } from '@sdcorejs/utils/fns';
+import type { SdLabelPlacement } from '@sdcorejs/angular/forms/models';
 import { Subscription } from 'rxjs';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
@@ -54,7 +55,11 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   styleUrl: './textarea.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'isViewed() || isInline()' },
+  host: {
+    '[class.sd-has-label]': '!!label()',
+    '[class.sd-viewed]': 'isViewed() || isInline()',
+    '[class.sd-label-top]': "labelPlacement() === 'top'",
+  },
   imports: [
     SdIcon,
     CommonModule,
@@ -73,6 +78,9 @@ export class SdTextarea implements OnInit, OnDestroy {
   /** why: id ổn định của <mat-error> để control trỏ `aria-describedby` sang — thông báo lỗi
    *  phải đọc được từ chính control, không chỉ hiện ra màn hình. */
   readonly errorId = `${this.id}-error`;
+  /** id của nhãn/helper khi `labelPlacement='top'`. */
+  readonly labelId = `${this.id}-label`;
+  readonly hintId = `${this.id}-hint`;
 
   // ==========================================
   // 1. SIGNAL QUERIES
@@ -166,6 +174,10 @@ export class SdTextarea implements OnInit, OnDestroy {
   maxlength = input<number | null, unknown>(null, {
     transform: v => (v != null && NumberUtilities.isPositiveInteger(Number(v)) ? Number(v) : null),
   });
+  /** Số ký tự tối thiểu (khi có giá trị). Rỗng vẫn do `required` quyết định. */
+  minlength = input<number | null, unknown>(null, {
+    transform: v => (v != null && NumberUtilities.isPositiveInteger(Number(v)) ? Number(v) : null),
+  });
 
   pattern = input<string | undefined, string | undefined | null>(undefined, {
     transform: (v: string | undefined | null): string | undefined => v ?? undefined,
@@ -184,6 +196,7 @@ export class SdTextarea implements OnInit, OnDestroy {
     if (!errors) return undefined;
 
     if (errors['required']) return this.#i18n.t('core.form.textarea.required');
+    if (errors['minlength']) return this.#i18n.t('core.form.textarea.minlength', { min: this.minlength() ?? '' });
     if (errors['maxlength']) return this.#i18n.t('core.form.textarea.maxlength', { max: this.maxlength() ?? '' });
     if (errors['pattern']) return this.#i18n.t('core.form.textarea.invalid-pattern');
     if (errors['customValidator']) return errors['customValidator'] as string;
@@ -195,6 +208,8 @@ export class SdTextarea implements OnInit, OnDestroy {
   appearance = computed(() => this.appearanceInput() ?? this.#formConfiguration?.appearance ?? 'outline');
 
   floatLabel = input<FloatLabelType>('auto');
+  /** `'float'` (mặc định) hoặc `'top'` — nhãn `<label for>` tĩnh phía trên, helper text dưới control. */
+  labelPlacement = input<SdLabelPlacement>('float');
 
   valueModel = model<any>(undefined, { alias: 'model' });
 
@@ -212,8 +227,10 @@ export class SdTextarea implements OnInit, OnDestroy {
   readonly #validators = computed<readonly ValidatorFn[]>(() => {
     const validators: ValidatorFn[] = [];
     const maxLen = this.maxlength();
+    const minLen = this.minlength();
     const pattern = this.pattern();
 
+    if (minLen != null) validators.push(Validators.minLength(minLen));
     if (maxLen != null) validators.push(Validators.maxLength(maxLen));
     if (pattern) validators.push(Validators.pattern(pattern));
     if (this.inlineError()) validators.push(SdInlineErrorValidator);

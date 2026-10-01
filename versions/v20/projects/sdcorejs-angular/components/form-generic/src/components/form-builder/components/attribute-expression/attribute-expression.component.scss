@@ -1,97 +1,39 @@
 :host {
   display: block;
-  padding: 8px 0;
 }
 
-.fb-field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.expr {
+  font-family: 'Roboto Mono', ui-monospace, monospace;
 }
 
-.fb-field__label {
-  color: var(--md-sys-color-on-surface-variant);
-  font-size: var(--sd-font-size-11, 11px);
-  font-weight: var(--sd-font-weight-medium, 500);
+// why: cùng bảng màu token với `sd-query-builder mode="view"` để người dùng nhận ra đây là dạng xem
+// của chính query builder sẽ mở trong popup.
+.expr__tok {
+  white-space: pre-wrap;
 }
 
-.fb-expr {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 32px;
-  border: 1px solid var(--md-sys-color-outline-variant);
-  border-radius: var(--r-xs, 4px);
-  background: var(--md-sys-color-surface-container-lowest);
-  color: var(--md-sys-color-on-surface-variant);
-  cursor: pointer;
-  overflow: hidden;
-}
-
-.fb-expr:focus-visible {
-  outline: var(--sd-focus-ring-width, 2px) solid color-mix(in srgb, var(--sd-focus-ring-color, var(--sd-primary)) 72%, transparent);
-  outline-offset: 2px;
-}
-
-.fb-expr__badge {
-  align-self: stretch;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 34px;
-  padding: 0 6px;
-  background: var(--md-sys-color-primary-container);
-  color: var(--md-sys-color-primary);
-  font-family: 'Roboto Mono', monospace;
-  font-size: var(--sd-font-size-10, 10px);
+.expr__tok--field {
+  color: var(--sd-text);
   font-weight: var(--sd-font-weight-semibold, 600);
 }
 
-.fb-expr__code,
-.empty {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.expr__tok--op {
+  color: var(--sd-primary);
+  font-weight: var(--sd-font-weight-semibold, 600);
 }
 
-.fb-expr__code {
-  color: var(--md-sys-color-on-surface);
-  font-family: 'Roboto Mono', monospace;
-  font-size: var(--sd-font-size-11, 11px);
+.expr__tok--value {
+  color: var(--sd-success);
 }
 
-.empty {
-  font-size: var(--sd-font-size-12, 12px);
+.expr__tok--logic {
+  color: var(--sd-text-secondary);
+  font-weight: var(--sd-font-weight-bold, 700);
+  text-transform: uppercase;
 }
 
-.fb-icon-btn {
-  width: 28px;
-  height: 28px;
-  border: 0;
-  border-radius: var(--sd-radius-999, 999px);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  margin-right: 2px;
-  color: var(--md-sys-color-primary);
-  background: transparent;
-  cursor: pointer;
-}
-
-.msi {
-  font-family: 'Material Icons Outlined';
-  font-size: var(--sd-font-size-18, 18px);
-  font-weight: normal;
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  white-space: nowrap;
-  font-feature-settings: 'liga';
-  -webkit-font-feature-settings: 'liga';
-  -webkit-font-smoothing: antialiased;
+.expr__tok--paren {
+  color: var(--sd-text-secondary);
 }
 
 .fb-expression-query {

@@ -5,6 +5,8 @@
 @let _helperText = helperText();
 @let _required = required();
 @let _isInline = isInline();
+@let _labelTop = labelPlacement() === 'top';
+@let _placeholder = placeholder() || (_labelTop ? '' : _label) || '';
 @let _bare = _isInline;
 @let _hasValue = !!formControl.value;
 <!-- why: một cổng gate duy nhất cho <mat-error>, aria-invalid và aria-describedby — message
@@ -44,10 +46,14 @@
       }
     </span>
   }
-  @if (!_appearance) {
+  @if (!_appearance || _labelTop) {
     <ng-content select="[sdLabel]">
       @if (_label) {
-        <sd-label [label]="_label" [required]="_required"></sd-label>
+        <sd-label
+          [label]="_label"
+          [required]="_required"
+          [for]="_labelTop ? id : null"
+          [labelId]="_labelTop ? labelId : null"></sd-label>
       }
     </ng-content>
   }
@@ -68,9 +74,10 @@
       [class.sd-md]="size() === 'md'"
       [class.sd-sm]="size() === 'sm'"
       [class.hide-inline-error]="_hideInlineError"
+      [class.sd-label-top]="_labelTop"
       [appearance]="_appearance || 'outline'"
       [floatLabel]="floatLabel()">
-      @if (_appearance && _label) {
+      @if (_appearance && _label && !_labelTop) {
         <mat-label class="sd-form-field-label">
           <span>{{ _label }}</span>
           @if (_helperText) {
@@ -97,7 +104,7 @@
         autocorrect="off"
         [formControl]="formControl"
         [required]="_required"
-        [placeholder]="placeholder() || _label || ''"
+        [placeholder]="_placeholder"
         [min]="_resolvedMin"
         [max]="_resolvedMax"
         (focus)="onFocus()"
@@ -116,6 +123,8 @@
 
       @if (_showInlineError) {
         <mat-error [id]="errorId">{{ _errorMessage }}</mat-error>
+      } @else if (_labelTop && _helperText) {
+        <mat-hint [id]="hintId">{{ _helperText }}</mat-hint>
       }
 
       @if (clearable() && formControl.value && !_required && !formControl.disabled && !_bare) {

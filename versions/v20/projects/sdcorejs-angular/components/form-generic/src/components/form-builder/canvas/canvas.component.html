@@ -1,0 +1,281 @@
+@let _mode = store.layoutMode();
+@let _empty = !store.doc().elements.length;
+<!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events -->
+<div
+  #scroller
+  class="fb-canvas"
+  [class.is-dragging]="isDragging()"
+  [class.is-resizing]="!!store.resize()"
+  role="region"
+  tabindex="-1"
+  [attr.aria-label]="'core.component.form-builder.canvas' | sdTranslate"
+  (click)="onBackgroundClick($event)">
+  <div
+    #page
+    class="fb-page"
+    [attr.data-viewport]="_mode"
+    [class.fb-page--tablet]="_mode === 'tablet'"
+    [class.fb-page--mobile]="_mode === 'mobile'">
+    <div class="fb-rows" data-fb-container="root">
+      <ng-container *ngTemplateOutlet="rowsTpl; context: { $implicit: store.rootRows(), parentId: null }"></ng-container>
+    </div>
+
+    @if (_empty) {
+      <div class="fb-empty">
+        <sd-icon name="dashboard_customize" size="40px"></sd-icon>
+        <div class="fb-empty__title">{{ 'core.component.form-builder.empty.title' | sdTranslate }}</div>
+        <div class="fb-empty__hint">{{ 'core.component.form-builder.empty.hint' | sdTranslate }}</div>
+      </div>
+    }
+    <!-- why: vùng thêm ở cuối là đích thả "hàng mới cuối form" và (bằng bàn phím) đưa focus sang
+         palette để chọn thành phần — không tự thêm field nào. -->
+    <button type="button" class="fb-add-zone" (click)="store.select(null); requestAdd.emit()">
+      <sd-icon name="add" size="18px"></sd-icon>
+      <span>{{ 'core.component.form-builder.add-zone' | sdTranslate }}</span>
+    </button>
+  </div>
+</div>
+<!-- why: lớp phản hồi kéo nằm NGOÀI vùng cuộn (xem DropIndicatorComponent). -->
+<fb-drop-indicator></fb-drop-indicator>
+<fb-drop-status></fb-drop-status>
+
+<!-- ══════════════ Hàng (dùng chung cho cấp gốc và thân group) ══════════════ -->
+<ng-template #rowsTpl let-rows let-parentId="parentId">
+  @for (row of rows; track row.key) {
+    @if (row.kind === 'group') {
+      <div class="fb-row fb-row--group" [attr.data-fb-row]="row.key">
+        <ng-container *ngTemplateOutlet="groupTpl; context: { $implicit: row.items[0] }"></ng-container>
+      </div>
+    } @else {
+      <div class="fb-row" [attr.data-fb-row]="row.key">
+        @for (item of row.items; track item.id) {
+          <ng-container *ngTemplateOutlet="cellTpl; context: { $implicit: item, parentId: parentId }"></ng-container>
+        }
+      </div>
+    }
+  }
+</ng-template>
+
+<!-- ══════════════ Field ══════════════ -->
+<ng-template #cellTpl let-item let-parentId="parentId">
+  @let _selected = isSelected(item);
+  @let _badge = resizeBadge(item);
+  @let _unknown = isUnknown(item);
+  <div
+    #cell
+    class="fb-cell"
+    [attr.data-fb-item]="item.id"
+    [style.width]="widthOf(item)"
+    [class.is-selected]="_selected"
+    [class.is-moving]="movingId() === item.id"
+    [class.is-hidden]="isHidden(item)"
+    [class.is-unknown]="_unknown"
+    [class.is-resizing]="!!_badge">
+    <!-- why: card là NÚT chọn field (role=button) — bên trong chỉ có hình minh hoạ aria-hidden,
+         không có control thật, nên không lặp lại lỗi "button bọc input". Thao tác (kéo, nhân bản,
+         xoá, menu) là nút riêng nằm NGOÀI card. -->
+    <div
+      class="fb-card"
+      data-fb-card
+      role="button"
+      tabindex="0"
+      [attr.aria-pressed]="_selected"
+      [attr.aria-label]="ariaLabelOf(item)"
+      (pointerdown)="onCardPointerDown($event, item)"
+      (click)="select(item, $event)"
+      (keydown)="onCardKeydown($event, item)">
+      <fb-field-preview aria-hidden="true" [item]="item"></fb-field-preview>
+    </div>
+
+    <!-- why: `newRow` là cờ của chính field (thay cho phần tử ngắt dòng cũ) — dấu nhỏ ở mép trái cho
+         biết field luôn mở hàng mới dù hàng trước còn chỗ. -->
+    @if (hasNewRow(item)) {
+      <span class="fb-newrow" aria-hidden="true" [title]="'core.component.form-builder.new-row' | sdTranslate">
+        <sd-icon name="keyboard_return" size="14px"></sd-icon>
+      </span>
+    }
+
+    <!-- why: thanh công cụ + menu ⋮ chỉ render cho field ĐANG CHỌN. Render cho mọi field (menu có một
+         mục "chuyển vào nhóm" cho từng nhóm) làm form 300 field có ~22 000 phần tử DOM, mỗi lần kéo đổi
+         đích tốn ~60 ms layout + hit-test. Chuột kéo được từ cả thẻ; cảm ứng chọn rồi kéo bằng tay nắm. -->
+    @if (_selected) {
+      <div class="fb-tools">
+        <button
+          type="button"
+          class="fb-tool fb-tool--grip"
+          [attr.aria-label]="'core.component.form-builder.move-handle' | sdTranslate"
+          [title]="'core.component.form-builder.move-handle' | sdTranslate"
+          tabindex="-1"
+          (pointerdown)="onGripPointerDown($event, item)"
+          (click)="$event.stopPropagation()">
+          <sd-icon name="drag_indicator" size="16px"></sd-icon>
+        </button>
+        <!-- why: phần tử type chưa hỗ trợ chỉ được di chuyển/xoá — nhân bản mù sẽ trùng key/id bên trong nó. -->
+        @if (!_unknown) {
+          <button
+            type="button"
+            class="fb-tool"
+            [attr.aria-label]="('core.component.form-builder.duplicate' | sdTranslate) + ': ' + labelOf(item)"
+            [title]="'core.component.form-builder.duplicate' | sdTranslate"
+            (click)="$event.stopPropagation(); duplicate(item)">
+            <sd-icon name="content_copy" size="16px"></sd-icon>
+          </button>
+        }
+        <button
+          type="button"
+          class="fb-tool fb-tool--danger"
+          [attr.aria-label]="('core.component.form-builder.delete' | sdTranslate) + ': ' + labelOf(item)"
+          [title]="'core.component.form-builder.delete' | sdTranslate"
+          (click)="$event.stopPropagation(); remove(item)">
+          <sd-icon name="delete" size="16px"></sd-icon>
+        </button>
+        <ng-container *ngTemplateOutlet="menuTpl; context: { $implicit: item, parentId: parentId }"></ng-container>
+      </div>
+      @if (!_badge && !_unknown) {
+        <span class="fb-span-badge" aria-hidden="true">{{ spanLabel(item) }}</span>
+      }
+    }
+
+    <!-- why: tay nắm resize chỉ dành cho chuột/bút; bàn phím đổi span ở tab Bố cục của inspector.
+         Kéo ghi span của MỨC ĐANG XEM (Desktop | Tablet | Mobile). -->
+    @if (!_unknown) {
+      <div
+        class="fb-resize"
+        aria-hidden="true"
+        [title]="'core.component.form-builder.resize-handle' | sdTranslate"
+        (pointerdown)="onResizePointerDown($event, item, cell)"></div>
+    }
+    @if (_badge) {
+      <span class="fb-resize-badge" aria-hidden="true">{{ _badge }}</span>
+    }
+  </div>
+</ng-template>
+
+<!-- ══════════════ Group — sửa trực tiếp trên canvas ══════════════ -->
+<ng-template #groupTpl let-group>
+  @let _selected = isSelected(group);
+  @let _collapsed = isCollapsed(group);
+  @let _count = groupCount(group);
+  <section
+    class="fb-group"
+    [attr.data-fb-item]="group.id"
+    [class.is-selected]="_selected"
+    [class.is-moving]="movingId() === group.id"
+    [class.is-hidden]="isHidden(group)">
+    <header class="fb-group__head">
+      <button
+        type="button"
+        class="fb-tool fb-tool--grip"
+        [attr.aria-label]="'core.component.form-builder.move-handle' | sdTranslate"
+        [title]="'core.component.form-builder.move-handle' | sdTranslate"
+        tabindex="-1"
+        (pointerdown)="onGripPointerDown($event, group)"
+        (click)="$event.stopPropagation()">
+        <sd-icon name="drag_indicator" size="16px"></sd-icon>
+      </button>
+      <div
+        class="fb-group__title"
+        data-fb-card
+        role="button"
+        tabindex="0"
+        [attr.aria-pressed]="_selected"
+        [attr.aria-label]="ariaLabelOf(group)"
+        (pointerdown)="onCardPointerDown($event, group)"
+        (click)="select(group, $event)"
+        (keydown)="onCardKeydown($event, group)">
+        <span class="fb-group__icon" [attr.data-color]="group.color || 'primary'" aria-hidden="true">
+          <sd-icon [name]="group.icon || 'category'" size="18px"></sd-icon>
+        </span>
+        <span class="fb-group__label">{{ labelOf(group) }}</span>
+        <span class="fb-group__count">{{ 'core.component.form-builder.group-fields' | sdTranslate: { count: _count } }}</span>
+        @if (isHidden(group)) {
+          <span class="fb-group__chip"
+            ><sd-icon name="visibility_off" size="14px"></sd-icon>{{ 'core.component.form-builder.hidden' | sdTranslate }}</span
+          >
+        }
+        @if (group.rules?.visible || group.rules?.hidden) {
+          <span class="fb-group__chip fb-group__chip--accent"
+            ><sd-icon name="bolt" size="14px"></sd-icon>{{ 'core.component.form-builder.conditional' | sdTranslate }}</span
+          >
+        }
+      </div>
+      <button
+        type="button"
+        class="fb-tool"
+        [attr.aria-expanded]="!_collapsed"
+        [attr.aria-label]="(_collapsed ? 'core.component.form-builder.expand' : 'core.component.form-builder.collapse') | sdTranslate"
+        [title]="(_collapsed ? 'core.component.form-builder.expand' : 'core.component.form-builder.collapse') | sdTranslate"
+        (click)="toggleCollapsed(group, $event)">
+        <sd-icon [name]="_collapsed ? 'expand_more' : 'expand_less'" size="18px"></sd-icon>
+      </button>
+      <ng-container *ngTemplateOutlet="menuTpl; context: { $implicit: group, parentId: null }"></ng-container>
+    </header>
+    @if (!_collapsed) {
+      <div class="fb-group__body" [attr.data-fb-group-body]="group.id">
+        <div class="fb-rows" [attr.data-fb-container]="group.id">
+          <ng-container *ngTemplateOutlet="rowsTpl; context: { $implicit: groupRows(group), parentId: group.id }"></ng-container>
+        </div>
+        @if (!_count) {
+          <div class="fb-group__empty">
+            <sd-icon name="move_to_inbox" size="18px"></sd-icon>
+            <span>{{ 'core.component.form-builder.group-empty' | sdTranslate }}</span>
+          </div>
+        }
+      </div>
+    }
+  </section>
+</ng-template>
+
+<!-- ══════════════ Menu thao tác (action popover của Core) ══════════════ -->
+<ng-template #menuTpl let-item let-parentId="parentId">
+  <sd-button
+    class="fb-menu"
+    type="text"
+    color="secondary"
+    size="sm"
+    prefixIcon="more_vert"
+    [tooltip]="'core.component.form-builder.more-actions' | sdTranslate">
+    <sd-button-item prefixIcon="arrow_upward" [disabled]="!canMoveUp(item)" (click)="moveBy(item, -1)">
+      {{ 'core.component.form-builder.move-up' | sdTranslate }}
+    </sd-button-item>
+    <sd-button-item prefixIcon="arrow_downward" [disabled]="!canMoveDown(item)" (click)="moveBy(item, 1)">
+      {{ 'core.component.form-builder.move-down' | sdTranslate }}
+    </sd-button-item>
+    @if (!isGroup(item)) {
+      @if (otherGroups(item).length) {
+        <sd-button-item-divider [title]="'core.component.form-builder.move-into-group' | sdTranslate"></sd-button-item-divider>
+        <!-- why: track $index, KHÔNG track group.id. <sd-button> dời host <sd-button-item> sang vùng
+             định nghĩa riêng của nó, còn anchor của @for nằm lại chỗ cũ — @for đổi chỗ/chèn giữa
+             (khi thứ tự nhóm đổi) sẽ insertBefore sai cha (NotFoundError). Theo $index thì mục chỉ
+             cập nhật tại chỗ và chỉ thêm/bớt ở cuối, không phải di chuyển node. -->
+        @for (group of otherGroups(item); track $index) {
+          <sd-button-item prefixIcon="input" (click)="moveTo(item, group.id)">{{ labelOf(group) }}</sd-button-item>
+        }
+      }
+      @if (parentId) {
+        <sd-button-item prefixIcon="logout" (click)="moveTo(item, null)">
+          {{ 'core.component.form-builder.move-out-of-group' | sdTranslate }}
+        </sd-button-item>
+      }
+      @if (!isUnknown(item)) {
+        <sd-button-item-divider></sd-button-item-divider>
+        <sd-button-item [prefixIcon]="hasNewRow(item) ? 'check_box' : 'check_box_outline_blank'" (click)="toggleNewRow(item)">
+          {{ 'core.component.form-builder.new-row' | sdTranslate }}
+        </sd-button-item>
+      }
+    } @else {
+      <sd-button-item-divider></sd-button-item-divider>
+      <sd-button-item prefixIcon="call_split" [disabled]="!groupCount(item)" (click)="store.ungroup(item.id)">
+        {{ 'core.component.form-builder.ungroup' | sdTranslate }}
+      </sd-button-item>
+    }
+    @if (canDuplicate(item)) {
+      <sd-button-item prefixIcon="content_copy" (click)="duplicate(item)">{{
+        'core.component.form-builder.duplicate' | sdTranslate
+      }}</sd-button-item>
+    }
+    <sd-button-item prefixIcon="delete" color="error" (click)="remove(item)">{{
+      'core.component.form-builder.delete' | sdTranslate
+    }}</sd-button-item>
+  </sd-button>
+</ng-template>
