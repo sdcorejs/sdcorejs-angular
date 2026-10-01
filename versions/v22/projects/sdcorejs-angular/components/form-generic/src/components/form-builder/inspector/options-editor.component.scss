@@ -1,0 +1,162 @@
+:host {
+  display: block;
+}
+
+.opt {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+// Tay nắm · giá trị · nhãn · xoá
+$columns: 24px minmax(0, 1fr) minmax(0, 1fr) 28px;
+
+.opt__head {
+  display: grid;
+  grid-template-columns: $columns;
+  gap: 6px;
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-12, 12px);
+  font-weight: var(--sd-font-weight-medium, 500);
+}
+
+.opt__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.opt__row {
+  display: grid;
+  grid-template-columns: $columns;
+  gap: 6px;
+  align-items: center;
+  border-radius: var(--sd-radius-6, 6px);
+  background: var(--sd-surface);
+
+  &.is-duplicate .opt__input--mono {
+    border-color: var(--sd-error);
+  }
+
+  // why: preview của CDK được giữ trong danh sách (cdkDragPreviewContainer="parent") nên vẫn nhận
+  // style của component; nổi lên bằng bóng thay vì đổi màu nền.
+  &.cdk-drag-preview {
+    box-shadow: var(--sd-shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.16));
+  }
+
+  &.cdk-drag-animating {
+    transition: transform 180ms cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+.cdk-drop-list-dragging .opt__row:not(.cdk-drag-placeholder) {
+  transition: transform 180ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.opt__placeholder {
+  height: 32px;
+  border: 1px dashed var(--sd-primary);
+  border-radius: var(--sd-radius-6, 6px);
+  background: color-mix(in srgb, var(--sd-primary) 6%, var(--sd-surface));
+}
+
+.opt__handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--sd-radius-4, 4px);
+  background: transparent;
+  color: var(--sd-text-secondary);
+  cursor: grab;
+  touch-action: none;
+
+  &:hover {
+    background: var(--sd-surface-muted);
+    color: var(--sd-text);
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+  }
+}
+
+.opt__input {
+  min-width: 0;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--sd-border);
+  border-radius: var(--sd-radius-4, 4px);
+  background: var(--sd-surface);
+  color: var(--sd-text);
+  font-size: var(--sd-font-size-13, 13px);
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: -1px;
+    border-color: var(--sd-primary);
+  }
+}
+
+.opt__input--mono {
+  font-family: 'Roboto Mono', ui-monospace, monospace;
+  font-size: var(--sd-font-size-12, 12px);
+}
+
+.opt__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--sd-radius-6, 6px);
+  background: transparent;
+  color: var(--sd-text-secondary);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--sd-surface-muted);
+    color: var(--sd-error);
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+  }
+}
+
+.opt__error {
+  margin: 0;
+  color: var(--sd-error);
+  font-size: var(--sd-font-size-12, 12px);
+}
+
+.opt__add {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: var(--sd-radius-6, 6px);
+  background: transparent;
+  color: var(--sd-primary);
+  font-size: var(--sd-font-size-13, 13px);
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--sd-primary) 6%, var(--sd-surface));
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+  }
+}

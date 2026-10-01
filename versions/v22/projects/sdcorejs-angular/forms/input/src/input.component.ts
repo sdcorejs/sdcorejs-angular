@@ -50,6 +50,7 @@ import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/dat
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { Size } from '@sdcorejs/utils/models';
 import type { ValidationPatternType } from '@sdcorejs/utils/models';
+import type { SdLabelPlacement } from '@sdcorejs/angular/forms/models';
 import { VALIDATION_PATTERNS } from '@sdcorejs/utils/constants';
 
 // Back-compat: SdPatternType cũ → ValidationPatternType mới.
@@ -70,7 +71,11 @@ import { SdInputMask, SdInputMaskResult, SdInputMaskStatus, sdResolveInputMask }
   styleUrl: './input.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'isViewed() || isInline()' },
+  host: {
+    '[class.sd-has-label]': '!!label()',
+    '[class.sd-viewed]': 'isViewed() || isInline()',
+    '[class.sd-label-top]': "labelPlacement() === 'top'",
+  },
   imports: [
     SdIcon,
     CommonModule,
@@ -91,6 +96,9 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   /** why: id ổn định của <mat-error> để `<input>` trỏ `aria-describedby` sang — thông báo lỗi
    *  phải đọc được từ chính control, không chỉ hiện ra màn hình. */
   readonly errorId = `${this.id}-error`;
+  /** id của nhãn/helper khi `labelPlacement='top'` — control trỏ `aria-describedby` sang helper. */
+  readonly labelId = `${this.id}-label`;
+  readonly hintId = `${this.id}-hint`;
 
   // ==========================================
   // 1. SIGNAL QUERIES (Thay thế @ViewChild / @ContentChild)
@@ -153,6 +161,11 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   appearance = computed(() => this.appearanceInput() ?? this.#formConfig?.appearance ?? 'outline');
 
   floatLabel = input<FloatLabelType>('auto');
+  /**
+   * `'float'` (mặc định) giữ floating label của Material. `'top'` đặt nhãn `<label for>` tĩnh
+   * phía trên control, helper text thành dòng gợi ý dưới control. Xem `SdLabelPlacement`.
+   */
+  labelPlacement = input<SdLabelPlacement>('float');
 
   size = input<Size>('md');
   // Ghi (TransformT): any (để không bị lỗi typing khi cha truyền vào)
@@ -171,11 +184,19 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   label = input<string | undefined>();
   helperText = input<string | undefined>();
   placeholder = input<string | undefined>();
-  type = input<'text' | 'number' | 'password' | 'email'>('text');
+  /** Kiểu `<input>` gốc. `'tel'`/`'url'` chỉ đổi bàn phím/autofill — KHÔNG tự thêm validation. */
+  type = input<'text' | 'number' | 'password' | 'email' | 'tel' | 'url'>('text');
   mask = input<SdInputMask | null | undefined>();
   readonly maskAdapter = computed(() => sdResolveInputMask(this.mask()));
   readonly effectiveType = computed(() => (this.maskAdapter() ? 'text' : this.type()));
-  readonly inputMode = computed(() => this.maskAdapter()?.inputMode);
+  /** `inputmode` gốc do consumer chỉ định; mask (nếu có) luôn thắng vì nó biết ký tự hợp lệ. */
+  readonly inputmodeInput = input<string | undefined | null>(undefined, { alias: 'inputmode' });
+  readonly inputMode = computed(() => this.maskAdapter()?.inputMode ?? (this.inputmodeInput() || undefined));
+  /**
+   * Token `autocomplete` (vd `email`, `tel`, `url`, `new-password`). Không truyền thì giữ hành vi
+   * cũ: gán một token ngẫu nhiên để trình duyệt không tự điền.
+   */
+  readonly autocomplete = input<string | undefined | null>(undefined);
   readonly maxDisplayLength = computed(() => this.maskAdapter()?.maxDisplayLength);
 
   hideInlineError = input(false, { transform: booleanAttribute });
@@ -245,6 +266,9 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
     if (!errors) return undefined;
 
     if (errors['required']) return this.#i18n.t('core.form.input.required');
+    // why: minlength validator đã được cài từ lâu nhưng lỗi không có message nào — control đỏ viền
+    // mà không nói lý do.
+    if (errors['minlength']) return this.#i18n.t('core.form.input.minlength', { min: this.minlength() ?? '' });
     if (errors['maxlength']) return this.#i18n.t('core.form.input.maxlength', { max: this.maxlength() ?? '' });
     if (errors['maskIncomplete']) return this.#i18n.t('core.form.input.mask-incomplete');
     if (errors['maskInvalid']) return this.#i18n.t('core.form.input.mask-invalid');

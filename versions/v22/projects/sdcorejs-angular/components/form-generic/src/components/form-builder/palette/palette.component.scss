@@ -1,0 +1,211 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.fb-tabs {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 4px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--sd-border);
+}
+
+.fb-tabs__tab {
+  position: relative;
+  padding: 12px 8px 10px;
+  border: 0;
+  background: transparent;
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-14, 14px);
+  font-weight: var(--sd-font-weight-medium, 500);
+  cursor: pointer;
+
+  &.is-active {
+    color: var(--sd-primary);
+
+    &::after {
+      content: '';
+      position: absolute;
+      left: 4px;
+      right: 4px;
+      bottom: -1px;
+      height: 2px;
+      border-radius: 2px;
+      background: var(--sd-primary);
+    }
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: -2px;
+  }
+}
+
+.fb-palette {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.fb-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 12px 8px;
+  padding: 0 10px;
+  height: 36px;
+  border: 1px solid var(--sd-border);
+  border-radius: var(--sd-radius-8, 8px);
+  color: var(--sd-text-secondary);
+  background: var(--sd-surface);
+
+  &:focus-within {
+    border-color: var(--sd-primary);
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: -1px;
+  }
+}
+
+.fb-search__input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--sd-text);
+  font-size: var(--sd-font-size-13, 13px);
+}
+
+.fb-target {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 12px 8px;
+  padding: 6px 8px;
+  border-radius: var(--sd-radius-6, 6px);
+  background: color-mix(in srgb, var(--sd-primary) 6%, var(--sd-surface));
+  color: var(--sd-primary);
+  font-size: var(--sd-font-size-12, 12px);
+}
+
+.fb-target__text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fb-target__clear {
+  display: inline-flex;
+  padding: 2px;
+  border: 0;
+  border-radius: var(--sd-radius-4, 4px);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+  }
+}
+
+.fb-palette__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 8px 12px;
+}
+
+.fb-palette__empty {
+  margin: 16px 8px;
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-13, 13px);
+}
+
+.fb-cat + .fb-cat {
+  margin-top: 4px;
+}
+
+.fb-cat__head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 6px 4px;
+  border: 0;
+  background: transparent;
+  color: var(--sd-text);
+  font-size: var(--sd-font-size-13, 13px);
+  font-weight: var(--sd-font-weight-semibold, 600);
+  text-align: left;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    border-radius: var(--sd-radius-4, 4px);
+  }
+}
+
+.fb-cat__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 4px;
+  padding: 0 0 0 4px;
+  list-style: none;
+}
+
+.fb-palette-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 34px;
+  padding: 0 6px 0 10px;
+  border: 1px solid var(--sd-border);
+  border-radius: var(--sd-radius-6, 6px);
+  background: var(--sd-surface);
+  color: var(--sd-text);
+  font-size: var(--sd-font-size-13, 13px);
+  text-align: left;
+  cursor: grab;
+  user-select: none;
+
+  &:hover {
+    border-color: var(--sd-primary);
+    background: color-mix(in srgb, var(--sd-primary) 4%, var(--sd-surface));
+
+    .fb-palette-item__grip {
+      opacity: 1;
+    }
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: var(--sd-focus-ring-offset, 2px);
+  }
+}
+
+.fb-palette-item__icon {
+  color: var(--sd-text-secondary);
+}
+
+.fb-palette-item__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fb-palette-item__grip {
+  display: inline-flex;
+  color: var(--sd-text-muted);
+  opacity: 0.6;
+  touch-action: none;
+}

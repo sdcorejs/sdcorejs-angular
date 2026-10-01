@@ -9,6 +9,7 @@
 @let _errorMessage = errorMessage();
 @let _size = size();
 @let _removable = removable();
+@let _labelTop = labelPlacement() === 'top';
 <!-- why: một cổng gate duy nhất cho <mat-error>, aria-invalid và aria-describedby. -->
 @let _errorVisible = !!_errorMessage && formControl.touched;
 @let _showInlineError = !_hideInlineError && _errorVisible;
@@ -24,11 +25,11 @@
     [valueTemplate]="_valueTemplate">
   </sd-view>
 } @else {
-  @if (!_appearance && _labelTemplate) {
+  @if ((!_appearance || _labelTop) && _labelTemplate) {
     <ng-container *ngTemplateOutlet="_labelTemplate"></ng-container>
   }
-  @if (!_appearance && _label && !_labelTemplate) {
-    <sd-label [label]="_label" [required]="_required"></sd-label>
+  @if ((!_appearance || _labelTop) && _label && !_labelTemplate) {
+    <sd-label [label]="_label" [required]="_required" [for]="_labelTop ? inputId : null"></sd-label>
   }
 
   <!-- why: div chỉ là hộp layout — aria-hidden="true" cũ ẩn CẢ cây con (chip, ô nhập, <mat-error>)
@@ -58,9 +59,10 @@
         [class.sd-md]="_size === 'md'"
         [class.sd-sm]="_size === 'sm'"
         [class.hide-inline-error]="_hideInlineError"
+        [class.sd-label-top]="_labelTop"
         [appearance]="_appearance"
         [floatLabel]="floatLabel()">
-        @if (_appearance && _label) {
+        @if (_appearance && _label && !_labelTop) {
           <mat-label>{{ _label }}</mat-label>
         }
         <mat-chip-grid [formControl]="formControl" #chipList [class.sd-md]="_size === 'md'" [class.sd-sm]="_size === 'sm'">
@@ -85,7 +87,8 @@
           <input
             class="sd-chip-input"
             [formControl]="inputControl"
-            [placeholder]="placeholder() || _label"
+            [id]="inputId"
+            [placeholder]="placeholder() || (_labelTop ? '' : _label)"
             [matChipInputFor]="chipList"
             autocomplete="off"
             [errorStateMatcher]="matcher"

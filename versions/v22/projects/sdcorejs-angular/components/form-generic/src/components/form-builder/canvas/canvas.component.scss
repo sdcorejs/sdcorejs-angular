@@ -1,0 +1,485 @@
+// Canvas thiết kế — chỉ dùng token Core (màu/spacing/radius), không mã màu cứng.
+:host {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.fb-canvas {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 20px 24px 32px;
+  background: var(--sd-surface-muted);
+
+  &.is-dragging,
+  &.is-resizing {
+    user-select: none;
+  }
+
+  &.is-dragging {
+    cursor: grabbing;
+  }
+
+  &.is-resizing {
+    cursor: ew-resize;
+  }
+}
+
+.fb-page {
+  box-sizing: border-box;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 16px 16px 20px;
+  border: 1px solid var(--sd-border);
+  border-radius: var(--sd-radius-12, 12px);
+  background: var(--sd-surface);
+  box-shadow: var(--sd-shadow-xs, 0 1px 2px rgba(0, 0, 0, 0.04));
+}
+
+@container sd-form-builder (max-width: 1000px) {
+  .fb-canvas {
+    padding: 12px 12px 24px;
+  }
+
+  .fb-page:not(.fb-page--tablet):not(.fb-page--mobile) {
+    padding: 12px 10px 16px;
+  }
+}
+
+// why: khung tablet 768px / mobile 390px — cùng khung với Xem trước. Hàng của canvas tính bằng span
+// của mức đang xem (`sdPackRows`), cùng hàm renderer dùng.
+.fb-page--tablet {
+  width: 768px;
+  max-width: 100%;
+  border-radius: var(--sd-radius-16, 16px);
+  border-color: var(--sd-border-strong);
+}
+
+.fb-page--mobile {
+  width: 390px;
+  max-width: 100%;
+  border-radius: var(--sd-radius-24, 24px);
+  border-color: var(--sd-border-strong);
+  padding: 20px 12px;
+}
+
+.fb-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.fb-row {
+  display: flex;
+  align-items: stretch;
+  position: relative;
+  min-height: 16px;
+}
+
+.fb-row--group {
+  padding: 6px;
+}
+
+// ── Field ────────────────────────────────────────────────────────────────────
+.fb-cell {
+  position: relative;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  min-width: 0;
+  padding: 6px;
+
+  &.is-moving {
+    opacity: 0.35;
+  }
+
+  &.is-hidden .fb-card {
+    opacity: 0.6;
+    border-style: dashed;
+    border-color: var(--sd-border-strong);
+  }
+
+  &.is-unknown .fb-card {
+    border-style: dashed;
+    border-color: var(--sd-border-strong);
+    background: var(--sd-surface-muted);
+  }
+
+  &:hover,
+  &:focus-within,
+  &.is-selected,
+  &.is-resizing {
+    .fb-tools,
+    .fb-resize {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+}
+
+.fb-card {
+  height: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--sd-radius-8, 8px);
+  cursor: pointer;
+  transition:
+    border-color var(--sd-duration-fast, 120ms) ease,
+    background-color var(--sd-duration-fast, 120ms) ease;
+
+  &:hover {
+    border-color: var(--sd-border-strong);
+    background: color-mix(in srgb, var(--sd-primary) 3%, var(--sd-surface));
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: var(--sd-focus-ring-offset, 2px);
+  }
+}
+
+.fb-cell.is-selected .fb-card {
+  border: 2px solid var(--sd-primary);
+  padding: 9px 11px 11px;
+  background: color-mix(in srgb, var(--sd-primary) 5%, var(--sd-surface));
+}
+
+.fb-tools {
+  // why: thanh nằm TRÊN mép trên của card (đáy thanh ≈ đỉnh dòng nhãn) để không che nhãn của field,
+  // kể cả field hẹp. Cao 30px = nút 24px + padding + viền → top -14px.
+  position: absolute;
+  top: -14px;
+  right: 12px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--sd-border);
+  border-radius: var(--sd-radius-8, 8px);
+  background: var(--sd-surface);
+  box-shadow: var(--sd-shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.08));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--sd-duration-fast, 120ms) ease;
+}
+
+.fb-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--sd-radius-6, 6px);
+  background: transparent;
+  color: var(--sd-text-secondary);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--sd-surface-muted);
+    color: var(--sd-text);
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: 0;
+  }
+}
+
+.fb-tool--grip {
+  cursor: grab;
+  touch-action: none; // cảm ứng: tay nắm kéo, phần còn lại vẫn cuộn được
+}
+
+.fb-tool--danger:hover {
+  color: var(--sd-error);
+}
+
+// Nút menu (sd-button của Core) thu gọn cho vừa thanh công cụ.
+.fb-menu {
+  display: inline-flex;
+}
+
+.fb-tools .fb-menu ::ng-deep .c-button {
+  width: 24px;
+  min-width: 0;
+  height: 24px;
+  padding: 0;
+}
+
+.fb-resize {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  z-index: 2;
+  width: 10px;
+  height: 36px;
+  margin-top: -18px;
+  cursor: ew-resize;
+  touch-action: none;
+  opacity: 0;
+  pointer-events: none;
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    border-radius: var(--sd-radius-999, 999px);
+    background: var(--sd-primary);
+  }
+}
+
+// Trong lúc kéo: không hiện chrome hover (thanh công cụ, tay nắm resize, nền hover) của các field
+// con trỏ đi qua — chỉ indicator nói thả vào đâu.
+.fb-canvas.is-dragging .fb-cell {
+  .fb-tools,
+  .fb-resize {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .fb-card:hover {
+    border-color: transparent;
+    background: transparent;
+  }
+
+  &.is-selected .fb-card:hover {
+    border-color: var(--sd-primary);
+    background: color-mix(in srgb, var(--sd-primary) 5%, var(--sd-surface));
+  }
+}
+
+// Dấu `layout.newRow`: field luôn mở hàng mới.
+.fb-newrow {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--sd-radius-999, 999px);
+  background: var(--sd-surface);
+  color: var(--sd-primary);
+  box-shadow: 0 0 0 1px var(--sd-border);
+}
+
+// Span của mức đang xem (kèm nhãn kế thừa) trên field đang chọn.
+.fb-span-badge {
+  position: absolute;
+  right: 16px;
+  bottom: 10px;
+  z-index: 2;
+  padding: 1px 8px;
+  border: 1px solid var(--sd-border);
+  border-radius: var(--sd-radius-999, 999px);
+  background: var(--sd-surface);
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-11, 11px);
+  font-weight: var(--sd-font-weight-medium, 500);
+  pointer-events: none;
+}
+
+.fb-resize-badge {
+  position: absolute;
+  right: 16px;
+  bottom: 10px;
+  z-index: 3;
+  padding: 2px 8px;
+  border-radius: var(--sd-radius-999, 999px);
+  background: var(--sd-primary);
+  color: var(--sd-primary-contrast);
+  font-size: var(--sd-font-size-12, 12px);
+  font-weight: var(--sd-font-weight-semibold, 600);
+}
+
+// ── Group ────────────────────────────────────────────────────────────────────
+.fb-group {
+  width: 100%;
+  border: 1px solid var(--sd-border);
+  border-radius: var(--sd-radius-8, 8px);
+  background: var(--sd-surface);
+  transition:
+    border-color var(--sd-duration-fast, 120ms) ease,
+    background-color var(--sd-duration-fast, 120ms) ease;
+
+  &.is-selected {
+    border: 1px dashed var(--sd-primary);
+    box-shadow: 0 0 0 1px var(--sd-primary);
+  }
+
+  &.is-moving {
+    opacity: 0.35;
+  }
+
+  &.is-hidden {
+    opacity: 0.7;
+    border-style: dashed;
+  }
+}
+
+.fb-group__head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--sd-border);
+
+  .fb-tool--grip {
+    opacity: 0.7;
+  }
+}
+
+.fb-group__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  padding: 4px 6px;
+  border-radius: var(--sd-radius-6, 6px);
+  cursor: pointer;
+  color: var(--sd-text);
+  font-weight: var(--sd-font-weight-semibold, 600);
+  font-size: var(--sd-font-size-14, 14px);
+
+  &:hover {
+    background: var(--sd-surface-muted);
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: 0;
+  }
+}
+
+// why: cùng cách hiển thị với `sd-section` mà renderer dùng cho group — icon màu nhấn
+// (`properties.color`) trên nền tròn nhạt của chính màu đó — để canvas khớp bản render thật.
+.fb-group__icon {
+  --fb-group-accent: var(--sd-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--sd-radius-999, 999px);
+  background: color-mix(in srgb, var(--fb-group-accent) 12%, var(--sd-surface));
+  color: var(--fb-group-accent);
+
+  @each $color in primary, secondary, info, success, warning, error {
+    &[data-color='#{$color}'] {
+      --fb-group-accent: var(--sd-#{$color});
+    }
+  }
+}
+
+.fb-group__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fb-group__count {
+  flex: 0 0 auto;
+  color: var(--sd-text-secondary);
+  font-weight: var(--sd-font-weight-regular, 400);
+  font-size: var(--sd-font-size-12, 12px);
+}
+
+.fb-group__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--sd-radius-999, 999px);
+  background: var(--sd-surface-muted);
+  color: var(--sd-text-secondary);
+  font-weight: var(--sd-font-weight-medium, 500);
+  font-size: var(--sd-font-size-11, 11px);
+}
+
+.fb-group__chip--accent {
+  background: var(--sd-status-warning-bg, var(--sd-warning-light));
+  color: var(--sd-status-warning-fg, var(--sd-warning-dark));
+}
+
+.fb-group__body {
+  padding: 6px;
+  min-height: 56px;
+}
+
+.fb-group__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 64px;
+  margin: 6px;
+  padding: 12px;
+  border: 1px dashed var(--sd-border-strong);
+  border-radius: var(--sd-radius-8, 8px);
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-13, 13px);
+  text-align: center;
+}
+
+// ── Trống & vùng thêm ────────────────────────────────────────────────────────
+.fb-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 32px 16px 20px;
+  color: var(--sd-text-secondary);
+  text-align: center;
+}
+
+.fb-empty__title {
+  color: var(--sd-text);
+  font-size: var(--sd-font-size-16, 16px);
+  font-weight: var(--sd-font-weight-semibold, 600);
+}
+
+.fb-empty__hint {
+  max-width: 420px;
+  font-size: var(--sd-font-size-13, 13px);
+}
+
+.fb-add-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: calc(100% - 12px);
+  min-height: 48px;
+  margin: 10px 6px 0;
+  border: 1px dashed var(--sd-border-strong);
+  border-radius: var(--sd-radius-8, 8px);
+  background: transparent;
+  color: var(--sd-primary);
+  font-size: var(--sd-font-size-13, 13px);
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--sd-primary) 4%, var(--sd-surface));
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: var(--sd-focus-ring-offset, 2px);
+  }
+}
+
+// ── Indicator thả (một đích duy nhất) ────────────────────────────────────────

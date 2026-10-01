@@ -1,0 +1,77 @@
+@let _viewport = store.viewport();
+@let _result = result();
+<div class="pv">
+  <div class="pv__bar">
+    <span class="pv__note">
+      <sd-icon name="science" size="16px"></sd-icon>
+      {{ 'core.component.form-builder.preview.note' | sdTranslate }}
+    </span>
+    <span class="pv__actions">
+      <sd-button
+        type="text"
+        color="secondary"
+        size="sm"
+        [prefixIcon]="viewed() ? 'edit' : 'visibility'"
+        [title]="
+          (viewed() ? 'core.component.form-builder.preview.edit-mode' : 'core.component.form-builder.preview.view-mode') | sdTranslate
+        "
+        (click)="toggleViewed()"></sd-button>
+      <sd-button
+        type="outline"
+        color="secondary"
+        size="sm"
+        prefixIcon="restart_alt"
+        [title]="'core.component.form-builder.preview.reset' | sdTranslate"
+        (click)="reset()"></sd-button>
+      <sd-button
+        type="fill"
+        color="primary"
+        size="sm"
+        prefixIcon="task_alt"
+        [disabled]="viewed() || isEmpty()"
+        [title]="'core.component.form-builder.preview.validate' | sdTranslate"
+        (click)="validate()"></sd-button>
+    </span>
+  </div>
+
+  <div class="pv__stage">
+    <div
+      class="pv__frame"
+      [attr.data-viewport]="_viewport"
+      [class.pv__frame--tablet]="_viewport === 'tablet'"
+      [class.pv__frame--mobile]="_viewport === 'mobile'">
+      @if (isEmpty()) {
+        <p class="pv__empty">{{ 'core.component.form-builder.preview.empty' | sdTranslate }}</p>
+      } @else {
+        @for (key of [session()]; track key) {
+          <sd-form-render [schema]="schema()" [(value)]="value" [viewed]="viewed()" [breakpoint]="_viewport"></sd-form-render>
+        }
+      }
+    </div>
+
+    <!-- why: the live region stays in the DOM and only its content changes, so the first result is announced too. -->
+    <div class="pv__result" [attr.data-viewport]="_viewport" role="status" aria-live="polite">
+      @if (_result) {
+        @if (_result.invalidFields) {
+          <div class="pv__msg pv__msg--error">
+            <sd-icon name="error" size="18px"></sd-icon>{{ 'core.component.form-builder.preview.invalid-fields' | sdTranslate }}
+          </div>
+        } @else if (!_result.errors.length && !_result.warnings.length) {
+          <div class="pv__msg pv__msg--success">
+            <sd-icon name="check_circle" size="18px"></sd-icon>{{ 'core.component.form-builder.preview.valid' | sdTranslate }}
+          </div>
+        }
+        @for (message of _result.errors; track $index) {
+          <!-- why: message của validation cấp form có thể là HTML (validator của portal) — Angular
+               sanitize [innerHTML]. -->
+          <div class="pv__msg pv__msg--error"><sd-icon name="error" size="18px"></sd-icon><span [innerHTML]="message"></span></div>
+        }
+        @for (message of _result.warnings; track $index) {
+          <div class="pv__msg pv__msg--warning">
+            <sd-icon name="warning_amber" size="18px"></sd-icon><span [innerHTML]="message"></span>
+          </div>
+        }
+      }
+    </div>
+  </div>
+</div>

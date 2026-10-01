@@ -1,24 +1,25 @@
-<div class="fb-field">
-  @if (label) {
-    <div class="fb-field__label">{{ label }}</div>
+@let _tokens = tokens();
+<fb-value-box
+  [label]="label()"
+  [empty]="!_tokens.length"
+  [tooltip]="text()"
+  [readonly]="readonly()"
+  [editLabel]="'core.component.form-builder.expression.edit' | sdTranslate"
+  (edit)="onEdit()">
+  @if (_tokens.length) {
+    <span class="expr">
+      @for (token of _tokens; track $index) {
+        <span class="expr__tok expr__tok--{{ token.kind }}">{{ token.text }}</span>
+      }
+    </span>
+  } @else {
+    {{ 'core.component.form-builder.expression.empty' | sdTranslate }}
   }
-  @let exprText = model | expressionQuery;
-  <div class="fb-expr" (click)="onEdit()" role="button" tabindex="0" (keydown.enter)="onEdit()" (keydown.space)="onEdit()">
-    <span class="fb-expr__badge">QB</span>
-    @if (exprText) {
-      <span class="fb-expr__code mono">{{ exprText }}</span>
-    } @else {
-      <span class="empty">{{ 'core.component.form-builder.set-expression' | sdTranslate }}</span>
-    }
-    <button type="button" class="fb-icon-btn" (click)="onEdit(); $event.stopPropagation()" aria-label="edit expression">
-      <span class="msi">account_tree</span>
-    </button>
-  </div>
-</div>
+</fb-value-box>
 
 <sd-modal [title]="'core.component.form-builder.set-expression' | sdTranslate" width="920px" modalClass="sd-form-builder-dialog">
   <div class="fb-expression-query">
-    <sd-query-builder [fields]="queryFields" [(value)]="draftFilter"></sd-query-builder>
+    <sd-query-builder [fields]="queryFields()" [(value)]="draftFilter"></sd-query-builder>
   </div>
   <sd-button
     sdFooterRight

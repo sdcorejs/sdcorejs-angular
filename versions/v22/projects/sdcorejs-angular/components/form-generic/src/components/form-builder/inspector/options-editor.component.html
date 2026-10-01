@@ -1,0 +1,51 @@
+@let _rows = rows();
+@let _duplicates = duplicates();
+<!-- why: bảng hai cột (giá trị/nhãn) dùng input gốc gọn — mỗi ô có nhãn truy cập riêng theo số thứ tự.
+     Sắp xếp bằng kéo tay nắm (CDK); tay nắm là nút nên bàn phím dùng ↑/↓ thay cho kéo. -->
+<div class="opt" role="group" [attr.aria-label]="'core.component.form-builder.options' | sdTranslate">
+  @if (_rows.length) {
+    <div class="opt__head" aria-hidden="true">
+      <span></span>
+      <span>{{ 'core.component.form-builder.option.value' | sdTranslate }}</span>
+      <span>{{ 'core.component.form-builder.option.label' | sdTranslate }}</span>
+    </div>
+  }
+  <div class="opt__list" cdkDropList cdkDropListLockAxis="y" [cdkDropListData]="_rows" (cdkDropListDropped)="drop($event)">
+    @for (option of _rows; track $index; let index = $index, first = $first, last = $last) {
+      <div class="opt__row" cdkDrag cdkDragPreviewContainer="parent" [class.is-duplicate]="_duplicates.has('' + option.value)">
+        <button
+          type="button"
+          class="opt__handle"
+          cdkDragHandle
+          [attr.data-option-handle]="index"
+          [attr.aria-label]="'core.component.form-builder.option.reorder' | sdTranslate: { index: index + 1 }"
+          (keydown.arrowup)="moveByKey($event, index, -1, first)"
+          (keydown.arrowdown)="moveByKey($event, index, 1, last)">
+          <sd-icon name="drag_indicator" size="18px"></sd-icon>
+        </button>
+        <input
+          class="opt__input opt__input--mono"
+          [value]="option.value"
+          [attr.aria-label]="('core.component.form-builder.option.value' | sdTranslate) + ' ' + (index + 1)"
+          [attr.aria-invalid]="_duplicates.has('' + option.value) ? 'true' : null"
+          (input)="update(index, 'value', valueOf($event))" />
+        <input
+          class="opt__input"
+          [value]="option.label"
+          [attr.aria-label]="('core.component.form-builder.option.label' | sdTranslate) + ' ' + (index + 1)"
+          (input)="update(index, 'label', valueOf($event))" />
+        <button type="button" class="opt__btn opt__btn--danger" [attr.aria-label]="'core.component.form-builder.option.remove' | sdTranslate" (click)="remove(index)">
+          <sd-icon name="close" size="16px"></sd-icon>
+        </button>
+        <div class="opt__placeholder" *cdkDragPlaceholder></div>
+      </div>
+    }
+  </div>
+  @if (_duplicates.size) {
+    <p class="opt__error" role="alert">{{ 'core.component.form-builder.option.duplicate' | sdTranslate }}</p>
+  }
+  <button type="button" class="opt__add" (click)="add()">
+    <sd-icon name="add" size="16px"></sd-icon>
+    {{ 'core.component.form-builder.option.add' | sdTranslate }}
+  </button>
+</div>

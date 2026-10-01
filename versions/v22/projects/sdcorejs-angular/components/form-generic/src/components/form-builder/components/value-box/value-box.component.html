@@ -1,0 +1,29 @@
+@let _label = label();
+@let _tooltip = tooltip();
+@if (_label) {
+  <div class="vb-label" [id]="labelId">{{ _label }}</div>
+}
+<div class="vb" [class.is-empty]="empty()" [class.is-readonly]="readonly()">
+  <div
+    class="vb__content"
+    role="group"
+    [attr.aria-labelledby]="_label ? labelId : null"
+    [matTooltip]="_tooltip || ''"
+    [matTooltipDisabled]="!_tooltip"
+    [matTooltipShowDelay]="300"
+    matTooltipPosition="above"
+    matTooltipClass="sd-multiline-tooltip">
+    <ng-content></ng-content>
+  </div>
+  @if (!readonly()) {
+    <button
+      type="button"
+      class="vb__edit"
+      [attr.aria-label]="editLabel() + (_label ? ': ' + _label : '')"
+      [matTooltip]="editLabel()"
+      matTooltipPosition="above"
+      (click)="edit.emit()">
+      <sd-icon name="edit" size="16px"></sd-icon>
+    </button>
+  }
+</div>

@@ -1,0 +1,965 @@
+@let _item = item();
+@let _field = field();
+@let _group = group();
+@let _type = type();
+@let _tab = activeTab();
+@let _validation = validation();
+@let _rules = rules();
+
+<!-- why: mọi control của inspector dùng hideInlineError — panel hẹp, xếp dày; lỗi (nếu có) hiện
+     bằng viền đỏ + icon kèm tooltip thay vì dòng chữ chiếm chỗ dưới từng ô. -->
+@if (!_item) {
+  <!-- ══════════ Không chọn gì: cấu hình cấp form ══════════ -->
+  <div class="ins-empty">
+    <div class="ins-head">
+      <span class="ins-head__icon" aria-hidden="true"><sd-icon name="dynamic_form" size="20px"></sd-icon></span>
+      <div class="ins-head__text">
+        <div class="ins-head__title">{{ 'core.component.form-builder.form-settings' | sdTranslate }}</div>
+        <div class="ins-head__sub">{{ 'core.component.form-builder.select-field-hint' | sdTranslate }}</div>
+      </div>
+    </div>
+    <div class="ins-body">
+      <div class="ins-card">
+        <div class="ins-card__row">
+          <span>{{ 'core.component.form-builder.variables' | sdTranslate }}</span>
+          <span class="ins-count">{{ store.doc().variables.length }}</span>
+        </div>
+        <p class="ins-note">{{ 'core.component.form-builder.variables-hint' | sdTranslate }}</p>
+        <sd-button
+          type="outline"
+          color="primary"
+          size="sm"
+          prefixIcon="data_array"
+          [title]="'core.component.form-builder.manage' | sdTranslate"
+          (click)="openVariables.emit()"></sd-button>
+      </div>
+      <div class="ins-card">
+        <div class="ins-card__row">
+          <span>{{ 'core.component.form-builder.form-validations' | sdTranslate }}</span>
+          <span class="ins-count">{{ store.doc().validations.length }}</span>
+        </div>
+        <p class="ins-note">{{ 'core.component.form-builder.form-validations-hint' | sdTranslate }}</p>
+        <sd-button
+          type="outline"
+          color="primary"
+          size="sm"
+          prefixIcon="rule"
+          [title]="'core.component.form-builder.manage' | sdTranslate"
+          (click)="openValidations.emit()"></sd-button>
+      </div>
+      <sd-button
+        type="text"
+        color="secondary"
+        size="sm"
+        prefixIcon="keyboard"
+        [title]="'core.component.form-builder.shortcuts' | sdTranslate"
+        (click)="openShortcuts.emit()"></sd-button>
+    </div>
+  </div>
+} @else {
+  <!-- ══════════ Header ══════════ -->
+  <div class="ins-head">
+    <span class="ins-head__icon" aria-hidden="true"><sd-icon [name]="icon()" size="20px"></sd-icon></span>
+    <div class="ins-head__text">
+      <div class="ins-head__title">{{ store.labelOf(_item) }}</div>
+      <div class="ins-head__sub">
+        {{ typeLabelKey() | sdTranslate }}
+        @if (_field?.key) {
+          · <span class="ins-mono">{{ _field?.key }}</span>
+        }
+      </div>
+    </div>
+    <span class="ins-badge ins-mono">{{ unsupported() ? _type : presetId() }}</span>
+  </div>
+
+  @if (unsupported()) {
+    <div class="ins-body">
+      <p class="ins-note"><sd-icon name="help" size="14px"></sd-icon>{{ 'core.component.form-builder.unsupported-note' | sdTranslate }}</p>
+    </div>
+  } @else {
+    <!-- ══════════ Tabs ══════════ -->
+    <!-- why: phím mũi tên nổi bọt từ tab đang focus (roving tabindex, mẫu tablist của APG). -->
+    <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -->
+    <div
+      class="ins-tabs"
+      role="tablist"
+      [attr.aria-label]="'core.component.form-builder.attribute' | sdTranslate"
+      (keydown)="onTabKeydown($event)">
+      @for (tab of tabs(); track tab) {
+        <button
+          type="button"
+          role="tab"
+          class="ins-tabs__tab"
+          [id]="tabId(tab)"
+          [attr.aria-controls]="panelId"
+          [attr.data-tab]="tab"
+          [class.is-active]="_tab === tab"
+          [attr.aria-selected]="_tab === tab"
+          [attr.tabindex]="_tab === tab ? 0 : -1"
+          (click)="selectTab(tab)">
+          {{ 'core.component.form-builder.tab.' + tab | sdTranslate }}
+        </button>
+      }
+    </div>
+
+    <div class="ins-body" role="tabpanel" [id]="panelId" [attr.aria-labelledby]="tabId(_tab)">
+      @switch (_tab) {
+        <!-- ─────────────── CHUNG ─────────────── -->
+        @case ('general') {
+          @if (_group) {
+            <sd-input
+              size="sm"
+              labelPlacement="top"
+              hideInlineError
+              [label]="'core.component.form-builder.display-label' | sdTranslate"
+              [model]="_group.label"
+              (modelChange)="setLabel($event)"
+              (sdBlur)="sealHistory()"></sd-input>
+            <div class="ins-field">
+              <div class="ins-field__label">{{ 'core.component.form-builder.group-icon' | sdTranslate }}</div>
+              <div class="ins-icons" role="group" [attr.aria-label]="'core.component.form-builder.group-icon' | sdTranslate">
+                @for (icon of iconPresets; track icon) {
+                  <button
+                    type="button"
+                    class="ins-icons__btn"
+                    [class.is-active]="_group.icon === icon"
+                    [attr.aria-pressed]="_group.icon === icon"
+                    [attr.aria-label]="icon"
+                    (click)="pickIcon(icon)">
+                    <sd-icon [name]="icon" size="18px"></sd-icon>
+                  </button>
+                }
+              </div>
+            </div>
+            <div class="ins-field">
+              <div class="ins-field__label">{{ 'core.component.form-builder.group-accent-color' | sdTranslate }}</div>
+              <div class="ins-colors" role="group" [attr.aria-label]="'core.component.form-builder.group-accent-color' | sdTranslate">
+                @for (color of colorPresets; track color) {
+                  <button
+                    type="button"
+                    class="ins-colors__swatch"
+                    [attr.data-color]="color"
+                    [class.is-active]="(_group.color || 'primary') === color"
+                    [attr.aria-pressed]="(_group.color || 'primary') === color"
+                    [attr.aria-label]="color"
+                    (click)="pickColor(color)"></button>
+                }
+              </div>
+            </div>
+          } @else if (_field) {
+            @if (_type === 'html') {
+              @if (!_field['definition']) {
+                <sd-textarea
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  [rows]="8"
+                  [label]="'core.component.form-builder.content' | sdTranslate"
+                  [model]="_field['content']"
+                  (modelChange)="set('content', $event ?? '', true)"
+                  (sdBlur)="sealHistory()"></sd-textarea>
+              }
+              <p class="ins-note">{{ 'core.component.form-builder.html-info' | sdTranslate }}</p>
+            } @else {
+              <sd-input
+                size="sm"
+                labelPlacement="top"
+                hideInlineError
+                [label]="'core.component.form-builder.display-label' | sdTranslate"
+                [model]="_field['label']"
+                (modelChange)="setLabel($event)"
+                (sdBlur)="sealHistory()"></sd-input>
+              @if (supportsHelper()) {
+                <sd-textarea
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  [rows]="2"
+                  [label]="'core.component.form-builder.helper-text' | sdTranslate"
+                  [model]="_field['helperText']"
+                  (modelChange)="set('helperText', $event, true)"
+                  (sdBlur)="sealHistory()"></sd-textarea>
+              }
+              @if (supportsPlaceholder()) {
+                <sd-input
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  [label]="'core.component.form-builder.placeholder' | sdTranslate"
+                  [model]="_field['placeholder']"
+                  (modelChange)="set('placeholder', $event, true)"
+                  (sdBlur)="sealHistory()"></sd-input>
+              }
+              @if (_type === 'textfield') {
+                <sd-select
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  required
+                  class="ins-fixed-select"
+                  [label]="'core.component.form-builder.input-kind' | sdTranslate"
+                  [items]="textKinds()"
+                  valueField="value"
+                  displayField="display"
+                  [model]="textSubtype()"
+                  (modelChange)="setTextSubtype($event)"></sd-select>
+              } @else if (_type === 'number') {
+                <sd-select
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  required
+                  class="ins-fixed-select"
+                  [label]="'core.component.form-builder.number-kind' | sdTranslate"
+                  [items]="numberKinds()"
+                  valueField="value"
+                  displayField="display"
+                  [model]="numberSubtype()"
+                  (modelChange)="setNumberSubtype($event)"></sd-select>
+              } @else if (_type === 'datetime') {
+                <sd-select
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  required
+                  class="ins-fixed-select"
+                  [label]="'core.component.form-builder.format' | sdTranslate"
+                  [items]="datetimeFormats"
+                  valueField="value"
+                  displayField="display"
+                  [model]="_field['subtype'] || 'date'"
+                  (modelChange)="set('subtype', $event)"></sd-select>
+              }
+              @if (supportsRequired()) {
+                <fb-toggle-row
+                  [label]="'core.component.form-builder.required' | sdTranslate"
+                  [model]="!!_validation.required"
+                  (modelChange)="setRequired($event)"></fb-toggle-row>
+              }
+              @if (textSubtype() === 'password') {
+                <p class="ins-note">
+                  <sd-icon name="lock" size="14px"></sd-icon>{{ 'core.component.form-builder.password-note' | sdTranslate }}
+                </p>
+              }
+              @if (passwordHasDefault()) {
+                <div class="ins-warning" role="alert">
+                  <span>{{ 'core.component.form-builder.password-default-warning' | sdTranslate }}</span>
+                  <sd-button
+                    type="text"
+                    color="error"
+                    size="sm"
+                    [title]="'core.component.form-builder.remove-default' | sdTranslate"
+                    (click)="set('defaultValue', undefined)"></sd-button>
+                </div>
+              }
+            }
+          }
+        }
+
+        <!-- ─────────────── DỮ LIỆU ─────────────── -->
+        @case ('data') {
+          @if (_field) {
+            @if (templateChoices().length) {
+              <sd-select
+                size="sm"
+                labelPlacement="top"
+                hideInlineError
+                [label]="'core.component.form-builder.template-data' | sdTranslate"
+                [items]="templateChoices()"
+                valueField="value"
+                displayField="display"
+                [model]="currentTemplate()"
+                (modelChange)="applyTemplate($event)"></sd-select>
+            }
+
+            @if (supportsDefault()) {
+              @switch (_type) {
+                @case ('number') {
+                  <sd-input-number
+                    size="sm"
+                    labelPlacement="top"
+                    hideInlineError
+                    [label]="'core.component.form-builder.default-value' | sdTranslate"
+                    [precision]="numberPrecision() ?? 3"
+                    [model]="_field['defaultValue']"
+                    (modelChange)="setDefaultNumber($event)"
+                    (sdBlur)="sealHistory()"></sd-input-number>
+                }
+                @case ('checkbox') {
+                  <sd-select
+                    size="sm"
+                    labelPlacement="top"
+                    hideInlineError
+                    required
+                    class="ins-fixed-select"
+                    [label]="'core.component.form-builder.default-value' | sdTranslate"
+                    [items]="booleanDefaults()"
+                    valueField="value"
+                    displayField="display"
+                    [model]="defaultBooleanValue()"
+                    (modelChange)="setDefaultBoolean($event)"></sd-select>
+                }
+                @case ('select') {
+                  @if (!catalogId()) {
+                    <!-- why: a live sd-select cannot switch `multiple` (MatSelect throws when the value and the
+                         mode disagree for one tick) — a new select is created when the flag changes. -->
+                    @for (multiple of [!!_field['multiple']]; track multiple) {
+                      <sd-select
+                        size="sm"
+                        labelPlacement="top"
+                        hideInlineError
+                        clearable
+                        [multiple]="multiple"
+                        [label]="'core.component.form-builder.default-value' | sdTranslate"
+                        [items]="optionChoices()"
+                        valueField="value"
+                        displayField="display"
+                        [model]="_field['defaultValue']"
+                        (modelChange)="set('defaultValue', $event)"></sd-select>
+                    }
+                  }
+                }
+                @case ('radio') {
+                  @if (!catalogId()) {
+                    <sd-select
+                      size="sm"
+                      labelPlacement="top"
+                      hideInlineError
+                      clearable
+                      [label]="'core.component.form-builder.default-value' | sdTranslate"
+                      [items]="optionChoices()"
+                      valueField="value"
+                      displayField="display"
+                      [model]="_field['defaultValue']"
+                      (modelChange)="set('defaultValue', $event)"></sd-select>
+                  }
+                }
+                @case ('textarea') {
+                  <sd-textarea
+                    size="sm"
+                    labelPlacement="top"
+                    hideInlineError
+                    [rows]="2"
+                    [label]="'core.component.form-builder.default-value' | sdTranslate"
+                    [model]="_field['defaultValue']"
+                    (modelChange)="setDefaultText($event)"
+                    (sdBlur)="sealHistory()"></sd-textarea>
+                }
+                @default {
+                  <sd-input
+                    size="sm"
+                    labelPlacement="top"
+                    hideInlineError
+                    [label]="'core.component.form-builder.default-value' | sdTranslate"
+                    [model]="_field['defaultValue']"
+                    (modelChange)="setDefaultText($event)"
+                    (sdBlur)="sealHistory()"></sd-input>
+                }
+              }
+            }
+
+            @if (_type === 'select') {
+              <fb-toggle-row
+                [label]="'core.component.form-builder.multiple' | sdTranslate"
+                [model]="!!_field['multiple']"
+                (modelChange)="setMultiple($event)"></fb-toggle-row>
+            }
+
+            @if (_type === 'select' || _type === 'radio') {
+              <section class="ins-section">
+                <h3 class="ins-section__title">{{ 'core.component.form-builder.options' | sdTranslate }}</h3>
+                @if (sourceChoices().length > 1) {
+                  <sd-select
+                    size="sm"
+                    labelPlacement="top"
+                    hideInlineError
+                    required
+                    class="ins-fixed-select"
+                    [label]="'core.component.form-builder.options.source' | sdTranslate"
+                    [items]="sourceChoices()"
+                    valueField="value"
+                    displayField="display"
+                    [model]="optionSource()"
+                    (modelChange)="setOptionSource($event)"></sd-select>
+                }
+                @if (!catalogId()) {
+                  <fb-options-editor
+                    [options]="staticItems()"
+                    (optionsChange)="setStaticItems($event.options, $event.coalesceKey)"></fb-options-editor>
+                } @else {
+                  @if (!catalog()) {
+                    <p class="ins-note">
+                      <sd-icon name="warning" size="14px"></sd-icon
+                      >{{ 'core.component.form-builder.catalog.missing' | sdTranslate: { catalog: catalogId() ?? '' } }}
+                    </p>
+                  }
+                  <build-queries
+                    [label]="'core.component.form-builder.catalog.params' | sdTranslate"
+                    [elements]="elements()"
+                    [variables]="variables()"
+                    [definitions]="catalog()?.params"
+                    [model]="catalogParams()"
+                    (modelChange)="setCatalogParams($event)"></build-queries>
+                  <build-variables
+                    [label]="'core.component.form-builder.catalog.fill' | sdTranslate"
+                    [elements]="elements()"
+                    [fields]="catalog()?.fields"
+                    [exclude]="_field.key"
+                    [model]="catalogFill()"
+                    (modelChange)="setCatalogFill($event)"></build-variables>
+                }
+              </section>
+            }
+
+            @if (_type === 'upload') {
+              <sd-select
+                size="sm"
+                labelPlacement="top"
+                hideInlineError
+                required
+                class="ins-fixed-select"
+                [label]="'core.component.form-builder.type' | sdTranslate"
+                [items]="uploadTypes()"
+                valueField="value"
+                displayField="display"
+                [model]="_field['accept'] || 'file'"
+                (modelChange)="set('accept', $event)"></sd-select>
+              @if (_field['accept'] === 'image') {
+                <sd-select
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  required
+                  class="ins-fixed-select"
+                  [label]="'core.component.form-builder.source-mobile' | sdTranslate"
+                  [items]="uploadSources()"
+                  valueField="value"
+                  displayField="display"
+                  [model]="_field['source'] || 'ALL'"
+                  (modelChange)="set('source', $event)"></sd-select>
+              }
+              <attribute-parameter
+                [label]="'core.component.form-builder.assign-parameter' | sdTranslate"
+                [elements]="elements()"
+                [variables]="variables()"
+                [model]="_field['params']"
+                (modelChange)="setUploadParams($event)"></attribute-parameter>
+            }
+
+            @if (_type === 'html') {
+              @if (htmlDefinitionChoices().length) {
+                <!-- why: choices also hold the field's current definition when the portal lacks it, so it can be cleared. -->
+                <sd-select
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  clearable
+                  [label]="'core.component.form-builder.template-data' | sdTranslate"
+                  [items]="htmlDefinitionChoices()"
+                  valueField="value"
+                  displayField="display"
+                  [model]="_field['definition']"
+                  (modelChange)="applyHtmlDefinition($event)"></sd-select>
+              }
+              @for (variable of htmlVariables(); track variable.key) {
+                <sd-input
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  [label]="variable.label"
+                  [model]="variable.value"
+                  (modelChange)="setHtmlVariable(variable.key, $event)"
+                  (sdBlur)="sealHistory()"></sd-input>
+              }
+              <build-queries-html
+                [label]="'core.component.form-builder.query-condition' | sdTranslate"
+                [definition]="htmlDefinition()"
+                [elements]="elements()"
+                [variables]="variables()"
+                [model]="_field['query']"
+                (modelChange)="setHtmlQuery($event)"></build-queries-html>
+            }
+
+            @if (supportsHyperlink()) {
+              <div class="ins-field">
+                <sd-input
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  [label]="'core.component.form-builder.hyperlink' | sdTranslate"
+                  [model]="_field['hyperlink']"
+                  (modelChange)="set('hyperlink', $event, true)"
+                  (sdBlur)="sealHistory()"></sd-input>
+                <p class="ins-note">{{ 'core.component.form-builder.hyperlink-hint' | sdTranslate }}</p>
+              </div>
+            }
+
+            <!-- Nâng cao: mã trường (key). Đổi nhãn KHÔNG đổi key; đổi key luôn qua xác nhận. -->
+            <section class="ins-section">
+              <h3 class="ins-section__title">{{ 'core.component.form-builder.advanced' | sdTranslate }}</h3>
+              @if (_field.key || _type !== 'html') {
+                <div class="ins-key">
+                  <sd-input
+                    size="sm"
+                    labelPlacement="top"
+                    hideInlineError
+                    [label]="'core.component.form-builder.key.label' | sdTranslate"
+                    [inlineError]="keyError() || undefined"
+                    [model]="keyDraft()"
+                    (modelChange)="keyDraft.set($event ?? '')"
+                    (keyupEnter)="applyKey()"></sd-input>
+                  <sd-button
+                    type="outline"
+                    color="primary"
+                    size="sm"
+                    [disabled]="!!keyError() || keyDraft().trim() === _field.key"
+                    [title]="'core.component.form-builder.key.apply' | sdTranslate"
+                    (click)="applyKey()"></sd-button>
+                </div>
+              }
+              @if (!_field.key && _type !== 'html') {
+                <div class="ins-warning">
+                  <span>{{ 'core.component.form-builder.key.missing' | sdTranslate }}</span>
+                  <sd-button
+                    type="text"
+                    color="primary"
+                    size="sm"
+                    [title]="'core.component.form-builder.key.generate' | sdTranslate"
+                    (click)="generateKey()"></sd-button>
+                </div>
+              }
+              @if (keyMessage(); as message) {
+                <sd-inform type="tip" success closable [description]="message" (sdClosed)="keyMessage.set('')"></sd-inform>
+              }
+            </section>
+          }
+        }
+
+        <!-- ─────────────── QUY TẮC ─────────────── -->
+        @case ('rules') {
+          @if (_field) {
+            @switch (textSubtype()) {
+              @case ('email') {
+                <p class="ins-note">
+                  <sd-icon name="verified" size="14px"></sd-icon>{{ 'core.component.form-builder.rule.email' | sdTranslate }}
+                </p>
+              }
+              @case ('url') {
+                <p class="ins-note">
+                  <sd-icon name="verified" size="14px"></sd-icon>{{ 'core.component.form-builder.rule.url' | sdTranslate }}
+                </p>
+              }
+              @case ('phone') {
+                <p class="ins-note">
+                  <sd-icon name="verified" size="14px"></sd-icon>{{ 'core.component.form-builder.rule.phone' | sdTranslate }}
+                </p>
+                <sd-select
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  required
+                  class="ins-fixed-select"
+                  [label]="'core.component.form-builder.phone-country' | sdTranslate"
+                  [items]="phoneCountries()"
+                  valueField="value"
+                  displayField="display"
+                  [model]="_validation.phoneCountry || NONE"
+                  (modelChange)="setValidationChoice('phoneCountry', $event)"></sd-select>
+              }
+            }
+
+            @if (_type === 'number') {
+              <div class="ins-grid">
+                <!-- why: coalesce + seal on blur — typing "1000" is one undo step, not four. -->
+                <sd-input-number
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  [label]="'core.component.form-builder.min' | sdTranslate"
+                  [model]="_validation.min"
+                  (modelChange)="setValidation('min', numberOrNull($event), true)"
+                  (sdBlur)="sealHistory()"></sd-input-number>
+                <sd-input-number
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  [label]="'core.component.form-builder.max' | sdTranslate"
+                  [model]="_validation.max"
+                  (modelChange)="setValidation('max', numberOrNull($event), true)"
+                  (sdBlur)="sealHistory()"></sd-input-number>
+              </div>
+              @if (numberSubtype() === 'decimal' || numberSubtype() === 'currency' || numberSubtype() === 'percent') {
+                <sd-input-number
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  type="positive"
+                  [precision]="0"
+                  [min]="0"
+                  [max]="10"
+                  [label]="'core.component.form-builder.precision' | sdTranslate"
+                  [model]="numberPrecision()"
+                  (modelChange)="set('precision', numberOrNull($event), true)"
+                  (sdBlur)="sealHistory()"></sd-input-number>
+              }
+              @if (numberSubtype() === 'currency') {
+                <sd-input
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  [label]="'core.component.form-builder.currency' | sdTranslate"
+                  [model]="_field['currency'] || 'VND'"
+                  (modelChange)="set('currency', $event, true)"
+                  (sdBlur)="sealHistory()"></sd-input>
+              }
+              @if (numberSubtype() === 'percent') {
+                <p class="ins-note">{{ 'core.component.form-builder.rule.percent' | sdTranslate }}</p>
+              }
+              @if (numberSubtype() === 'integer') {
+                <p class="ins-note">{{ 'core.component.form-builder.rule.integer' | sdTranslate }}</p>
+              }
+            }
+
+            @if (_type === 'datetime') {
+              <div class="ins-grid">
+                <sd-select
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  [label]="'core.component.form-builder.min' | sdTranslate"
+                  required
+                  class="ins-fixed-select"
+                  [items]="minDateChoices()"
+                  valueField="value"
+                  displayField="display"
+                  [model]="dateLimitValue(_validation.min)"
+                  (modelChange)="setValidationChoice('min', $event)"></sd-select>
+                <sd-select
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  [label]="'core.component.form-builder.max' | sdTranslate"
+                  required
+                  class="ins-fixed-select"
+                  [items]="maxDateChoices()"
+                  valueField="value"
+                  displayField="display"
+                  [model]="dateLimitValue(_validation.max)"
+                  (modelChange)="setValidationChoice('max', $event)"></sd-select>
+              </div>
+            }
+
+            @if (supportsLength()) {
+              <div class="ins-grid">
+                <sd-input-number
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  type="positive"
+                  [precision]="0"
+                  [label]="'core.component.form-builder.minlength' | sdTranslate"
+                  [model]="_validation.minLength"
+                  (modelChange)="setValidation('minLength', numberOrNull($event), true)"
+                  (sdBlur)="sealHistory()"></sd-input-number>
+                <sd-input-number
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  type="positive"
+                  [precision]="0"
+                  [label]="'core.component.form-builder.maxlength' | sdTranslate"
+                  [model]="_validation.maxLength"
+                  (modelChange)="setValidation('maxLength', numberOrNull($event), true)"
+                  (sdBlur)="sealHistory()"></sd-input-number>
+              </div>
+            }
+
+            @if (_type === 'chip-string' || _type === 'chip-calendar') {
+              <sd-input-number
+                size="sm"
+                labelPlacement="top"
+                hideInlineError
+                type="positive"
+                [precision]="0"
+                [label]="'core.component.form-builder.max-items' | sdTranslate"
+                [model]="_validation.maxItems"
+                (modelChange)="setValidation('maxItems', numberOrNull($event), true)"
+                (sdBlur)="sealHistory()"></sd-input-number>
+            }
+
+            @if (_type === 'upload') {
+              <div class="ins-grid">
+                <sd-input-number
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  type="positive"
+                  [precision]="0"
+                  [label]="'core.component.form-builder.max-files' | sdTranslate"
+                  [model]="_field['maxFiles']"
+                  (modelChange)="set('maxFiles', numberOrNull($event), true)"
+                  (sdBlur)="sealHistory()"></sd-input-number>
+                <sd-input-number
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  type="positive"
+                  [label]="'core.component.form-builder.size-mb' | sdTranslate"
+                  [model]="_field['maxSizeMb']"
+                  (modelChange)="set('maxSizeMb', numberOrNull($event), true)"
+                  (sdBlur)="sealHistory()"></sd-input-number>
+              </div>
+              @if (_field['accept'] !== 'image') {
+                <sd-input
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  [label]="'core.component.form-builder.format-example' | sdTranslate"
+                  [model]="extensionsText()"
+                  (modelChange)="setExtensions($event)"
+                  (sdBlur)="sealHistory()"></sd-input>
+              }
+            }
+
+            @if (_type === 'textfield' && textSubtype() !== 'password') {
+              <details class="ins-details" [open]="!!_validation.pattern">
+                <summary>{{ 'core.component.form-builder.rule.advanced-pattern' | sdTranslate }}</summary>
+                <sd-input
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  [label]="'core.component.form-builder.pattern' | sdTranslate"
+                  [inlineError]="patternError()"
+                  [model]="_validation.pattern?.value"
+                  (modelChange)="setPattern('value', $event)"
+                  (sdBlur)="sealHistory()"></sd-input>
+                <sd-input
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  [label]="'core.component.form-builder.pattern-message' | sdTranslate"
+                  [model]="_validation.pattern?.message"
+                  (modelChange)="setPattern('message', $event)"
+                  (sdBlur)="sealHistory()"></sd-input>
+              </details>
+            }
+
+            <section class="ins-section">
+              <h3 class="ins-section__title">{{ 'core.component.form-builder.state' | sdTranslate }}</h3>
+              @if (supportsDisabled()) {
+                <fb-toggle-row
+                  [label]="'core.component.form-builder.disabled' | sdTranslate"
+                  [model]="!!_field['disabled']"
+                  (modelChange)="setFlag('disabled', $event)"></fb-toggle-row>
+              }
+              @if (supportsViewed()) {
+                <fb-toggle-row
+                  [label]="'core.component.form-builder.read-only-mode' | sdTranslate"
+                  [hint]="'core.component.form-builder.read-only-mode.hint' | sdTranslate"
+                  [model]="!!_field['viewed']"
+                  (modelChange)="setFlag('viewed', $event)"></fb-toggle-row>
+              }
+              <fb-toggle-row
+                [label]="'core.component.form-builder.hide' | sdTranslate"
+                [model]="!!_field['hidden']"
+                (modelChange)="setFlag('hidden', $event)"></fb-toggle-row>
+              @if (_field['hidden']) {
+                <p class="ins-note">{{ 'core.component.form-builder.hidden-note' | sdTranslate }}</p>
+              }
+            </section>
+
+            <section class="ins-section">
+              <h3 class="ins-section__title">{{ 'core.component.form-builder.conditions' | sdTranslate }}</h3>
+              <attribute-expression
+                [label]="'core.component.form-builder.visible-when' | sdTranslate"
+                [elements]="elements()"
+                [variables]="variables()"
+                [model]="_rules.visible"
+                (sdChange)="setRule('visible', $event)"></attribute-expression>
+              <attribute-expression
+                [label]="'core.component.form-builder.hidden-when' | sdTranslate"
+                [elements]="elements()"
+                [variables]="variables()"
+                [model]="_rules.hidden"
+                (sdChange)="setRule('hidden', $event)"></attribute-expression>
+              @if (supportsDisabled() && !_field['disabled']) {
+                <attribute-expression
+                  [label]="'core.component.form-builder.disabled-when' | sdTranslate"
+                  [elements]="elements()"
+                  [variables]="variables()"
+                  [model]="_rules.disabled"
+                  (sdChange)="setRule('disabled', $event)"></attribute-expression>
+              }
+              @if (supportsRequired() && !_validation.required) {
+                <attribute-expression
+                  [label]="'core.component.form-builder.required-when' | sdTranslate"
+                  [elements]="elements()"
+                  [variables]="variables()"
+                  [model]="_rules.required"
+                  (sdChange)="setRule('required', $event)"></attribute-expression>
+              }
+            </section>
+          } @else if (_group) {
+            <section class="ins-section">
+              <h3 class="ins-section__title">{{ 'core.component.form-builder.state' | sdTranslate }}</h3>
+              <fb-toggle-row
+                [label]="'core.component.form-builder.hide' | sdTranslate"
+                [model]="!!_group.hidden"
+                (modelChange)="setFlag('hidden', $event)"></fb-toggle-row>
+              <p class="ins-note">{{ 'core.component.form-builder.group-rules-note' | sdTranslate }}</p>
+            </section>
+            <section class="ins-section">
+              <h3 class="ins-section__title">{{ 'core.component.form-builder.conditions' | sdTranslate }}</h3>
+              <attribute-expression
+                [label]="'core.component.form-builder.visible-when' | sdTranslate"
+                [elements]="elements()"
+                [variables]="variables()"
+                [model]="_rules.visible"
+                (sdChange)="setRule('visible', $event)"></attribute-expression>
+              <attribute-expression
+                [label]="'core.component.form-builder.hidden-when' | sdTranslate"
+                [elements]="elements()"
+                [variables]="variables()"
+                [model]="_rules.hidden"
+                (sdChange)="setRule('hidden', $event)"></attribute-expression>
+            </section>
+          }
+        }
+
+        <!-- ─────────────── BỐ CỤC ─────────────── -->
+        @case ('layout') {
+          @let _location = location();
+          @let _siblings = store.childrenOf(_location?.parentId ?? null).length;
+          @if (_field) {
+            @let _viewport = viewport();
+            @let _viewportLabel = 'core.component.form-builder.viewport.' + _viewport | sdTranslate;
+            <section class="ins-section">
+              <h3 class="ins-section__title">{{ 'core.component.form-builder.layout.size' | sdTranslate }}</h3>
+              <!-- why: span sửa theo MỨC ĐANG XEM (thanh công cụ Desktop | Tablet | Mobile). Mức chưa tự
+                   khai báo hiện nhãn kế thừa; "Về kế thừa" xoá span của riêng mức đó. -->
+              <div class="ins-key">
+                <sd-select
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  required
+                  class="ins-fixed-select"
+                  [label]="'core.component.form-builder.span.at' | sdTranslate: { viewport: _viewportLabel }"
+                  [items]="columnChoices"
+                  valueField="value"
+                  displayField="display"
+                  [model]="span()"
+                  (modelChange)="setSpan($event)"></sd-select>
+                <sd-button
+                  type="outline"
+                  color="secondary"
+                  size="sm"
+                  prefixIcon="restart_alt"
+                  [disabled]="spanSource() !== 'own'"
+                  [title]="'core.component.form-builder.span.clear' | sdTranslate"
+                  (click)="clearSpan()"></sd-button>
+              </div>
+              <p class="ins-note ins-note--span">
+                @if (inheritedLabel(); as _inherited) {
+                  <span class="ins-badge">{{ _inherited }}</span>
+                }
+                <span>{{ spanSummary() }}</span>
+              </p>
+              <fb-toggle-row
+                [label]="'core.component.form-builder.new-row' | sdTranslate"
+                [hint]="'core.component.form-builder.new-row.hint' | sdTranslate"
+                [model]="newRow()"
+                (modelChange)="setNewRow($event)"></fb-toggle-row>
+              @if (_type === 'radio') {
+                <sd-select
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  required
+                  class="ins-fixed-select"
+                  [label]="'core.component.form-builder.direction' | sdTranslate"
+                  [items]="directions()"
+                  valueField="value"
+                  displayField="display"
+                  [model]="_field['direction'] || 'row'"
+                  (modelChange)="set('direction', $event)"></sd-select>
+              }
+            </section>
+          } @else if (_group) {
+            <section class="ins-section">
+              <h3 class="ins-section__title">{{ 'core.component.form-builder.layout.display' | sdTranslate }}</h3>
+              <fb-toggle-row
+                [label]="'core.component.form-builder.collapsible' | sdTranslate"
+                [model]="!!_group.collapsible"
+                (modelChange)="setCollapsible($event)"></fb-toggle-row>
+              <p class="ins-note">{{ 'core.component.form-builder.group-full-width' | sdTranslate }}</p>
+            </section>
+          }
+          <section class="ins-section">
+            <h3 class="ins-section__title">{{ 'core.component.form-builder.position' | sdTranslate }}</h3>
+            <div class="ins-row">
+              <span class="ins-row__label" [id]="orderLabelId">{{ 'core.component.form-builder.order' | sdTranslate }}</span>
+              <div class="ins-stepper" role="group" [attr.aria-labelledby]="orderLabelId">
+                <button
+                  type="button"
+                  class="ins-stepper__btn"
+                  [disabled]="(_location?.index ?? 0) === 0"
+                  [attr.aria-label]="'core.component.form-builder.move-up' | sdTranslate"
+                  [matTooltip]="'core.component.form-builder.move-up' | sdTranslate"
+                  (click)="store.moveBy(_item.id, -1)">
+                  <sd-icon name="arrow_upward" size="18px"></sd-icon>
+                </button>
+                <button
+                  type="button"
+                  class="ins-stepper__btn"
+                  [disabled]="(_location?.index ?? 0) >= _siblings - 1"
+                  [attr.aria-label]="'core.component.form-builder.move-down' | sdTranslate"
+                  [matTooltip]="'core.component.form-builder.move-down' | sdTranslate"
+                  (click)="store.moveBy(_item.id, 1)">
+                  <sd-icon name="arrow_downward" size="18px"></sd-icon>
+                </button>
+              </div>
+            </div>
+            @if (_field) {
+              @if (containerChoices().length > 1) {
+                <sd-select
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  required
+                  class="ins-fixed-select"
+                  [label]="'core.component.form-builder.container' | sdTranslate"
+                  [items]="containerChoices()"
+                  valueField="value"
+                  displayField="display"
+                  [model]="_location?.parentId || NONE"
+                  (modelChange)="moveToContainer($event)"></sd-select>
+              }
+            } @else if (_group) {
+              <sd-button
+                type="outline"
+                color="secondary"
+                size="sm"
+                block
+                prefixIcon="call_split"
+                [disabled]="!_group.elements?.length"
+                [title]="'core.component.form-builder.ungroup' | sdTranslate"
+                (click)="store.ungroup(_group.id)"></sd-button>
+            }
+          </section>
+        }
+      }
+    </div>
+  }
+
+  <div class="ins-foot">
+    <sd-button
+      type="light"
+      color="error"
+      size="sm"
+      block
+      prefixIcon="delete"
+      [title]="'core.component.form-builder.delete' | sdTranslate"
+      (click)="remove()"></sd-button>
+  </div>
+}
