@@ -1,6 +1,7 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { SdTableOption } from '../models/table-option.model';
 import { MapToSdTableItem, SdTableItem } from '../models/table-item.model';
+import { resolveFieldValue } from '../services/field-value.util';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { buildGroupHeaderContext, SdGroupHeaderHost, syncGroupSelectionMeta } from '../services/table-selection/table-selection.util';
 
@@ -40,11 +41,11 @@ export class SdGroupPipe implements PipeTransform {
     const defaultExpanded = !group.defaultCollapsed;
 
     // Bucket items theo combined field-value hash.
-    // Field hỗ trợ dot-notation (vd 'customer.id') — resolve qua getNestedValue.
+    // Field hỗ trợ dot-notation (vd 'customer.id') và key có khoảng trắng (NSP-5745) — resolve qua resolveFieldValue.
     const buckets = new Map<string, { values: Record<string, any>; items: SdTableItem[] }>();
     for (const item of items) {
       const values: Record<string, any> = {};
-      for (const f of fields) values[f as string] = Utilities.getNestedValue(item.data, f as string);
+      for (const f of fields) values[f as string] = resolveFieldValue(item.data, f as string);
       const key = Utilities.hash(values);
       let bucket = buckets.get(key);
       if (!bucket) {

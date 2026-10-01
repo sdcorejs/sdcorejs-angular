@@ -113,6 +113,40 @@ describe('aggregate snapshot', () => {
     expect(result.branches.get(root)!.cells.get('value')!.context.isComplete).toBeFalse();
     expect(result.branches.get(root)!.cells.get('value')!.context.value).toBeUndefined();
   });
+
+  it('sums a column and buckets groups by fields that are not valid @sdcorejs/utils paths (NSP-5745)', () => {
+    type ImportRow = Record<string, string | number>;
+    const rows: ImportRow[] = [
+      { 'Phân khu*': 'A', 'Diện tích (m2)': 50 },
+      { 'Phân khu*': 'A', 'Diện tích (m2)': 70 },
+      { 'Phân khu*': 'B', 'Diện tích (m2)': 30 },
+    ];
+    const field = 'Diện tích (m2)';
+    const result = buildAggregateSnapshot<ImportRow>({
+      roots: rows,
+      option: {
+        type: 'local',
+        items: () => rows,
+        columns: [],
+        group: { fields: ['Phân khu*'] },
+        aggregate: { group: true },
+      } as SdTableOption<ImportRow>,
+      columns: [{ field, title: '', type: 'number', aggregate: 'SUM' }],
+      complete: true,
+      loadedChildren: new Set<ImportRow>(),
+      format: value => String(value),
+      diagnose: error => {
+        throw error;
+      },
+    });
+
+    expect(result.total!.cells.get(field)!.context.value).toBe(150);
+    const groups = [...result.groups.values()].map(row => row.cells.get(field)!.context);
+    expect(groups.map(context => [context.group?.values['Phân khu*'], context.value])).toEqual([
+      ['A', 120],
+      ['B', 30],
+    ]);
+  });
 });
 
 describe('aggregate tree selection', () => {

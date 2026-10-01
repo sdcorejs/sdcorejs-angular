@@ -207,6 +207,26 @@ describe('TableExportService', () => {
     expect(service.exportTitle()).toBe(TestBed.inject(I18nService).t('core.component.table.export'));
   });
 
+  it('exports the row value of fields that are not valid @sdcorejs/utils paths (NSP-5745)', async () => {
+    const option = {
+      columns: [
+        { field: 'Số phòng ngủ', title: 'Số phòng ngủ', type: 'string' },
+        { field: 'Loại sản phẩm*', title: 'Loại sản phẩm', type: 'string' },
+      ],
+      export: {
+        type: 'default',
+        columns: [{ field: 'Mã căn', title: 'Mã căn', transform: (value: unknown) => `#${String(value)}` }],
+      },
+    } as unknown as SdTableOption;
+    const row = { 'Số phòng ngủ': '2PN', 'Loại sản phẩm*': 'Cao tầng', 'Mã căn': 'A-01' };
+
+    await service.exportCSV(context(option, { total: 1, fetchChunk: async () => [row] }));
+
+    expect(excel.exportCSV.calls.mostRecent().args[0].items).toEqual([
+      { 'Số phòng ngủ': '2PN', 'Loại sản phẩm*': 'Cao tầng', 'Mã căn': '#A-01' },
+    ]);
+  });
+
   describe('export.max', () => {
     const rows = (count: number) => Array.from({ length: count }, (_, index) => ({ id: index + 1 }));
     const limited = (max: unknown, extra: Record<string, unknown> = {}) =>
