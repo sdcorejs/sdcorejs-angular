@@ -57,7 +57,7 @@ CHANGELOG.md        # canonical changelog, keyed theo release suffix
 
 **Showcase đã ra khỏi `versions/`** (2026-08-06). Trước đó nó bị mirror sang cả v20/v21 (3 bản × 186 file) mà **chỉ v19 build**, và `check:sync` có `projects/showcase` trong `syncedRoots` nên mỗi lần sửa showcase đều phải rollout sang v20/v21 nếu không release guard đỏ — cho một app không bao giờ ship. Giờ `syncedRoots` chỉ còn `projects/sdcorejs-angular`.
 
-`showcase/` resolve lib qua tsconfig path `@sdcorejs/angular → ../versions/v19/dist/sdcorejs-angular`, tức **ăn lib đã build**. Phải `ng build sdcorejs-angular` trong `versions/v19` trước khi build showcase.
+`showcase/` resolve lib qua tsconfig path `@sdcorejs/angular → ./node_modules/@sdcorejs/angular`. Thư mục đó do `npm run link:library` (`scripts/link-showcase-library.mjs`) **copy** từ `versions/v19/dist/sdcorejs-angular` — copy chứ không symlink hay path thẳng vào dist, vì lib nằm ngoài workspace sẽ resolve `@angular/*` sang `versions/v19/node_modules`, thành hai bản Angular và mọi demo chết với NG0203. Tức showcase vẫn **ăn lib đã build**: phải `ng build sdcorejs-angular` trong `versions/v19` trước khi build hoặc test showcase. `prestart`, `prebuild` và `build:page` tự chạy `link:library`; `npm test` thì không, nên chạy `npm --prefix showcase run link:library` trước khi test và sau mỗi lần build lại lib. Cài showcase bằng `npm --prefix showcase ci --legacy-peer-deps`; `npm ci` không cờ fail `EUSAGE`.
 
 **Không có `migrations/`.** Migration guide riêng theo release đã bỏ hẳn (2026-08-06). Thay bằng: mỗi archive `published-docs/<version>/` tự mang `CHANGELOG.md` của chính nó + link diff sang release trước — xem "Per-version changelog" dưới.
 

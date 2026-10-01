@@ -211,6 +211,6 @@ export const routes: Routes = [
 
 ## Related
 
-- [keycloak module](./sd-keycloak.md) — typical `action.signout` / `guard.authInfo` source for Keycloak SSO.
-- [permission module](./sd-permission.md) — runs on top of auth; uses `getToken` to call your permission API.
-- [layout module](./sd-layout.md) — `SdLayoutService` consumes `SdAuthService` indirectly via its own `signout` / `userInfo` config (not auto-wired).
+- [keycloak module](../keycloak/sd-keycloak.md) — typical `action.signout` / `guard.authInfo` source for Keycloak SSO.
+- [permission module](../permission/sd-permission.md) — runs on top of auth; uses `getToken` to call your permission API.
+- [layout module](../layout/sd-layout.md) — `SdLayoutService` consumes `SdAuthService` indirectly via its own `signout` / `userInfo` config (not auto-wired).

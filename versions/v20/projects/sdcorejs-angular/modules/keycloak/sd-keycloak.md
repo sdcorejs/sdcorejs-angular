@@ -240,6 +240,6 @@ export class HeaderUser {
 
 ## Related
 
-- [auth module](./sd-auth.md) — generic façade you can layer on top to expose `SdAuthService`.
-- [permission module](./sd-permission.md) — `getToken` callback can return `kc.getToken()` so permission decoding works.
-- [layout module](./sd-layout.md) — `SdLayoutService` consumes user info / signout that you wire from this service.
+- [auth module](../auth/sd-auth.md) — generic façade you can layer on top to expose `SdAuthService`.
+- [permission module](../permission/sd-permission.md) — `getToken` callback can return `kc.getToken()` so permission decoding works.
+- [layout module](../layout/sd-layout.md) — `SdLayoutService` consumes user info / signout that you wire from this service.
