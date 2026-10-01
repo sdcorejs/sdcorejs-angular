@@ -32,6 +32,8 @@ Tiny presentational label primitive — renders the standard SDCoreJS field labe
 | `description` | `string \| null \| undefined` | `undefined` | Optional description line shown below the label in muted (`text-secondary T12R`) style.                |
 | `helperText`  | `string \| undefined`         | `undefined` | When set, renders an outlined `info` icon next to the label; tooltip on hover shows this text.        |
 | `required`    | `boolean \| ''`               | `false`     | Renders a red `*` after the label. Bare attribute (`required`) and string `''` both coerce to `true`. |
+| `for` | `string \| null \| undefined` | `undefined` | The `id` of the native control this label names. When set the label renders as a real `<label for>`: clicking it focuses the control and screen readers use it as the control's name. The required `*` sits inside the label and is `aria-hidden` (the control already reports `required`). |
+| `labelId` | `string \| null \| undefined` | `undefined` | An `id` for the element that holds the label text, so a non-labelable control (e.g. `mat-select`) can point `aria-labelledby` at it. The required `*` stays next to the text and is `aria-hidden`. Without `for` / `labelId` the markup is unchanged. |
 
 > **Coerce**: `required` is treated as `true` for empty-string or any truthy value (custom setter — NOT `booleanAttribute`).
 

@@ -44,6 +44,7 @@ import {
   ɵsdModelFacingControl,
   ɵsdTimerScope,
 } from '@sdcorejs/angular/forms/models';
+import type { SdLabelPlacement } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { Size } from '@sdcorejs/utils/models';
@@ -120,7 +121,12 @@ function datetimeControlToDate(value: string | null): Date | null {
   templateUrl: './datetime.component.html',
   styleUrl: './datetime.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { '[class.sd-bare]': 'isInline()', '[class.sd-viewed]': 'isViewed() || isInline()', '[class.sd-has-label]': '!!label()' },
+  host: {
+    '[class.sd-bare]': 'isInline()',
+    '[class.sd-viewed]': 'isViewed() || isInline()',
+    '[class.sd-has-label]': '!!label()',
+    '[class.sd-label-top]': "labelPlacement() === 'top'",
+  },
   providers: [
     Platform,
     SdNativeDateAdapter,
@@ -155,6 +161,9 @@ export class SdDatetime implements OnDestroy, OnInit {
   /** why: id ổn định của <mat-error> để control trỏ `aria-describedby` sang — thông báo lỗi
    *  phải đọc được từ chính control, không chỉ hiện ra màn hình. */
   readonly errorId = `${this.id}-error`;
+  /** id của nhãn/helper khi `labelPlacement='top'`. */
+  readonly labelId = `${this.id}-label`;
+  readonly hintId = `${this.id}-hint`;
 
   // ==========================================
   // 1. SIGNAL QUERIES
@@ -270,6 +279,8 @@ export class SdDatetime implements OnDestroy, OnInit {
   appearance = computed(() => this.appearanceInput() ?? this.formConfig?.appearance ?? 'outline');
 
   floatLabel = input<FloatLabelType>('auto');
+  /** `'float'` (mặc định) hoặc `'top'` — nhãn `<label for>` tĩnh phía trên, helper text dưới control. */
+  labelPlacement = input<SdLabelPlacement>('float');
 
   // Min/max — chấp nhận 'TODAY', Date, hoặc string ISO
   minInput = input<any>(undefined, { alias: 'min' });

@@ -59,6 +59,7 @@ import {
   ɵsdFormControlConnector,
   ɵsdTimerScope,
 } from '@sdcorejs/angular/forms/models';
+import type { SdLabelPlacement } from '@sdcorejs/angular/forms/models';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { ArrayUtilities, StringUtilities, Utilities } from '@sdcorejs/utils/fns';
@@ -115,7 +116,12 @@ class SdSelectVirtualAdapter {
   styleUrl: './select.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  host: { '[class.sd-bare]': 'isInline()', '[class.sd-viewed]': 'isViewed() || isInline()', '[class.sd-has-label]': '!!label()' },
+  host: {
+    '[class.sd-bare]': 'isInline()',
+    '[class.sd-viewed]': 'isViewed() || isInline()',
+    '[class.sd-has-label]': '!!label()',
+    '[class.sd-label-top]': "labelPlacement() === 'top'",
+  },
   imports: [
     SdDataState,
     SdDataStateTemplateDirective,
@@ -142,6 +148,9 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   /** why: id ổn định của <mat-error> để control trỏ `aria-describedby` sang — thông báo lỗi
    *  phải đọc được từ chính control, không chỉ hiện ra màn hình. */
   readonly errorId = `${this.id}-error`;
+  /** id của nhãn/helper khi `labelPlacement='top'` — `mat-select` trỏ `aria-labelledby` sang nhãn. */
+  readonly labelId = `${this.id}-label`;
+  readonly hintId = `${this.id}-hint`;
 
   // ==========================================
   // 1. SIGNAL QUERIES & INJECTS
@@ -314,6 +323,8 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   appearance = computed(() => this.appearanceInput() ?? this.#formConfiguration?.appearance ?? 'outline');
 
   floatLabel = input<FloatLabelType>('auto');
+  /** `'float'` (mặc định) hoặc `'top'` — nhãn tĩnh phía trên, helper text dưới control. */
+  labelPlacement = input<SdLabelPlacement>('float');
 
   // Mở rộng kiểu dữ liệu cho phép nhận Signal từ bên ngoài truyền vào
   items = input<undefined | null | T[] | SdSearch | Signal<T[]>>();
@@ -1164,6 +1175,16 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
     if (this.sdViewDef()?.templateRef) {
       if (!this.formControl.disabled && !this.focused()) this.focus();
     }
+  };
+
+  /**
+   * Bấm nhãn rời (`labelPlacement='top'`) focus `mat-select` — như `<label for>` với input gốc.
+   * why: `mat-select` không phải phần tử "labelable" nên `for` không có tác dụng; chỉ focus, KHÔNG
+   * mở panel (hành vi giống select gốc).
+   */
+  onLabelClick = () => {
+    if (this.formControl.disabled) return;
+    this.selectRef()?.focus();
   };
 
   focus = () => {

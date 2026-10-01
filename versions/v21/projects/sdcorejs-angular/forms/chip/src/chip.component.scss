@@ -7,6 +7,12 @@
   padding-top: 4px;
 }
 
+// why: nhãn rời (`labelPlacement="top"`) nằm phía trên control, không còn floating label
+// cần chừa chỗ ở mép trên.
+:host(.sd-label-top) {
+  padding-top: 0;
+}
+
 // why: viewed mode hiển thị sd-view (text only) → bỏ đệm trên.
 :host(.sd-viewed) { padding-top: 0; }
 

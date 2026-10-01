@@ -1,85 +1,30 @@
-import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, OnDestroy, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { FormGroup } from '@angular/forms';
+import { SdView } from '@sdcorejs/angular/components/view';
 import { SdChipCalendar } from '@sdcorejs/angular/forms';
-import { filter, Subject, Subscription } from 'rxjs';
-import { SdFormGenericChipCalendar } from '../../../../../../models';
+import type { SdFormGenericChipCalendar } from '../../../../../../models/form-generic-field.model';
 import { ComponentViewedPipe } from '../../../../../../pipes';
+import { FormRenderContext } from '../../../../form-render.context';
 
 @Component({
   selector: 'lib-chip-calendar',
   templateUrl: './chip-calendar.component.html',
   styleUrl: './chip-calendar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    CommonModule,
-    SdChipCalendar,
-    // Pipe cho phần viewed
-    ComponentViewedPipe,
-  ],
+  imports: [SdChipCalendar, SdView, ComponentViewedPipe],
 })
-export class ChipCalendarComponent implements OnInit, OnDestroy {
-  private ref = inject(ChangeDetectorRef);
+export class ChipCalendarComponent {
+  readonly field = input.required<SdFormGenericChipCalendar>();
+  readonly form = input.required<FormGroup>();
+  readonly disabled = input(false);
+  readonly required = input(false);
 
-  readonly setVariables = input.required<
-    Subject<{
-      key: string;
-      value: any;
-    }>
-  >();
-  readonly form = input(new FormGroup({}));
-  value: any;
-  entity: Record<string, any> = {};
-  @Input({
-    alias: 'entity',
-    required: true,
-  })
-  set _entity(val: Record<string, any>) {
-    if (this.entity !== val) {
-      this.entity = val;
-    }
-  }
+  readonly #context = inject(FormRenderContext);
+  readonly labelPlacement = this.#context.labelPlacement;
+  readonly viewed = computed(() => this.#context.viewed() || !!this.field().viewed);
+  readonly value = computed(() => this.#context.value()[this.field().key] as string[] | null | undefined);
 
-  component?: SdFormGenericChipCalendar;
-  @Input({
-    alias: 'component',
-    required: true,
-  })
-  set _component(val: SdFormGenericChipCalendar) {
-    this.component = val;
-  }
-
-  disabled = false;
-  @Input('disabled') set _disabled(val: boolean | '' | undefined | null) {
-    this.disabled = val === '' || !!val;
-  }
-
-  required = false;
-  @Input('required') set _required(val: boolean | '' | undefined | null) {
-    this.required = val === '' || !!val;
-  }
-
-  viewed = false;
-  @Input('viewed') set _viewed(val: boolean | '' | undefined | null) {
-    this.viewed = val === '' || !!val;
-  }
-
-  #subscription = new Subscription();
-
-  /** Inserted by Angular inject() migration for backwards compatibility */
-  constructor(...args: unknown[]);
-  constructor() {}
-  ngOnInit() {
-    this.#subscription.add(
-      this.setVariables()
-        .pipe(filter(variable => variable.key === this.component?.key))
-        .subscribe(variable => {
-          this.entity[variable.key] = variable.value;
-          this.ref.markForCheck();
-        })
-    );
-  }
-  ngOnDestroy() {
-    this.#subscription.unsubscribe();
+  setValue(value: unknown): void {
+    this.#context.patch({ [this.field().key]: value });
   }
 }

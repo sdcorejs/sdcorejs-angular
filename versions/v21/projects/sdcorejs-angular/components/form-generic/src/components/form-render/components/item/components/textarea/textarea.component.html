@@ -1,13 +1,16 @@
-@if (component && entity) {
-  <sd-textarea
-    [form]="form()"
-    [label]="component.label || component.key"
-    [helperText]="component.helperText"
-    [name]="component.key"
-    [autoId]="component.key"
-    [(model)]="entity[component.key!]"
-    [required]="required"
-    [maxlength]="component.validate?.maxlength"
-    [disabled]="disabled"
-    [viewed]="viewed || component.properties?.viewed"></sd-textarea>
-}
+@let item = field();
+<sd-textarea
+  [form]="form()"
+  [label]="item.label || item.key"
+  [helperText]="item.helperText"
+  [placeholder]="item.placeholder"
+  [labelPlacement]="labelPlacement()"
+  [name]="item.key"
+  [autoId]="item.key"
+  [model]="value()"
+  (modelChange)="setValue($event)"
+  [required]="required()"
+  [minlength]="viewed() ? undefined : item.validation?.minLength"
+  [maxlength]="viewed() ? undefined : item.validation?.maxLength"
+  [disabled]="disabled()"
+  [viewed]="viewed()"></sd-textarea>

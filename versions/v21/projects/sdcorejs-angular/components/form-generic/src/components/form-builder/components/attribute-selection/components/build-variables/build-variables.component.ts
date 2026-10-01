@@ -1,141 +1,98 @@
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  Input,
-  ViewChild,
-  OnInit,
-  OnDestroy,
-  inject,
-  input,
-  output,
-} from '@angular/core';
+import { booleanAttribute, ChangeDetectionStrategy, Component, computed, input, output, signal, viewChild } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
-import { SdAutocomplete } from '@sdcorejs/angular/forms/autocomplete';
-import { Utilities } from '@sdcorejs/utils/fns';
-import {
-  sdGetComponentAttributes,
-  sdGetVariableAttributes,
-  SdFormGenericComponent,
-  SdFormGenericDefinitionSelection,
-  SdFormGenericGroup,
-  SdFormGenericVariable,
-} from '../../../../../../models';
-import { startWith, Subject, Subscription } from 'rxjs';
+import { SdInput, SdSelect } from '@sdcorejs/angular/forms';
 import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import type { SdFormGenericFill } from '../../../../../../models/form-generic-field.model';
+import { sdIsField, sdIsGroup } from '../../../../../../models/form-generic-schema';
+import type { SdFormGenericPageElement } from '../../../../../../models/form-generic-schema.model';
+import { MappingBoxComponent } from '../../../value-box/mapping-box.component';
+import { fillRows, referenceLabels } from '../../../value-box/mapping-summary';
 
+interface DraftFill {
+  field: string;
+  from: string;
+}
+
+/**
+ * Sửa `options.fill`: khi người dùng chọn một mục catalog, ghi `item.data[from]` vào field đích.
+ * `from` chọn theo `catalog.fields` nếu portal khai báo; không khai báo thì nhập tên thuộc tính.
+ */
 @Component({
   selector: 'build-variables',
   templateUrl: './build-variables.component.html',
   styleUrl: './build-variables.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdAutocomplete, SdButton, SdModal, SdTranslatePipe],
+  imports: [SdInput, SdSelect, SdButton, SdModal, SdTranslatePipe, MappingBoxComponent],
 })
-export class BuildVariables implements OnInit, OnDestroy {
-  private ref = inject(ChangeDetectorRef);
+export class BuildVariables {
+  readonly modal = viewChild(SdModal);
 
-  @ViewChild(SdModal) modal?: SdModal;
-  readonly components = input.required<(SdFormGenericComponent | SdFormGenericGroup)[]>();
-  readonly variables = input.required<SdFormGenericVariable[]>();
-  form = new FormGroup({});
-  @Input() label?: string;
-  readonly selections = input.required<SdFormGenericDefinitionSelection[]>();
-  valuesKey?: string | null;
-  @Input({ alias: 'valuesKey', required: true }) set _valuesKey(valuesKey: string | undefined | null) {
-    this.valuesKey = valuesKey;
-    this.#inputChanges.next();
-  }
-  selection?: SdFormGenericDefinitionSelection;
+  readonly label = input<string>();
+  readonly elements = input.required<readonly SdFormGenericPageElement[]>();
+  /** Thuộc tính trong `item.data` mà catalog trả về (`catalog.fields`). */
+  readonly fields = input<readonly { name: string; label: string }[] | null | undefined>([]);
+  /** Key của chính field đang sửa — không được làm field đích. */
+  readonly exclude = input<string | null | undefined>(undefined);
+  readonly model = input<readonly SdFormGenericFill[] | null | undefined>(undefined);
+  /** Chỉ xem — không có nút mở popup chỉnh sửa. */
+  readonly readonly = input(false, { transform: booleanAttribute });
+  readonly modelChange = output<SdFormGenericFill[]>();
 
-  leftProperties?: Property[];
-  rightProperties?: Property[];
+  readonly form = new FormGroup({});
+  readonly draft = signal<DraftFill[]>([]);
+  readonly #labels = computed(() => referenceLabels(this.elements(), []));
+  readonly declared = computed(() => !!this.fields()?.length);
+  readonly rows = computed(() => {
+    const fields = this.fields() ?? [];
+    return fillRows(this.model(), this.#labels(), from => fields.find(field => field.name === from)?.label || from);
+  });
+  readonly targetOptions = computed(() =>
+    this.elements()
+      .flatMap(element => (sdIsGroup(element) ? (element.elements ?? []) : [element]))
+      .filter(sdIsField)
+      .filter(field => !!field.key && field.key !== this.exclude() && field.type !== 'html' && field.type !== 'upload')
+      .map(field => ({ value: field.key as string, display: field.label || (field.key as string) }))
+  );
+  readonly fromOptions = computed(() => (this.fields() ?? []).map(field => ({ value: field.name, display: field.label || field.name })));
 
-  items: {
-    id: string;
-    key: string;
-    value: any;
-  }[] = [];
-  queryString?: string;
-  #model!: Record<string, any>;
-  @Input({ alias: 'model', required: true }) set _model(model: Record<string, any> | undefined) {
-    this.#model = JSON.parse(JSON.stringify({ ...model }));
-    // Parse JSON -> STRING để hiển thị trên UI
-    this.queryString = JSON.stringify(this.#model);
-    this.items = Object.keys(this.#model).map(key => ({
-      id: Utilities.randomId(),
-      key,
-      value: this.#model?.[key],
-    }));
-  }
-  readonly modelChange = output<Record<string, string>>();
-
-  // Mỗi lần inputChanges thì tính lại selection
-  #inputChanges = new Subject<void>();
-  #subscription = new Subscription();
-
-  /** Inserted by Angular inject() migration for backwards compatibility */
-  constructor(...args: unknown[]);
-  constructor() {}
-
-  ngOnInit() {
-    this.#subscription.add(
-      this.#inputChanges.pipe(startWith('')).subscribe(() => {
-        this.selection = this.selections()?.find?.(e => e.value === this.valuesKey);
-      })
-    );
+  edit(): void {
+    if (this.readonly()) return;
+    this.draft.set((this.model() ?? []).map(item => ({ field: item.field, from: item.from })));
+    this.modal()?.open();
   }
 
-  ngOnDestroy() {
-    this.#subscription.unsubscribe();
+  setField(index: number, field: unknown): void {
+    this.#patch(index, { field: typeof field === 'string' ? field : '' });
   }
 
-  edit = async () => {
-    this.leftProperties = [...sdGetComponentAttributes(this.components()), ...sdGetVariableAttributes(this.variables())];
-    this.rightProperties =
-      this.selection?.variables?.items?.map(e => ({
-        value: '${' + e.value + '}',
-        display: e.display,
-      })) || [];
-    this.modal?.open?.();
-    this.ref.markForCheck();
-    this.modal?.open?.();
-    this.ref.markForCheck();
-  };
+  setFrom(index: number, from: unknown): void {
+    this.#patch(index, { from: typeof from === 'string' ? from : '' });
+  }
 
-  addField = () => {
-    this.items.push({
-      id: Utilities.randomId(),
-      key: '',
-      value: '',
-    });
-    this.ref.markForCheck();
-  };
+  add(): void {
+    this.draft.set([...this.draft(), { field: '', from: '' }]);
+  }
 
-  remove = (idx: number) => {
-    this.items.splice(idx, 1);
-    this.ref.markForCheck();
-  };
+  remove(index: number): void {
+    this.draft.set(this.draft().filter((_, position) => position !== index));
+  }
 
-  onAccept = () => {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
+  /** Bỏ dòng thiếu field đích hoặc thiếu thuộc tính nguồn; một field đích chỉ nhận một nguồn (giữ dòng đầu). */
+  accept(): void {
+    const fill: SdFormGenericFill[] = [];
+    for (const row of this.draft()) {
+      const field = row.field.trim();
+      const from = row.from.trim();
+      if (!field || !from || fill.some(item => item.field === field)) continue;
+      fill.push({ field, from });
     }
-    const result: Record<string, string> = {};
-    for (const { key, value } of this.items) {
-      if (value !== undefined && value !== null && value !== '') {
-        result[key] = value;
-      }
-    }
-    this.modelChange.emit(result);
-    this.modal?.close();
-    this.ref.markForCheck();
-  };
-}
+    this.modelChange.emit(fill);
+    this.modal()?.close();
+  }
 
-export interface Property {
-  value: string;
-  display: string;
+  #patch(index: number, patch: Partial<DraftFill>): void {
+    this.draft.set(this.draft().map((row, position) => (position === index ? { ...row, ...patch } : row)));
+  }
 }

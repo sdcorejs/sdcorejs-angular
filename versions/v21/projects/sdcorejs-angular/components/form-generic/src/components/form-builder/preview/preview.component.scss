@@ -1,0 +1,129 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.pv {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.pv__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex: 0 0 auto;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--sd-border);
+  background: var(--sd-surface);
+}
+
+.pv__note {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-12, 12px);
+}
+
+.pv__actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pv__stage {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 20px 24px 32px;
+  background: var(--sd-surface-muted);
+}
+
+.pv__frame {
+  box-sizing: border-box;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 16px 8px;
+  border: 1px solid var(--sd-border);
+  border-radius: var(--sd-radius-12, 12px);
+  background: var(--sd-surface);
+}
+
+// why: khung = bề rộng thiết bị; mức bố cục do `[breakpoint]` ép theo viewport đang chọn, không phụ
+// thuộc bề rộng khung — hàng ở đây trùng hàng của canvas cùng mức.
+.pv__frame--tablet {
+  width: 768px;
+  max-width: 100%;
+  border-radius: var(--sd-radius-16, 16px);
+  border-color: var(--sd-border-strong);
+}
+
+.pv__frame--mobile {
+  width: 390px;
+  max-width: 100%;
+  border-radius: var(--sd-radius-24, 24px);
+  border-color: var(--sd-border-strong);
+  padding: 16px 4px;
+}
+
+.pv__empty {
+  margin: 24px 16px;
+  color: var(--sd-text-secondary);
+  text-align: center;
+}
+
+.pv__result {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 1040px;
+  margin: 12px auto 0;
+}
+
+// why: the live region is always rendered (see the template) — without a result it takes no space.
+.pv__result:empty {
+  margin: 0;
+}
+
+.pv__result[data-viewport='tablet'] {
+  max-width: 768px;
+}
+
+.pv__result[data-viewport='mobile'] {
+  max-width: 390px;
+}
+
+.pv__msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--sd-radius-8, 8px);
+  font-size: var(--sd-font-size-13, 13px);
+
+  sd-icon {
+    flex: 0 0 auto;
+  }
+}
+
+.pv__msg--success {
+  background: var(--sd-status-success-bg, var(--sd-success-light));
+  color: var(--sd-status-success-fg, var(--sd-success-dark));
+}
+
+.pv__msg--error {
+  background: var(--sd-status-error-bg, var(--sd-error-light));
+  color: var(--sd-status-error-fg, var(--sd-error-dark));
+}
+
+.pv__msg--warning {
+  background: var(--sd-status-warning-bg, var(--sd-warning-light));
+  color: var(--sd-status-warning-fg, var(--sd-warning-dark));
+}

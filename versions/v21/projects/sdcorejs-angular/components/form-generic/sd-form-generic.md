@@ -1,329 +1,388 @@
-# `<sd-form-builder>`, `<sd-form-render>` & `<sd-feel-expression>`
+# `<sd-form-builder>` & `<sd-form-render>`
 
-**Type**: Components (three public components in one entry point)
-**Selectors**: `sd-form-builder`, `sd-form-render`, `sd-feel-expression`
+**Type**: Components (two public components in one entry point)
+**Selectors**: `sd-form-builder`, `sd-form-render`
 **Import path**: `@sdcorejs/angular/components/form-generic`
-**Classes**: `SdFormBuilder`, `SdFormRender`, `SdFeelExpression`
+**Classes**: `SdFormBuilder`, `SdFormRender`
 **Standalone**: yes
 
 ## One-line purpose
 
-A schema-driven form system: `<sd-form-builder>` is a drag-and-drop designer that produces an `SdFormGeneric` JSON schema, `<sd-form-render>` turns that schema into a live Angular reactive form, and `<sd-feel-expression>` is the condition editor both of them use for `*WhenExpression` rules.
+A schema-driven form system: `<sd-form-builder>` is an embedded drag-and-drop designer that produces an `SdFormGenericSchema` JSON document, and `<sd-form-render>` turns that document into a live Angular form with a `[(value)]` model.
 
 ## When to use
 
 - The set of fields is data, not code — a portal where an admin composes the form and end users fill it in.
 - The same schema must drive both an editable form and a read-only detail view (`[viewed]`).
 - Fields need to show/hide/disable/require each other through configured conditions rather than hand-written template logic.
+- The layout must adapt to the width of the **form** (a drawer, a dialog, a page) with a span per level (desktop / tablet / mobile).
 
 ## When NOT to use
 
 - A form whose fields are known at compile time. Compose `<sd-input>` / `<sd-select>` / … directly — you get real types and far less indirection.
 - A single dynamic field. Use `@if` over the concrete control.
-- A page that only needs conditional display. `@if` on a signal is lighter than an expression schema.
+- A page that only needs conditional display. `@if` on a signal is lighter than a schema.
 
 ## Exported surface
 
-`index.ts` re-exports four groups. Anything not listed here is internal, even if the file lives inside this folder:
+The entry point exports exactly five runtime symbols — guarded by `src/public-api.spec.ts`:
 
-| Group | Exported |
+| Runtime symbol | Kind |
 | --- | --- |
-| Components | `SdFormBuilder`, `SdFormRender`, `SdFeelExpression` |
-| Configuration | `ISdFormGenericConfiguration`, `SD_FORM_GENERIC_CONFIGURATION`, `IWorkflowConfigurationForm` (type-only) |
-| Models | `SdFormGeneric`, `SdFormRenderConfiguration`, `SdFormGenericComponent` (+ every per-type interface), `SdFormGenericGroup`, `SdFormGenericVariable`, `SdFormGenericLayout`, `SdFormGenericExpression`, the selection / table / html definition types, and the helper functions/constants below |
-| Services | `SdFormRenderService` only |
+| `SdFormBuilder` | component `sd-form-builder` |
+| `SdFormRender` | component `sd-form-render` |
+| `SdFormRenderService` | service (`viewEntities`) |
+| `provideSdFormGeneric(config)` | `EnvironmentProviders` for the portal configuration |
+| `SD_FORM_GENERIC_BREAKPOINTS` | frozen default breakpoints `{ tablet: 600, desktop: 1024 }` |
 
-**Not exported** (internal): the 14 field sub-components (`TextFieldControl`, `SelectAttribute`, …), `BuilderService`, `FormGenericService`, and all seven pipes (`ComponentViewedPipe`, `WhenExpressionPipe`, `ExpressionQueryPipe`, `ExpressionViewPipe`, `ExpressionFeelPipe`, `HtmlPipe`, `HyperlinkPipe`). The builder and renderer compose them internally; there is no supported way to mount one on its own.
+Everything else is **type-only**: the schema (`SdFormGenericSchema`, `SdFormGenericPage`, `SdFormGenericGroup`, `SdFormGenericVariable`, `SdFormGenericValidation`, …), the field model (`SdFormGenericField` and one interface per `type`, `SdFormGenericLayout`, `SdFormGenericRules`, `SdFormGenericFieldValidation`, `SdFormGenericOptions`, `SdFormGenericValueRef`, `SdFormGenericParam`, `SdFormGenericFill`, …), the configuration (`SdFormGenericConfig`, `SdFormGenericCatalog`, `SdFormGenericCatalogItem`, `SdFormGenericCatalogContext`, `SdFormGenericTemplate`, `SdFormGenericHtmlDefinition`, `SdFormGenericValidator`), the breakpoint types (`SdFormGenericBreakpoint`, `SdFormGenericBreakpoints`) and the result of `validate()` (`SdFormGenericValidationResult`, `SdFormGenericValidationMessages`).
 
-`SdFormGenericValidation`, `SdFormGenericValidationFunction`, `SdFormGenericValidationConfiguration` and `ValidationAlerts` are exported from the models barrel, so the types behind `SdFormGeneric.validations` and `IWorkflowConfigurationForm.validation` can be imported by name.
-
-### Helper functions and constants
-
-| Symbol | Signature | Notes |
-| --- | --- | --- |
-| `sdGenerateId()` | `() => string` | New component `id` (`Utilities.randomId('id')`). |
-| `sdGenerateKey()` | `() => string` | New component `key` (`Utilities.randomId('key')`). |
-| `sdFormatComponent(component)` | `(SdFormGenericComponent \| SdFormGenericGroup) => …` | Normalises a component in place before render. |
-| `sdGetComponentAttributes(components)` | `=> { value, display }[]` | Flattens a schema into pickable attributes; recurses into groups, skips `html`. |
-| `sdGetVariableAttributes(variables)` | `=> { value, display }[]` | Same, for `variables`. |
-| `sdGetDatetimeValue(value)` | `(string) => …` | Resolves a relative date token used by expressions. |
-| `sdEvaluateExpression(expression, entity)` | `=> boolean` | Evaluates a condition tree against an entity. Used by validations and `*WhenExpression`. |
-| `sdExpressionToJavascriptExpression(condition)` | `=> string` | Renders a condition tree as a JS source string. |
-| `sdTemplateToCondition(template, entity)` | `=> …` | Interpolates a `${key}` template against an entity. |
-| `SD_FORM_BUILDER_COMPONENTS` | `FormBuilderComponent[]` | The palette. 13 entries across `basic` / `choice` / `advanced` / `layout`. |
-| `SD_COMPONENT_ICONS` | `Record<string, { symbol, label }>` | Derived from the palette; keyed by component `type`. |
-| `SD_TABLE_COLUMN_TYPES` | array | Column types offered by the `table` field. |
-| `SD_ATTRIBUTE_OPERATORS` | record | Operators offered per attribute type in the expression editor. |
-| `SD_DAY_INFO_TYPES`, `SD_DAY_INFO_PREVIOUSES` | arrays | Relative-date vocabulary for date conditions. |
-| `SdFormGenericOperators` | object | Operator metadata for `SdFormGenericOperator`. |
-
-## Schema — `SdFormGeneric`
-
-```ts
-interface SdFormGeneric {
-  components: (SdFormGenericComponent | SdFormGenericGroup)[];
-  variables?: SdFormGenericVariable[];
-  validations?: SdFormGenericValidation[];
-}
-```
-
-Every field extends `SdFormGenericComponentBase`:
-
-```ts
-interface SdFormGenericComponentBase {
-  id: string;                 // unique, sdGenerateId()
-  key: string;                // the entity property this field reads/writes, sdGenerateKey()
-  label: string;
-  template?: string;
-  helperText?: string;
-  layout?: SdFormGenericLayout;      // { row?, columns, mobileColumns? } — a 12-column grid
-  validate?: { required?: boolean };
-  disabled?: boolean;
-  properties?: {
-    viewed?: boolean;                // read-only presentation (NOT the same as disabled)
-    hyperlink?: string;              // link target while viewed
-    hidden?: boolean;
-    hiddenWhenExpression?: SdFormGenericExpression;
-    visibleWhenExpression?: SdFormGenericExpression;
-    disabledWhenExpression?: SdFormGenericExpression;
-    requiredWhenExpression?: SdFormGenericExpression;
-    onChange?: { setValues?: Record<string, any> };
-  } & Record<string, any>;
-}
-```
-
-`SdFormGenericComponent` is the discriminated union over `type`. Per-variant additions:
-
-| `type` | Interface | Adds |
-| --- | --- | --- |
-| `textfield` | `SdFormGenericTextfield` | `defaultValue?: string`; `validate.{minlength,maxlength,pattern,patternErrorMessage}` |
-| `textarea` | `SdFormGenericTextarea` | `defaultValue?: string`; `validate.{minlength,maxlength}` |
-| `number` | `SdFormGenericNumber` | `defaultValue?: number`; `validate.{min,max}` |
-| `datetime` | `SdFormGenericDatetime` | `subtype: 'date' \| 'datetime'`; `defaultValue?: string`; `validate.{min,max}` (accepts the literal `'TODAY'`) |
-| `checkbox` | `SdFormGenericCheckbox` | `defaultValue?: boolean`. **`validate.required` is not enforced** — `<sd-checkbox>` has no `required` input, so a checkbox cannot be made mandatory from the schema. |
-| `select` | `SdFormGenericSelect` | `values?` / `valuesKey?`; `defaultValue?: string \| string[]`; `properties.{query,multiple,setVariables}` |
-| `radio` | `SdFormGenericRadio` | `values?` / `valuesKey?`; `defaultValue?: string`; `properties.direction: 'row' \| 'column'` |
-| `checklist` | `SdFormGenericChecklist` | `values?` / `valuesKey?`; `defaultValue?: string[]`; `properties.query` |
-| `chip-string` | `SdFormGenericChipString` | `defaultValue?: string[]`; `validate.{minlength,maxlength,pattern,patternErrorMessage,maxOfItems}` |
-| `chip-calendar` | `SdFormGenericChipCalendar` | same validate shape as `chip-string` |
-| `upload` | `SdFormGenericUpload` | `properties.{type,max,maxSize,extensions,args,source}` — mirrors `<sd-upload-file>` |
-| `table` | `SdFormGenericTable` | `columns?` / `columnsKey?`; `properties.{type,titleButtonCreate}` |
-| `html` | `SdFormGenericHtml` | `content: string`; `properties.{variables,queries,query}`. Has **no** `label` and its `key` is optional |
-| `break` | `SdFormGenericBreak` | Nothing. Invisible spacer that forces the next field onto a new row |
-
-`SdFormGenericGroup` is not a field — it is a titled container with its own `layout`, a nested `components` array, and required `properties.{icon, color}`. Groups do not nest: the builder hides `group` from the palette while you are editing one.
-
-Groups support `properties.hidden`, `hiddenWhenExpression` and `visibleWhenExpression` for visibility. They have **no disabled-when option** (`disabledWhenExpression`) or required rule; configure those on individual child fields. Legacy group-level disable conditions are ignored by the renderer.
-
-| Group property | Type | Default | Behaviour |
-| --- | --- | --- | --- |
-| `properties.collapsible` | `boolean` | `false` | Allows expanding/collapsing the group in builder preview and `<sd-form-render>`, including viewed mode. Uses the same `collapsible` property as `<sd-section>`. |
-
-```ts
-const group: SdFormGenericGroup = {
-  id: 'details',
-  type: 'group',
-  label: 'Details',
-  layout: { columns: '12' },
-  properties: { icon: 'category', color: 'primary', collapsible: true },
-  components: [/* child fields */],
-};
-```
-
-Groups start expanded. Collapsing changes presentation only: child controls keep their values, touched state and validation. The expanded/collapsed state belongs to the rendered section instance and is not saved to the schema. The design canvas remains available for editing group contents through Details.
-
-`SdFormGenericValues` is a convenience alias for `SdFormGenericRadio | SdFormGenericSelect | SdFormGenericChecklist`. Their inline `values` entries are `SdFormGenericSelectionStaticItem` — `{ value: string; label: string }` (note `label`, not `display`; the `display` spelling belongs to `SdFormGenericSelectionItem`, which is what a `valuesKey` lookup returns).
-
-### Expressions
-
-`*WhenExpression` and expression validations share one tree type:
-
-```ts
-interface SdFormGenericExpression {
-  key: string;                 // any unique string — it is the @for track key
-  type: 'combinator';
-  combinator: '&&' | '||';
-  conditions: (SdFormGenericExpression | SdFormGenericExpressionCondition)[];
-}
-
-interface SdFormGenericExpressionCondition {
-  key: string;
-  type: 'condition';
-  field?: string;              // a component `key`
-  operator: Operator;          // from @sdcorejs/utils/models — NOT SdFormGenericOperator
-  value: any;                  // required (pass undefined for NULL / NOT_NULL)
-  dayInfo: DayInfo;            // required (pass {} for non-date fields)
-}
-```
-
-⚠️ `value` and `dayInfo` are **not optional** — a condition literal must include both even when they carry nothing. `operator` is the full `Operator` union from `@sdcorejs/utils/models` (`EQUAL`, `NOT_EQUAL`, `CONTAIN`, `IN`, `BETWEEN`, `NULL`, `NOT_NULL`, …). `SdFormGenericOperator` is a separate 8-member subset used only to label the pickers in `SdFormGenericOperators`; it is not the type of this field.
+**Not exported** (internal): the renderer's field sub-components, the builder's canvas / palette / inspector / preview parts and its state layer, the layout / rule / reference helpers, `FormGenericService`, the presets and the pipes. There is no supported way to mount one of them on its own.
 
 ---
 
-## `<sd-form-builder>`
+## Schema — `SdFormGenericSchema`
 
-The visual designer: a searchable palette on the left, a 12-column drag-and-drop canvas in the middle, and an attribute panel on the right.
-
-### Inputs
-
-| Name | Type | Default | Notes |
-| --- | --- | --- | --- |
-| `formGeneric` | `SdFormGeneric \| undefined` | `undefined` | Seed schema. Deep-cloned on every **reference** change (`JSON.parse(JSON.stringify(...))`), so the input object is never mutated — and mutating it in place will **not** reload the canvas. Pass a new object to reset. |
-
-### Outputs
-
-**None.** The builder does not emit. Read the edited schema off the component instance through a template reference:
-
-| Field | Type |
-| --- | --- |
-| `components` | `SdFormGeneric['components']` |
-| `variables` | `SdFormGenericVariable[]` |
-| `validations` | `SdFormGenericValidation[]` |
-
-```html
-<sd-form-builder #builder [formGeneric]="seed"></sd-form-builder>
-<sd-button title="Save" (click)="save(builder)"></sd-button>
-```
+This is the **first version** of the schema: there is no `schemaVersion` field and no migration from the pre-3.0 `SdFormGeneric` shape.
 
 ```ts
-save(builder: SdFormBuilder) {
-  const schema: SdFormGeneric = {
-    components: builder.components,
-    variables: builder.variables,
-    validations: builder.validations,
-  };
-  return this.api.post('/api/forms', schema);
+interface SdFormGenericSchema {
+  pages: SdFormGenericPage[];                 // a single-page form still stores one page
+  navigation?: { type: 'tabs' } | { type: 'steps'; linear?: boolean }; // reserved for tabs / steps (later release)
+  variables?: SdFormGenericVariable[];       // { key, label } — values come from [variables]
+  validations?: SdFormGenericValidation[];   // form-level checks run by validate()
+}
+
+interface SdFormGenericPage {
+  id: string;
+  label?: string;
+  icon?: string;
+  rules?: { visible?: Filter; hidden?: Filter };
+  elements: (SdFormGenericGroup | SdFormGenericField)[];
 }
 ```
 
-### Behaviour notes
+The grammar is fixed: **schema → pages → group | field**, and a group holds fields only — groups do not nest. Every element has an `id`; every field that stores a value has a `key`, unique across fields **and** variables (one namespace). A key cannot be a JavaScript `Object.prototype` name (`__proto__`, `constructor`, `toString`…) or `prototype`; the builder refuses it and the renderer skips such a field (one dev-mode warning per key). This release renders and designs the **first page**; the other pages and `navigation` are kept unchanged when the builder emits the schema.
 
-- **Layout is a 12-column grid.** Each field carries `layout.columns` (1–12) and optional `layout.mobileColumns`. A row is full at 12; the builder refuses an inline drop when fewer than 2 columns remain.
-- **Break** is not in the palette. Add it with the per-row "+ Break" quick action.
-- **Live preview** — the builder embeds an `<sd-form-render>` for its preview mode, so what you see is the real renderer, not a mock.
-- **Structural edits are debounced** by 200 ms before the canvas rows are recomputed.
-- Requires `SdNotifyService` and `SdConfirmService` (both `providedIn: 'root'`, nothing to register).
+An element whose `type` this version does not know (added by a later release) is **skipped** by the renderer (one dev-mode warning per type) and **kept as-is** by the builder, which shows it as an "unsupported" card that can be moved or deleted but not edited or duplicated.
+
+An `id` that is missing, or that repeats an earlier one (for example in hand-copied JSON), gets a new id when a component loads the schema; the first element keeps its id.
+
+### Field base
+
+Every field has these properties:
+
+| Property | Type | Notes |
+| --- | --- | --- |
+| `id` | `string` | Unique element id. |
+| `type` | see table below | Discriminates the field union. |
+| `key` | `string` | The property of `value` this field reads and writes (optional on `html`). |
+| `label` | `string` | Visible label. |
+| `placeholder`, `helperText` | `string` | Hint inside the control / described-by text under it. |
+| `defaultValue` | per type | Applied only while the key is `undefined` — see *Field behaviour*. |
+| `layout` | `SdFormGenericLayout` | Span per level and `newRow` — see *Layout*. |
+| `rules` | `SdFormGenericRules` | Dynamic `visible` / `hidden` / `disabled` / `required` conditions (`Filter`). |
+| `validation` | `SdFormGenericFieldValidation` | Static constraints. |
+| `disabled`, `viewed`, `hidden` | `boolean` | Static state. `viewed` is a read-only presentation (not the same as disabled). |
+| `hyperlink` | `string` | Link used in viewed mode (select / radio); `${key}` inside is free text (not rewritten on rename) and is replaced by the URL-encoded value. |
+
+```ts
+interface SdFormGenericFieldValidation {
+  required?: boolean;
+  min?: number | 'today' | string;    // number: numeric bound; datetime: 'today' (whole day for date+time) or an ISO date
+  max?: number | 'today' | string;
+  minLength?: number;
+  maxLength?: number;
+  pattern?: { value: string; message?: string };
+  maxItems?: number;                  // chip-string / chip-calendar
+  phoneCountry?: 'VN';                // textfield subtype 'phone'
+}
+```
+
+### Field types
+
+| `type` | Adds | Value |
+| --- | --- | --- |
+| `textfield` | `subtype?: 'text' \| 'email' \| 'phone' \| 'url' \| 'password'` (see *Presets*) | `string` |
+| `textarea` | — | `string` |
+| `number` | `subtype?: 'integer' \| 'decimal' \| 'currency' \| 'percent'`, `precision?`, `currency?` | `number` |
+| `select` | `options`, `multiple?` | `string \| string[]` |
+| `radio` | `options`, `direction?: 'row' \| 'column'` | `string` |
+| `checkbox` | — | `boolean` |
+| `datetime` | `subtype?: 'date' \| 'datetime'` | ISO `string` |
+| `chip-string` | — | `string[]` |
+| `chip-calendar` | — | `string[]` (dates) |
+| `upload` | `accept?: 'file' \| 'image'`, `source?: 'ALL' \| 'PHOTO_LIBRARY' \| 'CAPTURE'`, `extensions?`, `maxFiles?`, `maxSizeMb?`, `params?` | result of the portal upload |
+| `html` | static `content` + `variables`, **or** a portal `definition` + `query` | — (no value) |
+
+A line break is no longer an element: a field that must start a new row sets `layout.newRow: true`.
+
+### Group
+
+```ts
+interface SdFormGenericGroup {
+  id: string;
+  type: 'group';
+  label: string;
+  icon?: string;          // Material icon name before the title
+  color?: Color;          // icon accent: primary (default) · secondary · info · success · warning · error
+  collapsible?: boolean;  // expand / collapse in the builder preview and the renderer
+  hidden?: boolean;
+  rules?: { visible?: Filter; hidden?: Filter };
+  elements: SdFormGenericField[];
+}
+```
+
+A group always takes a full row and is presentation only: its children read and write **flat** keys on `value`. A group whose children are all hidden is not rendered. Collapsing changes presentation only — child controls keep their values, touched state and validation.
+
+### Layout
+
+```ts
+interface SdFormGenericLayout {
+  span?: { desktop?: number; tablet?: number; mobile?: number }; // 1–12
+  newRow?: boolean;
+}
+```
+
+The grid has 12 columns and three levels. Inheritance:
+
+| Level | Span |
+| --- | --- |
+| desktop | `span.desktop ?? 12` |
+| tablet | `span.tablet ?? span.desktop ?? 12` — *same as Desktop* |
+| mobile | `span.mobile ?? 12` — *default* (full row) |
+
+Rows are packed greedily in schema order: a field that does not fit starts a new row, `newRow: true` always starts one, and a group takes a full row. The renderer and the builder canvas use **the same packing function**, so the same schema at the same level gives the same rows.
+
+The level is chosen from the width of the **form** — a `ResizeObserver` on the renderer's grid, not the viewport — so a form in a narrow drawer stacks like it would on a phone:
+
+| Form width | Level |
+| --- | --- |
+| `< tablet` (600 px) | mobile |
+| `tablet` … `< desktop` (600–1023 px) | tablet |
+| `≥ desktop` (1024 px) | desktop |
+
+The thresholds are `SD_FORM_GENERIC_BREAKPOINTS`; a portal overrides either one with `provideSdFormGeneric({ breakpoints: { tablet: 700 } })` (the other keeps its default). `<sd-form-render [breakpoint]>` forces a level regardless of the width.
+
+### Rules — `Filter`
+
+Conditions are stored as `Filter` from `@sdcorejs/utils/models` — the same shape `<sd-query-builder>` edits — and evaluated against `{ ...value, ...variables }`:
+
+```ts
+rules: {
+  visible:  { field: 'agree', operator: 'EQUAL', data: true },
+  required: { field: 'amount', operator: 'GREATER_THAN', data: 1000 },
+  disabled: { field: 'tenantLocked', operator: 'EQUAL', data: true },   // a variable key
+}
+```
+
+- A field is shown when (`visible` is absent or true) **and** (`hidden` is absent or false) **and** the static `hidden` flag is off.
+- `disabled` / `required` are OR-ed with the static `disabled` / `validation.required`.
+- Field-to-field comparisons use `dataType: 'field'`; dates support `dataType: 'date-today'` and `'date-relative'`.
+- On a multiple value (a `select` with `multiple`, chips) `IN` / `NOT_IN` mean *one selected item is / none is in the list*, and `EQUAL` / `NOT_EQUAL` mean *one selected item equals / none equals*.
+- A checkbox without a value (never touched) counts as unticked: `EQUAL false` matches it.
+- An `AND` / `OR` group without conditions is *no condition*: inside a group it is skipped, and a rule or a form validation that is only an empty group does not apply.
+- `CONTAIN` / `START_WITH` / `END_WITH` (and their `NOT_` forms) on a multiple value compare the comma-joined text of the selected items.
+- A condition the evaluator cannot read (hand-edited JSON, for example a leaf without `field`) never matches, so a form validation built on it never fires.
+- A hidden field is not rendered (the rows reflow) and therefore not validated; its value stays in `value`.
+
+### Form-level validations
+
+```ts
+type SdFormGenericValidation =
+  | { type: 'filter'; filter: Filter; message: string; alert: 'error' | 'warning' }  // message when the filter is true
+  | { type: 'function'; validator: string; alert: 'error' | 'warning' };           // id of a registered validator
+```
+
+`validate()` runs them after the field validators. A `function` validation whose id is **not registered** in `provideSdFormGeneric({ validators })` fails closed with an error message (`core.component.form-generic.validation.unregistered`); a validator that throws reports `core.component.form-generic.validation.failed`. Only `error` messages make the form invalid.
+
+### Options — static or catalog
+
+```ts
+type SdFormGenericOptions =
+  | { source: 'static'; items: { value: string; label: string; disabled?: boolean }[] }
+  | {
+      source: 'catalog';
+      catalog: string;                                          // id of a registered catalog
+      params?: { name: string; value: SdFormGenericValueRef }[];
+      fill?: { field: string; from: string }[];                 // on select: value[field] = item.data[from]
+    };
+
+type SdFormGenericValueRef = { field: string } | { variable: string } | { value: string | number | boolean };
+```
+
+A catalog is registered by the portal (see *Configuration*): the components never call HTTP themselves. `params` are resolved from `value` / `variables` and the catalog is reloaded when a resolved parameter changes; a catalog with `search` makes the select search by term instead. Loaded lists are cached per catalog and parameters for the lifetime of the renderer.
+
+Every reference to another key is **structured** — `rules` (`Filter.field` and field-to-field `data`), `options.params`, `options.fill`, upload `params`, html `query`, form validations — so the builder can rename a key everywhere. `${key}` inside `hyperlink` and html `content` is free text and is never rewritten.
+
+### Presets
+
+Presets are **not** new types. They reuse `textfield` / `number` with a `subtype`, so nothing asks the end user for a regular expression.
+
+| Preset | Schema | Native input | Validation (empty is always valid — `required` decides) | Stored value |
+| --- | --- | --- | --- | --- |
+| Text | `textfield`, no `subtype` or `'text'` | `type="text"` | `minLength` / `maxLength` / `pattern` | string |
+| Email | `subtype: 'email'` | `type="email"`, `autocomplete="email"` | format check | string, as typed |
+| Phone | `subtype: 'phone'` | `type="tel"`, `autocomplete="tel"` | phone characters and 7–15 digits; with `validation.phoneCountry: 'VN'` the Vietnamese mobile format | string — `+` and a leading `0` are kept |
+| URL | `subtype: 'url'` | `type="url"` | `http://` / `https://` only | string |
+| Password | `subtype: 'password'` | `type="password"`, `autocomplete="new-password"` | none | string; **never** filled from `defaultValue`, **never** shown in viewed mode (a fixed mask is shown) |
+| Integer | `number`, `subtype: 'integer'` | numeric keyboard when `min ≥ 0` | whole numbers only | number |
+| Decimal | `subtype: 'decimal'` | decimal keyboard | at most `precision` decimals (default 2) | number |
+| Currency | `subtype: 'currency'` | as decimal | at most `precision` decimals (default 0) | number — `currency` (default `VND`) is a display suffix |
+| Percent | `subtype: 'percent'` | as decimal | at most `precision` decimals (default 2) | number — `10` means 10 % |
+
+A `number` without `subtype` keeps the `<sd-input-number>` default of 3 decimals, while editing and in viewed mode. In viewed mode a URL links only safe `http(s)` URLs. A `validation.pattern` that is not a valid regular expression is ignored by the renderer (with a dev-mode warning) and flagged in the builder inspector.
+
+### HTML field
+
+Either static `content` with `${key}` placeholders filled from `variables`, or `definition` — the id of a portal html definition. A `static` definition supplies the content; a `query` definition receives `query` (value refs resolved like catalog params) and is called again when a resolved parameter changes. Content is sanitized.
+
+---
+
+## Configuration — `provideSdFormGeneric`
+
+Portal-wide data enters the form only through this provider. Without it both components work with the default breakpoints, no catalogs, templates, html definitions or validators. Call it at bootstrap or in the `providers` of a route: the builder, the renderer and `SdFormRenderService` under that route all read the route's configuration.
+
+```ts
+import { provideSdFormGeneric } from '@sdcorejs/angular/components/form-generic';
+
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideSdFormGeneric({
+      catalogs: [
+        {
+          id: 'districts',
+          label: 'Districts',
+          params: [{ name: 'provinceId', label: 'Province', required: true }],
+          fields: [{ name: 'postalCode', label: 'Postal code' }],
+          load: async ({ provinceId }) =>
+            (await api.districts(provinceId)).map(d => ({ value: d.id, label: d.name, data: { postalCode: d.zip } })),
+          labels: async values => api.districtLabels(values), // optional: labels for viewed mode / viewEntities
+        },
+      ],
+      validators: [
+        {
+          id: 'budget',
+          label: 'Budget covers the request',
+          validate: value => ((value['amount'] as number) > (value['budget'] as number) ? 'Amount exceeds the budget.' : null),
+        },
+      ],
+      htmlDefinitions: async () => api.htmlDefinitions(),   // an array, a factory or an async factory
+      templates: [],                                        // quick-pick field templates in the builder inspector
+      breakpoints: { tablet: 700 },                         // partial override of SD_FORM_GENERIC_BREAKPOINTS
+    }),
+  ],
+});
+```
+
+| Key | Type | Used by |
+| --- | --- | --- |
+| `catalogs` | `SdFormGenericCatalog[]` | `options.source: 'catalog'`. `load(params, ctx)`, optional `search(term, params, ctx)` and `labels(values, params)`; `params` / `fields` describe what the builder offers. |
+| `validators` | `SdFormGenericValidator[]` | `{ type: 'function', validator: id }`. `validate(value)` returns a message (may be HTML) or `null` / `''`. |
+| `htmlDefinitions` | list, factory or async factory | html `definition`. Called once. |
+| `templates` | `SdFormGenericTemplate[]` | Builder inspector: apply a predefined field (same `type`). |
+| `breakpoints` | `{ tablet?, desktop? }` | Level thresholds of both components. |
 
 ---
 
 ## `<sd-form-render>`
 
-Turns a schema into a live form. `OnPush`.
+Turns a schema into a live form. `OnPush`. It never mutates the schema or the value object you pass.
 
 ### Inputs
 
-| Name | Type | Required | Notes |
+| Name | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `configuration` | `SdFormRenderConfiguration` | **yes** | Schema + hooks. Deep-cloned and normalised on every set, so the renderer never mutates your object. |
-| `form` | `FormGroup` | no | The reactive form the fields register into. Defaults to a fresh empty `FormGroup`. Supply your own to submit/validate from the parent. |
-| `entity` | `Record<string, any>` | no | Current values, keyed by each component's `key`. Two-way in effect: the renderer writes user input back onto this object. |
-| `defaultEntity` | `Record<string, any>` | no | Seed values applied only where `entity` has no value (`entity[k] ?? defaultEntity[k]`). |
-| `properties` | `string[]` | no | Restricts rendering to the listed component keys. |
-| `viewed` | `boolean \| ''` | no | Read-only presentation for the whole form. Bare attribute (`<sd-form-render viewed>`) counts as `true`. |
+| `schema` | `SdFormGenericSchema` | **required** | Normalised internally (missing or repeated ids get new ids); the input is never mutated. |
+| `value` | `Record<string, unknown>` | `{}` | `model()` — bind `[(value)]`. Every change emits a **new** object; the previous object is untouched (a deep-frozen value works). |
+| `form` | `FormGroup \| null` | own group | The reactive form the controls register into — supply yours to read status from the parent. |
+| `variables` | `Record<string, unknown> \| null` | `null` | Values for the schema variables; used by rules, value refs and hyperlinks. |
+| `viewed` | `boolean` | `false` | Read-only presentation of the whole form. |
+| `breakpoint` | `'desktop' \| 'tablet' \| 'mobile' \| null` | `null` | Forces a level; `null` measures the form width. |
+| `labelPlacement` | `'top' \| 'float'` | `'top'` | Labels above the controls (real `<label for>`), or Material floating labels. |
+| `keys` | `readonly string[] \| null` | `null` | Renders only the fields whose key is listed. |
 
-```ts
-interface SdFormRenderConfiguration {
-  components: SdFormGeneric['components'];
-  validations?: SdFormGeneric['validations'];
-  variables?: SdFormGenericVariable[];
-  onLoaded?: () => void;
-  beforeSubmit?: (entity: Record<string, any>) => Promise<Record<string, any>>;
-}
-```
-
-### Outputs
-
-**None.** Read `entity` (which the renderer mutates) or the `FormGroup` you passed in.
-
-### Public methods
+### Methods
 
 | Name | Signature | Notes |
 | --- | --- | --- |
-| `upload()` | `() => Promise<void>` | Walks every field (including table file columns) and performs pending uploads, mapping the results into `entity`. **Call this before saving**, otherwise file fields still hold local placeholders. |
-| `getValidationMessages(alert)` | `('warning' \| 'error') => Promise<string[] \| undefined>` | Runs the configured `validations` whose `alert` matches, and returns the messages that fired. ⚠️ If the underlying `FormGroup` is already invalid it calls `markAllAsTouched()` and returns **`undefined`** — not an empty array. Check for `undefined` before treating the result as "no errors". |
+| `validate()` | `() => Promise<SdFormGenericValidationResult>` | Marks every control touched, waits for pending async validators, then runs the form-level `validations`. Always resolves `{ valid, messages: { error: string[]; warning: string[] } }` — never `undefined`. `valid` is `false` when a field is invalid or an `error` message fired. |
+| `upload()` | `() => Promise<void>` | Uploads the pending files of every `upload` field with its resolved `params` and writes the results into `value`. **Call it before saving.** |
 
-### Public fields
+### Field behaviour
 
-| Field | Type | Notes |
-| --- | --- | --- |
-| `entity` | `Record<string, any>` | Live values. |
-| `formValue` | `Record<string, any>` | Last computed form value. |
-| `loadCompleted` | `boolean` | `true` once a non-empty schema and entity have both arrived. |
-| `setVariables` | `Subject<{ key, value }>` | Push a variable value into the rendered fields at runtime. |
-
-### Validation model
-
-Two kinds, both keyed by `alert: 'warning' | 'error'`:
-
-- `{ type: 'expression', expression, message }` — `message` may contain HTML; fires when `sdEvaluateExpression(expression, entity)` is truthy.
-- `{ type: 'function', code }` — `code` selects a function registered under `SD_FORM_GENERIC_CONFIGURATION.form.validation.functions`; the function returns a message string (or nothing) from `validate({ entity })`.
+- `defaultValue` fills a key only while it is `undefined` — a key the user cleared (`null`, `''`) is not refilled. Not in viewed mode, and never for the password preset.
+- Controls register into the `FormGroup` while rendered; a hidden field unregisters, so it does not block `validate()`.
+- A viewed field (its own `viewed`, or the renderer's `[viewed]`) is not validated: the user cannot change it, so its `required` and constraints never make `validate()` fail.
+- A select / radio with catalog options loads (or searches) through the portal catalog; choosing an item applies `fill`.
+- In viewed mode values are formatted like `SdFormRenderService.viewEntities` (option labels, dates, numbers by preset, password mask).
 
 ---
 
-## `<sd-feel-expression>`
+## `<sd-form-builder>`
 
-The condition editor. Opens an `<sd-modal>` in which the user composes a condition tree over the form's own attributes. `OnPush`.
+An **embedded** visual designer, not an application: it has no header, save / draft / publish / import / export actions. Persistence belongs to the host page. It fills the height its host gives it — give the element (or its flex container) a height.
 
-### Inputs
-
-| Name | Type | Required | Notes |
-| --- | --- | --- | --- |
-| `components` | `(SdFormGenericComponent \| SdFormGenericGroup)[]` | **yes** | `input.required()`. The attribute pool the editor offers; groups are flattened. |
-| `expression` | `SdFormGenericExpression \| undefined` | **yes** | Current condition tree. `undefined` is replaced with an empty `&&` combinator. |
-| `model` | `string \| undefined` | **yes** | Text form of the expression. |
-
-### Outputs
-
-| Name | Payload | Notes |
-| --- | --- | --- |
-| `expressionChange` | `SdFormGenericExpression` | The edited tree. |
-| `modelChange` | `string \| undefined` | Completes the two-way `[(model)]`. |
-| `sdChange` | `{ model?, expression? }` | Both at once. |
-
-### Public methods
-
-| Name | Notes |
-| --- | --- |
-| `edit()` | Resolves attributes from `components()` and opens the modal. |
-| `addCondition(conditions)` | Appends an empty `EQUAL` condition to the given list. |
-
----
-
-## Configuration token
-
-Portal-wide data sources are registered once through `SD_FORM_GENERIC_CONFIGURATION`. It is `@Optional` — the components work without it, but `valuesKey` / `columnsKey` / html definitions and validation functions will not resolve.
-
-```ts
-import { SD_FORM_GENERIC_CONFIGURATION } from '@sdcorejs/angular/components/form-generic';
-
-providers: [
-  {
-    provide: SD_FORM_GENERIC_CONFIGURATION,
-    useValue: {
-      form: {
-        templates: [],
-        // one selection definition per `valuesKey` a schema may reference
-        selections: [{ value: 'status', display: 'Status', valuesKey: 'status' }],
-        tables: [],
-        htmls: [],
-        getValues: async key => api.get(`/api/lookup/${key}`),
-        validation: {
-          functions: [
-            {
-              value: 'BUDGET',
-              display: 'Budget must cover the request',
-              validate: async ({ entity }) =>
-                entity['amount'] > entity['budget'] ? 'Amount exceeds the remaining budget.' : undefined,
-            },
-          ],
-        },
-      },
-    },
-  },
-],
+```
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│ [Design | Preview | Schema]  [Desktop | Tablet | Mobile]            [↶] [↷] [⋮]  │
+├──────────────────────┬──────────────────────────────────────┬────────────────────┤
+│ Components|Structure │ canvas (rows of the level in view)   │ Properties         │
+└──────────────────────┴──────────────────────────────────────┴────────────────────┘
 ```
 
-`selections`, `htmls` accept an array, a factory, or an async factory. `getValues(key, args)` backs `valuesKey`; `getLazyValues(key, args)` backs a searchable/lazy list.
+### Inputs / outputs
+
+| Name | Type | Notes |
+| --- | --- | --- |
+| `schema` | `model<SdFormGenericSchema \| undefined>` | Bind `[(schema)]`. The builder emits `schemaChange` with an independent snapshot (deep clone) after **every user change**, including undo and redo — not when a schema loads, nor for selection, mode or viewport changes. A new reference with **different content** loads another form and resets the undo history and the selection. The snapshot the builder just emitted, or another object with the **same content**, is ignored — so `[(schema)]` neither loops nor wipes the history. Mutating the bound object in place does nothing; pass a new object. |
+
+```html
+<sd-form-builder [(schema)]="schema"></sd-form-builder>
+```
+
+| Method | Notes |
+| --- | --- |
+| `getSchema()` | Snapshot of the current schema (deep clone), safe to mutate. |
+
+### Behaviour notes
+
+- **Desktop | Tablet | Mobile** picks the level being designed. The canvas packs rows with the span of that level (the same packing as the renderer) in a 768 px (tablet) or 390 px (mobile) frame. Resizing a field and the *Layout* tab write the span of **that level only**; a level without its own span shows *Same as Desktop* (tablet) or *Default* (mobile), and *Reset to inherited* removes the level's own span.
+- **Start a new row** (`layout.newRow`) is a switch in *Layout* and in each field's ⋮ menu; the canvas marks such fields. When a drop needs a row start to keep the row you pointed at, the planner turns `newRow` on instead of inserting an element.
+- **Preview** is the real `<sd-form-render>` with `[breakpoint]` forced to the level in view — its rows match the canvas at every level. The canvas also keeps a place for statically hidden fields (dimmed) and unsupported elements so they stay selectable; the renderer skips them, so around such an element the canvas rows can differ from Preview. Test data typed there never reaches the schema; *Validate* runs `validate()` and lists invalid fields and form messages separately.
+- **Schema** shows the read-only JSON that `schemaChange` emits. The level switch is hidden there.
+- **One drop position per pointer location**: the top or bottom quarter of a row means *a new row above / below*; the middle means *this row*. A new field dropped into a row takes the remaining width (at least 3 columns); an existing field must fit as it is. Other fields are never shrunk. The indicator and the commit use the same planner. Moving or deleting an element never pulls untouched rows up: the planner turns `newRow` on where a row would otherwise merge into the one before it — for a move at the level in view, for a delete at every level. `newRow` is one flag for all levels, so a row start kept for one level also starts a row at the others.
+- **Groups** are edited in place. Fields move page ↔ group and group ↔ group by dragging or through the ⋮ menu (*Move into group …*, *Move out of group*). Groups do not nest.
+- **Inspector**: *General · Data · Rules · Layout* for a field, *General · Rules · Layout* for a group. *Data* chooses the options source — a static list (value, label; reorder by the grip or ↑ / ↓) or a portal catalog with its parameters (`params`: field, variable or fixed value) and *Fill other fields on select* (`fill`). *Rules* edits `visible` / `hidden` / `disabled` / `required` in `<sd-query-builder>` and stores the `Filter` as is. The ⋮ *Tools* menu holds the variables and form-validation dialogs; form validations are a `Filter` with a message or a registered validator.
+- **Undo / redo**: every edit is one command; typing in one property coalesces into one step; 100 steps are kept. Ctrl/⌘+Z, Ctrl/⌘+Y and Ctrl/⌘+Shift+Z act inside the builder only and never replace the text undo of an input.
+- **Keys**: a new field gets `<preset>_<hash>` (`email_k3x9qa`), never an existing key. Renaming checks the format and uniqueness (fields of every page and variables share one namespace), then asks **Yes / No** with how many structured references are updated with it, how many free-text uses (`hyperlink`, html `content`) are not, and that data saved under the old key is not moved. Applying a template whose key differs asks the same question — *No* applies the template and keeps the key. Renaming a variable in the variables dialog updates its structured references too; saving the dialog without a variable that is still used asks first.
+- **Delete** asks first when a group still has fields or other elements reference the key; every delete offers **Undo** in a 5 s toast that closes as soon as the schema changes in another way. Focus moves to the neighbouring card (or the group, or the canvas).
+- **Drag** uses Pointer Events for mouse, pen and touch; on touch only the grip starts a drag so the canvas still scrolls. Nothing is written until release; Escape or dropping outside the canvas cancels.
+- When the builder is narrower than 900 px, the palette and the inspector become overlay panels opened from the toolbar; opening one moves focus into it and Escape closes it back to its button.
+- Requires `SdConfirmService` and `SdNotifyService` (both `providedIn: 'root'`).
+
+### Keyboard
+
+| Keys | Where | Action |
+| --- | --- | --- |
+| Enter / Space | canvas card | select |
+| Delete / Backspace | selected card | delete (asks when needed) |
+| Alt+↑ / Alt+↓ | selected card | move before / after its sibling |
+| Ctrl/⌘+D | selected card | duplicate |
+| Ctrl/⌘+Z, Ctrl/⌘+Y, Ctrl/⌘+Shift+Z | anywhere in the builder except text inputs | undo / redo |
+| Escape | while dragging or resizing | cancel |
+| Escape | inside an open overlay panel (narrow builder) | close it |
+| ← / → / ↑ / ↓ / Home / End | Design · Preview · Schema, Desktop · Tablet · Mobile | switch |
+| ↑ / ↓ / Home / End / Enter | Structure tree | move / select |
+| ↑ / ↓ | grip of a static option (inspector) | move the option up / down |
+
+---
+
+## `SdFormRenderService`
+
+| Method | Signature | Notes |
+| --- | --- | --- |
+| `viewEntities(schema, entities)` | `(SdFormGenericSchema, Record<string, unknown>[]) => Promise<Record<string, string>[]>` | Display text per field key for each entity — option labels (static items, or the catalog's `labels` / `load`), dates, numbers by preset, the password mask. For list and export screens. Within one call a catalog without `labels` is loaded once per resolved parameters, not once per value. |
 
 ---
 
@@ -333,109 +392,150 @@ providers: [
 
 ```ts
 import { Component, signal } from '@angular/core';
-import { FormGroup } from '@angular/forms';
-import {
-  SdFormBuilder,
-  SdFormRender,
-  type SdFormGeneric,
-  type SdFormRenderConfiguration,
-} from '@sdcorejs/angular/components/form-generic';
+import { SdFormBuilder, SdFormRender, type SdFormGenericSchema } from '@sdcorejs/angular/components/form-generic';
 
 @Component({
   selector: 'app-form-designer',
   imports: [SdFormBuilder, SdFormRender],
   template: `
-    <sd-form-builder #builder [formGeneric]="seed()"></sd-form-builder>
-    <sd-form-render [configuration]="preview(builder)" [form]="form" [entity]="entity"></sd-form-render>
+    <div style="height: 720px">
+      <sd-form-builder [(schema)]="schema"></sd-form-builder>
+    </div>
+    <sd-form-render [schema]="schema()" [(value)]="value"></sd-form-render>
   `,
 })
 export class FormDesignerComponent {
-  readonly seed = signal<SdFormGeneric>({ components: [] });
-  readonly form = new FormGroup({});
-  entity: Record<string, any> = {};
+  readonly schema = signal<SdFormGenericSchema>({ pages: [{ id: 'main', elements: [] }] });
+  readonly value = signal<Record<string, unknown>>({});
 
-  preview(builder: SdFormBuilder): SdFormRenderConfiguration {
-    return { components: builder.components, variables: builder.variables, validations: builder.validations };
+  save() {
+    return this.api.post('/api/forms', this.schema());
   }
 }
 ```
 
-### 2. Render a stored schema and submit it
+### 2. Validate, upload and submit
 
 ```ts
 async submit(render: SdFormRender) {
-  await render.upload();                                   // resolve file fields first
-
-  const errors = await render.getValidationMessages('error');
-  if (errors === undefined) return;                        // FormGroup itself is invalid
-  if (errors.length) {
-    this.notify.error(errors);
+  const { valid, messages } = await render.validate();
+  if (messages.warning.length) this.notify.warning(messages.warning);
+  if (!valid) {
+    if (messages.error.length) this.notify.error(messages.error);
     return;
   }
-
-  await this.api.post('/api/requests', render.entity);
+  await render.upload();                         // resolve file fields first
+  await this.api.post('/api/requests', this.value());
 }
 ```
 
 ### 3. A hand-written schema
 
 ```ts
-const schema: SdFormGeneric = {
-  components: [
+const schema: SdFormGenericSchema = {
+  pages: [
     {
-      id: 'c1',
-      key: 'fullName',
-      type: 'textfield',
-      label: 'Full name',
-      layout: { columns: 6 },
-      validate: { required: true, maxlength: 120 },
-    },
-    {
-      id: 'c2',
-      key: 'startDate',
-      type: 'datetime',
-      subtype: 'date',
-      label: 'Start date',
-      layout: { columns: 6 },
-      validate: { min: 'TODAY' },
-    },
-    {
-      id: 'c3',
-      key: 'note',
-      type: 'textarea',
-      label: 'Reason',
-      layout: { columns: 12 },
-      properties: {
-        // only ask for a reason when the start date is filled in
-        requiredWhenExpression: {
-          key: 'r1',
-          type: 'combinator',
-          combinator: '&&',
-          conditions: [
-            { key: 'r1c1', type: 'condition', field: 'startDate', operator: 'NOT_NULL', value: undefined, dayInfo: {} },
+      id: 'main',
+      elements: [
+        {
+          id: 'f1',
+          key: 'fullName',
+          type: 'textfield',
+          label: 'Full name',
+          layout: { span: { desktop: 6, mobile: 12 } },
+          validation: { required: true, maxLength: 120 },
+        },
+        {
+          id: 'f2',
+          key: 'email',
+          type: 'textfield',
+          subtype: 'email',                        // preset: format checked, no regex needed
+          label: 'Email',
+          placeholder: 'name@example.com',
+          layout: { span: { desktop: 6 } },        // tablet follows desktop, mobile is a full row
+        },
+        {
+          id: 'f3',
+          key: 'province',
+          type: 'select',
+          label: 'Province',
+          layout: { span: { desktop: 4, tablet: 6 } },
+          options: { source: 'static', items: [{ value: 'HN', label: 'Hà Nội' }, { value: 'SG', label: 'TP. HCM' }] },
+        },
+        {
+          id: 'f4',
+          key: 'district',
+          type: 'select',
+          label: 'District',
+          layout: { span: { desktop: 4, tablet: 6 } },
+          options: {
+            source: 'catalog',
+            catalog: 'districts',
+            params: [{ name: 'provinceId', value: { field: 'province' } }],
+            fill: [{ field: 'postalCode', from: 'postalCode' }],
+          },
+        },
+        {
+          id: 'g1',
+          type: 'group',
+          label: 'Budget',
+          icon: 'payments',
+          elements: [
+            {
+              id: 'f5',
+              key: 'budget',
+              type: 'number',
+              subtype: 'currency',
+              label: 'Budget',
+              layout: { span: { desktop: 6 } },
+              validation: { min: 0 },
+              currency: 'VND',
+            },
+            {
+              id: 'f6',
+              key: 'reason',
+              type: 'textarea',
+              label: 'Reason',
+              layout: { newRow: true },            // always on its own row
+              rules: { required: { field: 'budget', operator: 'GREATER_THAN', data: 100000000 } },
+            },
           ],
         },
-      },
+      ],
     },
   ],
+  validations: [{ type: 'function', validator: 'budget', alert: 'error' }],
 };
 ```
 
-## Accessibility — canvas items
+## Accessibility
 
-A canvas card (`.fb-item` / `.fb-group`) wraps both its floating action buttons and, for component items, a live control preview containing real inputs. It therefore carries **no** `role="button"`: a `role="button"` wrapper makes assistive tech collapse the whole card into one control and drop everything nested inside it. The card keeps `(click)` as a mouse convenience; the keyboard / screen-reader affordance is a real `<button>` at the head of the card's action toolbar, carrying `aria-pressed` (selected state) and an `aria-label` from the item label. The toolbar is revealed on `:focus-within` as well as `:hover`, so keyboard focus never lands on an invisible control. Tooltip label: `core.component.form-builder.select-item`.
+- **Canvas cards** are `role="button"` elements with `aria-pressed` (selected) and an `aria-label` built from the label, the preset and the required / hidden state. The card content is an `aria-hidden` illustration without real inputs. The drag grip, duplicate, delete and ⋮ menu are separate buttons, rendered for the selected field only, which keeps the DOM of large forms small.
+- **Structure** is an ARIA tree with a roving tab stop (↑ ↓ Home End, Enter selects and scrolls the canvas to the item).
+- Adding, moving, deleting and undoing are announced through a polite live region. Every drag has a keyboard path: Alt+↑ / Alt+↓, the ⋮ menu (*Move into group …*, *Move out of group*, *Start a new row*) and click / Enter on a palette item. Resize has *Layout* → width of the level in view.
+- In `<sd-form-render>` (default `labelPlacement="top"`) each control is named by exactly one visible label and described by its helper text or its error.
+
+## Limitations
+
+- One page is designed and rendered; `navigation` (tabs / steps), static content elements, buttons and a repeating table are not part of this release.
+- `checkbox` `validation.required` is not enforced (`<sd-checkbox>` has no `required` input).
+- The password preset has no show / hide toggle.
+- Groups always span the full row and do not nest.
+- Schema mode is read-only.
 
 ## Anti-patterns
 
-- ❌ Mutating the object bound to `[formGeneric]` and expecting the canvas to update — the builder only reacts to a **new reference**.
-- ❌ Saving `render.entity` without awaiting `render.upload()` — file fields still point at local placeholders.
-- ❌ Treating a falsy `getValidationMessages()` result as "valid" — it returns `undefined` when the `FormGroup` is invalid.
-- ❌ Importing a field sub-component or a pipe from a deep path — they are not exported and the path is not an entry point.
-- ❌ Reaching for this entry point when the fields are known at compile time. Static controls are smaller, typed, and easier to test.
+- ❌ Mutating the object bound to `[(schema)]` and expecting the canvas to update — the builder only reacts to a **new reference** with different content.
+- ❌ Writing a delayed save response back into `[(schema)]`. If the user edited meanwhile, the older schema differs from the current one and is loaded, discarding the newer edits and the undo history. Keep the schema you sent.
+- ❌ Calling HTTP from a component or pipe to feed a select — register a catalog in `provideSdFormGeneric` and reference it with `options: { source: 'catalog' }`.
+- ❌ Referencing a function validation id that the portal does not register — it fails closed and blocks submit.
+- ❌ Asking end users for a regex to validate an email or a phone number — use the `email` / `phone` presets.
+- ❌ Saving without awaiting `render.upload()` — file fields still hold local placeholders.
+- ❌ Importing a field sub-component, a pipe or a helper from a deep path — they are not exported and the path is not an entry point.
 
 ## Related
 
-- `<sd-table>` — backs the `table` field type.
+- `<sd-query-builder>` — edits the `Filter` conditions the schema stores.
 - `<sd-upload-file>` — backs the `upload` field type.
-- `<sd-query-builder>` — standalone condition builder for querying, when you do not need a whole form.
-- `<sd-modal>` — hosts the builder's JSON/variables dialogs and the expression editor.
+- `<sd-section>` — renders a group.
+- `<sd-input>` / `<sd-select>` / … — the controls the renderer composes; `labelPlacement` is available on them too (default `'float'` there).
