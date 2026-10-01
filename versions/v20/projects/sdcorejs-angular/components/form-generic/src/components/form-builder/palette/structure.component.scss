@@ -1,0 +1,89 @@
+:host {
+  display: block;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px;
+}
+
+.fb-tree {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fb-tree__node {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 4px 8px 4px 4px;
+  border-radius: var(--sd-radius-6, 6px);
+  color: var(--sd-text);
+  font-size: var(--sd-font-size-13, 13px);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--sd-surface-muted);
+  }
+
+  &.is-child {
+    padding-left: 22px;
+  }
+
+  &.is-selected {
+    background: color-mix(in srgb, var(--sd-primary) 10%, var(--sd-surface));
+    color: var(--sd-primary);
+  }
+
+  &.is-hidden .fb-tree__label {
+    opacity: 0.6;
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: -2px;
+  }
+}
+
+.fb-tree__twisty {
+  display: inline-flex;
+  width: 16px;
+  flex: 0 0 16px;
+  color: var(--sd-text-secondary);
+}
+
+.fb-tree__icon {
+  color: var(--sd-text-secondary);
+}
+
+.fb-tree__text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.fb-tree__label,
+.fb-tree__key {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fb-tree__key {
+  color: var(--sd-text-muted);
+  font-family: 'Roboto Mono', ui-monospace, monospace;
+  font-size: var(--sd-font-size-11, 11px);
+}
+
+.fb-tree__state {
+  color: var(--sd-text-secondary);
+}
+
+.fb-tree__empty {
+  margin: 12px 8px;
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-13, 13px);
+}

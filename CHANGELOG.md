@@ -38,6 +38,82 @@ Planned release suffix `3.0` targets `19.3.0`, `20.3.0`, `21.3.0`, and `22.3.0`,
 - Upload file: the document name is a `<button type="button" class="c-file-name">` instead of `<a href="javascript:;">`; the link look is unchanged.
 - i18n: new catalog keys `core.notify.close`, `core.form.select.clear`, `core.component.table.export-max-exceeded`, `core.component.preview-video.error`, `.retry`, `.download` and `.unsupported`. A custom typed `I18nCatalog` must add them.
 
+- **Form generic: new schema `SdFormGenericSchema` replaces `SdFormGeneric`.** `<sd-form-builder>` and `<sd-form-render>` read and write the new schema only — this is its first version (no `schemaVersion` field) and there is no automatic conversion, so stored schemas must be migrated once. The tree is fixed: `pages[] → group | field`, groups hold fields and do not nest; this release designs and renders the first page (other pages and `navigation` are kept for the tabs/steps release).
+
+```diff
+- const form: SdFormGeneric = {
+-   components: [
+-     {
+-       id: 'a', key: 'email', type: 'textfield', subtype: 'email', label: 'Email',
+-       layout: { columns: '6', mobileColumns: '12' },
+-       validate: { required: true, maxlength: 120 },
+-       properties: { viewed: false, visibleWhenExpression: { key: 'e', type: 'combinator', combinator: '&&', conditions: [/* … */] } },
+-     },
+-     { id: 'br', type: 'break' },
+-     { id: 'c', key: 'district', type: 'select', label: 'District', valuesKey: 'districts', properties: { query: { provinceId: '${province}' } } },
+-   ],
+-   variables: [{ id: 'v1', key: 'tenantId', label: 'Tenant' }],
+-   validations: [{ type: 'function', code: 'BUDGET', alert: 'error' }],
+- };
++ const schema: SdFormGenericSchema = {
++   pages: [{
++     id: 'main',
++     elements: [
++       {
++         id: 'a', key: 'email', type: 'textfield', subtype: 'email', label: 'Email',
++         layout: { span: { desktop: 6 } },                    // tablet follows desktop, mobile is a full row
++         validation: { required: true, maxLength: 120 },
++         rules: { visible: { field: 'agree', operator: 'EQUAL', data: true } },   // Filter from @sdcorejs/utils
++       },
++       {
++         id: 'c', key: 'district', type: 'select', label: 'District',
++         layout: { newRow: true },                            // replaces the break element
++         options: { source: 'catalog', catalog: 'districts', params: [{ name: 'provinceId', value: { field: 'province' } }] },
++       },
++     ],
++   }],
++   variables: [{ key: 'tenantId', label: 'Tenant' }],
++   validations: [{ type: 'function', validator: 'budget', alert: 'error' }],
++ };
+```
+
+  Property mapping: `components` → `pages[0].elements` (group `components` → `elements`); `layout.columns` / `layout.mobileColumns` → `layout.span.desktop` / `layout.span.mobile` (numbers, plus the new `tablet` level); a `break` element → `layout.newRow: true` on the next field; `validate.*` → `validation.*` with `minLength`, `maxLength`, `maxItems` (was `maxOfItems`), `pattern: { value, message }` (was `pattern` + `patternErrorMessage`) and `'today'` (was `'TODAY'`); `properties.{hidden, viewed, hyperlink, multiple, direction, precision, currency}` and group `properties.{icon, color, collapsible}` → top-level properties; `properties.{visible,hidden,disabled,required}WhenExpression` (`SdFormGenericExpression`) → `rules.{visible, hidden, disabled, required}` stored as `Filter`; `values` → `options: { source: 'static', items }`; `valuesKey` + `properties.query` / `properties.setVariables` → `options: { source: 'catalog', catalog, params, fill }` with structured value refs (`{ field }`, `{ variable }`, `{ value }`) instead of `${key}` strings; upload `properties.{type, max, maxSize, args}` → `accept`, `maxFiles`, `maxSizeMb`, `params`; html `template` + `properties.{variables, queries, query}` → `definition`, `variables` (a record), `query`; validation `{ type: 'expression', expression, message }` → `{ type: 'filter', filter, message }` and `{ type: 'function', code }` → `{ type: 'function', validator }`; variables drop `id`. The `table` and `checklist` field types and the `break` element are gone (a table field returns in a later release). `hyperlink` now URL-encodes every `${key}` value: keep the scheme, host and `/` separators in the template text — a template such as `${baseUrl}/x` or `/files/${path}` whose value carries them must be rewritten.
+
+- **Form generic: component API.** `<sd-form-builder>` binds `[(schema)]` (a `model()`); `<sd-form-render>` takes `[schema]` and a `[(value)]` model that always emits a new object and never mutates the one you pass.
+
+```diff
+- <sd-form-builder [formGeneric]="form()" (sdChange)="form.set($event)"></sd-form-builder>
++ <sd-form-builder [(schema)]="schema"></sd-form-builder>
+
+- <sd-form-render [configuration]="config" [form]="form" [entity]="entity" [properties]="keys"></sd-form-render>
++ <sd-form-render [schema]="schema()" [(value)]="value" [form]="form" [variables]="variables" [keys]="keys"></sd-form-render>
+```
+
+```diff
+- const errors = await render.getValidationMessages('error');
+- if (errors === undefined || errors.length) return;
++ const { valid, messages } = await render.validate();   // { valid, messages: { error: [], warning: [] } }, never undefined
++ if (!valid) return;
+```
+
+  Removed from the builder: `[formGeneric]`, `(sdChange)`, `getForm()`, `getComponents()`, `getVariables()` and the `components` / `variables` / `validations` accessors — use `[(schema)]` and `getSchema()`. Removed from the renderer: `configuration`, `entity`, `defaultEntity`, `properties`, `getValidationMessages()`, `entity` / `formValue` / `loadCompleted` fields, the `setVariables` subject, and the `onLoaded`, `beforeSubmit` and `onChange.setValues` hooks — use `[schema]`, `[(value)]`, field `defaultValue`, `[keys]`, `[variables]` and `validate()`. Labels sit above the controls by default (`labelPlacement="top"`); `labelPlacement="float"` restores the Material floating label.
+
+- **Form generic: configuration.** `SD_FORM_GENERIC_CONFIGURATION` is replaced by `provideSdFormGeneric()`. Catalogs replace selection definitions and `getValues`; the components never call HTTP. A `function` validation whose validator is not registered now **fails closed** (an error message, `valid: false`) instead of passing.
+
+```diff
+- { provide: SD_FORM_GENERIC_CONFIGURATION, useValue: { form: { selections, getValues, htmls, validation: { functions } } } }
++ provideSdFormGeneric({
++   catalogs: [{ id: 'districts', label: 'Districts', params: [{ name: 'provinceId', label: 'Province' }], load: params => api.districts(params) }],
++   htmlDefinitions,
++   validators: [{ id: 'budget', label: 'Budget', validate: value => (value['amount'] > value['budget'] ? 'Over budget' : null) }],
++   breakpoints: { tablet: 700 },   // optional, partial override of SD_FORM_GENERIC_BREAKPOINTS
++ })
+```
+
+- **Form generic: removed exports.** Runtime: `SdFeelExpression` (`<sd-feel-expression>`), `sdEvaluateExpression`, `sdExpressionToJavascriptExpression`, `sdTemplateToCondition`, `sdGetAttributes`, `sdGetComponentAttributes`, `sdGetVariableAttributes`, `sdGetDatetimeValue`, `sdGenerateId`, `sdGenerateKey`, `sdFormatComponent`, `SD_FORM_BUILDER_COMPONENTS`, `SD_COMPONENT_ICONS`, `SD_TABLE_COLUMN_TYPES`, `SD_ATTRIBUTE_OPERATORS`, `SD_DAY_INFO_TYPES`, `SD_DAY_INFO_PREVIOUSES`, `SdFormGenericOperators`, `ValidationAlerts` and `SD_FORM_GENERIC_CONFIGURATION`. Types: `ISdFormGenericConfiguration`, `IWorkflowConfigurationForm`, `SdFormGeneric`, `SdFormRenderConfiguration`, `SdFormRenderEntity`, `SdFormGenericArgs`, `SdFormGenericComponent`, `SdFormGenericComponentBase`, `SdFormGenericValues`, `SdFormGenericChecklist`, `SdFormGenericTable`, `SdFormGenericTableColumn`, `FormRenderComponentTableColumnValues`, `SdFormGenericBreak`, `FormBuilderComponent`, `FormBuilderComponentGroup`, `SdFormGenericExpression`, `SdFormGenericExpressionCondition`, `SdFormGenericOperator`, `Attribute`, `DayInfo`, `SdFormGenericSelectionItem`, `SdFormGenericSelectionStaticItem`, `SdFormGenericDefinitionSelection`, `SdFormGenericDefinitionTable`, `SdFormGenericDefinitionHtml`, `SdFormGenericValidationFunction` and `SdFormGenericValidationConfiguration`. These names are kept with a **new shape** (see the property mapping above): `SdFormGenericLayout`, `SdFormGenericVariable`, `SdFormGenericGroup`, `SdFormGenericTemplate`, `SdFormGenericValidation` and the field interfaces `SdFormGenericTextfield`, `SdFormGenericTextarea`, `SdFormGenericNumber`, `SdFormGenericSelect`, `SdFormGenericRadio`, `SdFormGenericCheckbox`, `SdFormGenericDatetime`, `SdFormGenericChipString`, `SdFormGenericChipCalendar`, `SdFormGenericUpload` and `SdFormGenericHtml`. The entry point now exports five runtime symbols — `SdFormBuilder`, `SdFormRender`, `SdFormRenderService`, `provideSdFormGeneric`, `SD_FORM_GENERIC_BREAKPOINTS` — plus the schema, field and configuration types.
+- **Form generic: layout follows the form width at three levels.** The renderer picks desktop (≥ 1024 px), tablet (600–1023 px) or mobile (< 600 px) from its **own** width, not the viewport, where 2.15 had a single 768 px switch. `[breakpoint]` forces a level. Tablet inherits the desktop span and mobile defaults to a full row, so a schema that only sets `span.desktop` keeps its desktop rows on tablet-width forms.
+- i18n: 217 new catalog keys — `core.component.form-builder.*` (210), `core.component.form-generic.validator.{integer,precision,number}`, `core.component.form-generic.validation.{unregistered,failed}`, `core.form.input.minlength` and `core.form.textarea.minlength` — and 54 `core.component.form-builder.*` keys of the previous builder removed. A custom typed `I18nCatalog` must add and drop them.
+
 ### Added
 - API handlers work from lazy routes, with no library change (`@sdcorejs/angular/services/api`). `SdHttpInterceptor` is registered at the root injector and read `SD_API_CONFIG` once at construction, so a library that provided `{ provide: SD_API_CONFIG, multi: true }` in an NgModule loaded with `loadChildren` lost every handler without any error: no headers, no `beforeRemote` / `afterRemote`, no error toast. Now the root `SdApiHandlerRegistry` reads the `SD_API_CONFIG` entries of each injector that the Router creates for a route (`Route.providers`, or the NgModule of `loadChildren`). It registers them in the same navigation, before guards, resolvers and components run, and removes them when that injector is destroyed. Libraries keep their existing provider. A lazy handler exists only after its route has been navigated to, so a shell that calls a library's host itself before that, for example in a guard on a parent route, must keep a root handler for that host.
 - `provideSdApiConfiguration(Configuration | value)` registers a configuration for any scope, including one that the Router does not create. `provideSdApiConfiguration` registers the configuration in a root registry when its scope's injector is created and removes it when that injector is destroyed. The same declaration therefore works in root providers, an eager NgModule, a lazy `Route.providers` and a `loadChildren` module. The interceptor and `SdApiService` now resolve handlers per request from the root list plus the registry, and root `SD_API_CONFIG` providers keep working unchanged. `SdApiModule` still does not call `provideHttpClient`.
@@ -53,6 +129,10 @@ Planned release suffix `3.0` targets `19.3.0`, `20.3.0`, `21.3.0`, and `22.3.0`,
 - `sdIsSafeResourceUrl()` and `sdSanitizeEditorHtml()` exported from `@sdcorejs/angular/utilities/extensions`.
 - Tooling: `npm run check:scss-hex` (raw hex and focus-outline check for library SCSS/TS, `--report --literals` for scale literals), an ESLint rule for hex colours in library TS and templates, `test:theme` now includes the contrast matrix, `test:theme-token-list`, and a CI scripts job on Node 22.22.3. Release tooling accepts an `x.0` suffix with an explicit lower-minor baseline (`--baseline-suffix`, `deploy.ps1 -BaselineSuffix`, `baselineSuffix` in the release snapshot).
 
+- Form builder: `<sd-form-builder>` is an embedded designer — toolbar Design / Preview / Schema, **Desktop / Tablet / Mobile** and undo / redo; presets palette (Text, Email, Phone, URL, Password, Integer, Decimal, Currency, Percent are `subtype` on `textfield` / `number`); canvas with in-place groups; inspector. Resize and the *Layout* tab write the span of the level in view and show the inherited value (*Same as Desktop* / *Default*); *Start a new row* sets `layout.newRow`. Drag and drop (Pointer Events, one planner for the indicator and the commit), 100-step undo, key rename that updates every structured reference (rules, catalog params/fill, upload params, html query, form validations), Undo toast after a delete, and keyboard paths for every drag. Preview is the real renderer forced to the level in view (tablet 768 px, mobile 390 px frames). Elements of an unknown `type` are kept unchanged and shown as unsupported.
+- Form render: `[(value)]` model, `[variables]`, `[breakpoint]`, `[keys]`, `labelPlacement` (`'top'` default, `'float'`), `validate()` and `upload()`; rules and form validations evaluate `Filter` against `{ ...value, ...variables }`; select / radio options from a static list or a portal catalog (`load`, optional `search` and `labels`) with `params` and `fill`. `SdFormRenderService.viewEntities(schema, entities)` formats values for lists.
+- Forms: `labelPlacement: 'float' | 'top'` (type `SdLabelPlacement` in `@sdcorejs/angular/forms/models`) on `sd-input`, `sd-input-number`, `sd-textarea`, `sd-select`, `sd-date`, `sd-datetime`, `sd-chip` and `sd-chip-calendar` — default `'float'`, so existing screens are unchanged. `sd-label` gains `for` and `labelId`. `sd-input` accepts `type="tel" | "url"`, `inputmode` and `autocomplete`; `sd-input-number` accepts `inputmode`; `sd-textarea` accepts `minlength`.
+
 ### Changed
 - API handler selection: when several handlers match a URL, the one with the **longest** matching host prefix (origin plus path) wins. It used to be the first match in registration order, so when libraries share a gateway and differ by context path, provider order decided which handler received a request. Now `https://gw.example/bpm` wins over `https://gw.example` in either order; equally long prefixes keep registration order, with root providers first. If a broad host listed first was shadowing a more specific one on purpose, remove the broad host from that handler. Host matching itself (origin plus segment-aware path, blank hosts match nothing) is unchanged. `@sd-angular/core` 19.0.41 ships the same registry API and the same longest-prefix rule, but it keeps a raw `url.startsWith(host)` match.
 - `@sdcorejs/utils` is upgraded from `1.1.4` to `1.2.4` on every line (a runtime dependency of the package, pinned exactly). Consumers that import `@sdcorejs/utils` directly get the 1.2 contract: see its `MIGRATION-1.2.md`. The notable changes are that `getNestedValue` returns `T | undefined`, `normalizeAsync` returns a structural subscribable rather than an RxJS `Observable`, `BrowserUtilities.upload` rejects with `FilePickerCancelledError` when the picker is cancelled or times out instead of resolving empty, and the date and number helpers are stricter. Behaviour of `@sdcorejs/angular` itself is kept:
@@ -66,9 +146,13 @@ Planned release suffix `3.0` targets `19.3.0`, `20.3.0`, `21.3.0`, and `22.3.0`,
 - Dates and numbers formatted by the library (date/datetime min/max messages, query-bar values, home page, 403/404 pages) follow `I18nService.locale()` instead of always `vi-VN`.
 - File explorer: video files (`mp4`, `mov`, `webm`, …) play in `sd-preview-video` in the file detail, so `option.preview` is now also called for them. For large videos return a URL (signed or streamed) rather than a `Blob`.
 
+- Form render: `defaultValue` fills a key only while it is `undefined` (a value the user cleared is not refilled), never in viewed mode and never for the password preset; `validation.minLength` applies to `textarea` and `validation.maxItems` to chip fields, and chip fields show their values in viewed mode.
+- Form render: a viewed field is not validated (its `required` and constraints never fail `validate()`); on a multiple value `EQUAL` / `NOT_EQUAL` mean "one selected item equals" / "none equals"; an untouched checkbox counts as `false`; a `number` without `subtype` shows 3 decimals in viewed mode, like its input; an invalid `validation.pattern` is ignored instead of breaking the field; an `AND` / `OR` group without conditions is no condition (a rule that is only an empty group does not apply); values inserted into a `hyperlink` are URL-encoded; a key that is an `Object.prototype` name (`__proto__`, `constructor`…) is refused by the builder and its field is skipped by the renderer. `provideSdFormGeneric()` in a route's `providers` applies to the builder, the renderer and `SdFormRenderService` under that route.
+
 ### Fixed
 - Table: a display callback that throws or rejects (`transform`, `htmlTemplate`, `tooltip`, `useBadge`, `lazy-values` `views`) no longer turns a successful server read into the "Không thể tải dữ liệu" error. Only that cell falls back to its raw value (arrays joined with `, `, empty values `--`); the error is logged once per column for each format pass and the read stays `ready`/`empty`. Only a failing loader is a read error.
 - Table: a successful empty server read shows the three illustrated empty states again, as local tables do: filter returned nothing, required external filter not chosen, or no data yet, with `SD_TABLE_CONFIGURATION.images` (`filterEmpty`, `filterRequired`, `dataEmpty`). It had shown a single generic "Chưa có dữ liệu" panel. A projected `sdDataStateTemplate` still renders the empty state, and the empty region only appears when the table has no rows.
+- Form render: a group's `color` now colours its icon (`sd-section [iconColor]`); it used to be saved by the builder but ignored at render time. Unset still means `primary`.
 - Side drawer: locking page scroll adds the scrollbar width as right padding, so the page no longer shifts when a drawer opens.
 - Tooltip: meets WCAG 1.4.13 (hoverable, dismissible with Escape, persistent while hovered or focused).
 - Notify: toast announcements are reliable (persistent live regions) and the close button has an accessible name.

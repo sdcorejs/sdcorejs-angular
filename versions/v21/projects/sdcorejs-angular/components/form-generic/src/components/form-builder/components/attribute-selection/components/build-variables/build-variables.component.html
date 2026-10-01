@@ -1,45 +1,56 @@
-@if (!!selection?.variables?.items?.length) {
-  <div class="d-flex align-items-center py-4">
-    @if (label) {
-      <div class="T14R" style="flex: 1">{{ label }}</div>
+<fb-mapping-box [label]="label()" [rows]="rows()" [readonly]="readonly()" (edit)="edit()"></fb-mapping-box>
+<sd-modal [title]="'core.component.form-builder.set-on-change-assign' | sdTranslate" width="560px" modalClass="sd-form-builder-dialog">
+  <div class="c-builder">
+    @for (row of draft(); track $index; let idx = $index) {
+      <div class="d-flex align-items-center gap-8 py-8">
+        <sd-select
+          class="flex-1"
+          size="sm"
+          [label]="'core.component.form-builder.target-field' | sdTranslate"
+          [items]="targetOptions()"
+          valueField="value"
+          displayField="display"
+          [model]="row.field"
+          (modelChange)="setField(idx, $event)"
+          hideInlineError></sd-select>
+        @if (declared()) {
+          <sd-select
+            class="flex-1"
+            size="sm"
+            [label]="'core.component.form-builder.target-value' | sdTranslate"
+            [items]="fromOptions()"
+            valueField="value"
+            displayField="display"
+            [model]="row.from"
+            (modelChange)="setFrom(idx, $event)"
+            hideInlineError></sd-select>
+        } @else {
+          <sd-input
+            class="flex-1"
+            size="sm"
+            [form]="form"
+            [label]="'core.component.form-builder.target-value' | sdTranslate"
+            [model]="row.from"
+            (modelChange)="setFrom(idx, $event)"
+            hideInlineError></sd-input>
+        }
+        <div style="width: 32px; min-width: 32px">
+          <sd-button
+            prefixIcon="delete"
+            size="sm"
+            class="p-0"
+            [tooltip]="'core.component.form-builder.delete' | sdTranslate"
+            (click)="remove(idx)"></sd-button>
+        </div>
+      </div>
+    } @empty {
+      <p class="text-secondary">{{ 'core.component.form-builder.value-box.empty' | sdTranslate }}</p>
     }
-    <div style="width: 200px" class="d-flex align-items-center">
-      <a class="T12R" href="javascript:;" (click)="edit()">{{ queryString }}</a>
+    <div class="d-flex justify-content-end">
+      <sd-button prefixIcon="add" [title]="'core.component.form-builder.add-field' | sdTranslate" color="primary" (click)="add()"></sd-button>
     </div>
   </div>
-  <sd-modal [title]="'core.component.form-builder.set-on-change-assign' | sdTranslate" width="500px" modalClass="sd-form-builder-dialog">
-    <div class="c-builder">
-      <div class="d-flex justify-content-end">
-        <sd-button prefixIcon="add" [title]="'core.component.form-builder.add-field' | sdTranslate" color="primary" (click)="addField()"></sd-button>
-      </div>
-      <!-- Cấp 1 -->
-      @for (item of items; track item.id; let idx = $index) {
-        <div class="d-flex align-items-center py-8" style="gap: 8px">
-          <sd-autocomplete
-            [label]="'core.component.form-builder.target-field' | sdTranslate"
-            [form]="form"
-            style="flex: 1"
-            [(model)]="item.key"
-            [items]="leftProperties"
-            valueField="value"
-            displayField="display"
-            required
-            hideInlineError></sd-autocomplete>
-          <sd-autocomplete
-             [label]="'core.component.form-builder.target-value' | sdTranslate"
-            [form]="form"
-            style="flex: 1"
-            [(model)]="item.value"
-            [items]="rightProperties"
-            valueField="value"
-            displayField="display"
-            required
-            hideInlineError></sd-autocomplete>
-        </div>
-      }
-    </div>
-    <ng-container sdFooterRight>
-      <sd-button prefixIcon="save" [title]="'core.component.form-builder.confirm' | sdTranslate" (click)="onAccept()" color="primary" type="fill"></sd-button>
-    </ng-container>
-  </sd-modal>
-}
+  <ng-container sdFooterRight>
+    <sd-button prefixIcon="save" [title]="'core.component.form-builder.confirm' | sdTranslate" (click)="accept()" color="primary" type="fill"></sd-button>
+  </ng-container>
+</sd-modal>

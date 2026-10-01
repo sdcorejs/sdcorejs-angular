@@ -1,34 +1,96 @@
-@if (!!selection?.queries?.items?.length) {
-  <div class="d-flex align-items-center py-4">
-    @if (label) {
-      <div class="T14R" style="flex: 1">{{ label }}</div>
-    }
-    <div style="width: 200px" class="d-flex align-items-center">
-      <a class="T12R" href="javascript:;" (click)="edit()">{{ queryString }}</a>
-    </div>
-  </div>
-  <sd-modal [title]="'core.component.form-builder.set-query-value' | sdTranslate" width="400px" modalClass="sd-form-builder-dialog">
-    <div class="c-builder">
-      @for (property of leftProperties; track property.value) {
-        <div class="d-flex align-items-center py-8" style="gap: 8px">
-          <div style="width: 150px">
-            <div class="text-secondary">{{ property.value }}</div>
-            <div class="T16M">{{ property.display }}</div>
+<fb-mapping-box [label]="label()" [rows]="rows()" [readonly]="readonly()" (edit)="edit()"></fb-mapping-box>
+<sd-modal [title]="title() || ('core.component.form-builder.set-query-value' | sdTranslate)" width="640px" modalClass="sd-form-builder-dialog">
+  <div class="c-builder">
+    @for (row of draft(); track $index; let idx = $index) {
+      <div class="d-flex align-items-center gap-8 py-8">
+        @if (row.fixed) {
+          <div class="flex-1" style="min-width: 0">
+            <div class="T14M">
+              {{ labelOf(row.name) }}
+              @if (row.required) {
+                <span class="text-error" aria-hidden="true">*</span>
+              }
+            </div>
+            <div class="text-secondary">{{ row.name }}</div>
           </div>
-          <sd-autocomplete
-            [label]="'core.component.form-builder.value-source-field' | sdTranslate"
+        } @else {
+          <sd-input
+            class="flex-1"
+            size="sm"
             [form]="form"
-            style="flex: 1"
-            [(model)]="model![property.value]"
-            [items]="rightProperties"
-            valueField="value"
-            displayField="display"
-            hideInlineError></sd-autocomplete>
+            [label]="'core.component.form-builder.parameter-name' | sdTranslate"
+            [model]="row.name"
+            (modelChange)="setName(idx, $event)"
+            hideInlineError></sd-input>
+        }
+        <sd-select
+          style="width: 128px; min-width: 128px"
+          size="sm"
+          [label]="'core.component.form-builder.value-ref.source' | sdTranslate"
+          [items]="sources()"
+          valueField="value"
+          displayField="display"
+          [model]="row.source"
+          (modelChange)="setSource(idx, $event)"
+          [clearable]="false"
+          hideInlineError></sd-select>
+        @switch (row.source) {
+          @case ('field') {
+            <sd-select
+              class="flex-1"
+              size="sm"
+              [label]="'core.component.form-builder.value-ref.field' | sdTranslate"
+              [items]="fieldOptions()"
+              valueField="value"
+              displayField="display"
+              [model]="row.ref"
+              (modelChange)="setRef(idx, $event)"
+              hideInlineError></sd-select>
+          }
+          @case ('variable') {
+            <sd-select
+              class="flex-1"
+              size="sm"
+              [label]="'core.component.form-builder.value-ref.variable' | sdTranslate"
+              [items]="variableOptions()"
+              valueField="value"
+              displayField="display"
+              [model]="row.ref"
+              (modelChange)="setRef(idx, $event)"
+              hideInlineError></sd-select>
+          }
+          @default {
+            <sd-input
+              class="flex-1"
+              size="sm"
+              [form]="form"
+              [label]="'core.component.form-builder.value-ref.value' | sdTranslate"
+              [model]="row.ref"
+              (modelChange)="setRef(idx, $event)"
+              hideInlineError></sd-input>
+          }
+        }
+        <div style="width: 32px; min-width: 32px">
+          @if (!row.fixed) {
+            <sd-button
+              prefixIcon="delete"
+              size="sm"
+              class="p-0"
+              [tooltip]="'core.component.form-builder.delete' | sdTranslate"
+              (click)="remove(idx)"></sd-button>
+          }
         </div>
-      }
-    </div>
-    <ng-container sdFooterRight>
-      <sd-button prefixIcon="save" [title]="'core.component.form-builder.confirm' | sdTranslate" (click)="onAccept()" color="primary" type="fill"></sd-button>
-    </ng-container>
-  </sd-modal>
-}
+      </div>
+    } @empty {
+      <p class="text-secondary">{{ 'core.component.form-builder.value-box.empty' | sdTranslate }}</p>
+    }
+    @if (freeNames()) {
+      <div class="d-flex justify-content-end">
+        <sd-button prefixIcon="add" [title]="'core.component.form-builder.add-field' | sdTranslate" color="primary" (click)="add()"></sd-button>
+      </div>
+    }
+  </div>
+  <ng-container sdFooterRight>
+    <sd-button prefixIcon="save" [title]="'core.component.form-builder.confirm' | sdTranslate" (click)="accept()" color="primary" type="fill"></sd-button>
+  </ng-container>
+</sd-modal>

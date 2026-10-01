@@ -62,6 +62,7 @@ import {
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
 import { NumberUtilities } from '@sdcorejs/utils/fns';
+import type { SdLabelPlacement } from '@sdcorejs/angular/forms/models';
 import { Size } from '@sdcorejs/utils/models';
 import { Subscription } from 'rxjs';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
@@ -80,7 +81,11 @@ class SdInputNumberErrotStateMatcher implements ErrorStateMatcher {
   styleUrl: './input-number.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'isViewed() || isInline()' },
+  host: {
+    '[class.sd-has-label]': '!!label()',
+    '[class.sd-viewed]': 'isViewed() || isInline()',
+    '[class.sd-label-top]': "labelPlacement() === 'top'",
+  },
   imports: [
     SdIcon,
     CommonModule,
@@ -101,6 +106,9 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   /** why: id ổn định của <mat-error> để control trỏ `aria-describedby` sang — thông báo lỗi
    *  phải đọc được từ chính control, không chỉ hiện ra màn hình. */
   readonly errorId = `${this.id}-error`;
+  /** id của nhãn/helper khi `labelPlacement='top'`. */
+  readonly labelId = `${this.id}-label`;
+  readonly hintId = `${this.id}-hint`;
 
   // ==========================================
   // 1. SIGNAL QUERIES
@@ -223,6 +231,13 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   appearance = computed(() => this.appearanceInput() ?? this.formConfig?.appearance ?? 'outline');
 
   floatLabel = input<FloatLabelType>('auto');
+  /** `'float'` (mặc định) hoặc `'top'` — nhãn `<label for>` tĩnh phía trên, helper text dưới control. */
+  labelPlacement = input<SdLabelPlacement>('float');
+  /**
+   * `inputmode` gốc (vd `'numeric'`, `'decimal'`). Mặc định không đặt — bàn phím số của iOS không có
+   * dấu trừ, nên chỉ consumer biết chắc giá trị không âm mới nên bật.
+   */
+  readonly inputmode = input<string | undefined | null>(undefined);
 
   valueModel = model<any>(undefined, { alias: 'model' });
 

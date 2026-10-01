@@ -1,0 +1,124 @@
+@let _tab = store.leftTab();
+<div class="fb-tabs" role="tablist" [attr.aria-label]="'core.component.form-builder.left-panel' | sdTranslate">
+  <!-- why: mẫu tablist của APG — mũi tên (vòng) / Home / End đổi tab VÀ chuyển focus sang tab mới. -->
+  <button
+    #componentsTab
+    type="button"
+    role="tab"
+    [id]="uid + '-components'"
+    [attr.aria-controls]="uid + '-panel'"
+    class="fb-tabs__tab"
+    [class.is-active]="_tab === 'components'"
+    [attr.aria-selected]="_tab === 'components'"
+    [attr.tabindex]="_tab === 'components' ? 0 : -1"
+    (click)="store.leftTab.set('components')"
+    (keydown.arrowright)="switchTab('structure', structureTab, $event)"
+    (keydown.arrowleft)="switchTab('structure', structureTab, $event)"
+    (keydown.end)="switchTab('structure', structureTab, $event)">
+    {{ 'core.component.form-builder.tab.components' | sdTranslate }}
+  </button>
+  <button
+    #structureTab
+    type="button"
+    role="tab"
+    [id]="uid + '-structure'"
+    [attr.aria-controls]="uid + '-panel'"
+    class="fb-tabs__tab"
+    [class.is-active]="_tab === 'structure'"
+    [attr.aria-selected]="_tab === 'structure'"
+    [attr.tabindex]="_tab === 'structure' ? 0 : -1"
+    (click)="store.leftTab.set('structure')"
+    (keydown.arrowleft)="switchTab('components', componentsTab, $event)"
+    (keydown.arrowright)="switchTab('components', componentsTab, $event)"
+    (keydown.home)="switchTab('components', componentsTab, $event)">
+    {{ 'core.component.form-builder.tab.structure' | sdTranslate }}
+  </button>
+</div>
+
+@if (_tab === 'components') {
+  <div class="fb-palette" role="tabpanel" [id]="uid + '-panel'" [attr.aria-labelledby]="uid + '-components'">
+    <label class="fb-search">
+      <sd-icon name="search" size="18px"></sd-icon>
+      <input
+        #searchInput
+        type="search"
+        class="fb-search__input"
+        [value]="search()"
+        [placeholder]="'core.component.form-builder.search-components' | sdTranslate"
+        [attr.aria-label]="'core.component.form-builder.search-components' | sdTranslate"
+        (input)="search.set($any($event.target).value)"
+        (keydown.escape)="clearSearch($event)" />
+    </label>
+
+    @let _target = target();
+    <div class="fb-target" aria-live="polite">
+      @switch (_target.kind) {
+        @case ('group') {
+          <sd-icon name="subdirectory_arrow_right" size="16px"></sd-icon>
+          <span class="fb-target__text">{{ 'core.component.form-builder.add-target.group' | sdTranslate: { label: _target.label } }}</span>
+        }
+        @case ('after') {
+          <sd-icon name="subdirectory_arrow_right" size="16px"></sd-icon>
+          <span class="fb-target__text">{{ 'core.component.form-builder.add-target.after' | sdTranslate: { label: _target.label } }}</span>
+        }
+        @default {
+          <sd-icon name="vertical_align_bottom" size="16px"></sd-icon>
+          <span class="fb-target__text">{{ 'core.component.form-builder.add-target.root' | sdTranslate }}</span>
+        }
+      }
+      @if (_target.kind !== 'root') {
+        <button
+          type="button"
+          class="fb-target__clear"
+          [attr.aria-label]="'core.component.form-builder.add-target.clear' | sdTranslate"
+          [title]="'core.component.form-builder.add-target.clear' | sdTranslate"
+          (click)="clearSelection()">
+          <sd-icon name="close" size="14px"></sd-icon>
+        </button>
+      }
+    </div>
+
+    <div class="fb-palette__scroll">
+      @for (section of sections(); track section.category) {
+        @let _collapsed = isCollapsed(section.category);
+        <section class="fb-cat">
+          <button type="button" class="fb-cat__head" [attr.aria-expanded]="!_collapsed" (click)="toggleCategory(section.category)">
+            <sd-icon [name]="_collapsed ? 'chevron_right' : 'expand_more'" size="18px"></sd-icon>
+            <span>{{ 'core.component.form-builder.category.' + section.category | sdTranslate }}</span>
+          </button>
+          @if (!_collapsed) {
+            <ul class="fb-cat__list" role="list">
+              @for (entry of section.items; track entry.id) {
+                <li>
+                  <!-- why: mục palette là <button> thật: click/Enter/Space thêm vào đúng vị trí đang
+                       hiển thị ở dòng "Thêm vào…", cùng semantics với kéo-thả. -->
+                  <button
+                    type="button"
+                    class="fb-palette-item"
+                    [attr.data-palette-id]="entry.id"
+                    (pointerdown)="onPointerDown($event, entry)"
+                    (click)="add(entry)">
+                    <sd-icon class="fb-palette-item__icon" [name]="entry.icon" size="18px"></sd-icon>
+                    <span class="fb-palette-item__label">{{ entry.labelKey | sdTranslate }}</span>
+                    <span
+                      class="fb-palette-item__grip"
+                      aria-hidden="true"
+                      (pointerdown)="$event.stopPropagation(); onPointerDown($event, entry, true)">
+                      <sd-icon name="drag_indicator" size="16px"></sd-icon>
+                    </span>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+      } @empty {
+        <p class="fb-palette__empty">{{ 'core.component.form-builder.no-results' | sdTranslate }}</p>
+      }
+    </div>
+  </div>
+} @else {
+  <div class="fb-palette" role="tabpanel" [id]="uid + '-panel'" [attr.aria-labelledby]="uid + '-structure'">
+    <fb-structure (focusItem)="itemFocused.emit($event)"></fb-structure>
+  </div>
+}

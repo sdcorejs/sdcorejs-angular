@@ -1,151 +1,70 @@
-import { CommonModule } from '@angular/common';
-import {
-  AfterViewInit,
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  Input,
-  OnDestroy,
-  OnInit,
-  inject,
-  input,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdRadio } from '@sdcorejs/angular/forms';
-import { filter, startWith, Subject, Subscription } from 'rxjs';
-import { SdFormGenericRadio, SdFormGenericSelectionItem } from '../../../../../../models';
-import { ComponentViewedPipe, HyperlinkPipe } from '../../../../../../pipes';
-import { FormGenericService } from '../../../../../../services';
-import { Router } from '@angular/router';
-import { Utilities } from '@sdcorejs/utils/fns';
+import type { SdFormGenericCatalogItem } from '../../../../../../models/form-generic-config.model';
+import type { SdFormGenericOption, SdFormGenericRadio } from '../../../../../../models/form-generic-field.model';
+import { sdStableStringify } from '../../../../../../models/form-generic-schema';
+import { HyperlinkPipe } from '../../../../../../pipes';
+import { sdFillPatch, sdResolveParams } from '../../../../../../rules/form-generic-values';
+import { FormRenderCatalog } from '../../../../form-render-catalog';
+import { FormRenderContext } from '../../../../form-render.context';
 
 @Component({
   selector: 'lib-radio',
   templateUrl: './radio.component.html',
   styleUrl: './radio.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    CommonModule,
-    SdRadio,
-    // Pipe cho phần viewed
-    ComponentViewedPipe,
-    HyperlinkPipe,
-  ],
+  imports: [SdRadio, HyperlinkPipe],
 })
-export class RadioComponent implements AfterViewInit, OnDestroy, OnInit {
-  private router = inject(Router);
-  private ref = inject(ChangeDetectorRef);
-  private readonly formGenericService = inject(FormGenericService);
+export class RadioComponent {
+  readonly field = input.required<SdFormGenericRadio>();
+  readonly form = input.required<FormGroup>();
+  readonly disabled = input(false);
+  readonly required = input(false);
 
-  readonly setVariables = input.required<
-    Subject<{
-      key: string;
-      value: any;
-    }>
-  >();
-  form = new FormGroup({});
-  @Input({ alias: 'form', required: true }) set _form(form: FormGroup) {
-    if (this.form !== form) {
-      this.form = form;
-      this.#changes.next();
+  readonly #context = inject(FormRenderContext);
+  readonly #catalog = inject(FormRenderCatalog);
+  readonly #loaded = signal<SdFormGenericCatalogItem[]>([]);
+  #request = 0;
+
+  readonly scope = this.#context.scope;
+  readonly viewed = computed(() => this.#context.viewed() || !!this.field().viewed);
+  readonly value = computed(() => this.#context.value()[this.field().key] as string | null | undefined);
+  readonly params = computed(
+    () => {
+      const options = this.field().options;
+      return options?.source === 'catalog' ? sdResolveParams(options.params, this.#context.value(), this.#context.variables()) : {};
+    },
+    { equal: (left, right) => sdStableStringify(left) === sdStableStringify(right) }
+  );
+  /** Radio luôn hiện toàn bộ lựa chọn: catalog được tải (không tìm theo từ khoá). */
+  readonly items = computed<SdFormGenericOption[]>(() => {
+    const options = this.field().options;
+    return options?.source === 'catalog' ? this.#loaded() : (options?.items ?? []);
+  });
+
+  constructor() {
+    effect(() => {
+      const options = this.field().options;
+      if (options?.source !== 'catalog') return;
+      const params = this.params();
+      untracked(() => {
+        const request = ++this.#request;
+        this.#catalog
+          .load(options.catalog, params, { field: this.field(), value: this.#context.value(), variables: this.#context.variables() })
+          .then(items => request === this.#request && this.#loaded.set(items))
+          .catch(() => request === this.#request && this.#loaded.set([]));
+      });
+    });
+  }
+
+  select(value: unknown): void {
+    const field = this.field();
+    const patch: Record<string, unknown> = { [field.key]: value };
+    if (field.options?.source === 'catalog' && field.options.fill?.length) {
+      const selected = this.#loaded().find(item => item.value === value) ?? null;
+      Object.assign(patch, sdFillPatch(field.options.fill, selected));
     }
+    this.#context.patch(patch);
   }
-  value: any;
-  entity: Record<string, any> = {};
-  @Input({ alias: 'entity', required: true }) set _entity(val: Record<string, any>) {
-    if (this.entity !== val) {
-      this.entity = val;
-      this.#changes.next();
-    }
-  }
-
-  component!: SdFormGenericRadio;
-  @Input({
-    alias: 'component',
-    required: true,
-  })
-  set _component(val: SdFormGenericRadio) {
-    if (this.component !== val) {
-      this.component = val;
-      this.#changes.next();
-    }
-  }
-
-  disabled = false;
-  @Input('disabled') set _disabled(val: boolean | '' | undefined | null) {
-    this.disabled = val === '' || !!val;
-  }
-
-  required = false;
-  @Input('required') set _required(val: boolean | '' | undefined | null) {
-    this.required = val === '' || !!val;
-  }
-
-  viewed = false;
-  @Input('viewed') set _viewed(val: boolean | '' | undefined | null) {
-    const viewed = val === '' || !!val;
-    if (this.viewed !== viewed) {
-      this.viewed = viewed;
-      this.#changes.next();
-    }
-  }
-
-  items: SdFormGenericSelectionItem[] = [];
-
-  #subscription = new Subscription();
-  #changes = new Subject<void>();
-
-  /** Inserted by Angular inject() migration for backwards compatibility */
-  constructor(...args: unknown[]);
-  constructor() {}
-
-  ngOnInit() {
-    this.#subscription.add(
-      this.setVariables()
-        .pipe(filter(variable => variable.key === this.component?.key))
-        .subscribe(variable => {
-          this.entity[variable.key] = variable.value;
-          this.ref.markForCheck();
-        })
-    );
-  }
-
-  ngAfterViewInit(): void {
-    this.#subscription.add(
-      this.#changes.pipe(startWith('')).subscribe(async () => {
-        // Trạng thái viewed thì không cần check
-        if (!this.viewed && this.component && !this.component?.properties?.viewed) {
-          const values = { ...this.entity, ...this.form.value };
-          const items = await this.formGenericService.selection.items(this.component.valuesKey, {
-            entity: values,
-            component: this.component,
-          });
-          // Với radio thì selection buộc phải là values, không phải là lazyValues
-          if (Array.isArray(items)) {
-            this.items = items;
-          } else {
-            this.items = [];
-          }
-          this.ref.markForCheck();
-        }
-      })
-    );
-  }
-
-  ngOnDestroy(): void {
-    this.#subscription.unsubscribe();
-  }
-
-  onNavigate = (url: string) => {
-    if (!url) {
-      return;
-    }
-    if (url.startsWith('http')) {
-      window.open(url);
-    } else {
-      const [path, queryString] = url.split('?');
-      const queryParams = Utilities.parseQueryParams(queryString);
-      this.router.navigate([path], { queryParams });
-    }
-  };
 }

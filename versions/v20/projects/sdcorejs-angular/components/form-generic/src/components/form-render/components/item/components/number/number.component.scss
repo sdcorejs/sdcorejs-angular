@@ -2,3 +2,9 @@
   display: contents;
   width: 100%;
 }
+// Hậu tố trình bày của preset tiền tệ / phần trăm — chỉ là chữ, giá trị vẫn là number.
+.sd-fg-number-suffix {
+  color: var(--sd-text-secondary, var(--md-sys-color-on-surface-variant));
+  font-size: var(--sd-font-size-14, 14px);
+  white-space: nowrap;
+}

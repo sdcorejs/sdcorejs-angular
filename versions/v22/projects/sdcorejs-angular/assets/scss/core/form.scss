@@ -349,3 +349,26 @@ mat-checkbox {
 .mat-mdc-floating-label {
   font-size: var(--sd-font-size-14, 14px) !important;
 }
+
+// --------------------------------------------------------------------------
+// Nhãn rời — `labelPlacement="top"` trên sd-input / sd-input-number / sd-textarea / sd-select /
+// sd-date / sd-datetime / sd-chip / sd-chip-calendar. Host mang class `.sd-label-top`, nhãn là
+// `<sd-label>` con trực tiếp (label thật, luôn hiển thị), helper text là `<mat-hint>`.
+// --------------------------------------------------------------------------
+.sd-label-top > sd-label {
+  display: block;
+  margin-bottom: 4px;
+  color: map.get(color.$color_map, 'text');
+
+  .sd-label__text {
+    display: inline;
+    margin: 0;
+    cursor: default;
+  }
+}
+
+.mat-mdc-form-field.sd-label-top .mat-mdc-form-field-hint {
+  color: map.get(color.$color_map, 'text-secondary');
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: var(--sd-line-height-16, 16px);
+}

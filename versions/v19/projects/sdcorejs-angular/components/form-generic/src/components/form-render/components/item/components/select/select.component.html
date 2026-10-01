@@ -1,19 +1,20 @@
-@if (entity && component) {
-  <sd-select
-    [form]="form"
-    [label]="component.label || component.key"
-    [name]="component.key"
-    [autoId]="component.key"
-    [(model)]="entity[component.key]"
-    [required]="required"
-    [validator]="validator"
-    [disabled]="disabled"
-    [items]="items"
-    valueField="value"
-    displayField="display"
-    disabledField="disabled"
-    (sdChange)="onChanges()"
-    [multiple]="component.properties?.multiple"
-    [viewed]="viewed || component.properties?.viewed"
-    [hyperlink]="component.properties?.hyperlink | hyperlink: entity"></sd-select>
-}
+@let item = field();
+<sd-select
+  [form]="form()"
+  [label]="item.label || item.key"
+  [helperText]="item.helperText"
+  [placeholder]="item.placeholder"
+  [labelPlacement]="labelPlacement()"
+  [name]="item.key"
+  [autoId]="item.key"
+  [model]="value()"
+  (modelChange)="select($event)"
+  [required]="required()"
+  [disabled]="disabled()"
+  [items]="items()"
+  valueField="value"
+  displayField="label"
+  disabledField="disabled"
+  [multiple]="!!item.multiple"
+  [viewed]="viewed()"
+  [hyperlink]="item.hyperlink | hyperlink: scope()"></sd-select>

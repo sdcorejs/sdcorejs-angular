@@ -1,99 +1,33 @@
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  Input,
-  ViewChild,
-  OnInit,
-  OnDestroy,
-  inject,
-  input,
-  output,
-} from '@angular/core';
-import { FormGroup } from '@angular/forms';
-import { SdButton } from '@sdcorejs/angular/components/button';
-import { SdModal } from '@sdcorejs/angular/components/modal';
-import { SdAutocomplete } from '@sdcorejs/angular/forms/autocomplete';
-import {
-  sdGetComponentAttributes,
-  sdGetVariableAttributes,
-  SdFormGenericComponent,
-  SdFormGenericGroup,
-  SdFormGenericVariable,
-} from '../../../../../../../models';
-import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import { booleanAttribute, ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import type { SdFormGenericHtmlDefinition } from '../../../../../../../models/form-generic-config.model';
+import type { SdFormGenericParam } from '../../../../../../../models/form-generic-field.model';
+import type { SdFormGenericPageElement, SdFormGenericVariable } from '../../../../../../../models/form-generic-schema.model';
+import { BuildQueries } from '../../../../attribute-selection/components/build-queries/build-queries.component';
 
+/**
+ * `query` của field html theo html definition dạng `query`: tên tham số cố định theo `definition.params`,
+ * giá trị là tham chiếu field | biến | hằng số. Definition tĩnh hoặc không có tham số thì không hiện gì.
+ */
 @Component({
-  selector: 'build-queries',
+  // why: selector riêng — inspector dùng song song với build-queries của nguồn catalog.
+  selector: 'build-queries-html',
   templateUrl: './build-queries.component.html',
   styleUrl: './build-queries.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdAutocomplete, SdButton, SdModal, SdTranslatePipe],
+  imports: [BuildQueries],
 })
-export class BuildQueries implements OnInit, OnDestroy {
-  private ref = inject(ChangeDetectorRef);
+export class HtmlBuildQueries {
+  readonly label = input<string>();
+  readonly elements = input.required<readonly SdFormGenericPageElement[]>();
+  readonly variables = input.required<readonly SdFormGenericVariable[]>();
+  readonly definition = input<SdFormGenericHtmlDefinition | null | undefined>(undefined);
+  readonly model = input<readonly SdFormGenericParam[] | null | undefined>(undefined);
+  /** Chỉ xem — không có nút mở popup chỉnh sửa. */
+  readonly readonly = input(false, { transform: booleanAttribute });
+  readonly modelChange = output<SdFormGenericParam[]>();
 
-  @ViewChild(SdModal) modal?: SdModal;
-  form = new FormGroup({});
-  @Input() label?: string;
-  leftProperties?: Property[];
-  @Input({ alias: 'queries', required: true }) set _queries(queries: { key: string; label: string }[] | undefined | null) {
-    this.leftProperties =
-      queries?.map(e => ({
-        value: e.key,
-        display: e.label,
-      })) || [];
-  }
-  readonly components = input.required<(SdFormGenericComponent | SdFormGenericGroup)[]>();
-  readonly variables = input.required<SdFormGenericVariable[]>();
-  rightProperties?: Property[];
-  queryString?: string;
-  model?: Record<string, any>;
-  @Input({ alias: 'model', required: true }) set _model(model: Record<string, any> | undefined) {
-    this.model = JSON.parse(JSON.stringify({ ...model }));
-    // Parse JSON -> STRING để hiển thị trên UI
-    this.queryString = JSON.stringify(this.model);
-  }
-  readonly modelChange = output<Record<string, string>>();
-
-  /** Inserted by Angular inject() migration for backwards compatibility */
-  constructor(...args: unknown[]);
-
-  constructor() {}
-
-  ngOnInit() {}
-
-  ngOnDestroy() {}
-
-  edit = () => {
-    this.rightProperties =
-      [...sdGetComponentAttributes(this.components()), ...sdGetVariableAttributes(this.variables())].map(e => ({
-        value: '${' + e.value + '}',
-        display: e.display,
-      })) || [];
-    this.modal?.open?.();
-    this.ref.markForCheck();
-  };
-
-  onAccept = () => {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
-    const result: Record<string, string> = {};
-    for (const key of Object.keys(this.model!)) {
-      const value = this.model?.[key];
-      if (value !== undefined && value !== null && value !== '') {
-        result[key] = value;
-      }
-    }
-    this.modelChange.emit(result);
-    this.modal?.close();
-    this.ref.markForCheck();
-  };
-}
-
-interface Property {
-  value: string;
-  display: string;
+  readonly params = computed(() => {
+    const definition = this.definition();
+    return definition?.type === 'query' ? (definition.params ?? []) : [];
+  });
 }

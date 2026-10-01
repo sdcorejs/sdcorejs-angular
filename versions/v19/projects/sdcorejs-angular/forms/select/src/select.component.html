@@ -13,6 +13,8 @@
 @let _normalizedValue = $any(normalizedValue());
 @let _focused = $any(focused());
 @let _isInline = isInline();
+@let _labelTop = labelPlacement() === 'top';
+@let _placeholder = placeholder() || (_labelTop ? '' : _label) || '';
 @let _bare = _isInline;
 @let _hasValue = _multiple ? !!_normalizedValue?.length : _normalizedValue !== undefined && _normalizedValue !== null;
 @let _display = display();
@@ -71,10 +73,16 @@
     </span>
   }
 
-  @if (!_appearance) {
+  @if (!_appearance || _labelTop) {
     <ng-content select="[sdLabel]">
       @if (_label) {
-        <sd-label [label]="_label" [required]="_required"></sd-label>
+        <!-- why: mat-select không "labelable" nên nhãn rời dùng id + aria-labelledby, còn click
+             nhãn thì tự focus control (tương đương <label for>). -->
+        <sd-label
+          [label]="_label"
+          [required]="_required"
+          [labelId]="_labelTop ? labelId : null"
+          (click)="_labelTop && onLabelClick()"></sd-label>
       }
     </ng-content>
   }
@@ -107,9 +115,10 @@
         [class.sd-md]="_size === 'md'"
         [class.sd-sm]="_size === 'sm'"
         [class.hide-inline-error]="_hideInlineError"
+        [class.sd-label-top]="_labelTop"
         [appearance]="_appearance!"
         [floatLabel]="_floatLabel">
-        @if (_appearance && _label) {
+        @if (_appearance && _label && !_labelTop) {
           <mat-label class="sd-form-field-label">
             <span>{{ _label }}</span>
             @if (_helperText) {
@@ -120,9 +129,10 @@
 
         <mat-select
           #select
+          [aria-labelledby]="_labelTop ? labelId : null"
           multiple
           [formControl]="formControl"
-          [placeholder]="placeholder() || _label || ''"
+          [placeholder]="_placeholder"
           (selectionChange)="onSelectionChange($event)"
           disableOptionCentering="true"
           [panelWidth]="calculatedPanelWidth()"
@@ -267,6 +277,8 @@
              tồn tại — id auto-gen của Material đổi theo từng instance nên test/AT không bám được. -->
         @if (_showInlineError) {
           <mat-error [id]="errorId">{{ _errorMessage }}</mat-error>
+        } @else if (_labelTop && _helperText) {
+          <mat-hint [id]="hintId">{{ _helperText }}</mat-hint>
         }
 
         @if (_normalizedValue?.length && !_required && !formControl.disabled && !_bare) {
@@ -282,9 +294,10 @@
         [class.sd-md]="_size === 'md'"
         [class.sd-sm]="_size === 'sm'"
         [class.hide-inline-error]="_hideInlineError"
+        [class.sd-label-top]="_labelTop"
         [appearance]="_appearance!"
         [floatLabel]="_floatLabel">
-        @if (_appearance && _label) {
+        @if (_appearance && _label && !_labelTop) {
           <mat-label class="sd-form-field-label">
             <span>{{ _label }}</span>
             @if (_helperText) {
@@ -295,8 +308,9 @@
 
         <mat-select
           #select
+          [aria-labelledby]="_labelTop ? labelId : null"
           [formControl]="formControl"
-          [placeholder]="placeholder() || _label || ''"
+          [placeholder]="_placeholder"
           (selectionChange)="onSelectionChange($event)"
           disableOptionCentering="true"
           [panelWidth]="calculatedPanelWidth()"
@@ -423,6 +437,8 @@
              tồn tại — id auto-gen của Material đổi theo từng instance nên test/AT không bám được. -->
         @if (_showInlineError) {
           <mat-error [id]="errorId">{{ _errorMessage }}</mat-error>
+        } @else if (_labelTop && _helperText) {
+          <mat-hint [id]="hintId">{{ _helperText }}</mat-hint>
         }
 
         @if (_normalizedValue !== undefined && _normalizedValue !== null && !_required && !formControl.disabled && !_bare) {
@@ -473,9 +489,10 @@
     [class.sd-md]="_size === 'md'"
     [class.sd-sm]="_size === 'sm'"
     [class.hide-inline-error]="_hideInlineError"
+    [class.sd-label-top]="_labelTop"
     [appearance]="_appearance!"
     [floatLabel]="_floatLabel">
-    @if (_appearance && _label) {
+    @if (_appearance && _label && !_labelTop) {
       <mat-label class="sd-form-field-label">
         <span>{{ _label }}</span>
         @if (_helperText) {
@@ -486,12 +503,13 @@
 
     <mat-select
       #select
+      [aria-labelledby]="_labelTop ? labelId : null"
       [multiple]="multiple"
       [value]="virtualShellValue()"
       [compareWith]="virtualCompareWith"
       [errorStateMatcher]="virtualErrorStateMatcher"
       [disabled]="formControl.disabled"
-      [placeholder]="placeholder() || _label || ''"
+      [placeholder]="_placeholder"
       disableOptionCentering="true"
       [panelWidth]="calculatedPanelWidth()"
       [panelClass]="multiple ? virtualPanelClass.multiple : virtualPanelClass.single"
@@ -622,6 +640,8 @@
 
     @if (_showInlineError) {
       <mat-error [id]="errorId">{{ _errorMessage }}</mat-error>
+    } @else if (_labelTop && _helperText) {
+      <mat-hint [id]="hintId">{{ _helperText }}</mat-hint>
     }
 
     @if (_hasValue && !_required && !formControl.disabled && !_bare) {

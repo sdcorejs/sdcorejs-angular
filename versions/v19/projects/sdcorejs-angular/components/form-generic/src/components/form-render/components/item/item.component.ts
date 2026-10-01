@@ -1,23 +1,23 @@
-import { ChangeDetectionStrategy, Component, Input, ViewChild, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, viewChild } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { SdCustomValidator } from '@sdcorejs/angular/forms/models';
-import { SdFormGenericComponent } from '../../../../models';
+import type { SdFormGenericField } from '../../../../models/form-generic-field.model';
+import type { SdFormGenericElementState } from '../../../../rules/form-generic-filter';
 import {
+  CheckboxComponent,
   ChipCalendarComponent,
   ChipStringComponent,
   DatetimeComponent,
+  HtmlComponent,
   NumberComponent,
-  CheckboxComponent,
   RadioComponent,
   SelectComponent,
-  TableComponent,
   TextareaComponent,
   TextfieldComponent,
   UploadComponent,
 } from './components';
-import { Subject } from 'rxjs';
-import { HtmlComponent } from './components/html/html.component';
+import { FormRenderContext } from '../../form-render.context';
 
+/** Một field của `sd-form-render`: chọn control theo `type`, trạng thái (khoá/bắt buộc) do renderer tính. */
 @Component({
   selector: 'lib-item',
   templateUrl: './item.component.html',
@@ -33,82 +33,27 @@ import { HtmlComponent } from './components/html/html.component';
     SelectComponent,
     RadioComponent,
     CheckboxComponent,
-    TableComponent,
     UploadComponent,
     HtmlComponent,
   ],
 })
 export class LibItemComponent {
-  @ViewChild(UploadComponent) itemUpload?: UploadComponent;
-  @ViewChild(TableComponent) itemTable?: TableComponent;
-  readonly setVariables = input.required<
-    Subject<{
-      key: string;
-      value: any;
-    }>
-  >();
-  readonly form = input(new FormGroup({}));
-  value: any;
-  entity: Record<string, any> = {};
-  @Input({
-    alias: 'entity',
-    required: true,
-  })
-  set _entity(val: Record<string, any>) {
-    if (this.entity !== val) {
-      this.entity = val;
-    }
+  readonly field = input.required<SdFormGenericField>();
+  readonly state = input.required<SdFormGenericElementState>();
+  readonly form = input.required<FormGroup>();
+
+  readonly #context = inject(FormRenderContext);
+  /**
+   * Bắt buộc có hiệu lực. why: field chỉ xem không được validate — người dùng không sửa được nó, và
+   * control của nó (có hoặc không, tuỳ type) không được làm `validate()` lỗi mà không hiện gì.
+   */
+  readonly required = computed(() => this.state().required && !(this.#context.viewed() || !!this.field().viewed));
+
+  // why: signal queries cannot live on ES `#private` members (NG1053).
+  private readonly uploader = viewChild(UploadComponent);
+
+  /** Tải lên tệp đang chờ nếu field là upload. */
+  async upload(): Promise<void> {
+    await this.uploader()?.upload();
   }
-
-  col = 'col-6 px-8 py-8';
-  component?: SdFormGenericComponent;
-  @Input({
-    alias: 'component',
-    required: true,
-  })
-  set _component(val: SdFormGenericComponent) {
-    this.component = val;
-    this.col = `col-${this.component?.layout?.columns || '6'} px-8 py-8`;
-  }
-
-  disabled = false;
-  @Input('disabled') set _disabled(val: boolean | '' | undefined) {
-    this.disabled = val === '' || !!val;
-  }
-
-  required = false;
-  @Input('required') set _required(val: boolean | '' | undefined) {
-    this.required = val === '' || !!val;
-  }
-
-  viewed = false;
-  @Input('viewed') set _viewed(val: boolean | '' | undefined) {
-    this.viewed = val === '' || !!val;
-  }
-
-  validator?: SdCustomValidator;
-  @Input('validator') set _validator(validator: SdCustomValidator) {
-    if (validator && this.validator !== validator) {
-      this.validator = validator;
-    }
-  }
-
-  // Thực hiện upload nếu có component upload
-  // TODO: Bổ sung logic upload cho table
-  upload = async () => {
-    await this.itemUpload?.upload?.();
-    await this.itemTable?.upload?.();
-  };
-
-  // items: SdSearch = (args)=> {
-  //   const {  } = args;
-  // }
-
-  // onSelect = (data: BaseEntity | BaseEntity[]) => {
-  //   if (Array.isArray(data)) {
-  //     this.entity[this.component.key] = data.map(selected => selected?.id).filter(val => !!val);
-  //   } else {
-  //     this.entity[this.component.key] = data?.id;
-  //   }
-  // };
 }

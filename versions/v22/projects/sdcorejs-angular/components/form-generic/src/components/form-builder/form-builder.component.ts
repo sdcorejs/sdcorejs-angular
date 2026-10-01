@@ -1,1124 +1,509 @@
-import { ChangeDetectionStrategy as SdAngular22ChangeDetectionStrategy } from '@angular/core';
 import {
-  CdkDrag,
-  CdkDragDrop,
-  CdkDragEnter,
-  CdkDragMove,
-  CdkDragSortEvent,
-  CdkDropList,
-  DragDropModule,
-  moveItemInArray,
-  transferArrayItem,
-} from '@angular/cdk/drag-drop';
-import { CommonModule } from '@angular/common';
-import {
-  ChangeDetectorRef,
+  afterNextRender,
+  ChangeDetectionStrategy,
   Component,
   computed,
-  ElementRef,
+  DestroyRef,
   effect,
+  ElementRef,
   inject,
-  input,
+  Injector,
+  model,
+  NgZone,
   signal,
   untracked,
   viewChild,
-  viewChildren,
-  OnInit,
-  OnDestroy,
 } from '@angular/core';
-import { FormGroup } from '@angular/forms';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdButton, SdButtonItem, SdButtonItemDivider } from '@sdcorejs/angular/components/button';
+import { SdCodeEditor } from '@sdcorejs/angular/components/code-editor';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdInput } from '@sdcorejs/angular/forms/input';
-import { SdCodeEditor } from '@sdcorejs/angular/components/code-editor';
-import { SdConfirmService, SdNotifyService } from '@sdcorejs/angular/services';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { SdConfirmService } from '@sdcorejs/angular/services/confirm';
+import { SdNotifyService } from '@sdcorejs/angular/services/notify';
+import { Subscription } from 'rxjs';
 import { Utilities } from '@sdcorejs/utils/fns';
-import { debounceTime, startWith, Subject, Subscription } from 'rxjs';
-import {
-  SD_COMPONENT_ICONS,
-  FormBuilderComponent,
-  FormBuilderComponentGroup,
-  SD_FORM_BUILDER_COMPONENTS,
-  sdGenerateId,
-  sdGenerateKey,
-  SdFormGenericComponent,
-  SdFormGenericGroup,
-  SdFormGenericVariable,
-} from '../../models';
-import { SdFormGenericValidation } from '../../models/form-generic-validation.model';
-import { SdFormGeneric } from '../../models/form-generic.model';
-import { SdFormRender } from '../form-render/form-render.component';
-import {
-  CheckboxAttribute,
-  CheckboxControl,
-  ChipCalendarAttribute,
-  ChipCalendarControl,
-  ChipStringAttribute,
-  ChipStringControl,
-  DatetimeAttribute,
-  DatetimeControl,
-  GroupAttribute,
-  HtmlAttribute,
-  HtmlControl,
-  NumberAttribute,
-  NumberControl,
-  RadioAttribute,
-  RadioControl,
-  SelectAttribute,
-  SelectControl,
-  TableAttribute,
-  TableControl,
-  TextareaAttribute,
-  TextareaControl,
-  TextfieldAttribute,
-  TextFieldControl,
-  UploadAttribute,
-  UploadControl,
-} from './components';
+import { SD_FORM_GENERIC_RESERVED_KEYS } from '../../models/form-generic-schema';
+import type { SdFormGenericSchema, SdFormGenericValidation, SdFormGenericVariable } from '../../models/form-generic-schema.model';
+import { sdFindKeyReferences } from '../../rules/form-generic-references';
+import { CanvasComponent } from './canvas/canvas.component';
 import { ConfigureValidationComponent } from './components/configure-validation/configure-validation.component';
-import { buildFormBuilderRows, canPlaceInRow, flattenFormBuilderRows, FormBuilderLayoutRow, moveItemToRow } from './form-builder-layout';
-import { BuilderService } from './services';
-import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import { InspectorComponent } from './inspector/inspector.component';
+import { PaletteComponent } from './palette/palette.component';
+import { PreviewComponent } from './preview/preview.component';
+import {
+  cloneJson,
+  collectKeys,
+  documentFromSchema,
+  documentToSchema,
+  isGroup,
+  sameDocumentContent,
+  SD_FORM_BUILDER_KEY_PATTERN,
+} from './state/builder-document';
+import { BuilderDragService } from './state/builder-drag';
+import { escapeHtml } from './state/builder-html';
+import { BuilderMode, BuilderViewport, FormBuilderStore } from './state/builder-store';
 
-interface DragDropRowItem extends FormBuilderLayoutRow {
-  rowIndex?: number;
+interface VariableDraft {
+  /** Id cục bộ của dòng trong dialog (không lưu vào schema). */
+  id: string;
+  key: string;
+  label: string;
+  /** Biến gốc (nếu có) — giữ các thuộc tính khác của consumer khi lưu. */
+  source?: SdFormGenericVariable;
 }
 
-interface ResizeState {
-  itemId: string;
-  rowId: string;
-  columns: string;
-}
+/** Bề rộng (px) của builder dưới ngưỡng này thì palette/inspector thành panel nổi bật/tắt được. */
+const COMPACT_WIDTH = 900;
 
-type RowInsertionEdge = 'before' | 'after';
+let nextBuilderId = 0;
 
-type PaletteDropTarget =
-  | { kind: 'empty' }
-  | { kind: 'inline'; rowId: string; index: number; columns: string }
-  | { kind: 'edge'; rowId: string; edge: RowInsertionEdge };
+/** Thời gian (ms) thông báo "Đã xoá" còn cho bấm Hoàn tác. */
+const UNDO_REMOVE_MS = 5000;
 
+const isEditableTarget = (target: EventTarget | null): boolean => {
+  const element = target as HTMLElement | null;
+  if (!element) return false;
+  if (element.isContentEditable) return true;
+  const tag = element.tagName;
+  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+};
+
+/**
+ * `<sd-form-builder>` — trình thiết kế form NHÚNG trong Core UI (không phải ứng dụng riêng: không
+ * header ứng dụng, không lưu/nháp/xuất bản — persistence thuộc consumer).
+ *
+ * Bố cục: toolbar nội bộ `[Thiết kế | Xem trước | Schema] [Desktop | Tablet | Mobile] [Hoàn tác |
+ * Làm lại | Công cụ]`, dưới là Thành phần/Cấu trúc · Canvas · Thuộc tính. Chiều cao do host quyết định.
+ * Viewport chọn mức bố cục đang thiết kế: resize và tab Bố cục ghi span của mức đó.
+ *
+ * State: schema chuẩn duy nhất trong `FormBuilderStore` (một instance/builder); mọi chỉnh sửa là
+ * command có undo. Input của consumer không bao giờ bị mutate.
+ */
 @Component({
-  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
   selector: 'sd-form-builder',
   templateUrl: './form-builder.component.html',
   styleUrl: './form-builder.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [FormBuilderStore, BuilderDragService],
+  host: {
+    class: 'sd-form-builder',
+    '[class.sd-form-builder--compact]': 'compact()',
+    '(keydown)': 'onKeydown($event)',
+  },
   imports: [
-    CommonModule,
-    MatTooltipModule,
-    DragDropModule,
-    // Controls
-    TextFieldControl,
-    TextfieldAttribute,
-    TextareaControl,
-    TextareaAttribute,
-    ChipStringControl,
-    ChipStringAttribute,
-    ChipCalendarControl,
-    ChipCalendarAttribute,
-    NumberControl,
-    NumberAttribute,
-    SelectControl,
-    SelectAttribute,
-    DatetimeControl,
-    DatetimeAttribute,
-    RadioControl,
-    RadioAttribute,
-    CheckboxControl,
-    CheckboxAttribute,
-    HtmlControl,
-    HtmlAttribute,
-    UploadControl,
-    UploadAttribute,
-    TableControl,
-    TableAttribute,
-    GroupAttribute,
-    SdModal,
-    SdInput,
-    SdCodeEditor,
-    SdButton,
-    SdFormRender,
+    PaletteComponent,
+    CanvasComponent,
+    InspectorComponent,
+    PreviewComponent,
     ConfigureValidationComponent,
+    SdButton,
+    SdButtonItem,
+    SdButtonItemDivider,
+    SdCodeEditor,
+    SdIcon,
+    SdInput,
+    SdModal,
     SdTranslatePipe,
   ],
 })
-export class SdFormBuilder implements OnInit, OnDestroy {
-  // ── viewChild signals (Angular 17+) ────────────────────────────────────
-  readonly popupViewJSON = viewChild<SdModal>('popupViewJSON');
-  readonly popupConfigureVariables = viewChild<SdModal>('popupConfigureVariables');
-  readonly configureValidation = viewChild(ConfigureValidationComponent);
-  readonly formRender = viewChild(SdFormRender);
-  private readonly canvasDropZone = viewChild<ElementRef<HTMLElement>>('canvasDropZone');
-  readonly rowDropLists = viewChildren<unknown, CdkDropList>('rowDropList', { read: CdkDropList });
-  readonly connectedRowDropLists = computed<CdkDropList[]>(() => [...this.rowDropLists()]);
+export class SdFormBuilder {
+  readonly store = inject(FormBuilderStore);
+  readonly #drag = inject(BuilderDragService);
+  readonly #confirm = inject(SdConfirmService);
+  readonly #notify = inject(SdNotifyService);
+  readonly #zone = inject(NgZone);
+  readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
+  readonly #injector = inject(Injector);
 
-  // ── injected services ──────────────────────────────────────────────────
-  readonly #ref = inject(ChangeDetectorRef);
-  readonly #notifyService = inject(SdNotifyService);
-  readonly #confirmService = inject(SdConfirmService);
-  readonly #builderService = inject(BuilderService);
-  readonly #i18n = inject(I18nService);
+  /**
+   * Schema của builder — `[(schema)]`. Mỗi tham chiếu MỚI có nội dung khác schema hiện tại = nạp form
+   * khác: reset lịch sử undo và selection. Nhận lại đúng schema vừa phát, hoặc tham chiếu mới nhưng
+   * CÙNG nội dung (vd consumer lưu rồi truyền lại), bị bỏ qua — không reset, không vòng lặp.
+   *
+   * Builder phát snapshot (bản clone độc lập) sau MỖI thay đổi do người dùng — kể cả hoàn tác/làm lại;
+   * không phát khi nạp schema, khi đổi selection/mode/viewport. Input không bao giờ bị mutate; sửa
+   * object tại chỗ sẽ KHÔNG nạp lại — hãy truyền object mới.
+   */
+  readonly schema = model<SdFormGenericSchema | undefined>(undefined);
 
-  form = new FormGroup({});
+  readonly canvas = viewChild(CanvasComponent);
+  readonly palette = viewChild(PaletteComponent);
+  readonly validationDialog = viewChild(ConfigureValidationComponent);
+  readonly variablesModal = viewChild<SdModal>('variablesModal');
+  readonly shortcutsModal = viewChild<SdModal>('shortcutsModal');
 
-  // ── signal inputs ──────────────────────────────────────────────────────
-  /** Input chính: schema form. Mỗi lần ref thay đổi → effect sẽ clone về local arrays. */
-  readonly formGeneric = input<SdFormGeneric | undefined>(undefined);
+  /** Container hẹp → palette/inspector thành panel nổi. */
+  readonly compact = signal(false);
+  readonly leftOpen = signal(false);
+  readonly rightOpen = signal(false);
+  readonly #uid = `sd-form-builder-${++nextBuilderId}`;
+  /** Id của hai panel — nút mở trỏ tới qua `aria-controls`. */
+  protected readonly leftPanelId = `${this.#uid}-left`;
+  protected readonly rightPanelId = `${this.#uid}-right`;
+  // why: signal queries cannot live on ES `#private` members (NG1053); protected keeps them off the public API.
+  protected readonly leftToggle = viewChild<ElementRef<HTMLButtonElement>>('leftToggle');
+  protected readonly rightToggle = viewChild<ElementRef<HTMLButtonElement>>('rightToggle');
 
-  // ── component registry (immutable) ─────────────────────────────────────
-  readonly formBuilderComponents = SD_FORM_BUILDER_COMPONENTS;
-  readonly componentIcons = SD_COMPONENT_ICONS;
+  readonly modes: readonly BuilderMode[] = ['design', 'preview', 'schema'];
+  readonly viewports: readonly BuilderViewport[] = ['desktop', 'tablet', 'mobile'];
+  readonly modeIcons: Record<BuilderMode, string> = { design: 'edit', preview: 'visibility', schema: 'data_object' };
+  readonly viewportIcons: Record<BuilderViewport, string> = { desktop: 'desktop_windows', tablet: 'tablet_mac', mobile: 'smartphone' };
 
-  // ── palette state (signal + computed group buckets) ────────────────────
-  readonly paletteSearch = signal('');
-  readonly paletteGroups = computed<{ key: FormBuilderComponentGroup; label: string; items: FormBuilderComponent[] }[]>(() => {
-    const term = this.paletteSearch().trim().toLowerCase();
-    // why: trong chế độ Detail group, ẩn item 'group' khỏi palette — không cho group lồng group.
-    const inGroup = !!this.editingGroupId();
-    const match = (c: FormBuilderComponent) =>
-      (!inGroup || c.type !== 'group') && (!term || c.name.toLowerCase().includes(term) || c.type.toLowerCase().includes(term));
-    const buckets: Record<FormBuilderComponentGroup, FormBuilderComponent[]> = { basic: [], choice: [], advanced: [], layout: [] };
-    for (const c of this.formBuilderComponents) {
-      if (match(c)) buckets[c.group].push(c);
-    }
-    return [
-      { key: 'basic' as const, label: 'Basic', items: buckets.basic },
-      { key: 'choice' as const, label: 'Choice', items: buckets.choice },
-      { key: 'advanced' as const, label: 'Advanced', items: buckets.advanced },
-      { key: 'layout' as const, label: 'Layout', items: buckets.layout },
-    ].filter(g => g.items.length > 0);
+  readonly isDesign = computed(() => this.store.mode() === 'design');
+  readonly schemaText = computed(() => (this.store.mode() === 'schema' ? JSON.stringify(documentToSchema(this.store.doc()), null, 2) : ''));
+
+  readonly variableDrafts = signal<VariableDraft[]>([]);
+  readonly variableErrors = computed(() => {
+    const drafts = this.variableDrafts();
+    const fieldKeys = collectKeys({ ...this.store.doc(), variables: [] });
+    const counts = new Map<string, number>();
+    for (const draft of drafts) counts.set(draft.key.trim(), (counts.get(draft.key.trim()) ?? 0) + 1);
+    return drafts.map(draft => {
+      const key = draft.key.trim();
+      if (!key) return this.store.t('core.component.form-builder.key.empty');
+      if (!SD_FORM_BUILDER_KEY_PATTERN.test(key)) return this.store.t('core.component.form-builder.key.invalid');
+      if (SD_FORM_GENERIC_RESERVED_KEYS.has(key)) return this.store.t('core.component.form-builder.key.reserved');
+      if ((counts.get(key) ?? 0) > 1) return this.store.t('core.component.form-builder.variable.duplicate');
+      if (fieldKeys.has(key)) return this.store.t('core.component.form-builder.variable.conflict');
+      return '';
+    });
   });
+  readonly variablesInvalid = computed(() => this.variableErrors().some(Boolean));
 
-  // ── local mutable state ────────────────────────────────────────────────
-  // Components/variables/validations giữ là plain arrays vì code hiện tại
-  // mutate in-place rất nhiều chỗ (push, splice, forEach …). Đổi sang signal
-  // tốn rủi ro với rất ít lợi ích — chỉ markForCheck() khi cần.
-  components: Required<SdFormGeneric>['components'] = [];
-  variables: Required<SdFormGeneric>['variables'] = [];
-  validations: Required<SdFormGeneric>['validations'] = [];
-
-  /** Cloned variables — dùng cho modal "Configure variables" (huỷ thì discard, ok thì gán ngược). */
-  clonedVariables: SdFormGenericVariable[] = [];
-
-  readonly selectedComponent = signal<SdFormGenericComponent | SdFormGenericGroup | undefined>(undefined);
-  readonly isPreview = signal(false);
-
-  // ── group drill-in (Detail) ─────────────────────────────────────────────
-  // why: bỏ hẳn drag/drop trong group. Thay vào đó "Detail" 1 group → mở canvas
-  // riêng chỉ thiết kế children của group đó (cùng tooling: palette/reorder/resize/
-  // attribute), KHÔNG cho group lồng group. OK = giữ, Cancel = revert. Depth tối đa
-  // 1 (group không chứa group) nên chỉ cần 1 con trỏ editingGroupId, không cần stack.
-  readonly editingGroupId = signal<string | undefined>(undefined);
-  /** Group đang được Detail (tìm ở TOP-LEVEL theo id), undefined = đang ở canvas chính. */
-  readonly editingGroup = computed<SdFormGenericGroup | undefined>(() => {
-    const id = this.editingGroupId();
-    if (!id) return undefined;
-    return this.components.find(c => c.id === id && c.type === 'group') as SdFormGenericGroup | undefined;
-  });
-  /** Snapshot (deep clone JSON) của group.components khi vào Detail — phục vụ Cancel. */
-  #groupSnapshot?: string;
-
-  /** Mảng components đang được canvas thao tác: children của group khi Detail, ngược lại là top-level. */
-  #scope = (): (SdFormGenericComponent | SdFormGenericGroup)[] => this.editingGroup()?.components ?? this.components;
-
-  /** Signal toàn cục: TRUE khi BẤT KỲ cdkDrag nào đang active (palette, canvas, group, resize).
-   *  Trigger class `.fb-shell--dragging` để ẩn hover/actions/resize toàn diện, không phụ thuộc :has(). */
-  readonly isAnyDragging = signal(false);
-  readonly dragSource = signal<'palette' | 'row' | 'canvas' | 'resize' | undefined>(undefined);
-  readonly draggedPaletteItem = signal<FormBuilderComponent | undefined>(undefined);
-  readonly paletteDropTarget = signal<PaletteDropTarget | undefined>(undefined);
-  /** @deprecated Internal drag-preview compatibility mirror; use no application code. */
-  readonly rowInsertionEdge = signal<RowInsertionEdge>('after');
-  /** @deprecated Internal drag-preview compatibility mirror; use no application code. */
-  readonly inlineDropTargetRow = signal<DragDropRowItem | undefined>(undefined);
-  readonly resizeState = signal<ResizeState | undefined>(undefined);
-  readonly isResizing = computed(() => !!this.resizeState());
-
-  expand = true;
-  dragDropRows: DragDropRowItem[] = [];
-  isDragging = false;
-  targetItem?: DragDropRowItem = undefined;
-  private lastDragPointer?: { x: number; y: number };
-  readonly #host: ElementRef<HTMLElement> = inject(ElementRef);
-
-  #setPaletteDropTarget = (target: PaletteDropTarget | undefined) => {
-    this.paletteDropTarget.set(target);
-    this.rowInsertionEdge.set(target?.kind === 'edge' ? target.edge : 'after');
-    this.inlineDropTargetRow.set(target?.kind === 'inline' ? this.dragDropRows.find(row => row.id === target.rowId) : undefined);
-  };
-
-  /** Handler chung cho mọi cdkDragStarted — set signal global true. */
-  onAnyDragStarted = () => {
-    this.isAnyDragging.set(true);
-  };
-
-  onPaletteDragStarted = (item?: FormBuilderComponent) => {
-    this.draggedPaletteItem.set(item);
-    this.#setPaletteDropTarget(undefined);
-    this.targetItem = undefined;
-    this.lastDragPointer = undefined;
-    this.dragSource.set('palette');
-    this.onAnyDragStarted();
-  };
-
-  onRowDragStarted = () => {
-    this.dragSource.set('row');
-    this.onAnyDragStarted();
-  };
-
-  onAnyDragMoved = (event: CdkDragMove<any>) => {
-    this.lastDragPointer = event.pointerPosition;
-    if (this.dragSource() === 'palette') {
-      this.#updatePaletteDropTargetFromPointer(event.pointerPosition);
-      return;
-    }
-    if (!this.#isPointerInsideCanvas(event.pointerPosition)) {
-      if (this.targetItem) {
-        this.targetItem = undefined;
-        this.#ref.markForCheck();
-      }
-      return;
-    }
-    const hit = this.#rowHitFromPointer(event.pointerPosition);
-    if (hit?.row && this.targetItem !== hit.row) {
-      this.targetItem = hit.row;
-      this.#ref.markForCheck();
-    }
-  };
-
-  #isPointerInsideCanvas = (pointer: { x: number; y: number }): boolean => {
-    const rect = this.canvasDropZone()?.nativeElement.getBoundingClientRect();
-    return !!rect && pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom;
-  };
-
-  #updatePaletteDropTargetFromPointer = (pointer: { x: number; y: number }) => {
-    if (!this.#isPointerInsideCanvas(pointer)) {
-      this.#setPaletteDropTarget(undefined);
-      this.#ref.markForCheck();
-      return;
-    }
-    if (!this.dragDropRows.length) {
-      this.#setPaletteDropTarget({ kind: 'empty' });
-      this.#ref.markForCheck();
-      return;
-    }
-    const hit = this.#rowHitFromPointer(pointer);
-    if (!hit) {
-      this.#setPaletteDropTarget(undefined);
-      this.#ref.markForCheck();
-      return;
-    }
-    const element = document.elementFromPoint(pointer.x, pointer.y);
-    const rowItems = element?.closest('.fb-row__items');
-    const rowElement = rowItems?.closest('.fb-row') as HTMLElement | null;
-    const paletteItem = this.draggedPaletteItem();
-    if (rowElement?.id === hit.row.id && paletteItem?.type !== 'break' && !this.isRowInlineDropLocked(hit.row)) {
-      const current = this.paletteDropTarget();
-      if (current?.kind === 'inline' && current.rowId === hit.row.id) return;
-      this.#setPaletteDropTarget({
-        kind: 'inline',
-        rowId: hit.row.id,
-        index: hit.row.items.length,
-        columns: `${this.#availableColumns(hit.row)}`,
-      });
-    } else {
-      this.#setPaletteDropTarget({ kind: 'edge', rowId: hit.row.id, edge: hit.edge });
-    }
-    this.#ref.markForCheck();
-  };
-
-  /** Handler chung cho mọi cdkDragEnded — set signal global false (dùng setTimeout 0
-   *  để chờ CDK xử lý xong drop event trước khi UI re-enable). */
-  onAnyDragEnded = () => {
-    setTimeout(() => {
-      this.isAnyDragging.set(false);
-      this.dragSource.set(undefined);
-      this.draggedPaletteItem.set(undefined);
-      this.#setPaletteDropTarget(undefined);
-      this.lastDragPointer = undefined;
-      this.targetItem = undefined;
-      this.#ref.markForCheck();
-    }, 0);
-  };
-
-  startResizeControl = (item: SdFormGenericComponent | SdFormGenericGroup, row: DragDropRowItem) => {
-    this.dragSource.set('resize');
-    this.isAnyDragging.set(true);
-    this.resizeState.set({ itemId: item.id, rowId: row.id, columns: `${item.layout?.columns || '12'}` });
-    this.#ref.markForCheck();
-  };
-
-  endResizeControl = (event: any) => {
-    this.dragEndChangeSizeControl(event);
-    this.resizeState.set(undefined);
-    this.onAnyDragEnded();
-  };
-
-  #componentsChanges = new Subject<void>();
-  #variablesChanges = new Subject<void>();
-  #validationsChanges = new Subject<void>();
-  #subscription = new Subscription();
+  #lastEmitted?: SdFormGenericSchema;
+  #loaded = false;
 
   constructor() {
-    // Khi input `formGeneric` ref thay đổi: clone components/variables/validations
-    // sang local arrays và bắn subject tương ứng cho stream debounced (syncRows).
-    // untracked() bao bọc các mutation để không tạo cycle (effect chỉ tracks formGeneric()).
     effect(() => {
-      const fg = this.formGeneric();
+      const incoming = this.schema();
+      untracked(() => this.#receive(incoming));
+    });
+    const subscription = this.store.changes.subscribe(doc => {
+      const snapshot = documentToSchema(doc);
+      this.#lastEmitted = snapshot;
+      this.schema.set(snapshot);
+    });
+    // why: after a delete or ungroup focus goes back to the canvas. In compact mode the overlay panel the
+    // action came from is closed first, so the focused card is not hidden under the panel or the scrim.
+    effect(() => {
+      const request = this.store.focusRequest();
+      if (!request) return;
       untracked(() => {
-        this.components = Array.isArray(fg?.components) ? JSON.parse(JSON.stringify(fg!.components)) : [];
-        this.variables = Array.isArray(fg?.variables) ? JSON.parse(JSON.stringify(fg!.variables)) : [];
-        this.validations = Array.isArray(fg?.validations) ? JSON.parse(JSON.stringify(fg!.validations)) : [];
-        this.#componentsChanges.next();
-        this.#variablesChanges.next();
-        this.#validationsChanges.next();
+        this.store.focusRequest.set(null);
+        if (this.compact()) {
+          this.leftOpen.set(false);
+          this.rightOpen.set(false);
+        }
+        this.canvas()?.focusItem(request.id);
       });
+    });
+    const destroyRef = inject(DestroyRef);
+    destroyRef.onDestroy(() => {
+      subscription.unsubscribe();
+      this.#undoRemove?.release();
+    });
+    afterNextRender(() => {
+      const observer = new ResizeObserver(entries => {
+        const width = entries[0]?.contentRect.width ?? this.#host.nativeElement.clientWidth;
+        const compact = width > 0 && width < COMPACT_WIDTH;
+        if (compact !== this.compact()) this.compact.set(compact);
+      });
+      observer.observe(this.#host.nativeElement);
+      destroyRef.onDestroy(() => observer.disconnect());
     });
   }
 
-  ngOnInit() {
-    this.#subscription.add(
-      this.#componentsChanges.pipe(debounceTime(200), startWith('')).subscribe(() => {
-        this.#syncComponentsToRows();
-        this.#ref.markForCheck();
-      })
-    );
-    this.#subscription.add(
-      this.#variablesChanges.pipe(debounceTime(200), startWith('')).subscribe(() => {
-        this.#ref.markForCheck();
-      })
-    );
-    this.#subscription.add(
-      this.#validationsChanges.pipe(debounceTime(200), startWith('')).subscribe(() => {
-        this.#ref.markForCheck();
-      })
-    );
+  // ── API công khai ───────────────────────────────────────────────────────────
+
+  /** Snapshot schema hiện tại (bản clone độc lập, sửa thoải mái không ảnh hưởng builder). */
+  getSchema = (): SdFormGenericSchema => documentToSchema(this.store.doc());
+
+  // ── Toolbar ─────────────────────────────────────────────────────────────────
+
+  setMode(mode: BuilderMode): void {
+    this.#drag.cancel();
+    this.store.setMode(mode);
+    this.leftOpen.set(false);
+    this.rightOpen.set(false);
   }
 
-  ngOnDestroy() {
-    this.#subscription.unsubscribe();
+  setViewport(viewport: BuilderViewport): void {
+    this.store.viewport.set(viewport);
   }
 
-  addComponent = (item: FormBuilderComponent, index?: number, layoutColumns = '12') => {
-    // why: không cho thêm group khi đang Detail trong 1 group (tránh group lồng group).
-    if (item.type === 'group' && this.editingGroupId()) return;
-    const id = sdGenerateId();
-    const columns = item.type === 'break' ? '12' : layoutColumns;
-    let newComponent: SdFormGenericComponent | SdFormGenericGroup;
-    if (item.type === 'group') {
-      // Group là layout container, không có key/validate; có nested components[] + properties{icon,color}.
-      newComponent = {
-        id,
-        type: 'group',
-        label: 'Group',
-        layout: { columns },
-        components: [],
-        properties: {
-          icon: item.symbol || 'category',
-          color: 'primary',
-        },
-      } as SdFormGenericGroup;
-    } else if (item.type === 'break') {
-      // Break: 12-col luôn, đóng vai trò row separator cố định. Extend base nên có key
-      // (auto-gen cho stability) nhưng không hiển thị trong attribute panel.
-      newComponent = {
-        id,
-        key: sdGenerateKey(),
-        type: 'break',
-        label: 'Break',
-        layout: { columns: '12' },
-        validate: {},
-        disabled: false,
-        properties: {},
-      } as any;
-    } else {
-      newComponent = {
-        id,
-        key: sdGenerateKey(),
-        type: item.type as any,
-        label: item.type,
-        layout: { columns },
-        validate: { required: false },
-        disabled: false,
-        properties: {},
-      } as SdFormGenericComponent;
-    }
-    const scope = this.#scope();
-    if (index !== undefined) {
-      scope.splice(index, 0, newComponent);
-    } else {
-      scope.push(newComponent);
-    }
-
-    this.#recountTabIndex();
-    const created = scope.find(component => component.id === id);
-    this.selectedComponent.set(created);
-    this.selectComponent(created);
-    this.#ref.markForCheck();
-  };
-
-  // ── Helpers cho UI mới ────────────────────────────────────────
-  /** Symbol Material để render trên canvas item / attribute header. */
-  symbolFor = (item: SdFormGenericComponent | SdFormGenericGroup): string => {
-    if (item.type === 'group') return (item as SdFormGenericGroup).properties?.icon || 'category';
-    return this.componentIcons[item.type]?.symbol ?? 'help';
-  };
-
-  /** Human-readable type label (e.g. "Text field", "Date"). */
-  typeLabelFor = (item: SdFormGenericComponent | SdFormGenericGroup): string => {
-    return this.componentIcons[item.type]?.label ?? item.type;
-  };
-
-  placeholderSymbolFor = (
-    item: FormBuilderComponent | SdFormGenericComponent | SdFormGenericGroup | DragDropRowItem | undefined
-  ): string => {
-    if (!item) return 'add';
-    if (this.#isPaletteComponent(item)) return item.symbol;
-    if ('items' in item) return 'view_week';
-    return this.symbolFor(item);
-  };
-
-  placeholderTitleFor = (
-    item: FormBuilderComponent | SdFormGenericComponent | SdFormGenericGroup | DragDropRowItem | undefined
-  ): string => {
-    if (!item) return 'Component';
-    if (this.#isPaletteComponent(item)) return item.name;
-    if ('items' in item) return 'Row';
-    return ('label' in item && item.label) || this.typeLabelFor(item);
-  };
-
-  placeholderMetaFor = (item: FormBuilderComponent | SdFormGenericComponent | SdFormGenericGroup | DragDropRowItem | undefined): string => {
-    if (!item) return '';
-    if (this.#isPaletteComponent(item)) return 'New field';
-    if ('items' in item) return `${item.items.length} field${item.items.length === 1 ? '' : 's'}`;
-    return this.typeLabelFor(item);
-  };
-
-  placeholderColumnsFor = (
-    item: FormBuilderComponent | SdFormGenericComponent | SdFormGenericGroup | DragDropRowItem | undefined
-  ): number => {
-    if (!item) return 12;
-    if ('items' in item) return 12;
-    if (this.#isPaletteComponent(item)) {
-      const row = this.targetItem;
-      if (row && !this.isRowInlineDropLocked(row)) return Math.max(2, this.#availableColumns(row));
-      return item.type === 'break' ? 12 : 6;
-    }
-    return +(item.layout?.columns || 12);
-  };
-
-  /** True nếu component có expression điều kiện — drives the "conditional" status chip. */
-  hasConditional = (item: SdFormGenericComponent | SdFormGenericGroup): boolean => {
-    const p: any = item.properties || {};
-    return !!(p.visibleWhenExpression || p.hiddenWhenExpression || p.disabledWhenExpression || p.requiredWhenExpression);
-  };
-
-  /** Map Color preset → 2 CSS var names cho header-bg và header-fg của group card. */
-  groupColorVars = (color: string | undefined | null): { bg: string; fg: string } => {
-    switch (color) {
-      case 'secondary':
-        return { bg: 'var(--md-sys-color-secondary-container)', fg: 'var(--md-sys-color-on-secondary-container)' };
-      case 'success':
-        return { bg: 'var(--md-sys-color-success-container)', fg: 'var(--md-sys-color-success)' };
-      case 'warning':
-        return { bg: 'var(--md-sys-color-warning-container)', fg: 'var(--md-sys-color-warning)' };
-      case 'error':
-        return { bg: 'var(--md-sys-color-error-container)', fg: 'var(--md-sys-color-error)' };
-      case 'primary':
-      default:
-        return { bg: 'var(--md-sys-color-primary-container)', fg: 'var(--md-sys-color-primary)' };
-    }
-  };
-
-  /** Segmented Design/Preview toggle (replaces play_circle/stop_circle). */
-  setMode = (preview: boolean) => {
-    this.isPreview.set(preview);
-  };
-
-  // ── Group drill-in (Detail) navigation ──────────────────────────────────
-  /** Mở canvas thiết kế riêng cho 1 group (chỉ children của nó). Snapshot để Cancel revert. */
-  // why: body group nay là role="button" + tabindex="0" nên Enter/Space phải mở màn hình Detail
-  // đúng như click. stopPropagation để item cha (cũng là role="button") không tự chọn lại.
-  onEnterGroupEditKeydown = (group: SdFormGenericGroup, event: KeyboardEvent) => {
-    if (event.target !== event.currentTarget) return;
+  /** Phím của radiogroup (APG): ←/↑ lùi, →/↓ tiến (vòng), Home/End về đầu/cuối. */
+  onSegmentKeydown(event: KeyboardEvent, values: readonly string[], current: string, apply: (value: string) => void): void {
+    const index = values.indexOf(current);
+    const step: Record<string, number> = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: values.length - 1, ArrowUp: values.length - 1 };
+    const next =
+      event.key === 'Home'
+        ? values[0]
+        : event.key === 'End'
+          ? values[values.length - 1]
+          : event.key in step
+            ? values[(index + step[event.key]) % values.length]
+            : undefined;
+    if (next === undefined) return;
     event.preventDefault();
-    event.stopPropagation();
-    this.enterGroupEdit(group);
-  };
+    apply(next);
+    const group = event.currentTarget as HTMLElement | null;
+    queueMicrotask(() => group?.querySelector<HTMLElement>(`[data-value="${next}"]`)?.focus());
+  }
 
-  enterGroupEdit = (group: SdFormGenericGroup) => {
-    this.#groupSnapshot = JSON.stringify(group.components ?? []);
-    this.editingGroupId.set(group.id);
-    this.selectedComponent.set(undefined);
-    this.#recountTabIndex();
-    this.#ref.markForCheck();
-  };
+  applyMode = (value: string) => this.setMode(value as BuilderMode);
+  applyViewport = (value: string) => this.setViewport(value as BuilderViewport);
 
-  /** OK: giữ thay đổi children, quay về canvas chính. */
-  confirmGroupEdit = () => {
-    this.#groupSnapshot = undefined;
-    this.editingGroupId.set(undefined);
-    this.selectedComponent.set(undefined);
-    this.#syncComponentsToRows();
-    this.#ref.markForCheck();
-  };
+  undo(): void {
+    this.store.undo();
+  }
 
-  /** Cancel: revert children về snapshot lúc vào Detail, rồi quay về canvas chính. */
-  cancelGroupEdit = () => {
-    const g = this.editingGroup();
-    if (g && this.#groupSnapshot !== undefined) {
-      g.components = JSON.parse(this.#groupSnapshot);
+  redo(): void {
+    this.store.redo();
+  }
+
+  /** Phím tắt trong phạm vi builder (không bắt toàn trang). Ô nhập giữ undo gõ chữ của trình duyệt. */
+  onKeydown(event: KeyboardEvent): void {
+    if (!this.isDesign() || this.#drag.active) return;
+    if (event.key === 'Escape' && this.compact() && (this.leftOpen() || this.rightOpen())) {
+      // why: Escape belongs to an open popup first. MatSelect keeps focus on its trigger (aria-expanded) and
+      // closes only later, from the overlay's document listener — this handler would otherwise close the panel too.
+      const target = event.target as HTMLElement | null;
+      if (event.defaultPrevented || target?.closest('[aria-expanded="true"]:not(.fb-panel-toggle)')) return;
+      event.preventDefault();
+      this.#closePanels();
+      return;
     }
-    this.#groupSnapshot = undefined;
-    this.editingGroupId.set(undefined);
-    this.selectedComponent.set(undefined);
-    this.#syncComponentsToRows();
-    this.#ref.markForCheck();
-  };
+    const modifier = event.ctrlKey || event.metaKey;
+    if (!modifier || event.altKey) return;
+    const key = event.key.toLowerCase();
+    const isUndo = key === 'z' && !event.shiftKey;
+    const isRedo = (key === 'z' && event.shiftKey) || key === 'y';
+    if (!isUndo && !isRedo) return;
+    if (isEditableTarget(event.target)) return;
+    event.preventDefault();
+    if (isUndo) this.store.undo();
+    else this.store.redo();
+  }
 
-  /** Quick-add break sau row chỉ định (theo scope hiện tại — top-level hoặc group).
-   *  Tính component index cuối cùng của row đó trong scope, splice break vào sau.
+  // ── Panel & điều hướng ──────────────────────────────────────────────────────
+
+  focusPalette(): void {
+    if (this.compact()) this.leftOpen.set(true);
+    this.palette()?.focusSearch();
+  }
+
+  /** Mở/đóng panel nổi (builder hẹp). Mở thì focus vào panel; Esc đóng và trả focus về nút. */
+  protected togglePanel(side: 'left' | 'right'): void {
+    const open = !(side === 'left' ? this.leftOpen() : this.rightOpen());
+    this.leftOpen.set(open && side === 'left');
+    this.rightOpen.set(open && side === 'right');
+    if (!open) return;
+    // why: the left panel keeps its tab — only the Components tab starts in its search box.
+    if (side === 'left' && this.store.leftTab() === 'components') this.palette()?.focusSearch();
+    else this.#focusIn(side === 'left' ? this.leftPanelId : this.rightPanelId);
+  }
+
+  /** Focus trong panel sau lần render kế tiếp: tab đang chọn (roving tablist), không có thì control đầu tiên trong tab order. */
+  #focusIn(panelId: string): void {
+    afterNextRender(
+      () => {
+        const panel = this.#host.nativeElement.querySelector<HTMLElement>(`#${panelId}`);
+        const target =
+          panel?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]') ??
+          panel?.querySelector<HTMLElement>(':is(button, input, textarea, [tabindex="0"]):not([disabled]):not([tabindex="-1"])');
+        target?.focus();
+      },
+      { injector: this.#injector }
+    );
+  }
+
+  #closePanels(): void {
+    const toggle = this.leftOpen() ? this.leftToggle() : this.rightToggle();
+    this.leftOpen.set(false);
+    this.rightOpen.set(false);
+    toggle?.nativeElement.focus();
+  }
+
+  onItemAdded(id: string): void {
+    // why: in compact mode the palette closes over the new field — move focus to it instead of losing it.
+    this.canvas()?.scrollToItem(id, this.compact());
+    if (this.compact()) this.leftOpen.set(false);
+  }
+
+  onItemFocused(id: string): void {
+    this.canvas()?.scrollToItem(id, true);
+    if (this.compact()) this.leftOpen.set(false);
+  }
+
+  /** Xoá — hỏi xác nhận khi có nơi khác phụ thuộc vào field, hoặc group còn field con. */
+  async remove(id: string): Promise<void> {
+    const location = this.store.index().get(id);
+    if (!location) return;
+    const item = location.item;
+    const label = this.store.labelOf(item);
+    const childCount = isGroup(item) ? (item.elements ?? []).length : 0;
+    const dependents = this.store.dependentsOf(id);
+    if (childCount || dependents.length) {
+      // why: the confirm renders its message as HTML — a label is user text, never markup.
+      const safeLabel = escapeHtml(label);
+      const message = childCount
+        ? this.store.t('core.component.form-builder.confirm.delete-group', { label: safeLabel, count: childCount })
+        : this.store.t('core.component.form-builder.confirm.delete-referenced', { label: safeLabel, count: dependents.length });
+      try {
+        await this.#confirm.confirm(message, {
+          title: this.store.t('core.component.form-builder.confirm.delete-title'),
+          yesTitle: this.store.t('core.component.form-builder.delete'),
+          noTitle: this.store.t('core.component.form-builder.cancel'),
+          yesButtonColor: 'error',
+        });
+      } catch {
+        return;
+      }
+    }
+    if (this.store.remove(id)) this.#offerUndoRemove(id, label);
+  }
+
+  /** Toast đang mở của lần xoá gần nhất + cách gỡ nó. */
+  #undoRemove: { readonly toastId?: string; readonly release: () => void } | undefined = undefined;
+
+  /**
+   * Toast "Đã xoá …" trong {@link UNDO_REMOVE_MS} kèm Hoàn tác.
+   *
+   * why: Hoàn tác trong toast chỉ được huỷ ĐÚNG lần xoá đó. Ngay khi schema đổi vì thao tác khác
+   * (sửa tiếp, hoàn tác bằng phím, xoá thêm) toast bị gỡ — bấm vào lúc ấy sẽ huỷ nhầm thao tác sau.
    */
-  insertBreakAfter = (row: DragDropRowItem) => {
-    const scope = this.#scope();
-    const lastItemId = row.items[row.items.length - 1]?.id;
-    const insertAfter = lastItemId ? scope.findIndex(c => c.id === lastItemId) : scope.length - 1;
-    const newBreak: any = {
-      id: sdGenerateId(),
-      key: sdGenerateKey(),
-      type: 'break',
-      label: 'Break',
-      layout: { columns: '12' },
-      validate: {},
-      disabled: false,
-      properties: {},
+  #offerUndoRemove(id: string, label: string): void {
+    this.#undoRemove?.release();
+    const removedDoc = this.store.doc();
+    // why: no escaping here — the toast renders plain text unless `html: true` is passed.
+    const message = this.store.t('core.component.form-builder.announce.removed', { label });
+    const undo = () => {
+      const pending = this.#undoRemove;
+      if (this.store.doc() !== removedDoc || !this.store.undo()) return;
+      this.store.select(id);
+      pending?.release();
     };
-    scope.splice(insertAfter + 1, 0, newBreak);
-    this.#recountTabIndex();
-    this.#ref.markForCheck();
-  };
-
-  /** Xoá component theo scope hiện tại (top-level hoặc children của group đang Detail). */
-  removeComponent = (id: string) => {
-    const g = this.editingGroup();
-    if (g) {
-      g.components = g.components.filter((t: { id: string }) => t.id !== id);
-    } else {
-      this.components = this.components.filter((t: { id: string }) => t.id !== id);
-    }
-    if (this.selectedComponent()?.id === id) this.selectedComponent.set(undefined);
-    this.#recountTabIndex();
-  };
-
-  selectComponent = (item?: SdFormGenericComponent | SdFormGenericGroup) => {
-    this.selectedComponent.set(item);
-    this.#ref.markForCheck();
-  };
-
-  // why: mục palette nay là role="button" + tabindex="0" nên Enter/Space phải thêm component đúng
-  // như click — trước đây chỉ kéo-thả hoặc click chuột mới dựng được form.
-  onPaletteItemKeydown = (item: FormBuilderComponent, event: KeyboardEvent) => {
-    if (event.target !== event.currentTarget) return;
-    // why: chặn Space cuộn trang.
-    event.preventDefault();
-    this.addComponent(item);
-  };
-
-  onClickedOutside = (e: any) => {
-    const classList = (e.target as Element).classList;
-    if (!classList.length || classList.contains('components') || classList.contains('cdk-drop-list')) {
-      this.selectedComponent.set(undefined);
-    }
-  };
-
-  clickFormContentEmpty = () => {
-    if (!this.dragDropRows?.length) {
-      this.selectedComponent.set(undefined);
-    }
-  };
-
-  drop = (event: CdkDragDrop<any[]>) => {
-    if (event.previousContainer === event.container) {
-      moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
-      this.#syncRowsToComponents();
-      // Xử lý kéo chéo giữa các row khi pointer rời khỏi container hiện tại.
-      if (!event.isPointerOverContainer) {
-        const dragItemId = event.item.element.nativeElement.id;
-        if (dragItemId) {
-          const dragItem = this.#scope().find((t: { id: string }) => t.id === dragItemId);
-          this.xuLyKeoCheo(dragItem);
-        }
-      }
-    } else {
-      const draggedData = this.#draggedDataFromDropEvent(event);
-      if (this.#isPaletteComponent(draggedData)) {
-        const placement = this.#paletteDropPlacement(draggedData);
-        this.#setPaletteDropTarget(undefined);
-        if (!placement) return;
-        this.addComponent(draggedData, placement.index, placement.columns);
-      } else {
-        const movedItem = event.previousContainer.data[event.previousIndex] as SdFormGenericComponent | SdFormGenericGroup;
-        const targetRow = this.#rowForItems(event.container.data);
-        if (targetRow && !canPlaceInRow(targetRow, movedItem, movedItem.id)) {
-          this.#notifyService.warning(this.#i18n.t('core.component.form-builder.row-overflow'));
-          return;
-        }
-
-        transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, event.currentIndex);
-        this.#syncRowsToComponents();
-      }
-    }
-    this.#recountTabIndex();
-  };
-
-  dragStartComponentItem = (event: any) => {
-    void event;
-    this.dragSource.set('canvas');
-    this.onAnyDragStarted();
-    this.isDragging = true;
-  };
-
-  dragEndComponentItem = (event: any) => {
-    this.isDragging = false;
-  };
-
-  onMouseover = (event: MouseEvent, rowItem: DragDropRowItem) => {
-    if (this.isDragging && this.targetItem !== rowItem) {
-      this.targetItem = rowItem;
-      this.#ref.markForCheck();
-    }
-  };
-
-  isRowFull = (row: DragDropRowItem): boolean => this.#usedColumns(row) >= 12;
-
-  isRowInlineDropLocked = (row: DragDropRowItem): boolean => this.#availableColumns(row) < 2;
-
-  shouldShowRowInsertionPlaceholder = (row: DragDropRowItem, edge?: RowInsertionEdge): boolean => {
-    const target = this.paletteDropTarget();
-    const resolvedEdge = edge ?? (target?.kind === 'edge' ? target.edge : 'after');
-    return target?.kind === 'edge' && target.rowId === row.id && target.edge === resolvedEdge;
-  };
-
-  shouldShowInlinePalettePlaceholder = (row: DragDropRowItem, index: number): boolean => {
-    const target = this.paletteDropTarget();
-    return target?.kind === 'inline' && target.rowId === row.id && target.index === index;
-  };
-
-  isPaletteEmptyDropTarget = (): boolean => this.paletteDropTarget()?.kind === 'empty';
-
-  palettePlaceholderColumnsFor = (row?: DragDropRowItem): number => {
-    const target = this.paletteDropTarget();
-    return target?.kind === 'inline' && (!row || target.rowId === row.id) ? +target.columns : 12;
-  };
-
-  onRowItemsDropEntered = (row: DragDropRowItem, event?: CdkDragEnter<any[]>) => {
-    const paletteItem = this.draggedPaletteItem();
-    if (this.dragSource() !== 'palette' || !paletteItem || paletteItem.type === 'break' || this.isRowInlineDropLocked(row)) return;
-    this.#setPaletteDropTarget({
-      kind: 'inline',
-      rowId: row.id,
-      index: Math.max(0, Math.min(event?.currentIndex ?? row.items.length, row.items.length)),
-      columns: `${this.#availableColumns(row)}`,
+    this.#notify.success(message, {
+      duration: UNDO_REMOVE_MS,
+      actionLabel: this.store.t('core.component.form-builder.undo'),
+      onAction: undo,
     });
-    this.#ref.markForCheck();
-  };
-
-  onRowItemsDropSorted = (row: DragDropRowItem, event: CdkDragSortEvent<any[]>) => {
-    const target = this.paletteDropTarget();
-    if (this.dragSource() !== 'palette' || target?.kind !== 'inline' || target.rowId !== row.id) return;
-    this.#setPaletteDropTarget({ ...target, index: Math.max(0, Math.min(event.currentIndex, row.items.length)) });
-    this.#ref.markForCheck();
-  };
-
-  onRowItemsDropExited = (row: DragDropRowItem) => {
-    const target = this.paletteDropTarget();
-    if (target?.kind === 'inline' && target.rowId === row.id) {
-      this.#setPaletteDropTarget(undefined);
-      this.#ref.markForCheck();
-    }
-  };
-
-  canEnterCanvasDropList = (
-    drag: CdkDrag<FormBuilderComponent | SdFormGenericComponent | SdFormGenericGroup | DragDropRowItem>
-  ): boolean => {
-    const data = drag.data;
-    if (!data) return false;
-    if (this.#isPaletteComponent(data)) return true;
-    return typeof data === 'object' && 'items' in data;
-  };
-
-  canEnterRowDropList = (
-    drag: CdkDrag<FormBuilderComponent | SdFormGenericComponent | SdFormGenericGroup>,
-    drop: CdkDropList<(SdFormGenericComponent | SdFormGenericGroup)[]>
-  ): boolean => {
-    const row = this.#rowForItems(drop.data);
-    if (!row) return false;
-
-    const data = drag.data;
-    if (!data) return false;
-    if (this.#isPaletteComponent(data)) {
-      return data.type !== 'break' && this.#availableColumns(row) >= 2;
-    }
-    if ('layout' in data && 'id' in data) {
-      return canPlaceInRow(row, data, data.id);
-    }
-
-    return false;
-  };
-
-  onFocus = (event: FocusEvent) => {
-    void event;
-  };
-
-  xuLyKeoCheo = (dragItem?: SdFormGenericComponent | SdFormGenericGroup) => {
-    if (dragItem && this.targetItem) {
-      const result = moveItemToRow(this.dragDropRows, {
-        itemId: dragItem.id,
-        targetRowId: this.targetItem.id,
-      });
-      if (result.moved) {
-        this.dragDropRows = this.#withRowIndexes(result.rows);
-        this.#syncRowsToComponents();
-      } else if (result.reason === 'row-overflow') {
-        this.#notifyService.warning(this.#i18n.t('core.component.form-builder.row-overflow'));
-      }
-    }
-    this.targetItem = undefined;
-  };
-  noReturnPredicate = () => {
-    return false;
-  };
-
-  #recountTabIndex = () => {
-    const scope = this.#scope();
-    scope.forEach((item, index) => {
-      if (item.layout) {
-        item.layout!.row = `${index + 1}`;
-        item.layout!.columns = item.layout?.columns || '12';
-      } else {
-        item.layout = {
-          row: `${index + 1}`,
-          columns: '12',
-        };
-      }
-    });
-    const sel = this.selectedComponent();
-    if (sel && sel?.layout?.row) {
-      sel.layout.row = scope.find(t => t.id === sel.id)?.layout?.row;
-    }
-    this.#syncComponentsToRows();
-  };
-
-  // Hàm xử lý chuyển đổi components (scope hiện tại) -> dragDropRows
-  #syncComponentsToRows = () => {
-    this.dragDropRows = this.#withRowIndexes(buildFormBuilderRows(this.#scope()));
-  };
-
-  #syncRowsToComponents = () => {
-    const flat = flattenFormBuilderRows(this.dragDropRows);
-    const g = this.editingGroup();
-    if (g) {
-      g.components = flat as SdFormGenericComponent[];
-    } else {
-      this.components = flat;
-    }
-  };
-
-  changeSizeControl = async (
-    event: CdkDragMove<SdFormGenericComponent | SdFormGenericGroup>,
-    item: SdFormGenericComponent | SdFormGenericGroup,
-    items: (SdFormGenericComponent | SdFormGenericGroup)[],
-    currentIndex: number
-  ) => {
-    // const totalColumnInRow = items.map(k => k.layout.columns).reduce((acc, curr) => acc + parseInt(curr, 0), 0);
-    const totalColumnBeforeItem = items
-      .map(k => +k.layout!.columns || 12)
-      .reduce((acc, curr, index) => {
-        if (index < currentIndex) {
-          acc = acc + curr;
-        }
-        return acc;
-      }, 0);
-    const rect = document.getElementById('frmComponent')?.getBoundingClientRect() as DOMRect;
-    const left = rect.left;
-    const right = rect.right - left;
-    const mouse = event.pointerPosition.x - left!;
-    const t = Math.round(12 / (100 / ((100 * mouse) / right))) - totalColumnBeforeItem;
-    // Clamp + skip-if-unchanged để tránh re-render mỗi pixel mouse di chuyển.
-    const newCols = t > 12 ? '12' : t < 2 ? '2' : `${t}`;
-    if (item.layout!.columns !== newCols) {
-      item.layout!.columns = newCols as any;
-    }
-    const currentResizeState = this.resizeState();
-    if (currentResizeState?.itemId !== item.id || currentResizeState?.columns !== newCols) {
-      this.resizeState.set({
-        itemId: item.id,
-        rowId: currentResizeState?.rowId ?? this.#rowForItems(items)?.id ?? `row-${item.id}`,
-        columns: newCols,
-      });
-      this.#ref.markForCheck();
-    }
-
-    //     document.getElementById('test').innerHTML = `<pre>
-    // left: ${left}
-    // right: ${document.getElementById('frmComponent').getBoundingClientRect().right}
-    // right-left: ${right}
-    // mouse: ${event.pointerPosition.x}
-    // mouse-left: ${mouse}
-    // t: ${t}
-    // columns: ${item.layout.columns}
-    // </pre>`;
-  };
-
-  dragEndChangeSizeControl = (event: any) => {
-    this.#recountTabIndex();
-  };
-
-  onChangeViewed = (component: SdFormGenericComponent) => {
-    component.properties!.viewed = !component.properties!.viewed;
-    // Emit khi có sự thay đổi để control và attribute lắng nghe và render lại
-    this.#builderService.componentEmitters.next(component);
-  };
-
-  onChangeHidden = (component: SdFormGenericComponent | SdFormGenericGroup) => {
-    component.properties!.hidden = !component.properties!.hidden;
-    // Emit khi có sự thay đổi để control và attribute lắng nghe và render lại
-    this.#builderService.componentEmitters.next(component);
-  };
-
-  // Duplicate component nhưng sẽ clear id và key để tránh trùng lặp (theo scope hiện tại)
-  onDuplicate = (component: SdFormGenericComponent | SdFormGenericGroup) => {
-    const clonedComponent = this.#cloneComponentWithNewIdentity(component);
-    const scope = this.#scope();
-    scope.push(clonedComponent);
-    this.#recountTabIndex();
-    const created = scope.find(t => t.id === clonedComponent.id);
-    this.selectedComponent.set(created);
-    this.selectComponent(created);
-    this.#ref.markForCheck();
-  };
-
-  // Copy form hiện tại
-  jsonString?: string;
-  viewJSON = () => {
-    // why: JSON một dòng thì không đọc nổi và cũng không sửa được bằng tay; schema này lồng nhiều
-    // tầng nên in thụt lề mới dùng được với editor.
-    this.jsonString = JSON.stringify({ components: this.components }, null, 2);
-    this.popupViewJSON()?.open();
-    this.#ref.markForCheck();
-  };
-
-  updateJSON = () => {
-    try {
-      if (this.jsonString) {
-        const json: Record<string, any> = JSON.parse(this.jsonString);
-        if ('components' in json) {
-          this.components = json['components'];
-          this.popupViewJSON()?.close();
-          this.#syncComponentsToRows();
-          this.#ref.markForCheck();
-        } else {
-          throw new Error('Invalid JSON');
-        }
-      }
-    } catch (err: any) {
-      console.error(err);
-      this.#notifyService.warning(err?.message);
-    }
-  };
-
-  configureVariables = () => {
-    this.clonedVariables = JSON.parse(JSON.stringify(this.variables || []));
-    this.popupConfigureVariables()?.open();
-    this.#ref.markForCheck();
-  };
-
-  addVariables = () => {
-    this.clonedVariables.push({
-      id: Utilities.randomId(),
-      key: '',
-      label: '',
-    });
-  };
-
-  removeVariables = (id: string) => {
-    const idx = this.clonedVariables.findIndex(e => e.id === id);
-    this.clonedVariables.splice(idx, 1);
-  };
-
-  updateVariables = () => {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      this.#ref.markForCheck();
-      return;
-    }
-    this.variables = this.clonedVariables;
-    this.popupConfigureVariables()?.close();
-    this.#ref.markForCheck();
-  };
-
-  // Chìa ra cho bên ngoài lấy components hiện tại
-  getComponents = (): (SdFormGenericComponent | SdFormGenericGroup)[] => {
-    this.#syncRowsToComponents();
-    return JSON.parse(JSON.stringify(this.components || []));
-  };
-
-  // Chìa ra cho bên ngoài lấy variables hiện tại
-  getVariables = (): SdFormGenericVariable[] => {
-    return JSON.parse(JSON.stringify(this.variables || []));
-  };
-
-  #getValidations = (): SdFormGenericValidation[] => {
-    return JSON.parse(JSON.stringify(this.validations || []));
-  };
-
-  getForm = (): SdFormGeneric => {
-    return {
-      components: this.getComponents(),
-      variables: this.getVariables(),
-      validations: this.#getValidations(),
+    // why: toast mới nhất nằm đầu danh sách (success/info không bị gom như warning/error).
+    const toast = this.#notify.toasts()[0];
+    const toastId = toast?.onAction === undo ? toast.id : undefined;
+    const cleanup: { subscription?: Subscription; timer?: ReturnType<typeof setTimeout> } = {};
+    const state = {
+      toastId,
+      release: () => {
+        cleanup.subscription?.unsubscribe();
+        clearTimeout(cleanup.timer);
+        if (toastId) this.#notify.remove(toastId);
+        if (this.#undoRemove === state) this.#undoRemove = undefined;
+      },
     };
-  };
+    this.#undoRemove = state;
+    cleanup.subscription = this.store.changes.subscribe(doc => {
+      if (doc !== removedDoc) state.release();
+    });
+    // why: toast tự đóng sau thời hạn; dọn subscription dù người dùng không làm gì thêm. Chạy ngoài
+    // zone để một lần xoá không giữ ứng dụng "chưa ổn định" (whenStable/Testability) thêm vài giây.
+    cleanup.timer = this.#zone.runOutsideAngular(() => setTimeout(state.release, UNDO_REMOVE_MS + 1000));
+  }
 
-  openConfigureValidation = () => {
-    this.configureValidation()?.open(this.getForm());
-  };
+  // ── Công cụ: biến, xác thực cấp form, phím tắt ─────────────────────────────
 
-  onUpdateValidations = (validations: SdFormGenericValidation[]) => {
-    this.validations = validations;
-  };
+  openVariables(): void {
+    this.variableDrafts.set(
+      this.store.doc().variables.map(variable => ({
+        id: Utilities.randomId(),
+        key: variable.key ?? '',
+        label: variable.label ?? '',
+        source: variable,
+      }))
+    );
+    this.variablesModal()?.open();
+  }
 
-  onValidate = async () => {
-    const errorMessages = await this.formRender()?.getValidationMessages('error');
-    if (errorMessages?.length) {
-      this.#notifyService.error(errorMessages);
-      return;
-    }
-    const warningMessages = await this.formRender()?.getValidationMessages('warning');
-    if (warningMessages?.length) {
-      this.#confirmService.confirm(warningMessages.join(', ')).then(() => {
-        this.#notifyService.success('Submit success');
-      });
-    } else {
-      this.#notifyService.success('Submit success');
-    }
-  };
+  addVariable(): void {
+    this.variableDrafts.update(drafts => [...drafts, { id: Utilities.randomId(), key: '', label: '' }]);
+  }
 
-  #withRowIndexes = (rows: FormBuilderLayoutRow[]): DragDropRowItem[] => {
-    return rows.map((row, index) => ({
-      ...row,
-      rowIndex: index,
-    }));
-  };
+  updateVariable(index: number, field: 'key' | 'label', value: string): void {
+    this.variableDrafts.update(drafts =>
+      drafts.map((draft, position) => (position === index ? { ...draft, [field]: value ?? '' } : draft))
+    );
+  }
 
-  #rowForItems = (items: any[]): DragDropRowItem | undefined => {
-    return this.dragDropRows.find(row => row.items === items);
-  };
+  removeVariable(index: number): void {
+    this.variableDrafts.update(drafts => drafts.filter((_, position) => position !== index));
+  }
 
-  #isPaletteComponent = (item: unknown): item is FormBuilderComponent => {
-    return !!item && typeof item === 'object' && 'symbol' in item && 'type' in item;
-  };
-
-  #draggedDataFromDropEvent = (event: CdkDragDrop<any[]>): unknown => {
-    return event.item.data ?? event.previousContainer.data[event.previousIndex];
-  };
-
-  #usedColumns = (row: DragDropRowItem): number => {
-    return row.items.reduce((sum, item) => sum + +(item.layout?.columns || 12), 0);
-  };
-
-  #availableColumns = (row: DragDropRowItem): number => {
-    return Math.max(0, 12 - this.#usedColumns(row));
-  };
-
-  #scopeIndexAfterRow = (row: DragDropRowItem): number => {
-    const scope = this.#scope();
-    const lastItem = row.items[row.items.length - 1];
-    const lastIndex = lastItem ? scope.findIndex(component => component.id === lastItem.id) : -1;
-    return lastIndex >= 0 ? lastIndex + 1 : scope.length;
-  };
-
-  #scopeIndexBeforeRow = (row: DragDropRowItem): number => {
-    const scope = this.#scope();
-    const firstItem = row.items[0];
-    const firstIndex = firstItem ? scope.findIndex(component => component.id === firstItem.id) : -1;
-    return firstIndex >= 0 ? firstIndex : scope.length;
-  };
-
-  #rowHitFromPointer = (pointer: { x: number; y: number }): { row: DragDropRowItem; edge: RowInsertionEdge } | undefined => {
-    const directRowEl = document.elementFromPoint(pointer.x, pointer.y)?.closest('.fb-row') as HTMLElement | null;
-    const rowElements = directRowEl ? [directRowEl] : Array.from(this.#host.nativeElement.querySelectorAll<HTMLElement>('.fb-row[id]'));
-
-    let best: { rowEl: HTMLElement; edge: RowInsertionEdge; distance: number } | undefined;
-    for (const rowEl of rowElements) {
-      const rect = rowEl.getBoundingClientRect();
-      const edge: RowInsertionEdge = pointer.y < rect.top + rect.height / 2 ? 'before' : 'after';
-      const distance = pointer.y < rect.top ? rect.top - pointer.y : pointer.y > rect.bottom ? pointer.y - rect.bottom : 0;
-      if (!best || distance < best.distance) {
-        best = { rowEl, edge, distance };
+  /**
+   * Lưu dialog Biến. Đổi key biến kéo theo mọi tham chiếu có cấu trúc (như đổi mã field); bỏ một biến
+   * còn được dùng thì hỏi trước, vì các điều kiện/tham số đó sẽ không còn đúng.
+   */
+  async saveVariables(): Promise<void> {
+    if (this.variablesInvalid() || this.#savingVariables) return;
+    // why: giữ nguyên thuộc tính khác của biến cũ (nếu consumer có thêm), chỉ cập nhật key/label —
+    // lấy theo tham chiếu biến gốc của từng dòng (biến không có id cũng không mất dữ liệu).
+    const edits = this.variableDrafts().map(draft => ({ source: draft.source, key: draft.key.trim(), label: draft.label }));
+    const doc = this.store.doc();
+    const schema = documentToSchema(doc);
+    const referenced = doc.variables
+      .filter(variable => variable.key && !edits.some(edit => edit.source === variable))
+      .map(variable => ({ label: variable.label || variable.key, count: sdFindKeyReferences(schema, variable.key).length }))
+      .filter(entry => entry.count > 0);
+    if (referenced.length) {
+      this.#savingVariables = true;
+      try {
+        await this.#confirm.confirm(
+          this.store.t('core.component.form-builder.confirm.delete-referenced', {
+            label: referenced.map(entry => escapeHtml(entry.label)).join(', '),
+            count: referenced.reduce((sum, entry) => sum + entry.count, 0),
+          }),
+          {
+            title: this.store.t('core.component.form-builder.confirm.delete-title'),
+            yesTitle: this.store.t('core.component.form-builder.delete'),
+            noTitle: this.store.t('core.component.form-builder.cancel'),
+            yesButtonColor: 'error',
+          }
+        );
+      } catch {
+        return;
+      } finally {
+        this.#savingVariables = false;
       }
     }
+    this.store.saveVariables(edits);
+    this.variablesModal()?.close();
+  }
 
-    if (!best?.rowEl.id) return undefined;
-    const row = this.dragDropRows.find(item => item.id === best.rowEl.id);
-    return row ? { row, edge: best.edge } : undefined;
-  };
+  #savingVariables = false;
 
-  #paletteDropPlacement = (item: FormBuilderComponent): { index: number; columns?: string } | undefined => {
-    const target = this.paletteDropTarget();
-    if (!target) return undefined;
-    if (target.kind === 'empty') return { index: 0, columns: item.type === 'break' ? undefined : '12' };
-    const row = this.dragDropRows.find(candidate => candidate.id === target.rowId);
-    if (!row) return undefined;
-    if (target.kind === 'inline') {
-      return {
-        index: this.#scopeIndexFromDrop(row.items, target.index) ?? this.#scope().length,
-        columns: item.type === 'break' ? undefined : target.columns,
-      };
-    }
-    return {
-      index: target.edge === 'before' ? this.#scopeIndexBeforeRow(row) : this.#scopeIndexAfterRow(row),
-      columns: item.type === 'break' ? undefined : '12',
-    };
-  };
+  openValidations(): void {
+    const doc = this.store.doc();
+    this.validationDialog()?.open(doc.elements, doc.variables, doc.validations);
+  }
 
-  #scopeIndexFromDrop = (containerData: any[], currentIndex: number): number | undefined => {
-    const scope = this.#scope();
-    const row = this.#rowForItems(containerData);
-    if (row) {
-      const anchor = row.items[currentIndex] ?? row.items[row.items.length - 1];
-      if (!anchor) return scope.length;
+  onValidationsAccepted(validations: SdFormGenericValidation[]): void {
+    this.store.setValidations(cloneJson(validations ?? []));
+  }
 
-      const anchorIndex = scope.findIndex(component => component.id === anchor.id);
-      if (anchorIndex < 0) return scope.length;
-      return currentIndex >= row.items.length ? anchorIndex + 1 : anchorIndex;
-    }
+  openShortcuts(): void {
+    this.shortcutsModal()?.open();
+  }
 
-    if (containerData === this.dragDropRows) {
-      const rowAtIndex = this.dragDropRows[currentIndex];
-      const anchor = rowAtIndex?.items[0];
-      if (!anchor) return scope.length;
-
-      const anchorIndex = scope.findIndex(component => component.id === anchor.id);
-      return anchorIndex >= 0 ? anchorIndex : scope.length;
-    }
-
-    return undefined;
-  };
-
-  #cloneComponentWithNewIdentity = <T extends SdFormGenericComponent | SdFormGenericGroup>(component: T): T => {
-    const clonedComponent = JSON.parse(JSON.stringify(component)) as T;
-    this.#regenerateComponentIdentity(clonedComponent);
-    return clonedComponent;
-  };
-
-  #regenerateComponentIdentity = (component: SdFormGenericComponent | SdFormGenericGroup) => {
-    component.id = sdGenerateId();
-    if (component.type === 'group') {
-      component.components = component.components.map(child => this.#cloneComponentWithNewIdentity(child));
-      return;
-    }
-
-    component.key = sdGenerateKey();
-  };
+  #receive(incoming: SdFormGenericSchema | undefined): void {
+    if (incoming && incoming === this.#lastEmitted) return;
+    const doc = documentFromSchema(incoming);
+    if (this.#loaded && sameDocumentContent(doc, this.store.doc())) return;
+    this.#loaded = true;
+    // why: once another form is loaded, the snapshot emitted for the previous one is no longer an echo —
+    // binding it again must load it back, not be skipped.
+    this.#lastEmitted = undefined;
+    this.#drag.cancel();
+    this.store.load(doc);
+  }
 }

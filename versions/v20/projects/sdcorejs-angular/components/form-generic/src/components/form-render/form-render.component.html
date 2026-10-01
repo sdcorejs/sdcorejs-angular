@@ -1,44 +1,45 @@
-@if (form && loadCompleted && hashedValues) {
-  <div class="row mx-0">
-    @for (component of configuration.components; track component.id) {
-      @let expression = hashedValues | whenExpression: component : formValue;
-      @if (!expression.hidden) {
-        @if (component.type === 'group') {
-          @if (!!component.components.length) {
-            <div class="col-12 mt-16">
-              <sd-section [title]="component.label" [icon]="component.properties.icon" [collapsible]="component.properties.collapsible ?? false">
-                <!-- why: `.sd-section-body` để padding 0 (mỗi nội dung tự quyết), nên các field chỉ
-                     còn px-8/py-8 của riêng chúng và dính sát khung section. Group tự chừa lề. -->
-                <div class="row mx-0 c-group-body">
-                  @for (childComponent of component.components; track childComponent.id) {
-                    @let childExpression = hashedValues | whenExpression: childComponent : formValue;
-                    @if (!childExpression.hidden) {
-                      <lib-item
-                        [setVariables]="setVariables"
-                        [form]="form"
-                        [entity]="entity"
-                        [component]="childComponent"
-                        [required]="childExpression.required"
-                        [disabled]="childExpression.disabled"
-                        [viewed]="viewed"></lib-item>
-                    }
-                  }
-                </div>
-              </sd-section>
-            </div>
-          }
-        } @else {
-          <lib-item
-            [setVariables]="setVariables"
-            [form]="form"
-            [entity]="entity"
-            [component]="component"
-            [required]="expression.required"
-            [disabled]="expression.disabled"
-            [viewed]="viewed"></lib-item>
-        }
-      }
+<!-- why: rows come from sdPackRows (shared with the builder canvas), so both place fields identically.
+     The DOM is flat (one @for keyed by id) and each cell is placed with grid-row / grid-column: a field
+     that changes row (another level, a field shown or hidden before it) keeps its component and control. -->
+<div #grid class="sd-fg-grid" [attr.data-level]="level()">
+  @for (cell of cells(); track cell.id) {
+    @if (cell.kind === 'group') {
+      <div
+        class="sd-fg-cell mt-16"
+        [style.grid-row]="cell.row"
+        [style.grid-column]="cell.column"
+        [attr.data-row]="cell.row"
+        [attr.data-element-id]="cell.id">
+        <sd-section
+          [title]="cell.group.label"
+          [icon]="cell.group.icon"
+          [iconColor]="cell.group.color || 'primary'"
+          [collapsible]="cell.group.collapsible ?? false">
+          <!-- why: `.sd-section-body` has no padding (each content decides), the group body keeps its own gutter.
+               The section title is not a heading, so the body names the group for assistive tech. -->
+          <div class="c-group-body" role="group" [attr.aria-label]="cell.group.label || null">
+            @for (child of cell.children; track child.id) {
+              <div
+                class="sd-fg-cell px-8 py-8"
+                [style.grid-row]="child.row"
+                [style.grid-column]="child.column"
+                [attr.data-row]="child.row"
+                [attr.data-element-id]="child.id">
+                <lib-item [field]="child.field" [state]="child.state" [form]="formGroup()"></lib-item>
+              </div>
+            }
+          </div>
+        </sd-section>
+      </div>
+    } @else {
+      <div
+        class="sd-fg-cell px-8 py-8"
+        [style.grid-row]="cell.row"
+        [style.grid-column]="cell.column"
+        [attr.data-row]="cell.row"
+        [attr.data-element-id]="cell.id">
+        <lib-item [field]="cell.field" [state]="cell.state" [form]="formGroup()"></lib-item>
+      </div>
     }
-    <variable [variables]="configuration.variables" [setVariables]="setVariables" [form]="form" [entity]="entity" ></variable>
-  </div>
-}
+  }
+</div>

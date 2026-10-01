@@ -1,0 +1,47 @@
+@let _nodes = nodes();
+@if (_nodes.length) {
+  <ul class="fb-tree" role="tree" [attr.aria-label]="'core.component.form-builder.tab.structure' | sdTranslate">
+    @for (node of _nodes; track node.item.id) {
+      @let _selected = store.selectedId() === node.item.id;
+      <li
+        class="fb-tree__node"
+        role="treeitem"
+        [attr.data-tree-id]="node.item.id"
+        [attr.aria-level]="node.depth"
+        [attr.aria-selected]="_selected"
+        [attr.aria-expanded]="node.isGroup ? node.expanded : null"
+        [attr.tabindex]="activeId() === node.item.id ? 0 : -1"
+        [class.is-selected]="_selected"
+        [class.is-child]="node.depth === 2"
+        [class.is-hidden]="isHidden(node.item)"
+        (click)="choose(node)"
+        (keydown)="onKeydown($event, node)">
+        @if (node.isGroup) {
+          <!-- why: nút mở/đóng chỉ là tiện ích chuột; bàn phím dùng →/← trên chính treeitem. -->
+          <span class="fb-tree__twisty" aria-hidden="true" (click)="toggle(node, $event)">
+            <sd-icon [name]="node.expanded ? 'expand_more' : 'chevron_right'" size="16px"></sd-icon>
+          </span>
+        } @else {
+          <span class="fb-tree__twisty" aria-hidden="true"></span>
+        }
+        <sd-icon class="fb-tree__icon" [name]="itemIcon(node.item)" size="16px"></sd-icon>
+        <span class="fb-tree__text">
+          <span class="fb-tree__label">{{ labelOf(node.item) }}</span>
+          @if (keyOf(node.item); as _key) {
+            <span class="fb-tree__key">{{ _key }}</span>
+          } @else if (node.isGroup) {
+            <span class="fb-tree__key">{{ 'core.component.form-builder.group-fields' | sdTranslate: { count: node.childCount } }}</span>
+          }
+        </span>
+        @if (isHidden(node.item)) {
+          <sd-icon class="fb-tree__state" name="visibility_off" size="14px" [title]="'core.component.form-builder.hidden' | sdTranslate"></sd-icon>
+        }
+        @if (isConditional(node.item)) {
+          <sd-icon class="fb-tree__state" name="bolt" size="14px" [title]="'core.component.form-builder.conditional' | sdTranslate"></sd-icon>
+        }
+      </li>
+    }
+  </ul>
+} @else {
+  <p class="fb-tree__empty">{{ 'core.component.form-builder.structure.empty' | sdTranslate }}</p>
+}

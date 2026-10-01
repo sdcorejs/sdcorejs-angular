@@ -1,0 +1,418 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.ins-empty {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+.ins-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+  padding: 14px 16px 10px;
+}
+
+.ins-head__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--sd-radius-8, 8px);
+  background: color-mix(in srgb, var(--sd-primary) 10%, var(--sd-surface));
+  color: var(--sd-primary);
+}
+
+.ins-head__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.ins-head__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--sd-text);
+  font-size: var(--sd-font-size-16, 16px);
+  font-weight: var(--sd-font-weight-semibold, 600);
+}
+
+.ins-head__sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-12, 12px);
+
+  .ins-empty & {
+    white-space: normal;
+  }
+}
+
+.ins-mono {
+  font-family: 'Roboto Mono', ui-monospace, monospace;
+}
+
+.ins-badge {
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  border-radius: var(--sd-radius-999, 999px);
+  background: color-mix(in srgb, var(--sd-primary) 8%, var(--sd-surface));
+  color: var(--sd-primary);
+  font-size: var(--sd-font-size-11, 11px);
+}
+
+.ins-tabs {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 2px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--sd-border);
+  overflow-x: auto;
+}
+
+.ins-tabs__tab {
+  position: relative;
+  flex: 0 0 auto;
+  padding: 10px 10px 9px;
+  border: 0;
+  background: transparent;
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-13, 13px);
+  font-weight: var(--sd-font-weight-medium, 500);
+  cursor: pointer;
+
+  &.is-active {
+    color: var(--sd-primary);
+
+    &::after {
+      content: '';
+      position: absolute;
+      left: 6px;
+      right: 6px;
+      bottom: -1px;
+      height: 2px;
+      border-radius: 2px;
+      background: var(--sd-primary);
+    }
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: -2px;
+  }
+}
+
+.ins-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+  // why: panel chỉ cuộn dọc — control nào rộng hơn panel phải co lại, không tạo thanh cuộn ngang.
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 14px 16px 16px;
+
+  > * {
+    min-width: 0;
+  }
+
+  // why: infix của Material mặc định rộng 180px; hai select trong lưới 2 cột của panel 320px sẽ
+  // tràn ra ngoài nếu trang không nạp style form toàn cục của Core. Control luôn co theo cột.
+  ::ng-deep .mat-mdc-form-field {
+    width: 100%;
+    min-width: 0;
+  }
+
+  ::ng-deep .mat-mdc-form-field-infix {
+    width: auto;
+    min-width: 0;
+  }
+}
+
+.ins-foot {
+  flex: 0 0 auto;
+  padding: 6px 8px;
+  border-top: 1px solid var(--sd-border);
+}
+
+.ins-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 6px;
+
+  > * {
+    min-width: 0;
+  }
+}
+
+// why: tiêu đề vùng phải khác hẳn nhãn trường (14px, chữ thường, màu chữ chính): chữ hoa nhỏ,
+// giãn chữ, màu phụ và một đường kẻ chạy tới mép panel — đọc là "nhóm", không phải "ô nhập".
+.ins-section__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-11, 11px);
+  font-weight: var(--sd-font-weight-semibold, 600);
+  letter-spacing: 0.06em;
+  line-height: var(--sd-line-height-16, 16px);
+  text-transform: uppercase;
+
+  &::after {
+    content: '';
+    flex: 1 1 auto;
+    height: 1px;
+    background: var(--sd-border);
+  }
+}
+
+.ins-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ins-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ins-field__label {
+  color: var(--sd-text);
+  font-size: var(--sd-font-size-14, 14px);
+  font-weight: var(--sd-font-weight-medium, 500);
+}
+
+.ins-note {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: var(--sd-line-height-16, 16px);
+
+  sd-icon {
+    flex: 0 0 auto;
+    color: var(--sd-success);
+  }
+}
+
+.ins-note--success {
+  color: var(--sd-success);
+}
+
+.ins-warning {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--sd-radius-6, 6px);
+  background: var(--sd-status-warning-bg, var(--sd-warning-light));
+  color: var(--sd-status-warning-fg, var(--sd-warning-dark));
+  font-size: var(--sd-font-size-12, 12px);
+}
+
+.ins-key {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+
+  sd-input,
+  sd-select {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+// Span của 3 mức dưới ô độ rộng; badge "Theo Desktop" / "Mặc định" khi mức đang xem kế thừa.
+.ins-note--span {
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+// Một dòng "nhãn … điều khiển" (vd Thứ tự ↑ ↓), thẳng hàng với switch dạng settings row.
+.ins-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 32px;
+}
+
+.ins-row__label {
+  color: var(--sd-text);
+  font-size: var(--sd-font-size-14, 14px);
+  font-weight: var(--sd-font-weight-medium, 500);
+}
+
+.ins-stepper {
+  display: inline-flex;
+  border: 1px solid var(--sd-border);
+  border-radius: var(--sd-radius-6, 6px);
+  overflow: hidden;
+}
+
+.ins-stepper__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  background: var(--sd-surface);
+  color: var(--sd-text);
+  cursor: pointer;
+
+  & + & {
+    border-left: 1px solid var(--sd-border);
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--sd-surface-muted);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: -2px;
+  }
+}
+
+.ins-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--sd-border);
+  border-radius: var(--sd-radius-8, 8px);
+}
+
+.ins-card__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  color: var(--sd-text);
+  font-weight: var(--sd-font-weight-medium, 500);
+}
+
+.ins-count {
+  min-width: 24px;
+  padding: 0 6px;
+  border-radius: var(--sd-radius-999, 999px);
+  background: var(--sd-surface-muted);
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-12, 12px);
+  text-align: center;
+}
+
+.ins-details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  > summary {
+    color: var(--sd-text);
+    font-size: var(--sd-font-size-13, 13px);
+    font-weight: var(--sd-font-weight-medium, 500);
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    }
+  }
+
+  &[open] > summary {
+    margin-bottom: 10px;
+  }
+
+  > sd-input + sd-input {
+    margin-top: 10px;
+  }
+}
+
+.ins-icons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ins-icons__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--sd-border);
+  border-radius: var(--sd-radius-6, 6px);
+  background: var(--sd-surface);
+  color: var(--sd-text-secondary);
+  cursor: pointer;
+
+  &.is-active {
+    border-color: var(--sd-primary);
+    background: color-mix(in srgb, var(--sd-primary) 8%, var(--sd-surface));
+    color: var(--sd-primary);
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+  }
+}
+
+.ins-colors {
+  display: flex;
+  gap: 8px;
+}
+
+.ins-colors__swatch {
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--sd-surface);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--sd-border);
+  cursor: pointer;
+
+  @each $color in primary, secondary, info, success, warning, error {
+    &[data-color='#{$color}'] {
+      background: var(--sd-#{$color});
+    }
+  }
+
+  &.is-active {
+    box-shadow: 0 0 0 2px var(--sd-text);
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: var(--sd-focus-ring-offset, 2px);
+  }
+}
+
+// Select luôn có một lựa chọn (xem NONE trong inspector.component.ts): `required` để sd-select không
+// hiện nút × (xoá sẽ làm select trống lệch với schema), nhưng ẩn dấu * vì đây không phải trường
+// bắt buộc của form đang thiết kế.
+.ins-fixed-select ::ng-deep .sd-label__required {
+  display: none;
+}

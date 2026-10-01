@@ -849,7 +849,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "components/form-generic",
     sectionId: "example-builder-render",
     title: "Builder + Render",
-    description: "Group có thể thu gọn/mở rộng trong preview; điều kiện vô hiệu hóa được cấu hình trên từng trường con.",
+    description: "Lưu/nháp/xuất bản thuộc về consumer — builder chỉ phát (schemaChange). Nút bên dưới là của trang demo.",
   },
   {
     sourceKey: "components/highlight/example-tim-kiem-khong-dau",

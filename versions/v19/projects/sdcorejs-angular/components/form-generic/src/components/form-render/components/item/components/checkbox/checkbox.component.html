@@ -1,10 +1,10 @@
-@if (component && entity) {
-  <sd-checkbox
-    [form]="form()"
-    [label]="component.label || component.key"
-    [name]="component.key"
-    [autoId]="component.key"
-    [(model)]="entity[component.key!]"
-    [disabled]="disabled"
-    [viewed]="viewed || component.properties?.viewed"></sd-checkbox>
-}
+@let item = field();
+<sd-checkbox
+  [form]="form()"
+  [label]="item.label || item.key"
+  [name]="item.key"
+  [autoId]="item.key"
+  [model]="value()"
+  (modelChange)="setValue($event)"
+  [disabled]="disabled()"
+  [viewed]="viewed()"></sd-checkbox>

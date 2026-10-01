@@ -9,6 +9,7 @@
 @let _errorMessage = errorMessage();
 @let _size = size();
 @let _removable = removable();
+@let _labelTop = labelPlacement() === 'top';
 
 @if (_isViewed) {
   <sd-view
@@ -20,11 +21,11 @@
     [valueTemplate]="_valueTemplate">
   </sd-view>
 } @else {
-  @if (!_appearance && _labelTemplate) {
+  @if ((!_appearance || _labelTop) && _labelTemplate) {
     <ng-container *ngTemplateOutlet="_labelTemplate"></ng-container>
   }
-  @if (!_appearance && _label && !_labelTemplate) {
-    <sd-label [label]="_label" [required]="_required"></sd-label>
+  @if ((!_appearance || _labelTop) && _label && !_labelTemplate) {
+    <sd-label [label]="_label" [required]="_required" [for]="_labelTop ? inputId : null"></sd-label>
   }
 
   <div
@@ -42,9 +43,10 @@
         [class.sd-md]="_size === 'md'"
         [class.sd-sm]="_size === 'sm'"
         [class.hide-inline-error]="_hideInlineError"
+        [class.sd-label-top]="_labelTop"
         [appearance]="_appearance"
         [floatLabel]="floatLabel()">
-        @if (_appearance && _label) {
+        @if (_appearance && _label && !_labelTop) {
           <mat-label>{{ _label }}</mat-label>
         }
         <mat-chip-grid [formControl]="formControl" #chipList [class.sd-md]="_size === 'md'" [class.sd-sm]="_size === 'sm'">
@@ -67,7 +69,8 @@
           <input
             class="sd-chip-input"
             [formControl]="inputControl"
-            [placeholder]="placeholder() || _label"
+            [id]="inputId"
+            [placeholder]="placeholder() || (_labelTop ? '' : _label)"
             [matChipInputFor]="chipList"
             [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
             (matChipInputTokenEnd)="onAdd($event)"

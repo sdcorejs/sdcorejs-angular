@@ -6,6 +6,8 @@
 @let _format = format();
 @let _required = required();
 @let _isInline = isInline();
+@let _labelTop = labelPlacement() === 'top';
+@let _placeholder = placeholder() || (_labelTop ? '' : _label) || '';
 <!-- why: một cổng gate duy nhất cho <mat-error>, aria-invalid và aria-describedby — trước đây
      message hiện nhưng control không báo invalid nên screen reader không biết ô đang lỗi. -->
 @let _errorVisible = !!_errorMessage && formControl.touched;
@@ -37,10 +39,14 @@
     (cleared)="cleared.emit()">
   </sd-inline-text>
 } @else {
-  @if (!_appearance) {
+  @if (!_appearance || _labelTop) {
     <ng-content select="[sdLabel]">
       @if (_label) {
-        <sd-label [label]="_label" [required]="_required"></sd-label>
+        <sd-label
+          [label]="_label"
+          [required]="_required"
+          [for]="_labelTop ? id : null"
+          [labelId]="_labelTop ? labelId : null"></sd-label>
       }
     </ng-content>
   }
@@ -58,9 +64,10 @@
       [class.sd-md]="size() === 'md'"
       [class.sd-sm]="size() === 'sm'"
       [class.hide-inline-error]="_hideInlineError"
+      [class.sd-label-top]="_labelTop"
       [appearance]="_appearance!"
       [floatLabel]="floatLabel()">
-      @if (_appearance && _label) {
+      @if (_appearance && _label && !_labelTop) {
         <mat-label class="sd-form-field-label">
           <span>{{ _label }}</span>
           @if (_helperText) {
@@ -76,7 +83,8 @@
         [formControl]="inputControl"
         #control
         matInput
-        [placeholder]="placeholder() || _label || ''"
+        [placeholder]="_placeholder"
+        [attr.inputmode]="inputmode() || null"
         [errorStateMatcher]="matcher"
         (keyup.enter)="onKeyupEnter()"
         (focus)="onFocus()"
@@ -101,6 +109,8 @@
 
       @if (_showInlineError) {
         <mat-error [id]="errorId">{{ _errorMessage }}</mat-error>
+      } @else if (_labelTop && _helperText) {
+        <mat-hint [id]="hintId">{{ _helperText }}</mat-hint>
       }
 
       <!-- why: nút clear render TRƯỚC error icon. Clear hover-gated (visibility:hidden) vẫn

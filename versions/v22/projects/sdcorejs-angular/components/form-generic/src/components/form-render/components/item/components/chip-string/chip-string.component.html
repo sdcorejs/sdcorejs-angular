@@ -1,15 +1,17 @@
-@if (component && entity) {
-  @if (viewed || component.properties?.viewed) {
-    <div class="text-secondary">{{ component.label || component.key }}</div>
-    <div class="T14M">{{ entity[component.key!] | componentViewed: entity : component | async }}</div>
-  } @else {
-    <sd-chip
-      [form]="form()"
-      [label]="component.label || component.key"
-      [name]="component.key"
-      [autoId]="component.key"
-      [(model)]="entity[component.key!]"
-      [required]="required"
-      [disabled]="disabled"></sd-chip>
-  }
+@let item = field();
+@if (viewed()) {
+  <sd-view [label]="item.label || item.key" [display]="value() | componentViewed: item"></sd-view>
+} @else {
+  <sd-chip
+    [form]="form()"
+    [label]="item.label || item.key"
+    [placeholder]="item.placeholder"
+    [labelPlacement]="labelPlacement()"
+    [name]="item.key"
+    [autoId]="item.key"
+    [model]="value()"
+    (modelChange)="setValue($event)"
+    [required]="required()"
+    [max]="item.validation?.maxItems"
+    [disabled]="disabled()"></sd-chip>
 }

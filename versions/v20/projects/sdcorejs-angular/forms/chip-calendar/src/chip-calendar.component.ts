@@ -51,6 +51,7 @@ import {
   ɵsdFormControlConnector,
   ɵsdTimerScope,
 } from '@sdcorejs/angular/forms/models';
+import type { SdLabelPlacement } from '@sdcorejs/angular/forms/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { DateUtilities } from '@sdcorejs/utils/fns';
@@ -73,7 +74,11 @@ class SdChipCalendarErrorStateMatcher implements ErrorStateMatcher {
   styleUrl: './chip-calendar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'isViewed()' },
+  host: {
+    '[class.sd-has-label]': '!!label()',
+    '[class.sd-viewed]': 'isViewed()',
+    '[class.sd-label-top]': "labelPlacement() === 'top'",
+  },
   imports: [
     SdIcon,
     CommonModule,
@@ -135,6 +140,17 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
   appearance = input<MatFormFieldAppearance, MatFormFieldAppearance | null | undefined>('outline', {
     transform: (v): MatFormFieldAppearance => v || 'outline',
   });
+  /**
+   * `'float'` (mặc định) hoặc `'top'` — nhãn `<label for>` tĩnh phía trên ô nhập chip.
+   * why: ô nhập chip là `<input matInput>` thật nên nhãn rời gắn `for` vào đó (`inputId`).
+   */
+  labelPlacement = input<SdLabelPlacement>('float');
+  /**
+   * id ổn định của ô nhập chip — nhãn rời trỏ `for` sang, và `mat-chip-grid` dùng nó làm id cho
+   * `<mat-label>` ở chế độ nổi. why: luôn gán (kể cả `'float'`): `[id]="null"` sẽ ghi đè id mặc định
+   * của `MatChipInput` thành chuỗi `"null"` và làm mất liên kết nhãn.
+   */
+  readonly inputId = `I${Utilities.generateUuid()}`;
   floatLabel = input<FloatLabelType, FloatLabelType | null | undefined>('auto', {
     transform: (v): FloatLabelType => v || 'auto',
   });
