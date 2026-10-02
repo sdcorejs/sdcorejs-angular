@@ -166,6 +166,19 @@ type DemoControl = 'table' | 'select' | 'autocomplete';
           </div>
         </demo-section>
       }
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-icon-shape') {
+        <demo-section
+          heading="Icon shape"
+          [props]="[
+            { name: 'iconShape', value: 'square / circle / none' },
+            { name: 'provideSdIcon', value: '{ defaultShape }' },
+          ]"
+          note="Mặc định square bo 8px (token --sd-icon-shape-radius). circle giữ kiểu tròn cũ; none bỏ nền, giữ kích thước ô.">
+          <sd-data-state state="empty" compact iconShape="square" title="square" message="Mặc định"></sd-data-state>
+          <sd-data-state state="loading" compact iconShape="circle" title="circle" message="Kiểu tròn"></sd-data-state>
+          <sd-data-state state="error" compact iconShape="none" title="none" message="Không nền"></sd-data-state>
+        </demo-section>
+      }
     </demo-page>
   `,
   styles: `

@@ -3,7 +3,9 @@ import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
+import { Color } from '@sdcorejs/utils/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
+import { resolveSdIconConfig, SD_ICON_CONFIGURATION, type SdIconShape } from '@sdcorejs/angular/modules/icon';
 import { SdInform } from './inform.component';
 import { SdInformActionDirective } from './inform-action.directive';
 import { queryByCss, setInput } from '../../../testing/test-utils';
@@ -326,5 +328,95 @@ describe('SdInform', () => {
       const el = queryByCss<HTMLElement>(fixture, 'div.c-inform');
       expect(el.hasAttribute('data-autoId')).toBe(false);
     });
+  });
+});
+
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  standalone: true,
+  imports: [SdInform],
+  template: `<sd-inform [type]="type" [color]="color" [iconShape]="iconShape" title="Shape"></sd-inform>`,
+})
+class ShapeHostComponent {
+  type: 'default' | 'tip' = 'default';
+  color: Color = 'primary';
+  iconShape: SdIconShape | null | undefined = undefined;
+}
+
+const INFORM_TONES: Color[] = ['primary', 'secondary', 'info', 'success', 'warning', 'error'];
+
+function createShapeHost(defaultShape?: SdIconShape): ComponentFixture<ShapeHostComponent> {
+  TestBed.configureTestingModule({
+    imports: [ShapeHostComponent, NoopAnimationsModule],
+    providers: defaultShape ? [{ provide: SD_ICON_CONFIGURATION, useValue: resolveSdIconConfig({ defaultShape }) }] : [],
+  });
+  const fixture = TestBed.createComponent(ShapeHostComponent);
+  // why: the isolated test runner does not load the app-level theme, so give every tone a visible background.
+  INFORM_TONES.forEach((tone, index) => fixture.nativeElement.style.setProperty(`--sd-${tone}-light`, `rgb(${10 + index}, 20, 30)`));
+  fixture.detectChanges();
+  return fixture;
+}
+
+function iconTile(fixture: ComponentFixture<unknown>): HTMLElement {
+  return (fixture.nativeElement as HTMLElement).querySelector('.c-inform-icon-tile') as HTMLElement;
+}
+
+describe('SdInform icon shape', () => {
+  it('defaults to square without a provider', () => {
+    expect(iconTile(createShapeHost()).getAttribute('data-icon-shape')).toBe('square');
+  });
+
+  it('follows the app default and lets the instance input win', () => {
+    const fixture = createShapeHost('circle');
+    expect(iconTile(fixture).getAttribute('data-icon-shape')).toBe('circle');
+    fixture.componentInstance.iconShape = 'none';
+    fixture.detectChanges();
+    expect(iconTile(fixture).getAttribute('data-icon-shape')).toBe('none');
+  });
+
+  it('renders square with an 8px radius that the token can change', () => {
+    const fixture = createShapeHost();
+    const tile = iconTile(fixture);
+    expect(getComputedStyle(tile).borderTopLeftRadius).toBe('8px');
+    expect(getComputedStyle(tile).backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+    fixture.nativeElement.style.setProperty('--sd-icon-shape-radius', '4px');
+    expect(getComputedStyle(tile).borderTopLeftRadius).toBe('4px');
+  });
+
+  it('renders circle like before and none without a background at the same size, for every tone', () => {
+    const fixture = createShapeHost();
+    for (const tone of INFORM_TONES) {
+      fixture.componentInstance.color = tone;
+      fixture.componentInstance.iconShape = 'square';
+      fixture.detectChanges();
+      const tile = iconTile(fixture);
+      const squareBackground = getComputedStyle(tile).backgroundColor;
+      const squareSize = [getComputedStyle(tile).width, getComputedStyle(tile).height];
+
+      fixture.componentInstance.iconShape = 'circle';
+      fixture.detectChanges();
+      expect(getComputedStyle(tile).borderTopLeftRadius).withContext(tone).toBe('50%');
+      expect(getComputedStyle(tile).backgroundColor).withContext(tone).toBe(squareBackground);
+
+      fixture.componentInstance.iconShape = 'none';
+      fixture.detectChanges();
+      expect(getComputedStyle(tile).backgroundColor).withContext(tone).toBe('rgba(0, 0, 0, 0)');
+      expect([getComputedStyle(tile).width, getComputedStyle(tile).height])
+        .withContext(tone)
+        .toEqual(squareSize);
+    }
+  });
+
+  it('keeps the tip icon flat and transparent for every shape', () => {
+    const fixture = createShapeHost();
+    fixture.componentInstance.type = 'tip';
+    for (const shape of ['square', 'circle', 'none'] as SdIconShape[]) {
+      fixture.componentInstance.iconShape = shape;
+      fixture.detectChanges();
+      const tile = iconTile(fixture);
+      expect(tile.getAttribute('data-icon-shape')).toBe(shape);
+      expect(getComputedStyle(tile).backgroundColor).withContext(shape).toBe('rgba(0, 0, 0, 0)');
+      expect(getComputedStyle(tile).borderTopLeftRadius).withContext(shape).toBe('0px');
+    }
   });
 });

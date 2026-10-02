@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
+import type { SdIconShape } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'app-notify-demo',
@@ -37,6 +38,19 @@ import { SdNotifyService } from '@sdcorejs/angular/services/notify';
         <button mat-stroked-button color="warn" (click)="onClear()">Xóa tất cả</button>
       </demo-section>
       }
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-icon-shape') {
+        <demo-section
+          heading="Icon shape"
+          [props]="[
+            { name: 'iconShape', value: 'square / circle / none' },
+            { name: 'provideSdIcon', value: '{ defaultShape }' },
+          ]"
+          note="Mặc định square bo 8px (token --sd-icon-shape-radius). circle giữ kiểu tròn cũ; none bỏ nền, giữ kích thước ô.">
+          <button mat-stroked-button (click)="onShape('square')">square</button>
+          <button mat-stroked-button (click)="onShape('circle')">circle</button>
+          <button mat-stroked-button (click)="onShape('none')">none</button>
+        </demo-section>
+      }
     </demo-page>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -51,6 +65,8 @@ export class NotifyDemoComponent {
 
   onShort() { this.#notify.info('Toast biến mất sau 1.5 giây.', { duration: 1500 }); }
   onLong() { this.#notify.success('Toast ở lại 8 giây.', { duration: 8000 }); }
+
+  onShape(iconShape: SdIconShape) { this.#notify.success(`Toast với iconShape: '${iconShape}'.`, { iconShape }); }
 
   onAction() {
     this.#notify.success('Đã xóa 1 bản ghi.', {

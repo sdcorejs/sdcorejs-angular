@@ -29,7 +29,7 @@
   flex: 0 0 40px;
   width: 40px;
   height: 40px;
-  border-radius: 50%;
+  border-radius: var(--sd-icon-shape-radius, var(--sd-radius-8, 8px));
   color: var(--sd-primary-dark);
   background: var(--sd-primary-light);
 
@@ -38,6 +38,15 @@
       color: var(--sd-#{$tone}-dark);
       background: var(--sd-#{$tone}-light);
     }
+  }
+
+  // why: đặt sau vòng tone — cùng specificity với [data-tone] nên thứ tự quyết định (D-008).
+  &[data-icon-shape='circle'] {
+    border-radius: 50%;
+  }
+
+  &[data-icon-shape='none'] {
+    background: transparent;
   }
 
   sd-icon {

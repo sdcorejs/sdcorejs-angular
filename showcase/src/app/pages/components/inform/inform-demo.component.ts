@@ -182,6 +182,19 @@ const LONG = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sem
           </div>
         </demo-section>
       }
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-icon-shape') {
+        <demo-section
+          heading="Icon shape"
+          [props]="[
+            { name: 'iconShape', value: 'square / circle / none' },
+            { name: 'provideSdIcon', value: '{ defaultShape }' },
+          ]"
+          note="Mặc định square bo 8px (token --sd-icon-shape-radius). circle giữ kiểu tròn cũ; none bỏ nền, giữ kích thước ô.">
+          <sd-inform info iconShape="square" title="square" description="Ô icon vuông bo 8px (mặc định)."></sd-inform>
+          <sd-inform success iconShape="circle" title="circle" description="Ô icon tròn như trước."></sd-inform>
+          <sd-inform warning iconShape="none" title="none" description="Không có nền, icon giữ màu."></sd-inform>
+        </demo-section>
+      }
     </demo-page>
   `,
   styles: [

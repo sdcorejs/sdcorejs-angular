@@ -11,7 +11,7 @@
     [attr.data-autoId]="autoId() || null"
     [attr.data-autoid]="autoId() || null">
     @if (_effectiveIcon) {
-      <span class="c-inform-icon-tile" aria-hidden="true"
+      <span class="c-inform-icon-tile" aria-hidden="true" [attr.data-icon-shape]="resolvedIconShape()"
         ><sd-icon
           class="c-inform-icon c-material-icon"
           [size]="_isTip ? '16px' : '20px'"

@@ -123,6 +123,7 @@ export class SdNotifyService {
       actionLabel: option?.actionLabel,
       onAction: option?.onAction,
       html: option?.html,
+      iconShape: option?.iconShape,
     };
 
     this.toasts.update(current => {
@@ -172,6 +173,7 @@ export class SdNotifyService {
       actionLabel: option?.actionLabel,
       onAction: option?.onAction,
       html: option?.html,
+      iconShape: option?.iconShape,
     };
 
     this.toasts.update(current => {

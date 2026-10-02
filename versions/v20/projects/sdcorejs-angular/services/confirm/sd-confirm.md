@@ -46,6 +46,7 @@ confirm(
   message: string,
   option?: {
     icon?: string;                   // optional; blank uses the contextual default
+    iconShape?: SdIconShape;         // 'square' | 'circle' | 'none'; default: provideSdIcon({ defaultShape }) → 'square'
     title?: string;                  // default: 'Xác nhận'
     yesTitle?: string;               // default: 'Đồng ý'
     noTitle?: string;                // default: 'Hủy bỏ'
@@ -65,6 +66,7 @@ withInput(
   message?: string,
   option?: {
     icon?: string;                   // optional; blank uses the contextual default
+    iconShape?: SdIconShape;         // 'square' | 'circle' | 'none'; default: provideSdIcon({ defaultShape }) → 'square'
     title?: string;                  // default: 'Xác nhận'
     yesTitle?: string;               // default: 'Có'
     noTitle?: string;                // default: 'Không'
@@ -88,6 +90,7 @@ withRadio(
   message?: string,
   option?: {
     icon?: string;                   // optional; blank uses the contextual default
+    iconShape?: SdIconShape;         // 'square' | 'circle' | 'none'; default: provideSdIcon({ defaultShape }) → 'square'
     title?: string;
     yesTitle?: string;               // default: 'Có'
     noTitle?: string;                // default: 'Không'
@@ -112,6 +115,7 @@ withDate(
   message?: string,
   option?: {
     icon?: string;                   // optional; blank uses the contextual default
+    iconShape?: SdIconShape;         // 'square' | 'circle' | 'none'; default: provideSdIcon({ defaultShape }) → 'square'
     title?: string;
     yesTitle?: string;               // default: 'Có'
     noTitle?: string;                // default: 'Không'
@@ -135,6 +139,7 @@ withSelect(
   message?: string,
   option?: {
     icon?: string;                   // optional; blank uses the contextual default
+    iconShape?: SdIconShape;         // 'square' | 'circle' | 'none'; default: provideSdIcon({ defaultShape }) → 'square'
     title?: string;
     yesTitle?: string;               // default: 'Có'
     noTitle?: string;                // default: 'Không'
@@ -160,6 +165,7 @@ withDatetime(
   message?: string,
   option?: {
     icon?: string;                   // optional; blank uses the contextual default
+    iconShape?: SdIconShape;         // 'square' | 'circle' | 'none'; default: provideSdIcon({ defaultShape }) → 'square'
     title?: string;
     yesTitle?: string;               // default: 'Có'
     noTitle?: string;                // default: 'Không'
@@ -184,6 +190,7 @@ None. The service depends on `MatDialog` from `@angular/material/dialog`, so the
 - **Backdrop click**: disabled by default (`disableBackdropClose: true`). Pass `false` to allow clicking outside to dismiss.
 - **Cancel rejects, not resolves**: every method returns a `Promise` that **rejects** (with the string `'CANCEL'`) when the user cancels — wrap calls in `try/catch` (or `.then(...).catch(...)`).
 - **Width**: only `confirm()` exposes `width`. The other variants are fixed at `'440px'`.
+- **Icon tile shape**: `iconShape` (`SdIconShape` from `@sdcorejs/angular/modules/icon`) picks `square` (8px radius), `circle` or `none`; see [icon tile shape](../../modules/icon/sd-icon.md#icon-tile-shape).
 - **`Color`** comes from `@sdcorejs/utils/models` (theme color tokens like `'primary'`, `'secondary'`, etc.).
 
 ## Examples
@@ -302,7 +309,7 @@ describe('SdConfirmService', () => {
 
 Key points:
 - **No `NoopAnimationsModule` needed** — `MatDialog` is fully mocked; no real dialog is opened.
-- **`afterClosed$` subject** drives promise resolution: emit `{ action: 'ACCEPT', value: x }` to resolve, `{ action: 'CANCEL', value: null }` to reject.
+- **`afterClosed subject** drives promise resolution: emit `{ action: 'ACCEPT', value: x }` to resolve, `{ action: 'CANCEL', value: null }` to reject.
 - Test `Promise` outcomes with Jasmine's `expectAsync(...).toBeResolvedTo(...)` / `toBeRejectedWith('CANCEL')`.
 - No `fakeAsync` / `tick` required — `Subject.next()` is synchronous.
 

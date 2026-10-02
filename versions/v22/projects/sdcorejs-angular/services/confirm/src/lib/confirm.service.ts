@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { DialogConfirmComponent } from './components/dialog-confirm/dialog-confirm.component';
 import { Color } from '@sdcorejs/utils/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
+import type { SdIconShape } from '@sdcorejs/angular/modules/icon';
 
 @Injectable({
   providedIn: 'root',
@@ -41,6 +42,8 @@ export class SdConfirmService {
     option: {
       title?: string;
       icon?: string;
+      /** Hình nền ô icon; bỏ trống thì dùng `defaultShape` của `provideSdIcon`. */
+      iconShape?: SdIconShape;
       yesTitle?: string;
       noTitle?: string;
       yesButtonColor?: Color;
@@ -58,6 +61,7 @@ export class SdConfirmService {
       disableClose: option?.disableBackdropClose ?? true,
       data: {
         icon: option?.icon,
+        iconShape: option?.iconShape,
         title: option?.title || this.#i18n.t('core.confirm.title'),
         message,
         yesTitle: option?.yesTitle || this.#i18n.t('core.confirm.yes'),
@@ -74,6 +78,8 @@ export class SdConfirmService {
     option?: {
       title?: string;
       icon?: string;
+      /** Hình nền ô icon; bỏ trống thì dùng `defaultShape` của `provideSdIcon`. */
+      iconShape?: SdIconShape;
       yesTitle?: string;
       noTitle?: string;
       required?: boolean;
@@ -95,6 +101,7 @@ export class SdConfirmService {
       disableClose: option?.disableBackdropClose ?? true,
       data: {
         icon: option?.icon,
+        iconShape: option?.iconShape,
         title: option?.title || this.#i18n.t('core.confirm.title'),
         message,
         yesTitle: option?.yesTitle || this.#i18n.t('core.confirm.yes-short'),
@@ -118,6 +125,8 @@ export class SdConfirmService {
     option?: {
       title?: string;
       icon?: string;
+      /** Hình nền ô icon; bỏ trống thì dùng `defaultShape` của `provideSdIcon`. */
+      iconShape?: SdIconShape;
       yesTitle?: string;
       noTitle?: string;
       required?: boolean;
@@ -140,6 +149,7 @@ export class SdConfirmService {
       disableClose: option?.disableBackdropClose ?? true,
       data: {
         icon: option?.icon,
+        iconShape: option?.iconShape,
         title: option?.title || this.#i18n.t('core.confirm.title'),
         message,
         yesTitle: option?.yesTitle || this.#i18n.t('core.confirm.yes-short'),
@@ -164,6 +174,8 @@ export class SdConfirmService {
     option?: {
       title?: string;
       icon?: string;
+      /** Hình nền ô icon; bỏ trống thì dùng `defaultShape` của `provideSdIcon`. */
+      iconShape?: SdIconShape;
       yesTitle?: string;
       noTitle?: string;
       required?: boolean;
@@ -187,6 +199,7 @@ export class SdConfirmService {
       disableClose: option?.disableBackdropClose ?? true,
       data: {
         icon: option?.icon,
+        iconShape: option?.iconShape,
         title: option?.title || this.#i18n.t('core.confirm.title'),
         message,
         yesTitle: option?.yesTitle || this.#i18n.t('core.confirm.yes-short'),
@@ -212,6 +225,8 @@ export class SdConfirmService {
     option?: {
       title?: string;
       icon?: string;
+      /** Hình nền ô icon; bỏ trống thì dùng `defaultShape` của `provideSdIcon`. */
+      iconShape?: SdIconShape;
 
       yesTitle?: string;
       noTitle?: string;
@@ -234,6 +249,7 @@ export class SdConfirmService {
       disableClose: option?.disableBackdropClose ?? true,
       data: {
         icon: option?.icon,
+        iconShape: option?.iconShape,
         title: option?.title || this.#i18n.t('core.confirm.title'),
         message,
         yesTitle: option?.yesTitle || this.#i18n.t('core.confirm.yes-short'),
@@ -257,6 +273,8 @@ export class SdConfirmService {
     option?: {
       title?: string;
       icon?: string;
+      /** Hình nền ô icon; bỏ trống thì dùng `defaultShape` của `provideSdIcon`. */
+      iconShape?: SdIconShape;
 
       yesTitle?: string;
       noTitle?: string;
@@ -280,6 +298,7 @@ export class SdConfirmService {
       disableClose: option?.disableBackdropClose ?? true,
       data: {
         icon: option?.icon,
+        iconShape: option?.iconShape,
         title: option?.title || this.#i18n.t('core.confirm.title'),
         message,
         yesTitle: option?.yesTitle || this.#i18n.t('core.confirm.yes-short'),

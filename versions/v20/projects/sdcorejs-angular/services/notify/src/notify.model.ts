@@ -1,3 +1,5 @@
+import type { SdIconShape } from '@sdcorejs/angular/modules/icon';
+
 export type ToastType = 'success' | 'info' | 'warning' | 'error';
 
 export interface ToastData {
@@ -16,6 +18,8 @@ export interface ToastData {
    *   TIN CẬY (do dev tự viết); KHÔNG truyền data người dùng vào đây.
    */
   html?: boolean;
+  /** Hình nền ô icon; bỏ trống thì toast dùng `defaultShape` của `provideSdIcon`. */
+  iconShape?: SdIconShape;
 }
 
 export interface NotifyOption {
@@ -32,4 +36,9 @@ export interface NotifyOption {
    * Chỉ dùng cho markup tin cậy. Xem `ToastData.html`.
    */
   html?: boolean;
+  /**
+   * Hình nền ô icon: `square` | `circle` | `none`. Bỏ trống thì dùng `defaultShape` của `provideSdIcon`.
+   * Với `warning`/`error` (gom theo debounce), option của lời gọi cuối được dùng — giống `title`/`duration`.
+   */
+  iconShape?: SdIconShape;
 }

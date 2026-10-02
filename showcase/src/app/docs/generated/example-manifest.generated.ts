@@ -55,6 +55,7 @@ export type ShowcaseExampleSourceKey =
   | "components/data-state/example-empty"
   | "components/data-state/example-error"
   | "components/data-state/example-forbidden"
+  | "components/data-state/example-icon-shape"
   | "components/data-state/example-loading"
   | "components/data-state/example-loi-va-retry-tren-ba-control"
   | "components/data-state/example-panel-hep-va-lua-chon-dang-giu"
@@ -90,6 +91,7 @@ export type ShowcaseExampleSourceKey =
   | "components/inform/example-bang-mau"
   | "components/inform/example-chi-co-tieu-de"
   | "components/inform/example-dong-duoc-action"
+  | "components/inform/example-icon-shape"
   | "components/inform/example-line-clamp"
   | "components/inform/example-noi-dung-tuy-bien"
   | "components/inform/example-tip-bang-mau"
@@ -143,6 +145,7 @@ export type ShowcaseExampleSourceKey =
   | "components/section/example-footer-left-right"
   | "components/section/example-full-width-content-with-body-padding-0"
   | "components/section/example-headerless-card-with-manual-body-padding"
+  | "components/section/example-icon-shape"
   | "components/section/example-section-item-rich-values"
   | "components/side-drawer/example-create-drawer-split-footer"
   | "components/side-drawer/example-custom-header-left-right"
@@ -360,6 +363,7 @@ export type ShowcaseExampleSourceKey =
   | "services/confirm/example-chon-ngay-gio"
   | "services/confirm/example-chon-phong-ban"
   | "services/confirm/example-chon-radio-dang-doc"
+  | "services/confirm/example-icon-shape"
   | "services/confirm/example-nhap-ly-do"
   | "services/confirm/example-nhat-ky-gan-nhat"
   | "services/confirm/example-xac-nhan-co-ban"
@@ -373,6 +377,7 @@ export type ShowcaseExampleSourceKey =
   | "services/loading/example-nhieu-host-cung-selector-multi-tab"
   | "services/notify/example-4-loai-toast"
   | "services/notify/example-don-dep"
+  | "services/notify/example-icon-shape"
   | "services/notify/example-thoi-luong-tuy-chinh"
   | "services/notify/example-toast-co-action"
   | "services/persistence/example-deterministic-identity"
@@ -803,6 +808,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Lỗi nằm giữa, dưới các mục đã chọn. Panel 180px vẫn đọc được thông báo và bấm Thử lại.",
   },
   {
+    sourceKey: "components/data-state/example-icon-shape",
+    pageKey: "components/data-state",
+    sectionId: "example-icon-shape",
+    title: "Icon shape",
+    description: "Mặc định square bo 8px (token --sd-icon-shape-radius). circle giữ kiểu tròn cũ; none bỏ nền, giữ kích thước ô.",
+  },
+  {
     sourceKey: "components/editor/example-soan-noi-dung",
     pageKey: "components/editor",
     sectionId: "example-soan-noi-dung",
@@ -1067,6 +1079,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-tip-trong-form-va-bang",
     title: "Tip trong form và bảng",
     description: "Existing “Tip trong form và bảng” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/inform/example-icon-shape",
+    pageKey: "components/inform",
+    sectionId: "example-icon-shape",
+    title: "Icon shape",
+    description: "Mặc định square bo 8px (token --sd-icon-shape-radius). circle giữ kiểu tròn cũ; none bỏ nền, giữ kích thước ô.",
   },
   {
     sourceKey: "components/job-progress/example-determinate-bar",
@@ -1396,6 +1415,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-section-item-rich-values",
     title: "Section item rich values",
     description: "Existing “Section item rich values” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/section/example-icon-shape",
+    pageKey: "components/section",
+    sectionId: "example-icon-shape",
+    title: "Icon shape",
+    description: "Mặc định square bo 8px (token --sd-icon-shape-radius). circle giữ kiểu tròn cũ; none bỏ nền, giữ kích thước ô.",
   },
   {
     sourceKey: "components/side-drawer/example-create-drawer-split-footer",
@@ -2938,6 +2964,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Existing “Nhật ký gần nhất” scenario preserved from the showcase.",
   },
   {
+    sourceKey: "services/confirm/example-icon-shape",
+    pageKey: "services/confirm",
+    sectionId: "example-icon-shape",
+    title: "Icon shape",
+    description: "Mặc định square bo 8px (token --sd-icon-shape-radius). circle giữ kiểu tròn cũ; none bỏ nền, giữ kích thước ô.",
+  },
+  {
     sourceKey: "services/excel/example-xuat-file-xlsx",
     pageKey: "services/excel",
     sectionId: "example-xuat-file-xlsx",
@@ -3013,6 +3046,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-don-dep",
     title: "Dọn dẹp",
     description: "clearAll() xóa toàn bộ; clearByType('error') xóa theo loại.",
+  },
+  {
+    sourceKey: "services/notify/example-icon-shape",
+    pageKey: "services/notify",
+    sectionId: "example-icon-shape",
+    title: "Icon shape",
+    description: "Mặc định square bo 8px (token --sd-icon-shape-radius). circle giữ kiểu tròn cũ; none bỏ nền, giữ kích thước ô.",
   },
   {
     sourceKey: "services/persistence/example-graph-round-trip",

@@ -130,6 +130,19 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
         </sd-section>
       </demo-section>
       }
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-icon-shape') {
+        <demo-section
+          heading="Icon shape"
+          [props]="[
+            { name: 'iconShape', value: 'square / circle / none' },
+            { name: 'provideSdIcon', value: '{ defaultShape }' },
+          ]"
+          note="Mặc định square bo 8px (token --sd-icon-shape-radius). circle giữ kiểu tròn cũ; none bỏ nền, giữ kích thước ô.">
+          <sd-section icon="info" iconColor="primary" iconShape="square" title="square" subTitle="Mặc định" class="demo-section-card"></sd-section>
+          <sd-section icon="info" iconColor="success" iconShape="circle" title="circle" subTitle="Kiểu tròn" class="demo-section-card"></sd-section>
+          <sd-section icon="info" iconColor="warning" iconShape="none" title="none" subTitle="Không nền" class="demo-section-card"></sd-section>
+        </demo-section>
+      }
     </demo-page>
   `,
   styles: [`

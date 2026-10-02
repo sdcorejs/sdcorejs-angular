@@ -1,6 +1,6 @@
 <div class="sd-toast__bar" [class]="'bg-' + data.type"></div>
 
-<div class="sd-toast__icon" aria-hidden="true">
+<div class="sd-toast__icon" aria-hidden="true" [attr.data-icon-shape]="iconShape">
   @switch (data.type) {
     @case ('success') {
       <svg viewBox="0 0 24 24" focusable="false">

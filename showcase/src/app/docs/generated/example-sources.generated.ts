@@ -1822,6 +1822,19 @@ type DemoControl = 'table' | 'select' | 'autocomplete';
           </div>
         </demo-section>
       }
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-icon-shape') {
+        <demo-section
+          heading="Icon shape"
+          [props]="[
+            { name: 'iconShape', value: 'square / circle / none' },
+            { name: 'provideSdIcon', value: '{ defaultShape }' },
+          ]"
+          note="Mặc định square bo 8px (token --sd-icon-shape-radius). circle giữ kiểu tròn cũ; none bỏ nền, giữ kích thước ô.">
+          <sd-data-state state="empty" compact iconShape="square" title="square" message="Mặc định"></sd-data-state>
+          <sd-data-state state="loading" compact iconShape="circle" title="circle" message="Kiểu tròn"></sd-data-state>
+          <sd-data-state state="error" compact iconShape="none" title="none" message="Không nền"></sd-data-state>
+        </demo-section>
+      }
     </demo-page>
   \`,
   styles: \`
@@ -4798,6 +4811,19 @@ const LONG = \`Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec se
           </div>
         </demo-section>
       }
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-icon-shape') {
+        <demo-section
+          heading="Icon shape"
+          [props]="[
+            { name: 'iconShape', value: 'square / circle / none' },
+            { name: 'provideSdIcon', value: '{ defaultShape }' },
+          ]"
+          note="Mặc định square bo 8px (token --sd-icon-shape-radius). circle giữ kiểu tròn cũ; none bỏ nền, giữ kích thước ô.">
+          <sd-inform info iconShape="square" title="square" description="Ô icon vuông bo 8px (mặc định)."></sd-inform>
+          <sd-inform success iconShape="circle" title="circle" description="Ô icon tròn như trước."></sd-inform>
+          <sd-inform warning iconShape="none" title="none" description="Không có nền, icon giữ màu."></sd-inform>
+        </demo-section>
+      }
     </demo-page>
   \`,
   styles: [
@@ -6684,6 +6710,19 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
           </sd-section-item>
         </sd-section>
       </demo-section>
+      }
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-icon-shape') {
+        <demo-section
+          heading="Icon shape"
+          [props]="[
+            { name: 'iconShape', value: 'square / circle / none' },
+            { name: 'provideSdIcon', value: '{ defaultShape }' },
+          ]"
+          note="Mặc định square bo 8px (token --sd-icon-shape-radius). circle giữ kiểu tròn cũ; none bỏ nền, giữ kích thước ô.">
+          <sd-section icon="info" iconColor="primary" iconShape="square" title="square" subTitle="Mặc định" class="demo-section-card"></sd-section>
+          <sd-section icon="info" iconColor="success" iconShape="circle" title="circle" subTitle="Kiểu tròn" class="demo-section-card"></sd-section>
+          <sd-section icon="info" iconColor="warning" iconShape="none" title="none" subTitle="Không nền" class="demo-section-card"></sd-section>
+        </demo-section>
       }
     </demo-page>
   \`,
@@ -15997,6 +16036,7 @@ code {
 import { MatButtonModule } from '@angular/material/button';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdConfirmService } from '@sdcorejs/angular/services/confirm';
+import type { SdIconShape } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'app-confirm-demo',
@@ -16090,6 +16130,20 @@ import { SdConfirmService } from '@sdcorejs/angular/services/confirm';
           }}</pre>
         </demo-section>
       }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-icon-shape') {
+        <demo-section
+          heading="Icon shape"
+          [props]="[
+            { name: 'iconShape', value: 'square / circle / none' },
+            { name: 'provideSdIcon', value: '{ defaultShape }' },
+          ]"
+          note="Mặc định square bo 8px (token --sd-icon-shape-radius). circle giữ kiểu tròn cũ; none bỏ nền, giữ kích thước ô.">
+          <button mat-stroked-button (click)="onShape('square')">square</button>
+          <button mat-stroked-button (click)="onShape('circle')">circle</button>
+          <button mat-stroked-button (click)="onShape('none')">none</button>
+        </demo-section>
+      }
     </demo-page>
   \`,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -16104,6 +16158,15 @@ export class ConfirmDemoComponent {
       .then(
         () => this.log.set('Cơ bản: ĐỒNG Ý'),
         () => this.log.set('Cơ bản: HỦY')
+      );
+  }
+
+  onShape(iconShape: SdIconShape) {
+    this.#confirm
+      .confirm(\`Hộp thoại với iconShape: '\${iconShape}'.\`, { iconShape, title: 'Icon shape', yesTitle: 'Đóng', noTitle: 'Hủy' })
+      .then(
+        () => this.log.set(\`Icon shape \${iconShape}: ĐỒNG Ý\`),
+        () => this.log.set(\`Icon shape \${iconShape}: HỦY\`)
       );
   }
 
@@ -16543,6 +16606,7 @@ export class LoadingDemoComponent {
 import { MatButtonModule } from '@angular/material/button';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
+import type { SdIconShape } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'app-notify-demo',
@@ -16578,6 +16642,19 @@ import { SdNotifyService } from '@sdcorejs/angular/services/notify';
         <button mat-stroked-button color="warn" (click)="onClear()">Xóa tất cả</button>
       </demo-section>
       }
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-icon-shape') {
+        <demo-section
+          heading="Icon shape"
+          [props]="[
+            { name: 'iconShape', value: 'square / circle / none' },
+            { name: 'provideSdIcon', value: '{ defaultShape }' },
+          ]"
+          note="Mặc định square bo 8px (token --sd-icon-shape-radius). circle giữ kiểu tròn cũ; none bỏ nền, giữ kích thước ô.">
+          <button mat-stroked-button (click)="onShape('square')">square</button>
+          <button mat-stroked-button (click)="onShape('circle')">circle</button>
+          <button mat-stroked-button (click)="onShape('none')">none</button>
+        </demo-section>
+      }
     </demo-page>
   \`,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -16592,6 +16669,8 @@ export class NotifyDemoComponent {
 
   onShort() { this.#notify.info('Toast biến mất sau 1.5 giây.', { duration: 1500 }); }
   onLong() { this.#notify.success('Toast ở lại 8 giây.', { duration: 8000 }); }
+
+  onShape(iconShape: SdIconShape) { this.#notify.success(\`Toast với iconShape: '\${iconShape}'.\`, { iconShape }); }
 
   onAction() {
     this.#notify.success('Đã xóa 1 bản ghi.', {
@@ -18188,6 +18267,20 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
       </div>
     </demo-section>`,
   },
+  "components/data-state/example-icon-shape": {
+    ...SHOWCASE_PAGE_SOURCES["components/data-state"],
+    html: `<demo-section
+      heading="Icon shape"
+      [props]="[
+        { name: 'iconShape', value: 'square / circle / none' },
+        { name: 'provideSdIcon', value: '{ defaultShape }' },
+      ]"
+      note="Mặc định square bo 8px (token --sd-icon-shape-radius). circle giữ kiểu tròn cũ; none bỏ nền, giữ kích thước ô.">
+      <sd-data-state state="empty" compact iconShape="square" title="square" message="Mặc định"></sd-data-state>
+      <sd-data-state state="loading" compact iconShape="circle" title="circle" message="Kiểu tròn"></sd-data-state>
+      <sd-data-state state="error" compact iconShape="none" title="none" message="Không nền"></sd-data-state>
+    </demo-section>`,
+  },
   "components/data-state/example-loading": {
     ...SHOWCASE_PAGE_SOURCES["components/data-state"],
     html: `<demo-section heading="Loading" [props]="[{ name: 'compact', value: 'true' }]">
@@ -18892,6 +18985,20 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
       ]">
       <sd-inform error closable title="Không tải được dữ liệu" description="Máy chủ không phản hồi." actionLabel="Thử lại"></sd-inform>
       <sd-inform info closable title="Bản nháp đã lưu" description="Tự động lưu lúc 14:30." actionLabel="Xem"></sd-inform>
+    </demo-section>`,
+  },
+  "components/inform/example-icon-shape": {
+    ...SHOWCASE_PAGE_SOURCES["components/inform"],
+    html: `<demo-section
+      heading="Icon shape"
+      [props]="[
+        { name: 'iconShape', value: 'square / circle / none' },
+        { name: 'provideSdIcon', value: '{ defaultShape }' },
+      ]"
+      note="Mặc định square bo 8px (token --sd-icon-shape-radius). circle giữ kiểu tròn cũ; none bỏ nền, giữ kích thước ô.">
+      <sd-inform info iconShape="square" title="square" description="Ô icon vuông bo 8px (mặc định)."></sd-inform>
+      <sd-inform success iconShape="circle" title="circle" description="Ô icon tròn như trước."></sd-inform>
+      <sd-inform warning iconShape="none" title="none" description="Không có nền, icon giữ màu."></sd-inform>
     </demo-section>`,
   },
   "components/inform/example-line-clamp": {
@@ -19721,6 +19828,20 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
       </div>
     </sd-section>
   </demo-section>`,
+  },
+  "components/section/example-icon-shape": {
+    ...SHOWCASE_PAGE_SOURCES["components/section"],
+    html: `<demo-section
+      heading="Icon shape"
+      [props]="[
+        { name: 'iconShape', value: 'square / circle / none' },
+        { name: 'provideSdIcon', value: '{ defaultShape }' },
+      ]"
+      note="Mặc định square bo 8px (token --sd-icon-shape-radius). circle giữ kiểu tròn cũ; none bỏ nền, giữ kích thước ô.">
+      <sd-section icon="info" iconColor="primary" iconShape="square" title="square" subTitle="Mặc định" class="demo-section-card"></sd-section>
+      <sd-section icon="info" iconColor="success" iconShape="circle" title="circle" subTitle="Kiểu tròn" class="demo-section-card"></sd-section>
+      <sd-section icon="info" iconColor="warning" iconShape="none" title="none" subTitle="Không nền" class="demo-section-card"></sd-section>
+    </demo-section>`,
   },
   "components/section/example-section-item-rich-values": {
     ...SHOWCASE_PAGE_SOURCES["components/section"],
@@ -23421,6 +23542,20 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
       <button mat-stroked-button color="primary" (click)="onRadioColumn()">Chọn phòng ban dạng dọc</button>
     </demo-section>`,
   },
+  "services/confirm/example-icon-shape": {
+    ...SHOWCASE_PAGE_SOURCES["services/confirm"],
+    html: `<demo-section
+      heading="Icon shape"
+      [props]="[
+        { name: 'iconShape', value: 'square / circle / none' },
+        { name: 'provideSdIcon', value: '{ defaultShape }' },
+      ]"
+      note="Mặc định square bo 8px (token --sd-icon-shape-radius). circle giữ kiểu tròn cũ; none bỏ nền, giữ kích thước ô.">
+      <button mat-stroked-button (click)="onShape('square')">square</button>
+      <button mat-stroked-button (click)="onShape('circle')">circle</button>
+      <button mat-stroked-button (click)="onShape('none')">none</button>
+    </demo-section>`,
+  },
   "services/confirm/example-nhap-ly-do": {
     ...SHOWCASE_PAGE_SOURCES["services/confirm"],
     html: `<demo-section
@@ -23551,6 +23686,20 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     <button mat-stroked-button (click)="onSpam()">Tạo 3 toast cùng lúc</button>
     <button mat-stroked-button color="warn" (click)="onClear()">Xóa tất cả</button>
   </demo-section>`,
+  },
+  "services/notify/example-icon-shape": {
+    ...SHOWCASE_PAGE_SOURCES["services/notify"],
+    html: `<demo-section
+      heading="Icon shape"
+      [props]="[
+        { name: 'iconShape', value: 'square / circle / none' },
+        { name: 'provideSdIcon', value: '{ defaultShape }' },
+      ]"
+      note="Mặc định square bo 8px (token --sd-icon-shape-radius). circle giữ kiểu tròn cũ; none bỏ nền, giữ kích thước ô.">
+      <button mat-stroked-button (click)="onShape('square')">square</button>
+      <button mat-stroked-button (click)="onShape('circle')">circle</button>
+      <button mat-stroked-button (click)="onShape('none')">none</button>
+    </demo-section>`,
   },
   "services/notify/example-thoi-luong-tuy-chinh": {
     ...SHOWCASE_PAGE_SOURCES["services/notify"],

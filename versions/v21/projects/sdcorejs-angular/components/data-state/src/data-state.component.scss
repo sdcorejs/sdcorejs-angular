@@ -22,7 +22,7 @@
   width: 56px;
   height: 56px;
   margin-bottom: 16px;
-  border-radius: 50%;
+  border-radius: var(--sd-icon-shape-radius, var(--sd-radius-8, 8px));
   background: var(--sd-surface-muted);
 }
 .sd-data-state__icon {
@@ -121,6 +121,14 @@
 .sd-data-state--compact .sd-data-state__actions {
   justify-content: flex-start;
   margin-top: 10px;
+}
+// why: rule state (.sd-data-state[data-state=…] .sd-data-state__symbol) mạnh hơn selector attribute đơn;
+// cùng tiền tố [data-state] và đặt sau để shape luôn thắng (D-008).
+.sd-data-state[data-state] .sd-data-state__symbol[data-icon-shape='circle'] {
+  border-radius: 50%;
+}
+.sd-data-state[data-state] .sd-data-state__symbol[data-icon-shape='none'] {
+  background: transparent;
 }
 .sd-data-state--full-page {
   min-height: 100dvh;

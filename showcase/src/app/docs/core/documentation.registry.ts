@@ -228,7 +228,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/data-state/sd-data-state',
     keywords: ['loading', 'empty', 'error', 'forbidden', 'retry'],
     status: 'stable',
-    demoSectionCount: 7,
+    demoSectionCount: 8,
     loadComponent: () => import('../../pages/components/data-state/data-state-demo.component').then(m => m.DataStateDemoComponent),
   }),
   defineDocPage({
@@ -377,7 +377,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/inform/sd-inform',
     keywords: ['alert', 'banner', 'warning', 'message'],
     status: 'stable',
-    demoSectionCount: 12,
+    demoSectionCount: 13,
     loadComponent: () => import('../../pages/components/inform/inform-demo.component').then(m => m.InformDemoComponent),
   }),
   defineDocPage({
@@ -523,7 +523,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/section/sd-section',
     keywords: ['card', 'details', 'header', 'footer'],
     status: 'stable',
-    demoSectionCount: 7,
+    demoSectionCount: 8,
     loadComponent: () => import('../../pages/components/section/section-demo.component').then(m => m.SectionDemoComponent),
   }),
   defineDocPage({
@@ -906,7 +906,7 @@ const SERVICE_PAGES = [
     publishedDocId: 'services/confirm/sd-confirm',
     keywords: ['dialog', 'confirmation', 'prompt', 'promise'],
     status: 'stable',
-    demoSectionCount: 9,
+    demoSectionCount: 10,
     loadComponent: () => import('../../pages/services/confirm/confirm-demo.component').then(m => m.ConfirmDemoComponent),
   }),
   defineDocPage({
@@ -958,7 +958,7 @@ const SERVICE_PAGES = [
     publishedDocId: 'services/notify/sd-notify',
     keywords: ['toast', 'notification', 'feedback', 'message'],
     status: 'stable',
-    demoSectionCount: 4,
+    demoSectionCount: 5,
     loadComponent: () => import('../../pages/services/notify/notify-demo.component').then(m => m.NotifyDemoComponent),
   }),
   defineDocPage({

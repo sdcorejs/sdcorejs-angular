@@ -38,6 +38,7 @@ Page-level banner / alert (báo lỗi / cảnh báo / thông tin) neo trên page
 | `icon` | `string \| undefined` | `undefined` | Material icon name override. When falsy (and not hidden), the icon is auto-mapped per color (see table below). |
 | `hideIcon` | `boolean` | `false` | `transform: booleanAttribute` — bare attribute = true. Suppress the icon entirely (no auto-map). |
 | `fontSet` | `SdIconSet` | `undefined` | Optional icon set override passed to `<sd-icon>`. Leave unset to inherit `provideSdIcon({ defaultFontSet })`. |
+| `iconShape` | `SdIconShape \| null \| undefined` | `undefined` | Icon tile shape: `'square'` (8px radius), `'circle'` or `'none'` (no background). Leave unset to inherit `provideSdIcon({ defaultShape })` (default `square`). See [icon tile shape](../../modules/icon/sd-icon.md#icon-tile-shape). The tip variant is always flat and transparent. |
 | `closable` | `boolean` | `false` | `transform: booleanAttribute` — bare attribute = true. Show the `×` dismiss button. |
 | `actionLabel` | `string \| undefined` | `undefined` | Text-link action rendered at the end of the content. Overridden by the `[sdInformAction]` projected slot when present. |
 | `lineClamp` | `number \| undefined` | `undefined` | Clamp the body to N lines and show a show-more / show-less toggle when it overflows. Values `<= 0` are treated as no clamp. |
@@ -84,7 +85,7 @@ The warning/error defaults use explicit outline glyphs even in the legacy Materi
 Import `SdInform` and the optional `SdInformType` type from the existing inform entry point. No additional directive or component is required.
 
 - 8px vertical / 12px horizontal padding, 3px colored inline-start border, 4px radius, 13px text with 20px line height.
-- Contextual outline icon is 16px, without the circular tile, aligned with the first line when content wraps. Existing `icon`, `hideIcon` and `fontSet`/provider overrides still apply.
+- Contextual outline icon is 16px, without the background tile (whatever `iconShape` is), aligned with the first line when content wraps. Existing `icon`, `hideIcon` and `fontSet`/provider overrides still apply.
 - Reuses all six Core color tokens, `--sd-surface` and `--sd-text`; theme changes propagate through CSS custom properties. Inline code and links wrap on narrow screens.
 - Title is optional and bold. Without projected content, `title` and `description` render normally. With projected content, the existing whole-content precedence applies: put a custom title inside the projected content if needed.
 - Rich text uses Angular content projection, preserving bindings and event handlers. No `innerHTML`, HTML strings or sanitization bypass is used. `lineClamp` remains limited to the built-in description.

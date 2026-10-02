@@ -9,7 +9,7 @@ describe('DataStateDemoComponent', () => {
     fixture.detectChanges();
 
     const element = fixture.nativeElement as HTMLElement;
-    expect(element.querySelectorAll('demo-section')).toHaveSize(7);
+    expect(element.querySelectorAll('demo-section')).toHaveSize(8);
     const retainedSelection = element.querySelector('sd-select[label="Giữ hai lựa chọn"]');
     expect(retainedSelection?.hasAttribute('multiple')).toBeTrue();
     expect(retainedSelection?.getAttribute('minWidthPanel')).toBe('180px');

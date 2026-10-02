@@ -14,8 +14,9 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
 | --- | --- | --- | --- |
 | `title` | `string \| null \| undefined` | `undefined` | Header title. |
 | `subTitle` | `string \| null \| undefined` | `undefined` | Optional secondary line below the title. |
-| `icon` | `string \| null \| undefined` | `undefined` | Material icon name shown before the title, centered at 20px inside a 32px circular soft background. |
-| `iconColor` | `Color` | `'primary'` | Icon color token; the circular background uses the matching light tone. |
+| `icon` | `string \| null \| undefined` | `undefined` | Material icon name shown before the title, centered at 20px inside a 32px soft background tile. |
+| `iconColor` | `Color` | `'primary'` | Icon color token; the tile background uses the matching light tone. |
+| `iconShape` | `SdIconShape \| null \| undefined` | `undefined` | Tile shape: `'square'` (8px radius), `'circle'` or `'none'` (no background). Leave unset to inherit `provideSdIcon({ defaultShape })` (default `square`). See [icon tile shape](../../modules/icon/sd-icon.md#icon-tile-shape). |
 | `collapsed` | `boolean` model | `false` | Two-way bindable through `[(collapsed)]`. |
 | `collapsible` | `boolean` | `false` | Enables header click collapse. Bare attribute = true. |
 | `hideHeader` | `boolean` | `false` | Hides the header row. Bare attribute = true. |

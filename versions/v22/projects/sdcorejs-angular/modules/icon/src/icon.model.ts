@@ -13,6 +13,15 @@ export type { SdIconSet, SdMaterialIconSet };
 export type SdIconFontSet = SdIconSet;
 
 /**
+ * Hình nền của ô icon trang trí (header `sd-section`, `sd-inform`, `sd-data-state`, toast, dialog confirm).
+ *
+ * - `square`: nền vuông bo góc `var(--sd-icon-shape-radius, var(--sd-radius-8, 8px))`.
+ * - `circle`: nền tròn.
+ * - `none`: không có nền, giữ nguyên kích thước ô.
+ */
+export type SdIconShape = 'square' | 'circle' | 'none';
+
+/**
  * Một icon Lucide có thể đăng ký bằng class icon Angular hoặc dữ liệu path thuần.
  */
 export type SdLucideIconRegistration = LucideIcon | LucideIconData;
@@ -30,6 +39,8 @@ export type SdLucideIconRegistrations = SdLucideIconRegistration[] | Record<stri
 export interface ISdIconConfiguration {
   /** Default icon font set when component does not pass `fontSet`. */
   defaultFontSet?: SdIconSet;
+  /** Hình nền mặc định của ô icon khi component không truyền `iconShape`. Mặc định `square`. */
+  defaultShape?: SdIconShape;
   /** Alias áp dụng khi renderer hiện tại là Material. */
   materialAliases?: Record<string, string>;
   /** Alias áp dụng khi renderer hiện tại là Lucide. */
@@ -299,6 +310,7 @@ export const SD_DEFAULT_MATERIAL_ALIASES: Record<string, string> = {
  */
 export const SD_ICON_DEFAULT_CONFIG: ISdIconResolvedConfiguration = {
   defaultFontSet: DefaultSdIconSet,
+  defaultShape: 'square',
   materialAliases: SD_DEFAULT_MATERIAL_ALIASES,
   lucideAliases: SD_DEFAULT_LUCIDE_ALIASES,
   lucideConfig: {},

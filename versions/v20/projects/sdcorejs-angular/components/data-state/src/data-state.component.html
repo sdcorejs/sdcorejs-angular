@@ -25,7 +25,7 @@
     [attr.aria-busy]="currentState === 'loading' ? 'true' : null"
     [attr.aria-live]="_role === 'alert' ? 'assertive' : 'polite'">
     @if (currentIcon) {
-      <span class="sd-data-state__symbol" aria-hidden="true">
+      <span class="sd-data-state__symbol" aria-hidden="true" [attr.data-icon-shape]="resolvedIconShape()">
         <sd-icon class="sd-data-state__icon" [name]="currentIcon" [fontSet]="fontSet()" [size]="_compact ? '22px' : '32px'"></sd-icon>
       </span>
     }

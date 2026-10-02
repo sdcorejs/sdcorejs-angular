@@ -27,9 +27,18 @@
   flex: 0 0 32px;
   width: 32px;
   height: 32px;
-  border-radius: 50%;
+  border-radius: var(--sd-icon-shape-radius, var(--sd-radius-8, 8px));
   background: var(--inform-soft);
   color: var(--inform-ink);
+
+  // why: variant tip (.c-inform.c-inform-tip .c-inform-icon-tile) mạnh hơn hai rule này nên tip vẫn phẳng, trong suốt.
+  &[data-icon-shape='circle'] {
+    border-radius: 50%;
+  }
+
+  &[data-icon-shape='none'] {
+    background: transparent;
+  }
 }
 .c-inform-icon {
   width: 20px;

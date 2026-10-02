@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { MatButtonModule } from '@angular/material/button';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdConfirmService } from '@sdcorejs/angular/services/confirm';
+import type { SdIconShape } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'app-confirm-demo',
@@ -95,6 +96,20 @@ import { SdConfirmService } from '@sdcorejs/angular/services/confirm';
           }}</pre>
         </demo-section>
       }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-icon-shape') {
+        <demo-section
+          heading="Icon shape"
+          [props]="[
+            { name: 'iconShape', value: 'square / circle / none' },
+            { name: 'provideSdIcon', value: '{ defaultShape }' },
+          ]"
+          note="Mặc định square bo 8px (token --sd-icon-shape-radius). circle giữ kiểu tròn cũ; none bỏ nền, giữ kích thước ô.">
+          <button mat-stroked-button (click)="onShape('square')">square</button>
+          <button mat-stroked-button (click)="onShape('circle')">circle</button>
+          <button mat-stroked-button (click)="onShape('none')">none</button>
+        </demo-section>
+      }
     </demo-page>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -109,6 +124,15 @@ export class ConfirmDemoComponent {
       .then(
         () => this.log.set('Cơ bản: ĐỒNG Ý'),
         () => this.log.set('Cơ bản: HỦY')
+      );
+  }
+
+  onShape(iconShape: SdIconShape) {
+    this.#confirm
+      .confirm(`Hộp thoại với iconShape: '${iconShape}'.`, { iconShape, title: 'Icon shape', yesTitle: 'Đóng', noTitle: 'Hủy' })
+      .then(
+        () => this.log.set(`Icon shape ${iconShape}: ĐỒNG Ý`),
+        () => this.log.set(`Icon shape ${iconShape}: HỦY`)
       );
   }
 

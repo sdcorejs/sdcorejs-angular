@@ -19,6 +19,7 @@ Provide a consistent presentation for `loading`, `empty`, `error`, and `forbidde
 | `message`     | `string \| null`                                    | locale default | Empty string intentionally hides the default message.                        |
 | `icon`        | `string \| null`                                    | state default  | Pass an empty string to hide the icon; null/undefined use the state default. |
 | `fontSet`     | `SdIconSet`                                         | inherited      | Icon font set.                                                               |
+| `iconShape`   | `SdIconShape \| null`                                | inherited      | Icon tile shape: `'square'` (8px radius), `'circle'` or `'none'` (no background). Leave unset to inherit `provideSdIcon({ defaultShape })` (default `square`). See [icon tile shape](../../modules/icon/sd-icon.md#icon-tile-shape). |
 | `retryable`   | `boolean`                                           | `false`        | Shows the retry button.                                                      |
 | `retryLabel`  | `string \| null`                                    | locale default | Retry button label.                                                          |
 | `actionLabel` | `string \| null`                                    | `undefined`    | Shows a secondary action when non-empty.                                     |
@@ -66,7 +67,7 @@ This UI component is separate from `@sdcorejs/angular/utilities/data-state`, whi
 
 ## Presentation and motion
 
-Icons use a soft circular background: 56px background / 32px icon in regular layout, 32px background / 22px icon in compact layout. Compact presentation places the icon beside left-aligned title, message and actions; regular remains centered. Loading uses primary colors; empty uses a neutral icon (`--sd-text-secondary`) on a muted background (`--sd-surface-muted`); error/forbidden use error colors. Colors resolve through the current theme.
+Icons use a soft background tile (shape from `iconShape`, square with an 8px radius by default): 56px background / 32px icon in regular layout, 32px background / 22px icon in compact layout. Compact presentation places the icon beside left-aligned title, message and actions; regular remains centered. Loading uses primary colors; empty uses a neutral icon (`--sd-text-secondary`) on a muted background (`--sd-surface-muted`); error/forbidden use error colors. Colors resolve through the current theme.
 
 Loading uses `autorenew` with a 1s linear rotation; the tile stays still. Reduced motion disables rotation. Rendering continues through `SdIcon`, preserving configured Material/Lucide icon sets. Retry uses `SdButton` with `size="sm"`, `type="light"`, `color="primary"`; the secondary action uses `type="fill"`. Both use `htmlType="button"` and emit one void event.
 

@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { Color } from '@sdcorejs/utils/models';
+import { resolveSdIconConfig, SD_ICON_CONFIGURATION, type SdIconShape } from '@sdcorejs/angular/modules/icon';
 import { DialogConfirmComponent, DialogData } from './dialog-confirm.component';
 
 function setup(data: DialogData): {
@@ -264,5 +266,63 @@ describe('DialogConfirmComponent', () => {
     // template binding; the component constructor itself guards with `data?.input`
     // etc. Pass {} to confirm the constructor branches are skipped without input/date/radio.
     expect(() => setup({} as any)).not.toThrow();
+  });
+});
+
+describe('DialogConfirmComponent icon shape', () => {
+  const TONES: Color[] = ['primary', 'success', 'info', 'warning', 'error'];
+
+  function render(
+    data: Partial<DialogData>,
+    defaultShape?: SdIconShape
+  ): { fix: ComponentFixture<DialogConfirmComponent>; icon: HTMLElement } {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [NoopAnimationsModule, DialogConfirmComponent],
+      providers: [
+        { provide: MatDialogRef, useValue: jasmine.createSpyObj('MatDialogRef', ['close']) },
+        { provide: MAT_DIALOG_DATA, useValue: { title: 'T', message: 'M', yesTitle: 'Y', noTitle: 'N', ...data } },
+        ...(defaultShape ? [{ provide: SD_ICON_CONFIGURATION, useValue: resolveSdIconConfig({ defaultShape }) }] : []),
+      ],
+    });
+    const fix = TestBed.createComponent(DialogConfirmComponent);
+    // why: the isolated test runner does not load the app-level theme, so give every tone a visible background.
+    TONES.forEach((tone, index) =>
+      (fix.nativeElement as HTMLElement).style.setProperty(`--sd-${tone}-light`, `rgb(${10 + index}, 20, 30)`)
+    );
+    fix.detectChanges();
+    return { fix, icon: (fix.nativeElement as HTMLElement).querySelector('.sd-dialog-confirm__icon') as HTMLElement };
+  }
+
+  it('resolves the option shape, then the app default, then square', () => {
+    expect(render({}).icon.getAttribute('data-icon-shape')).toBe('square');
+    expect(render({}, 'circle').icon.getAttribute('data-icon-shape')).toBe('circle');
+    expect(render({ iconShape: 'none' }, 'circle').icon.getAttribute('data-icon-shape')).toBe('none');
+  });
+
+  it('renders square with an 8px radius that the token can change', () => {
+    const { fix, icon } = render({});
+    expect(getComputedStyle(icon).borderTopLeftRadius).toBe('8px');
+    expect(getComputedStyle(icon).backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+    (fix.nativeElement as HTMLElement).style.setProperty('--sd-icon-shape-radius', '4px');
+    expect(getComputedStyle(icon).borderTopLeftRadius).toBe('4px');
+  });
+
+  it('renders circle like before and none without a background at the same size, for every tone', () => {
+    for (const tone of TONES) {
+      const square = render({ yesButtonColor: tone, iconShape: 'square' }).icon;
+      const squareBackground = getComputedStyle(square).backgroundColor;
+      const squareSize = [getComputedStyle(square).width, getComputedStyle(square).height];
+
+      const circle = render({ yesButtonColor: tone, iconShape: 'circle' }).icon;
+      expect(getComputedStyle(circle).borderTopLeftRadius).withContext(tone).toBe('50%');
+      expect(getComputedStyle(circle).backgroundColor).withContext(tone).toBe(squareBackground);
+
+      const none = render({ yesButtonColor: tone, iconShape: 'none' }).icon;
+      expect(getComputedStyle(none).backgroundColor).withContext(tone).toBe('rgba(0, 0, 0, 0)');
+      expect([getComputedStyle(none).width, getComputedStyle(none).height])
+        .withContext(tone)
+        .toEqual(squareSize);
+    }
   });
 });

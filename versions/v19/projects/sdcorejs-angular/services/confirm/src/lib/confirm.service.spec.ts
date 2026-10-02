@@ -247,4 +247,27 @@ describe('SdConfirmService', () => {
     afterClosed$.complete();
     await expectAsync(promise).toBeResolvedTo('2024-01-15T08:30:00');
   });
+
+  // ─── iconShape pass-through ────────────────────────────────────────────────
+
+  const shapeCases: { name: string; call: (s: SdConfirmService) => Promise<unknown> }[] = [
+    { name: 'confirm', call: s => s.confirm('x', { iconShape: 'circle' }) as Promise<unknown> },
+    { name: 'withInput', call: s => s.withInput('x', { iconShape: 'circle' }) },
+    { name: 'withRadio', call: s => s.withRadio('x', { items: [], valueField: 'value', displayField: 'label', iconShape: 'circle' }) },
+    { name: 'withSelect', call: s => s.withSelect('x', { items: [], valueField: 'value', displayField: 'label', iconShape: 'circle' }) },
+    { name: 'withDate', call: s => s.withDate('x', { iconShape: 'circle' }) },
+    { name: 'withDatetime', call: s => s.withDatetime('x', { iconShape: 'circle' }) },
+  ];
+
+  for (const { name, call } of shapeCases) {
+    it(`${name}() passes option.iconShape to the dialog data`, () => {
+      call(service).catch(() => undefined);
+      expect(dialogOpenSpy.calls.mostRecent().args[1].data.iconShape).toBe('circle');
+    });
+  }
+
+  it('leaves iconShape unset when the option omits it', () => {
+    (service.confirm('x') as Promise<unknown>).catch(() => undefined);
+    expect(dialogOpenSpy.calls.mostRecent().args[1].data.iconShape).toBeUndefined();
+  });
 });
