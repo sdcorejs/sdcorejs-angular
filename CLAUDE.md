@@ -109,9 +109,9 @@ git push
 
 ### Quy trình deploy npm — qua GitHub Actions (khuyến nghị)
 
-Release đang chuẩn bị: `v2.15` → `19.2.15` / `20.2.15` / `21.2.15` / `22.2.15`.
-Workflow `publish-npm.yml` pin đúng tag `v2.15`; snapshot `scripts/release-contracts/2.15.json`
-đối chiếu từng line với bản `*.2.14` cùng Angular major. Fallback từ Angular 22 sang 21
+Release đang chuẩn bị: `v3.0` → `19.3.0` / `20.3.0` / `21.3.0` / `22.3.0`.
+Workflow `publish-npm.yml` pin đúng tag `v3.0`; snapshot `scripts/release-contracts/3.0.json`
+đối chiếu từng line với bản `*.2.15` cùng Angular major qua baseline tường minh `2.15`. Fallback từ Angular 22 sang 21
 chỉ áp dụng cho release khởi đầu `22.2.5`.
 
 Workflow: `.github/workflows/publish-npm.yml`. Auth qua **npm trusted publishing (OIDC)** — không dùng `NPM_TOKEN`, `NODE_AUTH_TOKEN` hay `npm login` local. Mọi release build/verify/publish job pin exact Node `22.22.3`; publisher cài exact `npm@11.5.1`, dùng job env `NPM_CONFIG_REGISTRY: https://registry.npmjs.org` và là job duy nhất có `permissions: id-token: write`. Không truyền `registry-url` cho `setup-node` trong job publisher vì action tự tạo token giả cùng `.npmrc` chứa `_authToken`, làm guard OIDC chặn publish. Trusted publisher trên npmjs.com pin theo repo + tên file workflow, nên đổi tên `publish-npm.yml` là phải khai báo lại bên npm.

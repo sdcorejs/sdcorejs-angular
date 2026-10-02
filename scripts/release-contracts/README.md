@@ -1,5 +1,29 @@
 # Reviewed release snapshots
 
+## Release 3.0
+
+`3.0.json` explicitly binds all four targets to their same-major published
+`*.2.15` baseline. Candidates were staged by `deploy.ps1 -DryRun -PatchVersion
+3.0 -BaselineSuffix 2.15` from main
+`445d18aaa27d30328b5b3fa40ab2c1b9b05b4271`, using each locked Angular toolchain,
+Node `22.22.3` and npm `11.5.1`.
+
+The export map adds `components/image-editor`, `components/highlight` and
+`utilities/theme`, with no removed entry point. The documented form-generic
+schema and component API migration removes the legacy builder/render internals;
+Angular 19 drops 72 legacy form-generic declaration paths, while later Angular
+lines keep their bundled declaration inventory. The direct `@sdcorejs/utils`
+dependency moves from `1.1.4` to `1.2.5`, as documented in the changelog.
+Other dependency, peer and engine contracts remain unchanged for each line.
+
+The reviewed source/declaration changes also include theme tokens and modes,
+table export limits, editor and resource URL filtering, virtual scrolling,
+accessibility, file-explorer/upload integration and icon shapes. The snapshot
+pins the complete retained surface rather than waiving these checks. Tarball
+hashes, exact source binding, manifests, inventories and strict consumer
+compilation remain independent release gates. CI rebuilds from the immutable
+release tag and publishes only its verified retained artifacts.
+
 ## Release 2.7
 
 `2.7.json` compares each candidate with the published `*.2.6` package from
