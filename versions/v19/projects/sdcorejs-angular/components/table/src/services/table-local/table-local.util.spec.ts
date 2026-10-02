@@ -193,4 +193,32 @@ describe('table-local.util', () => {
     expect(result.treeSearchPredicate?.(root.data)).toBeFalse();
     expect(result.treeSearchPredicate?.(child)).toBeTrue();
   });
+
+  it('filters and sorts by fields that are not valid @sdcorejs/utils paths (NSP-5745)', () => {
+    type ImportRow = Record<string, string | number>;
+    const importColumns: SdTableOption<ImportRow>['columns'] = [
+      { field: 'Hướng ban công', title: 'Hướng ban công', type: 'string' },
+      { field: 'Số tầng', title: 'Số tầng', type: 'number' },
+    ];
+    const rows = [
+      MapToSdTableItem<ImportRow>({ id: 1, 'Hướng ban công': 'Tây', 'Số tầng': 30 }),
+      MapToSdTableItem<ImportRow>({ id: 2, 'Hướng ban công': 'Đông', 'Số tầng': 10 }),
+      MapToSdTableItem<ImportRow>({ id: 3, 'Hướng ban công': 'Tây Nam', 'Số tầng': 20 }),
+    ];
+
+    expect(matchesColumnFilter(rows[0].data, importColumns, { 'Hướng ban công': 'tây' })).toBeTrue();
+    expect(matchesColumnFilter(rows[1].data, importColumns, { 'Hướng ban công': 'tây' })).toBeFalse();
+
+    const result = filterLocalItems(rows, { type: 'local', columns: importColumns }, {
+      columnOperator: {},
+      rawColumnFilter: { 'Hướng ban công': 'tây' },
+      rawExternalFilter: {},
+      orderBy: 'Số tầng',
+      orderDirection: 'ASC',
+      pageNumber: 0,
+      pageSize: 20,
+    } as SdTableFilterRequest<ImportRow>);
+
+    expect(result.items.map(item => item.data['id'])).toEqual([3, 1]);
+  });
 });

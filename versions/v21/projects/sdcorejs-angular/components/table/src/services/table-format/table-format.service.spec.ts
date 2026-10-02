@@ -844,3 +844,52 @@ describe('TableFormatService.loadValues', () => {
     });
   }
 });
+
+// ---------------------------------------------------------------------------
+// NSP-5745: fields that @sdcorejs/utils 1.2 rejects as property paths
+// ---------------------------------------------------------------------------
+describe('TableFormatService.format — invalid-path fields (NSP-5745)', () => {
+  let service: TableFormatService;
+
+  beforeEach(() => {
+    service = buildService();
+  });
+
+  it('resolves literal and legacy-nested values instead of rejecting the whole format', async () => {
+    const raw = [{ 'Loại sản phẩm*': 'Cao tầng', 'Hướng ban công': 'Tây', ' Mã ': 'X-01', a: { 'b c': 3 } }];
+    const cols: SdTableColumn[] = [
+      { field: 'Loại sản phẩm*', title: 'Loại sản phẩm', type: 'string' },
+      { field: 'Hướng ban công', title: 'Hướng ban công', type: 'string' },
+      { field: ' Mã ', title: 'Mã', type: 'string' },
+      { field: 'a.b c', title: 'Nested', type: 'string' },
+    ];
+
+    const result = await service.format(raw, cols, {}, {});
+
+    const display = result[0].meta.display;
+    expect(display['Loại sản phẩm*'].data).toBe('Cao tầng');
+    expect(display['Hướng ban công'].data).toBe('Tây');
+    expect(display[' Mã '].data).toBe('X-01');
+    expect(display['a.b c'].data).toBe(3);
+  });
+
+  it('collects lazy-values keys from a whitespace field', async () => {
+    const raw = [{ 'Mã hướng': 'UNIT_DIRECTION_W' }];
+    const viewsSpy = jasmine.createSpy('views').and.returnValue(Promise.resolve([{ id: 'UNIT_DIRECTION_W', name: 'Tây' }]));
+    const cacheObjValues: Record<string, Record<string, string>> = {};
+    const cols: SdTableColumn[] = [
+      {
+        field: 'Mã hướng',
+        title: 'Hướng',
+        type: 'lazy-values',
+        option: { items: () => Promise.resolve([]), valueField: 'id', displayField: 'name', views: viewsSpy },
+      },
+    ];
+
+    const result = await service.format(raw, cols, {}, cacheObjValues);
+
+    expect(viewsSpy).toHaveBeenCalledWith(['UNIT_DIRECTION_W']);
+    expect(result[0].meta.display['Mã hướng']).toBeDefined();
+    expect(cacheObjValues['Mã hướng']['UNIT_DIRECTION_W']).toBeDefined();
+  });
+});

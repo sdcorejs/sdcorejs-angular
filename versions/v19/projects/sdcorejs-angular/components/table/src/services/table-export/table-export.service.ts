@@ -2,12 +2,12 @@ import { Injectable, Injector, computed, inject, signal } from '@angular/core';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdExcelColumn, SdExcelService, SdNotifyService } from '@sdcorejs/angular/services';
 import { SdExcelSheet } from '@sdcorejs/angular/services/excel';
-import { Utilities } from '@sdcorejs/utils/fns';
 import { DateUtilities } from '@sdcorejs/utils/fns';
 import { SdTableColumn } from '../../models/table-column.model';
 import { ConfiguredTableResult } from '../../models/table-option-config.model';
 import { SdTableOptionExportColumn } from '../../models/table-option-export.model';
 import { SdTableOption } from '../../models/table-option.model';
+import { resolveFieldValue } from '../field-value.util';
 import { SdTableFilterRequest } from '../table-filter/table-filter.model';
 
 export interface SdTableExportContext<T = any> {
@@ -160,13 +160,13 @@ export class TableExportService {
           const obj: any = {};
 
           const handle = async (exportColumn: SdExcelColumn) => {
-            obj[exportColumn.field] = Utilities.getNestedValue(item, exportColumn.field);
+            obj[exportColumn.field] = resolveFieldValue(item, exportColumn.field);
 
             const column = allColumns.find(e => e.field === exportColumn.field);
             const exportedColumn = allExportedColumns.find(e => e.field === exportColumn.field);
 
             if (exportedColumn?.transform) {
-              obj[exportedColumn.field] = exportedColumn.transform(Utilities.getNestedValue(item, exportedColumn.field), item);
+              obj[exportedColumn.field] = exportedColumn.transform(resolveFieldValue(item, exportedColumn.field), item);
               return;
             }
             if (!column) return;
@@ -183,7 +183,7 @@ export class TableExportService {
             }
             if (!columns.some(e => e.field === column.field)) return;
 
-            const itemValue = Utilities.getNestedValue(item, column.field as string);
+            const itemValue = resolveFieldValue(item, column.field as string);
             const fieldStr = column.field as string;
 
             if (column.transform) {

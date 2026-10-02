@@ -177,4 +177,25 @@ describe('SdGroupPipe', () => {
     // 3 groups: A-10, A-20, B-10
     expect(headers.length).toBe(3);
   });
+
+  it('groups by a field that is not a valid @sdcorejs/utils path (NSP-5745)', () => {
+    type ImportRow = Record<string, string | number>;
+    const items = [
+      MapToSdTableItem<ImportRow>({ id: 1, 'Phân khu*': 'A' }),
+      MapToSdTableItem<ImportRow>({ id: 2, 'Phân khu*': 'A' }),
+      MapToSdTableItem<ImportRow>({ id: 3, 'Phân khu*': 'B' }),
+    ];
+    const opt = {
+      type: 'local',
+      items: () => [],
+      columns: [],
+      group: { fields: ['Phân khu*'] },
+    } as unknown as SdTableOption;
+
+    const headers = pipe.transform(items, opt).filter(i => i.meta.group?.isGroupHeader);
+
+    expect(headers.length).toBe(2);
+    expect(headers.find(h => h.meta.group?.values?.['Phân khu*'] === 'A')?.meta.group?.items?.length).toBe(2);
+    expect(headers.find(h => h.meta.group?.values?.['Phân khu*'] === 'B')?.meta.group?.items?.length).toBe(1);
+  });
 });

@@ -15,8 +15,8 @@ import { CommonModule } from '@angular/common';
 import { SdTableCellDefDirective } from '../../directives/sd-table-cell-def.directive';
 import { SdTableColumn } from '../../models/table-column.model';
 import { SdTableItem } from '../../models/table-item.model';
+import { resolveFieldValue } from '../../services/field-value.util';
 import { SdTooltipDirective } from '@sdcorejs/angular/directives';
-import { Utilities } from '@sdcorejs/utils/fns';
 import { ViewComponent } from './view/view.component';
 import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
@@ -41,7 +41,7 @@ export class DesktopCellComponent {
   cellDef = input.required<Record<string, SdTableCellDefDirective>>({});
 
   value = computed(() => {
-    return Utilities.getNestedValue(this.item()?.data, this.column()?.field);
+    return resolveFieldValue(this.item()?.data, this.column()?.field);
   });
 
   key = computed(() => {

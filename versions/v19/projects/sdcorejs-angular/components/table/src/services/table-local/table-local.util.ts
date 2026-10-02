@@ -5,6 +5,7 @@ import { SdTableItem } from '../../models/table-item.model';
 import { SdTableOptionTree } from '../../models/table-option-tree.model';
 import { SdTableFilterRequest, SdTableOptionFilter } from '../table-filter/table-filter.model';
 import { matchesQuickSearch, quickSearchConditions } from '../table-filter/table-quick-search.util';
+import { resolveFieldValue } from '../field-value.util';
 import { subtreeMatches } from '../tree/tree.util';
 import { compareLocalValues } from './table-local-sort.util';
 
@@ -45,7 +46,7 @@ export const matchesColumnFilter = <T>(
   for (const column of columns) {
     const { field, type } = column;
     const filterValue: string = (rawColumnFilter[field] || '').toString().trim().toLowerCase();
-    const rawColVal = Utilities.getNestedValue(data, field);
+    const rawColVal = resolveFieldValue(data, field);
     const columnValue: string = (rawColVal || '').toString().trim().toLowerCase();
 
     if (filterValue) {
@@ -151,8 +152,8 @@ export const filterLocalItems = <T, TItem extends LocalFilterItem<T>>(
     if (column) {
       const { type, field } = column;
       items.sort((tableItemCurrent, tableItemNext) => {
-        const dataVal = Utilities.getNestedValue(resolveItemData<T>(tableItemCurrent), field);
-        const nextVal = Utilities.getNestedValue(resolveItemData<T>(tableItemNext), field);
+        const dataVal = resolveFieldValue(resolveItemData<T>(tableItemCurrent), field);
+        const nextVal = resolveFieldValue(resolveItemData<T>(tableItemNext), field);
 
         return compareLocalValues(dataVal, nextVal, type, orderDirection);
       });
