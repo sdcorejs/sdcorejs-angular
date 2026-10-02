@@ -269,6 +269,32 @@ describe('SdTable server read state', () => {
     f.destroy();
   }));
 
+  it('renders rows when a column field is not a valid @sdcorejs/utils path (NSP-5745)', fakeAsync(() => {
+    // why: import-result tables build columns from backend header codes such as "Số phòng ngủ";
+    // utils 1.2 rejects whitespace in property paths and used to turn this read into an error.
+    type ImportRow = Record<string, string | number>;
+    const f = TestBed.createComponent(SdTable<ImportRow>);
+    f.componentRef.setInput('option', {
+      type: 'server',
+      items: () => Promise.resolve({ items: [{ id: 1, 'Số phòng ngủ': '2PN', 'Loại sản phẩm*': 'Cao tầng' }], total: 1 }),
+      columns: [
+        { field: 'Số phòng ngủ', type: 'string', title: 'Số phòng ngủ' },
+        { field: 'Loại sản phẩm*', type: 'string', title: 'Loại sản phẩm' },
+      ],
+      paginate: { pageSize: 10 },
+    } as SdTableOption<ImportRow>);
+    f.detectChanges();
+    tick(250);
+    f.detectChanges();
+
+    expect(f.componentInstance.readState().status).toBe('ready');
+    expect(f.nativeElement.querySelector('sd-data-state [role="alert"]')).toBeNull();
+    const rowText = f.nativeElement.querySelector('tr.c-row')?.textContent ?? '';
+    expect(rowText).toContain('2PN');
+    expect(rowText).toContain('Cao tầng');
+    f.destroy();
+  }));
+
   describe('empty states (NSP-5551)', () => {
     const empty = () => jasmine.createSpy('loader').and.resolveTo({ items: [], total: 0 });
     const t = (key: string) => TestBed.inject(I18nService).t(key);

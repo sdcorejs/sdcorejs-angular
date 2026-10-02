@@ -1,6 +1,7 @@
 import { isSignal } from '@angular/core';
-import { FilterUtilities, Utilities } from '@sdcorejs/utils/fns';
+import { FilterUtilities } from '@sdcorejs/utils/fns';
 import type { Filter } from '@sdcorejs/utils/models';
+import { resolveFieldValue } from '../field-value.util';
 import type { SdTableOptionQuickSearch, SdTableQuickSearchFilterValue, SdTableQuickSearchValue } from './table-quick-search.model';
 
 export const hasQuickSearchValue = (value: SdTableQuickSearchFilterValue): boolean =>
@@ -75,7 +76,7 @@ export const matchesQuickSearch = <T>(
     !term ||
     !fields.length ||
     fields.some(({ field, exact }) => {
-      const raw = Utilities.getNestedValue(data, field);
+      const raw = resolveFieldValue(data, field);
       if (raw == null) return false;
       const text = String(raw).toLowerCase();
       return exact ? text === term : text.includes(term);

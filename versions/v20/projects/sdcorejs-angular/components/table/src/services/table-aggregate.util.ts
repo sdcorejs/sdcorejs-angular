@@ -10,6 +10,7 @@ import type {
 import type { SdTableColumnNormal } from '../models/table-column.model';
 import type { SdTableOptionTree } from '../models/table-option-tree.model';
 import type { SdTableOption } from '../models/table-option.model';
+import { resolveFieldValue } from './field-value.util';
 import type { TemplateRef } from '@angular/core';
 import { getChildrenFromData, getVisibleChildrenData, isLazyTree } from './tree/tree.util';
 
@@ -48,7 +49,7 @@ export function calculateAggregate<T>(
   if (!calculate) return undefined;
   validateOperation(context.column, calculate);
   if (!context.isComplete) return undefined;
-  const values = items.map(item => Utilities.getNestedValue(item, context.column.field) as unknown);
+  const values = items.map(item => resolveFieldValue(item, context.column.field) as unknown);
   if (calculate === 'COUNT') return values.filter(hasAggregateValue).length;
   if (context.column.type === 'date' || context.column.type === 'datetime') {
     // Same accepted shapes/timezone semantics as local sorting: Date, native-parsable string, epoch milliseconds.
@@ -202,7 +203,7 @@ export function buildAggregateSnapshot<T>(args: {
     const buckets = new Map<string, { values: Record<string, unknown>; items: T[] }>();
     for (const item of roots) {
       const values: Record<string, unknown> = {};
-      for (const field of option.group.fields) values[field] = Utilities.getNestedValue(item, field);
+      for (const field of option.group.fields) values[field] = resolveFieldValue(item, field);
       const key = Utilities.hash(values);
       if (!buckets.has(key)) buckets.set(key, { values, items: [] });
       buckets.get(key)!.items.push(item);

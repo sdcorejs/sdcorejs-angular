@@ -6,6 +6,7 @@ import { ArrayUtilities, NumberUtilities } from '@sdcorejs/utils/fns';
 
 import { SdTableColumn, SdTableColumnNormal } from '../../models/table-column.model';
 import { MapToSdTableItem, SdTableDisplay, SdTableItem } from '../../models/table-item.model';
+import { resolveFieldValue } from '../field-value.util';
 
 /**
  * Giá trị thô của một ô, do consumer cung cấp nên lib không ràng buộc được kiểu.
@@ -156,7 +157,7 @@ export class TableFormatService {
 
         const values = ArrayUtilities.distinct(
           items
-            .map(item => Utilities.getNestedValue<SdTableCellValue>(item.data, fieldStr))
+            .map(item => resolveFieldValue<SdTableCellValue>(item.data, fieldStr))
             .filter(val => val?.toString())
             .reduce<string[]>((current, next) => [...current, ...(Array.isArray(next) ? next : [next])], [])
             .filter(val => !Object.keys(cacheObjValues[fieldStr]).includes(val))
@@ -182,7 +183,15 @@ export class TableFormatService {
       // Format dữ liệu cho từng hàng
       for (const item of items) {
         const rowData = item.data;
-        const value = Utilities.getNestedValue<SdTableCellValue>(rowData, fieldStr);
+        // why: đọc giá trị cũng thuộc phạm vi một ô (NSP-5745) — lỗi bất ngờ khi đọc field chỉ làm ô
+        // hiện rỗng, không được biến lượt đọc thành công thành "Không thể tải dữ liệu".
+        let value: SdTableCellValue;
+        try {
+          value = resolveFieldValue<SdTableCellValue>(rowData, fieldStr);
+        } catch (error) {
+          report(error);
+          value = undefined;
+        }
         item.meta.display[fieldStr] = {
           badge: undefined,
           cellStyle: column.align === 'right' ? { 'text-align': 'right!important' } : undefined,

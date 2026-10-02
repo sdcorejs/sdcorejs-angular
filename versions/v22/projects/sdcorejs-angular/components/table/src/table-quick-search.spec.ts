@@ -132,6 +132,23 @@ describe('Quick search request and local filtering', () => {
       initialQuickSearchValue({ filters: [{ ...quickOption().filters[0], default: 0 }] } as any, cached).filters['tenantId']
     ).toBeNull();
   });
+
+  it('finds a keyword in fields that are not valid @sdcorejs/utils paths (NSP-5745)', () => {
+    type ImportRow = Record<string, string | number>;
+    const rows: ImportRow[] = [
+      { id: 1, 'Mã căn': 'A-01', 'Hướng ban công': 'Tây' },
+      { id: 2, 'Mã căn': 'B-02', 'Hướng ban công': 'Đông' },
+    ];
+    const option = {
+      type: 'local' as const,
+      columns: [{ field: 'Mã căn', title: 'Mã căn', type: 'string' as const }],
+      filter: { quickSearch: { containFields: ['Hướng ban công'], equalFields: ['Mã căn'] } },
+    };
+    const search = (term: string) => filterLocalItems(rows, option as never, request(term) as unknown as SdTableFilterRequest<ImportRow>);
+
+    expect(search('tây').items.map(row => row['id'])).toEqual([1]);
+    expect(search('b-02').items.map(row => row['id'])).toEqual([2]);
+  });
 });
 
 @Component({
