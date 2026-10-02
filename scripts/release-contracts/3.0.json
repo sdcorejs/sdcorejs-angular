@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "suffix": "3.0",
+  "baselineSuffix": "2.15",
+  "reviewedSourceSha": "445d18aaa27d30328b5b3fa40ab2c1b9b05b4271",
+  "artifactSource": "Local 3.0 packages staged by canonical deploy.ps1 -DryRun -BaselineSuffix 2.15 from main 445d18aaa27d30328b5b3fa40ab2c1b9b05b4271, using the locked per-major toolchains on exact Node 22.22.3 and npm 11.5.1. Compared with the exact same-major published npm 2.15 tarballs. Reviewed changes: image-editor, highlight and utilities/theme entry points; documented form-generic schema/API replacement and legacy internal implementation removals; theme modes/tokens, table export limits, editor/resource URL hardening, virtual scrolling, accessibility and icon shapes. No existing export-map entry is removed. Direct @sdcorejs/utils advances from 1.1.4 to 1.2.5 as documented in the release changelog; all other runtime dependencies, peer ranges and engines retain their same-line contracts. v19 removes 72 legacy form-generic declaration paths; later majors retain their bundled declaration inventory. Tarball hashes, source binding, manifest/peer/engine/assets checks and strict consumers remain independent gates. CI rebuilds once from the immutable release tag.",
+  "targets": {
+    "19.3.0": {
+      "version": "19.3.0",
+      "baselineVersion": "19.2.15",
+      "dependencies": {
+        "baseline": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f",
+        "candidate": "f77acc1c41d5a64b1d9ae09e38d3de06313265c7d0be887019e46cbbc2e1d733"
+      },
+      "exports": {
+        "baseline": "12cc1dff513c11e62cf60fb81bb166b4c149baf1eb8d46f4572c186e1e292cc0",
+        "candidate": "9063c1ba544ac5873869e6266b4ef00a54fbc15802b2362f0c2e123611060502"
+      },
+      "files": {
+        "baseline": "4f2d775865c6c5fb8bea96a5d5086c83ffdeac711f29d1600996c128b9285c84",
+        "candidate": "0af9b1d1ffd78de132a8b9156e9f03266ba1608e6b0ff4726b51fd4c4efce044"
+      },
+      "publicSurface": {
+        "baseline": "814a86d18732071ff2038eb07f8c05560d1c335dbd71efee1de70a4cae8ddc0d",
+        "candidate": "169141b8b71d7072217b281612923321cc9894a480e3c4ff1b4508a0ee135b37"
+      }
+    },
+    "20.3.0": {
+      "version": "20.3.0",
+      "baselineVersion": "20.2.15",
+      "dependencies": {
+        "baseline": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f",
+        "candidate": "f77acc1c41d5a64b1d9ae09e38d3de06313265c7d0be887019e46cbbc2e1d733"
+      },
+      "exports": {
+        "baseline": "12cc1dff513c11e62cf60fb81bb166b4c149baf1eb8d46f4572c186e1e292cc0",
+        "candidate": "9063c1ba544ac5873869e6266b4ef00a54fbc15802b2362f0c2e123611060502"
+      },
+      "files": {
+        "baseline": "66e93be3f293afadf8b4ab33589bebab52f0aa015193eb934c8a2ad6e0b4b7e2",
+        "candidate": "3e0f5a0c221fec670aa7e34f3e3e2791dc258a090a3de6e3dd55c4441ba8915f"
+      },
+      "publicSurface": {
+        "baseline": "89304fc7b664a9d900481594481dbb69abf6f460bdecf9ea123b07b1740d67dc",
+        "candidate": "edfbccc02df9c6238fc8399bcdce302cdced52f54f833e43fca758eaf5a1128b"
+      }
+    },
+    "21.3.0": {
+      "version": "21.3.0",
+      "baselineVersion": "21.2.15",
+      "dependencies": {
+        "baseline": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f",
+        "candidate": "f77acc1c41d5a64b1d9ae09e38d3de06313265c7d0be887019e46cbbc2e1d733"
+      },
+      "exports": {
+        "baseline": "aeee56b3e807faa54510988e99faef10ae683cda45c58a5839c640e1a48fca98",
+        "candidate": "4ae9f4b2506cb6eabf9ce13afe13067f4d1ba0c6701d8be87dad92d8e460d4c9"
+      },
+      "files": {
+        "baseline": "aad258ab5fdd885aaf99e65e0fd3c0206ae1e9dd20ec0fa07e2a7ea2fc3a535d",
+        "candidate": "bc161cd97850f451818b893bf49dbcd718b375d016c5e7e2dcefed8337cd3b79"
+      },
+      "publicSurface": {
+        "baseline": "4cd9819619dd3590111448a0ff310dd27388cbbd4eb2fadfcb468d51da0b26bf",
+        "candidate": "abe43267c8ed87caa740dd980b9d25ea1640417f485eb868d31f5d5a5bc9c2d8"
+      }
+    },
+    "22.3.0": {
+      "version": "22.3.0",
+      "baselineVersion": "22.2.15",
+      "dependencies": {
+        "baseline": "63fd0bf472e394c7165e8da02cf85a945dc0cce3a7646148d2fda281b545976f",
+        "candidate": "f77acc1c41d5a64b1d9ae09e38d3de06313265c7d0be887019e46cbbc2e1d733"
+      },
+      "exports": {
+        "baseline": "aeee56b3e807faa54510988e99faef10ae683cda45c58a5839c640e1a48fca98",
+        "candidate": "4ae9f4b2506cb6eabf9ce13afe13067f4d1ba0c6701d8be87dad92d8e460d4c9"
+      },
+      "files": {
+        "baseline": "aad258ab5fdd885aaf99e65e0fd3c0206ae1e9dd20ec0fa07e2a7ea2fc3a535d",
+        "candidate": "bc161cd97850f451818b893bf49dbcd718b375d016c5e7e2dcefed8337cd3b79"
+      },
+      "publicSurface": {
+        "baseline": "dddfd107dca3a0cc57a228c1a2cfddd2684f18de066f74a39aa9401f441bdba5",
+        "candidate": "12c6d5e373eb146cf7d44591edf72a383374e2cb5988ff3209f87f2951ffbab0"
+      }
+    }
+  }
+}

@@ -419,13 +419,13 @@ test('release snapshot fingerprints ignore object insertion order but retain all
 });
 
 test('repository snapshots bind reviewed releases to exact baselines without authorizing future releases', () => {
-  for (const suffix of ['2.5', '2.6', '2.7', '2.8', '2.9', '2.10', '2.11', '2.12', '2.13', '2.14', '2.15']) {
+  for (const suffix of ['2.5', '2.6', '2.7', '2.8', '2.9', '2.10', '2.11', '2.12', '2.13', '2.14', '2.15', '3.0']) {
     const contract = loadReleaseContract(suffix);
-    for (const target of releaseTargets(suffix)) {
+    for (const target of releaseTargets(suffix, { baselineSuffix: contract.baselineSuffix })) {
       const snapshot = contract.targets[target.version];
       assert.equal(snapshot.version, target.version);
       assert.equal(snapshot.baselineVersion, target.baselineVersion);
-      for (const section of ['exports', 'files', 'publicSurface', ...(['2.9', '2.10', '2.11', '2.12', '2.13', '2.14', '2.15'].includes(suffix) ? ['dependencies'] : [])]) {
+      for (const section of ['exports', 'files', 'publicSurface', ...(['2.9', '2.10', '2.11', '2.12', '2.13', '2.14', '2.15', '3.0'].includes(suffix) ? ['dependencies'] : [])]) {
         for (const side of ['baseline', 'candidate']) assert.match(snapshot[section][side], /^[a-f0-9]{64}$/u);
       }
     }

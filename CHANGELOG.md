@@ -6,7 +6,9 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
-Planned release suffix `3.0` targets `19.3.0`, `20.3.0`, `21.3.0`, and `22.3.0`, validated against `*.2.15`.
+## [3.0] - 2026-10-02
+
+Release suffix `3.0` targets `19.3.0`, `20.3.0`, `21.3.0`, and `22.3.0`, validated against `*.2.15`.
 
 ### Changed (BREAKING for consumers)
 - Table: `export.max` is now enforced for Excel and CSV export (it was declared but never read). The table total is checked before any data is fetched, and the `{ items, total }` totals and fetched row count are checked again while exporting; above the limit no file is written and a warning toast shows `core.component.table.export-max-exceeded`. Only a positive finite number is a limit — unset, `0`, negative or `NaN` stays unlimited; `export.type: 'custom'` is unaffected.
