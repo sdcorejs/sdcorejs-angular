@@ -4,8 +4,8 @@ import { SHOWCASE_EXAMPLE_SOURCES } from '../generated/example-sources.generated
 
 const EXPECTED_CATEGORY_COUNTS = {
   guides: 4,
-  components: 39,
-  forms: 22,
+  components: 40,
+  forms: 23,
   directives: 6,
   services: 11,
   'modules-integrations': 10,
@@ -17,15 +17,15 @@ describe('documentation registry', () => {
     const publishedIds = DOC_PAGES.map(page => page.publishedDocId).filter(id => id !== null);
     const localOnlyPages = DOC_PAGES.filter(page => page.publishedDocId === null);
 
-    expect(DOC_PAGES).toHaveSize(103);
-    expect(new Set(publishedIds).size).toBe(103);
+    expect(DOC_PAGES).toHaveSize(105);
+    expect(new Set(publishedIds).size).toBe(105);
     expect(DOC_PAGES.some(page => page.category === 'components' && page.slug === 'chart')).toBeFalse();
     expect(localOnlyPages).toHaveSize(0);
     expect(DOC_CATEGORIES).toHaveSize(7);
     for (const category of DOC_CATEGORIES) {
       expect(getDocPagesByCategory(category)).withContext(category).toHaveSize(EXPECTED_CATEGORY_COUNTS[category]);
     }
-    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(396);
+    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(403);
   });
 
   it('uses unique stable page ids and category/slug pairs', () => {
@@ -47,7 +47,8 @@ describe('documentation registry', () => {
     const exampleIds = DOC_PAGES.flatMap(page => page.examples.map(example => example.id));
 
     expect(new Set(exampleIds).size).toBe(exampleIds.length);
-    expect(exampleIds).toHaveSize(396);
+    expect(exampleIds).toHaveSize(403);
+    expect(exampleIds).toContain('forms-segmented-example-types');
     const switchSections = findDocPage('forms', 'switch')?.examples.map(example => example.sectionId);
     expect(switchSections).toContain('example-kich-thuoc');
     expect(switchSections).toContain('example-ben-trong-bang');
@@ -66,7 +67,7 @@ describe('documentation registry', () => {
   });
 
   it('derives navigation groups and canonical/legacy lookup helpers from the registry', () => {
-    expect(DOC_NAV_GROUPS.map(group => group.pages.length)).toEqual([4, 39, 22, 6, 11, 10, 11]);
+    expect(DOC_NAV_GROUPS.map(group => group.pages.length)).toEqual([4, 40, 23, 6, 11, 10, 11]);
     expect(findDocPage('components', 'button')?.title).toBe('Button');
     expect(findDocPage('directives', 'tooltip')?.publishedDocId).toBe('directives/src/sd-tooltip');
     expect(findDocPage('components', 'generic')?.title).toBe('Form Generic');
@@ -86,6 +87,11 @@ describe('documentation registry', () => {
     expect(findDocPage('components', 'audit-diff')?.demoSectionCount).toBe(4);
     expect(findDocPage('components', 'breadcrumb')?.demoSectionCount).toBe(3);
     expect(findDocPage('components', 'data-state')?.demoSectionCount).toBe(8);
+    expect(findDocPage('components', 'kanban')?.selector).toBe('sd-kanban');
+    expect(findDocPage('components', 'kanban')?.demoSectionCount).toBe(3);
+    expect(findDocPage('forms', 'segmented')?.selector).toBe('sd-segmented');
+    expect(findDocPage('forms', 'segmented')?.title).toBe('Segmented control');
+    expect(findDocPage('forms', 'segmented')?.demoSectionCount).toBe(4);
     expect(findDocPage('pipes-utilities', 'read-state')?.publishedDocId).toBe('utilities/read-state/sd-read-state');
     expect(findDocPage('pipes-utilities', 'read-state')?.importPath).toBe('@sdcorejs/angular/utilities/read-state');
     expect(findDocPage('services', 'missing')).toBeUndefined();

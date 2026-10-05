@@ -6,6 +6,11 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+### Added
+
+- `sd-kanban` / `SdKanban<T>`: generic status columns and immutable domain mappings, card/header/action templates, search/filter/count/collapse, CDK dragging with movement-menu and keyboard alternatives, and consumer-confirmed async moves with pending serialization and stale-response protection. Columns are tinted with their semantic color, cards are compact and title-first with quiet top-end controls, and pending/rejected/failed moves are shown on the affected card (board-level alert only as a fallback); columns keep scrolling horizontally on mobile.
+- Segmented control — `sd-segmented` / `SdSegmentedComponent` (`@sdcorejs/angular/forms/segmented`): single or multiple choices, `type` (`light` default, `fill`, `outline`), semantic colors/sizes, prefix/suffix icons and item templates (`sdSegmentedItemTemplate`), accessible keyboard navigation that scrolls only the control's own track to reveal the focused choice, and existing Core UI form/model/`sdChange` integration. Consumer-owned content remains independent of the choice control.
+
 ## [3.0] - 2026-10-02
 
 Release suffix `3.0` targets `19.3.0`, `20.3.0`, `21.3.0`, and `22.3.0`, validated against `*.2.15`.

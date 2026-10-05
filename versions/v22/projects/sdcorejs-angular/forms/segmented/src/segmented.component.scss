@@ -1,0 +1,139 @@
+:host {
+  display: inline-block;
+  max-width: 100%;
+  min-width: 0;
+  --sd-segmented-color: var(--sd-primary);
+  --sd-segmented-foreground: var(--sd-primary-dark);
+  --sd-segmented-background: var(--sd-primary-light);
+  --sd-segmented-contrast: var(--sd-primary-contrast);
+  font-family: inherit;
+}
+@each $color in primary, secondary, info, success, warning, error {
+  :host([data-color='#{$color}']) {
+    --sd-segmented-color: var(--sd-#{$color});
+    --sd-segmented-foreground: var(--sd-#{$color}-dark);
+    --sd-segmented-background: var(--sd-#{$color}-light);
+    --sd-segmented-contrast: var(--sd-#{$color}-contrast);
+  }
+}
+.sd-segmented {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow-x: auto;
+  // why: block 4px holds the 2px outline + 2px offset ring. Inline gets 1px more because at the native
+  // scroll limit (notably RTL) Chrome rounds the scroll extent to whole pixels while choice edges stay
+  // fractional, which clipped the end choice's ring by a sub-pixel amount with exactly 4px.
+  padding: 4px 5px;
+  // why: transparent keeps the track edge visible in forced colours without a visual border in light/fill.
+  border: 1px solid transparent;
+  border-radius: var(--sd-radius-8, 8px);
+  background: var(--sd-surface-muted);
+  margin-top: 4px;
+}
+:host([data-type='outline']) .sd-segmented {
+  border-color: var(--sd-border);
+  background: transparent;
+}
+// why: the connector only reports `invalid` after touch/dirty; the message below stays the primary cue.
+.sd-segmented[aria-invalid='true'] {
+  border-color: var(--sd-border-danger, var(--sd-error));
+}
+.sd-segmented--vertical {
+  flex-direction: column;
+}
+.sd-segmented--stretch .sd-segmented__item {
+  flex: 1 0 auto;
+}
+.sd-segmented__item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  min-height: 36px;
+  padding: 6px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--sd-radius-4, 4px);
+  background: transparent;
+  color: var(--sd-text);
+  font: inherit;
+  font-size: var(--sd-font-size-14, 14px);
+  line-height: 1.4;
+  cursor: pointer;
+  white-space: nowrap;
+  &:hover:not(:disabled) {
+    // why: a text-derived overlay works on the muted track and the outline (surface) track in both modes,
+    // and never looks like the raised `light` selection.
+    background: color-mix(in srgb, var(--sd-text) 6%, transparent);
+  }
+  &:focus-visible {
+    // why: an outward ring sits on the neutral (light/fill) or transparent (outline) track, a pair the theme
+    // test keeps >= 3:1. An inset ring disappeared inside a `fill` selection of the same hue. Width 2px +
+    // offset 2px fits the track's 4px block / 5px inline padding and 4px gap, so the scrolling track does not clip it.
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: var(--sd-focus-ring-offset, 2px);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+  &[aria-disabled='true'] {
+    cursor: default;
+  }
+}
+.sd-segmented__item--selected,
+.sd-segmented__item--selected:hover:not(:disabled) {
+  color: var(--sd-segmented-foreground);
+  background: var(--sd-surface);
+  box-shadow: var(--sd-shadow-xs);
+  font-weight: var(--sd-font-weight-semibold, 600);
+}
+:host([data-type='fill']) .sd-segmented__item--selected,
+:host([data-type='fill']) .sd-segmented__item--selected:hover:not(:disabled) {
+  color: var(--sd-segmented-contrast);
+  background: var(--sd-segmented-color);
+  box-shadow: none;
+}
+:host([data-type='outline']) .sd-segmented__item--selected,
+:host([data-type='outline']) .sd-segmented__item--selected:hover:not(:disabled) {
+  color: var(--sd-segmented-foreground);
+  background: var(--sd-segmented-background);
+  border-color: var(--sd-segmented-color);
+  box-shadow: none;
+}
+:host([data-size='sm']) .sd-segmented__item {
+  min-height: 28px;
+  padding: 4px 10px;
+}
+:host([data-size='lg']) .sd-segmented__item {
+  min-height: 44px;
+  padding: 8px 18px;
+  font-size: var(--sd-font-size-16, 16px);
+}
+.sd-segmented__state,
+.sd-segmented__error {
+  margin: 4px 0 0;
+  font-size: var(--sd-font-size-12, 12px);
+}
+.sd-segmented__state {
+  color: var(--sd-text-secondary);
+}
+.sd-segmented__error {
+  color: var(--sd-error);
+}
+@media (pointer: coarse) {
+  .sd-segmented__item,
+  :host([data-size='sm']) .sd-segmented__item {
+    min-height: 40px;
+  }
+}
+@media (forced-colors: active) {
+  .sd-segmented__item--selected {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}

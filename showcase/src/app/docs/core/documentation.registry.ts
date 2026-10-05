@@ -116,6 +116,19 @@ function definePublishedDocPage(seed: PublishedDocPageSeed): DocPageDefinition {
 const COMPONENT_PAGES = [
   defineDocPage({
     category: 'components',
+    slug: 'kanban',
+    title: 'Kanban',
+    description: 'Generic ordered board with typed templates, search and consumer-confirmed asynchronous moves.',
+    selector: 'sd-kanban',
+    importPath: '@sdcorejs/angular/components/kanban',
+    publishedDocId: 'components/kanban/sd-kanban',
+    keywords: ['kanban', 'board', 'drag', 'status', 'reorder', 'async'],
+    status: 'stable',
+    demoSectionCount: 3,
+    loadComponent: () => import('../../pages/components/kanban/kanban-demo.component').then(m => m.KanbanDemoComponent),
+  }),
+  defineDocPage({
+    category: 'components',
     slug: 'anchor',
     title: 'Anchor',
     description: 'Điều hướng scroll-spy dạng cột và tự đánh dấu mục tương ứng khi cuộn.',
@@ -248,7 +261,8 @@ const COMPONENT_PAGES = [
     category: 'components',
     slug: 'file-explorer',
     title: 'File Explorer',
-    description: 'Trình duyệt tệp kiểu Google Drive: cây thư mục, list/grid, tìm kiếm, xem trước, tải lên/tải xuống và hàng đợi truyền tệp.',
+    description:
+      'Trình duyệt tệp kiểu Google Drive: cây thư mục, list/grid, tìm kiếm, xem trước, tải lên/tải xuống và hàng đợi truyền tệp.',
     selector: 'sd-file-explorer',
     importPath: '@sdcorejs/angular/components/file-explorer',
     publishedDocId: 'components/file-explorer/sd-file-explorer',
@@ -290,7 +304,8 @@ const COMPONENT_PAGES = [
     category: 'components',
     slug: 'image-editor',
     title: 'Image Editor',
-    description: 'Cắt ảnh tự do hoặc theo tỷ lệ, xoay 90°, lật, resize theo pixel, zoom/pan, undo/redo và chọn định dạng; trả Blob/File thật khi Apply.',
+    description:
+      'Cắt ảnh tự do hoặc theo tỷ lệ, xoay 90°, lật, resize theo pixel, zoom/pan, undo/redo và chọn định dạng; trả Blob/File thật khi Apply.',
     selector: 'sd-image-editor',
     importPath: '@sdcorejs/angular/components/image-editor',
     publishedDocId: 'components/image-editor/sd-image-editor',
@@ -599,9 +614,9 @@ const COMPONENT_PAGES = [
     selector: 'sd-table',
     importPath: '@sdcorejs/angular/components/table',
     publishedDocId: 'components/table/sd-table',
-      keywords: ['data grid', 'pagination', 'filter', 'quick search', 'selection', 'server side', 'command header', 'aggregate', 'subtotal'],
+    keywords: ['data grid', 'pagination', 'filter', 'quick search', 'selection', 'server side', 'command header', 'aggregate', 'subtotal'],
     status: 'stable',
-      demoSectionCount: 28,
+    demoSectionCount: 28,
     loadComponent: () => import('../../pages/components/table/table-demo.component').then(m => m.TableDemoComponent),
   }),
   defineDocPage({
@@ -646,6 +661,19 @@ const COMPONENT_PAGES = [
 ] as const;
 
 const FORM_PAGES = [
+  defineDocPage({
+    category: 'forms',
+    slug: 'segmented',
+    title: 'Segmented control',
+    description: 'Compact single or multiple choice control with icons, templates, keyboard and form integration.',
+    selector: 'sd-segmented',
+    importPath: '@sdcorejs/angular/forms/segmented',
+    publishedDocId: 'forms/segmented/sd-segmented',
+    keywords: ['segmented', 'segment', 'choice', 'toggle', 'single', 'multiple'],
+    status: 'stable',
+    demoSectionCount: 4,
+    loadComponent: () => import('../../pages/forms/segmented/segmented-demo.component').then(m => m.SegmentedDemoComponent),
+  }),
   defineDocPage({
     category: 'forms',
     slug: 'autocomplete',

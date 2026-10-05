@@ -1,0 +1,63 @@
+@let _label = label();
+@let _option = option();
+@let _state = state();
+@let _error = errorMessage();
+@let _template = itemTemplate();
+@if (_label) {
+  <sd-label [label]="_label" [labelId]="id + '-label'" [required]="required()" />
+}
+<div
+  class="sd-segmented"
+  [class.sd-segmented--vertical]="_option.orientation === 'vertical'"
+  [class.sd-segmented--stretch]="_option.stretch"
+  [attr.role]="multiple() ? 'group' : 'radiogroup'"
+  [attr.aria-label]="_label ? null : groupLabel()"
+  [attr.aria-labelledby]="_label ? id + '-label' : null"
+  [attr.aria-required]="!multiple() ? required() : null"
+  [attr.aria-invalid]="_state.invalid || dataInvalid()"
+  [attr.aria-describedby]="dataInvalid() ? id + '-config-error' : _error ? id + '-error' : null"
+  [attr.aria-busy]="loading()"
+  [attr.data-autoid]="autoId() ? 'forms-segmented-' + autoId() : null"
+  (focusout)="blur($event)">
+  @for (item of dataInvalid() ? [] : items(); track item.value; let index = $index) {
+    <button
+      type="button"
+      class="sd-segmented__item"
+      [class.sd-segmented__item--selected]="selected(item)"
+      [attr.role]="multiple() ? 'checkbox' : 'radio'"
+      [attr.aria-checked]="selected(item)"
+      [attr.aria-label]="item.label"
+      [attr.aria-disabled]="blocked() || !!item.disabled"
+      [disabled]="disabled() || _state.disabled || loading() || dataInvalid() || !!item.disabled"
+      [attr.tabindex]="tabValue() === item.value ? 0 : -1"
+      [attr.data-segmented-index]="index"
+      [attr.data-autoid]="autoId() ? 'forms-segmented-' + autoId() + '-item-' + index : null"
+      (focus)="focused.set(item.value)"
+      (click)="choose(item)"
+      (keydown)="keydown($event, item)">
+      @if (_template) {
+        <ng-container [ngTemplateOutlet]="_template.template" [ngTemplateOutletContext]="context(item)" />
+      } @else {
+        @if (item.prefixIcon) {
+          <sd-icon [name]="item.prefixIcon" [fontSet]="item.fontSet" size="sm" />
+        }
+        @if (!item.iconOnly) {
+          <span>{{ item.label }}</span>
+        }
+        @if (item.suffixIcon) {
+          <sd-icon [name]="item.suffixIcon" [fontSet]="item.fontSet" size="sm" />
+        }
+      }
+    </button>
+  }
+</div>
+@if (loading()) {
+  <p class="sd-segmented__state" role="status">{{ 'core.component.data-state.loading.title' | sdTranslate }}</p>
+} @else if (dataInvalid()) {
+  <p class="sd-segmented__error" [id]="id + '-config-error'" role="alert">{{ 'core.form.segmented.invalid-items' | sdTranslate }}</p>
+} @else if (!items().length) {
+  <p class="sd-segmented__state" role="status">{{ 'core.component.data-state.empty.title' | sdTranslate }}</p>
+}
+@if (_error) {
+  <p class="sd-segmented__error" [id]="id + '-error'" role="alert">{{ _error }}</p>
+}

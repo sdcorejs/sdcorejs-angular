@@ -103,6 +103,9 @@ export type ShowcaseExampleSourceKey =
   | "components/job-progress/example-determinate-bar"
   | "components/job-progress/example-indeterminate-compact"
   | "components/job-progress/example-registry-binding"
+  | "components/kanban/example-async-confirmation"
+  | "components/kanban/example-cms-mapping"
+  | "components/kanban/example-local-board"
   | "components/mini-editor/example-dinh-dang-dau-ra-html"
   | "components/mini-editor/example-dinh-dang-dau-ra-markdown"
   | "components/modal/example-basic-modal-footer-right"
@@ -300,6 +303,10 @@ export type ShowcaseExampleSourceKey =
   | "forms/radio/example-hien-thi"
   | "forms/radio/example-trang-thai"
   | "forms/radio/example-validator"
+  | "forms/segmented/example-form-and-states"
+  | "forms/segmented/example-multiple-and-templates"
+  | "forms/segmented/example-single-choice"
+  | "forms/segmented/example-types"
   | "forms/select/example-api-footer-action"
   | "forms/select/example-chinh-sua-noi-tuyen"
   | "forms/select/example-chon-nhieu-voi-dong-tat-ca"
@@ -1114,6 +1121,27 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-registry-binding",
     title: "Registry binding",
     description: "Existing “Registry binding” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/kanban/example-local-board",
+    pageKey: "components/kanban",
+    sectionId: "example-local-board",
+    title: "Local board",
+    description: "Drag by the handle, use the movement menu, or focus the handle and press Alt plus an arrow key. Search preserves hidden cards and counts. Card metadata comes from the card template.",
+  },
+  {
+    sourceKey: "components/kanban/example-cms-mapping",
+    pageKey: "components/kanban",
+    sectionId: "example-cms-mapping",
+    title: "CMS mapping",
+    description: "Nested CMS fields map through option callbacks. Readonly prevents moves while search and column collapse remain available.",
+  },
+  {
+    sourceKey: "components/kanban/example-async-confirmation",
+    pageKey: "components/kanban",
+    sectionId: "example-async-confirmation",
+    title: "Async confirmation",
+    description: "Start a move, then confirm, reject, or fail it. The card stays in its previous column until confirmation. Refreshing data cancels the pending proposal.",
   },
   {
     sourceKey: "components/mini-editor/example-dinh-dang-dau-ra-html",
@@ -2493,6 +2521,34 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-chinh-sua-noi-tuyen",
     title: "Chỉnh sửa nội tuyến",
     description: "Radio vẫn chọn được; khi disabled thì hiện text tĩnh (viewed=true).",
+  },
+  {
+    sourceKey: "forms/segmented/example-single-choice",
+    pageKey: "forms/segmented",
+    sectionId: "example-single-choice",
+    title: "Single choice",
+    description: "Use arrow keys to choose a mode. Changing the choice updates the content owned by this demo.",
+  },
+  {
+    sourceKey: "forms/segmented/example-types",
+    pageKey: "forms/segmented",
+    sectionId: "example-types",
+    title: "Types",
+    description: "Light is the default: a neutral track with a raised choice. Fill uses the solid colour and outline a border and tint. Behavior is identical for every type.",
+  },
+  {
+    sourceKey: "forms/segmented/example-multiple-and-templates",
+    pageKey: "forms/segmented",
+    sectionId: "example-multiple-and-templates",
+    title: "Multiple and templates",
+    description: "Arrows move focus; Space or Enter toggles a choice. Custom content retains the accessible label.",
+  },
+  {
+    sourceKey: "forms/segmented/example-form-and-states",
+    pageKey: "forms/segmented",
+    sectionId: "example-form-and-states",
+    title: "Form and states",
+    description: "A required choice shows an error after the form is touched. Readonly keeps the form value; loading blocks changes.",
   },
   {
     sourceKey: "forms/select/example-co-ban",
