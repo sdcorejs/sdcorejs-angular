@@ -16,6 +16,7 @@ export * from '@sdcorejs/angular/forms/select';
 export * from '@sdcorejs/angular/forms/autocomplete';
 export * from '@sdcorejs/angular/forms/switch';
 export * from '@sdcorejs/angular/forms/radio';
+export * from '@sdcorejs/angular/forms/segmented';
 export * from '@sdcorejs/angular/forms/textarea';
 export * from '@sdcorejs/angular/forms/chip';
 export * from '@sdcorejs/angular/forms/chip-calendar';

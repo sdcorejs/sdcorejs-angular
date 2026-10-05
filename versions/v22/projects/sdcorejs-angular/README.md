@@ -91,9 +91,9 @@ Replace the timer with your typed service call and reset `saving` in a `finally`
 
 | Area              | Representative APIs                                                                                                             |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| UI components     | Navigation/data state, PDF preview, job progress, audit diff, modals, drawers, tabs, editors, and document tooling              |
+| UI components     | Navigation/data state, kanban boards, PDF preview, job progress, audit diff, modals, drawers, tabs, editors, and document tooling |
 | Data and workflow | Local/server tables, entity/tree pickers, query builders, unsaved-change guards, background tasks, upload, and Excel import     |
-| Form controls     | Text/mask, number, time/time range, date/date range, datetime, select, autocomplete, checkbox, radio, switch, chip, and color   |
+| Form controls     | Text/mask, number, time/time range, date/date range, datetime, select, autocomplete, checkbox, radio, segmented choices, switch, chip, and color |
 | Services          | Typed API/retry/cancel, ref-counted loading, graph-safe persistence/cache/storage, viewport signals, notifications, and exports |
 | Portal modules    | Auth, Keycloak, permission, layout, and icon modules                                                                            |
 | Localization      | Built-in `vi`, `en`, `ja`, `ko`, and `zh` catalogs, plus a synchronous custom-catalog provider                                  |

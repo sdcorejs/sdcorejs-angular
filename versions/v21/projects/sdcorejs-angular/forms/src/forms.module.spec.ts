@@ -23,6 +23,7 @@ import { SdInputColor } from '@sdcorejs/angular/forms/input-color';
 import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import { SdRadio } from '@sdcorejs/angular/forms/radio';
+import { SdSegmentedComponent, SdSegmentedItemTemplateDirective } from '@sdcorejs/angular/forms/segmented';
 import { SdSelect, SdSelectFooterActionDirective } from '@sdcorejs/angular/forms/select';
 import { SdSwitch } from '@sdcorejs/angular/forms/switch';
 import { SdTextarea } from '@sdcorejs/angular/forms/textarea';
@@ -57,6 +58,7 @@ import { SdFormsModule } from './forms.module';
     <sd-autocomplete></sd-autocomplete>
     <sd-switch></sd-switch>
     <sd-radio valueField="id" displayField="name"></sd-radio>
+    <sd-segmented></sd-segmented>
     <sd-textarea></sd-textarea>
     <sd-chip></sd-chip>
     <sd-chip-calendar></sd-chip-calendar>
@@ -88,6 +90,7 @@ const CONTROLS: Type<unknown>[] = [
   SdAutocomplete,
   SdSwitch,
   SdRadio,
+  SdSegmentedComponent,
   SdTextarea,
   SdChip,
   SdChipCalendar,
@@ -104,6 +107,7 @@ const DIRECTIVES: Type<unknown>[] = [
   SdEntityPickerRowTemplateDirective,
   SdEntityPickerDetailTemplateDirective,
   SdTreeSelectNodeTemplateDirective,
+  SdSegmentedItemTemplateDirective,
 ];
 
 function moduleExports(): unknown[] {

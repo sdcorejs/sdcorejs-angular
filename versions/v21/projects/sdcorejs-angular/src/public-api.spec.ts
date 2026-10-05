@@ -339,6 +339,10 @@ describe('sd-angular public API', () => {
     // One probe per top-level barrel listed in public-api.ts, so a dropped `export *` is caught.
     const probes = [
       'SdButton', // components
+      'SdKanban',
+      'SdKanbanCardTemplateDirective',
+      'SdSegmentedComponent',
+      'SdSegmentedItemTemplateDirective',
       'SdInput', // forms
       'SdApiService', // services
       'SdNotifyService', // services

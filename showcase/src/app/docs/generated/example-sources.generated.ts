@@ -5028,6 +5028,341 @@ export class JobProgressDemoComponent {
   margin-top: 8px;
 }`,
   },
+  "components/kanban": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdAvatar } from '@sdcorejs/angular/components/avatar';
+import { SdBadge } from '@sdcorejs/angular/components/badge';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import {
+  SdKanban,
+  SdKanbanCardTemplateDirective,
+  SdKanbanCardActionsTemplateDirective,
+  SdKanbanColumnTemplateDirective,
+  SdKanbanColumn,
+  SdKanbanMoveRequest,
+  SdKanbanOption,
+} from '@sdcorejs/angular/components/kanban';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+type Priority = 'High' | 'Medium' | 'Low';
+// Demo-owned task metadata: the board only knows the mapping in \`option\`.
+interface Task {
+  key: string;
+  phase: string;
+  title: string;
+  owner: string;
+  priority: Priority;
+  comments: number;
+  due: string;
+}
+interface Content {
+  uuid: string;
+  workflow: { stage: string };
+  content: { heading: string; kind: string };
+}
+const TASKS: readonly Task[] = [
+  { key: 'WEB-001', phase: 'open', title: 'Design the home page', owner: 'Annie Tran', priority: 'High', comments: 2, due: 'Oct 12' },
+  { key: 'BE-023', phase: 'open', title: 'Build the sign-in API', owner: 'Minh Le', priority: 'Medium', comments: 5, due: 'Oct 15' },
+  { key: 'DOC-004', phase: 'open', title: 'Write the user guide', owner: 'Linh Pham', priority: 'Low', comments: 1, due: 'Oct 20' },
+  { key: 'PAY-008', phase: 'doing', title: 'Integrate payments', owner: 'Quang Vo', priority: 'High', comments: 4, due: 'Oct 10' },
+  { key: 'SYS-012', phase: 'doing', title: 'Improve query performance', owner: 'Minh Le', priority: 'Medium', comments: 2, due: 'Oct 14' },
+  { key: 'QA-011', phase: 'review', title: 'Test the chat feature', owner: 'Annie Tran', priority: 'Medium', comments: 6, due: 'Oct 11' },
+  { key: 'LIB-007', phase: 'done', title: 'Update the UI library', owner: 'Linh Pham', priority: 'Low', comments: 1, due: 'Oct 5' },
+];
+const TASK_OPTION: SdKanbanOption<Task> = {
+  getId: task => task.key,
+  getColumnId: task => task.phase,
+  getTitle: task => task.title,
+  getSearchText: task => \`\${task.title} \${task.key} \${task.owner}\`,
+  withColumn: (task, columnId) => ({ ...task, phase: String(columnId) }),
+};
+
+@Component({
+  selector: 'app-kanban-demo',
+  standalone: true,
+  imports: [
+    DemoPageComponent,
+    DemoSectionComponent,
+    SdAvatar,
+    SdBadge,
+    SdButton,
+    SdIcon,
+    SdKanban,
+    SdKanbanCardTemplateDirective,
+    SdKanbanCardActionsTemplateDirective,
+    SdKanbanColumnTemplateDirective,
+  ],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Kanban"
+      description="A reusable status board with local ordering, generic domain mapping and consumer-confirmed asynchronous moves.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-local-board') {
+        <demo-section
+          heading="Local board"
+          [props]="[{ name: 'model / option', value: 'immutable local data' }]"
+          note="Drag by the handle, use the movement menu, or focus the handle and press Alt plus an arrow key. Search preserves hidden cards and counts. Card metadata comes from the card template.">
+          <div class="example-content">
+            <sd-kanban ariaLabel="Task board" [columns]="columns" [option]="localOption" [(model)]="tasks" autoId="local">
+              <ng-template [sdKanbanCardTemplate]="localOption" let-task>
+                <strong class="task-title">{{ task.title }}</strong>
+                <span class="task-code">{{ task.key }}</span>
+                <sd-badge class="task-priority" type="round" [color]="priorityColor[task.priority]" [title]="task.priority" />
+                <div class="task-meta">
+                  <sd-avatar [src]="task.owner" [size]="24" aria-hidden="true" />
+                  <span class="visually-hidden">Assigned to {{ task.owner }}</span>
+                  <span class="task-meta-item">
+                    <sd-icon name="chat_bubble_outline" size="sm" />{{ task.comments }}
+                    <span class="visually-hidden">comments</span>
+                  </span>
+                  <span class="task-meta-item task-due">
+                    <sd-icon name="event" size="sm" /><span class="visually-hidden">Due</span>{{ task.due }}
+                  </span>
+                </div>
+              </ng-template>
+              <ng-template [sdKanbanCardActionsTemplate]="localOption" let-task let-pending="pending">
+                <sd-button type="text" size="sm" title="Details" [disabled]="pending" (click)="selectedTask.set(task.title)" />
+              </ng-template>
+            </sd-kanban>
+            @if (selectedTask()) {
+              <p role="status">Selected: {{ selectedTask() }}</p>
+            }
+          </div>
+        </demo-section>
+      }
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-cms-mapping') {
+        <demo-section
+          heading="CMS mapping"
+          [props]="[
+            { name: 'option.filter', value: 'articles only' },
+            { name: 'readonly', value: 'true' },
+          ]"
+          note="Nested CMS fields map through option callbacks. Readonly prevents moves while search and column collapse remain available.">
+          <div class="example-content">
+            <sd-kanban ariaLabel="Editorial board" [columns]="cmsColumns" [option]="cmsOption" [model]="content" readonly>
+              <ng-template sdKanbanColumnTemplate let-column
+                ><span>{{ column.label }}</span></ng-template
+              >
+              <ng-template [sdKanbanCardTemplate]="cmsOption" let-item>
+                <span class="card-key">{{ item.uuid }}</span
+                ><strong>{{ item.content.heading }}</strong>
+                <p>{{ item.content.kind }}</p>
+              </ng-template>
+            </sd-kanban>
+          </div>
+        </demo-section>
+      }
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-async-confirmation') {
+        <demo-section
+          heading="Async confirmation"
+          [props]="[{ name: 'option.move', value: 'Promise<boolean | void>' }]"
+          note="Start a move, then confirm, reject, or fail it. The card stays in its previous column until confirmation. Refreshing data cancels the pending proposal.">
+          <div class="example-content">
+            <div class="demo-actions">
+              <button type="button" [disabled]="!pendingRequest()" (click)="confirm()">Confirm move</button>
+              <button type="button" [disabled]="!pendingRequest()" (click)="reject()">Reject move</button>
+              <button type="button" [disabled]="!pendingRequest()" (click)="fail()">Fail move</button>
+              <button type="button" (click)="refresh()">Refresh data</button>
+              <button type="button" (click)="loadState.set(loadState() === 'loading' ? 'ready' : 'loading')">Toggle loading</button>
+              <button type="button" (click)="loadState.set(loadState() === 'error' ? 'ready' : 'error')">Toggle error</button>
+            </div>
+            @if (pendingRequest(); as request) {
+              <p role="status">Confirm moving {{ request.item.title }} to {{ request.toColumnId }}?</p>
+            }
+            <sd-kanban
+              ariaLabel="Confirmed task board"
+              [columns]="columns"
+              [option]="asyncOption"
+              [(model)]="asyncTasks"
+              [loading]="loadState() === 'loading'"
+              [error]="loadState() === 'error' ? 'The board could not be loaded.' : null"
+              (sdRetry)="loadState.set('ready')"
+              autoId="async" />
+          </div>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  styles: [
+    \`
+      .example-content {
+        width: 100%;
+        min-width: 0;
+      }
+      .card-key,
+      .task-code {
+        display: block;
+        color: var(--sd-text-secondary);
+        font-size: 12px;
+        line-height: 16px;
+      }
+      strong {
+        display: block;
+      }
+      .task-title {
+        font-weight: 600;
+      }
+      .task-priority {
+        display: inline-flex;
+        margin-top: 6px;
+      }
+      .task-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 10px;
+        font-size: 12px;
+        color: var(--sd-text-secondary);
+      }
+      .task-meta-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .task-due {
+        margin-inline-start: auto;
+      }
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+      }
+      .demo-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+    \`,
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class KanbanDemoComponent {
+  readonly columns: readonly SdKanbanColumn[] = [
+    { id: 'open', label: 'To do', color: 'primary' },
+    { id: 'doing', label: 'In progress', color: 'info' },
+    { id: 'review', label: 'In review', color: 'warning' },
+    { id: 'done', label: 'Done', color: 'success' },
+  ];
+  readonly priorityColor = { High: 'error', Medium: 'info', Low: 'success' } as const;
+  readonly tasks = signal<readonly Task[]>(TASKS);
+  readonly asyncTasks = signal<readonly Task[]>(TASKS);
+  readonly localOption = TASK_OPTION;
+  readonly selectedTask = signal('');
+  readonly pendingRequest = signal<SdKanbanMoveRequest<Task> | null>(null);
+  readonly loadState = signal<'ready' | 'loading' | 'error'>('ready');
+  #resolve?: (value: boolean) => void;
+  #reject?: (reason: Error) => void;
+  readonly asyncOption: SdKanbanOption<Task> = {
+    ...TASK_OPTION,
+    move: request =>
+      new Promise<boolean>((resolve, reject) => {
+        this.pendingRequest.set(request);
+        this.#resolve = resolve;
+        this.#reject = reject;
+        request.signal.addEventListener(
+          'abort',
+          () => {
+            this.pendingRequest.set(null);
+            resolve(false);
+          },
+          { once: true }
+        );
+      }),
+  };
+  readonly cmsColumns: readonly SdKanbanColumn[] = [
+    { id: 'draft', label: 'Drafts' },
+    { id: 'review', label: 'Editorial review', color: 'warning' },
+    { id: 'published', label: 'Published', color: 'success' },
+  ];
+  readonly content: readonly Content[] = [
+    { uuid: 'article-1', workflow: { stage: 'draft' }, content: { heading: 'Getting started with the workspace', kind: 'Article' } },
+    { uuid: 'asset-2', workflow: { stage: 'draft' }, content: { heading: 'Product photography', kind: 'Asset' } },
+    { uuid: 'article-3', workflow: { stage: 'review' }, content: { heading: 'How the editorial team works', kind: 'Article' } },
+  ];
+  readonly cmsOption: SdKanbanOption<Content> = {
+    getId: item => item.uuid,
+    getColumnId: item => item.workflow.stage,
+    getTitle: item => item.content.heading,
+    withColumn: (item, columnId) => ({ ...item, workflow: { ...item.workflow, stage: String(columnId) } }),
+    filter: item => item.content.kind === 'Article',
+  };
+  confirm(): void {
+    this.#resolve?.(true);
+    this.pendingRequest.set(null);
+  }
+  reject(): void {
+    this.#resolve?.(false);
+    this.pendingRequest.set(null);
+  }
+  fail(): void {
+    this.#reject?.(new Error('Demo persistence failure'));
+    this.pendingRequest.set(null);
+  }
+  refresh(): void {
+    this.asyncTasks.set([...TASKS]);
+    this.loadState.set('ready');
+  }
+}
+`,
+    scss: `.example-content {
+  width: 100%;
+  min-width: 0;
+}
+.card-key,
+.task-code {
+  display: block;
+  color: var(--sd-text-secondary);
+  font-size: 12px;
+  line-height: 16px;
+}
+strong {
+  display: block;
+}
+.task-title {
+  font-weight: 600;
+}
+.task-priority {
+  display: inline-flex;
+  margin-top: 6px;
+}
+.task-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--sd-text-secondary);
+}
+.task-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.task-due {
+  margin-inline-start: auto;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.demo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}`,
+  },
   "components/mini-editor": {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -12891,6 +13226,224 @@ export class RadioDemoComponent {
 }
 `,
   },
+  "forms/segmented": {
+    typescript: `import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { FormGroup } from '@angular/forms';
+import {
+  SdSegmentedComponent,
+  SdSegmentedItem,
+  SdSegmentedItemTemplateDirective,
+  SdSegmentedModel,
+  SdSegmentedType,
+} from '@sdcorejs/angular/forms/segmented';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+type Mode = 'design' | 'preview' | 'schema';
+@Component({
+  selector: 'app-segmented-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, SdSegmentedComponent, SdSegmentedItemTemplateDirective],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Segmented control"
+      description="Compact single or multiple choices. The application owns the content shown for the chosen value.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-single-choice') {
+        <demo-section
+          heading="Single choice"
+          [props]="[
+            { name: 'size', value: 'sm / md / lg' },
+            { name: 'color', value: 'primary / info / success' },
+          ]"
+          note="Use arrow keys to choose a mode. Changing the choice updates the content owned by this demo.">
+          <sd-segmented label="Form builder mode" [items]="modes" [(model)]="mode" autoId="builder-mode" />
+          <div class="consumer-panel">
+            @switch (mode()) {
+              @case ('design') {
+                <strong>Design your form</strong>
+                <p>Add fields, arrange groups, and choose validation.</p>
+              }
+              @case ('preview') {
+                <strong>Preview your form</strong>
+                <p>Try the form as a person filling it out.</p>
+              }
+              @case ('schema') {
+                <strong>Form schema</strong>
+                <p>Inspect the schema generated from your design.</p>
+              }
+            }
+          </div>
+          <div class="choices-row">
+            <sd-segmented label="Small" size="sm" color="info" [items]="views" [(model)]="view" />
+            <sd-segmented label="Large" size="lg" color="success" [items]="views" [(model)]="view" />
+          </div>
+        </demo-section>
+      }
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-types') {
+        <demo-section
+          heading="Types"
+          [props]="[{ name: 'type', value: 'light / fill / outline' }]"
+          note="Light is the default: a neutral track with a raised choice. Fill uses the solid colour and outline a border and tint. Behavior is identical for every type.">
+          <div class="choices-row">
+            @for (type of types; track type.value) {
+              <sd-segmented [label]="type.label" [type]="type.value" [items]="modes" [(model)]="typeMode" />
+            }
+          </div>
+          <div class="choices-row">
+            <sd-segmented label="Fill, info, small" type="fill" color="info" size="sm" [items]="views" [(model)]="view" />
+            <sd-segmented label="Outline, success, large" type="outline" color="success" size="lg" [items]="views" [(model)]="view" />
+            <sd-segmented
+              label="Fill, vertical"
+              type="fill"
+              color="warning"
+              [option]="{ orientation: 'vertical' }"
+              [items]="modes"
+              [(model)]="typeMode" />
+            <sd-segmented
+              label="Outline, multiple, stretch"
+              type="outline"
+              color="secondary"
+              [option]="{ multiple: true, stretch: true }"
+              [items]="channels"
+              [(model)]="selectedChannels" />
+          </div>
+        </demo-section>
+      }
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-multiple-and-templates') {
+        <demo-section
+          heading="Multiple and templates"
+          [props]="[{ name: 'option.multiple', value: 'true' }]"
+          note="Arrows move focus; Space or Enter toggles a choice. Custom content retains the accessible label.">
+          <sd-segmented label="Visible channels" [items]="channels" [option]="{ multiple: true }" [(model)]="selectedChannels" color="info">
+            <ng-template [sdSegmentedItemTemplate]="channels" let-item let-selected="selected">
+              <span aria-hidden="true">{{ selected ? '✓' : '+' }}</span
+              ><span>{{ item.label }}</span>
+            </ng-template>
+          </sd-segmented>
+          <p>Selected: {{ selectedChannelText() || 'None' }}</p>
+          <sd-segmented label="Layout" [items]="iconViews" [(model)]="view" />
+        </demo-section>
+      }
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-form-and-states') {
+        <demo-section
+          heading="Form and states"
+          [props]="[{ name: 'form / name / required', value: 'Core UI form registration' }]"
+          note="A required choice shows an error after the form is touched. Readonly keeps the form value; loading blocks changes.">
+          <sd-segmented label="Required choice" [form]="form" name="mode" [items]="modes" required [(model)]="requiredMode" />
+          <div class="demo-actions">
+            <button type="button" (click)="form.markAllAsTouched()">Check form</button
+            ><button type="button" (click)="reset()">Reset</button>
+          </div>
+          <div class="choices-row">
+            <sd-segmented label="Disabled" [items]="views" [model]="'list'" disabled />
+            <sd-segmented label="Readonly" [items]="views" [model]="'grid'" readonly />
+            <sd-segmented label="Loading" [items]="views" loading />
+            <sd-segmented label="Empty choices" />
+          </div>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  styles: [
+    \`
+      .choices-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: start;
+        gap: 20px;
+        margin-top: 20px;
+        /* why: the row is a flex item of the section body; its automatic minimum is the widest unscrolled
+           segmented-control track, which overflowed the 320px preview. Let it shrink so each track scrolls. */
+        min-width: 0;
+        max-width: 100%;
+      }
+      .consumer-panel {
+        padding: 20px;
+        margin-top: 16px;
+        border: 1px solid var(--sd-border);
+        border-radius: 8px;
+        background: var(--sd-surface-muted);
+      }
+      .consumer-panel p {
+        margin: 8px 0 0;
+        color: var(--sd-text-secondary);
+      }
+      .demo-actions {
+        display: flex;
+        gap: 8px;
+        margin: 12px 0;
+      }
+    \`,
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class SegmentedDemoComponent {
+  readonly modes: readonly SdSegmentedItem<Mode>[] = [
+    { value: 'design', label: 'Design', prefixIcon: 'edit' },
+    { value: 'preview', label: 'Preview', prefixIcon: 'visibility' },
+    { value: 'schema', label: 'Schema', prefixIcon: 'code', suffixIcon: 'data_object' },
+  ];
+  readonly views: readonly SdSegmentedItem<'list' | 'grid'>[] = [
+    { value: 'list', label: 'List', prefixIcon: 'view_list' },
+    { value: 'grid', label: 'Grid', prefixIcon: 'grid_view' },
+  ];
+  readonly iconViews = this.views.map(item => ({ ...item, iconOnly: true }));
+  readonly channels: readonly SdSegmentedItem<string>[] = [
+    { value: 'web', label: 'Web' },
+    { value: 'mobile', label: 'Mobile' },
+    { value: 'email', label: 'Email' },
+    { value: 'archived', label: 'Archived', disabled: true },
+  ];
+  readonly types: readonly { value: SdSegmentedType; label: string }[] = [
+    { value: 'light', label: 'Light (default)' },
+    { value: 'fill', label: 'Fill' },
+    { value: 'outline', label: 'Outline' },
+  ];
+  readonly mode = signal<SdSegmentedModel<Mode>>('design');
+  readonly typeMode = signal<SdSegmentedModel<Mode>>('preview');
+  readonly view = signal<SdSegmentedModel<'list' | 'grid'>>('list');
+  readonly selectedChannels = signal<SdSegmentedModel<string>>(['web']);
+  readonly selectedChannelText = computed(() => {
+    const selected = this.selectedChannels();
+    return Array.isArray(selected) ? selected.join(', ') : String(selected ?? '');
+  });
+  readonly form = new FormGroup({});
+  readonly requiredMode = signal<SdSegmentedModel<Mode>>(null);
+  reset(): void {
+    this.requiredMode.set(null);
+    this.form.markAsUntouched();
+    this.form.markAsPristine();
+  }
+}
+`,
+    scss: `.choices-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  gap: 20px;
+  margin-top: 20px;
+  /* why: the row is a flex item of the section body; its automatic minimum is the widest unscrolled
+     segmented-control track, which overflowed the 320px preview. Let it shrink so each track scrolls. */
+  min-width: 0;
+  max-width: 100%;
+}
+.consumer-panel {
+  padding: 20px;
+  margin-top: 16px;
+  border: 1px solid var(--sd-border);
+  border-radius: 8px;
+  background: var(--sd-surface-muted);
+}
+.consumer-panel p {
+  margin: 8px 0 0;
+  color: var(--sd-text-secondary);
+}
+.demo-actions {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}`,
+  },
   "forms/select": {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -19169,6 +19722,93 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
       <sd-job-progress taskId="showcase-component-task" mode="details"></sd-job-progress>
     </demo-section>`,
   },
+  "components/kanban/example-async-confirmation": {
+    ...SHOWCASE_PAGE_SOURCES["components/kanban"],
+    html: `<demo-section
+      heading="Async confirmation"
+      [props]="[{ name: 'option.move', value: 'Promise<boolean | void>' }]"
+      note="Start a move, then confirm, reject, or fail it. The card stays in its previous column until confirmation. Refreshing data cancels the pending proposal.">
+      <div class="example-content">
+        <div class="demo-actions">
+          <button type="button" [disabled]="!pendingRequest()" (click)="confirm()">Confirm move</button>
+          <button type="button" [disabled]="!pendingRequest()" (click)="reject()">Reject move</button>
+          <button type="button" [disabled]="!pendingRequest()" (click)="fail()">Fail move</button>
+          <button type="button" (click)="refresh()">Refresh data</button>
+          <button type="button" (click)="loadState.set(loadState() === 'loading' ? 'ready' : 'loading')">Toggle loading</button>
+          <button type="button" (click)="loadState.set(loadState() === 'error' ? 'ready' : 'error')">Toggle error</button>
+        </div>
+        @if (pendingRequest(); as request) {
+          <p role="status">Confirm moving {{ request.item.title }} to {{ request.toColumnId }}?</p>
+        }
+        <sd-kanban
+          ariaLabel="Confirmed task board"
+          [columns]="columns"
+          [option]="asyncOption"
+          [(model)]="asyncTasks"
+          [loading]="loadState() === 'loading'"
+          [error]="loadState() === 'error' ? 'The board could not be loaded.' : null"
+          (sdRetry)="loadState.set('ready')"
+          autoId="async" />
+      </div>
+    </demo-section>`,
+  },
+  "components/kanban/example-cms-mapping": {
+    ...SHOWCASE_PAGE_SOURCES["components/kanban"],
+    html: `<demo-section
+      heading="CMS mapping"
+      [props]="[
+        { name: 'option.filter', value: 'articles only' },
+        { name: 'readonly', value: 'true' },
+      ]"
+      note="Nested CMS fields map through option callbacks. Readonly prevents moves while search and column collapse remain available.">
+      <div class="example-content">
+        <sd-kanban ariaLabel="Editorial board" [columns]="cmsColumns" [option]="cmsOption" [model]="content" readonly>
+          <ng-template sdKanbanColumnTemplate let-column
+            ><span>{{ column.label }}</span></ng-template
+          >
+          <ng-template [sdKanbanCardTemplate]="cmsOption" let-item>
+            <span class="card-key">{{ item.uuid }}</span
+            ><strong>{{ item.content.heading }}</strong>
+            <p>{{ item.content.kind }}</p>
+          </ng-template>
+        </sd-kanban>
+      </div>
+    </demo-section>`,
+  },
+  "components/kanban/example-local-board": {
+    ...SHOWCASE_PAGE_SOURCES["components/kanban"],
+    html: `<demo-section
+      heading="Local board"
+      [props]="[{ name: 'model / option', value: 'immutable local data' }]"
+      note="Drag by the handle, use the movement menu, or focus the handle and press Alt plus an arrow key. Search preserves hidden cards and counts. Card metadata comes from the card template.">
+      <div class="example-content">
+        <sd-kanban ariaLabel="Task board" [columns]="columns" [option]="localOption" [(model)]="tasks" autoId="local">
+          <ng-template [sdKanbanCardTemplate]="localOption" let-task>
+            <strong class="task-title">{{ task.title }}</strong>
+            <span class="task-code">{{ task.key }}</span>
+            <sd-badge class="task-priority" type="round" [color]="priorityColor[task.priority]" [title]="task.priority" />
+            <div class="task-meta">
+              <sd-avatar [src]="task.owner" [size]="24" aria-hidden="true" />
+              <span class="visually-hidden">Assigned to {{ task.owner }}</span>
+              <span class="task-meta-item">
+                <sd-icon name="chat_bubble_outline" size="sm" />{{ task.comments }}
+                <span class="visually-hidden">comments</span>
+              </span>
+              <span class="task-meta-item task-due">
+                <sd-icon name="event" size="sm" /><span class="visually-hidden">Due</span>{{ task.due }}
+              </span>
+            </div>
+          </ng-template>
+          <ng-template [sdKanbanCardActionsTemplate]="localOption" let-task let-pending="pending">
+            <sd-button type="text" size="sm" title="Details" [disabled]="pending" (click)="selectedTask.set(task.title)" />
+          </ng-template>
+        </sd-kanban>
+        @if (selectedTask()) {
+          <p role="status">Selected: {{ selectedTask() }}</p>
+        }
+      </div>
+    </demo-section>`,
+  },
   "components/mini-editor/example-dinh-dang-dau-ra-html": {
     ...SHOWCASE_PAGE_SOURCES["components/mini-editor"],
     html: `<demo-section heading="Định dạng đầu ra HTML" [props]="[{ name: 'outputFormat', value: 'html' }]">
@@ -22518,6 +23158,104 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
       </div>
     </div>
   </demo-section>`,
+  },
+  "forms/segmented/example-form-and-states": {
+    ...SHOWCASE_PAGE_SOURCES["forms/segmented"],
+    html: `<demo-section
+      heading="Form and states"
+      [props]="[{ name: 'form / name / required', value: 'Core UI form registration' }]"
+      note="A required choice shows an error after the form is touched. Readonly keeps the form value; loading blocks changes.">
+      <sd-segmented label="Required choice" [form]="form" name="mode" [items]="modes" required [(model)]="requiredMode" />
+      <div class="demo-actions">
+        <button type="button" (click)="form.markAllAsTouched()">Check form</button
+        ><button type="button" (click)="reset()">Reset</button>
+      </div>
+      <div class="choices-row">
+        <sd-segmented label="Disabled" [items]="views" [model]="'list'" disabled />
+        <sd-segmented label="Readonly" [items]="views" [model]="'grid'" readonly />
+        <sd-segmented label="Loading" [items]="views" loading />
+        <sd-segmented label="Empty choices" />
+      </div>
+    </demo-section>`,
+  },
+  "forms/segmented/example-multiple-and-templates": {
+    ...SHOWCASE_PAGE_SOURCES["forms/segmented"],
+    html: `<demo-section
+      heading="Multiple and templates"
+      [props]="[{ name: 'option.multiple', value: 'true' }]"
+      note="Arrows move focus; Space or Enter toggles a choice. Custom content retains the accessible label.">
+      <sd-segmented label="Visible channels" [items]="channels" [option]="{ multiple: true }" [(model)]="selectedChannels" color="info">
+        <ng-template [sdSegmentedItemTemplate]="channels" let-item let-selected="selected">
+          <span aria-hidden="true">{{ selected ? '✓' : '+' }}</span
+          ><span>{{ item.label }}</span>
+        </ng-template>
+      </sd-segmented>
+      <p>Selected: {{ selectedChannelText() || 'None' }}</p>
+      <sd-segmented label="Layout" [items]="iconViews" [(model)]="view" />
+    </demo-section>`,
+  },
+  "forms/segmented/example-single-choice": {
+    ...SHOWCASE_PAGE_SOURCES["forms/segmented"],
+    html: `<demo-section
+      heading="Single choice"
+      [props]="[
+        { name: 'size', value: 'sm / md / lg' },
+        { name: 'color', value: 'primary / info / success' },
+      ]"
+      note="Use arrow keys to choose a mode. Changing the choice updates the content owned by this demo.">
+      <sd-segmented label="Form builder mode" [items]="modes" [(model)]="mode" autoId="builder-mode" />
+      <div class="consumer-panel">
+        @switch (mode()) {
+          @case ('design') {
+            <strong>Design your form</strong>
+            <p>Add fields, arrange groups, and choose validation.</p>
+          }
+          @case ('preview') {
+            <strong>Preview your form</strong>
+            <p>Try the form as a person filling it out.</p>
+          }
+          @case ('schema') {
+            <strong>Form schema</strong>
+            <p>Inspect the schema generated from your design.</p>
+          }
+        }
+      </div>
+      <div class="choices-row">
+        <sd-segmented label="Small" size="sm" color="info" [items]="views" [(model)]="view" />
+        <sd-segmented label="Large" size="lg" color="success" [items]="views" [(model)]="view" />
+      </div>
+    </demo-section>`,
+  },
+  "forms/segmented/example-types": {
+    ...SHOWCASE_PAGE_SOURCES["forms/segmented"],
+    html: `<demo-section
+      heading="Types"
+      [props]="[{ name: 'type', value: 'light / fill / outline' }]"
+      note="Light is the default: a neutral track with a raised choice. Fill uses the solid colour and outline a border and tint. Behavior is identical for every type.">
+      <div class="choices-row">
+        @for (type of types; track type.value) {
+          <sd-segmented [label]="type.label" [type]="type.value" [items]="modes" [(model)]="typeMode" />
+        }
+      </div>
+      <div class="choices-row">
+        <sd-segmented label="Fill, info, small" type="fill" color="info" size="sm" [items]="views" [(model)]="view" />
+        <sd-segmented label="Outline, success, large" type="outline" color="success" size="lg" [items]="views" [(model)]="view" />
+        <sd-segmented
+          label="Fill, vertical"
+          type="fill"
+          color="warning"
+          [option]="{ orientation: 'vertical' }"
+          [items]="modes"
+          [(model)]="typeMode" />
+        <sd-segmented
+          label="Outline, multiple, stretch"
+          type="outline"
+          color="secondary"
+          [option]="{ multiple: true, stretch: true }"
+          [items]="channels"
+          [(model)]="selectedChannels" />
+      </div>
+    </demo-section>`,
   },
   "forms/select/example-api-footer-action": {
     ...SHOWCASE_PAGE_SOURCES["forms/select"],

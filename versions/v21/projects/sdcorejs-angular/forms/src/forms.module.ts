@@ -9,6 +9,7 @@ import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
 import { SdSelect, SdSelectFooterActionDirective } from '@sdcorejs/angular/forms/select';
 import { SdAutocomplete } from '@sdcorejs/angular/forms/autocomplete';
 import { SdRadio } from '@sdcorejs/angular/forms/radio';
+import { SdSegmentedComponent, SdSegmentedItemTemplateDirective } from '@sdcorejs/angular/forms/segmented';
 import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
 import { SdSwitch } from '@sdcorejs/angular/forms/switch';
 import { SdChip } from '@sdcorejs/angular/forms/chip';
@@ -48,6 +49,7 @@ const SD_FORM_CONTROLS = [
   SdAutocomplete,
   SdSwitch,
   SdRadio,
+  SdSegmentedComponent,
   SdTextarea,
   SdChip,
   SdChipCalendar,
@@ -59,6 +61,7 @@ const SD_FORM_CONTROLS = [
 // trên — không export thì consumer NgModule dựng được control nhưng không tuỳ biến được nội dung.
 const SD_FORM_DIRECTIVES = [
   SdSuffixDefDirective,
+  SdSegmentedItemTemplateDirective,
   SdLabelDefDirective,
   SdViewDefDirective,
   SdItemDefDefDirective,
