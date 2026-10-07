@@ -1986,6 +1986,12 @@ describe('SdFileExplorer', () => {
         expect(looks()).toEqual(idle);
         expect(getComputedStyle(band).backgroundColor).not.toBe('rgb(1, 2, 3)');
         // The selected row keeps its accent tint; the explorer surface and the search box keep their own.
+        // Wait for the row's CSS transition: Angular stability does not finish browser animations.
+        await Promise.all(
+          row('Guide.pdf')
+            .getAnimations()
+            .map(animation => animation.finished)
+        );
         expect(getComputedStyle(row('Guide.pdf')).backgroundColor).toBe('rgb(1, 2, 3)');
         expect(getComputedStyle(element()).backgroundColor).toBe('rgb(255, 255, 255)');
         expect(closeTo(rgbOf(getComputedStyle(search).backgroundColor), [228, 230, 235])).toBeTrue();
