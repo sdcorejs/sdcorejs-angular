@@ -3,20 +3,35 @@
 // `--sd-primary`, `--sd-surface`, `--sd-border`… when no override is given.
 :host {
   --sd-fe-accent: var(--sd-file-explorer-accent, var(--sd-primary, #005cbb));
-  --sd-fe-accent-strong: var(--sd-file-explorer-accent-strong, color-mix(in srgb, var(--sd-fe-accent) 84%, var(--sd-file-explorer-mix-shade, #000000)));
+  --sd-fe-accent-strong: var(
+    --sd-file-explorer-accent-strong,
+    color-mix(in srgb, var(--sd-fe-accent) 84%, var(--sd-file-explorer-mix-shade, #000000))
+  );
   --sd-fe-accent-contrast: var(--sd-file-explorer-accent-contrast, var(--sd-primary-contrast, #ffffff));
-  --sd-fe-accent-soft: var(--sd-file-explorer-accent-soft, color-mix(in srgb, var(--sd-fe-accent) 10%, var(--sd-file-explorer-mix-tint, #ffffff)));
+  --sd-fe-accent-soft: var(
+    --sd-file-explorer-accent-soft,
+    color-mix(in srgb, var(--sd-fe-accent) 10%, var(--sd-file-explorer-mix-tint, #ffffff))
+  );
   --sd-fe-surface: var(--sd-file-explorer-surface, #ffffff);
   --sd-fe-sidebar-bg: var(--sd-file-explorer-sidebar-bg, color-mix(in srgb, var(--sd-surface-muted, #e7e8ed) 26%, var(--sd-fe-surface)));
   --sd-fe-muted-surface: var(
     --sd-file-explorer-muted-surface,
     color-mix(in srgb, var(--sd-surface-muted, #e7e8ed) 50%, var(--sd-fe-surface))
   );
-  --sd-fe-preview-bg: var(--sd-file-explorer-preview-bg, color-mix(in srgb, var(--sd-fe-accent) 9%, var(--sd-file-explorer-mix-tint, #ffffff)));
-  --sd-fe-border: var(--sd-file-explorer-border, color-mix(in srgb, var(--sd-border, #c4c6d0) 55%, var(--sd-file-explorer-mix-tint, #ffffff)));
+  --sd-fe-preview-bg: var(
+    --sd-file-explorer-preview-bg,
+    color-mix(in srgb, var(--sd-fe-accent) 9%, var(--sd-file-explorer-mix-tint, #ffffff))
+  );
+  --sd-fe-border: var(
+    --sd-file-explorer-border,
+    color-mix(in srgb, var(--sd-border, #c4c6d0) 55%, var(--sd-file-explorer-mix-tint, #ffffff))
+  );
   --sd-fe-border-strong: var(--sd-file-explorer-border-strong, var(--sd-border, #c4c6d0));
   --sd-fe-text: var(--sd-file-explorer-text, var(--sd-text, #1a1b1f));
-  --sd-fe-text-secondary: var(--sd-file-explorer-text-secondary, color-mix(in srgb, var(--sd-text-secondary, #44474f) 84%, var(--sd-file-explorer-mix-tint, #ffffff)));
+  --sd-fe-text-secondary: var(
+    --sd-file-explorer-text-secondary,
+    color-mix(in srgb, var(--sd-text-secondary, #44474f) 84%, var(--sd-file-explorer-mix-tint, #ffffff))
+  );
   --sd-fe-hover: color-mix(in srgb, var(--sd-fe-text) 4%, transparent);
   --sd-fe-hover-strong: color-mix(in srgb, var(--sd-fe-text) 8%, transparent);
   --sd-fe-track: color-mix(in srgb, var(--sd-fe-text) 7%, var(--sd-fe-surface));
@@ -342,6 +357,118 @@
   color: var(--sd-fe-text-secondary);
 }
 
+// ---- Selection band ----
+
+// One band for list and grid: the status sentence + clear, then the consumer's actions, on one neutral, nearly white
+// surface whether or not files are selected — the selection shows in the sentence, the clear button and the actions.
+// Actions wrap below when the band is narrow; they are never folded into a menu.
+.selection {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin: 10px 28px 0;
+  padding: 6px 8px 6px 10px;
+  border: 1px solid var(--sd-fe-border);
+  border-radius: var(--sd-radius-12, 12px);
+  // why: nền xám rất nhạt trung tính cho riêng thanh chọn, không tint accent khi có tệp được chọn. Pha
+  // `--sd-surface-muted` của Core với tint của explorer (trắng ở light, nền tối ở dark — như viền và chữ phụ) thay vì với
+  // bề mặt explorer, nên theme dark của Core vẫn cho dải tối dù consumer chưa đặt hook bề mặt. Hook public
+  // `--sd-file-explorer-muted-surface` (cũng của ô tìm kiếm và thumbnail) vẫn thắng khi consumer đặt.
+  background: var(
+    --sd-file-explorer-muted-surface,
+    color-mix(in srgb, var(--sd-surface-muted, #e7e8ed) 50%, var(--sd-file-explorer-mix-tint, #ffffff))
+  );
+}
+
+.selection-summary {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+// A plain status sentence, the same 14 px text throughout; only the number is semibold. No badge.
+.selection-status {
+  min-width: 0;
+  color: var(--sd-fe-text);
+  font-size: var(--sd-font-size-14, 14px);
+  font-weight: var(--sd-font-weight-regular, 400);
+  line-height: var(--sd-line-height-20, 20px);
+  overflow-wrap: anywhere;
+}
+
+.selection-count {
+  font-weight: var(--sd-font-weight-semibold, 600);
+}
+
+// Desktop: 32 px, the height of the band's actions. Touch: 44 px target; the 20 px icon stays.
+.icon-button.selection-clear {
+  width: 32px;
+  height: 32px;
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.45;
+
+    &:hover {
+      background: transparent;
+    }
+  }
+}
+
+:host(.sd-file-explorer--touch) .icon-button.selection-clear {
+  width: 44px;
+  height: 44px;
+}
+
+// why: Material giữ vùng chạm 48px quanh nút 32px (cao hơn nút 8px mỗi phía, rộng bằng nút). Các dòng nút bị xuống dòng
+// cách nhau 16px để vùng chạm của hai dòng chỉ chạm nhau, không chồng lên nhau; theo chiều ngang 8px là đủ.
+.selection-actions {
+  flex: 0 1 auto;
+  justify-content: flex-end;
+  gap: 16px 8px;
+  margin-inline-start: auto;
+}
+
+.selection-actions:empty {
+  display: none;
+}
+
+// why: sd-button tô chữ nút `light` / `text` bằng màu gốc (`--sd-success`, `--sd-warning`). Trên nền `-light` của nút
+// và nền tint của thanh chọn, cộng state layer hover / focus / pressed, success và warning gốc dưới 4.5:1 cho chữ 14px.
+// Trong thanh chọn chỉ đổi VAI TRÒ chữ sang `status-*-fg`: cặp `status-*-fg` / `status-*-bg` được `npm run test:theme`
+// giữ ≥ 4.5 cho mọi preset và dark, và `status-*-bg` chính là nền `-light` của nút. Màu ngữ nghĩa, kiểu nút, nền, state
+// layer, focus ring, disabled và loading vẫn của sd-button; fill / outline consumer chọn giữ nguyên. Icon kế thừa
+// `currentColor`; spinner loading được tô cùng vai trò cho thống nhất (Core đặt stroke bằng !important nên ở đây cũng
+// phải !important — selector này cụ thể hơn nên thắng không phụ thuộc thứ tự stylesheet).
+:host .selection-actions ::ng-deep sd-button > button.c-button:not([disabled]) {
+  @each $state in (success, warning) {
+    &.mat-#{$state}.c-light,
+    &.mat-#{$state}.c-text {
+      color: var(--sd-status-#{$state}-fg, var(--sd-#{$state}-dark));
+
+      .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
+        stroke: var(--sd-status-#{$state}-fg, var(--sd-#{$state}-dark)) !important;
+      }
+    }
+  }
+
+  // why: nút `text` không có nền riêng — hover / focus / pressed vẽ state layer của Material (mặc định màu primary) lên
+  // nền tint của thanh chọn, kéo tương phản của chữ xuống; khi nhấn, ripple tạm thời (cũng primary 12%) còn chồng lên
+  // nó. State layer lấy màu tint của explorer (trắng ở light, nền tối ở dark): lớp phủ làm nền sáng hơn ở light / tối
+  // hơn ở dark, chữ giữ tương phản. Gồm cả primary — màu mặc định của nút nhóm (`text`) khi consumer không khai `color`.
+  // Chỉ token state layer của nút text; ripple tạm thời, nền và mọi loại nút khác vẫn của sd-button.
+  @each $state in (primary, success, info, warning, error) {
+    &.mat-#{$state}.c-text {
+      --mat-text-button-state-layer-color: var(--sd-file-explorer-mix-tint, #ffffff);
+      // Material 20+ renamed the token; keep the same scoped role on every supported line.
+      --mat-button-text-state-layer-color: var(--mat-text-button-state-layer-color);
+    }
+  }
+}
+
 .scroller {
   flex: 1;
   min-height: 0;
@@ -583,6 +710,24 @@
 
   .count {
     padding-bottom: 8px;
+  }
+
+  // Status and clear on the first line, the actions on their own lines below, aligned to the start.
+  .selection {
+    margin: 8px 12px 4px;
+  }
+
+  .selection-summary {
+    flex: 1 1 100%;
+    justify-content: space-between;
+  }
+
+  .selection-actions {
+    flex-basis: 100%;
+    justify-content: flex-start;
+    margin-inline-start: 0;
+    padding-top: 8px;
+    border-top: 1px solid var(--sd-fe-border);
   }
 
   .scroller {

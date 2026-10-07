@@ -349,9 +349,9 @@ All six methods accept `icon?: string`. The icon is always shown in a decorative
 | Radio / select | `list` |
 | Other confirmation | `check_circle` |
 
-Icon color follows the primary action tone (primary, success, info, warning or error), with a light background. Dialogs use 18px left-aligned titles, 14px descriptions, 24px padding, an 8px radius and 440px default width. Explicit `confirm(..., { width })` still wins, constrained to the viewport with 16px side gutters. Long content scrolls above the action row.
+Icon color follows the primary action tone (primary, success, info, warning or error), with a light background. Dialogs use 18px left-aligned titles, 14px descriptions, 20px padding, an 8px radius and 440px default width. Explicit `confirm(..., { width })` still wins, constrained to the viewport with 16px side gutters. Long content scrolls above the action row.
 
-Actions reuse `SdButton size="sm"`: cancel uses light, accept uses fill, both native type button. Mobile uses 20px padding and actions at least44px tall. Focus begins on cancel for plain confirmation, on the textarea for text input, and on the first focusable control for choices/date/datetime. Backdrop/Escape behavior remains controlled by `disableBackdropClose`; the default remains true. Reduced motion disables the panel transitions.
+Actions reuse `SdButton size="sm"`: cancel uses light, accept uses fill, both native type button. Mobile uses 16px padding and actions at least44px tall. Focus begins on cancel for plain confirmation, on the textarea for text input, and on the first focusable control for choices/date/datetime. Backdrop/Escape behavior remains controlled by `disableBackdropClose`; the default remains true. Reduced motion disables the panel transitions.
 
 `withInput()` additionally accepts `label` and `placeholder`. Required whitespace-only text cannot be submitted from the UI; numeric zero remains a valid choice. Returned values and existing Promise semantics are preserved. Default button labels remain backward-compatible; callers should set specific labels such as `yesTitle: 'Xóa bản ghi'` or `yesTitle: 'Gửi lý do'`, with `noTitle: 'Hủy'`.
 

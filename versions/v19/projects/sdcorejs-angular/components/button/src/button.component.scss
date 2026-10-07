@@ -1,7 +1,14 @@
 @use '../../../assets/scss/core/color.scss' as color;
 @use 'sass:map';
 
-$button-outline-border-color: var(--sd-border-strong, #74777f);
+$button-outline-border-color: var(
+  --sd-button-outline-border,
+  color-mix(
+    in srgb,
+    var(--sd-border-strong, #74777f) 86%,
+    var(--sd-surface, #fdfbff)
+  )
+);
 $button-disabled-border-color: var(--sd-disabled-text, #74777f);
 $button-disabled-background-color: var(--sd-disabled-bg, #e7e8ed);
 $sd-button-black-color: map.get(color.$basic_color_map, 'black');
@@ -245,35 +252,75 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
     // 3. OUTLINE
     &.c-outline {
       &.mat-mdc-outlined-button {
+        .mat-mdc-progress-spinner {
+          color: inherit;
+        }
+
+        // why: Outline có role riêng; không làm nhạt token border/text của toàn Core.
+        border-width: 1px;
         border-color: $button-outline-border-color;
+        --mat-outlined-button-state-layer-color: currentColor;
+        --mat-outlined-button-hover-state-layer-opacity: var(--sd-button-outline-hover-opacity, 0.02);
+        --mat-outlined-button-focus-state-layer-opacity: var(--sd-button-outline-hover-opacity, 0.02);
+        --mat-outlined-button-ripple-color: color-mix(
+          in srgb,
+          currentColor calc(var(--sd-button-outline-pressed-opacity, 0.04) * 100%),
+          transparent
+        );
+        // Material 20+ uses the reordered token names; both APIs share the outline roles.
+        --mat-button-outlined-state-layer-color: var(--mat-outlined-button-state-layer-color);
+        --mat-button-outlined-hover-state-layer-opacity: var(--mat-outlined-button-hover-state-layer-opacity);
+        --mat-button-outlined-focus-state-layer-opacity: var(--mat-outlined-button-focus-state-layer-opacity);
+        --mat-button-outlined-ripple-color: var(--mat-outlined-button-ripple-color);
+
+        &:focus-visible {
+          outline-color: var(--sd-button-outline-focus, var(--sd-focus-ring-color, var(--sd-primary)));
+        }
+
         &.mat-primary:not([disabled]) {
-          color: map.get(color.$color_map, 'primary');
+          color: var(--sd-button-outline-primary, #{map.get(color.$color_map, 'primary')});
           .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
-            stroke: map.get(color.$color_map, 'primary') !important;
+            stroke: currentColor !important;
           }
         }
         &.mat-info:not([disabled]) {
-          color: map.get(color.$color_map, 'info');
+          color: var(
+            --sd-button-outline-info,
+            light-dark(var(--sd-info), color-mix(in srgb, var(--sd-info) 60%, white))
+          );
           .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
-            stroke: map.get(color.$color_map, 'info') !important;
+            stroke: currentColor !important;
           }
         }
         &.mat-success:not([disabled]) {
-          color: map.get(color.$color_map, 'success');
+          color: var(
+            --sd-button-outline-success,
+            light-dark(
+              color-mix(in srgb, var(--sd-success) 92%, black),
+              color-mix(in srgb, var(--sd-success) 60%, white)
+            )
+          );
           .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
-            stroke: map.get(color.$color_map, 'success') !important;
+            stroke: currentColor !important;
           }
         }
         &.mat-warning:not([disabled]) {
-          color: map.get(color.$color_map, 'warning');
+          // why: Warning light cần dư địa cho hover; dark theo color-scheme của consumer.
+          color: var(
+            --sd-button-outline-warning,
+            light-dark(
+              color-mix(in srgb, var(--sd-warning) 92%, black),
+              color-mix(in srgb, var(--sd-warning) 60%, white)
+            )
+          );
           .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
-            stroke: map.get(color.$color_map, 'warning') !important;
+            stroke: currentColor !important;
           }
         }
         &.mat-error:not([disabled]) {
-          color: map.get(color.$color_map, 'error');
+          color: var(--sd-button-outline-error, #{map.get(color.$color_map, 'error')});
           .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
-            stroke: map.get(color.$color_map, 'error') !important;
+            stroke: currentColor !important;
           }
         }
         &.mat-secondary:not([disabled]) {
@@ -381,6 +428,28 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
   // Chặn click nhưng KHÔNG đổi màu xám (không áp dụng style disabled)
   pointer-events: none;
   opacity: 0.85;
+
+  // why: Làm mờ toàn outline khiến warning text mất contrast dù border vẫn hiện.
+  &.c-outline {
+    opacity: 1;
+  }
+}
+
+@media (forced-colors: active) {
+  :host ::ng-deep button.c-button.c-outline.mat-mdc-outlined-button {
+    --sd-button-outline-focus-ring: Highlight;
+    border-color: ButtonText;
+    color: ButtonText !important;
+
+    &[disabled] {
+      border-color: GrayText !important;
+      color: GrayText !important;
+    }
+
+    &:focus-visible {
+      outline-color: var(--sd-button-outline-focus-ring);
+    }
+  }
 }
 
 // why: chỉ dừng chuyển động của spinner khi người dùng yêu cầu giảm chuyển động.

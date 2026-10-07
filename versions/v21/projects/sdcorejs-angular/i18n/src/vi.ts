@@ -847,6 +847,15 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.file-explorer.share.copy-manual': 'Nhấn Ctrl+C (⌘C trên macOS) để sao chép liên kết đã chọn.',
   'core.component.file-explorer.share.error': 'Không tạo được liên kết chia sẻ',
   'core.component.file-explorer.close': 'Đóng',
+  'core.component.file-explorer.selection.label': 'Lựa chọn tệp',
+  'core.component.file-explorer.selection.none': 'Chọn tệp',
+  'core.component.file-explorer.selection.selected': '{count} tệp đã chọn',
+  'core.component.file-explorer.selection.selected-one': '{count} tệp đã chọn',
+  'core.component.file-explorer.selection.select-all': 'Chọn tất cả {count} tệp đang hiển thị',
+  'core.component.file-explorer.selection.select-item': 'Chọn {name}',
+  'core.component.file-explorer.selection.clear': 'Bỏ chọn tất cả',
+  'core.component.file-explorer.action-loading': 'Đang xử lý',
+  'core.component.file-explorer.item-actions': 'Thao tác với {name}',
 
   // ---- Component: image-editor ----
   'core.component.image-editor.group-history': 'Lịch sử chỉnh sửa',

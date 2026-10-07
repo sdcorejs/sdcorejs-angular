@@ -16,6 +16,8 @@
 @let _shareItem = shareItem();
 @let _canShare = canShare();
 @let _modalOpen = _dialogOpen || !!_shareItem;
+@let _touch = touch();
+@let _rowShortcuts = rowShortcuts();
 
 <header class="header" [attr.inert]="_modalOpen ? '' : null">
   @if (_option.title) {
@@ -96,9 +98,14 @@
       <sd-file-explorer-folder-tree
         [nodes]="treeNodes()"
         [label]="'core.component.file-explorer.tree-label' | sdTranslate"
+        [commands]="_option.folderCommands"
+        [touch]="_touch"
+        [compact]="_compact"
+        [menuOpenId]="treeMenuOpenId()"
         (select)="onTreeSelect($event)"
         (toggle)="onTreeToggle($event)"
-        (retry)="onTreeRetry($event)" />
+        (retry)="onTreeRetry($event)"
+        (openCommands)="openCommands($event.item, 'tree', $event.trigger)" />
     </div>
     @if (canCreateFolder()) {
       <div class="sidebar-footer">
@@ -177,6 +184,59 @@
       }
     </div>
 
+    @let _selection = selectionView();
+    @if (_selection) {
+      @let _selected = selectedItems();
+      @let _selectedCount = _selected.length;
+      @let _summary = selectionSummary();
+      @let _clearLabel = 'core.component.file-explorer.selection.clear' | sdTranslate;
+      <!-- why: one band for list and grid. The select-all checkbox lives in the list header / above the grid, not here. -->
+      <div
+        class="selection"
+        role="group"
+        [class.selection--active]="_selectedCount > 0"
+        [attr.aria-label]="'core.component.file-explorer.selection.label' | sdTranslate"
+        [attr.inert]="_preview ? '' : null"
+        [attr.data-autoid]="_autoId ? _autoId + '-selection' : null">
+        <div class="selection-summary">
+          <!-- why: one plain sentence in the translated word order ("2 tệp đã chọn", "已选择 2 个文件"); only the number is
+               heavier. Each part sits in its own span: the markup whitespace between spans is dropped, so the sentence
+               keeps exactly the spaces of its translation ("2件…" stays joined). -->
+          <span class="selection-status" role="status">
+            <span>{{ _summary.before }}</span>
+            @if (_summary.count) {
+              <span class="selection-count">{{ _summary.count }}</span>
+            }
+            <span>{{ _summary.after }}</span>
+          </span>
+          <button
+            type="button"
+            class="icon-button selection-clear"
+            [disabled]="!_selectedCount"
+            [attr.aria-label]="_clearLabel"
+            [matTooltip]="_clearLabel"
+            [attr.data-autoid]="_autoId ? _autoId + '-selection-clear' : null"
+            (click)="clearSelection()">
+            <sd-icon name="close" size="20px" />
+          </button>
+        </div>
+        @if (_selectedCount && _option.selector?.actions?.length) {
+          <!-- why: unset types follow the kind (light flat action, text group trigger). sd-button's own sizes: 32 px like the
+               row commands, 48 px only on a wide touch layout; a narrow layout keeps 32 px and spaces the lines instead. -->
+          <sd-file-explorer-actions
+            class="selection-actions"
+            source="selector.actions"
+            defaultLeafType="light"
+            defaultGroupType="text"
+            defaultColor="primary"
+            [actions]="_option.selector?.actions"
+            [context]="_selected"
+            [size]="_touch && !_compact ? 'lg' : 'sm'"
+            [autoId]="_autoId ? _autoId + '-selection-action' : undefined" />
+        }
+      </div>
+    }
+
     <div class="scroller" [attr.inert]="_preview ? '' : null">
       @switch (_state) {
         @case ('loading') {
@@ -205,14 +265,22 @@
           <sd-file-explorer-item-list
             [items]="itemViews()"
             [view]="_view"
-            [canDownload]="_canDownload"
-            [canShare]="_canShare"
+            [canDownload]="_canDownload && _rowShortcuts"
+            [canShare]="_canShare && _rowShortcuts"
             [compact]="_compact"
+            [touch]="_touch"
             [activeId]="_preview ? _preview.item.id : null"
             [label]="_heading"
+            [selection]="_selection"
+            [fileCommands]="_option.fileCommands"
+            [folderCommands]="_option.folderCommands"
+            [menuOpenId]="itemsMenuOpenId()"
             (activate)="onActivate($event)"
             (download)="downloadItem($event.item)"
-            (share)="openShare($event.item)" />
+            (share)="openShare($event.item)"
+            (toggleSelect)="toggleSelection($event)"
+            (toggleSelectAll)="toggleSelectAll()"
+            (openCommands)="openCommands($event.item, _view, $event.trigger)" />
         }
       }
     </div>
@@ -251,6 +319,15 @@
   (share)="sharePreview()"
   (retry)="retryPreview()"
   (imageError)="onPreviewImageError()" />
+
+<!-- why: lệnh của một mục trên layout hẹp mở trong sd-side-drawer thật của Core (gắn vào <body>: backdrop, Esc, bẫy focus,
+     khoá scroll trang) thay cho các nút trên hàng / thẻ / nút cây. -->
+<sd-file-explorer-command-sheet
+  [sheet]="commandSheet()"
+  [touch]="_touch"
+  [autoId]="_autoId ? _autoId + '-commands' : undefined"
+  (activate)="runCommand($event)"
+  (close)="onCommandsClosed()" />
 
 @if (dragActive()) {
   <div class="drop-overlay" aria-hidden="true">

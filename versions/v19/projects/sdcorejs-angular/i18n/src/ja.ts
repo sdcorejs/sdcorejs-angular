@@ -850,6 +850,15 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.file-explorer.share.copy-manual': '選択したリンクを Ctrl+C（macOS は ⌘C）でコピーしてください。',
   'core.component.file-explorer.share.error': '共有リンクを作成できません',
   'core.component.file-explorer.close': '閉じる',
+  'core.component.file-explorer.selection.label': 'ファイルの選択',
+  'core.component.file-explorer.selection.none': 'ファイルを選択',
+  'core.component.file-explorer.selection.selected': '{count}件のファイルを選択中',
+  'core.component.file-explorer.selection.selected-one': '{count}件のファイルを選択中',
+  'core.component.file-explorer.selection.select-all': '表示中のファイル {count} 件をすべて選択',
+  'core.component.file-explorer.selection.select-item': '{name} を選択',
+  'core.component.file-explorer.selection.clear': 'すべての選択を解除',
+  'core.component.file-explorer.action-loading': '処理中',
+  'core.component.file-explorer.item-actions': '{name} の操作',
 
   // ---- Component: image-editor ----
   'core.component.image-editor.group-history': '編集履歴',

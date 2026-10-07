@@ -64,7 +64,7 @@ Standard action button — used everywhere a user triggers an action (save, canc
 
 - Keeps Material 3 corner shape and label typography. No pill-radius override is applied.
 - Icon/text spacing is local to the button: 6px for `sm`, 8px for `md`/`lg`. Prefix, suffix and loading layouts do not depend on global margin utilities.
-- Outline uses `--sd-border-strong` (falling back to `#74777f`). Disabled text/background use `--sd-disabled-text` / `--sd-disabled-bg` with existing-theme fallbacks. Outlined and text-style disabled actions stay transparent. The button itself is not faded with opacity. For secondary icon-only text buttons, disabled icons render at 50% opacity on top of the disabled color so their neutral gray is visibly distinct from enabled icons; the background stays transparent. This applies to prefix/suffix icons and Material/Lucide sets, without changing loading spinners or buttons with titles.
+- Outline uses `--sd-button-outline-border` when supplied; otherwise it mixes 86% `--sd-border-strong` (falling back to `#74777f`) with the surface. Disabled text/background use `--sd-disabled-text` / `--sd-disabled-bg` with existing-theme fallbacks. Outlined and text-style disabled actions stay transparent. The button itself is not faded with opacity. For secondary icon-only text buttons, disabled icons render at 50% opacity on top of the disabled color so their neutral gray is visibly distinct from enabled icons; the background stays transparent. This applies to prefix/suffix icons and Material/Lucide sets, without changing loading spinners or buttons with titles.
 - Keyboard focus shows a 2px primary outline with a 2px offset. Hover preserves the native Material state layer and does not change button dimensions.
 - Loading keeps the existing click suppression and semantic color. Spinner animation respects `prefers-reduced-motion`.
 - Use `fill` + `primary` for the principal action, `outline` + `secondary` for secondary toolbar actions, and `text` for less prominent actions. Existing defaults stay unchanged.
@@ -129,6 +129,40 @@ The button itself does NOT enforce permission — wrap with the `*sdPermission` 
   (click)="onSubmitForApproval()">
 </sd-button>
 ```
+
+## Outline theme roles
+
+`type="outline"` keeps a real 1px border and the existing Material shape. The
+default border mixes `--sd-border-strong` (86%) with `--sd-surface` (14%), so
+consumer theme changes still propagate without changing the global border role.
+Only outline uses these scoped, inherited CSS overrides:
+
+| Token | Default / purpose |
+|---|---|
+| `--sd-button-outline-border` | Derived neutral border; use this for an exact consumer border color |
+| `--sd-button-outline-primary`, `--sd-button-outline-error` | Existing semantic foreground |
+| `--sd-button-outline-info` | Existing info in light; 60% info + 40% white in dark |
+| `--sd-button-outline-success`, `--sd-button-outline-warning` | 92% semantic + 8% black in light; 60% semantic + 40% white in dark |
+| `--sd-button-outline-focus` | Existing primary focus ring, 2px with 2px offset |
+| `--sd-button-outline-hover-opacity` | 0.02 for Material hover/focus state layer |
+| `--sd-button-outline-pressed-opacity` | 0.04 for Material ripple |
+
+Semantic roles use the consumer's `color-scheme` through `light-dark()`; a dark
+Material/token theme must also set `color-scheme: dark` on its theme container.
+Consumers with already adjusted semantic foregrounds can supply the exact
+outline foreground tokens above. Check contrast on the actual consumer surface,
+including hover/ripple; arbitrary custom palettes are not automatically certified.
+
+Outline loading keeps full opacity so warning text and border retain contrast;
+activation blocking, spinner replacement and suffix behavior remain unchanged.
+Other variants retain their loading opacity. Disabled outline keeps the existing
+neutral disabled tokens and a transparent background. Forced colors uses system
+ButtonText/GrayText borders and Highlight focus. No input/output or radius change.
+
+Loading content can still change intrinsic width when a spinner replaces an icon
+or a suffix disappears; this existing layout behavior is separate from the stable
+1px border. Consumers that require fixed async action width should use the existing
+`width` input. Reduced-motion spinner behavior remains supported.
 
 ## E2E test attributes
 

@@ -1,0 +1,59 @@
+// Same chrome as the explorer's other icon buttons (clear selection, folder panel): round, quiet, secondary text color.
+:host {
+  display: inline-flex;
+  flex: none;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--sd-radius-999, 999px);
+  background: transparent;
+  color: var(--sd-fe-text-secondary, var(--sd-text-secondary, #44474f));
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  &:hover,
+  &[aria-expanded='true'] {
+    background: var(--sd-fe-hover-strong, rgb(26 27 31 / 8%));
+    color: var(--sd-fe-text, var(--sd-text, #1a1b1f));
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-file-explorer-accent, var(--sd-focus-ring-color, var(--sd-primary)));
+    outline-offset: 1px;
+  }
+}
+
+// Touch: a 44 px target, like the clear button of the selection band.
+:host(.sd-file-explorer-menu-trigger--touch) .trigger {
+  width: 44px;
+  height: 44px;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border: 2px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: sd-file-explorer-menu-trigger-spin 0.8s linear infinite;
+}
+
+@keyframes sd-file-explorer-menu-trigger-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2.4s;
+  }
+}

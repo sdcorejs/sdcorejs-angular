@@ -18,20 +18,33 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
+import { MatTooltip } from '@angular/material/tooltip';
 import { SdBreadcrumb, SdBreadcrumbItem } from '@sdcorejs/angular/components/breadcrumb';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdDataState } from '@sdcorejs/angular/components/data-state';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { SdFileExplorerActions } from './components/actions.component';
+import { SdFileExplorerCommandSheet, type SdFileExplorerSheetActivation } from './components/command-sheet.component';
 import { SdFileExplorerFolderTree } from './components/folder-tree.component';
 import { SdFileExplorerItemList } from './components/item-list.component';
 import { SdFileExplorerPreviewPanel } from './components/preview-panel.component';
 import { SdFileExplorerTransferPanel } from './components/transfer-panel.component';
+import {
+  SD_FILE_EXPLORER_COMMAND_DEFAULTS,
+  sdFileExplorerActionBlocked,
+  sdFileExplorerResolveActions,
+  sdFileExplorerSheetEntries,
+} from './file-explorer-actions';
 import type {
+  SdFileExplorerActionGroup,
+  SdFileExplorerActionLeaf,
+  SdFileExplorerCommand,
   SdFileExplorerItem,
   SdFileExplorerOpenEvent,
   SdFileExplorerOption,
   SdFileExplorerProgressReporter,
+  SdFileExplorerSelector,
   SdFileExplorerTransfer,
   SdFileExplorerTransferArgs,
   SdFileExplorerTransferDirection,
@@ -51,10 +64,12 @@ import {
   sdFileExplorerSafeId,
 } from './file-explorer.utils';
 import type {
+  SdFileExplorerCommandSheetView,
   SdFileExplorerContentState,
   SdFileExplorerItemView,
   SdFileExplorerMetaRow,
   SdFileExplorerPreviewState,
+  SdFileExplorerSelectionView,
   SdFileExplorerShareFeedback,
   SdFileExplorerShareState,
   SdFileExplorerTransferView,
@@ -67,6 +82,8 @@ const SEARCH_DEBOUNCE_MS = 300;
 const MAX_PARALLEL_UPLOADS = 3;
 /** Below this host width the explorer switches to the compact (mobile) layout. */
 const COMPACT_MAX_WIDTH = 720;
+/** Primary pointer is a finger: commands stay visible and use 48 px targets. */
+const TOUCH_QUERY = '(pointer: coarse)';
 /** How long a saved download's object URL stays alive before it is revoked. */
 const DOWNLOAD_URL_TTL_MS = 40_000;
 
@@ -104,6 +121,26 @@ interface TransferJob {
   attempt: TransferAttempt | null;
 }
 
+/** Where a compact command drawer was opened: a list row, a grid card or a tree node. */
+type CommandOrigin = SdFileExplorerView | 'tree';
+
+/** Item whose commands the compact drawer shows. Only its id is kept: the item itself is looked up on every use. */
+interface CommandTarget {
+  readonly id: string;
+  readonly origin: CommandOrigin;
+  /** Actions trigger that opened the drawer: focus goes back to it while it is still in the page. */
+  readonly trigger: HTMLElement;
+}
+
+/** Command pressed in the drawer: the item id and the definitions, looked up again right before the command runs. */
+interface PendingCommand {
+  readonly id: string;
+  readonly origin: CommandOrigin;
+  readonly leaf: SdFileExplorerActionLeaf<SdFileExplorerItem>;
+  /** Group the leaf was pressed in; `null` for a flat command. */
+  readonly group: SdFileExplorerActionGroup<SdFileExplorerItem> | null;
+}
+
 let nextExplorerId = 0;
 
 /**
@@ -121,11 +158,14 @@ let nextExplorerId = 0;
   selector: 'sd-file-explorer',
   standalone: true,
   imports: [
+    MatTooltip,
     SdIcon,
     SdTranslatePipe,
     SdBreadcrumb,
     SdButton,
     SdDataState,
+    SdFileExplorerActions,
+    SdFileExplorerCommandSheet,
     SdFileExplorerFolderTree,
     SdFileExplorerItemList,
     SdFileExplorerPreviewPanel,
@@ -137,6 +177,7 @@ let nextExplorerId = 0;
   host: {
     class: 'sd-file-explorer',
     '[class.sd-file-explorer--compact]': 'compact()',
+    '[class.sd-file-explorer--touch]': 'touch()',
     '[class.sd-file-explorer--dragging]': 'dragActive()',
     '[attr.data-autoid]': 'autoId()',
     '(dragenter)': 'onDragEnter($event)',
@@ -170,6 +211,14 @@ export class SdFileExplorer {
   readonly #previewItem = signal<SdFileExplorerItem | null>(null);
   readonly #transfers = signal<readonly SdFileExplorerTransfer[]>([]);
   readonly #width = signal(0);
+  readonly #touch = signal(false);
+  /**
+   * Ids the user selected. Only those still visible and eligible count — see `selectedItems` — and the others are
+   * forgotten once the view settles, so a file that leaves the view or gets disabled is never selected again by itself.
+   */
+  readonly #selectedIds = signal<ReadonlySet<string>>(new Set());
+  /** Item whose commands the compact drawer shows; `null` while it is closed. */
+  readonly #commandTarget = signal<CommandTarget | null>(null);
 
   protected readonly view = signal<SdFileExplorerView>('list');
   protected readonly keyword = signal('');
@@ -203,6 +252,7 @@ export class SdFileExplorer {
   protected readonly shareInput = viewChild<ElementRef<HTMLInputElement>>('shareInput');
   protected readonly shareDialog = viewChild<ElementRef<HTMLElement>>('shareDialog');
   protected readonly sidebar = viewChild<ElementRef<HTMLElement>>('sidebar');
+  protected readonly commandDrawer = viewChild(SdFileExplorerCommandSheet);
 
   // ---- Non-reactive bookkeeping ----
   readonly #listControllers = new Map<string | null, AbortController>();
@@ -217,6 +267,8 @@ export class SdFileExplorer {
   #previewObjectUrl: string | null = null;
   #shareController: AbortController | null = null;
   #shareReturnFocus: HTMLElement | null = null;
+  /** Command pressed in the compact drawer, waiting for the drawer to finish closing; any context change drops it. */
+  #pendingCommand: PendingCommand | null = null;
   #dragDepth = 0;
   #listFn: SdFileExplorerOption['list'] | null = null;
   #resizeObserver: ResizeObserver | null = null;
@@ -229,6 +281,8 @@ export class SdFileExplorer {
     const width = this.#width();
     return width > 0 && width < COMPACT_MAX_WIDTH;
   });
+
+  protected readonly touch = this.#touch.asReadonly();
 
   readonly autoId = computed(() => {
     const scope = this.option().autoId;
@@ -276,6 +330,140 @@ export class SdFileExplorer {
   protected readonly itemViews = computed<readonly SdFileExplorerItemView[]>(() => {
     const format = this.#itemFormatter();
     return sdFileExplorerFoldersFirst(this.#visibleItems()).map(format);
+  });
+
+  // ---- Selection ----
+
+  /** The row download / share shortcuts stay until the consumer declares `fileCommands` (even `[]`). */
+  protected readonly rowShortcuts = computed(() => this.option().fileCommands == null);
+
+  readonly #selector = computed<SdFileExplorerSelector | null>(() => {
+    const selector = this.option().selector;
+    return selector && selector.visible !== false ? selector : null;
+  });
+
+  /** Files of the current folder or search results, in display order. Folders are never selectable. */
+  readonly #visibleFiles = computed(() => this.#visibleItems().filter(item => item.kind === 'file'));
+
+  readonly #eligibleFiles = computed<readonly SdFileExplorerItem[]>(() => {
+    const selector = this.#selector();
+    if (!selector) return [];
+    const disabled = selector.disabled;
+    return disabled ? this.#visibleFiles().filter(item => !disabled(item)) : this.#visibleFiles();
+  });
+
+  /**
+   * Frozen snapshot of the selection handed to callbacks and actions: selected files that are still visible and
+   * eligible, in display order. A file that a refresh drops, or that becomes disabled, leaves it.
+   */
+  protected readonly selectedItems = computed<readonly SdFileExplorerItem[]>(() => {
+    const ids = this.#selectedIds();
+    return Object.freeze(this.#eligibleFiles().filter(item => ids.has(item.id)));
+  });
+
+  /** Selection state of the item list; `null` (no checkbox, no band) without selector or without files in view. */
+  protected readonly selectionView = computed<SdFileExplorerSelectionView | null>(() => {
+    const files = this.#visibleFiles();
+    if (!this.#selector() || !files.length) return null;
+    const eligible = this.#eligibleFiles();
+    const selected = this.selectedItems();
+    const eligibleIds = new Set(eligible.map(item => item.id));
+    const autoId = this.autoId();
+    return {
+      selectedIds: new Set(selected.map(item => item.id)),
+      disabledIds: new Set(files.filter(item => !eligibleIds.has(item.id)).map(item => item.id)),
+      state: !selected.length ? 'none' : selected.length === eligible.length ? 'all' : 'some',
+      eligibleCount: eligible.length,
+      allLabel: this.#i18n.t('core.component.file-explorer.selection.select-all', { count: eligible.length }),
+      autoId: autoId ? `${autoId}-select-all` : undefined,
+    };
+  });
+
+  /**
+   * Status sentence of the band, split around the number so the template can set it in semibold: "2 tệp đã chọn",
+   * "已选择 2 个文件". Nothing selected: `count` is 0 and `before` holds the whole sentence.
+   */
+  protected readonly selectionSummary = computed(() => {
+    const count = this.selectedItems().length;
+    if (!count) return { count, before: this.#i18n.t('core.component.file-explorer.selection.none'), after: '' };
+    // why: không truyền params thì I18nService giữ nguyên `{count}` — tách câu đã dịch tại đó, đúng vị trí của từng ngôn ngữ.
+    const message = this.#i18n.t(`core.component.file-explorer.selection.${count === 1 ? 'selected-one' : 'selected'}`);
+    const placeholder = '{count}';
+    const at = message.indexOf(placeholder);
+    if (at < 0) return { count, before: '', after: ` ${message}` };
+    return { count, before: message.slice(0, at), after: message.slice(at + placeholder.length) };
+  });
+
+  // ---- Compact command drawer ----
+
+  // why: mỗi lối tắt là một computed riêng — định nghĩa giữ nguyên object khi chỉ lối tắt kia đổi, nên lần kiểm tra ngay
+  // trước khi chạy lệnh (definition còn được khai không) không hủy nhầm "Chia sẻ" chỉ vì `download` vừa đổi.
+  readonly #shareShortcut = computed<SdFileExplorerCommand | null>(() =>
+    this.canShare()
+      ? { title: this.#i18n.t('core.component.file-explorer.share'), prefixIcon: 'share', click: item => this.openShare(item) }
+      : null
+  );
+  readonly #downloadShortcut = computed<SdFileExplorerCommand | null>(() =>
+    this.canDownload()
+      ? {
+          title: this.#i18n.t('core.component.file-explorer.download'),
+          prefixIcon: 'file_download',
+          click: item => this.downloadItem(item),
+        }
+      : null
+  );
+
+  /** Row shortcuts as commands, for the drawer while `fileCommands` is undeclared: share, then download, as on the row. */
+  readonly #shortcuts = computed(() => {
+    const commands: SdFileExplorerCommand[] = [];
+    const keys: string[] = [];
+    const share = this.#shareShortcut();
+    const download = this.#downloadShortcut();
+    if (share) {
+      commands.push(share);
+      keys.push('share');
+    }
+    if (download) {
+      commands.push(download);
+      keys.push('download');
+    }
+    return { commands, keys };
+  });
+
+  /** Current version of the drawer's item — looked up by id in the list it was opened from; `null` once it is gone. */
+  readonly #commandItem = computed<SdFileExplorerItem | null>(() => {
+    const target = this.#commandTarget();
+    return target ? this.#findCommandItem(target.id, target.origin) : null;
+  });
+
+  /** Content of the drawer: the item's commands resolved for it now; `null` when nothing is left to show. */
+  // why: kiểu tường minh như contentState — d.ts ổn định giữa các máy build.
+  protected readonly commandSheet: Signal<SdFileExplorerCommandSheetView | null> = computed<SdFileExplorerCommandSheetView | null>(() => {
+    const target = this.#commandTarget();
+    const item = this.#commandItem();
+    if (!target || !item) return null;
+    const definitions = this.#commandDefinitions(item, target.origin);
+    const source = item.kind === 'folder' ? 'folderCommands' : 'fileCommands';
+    const resolved = sdFileExplorerResolveActions(definitions, item, SD_FILE_EXPLORER_COMMAND_DEFAULTS, source);
+    if (!resolved.length) return null;
+    const shortcuts = this.#shortcuts();
+    const view = this.#itemFormatter()(item);
+    return {
+      title: item.name,
+      context: [view.typeLabel, view.sizeLabel].filter(Boolean).join(' · '),
+      icon: view.icon,
+      entries: sdFileExplorerSheetEntries(resolved, definitions === shortcuts.commands ? shortcuts.keys : undefined),
+    };
+  });
+
+  protected readonly itemsMenuOpenId: Signal<string | null> = computed(() => {
+    const target = this.#commandTarget();
+    return target && target.origin !== 'tree' ? target.id : null;
+  });
+
+  protected readonly treeMenuOpenId: Signal<string | null> = computed(() => {
+    const target = this.#commandTarget();
+    return target?.origin === 'tree' ? target.id : null;
   });
 
   // why: như shareFeedback — kiểu tường minh để d.ts ổn định giữa các máy build.
@@ -508,17 +696,32 @@ export class SdFileExplorer {
         modifiedTitle: sdFileExplorerFormatDateTime(item.modifiedAt, locale),
         downloadLabel: t('download-item', { name: item.name }),
         shareLabel: t('share-item', { name: item.name }),
+        selectLabel: t('selection.select-item', { name: item.name }),
+        actionsLabel: t('item-actions', { name: item.name }),
         autoId: autoId ? `${autoId}-item-${sdFileExplorerSafeId(item.id)}` : undefined,
       };
     };
   });
 
   constructor() {
+    const destroyRef = inject(DestroyRef);
+    // why: trên màn hình cảm ứng không có hover — lệnh của hàng/thẻ/cây luôn hiện và dùng vùng chạm 48px.
+    // Đọc ngay trong constructor (không đợi render) để lần vẽ đầu đã đúng cỡ, rồi theo dõi khi thiết bị đổi con trỏ.
+    const touchQuery = this.#document.defaultView?.matchMedia?.(TOUCH_QUERY);
+    if (touchQuery) {
+      this.#touch.set(touchQuery.matches);
+      const onTouchChange = (event: MediaQueryListEvent) => this.#touch.set(event.matches);
+      touchQuery.addEventListener?.('change', onTouchChange);
+      destroyRef.onDestroy(() => touchQuery.removeEventListener?.('change', onTouchChange));
+    }
+
     // why: chỉ reset khi hàm `list` đổi (đổi nguồn lưu trữ). Consumer tạo lại object option với cùng callback
     // (ví dụ đổi title) không được xoá cache/điều hướng của người dùng.
     effect(() => {
       const option = this.option();
+      const selecting = !!this.#selector();
       untracked(() => {
+        if (!selecting) this.#clearSelection();
         if (this.#listFn === option.list) return;
         const firstRun = this.#listFn === null;
         this.#listFn = option.list;
@@ -526,6 +729,16 @@ export class SdFileExplorer {
         this.#resetNavigation();
         this.#ensureLoaded(null);
       });
+    });
+
+    // why: tệp bị lần tải lại bỏ khỏi danh sách hoặc bị consumer khóa (selector.disabled) rời lựa chọn hẳn — không
+    // được tự chọn lại khi xuất hiện/mở khóa lần sau. Chỉ dọn khi nội dung đã ổn định (không dọn lúc đang tải) và không
+    // gọi callback: đây không phải thao tác của người dùng hay một lần đổi phạm vi. Tạo SAU effect option để khi
+    // selector bị ẩn, #clearSelection (có onClear) chạy trước lần dọn im lặng này.
+    effect(() => {
+      const eligible = this.#eligibleFiles();
+      if (this.contentState() === 'loading') return;
+      untracked(() => this.#keepEligibleSelection(eligible));
     });
 
     afterNextRender(() => {
@@ -539,21 +752,44 @@ export class SdFileExplorer {
       this.#resizeObserver.observe(host);
     });
 
-    // why: rời khỏi layout compact thì drawer không còn ý nghĩa — đóng để lần thu nhỏ sau không bật lại scrim.
+    // why: rời khỏi layout compact thì drawer không còn ý nghĩa — đóng để lần thu nhỏ sau không bật lại scrim. Drawer
+    // lệnh cũng đóng: hàng/thẻ/cây lại hiện lệnh của chúng (xoay ngang máy, kéo rộng cửa sổ).
     effect(() => {
-      if (!this.compact()) untracked(() => this.sidebarOpen.set(false));
+      if (this.compact()) return;
+      untracked(() => {
+        this.sidebarOpen.set(false);
+        this.#closeCommands();
+      });
     });
 
-    inject(DestroyRef).onDestroy(() => this.#teardown());
+    // why: mục của drawer lệnh rời danh sách (lần tải lại bỏ nó, kết quả tìm kiếm đổi) hoặc không còn lệnh nào hiện —
+    // đóng drawer thay vì giữ một ảnh chụp cũ có thể chạy lệnh trên mục đã mất.
+    effect(() => {
+      if (this.#commandTarget() && !this.commandSheet()) untracked(() => this.#closeCommands());
+    });
+
+    // why: nút Back của trình duyệt / Android khi drawer lệnh đang mở — đóng drawer theo điều hướng của trang. Drawer không
+    // giữ mục lịch sử nào (không pushState, không history.back): Back vẫn điều hướng như bình thường.
+    const view = this.#document.defaultView;
+    if (view) {
+      const onPopState = () => this.#closeCommands();
+      view.addEventListener('popstate', onPopState);
+      destroyRef.onDestroy(() => view.removeEventListener('popstate', onPopState));
+    }
+
+    destroyRef.onDestroy(() => this.#teardown());
   }
 
   // ---- Public API ----
 
   /**
    * Lists the current folder again and drops the cached children of folders that are neither open in the
-   * tree nor on the current path. Re-runs the active search, if any.
+   * tree nor on the current path. Re-runs the active search, if any. Clears the file selection and closes the command
+   * drawer of the compact layout.
    */
   reload(): void {
+    this.#clearSelection();
+    this.#closeCommands();
     const keep = new Set<string | null>([null, this.#currentId(), ...this.#expanded(), ...this.#path().map(folder => folder.id)]);
     const folders = new Map(this.#folders());
     for (const key of [...folders.keys()]) {
@@ -573,6 +809,8 @@ export class SdFileExplorer {
 
   protected navigate(folder: SdFileExplorerItem | null): void {
     const id = folder?.id ?? null;
+    if (id !== this.#currentId()) this.#clearSelection();
+    this.#closeCommands();
     const path = folder ? this.#buildPath(folder) : [];
     this.#currentId.set(id);
     this.#path.set(path);
@@ -684,10 +922,174 @@ export class SdFileExplorer {
     if (item) this.openShare(item);
   }
 
+  // ---- Selection ----
+
+  protected toggleSelection(item: SdFileExplorerItem): void {
+    const selector = this.#selector();
+    if (!selector || !this.#eligibleFiles().some(file => file.id === item.id)) return;
+    // why: dựng lại từ selectedItems (không từ #selectedIds) để bỏ luôn id của tệp đã rời khỏi danh sách.
+    const next = new Set(this.selectedItems().map(file => file.id));
+    if (next.has(item.id)) next.delete(item.id);
+    else next.add(item.id);
+    this.#selectedIds.set(next);
+    selector.onSelect?.(item, this.selectedItems());
+  }
+
+  protected toggleSelectAll(): void {
+    const selector = this.#selector();
+    const eligible = this.#eligibleFiles();
+    if (!selector || !eligible.length) return;
+    const all = this.selectedItems().length === eligible.length;
+    this.#selectedIds.set(new Set(all ? [] : eligible.map(item => item.id)));
+    selector.onSelectAll?.(this.selectedItems());
+  }
+
+  protected clearSelection(): void {
+    this.#clearSelection();
+    // why: nút Bỏ chọn bị vô hiệu ngay khi không còn tệp nào được chọn — đưa focus về checkbox chọn tất cả để bàn
+    // phím không rơi về body.
+    afterNextRender(() => this.#host.nativeElement.querySelector<HTMLElement>('.select-all input')?.focus(), { injector: this.#injector });
+  }
+
+  /** Empties the selection, calling `onClear` once when something was selected. */
+  #clearSelection(): void {
+    if (!this.#selectedIds().size) return;
+    this.#selectedIds.set(new Set());
+    this.option().selector?.onClear?.();
+  }
+
+  /** Forgets selected ids that are no longer visible and eligible. Silent: no callback. */
+  #keepEligibleSelection(eligible: readonly SdFileExplorerItem[]): void {
+    const ids = this.#selectedIds();
+    if (!ids.size) return;
+    const kept = new Set(eligible.filter(item => ids.has(item.id)).map(item => item.id));
+    if (kept.size !== ids.size) this.#selectedIds.set(kept);
+  }
+
+  // ---- Compact command drawer ----
+
+  protected openCommands(item: SdFileExplorerItem, origin: CommandOrigin, trigger: HTMLElement): void {
+    this.#pendingCommand = null;
+    // why: bẫy focus của sd-side-drawer trả focus về phần tử đang giữ focus lúc nó mở. Chạm vào nút trên iOS không
+    // focus nút, nên focus nút trước khi mở để đóng drawer xong focus về đúng hàng / thẻ / nút cây.
+    trigger.focus({ preventScroll: true });
+    this.#commandTarget.set({ id: item.id, origin, trigger });
+    this.commandDrawer()?.show();
+  }
+
+  /** The user closed the drawer (close button, `Escape`, backdrop). */
+  protected onCommandsClosed(): void {
+    const target = this.#commandTarget();
+    if (!target) return;
+    this.#commandTarget.set(null);
+    afterNextRender(() => this.#restoreCommandFocus(target), { injector: this.#injector });
+  }
+
+  /**
+   * Runs a command pressed in the drawer. The press is checked against the current item, definitions and states: a
+   * stale entry, a state the consumer changed since the last render or a second press runs nothing.
+   *
+   * The drawer closes first, at once. The command runs after the next render: by then the drawer's focus trap is gone
+   * and has handed focus back, so it cannot pull focus away from a dialog or a preview the command opens. Right before
+   * it runs, the same check is made again, and `click` receives the item as listed at that moment.
+   */
+  protected runCommand({ command, group }: SdFileExplorerSheetActivation): void {
+    const target = this.#commandTarget();
+    if (this.#pendingCommand || !target) return;
+    const pending: PendingCommand = { id: target.id, origin: target.origin, leaf: command.definition, group: group?.definition ?? null };
+    if (!this.#runnableItem(pending)) {
+      // why: trạng thái do consumer giữ ngoài signal đã đổi từ lần render trước — tính lại để drawer hiện đúng trạng thái.
+      this.#commandTarget.set({ ...target });
+      return;
+    }
+    this.#pendingCommand = pending;
+    this.#commandTarget.set(null);
+    this.commandDrawer()?.hide();
+    afterNextRender(
+      () => {
+        if (this.#pendingCommand !== pending) return;
+        this.#pendingCommand = null;
+        this.#restoreCommandFocus(target);
+        // why: giữa lúc bấm và lần render này consumer vẫn có thể đổi trạng thái, rút định nghĩa hay làm mới danh sách
+        // (drawer đã đóng nên effect "mục biến mất" không còn canh) — kiểm lại ngay trước khi chạy, với bản hiện tại của mục.
+        const item = this.#runnableItem(pending);
+        if (item) pending.leaf.click(item);
+      },
+      { injector: this.#injector }
+    );
+  }
+
+  /** Current version of an item, by id, in the list a drawer was opened from (list / grid items or tree folders). */
+  #findCommandItem(id: string, origin: CommandOrigin): SdFileExplorerItem | null {
+    if (origin === 'tree') return this.treeNodes().find(node => node.id === id)?.item ?? null;
+    return this.#visibleItems().find(item => item.id === id) ?? null;
+  }
+
+  /**
+   * The current item when `command` may run now — the item is still listed where the drawer was opened, the pressed
+   * definition and its group are still declared for it, and neither is hidden, disabled or loading — else `null`.
+   */
+  #runnableItem(command: PendingCommand): SdFileExplorerItem | null {
+    const item = this.#findCommandItem(command.id, command.origin);
+    if (!item) return null;
+    const { leaf, group } = command;
+    const definitions = this.#commandDefinitions(item, command.origin);
+    const declared = group ? definitions.includes(group) && group.children.includes(leaf) : definitions.includes(leaf);
+    const blocked = (group !== null && sdFileExplorerActionBlocked(group, item)) || sdFileExplorerActionBlocked(leaf, item);
+    return declared && !blocked ? item : null;
+  }
+
+  /** Commands of one item in the drawer: the declared ones, or the row shortcuts while `fileCommands` is undeclared. */
+  #commandDefinitions(item: SdFileExplorerItem, origin: CommandOrigin): readonly SdFileExplorerCommand[] {
+    const option = this.option();
+    if (item.kind === 'folder') return option.folderCommands ?? [];
+    if (option.fileCommands != null) return option.fileCommands;
+    // why: lối tắt tải xuống / chia sẻ chỉ có trên hàng danh sách — thẻ lưới chưa từng có — nên chỉ hàng mang chúng vào drawer.
+    return origin === 'list' ? this.#shortcuts().commands : [];
+  }
+
+  /** Closes the drawer without running anything and drops a pressed command that has not run yet. */
+  #closeCommands(): void {
+    this.#pendingCommand = null;
+    const target = this.#commandTarget();
+    if (!target) return;
+    this.#commandTarget.set(null);
+    this.commandDrawer()?.hide();
+    afterNextRender(() => this.#restoreCommandFocus(target), { injector: this.#injector });
+  }
+
+  /**
+   * After the drawer closed: when its focus trap could not give focus back — the trigger left the page with its row,
+   * or the layout changed — focus the item's row, card or tree tab stop, the first item, or the search box.
+   */
+  #restoreCommandFocus(target: CommandTarget): void {
+    const active = this.#document.activeElement;
+    if (this.#destroyed || (active && active !== this.#document.body)) return;
+    const host = this.#host.nativeElement;
+    const items = Array.from(host.querySelectorAll<HTMLElement>('[data-item-id]'));
+    const candidates = [
+      target.trigger.isConnected ? target.trigger : null,
+      target.origin === 'tree'
+        ? host.querySelector<HTMLElement>('[role="treeitem"][tabindex="0"]')
+        : (items.find(element => element.dataset['itemId'] === target.id) ?? null),
+      items[0] ?? null,
+      this.searchInput()?.nativeElement ?? null,
+    ];
+    for (const candidate of candidates) {
+      candidate?.focus({ preventScroll: true });
+      if (candidate && this.#document.activeElement === candidate) return;
+    }
+  }
+
   // ---- Search ----
 
   protected onKeywordInput(value: string): void {
+    const before = this.#trimmedKeyword();
     this.keyword.set(value);
+    if (this.#trimmedKeyword() !== before) {
+      this.#clearSelection();
+      this.#closeCommands();
+    }
     this.#scheduleSearch(false);
   }
 
@@ -921,6 +1323,8 @@ export class SdFileExplorer {
   // ---- Internals: folders ----
 
   #resetNavigation(): void {
+    this.#clearSelection();
+    this.#closeCommands();
     for (const controller of this.#listControllers.values()) controller.abort();
     this.#listControllers.clear();
     this.#folders.set(new Map());
@@ -1022,6 +1426,10 @@ export class SdFileExplorer {
   }
 
   #clearSearch(): void {
+    if (this.#trimmedKeyword()) {
+      this.#clearSelection();
+      this.#closeCommands();
+    }
     this.keyword.set('');
     this.#scheduleSearch(false);
   }
@@ -1213,6 +1621,8 @@ export class SdFileExplorer {
 
   #teardown(): void {
     this.#destroyed = true;
+    // A command pressed right before the explorer goes away never runs; sd-side-drawer releases its own scroll lock.
+    this.#pendingCommand = null;
     this.#resizeObserver?.disconnect();
     for (const controller of this.#listControllers.values()) controller.abort();
     this.#listControllers.clear();

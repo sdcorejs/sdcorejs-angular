@@ -1,6 +1,12 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, viewChild } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
-import { SdFileExplorer, SdFileExplorerItem, SdFileExplorerOpenEvent, SdFileExplorerOption } from '@sdcorejs/angular/components/file-explorer';
+import {
+  SdFileExplorer,
+  SdFileExplorerItem,
+  SdFileExplorerOpenEvent,
+  SdFileExplorerOption,
+} from '@sdcorejs/angular/components/file-explorer';
+import { SdConfirmService } from '@sdcorejs/angular/services/confirm';
 
 const DAY = 86_400_000;
 
@@ -102,7 +108,16 @@ function seed(): DemoEntry[] {
       modifiedAt: now - 2 * 3_600_000,
       content: () => pdfBlob('Huong dan su dung'),
     },
-    { id: 'ke-hoach', parentId: null, name: 'Bảng kế hoạch.xlsx', kind: 'file', mimeType: XLSX, size: 866_304, modifiedAt: now - DAY, content: csv },
+    {
+      id: 'ke-hoach',
+      parentId: null,
+      name: 'Bảng kế hoạch.xlsx',
+      kind: 'file',
+      mimeType: XLSX,
+      size: 866_304,
+      modifiedAt: now - DAY,
+      content: csv,
+    },
     {
       id: 'anh-bia',
       parentId: null,
@@ -113,8 +128,26 @@ function seed(): DemoEntry[] {
       modifiedAt: now - 3 * DAY,
       content: () => svgBlob(COVER_SVG),
     },
-    { id: 'brief', parentId: 'du-an', name: 'Brief dự án.docx', kind: 'file', mimeType: DOCX, size: 48_128, modifiedAt: now - 5 * DAY, content: doc('Brief') },
-    { id: 'sitemap', parentId: 'website', name: 'Sơ đồ trang.pdf', kind: 'file', mimeType: 'application/pdf', size: 320_512, modifiedAt: now - 8 * DAY, content: () => pdfBlob('So do trang') },
+    {
+      id: 'brief',
+      parentId: 'du-an',
+      name: 'Brief dự án.docx',
+      kind: 'file',
+      mimeType: DOCX,
+      size: 48_128,
+      modifiedAt: now - 5 * DAY,
+      content: doc('Brief'),
+    },
+    {
+      id: 'sitemap',
+      parentId: 'website',
+      name: 'Sơ đồ trang.pdf',
+      kind: 'file',
+      mimeType: 'application/pdf',
+      size: 320_512,
+      modifiedAt: now - 8 * DAY,
+      content: () => pdfBlob('So do trang'),
+    },
     {
       id: 'logo',
       parentId: 'thiet-ke',
@@ -126,9 +159,36 @@ function seed(): DemoEntry[] {
       thumbnailUrl: svgDataUrl(COVER_SVG),
       content: () => svgBlob(COVER_SVG),
     },
-    { id: 'quy-trinh', parentId: 'tai-lieu', name: 'Quy trình phê duyệt.pdf', kind: 'file', mimeType: 'application/pdf', size: 1_153_433, modifiedAt: now - 2 * DAY, content: () => pdfBlob('Quy trinh phe duyet') },
-    { id: 'hop-dong', parentId: 'tai-lieu', name: 'Hợp đồng mẫu.docx', kind: 'file', mimeType: DOCX, size: 212_992, modifiedAt: now - 40 * DAY, content: doc('Hop dong') },
-    { id: 'bao-cao', parentId: 'tai-lieu', name: 'Báo cáo quý 3.xlsx', kind: 'file', mimeType: XLSX, size: 530_432, modifiedAt: now - 6 * DAY, content: csv },
+    {
+      id: 'quy-trinh',
+      parentId: 'tai-lieu',
+      name: 'Quy trình phê duyệt.pdf',
+      kind: 'file',
+      mimeType: 'application/pdf',
+      size: 1_153_433,
+      modifiedAt: now - 2 * DAY,
+      content: () => pdfBlob('Quy trinh phe duyet'),
+    },
+    {
+      id: 'hop-dong',
+      parentId: 'tai-lieu',
+      name: 'Hợp đồng mẫu.docx',
+      kind: 'file',
+      mimeType: DOCX,
+      size: 212_992,
+      modifiedAt: now - 40 * DAY,
+      content: doc('Hop dong'),
+    },
+    {
+      id: 'bao-cao',
+      parentId: 'tai-lieu',
+      name: 'Báo cáo quý 3.xlsx',
+      kind: 'file',
+      mimeType: XLSX,
+      size: 530_432,
+      modifiedAt: now - 6 * DAY,
+      content: csv,
+    },
     {
       id: 'banner',
       parentId: 'hinh-anh',
@@ -140,7 +200,15 @@ function seed(): DemoEntry[] {
       thumbnailUrl: svgDataUrl(COVER_SVG),
       content: () => svgBlob(COVER_SVG),
     },
-    { id: 'video', parentId: 'hinh-anh', name: 'Giới thiệu sản phẩm.mp4', kind: 'file', mimeType: 'video/mp4', size: 48_234_496, modifiedAt: now - 9 * DAY },
+    {
+      id: 'video',
+      parentId: 'hinh-anh',
+      name: 'Giới thiệu sản phẩm.mp4',
+      kind: 'file',
+      mimeType: 'video/mp4',
+      size: 48_234_496,
+      modifiedAt: now - 9 * DAY,
+    },
   ];
 }
 
@@ -215,6 +283,41 @@ class DemoDrive {
     return folder;
   }
 
+  /** Deletes items, folders with everything inside them. */
+  async remove(ids: readonly string[]): Promise<void> {
+    await wait(900);
+    const doomed = new Set(ids);
+    for (let grew = true; grew; ) {
+      grew = false;
+      for (const item of this.#items.values()) {
+        if (item.parentId !== null && doomed.has(item.parentId) && !doomed.has(item.id)) {
+          doomed.add(item.id);
+          grew = true;
+        }
+      }
+    }
+    for (const id of doomed) this.#items.delete(id);
+  }
+
+  async rename(id: string, name: string): Promise<void> {
+    await wait(400);
+    const entry = this.#items.get(id);
+    if (!entry) throw new Error('Mục này không còn tồn tại.');
+    const taken = [...this.#items.values()].some(
+      item => item.id !== id && item.parentId === entry.parentId && normalize(item.name) === normalize(name)
+    );
+    if (taken) throw new Error(`Đã có mục tên "${name}" trong thư mục này.`);
+    this.#items.set(id, { ...entry, name, modifiedAt: Date.now() });
+  }
+
+  async move(ids: readonly string[], parentId: string | null): Promise<void> {
+    await wait(700);
+    for (const id of ids) {
+      const entry = this.#items.get(id);
+      if (entry) this.#items.set(id, { ...entry, parentId });
+    }
+  }
+
   #isInside(item: SdFileExplorerItem, folderId: string | null): boolean {
     if (folderId === null) return true;
     let parentId = item.parentId;
@@ -263,11 +366,16 @@ function fullOption(drive: DemoDrive, autoId: string): SdFileExplorerOption {
             { name: 'option.download', value: 'Blob + progress' },
             { name: 'option.share', value: 'link chia sẻ' },
             { name: 'option.createFolder', value: 'callback' },
-            { name: '(open)', value: 'SdFileExplorerOpenEvent' }
+            { name: 'option.selector', value: 'chọn nhiều + actions' },
+            { name: 'option.fileCommands', value: 'nút + nhóm menu' },
+            { name: 'option.folderCommands', value: 'hàng, thẻ, cây' },
+            { name: 'color', value: 'success / info / warning / error' },
+            { name: 'reload()', value: 'method' },
+            { name: '(open)', value: 'SdFileExplorerOpenEvent' },
           ]"
-          note="Kéo thả tệp vào explorer hoặc bấm Tải tệp lên. Tên tệp có chữ “loi” sẽ mô phỏng lỗi để thử nút Thử lại; hủy được khi đang chuẩn bị hoặc đang truyền.">
+          note="Kéo thả tệp vào explorer hoặc bấm Tải tệp lên; tên tệp có chữ “loi” mô phỏng lỗi để thử nút Thử lại. Tích chọn nhiều tệp rồi dùng thanh chọn: nút phẳng mặc định light (Chuyển vào Tài liệu), nhóm mặc định text (Công cụ, menu ⋮), cùng cỡ 32px với lệnh của hàng. Màu ngữ nghĩa do trang demo tự khai báo: Đánh dấu đã duyệt (success), Xem thông tin (info), Lưu trữ (warning), Xóa tệp (error). Rê chuột (hoặc Tab) vào một hàng để thấy lệnh của tệp/thư mục; hợp đồng mẫu bị khóa chọn. Xác nhận, trạng thái loading và reload() đều do trang demo (consumer) tự làm.">
           <div class="frame frame--desktop">
-            <sd-file-explorer [option]="full" (open)="onOpen($event)" />
+            <sd-file-explorer #fullExplorer [option]="full" (open)="onOpen($event)" />
           </div>
           <p class="log" aria-live="polite">
             <strong>(open)</strong>
@@ -275,6 +383,14 @@ function fullOption(drive: DemoDrive, autoId: string): SdFileExplorerOption {
               {{ event }}
             } @else {
               — chưa mở tệp nào
+            }
+          </p>
+          <p class="log" aria-live="polite">
+            <strong>selector / commands</strong>
+            @if (lastAction(); as action) {
+              {{ action }}
+            } @else {
+              — chưa có thao tác nào
             }
           </p>
         </demo-section>
@@ -288,7 +404,7 @@ function fullOption(drive: DemoDrive, autoId: string): SdFileExplorerOption {
             { name: 'option.createFolder', value: 'không truyền' },
             { name: 'option.search', value: 'lọc tại chỗ' },
             { name: 'option.download', value: 'trả void (trình duyệt tự tải)' },
-            { name: 'option.defaultView', value: 'grid' }
+            { name: 'option.defaultView', value: 'grid' },
           ]"
           note="Callback nào không được cung cấp thì UI tương ứng biến mất. Không có search nên ô tìm kiếm lọc danh sách đã tải của thư mục hiện tại. Download trả void: explorer chỉ ghi nhận đã chuyển cho trình duyệt, không giả lập phần trăm.">
           <div class="frame frame--compact-height">
@@ -303,11 +419,12 @@ function fullOption(drive: DemoDrive, autoId: string): SdFileExplorerOption {
           [props]="[
             { name: 'width', value: '< 720px' },
             { name: 'cây thư mục', value: 'panel mở bằng nút menu' },
-            { name: 'xem trước', value: 'phủ toàn khung' }
+            { name: 'xem trước', value: 'phủ toàn khung' },
+            { name: 'option.selector', value: 'thanh chọn 2 hàng' },
           ]"
-          note="Layout đổi theo độ rộng của chính explorer (ResizeObserver), không theo viewport — đặt trong sidebar hẹp cũng tự chuyển.">
+          note="Layout đổi theo độ rộng của chính explorer (ResizeObserver), không theo viewport — đặt trong sidebar hẹp cũng tự chuyển. Thanh chọn giữ số lượng và nút bỏ chọn ở hàng đầu, các action xuống hàng sau; trên màn hình cảm ứng lệnh của hàng luôn hiện với vùng chạm 48px.">
           <div class="frame frame--mobile">
-            <sd-file-explorer [option]="mobile" />
+            <sd-file-explorer #mobileExplorer [option]="mobile" />
           </div>
         </demo-section>
       }
@@ -317,7 +434,7 @@ function fullOption(drive: DemoDrive, autoId: string): SdFileExplorerOption {
           heading="Loading, rỗng và lỗi"
           [props]="[
             { name: 'list', value: 'Promise chậm / [] / reject' },
-            { name: 'thử lại', value: 'gọi lại list' }
+            { name: 'thử lại', value: 'gọi lại list' },
           ]"
           note="Thư mục “Lỗi lần đầu” reject ở lần gọi đầu tiên; bấm Thử lại (trong nội dung hoặc biểu tượng trên cây) sẽ thành công.">
           <div class="frame frame--compact-height">
@@ -355,8 +472,24 @@ function fullOption(drive: DemoDrive, autoId: string): SdFileExplorerOption {
   `,
 })
 export class FileExplorerDemoComponent {
-  readonly full = fullOption(new DemoDrive(), 'full');
-  readonly mobile = fullOption(new DemoDrive(), 'mobile');
+  readonly #confirm = inject(SdConfirmService);
+  // Angular queries cannot live on ES-private (#) fields.
+  private readonly fullExplorer = viewChild<SdFileExplorer>('fullExplorer');
+  private readonly mobileExplorer = viewChild<SdFileExplorer>('mobileExplorer');
+  /** Ids whose action is running: their actions show a spinner and ignore new clicks until the drive answers. */
+  readonly #busy = signal<ReadonlySet<string>>(new Set());
+  readonly lastAction = signal<string | null>(null);
+
+  readonly #fullDrive = new DemoDrive();
+  readonly #mobileDrive = new DemoDrive();
+  readonly full: SdFileExplorerOption = {
+    ...fullOption(this.#fullDrive, 'full'),
+    ...this.#manage(this.#fullDrive, () => this.fullExplorer()),
+  };
+  readonly mobile: SdFileExplorerOption = {
+    ...fullOption(this.#mobileDrive, 'mobile'),
+    ...this.#manage(this.#mobileDrive, () => this.mobileExplorer()),
+  };
 
   readonly #readOnlyDrive = new DemoDrive();
   readonly readOnly: SdFileExplorerOption = {
@@ -409,5 +542,175 @@ export class FileExplorerDemoComponent {
   onOpen(event: SdFileExplorerOpenEvent): void {
     const path = event.path.map(folder => folder.name).join(' / ') || 'thư mục gốc';
     this.lastOpen.set(`${event.item.name} · ${path}`);
+  }
+
+  /**
+   * Selection, bulk actions and per-item commands. The explorer only renders them and hands over the selected files
+   * or the item; confirming, loading, errors and reload() are the page's job, as in a real app.
+   *
+   * Types are left unset, so the explorer defaults apply: a flat selector action is `light`, a group trigger and every
+   * command `text`. The semantic colors (success / info / warning / error) are this page's data — the explorer never
+   * colors an action by its meaning.
+   */
+  #manage(
+    drive: DemoDrive,
+    explorer: () => SdFileExplorer | undefined
+  ): Pick<SdFileExplorerOption, 'selector' | 'fileCommands' | 'folderCommands'> {
+    const busy = (items: readonly SdFileExplorerItem[]) => items.some(item => this.#busy().has(item.id));
+    const remove = (items: readonly SdFileExplorerItem[]) => void this.#remove(drive, explorer, items);
+    const rename = (item: SdFileExplorerItem) => void this.#rename(drive, explorer, item);
+    const approve = (items: readonly SdFileExplorerItem[]) =>
+      this.lastAction.set(`Đã đánh dấu duyệt ${this.#count(items)} (chỉ ghi nhật ký)`);
+    const archive = (items: readonly SdFileExplorerItem[]) => this.lastAction.set(`Đã lưu trữ ${this.#count(items)} (chỉ ghi nhật ký)`);
+    return {
+      selector: {
+        // The signed contract is locked: its checkbox is disabled and "select all" skips it.
+        disabled: item => item.id === 'hop-dong',
+        onSelect: (item, selected) => this.lastAction.set(`onSelect · ${item.name} · ${selected.length} tệp đang chọn`),
+        onSelectAll: selected => this.lastAction.set(`onSelectAll · ${selected.length} tệp`),
+        onClear: () => this.lastAction.set('onClear · đã bỏ chọn'),
+        actions: [
+          {
+            title: 'Chuyển vào Tài liệu',
+            prefixIcon: 'drive_file_move',
+            loading: busy,
+            click: items => void this.#moveToDocuments(drive, explorer, items),
+          },
+          { title: 'Đánh dấu đã duyệt', prefixIcon: 'task_alt', color: 'success', click: approve },
+          {
+            title: 'Công cụ',
+            prefixIcon: 'construction',
+            children: [
+              { title: 'Xem thông tin', prefixIcon: 'info', color: 'info', click: items => this.#describe(items) },
+              { title: 'Sao chép tên tệp', prefixIcon: 'content_copy', click: items => void this.#copyNames(items) },
+              { title: 'Đổi tên', prefixIcon: 'edit', disabled: items => items.length !== 1, click: items => rename(items[0]) },
+            ],
+          },
+          {
+            tooltip: 'Thao tác khác với tệp đã chọn',
+            children: [
+              { title: 'Lưu trữ', prefixIcon: 'archive', color: 'warning', click: archive },
+              { title: 'Xóa tệp', prefixIcon: 'delete', color: 'error', loading: busy, click: remove },
+            ],
+          },
+        ],
+      },
+      fileCommands: [
+        { tooltip: 'Tải bản sao', prefixIcon: 'file_download', click: item => this.#saveCopy(drive, item) },
+        { tooltip: 'Xem thông tin', prefixIcon: 'info', color: 'info', click: item => this.#describe([item]) },
+        {
+          tooltip: 'Thao tác khác với tệp',
+          children: [
+            { title: 'Đổi tên', prefixIcon: 'edit', click: rename },
+            { title: 'Đánh dấu đã duyệt', prefixIcon: 'task_alt', color: 'success', click: item => approve([item]) },
+            { title: 'Lưu trữ', prefixIcon: 'archive', color: 'warning', click: item => archive([item]) },
+            { title: 'Xóa tệp', prefixIcon: 'delete', color: 'error', loading: item => busy([item]), click: item => remove([item]) },
+          ],
+        },
+      ],
+      folderCommands: [
+        { tooltip: 'Đổi tên thư mục', prefixIcon: 'edit', click: rename },
+        {
+          tooltip: 'Thao tác khác với thư mục',
+          children: [
+            { title: 'Lưu trữ thư mục', prefixIcon: 'archive', color: 'warning', click: item => archive([item]) },
+            { title: 'Xóa thư mục', prefixIcon: 'delete', color: 'error', loading: item => busy([item]), click: item => remove([item]) },
+          ],
+        },
+      ],
+    };
+  }
+
+  #count(items: readonly SdFileExplorerItem[]): string {
+    return items.length === 1 ? `“${items[0].name}”` : `${items.length} mục`;
+  }
+
+  #describe(items: readonly SdFileExplorerItem[]): void {
+    const bytes = items.reduce((total, item) => total + (item.size ?? 0), 0);
+    const size = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 1 }).format(bytes / 1_048_576);
+    this.lastAction.set(`Thông tin · ${this.#count(items)} · ${size} MB`);
+  }
+
+  async #remove(drive: DemoDrive, explorer: () => SdFileExplorer | undefined, items: readonly SdFileExplorerItem[]): Promise<void> {
+    const what = this.#count(items);
+    try {
+      await this.#confirm.confirm(`Xóa ${what}? Thao tác này không hoàn tác được.`, {
+        title: 'Xóa',
+        yesTitle: 'Xóa',
+        yesButtonColor: 'error',
+      });
+    } catch {
+      return; // the user cancelled
+    }
+    await this.#run(items, async () => {
+      await drive.remove(items.map(item => item.id));
+      this.lastAction.set(`Đã xóa ${what}`);
+      explorer()?.reload();
+    });
+  }
+
+  async #rename(drive: DemoDrive, explorer: () => SdFileExplorer | undefined, item: SdFileExplorerItem): Promise<void> {
+    let name: string;
+    try {
+      name = await this.#confirm.withInput('Tên mới', {
+        title: `Đổi tên “${item.name}”`,
+        defaultValue: item.name,
+        required: true,
+        maxlength: 255,
+      });
+    } catch {
+      return; // the user cancelled
+    }
+    const trimmed = name.trim();
+    if (!trimmed || trimmed === item.name) return;
+    await this.#run([item], async () => {
+      await drive.rename(item.id, trimmed);
+      this.lastAction.set(`Đã đổi tên thành “${trimmed}”`);
+      explorer()?.reload();
+    });
+  }
+
+  async #moveToDocuments(
+    drive: DemoDrive,
+    explorer: () => SdFileExplorer | undefined,
+    items: readonly SdFileExplorerItem[]
+  ): Promise<void> {
+    await this.#run(items, async () => {
+      await drive.move(
+        items.map(item => item.id),
+        'tai-lieu'
+      );
+      this.lastAction.set(`Đã chuyển ${items.length} tệp vào Tài liệu`);
+      explorer()?.reload();
+    });
+  }
+
+  async #copyNames(items: readonly SdFileExplorerItem[]): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(items.map(item => item.name).join('\n'));
+      this.lastAction.set(`Đã sao chép tên ${items.length} tệp`);
+    } catch {
+      this.lastAction.set('Trình duyệt chặn clipboard');
+    }
+  }
+
+  #saveCopy(drive: DemoDrive, item: SdFileExplorerItem): void {
+    const url = URL.createObjectURL(drive.preview(item) ?? new Blob([item.name]));
+    Object.assign(document.createElement('a'), { href: url, download: item.name }).click();
+    setTimeout(() => URL.revokeObjectURL(url), 30_000);
+    this.lastAction.set(`Đã tải bản sao “${item.name}”`);
+  }
+
+  /** Marks the items busy while `work` runs, so their actions show a spinner and ignore repeated clicks. */
+  async #run(items: readonly SdFileExplorerItem[], work: () => Promise<void>): Promise<void> {
+    const ids = items.map(item => item.id);
+    this.#busy.update(current => new Set([...current, ...ids]));
+    try {
+      await work();
+    } catch (error) {
+      this.lastAction.set(error instanceof Error ? `Lỗi: ${error.message}` : 'Lỗi không xác định');
+    } finally {
+      this.#busy.update(current => new Set([...current].filter(id => !ids.includes(id))));
+    }
   }
 }

@@ -323,10 +323,17 @@ describe('SdButton', () => {
       setInput(fixture, 'title', 'Export');
       const host = fixture.nativeElement as HTMLElement;
       const button = host.querySelector('button')!;
+      host.style.setProperty('--sd-surface', 'rgb(250, 250, 250)');
+      const expectBorder = (expected: number[]) => {
+        const value = getComputedStyle(button).borderTopColor;
+        const numbers = value.match(/[\d.]+/g)!.map(Number);
+        const channels = value.startsWith('color(') ? numbers.slice(-3).map(channel => channel * 255) : numbers.slice(0, 3);
+        channels.forEach((channel, index) => expect(channel).toBeCloseTo(expected[index], 2));
+      };
       host.style.setProperty('--sd-border-strong', 'rgb(92, 101, 120)');
-      expect(getComputedStyle(button).borderTopColor).toBe('rgb(92, 101, 120)');
+      expectBorder([114.12, 121.86, 138.2]);
       host.style.setProperty('--sd-border-strong', 'rgb(190, 201, 220)');
-      expect(getComputedStyle(button).borderTopColor).toBe('rgb(190, 201, 220)');
+      expectBorder([198.4, 207.86, 224.2]);
       host.style.setProperty('--sd-disabled-text', 'rgb(151, 162, 183)');
       host.style.setProperty('--sd-disabled-bg', 'rgb(43, 51, 66)');
       setInput(fixture, 'disabled', true);

@@ -840,7 +840,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "components/file-explorer",
     sectionId: "example-day-du-tinh-nang",
     title: "Đầy đủ tính năng",
-    description: "Kéo thả tệp vào explorer hoặc bấm Tải tệp lên. Tên tệp có chữ “loi” sẽ mô phỏng lỗi để thử nút Thử lại; hủy được khi đang chuẩn bị hoặc đang truyền.",
+    description: "Kéo thả tệp vào explorer hoặc bấm Tải tệp lên; tên tệp có chữ “loi” mô phỏng lỗi để thử nút Thử lại. Tích chọn nhiều tệp rồi dùng thanh chọn: nút phẳng mặc định light (Chuyển vào Tài liệu), nhóm mặc định text (Công cụ, menu ⋮), cùng cỡ 32px với lệnh của hàng. Màu ngữ nghĩa do trang demo tự khai báo: Đánh dấu đã duyệt (success), Xem thông tin (info), Lưu trữ (warning), Xóa tệp (error). Rê chuột (hoặc Tab) vào một hàng để thấy lệnh của tệp/thư mục; hợp đồng mẫu bị khóa chọn. Xác nhận, trạng thái loading và reload() đều do trang demo (consumer) tự làm.",
   },
   {
     sourceKey: "components/file-explorer/example-chi-xem-va-tai-xuong",
@@ -854,7 +854,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "components/file-explorer",
     sectionId: "example-khung-hep-mobile",
     title: "Khung hẹp / mobile",
-    description: "Layout đổi theo độ rộng của chính explorer (ResizeObserver), không theo viewport — đặt trong sidebar hẹp cũng tự chuyển.",
+    description: "Layout đổi theo độ rộng của chính explorer (ResizeObserver), không theo viewport — đặt trong sidebar hẹp cũng tự chuyển. Thanh chọn giữ số lượng và nút bỏ chọn ở hàng đầu, các action xuống hàng sau; trên màn hình cảm ứng lệnh của hàng luôn hiện với vùng chạm 48px.",
   },
   {
     sourceKey: "components/file-explorer/example-loading-rong-va-loi",
