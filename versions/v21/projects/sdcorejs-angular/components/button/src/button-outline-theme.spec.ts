@@ -86,6 +86,8 @@ describe('SdButton outline theme regression', () => {
   it('keeps outline loading full opacity and leaves fill loading behavior unchanged', () => {
     setInput(fixture, 'color', 'warning');
     const normal = getComputedStyle(button()).color;
+    const stateLayer = button().querySelector('.mat-mdc-button-persistent-ripple')!;
+    expect(getComputedStyle(stateLayer, '::before').backgroundColor).toBe(normal);
     setInput(fixture, 'loading', true);
     expect(getComputedStyle(button()).opacity).toBe('1');
     expect(getComputedStyle(button()).color).toBe(normal);

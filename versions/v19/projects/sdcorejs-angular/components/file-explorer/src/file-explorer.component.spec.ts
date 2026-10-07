@@ -2287,6 +2287,14 @@ describe('SdFileExplorer', () => {
       for (const [name, value] of Object.entries(tokens)) root.setProperty(name, value);
       try {
         const click = () => undefined;
+        // Capture the standalone role first: creating another root fixture after setup detaches the explorer DOM.
+        const standalone = TestBed.createComponent(SdButton);
+        standalone.componentRef.setInput('type', 'outline');
+        standalone.componentRef.setInput('color', 'success');
+        standalone.componentRef.setInput('title', 'Outlined');
+        standalone.detectChanges();
+        const outlineColor = getComputedStyle(standalone.nativeElement.querySelector('button')).color;
+        standalone.destroy();
         await setup({
           selector: {
             actions: [
@@ -2317,13 +2325,7 @@ describe('SdFileExplorer', () => {
 
         // Everything else stays as sd-button renders it.
         expect(color(nativeButton(move))).toBe('rgb(0, 92, 187)');
-        const standalone = TestBed.createComponent(SdButton);
-        standalone.componentRef.setInput('type', 'outline');
-        standalone.componentRef.setInput('color', 'success');
-        standalone.componentRef.setInput('title', 'Outlined');
-        standalone.detectChanges();
-        expect(color(nativeButton(outlined))).toBe(color(standalone.nativeElement.querySelector('button')));
-        standalone.destroy();
+        expect(color(nativeButton(outlined))).toBe(outlineColor);
         expect(color(nativeButton(filled))).toBe('rgb(255, 255, 255)');
         expect(color(nativeButton(locked))).toBe('rgb(116, 119, 127)');
         expect(color(nativeButton(actionButtons(row('Guide.pdf'))[0]))).toBe('rgb(46, 125, 50)');

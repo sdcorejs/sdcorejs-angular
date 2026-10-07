@@ -463,6 +463,8 @@
   @each $state in (primary, success, info, warning, error) {
     &.mat-#{$state}.c-text {
       --mat-text-button-state-layer-color: var(--sd-file-explorer-mix-tint, #ffffff);
+      // Material 20+ renamed the token; keep the same scoped role on every supported line.
+      --mat-button-text-state-layer-color: var(--mat-text-button-state-layer-color);
     }
   }
 }

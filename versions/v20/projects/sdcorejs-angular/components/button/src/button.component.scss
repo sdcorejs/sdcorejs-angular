@@ -267,6 +267,11 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
           currentColor calc(var(--sd-button-outline-pressed-opacity, 0.04) * 100%),
           transparent
         );
+        // Material 20+ uses the reordered token names; both APIs share the outline roles.
+        --mat-button-outlined-state-layer-color: var(--mat-outlined-button-state-layer-color);
+        --mat-button-outlined-hover-state-layer-opacity: var(--mat-outlined-button-hover-state-layer-opacity);
+        --mat-button-outlined-focus-state-layer-opacity: var(--mat-outlined-button-focus-state-layer-opacity);
+        --mat-button-outlined-ripple-color: var(--mat-outlined-button-ripple-color);
 
         &:focus-visible {
           outline-color: var(--sd-button-outline-focus, var(--sd-focus-ring-color, var(--sd-primary)));
