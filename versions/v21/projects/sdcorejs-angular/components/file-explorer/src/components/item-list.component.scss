@@ -8,9 +8,13 @@
   width: 100%;
 }
 
+// why: mỗi ô có cột cố định của nó; cột chọn và cột thao tác vắng mặt thì rộng 0, các ô còn lại không bị dồn chỗ.
+// --sd-fe-actions-width do host đặt (null khi không có nút tải xuống/chia sẻ ở hàng).
 .row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 128px 88px var(--sd-fe-actions-width, 44px);
+  grid-template-columns:
+    var(--sd-fe-select-col, 0px) minmax(0, 1fr) var(--sd-fe-modified-col, 128px) var(--sd-fe-size-col, 88px)
+    var(--sd-fe-actions-width, 0px);
   align-items: center;
   min-height: 62px;
   border-bottom: 1px solid var(--sd-fe-border);
@@ -29,9 +33,28 @@
   }
 }
 
-// why: số cột thay đổi theo canDownload/compact — ghi đè template columns thay vì tính trong TS.
-.list:not(:has(.cell--action)) .row {
-  grid-template-columns: minmax(0, 1fr) 128px 88px;
+.list--selectable {
+  --sd-fe-select-col: 44px;
+}
+
+.cell--select {
+  grid-column: 1;
+}
+
+.cell--name {
+  grid-column: 2;
+}
+
+.cell--modified {
+  grid-column: 3;
+}
+
+.cell--size {
+  grid-column: 4;
+}
+
+.cell--action {
+  grid-column: 5;
 }
 
 .row--head {
@@ -45,7 +68,8 @@
   }
 }
 
-.row--active {
+.row--active,
+.row--selected {
   background: var(--sd-fe-accent-soft);
 
   &:hover {
@@ -90,15 +114,57 @@
   white-space: nowrap;
 }
 
+// ---- Selection and commands ----
+
+.cell--select {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  // why: vùng chạm 48px của mat-checkbox rộng hơn ô 44px — không cắt nó.
+  overflow: visible;
+}
+
+// The name, then the commands of the row; commands that do not fit wrap onto a second line of the same cell.
+.row--commands .cell--name {
+  flex-wrap: wrap;
+  row-gap: 4px;
+  padding-block: 8px;
+  overflow: visible;
+}
+
+.row--commands .name {
+  flex: 1 1 4.5rem;
+}
+
+.commands,
+.card-menu {
+  margin-inline-start: auto;
+}
+
+// why: trên desktop lệnh chỉ hiện khi rê chuột hoặc focus vào hàng/thẻ. Dùng opacity (không ẩn hẳn) để phím Tab
+// vẫn tới được nút — focus vào nút làm :focus-within hiện vùng lệnh. Menu đang mở hoặc lệnh đang loading giữ nó hiện.
+.commands {
+  opacity: 0;
+}
+
+.row:hover .commands,
+.row:focus-within .commands,
+.card:hover .commands,
+.card:focus-within .commands,
+.commands.sd-file-explorer-actions--open,
+.commands.sd-file-explorer-actions--busy,
+:host(.sd-file-explorer-item-list--touch) .commands {
+  opacity: 1;
+}
+
 :host(.sd-file-explorer-item-list--compact) {
+  --sd-fe-modified-col: 0px;
+  --sd-fe-size-col: 66px;
+
   .row {
-    grid-template-columns: minmax(0, 1fr) 66px var(--sd-fe-actions-width, 36px);
     min-height: 55px;
     font-size: var(--sd-font-size-14, 14px);
-  }
-
-  .list:not(:has(.cell--action)) .row {
-    grid-template-columns: minmax(0, 1fr) 66px;
   }
 
   .row--head {
@@ -114,6 +180,7 @@
     padding: 0 4px;
   }
 
+  // The actions trigger, at the end of the row; its column is as wide as the trigger plus 4 px.
   .cell--action {
     padding: 0;
   }
@@ -158,6 +225,30 @@
 
 .card--active {
   border-color: var(--sd-fe-accent);
+}
+
+.card--selected {
+  border-color: var(--sd-fe-accent);
+  background: var(--sd-fe-accent-soft);
+}
+
+// Checkbox at the start, commands at the end; commands that do not fit wrap below inside the card, never over the name.
+.card-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-height: 40px;
+  margin-block: -4px;
+}
+
+// why: thẳng hàng với checkbox của thẻ — cùng lề trong của thẻ (viền 1px + padding 12px).
+.grid-head {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 0 0 4px 13px;
+  border-bottom: 1px solid var(--sd-fe-border);
 }
 
 .thumb {

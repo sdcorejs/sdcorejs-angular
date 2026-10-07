@@ -846,6 +846,15 @@ export const EN_MESSAGES = {
   'core.component.file-explorer.share.copy-manual': 'Press Ctrl+C (⌘C on macOS) to copy the selected link.',
   'core.component.file-explorer.share.error': 'Unable to create the share link',
   'core.component.file-explorer.close': 'Close',
+  'core.component.file-explorer.selection.label': 'File selection',
+  'core.component.file-explorer.selection.none': 'Select files',
+  'core.component.file-explorer.selection.selected': '{count} files selected',
+  'core.component.file-explorer.selection.selected-one': '{count} file selected',
+  'core.component.file-explorer.selection.select-all': 'Select all visible files ({count})',
+  'core.component.file-explorer.selection.select-item': 'Select {name}',
+  'core.component.file-explorer.selection.clear': 'Deselect all',
+  'core.component.file-explorer.action-loading': 'In progress',
+  'core.component.file-explorer.item-actions': 'Actions for {name}',
 
   // ---- Component: image-editor ----
   'core.component.image-editor.group-history': 'History',

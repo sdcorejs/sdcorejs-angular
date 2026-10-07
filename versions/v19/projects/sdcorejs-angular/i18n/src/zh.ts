@@ -844,6 +844,15 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.file-explorer.share.copy-manual': '按 Ctrl+C（macOS 为 ⌘C）复制所选链接。',
   'core.component.file-explorer.share.error': '无法创建分享链接',
   'core.component.file-explorer.close': '关闭',
+  'core.component.file-explorer.selection.label': '文件选择',
+  'core.component.file-explorer.selection.none': '选择文件',
+  'core.component.file-explorer.selection.selected': '已选择 {count} 个文件',
+  'core.component.file-explorer.selection.selected-one': '已选择 {count} 个文件',
+  'core.component.file-explorer.selection.select-all': '选择全部 {count} 个可见文件',
+  'core.component.file-explorer.selection.select-item': '选择 {name}',
+  'core.component.file-explorer.selection.clear': '取消全部选择',
+  'core.component.file-explorer.action-loading': '处理中',
+  'core.component.file-explorer.item-actions': '{name} 的操作',
 
   // ---- Component: image-editor ----
   'core.component.image-editor.group-history': '编辑历史',

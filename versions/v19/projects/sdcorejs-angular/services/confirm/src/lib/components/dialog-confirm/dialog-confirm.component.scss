@@ -5,7 +5,7 @@
   box-sizing: border-box;
   min-height: 0;
   max-height: calc(100dvh - 32px);
-  padding: 24px;
+  padding: 20px;
   overflow: hidden;
 }
 
@@ -161,7 +161,7 @@
 
 @media (max-width: 600px) {
   :host {
-    padding: 20px;
-    padding-bottom: max(20px, env(safe-area-inset-bottom));
+    padding: 16px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
   }
 }

@@ -847,6 +847,15 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.file-explorer.share.copy-manual': '선택한 링크를 Ctrl+C(macOS는 ⌘C)로 복사하세요.',
   'core.component.file-explorer.share.error': '공유 링크를 만들 수 없습니다',
   'core.component.file-explorer.close': '닫기',
+  'core.component.file-explorer.selection.label': '파일 선택',
+  'core.component.file-explorer.selection.none': '파일을 선택하세요',
+  'core.component.file-explorer.selection.selected': '{count}개 파일 선택됨',
+  'core.component.file-explorer.selection.selected-one': '{count}개 파일 선택됨',
+  'core.component.file-explorer.selection.select-all': '표시된 파일 {count}개 모두 선택',
+  'core.component.file-explorer.selection.select-item': '{name} 선택',
+  'core.component.file-explorer.selection.clear': '모두 선택 해제',
+  'core.component.file-explorer.action-loading': '처리 중',
+  'core.component.file-explorer.item-actions': '{name} 작업',
 
   // ---- Component: image-editor ----
   'core.component.image-editor.group-history': '편집 기록',

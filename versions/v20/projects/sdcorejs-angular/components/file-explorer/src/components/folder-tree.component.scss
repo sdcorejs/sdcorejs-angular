@@ -97,6 +97,53 @@
   }
 }
 
+// why: cây dùng roving tabindex — chỉ nút đang focus (hoặc đang rê chuột) hiện lệnh, nên Tab đi từ nút cây vào lệnh
+// của chính nó rồi ra khỏi cây, thay vì đi qua lệnh của mọi thư mục. Ẩn bằng display (không phải visibility) để lệnh
+// ẩn KHÔNG giữ chỗ: tên thư mục dùng hết bề ngang, chỉ co lại ("…" + tooltip) khi lệnh hiện, và nút không bao giờ đè
+// lên tên. Menu đang mở hoặc lệnh đang loading giữ vùng lệnh hiện; màn hình cảm ứng luôn hiện.
+.node-actions {
+  display: none;
+  flex: 0 1 auto;
+  min-width: 0;
+  margin-inline: auto -6px;
+}
+
+.node:hover .node-actions,
+.node:focus-within .node-actions,
+.node-actions.sd-file-explorer-actions--open,
+.node-actions.sd-file-explorer-actions--busy,
+:host(.sd-file-explorer-folder-tree--touch) .node-actions {
+  display: inline-flex;
+}
+
+// Node with commands: commands that do not fit next to the name move to a second line, at the end, in the declared
+// order. On desktop the name gives way first (commands only show on hover / focus, so the row does not grow then).
+.node--commands {
+  flex-wrap: wrap;
+  row-gap: 2px;
+  padding-block: 2px;
+}
+
+// why: trên màn hình cảm ứng lệnh luôn hiện — giữ trọn tên thư mục thông thường, đẩy lệnh xuống dòng dưới khi thiếu chỗ.
+:host(.sd-file-explorer-folder-tree--touch) .node--commands .label {
+  flex: 1 1 auto;
+}
+
+// Compact: one actions trigger at the end of the node, on the same line. The name gives way ("…") instead of pushing
+// the trigger onto a line of its own; the drawer the trigger opens shows the whole name as its title.
+.node-menu {
+  flex: none;
+  margin-inline: auto -6px;
+}
+
+:host(.sd-file-explorer-folder-tree--compact) .node--commands {
+  flex-wrap: nowrap;
+}
+
+:host(.sd-file-explorer-folder-tree--compact) .node--commands .label {
+  flex: 1 1 0;
+}
+
 .spinner {
   flex: none;
   width: 14px;

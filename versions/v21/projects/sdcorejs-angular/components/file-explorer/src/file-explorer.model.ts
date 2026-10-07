@@ -1,3 +1,6 @@
+import type { SdButtonColor, SdButtonType } from '@sdcorejs/angular/components/button';
+import type { SdIconSet } from '@sdcorejs/angular/modules/icon';
+
 /**
  * Kind of an explorer entry. Folders can be opened and listed; files can be previewed and downloaded.
  */
@@ -143,6 +146,105 @@ export interface SdFileExplorerCreateFolderArgs {
 export type SdFileExplorerView = 'list' | 'grid';
 
 /**
+ * Static or per-context state of an explorer action (`hidden`, `disabled`, `loading`).
+ *
+ * A function receives the same context as the action's `click`: the selected files for `selector.actions`, the item
+ * of the row, card or tree node for `fileCommands` / `folderCommands`. It is evaluated while rendering and again
+ * right before `click` runs; read Angular signals inside it so the explorer re-renders when the state changes.
+ */
+export type SdFileExplorerState<T> = boolean | ((context: T) => boolean);
+
+/** Appearance and state shared by every explorer action, flat button or group. */
+export interface SdFileExplorerActionAppearance<T> {
+  /**
+   * Visible label. Without it the button is icon-only and `tooltip` is its accessible name. A menu item shows its
+   * `title`, or its `tooltip` when it has no title. Every definition needs a `title` or a `tooltip`.
+   */
+  title?: string;
+  /** Tooltip, and the accessible name of an icon-only button. */
+  tooltip?: string;
+  /** Icon before the label. A group without one shows `more_vert`. */
+  prefixIcon?: string;
+  /** Icon after the label. */
+  suffixIcon?: string;
+  /** Icon set of `prefixIcon` / `suffixIcon`. Defaults to the app icon provider. */
+  fontSet?: SdIconSet;
+  /**
+   * Semantic color, as on `sd-button` (`primary`, `secondary`, `info`, `success`, `warning`, `error`, `black`). Use
+   * `'error'` for destructive actions. Unset: `primary` in `selector.actions`, `secondary` in commands; menu items stay
+   * neutral. In the compact command drawer it colors the icons only, like on menu items, and unset stays neutral.
+   */
+  color?: SdButtonColor;
+  /**
+   * `sd-button` variant: `fill`, `light`, `outline` or `text`. Desktop buttons only: ignored for menu items and in the
+   * compact command drawer. Unset: `light` for a flat selector action, `text` for a selector group trigger and for
+   * every file / folder command.
+   */
+  type?: SdButtonType;
+  /** Removes the action. A group whose children are all hidden is removed too. */
+  hidden?: SdFileExplorerState<T>;
+  /** Keeps the action visible but blocks it. */
+  disabled?: SdFileExplorerState<T>;
+  /** Shows a spinner and blocks the action while your own work runs. A loading menu item is also disabled. */
+  loading?: SdFileExplorerState<T>;
+}
+
+/** Action that runs a callback: a button next to its siblings, or an item in a group menu. */
+export interface SdFileExplorerActionLeaf<T> extends SdFileExplorerActionAppearance<T> {
+  /**
+   * Runs the action with the selected files (`selector.actions`) or with the item (`fileCommands`,
+   * `folderCommands`). The explorer does not await it: confirmation, errors, `loading` and `reload()` are yours.
+   */
+  click: (context: T) => void;
+  children?: never;
+}
+
+/** Button that only opens a menu of leaves. Groups are one level deep. */
+export interface SdFileExplorerActionGroup<T> extends SdFileExplorerActionAppearance<T> {
+  /** Menu items in display order. Leaves only: a group cannot contain another group. */
+  children: readonly SdFileExplorerActionLeaf<T>[];
+  click?: never;
+}
+
+/**
+ * One entry of `selector.actions`, `fileCommands` or `folderCommands`: a leaf with `click`, or a group with
+ * `children`. Siblings render in the declared order; the explorer never moves them into an overflow menu.
+ */
+export type SdFileExplorerAction<T> = SdFileExplorerActionLeaf<T> | SdFileExplorerActionGroup<T>;
+
+/** Action on the selected files. `click` receives a frozen snapshot of the selection. */
+export type SdFileExplorerSelectionAction = SdFileExplorerAction<readonly SdFileExplorerItem[]>;
+
+/** Action on one file or folder. `click` receives the item exactly as returned by `list` or `search`. */
+export type SdFileExplorerCommand = SdFileExplorerAction<SdFileExplorerItem>;
+
+/**
+ * Multi-file selection of `<sd-file-explorer>`.
+ *
+ * Only the files visible in the current folder or search results can be selected — never folders, never items of
+ * other folders. The selection survives switching between list and grid and opening a file, and is cleared when the
+ * folder, the search keyword or `list` changes, or on `reload()`. A file that a refresh drops or that `disabled`
+ * starts locking leaves the selection without a callback and is not selected again when it comes back.
+ */
+export interface SdFileExplorerSelector {
+  /** Shows the checkboxes and the selection band. @defaultValue `true` */
+  visible?: boolean;
+  /**
+   * Actions on the selected files, shown in the selection band while at least one file is selected. Without `type`,
+   * a flat action is `light` and a group trigger `text`; without `color`, both are `primary`.
+   */
+  actions?: readonly SdFileExplorerSelectionAction[];
+  /** Files for which it returns `true` show a disabled checkbox and are left out of "select all". */
+  disabled?: (item: SdFileExplorerItem) => boolean;
+  /** Called after a file checkbox is toggled, with the file and the new selection. */
+  onSelect?: (item: SdFileExplorerItem, selectedItems: readonly SdFileExplorerItem[]) => void;
+  /** Called once after the select-all checkbox selects every eligible file or deselects them all (`[]`). */
+  onSelectAll?: (selectedItems: readonly SdFileExplorerItem[]) => void;
+  /** Called once when a non-empty selection is cleared: the band's clear button, or a folder / search / `list` change or `reload()`. */
+  onClear?: () => void;
+}
+
+/**
  * Configuration of `<sd-file-explorer>`.
  *
  * Only `list` is required. Every other callback is optional and switches its UI on: without `upload` there is
@@ -231,6 +333,22 @@ export interface SdFileExplorerOption {
   rootLabel?: string;
   /** Initial layout of the item area. The user can switch afterwards. @defaultValue `'list'` */
   defaultView?: SdFileExplorerView;
+  /**
+   * Multi-file selection: checkboxes on files, a select-all checkbox in the list header (above the grid) and a
+   * selection band with `selector.actions`. See `SdFileExplorerSelector`.
+   */
+  selector?: SdFileExplorerSelector;
+  /**
+   * Actions on one file, in list rows and grid cards — in the compact layout, in the command drawer each row or card
+   * opens. Declaring it — even as `[]` — replaces the row download and share shortcuts, in that drawer too; the detail
+   * drawer keeps its own Download and Share buttons.
+   */
+  fileCommands?: readonly SdFileExplorerCommand[];
+  /**
+   * Actions on one folder, in list rows, grid cards and the folder tree (never on the root) — in the compact layout,
+   * in the command drawer each row, card or tree node opens.
+   */
+  folderCommands?: readonly SdFileExplorerCommand[];
   /** E2E scope. Produces `data-autoid="components-file-explorer-{autoId}"` and derived child ids. */
   autoId?: string;
 }
