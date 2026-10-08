@@ -37,10 +37,21 @@ Section header/footer padding is `8px 16px`. Section body padding is `0`. Use `s
 
 | Name | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `label` | `string` | required | Left label text. |
+| `label` | `string` | `''` | Left label text. Optional when the left column is projected through `[itemLeft]`. |
 | `labelWidth` | `string` | `'150px'` | Width of the label column. |
 
 Each item row uses `8px 16px` padding and projects the value in the default slot.
+
+## `<sd-section-item>` Slots
+
+| Selector | Where it renders |
+| --- | --- |
+| `[itemLeft]` | Left column (`.c-item-label`), replacing `label`. The column keeps `labelWidth` and its `T14R text-secondary` classes. |
+| (default) | Value column (`.c-item-content`). |
+
+- `[itemLeft]` uses `ng-content` default content: `label` renders only when no `[itemLeft]` element is projected. Put typography classes such as `T14M` on the projected element. It inherits the `text-secondary` colour unless it sets its own colour class.
+- The fallback is fixed when the template compiles, not at runtime. An `[itemLeft]` element inside `@if` counts as projected even when the condition is false, so the left column stays blank instead of showing `label`. To switch conditionally, put the `@if` around the whole `<sd-section-item>` or bind `label` alone.
+- `label` is optional (default `''`). Leaving out both `label` and `[itemLeft]` renders an empty left column that still takes `labelWidth`.
 
 ## Examples
 
@@ -51,6 +62,15 @@ Each item row uses `8px 16px` padding and projects the value in the default slot
 
   <sd-button sdFooterLeft type="text" title="History"></sd-button>
   <sd-button sdFooterRight type="fill" color="primary" title="Save"></sd-button>
+</sd-section>
+```
+
+```html
+<sd-section icon="apartment" title="Unit A-12.05">
+  <sd-section-item labelWidth="180px">
+    <span itemLeft class="T14M">General info</span>
+  </sd-section-item>
+  <sd-section-item label="Area" labelWidth="180px">75 m²</sd-section-item>
 </sd-section>
 ```
 

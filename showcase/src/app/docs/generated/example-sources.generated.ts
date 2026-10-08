@@ -7349,6 +7349,22 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
         </sd-section>
       </demo-section>
       }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-section-item-custom-left-column') {
+      <demo-section heading="Section item custom left column" [props]="[{ name: 'itemLeft', value: 'template' }, { name: 'label', value: 'optional' }]">
+        <sd-section icon="apartment" title="Unit A-12.05" subTitle="Group titles in T14M through [itemLeft]" class="demo-section-card">
+          <sd-section-item labelWidth="180px">
+            <span itemLeft class="T14M">General info</span>
+          </sd-section-item>
+          <sd-section-item label="Area" labelWidth="180px">75 m²</sd-section-item>
+          <sd-section-item label="Orientation" labelWidth="180px">South-east</sd-section-item>
+          <sd-section-item labelWidth="180px">
+            <span itemLeft class="T14M">Deal value</span>
+          </sd-section-item>
+          <sd-section-item label="Sale price" labelWidth="180px">5,200,000,000 VND</sd-section-item>
+        </sd-section>
+      </demo-section>
+      }
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-icon-shape') {
         <demo-section
           heading="Icon shape"
@@ -20799,6 +20815,22 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
       <sd-section icon="info" iconColor="success" iconShape="circle" title="circle" subTitle="Kiểu tròn" class="demo-section-card"></sd-section>
       <sd-section icon="info" iconColor="warning" iconShape="none" title="none" subTitle="Không nền" class="demo-section-card"></sd-section>
     </demo-section>`,
+  },
+  "components/section/example-section-item-custom-left-column": {
+    ...SHOWCASE_PAGE_SOURCES["components/section"],
+    html: `<demo-section heading="Section item custom left column" [props]="[{ name: 'itemLeft', value: 'template' }, { name: 'label', value: 'optional' }]">
+    <sd-section icon="apartment" title="Unit A-12.05" subTitle="Group titles in T14M through [itemLeft]" class="demo-section-card">
+      <sd-section-item labelWidth="180px">
+        <span itemLeft class="T14M">General info</span>
+      </sd-section-item>
+      <sd-section-item label="Area" labelWidth="180px">75 m²</sd-section-item>
+      <sd-section-item label="Orientation" labelWidth="180px">South-east</sd-section-item>
+      <sd-section-item labelWidth="180px">
+        <span itemLeft class="T14M">Deal value</span>
+      </sd-section-item>
+      <sd-section-item label="Sale price" labelWidth="180px">5,200,000,000 VND</sd-section-item>
+    </sd-section>
+  </demo-section>`,
   },
   "components/section/example-section-item-rich-values": {
     ...SHOWCASE_PAGE_SOURCES["components/section"],

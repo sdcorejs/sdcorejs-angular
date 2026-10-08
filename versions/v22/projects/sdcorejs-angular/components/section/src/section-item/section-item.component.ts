@@ -9,7 +9,8 @@ import { Component, input } from '@angular/core';
   standalone: true,
 })
 export class SdSectionItem {
-  label = input.required<string>();
+  /** Left column text. Optional when the left column is projected through `[itemLeft]`. */
+  label = input<string>('');
   labelWidth = input<string, string | null | undefined>('150px', {
     transform: (val: any): string => {
       return val || '150px';
