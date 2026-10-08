@@ -96,4 +96,92 @@ describe('SdSectionItem', () => {
       expect(input.value).toBe('x@y.com');
     });
   });
+
+  describe('label-only left column', () => {
+    it('keeps the c-item-label T14R text-secondary classes, the width and the label text', () => {
+      fixture.componentRef.setInput('labelWidth', '180px');
+      fixture.detectChanges();
+      const left = fixture.nativeElement.querySelector('.c-item > .c-item-label') as HTMLElement;
+      expect(left.classList).toContain('T14R');
+      expect(left.classList).toContain('text-secondary');
+      expect(left.style.width).toBe('180px');
+      expect(left.textContent?.trim()).toBe('My Label');
+    });
+  });
+
+  describe('[itemLeft] slot', () => {
+    @Component({
+      standalone: true,
+      imports: [SdSectionItem],
+      template: `
+        <sd-section-item [label]="'Plain label'" [labelWidth]="'120px'">
+          <span itemLeft class="T14M custom-left">General info</span>
+          <input class="proj" value="value" />
+        </sd-section-item>
+      `,
+    })
+    class SlotWithLabelHost {}
+
+    @Component({
+      standalone: true,
+      imports: [SdSectionItem],
+      template: `
+        <sd-section-item>
+          <span itemLeft class="custom-left">Deal value</span>
+        </sd-section-item>
+      `,
+    })
+    class SlotOnlyHost {}
+
+    const leftColumn = (hostFixture: ComponentFixture<unknown>): HTMLElement =>
+      hostFixture.nativeElement.querySelector('.c-item > .c-item-label') as HTMLElement;
+
+    it('renders projected [itemLeft] content in the left column instead of the label', () => {
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({ imports: [SlotWithLabelHost] });
+      const hostFixture = TestBed.createComponent(SlotWithLabelHost);
+      hostFixture.detectChanges();
+      const left = leftColumn(hostFixture);
+      const span = left.querySelector('span.custom-left') as HTMLElement;
+      expect(span).not.toBeNull();
+      expect(span.classList).toContain('T14M');
+      expect(left.textContent?.trim()).toBe('General info');
+      expect(left.textContent).not.toContain('Plain label');
+      expect(left.style.width).toBe('120px');
+    });
+
+    it('keeps the value slot working alongside [itemLeft]', () => {
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({ imports: [SlotWithLabelHost] });
+      const hostFixture = TestBed.createComponent(SlotWithLabelHost);
+      hostFixture.detectChanges();
+      const left = leftColumn(hostFixture);
+      const content = hostFixture.nativeElement.querySelector('.c-item > .c-item-content') as HTMLElement;
+      expect(left.querySelector('span.custom-left')).not.toBeNull();
+      expect(left.querySelector('input.proj')).toBeNull();
+      const input = content.querySelector('input.proj') as HTMLInputElement;
+      expect(input).not.toBeNull();
+      expect(input.value).toBe('value');
+    });
+
+    it('creates without label when only [itemLeft] is projected', () => {
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({ imports: [SlotOnlyHost] });
+      const hostFixture = TestBed.createComponent(SlotOnlyHost);
+      expect(() => hostFixture.detectChanges()).not.toThrow();
+      const item = hostFixture.debugElement.query(By.directive(SdSectionItem)).componentInstance as SdSectionItem;
+      expect(item.label()).toBe('');
+      expect(leftColumn(hostFixture).textContent?.trim()).toBe('Deal value');
+    });
+  });
+
+  describe('optional label', () => {
+    it('defaults label() to an empty string when not set', () => {
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({ imports: [SdSectionItem] });
+      const bare = TestBed.createComponent(SdSectionItem);
+      expect(() => bare.detectChanges()).not.toThrow();
+      expect(bare.componentInstance.label()).toBe('');
+    });
+  });
 });

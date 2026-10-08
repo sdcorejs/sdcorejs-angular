@@ -149,6 +149,7 @@ export type ShowcaseExampleSourceKey =
   | "components/section/example-full-width-content-with-body-padding-0"
   | "components/section/example-headerless-card-with-manual-body-padding"
   | "components/section/example-icon-shape"
+  | "components/section/example-section-item-custom-left-column"
   | "components/section/example-section-item-rich-values"
   | "components/side-drawer/example-create-drawer-split-footer"
   | "components/side-drawer/example-custom-header-left-right"
@@ -1443,6 +1444,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-section-item-rich-values",
     title: "Section item rich values",
     description: "Existing “Section item rich values” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/section/example-section-item-custom-left-column",
+    pageKey: "components/section",
+    sectionId: "example-section-item-custom-left-column",
+    title: "Section item custom left column",
+    description: "Existing “Section item custom left column” scenario preserved from the showcase.",
   },
   {
     sourceKey: "components/section/example-icon-shape",

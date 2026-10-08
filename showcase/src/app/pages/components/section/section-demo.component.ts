@@ -130,6 +130,22 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
         </sd-section>
       </demo-section>
       }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-section-item-custom-left-column') {
+      <demo-section heading="Section item custom left column" [props]="[{ name: 'itemLeft', value: 'template' }, { name: 'label', value: 'optional' }]">
+        <sd-section icon="apartment" title="Unit A-12.05" subTitle="Group titles in T14M through [itemLeft]" class="demo-section-card">
+          <sd-section-item labelWidth="180px">
+            <span itemLeft class="T14M">General info</span>
+          </sd-section-item>
+          <sd-section-item label="Area" labelWidth="180px">75 m²</sd-section-item>
+          <sd-section-item label="Orientation" labelWidth="180px">South-east</sd-section-item>
+          <sd-section-item labelWidth="180px">
+            <span itemLeft class="T14M">Deal value</span>
+          </sd-section-item>
+          <sd-section-item label="Sale price" labelWidth="180px">5,200,000,000 VND</sd-section-item>
+        </sd-section>
+      </demo-section>
+      }
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-icon-shape') {
         <demo-section
           heading="Icon shape"

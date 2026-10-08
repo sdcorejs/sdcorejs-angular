@@ -538,7 +538,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/section/sd-section',
     keywords: ['card', 'details', 'header', 'footer'],
     status: 'stable',
-    demoSectionCount: 8,
+    demoSectionCount: 9,
     loadComponent: () => import('../../pages/components/section/section-demo.component').then(m => m.SectionDemoComponent),
   }),
   defineDocPage({
