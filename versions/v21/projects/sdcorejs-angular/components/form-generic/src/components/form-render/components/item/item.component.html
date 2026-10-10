@@ -1,34 +1,34 @@
 @let item = field();
 @switch (item.type) {
   @case ('textfield') {
-    <lib-textfield [field]="item" [form]="form()" [required]="required()" [disabled]="state().disabled"></lib-textfield>
+    <lib-textfield [field]="item" [form]="registrationForm()" [required]="required()" [disabled]="state().disabled"></lib-textfield>
   }
   @case ('textarea') {
-    <lib-textarea [field]="item" [form]="form()" [required]="required()" [disabled]="state().disabled"></lib-textarea>
+    <lib-textarea [field]="item" [form]="registrationForm()" [required]="required()" [disabled]="state().disabled"></lib-textarea>
   }
   @case ('number') {
-    <lib-number [field]="item" [form]="form()" [required]="required()" [disabled]="state().disabled"></lib-number>
+    <lib-number [field]="item" [form]="registrationForm()" [required]="required()" [disabled]="state().disabled"></lib-number>
   }
   @case ('select') {
-    <lib-select [field]="item" [form]="form()" [required]="required()" [disabled]="state().disabled"></lib-select>
+    <lib-select [field]="item" [form]="registrationForm()" [required]="required()" [disabled]="state().disabled"></lib-select>
   }
   @case ('radio') {
-    <lib-radio [field]="item" [form]="form()" [required]="required()" [disabled]="state().disabled"></lib-radio>
+    <lib-radio [field]="item" [form]="registrationForm()" [required]="required()" [disabled]="state().disabled"></lib-radio>
   }
   @case ('checkbox') {
-    <lib-checkbox [field]="item" [form]="form()" [required]="required()" [disabled]="state().disabled"></lib-checkbox>
+    <lib-checkbox [field]="item" [form]="registrationForm()" [required]="required()" [disabled]="state().disabled"></lib-checkbox>
   }
   @case ('datetime') {
-    <lib-datetime [field]="item" [form]="form()" [required]="required()" [disabled]="state().disabled"></lib-datetime>
+    <lib-datetime [field]="item" [form]="registrationForm()" [required]="required()" [disabled]="state().disabled"></lib-datetime>
   }
   @case ('chip-string') {
-    <lib-chip-string [field]="item" [form]="form()" [required]="required()" [disabled]="state().disabled"></lib-chip-string>
+    <lib-chip-string [field]="item" [form]="registrationForm()" [required]="required()" [disabled]="state().disabled"></lib-chip-string>
   }
   @case ('chip-calendar') {
-    <lib-chip-calendar [field]="item" [form]="form()" [required]="required()" [disabled]="state().disabled"></lib-chip-calendar>
+    <lib-chip-calendar [field]="item" [form]="registrationForm()" [required]="required()" [disabled]="state().disabled"></lib-chip-calendar>
   }
   @case ('upload') {
-    <lib-upload [field]="item" [form]="form()" [required]="required()" [disabled]="state().disabled"></lib-upload>
+    <lib-upload [field]="item" [form]="registrationForm()" [required]="required()" [disabled]="state().disabled"></lib-upload>
   }
   @case ('html') {
     <lib-html [field]="item"></lib-html>

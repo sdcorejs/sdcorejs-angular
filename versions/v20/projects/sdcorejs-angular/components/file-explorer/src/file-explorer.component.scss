@@ -10,9 +10,9 @@
   --sd-fe-accent-contrast: var(--sd-file-explorer-accent-contrast, var(--sd-primary-contrast, #ffffff));
   --sd-fe-accent-soft: var(
     --sd-file-explorer-accent-soft,
-    color-mix(in srgb, var(--sd-fe-accent) 10%, var(--sd-file-explorer-mix-tint, #ffffff))
+    color-mix(in srgb, var(--sd-fe-accent) 10%, var(--sd-file-explorer-mix-tint, var(--sd-fe-surface)))
   );
-  --sd-fe-surface: var(--sd-file-explorer-surface, #ffffff);
+  --sd-fe-surface: var(--sd-file-explorer-surface, var(--sd-surface, #ffffff));
   --sd-fe-sidebar-bg: var(--sd-file-explorer-sidebar-bg, color-mix(in srgb, var(--sd-surface-muted, #e7e8ed) 26%, var(--sd-fe-surface)));
   --sd-fe-muted-surface: var(
     --sd-file-explorer-muted-surface,
@@ -20,17 +20,17 @@
   );
   --sd-fe-preview-bg: var(
     --sd-file-explorer-preview-bg,
-    color-mix(in srgb, var(--sd-fe-accent) 9%, var(--sd-file-explorer-mix-tint, #ffffff))
+    color-mix(in srgb, var(--sd-fe-accent) 9%, var(--sd-file-explorer-mix-tint, var(--sd-fe-surface)))
   );
   --sd-fe-border: var(
     --sd-file-explorer-border,
-    color-mix(in srgb, var(--sd-border, #c4c6d0) 55%, var(--sd-file-explorer-mix-tint, #ffffff))
+    color-mix(in srgb, var(--sd-border, #c4c6d0) 55%, var(--sd-file-explorer-mix-tint, var(--sd-fe-surface)))
   );
   --sd-fe-border-strong: var(--sd-file-explorer-border-strong, var(--sd-border, #c4c6d0));
   --sd-fe-text: var(--sd-file-explorer-text, var(--sd-text, #1a1b1f));
   --sd-fe-text-secondary: var(
     --sd-file-explorer-text-secondary,
-    color-mix(in srgb, var(--sd-text-secondary, #44474f) 84%, var(--sd-file-explorer-mix-tint, #ffffff))
+    color-mix(in srgb, var(--sd-text-secondary, #44474f) 84%, var(--sd-file-explorer-mix-tint, var(--sd-fe-surface)))
   );
   --sd-fe-hover: color-mix(in srgb, var(--sd-fe-text) 4%, transparent);
   --sd-fe-hover-strong: color-mix(in srgb, var(--sd-fe-text) 8%, transparent);
@@ -85,7 +85,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--sd-fe-accent) 14%, var(--sd-file-explorer-mix-tint, #ffffff));
+  background: color-mix(in srgb, var(--sd-fe-accent) 14%, var(--sd-file-explorer-mix-tint, var(--sd-fe-surface)));
   color: var(--sd-fe-accent);
 }
 
@@ -330,29 +330,8 @@
   color: var(--sd-fe-accent);
 }
 
-.heading-row {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 10px;
-  padding: 0 32px;
-}
-
-.heading {
-  min-width: 0;
-  margin: 0;
-  overflow: hidden;
-  font-size: var(--sd-font-size-18, 18px);
-  font-weight: var(--sd-font-weight-bold, 700);
-  line-height: 26px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .count {
   flex: none;
-  padding-bottom: 12px;
   font-size: var(--sd-font-size-13, 13px);
   color: var(--sd-fe-text-secondary);
 }
@@ -378,7 +357,7 @@
   // `--sd-file-explorer-muted-surface` (cũng của ô tìm kiếm và thumbnail) vẫn thắng khi consumer đặt.
   background: var(
     --sd-file-explorer-muted-surface,
-    color-mix(in srgb, var(--sd-surface-muted, #e7e8ed) 50%, var(--sd-file-explorer-mix-tint, #ffffff))
+    color-mix(in srgb, var(--sd-surface-muted, #e7e8ed) 50%, var(--sd-file-explorer-mix-tint, var(--sd-fe-surface)))
   );
 }
 
@@ -403,7 +382,7 @@
   font-weight: var(--sd-font-weight-semibold, 600);
 }
 
-// Desktop: 32 px, the height of the band's actions. Touch: 44 px target; the 20 px icon stays.
+// Desktop: 32 px, the height of the band's actions. Touch: 48 px target; the 20 px icon stays.
 .icon-button.selection-clear {
   width: 32px;
   height: 32px;
@@ -419,8 +398,8 @@
 }
 
 :host(.sd-file-explorer--touch) .icon-button.selection-clear {
-  width: 44px;
-  height: 44px;
+  width: var(--sd-space-48, 48px);
+  height: var(--sd-space-48, 48px);
 }
 
 // why: Material giữ vùng chạm 48px quanh nút 32px (cao hơn nút 8px mỗi phía, rộng bằng nút). Các dòng nút bị xuống dòng
@@ -462,7 +441,7 @@
   // Chỉ token state layer của nút text; ripple tạm thời, nền và mọi loại nút khác vẫn của sd-button.
   @each $state in (primary, success, info, warning, error) {
     &.mat-#{$state}.c-text {
-      --mat-text-button-state-layer-color: var(--sd-file-explorer-mix-tint, #ffffff);
+      --mat-text-button-state-layer-color: var(--sd-file-explorer-mix-tint, var(--sd-fe-surface));
       // Material 20+ renamed the token; keep the same scoped role on every supported line.
       --mat-button-text-state-layer-color: var(--mat-text-button-state-layer-color);
     }
@@ -505,7 +484,7 @@
   padding: 16px;
   border: 2px dashed var(--sd-fe-accent);
   border-radius: var(--sd-fe-radius);
-  background: color-mix(in srgb, var(--sd-fe-accent) 8%, rgb(255 255 255 / 86%));
+  background: color-mix(in srgb, var(--sd-fe-accent) 8%, color-mix(in srgb, var(--sd-fe-surface) 86%, transparent));
   pointer-events: none;
 }
 
@@ -765,4 +744,14 @@
   :host(.sd-file-explorer--compact) .sidebar {
     transition: none;
   }
+}
+.move-status {
+  display: block;
+  margin: 8px 16px;
+  color: var(--sd-fe-text-secondary);
+}
+.move-picker {
+  box-sizing: border-box;
+  max-height: min(80vh, calc(100% - 32px));
+  overflow-y: auto;
 }

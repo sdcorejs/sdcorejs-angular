@@ -12,9 +12,9 @@ const SHEET_WIDTH = 'min(400px, calc(100vw - 56px))';
 let nextSheetId = 0;
 
 /** Entry pressed in the drawer, with the group it belongs to. */
-export interface SdFileExplorerSheetActivation {
-  readonly command: SdFileExplorerSheetCommand;
-  readonly group: SdFileExplorerSheetGroup | null;
+export interface SdFileExplorerSheetActivation<T = unknown> {
+  readonly command: SdFileExplorerSheetCommand<T>;
+  readonly group: SdFileExplorerSheetGroup<T> | null;
 }
 
 /**
@@ -121,17 +121,17 @@ export interface SdFileExplorerSheetActivation {
   `,
   styleUrl: './command-sheet.component.scss',
 })
-export class SdFileExplorerCommandSheet {
+export class SdFileExplorerCommandSheet<T = unknown> {
   readonly #i18n = inject(I18nService);
 
   /** Content for the item whose commands are shown; `null` while nothing is open. */
-  readonly sheet = input<SdFileExplorerCommandSheetView | null>(null);
+  readonly sheet = input<SdFileExplorerCommandSheetView<T> | null>(null);
   /** Touch screen: 48 px entries and a 44 px close button. */
   readonly touch = input(false);
   /** E2E scope of the content and its entries. */
   readonly autoId = input<string | undefined>(undefined);
   /** An entry was pressed. Nothing has run yet. */
-  readonly activate = output<SdFileExplorerSheetActivation>();
+  readonly activate = output<SdFileExplorerSheetActivation<T>>();
   /** The user closed the drawer (close button, `Escape` or backdrop). */
   readonly close = output<void>();
 

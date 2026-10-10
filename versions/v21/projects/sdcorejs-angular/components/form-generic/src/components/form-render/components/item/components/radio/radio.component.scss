@@ -2,3 +2,26 @@
   display: contents;
   width: 100%;
 }
+
+// Keep row-direction choices readable in their consumer-selected grid span, including long
+// localized labels. This override belongs only to the private Form adapter, not Core radio.
+:host ::ng-deep {
+  .c-radio-group-row {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+
+  .mat-mdc-radio-button {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .mdc-form-field {
+    max-width: 100%;
+  }
+
+  .mdc-label {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}

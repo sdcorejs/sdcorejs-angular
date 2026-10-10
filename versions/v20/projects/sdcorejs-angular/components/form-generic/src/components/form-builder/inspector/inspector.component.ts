@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, output, signal, untracked } from '@angular/core';
+import type { Signal } from '@angular/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdInform } from '@sdcorejs/angular/components/inform';
@@ -18,13 +19,19 @@ import type {
   SdFormGenericField,
   SdFormGenericFieldValidation,
   SdFormGenericFill,
+  SdFormGenericNumberSubtype,
   SdFormGenericOption,
   SdFormGenericOptions,
   SdFormGenericParam,
   SdFormGenericRules,
 } from '../../../models/form-generic-field.model';
 import { SD_FORM_GENERIC_RESERVED_KEYS } from '../../../models/form-generic-schema';
-import type { SdFormGenericGroup, SdFormGenericSchema } from '../../../models/form-generic-schema.model';
+import type {
+  SdFormGenericGroup,
+  SdFormGenericNavigation,
+  SdFormGenericPageElement,
+  SdFormGenericSchema,
+} from '../../../models/form-generic-schema.model';
 import { sdIsValidPattern, sdNumberPrecision, sdNumberSubtype, sdTextSubtype } from '../../../presets/form-generic-presets';
 import { sdIsEmptyFilter } from '../../../rules/form-generic-filter';
 import { sdFindKeyReferences } from '../../../rules/form-generic-references';
@@ -193,13 +200,24 @@ export class InspectorComponent {
   });
   /** Phần tử `type` mà phiên bản này chưa hỗ trợ: chỉ xem/xoá/di chuyển, nội dung giữ nguyên. */
   readonly unsupported = computed(() => isUnknown(this.item()));
-  readonly type = computed(() => this.item()?.type ?? null);
+  readonly type: Signal<SdFormGenericPageElement['type'] | null> = computed(() => this.item()?.type ?? null);
   readonly presetId = computed(() => (this.item() ? paletteIdOf(this.item()!) : ''));
   readonly icon = computed(() => (this.item() ? itemIcon(this.item()!) : 'tune'));
   readonly typeLabelKey = computed(() => (this.item() ? itemTypeLabelKey(this.item()!) : ''));
   readonly validation = computed(() => (this.field()?.validation ?? {}) as SdFormGenericFieldValidation);
   readonly rules = computed(() => ((this.item() as { rules?: SdFormGenericRules } | null)?.rules ?? {}) as SdFormGenericRules);
-  readonly elements = computed(() => this.store.doc().elements);
+  readonly elements = this.store.allElements;
+  readonly navigationMode: Signal<SdFormGenericNavigation['type'] | 'single'> = computed(() => this.store.navigation()?.type ?? 'single');
+  readonly linear = computed(() => {
+    const navigation = this.store.navigation();
+    return navigation?.type === 'steps' && !!navigation.linear;
+  });
+  readonly navigationChoices = computed(() =>
+    ['single', 'tabs', 'steps'].map(value => ({ value, display: this.store.t(`core.component.form-builder.page.${value}`) }))
+  );
+  setNavigation(value: string | null | undefined): void {
+    if (value === 'single' || value === 'tabs' || value === 'steps') this.store.setNavigation(value);
+  }
   readonly variables = computed(() => this.store.doc().variables);
 
   /** Tab khả dụng theo loại phần tử. */
@@ -234,7 +252,9 @@ export class InspectorComponent {
   readonly supportsHyperlink = computed(() => this.type() === 'select' || this.type() === 'radio');
 
   readonly textSubtype = computed(() => (this.type() === 'textfield' ? sdTextSubtype(this.field() as never) : null));
-  readonly numberSubtype = computed(() => (this.type() === 'number' ? (sdNumberSubtype(this.field() as never) ?? 'number') : null));
+  readonly numberSubtype: Signal<SdFormGenericNumberSubtype | 'number' | null> = computed(() =>
+    this.type() === 'number' ? (sdNumberSubtype(this.field() as never) ?? 'number') : null
+  );
   readonly numberPrecision = computed(() => (this.type() === 'number' ? sdNumberPrecision(this.field() as never) : undefined));
   readonly passwordHasDefault = computed(() => this.textSubtype() === 'password' && this.field()?.['defaultValue'] != null);
   /** Regex không biên dịch được — renderer sẽ bỏ qua nó, nên báo ngay ở ô nhập. */

@@ -1,10 +1,41 @@
 import { Component } from '@angular/core';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdDateRange } from '@sdcorejs/angular/forms/date-range';
+import type { SdFileExplorerAction, SdFileExplorerActionGroup, SdFileExplorerActionLeaf, SdFileExplorerItem } from '@sdcorejs/angular/components/file-explorer';
 import { SdTable, SdTableOption, SdTableRowMobileDefDirective } from '@sdcorejs/angular/components/table';
 import { EMPTY_STR } from '@sdcorejs/utils/constants';
 import { Utilities } from '@sdcorejs/utils/fns';
 import type { Color } from '@sdcorejs/utils/models';
+
+// Compatibility with pre-3.1 consumer interfaces and direct callback invocation is a packed-package contract.
+export interface LegacyExplorerAction extends SdFileExplorerActionLeaf<SdFileExplorerItem> {
+  consumerKey: string;
+}
+export const legacyExplorerAction: LegacyExplorerAction = {
+  consumerKey: 'legacy',
+  title: 'Legacy',
+  click: item => {
+    void item.id;
+  },
+};
+export function invokeLegacyExplorerAction(action: SdFileExplorerActionLeaf<SdFileExplorerItem>, item: SdFileExplorerItem): void {
+  action.click(item);
+}
+export function invokeLegacyExplorerGroup(group: SdFileExplorerActionGroup<SdFileExplorerItem>, item: SdFileExplorerItem): void {
+  group.children[0].click(item);
+}
+export const canonicalExplorerAction: SdFileExplorerAction<SdFileExplorerItem> = {
+  title: 'Canonical',
+  children: [
+    {
+      title: 'Run',
+      onClick: item => {
+        void item.id;
+      },
+    },
+    legacyExplorerAction,
+  ],
+};
 
 @Component({
   selector: 'app-mobile-package-consumer-fixture',

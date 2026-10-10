@@ -30,10 +30,10 @@
   }
 }
 
-// Touch: a 44 px target, like the clear button of the selection band.
+// Touch target matches Core's 48 px target while the icon stays 20 px.
 :host(.sd-file-explorer-menu-trigger--touch) .trigger {
-  width: 44px;
-  height: 44px;
+  width: var(--sd-space-48, 48px);
+  height: var(--sd-space-48, 48px);
 }
 
 .spinner {

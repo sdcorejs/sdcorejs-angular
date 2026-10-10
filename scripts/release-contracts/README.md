@@ -1,5 +1,34 @@
 # Reviewed release snapshots
 
+## Release 3.1
+
+`3.1.json` compares all four candidates with their exact same-major published
+`*.3.0` baseline. The reviewed source commit is recorded in the snapshot.
+Inspectable inputs include independently verified registry baselines and actual
+`19.3.1` / `20.3.1` / `21.3.1` / `22.3.1` tarballs built by the official dry-run
+from repaired source `c9341724a53df65508f8f67fd14a0a7c4b14ecb1` with exact
+Node `22.22.3` and npm `11.5.1`. Their retained SHA-256, npm SHA-512 integrity
+and SHA-1 shasum were independently rechecked. The complete inventories,
+declaration/source inputs, per-major deltas and all seven packed font hashes
+are retained for independent review. The canonical surface fingerprint reader
+excludes only `version` and `frameworkMajor`. Final immutable-head builds,
+source binding, peers/engines/assets and strict consumers remain separate gates.
+
+The only new export-map entries are `components/kanban` and `forms/segmented`;
+no existing export, declaration file or packed path is removed. Angular 19 adds
+15 declaration files; later Angular lines add two bundled declaration entries.
+Changes cover Explorer typed data/columns, grouped capabilities, selection and
+consumer-owned moves; Form multi-page navigation and validation; Section's
+optional label/itemLeft slot; outline/confirm/compact UI behavior; Kanban and
+Segmented. Runtime dependencies, same-line peers and engines are retained.
+The changelog documents custom-catalog additions and the intentional actionless
+picker migration. Explicit Form signal annotations preserve the same accepted values while making
+Angular19 declaration text independent of inferred union ordering. The canceled
+navigation poll checks ownership before reacquiring or touching new schema
+controls; the actual action component accepts canonical and legacy definitions.
+The source and declaration changes must be independently
+reviewed with this snapshot; CI never regenerates expectations.
+
 ## Release 3.0
 
 `3.0.json` explicitly binds all four targets to their same-major published

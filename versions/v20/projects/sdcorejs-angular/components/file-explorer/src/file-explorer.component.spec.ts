@@ -403,7 +403,7 @@ describe('SdFileExplorer', () => {
       expect(spy.calls.mostRecent().args[0].signal).toEqual(jasmine.any(AbortSignal));
       expect(rowNames()).toEqual(['Projects', 'Docs', 'Guide.pdf', 'Plan.xlsx', 'Cover.jpg', 'Memo.docx']);
       expect(q('.count')?.textContent?.trim()).toBe(t('item-count', { count: 6 }));
-      expect(q('.heading')?.textContent?.trim()).toBe(t('root'));
+      expect(q('.main')?.getAttribute('aria-label')).toBe(t('root'));
     });
 
     it('formats size and modification date and shows a dash when metadata is missing', async () => {
@@ -444,7 +444,7 @@ describe('SdFileExplorer', () => {
       await setup({ title: 'Team drive', description: 'Shared files', rootLabel: 'Library' });
       expect(q('.brand-title')?.textContent?.trim()).toBe('Team drive');
       expect(q('.brand-description')?.textContent?.trim()).toBe('Shared files');
-      expect(q('.heading')?.textContent?.trim()).toBe('Library');
+      expect(q('.main')?.getAttribute('aria-label')).toBe('Library');
       expect(treeNames()[0]).toBe('Library');
     });
 
@@ -516,17 +516,17 @@ describe('SdFileExplorer', () => {
       await setup();
       row('Projects').click();
       await settle();
-      expect(q('.heading')?.textContent?.trim()).toBe('Projects');
+      expect(q('.main')?.getAttribute('aria-label')).toBe('Projects');
 
       host.option.update(option => ({ ...option, title: 'Renamed' }));
       await settle();
-      expect(q('.heading')?.textContent?.trim()).toBe('Projects');
+      expect(q('.main')?.getAttribute('aria-label')).toBe('Projects');
 
       const next = listSpy({ root: [file('x', null, 'Other.txt')] });
       host.option.set({ list: next });
       await settle();
       expect(next).toHaveBeenCalledTimes(1);
-      expect(q('.heading')?.textContent?.trim()).toBe(t('root'));
+      expect(q('.main')?.getAttribute('aria-label')).toBe(t('root'));
       expect(rowNames()).toEqual(['Other.txt']);
     });
   });
@@ -537,7 +537,7 @@ describe('SdFileExplorer', () => {
       row('Projects').click();
       await settle();
       expect(list().calls.mostRecent().args[0].parentId).toBe('projects');
-      expect(q('.heading')?.textContent?.trim()).toBe('Projects');
+      expect(q('.main')?.getAttribute('aria-label')).toBe('Projects');
       expect(rowNames()).toEqual(['Website', 'Design', 'Brief.docx']);
       expect(qa('sd-breadcrumb li').map(li => li.textContent?.trim())).toEqual([jasmine.stringContaining(t('root')), 'Projects']);
       expect(treeNode('Projects').getAttribute('aria-selected')).toBe('true');
@@ -550,7 +550,7 @@ describe('SdFileExplorer', () => {
       await setup();
       keydown(row('Projects'), 'Enter');
       await settle();
-      expect(q('.heading')?.textContent?.trim()).toBe('Projects');
+      expect(q('.main')?.getAttribute('aria-label')).toBe('Projects');
     });
 
     it('navigates back through the breadcrumb using the cached listing', async () => {
@@ -565,7 +565,7 @@ describe('SdFileExplorer', () => {
       const rootButton = q<HTMLButtonElement>('sd-breadcrumb button');
       rootButton?.click();
       await settle();
-      expect(q('.heading')?.textContent?.trim()).toBe(t('root'));
+      expect(q('.main')?.getAttribute('aria-label')).toBe(t('root'));
       expect(list().calls.count()).toBe(calls);
     });
 
@@ -579,7 +579,7 @@ describe('SdFileExplorer', () => {
       await settle();
       expect(spy.calls.mostRecent().args[0].parentId).toBe('projects');
       expect(treeNames()).toEqual([t('root'), 'Projects', 'Website', 'Design', 'Docs']);
-      expect(q('.heading')?.textContent?.trim()).toBe(t('root'));
+      expect(q('.main')?.getAttribute('aria-label')).toBe(t('root'));
 
       treeNode('Projects').querySelector<HTMLButtonElement>('button.toggle')?.click();
       await settle();
@@ -625,7 +625,7 @@ describe('SdFileExplorer', () => {
       const enter = keydown(treeNode('Docs'), 'Enter');
       await settle();
       expect(enter.defaultPrevented).toBeTrue();
-      expect(q('.heading')?.textContent?.trim()).toBe('Docs');
+      expect(q('.main')?.getAttribute('aria-label')).toBe('Docs');
     });
 
     it('marks a failed tree branch and retries it from the tree', async () => {
@@ -663,7 +663,7 @@ describe('SdFileExplorer', () => {
       const input = q<HTMLInputElement>('.search-input') as HTMLInputElement;
       type(input, 'TAI LIEU');
       expect(rowNames()).toEqual(['Tài liệu.pdf']);
-      expect(q('.heading')?.textContent?.trim()).toBe(t('search-results'));
+      expect(q('.main')?.getAttribute('aria-label')).toBe(t('search-results'));
 
       type(input, 'zzz');
       expect(q('sd-data-state')?.textContent).toContain(t('search-empty', { keyword: 'zzz' }));
@@ -726,7 +726,7 @@ describe('SdFileExplorer', () => {
       row('Website').click();
       await settle();
       expect((q<HTMLInputElement>('.search-input') as HTMLInputElement).value).toBe('');
-      expect(q('.heading')?.textContent?.trim()).toBe('Website');
+      expect(q('.main')?.getAttribute('aria-label')).toBe('Website');
     });
 
     it('Escape clears the keyword', async () => {
@@ -761,7 +761,7 @@ describe('SdFileExplorer', () => {
       expect(qa('.card')[0].querySelector('sd-file-explorer-file-icon')?.getAttribute('data-icon')).toBe('folder-closed');
       keydown(qa('.card')[0], ' ');
       await settle();
-      expect(q('.heading')?.textContent?.trim()).toBe('Folder');
+      expect(q('.main')?.getAttribute('aria-label')).toBe('Folder');
     });
   });
 
@@ -803,7 +803,7 @@ describe('SdFileExplorer', () => {
       expect(q('.header')?.hasAttribute('inert')).toBeFalse();
       expect(q('.sidebar')?.closest('[inert]')).toBeNull();
       expect(q('.toolbar')?.hasAttribute('inert')).toBeTrue();
-      expect(q('.heading-row')?.hasAttribute('inert')).toBeTrue();
+      expect(q('.toolbar')?.hasAttribute('inert')).toBeTrue();
       expect(q('.scroller')?.hasAttribute('inert')).toBeTrue();
       expect(drawer.closest('[inert]')).toBeNull();
 
@@ -825,7 +825,7 @@ describe('SdFileExplorer', () => {
 
       treeNode('Docs').click();
       await settle();
-      expect(q('.heading')?.textContent?.trim()).toBe('Docs');
+      expect(q('.main')?.getAttribute('aria-label')).toBe('Docs');
       expect(detail()).toBeNull();
     });
 
@@ -1551,7 +1551,7 @@ describe('SdFileExplorer', () => {
       treeNode('Projects').click();
       await settle();
       expect(q('aside.sidebar')?.classList).not.toContain('sidebar--open');
-      expect(q('.heading')?.textContent?.trim()).toBe('Projects');
+      expect(q('.main')?.getAttribute('aria-label')).toBe('Projects');
     });
 
     it('closes the folder panel with the scrim and Escape', async () => {
@@ -1633,7 +1633,7 @@ describe('SdFileExplorer', () => {
 
   describe('selection', () => {
     it('offers a named checkbox for every file but none for folders, plus a header-only select-all checkbox', async () => {
-      await setup({ selector: { disabled: entry => entry.id === 'memo' } });
+      await setup({ selector: { mode: 'picker', disabled: entry => entry.id === 'memo' } });
       expect(row('Projects').querySelector('.select')).toBeNull();
       expect(row('Docs').querySelector('.select')).toBeNull();
       expect(selectBox('Guide.pdf').getAttribute('aria-label')).toBe(t('selection.select-item', { name: 'Guide.pdf' }));
@@ -1645,16 +1645,16 @@ describe('SdFileExplorer', () => {
       expect(header.textContent?.trim()).toBe('');
       // Three files can be selected: the disabled Memo.docx is not counted.
       expect(all.getAttribute('aria-label')).toBe(t('selection.select-all', { count: 3 }));
-      expect(q('.selection')?.contains(all)).toBeFalse();
+      expect(q('.selection')).toBeNull();
     });
 
     it('counts selected files in the band, marks the header mixed and reports every toggle to onSelect', async () => {
       const onSelect = jasmine.createSpy('onSelect');
       const data = tree();
-      await setup({ list: listSpy(data), selector: { onSelect } });
+      await setup({ list: listSpy(data), selector: { mode: 'picker', onSelect } });
       expect(q('.selection-count')).toBeNull();
-      expect(selectionStatus()).toBe(t('selection.none'));
-      expect(q<HTMLButtonElement>('.selection-clear')?.disabled).toBeTrue();
+      expect(selectionStatus()).toBe('');
+      expect(q('.selection-clear')).toBeNull();
 
       toggle(selectBox('Plan.xlsx'));
       expect(selectionStatus()).toBe(t('selection.selected-one', { count: 1 }));
@@ -1682,7 +1682,7 @@ describe('SdFileExplorer', () => {
     it('selects every visible enabled file from the header with one onSelectAll, and deselects them the same way', async () => {
       const onSelect = jasmine.createSpy('onSelect');
       const onSelectAll = jasmine.createSpy('onSelectAll');
-      await setup({ selector: { disabled: entry => entry.id === 'cover', onSelect, onSelectAll } });
+      await setup({ selector: { mode: 'picker', disabled: entry => entry.id === 'cover', onSelect, onSelectAll } });
       toggle(selectBox('Plan.xlsx'));
       toggle(selectAllBox());
       expect(onSelectAll).toHaveBeenCalledTimes(1);
@@ -1702,7 +1702,7 @@ describe('SdFileExplorer', () => {
 
     it('clears the selection from the band with one onClear and gives focus back to the header checkbox', async () => {
       const onClear = jasmine.createSpy('onClear');
-      await setup({ selector: { onClear } });
+      await setup({ selector: { mode: 'picker', onClear } });
       toggle(selectBox('Guide.pdf'));
       toggle(selectBox('Memo.docx'));
       const clear = q<HTMLButtonElement>('.selection-clear') as HTMLButtonElement;
@@ -1713,12 +1713,13 @@ describe('SdFileExplorer', () => {
       expect(onClear).toHaveBeenCalledTimes(1);
       expect(selectionCount()).toBe('0');
       expect(selectBox('Guide.pdf').checked).toBeFalse();
-      expect(clear.disabled).toBeTrue();
+      expect(q('.selection-clear')).toBeNull();
+      expect(clear.isConnected).toBeFalse();
       expect(document.activeElement).toBe(selectAllBox());
     });
 
     it('keeps the selection when switching between list and grid and while a file preview is open', async () => {
-      await setup({ selector: {}, preview: () => null });
+      await setup({ selector: { mode: 'picker' }, preview: () => null });
       toggle(selectBox('Guide.pdf'));
       toggle(selectBox('Memo.docx'));
       qa<HTMLButtonElement>('.icon-button--toggle')[1].click();
@@ -1741,7 +1742,7 @@ describe('SdFileExplorer', () => {
 
     it('clears the selection with exactly one onClear when the folder, the keyword, the list callback or reload() changes', async () => {
       const onClear = jasmine.createSpy('onClear');
-      await setup({ selector: { onClear } });
+      await setup({ selector: { mode: 'picker', onClear } });
       toggle(selectBox('Guide.pdf'));
       row('Projects').click();
       await settle();
@@ -1781,14 +1782,17 @@ describe('SdFileExplorer', () => {
 
     it('clears once when a folder is opened from search results, although the keyword is cleared as well', async () => {
       const onClear = jasmine.createSpy('onClear');
-      await setup({ selector: { onClear }, search: () => [folder('web', 'projects', 'Website'), file('sitemap', 'web', 'Sitemap.pdf')] });
+      await setup({
+        selector: { mode: 'picker', onClear },
+        search: () => [folder('web', 'projects', 'Website'), file('sitemap', 'web', 'Sitemap.pdf')],
+      });
       type(q<HTMLInputElement>('.search-input') as HTMLInputElement, 'site');
       await wait(350);
       await settle();
       toggle(selectBox('Sitemap.pdf'));
       row('Website').click();
       await settle();
-      expect(q('.heading')?.textContent?.trim()).toBe('Website');
+      expect(q('.main')?.getAttribute('aria-label')).toBe('Website');
       expect(onClear).toHaveBeenCalledTimes(1);
     });
 
@@ -1797,7 +1801,7 @@ describe('SdFileExplorer', () => {
       const late = deferred<SdFileExplorerItem[]>();
       const data = tree();
       await setup({
-        selector: { onClear },
+        selector: { mode: 'picker', onClear },
         list: ({ parentId }) => (parentId === 'projects' ? late.promise : [...(data[parentId ?? 'root'] ?? [])]),
       });
       toggle(selectBox('Guide.pdf'));
@@ -1808,7 +1812,7 @@ describe('SdFileExplorer', () => {
       await settle();
       late.resolve([file('brief', 'projects', 'Brief.docx')]);
       await settle();
-      expect(q('.heading')?.textContent?.trim()).toBe(t('root'));
+      expect(q('.main')?.getAttribute('aria-label')).toBe(t('root'));
       expect(selectBox('Guide.pdf').checked).toBeFalse();
       expect(selectionCount()).toBe('0');
       expect(onClear).toHaveBeenCalledTimes(1);
@@ -1817,7 +1821,11 @@ describe('SdFileExplorer', () => {
     it('drops files that a refresh no longer lists from the selection handed to actions', async () => {
       const move = jasmine.createSpy('move');
       const data = tree();
-      await setup({ list: listSpy(data), upload: () => undefined, selector: { actions: [{ title: 'Move', click: move }] } });
+      await setup({
+        list: listSpy(data),
+        upload: () => undefined,
+        selector: { mode: 'picker', actions: [{ title: 'Move', click: move }] },
+      });
       toggle(selectBox('Guide.pdf'));
       toggle(selectBox('Plan.xlsx'));
       data['root'] = data['root'].filter(entry => entry.id !== 'plan');
@@ -1836,7 +1844,13 @@ describe('SdFileExplorer', () => {
       const onClear = jasmine.createSpy('onClear');
       const move = jasmine.createSpy('move');
       await setup({
-        selector: { disabled: entry => locked().has(entry.id), onSelect, onClear, actions: [{ title: 'Move', click: move }] },
+        selector: {
+          mode: 'picker',
+          disabled: entry => locked().has(entry.id),
+          onSelect,
+          onClear,
+          actions: [{ title: 'Move', click: move }],
+        },
       });
       toggle(selectBox('Guide.pdf'));
       toggle(selectBox('Plan.xlsx'));
@@ -1863,7 +1877,7 @@ describe('SdFileExplorer', () => {
     it('does not select a file again when a refresh drops it and a later refresh lists it again', async () => {
       const onClear = jasmine.createSpy('onClear');
       const data = tree();
-      await setup({ list: listSpy(data), upload: () => undefined, selector: { onClear } });
+      await setup({ list: listSpy(data), upload: () => undefined, selector: { mode: 'picker', onClear } });
       toggle(selectBox('Plan.xlsx'));
       const plan = data['root'][2];
       data['root'] = data['root'].filter(entry => entry.id !== 'plan');
@@ -1885,7 +1899,7 @@ describe('SdFileExplorer', () => {
 
     it('keeps checkboxes and names apart: a checkbox never opens the file and opening a file never changes the selection', async () => {
       const onSelect = jasmine.createSpy('onSelect');
-      await setup({ selector: { onSelect }, preview: () => null });
+      await setup({ selector: { mode: 'picker', onSelect }, preview: () => null });
       toggle(selectBox('Guide.pdf'));
       (row('Plan.xlsx').querySelector('.cell--select') as HTMLElement).click();
       for (const key of ['Enter', ' ']) expect(keydown(selectBox('Plan.xlsx'), key).defaultPrevented).toBeFalse();
@@ -1901,7 +1915,7 @@ describe('SdFileExplorer', () => {
     });
 
     it('selects from grid cards, whose header checkbox lines up with the card checkboxes', async () => {
-      await setup({ defaultView: 'grid', selector: {}, preview: () => null });
+      await setup({ defaultView: 'grid', selector: { mode: 'picker' }, preview: () => null });
       expect(card('Projects').querySelector('.select')).toBeNull();
       const all = selectAllBox();
       const head = all.closest('.grid-head') as HTMLElement;
@@ -1925,8 +1939,9 @@ describe('SdFileExplorer', () => {
     });
 
     it('names the selection with tệp in Vietnamese and file in English, and puts the number where each language does', async () => {
-      await setup({ selector: {} });
-      expect(selectionStatus()).toContain('tệp');
+      await setup({ selector: { mode: 'picker' } });
+      expect(selectionStatus()).toBe('');
+      expect(selectAllBox().getAttribute('aria-label')).toContain('tệp');
       toggle(selectBox('Guide.pdf'));
       toggle(selectBox('Plan.xlsx'));
       expect(selectionStatus()).toBe('2 tệp đã chọn');
@@ -1935,8 +1950,8 @@ describe('SdFileExplorer', () => {
       // why: setLanguage persists the choice; keep it out of localStorage so later specs still start in Vietnamese.
       spyOn(localStorage, 'setItem');
       i18n.setLanguage('en', { reload: false });
-      await setup({ selector: {} });
-      expect(selectionStatus()).toBe('Select files');
+      await setup({ selector: { mode: 'picker' } });
+      expect(selectionStatus()).toBe('');
       toggle(selectBox('Guide.pdf'));
       expect(selectionStatus()).toBe('1 file selected');
       toggle(selectBox('Plan.xlsx'));
@@ -1951,7 +1966,7 @@ describe('SdFileExplorer', () => {
         ['ko', '2개 파일 선택됨'],
       ]) {
         i18n.setLanguage(language as 'zh' | 'ja' | 'ko', { reload: false });
-        await setup({ selector: {} });
+        await setup({ selector: { mode: 'picker' } });
         toggle(selectBox('Guide.pdf'));
         toggle(selectBox('Plan.xlsx'));
         expect(selectionStatus()).withContext(language).toBe(expected);
@@ -1960,7 +1975,7 @@ describe('SdFileExplorer', () => {
       }
     });
 
-    it('keeps the selection band on one neutral surface, selected or not, on desktop and mobile, and leaves the selected rows tinted', async () => {
+    it('keeps the selection band on one neutral surface, while selected on desktop and mobile, and leaves the selected rows tinted', async () => {
       // Distinct test values. Core's dark pair: --sd-surface-muted #2e3035 and the explorer tint #1d1f23.
       const tokens: Record<string, string> = {
         '--sd-surface-muted': 'rgb(200, 204, 214)',
@@ -1970,7 +1985,9 @@ describe('SdFileExplorer', () => {
       const root = document.documentElement.style;
       for (const [name, value] of Object.entries(tokens)) root.setProperty(name, value);
       try {
-        await setup({ selector: { actions: [{ title: 'Move', click: () => undefined }] } });
+        await setup({ selector: { mode: 'picker', actions: [{ title: 'Move', click: () => undefined }] } });
+        expect(q('.selection')).toBeNull();
+        toggle(selectBox('Guide.pdf'));
         const band = q('.selection') as HTMLElement;
         const search = q('.search') as HTMLElement;
         const looks = () => [getComputedStyle(band).backgroundColor, getComputedStyle(band).borderTopColor];
@@ -1980,8 +1997,8 @@ describe('SdFileExplorer', () => {
           .toBeTrue();
         const idle = looks();
 
-        // Selecting files changes the sentence and shows the actions, not the band: no accent tint, same border.
-        toggle(selectBox('Guide.pdf'));
+        // Additional files keep the same neutral surface and border.
+        toggle(selectBox('Plan.xlsx'));
         expect(band.classList).toContain('selection--active');
         expect(looks()).toEqual(idle);
         expect(getComputedStyle(band).backgroundColor).not.toBe('rgb(1, 2, 3)');
@@ -2021,11 +2038,12 @@ describe('SdFileExplorer', () => {
     });
 
     it('states the selection as plain text: a semibold number inside the same 14 px sentence, with the clear button apart', async () => {
-      await setup({ selector: {} });
-      const status = q('.selection-status') as HTMLElement;
-      expect(status.getAttribute('role')).toBe('status');
+      await setup({ selector: { mode: 'picker' } });
+      expect(q('.selection-status')).toBeNull();
       expect(q('.selection-count')).toBeNull();
       toggle(selectBox('Guide.pdf'));
+      const status = q('.selection-status') as HTMLElement;
+      expect(status.getAttribute('role')).toBe('status');
       toggle(selectBox('Memo.docx'));
       const count = q('.selection-count') as HTMLElement;
       expect(selectionStatus()).toBe(t('selection.selected', { count: 2 }));
@@ -2043,7 +2061,7 @@ describe('SdFileExplorer', () => {
     });
 
     it('stays off without a selector or when it is not visible', async () => {
-      await setup({ selector: { visible: false } });
+      await setup({ selector: { mode: 'picker', visible: false } });
       expect(q('.selection')).toBeNull();
       expect(q('.cell--select')).toBeNull();
       expect(q('.select-all')).toBeNull();
@@ -2051,13 +2069,13 @@ describe('SdFileExplorer', () => {
 
     it('clears the selection once when the consumer hides the selector', async () => {
       const onClear = jasmine.createSpy('onClear');
-      await setup({ selector: { onClear } });
+      await setup({ selector: { mode: 'picker', onClear } });
       toggle(selectBox('Guide.pdf'));
-      host.option.update(option => ({ ...option, selector: { onClear, visible: false } }));
+      host.option.update(option => ({ ...option, selector: { mode: 'picker', onClear, visible: false } }));
       await settle();
       expect(onClear).toHaveBeenCalledTimes(1);
       expect(q('.selection')).toBeNull();
-      host.option.update(option => ({ ...option, selector: { onClear } }));
+      host.option.update(option => ({ ...option, selector: { mode: 'picker', onClear } }));
       await settle();
       expect(selectBox('Guide.pdf').checked).toBeFalse();
       expect(selectionCount()).toBe('0');
@@ -2468,7 +2486,7 @@ describe('SdFileExplorer', () => {
       expect(host.opened).toEqual([]);
       expect(detail()).toBeNull();
       expect(selectionCount()).toBe('0');
-      expect(q('.heading')?.textContent?.trim()).toBe(t('root'));
+      expect(q('.main')?.getAttribute('aria-label')).toBe(t('root'));
 
       press(group);
       expect(nativeButton(group).getAttribute('aria-expanded')).toBe('true');
@@ -2510,7 +2528,7 @@ describe('SdFileExplorer', () => {
       fixture.detectChanges();
       expect(move.calls.mostRecent().args[0]).toBe(projects);
       await settle();
-      expect(q('.heading')?.textContent?.trim()).toBe(t('root'));
+      expect(q('.main')?.getAttribute('aria-label')).toBe(t('root'));
       expect(treeNode('Projects').getAttribute('aria-selected')).toBe('false');
 
       qa<HTMLButtonElement>('.icon-button--toggle')[1].click();
@@ -2518,7 +2536,7 @@ describe('SdFileExplorer', () => {
       press(actionButtons(card('Projects'))[0]);
       expect(rename).toHaveBeenCalledTimes(3);
       await settle();
-      expect(q('.heading')?.textContent?.trim()).toBe(t('root'));
+      expect(q('.main')?.getAttribute('aria-label')).toBe(t('root'));
     });
 
     it('opens one command menu at a time, toggles it on repeated clicks and closes it with Escape or an outside click', async () => {
@@ -2549,7 +2567,7 @@ describe('SdFileExplorer', () => {
       expect(document.activeElement).toBe(plan);
       plan.click();
       fixture.detectChanges();
-      (q('.heading') as HTMLElement).click();
+      (q('.toolbar') as HTMLElement).click();
       fixture.detectChanges();
       expect(menu()).toBeNull();
       expect(rename).not.toHaveBeenCalled();
@@ -2610,10 +2628,10 @@ describe('SdFileExplorer', () => {
       const rename = nativeButton(actionButtons(treeNode('Docs'), '.node-actions')[0]);
       for (const key of ['Enter', ' ', 'ArrowUp']) keydown(rename, key);
       await settle();
-      expect(q('.heading')?.textContent?.trim()).toBe(t('root'));
+      expect(q('.main')?.getAttribute('aria-label')).toBe(t('root'));
       keydown(treeNode('Docs'), 'Enter');
       await settle();
-      expect(q('.heading')?.textContent?.trim()).toBe('Docs');
+      expect(q('.main')?.getAttribute('aria-label')).toBe('Docs');
     });
 
     it('wraps the commands of a narrow desktop row onto their own line instead of overlapping the name', async () => {
@@ -2801,7 +2819,7 @@ describe('SdFileExplorer', () => {
       expect(nativeButton(selectionActions()[0]).getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
     });
 
-    it('sizes the selection band like the row commands on desktop and keeps 48 px actions and a 44 px clear button on touch', async () => {
+    it('sizes the selection band like the row commands on desktop and keeps 48 px actions and a 48 px clear button on touch', async () => {
       const click = () => undefined;
       const option = (): Partial<SdFileExplorerOption> => ({
         selector: {
@@ -2857,10 +2875,10 @@ describe('SdFileExplorer', () => {
         [48, 24, '16px'],
         [48, 24, '16px'],
       ]);
-      expect(touch.clear).toEqual([44, 44, 20]);
+      expect(touch.clear).toEqual([48, 48, 20]);
       fixture.destroy();
 
-      // Narrow touch screen: sd-button's own sm size (not a shrunken lg); the clear button keeps its 44 px target.
+      // Narrow touch screen: sd-button's own sm size (not a shrunken lg); the clear button keeps its 48 px target.
       await setupCompact(option());
       toggle(selectBox('Guide.pdf'));
       expect(selectionActions().map(buttonMetrics)).toEqual([
@@ -2870,7 +2888,7 @@ describe('SdFileExplorer', () => {
       ]);
       expect(selectionActions().every(entry => nativeButton(entry).classList.contains('c-sm'))).toBeTrue();
       const clear = (q('.selection-clear') as HTMLElement).getBoundingClientRect();
-      expect([clear.width, clear.height]).toEqual([44, 44]);
+      expect([clear.width, clear.height]).toEqual([48, 48]);
     });
 
     it('keeps the 48 px Material touch targets of wrapped compact selection actions apart from each other and from the clear button', async () => {
@@ -3272,7 +3290,7 @@ describe('SdFileExplorer', () => {
       for (const method of ['back', 'forward', 'go', 'pushState', 'replaceState'] as const) expect(history[method]).not.toHaveBeenCalled();
       await closesOn(() => host.option.update(option => ({ ...option, list: listSpy() })), 'list callback');
       await closesOn(() => row('Projects').click(), 'folder');
-      expect(q('.heading')?.textContent?.trim()).toBe('Projects');
+      expect(q('.main')?.getAttribute('aria-label')).toBe('Projects');
 
       // A wide layout puts the commands back on the row: focus goes to the row of the item, not to the page.
       await openCommandsOf(row('Brief.docx'));
@@ -3615,7 +3633,7 @@ describe('SdFileExplorer', () => {
       // Keys pressed on the trigger belong to it: they neither move through the tree nor open the folder.
       for (const key of ['ArrowDown', 'Enter', ' ']) keydown(trigger, key);
       await settle();
-      expect(q('.heading')?.textContent?.trim()).toBe(t('root'));
+      expect(q('.main')?.getAttribute('aria-label')).toBe(t('root'));
 
       trigger.click();
       await settle();
@@ -3632,16 +3650,16 @@ describe('SdFileExplorer', () => {
       await settle();
       expect(rename).toHaveBeenCalledTimes(1);
       expect(rename.calls.mostRecent().args[0]).toBe(data['root'][1]);
-      expect(q('.heading')?.textContent?.trim()).toBe(t('root'));
+      expect(q('.main')?.getAttribute('aria-label')).toBe(t('root'));
       expect(document.activeElement).toBe(trigger);
     });
 
-    it('gives touch screens 44 px triggers, 48 px drawer entries and a 44 px close button', async () => {
+    it('gives touch screens 48 px triggers, 48 px drawer entries and a 44 px close button', async () => {
       emulateTouch();
       await setupCompact({ download: () => undefined, share: () => 'https://s.example/x', folderCommands: [renameFolder()] });
       const guide = row('Guide.pdf');
       const box = menuTrigger(guide).getBoundingClientRect();
-      expect([box.width, box.height]).toEqual([44, 44]);
+      expect([box.width, box.height]).toEqual([48, 48]);
       expect(guide.scrollWidth).toBeLessThanOrEqual(guide.clientWidth);
       await openCommandsOf(guide);
       const drawer = commandDrawer() as HTMLElement;

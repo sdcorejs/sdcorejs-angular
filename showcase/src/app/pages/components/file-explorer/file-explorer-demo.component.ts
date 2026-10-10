@@ -5,6 +5,8 @@ import {
   SdFileExplorerItem,
   SdFileExplorerOpenEvent,
   SdFileExplorerOption,
+  SdFileExplorerConfig,
+  SdFileExplorerColumnDef,
 } from '@sdcorejs/angular/components/file-explorer';
 import { SdConfirmService } from '@sdcorejs/angular/services/confirm';
 
@@ -348,7 +350,7 @@ function fullOption(drive: DemoDrive, autoId: string): SdFileExplorerOption {
 @Component({
   selector: 'app-file-explorer-demo',
   standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, SdFileExplorer],
+  imports: [DemoPageComponent, DemoSectionComponent, SdFileExplorer, SdFileExplorerColumnDef],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <demo-page
@@ -442,6 +444,32 @@ function fullOption(drive: DemoDrive, autoId: string): SdFileExplorerOption {
           </div>
         </demo-section>
       }
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-generic-data-columns-move') {
+        <demo-section
+          heading="Generic data, columns & move"
+          note="Typed DTO columns, grouped capability eligibility and consumer-controlled moves. Select files to use Move, Share and Download in the selection band; fileCommands is deliberately empty.">
+          <div class="frame frame--desktop">
+            <sd-file-explorer [option]="generic">
+              <ng-template
+                sdFileExplorerColumnDef="owner"
+                [sdFileExplorerColumnFor]="generic"
+                title="Owner"
+                width="160px"
+                let-data="data"
+                >{{ data?.owner }}</ng-template
+              >
+              <ng-template
+                sdFileExplorerColumnDef="classification"
+                [sdFileExplorerColumnFor]="generic"
+                title="Classification"
+                width="140px"
+                let-item
+                >{{ item.data?.classification }}</ng-template
+              >
+            </sd-file-explorer>
+          </div>
+        </demo-section>
+      }
     </demo-page>
   `,
   styles: `
@@ -472,6 +500,48 @@ function fullOption(drive: DemoDrive, autoId: string): SdFileExplorerOption {
   `,
 })
 export class FileExplorerDemoComponent {
+  readonly #genericItems: SdFileExplorerItem<{ owner: string; classification: string }>[] = [
+    { id: 'g-work', parentId: null, name: 'Projects', kind: 'folder', data: { owner: 'Ada', classification: 'Team' } },
+    { id: 'g-private', parentId: null, name: 'Private', kind: 'folder', data: { owner: 'Grace', classification: 'Restricted' } },
+    {
+      id: 'g-report',
+      parentId: null,
+      name: 'Quarterly report.pdf',
+      kind: 'file',
+      size: 12000,
+      data: { owner: 'Ada', classification: 'Team' },
+    },
+    {
+      id: 'g-budget',
+      parentId: null,
+      name: 'Budget.xlsx',
+      kind: 'file',
+      size: 24000,
+      data: { owner: 'Grace', classification: 'Restricted' },
+    },
+  ];
+  readonly generic: SdFileExplorerConfig<{ owner: string; classification: string }> = {
+    autoId: 'generic-columns-move',
+    title: 'Project documents',
+    selector: {},
+    fileCommands: [],
+    dataSource: { onList: ({ parentId }) => this.#genericItems.filter(item => item.parentId === parentId) },
+    capabilities: {
+      share: {
+        shareable: item => item.data?.classification !== 'Restricted',
+        onShare: ({ item }) => `https://drive.example.com/share/${item.id}`,
+      },
+      download: { onDownload: ({ item }) => new Blob([item.name]) },
+    },
+    move: {
+      movable: ({ targetFolder }) => targetFolder?.id !== 'g-private',
+      onMove: async ({ items, targetFolder, signal }) => {
+        await wait(700, signal);
+        for (const item of items) item.parentId = targetFolder?.id ?? null;
+        return true;
+      },
+    },
+  };
   readonly #confirm = inject(SdConfirmService);
   // Angular queries cannot live on ES-private (#) fields.
   private readonly fullExplorer = viewChild<SdFileExplorer>('fullExplorer');

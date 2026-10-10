@@ -53,7 +53,7 @@ export class SdFileExplorerMenuTrigger {
   readonly busy = input(false);
   /** The item's command drawer is open. */
   readonly expanded = input(false);
-  /** Touch screen: 44 px target, no tooltip. */
+  /** Touch screen: 48 px target, no tooltip. */
   readonly touch = input(false);
   /** `null` keeps the button in the tab order; the tree passes `-1` for every node but its tab stop. */
   readonly tabIndex = input<number | null>(null);

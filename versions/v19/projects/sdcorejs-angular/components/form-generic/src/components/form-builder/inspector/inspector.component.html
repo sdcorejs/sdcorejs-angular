@@ -19,6 +19,54 @@
       </div>
     </div>
     <div class="ins-body">
+      <section class="ins-card">
+        <h3 class="ins-section__title">{{ 'core.component.form-builder.page.settings' | sdTranslate }}</h3>
+        <sd-select
+          size="sm"
+          labelPlacement="top"
+          hideInlineError
+          required
+          [label]="'core.component.form-builder.page.navigation' | sdTranslate"
+          [items]="navigationChoices()"
+          valueField="value"
+          displayField="display"
+          [model]="navigationMode()"
+          (modelChange)="setNavigation($event)"></sd-select>
+        @if (navigationMode() === 'steps') {
+          <fb-toggle-row
+            [label]="'core.component.form-builder.page.linear' | sdTranslate"
+            [model]="linear()"
+            (modelChange)="store.setLinear($event)"></fb-toggle-row>
+        }
+        <sd-input
+          size="sm"
+          labelPlacement="top"
+          hideInlineError
+          [label]="'core.component.form-builder.display-label' | sdTranslate"
+          [model]="store.activePage().label"
+          (modelChange)="store.setPageMetadata({ label: $event || undefined }, 'page-label:' + store.activePage().id)"
+          (sdBlur)="store.sealHistory()"></sd-input>
+        <sd-input
+          size="sm"
+          labelPlacement="top"
+          hideInlineError
+          [label]="'core.component.form-builder.page.icon' | sdTranslate"
+          [model]="store.activePage().icon"
+          (modelChange)="store.setPageMetadata({ icon: $event || undefined }, 'page-icon:' + store.activePage().id)"
+          (sdBlur)="store.sealHistory()"></sd-input>
+        <attribute-expression
+          [label]="'core.component.form-builder.visible-when' | sdTranslate"
+          [elements]="elements()"
+          [variables]="variables()"
+          [model]="store.activePage().rules?.visible"
+          (sdChange)="store.setPageRule('visible', $event)"></attribute-expression>
+        <attribute-expression
+          [label]="'core.component.form-builder.hidden-when' | sdTranslate"
+          [elements]="elements()"
+          [variables]="variables()"
+          [model]="store.activePage().rules?.hidden"
+          (sdChange)="store.setPageRule('hidden', $event)"></attribute-expression>
+      </section>
       <div class="ins-card">
         <div class="ins-card__row">
           <span>{{ 'core.component.form-builder.variables' | sdTranslate }}</span>

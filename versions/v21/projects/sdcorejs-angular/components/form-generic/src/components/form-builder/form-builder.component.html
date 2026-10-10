@@ -147,7 +147,87 @@
   <div class="fb-main">
     @switch (_mode) {
       @case ('design') {
-        <fb-canvas (requestAdd)="focusPalette()" (requestRemove)="remove($event)"></fb-canvas>
+        <div class="fb-page-editor">
+          <div class="fb-pages" role="group" [attr.aria-label]="'core.component.form-generic.pages' | sdTranslate">
+            <div class="fb-pages__strip">
+              @for (page of store.pages(); track page.id; let index = $index) {
+                <button
+                  type="button"
+                  class="fb-page-tab"
+                  [attr.data-builder-page]="page.id"
+                  [attr.aria-pressed]="store.activePage().id === page.id"
+                  [class.is-active]="store.activePage().id === page.id"
+                  [class.has-rules]="!!page.rules?.visible || !!page.rules?.hidden"
+                  (focus)="revealPageHeader($event)"
+                  (click)="store.selectPage(page.id); store.select(null); revealPageHeader($event)">
+                  @if (page.icon) {
+                    <sd-icon [name]="page.icon" size="16px"></sd-icon>
+                  }
+                  {{ page.label || ('core.component.form-generic.page' | sdTranslate: { number: index + 1 }) }}
+                  @if (page.rules?.visible || page.rules?.hidden) {
+                    <sd-icon name="visibility" size="16px" [title]="'core.component.form-builder.page.rules-hint' | sdTranslate"></sd-icon>
+                  }
+                </button>
+              }
+            </div>
+            <div class="fb-pages__actions">
+              <button
+                type="button"
+                data-page-action="add"
+                [title]="'core.component.form-builder.page.add' | sdTranslate"
+                [attr.aria-label]="'core.component.form-builder.page.add' | sdTranslate"
+                (click)="store.addPage()">
+                <sd-icon name="add" size="18px"></sd-icon>
+              </button>
+              <button
+                type="button"
+                data-page-action="duplicate"
+                [disabled]="!store.canDuplicatePage()"
+                [title]="
+                  (store.canDuplicatePage() ? 'core.component.form-builder.duplicate' : 'core.component.form-builder.page.unsupported')
+                    | sdTranslate
+                "
+                [attr.aria-label]="'core.component.form-builder.duplicate' | sdTranslate"
+                [attr.aria-describedby]="!store.canDuplicatePage() ? leftPanelId + '-page-duplicate-reason' : null"
+                (click)="store.duplicatePage()">
+                <sd-icon name="content_copy" size="18px"></sd-icon>
+              </button>
+              <button
+                type="button"
+                data-page-action="up"
+                [disabled]="pageIndex() <= 0"
+                [title]="'core.component.form-builder.move-up' | sdTranslate"
+                [attr.aria-label]="'core.component.form-builder.move-up' | sdTranslate"
+                (click)="store.movePage(store.activePage().id, -1)">
+                <sd-icon name="arrow_back" size="18px"></sd-icon>
+              </button>
+              <button
+                type="button"
+                data-page-action="down"
+                [disabled]="pageIndex() >= store.pages().length - 1"
+                [title]="'core.component.form-builder.move-down' | sdTranslate"
+                [attr.aria-label]="'core.component.form-builder.move-down' | sdTranslate"
+                (click)="store.movePage(store.activePage().id, 1)">
+                <sd-icon name="arrow_forward" size="18px"></sd-icon>
+              </button>
+              <button
+                type="button"
+                data-page-action="delete"
+                [disabled]="store.pages().length <= 1"
+                [title]="'core.component.form-builder.delete' | sdTranslate"
+                [attr.aria-label]="'core.component.form-builder.delete' | sdTranslate"
+                (click)="removePage()">
+                <sd-icon name="delete" size="18px"></sd-icon>
+              </button>
+            </div>
+          </div>
+          @if (!store.canDuplicatePage()) {
+            <p class="fb-page-note" [id]="leftPanelId + '-page-duplicate-reason'">
+              {{ 'core.component.form-builder.page.unsupported' | sdTranslate }}
+            </p>
+          }
+          <fb-canvas (requestAdd)="focusPalette()" (requestRemove)="remove($event)"></fb-canvas>
+        </div>
       }
       @case ('preview') {
         <fb-preview></fb-preview>

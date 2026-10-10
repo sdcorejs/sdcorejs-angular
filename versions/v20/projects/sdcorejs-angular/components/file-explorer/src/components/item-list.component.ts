@@ -1,4 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
+import { SdFileExplorerColumnDef } from '../file-explorer-column.directive';
 import { MatCheckbox } from '@angular/material/checkbox';
 import { MatTooltip } from '@angular/material/tooltip';
 import { SdButton } from '@sdcorejs/angular/components/button';
@@ -11,22 +13,22 @@ import { SdFileExplorerFileIcon } from './file-icon.component';
 import { SdFileExplorerMenuTrigger } from './menu-trigger.component';
 
 /** One list row / grid card with its selection and command state. */
-interface SdFileExplorerItemRow {
-  readonly view: SdFileExplorerItemView;
+interface SdFileExplorerItemRow<T = unknown> {
+  readonly view: SdFileExplorerItemView<T>;
   /** A file while the selector is on: it gets a checkbox. */
   readonly selectable: boolean;
   readonly selected: boolean;
   readonly selectDisabled: boolean;
   /** Desktop: `fileCommands` or `folderCommands` for the item kind; `null` when none are declared, and in compact. */
-  readonly commands: readonly SdFileExplorerCommand[] | null;
+  readonly commands: readonly SdFileExplorerCommand<T>[] | null;
   readonly source: 'fileCommands' | 'folderCommands';
   /** Compact: the trigger of the item's command drawer; `null` when the drawer would be empty, and on desktop. */
   readonly menu: SdFileExplorerCommandMenu | null;
 }
 
 /** Item whose command drawer a compact trigger asks for, with the trigger focus goes back to. */
-export interface SdFileExplorerCommandsRequest {
-  readonly item: SdFileExplorerItem;
+export interface SdFileExplorerCommandsRequest<T = unknown> {
+  readonly item: SdFileExplorerItem<T>;
   readonly trigger: HTMLElement;
 }
 
@@ -44,7 +46,16 @@ const CONTROL_AREAS = '.cell--select, .card-top, .commands, .sd-file-explorer-me
 @Component({
   selector: 'sd-file-explorer-item-list',
   standalone: true,
-  imports: [MatCheckbox, MatTooltip, SdButton, SdTranslatePipe, SdFileExplorerActions, SdFileExplorerFileIcon, SdFileExplorerMenuTrigger],
+  imports: [
+    NgTemplateOutlet,
+    MatCheckbox,
+    MatTooltip,
+    SdButton,
+    SdTranslatePipe,
+    SdFileExplorerActions,
+    SdFileExplorerFileIcon,
+    SdFileExplorerMenuTrigger,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'sd-file-explorer-item-list',
@@ -62,9 +73,16 @@ const CONTROL_AREAS = '.cell--select, .card-top, .commands, .sd-file-explorer-me
     @let _activeId = activeId();
     @let _menuOpenId = menuOpenId();
     @let _selection = selection();
-    @let _commandSize = _touch ? 'lg' : 'sm';
+    @let _commandSize = _touch && !_compact ? 'lg' : 'sm';
     @if (view() === 'list') {
-      <div class="list" role="table" [class.list--selectable]="!!_selection" [attr.aria-label]="label()">
+      <div
+        class="list"
+        role="table"
+        [class.list--selectable]="!!_selection"
+        [class.list--custom]="columns().length > 0"
+        [style.--sd-fe-custom-cols]="columnWidths()"
+        [attr.aria-label]="label()"
+        [attr.aria-colcount]="(_selection ? 1 : 0) + (_compact ? 2 : 3) + columns().length + (_actionColumn ? 1 : 0)">
         <div class="list-head" role="rowgroup">
           <div class="row row--head" role="row">
             @if (_selection) {
@@ -88,13 +106,16 @@ const CONTROL_AREAS = '.cell--select, .card-top, .commands, .sd-file-explorer-me
               }}</span>
             }
             <span class="cell cell--size" role="columnheader">{{ 'core.component.file-explorer.column.size' | sdTranslate }}</span>
+            @for (column of columns(); track column.id(); let index = $index) {
+              <span class="cell cell--custom" role="columnheader" [style.grid-column]="5 + index">{{ column.title() }}</span>
+            }
             @if (_actionColumn) {
-              <span class="cell cell--action" role="columnheader"></span>
+              <span class="cell cell--action" role="columnheader" [style.grid-column]="5 + columns().length"></span>
             }
           </div>
         </div>
         <div role="rowgroup">
-          @for (row of _rows; track row.view.item.id) {
+          @for (row of _rows; track row.view.item.id; let rowIndex = $index) {
             @let view = row.view;
             <div
               class="row"
@@ -103,7 +124,10 @@ const CONTROL_AREAS = '.cell--select, .card-top, .commands, .sd-file-explorer-me
               [class.row--active]="view.item.id === _activeId"
               [class.row--selected]="row.selected"
               [class.row--commands]="!!row.commands"
+              [class.row--movable]="canMove() && view.item.kind === 'file'"
               [attr.data-item-id]="view.item.id"
+              [attr.data-move-target]="view.item.kind === 'folder' ? view.item.id : null"
+              [class.move-drop-target]="view.item.kind === 'folder' && moveDropTarget() === view.item.id"
               [attr.data-autoid]="view.autoId"
               (click)="onClick($event, view)"
               (keydown)="onKeydown($event, view)">
@@ -123,7 +147,23 @@ const CONTROL_AREAS = '.cell--select, .card-top, .commands, .sd-file-explorer-me
               }
               <span class="cell cell--name" role="cell">
                 <sd-file-explorer-file-icon [icon]="view.icon" [size]="32" />
-                <span class="name" [title]="view.item.name">{{ view.item.name }}</span>
+                <span class="name" [draggable]="canMove() && view.item.kind === 'file'" [title]="view.item.name">{{ view.item.name }}</span>
+                @if (view.item.kind === 'folder' && moveDropTarget() === view.item.id) {
+                  <span class="move-drop-label">{{ 'core.component.file-explorer.move.confirm' | sdTranslate }}</span>
+                }
+                @if (canMove() && view.item.kind === 'file') {
+                  <sd-button
+                    htmlType="button"
+                    class="move-file-button commands"
+                    type="text"
+                    color="secondary"
+                    [size]="_compact ? 'sm' : 'md'"
+                    [disabled]="movePending()"
+                    [title]="'core.component.file-explorer.move.to' | sdTranslate"
+                    [tooltip]="('core.component.file-explorer.move.to' | sdTranslate) + ': ' + view.item.name"
+                    (click)="$event.stopPropagation(); move.emit(view.item)"
+                    (keydown)="$event.stopPropagation()" />
+                }
                 @if (row.commands) {
                   <sd-file-explorer-actions
                     class="commands"
@@ -138,9 +178,16 @@ const CONTROL_AREAS = '.cell--select, .card-top, .commands, .sd-file-explorer-me
                 <span class="cell cell--modified" role="cell" [title]="view.modifiedTitle">{{ view.modifiedLabel || '—' }}</span>
               }
               <span class="cell cell--size" role="cell">{{ view.sizeLabel || '—' }}</span>
+              @for (column of columns(); track column.id(); let index = $index) {
+                <span class="cell cell--custom" role="cell" [style.grid-column]="5 + index">
+                  <ng-container
+                    [ngTemplateOutlet]="column.template"
+                    [ngTemplateOutletContext]="{ $implicit: view.item, item: view.item, data: view.item.data, index: rowIndex }" />
+                </span>
+              }
               @if (_actionColumn) {
                 <!-- why: sd-button already keeps its click from reaching the row; Enter/Space are stopped here so the key does not open the file too. -->
-                <span class="cell cell--action" role="cell">
+                <span class="cell cell--action" role="cell" [style.grid-column]="5 + columns().length">
                   @if (_compact) {
                     @if (row.menu; as menu) {
                       <sd-file-explorer-menu-trigger
@@ -156,6 +203,8 @@ const CONTROL_AREAS = '.cell--select, .card-top, .commands, .sd-file-explorer-me
                     @if (_canShare) {
                       <sd-button
                         class="row-action row-share"
+                        [disabled]="view.shareDisabled ?? false"
+                        [attr.aria-description]="view.shareDisabled ? view.unavailableReason : null"
                         type="text"
                         color="secondary"
                         size="sm"
@@ -169,6 +218,8 @@ const CONTROL_AREAS = '.cell--select, .card-top, .commands, .sd-file-explorer-me
                     @if (_canDownload) {
                       <sd-button
                         class="row-action row-download"
+                        [disabled]="view.downloadDisabled ?? false"
+                        [attr.aria-description]="view.downloadDisabled ? view.unavailableReason : null"
                         type="text"
                         color="secondary"
                         size="sm"
@@ -211,6 +262,8 @@ const CONTROL_AREAS = '.cell--select, .card-top, .commands, .sd-file-explorer-me
             [class.card--active]="view.item.id === _activeId"
             [class.card--selected]="row.selected"
             [attr.data-item-id]="view.item.id"
+            [attr.data-move-target]="view.item.kind === 'folder' ? view.item.id : null"
+            [class.move-drop-target]="view.item.kind === 'folder' && moveDropTarget() === view.item.id"
             [attr.data-autoid]="view.autoId"
             [attr.aria-label]="view.item.name + ', ' + view.typeLabel"
             (click)="onClick($event, view)"
@@ -255,7 +308,21 @@ const CONTROL_AREAS = '.cell--select, .card-top, .commands, .sd-file-explorer-me
                 <sd-file-explorer-file-icon [icon]="view.icon" [size]="48" />
               }
             </span>
-            <span class="card-name" [title]="view.item.name">{{ view.item.name }}</span>
+            <span class="card-name" [draggable]="canMove() && view.item.kind === 'file'" [title]="view.item.name">{{
+              view.item.name
+            }}</span>
+            @if (canMove() && view.item.kind === 'file') {
+              <sd-button
+                htmlType="button"
+                class="move-file-button commands"
+                type="text"
+                color="secondary"
+                [size]="_compact ? 'sm' : 'md'"
+                [disabled]="movePending()"
+                [title]="'core.component.file-explorer.move.to' | sdTranslate"
+                (click)="$event.stopPropagation(); move.emit(view.item)"
+                (keydown)="$event.stopPropagation()" />
+            }
           </li>
         }
       </ul>
@@ -263,9 +330,19 @@ const CONTROL_AREAS = '.cell--select, .card-top, .commands, .sd-file-explorer-me
   `,
   styleUrl: './item-list.component.scss',
 })
-export class SdFileExplorerItemList {
+export class SdFileExplorerItemList<T = unknown> {
+  readonly canMove = input(false);
+  readonly moveDropTarget = input<string | null | undefined>();
+  readonly movePending = input(false);
+  readonly move = output<SdFileExplorerItem<T>>();
+  readonly columns = input<readonly SdFileExplorerColumnDef<T>[]>([]);
+  protected readonly columnWidths = computed(() =>
+    this.columns()
+      .map(column => column.width())
+      .join(' ')
+  );
   /** Items to render, already formatted. */
-  readonly items = input.required<readonly SdFileExplorerItemView[]>();
+  readonly items = input.required<readonly SdFileExplorerItemView<T>[]>();
   /** `list` or `grid`. */
   readonly view = input<SdFileExplorerView>('list');
   /** Show download buttons for files. */
@@ -274,7 +351,7 @@ export class SdFileExplorerItemList {
   readonly canShare = input(false);
   /** Narrow layout: hides the modified column and replaces commands and row shortcuts with an actions trigger. */
   readonly compact = input(false);
-  /** Touch screen: commands always visible, with 48 px buttons (44 px compact trigger). */
+  /** Touch screen: commands always visible, with 48 px touch targets. */
   readonly touch = input(false);
   /** Id of the file currently shown in the preview panel. */
   readonly activeId = input<string | null>(null);
@@ -283,30 +360,30 @@ export class SdFileExplorerItemList {
   /** Selection state; `null` hides every checkbox. */
   readonly selection = input<SdFileExplorerSelectionView | null>(null);
   /** Commands of file rows and cards. */
-  readonly fileCommands = input<readonly SdFileExplorerCommand[] | null | undefined>(undefined);
+  readonly fileCommands = input<readonly SdFileExplorerCommand<T>[] | null | undefined>(undefined);
   /** Commands of folder rows and cards. */
-  readonly folderCommands = input<readonly SdFileExplorerCommand[] | null | undefined>(undefined);
+  readonly folderCommands = input<readonly SdFileExplorerCommand<T>[] | null | undefined>(undefined);
   /** Id of the item whose command drawer is open from this list. */
   readonly menuOpenId = input<string | null>(null);
   /** Row / card activated. */
-  readonly activate = output<SdFileExplorerItemView>();
+  readonly activate = output<SdFileExplorerItemView<T>>();
   /** Compact actions trigger pressed. */
-  readonly openCommands = output<SdFileExplorerCommandsRequest>();
+  readonly openCommands = output<SdFileExplorerCommandsRequest<T>>();
   /** Download button pressed. */
-  readonly download = output<SdFileExplorerItemView>();
+  readonly download = output<SdFileExplorerItemView<T>>();
   /** Share button pressed. */
-  readonly share = output<SdFileExplorerItemView>();
+  readonly share = output<SdFileExplorerItemView<T>>();
   /** Checkbox of a file toggled. */
-  readonly toggleSelect = output<SdFileExplorerItem>();
+  readonly toggleSelect = output<SdFileExplorerItem<T>>();
   /** Select-all checkbox toggled. */
   readonly toggleSelectAll = output<void>();
 
   /**
    * Width of the row action column: one 32 px icon button per row shortcut on desktop; the actions trigger (32 px,
-   * 44 px on touch) in compact.
+   * 48 px on touch) in compact.
    */
   protected readonly actionsWidth = computed(() => {
-    if (this.compact()) return this.menuColumn() ? `${(this.touch() ? 44 : 32) + 4}px` : null;
+    if (this.compact()) return this.menuColumn() ? `${(this.touch() ? 48 : 32) + 4}px` : null;
     const count = (this.canDownload() ? 1 : 0) + (this.canShare() ? 1 : 0);
     if (!count) return null;
     return `${count * 32 + (count - 1) * 2 + 12}px`;
@@ -314,7 +391,7 @@ export class SdFileExplorerItemList {
 
   protected readonly hasCommands = computed(() => !!(this.fileCommands()?.length || this.folderCommands()?.length));
 
-  protected readonly rows = computed<readonly SdFileExplorerItemRow[]>(() => {
+  protected readonly rows = computed<readonly SdFileExplorerItemRow<T>[]>(() => {
     const selection = this.selection();
     const fileCommands = this.fileCommands();
     const folderCommands = this.folderCommands();
@@ -343,8 +420,8 @@ export class SdFileExplorerItemList {
 
   /** Trigger state of one item: `null` when its drawer would be empty. Same filtering as the drawer and the buttons. */
   #menu(
-    commands: readonly SdFileExplorerCommand[] | null | undefined,
-    item: SdFileExplorerItem,
+    commands: readonly SdFileExplorerCommand<T>[] | null | undefined,
+    item: SdFileExplorerItem<T>,
     source: string,
     shortcuts: boolean
   ): SdFileExplorerCommandMenu | null {
@@ -352,12 +429,12 @@ export class SdFileExplorerItemList {
     return resolved.length || shortcuts ? { busy: sdFileExplorerActionsBusy(resolved) } : null;
   }
 
-  protected onClick(event: MouseEvent, view: SdFileExplorerItemView): void {
+  protected onClick(event: MouseEvent, view: SdFileExplorerItemView<T>): void {
     if (this.#fromControl(event)) return;
     this.activate.emit(view);
   }
 
-  protected onKeydown(event: KeyboardEvent, view: SdFileExplorerItemView): void {
+  protected onKeydown(event: KeyboardEvent, view: SdFileExplorerItemView<T>): void {
     if (event.key !== 'Enter' && event.key !== ' ') return;
     if (this.#fromControl(event)) return;
     event.preventDefault();

@@ -14,6 +14,22 @@
   min-width: 0;
 }
 
+.sd-fg-grid[hidden] {
+  display: none;
+}
+
+.sd-fg-navigation {
+  min-width: 0;
+}
+.sd-fg-step-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+}
+
 // why: sd-section keeps `.sd-section-body { padding: 0 }` on purpose — each content decides its gutter.
 // Fields inside a group only carry their own px-8/py-8, so the group body adds 8px to line up with the
 // section header (8px + px-8 = 16px on each side).

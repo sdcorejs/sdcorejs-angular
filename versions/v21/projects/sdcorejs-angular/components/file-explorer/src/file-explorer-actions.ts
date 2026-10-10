@@ -3,8 +3,8 @@ import type { SdButtonColor, SdButtonType } from '@sdcorejs/angular/components/b
 import type { SdIconSet } from '@sdcorejs/angular/modules/icon';
 import type {
   SdFileExplorerAction,
-  SdFileExplorerActionGroup,
-  SdFileExplorerActionLeaf,
+  SdFileExplorerActionGroupDefinition,
+  SdFileExplorerActionLeafDefinition,
   SdFileExplorerItem,
   SdFileExplorerState,
 } from './file-explorer.model';
@@ -45,12 +45,12 @@ interface SdFileExplorerResolvedButton {
 
 export interface SdFileExplorerResolvedLeaf<T> extends SdFileExplorerResolvedButton {
   readonly kind: 'leaf';
-  readonly definition: SdFileExplorerActionLeaf<T>;
+  readonly definition: SdFileExplorerActionLeafDefinition<T>;
 }
 
 export interface SdFileExplorerResolvedGroup<T> extends SdFileExplorerResolvedButton {
   readonly kind: 'group';
-  readonly definition: SdFileExplorerActionGroup<T>;
+  readonly definition: SdFileExplorerActionGroupDefinition<T>;
   /** Visible menu items; never empty. */
   readonly children: readonly SdFileExplorerResolvedMenuItem<T>[];
 }
@@ -58,7 +58,7 @@ export interface SdFileExplorerResolvedGroup<T> extends SdFileExplorerResolvedBu
 /** Menu item of a group. Loading items are disabled as well: `sd-button-item` has no loading state of its own. */
 export interface SdFileExplorerResolvedMenuItem<T> {
   readonly key: string;
-  readonly definition: SdFileExplorerActionLeaf<T>;
+  readonly definition: SdFileExplorerActionLeafDefinition<T>;
   /** Projected label: the title, or the tooltip of an item without title. */
   readonly label: string;
   /** Tooltip, unless it already is the label. */
@@ -108,19 +108,31 @@ function warn(definition: unknown, message: string): void {
  */
 function problem(definition: unknown, inGroup: boolean): string | null {
   if (definition === null || typeof definition !== 'object') return 'is not an action object';
-  const { click, children, title, tooltip } = definition as Record<string, unknown>;
+  const { click, onClick, children, title, tooltip } = definition as Record<string, unknown>;
   if (children !== undefined && children !== null && !Array.isArray(children)) return '`children` must be an array';
   if (Array.isArray(children)) {
     if (inGroup) return 'is a group inside a group; groups are one level deep';
-    if (typeof click === 'function') return 'declares both `click` and `children`; a group only opens its menu';
-  } else if (typeof click !== 'function') {
+    if (typeof click === 'function' || typeof onClick === 'function')
+      return 'declares both `click` and `children`; a group only opens its menu';
+  } else if (typeof click !== 'function' && typeof onClick !== 'function') {
     return 'needs `click` (an action) or `children` (a group)';
   }
   if (!text(title) && !text(tooltip)) return 'needs a `title` or a `tooltip` as its accessible name';
   return null;
 }
 
-function resolveMenu<T>(group: SdFileExplorerActionGroup<T>, context: T, path: string): SdFileExplorerResolvedMenuItem<T>[] {
+/** Selection capability is configuration-level. A context predicate cannot prove that every future selection is hidden. */
+export function sdFileExplorerHasActionCapability<T>(actions: readonly SdFileExplorerAction<T>[] | null | undefined): boolean {
+  if (!Array.isArray(actions)) return false;
+  return actions.some((definition: SdFileExplorerAction<T>) => {
+    if (problem(definition, false) || definition.hidden === true) return false;
+    return Array.isArray(definition.children)
+      ? definition.children.some((child: SdFileExplorerActionLeafDefinition<T>) => !problem(child, true) && child.hidden !== true)
+      : true;
+  });
+}
+
+function resolveMenu<T>(group: SdFileExplorerActionGroupDefinition<T>, context: T, path: string): SdFileExplorerResolvedMenuItem<T>[] {
   const items: SdFileExplorerResolvedMenuItem<T>[] = [];
   group.children.forEach((child, index) => {
     const reason = problem(child, true);
@@ -184,10 +196,10 @@ export function sdFileExplorerResolveActions<T>(
       loading: evaluate(definition.loading, context),
     };
     if (!isGroup) {
-      resolved.push({ ...button, kind: 'leaf', definition: definition as SdFileExplorerActionLeaf<T> });
+      resolved.push({ ...button, kind: 'leaf', definition: definition as SdFileExplorerActionLeafDefinition<T> });
       return;
     }
-    const group = definition as SdFileExplorerActionGroup<T>;
+    const group = definition as SdFileExplorerActionGroupDefinition<T>;
     const children = resolveMenu(group, context, path);
     if (children.length) {
       resolved.push({ ...button, kind: 'group', definition: group, prefixIcon: group.prefixIcon ?? GROUP_ICON, children });
@@ -213,10 +225,10 @@ export function sdFileExplorerActionsBusy<T>(resolved: readonly SdFileExplorerRe
  * on the desktop trigger — whose children are disabled while the group itself is disabled or loading. `keys` renames
  * entries by declared index (the row shortcuts: `share`, `download`).
  */
-export function sdFileExplorerSheetEntries(
-  resolved: readonly SdFileExplorerResolvedAction<SdFileExplorerItem>[],
+export function sdFileExplorerSheetEntries<T>(
+  resolved: readonly SdFileExplorerResolvedAction<SdFileExplorerItem<T>>[],
   keys?: readonly string[]
-): SdFileExplorerSheetEntry[] {
+): SdFileExplorerSheetEntry<T>[] {
   return resolved.map(entry => {
     const key = keys?.[Number(entry.key)] ?? entry.key;
     if (entry.kind === 'leaf') {
@@ -235,7 +247,7 @@ export function sdFileExplorerSheetEntries(
     }
     const blocked = entry.disabled || entry.loading;
     const children = entry.children.map(
-      (child): SdFileExplorerSheetCommand => ({
+      (child): SdFileExplorerSheetCommand<T> => ({
         kind: 'leaf',
         key: child.key,
         label: child.label,

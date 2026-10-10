@@ -244,7 +244,15 @@ interface SdFileExplorerActionGroup<T> extends SdFileExplorerActionAppearance<T>
   click?: never; // a group only opens its menu
 }
 
-type SdFileExplorerAction<T> = SdFileExplorerActionLeaf<T> | SdFileExplorerActionGroup<T>;
+type SdFileExplorerActionLeafDefinition<T> =
+  | SdFileExplorerActionLeaf<T>
+  | (SdFileExplorerActionAppearance<T> & { onClick: (context: T) => void; click?: never; children?: never });
+interface SdFileExplorerActionGroupDefinition<T> extends SdFileExplorerActionAppearance<T> {
+  children: readonly SdFileExplorerActionLeafDefinition<T>[];
+  click?: never;
+  onClick?: never;
+}
+type SdFileExplorerAction<T> = SdFileExplorerActionLeafDefinition<T> | SdFileExplorerActionGroupDefinition<T>;
 type SdFileExplorerSelectionAction = SdFileExplorerAction<readonly SdFileExplorerItem[]>;
 type SdFileExplorerCommand = SdFileExplorerAction<SdFileExplorerItem>;
 ```
@@ -272,7 +280,7 @@ interface SdFileExplorerSelector {
 
 - **What can be selected**: the files visible in the current folder or search results. Folders never get a checkbox, and nothing outside the current view (other folders, unloaded items) is ever selected. `disabled` locks a file's checkbox and leaves it out of "select all".
 - **Select all** is a checkbox without visible text in the first column of the list header (above the cards in the grid), named and tooltipped "Select all visible files (N)" with N = selectable files. It is unchecked, mixed or checked for none, some or all of them.
-- **Selection band**: between the heading and the items whenever the view holds files, on one neutral, nearly white surface — Core's `--sd-surface-muted` mixed half and half with the explorer tint `--sd-file-explorer-mix-tint`, so a dark theme gives a dark band; `--sd-file-explorer-muted-surface` overrides it — that stays the same when files are selected: the selection shows in the sentence, the clear button and the actions, not in an accent tint (selected rows keep theirs). It states the selection as one plain 14 px sentence in the translated word order — "2 tệp đã chọn", "2 files selected", "已选择 2 个文件" — with only the number in semibold (a neutral "Select files" at zero), then a separate clear button ("Deselect all", disabled at zero) and, while files are selected, `selector.actions`. Actions use `sd-button`'s own sizes: `sm` like the row commands (32 px, 16 px icons, 14 px text) on desktop and in the compact layout, `lg` (48 px) only on a touch screen wide enough for the desktop layout; the clear button is 32 px with a 20 px icon, 44 px on touch screens. On desktop the band is 46 px high. On a narrow explorer the sentence and clear stay on the first line and the actions wrap below, 16 px apart from line to line: Material keeps a 48 px touch target around each 32 px button (8 px above and below, as wide as the button), so the targets of two lines meet without overlapping.
+- **Selection band**: shown only after at least one file is selected, on a neutral surface. It states the selection in the translated word order, then Clear and the selection actions. Actions use Core `sm` on compact/mobile layouts (32px visual height with Material's 48px touch span); wide touch layouts retain `lg`. Clear keeps a 20px icon and a 48px touch target. Wrapped action rows stay 16px apart so their touch spans do not overlap.
 - **Callbacks**: `onSelect(item, selectedItems)` after each file checkbox toggle; `onSelectAll(selectedItems)` once per select-all toggle (`[]` when it deselects everything); `onClear()` once when a non-empty selection is cleared — by the clear button (focus then moves to the select-all checkbox), or because the folder, the search keyword or `list` changed, or `reload()` ran. `selectedItems` is always a frozen array in display order.
 - **What keeps it**: switching between list and grid, opening a file in the detail drawer, and refreshes that do not change the scope (a finished upload or folder creation in the current folder). A file that such a refresh no longer lists, or that `disabled` starts locking, leaves the selection for good: it is not selected again when a later listing brings it back or when it is unlocked. Leaving this way is not a user action or a clear, so no callback runs — the `selectedItems` handed to `selector.actions` is always the current selection.
 - Checkboxes, names and actions stay independent: a checkbox never opens a file, opening a file or folder never changes the selection, and actions never change it either.
@@ -555,3 +563,40 @@ With `option.autoId = 'drive'` the host is `components-file-explorer-drive`, and
 - `<sd-side-drawer>` — the file detail; its `container` input keeps the drawer inside the explorer.
 - `<sd-breadcrumb>`, `<sd-data-state>` — used internally for the path and the loading / empty / error states.
 - `<sd-upload-file>` — single form upload control; independent of this component.
+
+# Generic data, columns and capabilities (3.1)
+
+`SdFileExplorerItem<T = unknown>` keeps your optional `data?: T` object by identity. Use the same `T` for options, open events, selection and commands. Existing `SdFileExplorerOption<T>` remains an interface with required callable `list`; existing direct calls and interface extensions remain supported.
+
+New source-only declarations use `SdFileExplorerDataSourceOption<T>` with `dataSource: { onList, onSearch? }`. The component accepts `SdFileExplorerConfig<T>`, the union of the legacy and source-only surfaces. Do not mix `dataSource` with root `list`/`search`. Without `onSearch`, filtering stays local.
+
+Canonical action callbacks live in `capabilities.share.onShare`, `.download.onDownload`, `.upload.onUpload`, `.preview.onPreview`, and `.createFolder.onCreateFolder`. The corresponding synchronous eligibility states are `shareable`, `downloadable`, `uploadable`, `previewable`, and `creatable`. An explicit group takes precedence over its legacy callback as a whole, including when eligibility is false. Supported actions remain visible and disabled; unsupported actions remain absent. Eligibility is rechecked at dispatch and transfer retry. These UI predicates do not replace authorization in your storage API.
+
+Custom action leaves accept exactly one callback: canonical `onClick` or legacy `click`. Groups accept only leaf `children` and neither callback. Callbacks are not awaited: confirmation, loading, errors and reload remain yours.
+
+`SdFileExplorerActionLeaf<T>` and `SdFileExplorerActionGroup<T>` retain their legacy callable `click` interfaces, including interface extension and direct child calls. Use `SdFileExplorerAction<T>` or the new `SdFileExplorerActionLeafDefinition<T>` / `SdFileExplorerActionGroupDefinition<T>` types when defining canonical `onClick` actions or mixed menus.
+
+Action-mode selection depends on usable configured actions. Missing or empty collections, statically hidden leaves and groups with no usable children hide the selection controls. A dynamic `hidden` predicate only hides the action for the current selection: checkboxes and intermediate selections remain so a user can reach an action that requires, for example, exactly two files. To withdraw selection, set `selector.visible: false`, replace `actions` with `[]`, or configure all actions with static `hidden: true`.
+
+Import `SdFileExplorerColumnDef` alongside `SdFileExplorer` and project list-only metadata columns:
+
+```html
+<sd-file-explorer [option]="option">
+  <ng-template
+    sdFileExplorerColumnDef="owner"
+    [sdFileExplorerColumnFor]="option"
+    title="Owner"
+    width="160px"
+    let-item
+    let-data="data"
+    let-index="index">
+    {{ data?.ownerName }}
+  </ng-template>
+</sd-file-explorer>
+```
+
+The required `sdFileExplorerColumnFor` config anchor lets Angular infer `item`, `data` and displayed `index`. Pass the parent Explorer option; the compiler validates the anchor's DTO context but does not enforce projection-parent DTO equality. Untyped DTOs remain `unknown`. Folders use the same context. Columns append in declaration order after built-in metadata; name, selection and command columns stay built in. IDs must be non-empty and unique per instance; the first declaration wins and development mode reports duplicates. Columns do not change grid cards or provide sorting/filtering/reordering APIs.
+
+File move is opt-in through root `move: { movable?, onMove }`. The callback receives frozen `items`, `targetFolder` (`null` for root), `source` (`drag`, `menu`, `keyboard`, `api`) and an `AbortSignal`. It owns the storage mutation and returns `false` to cancel, or `true`/`void` to accept. Explorer serializes the request, waits pessimistically, then refreshes affected cached folders without changing navigation. A refresh failure retries refresh only. Abort is cooperative and cannot promise storage rollback.
+
+The dedicated destination picker also works with `fileCommands: []`. File-name drag handles carry the eligible visible selection in display order, or just the unselected file. Only known folder rows/cards and tree/root nodes accept internal drops; no hover navigation or blank/breadcrumb drop target exists. Folder sources, stale/forged/cross-instance tokens, same-parent members, duplicates and mixed internal/native file payloads reject the entire batch. External `Files` continue through upload only. Keyboard and API moves use the same validation pipeline.

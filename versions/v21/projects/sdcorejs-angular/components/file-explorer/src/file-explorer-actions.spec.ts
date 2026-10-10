@@ -3,6 +3,7 @@ import {
   SD_FILE_EXPLORER_COMMAND_DEFAULTS,
   sdFileExplorerActionBlocked,
   sdFileExplorerActionsBusy,
+  sdFileExplorerHasActionCapability,
   sdFileExplorerResolveActions,
   sdFileExplorerSheetEntries,
   type SdFileExplorerResolvedAction,
@@ -22,6 +23,19 @@ function outline<T>(entries: readonly SdFileExplorerResolvedAction<T>[]): string
 }
 
 describe('file-explorer actions', () => {
+  it('recognizes configured dynamic action capability without probing caller predicates or callbacks', () => {
+    const hidden = jasmine.createSpy('hidden').and.returnValue(true);
+    const click = jasmine.createSpy('click');
+    expect(sdFileExplorerHasActionCapability([{ title: 'Conditional', hidden, onClick: click }])).toBeTrue();
+    expect(
+      sdFileExplorerHasActionCapability([{ title: 'Tools', children: [{ title: 'Conditional', hidden, onClick: click }] }])
+    ).toBeTrue();
+    expect(hidden).not.toHaveBeenCalled();
+    expect(click).not.toHaveBeenCalled();
+    expect(
+      sdFileExplorerHasActionCapability([{ title: 'Tools', children: [{ title: 'Hidden', hidden: true, onClick: click }] }])
+    ).toBeFalse();
+  });
   describe('typing', () => {
     it('allows leaves and one level of groups, and rejects nested groups or a parent that also clicks', () => {
       const leaf = { title: 'Download', click: noop };

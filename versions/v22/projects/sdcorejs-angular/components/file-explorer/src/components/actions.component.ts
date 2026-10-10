@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, viewChildr
 import { SdButton, SdButtonItem, type SdButtonColor, type SdButtonSize, type SdButtonType } from '@sdcorejs/angular/components/button';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { sdFileExplorerActionBlocked, sdFileExplorerActionsBusy, sdFileExplorerResolveActions } from '../file-explorer-actions';
-import type { SdFileExplorerAction, SdFileExplorerActionGroup, SdFileExplorerActionLeaf } from '../file-explorer.model';
+import type { SdFileExplorerAction, SdFileExplorerActionGroupDefinition, SdFileExplorerActionLeafDefinition } from '../file-explorer.model';
 
 /**
  * Action area of the explorer (internal): `selector.actions`, `fileCommands` or `folderCommands` for one context.
@@ -119,7 +119,7 @@ export class SdFileExplorerActions<T> {
   protected readonly busy = computed(() => sdFileExplorerActionsBusy(this.entries()));
   protected readonly loadingLabel = computed(() => this.#i18n.t('core.component.file-explorer.action-loading'));
 
-  protected run(action: SdFileExplorerActionLeaf<T>, group?: SdFileExplorerActionGroup<T>): void {
+  protected run(action: SdFileExplorerActionLeafDefinition<T>, group?: SdFileExplorerActionGroupDefinition<T>): void {
     const actions = this.actions();
     // A stale rendered button or menu must not dispatch a definition the consumer has withdrawn.
     if (group ? !actions?.includes(group) || !group.children.includes(action) : !actions?.includes(action)) return;
@@ -127,6 +127,6 @@ export class SdFileExplorerActions<T> {
     // why: trạng thái do consumer giữ có thể đã đổi sau lần render cuối (ví dụ bật loading ngay trong click trước, khi
     // Angular chưa kịp vẽ lại nút) — đánh giá lại lúc bấm để click lặp hay menu cũ không chạy callback lần nữa.
     if ((group && sdFileExplorerActionBlocked(group, context)) || sdFileExplorerActionBlocked(action, context)) return;
-    action.click(context);
+    (action.onClick ?? action.click)?.(context);
   }
 }

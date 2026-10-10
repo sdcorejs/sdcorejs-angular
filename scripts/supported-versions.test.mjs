@@ -239,6 +239,7 @@ test('[workspace] root lint and script gates enumerate every line in order', () 
     'npm run test:version-sync-contract',
     'npm run test:release-package-contract',
     'npm run test:publish-npm-workflow',
+    'npm run test:ci-selection',
     'npm run test:file-explorer-icons',
     'npm run test:theme',
     'npm run test:theme-token-list',

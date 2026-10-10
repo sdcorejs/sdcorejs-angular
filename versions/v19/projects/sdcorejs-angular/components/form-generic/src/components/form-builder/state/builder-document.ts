@@ -20,7 +20,9 @@ export type ContainerId = string | null;
  * Nguồn schema chuẩn DUY NHẤT của builder. Được thay thế bất biến bởi các command — không component
  * nào sửa object bên trong. Selection, viewport, kéo-thả… là editor state, không nằm ở đây.
  *
- * `elements` là phần tử của trang đang thiết kế (đợt 1: trang đầu). `base` giữ phần còn lại của
+ * `elements` belongs to the edited page. `base.pagePosition` preserves its serialized position;
+ * `base` keeps the remaining schema data and pages.
+ * `base` giữ phần còn lại của
  * schema (thông tin trang, các trang khác, navigation, khoá lạ) để phát lại nguyên vẹn.
  */
 export interface BuilderDocument {
@@ -29,6 +31,8 @@ export interface BuilderDocument {
   readonly validations: readonly SdFormGenericValidation[];
   readonly base: {
     readonly page: Omit<SdFormGenericPage, 'elements'>;
+    /** Position of the edited page in serialized pages; editor selection never changes schema order. */
+    readonly pagePosition?: number;
     readonly otherPages: readonly SdFormGenericPage[];
     readonly rest: Readonly<Record<string, unknown>>;
   };
@@ -72,24 +76,31 @@ export const createId = (): string => Utilities.randomId('id');
  * Nạp schema từ consumer. Chuẩn hoá (clone, cấp `id` còn thiếu) — KHÔNG mutate input, không bỏ
  * thuộc tính nào, phần tử type lạ được giữ nguyên.
  */
-export const documentFromSchema = (schema: SdFormGenericSchema | null | undefined): BuilderDocument => {
+export const documentFromSchema = (schema: SdFormGenericSchema | null | undefined, activePageId?: string): BuilderDocument => {
   const normalized = sdNormalizeSchema((schema ?? {}) as SdFormGenericSchema);
   const { pages, variables, validations, ...rest } = normalized;
-  const [first, ...otherPages] = pages;
+  const pagePosition = Math.max(
+    0,
+    pages.findIndex(page => page.id === activePageId)
+  );
+  const first = pages[pagePosition];
+  const otherPages = pages.filter((_, index) => index !== pagePosition);
   const { elements, ...page } = first;
   return {
     elements: elements ?? [],
     variables: variables ?? [],
     validations: validations ?? [],
-    base: { page, otherPages, rest },
+    base: { page, otherPages, rest, ...(pagePosition ? { pagePosition } : {}) },
   };
 };
 
 /** Snapshot công khai: bản clone độc lập. Mảng rỗng của biến/validation không được ghi. */
 export const documentToSchema = (doc: BuilderDocument): SdFormGenericSchema => {
+  const pages = cloneJson([...doc.base.otherPages]);
+  pages.splice(doc.base.pagePosition ?? 0, 0, { ...cloneJson(doc.base.page), elements: cloneJson([...doc.elements]) });
   const schema: SdFormGenericSchema = {
     ...cloneJson(doc.base.rest),
-    pages: [{ ...cloneJson(doc.base.page), elements: cloneJson([...doc.elements]) }, ...cloneJson([...doc.base.otherPages])],
+    pages,
   };
   if (doc.variables.length) schema.variables = cloneJson([...doc.variables]);
   if (doc.validations.length) schema.validations = cloneJson([...doc.validations]);

@@ -64,6 +64,7 @@ export type ShowcaseExampleSourceKey =
   | "components/editor/example-soan-noi-dung"
   | "components/file-explorer/example-chi-xem-va-tai-xuong"
   | "components/file-explorer/example-day-du-tinh-nang"
+  | "components/file-explorer/example-generic-data-columns-move"
   | "components/file-explorer/example-khung-hep-mobile"
   | "components/file-explorer/example-loading-rong-va-loi"
   | "components/form-generic/example-builder-render"
@@ -863,6 +864,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-loading-rong-va-loi",
     title: "Loading, rỗng và lỗi",
     description: "Thư mục “Lỗi lần đầu” reject ở lần gọi đầu tiên; bấm Thử lại (trong nội dung hoặc biểu tượng trên cây) sẽ thành công.",
+  },
+  {
+    sourceKey: "components/file-explorer/example-generic-data-columns-move",
+    pageKey: "components/file-explorer",
+    sectionId: "example-generic-data-columns-move",
+    title: "Generic data, columns & move",
+    description: "Typed DTO columns, grouped capability eligibility and consumer-controlled moves. Select files to use Move, Share and Download in the selection band; fileCommands is deliberately empty.",
   },
   {
     sourceKey: "components/form-generic/example-builder-render",
