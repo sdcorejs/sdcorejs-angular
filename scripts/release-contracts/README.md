@@ -6,7 +6,7 @@
 `*.3.0` baseline. The reviewed source commit is recorded in the snapshot.
 Inspectable inputs include independently verified registry baselines and actual
 `19.3.1` / `20.3.1` / `21.3.1` / `22.3.1` tarballs built by the official dry-run
-from repaired source `02465af3dae0154d244722b35347d4538d74bfc6` with exact
+from repaired source `c9341724a53df65508f8f67fd14a0a7c4b14ecb1` with exact
 Node `22.22.3` and npm `11.5.1`. Their retained SHA-256, npm SHA-512 integrity
 and SHA-1 shasum were independently rechecked. The complete inventories,
 declaration/source inputs, per-major deltas and all seven packed font hashes
@@ -22,7 +22,11 @@ consumer-owned moves; Form multi-page navigation and validation; Section's
 optional label/itemLeft slot; outline/confirm/compact UI behavior; Kanban and
 Segmented. Runtime dependencies, same-line peers and engines are retained.
 The changelog documents custom-catalog additions and the intentional actionless
-picker migration. The source and declaration changes must be independently
+picker migration. Explicit Form signal annotations preserve the same accepted values while making
+Angular19 declaration text independent of inferred union ordering. The canceled
+navigation poll checks ownership before reacquiring or touching new schema
+controls; the actual action component accepts canonical and legacy definitions.
+The source and declaration changes must be independently
 reviewed with this snapshot; CI never regenerates expectations.
 
 ## Release 3.0
