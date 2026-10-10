@@ -4,12 +4,15 @@
 
 `3.1.json` compares all four candidates with their exact same-major published
 `*.3.0` baseline. The reviewed source commit is recorded in the snapshot.
-Inspectable inputs include independently verified registry tarballs and the
-preserved producer packages from source aggregate
-`3a581bb44633bdd06412d3008c8f67fa4371ef8b40e78d5f92cf29250150c525`.
-Release version/framework metadata is excluded only by the existing canonical
-surface fingerprint reader. Final `*.3.1` builds, source binding, package
-integrities, peers/engines/assets and strict consumers remain independent gates.
+Inspectable inputs include independently verified registry baselines and actual
+`19.3.1` / `20.3.1` / `21.3.1` / `22.3.1` tarballs built by the official dry-run
+from repaired source `02465af3dae0154d244722b35347d4538d74bfc6` with exact
+Node `22.22.3` and npm `11.5.1`. Their retained SHA-256, npm SHA-512 integrity
+and SHA-1 shasum were independently rechecked. The complete inventories,
+declaration/source inputs, per-major deltas and all seven packed font hashes
+are retained for independent review. The canonical surface fingerprint reader
+excludes only `version` and `frameworkMajor`. Final immutable-head builds,
+source binding, peers/engines/assets and strict consumers remain separate gates.
 
 The only new export-map entries are `components/kanban` and `forms/segmented`;
 no existing export, declaration file or packed path is removed. Angular 19 adds
