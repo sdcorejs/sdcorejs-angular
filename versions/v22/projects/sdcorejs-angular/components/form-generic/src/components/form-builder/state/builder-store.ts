@@ -2,10 +2,19 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { Subject } from 'rxjs';
 import { sdStableStringify } from '../../../models/form-generic-schema';
-import type { SdFormGenericSchema, SdFormGenericValidation, SdFormGenericVariable } from '../../../models/form-generic-schema.model';
+import type {
+  SdFormGenericNavigation,
+  SdFormGenericPage,
+  SdFormGenericSchema,
+  SdFormGenericValidation,
+  SdFormGenericVariable,
+  SdFormGenericVisibilityRules,
+} from '../../../models/form-generic-schema.model';
+import type { Filter } from '@sdcorejs/utils/models';
 import { sdFindKeyReferences, sdRenameKey, type SdFormGenericKeyReference } from '../../../rules/form-generic-references';
 import {
   applyVariables,
+  clonePage,
   duplicateItem,
   groupsOf,
   insertionIntentFor,
@@ -24,6 +33,7 @@ import {
   canDuplicate,
   childrenOf,
   collectKeys,
+  createId,
   ContainerId,
   documentFromSchema,
   documentToSchema,
@@ -74,6 +84,12 @@ export class FormBuilderStore {
   readonly #historyTick = signal(0);
 
   readonly doc = signal<BuilderDocument>(EMPTY_BUILDER_DOCUMENT);
+  readonly pages = computed(() => documentToSchema(this.doc()).pages);
+  readonly activePage = computed(() => this.doc().base.page);
+  readonly allElements = computed(() => this.pages().flatMap(page => page.elements));
+  readonly navigation = computed(() => this.doc().base.rest['navigation'] as SdFormGenericNavigation | undefined);
+  readonly canDuplicatePage = computed(() => this.doc().elements.every(canDuplicate));
+  readonly #pageSelections = new Map<string, string | null>();
   readonly selectedId = signal<string | null>(null);
   readonly mode = signal<BuilderMode>('design');
   readonly viewport = signal<BuilderViewport>('desktop');
@@ -133,6 +149,7 @@ export class FormBuilderStore {
     this.drag.set(null);
     this.resize.set(null);
     this.collapsed.set(new Set());
+    this.#pageSelections.clear();
   }
 
   /** Áp tài liệu mới do người dùng thao tác — một bước undo (hoặc gộp theo `coalesceKey`). */
@@ -152,11 +169,12 @@ export class FormBuilderStore {
     if (this.mode() !== 'design') return false;
     const previous = this.#history.undo(this.doc());
     if (!previous) return false;
-    this.doc.set(previous);
+    const activeId = this.doc().base.page.id;
+    this.doc.set(documentFromSchema(documentToSchema(previous), activeId));
     this.#historyTick.update(value => value + 1);
     this.#keepSelectionValid();
     this.announce(this.t('core.component.form-builder.announce.undo'));
-    this.changes.next(previous);
+    this.changes.next(this.doc());
     return true;
   }
 
@@ -164,11 +182,12 @@ export class FormBuilderStore {
     if (this.mode() !== 'design') return false;
     const next = this.#history.redo(this.doc());
     if (!next) return false;
-    this.doc.set(next);
+    const activeId = this.doc().base.page.id;
+    this.doc.set(documentFromSchema(documentToSchema(next), activeId));
     this.#historyTick.update(value => value + 1);
     this.#keepSelectionValid();
     this.announce(this.t('core.component.form-builder.announce.redo'));
-    this.changes.next(next);
+    this.changes.next(this.doc());
     return true;
   }
 
@@ -193,6 +212,96 @@ export class FormBuilderStore {
   select(id: string | null): void {
     if (this.selectedId() !== id) this.#history.seal();
     this.selectedId.set(id);
+  }
+
+  /** Editor page selection is transient: preserve schema order, values and undo history. */
+  selectPage(id: string): void {
+    if (this.activePage().id === id || !this.pages().some(page => page.id === id)) return;
+    this.#pageSelections.set(this.activePage().id, this.selectedId());
+    this.#history.seal();
+    this.doc.set(documentFromSchema(documentToSchema(this.doc()), id));
+    this.selectedId.set(this.#pageSelections.get(id) ?? null);
+    this.#keepSelectionValid();
+    this.drag.set(null);
+    this.resize.set(null);
+  }
+
+  addPage(): void {
+    const schema = documentToSchema(this.doc());
+    const page: SdFormGenericPage = { id: createId(), elements: [] };
+    schema.pages.push(page);
+    this.commit(documentFromSchema(schema, this.activePage().id));
+    this.selectPage(page.id);
+  }
+
+  duplicatePage(): string | null {
+    const schema = documentToSchema(this.doc());
+    const index = schema.pages.findIndex(page => page.id === this.activePage().id);
+    const copy = clonePage(this.doc(), schema.pages[index]);
+    if (!copy) return null;
+    schema.pages.splice(index + 1, 0, copy);
+    this.commit(documentFromSchema(schema, this.activePage().id));
+    this.selectPage(copy.id);
+    return copy.id;
+  }
+
+  removePage(id: string): boolean {
+    const schema = documentToSchema(this.doc());
+    const index = schema.pages.findIndex(page => page.id === id);
+    if (schema.pages.length <= 1 || index < 0) return false;
+    const active = this.activePage().id === id ? (schema.pages[index + 1] ?? schema.pages[index - 1]).id : this.activePage().id;
+    schema.pages.splice(index, 1);
+    return this.commit(documentFromSchema(schema, active));
+  }
+
+  movePage(id: string, delta: -1 | 1): boolean {
+    const schema = documentToSchema(this.doc());
+    const index = schema.pages.findIndex(page => page.id === id);
+    const next = index + delta;
+    if (index < 0 || next < 0 || next >= schema.pages.length) return false;
+    [schema.pages[index], schema.pages[next]] = [schema.pages[next], schema.pages[index]];
+    return this.commit(documentFromSchema(schema, this.activePage().id));
+  }
+
+  setPageMetadata(patch: Partial<Pick<SdFormGenericPage, 'label' | 'icon' | 'rules'>>, coalesceKey?: string): boolean {
+    const current = this.doc();
+    const next = { ...current, base: { ...current.base, page: { ...current.base.page, ...patch } } };
+    return sameDocumentContent(current, next) ? false : this.commit(next, { coalesceKey });
+  }
+
+  setPageRule(key: keyof SdFormGenericVisibilityRules, filter: Filter | undefined): boolean {
+    const rules = { ...this.activePage().rules };
+    if (filter) rules[key] = filter;
+    else delete rules[key];
+    return this.setPageMetadata({ rules: Object.keys(rules).length ? rules : undefined });
+  }
+
+  setNavigation(mode: 'single' | 'tabs' | 'steps'): boolean {
+    const current = this.doc();
+    const rest = { ...current.base.rest };
+    if (mode === 'single') delete rest['navigation'];
+    else rest['navigation'] = this.navigation()?.type === mode ? this.navigation() : { type: mode };
+    const next = { ...current, base: { ...current.base, rest } };
+    return sameDocumentContent(current, next) ? false : this.commit(next);
+  }
+  setLinear(linear: boolean): boolean {
+    const navigation = this.navigation();
+    if (navigation?.type !== 'steps' || !!navigation.linear === linear) return false;
+    return this.commit({
+      ...this.doc(),
+      base: { ...this.doc().base, rest: { ...this.doc().base.rest, navigation: { ...navigation, linear } } },
+    });
+  }
+
+  pageDependentsOf(id: string): SdFormGenericKeyReference[] {
+    const schema = documentToSchema(this.doc());
+    const page = schema.pages.find(page => page.id === id);
+    if (!page) return [];
+    const members = page.elements.flatMap(item => (isGroup(item) ? [item, ...(item.elements ?? [])] : [item]));
+    const owned = new Set([id, ...members.map(item => item.id)]);
+    return members.flatMap(item =>
+      isField(item) && item.key ? sdFindKeyReferences(schema, item.key).filter(reference => !owned.has(reference.elementId ?? '')) : []
+    );
   }
 
   setMode(mode: BuilderMode): void {
@@ -326,7 +435,7 @@ export class FormBuilderStore {
       return -1;
     }
     const updated = sdFindKeyReferences(schema, key).filter(reference => reference.kind === 'structured').length;
-    this.commit(documentFromSchema(renamed));
+    this.commit(documentFromSchema(renamed, this.activePage().id));
     return updated;
   }
 
@@ -340,7 +449,7 @@ export class FormBuilderStore {
     const key = item && isField(item) ? item.key : undefined;
     if (nextKey && key && key !== nextKey) {
       try {
-        next = documentFromSchema(sdRenameKey(documentToSchema(next), key, nextKey));
+        next = documentFromSchema(sdRenameKey(documentToSchema(next), key, nextKey), this.activePage().id);
       } catch {
         return false;
       }
@@ -350,7 +459,7 @@ export class FormBuilderStore {
 
   /** Lưu dialog Biến: đổi key biến kéo theo tham chiếu (một bước undo); không đổi gì thì không commit. */
   saveVariables(edits: readonly VariableEdit[]): boolean {
-    const next = applyVariables(this.doc(), edits);
+    const next = documentFromSchema(documentToSchema(applyVariables(this.doc(), edits)), this.activePage().id);
     if (sameDocumentContent(next, this.doc())) return false;
     return this.commit(next);
   }

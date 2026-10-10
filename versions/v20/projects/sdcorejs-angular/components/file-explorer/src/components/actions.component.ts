@@ -127,6 +127,6 @@ export class SdFileExplorerActions<T> {
     // why: trạng thái do consumer giữ có thể đã đổi sau lần render cuối (ví dụ bật loading ngay trong click trước, khi
     // Angular chưa kịp vẽ lại nút) — đánh giá lại lúc bấm để click lặp hay menu cũ không chạy callback lần nữa.
     if ((group && sdFileExplorerActionBlocked(group, context)) || sdFileExplorerActionBlocked(action, context)) return;
-    action.click(context);
+    (action.onClick ?? action.click)?.(context);
   }
 }

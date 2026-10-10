@@ -2029,6 +2029,8 @@ import {
   SdFileExplorerItem,
   SdFileExplorerOpenEvent,
   SdFileExplorerOption,
+  SdFileExplorerConfig,
+  SdFileExplorerColumnDef,
 } from '@sdcorejs/angular/components/file-explorer';
 import { SdConfirmService } from '@sdcorejs/angular/services/confirm';
 
@@ -2372,7 +2374,7 @@ function fullOption(drive: DemoDrive, autoId: string): SdFileExplorerOption {
 @Component({
   selector: 'app-file-explorer-demo',
   standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, SdFileExplorer],
+  imports: [DemoPageComponent, DemoSectionComponent, SdFileExplorer, SdFileExplorerColumnDef],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: \`
     <demo-page
@@ -2466,6 +2468,32 @@ function fullOption(drive: DemoDrive, autoId: string): SdFileExplorerOption {
           </div>
         </demo-section>
       }
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-generic-data-columns-move') {
+        <demo-section
+          heading="Generic data, columns & move"
+          note="Typed DTO columns, grouped capability eligibility and consumer-controlled moves. Select files to use Move, Share and Download in the selection band; fileCommands is deliberately empty.">
+          <div class="frame frame--desktop">
+            <sd-file-explorer [option]="generic">
+              <ng-template
+                sdFileExplorerColumnDef="owner"
+                [sdFileExplorerColumnFor]="generic"
+                title="Owner"
+                width="160px"
+                let-data="data"
+                >{{ data?.owner }}</ng-template
+              >
+              <ng-template
+                sdFileExplorerColumnDef="classification"
+                [sdFileExplorerColumnFor]="generic"
+                title="Classification"
+                width="140px"
+                let-item
+                >{{ item.data?.classification }}</ng-template
+              >
+            </sd-file-explorer>
+          </div>
+        </demo-section>
+      }
     </demo-page>
   \`,
   styles: \`
@@ -2496,6 +2524,48 @@ function fullOption(drive: DemoDrive, autoId: string): SdFileExplorerOption {
   \`,
 })
 export class FileExplorerDemoComponent {
+  readonly #genericItems: SdFileExplorerItem<{ owner: string; classification: string }>[] = [
+    { id: 'g-work', parentId: null, name: 'Projects', kind: 'folder', data: { owner: 'Ada', classification: 'Team' } },
+    { id: 'g-private', parentId: null, name: 'Private', kind: 'folder', data: { owner: 'Grace', classification: 'Restricted' } },
+    {
+      id: 'g-report',
+      parentId: null,
+      name: 'Quarterly report.pdf',
+      kind: 'file',
+      size: 12000,
+      data: { owner: 'Ada', classification: 'Team' },
+    },
+    {
+      id: 'g-budget',
+      parentId: null,
+      name: 'Budget.xlsx',
+      kind: 'file',
+      size: 24000,
+      data: { owner: 'Grace', classification: 'Restricted' },
+    },
+  ];
+  readonly generic: SdFileExplorerConfig<{ owner: string; classification: string }> = {
+    autoId: 'generic-columns-move',
+    title: 'Project documents',
+    selector: {},
+    fileCommands: [],
+    dataSource: { onList: ({ parentId }) => this.#genericItems.filter(item => item.parentId === parentId) },
+    capabilities: {
+      share: {
+        shareable: item => item.data?.classification !== 'Restricted',
+        onShare: ({ item }) => \`https://drive.example.com/share/\${item.id}\`,
+      },
+      download: { onDownload: ({ item }) => new Blob([item.name]) },
+    },
+    move: {
+      movable: ({ targetFolder }) => targetFolder?.id !== 'g-private',
+      onMove: async ({ items, targetFolder, signal }) => {
+        await wait(700, signal);
+        for (const item of items) item.parentId = targetFolder?.id ?? null;
+        return true;
+      },
+    },
+  };
   readonly #confirm = inject(SdConfirmService);
   // Angular queries cannot live on ES-private (#) fields.
   private readonly fullExplorer = viewChild<SdFileExplorer>('fullExplorer');
@@ -2966,7 +3036,14 @@ const buildLargeForm = (fields: number): SdFormGenericSchema => {
       else if (kind === 'checkbox') children.push({ ...base, type: 'checkbox' });
       else children.push({ ...base, type: 'textfield', subtype: kind });
     }
-    elements.push({ id: \`g\${index}\`, type: 'group', label: \`Nhóm \${elements.length + 1}\`, icon: 'category', color: 'primary', elements: children });
+    elements.push({
+      id: \`g\${index}\`,
+      type: 'group',
+      label: \`Nhóm \${elements.length + 1}\`,
+      icon: 'category',
+      color: 'primary',
+      elements: children,
+    });
   }
   return { pages: [{ id: 'main', elements }] };
 };
@@ -2981,49 +3058,57 @@ const PREVIEW_WIDTHS = [null, 1100, 800, 480] as const;
   standalone: true,
   imports: [JsonPipe, DemoPageComponent, DemoSectionComponent, SdFormBuilder, SdFormRender, SdButton],
   template: \`
-    <demo-page #demoPage
+    <demo-page
+      #demoPage
       title="Form Generic"
       description="Form builder nhúng (Desktop | Tablet | Mobile, span theo mức, bắt đầu hàng mới, điều kiện Filter, preset Email/SĐT/Tiền tệ…, kéo-thả, undo/redo) và renderer dùng chung schema SdFormGenericSchema.">
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-builder-render') {
-      <demo-section heading="Builder + Render"
-        [props]="[{ name: '[(schema)]', value: 'SdFormGenericSchema' }, { name: '[(value)]', value: 'Record<string, unknown>' }]"
-        note="Lưu/nháp/xuất bản thuộc về consumer — builder chỉ phát (schemaChange). Nút bên dưới là của trang demo.">
-        <div class="row-actions">
-          <sd-button type="outline" color="primary" title="Form mẫu" prefixIcon="restart_alt" (click)="load(seedForm())"></sd-button>
-          <sd-button type="outline" color="secondary" title="Form rỗng" prefixIcon="layers_clear" (click)="load(emptyForm())"></sd-button>
-          <sd-button type="outline" color="secondary" title="Form 100 trường" prefixIcon="speed" (click)="load(large(100))"></sd-button>
-          <sd-button type="outline" color="secondary" title="Form 300 trường" prefixIcon="speed" (click)="load(large(300))"></sd-button>
-          <span class="row-actions__meta">Thay đổi: {{ changes() }}</span>
-        </div>
-
-        <div class="builder-box">
-          <sd-form-builder [(schema)]="schema" (schemaChange)="onChange()"></sd-form-builder>
-        </div>
-
-        <div class="render-preview">
-          <div class="render-preview__head">
-            <span class="render-preview__title">Runtime render từ [(schema)] · mức {{ renderer.level() }}</span>
-            <span class="render-preview__widths">
-              @for (width of widths; track $index) {
-                <sd-button
-                  size="sm"
-                  [type]="previewWidth() === width ? 'fill' : 'outline'"
-                  color="secondary"
-                  [title]="width ? width + 'px' : 'Tự do'"
-                  (click)="previewWidth.set(width)"></sd-button>
-              }
-              <sd-button size="sm" type="fill" color="primary" title="Kiểm tra" prefixIcon="task_alt" (click)="check()"></sd-button>
-            </span>
+        <demo-section
+          heading="Builder + Render"
+          [props]="[
+            { name: '[(schema)]', value: 'SdFormGenericSchema' },
+            { name: '[(value)]', value: 'Record<string, unknown>' },
+          ]"
+          note="Lưu/nháp/xuất bản thuộc về consumer — builder chỉ phát (schemaChange). Nút bên dưới là của trang demo.">
+          <div class="row-actions">
+            <sd-button type="outline" color="primary" title="Form mẫu" prefixIcon="restart_alt" (click)="load(seedForm())"></sd-button>
+            <sd-button type="outline" color="secondary" title="Form rỗng" prefixIcon="layers_clear" (click)="load(emptyForm())"></sd-button>
+            <sd-button type="outline" color="secondary" title="Form 100 trường" prefixIcon="speed" (click)="load(large(100))"></sd-button>
+            <sd-button type="outline" color="secondary" title="Form 300 trường" prefixIcon="speed" (click)="load(large(300))"></sd-button>
+            <sd-button type="outline" color="primary" title="Tabs nhiều trang" (click)="load(multipage('tabs'))"></sd-button>
+            <sd-button type="outline" color="primary" title="Steps tuyến tính" (click)="load(multipage('steps', true))"></sd-button>
+            <sd-button type="outline" color="secondary" title="Steps tự do" (click)="load(multipage('steps', false))"></sd-button>
+            <span class="row-actions__meta">Thay đổi: {{ changes() }}</span>
           </div>
-          <div class="render-preview__frame" [style.max-width.px]="previewWidth()">
-            <sd-form-render #renderer [schema]="schema() ?? emptySchema" [(value)]="value" [variables]="variables"></sd-form-render>
+
+          <div class="builder-box">
+            <sd-form-builder [(schema)]="schema" (schemaChange)="onChange()"></sd-form-builder>
           </div>
-          @if (result(); as _result) {
-            <p class="render-preview__result">{{ _result }}</p>
-          }
-          <pre class="render-preview__value">{{ value() | json }}</pre>
-        </div>
-      </demo-section>
+
+          <div class="render-preview">
+            <div class="render-preview__head">
+              <span class="render-preview__title">Runtime render từ [(schema)] · mức {{ renderer.level() }}</span>
+              <span class="render-preview__widths">
+                @for (width of widths; track $index) {
+                  <sd-button
+                    size="sm"
+                    [type]="previewWidth() === width ? 'fill' : 'outline'"
+                    color="secondary"
+                    [title]="width ? width + 'px' : 'Tự do'"
+                    (click)="previewWidth.set(width)"></sd-button>
+                }
+                <sd-button size="sm" type="fill" color="primary" title="Kiểm tra" prefixIcon="task_alt" (click)="check()"></sd-button>
+              </span>
+            </div>
+            <div class="render-preview__frame" [style.max-width.px]="previewWidth()">
+              <sd-form-render #renderer [schema]="schema() ?? emptySchema" [(value)]="value" [variables]="variables"></sd-form-render>
+            </div>
+            @if (result(); as _result) {
+              <p class="render-preview__result">{{ _result }}</p>
+            }
+            <pre class="render-preview__value">{{ value() | json }}</pre>
+          </div>
+        </demo-section>
       }
     </demo-page>
   \`,
@@ -3070,6 +3155,8 @@ const PREVIEW_WIDTHS = [null, 1100, 800, 480] as const;
         gap: 6px;
       }
       .render-preview__frame {
+        box-sizing: border-box;
+        padding: 12px;
         border: 1px dashed var(--sd-border-strong);
         border-radius: 8px;
       }
@@ -3105,6 +3192,34 @@ export class FormGenericDemoComponent {
   emptyForm = (): SdFormGenericSchema => structuredClone(EMPTY);
   large = (fields: number): SdFormGenericSchema => buildLargeForm(fields);
 
+  /** Three real pages, with a conditional last page and the same renderer/builder schema. */
+  multipage(type: 'tabs' | 'steps', linear = false): SdFormGenericSchema {
+    const elements = structuredClone(SEED.pages[0].elements);
+    return {
+      navigation: type === 'tabs' ? { type } : { type, linear },
+      variables: structuredClone(SEED.variables),
+      pages: [
+        {
+          id: 'personal',
+          label: 'Thông tin',
+          icon: 'person',
+          elements: [
+            elements[0],
+            { id: 'show-review', key: 'showReview', type: 'checkbox', label: 'Hiện trang bổ sung', defaultValue: true },
+          ],
+        },
+        { id: 'address', label: 'Địa chỉ', icon: 'home', elements: [elements[1]] },
+        {
+          id: 'review',
+          label: 'Bổ sung',
+          icon: 'fact_check',
+          rules: { visible: { field: 'showReview', operator: 'EQUAL', data: true } },
+          elements: elements.slice(2),
+        },
+      ],
+    };
+  }
+
   load(schema: SdFormGenericSchema): void {
     this.schema.set(schema);
     this.value.set({});
@@ -3120,7 +3235,11 @@ export class FormGenericDemoComponent {
     const outcome = await this.render()?.validate();
     if (!outcome) return;
     const { error, warning } = outcome.messages;
-    this.result.set(outcome.valid ? \`Hợp lệ\${warning.length ? \` · \${warning.join('; ')}\` : ''}\` : \`Chưa hợp lệ\${error.length ? \`: \${error.join('; ')}\` : ''}\`);
+    this.result.set(
+      outcome.valid
+        ? \`Hợp lệ\${warning.length ? \` · \${warning.join('; ')}\` : ''}\`
+        : \`Chưa hợp lệ\${error.length ? \`: \${error.join('; ')}\` : ''}\`
+    );
   }
 }
 `,
@@ -3165,6 +3284,8 @@ export class FormGenericDemoComponent {
   gap: 6px;
 }
 .render-preview__frame {
+  box-sizing: border-box;
+  padding: 12px;
   border: 1px dashed var(--sd-border-strong);
   border-radius: 8px;
 }
@@ -19354,6 +19475,33 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
       </p>
     </demo-section>`,
   },
+  "components/file-explorer/example-generic-data-columns-move": {
+    ...SHOWCASE_PAGE_SOURCES["components/file-explorer"],
+    html: `<demo-section
+      heading="Generic data, columns & move"
+      note="Typed DTO columns, grouped capability eligibility and consumer-controlled moves. Select files to use Move, Share and Download in the selection band; fileCommands is deliberately empty.">
+      <div class="frame frame--desktop">
+        <sd-file-explorer [option]="generic">
+          <ng-template
+            sdFileExplorerColumnDef="owner"
+            [sdFileExplorerColumnFor]="generic"
+            title="Owner"
+            width="160px"
+            let-data="data"
+            >{{ data?.owner }}</ng-template
+          >
+          <ng-template
+            sdFileExplorerColumnDef="classification"
+            [sdFileExplorerColumnFor]="generic"
+            title="Classification"
+            width="140px"
+            let-item
+            >{{ item.data?.classification }}</ng-template
+          >
+        </sd-file-explorer>
+      </div>
+    </demo-section>`,
+  },
   "components/file-explorer/example-khung-hep-mobile": {
     ...SHOWCASE_PAGE_SOURCES["components/file-explorer"],
     html: `<demo-section
@@ -19386,45 +19534,52 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
   },
   "components/form-generic/example-builder-render": {
     ...SHOWCASE_PAGE_SOURCES["components/form-generic"],
-    html: `<demo-section heading="Builder + Render"
-    [props]="[{ name: '[(schema)]', value: 'SdFormGenericSchema' }, { name: '[(value)]', value: 'Record<string, unknown>' }]"
-    note="Lưu/nháp/xuất bản thuộc về consumer — builder chỉ phát (schemaChange). Nút bên dưới là của trang demo.">
-    <div class="row-actions">
-      <sd-button type="outline" color="primary" title="Form mẫu" prefixIcon="restart_alt" (click)="load(seedForm())"></sd-button>
-      <sd-button type="outline" color="secondary" title="Form rỗng" prefixIcon="layers_clear" (click)="load(emptyForm())"></sd-button>
-      <sd-button type="outline" color="secondary" title="Form 100 trường" prefixIcon="speed" (click)="load(large(100))"></sd-button>
-      <sd-button type="outline" color="secondary" title="Form 300 trường" prefixIcon="speed" (click)="load(large(300))"></sd-button>
-      <span class="row-actions__meta">Thay đổi: {{ changes() }}</span>
-    </div>
-
-    <div class="builder-box">
-      <sd-form-builder [(schema)]="schema" (schemaChange)="onChange()"></sd-form-builder>
-    </div>
-
-    <div class="render-preview">
-      <div class="render-preview__head">
-        <span class="render-preview__title">Runtime render từ [(schema)] · mức {{ renderer.level() }}</span>
-        <span class="render-preview__widths">
-          @for (width of widths; track $index) {
-            <sd-button
-              size="sm"
-              [type]="previewWidth() === width ? 'fill' : 'outline'"
-              color="secondary"
-              [title]="width ? width + 'px' : 'Tự do'"
-              (click)="previewWidth.set(width)"></sd-button>
-          }
-          <sd-button size="sm" type="fill" color="primary" title="Kiểm tra" prefixIcon="task_alt" (click)="check()"></sd-button>
-        </span>
+    html: `<demo-section
+      heading="Builder + Render"
+      [props]="[
+        { name: '[(schema)]', value: 'SdFormGenericSchema' },
+        { name: '[(value)]', value: 'Record<string, unknown>' },
+      ]"
+      note="Lưu/nháp/xuất bản thuộc về consumer — builder chỉ phát (schemaChange). Nút bên dưới là của trang demo.">
+      <div class="row-actions">
+        <sd-button type="outline" color="primary" title="Form mẫu" prefixIcon="restart_alt" (click)="load(seedForm())"></sd-button>
+        <sd-button type="outline" color="secondary" title="Form rỗng" prefixIcon="layers_clear" (click)="load(emptyForm())"></sd-button>
+        <sd-button type="outline" color="secondary" title="Form 100 trường" prefixIcon="speed" (click)="load(large(100))"></sd-button>
+        <sd-button type="outline" color="secondary" title="Form 300 trường" prefixIcon="speed" (click)="load(large(300))"></sd-button>
+        <sd-button type="outline" color="primary" title="Tabs nhiều trang" (click)="load(multipage('tabs'))"></sd-button>
+        <sd-button type="outline" color="primary" title="Steps tuyến tính" (click)="load(multipage('steps', true))"></sd-button>
+        <sd-button type="outline" color="secondary" title="Steps tự do" (click)="load(multipage('steps', false))"></sd-button>
+        <span class="row-actions__meta">Thay đổi: {{ changes() }}</span>
       </div>
-      <div class="render-preview__frame" [style.max-width.px]="previewWidth()">
-        <sd-form-render #renderer [schema]="schema() ?? emptySchema" [(value)]="value" [variables]="variables"></sd-form-render>
+
+      <div class="builder-box">
+        <sd-form-builder [(schema)]="schema" (schemaChange)="onChange()"></sd-form-builder>
       </div>
-      @if (result(); as _result) {
-        <p class="render-preview__result">{{ _result }}</p>
-      }
-      <pre class="render-preview__value">{{ value() | json }}</pre>
-    </div>
-  </demo-section>`,
+
+      <div class="render-preview">
+        <div class="render-preview__head">
+          <span class="render-preview__title">Runtime render từ [(schema)] · mức {{ renderer.level() }}</span>
+          <span class="render-preview__widths">
+            @for (width of widths; track $index) {
+              <sd-button
+                size="sm"
+                [type]="previewWidth() === width ? 'fill' : 'outline'"
+                color="secondary"
+                [title]="width ? width + 'px' : 'Tự do'"
+                (click)="previewWidth.set(width)"></sd-button>
+            }
+            <sd-button size="sm" type="fill" color="primary" title="Kiểm tra" prefixIcon="task_alt" (click)="check()"></sd-button>
+          </span>
+        </div>
+        <div class="render-preview__frame" [style.max-width.px]="previewWidth()">
+          <sd-form-render #renderer [schema]="schema() ?? emptySchema" [(value)]="value" [variables]="variables"></sd-form-render>
+        </div>
+        @if (result(); as _result) {
+          <p class="render-preview__result">{{ _result }}</p>
+        }
+        <pre class="render-preview__value">{{ value() | json }}</pre>
+      </div>
+    </demo-section>`,
   },
   "components/highlight/example-du-lieu-chua-markup": {
     ...SHOWCASE_PAGE_SOURCES["components/highlight"],

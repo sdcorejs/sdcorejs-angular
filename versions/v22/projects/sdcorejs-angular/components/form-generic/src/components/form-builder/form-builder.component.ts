@@ -112,10 +112,40 @@ export class SdFormBuilder {
   readonly store = inject(FormBuilderStore);
   readonly #drag = inject(BuilderDragService);
   readonly #confirm = inject(SdConfirmService);
+  readonly pageIndex = computed(() => this.store.pages().findIndex(page => page.id === this.store.activePage().id));
+
+  /** Confirm destructive page removal with existing reference ownership warnings. */
+  async removePage(): Promise<void> {
+    const doc = this.store.doc();
+    const id = doc.base.page.id;
+    if (this.store.pages().length <= 1) return;
+    const references = this.store.pageDependentsOf(id);
+    if (doc.elements.length || references.length) {
+      try {
+        await this.#confirm.confirm(
+          this.store.t('core.component.form-builder.page.delete-confirm', {
+            label: escapeHtml(doc.base.page.label || this.store.t('core.component.form-generic.page', { number: this.pageIndex() + 1 })),
+            count: references.length,
+          }),
+          {
+            title: this.store.t('core.component.form-builder.confirm.delete-title'),
+            yesTitle: this.store.t('core.component.form-builder.delete'),
+            noTitle: this.store.t('core.component.form-builder.cancel'),
+            yesButtonColor: 'error',
+          }
+        );
+      } catch {
+        return;
+      }
+      if (!sameDocumentContent(doc, this.store.doc()) || this.store.activePage().id !== id) return;
+    }
+    this.store.removePage(id);
+  }
   readonly #notify = inject(SdNotifyService);
   readonly #zone = inject(NgZone);
   readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly #injector = inject(Injector);
+  #headerRevealFrame: number | null = null;
 
   /**
    * Schema của builder — `[(schema)]`. Mỗi tham chiếu MỚI có nội dung khác schema hiện tại = nạp form
@@ -203,6 +233,7 @@ export class SdFormBuilder {
     destroyRef.onDestroy(() => {
       subscription.unsubscribe();
       this.#undoRemove?.release();
+      if (this.#headerRevealFrame !== null) cancelAnimationFrame(this.#headerRevealFrame);
     });
     afterNextRender(() => {
       const observer = new ResizeObserver(entries => {
@@ -219,6 +250,40 @@ export class SdFormBuilder {
 
   /** Snapshot schema hiện tại (bản clone độc lập, sửa thoải mái không ảnh hưởng builder). */
   getSchema = (): SdFormGenericSchema => documentToSchema(this.store.doc());
+
+  /** Keep native focus visible without moving the page or any surrounding scroll container. */
+  protected revealPageHeader(event: Event): void {
+    const header = event.currentTarget as HTMLElement | null;
+    const strip = header?.parentElement;
+    if (!header || !strip?.classList.contains('fb-pages__strip') || !this.#host.nativeElement.contains(strip)) return;
+    const reveal = () => {
+      if (!header.isConnected || header.parentElement !== strip || header.ownerDocument.activeElement !== header) return;
+      const viewport = strip.getBoundingClientRect();
+      const left = viewport.left + strip.clientLeft;
+      const right = left + strip.clientWidth;
+      const bounds = header.getBoundingClientRect();
+      const style = getComputedStyle(header);
+      const gutter =
+        style.outlineStyle === 'none'
+          ? 0
+          : Math.max(0, parseFloat(style.outlineWidth) || 0) + Math.max(0, parseFloat(style.outlineOffset) || 0);
+      let delta = 0;
+      if (bounds.width + 2 * gutter <= strip.clientWidth) {
+        if (bounds.left - gutter < left) delta = bounds.left - gutter - left;
+        else if (bounds.right + gutter > right) delta = bounds.right + gutter - right;
+      } else if (bounds.right <= left || bounds.left >= right) {
+        delta = bounds.left - left - gutter;
+      }
+      // Physical bounds keep this mutation local. RTL behavior remains a separate validation scope.
+      if (delta) strip.scrollLeft += delta;
+    };
+    reveal();
+    if (this.#headerRevealFrame !== null) cancelAnimationFrame(this.#headerRevealFrame);
+    this.#headerRevealFrame = requestAnimationFrame(() => {
+      this.#headerRevealFrame = null;
+      reveal();
+    });
+  }
 
   // ── Toolbar ─────────────────────────────────────────────────────────────────
 

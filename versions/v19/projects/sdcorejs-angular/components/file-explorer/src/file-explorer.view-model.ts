@@ -10,16 +10,16 @@ import type {
 import type { SdFileExplorerFileType } from './file-explorer.utils';
 
 // View models passed from `SdFileExplorer` to its internal presentational children.
-// Not exported from the entry point: consumers only see `SdFileExplorerOption` / `SdFileExplorerItem`.
+// Not exported from the entry point: consumers only see `SdFileExplorerOption<T>` / `SdFileExplorerItem<T>`.
 
 /** One visible row of the folder tree (the tree is rendered flat, depth carried by `level`). */
-export interface SdFileExplorerTreeNode {
+export interface SdFileExplorerTreeNode<T = unknown> {
   /** Unique key: `root` for the root folder, `f:<id>` for folders. */
   readonly key: string;
   /** Folder id; `null` for the root. */
   readonly id: string | null;
   /** Folder item; `null` for the root. */
-  readonly item: SdFileExplorerItem | null;
+  readonly item: SdFileExplorerItem<T> | null;
   readonly name: string;
   /** 1-based depth, rendered as `aria-level`. The root is level 1. */
   readonly level: number;
@@ -32,8 +32,11 @@ export interface SdFileExplorerTreeNode {
 }
 
 /** One item of the list / grid, with every display string already formatted. */
-export interface SdFileExplorerItemView {
-  readonly item: SdFileExplorerItem;
+export interface SdFileExplorerItemView<T = unknown> {
+  readonly downloadDisabled?: boolean;
+  readonly shareDisabled?: boolean;
+  readonly unavailableReason?: string;
+  readonly item: SdFileExplorerItem<T>;
   readonly type: SdFileExplorerFileType;
   /** Built-in glyph resolved from the extension / MIME type. */
   readonly icon: SdFileExplorerIconName;
@@ -57,7 +60,7 @@ export interface SdFileExplorerCommandMenu {
 }
 
 /** Command of the compact command drawer, with its states evaluated for the drawer's item. */
-export interface SdFileExplorerSheetCommand {
+export interface SdFileExplorerSheetCommand<T = unknown> {
   readonly kind: 'leaf';
   /** Declared index (`share` / `download` for the row shortcuts): tracks the entry and suffixes its autoId. */
   readonly key: string;
@@ -71,7 +74,7 @@ export interface SdFileExplorerSheetCommand {
   /** Disabled, loading, or inside a disabled or loading group. */
   readonly disabled: boolean;
   readonly loading: boolean;
-  readonly definition: SdFileExplorerActionLeaf<SdFileExplorerItem>;
+  readonly definition: SdFileExplorerActionLeaf<SdFileExplorerItem<T>>;
 }
 
 /**
@@ -79,28 +82,28 @@ export interface SdFileExplorerSheetCommand {
  * not a control, so it carries no icon or color: the group's `prefixIcon` (often the icon of one of its children) and
  * the desktop `more_vert` face stay on the desktop trigger.
  */
-export interface SdFileExplorerSheetGroup {
+export interface SdFileExplorerSheetGroup<T = unknown> {
   readonly kind: 'group';
   readonly key: string;
   readonly label: string;
   readonly disabled: boolean;
   readonly loading: boolean;
-  readonly definition: SdFileExplorerActionGroup<SdFileExplorerItem>;
+  readonly definition: SdFileExplorerActionGroup<SdFileExplorerItem<T>>;
   /** Never empty. */
-  readonly children: readonly SdFileExplorerSheetCommand[];
+  readonly children: readonly SdFileExplorerSheetCommand<T>[];
 }
 
-export type SdFileExplorerSheetEntry = SdFileExplorerSheetCommand | SdFileExplorerSheetGroup;
+export type SdFileExplorerSheetEntry<T = unknown> = SdFileExplorerSheetCommand<T> | SdFileExplorerSheetGroup<T>;
 
 /** Content of the compact command drawer for one item. */
-export interface SdFileExplorerCommandSheetView {
+export interface SdFileExplorerCommandSheetView<T = unknown> {
   /** Full item name: the drawer title, wrapped rather than cut. */
   readonly title: string;
   /** Type and size of the item, under the title. */
   readonly context: string;
   readonly icon: SdFileExplorerIconName;
   /** Never empty. */
-  readonly entries: readonly SdFileExplorerSheetEntry[];
+  readonly entries: readonly SdFileExplorerSheetEntry<T>[];
 }
 
 /** Selection handed to the item list while the selector is on and the current view holds files. */

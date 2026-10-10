@@ -36,6 +36,8 @@ export type SdTabRegionStyle = Readonly<Record<string, string | number | null | 
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SdTabGroup {
+  /** Keep visited tab bodies in the DOM so form controls retain their rendered state while inactive. */
+  preserveContent = input(false, { transform: booleanAttribute });
   tabs = contentChildren(SdTab);
 
   selectedIndex = model<number>(0);
@@ -157,7 +159,12 @@ export class SdTabGroup {
       this.selectedIndex.set(0);
       return;
     }
-    this.selectedIndex.set(Math.max(0, Math.min(index, len - 1)));
+    const next = Math.max(0, Math.min(index, len - 1));
+    this.selectedIndex.set(next);
+    // Force the native input as well: its own header may have changed the index while
+    // the controlled Angular binding still remembers the previously accepted value.
+    const group = this.matTabGroup();
+    if (group) group.selectedIndex = next;
   }
 
   realignInkBar(): void {

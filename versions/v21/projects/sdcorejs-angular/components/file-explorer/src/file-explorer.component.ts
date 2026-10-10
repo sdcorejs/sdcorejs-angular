@@ -1,4 +1,7 @@
+import { sdFileExplorerNormalizeConfig, sdFileExplorerEligible } from './file-explorer-normalize';
 import { DOCUMENT } from '@angular/common';
+import { A11yModule } from '@angular/cdk/a11y';
+import { SD_FILE_EXPLORER_MOVE_MIME, SdFileExplorerDragSession, sdFileExplorerValidateMove } from './file-explorer-move';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -10,6 +13,8 @@ import {
   WritableSignal,
   afterNextRender,
   computed,
+  contentChildren,
+  isDevMode,
   effect,
   inject,
   input,
@@ -21,10 +26,12 @@ import {
 import { MatTooltip } from '@angular/material/tooltip';
 import { SdBreadcrumb, SdBreadcrumbItem } from '@sdcorejs/angular/components/breadcrumb';
 import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdInform, SdInformActionDirective } from '@sdcorejs/angular/components/inform';
 import { SdDataState } from '@sdcorejs/angular/components/data-state';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { SdFileExplorerActions } from './components/actions.component';
+import { SdFileExplorerColumnDef } from './file-explorer-column.directive';
 import { SdFileExplorerCommandSheet, type SdFileExplorerSheetActivation } from './components/command-sheet.component';
 import { SdFileExplorerFolderTree } from './components/folder-tree.component';
 import { SdFileExplorerItemList } from './components/item-list.component';
@@ -43,8 +50,11 @@ import type {
   SdFileExplorerItem,
   SdFileExplorerOpenEvent,
   SdFileExplorerOption,
+  SdFileExplorerConfig,
+  SdFileExplorerMoveRequest,
   SdFileExplorerProgressReporter,
   SdFileExplorerSelector,
+  SdFileExplorerSelectionAction,
   SdFileExplorerTransfer,
   SdFileExplorerTransferArgs,
   SdFileExplorerTransferDirection,
@@ -90,19 +100,19 @@ const DOWNLOAD_URL_TTL_MS = 40_000;
 const ACTIVE_STATUSES: ReadonlySet<SdFileExplorerTransferStatus> = new Set(['queued', 'preparing', 'transferring']);
 const FINISHED_STATUSES: ReadonlySet<SdFileExplorerTransferStatus> = new Set(['done', 'error', 'cancelled']);
 
-interface FolderState {
+interface FolderState<T = unknown> {
   readonly status: 'loading' | 'loaded' | 'error';
-  readonly items: readonly SdFileExplorerItem[];
+  readonly items: readonly SdFileExplorerItem<T>[];
   /** The folder has been listed successfully at least once (a reload keeps showing the old items). */
   readonly loaded: boolean;
   readonly error?: unknown;
 }
 
-interface SearchState {
+interface SearchState<T = unknown> {
   readonly keyword: string;
   readonly parentId: string | null;
   readonly status: 'loading' | 'loaded' | 'error';
-  readonly items: readonly SdFileExplorerItem[];
+  readonly items: readonly SdFileExplorerItem<T>[];
   readonly error?: unknown;
 }
 
@@ -133,12 +143,12 @@ interface CommandTarget {
 }
 
 /** Command pressed in the drawer: the item id and the definitions, looked up again right before the command runs. */
-interface PendingCommand {
+interface PendingCommand<T = unknown> {
   readonly id: string;
   readonly origin: CommandOrigin;
-  readonly leaf: SdFileExplorerActionLeaf<SdFileExplorerItem>;
+  readonly leaf: SdFileExplorerActionLeaf<SdFileExplorerItem<T>>;
   /** Group the leaf was pressed in; `null` for a flat command. */
-  readonly group: SdFileExplorerActionGroup<SdFileExplorerItem> | null;
+  readonly group: SdFileExplorerActionGroup<SdFileExplorerItem<T>> | null;
 }
 
 let nextExplorerId = 0;
@@ -147,7 +157,7 @@ let nextExplorerId = 0;
  * Google-Drive-like file browser: folder tree, breadcrumb, list / grid, search, file detail drawer, uploads with
  * drag-and-drop, downloads and a transfer queue — all inside one element.
  *
- * Storage-agnostic: every read and write goes through the callbacks of `SdFileExplorerOption`.
+ * Storage-agnostic: every read and write goes through the callbacks of `SdFileExplorerOption<T>`.
  *
  * @example
  * ```html
@@ -158,11 +168,14 @@ let nextExplorerId = 0;
   selector: 'sd-file-explorer',
   standalone: true,
   imports: [
+    A11yModule,
     MatTooltip,
     SdIcon,
     SdTranslatePipe,
     SdBreadcrumb,
     SdButton,
+    SdInform,
+    SdInformActionDirective,
     SdDataState,
     SdFileExplorerActions,
     SdFileExplorerCommandSheet,
@@ -184,31 +197,72 @@ let nextExplorerId = 0;
     '(dragover)': 'onDragOver($event)',
     '(dragleave)': 'onDragLeave()',
     '(drop)': 'onDrop($event)',
+    '(dragstart)': 'onMoveDragStart($event)',
+    '(dragend)': 'onMoveDragEnd()',
     '(keydown.escape)': 'onEscape($event)',
   },
 })
-export class SdFileExplorer {
+export class SdFileExplorer<T = unknown> {
+  readonly #moveDrag = new SdFileExplorerDragSession<T>();
+  #moveController: AbortController | null = null;
+  #moveRefreshFolders: readonly (string | null)[] = [];
+  #moveReturnFocus: HTMLElement | null = null;
+  #moveDragSelectionRequired = false;
+  #movePickerSelectionRequired = false;
+  protected readonly movePending = signal(false);
+  protected readonly moveStatus = signal('');
+  protected readonly moveRefreshError = signal(false);
+  protected readonly movePickerItems = signal<readonly SdFileExplorerItem<T>[] | null>(null);
+  protected readonly moveTarget = signal<SdFileExplorerItem<T> | null>(null);
+  protected readonly moveDropTarget = signal<string | null | undefined>(undefined);
+  protected readonly canMove = computed(() => typeof this.#config().move?.onMove === 'function');
+  protected readonly movePickerNodes = computed(() =>
+    this.treeNodes().map(node => ({ ...node, selected: node.id === (this.moveTarget()?.id ?? null) }))
+  );
+  protected readonly canSubmitMove = computed(() => {
+    const items = this.movePickerItems();
+    if (!items || this.movePending()) return false;
+    return this.#moveAllowed(items, this.moveTarget(), 'menu', new AbortController().signal, this.#movePickerSelectionRequired);
+  });
+  protected readonly columnDefs = contentChildren<SdFileExplorerColumnDef<T>>(SdFileExplorerColumnDef);
+  readonly #warnedColumns = new WeakSet<object>();
+  protected readonly columns = computed(() => {
+    const seen = new Set<string>();
+    return this.columnDefs().filter(column => {
+      const id = column.id().trim();
+      if (!id || seen.has(id)) {
+        if (isDevMode() && !this.#warnedColumns.has(column)) {
+          this.#warnedColumns.add(column);
+          console.warn(`[sd-file-explorer] ignored empty or duplicate column id: ${id}`);
+        }
+        return false;
+      }
+      seen.add(id);
+      return true;
+    });
+  });
   readonly #i18n = inject(I18nService);
   readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly #document = inject(DOCUMENT);
   readonly #injector = inject(Injector);
   readonly #zone = inject(NgZone);
 
-  /** Data callbacks and display settings. See `SdFileExplorerOption`. */
-  readonly option = input.required<SdFileExplorerOption>();
+  /** Data callbacks and display settings. See `SdFileExplorerOption<T>`. */
+  readonly option = input.required<SdFileExplorerConfig<T>>();
+  readonly #config = computed(() => sdFileExplorerNormalizeConfig(this.option()));
   /**
    * Emitted exactly once each time the user opens a file (click, `Enter` or `Space` on a file in the list,
    * grid or search results), right before the detail drawer starts loading. Never emitted for folders.
    */
-  readonly open = output<SdFileExplorerOpenEvent>();
+  readonly open = output<SdFileExplorerOpenEvent<T>>();
 
   // ---- State ----
-  readonly #folders = signal<ReadonlyMap<string | null, FolderState>>(new Map());
+  readonly #folders = signal<ReadonlyMap<string | null, FolderState<T>>>(new Map());
   readonly #currentId = signal<string | null>(null);
-  readonly #path = signal<readonly SdFileExplorerItem[]>([]);
+  readonly #path = signal<readonly SdFileExplorerItem<T>[]>([]);
   readonly #expanded = signal<ReadonlySet<string>>(new Set());
-  readonly #search = signal<SearchState | null>(null);
-  readonly #previewItem = signal<SdFileExplorerItem | null>(null);
+  readonly #search = signal<SearchState<T> | null>(null);
+  readonly #previewItem = signal<SdFileExplorerItem<T> | null>(null);
   readonly #transfers = signal<readonly SdFileExplorerTransfer[]>([]);
   readonly #width = signal(0);
   readonly #touch = signal(false);
@@ -231,7 +285,7 @@ export class SdFileExplorer {
   protected readonly folderSubmitting = signal(false);
   protected readonly folderError = signal('');
   /** File whose share dialog is open. */
-  protected readonly shareItem = signal<SdFileExplorerItem | null>(null);
+  protected readonly shareItem = signal<SdFileExplorerItem<T> | null>(null);
   protected readonly shareState = signal<SdFileExplorerShareState>({ status: 'loading' });
   /** Result of the last copy attempt: copied to the clipboard, or selected for a manual Ctrl+C. */
   // why: kiểu khai báo tường minh bằng alias — union tự suy ra được in vào d.ts theo thứ tự nội bộ của TypeScript,
@@ -268,9 +322,9 @@ export class SdFileExplorer {
   #shareController: AbortController | null = null;
   #shareReturnFocus: HTMLElement | null = null;
   /** Command pressed in the compact drawer, waiting for the drawer to finish closing; any context change drops it. */
-  #pendingCommand: PendingCommand | null = null;
+  #pendingCommand: PendingCommand<T> | null = null;
   #dragDepth = 0;
-  #listFn: SdFileExplorerOption['list'] | null = null;
+  #listFn: SdFileExplorerOption<T>['list'] | null = null;
   #resizeObserver: ResizeObserver | null = null;
   #destroyed = false;
 
@@ -285,17 +339,23 @@ export class SdFileExplorer {
   protected readonly touch = this.#touch.asReadonly();
 
   readonly autoId = computed(() => {
-    const scope = this.option().autoId;
+    const scope = this.#config().autoId;
     return scope ? `components-file-explorer-${scope}` : undefined;
   });
 
   protected readonly locale = this.#i18n.locale;
-  protected readonly rootLabel = computed(() => this.option().rootLabel || this.#i18n.t('core.component.file-explorer.root'));
-  protected readonly canUpload = computed(() => typeof this.option().upload === 'function');
-  protected readonly canDownload = computed(() => typeof this.option().download === 'function');
-  protected readonly canCreateFolder = computed(() => typeof this.option().createFolder === 'function');
-  protected readonly canShare = computed(() => typeof this.option().share === 'function');
-  readonly #serverSearch = computed(() => typeof this.option().search === 'function');
+  protected readonly rootLabel = computed(() => this.#config().rootLabel || this.#i18n.t('core.component.file-explorer.root'));
+  protected readonly canUpload = computed(() => typeof this.#config().upload === 'function');
+  protected readonly canDownload = computed(() => typeof this.#config().download === 'function');
+  protected readonly canCreateFolder = computed(() => typeof this.#config().createFolder === 'function');
+  protected readonly canShare = computed(() => typeof this.#config().share === 'function');
+  protected readonly uploadDisabled = computed(
+    () => this.movePending() || !sdFileExplorerEligible(this.#config().uploadable, { parentId: this.#currentId() })
+  );
+  protected readonly createDisabled = computed(
+    () => this.movePending() || !sdFileExplorerEligible(this.#config().creatable, { parentId: this.#currentId() })
+  );
+  readonly #serverSearch = computed(() => typeof this.#config().search === 'function');
 
   protected readonly currentName = computed(() => {
     const path = this.#path();
@@ -303,7 +363,7 @@ export class SdFileExplorer {
   });
 
   readonly #itemById = computed(() => {
-    const map = new Map<string, SdFileExplorerItem>();
+    const map = new Map<string, SdFileExplorerItem<T>>();
     for (const state of this.#folders().values()) {
       for (const item of state.items) map.set(item.id, item);
     }
@@ -315,7 +375,7 @@ export class SdFileExplorer {
   readonly #trimmedKeyword = computed(() => this.keyword().trim());
   protected readonly searching = computed(() => this.#trimmedKeyword().length > 0);
 
-  readonly #visibleItems = computed<readonly SdFileExplorerItem[]>(() => {
+  readonly #visibleItems = computed<readonly SdFileExplorerItem<T>[]>(() => {
     const keyword = this.#trimmedKeyword();
     const items = this.#currentFolder()?.items ?? [];
     if (!keyword) return items;
@@ -327,7 +387,7 @@ export class SdFileExplorer {
     return items.filter(item => sdFileExplorerNormalize(item.name).includes(needle));
   });
 
-  protected readonly itemViews = computed<readonly SdFileExplorerItemView[]>(() => {
+  protected readonly itemViews = computed<readonly SdFileExplorerItemView<T>[]>(() => {
     const format = this.#itemFormatter();
     return sdFileExplorerFoldersFirst(this.#visibleItems()).map(format);
   });
@@ -335,28 +395,93 @@ export class SdFileExplorer {
   // ---- Selection ----
 
   /** The row download / share shortcuts stay until the consumer declares `fileCommands` (even `[]`). */
-  protected readonly rowShortcuts = computed(() => this.option().fileCommands == null);
+  protected readonly rowShortcuts = computed(() => this.#config().fileCommands == null);
 
-  readonly #selector = computed<SdFileExplorerSelector | null>(() => {
-    const selector = this.option().selector;
+  readonly #configuredSelector = computed<SdFileExplorerSelector<T> | null>(() => {
+    const selector = this.#config().selector;
     return selector && selector.visible !== false ? selector : null;
+  });
+
+  readonly #pickerSelection = computed(() => {
+    const selector = this.#configuredSelector();
+    return (
+      !!selector &&
+      (selector.mode === 'picker' ||
+        (selector.mode === undefined && (typeof selector.onSelect === 'function' || typeof selector.onSelectAll === 'function')))
+    );
+  });
+
+  /** Selection actions remain caller-owned when declared, including an intentional empty array. */
+  protected readonly selectionActions = computed<readonly SdFileExplorerSelectionAction<T>[]>(() => {
+    const selector = this.#configuredSelector();
+    if (!selector) return [];
+    if (selector.actions !== undefined) return selector.actions ?? [];
+    if (this.#pickerSelection()) return [];
+    const config = this.#config();
+    const actions: SdFileExplorerSelectionAction<T>[] = [];
+    if (typeof config.move?.onMove === 'function')
+      actions.push({
+        title: this.#i18n.t('core.component.file-explorer.move.to'),
+        prefixIcon: 'drive_file_move',
+        type: 'outline',
+        disabled: () => this.movePending() || this.moveRefreshError(),
+        onClick: items => this.openMovePicker(items),
+      });
+    if (typeof config.share === 'function')
+      actions.push({
+        title: this.#i18n.t('core.component.file-explorer.share'),
+        prefixIcon: 'share',
+        disabled: items => items.length !== 1 || !sdFileExplorerEligible(config.shareable, items[0]),
+        onClick: items => {
+          if (items.length === 1) this.openShare(items[0]);
+        },
+      });
+    if (typeof config.download === 'function')
+      actions.push({
+        title: this.#i18n.t('core.component.file-explorer.download'),
+        prefixIcon: 'file_download',
+        disabled: items => !items.length || items.some(item => !sdFileExplorerEligible(config.downloadable, item)),
+        onClick: items => {
+          for (const item of items) this.downloadItem(item);
+        },
+      });
+    return actions;
+  });
+
+  readonly #selector = computed<SdFileExplorerSelector<T> | null>(() => {
+    const selector = this.#configuredSelector();
+    if (!selector || this.#pickerSelection()) return selector;
+    const selected = this.#selectedCandidates();
+    // With nothing selected, probe the available files and individual files so a single-selection action can enable
+    // its checkboxes. Hidden predicates still use the actual selection as soon as a user selects something.
+    const candidates = this.#selectionCandidates();
+    const contexts = selected.length ? [selected] : [candidates, ...candidates.map(item => Object.freeze([item]))];
+    const defaults = { leafType: 'light', groupType: 'text', color: 'primary' } as const;
+    return contexts.some(items => sdFileExplorerResolveActions(this.selectionActions(), items, defaults, 'selector.actions').length)
+      ? selector
+      : null;
   });
 
   /** Files of the current folder or search results, in display order. Folders are never selectable. */
   readonly #visibleFiles = computed(() => this.#visibleItems().filter(item => item.kind === 'file'));
 
-  readonly #eligibleFiles = computed<readonly SdFileExplorerItem[]>(() => {
-    const selector = this.#selector();
+  readonly #selectionCandidates = computed<readonly SdFileExplorerItem<T>[]>(() => {
+    const selector = this.#configuredSelector();
     if (!selector) return [];
     const disabled = selector.disabled;
     return disabled ? this.#visibleFiles().filter(item => !disabled(item)) : this.#visibleFiles();
   });
 
+  readonly #selectedCandidates = computed(() =>
+    Object.freeze(this.#selectionCandidates().filter(item => this.#selectedIds().has(item.id)))
+  );
+  readonly #eligibleFiles = computed<readonly SdFileExplorerItem<T>[]>(() => (this.#selector() ? this.#selectionCandidates() : []));
+
   /**
    * Frozen snapshot of the selection handed to callbacks and actions: selected files that are still visible and
    * eligible, in display order. A file that a refresh drops, or that becomes disabled, leaves it.
    */
-  protected readonly selectedItems = computed<readonly SdFileExplorerItem[]>(() => {
+  protected readonly selectedItems = computed<readonly SdFileExplorerItem<T>[]>(() => {
     const ids = this.#selectedIds();
     return Object.freeze(this.#eligibleFiles().filter(item => ids.has(item.id)));
   });
@@ -398,16 +523,22 @@ export class SdFileExplorer {
 
   // why: mỗi lối tắt là một computed riêng — định nghĩa giữ nguyên object khi chỉ lối tắt kia đổi, nên lần kiểm tra ngay
   // trước khi chạy lệnh (definition còn được khai không) không hủy nhầm "Chia sẻ" chỉ vì `download` vừa đổi.
-  readonly #shareShortcut = computed<SdFileExplorerCommand | null>(() =>
+  readonly #shareShortcut = computed<SdFileExplorerCommand<T> | null>(() =>
     this.canShare()
-      ? { title: this.#i18n.t('core.component.file-explorer.share'), prefixIcon: 'share', click: item => this.openShare(item) }
+      ? {
+          title: this.#i18n.t('core.component.file-explorer.share'),
+          prefixIcon: 'share',
+          disabled: item => this.movePending() || !sdFileExplorerEligible(this.#config().shareable, item),
+          click: item => this.openShare(item),
+        }
       : null
   );
-  readonly #downloadShortcut = computed<SdFileExplorerCommand | null>(() =>
+  readonly #downloadShortcut = computed<SdFileExplorerCommand<T> | null>(() =>
     this.canDownload()
       ? {
           title: this.#i18n.t('core.component.file-explorer.download'),
           prefixIcon: 'file_download',
+          disabled: item => this.movePending() || !sdFileExplorerEligible(this.#config().downloadable, item),
           click: item => this.downloadItem(item),
         }
       : null
@@ -415,7 +546,7 @@ export class SdFileExplorer {
 
   /** Row shortcuts as commands, for the drawer while `fileCommands` is undeclared: share, then download, as on the row. */
   readonly #shortcuts = computed(() => {
-    const commands: SdFileExplorerCommand[] = [];
+    const commands: SdFileExplorerCommand<T>[] = [];
     const keys: string[] = [];
     const share = this.#shareShortcut();
     const download = this.#downloadShortcut();
@@ -431,30 +562,32 @@ export class SdFileExplorer {
   });
 
   /** Current version of the drawer's item — looked up by id in the list it was opened from; `null` once it is gone. */
-  readonly #commandItem = computed<SdFileExplorerItem | null>(() => {
+  readonly #commandItem = computed<SdFileExplorerItem<T> | null>(() => {
     const target = this.#commandTarget();
     return target ? this.#findCommandItem(target.id, target.origin) : null;
   });
 
   /** Content of the drawer: the item's commands resolved for it now; `null` when nothing is left to show. */
   // why: kiểu tường minh như contentState — d.ts ổn định giữa các máy build.
-  protected readonly commandSheet: Signal<SdFileExplorerCommandSheetView | null> = computed<SdFileExplorerCommandSheetView | null>(() => {
-    const target = this.#commandTarget();
-    const item = this.#commandItem();
-    if (!target || !item) return null;
-    const definitions = this.#commandDefinitions(item, target.origin);
-    const source = item.kind === 'folder' ? 'folderCommands' : 'fileCommands';
-    const resolved = sdFileExplorerResolveActions(definitions, item, SD_FILE_EXPLORER_COMMAND_DEFAULTS, source);
-    if (!resolved.length) return null;
-    const shortcuts = this.#shortcuts();
-    const view = this.#itemFormatter()(item);
-    return {
-      title: item.name,
-      context: [view.typeLabel, view.sizeLabel].filter(Boolean).join(' · '),
-      icon: view.icon,
-      entries: sdFileExplorerSheetEntries(resolved, definitions === shortcuts.commands ? shortcuts.keys : undefined),
-    };
-  });
+  protected readonly commandSheet: Signal<SdFileExplorerCommandSheetView<T> | null> = computed<SdFileExplorerCommandSheetView<T> | null>(
+    () => {
+      const target = this.#commandTarget();
+      const item = this.#commandItem();
+      if (!target || !item) return null;
+      const definitions = this.#commandDefinitions(item, target.origin);
+      const source = item.kind === 'folder' ? 'folderCommands' : 'fileCommands';
+      const resolved = sdFileExplorerResolveActions(definitions, item, SD_FILE_EXPLORER_COMMAND_DEFAULTS, source);
+      if (!resolved.length) return null;
+      const shortcuts = this.#shortcuts();
+      const view = this.#itemFormatter()(item);
+      return {
+        title: item.name,
+        context: [view.typeLabel, view.sizeLabel].filter(Boolean).join(' · '),
+        icon: view.icon,
+        entries: sdFileExplorerSheetEntries(resolved, definitions === shortcuts.commands ? shortcuts.keys : undefined),
+      };
+    }
+  );
 
   protected readonly itemsMenuOpenId: Signal<string | null> = computed(() => {
     const target = this.#commandTarget();
@@ -527,7 +660,7 @@ export class SdFileExplorer {
 
   /** Breadcrumb trail plus the folder each entry navigates to. */
   protected readonly breadcrumb = computed(() => {
-    const targets = new Map<SdBreadcrumbItem, SdFileExplorerItem | null>();
+    const targets = new Map<SdBreadcrumbItem, SdFileExplorerItem<T> | null>();
     const items: SdBreadcrumbItem[] = [];
     const root: SdBreadcrumbItem = { label: this.rootLabel(), clickable: true };
     targets.set(root, null);
@@ -540,13 +673,13 @@ export class SdFileExplorer {
     return { items, targets };
   });
 
-  protected readonly treeNodes = computed<readonly SdFileExplorerTreeNode[]>(() => {
+  protected readonly treeNodes = computed<readonly SdFileExplorerTreeNode<T>[]>(() => {
     const folders = this.#folders();
     const expanded = this.#expanded();
     const current = this.#currentId();
     const autoId = this.autoId();
     const rootState = folders.get(null);
-    const nodes: SdFileExplorerTreeNode[] = [
+    const nodes: SdFileExplorerTreeNode<T>[] = [
       {
         key: 'root',
         id: null,
@@ -571,7 +704,7 @@ export class SdFileExplorer {
         const isExpanded = expanded.has(folder.id);
         const hasSubfolders = childState?.loaded ? childState.items.some(item => item.kind === 'folder') : folder.hasChildren !== false;
         const open = isExpanded && hasSubfolders;
-        let status: SdFileExplorerTreeNode['status'] = 'idle';
+        let status: SdFileExplorerTreeNode<T>['status'] = 'idle';
         if (isExpanded && childState?.status === 'error') status = 'error';
         else if (isExpanded && childState?.status === 'loading' && !childState.loaded) status = 'loading';
         nodes.push({
@@ -593,7 +726,7 @@ export class SdFileExplorer {
     return nodes;
   });
 
-  protected readonly previewView = computed<SdFileExplorerItemView | null>(() => {
+  protected readonly previewView = computed<SdFileExplorerItemView<T> | null>(() => {
     const item = this.#previewItem();
     return item ? this.#itemFormatter()(item) : null;
   });
@@ -684,10 +817,13 @@ export class SdFileExplorer {
     const t = (key: string, params?: Record<string, string>) => this.#i18n.t(`core.component.file-explorer.${key}`, params);
     const labels = { today: t('today'), yesterday: t('yesterday') };
     const now = new Date();
-    return (item: SdFileExplorerItem): SdFileExplorerItemView => {
+    return (item: SdFileExplorerItem<T>): SdFileExplorerItemView<T> => {
       const type = sdFileExplorerFileType(item);
       return {
         item,
+        downloadDisabled: this.movePending() || !sdFileExplorerEligible(this.#config().downloadable, item),
+        shareDisabled: this.movePending() || !sdFileExplorerEligible(this.#config().shareable, item),
+        unavailableReason: t('action-unavailable'),
         type,
         icon: sdFileExplorerIconName(item),
         typeLabel: t(`type.${type}`),
@@ -705,6 +841,33 @@ export class SdFileExplorer {
 
   constructor() {
     const destroyRef = inject(DestroyRef);
+    let previewProvider: SdFileExplorerOption<T>['preview'];
+    let shareProvider: SdFileExplorerOption<T>['share'];
+    let moveProvider: SdFileExplorerConfig<T>['move'];
+    let searchProvider: SdFileExplorerOption<T>['search'];
+    effect(() => {
+      const config = this.#config();
+      const previewChanged = previewProvider !== config.preview;
+      const shareChanged = shareProvider !== config.share;
+      const moveChanged = moveProvider?.onMove !== config.move?.onMove;
+      const searchChanged = searchProvider !== config.search;
+      previewProvider = config.preview;
+      shareProvider = config.share;
+      moveProvider = config.move;
+      searchProvider = config.search;
+      untracked(() => {
+        const item = this.#previewItem();
+        if (previewChanged && item) void this.#loadPreview(item);
+        const shareItem = this.shareItem();
+        if (shareChanged && shareItem) {
+          this.#shareController?.abort();
+          if (config.share && sdFileExplorerEligible(config.shareable, shareItem)) void this.#loadShareLink(shareItem);
+          else this.closeShare();
+        }
+        if (moveChanged && this.#moveController) this.cancelMove();
+        if (searchChanged && this.#listFn === config.list) this.#scheduleSearch(true);
+      });
+    });
     // why: trên màn hình cảm ứng không có hover — lệnh của hàng/thẻ/cây luôn hiện và dùng vùng chạm 48px.
     // Đọc ngay trong constructor (không đợi render) để lần vẽ đầu đã đúng cỡ, rồi theo dõi khi thiết bị đổi con trỏ.
     const touchQuery = this.#document.defaultView?.matchMedia?.(TOUCH_QUERY);
@@ -718,13 +881,17 @@ export class SdFileExplorer {
     // why: chỉ reset khi hàm `list` đổi (đổi nguồn lưu trữ). Consumer tạo lại object option với cùng callback
     // (ví dụ đổi title) không được xoá cache/điều hướng của người dùng.
     effect(() => {
-      const option = this.option();
+      const option = this.#config();
       const selecting = !!this.#selector();
       untracked(() => {
         if (!selecting) this.#clearSelection();
         if (this.#listFn === option.list) return;
         const firstRun = this.#listFn === null;
         this.#listFn = option.list;
+        if (this.#moveController) this.cancelMove();
+        this.moveRefreshError.set(false);
+        this.#moveRefreshFolders = [];
+        this.#moveDrag.clear();
         if (firstRun) this.view.set(option.defaultView ?? 'list');
         this.#resetNavigation();
         this.#ensureLoaded(null);
@@ -782,6 +949,196 @@ export class SdFileExplorer {
 
   // ---- Public API ----
 
+  /** Moves visible files through the caller's storage callback. False includes cancellation, rejection or refresh failure. */
+  async moveFiles(
+    items: readonly SdFileExplorerItem<T>[],
+    targetFolder: SdFileExplorerItem<T> | null,
+    source: SdFileExplorerMoveRequest<T>['source'] = 'api'
+  ): Promise<boolean> {
+    return this.#performMove(items, targetFolder, source, false);
+  }
+
+  async #performMove(
+    items: readonly SdFileExplorerItem<T>[],
+    targetFolder: SdFileExplorerItem<T> | null,
+    source: SdFileExplorerMoveRequest<T>['source'],
+    selectionRequired: boolean
+  ): Promise<boolean> {
+    const move = this.#config().move;
+    if (
+      !move ||
+      this.movePending() ||
+      this.moveRefreshError() ||
+      this.folderSubmitting() ||
+      this.#transfers().some(transfer => transfer.direction === 'upload' && ACTIVE_STATUSES.has(transfer.status)) ||
+      this.#destroyed
+    )
+      return false;
+    const controller = new AbortController();
+    if (!this.#moveAllowed(items, targetFolder, source, controller.signal, selectionRequired)) return false;
+    const request: SdFileExplorerMoveRequest<T> = Object.freeze({
+      items: Object.freeze([...items]),
+      targetFolder,
+      source,
+      signal: controller.signal,
+    });
+    const sourceParents = items.map(item => item.parentId);
+    const movedIds = new Set(items.map(item => item.id));
+    const cachedSources = [...this.#folders()].filter(([, folder]) => folder.items.some(item => movedIds.has(item.id))).map(([id]) => id);
+    this.#moveController = controller;
+    this.movePending.set(true);
+    this.moveStatus.set(this.#i18n.t('core.component.file-explorer.move.pending'));
+    try {
+      const accepted = await move.onMove(request);
+      if (controller.signal.aborted || this.#destroyed || this.#config().move?.onMove !== move.onMove) return false;
+      if (accepted === false) {
+        this.moveStatus.set(this.#i18n.t('core.component.file-explorer.move.cancelled'));
+        return false;
+      }
+      this.#moveRefreshFolders = [...new Set([...sourceParents, ...cachedSources, targetFolder?.id ?? null])].filter(id =>
+        this.#folders().has(id)
+      );
+      this.#clearSelection();
+      return await this.#refreshMove(controller);
+    } catch (error) {
+      if (!controller.signal.aborted && !this.#destroyed)
+        this.moveStatus.set(sdFileExplorerErrorMessage(error) || this.#i18n.t('core.component.file-explorer.move.error'));
+      return false;
+    } finally {
+      if (this.#moveController === controller) {
+        this.#moveController = null;
+        this.movePending.set(false);
+      }
+    }
+  }
+
+  /** Cooperatively aborts the current mutation. A consumer may already have committed its storage change. */
+  cancelMove(): void {
+    this.#moveController?.abort();
+    this.#moveController = null;
+    this.movePending.set(false);
+    this.moveStatus.set(this.#i18n.t('core.component.file-explorer.move.cancelled'));
+    this.#moveDrag.clear();
+  }
+
+  /** Repeats failed listing only; never calls onMove again. */
+  async retryMoveRefresh(): Promise<boolean> {
+    if (!this.moveRefreshError() || this.movePending() || this.#destroyed) return false;
+    const controller = new AbortController();
+    this.#moveController = controller;
+    this.movePending.set(true);
+    try {
+      return await this.#refreshMove(controller);
+    } finally {
+      if (this.#moveController === controller) {
+        this.#moveController = null;
+        this.movePending.set(false);
+      }
+    }
+  }
+
+  async #refreshMove(controller: AbortController): Promise<boolean> {
+    await Promise.all(this.#moveRefreshFolders.map(id => this.#load(id)));
+    if (controller.signal.aborted || this.#destroyed) return false;
+    const failed = this.#moveRefreshFolders.some(id => this.#folders().get(id)?.status !== 'loaded');
+    this.moveRefreshError.set(failed);
+    this.moveStatus.set(
+      this.#i18n.t(failed ? 'core.component.file-explorer.move.refresh-error' : 'core.component.file-explorer.move.done')
+    );
+    if (!failed) {
+      this.#moveRefreshFolders = [];
+      if (this.searching()) this.#scheduleSearch(true);
+    }
+    return !failed;
+  }
+
+  #moveAllowed(
+    items: readonly SdFileExplorerItem<T>[],
+    target: SdFileExplorerItem<T> | null,
+    source: SdFileExplorerMoveRequest<T>['source'],
+    signal: AbortSignal,
+    selectionRequired = false
+  ): boolean {
+    const move = this.#config().move;
+    const visible = this.#visibleItems();
+    const known = [...this.#folders().values()].flatMap(folder => folder.items.filter(item => item.kind === 'folder'));
+    if (!move || !sdFileExplorerValidateMove(items, target, known, visible)) return false;
+    if (selectionRequired && items.some(item => !this.#eligibleFiles().includes(item))) return false;
+    return sdFileExplorerEligible(move.movable, { items: Object.freeze([...items]), targetFolder: target, source, signal });
+  }
+
+  protected openMovePicker(items: readonly SdFileExplorerItem<T>[], event?: Event): void {
+    if (!this.canMove() || this.movePending() || !items.length) return;
+    const active = this.#document.activeElement;
+    this.#moveReturnFocus = active instanceof HTMLElement ? active : null;
+    const selected = this.selectedItems();
+    this.#movePickerSelectionRequired = items.every(item => selected.includes(item));
+    this.moveTarget.set(null);
+    this.movePickerItems.set(Object.freeze([...items]));
+    event?.stopPropagation();
+  }
+
+  protected closeMovePicker(): void {
+    if (this.movePending()) this.cancelMove();
+    this.movePickerItems.set(null);
+    this.#movePickerSelectionRequired = false;
+    const focus = this.#moveReturnFocus;
+    this.#moveReturnFocus = null;
+    if (focus?.isConnected) afterNextRender(() => focus.focus({ preventScroll: true }), { injector: this.#injector });
+  }
+
+  protected submitMoveFromEvent(event: Event): void {
+    void this.submitMove(event instanceof MouseEvent && event.detail === 0 ? 'keyboard' : 'menu');
+  }
+
+  protected async submitMove(source: 'menu' | 'keyboard' = 'menu'): Promise<void> {
+    const items = this.movePickerItems();
+    if (!items) return;
+    if (await this.#performMove(items, this.moveTarget(), source, this.#movePickerSelectionRequired)) this.closeMovePicker();
+  }
+
+  protected onMoveDragStart(event: DragEvent): void {
+    const element = event.target instanceof Element ? event.target : null;
+    if (
+      !element?.closest('.name, .card-name') ||
+      element.closest('button,input,a,.commands,.card-top,.cell--select') ||
+      !event.dataTransfer ||
+      !this.canMove() ||
+      this.movePending()
+    ) {
+      event.preventDefault();
+      return;
+    }
+    const id = element.closest<HTMLElement>('[data-item-id]')?.dataset['itemId'];
+    const file = this.#visibleItems().find(item => item.id === id && item.kind === 'file');
+    if (!file) {
+      event.preventDefault();
+      return;
+    }
+    const selected = this.selectedItems();
+    this.#moveDragSelectionRequired = selected.includes(file);
+    const items = selected.includes(file) ? selected : [file];
+    event.dataTransfer.setData(SD_FILE_EXPLORER_MOVE_MIME, this.#moveDrag.start(items));
+    event.dataTransfer.effectAllowed = 'move';
+  }
+
+  protected onMoveDragEnd(): void {
+    this.#moveDrag.clear();
+    this.#moveDragSelectionRequired = false;
+    this.moveDropTarget.set(undefined);
+  }
+
+  #internalDropTarget(event: DragEvent): { folder: SdFileExplorerItem<T> | null } | null {
+    const element = event.target instanceof Element ? event.target : null;
+    if (element?.closest('sd-file-explorer') !== this.#host.nativeElement) return null;
+    const node = element.closest<HTMLElement>('[data-move-target]');
+    if (!node) return null;
+    const id = node.dataset['moveTarget'];
+    if (id === '') return { folder: null };
+    const folder = [...this.#itemById().values()].find(item => item.id === id && item.kind === 'folder');
+    return folder ? { folder } : null;
+  }
+
   /**
    * Lists the current folder again and drops the cached children of folders that are neither open in the
    * tree nor on the current path. Re-runs the active search, if any. Clears the file selection and closes the command
@@ -807,7 +1164,7 @@ export class SdFileExplorer {
 
   // ---- Navigation ----
 
-  protected navigate(folder: SdFileExplorerItem | null): void {
+  protected navigate(folder: SdFileExplorerItem<T> | null): void {
     const id = folder?.id ?? null;
     if (id !== this.#currentId()) this.#clearSelection();
     this.#closeCommands();
@@ -832,11 +1189,11 @@ export class SdFileExplorer {
     if (targets.has(entry)) this.navigate(targets.get(entry) ?? null);
   }
 
-  protected onTreeSelect(node: SdFileExplorerTreeNode): void {
+  protected onTreeSelect(node: SdFileExplorerTreeNode<T>): void {
     this.navigate(node.item);
   }
 
-  protected onTreeToggle(node: SdFileExplorerTreeNode): void {
+  protected onTreeToggle(node: SdFileExplorerTreeNode<T>): void {
     if (node.id === null) return;
     const id = node.id;
     const expand = !this.#expanded().has(id);
@@ -849,7 +1206,7 @@ export class SdFileExplorer {
     if (expand) this.#ensureLoaded(id);
   }
 
-  protected onTreeRetry(node: SdFileExplorerTreeNode): void {
+  protected onTreeRetry(node: SdFileExplorerTreeNode<T>): void {
     this.#load(node.id);
   }
 
@@ -874,12 +1231,12 @@ export class SdFileExplorer {
 
   // ---- Items / preview ----
 
-  protected onActivate(view: SdFileExplorerItemView): void {
+  protected onActivate(view: SdFileExplorerItemView<T>): void {
     if (view.item.kind === 'folder') this.navigate(view.item);
     else this.openFile(view.item);
   }
 
-  protected openFile(item: SdFileExplorerItem): void {
+  protected openFile(item: SdFileExplorerItem<T>): void {
     this.open.emit({ item, path: this.#path() });
     this.#previewItem.set(item);
     void this.#loadPreview(item);
@@ -905,10 +1262,14 @@ export class SdFileExplorer {
     this.previewState.set({ status: 'error', message: '' });
   }
 
-  protected downloadItem(item: SdFileExplorerItem): void {
-    const download = this.option().download;
-    if (!download) return;
-    this.#enqueue('download', item.name, item.parentId, args => download({ item, ...args }));
+  protected downloadItem(item: SdFileExplorerItem<T>): void {
+    const download = this.#config().download;
+    if (!download || !sdFileExplorerEligible(this.#config().downloadable, item)) return;
+    this.#enqueue('download', item.name, item.parentId, args => {
+      if (!sdFileExplorerEligible(this.#config().downloadable, item))
+        throw new Error(this.#i18n.t('core.component.file-explorer.action-unavailable'));
+      return download({ item, ...args });
+    });
     this.transfersCollapsed.set(false);
   }
 
@@ -924,7 +1285,7 @@ export class SdFileExplorer {
 
   // ---- Selection ----
 
-  protected toggleSelection(item: SdFileExplorerItem): void {
+  protected toggleSelection(item: SdFileExplorerItem<T>): void {
     const selector = this.#selector();
     if (!selector || !this.#eligibleFiles().some(file => file.id === item.id)) return;
     // why: dựng lại từ selectedItems (không từ #selectedIds) để bỏ luôn id của tệp đã rời khỏi danh sách.
@@ -945,21 +1306,24 @@ export class SdFileExplorer {
   }
 
   protected clearSelection(): void {
+    const active = this.#document.activeElement;
+    if (active instanceof HTMLElement && active.classList.contains('selection-clear') && this.#host.nativeElement.contains(active)) {
+      // Move owned focus before removing the toolbar. A consumer's onClear callback
+      // remains free to move focus elsewhere after the selection is cleared.
+      this.#host.nativeElement.querySelector<HTMLElement>('.select-all input')?.focus({ preventScroll: true });
+    }
     this.#clearSelection();
-    // why: nút Bỏ chọn bị vô hiệu ngay khi không còn tệp nào được chọn — đưa focus về checkbox chọn tất cả để bàn
-    // phím không rơi về body.
-    afterNextRender(() => this.#host.nativeElement.querySelector<HTMLElement>('.select-all input')?.focus(), { injector: this.#injector });
   }
 
   /** Empties the selection, calling `onClear` once when something was selected. */
   #clearSelection(): void {
     if (!this.#selectedIds().size) return;
     this.#selectedIds.set(new Set());
-    this.option().selector?.onClear?.();
+    this.#config().selector?.onClear?.();
   }
 
   /** Forgets selected ids that are no longer visible and eligible. Silent: no callback. */
-  #keepEligibleSelection(eligible: readonly SdFileExplorerItem[]): void {
+  #keepEligibleSelection(eligible: readonly SdFileExplorerItem<T>[]): void {
     const ids = this.#selectedIds();
     if (!ids.size) return;
     const kept = new Set(eligible.filter(item => ids.has(item.id)).map(item => item.id));
@@ -968,7 +1332,7 @@ export class SdFileExplorer {
 
   // ---- Compact command drawer ----
 
-  protected openCommands(item: SdFileExplorerItem, origin: CommandOrigin, trigger: HTMLElement): void {
+  protected openCommands(item: SdFileExplorerItem<T>, origin: CommandOrigin, trigger: HTMLElement): void {
     this.#pendingCommand = null;
     // why: bẫy focus của sd-side-drawer trả focus về phần tử đang giữ focus lúc nó mở. Chạm vào nút trên iOS không
     // focus nút, nên focus nút trước khi mở để đóng drawer xong focus về đúng hàng / thẻ / nút cây.
@@ -996,7 +1360,7 @@ export class SdFileExplorer {
   protected runCommand({ command, group }: SdFileExplorerSheetActivation): void {
     const target = this.#commandTarget();
     if (this.#pendingCommand || !target) return;
-    const pending: PendingCommand = { id: target.id, origin: target.origin, leaf: command.definition, group: group?.definition ?? null };
+    const pending: PendingCommand<T> = { id: target.id, origin: target.origin, leaf: command.definition, group: group?.definition ?? null };
     if (!this.#runnableItem(pending)) {
       // why: trạng thái do consumer giữ ngoài signal đã đổi từ lần render trước — tính lại để drawer hiện đúng trạng thái.
       this.#commandTarget.set({ ...target });
@@ -1013,14 +1377,14 @@ export class SdFileExplorer {
         // why: giữa lúc bấm và lần render này consumer vẫn có thể đổi trạng thái, rút định nghĩa hay làm mới danh sách
         // (drawer đã đóng nên effect "mục biến mất" không còn canh) — kiểm lại ngay trước khi chạy, với bản hiện tại của mục.
         const item = this.#runnableItem(pending);
-        if (item) pending.leaf.click(item);
+        if (item) (pending.leaf.onClick ?? pending.leaf.click)?.(item);
       },
       { injector: this.#injector }
     );
   }
 
   /** Current version of an item, by id, in the list a drawer was opened from (list / grid items or tree folders). */
-  #findCommandItem(id: string, origin: CommandOrigin): SdFileExplorerItem | null {
+  #findCommandItem(id: string, origin: CommandOrigin): SdFileExplorerItem<T> | null {
     if (origin === 'tree') return this.treeNodes().find(node => node.id === id)?.item ?? null;
     return this.#visibleItems().find(item => item.id === id) ?? null;
   }
@@ -1029,7 +1393,7 @@ export class SdFileExplorer {
    * The current item when `command` may run now — the item is still listed where the drawer was opened, the pressed
    * definition and its group are still declared for it, and neither is hidden, disabled or loading — else `null`.
    */
-  #runnableItem(command: PendingCommand): SdFileExplorerItem | null {
+  #runnableItem(command: PendingCommand<T>): SdFileExplorerItem<T> | null {
     const item = this.#findCommandItem(command.id, command.origin);
     if (!item) return null;
     const { leaf, group } = command;
@@ -1040,8 +1404,8 @@ export class SdFileExplorer {
   }
 
   /** Commands of one item in the drawer: the declared ones, or the row shortcuts while `fileCommands` is undeclared. */
-  #commandDefinitions(item: SdFileExplorerItem, origin: CommandOrigin): readonly SdFileExplorerCommand[] {
-    const option = this.option();
+  #commandDefinitions(item: SdFileExplorerItem<T>, origin: CommandOrigin): readonly SdFileExplorerCommand<T>[] {
+    const option = this.#config();
     if (item.kind === 'folder') return option.folderCommands ?? [];
     if (option.fileCommands != null) return option.fileCommands;
     // why: lối tắt tải xuống / chia sẻ chỉ có trên hàng danh sách — thẻ lưới chưa từng có — nên chỉ hàng mang chúng vào drawer.
@@ -1108,16 +1472,25 @@ export class SdFileExplorer {
   }
 
   protected uploadFiles(files: readonly File[]): void {
-    const upload = this.option().upload;
-    if (!upload || files.length === 0) return;
+    if (this.movePending()) return;
+    const upload = this.#config().upload;
+    if (!upload || files.length === 0 || !sdFileExplorerEligible(this.#config().uploadable, { parentId: this.#currentId() })) return;
     const parentId = this.#currentId();
     for (const file of files) {
-      this.#enqueue('upload', file.name, parentId, args => upload({ file, parentId, ...args }));
+      this.#enqueue('upload', file.name, parentId, args => {
+        if (!sdFileExplorerEligible(this.#config().uploadable, { parentId }))
+          throw new Error(this.#i18n.t('core.component.file-explorer.action-unavailable'));
+        return upload({ file, parentId, ...args });
+      });
     }
     this.transfersCollapsed.set(false);
   }
 
   protected onDragEnter(event: DragEvent): void {
+    if (event.dataTransfer?.types.includes(SD_FILE_EXPLORER_MOVE_MIME)) {
+      this.onDragOver(event);
+      return;
+    }
     if (!this.#acceptsDrag(event)) return;
     event.preventDefault();
     this.#dragDepth++;
@@ -1125,6 +1498,20 @@ export class SdFileExplorer {
   }
 
   protected onDragOver(event: DragEvent): void {
+    if (event.dataTransfer?.types.includes(SD_FILE_EXPLORER_MOVE_MIME)) {
+      const target = this.#internalDropTarget(event);
+      const items = this.#moveDrag.activeItems;
+      const allowed =
+        !event.dataTransfer.types.includes('Files') &&
+        !!items &&
+        !!target &&
+        !this.movePending() &&
+        this.#moveAllowed(items, target.folder, 'drag', new AbortController().signal, this.#moveDragSelectionRequired);
+      if (target && items && allowed) event.preventDefault();
+      event.dataTransfer.dropEffect = allowed ? 'move' : 'none';
+      this.moveDropTarget.set(allowed ? (target!.folder?.id ?? null) : undefined);
+      return;
+    }
     if (!this.#acceptsDrag(event)) return;
     event.preventDefault();
     if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
@@ -1138,6 +1525,16 @@ export class SdFileExplorer {
   }
 
   protected onDrop(event: DragEvent): void {
+    if (event.dataTransfer?.types.includes(SD_FILE_EXPLORER_MOVE_MIME)) {
+      event.preventDefault();
+      const target = this.#internalDropTarget(event);
+      const items = this.#moveDrag.resolve(event.dataTransfer.getData(SD_FILE_EXPLORER_MOVE_MIME));
+      const mixed = event.dataTransfer.types.includes('Files') || event.dataTransfer.files.length > 0;
+      const selectionRequired = this.#moveDragSelectionRequired;
+      this.onMoveDragEnd();
+      if (items && target && !mixed) void this.#performMove(items, target.folder, 'drag', selectionRequired);
+      return;
+    }
     if (!this.#acceptsDrag(event)) return;
     event.preventDefault();
     this.#dragDepth = 0;
@@ -1160,6 +1557,7 @@ export class SdFileExplorer {
 
   protected retryTransfer(id: string): void {
     const job = this.#jobs.get(id);
+    if (job?.direction === 'upload' && this.movePending()) return;
     const status = this.#statusOf(id);
     if (!job || (status !== 'error' && status !== 'cancelled')) return;
     this.#patch(id, { status: 'queued', loaded: undefined, total: undefined, percent: undefined, error: undefined, handedOff: undefined });
@@ -1200,8 +1598,8 @@ export class SdFileExplorer {
 
   // ---- Share ----
 
-  protected openShare(item: SdFileExplorerItem): void {
-    if (!this.option().share) return;
+  protected openShare(item: SdFileExplorerItem<T>): void {
+    if (!this.#config().share || !sdFileExplorerEligible(this.#config().shareable, item)) return;
     const active = this.#document.activeElement;
     this.#shareReturnFocus = active instanceof HTMLElement && this.#host.nativeElement.contains(active) ? active : null;
     this.shareItem.set(item);
@@ -1249,9 +1647,9 @@ export class SdFileExplorer {
     }
   }
 
-  async #loadShareLink(item: SdFileExplorerItem): Promise<void> {
-    const share = this.option().share;
-    if (!share) return;
+  async #loadShareLink(item: SdFileExplorerItem<T>): Promise<void> {
+    const share = this.#config().share;
+    if (!share || !sdFileExplorerEligible(this.#config().shareable, item)) return;
     this.#shareController?.abort();
     const controller = new AbortController();
     this.#shareController = controller;
@@ -1285,9 +1683,11 @@ export class SdFileExplorer {
 
   protected async submitFolder(event: Event): Promise<void> {
     event.preventDefault();
-    const create = this.option().createFolder;
+    if (this.movePending()) return;
+    const create = this.#config().createFolder;
     const name = this.folderName().trim();
-    if (!create || !name || this.folderSubmitting()) return;
+    if (!create || !name || this.folderSubmitting() || !sdFileExplorerEligible(this.#config().creatable, { parentId: this.#currentId() }))
+      return;
     const parentId = this.#currentId();
     this.folderSubmitting.set(true);
     this.folderError.set('');
@@ -1309,7 +1709,9 @@ export class SdFileExplorer {
 
   protected onEscape(event: Event): void {
     if (event.defaultPrevented) return;
-    if (this.folderDialogOpen()) this.closeFolderDialog();
+    if (this.movePickerItems()) this.closeMovePicker();
+    else if (this.movePending()) this.cancelMove();
+    else if (this.folderDialogOpen()) this.closeFolderDialog();
     else if (this.shareItem()) this.closeShare();
     // why: header vẫn dùng được khi drawer chi tiết mở — Esc trong ô tìm kiếm xoá từ khoá trước, chưa đóng drawer.
     else if (this.keyword() && event.target === this.searchInput()?.nativeElement) this.clearSearch();
@@ -1353,7 +1755,7 @@ export class SdFileExplorer {
     const previous = this.#folders().get(parentId);
     this.#setFolder(parentId, { status: 'loading', items: previous?.loaded ? previous.items : [], loaded: !!previous?.loaded });
     try {
-      const items = await this.option().list({ parentId, signal: controller.signal });
+      const items = await this.#config().list({ parentId, signal: controller.signal });
       if (controller.signal.aborted || this.#destroyed) return;
       this.#setFolder(parentId, { status: 'loaded', items: Array.isArray(items) ? items : [], loaded: true });
     } catch (error) {
@@ -1364,13 +1766,13 @@ export class SdFileExplorer {
     }
   }
 
-  #setFolder(parentId: string | null, state: FolderState): void {
+  #setFolder(parentId: string | null, state: FolderState<T>): void {
     this.#folders.update(folders => new Map(folders).set(parentId, state));
   }
 
-  #buildPath(folder: SdFileExplorerItem): SdFileExplorerItem[] {
+  #buildPath(folder: SdFileExplorerItem<T>): SdFileExplorerItem<T>[] {
     const byId = this.#itemById();
-    const chain: SdFileExplorerItem[] = [folder];
+    const chain: SdFileExplorerItem<T>[] = [folder];
     const seen = new Set([folder.id]);
     let parentId = folder.parentId;
     while (parentId !== null) {
@@ -1396,7 +1798,7 @@ export class SdFileExplorer {
     this.#searchController?.abort();
     this.#searchController = null;
     const keyword = this.#trimmedKeyword();
-    const search = this.option().search;
+    const search = this.#config().search;
     if (!keyword || !search) {
       this.#search.set(null);
       return;
@@ -1409,16 +1811,16 @@ export class SdFileExplorer {
 
   async #runSearch(keyword: string, parentId: string | null): Promise<void> {
     this.#searchTimer = null;
-    const search = this.option().search;
+    const search = this.#config().search;
     if (!search) return;
     const controller = new AbortController();
     this.#searchController = controller;
     try {
       const items = await search({ parentId, keyword, signal: controller.signal });
-      if (controller.signal.aborted || this.#destroyed) return;
+      if (controller.signal.aborted || this.#destroyed || this.#config().search !== search) return;
       this.#search.set({ keyword, parentId, status: 'loaded', items: Array.isArray(items) ? items : [] });
     } catch (error) {
-      if (controller.signal.aborted || this.#destroyed) return;
+      if (controller.signal.aborted || this.#destroyed || this.#config().search !== search) return;
       this.#search.set({ keyword, parentId, status: 'error', items: [], error });
     } finally {
       if (this.#searchController === controller) this.#searchController = null;
@@ -1436,14 +1838,14 @@ export class SdFileExplorer {
 
   // ---- Internals: preview ----
 
-  async #loadPreview(item: SdFileExplorerItem): Promise<void> {
+  async #loadPreview(item: SdFileExplorerItem<T>): Promise<void> {
     this.#releasePreview();
     const kind = sdFileExplorerPreviewKind(sdFileExplorerFileType(item));
     const fallback = (): SdFileExplorerPreviewState =>
       kind === 'image' && item.thumbnailUrl ? { status: 'image', url: item.thumbnailUrl } : { status: 'unavailable' };
-    const preview = this.option().preview;
+    const preview = this.#config().preview;
     // why: định dạng không có renderer thì KHÔNG gọi callback — tránh tải cả file chỉ để hiện fallback.
-    if (kind === 'none' || !preview) {
+    if (kind === 'none' || !preview || !sdFileExplorerEligible(this.#config().previewable, item)) {
       this.previewState.set(kind === 'none' ? { status: 'unavailable' } : fallback());
       return;
     }
@@ -1590,7 +1992,13 @@ export class SdFileExplorer {
 
   #acceptsDrag(event: DragEvent): boolean {
     const types = event.dataTransfer?.types;
-    return this.canUpload() && !!types && Array.from(types).includes('Files');
+    return (
+      this.canUpload() &&
+      !this.uploadDisabled() &&
+      !!types &&
+      !Array.from(types).includes(SD_FILE_EXPLORER_MOVE_MIME) &&
+      Array.from(types).includes('Files')
+    );
   }
 
   #droppedFiles(transfer: DataTransfer | null): File[] {
@@ -1621,6 +2029,8 @@ export class SdFileExplorer {
 
   #teardown(): void {
     this.#destroyed = true;
+    this.#moveController?.abort();
+    this.#moveDrag.clear();
     // A command pressed right before the explorer goes away never runs; sd-side-drawer releases its own scroll lock.
     this.#pendingCommand = null;
     this.#resizeObserver?.disconnect();

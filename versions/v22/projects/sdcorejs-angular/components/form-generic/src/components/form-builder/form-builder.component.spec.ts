@@ -171,6 +171,203 @@ describe('SdFormBuilder (integration)', () => {
     return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, rect };
   };
 
+  it('edits every page without changing serialized order or creating navigation history (AC-108)', async () => {
+    const schema = {
+      ...seed(),
+      navigation: { type: 'tabs' as const },
+      pages: [...seed().pages, { id: 'second', label: 'Second', elements: [] }],
+    };
+    host.form.set(schema);
+    await render();
+    const page = root().querySelector<HTMLButtonElement>('[data-builder-page="second"]');
+    expect(page).not.toBeNull();
+    if (!page) return;
+    const emitted = host.emitted.length;
+    page.click();
+    await render();
+    expect(builder().store.doc().base.page.id).toBe('second');
+    expect(current().pages.map(page => page.id)).toEqual(['page', 'second']);
+    expect(builder().store.canUndo()).toBeFalse();
+    expect(host.emitted.length).toBe(emitted);
+    const add = root().querySelector<HTMLButtonElement>('[data-page-action="add"]');
+    expect(add).not.toBeNull();
+    add?.click();
+    await render();
+    expect(current().pages.length).toBe(3);
+    expect(builder().store.canUndo()).toBeTrue();
+    builder().store.undo();
+    await render();
+    expect(current().pages.map(page => page.id)).toEqual(['page', 'second']);
+  });
+
+  it('duplicates page-wide structured references with unique identities and retains external references (AC-109)', async () => {
+    const schema = {
+      pages: [
+        {
+          id: 'p',
+          label: 'P',
+          elements: [
+            { id: 'a', key: 'a', type: 'textfield', label: 'A', consumerData: { retained: true } },
+            {
+              id: 'b',
+              key: 'b',
+              type: 'textfield',
+              label: 'B',
+              rules: { visible: { field: 'a', operator: 'NOT_NULL' }, hidden: { field: 'outside', operator: 'EQUAL', data: true } },
+            },
+          ],
+        },
+        { id: 'external', elements: [{ id: 'outside', key: 'outside', type: 'checkbox', label: 'Outside' }] },
+      ],
+      navigation: { type: 'tabs' },
+      vendor: { retained: true },
+    } as unknown as SdFormGenericSchema;
+    host.form.set(schema);
+    await render();
+    const duplicate = root().querySelector<HTMLButtonElement>('[data-page-action="duplicate"]');
+    expect(duplicate).not.toBeNull();
+    if (!duplicate) return;
+    duplicate.click();
+    await render();
+    const copy = current().pages[1];
+    expect(current().pages.length).toBe(3);
+    expect(copy.id).not.toBe('p');
+    const [a, b] = copy.elements as unknown as AnyItem[];
+    expect(a['id']).not.toBe('a');
+    expect(a['key']).not.toBe('a');
+    expect(b['rules'].visible.field).toBe(a['key']);
+    expect(b['rules'].hidden.field).toBe('outside');
+    expect(a['consumerData']).toEqual({ retained: true });
+    expect((current() as unknown as AnyItem)['vendor']).toEqual({ retained: true });
+    expect(sdValidateSchema(current())).toEqual([]);
+  });
+
+  it('guards unknown page duplication and last-page deletion and confirms nonempty page deletion (AC-108/109)', async () => {
+    const schema = {
+      pages: [{ id: 'unknown', elements: [{ id: 'future', type: 'future-widget', nested: { id: 'opaque' } }] }],
+    } as unknown as SdFormGenericSchema;
+    host.form.set(schema);
+    await render();
+    const duplicate = root().querySelector<HTMLButtonElement>('[data-page-action="duplicate"]');
+    const remove = root().querySelector<HTMLButtonElement>('[data-page-action="delete"]');
+    expect(duplicate).not.toBeNull();
+    expect(remove).not.toBeNull();
+    expect(duplicate?.disabled).toBeTrue();
+    expect(remove?.disabled).toBeTrue();
+    expect(duplicate?.getAttribute('title')).toBeTruthy();
+    host.form.set({ ...schema, pages: [...schema.pages, { id: 'empty', elements: [] }] });
+    await render();
+    root().querySelector<HTMLButtonElement>('[data-page-action="delete"]')?.click();
+    await render();
+    expect(confirm).toHaveBeenCalledTimes(1);
+    expect(current().pages.map(page => page.id)).toEqual(['empty']);
+    builder().store.undo();
+    await render();
+    expect(current().pages[0].elements).toEqual(schema.pages[0].elements);
+  });
+
+  it('uses the real multipage renderer in preview even when the first page is empty (AC-110)', async () => {
+    host.form.set({ pages: [{ id: 'empty', elements: [] }, ...seed().pages], navigation: { type: 'tabs' } });
+    await render();
+    toolbarButton('preview').click();
+    await render();
+    expect(fixture.debugElement.query(By.directive(SdFormRender))).not.toBeNull();
+    expect(root().querySelectorAll('fb-preview .sd-fg-navigation [role="tab"]').length).toBe(2);
+  });
+
+  it('preserves the edited page and field selection through cross-page key renames, reorder and undo/redo', async () => {
+    const schema = {
+      pages: [
+        {
+          id: 'first',
+          elements: [{ id: 'a', key: 'a', type: 'textfield', label: 'A', rules: { visible: { field: 'b', operator: 'NOT_NULL' } } }],
+        },
+        { id: 'second', label: 'Second', pageExtension: { keep: true }, elements: [{ id: 'b', key: 'b', type: 'textfield', label: 'B' }] },
+      ],
+      navigation: { type: 'tabs' },
+    } as unknown as SdFormGenericSchema;
+    host.form.set(schema);
+    await render();
+    const store = builder().store;
+    store.selectPage('second');
+    store.select('b');
+    expect(store.renameKey('b', 'renamed')).toBe(1);
+    await render();
+    expect(store.activePage().id).toBe('second');
+    expect(store.selectedId()).toBe('b');
+    expect(current().pages.map(page => page.id)).toEqual(['first', 'second']);
+    expect((current().pages[0].elements[0] as unknown as AnyItem)['rules'].visible.field).toBe('renamed');
+    store.undo();
+    await render();
+    expect(store.activePage().id).toBe('second');
+    expect(store.selectedId()).toBe('b');
+    expect((current().pages[1].elements[0] as unknown as AnyItem)['key']).toBe('b');
+    store.redo();
+    store.movePage('second', -1);
+    await render();
+    expect(current().pages.map(page => page.id)).toEqual(['second', 'first']);
+    store.undo();
+    await render();
+    expect(current().pages.map(page => page.id)).toEqual(['first', 'second']);
+    expect((current().pages[1] as unknown as AnyItem)['pageExtension']).toEqual({ keep: true });
+  });
+
+  it('records page metadata/rules/navigation settings in history and keeps imported pages in single mode', async () => {
+    host.form.set({
+      pages: [
+        { id: 'first', elements: [] },
+        { id: 'second', elements: [] },
+      ],
+    });
+    await render();
+    const store = builder().store;
+    store.selectPage('second');
+    store.setPageMetadata({ label: 'Renamed', icon: 'person' });
+    store.setPageRule('visible', { field: 'flag', operator: 'EQUAL', data: true });
+    store.setNavigation('steps');
+    store.setLinear(true);
+    await render();
+    expect(current().navigation).toEqual({ type: 'steps', linear: true });
+    expect(current().pages[1]).toEqual({
+      id: 'second',
+      label: 'Renamed',
+      icon: 'person',
+      rules: { visible: { field: 'flag', operator: 'EQUAL', data: true } },
+      elements: [],
+    });
+    store.undo();
+    await render();
+    expect(current().navigation).toEqual({ type: 'steps' });
+    store.redo();
+    store.setNavigation('single');
+    await render();
+    expect(current().navigation).toBeUndefined();
+    expect(current().pages.length).toBe(2);
+    expect(store.activePage().id).toBe('second');
+  });
+
+  it('warns on external page references before delete and retains those references for consumer repair', async () => {
+    const schema = {
+      pages: [
+        { id: 'first', elements: [{ id: 'a', key: 'a', type: 'textfield', label: 'A' }] },
+        {
+          id: 'second',
+          elements: [{ id: 'b', key: 'b', type: 'textfield', label: 'B', rules: { visible: { field: 'a', operator: 'NOT_NULL' } } }],
+        },
+      ],
+    } as unknown as SdFormGenericSchema;
+    host.form.set(schema);
+    await render();
+    expect(builder().store.pageDependentsOf('first').length).toBe(1);
+    await builder().removePage();
+    await render();
+    expect(confirm).toHaveBeenCalledTimes(1);
+    expect(current().pages[0].elements).toEqual(schema.pages[1].elements);
+    builder().store.undo();
+    await render();
+    expect(current().pages).toEqual(schema.pages);
+  });
+
   beforeEach(async () => {
     confirm = jasmine.createSpy('confirm').and.returnValue(Promise.resolve());
     TestBed.configureTestingModule({
@@ -190,6 +387,107 @@ describe('SdFormBuilder (integration)', () => {
   afterEach(() => {
     fixture.destroy();
     root().remove();
+  });
+
+  for (const width of [240, 310]) {
+    it(`keeps the focused selected page label visible alongside page actions in a ${width}px builder`, async () => {
+      host.form.set({
+        pages: [
+          { id: 'first', label: 'Personal', elements: [] },
+          { id: 'address', label: 'Address page', elements: [] },
+        ],
+      });
+      root().querySelector<HTMLElement>('.host')!.style.width = `${width}px`;
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      await render();
+      const selected = root().querySelector<HTMLButtonElement>('[data-builder-page="address"]')!;
+      selected.focus();
+      selected.click();
+      await render();
+      const strip = root().querySelector<HTMLElement>('.fb-pages__strip')!.getBoundingClientRect();
+      const label = selected.getBoundingClientRect();
+      expect(label.right)
+        .withContext('complete selected page label fits the visible strip')
+        .toBeLessThanOrEqual(strip.right + 1);
+      expect(label.left).toBeGreaterThanOrEqual(strip.left - 1);
+      expect(document.activeElement).toBe(selected);
+      expect(root().querySelector<HTMLButtonElement>('[data-page-action="duplicate"]')!.disabled).toBeFalse();
+    });
+  }
+
+  it('reveals the entire long localized page label when a narrow builder focuses and activates it', async () => {
+    host.form.set({
+      pages: [
+        { id: 'first', label: 'Personal', elements: [] },
+        { id: 'address', label: 'Thông tin địa chỉ liên hệ', elements: [] },
+      ],
+    });
+    root().querySelector<HTMLElement>('.host')!.style.width = '240px';
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    await render();
+    const selected = root().querySelector<HTMLButtonElement>('[data-builder-page="address"]')!;
+    selected.focus();
+    selected.click();
+    await render();
+    const strip = root().querySelector<HTMLElement>('.fb-pages__strip')!.getBoundingClientRect();
+    const label = selected.getBoundingClientRect();
+    expect(selected.getAttribute('aria-pressed')).toBe('true');
+    expect(document.activeElement).toBe(selected);
+    expect(label.right)
+      .withContext('native focused/activated long label fully visible')
+      .toBeLessThanOrEqual(strip.right + 1);
+    expect(label.left).toBeGreaterThanOrEqual(strip.left - 1);
+  });
+
+  it('reveals a focused page by scrolling only its own horizontal strip', async () => {
+    const pages = Array.from({ length: 5 }, (_, index) => ({ id: `page-${index}`, label: `Page label ${index}`, elements: [] }));
+    host.form.set({ pages });
+    host.secondForm.set({ pages });
+    host.second.set(true);
+    root().querySelector<HTMLElement>('.host')!.style.width = '240px';
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    await render();
+    const own = root().querySelector<HTMLElement>('sd-form-builder .fb-pages__strip')!;
+    const sibling = root().querySelectorAll<HTMLElement>('sd-form-builder .fb-pages__strip')[1];
+    const last = own.querySelector<HTMLButtonElement>('[data-builder-page="page-4"]')!;
+    last.focus();
+    own.scrollLeft = 0;
+    const ancestors: HTMLElement[] = [];
+    for (let element = own.parentElement; element; element = element.parentElement) ancestors.push(element);
+    const ancestorPositions = ancestors.map(element => ({ left: element.scrollLeft, top: element.scrollTop }));
+    const windowPosition = { x: window.scrollX, y: window.scrollY };
+    const siblingPosition = { left: sibling.scrollLeft, top: sibling.scrollTop };
+    const stripTop = own.scrollTop;
+    last.dispatchEvent(new FocusEvent('focus'));
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    expect(own.scrollLeft).withContext('only its horizontal viewport reveals the off-screen focused page').toBeGreaterThan(0);
+    expect(own.scrollTop).toBe(stripTop);
+    expect(ancestors.map(element => ({ left: element.scrollLeft, top: element.scrollTop }))).toEqual(ancestorPositions);
+    expect({ x: window.scrollX, y: window.scrollY }).toEqual(windowPosition);
+    expect({ left: sibling.scrollLeft, top: sibling.scrollTop }).toEqual(siblingPosition);
+    expect(document.activeElement).toBe(last);
+  });
+
+  it('keeps a manually reached end of an oversized page label stable on repeated focused activation', async () => {
+    host.form.set({ pages: [{ id: 'wide', label: 'Long localized page label '.repeat(12), elements: [] }] });
+    root().querySelector<HTMLElement>('.host')!.style.width = '240px';
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    await render();
+    const strip = root().querySelector<HTMLElement>('.fb-pages__strip')!;
+    const page = strip.querySelector<HTMLButtonElement>('[data-builder-page="wide"]')!;
+    page.focus();
+    strip.scrollLeft = strip.scrollWidth - strip.clientWidth;
+    const end = strip.scrollLeft;
+    expect(end).toBeGreaterThan(0);
+    page.dispatchEvent(new FocusEvent('focus'));
+    page.click();
+    await render();
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    expect(strip.scrollLeft).withContext('oversized labels retain manual horizontal end access').toBe(end);
+    expect(document.activeElement).toBe(page);
+    expect(page.getAttribute('aria-pressed')).toBe('true');
+    strip.scrollLeft = 0;
+    expect(strip.scrollLeft).toBe(0);
   });
 
   it('loads a schema and returns it unchanged — unknown properties, presets, groups and rules survive load → get', () => {

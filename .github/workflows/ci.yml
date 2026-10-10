@@ -146,6 +146,9 @@ jobs:
         run: >-
           npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadlessCI
           --include=projects/sdcorejs-angular/components/file-explorer/**/*.spec.ts
+          --include=projects/sdcorejs-angular/components/form-generic/**/*.spec.ts
           --include=projects/sdcorejs-angular/components/button/**/*.spec.ts
+          --include=projects/sdcorejs-angular/components/tab/**/*.spec.ts
+          --include=projects/sdcorejs-angular/components/stepper/**/*.spec.ts
           --include=projects/sdcorejs-angular/services/confirm/**/*.spec.ts
         working-directory: versions/${{ matrix.version }}

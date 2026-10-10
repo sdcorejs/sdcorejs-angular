@@ -208,7 +208,7 @@ export function sdFileExplorerIsAbort(error: unknown): boolean {
  * Folders first, then files. Within each group the order returned by the callback is kept, so the
  * consumer (or its API) decides how items are sorted.
  */
-export function sdFileExplorerFoldersFirst(items: readonly SdFileExplorerItem[]): SdFileExplorerItem[] {
+export function sdFileExplorerFoldersFirst<T>(items: readonly SdFileExplorerItem<T>[]): SdFileExplorerItem<T>[] {
   return [...items.filter(item => item.kind === 'folder'), ...items.filter(item => item.kind !== 'folder')];
 }
 

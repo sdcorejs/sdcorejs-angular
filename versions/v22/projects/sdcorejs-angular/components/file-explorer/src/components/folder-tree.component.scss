@@ -78,6 +78,33 @@
   white-space: nowrap;
 }
 
+:host(.sd-file-explorer-folder-tree--touch) {
+  .node {
+    min-height: var(--sd-space-48, 48px);
+  }
+
+  // Retry retains its touch target; a wrapping name lane prevents narrow error rows losing the folder label.
+  .node--error {
+    flex-wrap: wrap;
+
+    .label {
+      flex: 1 1 8ch;
+      min-inline-size: min(100%, 8ch);
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+
+    .retry {
+      margin-inline-start: auto;
+    }
+  }
+  .toggle,
+  .retry {
+    width: var(--sd-space-48, 48px);
+    height: var(--sd-space-48, 48px);
+  }
+}
+
 .retry {
   flex: none;
   display: inline-flex;
@@ -164,4 +191,13 @@
   .spinner {
     animation-duration: 2.4s;
   }
+}
+.move-drop-target::after {
+  content: '↳';
+  font-weight: 700;
+  color: var(--sd-fe-text);
+}
+.move-drop-target {
+  outline: 2px solid var(--sd-fe-accent);
+  outline-offset: -2px;
 }

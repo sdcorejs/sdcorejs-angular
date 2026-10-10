@@ -15,7 +15,7 @@
 @let _dialogOpen = folderDialogOpen();
 @let _shareItem = shareItem();
 @let _canShare = canShare();
-@let _modalOpen = _dialogOpen || !!_shareItem;
+@let _modalOpen = _dialogOpen || !!_shareItem || !!movePickerItems();
 @let _touch = touch();
 @let _rowShortcuts = rowShortcuts();
 
@@ -61,9 +61,11 @@
   @if (_canUpload) {
     <sd-button
       class="upload-button"
+      [disabled]="uploadDisabled()"
+      [attr.aria-description]="uploadDisabled() ? ('core.component.file-explorer.action-unavailable' | sdTranslate) : null"
       type="fill"
       color="primary"
-      size="md"
+      [size]="_compact ? 'sm' : 'md'"
       prefixIcon="file_upload"
       [title]="_compact ? undefined : ('core.component.file-explorer.upload' | sdTranslate)"
       [tooltip]="_compact ? ('core.component.file-explorer.upload' | sdTranslate) : undefined"
@@ -81,6 +83,23 @@
   }
 </header>
 
+@if (moveStatus()) {
+  <sd-inform class="move-status" color="secondary" [hideIcon]="true" [title]="moveStatus()!">
+    @if (moveRefreshError()) {
+      <sd-button
+        sdInformAction
+        class="move-retry-button"
+        type="light"
+        color="primary"
+        [size]="_compact ? 'sm' : 'md'"
+        htmlType="button"
+        [title]="'core.component.file-explorer.move.retry-refresh' | sdTranslate"
+        [disabled]="movePending()"
+        (click)="retryMoveRefresh()" />
+    }
+  </sd-inform>
+}
+
 <!-- why: dialog phủ cả explorer nên làm inert cả vùng này, kể cả drawer chi tiết đang nằm trong .main. -->
 <div class="body" [attr.inert]="_modalOpen ? '' : null">
   @if (_compact && _sidebarOpen) {
@@ -97,6 +116,7 @@
     <div class="sidebar-tree">
       <sd-file-explorer-folder-tree
         [nodes]="treeNodes()"
+        [moveDropTarget]="moveDropTarget()"
         [label]="'core.component.file-explorer.tree-label' | sdTranslate"
         [commands]="_option.folderCommands"
         [touch]="_touch"
@@ -112,9 +132,11 @@
         <sd-button
           #newFolderButton
           class="new-folder-button"
+          [disabled]="createDisabled()"
+          [attr.aria-description]="createDisabled() ? ('core.component.file-explorer.action-unavailable' | sdTranslate) : null"
           type="outline"
           color="secondary"
-          size="md"
+          [size]="_compact ? 'sm' : 'md'"
           prefixIcon="add"
           block
           [title]="'core.component.file-explorer.new-folder' | sdTranslate"
@@ -151,6 +173,9 @@
         [maxItems]="_compact ? 3 : 5"
         [ariaLabel]="'core.component.file-explorer.breadcrumb' | sdTranslate"
         (sdItemActivate)="onBreadcrumb($event)" />
+      @if (_state === 'items') {
+        <span class="count">{{ itemCountLabel() }}</span>
+      }
       <div class="view-toggle" role="group" [attr.aria-label]="'core.component.file-explorer.view' | sdTranslate">
         <button
           type="button"
@@ -177,15 +202,8 @@
       </div>
     </div>
 
-    <div class="heading-row" [attr.inert]="_preview ? '' : null">
-      <h3 class="heading" [title]="_heading">{{ _heading }}</h3>
-      @if (_state === 'items') {
-        <span class="count">{{ itemCountLabel() }}</span>
-      }
-    </div>
-
     @let _selection = selectionView();
-    @if (_selection) {
+    @if (_selection && selectedItems().length) {
       @let _selected = selectedItems();
       @let _selectedCount = _selected.length;
       @let _summary = selectionSummary();
@@ -220,7 +238,7 @@
             <sd-icon name="close" size="20px" />
           </button>
         </div>
-        @if (_selectedCount && _option.selector?.actions?.length) {
+        @if (_selectedCount && selectionActions().length) {
           <!-- why: unset types follow the kind (light flat action, text group trigger). sd-button's own sizes: 32 px like the
                row commands, 48 px only on a wide touch layout; a narrow layout keeps 32 px and spaces the lines instead. -->
           <sd-file-explorer-actions
@@ -229,7 +247,7 @@
             defaultLeafType="light"
             defaultGroupType="text"
             defaultColor="primary"
-            [actions]="_option.selector?.actions"
+            [actions]="selectionActions()"
             [context]="_selected"
             [size]="_touch && !_compact ? 'lg' : 'sm'"
             [autoId]="_autoId ? _autoId + '-selection-action' : undefined" />
@@ -263,6 +281,11 @@
         }
         @default {
           <sd-file-explorer-item-list
+            [columns]="columns()"
+            [moveDropTarget]="moveDropTarget()"
+            [canMove]="canMove()"
+            [movePending]="movePending()"
+            (move)="openMovePicker([$event])"
             [items]="itemViews()"
             [view]="_view"
             [canDownload]="_canDownload && _rowShortcuts"
@@ -308,6 +331,7 @@
      header (tìm kiếm, tải lên), cây thư mục và hàng chờ truyền tải vẫn dùng được khi drawer mở. -->
 <sd-file-explorer-preview-panel
   [view]="_preview"
+  [compact]="_compact"
   [state]="previewState()"
   [meta]="previewMeta()"
   [canDownload]="_canDownload"
@@ -366,21 +390,21 @@
       [attr.data-autoid]="_autoId ? _autoId + '-folder-name' : null"
       (input)="folderName.set(folderInput.value)" />
     @if (_folderError) {
-      <p class="field-error" role="alert" [id]="instanceId + '-folder-error'">{{ _folderError }}</p>
+      <sd-inform class="field-error" color="error" [hideIcon]="true" [id]="instanceId + '-folder-error'" [title]="_folderError" />
     }
     <div class="dialog-actions">
       <sd-button
         class="cancel-button"
         type="text"
         color="secondary"
-        size="md"
+        [size]="_compact ? 'sm' : 'md'"
         [title]="'core.component.file-explorer.cancel' | sdTranslate"
         (click)="closeFolderDialog()" />
       <sd-button
         class="submit-button"
         type="fill"
         color="primary"
-        size="md"
+        [size]="_compact ? 'sm' : 'md'"
         htmlType="submit"
         [title]="'core.component.file-explorer.create' | sdTranslate"
         [disabled]="!_folderName.trim()"
@@ -388,6 +412,56 @@
         [attr.data-autoid]="_autoId ? _autoId + '-folder-submit' : null" />
     </div>
   </form>
+}
+
+@if (movePickerItems()) {
+  <div class="dialog-backdrop" aria-hidden="true" (click)="closeMovePicker()"></div>
+  <section
+    class="dialog move-picker"
+    role="dialog"
+    aria-modal="true"
+    cdkTrapFocus
+    [cdkTrapFocusAutoCapture]="true"
+    (keydown.tab)="$event.stopPropagation()"
+    (keydown.shift.tab)="$event.stopPropagation()"
+    [attr.aria-labelledby]="instanceId + '-move-title'">
+    <h3 cdkFocusInitial tabindex="-1" [id]="instanceId + '-move-title'">{{ 'core.component.file-explorer.move.to' | sdTranslate }}</h3>
+    <sd-file-explorer-folder-tree
+      [nodes]="movePickerNodes()"
+      [label]="'core.component.file-explorer.folders' | sdTranslate"
+      [touch]="_touch"
+      [compact]="false"
+      (select)="moveTarget.set($event.item)"
+      (toggle)="onTreeToggle($event)"
+      (retry)="onTreeRetry($event)" />
+    @if (!canSubmitMove() && !movePending()) {
+      <sd-inform
+        class="field-error move-destination-tip"
+        type="tip"
+        color="secondary"
+        [hideIcon]="true"
+        [title]="'core.component.file-explorer.move.destination-tip' | sdTranslate" />
+    }
+    <div class="dialog-actions">
+      <sd-button
+        class="move-cancel-button"
+        type="text"
+        color="secondary"
+        [size]="_compact ? 'sm' : 'md'"
+        htmlType="button"
+        [title]="'core.component.file-explorer.cancel' | sdTranslate"
+        (click)="closeMovePicker()" />
+      <sd-button
+        class="move-submit-button"
+        type="fill"
+        color="primary"
+        [size]="_compact ? 'sm' : 'md'"
+        htmlType="button"
+        [title]="'core.component.file-explorer.move.confirm' | sdTranslate"
+        [disabled]="!canSubmitMove()"
+        (click)="submitMoveFromEvent($event)" />
+    </div>
+  </section>
 }
 
 @if (_shareItem) {
@@ -411,7 +485,7 @@
         </p>
       }
       @case ('error') {
-        <p class="field-error" role="alert">{{ _shareState.message }}</p>
+        <sd-inform class="field-error" color="error" [hideIcon]="true" [title]="_shareState.message" />
       }
       @case ('ready') {
         <label class="field-label" [for]="instanceId + '-share-link'">{{ 'core.component.file-explorer.share.link' | sdTranslate }}</label>
@@ -432,7 +506,7 @@
         class="close-button"
         type="text"
         color="secondary"
-        size="md"
+        [size]="_compact ? 'sm' : 'md'"
         [title]="'core.component.file-explorer.close' | sdTranslate"
         (click)="closeShare()" />
       @if (_shareState.status === 'error') {
@@ -440,7 +514,7 @@
           class="retry-button"
           type="outline"
           color="primary"
-          size="md"
+          [size]="_compact ? 'sm' : 'md'"
           prefixIcon="refresh"
           [title]="'core.component.file-explorer.retry' | sdTranslate"
           (click)="retryShare()" />
@@ -450,7 +524,7 @@
           class="copy-button"
           type="fill"
           color="primary"
-          size="md"
+          [size]="_compact ? 'sm' : 'md'"
           prefixIcon="content_copy"
           [title]="
             (shareFeedback() === 'copied' ? 'core.component.file-explorer.share.copied' : 'core.component.file-explorer.share.copy')

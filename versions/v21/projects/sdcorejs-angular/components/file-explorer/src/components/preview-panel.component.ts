@@ -112,6 +112,9 @@ import { SdFileExplorerFileIcon } from './file-icon.component';
         <sd-button
           sdFooterRight
           class="share-button"
+          [size]="compact() ? 'sm' : 'md'"
+          [disabled]="_view?.shareDisabled ?? false"
+          [attr.aria-description]="_view?.shareDisabled ? _view?.unavailableReason : null"
           [type]="_canDownload ? 'outline' : 'fill'"
           [color]="_canDownload ? 'secondary' : 'primary'"
           prefixIcon="share"
@@ -123,6 +126,9 @@ import { SdFileExplorerFileIcon } from './file-icon.component';
         <sd-button
           sdFooterRight
           class="download-button"
+          [size]="compact() ? 'sm' : 'md'"
+          [disabled]="_view?.downloadDisabled ?? false"
+          [attr.aria-description]="_view?.downloadDisabled ? _view?.unavailableReason : null"
           type="fill"
           color="primary"
           prefixIcon="file_download"
@@ -149,9 +155,9 @@ import { SdFileExplorerFileIcon } from './file-icon.component';
   `,
   styleUrl: './preview-panel.component.scss',
 })
-export class SdFileExplorerPreviewPanel {
+export class SdFileExplorerPreviewPanel<T = unknown> {
   /** File shown in the drawer; `null` closes the drawer. */
-  readonly view = input<SdFileExplorerItemView | null>(null);
+  readonly view = input<SdFileExplorerItemView<T> | null>(null);
   /** What the stage renders. */
   readonly state = input.required<SdFileExplorerPreviewState>();
   /** Metadata rows (name, type, size, modified). */
@@ -160,6 +166,8 @@ export class SdFileExplorerPreviewPanel {
   readonly canDownload = input(false);
   /** Show the share button. */
   readonly canShare = input(false);
+  /** Matches the explorer's narrow layout; footer buttons retain Core's 48 px touch span. */
+  readonly compact = input(false);
   /** Element the drawer opens inside: the explorer's item area, right of the folder tree. */
   readonly container = input<HTMLElement | null>(null);
   /** E2E scope of the detail content and its buttons. */

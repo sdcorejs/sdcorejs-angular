@@ -9,12 +9,12 @@ export type SdFileExplorerItemKind = 'folder' | 'file';
 /**
  * One file or folder shown by `<sd-file-explorer>`.
  *
- * The explorer never talks to a storage API itself: every item comes from `SdFileExplorerOption.list`
+ * The explorer never talks to a storage API itself: every item comes from `SdFileExplorerOption<T>.list`
  * (or `search`), so map your own DTO into this shape inside the callback.
  *
  * @example
  * ```ts
- * const item: SdFileExplorerItem = {
+ * const item: SdFileExplorerItem<T> = {
  *   id: 'f-42',
  *   parentId: 'folder-7', // null = item sits in the root folder
  *   name: 'Contract.pdf',
@@ -25,7 +25,9 @@ export type SdFileExplorerItemKind = 'folder' | 'file';
  * };
  * ```
  */
-export interface SdFileExplorerItem {
+export interface SdFileExplorerItem<T = unknown> {
+  /** Caller-owned DTO, preserved by identity and never serialized by the explorer. */
+  data?: T;
   /** Stable id, unique across the whole tree. Used for tracking, navigation and `autoId` suffixes. */
   id: string;
   /** Id of the containing folder, or `null` when the item sits in the root folder. */
@@ -53,7 +55,7 @@ export interface SdFileExplorerItem {
   thumbnailUrl?: string;
 }
 
-/** Arguments of `SdFileExplorerOption.list`. */
+/** Arguments of `SdFileExplorerOption<T>.list`. */
 export interface SdFileExplorerListArgs {
   /** Folder whose direct children are requested; `null` is the root folder. */
   parentId: string | null;
@@ -65,7 +67,7 @@ export interface SdFileExplorerListArgs {
   signal: AbortSignal;
 }
 
-/** Arguments of `SdFileExplorerOption.search`. */
+/** Arguments of `SdFileExplorerOption<T>.search`. */
 export interface SdFileExplorerSearchArgs {
   /** Folder the user is currently viewing; `null` is the root folder. */
   parentId: string | null;
@@ -75,16 +77,16 @@ export interface SdFileExplorerSearchArgs {
   signal: AbortSignal;
 }
 
-/** Arguments of `SdFileExplorerOption.preview`. */
-export interface SdFileExplorerPreviewArgs {
+/** Arguments of `SdFileExplorerOption<T>.preview`. */
+export interface SdFileExplorerPreviewArgs<T = unknown> {
   /** File being previewed. */
-  item: SdFileExplorerItem;
+  item: SdFileExplorerItem<T>;
   /** Aborted when the detail drawer is closed or another file is opened before this one resolves. */
   signal: AbortSignal;
 }
 
 /**
- * Content returned by `SdFileExplorerOption.preview`.
+ * Content returned by `SdFileExplorerOption<T>.preview`.
  *
  * - `string`: a URL. Caller-owned — the explorer uses it as-is and never revokes it.
  * - `Blob` / `File`: the explorer creates an object URL when needed and revokes it when the preview closes,
@@ -112,7 +114,7 @@ export interface SdFileExplorerTransferArgs {
   signal: AbortSignal;
 }
 
-/** Arguments of `SdFileExplorerOption.upload`. */
+/** Arguments of `SdFileExplorerOption<T>.upload`. */
 export interface SdFileExplorerUploadArgs extends SdFileExplorerTransferArgs {
   /** File picked through the upload button or dropped onto the explorer. */
   file: File;
@@ -120,21 +122,21 @@ export interface SdFileExplorerUploadArgs extends SdFileExplorerTransferArgs {
   parentId: string | null;
 }
 
-/** Arguments of `SdFileExplorerOption.download`. */
-export interface SdFileExplorerDownloadArgs extends SdFileExplorerTransferArgs {
+/** Arguments of `SdFileExplorerOption<T>.download`. */
+export interface SdFileExplorerDownloadArgs<T = unknown> extends SdFileExplorerTransferArgs {
   /** File to download. */
-  item: SdFileExplorerItem;
+  item: SdFileExplorerItem<T>;
 }
 
-/** Arguments of `SdFileExplorerOption.share`. */
-export interface SdFileExplorerShareArgs {
+/** Arguments of `SdFileExplorerOption<T>.share`. */
+export interface SdFileExplorerShareArgs<T = unknown> {
   /** File to share. */
-  item: SdFileExplorerItem;
+  item: SdFileExplorerItem<T>;
   /** Aborted when the user closes the share dialog before the link is ready, or the explorer is destroyed. */
   signal: AbortSignal;
 }
 
-/** Arguments of `SdFileExplorerOption.createFolder`. */
+/** Arguments of `SdFileExplorerOption<T>.createFolder`. */
 export interface SdFileExplorerCreateFolderArgs {
   /** Folder that receives the new folder (the folder being viewed); `null` is the root folder. */
   parentId: string | null;
@@ -190,20 +192,17 @@ export interface SdFileExplorerActionAppearance<T> {
 }
 
 /** Action that runs a callback: a button next to its siblings, or an item in a group menu. */
-export interface SdFileExplorerActionLeaf<T> extends SdFileExplorerActionAppearance<T> {
-  /**
-   * Runs the action with the selected files (`selector.actions`) or with the item (`fileCommands`,
-   * `folderCommands`). The explorer does not await it: confirmation, errors, `loading` and `reload()` are yours.
-   */
-  click: (context: T) => void;
-  children?: never;
-}
+export type SdFileExplorerActionLeaf<T> = SdFileExplorerActionAppearance<T> & { children?: never } & (
+    | { onClick: (context: T) => void; click?: never }
+    | { click: (context: T) => void; onClick?: never }
+  );
 
 /** Button that only opens a menu of leaves. Groups are one level deep. */
 export interface SdFileExplorerActionGroup<T> extends SdFileExplorerActionAppearance<T> {
   /** Menu items in display order. Leaves only: a group cannot contain another group. */
   children: readonly SdFileExplorerActionLeaf<T>[];
   click?: never;
+  onClick?: never;
 }
 
 /**
@@ -213,10 +212,10 @@ export interface SdFileExplorerActionGroup<T> extends SdFileExplorerActionAppear
 export type SdFileExplorerAction<T> = SdFileExplorerActionLeaf<T> | SdFileExplorerActionGroup<T>;
 
 /** Action on the selected files. `click` receives a frozen snapshot of the selection. */
-export type SdFileExplorerSelectionAction = SdFileExplorerAction<readonly SdFileExplorerItem[]>;
+export type SdFileExplorerSelectionAction<T = unknown> = SdFileExplorerAction<readonly SdFileExplorerItem<T>[]>;
 
 /** Action on one file or folder. `click` receives the item exactly as returned by `list` or `search`. */
-export type SdFileExplorerCommand = SdFileExplorerAction<SdFileExplorerItem>;
+export type SdFileExplorerCommand<T = unknown> = SdFileExplorerAction<SdFileExplorerItem<T>>;
 
 /**
  * Multi-file selection of `<sd-file-explorer>`.
@@ -226,20 +225,27 @@ export type SdFileExplorerCommand = SdFileExplorerAction<SdFileExplorerItem>;
  * folder, the search keyword or `list` changes, or on `reload()`. A file that a refresh drops or that `disabled`
  * starts locking leaves the selection without a callback and is not selected again when it comes back.
  */
-export interface SdFileExplorerSelector {
-  /** Shows the checkboxes and the selection band. @defaultValue `true` */
+export interface SdFileExplorerSelector<T = unknown> {
+  /** Allows selection when useful actions or an explicit picker contract exist. @defaultValue `true` */
   visible?: boolean;
+  /**
+   * `actions` requires at least one visible selection action; `picker` deliberately allows selection without actions.
+   * When omitted, existing `onSelect` / `onSelectAll` callbacks retain picker behavior; other selectors use `actions`.
+   */
+  mode?: 'actions' | 'picker';
   /**
    * Actions on the selected files, shown in the selection band while at least one file is selected. Without `type`,
    * a flat action is `light` and a group trigger `text`; without `color`, both are `primary`.
+   * Omitted in action mode: configured move/share/download callbacks provide the default actions. An explicit `[]`
+   * suppresses those defaults. Hidden/empty groups do not enable selection; disabled/loading actions still do.
    */
-  actions?: readonly SdFileExplorerSelectionAction[];
+  actions?: readonly SdFileExplorerSelectionAction<T>[];
   /** Files for which it returns `true` show a disabled checkbox and are left out of "select all". */
-  disabled?: (item: SdFileExplorerItem) => boolean;
+  disabled?: (item: SdFileExplorerItem<T>) => boolean;
   /** Called after a file checkbox is toggled, with the file and the new selection. */
-  onSelect?: (item: SdFileExplorerItem, selectedItems: readonly SdFileExplorerItem[]) => void;
+  onSelect?: (item: SdFileExplorerItem<T>, selectedItems: readonly SdFileExplorerItem<T>[]) => void;
   /** Called once after the select-all checkbox selects every eligible file or deselects them all (`[]`). */
-  onSelectAll?: (selectedItems: readonly SdFileExplorerItem[]) => void;
+  onSelectAll?: (selectedItems: readonly SdFileExplorerItem<T>[]) => void;
   /** Called once when a non-empty selection is cleared: the band's clear button, or a folder / search / `list` change or `reload()`. */
   onClear?: () => void;
 }
@@ -257,7 +263,7 @@ export interface SdFileExplorerSelector {
  *
  * @example
  * ```ts
- * readonly option: SdFileExplorerOption = {
+ * readonly option: SdFileExplorerOption<T> = {
  *   title: 'My files',
  *   list: ({ parentId, signal }) => firstValueFrom(this.api.children(parentId, { signal })),
  *   search: ({ parentId, keyword }) => firstValueFrom(this.api.search(parentId, keyword)),
@@ -269,14 +275,22 @@ export interface SdFileExplorerSelector {
  * };
  * ```
  */
-export interface SdFileExplorerOption {
+export interface SdFileExplorerOption<T = unknown> {
+  /** Canonical grouped callbacks; an explicit group wins over its legacy root callback. */
+  capabilities?: SdFileExplorerCapabilities<T>;
+  /** Opt-in file move; caller performs the storage mutation. */
+  move?: {
+    movable?: SdFileExplorerState<SdFileExplorerMoveRequest<T>>;
+    onMove: (request: SdFileExplorerMoveRequest<T>) => boolean | void | Promise<boolean | void>;
+  };
+  dataSource?: never;
   /**
    * Returns the direct children (files and folders) of a folder. Required.
    *
    * Called lazily: once per folder when it is first opened or expanded in the tree, then cached until
    * `reload()` or a successful upload / folder creation in that folder. `parentId` is `null` for the root.
    */
-  list: (args: SdFileExplorerListArgs) => SdFileExplorerItem[] | Promise<SdFileExplorerItem[]>;
+  list: (args: SdFileExplorerListArgs) => SdFileExplorerItem<T>[] | Promise<SdFileExplorerItem<T>[]>;
   /**
    * Server-side search inside the current folder. Called 300 ms after the user stops typing, and only for a
    * non-empty keyword; stale requests are aborted and their results ignored.
@@ -284,7 +298,7 @@ export interface SdFileExplorerOption {
    * When omitted, the search box filters the already loaded children of the current folder by name
    * (case- and Vietnamese-accent-insensitive) without calling any callback.
    */
-  search?: (args: SdFileExplorerSearchArgs) => SdFileExplorerItem[] | Promise<SdFileExplorerItem[]>;
+  search?: (args: SdFileExplorerSearchArgs) => SdFileExplorerItem<T>[] | Promise<SdFileExplorerItem<T>[]>;
   /**
    * Resolves the content shown in the detail drawer when a file is opened.
    *
@@ -293,7 +307,7 @@ export interface SdFileExplorerOption {
    * "no preview" fallback. Other formats always show the fallback with a download button.
    */
   preview?: (
-    args: SdFileExplorerPreviewArgs
+    args: SdFileExplorerPreviewArgs<T>
   ) => SdFileExplorerPreviewSource | null | undefined | Promise<SdFileExplorerPreviewSource | null | undefined>;
   /**
    * Downloads a file. Enables the download buttons in list, grid and preview.
@@ -302,7 +316,7 @@ export interface SdFileExplorerOption {
    * - Return nothing: you handed the download to the browser yourself (for example `window.open(url)` or an
    *   anchor with `download`). The transfer is then marked "handed to the browser" without a fake percentage.
    */
-  download?: (args: SdFileExplorerDownloadArgs) => Blob | void | Promise<Blob | void>;
+  download?: (args: SdFileExplorerDownloadArgs<T>) => Blob | void | Promise<Blob | void>;
   /**
    * Creates a shareable link for a file and returns its URL. Enables the "Share" buttons (list rows and
    * detail drawer).
@@ -311,7 +325,7 @@ export interface SdFileExplorerOption {
    * explicit click, so it works even when the callback takes a while. Throw (or reject) to show the error
    * `message` with a retry button. Expiry, permissions or audience stay in your API.
    */
-  share?: (args: SdFileExplorerShareArgs) => string | Promise<string>;
+  share?: (args: SdFileExplorerShareArgs<T>) => string | Promise<string>;
   /**
    * Uploads one file into `parentId`. Enables the upload button and drag-and-drop.
    *
@@ -319,12 +333,12 @@ export interface SdFileExplorerOption {
    * destination folder is listed again. Throw (or reject) to mark the transfer as failed — the error `message`
    * is shown as the failure reason and the user can retry.
    */
-  upload?: (args: SdFileExplorerUploadArgs) => SdFileExplorerItem | void | Promise<SdFileExplorerItem | void>;
+  upload?: (args: SdFileExplorerUploadArgs) => SdFileExplorerItem<T> | void | Promise<SdFileExplorerItem<T> | void>;
   /**
    * Creates a folder inside the current folder. Enables the "New folder" button.
    * After success the current folder is listed again. Throw (or reject) to keep the dialog open with the error.
    */
-  createFolder?: (args: SdFileExplorerCreateFolderArgs) => SdFileExplorerItem | void | Promise<SdFileExplorerItem | void>;
+  createFolder?: (args: SdFileExplorerCreateFolderArgs) => SdFileExplorerItem<T> | void | Promise<SdFileExplorerItem<T> | void>;
   /** Heading shown in the explorer header. When omitted the header shows only search and upload. */
   title?: string;
   /** Secondary line under `title`. Ignored when `title` is omitted. */
@@ -335,20 +349,20 @@ export interface SdFileExplorerOption {
   defaultView?: SdFileExplorerView;
   /**
    * Multi-file selection: checkboxes on files, a select-all checkbox in the list header (above the grid) and a
-   * selection band with `selector.actions`. See `SdFileExplorerSelector`.
+   * selection band with `selector.actions`. See `SdFileExplorerSelector<T>`.
    */
-  selector?: SdFileExplorerSelector;
+  selector?: SdFileExplorerSelector<T>;
   /**
    * Actions on one file, in list rows and grid cards — in the compact layout, in the command drawer each row or card
    * opens. Declaring it — even as `[]` — replaces the row download and share shortcuts, in that drawer too; the detail
    * drawer keeps its own Download and Share buttons.
    */
-  fileCommands?: readonly SdFileExplorerCommand[];
+  fileCommands?: readonly SdFileExplorerCommand<T>[];
   /**
    * Actions on one folder, in list rows, grid cards and the folder tree (never on the root) — in the compact layout,
    * in the command drawer each row, card or tree node opens.
    */
-  folderCommands?: readonly SdFileExplorerCommand[];
+  folderCommands?: readonly SdFileExplorerCommand<T>[];
   /** E2E scope. Produces `data-autoid="components-file-explorer-{autoId}"` and derived child ids. */
   autoId?: string;
 }
@@ -360,11 +374,11 @@ export interface SdFileExplorerOption {
  * grid or search results). Not emitted for folders, which navigate instead, nor when the detail drawer
  * re-renders or reloads.
  */
-export interface SdFileExplorerOpenEvent {
+export interface SdFileExplorerOpenEvent<T = unknown> {
   /** The file that was opened. */
-  item: SdFileExplorerItem;
+  item: SdFileExplorerItem<T>;
   /** Folders from the root (excluded) down to the folder being viewed when the file was opened. */
-  path: readonly SdFileExplorerItem[];
+  path: readonly SdFileExplorerItem<T>[];
 }
 
 /** Direction of a transfer shown in the transfer panel. */
@@ -403,3 +417,28 @@ export interface SdFileExplorerTransfer {
   /** Reason of the failure when `status` is `'error'`. */
   readonly error?: unknown;
 }
+
+/** File-only, consumer-controlled move. Abort is cooperative, not rollback. */
+export interface SdFileExplorerMoveRequest<T = unknown> {
+  readonly items: readonly SdFileExplorerItem<T>[];
+  readonly targetFolder: SdFileExplorerItem<T> | null;
+  readonly source: 'drag' | 'menu' | 'keyboard' | 'api';
+  readonly signal: AbortSignal;
+}
+export interface SdFileExplorerCapabilities<T = unknown> {
+  share?: { shareable?: SdFileExplorerState<SdFileExplorerItem<T>>; onShare: NonNullable<SdFileExplorerOption<T>['share']> };
+  download?: { downloadable?: SdFileExplorerState<SdFileExplorerItem<T>>; onDownload: NonNullable<SdFileExplorerOption<T>['download']> };
+  preview?: { previewable?: SdFileExplorerState<SdFileExplorerItem<T>>; onPreview: NonNullable<SdFileExplorerOption<T>['preview']> };
+  upload?: { uploadable?: SdFileExplorerState<{ parentId: string | null }>; onUpload: NonNullable<SdFileExplorerOption<T>['upload']> };
+  createFolder?: {
+    creatable?: SdFileExplorerState<{ parentId: string | null }>;
+    onCreateFolder: NonNullable<SdFileExplorerOption<T>['createFolder']>;
+  };
+}
+/** New source-only surface. Legacy source callbacks remain callable on SdFileExplorerOption. */
+export interface SdFileExplorerDataSourceOption<T = unknown> extends Omit<SdFileExplorerOption<T>, 'list' | 'search' | 'dataSource'> {
+  dataSource: { onList: SdFileExplorerOption<T>['list']; onSearch?: SdFileExplorerOption<T>['search'] };
+  list?: never;
+  search?: never;
+}
+export type SdFileExplorerConfig<T = unknown> = SdFileExplorerOption<T> | SdFileExplorerDataSourceOption<T>;

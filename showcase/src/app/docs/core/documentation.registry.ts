@@ -268,7 +268,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/file-explorer/sd-file-explorer',
     keywords: ['file', 'folder', 'drive', 'upload', 'download', 'preview', 'tree', 'storage'],
     status: 'stable',
-    demoSectionCount: 4,
+    demoSectionCount: 5,
     loadComponent: () => import('../../pages/components/file-explorer/file-explorer-demo.component').then(m => m.FileExplorerDemoComponent),
   }),
   defineDocPage({

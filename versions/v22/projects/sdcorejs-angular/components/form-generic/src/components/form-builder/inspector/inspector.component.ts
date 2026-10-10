@@ -199,7 +199,18 @@ export class InspectorComponent {
   readonly typeLabelKey = computed(() => (this.item() ? itemTypeLabelKey(this.item()!) : ''));
   readonly validation = computed(() => (this.field()?.validation ?? {}) as SdFormGenericFieldValidation);
   readonly rules = computed(() => ((this.item() as { rules?: SdFormGenericRules } | null)?.rules ?? {}) as SdFormGenericRules);
-  readonly elements = computed(() => this.store.doc().elements);
+  readonly elements = this.store.allElements;
+  readonly navigationMode = computed(() => this.store.navigation()?.type ?? 'single');
+  readonly linear = computed(() => {
+    const navigation = this.store.navigation();
+    return navigation?.type === 'steps' && !!navigation.linear;
+  });
+  readonly navigationChoices = computed(() =>
+    ['single', 'tabs', 'steps'].map(value => ({ value, display: this.store.t(`core.component.form-builder.page.${value}`) }))
+  );
+  setNavigation(value: string | null | undefined): void {
+    if (value === 'single' || value === 'tabs' || value === 'steps') this.store.setNavigation(value);
+  }
   readonly variables = computed(() => this.store.doc().variables);
 
   /** Tab khả dụng theo loại phần tử. */

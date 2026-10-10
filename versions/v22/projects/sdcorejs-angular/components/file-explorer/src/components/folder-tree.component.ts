@@ -52,8 +52,11 @@ const COMMAND_AREAS = '.node-actions, .sd-file-explorer-menu-trigger';
         <li
           class="node"
           role="treeitem"
+          [attr.data-move-target]="node.id ?? ''"
+          [class.move-drop-target]="moveDropTarget() === node.id"
           [class.node--selected]="node.selected"
           [class.node--commands]="_nodeCommands"
+          [class.node--error]="node.status === 'error'"
           [attr.aria-labelledby]="_nodeCommands ? _labelId : null"
           [attr.aria-level]="node.level"
           [attr.aria-selected]="node.selected"
@@ -127,7 +130,8 @@ const COMMAND_AREAS = '.node-actions, .sd-file-explorer-menu-trigger';
   `,
   styleUrl: './folder-tree.component.scss',
 })
-export class SdFileExplorerFolderTree {
+export class SdFileExplorerFolderTree<T = unknown> {
+  readonly moveDropTarget = input<string | null | undefined>();
   readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly #i18n = inject(I18nService);
 
@@ -135,11 +139,11 @@ export class SdFileExplorerFolderTree {
   protected readonly treeId = `sd-file-explorer-tree-${nextTreeId++}`;
 
   /** Visible nodes in display order. */
-  readonly nodes = input.required<readonly SdFileExplorerTreeNode[]>();
+  readonly nodes = input.required<readonly SdFileExplorerTreeNode<T>[]>();
   /** Accessible name of the tree. */
   readonly label = input<string>('');
   /** Commands of every folder node; the root has none. */
-  readonly commands = input<readonly SdFileExplorerCommand[] | null | undefined>(undefined);
+  readonly commands = input<readonly SdFileExplorerCommand<T>[] | null | undefined>(undefined);
   /** Touch screen: commands always visible, with 48 px buttons (44 px compact trigger). */
   readonly touch = input(false);
   /** Compact layout: an actions trigger per folder node instead of its commands. */
@@ -147,11 +151,11 @@ export class SdFileExplorerFolderTree {
   /** Id of the folder whose command drawer is open from the tree. */
   readonly menuOpenId = input<string | null>(null);
   /** A node was activated (click, Enter, Space). */
-  readonly select = output<SdFileExplorerTreeNode>();
+  readonly select = output<SdFileExplorerTreeNode<T>>();
   /** Expand / collapse requested. */
-  readonly toggle = output<SdFileExplorerTreeNode>();
+  readonly toggle = output<SdFileExplorerTreeNode<T>>();
   /** Retry loading the children of a node whose listing failed. */
-  readonly retry = output<SdFileExplorerTreeNode>();
+  readonly retry = output<SdFileExplorerTreeNode<T>>();
   /** Compact actions trigger of a folder pressed. */
   readonly openCommands = output<SdFileExplorerCommandsRequest>();
 
@@ -182,27 +186,27 @@ export class SdFileExplorerFolderTree {
     return nodes.find(node => node.selected)?.key ?? nodes[0]?.key ?? null;
   });
 
-  protected toggleLabel(node: SdFileExplorerTreeNode): string {
+  protected toggleLabel(node: SdFileExplorerTreeNode<T>): string {
     const key = node.expanded ? 'core.component.file-explorer.collapse' : 'core.component.file-explorer.expand';
     return this.#i18n.t(key, { name: node.name });
   }
 
-  protected menuLabel(node: SdFileExplorerTreeNode): string {
+  protected menuLabel(node: SdFileExplorerTreeNode<T>): string {
     return this.#i18n.t('core.component.file-explorer.item-actions', { name: node.name });
   }
 
-  protected onToggle(event: Event, node: SdFileExplorerTreeNode): void {
+  protected onToggle(event: Event, node: SdFileExplorerTreeNode<T>): void {
     // why: nút toggle nằm trong treeitem — chặn bubble để bấm mũi tên không đồng thời điều hướng vào thư mục.
     event.stopPropagation();
     this.toggle.emit(node);
   }
 
-  protected onRetry(event: Event, node: SdFileExplorerTreeNode): void {
+  protected onRetry(event: Event, node: SdFileExplorerTreeNode<T>): void {
     event.stopPropagation();
     this.retry.emit(node);
   }
 
-  protected onClick(event: MouseEvent, node: SdFileExplorerTreeNode): void {
+  protected onClick(event: MouseEvent, node: SdFileExplorerTreeNode<T>): void {
     if (this.#fromCommands(event)) return;
     this.select.emit(node);
   }

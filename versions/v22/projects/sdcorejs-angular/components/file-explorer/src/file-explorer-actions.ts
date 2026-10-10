@@ -108,12 +108,13 @@ function warn(definition: unknown, message: string): void {
  */
 function problem(definition: unknown, inGroup: boolean): string | null {
   if (definition === null || typeof definition !== 'object') return 'is not an action object';
-  const { click, children, title, tooltip } = definition as Record<string, unknown>;
+  const { click, onClick, children, title, tooltip } = definition as Record<string, unknown>;
   if (children !== undefined && children !== null && !Array.isArray(children)) return '`children` must be an array';
   if (Array.isArray(children)) {
     if (inGroup) return 'is a group inside a group; groups are one level deep';
-    if (typeof click === 'function') return 'declares both `click` and `children`; a group only opens its menu';
-  } else if (typeof click !== 'function') {
+    if (typeof click === 'function' || typeof onClick === 'function')
+      return 'declares both `click` and `children`; a group only opens its menu';
+  } else if (typeof click !== 'function' && typeof onClick !== 'function') {
     return 'needs `click` (an action) or `children` (a group)';
   }
   if (!text(title) && !text(tooltip)) return 'needs a `title` or a `tooltip` as its accessible name';
@@ -213,10 +214,10 @@ export function sdFileExplorerActionsBusy<T>(resolved: readonly SdFileExplorerRe
  * on the desktop trigger — whose children are disabled while the group itself is disabled or loading. `keys` renames
  * entries by declared index (the row shortcuts: `share`, `download`).
  */
-export function sdFileExplorerSheetEntries(
-  resolved: readonly SdFileExplorerResolvedAction<SdFileExplorerItem>[],
+export function sdFileExplorerSheetEntries<T>(
+  resolved: readonly SdFileExplorerResolvedAction<SdFileExplorerItem<T>>[],
   keys?: readonly string[]
-): SdFileExplorerSheetEntry[] {
+): SdFileExplorerSheetEntry<T>[] {
   return resolved.map(entry => {
     const key = keys?.[Number(entry.key)] ?? entry.key;
     if (entry.kind === 'leaf') {
@@ -235,7 +236,7 @@ export function sdFileExplorerSheetEntries(
     }
     const blocked = entry.disabled || entry.loading;
     const children = entry.children.map(
-      (child): SdFileExplorerSheetCommand => ({
+      (child): SdFileExplorerSheetCommand<T> => ({
         kind: 'leaf',
         key: child.key,
         label: child.label,

@@ -199,7 +199,14 @@ const buildLargeForm = (fields: number): SdFormGenericSchema => {
       else if (kind === 'checkbox') children.push({ ...base, type: 'checkbox' });
       else children.push({ ...base, type: 'textfield', subtype: kind });
     }
-    elements.push({ id: `g${index}`, type: 'group', label: `Nhóm ${elements.length + 1}`, icon: 'category', color: 'primary', elements: children });
+    elements.push({
+      id: `g${index}`,
+      type: 'group',
+      label: `Nhóm ${elements.length + 1}`,
+      icon: 'category',
+      color: 'primary',
+      elements: children,
+    });
   }
   return { pages: [{ id: 'main', elements }] };
 };
@@ -214,49 +221,57 @@ const PREVIEW_WIDTHS = [null, 1100, 800, 480] as const;
   standalone: true,
   imports: [JsonPipe, DemoPageComponent, DemoSectionComponent, SdFormBuilder, SdFormRender, SdButton],
   template: `
-    <demo-page #demoPage
+    <demo-page
+      #demoPage
       title="Form Generic"
       description="Form builder nhúng (Desktop | Tablet | Mobile, span theo mức, bắt đầu hàng mới, điều kiện Filter, preset Email/SĐT/Tiền tệ…, kéo-thả, undo/redo) và renderer dùng chung schema SdFormGenericSchema.">
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-builder-render') {
-      <demo-section heading="Builder + Render"
-        [props]="[{ name: '[(schema)]', value: 'SdFormGenericSchema' }, { name: '[(value)]', value: 'Record<string, unknown>' }]"
-        note="Lưu/nháp/xuất bản thuộc về consumer — builder chỉ phát (schemaChange). Nút bên dưới là của trang demo.">
-        <div class="row-actions">
-          <sd-button type="outline" color="primary" title="Form mẫu" prefixIcon="restart_alt" (click)="load(seedForm())"></sd-button>
-          <sd-button type="outline" color="secondary" title="Form rỗng" prefixIcon="layers_clear" (click)="load(emptyForm())"></sd-button>
-          <sd-button type="outline" color="secondary" title="Form 100 trường" prefixIcon="speed" (click)="load(large(100))"></sd-button>
-          <sd-button type="outline" color="secondary" title="Form 300 trường" prefixIcon="speed" (click)="load(large(300))"></sd-button>
-          <span class="row-actions__meta">Thay đổi: {{ changes() }}</span>
-        </div>
-
-        <div class="builder-box">
-          <sd-form-builder [(schema)]="schema" (schemaChange)="onChange()"></sd-form-builder>
-        </div>
-
-        <div class="render-preview">
-          <div class="render-preview__head">
-            <span class="render-preview__title">Runtime render từ [(schema)] · mức {{ renderer.level() }}</span>
-            <span class="render-preview__widths">
-              @for (width of widths; track $index) {
-                <sd-button
-                  size="sm"
-                  [type]="previewWidth() === width ? 'fill' : 'outline'"
-                  color="secondary"
-                  [title]="width ? width + 'px' : 'Tự do'"
-                  (click)="previewWidth.set(width)"></sd-button>
-              }
-              <sd-button size="sm" type="fill" color="primary" title="Kiểm tra" prefixIcon="task_alt" (click)="check()"></sd-button>
-            </span>
+        <demo-section
+          heading="Builder + Render"
+          [props]="[
+            { name: '[(schema)]', value: 'SdFormGenericSchema' },
+            { name: '[(value)]', value: 'Record<string, unknown>' },
+          ]"
+          note="Lưu/nháp/xuất bản thuộc về consumer — builder chỉ phát (schemaChange). Nút bên dưới là của trang demo.">
+          <div class="row-actions">
+            <sd-button type="outline" color="primary" title="Form mẫu" prefixIcon="restart_alt" (click)="load(seedForm())"></sd-button>
+            <sd-button type="outline" color="secondary" title="Form rỗng" prefixIcon="layers_clear" (click)="load(emptyForm())"></sd-button>
+            <sd-button type="outline" color="secondary" title="Form 100 trường" prefixIcon="speed" (click)="load(large(100))"></sd-button>
+            <sd-button type="outline" color="secondary" title="Form 300 trường" prefixIcon="speed" (click)="load(large(300))"></sd-button>
+            <sd-button type="outline" color="primary" title="Tabs nhiều trang" (click)="load(multipage('tabs'))"></sd-button>
+            <sd-button type="outline" color="primary" title="Steps tuyến tính" (click)="load(multipage('steps', true))"></sd-button>
+            <sd-button type="outline" color="secondary" title="Steps tự do" (click)="load(multipage('steps', false))"></sd-button>
+            <span class="row-actions__meta">Thay đổi: {{ changes() }}</span>
           </div>
-          <div class="render-preview__frame" [style.max-width.px]="previewWidth()">
-            <sd-form-render #renderer [schema]="schema() ?? emptySchema" [(value)]="value" [variables]="variables"></sd-form-render>
+
+          <div class="builder-box">
+            <sd-form-builder [(schema)]="schema" (schemaChange)="onChange()"></sd-form-builder>
           </div>
-          @if (result(); as _result) {
-            <p class="render-preview__result">{{ _result }}</p>
-          }
-          <pre class="render-preview__value">{{ value() | json }}</pre>
-        </div>
-      </demo-section>
+
+          <div class="render-preview">
+            <div class="render-preview__head">
+              <span class="render-preview__title">Runtime render từ [(schema)] · mức {{ renderer.level() }}</span>
+              <span class="render-preview__widths">
+                @for (width of widths; track $index) {
+                  <sd-button
+                    size="sm"
+                    [type]="previewWidth() === width ? 'fill' : 'outline'"
+                    color="secondary"
+                    [title]="width ? width + 'px' : 'Tự do'"
+                    (click)="previewWidth.set(width)"></sd-button>
+                }
+                <sd-button size="sm" type="fill" color="primary" title="Kiểm tra" prefixIcon="task_alt" (click)="check()"></sd-button>
+              </span>
+            </div>
+            <div class="render-preview__frame" [style.max-width.px]="previewWidth()">
+              <sd-form-render #renderer [schema]="schema() ?? emptySchema" [(value)]="value" [variables]="variables"></sd-form-render>
+            </div>
+            @if (result(); as _result) {
+              <p class="render-preview__result">{{ _result }}</p>
+            }
+            <pre class="render-preview__value">{{ value() | json }}</pre>
+          </div>
+        </demo-section>
       }
     </demo-page>
   `,
@@ -303,6 +318,8 @@ const PREVIEW_WIDTHS = [null, 1100, 800, 480] as const;
         gap: 6px;
       }
       .render-preview__frame {
+        box-sizing: border-box;
+        padding: 12px;
         border: 1px dashed var(--sd-border-strong);
         border-radius: 8px;
       }
@@ -338,6 +355,34 @@ export class FormGenericDemoComponent {
   emptyForm = (): SdFormGenericSchema => structuredClone(EMPTY);
   large = (fields: number): SdFormGenericSchema => buildLargeForm(fields);
 
+  /** Three real pages, with a conditional last page and the same renderer/builder schema. */
+  multipage(type: 'tabs' | 'steps', linear = false): SdFormGenericSchema {
+    const elements = structuredClone(SEED.pages[0].elements);
+    return {
+      navigation: type === 'tabs' ? { type } : { type, linear },
+      variables: structuredClone(SEED.variables),
+      pages: [
+        {
+          id: 'personal',
+          label: 'Thông tin',
+          icon: 'person',
+          elements: [
+            elements[0],
+            { id: 'show-review', key: 'showReview', type: 'checkbox', label: 'Hiện trang bổ sung', defaultValue: true },
+          ],
+        },
+        { id: 'address', label: 'Địa chỉ', icon: 'home', elements: [elements[1]] },
+        {
+          id: 'review',
+          label: 'Bổ sung',
+          icon: 'fact_check',
+          rules: { visible: { field: 'showReview', operator: 'EQUAL', data: true } },
+          elements: elements.slice(2),
+        },
+      ],
+    };
+  }
+
   load(schema: SdFormGenericSchema): void {
     this.schema.set(schema);
     this.value.set({});
@@ -353,6 +398,10 @@ export class FormGenericDemoComponent {
     const outcome = await this.render()?.validate();
     if (!outcome) return;
     const { error, warning } = outcome.messages;
-    this.result.set(outcome.valid ? `Hợp lệ${warning.length ? ` · ${warning.join('; ')}` : ''}` : `Chưa hợp lệ${error.length ? `: ${error.join('; ')}` : ''}`);
+    this.result.set(
+      outcome.valid
+        ? `Hợp lệ${warning.length ? ` · ${warning.join('; ')}` : ''}`
+        : `Chưa hợp lệ${error.length ? `: ${error.join('; ')}` : ''}`
+    );
   }
 }

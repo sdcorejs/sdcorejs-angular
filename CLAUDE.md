@@ -107,12 +107,22 @@ git commit -m "<type>: <summary>"
 git push
 ```
 
+## Review bắt buộc: naming và public API consistency
+
+Khi implement chức năng mới hoặc mở rộng public API, phải đối chiếu naming và cách khai báo input/output với component tương đương và convention hiện có của repo trước khi hoàn tất.
+
+- Rà tên property, input/output và alias, event payload, callback trong options, cách nhóm options, defaults, two-way binding và public exports/entry points; so sánh cả naming lẫn kiểu và cách khai báo.
+- Dùng convention hiện có khi đã có API tương đương. Ví dụ callback trong options dùng `on<Action>` chỉ ở nơi repo đang theo convention đó; không rename toàn bộ Angular outputs thành `on<Action>` một cách máy móc.
+- Nếu thật sự cần khác convention, ghi rõ lý do, API trước/sau và tác động compatibility/migration để review. Không tự đổi hoặc rename API ngoài scope đã được yêu cầu.
+- Rà tính nhất quán giữa v19–v22 bằng cơ chế sync hiện có: sửa logic/API chung ở v19, chạy `npm run sync` và `npm run check:sync`; không hand-edit các bản dẫn xuất để che khác biệt. Khác biệt Angular-major-specific phải theo quy tắc dependency/shim đã duyệt của repo.
+- Self-review và independent review phải có xác nhận **API consistency**: component/convention đã đối chiếu, các mục trên đã rà, khác biệt và tác động compatibility nếu có. Nếu independent review chưa thực hiện, ghi rõ trạng thái pending; không suy diễn là đã được duyệt.
+
 ### Quy trình deploy npm — qua GitHub Actions (khuyến nghị)
 
-Release đang chuẩn bị: `v3.0` → `19.3.0` / `20.3.0` / `21.3.0` / `22.3.0`.
-Workflow `publish-npm.yml` pin đúng tag `v3.0`; snapshot `scripts/release-contracts/3.0.json`
-đối chiếu từng line với bản `*.2.15` cùng Angular major qua baseline tường minh `2.15`. Fallback từ Angular 22 sang 21
-chỉ áp dụng cho release khởi đầu `22.2.5`.
+Release đang chuẩn bị: `v3.1` → `19.3.1` / `20.3.1` / `21.3.1` / `22.3.1`.
+Workflow `publish-npm.yml` pin đúng tag `v3.1`; snapshot `scripts/release-contracts/3.1.json`
+đối chiếu từng line với bản `*.3.0` cùng Angular major qua baseline patch `3.0`.
+Fallback từ Angular 22 sang 21 chỉ áp dụng cho release khởi đầu `22.2.5`.
 
 Workflow: `.github/workflows/publish-npm.yml`. Auth qua **npm trusted publishing (OIDC)** — không dùng `NPM_TOKEN`, `NODE_AUTH_TOKEN` hay `npm login` local. Mọi release build/verify/publish job pin exact Node `22.22.3`; publisher cài exact `npm@11.5.1`, dùng job env `NPM_CONFIG_REGISTRY: https://registry.npmjs.org` và là job duy nhất có `permissions: id-token: write`. Không truyền `registry-url` cho `setup-node` trong job publisher vì action tự tạo token giả cùng `.npmrc` chứa `_authToken`, làm guard OIDC chặn publish. Trusted publisher trên npmjs.com pin theo repo + tên file workflow, nên đổi tên `publish-npm.yml` là phải khai báo lại bên npm.
 

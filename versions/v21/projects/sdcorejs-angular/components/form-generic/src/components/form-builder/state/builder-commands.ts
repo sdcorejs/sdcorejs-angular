@@ -1,9 +1,15 @@
 import { sdWithNewRow, sdWithSpan } from '../../../layout/form-generic-layout';
-import type { SdFormGenericGroup, SdFormGenericSchema, SdFormGenericVariable } from '../../../models/form-generic-schema.model';
+import type {
+  SdFormGenericGroup,
+  SdFormGenericPage,
+  SdFormGenericSchema,
+  SdFormGenericVariable,
+} from '../../../models/form-generic-schema.model';
 import { sdRenameKey } from '../../../rules/form-generic-references';
 import {
   BuilderDocument,
   BuilderItem,
+  canDuplicate,
   childrenOf,
   cloneJson,
   collectKeys,
@@ -30,6 +36,26 @@ const LAYOUT_LEVELS: readonly LayoutMode[] = ['desktop', 'tablet', 'mobile'];
 
 /** Ý định chèn "hàng mới ở cuối vùng chứa". */
 export const endOf = (parentId: ContainerId): DropIntent => ({ kind: 'row', parentId, beforeRowKey: null });
+
+/** Clone a whole supported page, rewriting structured references only inside its ownership boundary. */
+export const clonePage = (doc: BuilderDocument, source: SdFormGenericPage): SdFormGenericPage | null => {
+  if (!source.elements.every(canDuplicate)) return null;
+  const copy = cloneJson(source);
+  copy.id = createId();
+  const takenKeys = collectKeys(doc);
+  const renames: [string, string][] = [];
+  const members = copy.elements.flatMap(item => (isGroup(item) ? [item, ...(item.elements ?? [])] : [item]));
+  for (const member of members) {
+    member.id = createId();
+    if (isGroup(member) || !('key' in member) || !member.key) continue;
+    const nextKey = uniqueKey(member.key.replace(/_\d+$/, '') || 'field', takenKeys);
+    takenKeys.add(nextKey);
+    renames.push([member.key, nextKey]);
+  }
+  let scratch: SdFormGenericSchema = { pages: [copy] };
+  for (const [from, to] of renames) scratch = sdRenameKey(scratch, from, to);
+  return scratch.pages[0];
+};
 
 /** Ý định chèn "hàng mới ngay sau hàng chứa `id`". */
 export const rowAfter = (doc: BuilderDocument, id: string, mode: LayoutMode): DropIntent | null => {

@@ -99,7 +99,10 @@ export class SdStepper {
       this.selectedIndex.set(0);
       return;
     }
-    this.selectedIndex.set(Math.max(0, Math.min(index, len - 1)));
+    const next = Math.max(0, Math.min(index, len - 1));
+    this.selectedIndex.set(next);
+    const stepper = this.matStepper();
+    if (stepper) stepper.selectedIndex = next;
   }
 
   protected onSelectionChange(ev: StepperSelectionEvent): void {

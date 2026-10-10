@@ -9,7 +9,7 @@ import type { SdFormGenericField } from './form-generic-field.model';
  */
 export interface SdFormGenericSchema {
   pages: SdFormGenericPage[];
-  /** Chừa cho tabs/steps (đợt 3). Vắng = một trang. */
+  /** Tabs or steps across visible pages. Absent preserves first-page rendering. */
   navigation?: SdFormGenericNavigation;
   /** Biến do consumer cấp qua `[variables]`; dùng chung không gian key với field. */
   variables?: SdFormGenericVariable[];
@@ -17,6 +17,7 @@ export interface SdFormGenericSchema {
   validations?: SdFormGenericValidation[];
 }
 
+/** Steps default to `linear: false`; linear forward navigation validates visible predecessor fields. */
 export type SdFormGenericNavigation = { type: 'tabs' } | { type: 'steps'; linear?: boolean };
 
 /** Điều kiện ẩn/hiện của trang hoặc group. */

@@ -42,7 +42,7 @@ export class PreviewComponent {
   /** Bản clone độc lập: renderer không thể chạm vào tài liệu của builder. */
   readonly schema = computed(() => documentToSchema(this.store.doc()));
 
-  readonly isEmpty = computed(() => !this.store.doc().elements.length);
+  readonly isEmpty = computed(() => !this.schema().navigation && !this.schema().pages[0]?.elements.length);
 
   /** Lần "Kiểm tra" mới nhất — kết quả của lần cũ hơn (đã đặt lại/đổi dữ liệu giữa chừng) bị bỏ. */
   #request = 0;

@@ -6,7 +6,8 @@
   [mat-stretch-tabs]="stretchTabs()"
   [animationDuration]="animationDuration()"
   [disableRipple]="disableRipple()"
-  [dynamicHeight]="dynamicHeight()">
+  [dynamicHeight]="dynamicHeight()"
+  [preserveContent]="preserveContent()">
   @for (tab of tabs(); track tab; let i = $index) {
     <mat-tab [disabled]="tab.disabled()">
       <ng-template mat-tab-label>
