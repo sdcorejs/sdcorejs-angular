@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import type { Signal } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdDate } from '@sdcorejs/angular/forms/date';
 import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
@@ -38,7 +39,7 @@ export class DatetimeComponent {
   readonly labelPlacement = this.#context.labelPlacement;
   readonly viewed = computed(() => this.#context.viewed() || !!this.field().viewed);
   readonly value = computed(() => this.#context.value()[this.field().key] as string | null | undefined);
-  readonly subtype = computed(() => this.field().subtype || 'date');
+  readonly subtype: Signal<NonNullable<SdFormGenericDatetime['subtype']>> = computed(() => this.field().subtype || 'date');
   // why: a viewed field is not validated (see LibItemComponent), so it gets no min/max either.
   readonly min = computed(() => (this.viewed() ? undefined : boundary(this.field().validation?.min, this.subtype(), 'min')));
   readonly max = computed(() => (this.viewed() ? undefined : boundary(this.field().validation?.max, this.subtype(), 'max')));

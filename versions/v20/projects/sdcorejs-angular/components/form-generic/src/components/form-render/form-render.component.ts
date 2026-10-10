@@ -383,6 +383,7 @@ export class SdFormRender {
     controls.forEach(control => control.markAsTouched());
     while (controls.some(control => control.pending) && currentAttempt()) {
       await firstValueFrom(timer(PENDING_POLL_MS));
+      if (!currentAttempt()) return;
       // A consumer can replace/remove a control without changing the FormGroup or model reference.
       // Reacquire exact owned registrations so detached PENDING/INVALID controls cannot gate this request.
       controls = predecessors.flatMap(page => this.#controlsFor(page));

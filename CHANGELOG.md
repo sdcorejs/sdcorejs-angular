@@ -30,9 +30,9 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ### Fixed
 
-- Legacy Explorer `SdFileExplorerActionLeaf` and `SdFileExplorerActionGroup` retain callable `click` interfaces; additive definition types accept canonical `onClick` callbacks.
+- Legacy Explorer `SdFileExplorerActionLeaf` and `SdFileExplorerActionGroup` retain callable `click` interfaces; additive definition types accept canonical `onClick` callbacks throughout the actual action component.
 - Compact touch error folder rows keep wrapping when commands are present; a long destination picker stays inside consumer-supplied short Explorer hosts and retains a scrollable footer.
-- Form navigation reacquires owned controls after consumer replacement/removal while validation is pending. Global validation configuration includes fields from every page; page changes dismiss stale delete Undo toasts, and page metadata edits seal history through Core `sdBlur`.
+- Form navigation reacquires owned controls after consumer replacement/removal while validation is pending and checks cancellation before touching replacement schema controls. Global validation configuration includes fields from every page; page changes dismiss stale delete Undo toasts, and page metadata edits seal history through Core `sdBlur`.
 - Explorer destination-picker Tab/Shift+Tab ownership, dark surfaces, current selection/search move eligibility, changed-provider stale-response rejection and accepted-move cache refresh.
 - Per-item Move rows permit the full Core48px touch span without clipping; filenames keep ellipsis and narrow rows can wrap without overlapping touch targets. Retry controls retain readable labels on narrow layouts.
 - Form builder/page-strip scrolling reveals selected/focused long labels. Dynamic helper/error heights, radio label wrapping, renderer tab scrolling/focus and blocked linear navigation remain usable on narrow screens and enlarged text.
@@ -40,6 +40,7 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 ### Release tooling
 
 - The reviewed3.1 contract compares exact same-major3.0 npm packages. The existing four-artifact OIDC transaction, immutable integrity checks, strict consumers and postpublish-only docs/page workflow remain release gates.
+- Explicit Form signal types keep v19 declarations stable across repeated builds without changing their accepted values or weakening the package fingerprint guard.
 
 ## [3.0] - 2026-10-02
 

@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, viewChildr
 import { SdButton, SdButtonItem, type SdButtonColor, type SdButtonSize, type SdButtonType } from '@sdcorejs/angular/components/button';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { sdFileExplorerActionBlocked, sdFileExplorerActionsBusy, sdFileExplorerResolveActions } from '../file-explorer-actions';
-import type { SdFileExplorerAction, SdFileExplorerActionGroup, SdFileExplorerActionLeaf } from '../file-explorer.model';
+import type { SdFileExplorerAction, SdFileExplorerActionGroupDefinition, SdFileExplorerActionLeafDefinition } from '../file-explorer.model';
 
 /**
  * Action area of the explorer (internal): `selector.actions`, `fileCommands` or `folderCommands` for one context.
@@ -119,7 +119,7 @@ export class SdFileExplorerActions<T> {
   protected readonly busy = computed(() => sdFileExplorerActionsBusy(this.entries()));
   protected readonly loadingLabel = computed(() => this.#i18n.t('core.component.file-explorer.action-loading'));
 
-  protected run(action: SdFileExplorerActionLeaf<T>, group?: SdFileExplorerActionGroup<T>): void {
+  protected run(action: SdFileExplorerActionLeafDefinition<T>, group?: SdFileExplorerActionGroupDefinition<T>): void {
     const actions = this.actions();
     // A stale rendered button or menu must not dispatch a definition the consumer has withdrawn.
     if (group ? !actions?.includes(group) || !group.children.includes(action) : !actions?.includes(action)) return;

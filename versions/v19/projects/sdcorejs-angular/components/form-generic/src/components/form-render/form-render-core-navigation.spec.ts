@@ -48,6 +48,40 @@ describe('Form Core navigation and consumer registration regressions', () => {
   }
   afterEach(() => fixture?.destroy());
 
+  it('leaves fresh schema controls untouched when an older pending navigation timer is canceled', async () => {
+    await setup('steps');
+    const render = fixture.componentInstance;
+    fixture.componentRef.setInput('value', { ...render.value(), needsLegal: false });
+    await settle();
+    const old = render.formGroup().get('project')!;
+    let finish!: (value: null) => void;
+    old.setAsyncValidators(() => new Promise<null>(resolve => (finish = resolve)));
+    old.updateValueAndValidity({ emitEvent: false });
+    const navigation = render.requestPage('approval');
+    expect(render.navigationPending()).toBeTrue();
+    const replacement = schema('steps');
+    replacement.pages[0].elements = [
+      { id: 'fresh', key: 'fresh', type: 'textfield', label: 'Fresh field', validation: { required: true } },
+    ];
+    fixture.componentRef.setInput('schema', replacement);
+    fixture.componentRef.setInput('value', { fresh: '', approver: 'Linh', needsLegal: false });
+    fixture.detectChanges();
+    const fresh = render.formGroup().get('fresh')!;
+    expect(fresh).toBeTruthy();
+    expect(fresh.touched).withContext('replacement schema starts with a pristine field').toBeFalse();
+    // Let the already scheduled old poll resume after reconciliation has canceled its attempt.
+    await new Promise(resolve => setTimeout(resolve, 60));
+    await navigation;
+    expect(fresh.touched).withContext('a canceled timer must not touch controls belonging to the new schema').toBeFalse();
+    expect(render.navigationPending()).toBeFalse();
+    expect(render.effectivePageId()).toBe('details');
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.sd-fg-navigation-tip [role="note"]')).toBeNull();
+    finish(null);
+    await settle();
+    expect(fresh.touched).toBeFalse();
+  });
+
   for (const mutation of ['replace-valid', 'replace-invalid', 'remove'] as const) {
     it(`reacquires page-owned controls when a pending control is ${mutation} with the same model value`, async () => {
       await setup('steps');
