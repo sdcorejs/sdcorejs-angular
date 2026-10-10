@@ -45,7 +45,7 @@
           [label]="'core.component.form-builder.display-label' | sdTranslate"
           [model]="store.activePage().label"
           (modelChange)="store.setPageMetadata({ label: $event || undefined }, 'page-label:' + store.activePage().id)"
-          (blur)="store.sealHistory()"></sd-input>
+          (sdBlur)="store.sealHistory()"></sd-input>
         <sd-input
           size="sm"
           labelPlacement="top"
@@ -53,7 +53,7 @@
           [label]="'core.component.form-builder.page.icon' | sdTranslate"
           [model]="store.activePage().icon"
           (modelChange)="store.setPageMetadata({ icon: $event || undefined }, 'page-icon:' + store.activePage().id)"
-          (blur)="store.sealHistory()"></sd-input>
+          (sdBlur)="store.sealHistory()"></sd-input>
         <attribute-expression
           [label]="'core.component.form-builder.visible-when' | sdTranslate"
           [elements]="elements()"

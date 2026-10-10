@@ -191,11 +191,17 @@ export interface SdFileExplorerActionAppearance<T> {
   loading?: SdFileExplorerState<T>;
 }
 
-/** Action that runs a callback: a button next to its siblings, or an item in a group menu. */
-export type SdFileExplorerActionLeaf<T> = SdFileExplorerActionAppearance<T> & { children?: never } & (
-    | { onClick: (context: T) => void; click?: never }
-    | { click: (context: T) => void; onClick?: never }
-  );
+/** Legacy callable leaf contract. Consumers may extend this interface and invoke `click` directly. */
+export interface SdFileExplorerActionLeaf<T> extends SdFileExplorerActionAppearance<T> {
+  click: (context: T) => void;
+  onClick?: never;
+  children?: never;
+}
+
+/** A configured leaf accepts the canonical `onClick` callback or the legacy callable `click` contract. */
+export type SdFileExplorerActionLeafDefinition<T> =
+  | SdFileExplorerActionLeaf<T>
+  | (SdFileExplorerActionAppearance<T> & { onClick: (context: T) => void; click?: never; children?: never });
 
 /** Button that only opens a menu of leaves. Groups are one level deep. */
 export interface SdFileExplorerActionGroup<T> extends SdFileExplorerActionAppearance<T> {
@@ -205,11 +211,18 @@ export interface SdFileExplorerActionGroup<T> extends SdFileExplorerActionAppear
   onClick?: never;
 }
 
+/** Configured one-level menu; both canonical and legacy leaf callbacks are accepted. */
+export interface SdFileExplorerActionGroupDefinition<T> extends SdFileExplorerActionAppearance<T> {
+  children: readonly SdFileExplorerActionLeafDefinition<T>[];
+  click?: never;
+  onClick?: never;
+}
+
 /**
  * One entry of `selector.actions`, `fileCommands` or `folderCommands`: a leaf with `click`, or a group with
  * `children`. Siblings render in the declared order; the explorer never moves them into an overflow menu.
  */
-export type SdFileExplorerAction<T> = SdFileExplorerActionLeaf<T> | SdFileExplorerActionGroup<T>;
+export type SdFileExplorerAction<T> = SdFileExplorerActionLeafDefinition<T> | SdFileExplorerActionGroupDefinition<T>;
 
 /** Action on the selected files. `click` receives a frozen snapshot of the selection. */
 export type SdFileExplorerSelectionAction<T = unknown> = SdFileExplorerAction<readonly SdFileExplorerItem<T>[]>;
@@ -229,7 +242,7 @@ export interface SdFileExplorerSelector<T = unknown> {
   /** Allows selection when useful actions or an explicit picker contract exist. @defaultValue `true` */
   visible?: boolean;
   /**
-   * `actions` requires at least one visible selection action; `picker` deliberately allows selection without actions.
+   * `actions` requires a usable configured selection action; `picker` deliberately allows selection without actions.
    * When omitted, existing `onSelect` / `onSelectAll` callbacks retain picker behavior; other selectors use `actions`.
    */
   mode?: 'actions' | 'picker';
@@ -237,7 +250,9 @@ export interface SdFileExplorerSelector<T = unknown> {
    * Actions on the selected files, shown in the selection band while at least one file is selected. Without `type`,
    * a flat action is `light` and a group trigger `text`; without `color`, both are `primary`.
    * Omitted in action mode: configured move/share/download callbacks provide the default actions. An explicit `[]`
-   * suppresses those defaults. Hidden/empty groups do not enable selection; disabled/loading actions still do.
+   * suppresses those defaults. Static hidden actions and empty groups do not enable selection; disabled/loading
+   * actions still do. A `hidden` predicate controls the action for the current selection, without removing checkboxes
+   * or clearing intermediate selections. Withdraw the action configuration or use `visible: false` to disable selection.
    */
   actions?: readonly SdFileExplorerSelectionAction<T>[];
   /** Files for which it returns `true` show a disabled checkbox and are left out of "select all". */

@@ -2,8 +2,8 @@ import type { SdButtonColor } from '@sdcorejs/angular/components/button';
 import type { SdIconSet } from '@sdcorejs/angular/modules/icon';
 import type { SdFileExplorerIconName } from './file-explorer-icons.generated';
 import type {
-  SdFileExplorerActionGroup,
-  SdFileExplorerActionLeaf,
+  SdFileExplorerActionGroupDefinition,
+  SdFileExplorerActionLeafDefinition,
   SdFileExplorerItem,
   SdFileExplorerTransfer,
 } from './file-explorer.model';
@@ -74,7 +74,7 @@ export interface SdFileExplorerSheetCommand<T = unknown> {
   /** Disabled, loading, or inside a disabled or loading group. */
   readonly disabled: boolean;
   readonly loading: boolean;
-  readonly definition: SdFileExplorerActionLeaf<SdFileExplorerItem<T>>;
+  readonly definition: SdFileExplorerActionLeafDefinition<SdFileExplorerItem<T>>;
 }
 
 /**
@@ -88,7 +88,7 @@ export interface SdFileExplorerSheetGroup<T = unknown> {
   readonly label: string;
   readonly disabled: boolean;
   readonly loading: boolean;
-  readonly definition: SdFileExplorerActionGroup<SdFileExplorerItem<T>>;
+  readonly definition: SdFileExplorerActionGroupDefinition<SdFileExplorerItem<T>>;
   /** Never empty. */
   readonly children: readonly SdFileExplorerSheetCommand<T>[];
 }

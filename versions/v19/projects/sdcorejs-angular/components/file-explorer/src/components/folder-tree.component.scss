@@ -163,11 +163,11 @@
   margin-inline: auto -6px;
 }
 
-:host(.sd-file-explorer-folder-tree--compact) .node--commands {
+:host(.sd-file-explorer-folder-tree--compact) .node--commands:not(.node--error) {
   flex-wrap: nowrap;
 }
 
-:host(.sd-file-explorer-folder-tree--compact) .node--commands .label {
+:host(.sd-file-explorer-folder-tree--compact) .node--commands:not(.node--error) .label {
   flex: 1 1 0;
 }
 

@@ -25,11 +25,14 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ### Changed (BREAKING for consumers)
 
-- Action-mode selection requires a visible action. Explicit empty/fully hidden actions suppress file checkboxes, select-all and the band; withdrawing actions clears selection. For an intentional actionless picker, migrate `selector: {}` to `selector: { mode: 'picker' }`. Omitted mode with legacy `onSelect`/`onSelectAll` callbacks preserves callback-owned picker behavior. Disabled/loading visible actions retain selection affordances.
+- Action-mode selection requires a usable configured action. Explicit empty or statically fully hidden actions suppress file checkboxes, select-all and the band; withdrawing actions clears selection. Dynamic `hidden` predicates affect current action visibility while retaining checkboxes and intermediate selections, including actions that require exactly two files. For an intentional actionless picker, migrate `selector: {}` to `selector: { mode: 'picker' }`. Omitted mode with legacy `onSelect`/`onSelectAll` callbacks preserves callback-owned picker behavior. Disabled/loading actions retain selection affordances.
 - Custom typed i18n catalogs must add the new selection/action/loading/item-actions, move/availability, and sixteen Form layout/transition keys present in the built-in catalogs.
 
 ### Fixed
 
+- Legacy Explorer `SdFileExplorerActionLeaf` and `SdFileExplorerActionGroup` retain callable `click` interfaces; additive definition types accept canonical `onClick` callbacks.
+- Compact touch error folder rows keep wrapping when commands are present; a long destination picker stays inside consumer-supplied short Explorer hosts and retains a scrollable footer.
+- Form navigation reacquires owned controls after consumer replacement/removal while validation is pending. Global validation configuration includes fields from every page; page changes dismiss stale delete Undo toasts, and page metadata edits seal history through Core `sdBlur`.
 - Explorer destination-picker Tab/Shift+Tab ownership, dark surfaces, current selection/search move eligibility, changed-provider stale-response rejection and accepted-move cache refresh.
 - Per-item Move rows permit the full Core48px touch span without clipping; filenames keep ellipsis and narrow rows can wrap without overlapping touch targets. Retry controls retain readable labels on narrow layouts.
 - Form builder/page-strip scrolling reveals selected/focused long labels. Dynamic helper/error heights, radio label wrapping, renderer tab scrolling/focus and blocked linear navigation remain usable on narrow screens and enlarged text.

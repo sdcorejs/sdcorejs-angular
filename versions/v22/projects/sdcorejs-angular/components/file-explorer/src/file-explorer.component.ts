@@ -40,12 +40,13 @@ import { SdFileExplorerTransferPanel } from './components/transfer-panel.compone
 import {
   SD_FILE_EXPLORER_COMMAND_DEFAULTS,
   sdFileExplorerActionBlocked,
+  sdFileExplorerHasActionCapability,
   sdFileExplorerResolveActions,
   sdFileExplorerSheetEntries,
 } from './file-explorer-actions';
 import type {
-  SdFileExplorerActionGroup,
-  SdFileExplorerActionLeaf,
+  SdFileExplorerActionGroupDefinition,
+  SdFileExplorerActionLeafDefinition,
   SdFileExplorerCommand,
   SdFileExplorerItem,
   SdFileExplorerOpenEvent,
@@ -146,9 +147,9 @@ interface CommandTarget {
 interface PendingCommand<T = unknown> {
   readonly id: string;
   readonly origin: CommandOrigin;
-  readonly leaf: SdFileExplorerActionLeaf<SdFileExplorerItem<T>>;
+  readonly leaf: SdFileExplorerActionLeafDefinition<SdFileExplorerItem<T>>;
   /** Group the leaf was pressed in; `null` for a flat command. */
-  readonly group: SdFileExplorerActionGroup<SdFileExplorerItem<T>> | null;
+  readonly group: SdFileExplorerActionGroupDefinition<SdFileExplorerItem<T>> | null;
 }
 
 let nextExplorerId = 0;
@@ -451,15 +452,8 @@ export class SdFileExplorer<T = unknown> {
   readonly #selector = computed<SdFileExplorerSelector<T> | null>(() => {
     const selector = this.#configuredSelector();
     if (!selector || this.#pickerSelection()) return selector;
-    const selected = this.#selectedCandidates();
-    // With nothing selected, probe the available files and individual files so a single-selection action can enable
-    // its checkboxes. Hidden predicates still use the actual selection as soon as a user selects something.
-    const candidates = this.#selectionCandidates();
-    const contexts = selected.length ? [selected] : [candidates, ...candidates.map(item => Object.freeze([item]))];
-    const defaults = { leafType: 'light', groupType: 'text', color: 'primary' } as const;
-    return contexts.some(items => sdFileExplorerResolveActions(this.selectionActions(), items, defaults, 'selector.actions').length)
-      ? selector
-      : null;
+    // Keep intermediate selections reachable even when actions are hidden until a particular combination is selected.
+    return sdFileExplorerHasActionCapability(this.selectionActions()) ? selector : null;
   });
 
   /** Files of the current folder or search results, in display order. Folders are never selectable. */
@@ -472,9 +466,6 @@ export class SdFileExplorer<T = unknown> {
     return disabled ? this.#visibleFiles().filter(item => !disabled(item)) : this.#visibleFiles();
   });
 
-  readonly #selectedCandidates = computed(() =>
-    Object.freeze(this.#selectionCandidates().filter(item => this.#selectedIds().has(item.id)))
-  );
   readonly #eligibleFiles = computed<readonly SdFileExplorerItem<T>[]>(() => (this.#selector() ? this.#selectionCandidates() : []));
 
   /**

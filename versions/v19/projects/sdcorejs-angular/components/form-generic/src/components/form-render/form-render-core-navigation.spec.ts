@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
-import { FormGroup } from '@angular/forms';
+import { FormControl, FormGroup } from '@angular/forms';
 import { SdTabGroup } from '@sdcorejs/angular/components/tab';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdStepper } from '@sdcorejs/angular/components/stepper';
@@ -47,6 +47,41 @@ describe('Form Core navigation and consumer registration regressions', () => {
     await settle();
   }
   afterEach(() => fixture?.destroy());
+
+  for (const mutation of ['replace-valid', 'replace-invalid', 'remove'] as const) {
+    it(`reacquires page-owned controls when a pending control is ${mutation} with the same model value`, async () => {
+      await setup('steps');
+      const render = fixture.componentInstance;
+      fixture.componentRef.setInput('value', { ...render.value(), needsLegal: false });
+      await settle();
+      const form = render.formGroup();
+      const oldControl = form.get('project')!;
+      let finish!: (errors: { stale: true } | null) => void;
+      oldControl.setAsyncValidators(() => new Promise<{ stale: true } | null>(resolve => (finish = resolve)));
+      oldControl.updateValueAndValidity({ emitEvent: false });
+      const accepted: string[] = [];
+      const subscription = render.activePageId.subscribe(id => {
+        if (id) accepted.push(id);
+      });
+      const navigation = render.requestPage('approval');
+      expect(render.navigationPending()).toBeTrue();
+      if (mutation === 'remove') form.removeControl('project');
+      else
+        form.setControl('project', new FormControl(oldControl.value, mutation === 'replace-invalid' ? () => ({ external: true }) : null));
+      fixture.detectChanges();
+      // Do not await whenStable: the bug keeps its polling timer alive indefinitely.
+      await new Promise(resolve => setTimeout(resolve, 60));
+      fixture.detectChanges();
+      expect(render.navigationPending()).withContext('a detached pending validator cannot keep navigation alive').toBeFalse();
+      expect(render.effectivePageId()).toBe('approval');
+      finish({ stale: true });
+      await navigation;
+      await settle();
+      expect(render.effectivePageId()).withContext('late detached INVALID cannot reject or reroute an accepted request').toBe('approval');
+      expect(accepted.filter(id => id === 'approval').length).toBe(1);
+      subscription.unsubscribe();
+    });
+  }
 
   it('uses sm Core footer buttons on mobile and restores md outside mobile', async () => {
     await setup('steps');

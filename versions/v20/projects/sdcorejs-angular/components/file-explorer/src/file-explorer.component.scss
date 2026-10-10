@@ -751,6 +751,7 @@
   color: var(--sd-fe-text-secondary);
 }
 .move-picker {
-  max-height: 80vh;
+  box-sizing: border-box;
+  max-height: min(80vh, calc(100% - 32px));
   overflow-y: auto;
 }

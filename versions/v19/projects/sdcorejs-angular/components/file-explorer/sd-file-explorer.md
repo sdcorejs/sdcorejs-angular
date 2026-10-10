@@ -244,7 +244,15 @@ interface SdFileExplorerActionGroup<T> extends SdFileExplorerActionAppearance<T>
   click?: never; // a group only opens its menu
 }
 
-type SdFileExplorerAction<T> = SdFileExplorerActionLeaf<T> | SdFileExplorerActionGroup<T>;
+type SdFileExplorerActionLeafDefinition<T> =
+  | SdFileExplorerActionLeaf<T>
+  | (SdFileExplorerActionAppearance<T> & { onClick: (context: T) => void; click?: never; children?: never });
+interface SdFileExplorerActionGroupDefinition<T> extends SdFileExplorerActionAppearance<T> {
+  children: readonly SdFileExplorerActionLeafDefinition<T>[];
+  click?: never;
+  onClick?: never;
+}
+type SdFileExplorerAction<T> = SdFileExplorerActionLeafDefinition<T> | SdFileExplorerActionGroupDefinition<T>;
 type SdFileExplorerSelectionAction = SdFileExplorerAction<readonly SdFileExplorerItem[]>;
 type SdFileExplorerCommand = SdFileExplorerAction<SdFileExplorerItem>;
 ```
@@ -565,6 +573,10 @@ New source-only declarations use `SdFileExplorerDataSourceOption<T>` with `dataS
 Canonical action callbacks live in `capabilities.share.onShare`, `.download.onDownload`, `.upload.onUpload`, `.preview.onPreview`, and `.createFolder.onCreateFolder`. The corresponding synchronous eligibility states are `shareable`, `downloadable`, `uploadable`, `previewable`, and `creatable`. An explicit group takes precedence over its legacy callback as a whole, including when eligibility is false. Supported actions remain visible and disabled; unsupported actions remain absent. Eligibility is rechecked at dispatch and transfer retry. These UI predicates do not replace authorization in your storage API.
 
 Custom action leaves accept exactly one callback: canonical `onClick` or legacy `click`. Groups accept only leaf `children` and neither callback. Callbacks are not awaited: confirmation, loading, errors and reload remain yours.
+
+`SdFileExplorerActionLeaf<T>` and `SdFileExplorerActionGroup<T>` retain their legacy callable `click` interfaces, including interface extension and direct child calls. Use `SdFileExplorerAction<T>` or the new `SdFileExplorerActionLeafDefinition<T>` / `SdFileExplorerActionGroupDefinition<T>` types when defining canonical `onClick` actions or mixed menus.
+
+Action-mode selection depends on usable configured actions. Missing or empty collections, statically hidden leaves and groups with no usable children hide the selection controls. A dynamic `hidden` predicate only hides the action for the current selection: checkboxes and intermediate selections remain so a user can reach an action that requires, for example, exactly two files. To withdraw selection, set `selector.visible: false`, replace `actions` with `[]`, or configure all actions with static `hidden: true`.
 
 Import `SdFileExplorerColumnDef` alongside `SdFileExplorer` and project list-only metadata columns:
 

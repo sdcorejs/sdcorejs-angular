@@ -33,6 +33,7 @@ import { InspectorComponent } from './inspector/inspector.component';
 import { PaletteComponent } from './palette/palette.component';
 import { PreviewComponent } from './preview/preview.component';
 import {
+  type BuilderDocument,
   cloneJson,
   collectKeys,
   documentFromSchema,
@@ -214,6 +215,14 @@ export class SdFormBuilder {
       const snapshot = documentToSchema(doc);
       this.#lastEmitted = snapshot;
       this.schema.set(snapshot);
+    });
+    // Page selection/load recreates the document without emitting a schema edit through `changes`.
+    // A toast must disappear when its exact deletion is no longer the current undoable document.
+    effect(() => {
+      const doc = this.store.doc();
+      untracked(() => {
+        if (this.#undoRemove && this.#undoRemove.doc !== doc) this.#undoRemove.release();
+      });
     });
     // why: after a delete or ungroup focus goes back to the canvas. In compact mode the overlay panel the
     // action came from is closed first, so the focused card is not hidden under the panel or the scrim.
@@ -431,7 +440,7 @@ export class SdFormBuilder {
   }
 
   /** Toast đang mở của lần xoá gần nhất + cách gỡ nó. */
-  #undoRemove: { readonly toastId?: string; readonly release: () => void } | undefined = undefined;
+  #undoRemove: { readonly doc: BuilderDocument; readonly toastId?: string; readonly release: () => void } | undefined = undefined;
 
   /**
    * Toast "Đã xoá …" trong {@link UNDO_REMOVE_MS} kèm Hoàn tác.
@@ -460,6 +469,7 @@ export class SdFormBuilder {
     const toastId = toast?.onAction === undo ? toast.id : undefined;
     const cleanup: { subscription?: Subscription; timer?: ReturnType<typeof setTimeout> } = {};
     const state = {
+      doc: removedDoc,
       toastId,
       release: () => {
         cleanup.subscription?.unsubscribe();
@@ -549,7 +559,7 @@ export class SdFormBuilder {
 
   openValidations(): void {
     const doc = this.store.doc();
-    this.validationDialog()?.open(doc.elements, doc.variables, doc.validations);
+    this.validationDialog()?.open(this.store.allElements(), doc.variables, doc.validations);
   }
 
   onValidationsAccepted(validations: SdFormGenericValidation[]): void {

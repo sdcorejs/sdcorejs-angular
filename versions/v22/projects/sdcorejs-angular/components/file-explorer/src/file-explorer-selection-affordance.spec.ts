@@ -40,10 +40,11 @@ describe('Explorer useful selection affordances', () => {
     await fixture.whenStable();
     fixture.detectChanges();
   }
-  async function setup(selector: SdFileExplorerSelector = {}) {
+  async function setup(selector: SdFileExplorerSelector = {}, fileCount = 2) {
     TestBed.configureTestingModule({ imports: [SelectionHost], providers: [provideNoopAnimations()] });
     fixture = TestBed.createComponent(SelectionHost);
     host = fixture.componentInstance;
+    if (fileCount === 3) host.files.push({ id: 'c', parentId: null, kind: 'file', name: 'C.pdf' });
     host.option.set({ list: host.list, selector });
     root = fixture.nativeElement;
     await settle();
@@ -61,6 +62,24 @@ describe('Explorer useful selection affordances', () => {
     expect(selected()).toEqual([]);
   }
   afterEach(() => fixture?.destroy());
+
+  for (const fileCount of [2, 3]) {
+    it(`retains intermediate selections until a nonmonotonic action becomes visible with ${fileCount} files`, async () => {
+      const run = jasmine.createSpy('run');
+      await setup({ actions: [{ title: 'Exactly two', hidden: items => items.length !== 2, onClick: run }] }, fileCount);
+      expect(root.querySelectorAll('.select,.select-all').length).toBe(fileCount + 1);
+      await choose();
+      expect(selected().map(file => file.id)).toEqual(['a']);
+      expect(root.querySelectorAll('.select,.select-all').length).toBe(fileCount + 1);
+      expect(root.querySelector('.selection-actions sd-button')).toBeNull();
+      root.querySelector<HTMLInputElement>('[data-item-id="b"] input[type="checkbox"]')!.click();
+      await settle();
+      expect(selected().map(file => file.id)).toEqual(['a', 'b']);
+      root.querySelector<HTMLButtonElement>('.selection-actions sd-button button')!.click();
+      await settle();
+      expect(run).toHaveBeenCalledOnceWith([host.files[0], host.files[1]]);
+    });
+  }
 
   for (const view of ['list', 'grid'] as const) {
     it(`hides all ${view} selection controls when no actions or picker callback exist`, async () => {
@@ -99,19 +118,34 @@ describe('Explorer useful selection affordances', () => {
     const button = fixture.debugElement.query(By.css('.selection-actions sd-button')).componentInstance as SdButton;
     expect(button.disabled()).toBeTrue();
   });
-  it('hides and clears when all actions become hidden, then returns unchecked when visible again', async () => {
+  it('hides and clears when all configured actions become statically hidden, then returns unchecked when visible again', async () => {
+    const clear = jasmine.createSpy('clear');
+    await setup({ actions: [action({ hidden: false })], onClear: clear });
+    await choose();
+    host.option.update(o => ({ ...o, selector: { actions: [action({ hidden: true })], onClear: clear } }));
+    await settle();
+    expectNoSelection();
+    expect(clear).toHaveBeenCalledTimes(1);
+    host.option.update(o => ({ ...o, selector: { actions: [action({ hidden: false })], onClear: clear } }));
+    await settle();
+    expect(root.querySelectorAll('.select,.select-all').length).toBe(3);
+    expect(selected()).toEqual([]);
+  });
+  it('updates context-dependent action visibility without discarding a reachable intermediate selection', async () => {
     const hidden = signal(false),
       clear = jasmine.createSpy('clear');
     await setup({ actions: [action({ hidden: () => hidden() })], onClear: clear });
     await choose();
     hidden.set(true);
     await settle();
-    expectNoSelection();
-    expect(clear).toHaveBeenCalledTimes(1);
+    expect(root.querySelector('.selection-actions sd-button')).toBeNull();
+    expect(root.querySelectorAll('.select,.select-all').length).toBe(3);
+    expect(selected().map(file => file.id)).toEqual(['a']);
+    expect(clear).not.toHaveBeenCalled();
     hidden.set(false);
     await settle();
-    expect(root.querySelectorAll('.select,.select-all').length).toBe(3);
-    expect(selected()).toEqual([]);
+    expect(root.querySelector('.selection-actions sd-button')).not.toBeNull();
+    expect(selected().map(file => file.id)).toEqual(['a']);
   });
   it('handles runtime configuration withdrawal and blocks stale checkbox events', async () => {
     await setup({ actions: [action()] });
