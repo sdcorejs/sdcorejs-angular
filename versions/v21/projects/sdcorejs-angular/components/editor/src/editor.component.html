@@ -33,8 +33,7 @@
     <sd-icon class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
   }
   @if (_hideInlineError && _errorMessage && formControl.touched) {
-    <span class="sd-visually-hidden">{{ _errorMessage }}</span>
-
+    <span class="sd-visually-hidden">{{ _errorMessage }}</span>
   }
 </div>
 

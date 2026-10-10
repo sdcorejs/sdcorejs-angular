@@ -1,5 +1,27 @@
 # Reviewed release snapshots
 
+## Release 3.1
+
+`3.1.json` compares all four candidates with their exact same-major published
+`*.3.0` baseline. The reviewed source commit is recorded in the snapshot.
+Inspectable inputs include independently verified registry tarballs and the
+preserved producer packages from source aggregate
+`3a581bb44633bdd06412d3008c8f67fa4371ef8b40e78d5f92cf29250150c525`.
+Release version/framework metadata is excluded only by the existing canonical
+surface fingerprint reader. Final `*.3.1` builds, source binding, package
+integrities, peers/engines/assets and strict consumers remain independent gates.
+
+The only new export-map entries are `components/kanban` and `forms/segmented`;
+no existing export, declaration file or packed path is removed. Angular 19 adds
+15 declaration files; later Angular lines add two bundled declaration entries.
+Changes cover Explorer typed data/columns, grouped capabilities, selection and
+consumer-owned moves; Form multi-page navigation and validation; Section's
+optional label/itemLeft slot; outline/confirm/compact UI behavior; Kanban and
+Segmented. Runtime dependencies, same-line peers and engines are retained.
+The changelog documents custom-catalog additions and the intentional actionless
+picker migration. The source and declaration changes must be independently
+reviewed with this snapshot; CI never regenerates expectations.
+
 ## Release 3.0
 
 `3.0.json` explicitly binds all four targets to their same-major published
