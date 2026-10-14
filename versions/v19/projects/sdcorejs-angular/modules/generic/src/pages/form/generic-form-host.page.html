@@ -7,24 +7,27 @@
       </div>
     </sd-side-drawer>
   } @else {
-    <div class="sd-generic-form d-flex flex-column gap-16 p-16">
-      <div class="d-flex align-items-center justify-content-between gap-12 flex-wrap">
-        <div class="d-flex align-items-center gap-8">
-          <sd-button type="text" prefixIcon="arrow_back" [tooltip]="'core.module.generic.action.back' | sdTranslate" (click)="close()"></sd-button>
-          <h1 #heading class="T20B m-0" tabindex="-1">{{ title() }}</h1>
-        </div>
-        <div class="d-flex align-items-center gap-8 flex-wrap">
-          <ng-container [ngTemplateOutlet]="buttons"></ng-container>
-        </div>
+    <sd-page class="sd-generic-form">
+      <div headerLeft class="d-flex align-items-center gap-8">
+        <sd-button type="text" prefixIcon="arrow_back" [tooltip]="'core.module.generic.action.back' | sdTranslate" (click)="close()"></sd-button>
+        <h1 #heading class="T20M m-0" tabindex="-1">{{ title() }}</h1>
       </div>
-      <ng-container [ngTemplateOutlet]="body" [ngTemplateOutletContext]="{ $implicit: formSchema }"></ng-container>
-    </div>
+      <div headerRight class="d-flex align-items-center gap-8 flex-wrap">
+        <ng-container [ngTemplateOutlet]="buttons"></ng-container>
+      </div>
+      <div class="p-16">
+        <ng-container [ngTemplateOutlet]="body" [ngTemplateOutletContext]="{ $implicit: formSchema }"></ng-container>
+      </div>
+    </sd-page>
   }
 }
 
 <ng-template #body let-formSchema>
   <div [attr.aria-busy]="loading() || null">
-    <sd-form-render [schema]="formSchema" [form]="form" [viewed]="viewed()" [(value)]="value"></sd-form-render>
+    <!-- why: detail / update render once the record is there, so every field starts from its loaded value. -->
+    @if (action() === 'create' || record()) {
+      <sd-form-render [schema]="formSchema" [form]="form" [viewed]="viewed()" [(value)]="value"></sd-form-render>
+    }
   </div>
 </ng-template>
 

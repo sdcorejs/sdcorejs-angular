@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { SdSection } from '@sdcorejs/angular/components/section';
 import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
 import { SdInput } from '@sdcorejs/angular/forms/input';
 import { SdSelect } from '@sdcorejs/angular/forms/select';
@@ -10,8 +11,9 @@ import type { SdGenericImportColumn, SdGenericSchema } from '../../models';
 @Component({
   selector: 'sd-generic-configuration-import',
   templateUrl: './generic-configuration-import.component.html',
+  styleUrl: '../generic-configuration.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdCheckbox, SdInput, SdSelect, SdTranslatePipe],
+  imports: [SdSection, SdCheckbox, SdInput, SdSelect, SdTranslatePipe],
 })
 export class GenericConfigurationImport {
   readonly schema = input.required<SdGenericSchema>();

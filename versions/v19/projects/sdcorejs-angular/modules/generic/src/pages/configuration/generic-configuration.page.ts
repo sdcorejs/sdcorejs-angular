@@ -5,6 +5,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdInform } from '@sdcorejs/angular/components/inform';
 import { SdTab, SdTabGroup } from '@sdcorejs/angular/components/tab';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdPageComponent } from '@sdcorejs/angular/modules/layout';
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
 import { filter } from 'rxjs';
 import { GenericConfigurationForm } from '../../components/configuration-form/generic-configuration-form.component';
@@ -27,6 +28,7 @@ import { SdGenericSchemaService } from '../../services';
   imports: [
     SdButton,
     SdInform,
+    SdPageComponent,
     SdTab,
     SdTabGroup,
     SdTranslatePipe,

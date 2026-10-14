@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdFormBuilder, type SdFormGenericSchema } from '@sdcorejs/angular/components/form-generic';
+import { SdSection } from '@sdcorejs/angular/components/section';
 import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
 import { SdInput } from '@sdcorejs/angular/forms/input';
 import { SdSegmentedComponent, type SdSegmentedItem } from '@sdcorejs/angular/forms/segmented';
@@ -30,8 +31,9 @@ const fieldKeys = (form: SdFormGenericSchema): Set<string> => {
 @Component({
   selector: 'sd-generic-configuration-form',
   templateUrl: './generic-configuration-form.component.html',
+  styleUrl: '../generic-configuration.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdButton, SdCheckbox, SdFormBuilder, SdInput, SdSegmentedComponent, SdTranslatePipe],
+  imports: [SdSection, SdButton, SdCheckbox, SdFormBuilder, SdInput, SdSegmentedComponent, SdTranslatePipe],
 })
 export class GenericConfigurationForm {
   readonly schema = input.required<SdGenericSchema>();

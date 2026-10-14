@@ -95,16 +95,26 @@ const withFlags = (column: Column, config: SdGenericListColumn): Column => ({
   ...(config.filterable === false ? { filter: { disabled: true } } : {}),
 });
 
-/** sd-table columns of the list (INV-013); configured keys that no longer exist are skipped. */
-export const sdGenericTableColumns = (schema: SdGenericSchema, deps: SdGenericColumnDeps): Column[] => {
+/**
+ * sd-table columns of the list (INV-013); configured keys that no longer exist are skipped. With `open`, the first
+ * visible column that is not a server field (else the first visible one) links to the record.
+ */
+export const sdGenericTableColumns = (
+  schema: SdGenericSchema,
+  deps: SdGenericColumnDeps,
+  open?: (row: SdGenericRecord) => void
+): Column[] => {
   const properties = sdGenericPropertyMap(schema);
-  return sdGenericListColumns(schema).flatMap(config => {
-    const property = properties.get(config.key);
-    return property ? [withFlags(columnOf(property, schema, deps), config)] : [];
+  const configs = sdGenericListColumns(schema).filter(config => properties.has(config.key));
+  const visible = configs.filter(config => config.visible !== false);
+  const link = open ? (visible.find(config => !properties.get(config.key)!.system) ?? visible[0]) : undefined;
+  return configs.map(config => {
+    const column = withFlags(columnOf(properties.get(config.key)!, schema, deps), config);
+    return config === link ? { ...column, click: (_value: unknown, row: SdGenericRecord) => open!(row) } : column;
   });
 };
 
-/** sd-table external filters of the list; json and file properties cannot be filtered. */
+/** sd-table external filters of the list, shown by default; json and file properties cannot be filtered. */
 export const sdGenericExternalFilters = (schema: SdGenericSchema, deps: SdGenericColumnDeps): SdTableExternalFilter[] => {
   const properties = sdGenericPropertyMap(schema);
   return (schema.list?.externalFilters ?? []).flatMap(config => {
@@ -113,6 +123,8 @@ export const sdGenericExternalFilters = (schema: SdGenericSchema, deps: SdGeneri
     const base = {
       field: property.key,
       title: property.label,
+      // why: a configured filter is shown right away; the list hides the toolbar that would let users pick it.
+      defaultShowing: true,
       ...(config.required ? { required: true } : {}),
       ...(config.operator ? { defaultOperator: config.operator } : {}),
       ...(config.default !== undefined ? { default: config.default } : {}),
