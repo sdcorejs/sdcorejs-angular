@@ -152,6 +152,12 @@ export interface SdFormGenericHtml extends Omit<SdFormGenericFieldBase<'html', n
   query?: SdFormGenericParam[];
 }
 
+/** Time of day stored as canonical `HH:mm`; `validation.min`/`max` take `HH:mm` boundaries. */
+export type SdFormGenericTime = SdFormGenericFieldBase<'time', string>;
+
+/** JSON edited as text in `sd-code-editor`; the stored value is the parsed JSON, never the text. */
+export type SdFormGenericJson = SdFormGenericFieldBase<'json', unknown>;
+
 export type SdFormGenericField =
   | SdFormGenericTextfield
   | SdFormGenericTextarea
@@ -163,6 +169,8 @@ export type SdFormGenericField =
   | SdFormGenericChipString
   | SdFormGenericChipCalendar
   | SdFormGenericUpload
+  | SdFormGenericTime
+  | SdFormGenericJson
   | SdFormGenericHtml;
 
 export type SdFormGenericFieldType = SdFormGenericField['type'];
