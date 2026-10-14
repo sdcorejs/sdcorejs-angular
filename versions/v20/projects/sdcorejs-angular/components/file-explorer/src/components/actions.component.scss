@@ -19,6 +19,12 @@ sd-button {
   max-width: 100%;
 }
 
+// why: two consumer-declared icons need their intrinsic width plus padding inside the hit area.
+:host ::ng-deep > sd-button.action--dual-icon > button.c-button.c-square {
+  width: auto !important;
+  padding-inline: 6px !important;
+}
+
 // Menu item labels are projected from this view, so these rules also reach them inside the popover overlay.
 .spinner {
   display: inline-block;

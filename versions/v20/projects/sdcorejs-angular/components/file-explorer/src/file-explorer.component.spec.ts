@@ -2424,6 +2424,94 @@ describe('SdFileExplorer', () => {
   });
 
   describe('commands', () => {
+    it('uses icons and named tooltips for item commands while retaining label-only fallbacks, menu labels and selector titles', async () => {
+      const inspect = jasmine.createSpy('inspect');
+      const commands = (): SdFileExplorerCommand[] => [
+        { title: 'Metadata', tooltip: 'Inspect metadata', prefixIcon: 'info', onClick: inspect },
+        { title: 'Label-only fallback', tooltip: 'Fallback description', onClick: () => undefined },
+        { title: 'Tools', children: [{ title: 'Read metadata', prefixIcon: 'info', onClick: inspect }] },
+        { tooltip: 'Tooltip-only label fallback', onClick: () => undefined },
+      ];
+      await setup({
+        fileCommands: commands(),
+        folderCommands: commands(),
+        selector: { actions: [{ title: 'Review selected files', prefixIcon: 'done', onClick: () => undefined }] },
+      });
+      for (const [target, area] of [
+        [row('Guide.pdf'), '.commands'],
+        [row('Projects'), '.commands'],
+        [treeNode('Projects'), '.node-actions'],
+      ] as const) {
+        const [icon, fallback, group] = actionButtons(target, area);
+        expect(nativeButton(icon).getAttribute('aria-label')).toBe('Inspect metadata');
+        expect(icon.querySelector('.c-title:not(.c-projected-label)')).toBeNull();
+        expect(icon.querySelector('sd-icon')).not.toBeNull();
+        expect(nativeButton(fallback).textContent).toContain('Label-only fallback');
+        expect(nativeButton(actionButtons(target, area)[3]).textContent).toContain('Tooltip-only label fallback');
+        expect(nativeButton(group).getAttribute('aria-label')).toBe('Tools');
+        expect(group.querySelector('.c-title:not(.c-projected-label)')).toBeNull();
+      }
+      press(actionButtons(row('Guide.pdf'))[0]);
+      expect(inspect.calls.mostRecent().args[0].id).toBe('guide');
+      press(actionButtons(row('Guide.pdf'))[2]);
+      expect(menuLabels()).toEqual(['Read metadata']);
+      keydown(menuItems()[0], 'Escape');
+      toggle(selectBox('Guide.pdf'));
+      expect(nativeButton(selectionActions()[0]).textContent).toContain('Review selected files');
+      expect(q('.selection')).not.toBeNull();
+    });
+
+    it('keeps both declared command icons inside their desktop button in file, folder and tree contexts', async () => {
+      const command = (): SdFileExplorerCommand => ({
+        title: 'Dual icon command',
+        prefixIcon: 'info',
+        suffixIcon: 'help',
+        onClick: () => undefined,
+      });
+      await setup({ fileCommands: [command()], folderCommands: [command()] });
+      for (const [target, area] of [
+        [row('Guide.pdf'), '.commands'],
+        [row('Projects'), '.commands'],
+        [treeNode('Projects'), '.node-actions'],
+      ] as const) {
+        const action = actionButtons(target, area)[0];
+        const button = nativeButton(action);
+        const box = button.getBoundingClientRect();
+        const icons = Array.from(action.querySelectorAll('sd-icon'));
+        expect(icons.length).toBe(2);
+        expect(button.getAttribute('aria-label')).toBe('Dual icon command');
+        expect(action.querySelector('.c-title:not(.c-projected-label)')).toBeNull();
+        for (const icon of icons) {
+          const bounds = icon.getBoundingClientRect();
+          expect(bounds.left).withContext('icon left edge').toBeGreaterThanOrEqual(box.left);
+          expect(bounds.right).withContext('icon right edge').toBeLessThanOrEqual(box.right);
+        }
+      }
+    });
+
+    for (const language of ['vi', 'en'] as const) {
+      for (const view of ['list', 'grid'] as const) {
+        it(`renders named small Move icons in ${language} ${view}`, async () => {
+          i18n.setLanguage(language, { reload: false });
+          localStorage.removeItem(I18N_STORAGE_KEY);
+          await setup({ defaultView: view, move: { onMove: () => true } });
+          await settle();
+          const moves = qa('sd-button.move-file-button');
+          expect(moves.length).toBeGreaterThan(0);
+          for (const move of moves) {
+            const item = move.closest('.row, .card');
+            const name = item?.querySelector('.name, .card-name')?.textContent?.trim();
+            const button = nativeButton(move);
+            expect(button.getAttribute('aria-label')).toBe(t('move.to') + ': ' + name);
+            expect(button.classList.contains('c-square')).toBeTrue();
+            expect(button.classList.contains('c-sm')).toBeTrue();
+            expect(move.querySelector('.c-title:not(.c-projected-label)')).toBeNull();
+            expect(move.querySelector('sd-icon mat-icon')?.textContent?.trim()).toBe('drive_file_move');
+          }
+        });
+      }
+    }
+
     it('keeps file and folder commands text and secondary, flat or grouped, unless the consumer sets type or color', async () => {
       const click = () => undefined;
       const commands = (): SdFileExplorerCommand[] => [
@@ -2766,11 +2854,11 @@ describe('SdFileExplorer', () => {
       const box = node.getBoundingClientRect();
       const label = node.querySelector('.label') as HTMLElement;
       const buttons = actionButtons(node, '.node-actions');
-      expect(buttons.map(entry => entry.textContent?.replace(/\s+/g, ' ').trim())).toEqual([
-        jasmine.stringContaining('Đổi tên thư mục này'),
-        jasmine.stringContaining('Chia sẻ với cả nhóm dự án'),
-        jasmine.stringContaining('more_vert'),
-        jasmine.stringContaining('Tải toàn bộ thư mục về máy'),
+      expect(accessibleNames(buttons)).toEqual([
+        'Đổi tên thư mục này',
+        'Chia sẻ với cả nhóm dự án',
+        'More folder actions',
+        'Tải toàn bộ thư mục về máy',
       ]);
       for (const entry of buttons) {
         const button = nativeButton(entry).getBoundingClientRect();
