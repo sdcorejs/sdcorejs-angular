@@ -1,0 +1,42 @@
+:host {
+  display: block;
+  min-width: 0;
+  container-name: sd-editor;
+  container-type: inline-size;
+}
+.sd-editor-surface {
+  color: var(--sd-text);
+  background: var(--sd-surface);
+  border: 1px solid var(--sd-border);
+  border-radius: var(--sd-radius-4, 4px);
+}
+.sd-editor-content-host {
+  box-sizing: border-box;
+  overflow: auto;
+}
+.sd-editor-content-host:focus-within {
+  outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+  outline-offset: var(--sd-focus-ring-offset, 2px);
+}
+.sd-editor-escaped-preview {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 0;
+  padding: var(--sd-space-12, 12px);
+  font: inherit;
+}
+.sd-editor-import-warning {
+  padding: var(--sd-space-8, 8px) var(--sd-space-12, 12px);
+  color: var(--sd-status-warning-fg);
+  background: var(--sd-status-warning-bg);
+  border-top: 1px solid var(--sd-border);
+}
+.sd-editor-import-warning p {
+  margin-block: var(--sd-space-4, 4px);
+}
+.sd-editor-import-warning summary {
+  cursor: pointer;
+}
+.sd-editor-import-warning li {
+  overflow-wrap: anywhere;
+}

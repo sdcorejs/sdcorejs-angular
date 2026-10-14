@@ -1,0 +1,90 @@
+:host {
+  display: block;
+  position: relative;
+}
+.sd-editor-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sd-space-2, 2px);
+  padding: var(--sd-space-4, 4px);
+  background: var(--sd-surface);
+  border-bottom: 1px solid var(--sd-border);
+}
+.sd-editor-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: var(--sd-space-2, 2px);
+}
+.sd-editor-toolbar-group + .sd-editor-toolbar-group {
+  border-inline-start: 1px solid var(--sd-border);
+  padding-inline-start: var(--sd-space-4, 4px);
+}
+:host ::ng-deep .sd-editor-toolbar .sd-editor-icon-menu button.c-button.c-square {
+  width: 48px !important;
+}
+:host ::ng-deep .sd-editor-toolbar button.c-button[aria-pressed='true']:not(:disabled),
+:host ::ng-deep .sd-editor-active button.c-button:not(:disabled) {
+  background: var(--sd-primary-light) !important;
+  color: var(--sd-primary) !important;
+  box-shadow: inset 0 -2px var(--sd-primary);
+}
+:host ::ng-deep .sd-editor-mixed button.c-button:not(:disabled) {
+  border-bottom: 2px dashed var(--sd-primary);
+}
+.sd-editor-popup {
+  position: absolute;
+  inset-inline-end: 0;
+  top: 100%;
+  z-index: var(--sd-z-popover, 40);
+  box-sizing: border-box;
+  width: min(360px, 100%);
+  max-width: calc(100vw - 24px);
+  padding: var(--sd-space-12, 12px);
+  background: var(--sd-surface);
+  color: var(--sd-text);
+  border: 1px solid var(--sd-border-strong);
+  border-radius: var(--sd-radius-4, 4px);
+  box-shadow: var(--sd-shadow-sm);
+}
+.sd-editor-popup label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sd-space-6, 6px);
+}
+.sd-editor-popup input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 40px;
+  color: var(--sd-text);
+  background: var(--sd-surface);
+  border: 1px solid var(--sd-border-strong);
+  border-radius: var(--sd-radius-4, 4px);
+  padding: var(--sd-space-8, 8px);
+  font: inherit;
+}
+.sd-editor-popup input:focus-visible {
+  outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+  outline-offset: var(--sd-focus-ring-offset, 2px);
+}
+.sd-editor-popup-error {
+  color: var(--sd-status-error-fg);
+  margin-block: var(--sd-space-8, 8px);
+}
+.sd-editor-popup-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sd-space-4, 4px);
+  padding-top: var(--sd-space-8, 8px);
+}
+@container sd-editor (max-width: 620px) {
+  .sd-editor-secondary {
+    display: none;
+  }
+}
+@media (pointer: coarse) {
+  :host ::ng-deep .sd-editor-toolbar button.c-button[data-editor-control] {
+    min-width: 48px !important;
+    min-height: 48px;
+  }
+}

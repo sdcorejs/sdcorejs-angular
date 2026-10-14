@@ -1,103 +1,88 @@
-import { FileLoader } from 'ckeditor5';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdEditorImageUploadValidation } from '../../../models';
 
-// Dựa vào file để detect định dạng thay vì chỉ check tên
-// Tránh user gửi file không đúng, ví dụ file docx nhưng đổi tên thành ảnh docx.jpg
-const detectFormatFromBytes = async (file: File): Promise<string> => {
-  const buffer = await file.slice(0, 12).arrayBuffer();
-  const b = new Uint8Array(buffer);
+/** Structural local contract; no dependency on an editor vendor's file loader. */
+export interface SdEditorFileLoader {
+  file: Promise<File | null> | File | null;
+}
 
+const detectFormatFromBytes = async (file: File): Promise<string> => {
+  const b = new Uint8Array(await file.slice(0, 12).arrayBuffer());
   if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return 'jpg';
-  if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return 'png';
-  if (b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 && b[8] === 0x57) return 'webp';
-  if (b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x38) return 'gif';
-  if (b[4] === 0x66 && b[5] === 0x74 && b[6] === 0x79 && b[7] === 0x70) {
-    const brand = String.fromCharCode(b[8], b[9], b[10], b[11]);
-    if (brand === 'avif') return 'avif';
-    if (brand.startsWith('hei')) return 'heic';
+  if ([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every((v, i) => b[i] === v)) return 'png';
+  if (String.fromCharCode(...b.slice(0, 4)) === 'RIFF' && String.fromCharCode(...b.slice(8, 12)) === 'WEBP') return 'webp';
+  if (['GIF87a', 'GIF89a'].includes(String.fromCharCode(...b.slice(0, 6)))) return 'gif';
+  if (String.fromCharCode(...b.slice(4, 8)) === 'ftyp') {
+    const brand = String.fromCharCode(...b.slice(8, 12));
+    if (['avif', 'avis'].includes(brand)) return 'avif';
+    if (['heic', 'heix', 'hevc', 'hevx'].includes(brand)) return 'heic';
   }
   return '';
 };
 
-const getImageInfo = async (file: File): Promise<{ width: number; height: number; sizeMB: number; format: string }> => {
-  const sizeMB = file.size / (1024 * 1024);
-  const loadDimensions = new Promise<{ width: number; height: number }>(resolve => {
+const loadDimensions = (file: File, signal?: AbortSignal): Promise<{ width: number; height: number }> =>
+  new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new Error('Image validation cancelled'));
+      return;
+    }
     const url = URL.createObjectURL(file);
-    const img = new window.Image();
-    img.onload = () => {
+    const img = new Image();
+    const finish = (dimensions?: { width: number; height: number }) => {
+      clearTimeout(timer);
+      signal?.removeEventListener('abort', abort);
+      img.onload = img.onerror = null;
+      img.src = '';
       URL.revokeObjectURL(url);
-      resolve({ width: img.naturalWidth, height: img.naturalHeight });
+      if (dimensions) resolve(dimensions);
+      else reject(new Error('Image validation cancelled'));
     };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      resolve({ width: 0, height: 0 });
-    };
+    const abort = () => finish();
+    const timer = setTimeout(() => finish({ width: 0, height: 0 }), 15000);
+    signal?.addEventListener('abort', abort, { once: true });
+    img.onload = () => finish({ width: img.naturalWidth, height: img.naturalHeight });
+    img.onerror = () => finish({ width: 0, height: 0 });
     img.src = url;
   });
-  const [format, { width, height }] = await Promise.all([detectFormatFromBytes(file), loadDimensions]);
-  return { width, height, sizeMB, format };
-};
-
-// Helper: gọi i18n.t khi có service; nếu thiếu thì trả empty (Angular wrapper luôn truyền i18n)
-const tr = (i18n: I18nService | undefined, key: string, params: Record<string, unknown>): string => i18n?.t(key, params as any) ?? '';
-
-const validateImageFile = async (
-  file: File,
-  validation: SdEditorImageUploadValidation,
-  onWarning?: (message: string) => void,
-  i18n?: I18nService
-): Promise<boolean> => {
-  const { width, height, sizeMB, format } = await getImageInfo(file);
-
-  if (validation.allowedFormats !== undefined) {
-    const normalizedFormats = validation.allowedFormats.map((f: string) => {
-      const fmt = f.replace(/^\./, '').toLowerCase();
-      return fmt === 'jpeg' ? 'jpg' : fmt;
-    });
-    if (!normalizedFormats.includes(format)) {
-      const allowed = normalizedFormats.join(', ');
-      onWarning?.(tr(i18n, 'core.component.editor.image.invalid-format', { format, allowed }));
-      return false;
-    }
-  }
-  if (validation.maxSizeMB !== undefined && sizeMB > validation.maxSizeMB) {
-    const sizeMBFixed = sizeMB.toFixed(2);
-    onWarning?.(tr(i18n, 'core.component.editor.image.size-exceeded', { sizeMB: sizeMBFixed, maxSizeMB: validation.maxSizeMB }));
-    return false;
-  }
-  if (validation.minWidth !== undefined && width < validation.minWidth) {
-    onWarning?.(tr(i18n, 'core.component.editor.image.min-width', { width, min: validation.minWidth }));
-    return false;
-  }
-  if (validation.minHeight !== undefined && height < validation.minHeight) {
-    onWarning?.(tr(i18n, 'core.component.editor.image.min-height', { height, min: validation.minHeight }));
-    return false;
-  }
-  if (validation.maxWidth !== undefined && width > validation.maxWidth) {
-    onWarning?.(tr(i18n, 'core.component.editor.image.max-width', { width, max: validation.maxWidth }));
-    return false;
-  }
-  if (validation.maxHeight !== undefined && height > validation.maxHeight) {
-    onWarning?.(tr(i18n, 'core.component.editor.image.max-height', { height, max: validation.maxHeight }));
-    return false;
-  }
-  return true;
-};
 
 export const validateAndGetFile = async (
-  loader: FileLoader,
-  validation?: SdEditorImageUploadValidation,
+  loader: SdEditorFileLoader,
+  validation: SdEditorImageUploadValidation = {},
   onWarning?: (message: string) => void,
-  i18n?: I18nService
+  i18n?: I18nService,
+  signal?: AbortSignal
 ): Promise<File> => {
-  const file = (await loader.file) as File | null;
-  if (!file) {
-    throw new Error('No file found');
+  const file = await loader.file;
+  if (!file) throw new Error('No file found');
+  const warn = (key: string, params: Record<string, unknown>) => onWarning?.(i18n?.t(key, params as any) ?? '');
+  const format = await detectFormatFromBytes(file);
+  const allowed = validation.allowedFormats?.map(value => {
+    const normalized = value.replace(/^\./, '').toLowerCase();
+    return normalized === 'jpeg' ? 'jpg' : normalized;
+  });
+  if (!format || (allowed && !allowed.includes(format))) {
+    warn('core.component.editor.image.invalid-format', { format, allowed: allowed?.join(', ') ?? 'jpg, png, webp, gif, avif, heic' });
+    throw new Error('Image validation failed');
   }
-  if (validation) {
-    const valid = await validateImageFile(file, validation, onWarning, i18n);
-    if (!valid) {
+  const sizeMB = file.size / (1024 * 1024);
+  if (validation.maxSizeMB !== undefined && sizeMB > validation.maxSizeMB) {
+    warn('core.component.editor.image.size-exceeded', { sizeMB: sizeMB.toFixed(2), maxSizeMB: validation.maxSizeMB });
+    throw new Error('Image validation failed');
+  }
+  const { width, height } = await loadDimensions(file, signal);
+  if (!width || !height) {
+    warn('core.component.editor.image.invalid-format', { format, allowed: allowed?.join(', ') ?? format });
+    throw new Error('Image validation failed');
+  }
+  const checks: [number | undefined, number, boolean, string, string][] = [
+    [validation.minWidth, width, true, 'min-width', 'min'],
+    [validation.minHeight, height, true, 'min-height', 'min'],
+    [validation.maxWidth, width, false, 'max-width', 'max'],
+    [validation.maxHeight, height, false, 'max-height', 'max'],
+  ];
+  for (const [limit, actual, minimum, key, param] of checks) {
+    if (limit !== undefined && (minimum ? actual < limit : actual > limit)) {
+      warn(`core.component.editor.image.${key}`, { width, height, [param]: limit });
       throw new Error('Image validation failed');
     }
   }

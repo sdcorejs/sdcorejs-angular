@@ -150,5 +150,10 @@ jobs:
           --include=projects/sdcorejs-angular/components/button/**/*.spec.ts
           --include=projects/sdcorejs-angular/components/tab/**/*.spec.ts
           --include=projects/sdcorejs-angular/components/stepper/**/*.spec.ts
+          --include=projects/sdcorejs-angular/components/window/**/*.spec.ts
+          --include=projects/sdcorejs-angular/components/modal-resizable/**/*.spec.ts
+          --include=projects/sdcorejs-angular/components/editor-engine/**/*.spec.ts
+          --include=projects/sdcorejs-angular/components/editor/**/*.spec.ts
+          --include=projects/sdcorejs-angular/components/mini-editor/**/*.spec.ts
           --include=projects/sdcorejs-angular/services/confirm/**/*.spec.ts
         working-directory: versions/${{ matrix.version }}

@@ -5,6 +5,23 @@ describe('editor image style utilities', () => {
     expect(countTextLength('')).toBe(0);
     expect(countTextLength('<p>Hello <strong>world</strong></p><img alt="ignored"><figure>caption</figure>')).toBe(11);
   });
+  it('matches DOMParser UTF-16 text counts without a browser for entities, quoted attributes and nested figures (R3 RED)', () => {
+    const corpus = [
+      '<p title="a > b">One &copy; &NotEqualTilde; &acE; &#x1f600; &#65; &notin;</p>',
+      '<html><head><title>not body text</title></head><body>Before<figure>outer<figure>nested</figure>also excluded</figure>After<img alt="not counted"></body></html>',
+      '<p>Before<!--comment--><template>not in body textContent</template><span>After</span></p>',
+      '<table>fostered<tr><td>A&amp;B</td></tr></table><p data-info="quoted > and < text">😀 &frac12;</p>',
+      '<p>&nbsp;&shy;&CounterClockwiseContourIntegral; &#x110000; &#0;</p>',
+    ];
+    const expected = corpus.map(html => countTextLength(html));
+    const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'DOMParser')!;
+    Object.defineProperty(globalThis, 'DOMParser', { configurable: true, writable: true, value: undefined });
+    try {
+      corpus.forEach((html, index) => expect(countTextLength(html)).withContext(html).toBe(expected[index]));
+    } finally {
+      Object.defineProperty(globalThis, 'DOMParser', descriptor);
+    }
+  });
 
   it('converts float alignment to classes and preserves unrelated styles', () => {
     const html = imageInlineStylesToClasses(

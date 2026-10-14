@@ -159,8 +159,10 @@ export type SdFileExplorerState<T> = boolean | ((context: T) => boolean);
 /** Appearance and state shared by every explorer action, flat button or group. */
 export interface SdFileExplorerActionAppearance<T> {
   /**
-   * Visible label. Without it the button is icon-only and `tooltip` is its accessible name. A menu item shows its
-   * `title`, or its `tooltip` when it has no title. Every definition needs a `title` or a `tooltip`.
+   * Label of selector buttons, label-only commands, menu items and drawer entries. File/folder command buttons with
+   * icons show their declared icons and use `tooltip ?? title` as their tooltip and accessible name. Without a title, a menu
+   * item or drawer entry shows its tooltip. A command without an icon shows `title ?? tooltip`. Every definition
+   * needs a `title` or a `tooltip`.
    */
   title?: string;
   /** Tooltip, and the accessible name of an icon-only button. */

@@ -1,0 +1,173 @@
+// Shared content styling for both Core editor toolbars. Styling never defines the HTML schema.
+sd-editor-surface .tiptap,
+sd-editor-surface .sd-editor-import-preview {
+  box-sizing: border-box;
+  padding: 24px;
+  color: var(--sd-text);
+  font-family: inherit;
+  font-size: var(--sd-font-size-14, 14px);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  outline: none;
+
+  > :first-child {
+    margin-top: 0;
+  }
+  > :last-child {
+    margin-bottom: 0;
+  }
+  p {
+    margin: 0 0 0.75em;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    line-height: 1.3;
+    margin: 1em 0 0.5em;
+  }
+  ul,
+  ol {
+    padding-inline-start: 1.5em;
+  }
+  li > p {
+    margin-bottom: 0.25em;
+  }
+  blockquote {
+    margin-inline: 0;
+    padding-inline-start: 1em;
+    border-inline-start: 3px solid var(--sd-border);
+  }
+  pre {
+    white-space: pre-wrap;
+    padding: 0.75em;
+    border-radius: 4px;
+    background: var(--sd-surface-muted);
+  }
+  code {
+    font-family: monospace;
+  }
+  a {
+    color: var(--sd-primary);
+    text-decoration: underline;
+  }
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+  figure {
+    margin: 1em 0;
+    max-width: 100%;
+  }
+  figure.image {
+    margin-inline: auto;
+  }
+  figure.image img {
+    display: block;
+    width: 100%;
+  }
+  figure.image-style-align-left {
+    float: left;
+    margin-inline: 0 1em;
+  }
+  figure.image-style-align-right {
+    float: right;
+    margin-inline: 1em 0;
+  }
+  figure.image-style-block-align-left {
+    margin-inline: 0 auto;
+  }
+  figure.image-style-block-align-right {
+    margin-inline: auto 0;
+  }
+  figcaption {
+    font-size: var(--sd-font-size-12, 12px);
+    color: var(--sd-text-muted);
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: fixed;
+  }
+  th,
+  td {
+    border: 1px solid var(--sd-border);
+    padding: 0.5em;
+    vertical-align: top;
+    min-width: 1em;
+  }
+  th {
+    background: var(--sd-surface-muted);
+    font-weight: 600;
+  }
+  .tableWrapper {
+    overflow-x: auto;
+  }
+  .selectedCell {
+    background: color-mix(in srgb, var(--sd-primary) 12%, transparent);
+  }
+  .ProseMirror-selectednode {
+    outline: 2px solid var(--sd-focus-ring-color, var(--sd-primary));
+  }
+  .ck-custom-mention,
+  [data-type='mention'],
+  [data-id][data-marker] {
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--sd-primary) 10%, transparent);
+    color: var(--sd-primary);
+  }
+  p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    color: var(--sd-text-muted);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }
+}
+
+sd-editor-surface[data-variant='compact'] .tiptap,
+sd-editor-surface[data-variant='compact'] .sd-editor-import-preview {
+  padding: 12px;
+}
+
+@media (max-width: 600px) {
+  sd-editor-surface .tiptap,
+  sd-editor-surface .sd-editor-import-preview {
+    padding: 12px;
+  }
+}
+
+.sd-editor-mention-list {
+  z-index: 1000;
+  min-width: 160px;
+  max-width: min(320px, calc(100vw - 24px));
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid var(--sd-border);
+  border-radius: 6px;
+  background: var(--sd-surface);
+  color: var(--sd-text);
+  padding: 4px;
+
+  [role='option'] {
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+  }
+
+  [role='option'][aria-selected='true'] {
+    background: color-mix(in srgb, var(--sd-primary) 12%, var(--sd-surface));
+  }
+}
+
+@media (pointer: coarse) {
+  .sd-editor-mention-list [role='option'] {
+    min-height: 48px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+  }
+}

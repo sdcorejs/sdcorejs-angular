@@ -1,2 +1,20 @@
-<sd-ckeditor-styles />
-<ckeditor class="sd-mini-editor" [editor]="Editor" [config]="editorConfig" [disabled]="disabled()" (ready)="onReady($event)"> </ckeditor>
+<sd-editor-surface
+  class="sd-mini-editor"
+  variant="compact"
+  [content]="surfaceContent()"
+  [format]="option?.outputFormat ?? 'html'"
+  [editable]="!effectiveDisabled()"
+  [placeholder]="option?.placeholder"
+  [disabled]="effectiveDisabled()"
+  [height]="option?.height"
+  [maxHeight]="option?.maxHeight"
+  [mentionFeeds]="option?.enableMention ? option?.mentionConfig?.feeds : undefined"
+  (engineReady)="onEngineReady($event)"
+  (sourceChange)="onSourceChange($event)"
+  (formatChange)="onFormatChange($event)"
+  (compositionChange)="onCompositionChange($event)"
+  (change)="onSurfaceChange($event)"
+  (focus)="onSurfaceFocus($event)"
+  (blur)="onSurfaceBlur($event)"
+  (diagnostics)="onDiagnostics($event)"
+  (mentionSelected)="onMentionSelected($event)" />

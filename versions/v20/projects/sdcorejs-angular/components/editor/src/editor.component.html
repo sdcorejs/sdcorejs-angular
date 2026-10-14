@@ -1,4 +1,3 @@
-<sd-ckeditor-styles />
 @let _label = label();
 @let _helperText = helperText();
 @let _hideInlineError = hideInlineError();
@@ -21,7 +20,27 @@
   [attr.data-autoId]="autoId()"
   [attr.data-disabled]="dataDisabled()"
   [attr.data-empty]="dataEmpty()">
-  <ckeditor [editor]="Editor" [config]="editorConfig()" [disabled]="formControl.disabled" (ready)="onReady($event)"></ckeditor>
+  <sd-editor-surface
+    variant="full"
+    [content]="surfaceContent()"
+    [editable]="!formControl.disabled && !readonly()"
+    [disabled]="formControl.disabled"
+    [readonly]="readonly()"
+    [placeholder]="placeholder()"
+    [height]="height()"
+    [maxHeight]="maxHeight()"
+    [uploadEnabled]="uploadEnabled()"
+    [label]="label()"
+    [describedBy]="helperText() || (_errorMessage && formControl.touched) ? descriptionId() : undefined"
+    [invalid]="formControl.invalid && formControl.touched"
+    (engineReady)="onEngineReady($event)"
+    (sourceChange)="onSourceChange()"
+    (change)="onSurfaceChange($event)"
+    (compositionChange)="onCompositionChange($event)"
+    (focus)="onSurfaceFocus($event)"
+    (blur)="onSurfaceBlur($event)"
+    (diagnostics)="onDiagnostics($event)"
+    (filesSelected)="onFilesSelected($event)" />
 
   @if (_showCounter) {
     <div class="sd-editor-counter-row">
@@ -33,7 +52,7 @@
     <sd-icon class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
   }
   @if (_hideInlineError && _errorMessage && formControl.touched) {
-    <span class="sd-visually-hidden">{{ _errorMessage }}</span>
+    <span class="sd-visually-hidden">{{ _errorMessage }}</span>
   }
 </div>
 
@@ -42,3 +61,7 @@
     <mat-error>{{ _errorMessage }}</mat-error>
   }
 </div>
+
+@if (_helperText || (_errorMessage && formControl.touched)) {
+  <span class="sd-visually-hidden" [id]="descriptionId()">{{ _helperText }} {{ formControl.touched ? _errorMessage : '' }}</span>
+}

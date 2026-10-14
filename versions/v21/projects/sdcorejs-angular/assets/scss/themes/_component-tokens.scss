@@ -113,10 +113,11 @@ $component-tokens: (
   'history-meta': (#757575, #a4a6b0),
   'history-meta-strong': (#000000, #e3e2e6),
   // modal-resizable
-  'modal-resizable-bg': (#ffffff, #1d1f23),
-  'modal-resizable-title': (#212121, #e3e2e6),
-  'modal-resizable-header-bg': (#5d6165, #3a3d44),
-  'modal-resizable-divider': (#dde0e5, #44474f),
+  'modal-resizable-bg': (var(--sd-overlay-surface), var(--sd-overlay-surface)),
+  'modal-resizable-title': (var(--sd-text), var(--sd-text)),
+  'modal-resizable-header-bg': (var(--sd-overlay-surface), var(--sd-overlay-surface)),
+  'modal-resizable-divider': (var(--sd-border), var(--sd-border)),
+  // Canonical --sd-window-* hooks stay unset; CSS fallbacks must resolve scoped legacy overrides locally.
   'modal-resizable-focus-ring-on-dark': (#ffffff, #ffffff),
   // org-chart
   'org-chart-line': (#d9e2ef, #3c4452),

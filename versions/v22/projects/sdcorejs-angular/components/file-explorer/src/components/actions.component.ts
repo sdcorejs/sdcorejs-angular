@@ -29,14 +29,17 @@ import type { SdFileExplorerAction, SdFileExplorerActionGroupDefinition, SdFileE
     @let _size = size();
     @for (entry of entries(); track entry.key) {
       @let _entryAutoId = _autoId ? _autoId + '-' + entry.key : null;
+      @let _iconOnly = iconOnlyCommands() && !!(entry.prefixIcon || entry.suffixIcon);
+      @let _title = iconOnlyCommands() ? (entry.title ?? entry.tooltip) : entry.title;
       @if (entry.kind === 'leaf') {
         <sd-button
           class="action"
+          [class.action--dual-icon]="_iconOnly && !!entry.prefixIcon && !!entry.suffixIcon"
           [type]="entry.type"
           [color]="entry.color"
           [size]="_size"
-          [title]="entry.title"
-          [tooltip]="entry.tooltip"
+          [title]="_iconOnly ? undefined : _title"
+          [tooltip]="_iconOnly ? (entry.tooltip ?? entry.title) : entry.tooltip"
           [prefixIcon]="entry.prefixIcon"
           [suffixIcon]="entry.suffixIcon"
           [fontSet]="entry.fontSet"
@@ -47,11 +50,12 @@ import type { SdFileExplorerAction, SdFileExplorerActionGroupDefinition, SdFileE
       } @else {
         <sd-button
           class="action action--group"
+          [class.action--dual-icon]="_iconOnly && !!entry.prefixIcon && !!entry.suffixIcon"
           [type]="entry.type"
           [color]="entry.color"
           [size]="_size"
-          [title]="entry.title"
-          [tooltip]="entry.tooltip"
+          [title]="_iconOnly ? undefined : _title"
+          [tooltip]="_iconOnly ? (entry.tooltip ?? entry.title) : entry.tooltip"
           [prefixIcon]="entry.prefixIcon"
           [suffixIcon]="entry.suffixIcon"
           [fontSet]="entry.fontSet"
@@ -115,6 +119,8 @@ export class SdFileExplorerActions<T> {
       this.source()
     )
   );
+  // why: lệnh theo item cần gọn; giữ definition gốc để menu/drawer vẫn có nhãn và selector vẫn có title.
+  protected readonly iconOnlyCommands = computed(() => this.source() === 'fileCommands' || this.source() === 'folderCommands');
   protected readonly open = computed(() => this.buttons().some(button => button.popover.opened()));
   protected readonly busy = computed(() => sdFileExplorerActionsBusy(this.entries()));
   protected readonly loadingLabel = computed(() => this.#i18n.t('core.component.file-explorer.action-loading'));

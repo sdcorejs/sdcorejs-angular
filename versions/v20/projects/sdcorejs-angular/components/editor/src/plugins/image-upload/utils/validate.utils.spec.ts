@@ -1,4 +1,4 @@
-import { FileLoader } from 'ckeditor5';
+import { SdEditorFileLoader } from './validate.utils';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdEditorImageUploadValidation } from '../../../models';
 import { validateAndGetFile } from './validate.utils';
@@ -9,8 +9,8 @@ function imageFile(bytes: number[], size = bytes.length): File {
   return new File([content], 'upload.bin');
 }
 
-function loaderFor(file: File | null): FileLoader {
-  return { file: Promise.resolve(file) } as FileLoader;
+function loaderFor(file: File | null): SdEditorFileLoader {
+  return { file: Promise.resolve(file) } as SdEditorFileLoader;
 }
 
 describe('editor image upload validation', () => {
@@ -38,9 +38,9 @@ describe('editor image upload validation', () => {
   it('accepts detected JPG, PNG, WebP, GIF, AVIF, and HEIC signatures', async () => {
     const cases: [number[], string][] = [
       [[0xff, 0xd8, 0xff], 'jpeg'],
-      [[0x89, 0x50, 0x4e, 0x47], '.png'],
-      [[0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57], 'webp'],
-      [[0x47, 0x49, 0x46, 0x38], 'gif'],
+      [[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a], '.png'],
+      [[0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50], 'webp'],
+      [[0x47, 0x49, 0x46, 0x38, 0x39, 0x61], 'gif'],
       [[0, 0, 0, 0, 0x66, 0x74, 0x79, 0x70, 0x61, 0x76, 0x69, 0x66], 'avif'],
       [[0, 0, 0, 0, 0x66, 0x74, 0x79, 0x70, 0x68, 0x65, 0x69, 0x63], 'heic'],
     ];
