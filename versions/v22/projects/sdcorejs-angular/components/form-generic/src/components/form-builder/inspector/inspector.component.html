@@ -697,6 +697,25 @@
               </div>
             }
 
+            @if (_type === 'time') {
+              <div class="ins-grid">
+                <sd-time
+                  size="sm"
+                  hideInlineError
+                  clearable
+                  [label]="'core.component.form-builder.min' | sdTranslate"
+                  [model]="timeLimitValue(_validation.min)"
+                  (modelChange)="setValidation('min', $event || null, true)"></sd-time>
+                <sd-time
+                  size="sm"
+                  hideInlineError
+                  clearable
+                  [label]="'core.component.form-builder.max' | sdTranslate"
+                  [model]="timeLimitValue(_validation.max)"
+                  (modelChange)="setValidation('max', $event || null, true)"></sd-time>
+              </div>
+            }
+
             @if (supportsLength()) {
               <div class="ins-grid">
                 <sd-input-number

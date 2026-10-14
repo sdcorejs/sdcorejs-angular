@@ -1,0 +1,38 @@
+<div class="d-flex flex-column gap-16 py-16">
+  <sd-segmented
+    autoId="generic-form-action"
+    [ariaLabel]="'core.module.generic.configuration.tab.form' | sdTranslate"
+    [items]="actionItems()"
+    [model]="action()"
+    (modelChange)="selectValue($event)"></sd-segmented>
+  <sd-input
+    size="sm"
+    labelPlacement="top"
+    hideInlineError
+    [label]="'core.module.generic.field.title' | sdTranslate"
+    [model]="section()?.title"
+    (modelChange)="setTitle($event)"></sd-input>
+  @if (action() !== 'detail') {
+    <sd-checkbox
+      [label]="'core.module.generic.configuration.form.same-as-detail' | sdTranslate"
+      [model]="sameAsDetail()"
+      (modelChange)="setSameAsDetail($event)"></sd-checkbox>
+  }
+  @if (!sameAsDetail()) {
+    @if (missing().length) {
+      <div class="d-flex flex-column gap-8" data-autoId="generic-form-missing">
+        <span class="T14M">{{ 'core.module.generic.configuration.form.properties' | sdTranslate }}</span>
+        <div class="d-flex gap-8 flex-wrap">
+          @for (property of missing(); track property.key) {
+            <sd-button
+              [attr.data-autoId]="'generic-form-add-' + property.key"
+              prefixIcon="add"
+              [title]="'core.module.generic.configuration.form.add' | sdTranslate: { label: property.label }"
+              (click)="add(property)"></sd-button>
+          }
+        </div>
+      </div>
+    }
+    <sd-form-builder [schema]="layout()" (schemaChange)="setLayout($event)"></sd-form-builder>
+  }
+</div>
