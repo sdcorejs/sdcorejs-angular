@@ -1,0 +1,297 @@
+<div class="sd-editor-toolbar" role="toolbar" tabindex="-1" [attr.aria-label]="t('tools')" (keydown)="navigate($event)">
+  <div class="sd-editor-toolbar-group">
+    @for (mark of marks; track mark) {
+      <sd-button
+        [sdEditorButton]="mark"
+        [prefixIcon]="icons[mark]"
+        fontSet="material-icons-outlined"
+        size="md"
+        [tooltip]="t(mark)"
+        [sdEditorLabel]="t(mark)"
+        type="text"
+        color="secondary"
+        [class.sd-editor-active]="active(mark) === true"
+        [class.sd-editor-mixed]="active(mark) === 'mixed'"
+        [sdEditorPressed]="active(mark)"
+        [sdEditorTabIndex]="focusedId() === mark ? 0 : -1"
+        [disabled]="!can(mark)"
+        (sdEditorBeforeFocus)="capture()"
+        (sdEditorFocused)="rememberFocus(mark)"
+        (sdEditorActivate)="execute(mark)" />
+    }
+  </div>
+  @if (variant() === 'full') {
+    <div class="sd-editor-toolbar-group sd-editor-secondary">
+      <sd-button
+        sdEditorButton="heading"
+        [title]="t('heading')"
+        [tooltip]="t('heading')"
+        [sdEditorLabel]="t('heading')"
+        type="text"
+        [disabled]="!available()"
+        [sdEditorTabIndex]="focusedId() === 'heading' ? 0 : -1"
+        (sdEditorBeforeFocus)="capture()"
+        (sdEditorFocused)="rememberFocus('heading')">
+        <sd-button-item [disabled]="!can('paragraph')" (click)="execute('paragraph')">{{ t('paragraph') }}</sd-button-item>
+        @for (level of levels; track level) {
+          <sd-button-item [disabled]="!can('heading', level)" (click)="execute('heading', level)">{{
+            t('heading-level', { level })
+          }}</sd-button-item>
+        }
+      </sd-button>
+      <sd-button
+        sdEditorButton="font"
+        [title]="t('font')"
+        [tooltip]="choiceTooltip('font', 'fontFamily')"
+        [sdEditorLabel]="t('font')"
+        type="text"
+        [disabled]="!canStyle('font')"
+        [sdEditorTabIndex]="focusedId() === 'font' ? 0 : -1"
+        (sdEditorBeforeFocus)="capture()"
+        (sdEditorFocused)="rememberFocus('font')"
+        (sdEditorActivate)="open('font', 'font')" />
+      <sd-button
+        sdEditorButton="size"
+        [title]="choiceValue('fontSize') || t('size')"
+        [sdEditorLabel]="t('size')"
+        [tooltip]="choiceTooltip('size', 'fontSize')"
+        type="text"
+        [disabled]="!canSize('14')"
+        [sdEditorTabIndex]="focusedId() === 'size' ? 0 : -1"
+        (sdEditorBeforeFocus)="capture()"
+        (sdEditorFocused)="rememberFocus('size')">
+        @for (size of sizes; track size) {
+          <sd-button-item [disabled]="!canSize(size)" (click)="setSize(size)">{{ size }}px</sd-button-item>
+        }
+      </sd-button>
+      <sd-button
+        sdEditorButton="color"
+        prefixIcon="format_color_text"
+        fontSet="material-icons-outlined"
+        size="md"
+        color="secondary"
+        [tooltip]="choiceTooltip('color', 'color')"
+        [sdEditorLabel]="t('color')"
+        type="text"
+        [disabled]="!canStyle('color')"
+        [sdEditorTabIndex]="focusedId() === 'color' ? 0 : -1"
+        (sdEditorBeforeFocus)="capture()"
+        (sdEditorFocused)="rememberFocus('color')"
+        (sdEditorActivate)="open('color', 'color')" />
+      <sd-button
+        sdEditorButton="alignment"
+        class="sd-editor-icon-menu"
+        [prefixIcon]="alignmentIcon()"
+        fontSet="material-icons-outlined"
+        size="md"
+        color="secondary"
+        [tooltip]="t('alignment')"
+        [sdEditorLabel]="t('alignment')"
+        type="text"
+        [disabled]="!available()"
+        [sdEditorTabIndex]="focusedId() === 'alignment' ? 0 : -1"
+        (sdEditorBeforeFocus)="capture()"
+        (sdEditorFocused)="rememberFocus('alignment')">
+        @for (alignment of alignments; track alignment) {
+          <sd-button-item
+            [prefixIcon]="icons[alignment]"
+            fontSet="material-icons-outlined"
+            [disabled]="!can(alignment)"
+            (click)="execute(alignment)"
+            >{{ t(alignment) }}</sd-button-item
+          >
+        }
+      </sd-button>
+    </div>
+  }
+  <div class="sd-editor-toolbar-group sd-editor-secondary">
+    <sd-button
+      sdEditorButton="bullet"
+      [prefixIcon]="icons.bullet"
+      fontSet="material-icons-outlined"
+      size="md"
+      color="secondary"
+      [tooltip]="t('bullet')"
+      [sdEditorLabel]="t('bullet')"
+      type="text"
+      [disabled]="!can('bullet')"
+      [sdEditorPressed]="active('bullet')"
+      [sdEditorTabIndex]="focusedId() === 'bullet' ? 0 : -1"
+      (sdEditorBeforeFocus)="capture()"
+      (sdEditorFocused)="rememberFocus('bullet')"
+      (sdEditorActivate)="execute('bullet')" />
+    <sd-button
+      sdEditorButton="ordered"
+      [prefixIcon]="icons.ordered"
+      fontSet="material-icons-outlined"
+      size="md"
+      color="secondary"
+      [tooltip]="t('ordered')"
+      [sdEditorLabel]="t('ordered')"
+      type="text"
+      [disabled]="!can('ordered')"
+      [sdEditorPressed]="active('ordered')"
+      [sdEditorTabIndex]="focusedId() === 'ordered' ? 0 : -1"
+      (sdEditorBeforeFocus)="capture()"
+      (sdEditorFocused)="rememberFocus('ordered')"
+      (sdEditorActivate)="execute('ordered')" />
+  </div>
+  <sd-button
+    sdEditorButton="link"
+    prefixIcon="link"
+    fontSet="material-icons-outlined"
+    size="md"
+    color="secondary"
+    [tooltip]="t('link')"
+    [sdEditorLabel]="t('link')"
+    type="text"
+    [disabled]="!canStyle('link')"
+    [sdEditorTabIndex]="focusedId() === 'link' ? 0 : -1"
+    (sdEditorBeforeFocus)="capture()"
+    (sdEditorFocused)="rememberFocus('link')"
+    (sdEditorActivate)="open('link', 'link')" />
+  @if (variant() === 'full') {
+    <sd-button
+      sdEditorButton="table"
+      class="sd-editor-secondary sd-editor-icon-menu"
+      prefixIcon="table_chart"
+      fontSet="material-icons-outlined"
+      size="md"
+      color="secondary"
+      [tooltip]="t('table')"
+      [sdEditorLabel]="t('table')"
+      type="text"
+      [disabled]="!available()"
+      [sdEditorTabIndex]="focusedId() === 'table' ? 0 : -1"
+      (sdEditorBeforeFocus)="capture()"
+      (sdEditorFocused)="rememberFocus('table')">
+      @for (action of tableActions; track action) {
+        <sd-button-item [disabled]="!can(action)" (click)="execute(action)">{{ t(action) }}</sd-button-item>
+      }
+    </sd-button>
+    @if (uploadEnabled()) {
+      <sd-button
+        sdEditorButton="image"
+        class="sd-editor-secondary"
+        prefixIcon="image"
+        fontSet="material-icons-outlined"
+        size="md"
+        color="secondary"
+        [tooltip]="t('image')"
+        [sdEditorLabel]="t('image')"
+        type="text"
+        [disabled]="!available()"
+        [sdEditorTabIndex]="focusedId() === 'image' ? 0 : -1"
+        (sdEditorBeforeFocus)="capture()"
+        (sdEditorFocused)="rememberFocus('image')"
+        (sdEditorActivate)="chooseFiles()" />
+    }
+  }
+  <sd-button
+    sdEditorButton="more"
+    class="sd-editor-icon-menu"
+    prefixIcon="more_horiz"
+    fontSet="material-icons-outlined"
+    size="md"
+    color="secondary"
+    [tooltip]="t('more')"
+    [sdEditorLabel]="t('more')"
+    type="text"
+    [disabled]="!available()"
+    [sdEditorTabIndex]="focusedId() === 'more' ? 0 : -1"
+    (sdEditorBeforeFocus)="capture()"
+    (sdEditorFocused)="rememberFocus('more')">
+    <sd-button-item [prefixIcon]="icons.undo" fontSet="material-icons-outlined" [disabled]="!can('undo')" (click)="execute('undo')">{{
+      t('undo')
+    }}</sd-button-item>
+    <sd-button-item [prefixIcon]="icons.redo" fontSet="material-icons-outlined" [disabled]="!can('redo')" (click)="execute('redo')">{{
+      t('redo')
+    }}</sd-button-item>
+    <sd-button-item-divider />
+    @for (mark of additionalMarks; track mark) {
+      <sd-button-item [prefixIcon]="icons[mark]" fontSet="material-icons-outlined" [disabled]="!can(mark)" (click)="execute(mark)">{{
+        t(mark)
+      }}</sd-button-item>
+    }
+    <sd-button-item-divider />
+    <sd-button-item [prefixIcon]="icons.bullet" fontSet="material-icons-outlined" [disabled]="!can('bullet')" (click)="execute('bullet')">{{
+      t('bullet')
+    }}</sd-button-item>
+    <sd-button-item
+      [prefixIcon]="icons.ordered"
+      fontSet="material-icons-outlined"
+      [disabled]="!can('ordered')"
+      (click)="execute('ordered')"
+      >{{ t('ordered') }}</sd-button-item
+    >
+    <sd-button-item [disabled]="!can('paragraph')" (click)="execute('paragraph')">{{ t('paragraph') }}</sd-button-item>
+    @for (level of levels; track level) {
+      <sd-button-item [disabled]="!can('heading', level)" (click)="execute('heading', level)">{{
+        t('heading-level', { level })
+      }}</sd-button-item>
+    }
+    <sd-button-item-divider />
+    <sd-button-item [disabled]="!canStyle('color')" (click)="open('color', 'more')">{{ t('color') }}</sd-button-item>
+    <sd-button-item [disabled]="!canStyle('font')" (click)="open('font', 'more')">{{ t('font') }}</sd-button-item>
+    @for (size of sizes; track size) {
+      <sd-button-item [disabled]="!canSize(size)" (click)="setSize(size)">{{ t('size') }} {{ size }}px</sd-button-item>
+    }
+    @for (alignment of alignments; track alignment) {
+      <sd-button-item
+        [prefixIcon]="icons[alignment]"
+        fontSet="material-icons-outlined"
+        [disabled]="!can(alignment)"
+        (click)="execute(alignment)"
+        >{{ t(alignment) }}</sd-button-item
+      >
+    }
+    <sd-button-item-divider />
+    @for (action of tableActions; track action) {
+      <sd-button-item [disabled]="!can(action)" (click)="execute(action)">{{ t(action) }}</sd-button-item>
+    }
+    @if (selectedImage()) {
+      <sd-button-item-divider [title]="t('image-size')" />
+      @for (width of imageWidths; track width) {
+        <sd-button-item (click)="resizeImage(width)">{{ width }}</sd-button-item>
+      }
+      <sd-button-item (click)="resizeImage(null)">{{ t('image-original') }}</sd-button-item>
+      <sd-button-item (click)="alignImage('left')">{{ t('image-left') }}</sd-button-item>
+      <sd-button-item (click)="alignImage('center')">{{ t('image-center') }}</sd-button-item>
+      <sd-button-item (click)="alignImage('right')">{{ t('image-right') }}</sd-button-item>
+    }
+    @if (uploadEnabled()) {
+      <sd-button-item prefixIcon="image" fontSet="material-icons-outlined" (click)="chooseFiles()">{{ t('image') }}</sd-button-item>
+    }
+  </sd-button>
+</div>
+
+@if (popup(); as kind) {
+  <form
+    #popup
+    class="sd-editor-popup"
+    role="dialog"
+    novalidate
+    [attr.aria-label]="t(kind)"
+    (submit)="apply($event)"
+    (keydown)="popupKeydown($event)">
+    <label>
+      <span>{{ t(kind === 'link' ? 'link-address' : kind) }}</span>
+      <input
+        #popupField
+        [type]="kind === 'link' ? 'url' : 'text'"
+        [value]="popupValue()"
+        [attr.aria-invalid]="!!popupError()"
+        [attr.aria-describedby]="popupError() ? popupErrorId : null"
+        (input)="popupValue.set($any($event.target).value); popupError.set('')"
+        (compositionstart)="popupComposing.set(true)"
+        (compositionend)="popupComposing.set(false)" />
+    </label>
+    @if (popupError()) {
+      <p class="sd-editor-popup-error" [id]="popupErrorId" role="status">{{ popupError() }}</p>
+    }
+    <div class="sd-editor-popup-actions">
+      <sd-button [title]="cancelLabel()" type="text" (click)="close(true)" />
+      <sd-button [title]="t('apply')" type="fill" color="primary" htmlType="submit" [disabled]="!available() || popupComposing()" />
+    </div>
+  </form>
+}

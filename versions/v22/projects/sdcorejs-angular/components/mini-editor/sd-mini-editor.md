@@ -1,194 +1,94 @@
 # `<sd-mini-editor>`
 
-**Type**: Component
-**Selector**: `sd-mini-editor`
-**Import path**: `@sdcorejs/angular/components/mini-editor` (or barrel: `@sdcorejs/angular/components`)
-**Class**: `SdMiniEditor`
-**Standalone**: yes
-**Change detection**: default (implements `ControlValueAccessor`)
+**Type:** standalone component with ControlValueAccessor. **Class:** SdMiniEditor. **Import:** `@sdcorejs/angular/components/mini-editor` (also components barrel).
 
-## One-line purpose
-Compact rich-text input (CKEditor 5 ClassicEditor) for short-form content like comments, notes, and chat-style messages — supports bold/italic/underline/font color/lists/links and optional `@mention`, with HTML or Markdown output.
+## Purpose
 
-## When to use
-- Comment input on a record (timeline, ticket, post)
-- Reply box in a discussion thread
-- Short notes / annotations on a row or detail panel
-- Anywhere you'd otherwise use a `<textarea>` but want minimal formatting + mentions
-- When you need Markdown output for storage
+A compact Core toolbar for comments and notes, using the exact full Editor schema. A supported rich table/image/caption document survives a basic MiniEditor text edit; compact controls do not imply a smaller schema.
 
-## When NOT to use
-- For long documents with images, tables, headings → use `<sd-editor>`
-- For plain unformatted text → use `<sd-input type="textarea">`
-- For code → use `<sd-code-editor>`
+## Inputs / outputs
 
-## Inputs
-| Name | Type | Default | Notes |
-| --- | --- | --- | --- |
-| `option` | `SdMiniEditorOption` | — | **Required.** Drives placeholder, output format, mention, height, callbacks. See type below. |
-| `value` | `string` | `''` | Two-way bindable via `[(ngModel)]` (CVA) or `[(value)]`. |
-| `disabled` | `boolean` | `false` | Disables editing. Also responds to Angular forms' `setDisabledState`. |
+| Name                       | Type / default                      | Behavior                                                                                         |
+| -------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------ |
+| option                     | SdMiniEditorOption / required       | Format, placeholder, height/maxHeight, mention feeds and callbacks.                              |
+| value                      | string / ''                         | Direct `[(value)]` binding or CVA forms/ngModel. External writes synchronize before/after mount. |
+| disabled                   | boolean / false                     | Combined with CVA disabled using OR.                                                             |
+| valueChange, contentChange | string                              | User output throttled 500ms, leading and trailing.                                               |
+| focus, blur                | native editable FocusEvent          | Also call option.onFocus/onBlur; blur calls CVA touched.                                         |
+| importWarning              | readonly SdEditorImportDiagnostic[] | No automatic value rewrite.                                                                      |
+| importDiagnostics          | readonly signal                     | Current import diagnostics.                                                                      |
 
-### `SdMiniEditorOption`
+Registered form callbacks and option.onChange receive the same output. External writes are silent, cancel stale cadence and preserve selection/history for equality with the current document. Composition pauses queued output and flushes current content after it ends.
+
+## Example
+
 ```ts
-interface SdMiniEditorOption {
-  outputFormat?: 'html' | 'markdown';   // default 'html' — when 'markdown', loads CKEditor Markdown plugin
-  placeholder?: string;
-  height?: string;                      // CSS height (reserved; not yet wired to host style — use maxHeight for now)
-  maxHeight?: string;                   // CSS max-height — wired to host var --sd-mini-editor-max-height
-  enableMention?: boolean;              // false → mention plugin not loaded
-  mentionConfig?: SdMiniEditorMentionConfig;  // { feeds: MentionFeed[], valueRender? }
-  onChange?: (content: string) => void;
-  onBlur?: (event: FocusEvent) => void;
-  onFocus?: (event: FocusEvent) => void;
-  onMentionSelect?: (item: SdMiniEditorMentionItem) => void;
-}
-```
-
-### `SdMiniEditorMentionConfig`
-```ts
-interface SdMiniEditorMentionConfig {
-  feeds?: MentionFeed[];    // CKEditor MentionFeed — each item has { marker, feed, minimumCharacters?, itemRenderer?, ... }
-  valueRender?: (item: MentionFeedObjectItem) => { text: string; attributes?: Record<string, string> };
-}
-```
-
-### `SdMiniEditorMentionItem`
-```ts
-type SdMiniEditorMentionItem<T = any> = MentionFeedObjectItem & { data?: T };
-// id: string  — raw marker-prefixed id (e.g. '@user-123'); marker is extracted as id[0], cleanId as id.slice(1)
-```
-
-### Exported type alias
-```ts
-type SdMiniEditorOutputFormat = 'html' | 'markdown';
-// Import: import { SdMiniEditorOutputFormat } from '@sdcorejs/angular/components/mini-editor';
-```
-
-## Outputs
-| Name | Type | Notes |
-| --- | --- | --- |
-| `valueChange` | `string` | Companion to `[(value)]`. Throttled to 500ms (leading + trailing). |
-| `contentChange` | `string` | Same payload as `valueChange`, kept for clarity / readability. |
-| `blur` | `FocusEvent` | Editor lost focus. |
-| `focus` | `FocusEvent` | Editor gained focus. |
-
-## Public methods
-- `setContent(content: string)` — set HTML/Markdown into the editor.
-- `getContent(): string` — get current content (formatted per `outputFormat`).
-- `getHtmlContent(): string` — always returns HTML (filtered), ignoring `outputFormat`.
-- `focusEditor()` — programmatic focus.
-- `insertMention({ id, name, marker? })` — programmatically insert a mention at the cursor.
-- `getMentions()` — returns array of mentions currently in the content.
-
-## Content projection
-None — toolbar and editor are fully managed by CKEditor.
-
-## Behavior notes
-- **ControlValueAccessor**: the component implements `ControlValueAccessor` and works with both template-driven (`[(ngModel)]`) and reactive (`[formControl]`) forms. `writeValue` sets the internal `value` and, if the editor is already initialised, calls `setData` on it. `setDisabledState` is NOT yet implemented — use the `[disabled]` input directly.
-- **Throttle on content change**: the `change:data` event from CKEditor is funnelled through an RxJS `Subject` throttled at 500 ms (leading + trailing). Both `valueChange` and `contentChange` fire on the same throttled tick. `option.onChange` is also called inside the same subscriber.
-- **Output format**: when `option.outputFormat === 'markdown'`, the CKEditor `Markdown` plugin is loaded. The component reads the HTML from the editor's data view, filters it, then converts the filtered HTML to Markdown with the plugin's data processor (see *Output sanitization*).
-- **Mention plugin**: loaded dynamically only when `option.enableMention === true`. A custom `downcast` converter renders mentions as `<span class="ck-custom-mention" data-id="..." data-marker="...">` (marker-prefixed id is split: `id[0]` = marker, `id.slice(1)` = clean id). Backspace/Delete on a mention node removes the entire text node in one keypress.
-- **focusEditor()** and **setContent()** are safe to call before the editor is initialised (they no-op silently).
-- **Host CSS variable**: `--sd-mini-editor-max-height` is set on the host element via `@HostBinding` from `option.maxHeight`. The SCSS uses it to cap `.ck-editor__editable_inline`.
-- **Lifecycle**: `ngOnDestroy` unsubscribes the RxJS subscription and calls `editor.destroy()` to release CKEditor memory.
-
-## Output sanitization (BREAKING)
-
-Everything the component emits goes through `sdSanitizeEditorHtml`
-(`@sdcorejs/angular/utilities/extensions`): `[(value)]` / `valueChange`, `contentChange`, the form
-value (`ControlValueAccessor`), `option.onChange`, `getContent()` and `getHtmlContent()`.
-
-- Kept: the formatting the toolbar produces, links to `https:`, `http:`, `mailto:`, `tel:`, relative URLs
-  and `#fragment`, mention chips (`<span class="ck-custom-mention" data-id data-marker contenteditable="false">`).
-- Removed: `<script>` / `<style>` / `<iframe>` and other dangerous elements, every `on*` attribute,
-  `javascript:` / `vbscript:` / `data:` links (the link text stays).
-- **Markdown** (`outputFormat: 'markdown'`): the HTML is filtered **before** it is converted, so
-  `[text](javascript:…)` can no longer reach the Markdown string.
-- `link.allowedProtocols` is `['https', 'http', 'mailto', 'tel']` (CKEditor's default also allowed
-  `ftp`/`ftps`).
-- `getHtmlContent()` now returns HTML in Markdown mode too (it used to return the Markdown from
-  `getData()`, contrary to its description).
-
-Content written in from outside (`writeValue`, `setContent`) that needs filtering is emitted back once
-with the filtered HTML; through a form this marks the control dirty.
-
-## Visual cues
-- A compact rich-text box: a small toolbar at the top (Bold | Italic | Underline | Font color | Bulleted list | Numbered list | Link), then a single editing region below
-- No headings, no images, no tables — much shorter than `<sd-editor>` toolbar
-- Editor body grows to fit content but is capped by `option.maxHeight` (scroll appears beyond)
-- When `enableMention` is on, typing the configured marker (e.g. `@`) opens a dropdown of suggestions
-- Inserted mentions appear as inline pills with `class="ck-custom-mention"` and `data-id` / `data-marker` attributes
-- Disabled state grays out the toolbar and the editor body
-
-## Examples
-
-### 1. Basic comment box
-```html
-<sd-mini-editor
-  [option]="{ placeholder: 'Viết bình luận...', maxHeight: '160px' }"
-  [(ngModel)]="comment">
-</sd-mini-editor>
-```
-
-### 2. With Markdown output
-```html
-<sd-mini-editor
-  [option]="{ outputFormat: 'markdown', placeholder: 'Ghi chú (Markdown)...' }"
-  [(value)]="note"
-  (contentChange)="onChange($event)">
-</sd-mini-editor>
-```
-
-### 3. With @mention of teammates
-```ts
-option: SdMiniEditorOption = {
-  placeholder: 'Trao đổi với đội nhóm...',
+import { SdMiniEditorOption } from '@sdcorejs/angular/components/mini-editor';
+const option: SdMiniEditorOption = {
+  outputFormat: 'html',
+  placeholder: 'Write a comment…',
+  maxHeight: '240px',
   enableMention: true,
   mentionConfig: {
     feeds: [
       {
         marker: '@',
-        feed: (q) => this.userService.search(q),
-        minimumCharacters: 1,
-        itemRenderer: (item: any) => {
-          const el = document.createElement('span');
-          el.textContent = `${item.name} (${item.id})`;
-          return el;
-        },
+        minimumCharacters: 0,
+        feed: [
+          { id: 'user-1', name: 'An' },
+          { id: 'user-2', name: 'Bình' },
+        ],
       },
     ],
   },
-  onMentionSelect: (m) => console.log('mentioned', m.id),
 };
 ```
+
 ```html
-<sd-mini-editor [option]="option" [(value)]="message"></sd-mini-editor>
+<sd-mini-editor [option]="option" [(ngModel)]="content" />
 ```
 
-### 4. Imperative content control via template ref
-```html
-<sd-mini-editor #editor [option]="option" [(value)]="text"></sd-mini-editor>
+Option fields: outputFormat ('html' default or 'markdown'), placeholder, height/maxHeight, enableMention (false default), mentionConfig, onChange(string), onFocus/onBlur(FocusEvent), onMentionSelect(SdMiniEditorMentionItem).
 
-<sd-button title="Chèn @username" type="text"
-  (click)="editor.insertMention({ id: '123', name: 'nghiatt15' })"></sd-button>
-```
+## Mentions
 
-## Anti-patterns
-- DON'T use `<sd-mini-editor>` for long-form documents — its toolbar is intentionally minimal; use `<sd-editor>`
-- DON'T pass HTML into `value` when `outputFormat: 'markdown'` is set — the editor will misinterpret it
-- DON'T forget `option` is required — leaving it `undefined` will throw on render
-- DON'T render many `<sd-mini-editor>` instances on one screen — each loads CKEditor; prefer one shared comment box
-- DON'T rely on `valueChange` / `contentChange` for keystroke-by-keystroke logic — they are throttled to 500ms
+Feeds use Core-owned `SdEditorMentionFeed`: marker, feed array or `(query) => items | Promise<items>`, minimumCharacters and dropdownLimit. Items are string or `{ id: string; name?: string; text?: string; data?: unknown }`. Identity is retained; marker/name are separate. Async stale results are ignored. Keyboard arrows/Enter/Escape and touch selection use the same atomic mention node.
 
-## Accessibility
-- The CKEditor editing region is a `contenteditable` div — it receives focus in the natural tab order. Keyboard navigation of toolbar buttons is handled by CKEditor internals (arrow keys cycle through toolbar items).
-- When using `@mention`, the mention dropdown that opens is a CKEditor-native listbox; it is keyboard-accessible (arrow keys + Enter to select, Escape to dismiss).
-- The component does not add `aria-label` automatically — when embedding in a form, wrap with `<label>` or add an `aria-label` on the host: `<sd-mini-editor aria-label="Bình luận" ...>`.
-- Mention pills rendered as `<span class="ck-custom-mention" contenteditable="false">` are non-focusable by design; screen readers will read them as inline text.
-- `disabled` state passes the `[disabled]` flag to the CKEditor component which marks the editing area as non-interactive. No additional ARIA attribute is explicitly set by this component for the disabled state.
+`insertMention({id,name,marker?})` inserts at the current selection when enabled/editable. `getMentions()` returns `{id,name,marker}[]`. Legacy data-id/data-marker spans import without silently rewriting IDs. Deprecated valueRender was previously unused and still provides no rendering behavior; CK itemRenderer is unsupported.
 
-## Related
-- `<sd-editor>` — full rich text with images, alignment, font sizes, validation
-- `<sd-input type="textarea">` — plain unformatted text
-- `<sd-code-editor>` — Monaco-based code editor
+## Methods / Markdown
+
+- `setContent(string)`: silent authoritative value, retained before mount.
+- `getContent(): string`: selected output format.
+- `getHtmlContent(): string`: safe lossless HTML representation, or typed import/conversion failure.
+- `focusEditor(): void`: focuses an enabled visible editor.
+- Standard writeValue/registerOnChange/registerOnTouched/setDisabledState methods implement the CVA contract.
+
+Markdown uses the OSS converter and the full schema. It is a compatibility format: safe conversion must survive Markdown→HTML/schema comparison. Rich structures/attributes Markdown cannot express are blocked with diagnostics; no lossy Markdown is emitted or saved after a simple edit. Changing format preserves the current document rather than replaying stale initial input; unsupported conversions retain original source and report failure.
+
+## Migration from CKEditor
+
+The engine is now Tiptap OSS with a Core-owned Angular adapter. Editor and MiniEditor share the full document schema; toolbar size does not remove document capabilities.
+
+| Before                                                             | After / action                                                                                                         |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| Component selectors, normal bindings and upload token              | Retained; use the examples in this guide.                                                                              |
+| Public `Editor`, `editorConfig`, `onReady(ClassicEditor)`          | Removed. These were CK-specific implementation surfaces; there is no fake CK instance/config facade.                   |
+| `EditorOption` / `SdMiniEditorConfig` derived from CK EditorConfig | Deprecated Core-owned aliases; CK plugins, licenseKey and plugin configuration are unsupported. Use component options. |
+| CK `MentionFeedObjectItem` / MentionFeed                           | Core-owned item/feed contracts. Use typed arrays or asynchronous query functions; CK DOM itemRenderer is unsupported.  |
+| `sd-ckeditor-styles` / SdCKEditorStyles                            | Deprecated compatibility export/selector. It now loads shared Core content styling; editors load styling themselves.   |
+| Existing stored HTML                                               | Import checks the sanitizer AND schema before enabling edits. Do not batch rewrite stored data just to migrate the UI. |
+
+Initial and external writes do not emit normalized values. Untouched safe HTML retains its original bytes. Supported documents serialize after an actual edit; equivalent tag/parser normalization can then occur. Safe unsupported nodes/attributes/styles remain in the original caller value, show diagnostics and lock editing. Unsupported rich paste is rejected as a whole.
+
+Unsafe HTML is displayed only as a sanitized preview and locks editing. Existing caller values are not silently rewritten, but content getters/upload refuse unsafe export with `SdEditorImportError`. Import the error class from the normal component entrypoint to handle it. HTML/Markdown conversion that cannot preserve the document is similarly refused; never treat the preview as a lossless export.
+
+Diagnostics carry `code` (unsafe-html, unsupported-html, markdown-loss or invalid-option), a source path, optional tag/attribute and developer detail. Built-in visible messages are localized; inspect details before deciding how your application repairs a document.
+
+The verified corpus covers paragraphs/headings, marks, fonts/colors/alignment, nested lists, ordered start/type, merged table cells, image figures/captions, inline images and legacy mentions. This is not proof for every production HTML document. Table caption/colgroup and other unsupported structures preserve the source and lock editing until implemented; Office-specific conversion is not provided.
+
+Tiptap schema is not an XSS sanitizer. Link/image URL, paste, CSS and upload-result boundaries are checked separately. No trusted-HTML bypass or active embeds are provided. Server rendering creates no editor DOM; the client mounts after rendering/hydration and cleans up on destroy. Manual Safari and native Telex/VNI acceptance require a real device/runtime.
+
+No Pro/paid API, Pages, collaboration, tracked changes, DOCX import/export or DocumentEditor is included. Installed editor-specific OSS license notices ship at `assets/licenses/tiptap-oss-NOTICES.txt` (Tiptap MIT, parser MIT, entity decoder BSD-2-Clause).
+
+A successful output-format change delivers the current document in its new representation through the existing CVA and outputs. A pending edit keeps its original 500 ms deadline; only the converted latest value is delivered. A refused Markdown conversion pauses that delivery, retains the live HTML, and reports diagnostics. Restoring HTML resumes the pending delivery; replacing the value externally cancels it. Check diagnostics before saving.

@@ -1,17 +1,17 @@
-import { EditorConfig, MentionFeed, MentionFeedObjectItem } from 'ckeditor5';
-
-export type { MentionFeedObjectItem };
+import { SdEditorEngineOptions, SdEditorMentionFeed, SdEditorMentionItem } from '@sdcorejs/angular/components/editor-engine';
+export type { SdEditorImportDiagnostic, SdEditorMentionFeed, SdEditorMentionItem } from '@sdcorejs/angular/components/editor-engine';
+/** @deprecated Use SdEditorMentionItem. CK DOM renderers are unsupported. */
+export type MentionFeedObjectItem = SdEditorMentionItem;
 
 export type SdMiniEditorOutputFormat = 'html' | 'markdown';
 
 export interface SdMiniEditorMentionConfig {
-  /** Feed data cho mention - có thể là array hoặc function trả về Promise
-   * CKEditor MentionFeed đã hỗ trợ: marker, minChars, dropdownLimit, itemRenderer
-   */
-  feeds?: MentionFeed[];
+  /** Library-owned feed arrays/functions. CK itemRenderer is unsupported and diagnosed. */
+  feeds?: SdEditorMentionFeed[];
   /** Custom render function cho giá trị mention khi chèn vào editor
    * Trả về object với text và các attributes tùy chỉnh
    */
+  /** @deprecated This previously unused callback has no rendering behavior. */
   valueRender?: (item: MentionFeedObjectItem) => {
     text: string;
     attributes?: Record<string, string>;
@@ -45,6 +45,5 @@ export interface SdMiniEditorOption {
   onMentionSelect?: (item: SdMiniEditorMentionItem) => void;
 }
 
-export type SdMiniEditorConfig = EditorConfig & {
-  getOption?: () => SdMiniEditorOption;
-};
+/** @deprecated Use component options. CK plugins/config/licenseKey are unsupported. */
+export type SdMiniEditorConfig = SdEditorEngineOptions;
