@@ -348,6 +348,8 @@ export type ShowcaseExampleSourceKey =
   | "guides/theme-tokens/example-palette-va-che-do-sang-toi"
   | "guides/theme-tokens/example-ramp"
   | "guides/theme-tokens/example-semantic-va-scale"
+  | "modules/generic/example-generic-configuration-screen"
+  | "modules/generic/example-generic-crud-with-a-mock-adapter"
   | "modules/layout/example-sidebar-v1-classic"
   | "modules/layout/example-sidebar-v2-rail"
   | "modules/layout/example-sidebar-v3-collapsible"
@@ -2838,6 +2840,20 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-bang-contrast",
     title: "Bảng contrast",
     description: "Đo trên trình duyệt cho palette default ở chế độ sáng và tối, cùng cặp và ngưỡng với test:theme (test đó còn chạy cho 8 preset có tên). Đây là kiểm tra palette, không thay cho việc kiểm tra từng trạng thái component.",
+  },
+  {
+    sourceKey: "modules/generic/example-generic-crud-with-a-mock-adapter",
+    pageKey: "modules/generic",
+    sectionId: "example-generic-crud-with-a-mock-adapter",
+    title: "Generic CRUD with a mock adapter",
+    description: "The showcase registers an in-memory adapter for the module 'showcase' and mounts sdGenericRoutes() under /demo. Product opens forms as a page; supplier (fewer properties) opens them in a side drawer.",
+  },
+  {
+    sourceKey: "modules/generic/example-generic-configuration-screen",
+    pageKey: "modules/generic",
+    sectionId: "example-generic-configuration-screen",
+    title: "Generic configuration screen",
+    description: "Edit labels, columns, filters, form layouts and import settings. Without an adapter store the configuration is kept in localStorage; an invalid stored configuration falls back to the default one.",
   },
   {
     sourceKey: "modules/layout/example-sidebar-v1-classic",

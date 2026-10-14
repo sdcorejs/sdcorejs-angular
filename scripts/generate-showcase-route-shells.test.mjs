@@ -184,7 +184,7 @@ test('matches the canonical v19 runtime registry and expected deployment route c
       .map(category => [category, pages.filter(page => page.category === category).length])
   );
 
-  assert.equal(pages.length, 105);
+  assert.equal(pages.length, 106);
   assert.ok(pages.some(page => page.category === 'components' && page.slug === 'kanban'));
   assert.ok(pages.some(page => page.category === 'forms' && page.slug === 'segmented'));
   assert.ok(!pages.some(page => page.category === 'components' && page.slug === 'chart'));
@@ -194,6 +194,8 @@ test('matches the canonical v19 runtime registry and expected deployment route c
   assert.ok(pages.some(page => page.category === 'components' && page.slug === 'image-editor'));
   assert.ok(pages.some(page => page.category === 'guides' && page.slug === 'theme-tokens'));
   assert.ok(pages.some(page => page.category === 'pipes-utilities' && page.slug === 'theme'));
+  // 3.2 page: the generic CRUD module (modules/generic).
+  assert.ok(pages.some(page => page.category === 'modules-integrations' && page.slug === 'generic-crud'));
 
   // why: `routes.length` từng là hằng số 5941 và đã mục ngay khi release 1.6 ra (thực tế 7426).
   // Con số đó là TÍCH của hai thứ đã được kiểm ở nơi khác — số release được hỗ trợ và số route mỗi
@@ -213,7 +215,7 @@ test('matches the canonical v19 runtime registry and expected deployment route c
     directives: 6,
     forms: 23,
     guides: 4,
-    'modules-integrations': 10,
+    'modules-integrations': 11,
     'pipes-utilities': 11,
     services: 11,
   });
