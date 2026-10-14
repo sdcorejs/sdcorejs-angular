@@ -222,7 +222,7 @@ Three opt-in collections share one action shape:
 type SdFileExplorerState<T> = boolean | ((context: T) => boolean);
 
 interface SdFileExplorerActionAppearance<T> {
-  title?: string; // visible label; without it the button is icon-only
+  title?: string; // selector/menu/drawer label; icon command uses tooltip ?? title
   tooltip?: string; // tooltip, and the accessible name of an icon-only button
   prefixIcon?: string; // a group without one shows more_vert
   suffixIcon?: string;
@@ -257,6 +257,7 @@ type SdFileExplorerSelectionAction = SdFileExplorerAction<readonly SdFileExplore
 type SdFileExplorerCommand = SdFileExplorerAction<SdFileExplorerItem>;
 ```
 
+- **Item command labels**: file/folder buttons with a prefix or suffix icon show their declared icons and use `tooltip ?? title` as the native Core tooltip and accessible name. A leaf without an icon shows `title ?? tooltip` as readable text; an explicit title remains the visible label when a separate tooltip is supplied. Group triggers retain their declared/default icon; children and compact drawer entries keep visible labels. Selection-band titles are unchanged. A command with both icons fits their intrinsic width. Built-in per-file Move is a small icon button with a localized tooltip containing the file name in both list and grid.
 - **Leaf** → an `<sd-button>` that runs `click`. **Group** → an `<sd-button>` whose children are `<sd-button-item>`s in its Action Popover; the group itself never runs a callback. TypeScript rejects a group inside a group and a parent with both `click` and `children`; untyped configuration with those shapes, or without a `title` and a `tooltip`, is skipped with a dev-mode `console.warn`.
 - **You decide the structure.** Flat buttons, groups, or several groups side by side render in the declared order. Nothing is folded into an automatic "more" menu, whatever the number of actions or the width; a narrow area wraps them onto another line instead.
 - **Defaults**: a group without `prefixIcon` shows `more_vert` (also next to a `suffixIcon`). An unset `type` depends only on the kind of the definition, never on its position, title or callback: in the selection band a flat action is `light` and a group trigger `text`; every file and folder command, flat or grouped, is `text`. An unset `color` is `primary` in the selection band and `secondary` for commands. Whatever `type` and `color` you declare is kept. Menu items stay neutral unless they declare `color`. A menu item shows its `title`, or its `tooltip` when it has no title.
