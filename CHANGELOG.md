@@ -6,6 +6,27 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+### Added
+
+- Generic module (`@sdcorejs/angular/modules/generic`): list, detail, create, update, Excel import and configuration screens generated from one `SdGenericSchema` per entity. Backends plug in through `provideSdGeneric({ adapters })` (`SdGenericConfiguration`; one adapter per module, nearest injector wins); `provideSdGenericEntity` adds schema adjustments, a dedicated search, page/side-drawer display, `beforeSave`/`afterSave` hooks and custom actions. Routes `generic/:module/:entity[/create|/:id/detail|/:id/update|/configuration]` are guarded by `<MODULE>_<ENTITY>_C_GENERIC_<ACTION>` codes, refuse unsafe module/entity names and close the form routes hidden by `hiddenDefaults`. Stored configurations (`adapter.schemaStore`, default `localStorage`) are checked by `validateSdGenericSchema` and merged with the backend schema; a configuration may narrow but never reopen `insertable`/`updatable`. Excel import looks records up in batches of 100 and reports ambiguous matches and every failed row in `<sd-import-excel>`.
+- Form Generic: `time` (`HH:mm`, `<sd-time>`) and `json` (`<sd-code-editor>`, stores the parsed value) field types in the renderer, builder palette, preview and inspector. The JSON field exposes its label, required state and error to assistive technology.
+
+### Changed (BREAKING for consumers)
+
+- Custom typed i18n catalogs must add the new `core.module.generic.*`, `core.component.form-builder.preset.time`, `core.component.form-builder.preset.json` and `core.component.form-generic.json.invalid` keys present in the built-in catalogs. Copy the entries from the built-in catalog of the same language, or let the compiler list the missing keys.
+- Code that switches exhaustively over `SdFormGenericField['type']` (or `SD_FORM_GENERIC_FIELD_TYPES`) no longer compiles until it handles `time` and `json`:
+
+  ```diff
+   switch (field.type) {
+     case 'datetime':
+       return formatDate(value);
+  +  case 'time':
+  +    return String(value ?? ''); // 'HH:mm'
+  +  case 'json':
+  +    return JSON.stringify(value);
+   }
+  ```
+
 ## [3.1] - 2026-10-10
 
 ### Added

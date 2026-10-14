@@ -1,0 +1,8 @@
+:host {
+  display: block;
+}
+
+// Headings receive the focus programmatically (route changes); show the ring only for keyboard focus.
+h1:focus:not(:focus-visible) {
+  outline: none;
+}
