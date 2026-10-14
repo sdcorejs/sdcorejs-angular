@@ -199,6 +199,44 @@ Kiểm lại trên Showcase `ng serve` sau khi xử lý advisory:
 - Bấm Quay lại: list hiện lại với 40 dòng, focus về tiêu đề "Product".
 - `/product/configuration`: property `code` (adapter đặt `updatable: false`) có checkbox updatable bị khoá. Dòng có `role="group"` và `aria-label="Code"`.
 
+## UI Feedback Round (2026-10-14, after the 7 commits)
+
+Người dùng góp ý sau khi xem Showcase. Các thay đổi đã làm:
+
+- Form builder, card "Thiết lập trang":
+  - các field giãn hết chiều rộng card (`.ins-card--form`);
+  - tiêu đề dùng cùng hàng tiêu đề với card Biến / Xác thực;
+  - icon trang chọn từ preset giống group, bấm lại icon đang chọn thì bỏ chọn (`pickPageIcon`);
+  - nhãn vi "Xác thực cấp form" đổi thành "Xác thực của biểu mẫu" (cả trên toolbar).
+- List của generic:
+  - external filter có `defaultShowing: true`, table đặt `hideExternalFilterToolbar: true`;
+  - cột hiển thị đầu tiên không phải `system` thành hyperlink: mở detail, hoặc update nếu chỉ có quyền UPDATE;
+  - bỏ command Xem / Sửa / Xoá trên từng dòng. Nút Sửa đã có trong màn chi tiết (theo quyền), Xoá dùng selector cho cả một dòng.
+- Dùng `sd-page` (`@sdcorejs/angular/modules/layout`) cho list, form dạng page và màn configuration. Không có vòng phụ thuộc: `modules/layout` không import barrel `modules`.
+- Màn configuration làm lại:
+  - mỗi tab chia thành các `sd-section` (Thực thể / Thuộc tính, Hiển thị / Cột, Bố cục biểu mẫu, Cập nhật bản ghi đã có / Cột nhập);
+  - mỗi property/cột là một dòng lưới với cột cố định, thay cho một card riêng;
+  - style dùng chung nằm ở file mới `components/generic-configuration.scss`;
+  - thêm 9 khoá i18n;
+  - nhãn vi "Cho phép sắp xếp" / "Cho phép lọc" rút gọn thành "Sắp xếp" / "Lọc".
+- Lỗi phát hiện khi kiểm UI: màn chi tiết hiện "--" cho Code / Name. Nguyên nhân là lỗi có sẵn của Core `sd-input`: `displayValue` là `computed` đọc `formControl.value` vốn không phải signal, nên ở chế độ xem không cập nhật khi giá trị đến sau. Trong module, form detail/update chỉ render khi record đã tải xong. Lỗi gốc của `sd-input` được tách thành task riêng.
+- Spec:
+  - AC-014 giờ xoá một dòng qua selector;
+  - thêm test hyperlink, fallback sang update, `defaultShowing`, preset icon trang;
+  - test cũ gõ icon trang được thay bằng test preset.
+- Sai khác so với spec gốc: AC-014 ("xoá 1 dòng" qua command) đổi sang xoá qua selector, theo yêu cầu của người dùng. Path ngoài plan, đều phát sinh từ góp ý của người dùng: file mới `modules/generic/src/components/generic-configuration.scss`, cùng `inspector.component.scss` và `form-builder-release-review.spec.ts` của form-generic.
+- Verify:
+  - suite lib 498/498;
+  - lint toàn bộ v19 sạch;
+  - `check:i18n` OK, parity 1178 key × 5 ngôn ngữ;
+  - quét import backend sạch;
+  - showcase 16/16, chạy hai lần;
+  - `test:showcase-examples` 17/17;
+  - `npm run sync` rồi `check:sync` OK;
+  - build v19–v22 OK; năm warning NG8113 của v22 nằm ở file không bị sửa (select, table, query-bar, upload-file, import-excel);
+  - `test:scripts` 236/236;
+  - kiểm UI bằng Playwright 1440×900 (list, chi tiết, configuration bốn tab, inspector).
+
 ## Known Gaps
 
 - Chưa chạy full suite v19 với `--code-coverage`; đây là gate release, workflow publish chạy. Chưa chạy spec trên v20–v22, mới build.
