@@ -12,7 +12,7 @@ const { load } = require('js-yaml');
 const { findTests } = require(join(dirname(require.resolve('@angular/build/package.json')), 'src/builders/karma/find-tests.js'));
 const root = fileURLToPath(new URL('../', import.meta.url));
 const workflow = readFileSync(join(root, '.github/workflows/ci.yml'), 'utf8');
-const scopes = ['components/file-explorer', 'components/form-generic', 'components/button', 'services/confirm', 'components/tab', 'components/stepper', 'components/window', 'components/modal-resizable'];
+const scopes = ['components/file-explorer', 'components/form-generic', 'components/button', 'services/confirm', 'components/tab', 'components/stepper', 'components/window', 'components/modal-resizable', 'components/editor-engine', 'components/editor', 'components/mini-editor'];
 const formPattern = 'projects/sdcorejs-angular/components/form-generic/**/*.spec.ts';
 
 function specFiles(directory) {
@@ -49,11 +49,11 @@ async function assertCompleteSelection(source, major) {
   const selected = new Set(actual);
   const missing = expected.filter(path => !selected.has(path)).map(path => relative(workspace, path));
   assert.equal(missing.length, 0, `${major}: missing scoped specs: ${missing.join(', ')}`);
-  assert.deepEqual(actual, expected, `${major}: selection must equal all eight affected scope trees`);
+  assert.deepEqual(actual, expected, `${major}: selection must equal all ${scopes.length} affected scope trees`);
 }
 
 for (const major of ['v20', 'v21']) {
-  test(`${major} selects every affected component spec, including canonical Window, its legacy alias and nested specs`, async () => {
+  test(`${major} selects every affected component spec, including shared editors, Window aliases and nested specs`, async () => {
     await assertCompleteSelection(workflow, major);
   });
 
@@ -70,7 +70,7 @@ for (const major of ['v20', 'v21']) {
     await assert.rejects(assertCompleteSelection(narrowed, major), /missing scoped specs.*form-generic/u);
   });
 
-  for (const component of ['window', 'modal-resizable']) {
+  for (const component of ['window', 'modal-resizable', 'editor-engine', 'editor', 'mini-editor']) {
     test(`${major} rejects an omitted ${component} selector even when its text remains in a comment`, async () => {
       const selector = `--include=projects/sdcorejs-angular/components/${component}/**/*.spec.ts`;
       const omitted = workflow.replace(`          ${selector}`, '');

@@ -3,570 +3,536 @@ import { Component, input, output } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { ClassicEditor } from 'ckeditor5';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
-
+import {
+  SdEditorEngine,
+  SdEditorImportDiagnostic,
+  SdEditorMentionFeed,
+  SdEditorMentionItem,
+  SdEditorSurface,
+} from '@sdcorejs/angular/components/editor-engine';
 import { SdMiniEditor } from './mini-editor.component';
 import { SdMiniEditorOption } from './mini-editor.model';
 
-// ---------------------------------------------------------------------------
-// Stub CKEditor component — replaces heavy CKEditor5 Angular binding
-// ---------------------------------------------------------------------------
-
 @Component({
   changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
-  selector: 'ckeditor',
+  selector: 'sd-editor-surface',
   standalone: true,
-  template: '<div class="ck-editor-stub"></div>',
+  template: '',
 })
-class FakeCKEditorComponent {
-  readonly editor = input<any>();
-  readonly config = input<any>();
+class SurfaceStub {
+  readonly content = input('');
+  readonly format = input('html');
+  readonly variant = input('full');
+  readonly editable = input(true);
+  readonly placeholder = input<string>();
   readonly disabled = input(false);
-  readonly ready = output<any>();
+  readonly height = input<string>();
+  readonly maxHeight = input<string>();
+  readonly mentionFeeds = input<readonly SdEditorMentionFeed[]>();
+  readonly engineReady = output<SdEditorEngine>();
+  readonly change = output<string>();
+  readonly sourceChange = output<'source' | 'editable' | 'format' | void>();
+  readonly formatChange = output<string | undefined>();
+  readonly focus = output<FocusEvent>();
+  readonly blur = output<FocusEvent>();
+  readonly diagnostics = output<readonly SdEditorImportDiagnostic[]>();
+  readonly mentionSelected = output<SdEditorMentionItem>();
+  readonly compositionChange = output<boolean>();
 }
-
 @Component({
   changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
   standalone: true,
   imports: [SdMiniEditor, ReactiveFormsModule],
-  template: `<sd-mini-editor [option]="option" [formControl]="control"></sd-mini-editor>`,
+  template: '<sd-mini-editor [option]="option" [formControl]="control" />',
 })
-class MiniEditorFormHostComponent {
-  option: SdMiniEditorOption = { placeholder: 'x' };
-  control = new FormControl('<p>Hi <a href="javascript:alert(1)">x</a></p>');
+class FormHost {
+  option: SdMiniEditorOption = {};
+  control = new FormControl('<p>Initial</p>');
+}
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  standalone: true,
+  imports: [SdMiniEditor, FormsModule],
+  template: '<sd-mini-editor [option]="option" [(ngModel)]="value" />',
+})
+class ModelHost {
+  option: SdMiniEditorOption = {};
+  value = '<p>Model</p>';
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-const defaultOption: SdMiniEditorOption = {
-  placeholder: 'Viết bình luận...',
-  maxHeight: '200px',
-};
-
-function buildFixture(option: SdMiniEditorOption = defaultOption): ComponentFixture<SdMiniEditor> {
-  const fixture = TestBed.createComponent(SdMiniEditor);
-  fixture.componentInstance.option = option;
-  fixture.detectChanges();
-  return fixture;
-}
-
-// ---------------------------------------------------------------------------
-// Fake ClassicEditor mock for onReady tests
-// ---------------------------------------------------------------------------
-
-function makeFakeEditor() {
-  const dataChangeListeners: (() => void)[] = [];
-  const focusListeners: ((evt: any) => void)[] = [];
-  const blurListeners: ((evt: any) => void)[] = [];
-
-  const fakeEditor: any = {
-    _data: '',
-    getData: jasmine.createSpy('getData').and.callFake(() => fakeEditor._data),
-    setData: jasmine.createSpy('setData').and.callFake((v: string) => {
-      fakeEditor._data = v;
+function engineMock(initial = '') {
+  const engine = {
+    format: 'html' as const,
+    value: initial,
+    getContent: jasmine.createSpy('getContent').and.callFake(() => engine.value),
+    getHtml: jasmine.createSpy('getHtml').and.callFake(() => engine.value),
+    setContent: jasmine.createSpy('setContent').and.callFake((value: string) => {
+      engine.value = value;
     }),
+    focus: jasmine.createSpy('focus'),
     destroy: jasmine.createSpy('destroy'),
-    execute: jasmine.createSpy('execute'),
-    model: {
-      document: {
-        on: (event: string, cb: () => void) => {
-          if (event === 'change:data') dataChangeListeners.push(cb);
-        },
-        selection: { getFirstPosition: () => null },
-      },
-      createRangeIn: () => ({ getItems: () => [] }),
-    },
-    editing: {
-      view: {
-        document: {
-          on: (event: string, cb: (evt: any) => void) => {
-            if (event === 'focus') focusListeners.push(cb);
-            if (event === 'blur') blurListeners.push(cb);
-          },
-          fire: (event: string, domEvent: any) => {
-            if (event === 'focus') focusListeners.forEach(fn => fn({ domEvent }));
-            if (event === 'blur') blurListeners.forEach(fn => fn({ domEvent }));
-          },
-        },
-        focus: jasmine.createSpy('focus'),
-      },
-    },
-    conversion: {
-      for: () => ({ attributeToElement: () => {} }),
-    },
-    commands: {
-      get: () => null,
-    },
-    triggerDataChange: () => dataChangeListeners.forEach(fn => fn()),
-    triggerFocus: (domEvent: any) => focusListeners.forEach(fn => fn({ domEvent })),
-    triggerBlur: (domEvent: any) => blurListeners.forEach(fn => fn({ domEvent })),
+    insertMention: jasmine.createSpy('insertMention'),
+    getMentions: jasmine.createSpy('getMentions').and.returnValue([{ id: 'identity', name: 'User', marker: '@' }]),
   };
-
-  return fakeEditor;
+  return engine;
 }
 
-// ---------------------------------------------------------------------------
-// Specs
-// ---------------------------------------------------------------------------
-
-describe('SdMiniEditor', () => {
+describe('SdMiniEditor shared engine adapter contracts', () => {
+  let fixture: ComponentFixture<SdMiniEditor>;
+  let component: SdMiniEditor;
+  let surface: SurfaceStub;
   beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [SdMiniEditor, NoopAnimationsModule, FormsModule, MiniEditorFormHostComponent],
-    })
-      .overrideComponent(SdMiniEditor, {
-        remove: { imports: [CKEditorModule] },
-        add: { imports: [FakeCKEditorComponent] },
-      })
+    await TestBed.configureTestingModule({ imports: [SdMiniEditor, FormHost, ModelHost] })
+      .overrideComponent(SdMiniEditor, { remove: { imports: [SdEditorSurface] }, add: { imports: [SurfaceStub] } })
       .compileComponents();
+    fixture = TestBed.createComponent(SdMiniEditor);
+    fixture.componentRef.setInput('option', {});
+    fixture.detectChanges();
+    component = fixture.componentInstance;
+    surface = fixture.debugElement.query(By.directive(SurfaceStub)).componentInstance;
   });
-
-  // ─── 1. Creation & rendering ─────────────────────────────────────────────
-
-  describe('creation & rendering', () => {
-    it('should instantiate without errors', () => {
-      const fixture = buildFixture();
-      expect(fixture.componentInstance).toBeTruthy();
-    });
-
-    it('should render the ckeditor stub element', () => {
-      const fixture = buildFixture();
-      const el: HTMLElement = fixture.nativeElement.querySelector('.ck-editor-stub');
-      expect(el).not.toBeNull();
-    });
+  it('keeps required option, value default, disabled default and compact surface', () => {
+    expect(component.value).toBe('');
+    expect(component.disabled()).toBeFalse();
+    expect(surface.variant()).toBe('compact');
+    expect(surface.editable()).toBeTrue();
+    expect(component.maxEditorHeight).toBeUndefined();
+    expect('Editor' in component).toBeFalse();
+    expect('editorConfig' in component).toBeFalse();
+    expect('onReady' in component).toBeFalse();
   });
-
-  // ─── 2. Inputs — default values ──────────────────────────────────────────
-
-  describe('input defaults', () => {
-    it('value defaults to empty string', () => {
-      const fixture = buildFixture();
-      expect(fixture.componentInstance.value).toBe('');
+  it('forwards placeholder, height, maxHeight, format and enabled mention feeds', () => {
+    const feeds: SdEditorMentionFeed[] = [{ marker: '@', feed: [{ id: 'real-id', name: 'Real' }] }];
+    fixture.componentRef.setInput('option', {
+      placeholder: 'Write',
+      height: '80px',
+      maxHeight: '160px',
+      outputFormat: 'markdown',
+      enableMention: true,
+      mentionConfig: { feeds },
     });
-
-    it('disabled defaults to false', () => {
-      const fixture = buildFixture();
-      expect(fixture.componentInstance.disabled()).toBe(false);
-    });
-
-    it('option is passed through to the component', () => {
-      const fixture = buildFixture({ placeholder: 'Test', maxHeight: '300px' });
-      expect(fixture.componentInstance.option.placeholder).toBe('Test');
-    });
+    fixture.detectChanges();
+    expect(surface.placeholder()).toBe('Write');
+    expect(surface.height()).toBe('80px');
+    expect(surface.maxHeight()).toBe('160px');
+    expect(surface.format()).toBe('markdown');
+    expect(surface.mentionFeeds()).toBe(feeds);
+    expect(component.maxEditorHeight).toBe('160px');
   });
-
-  // ─── 3. editorConfig getter ──────────────────────────────────────────────
-
-  describe('editorConfig', () => {
-    it('uses placeholder from option', () => {
-      const fixture = buildFixture({ placeholder: 'Enter text' });
-      expect(fixture.componentInstance.editorConfig.placeholder).toBe('Enter text');
-    });
-
-    it('does NOT include Markdown plugin when outputFormat is html', () => {
-      const fixture = buildFixture({ outputFormat: 'html' });
-      const config = fixture.componentInstance.editorConfig;
-      const pluginNames = config.plugins!.map((p: any) => p.pluginName ?? p.name ?? String(p));
-      expect(pluginNames).not.toContain('Markdown');
-    });
-
-    it('includes Markdown plugin when outputFormat is markdown', () => {
-      const fixture = buildFixture({ outputFormat: 'markdown' });
-      const config = fixture.componentInstance.editorConfig;
-      const pluginCtors = config.plugins as any[];
-      // Markdown plugin present when outputFormat === 'markdown'
-      expect(pluginCtors.length).toBeGreaterThan(0);
-    });
-
-    it('does NOT include Mention plugin when enableMention is false', () => {
-      const fixture = buildFixture({ enableMention: false });
-      const config = fixture.componentInstance.editorConfig;
-      const pluginCtors = config.plugins as any[];
-      // Should not have Mention — check no entry has pluginName 'Mention'
-      const hasM = pluginCtors.some((p: any) => (p.pluginName ?? p.name) === 'Mention');
-      expect(hasM).toBe(false);
-    });
-
-    it('includes Mention plugin when enableMention is true', () => {
-      const fixture = buildFixture({ enableMention: true });
-      const config = fixture.componentInstance.editorConfig;
-      const pluginCtors = config.plugins as any[];
-      const hasM = pluginCtors.some((p: any) => (p.pluginName ?? p.name) === 'Mention');
-      expect(hasM).toBe(true);
-    });
-
-    it('toolbar items include bold, italic, underline, link', () => {
-      const fixture = buildFixture();
-      const items = (fixture.componentInstance.editorConfig.toolbar as any).items as string[];
-      expect(items).toContain('bold');
-      expect(items).toContain('italic');
-      expect(items).toContain('underline');
-      expect(items).toContain('link');
-    });
-
-    it('sets mention feeds from option.mentionConfig when enableMention is true', () => {
-      const feeds = [{ marker: '@', feed: [] }] as any;
-      const fixture = buildFixture({ enableMention: true, mentionConfig: { feeds } });
-      const config = fixture.componentInstance.editorConfig;
-      expect(config.mention?.feeds).toBe(feeds);
-    });
+  it('stores setContent before the surface is ready (behavioral RED regression)', () => {
+    component.setContent('<p>Before mount</p>');
+    fixture.detectChanges();
+    expect(component.value).toBe('<p>Before mount</p>');
+    expect(surface.content()).toBe('<p>Before mount</p>');
+    expect(component.getContent()).toBe('');
+    expect(component.getHtmlContent()).toBe('');
   });
-
-  // ─── 4. maxEditorHeight HostBinding ──────────────────────────────────────
-
-  describe('maxEditorHeight HostBinding', () => {
-    it('returns maxHeight from option', () => {
-      const fixture = buildFixture({ maxHeight: '350px' });
-      expect(fixture.componentInstance.maxEditorHeight).toBe('350px');
-    });
-
-    it('returns undefined when option.maxHeight is not set', () => {
-      const fixture = buildFixture({});
-      expect(fixture.componentInstance.maxEditorHeight).toBeUndefined();
-    });
+  it('synchronizes direct value input before and after ready without outputs', () => {
+    const changed = jasmine.createSpy('changed');
+    component.valueChange.subscribe(changed);
+    fixture.componentRef.setInput('value', '<p>External</p>');
+    fixture.detectChanges();
+    expect(surface.content()).toBe('<p>External</p>');
+    const engine = engineMock('<p>External</p>');
+    surface.engineReady.emit(engine as unknown as SdEditorEngine);
+    fixture.componentRef.setInput('value', '<p>Replacement</p>');
+    fixture.detectChanges();
+    expect(engine.setContent).toHaveBeenCalledOnceWith('<p>Replacement</p>', 'html');
+    expect(changed).not.toHaveBeenCalled();
   });
-
-  // ─── 5. ControlValueAccessor ─────────────────────────────────────────────
-
-  describe('ControlValueAccessor', () => {
-    it('writeValue sets value', () => {
-      const fixture = buildFixture();
-      const comp = fixture.componentInstance;
-      comp.writeValue('<p>hello</p>');
-      expect(comp.value).toBe('<p>hello</p>');
-    });
-
-    it('writeValue with null/undefined sets value to empty string', () => {
-      const fixture = buildFixture();
-      const comp = fixture.componentInstance;
-      comp.writeValue(null as any);
-      expect(comp.value).toBe('');
-    });
-
-    it('registerOnChange stores callback', () => {
-      const fixture = buildFixture();
-      const comp = fixture.componentInstance;
-      const spy = jasmine.createSpy('onChange');
-      comp.registerOnChange(spy);
-      // Internally stored — verify it's reachable via the private field approach:
-      // Call through onReady + data change to verify callback fires
-      expect(spy).not.toHaveBeenCalled(); // just stored, not called yet
-    });
-
-    it('registerOnTouched stores callback without errors', () => {
-      const fixture = buildFixture();
-      const comp = fixture.componentInstance;
-      const spy = jasmine.createSpy('onTouched');
-      comp.registerOnTouched(spy);
-      expect(spy).not.toHaveBeenCalled();
-    });
+  it('normalizes nullish CVA writes and retains unsafe source without changing its caller value', () => {
+    const unsafe = '<p onclick="x()">Original</p>';
+    component.writeValue(unsafe);
+    expect(component.value).toBe(unsafe);
+    expect(component.surfaceContent()).toBe(unsafe);
+    component.writeValue(null as never);
+    expect(component.value).toBe('');
   });
-
-  // ─── 6. Public methods (no editor) ───────────────────────────────────────
-
-  describe('public methods — no editor initialised', () => {
-    it('getContent returns empty string when editor not ready', () => {
-      const fixture = buildFixture();
-      expect(fixture.componentInstance.getContent()).toBe('');
-    });
-
-    it('getHtmlContent returns empty string when editor not ready', () => {
-      const fixture = buildFixture();
-      expect(fixture.componentInstance.getHtmlContent()).toBe('');
-    });
-
-    it('setContent does not throw when editor not ready', () => {
-      const fixture = buildFixture();
-      expect(() => fixture.componentInstance.setContent('<p>test</p>')).not.toThrow();
-    });
-
-    it('focusEditor does not throw when editor not ready', () => {
-      const fixture = buildFixture();
-      expect(() => fixture.componentInstance.focusEditor()).not.toThrow();
-    });
-
-    it('insertMention does not throw when editor not ready', () => {
-      const fixture = buildFixture();
-      expect(() => fixture.componentInstance.insertMention({ id: '1', name: 'user' })).not.toThrow();
-    });
-
-    it('getMentions returns empty array when editor not ready', () => {
-      const fixture = buildFixture();
-      expect(fixture.componentInstance.getMentions()).toEqual([]);
-    });
-  });
-
-  // ─── 7. onReady + editor interactions ────────────────────────────────────
-
-  describe('onReady — with fake editor', () => {
-    it('calls setData with initial value when editor is ready', () => {
-      const fixture = TestBed.createComponent(SdMiniEditor);
-      const comp = fixture.componentInstance;
-      comp.option = defaultOption;
-      comp.value = '<p>initial</p>';
+  it('calls CVA, both outputs and option callback in the established order', fakeAsync(() => {
+    const order: string[] = [];
+    component.registerOnChange(value => order.push('cva:' + value));
+    component.valueChange.subscribe(value => order.push('value:' + value));
+    component.contentChange.subscribe(value => order.push('content:' + value));
+    component.option = { onChange: value => order.push('option:' + value) };
+    surface.change.emit('<p>User</p>');
+    expect(order).toEqual(['cva:<p>User</p>', 'value:<p>User</p>', 'content:<p>User</p>', 'option:<p>User</p>']);
+    expect(component.value).toBe('<p>User</p>');
+    tick(500);
+  }));
+  it('throttles at 500ms with leading and trailing values, and continued windows', fakeAsync(() => {
+    const values: string[] = [];
+    component.contentChange.subscribe(value => values.push(value));
+    surface.change.emit('first');
+    tick(100);
+    surface.change.emit('second');
+    tick(100);
+    surface.change.emit('third');
+    expect(values).toEqual(['first']);
+    tick(299);
+    expect(values).toEqual(['first']);
+    tick(1);
+    expect(values).toEqual(['first', 'third']);
+    surface.change.emit('fourth');
+    tick(500);
+    expect(values).toEqual(['first', 'third', 'fourth']);
+    tick(500);
+  }));
+  for (const update of [
+    { name: 'placeholder', option: { placeholder: 'Updated' } },
+    { name: 'maxHeight', option: { maxHeight: '240px' } },
+    { name: 'onChange callback', option: {} },
+    { name: 'equivalent default html format', option: { outputFormat: 'html' as const } },
+  ]) {
+    it(`preserves the pending final CVA value and outputs when ${update.name} changes (B1 RED)`, fakeAsync(() => {
+      const order: string[] = [];
+      const originalCallback = jasmine.createSpy('original onChange').and.callFake((value: string) => order.push('original:' + value));
+      const replacementCallback = jasmine
+        .createSpy('replacement onChange')
+        .and.callFake((value: string) => order.push('replacement:' + value));
+      component.registerOnChange(value => order.push('cva:' + value));
+      component.valueChange.subscribe(value => order.push('value:' + value));
+      component.contentChange.subscribe(value => order.push('content:' + value));
+      fixture.componentRef.setInput('option', { onChange: originalCallback });
       fixture.detectChanges();
-
-      const fakeEditor = makeFakeEditor();
-      comp.onReady(fakeEditor);
-
-      expect(fakeEditor.setData).toHaveBeenCalledWith('<p>initial</p>');
-    });
-
-    it('does NOT call setData when value is empty on ready', () => {
-      const fixture = buildFixture();
-      const fakeEditor = makeFakeEditor();
-      fixture.componentInstance.onReady(fakeEditor);
-      expect(fakeEditor.setData).not.toHaveBeenCalled();
-    });
-
-    it('getContent returns editor getData() output after onReady', () => {
-      const fixture = buildFixture();
-      const comp = fixture.componentInstance;
-      const fakeEditor = makeFakeEditor();
-      fakeEditor._data = '<p>content</p>';
-      comp.onReady(fakeEditor);
-      expect(comp.getContent()).toBe('<p>content</p>');
-    });
-
-    it('getHtmlContent returns raw getData() after onReady', () => {
-      const fixture = buildFixture();
-      const comp = fixture.componentInstance;
-      const fakeEditor = makeFakeEditor();
-      fakeEditor._data = '<b>html</b>';
-      comp.onReady(fakeEditor);
-      expect(comp.getHtmlContent()).toBe('<b>html</b>');
-    });
-
-    it('writeValue calls setData when editor is ready', () => {
-      const fixture = buildFixture();
-      const comp = fixture.componentInstance;
-      const fakeEditor = makeFakeEditor();
-      comp.onReady(fakeEditor);
-      comp.writeValue('<p>updated</p>');
-      expect(fakeEditor.setData).toHaveBeenCalledWith('<p>updated</p>');
-    });
-  });
-
-  // ─── 8. Output events ────────────────────────────────────────────────────
-
-  describe('output events via onReady', () => {
-    it('emits contentChange after data change (after throttle)', fakeAsync(() => {
-      const fixture = buildFixture();
-      const comp = fixture.componentInstance;
-      const changeSpy = jasmine.createSpy('contentChange');
-      comp.contentChange.subscribe(changeSpy);
-      comp.registerOnChange(() => {});
-
-      const fakeEditor = makeFakeEditor();
-      fakeEditor._data = '<p>new text</p>';
-      comp.onReady(fakeEditor);
-
-      fakeEditor.triggerDataChange();
-      tick(600); // past throttleTime(500) trailing
+      surface.change.emit('<p>Leading</p>');
+      tick(100);
+      surface.change.emit('<p>Final</p>');
+      const callbackChanged = update.name === 'onChange callback';
+      fixture.componentRef.setInput('option', {
+        ...update.option,
+        onChange: callbackChanged ? replacementCallback : originalCallback,
+      });
       fixture.detectChanges();
-
-      expect(changeSpy).toHaveBeenCalledWith('<p>new text</p>');
+      tick(399);
+      expect(order).toEqual(['cva:<p>Leading</p>', 'value:<p>Leading</p>', 'content:<p>Leading</p>', 'original:<p>Leading</p>']);
+      tick(1);
+      expect(order).toEqual([
+        'cva:<p>Leading</p>',
+        'value:<p>Leading</p>',
+        'content:<p>Leading</p>',
+        'original:<p>Leading</p>',
+        'cva:<p>Final</p>',
+        'value:<p>Final</p>',
+        'content:<p>Final</p>',
+        `${callbackChanged ? 'replacement' : 'original'}:<p>Final</p>`,
+      ]);
+      expect(component.value).toBe('<p>Final</p>');
+      expect(originalCallback).toHaveBeenCalledTimes(callbackChanged ? 1 : 2);
+      expect(replacementCallback).toHaveBeenCalledTimes(callbackChanged ? 1 : 0);
+      tick(1000);
+      expect(order.length).toBe(8);
     }));
-
-    it('emits valueChange after data change (after throttle)', fakeAsync(() => {
-      const fixture = buildFixture();
-      const comp = fixture.componentInstance;
-      const valueSpy = jasmine.createSpy('valueChange');
-      comp.valueChange.subscribe(valueSpy);
-      comp.registerOnChange(() => {});
-
-      const fakeEditor = makeFakeEditor();
-      fakeEditor._data = '<p>value</p>';
-      comp.onReady(fakeEditor);
-
-      fakeEditor.triggerDataChange();
-      tick(600);
-      fixture.detectChanges();
-
-      expect(valueSpy).toHaveBeenCalledWith('<p>value</p>');
-    }));
-
-    it('emits focus event on editor focus', () => {
-      const fixture = buildFixture();
-      const comp = fixture.componentInstance;
-      const focusSpy = jasmine.createSpy('focus');
-      comp.focus.subscribe(focusSpy);
-
-      const fakeEditor = makeFakeEditor();
-      comp.onReady(fakeEditor);
-
-      const domEvent = new FocusEvent('focus');
-      fakeEditor.triggerFocus(domEvent);
-
-      expect(focusSpy).toHaveBeenCalledWith(domEvent);
+  }
+  it('delivers the converted latest value at the retained deadline after an output format transition (B2)', fakeAsync(() => {
+    const changed = jasmine.createSpy('changed');
+    component.registerOnChange(changed);
+    component.valueChange.subscribe(changed);
+    component.contentChange.subscribe(changed);
+    fixture.componentRef.setInput('option', { onChange: changed });
+    fixture.detectChanges();
+    surface.change.emit('<p>Leading</p>');
+    tick(100);
+    surface.change.emit('<p>Final</p>');
+    fixture.componentRef.setInput('option', { outputFormat: 'markdown', onChange: changed });
+    fixture.detectChanges();
+    surface.sourceChange.emit('format');
+    surface.formatChange.emit('Final');
+    tick(399);
+    expect(changed.calls.allArgs()).toEqual(Array.from({ length: 4 }, () => ['<p>Leading</p>']));
+    tick(1);
+    expect(changed.calls.allArgs()).toEqual([
+      ...Array.from({ length: 4 }, () => ['<p>Leading</p>']),
+      ...Array.from({ length: 4 }, () => ['Final']),
+    ]);
+    expect(component.value).toBe('Final');
+    tick(1000);
+    expect(changed.calls.count()).toBe(8);
+  }));
+  it('does not duplicate the leading value when there is no trailing edit', fakeAsync(() => {
+    const values: string[] = [];
+    component.valueChange.subscribe(value => values.push(value));
+    surface.change.emit('single');
+    tick(1000);
+    expect(values).toEqual(['single']);
+  }));
+  it('external write cancels pending trailing content and starts a fresh throttle window', fakeAsync(() => {
+    const values: string[] = [];
+    component.valueChange.subscribe(value => values.push(value));
+    surface.change.emit('first');
+    surface.change.emit('stale');
+    component.writeValue('authoritative');
+    tick(500);
+    expect(values).toEqual(['first']);
+    surface.change.emit('new');
+    expect(values).toEqual(['first', 'new']);
+    tick(500);
+  }));
+  it('source generation cancellation suppresses stale trailing composition callbacks', fakeAsync(() => {
+    const values: string[] = [];
+    component.valueChange.subscribe(value => values.push(value));
+    surface.change.emit('before');
+    surface.change.emit('stale');
+    surface.sourceChange.emit();
+    tick(1000);
+    expect(values).toEqual(['before']);
+  }));
+  it('consumer echoes retain the current engine selection/history and throttle window', fakeAsync(() => {
+    const engine = engineMock();
+    surface.engineReady.emit(engine as unknown as SdEditorEngine);
+    const values: string[] = [];
+    component.valueChange.subscribe(value => values.push(value));
+    engine.value = 'leading';
+    surface.change.emit('leading');
+    component.writeValue('leading');
+    engine.value = 'trailing';
+    surface.change.emit('trailing');
+    expect(engine.setContent).not.toHaveBeenCalled();
+    tick(500);
+    expect(values).toEqual(['leading', 'trailing']);
+    tick(500);
+  }));
+  it('honors resetting an emitted value while a different live trailing edit is pending (R1 RED)', fakeAsync(() => {
+    const engine = engineMock();
+    surface.engineReady.emit(engine as unknown as SdEditorEngine);
+    const values: string[] = [];
+    component.valueChange.subscribe(value => values.push(value));
+    engine.value = '<p>A</p>';
+    surface.change.emit(engine.value);
+    tick(50);
+    engine.value = '<p>B</p>';
+    surface.change.emit(engine.value);
+    component.writeValue('<p>A</p>');
+    tick(1000);
+    expect(engine.setContent).toHaveBeenCalledOnceWith('<p>A</p>', 'html');
+    expect(engine.value).toBe('<p>A</p>');
+    expect(values).toEqual(['<p>A</p>']);
+    expect(component.value).toBe('<p>A</p>');
+  }));
+  it('resets an actually edited engine document to its emitted CVA value before trailing emission (R1 real engine RED)', fakeAsync(() => {
+    const host = document.createElement('div');
+    fixture.nativeElement.appendChild(host);
+    const values: string[] = [];
+    component.valueChange.subscribe(value => values.push(value));
+    const engine = new SdEditorEngine(host, {
+      onChange: value => surface.change.emit(value),
+      onSourceChange: () => surface.sourceChange.emit(),
     });
-
-    it('emits blur event on editor blur', () => {
-      const fixture = buildFixture();
-      const comp = fixture.componentInstance;
-      const blurSpy = jasmine.createSpy('blur');
-      comp.blur.subscribe(blurSpy);
-
-      const fakeEditor = makeFakeEditor();
-      comp.onReady(fakeEditor);
-
-      const domEvent = new FocusEvent('blur');
-      fakeEditor.triggerBlur(domEvent);
-
-      expect(blurSpy).toHaveBeenCalledWith(domEvent);
-    });
-
-    it('calls option.onBlur callback on blur', () => {
-      const blurCb = jasmine.createSpy('onBlur');
-      const fixture = buildFixture({ onBlur: blurCb });
-      const comp = fixture.componentInstance;
-      const fakeEditor = makeFakeEditor();
-      comp.onReady(fakeEditor);
-
-      const domEvent = new FocusEvent('blur');
-      fakeEditor.triggerBlur(domEvent);
-
-      expect(blurCb).toHaveBeenCalledWith(domEvent);
-    });
-
-    it('calls option.onFocus callback on focus', () => {
-      const focusCb = jasmine.createSpy('onFocus');
-      const fixture = buildFixture({ onFocus: focusCb });
-      const comp = fixture.componentInstance;
-      const fakeEditor = makeFakeEditor();
-      comp.onReady(fakeEditor);
-
-      const domEvent = new FocusEvent('focus');
-      fakeEditor.triggerFocus(domEvent);
-
-      expect(focusCb).toHaveBeenCalledWith(domEvent);
-    });
-
-    it('calls option.onChange callback after data change', fakeAsync(() => {
-      const changeCb = jasmine.createSpy('onChange');
-      const fixture = buildFixture({ onChange: changeCb });
-      const comp = fixture.componentInstance;
-
-      const fakeEditor = makeFakeEditor();
-      fakeEditor._data = 'changed';
-      comp.onReady(fakeEditor);
-
-      fakeEditor.triggerDataChange();
-      tick(600);
-      fixture.detectChanges();
-
-      expect(changeCb).toHaveBeenCalledWith('changed');
-    }));
+    try {
+      surface.engineReady.emit(engine);
+      engine.editor.commands.insertContent('A');
+      const valueA = component.value;
+      engine.editor.commands.insertContent('B');
+      expect(engine.getContent()).not.toBe(valueA);
+      component.writeValue(valueA);
+      tick(1000);
+      expect(engine.getContent()).toBe(valueA);
+      expect(component.value).toBe(valueA);
+      expect(values).toEqual([valueA]);
+    } finally {
+      engine.destroy();
+      host.remove();
+    }
+  }));
+  it('pauses a trailing throttle window during composition and emits the latest value at the retained deadline (R4 RED)', fakeAsync(() => {
+    const values: string[] = [];
+    component.valueChange.subscribe(value => values.push(value));
+    surface.change.emit('leading');
+    tick(100);
+    surface.change.emit('pending');
+    surface.compositionChange.emit(true);
+    tick(500);
+    expect(values).toEqual(['leading']);
+    surface.change.emit('final IME');
+    expect(values).toEqual(['leading']);
+    surface.compositionChange.emit(false);
+    tick(0);
+    expect(values).toEqual(['leading', 'final IME']);
+    tick(1000);
+    expect(values).toEqual(['leading', 'final IME']);
+  }));
+  it('preserves the remaining throttle time when composition ends before the deadline (R4 RED)', fakeAsync(() => {
+    const values: string[] = [];
+    component.valueChange.subscribe(value => values.push(value));
+    surface.change.emit('leading');
+    tick(100);
+    surface.change.emit('pending');
+    surface.compositionChange.emit(true);
+    tick(100);
+    surface.change.emit('final IME');
+    surface.compositionChange.emit(false);
+    tick(299);
+    expect(values).toEqual(['leading']);
+    tick(1);
+    expect(values).toEqual(['leading', 'final IME']);
+    tick(500);
+  }));
+  it('defers a fresh leading change until composition ends and does not duplicate it (R4 RED)', fakeAsync(() => {
+    const values: string[] = [];
+    component.valueChange.subscribe(value => values.push(value));
+    surface.compositionChange.emit(true);
+    surface.change.emit('final');
+    tick(600);
+    expect(values).toEqual([]);
+    surface.compositionChange.emit(false);
+    tick(0);
+    expect(values).toEqual(['final']);
+    tick(1000);
+    expect(values).toEqual(['final']);
+  }));
+  it('external source replacement cancels a paused trailing value without emitting it (R4 RED)', fakeAsync(() => {
+    const values: string[] = [];
+    component.valueChange.subscribe(value => values.push(value));
+    surface.change.emit('leading');
+    surface.change.emit('old');
+    surface.compositionChange.emit(true);
+    tick(600);
+    component.writeValue('server');
+    surface.sourceChange.emit();
+    surface.compositionChange.emit(false);
+    tick(1000);
+    expect(values).toEqual(['leading']);
+    expect(component.value).toBe('server');
+  }));
+  it('notifies the CVA touched callback on editable blur (behavioral RED regression)', () => {
+    const touched = jasmine.createSpy('touched');
+    component.registerOnTouched(touched);
+    const event = new FocusEvent('blur');
+    const blur = jasmine.createSpy('blur');
+    component.blur.subscribe(blur);
+    const callback = jasmine.createSpy('onBlur');
+    component.option = { onBlur: callback };
+    surface.blur.emit(event);
+    expect(touched).toHaveBeenCalledTimes(1);
+    expect(blur).toHaveBeenCalledOnceWith(event);
+    expect(callback).toHaveBeenCalledOnceWith(event);
   });
-
-  // ─── 9. ngOnDestroy ──────────────────────────────────────────────────────
-
-  describe('ngOnDestroy', () => {
-    it('calls editor.destroy on component destruction', () => {
-      const fixture = buildFixture();
-      const comp = fixture.componentInstance;
-      const fakeEditor = makeFakeEditor();
-      comp.onReady(fakeEditor);
-
-      fixture.destroy();
-      expect(fakeEditor.destroy).toHaveBeenCalled();
-    });
-
-    it('does not throw on destroy when editor was never initialised', () => {
-      const fixture = buildFixture();
-      expect(() => fixture.destroy()).not.toThrow();
-    });
+  it('keeps exact FocusEvent identity for focus and its option callback', () => {
+    const event = new FocusEvent('focus');
+    const focus = jasmine.createSpy('focus');
+    component.focus.subscribe(focus);
+    const callback = jasmine.createSpy('onFocus');
+    component.option = { onFocus: callback };
+    surface.focus.emit(event);
+    expect(focus).toHaveBeenCalledOnceWith(event);
+    expect(callback).toHaveBeenCalledOnceWith(event);
   });
-  // ─── 10. Output sanitization (D-032) ─────────────────────────────────────
-
-  describe('output sanitization (D-032)', () => {
-    const UNSAFE = '<p>Hi <a href="javascript:alert(1)">x</a> <img src="/a.png" onerror="alert(1)"></p>';
-    const CLEANED = '<p>Hi <a>x</a> <img src="/a.png"></p>';
-
-    it('limits link protocols to https, http, mailto and tel', () => {
-      const fixture = buildFixture();
-      expect(fixture.componentInstance.editorConfig.link?.allowedProtocols).toEqual(['https', 'http', 'mailto', 'tel']);
-    });
-
-    it('emits filtered HTML through valueChange, contentChange, option.onChange and the form callback', fakeAsync(() => {
-      const onChangeOption = jasmine.createSpy('option.onChange');
-      const fixture = buildFixture({ onChange: onChangeOption });
-      const comp = fixture.componentInstance;
-      const valueSpy = jasmine.createSpy('valueChange');
-      const contentSpy = jasmine.createSpy('contentChange');
-      const formSpy = jasmine.createSpy('onChange');
-      comp.valueChange.subscribe(valueSpy);
-      comp.contentChange.subscribe(contentSpy);
-      comp.registerOnChange(formSpy);
-      const fakeEditor = makeFakeEditor();
-      fakeEditor._data = UNSAFE;
-      comp.onReady(fakeEditor);
-
-      fakeEditor.triggerDataChange();
-      tick(600);
-
-      for (const spy of [valueSpy, contentSpy, formSpy, onChangeOption]) expect(spy).toHaveBeenCalledOnceWith(CLEANED);
-      expect(comp.value).toBe(CLEANED);
-    }));
-
-    it('filters getContent() and getHtmlContent()', () => {
-      const fixture = buildFixture();
-      const comp = fixture.componentInstance;
-      const fakeEditor = makeFakeEditor();
-      fakeEditor._data = UNSAFE;
-      comp.onReady(fakeEditor);
-
-      expect(comp.getContent()).toBe(CLEANED);
-      expect(comp.getHtmlContent()).toBe(CLEANED);
-    });
-
-    it('writes filtered content back once and marks the form control dirty', fakeAsync(() => {
-      const fixture = TestBed.createComponent(MiniEditorFormHostComponent);
-      fixture.detectChanges();
-      const control = fixture.componentInstance.control;
-      const comp = fixture.debugElement.query(By.directive(SdMiniEditor)).componentInstance as SdMiniEditor;
-      const fakeEditor = makeFakeEditor();
-      comp.onReady(fakeEditor); // nạp giá trị ban đầu vào editor qua setData
-      expect(control.dirty).toBeFalse();
-
-      fakeEditor.triggerDataChange(); // CKEditor phát change:data sau setData
-      tick(600);
-
-      expect(control.value).toBe('<p>Hi <a>x</a></p>');
-      expect(control.dirty).toBeTrue();
-    }));
+  it('combines disabled input and CVA disable with OR semantics', () => {
+    component.setDisabledState(true);
+    fixture.detectChanges();
+    expect(surface.editable()).toBeFalse();
+    fixture.componentRef.setInput('disabled', true);
+    component.setDisabledState(false);
+    fixture.detectChanges();
+    expect(surface.editable()).toBeFalse();
+    fixture.componentRef.setInput('disabled', false);
+    fixture.detectChanges();
+    expect(surface.editable()).toBeTrue();
+    component.setDisabledState(true);
+    fixture.componentRef.setInput('disabled', false);
+    fixture.detectChanges();
+    expect(surface.editable()).toBeFalse();
   });
-
-  // ─── 11. Markdown output with a real CKEditor ────────────────────────────
-
-  describe('Markdown output (real CKEditor)', () => {
-    it('filters the HTML before converting it to Markdown', async () => {
-      const fixture = buildFixture({ outputFormat: 'markdown' });
-      const comp = fixture.componentInstance;
-      const element = document.createElement('div');
-      document.body.appendChild(element);
-      const editor = await ClassicEditor.create(element, comp.editorConfig as never);
-      try {
-        comp.onReady(editor);
-        editor.setData('[safe](https://example.com) and [bad](javascript:alert(1))');
-
-        const markdown = comp.getContent();
-        expect(markdown).toContain('[safe](https://example.com)');
-        expect(markdown).toContain('bad');
-        expect(markdown).not.toContain('javascript:');
-
-        const html = comp.getHtmlContent();
-        expect(html).toContain('href="https://example.com"');
-        expect(html).not.toContain('javascript:');
-        expect(html.startsWith('<p>')).toBeTrue();
-      } finally {
-        await editor.destroy();
-        element.remove();
-      }
-    });
+  it('disable cancels pending values and prevents user callbacks', fakeAsync(() => {
+    const values: string[] = [];
+    component.valueChange.subscribe(value => values.push(value));
+    surface.change.emit('first');
+    surface.change.emit('stale');
+    component.setDisabledState(true);
+    surface.change.emit('disabled');
+    tick(1000);
+    expect(values).toEqual(['first']);
+  }));
+  it('exposes readonly diagnostic state and emits warning without a value mutation', () => {
+    const value = '<dl><dt>Source</dt></dl>';
+    component.writeValue(value);
+    const warning = jasmine.createSpy('warning');
+    const change = jasmine.createSpy('change');
+    component.importWarning.subscribe(warning);
+    component.valueChange.subscribe(change);
+    const diagnostics: SdEditorImportDiagnostic[] = [{ code: 'unsupported-html', path: '/dl', tag: 'dl', detail: 'Unsupported structure' }];
+    surface.diagnostics.emit(diagnostics);
+    expect(component.importDiagnostics()).toBe(diagnostics);
+    expect(warning).toHaveBeenCalledOnceWith(diagnostics);
+    expect(change).not.toHaveBeenCalled();
+    expect(component.value).toBe(value);
   });
+  it('delegates safe HTML/format getters and propagates export errors', () => {
+    const engine = engineMock('**Markdown**');
+    engine.getHtml.and.returnValue('<p><strong>Markdown</strong></p>');
+    surface.engineReady.emit(engine as unknown as SdEditorEngine);
+    expect(component.getContent()).toBe('**Markdown**');
+    expect(component.getHtmlContent()).toBe('<p><strong>Markdown</strong></p>');
+    engine.getContent.and.throwError('blocked export');
+    expect(() => component.getContent()).toThrowError('blocked export');
+  });
+  it('delegates mention identity/getters and default feed marker', () => {
+    component.option = { enableMention: true, mentionConfig: { feeds: [{ marker: '#', feed: [] }] } };
+    const engine = engineMock();
+    surface.engineReady.emit(engine as unknown as SdEditorEngine);
+    component.insertMention({ id: 'identity', name: 'User' });
+    expect(engine.insertMention).toHaveBeenCalledOnceWith({ id: 'identity', name: 'User', marker: '#' });
+    expect(component.getMentions()).toEqual([{ id: 'identity', name: 'User', marker: '@' }]);
+  });
+  it('calls mention selection callback with the library-owned feed item', () => {
+    const callback = jasmine.createSpy('onMentionSelect');
+    component.option = { onMentionSelect: callback };
+    const item = { id: 'untouched-id', name: 'User', data: { role: 'customer' } };
+    surface.mentionSelected.emit(item);
+    expect(callback).toHaveBeenCalledOnceWith(item);
+  });
+  it('ignores mention insertion while disabled or mention option is off', () => {
+    const engine = engineMock();
+    surface.engineReady.emit(engine as unknown as SdEditorEngine);
+    component.insertMention({ id: '1', name: 'User' });
+    expect(engine.insertMention).not.toHaveBeenCalled();
+    component.option = { enableMention: true };
+    component.setDisabledState(true);
+    component.insertMention({ id: '1', name: 'User' });
+    expect(engine.insertMention).not.toHaveBeenCalled();
+  });
+  it('delegates focus without owning engine destruction and cancels destroyed timers', fakeAsync(() => {
+    const engine = engineMock();
+    surface.engineReady.emit(engine as unknown as SdEditorEngine);
+    component.focusEditor();
+    expect(engine.focus).toHaveBeenCalledTimes(1);
+    const values: string[] = [];
+    component.valueChange.subscribe(value => values.push(value));
+    surface.change.emit('first');
+    surface.change.emit('stale');
+    fixture.destroy();
+    tick(1000);
+    expect(values).toEqual(['first']);
+    expect(engine.destroy).not.toHaveBeenCalled();
+  }));
+  it('integrates reactive forms initial value, external writes, touched, change and disabled', fakeAsync(() => {
+    const host = TestBed.createComponent(FormHost);
+    host.detectChanges();
+    const adapter: SdMiniEditor = host.debugElement.query(By.directive(SdMiniEditor)).componentInstance;
+    expect(adapter.surfaceContent()).toBe('<p>Initial</p>');
+    host.componentInstance.control.setValue('<p>Server</p>');
+    host.detectChanges();
+    expect(adapter.surfaceContent()).toBe('<p>Server</p>');
+    adapter.onSurfaceBlur(new FocusEvent('blur'));
+    expect(host.componentInstance.control.touched).toBeTrue();
+    adapter.onSurfaceChange('<p>Edited</p>');
+    expect(host.componentInstance.control.value).toBe('<p>Edited</p>');
+    host.componentInstance.control.disable();
+    host.detectChanges();
+    expect(adapter.effectiveDisabled()).toBeTrue();
+    host.destroy();
+    tick(500);
+  }));
+  it('integrates ngModel initial value and user writes', fakeAsync(() => {
+    const host = TestBed.createComponent(ModelHost);
+    host.detectChanges();
+    tick();
+    host.detectChanges();
+    const adapter: SdMiniEditor = host.debugElement.query(By.directive(SdMiniEditor)).componentInstance;
+    expect(adapter.surfaceContent()).toBe('<p>Model</p>');
+    adapter.onSurfaceChange('<p>Edited model</p>');
+    tick();
+    expect(host.componentInstance.value).toBe('<p>Edited model</p>');
+    host.destroy();
+    tick(500);
+  }));
 });

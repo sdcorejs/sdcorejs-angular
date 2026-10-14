@@ -1,184 +1,92 @@
 # `<sd-editor>`
 
-**Type**: Component
-**Selector**: `sd-editor`
-**Import path**: `@sdcorejs/angular/components/editor` (or barrel: `@sdcorejs/angular/components`)
-**Class**: `SdEditor`
-**Standalone**: yes
-**Change detection**: `OnPush`
+**Type:** standalone OnPush component. **Class:** SdEditor. **Import:** `@sdcorejs/angular/components/editor` (also components barrel).
 
-## One-line purpose
-Form-bound rich-text editor (CKEditor 5 ClassicEditor) with bold/italic/underline, font size & color, alignment, lists, and optional inline image upload + label/required/maxlength validation.
+## Purpose
 
-## When to use
-- Long-form rich-text fields on forms — descriptions, notes, articles, email body
-- Anywhere users need formatted text with images and word-style alignment
-- Content fields that must integrate with `FormGroup` / `[(model)]` and validation (required, maxlength, custom)
-- When you need batched / deferred image uploads tied to form save
-
-## When NOT to use
-- For short comments / chat messages → use `<sd-mini-editor>` (lighter toolbar)
-- For plain text → use `<sd-input type="textarea">`
-- For code → use `<sd-code-editor>`
+Form-bound HTML editing with a full Core toolbar, shared Tiptap OSS schema, images and validation. Use MiniEditor for the compact toolbar; it preserves the same supported rich content. Use a textarea for plain text and CodeEditor for code.
 
 ## Inputs
-| Name | Type | Default | Notes |
-| --- | --- | --- | --- |
-| `option` | `SdEditorOption` | `{}` | Drives image upload, batch config, lazy-load. |
-| `model` (alias of `valueModel`) | `string` | `''` | Two-way bindable: `[(model)]="html"`. |
-| `height` | `string` | `'250px'` | Min height of the editor content area. Wired to `--sd-editor-content-min-height`. |
-| `maxHeight` | `string` | `'250px'` | Max height before vertical scroll. Wired to `--sd-editor-content-max-height`. |
-| `maxlength` | `number \| undefined` | `undefined` | Max plain-text character count (counts text, not HTML tags). When set, a counter displays. |
-| `label` | `string \| undefined` | `undefined` | Optional `<sd-label>` rendered above the editor. |
-| `helperText` | `string \| undefined` | `undefined` | Helper text passed to `<sd-label>`. |
-| `required` | `boolean` | `false` | Marks the field required. Bare attribute = true. |
-| `disabled` | `boolean` | `false` | Disables editing AND associated `formControl`. Bare attribute = true. |
-| `readonly` | `boolean` | `false` | View-only mode (toolbar still visible but greyed). Bare attribute = true. |
-| `hideInlineError` | `boolean` | `false` | Hide the inline `<mat-error>`; instead show a small error icon with tooltip. Bare attribute = true. |
-| `inlineError` | `string \| undefined` | `undefined` | Imperative error message override (e.g. server-side error). |
-| `placeholder` | `string \| undefined` | `undefined` | Placeholder shown when empty. |
-| `validator` | `SdCustomValidator \| undefined` | `undefined` | Async custom validator. |
-| `form` | `FormGroup \| NgForm` | `undefined` | When set + `key`/`name`, the editor registers its `formControl` as a child of this group. |
-| `key` | `string \| undefined` | `undefined` | Selects which `ISdEditorConfiguration` to use (when multiple are provided via DI). |
-| `autoId` | `string \| null \| undefined` | `undefined` | Generates `data-autoId="components-editor-<value>"` for E2E. |
-| `name` | `string` | random uuid | Form control name. |
 
-## Outputs
-| Name | Type | Notes |
-| --- | --- | --- |
-| `model` (two-way) | `string` | Companion to `[(model)]`. |
-| `sdChange` | `string` | Debounced 100ms after editor data change. Already strips/normalizes inline image classes to inline styles, and is filtered by `sdSanitizeEditorHtml` (see *Output sanitization*). |
-| `sdBlur` | `FocusEvent` | Editor lost focus; also marks the form control as touched. |
-| `sdFocus` | `FocusEvent` | Editor gained focus. |
+| Name                           | Type / default             | Behavior                                                                                                   |
+| ------------------------------ | -------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| option                         | SdEditorOption / {}        | Image upload settings.                                                                                     |
+| model (valueModel alias)       | string / ''                | `[(model)]` with implicit modelChange.                                                                     |
+| form                           | FormGroup / optional       | Also accepts NgForm or an object whose form is a FormGroup.                                                |
+| name                           | string / generated UUID    | Form registration name; owned registrations rebind and clean up.                                           |
+| label, helperText, placeholder | optional string            | Label, description and empty-content prompt.                                                               |
+| required, disabled, readonly   | boolean / false            | booleanAttribute coercion. Disabled removes the control from normal form value; readonly keeps it enabled. |
+| maxlength                      | optional number            | Validation/counter; does not truncate.                                                                     |
+| validator                      | optional SdCustomValidator | Existing asynchronous custom-validation contract.                                                          |
+| inlineError                    | optional string            | Application error.                                                                                         |
+| hideInlineError                | boolean / false            | Accessible tooltip/error alternative.                                                                      |
+| height, maxHeight              | string / '250px' each      | Editable/preview geometry and scrolling.                                                                   |
+| key                            | optional string            | Selects upload configuration, independently of form name.                                                  |
+| autoId (autoIdInput alias)     | string/null / optional     | Produces components-editor-{autoId} data hook.                                                             |
 
-## Public methods
-- `onReady(editor)` — internal CKEditor lifecycle hook (don't call manually).
-- `focusEditor()` — programmatic focus.
-- `upload(): Promise<string>` — runs deferred image uploads (see `imageConfig.uploadMode === 'deferred'`) and returns final HTML (filtered like every other output). Use this in your save handler when uploads are batched.
+Editor uses its existing form/name connector and internal SdFormControl; it is not a CVA. Required/maxlength retain UTF-16 counting semantics, excluding img and all figure content (including figure-contained table/caption text).
 
-## Content projection
-None — label/error chrome is rendered by the component itself based on inputs.
+## Outputs and state
 
-## Visual cues
-- Optional `<sd-label>` row above (label + required asterisk + helper text)
-- Top toolbar with grouped buttons: Bold | Italic | Underline | Font size | Font color | Alignments (left/center/right/justify) | Bulleted list | Numbered list | (optional) Upload image
-- Content area: white box with min/max height, vertical scroll past max
-- Bottom-right counter "<chars>/<maxlength>" in red when over limit
-- Material `<mat-error>` line below for inline error (or a small red error icon with tooltip when `hideInlineError`)
-- Image upload feature: drag/drop or paste images; size resize toolbar (100/75/50/25/Original); align left/center/right
-- Disabled / readonly state greys out toolbar and content
+| Name              | Payload / behavior                                               |
+| ----------------- | ---------------------------------------------------------------- |
+| modelChange       | string; two-way model companion.                                 |
+| sdChange          | string; user edits debounced 100ms.                              |
+| sdFocus, sdBlur   | native editable FocusEvent; blur marks touched.                  |
+| sdImportWarning   | readonly SdEditorImportDiagnostic[]. No automatic value rewrite. |
+| importDiagnostics | readonly signal containing current import diagnostics.           |
 
-## Output sanitization (BREAKING)
+Editable focus/blur remains distinct from whole-component focus: opening a toolbar popup can blur the editable. Equal current-value echoes preserve selection/history. Authoritative replacements cancel pending old emissions/uploads; composition delays replacement and prevents mid-composition output.
 
-The HTML that leaves the editor — `[(model)]`, the form value, `sdChange` and the string returned by
-`upload()` — now goes through `sdSanitizeEditorHtml` (`@sdcorejs/angular/utilities/extensions`), an
-allowlist filter:
+## Example
 
-- Formatting CKEditor produces is kept unchanged: paragraphs, bold/italic/underline, font colour and
-  size (`<span style>`), alignment, lists, images with their inline size/alignment styles and
-  `loading="lazy"`.
-- Removed: `<script>`, `<style>`, `<iframe>`, form controls and other dangerous elements (with their
-  content); every `on*` attribute; `href` outside http/https/mailto/tel/relative/`#`; image `src`
-  outside http/https/`blob:`/relative/`data:image/*`.
-- Clean output is returned as the exact same string, so a normal edit never changes shape.
-
-Content loaded from outside (the model, a form value) that needs filtering is written back **once** with
-the filtered HTML and the control is marked **dirty**, so an unsaved-changes guard sees that the stored
-value differs. The editor view itself is not rewritten (pending deferred image uploads are kept).
-
-Render stored HTML elsewhere through the same function when it may not have come from this editor:
-`sdSanitizeEditorHtml(html)`.
-
-## Examples
-
-### 1. Basic with required + maxlength
-```html
-<sd-editor
-  label="Mô tả"
-  placeholder="Nhập mô tả chi tiết..."
-  [maxlength]="2000"
-  [required]="true"
-  [(model)]="form.value.description">
-</sd-editor>
-```
-
-### 2. Inside a Reactive form
-```html
-<form #f="ngForm" [formGroup]="formGroup">
-  <sd-editor
-    label="Nội dung email"
-    name="body"
-    [form]="f"
-    [required]="true"
-    [(model)]="email.body"
-    (sdChange)="autosave()">
-  </sd-editor>
-</form>
-```
-
-### 3. With image upload (provider-injected config)
 ```ts
-// app.config.ts
-providers: [
-  { provide: SD_EDITOR_CONFIGURATION, useValue: {
-      key: 'cms',
-      upload: (file) => uploadService.upload(file),  // returns { url, idOrKey, name }
-    },
+import { SdEditor, SdEditorOption } from '@sdcorejs/angular/components/editor';
+const option: SdEditorOption = {
+  imageConfig: {
+    uploadMode: 'deferred',
+    batchSize: 2,
+    maxConcurrentUploads: 2,
+    uploadFn: async files => uploadImages(files),
   },
-],
-```
-```html
-<sd-editor key="cms" [(model)]="article.body" maxHeight="600px"></sd-editor>
-```
-
-### 4. Deferred upload (only on save)
-```ts
-option: SdEditorOption = {
-  imageConfig: { uploadMode: 'deferred', uploadFn: f => api.uploadImage(f), lazyLoad: true },
 };
 ```
+
 ```html
-<sd-editor #editor [option]="option" [(model)]="article.body"></sd-editor>
-<sd-button title="Lưu" (click)="onSave()"></sd-button>
-```
-```ts
-async onSave() {
-  const finalHtml = await this.editor.upload();  // flushes pending images
-  await this.api.save({ ...this.article, body: finalHtml });
-}
+<sd-editor [form]="form" name="body" label="Description" [(model)]="html" [option]="option" [required]="true" [maxlength]="2000" />
 ```
 
-## E2E test attributes
+## Methods and uploads
 
-Rendered on the editor host element (the outer `div.sd-editor`):
+`focusEditor(): void` focuses the visible editable, including readonly content; disabled controls do not receive programmatic focus. `upload(): Promise<string>` flushes deferred uploads and returns safe current HTML. A deferred call without a configured callback throws, preserving the existing contract.
 
-| Attribute | Value | Source |
-|---|---|---|
-| `data-autoid` | `components-editor-<autoId>` | input `autoId` |
-| `data-disabled` | `"true"` / `"false"` | input `disabled` |
-| `data-empty` | `"true"` / `"false"` | `sdIsEmpty(model())` |
+Configure option.imageConfig.uploadFn or provide SD_EDITOR_CONFIGURATION with `{ key?, upload }`; option callback wins, keys must be unique. Callback `(File[]) => Promise<SdEditorUploadFileDetail[]>` returns one result per input in order: `{ idOrKey, cdn, name? }`. The returned `cdn` must pass the Core image URL sanitizer: safe HTTP(S)/relative URLs and approved `data:image` URLs are accepted; temporary `blob:` URLs and unsafe schemes are refused. The Showcase callback uses data URLs; applications can return URLs from their upload API.
 
-> **Not exposed:**
-> - `data-value` — editor content may be MB-sized; use `data-empty` to check whether the editor has any content.
-> - `data-loading` — the component does not currently expose a loading signal; may be added if Monaco init becomes observable.
+Image settings retain uploadMode (deferred default/immediate), validation (dimensions, maxSizeMB, allowedFormats), batchSize/maxConcurrentUploads (2 defaults), maxImagesPerSelection and lazyLoad (true default). Validation uses bytes/dimensions, not just the filename. Removed/replaced/destroyed documents ignore stale results. Failed active replacements retain retry data; success/removal/destroy releases temporary object URLs. App callbacks cannot be cancelled unless the app supports it.
 
-Selector example:
+Selected images have width25/50/75/100% and left/center/right actions. Original size explicitly restores natural geometry by clearing image resize dimensions, while preserving unrelated attributes/metadata and captions.
 
-```ts
-const ed = page.locator('[data-autoid="components-editor-bio"]');
-await expect(ed).toHaveAttribute('data-empty', 'false');
-```
+## Migration from CKEditor
 
-## Anti-patterns
-- DON'T use `<sd-editor>` for short comments — toolbar is too heavy; use `<sd-mini-editor>`
-- DON'T set `maxlength` against HTML length — it counts plain text
-- DON'T inline-upload massive images without resize options — keep `image.resizeOptions` enabled
-- DON'T forget `editor.upload()` before save when using `imageConfig.uploadMode: 'deferred'` — otherwise blob URLs leak into stored content
-- DON'T register two `ISdEditorConfiguration` with the same `key` — the constructor throws
-- DON'T mix `disabled` and `readonly` semantically — `disabled` disables the entire form control; `readonly` is a view-only display
+The engine is now Tiptap OSS with a Core-owned Angular adapter. Editor and MiniEditor share the full document schema; toolbar size does not remove document capabilities.
 
-## Related
-- `<sd-mini-editor>` — compact comment-style editor
-- `<sd-label>` — used internally for the label row
-- `SdCustomValidator` — custom async validator type
-- `SD_EDITOR_CONFIGURATION` — DI token for upload config
+| Before                                                             | After / action                                                                                                         |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| Component selectors, normal bindings and upload token              | Retained; use the examples in this guide.                                                                              |
+| Public `Editor`, `editorConfig`, `onReady(ClassicEditor)`          | Removed. These were CK-specific implementation surfaces; there is no fake CK instance/config facade.                   |
+| `EditorOption` / `SdMiniEditorConfig` derived from CK EditorConfig | Deprecated Core-owned aliases; CK plugins, licenseKey and plugin configuration are unsupported. Use component options. |
+| CK `MentionFeedObjectItem` / MentionFeed                           | Core-owned item/feed contracts. Use typed arrays or asynchronous query functions; CK DOM itemRenderer is unsupported.  |
+| `sd-ckeditor-styles` / SdCKEditorStyles                            | Deprecated compatibility export/selector. It now loads shared Core content styling; editors load styling themselves.   |
+| Existing stored HTML                                               | Import checks the sanitizer AND schema before enabling edits. Do not batch rewrite stored data just to migrate the UI. |
+
+Initial and external writes do not emit normalized values. Untouched safe HTML retains its original bytes. Supported documents serialize after an actual edit; equivalent tag/parser normalization can then occur. Safe unsupported nodes/attributes/styles remain in the original caller value, show diagnostics and lock editing. Unsupported rich paste is rejected as a whole.
+
+Unsafe HTML is displayed only as a sanitized preview and locks editing. Existing caller values are not silently rewritten, but content getters/upload refuse unsafe export with `SdEditorImportError`. Import the error class from the normal component entrypoint to handle it. HTML/Markdown conversion that cannot preserve the document is similarly refused; never treat the preview as a lossless export.
+
+Diagnostics carry `code` (unsafe-html, unsupported-html, markdown-loss or invalid-option), a source path, optional tag/attribute and developer detail. Built-in visible messages are localized; inspect details before deciding how your application repairs a document.
+
+The verified corpus covers paragraphs/headings, marks, fonts/colors/alignment, nested lists, ordered start/type, merged table cells, image figures/captions, inline images and legacy mentions. This is not proof for every production HTML document. Table caption/colgroup and other unsupported structures preserve the source and lock editing until implemented; Office-specific conversion is not provided.
+
+Tiptap schema is not an XSS sanitizer. Link/image URL, paste, CSS and upload-result boundaries are checked separately. No trusted-HTML bypass or active embeds are provided. Server rendering creates no editor DOM; the client mounts after rendering/hydration and cleans up on destroy. Manual Safari and native Telex/VNI acceptance require a real device/runtime.
+
+No Pro/paid API, Pages, collaboration, tracked changes, DOCX import/export or DocumentEditor is included. Installed editor-specific OSS license notices ship at `assets/licenses/tiptap-oss-NOTICES.txt` (Tiptap MIT, parser MIT, entity decoder BSD-2-Clause).

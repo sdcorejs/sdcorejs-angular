@@ -1,3 +1,5 @@
+import { parse, type DefaultTreeAdapterMap } from 'parse5';
+
 const parseStyle = (style: string): Map<string, string> => {
   const map = new Map<string, string>();
   for (const decl of style.split(';')) {
@@ -14,6 +16,18 @@ const serializeStyle = (map: Map<string, string>): string => [...map.entries()].
 
 export const countTextLength = (content: string): number => {
   if (!content) return 0;
+  // The same standards-based HTML tree and UTF-16 text counting on the server.
+  if (typeof DOMParser === 'undefined') {
+    const document = parse(content, { scriptingEnabled: false });
+    const html = document.childNodes.find(node => node.nodeName === 'html');
+    const body = html && 'childNodes' in html ? html.childNodes.find(node => node.nodeName === 'body') : undefined;
+    const count = (node: DefaultTreeAdapterMap['node']): number => {
+      if ('tagName' in node && (node.tagName === 'img' || node.tagName === 'figure')) return 0;
+      if (node.nodeName === '#text' && 'value' in node) return node.value.length;
+      return 'childNodes' in node ? node.childNodes.reduce((length, child) => length + count(child), 0) : 0;
+    };
+    return body ? count(body) : 0;
+  }
   const doc = new DOMParser().parseFromString(content, 'text/html');
   doc.querySelectorAll('img, figure').forEach(el => el.remove());
   return doc.body.textContent?.length ?? 0;

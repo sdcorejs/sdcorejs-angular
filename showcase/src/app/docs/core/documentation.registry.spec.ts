@@ -25,7 +25,7 @@ describe('documentation registry', () => {
     for (const category of DOC_CATEGORIES) {
       expect(getDocPagesByCategory(category)).withContext(category).toHaveSize(EXPECTED_CATEGORY_COUNTS[category]);
     }
-    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(409);
+    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(411);
   });
 
   it('uses unique stable page ids and category/slug pairs', () => {
@@ -47,7 +47,7 @@ describe('documentation registry', () => {
     const exampleIds = DOC_PAGES.flatMap(page => page.examples.map(example => example.id));
 
     expect(new Set(exampleIds).size).toBe(exampleIds.length);
-    expect(exampleIds).toHaveSize(409);
+    expect(exampleIds).toHaveSize(411);
     expect(exampleIds).toContain('forms-segmented-example-types');
     const switchSections = findDocPage('forms', 'switch')?.examples.map(example => example.sectionId);
     expect(switchSections).toContain('example-kich-thuoc');
@@ -113,6 +113,23 @@ describe('documentation registry', () => {
     expect(legacy?.sourcePath).toBeNull();
     expect(legacy?.demoSectionCount).toBe(0);
     expect(legacy?.examples).toEqual([]);
+  });
+
+  it('registers the authored Editor and MiniEditor content and form examples in order', () => {
+    const editor = findDocPage('components', 'editor');
+    const mini = findDocPage('components', 'mini-editor');
+    expect(editor?.demoSectionCount).toBe(3);
+    expect(editor?.examples.map(example => example.sectionId)).toEqual([
+      'example-soan-noi-dung',
+      'example-bieu-mau',
+      'example-chi-doc',
+    ]);
+    expect(mini?.demoSectionCount).toBe(3);
+    expect(mini?.examples.map(example => example.sectionId)).toEqual([
+      'example-dinh-dang-dau-ra-html',
+      'example-dinh-dang-dau-ra-markdown',
+      'example-bieu-mau',
+    ]);
   });
 
   it('preserves authored example order and interaction-gates resource-intensive previews', () => {

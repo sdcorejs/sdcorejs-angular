@@ -1,0 +1,40 @@
+<sd-ckeditor-styles />
+<div class="sd-editor-surface" [class.sd-editor-surface-compact]="variant() === 'compact'" (change)="$event.stopPropagation()">
+  @if (engine(); as activeEngine) {
+    <sd-editor-toolbar
+      [engine]="activeEngine"
+      [variant]="variant()"
+      [revision]="revision()"
+      [sourceVersion]="sourceVersion()"
+      [uploadEnabled]="uploadEnabled()"
+      (requestFiles)="chooseFiles()" />
+  }
+  <div #contentHost class="sd-editor-content-host" [style.min-height]="height()" [style.max-height]="maxHeight()">
+    @if (!engine()) {
+      <pre class="sd-editor-escaped-preview">{{ preview() }}</pre>
+    }
+  </div>
+  <input
+    #fileInput
+    type="file"
+    accept="image/*"
+    multiple
+    hidden
+    [disabled]="!uploadEnabled() || !editable() || disabled() || readonly()"
+    (change)="selectedFiles($event)" />
+  @if (importDiagnostics().length) {
+    <div class="sd-editor-import-warning" role="status">
+      @for (code of warningCodes(); track code) {
+        <p>{{ warning(code) }}</p>
+      }
+      <details>
+        <summary>{{ detailsLabel() }}</summary>
+        <ul>
+          @for (diagnostic of importDiagnostics(); track $index) {
+            <li>{{ diagnostic.path }}: {{ diagnostic.detail }}</li>
+          }
+        </ul>
+      </details>
+    </div>
+  }
+</div>

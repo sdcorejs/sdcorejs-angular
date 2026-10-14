@@ -1962,63 +1962,163 @@ export class DataStateDemoComponent {
   },
   "components/editor": {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { FormGroup } from '@angular/forms';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdEditor, SdEditorImportDiagnostic, SdEditorOption } from '@sdcorejs/angular/components/editor';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
-import { SdEditor } from '@sdcorejs/angular/components/editor';
+import { EDITOR_DEMO_HTML, readDemoImage } from '../../../shared/editor-demo-content';
 
 @Component({
   selector: 'app-editor-demo',
   standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, SdEditor],
+  imports: [DemoPageComponent, DemoSectionComponent, SdEditor, SdButton],
   template: \`
-    <demo-page #demoPage
+    <demo-page
+      #demoPage
       title="Editor"
-      description="Rich text editor dựa trên CKEditor 5 — đầy đủ thanh công cụ, hỗ trợ chèn ảnh, validation và FormGroup binding.">
-
+      description="Soạn nội dung với thanh công cụ đầy đủ, bảng, ảnh, màu chữ và liên kết. Editor và Mini Editor dùng cùng một cấu trúc tài liệu.">
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-soan-noi-dung') {
-      <demo-section heading="Soạn nội dung" [props]="[{ name: '[(model)]', value: 'two-way' }]">
-        <div class="editor-box">
-          <sd-editor
-            label="Mô tả chi tiết"
-            placeholder="Nhập mô tả sản phẩm..."
-            helperText="Hỗ trợ định dạng đậm / nghiêng / gạch chân / màu chữ."
-            height="240px"
-            maxHeight="360px"
-            [(model)]="content">
-          </sd-editor>
-        </div>
-      </demo-section>
+        <demo-section heading="Soạn nội dung" [props]="[{ name: '[(model)]', value: 'two-way' }]">
+          <div class="editor-box">
+            <sd-editor
+              #editor
+              label="Mô tả chi tiết"
+              placeholder="Nhập mô tả..."
+              helperText="Chọn văn bản để định dạng; chọn ảnh để đổi kích thước và căn lề."
+              height="420px"
+              maxHeight="560px"
+              [option]="imageOption"
+              [(model)]="content"
+              (sdChange)="lastChange.set($event.length)"
+              (sdImportWarning)="recordWarnings($event)">
+            </sd-editor>
+            <div class="demo-actions">
+              <sd-button type="outline" (click)="content.set(richContent)">Khôi phục nội dung mẫu</sd-button>
+              <sd-button type="outline" (click)="saveImages(editor)">Hoàn tất ảnh đã chọn</sd-button>
+            </div>
+            <p class="hint">Demo giữ ảnh đã chọn trong HTML. Ứng dụng có thể dùng uploadFn để lưu ảnh qua API.</p>
+            <p class="hint" role="status" aria-live="polite">
+              {{ uploadStatus() || 'Lần thay đổi gần nhất: ' + lastChange() + ' ký tự HTML.' }}
+            </p>
+            @if (warning()) {
+              <p class="hint" role="status">{{ warning() }}</p>
+            }
+          </div>
+        </demo-section>
       }
-
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bieu-mau') {
+        <demo-section
+          heading="Biểu mẫu"
+          [props]="[
+            { name: 'required', value: 'true' },
+            { name: '[maxlength]', value: '120' },
+          ]">
+          <div class="editor-box">
+            <sd-editor
+              label="Ghi chú bắt buộc"
+              name="note"
+              [form]="form"
+              required
+              [maxlength]="120"
+              [disabled]="formDisabled()"
+              height="180px"
+              maxHeight="240px"
+              [(model)]="formContent">
+            </sd-editor>
+            <div class="demo-actions">
+              <sd-button type="outline" (click)="formContent.set('')">Xóa nội dung</sd-button>
+              <sd-button type="outline" (click)="formDisabled.set(!formDisabled())">{{
+                formDisabled() ? 'Mở biểu mẫu' : 'Vô hiệu hóa'
+              }}</sd-button>
+            </div>
+          </div>
+        </demo-section>
+      }
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chi-doc') {
-      <demo-section heading="Chỉ đọc" [props]="[{ name: 'readonly', value: 'true' }]">
-        <div class="editor-box">
-          <sd-editor
-            label="Điều khoản dịch vụ"
-            height="200px"
-            [readonly]="true"
-            [(model)]="readOnlyContent">
-          </sd-editor>
-        </div>
-      </demo-section>
+        <demo-section heading="Chỉ đọc" [props]="[{ name: 'readonly', value: 'true' }]">
+          <div class="editor-box">
+            <sd-editor label="Nội dung để đối chiếu" height="420px" maxHeight="560px" [readonly]="true" [(model)]="readOnlyContent">
+            </sd-editor>
+          </div>
+        </demo-section>
       }
     </demo-page>
   \`,
-  styles: [\`
-    .editor-box {
-      width: 100%;
-      max-width: 720px;
-    }
-  \`],
+  styles: [
+    \`
+      .editor-box {
+        width: 100%;
+        max-width: 800px;
+      }
+      .demo-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .hint {
+        margin: 8px 0 0;
+        opacity: 0.72;
+        font-size: 13px;
+      }
+    \`,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EditorDemoComponent {
-  readonly content = signal<string>('<p>Sản phẩm <strong>SP-001</strong> được thiết kế dành cho doanh nghiệp vừa và nhỏ.</p><ul><li>Bảo hành 12 tháng</li><li>Hỗ trợ kỹ thuật 24/7</li></ul>');
-  readonly readOnlyContent = signal<string>('<p><em>Bằng việc sử dụng dịch vụ, bạn đồng ý với các điều khoản sau:</em></p><ol><li>Không chia sẻ tài khoản cho bên thứ ba.</li><li>Tuân thủ chính sách bảo mật của hệ thống.</li></ol>');
+  readonly richContent = EDITOR_DEMO_HTML;
+  readonly content = signal(EDITOR_DEMO_HTML);
+  readonly readOnlyContent = signal(EDITOR_DEMO_HTML);
+  readonly formContent = signal('<p>Ghi chú có kiểm tra độ dài.</p>');
+  readonly formDisabled = signal(false);
+  readonly form = new FormGroup({});
+  readonly lastChange = signal(0);
+  readonly warning = signal('');
+  readonly uploadStatus = signal('');
+  readonly imageOption: SdEditorOption = {
+    imageConfig: {
+      uploadMode: 'deferred',
+      maxImagesPerSelection: 3,
+      validation: { maxSizeMB: 2, allowedFormats: ['png', 'jpg', 'jpeg', 'webp'] },
+      uploadFn: files =>
+        Promise.all(
+          files.map(async file => ({
+            idOrKey: crypto.randomUUID(),
+            name: file.name,
+            cdn: await readDemoImage(file),
+          }))
+        ),
+    },
+  };
+
+  recordWarnings(diagnostics: readonly SdEditorImportDiagnostic[]): void {
+    this.warning.set(diagnostics.map(item => item.code).join(', '));
+  }
+
+  async saveImages(editor: SdEditor): Promise<void> {
+    try {
+      const html = await editor.upload();
+      this.uploadStatus.set('Đã hoàn tất ảnh; nội dung có ' + html.length + ' ký tự HTML.');
+    } catch (error) {
+      this.uploadStatus.set(error instanceof Error ? error.message : 'Không hoàn tất được ảnh.');
+    }
+  }
 }
 `,
     scss: `.editor-box {
   width: 100%;
-  max-width: 720px;
+  max-width: 800px;
+}
+.demo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.hint {
+  margin: 8px 0 0;
+  opacity: 0.72;
+  font-size: 13px;
 }`,
   },
   "components/file-explorer": {
@@ -5789,82 +5889,142 @@ strong {
   },
   "components/mini-editor": {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdMiniEditor, SdEditorImportDiagnostic, SdMiniEditorOption } from '@sdcorejs/angular/components/mini-editor';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
-import { SdMiniEditor, SdMiniEditorOption } from '@sdcorejs/angular/components/mini-editor';
+import { EDITOR_DEMO_HTML, EDITOR_DEMO_MARKDOWN } from '../../../shared/editor-demo-content';
 
 @Component({
   selector: 'app-mini-editor-demo',
   standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, SdMiniEditor, FormsModule],
+  imports: [DemoPageComponent, DemoSectionComponent, SdMiniEditor, SdButton, FormsModule, ReactiveFormsModule],
   template: \`
-    <demo-page #demoPage
+    <demo-page
+      #demoPage
       title="Mini Editor"
-      description="Editor đơn giản (bold / italic / link / list) dành cho ô comment, ghi chú ngắn. Hỗ trợ mention và xuất HTML hoặc Markdown.">
-
+      description="Thanh công cụ gọn cho bình luận và ghi chú; vẫn giữ bảng, ảnh, chú thích và định dạng có sẵn. Hỗ trợ mention, biểu mẫu và Markdown.">
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-dinh-dang-dau-ra-html') {
-      <demo-section heading="Định dạng đầu ra HTML" [props]="[{ name: 'outputFormat', value: 'html' }]">
-        <div class="editor-box">
-          <sd-mini-editor
-            [option]="commentOption"
-            [(ngModel)]="commentContent">
-          </sd-mini-editor>
-          <p class="hint">Định dạng đầu ra: HTML</p>
-        </div>
-      </demo-section>
+        <demo-section heading="Định dạng đầu ra HTML" [props]="[{ name: 'outputFormat', value: 'html' }]">
+          <div class="editor-box">
+            <sd-mini-editor
+              [option]="commentOption"
+              [(ngModel)]="commentContent"
+              (contentChange)="lastChange.set($event.length)"
+              (importWarning)="recordWarnings($event)">
+            </sd-mini-editor>
+            <div class="demo-actions">
+              <sd-button type="outline" (click)="commentContent = richContent">Khôi phục nội dung mẫu</sd-button>
+            </div>
+            <p class="hint">Cùng nội dung mẫu với Editor. Gõ &#64; để chọn An hoặc Bình.</p>
+            <p class="hint" role="status" aria-live="polite">Lần thay đổi gần nhất: {{ lastChange() }} ký tự HTML.</p>
+            @if (warning()) {
+              <p class="hint" role="status">{{ warning() }}</p>
+            }
+          </div>
+        </demo-section>
       }
-
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-dinh-dang-dau-ra-markdown') {
-      <demo-section heading="Định dạng đầu ra Markdown" [props]="[{ name: 'outputFormat', value: 'markdown' }]">
-        <div class="editor-box">
-          <sd-mini-editor
-            [option]="markdownOption"
-            [(ngModel)]="markdownContent">
-          </sd-mini-editor>
-          <p class="hint">Định dạng đầu ra: Markdown</p>
-        </div>
-      </demo-section>
+        <demo-section heading="Định dạng đầu ra Markdown" [props]="[{ name: 'outputFormat', value: 'markdown' }]">
+          <div class="editor-box">
+            <sd-mini-editor [option]="markdownOption" [(ngModel)]="markdownContent"></sd-mini-editor>
+            <p class="hint">Nội dung được xuất dưới dạng Markdown.</p>
+          </div>
+        </demo-section>
+      }
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bieu-mau') {
+        <demo-section heading="Biểu mẫu" [props]="[{ name: '[formControl]', value: 'FormControl' }]">
+          <div class="editor-box">
+            <sd-mini-editor [option]="formOption" [formControl]="formNote"></sd-mini-editor>
+            <div class="demo-actions">
+              <sd-button type="outline" (click)="toggleForm()">{{ formDisabled() ? 'Mở biểu mẫu' : 'Vô hiệu hóa' }}</sd-button>
+              <sd-button type="outline" (click)="resetForm()">Khôi phục ghi chú</sd-button>
+            </div>
+            <p class="hint">Blur đánh dấu touched; trạng thái disabled lấy từ FormControl.</p>
+          </div>
+        </demo-section>
       }
     </demo-page>
   \`,
-  styles: [\`
-    .editor-box {
-      width: 100%;
-      max-width: 560px;
-    }
-    .hint {
-      margin: 6px 0 0;
-      font-size: 12px;
-      color: #6b6b6b;
-    }
-  \`],
+  styles: [
+    \`
+      .editor-box {
+        width: 100%;
+        max-width: 800px;
+      }
+      .demo-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .hint {
+        margin: 8px 0 0;
+        opacity: 0.72;
+        font-size: 13px;
+      }
+    \`,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MiniEditorDemoComponent {
+  readonly richContent = EDITOR_DEMO_HTML;
+  readonly lastChange = signal(0);
+  readonly warning = signal('');
+  readonly formDisabled = signal(false);
+  readonly formNote = new FormControl('<p>Ghi chú trong biểu mẫu.</p>', { nonNullable: true });
   readonly commentOption: SdMiniEditorOption = {
     outputFormat: 'html',
-    placeholder: 'Nhập bình luận của bạn...',
-    maxHeight: '160px',
+    placeholder: 'Nhập bình luận...',
+    maxHeight: '560px',
+    enableMention: true,
+    mentionConfig: {
+      feeds: [
+        {
+          marker: '@',
+          feed: [
+            { id: 'an', name: 'An' },
+            { id: 'binh', name: 'Bình' },
+          ],
+          minimumCharacters: 0,
+        },
+      ],
+    },
   };
+  readonly markdownOption: SdMiniEditorOption = { outputFormat: 'markdown', placeholder: 'Ghi chú...', maxHeight: '240px' };
+  readonly formOption: SdMiniEditorOption = { placeholder: 'Ghi chú biểu mẫu...', maxHeight: '240px' };
+  commentContent = EDITOR_DEMO_HTML;
+  markdownContent = EDITOR_DEMO_MARKDOWN;
 
-  readonly markdownOption: SdMiniEditorOption = {
-    outputFormat: 'markdown',
-    placeholder: 'Ghi chú (Markdown)...',
-    maxHeight: '160px',
-  };
+  recordWarnings(diagnostics: readonly SdEditorImportDiagnostic[]): void {
+    this.warning.set(diagnostics.map(item => item.code).join(', '));
+  }
 
-  commentContent = '<p>Đồng ý với <strong>đề xuất</strong> trên!</p>';
-  markdownContent = '**Lưu ý:** Đây là ghi chú Markdown.';
+  toggleForm(): void {
+    if (this.formNote.disabled) this.formNote.enable();
+    else this.formNote.disable();
+    this.formDisabled.set(this.formNote.disabled);
+  }
+
+  resetForm(): void {
+    this.formNote.setValue('<p>Ghi chú trong biểu mẫu.</p>');
+  }
 }
 `,
     scss: `.editor-box {
   width: 100%;
-  max-width: 560px;
+  max-width: 800px;
+}
+.demo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
 }
 .hint {
-  margin: 6px 0 0;
-  font-size: 12px;
-  color: #6b6b6b;
+  margin: 8px 0 0;
+  opacity: 0.72;
+  font-size: 13px;
 }`,
   },
   "components/modal": {
@@ -19595,33 +19755,73 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
       </sd-data-state>
     </demo-section>`,
   },
+  "components/editor/example-bieu-mau": {
+    ...SHOWCASE_PAGE_SOURCES["components/editor"],
+    html: `<demo-section
+      heading="Biểu mẫu"
+      [props]="[
+        { name: 'required', value: 'true' },
+        { name: '[maxlength]', value: '120' },
+      ]">
+      <div class="editor-box">
+        <sd-editor
+          label="Ghi chú bắt buộc"
+          name="note"
+          [form]="form"
+          required
+          [maxlength]="120"
+          [disabled]="formDisabled()"
+          height="180px"
+          maxHeight="240px"
+          [(model)]="formContent">
+        </sd-editor>
+        <div class="demo-actions">
+          <sd-button type="outline" (click)="formContent.set('')">Xóa nội dung</sd-button>
+          <sd-button type="outline" (click)="formDisabled.set(!formDisabled())">{{
+            formDisabled() ? 'Mở biểu mẫu' : 'Vô hiệu hóa'
+          }}</sd-button>
+        </div>
+      </div>
+    </demo-section>`,
+  },
   "components/editor/example-chi-doc": {
     ...SHOWCASE_PAGE_SOURCES["components/editor"],
     html: `<demo-section heading="Chỉ đọc" [props]="[{ name: 'readonly', value: 'true' }]">
-    <div class="editor-box">
-      <sd-editor
-        label="Điều khoản dịch vụ"
-        height="200px"
-        [readonly]="true"
-        [(model)]="readOnlyContent">
-      </sd-editor>
-    </div>
-  </demo-section>`,
+      <div class="editor-box">
+        <sd-editor label="Nội dung để đối chiếu" height="420px" maxHeight="560px" [readonly]="true" [(model)]="readOnlyContent">
+        </sd-editor>
+      </div>
+    </demo-section>`,
   },
   "components/editor/example-soan-noi-dung": {
     ...SHOWCASE_PAGE_SOURCES["components/editor"],
     html: `<demo-section heading="Soạn nội dung" [props]="[{ name: '[(model)]', value: 'two-way' }]">
-    <div class="editor-box">
-      <sd-editor
-        label="Mô tả chi tiết"
-        placeholder="Nhập mô tả sản phẩm..."
-        helperText="Hỗ trợ định dạng đậm / nghiêng / gạch chân / màu chữ."
-        height="240px"
-        maxHeight="360px"
-        [(model)]="content">
-      </sd-editor>
-    </div>
-  </demo-section>`,
+      <div class="editor-box">
+        <sd-editor
+          #editor
+          label="Mô tả chi tiết"
+          placeholder="Nhập mô tả..."
+          helperText="Chọn văn bản để định dạng; chọn ảnh để đổi kích thước và căn lề."
+          height="420px"
+          maxHeight="560px"
+          [option]="imageOption"
+          [(model)]="content"
+          (sdChange)="lastChange.set($event.length)"
+          (sdImportWarning)="recordWarnings($event)">
+        </sd-editor>
+        <div class="demo-actions">
+          <sd-button type="outline" (click)="content.set(richContent)">Khôi phục nội dung mẫu</sd-button>
+          <sd-button type="outline" (click)="saveImages(editor)">Hoàn tất ảnh đã chọn</sd-button>
+        </div>
+        <p class="hint">Demo giữ ảnh đã chọn trong HTML. Ứng dụng có thể dùng uploadFn để lưu ảnh qua API.</p>
+        <p class="hint" role="status" aria-live="polite">
+          {{ uploadStatus() || 'Lần thay đổi gần nhất: ' + lastChange() + ' ký tự HTML.' }}
+        </p>
+        @if (warning()) {
+          <p class="hint" role="status">{{ warning() }}</p>
+        }
+      </div>
+    </demo-section>`,
   },
   "components/file-explorer/example-chi-xem-va-tai-xuong": {
     ...SHOWCASE_PAGE_SOURCES["components/file-explorer"],
@@ -20503,29 +20703,48 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
       </div>
     </demo-section>`,
   },
+  "components/mini-editor/example-bieu-mau": {
+    ...SHOWCASE_PAGE_SOURCES["components/mini-editor"],
+    html: `<demo-section heading="Biểu mẫu" [props]="[{ name: '[formControl]', value: 'FormControl' }]">
+      <div class="editor-box">
+        <sd-mini-editor [option]="formOption" [formControl]="formNote"></sd-mini-editor>
+        <div class="demo-actions">
+          <sd-button type="outline" (click)="toggleForm()">{{ formDisabled() ? 'Mở biểu mẫu' : 'Vô hiệu hóa' }}</sd-button>
+          <sd-button type="outline" (click)="resetForm()">Khôi phục ghi chú</sd-button>
+        </div>
+        <p class="hint">Blur đánh dấu touched; trạng thái disabled lấy từ FormControl.</p>
+      </div>
+    </demo-section>`,
+  },
   "components/mini-editor/example-dinh-dang-dau-ra-html": {
     ...SHOWCASE_PAGE_SOURCES["components/mini-editor"],
     html: `<demo-section heading="Định dạng đầu ra HTML" [props]="[{ name: 'outputFormat', value: 'html' }]">
-    <div class="editor-box">
-      <sd-mini-editor
-        [option]="commentOption"
-        [(ngModel)]="commentContent">
-      </sd-mini-editor>
-      <p class="hint">Định dạng đầu ra: HTML</p>
-    </div>
-  </demo-section>`,
+      <div class="editor-box">
+        <sd-mini-editor
+          [option]="commentOption"
+          [(ngModel)]="commentContent"
+          (contentChange)="lastChange.set($event.length)"
+          (importWarning)="recordWarnings($event)">
+        </sd-mini-editor>
+        <div class="demo-actions">
+          <sd-button type="outline" (click)="commentContent = richContent">Khôi phục nội dung mẫu</sd-button>
+        </div>
+        <p class="hint">Cùng nội dung mẫu với Editor. Gõ &#64; để chọn An hoặc Bình.</p>
+        <p class="hint" role="status" aria-live="polite">Lần thay đổi gần nhất: {{ lastChange() }} ký tự HTML.</p>
+        @if (warning()) {
+          <p class="hint" role="status">{{ warning() }}</p>
+        }
+      </div>
+    </demo-section>`,
   },
   "components/mini-editor/example-dinh-dang-dau-ra-markdown": {
     ...SHOWCASE_PAGE_SOURCES["components/mini-editor"],
     html: `<demo-section heading="Định dạng đầu ra Markdown" [props]="[{ name: 'outputFormat', value: 'markdown' }]">
-    <div class="editor-box">
-      <sd-mini-editor
-        [option]="markdownOption"
-        [(ngModel)]="markdownContent">
-      </sd-mini-editor>
-      <p class="hint">Định dạng đầu ra: Markdown</p>
-    </div>
-  </demo-section>`,
+      <div class="editor-box">
+        <sd-mini-editor [option]="markdownOption" [(ngModel)]="markdownContent"></sd-mini-editor>
+        <p class="hint">Nội dung được xuất dưới dạng Markdown.</p>
+      </div>
+    </demo-section>`,
   },
   "components/modal/example-basic-modal-footer-right": {
     ...SHOWCASE_PAGE_SOURCES["components/modal"],

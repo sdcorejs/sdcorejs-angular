@@ -17,61 +17,33 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AsyncValidatorFn, FormGroup, NgForm, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
-import {
-  Alignment,
-  Bold,
-  ClassicEditor,
-  Essentials,
-  FontColor,
-  FontSize,
-  Italic,
-  List,
-  Paragraph,
-  Underline,
-  Undo,
-  Widget,
-} from 'ckeditor5';
-import { Subject } from 'rxjs';
-import { debounceTime } from 'rxjs/operators';
+import { SdEditorEngine, SdEditorImportDiagnostic, SdEditorSurface } from '@sdcorejs/angular/components/editor-engine';
 import { ISdEditorConfiguration, SD_EDITOR_CONFIGURATION, SdEditorUploadFileFuncUpload } from './configurations';
 import { SdNotifyService } from '@sdcorejs/angular/services';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { sdSanitizeEditorHtml } from '@sdcorejs/angular/utilities/extensions';
-import { EditorImageUploadPlugin } from './plugins/image-upload/image-upload.plugin';
-import { EditorOption, SdEditorOption } from './models';
-import { HandleSdCustomValidator, SdCustomValidator, SdFormControl, ɵsdFormControlConnector } from '@sdcorejs/angular/forms/models';
-import { SdCKEditorStyles } from '@sdcorejs/angular/components/ckeditor-styles';
+import { SdEditorOption } from './models';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
-import {
-  applyReplacementsToEditor,
-  countTextLength,
-  filterActivePendingFiles,
-  getActiveBlobUrls,
-  getBatchConfig,
-  imageClassesToInlineStyles,
-  imageInlineStylesToClasses,
-  runBatchUploads,
-} from './plugins/image-upload/utils';
+import { countTextLength } from './plugins/image-upload/utils/style.utils';
+import { SdEditorUploadManager } from './upload-manager';
+import { HandleSdCustomValidator, SdCustomValidator, SdFormControl, ɵsdFormControlConnector } from '@sdcorejs/angular/forms/models';
 
 @Component({
   selector: 'sd-editor',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdIcon, CKEditorModule, SdLabel, SdCKEditorStyles, MatFormFieldModule, MatTooltipModule],
+  imports: [SdIcon, SdEditorSurface, SdLabel, MatFormFieldModule, MatTooltipModule],
   templateUrl: './editor.component.html',
-  styleUrls: ['./editor.component.scss', './plugins/image-upload/image-upload.plugin.scss'],
+  styleUrls: ['./editor.component.scss'],
 })
 export class SdEditor {
-  // Injected
   readonly #destroyRef = inject(DestroyRef);
   readonly #cdRef = inject(ChangeDetectorRef);
   readonly #uploadConfig = inject<ISdEditorConfiguration | ISdEditorConfiguration[]>(SD_EDITOR_CONFIGURATION, { optional: true });
   readonly #notifyService = inject(SdNotifyService);
   readonly #i18n = inject(I18nService);
-
   // Input
   readonly option = input<SdEditorOption>({});
   readonly height = input<string>('250px'); // Chiều dài height hiển thị mặc định
@@ -131,201 +103,172 @@ export class SdEditor {
     return undefined;
   }
 
-  readonly Editor = ClassicEditor;
-  #editor: ClassicEditor | undefined;
-  readonly #contentChangeSubject = new Subject<string>();
-
-  readonly editorConfig = computed<EditorOption>(() => {
-    const opt = this.option();
-    const uploadFn = this.#buildUploadFn();
-    const enableImageUpload = !!uploadFn;
-
-    const plugins: any[] = [Essentials, FontColor, FontSize, Paragraph, Bold, Italic, Underline, List, Undo, Widget, Alignment];
-    if (enableImageUpload) plugins.push(EditorImageUploadPlugin);
-
-    const toolbarItems = [
-      'bold',
-      'italic',
-      'underline',
-      '|',
-      'fontSize',
-      'fontColor',
-      '|',
-      'alignment:left',
-      'alignment:center',
-      'alignment:right',
-      'alignment:justify',
-      '|',
-      'bulletedList',
-      'numberedList',
-    ];
-    if (enableImageUpload) toolbarItems.push('|', 'uploadImage');
-
-    const config: EditorOption = {
-      licenseKey: 'GPL',
-      getOption: () => ({
-        ...opt,
-        uploadFn,
-        onWarning: (msg: string) => this.#notifyService.warning(msg),
-        // Truyền i18n service xuống CKEditor plugin (ngoài DI tree) để dịch warning messages
-        _i18n: this.#i18n,
-      }),
-      plugins,
-      toolbar: { items: toolbarItems, shouldNotGroupWhenFull: true },
-      placeholder: this.placeholder(),
-      fontColor: { columns: 5, documentColors: 10, colorPicker: { format: 'hex' } },
-      fontSize: { options: [10, 11, 12, 14, 16, 18, 20], supportAllValues: true },
-    };
-
-    if (enableImageUpload) {
-      config.image = {
-        resizeUnit: '%',
-        resizeOptions: [
-          { name: 'resizeImage:100', value: '100', label: '100%' },
-          { name: 'resizeImage:75', value: '75', label: '75%' },
-          { name: 'resizeImage:50', value: '50', label: '50%' },
-          { name: 'resizeImage:25', value: '25', label: '25%' },
-          { name: 'resizeImage:original', value: null, label: 'Original' },
-        ],
-        toolbar: ['resizeImage', '|', 'imageStyle:alignBlockLeft', 'imageStyle:alignCenter', 'imageStyle:alignBlockRight'],
-      };
-    }
-
-    return config;
-  });
+  readonly sdImportWarning = output<readonly SdEditorImportDiagnostic[]>();
+  readonly #diagnostics = signal<readonly SdEditorImportDiagnostic[]>([]);
+  readonly importDiagnostics = this.#diagnostics.asReadonly();
+  readonly surfaceContent = signal('');
+  readonly uploadEnabled = computed(() => !!this.#buildUploadFn());
+  readonly descriptionId = computed(() => `sd-editor-description-${Utilities.generateUuid()}`);
+  #engine?: SdEditorEngine;
+  #uploads?: SdEditorUploadManager;
+  #timer?: ReturnType<typeof setTimeout>;
+  #pending?: string;
+  #deadline?: number;
+  #composing = false;
+  #destroyed = false;
 
   constructor() {
     this.#validateDuplicateConfigKeys();
-    this.#setupEffects();
-    this.#setupSubscriptions();
-    this.#setupDestroy();
-  }
-
-  onReady = (editor: ClassicEditor) => {
-    this.#editor = editor;
-
-    const currentValue = this.valueModel();
-    if (currentValue) {
-      this.#setToEditor(currentValue);
-    }
-    if (this.formControl.disabled) {
-      editor.enableReadOnlyMode('sd-editor');
-    }
-    if (this.readonly()) {
-      editor.enableReadOnlyMode('sd-editor-readonly');
-    }
-
-    editor.model.document.registerPostFixer(writer => {
-      let changed = false;
-      for (const change of editor.model.document.differ.getChanges()) {
-        if (change.type === 'insert' && (change.name === 'imageBlock' || change.name === 'imageInline')) {
-          const element = (change as any).position.nodeAfter;
-          if (element && !element.hasAttribute('resizedWidth')) {
-            writer.setAttribute('resizedWidth', '100%', element);
-            changed = true;
-          }
-        }
-      }
-      return changed;
+    effect(() => {
+      const disabled = this.disabled();
+      if (disabled) this.formControl.disable({ emitEvent: false });
+      else this.formControl.enable({ emitEvent: false });
+      if (disabled) this.#cancelWork();
     });
-
-    editor.model.document.on('change:data', () => this.#contentChangeSubject.next(editor.getData()));
-    editor.editing.view.document.on('focus', evt => this.sdFocus.emit((evt as any).domEvent as FocusEvent));
-    editor.editing.view.document.on('blur', evt => {
-      this.sdBlur.emit((evt as any).domEvent as FocusEvent);
-      this.formControl.markAsTouched();
+    effect(() => {
+      if (this.readonly()) this.#cancelWork();
+    });
+    effect(() => this.#setExternalContent(this.valueModel() ?? ''));
+    effect(() => {
+      this.required();
+      this.maxlength();
+      this.inlineError();
+      this.validator();
+      this.#updateValidators();
+    });
+    this.formControl.valueChanges.pipe(takeUntilDestroyed(this.#destroyRef)).subscribe((value: string) => {
+      const normalized = value ?? '';
+      this.#setExternalContent(normalized);
+      this.valueModel.set(normalized);
+    });
+    this.formControl.statusChanges.pipe(takeUntilDestroyed(this.#destroyRef)).subscribe(() => {
+      if (this.formControl.disabled) this.#cancelWork();
       this.#cdRef.markForCheck();
     });
+    this.formControl.sdChanges.pipe(takeUntilDestroyed(this.#destroyRef)).subscribe(() => this.#cdRef.markForCheck());
+    this.#destroyRef.onDestroy(() => {
+      this.#destroyed = true;
+      this.#cancelCadence();
+      this.#uploads?.destroy();
+      this.#engine = undefined; // Surface owns engine destruction exactly once.
+    });
+  }
+
+  onEngineReady(engine: SdEditorEngine): void {
+    this.#cancelCadence();
+    this.#composing = false;
+    this.#uploads?.destroy();
+    this.#engine = engine;
+    this.#uploads = new SdEditorUploadManager(
+      engine,
+      () => ({ ...this.option().imageConfig, uploadFn: this.#buildUploadFn() }),
+      message => this.#notifyService.warning(message),
+      this.#i18n
+    );
+  }
+  onSourceChange(): void {
+    this.#cancelCadence();
+    if (this.formControl.disabled || this.readonly()) this.#uploads?.invalidateWork();
+    else this.#uploads?.invalidateSource();
+  }
+  onSurfaceChange(value: string): void {
+    if (this.#destroyed || this.formControl.disabled || this.readonly()) return;
+    this.#uploads?.pruneRemoved();
+    this.#clearTimer();
+    this.#pending = value;
+    // Composition pauses an existing deadline; its final document replaces only
+    // the pending value. An ordinary edit starts a new 100ms debounce deadline.
+    if (!this.#composing || this.#deadline === undefined) this.#deadline = Date.now() + 100;
+    if (!this.#composing) this.#schedulePending();
+  }
+  onCompositionChange(composing: boolean): void {
+    this.#composing = composing;
+    this.#clearTimer();
+    if (!composing) this.#schedulePending();
+  }
+  #schedulePending(): void {
+    if (this.#pending === undefined || this.#deadline === undefined || this.#composing || this.#destroyed) return;
+    this.#timer = setTimeout(
+      () => {
+        this.#timer = undefined;
+        const value = this.#pending;
+        this.#pending = undefined;
+        this.#deadline = undefined;
+        if (value !== undefined && !this.#destroyed && !this.#composing && !this.formControl.disabled && !this.readonly())
+          this.#onEditorUserInput(value);
+      },
+      Math.max(0, this.#deadline - Date.now())
+    );
+  }
+  onSurfaceFocus(event: FocusEvent): void {
+    this.sdFocus.emit(event);
+  }
+  onSurfaceBlur(event: FocusEvent): void {
+    this.sdBlur.emit(event);
+    this.formControl.markAsTouched();
+    this.#cdRef.markForCheck();
+  }
+  onDiagnostics(diagnostics: readonly SdEditorImportDiagnostic[]): void {
+    this.#diagnostics.set(diagnostics);
+    this.sdImportWarning.emit(diagnostics);
+  }
+  async onFilesSelected(files: File[]): Promise<void> {
+    if (this.formControl.disabled || this.readonly()) return;
+    await this.#uploads?.selectFiles(files);
+  }
+  focusEditor = (): void => {
+    if (!this.formControl.disabled) this.#engine?.focus();
   };
-
-  focusEditor = () => this.#editor?.editing?.view?.focus?.();
-
-  /**
-   * Xử lý tải lên các file và trả về nội dung dữ liệu cuối cùng.
-   * * @description
-   * - Đối với các file upload chế độ 'deferred' (chỉ xử lý khi submit), cần @ViewChild component và gọi hàm upload() này.
-   * - Hỗ trợ two-way binding.
-   * - Hàm hỗ trợ trả ra data cuối cùng.
-   * * @returns {Promise<string>} Nội dung cuối cùng được trích xuất từ sd-editor.
-   */
   upload = async (): Promise<string> => {
-    await this.#uploadImages();
-    return this.#getFromEditor();
+    if ((this.option().imageConfig?.uploadMode ?? 'deferred') === 'deferred') {
+      if (!this.#buildUploadFn()) throw new Error('No upload function configured for image upload');
+      await this.#uploads?.upload();
+    }
+    return this.#engine?.getHtml() ?? '';
   };
-
-  // Editor Content
-  #setToEditor(html: string): void {
-    this.#editor?.setData?.(this.#normalizeHtmlForEditor(html));
+  #clearTimer(): void {
+    if (this.#timer !== undefined) clearTimeout(this.#timer);
+    this.#timer = undefined;
   }
-
-  #getFromEditor(): string {
-    // why: `upload()` trả HTML cuối cùng cho consumer lưu — cùng bộ lọc với luồng soạn thảo (D-032).
-    return this.#editor ? sdSanitizeEditorHtml(this.#normalizeEditorToHtml(this.#editor.getData())) : '';
+  #cancelCadence(): void {
+    this.#clearTimer();
+    this.#pending = undefined;
+    this.#deadline = undefined;
   }
-
-  // Normalize HTML từ bên ngoài -> format CKEditor.
-  #normalizeHtmlForEditor = (html: string): string => {
-    if (!html) {
-      return '';
-    }
-
-    let result = html;
-    result = imageInlineStylesToClasses(result);
-    return result;
-  };
-
-  // Normalize HTML từ CKEditor → format HTML.
-  #normalizeEditorToHtml = (html: string): string => {
-    if (!html) {
-      return '';
-    }
-
-    let result = html;
-    result = imageClassesToInlineStyles(result);
-    return result;
-  };
-
-  // Xử lý binding 2 chiều
-  #onModelSignalChange(html: string): void {
-    const v = html ?? '';
-    if (this.formControl.value === v) {
-      return;
-    }
-    this.formControl.setValue(v, { emitEvent: false });
-    this._textLength.set(countTextLength(v));
-    if (this.#editor) {
-      this.#setToEditor(v);
+  #cancelWork(): void {
+    this.#cancelCadence();
+    this.#uploads?.invalidateWork();
+  }
+  #setExternalContent(value: string): void {
+    if (this.formControl.value !== value) this.formControl.setValue(value, { emitEvent: false });
+    this._textLength.set(countTextLength(value));
+    this.formControl.updateValueAndValidity({ emitEvent: false });
+    if (this.#isCurrentContent(value)) return;
+    this.#cancelCadence();
+    this.#uploads?.invalidateSource();
+    this.surfaceContent.set(value);
+    this.#engine?.setContent(value);
+  }
+  #isCurrentContent(value: string): boolean {
+    if (!this.#engine) return value === this.surfaceContent();
+    try {
+      return value === this.#engine.getContent();
+    } catch {
+      return false;
     }
   }
-
-  // Xử lý khi user soạn thảo
   #onEditorUserInput(rawHtml: string): void {
-    const normalized = imageClassesToInlineStyles(rawHtml);
-    // why: HTML này đi thẳng vào form value, model và `sdChange`. Nội dung nạp từ ngoài (hoặc dán vào) có
-    // thể mang `javascript:`, `on*`, `data:text/html` — lọc theo allowlist (D-032) trước khi phát ra.
-    const out = sdSanitizeEditorHtml(normalized);
-    this._textLength.set(countTextLength(out));
-    if (this.formControl.value !== out) {
-      this.formControl.setValue(out, { emitEvent: false });
-      // why: bộ lọc đã sửa nội dung so với dữ liệu nạp vào — đánh dấu dirty để consumer biết cần lưu lại.
-      if (out !== normalized) this.formControl.markAsDirty();
+    const value = sdSanitizeEditorHtml(rawHtml);
+    this._textLength.set(countTextLength(value));
+    if (this.formControl.value !== value) {
+      this.formControl.setValue(value, { emitEvent: false });
+      if (value !== rawHtml) this.formControl.markAsDirty();
     }
     this.formControl.updateValueAndValidity({ emitEvent: false });
     this.formControl.sdChanges.next(true);
-    this.valueModel.set(out);
-    this.sdChange.emit(out);
+    this.valueModel.set(value);
+    this.sdChange.emit(value);
   }
-
-  // Xử lý nếu dev sử dụng form và set trực tiếp data
-  #onFormGroupExternalChange(html: string): void {
-    const v = html ?? '';
-    this.valueModel.set(v);
-    this._textLength.set(countTextLength(v));
-    if (this.#editor) {
-      this.#setToEditor(v);
-    }
-  }
-
   // Validators
   #requiredValidator(): ValidatorFn {
     return (): ValidationErrors | null => (this._textLength() ? null : { required: true });
@@ -366,107 +309,6 @@ export class SdEditor {
     this.formControl.setAsyncValidators(asyncValidators.length ? asyncValidators : null);
     this.formControl.updateValueAndValidity({ emitEvent: false });
   }
-
-  // Setup
-  #setupEffects(): void {
-    // Lắng nghe disabled
-    effect(() => {
-      if (this.disabled()) {
-        this.formControl.disable({ emitEvent: false });
-      } else {
-        this.formControl.enable({ emitEvent: false });
-      }
-    });
-
-    // Lắng nghe readonly
-    effect(() => {
-      if (!this.#editor) {
-        return;
-      }
-      if (this.readonly()) {
-        this.#editor.enableReadOnlyMode('sd-editor-readonly');
-      } else {
-        this.#editor.disableReadOnlyMode('sd-editor-readonly');
-      }
-    });
-
-    // Lắng nghe binđing 2 chiều model
-    effect(() => this.#onModelSignalChange(this.valueModel()));
-
-    // Lắng nghe validators
-    effect(() => {
-      this.required();
-      this.maxlength();
-      this.inlineError();
-      this.validator();
-      this.#updateValidators();
-    });
-  }
-
-  #setupSubscriptions(): void {
-    // Đăng ký nếu dev sử dụng form để set data trực tiếp từ bên ngoài vào
-    this.formControl.valueChanges
-      .pipe(takeUntilDestroyed(this.#destroyRef))
-      .subscribe((val: string) => this.#onFormGroupExternalChange(val));
-
-    this.formControl.sdChanges.pipe(takeUntilDestroyed(this.#destroyRef)).subscribe(() => this.#cdRef.markForCheck());
-
-    // Đăng ký user gõ trong editor
-    this.#contentChangeSubject
-      .pipe(debounceTime(100), takeUntilDestroyed(this.#destroyRef))
-      .subscribe(rawHtml => this.#onEditorUserInput(rawHtml));
-  }
-
-  #setupDestroy(): void {
-    this.#destroyRef.onDestroy(() => {
-      this.#editor?.destroy?.();
-    });
-  }
-
-  // Helpers
-  #uploadImages = async (): Promise<void> => {
-    const uploadMode = this.option()?.imageConfig?.uploadMode ?? 'deferred';
-    // Early return nếu không phải 'deferred' mode.
-    // Nếu trước đó là mode "deferred" mà mong muốn chuyển sang mode "immediate", dev chưa cần refactor code phía caller mà không ảnh hưởng đến logic.
-    if (uploadMode !== 'deferred') return;
-
-    const uploadFn = this.#buildUploadFn();
-    if (!uploadFn) {
-      throw new Error('No upload function configured for image upload');
-    }
-
-    const plugin = this.#editor?.plugins?.get(EditorImageUploadPlugin) as EditorImageUploadPlugin | undefined;
-    if (!plugin || plugin.pendingFiles.size === 0) return;
-
-    const { batchSize, maxConcurrent } = getBatchConfig(this.option());
-    const activeBlobUrls = this.#editor ? getActiveBlobUrls(this.#editor) : new Set<string>();
-    const toUpload = filterActivePendingFiles(plugin.pendingFiles, activeBlobUrls);
-
-    // Capture trước await để tránh race condition: ảnh được chèn trong lúc chờ API
-    const processedBlobUrls = new Set(toUpload.map(([blobUrl]) => blobUrl));
-    const { replacements, failedBatches } = await runBatchUploads(toUpload, uploadFn, batchSize, maxConcurrent);
-
-    if (this.#editor) {
-      const lazyLoad = this.option()?.imageConfig?.lazyLoad ?? true;
-      for (const detail of replacements.values()) {
-        plugin.setMeta(detail.cdn, { name: detail.name, idOrKey: detail.idOrKey, lazyLoad });
-      }
-      applyReplacementsToEditor(this.#editor, replacements);
-    }
-
-    // Chỉ xóa đúng các entries đã được xử lý
-    for (const blobUrl of processedBlobUrls) {
-      plugin.pendingFiles.delete(blobUrl);
-    }
-
-    for (const [blobUrl, file] of failedBatches.flat()) {
-      plugin.pendingFiles.set(blobUrl, file);
-    }
-
-    if (failedBatches.length > 0) {
-      throw new Error(`Upload failed for ${failedBatches.flat().length} image(s)`);
-    }
-  };
 
   #getConfigurations = (): ISdEditorConfiguration[] => {
     const config = this.#uploadConfig;
