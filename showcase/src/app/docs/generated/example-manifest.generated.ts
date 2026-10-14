@@ -222,6 +222,10 @@ export type ShowcaseExampleSourceKey =
   | "components/view/example-gia-tri-co-sieu-lien-ket"
   | "components/view/example-nhan-va-gia-tri-co-ban"
   | "components/view/example-template-tuy-chinh-gia-tri"
+  | "components/window/example-chi-tiet-va-thao-tac"
+  | "components/window/example-contract-dong"
+  | "components/window/example-hai-cua-so-cung-mo"
+  | "components/window/example-khong-co-footer"
   | "directives/desktop/example-cap-doi-voi-sdmobile"
   | "directives/desktop/example-chi-render-tren-desktop"
   | "directives/hover-copy/example-nut-sao-chep-hien-khi-hover"
@@ -1956,6 +1960,34 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-template-tuy-chinh-gia-tri",
     title: "Template tùy chỉnh giá trị",
     description: "Existing “Template tùy chỉnh giá trị” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/window/example-chi-tiet-va-thao-tac",
+    pageKey: "components/window",
+    sectionId: "example-chi-tiet-va-thao-tac",
+    title: "Chi tiết và thao tác",
+    description: "Existing “Chi tiết và thao tác” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/window/example-hai-cua-so-cung-mo",
+    pageKey: "components/window",
+    sectionId: "example-hai-cua-so-cung-mo",
+    title: "Hai cửa sổ cùng mở",
+    description: "Existing “Hai cửa sổ cùng mở” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/window/example-khong-co-footer",
+    pageKey: "components/window",
+    sectionId: "example-khong-co-footer",
+    title: "Không có footer",
+    description: "Existing “Không có footer” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/window/example-contract-dong",
+    pageKey: "components/window",
+    sectionId: "example-contract-dong",
+    title: "Contract đóng",
+    description: "Existing “Contract đóng” scenario preserved from the showcase.",
   },
   {
     sourceKey: "directives/desktop/example-chi-render-tren-desktop",

@@ -38,7 +38,7 @@ import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
 | `[sdFooterLeft]`  | Footer left action group.                           |
 | `[sdFooterRight]` | Footer right action group.                          |
 
-Header and footer use a white background (`--sd-white`, default `#fff`) and compact 12px vertical / 16px horizontal padding. Body content uses `padding: 12px 16px` on desktop and mobile, giving it its own top and bottom spacing within the separate body surface. Body content scrolls, while the footer remains available and wraps on narrow screens. The footer is hidden when both footer slots are empty.
+Header, body and footer share `--sd-side-drawer-surface`, defaulting through `--sd-overlay-surface` to the theme's `--sd-surface`; light/dark palettes apply to all three regions. `--sd-white` no longer controls overlay chrome. Header/footer retain 12px vertical / 16px horizontal padding. Body content uses `padding: 12px 16px` on desktop and mobile and scrolls separately, while the footer remains available and wraps on narrow screens. The footer is hidden when both footer slots are empty.
 
 ## Public API
 

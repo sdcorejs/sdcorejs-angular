@@ -17,7 +17,7 @@
 .sd-modal-bottom-sheet-panel {
   --sd-modal-radius: var(--sd-overlay-radius, 8px);
   --sd-modal-bottom-sheet-radius: var(--sd-overlay-bottom-sheet-radius, 12px);
-  --sd-modal-surface: var(--sd-surface, #fff);
+  --sd-modal-surface: var(--sd-overlay-surface, var(--sd-surface, #fff));
   --sd-modal-border: var(--sd-border, #dde0e5);
   --sd-modal-shadow: 0 6px 18px rgba(15, 23, 42, 0.18), 0 1px 3px rgba(15, 23, 42, 0.12);
 }
@@ -212,7 +212,7 @@
 .sd-modal-footer {
   flex-shrink: 0;
   padding: 12px 16px;
-  background: var(--sd-white, #fff);
+  background: var(--sd-modal-surface, var(--sd-overlay-surface, var(--sd-surface, #fff)));
 }
 .sd-modal-title {
   font-size: var(--sd-font-size-18, 18px);

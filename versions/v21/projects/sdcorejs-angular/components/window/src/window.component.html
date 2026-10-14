@@ -1,0 +1,83 @@
+<ng-template cdkPortal>
+  @let _opened = isOpened();
+  @let _loading = isLoading();
+  @let _minimum = isMinimum();
+  @let _maximum = isMaximum();
+  @let _labels = labels();
+  @let _autoId = autoId();
+  <div [id]="id + '-status'" class="sd-window__status modal-resizable__status" role="status" aria-live="polite" aria-atomic="true">
+    {{ _opened && _loading ? _labels.loading : '' }}
+  </div>
+  <div
+    [id]="id"
+    class="sd-window modal-resizable"
+    [ngClass]="windowClass()"
+    [attr.data-opened]="dataOpened()"
+    [attr.data-loading]="dataLoading()"
+    role="dialog"
+    aria-modal="false"
+    tabindex="-1"
+    [attr.aria-labelledby]="titleId"
+    [attr.aria-describedby]="ariaDescribedBy() || null"
+    [attr.aria-hidden]="!_opened ? 'true' : null"
+    [attr.aria-busy]="_loading ? 'true' : null"
+    [attr.inert]="!_opened ? '' : null"
+    [attr.data-autoid]="_autoId"
+    [class.modal-resizable--active]="_opened"
+    [class.modal-resizable--loading]="_loading"
+    [class.c-closed]="!_opened"
+    [class.c-minium]="_minimum"
+    [class.modal-resizable--top]="_minimum && minimizedAtTop()"
+    [class.c-fullscreen]="_maximum"
+    (mouseenter)="onFocus()"
+    (mouseleave)="onBlur()"
+    (pointerdown)="activate($event)"
+    (focusin)="onFocus(); activate()"
+    (focusout)="onBlur($event)"
+    (keydown)="onKeydown($event)">
+    @if (_opened) {
+      <div class="sd-window__header modal-resizable__header">
+        <div class="sd-window__title modal-resizable__title" [id]="titleId">
+          <ng-content select="[sdHeaderLeft],[sdTitle]">{{ title() || _labels.title }}</ng-content>
+        </div>
+        <div class="sd-window__actions modal-resizable__actions">
+          <ng-content select="[sdHeaderRight]"></ng-content>
+          <sd-button
+            data-sd-window-action="restore"
+            size="sm"
+            type="text"
+            color="secondary"
+            [prefixIcon]="_minimum ? 'expand_less' : 'remove'"
+            [tooltip]="_minimum ? _labels.restore : _labels.minimize"
+            [autoId]="_autoId ? _autoId + '-restore' : undefined"
+            (click)="_minimum ? restore() : minimize()" />
+          <sd-button
+            size="sm"
+            type="text"
+            color="secondary"
+            [prefixIcon]="_maximum ? 'fullscreen_exit' : 'open_in_full'"
+            [tooltip]="_maximum ? _labels.exitFullscreen : _labels.fullscreen"
+            [autoId]="_autoId ? _autoId + '-fullscreen' : undefined"
+            (click)="toggleFullscreen()" />
+          @if (!hideClose()) {
+          <sd-button
+            size="sm"
+            type="text"
+            color="secondary"
+            prefixIcon="close"
+            [tooltip]="_labels.close"
+            [autoId]="_autoId ? _autoId + '-close' : undefined"
+            (click)="close()" />
+          }
+        </div>
+      </div>
+      <div class="sd-window__body modal-resizable__body" [attr.inert]="_loading ? '' : null">
+        <div class="sd-window__content modal-resizable__content"><ng-content select="[sdBody]"></ng-content><ng-content></ng-content></div>
+      </div>
+      <div class="sd-window__footer modal-resizable__footer" [attr.inert]="_loading ? '' : null">
+        <div class="sd-window__footer-left modal-resizable__footer-left"><ng-content select="[sdFooterLeft]"></ng-content></div>
+        <div class="sd-window__footer-right modal-resizable__footer-right"><ng-content select="[sdFooterRight]"></ng-content></div>
+      </div>
+    }
+  </div>
+</ng-template>

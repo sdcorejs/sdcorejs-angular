@@ -1,6 +1,18 @@
 import type { EN_MESSAGES } from './en';
 
 export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
+  'core.component.window.title': '詳細',
+  'core.component.window.loading': '詳細を読み込み中',
+  'core.component.window.minimize': '最小化',
+  'core.component.window.restore': '元に戻す',
+  'core.component.window.fullscreen': '全画面表示',
+  'core.component.window.exit-fullscreen': '全画面表示を終了',
+  'core.component.modal-resizable.title': '詳細',
+  'core.component.modal-resizable.loading': '詳細を読み込み中',
+  'core.component.modal-resizable.minimize': '最小化',
+  'core.component.modal-resizable.restore': '元に戻す',
+  'core.component.modal-resizable.fullscreen': '全画面表示',
+  'core.component.modal-resizable.exit-fullscreen': '全画面表示を終了',
   'core.component.table.quick-search.placeholder': '検索…',
   'core.component.table.quick-search.enter': 'Enterキーで検索します。',
   'core.component.table.quick-search.required': '検索する前に必須フィルターを選択してください。',

@@ -1,6 +1,18 @@
 import type { EN_MESSAGES } from './en';
 
 export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
+  'core.component.window.title': '상세 정보',
+  'core.component.window.loading': '상세 정보 로딩 중',
+  'core.component.window.minimize': '최소화',
+  'core.component.window.restore': '복원',
+  'core.component.window.fullscreen': '전체 화면',
+  'core.component.window.exit-fullscreen': '전체 화면 종료',
+  'core.component.modal-resizable.title': '상세 정보',
+  'core.component.modal-resizable.loading': '상세 정보 로딩 중',
+  'core.component.modal-resizable.minimize': '최소화',
+  'core.component.modal-resizable.restore': '복원',
+  'core.component.modal-resizable.fullscreen': '전체 화면',
+  'core.component.modal-resizable.exit-fullscreen': '전체 화면 종료',
   'core.component.table.quick-search.placeholder': '검색…',
   'core.component.table.quick-search.enter': 'Enter 키를 눌러 검색하세요.',
   'core.component.table.quick-search.required': '검색하기 전에 필수 필터를 선택하세요.',

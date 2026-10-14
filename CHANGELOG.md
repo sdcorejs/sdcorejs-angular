@@ -6,6 +6,20 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+### Fixed
+
+- Window: neutral theme-aware chrome, shared Core UI icon buttons, token-based footer spacing/wrapping and viewport-bounded stacking. Removed delayed lifecycle races, released owned loading refs and kept keyboard page focus visible. Loading content is inert with an exposed localized status; nested overlays retain their own focus behavior. Window/Modal/Drawer share the semantic overlay surface in light/dark; existing component surface overrides remain.
+- Window: explicit boolean/bare-attribute write type for the unreleased `disableEscapeClose` input matches Core overlays and rejects invalid strict-template bindings without changing its default or runtime behavior. Server rendering leaves the body portal client-only; lifecycle and teardown work on Angular 19–22.
+
+### Added
+
+- `SdWindow` / `sd-window` and `components/window` are the preferred public API. Additive `hideClose`, `windowClass`, `beforeClose`, `sdClosed`, `sdCloseError`, `requestClose` and `forceClose` match Core overlay conventions, with stale-guard protection. Added Core header/default-body slots, readable state/action names, docs and four Showcase examples. The nonmodal window intentionally has no backdrop, focus trap or body scroll lock.
+
+### Deprecated
+
+- `SdModalResizable` / `sd-modal-resizable` / `components/modal-resizable` remain aliases of the same Window component; no existing API is removed. Legacy `maximize`/`toggleMaximum`, writable signals, projection slots, CSS hooks and selector autoId prefix remain supported. Prefer `restore`/`toggleFullscreen` and readonly `isMinimized`/`isFullscreen`. See `components/window/sd-window.md` for migration and Core API mapping.
+- Standard npm build/prepack hooks preserve the alias's TypeScript deprecation hint on Angular 19–22, including single-version CI installations. The annotation changes only the existing declaration export specifier's JSDoc; canonical exports, runtime code and signatures stay intact. Raw Angular CLI/watch artifacts need the documented annotation step before packaging.
+
 ## [3.1] - 2026-10-10
 
 ### Added
