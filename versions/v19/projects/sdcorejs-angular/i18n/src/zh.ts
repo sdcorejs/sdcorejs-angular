@@ -1,6 +1,18 @@
 import type { EN_MESSAGES } from './en';
 
 export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
+  'core.component.window.title': '详细信息',
+  'core.component.window.loading': '正在加载详细信息',
+  'core.component.window.minimize': '最小化',
+  'core.component.window.restore': '还原',
+  'core.component.window.fullscreen': '全屏',
+  'core.component.window.exit-fullscreen': '退出全屏',
+  'core.component.modal-resizable.title': '详细信息',
+  'core.component.modal-resizable.loading': '正在加载详细信息',
+  'core.component.modal-resizable.minimize': '最小化',
+  'core.component.modal-resizable.restore': '还原',
+  'core.component.modal-resizable.fullscreen': '全屏',
+  'core.component.modal-resizable.exit-fullscreen': '退出全屏',
   'core.component.table.quick-search.placeholder': '搜索…',
   'core.component.table.quick-search.enter': '按 Enter 键搜索。',
   'core.component.table.quick-search.required': '请先选择必填筛选条件。',

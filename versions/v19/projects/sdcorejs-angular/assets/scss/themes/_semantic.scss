@@ -13,6 +13,7 @@ $states: info, success, warning, error;
   }
   --sd-link: var(--sd-primary);
   --sd-surface-inverse: var(--sd-text);
+  --sd-overlay-surface: var(--sd-surface);
   --sd-text-on-solid: var(--sd-primary-contrast);
   --sd-border-focus: var(--sd-primary);
   --sd-border-danger: var(--sd-error);

@@ -1,6 +1,18 @@
 import type { EN_MESSAGES } from './en';
 
 export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
+  'core.component.window.title': 'Chi tiết',
+  'core.component.window.loading': 'Đang tải chi tiết',
+  'core.component.window.minimize': 'Thu nhỏ',
+  'core.component.window.restore': 'Khôi phục',
+  'core.component.window.fullscreen': 'Toàn màn hình',
+  'core.component.window.exit-fullscreen': 'Thoát toàn màn hình',
+  'core.component.modal-resizable.title': 'Chi tiết',
+  'core.component.modal-resizable.loading': 'Đang tải chi tiết',
+  'core.component.modal-resizable.minimize': 'Thu nhỏ',
+  'core.component.modal-resizable.restore': 'Khôi phục',
+  'core.component.modal-resizable.fullscreen': 'Toàn màn hình',
+  'core.component.modal-resizable.exit-fullscreen': 'Thoát toàn màn hình',
   'core.component.table.quick-search.placeholder': 'Tìm kiếm…',
   'core.component.table.quick-search.enter': 'Nhấn Enter để tìm kiếm.',
   'core.component.table.quick-search.required': 'Chọn các bộ lọc bắt buộc trước khi tìm kiếm.',

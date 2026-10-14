@@ -4,7 +4,7 @@ import { SHOWCASE_EXAMPLE_SOURCES } from '../generated/example-sources.generated
 
 const EXPECTED_CATEGORY_COUNTS = {
   guides: 4,
-  components: 40,
+  components: 42,
   forms: 23,
   directives: 6,
   services: 11,
@@ -17,15 +17,15 @@ describe('documentation registry', () => {
     const publishedIds = DOC_PAGES.map(page => page.publishedDocId).filter(id => id !== null);
     const localOnlyPages = DOC_PAGES.filter(page => page.publishedDocId === null);
 
-    expect(DOC_PAGES).toHaveSize(105);
-    expect(new Set(publishedIds).size).toBe(105);
+    expect(DOC_PAGES).toHaveSize(107);
+    expect(new Set(publishedIds).size).toBe(107);
     expect(DOC_PAGES.some(page => page.category === 'components' && page.slug === 'chart')).toBeFalse();
     expect(localOnlyPages).toHaveSize(0);
     expect(DOC_CATEGORIES).toHaveSize(7);
     for (const category of DOC_CATEGORIES) {
       expect(getDocPagesByCategory(category)).withContext(category).toHaveSize(EXPECTED_CATEGORY_COUNTS[category]);
     }
-    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(405);
+    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(409);
   });
 
   it('uses unique stable page ids and category/slug pairs', () => {
@@ -47,7 +47,7 @@ describe('documentation registry', () => {
     const exampleIds = DOC_PAGES.flatMap(page => page.examples.map(example => example.id));
 
     expect(new Set(exampleIds).size).toBe(exampleIds.length);
-    expect(exampleIds).toHaveSize(405);
+    expect(exampleIds).toHaveSize(409);
     expect(exampleIds).toContain('forms-segmented-example-types');
     const switchSections = findDocPage('forms', 'switch')?.examples.map(example => example.sectionId);
     expect(switchSections).toContain('example-kich-thuoc');
@@ -67,7 +67,7 @@ describe('documentation registry', () => {
   });
 
   it('derives navigation groups and canonical/legacy lookup helpers from the registry', () => {
-    expect(DOC_NAV_GROUPS.map(group => group.pages.length)).toEqual([4, 40, 23, 6, 11, 10, 11]);
+    expect(DOC_NAV_GROUPS.map(group => group.pages.length)).toEqual([4, 42, 23, 6, 11, 10, 11]);
     expect(findDocPage('components', 'button')?.title).toBe('Button');
     expect(findDocPage('directives', 'tooltip')?.publishedDocId).toBe('directives/src/sd-tooltip');
     expect(findDocPage('components', 'generic')?.title).toBe('Form Generic');
@@ -95,6 +95,24 @@ describe('documentation registry', () => {
     expect(findDocPage('pipes-utilities', 'read-state')?.publishedDocId).toBe('utilities/read-state/sd-read-state');
     expect(findDocPage('pipes-utilities', 'read-state')?.importPath).toBe('@sdcorejs/angular/utilities/read-state');
     expect(findDocPage('services', 'missing')).toBeUndefined();
+  });
+
+  it('owns Window examples once and retains the deprecated name as a reference-only page', () => {
+    const window = findDocPage('components', 'window');
+    const legacy = findDocPage('components', 'modal-resizable');
+
+    expect(window?.selector).toBe('sd-window');
+    expect(window?.importPath).toBe('@sdcorejs/angular/components/window');
+    expect(window?.status).toBe('experimental');
+    expect(window?.demoSectionCount).toBe(4);
+    expect(window?.sourcePath).toBe('showcase/src/app/pages/components/window/window-demo.component.ts');
+    expect(window?.examples.map(example => example.sectionId)).toContain('example-contract-dong');
+    expect(legacy?.selector).toBe('sd-modal-resizable');
+    expect(legacy?.importPath).toBe('@sdcorejs/angular/components/modal-resizable');
+    expect(legacy?.status).toBe('deprecated');
+    expect(legacy?.sourcePath).toBeNull();
+    expect(legacy?.demoSectionCount).toBe(0);
+    expect(legacy?.examples).toEqual([]);
   });
 
   it('preserves authored example order and interaction-gates resource-intensive previews', () => {

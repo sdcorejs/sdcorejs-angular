@@ -184,7 +184,9 @@ test('matches the canonical v19 runtime registry and expected deployment route c
       .map(category => [category, pages.filter(page => page.category === category).length])
   );
 
-  assert.equal(pages.length, 105);
+  assert.equal(pages.length, 107);
+  assert.ok(pages.some(page => page.category === 'components' && page.slug === 'window'));
+  assert.ok(pages.some(page => page.category === 'components' && page.slug === 'modal-resizable'));
   assert.ok(pages.some(page => page.category === 'components' && page.slug === 'kanban'));
   assert.ok(pages.some(page => page.category === 'forms' && page.slug === 'segmented'));
   assert.ok(!pages.some(page => page.category === 'components' && page.slug === 'chart'));
@@ -209,7 +211,7 @@ test('matches the canonical v19 runtime registry and expected deployment route c
     'total = 1 root redirect + one identical block per release'
   );
   assert.deepEqual(categoryCounts, {
-    components: 40,
+    components: 42,
     directives: 6,
     forms: 23,
     guides: 4,

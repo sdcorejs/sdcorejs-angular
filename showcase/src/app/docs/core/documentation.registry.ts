@@ -88,6 +88,7 @@ interface PublishedDocPageSeed {
   readonly importPath: string;
   readonly publishedDocId: string;
   readonly keywords?: readonly string[];
+  readonly status?: DocPageStatus;
 }
 
 /** Creates a catalog entry for published reference content that has no local live demo. */
@@ -104,7 +105,7 @@ function definePublishedDocPage(seed: PublishedDocPageSeed): DocPageDefinition {
     publishedDocId: seed.publishedDocId,
     keywords: [seed.title, seed.slug, seed.category, seed.importPath, ...(seed.selector ? [seed.selector] : []), ...(seed.keywords ?? [])],
     tabs: DOC_TABS,
-    status: 'stable',
+    status: seed.status ?? 'stable',
     sourcePath: null,
     legacyPath: canonicalPath,
     legacyPaths: [canonicalPath],
@@ -433,6 +434,30 @@ const COMPONENT_PAGES = [
     status: 'stable',
     demoSectionCount: 7,
     loadComponent: () => import('../../pages/components/modal/modal-demo.component').then(m => m.ModalDemoComponent),
+  }),
+  definePublishedDocPage({
+    category: 'components',
+    slug: 'modal-resizable',
+    title: 'Modal Resizable (deprecated)',
+    description: 'Alias tương thích của Window; dùng SdWindow và sd-window cho code mới.',
+    selector: 'sd-modal-resizable',
+    importPath: '@sdcorejs/angular/components/modal-resizable',
+    publishedDocId: 'components/modal-resizable/sd-modal-resizable',
+    keywords: ['window', 'panel', 'nonmodal', 'inspector'],
+    status: 'deprecated',
+  }),
+  defineDocPage({
+    category: 'components',
+    slug: 'window',
+    title: 'Window',
+    description: 'Cửa sổ chi tiết nonmodal, API đóng thống nhất với Core overlays; thu nhỏ và toàn màn hình.',
+    selector: 'sd-window',
+    importPath: '@sdcorejs/angular/components/window',
+    publishedDocId: 'components/window/sd-window',
+    keywords: ['window', 'panel', 'nonmodal', 'inspector', 'modal-resizable'],
+    status: 'experimental',
+    demoSectionCount: 4,
+    loadComponent: () => import('../../pages/components/window/window-demo.component').then(m => m.WindowDemoComponent),
   }),
   defineDocPage({
     category: 'components',

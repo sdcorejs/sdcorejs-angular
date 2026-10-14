@@ -227,6 +227,7 @@ test('[workspace] root lint and script gates enumerate every line in order', () 
   assert.equal(scripts['test:file-explorer-icons'], 'node --test scripts/generate-file-explorer-icons.test.mjs');
   assert.equal(scripts['test:theme'], 'node --test scripts/core-theme.test.mjs scripts/theme-contrast.test.mjs');
   assert.equal(scripts['test:theme-token-list'], 'node --test scripts/theme-token-list.test.mjs');
+  assert.equal(scripts['test:window-api'], 'node --test scripts/window-public-api.test.mjs scripts/annotate-window-deprecation.test.mjs');
   assert.equal(scripts['test:check-scss-hex'], 'node --test scripts/check-scss-hex.test.mjs');
 
   assert.deepEqual(scripts['test:scripts'].split(' && '), [
@@ -243,6 +244,7 @@ test('[workspace] root lint and script gates enumerate every line in order', () 
     'npm run test:file-explorer-icons',
     'npm run test:theme',
     'npm run test:theme-token-list',
+    'npm run test:window-api',
     'npm run test:check-scss-hex',
   ]);
 });
