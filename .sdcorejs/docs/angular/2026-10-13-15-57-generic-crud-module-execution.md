@@ -219,7 +219,7 @@ Người dùng góp ý sau khi xem Showcase. Các thay đổi đã làm:
   - style dùng chung nằm ở file mới `components/generic-configuration.scss`;
   - thêm 9 khoá i18n;
   - nhãn vi "Cho phép sắp xếp" / "Cho phép lọc" rút gọn thành "Sắp xếp" / "Lọc".
-- Lỗi phát hiện khi kiểm UI: màn chi tiết hiện "--" cho Code / Name. Nguyên nhân là lỗi có sẵn của Core `sd-input`: `displayValue` là `computed` đọc `formControl.value` vốn không phải signal, nên ở chế độ xem không cập nhật khi giá trị đến sau. Trong module, form detail/update chỉ render khi record đã tải xong. Lỗi gốc của `sd-input` được tách thành task riêng.
+- Lỗi phát hiện khi kiểm UI: màn chi tiết hiện "--" cho Code / Name. Nguyên nhân là lỗi có sẵn của Core `sd-input`: `displayValue` là `computed` đọc `formControl.value` vốn không phải signal, nên ở chế độ xem không cập nhật khi giá trị đến sau. Trong module, form detail/update chỉ render khi record đã tải xong. Lỗi gốc của `sd-input` được tách thành task riêng, và đã sửa ngày 2026-10-14: `displayValue` giờ phụ thuộc `#state` và `valueModel`, có regression spec trong `input.component.spec.ts`. Vẫn giữ việc chỉ render khi record đã tải xong, để mọi field bắt đầu từ giá trị đã tải.
 - Spec:
   - AC-014 giờ xoá một dòng qua selector;
   - thêm test hyperlink, fallback sang update, `defaultShowing`, preset icon trang;

@@ -15,6 +15,10 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 - Form builder: the page settings card uses the same layout as the Variables and Form validations cards, its fields take the full card width, and the page icon is picked from the group icon presets instead of typed. The Vietnamese label "Xác thực cấp form" becomes "Xác thực của biểu mẫu".
 
+### Fixed
+
+- Input: `viewed=true` shows a value that arrives after the first render — through `[model]` or the parent form's `patchValue` — and keeps following later changes, masked values included. It used to keep the first value it read, so a detail screen rendered before its record loaded showed "--".
+
 ### Changed (BREAKING for consumers)
 
 - Custom typed i18n catalogs must add the new `core.module.generic.*`, `core.component.form-builder.preset.time`, `core.component.form-builder.preset.json` and `core.component.form-generic.json.invalid` keys present in the built-in catalogs. Copy the entries from the built-in catalog of the same language, or let the compiler list the missing keys.
