@@ -16,6 +16,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdInform } from '@sdcorejs/angular/components/inform';
 import { SdTable, type SdTableCommand, type SdTableOption } from '@sdcorejs/angular/components/table';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdPageComponent } from '@sdcorejs/angular/modules/layout';
 import { SdConfirmService } from '@sdcorejs/angular/services/confirm';
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
 import { map } from 'rxjs';
@@ -47,7 +48,7 @@ const message = (error: unknown) => (error instanceof Error ? error.message : St
   templateUrl: './generic-list.page.html',
   styleUrl: './generic-list.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, SdButton, SdInform, SdTable, SdTranslatePipe, GenericImportDialog],
+  imports: [RouterOutlet, SdButton, SdInform, SdPageComponent, SdTable, SdTranslatePipe, GenericImportDialog],
   providers: [{ provide: SD_GENERIC_LIST_HOST, useExisting: forwardRef(() => GenericListPage) }],
 })
 export class GenericListPage implements SdGenericListHost {
@@ -72,7 +73,7 @@ export class GenericListPage implements SdGenericListHost {
   readonly #hidden = computed(() => new Set<SdGenericDefaultAction>(this.#entityConfig()?.hiddenDefaults ?? []));
   readonly title = computed(() => {
     const schema = this.schema();
-    if (!schema) return '';
+    if (!schema) return this.generic()?.entity ?? '';
     return schema.list?.title
       ? sdGenericRenderTitle(schema.list.title)
       : this.#i18n.t('core.module.generic.title.list', { label: schema.general.label });
@@ -183,13 +184,14 @@ export class GenericListPage implements SdGenericListHost {
       rows,
       reload: () => this.reload(),
     });
+    // why: a row opens its detail through a link on its first column (update when detail is not allowed); edit
+    // lives in the detail screen and delete in the selector, so built-in row commands would only repeat them.
+    const target: SdGenericFormAction | null = this.#allowed('detail', 'detail')
+      ? 'detail'
+      : this.#allowed('update', 'update')
+        ? 'update'
+        : null;
     const commands: SdTableCommand<SdGenericRecord>[] = [];
-    if (this.#allowed('detail', 'detail'))
-      commands.push({ icon: 'visibility', title: t('detail'), click: row => this.#open(row, schema, 'detail') });
-    if (this.#allowed('update', 'update'))
-      commands.push({ icon: 'edit', title: t('update'), click: row => this.#open(row, schema, 'update') });
-    if (this.#allowed('delete', 'delete'))
-      commands.push({ icon: 'delete', color: 'error', title: t('delete'), click: row => void this.#delete(schema, [row]) });
     for (const action of (this.#entityConfig()?.rowCommands ?? []).filter(item => this.#permission.canCode(item.permission))) {
       commands.push({
         icon: action.icon ?? 'more_horiz',
@@ -217,8 +219,8 @@ export class GenericListPage implements SdGenericListHost {
       type: 'server',
       key: `sd-generic.${schema.module}.${schema.entity}`,
       rowKey: sdGenericPrimaryKey(schema),
-      columns: sdGenericTableColumns(schema, deps),
-      filter: { externalFilters: sdGenericExternalFilters(schema, deps) },
+      columns: sdGenericTableColumns(schema, deps, target ? row => this.#open(row, schema, target) : undefined),
+      filter: { externalFilters: sdGenericExternalFilters(schema, deps), hideExternalFilterToolbar: true },
       paginate: { pageSize: sdGenericPageSize(schema) },
       ...(schema.list?.export && !this.#hidden().has('export')
         ? { export: { visible: 'EXCEL' as const, fileName: `${schema.module}-${schema.entity}` } }

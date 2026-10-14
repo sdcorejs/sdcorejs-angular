@@ -1,6 +1,7 @@
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdSection } from '@sdcorejs/angular/components/section';
 import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
 import { SdInput } from '@sdcorejs/angular/forms/input';
 import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
@@ -14,8 +15,9 @@ const NOT_FILTERABLE = new Set(['json', 'file']);
 @Component({
   selector: 'sd-generic-configuration-list',
   templateUrl: './generic-configuration-list.component.html',
+  styleUrl: '../generic-configuration.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdButton, SdCheckbox, SdInput, SdInputNumber, SdTranslatePipe],
+  imports: [SdSection, SdButton, SdCheckbox, SdInput, SdInputNumber, SdTranslatePipe],
 })
 export class GenericConfigurationList {
   readonly schema = input.required<SdGenericSchema>();
