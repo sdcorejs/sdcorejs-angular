@@ -1043,6 +1043,91 @@ describe('SdInput (host classes)', () => {
 });
 
 // ---------------------------------------------------------------------------
+// viewed=true phải hiện giá trị đến SAU lần render đầu
+// ---------------------------------------------------------------------------
+
+describe('SdInput (viewed=true hiện giá trị đến muộn)', () => {
+  // why: màn chi tiết thường render field trước rồi mới nhận record từ API. `displayValue` từng là
+  // computed đọc `formControl.value` (property thường, không phải signal) nên nó chốt giá trị ở lần
+  // đọc đầu — ô còn rỗng ⇒ sd-view hiện "--" mãi, dù `formControl.value` đã có dữ liệu.
+  @Component({
+    changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+    standalone: true,
+    imports: [SdInput],
+    template: `<sd-input label="Code" [viewed]="true" [mask]="mask" [(model)]="value"></sd-input>`,
+  })
+  class ViewedModelHost {
+    mask: 'VN_PHONE' | null = null;
+    value: string | null | undefined = undefined;
+  }
+
+  @Component({
+    changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+    standalone: true,
+    imports: [SdInput],
+    template: `<sd-input label="Code" name="code" [form]="fg" [viewed]="true"></sd-input>`,
+  })
+  class ViewedFormHost {
+    fg = new FormGroup({});
+  }
+
+  function viewText(fixture: ComponentFixture<unknown>): string {
+    return ((fixture.nativeElement as HTMLElement).querySelector('sd-view .T14M')?.textContent ?? '').trim();
+  }
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [ViewedModelHost, ViewedFormHost, NoopAnimationsModule],
+    }).compileComponents();
+  });
+
+  it('[model] gán sau lần render đầu → sd-view hiện giá trị mới', () => {
+    const fixture = TestBed.createComponent(ViewedModelHost);
+    fixture.detectChanges();
+    expect(viewText(fixture)).not.toBe('PRD-001');
+
+    fixture.componentInstance.value = 'PRD-001';
+    fixture.detectChanges();
+
+    expect(viewText(fixture)).toBe('PRD-001');
+  });
+
+  it('[model] đổi lần nữa → sd-view theo giá trị mới nhất', () => {
+    const fixture = TestBed.createComponent(ViewedModelHost);
+    fixture.componentInstance.value = 'PRD-001';
+    fixture.detectChanges();
+    expect(viewText(fixture)).toBe('PRD-001');
+
+    fixture.componentInstance.value = 'PRD-002';
+    fixture.detectChanges();
+
+    expect(viewText(fixture)).toBe('PRD-002');
+  });
+
+  it('[form] + name: patchValue của form cha sau lần render đầu → sd-view hiện giá trị mới', () => {
+    const fixture = TestBed.createComponent(ViewedFormHost);
+    fixture.autoDetectChanges();
+    expect(viewText(fixture)).not.toBe('Laptop');
+
+    fixture.componentInstance.fg.patchValue({ code: 'Laptop' });
+    fixture.detectChanges();
+
+    expect(viewText(fixture)).toBe('Laptop');
+  });
+
+  it('mask: [model] gán sau lần render đầu → sd-view hiện giá trị đã format', () => {
+    const fixture = TestBed.createComponent(ViewedModelHost);
+    fixture.componentInstance.mask = 'VN_PHONE';
+    fixture.detectChanges();
+
+    fixture.componentInstance.value = '0901234567';
+    fixture.detectChanges();
+
+    expect(viewText(fixture)).toBe('0901 234 567');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // viewed inline mode (tri-state `viewed`) — borderless input variant
 // ---------------------------------------------------------------------------
 

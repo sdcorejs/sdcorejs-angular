@@ -305,8 +305,16 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   readonly activeControl = computed(() => (this.maskAdapter() ? this.displayControl : this.formControl));
   readonly maskStatus = signal<SdInputMaskStatus>('empty');
   readonly displayValue = computed(() => {
+    // why: `formControl.value` là property THƯỜNG, không phát tín hiệu nào. Thiếu hai dependency dưới
+    // thì computed chốt giá trị ở lần đọc đầu (ô còn rỗng) — màn chi tiết render field trước khi record
+    // tải xong sẽ hiện "--" mãi. `#state` tick khi form cha `patchValue`/người dùng gõ; còn `[model]`
+    // được effect ghi vào control bằng `emitEvent: false` nên `#state` đứng im — `valueModel` là signal
+    // duy nhất đổi trong nhánh đó (effect chạy trước template của sd-input nên control đã có giá trị).
+    void this.#state();
+    void this.valueModel();
+    const value = this.formControl.value;
     const adapter = this.maskAdapter();
-    return adapter ? adapter.format(this.formControl.value == null ? '' : String(this.formControl.value)).display : this.formControl.value;
+    return adapter ? adapter.format(value == null ? '' : String(value)).display : value;
   });
   #subscription = new Subscription();
   #isComposing = false;
