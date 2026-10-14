@@ -98,5 +98,26 @@ describe('generic table columns', () => {
     ]);
     expect(filters[0]).toEqual(jasmine.objectContaining({ title: 'Code', default: 'SO', defaultOperator: 'EQUAL', required: true }));
     expect(filters[2]).toEqual(jasmine.objectContaining({ default: ['NEW'] }));
+    expect(filters.every(filter => filter.defaultShowing))
+      .withContext('configured filters show without the toolbar')
+      .toBeTrue();
+  });
+
+  it('links the first visible column that is not a server field to the record', () => {
+    const open = jasmine.createSpy('open');
+    const withId = schema({
+      general: {
+        label: 'Order',
+        properties: [{ key: 'id', label: 'Id', dataType: 'string', system: true }, ...schema().general.properties],
+      },
+      list: { columns: [{ key: 'id' }, { key: 'note', visible: false }, { key: 'code' }, { key: 'amount' }] },
+    });
+    const columns = sdGenericTableColumns(withId, deps, open);
+    expect(columns.filter(column => column.click).map(column => column.field)).toEqual(['code']);
+    columns.find(column => column.field === 'code')!.click!('SO1', { id: '1', code: 'SO1' });
+    expect(open).toHaveBeenCalledOnceWith({ id: '1', code: 'SO1' });
+    expect(sdGenericTableColumns(withId, deps).some(column => column.click))
+      .withContext('no link without open')
+      .toBeFalse();
   });
 });

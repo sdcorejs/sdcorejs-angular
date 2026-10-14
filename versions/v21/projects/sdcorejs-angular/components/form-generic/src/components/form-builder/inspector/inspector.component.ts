@@ -868,6 +868,12 @@ export class InspectorComponent {
     this.set('icon', icon);
   }
 
+  /** Page icon from the same presets as a group; picking the current icon again removes it. */
+  pickPageIcon(icon: string): void {
+    const page = this.store.activePage();
+    this.store.setPageMetadata({ icon: page.icon === icon ? undefined : icon });
+  }
+
   pickColor(color: string): void {
     this.set('color', color);
   }

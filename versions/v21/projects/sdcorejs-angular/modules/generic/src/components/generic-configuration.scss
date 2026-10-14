@@ -1,0 +1,134 @@
+// Shared layout of the configuration tabs: sections of dense rows instead of one card per item.
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 16px;
+}
+
+// sd-section has no body padding: the first-level content of each section adds it.
+.cfg-body {
+  padding: 12px 16px 16px;
+}
+
+.cfg-rows.cfg-body {
+  padding-top: 0;
+  padding-bottom: 4px;
+}
+
+// A line of settings: inputs keep a readable width and wrap on narrow screens.
+.cfg-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+
+  > sd-input,
+  > sd-input-number,
+  > sd-select {
+    flex: 1 1 220px;
+    max-width: 420px;
+    min-width: 0;
+  }
+}
+
+.cfg-hint {
+  margin: 0;
+  padding: 12px 16px 0;
+  color: var(--sd-text-secondary);
+}
+
+.cfg-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+// One property or column per row; each tab sets its grid columns with a modifier below. Every row is its own
+// grid, so the column sizes must not depend on the row content (no `auto`), or the columns would not line up.
+.cfg-row {
+  display: grid;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 10px 0;
+  border-top: 1px solid var(--sd-border);
+
+  &:first-child {
+    border-top: 0;
+  }
+
+  > * {
+    min-width: 0;
+  }
+}
+
+.cfg-rows--properties .cfg-row {
+  grid-template-columns: minmax(110px, 1fr) minmax(150px, 2fr) minmax(130px, 1.5fr) 440px;
+}
+
+.cfg-rows--columns .cfg-row {
+  grid-template-columns: 72px minmax(150px, 1.5fr) 380px 120px 170px;
+}
+
+.cfg-rows--import .cfg-row {
+  grid-template-columns: minmax(180px, 1.5fr) 120px minmax(200px, 2fr);
+}
+
+.cfg-key {
+  display: flex;
+  flex-direction: column;
+}
+
+.cfg-key__name {
+  color: var(--sd-text);
+  font-weight: var(--sd-font-weight-medium, 500);
+  overflow-wrap: anywhere;
+}
+
+.cfg-key__type {
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-12, 12px);
+}
+
+.cfg-flags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+}
+
+.cfg-order {
+  display: flex;
+  gap: 2px;
+}
+
+// Settings that only some data types have (enum options, relation display), under their row.
+.cfg-sub {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--sd-radius-8, 8px);
+  background: var(--sd-surface-muted);
+}
+
+// One enum option: value, label and color line up from option to option.
+.cfg-option {
+  display: grid;
+  grid-template-columns: 120px minmax(160px, 1fr) minmax(160px, 1fr);
+  align-items: center;
+  gap: 8px 16px;
+
+  > * {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .cfg-rows--properties .cfg-row,
+  .cfg-rows--columns .cfg-row,
+  .cfg-rows--import .cfg-row,
+  .cfg-option {
+    grid-template-columns: 1fr;
+  }
+}

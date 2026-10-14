@@ -1,9 +1,11 @@
+import { Location } from '@angular/common';
 import { provideLocationMocks } from '@angular/common/testing';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdPermissionService } from '@sdcorejs/angular/modules/permission';
 import { SdConfirmService } from '@sdcorejs/angular/services/confirm';
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
@@ -101,7 +103,8 @@ describe('GenericListPage', () => {
     const { page } = await open();
     const reload = spyOn(page, 'reload');
     const option = page.tableOption()!;
-    const deleteCommand = option.commands!.find(command => command.title === 'Delete' || command.icon === 'delete') as { click: Callable };
+    // Deleting goes through the selector only, for one row as for several.
+    const bulkDelete = option.selector!.actions!.find(action => (action as { icon?: string }).icon === 'delete') as { click: Callable };
     let running = 0;
     let peak = 0;
     adapter.delete.and.callFake(async () => {
@@ -110,13 +113,12 @@ describe('GenericListPage', () => {
       await new Promise(resolve => setTimeout(resolve, 2));
       running--;
     });
-    await deleteCommand.click({ id: '1' });
+    bulkDelete.click([{ id: '1' }]);
     await new Promise(resolve => setTimeout(resolve, 20));
-    expect(confirm).toHaveBeenCalledTimes(1);
+    expect(confirm).toHaveBeenCalledOnceWith(TestBed.inject(I18nService).t('core.module.generic.delete.confirm'), jasmine.anything());
     expect(adapter.delete).toHaveBeenCalledOnceWith('order', '1');
     expect(reload).toHaveBeenCalled();
 
-    const bulkDelete = option.selector!.actions!.find(action => (action as { icon?: string }).icon === 'delete') as { click: Callable };
     adapter.delete.calls.reset();
     bulkDelete.click([{ id: 'a' }, { id: 'b' }, { id: 'c' }]);
     await new Promise(resolve => setTimeout(resolve, 50));
@@ -132,10 +134,34 @@ describe('GenericListPage', () => {
   it('does not delete when the confirmation is cancelled', async () => {
     const { page } = await open();
     confirm.and.rejectWith('CANCEL');
-    const deleteCommand = page.tableOption()!.commands!.find(command => command.icon === 'delete') as { click: Callable };
-    deleteCommand.click({ id: '1' });
+    const bulkDelete = page.tableOption()!.selector!.actions!.find(action => (action as { icon?: string }).icon === 'delete') as {
+      click: Callable;
+    };
+    bulkDelete.click([{ id: '1' }]);
     await new Promise(resolve => setTimeout(resolve, 10));
     expect(adapter.delete).not.toHaveBeenCalled();
+  });
+
+  it('opens a record from its link column instead of repeating detail, edit and delete on every row', async () => {
+    const { page } = await open();
+    const option = page.tableOption()!;
+    expect(option.commands).withContext('no built-in row commands').toEqual([]);
+    expect(option.filter).toEqual(jasmine.objectContaining({ hideExternalFilterToolbar: true }));
+    const links = option.columns.filter(column => column.click);
+    expect(links.map(column => column.field))
+      .withContext('first non-system column')
+      .toEqual(['code']);
+    links[0].click!('SO1', { id: '1', code: 'SO1' });
+    await new Promise(resolve => setTimeout(resolve, 20));
+    expect(TestBed.inject(Location).path()).toBe('/generic/tms/order/1/detail');
+  });
+
+  it('links to update when the user may update but not view a record', async () => {
+    granted.delete('TMS_ORDER_C_GENERIC_DETAIL');
+    const { page } = await open();
+    page.tableOption()!.columns.find(column => column.click)!.click!('SO1', { id: '1', code: 'SO1' });
+    await new Promise(resolve => setTimeout(resolve, 20));
+    expect(TestBed.inject(Location).path()).toBe('/generic/tms/order/1/update');
   });
 
   it('shows the invalid configuration banner only to users who can configure (AC-007)', async () => {

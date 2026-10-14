@@ -18,6 +18,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdFormRender } from '@sdcorejs/angular/components/form-generic';
 import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdPageComponent } from '@sdcorejs/angular/modules/layout';
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
 import { filter } from 'rxjs';
 import { sdGenericBuildForm, sdGenericRenderTitle } from '../../core';
@@ -43,7 +44,7 @@ interface FormRouteState {
   templateUrl: './generic-form-host.page.html',
   styleUrl: './generic-form-host.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgTemplateOutlet, SdButton, SdFormRender, SdSideDrawer, SdTranslatePipe],
+  imports: [NgTemplateOutlet, SdButton, SdFormRender, SdPageComponent, SdSideDrawer, SdTranslatePipe],
 })
 export class GenericFormHostPage {
   readonly #route = inject(ActivatedRoute);

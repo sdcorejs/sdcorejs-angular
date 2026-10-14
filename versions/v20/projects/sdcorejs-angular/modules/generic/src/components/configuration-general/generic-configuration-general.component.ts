@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { SdSection } from '@sdcorejs/angular/components/section';
 import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
 import { SdInput } from '@sdcorejs/angular/forms/input';
 import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
@@ -10,8 +11,9 @@ const DEFAULT_EDITABLE = new Set(['string', 'text', 'number']);
 @Component({
   selector: 'sd-generic-configuration-general',
   templateUrl: './generic-configuration-general.component.html',
+  styleUrl: '../generic-configuration.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdCheckbox, SdInput, SdTranslatePipe],
+  imports: [SdSection, SdCheckbox, SdInput, SdTranslatePipe],
 })
 export class GenericConfigurationGeneral {
   readonly schema = input.required<SdGenericSchema>();

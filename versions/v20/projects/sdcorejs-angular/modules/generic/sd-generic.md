@@ -78,6 +78,16 @@ The guards also refuse, even with `permission: false`:
 - a `:module` or `:entity` that is not made of letters, digits, `_` and `-` with single dots between parts (`sales.order` is fine; a decoded `../admin` or `a b` is not), so a URL can never steer a permission code or an adapter call elsewhere;
 - `create`, `:id/detail` and `:id/update` when the entity lists that action in `hiddenDefaults`.
 
+The list, the page forms and the configuration screen render inside `<sd-page>` from `@sdcorejs/angular/modules/layout`, with the title on the left and the actions on the right of its header.
+
+On the list:
+
+- The first visible column that is not a `system` property links to the record. The link opens detail, or update when the user may update but not view the record.
+- There are no built-in row commands. Edit sits in the detail screen and shows only with `UPDATE`; delete sits in the table selector, for one row or for several. `rowCommands` of `provideSdGenericEntity` still add row commands.
+- Configured external filters show by default, and the filter toolbar (clear / pick filters) is hidden.
+
+Detail and update render their form once the record has loaded, so every field starts from its loaded value.
+
 Forms open as a **page** or a **side drawer**, decided by `provideSdGenericEntity.display`, then `adapter.display`, then `'page'`. A drawer opens over the list, which stays mounted (filters, sort and page are kept); back or closing the drawer returns to the list. A page form takes the place of the list, which stays mounted too, so its filters, sort and page survive; the list reloads after a save and the focus returns to its heading. When the router reuses a form or the configuration screen for another record or entity (same route, other `:id` / `:entity`), the screen reloads for the new one.
 
 ## Permissions
