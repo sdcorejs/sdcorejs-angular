@@ -12,9 +12,14 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 - Import diagnostics preserve untouched safe source, lock unsupported content and reject unsafe/lossy exports or paste. HTML/Markdown conversion verifies preservation; no Pro/paid conversion or DocumentEditor is included.
 - Selected-image sizing/alignment actions, composition-aware form output, SSR-safe initialization/counting, and upload generation/result/retry safeguards. OSS license notices ship with package assets.
 
+- `SdWindow` / `sd-window` and `components/window` are the preferred public API. Additive `hideClose`, `windowClass`, `beforeClose`, `sdClosed`, `sdCloseError`, `requestClose` and `forceClose` match Core overlay conventions, with stale-guard protection. Added Core header/default-body slots, readable state/action names, docs and four Showcase examples. The nonmodal window intentionally has no backdrop, focus trap or body scroll lock.
+
 ### Fixed
 
 - MiniEditor now synchronizes external values before/after mount, implements CVA touched and disabled state, and retains its 500ms leading/trailing output contract. Editor retains form/name registration and 100ms debounce.
+
+- Window: neutral theme-aware chrome, shared Core UI icon buttons, token-based footer spacing/wrapping and viewport-bounded stacking. Removed delayed lifecycle races, released owned loading refs and kept keyboard page focus visible. Loading content is inert with an exposed localized status; nested overlays retain their own focus behavior. Window/Modal/Drawer share the semantic overlay surface in light/dark; existing component surface overrides remain.
+- Window: explicit boolean/bare-attribute write type for the unreleased `disableEscapeClose` input matches Core overlays and rejects invalid strict-template bindings without changing its default or runtime behavior. Server rendering leaves the body portal client-only; lifecycle and teardown work on Angular 19–22.
 
 ### Changed (BREAKING for consumers)
 
@@ -22,6 +27,11 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 - `SdCKEditorStyles` / `sd-ckeditor-styles` and the legacy stylesheet import path remain deprecated compatibility loaders for shared Core content styles. They no longer load CKEditor CSS.
 - Unsafe content getters/upload and lossy format conversions report `SdEditorImportError` instead of silently exporting stripped content. Handle diagnostics before repairing or replacing stored values.
 - Custom typed i18n catalogs must add the new editor toolbar/content/import/upload/mention keys present in the built-in catalogs. VI/EN labels are localized; other built-in catalogs currently use explicit English fallback for the new keys.
+
+### Deprecated
+
+- `SdModalResizable` / `sd-modal-resizable` / `components/modal-resizable` remain aliases of the same Window component; no existing API is removed. Legacy `maximize`/`toggleMaximum`, writable signals, projection slots, CSS hooks and selector autoId prefix remain supported. Prefer `restore`/`toggleFullscreen` and readonly `isMinimized`/`isFullscreen`. See `components/window/sd-window.md` for migration and Core API mapping.
+- Standard npm build/prepack hooks preserve the alias's TypeScript deprecation hint on Angular 19–22, including single-version CI installations. The annotation changes only the existing declaration export specifier's JSDoc; canonical exports, runtime code and signatures stay intact. Raw Angular CLI/watch artifacts need the documented annotation step before packaging.
 
 ## [3.1] - 2026-10-10
 

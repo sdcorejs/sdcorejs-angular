@@ -133,6 +133,7 @@ export const SD_COLOR_TOKENS = [
   'border-focus',
   'border-danger',
   'overlay-backdrop',
+  'overlay-surface',
   'focus-ring-color',
 ] as const;
 

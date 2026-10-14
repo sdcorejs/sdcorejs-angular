@@ -3598,10 +3598,10 @@ describe('SdFileExplorer', () => {
         closeCommandDrawer();
         await settle();
 
-        // Any other sd-side-drawer — here the explorer's own detail drawer — keeps Core's header.
+        // Other drawers keep the shared Core surface; the Explorer command-sheet override stays scoped.
         row('Cover.jpg').click();
         await settle();
-        expect(background(detail()?.querySelector('.sd-side-drawer-header') as HTMLElement)).toBe('rgb(255, 255, 255)');
+        expect(background(detail()?.querySelector('.sd-side-drawer-header') as HTMLElement)).toBe('rgb(253, 251, 255)');
       } finally {
         for (const name of Object.keys(tokens)) root.removeProperty(name);
       }

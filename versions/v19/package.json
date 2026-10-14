@@ -6,6 +6,8 @@
     "start": "ng build sdcorejs-angular --watch",
     "watch": "ng build sdcorejs-angular --watch",
     "build": "node --max_old_space_size=8000 ./node_modules/@angular/cli/bin/ng build sdcorejs-angular",
+    "postbuild": "node ../../scripts/annotate-window-deprecation.mjs",
+    "prepack": "node ../../scripts/annotate-window-deprecation.mjs",
     "pack": "cd ./dist/sdcorejs-angular && npm pack",
     "build-pack": "npm run build && npm run pack",
     "publish:beta": "cd ./dist/sdcorejs-angular && npm publish --access public --tag beta",

@@ -1,0 +1,161 @@
+// why: chrome cửa sổ sống trong portal nên không phụ thuộc utility stylesheet của consumer.
+.modal-resizable__status {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.modal-resizable {
+  box-sizing: border-box;
+  position: fixed;
+  inset-inline-end: var(--sd-space-8, 8px);
+  inset-block-start: min(var(--sd-modal-resizable-top, 80px), 20dvh);
+  inset-block-end: 0;
+  max-inline-size: calc(100vw - 16px);
+  background: var(--sd-window-surface, var(--sd-modal-resizable-bg, var(--sd-overlay-surface, var(--sd-surface))));
+  color: var(--sd-window-text, var(--sd-modal-resizable-title, var(--sd-text)));
+  z-index: var(--sd-z-backdrop, 998);
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(var(--sd-space-16, 16px));
+  transition:
+    opacity var(--sd-duration-base, 200ms) var(--sd-ease-standard, ease),
+    transform var(--sd-duration-base, 200ms) var(--sd-ease-standard, ease);
+  pointer-events: none;
+  box-shadow: var(--sd-shadow-md);
+  border: 1px solid var(--sd-window-border, var(--sd-modal-resizable-divider, var(--sd-border)));
+  border-block-end: 0;
+  border-radius: var(--sd-radius-8, 8px) var(--sd-radius-8, 8px) 0 0;
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
+    outline-offset: var(--sd-focus-ring-offset, 2px);
+  }
+
+  &.c-minium {
+    inset-block-start: auto;
+    .modal-resizable__body,
+    .modal-resizable__footer {
+      display: none;
+    }
+  }
+
+  &.c-fullscreen:not(.c-minium) {
+    inset-block-start: var(--sd-space-8, 8px);
+  }
+  &.c-minium.modal-resizable--top {
+    inset-block-start: var(--sd-space-8, 8px);
+    inset-block-end: auto;
+    border-block-end: 1px solid var(--sd-window-border, var(--sd-modal-resizable-divider, var(--sd-border)));
+    border-radius: var(--sd-radius-8, 8px);
+  }
+}
+
+.modal-resizable--active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
+}
+
+.modal-resizable__header {
+  display: flex;
+  align-items: center;
+  gap: var(--sd-space-8, 8px);
+  flex: 0 0 auto;
+  min-block-size: var(--sd-space-56, 56px);
+  padding-inline: var(--sd-space-16, 16px);
+  padding-block: var(--sd-space-12, 12px);
+  background: var(--sd-window-header-bg, var(--sd-window-surface, var(--sd-modal-resizable-header-bg, var(--sd-modal-resizable-bg, var(--sd-overlay-surface, var(--sd-surface))))));
+  border-block-end: 1px solid var(--sd-window-border, var(--sd-modal-resizable-divider, var(--sd-border)));
+  border-start-start-radius: inherit;
+  border-start-end-radius: inherit;
+}
+
+.modal-resizable__title {
+  flex: 1 1 0;
+  min-inline-size: 0;
+  font-size: var(--sd-font-size-18, 18px);
+  line-height: var(--sd-line-height-28, 28px);
+  font-weight: var(--sd-font-weight-semibold, 600);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  > * {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.modal-resizable__actions {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: var(--sd-space-4, 4px);
+  margin-inline-start: auto;
+}
+
+.modal-resizable__body {
+  flex: 1 1 0;
+  min-block-size: 0;
+  min-inline-size: 0;
+  display: flex;
+  position: relative;
+}
+
+.modal-resizable__content {
+  flex: 1;
+  min-inline-size: 0;
+  min-block-size: 0;
+  padding: var(--sd-space-16, 16px);
+  overflow: auto;
+  overflow-wrap: anywhere;
+  overscroll-behavior: contain;
+}
+
+.modal-resizable__footer {
+  flex: 0 0 auto;
+  background: var(--sd-window-surface, var(--sd-modal-resizable-bg, var(--sd-overlay-surface, var(--sd-surface))));
+  border-block-start: 1px solid var(--sd-window-border, var(--sd-modal-resizable-divider, var(--sd-border)));
+  padding-inline: var(--sd-space-16, 16px);
+  padding-block: var(--sd-space-12, 12px);
+  padding-block-end: max(var(--sd-space-12, 12px), env(safe-area-inset-bottom));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sd-space-8, 8px);
+  // why: không dành border/padding cho footer chưa có nội dung, kể cả slot có Angular comment.
+  &:has(.modal-resizable__footer-left:empty):has(.modal-resizable__footer-right:empty) {
+    display: none;
+  }
+}
+
+.modal-resizable__footer-left,
+.modal-resizable__footer-right {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  gap: var(--sd-space-8, 8px);
+}
+
+.modal-resizable__footer-right {
+  margin-inline-start: auto;
+  justify-content: flex-end;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-resizable {
+    transition: none;
+    transform: none;
+  }
+}

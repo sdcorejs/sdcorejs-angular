@@ -287,3 +287,57 @@ test('sd-core ships opt-in [data-sd-theme] blocks for the default preset', () =>
   assert.match(light, /--sd-surface: #fdfbff;/);
   assert.match(light, /color-scheme: light;/);
 });
+
+// The three record overlays share a semantic surface; a palette change must reach their chrome.
+const componentCss = name => sass.compile(fileURLToPath(new URL(
+  `../versions/v19/projects/sdcorejs-angular/components/${name}/src/${name}.component.scss`, import.meta.url
+)), { loadPaths }).css;
+const selectorDeclarations = (css, selector) => Object.assign({}, ...[...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+  .filter(m => m[1].split(',').some(s => s.trim() === selector))
+  .map(m => Object.fromEntries([...m[2].matchAll(/(--[\w-]+|background(?:-color)?):\s*([^;]+);/g)]
+    .map(d => [d[1], d[2].trim()]))));
+const resolveSurface = (tokens, value, depth = 0) => {
+  assert.ok(depth < 20, 'surface token cycle');
+  const match = /^var\((--[\w-]+)(?:,\s*(.*))?\)$/.exec(value);
+  return match ? resolveSurface(tokens, tokens[match[1]] ?? match[2], depth + 1) : value;
+};
+
+for (const mode of ['light', 'dark']) {
+  test(`Window/Modal/Drawer surface and chrome follow the shared ${mode} theme`, () => {
+    const theme = declarations(compile(`.x { @include sd.theme($mode: '${mode}'); }`));
+    const expected = mode === 'light' ? '#fdfbff' : '#121316';
+    for (const [component, root, header, footer] of [
+      ['window', '.modal-resizable', '.modal-resizable__header', '.modal-resizable__footer'],
+      ['modal', '.sd-modal-root', '.sd-modal-header', '.sd-modal-footer'],
+      ['side-drawer', '.sd-side-drawer', '.sd-side-drawer-header', '.sd-side-drawer-footer'],
+    ]) {
+      const css = componentCss(component);
+      const rootStyles = selectorDeclarations(css, root);
+      const panelStyles = component === 'modal' ? selectorDeclarations(css, '.sd-modal-panel') : {};
+      const tokens = { ...theme, ...panelStyles, ...rootStyles };
+      const rootBg = rootStyles.background ?? rootStyles['background-color'];
+      assert.equal(resolveSurface(tokens, rootBg), expected, `${component} root`);
+      for (const region of [header, footer]) {
+        const styles = selectorDeclarations(css, region);
+        assert.equal(resolveSurface(tokens, styles.background ?? styles['background-color'] ?? rootBg), expected, region);
+      }
+    }
+  });
+}
+
+test('Window surface hooks follow consumer palettes while preserving legacy overrides', () => {
+  const theme = declarations(compile('.x { @include sd.theme((surface: #ffeecc)); }'));
+  // Unset canonical hooks avoid aliases being computed/inherited at the theme root before local overrides.
+  assert.equal(theme['--sd-window-surface'], undefined);
+  const css = componentCss('window');
+  const body = selectorDeclarations(css, '.modal-resizable').background;
+  const header = selectorDeclarations(css, '.modal-resizable__header').background;
+  assert.equal(resolveSurface(theme, body), '#ffeecc');
+  assert.equal(resolveSurface(theme, header), '#ffeecc');
+  const legacy = { ...theme, '--sd-modal-resizable-bg': '#123456', '--sd-modal-resizable-header-bg': '#345678' };
+  assert.equal(resolveSurface(legacy, body), '#123456');
+  assert.equal(resolveSurface(legacy, header), '#345678');
+  const modern = { ...legacy, '--sd-window-surface': '#654321' };
+  assert.equal(resolveSurface(modern, body), '#654321');
+  assert.equal(resolveSurface(modern, header), '#654321');
+});
