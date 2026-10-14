@@ -1,0 +1,75 @@
+<div class="d-flex flex-column gap-16 py-16">
+  <div class="d-flex gap-12 flex-wrap align-items-end">
+    <sd-input
+      class="flex-1"
+      size="sm"
+      labelPlacement="top"
+      hideInlineError
+      [label]="'core.module.generic.field.title' | sdTranslate"
+      [model]="schema().list?.title"
+      (modelChange)="setTitle($event)"></sd-input>
+    <sd-input-number
+      size="sm"
+      labelPlacement="top"
+      hideInlineError
+      type="positive"
+      [precision]="0"
+      [label]="'core.module.generic.field.page-size' | sdTranslate"
+      [model]="pageSize()"
+      (modelChange)="setPageSize($event)"></sd-input-number>
+    <sd-checkbox
+      [label]="'core.module.generic.field.export' | sdTranslate"
+      [model]="!!schema().list?.export"
+      (modelChange)="setList({ export: flag($event) })"></sd-checkbox>
+  </div>
+
+  @for (row of rows(); track row.column.key) {
+    <div
+      class="d-flex gap-12 flex-wrap align-items-center p-8 rounded-8 border"
+      role="group"
+      [attr.aria-label]="row.label"
+      [attr.data-autoId]="'generic-column-' + row.column.key">
+      <sd-checkbox [label]="row.label" [model]="row.shown" (modelChange)="toggleColumn(row.column.key, flag($event))"></sd-checkbox>
+      @if (row.shown) {
+        <sd-checkbox
+          [label]="'core.module.generic.field.visible' | sdTranslate"
+          [model]="row.column.visible !== false"
+          (modelChange)="setColumn(row.column.key, { visible: flag($event) ? undefined : false })"></sd-checkbox>
+        <sd-checkbox
+          [label]="'core.module.generic.field.sortable' | sdTranslate"
+          [model]="row.column.sortable !== false"
+          (modelChange)="setColumn(row.column.key, { sortable: flag($event) ? undefined : false })"></sd-checkbox>
+        <sd-checkbox
+          [label]="'core.module.generic.field.filterable' | sdTranslate"
+          [model]="row.column.filterable !== false"
+          (modelChange)="setColumn(row.column.key, { filterable: flag($event) ? undefined : false })"></sd-checkbox>
+        <sd-input-number
+          size="sm"
+          hideInlineError
+          type="positive"
+          [precision]="0"
+          [label]="'core.module.generic.field.width' | sdTranslate"
+          [model]="row.column.width"
+          (modelChange)="setColumn(row.column.key, { width: $event ? +$event : undefined })"></sd-input-number>
+        <sd-button
+          type="text"
+          prefixIcon="arrow_upward"
+          [tooltip]="'core.module.generic.action.move-up' | sdTranslate: { label: row.label }"
+          [disabled]="row.first"
+          (click)="move(row.column.key, -1)"></sd-button>
+        <sd-button
+          type="text"
+          prefixIcon="arrow_downward"
+          [tooltip]="'core.module.generic.action.move-down' | sdTranslate: { label: row.label }"
+          [disabled]="row.last"
+          (click)="move(row.column.key, 1)"></sd-button>
+      }
+      @if (row.filterable) {
+        <sd-checkbox
+          [label]="'core.module.generic.field.external-filter' | sdTranslate"
+          [model]="row.filter"
+          (modelChange)="toggleFilter(row.column.key, flag($event))"></sd-checkbox>
+      }
+    </div>
+  }
+</div>

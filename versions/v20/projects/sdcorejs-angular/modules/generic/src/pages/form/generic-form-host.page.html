@@ -1,0 +1,51 @@
+@if (formSchema(); as formSchema) {
+  @if (display() === 'side-drawer') {
+    <sd-side-drawer width="640px" [title]="title()" autoId="generic-form" (sdClosed)="onDrawerClosed()">
+      <ng-container [ngTemplateOutlet]="body" [ngTemplateOutletContext]="{ $implicit: formSchema }"></ng-container>
+      <div sdFooterRight class="d-flex align-items-center gap-8">
+        <ng-container [ngTemplateOutlet]="buttons"></ng-container>
+      </div>
+    </sd-side-drawer>
+  } @else {
+    <div class="sd-generic-form d-flex flex-column gap-16 p-16">
+      <div class="d-flex align-items-center justify-content-between gap-12 flex-wrap">
+        <div class="d-flex align-items-center gap-8">
+          <sd-button type="text" prefixIcon="arrow_back" [tooltip]="'core.module.generic.action.back' | sdTranslate" (click)="close()"></sd-button>
+          <h1 #heading class="T20B m-0" tabindex="-1">{{ title() }}</h1>
+        </div>
+        <div class="d-flex align-items-center gap-8 flex-wrap">
+          <ng-container [ngTemplateOutlet]="buttons"></ng-container>
+        </div>
+      </div>
+      <ng-container [ngTemplateOutlet]="body" [ngTemplateOutletContext]="{ $implicit: formSchema }"></ng-container>
+    </div>
+  }
+}
+
+<ng-template #body let-formSchema>
+  <div [attr.aria-busy]="loading() || null">
+    <sd-form-render [schema]="formSchema" [form]="form" [viewed]="viewed()" [(value)]="value"></sd-form-render>
+  </div>
+</ng-template>
+
+<ng-template #buttons>
+  @if (viewed()) {
+    @for (action of detailActions(); track action.id) {
+      <sd-button [title]="action.label" [prefixIcon]="action.icon" (click)="runAction(action)"></sd-button>
+    }
+    @if (canEdit()) {
+      <sd-button data-autoId="generic-edit" type="fill" color="primary" prefixIcon="edit" [title]="'core.module.generic.action.update' | sdTranslate" (click)="edit()"></sd-button>
+    }
+  } @else {
+    <sd-button [title]="'core.module.generic.action.cancel' | sdTranslate" (click)="close()"></sd-button>
+    <sd-button
+      data-autoId="generic-save"
+      type="fill"
+      color="primary"
+      prefixIcon="save"
+      [loading]="saving()"
+      [disabled]="!canSave()"
+      [title]="'core.module.generic.action.save' | sdTranslate"
+      (click)="save()"></sd-button>
+  }
+</ng-template>

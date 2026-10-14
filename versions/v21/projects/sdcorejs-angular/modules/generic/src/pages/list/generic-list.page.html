@@ -1,0 +1,58 @@
+@if (error(); as error) {
+  <div class="p-16">
+    <sd-inform error [title]="error"></sd-inform>
+  </div>
+}
+@let current = schema();
+@if (current) {
+  <!-- A page form takes the place of the list, which stays mounted so sd-table keeps its filters, sort and page. -->
+  <div class="sd-generic-list d-flex flex-column gap-16 p-16" [style.display]="pageChildActive() ? 'none' : null">
+    @if (showInvalidBanner()) {
+      <sd-inform
+        warning
+        data-autoId="generic-invalid-configuration"
+        [title]="'core.module.generic.configuration.invalid' | sdTranslate"
+        [actionLabel]="'core.module.generic.configuration.open' | sdTranslate"
+        (sdAction)="openConfiguration()"></sd-inform>
+    }
+    <div class="d-flex align-items-center justify-content-between gap-12 flex-wrap">
+      <h1 #heading class="T20B m-0" tabindex="-1">{{ title() }}</h1>
+      <div class="d-flex align-items-center gap-8 flex-wrap">
+        @for (action of listActions(); track action.id) {
+          <sd-button [title]="action.label" [prefixIcon]="action.icon" (click)="runAction(action)"></sd-button>
+        }
+        @if (canConfigure()) {
+          <sd-button
+            data-autoId="generic-configuration"
+            type="text"
+            prefixIcon="settings"
+            [title]="'core.module.generic.action.configuration' | sdTranslate"
+            (click)="openConfiguration()"></sd-button>
+        }
+        @if (canImport()) {
+          <sd-button
+            data-autoId="generic-import"
+            prefixIcon="upload_file"
+            [title]="'core.module.generic.action.import' | sdTranslate"
+            (click)="openImport()"></sd-button>
+        }
+        @if (canCreate()) {
+          <sd-button
+            data-autoId="generic-create"
+            type="fill"
+            color="primary"
+            prefixIcon="add"
+            [title]="'core.module.generic.action.create' | sdTranslate"
+            (click)="create()"></sd-button>
+        }
+      </div>
+    </div>
+    @if (tableOption(); as option) {
+      <sd-table [option]="option"></sd-table>
+    }
+  </div>
+  @if (canImport()) {
+    <sd-generic-import-dialog [schema]="current" (imported)="reload()"></sd-generic-import-dialog>
+  }
+}
+<router-outlet (deactivate)="onDeactivate()"></router-outlet>

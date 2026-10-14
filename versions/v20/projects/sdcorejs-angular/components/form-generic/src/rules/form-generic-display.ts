@@ -92,6 +92,10 @@ export const sdDisplayValue = (field: SdFormGenericField, value: unknown, option
       const items = listOf(value);
       return items.length ? items.map(item => DateUtilities.toFormat(item as string, 'dd/MM/yyyy') || item).join(', ') : EMPTY_STR;
     }
+    case 'time':
+      return (value as string) || EMPTY_STR;
+    case 'json':
+      return JSON.stringify(value) ?? EMPTY_STR;
     case 'datetime':
       return DateUtilities.toFormat(value as string, field.subtype === 'datetime' ? 'dd/MM/yyyy HH:mm' : 'dd/MM/yyyy') || EMPTY_STR;
     case 'select':

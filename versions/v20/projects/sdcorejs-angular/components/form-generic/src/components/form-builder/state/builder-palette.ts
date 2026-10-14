@@ -229,6 +229,15 @@ export const SD_FORM_BUILDER_PALETTE: readonly PaletteItem[] = [
     type: 'datetime',
     create: c => field(c, 'datetime', { type: 'datetime', subtype: 'datetime' }),
   },
+  {
+    id: 'time',
+    category: 'datetime',
+    icon: 'access_time',
+    labelKey: LABEL('time'),
+    keywords: ['time', 'hour', 'clock'],
+    type: 'time',
+    create: c => field(c, 'time', { type: 'time' }),
+  },
   // ── Nâng cao ──────────────────────────────────────────────────────────────
   {
     id: 'chip-string',
@@ -256,6 +265,15 @@ export const SD_FORM_BUILDER_PALETTE: readonly PaletteItem[] = [
     keywords: ['upload', 'file', 'image'],
     type: 'upload',
     create: c => field(c, 'upload', { type: 'upload', accept: 'file', source: 'ALL' }),
+  },
+  {
+    id: 'json',
+    category: 'advanced',
+    icon: 'data_object',
+    labelKey: LABEL('json'),
+    keywords: ['json', 'object', 'code'],
+    type: 'json',
+    create: c => field(c, 'json', { type: 'json' }),
   },
   // ── Bố cục ────────────────────────────────────────────────────────────────
   {

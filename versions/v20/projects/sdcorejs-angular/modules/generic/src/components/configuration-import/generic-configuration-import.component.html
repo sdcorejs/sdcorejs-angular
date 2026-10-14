@@ -1,0 +1,26 @@
+<div class="d-flex flex-column gap-16 py-16">
+  <sd-select
+    size="sm"
+    labelPlacement="top"
+    hideInlineError
+    valueField="value"
+    displayField="display"
+    [label]="'core.module.generic.field.upsert-key' | sdTranslate"
+    [items]="upsertOptions()"
+    [model]="schema().import?.upsertKey"
+    (modelChange)="setUpsertKey($event)"></sd-select>
+  @for (row of rows(); track row.property.key) {
+    <div class="d-flex gap-12 flex-wrap align-items-end p-8 rounded-8 border" [attr.data-autoId]="'generic-import-' + row.property.key">
+      <sd-checkbox [label]="row.property.label" [model]="row.selected" (modelChange)="toggle(row.property.key, $event)"></sd-checkbox>
+      @if (row.selected && row.property.dataType === 'relation') {
+        <sd-input
+          size="sm"
+          labelPlacement="top"
+          hideInlineError
+          [label]="'core.module.generic.field.match-field' | sdTranslate"
+          [model]="row.matchField"
+          (modelChange)="setMatchField(row.property.key, $event)"></sd-input>
+      }
+    </div>
+  }
+</div>

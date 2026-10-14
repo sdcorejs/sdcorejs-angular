@@ -24,6 +24,24 @@ export interface SdFormGenericValidationContext {
   failedMessage?: (validatorId: string) => string;
 }
 
+const TIME_VALUE = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+/** True for a canonical `HH:mm` time of day (00:00 to 23:59). */
+export const sdIsTimeValue = (value: unknown): value is string => typeof value === 'string' && TIME_VALUE.test(value);
+
+/** Result of {@link sdParseJsonText}; blank text parses to `null`. */
+export type SdJsonTextResult = { valid: true; value: unknown } | { valid: false };
+
+/** Parses the text of a json field without throwing. */
+export const sdParseJsonText = (text: string): SdJsonTextResult => {
+  if (!text.trim()) return { valid: true, value: null };
+  try {
+    return { valid: true, value: JSON.parse(text) as unknown };
+  } catch {
+    return { valid: false };
+  }
+};
+
 const defaultUnregistered = (id: string) => `Validator "${id}" is not registered.`;
 const defaultFailed = (id: string) => `Validator "${id}" failed.`;
 
