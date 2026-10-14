@@ -308,6 +308,16 @@
   border-radius: var(--sd-radius-8, 8px);
 }
 
+// A card that holds form fields (page settings): fields take the full card width.
+.ins-card--form {
+  align-items: stretch;
+  gap: 12px;
+
+  > * {
+    min-width: 0;
+  }
+}
+
 .ins-card__row {
   display: flex;
   align-items: center;
