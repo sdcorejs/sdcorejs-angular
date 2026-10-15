@@ -1,23 +1,49 @@
 import { LiveAnnouncer } from '@angular/cdk/a11y';
+import { CdkDrag, type CdkDragDrop, CdkDragHandle, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdSection } from '@sdcorejs/angular/components/section';
+import { SdTooltipDirective } from '@sdcorejs/angular/directives';
 import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
 import { SdInput } from '@sdcorejs/angular/forms/input';
 import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { sdGenericListColumns, sdGenericPageSize } from '../../core';
-import type { SdGenericListColumn, SdGenericListSection, SdGenericSchema } from '../../models';
+import type { SdGenericListColumn, SdGenericListSection, SdGenericProperty, SdGenericSchema } from '../../models';
+import { GenericPropertyIdentity } from '../property-identity/generic-property-identity.component';
 
-const NOT_FILTERABLE = new Set(['json', 'file']);
+interface ColumnRow {
+  column: SdGenericListColumn;
+  property: SdGenericProperty;
+  label: string;
+  first: boolean;
+  last: boolean;
+}
 
-/** "List" tab: column order and flags, external filters, page size and export. */
+/**
+ * "List" tab: column order (drag-drop or move buttons) and flags, page size and export. External filters are
+ * declared in code (backend schema or provideSdGenericEntity), not here (D-001).
+ */
 @Component({
   selector: 'sd-generic-configuration-list',
   templateUrl: './generic-configuration-list.component.html',
   styleUrl: '../generic-configuration.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdSection, SdButton, SdCheckbox, SdInput, SdInputNumber, SdTranslatePipe],
+  imports: [
+    CdkDrag,
+    CdkDragHandle,
+    CdkDropList,
+    GenericPropertyIdentity,
+    SdButton,
+    SdCheckbox,
+    SdIcon,
+    SdInput,
+    SdInputNumber,
+    SdSection,
+    SdTooltipDirective,
+    SdTranslatePipe,
+  ],
 })
 export class GenericConfigurationList {
   readonly schema = input.required<SdGenericSchema>();
@@ -28,26 +54,22 @@ export class GenericConfigurationList {
 
   readonly columns = computed(() => sdGenericListColumns(this.schema()));
   readonly pageSize = computed(() => sdGenericPageSize(this.schema()));
-  readonly rows = computed(() => {
-    const schema = this.schema();
-    const columns = this.columns();
-    const filters = new Set((schema.list?.externalFilters ?? []).map(filter => filter.key));
-    const shown = new Set(columns.map(column => column.key));
-    const properties = new Map(schema.general.properties.map(property => [property.key, property]));
-    const listed = columns.filter(column => properties.has(column.key)).map(column => ({ column, shown: true }));
-    return [
-      ...listed,
-      ...schema.general.properties
-        .filter(property => !shown.has(property.key))
-        .map(property => ({ column: { key: property.key } as SdGenericListColumn, shown: false })),
-    ].map((row, index) => ({
-      ...row,
-      label: properties.get(row.column.key)?.label ?? row.column.key,
-      filter: filters.has(row.column.key),
-      filterable: !NOT_FILTERABLE.has(properties.get(row.column.key)?.dataType ?? 'json'),
-      first: index === 0,
-      last: !row.shown || index === listed.length - 1,
-    }));
+  readonly #properties = computed(() => new Map(this.schema().general.properties.map(property => [property.key, property])));
+  /** Columns of the table, in order; they match `list.columns` because merge drops unknown keys (INV-005). */
+  readonly listedRows = computed<ColumnRow[]>(() => {
+    const properties = this.#properties();
+    const listed = this.columns().filter(column => properties.has(column.key));
+    return listed.map((column, index) => {
+      const property = properties.get(column.key)!;
+      return { column, property, label: property.label || column.key, first: index === 0, last: index === listed.length - 1 };
+    });
+  });
+  /** Properties that are not a column of the table; they can be added but not reordered. */
+  readonly unlistedRows = computed<ColumnRow[]>(() => {
+    const shown = new Set(this.columns().map(column => column.key));
+    return this.schema()
+      .general.properties.filter(property => !shown.has(property.key))
+      .map(property => ({ column: { key: property.key }, property, label: property.label || property.key, first: false, last: true }));
   });
 
   setList(patch: Partial<SdGenericListSection>): void {
@@ -65,6 +87,7 @@ export class GenericConfigurationList {
     if (Number.isInteger(value) && value > 0) this.setList({ pageSize: value });
   }
 
+  /** Adding a column appends it to the end; neither adding nor removing is a reorder. */
   toggleColumn(key: string, shown: boolean): void {
     const columns = this.columns();
     this.setList({ columns: shown ? [...columns, { key }] : columns.filter(column => column.key !== key) });
@@ -75,20 +98,33 @@ export class GenericConfigurationList {
   }
 
   move(key: string, delta: -1 | 1): void {
-    const columns = [...this.columns()];
-    const index = columns.findIndex(column => column.key === key);
-    const target = index + delta;
-    if (index < 0 || target < 0 || target >= columns.length) return;
-    [columns[index], columns[target]] = [columns[target], columns[index]];
-    this.setList({ columns });
-    // why: a screen reader does not report that the row moved; announce the new position of the column.
-    const label = this.schema().general.properties.find(property => property.key === key)?.label ?? key;
-    void this.#announcer.announce(this.#i18n.t('core.module.generic.configuration.moved', { label, position: target + 1 }));
+    const index = this.columns().findIndex(column => column.key === key);
+    if (index >= 0) this.reorder(index, index + delta);
   }
 
-  toggleFilter(key: string, on: boolean): void {
-    const filters = this.schema().list?.externalFilters ?? [];
-    this.setList({ externalFilters: on ? [...filters, { key }] : filters.filter(filter => filter.key !== key) });
+  drop(event: CdkDragDrop<unknown>): void {
+    // why: the drop list holds the listed rows only; translate its indices into positions in `list.columns`.
+    const rows = this.listedRows();
+    const from = rows[event.previousIndex]?.column.key;
+    const to = rows[event.currentIndex]?.column.key;
+    if (!from || !to) return;
+    const columns = this.columns();
+    this.reorder(
+      columns.findIndex(column => column.key === from),
+      columns.findIndex(column => column.key === to)
+    );
+  }
+
+  /** The only writer of the column order (D-012, INV-005): indices are positions in `list.columns`. */
+  reorder(fromIndex: number, toIndex: number): void {
+    const columns = [...this.columns()];
+    if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || fromIndex >= columns.length || toIndex >= columns.length) return;
+    const key = columns[fromIndex].key;
+    moveItemInArray(columns, fromIndex, toIndex);
+    this.setList({ columns });
+    // why: a screen reader does not report that the row moved; announce the new position of the column.
+    const label = this.#properties().get(key)?.label ?? key;
+    void this.#announcer.announce(this.#i18n.t('core.module.generic.configuration.moved', { label, position: toIndex + 1 }));
   }
 
   flag(value: unknown): boolean {

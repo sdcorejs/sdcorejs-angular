@@ -84,7 +84,7 @@ On the list:
 
 - The first visible column that is not a `system` property links to the record. The link opens detail, or update when the user may update but not view the record.
 - There are no built-in row commands. Edit sits in the detail screen and shows only with `UPDATE`; delete sits in the table selector, for one row or for several. `rowCommands` of `provideSdGenericEntity` still add row commands.
-- Configured external filters show by default, and the filter toolbar (clear / pick filters) is hidden.
+- The list filters inline, per column. External filters come only from code: `list.externalFilters` of the backend schema or of the `provideSdGenericEntity` schema adjustment. They show by default, and the filter toolbar (clear / pick filters) is hidden. The configuration screen does not edit them.
 
 Detail and update render their form once the record has loaded, so every field starts from its loaded value.
 
@@ -188,7 +188,20 @@ The effective schema of an entity is built in three layers: `adapter.schema(enti
 
 `validateSdGenericSchema(stored: unknown, base)` returns `{ code, severity, path, message }[]` with codes `shape`, `version`, `module-mismatch`, `entity-mismatch`, `property-key-duplicate`, `property-type`, `reference-dangling`, `layout-grammar`, `layout-type-mismatch`, `upsert-key-multiple`, `upsert-key-not-imported`, `create-not-insertable`, `update-not-updatable`, `title-placeholder-forbidden`, `title-placeholder-unknown`. It never throws: a member of the wrong type is a `shape` issue.
 
-The configuration screen has four tabs: General (labels; enum labels and colors; relation display and search fields, where an empty value means the default; required; default value; insertable/updatable, which cannot reopen a property the backend locks; `key` and `dataType` are read-only), List (columns, order, visibility, sort, filter, width, external filters, page size, export), Form (`sd-form-builder` for detail, create and update, with a panel that adds the properties not placed yet — adding one reloads the builder, which clears its undo history and selection) and Import (columns, relation match fields, upsert key). Save validates first and refuses to store a configuration with issues.
+The configuration screen has four tabs:
+
+- General: labels; enum labels and colors; relation display and search fields, where an empty value means the default; required; default value; insertable/updatable, which cannot reopen a property the backend locks.
+- List: columns, page size and export.
+  - The checkbox next to a column name puts the column in the table.
+  - "Show by default" decides whether it is visible at first; the end user can still show a hidden column from the column settings of the table.
+  - Each column also has sort, filter and width.
+  - Columns are reordered by dragging their handle or with the move buttons (keyboard).
+- Form: `sd-form-builder` for detail, create and update, with a panel that adds the properties not placed yet. Adding one reloads the builder, which clears its undo history and selection.
+- Import: columns, relation match fields, upsert key.
+
+Every property row in General, List and Import shows the data-type icon (from `SD_DATA_TYPE_ICON` of `@sdcorejs/angular/modules/icon`, with the type name as tooltip and accessible name) and the property `key` under its label; `key` and `dataType` are read-only. Save validates first and refuses to store a configuration with issues.
+
+A stored configuration never carries `list.externalFilters`: save drops it, and on load a stored value is ignored without an issue, so the backend schema and `provideSdGenericEntity` stay the only source. `validateSdGenericSchema` itself still checks `list.externalFilters` references when called directly.
 
 ## Import
 

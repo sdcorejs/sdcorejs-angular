@@ -25,7 +25,7 @@ describe('documentation registry', () => {
     for (const category of DOC_CATEGORIES) {
       expect(getDocPagesByCategory(category)).withContext(category).toHaveSize(EXPECTED_CATEGORY_COUNTS[category]);
     }
-    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(413);
+    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(414);
   });
 
   it('uses unique stable page ids and category/slug pairs', () => {
@@ -47,7 +47,7 @@ describe('documentation registry', () => {
     const exampleIds = DOC_PAGES.flatMap(page => page.examples.map(example => example.id));
 
     expect(new Set(exampleIds).size).toBe(exampleIds.length);
-    expect(exampleIds).toHaveSize(413);
+    expect(exampleIds).toHaveSize(414);
     expect(exampleIds).toContain('forms-segmented-example-types');
     const switchSections = findDocPage('forms', 'switch')?.examples.map(example => example.sectionId);
     expect(switchSections).toContain('example-kich-thuoc');
@@ -74,7 +74,7 @@ describe('documentation registry', () => {
     expect(findDocPage('components', 'generic')?.id).toBe('modules-integrations-generic');
     expect(findDocPage('components', 'generic')?.examples[0]?.id).toBe('modules-integrations-generic-example-builder-render');
     expect(findDocPage('modules-integrations', 'generic')?.category).toBe('components');
-    expect(findDocPage('modules-integrations', 'icon')?.demoSectionCount).toBe(7);
+    expect(findDocPage('modules-integrations', 'icon')?.demoSectionCount).toBe(8);
     expect(findDocPage('components', 'form-generic')?.slug).toBe('generic');
     expect(findDocPage('components', 'icon-configuration')?.slug).toBe('icon');
     expect(findDocPage('forms', 'time')?.demoSectionCount).toBe(4);

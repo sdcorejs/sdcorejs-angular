@@ -152,6 +152,20 @@ describe('sdGenericMergeSchema', () => {
     expect(schema.list!.columns!.map(column => column.key)).toEqual(['code', 'priority']);
   });
 
+  it('takes list.externalFilters from the current schema, never from the stored one (INV-004)', () => {
+    const current = { ...base(), list: { externalFilters: [{ key: 'status' }, { key: 'gone' }] } };
+    const saved = { ...stored(), list: { columns: [{ key: 'code' }], externalFilters: [{ key: 'code', default: 'X' }] } };
+    const { schema } = sdGenericMergeSchema(saved, current);
+    expect(schema.list?.externalFilters).toEqual([{ key: 'status' }]);
+    expect(schema.list?.columns?.[0]).toEqual({ key: 'code' });
+  });
+
+  it('drops a stored list.externalFilters when the current schema declares none (INV-004)', () => {
+    const saved = { ...stored(), list: { columns: [{ key: 'code' }], externalFilters: [{ key: 'code' }] } };
+    const { schema } = sdGenericMergeSchema(saved, base());
+    expect(schema.list?.externalFilters).toBeUndefined();
+  });
+
   it('never mutates its inputs', () => {
     const value = stored();
     const current = base();

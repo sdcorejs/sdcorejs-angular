@@ -3593,7 +3593,8 @@ export class HistoryDemoComponent {
   "components/icon": {
     typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { SdButton } from '@sdcorejs/angular/components/button';
-import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import { SD_DATA_TYPE_ICON, SD_DATA_TYPE_LABEL, SdIcon, type SdDataTypeIconKey } from '@sdcorejs/angular/modules/icon';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 
 interface IconDemoItem {
@@ -3604,7 +3605,7 @@ interface IconDemoItem {
 @Component({
   selector: 'app-icon-demo',
   standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, SdButton, SdIcon],
+  imports: [DemoPageComponent, DemoSectionComponent, SdButton, SdIcon, SdTranslatePipe],
   template: \`
     <demo-page #demoPage title="Icon" description="SdIcon is the Core UI icon facade for Material filled, Material outlined, and Lucide SVG icons.">
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-material-filled') {
@@ -3661,6 +3662,29 @@ interface IconDemoItem {
         <sd-button type="text" color="secondary" title="More" suffixIcon="more_vert" fontSet="lucide"></sd-button>
       </demo-section>
       }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-data-type-icons') {
+      <demo-section
+        heading="Data-type icons"
+        note="One icon per data type, shared by the generic module and the form builder. Lucide apps register SD_DATA_TYPE_LUCIDE_ICONS in provideSdIcon."
+        [props]="[
+          { name: 'SD_DATA_TYPE_ICON', value: 'map' },
+          { name: 'sdDataTypeIcon()', value: 'method' },
+          { name: 'SD_DATA_TYPE_LUCIDE_ICONS', value: 'provider' },
+        ]">
+        @for (key of dataTypes; track key) {
+          @let _label = labels[key] | sdTranslate;
+          <span class="icon-demo-item icon-demo-type" [attr.data-autoId]="'icon-data-type-' + key">
+            <sd-icon [name]="icons[key]" size="md" [ariaLabel]="_label"></sd-icon>
+            <sd-icon [name]="icons[key]" fontSet="lucide" size="md" [ariaLabel]="_label + ' (Lucide)'"></sd-icon>
+            <span class="icon-demo-type__text">
+              <span>{{ _label }}</span>
+              <code>{{ key }}</code>
+            </span>
+          </span>
+        }
+      </demo-section>
+      }
     </demo-page>
   \`,
   styles: [
@@ -3681,6 +3705,20 @@ interface IconDemoItem {
 
       .icon-demo-size {
         min-width: 88px;
+      }
+
+      .icon-demo-type {
+        min-width: 200px;
+      }
+
+      .icon-demo-type__text {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .icon-demo-type__text code {
+        color: #6b7280;
+        font-size: 12px;
       }
     \`,
   ],
@@ -3708,6 +3746,10 @@ export class IconDemoComponent {
   ];
 
   readonly sizes = ['sm', 'md', 'lg', '28px'];
+
+  readonly icons = SD_DATA_TYPE_ICON;
+  readonly labels = SD_DATA_TYPE_LABEL;
+  readonly dataTypes = Object.keys(SD_DATA_TYPE_ICON) as SdDataTypeIconKey[];
 }
 `,
     scss: `.icon-demo-item,
@@ -3726,6 +3768,20 @@ export class IconDemoComponent {
 
 .icon-demo-size {
   min-width: 88px;
+}
+
+.icon-demo-type {
+  min-width: 200px;
+}
+
+.icon-demo-type__text {
+  display: flex;
+  flex-direction: column;
+}
+
+.icon-demo-type__text code {
+  color: #6b7280;
+  font-size: 12px;
 }`,
   },
   "components/icon-configuration": {
@@ -20161,6 +20217,29 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     <sd-button type="light" color="primary" title="Outlined" prefixIcon="save" fontSet="material-icons-outlined"></sd-button>
     <sd-button type="outline" color="error" title="Lucide" prefixIcon="delete" fontSet="lucide"></sd-button>
     <sd-button type="text" color="secondary" title="More" suffixIcon="more_vert" fontSet="lucide"></sd-button>
+  </demo-section>`,
+  },
+  "components/icon/example-data-type-icons": {
+    ...SHOWCASE_PAGE_SOURCES["components/icon"],
+    html: `<demo-section
+    heading="Data-type icons"
+    note="One icon per data type, shared by the generic module and the form builder. Lucide apps register SD_DATA_TYPE_LUCIDE_ICONS in provideSdIcon."
+    [props]="[
+      { name: 'SD_DATA_TYPE_ICON', value: 'map' },
+      { name: 'sdDataTypeIcon()', value: 'method' },
+      { name: 'SD_DATA_TYPE_LUCIDE_ICONS', value: 'provider' },
+    ]">
+    @for (key of dataTypes; track key) {
+      @let _label = labels[key] | sdTranslate;
+      <span class="icon-demo-item icon-demo-type" [attr.data-autoId]="'icon-data-type-' + key">
+        <sd-icon [name]="icons[key]" size="md" [ariaLabel]="_label"></sd-icon>
+        <sd-icon [name]="icons[key]" fontSet="lucide" size="md" [ariaLabel]="_label + ' (Lucide)'"></sd-icon>
+        <span class="icon-demo-type__text">
+          <span>{{ _label }}</span>
+          <code>{{ key }}</code>
+        </span>
+      </span>
+    }
   </demo-section>`,
   },
   "components/icon/example-lucide-explicit": {

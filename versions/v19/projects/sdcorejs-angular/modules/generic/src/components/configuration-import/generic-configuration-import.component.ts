@@ -6,6 +6,7 @@ import { SdSelect } from '@sdcorejs/angular/forms/select';
 import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { sdGenericImportColumns, sdGenericImportable } from '../../core';
 import type { SdGenericImportColumn, SdGenericSchema } from '../../models';
+import { GenericPropertyIdentity } from '../property-identity/generic-property-identity.component';
 
 /** "Import" tab: imported columns, relation match fields and the upsert key. */
 @Component({
@@ -13,7 +14,7 @@ import type { SdGenericImportColumn, SdGenericSchema } from '../../models';
   templateUrl: './generic-configuration-import.component.html',
   styleUrl: '../generic-configuration.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdSection, SdCheckbox, SdInput, SdSelect, SdTranslatePipe],
+  imports: [GenericPropertyIdentity, SdSection, SdCheckbox, SdInput, SdSelect, SdTranslatePipe],
 })
 export class GenericConfigurationImport {
   readonly schema = input.required<SdGenericSchema>();

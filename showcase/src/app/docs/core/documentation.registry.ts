@@ -365,7 +365,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'modules/icon/sd-icon',
     keywords: ['material icons', 'lucide', 'svg', 'font set'],
     status: 'stable',
-    demoSectionCount: 5,
+    demoSectionCount: 6,
     demoPath: 'components/icon',
     loadComponent: () => import('../../pages/components/icon/icon-demo.component').then(m => m.IconDemoComponent),
   }),

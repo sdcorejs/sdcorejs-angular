@@ -77,6 +77,7 @@ export type ShowcaseExampleSourceKey =
   | "components/icon-configuration/example-configuration"
   | "components/icon-configuration/example-core-ui-preview"
   | "components/icon/example-button-integration"
+  | "components/icon/example-data-type-icons"
   | "components/icon/example-lucide-explicit"
   | "components/icon/example-material-filled"
   | "components/icon/example-material-outlined"
@@ -963,6 +964,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-button-integration",
     title: "Button integration",
     description: "Existing “Button integration” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/icon/example-data-type-icons",
+    pageKey: "components/icon",
+    sectionId: "example-data-type-icons",
+    title: "Data-type icons",
+    description: "One icon per data type, shared by the generic module and the form builder. Lucide apps register SD_DATA_TYPE_LUCIDE_ICONS in provideSdIcon.",
   },
   {
     sourceKey: "components/icon-configuration/example-configuration",

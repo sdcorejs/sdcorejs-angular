@@ -197,6 +197,26 @@ export const SD_DEFAULT_LUCIDE_ALIASES: Record<string, string> = {
   tune: 'sliders-horizontal',
   undo: 'undo-2',
   zoom_out: 'zoom-out',
+  // why: icon kiểu dữ liệu (`SD_DATA_TYPE_ICON`). Đích Lucide bám theo hình của glyph Material, vì alias áp cho
+  // MỌI chỗ dùng tên đó — `schedule` là đồng hồ của sd-time, nên phải là `clock` chứ không phải `calendar-clock`.
+  access_time: 'clock',
+  arrow_drop_down_circle: 'circle-chevron-down',
+  calculate: 'calculator',
+  call: 'phone',
+  check_box: 'square-check',
+  checklist: 'list-checks',
+  data_object: 'braces',
+  event_note: 'calendar-range',
+  hub: 'network',
+  label: 'tag',
+  link: 'link',
+  mail: 'mail',
+  notes: 'align-left',
+  numbers: 'hash',
+  payments: 'banknote',
+  percent: 'percent',
+  pin: 'binary',
+  schedule: 'clock',
 };
 
 /**
