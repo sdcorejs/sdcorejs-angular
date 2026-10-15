@@ -1317,7 +1317,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.module.generic.import.match-ambiguous': 'Có nhiều {label} khớp với "{value}".',
   // ---- Data types (shared icon set, @sdcorejs/angular/modules/icon) ----
   'core.data-type.string': 'Chuỗi',
-  'core.data-type.string-list': 'Danh sách chuỗi',
+  'core.data-type.string-multiple': 'Danh sách chuỗi',
   'core.data-type.email': 'Email',
   'core.data-type.phone': 'Số điện thoại',
   'core.data-type.url': 'URL',
@@ -1330,7 +1330,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.data-type.percent': 'Phần trăm',
   'core.data-type.boolean': 'Đúng/Sai',
   'core.data-type.date': 'Ngày',
-  'core.data-type.date-list': 'Danh sách ngày',
+  'core.data-type.date-multiple': 'Danh sách ngày',
   'core.data-type.datetime': 'Ngày giờ',
   'core.data-type.time': 'Giờ',
   'core.data-type.enum': 'Lựa chọn',

@@ -11,12 +11,12 @@ const property = (extra: Partial<SdGenericProperty> & Pick<SdGenericProperty, 'd
 describe('sdGenericPropertyIconKey', () => {
   const cases: [Partial<SdGenericProperty> & Pick<SdGenericProperty, 'dataType'>, SdDataTypeIconKey][] = [
     [{ dataType: 'string' }, 'string'],
-    [{ dataType: 'string', multiple: true }, 'string-list'],
+    [{ dataType: 'string', multiple: true }, 'string-multiple'],
     [{ dataType: 'string', format: 'email' }, 'email'],
     [{ dataType: 'string', format: 'phone' }, 'phone'],
     [{ dataType: 'string', format: 'url' }, 'url'],
     [{ dataType: 'string', format: 'password' }, 'password'],
-    [{ dataType: 'string', format: 'email', multiple: true }, 'string-list'],
+    [{ dataType: 'string', format: 'email', multiple: true }, 'string-multiple'],
     [{ dataType: 'text' }, 'text'],
     [{ dataType: 'number' }, 'number'],
     [{ dataType: 'number', format: 'integer' }, 'integer'],

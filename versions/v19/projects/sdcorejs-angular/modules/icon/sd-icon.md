@@ -82,11 +82,11 @@ Available font sets:
 
 ## Data-type icons
 
-One shared icon per data type, used by the generic module (configuration rows) and the form builder palette, so the same type looks the same everywhere.
+One shared icon per data type, used by the generic module (configuration rows) and the form builder palette, so a type looks the same in both. `sd-query-bar` and `sd-query-builder` still use their own field-type icons (`SD_QUERY_TYPE_ICON`, `SD_QB_TYPE_ICON`), which differ for some types (for example `number`, `boolean` and `date`).
 
 | Export | Purpose |
 | --- | --- |
-| `SdDataTypeIconKey` | The 22 keys: `string`, `string-list`, `email`, `phone`, `url`, `password`, `text`, `number`, `integer`, `decimal`, `currency`, `percent`, `boolean`, `date`, `date-list`, `datetime`, `time`, `enum`, `enum-multiple`, `relation`, `json`, `file`. |
+| `SdDataTypeIconKey` | The 22 keys: `string`, `string-multiple`, `email`, `phone`, `url`, `password`, `text`, `number`, `integer`, `decimal`, `currency`, `percent`, `boolean`, `date`, `date-multiple`, `datetime`, `time`, `enum`, `enum-multiple`, `relation`, `json`, `file`. |
 | `SD_DATA_TYPE_ICON` | Material icon name of each key. |
 | `SD_DATA_TYPE_LABEL` | i18n key of each type name, `core.data-type.<key>`; translate it with `SdTranslatePipe` or `I18nService.t`. |
 | `sdDataTypeIcon(key)` | Icon of a key; an empty or unknown key returns `'tune'`, the fallback used by query-bar and query-builder. |
@@ -96,7 +96,7 @@ One shared icon per data type, used by the generic module (configuration rows) a
 <sd-icon [name]="sdDataTypeIcon('currency')" [ariaLabel]="'core.data-type.currency' | sdTranslate"></sd-icon>
 ```
 
-The keys follow data semantics, not form widgets: each consumer maps its own model to a key. For example, the generic module maps `dataType` + `format` + `multiple`.
+The keys follow data semantics, not form widgets: each consumer maps its own model to a key. For example, the generic module maps `dataType` + `format` + `multiple`. A type that holds several values always takes the `-multiple` suffix.
 
 `SD_DEFAULT_LUCIDE_ALIASES` maps every data-type Material name to its Lucide icon. The Lucide target follows the Material glyph, so `schedule` and `access_time` both render `clock`.
 

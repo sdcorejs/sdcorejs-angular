@@ -243,7 +243,7 @@ export const SD_FORM_BUILDER_PALETTE: readonly PaletteItem[] = [
   {
     id: 'chip-string',
     category: 'advanced',
-    icon: SD_DATA_TYPE_ICON['string-list'],
+    icon: SD_DATA_TYPE_ICON['string-multiple'],
     labelKey: LABEL('chip-string'),
     keywords: ['chip', 'tags'],
     type: 'chip-string',
@@ -252,7 +252,7 @@ export const SD_FORM_BUILDER_PALETTE: readonly PaletteItem[] = [
   {
     id: 'chip-calendar',
     category: 'advanced',
-    icon: SD_DATA_TYPE_ICON['date-list'],
+    icon: SD_DATA_TYPE_ICON['date-multiple'],
     labelKey: LABEL('chip-calendar'),
     keywords: ['chip', 'dates'],
     type: 'chip-calendar',
