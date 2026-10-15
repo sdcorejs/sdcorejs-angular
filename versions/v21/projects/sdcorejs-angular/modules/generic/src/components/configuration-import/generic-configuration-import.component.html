@@ -1,0 +1,39 @@
+<sd-section [title]="'core.module.generic.configuration.section.upsert' | sdTranslate">
+  <p class="cfg-hint T14R">{{ 'core.module.generic.configuration.upsert-hint' | sdTranslate }}</p>
+  <div class="cfg-body cfg-fields">
+    <sd-select
+      size="sm"
+      hideInlineError
+      valueField="value"
+      displayField="display"
+      [label]="'core.module.generic.field.upsert-key' | sdTranslate"
+      [items]="upsertOptions()"
+      [model]="schema().import?.upsertKey"
+      (modelChange)="setUpsertKey($event)"></sd-select>
+  </div>
+</sd-section>
+
+<sd-section [title]="'core.module.generic.configuration.section.import-columns' | sdTranslate">
+  <div class="cfg-body cfg-rows cfg-rows--import">
+    @for (row of rows(); track row.property.key) {
+      <div class="cfg-row" role="group" [attr.aria-label]="row.label" [attr.data-autoId]="'generic-import-' + row.property.key">
+        <sd-generic-property-identity [property]="row.property">
+          <sd-checkbox
+            [label]="row.label"
+            [model]="row.selected"
+            (modelChange)="toggleColumn(row.property.key, flag($event))"></sd-checkbox>
+        </sd-generic-property-identity>
+        @if (row.selected && row.property.dataType === 'relation') {
+          <sd-input
+            size="sm"
+            hideInlineError
+            [label]="'core.module.generic.field.match-field' | sdTranslate"
+            [model]="row.matchField"
+            (modelChange)="setMatchField(row.property.key, $event)"></sd-input>
+        } @else {
+          <span></span>
+        }
+      </div>
+    }
+  </div>
+</sd-section>

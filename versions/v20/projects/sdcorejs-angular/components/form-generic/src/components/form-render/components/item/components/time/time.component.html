@@ -1,0 +1,15 @@
+@let item = field();
+<sd-time
+  [form]="form()"
+  [label]="item.label || item.key"
+  [helperText]="item.helperText"
+  [placeholder]="item.placeholder"
+  [name]="item.key"
+  [autoId]="item.key"
+  [model]="value()"
+  (modelChange)="setValue($event)"
+  [required]="required()"
+  [min]="min()"
+  [max]="max()"
+  [disabled]="disabled()"
+  [viewed]="viewed()"></sd-time>

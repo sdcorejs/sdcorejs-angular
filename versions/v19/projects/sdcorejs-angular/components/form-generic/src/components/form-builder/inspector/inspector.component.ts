@@ -6,6 +6,7 @@ import { SdInform } from '@sdcorejs/angular/components/inform';
 import { SdInput } from '@sdcorejs/angular/forms/input';
 import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
 import { SdSelect } from '@sdcorejs/angular/forms/select';
+import { SdTime } from '@sdcorejs/angular/forms/time';
 import { SdTextarea } from '@sdcorejs/angular/forms/textarea';
 import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
@@ -34,6 +35,7 @@ import type {
 } from '../../../models/form-generic-schema.model';
 import { sdIsValidPattern, sdNumberPrecision, sdNumberSubtype, sdTextSubtype } from '../../../presets/form-generic-presets';
 import { sdIsEmptyFilter } from '../../../rules/form-generic-filter';
+import { sdIsTimeValue } from '../../../rules/form-generic-validation';
 import { sdFindKeyReferences } from '../../../rules/form-generic-references';
 import { FormGenericService } from '../../../services/form-generic.service';
 import { AttributeExpression } from '../components/attribute-expression/attribute-expression.component';
@@ -152,6 +154,7 @@ const COLOR_PRESETS = ['primary', 'secondary', 'info', 'success', 'warning', 'er
     SdInput,
     SdInputNumber,
     SdSelect,
+    SdTime,
     SdTextarea,
     SdButton,
     SdIcon,
@@ -235,7 +238,7 @@ export class InspectorComponent {
 
   // ── Khả năng theo loại (chỉ hiện thứ renderer hỗ trợ) ───────────────────────
   readonly supportsPlaceholder = computed(() =>
-    ['textfield', 'textarea', 'number', 'select', 'datetime', 'chip-string', 'chip-calendar'].includes(this.type() ?? '')
+    ['textfield', 'textarea', 'number', 'select', 'datetime', 'time', 'chip-string', 'chip-calendar'].includes(this.type() ?? '')
   );
   readonly supportsHelper = computed(() => !!this.field() && this.type() !== 'html');
   /** `sd-checkbox` không có `required` → không hứa điều renderer không làm. */
@@ -861,8 +864,15 @@ export class InspectorComponent {
 
   // ── Group ─────────────────────────────────────────────────────────────────
 
+  /** Picking the current icon again removes it, like the page icon. */
   pickIcon(icon: string): void {
-    this.set('icon', icon);
+    this.set('icon', this.group()?.icon === icon ? undefined : icon);
+  }
+
+  /** Page icon from the same presets as a group; picking the current icon again removes it. */
+  pickPageIcon(icon: string): void {
+    const page = this.store.activePage();
+    this.store.setPageMetadata({ icon: page.icon === icon ? undefined : icon });
   }
 
   pickColor(color: string): void {
@@ -881,6 +891,11 @@ export class InspectorComponent {
 
   sealHistory(): void {
     this.store.sealHistory();
+  }
+
+  /** A time boundary as `HH:mm`, or null when the stored value is not a canonical time. */
+  timeLimitValue(value: unknown): string | null {
+    return sdIsTimeValue(value) ? value : null;
   }
 
   numberOrNull(value: unknown): number | null {

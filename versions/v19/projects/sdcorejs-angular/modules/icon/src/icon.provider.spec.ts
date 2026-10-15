@@ -1,7 +1,23 @@
 import { TestBed } from '@angular/core/testing';
 
-import { SD_ICON_DEFAULT_CONFIG, type SdIconShape } from './icon.model';
-import { provideSdIcon, resolveSdIconConfig, SD_ICON_CONFIGURATION } from './icon.provider';
+import { LucideHash, LucideMail } from '@lucide/angular';
+
+import { SD_ICON_DEFAULT_CONFIG, type SdIconShape, type SdLucideIconRegistration } from './icon.model';
+import { normalizeSdLucideIcons, provideSdIcon, resolveSdIconConfig, SD_ICON_CONFIGURATION } from './icon.provider';
+
+describe('normalizeSdLucideIcons', () => {
+  it('accepts a readonly array and returns a copy', () => {
+    const registrations: readonly SdLucideIconRegistration[] = Object.freeze([LucideHash, LucideMail]);
+    const normalized = normalizeSdLucideIcons(registrations);
+    expect(normalized).toEqual([LucideHash, LucideMail]);
+    expect(normalized).not.toBe(registrations);
+  });
+
+  it('accepts a readonly object map', () => {
+    const registrations: Readonly<Record<string, SdLucideIconRegistration>> = Object.freeze({ hash: LucideHash });
+    expect(normalizeSdLucideIcons(registrations)).toEqual([LucideHash]);
+  });
+});
 
 describe('icon provider defaultShape', () => {
   it('resolves square when no shape is configured', () => {

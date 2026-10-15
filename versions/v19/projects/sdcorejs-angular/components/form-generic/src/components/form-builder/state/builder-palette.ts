@@ -1,3 +1,4 @@
+import { SD_DATA_TYPE_ICON } from '@sdcorejs/angular/modules/icon';
 import type { SdFormGenericField, SdFormGenericLayout } from '../../../models/form-generic-field.model';
 import type { SdFormGenericGroup } from '../../../models/form-generic-schema.model';
 import { BuilderItem, createId, randomKey } from './builder-document';
@@ -72,7 +73,7 @@ export const SD_FORM_BUILDER_PALETTE: readonly PaletteItem[] = [
   {
     id: 'text',
     category: 'basic',
-    icon: 'text_fields',
+    icon: SD_DATA_TYPE_ICON.string,
     labelKey: LABEL('text'),
     keywords: ['textfield', 'text', 'input'],
     type: 'textfield',
@@ -81,7 +82,7 @@ export const SD_FORM_BUILDER_PALETTE: readonly PaletteItem[] = [
   {
     id: 'email',
     category: 'basic',
-    icon: 'mail',
+    icon: SD_DATA_TYPE_ICON.email,
     labelKey: LABEL('email'),
     keywords: ['textfield', 'email', 'mail'],
     type: 'textfield',
@@ -90,7 +91,7 @@ export const SD_FORM_BUILDER_PALETTE: readonly PaletteItem[] = [
   {
     id: 'phone',
     category: 'basic',
-    icon: 'call',
+    icon: SD_DATA_TYPE_ICON.phone,
     labelKey: LABEL('phone'),
     keywords: ['textfield', 'phone', 'tel'],
     type: 'textfield',
@@ -99,7 +100,7 @@ export const SD_FORM_BUILDER_PALETTE: readonly PaletteItem[] = [
   {
     id: 'url',
     category: 'basic',
-    icon: 'link',
+    icon: SD_DATA_TYPE_ICON.url,
     labelKey: LABEL('url'),
     keywords: ['textfield', 'url', 'link', 'website'],
     type: 'textfield',
@@ -108,7 +109,7 @@ export const SD_FORM_BUILDER_PALETTE: readonly PaletteItem[] = [
   {
     id: 'password',
     category: 'basic',
-    icon: 'lock',
+    icon: SD_DATA_TYPE_ICON.password,
     labelKey: LABEL('password'),
     keywords: ['textfield', 'password'],
     type: 'textfield',
@@ -117,7 +118,7 @@ export const SD_FORM_BUILDER_PALETTE: readonly PaletteItem[] = [
   {
     id: 'textarea',
     category: 'basic',
-    icon: 'notes',
+    icon: SD_DATA_TYPE_ICON.text,
     labelKey: LABEL('textarea'),
     keywords: ['textarea', 'multiline'],
     type: 'textarea',
@@ -127,7 +128,7 @@ export const SD_FORM_BUILDER_PALETTE: readonly PaletteItem[] = [
   {
     id: 'integer',
     category: 'number',
-    icon: 'pin',
+    icon: SD_DATA_TYPE_ICON.integer,
     labelKey: LABEL('integer'),
     keywords: ['number', 'integer'],
     type: 'number',
@@ -136,7 +137,7 @@ export const SD_FORM_BUILDER_PALETTE: readonly PaletteItem[] = [
   {
     id: 'decimal',
     category: 'number',
-    icon: 'calculate',
+    icon: SD_DATA_TYPE_ICON.decimal,
     labelKey: LABEL('decimal'),
     keywords: ['number', 'decimal', 'float'],
     type: 'number',
@@ -145,7 +146,7 @@ export const SD_FORM_BUILDER_PALETTE: readonly PaletteItem[] = [
   {
     id: 'currency',
     category: 'number',
-    icon: 'payments',
+    icon: SD_DATA_TYPE_ICON.currency,
     labelKey: LABEL('currency'),
     keywords: ['number', 'currency', 'money', 'amount'],
     type: 'number',
@@ -161,7 +162,7 @@ export const SD_FORM_BUILDER_PALETTE: readonly PaletteItem[] = [
   {
     id: 'percent',
     category: 'number',
-    icon: 'percent',
+    icon: SD_DATA_TYPE_ICON.percent,
     labelKey: LABEL('percent'),
     keywords: ['number', 'percent', 'rate'],
     type: 'number',
@@ -177,7 +178,7 @@ export const SD_FORM_BUILDER_PALETTE: readonly PaletteItem[] = [
   {
     id: 'select',
     category: 'choice',
-    icon: 'arrow_drop_down_circle',
+    icon: SD_DATA_TYPE_ICON.enum,
     labelKey: LABEL('select'),
     keywords: ['select', 'dropdown'],
     type: 'select',
@@ -186,7 +187,7 @@ export const SD_FORM_BUILDER_PALETTE: readonly PaletteItem[] = [
   {
     id: 'multiselect',
     category: 'choice',
-    icon: 'checklist',
+    icon: SD_DATA_TYPE_ICON['enum-multiple'],
     labelKey: LABEL('multiselect'),
     keywords: ['select', 'multiple'],
     type: 'select',
@@ -204,7 +205,7 @@ export const SD_FORM_BUILDER_PALETTE: readonly PaletteItem[] = [
   {
     id: 'checkbox',
     category: 'choice',
-    icon: 'check_box',
+    icon: SD_DATA_TYPE_ICON.boolean,
     labelKey: LABEL('checkbox'),
     keywords: ['checkbox', 'boolean', 'agree'],
     type: 'checkbox',
@@ -214,7 +215,7 @@ export const SD_FORM_BUILDER_PALETTE: readonly PaletteItem[] = [
   {
     id: 'date',
     category: 'datetime',
-    icon: 'calendar_month',
+    icon: SD_DATA_TYPE_ICON.date,
     labelKey: LABEL('date'),
     keywords: ['datetime', 'date'],
     type: 'datetime',
@@ -223,17 +224,26 @@ export const SD_FORM_BUILDER_PALETTE: readonly PaletteItem[] = [
   {
     id: 'datetime',
     category: 'datetime',
-    icon: 'schedule',
+    icon: SD_DATA_TYPE_ICON.datetime,
     labelKey: LABEL('datetime'),
     keywords: ['datetime', 'time'],
     type: 'datetime',
     create: c => field(c, 'datetime', { type: 'datetime', subtype: 'datetime' }),
   },
+  {
+    id: 'time',
+    category: 'datetime',
+    icon: SD_DATA_TYPE_ICON.time,
+    labelKey: LABEL('time'),
+    keywords: ['time', 'hour', 'clock'],
+    type: 'time',
+    create: c => field(c, 'time', { type: 'time' }),
+  },
   // ── Nâng cao ──────────────────────────────────────────────────────────────
   {
     id: 'chip-string',
     category: 'advanced',
-    icon: 'label',
+    icon: SD_DATA_TYPE_ICON['string-multiple'],
     labelKey: LABEL('chip-string'),
     keywords: ['chip', 'tags'],
     type: 'chip-string',
@@ -242,7 +252,7 @@ export const SD_FORM_BUILDER_PALETTE: readonly PaletteItem[] = [
   {
     id: 'chip-calendar',
     category: 'advanced',
-    icon: 'event_note',
+    icon: SD_DATA_TYPE_ICON['date-multiple'],
     labelKey: LABEL('chip-calendar'),
     keywords: ['chip', 'dates'],
     type: 'chip-calendar',
@@ -251,11 +261,20 @@ export const SD_FORM_BUILDER_PALETTE: readonly PaletteItem[] = [
   {
     id: 'upload',
     category: 'advanced',
-    icon: 'upload_file',
+    icon: SD_DATA_TYPE_ICON.file,
     labelKey: LABEL('upload'),
     keywords: ['upload', 'file', 'image'],
     type: 'upload',
     create: c => field(c, 'upload', { type: 'upload', accept: 'file', source: 'ALL' }),
+  },
+  {
+    id: 'json',
+    category: 'advanced',
+    icon: SD_DATA_TYPE_ICON.json,
+    labelKey: LABEL('json'),
+    keywords: ['json', 'object', 'code'],
+    type: 'json',
+    create: c => field(c, 'json', { type: 'json' }),
   },
   // ── Bố cục ────────────────────────────────────────────────────────────────
   {

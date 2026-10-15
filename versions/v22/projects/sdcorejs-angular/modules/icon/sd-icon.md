@@ -80,6 +80,40 @@ Available font sets:
 
 `SdButton` uses `SdIcon` for `prefixIcon` and `suffixIcon`. Use `fontSet="material-icons"`, `fontSet="material-icons-outlined"`, or `fontSet="lucide"` on a button for per-component migration, or set `defaultFontSet: 'lucide'` in `provideSdIcon` for app-level migration.
 
+## Data-type icons
+
+One shared icon per data type, used by the generic module (configuration rows) and the form builder palette, so a type looks the same in both. `sd-query-bar` and `sd-query-builder` still use their own field-type icons (`SD_QUERY_TYPE_ICON`, `SD_QB_TYPE_ICON`), which differ for some types (for example `number`, `boolean` and `date`).
+
+| Export | Purpose |
+| --- | --- |
+| `SdDataTypeIconKey` | The 22 keys: `string`, `string-multiple`, `email`, `phone`, `url`, `password`, `text`, `number`, `integer`, `decimal`, `currency`, `percent`, `boolean`, `date`, `date-multiple`, `datetime`, `time`, `enum`, `enum-multiple`, `relation`, `json`, `file`. |
+| `SD_DATA_TYPE_ICON` | Material icon name of each key. |
+| `SD_DATA_TYPE_LABEL_KEY` | i18n key of each type name, `core.data-type.<key>`; translate it with `SdTranslatePipe` or `I18nService.t`. |
+| `sdDataTypeIcon(key)` | Icon of a key; an empty or unknown key returns `'tune'`, the fallback used by query-bar and query-builder. |
+| `SD_DATA_TYPE_LUCIDE_ICONS` | Lucide registrations of every data-type icon. |
+
+```html
+<sd-icon [name]="sdDataTypeIcon('currency')" [ariaLabel]="'core.data-type.currency' | sdTranslate"></sd-icon>
+```
+
+The keys follow data semantics, not form widgets: each consumer maps its own model to a key. For example, the generic module maps `dataType` + `format` + `multiple`. A type that holds several values always takes the `-multiple` suffix.
+
+`SD_DEFAULT_LUCIDE_ALIASES` maps every data-type Material name to its Lucide icon. The Lucide target follows the Material glyph, so `schedule` and `access_time` both render `clock`. One exception: `notes` (`text`) renders `align-justify`, because Lucide draws `align-left` and `text` (the target of `text_fields`, the `string` icon) with the same glyph.
+
+These aliases also apply to existing uses of the same names under the Lucide renderer. For example, `schedule` in `sd-time` and `sd-datetime` now renders `clock`.
+
+`@lucide/angular` renders registered icons only, so apps that use the Lucide renderer opt in:
+
+```ts
+import { provideSdIcon, SD_DATA_TYPE_LUCIDE_ICONS } from '@sdcorejs/angular/modules/icon';
+
+provideSdIcon({ defaultFontSet: 'lucide', lucideIcons: [...SD_DATA_TYPE_LUCIDE_ICONS /*, app icons */] });
+```
+
+`lucideIcons` also takes the readonly set as is: `provideSdIcon({ lucideIcons: SD_DATA_TYPE_LUCIDE_ICONS })`.
+
+Material apps need nothing. `number` uses the Material name `numbers`, not `tag`, because the default Material alias turns `tag` into `local_offer`.
+
 ## Inside Material containers (menu, list, button)
 
 Material's base CSS targets the `.mat-icon` element directly — inside a menu item it forces `width`/`height` to `--mat-menu-item-icon-size` (24px) and adds `margin-right: var(--mat-menu-item-spacing, 12px)`. In an `<sd-icon>` that element is the *inner* glyph, so those rules used to blow the glyph past the host box (which clips it) and shift it left: the icon rendered cropped and crowding the label. Lucide never hit this at all, because its SVG is not a `.mat-icon` — the two sets drifted apart.

@@ -1,0 +1,96 @@
+<sd-section [title]="'core.module.generic.configuration.section.entity' | sdTranslate">
+  <div class="cfg-body cfg-fields">
+    <sd-input
+      size="sm"
+      hideInlineError
+      [label]="'core.module.generic.field.label' | sdTranslate"
+      [model]="schema().general.label"
+      (modelChange)="setEntityLabel(text($event))"></sd-input>
+  </div>
+</sd-section>
+
+<sd-section [title]="'core.module.generic.configuration.section.properties' | sdTranslate">
+  <div class="cfg-body cfg-rows cfg-rows--properties">
+    @for (row of rows(); track row.property.key) {
+      @let property = row.property;
+      <div class="cfg-row" role="group" [attr.aria-label]="property.label || property.key" [attr.data-autoId]="'generic-property-' + property.key">
+        <sd-generic-property-identity [property]="property">
+          <span>{{ property.label || property.key }}</span>
+        </sd-generic-property-identity>
+        <sd-input
+          size="sm"
+          hideInlineError
+          [label]="'core.module.generic.field.label' | sdTranslate"
+          [model]="property.label"
+          (modelChange)="setProperty(property.key, { label: text($event) })"></sd-input>
+        @if (row.defaultEditable) {
+          <sd-input
+            size="sm"
+            hideInlineError
+            [label]="'core.module.generic.field.default-value' | sdTranslate"
+            [model]="row.defaultText"
+            (modelChange)="setDefault(property, $event)"></sd-input>
+        } @else {
+          <span></span>
+        }
+        <div class="cfg-flags">
+          <sd-checkbox
+            [label]="'core.module.generic.field.required' | sdTranslate"
+            [model]="!!property.validation?.required"
+            (modelChange)="setValidation(property, { required: flag($event) || undefined })"></sd-checkbox>
+          @if (!property.system) {
+            <sd-checkbox
+              [label]="'core.module.generic.field.insertable' | sdTranslate"
+              [model]="property.insertable !== false"
+              [disabled]="row.insertLocked"
+              (modelChange)="setProperty(property.key, { insertable: flag($event) })"></sd-checkbox>
+            <sd-checkbox
+              [label]="'core.module.generic.field.updatable' | sdTranslate"
+              [model]="property.updatable !== false"
+              [disabled]="row.updateLocked"
+              (modelChange)="setProperty(property.key, { updatable: flag($event) })"></sd-checkbox>
+          }
+        </div>
+        @if (property.dataType === 'enum' && property.enums?.length) {
+          <div class="cfg-sub">
+            @for (option of property.enums ?? []; track option.value) {
+              <div class="cfg-option">
+                <span class="cfg-option__value">{{ option.value }}</span>
+                <sd-input
+                  size="sm"
+                  hideInlineError
+                  [label]="'core.module.generic.field.enum-label' | sdTranslate"
+                  [model]="option.label"
+                  (modelChange)="setEnum(property, option.value, { label: text($event) })"></sd-input>
+                <sd-input
+                  size="sm"
+                  hideInlineError
+                  [label]="'core.module.generic.field.color' | sdTranslate"
+                  [model]="option.color"
+                  (modelChange)="setEnum(property, option.value, { color: text($event) || undefined })"></sd-input>
+              </div>
+            }
+          </div>
+        }
+        @if (property.dataType === 'relation') {
+          <div class="cfg-sub">
+            <div class="cfg-fields">
+              <sd-input
+                size="sm"
+                hideInlineError
+                [label]="'core.module.generic.field.display' | sdTranslate"
+                [model]="property.relation?.display"
+                (modelChange)="setRelation(property, { display: text($event) })"></sd-input>
+              <sd-input
+                size="sm"
+                hideInlineError
+                [label]="'core.module.generic.field.search-fields' | sdTranslate"
+                [model]="row.searchFields"
+                (modelChange)="setSearchFields(property, $event)"></sd-input>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</sd-section>

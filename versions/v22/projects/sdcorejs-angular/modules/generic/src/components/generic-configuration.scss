@@ -1,0 +1,172 @@
+// Shared layout of the configuration tabs: sections of dense rows instead of one card per item. The row identity
+// (sd-generic-property-identity) has its own sheet, so this `:host` only styles the tabs.
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 16px;
+}
+
+// sd-section has no body padding: the first-level content of each section adds it.
+.cfg-body {
+  padding: 12px 16px 16px;
+}
+
+.cfg-rows.cfg-body {
+  padding-top: 0;
+  padding-bottom: 4px;
+}
+
+// A line of settings: inputs keep a readable width and wrap on narrow screens.
+.cfg-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+
+  > sd-input,
+  > sd-input-number,
+  > sd-select {
+    flex: 1 1 220px;
+    max-width: 420px;
+    min-width: 0;
+  }
+}
+
+.cfg-hint {
+  margin: 0;
+  padding: 12px 16px 0;
+  color: var(--sd-text-secondary);
+}
+
+.cfg-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+// One property or column per row; each tab sets its grid columns with a modifier below. Every row is its own
+// grid, so the column sizes must not depend on the row content (no `auto`), or the columns would not line up.
+.cfg-row {
+  display: grid;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 10px 0;
+  border-top: 1px solid var(--sd-border);
+
+  &:first-child {
+    border-top: 0;
+  }
+
+  > * {
+    min-width: 0;
+  }
+}
+
+.cfg-rows--properties .cfg-row {
+  grid-template-columns: minmax(160px, 1.2fr) minmax(150px, 2fr) minmax(130px, 1.5fr) 440px;
+}
+
+.cfg-rows--columns .cfg-row {
+  grid-template-columns: 104px minmax(180px, 1.5fr) 420px 120px;
+}
+
+// Properties that are not a column yet sit below the drop list; keep the row separator between the two lists.
+.cfg-rows--unlisted {
+  border-top: 1px solid var(--sd-border);
+}
+
+.cfg-rows--import .cfg-row {
+  grid-template-columns: minmax(220px, 1.5fr) minmax(200px, 2fr);
+}
+
+// Column order: a drag handle (CDK drag-drop) next to the move buttons, which stay for keyboard users.
+.cfg-drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: var(--sd-text-secondary);
+  cursor: grab;
+  border-radius: var(--sd-radius-4, 4px);
+
+  &:hover {
+    background: var(--sd-surface-hover, var(--sd-border));
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+// why: the preview is a clone of the row appended to <body>; it keeps the encapsulation attributes, so these
+// scoped rules still reach it.
+.cfg-row.cdk-drag-preview {
+  box-sizing: border-box;
+  padding: 10px 12px;
+  background: var(--sd-surface, var(--sd-background));
+  border: 1px solid var(--sd-border);
+  border-radius: var(--sd-radius-8, 8px);
+  box-shadow: var(--sd-shadow-md, 0 4px 12px rgb(0 0 0 / 16%));
+}
+
+.cfg-row.cdk-drag-placeholder {
+  opacity: 0.35;
+}
+
+.cfg-rows--columns.cdk-drop-list-dragging .cfg-row:not(.cdk-drag-placeholder),
+.cfg-row.cdk-drag-animating {
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.cfg-flags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+}
+
+.cfg-order {
+  display: flex;
+  gap: 2px;
+}
+
+// Settings that only some data types have (enum options, relation display), under their row.
+.cfg-sub {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--sd-radius-8, 8px);
+  background: var(--sd-surface-muted);
+}
+
+// One enum option: value, label and color line up from option to option.
+.cfg-option {
+  display: grid;
+  grid-template-columns: 120px minmax(160px, 1fr) minmax(160px, 1fr);
+  align-items: center;
+  gap: 8px 16px;
+
+  > * {
+    min-width: 0;
+  }
+}
+
+// The stored value of an option: a code, styled like the property key.
+.cfg-option__value {
+  color: var(--sd-text-secondary);
+  font-family: var(--sd-font-family-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-size: var(--sd-font-size-12, 12px);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 767px) {
+  .cfg-rows--properties .cfg-row,
+  .cfg-rows--columns .cfg-row,
+  .cfg-rows--import .cfg-row,
+  .cfg-option {
+    grid-template-columns: 1fr;
+  }
+}

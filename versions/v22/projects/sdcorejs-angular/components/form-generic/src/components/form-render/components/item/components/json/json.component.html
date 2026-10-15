@@ -1,0 +1,21 @@
+@let item = field();
+@let _error = error();
+<!-- sd-code-editor has no label input: the group carries the field name, required state and error to assistive technology. -->
+<div
+  class="d-flex flex-column gap-4 w-full"
+  role="group"
+  [attr.data-autoId]="'form-generic-json-' + item.key"
+  [attr.aria-labelledby]="id + '-label'"
+  [attr.aria-describedby]="_error ? id + '-error' : item.helperText ? id + '-helper' : null"
+  [attr.aria-required]="required() || null"
+  [attr.aria-invalid]="_error ? true : null">
+  <span class="T14M" [id]="id + '-label'">{{ item.label || item.key }}@if (required()) {<span class="text-danger" aria-hidden="true"> *</span>}</span>
+  <sd-code-editor language="json" maxHeight="320px" [model]="editorValue()" (modelChange)="onEditorChange($event)" [viewed]="viewed() || disabled()"></sd-code-editor>
+  @if (_error === 'json') {
+    <span class="T12R text-danger" role="alert" [id]="id + '-error'">{{ 'core.component.form-generic.json.invalid' | sdTranslate }}</span>
+  } @else if (_error === 'required') {
+    <span class="T12R text-danger" role="alert" [id]="id + '-error'">{{ 'core.form.input.required' | sdTranslate }}</span>
+  } @else if (item.helperText) {
+    <span class="T12R text-secondary" [id]="id + '-helper'">{{ item.helperText }}</span>
+  }
+</div>

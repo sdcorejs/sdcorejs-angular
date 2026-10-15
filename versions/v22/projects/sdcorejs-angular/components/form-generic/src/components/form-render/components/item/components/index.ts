@@ -8,4 +8,6 @@ export * from './select/select.component';
 export * from './radio/radio.component';
 export * from './checkbox/checkbox.component';
 export * from './upload/upload.component';
+export * from './time/time.component';
+export * from './json/json.component';
 export * from './html/html.component';

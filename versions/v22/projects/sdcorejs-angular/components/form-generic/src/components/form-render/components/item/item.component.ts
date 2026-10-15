@@ -9,11 +9,13 @@ import {
   ChipStringComponent,
   DatetimeComponent,
   HtmlComponent,
+  JsonComponent,
   NumberComponent,
   RadioComponent,
   SelectComponent,
   TextareaComponent,
   TextfieldComponent,
+  TimeComponent,
   UploadComponent,
 } from './components';
 import { FormRenderContext } from '../../form-render.context';
@@ -46,6 +48,8 @@ import { FormRenderContext } from '../../form-render.context';
     RadioComponent,
     CheckboxComponent,
     UploadComponent,
+    TimeComponent,
+    JsonComponent,
     HtmlComponent,
   ],
 })

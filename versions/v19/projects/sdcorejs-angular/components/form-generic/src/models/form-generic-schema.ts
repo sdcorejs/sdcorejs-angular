@@ -16,6 +16,8 @@ export const SD_FORM_GENERIC_FIELD_TYPES: ReadonlySet<string> = new Set([
   'chip-string',
   'chip-calendar',
   'upload',
+  'time',
+  'json',
   'html',
 ]);
 

@@ -14,6 +14,15 @@ describe('showcase documentation routes', () => {
     expect(typeof docsRoute?.children?.find(route => route.path === ':tab')?.title).toBe('function');
   });
 
+  it('mounts the generic module demo routes before the legacy category/slug route', () => {
+    const demoIndex = routes.findIndex(route => route.path === 'demo');
+    const legacyIndex = routes.findIndex(route => route.path === ':category/:slug');
+    expect(demoIndex).toBeGreaterThan(-1);
+    expect(demoIndex).toBeLessThan(legacyIndex);
+    expect(routes[demoIndex].providers?.length).toBeGreaterThan(0);
+    expect(routes[demoIndex].children?.[0]?.path).toBe('generic/:module/:entity');
+  });
+
   it('preserves legacy category/slug URLs through a redirect guard', () => {
     const legacy = routes.find(route => route.path === ':category/:slug');
     expect(legacy?.canActivate?.length).toBeGreaterThan(0);

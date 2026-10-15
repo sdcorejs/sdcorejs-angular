@@ -1059,6 +1059,19 @@ describe('SdFormBuilder (integration)', () => {
       expect(find(current(), 'g1')!['icon']).toBe('verified_user');
     });
 
+    it('clears the group icon on a second click, like the page icon', async () => {
+      await select('g1', 'general');
+      const button = (icon: string) => root().querySelector<HTMLButtonElement>(`fb-inspector .ins-icons__btn[aria-label="${icon}"]`)!;
+      button('folder').click();
+      await render();
+      expect(find(current(), 'g1')!['icon']).toBe('folder');
+      expect(button('folder').getAttribute('aria-pressed')).toBe('true');
+      button('folder').click();
+      await render();
+      expect(find(current(), 'g1')!['icon']).withContext('a second click removes the icon').toBeUndefined();
+      expect(button('folder').getAttribute('aria-pressed')).toBe('false');
+    });
+
     it('toggles from the visible label text as well as from the switch', async () => {
       await select('c', 'general');
       const row = root().querySelector<HTMLElement>('fb-inspector fb-toggle-row')!;

@@ -3593,7 +3593,8 @@ export class HistoryDemoComponent {
   "components/icon": {
     typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { SdButton } from '@sdcorejs/angular/components/button';
-import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import { SD_DATA_TYPE_ICON, SD_DATA_TYPE_LABEL_KEY, SdIcon, type SdDataTypeIconKey } from '@sdcorejs/angular/modules/icon';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 
 interface IconDemoItem {
@@ -3604,7 +3605,7 @@ interface IconDemoItem {
 @Component({
   selector: 'app-icon-demo',
   standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, SdButton, SdIcon],
+  imports: [DemoPageComponent, DemoSectionComponent, SdButton, SdIcon, SdTranslatePipe],
   template: \`
     <demo-page #demoPage title="Icon" description="SdIcon is the Core UI icon facade for Material filled, Material outlined, and Lucide SVG icons.">
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-material-filled') {
@@ -3661,6 +3662,30 @@ interface IconDemoItem {
         <sd-button type="text" color="secondary" title="More" suffixIcon="more_vert" fontSet="lucide"></sd-button>
       </demo-section>
       }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-data-type-icons') {
+      <demo-section
+        heading="Data-type icons"
+        note="One icon per data type, shared by the generic module and the form builder. Lucide apps register SD_DATA_TYPE_LUCIDE_ICONS in provideSdIcon."
+        [props]="[
+          { name: 'SD_DATA_TYPE_ICON', value: 'map' },
+          { name: 'SD_DATA_TYPE_LABEL_KEY', value: 'map (i18n keys)' },
+          { name: 'sdDataTypeIcon()', value: 'function' },
+          { name: 'SD_DATA_TYPE_LUCIDE_ICONS', value: 'array (lucideIcons)' },
+        ]">
+        @for (key of dataTypes; track key) {
+          @let _label = labelKeys[key] | sdTranslate;
+          <span class="icon-demo-item icon-demo-type" [attr.data-autoId]="'icon-data-type-' + key">
+            <sd-icon [name]="icons[key]" size="md" [ariaLabel]="_label"></sd-icon>
+            <sd-icon [name]="icons[key]" fontSet="lucide" size="md" [ariaLabel]="_label + ' (Lucide)'"></sd-icon>
+            <span class="icon-demo-type__text">
+              <span>{{ _label }}</span>
+              <code>{{ key }}</code>
+            </span>
+          </span>
+        }
+      </demo-section>
+      }
     </demo-page>
   \`,
   styles: [
@@ -3681,6 +3706,20 @@ interface IconDemoItem {
 
       .icon-demo-size {
         min-width: 88px;
+      }
+
+      .icon-demo-type {
+        min-width: 200px;
+      }
+
+      .icon-demo-type__text {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .icon-demo-type__text code {
+        color: #6b7280;
+        font-size: 12px;
       }
     \`,
   ],
@@ -3708,6 +3747,10 @@ export class IconDemoComponent {
   ];
 
   readonly sizes = ['sm', 'md', 'lg', '28px'];
+
+  readonly icons = SD_DATA_TYPE_ICON;
+  readonly labelKeys = SD_DATA_TYPE_LABEL_KEY;
+  readonly dataTypes = Object.keys(SD_DATA_TYPE_ICON) as SdDataTypeIconKey[];
 }
 `,
     scss: `.icon-demo-item,
@@ -3726,6 +3769,20 @@ export class IconDemoComponent {
 
 .icon-demo-size {
   min-width: 88px;
+}
+
+.icon-demo-type {
+  min-width: 200px;
+}
+
+.icon-demo-type__text {
+  display: flex;
+  flex-direction: column;
+}
+
+.icon-demo-type__text code {
+  color: #6b7280;
+  font-size: 12px;
 }`,
   },
   "components/icon-configuration": {
@@ -16039,6 +16096,80 @@ function contrastRatio(foreground: [number, number, number], background: [number
   font-weight: var(--sd-font-weight-semibold);
 }`,
   },
+  "modules/generic": {
+    typescript: `import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+/** Live routes mounted by \`app.routes.ts\` under \`/demo\` with the in-memory adapter. */
+export const GENERIC_DEMO_BASE = '/demo/generic/showcase';
+
+@Component({
+  selector: 'app-generic-demo',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [DemoPageComponent, DemoSectionComponent, SdButton],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Generic CRUD"
+      description="List, detail, create, update, import and configuration screens generated from one SdGenericSchema per entity, backed by an adapter per module.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-generic-crud-with-a-mock-adapter') {
+        <demo-section
+          heading="Generic CRUD with a mock adapter"
+          note="The showcase registers an in-memory adapter for the module 'showcase' and mounts sdGenericRoutes() under /demo. Product opens forms as a page; supplier (fewer properties) opens them in a side drawer."
+          [props]="[
+            { name: 'provideSdGeneric', value: '{ adapters: [GenericDemoMockAdapter], permission: false }' },
+            { name: 'routes', value: 'generic/:module/:entity[/create | /:id/detail | /:id/update]' },
+          ]">
+          <div class="d-flex gap-8 flex-wrap" data-generic-demo="crud">
+            <sd-button
+              data-generic-link="product"
+              type="fill"
+              color="primary"
+              prefixIcon="inventory_2"
+              title="Open products"
+              (click)="open(productsUrl)"></sd-button>
+            <sd-button
+              data-generic-link="supplier"
+              prefixIcon="local_shipping"
+              title="Open suppliers"
+              (click)="open(suppliersUrl)"></sd-button>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-generic-configuration-screen') {
+        <demo-section
+          heading="Generic configuration screen"
+          note="Edit labels, columns, filters, form layouts and import settings. Without an adapter store the configuration is kept in localStorage; an invalid stored configuration falls back to the default one."
+          [props]="[
+            { name: 'route', value: 'generic/:module/:entity/configuration' },
+            { name: 'storage', value: 'adapter.schemaStore or localStorage' },
+          ]">
+          <sd-button
+            data-generic-link="configuration"
+            prefixIcon="settings"
+            title="Configure products"
+            (click)="open(configurationUrl)"></sd-button>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+})
+export class GenericDemoComponent {
+  readonly #router = inject(Router);
+  readonly productsUrl = \`\${GENERIC_DEMO_BASE}/product\`;
+  readonly suppliersUrl = \`\${GENERIC_DEMO_BASE}/supplier\`;
+  readonly configurationUrl = \`\${GENERIC_DEMO_BASE}/product/configuration\`;
+
+  open(url: string): void {
+    void this.#router.navigateByUrl(url);
+  }
+}
+`,
+  },
   "modules/layout": {
     typescript: `import { ChangeDetectionStrategy, Component, effect, inject, input, signal } from '@angular/core';
 import { I18nService } from '@sdcorejs/angular/i18n';
@@ -20087,6 +20218,30 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     <sd-button type="light" color="primary" title="Outlined" prefixIcon="save" fontSet="material-icons-outlined"></sd-button>
     <sd-button type="outline" color="error" title="Lucide" prefixIcon="delete" fontSet="lucide"></sd-button>
     <sd-button type="text" color="secondary" title="More" suffixIcon="more_vert" fontSet="lucide"></sd-button>
+  </demo-section>`,
+  },
+  "components/icon/example-data-type-icons": {
+    ...SHOWCASE_PAGE_SOURCES["components/icon"],
+    html: `<demo-section
+    heading="Data-type icons"
+    note="One icon per data type, shared by the generic module and the form builder. Lucide apps register SD_DATA_TYPE_LUCIDE_ICONS in provideSdIcon."
+    [props]="[
+      { name: 'SD_DATA_TYPE_ICON', value: 'map' },
+      { name: 'SD_DATA_TYPE_LABEL_KEY', value: 'map (i18n keys)' },
+      { name: 'sdDataTypeIcon()', value: 'function' },
+      { name: 'SD_DATA_TYPE_LUCIDE_ICONS', value: 'array (lucideIcons)' },
+    ]">
+    @for (key of dataTypes; track key) {
+      @let _label = labelKeys[key] | sdTranslate;
+      <span class="icon-demo-item icon-demo-type" [attr.data-autoId]="'icon-data-type-' + key">
+        <sd-icon [name]="icons[key]" size="md" [ariaLabel]="_label"></sd-icon>
+        <sd-icon [name]="icons[key]" fontSet="lucide" size="md" [ariaLabel]="_label + ' (Lucide)'"></sd-icon>
+        <span class="icon-demo-type__text">
+          <span>{{ _label }}</span>
+          <code>{{ key }}</code>
+        </span>
+      </span>
+    }
   </demo-section>`,
   },
   "components/icon/example-lucide-explicit": {
@@ -24982,6 +25137,47 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
             </span>
           }
         </div>
+      </div>
+    </demo-section>`,
+  },
+  "modules/generic/example-generic-configuration-screen": {
+    ...SHOWCASE_PAGE_SOURCES["modules/generic"],
+    html: `<demo-section
+      heading="Generic configuration screen"
+      note="Edit labels, columns, filters, form layouts and import settings. Without an adapter store the configuration is kept in localStorage; an invalid stored configuration falls back to the default one."
+      [props]="[
+        { name: 'route', value: 'generic/:module/:entity/configuration' },
+        { name: 'storage', value: 'adapter.schemaStore or localStorage' },
+      ]">
+      <sd-button
+        data-generic-link="configuration"
+        prefixIcon="settings"
+        title="Configure products"
+        (click)="open(configurationUrl)"></sd-button>
+    </demo-section>`,
+  },
+  "modules/generic/example-generic-crud-with-a-mock-adapter": {
+    ...SHOWCASE_PAGE_SOURCES["modules/generic"],
+    html: `<demo-section
+      heading="Generic CRUD with a mock adapter"
+      note="The showcase registers an in-memory adapter for the module 'showcase' and mounts sdGenericRoutes() under /demo. Product opens forms as a page; supplier (fewer properties) opens them in a side drawer."
+      [props]="[
+        { name: 'provideSdGeneric', value: '{ adapters: [GenericDemoMockAdapter], permission: false }' },
+        { name: 'routes', value: 'generic/:module/:entity[/create | /:id/detail | /:id/update]' },
+      ]">
+      <div class="d-flex gap-8 flex-wrap" data-generic-demo="crud">
+        <sd-button
+          data-generic-link="product"
+          type="fill"
+          color="primary"
+          prefixIcon="inventory_2"
+          title="Open products"
+          (click)="open(productsUrl)"></sd-button>
+        <sd-button
+          data-generic-link="supplier"
+          prefixIcon="local_shipping"
+          title="Open suppliers"
+          (click)="open(suppliersUrl)"></sd-button>
       </div>
     </demo-section>`,
   },

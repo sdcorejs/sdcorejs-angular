@@ -1,6 +1,6 @@
 import { HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { SdAuthService } from '@sdcorejs/angular/modules';
+import { SdAuthService } from '@sdcorejs/angular/modules/auth';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 

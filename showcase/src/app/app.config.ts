@@ -25,7 +25,7 @@ import {
   LucideX,
 } from '@lucide/angular';
 import { ISdCoreConfiguration, SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
-import { provideSdIcon } from '@sdcorejs/angular/modules/icon';
+import { provideSdIcon, SD_DATA_TYPE_LUCIDE_ICONS } from '@sdcorejs/angular/modules/icon';
 import { routes } from './app.routes';
 
 const SHOWCASE_CORE_CONFIG: ISdCoreConfiguration = {
@@ -61,6 +61,8 @@ export const appConfig: ApplicationConfig = {
         LucideTriangleAlert,
         LucideUpload,
         LucideX,
+        // why: the data-type icons of the generic configuration screen and the Icon page (opt-in, D-014).
+        ...SD_DATA_TYPE_LUCIDE_ICONS,
       ],
     }),
     { provide: SD_CORE_CONFIGURATION, useValue: SHOWCASE_CORE_CONFIG },

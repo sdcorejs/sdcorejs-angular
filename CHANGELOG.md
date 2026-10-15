@@ -8,14 +8,25 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ### Added
 
+- Generic module (`@sdcorejs/angular/modules/generic`): list, detail, create, update, Excel import and configuration screens generated from one `SdGenericSchema` per entity. Backends plug in through `provideSdGeneric({ adapters })` (`SdGenericConfiguration`; one adapter per module, nearest injector wins); `provideSdGenericEntity` adds schema adjustments, a dedicated search, page/side-drawer display, `beforeSave`/`afterSave` hooks and custom actions. Routes `generic/:module/:entity[/create|/:id/detail|/:id/update|/configuration]` are guarded by `<MODULE>_<ENTITY>_C_GENERIC_<ACTION>` codes, refuse unsafe module/entity names and close the form routes hidden by `hiddenDefaults`. Stored configurations (`adapter.schemaStore`, default `localStorage`) are checked by `validateSdGenericSchema` and merged with the backend schema; a configuration may narrow but never reopen `insertable`/`updatable`. Excel import looks records up in batches of 100 and reports ambiguous matches and every failed row in `<sd-import-excel>`. Screens render in `<sd-page>`; the list opens a record from a link on its first column, keeps edit in the detail screen and delete in the selector, and shows external filters declared in code (backend schema or `provideSdGenericEntity`) without the filter toolbar. The configuration screen does not edit external filters, and a stored configuration neither carries nor contributes them.
+- Icon: shared data-type icon set in `@sdcorejs/angular/modules/icon`, made of `SdDataTypeIconKey` (22 keys), `SD_DATA_TYPE_ICON`, `SD_DATA_TYPE_LABEL_KEY` (`core.data-type.<key>`), `sdDataTypeIcon()` and `SD_DATA_TYPE_LUCIDE_ICONS`. The form builder palette uses it with unchanged icons. Every icon also renders under the Lucide renderer once `SD_DATA_TYPE_LUCIDE_ICONS` is passed to `provideSdIcon({ lucideIcons })`.
+- Generic configuration screen: every property row of General, List and Import shows its data-type icon and its `key` under the label. List columns reorder by dragging a handle, and the move buttons stay for keyboard use. The column "Visible" checkbox reads "Show by default" and has a tooltip saying the end user can still show the column.
+- Form Generic: `time` (`HH:mm`, `<sd-time>`) and `json` (`<sd-code-editor>`, stores the parsed value) field types in the renderer, builder palette, preview and inspector. The JSON field exposes its label, required state and error to assistive technology.
 - Editor and MiniEditor use a shared Tiptap OSS document engine with full and compact Core toolbars. Supported rich HTML, merged tables, image figures/captions, fonts, alignment and mentions use the same schema in both components.
 - Import diagnostics preserve untouched safe source, lock unsupported content and reject unsafe/lossy exports or paste. HTML/Markdown conversion verifies preservation; no Pro/paid conversion or DocumentEditor is included.
 - Selected-image sizing/alignment actions, composition-aware form output, SSR-safe initialization/counting, and upload generation/result/retry safeguards. OSS license notices ship with package assets.
 
 - `SdWindow` / `sd-window` and `components/window` are the preferred public API. Additive `hideClose`, `windowClass`, `beforeClose`, `sdClosed`, `sdCloseError`, `requestClose` and `forceClose` match Core overlay conventions, with stale-guard protection. Added Core header/default-body slots, readable state/action names, docs and four Showcase examples. The nonmodal window intentionally has no backdrop, focus trap or body scroll lock.
 
+### Changed
+
+- Icon: `SD_DEFAULT_LUCIDE_ALIASES` gains Lucide targets for `access_time`, `arrow_drop_down_circle`, `calculate`, `call`, `check_box`, `checklist`, `data_object`, `event_note`, `hub`, `label`, `link`, `mail`, `notes`, `numbers`, `payments`, `percent`, `pin` and `schedule`. Under the Lucide renderer, existing uses of those names now render the mapped icon (for example `schedule` in `sd-time` and `sd-datetime` renders `clock`). Existing keys keep their targets, app aliases still win, and Material rendering is unchanged. `notes` renders `align-justify`, so the `text` data type stays distinct from `string` (`text_fields`, which renders `text`).
+- Icon: `provideSdIcon({ lucideIcons })` also accepts a readonly array or map, such as `SD_DATA_TYPE_LUCIDE_ICONS`, without a copy.
+- Form builder: the page settings card uses the same layout as the Variables and Form validations cards, its fields take the full card width, and the page icon is picked from the group icon presets instead of typed. The Vietnamese label "Xác thực cấp form" becomes "Xác thực của biểu mẫu", and its hint says "biểu mẫu" too. Clicking the selected group icon again removes it, as for the page icon.
+
 ### Fixed
 
+- Input: `viewed=true` shows a value that arrives after the first render — through `[model]` or the parent form's `patchValue` — and keeps following later changes, masked values included. It used to keep the first value it read, so a detail screen rendered before its record loaded showed "--". A `patchValue(…, { emitEvent: false })` still does not refresh the viewed text (see `sd-input.md`).
 - MiniEditor now synchronizes external values before/after mount, implements CVA touched and disabled state, and retains its 500ms leading/trailing output contract. Editor retains form/name registration and 100ms debounce.
 
 - Window: neutral theme-aware chrome, shared Core UI icon buttons, token-based footer spacing/wrapping and viewport-bounded stacking. Removed delayed lifecycle races, released owned loading refs and kept keyboard page focus visible. Loading content is inert with an exposed localized status; nested overlays retain their own focus behavior. Window/Modal/Drawer share the semantic overlay surface in light/dark; existing component surface overrides remain.
@@ -23,6 +34,19 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ### Changed (BREAKING for consumers)
 
+- Custom typed i18n catalogs must add the new `core.module.generic.*`, `core.component.form-builder.preset.time`, `core.component.form-builder.preset.json`, `core.component.form-generic.json.invalid`, `core.data-type.*`, `core.module.generic.field.visible-hint` and `core.module.generic.action.drag` keys present in the built-in catalogs, and drop `core.module.generic.field.external-filter`. Copy the entries from the built-in catalog of the same language, or let the compiler list the missing keys.
+- Code that switches exhaustively over `SdFormGenericField['type']` (or `SD_FORM_GENERIC_FIELD_TYPES`) no longer compiles until it handles `time` and `json`:
+
+  ```diff
+   switch (field.type) {
+     case 'datetime':
+       return formatDate(value);
+  +  case 'time':
+  +    return String(value ?? ''); // 'HH:mm'
+  +  case 'json':
+  +    return JSON.stringify(value);
+   }
+  ```
 - CKEditor-specific public `Editor`, `editorConfig` and `onReady(ClassicEditor)` surfaces are removed. Deprecated `EditorOption`, `SdMiniEditorConfig` and `MentionFeedObjectItem` names now refer to Core-owned contracts; CK plugins/config/licenseKey/itemRenderer are unsupported. See component migration guides before upgrading.
 - `SdCKEditorStyles` / `sd-ckeditor-styles` and the legacy stylesheet import path remain deprecated compatibility loaders for shared Core content styles. They no longer load CKEditor CSS.
 - Unsafe content getters/upload and lossy format conversions report `SdEditorImportError` instead of silently exporting stripped content. Handle diagnostics before repairing or replacing stored values.

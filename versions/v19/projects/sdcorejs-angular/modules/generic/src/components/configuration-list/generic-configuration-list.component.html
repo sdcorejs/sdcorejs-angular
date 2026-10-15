@@ -1,0 +1,91 @@
+<sd-section [title]="'core.module.generic.configuration.section.display' | sdTranslate">
+  <div class="cfg-body cfg-fields">
+    <sd-input
+      size="sm"
+      hideInlineError
+      [label]="'core.module.generic.field.title' | sdTranslate"
+      [model]="schema().list?.title"
+      (modelChange)="setTitle($event)"></sd-input>
+    <sd-input-number
+      size="sm"
+      hideInlineError
+      type="positive"
+      [precision]="0"
+      [label]="'core.module.generic.field.page-size' | sdTranslate"
+      [model]="pageSize()"
+      (modelChange)="setPageSize($event)"></sd-input-number>
+    <sd-checkbox
+      [label]="'core.module.generic.field.export' | sdTranslate"
+      [model]="!!schema().list?.export"
+      (modelChange)="setList({ export: flag($event) })"></sd-checkbox>
+  </div>
+</sd-section>
+
+@let _visibleHint = 'core.module.generic.field.visible-hint' | sdTranslate;
+<sd-section [title]="'core.module.generic.configuration.section.columns' | sdTranslate" [subTitle]="'core.module.generic.configuration.columns-hint' | sdTranslate">
+  <div class="cfg-body">
+    <!-- why: only the columns of the table are in the drop list; drag-drop and the buttons share reorder() (INV-005). -->
+    <div class="cfg-rows cfg-rows--columns" cdkDropList cdkDropListLockAxis="y" (cdkDropListDropped)="drop($event)">
+      @for (row of listedRows(); track row.column.key) {
+        @let _dragLabel = 'core.module.generic.action.drag' | sdTranslate: { label: row.label };
+        <div class="cfg-row" cdkDrag role="group" [attr.aria-label]="row.label" [attr.data-autoId]="'generic-column-' + row.column.key">
+          <div class="cfg-order">
+            <span class="cfg-drag-handle" cdkDragHandle [sdTooltip]="_dragLabel">
+              <sd-icon name="drag_indicator" size="sm" [ariaLabel]="_dragLabel"></sd-icon>
+            </span>
+            <sd-button
+              type="text"
+              prefixIcon="arrow_upward"
+              [tooltip]="'core.module.generic.action.move-up' | sdTranslate: { label: row.label }"
+              [disabled]="row.first"
+              (click)="move(row.column.key, -1)"></sd-button>
+            <sd-button
+              type="text"
+              prefixIcon="arrow_downward"
+              [tooltip]="'core.module.generic.action.move-down' | sdTranslate: { label: row.label }"
+              [disabled]="row.last"
+              (click)="move(row.column.key, 1)"></sd-button>
+          </div>
+          <sd-generic-property-identity [property]="row.property">
+            <sd-checkbox [label]="row.label" [model]="true" (modelChange)="toggleColumn(row.column.key, flag($event))"></sd-checkbox>
+          </sd-generic-property-identity>
+          <div class="cfg-flags">
+            <sd-checkbox
+              [sdTooltip]="_visibleHint"
+              [label]="'core.module.generic.field.visible' | sdTranslate"
+              [model]="row.column.visible !== false"
+              (modelChange)="setColumn(row.column.key, { visible: flag($event) ? undefined : false })"></sd-checkbox>
+            <sd-checkbox
+              [label]="'core.module.generic.field.sortable' | sdTranslate"
+              [model]="row.column.sortable !== false"
+              (modelChange)="setColumn(row.column.key, { sortable: flag($event) ? undefined : false })"></sd-checkbox>
+            <sd-checkbox
+              [label]="'core.module.generic.field.filterable' | sdTranslate"
+              [model]="row.column.filterable !== false"
+              (modelChange)="setColumn(row.column.key, { filterable: flag($event) ? undefined : false })"></sd-checkbox>
+          </div>
+          <sd-input-number
+            size="sm"
+            hideInlineError
+            type="positive"
+            [precision]="0"
+            [label]="'core.module.generic.field.width' | sdTranslate"
+            [model]="row.column.width"
+            (modelChange)="setColumn(row.column.key, { width: $event ? +$event : undefined })"></sd-input-number>
+        </div>
+      }
+    </div>
+    @if (unlistedRows().length) {
+      <div class="cfg-rows cfg-rows--columns cfg-rows--unlisted">
+        @for (row of unlistedRows(); track row.column.key) {
+          <div class="cfg-row" role="group" [attr.aria-label]="row.label" [attr.data-autoId]="'generic-column-' + row.column.key">
+            <div class="cfg-order"></div>
+            <sd-generic-property-identity [property]="row.property">
+              <sd-checkbox [label]="row.label" [model]="false" (modelChange)="toggleColumn(row.column.key, flag($event))"></sd-checkbox>
+            </sd-generic-property-identity>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</sd-section>

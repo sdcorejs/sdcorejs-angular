@@ -30,6 +30,12 @@
   @case ('upload') {
     <lib-upload [field]="item" [form]="registrationForm()" [required]="required()" [disabled]="state().disabled"></lib-upload>
   }
+  @case ('time') {
+    <lib-time [field]="item" [form]="registrationForm()" [required]="required()" [disabled]="state().disabled"></lib-time>
+  }
+  @case ('json') {
+    <lib-json [field]="item" [form]="registrationForm()" [required]="required()" [disabled]="state().disabled"></lib-json>
+  }
   @case ('html') {
     <lib-html [field]="item"></lib-html>
   }

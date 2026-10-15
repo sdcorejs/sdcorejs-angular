@@ -2,7 +2,7 @@ import { HTTP_INTERCEPTORS, HttpClient, HttpErrorResponse } from '@angular/commo
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { SdAuthService } from '@sdcorejs/angular/modules';
+import { SdAuthService } from '@sdcorejs/angular/modules/auth';
 import { SdUnauthorizedInterceptor } from './unauthorized.interceptor';
 
 // ─── Suite ────────────────────────────────────────────────────────────────────

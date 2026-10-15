@@ -1,6 +1,6 @@
 import type { SdFormGenericValidator } from '../models/form-generic-config.model';
 import type { SdFormGenericValidation } from '../models/form-generic-schema.model';
-import { sdRunFormValidations } from './form-generic-validation';
+import { sdIsTimeValue, sdParseJsonText, sdRunFormValidations } from './form-generic-validation';
 
 const validations: SdFormGenericValidation[] = [
   { type: 'filter', filter: { field: 'age', operator: 'LESS_THAN', data: 18 }, message: 'Chưa đủ tuổi', alert: 'error' },
@@ -78,5 +78,26 @@ describe('form generic form-level validation', () => {
     ] as unknown as SdFormGenericValidation[];
     const result = await sdRunFormValidations(odd, { value: {}, variables: {} });
     expect(result).toEqual({ valid: false, messages: { error: ['Age missing'], warning: [] } });
+  });
+});
+
+describe('form generic field value checks', () => {
+  it('accepts only canonical HH:mm times', () => {
+    expect(sdIsTimeValue('00:00')).toBeTrue();
+    expect(sdIsTimeValue('23:59')).toBeTrue();
+    expect(sdIsTimeValue('9:05')).toBeFalse();
+    expect(sdIsTimeValue('24:00')).toBeFalse();
+    expect(sdIsTimeValue('25:00')).toBeFalse();
+    expect(sdIsTimeValue('12:60')).toBeFalse();
+    expect(sdIsTimeValue(930)).toBeFalse();
+  });
+
+  it('parses JSON text and reports invalid text without throwing', () => {
+    expect(sdParseJsonText('{"a":1}')).toEqual({ valid: true, value: { a: 1 } });
+    expect(sdParseJsonText('[1, 2]')).toEqual({ valid: true, value: [1, 2] });
+    expect(sdParseJsonText('false')).toEqual({ valid: true, value: false });
+    expect(sdParseJsonText('{"a":')).toEqual({ valid: false });
+    expect(sdParseJsonText('')).toEqual({ valid: true, value: null });
+    expect(sdParseJsonText('   ')).toEqual({ valid: true, value: null });
   });
 });

@@ -69,6 +69,14 @@ describe('form generic display value', () => {
     expect(sdDisplayValue(field({ type: 'select', options }), '79')).toBe('--');
   });
 
+  it('shows a time as HH:mm and JSON as compact text', () => {
+    expect(sdDisplayValue(field({ type: 'time' }), '09:05')).toBe('09:05');
+    expect(sdDisplayValue(field({ type: 'time' }), '')).toBe('--');
+    expect(sdDisplayValue(field({ type: 'json' }), { a: 1, b: [true, null] })).toBe('{"a":1,"b":[true,null]}');
+    expect(sdDisplayValue(field({ type: 'json' }), 0)).toBe('0');
+    expect(sdDisplayValue(field({ type: 'json' }), null)).toBe('--');
+  });
+
   it('returns an empty string for fields without a text view', () => {
     expect(sdDisplayValue(field({ type: 'checkbox' }), true)).toBe('');
     expect(sdDisplayValue(field({ type: 'upload' }), [{ name: 'a.pdf' }])).toBe('');

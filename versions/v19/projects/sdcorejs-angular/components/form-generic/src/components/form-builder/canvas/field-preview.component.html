@@ -47,6 +47,18 @@
         <sd-icon class="fbp-trailing" name="today" size="18px"></sd-icon>
       </div>
     }
+    @case ('time') {
+      <div class="fbp-control" [class.is-disabled]="disabled()">
+        <span class="fbp-placeholder">{{ placeholder() || 'HH:mm' }}</span>
+        <sd-icon class="fbp-trailing" name="access_time" size="18px"></sd-icon>
+      </div>
+    }
+    @case ('json') {
+      <div class="fbp-control" [class.is-disabled]="disabled()">
+        <span class="fbp-placeholder">{{ '{ }' }}</span>
+        <sd-icon class="fbp-trailing" name="data_object" size="18px"></sd-icon>
+      </div>
+    }
     @case ('chip-string') {
       <div class="fbp-control" [class.is-disabled]="disabled()">
         <span class="fbp-placeholder">{{ placeholder() }}</span>

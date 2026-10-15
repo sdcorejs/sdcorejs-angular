@@ -28,8 +28,9 @@ export type SdLucideIconRegistration = LucideIcon | LucideIconData;
 
 /**
  * Danh sách đăng ký Lucide cho provider, hỗ trợ cả array và object map để app có thể giữ cấu trúc import riêng.
+ * Nhận cả bản readonly (vd `SD_DATA_TYPE_LUCIDE_ICONS`) mà không cần copy.
  */
-export type SdLucideIconRegistrations = SdLucideIconRegistration[] | Record<string, SdLucideIconRegistration>;
+export type SdLucideIconRegistrations = readonly SdLucideIconRegistration[] | Readonly<Record<string, SdLucideIconRegistration>>;
 
 /**
  * Cấu hình app-level cho `SdIcon`.
@@ -197,6 +198,28 @@ export const SD_DEFAULT_LUCIDE_ALIASES: Record<string, string> = {
   tune: 'sliders-horizontal',
   undo: 'undo-2',
   zoom_out: 'zoom-out',
+  // why: icon kiểu dữ liệu (`SD_DATA_TYPE_ICON`). Đích Lucide bám theo hình của glyph Material, vì alias áp cho
+  // MỌI chỗ dùng tên đó — `schedule` là đồng hồ của sd-time, nên phải là `clock` chứ không phải `calendar-clock`.
+  // `notes` là `align-justify` chứ không phải `align-left`: Lucide gộp `align-left` với `text` (đích có sẵn của
+  // `text_fields`) vào cùng một hình, nên kiểu `text` sẽ giống hệt kiểu `string`.
+  access_time: 'clock',
+  arrow_drop_down_circle: 'circle-chevron-down',
+  calculate: 'calculator',
+  call: 'phone',
+  check_box: 'square-check',
+  checklist: 'list-checks',
+  data_object: 'braces',
+  event_note: 'calendar-range',
+  hub: 'network',
+  label: 'tag',
+  link: 'link',
+  mail: 'mail',
+  notes: 'align-justify',
+  numbers: 'hash',
+  payments: 'banknote',
+  percent: 'percent',
+  pin: 'binary',
+  schedule: 'clock',
 };
 
 /**

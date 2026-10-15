@@ -89,25 +89,36 @@ describe('Form Builder release review regressions', () => {
     expect(builder.store.activePage().id).toBe('second');
   });
 
-  for (const [index, property, first, second] of [
-    [0, 'label', 'First edit', 'Second edit'],
-    [1, 'icon', 'person', 'folder'],
-  ] as const) {
-    it(`seals page ${property} history on the inner Core input blur`, async () => {
-      const input = (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLInputElement>('fb-inspector .ins-empty sd-input input')[
-        index
-      ];
-      expect(input).toBeDefined();
-      input.value = first;
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      await settle();
-      input.dispatchEvent(new FocusEvent('blur', { bubbles: false }));
-      input.value = second;
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      await settle();
-      expect(builder.store.activePage()[property]).toBe(second);
-      expect(builder.store.undo()).toBeTrue();
-      expect(builder.store.activePage()[property]).toBe(first);
-    });
-  }
+  it('seals page label history on the inner Core input blur', async () => {
+    const input = (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>('fb-inspector .ins-empty sd-input input')!;
+    expect(input).not.toBeNull();
+    input.value = 'First edit';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await settle();
+    input.dispatchEvent(new FocusEvent('blur', { bubbles: false }));
+    input.value = 'Second edit';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await settle();
+    expect(builder.store.activePage().label).toBe('Second edit');
+    expect(builder.store.undo()).toBeTrue();
+    expect(builder.store.activePage().label).toBe('First edit');
+  });
+
+  it('picks the page icon from the group presets, one history step per pick, and clears it on a second click', async () => {
+    const button = (icon: string) =>
+      (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
+        `fb-inspector .ins-empty .ins-icons__btn[aria-label="${icon}"]`
+      )!;
+    button('person').click();
+    await settle();
+    button('folder').click();
+    await settle();
+    expect(builder.store.activePage().icon).toBe('folder');
+    expect(button('folder').getAttribute('aria-pressed')).toBe('true');
+    expect(builder.store.undo()).toBeTrue();
+    expect(builder.store.activePage().icon).toBe('person');
+    button('person').click();
+    await settle();
+    expect(builder.store.activePage().icon).withContext('a second click removes the icon').toBeUndefined();
+  });
 });

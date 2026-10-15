@@ -19,8 +19,11 @@
       </div>
     </div>
     <div class="ins-body">
-      <section class="ins-card">
-        <h3 class="ins-section__title">{{ 'core.component.form-builder.page.settings' | sdTranslate }}</h3>
+      <!-- why: same card head as Variables / Form validations below; fields stretch to the card width. -->
+      <section class="ins-card ins-card--form" [attr.aria-label]="'core.component.form-builder.page.settings' | sdTranslate">
+        <div class="ins-card__row">
+          <span>{{ 'core.component.form-builder.page.settings' | sdTranslate }}</span>
+        </div>
         <sd-select
           size="sm"
           labelPlacement="top"
@@ -46,14 +49,22 @@
           [model]="store.activePage().label"
           (modelChange)="store.setPageMetadata({ label: $event || undefined }, 'page-label:' + store.activePage().id)"
           (sdBlur)="store.sealHistory()"></sd-input>
-        <sd-input
-          size="sm"
-          labelPlacement="top"
-          hideInlineError
-          [label]="'core.component.form-builder.page.icon' | sdTranslate"
-          [model]="store.activePage().icon"
-          (modelChange)="store.setPageMetadata({ icon: $event || undefined }, 'page-icon:' + store.activePage().id)"
-          (sdBlur)="store.sealHistory()"></sd-input>
+        <div class="ins-field">
+          <div class="ins-field__label">{{ 'core.component.form-builder.page.icon' | sdTranslate }}</div>
+          <div class="ins-icons" role="group" [attr.aria-label]="'core.component.form-builder.page.icon' | sdTranslate">
+            @for (icon of iconPresets; track icon) {
+              <button
+                type="button"
+                class="ins-icons__btn"
+                [class.is-active]="store.activePage().icon === icon"
+                [attr.aria-pressed]="store.activePage().icon === icon"
+                [attr.aria-label]="icon"
+                (click)="pickPageIcon(icon)">
+                <sd-icon [name]="icon" size="18px"></sd-icon>
+              </button>
+            }
+          </div>
+        </div>
         <attribute-expression
           [label]="'core.component.form-builder.visible-when' | sdTranslate"
           [elements]="elements()"
@@ -694,6 +705,25 @@
                   displayField="display"
                   [model]="dateLimitValue(_validation.max)"
                   (modelChange)="setValidationChoice('max', $event)"></sd-select>
+              </div>
+            }
+
+            @if (_type === 'time') {
+              <div class="ins-grid">
+                <sd-time
+                  size="sm"
+                  hideInlineError
+                  clearable
+                  [label]="'core.component.form-builder.min' | sdTranslate"
+                  [model]="timeLimitValue(_validation.min)"
+                  (modelChange)="setValidation('min', $event || null, true)"></sd-time>
+                <sd-time
+                  size="sm"
+                  hideInlineError
+                  clearable
+                  [label]="'core.component.form-builder.max' | sdTranslate"
+                  [model]="timeLimitValue(_validation.max)"
+                  (modelChange)="setValidation('max', $event || null, true)"></sd-time>
               </div>
             }
 

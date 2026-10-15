@@ -93,7 +93,7 @@ const schema: SdFormGenericSchema = {
 
 Visible inactive panels stay mounted with `hidden` and `inert`: controls, dirty/touched state and async validators remain intact, while inactive fields cannot receive focus. A rule-hidden page unmounts its owned controls and retains its values. `validate()` checks all visible pages, including unvisited ones, waits for async field validation, then runs form-level validations once. External FormGroup controls still participate. Only a current failed field-validation attempt navigates/focuses; global/external-only errors have no invented field destination. `upload()` visits mounted visible fields once and skips rule-hidden pages.
 
-The builder page strip selects/adds/duplicates/reorders/deletes pages. Select a page to edit label/icon/visibility rules in the inspector; form settings choose Single page/Tabs/Steps and Linear. Page commands/configuration participate in the existing undo/redo history; page selection does not. The last page cannot be removed. Nonempty/referenced page deletion is confirmed, and external references remain for consumer repair. Duplicate rewrites only structured references owned by the copied page and assigns globally unique field keys/IDs. Unsupported elements disable page duplication with an explanation. Unknown metadata and imported pages survive single-page view. Preview uses the real renderer and applies page rules and navigation.
+The builder page strip selects/adds/duplicates/reorders/deletes pages. Select a page to edit label/icon/visibility rules in the inspector (the icon is picked from the same presets as a group; picking it again removes it); form settings choose Single page/Tabs/Steps and Linear. Page commands/configuration participate in the existing undo/redo history; page selection does not. The last page cannot be removed. Nonempty/referenced page deletion is confirmed, and external references remain for consumer repair. Duplicate rewrites only structured references owned by the copied page and assigns globally unique field keys/IDs. Unsupported elements disable page duplication with an explanation. Unknown metadata and imported pages survive single-page view. Preview uses the real renderer and applies page rules and navigation.
 
 An element whose `type` this version does not know (added by a later release) is **skipped** by the renderer (one dev-mode warning per type) and **kept as-is** by the builder, which shows it as an "unsupported" card that can be moved or deleted but not edited or duplicated.
 
@@ -120,7 +120,7 @@ Every field has these properties:
 ```ts
 interface SdFormGenericFieldValidation {
   required?: boolean;
-  min?: number | 'today' | string; // number: numeric bound; datetime: 'today' (whole day for date+time) or an ISO date
+  min?: number | 'today' | string; // number: numeric bound; datetime: 'today' (whole day for date+time) or an ISO date; time: 'HH:mm'
   max?: number | 'today' | string;
   minLength?: number;
   maxLength?: number;
@@ -144,6 +144,8 @@ interface SdFormGenericFieldValidation {
 | `chip-string`   | —                                                                                                                                   | `string[]`                  |
 | `chip-calendar` | —                                                                                                                                   | `string[]` (dates)          |
 | `upload`        | `accept?: 'file' \| 'image'`, `source?: 'ALL' \| 'PHOTO_LIBRARY' \| 'CAPTURE'`, `extensions?`, `maxFiles?`, `maxSizeMb?`, `params?` | result of the portal upload |
+| `time`          | — (`validation.min` / `max` as `'HH:mm'`)                                                                                           | `string` (`HH:mm`)          |
+| `json`          | —                                                                                                                                   | parsed JSON (`unknown`)     |
 | `html`          | static `content` + `variables`, **or** a portal `definition` + `query`                                                              | — (no value)                |
 
 A line break is no longer an element: a field that must start a new row sets `layout.newRow: true`.
@@ -348,6 +350,8 @@ Turns a schema into a live form. `OnPush`. It never mutates the schema or the va
 - A viewed field (its own `viewed`, or the renderer's `[viewed]`) is not validated: the user cannot change it, so its `required` and constraints never make `validate()` fail.
 - A select / radio with catalog options loads (or searches) through the portal catalog; choosing an item applies `fill`.
 - In viewed mode values are formatted like `SdFormRenderService.viewEntities` (option labels, dates, numbers by preset, password mask).
+- `time` uses `<sd-time>`. Typed and picked values are kept as canonical `HH:mm`, an impossible time (`25:00`) marks the control invalid, and only `HH:mm` boundaries in `validation.min` / `max` are applied.
+- `json` edits text in `<sd-code-editor language="json">`. The `FormGroup` control holds the TEXT (error `json` while it does not parse, `required` while it is empty and required); the form `value` holds the PARSED JSON, and blank text stores `null`. Viewed mode shows the formatted JSON read-only; `viewEntities` returns compact JSON text.
 
 ---
 
@@ -557,6 +561,8 @@ const schema: SdFormGenericSchema = {
 
 - Static content elements beyond the existing HTML field, action buttons, and repeating tables are not part of this release. Tabs/steps and page editing are supported as described above.
 - `checkbox` `validation.required` is not enforced (`<sd-checkbox>` has no `required` input).
+- `time` ignores `labelPlacement` (`<sd-time>` has no top-label mode yet); `json` always shows its label above the editor.
+- Code that switches exhaustively over `SdFormGenericField['type']` needs branches for `time` and `json`.
 - The password preset has no show / hide toggle.
 - Groups always span the full row and do not nest.
 - Schema mode is read-only.
@@ -575,5 +581,6 @@ const schema: SdFormGenericSchema = {
 
 - `<sd-query-builder>` — edits the `Filter` conditions the schema stores.
 - `<sd-upload-file>` — backs the `upload` field type.
+- `<sd-time>` / `<sd-code-editor>` — back the `time` / `json` field types.
 - `<sd-section>` — renders a group.
 - `<sd-input>` / `<sd-select>` / … — the controls the renderer composes; `labelPlacement` is available on them too (default `'float'` there).

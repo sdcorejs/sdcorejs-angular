@@ -1,0 +1,56 @@
+@let _draft = draft();
+<sd-page class="sd-generic-configuration">
+  <div headerLeft class="d-flex align-items-center gap-8">
+    <sd-button type="text" prefixIcon="arrow_back" [tooltip]="'core.module.generic.action.back' | sdTranslate" (click)="back()"></sd-button>
+    <h1 class="T20M m-0">{{ title() }}</h1>
+  </div>
+  <div headerRight class="d-flex align-items-center gap-8">
+    @if (_draft) {
+      <sd-button [title]="'core.module.generic.action.cancel' | sdTranslate" (click)="back()"></sd-button>
+      <sd-button
+        data-autoId="generic-configuration-save"
+        type="fill"
+        color="primary"
+        prefixIcon="save"
+        [loading]="saving()"
+        [title]="'core.module.generic.action.save' | sdTranslate"
+        (click)="save()"></sd-button>
+    }
+  </div>
+  <div class="d-flex flex-column gap-16 p-16">
+    @if (generic()?.error; as error) {
+      <sd-inform error [title]="error"></sd-inform>
+    }
+    @if (_draft) {
+      @if (removed()) {
+        <sd-inform warning [title]="'core.module.generic.configuration.removed' | sdTranslate: { keys: removed() }"></sd-inform>
+      }
+      @if (added()) {
+        <sd-inform info [title]="'core.module.generic.configuration.added' | sdTranslate: { keys: added() }"></sd-inform>
+      }
+      @if (issues().length) {
+        <sd-inform error data-autoId="generic-configuration-issues" [title]="'core.module.generic.configuration.save-blocked' | sdTranslate">
+          <ul class="m-0">
+            @for (issue of issues(); track $index) {
+              <li class="T14R">{{ issue.path }}: {{ issue.message }}</li>
+            }
+          </ul>
+        </sd-inform>
+      }
+      <sd-tab-group preserveContent>
+        <sd-tab [label]="'core.module.generic.configuration.tab.general' | sdTranslate">
+          <sd-generic-configuration-general [schema]="_draft" [base]="base()" (schemaChange)="update($event)"></sd-generic-configuration-general>
+        </sd-tab>
+        <sd-tab [label]="'core.module.generic.configuration.tab.list' | sdTranslate">
+          <sd-generic-configuration-list [schema]="_draft" (schemaChange)="update($event)"></sd-generic-configuration-list>
+        </sd-tab>
+        <sd-tab [label]="'core.module.generic.configuration.tab.form' | sdTranslate">
+          <sd-generic-configuration-form [schema]="_draft" (schemaChange)="update($event)"></sd-generic-configuration-form>
+        </sd-tab>
+        <sd-tab [label]="'core.module.generic.configuration.tab.import' | sdTranslate">
+          <sd-generic-configuration-import [schema]="_draft" (schemaChange)="update($event)"></sd-generic-configuration-import>
+        </sd-tab>
+      </sd-tab-group>
+    }
+  </div>
+</sd-page>
