@@ -94,6 +94,19 @@ describe('GenericConfigurationList', () => {
     expect(announce).toHaveBeenCalledTimes(2);
   });
 
+  it('moves past the next listed row even when list.columns holds a key without a property', async () => {
+    const { fixture, list, host } = await render();
+    // why: merge drops such keys (INV-005), but the move buttons must not depend on it, like drop() does not.
+    host.schema.set({ ...SCHEMA, list: { columns: [{ key: 'code' }, { key: 'ghost' }, { key: 'name' }] } });
+    fixture.detectChanges();
+    list.move('code', 1);
+    fixture.detectChanges();
+    expect(list.listedRows().map(row => row.column.key)).toEqual(['name', 'code']);
+    expect(announce).toHaveBeenCalledWith(
+      TestBed.inject(I18nService).t('core.module.generic.configuration.moved', { label: 'Code', position: 2 })
+    );
+  });
+
   it('gives a drag handle to listed columns only (AC-011)', async () => {
     const { row } = await render();
     for (const key of ['code', 'name', 'status']) {
@@ -118,6 +131,6 @@ describe('GenericConfigurationList', () => {
   it('shows the identity (type icon and key) of every row (AC-009)', async () => {
     const { fixture, row } = await render();
     expect(fixture.debugElement.queryAll(By.directive(GenericPropertyIdentity)).length).toBe(4);
-    expect(row('status').querySelector('[data-role="key"]')?.textContent?.trim()).toBe('status');
+    expect(row('status').querySelector('.cfg-identity__key')?.textContent?.trim()).toBe('status');
   });
 });

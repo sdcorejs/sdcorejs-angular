@@ -16,6 +16,7 @@ import { FormGroup } from '@angular/forms';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdFormRender } from '@sdcorejs/angular/components/form-generic';
+import { SdInform } from '@sdcorejs/angular/components/inform';
 import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdPageComponent } from '@sdcorejs/angular/modules/layout';
@@ -44,7 +45,7 @@ interface FormRouteState {
   templateUrl: './generic-form-host.page.html',
   styleUrl: './generic-form-host.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgTemplateOutlet, SdButton, SdFormRender, SdPageComponent, SdSideDrawer, SdTranslatePipe],
+  imports: [NgTemplateOutlet, SdButton, SdFormRender, SdInform, SdPageComponent, SdSideDrawer, SdTranslatePipe],
 })
 export class GenericFormHostPage {
   readonly #route = inject(ActivatedRoute);
@@ -76,6 +77,8 @@ export class GenericFormHostPage {
   readonly value = signal<Record<string, unknown>>({});
   readonly record = signal<SdGenericRecord | null>(null);
   readonly loading = signal(false);
+  /** Message of a failed record load; the screen shows it in place of the form. */
+  readonly loadError = signal<string | null>(null);
   readonly saving = signal(false);
   /** An update saves only over a loaded record; saving the empty form of a failed load would blank its fields. */
   readonly canSave = computed(() => this.action() === 'create' || this.record() !== null);
@@ -91,10 +94,7 @@ export class GenericFormHostPage {
   });
   readonly canEdit = computed(() => {
     const schema = this.schema();
-    const hidden = schema ? (this.#scope.entity(schema.module, schema.entity)?.hiddenDefaults ?? []) : [];
-    return (
-      !!schema && this.action() === 'detail' && !hidden.includes('update') && this.#permission.can(schema.module, schema.entity, 'update')
-    );
+    return !!schema && this.action() === 'detail' && this.#permission.allows(schema.module, schema.entity, 'update');
   });
   readonly detailActions = computed(() => {
     const schema = this.schema();
@@ -191,6 +191,7 @@ export class GenericFormHostPage {
     if (next.generic === current.generic && next.id === current.id) return;
     this.#state.set(next);
     this.record.set(null);
+    this.loadError.set(null);
     this.value.set({});
     this.#closing = false;
     if (this.action() !== 'create') void this.#load();
@@ -201,6 +202,7 @@ export class GenericFormHostPage {
     const { id } = this.#state();
     if (!schema || id === null) return;
     this.loading.set(true);
+    this.loadError.set(null);
     try {
       const record = await this.#data.detail(schema.module, schema.entity, id);
       // why: a slow answer for a record the user already left must not overwrite the current one.
@@ -208,7 +210,7 @@ export class GenericFormHostPage {
       this.record.set(record);
       this.value.set(this.#data.toFormValue(schema, record));
     } catch (error) {
-      if (this.#state().id === id) this.#notify.error(message(error));
+      if (this.#state().id === id) this.loadError.set(message(error));
     } finally {
       if (this.#state().id === id) this.loading.set(false);
     }

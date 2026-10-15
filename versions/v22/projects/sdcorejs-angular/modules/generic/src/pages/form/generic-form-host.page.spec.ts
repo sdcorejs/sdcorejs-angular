@@ -96,6 +96,15 @@ describe('GenericFormHostPage', () => {
     expect(root.querySelector('[data-autoId="generic-save"] button')?.hasAttribute('disabled')).toBeTrue();
   });
 
+  it('shows the load error in place of the form when the record fails to load', async () => {
+    const { root } = await open('/generic/tms/order/1/detail', { failDetail: true });
+    const form = root.querySelector('sd-generic-form-host')!;
+    const inform = form.querySelector('sd-inform[data-autoId="generic-form-error"]');
+    expect(inform).withContext('error banner').not.toBeNull();
+    expect(inform!.textContent).toContain('not found');
+    expect(form.querySelector('sd-form-render')).withContext('no empty form').toBeNull();
+  });
+
   it('shows every property read-only in detail, with the detail title rendered as text (AC-015, AC-009)', async () => {
     const { host, root } = await open('/generic/tms/order/1/detail', { schema: schema({ detail: { title: '<b>${code}</b>' } }) });
     expect(keys(host)).toEqual(['id', 'code', 'qty']);

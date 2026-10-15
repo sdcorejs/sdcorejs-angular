@@ -46,4 +46,13 @@ describe('sdGenericPropertyIconKey', () => {
     expect(sdGenericPropertyIconKey(property({ dataType: 'string', format: 'currency' }))).toBe('string');
     expect(sdGenericPropertyIconKey(property({ dataType: 'number', format: 'email' }))).toBe('number');
   });
+
+  it('has no key for a data type outside the icon set', () => {
+    // why: the backend schema is not validated before the screens render it.
+    for (const dataType of ['uuid', 'constructor', '']) {
+      expect(sdGenericPropertyIconKey(property({ dataType: dataType as SdGenericProperty['dataType'] })))
+        .withContext(dataType)
+        .toBeUndefined();
+    }
+  });
 });

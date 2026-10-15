@@ -105,6 +105,11 @@ export interface SdGenericListSection {
   title?: string;
   /** Absent: every property except `json` and `file`. */
   columns?: SdGenericListColumn[];
+  /**
+   * Filters shown above the table; the filter toolbar (clear / pick filters) stays hidden. Declared in code only: the backend
+   * schema or the `provideSdGenericEntity` schema adjustment. A stored configuration never carries them (save
+   * drops them, load ignores them), and the configuration screen does not edit them.
+   */
   externalFilters?: SdGenericExternalFilter[];
   /** Default sort. */
   orders?: Order[];

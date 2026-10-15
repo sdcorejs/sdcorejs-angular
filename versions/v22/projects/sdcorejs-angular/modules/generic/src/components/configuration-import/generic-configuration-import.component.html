@@ -16,9 +16,12 @@
 <sd-section [title]="'core.module.generic.configuration.section.import-columns' | sdTranslate">
   <div class="cfg-body cfg-rows cfg-rows--import">
     @for (row of rows(); track row.property.key) {
-      <div class="cfg-row" role="group" [attr.aria-label]="row.property.label" [attr.data-autoId]="'generic-import-' + row.property.key">
+      <div class="cfg-row" role="group" [attr.aria-label]="row.label" [attr.data-autoId]="'generic-import-' + row.property.key">
         <sd-generic-property-identity [property]="row.property">
-          <sd-checkbox [label]="row.property.label" [model]="row.selected" (modelChange)="toggle(row.property.key, $event)"></sd-checkbox>
+          <sd-checkbox
+            [label]="row.label"
+            [model]="row.selected"
+            (modelChange)="toggleColumn(row.property.key, flag($event))"></sd-checkbox>
         </sd-generic-property-identity>
         @if (row.selected && row.property.dataType === 'relation') {
           <sd-input

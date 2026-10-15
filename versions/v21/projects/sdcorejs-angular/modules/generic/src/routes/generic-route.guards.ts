@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import type { ActivatedRouteSnapshot, CanActivateFn, ResolveFn } from '@angular/router';
 import { I18nService } from '@sdcorejs/angular/i18n';
-import type { SdGenericAction, SdGenericDefaultAction } from '../models';
+import type { SdGenericAction } from '../models';
 import { SD_GENERIC_SCOPE } from '../registry';
 import { SdGenericPermissionService, SdGenericSchemaService, type SdGenericResolvedSchema } from '../services';
 
@@ -30,9 +30,6 @@ export const sdGenericRouteParams = (route: ActivatedRouteSnapshot): { module: s
  */
 const NAME = /^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*$/;
 
-/** Default actions that `hiddenDefaults` can also close at the route level. */
-const HIDEABLE = new Set<SdGenericAction>(['create', 'detail', 'update']);
-
 /**
  * Blocks a generic route without its permission code (INV-005), with an unsafe module / entity name, or whose
  * action the entity hides through `hiddenDefaults`. Permissions are loaded before the check.
@@ -41,12 +38,12 @@ export const sdGenericPermissionGuard =
   (action: SdGenericAction): CanActivateFn =>
   async route => {
     const permission = inject(SdGenericPermissionService);
-    const scope = inject(SD_GENERIC_SCOPE);
     const { module, entity } = sdGenericRouteParams(route);
     if (!NAME.test(module) || !NAME.test(entity)) return false;
-    if (HIDEABLE.has(action) && scope.entity(module, entity)?.hiddenDefaults?.includes(action as SdGenericDefaultAction)) return false;
+    // why: a hidden route is refused before the permission list is loaded.
+    if (permission.hides(module, entity, action)) return false;
     await permission.ensureLoaded();
-    return permission.can(module, entity, action);
+    return permission.allows(module, entity, action);
   };
 
 /** Resolves the effective schema before the page renders; a failure becomes `error` instead of a navigation error. */

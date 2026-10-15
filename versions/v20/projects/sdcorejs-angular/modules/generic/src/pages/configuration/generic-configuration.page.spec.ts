@@ -13,6 +13,7 @@ import { SdNotifyService } from '@sdcorejs/angular/services/notify';
 import type { SdGenericAdapter, SdGenericSchema } from '../../models';
 import { provideSdGeneric } from '../../registry';
 import { sdGenericRoutes } from '../../routes';
+import { GenericConfigurationImport } from '../../components/configuration-import/generic-configuration-import.component';
 import { GenericConfigurationList } from '../../components/configuration-list/generic-configuration-list.component';
 import { GenericConfigurationPage } from './generic-configuration.page';
 
@@ -144,8 +145,8 @@ describe('GenericConfigurationPage', () => {
     const { root } = await open();
     const row = root.querySelector('[data-autoId="generic-property-code"]')!;
     expect(row.querySelector('sd-generic-property-identity')).not.toBeNull();
-    expect(row.querySelector('[data-role="key"]')!.textContent?.trim()).toBe('code');
-    expect(row.querySelector('[data-role="data-type"] sd-icon')?.getAttribute('aria-label')).toBe(
+    expect(row.querySelector('.cfg-identity__key')!.textContent?.trim()).toBe('code');
+    expect(row.querySelector('.cfg-identity__icon sd-icon')?.getAttribute('aria-label')).toBe(
       TestBed.inject(I18nService).t('core.data-type.string')
     );
     const inputs = Array.from(row.querySelectorAll('input')).map(input => (input as HTMLInputElement).value);
@@ -177,9 +178,38 @@ describe('GenericConfigurationPage', () => {
     harness.fixture.detectChanges();
     const row = root.querySelector('[data-autoId="generic-import-tags"]')!;
     expect(row.querySelector('sd-generic-property-identity')).not.toBeNull();
-    expect(row.querySelector('[data-role="key"]')!.textContent?.trim()).toBe('tags');
-    expect(row.querySelector('[data-role="data-type"] sd-icon')?.getAttribute('aria-label')).toBe(
+    expect(row.querySelector('.cfg-identity__key')!.textContent?.trim()).toBe('tags');
+    expect(row.querySelector('.cfg-identity__icon sd-icon')?.getAttribute('aria-label')).toBe(
       TestBed.inject(I18nService).t('core.data-type.string-multiple')
     );
+  });
+
+  it('names an import column without a label by its key, like the list tab', async () => {
+    const { harness, root } = await open(value => ({
+      ...value,
+      general: { ...value.general, properties: [...value.general.properties, { key: 'ref', label: '', dataType: 'string' }] },
+      import: { columns: [{ key: 'ref' }] },
+    }));
+    (root.querySelectorAll('[role="tab"]')[3] as HTMLElement).click();
+    harness.fixture.detectChanges();
+    await harness.fixture.whenStable();
+    harness.fixture.detectChanges();
+    const importTab = harness.fixture.debugElement.query(By.directive(GenericConfigurationImport))
+      .componentInstance as GenericConfigurationImport;
+    expect(root.querySelector('[data-autoId="generic-import-ref"]')?.getAttribute('aria-label')).toBe('ref');
+    expect(importTab.upsertOptions().find(option => option.value === 'ref')?.display).toBe('ref');
+    importTab.toggleColumn('code', true);
+    harness.fixture.detectChanges();
+    expect(importTab.columns().map(column => column.key)).toEqual(['ref', 'code']);
+  });
+
+  it('keeps a heading when the schema fails to load', async () => {
+    const { harness, root } = await open(() => {
+      throw new Error('schema down');
+    });
+    harness.fixture.detectChanges();
+    const heading = root.querySelector('sd-generic-configuration-page h1')!;
+    expect(heading.textContent?.trim()).toBe(TestBed.inject(I18nService).t('core.module.generic.configuration.title', { label: 'order' }));
+    expect(root.textContent).toContain('schema down');
   });
 });

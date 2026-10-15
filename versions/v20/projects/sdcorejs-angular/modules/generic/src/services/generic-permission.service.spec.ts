@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { SdPermissionService } from '@sdcorejs/angular/modules/permission';
-import { provideSdGeneric } from '../registry/provide-sd-generic';
+import { provideSdGeneric, provideSdGenericEntity } from '../registry/provide-sd-generic';
 import { SdGenericPermissionService } from './generic-permission.service';
 
 describe('SdGenericPermissionService', () => {
@@ -27,6 +27,35 @@ describe('SdGenericPermissionService', () => {
     expect(service.can('tms', 'order', 'list')).toBeTrue();
     expect(service.can('tms', 'order', 'create')).toBeFalse();
     expect(permission.hasPermission).toHaveBeenCalledWith('TMS_ORDER_C_GENERIC_CREATE');
+  });
+
+  it('allows a default action only when the entity does not hide it and the code is granted', () => {
+    const codes = new Set(['TMS_ORDER_C_GENERIC_LIST', 'TMS_ORDER_C_GENERIC_UPDATE', 'TMS_ORDER_C_GENERIC_DELETE']);
+    TestBed.configureTestingModule({
+      providers: [
+        provideSdGeneric({ adapters: [] }),
+        provideSdGenericEntity({ module: 'tms', entity: 'order', hiddenDefaults: ['delete', 'export'] }),
+        { provide: SdPermissionService, useValue: { hasPermission: (code: string) => codes.has(code) } },
+        SdGenericPermissionService,
+      ],
+    });
+    const service = TestBed.inject(SdGenericPermissionService);
+    expect(service.allows('tms', 'order', 'update'))
+      .withContext('granted, not hidden')
+      .toBeTrue();
+    expect(service.allows('tms', 'order', 'delete'))
+      .withContext('granted but hidden')
+      .toBeFalse();
+    expect(service.allows('tms', 'order', 'create'))
+      .withContext('not granted')
+      .toBeFalse();
+    expect(service.allows('tms', 'order', 'list'))
+      .withContext('list cannot be hidden')
+      .toBeTrue();
+    expect(service.hides('tms', 'order', 'export')).toBeTrue();
+    expect(service.hides('tms', 'trip', 'delete'))
+      .withContext('another entity')
+      .toBeFalse();
   });
 
   it('checks custom action codes and treats an absent code as allowed (AC-018)', () => {

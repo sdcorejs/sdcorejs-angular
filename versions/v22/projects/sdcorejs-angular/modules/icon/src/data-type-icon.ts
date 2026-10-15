@@ -1,5 +1,5 @@
 import {
-  LucideAlignLeft,
+  LucideAlignJustify,
   LucideBanknote,
   LucideBinary,
   LucideBraces,
@@ -88,12 +88,12 @@ export const SD_DATA_TYPE_ICON: Readonly<Record<SdDataTypeIconKey, string>> = /*
   file: 'upload_file',
 });
 
-/** Khoá i18n tên kiểu dữ liệu (`core.data-type.<key>`); component dùng tự dịch. */
-export const SD_DATA_TYPE_LABEL: Readonly<Record<SdDataTypeIconKey, string>> = /* @__PURE__ */ dataTypeLabels();
+/** Khoá i18n tên kiểu dữ liệu (`core.data-type.<key>`), chưa dịch; component dùng tự dịch. */
+export const SD_DATA_TYPE_LABEL_KEY: Readonly<Record<SdDataTypeIconKey, string>> = /* @__PURE__ */ dataTypeLabelKeys();
 
 // why: dựng trong một hàm để một lời gọi `@__PURE__` bao trọn — đánh dấu thẳng `Object.freeze(...)` thì bundler vẫn
 // giữ các lời gọi lồng bên trong (`Object.fromEntries`, `Object.keys`).
-function dataTypeLabels(): Readonly<Record<SdDataTypeIconKey, string>> {
+function dataTypeLabelKeys(): Readonly<Record<SdDataTypeIconKey, string>> {
   return Object.freeze(
     Object.fromEntries(Object.keys(SD_DATA_TYPE_ICON).map(key => [key, `core.data-type.${key}`])) as Record<SdDataTypeIconKey, string>
   );
@@ -107,7 +107,7 @@ function dataTypeLabels(): Readonly<Record<SdDataTypeIconKey, string>> {
  * Material không phải tải thêm icon nào.
  */
 export const SD_DATA_TYPE_LUCIDE_ICONS: readonly SdLucideIconRegistration[] = /* @__PURE__ */ Object.freeze([
-  LucideAlignLeft,
+  LucideAlignJustify,
   LucideBanknote,
   LucideBinary,
   LucideBraces,
@@ -132,5 +132,6 @@ export const SD_DATA_TYPE_LUCIDE_ICONS: readonly SdLucideIconRegistration[] = /*
 
 /** Icon Material của một kiểu dữ liệu; khoá rỗng hoặc lạ trả về `'tune'` (cùng fallback với query-bar/query-builder). */
 export function sdDataTypeIcon(key: SdDataTypeIconKey | (string & {}) | null | undefined): string {
-  return (key && SD_DATA_TYPE_ICON[key as SdDataTypeIconKey]) || 'tune';
+  // why: `Object.hasOwn` — tên kế thừa từ prototype (`constructor`, `toString`) không phải khoá.
+  return key && Object.hasOwn(SD_DATA_TYPE_ICON, key) ? SD_DATA_TYPE_ICON[key as SdDataTypeIconKey] : 'tune';
 }

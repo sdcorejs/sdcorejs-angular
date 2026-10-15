@@ -25,7 +25,6 @@ import { sdGenericExternalFilters, sdGenericPageSize, sdGenericPrimaryKey, sdGen
 import type {
   SdGenericActionContext,
   SdGenericCustomAction,
-  SdGenericDefaultAction,
   SdGenericDisplay,
   SdGenericFormAction,
   SdGenericRecord,
@@ -70,7 +69,6 @@ export class GenericListPage implements SdGenericListHost {
     const generic = this.generic();
     return generic ? this.#scope.entity(generic.module, generic.entity) : undefined;
   });
-  readonly #hidden = computed(() => new Set<SdGenericDefaultAction>(this.#entityConfig()?.hiddenDefaults ?? []));
   readonly title = computed(() => {
     const schema = this.schema();
     if (!schema) return this.generic()?.entity ?? '';
@@ -78,8 +76,8 @@ export class GenericListPage implements SdGenericListHost {
       ? sdGenericRenderTitle(schema.list.title)
       : this.#i18n.t('core.module.generic.title.list', { label: schema.general.label });
   });
-  readonly canCreate = computed(() => this.#allowed('create', 'create'));
-  readonly canImport = computed(() => this.#allowed('import', 'import'));
+  readonly canCreate = computed(() => this.#allowed('create'));
+  readonly canImport = computed(() => this.#allowed('import'));
   readonly canConfigure = computed(() => {
     const generic = this.generic();
     return !!generic && this.#permission.can(generic.module, generic.entity, 'configuration');
@@ -137,9 +135,9 @@ export class GenericListPage implements SdGenericListHost {
     }
   }
 
-  #allowed(action: 'create' | 'import' | 'detail' | 'update' | 'delete', hidden: SdGenericDefaultAction): boolean {
+  #allowed(action: 'create' | 'import' | 'detail' | 'update' | 'delete'): boolean {
     const generic = this.generic();
-    return !!generic && !this.#hidden().has(hidden) && this.#permission.can(generic.module, generic.entity, action);
+    return !!generic && this.#permission.allows(generic.module, generic.entity, action);
   }
 
   #visibleActions(actions: SdGenericCustomAction[] | undefined, context: SdGenericActionContext): SdGenericCustomAction[] {
@@ -186,11 +184,7 @@ export class GenericListPage implements SdGenericListHost {
     });
     // why: a row opens its detail through a link on its first column (update when detail is not allowed); edit
     // lives in the detail screen and delete in the selector, so built-in row commands would only repeat them.
-    const target: SdGenericFormAction | null = this.#allowed('detail', 'detail')
-      ? 'detail'
-      : this.#allowed('update', 'update')
-        ? 'update'
-        : null;
+    const target: SdGenericFormAction | null = this.#allowed('detail') ? 'detail' : this.#allowed('update') ? 'update' : null;
     const commands: SdTableCommand<SdGenericRecord>[] = [];
     for (const action of (this.#entityConfig()?.rowCommands ?? []).filter(item => this.#permission.canCode(item.permission))) {
       commands.push({
@@ -201,7 +195,7 @@ export class GenericListPage implements SdGenericListHost {
       });
     }
     const bulk: SelectorAction[] = [];
-    if (this.#allowed('delete', 'delete'))
+    if (this.#allowed('delete'))
       bulk.push({
         icon: 'delete',
         color: 'error',
@@ -222,7 +216,7 @@ export class GenericListPage implements SdGenericListHost {
       columns: sdGenericTableColumns(schema, deps, target ? row => this.#open(row, schema, target) : undefined),
       filter: { externalFilters: sdGenericExternalFilters(schema, deps), hideExternalFilterToolbar: true },
       paginate: { pageSize: sdGenericPageSize(schema) },
-      ...(schema.list?.export && !this.#hidden().has('export')
+      ...(schema.list?.export && !this.#permission.hides(schema.module, schema.entity, 'export')
         ? { export: { visible: 'EXCEL' as const, fileName: `${schema.module}-${schema.entity}` } }
         : {}),
       ...(bulk.length ? { selector: { visible: true, actions: bulk } } : {}),

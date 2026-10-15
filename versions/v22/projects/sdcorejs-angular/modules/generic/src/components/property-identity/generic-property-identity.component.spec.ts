@@ -42,7 +42,18 @@ describe('GenericPropertyIdentity', () => {
     const fixture = await render();
     const root = fixture.nativeElement as HTMLElement;
     expect(root.querySelector('.projected')?.textContent).toBe('Customer email');
-    expect(root.querySelector('[data-role="key"]')?.textContent?.trim()).toBe('customerEmail');
+    expect(root.querySelector('.cfg-identity__key')?.textContent?.trim()).toBe('customerEmail');
+  });
+
+  it('names a data type it does not know by its raw value, with the fallback icon', async () => {
+    const fixture = await render();
+    // why: the backend schema is not validated, so a type outside SdGenericDataType can reach the screen.
+    fixture.componentInstance.property.set({ key: 'ref', label: 'Ref', dataType: 'uuid' as SdGenericProperty['dataType'] });
+    await fixture.whenStable();
+    const icon = fixture.debugElement.query(By.directive(SdIcon)).componentInstance as SdIcon;
+    expect(icon.name()).toBe('tune');
+    expect(icon.ariaLabel()).toBe('uuid');
+    expect(fixture.debugElement.query(By.directive(SdTooltipDirective)).injector.get(SdTooltipDirective).content()).toBe('uuid');
   });
 
   it('follows the property when it changes', async () => {
@@ -58,6 +69,6 @@ describe('GenericPropertyIdentity', () => {
     const icon = fixture.debugElement.query(By.directive(SdIcon)).componentInstance as SdIcon;
     expect(icon.name()).toBe('hub');
     expect(icon.ariaLabel()).toBe(TestBed.inject(I18nService).t('core.data-type.relation'));
-    expect((fixture.nativeElement as HTMLElement).querySelector('[data-role="key"]')?.textContent?.trim()).toBe('owners');
+    expect((fixture.nativeElement as HTMLElement).querySelector('.cfg-identity__key')?.textContent?.trim()).toBe('owners');
   });
 });

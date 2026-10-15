@@ -1,9 +1,9 @@
-@let _typeLabel = typeLabelKey() | sdTranslate;
+@let _typeLabel = typeLabel();
 <!-- why: SdIcon has no tooltip input, so the tooltip sits on a wrapper (D-016); the icon itself carries the accessible name. -->
-<span class="cfg-identity__icon" data-role="data-type" [sdTooltip]="_typeLabel">
+<span class="cfg-identity__icon" [sdTooltip]="_typeLabel">
   <sd-icon size="sm" [name]="icon()" [ariaLabel]="_typeLabel"></sd-icon>
 </span>
 <span class="cfg-identity__text">
   <ng-content></ng-content>
-  <span class="cfg-identity__key" data-role="key">{{ property().key }}</span>
+  <span class="cfg-identity__key">{{ property().key }}</span>
 </span>

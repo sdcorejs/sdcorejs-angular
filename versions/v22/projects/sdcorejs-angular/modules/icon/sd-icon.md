@@ -88,7 +88,7 @@ One shared icon per data type, used by the generic module (configuration rows) a
 | --- | --- |
 | `SdDataTypeIconKey` | The 22 keys: `string`, `string-multiple`, `email`, `phone`, `url`, `password`, `text`, `number`, `integer`, `decimal`, `currency`, `percent`, `boolean`, `date`, `date-multiple`, `datetime`, `time`, `enum`, `enum-multiple`, `relation`, `json`, `file`. |
 | `SD_DATA_TYPE_ICON` | Material icon name of each key. |
-| `SD_DATA_TYPE_LABEL` | i18n key of each type name, `core.data-type.<key>`; translate it with `SdTranslatePipe` or `I18nService.t`. |
+| `SD_DATA_TYPE_LABEL_KEY` | i18n key of each type name, `core.data-type.<key>`; translate it with `SdTranslatePipe` or `I18nService.t`. |
 | `sdDataTypeIcon(key)` | Icon of a key; an empty or unknown key returns `'tune'`, the fallback used by query-bar and query-builder. |
 | `SD_DATA_TYPE_LUCIDE_ICONS` | Lucide registrations of every data-type icon. |
 
@@ -98,7 +98,7 @@ One shared icon per data type, used by the generic module (configuration rows) a
 
 The keys follow data semantics, not form widgets: each consumer maps its own model to a key. For example, the generic module maps `dataType` + `format` + `multiple`. A type that holds several values always takes the `-multiple` suffix.
 
-`SD_DEFAULT_LUCIDE_ALIASES` maps every data-type Material name to its Lucide icon. The Lucide target follows the Material glyph, so `schedule` and `access_time` both render `clock`.
+`SD_DEFAULT_LUCIDE_ALIASES` maps every data-type Material name to its Lucide icon. The Lucide target follows the Material glyph, so `schedule` and `access_time` both render `clock`. One exception: `notes` (`text`) renders `align-justify`, because Lucide draws `align-left` and `text` (the target of `text_fields`, the `string` icon) with the same glyph.
 
 These aliases also apply to existing uses of the same names under the Lucide renderer. For example, `schedule` in `sd-time` and `sd-datetime` now renders `clock`.
 
@@ -109,6 +109,8 @@ import { provideSdIcon, SD_DATA_TYPE_LUCIDE_ICONS } from '@sdcorejs/angular/modu
 
 provideSdIcon({ defaultFontSet: 'lucide', lucideIcons: [...SD_DATA_TYPE_LUCIDE_ICONS /*, app icons */] });
 ```
+
+`lucideIcons` also takes the readonly set as is: `provideSdIcon({ lucideIcons: SD_DATA_TYPE_LUCIDE_ICONS })`.
 
 Material apps need nothing. `number` uses the Material name `numbers`, not `tag`, because the default Material alias turns `tag` into `local_offer`.
 

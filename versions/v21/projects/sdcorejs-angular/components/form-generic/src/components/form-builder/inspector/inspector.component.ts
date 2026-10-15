@@ -864,8 +864,9 @@ export class InspectorComponent {
 
   // ── Group ─────────────────────────────────────────────────────────────────
 
+  /** Picking the current icon again removes it, like the page icon. */
   pickIcon(icon: string): void {
-    this.set('icon', icon);
+    this.set('icon', this.group()?.icon === icon ? undefined : icon);
   }
 
   /** Page icon from the same presets as a group; picking the current icon again removes it. */

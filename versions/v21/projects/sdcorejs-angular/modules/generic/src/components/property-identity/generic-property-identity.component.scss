@@ -1,0 +1,28 @@
+// Identity of a configuration row: type icon, label (or checkbox) and the property key under it.
+:host {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.cfg-identity__icon {
+  display: inline-flex;
+  flex: none;
+  margin-top: 2px;
+  color: var(--sd-text-secondary);
+}
+
+.cfg-identity__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  color: var(--sd-text);
+  overflow-wrap: anywhere;
+}
+
+.cfg-identity__key {
+  color: var(--sd-text-secondary);
+  font-family: var(--sd-font-family-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-size: var(--sd-font-size-12, 12px);
+}

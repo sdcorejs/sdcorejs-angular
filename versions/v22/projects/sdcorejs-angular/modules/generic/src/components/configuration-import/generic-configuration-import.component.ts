@@ -30,18 +30,25 @@ export class GenericConfigurationImport {
     const selected = new Map(this.columns().map(column => [column.key, column]));
     return this.schema()
       .general.properties.filter(sdGenericImportable)
-      .map(property => ({ property, selected: selected.has(property.key), matchField: selected.get(property.key)?.matchField ?? '' }));
+      .map(property => ({
+        property,
+        // why: same fallback as the list tab — a property without a label is named by its key.
+        label: property.label || property.key,
+        selected: selected.has(property.key),
+        matchField: selected.get(property.key)?.matchField ?? '',
+      }));
   });
   /** Only an imported single-value column can match existing records (AC-020). */
   readonly upsertOptions = computed(() =>
     sdGenericImportColumns(this.schema())
       .filter(column => !column.property.multiple)
-      .map(column => ({ value: column.key, display: column.property.label }))
+      .map(column => ({ value: column.key, display: column.property.label || column.key }))
   );
 
-  toggle(key: string, on: unknown): void {
+  /** Same contract as the list tab: adding a column appends it to the end. */
+  toggleColumn(key: string, selected: boolean): void {
     const columns = this.columns();
-    this.#setImport({ columns: on === true ? [...columns, { key }] : columns.filter(column => column.key !== key) });
+    this.#setImport({ columns: selected ? [...columns, { key }] : columns.filter(column => column.key !== key) });
   }
 
   setMatchField(key: string, raw: unknown): void {
@@ -61,5 +68,9 @@ export class GenericConfigurationImport {
     const next = { ...schema.import, ...patch };
     if (Object.hasOwn(patch, 'upsertKey') && patch.upsertKey === undefined) delete next.upsertKey;
     this.schemaChange.emit({ ...schema, import: next });
+  }
+
+  flag(value: unknown): boolean {
+    return value === true;
   }
 }

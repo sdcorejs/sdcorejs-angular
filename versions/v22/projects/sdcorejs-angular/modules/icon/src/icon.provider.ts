@@ -85,5 +85,10 @@ export function normalizeSdLucideIcons(registrations?: SdLucideIconRegistrations
     return [];
   }
 
-  return Array.isArray(registrations) ? registrations : Object.values(registrations);
+  // why: `Array.isArray` không thu hẹp được `readonly T[]`; copy để mảng trả về luôn là mảng mới, không lộ input.
+  return isReadonlyArray(registrations) ? [...registrations] : Object.values(registrations);
+}
+
+function isReadonlyArray<T>(value: readonly T[] | object): value is readonly T[] {
+  return Array.isArray(value);
 }

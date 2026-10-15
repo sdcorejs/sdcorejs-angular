@@ -55,8 +55,9 @@ export class GenericConfigurationPage {
   /** Default configuration (backend schema after the entity schema function): what a stored one may only narrow. */
   readonly base = computed(() => this.generic()?.resolved?.base ?? null);
   readonly title = computed(() => {
-    const draft = this.draft();
-    return draft ? this.#i18n.t('core.module.generic.configuration.title', { label: draft.general.label }) : '';
+    // why: like the list page, a schema that failed to load still names the screen, after its entity.
+    const label = this.draft()?.general.label ?? this.generic()?.entity;
+    return label === undefined ? '' : this.#i18n.t('core.module.generic.configuration.title', { label });
   });
 
   constructor() {
