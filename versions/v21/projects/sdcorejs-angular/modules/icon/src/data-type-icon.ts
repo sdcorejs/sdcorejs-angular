@@ -29,10 +29,11 @@ import type { SdLucideIconRegistration } from './icon.model';
  *
  * why: `modules/icon` là entry point lá mà generic, form-generic… cùng import, nên bộ khoá này không được
  * phụ thuộc model của bất kỳ component nào — mỗi nơi tự quy dữ liệu của mình về một khoá.
+ * Kiểu giữ nhiều giá trị luôn dùng hậu tố `-multiple`, khớp cờ `multiple` của property generic và form-generic.
  */
 export type SdDataTypeIconKey =
   | 'string'
-  | 'string-list'
+  | 'string-multiple'
   | 'email'
   | 'phone'
   | 'url'
@@ -45,7 +46,7 @@ export type SdDataTypeIconKey =
   | 'percent'
   | 'boolean'
   | 'date'
-  | 'date-list'
+  | 'date-multiple'
   | 'datetime'
   | 'time'
   | 'enum'
@@ -59,10 +60,12 @@ export type SdDataTypeIconKey =
  *
  * why: `number` dùng `numbers` chứ không dùng `tag` — `SD_DEFAULT_MATERIAL_ALIASES` đổi `tag` thành
  * `local_offer` (hình nhãn giá).
+ * why: các hằng của file này đánh dấu `@__PURE__` — lời gọi `Object.freeze` ở top-level bị bundler coi là có side
+ * effect, nên nếu không đánh dấu thì app nào import `modules/icon` cũng phải tải chúng (kèm các class Lucide).
  */
-export const SD_DATA_TYPE_ICON: Readonly<Record<SdDataTypeIconKey, string>> = Object.freeze({
+export const SD_DATA_TYPE_ICON: Readonly<Record<SdDataTypeIconKey, string>> = /* @__PURE__ */ Object.freeze({
   string: 'text_fields',
-  'string-list': 'label',
+  'string-multiple': 'label',
   email: 'mail',
   phone: 'call',
   url: 'link',
@@ -75,7 +78,7 @@ export const SD_DATA_TYPE_ICON: Readonly<Record<SdDataTypeIconKey, string>> = Ob
   percent: 'percent',
   boolean: 'check_box',
   date: 'calendar_month',
-  'date-list': 'event_note',
+  'date-multiple': 'event_note',
   datetime: 'schedule',
   time: 'access_time',
   enum: 'arrow_drop_down_circle',
@@ -86,9 +89,15 @@ export const SD_DATA_TYPE_ICON: Readonly<Record<SdDataTypeIconKey, string>> = Ob
 });
 
 /** Khoá i18n tên kiểu dữ liệu (`core.data-type.<key>`); component dùng tự dịch. */
-export const SD_DATA_TYPE_LABEL: Readonly<Record<SdDataTypeIconKey, string>> = Object.freeze(
-  Object.fromEntries(Object.keys(SD_DATA_TYPE_ICON).map(key => [key, `core.data-type.${key}`])) as Record<SdDataTypeIconKey, string>
-);
+export const SD_DATA_TYPE_LABEL: Readonly<Record<SdDataTypeIconKey, string>> = /* @__PURE__ */ dataTypeLabels();
+
+// why: dựng trong một hàm để một lời gọi `@__PURE__` bao trọn — đánh dấu thẳng `Object.freeze(...)` thì bundler vẫn
+// giữ các lời gọi lồng bên trong (`Object.fromEntries`, `Object.keys`).
+function dataTypeLabels(): Readonly<Record<SdDataTypeIconKey, string>> {
+  return Object.freeze(
+    Object.fromEntries(Object.keys(SD_DATA_TYPE_ICON).map(key => [key, `core.data-type.${key}`])) as Record<SdDataTypeIconKey, string>
+  );
+}
 
 /**
  * Đăng ký Lucide cho mọi icon của bộ kiểu dữ liệu.
@@ -97,7 +106,7 @@ export const SD_DATA_TYPE_LABEL: Readonly<Record<SdDataTypeIconKey, string>> = O
  * này là opt-in — app dùng Lucide truyền vào `provideSdIcon({ lucideIcons: [...SD_DATA_TYPE_LUCIDE_ICONS] })`, app
  * Material không phải tải thêm icon nào.
  */
-export const SD_DATA_TYPE_LUCIDE_ICONS: readonly SdLucideIconRegistration[] = Object.freeze([
+export const SD_DATA_TYPE_LUCIDE_ICONS: readonly SdLucideIconRegistration[] = /* @__PURE__ */ Object.freeze([
   LucideAlignLeft,
   LucideBanknote,
   LucideBinary,

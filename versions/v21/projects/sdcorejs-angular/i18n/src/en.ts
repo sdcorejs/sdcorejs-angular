@@ -1313,7 +1313,7 @@ export const EN_MESSAGES = {
   'core.module.generic.import.match-ambiguous': 'Several {label} records match "{value}".',
   // ---- Data types (shared icon set, @sdcorejs/angular/modules/icon) ----
   'core.data-type.string': 'Text',
-  'core.data-type.string-list': 'Text list',
+  'core.data-type.string-multiple': 'Text list',
   'core.data-type.email': 'Email',
   'core.data-type.phone': 'Phone number',
   'core.data-type.url': 'URL',
@@ -1326,7 +1326,7 @@ export const EN_MESSAGES = {
   'core.data-type.percent': 'Percentage',
   'core.data-type.boolean': 'Yes/No',
   'core.data-type.date': 'Date',
-  'core.data-type.date-list': 'Date list',
+  'core.data-type.date-multiple': 'Date list',
   'core.data-type.datetime': 'Date and time',
   'core.data-type.time': 'Time',
   'core.data-type.enum': 'Option',

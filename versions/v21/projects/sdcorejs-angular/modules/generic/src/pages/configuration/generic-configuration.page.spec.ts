@@ -152,6 +152,23 @@ describe('GenericConfigurationPage', () => {
     expect(inputs).not.toContain('code');
   });
 
+  it('styles the stored value of each enum option as a secondary code', async () => {
+    const { root } = await open(value => ({
+      ...value,
+      general: {
+        ...value.general,
+        properties: [
+          ...value.general.properties,
+          { key: 'status', label: 'Status', dataType: 'enum', enums: [{ value: 'NEW', label: 'New' }] },
+        ],
+      },
+    }));
+    const option = root.querySelector('.cfg-option__value') as HTMLElement;
+    expect(option?.textContent?.trim()).toBe('NEW');
+    // why: a class without a matching rule renders like body text; the shared stylesheet must style the value.
+    expect(getComputedStyle(option).fontSize).toBe('12px');
+  });
+
   it('shows the key and the data-type icon of every import column (AC-009)', async () => {
     const { harness, root } = await open();
     (root.querySelectorAll('[role="tab"]')[3] as HTMLElement).click();
@@ -162,7 +179,7 @@ describe('GenericConfigurationPage', () => {
     expect(row.querySelector('sd-generic-property-identity')).not.toBeNull();
     expect(row.querySelector('[data-role="key"]')!.textContent?.trim()).toBe('tags');
     expect(row.querySelector('[data-role="data-type"] sd-icon')?.getAttribute('aria-label')).toBe(
-      TestBed.inject(I18nService).t('core.data-type.string-list')
+      TestBed.inject(I18nService).t('core.data-type.string-multiple')
     );
   });
 });

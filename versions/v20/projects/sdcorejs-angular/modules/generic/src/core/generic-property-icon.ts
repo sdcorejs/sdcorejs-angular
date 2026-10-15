@@ -13,7 +13,7 @@ export function sdGenericPropertyIconKey(property: Pick<SdGenericProperty, 'data
   const format = property.format as SdDataTypeIconKey | undefined;
   switch (property.dataType) {
     case 'string':
-      if (property.multiple) return 'string-list';
+      if (property.multiple) return 'string-multiple';
       return format && STRING_FORMATS.has(format) ? format : 'string';
     case 'number':
       return format && NUMBER_FORMATS.has(format) ? format : 'number';

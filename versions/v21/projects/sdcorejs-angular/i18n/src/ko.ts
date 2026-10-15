@@ -1311,7 +1311,7 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.module.generic.import.match-ambiguous': '"{value}"과(와) 일치하는 {label}이(가) 여러 개입니다.',
   // ---- Data types (shared icon set, @sdcorejs/angular/modules/icon) ----
   'core.data-type.string': '문자열',
-  'core.data-type.string-list': '문자열 목록',
+  'core.data-type.string-multiple': '문자열 목록',
   'core.data-type.email': '이메일',
   'core.data-type.phone': '전화번호',
   'core.data-type.url': 'URL',
@@ -1324,7 +1324,7 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.data-type.percent': '백분율',
   'core.data-type.boolean': '예/아니요',
   'core.data-type.date': '날짜',
-  'core.data-type.date-list': '날짜 목록',
+  'core.data-type.date-multiple': '날짜 목록',
   'core.data-type.datetime': '날짜 및 시간',
   'core.data-type.time': '시간',
   'core.data-type.enum': '선택 항목',

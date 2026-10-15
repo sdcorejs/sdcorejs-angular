@@ -8,7 +8,7 @@ import { provideSdIcon } from './icon.provider';
 /** [Material name, Lucide target] of every key, as approved in the architecture (D-013, D-015). */
 const EXPECTED: Record<SdDataTypeIconKey, readonly [string, string]> = {
   string: ['text_fields', 'text'],
-  'string-list': ['label', 'tag'],
+  'string-multiple': ['label', 'tag'],
   email: ['mail', 'mail'],
   phone: ['call', 'phone'],
   url: ['link', 'link'],
@@ -21,7 +21,7 @@ const EXPECTED: Record<SdDataTypeIconKey, readonly [string, string]> = {
   percent: ['percent', 'percent'],
   boolean: ['check_box', 'square-check'],
   date: ['calendar_month', 'calendar-days'],
-  'date-list': ['event_note', 'calendar-range'],
+  'date-multiple': ['event_note', 'calendar-range'],
   datetime: ['schedule', 'clock'],
   time: ['access_time', 'clock'],
   enum: ['arrow_drop_down_circle', 'circle-chevron-down'],

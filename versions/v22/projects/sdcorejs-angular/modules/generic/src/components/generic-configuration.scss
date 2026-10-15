@@ -185,6 +185,14 @@
   }
 }
 
+// The stored value of an option: a code, styled like the property key.
+.cfg-option__value {
+  color: var(--sd-text-secondary);
+  font-family: var(--sd-font-family-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-size: var(--sd-font-size-12, 12px);
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 767px) {
   .cfg-rows--properties .cfg-row,
   .cfg-rows--columns .cfg-row,

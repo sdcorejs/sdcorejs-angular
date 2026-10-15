@@ -76,8 +76,8 @@ describe('form builder palette · icons', () => {
     date: 'date',
     datetime: 'datetime',
     time: 'time',
-    'chip-string': 'string-list',
-    'chip-calendar': 'date-list',
+    'chip-string': 'string-multiple',
+    'chip-calendar': 'date-multiple',
     upload: 'file',
     json: 'json',
   };

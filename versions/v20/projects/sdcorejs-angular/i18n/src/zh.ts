@@ -1303,7 +1303,7 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.module.generic.import.match-ambiguous': '有多个{label}与 "{value}" 匹配。',
   // ---- Data types (shared icon set, @sdcorejs/angular/modules/icon) ----
   'core.data-type.string': '文本',
-  'core.data-type.string-list': '文本列表',
+  'core.data-type.string-multiple': '文本列表',
   'core.data-type.email': '电子邮件',
   'core.data-type.phone': '电话号码',
   'core.data-type.url': 'URL',
@@ -1316,7 +1316,7 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.data-type.percent': '百分比',
   'core.data-type.boolean': '是/否',
   'core.data-type.date': '日期',
-  'core.data-type.date-list': '日期列表',
+  'core.data-type.date-multiple': '日期列表',
   'core.data-type.datetime': '日期时间',
   'core.data-type.time': '时间',
   'core.data-type.enum': '选项',

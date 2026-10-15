@@ -1317,7 +1317,7 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.module.generic.import.match-ambiguous': '"{value}" に一致する{label}が複数あります。',
   // ---- Data types (shared icon set, @sdcorejs/angular/modules/icon) ----
   'core.data-type.string': '文字列',
-  'core.data-type.string-list': '文字列リスト',
+  'core.data-type.string-multiple': '文字列リスト',
   'core.data-type.email': 'メール',
   'core.data-type.phone': '電話番号',
   'core.data-type.url': 'URL',
@@ -1330,7 +1330,7 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.data-type.percent': 'パーセント',
   'core.data-type.boolean': 'はい/いいえ',
   'core.data-type.date': '日付',
-  'core.data-type.date-list': '日付リスト',
+  'core.data-type.date-multiple': '日付リスト',
   'core.data-type.datetime': '日時',
   'core.data-type.time': '時刻',
   'core.data-type.enum': '選択肢',
