@@ -1,6 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { setInput } from '../../../testing/test-utils';
-import { SD_DATA_TYPE_ICON, SD_DATA_TYPE_LABEL, SD_DATA_TYPE_LUCIDE_ICONS, sdDataTypeIcon, type SdDataTypeIconKey } from './data-type-icon';
+import {
+  SD_DATA_TYPE_ICON,
+  SD_DATA_TYPE_LABEL_KEY,
+  SD_DATA_TYPE_LUCIDE_ICONS,
+  sdDataTypeIcon,
+  type SdDataTypeIconKey,
+} from './data-type-icon';
 import { SdIcon } from './icon.component';
 import { SD_DEFAULT_LUCIDE_ALIASES, SD_DEFAULT_MATERIAL_ALIASES, type SdLucideIconRegistration } from './icon.model';
 import { provideSdIcon } from './icon.provider';
@@ -13,7 +19,7 @@ const EXPECTED: Record<SdDataTypeIconKey, readonly [string, string]> = {
   phone: ['call', 'phone'],
   url: ['link', 'link'],
   password: ['lock', 'lock-keyhole'],
-  text: ['notes', 'align-left'],
+  text: ['notes', 'align-justify'],
   number: ['numbers', 'hash'],
   integer: ['pin', 'binary'],
   decimal: ['calculate', 'calculator'],
@@ -41,7 +47,7 @@ function lucideNames(registration: SdLucideIconRegistration): string[] {
 describe('data-type icon set', () => {
   it('declares exactly the 22 data-type keys', () => {
     expect(Object.keys(SD_DATA_TYPE_ICON).sort()).toEqual([...KEYS].sort());
-    expect(Object.keys(SD_DATA_TYPE_LABEL).sort()).toEqual([...KEYS].sort());
+    expect(Object.keys(SD_DATA_TYPE_LABEL_KEY).sort()).toEqual([...KEYS].sort());
   });
 
   it('maps every key to its Material name', () => {
@@ -51,6 +57,7 @@ describe('data-type icon set', () => {
   it('resolves a key through sdDataTypeIcon and falls back to tune', () => {
     for (const key of KEYS) expect(sdDataTypeIcon(key)).withContext(key).toBe(EXPECTED[key][0]);
     expect(sdDataTypeIcon('unknown-type')).toBe('tune');
+    expect(sdDataTypeIcon('constructor')).withContext('inherited member').toBe('tune');
     expect(sdDataTypeIcon('')).toBe('tune');
     expect(sdDataTypeIcon(null)).toBe('tune');
     expect(sdDataTypeIcon(undefined)).toBe('tune');
@@ -75,14 +82,27 @@ describe('data-type icon set', () => {
     for (const key of KEYS) expect(registered.has(EXPECTED[key][1])).withContext(key).toBeTrue();
   });
 
+  it('draws string and text with different Lucide glyphs', () => {
+    // why: Lucide gộp alias vào một class — `text` và `align-left` cùng là `text-align-start`, nên hai kiểu từng giống
+    // hệt nhau dưới Lucide. So tên chuẩn của registration chứ không so tên alias.
+    const glyphOf = (target: string) => {
+      const registration = SD_DATA_TYPE_LUCIDE_ICONS.find(item => lucideNames(item).includes(target));
+      return registration ? lucideNames(registration)[0] : undefined;
+    };
+    expect(glyphOf(EXPECTED.string[1])).toBeDefined();
+    expect(glyphOf(EXPECTED.text[1])).toBeDefined();
+    expect(glyphOf(EXPECTED.string[1])).not.toBe(glyphOf(EXPECTED.text[1]));
+  });
+
   it('labels every key with an i18n key core.data-type.<key>', () => {
-    for (const key of KEYS) expect(SD_DATA_TYPE_LABEL[key]).withContext(key).toBe(`core.data-type.${key}`);
+    for (const key of KEYS) expect(SD_DATA_TYPE_LABEL_KEY[key]).withContext(key).toBe(`core.data-type.${key}`);
   });
 
   it('renders every data-type icon as an svg under the Lucide renderer', async () => {
     await TestBed.configureTestingModule({
       imports: [SdIcon],
-      providers: [provideSdIcon({ defaultFontSet: 'lucide', lucideIcons: [...SD_DATA_TYPE_LUCIDE_ICONS] })],
+      // why: truyền thẳng danh sách readonly, không cần spread ra mảng mới.
+      providers: [provideSdIcon({ defaultFontSet: 'lucide', lucideIcons: SD_DATA_TYPE_LUCIDE_ICONS })],
     }).compileComponents();
 
     for (const key of KEYS) {

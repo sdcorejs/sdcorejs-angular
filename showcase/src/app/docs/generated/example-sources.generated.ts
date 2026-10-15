@@ -3594,7 +3594,7 @@ export class HistoryDemoComponent {
     typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
-import { SD_DATA_TYPE_ICON, SD_DATA_TYPE_LABEL, SdIcon, type SdDataTypeIconKey } from '@sdcorejs/angular/modules/icon';
+import { SD_DATA_TYPE_ICON, SD_DATA_TYPE_LABEL_KEY, SdIcon, type SdDataTypeIconKey } from '@sdcorejs/angular/modules/icon';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 
 interface IconDemoItem {
@@ -3669,11 +3669,12 @@ interface IconDemoItem {
         note="One icon per data type, shared by the generic module and the form builder. Lucide apps register SD_DATA_TYPE_LUCIDE_ICONS in provideSdIcon."
         [props]="[
           { name: 'SD_DATA_TYPE_ICON', value: 'map' },
-          { name: 'sdDataTypeIcon()', value: 'method' },
-          { name: 'SD_DATA_TYPE_LUCIDE_ICONS', value: 'provider' },
+          { name: 'SD_DATA_TYPE_LABEL_KEY', value: 'map (i18n keys)' },
+          { name: 'sdDataTypeIcon()', value: 'function' },
+          { name: 'SD_DATA_TYPE_LUCIDE_ICONS', value: 'array (lucideIcons)' },
         ]">
         @for (key of dataTypes; track key) {
-          @let _label = labels[key] | sdTranslate;
+          @let _label = labelKeys[key] | sdTranslate;
           <span class="icon-demo-item icon-demo-type" [attr.data-autoId]="'icon-data-type-' + key">
             <sd-icon [name]="icons[key]" size="md" [ariaLabel]="_label"></sd-icon>
             <sd-icon [name]="icons[key]" fontSet="lucide" size="md" [ariaLabel]="_label + ' (Lucide)'"></sd-icon>
@@ -3748,7 +3749,7 @@ export class IconDemoComponent {
   readonly sizes = ['sm', 'md', 'lg', '28px'];
 
   readonly icons = SD_DATA_TYPE_ICON;
-  readonly labels = SD_DATA_TYPE_LABEL;
+  readonly labelKeys = SD_DATA_TYPE_LABEL_KEY;
   readonly dataTypes = Object.keys(SD_DATA_TYPE_ICON) as SdDataTypeIconKey[];
 }
 `,
@@ -20226,11 +20227,12 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     note="One icon per data type, shared by the generic module and the form builder. Lucide apps register SD_DATA_TYPE_LUCIDE_ICONS in provideSdIcon."
     [props]="[
       { name: 'SD_DATA_TYPE_ICON', value: 'map' },
-      { name: 'sdDataTypeIcon()', value: 'method' },
-      { name: 'SD_DATA_TYPE_LUCIDE_ICONS', value: 'provider' },
+      { name: 'SD_DATA_TYPE_LABEL_KEY', value: 'map (i18n keys)' },
+      { name: 'sdDataTypeIcon()', value: 'function' },
+      { name: 'SD_DATA_TYPE_LUCIDE_ICONS', value: 'array (lucideIcons)' },
     ]">
     @for (key of dataTypes; track key) {
-      @let _label = labels[key] | sdTranslate;
+      @let _label = labelKeys[key] | sdTranslate;
       <span class="icon-demo-item icon-demo-type" [attr.data-autoId]="'icon-data-type-' + key">
         <sd-icon [name]="icons[key]" size="md" [ariaLabel]="_label"></sd-icon>
         <sd-icon [name]="icons[key]" fontSet="lucide" size="md" [ariaLabel]="_label + ' (Lucide)'"></sd-icon>

@@ -1,7 +1,7 @@
 import { Injectable, Injector, inject } from '@angular/core';
 import { SdPermissionService } from '@sdcorejs/angular/modules/permission';
 import { sdGenericPermissionCode } from '../core';
-import type { SdGenericAction } from '../models';
+import type { SdGenericAction, SdGenericDefaultAction } from '../models';
 import { SD_GENERIC_SCOPE } from '../registry';
 
 /**
@@ -23,6 +23,16 @@ export class SdGenericPermissionService {
 
   can(module: string, entity: string, action: SdGenericAction): boolean {
     return !this.enabled || this.#service().hasPermission(sdGenericPermissionCode(module, entity, action));
+  }
+
+  /** Whether `provideSdGenericEntity({ hiddenDefaults })` hides the default action; `list` and `configuration` never are. */
+  hides(module: string, entity: string, action: SdGenericAction | SdGenericDefaultAction): boolean {
+    return this.#scope.entity(module, entity)?.hiddenDefaults?.includes(action as SdGenericDefaultAction) ?? false;
+  }
+
+  /** The one rule of a default action, shared by the screens and the route guard: not hidden, and permitted. */
+  allows(module: string, entity: string, action: SdGenericAction): boolean {
+    return !this.hides(module, entity, action) && this.can(module, entity, action);
   }
 
   /** A custom action without `permission` is allowed. */

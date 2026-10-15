@@ -98,8 +98,15 @@ export class GenericConfigurationList {
   }
 
   move(key: string, delta: -1 | 1): void {
-    const index = this.columns().findIndex(column => column.key === key);
-    if (index >= 0) this.reorder(index, index + delta);
+    // why: `first` / `last` of the buttons come from the listed rows; move past the next listed row, like drop().
+    const rows = this.listedRows();
+    const target = rows[rows.findIndex(row => row.column.key === key) + delta]?.column.key;
+    if (!target) return;
+    const columns = this.columns();
+    this.reorder(
+      columns.findIndex(column => column.key === key),
+      columns.findIndex(column => column.key === target)
+    );
   }
 
   drop(event: CdkDragDrop<unknown>): void {
@@ -123,8 +130,11 @@ export class GenericConfigurationList {
     moveItemInArray(columns, fromIndex, toIndex);
     this.setList({ columns });
     // why: a screen reader does not report that the row moved; announce the new position of the column.
-    const label = this.#properties().get(key)?.label ?? key;
-    void this.#announcer.announce(this.#i18n.t('core.module.generic.configuration.moved', { label, position: toIndex + 1 }));
+    const properties = this.#properties();
+    const label = properties.get(key)?.label || key;
+    // why: announce the position among the listed rows, which is what the user sees.
+    const position = columns.slice(0, toIndex + 1).filter(column => properties.has(column.key)).length;
+    void this.#announcer.announce(this.#i18n.t('core.module.generic.configuration.moved', { label, position }));
   }
 
   flag(value: unknown): boolean {

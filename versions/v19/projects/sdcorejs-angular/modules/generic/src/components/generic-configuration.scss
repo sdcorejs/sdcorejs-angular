@@ -1,4 +1,5 @@
-// Shared layout of the configuration tabs: sections of dense rows instead of one card per item.
+// Shared layout of the configuration tabs: sections of dense rows instead of one card per item. The row identity
+// (sd-generic-property-identity) has its own sheet, so this `:host` only styles the tabs.
 :host {
   display: flex;
   flex-direction: column;
@@ -76,38 +77,6 @@
 
 .cfg-rows--import .cfg-row {
   grid-template-columns: minmax(220px, 1.5fr) minmax(200px, 2fr);
-}
-
-// Identity of a row (sd-generic-property-identity): type icon, label (or checkbox) and the property key under it.
-// why: this sheet is shared with the tab components, whose `:host` is a padded column; reset both for the identity.
-:host(.cfg-identity) {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 8px;
-  min-width: 0;
-  padding-top: 0;
-}
-
-.cfg-identity__icon {
-  display: inline-flex;
-  flex: none;
-  margin-top: 2px;
-  color: var(--sd-text-secondary);
-}
-
-.cfg-identity__text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  color: var(--sd-text);
-  overflow-wrap: anywhere;
-}
-
-.cfg-identity__key {
-  color: var(--sd-text-secondary);
-  font-family: var(--sd-font-family-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
-  font-size: var(--sd-font-size-12, 12px);
 }
 
 // Column order: a drag handle (CDK drag-drop) next to the move buttons, which stay for keyboard users.

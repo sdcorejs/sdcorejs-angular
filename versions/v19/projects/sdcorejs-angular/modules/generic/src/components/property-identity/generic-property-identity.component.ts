@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { SdTooltipDirective } from '@sdcorejs/angular/directives';
-import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
-import { SD_DATA_TYPE_LABEL, SdIcon, sdDataTypeIcon } from '@sdcorejs/angular/modules/icon';
+import { I18nService } from '@sdcorejs/angular/i18n';
+import { SD_DATA_TYPE_LABEL_KEY, SdIcon, sdDataTypeIcon } from '@sdcorejs/angular/modules/icon';
 import { sdGenericPropertyIconKey } from '../../core';
 import type { SdGenericProperty } from '../../models';
 
@@ -12,15 +12,20 @@ import type { SdGenericProperty } from '../../models';
 @Component({
   selector: 'sd-generic-property-identity',
   templateUrl: './generic-property-identity.component.html',
-  styleUrl: '../generic-configuration.scss',
+  styleUrl: './generic-property-identity.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'cfg-identity' },
-  imports: [SdIcon, SdTooltipDirective, SdTranslatePipe],
+  imports: [SdIcon, SdTooltipDirective],
 })
 export class GenericPropertyIdentity {
+  readonly #i18n = inject(I18nService);
   readonly property = input.required<Pick<SdGenericProperty, 'key' | 'dataType' | 'format' | 'multiple'>>();
 
   readonly #typeKey = computed(() => sdGenericPropertyIconKey(this.property()));
   readonly icon = computed(() => sdDataTypeIcon(this.#typeKey()));
-  readonly typeLabelKey = computed(() => SD_DATA_TYPE_LABEL[this.#typeKey()]);
+  /** Translated type name; a data type outside the icon set has no i18n key, so its raw value is shown as is. */
+  readonly typeLabel = computed(() => {
+    const key = this.#typeKey();
+    return key ? this.#i18n.t(SD_DATA_TYPE_LABEL_KEY[key]) : String(this.property().dataType);
+  });
 }

@@ -24,8 +24,11 @@
 
 <ng-template #body let-formSchema>
   <div [attr.aria-busy]="loading() || null">
-    <!-- why: detail / update render once the record is there, so every field starts from its loaded value. -->
-    @if (action() === 'create' || record()) {
+    <!-- why: detail / update render once the record is there, so every field starts from its loaded value and a
+         failed load never shows an empty form; the load error takes its place. -->
+    @if (loadError(); as error) {
+      <sd-inform error data-autoId="generic-form-error" [title]="error"></sd-inform>
+    } @else if (action() === 'create' || record()) {
       <sd-form-render [schema]="formSchema" [form]="form" [viewed]="viewed()" [(value)]="value"></sd-form-render>
     }
   </div>
