@@ -5,6 +5,7 @@ export * from './generic-form';
 export * from './generic-import';
 export * from './generic-merge';
 export * from './generic-permission';
+export * from './generic-property-icon';
 export * from './generic-search';
 export * from './generic-title';
 export * from './generic-validate';

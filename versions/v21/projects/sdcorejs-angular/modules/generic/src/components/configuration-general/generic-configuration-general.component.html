@@ -14,10 +14,9 @@
     @for (row of rows(); track row.property.key) {
       @let property = row.property;
       <div class="cfg-row" role="group" [attr.aria-label]="property.label || property.key" [attr.data-autoId]="'generic-property-' + property.key">
-        <div class="cfg-key">
-          <span class="cfg-key__name" data-role="key">{{ property.key }}</span>
-          <span class="cfg-key__type" data-role="data-type">{{ property.dataType }}{{ property.multiple ? '[]' : '' }}</span>
-        </div>
+        <sd-generic-property-identity [property]="property">
+          <span>{{ property.label || property.key }}</span>
+        </sd-generic-property-identity>
         <sd-input
           size="sm"
           hideInlineError

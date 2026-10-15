@@ -99,6 +99,17 @@ describe('GenericListPage', () => {
     expect(result).toEqual({ items: [{ id: '1', code: 'SO1', amount: 5 }], total: 1 });
   });
 
+  it('shows external filters declared by provideSdGenericEntity, with the filter toolbar hidden (AC-002)', async () => {
+    const { page } = await open({
+      entity: {
+        schema: (base: SdGenericSchema) => ({ ...base, list: { ...base.list, externalFilters: [{ key: 'code', default: 'SO' }] } }),
+      },
+    });
+    const option = page.tableOption()!;
+    expect(option.filter?.externalFilters?.map(filter => filter.field)).toEqual(['code']);
+    expect(option.filter).toEqual(jasmine.objectContaining({ hideExternalFilterToolbar: true }));
+  });
+
   it('confirms before deleting one row and deletes selected rows one after another (AC-014)', async () => {
     const { page } = await open();
     const reload = spyOn(page, 'reload');

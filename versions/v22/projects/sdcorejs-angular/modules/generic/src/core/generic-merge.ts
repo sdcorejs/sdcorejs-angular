@@ -99,7 +99,11 @@ export const sdGenericMergeSchema = (storedInput: SdGenericSchema, currentInput:
       const listed = new Set(columns.map(column => column.key));
       schema.list.columns = [...columns, ...added.filter(key => !listed.has(key)).map(key => ({ key, visible: false }))];
     }
-    if (list.externalFilters) schema.list.externalFilters = list.externalFilters.filter(filter => keys.has(filter.key));
+    // why: external filters are declared in code (backend schema or provideSdGenericEntity), never by a stored
+    // configuration. `list` may be the stored one, so drop its value and take the current schema's (INV-004).
+    delete schema.list.externalFilters;
+    const externalFilters = current.list?.externalFilters;
+    if (externalFilters) schema.list.externalFilters = externalFilters.filter(filter => keys.has(filter.key));
     if (list.orders) schema.list.orders = list.orders.filter(order => keys.has(order.field as string));
   }
   for (const action of ['detail', 'create', 'update'] as const) {

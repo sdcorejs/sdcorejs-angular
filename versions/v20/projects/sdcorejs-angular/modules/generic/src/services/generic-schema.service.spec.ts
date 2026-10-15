@@ -138,6 +138,33 @@ describe('SdGenericSchemaService', () => {
     expect(store!.set).not.toHaveBeenCalled();
   });
 
+  // why: external filters are declared in code (backend schema or provideSdGenericEntity); a stored configuration
+  // neither carries nor contributes them (D-011, INV-004).
+  const withCodeFilters = (schema: SdGenericSchema): SdGenericSchema => ({
+    ...schema,
+    list: { ...schema.list, externalFilters: [{ key: 'code' }] },
+  });
+
+  it('never stores list.externalFilters, even when the effective schema has them (AC-003)', async () => {
+    const service = setup({ store: true, entitySchema: withCodeFilters });
+    const { schema } = await service.resolve('tms', 'order');
+    expect(schema.list?.externalFilters).toEqual([{ key: 'code' }]);
+
+    expect(await service.save('tms', 'order', schema)).toEqual([]);
+    const saved = store!.set.calls.mostRecent().args[1];
+    expect(saved.list && 'externalFilters' in saved.list).toBeFalse();
+  });
+
+  it('ignores list.externalFilters of a stored configuration without an issue and keeps the code-declared ones (AC-004)', async () => {
+    const service = setup({ store: true, entitySchema: withCodeFilters });
+    store!.get.and.resolveTo({ ...base(), list: { columns: [{ key: 'name' }], externalFilters: [{ key: 'ghost' }, { key: 'name' }] } });
+    const resolved = await service.resolve('tms', 'order');
+    expect(resolved.invalid).toBeFalse();
+    expect(resolved.issues.filter(issue => issue.path.includes('externalFilters'))).toEqual([]);
+    expect(resolved.schema.list?.externalFilters).toEqual([{ key: 'code' }]);
+    expect(resolved.schema.list?.columns?.map(column => column.key)).toEqual(['name']);
+  });
+
   it('caches the resolved schema per module and entity', async () => {
     const service = setup({ store: true });
     await service.resolve('tms', 'order');

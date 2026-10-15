@@ -19,6 +19,19 @@ export interface SdGenericResolvedSchema {
 }
 
 /**
+ * Copy of a stored configuration without `list.externalFilters`. External filters are declared in code (backend
+ * schema or `provideSdGenericEntity`), so a stored configuration neither carries nor contributes them (INV-004).
+ * Anything that is not a configuration object is returned unchanged for the validator to report.
+ */
+function withoutExternalFilters<T>(configuration: T): T {
+  const list = (configuration as { list?: unknown } | null)?.list;
+  if (!list || typeof list !== 'object' || Array.isArray(list) || !('externalFilters' in list)) return configuration;
+  const rest: Record<string, unknown> = { ...list };
+  delete rest['externalFilters'];
+  return { ...(configuration as object), list: rest } as T;
+}
+
+/**
  * Owns the effective schema of each entity (INV-002): adapter schema -> entity schema function -> stored
  * configuration (validated, then merged). It is the only caller of `adapter.schema` and of the schema store.
  */
@@ -42,9 +55,10 @@ export class SdGenericSchemaService {
   /** Validates, stores and drops the cached schema of the entity; returns the issues when it refuses to save. */
   async save(module: string, entity: string, schema: SdGenericSchema): Promise<SdGenericSchemaIssue[]> {
     const { base } = await this.resolve(module, entity);
-    const issues = validateSdGenericSchema(schema, base);
+    const configuration = withoutExternalFilters(schema);
+    const issues = validateSdGenericSchema(configuration, base);
     if (issues.length) return issues;
-    await this.#store(this.#adapter(module)).set(entity, schema);
+    await this.#store(this.#adapter(module)).set(entity, configuration);
     this.invalidate(module, entity);
     return [];
   }
@@ -58,7 +72,7 @@ export class SdGenericSchemaService {
     const config = this.#scope.entity(module, entity);
     let base = await adapter.schema(entity);
     if (config?.schema) base = await config.schema(structuredClone(base));
-    const stored = await this.#store(adapter).get(entity);
+    const stored = withoutExternalFilters(await this.#store(adapter).get(entity));
     if (stored === null || stored === undefined) return { schema: base, base, invalid: false, issues: [], removed: [], added: [] };
     const issues = validateSdGenericSchema(stored, base);
     if (issues.some(sdGenericBlocksLoad)) {

@@ -4,6 +4,7 @@ import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
 import { SdInput } from '@sdcorejs/angular/forms/input';
 import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import type { SdGenericEnumOption, SdGenericProperty, SdGenericPropertyValidation, SdGenericRelation, SdGenericSchema } from '../../models';
+import { GenericPropertyIdentity } from '../property-identity/generic-property-identity.component';
 
 const DEFAULT_EDITABLE = new Set(['string', 'text', 'number']);
 
@@ -13,7 +14,7 @@ const DEFAULT_EDITABLE = new Set(['string', 'text', 'number']);
   templateUrl: './generic-configuration-general.component.html',
   styleUrl: '../generic-configuration.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdSection, SdCheckbox, SdInput, SdTranslatePipe],
+  imports: [GenericPropertyIdentity, SdSection, SdCheckbox, SdInput, SdTranslatePipe],
 })
 export class GenericConfigurationGeneral {
   readonly schema = input.required<SdGenericSchema>();

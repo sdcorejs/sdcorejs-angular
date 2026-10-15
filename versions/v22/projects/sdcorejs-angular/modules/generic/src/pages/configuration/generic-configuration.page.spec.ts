@@ -6,6 +6,7 @@ import { By } from '@angular/platform-browser';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdPermissionService } from '@sdcorejs/angular/modules/permission';
 import { SdConfirmService } from '@sdcorejs/angular/services/confirm';
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
@@ -139,12 +140,29 @@ describe('GenericConfigurationPage', () => {
     expect(announce).toHaveBeenCalledOnceWith(jasmine.stringContaining('Code'));
   });
 
-  it('shows key and data type as read-only text in the general tab (AC-020)', async () => {
+  it('shows the key and the data-type icon as read-only identity in the general tab (AC-009, AC-020)', async () => {
     const { root } = await open();
     const row = root.querySelector('[data-autoId="generic-property-code"]')!;
-    expect(row.querySelector('[data-role="key"]')!.textContent).toBe('code');
-    expect(row.querySelector('[data-role="data-type"]')!.textContent).toBe('string');
+    expect(row.querySelector('sd-generic-property-identity')).not.toBeNull();
+    expect(row.querySelector('[data-role="key"]')!.textContent?.trim()).toBe('code');
+    expect(row.querySelector('[data-role="data-type"] sd-icon')?.getAttribute('aria-label')).toBe(
+      TestBed.inject(I18nService).t('core.data-type.string')
+    );
     const inputs = Array.from(row.querySelectorAll('input')).map(input => (input as HTMLInputElement).value);
     expect(inputs).not.toContain('code');
+  });
+
+  it('shows the key and the data-type icon of every import column (AC-009)', async () => {
+    const { harness, root } = await open();
+    (root.querySelectorAll('[role="tab"]')[3] as HTMLElement).click();
+    harness.fixture.detectChanges();
+    await harness.fixture.whenStable();
+    harness.fixture.detectChanges();
+    const row = root.querySelector('[data-autoId="generic-import-tags"]')!;
+    expect(row.querySelector('sd-generic-property-identity')).not.toBeNull();
+    expect(row.querySelector('[data-role="key"]')!.textContent?.trim()).toBe('tags');
+    expect(row.querySelector('[data-role="data-type"] sd-icon')?.getAttribute('aria-label')).toBe(
+      TestBed.inject(I18nService).t('core.data-type.string-list')
+    );
   });
 });
