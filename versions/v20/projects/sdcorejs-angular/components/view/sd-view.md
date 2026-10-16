@@ -88,11 +88,32 @@ export class ContractDetailComponent {
 ## Visual cues
 
 - Vertical stack with a small gap between label and value.
-- Label uses the same grey/small visual language as form-field labels in viewed mode.
-- Value uses medium body text.
+- Label: 14px regular, `--sd-view-label-color` (class `.sd-view-label`). Value: 14px medium, `--sd-view-value-color` (class `.sd-view-value`). Every form control in `viewed` mode and the label of `<sd-section-item>` use the same classes.
 - Hyperlink mode renders the value as clickable text.
 - Empty/default branch shows `--` through `sdView`.
 - Primitive arrays display as `A, B, C`.
+
+## Styling tokens
+
+| Token / class | Default (light / dark) | Notes |
+| --- | --- | --- |
+| `--sd-view-label-color` / `.sd-view-label` | `color-mix(in srgb, var(--sd-text) 70%, var(--sd-surface))` ≈ `#5e5e62` / `#a4a4a8` | Lighter than the value; at least 4.5:1 on `--sd-surface` and `--sd-surface-muted`. Follows custom palettes. |
+| `--sd-view-value-color` / `.sd-view-value` | `var(--sd-text)` = `#1a1b1f` / `#e3e2e6` | Same colour as body text. |
+
+Both tokens are component tokens of `sd.theme()`. Override them on any scope to restyle every read-only field below it:
+
+```scss
+.contract-detail {
+  --sd-view-label-color: var(--sd-text-secondary);
+}
+```
+
+A custom detail layout that cannot use `<sd-view>` takes the same look from the classes:
+
+```html
+<div class="sd-view-label">Mã hợp đồng</div>
+<div class="sd-view-value">HD-001</div>
+```
 
 ## Permission gating
 

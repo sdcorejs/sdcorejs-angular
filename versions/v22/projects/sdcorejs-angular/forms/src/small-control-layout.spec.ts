@@ -102,6 +102,17 @@ function center(element: Element): number {
   return rect.top + rect.height / 2;
 }
 
+/** Center of the glyph box of the first text under the element, independent of line-heights. */
+function textCenter(element: Element): number {
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, {
+    acceptNode: node => (node.textContent?.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP),
+  });
+  const range = document.createRange();
+  range.selectNodeContents(walker.nextNode()!);
+  const rect = range.getBoundingClientRect();
+  return rect.top + rect.height / 2;
+}
+
 describe('Small controls with the shipped theme', () => {
   let fixture: ComponentFixture<SmallControlsHost>;
 
@@ -128,6 +139,28 @@ describe('Small controls with the shipped theme', () => {
         .toBeLessThanOrEqual(1);
     });
   });
+
+  // why: Chrome rounds a 0.5px gap between the resting label and the value text to a whole pixel, so the
+  // label visibly sat 1px below the text it turns into (sm, at 100% and 125% zoom).
+  for (const size of ['sm', 'md'] as const) {
+    it(`rests the select label on the line of its selected value: ${size}`, async () => {
+      Object.assign(fixture.componentInstance, { size });
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const field = fixture.nativeElement.querySelector('sd-select mat-form-field') as HTMLElement;
+      const label = textCenter(field.querySelector('mat-label span')!);
+
+      fixture.componentInstance.status = 'active';
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+      expect(field.querySelector('.mat-mdc-select-value-text')?.textContent).toContain('Đang xử lý');
+      const value = textCenter(field.querySelector('.mat-mdc-select-value-text')!);
+      expect(Math.abs(label - value))
+        .withContext(`${size}: resting label ${label.toFixed(2)}, value ${value.toFixed(2)}`)
+        .toBeLessThanOrEqual(0.25);
+    });
+  }
 
   for (const size of ['sm', 'md'] as const) {
     for (const appearance of ['outline', 'fill'] as const) {

@@ -2,7 +2,7 @@
   <ng-container *ngTemplateOutlet="activeLabelTemplate()!"></ng-container>
 } @else {
   @if (label()) {
-    <div class="T14R text-secondary">{{ label() }}</div>
+    <div class="sd-view-label T14R">{{ label() }}</div>
   }
 }
 
@@ -28,6 +28,6 @@
   @if (hyperlink(); as link) {
     <a [sdHref]="link">{{ display() | sdView }}</a>
   } @else {
-    <div class="T14M">{{ display() | sdView }}</div>
+    <div class="sd-view-value T14M">{{ display() | sdView }}</div>
   }
 }

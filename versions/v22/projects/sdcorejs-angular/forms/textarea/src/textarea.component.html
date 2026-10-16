@@ -18,9 +18,9 @@
   @if (_sdLabelDef?.templateRef) {
     <ng-container *ngTemplateOutlet="_sdLabelDef!.templateRef"> </ng-container>
   } @else if (_label) {
-    <div class="T14R text-secondary">{{ _label }}</div>
+    <div class="sd-view-label T14R">{{ _label }}</div>
   }
-  <div class="T14M">{{ formControl.value | sdEmpty }}</div>
+  <div class="sd-view-value T14M">{{ formControl.value | sdEmpty }}</div>
 } @else {
   @if ((!_appearance || _labelTop) && _sdLabelDef?.templateRef) {
     <ng-container *ngTemplateOutlet="_sdLabelDef!.templateRef"> </ng-container>

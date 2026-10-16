@@ -9,14 +9,14 @@
   @if (_sdLabelDef?.templateRef) {
     <ng-container *ngTemplateOutlet="_sdLabelDef!.templateRef"> </ng-container>
   } @else if (_label) {
-    <div class="T14R text-secondary">{{ _label }}</div>
+    <div class="sd-view-label T14R">{{ _label }}</div>
   }
   @if (_hyperlink) {
     <!-- Nếu có hyperlink thì dùng thẻ a -->
     <a [sdHref]="_hyperlink!">{{ viewedText() || placeholder() }}</a>
   } @else {
     <!-- Ngoài ra dùng thẻ mặc định -->
-    <div class="T14M">{{ viewedText() || placeholder() | sdEmpty }}</div>
+    <div class="sd-view-value T14M">{{ viewedText() || placeholder() | sdEmpty }}</div>
   }
 } @else {
   <section [ngClass]="{ 'c-section': _display === 'row' }">

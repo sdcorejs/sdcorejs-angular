@@ -25,7 +25,9 @@
   color: var(--sd-black400, var(--sd-text-muted));
 }
 
-// why: MDC variables are inherited into SdInput without changing global fields.
+// why: MDC variables are inherited into SdInput without changing global fields. The outline tokens are
+// declared under both names — Material 19 (`--mdc-outlined-text-field-*`) and 20+
+// (`--mat-form-field-outlined-*`) — because sd.theme() maps both onto the Core palette.
 .sd-layout-search-field__control {
   flex: 1;
   min-width: 0;
@@ -33,6 +35,9 @@
   --mdc-outlined-text-field-outline-color: transparent;
   --mdc-outlined-text-field-hover-outline-color: transparent;
   --mdc-outlined-text-field-focus-outline-color: transparent;
+  --mat-form-field-outlined-outline-color: transparent;
+  --mat-form-field-outlined-hover-outline-color: transparent;
+  --mat-form-field-outlined-focus-outline-color: transparent;
   --mdc-outlined-text-field-input-text-placeholder-color: var(--sd-black400, var(--sd-text-muted));
   --mdc-outlined-text-field-container-shape: 0px;
 }

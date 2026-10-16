@@ -6,6 +6,9 @@
   font-size: var(--sd-font-size-16, 16px);
   width: 100%;
 
+  // Màu viền / label / caret theo trạng thái (thường, focus, lỗi): token Material ánh xạ sang palette
+  // Core trong sd.theme() — xem themes/_material-tokens.scss.
+
   .sd-form-field-label {
     display: inline-flex;
     align-items: center;
@@ -21,20 +24,6 @@
   // Xử lý tô màu required
   .mat-mdc-form-field-required-marker {
     color: map.get(color.$color_map, 'error');
-  }
-
-  // Xử lý màu border nhạt bớt
-  .mat-mdc-notch-piece {
-    &.mdc-notched-outline__leading {
-      border-color: map.get(color.$color_map, 'border') !important;
-    }
-    &.mdc-notched-outline__notch {
-      border-top-color: map.get(color.$color_map, 'border') !important;
-      border-bottom-color: map.get(color.$color_map, 'border') !important;
-    }
-    &.mdc-notched-outline__trailing {
-      border-color: map.get(color.$color_map, 'border') !important;
-    }
   }
 
   // Xử lý icon
@@ -136,25 +125,11 @@
     }
   }
 
-  // Bỏ padding nếu hideInlineError
+  // Bỏ padding nếu hideInlineError. Viền đỏ khi lỗi đến từ token `error-outline-color` ở trên, như
+  // mọi field khác.
   &.hide-inline-error {
     .mat-mdc-form-field-subscript-wrapper {
       display: none;
-    }
-
-    &.mat-form-field-invalid {
-      .mat-mdc-notch-piece {
-        &.mdc-notched-outline__leading {
-          border-color: map.get(color.$color_map, 'error') !important;
-        }
-        &.mdc-notched-outline__notch {
-          border-top-color: map.get(color.$color_map, 'error') !important;
-          border-bottom-color: map.get(color.$color_map, 'error') !important;
-        }
-        &.mdc-notched-outline__trailing {
-          border-color: map.get(color.$color_map, 'error') !important;
-        }
-      }
     }
   }
 
@@ -299,17 +274,14 @@
         }
       }
 
-      &.mat-mdc-form-field-can-float {
-        .mat-mdc-form-field-label {
-          top: 22px;
-        }
-
-        &.mat-mdc-form-field-should-float {
-          .mat-mdc-form-field-label {
-            transform: translateY(-10px) scale(0.75);
-            width: 133.33333%;
-          }
-        }
+      // why: trong khung 32px, label nghỉ (chưa float) nằm thấp hơn chữ giá trị/placeholder 1px (đo
+      // pixel trên select, autocomplete, input ở DPR 1 và 1.25) — label tâm ~16.8px, chữ ~16.5px, Chrome
+      // làm tròn chênh 0.3–0.5px thành 1px. Nâng 0.5px để label trùng dòng chữ khi float lên. Chỉ trạng
+      // thái nghỉ; `translate` cộng dồn với `transform` của Material nên không đè giá trị của nó.
+      // (Rule `top` cũ trỏ vào class M2 `.mat-mdc-form-field-label` không còn tồn tại nên chưa từng có
+      // hiệu lực.)
+      .mdc-floating-label:not(.mdc-floating-label--float-above) {
+        translate: 0 -0.5px;
       }
 
       // Fix for date range and datetime inputs with small size
@@ -321,6 +293,14 @@
       }
     }
   }
+}
+
+// why: chữ option của sd-select / sd-autocomplete 14px, bằng chữ hiển thị trong ô. Option single của
+// Material mặc định là body-large (16px) trong khi trigger/input là 14px. Màu option đang chọn nằm ở
+// themes/_material-tokens.scss.
+.mat-mdc-select-panel.sd-select-panel,
+.mat-mdc-autocomplete-panel.sd-autocomplete-panel {
+  --mat-option-label-text-size: var(--sd-font-size-14, 14px);
 }
 
 // Override reboot rule `label { margin-bottom: 0.5rem }` cho mat-checkbox layout
