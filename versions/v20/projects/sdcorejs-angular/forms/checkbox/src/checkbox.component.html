@@ -1,8 +1,8 @@
 @if (isViewed()) {
   @if (label()) {
-    <div class="T14R text-secondary">{{ label() }}</div>
+    <div class="sd-view-label T14R">{{ label() }}</div>
   }
-  <div class="T14M">{{ (model() ? 'core.form.checkbox.checked' : 'core.form.checkbox.unchecked') | sdTranslate }}</div>
+  <div class="sd-view-value T14M">{{ (model() ? 'core.form.checkbox.checked' : 'core.form.checkbox.unchecked') | sdTranslate }}</div>
 } @else {
   <mat-checkbox
     [formControl]="formControl"

@@ -2,33 +2,14 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SdInput } from '@sdcorejs/angular/forms';
+import { LayoutTestTheme } from '../../../../../testing/layout-theme.spec';
 import { SdLayoutSearchFieldComponent } from './search-field.component';
 
 describe('SdLayoutSearchFieldComponent', () => {
   let fixture: ComponentFixture<SdLayoutSearchFieldComponent>;
-  let coreStyles: HTMLStyleElement;
   let originalRootStyle: string | null;
 
   beforeEach(async () => {
-    // The library test target omits consumer global styles; load only the Core declarations under test.
-    coreStyles = document.createElement('style');
-    coreStyles.textContent = `
-      .mat-mdc-form-field .mat-mdc-notch-piece.mdc-notched-outline__leading {
-        border-color: var(--sd-border) !important;
-      }
-      .mat-mdc-form-field .mat-mdc-notch-piece.mdc-notched-outline__notch {
-        border-top-color: var(--sd-border) !important;
-        border-bottom-color: var(--sd-border) !important;
-      }
-      .mat-mdc-form-field .mat-mdc-notch-piece.mdc-notched-outline__trailing {
-        border-color: var(--sd-border) !important;
-      }
-      .mat-mdc-form-field.hide-inline-error .mat-mdc-form-field-subscript-wrapper {
-        display: none;
-      }
-    `;
-    document.head.appendChild(coreStyles);
-
     originalRootStyle = document.documentElement.getAttribute('style');
     document.documentElement.style.setProperty('--sd-border', 'rgb(12, 34, 56)');
     document.documentElement.style.setProperty('--sd-surface-muted', 'rgb(231, 232, 237)');
@@ -38,8 +19,11 @@ describe('SdLayoutSearchFieldComponent', () => {
     document.documentElement.style.removeProperty('--sd-black400');
 
     await TestBed.configureTestingModule({
-      imports: [SdLayoutSearchFieldComponent, NoopAnimationsModule],
+      imports: [SdLayoutSearchFieldComponent, LayoutTestTheme, NoopAnimationsModule],
     }).compileComponents();
+    // why: the shipped theme (sd-core.scss) maps the Material outline tokens onto the Core palette; the pill
+    // must keep them transparent against that real mapping, not a hand-written copy.
+    TestBed.createComponent(LayoutTestTheme).detectChanges();
     fixture = TestBed.createComponent(SdLayoutSearchFieldComponent);
     fixture.componentRef.setInput('placeholder', 'Tìm trong tất cả menu');
     fixture.componentRef.setInput('autoId', 'layout-test-search');
@@ -48,7 +32,6 @@ describe('SdLayoutSearchFieldComponent', () => {
   });
 
   afterEach(() => {
-    coreStyles.remove();
     if (originalRootStyle === null) document.documentElement.removeAttribute('style');
     else document.documentElement.setAttribute('style', originalRootStyle);
   });
@@ -74,11 +57,19 @@ describe('SdLayoutSearchFieldComponent', () => {
     expect(getComputedStyle(input, '::placeholder').color).toBe('rgb(99, 100, 101)');
   });
 
-  it('keeps Core-forced notch borders transparent within the pill', () => {
+  it('keeps the themed Material outline transparent within the pill, focused or not', () => {
     const control = fixture.nativeElement.querySelector('sd-input') as HTMLElement;
     const leadingNotch = fixture.nativeElement.querySelector('.mdc-notched-outline__leading') as HTMLElement;
 
+    // The shipped theme maps the outline tokens; the pill overrides them below it.
+    expect(getComputedStyle(document.documentElement).getPropertyValue('--mdc-outlined-text-field-focus-outline-color').trim()).toBe(
+      'rgb(0, 92, 187)'
+    );
     expect(getComputedStyle(control).getPropertyValue('--sd-border').trim()).toBe('transparent');
+    expect(getComputedStyle(leadingNotch).borderColor).toBe('rgba(0, 0, 0, 0)');
+
+    (fixture.nativeElement.querySelector('input') as HTMLInputElement).focus();
+    fixture.detectChanges();
     expect(getComputedStyle(leadingNotch).borderColor).toBe('rgba(0, 0, 0, 0)');
   });
 

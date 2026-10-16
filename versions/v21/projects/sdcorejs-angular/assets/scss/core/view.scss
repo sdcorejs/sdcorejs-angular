@@ -1,0 +1,24 @@
+// Read-only label/value pair — <sd-view>, every form control in `viewed` mode and the label of
+// <sd-section-item>. Public classes, so a custom detail layout reads the same as the library:
+//
+//   <div class="sd-view-label">Mã hợp đồng</div>
+//   <div class="sd-view-value">HD-001</div>
+//
+// why: label and value used to differ only by weight (#44474f regular vs #1a1b1f medium), so a detail
+// screen read as one block of dark text. The label now takes --sd-view-label-color (the text colour
+// mixed 70% into the surface) and the value --sd-view-value-color (the text colour). Both are component
+// tokens of sd.theme(); override them on any scope to restyle every read-only field below it.
+
+.sd-view-label {
+  color: var(--sd-view-label-color, var(--sd-text-secondary, #44474f));
+  font-size: var(--sd-font-size-14, 14px);
+  font-weight: var(--sd-font-weight-regular, 400);
+  line-height: var(--sd-line-height-20, 20px);
+}
+
+.sd-view-value {
+  color: var(--sd-view-value-color, var(--sd-text, #1a1b1f));
+  font-size: var(--sd-font-size-14, 14px);
+  font-weight: var(--sd-font-weight-medium, 500);
+  line-height: var(--sd-line-height-20, 20px);
+}

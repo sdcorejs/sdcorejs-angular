@@ -67,8 +67,17 @@
 </div>
 
 <ng-template #pageBody let-region>
+  @if (region.page.description; as description) {
+    <p
+      class="sd-fg-page-description"
+      [id]="pageDomId(region.page.id, 'description')"
+      [hidden]="!!navigation() && effectivePageId() !== region.page.id">
+      {{ description }}
+    </p>
+  }
   <div
     class="sd-fg-grid"
+    [attr.aria-describedby]="navigation() && region.page.description ? pageDomId(region.page.id, 'description') : null"
     [attr.data-level]="level()"
     [attr.data-page-id]="region.page.id"
     [id]="pageDomId(region.page.id, 'panel')"

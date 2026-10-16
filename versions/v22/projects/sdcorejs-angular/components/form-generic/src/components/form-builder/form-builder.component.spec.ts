@@ -200,6 +200,99 @@ describe('SdFormBuilder (integration)', () => {
     expect(current().pages.map(page => page.id)).toEqual(['page', 'second']);
   });
 
+  // why: page settings used to share one card with the form-level navigation, which users mixed up.
+  it('keeps page settings (title, description, icon, rules) apart from the form settings', async () => {
+    const store = () => builder().store;
+    const panel = () => root().querySelector<HTMLElement>('[data-inspector-panel]')?.getAttribute('data-inspector-panel');
+    const inspector = () => root().querySelector<HTMLElement>('[data-inspector-panel]')!;
+    await render();
+    store().select(null);
+    await render();
+    expect(panel()).toBe('form');
+    expect(inspector().querySelector('sd-select')).not.toBeNull();
+    expect(inspector().querySelector('[data-page-field]')).toBeNull();
+    expect(inspector().querySelector('[data-page-settings-tip] .c-inform-content')?.textContent?.trim()).toBe(
+      store().t('core.component.form-builder.page.settings-tip')
+    );
+
+    root().querySelector<HTMLButtonElement>('[data-builder-page="page"]')!.click();
+    await render();
+    expect(panel()).toBe('page');
+    expect(store().pageInspected()).toBeTrue();
+    expect(inspector().querySelector('sd-select')).toBeNull();
+    expect(inspector().querySelector('[data-page-field="title"]')).not.toBeNull();
+    expect(inspector().querySelector('[data-page-field="description"]')).not.toBeNull();
+    expect(inspector().querySelector('[data-page-settings-tip]')).toBeNull();
+    const back = inspector().querySelector<HTMLButtonElement>('.ins-head [data-inspector-action="form-settings"]')!;
+    expect(back.getAttribute('aria-label')).toBe(store().t('core.component.form-builder.page.back-to-form'));
+
+    store().setPageMetadata({ label: 'Hồ sơ', description: 'Thông tin chung.' }, 'page-meta');
+    await render();
+    expect(current().pages[0].label).toBe('Hồ sơ');
+    expect(current().pages[0].description).toBe('Thông tin chung.');
+    expect(inspector().querySelector('.ins-head__sub')?.textContent?.trim()).toBe('Hồ sơ');
+    store().undo();
+    await render();
+    expect(current().pages[0].description).toBeUndefined();
+
+    root().querySelector<HTMLButtonElement>('[data-inspector-action="form-settings"]')!.click();
+    await render();
+    expect(panel()).toBe('form');
+
+    root().querySelector<HTMLButtonElement>('[data-page-action="add"]')!.click();
+    await render();
+    expect(panel()).withContext('a new page opens its settings').toBe('page');
+    expect(inspector().querySelector('[data-page-hidden-hint]')).withContext('single page never shows the new page').not.toBeNull();
+
+    store().inspectPage('page');
+    store().select('g1');
+    await render();
+    expect(store().pageInspected()).toBeFalse();
+    expect(root().querySelector('[data-inspector-panel]')).toBeNull();
+  });
+
+  // why: single-page navigation renders only the first page, so later pages would be built but never shown.
+  it('warns that single-page navigation hides every page after the first, without changing the schema', async () => {
+    const store = () => builder().store;
+    const hint = () => root().querySelector('[data-single-page-hint]');
+    const tab = (id: string) => root().querySelector<HTMLButtonElement>(`[data-builder-page="${id}"]`)!;
+    await render();
+    store().select(null);
+    await render();
+    expect(store().singlePageHidesPages()).toBeFalse();
+    expect(hint()).toBeNull();
+
+    root().querySelector<HTMLButtonElement>('[data-page-action="add"]')!.click();
+    await render();
+    store().select(null);
+    await render();
+    const added = current().pages[1].id;
+    expect(current().navigation).toBeUndefined();
+    expect(store().singlePageHidesPages()).toBeTrue();
+    // why: read the content box — the sd-icon ligature ("warning_amber") is part of the host's textContent.
+    expect(hint()?.querySelector('.c-inform-content')?.textContent?.trim()).toBe(store().t('core.component.form-builder.page.single-hint'));
+    expect(tab(added).classList).toContain('is-hidden-at-runtime');
+    expect(tab(added).querySelector('[data-page-hidden]')).not.toBeNull();
+    const noteId = tab(added).getAttribute('aria-describedby');
+    expect(noteId).toBeTruthy();
+    expect(root().querySelector(`[id="${noteId}"]`)?.textContent?.trim()).toBe(
+      store().t('core.component.form-builder.page.hidden-in-single')
+    );
+    expect(tab('page').classList).not.toContain('is-hidden-at-runtime');
+    expect(tab('page').hasAttribute('aria-describedby')).toBeFalse();
+
+    for (const mode of ['tabs', 'steps'] as const) {
+      store().setNavigation(mode);
+      await render();
+      expect(hint()).toBeNull();
+      expect(tab(added).classList).not.toContain('is-hidden-at-runtime');
+      expect(tab(added).querySelector('[data-page-hidden]')).toBeNull();
+    }
+    store().setNavigation('single');
+    await render();
+    expect(hint()).not.toBeNull();
+  });
+
   it('duplicates page-wide structured references with unique identities and retains external references (AC-109)', async () => {
     const schema = {
       pages: [

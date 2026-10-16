@@ -1042,7 +1042,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.form-builder.expand': 'Mở rộng',
   'core.component.form-builder.structure.empty': 'Chưa có thành phần nào.',
   'core.component.form-builder.form-settings': 'Biểu mẫu',
-  'core.component.form-builder.select-field-hint': 'Chọn một thành phần trên canvas để chỉnh thuộc tính.',
+  'core.component.form-builder.select-field-hint': 'Chọn một trang hoặc thành phần trên canvas để chỉnh thuộc tính.',
   'core.component.form-builder.variables': 'Biến',
   'core.component.form-builder.variables-hint':
     'Biến là giá trị không hiển thị, dùng trong điều kiện và gán giá trị. Mã biến dùng chung không gian với mã trường.',
@@ -1226,6 +1226,16 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.form-builder.page.icon': 'Icon',
   'core.component.form-builder.page.rules-hint': 'Điều kiện hiển thị áp dụng trong Xem trước. Trang vẫn có thể chỉnh sửa.',
   'core.component.form-builder.page.unsupported': 'Trang có phần tử chưa hỗ trợ nên không thể nhân bản an toàn.',
+  'core.component.form-builder.page.single-hint':
+    'Điều hướng Một trang chỉ hiển thị trang đầu. Chọn Tabs hoặc Steps để hiện các trang khác.',
+  'core.component.form-builder.page.hidden-in-single': 'Không hiển thị khi điều hướng là Một trang',
+  'core.component.form-builder.page.title': 'Tiêu đề',
+  'core.component.form-builder.page.description': 'Mô tả',
+  'core.component.form-builder.page.description-hint': 'Hiện ở đầu nội dung trang khi điền biểu mẫu.',
+  'core.component.form-builder.page.back-to-form': 'Thiết lập biểu mẫu',
+  'core.component.form-builder.page.navigation-card': 'Điều hướng trang',
+  'core.component.form-builder.page.settings-tip':
+    'Bấm vào một trang trên thanh trang để chỉnh tiêu đề, mô tả, icon và điều kiện hiển thị của trang.',
   'core.component.form-builder.page.delete-confirm': 'Xoá trang "{label}" và các trường? Tham chiếu bên ngoài: {count}.',
   'core.component.form-generic.page': 'Trang {number}',
   'core.component.form-generic.pages': 'Các trang biểu mẫu',

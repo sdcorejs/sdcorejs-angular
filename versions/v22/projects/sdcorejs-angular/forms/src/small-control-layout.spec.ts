@@ -102,6 +102,17 @@ function center(element: Element): number {
   return rect.top + rect.height / 2;
 }
 
+/** Center of the glyph box of the first text under the element, independent of line-heights. */
+function textCenter(element: Element): number {
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, {
+    acceptNode: node => (node.textContent?.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP),
+  });
+  const range = document.createRange();
+  range.selectNodeContents(walker.nextNode()!);
+  const rect = range.getBoundingClientRect();
+  return rect.top + rect.height / 2;
+}
+
 describe('Small controls with the shipped theme', () => {
   let fixture: ComponentFixture<SmallControlsHost>;
 
@@ -128,6 +139,30 @@ describe('Small controls with the shipped theme', () => {
         .toBeLessThanOrEqual(1);
     });
   });
+
+  // why: the value text sits in the 24px line box of the control, where Chrome floors the half-leading
+  // (Roboto is 17px tall on Windows, 16px on Linux/macOS). The sm resting label shares that line height, so
+  // both glyphs land on the same pixel row on every OS; before, it sat 1px low on Windows. md keeps
+  // Material's own label geometry, which differs by up to 0.35px per OS, so it is not asserted here.
+  for (const size of ['sm'] as const) {
+    it(`rests the select label on the line of its selected value: ${size}`, async () => {
+      Object.assign(fixture.componentInstance, { size });
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const field = fixture.nativeElement.querySelector('sd-select mat-form-field') as HTMLElement;
+      const label = textCenter(field.querySelector('mat-label span')!);
+
+      fixture.componentInstance.status = 'active';
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+      expect(field.querySelector('.mat-mdc-select-value-text')?.textContent).toContain('Đang xử lý');
+      const value = textCenter(field.querySelector('.mat-mdc-select-value-text')!);
+      expect(Math.abs(label - value))
+        .withContext(`${size}: resting label ${label.toFixed(2)}, value ${value.toFixed(2)}`)
+        .toBeLessThanOrEqual(0.25);
+    });
+  }
 
   for (const size of ['sm', 'md'] as const) {
     for (const appearance of ['outline', 'fill'] as const) {

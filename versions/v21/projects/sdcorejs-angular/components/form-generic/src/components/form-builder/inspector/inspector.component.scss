@@ -32,6 +32,24 @@
   color: var(--sd-primary);
 }
 
+// why: the page panel turns the header tile into its back button; reset the native button chrome.
+.ins-head__back {
+  padding: 0;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color var(--sd-duration-fast, 120ms) ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--sd-primary) 18%, var(--sd-surface));
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
+    outline-offset: var(--sd-focus-ring-offset, 2px);
+  }
+}
+
 .ins-head__text {
   flex: 1;
   min-width: 0;

@@ -1,9 +1,9 @@
 @let _label = label();
 @if (isViewed()) {
   @if (_label) {
-    <div class="T14R text-secondary">{{ _label }}</div>
+    <div class="sd-view-label T14R">{{ _label }}</div>
   }
-  <div class="T14M">{{ (model() ? 'core.form.switch.on' : 'core.form.switch.off') | sdTranslate }}</div>
+  <div class="sd-view-value T14M">{{ (model() ? 'core.form.switch.on' : 'core.form.switch.off') | sdTranslate }}</div>
 } @else {
   <mat-slide-toggle
     [formControl]="formControl"

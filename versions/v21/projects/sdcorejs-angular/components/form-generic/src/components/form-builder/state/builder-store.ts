@@ -88,9 +88,19 @@ export class FormBuilderStore {
   readonly activePage = computed(() => this.doc().base.page);
   readonly allElements = computed(() => this.pages().flatMap(page => page.elements));
   readonly navigation = computed(() => this.doc().base.rest['navigation'] as SdFormGenericNavigation | undefined);
+  /**
+   * Single-page navigation (no `navigation`) renders only the first page, so with two or more pages the
+   * others are kept in the schema but never shown. The builder warns instead of changing the schema.
+   */
+  readonly singlePageHidesPages = computed(() => !this.navigation() && this.pages().length > 1);
   readonly canDuplicatePage = computed(() => this.doc().elements.every(canDuplicate));
   readonly #pageSelections = new Map<string, string | null>();
   readonly selectedId = signal<string | null>(null);
+  /**
+   * With no element selected, the inspector shows the active page (title, description, icon, rules)
+   * instead of the form-level settings (navigation, variables, validations). Not saved in the schema.
+   */
+  readonly pageInspected = signal(false);
   readonly mode = signal<BuilderMode>('design');
   readonly viewport = signal<BuilderViewport>('desktop');
   readonly leftTab = signal<LeftTab>('components');
@@ -146,6 +156,7 @@ export class FormBuilderStore {
     this.#history.clear();
     this.#historyTick.update(value => value + 1);
     this.selectedId.set(null);
+    this.pageInspected.set(false);
     this.drag.set(null);
     this.resize.set(null);
     this.collapsed.set(new Set());
@@ -212,6 +223,14 @@ export class FormBuilderStore {
   select(id: string | null): void {
     if (this.selectedId() !== id) this.#history.seal();
     this.selectedId.set(id);
+    this.pageInspected.set(false);
+  }
+
+  /** Opens the page settings in the inspector, optionally switching to that page first. */
+  inspectPage(id?: string): void {
+    if (id) this.selectPage(id);
+    this.select(null);
+    this.pageInspected.set(true);
   }
 
   /** Editor page selection is transient: preserve schema order, values and undo history. */
@@ -231,7 +250,7 @@ export class FormBuilderStore {
     const page: SdFormGenericPage = { id: createId(), elements: [] };
     schema.pages.push(page);
     this.commit(documentFromSchema(schema, this.activePage().id));
-    this.selectPage(page.id);
+    this.inspectPage(page.id);
   }
 
   duplicatePage(): string | null {
@@ -241,7 +260,7 @@ export class FormBuilderStore {
     if (!copy) return null;
     schema.pages.splice(index + 1, 0, copy);
     this.commit(documentFromSchema(schema, this.activePage().id));
-    this.selectPage(copy.id);
+    this.inspectPage(copy.id);
     return copy.id;
   }
 
@@ -263,7 +282,7 @@ export class FormBuilderStore {
     return this.commit(documentFromSchema(schema, this.activePage().id));
   }
 
-  setPageMetadata(patch: Partial<Pick<SdFormGenericPage, 'label' | 'icon' | 'rules'>>, coalesceKey?: string): boolean {
+  setPageMetadata(patch: Partial<Pick<SdFormGenericPage, 'label' | 'description' | 'icon' | 'rules'>>, coalesceKey?: string): boolean {
     const current = this.doc();
     const next = { ...current, base: { ...current.base, page: { ...current.base.page, ...patch } } };
     return sameDocumentContent(current, next) ? false : this.commit(next, { coalesceKey });

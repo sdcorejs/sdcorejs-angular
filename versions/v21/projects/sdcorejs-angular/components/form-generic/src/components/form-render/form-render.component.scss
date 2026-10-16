@@ -18,6 +18,21 @@
   display: none;
 }
 
+// why: plain-text page intro above the fields; the same 8px gutter as the cells.
+.sd-fg-page-description {
+  margin: 0;
+  padding: 8px 8px 0;
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-14, 14px);
+  line-height: var(--sd-line-height-20, 20px);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
 .sd-fg-navigation {
   min-width: 0;
 }

@@ -244,6 +244,11 @@ $component-tokens: (
   'upload-file-badge-text': (#000000, #e3e2e6),
   'upload-file-badge-border': (#ffffff, #1d1f23),
   'upload-file-muted-bg': (#f9f9f9, #25272c),
+  // view — read-only label/value pair of <sd-view> and of every form control in `viewed` mode (classes
+  // .sd-view-label / .sd-view-value). The label is the text colour mixed 70% into the surface: clearly
+  // lighter than the value, still >= 4.5:1 on surface and surface-muted, and it follows custom palettes.
+  'view-label-color': (color-mix(in srgb, var(--sd-text) 70%, var(--sd-surface)), color-mix(in srgb, var(--sd-text) 70%, var(--sd-surface))),
+  'view-value-color': (var(--sd-text), var(--sd-text)),
   // forms
   'autocomplete-selected-text': (#000000, #e3e2e6),
   'chip-bg': (#ebecf0, #34373d),

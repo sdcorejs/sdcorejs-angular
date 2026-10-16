@@ -7,6 +7,7 @@
 @use "./semantic";
 @use "./ramps";
 @use "./component-tokens";
+@use "./material-tokens";
 
 $default-theme: (
   primary: #005cbb,
@@ -173,6 +174,7 @@ $modes: 'light', 'dark', 'auto';
   @include semantic.emit($scheme);
   @include scales.emit();
   @include component-tokens.emit($scheme);
+  @include material-tokens.emit();
 
   @if $scheme == dark {
     color-scheme: dark;

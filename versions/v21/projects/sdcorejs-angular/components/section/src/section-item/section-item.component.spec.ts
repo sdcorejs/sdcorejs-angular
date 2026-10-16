@@ -98,12 +98,12 @@ describe('SdSectionItem', () => {
   });
 
   describe('label-only left column', () => {
-    it('keeps the c-item-label T14R text-secondary classes, the width and the label text', () => {
+    it('keeps the c-item-label sd-view-label T14R classes, the width and the label text', () => {
       fixture.componentRef.setInput('labelWidth', '180px');
       fixture.detectChanges();
       const left = fixture.nativeElement.querySelector('.c-item > .c-item-label') as HTMLElement;
       expect(left.classList).toContain('T14R');
-      expect(left.classList).toContain('text-secondary');
+      expect(left.classList).toContain('sd-view-label');
       expect(left.style.width).toBe('180px');
       expect(left.textContent?.trim()).toBe('My Label');
     });
