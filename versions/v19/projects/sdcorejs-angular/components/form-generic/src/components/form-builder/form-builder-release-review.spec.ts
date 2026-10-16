@@ -90,7 +90,9 @@ describe('Form Builder release review regressions', () => {
   });
 
   it('seals page label history on the inner Core input blur', async () => {
-    const input = (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>('fb-inspector .ins-empty sd-input input')!;
+    builder.store.inspectPage();
+    await settle();
+    const input = (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>('fb-inspector [data-page-field="title"] input')!;
     expect(input).not.toBeNull();
     input.value = 'First edit';
     input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -105,6 +107,8 @@ describe('Form Builder release review regressions', () => {
   });
 
   it('picks the page icon from the group presets, one history step per pick, and clears it on a second click', async () => {
+    builder.store.inspectPage();
+    await settle();
     const button = (icon: string) =>
       (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
         `fb-inspector .ins-empty .ins-icons__btn[aria-label="${icon}"]`

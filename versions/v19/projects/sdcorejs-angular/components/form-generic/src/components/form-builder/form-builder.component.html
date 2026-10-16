@@ -149,23 +149,41 @@
       @case ('design') {
         <div class="fb-page-editor">
           <div class="fb-pages" role="group" [attr.aria-label]="'core.component.form-generic.pages' | sdTranslate">
+            <!-- why: "Một trang" (no navigation) renders only the first page; later pages stay in the schema but are
+                 never shown, so they are marked and described instead of looking like reachable pages. -->
+            @let _singleHides = store.singlePageHidesPages();
+            @if (_singleHides) {
+              <span class="sd-visually-hidden" [id]="leftPanelId + '-page-hidden-note'">{{
+                'core.component.form-builder.page.hidden-in-single' | sdTranslate
+              }}</span>
+            }
             <div class="fb-pages__strip">
               @for (page of store.pages(); track page.id; let index = $index) {
+                @let _hiddenAtRuntime = _singleHides && index > 0;
                 <button
                   type="button"
                   class="fb-page-tab"
                   [attr.data-builder-page]="page.id"
                   [attr.aria-pressed]="store.activePage().id === page.id"
+                  [attr.aria-describedby]="_hiddenAtRuntime ? leftPanelId + '-page-hidden-note' : null"
                   [class.is-active]="store.activePage().id === page.id"
+                  [class.is-hidden-at-runtime]="_hiddenAtRuntime"
                   [class.has-rules]="!!page.rules?.visible || !!page.rules?.hidden"
                   (focus)="revealPageHeader($event)"
-                  (click)="store.selectPage(page.id); store.select(null); revealPageHeader($event)">
+                  (click)="store.inspectPage(page.id); revealPageHeader($event)">
                   @if (page.icon) {
                     <sd-icon [name]="page.icon" size="16px"></sd-icon>
                   }
                   {{ page.label || ('core.component.form-generic.page' | sdTranslate: { number: index + 1 }) }}
                   @if (page.rules?.visible || page.rules?.hidden) {
                     <sd-icon name="visibility" size="16px" [title]="'core.component.form-builder.page.rules-hint' | sdTranslate"></sd-icon>
+                  }
+                  @if (_hiddenAtRuntime) {
+                    <sd-icon
+                      name="visibility_off"
+                      size="16px"
+                      data-page-hidden
+                      [title]="'core.component.form-builder.page.hidden-in-single' | sdTranslate"></sd-icon>
                   }
                 </button>
               }
