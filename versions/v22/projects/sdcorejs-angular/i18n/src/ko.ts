@@ -1228,6 +1228,7 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.form-builder.page.description-hint': '양식을 작성할 때 페이지 내용 맨 위에 표시됩니다.',
   'core.component.form-builder.page.back-to-form': '양식 설정',
   'core.component.form-builder.page.navigation-card': '페이지 탐색',
+  'core.component.form-builder.page.settings-tip': '페이지 막대에서 페이지를 클릭하면 제목, 설명, 아이콘과 표시 조건을 편집할 수 있습니다.',
   'core.component.form-builder.page.delete-confirm': '페이지 "{label}" 및 필드를 삭제할까요? 외부 참조: {count}.',
   'core.component.form-generic.page': '페이지 {number}',
   'core.component.form-generic.pages': '양식 페이지',

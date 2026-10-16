@@ -1234,6 +1234,8 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.form-builder.page.description-hint': 'Hiện ở đầu nội dung trang khi điền biểu mẫu.',
   'core.component.form-builder.page.back-to-form': 'Thiết lập biểu mẫu',
   'core.component.form-builder.page.navigation-card': 'Điều hướng trang',
+  'core.component.form-builder.page.settings-tip':
+    'Bấm vào một trang trên thanh trang để chỉnh tiêu đề, mô tả, icon và điều kiện hiển thị của trang.',
   'core.component.form-builder.page.delete-confirm': 'Xoá trang "{label}" và các trường? Tham chiếu bên ngoài: {count}.',
   'core.component.form-generic.page': 'Trang {number}',
   'core.component.form-generic.pages': 'Các trang biểu mẫu',

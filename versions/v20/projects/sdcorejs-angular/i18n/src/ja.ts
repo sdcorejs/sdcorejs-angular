@@ -1234,6 +1234,7 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.form-builder.page.description-hint': 'フォーム入力時にページ内容の先頭に表示されます。',
   'core.component.form-builder.page.back-to-form': 'フォーム設定',
   'core.component.form-builder.page.navigation-card': 'ページナビゲーション',
+  'core.component.form-builder.page.settings-tip': 'ページバーのページをクリックすると、タイトル、説明、アイコン、表示条件を編集できます。',
   'core.component.form-builder.page.delete-confirm': 'ページ「{label}」とフィールドを削除しますか？外部参照: {count}。',
   'core.component.form-generic.page': 'ページ {number}',
   'core.component.form-generic.pages': 'フォームのページ',

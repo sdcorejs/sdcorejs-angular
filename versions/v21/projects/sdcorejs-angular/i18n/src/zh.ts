@@ -1220,6 +1220,7 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.form-builder.page.description-hint': '填写表单时显示在页面内容顶部。',
   'core.component.form-builder.page.back-to-form': '表单设置',
   'core.component.form-builder.page.navigation-card': '页面导航',
+  'core.component.form-builder.page.settings-tip': '点击页面栏中的页面，即可编辑其标题、描述、图标和显示条件。',
   'core.component.form-builder.page.delete-confirm': '删除页面“{label}”及其字段？外部引用：{count}。',
   'core.component.form-generic.page': '第 {number} 页',
   'core.component.form-generic.pages': '表单页面',

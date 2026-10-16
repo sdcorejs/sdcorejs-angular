@@ -1229,6 +1229,8 @@ export const EN_MESSAGES = {
   'core.component.form-builder.page.description-hint': 'Shown at the top of the page content while filling in the form.',
   'core.component.form-builder.page.back-to-form': 'Form settings',
   'core.component.form-builder.page.navigation-card': 'Page navigation',
+  'core.component.form-builder.page.settings-tip':
+    'Click a page in the page strip to edit its title, description, icon and visibility rules.',
   'core.component.form-builder.page.delete-confirm': 'Delete page "{label}" and its fields? External references: {count}.',
   'core.component.form-generic.page': 'Page {number}',
   'core.component.form-generic.pages': 'Form pages',

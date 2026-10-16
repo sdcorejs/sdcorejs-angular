@@ -13,7 +13,16 @@
   @let _page = store.activePage();
   <div class="ins-empty" data-inspector-panel="page">
     <div class="ins-head">
-      <span class="ins-head__icon" aria-hidden="true"><sd-icon [name]="_page.icon || 'description'" size="20px"></sd-icon></span>
+      <!-- why: the page panel is one level below the form settings; the header icon is the way back. -->
+      <button
+        type="button"
+        class="ins-head__icon ins-head__back"
+        data-inspector-action="form-settings"
+        [attr.aria-label]="'core.component.form-builder.page.back-to-form' | sdTranslate"
+        [title]="'core.component.form-builder.page.back-to-form' | sdTranslate"
+        (click)="store.select(null)">
+        <sd-icon name="arrow_back" size="20px"></sd-icon>
+      </button>
       <div class="ins-head__text">
         <div class="ins-head__title">{{ 'core.component.form-builder.page.settings' | sdTranslate }}</div>
         <div class="ins-head__sub">{{ pageTitle() }}</div>
@@ -73,15 +82,6 @@
           [model]="_page.rules?.hidden"
           (sdChange)="store.setPageRule('hidden', $event)"></attribute-expression>
       </section>
-      <!-- why: same quiet text button as Shortcuts in the form panel; the header stays free for the page title. -->
-      <sd-button
-        type="text"
-        color="secondary"
-        size="sm"
-        prefixIcon="tune"
-        data-inspector-action="form-settings"
-        [title]="'core.component.form-builder.page.back-to-form' | sdTranslate"
-        (click)="store.select(null)"></sd-button>
     </div>
   </div>
 } @else if (!_item) {
@@ -95,6 +95,8 @@
       </div>
     </div>
     <div class="ins-body">
+      <!-- why: page settings live in their own panel, opened from the page strip; say where to find them. -->
+      <sd-inform type="tip" info data-page-settings-tip>{{ 'core.component.form-builder.page.settings-tip' | sdTranslate }}</sd-inform>
       <!-- why: same card head as Variables / Form validations below; fields stretch to the card width. -->
       <section class="ins-card ins-card--form" [attr.aria-label]="'core.component.form-builder.page.navigation-card' | sdTranslate">
         <div class="ins-card__row">

@@ -209,6 +209,9 @@ describe('SdFormBuilder (integration)', () => {
     expect(panel()).toBe('form');
     expect(inspector().querySelector('sd-select')).not.toBeNull();
     expect(inspector().querySelector('[data-page-field]')).toBeNull();
+    expect(inspector().querySelector('[data-page-settings-tip] .c-inform-content')?.textContent?.trim()).toBe(
+      store().t('core.component.form-builder.page.settings-tip')
+    );
 
     root().querySelector<HTMLButtonElement>('[data-builder-page="page"]')!.click();
     await render();
@@ -217,6 +220,9 @@ describe('SdFormBuilder (integration)', () => {
     expect(inspector().querySelector('sd-select')).toBeNull();
     expect(inspector().querySelector('[data-page-field="title"]')).not.toBeNull();
     expect(inspector().querySelector('[data-page-field="description"]')).not.toBeNull();
+    expect(inspector().querySelector('[data-page-settings-tip]')).toBeNull();
+    const back = inspector().querySelector<HTMLButtonElement>('.ins-head [data-inspector-action="form-settings"]')!;
+    expect(back.getAttribute('aria-label')).toBe(store().t('core.component.form-builder.page.back-to-form'));
 
     store().setPageMetadata({ label: 'Hồ sơ', description: 'Thông tin chung.' }, 'page-meta');
     await render();
@@ -227,7 +233,7 @@ describe('SdFormBuilder (integration)', () => {
     await render();
     expect(current().pages[0].description).toBeUndefined();
 
-    root().querySelector<HTMLElement>('[data-inspector-action="form-settings"] button')!.click();
+    root().querySelector<HTMLButtonElement>('[data-inspector-action="form-settings"]')!.click();
     await render();
     expect(panel()).toBe('form');
 
