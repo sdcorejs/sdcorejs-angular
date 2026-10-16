@@ -30,6 +30,10 @@ const PAIRS = [
   ['focus-ring-color', 'surface-muted', 3],
   ['link', 'surface', 4.5],
   ['primary-contrast', 'primary', 4.5],
+  ['view-label-color', 'surface', 4.5],
+  ['view-label-color', 'surface-muted', 4.5],
+  ['view-value-color', 'surface', 4.5],
+  ['view-value-color', 'surface-muted', 4.5],
   ...STATES.map(state => [`status-${state}-fg`, `status-${state}-bg`, 4.5]),
 ];
 

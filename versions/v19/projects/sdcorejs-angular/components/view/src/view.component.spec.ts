@@ -2,6 +2,7 @@ import { Component, TemplateRef, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
+import { LayoutTestTheme } from '../../../testing/layout-theme.spec';
 import { SdView } from './view.component';
 
 // ---------------------------------------------------------------------------
@@ -372,6 +373,40 @@ describe('SdView', () => {
       const el = fixture.debugElement.query(By.directive(SdView)).nativeElement as HTMLElement;
       expect(el.querySelector('a')).toBeNull();
       expect(el.querySelector('div.T14M')?.textContent?.trim()).toBe('X');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Shipped theme: label/value contrast tokens
+  // -------------------------------------------------------------------------
+
+  describe('with the shipped theme', () => {
+    @Component({
+      standalone: true,
+      imports: [SdView, LayoutTestTheme],
+      template: `
+        <sd-layout-test-theme />
+        <sd-view label="Mã hợp đồng" display="HD-001"></sd-view>
+        <span class="probe-label" style="color: var(--sd-view-label-color)"></span>
+        <span class="probe-value" style="color: var(--sd-view-value-color)"></span>
+        <span class="probe-secondary" style="color: var(--sd-text-secondary)"></span>
+      `,
+    })
+    class ThemedHost {}
+
+    it('colours the label with --sd-view-label-color and the value with --sd-view-value-color', async () => {
+      await TestBed.configureTestingModule({ imports: [ThemedHost], providers: [provideRouter([])] }).compileComponents();
+      const fixture = TestBed.createComponent(ThemedHost);
+      fixture.detectChanges();
+      const root = fixture.nativeElement as HTMLElement;
+      const color = (selector: string) => getComputedStyle(root.querySelector(selector)!).color;
+
+      const label = root.querySelector('sd-view .sd-view-label')!;
+      expect(label.classList).not.toContain('text-secondary');
+      expect(color('sd-view .sd-view-label')).toBe(color('.probe-label'));
+      expect(color('sd-view .sd-view-value')).toBe(color('.probe-value'));
+      expect(color('.probe-label')).not.toBe(color('.probe-value'));
+      expect(color('.probe-label')).not.toBe(color('.probe-secondary'));
     });
   });
 });

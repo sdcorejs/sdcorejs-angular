@@ -177,13 +177,43 @@ test('VAL-001: named presets keep their 2.15 values, -light/-dark/-contrast incl
   }
 });
 
-test('VAL-001: only additions — no module-level output, new declarations are --sd-* custom properties', () => {
+test('VAL-001: only additions — no module-level output, new declarations are --sd-* or Material tokens mapped to one', () => {
   // Importing the module still emits the colour utilities (as in 2.15), but no longer a :root block.
   assert.doesNotMatch(compile(''), /:root|--mat-form-field/, 'the Material form-field variables moved into theme()');
   const light = declarations(compile('.x { @include sd.theme(); }'));
-  for (const name of Object.keys(light).filter(n => !(n in V215_DEFAULT))) assert.match(name, /^--sd-/, name);
+  for (const name of Object.keys(light).filter(n => !(n in V215_DEFAULT))) {
+    // The Material tier (themes/_material-tokens.scss) only points Material tokens at a Core token.
+    if (/^--(mat|mdc)-/.test(name)) assert.match(light[name], /^var\(--sd-[\w-]+\)$/, name);
+    else assert.match(name, /^--sd-/, name);
+  }
   // The Material form-field variables moved from :root into theme(), so every scope re-declares them.
   assert.match(ruleBody(compile('.scope { @include sd.theme(); }'), '.scope'), /--mat-form-field-error-trailing-icon-color: var\(--sd-error, #ba1a1a\);/);
+});
+
+test('Material tier: focus and selection use the primary, an error reddens only the outline', () => {
+  for (const mode of ['light', 'dark']) {
+    const tokens = declarations(compile(`.x { @include sd.theme($mode: '${mode}'); }`));
+    // Material 19 names first, Material 20+ names second: one source ships to every Angular major.
+    for (const prefix of ['--mdc-outlined-text-field-', '--mat-form-field-outlined-']) {
+      assert.equal(tokens[`${prefix}outline-color`], 'var(--sd-border)', `${mode} ${prefix}outline-color`);
+      assert.equal(tokens[`${prefix}focus-outline-color`], 'var(--sd-primary)', `${mode} ${prefix}focus-outline-color`);
+      assert.equal(tokens[`${prefix}focus-label-text-color`], 'var(--sd-primary)', `${mode} ${prefix}focus-label-text-color`);
+      assert.equal(tokens[`${prefix}error-outline-color`], 'var(--sd-error)', `${mode} ${prefix}error-outline-color`);
+      assert.equal(tokens[`${prefix}error-label-text-color`], 'var(--sd-text-secondary)', `${mode} ${prefix}error-label-text-color`);
+      for (const state of ['', 'hover-', 'focus-']) {
+        assert.equal(tokens[`${prefix}error-${state}label-text-color`], tokens[`${prefix}${state}label-text-color`], `${mode} ${prefix}error-${state}label`);
+      }
+    }
+    for (const prefix of ['--mdc-filled-text-field-', '--mat-form-field-filled-']) {
+      assert.equal(tokens[`${prefix}focus-active-indicator-color`], 'var(--sd-primary)', `${mode} ${prefix}focus-active-indicator-color`);
+      assert.equal(tokens[`${prefix}error-label-text-color`], tokens[`${prefix}label-text-color`], `${mode} ${prefix}error-label`);
+    }
+    assert.equal(tokens['--mat-select-invalid-arrow-color'], 'var(--sd-text-secondary)');
+    assert.equal(tokens['--mat-option-selected-state-label-text-color'], 'var(--sd-primary)');
+    assert.equal(tokens['--mat-full-pseudo-checkbox-selected-icon-color'], 'var(--sd-primary)');
+    assert.equal(tokens['--mat-pseudo-checkbox-full-selected-icon-color'], 'var(--sd-primary)');
+    assert.equal(tokens['--mat-datepicker-calendar-date-selected-state-background-color'], 'var(--sd-primary)');
+  }
 });
 
 test('Ramps: 7 families x 11 steps generated at runtime with color-mix', () => {
