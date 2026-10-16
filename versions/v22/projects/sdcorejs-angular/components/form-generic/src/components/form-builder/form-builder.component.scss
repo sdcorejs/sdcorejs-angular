@@ -122,6 +122,10 @@
   &.has-rules {
     border-style: dashed;
   }
+  // why: a page that single-page navigation never shows reads as muted, so it does not look reachable.
+  &.is-hidden-at-runtime:not(.is-active) {
+    color: var(--sd-text-secondary);
+  }
 }
 
 .fb-toolbar__spacer {

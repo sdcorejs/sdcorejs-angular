@@ -870,6 +870,15 @@ export class InspectorComponent {
   }
 
   /** Page icon from the same presets as a group; picking the current icon again removes it. */
+  /** Title of the active page, or its "Page n" fallback. */
+  readonly pageTitle = computed(() => {
+    const page = this.store.activePage();
+    const index = this.store.pages().findIndex(item => item.id === page.id);
+    return page.label || this.store.t('core.component.form-generic.page', { number: index + 1 });
+  });
+  /** Single-page navigation never renders this page (it is not the first one). */
+  readonly activePageHidden = computed(() => this.store.singlePageHidesPages() && this.store.pages()[0]?.id !== this.store.activePage().id);
+
   pickPageIcon(icon: string): void {
     const page = this.store.activePage();
     this.store.setPageMetadata({ icon: page.icon === icon ? undefined : icon });

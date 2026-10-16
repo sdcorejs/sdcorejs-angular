@@ -8,9 +8,85 @@
 
 <!-- why: mọi control của inspector dùng hideInlineError — panel hẹp, xếp dày; lỗi (nếu có) hiện
      bằng viền đỏ + icon kèm tooltip thay vì dòng chữ chiếm chỗ dưới từng ô. -->
-@if (!_item) {
-  <!-- ══════════ Không chọn gì: cấu hình cấp form ══════════ -->
-  <div class="ins-empty">
+@if (!_item && store.pageInspected()) {
+  <!-- ══════════ Không chọn phần tử, đang chọn trang: thiết lập của trang ══════════ -->
+  @let _page = store.activePage();
+  <div class="ins-empty" data-inspector-panel="page">
+    <div class="ins-head">
+      <span class="ins-head__icon" aria-hidden="true"><sd-icon [name]="_page.icon || 'description'" size="20px"></sd-icon></span>
+      <div class="ins-head__text">
+        <div class="ins-head__title">{{ 'core.component.form-builder.page.settings' | sdTranslate }}</div>
+        <div class="ins-head__sub">{{ pageTitle() }}</div>
+      </div>
+    </div>
+    <div class="ins-body">
+      <section class="ins-card ins-card--form" [attr.aria-label]="'core.component.form-builder.page.settings' | sdTranslate">
+        @if (activePageHidden()) {
+          <sd-inform type="tip" warning data-page-hidden-hint>{{ 'core.component.form-builder.page.single-hint' | sdTranslate }}</sd-inform>
+        }
+        <sd-input
+          size="sm"
+          labelPlacement="top"
+          hideInlineError
+          data-page-field="title"
+          [label]="'core.component.form-builder.page.title' | sdTranslate"
+          [model]="_page.label"
+          (modelChange)="store.setPageMetadata({ label: $event || undefined }, 'page-label:' + _page.id)"
+          (sdBlur)="store.sealHistory()"></sd-input>
+        <sd-textarea
+          size="sm"
+          labelPlacement="top"
+          hideInlineError
+          data-page-field="description"
+          [rows]="3"
+          [label]="'core.component.form-builder.page.description' | sdTranslate"
+          [model]="_page.description"
+          (modelChange)="store.setPageMetadata({ description: $event || undefined }, 'page-description:' + _page.id)"
+          (sdBlur)="store.sealHistory()"></sd-textarea>
+        <p class="ins-note">{{ 'core.component.form-builder.page.description-hint' | sdTranslate }}</p>
+        <div class="ins-field">
+          <div class="ins-field__label">{{ 'core.component.form-builder.page.icon' | sdTranslate }}</div>
+          <div class="ins-icons" role="group" [attr.aria-label]="'core.component.form-builder.page.icon' | sdTranslate">
+            @for (icon of iconPresets; track icon) {
+              <button
+                type="button"
+                class="ins-icons__btn"
+                [class.is-active]="_page.icon === icon"
+                [attr.aria-pressed]="_page.icon === icon"
+                [attr.aria-label]="icon"
+                (click)="pickPageIcon(icon)">
+                <sd-icon [name]="icon" size="18px"></sd-icon>
+              </button>
+            }
+          </div>
+        </div>
+        <attribute-expression
+          [label]="'core.component.form-builder.visible-when' | sdTranslate"
+          [elements]="elements()"
+          [variables]="variables()"
+          [model]="_page.rules?.visible"
+          (sdChange)="store.setPageRule('visible', $event)"></attribute-expression>
+        <attribute-expression
+          [label]="'core.component.form-builder.hidden-when' | sdTranslate"
+          [elements]="elements()"
+          [variables]="variables()"
+          [model]="_page.rules?.hidden"
+          (sdChange)="store.setPageRule('hidden', $event)"></attribute-expression>
+      </section>
+      <!-- why: same quiet text button as Shortcuts in the form panel; the header stays free for the page title. -->
+      <sd-button
+        type="text"
+        color="secondary"
+        size="sm"
+        prefixIcon="tune"
+        data-inspector-action="form-settings"
+        [title]="'core.component.form-builder.page.back-to-form' | sdTranslate"
+        (click)="store.select(null)"></sd-button>
+    </div>
+  </div>
+} @else if (!_item) {
+  <!-- ══════════ Không chọn gì: thiết lập cấp biểu mẫu (trang nằm ở panel riêng, mở bằng chip trang) ══════════ -->
+  <div class="ins-empty" data-inspector-panel="form">
     <div class="ins-head">
       <span class="ins-head__icon" aria-hidden="true"><sd-icon name="dynamic_form" size="20px"></sd-icon></span>
       <div class="ins-head__text">
@@ -20,9 +96,9 @@
     </div>
     <div class="ins-body">
       <!-- why: same card head as Variables / Form validations below; fields stretch to the card width. -->
-      <section class="ins-card ins-card--form" [attr.aria-label]="'core.component.form-builder.page.settings' | sdTranslate">
+      <section class="ins-card ins-card--form" [attr.aria-label]="'core.component.form-builder.page.navigation-card' | sdTranslate">
         <div class="ins-card__row">
-          <span>{{ 'core.component.form-builder.page.settings' | sdTranslate }}</span>
+          <span>{{ 'core.component.form-builder.page.navigation-card' | sdTranslate }}</span>
         </div>
         <sd-select
           size="sm"
@@ -35,48 +111,15 @@
           displayField="display"
           [model]="navigationMode()"
           (modelChange)="setNavigation($event)"></sd-select>
+        @if (store.singlePageHidesPages()) {
+          <sd-inform type="tip" warning data-single-page-hint>{{ 'core.component.form-builder.page.single-hint' | sdTranslate }}</sd-inform>
+        }
         @if (navigationMode() === 'steps') {
           <fb-toggle-row
             [label]="'core.component.form-builder.page.linear' | sdTranslate"
             [model]="linear()"
             (modelChange)="store.setLinear($event)"></fb-toggle-row>
         }
-        <sd-input
-          size="sm"
-          labelPlacement="top"
-          hideInlineError
-          [label]="'core.component.form-builder.display-label' | sdTranslate"
-          [model]="store.activePage().label"
-          (modelChange)="store.setPageMetadata({ label: $event || undefined }, 'page-label:' + store.activePage().id)"
-          (sdBlur)="store.sealHistory()"></sd-input>
-        <div class="ins-field">
-          <div class="ins-field__label">{{ 'core.component.form-builder.page.icon' | sdTranslate }}</div>
-          <div class="ins-icons" role="group" [attr.aria-label]="'core.component.form-builder.page.icon' | sdTranslate">
-            @for (icon of iconPresets; track icon) {
-              <button
-                type="button"
-                class="ins-icons__btn"
-                [class.is-active]="store.activePage().icon === icon"
-                [attr.aria-pressed]="store.activePage().icon === icon"
-                [attr.aria-label]="icon"
-                (click)="pickPageIcon(icon)">
-                <sd-icon [name]="icon" size="18px"></sd-icon>
-              </button>
-            }
-          </div>
-        </div>
-        <attribute-expression
-          [label]="'core.component.form-builder.visible-when' | sdTranslate"
-          [elements]="elements()"
-          [variables]="variables()"
-          [model]="store.activePage().rules?.visible"
-          (sdChange)="store.setPageRule('visible', $event)"></attribute-expression>
-        <attribute-expression
-          [label]="'core.component.form-builder.hidden-when' | sdTranslate"
-          [elements]="elements()"
-          [variables]="variables()"
-          [model]="store.activePage().rules?.hidden"
-          (sdChange)="store.setPageRule('hidden', $event)"></attribute-expression>
       </section>
       <div class="ins-card">
         <div class="ins-card__row">

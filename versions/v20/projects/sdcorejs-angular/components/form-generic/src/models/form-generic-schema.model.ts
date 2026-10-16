@@ -28,7 +28,10 @@ export interface SdFormGenericVisibilityRules {
 
 export interface SdFormGenericPage {
   id: string;
+  /** Page title: tab/step label, and the page name in the builder. */
   label?: string;
+  /** Plain text shown at the top of the page content while filling in the form. */
+  description?: string;
   icon?: string;
   rules?: SdFormGenericVisibilityRules;
   elements: SdFormGenericPageElement[];

@@ -310,7 +310,7 @@ export class SdFormRender {
       page.label || this.t('core.component.form-generic.page', { number: this.normalized().pages.findIndex(p => p.id === page.id) + 1 })
     );
   }
-  pageDomId(pageId: string, part: 'tab' | 'panel'): string {
+  pageDomId(pageId: string, part: 'tab' | 'panel' | 'description'): string {
     return `${this.#renderId}-${part}-${encodeURIComponent(pageId)}`;
   }
 

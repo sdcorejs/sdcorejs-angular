@@ -55,7 +55,8 @@ interface SdFormGenericSchema {
 
 interface SdFormGenericPage {
   id: string;
-  label?: string;
+  label?: string; // page title: tab/step label and the page name in the builder
+  description?: string; // plain text shown at the top of the page content
   icon?: string;
   rules?: { visible?: Filter; hidden?: Filter };
   elements: (SdFormGenericGroup | SdFormGenericField)[];
@@ -66,7 +67,7 @@ The grammar is fixed: **schema → pages → group | field**, and a group holds 
 
 ### Tabs and steps
 
-With no `navigation`, the renderer keeps the released first-page behavior. `{ type: 'tabs' }` renders the visible pages as manually activated tabs: arrows/Home/End move focus, Enter/Space activates. Labels use `page.label` or localized "Page n"; icons are optional. The header scrolls horizontally on narrow screens.
+With no `navigation`, the renderer keeps the released first-page behavior. A page `description` renders as plain text (line breaks kept) above the page fields in every mode; with tabs/steps it also describes the page region (`aria-describedby`). `{ type: 'tabs' }` renders the visible pages as manually activated tabs: arrows/Home/End move focus, Enter/Space activates. Labels use `page.label` or localized "Page n"; icons are optional. The header scrolls horizontally on narrow screens.
 
 `{ type: 'steps' }` allows free step selection. Add `linear: true` to validate all visible predecessor pages before moving forward. Errors block advancement and reveal the first invalid page; warnings do not block. Previous/backward navigation remains available while async forward validation is pending and cancels that transition. Additional forward requests are rejected while it is pending; they are not queued. Changing schema, values, page visibility or the active page invalidates old results. There is no automatic save/submit or final-step callback.
 
@@ -93,7 +94,7 @@ const schema: SdFormGenericSchema = {
 
 Visible inactive panels stay mounted with `hidden` and `inert`: controls, dirty/touched state and async validators remain intact, while inactive fields cannot receive focus. A rule-hidden page unmounts its owned controls and retains its values. `validate()` checks all visible pages, including unvisited ones, waits for async field validation, then runs form-level validations once. External FormGroup controls still participate. Only a current failed field-validation attempt navigates/focuses; global/external-only errors have no invented field destination. `upload()` visits mounted visible fields once and skips rule-hidden pages.
 
-The builder page strip selects/adds/duplicates/reorders/deletes pages. Select a page to edit label/icon/visibility rules in the inspector (the icon is picked from the same presets as a group; picking it again removes it); form settings choose Single page/Tabs/Steps and Linear. Page commands/configuration participate in the existing undo/redo history; page selection does not. The last page cannot be removed. Nonempty/referenced page deletion is confirmed, and external references remain for consumer repair. Duplicate rewrites only structured references owned by the copied page and assigns globally unique field keys/IDs. Unsupported elements disable page duplication with an explanation. Unknown metadata and imported pages survive single-page view. Preview uses the real renderer and applies page rules and navigation.
+The builder page strip selects/adds/duplicates/reorders/deletes pages. Clicking a page (or adding/duplicating one) opens the **page settings** in the inspector: title (`label`), description, icon (picked from the same presets as a group; picking it again removes it) and visibility rules. Clicking the empty canvas, or the form-settings button in the page panel, opens the **form settings**: page navigation (Single page/Tabs/Steps and Linear), variables, form validations and shortcuts. Selecting an element opens its own properties. Single page renders only the first page, so with two or more pages the form settings show a warning tip under Navigation and every later page in the strip is muted with a `visibility_off` icon and an accessible description; the builder never switches navigation by itself. Page commands/configuration participate in the existing undo/redo history; page selection does not. The last page cannot be removed. Nonempty/referenced page deletion is confirmed, and external references remain for consumer repair. Duplicate rewrites only structured references owned by the copied page and assigns globally unique field keys/IDs. Unsupported elements disable page duplication with an explanation. Unknown metadata and imported pages survive single-page view. Preview uses the real renderer and applies page rules and navigation.
 
 An element whose `type` this version does not know (added by a later release) is **skipped** by the renderer (one dev-mode warning per type) and **kept as-is** by the builder, which shows it as an "unsupported" card that can be moved or deleted but not edited or duplicated.
 
