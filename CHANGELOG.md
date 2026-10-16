@@ -31,7 +31,8 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ### Fixed
 
-- Select, Autocomplete and the other outlined `size="sm"` fields: the resting floating label sits on the line of the placeholder and the selected value. It was 1px lower (visible at 100% and 125% zoom). The old `sm` label rule targeted a Material 2 class and never applied.
+- Select, Autocomplete and the other outlined `size="sm"` fields: the resting floating label shares the 24px line height of the value, so it sits on the same pixel row as the placeholder and the selected value on every OS. On Windows it was 1px lower: Chrome floors the half-leading of the value line, and Roboto is 17px tall there (16px on Linux and macOS). The old `sm` label rule targeted a Material 2 class and never applied.
+- Layout search field on Angular 20–22: the placeholder colour and the square shape apply again; they were set only under the Material 19 token names.
 - Input: `viewed=true` shows a value that arrives after the first render — through `[model]` or the parent form's `patchValue` — and keeps following later changes, masked values included. It used to keep the first value it read, so a detail screen rendered before its record loaded showed "--". A `patchValue(…, { emitEvent: false })` still does not refresh the viewed text (see `sd-input.md`).
 - MiniEditor now synchronizes external values before/after mount, implements CVA touched and disabled state, and retains its 500ms leading/trailing output contract. Editor retains form/name registration and 100ms debounce.
 

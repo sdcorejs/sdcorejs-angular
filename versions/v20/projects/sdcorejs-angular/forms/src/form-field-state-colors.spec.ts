@@ -122,7 +122,9 @@ describe('Form field state colours with the shipped theme', () => {
     expect(options.length).toBe(2);
     options.forEach(option => expect(getComputedStyle(option.querySelector('.mdc-list-item__primary-text')!).fontSize).toBe('14px'));
     const selected = options.find(option => option.classList.contains('mdc-list-item--selected'))!;
-    expect(getComputedStyle(selected.querySelector('.mdc-list-item__primary-text')!).color).toBe(PRIMARY);
+    // Material 22 paints the selected colour only while the option is not the active one, and the selected
+    // option is active when the panel opens, so read the token the option resolves rather than its colour.
+    expect(getComputedStyle(selected).getPropertyValue('--mat-option-selected-state-label-text-color').trim()).toBe('#ae7129');
     expect(getComputedStyle(fields[2].querySelector('.mat-mdc-select-value')!).fontSize).toBe('14px');
   });
 

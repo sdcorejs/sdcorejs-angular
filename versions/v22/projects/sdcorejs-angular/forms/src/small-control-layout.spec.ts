@@ -140,9 +140,11 @@ describe('Small controls with the shipped theme', () => {
     });
   });
 
-  // why: Chrome rounds a 0.5px gap between the resting label and the value text to a whole pixel, so the
-  // label visibly sat 1px below the text it turns into (sm, at 100% and 125% zoom).
-  for (const size of ['sm', 'md'] as const) {
+  // why: the value text sits in the 24px line box of the control, where Chrome floors the half-leading
+  // (Roboto is 17px tall on Windows, 16px on Linux/macOS). The sm resting label shares that line height, so
+  // both glyphs land on the same pixel row on every OS; before, it sat 1px low on Windows. md keeps
+  // Material's own label geometry, which differs by up to 0.35px per OS, so it is not asserted here.
+  for (const size of ['sm'] as const) {
     it(`rests the select label on the line of its selected value: ${size}`, async () => {
       Object.assign(fixture.componentInstance, { size });
       fixture.detectChanges();

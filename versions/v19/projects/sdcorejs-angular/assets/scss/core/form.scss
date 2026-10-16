@@ -274,14 +274,16 @@
         }
       }
 
-      // why: trong khung 32px, label nghỉ (chưa float) nằm thấp hơn chữ giá trị/placeholder 1px (đo
-      // pixel trên select, autocomplete, input ở DPR 1 và 1.25) — label tâm ~16.8px, chữ ~16.5px, Chrome
-      // làm tròn chênh 0.3–0.5px thành 1px. Nâng 0.5px để label trùng dòng chữ khi float lên. Chỉ trạng
-      // thái nghỉ; `translate` cộng dồn với `transform` của Material nên không đè giá trị của nó.
-      // (Rule `top` cũ trỏ vào class M2 `.mat-mdc-form-field-label` không còn tồn tại nên chưa từng có
-      // hiệu lực.)
+      // why: chữ giá trị/placeholder nằm trong line box 24px của control, nên Chrome đặt glyph ở
+      // `floor((24 - cao_font) / 2)` — cao_font theo metrics của OS (Roboto: 17px trên Windows, 16px trên
+      // Linux/macOS). Label nghỉ dùng `line-height: normal` và căn tâm bằng translateY(-50%), không bị làm
+      // tròn như vậy, nên trên Windows nó thấp hơn chữ 1px (đo pixel ở DPR 1 và 1.25) còn Linux thì khớp.
+      // Cho label nghỉ cùng line-height với control: line box của label trùng line box của chữ (cùng top
+      // 5px trong khung 32px), glyph trùng nhau trên mọi OS. Chỉ trạng thái nghỉ — label đã float giữ
+      // `normal` để vị trí trên viền không đổi. (Rule `top` cũ trỏ vào class M2
+      // `.mat-mdc-form-field-label` không còn tồn tại nên chưa từng có hiệu lực.)
       .mdc-floating-label:not(.mdc-floating-label--float-above) {
-        translate: 0 -0.5px;
+        line-height: var(--mat-form-field-container-text-line-height, var(--mat-sys-body-large-line-height, 24px));
       }
 
       // Fix for date range and datetime inputs with small size

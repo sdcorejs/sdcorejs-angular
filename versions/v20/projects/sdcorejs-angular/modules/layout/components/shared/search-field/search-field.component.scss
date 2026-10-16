@@ -25,9 +25,9 @@
   color: var(--sd-black400, var(--sd-text-muted));
 }
 
-// why: MDC variables are inherited into SdInput without changing global fields. The outline tokens are
-// declared under both names — Material 19 (`--mdc-outlined-text-field-*`) and 20+
-// (`--mat-form-field-outlined-*`) — because sd.theme() maps both onto the Core palette.
+// why: MDC variables are inherited into SdInput without changing global fields. The outline, placeholder and
+// shape tokens are declared under both names — Material 19 (`--mdc-outlined-text-field-*`) and 20+
+// (`--mat-form-field-outlined-*`); Angular 20–22 ignore the Material 19 names.
 .sd-layout-search-field__control {
   flex: 1;
   min-width: 0;
@@ -40,6 +40,8 @@
   --mat-form-field-outlined-focus-outline-color: transparent;
   --mdc-outlined-text-field-input-text-placeholder-color: var(--sd-black400, var(--sd-text-muted));
   --mdc-outlined-text-field-container-shape: 0px;
+  --mat-form-field-outlined-input-text-placeholder-color: var(--sd-black400, var(--sd-text-muted));
+  --mat-form-field-outlined-container-shape: 0px;
 }
 
 // why: Consumer-wide focus rules must not stack a second ring over the 1px pill ring.
