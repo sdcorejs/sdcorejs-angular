@@ -27,6 +27,7 @@ export const appConfig: ApplicationConfig = {
 - Use an IANA id (`'Asia/Ho_Chi_Minh'`, `'UTC'`, `'Asia/Bangkok'`...). The typed list only drives autocomplete; any IANA id is accepted.
 - A numeric offset such as `'+07:00'` is rejected: it has no offset history. An unknown id throws a clear error when the service is created.
 - The service reads the setting once, from the root injector. Provide `SD_CORE_CONFIGURATION` in `ApplicationConfig`; a value provided on a lazy route is not read.
+- Try it in the Showcase: add `?timeZone=Asia/Ho_Chi_Minh` to a Showcase URL and load the page; the Date Time page shows the active zone, the date controls and a server table in that zone.
 
 ## Value kinds
 

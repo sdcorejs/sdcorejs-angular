@@ -9,6 +9,7 @@
     "build:prod": "node --max_old_space_size=8000 ./node_modules/@angular/cli/bin/ng build showcase --configuration production",
     "test": "ng test showcase --watch=false --browsers=ChromeHeadless --source-map=false",
     "link:library": "node ../scripts/link-showcase-library.mjs",
+    "e2e": "playwright test",
     "prestart": "npm run link:library",
     "prebuild": "npm run link:library"
   },
@@ -56,6 +57,7 @@
     "@angular-devkit/build-angular": "^19.0.0",
     "@angular/cli": "^19.0.0",
     "@angular/compiler-cli": "^19.0.0",
+    "@playwright/test": "1.63.0",
     "@types/jasmine": "~5.1.0",
     "@types/prismjs": "^1.26.6",
     "jasmine-core": "~5.5.0",
