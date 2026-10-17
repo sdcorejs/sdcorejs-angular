@@ -1,6 +1,7 @@
 import { Injectable, Provider } from '@angular/core';
 import { DateFnsAdapter, provideDateFnsAdapter } from '@angular/material-date-fns-adapter';
 import { DateAdapter, MatDateFormats } from '@angular/material/core';
+import { ɵsdInjectDateTime } from '@sdcorejs/angular/services/date-time';
 import { isValid as isValidDate, parse as parseDate } from 'date-fns';
 
 /**
@@ -20,6 +21,13 @@ import { isValid as isValidDate, parse as parseDate } from 'date-fns';
  */
 @Injectable()
 export class SdStrictDateFnsAdapter extends DateFnsAdapter {
+  readonly #dateTime = ɵsdInjectDateTime();
+
+  /** Calendar today marker: today in `ISdCoreConfiguration.timeZone` when one is set. */
+  override today(): Date {
+    return this.#dateTime && this.#dateTime.timeZone !== 'local' ? this.#dateTime.today() : super.today();
+  }
+
   override parse(value: unknown, parseFormat: string | string[]): Date | null {
     if (typeof value !== 'string') return super.parse(value, parseFormat);
 

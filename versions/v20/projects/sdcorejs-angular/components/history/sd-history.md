@@ -37,7 +37,7 @@ interface SdHistoryItemType {
     color?: Color;        // 'primary' | 'success' | 'warning' | 'error' | ...
     icon?: string;          // Material icon name
   };
-  date?: string;            // ISO string — rendered with viewDateTime pipe (dd/MM/yyyy HH:mm)
+  date?: string;            // ISO string — rendered with viewDateTime pipe (dd/MM/yyyy HH:mm), in ISdCoreConfiguration.timeZone when set
   actor?: string;           // Username (rendered as "Bởi @<actor>")
   source?: string;          // Free-form source label (e.g. "Web", "API", "Mobile")
   description?: string;     // Free-form long text below the meta row

@@ -2,7 +2,7 @@ import { Injectable, Injector, computed, inject, signal } from '@angular/core';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdExcelColumn, SdExcelService, SdNotifyService } from '@sdcorejs/angular/services';
 import { SdExcelSheet } from '@sdcorejs/angular/services/excel';
-import { DateUtilities } from '@sdcorejs/utils/fns';
+import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import { SdTableColumn } from '../../models/table-column.model';
 import { ConfiguredTableResult } from '../../models/table-option-config.model';
 import { SdTableOptionExportColumn } from '../../models/table-option-export.model';
@@ -37,6 +37,8 @@ export class TableExportService {
   #excelService = inject(SdExcelService);
   #i18n = inject(I18nService);
   #injector = inject(Injector);
+  // Cells export as the wall clock of ISdCoreConfiguration.timeZone, the same text the table shows.
+  #dateTime = inject(SdDateTimeService);
 
   // ==========================================
   // SIGNAL STATE (Component sẽ bind trực tiếp vào đây)
@@ -201,11 +203,11 @@ export class TableExportService {
                 obj[fieldStr] = column.option?.displayOnFalse || 'False';
               }
             } else if (column.type === 'date') {
-              obj[fieldStr] = DateUtilities.toFormat(itemValue, 'yyyy/MM/dd');
+              obj[fieldStr] = this.#dateTime.toFormat(itemValue, 'yyyy/MM/dd');
             } else if (column.type === 'datetime') {
-              obj[fieldStr] = DateUtilities.toFormat(itemValue, 'yyyy/MM/dd HH:mm:ss');
+              obj[fieldStr] = this.#dateTime.toFormat(itemValue, 'yyyy/MM/dd HH:mm:ss');
             } else if (column.type === 'time') {
-              obj[fieldStr] = DateUtilities.toFormat(itemValue, 'HH:mm:ss');
+              obj[fieldStr] = this.#dateTime.toFormat(itemValue, 'HH:mm:ss');
             } else if (column.type === 'values' || column.type === 'lazy-values') {
               const vals = (Array.isArray(itemValue) ? itemValue : [itemValue]).filter(e => !!e?.toString());
               obj[fieldStr] = vals.map(val => cacheObjValues[fieldStr]?.[val]?.[column.option.displayField as any] || val)?.join(', ');

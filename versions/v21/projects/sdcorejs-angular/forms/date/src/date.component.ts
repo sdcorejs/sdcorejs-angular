@@ -39,6 +39,7 @@ import {
   sdParseTransformedTemporal,
   sdSerializeTemporalValue,
   sdViewedInline,
+  ɵsdParseTransformedInstant,
   sdViewedTransform,
   ɵsdFormControlConnector,
   ɵsdModelFacingControl,
@@ -48,6 +49,7 @@ import type { SdLabelPlacement } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { sdFormControlState } from '@sdcorejs/angular/forms/models';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import { Size } from '@sdcorejs/utils/models';
 import { DateUtilities } from '@sdcorejs/utils/fns';
 import { BrowserUtilities, Utilities } from '@sdcorejs/utils/fns';
@@ -147,6 +149,9 @@ export class SdDate implements OnDestroy, OnInit {
   private ref = inject(ChangeDetectorRef);
   private formConfig = inject(SD_FORM_CONFIGURATION, { optional: true });
   readonly #i18n = inject(I18nService);
+  readonly #dateTime = inject(SdDateTimeService);
+  /** why: with `ISdCoreConfiguration.timeZone` set, model values are converted in that zone at the model/control boundary. */
+  readonly #zoned = this.#dateTime.timeZone !== 'local';
   // why: focus + mở datepicker hoãn 100ms; handle phải bị clear khi destroy, nếu không
   // datePicker().open() dựng overlay lịch mồ côi sau khi control đã tháo.
   readonly #timers = ɵsdTimerScope();
@@ -302,7 +307,8 @@ export class SdDate implements OnDestroy, OnInit {
    * và mọi thứ đi đúng đường cũ (form vẫn nhận `Date`).
    */
   readonly #modelFacing = ɵsdModelFacingControl<SdDateModelValue>({
-    active: computed(() => !!this.transform()),
+    // why: with a zone the picker Date would serialize to a host-dependent instant, so the form gets the model.
+    active: computed(() => !!this.transform() || this.#zoned),
     model: this.valueModel,
     writeModel: value => {
       this.valueModel.set(value);
@@ -320,7 +326,27 @@ export class SdDate implements OnDestroy, OnInit {
    */
   #serializeCommitted(value: Date | null): SdDateModelValue {
     if (!value) return null;
-    return sdSerializeTemporalValue(sdLocalStartOfDay(value), this.transform()) ?? dateControlToModel(value);
+    const startOfDay = sdLocalStartOfDay(value);
+    return (
+      sdSerializeTemporalValue(this.#zoned ? this.#dateTime.fromWallClock(startOfDay) : startOfDay, this.transform()) ??
+      dateControlToModel(value)
+    );
+  }
+
+  /** Model → `yyyy/MM/dd`. In a zone an instant takes its calendar day there; zone-less days keep their digits. */
+  #normalizeModel(value: SdDateModelValue): string | null {
+    if (!this.#zoned) return normalizeDateModel(value);
+    const day = this.#dateTime.toFormat(value, 'yyyy/MM/dd');
+    if (day) return day;
+    const instant = ɵsdParseTransformedInstant(value);
+    return instant ? this.#dateTime.toFormat(instant, 'yyyy/MM/dd') || null : null;
+  }
+
+  /** Model → picker carrier (local midnight of the calendar day). */
+  #modelToControl(value: SdDateModelValue): Date | null {
+    if (!this.#zoned) return dateModelToControl(value);
+    const normalized = this.#normalizeModel(value);
+    return normalized ? parseDate(normalized, 'yyyy/MM/dd', new Date()) : null;
   }
 
   /**
@@ -330,7 +356,7 @@ export class SdDate implements OnDestroy, OnInit {
    */
   #modelsEqual(left: SdDateModelValue, right: SdDateModelValue): boolean {
     if (this.transform()) return Object.is(left, right);
-    return normalizeDateModel(left) === normalizeDateModel(right);
+    return this.#normalizeModel(left) === this.#normalizeModel(right);
   }
 
   readonly #formConnector = ɵsdFormControlConnector<SdDateModelValue, Date | null>({
@@ -343,7 +369,7 @@ export class SdDate implements OnDestroy, OnInit {
       this.valueModel.set(value);
       this.sdChange.emit(value);
     },
-    modelToControl: dateModelToControl,
+    modelToControl: value => this.#modelToControl(value),
     controlToModel: value => this.#serializeCommitted(value),
     modelEquals: (left, right) => this.#modelsEqual(left, right),
     controlEquals: dateControlsEqual,
@@ -373,6 +399,10 @@ export class SdDate implements OnDestroy, OnInit {
 
   // Hàm private tái sử dụng cho parse Min/Max Date
   #parseDateBoundary(val: any): Date | null {
+    if (this.#zoned) {
+      if (val === 'TODAY') return this.#dateTime.today();
+      return val ? this.#modelToControl(val) : null;
+    }
     if (val === 'TODAY') return new Date();
     if (val && DateUtilities.isDate(val)) return new Date(val);
     return null;

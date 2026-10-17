@@ -67,20 +67,27 @@ export const sdFilterFieldTypes = (schema: SdFormGenericSchema | null | undefine
   return types;
 };
 
-const evaluate = (filter: Filter, entity: Record<string, unknown>, fieldTypes: SdFormGenericFieldTypes | undefined): boolean => {
+const evaluate = (
+  filter: Filter,
+  entity: Record<string, unknown>,
+  fieldTypes: SdFormGenericFieldTypes | undefined,
+  timeZone: string | undefined
+): boolean => {
   if (filter.operator === 'AND' || filter.operator === 'OR') {
     // why: null children (hand-edited JSON) and empty sub-groups carry no condition — skipped, else an
     // empty group would make an OR always true.
     const children = (Array.isArray(filter.data) ? filter.data : []).filter(child => isNode(child) && !sdIsEmptyFilter(child));
     if (!children.length) return true;
     return filter.operator === 'AND'
-      ? children.every(child => evaluate(child, entity, fieldTypes))
-      : children.some(child => evaluate(child, entity, fieldTypes));
+      ? children.every(child => evaluate(child, entity, fieldTypes, timeZone))
+      : children.some(child => evaluate(child, entity, fieldTypes, timeZone));
   }
   // why: a leaf without a field can never match; FilterUtilities would read it as a group and throw.
   const field = (filter as { field?: unknown }).field;
   if (typeof field !== 'string') return false;
-  const options = fieldTypes ? { fieldTypes: { ...fieldTypes } } : undefined;
+  // why: `timeZone` is passed only when one is configured, so the local options stay exactly as before.
+  const options =
+    fieldTypes || timeZone ? { ...(fieldTypes ? { fieldTypes: { ...fieldTypes } } : {}), ...(timeZone ? { timeZone } : {}) } : undefined;
   if ((filter.operator === 'IN' || filter.operator === 'NOT_IN') && Array.isArray(entity[field])) {
     const selected = entity[field] as unknown[];
     const list = Array.isArray(filter.data) ? (filter.data as unknown[]) : [filter.data];
@@ -97,15 +104,23 @@ const evaluate = (filter: Filter, entity: Record<string, unknown>, fieldTypes: S
   return FilterUtilities.evaluate(filter, entity, options);
 };
 
-/** Đánh giá một Filter trên scope. Không mutate scope. */
-export const sdEvaluateFilter = (filter: Filter, scope: SdFormGenericScope, fieldTypes?: SdFormGenericFieldTypes): boolean => {
+/**
+ * Đánh giá một Filter trên scope. Không mutate scope. `timeZone` (IANA, chỉ khi có
+ * `ISdCoreConfiguration.timeZone`) resolve date-today, date-relative và chuỗi ngày không múi giờ trong zone đó.
+ */
+export const sdEvaluateFilter = (
+  filter: Filter,
+  scope: SdFormGenericScope,
+  fieldTypes?: SdFormGenericFieldTypes,
+  timeZone?: string
+): boolean => {
   if (!isNode(filter)) return false;
   // why: no prototype — a `__proto__` key in the value becomes a plain property instead of a new prototype.
   const entity: Record<string, unknown> = Object.create(null);
   for (const [key, value] of Object.entries(scope)) entity[key] = isEmptyValue(value) ? null : value;
   // why: a checkbox nobody touched has no value yet, but on screen it is unticked — `EQUAL false` must match.
   for (const [key, type] of Object.entries(fieldTypes ?? {})) if (type === 'boolean' && entity[key] == null) entity[key] = false;
-  return evaluate(filter, entity, fieldTypes);
+  return evaluate(filter, entity, fieldTypes, timeZone);
 };
 
 /**
@@ -115,12 +130,13 @@ export const sdEvaluateFilter = (filter: Filter, scope: SdFormGenericScope, fiel
 export const sdElementState = (
   target: SdFormGenericRuleTarget,
   scope: SdFormGenericScope,
-  fieldTypes?: SdFormGenericFieldTypes
+  fieldTypes?: SdFormGenericFieldTypes,
+  timeZone?: string
 ): SdFormGenericElementState => {
   const rules = target.rules;
   // why: an empty group (no condition) is the same as no rule — never "always hidden / required".
   const present = (filter: Filter | undefined): filter is Filter => !sdIsEmptyFilter(filter);
-  const matches = (filter: Filter | undefined) => present(filter) && sdEvaluateFilter(filter, scope, fieldTypes);
+  const matches = (filter: Filter | undefined) => present(filter) && sdEvaluateFilter(filter, scope, fieldTypes, timeZone);
   const visible = !target.hidden && (!present(rules?.visible) || matches(rules?.visible)) && !matches(rules?.hidden);
   return {
     visible,

@@ -97,6 +97,18 @@ arrives with seconds or milliseconds keeps them until the user commits again.
 
 The field still shows `dd/MM/yyyy HH:mm` (or `dd/MM/yyyy HH:mm:ss` with `showSeconds`).
 
+## Time zone (`ISdCoreConfiguration.timeZone`)
+
+With a configured zone, `<sd-datetime>` shows and edits the wall clock of that zone instead of the browser's:
+
+- An instant model (`'1960-05-19T16:00:00Z'`, `Date`) shows `20/05/1960 00:00` under `'Asia/Ho_Chi_Minh'`, in every browser. A zone-less model (`'1960/05/20 08:00:00'`) keeps its digits.
+- A `transform` commits the typed or picked wall clock as an instant **in the zone**: `20/05/1960 08:00` with `transform="ISOString"` is `'1960-05-20T00:00:00.000Z'` under `'Asia/Ho_Chi_Minh'` (UTC+08 in 1960).
+- `TODAY` in `[min]` / `[max]`, the picker's Now button and its suggested time use the current wall clock of the zone. Instant limits are shown in the zone.
+- **`form.value` changes:** the parent `FormGroup` holds the model value (`'yyyy/MM/dd HH:mm:ss'`, or the transformed string) instead of the display string.
+- **`form.valueChanges`:** each user edit that changes the model emits once with the model value (as in local mode); writes from the parent `[(model)]` binding stay silent. The same holds with a `transform` and no zone.
+
+Without the setting (or with `'local'`) nothing changes. See [`SdDateTimeService`](../../services/date-time/sd-date-time.md).
+
 ## Outputs
 
 | Name       | Type             | Notes                                                                  |

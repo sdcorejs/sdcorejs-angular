@@ -43,6 +43,7 @@ import { SdTableRowMobileDefDirective } from './directives/sd-table-row-mobile-d
 import { SdTableMobileActionsComponent } from './components/mobile-cards/mobile-actions.component';
 import { SdTableMobileAction } from './components/mobile-cards/mobile-action.model';
 import { SdTableMobileCardsComponent } from './components/mobile-cards/mobile-cards.component';
+import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import { SdViewportService } from '@sdcorejs/angular/services/viewport';
 import { SdTableColumn, SdTableColumnNormal } from './models/table-column.model';
 import { SdTableCommand } from './models/table-command.model';
@@ -560,6 +561,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   readonly #aggregateNumber = inject(SdFormatNumberPipe);
   readonly #aggregateDate = inject(SdFormatDatePipe);
   readonly #aggregateDatetime = inject(SdFormatDatetimePipe);
+  readonly #dateTime = inject(SdDateTimeService);
 
   #refreshAggregate(): void {
     const configuredOption = this.tableOption();
@@ -586,6 +588,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
         predicate: this.#treeSearchPredicate,
         format: (value, column, operation) => this.#formatAggregate(value, column, operation),
         diagnose: error => console.error(error),
+        dateTime: this.#dateTime,
       })
     );
     this.#ref.markForCheck();
@@ -970,7 +973,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   };
 
   #filterLocal = <TItem extends SdTableItem<T> | T>(localItems: TItem[], filterInfo: SdTableFilterRequest<T>) => {
-    const result = filterLocalItems(localItems, this.tableOption()!, filterInfo);
+    const result = filterLocalItems(localItems, { ...this.tableOption()!, dateTime: this.#dateTime }, filterInfo);
     this.#treeSearchPredicate = result.treeSearchPredicate;
     return {
       items: result.items,
@@ -1107,6 +1110,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
         columns: opt.columns,
         externalFilters: opt.filter?.externalFilters,
         quickSearch: this.quickSearchOption(),
+        dateTime: this.#dateTime,
       });
       const optionRevision = this.#optionRevision;
       const sourceOption = this.option();
@@ -1344,6 +1348,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
           columns: opt.columns,
           externalFilters: opt.filter?.externalFilters,
           quickSearch: this.quickSearchOption(),
+          dateTime: this.#dateTime,
         });
         const result = opt.items(filterReq, pagingReq);
         return await result;

@@ -91,6 +91,18 @@ at midnight in their own timezone, never whatever time the editor happened to ca
 
 The field still shows `dd/MM/yyyy`.
 
+## Time zone (`ISdCoreConfiguration.timeZone`)
+
+With a configured zone, `<sd-date>` works on the calendar day of that zone instead of the browser's:
+
+- An instant model (`'1960-05-19T16:00:00Z'`, `Date`) shows its day in the zone (`20/05/1960` under `'Asia/Ho_Chi_Minh'`, in every browser). A date-only model (`'1960/05/20'`) keeps its digits.
+- A `transform` commits the first instant of the picked day **in the zone**: `20/05/1960` with `transform="ISOString"` is `'1960-05-19T16:00:00.000Z'` under `'Asia/Ho_Chi_Minh'`.
+- `TODAY` in `[min]` / `[max]` and the calendar's today marker are today in the zone. Instant limits are compared by their day in the zone.
+- **`form.value` changes:** the parent `FormGroup` holds the model value (`'yyyy/MM/dd'`, or the transformed string) instead of a `Date`. Read the model, not `Date` methods, from `form.value`.
+- **`form.valueChanges`:** each user edit that changes the model emits once with the model value (as in local mode); writes from the parent `[(model)]` binding stay silent. The same holds with a `transform` and no zone.
+
+Without the setting (or with `'local'`) nothing changes. See [`SdDateTimeService`](../../services/date-time/sd-date-time.md).
+
 ## Outputs
 
 | Name       | Type   | Notes                                                                                   |

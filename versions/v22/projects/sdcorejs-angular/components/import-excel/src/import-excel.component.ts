@@ -15,6 +15,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdExcelService, SdExcelSheet, SdExcelTemplate, SdExcelTemplateColumn } from '@sdcorejs/angular/services/excel';
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
+import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import { DateUtilities, NumberUtilities } from '@sdcorejs/utils/fns';
 import { SdLoadingService } from '@sdcorejs/angular/services/loading';
 import { ColumnTransformPipe } from './pipes/column-transform.pipe';
@@ -109,6 +110,7 @@ export class SdImportExcel implements OnInit, OnDestroy {
   isDownloadTemplate = false;
   readonly sdClosed = output();
   readonly #i18n = inject(I18nService);
+  readonly #dateTime = inject(SdDateTimeService);
 
   /** Inserted by Angular inject() migration for backwards compatibility */
   constructor(...args: unknown[]);
@@ -333,7 +335,7 @@ export class SdImportExcel implements OnInit, OnDestroy {
           const { type, format } = column;
           const val = item[column.field];
           if (val instanceof Date) {
-            item[column.field] = val.toISOString();
+            item[column.field] = this.#excelDateCell(val);
             continue;
           }
           if (format && item[column.field]) {
@@ -369,7 +371,7 @@ export class SdImportExcel implements OnInit, OnDestroy {
               errorMessages.push(`<strong>[${column.title || column.field}]</strong> ${error[column.field]}`);
               continue;
             }
-            item[column.field] = DateUtilities.parseFrom(val, format);
+            item[column.field] = this.#dateTime.parseFrom(val, format);
           }
           if (item[column.field] && !DateUtilities.isDate(item[column.field])) {
             error[column.field] = this.#i18n.t('core.component.import-excel.invalid-date-format', {
@@ -524,6 +526,18 @@ export class SdImportExcel implements OnInit, OnDestroy {
       })
       .finally(this.loadingService.stop);
   };
+
+  /**
+   * Stored value of an Excel date cell. exceljs returns a Date whose UTC fields are the Excel wall
+   * clock; with `ISdCoreConfiguration.timeZone` that wall clock is read in the zone.
+   */
+  #excelDateCell(value: Date): string {
+    if (this.#dateTime.timeZone === 'local') return value.toISOString();
+    const carrier = new Date(0);
+    carrier.setFullYear(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate());
+    carrier.setHours(value.getUTCHours(), value.getUTCMinutes(), value.getUTCSeconds(), value.getUTCMilliseconds());
+    return this.#dateTime.fromWallClock(carrier).toISOString();
+  }
 
   #isValidDate = (format: string, value: string) => {
     if (value?.length !== format?.length) {

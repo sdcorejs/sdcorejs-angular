@@ -220,6 +220,16 @@ rules: {
 - A condition the evaluator cannot read (hand-edited JSON, for example a leaf without `field`) never matches, so a form validation built on it never fires.
 - A hidden field is not rendered (the rows reflow) and therefore not validated; its value stays in `value`.
 
+### Time zone (`ISdCoreConfiguration.timeZone`)
+
+With a configured zone, every date the form works on uses the calendar of that zone:
+
+- Rules and form validations resolve `date-today`, `date-relative` and zone-less date strings in the zone (`FilterUtilities` `timeZone` option). At 01:00 on 15/08/2026 in `'Asia/Ho_Chi_Minh'`, `GREATER_OR_EQUAL date-today` is true for `'2026/08/15'` and false for `'2026/08/14'`, in every browser.
+- `min` / `max: 'today'` of a date + time field is the first and the last instant of today in the zone.
+- The read-only display (`viewed`), `SdFormRenderService.viewEntities` and the builder's limit choices show instants as the wall clock of the zone.
+
+Without the setting (or with `'local'`) nothing changes. See [`SdDateTimeService`](../../services/date-time/sd-date-time.md).
+
 ### Form-level validations
 
 ```ts

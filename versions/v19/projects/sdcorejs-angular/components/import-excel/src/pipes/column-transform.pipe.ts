@@ -1,6 +1,7 @@
 import { Pipe, PipeTransform, inject } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { DateUtilities, NumberUtilities } from '@sdcorejs/utils/fns';
+import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
+import { NumberUtilities } from '@sdcorejs/utils/fns';
 import { SdImportExcelItem, SdUploadExcelColumn } from '../import-excel.model';
 
 @Pipe({
@@ -9,6 +10,7 @@ import { SdImportExcelItem, SdUploadExcelColumn } from '../import-excel.model';
 })
 export class ColumnTransformPipe implements PipeTransform {
   private sanitizer = inject(DomSanitizer);
+  readonly #dateTime = inject(SdDateTimeService);
 
   /** Inserted by Angular inject() migration for backwards compatibility */
   constructor(...args: unknown[]);
@@ -46,10 +48,10 @@ export class ColumnTransformPipe implements PipeTransform {
         return '';
 
       case 'date':
-        return DateUtilities.toFormat(value, column.format || 'dd/MM/yyyy') ?? '';
+        return this.#dateTime.toFormat(value, column.format || 'dd/MM/yyyy') ?? '';
 
       case 'datetime':
-        return DateUtilities.toFormat(value, column.format || 'dd/MM/yyyy HH:mm') ?? '';
+        return this.#dateTime.toFormat(value, column.format || 'dd/MM/yyyy HH:mm') ?? '';
 
       default:
         return value ?? '';

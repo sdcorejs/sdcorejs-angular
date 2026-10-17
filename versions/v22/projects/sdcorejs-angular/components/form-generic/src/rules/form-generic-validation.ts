@@ -17,6 +17,8 @@ export interface SdFormGenericValidationContext {
   value: Readonly<Record<string, unknown>>;
   variables: Readonly<Record<string, unknown>>;
   fieldTypes?: SdFormGenericFieldTypes;
+  /** IANA zone of `ISdCoreConfiguration.timeZone`; vắng = múi giờ máy. */
+  timeZone?: string;
   validators?: readonly SdFormGenericValidator[];
   /** Message khi validator chưa được đăng ký (fail-closed). */
   unregisteredMessage?: (validatorId: string) => string;
@@ -58,7 +60,7 @@ export const sdRunFormValidations = async (
     const alert: keyof SdFormGenericValidationMessages = validation.alert === 'warning' ? 'warning' : 'error';
     if (validation.type === 'filter') {
       // why: a validation whose filter has no condition never fires (it would always report its message).
-      if (!sdIsEmptyFilter(validation.filter) && sdEvaluateFilter(validation.filter, scope, context.fieldTypes))
+      if (!sdIsEmptyFilter(validation.filter) && sdEvaluateFilter(validation.filter, scope, context.fieldTypes, context.timeZone))
         messages[alert].push(validation.message);
       continue;
     }
