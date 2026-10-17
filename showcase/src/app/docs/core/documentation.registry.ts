@@ -1257,6 +1257,15 @@ const PUBLISHED_ONLY_PAGES = [
     keywords: ['cache', 'data', 'performance'],
   }),
   definePublishedDocPage({
+    category: 'services',
+    slug: 'date-time',
+    title: 'Date Time Service',
+    description: 'Formats, parses and bounds dates in the fixed time zone configured for the whole application.',
+    importPath: '@sdcorejs/angular/services/date-time',
+    publishedDocId: 'services/date-time/sd-date-time',
+    keywords: ['date', 'time zone', 'timezone', 'format', 'parse'],
+  }),
+  definePublishedDocPage({
     category: 'modules-integrations',
     slug: 'core-configuration',
     title: 'Core Configuration',

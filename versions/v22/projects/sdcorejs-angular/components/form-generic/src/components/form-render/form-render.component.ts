@@ -24,6 +24,7 @@ import { SdTab, SdTabGroup } from '@sdcorejs/angular/components/tab';
 import { SdStep, SdStepper } from '@sdcorejs/angular/components/stepper';
 import type { SdLabelPlacement } from '@sdcorejs/angular/forms/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
+import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import { firstValueFrom, race, timer } from 'rxjs';
 import type { SdFormGenericBreakpoint } from '../../configurations/form-generic-breakpoints';
 import { SD_FORM_GENERIC_CONFIG } from '../../configurations/form-generic-config.token';
@@ -157,6 +158,9 @@ export class SdFormRender {
 
   readonly #config = inject(SD_FORM_GENERIC_CONFIG);
   readonly #i18n = inject(I18nService);
+  readonly #dateTime = inject(SdDateTimeService);
+  // why: rules and validations get a zone only when one is configured, so local evaluation stays as before.
+  readonly #ruleTimeZone = this.#dateTime.timeZone === 'local' ? undefined : this.#dateTime.timeZone;
   readonly #ownForm = new FormGroup({});
   readonly #width = signal(0);
   readonly #warnedTypes = new Set<string>();
@@ -183,7 +187,7 @@ export class SdFormRender {
   readonly visiblePages = computed(() => {
     const schema = this.normalized();
     return schema.navigation
-      ? schema.pages.filter(page => sdElementState(page, this.scope(), this.#fieldTypes()).visible)
+      ? schema.pages.filter(page => sdElementState(page, this.scope(), this.#fieldTypes(), this.#ruleTimeZone).visible)
       : schema.pages.slice(0, 1);
   });
   readonly activeIndex = computed(() => this.visiblePages().findIndex(page => page.id === this.effectivePageId()));
@@ -288,6 +292,7 @@ export class SdFormRender {
       value: this.#value(),
       variables: this.#variables(),
       fieldTypes: this.#fieldTypes(),
+      timeZone: this.#ruleTimeZone,
       validators: this.#config.validators,
       unregisteredMessage: id => this.#i18n.t('core.component.form-generic.validation.unregistered', { id }),
       failedMessage: id => this.#i18n.t('core.component.form-generic.validation.failed', { id }),
@@ -547,7 +552,7 @@ export class SdFormRender {
   }
 
   #state(element: SdFormGenericPageElement): SdFormGenericElementState {
-    return sdElementState(element, this.scope(), this.#fieldTypes());
+    return sdElementState(element, this.scope(), this.#fieldTypes(), this.#ruleTimeZone);
   }
 
   #fieldNode(element: unknown): FieldNode | null {

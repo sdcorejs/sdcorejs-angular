@@ -13,6 +13,9 @@ import type { SdTableOption } from '../models/table-option.model';
 import { resolveFieldValue } from './field-value.util';
 import type { TemplateRef } from '@angular/core';
 import { getChildrenFromData, getVisibleChildrenData, isLazyTree } from './tree/tree.util';
+import type { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
+
+type AggregateDateTime = Pick<SdDateTimeService, 'timeZone' | 'parse'>;
 
 /** Presence, deliberately independent of column type, formatting and dictionary hydration. */
 export function hasAggregateValue(value: unknown): boolean {
@@ -33,10 +36,12 @@ export function aggregateDefinition<T>(column: SdTableColumnNormal<T>): SdTableA
   return aggregate;
 }
 
+/** `dateTime` reads zone-less dates in `ISdCoreConfiguration.timeZone`; omitted or `'local'` keeps the machine zone. */
 export function calculateAggregate<T>(
   items: readonly T[],
   context: SdTableAggregateContext<T>,
-  definition: SdTableAggregateDefinition<T>
+  definition: SdTableAggregateDefinition<T>,
+  dateTime?: AggregateDateTime
 ): SdTableAggregateResult {
   const calculate = definition.calculate;
   if (typeof calculate === 'function') {
@@ -53,12 +58,14 @@ export function calculateAggregate<T>(
   if (calculate === 'COUNT') return values.filter(hasAggregateValue).length;
   if (context.column.type === 'date' || context.column.type === 'datetime') {
     // Same accepted shapes/timezone semantics as local sorting: Date, native-parsable string, epoch milliseconds.
+    const zone = dateTime && dateTime.timeZone !== 'local' ? dateTime : undefined;
+    const parse = (value: string | number) => (zone ? (zone.parse(value)?.getTime() ?? NaN) : new Date(value).getTime());
     const times = values
       .map(value =>
         value instanceof Date
           ? value.getTime()
           : (typeof value === 'string' && value.trim() !== '') || typeof value === 'number'
-            ? new Date(value as string | number).getTime()
+            ? parse(value as string | number)
             : NaN
       )
       .filter(Number.isFinite);
@@ -155,6 +162,7 @@ export function buildAggregateSnapshot<T>(args: {
   predicate?: (data: T) => boolean;
   format: (value: SdTableAggregateResult, column: SdTableColumnNormal<T>, operation?: SdTableAggregateOperation) => string;
   diagnose: (error: unknown) => void;
+  dateTime?: AggregateDateTime;
 }): AggregateSnapshot<T> {
   const { option, roots, loadedChildren, predicate } = args;
   const columns = args.columns.filter(column => column.aggregate !== undefined);
@@ -186,7 +194,7 @@ export function buildAggregateSnapshot<T>(args: {
       };
       try {
         const definition = aggregateDefinition(column)!;
-        const value = calculateAggregate(items, cellContext, definition);
+        const value = calculateAggregate(items, cellContext, definition, args.dateTime);
         const resolved = { ...cellContext, value };
         const operation = typeof definition.calculate === 'string' ? definition.calculate : undefined;
         cells.set(column.field, { context: resolved, templateRef: definition.templateRef, text: args.format(value, column, operation) });

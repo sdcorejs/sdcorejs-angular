@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
+import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import type { SdFormGenericField, SdFormGenericOption } from '../models/form-generic-field.model';
 import { sdSchemaFields } from '../models/form-generic-schema';
 import type { SdFormGenericSchema } from '../models/form-generic-schema.model';
@@ -13,6 +14,7 @@ import { FormGenericService } from './form-generic.service';
 export class SdFormRenderService {
   readonly #formGeneric = inject(FormGenericService);
   readonly #core = inject(SD_CORE_CONFIGURATION, { optional: true });
+  readonly #dateTime = inject(SdDateTimeService);
 
   /**
    * Giá trị hiển thị (chuỗi) theo từng field của mỗi entity — cùng định dạng với chế độ chỉ xem.
@@ -23,13 +25,14 @@ export class SdFormRenderService {
     const fields = sdSchemaFields(schema).filter(field => !!field.key && field.type !== 'upload' && field.type !== 'html');
     const cache = new Map<string, Promise<readonly SdFormGenericOption[]>>();
     const numberFormat = this.#core?.format?.number;
+    const dateFormat = (value: unknown, format: string) => this.#dateTime.toFormat(value, format);
     const results: Record<string, string>[] = [];
     for (const entity of entities ?? []) {
       const result: Record<string, string> = {};
       for (const field of fields) {
         const value = entity?.[field.key as string];
         const labels = await this.#catalogLabels(field, value, entity ?? {}, cache);
-        result[field.key as string] = sdDisplayValue(field, value, { labels, numberFormat });
+        result[field.key as string] = sdDisplayValue(field, value, { labels, numberFormat, dateFormat });
       }
       results.push(result);
     }

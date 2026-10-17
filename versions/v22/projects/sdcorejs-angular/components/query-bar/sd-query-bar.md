@@ -339,6 +339,10 @@ npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless \
 - No `Esc` shortcut to cancel an in-progress build chip (planned).
 - `(values | lazy-values).option.items` async-function variant is loaded once per popover open — no caching across opens. Acceptable for the current usage; revisit if a heavy endpoint hurts UX.
 
+## Time zone — backend contract
+
+`ISdCoreConfiguration.timeZone` changes only what the chips **show** (date chips use the read-only text of `sd-date-range`, which follows the zone). The emitted `SdQuery` is unchanged: date values stay zone-less (`'yyyy/MM/dd'`), and `TODAY` / relative-date tokens are sent as tokens. The backend must resolve them in the **same zone** the app configures. See [`SdDateTimeService`](../../services/date-time/sd-date-time.md).
+
 ## Anti-patterns
 - ❌ Using query-bar for a single simple filter — one form control is lighter.
 - ❌ Passing `SdQuery.filters` into `sd-table.filter.externalFilters` — those are different contracts.

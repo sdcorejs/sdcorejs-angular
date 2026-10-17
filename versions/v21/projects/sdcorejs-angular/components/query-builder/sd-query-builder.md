@@ -162,6 +162,10 @@ An incomplete offset (missing `unit` / `direction`, or `amount < 1`) is invalid 
 
 **Back-compat:** filters persisted before the migration stored `data: { rel: 'now' | 'offset', … }`. `filterToTree` still reads that legacy shape when seeding `[value]` and re-emits the new `dataType` form on the next change, so old saved queries keep working.
 
+### Time zone — backend contract
+
+The emitted `Filter` does not depend on `ISdCoreConfiguration.timeZone`: absolute dates stay zone-less strings, and `date-today` / `date-relative` are sent as tokens (`'TODAY'`, `{ amount, direction, unit }`). Resolve them on the backend in the **same zone** the app configures (`FilterUtilities` of `@sdcorejs/utils` 1.3.0 takes it as `{ timeZone }`). See [`SdDateTimeService`](../../services/date-time/sd-date-time.md).
+
 ## Operator vocabulary
 Allowed operators come from `SD_QB_OPERATORS_BY_TYPE[type]` unless `field.operators` overrides. The starting operator is `field.defaultOperator ?? SD_QB_DEFAULT_OPERATOR_BY_TYPE[type]`. The operator selector (`<sd-operator>`) is **hidden** when only one operator is allowed. Helpers exported alongside the component: `sdQbAllowedOperators`, `sdQbDefaultOperator`, `sdQbIsNoDataOperator`, `sdQbIsMultiOperator`, `sdQbSupportsFieldCompareOperator`.
 

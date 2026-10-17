@@ -202,7 +202,7 @@ Every callback may return a value or a `Promise`. A **missing callback hides its
 | `kind`         | `'folder' \| 'file'`        | Folders navigate; files open the preview.                                                                                               |
 | `mimeType`     | `string?`                   | Drives the type label and the preview renderer (falls back to the extension of `name`); the icon uses it when the extension is unknown. |
 | `size`         | `number?`                   | Bytes. Files only; the column shows `—` when absent.                                                                                    |
-| `modifiedAt`   | `Date \| string \| number?` | Shown as "Today", "Yesterday", `dd/MM` in the current year, `dd/MM/yyyy` otherwise (order follows the locale).                          |
+| `modifiedAt`   | `Date \| string \| number?` | Shown as "Today", "Yesterday", `dd/MM` in the current year, `dd/MM/yyyy` otherwise (order follows the locale). The day, the labels and the tooltip follow `ISdCoreConfiguration.timeZone` when it is set ([`SdDateTimeService`](../../services/date-time/sd-date-time.md)). |
 | `hasChildren`  | `boolean?`                  | Folders only. `false` hides the tree expander for folders known to have no sub-folders.                                                 |
 | `thumbnailUrl` | `string?`                   | Image shown on grid cards; also the image preview when no `preview` callback is given. Never revoked.                                   |
 

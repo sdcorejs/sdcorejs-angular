@@ -83,3 +83,23 @@ export function sdParseTransformedTemporal(value: unknown): Date | null {
   const parsed = new Date(text);
   return isValidDate(parsed) ? parsed : null;
 }
+
+const ISO_DATE_TIME_WITH_ZONE = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})$/;
+
+/**
+ * @internal Instant-only reading of the wire formats above, used by the date forms when
+ * `ISdCoreConfiguration.timeZone` is set: a zone-less match returns `null` so it is read by the
+ * time-zone service as a wall clock instead of being converted twice through the host zone.
+ * The public `sdParseTransformedTemporal` keeps its behavior.
+ */
+export function ɵsdParseTransformedInstant(value: unknown): Date | null {
+  if (typeof value !== 'string') return null;
+  const text = value.trim();
+  if (RFC_1123_UTC.test(text)) {
+    const parsed = new Date(text);
+    return isValidDate(parsed) ? parsed : null;
+  }
+  if (!ISO_DATE_TIME_WITH_ZONE.test(text)) return null;
+  const parsed = new Date(text.replace(' ', 'T').replace(/([+-]\d{2})(\d{2})$/, '$1:$2'));
+  return isValidDate(parsed) ? parsed : null;
+}

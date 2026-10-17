@@ -1,5 +1,6 @@
 import { EMPTY_STR } from '@sdcorejs/utils/constants';
-import { DateUtilities, NumberUtilities } from '@sdcorejs/utils/fns';
+import { ɵSD_LOCAL_DATE_TIME } from '@sdcorejs/angular/services/date-time';
+import { NumberUtilities } from '@sdcorejs/utils/fns';
 import type { SdFormGenericField, SdFormGenericNumber } from '../models/form-generic-field.model';
 
 // why: the read-only text of a field value, shared by the viewed pipe and SdFormRenderService.viewEntities.
@@ -15,6 +16,8 @@ export interface SdFormGenericDisplayOptions {
   labels?: Readonly<Record<string, string>>;
   /** Định dạng số của Core (`SD_CORE_CONFIGURATION.format.number`). */
   numberFormat?: SdFormGenericNumberFormat;
+  /** Định dạng ngày theo `ISdCoreConfiguration.timeZone` (`SdDateTimeService.toFormat`); vắng = múi giờ máy. */
+  dateFormat?: (value: unknown, format: string) => string;
 }
 
 type NumberPreset = Pick<SdFormGenericNumber, 'subtype' | 'precision' | 'currency'>;
@@ -72,6 +75,7 @@ const optionLabels = (
 export const sdDisplayValue = (field: SdFormGenericField, value: unknown, options: SdFormGenericDisplayOptions = {}): string => {
   if (!field?.key) return '';
   if (value === undefined || value === null) return EMPTY_STR;
+  const dateFormat = options.dateFormat ?? ɵSD_LOCAL_DATE_TIME.toFormat;
   switch (field.type) {
     case 'textfield':
       if (field.subtype === 'password') return value ? SD_FORM_GENERIC_PASSWORD_MASK : EMPTY_STR;
@@ -90,14 +94,14 @@ export const sdDisplayValue = (field: SdFormGenericField, value: unknown, option
     }
     case 'chip-calendar': {
       const items = listOf(value);
-      return items.length ? items.map(item => DateUtilities.toFormat(item as string, 'dd/MM/yyyy') || item).join(', ') : EMPTY_STR;
+      return items.length ? items.map(item => dateFormat(item, 'dd/MM/yyyy') || item).join(', ') : EMPTY_STR;
     }
     case 'time':
       return (value as string) || EMPTY_STR;
     case 'json':
       return JSON.stringify(value) ?? EMPTY_STR;
     case 'datetime':
-      return DateUtilities.toFormat(value as string, field.subtype === 'datetime' ? 'dd/MM/yyyy HH:mm' : 'dd/MM/yyyy') || EMPTY_STR;
+      return dateFormat(value, field.subtype === 'datetime' ? 'dd/MM/yyyy HH:mm' : 'dd/MM/yyyy') || EMPTY_STR;
     case 'select':
     case 'radio': {
       const values = listOf(value);

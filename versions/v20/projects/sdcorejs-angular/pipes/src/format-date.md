@@ -37,6 +37,10 @@ transform(value: unknown, format?: string): string | null
 
 Invalid or empty values return `null`; compose with `sdView` when the UI must show `--`.
 
+## Time zone
+
+With `ISdCoreConfiguration.timeZone` set, an instant shows the calendar day of that zone; zone-less and date-only strings keep their digits. With `timeZone: 'Asia/Ho_Chi_Minh'`, `'1960-05-19T16:00:00Z' | sdFormatDate` is `'20/05/1960'` in every browser (Bangkok shows `'19/05/1960'` without the setting). A pipe created by DI or in a template follows the zone; `new SdFormatDatePipe()` outside an injection context keeps the browser zone. See [`SdDateTimeService`](../../services/date-time/sd-date-time.md).
+
 ## Standalone import checklist
 
 Every standalone component that uses `| sdFormatDate` in its template must import `SdFormatDatePipe`.

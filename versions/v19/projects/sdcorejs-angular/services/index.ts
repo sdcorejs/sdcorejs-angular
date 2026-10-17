@@ -9,3 +9,4 @@ export * from '@sdcorejs/angular/services/excel';
 export * from '@sdcorejs/angular/services/viewport';
 export * from '@sdcorejs/angular/services/unsaved-changes';
 export * from '@sdcorejs/angular/services/task';
+export * from '@sdcorejs/angular/services/date-time';

@@ -447,6 +447,17 @@ Client-side matching sống ở `matchesColumnFilter` (`services/table-local/tab
 | `'values'` / `'lazy-values'`       | chọn nhiều giá trị = **OR** (tương đương `IN`); dữ liệu hàng dạng mảng thì khớp khi **giao khác rỗng** |
 
 `'values'` / `'lazy-values'` **không** đọc `option.selection` lúc so khớp — nhánh được chọn theo hình dạng giá trị thực tế. Nhờ vậy cột `selection: 'MULTIPLE'` lọc đúng cho cả dữ liệu hàng scalar (`status: 'ACTIVE'`) và dữ liệu hàng mảng (`statuses: [{ id, name }]`), và `filter.default` dạng string trên cột MULTIPLE cũng là input hợp lệ.
+
+#### Time zone (`ISdCoreConfiguration.timeZone`)
+
+Khi cấu hình `timeZone`, mọi phép tính ngày của table theo múi giờ đó thay vì múi giờ trình duyệt:
+
+- **Filter server** (`SdConvertToPagingReq`): một ngày là `[đầu ngày, đầu ngày kế tiếp)` trong zone, gửi dạng instant (`toISOString()`). Với `'Asia/Ho_Chi_Minh'`, ngày `1960/05/20` gửi `GREATER_OR_EQUAL '1960-05-19T16:00:00.000Z'` và `LESS_THAN '1960-05-20T16:00:00.000Z'`; ngày `1975/06/12` (dài 25 giờ) có biên trên `'1975-06-12T17:00:00.000Z'`. Giá trị datetime không múi giờ (`'1960/05/20 08:00:00'`) là giờ đồng hồ trong zone.
+- **Filter client, sort local, aggregate MIN/MAX:** giá trị hàng không múi giờ được đọc là giờ đồng hồ trong zone; instant giữ nguyên. Cột `'time'` không có zone.
+- **Ô hiển thị và export Excel:** cột `date` / `datetime` / `time` ghi giờ đồng hồ của zone (`'1960-05-19T16:00:00Z'` → `'1960/05/20'`, `'1960/05/20 00:00:00'`).
+- Gọi `SdConvertToPagingReq` thủ công thì truyền `dateTime: inject(SdDateTimeService)` để có cùng biên; bỏ trống (hoặc zone `'local'`) giữ đúng payload cũ.
+
+Không cấu hình (hoặc `'local'`) thì mọi giá trị giữ nguyên như trước. Xem [`SdDateTimeService`](../../services/date-time/sd-date-time.md).
 ### Commands (`SdTableCommandNormal<T>`)
 
 `{ color?, icon?: string \| (row)=>string, fontSet?, title?: string \| (row)=>string, disabled?: boolean \| (row)=>boolean, hidden?: boolean \| (row)=>boolean \| Promise<boolean>, click(row), htmlTemplate?(row)=>string }`. Group via `{ ... children: SdTableCommandNormal<T>[] }`.

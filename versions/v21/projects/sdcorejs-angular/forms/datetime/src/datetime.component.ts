@@ -37,6 +37,7 @@ import {
   SdViewed,
   SdViewedInput,
   sdParseTransformedTemporal,
+  ɵsdParseTransformedInstant,
   sdSerializeTemporalValue,
   sdViewedInline,
   sdViewedTransform,
@@ -47,6 +48,8 @@ import {
 import type { SdLabelPlacement } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
+import { SdDatetimeTimeZoneAdapter } from './datetime-time-zone.adapter';
 import { Size } from '@sdcorejs/utils/models';
 import { DateUtilities } from '@sdcorejs/utils/fns';
 import { BrowserUtilities, Utilities } from '@sdcorejs/utils/fns';
@@ -129,10 +132,12 @@ function datetimeControlToDate(value: string | null): Date | null {
   },
   providers: [
     Platform,
-    SdNativeDateAdapter,
+    // why: the subclass makes today() (Now button, calendar today marker) follow ISdCoreConfiguration.timeZone.
+    SdDatetimeTimeZoneAdapter,
+    { provide: SdNativeDateAdapter, useExisting: SdDatetimeTimeZoneAdapter },
     { provide: MAT_DATE_LOCALE, useValue: 'en-US' },
-    { provide: DateAdapter, useExisting: SdNativeDateAdapter },
-    { provide: SdDateAdapter, useExisting: SdNativeDateAdapter },
+    { provide: DateAdapter, useExisting: SdDatetimeTimeZoneAdapter },
+    { provide: SdDateAdapter, useExisting: SdDatetimeTimeZoneAdapter },
     { provide: MAT_DATE_FORMATS, useValue: SD_NATIVE_DATE_FORMATS },
     { provide: SD_DATE_FORMATS, useValue: SD_NATIVE_DATE_FORMATS },
   ],
@@ -182,6 +187,9 @@ export class SdDatetime implements OnDestroy, OnInit {
   private elementRef = inject(ElementRef);
   private formConfig = inject(SD_FORM_CONFIGURATION, { optional: true });
   readonly #i18n = inject(I18nService);
+  readonly #dateTime = inject(SdDateTimeService);
+  /** why: with `ISdCoreConfiguration.timeZone` set, model values are converted in that zone at the model/control boundary. */
+  readonly #zoned = this.#dateTime.timeZone !== 'local';
   // why: focus + mở picker hoãn 100ms; handle phải bị clear khi destroy, nếu không open()
   // dựng overlay mồ côi trên view đã tháo.
   readonly #timers = ɵsdTimerScope();
@@ -304,6 +312,7 @@ export class SdDatetime implements OnDestroy, OnInit {
   // Lấy thẳng từ valueModel (nguồn dữ liệu thật) rồi convert sang Date cho DatePipe.
   viewedDate = computed<Date | null>(() => {
     const v = this.valueModel();
+    if (this.#zoned) return this.#modelToCarrier(v);
     if (v == null || !DateUtilities.isDate(v)) return null;
     const iso = DateUtilities.toFormat(v as any, 'yyyy/MM/dd HH:mm:ss');
     if (!iso) return null;
@@ -351,7 +360,8 @@ export class SdDatetime implements OnDestroy, OnInit {
    * control này. Không có transform thì `registered` trả null và form vẫn nhận control của editor.
    */
   readonly #modelFacing = ɵsdModelFacingControl<SdDatetimeModelValue>({
-    active: computed(() => !!this.transform()),
+    // why: with a zone the form gets the model, not the editor's display string.
+    active: computed(() => !!this.transform() || this.#zoned),
     model: this.valueModel,
     writeModel: value => {
       this.valueModel.set(value);
@@ -382,7 +392,29 @@ export class SdDatetime implements OnDestroy, OnInit {
       seconds,
       0
     );
-    return sdSerializeTemporalValue(normalized, transform) ?? this.valueModel();
+    return sdSerializeTemporalValue(this.#zoned ? this.#dateTime.fromWallClock(normalized) : normalized, transform) ?? this.valueModel();
+  }
+
+  /** Model → wall-clock carrier in the zone (zone-less values keep their fields). */
+  #modelToCarrier(value: SdDatetimeModelValue): Date | null {
+    const carrier = this.#dateTime.toWallClock(value);
+    if (carrier) return carrier;
+    const instant = ɵsdParseTransformedInstant(value);
+    return instant ? this.#dateTime.toWallClock(instant) : null;
+  }
+
+  /** Model → display string `dd/MM/yyyy HH:mm[:ss]`. */
+  #modelToDisplay(value: SdDatetimeModelValue): string | null {
+    if (!this.#zoned) return datetimeModelToControl(value, this.showSeconds());
+    const carrier = this.#modelToCarrier(value);
+    return carrier ? DateUtilities.toFormat(carrier, this.showSeconds() ? 'dd/MM/yyyy HH:mm:ss' : 'dd/MM/yyyy HH:mm') || null : null;
+  }
+
+  /** Model → canonical `yyyy/MM/dd HH:mm:ss` for equality. */
+  #normalizeModel(value: SdDatetimeModelValue): string | null {
+    if (!this.#zoned) return normalizeDatetimeModel(value, this.showSeconds());
+    const carrier = this.#modelToCarrier(value);
+    return carrier ? DateUtilities.toFormat(carrier, this.showSeconds() ? 'yyyy/MM/dd HH:mm:ss' : 'yyyy/MM/dd HH:mm:00') || null : null;
   }
 
   /**
@@ -392,7 +424,7 @@ export class SdDatetime implements OnDestroy, OnInit {
    */
   #modelsEqual(left: SdDatetimeModelValue, right: SdDatetimeModelValue): boolean {
     if (this.transform()) return Object.is(left, right);
-    return normalizeDatetimeModel(left, this.showSeconds()) === normalizeDatetimeModel(right, this.showSeconds());
+    return this.#normalizeModel(left) === this.#normalizeModel(right);
   }
 
   readonly #formConnector = ɵsdFormControlConnector<SdDatetimeModelValue, string | null>({
@@ -405,7 +437,7 @@ export class SdDatetime implements OnDestroy, OnInit {
       this.valueModel.set(value);
       this.sdChange.emit(value);
     },
-    modelToControl: value => datetimeModelToControl(value, this.showSeconds()),
+    modelToControl: value => this.#modelToDisplay(value),
     controlToModel: value => this.#serializeCommitted(value),
     modelEquals: (left, right) => this.#modelsEqual(left, right),
     validators: this.#validators,
@@ -445,7 +477,7 @@ export class SdDatetime implements OnDestroy, OnInit {
     if (!picker) return;
     picker.setAnchor(this.inputRef()?.nativeElement ?? (this.elementRef.nativeElement as HTMLElement));
     // why: open() rebuilds the draft from committed state, so seed that state before opening.
-    picker.setValue(this.#currentValueAsDate() ?? new Date());
+    picker.setValue(this.#currentValueAsDate() ?? (this.#zoned ? this.#dateTime.now() : new Date()));
     picker.open();
     this.ref.markForCheck();
   }
@@ -471,6 +503,7 @@ export class SdDatetime implements OnDestroy, OnInit {
   /** Lấy giá trị hiện tại dưới dạng native Date để truyền vào popup. */
   #currentValueAsDate(): Date | null {
     const v = this.valueModel();
+    if (this.#zoned) return v ? this.#modelToCarrier(v) : null;
     if (!v || !DateUtilities.isDate(v)) return null;
     const fmtted = DateUtilities.toFormat(v as any, 'yyyy/MM/dd HH:mm:ss');
     if (!fmtted) return null;
@@ -482,6 +515,10 @@ export class SdDatetime implements OnDestroy, OnInit {
   // 7. PARSE/VALIDATE HELPERS
   // ==========================================
   #parseDateBoundary(val: any): Date | null {
+    if (this.#zoned) {
+      if (val === 'TODAY') return this.#dateTime.now();
+      return val ? this.#modelToCarrier(val) : null;
+    }
     if (val === 'TODAY') return new Date();
     if (val && DateUtilities.isDate(val)) return new Date(val);
     return null;

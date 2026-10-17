@@ -94,6 +94,17 @@ A partial range keeps `null` on the missing end, and clearing still yields `{ fr
 
 The field still shows `dd/MM/yyyy → dd/MM/yyyy`.
 
+## Time zone (`ISdCoreConfiguration.timeZone`)
+
+With a configured zone, both ends are calendar days of that zone:
+
+- Instant ends show their day in the zone; date-only ends keep their digits. The read-only text (also used by `sd-query-bar` chips) follows the zone.
+- A `transform` commits the first instant of each picked day **in the zone**: `12/06/1975` with `transform="ISOString"` is `'1975-06-11T16:00:00.000Z'` under `'Asia/Ho_Chi_Minh'`.
+- `TODAY` in `[min]` / `[max]` is today in the zone.
+- **`form.value` changes:** the parent `FormGroup` holds the range model (`{ from: 'yyyy/MM/dd', to: 'yyyy/MM/dd' }`, or the transformed strings) instead of `{ from: Date, to: Date }`.
+
+Without the setting (or with `'local'`) nothing changes. See [`SdDateTimeService`](../../services/date-time/sd-date-time.md).
+
 ## Outputs
 
 | Name       | Type                   | Notes                                                                   |

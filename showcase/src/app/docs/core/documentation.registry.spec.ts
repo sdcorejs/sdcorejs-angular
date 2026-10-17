@@ -7,7 +7,7 @@ const EXPECTED_CATEGORY_COUNTS = {
   components: 42,
   forms: 23,
   directives: 6,
-  services: 11,
+  services: 12,
   'modules-integrations': 11,
   'pipes-utilities': 11,
 } as const;
@@ -17,8 +17,8 @@ describe('documentation registry', () => {
     const publishedIds = DOC_PAGES.map(page => page.publishedDocId).filter(id => id !== null);
     const localOnlyPages = DOC_PAGES.filter(page => page.publishedDocId === null);
 
-    expect(DOC_PAGES).toHaveSize(108);
-    expect(new Set(publishedIds).size).toBe(108);
+    expect(DOC_PAGES).toHaveSize(109);
+    expect(new Set(publishedIds).size).toBe(109);
     expect(DOC_PAGES.some(page => page.category === 'components' && page.slug === 'chart')).toBeFalse();
     expect(localOnlyPages).toHaveSize(0);
     expect(DOC_CATEGORIES).toHaveSize(7);
@@ -67,7 +67,7 @@ describe('documentation registry', () => {
   });
 
   it('derives navigation groups and canonical/legacy lookup helpers from the registry', () => {
-    expect(DOC_NAV_GROUPS.map(group => group.pages.length)).toEqual([4, 42, 23, 6, 11, 11, 11]);
+    expect(DOC_NAV_GROUPS.map(group => group.pages.length)).toEqual([4, 42, 23, 6, 12, 11, 11]);
     expect(findDocPage('components', 'button')?.title).toBe('Button');
     expect(findDocPage('directives', 'tooltip')?.publishedDocId).toBe('directives/src/sd-tooltip');
     expect(findDocPage('components', 'generic')?.title).toBe('Form Generic');

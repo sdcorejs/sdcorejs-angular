@@ -11,7 +11,7 @@ import { SdTextarea } from '@sdcorejs/angular/forms/textarea';
 import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { SdConfirmService } from '@sdcorejs/angular/services/confirm';
-import { DateUtilities } from '@sdcorejs/utils/fns';
+import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import type { Filter } from '@sdcorejs/utils/models';
 import type { SdFormGenericBreakpoint } from '../../../configurations/form-generic-breakpoints';
 import { sdSpanSource, type SdFormGenericSpanSource } from '../../../layout/form-generic-layout';
@@ -172,6 +172,7 @@ export class InspectorComponent {
   readonly store = inject(FormBuilderStore);
   readonly #formGeneric = inject(FormGenericService);
   readonly #confirm = inject(SdConfirmService);
+  readonly #dateTime = inject(SdDateTimeService);
 
   readonly requestRemove = output<string>();
   readonly openVariables = output<void>();
@@ -470,7 +471,7 @@ export class InspectorComponent {
     // why: a date-only string is read as UTC midnight by Date — splitting it avoids showing the previous
     // day in a negative UTC offset.
     const day = /^(\d{4})-(\d{2})-(\d{2})$/.exec(current);
-    const display = day ? `${day[3]}/${day[2]}/${day[1]}` : DateUtilities.toFormat(current, 'dd/MM/yyyy') || current;
+    const display = day ? `${day[3]}/${day[2]}/${day[1]}` : this.#dateTime.toFormat(current, 'dd/MM/yyyy') || current;
     return [...choices, { value: current, display }];
   }
 

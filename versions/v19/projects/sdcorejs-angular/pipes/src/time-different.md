@@ -59,6 +59,10 @@ transform(
 - **Value already older than the threshold → emits the absolute formatted value once and completes; no interval is created at all.**
 - **Value inside the threshold → `interval(1000)` ticks the relative string, then the first tick past the threshold emits the absolute formatted value and the observable completes.** The stream is finite: once the output can no longer change, the timer and the per-tick `async`-pipe change detection stop for good. Still combine with `| async` so Angular auto-subscribes/unsubscribes.
 
+## Time zone
+- With `ISdCoreConfiguration.timeZone` set, a zone-less value is a wall clock in that zone (so the elapsed time is measured from the right instant), and the absolute fallback shows the wall clock of the zone: `'1960-05-19T16:00:00Z'` with format `'dd/MM/yyyy'` is `'20/05/1960'` under `'Asia/Ho_Chi_Minh'`.
+- Without the setting, a value is parsed with `new Date(value)` and formatted in the browser zone, as before. `new SdTimeDifferentPipe()` outside an injection context also keeps the browser zone. See [`SdDateTimeService`](../../services/date-time/sd-date-time.md).
+
 ## Anti-patterns
 - Forgetting `| async` — you'd render `[object Object]` (an `Observable`).
 - Assuming the stream never ends — it completes once the value ages out of the relative window. Do not chain operators that depend on an infinite source.
