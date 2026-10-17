@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup } from '@angular/forms';
 import { SdTable, SdTableOption } from '@sdcorejs/angular/components/table';
 import { SdDate } from '@sdcorejs/angular/forms/date';
@@ -41,12 +42,12 @@ const ROWS: Row[] = [{ id: 1, day: '1960-05-19T16:00:00Z', at: '1960-05-19T16:00
           heading="Form ngày giờ"
           [props]="[{ name: 'transform', value: 'ISOString' }]"
           note="Có timeZone thì form.value giữ giá trị model: sd-date 'yyyy/MM/dd', sd-datetime 'yyyy/MM/dd HH:mm:ss', sd-date-range { from, to }; transform ISOString cho instant tính trong múi giờ đó.">
-          <div class="d-flex flex-wrap gap-16 w-100" (focusout)="refresh()">
-            <sd-date autoId="tz-date" [form]="form" name="date" label="sd-date" (sdChange)="refresh()" />
-            <sd-date autoId="tz-date-iso" [form]="form" name="dateIso" label="sd-date (ISOString)" transform="ISOString" (sdChange)="refresh()" />
-            <sd-datetime autoId="tz-datetime" [form]="form" name="datetime" label="sd-datetime" (sdChange)="refresh()" />
-            <sd-datetime autoId="tz-datetime-iso" [form]="form" name="datetimeIso" label="sd-datetime (ISOString)" transform="ISOString" (sdChange)="refresh()" />
-            <sd-date-range autoId="tz-range" [form]="form" name="range" label="sd-date-range" (sdChange)="refresh()" />
+          <div class="d-flex flex-wrap gap-16 w-100">
+            <sd-date autoId="tz-date" [form]="form" name="date" label="sd-date" />
+            <sd-date autoId="tz-date-iso" [form]="form" name="dateIso" label="sd-date (ISOString)" transform="ISOString" />
+            <sd-datetime autoId="tz-datetime" [form]="form" name="datetime" label="sd-datetime" />
+            <sd-datetime autoId="tz-datetime-iso" [form]="form" name="datetimeIso" label="sd-datetime (ISOString)" transform="ISOString" />
+            <sd-date-range autoId="tz-range" [form]="form" name="range" label="sd-date-range" />
           </div>
           <pre class="T12R w-100 m-0" data-e2e="form-value">{{ formValue() }}</pre>
         </demo-section>
@@ -88,9 +89,8 @@ export class DateTimeDemoComponent {
     ],
   };
 
-  /** Shows form.value after each commit: the model values the date controls register in the parent form. */
-  refresh(): void {
-    // why: sdChange fires before the committed model reaches the control registered in the form.
-    setTimeout(() => this.formValue.set(JSON.stringify(this.form.value)));
+  constructor() {
+    // form.valueChanges emits once per user edit with the model values the date controls register.
+    this.form.valueChanges.pipe(takeUntilDestroyed()).subscribe(value => this.formValue.set(JSON.stringify(value)));
   }
 }

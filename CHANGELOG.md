@@ -40,6 +40,7 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
   - const day: Date = form.value.birthDate;
   + const day: string = form.value.birthDate; // 'yyyy/MM/dd' under a configured zone
   ```
+- Date forms with `transform` or `timeZone`: `form.valueChanges` emits once per user edit that changes the model, with the model value, as it does without them. Before, the parent form stayed silent for those edits because the control registered in it received the model with `emitEvent: false`. Writes from the parent `[(model)]` binding still emit nothing. Apps that use `transform` and listen to `form.valueChanges` now receive these events.
 
 ### Fixed
 

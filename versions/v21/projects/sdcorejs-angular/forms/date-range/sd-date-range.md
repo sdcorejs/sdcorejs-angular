@@ -102,6 +102,7 @@ With a configured zone, both ends are calendar days of that zone:
 - A `transform` commits the first instant of each picked day **in the zone**: `12/06/1975` with `transform="ISOString"` is `'1975-06-11T16:00:00.000Z'` under `'Asia/Ho_Chi_Minh'`.
 - `TODAY` in `[min]` / `[max]` is today in the zone.
 - **`form.value` changes:** the parent `FormGroup` holds the range model (`{ from: 'yyyy/MM/dd', to: 'yyyy/MM/dd' }`, or the transformed strings) instead of `{ from: Date, to: Date }`.
+- **`form.valueChanges`:** each user edit that changes the model emits once with the model value (as in local mode); writes from the parent `[(model)]` binding stay silent. The same holds with a `transform` and no zone.
 
 Without the setting (or with `'local'`) nothing changes. See [`SdDateTimeService`](../../services/date-time/sd-date-time.md).
 

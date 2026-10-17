@@ -34,7 +34,7 @@ describe('SdDateRange with ISdCoreConfiguration.timeZone', () => {
   let fixture: ComponentFixture<Host>;
   let host: Host;
 
-  const setup = async (timeZone?: string) => {
+  const setup = async (timeZone?: string, transform?: 'ISOString') => {
     TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [Host, NoopAnimationsModule],
@@ -42,6 +42,7 @@ describe('SdDateRange with ISdCoreConfiguration.timeZone', () => {
     }).compileComponents();
     fixture = TestBed.createComponent(Host);
     host = fixture.componentInstance;
+    host.transform = transform;
     fixture.detectChanges();
   };
   const pick = (from: Date, to: Date) => {
@@ -95,5 +96,39 @@ describe('SdDateRange with ISdCoreConfiguration.timeZone', () => {
     host.min = 'TODAY';
     fixture.detectChanges();
     expect(fields(host.range.resolvedMin())).toEqual([2026, 8, 15]);
+  });
+
+  describe('form.valueChanges', () => {
+    const changes = () => {
+      const values: unknown[] = [];
+      host.fg.valueChanges.subscribe(value => values.push(value));
+      return values;
+    };
+
+    it('emits the range model once per pick with a zone', async () => {
+      await setup(VN);
+      const values = changes();
+      pick(new Date(1975, 5, 12), new Date(1975, 5, 12));
+      await fixture.whenStable();
+      expect(values).toEqual([{ period: { from: '1975/06/12', to: '1975/06/12' } }]);
+    });
+
+    it('emits the transformed range once per pick with transform and no zone', async () => {
+      await setup(undefined, 'ISOString');
+      const values = changes();
+      pick(new Date(1975, 5, 12), new Date(1975, 5, 13));
+      await fixture.whenStable();
+      expect(values).toEqual([{ period: { from: new Date(1975, 5, 12).toISOString(), to: new Date(1975, 5, 13).toISOString() } }]);
+    });
+
+    it('stays silent when the host writes [model]', async () => {
+      await setup(VN);
+      const values = changes();
+      host.model = { from: '1960/05/20', to: '1960/05/21' };
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(values).toEqual([]);
+      expect(host.fg.get('period')!.value).toEqual({ from: '1960/05/20', to: '1960/05/21' });
+    });
   });
 });

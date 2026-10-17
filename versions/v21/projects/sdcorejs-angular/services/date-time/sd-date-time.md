@@ -86,6 +86,8 @@ A configured zone makes the date forms register their **model value** in the par
 
 With a `transform`, `form.value` is the transformed instant in both cases.
 
+The parent form emits `valueChanges` once per user edit that changes the model, carrying the model value, with a zone or a `transform` as without them. A write from the parent `[(model)]` binding stays silent.
+
 ## Backend contract
 
 - Zone-less values (`'1960/05/20'`, `'1960/05/20 08:00:00'`) are wall clock in the configured zone. A backend must read them in the same zone.

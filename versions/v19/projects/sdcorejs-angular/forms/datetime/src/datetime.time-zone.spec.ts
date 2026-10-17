@@ -33,7 +33,7 @@ describe('SdDatetime with ISdCoreConfiguration.timeZone', () => {
   let fixture: ComponentFixture<Host>;
   let host: Host;
 
-  const setup = async (timeZone?: string) => {
+  const setup = async (timeZone?: string, transform?: 'ISOString') => {
     TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [Host, NoopAnimationsModule],
@@ -41,6 +41,7 @@ describe('SdDatetime with ISdCoreConfiguration.timeZone', () => {
     }).compileComponents();
     fixture = TestBed.createComponent(Host);
     host = fixture.componentInstance;
+    host.transform = transform;
     fixture.detectChanges();
   };
   const enter = (display: string) => {
@@ -100,5 +101,39 @@ describe('SdDatetime with ISdCoreConfiguration.timeZone', () => {
     expect(fields(host.datetime.resolvedMin())).toEqual([2026, 8, 15, 0, 30]);
     const adapter = fixture.debugElement.query(By.directive(SdDatetime)).injector.get(SdDateAdapter) as SdDateAdapter<Date>;
     expect(fields(adapter.today())).toEqual([2026, 8, 15, 0, 30]);
+  });
+
+  describe('form.valueChanges', () => {
+    const changes = () => {
+      const values: unknown[] = [];
+      host.fg.valueChanges.subscribe(value => values.push(value));
+      return values;
+    };
+
+    it('emits the model once per entry with a zone', async () => {
+      await setup(VN);
+      const values = changes();
+      enter('20/05/1960 08:00');
+      await fixture.whenStable();
+      expect(values).toEqual([{ at: '1960/05/20 08:00:00' }]);
+    });
+
+    it('emits the transformed model once per entry with transform and no zone', async () => {
+      await setup(undefined, 'ISOString');
+      const values = changes();
+      enter('20/05/1960 08:00');
+      await fixture.whenStable();
+      expect(values).toEqual([{ at: new Date(1960, 4, 20, 8, 0).toISOString() }]);
+    });
+
+    it('stays silent when the host writes [model]', async () => {
+      await setup(VN);
+      const values = changes();
+      host.model = '1960/05/20 08:00:00';
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(values).toEqual([]);
+      expect(host.fg.get('at')!.value).toBe('1960/05/20 08:00:00');
+    });
   });
 });

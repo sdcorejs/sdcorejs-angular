@@ -31,7 +31,7 @@ describe('SdDate with ISdCoreConfiguration.timeZone', () => {
   let fixture: ComponentFixture<Host>;
   let host: Host;
 
-  const setup = async (timeZone?: string) => {
+  const setup = async (timeZone?: string, transform?: 'ISOString') => {
     TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [Host, NoopAnimationsModule],
@@ -39,6 +39,7 @@ describe('SdDate with ISdCoreConfiguration.timeZone', () => {
     }).compileComponents();
     fixture = TestBed.createComponent(Host);
     host = fixture.componentInstance;
+    host.transform = transform;
     fixture.detectChanges();
   };
   const pick = (value: Date) => {
@@ -114,5 +115,39 @@ describe('SdDate with ISdCoreConfiguration.timeZone', () => {
     expect(fields(host.date.resolvedMin())).toEqual([2026, 8, 15]);
     const adapter = fixture.debugElement.query(By.directive(SdDate)).injector.get(DateAdapter<Date>);
     expect(fields(adapter.today())).toEqual([2026, 8, 15]);
+  });
+
+  describe('form.valueChanges', () => {
+    const changes = () => {
+      const values: unknown[] = [];
+      host.fg.valueChanges.subscribe(value => values.push(value));
+      return values;
+    };
+
+    it('emits the model once per pick with a zone', async () => {
+      await setup(VN);
+      const values = changes();
+      pick(new Date(1960, 4, 20));
+      await fixture.whenStable();
+      expect(values).toEqual([{ dob: '1960/05/20' }]);
+    });
+
+    it('emits the transformed model once per pick with transform and no zone', async () => {
+      await setup(undefined, 'ISOString');
+      const values = changes();
+      pick(new Date(1960, 4, 20));
+      await fixture.whenStable();
+      expect(values).toEqual([{ dob: new Date(1960, 4, 20).toISOString() }]);
+    });
+
+    it('stays silent when the host writes [model]', async () => {
+      await setup(VN);
+      const values = changes();
+      host.model = '1960/05/20';
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(values).toEqual([]);
+      expect(host.fg.get('dob')!.value).toBe('1960/05/20');
+    });
   });
 });
