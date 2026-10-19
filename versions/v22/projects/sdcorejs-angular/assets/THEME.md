@@ -34,7 +34,7 @@ same value, and only adds new custom properties.
 | Ramps | `--sd-{family}-{step}` — families `primary`, `secondary`, `info`, `success`, `warning`, `error`, `neutral`; steps `50 100 200 300 400 500 600 700 800 900 950` | Tints and shades of each family (`color-mix()`), `500` is the base colour. For charts, badges and subtle backgrounds. |
 | Semantic roles | `--sd-status-{info,success,warning,error}-{bg,fg}`, `--sd-link`, `--sd-surface-inverse`, `--sd-text-on-solid`, `--sd-border-focus`, `--sd-border-danger`, `--sd-overlay-backdrop`, `--sd-focus-ring-color` | A role instead of a palette slot, so dark mode and custom palettes change the colour without touching the component. |
 | Scales | `--sd-space-{0…48}`, `--sd-radius-{2…24, 999}`, `--sd-shadow-{xs,sm,md,lg,xl}`, `--sd-z-{sidebar,header,popover,drawer-mobile,floating,backdrop,drawer,dropdown,overlay,modal,devtools}`, `--sd-duration-{fast,base,slow}`, `--sd-ease-standard`, `--sd-font-size-{10…48}`, `--sd-font-weight-{regular,medium,semibold,bold}`, `--sd-line-height-{16…28}`, `--sd-focus-ring-width`, `--sd-focus-ring-offset` | Non-colour tokens. Each value equals a literal the library already used; names carry the pixel value (`--sd-radius-8` is `8px`). Same in light and dark. |
-| Component tokens | `--sd-{component}-{part}`, for example `--sd-table-header-bg`, `--sd-tooltip-bg`, `--sd-query-bar-bg`, `--sd-scrollbar-thumb` | One colour of one component. Tokens migrated in 3.0 keep the colour the component had in 2.15 as their light value; tokens added later (`--sd-view-label-color`, `--sd-view-value-color`) document their own. Each has a dark value. |
+| Component tokens | `--sd-{component}-{part}`, for example `--sd-table-header-bg`, `--sd-tooltip-bg`, `--sd-query-bar-bg`, `--sd-scrollbar-thumb` | One colour of one component. Tokens migrated in 3.0 keep the colour the component had in 2.15 as their light value; tokens added later (`--sd-view-label-color`, `--sd-view-value-color`, `--sd-sidebar-v4-*`) document their own. Each has a dark value. |
 | Material tokens | Angular Material component tokens of the form field (outline, label, caret, select arrow), options, pseudo-checkboxes and datepicker, under both the Material 19 names (`--mdc-outlined-text-field-*`, `--mat-full-pseudo-checkbox-*`, …) and the Material 20+ names (`--mat-form-field-outlined-*`, `--mat-pseudo-checkbox-full-*`, …) | Each one points at a Core token (`assets/scss/themes/_material-tokens.scss`): focus and selection use `--sd-primary`, the outline at rest `--sd-border`, and an error reddens only the outline (`--sd-error`); the floating label keeps the colour of a valid field. Override a Material token on any element to change it for that subtree. |
 
 Rules for new code:
@@ -62,8 +62,8 @@ without `sd.theme()` still renders as before.
 | `'dark'` | The full set with the dark palette, `color-scheme: dark`, and Material's dark colour tokens. |
 | `'auto'` | Light on the selector; the dark set under `@media (prefers-color-scheme: dark)`, unless the element has `data-sd-theme="light"`. |
 
-- **Dark exists only for the `default` preset.** The eight named presets (`ocean`, `indigo`, `teal`,
-  `copper`, `slate`, `forest`, `plum`, `rose`) are light palettes: `sd.theme($preset: 'teal', $mode: 'dark')`
+- **Dark exists only for the `default` preset.** The nine named presets (`ocean`, `indigo`, `teal`,
+  `copper`, `slate`, `forest`, `plum`, `rose`, `graphite`) are light palettes: `sd.theme($preset: 'teal', $mode: 'dark')`
   (or `'auto'`) stops the Sass build with an error that points to the `$theme` route below.
 - `sd-core.scss` already contains `[data-sd-theme=dark] { @include sd.theme($mode: 'dark'); }` and a matching
   light block, for the default palette from the core source.
@@ -116,6 +116,76 @@ html[data-sd-theme='dark'] { @include sd.theme($brand-dark, $mode: 'dark'); }
 
 Set `primary-light` and `primary-dark` whenever you set `primary`: overriding the base does not recompute
 explicit variants.
+
+### Named presets and their `components` map
+
+The nine named presets and their values are listed in [STYLE-GUIDE §14.1](./STYLE-GUIDE.md). `graphite` is a
+near-black palette for back-office consoles: `primary` and `text` are both `#16181d`, `primary-contrast`
+stays white, and the semantic families (info, success, warning, error) keep the default values.
+
+A named preset may also carry an optional `components` map that replaces component tokens for that preset
+only:
+
+- Keys are token names from `$component-tokens` (`assets/scss/themes/_component-tokens.scss`) without the
+  `--sd-` prefix. An unknown key stops the Sass build with the list of valid keys.
+- Values are single values, emitted as-is, because named presets are light-only. A comma-separated
+  `box-shadow` list stays whole.
+- `sd.theme()` takes the map out before it merges the palette, so every preset emits the same set of
+  `--sd-*` names.
+
+`$presets` belongs to the library, so `components` is not an app-level option and `$theme` does not accept
+it. An app that needs a different component colour overrides that custom property in its own stylesheet.
+
+`graphite` uses the map to turn the active Sidebar V4 item into a raised surface:
+
+```scss
+components: (
+  sidebar-v4-active-bg: var(--sd-surface),
+  sidebar-v4-active-shadow: (0 0 0 1px var(--sd-border), 0 1px 2px rgba(20, 22, 28, 0.06)),
+),
+```
+
+### Links and text buttons under `graphite`
+
+`--sd-link` is `var(--sd-primary)`. It is a semantic role, not a palette key, so a preset cannot change it,
+and only the `upload-file` name reads it; most links and text buttons read `--sd-primary` directly. With
+`graphite`, `--sd-primary` is the body text colour, so these elements share the colour of body text:
+
+- links: global `a` (it still underlines on hover), links in editor content, the `upload-file` name, the
+  API contract builder breadcrumb, the `inform` "show more" button;
+- text buttons: `sd-button` with `type="text"` and `outline`, the `operator`, `preview-video` and
+  `job-progress` actions, `image-editor` text buttons, and the form builder add/edit links;
+- active labels: `tab-group`, `anchor-nav`, the current `stepper` step, the shared menu tree of sidebar
+  V2/V3 and their mobile variants, and sidebar V1 without `brandColor`;
+- values and tokens: `query-bar`, `query-builder`, the `inline-text` form control, the form builder value
+  and expression boxes, the `import-excel` issue counts and the API contract builder field types.
+
+No separate link token ships yet. Choose another preset when links and text buttons must stand out by
+colour.
+
+### Sidebar V4 tokens
+
+| Token | Value (light and dark) |
+| --- | --- |
+| `--sd-sidebar-v4-bg` | `color-mix(in srgb, var(--sd-text) 4%, var(--sd-surface))` |
+| `--sd-sidebar-v4-line` | `color-mix(in srgb, var(--sd-border) 45%, var(--sd-surface))` |
+| `--sd-sidebar-v4-hover-bg` | `color-mix(in srgb, var(--sd-text) 6%, var(--sd-sidebar-v4-bg))` |
+| `--sd-sidebar-v4-active-bg` | `var(--sd-primary-light)`; `graphite`: `var(--sd-surface)` |
+| `--sd-sidebar-v4-active-shadow` | `none`; `graphite`: the ring and shadow above |
+| `--sd-sidebar-v4-active-ink` | `var(--sd-primary)` |
+| `--sd-sidebar-v4-avatar-bg` | `color-mix(in srgb, var(--sd-primary) 14%, var(--sd-surface))` |
+| `--sd-sidebar-v4-avatar-ink` | `var(--sd-primary)` |
+| `--sd-sidebar-v4-attention` | `var(--sd-warning)` |
+| `--sd-sidebar-v4-live` | `var(--sd-success)` |
+
+Each value derives from the palette of its own scope, so one expression serves light, dark and every preset.
+Sizes are not theme tokens: `--sd-sidebar-v4-width`, `-rail-width`, `-item-height`, `-child-height` and
+`-item-radius` are declared on the sidebar host and follow `density`, `itemShape` and the pointer type (see
+`modules/layout/sd-layout.md`).
+
+The values resolve where `sd.theme()` emits them. Overriding `--sd-sidebar-v4-bg` lower in the tree
+recolours the drawer but does not move `--sd-sidebar-v4-hover-bg`, which was already computed from the
+background of the theme scope; override `--sd-sidebar-v4-hover-bg` on the same element as well.
 
 ### Scopes
 

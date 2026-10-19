@@ -11,8 +11,14 @@
 // Components reference these through `var(--sd-*)`; `:host` blocks may alias their existing local
 // names (`--sd-pdf-*`, `--sd-fe-*`, `--sd-preview-*`, `--sd-org-*`, `--sd-tree-*`) to them, so consumer
 // hooks keep working.
+//
+// A named preset may replace entries through its optional `components` map (D-007, D-029): `emit()`
+// receives it as `$overrides`, rejects any key that is not in `$component-tokens`, and emits each value
+// as-is in place of the default. Override values are single values (named presets are light-only), so a
+// comma-separated box-shadow list is emitted whole.
 
 @use 'sass:list';
+@use 'sass:map';
 
 $component-tokens: (
   // Global chrome
@@ -199,6 +205,18 @@ $component-tokens: (
   'sidebar-mobile-pressed-bg': (#f0f0f0, #2b2d33),
   'sidebar-mobile-header-bg': (#ffffff, #1d1f23),
   'sidebar-mobile-header-border': (#e0e0e0, #34373d),
+  // sidebar-v4 and sidebar-mobile-v4 — colours only; the size tokens live on the host (D-006). Every value
+  // derives from the palette of its own scope, so one expression serves both modes and every preset.
+  'sidebar-v4-bg': (color-mix(in srgb, var(--sd-text) 4%, var(--sd-surface)), color-mix(in srgb, var(--sd-text) 4%, var(--sd-surface))),
+  'sidebar-v4-line': (color-mix(in srgb, var(--sd-border) 45%, var(--sd-surface)), color-mix(in srgb, var(--sd-border) 45%, var(--sd-surface))),
+  'sidebar-v4-hover-bg': (color-mix(in srgb, var(--sd-text) 6%, var(--sd-sidebar-v4-bg)), color-mix(in srgb, var(--sd-text) 6%, var(--sd-sidebar-v4-bg))),
+  'sidebar-v4-active-bg': (var(--sd-primary-light), var(--sd-primary-light)),
+  'sidebar-v4-active-shadow': (none, none),
+  'sidebar-v4-active-ink': (var(--sd-primary), var(--sd-primary)),
+  'sidebar-v4-avatar-bg': (color-mix(in srgb, var(--sd-primary) 14%, var(--sd-surface)), color-mix(in srgb, var(--sd-primary) 14%, var(--sd-surface))),
+  'sidebar-v4-avatar-ink': (var(--sd-primary), var(--sd-primary)),
+  'sidebar-v4-attention': (var(--sd-warning), var(--sd-warning)),
+  'sidebar-v4-live': (var(--sd-success), var(--sd-success)),
   // home-page (layout)
   'home-page-gradient-start': (#fafbfc, #1b1d21),
   'home-page-gradient-end': (#f4f6fa, #16181b),
@@ -259,9 +277,29 @@ $component-tokens: (
   'input-number-copy-bg': (#e9e9e9, #34373d),
 );
 
-@mixin emit($scheme: light) {
+/// Returns `$overrides` when every key names an entry of `$component-tokens`; fails compilation otherwise.
+@function -validate-overrides($overrides) {
+  $unknown: ();
+  @each $name, $value in $overrides {
+    @if not map.has-key($component-tokens, $name) {
+      $unknown: list.append($unknown, $name, $separator: comma);
+    }
+  }
+  @if list.length($unknown) > 0 {
+    @error "Unknown Core UI component token '#{$unknown}' in a preset components map. Use a key of $component-tokens (themes/_component-tokens.scss), without the --sd- prefix. Available: #{map.keys($component-tokens)}.";
+  }
+  @return $overrides;
+}
+
+/// Emits every component token for `$scheme`; a validated `$overrides` value replaces the default as-is.
+@mixin emit($scheme: light, $overrides: ()) {
   $index: if($scheme == dark, 2, 1);
+  $overrides: -validate-overrides($overrides);
   @each $name, $pair in $component-tokens {
-    --sd-#{$name}: #{list.nth($pair, $index)};
+    @if map.has-key($overrides, $name) {
+      --sd-#{$name}: #{map.get($overrides, $name)};
+    } @else {
+      --sd-#{$name}: #{list.nth($pair, $index)};
+    }
   }
 }

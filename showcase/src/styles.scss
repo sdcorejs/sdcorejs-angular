@@ -1,3 +1,7 @@
+// why: package.json của lib không export `./assets/*`, nên Sass qua webpack (target test) không resolve được
+// `@sdcorejs/angular/assets/...`; đi thẳng vào bản copy của `link:library`, giống angular.json nạp sd-core.scss.
+@use '../node_modules/@sdcorejs/angular/assets/scss/themes/default' as sd;
+
 :root {
   --docs-header-height: 64px;
   --docs-sidebar-width: 288px;
@@ -88,6 +92,11 @@ h3 {
 .content h1[tabindex='-1']:focus-visible {
   outline: 0;
   box-shadow: -4px 0 0 var(--docs-focus-ring);
+}
+
+// Layout page, "Sidebar V4 - Graphite": the same sidebar under the named preset, scoped to that demo only.
+.layout-demo__preview--graphite {
+  @include sd.theme($preset: 'graphite');
 }
 
 .docs-visually-hidden {

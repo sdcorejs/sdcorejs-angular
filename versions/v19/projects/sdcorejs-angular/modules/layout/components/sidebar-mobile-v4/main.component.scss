@@ -1,0 +1,469 @@
+// why: kích thước khai trên host (D-006) — cây V4 ở mode mobile đọc các biến này: mọi dòng 44px (README M2), radius theo
+// itemShape. Màu chỉ đi qua token (INV-007): --sd-sidebar-v4-* do theme phát, fallback dựng từ --sd-* / color-mix. Không hex.
+:host {
+  --sd-sidebar-v4-item-height: 44px;
+  --sd-sidebar-v4-child-height: 44px;
+  --sd-sidebar-v4-item-radius: 999px;
+  --sidebar-drawer-width: min(88vw, 360px);
+  --sidebar-bottom-bar-height: 64px;
+  --sidebar-bg: var(--sd-sidebar-v4-bg, color-mix(in srgb, var(--sd-text) 4%, var(--sd-surface)));
+  --sidebar-line: var(--sd-sidebar-v4-line, color-mix(in srgb, var(--sd-border) 45%, var(--sd-surface)));
+  --sidebar-hover-bg: var(--sd-sidebar-v4-hover-bg, color-mix(in srgb, var(--sd-text) 6%, transparent));
+  --sidebar-muted-ink: var(--sd-text-secondary);
+  --sidebar-focus-ring: inset 0 0 0 2px var(--sd-focus-ring-color, var(--sd-primary));
+  display: block;
+  min-height: 100dvh;
+  background: var(--sd-light);
+  color: var(--sd-text);
+}
+
+:host(.sd-sidebar-mobile-v4--soft) {
+  --sd-sidebar-v4-item-radius: 8px;
+}
+
+// Buttons ----------------------------------------------------------------------------------------------------
+
+.sd-sidebar-mobile-v4__icon-button,
+.sd-sidebar-mobile-v4__search-clear {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--sd-radius-999, 999px);
+  background: transparent;
+  color: var(--sidebar-muted-ink);
+  cursor: pointer;
+  transition: background-color var(--sd-duration-fast, 120ms) ease;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--sidebar-focus-ring);
+  }
+}
+
+// why: màn hình cảm ứng giữ trạng thái :hover sau khi chạm — chỉ tô nền hover khi thiết bị thật sự có hover.
+@media (hover: hover) {
+  .sd-sidebar-mobile-v4__icon-button:hover,
+  .sd-sidebar-mobile-v4__search-clear:hover {
+    background: var(--sidebar-hover-bg);
+  }
+}
+
+.sd-sidebar-mobile-v4__icon-button {
+  width: 44px;
+  height: 44px;
+}
+
+.sd-sidebar-mobile-v4__icon-button--appbar {
+  color: var(--sd-text);
+}
+
+// App bar (M1) -----------------------------------------------------------------------------------------------
+
+.sd-sidebar-mobile-v4__appbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sd-space-4, 4px);
+  box-sizing: border-box;
+  height: 56px;
+  padding: 0 8px 0 4px;
+  border-bottom: 1px solid var(--sidebar-line);
+  background: var(--sd-surface);
+}
+
+.sd-sidebar-mobile-v4__appbar-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--sd-font-size-18, 18px);
+  font-weight: var(--sd-font-weight-medium, 500);
+  line-height: var(--sd-line-height-24, 24px);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sd-sidebar-mobile-v4__avatar {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--sd-radius-999, 999px);
+  background: var(--sd-sidebar-v4-avatar-bg, color-mix(in srgb, var(--sd-primary) 14%, var(--sd-surface)));
+  color: var(--sd-sidebar-v4-avatar-ink, var(--sd-primary));
+  font-size: var(--sd-font-size-12, 12px);
+  font-weight: var(--sd-font-weight-medium, 500);
+  line-height: 1;
+}
+
+// Content ----------------------------------------------------------------------------------------------------
+
+// why: bottom bar cố định ở đáy — chừa đúng chiều cao của nó (cột 64px + viền 1px + safe-area) để không che nội dung.
+:host(.sd-sidebar-mobile-v4--bottom-bar) .sd-sidebar-mobile-v4__content {
+  padding-bottom: calc(var(--sidebar-bottom-bar-height) + 1px + env(safe-area-inset-bottom));
+}
+
+// Bottom bar (M1, opt-in) ------------------------------------------------------------------------------------
+
+.sd-sidebar-mobile-v4__bottom-bar {
+  position: fixed;
+  z-index: var(--sd-z-sidebar, 20);
+  inset: auto 0 0;
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  padding-bottom: env(safe-area-inset-bottom);
+  border-top: 1px solid var(--sidebar-line);
+  background: var(--sd-surface);
+}
+
+.sd-sidebar-mobile-v4__destination {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  box-sizing: border-box;
+  min-width: 0;
+  height: var(--sidebar-bottom-bar-height);
+  margin: 0;
+  padding: 0 2px;
+  border: 0;
+  background: transparent;
+  color: var(--sidebar-muted-ink);
+  font: inherit;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: none;
+
+    .sd-sidebar-mobile-v4__indicator {
+      box-shadow: var(--sidebar-focus-ring);
+    }
+  }
+}
+
+.sd-sidebar-mobile-v4__indicator {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 30px;
+  border-radius: var(--sd-radius-999, 999px);
+  transition: background-color var(--sd-duration-fast, 120ms) ease;
+}
+
+@media (hover: hover) {
+  .sd-sidebar-mobile-v4__destination:hover .sd-sidebar-mobile-v4__indicator {
+    background: var(--sidebar-hover-bg);
+  }
+
+  .sd-sidebar-mobile-v4__destination--disabled:hover .sd-sidebar-mobile-v4__indicator {
+    background: transparent;
+  }
+}
+
+// README M1/K: indicator active luôn là primary-light + icon primary, kể cả preset ghi đè --sd-sidebar-v4-active-bg thành
+// bề mặt nổi (graphite) — trên bottom bar trắng, bề mặt trắng sẽ không còn thấy được.
+.sd-sidebar-mobile-v4__destination--active .sd-sidebar-mobile-v4__indicator,
+.sd-sidebar-mobile-v4__destination--active:hover .sd-sidebar-mobile-v4__indicator {
+  background: var(--sd-primary-light);
+  color: var(--sd-primary);
+}
+
+.sd-sidebar-mobile-v4__destination--active:focus-visible .sd-sidebar-mobile-v4__indicator {
+  box-shadow: var(--sidebar-focus-ring);
+}
+
+.sd-sidebar-mobile-v4__destination--disabled {
+  color: var(--sd-disabled-text, color-mix(in srgb, var(--sd-text) 60%, transparent));
+  cursor: not-allowed;
+}
+
+.sd-sidebar-mobile-v4__destination-image {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+.sd-sidebar-mobile-v4__destination--disabled .sd-sidebar-mobile-v4__destination-image {
+  opacity: 0.6;
+}
+
+.sd-sidebar-mobile-v4__label {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--sd-text-secondary);
+  font-size: 11.5px;
+  font-weight: var(--sd-font-weight-regular, 400);
+  line-height: var(--sd-line-height-16, 16px);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sd-sidebar-mobile-v4__destination--active .sd-sidebar-mobile-v4__label {
+  color: var(--sd-text);
+  font-weight: var(--sd-font-weight-medium, 500);
+}
+
+.sd-sidebar-mobile-v4__destination--disabled .sd-sidebar-mobile-v4__label {
+  color: inherit;
+}
+
+// Badge 16px và live dot 8px như rail V4; vòng 2px cùng màu bề mặt của bottom bar.
+.sd-sidebar-mobile-v4__badge {
+  position: absolute;
+  top: -2px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: var(--sd-radius-8, 8px);
+  background: var(--sd-sidebar-v4-attention, var(--sd-warning));
+  box-shadow: 0 0 0 2px var(--sd-surface);
+  color: var(--sd-warning-contrast);
+  font-size: var(--sd-font-size-10, 10px);
+  font-weight: var(--sd-font-weight-medium, 500);
+  line-height: 1;
+  pointer-events: none;
+}
+
+.sd-sidebar-mobile-v4__badge--error {
+  background: var(--sd-error);
+  color: var(--sd-error-contrast);
+}
+
+.sd-sidebar-mobile-v4__live {
+  --live-tone: var(--sd-sidebar-v4-live, var(--sd-success));
+
+  position: absolute;
+  top: 2px;
+  right: 14px;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--sd-radius-4, 4px);
+  background: var(--live-tone);
+  box-shadow: 0 0 0 2px var(--sd-surface);
+  pointer-events: none;
+
+  &[data-tone='warning'] {
+    --live-tone: var(--sd-warning);
+  }
+
+  &[data-tone='error'] {
+    --live-tone: var(--sd-error);
+  }
+}
+
+// Drawer (M2) ------------------------------------------------------------------------------------------------
+
+.sd-sidebar-mobile-v4__backdrop {
+  position: fixed;
+  z-index: var(--sd-z-popover, 40);
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--sd-overlay-backdrop, color-mix(in srgb, var(--sd-text) 40%, transparent));
+}
+
+.sd-sidebar-mobile-v4__drawer {
+  position: fixed;
+  z-index: var(--sd-z-drawer-mobile, 50);
+  inset: 0 auto 0 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: var(--sidebar-drawer-width);
+  max-width: 100%;
+  padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  border-radius: 0 var(--sd-radius-24, 24px) var(--sd-radius-24, 24px) 0;
+  background: var(--sidebar-bg);
+  box-shadow: 0 8px 32px color-mix(in srgb, var(--sd-text) 18%, transparent);
+  color: var(--sd-text);
+
+  // why: tabindex -1 chỉ để click vào vùng không focus được giữ focus trong drawer (Esc vẫn tới handler); bản thân panel
+  // không phải đích bàn phím nên không vẽ vòng focus — vòng focus nằm trên các nút và dòng.
+  &:focus {
+    outline: none;
+  }
+}
+
+.sd-sidebar-mobile-v4__header {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--sd-space-12, 12px);
+  box-sizing: border-box;
+  min-height: 64px;
+  padding: 0 12px 0 16px;
+}
+
+.sd-sidebar-mobile-v4__logo {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--sd-radius-8, 8px);
+  background: var(--sd-primary);
+  color: var(--sd-primary-contrast);
+  font-size: var(--sd-font-size-14, 14px);
+  font-weight: var(--sd-font-weight-bold, 700);
+  line-height: 1;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+}
+
+.sd-sidebar-mobile-v4__logo--image {
+  background: transparent;
+}
+
+.sd-sidebar-mobile-v4__brand {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sd-sidebar-mobile-v4__title {
+  overflow: hidden;
+  font-size: var(--sd-font-size-16, 16px);
+  font-weight: var(--sd-font-weight-medium, 500);
+  line-height: var(--sd-line-height-22, 22px);
+  letter-spacing: -0.2px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Search (M3): nằm ngoài vùng cuộn của list nên luôn thấy được khi cây cuộn.
+.sd-sidebar-mobile-v4__search {
+  flex: none;
+  padding: 0 12px 6px;
+}
+
+.sd-sidebar-mobile-v4__search-field {
+  display: flex;
+  align-items: center;
+  gap: var(--sd-space-8, 8px);
+  box-sizing: border-box;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: var(--sd-radius-999, 999px);
+  background: var(--sd-surface);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sd-border) 50%, var(--sd-surface));
+  color: var(--sidebar-muted-ink);
+
+  &:focus-within {
+    box-shadow: var(--sidebar-focus-ring);
+  }
+}
+
+// Nút xoá 44px nằm sát mép phải của ô pill.
+.sd-sidebar-mobile-v4__search-field--filled,
+.sd-sidebar-mobile-v4__search-field--filled:focus-within {
+  padding-right: 0;
+  box-shadow: inset 0 0 0 2px var(--sd-primary);
+}
+
+.sd-sidebar-mobile-v4__search-icon {
+  flex: none;
+}
+
+.sd-sidebar-mobile-v4__search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--sd-text);
+  font: inherit;
+  font-size: var(--sd-font-size-13, 13px);
+
+  &::placeholder {
+    color: var(--sidebar-muted-ink);
+    opacity: 1;
+  }
+}
+
+.sd-sidebar-mobile-v4__search-clear {
+  width: 44px;
+  height: 44px;
+}
+
+.sd-sidebar-mobile-v4__list {
+  flex: 1 1 auto;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 0 12px 12px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sidebar-line) transparent;
+}
+
+.sd-sidebar-mobile-v4__section-label {
+  margin: 0;
+  padding: 14px 12px 4px;
+  color: var(--sidebar-muted-ink);
+  font-size: var(--sd-font-size-11, 11px);
+  font-weight: var(--sd-font-weight-medium, 500);
+  line-height: var(--sd-line-height-16, 16px);
+  letter-spacing: 0.3px;
+}
+
+// why: nhóm đầu không có section thì không có heading — tách khỏi Pinned/Recent để không trông như thuộc section đó.
+.sd-sidebar-mobile-v4__tree--separated {
+  margin-top: var(--sd-space-16, 16px);
+}
+
+.sd-sidebar-mobile-v4__footer {
+  flex: none;
+  box-sizing: border-box;
+  padding: 12px 8px 12px 16px;
+  border-top: 1px solid var(--sidebar-line);
+}
+
+// why: popup tài khoản dùng chung rộng 272px, mở từ padding trái 16px của footer — có thể tràn mép drawer hẹp. Canh popup
+// cách mỗi mép drawer 12px như footer của sd-sidebar-v4 (cùng tiền lệ ::ng-deep).
+.sd-sidebar-mobile-v4__footer ::ng-deep .sd-layout-user-menu__popup {
+  box-sizing: border-box;
+  left: -4px;
+  width: calc(var(--sidebar-drawer-width) - 24px);
+}
+
+// why: dưới 16px thì Safari iOS tự phóng to trang khi focus ô nhập (quyết định của owner: chỉ đổi trên con trỏ coarse).
+@media (pointer: coarse) {
+  .sd-sidebar-mobile-v4__search-input {
+    font-size: var(--sd-font-size-16, 16px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sd-sidebar-mobile-v4__icon-button,
+  .sd-sidebar-mobile-v4__search-clear,
+  .sd-sidebar-mobile-v4__indicator {
+    transition: none;
+  }
+}

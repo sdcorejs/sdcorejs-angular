@@ -2,12 +2,15 @@
 @let configuration = sidebar();
 @let pinned = pinnedMenus();
 @let recent = recentMenus();
+@let title = configuration.defaultTitle || 'Back Office';
 <div class="sd-sidebar-v3" [class.sd-sidebar-v3--collapsed]="collapsed">
-  <aside class="sd-sidebar-v3__drawer d-flex flex-column" data-v3-sidebar [attr.data-collapsed]="collapsed">
+  <aside #asideElement class="sd-sidebar-v3__drawer d-flex flex-column" data-v3-sidebar [attr.data-collapsed]="collapsed">
     <header
+      #headerElement
       data-v3-header
       class="sd-sidebar-v3__header d-flex align-items-center gap-8 p-12"
       [class.sd-sidebar-v3__header--collapsed]="collapsed"
+      [class.sd-sidebar-v3__header--context-open]="!collapsed && contextOpen()"
       [class.justify-content-between]="!collapsed"
       [class.justify-content-center]="collapsed">
       @if (!collapsed) {
@@ -17,7 +20,15 @@
           } @else {
             <sd-icon name="apps" fontSet="material-icons-outlined" size="20px"></sd-icon>
           }
-          <span class="sd-sidebar-v3__title text-ellipsis">{{ configuration.defaultTitle || 'Back Office' }}</span>
+          @if (configuration.context; as context) {
+            <!-- Context switcher (R-008, D-010): dòng phụ ngay dưới tên app; popover nằm dưới header, thụt 12px mỗi bên. -->
+            <div class="sd-sidebar-v3__brand-text">
+              <span class="sd-sidebar-v3__title text-ellipsis">{{ title }}</span>
+              <sd-layout-context-switcher #headerSwitcher appearance="header" [configuration]="context" [anchor]="headerElement" />
+            </div>
+          } @else {
+            <span class="sd-sidebar-v3__title text-ellipsis">{{ title }}</span>
+          }
         </div>
       }
       <button
@@ -31,6 +42,14 @@
     </header>
 
     @if (collapsed) {
+      @if (configuration.context; as context) {
+        <!-- Rail thu gọn (D-010): avatar context ở đầu rail, dưới nút mở rộng; popover mở sang phải từ mép drawer. -->
+        <sd-layout-context-switcher
+          class="sd-sidebar-v3__rail-context"
+          appearance="rail"
+          [configuration]="context"
+          [anchor]="asideElement" />
+      }
       <nav class="sd-sidebar-v3__navigation d-flex flex-column align-items-center gap-4 p-8 flex-1 overflow-auto" aria-label="Menu thu gọn">
         @for (item of collapsedItems(); track item.key) {
           <button

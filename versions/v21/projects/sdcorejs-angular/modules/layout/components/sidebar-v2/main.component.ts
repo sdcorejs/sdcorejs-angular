@@ -6,6 +6,7 @@ import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { sdIsExternalHttpUrl, sdOpenExternal } from '@sdcorejs/angular/utilities';
 import { SdLayoutUserInfo, SidebarConfigurationV2, resolveSidebarV2Interaction } from '../../configurations';
 import { SdLayoutMenu, SdLayoutNavigationStateService, getMenuStableKey } from '../../services';
+import { SdLayoutContextSwitcher } from '../shared/context-switcher/context-switcher.component';
 import { SdLayoutMenuTreeComponent } from '../shared/menu-tree/menu-tree.component';
 import { SdLayoutSearchFieldComponent } from '../shared/search-field/search-field.component';
 import { SdLayoutUserMenuComponent } from '../shared/user-menu/user-menu.component';
@@ -19,7 +20,14 @@ interface SidebarV2RailItem {
 @Component({
   selector: 'sd-sidebar-v2',
   standalone: true,
-  imports: [SdIcon, SdLayoutSearchFieldComponent, SdLayoutMenuTreeComponent, SdLayoutUserMenuComponent, SdTranslatePipe],
+  imports: [
+    SdIcon,
+    SdLayoutSearchFieldComponent,
+    SdLayoutMenuTreeComponent,
+    SdLayoutUserMenuComponent,
+    SdLayoutContextSwitcher,
+    SdTranslatePipe,
+  ],
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

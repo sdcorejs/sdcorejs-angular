@@ -38,6 +38,12 @@
   outline-offset: 2px;
 }
 
+// Context switcher (R-008, D-010): class chỉ có khi cấu hình `context` (INV-001); màu do switcher lấy từ token (D-028).
+// why: switcher không render gì khi `items` rỗng (host chỉ còn comment) — ẩn hẳn để gap của rail không chừa khoảng trống.
+.sd-sidebar-v2__rail-context:empty {
+  display: none;
+}
+
 // why: Long group titles need a two-line compact label inside the 56px rail item.
 .sd-sidebar-v2__rail-label {
   width: 52px;

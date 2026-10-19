@@ -1,8 +1,47 @@
+import { OverlayContainer } from '@angular/cdk/overlay';
+import { WritableSignal, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { Router, provideRouter } from '@angular/router';
 import { I18nService } from '@sdcorejs/angular/i18n';
-import { SdLayoutMenu, SdLayoutNavigationStateService, SdLayoutStorageService } from '../../services';
+import { SdLayoutContext } from '../../configurations';
+import { SdLayoutContextService, SdLayoutMenu, SdLayoutNavigationStateService, SdLayoutStorageService } from '../../services';
+import { SdLayoutContextSwitcher } from '../shared/context-switcher/context-switcher.component';
 import { SdSidebarV3 } from './main.component';
+
+interface ContextServiceStub {
+  current: WritableSignal<SdLayoutContext | null>;
+  items: WritableSignal<readonly SdLayoutContext[]>;
+  switchingId: WritableSignal<string | null>;
+  switchFailed: WritableSignal<boolean>;
+  changedElsewhere: WritableSignal<boolean>;
+  syncItems: jasmine.Spy;
+  setCurrentContext: jasmine.Spy;
+  reload: jasmine.Spy;
+  getCurrentContext: jasmine.Spy;
+}
+
+// why: service thật reload trang qua runtime — spec sidebar chỉ cần state đã đối chiếu (INV-010).
+function createContextStub(): ContextServiceStub {
+  const stub: ContextServiceStub = {
+    current: signal<SdLayoutContext | null>(null),
+    items: signal<readonly SdLayoutContext[]>([]),
+    switchingId: signal<string | null>(null),
+    switchFailed: signal(false),
+    changedElsewhere: signal(false),
+    syncItems: jasmine.createSpy('syncItems'),
+    setCurrentContext: jasmine.createSpy('setCurrentContext'),
+    reload: jasmine.createSpy('reload'),
+    getCurrentContext: jasmine.createSpy('getCurrentContext'),
+  };
+  stub.syncItems.and.callFake((items: readonly SdLayoutContext[] | null | undefined) => {
+    const list = items ?? [];
+    stub.items.set(list);
+    if (!stub.current() && list.length) stub.current.set(list[0]);
+  });
+  stub.getCurrentContext.and.callFake(() => stub.current());
+  return stub;
+}
 
 const dashboard: SdLayoutMenu = { id: 'dashboard', title: 'Tổng quan', path: '/dashboard', permission: true };
 const reports: SdLayoutMenu = { id: 'reports', title: 'Báo cáo bán hàng', tooltipTitle: 'Doanh số', path: '/reports', permission: true };
@@ -401,5 +440,196 @@ describe('SdSidebarV3', () => {
     const headings = Array.from(fixture.nativeElement.querySelectorAll('h2')).map(h => (h as HTMLElement).textContent?.trim());
     expect(headings).toContain('Tất cả menu');
     expect(headings).not.toContain('');
+  });
+
+  // -------------------------------------------------------------------------
+  // Context switcher (R-008, D-010): mở rộng thì switcher nằm dưới tên app trong brand, thu gọn thì avatar context
+  // ở đầu rail ngay dưới nút mở rộng. Không có `context` thì V3 render như cũ và bỏ qua các field menu chỉ V4 dùng
+  // (R-003, AC-011, INV-001).
+  // -------------------------------------------------------------------------
+  describe('context switcher (R-003, R-008, AC-011, AC-018)', () => {
+    const contexts: SdLayoutContext[] = [
+      { id: 'hq', title: 'Head Office', subtitle: 'Owner' },
+      { id: 'north', title: 'North Branch', subtitle: 'Manager' },
+    ];
+    let context: ContextServiceStub;
+    let contextServiceCreations: number;
+
+    const root = (): HTMLElement => fixture.nativeElement as HTMLElement;
+    const q = <T extends HTMLElement = HTMLElement>(selector: string): T | null => root().querySelector<T>(selector);
+    const switchers = () => fixture.debugElement.queryAll(By.directive(SdLayoutContextSwitcher));
+    const overlayRoot = (): HTMLElement => TestBed.inject(OverlayContainer).getContainerElement();
+
+    beforeEach(async () => {
+      TestBed.resetTestingModule();
+      context = createContextStub();
+      contextServiceCreations = 0;
+      await TestBed.configureTestingModule({
+        imports: [SdSidebarV3],
+        providers: [
+          provideRouter([]),
+          {
+            provide: SdLayoutContextService,
+            // why: đếm số lần tạo để chứng minh V3 không cấu hình `context` không bao giờ tạo service (INV-001, D-021).
+            useFactory: () => {
+              contextServiceCreations++;
+              return context;
+            },
+          },
+        ],
+      }).compileComponents();
+    });
+
+    async function openSwitcher(): Promise<void> {
+      (q('[data-context-trigger]') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+    }
+
+    it('renders the header switcher under the title in the brand, anchored to the header, with a popover 24px narrower than the drawer', async () => {
+      create({ version: 3, context: { items: contexts } });
+      const header = q('[data-v3-header]') as HTMLElement;
+      const host = switchers()[0].nativeElement as HTMLElement;
+      const instance = switchers()[0].componentInstance as SdLayoutContextSwitcher;
+
+      expect(switchers().length).toBe(1);
+      expect(instance.appearance()).toBe('header');
+      expect(instance.anchor()).toBe(header);
+      expect(q('[data-v3-brand]')?.contains(host)).toBeTrue();
+      expect(q('.sd-sidebar-v3__title')?.nextElementSibling).toBe(host);
+      expect(q('.sd-sidebar-v3__title')?.textContent?.trim()).toBe('Back Office');
+      expect(context.syncItems).toHaveBeenCalledWith(contexts);
+      // INV-006: switcher không đổi bề rộng 304px của V3.
+      expect((q('[data-v3-sidebar]') as HTMLElement).getBoundingClientRect().width).toBe(304);
+
+      await openSwitcher();
+
+      const popover = overlayRoot().querySelector<HTMLElement>('[data-context-popover]') as HTMLElement;
+      expect(popover).not.toBeNull();
+      expect(getComputedStyle(popover).width).toBe('280px');
+      expect(popover.getBoundingClientRect().left).toBeCloseTo(header.getBoundingClientRect().left + 12, 0);
+      expect(popover.getBoundingClientRect().top).toBeCloseTo(header.getBoundingClientRect().bottom, 0);
+    });
+
+    it('gives the whole header the hover background while the header switcher is open (README CS1)', async () => {
+      // why: Karma không nạp theme — khai --sd-text để nền hover (color-mix) có giá trị thật mà so.
+      document.documentElement.style.setProperty('--sd-text', 'rgb(26, 27, 31)');
+      try {
+        create({ version: 3, context: { items: contexts } });
+        const header = q('[data-v3-header]') as HTMLElement;
+        const trigger = q('[data-context-trigger]') as HTMLElement;
+        expect(header.classList).not.toContain('sd-sidebar-v3__header--context-open');
+
+        await openSwitcher();
+
+        expect(header.classList).toContain('sd-sidebar-v3__header--context-open');
+        expect(getComputedStyle(header).borderTopLeftRadius).toBe('12px');
+        expect(getComputedStyle(header).backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+        // Chỉ một lớp nền: trigger đang mở không tô chồng lên nền header.
+        expect(getComputedStyle(trigger).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+
+        (switchers()[0].componentInstance as SdLayoutContextSwitcher).close(false);
+        fixture.detectChanges();
+        expect(header.classList).not.toContain('sd-sidebar-v3__header--context-open');
+      } finally {
+        document.documentElement.style.removeProperty('--sd-text');
+      }
+    });
+
+    it('renders the rail switcher under the header toggle at the top of the collapsed rail and opens its popover right of the drawer', async () => {
+      create({ version: 3, defaultCollapsed: true, context: { items: contexts } });
+      const aside = q('[data-v3-sidebar]') as HTMLElement;
+      const header = q('[data-v3-header]') as HTMLElement;
+      const host = switchers()[0].nativeElement as HTMLElement;
+      const instance = switchers()[0].componentInstance as SdLayoutContextSwitcher;
+
+      expect(switchers().length).toBe(1);
+      expect(instance.appearance()).toBe('rail');
+      expect(instance.anchor()).toBe(aside);
+      expect(header.nextElementSibling).toBe(host);
+      expect(host.nextElementSibling?.matches('nav.sd-sidebar-v3__navigation')).toBeTrue();
+      const avatar = (q('[data-context-trigger]') as HTMLElement).getBoundingClientRect();
+      const firstItem = (q('.sd-sidebar-v3__collapsed-action') as HTMLElement).getBoundingClientRect();
+      expect(avatar.top).toBeGreaterThanOrEqual(header.getBoundingClientRect().bottom);
+      expect(avatar.bottom).toBeLessThan(firstItem.top);
+      expect(avatar.left + avatar.width / 2).toBeCloseTo(firstItem.left + firstItem.width / 2, 0);
+
+      await openSwitcher();
+
+      const popover = overlayRoot().querySelector<HTMLElement>('[data-context-popover]') as HTMLElement;
+      const asideRight = aside.getBoundingClientRect().right;
+      expect(popover).not.toBeNull();
+      expect(popover.getBoundingClientRect().left).toBeGreaterThanOrEqual(asideRight);
+      expect(popover.getBoundingClientRect().left).toBeCloseTo(asideRight + 8, 0);
+    });
+
+    it('moves the switcher between the header and the rail when the drawer collapses and expands', () => {
+      create({ version: 3, context: { items: contexts } });
+      expect((switchers()[0].componentInstance as SdLayoutContextSwitcher).appearance()).toBe('header');
+
+      fixture.componentInstance.toggleCollapsed();
+      fixture.detectChanges();
+      expect(switchers().length).toBe(1);
+      expect((switchers()[0].componentInstance as SdLayoutContextSwitcher).appearance()).toBe('rail');
+      expect(q('[data-v3-brand]')).toBeNull();
+
+      fixture.componentInstance.toggleCollapsed();
+      fixture.detectChanges();
+      expect(switchers().length).toBe(1);
+      expect((switchers()[0].componentInstance as SdLayoutContextSwitcher).appearance()).toBe('header');
+    });
+
+    it('leaves no gap on the collapsed rail for a switcher that renders nothing', () => {
+      create({ version: 3, defaultCollapsed: true });
+      const baseline = (q('.sd-sidebar-v3__collapsed-action') as HTMLElement).getBoundingClientRect().top;
+      fixture.destroy();
+
+      create({ version: 3, defaultCollapsed: true, context: { items: [] } });
+
+      const empty = switchers()[0].nativeElement as HTMLElement;
+      expect(empty.childElementCount).toBe(0);
+      expect(empty.getBoundingClientRect().height).toBe(0);
+      expect((q('.sd-sidebar-v3__collapsed-action') as HTMLElement).getBoundingClientRect().top).toBe(baseline);
+    });
+
+    it('renders as before without context and ignores the V4-only menu fields, expanded or collapsed (R-003, AC-011, INV-001)', () => {
+      const v4Fields = {
+        section: 'Workspace',
+        badge: { value: 'NEW-7', tone: 'warning' as const },
+        status: { label: 'Connected', tone: 'success' as const, live: true },
+      };
+      const soon: SdLayoutMenu = { id: 'soon', title: 'Sắp ra mắt', path: '/soon', permission: true, comingSoon: true, ...v4Fields };
+      const v4Group: SdLayoutMenu = { id: 'v4-group', title: 'Nhóm mới', icon: 'science', comingSoon: true, ...v4Fields, children: [soon] };
+      create();
+      fixture.componentRef.setInput('menus', [v4Group, ...menus]);
+      fixture.detectChanges();
+      const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+
+      expect(q('sd-layout-context-switcher')).toBeNull();
+      expect(Array.from((q('[data-v3-brand]') as HTMLElement).children).map(child => child.localName)).toEqual(['sd-icon', 'span']);
+      expect(root().querySelectorAll('h2').length).toBe(1);
+      expect(root().querySelector('sd-layout-menu-tree :is([class*="badge"], [class*="status"], [class*="section"])')).toBeNull();
+      for (const value of ['Workspace', 'NEW-7', 'Connected']) expect(root().textContent).withContext(value).not.toContain(value);
+
+      // comingSoon không có nghĩa gì ở V3 (D-005): nhóm vẫn mở/đóng, mục vẫn điều hướng và vẫn tìm thấy.
+      const group = groupButton('id:v4-group') as HTMLButtonElement;
+      expect(group.hasAttribute('aria-disabled')).toBeFalse();
+      expect(group.getAttribute('aria-expanded')).toBe('true');
+      const soonButton = allRoute('id:soon') as HTMLButtonElement;
+      expect(soonButton.hasAttribute('aria-disabled')).toBeFalse();
+      soonButton.click();
+      expect(navigate).toHaveBeenCalledWith(['/soon'], { queryParams: {}, state: { switchTab: true } });
+      fixture.componentInstance.searchText.set('sap ra mat');
+      expect(fixture.componentInstance.searchResults().map(menu => menu.path)).toEqual(['/soon']);
+
+      fixture.componentInstance.toggleCollapsed();
+      fixture.detectChanges();
+      expect(q('sd-layout-context-switcher')).toBeNull();
+      expect((q('[data-v3-header]') as HTMLElement).nextElementSibling?.matches('nav.sd-sidebar-v3__navigation')).toBeTrue();
+      expect(root().querySelector('.sd-sidebar-v3__navigation :is([class*="badge"], [class*="status"])')).toBeNull();
+      expect(context.syncItems).not.toHaveBeenCalled();
+      expect(contextServiceCreations).toBe(0);
+    });
   });
 });

@@ -187,7 +187,7 @@ const SCOPES = [
         <demo-section
           heading="Bảng contrast"
           [props]="[{ name: 'npm run test:theme', value: 'contrast matrix' }]"
-          note="Đo trên trình duyệt cho palette default ở chế độ sáng và tối, cùng cặp và ngưỡng với test:theme (test đó còn chạy cho 8 preset có tên). Đây là kiểm tra palette, không thay cho việc kiểm tra từng trạng thái component.">
+          note="Đo trên trình duyệt cho palette default ở chế độ sáng và tối, cùng cặp và ngưỡng với test:theme (test đó còn chạy cho 9 preset có tên). Đây là kiểm tra palette, không thay cho việc kiểm tra từng trạng thái component.">
           <div class="tt-probes" aria-hidden="true">
             @for (scope of scopes; track scope.mode) {
               <div #probe class="tt-probe" [attr.data-sd-theme]="scope.mode"><span class="tt-probe__paint"></span></div>

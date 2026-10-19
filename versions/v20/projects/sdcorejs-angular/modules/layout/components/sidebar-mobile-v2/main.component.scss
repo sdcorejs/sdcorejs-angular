@@ -77,6 +77,12 @@
   overflow: hidden;
 }
 
+// Context switcher (R-008, D-027): class chỉ có khi cấu hình `context` (INV-001); màu do switcher lấy từ token (D-028).
+// why: switcher không render gì khi `items` rỗng (host chỉ còn comment) — ẩn hẳn để gap của sheet không chừa khoảng trống.
+.sd-sidebar-mobile-v2__context:empty {
+  display: none;
+}
+
 // why: Navigation motion must respect the user's reduced-motion preference.
 @media (prefers-reduced-motion: reduce) {
   .sd-sidebar-mobile-v2__sheet {

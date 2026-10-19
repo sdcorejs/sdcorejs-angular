@@ -60,12 +60,32 @@ interface SdStorage<T> {
   has(): boolean;
   remove(): void;
   destroy(): void;
+  refresh(): T | undefined;
   subject: BehaviorSubject<T | undefined>;
   observer: Observable<T | undefined>;
 }
 ```
 
-`setSilent()` persists without notifying observers. `destroy()` is typed, idempotent, completes the facade subject and detaches the handle without removing its stored value. A handle created with `default` returns `SdStorageWithDefault<T>` with non-optional `get()`/subject/observer types.
+`setSilent()` persists without notifying observers. `destroy()` is typed, idempotent, completes the facade subject and detaches the handle without removing its stored value. A handle created with `default` returns `SdStorageWithDefault<T>` with non-optional `get()`/`refresh()`/subject/observer types.
+
+### Re-reading storage with `refresh()`
+
+Every live handle of the same key shares one in-memory entry, and `get()` reads that entry, not storage. `refresh()` re-reads the persisted value instead. Use it when:
+
+- another tab or process may have written the key;
+- you need to confirm that a write actually persisted — `set()` updates memory first and keeps the value even when the browser rejects the write (quota, security error).
+
+```ts
+preferences.set({ theme: 'dark' });
+const persisted = preferences.refresh(); // what storage actually holds
+const stored = preferences.has(); // tells a stored value from the default
+```
+
+The fresh value replaces the shared entry, so every live handle of the key sees it. Subscribers are notified only when the value changed. The comparison uses the serializer output, so it relies on a deterministic serializer: a non-deterministic custom serializer (for example one with a random IV) may notify on every `refresh()`. `refresh()` returns the value from the same read it notified subscribers with: `undefined`, or the default for a handle created with `default`, when nothing is stored. When storage cannot be read (SSR, access denied, or a key whose last write failed), the unconfirmed in-memory value is dropped and the key reads as absent. `refresh()` throws on a destroyed handle, like `set()`, `has()` and `remove()`.
+
+`refresh()` follows the same rules as the first read of a key: it may rewrite a corrupt entry as a tombstone or migrate a legacy value to the current format. A key whose last write failed is quarantined and keeps reading as absent until its next successful write.
+
+Custom implementations of `SdStorage`/`SdStorageWithDefault` (for example test doubles) must add `refresh()`.
 
 ## Serialization and legacy data
 
@@ -95,8 +115,8 @@ supplies a namespace, the handle is created without one — see the collision ha
 
 ## Errors, SSR and cleanup
 
-- Browser storage security/quota exceptions are contained; the active in-memory value is preserved.
-- On SSR, the adapter reports storage unavailable and the handle continues as an in-memory reactive facade.
+- Browser storage security/quota exceptions are contained; the active in-memory value is preserved until `refresh()`.
+- On SSR, the adapter reports storage unavailable and the handle continues as an in-memory reactive facade until `refresh()`.
 - Invalid documents never partially mutate a hydrated state.
 - Injector teardown completes all subjects and clears internal maps.
 - Destroy dynamic handles when their owner is removed; call `remove()` separately when persisted data must be deleted.

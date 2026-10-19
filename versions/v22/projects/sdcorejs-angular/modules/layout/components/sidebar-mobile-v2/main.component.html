@@ -55,6 +55,11 @@
         </button>
       </header>
       <div class="d-flex flex-column gap-12 p-12 overflow-auto">
+        <!-- Context switcher (D-027): mobile V2 không có drawer nên trigger là dòng đầu của sheet menu; sheet chọn
+             context mở trong overlay CDK, chồng lên sheet này và tự giữ Esc (không đóng sheet menu). -->
+        @if (sidebar().context; as context) {
+          <sd-layout-context-switcher class="sd-sidebar-mobile-v2__context" appearance="sheet" [configuration]="context" />
+        }
         <sd-layout-user-menu presentation="mobile-inline" [userInfo]="userInfo()"></sd-layout-user-menu>
         <sd-layout-search-field
           [placeholder]="'core.module.layout.sidebar.search-in-menu' | sdTranslate"

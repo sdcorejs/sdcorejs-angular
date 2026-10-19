@@ -10,19 +10,33 @@ import { SdSidebarV2 } from '../sidebar-v2/main.component';
 import { SdSidebarMobileV2 } from '../sidebar-mobile-v2/main.component';
 import { SdSidebarV3 } from '../sidebar-v3/main.component';
 import { SdSidebarMobileV3 } from '../sidebar-mobile-v3/main.component';
+import { SdSidebarV4 } from '../sidebar-v4/main.component';
+import { SdSidebarMobileV4 } from '../sidebar-mobile-v4/main.component';
 import {
   SD_LAYOUT_CONFIGURATION,
   SidebarConfigurationV1,
   SidebarConfigurationV2,
   SidebarConfigurationV3,
+  SidebarConfigurationV4,
   normalizeLayoutMobileBreakpoint,
+  normalizeSidebarConfiguration,
 } from '../../configurations';
 
 @Component({
   selector: 'sd-layout',
   templateUrl: './layout-main.component.html',
   styleUrl: './layout-main.component.scss',
-  imports: [SdSidebarV1, SdSidebarMobileV1, SdSidebarV2, SdSidebarMobileV2, SdSidebarV3, SdSidebarMobileV3, NgTemplateOutlet],
+  imports: [
+    SdSidebarV1,
+    SdSidebarMobileV1,
+    SdSidebarV2,
+    SdSidebarMobileV2,
+    SdSidebarV3,
+    SdSidebarMobileV3,
+    SdSidebarV4,
+    SdSidebarMobileV4,
+    NgTemplateOutlet,
+  ],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -57,6 +71,11 @@ export class SdLayoutComponent {
   sidebarV3 = computed<SidebarConfigurationV3 | undefined>(() => {
     const sidebar = this.sidebar();
     return sidebar?.version === 3 ? sidebar : undefined;
+  });
+  // why: V4 là cấu hình duy nhất cần chuẩn hoá ở đây (INV-012) — bottomBar/itemShape/density/collapsedGroup có mặc định + sanitize.
+  sidebarV4 = computed<SidebarConfigurationV4 | undefined>(() => {
+    const sidebar = this.sidebar();
+    return sidebar?.version === 4 ? normalizeSidebarConfiguration(sidebar) : undefined;
   });
   mobileBreakpoint = normalizeLayoutMobileBreakpoint(this.#layoutConfiguration?.mobileBreakpoint);
   isMobile = computed(() => this.#responsiveService.isMobile(this.mobileBreakpoint));

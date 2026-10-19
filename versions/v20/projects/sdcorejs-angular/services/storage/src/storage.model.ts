@@ -19,12 +19,19 @@ export interface SdStorage<T = unknown> {
   has: () => boolean;
   remove: () => void;
   destroy: () => void;
+  /**
+   * Re-reads the persisted value, bypassing the in-memory entry shared by every live handle of the key.
+   * Notifies subscribers only when the value changed and returns the value from that same read.
+   */
+  refresh: () => T | undefined;
   subject: BehaviorSubject<T | undefined>;
   observer: Observable<T | undefined>;
 }
 
-export interface SdStorageWithDefault<T> extends Omit<SdStorage<T>, 'get' | 'subject' | 'observer'> {
+export interface SdStorageWithDefault<T> extends Omit<SdStorage<T>, 'get' | 'refresh' | 'subject' | 'observer'> {
   get: () => T;
+  /** Same as `SdStorage.refresh()`, returning the default when nothing is stored. */
+  refresh: () => T;
   subject: BehaviorSubject<T>;
   observer: Observable<T>;
 }

@@ -90,6 +90,32 @@ export interface SdLayoutUserInfo {
 
 export const DEFAULT_LAYOUT_MOBILE_BREAKPOINT = 1024;
 
+/** A context the signed-in user can switch between (for example a store or a legal entity). */
+export interface SdLayoutContext {
+  /** Stable identifier that Core persists and matches against the configured `items`. */
+  id: string;
+  /** Display name shown in the switcher. */
+  title: string;
+  /** Secondary line shown below the title. */
+  subtitle?: string;
+  /** Avatar image URL; the initial of `title` is shown when it is missing or fails to load. */
+  avatar?: string;
+}
+
+/**
+ * Context switcher configuration shared by sidebar versions 1–4.
+ * The consumer only assigns `items`; Core persists and restores the current context and reloads the page after a switch.
+ * Read the current context with `SdLayoutContextService.getCurrentContext()`.
+ */
+export interface SdLayoutContextConfiguration {
+  /** Name of the context kind shown in the switcher. Defaults to the translated "Context" label. */
+  label?: string;
+  /** Contexts the user can switch between. An empty list hides the switcher. */
+  items: SdLayoutContext[];
+  /** Forces the search box on or off. By default it is shown when there are more than 7 items. */
+  searchable?: boolean;
+}
+
 export interface SidebarConfigurationBase {
   brandColor?: string;
   brandLightColor?: string;
@@ -98,9 +124,15 @@ export interface SidebarConfigurationBase {
   pin?: {
     enabled?: boolean;
   };
+  /**
+   * Context switcher rendered in the sidebar header. The consumer only assigns `items`;
+   * Core persists and restores the current context and reloads the page on switch.
+   * Read it with `SdLayoutContextService.getCurrentContext()`.
+   */
+  context?: SdLayoutContextConfiguration;
 }
 
-export type ISdSidebarConfiguration = SidebarConfigurationV1 | SidebarConfigurationV2 | SidebarConfigurationV3;
+export type ISdSidebarConfiguration = SidebarConfigurationV1 | SidebarConfigurationV2 | SidebarConfigurationV3 | SidebarConfigurationV4;
 
 export interface SidebarConfigurationV1 extends SidebarConfigurationBase {
   version: 1;
@@ -156,6 +188,19 @@ export interface SidebarConfigurationV3 extends SidebarConfigurationBase {
   };
 }
 
+/** Sidebar V4: V3 behaviour (collapse, pinned, recent) with token-driven colours; `brandColor`/`brandLightColor` are ignored. */
+export interface SidebarConfigurationV4 extends Omit<SidebarConfigurationV3, 'version'> {
+  version: 4;
+  /** Shape of the active/hover item highlight. @default 'pill' */
+  itemShape?: 'pill' | 'soft';
+  /** Row height: `compact` 36/32px, `comfortable` 40/34px. @default 'compact' */
+  density?: 'compact' | 'comfortable';
+  /** How a group opens while the rail is collapsed. @default 'flyout' */
+  collapsedGroup?: 'flyout' | 'expand';
+  /** Mobile shell options. `bottomBar` lists at most 4 menu ids shown in the bottom navigation bar. */
+  mobile?: { bottomBar?: string[] };
+}
+
 export interface ResolvedSidebarRecentConfiguration {
   enabled: boolean;
   maxItems: number;
@@ -181,9 +226,15 @@ export function resolveSidebarV3Recent(sidebar: SidebarConfigurationV3): Resolve
   };
 }
 
+function sanitizeSidebarV4BottomBar(bottomBar: unknown): string[] {
+  const ids = Array.isArray(bottomBar) ? bottomBar.filter((id): id is string => typeof id === 'string').map(id => id.trim()) : [];
+  return [...new Set(ids.filter(Boolean))].slice(0, 4);
+}
+
 export function normalizeSidebarConfiguration(_sidebar: SidebarConfigurationV1): SidebarConfigurationV1;
 export function normalizeSidebarConfiguration(_sidebar: SidebarConfigurationV2): SidebarConfigurationV2;
 export function normalizeSidebarConfiguration(_sidebar: SidebarConfigurationV3): SidebarConfigurationV3;
+export function normalizeSidebarConfiguration(_sidebar: SidebarConfigurationV4): SidebarConfigurationV4;
 export function normalizeSidebarConfiguration(sidebar: ISdSidebarConfiguration): ISdSidebarConfiguration {
   if (sidebar.version === 2) {
     return {
@@ -197,6 +248,20 @@ export function normalizeSidebarConfiguration(sidebar: ISdSidebarConfiguration):
       ...sidebar,
       defaultCollapsed: sidebar.defaultCollapsed ?? false,
       recent: resolveSidebarV3Recent(sidebar),
+    };
+  }
+  if (sidebar.version === 4) {
+    const { mobile } = sidebar;
+    return {
+      ...sidebar,
+      defaultCollapsed: sidebar.defaultCollapsed ?? false,
+      // why: V4 kế thừa `recent` của V3; dùng lại đúng resolver V3 mà không nới kiểu tham số public của nó.
+      recent: resolveSidebarV3Recent({ version: 3, recent: sidebar.recent }),
+      itemShape: sidebar.itemShape === 'soft' ? 'soft' : 'pill',
+      density: sidebar.density === 'comfortable' ? 'comfortable' : 'compact',
+      collapsedGroup: sidebar.collapsedGroup === 'expand' ? 'expand' : 'flyout',
+      // why: không có `bottomBar` thì giữ nguyên `mobile` (kể cả vắng mặt) — không tự tạo bottom bar rỗng.
+      ...(mobile?.bottomBar == null ? {} : { mobile: { ...mobile, bottomBar: sanitizeSidebarV4BottomBar(mobile.bottomBar) } }),
     };
   }
   return sidebar;

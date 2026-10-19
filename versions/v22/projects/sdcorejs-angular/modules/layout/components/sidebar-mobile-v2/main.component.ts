@@ -1,13 +1,31 @@
 import { A11yModule } from '@angular/cdk/a11y';
 import { DOCUMENT } from '@angular/common';
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  Injector,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+  untracked,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { sdIsExternalHttpUrl, sdOpenExternal } from '@sdcorejs/angular/utilities';
 import { SdLayoutUserInfo, SidebarConfigurationV2 } from '../../configurations';
-import { SdLayoutMenu, SdLayoutNavigationStateService, getMenuStableKey, selectPrimaryMenuGroups } from '../../services';
+import {
+  SdLayoutContextService,
+  SdLayoutMenu,
+  SdLayoutNavigationStateService,
+  getMenuStableKey,
+  selectPrimaryMenuGroups,
+} from '../../services';
+import { SdLayoutContextSwitcher } from '../shared/context-switcher/context-switcher.component';
 import { SdLayoutMenuTreeComponent } from '../shared/menu-tree/menu-tree.component';
 import { SdLayoutSearchFieldComponent } from '../shared/search-field/search-field.component';
 import { SdLayoutUserMenuComponent } from '../shared/user-menu/user-menu.component';
@@ -15,7 +33,15 @@ import { SdLayoutUserMenuComponent } from '../shared/user-menu/user-menu.compone
 @Component({
   selector: 'sd-sidebar-mobile-v2',
   standalone: true,
-  imports: [A11yModule, SdIcon, SdLayoutSearchFieldComponent, SdLayoutMenuTreeComponent, SdLayoutUserMenuComponent, SdTranslatePipe],
+  imports: [
+    A11yModule,
+    SdIcon,
+    SdLayoutSearchFieldComponent,
+    SdLayoutMenuTreeComponent,
+    SdLayoutUserMenuComponent,
+    SdLayoutContextSwitcher,
+    SdTranslatePipe,
+  ],
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,6 +51,7 @@ export class SdSidebarMobileV2 {
   readonly #i18n = inject(I18nService);
   readonly #document = inject(DOCUMENT);
   readonly #destroyRef = inject(DestroyRef);
+  readonly #injector = inject(Injector);
   readonly #navigationState = inject(SdLayoutNavigationStateService);
   #restoreFocusElement: HTMLElement | null = null;
   #previousBodyOverflow = '';
@@ -49,6 +76,15 @@ export class SdSidebarMobileV2 {
     effect(() => {
       const menus = this.menus();
       untracked(() => this.#navigationState.hydrate(menus));
+    });
+    // why: switcher chỉ mount trong sheet menu (render khi mở) — đối chiếu context ngay lúc khởi tạo (EXEC-D1, D-021)
+    // để listener nhiều tab chạy từ đầu và lần chạm đầu vào menu không kích reload đối chiếu. Không có `context` thì
+    // không lấy service: app không cấu hình context không tạo service lẫn listener.
+    effect(() => {
+      const context = this.sidebar().context;
+      if (!context) return;
+      const items = context.items;
+      untracked(() => this.#injector.get(SdLayoutContextService).syncItems(items));
     });
     this.#router.events.pipe(takeUntilDestroyed(this.#destroyRef)).subscribe(event => {
       if (!(event instanceof NavigationEnd)) return;

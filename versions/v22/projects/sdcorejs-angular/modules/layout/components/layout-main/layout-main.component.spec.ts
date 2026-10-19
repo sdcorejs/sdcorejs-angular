@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy as SdAngular22ChangeDetectionStrategy } from '@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, input, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { SdViewportService } from '../../../../services/viewport';
 import { SD_LAYOUT_CONFIGURATION } from '../../configurations';
 import { MenuPipe } from '../../pipes';
@@ -82,11 +83,35 @@ class MobileV3StubComponent {
   sidebar = input.required<unknown>();
 }
 
-describe('SdLayoutComponent responsive V1/V2/V3 composition', () => {
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  selector: 'sd-sidebar-v4',
+  standalone: true,
+  template: '<span data-testid="desktop-v4"></span>',
+})
+class DesktopV4StubComponent {
+  menus = input<unknown[]>([]);
+  userInfo = input.required<unknown>();
+  sidebar = input.required<unknown>();
+}
+
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  selector: 'sd-sidebar-mobile-v4',
+  standalone: true,
+  template: '<span data-testid="mobile-v4"></span>',
+})
+class MobileV4StubComponent {
+  menus = input<unknown[]>([]);
+  userInfo = input.required<unknown>();
+  sidebar = input.required<unknown>();
+}
+
+describe('SdLayoutComponent responsive V1/V2/V3/V4 composition', () => {
   let fixture: ComponentFixture<SdLayoutComponent>;
   const viewportWidth = signal(1280);
   const sharedViewportWidth = signal(1280);
-  const sidebar = signal<{ version: 1 | 2 | 3; defaultTitle: string }>({ version: 1, defaultTitle: 'Portal' });
+  const sidebar = signal<any>({ version: 1, defaultTitle: 'Portal' });
 
   beforeEach(async () => {
     viewportWidth.set(1280);
@@ -126,6 +151,8 @@ describe('SdLayoutComponent responsive V1/V2/V3 composition', () => {
             MobileV2StubComponent,
             DesktopV3StubComponent,
             MobileV3StubComponent,
+            DesktopV4StubComponent,
+            MobileV4StubComponent,
             NgTemplateOutlet,
           ],
         },
@@ -140,7 +167,7 @@ describe('SdLayoutComponent responsive V1/V2/V3 composition', () => {
     expect(getComputedStyle(fixture.nativeElement).display).toBe('block');
   });
 
-  ([1, 2, 3] as const).forEach(version => {
+  ([1, 2, 3, 4] as const).forEach(version => {
     it(`switches V${version} from desktop to mobile live without navigation or reload`, () => {
       sidebar.set({ version, defaultTitle: 'Portal' });
       fixture.detectChanges();
@@ -152,6 +179,17 @@ describe('SdLayoutComponent responsive V1/V2/V3 composition', () => {
       expect(fixture.nativeElement.querySelector(`[data-testid="desktop-v${version}"]`)).toBeNull();
       expect(fixture.nativeElement.querySelector(`[data-testid="mobile-v${version}"]`)).not.toBeNull();
     });
+  });
+
+  it('passes a normalized configuration to the V4 sidebar', () => {
+    sidebar.set({ version: 4, mobile: { bottomBar: [' a ', 'a', '', 'b', 'c', 'd', 'e'] } });
+    fixture.detectChanges();
+    const stub = fixture.debugElement.query(By.directive(DesktopV4StubComponent)).componentInstance as DesktopV4StubComponent;
+    const config = stub.sidebar() as any;
+    expect(config.itemShape).toBe('pill');
+    expect(config.density).toBe('compact');
+    expect(config.collapsedGroup).toBe('flyout');
+    expect(config.mobile.bottomBar).toEqual(['a', 'b', 'c', 'd']);
   });
 
   it('uses the consumer mobileBreakpoint instead of a fixed device check', () => {
