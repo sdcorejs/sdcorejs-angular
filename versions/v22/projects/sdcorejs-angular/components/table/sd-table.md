@@ -461,6 +461,20 @@ Khi cấu hình `timeZone`, mọi phép tính ngày của table theo múi giờ 
 - Gọi `SdConvertToPagingReq` thủ công thì truyền `dateTime: inject(SdDateTimeService)` để có cùng biên; bỏ trống (hoặc zone `'local'`) giữ đúng payload cũ.
 
 Không cấu hình (hoặc `'local'`) thì mọi giá trị giữ nguyên như trước. Xem [`SdDateTimeService`](../../services/date-time/sd-date-time.md).
+
+#### Inline column filter — server payload for `split-number` (`type: 'server'`)
+
+`SdConvertToPagingReq` gửi giá trị `{ from, to }` của cột `type: 'number'` + `filter: { type: 'split-number' }` thành một filter khoảng đóng, bỏ qua operator trên `sd-operator`. Một đầu là `undefined`, `null` hoặc `''` thì coi là trống; `0` là giá trị hợp lệ.
+
+| Giá trị filter             | `pagingReq.filters`                                          |
+| -------------------------- | ------------------------------------------------------------ |
+| `{ from: 10, to: 20 }`     | `{ field, operator: 'BETWEEN', data: { from: 10, to: 20 } }` |
+| `{ from: 10, to: null }`   | `{ field, operator: 'GREATER_OR_EQUAL', data: 10 }`          |
+| `{ from: null, to: 20 }`   | `{ field, operator: 'LESS_OR_EQUAL', data: 20 }`             |
+| `{ from: null, to: null }` | không gửi filter                                             |
+
+Release `3.1` trở về trước gửi `{ field, operator: 'EQUAL', data: { from, to } }` (hoặc operator đã chọn kèm object), kể cả khi hai đầu đều trống. Backend nhận cột này phải hỗ trợ `BETWEEN` với `data: { from, to }`, `GREATER_OR_EQUAL` và `LESS_OR_EQUAL`.
+
 ### Commands (`SdTableCommandNormal<T>`)
 
 `{ color?, icon?: string \| (row)=>string, fontSet?, title?: string \| (row)=>string, disabled?: boolean \| (row)=>boolean, hidden?: boolean \| (row)=>boolean \| Promise<boolean>, click(row), htmlTemplate?(row)=>string }`. Group via `{ ... children: SdTableCommandNormal<T>[] }`.
@@ -1180,6 +1194,7 @@ The drag handle hides automatically for columns excluded from resize. Widths rel
 - ❌ Wiring per-row navigation via the cell `click` callback when the user expects right-click "open in new tab" — use a column with `htmlTemplate` rendering an `<a [sdHref]>` instead.
 - ❌ Defining `commands` AND `command.commands` simultaneously — `command` is the newer API; pick one to avoid confusion.
 - ❌ Putting a heavy server-side `items()` in front of a daterange filter without honoring the `BETWEEN` / `GREATER_OR_EQUAL` operators emitted in `pagingReq.filters` — the table builds the request correctly; your backend must accept that operator vocabulary.
+- ❌ Reading a `split-number` column filter on the server as `EQUAL` with a `{ from, to }` object — after release `3.1` the table sends `BETWEEN` `{ from, to }`, `GREATER_OR_EQUAL` or `LESS_OR_EQUAL` (see "server payload for `split-number`").
 - ❌ Using `'lazy-values'` with `selection: 'MULTIPLE'` and forgetting to provide `views` — bulk-display of saved values needs `views(values) => K[]` to render labels for already-stored ids.
 - ❌ Mutating row data in-place after a server fetch and expecting the table to redraw — call `tableRef.reload()` or replace the dataset reference.
 - ❌ Setting `expand.always: true` AND `expand.onExpand` — `always` keeps every row expanded; `onExpand` is bypassed for toggling but still called once for each row's data on first render. Decide which mode you want.
