@@ -1,5 +1,6 @@
 import { InjectionToken, Injectable, inject } from '@angular/core';
 import { SdStorage, SdStorageOption, SdStorageService } from '@sdcorejs/angular/services';
+import { SdLayoutContext } from '../../configurations';
 import { SdLayoutChildrenMenu, SdLayoutMenu } from '../menu/menu.model';
 import { getMenuStableKey, resolveMenuKeys } from '../menu/menu.utils';
 
@@ -19,7 +20,7 @@ export type SdLayoutStorageNamespace = string | (() => string | null | undefined
  *
  * ⚠️ `SdLayoutStorageService` là singleton `providedIn: 'root'`, thường được khởi tạo TRƯỚC khi biết
  * người dùng là ai. Vì vậy hãy cấp một **hàm** — nó được gọi lại ở mỗi lần truy cập handle, nên khi
- * danh tính đến (hoặc đổi) thì cả bảy handle tự dựng lại trên namespace mới:
+ * danh tính đến (hoặc đổi) thì cả tám handle tự dựng lại trên namespace mới:
  *
  * ```ts
  * providers: [
@@ -46,6 +47,7 @@ interface SdLayoutStorageHandles {
   pinnedMenuKeys: SdStorage<string[]>;
   recentMenuKeys: SdStorage<string[]>;
   versionStates: SdStorage<Record<string, SdLayoutVersionState>>;
+  currentContext: SdStorage<SdLayoutContext>;
 }
 
 @Injectable({
@@ -60,7 +62,7 @@ export class SdLayoutStorageService {
   // nên nó chạy ở lần inject đầu tiên, thường TRƯỚC khi đăng nhập xong, và factory theo user trả về
   // `undefined` cho cả phiên; biện pháp "pinned/recent của A không lộ sang B" quảng cáo trong doc khi
   // đó không bao giờ có hiệu lực. Giải quyết bằng cách resolve LƯỜI ở mỗi lần truy cập handle: khi
-  // danh tính đến (hoặc đổi user trong cùng phiên SPA) thì bảy handle được dựng lại trên namespace mới.
+  // danh tính đến (hoặc đổi user trong cùng phiên SPA) thì tám handle được dựng lại trên namespace mới.
   get isShowSidebar(): SdStorage<boolean> {
     return this.#resolveHandles().isShowSidebar;
   }
@@ -89,6 +91,11 @@ export class SdLayoutStorageService {
     return this.#resolveHandles().versionStates;
   }
 
+  /** Snapshot context hiện tại (`{ id, title, subtitle?, avatar? }`), chỉ `SdLayoutContextService` đọc/ghi. */
+  get currentContext(): SdStorage<SdLayoutContext> {
+    return this.#resolveHandles().currentContext;
+  }
+
   /**
    * Xoá toàn bộ state layout đã persist.
    *
@@ -103,6 +110,14 @@ export class SdLayoutStorageService {
   clear(): void {
     const handles = this.#resolveHandles();
     for (const handle of this.#allHandles(handles)) handle.remove();
+  }
+
+  /**
+   * Namespace mà các handle đang dùng tại lúc gọi (đã trim; rỗng/không cấu hình → `undefined`).
+   * So hai lần gọi để biết partition lưu trữ đã đổi (đăng nhập/đăng xuất trong SPA).
+   */
+  resolvedNamespace(): string | undefined {
+    return this.#resolveNamespace();
   }
 
   // why: namespace rỗng/space phải quy về undefined, nếu không mỗi chuỗi rác lại tạo ra một không
@@ -139,6 +154,7 @@ export class SdLayoutStorageService {
       pinnedMenuKeys: this.#sdStorageService.create('4bdc7f80-9ff4-4fe0-908f-6c9f7fe4100a', option),
       recentMenuKeys: this.#sdStorageService.create('fb989dc1-f6e7-4b62-a611-861a8f214a51', option),
       versionStates: this.#sdStorageService.create('ca8e4261-fbd4-4209-af88-2dbe278c1a1b', option),
+      currentContext: this.#sdStorageService.create('f628621f-7d5d-4f22-b40d-4cc5bf0fa7ae', option),
     };
   }
 
@@ -151,6 +167,7 @@ export class SdLayoutStorageService {
       handles.pinnedMenuKeys,
       handles.recentMenuKeys,
       handles.versionStates,
+      handles.currentContext,
     ];
   }
 
@@ -190,6 +207,27 @@ export class SdLayoutStorageService {
     return nextState;
   }
 
+  /** Đọc snapshot context từ bộ nhớ; trả bản sao, hoặc `null` khi chưa có hay sai dạng (thiếu/rỗng `id`, `title`). */
+  readCurrentContext(): SdLayoutContext | null {
+    return this.#parseContext(this.currentContext.get());
+  }
+
+  /** Lưu snapshot context, chỉ giữ `id`, `title`, `subtitle`, `avatar`; bỏ field tuỳ chọn đang `undefined`. */
+  writeCurrentContext(context: SdLayoutContext): void {
+    const { id, title, subtitle, avatar } = context;
+    this.currentContext.set({ id, title, ...(subtitle === undefined ? {} : { subtitle }), ...(avatar === undefined ? {} : { avatar }) });
+  }
+
+  /**
+   * Đọc lại snapshot context từ storage, bỏ qua entry trong bộ nhớ; kiểm dạng như `readCurrentContext()`.
+   *
+   * why: `set()` cập nhật bộ nhớ trước và không báo ghi lỗi, còn tab khác ghi thì entry trong bộ nhớ không
+   * đổi — chỉ `refresh()` mới cho biết giá trị thật sự đã lưu.
+   */
+  refreshCurrentContext(): SdLayoutContext | null {
+    return this.#parseContext(this.currentContext.refresh());
+  }
+
   #getLegacyPinnedKeys(): string[] {
     const legacyGroup = this.pinnedMenuGroup.get();
     if (!legacyGroup || !Array.isArray(legacyGroup.children)) return [];
@@ -204,6 +242,23 @@ export class SdLayoutStorageService {
 
   #sameKeys(left: string[], right: string[]): boolean {
     return left.length === right.length && left.every((key, index) => key === right[index]);
+  }
+
+  // why: giá trị trong storage có thể do bản cũ, tab khác hoặc tay người sửa — không tin kiểu đã khai báo.
+  #parseContext(value: unknown): SdLayoutContext | null {
+    if (typeof value !== 'object' || value === null) return null;
+    const { id, title, subtitle, avatar } = value as Record<string, unknown>;
+    if (!this.#isFilledString(id) || !this.#isFilledString(title)) return null;
+    return {
+      id,
+      title,
+      ...(typeof subtitle === 'string' ? { subtitle } : {}),
+      ...(typeof avatar === 'string' ? { avatar } : {}),
+    };
+  }
+
+  #isFilledString(value: unknown): value is string {
+    return typeof value === 'string' && value.trim().length > 0;
   }
 }
 

@@ -8,12 +8,13 @@ import { SdLayoutUserInfo, SidebarConfigurationV1 } from '../../../../configurat
 import { SdLayoutMenu, SdLayoutStorageService } from '../../../../services';
 import { resolveActiveMenuPath } from '../../../../utils';
 import { LayoutUserComponent } from '../user/user.component';
+import { SdLayoutContextSwitcher } from '../../../shared/context-switcher/context-switcher.component';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'sd-sidebar-mobile-overlay',
   standalone: true,
-  imports: [SdIcon, CommonModule, RouterModule, LayoutUserComponent],
+  imports: [SdIcon, CommonModule, RouterModule, LayoutUserComponent, SdLayoutContextSwitcher],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss',
 })

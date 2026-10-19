@@ -2,6 +2,11 @@
 // Named presets are light-only: theme() refuses $preset + $mode: 'dark' | 'auto'. Only the default
 // preset has a dark palette ($default-dark-theme in default.scss); pass your own colours through $theme
 // on the default preset to get a dark variant (D-022).
+// A preset may also carry an optional `components` map that overrides component tokens
+// (themes/_component-tokens.scss) for that preset only (D-007, D-029): keys are token names without the
+// `--sd-` prefix and must exist in $component-tokens (an unknown key fails compilation); values are
+// single values, emitted as-is, because named presets are light-only. theme() takes the map out before
+// merging the palette.
 $presets: (
   'default': (),
   'ocean': (
@@ -51,5 +56,16 @@ $presets: (
     surface: #ffffff, surface-muted: #faf4f5,
     text: #35262c, text-secondary: #70565f,
     border: #e1cfd6, border-strong: #997480,
+  ),
+  // Near-black primary for backoffice consoles; the active Sidebar V4 item is a raised surface.
+  'graphite': (
+    primary: #16181d, primary-light: #e3e5ea, primary-dark: #0b0c0f,
+    surface: #ffffff, surface-muted: #f3f4f7,
+    text: #16181d, text-secondary: #5a606b,
+    border: #dadde3, border-strong: #737985,
+    components: (
+      sidebar-v4-active-bg: var(--sd-surface),
+      sidebar-v4-active-shadow: (0 0 0 1px var(--sd-border), 0 1px 2px rgba(20, 22, 28, 0.06)),
+    ),
   ),
 );

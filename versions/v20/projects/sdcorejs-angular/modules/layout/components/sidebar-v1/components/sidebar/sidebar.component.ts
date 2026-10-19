@@ -1,6 +1,18 @@
 import { NestedTreeControl } from '@angular/cdk/tree';
 import { CommonModule, DOCUMENT } from '@angular/common';
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  computed,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+  untracked,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -17,6 +29,7 @@ import { SdLayoutUserInfo, SidebarConfigurationV1 } from '../../../../configurat
 import { HighlightSearchPipe, MenuFocusPipe } from '../../../../pipes';
 import { SdLayoutChildrenMenu, SdLayoutMenu, SdLayoutNavigationStateService, SdLayoutStorageService } from '../../../../services';
 import { resolveActiveMenuPath } from '../../../../utils';
+import { SdLayoutContextSwitcher } from '../../../shared/context-switcher/context-switcher.component';
 import { LayoutUserComponent } from '../user/user.component';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
@@ -35,6 +48,7 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
     HighlightSearchPipe,
     LayoutUserComponent,
     SdTranslatePipe,
+    SdLayoutContextSwitcher,
   ],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss',
@@ -64,6 +78,12 @@ export class SdSidebarV1Panel {
   popupUserMenuClosed = output<void>();
   popupUserMenuOpened = output<void>();
   showSideBar = output<boolean | null>();
+
+  // ==========================================
+  // CONTEXT SWITCHER (chỉ render khi cấu hình `sidebar.context`)
+  // ==========================================
+  private readonly headerContextSwitcher = viewChild<SdLayoutContextSwitcher>('headerContextSwitcher');
+  #isContextPopoverOpen = false;
 
   // ==========================================
   // STATE SIGNALS
@@ -124,6 +144,22 @@ export class SdSidebarV1Panel {
 
         this.#bindingMenuGroupByCurrentPath(currentMenus);
         this.#isFirstBindingMenu.set(false);
+      });
+    });
+
+    // why: popover context nằm trong overlay CDK có backdrop phủ màn hình — chuột rời sidenav thì main thu gọn
+    // sidebar đang mở tạm (hover) và huỷ luôn switcher. Báo qua cặp output popup như menu người dùng để main giữ
+    // sidebar mở. Chỉ bản header: báo từ rail sẽ làm main mở rộng sidebar và thay mất switcher rail đang mở.
+    effect(() => {
+      const isOpen = this.headerContextSwitcher()?.isOpen() ?? false;
+      untracked(() => {
+        if (isOpen === this.#isContextPopoverOpen) return;
+        this.#isContextPopoverOpen = isOpen;
+        if (isOpen) {
+          this.popupUserMenuOpened.emit();
+        } else {
+          this.popupUserMenuClosed.emit();
+        }
       });
     });
   }

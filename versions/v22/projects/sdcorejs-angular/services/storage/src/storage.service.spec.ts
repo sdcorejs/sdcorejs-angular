@@ -1,4 +1,4 @@
-import { Provider } from '@angular/core';
+import { createEnvironmentInjector, EnvironmentInjector, Provider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
   SD_PERSISTENCE_STORAGE_ADAPTER,
@@ -921,5 +921,151 @@ describe('SdStorageService', () => {
     TestBed.configureTestingModule({ providers: [{ provide: SD_PERSISTENCE_STORAGE_ADAPTER, useValue: adapter }] });
     service = TestBed.inject(SdStorageService);
     expect(service.create<string>('independent').has()).toBeFalse();
+  });
+
+  describe('refresh()', () => {
+    // why: một SdStorageService riêng dùng chung adapter mô phỏng tab/tiến trình khác ghi cùng storage —
+    // nó có state trong bộ nhớ riêng nên không đụng entry dùng chung của service đang test.
+    const otherWriterInjectors: EnvironmentInjector[] = [];
+
+    function createOtherWriter(): SdStorageService {
+      const injector = createEnvironmentInjector(
+        [SdStorageService, { provide: SD_PERSISTENCE_STORAGE_ADAPTER, useValue: adapter }],
+        TestBed.inject(EnvironmentInjector)
+      );
+      otherWriterInjectors.push(injector);
+      return injector.get(SdStorageService);
+    }
+
+    // why: hủy cả khi assertion fail giữa chừng; chạy trước afterEach ngoài nên injector cha còn sống.
+    afterEach(() => {
+      for (const injector of otherWriterInjectors.splice(0)) injector.destroy();
+    });
+
+    it('re-reads a value another writer persisted, updates every live handle of the key and emits once', () => {
+      const service = configure();
+      const storage = service.create<string>('refresh-other-writer');
+      const sibling = service.create<string>('refresh-other-writer');
+      storage.set('mine');
+      const emissions: (string | undefined)[] = [];
+      const siblingEmissions: (string | undefined)[] = [];
+      storage.observer.subscribe(value => emissions.push(value));
+      sibling.observer.subscribe(value => siblingEmissions.push(value));
+
+      createOtherWriter().create<string>('refresh-other-writer').set('theirs');
+      expect(storage.get()).toBe('mine');
+
+      expect(storage.refresh()).toBe('theirs');
+      expect(storage.get()).toBe('theirs');
+      expect(sibling.get()).toBe('theirs');
+      expect(emissions).toEqual(['mine', 'theirs']);
+      expect(siblingEmissions).toEqual(['mine', 'theirs']);
+    });
+
+    it('does not notify subscribers when the stored value is unchanged and returns an isolated clone', () => {
+      const service = configure();
+      const storage = service.create<{ nested: { count: number } }>('refresh-unchanged');
+      storage.set({ nested: { count: 1 } });
+      const emissions: ({ nested: { count: number } } | undefined)[] = [];
+      storage.observer.subscribe(value => emissions.push(value));
+
+      const refreshed = storage.refresh();
+      expect(refreshed).toEqual({ nested: { count: 1 } });
+      if (refreshed) refreshed.nested.count = 99;
+      expect(storage.refresh()).toEqual({ nested: { count: 1 } });
+
+      createOtherWriter()
+        .create<{ nested: { count: number } }>('refresh-unchanged')
+        .set({ nested: { count: 1 } });
+      expect(storage.refresh()).toEqual({ nested: { count: 1 } });
+      expect(emissions).toEqual([{ nested: { count: 1 } }]);
+
+      const absent = service.create<string>('refresh-unchanged-absent');
+      const absentEmissions: (string | undefined)[] = [];
+      absent.observer.subscribe(value => absentEmissions.push(value));
+      expect(absent.refresh()).toBeUndefined();
+      expect(absentEmissions).toEqual([undefined]);
+    });
+
+    it('reports undefined or the default instead of an unpersisted in-memory value after a failed write', () => {
+      const service = configure();
+      const storage = service.create<string>('refresh-failed-write');
+      const withDefault = service.create<string>('refresh-failed-write-default', { default: 'fallback' });
+      const emissions: (string | undefined)[] = [];
+      storage.observer.subscribe(value => emissions.push(value));
+
+      adapter.returnFalseSet = true;
+      storage.set('unpersisted');
+      withDefault.set('unpersisted');
+      adapter.returnFalseSet = false;
+      expect(storage.get()).toBe('unpersisted');
+      expect(withDefault.get()).toBe('unpersisted');
+
+      expect(storage.refresh()).toBeUndefined();
+      expect(storage.get()).toBeUndefined();
+      expect(storage.has()).toBeFalse();
+      expect(emissions).toEqual([undefined, 'unpersisted', undefined]);
+      expect(withDefault.refresh()).toBe('fallback');
+      expect(withDefault.get()).toBe('fallback');
+
+      const rejected = service.create<string>('refresh-rejected-value');
+      rejected.set('A');
+      adapter.maxValueLength = 500;
+      rejected.set('B'.repeat(2000));
+      adapter.maxValueLength = undefined;
+      expect(rejected.get()).toBe('B'.repeat(2000));
+      expect(rejected.refresh()).toBeUndefined();
+    });
+
+    it('returns the default for an absent key and after another writer removes the value', () => {
+      const service = configure();
+      const storage = service.create<string>('refresh-default', { default: 'fallback' });
+      expect(storage.refresh()).toBe('fallback');
+
+      storage.set('value');
+      const emissions: string[] = [];
+      storage.observer.subscribe(value => emissions.push(value));
+      createOtherWriter().create<string>('refresh-default', { default: 'fallback' }).remove();
+
+      expect(storage.refresh()).toBe('fallback');
+      expect(storage.has()).toBeFalse();
+      expect(emissions).toEqual(['value', 'fallback']);
+    });
+
+    it('returns the same snapshot it broadcasts when the re-read is transiently unavailable', () => {
+      const service = configure();
+      const storage = service.create<string>('refresh-transient');
+      storage.set('value');
+      const [primaryKey] = Array.from(adapter.local.keys());
+      const emissions: (string | undefined)[] = [];
+      storage.observer.subscribe(value => emissions.push(value));
+
+      adapter.unavailableReads.set(primaryKey, 1);
+      const refreshed = storage.refresh();
+      expect(refreshed).toBeUndefined();
+      expect(emissions).toEqual(['value', undefined]);
+      expect(storage.subject.value).toBe(refreshed);
+
+      expect(storage.refresh()).toBe('value');
+      expect(emissions).toEqual(['value', undefined, 'value']);
+
+      const withDefault = service.create<string>('refresh-transient-default', { default: 'fallback' });
+      withDefault.set('stored');
+      const defaultKey = Array.from(adapter.local.keys()).find(key => key !== primaryKey);
+      if (!defaultKey) throw new Error('Expected a primary key for the default handle');
+      adapter.unavailableReads.set(defaultKey, 1);
+      expect(withDefault.refresh()).toBe('fallback');
+      expect(withDefault.subject.value).toBe('fallback');
+    });
+
+    it('throws on a destroyed handle', () => {
+      const service = configure();
+      const storage = service.create<string>('refresh-destroyed');
+      const withDefault = service.create<string>('refresh-destroyed-default', { default: 'fallback' });
+      storage.destroy();
+      withDefault.destroy();
+      expect(() => storage.refresh()).toThrowError('Storage handle has been destroyed');
+      expect(() => withDefault.refresh()).toThrowError('Storage handle has been destroyed');
+    });
   });
 });

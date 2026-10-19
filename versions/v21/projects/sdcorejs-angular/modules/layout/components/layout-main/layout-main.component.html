@@ -6,6 +6,7 @@
 @let _sidebarV1 = sidebarV1();
 @let _sidebarV2 = sidebarV2();
 @let _sidebarV3 = sidebarV3();
+@let _sidebarV4 = sidebarV4();
 
 @if (_userInfo && _sidebarV1) {
   @if (!isMobile()) {
@@ -28,6 +29,18 @@
     <sd-sidebar-mobile-v3 [menus]="menus()" [userInfo]="_userInfo" [sidebar]="_sidebarV3">
       <ng-container [ngTemplateOutlet]="projectedContent"></ng-container>
     </sd-sidebar-mobile-v3>
+  }
+}
+
+@if (_userInfo && _sidebarV4) {
+  @if (!isMobile()) {
+    <sd-sidebar-v4 [menus]="menus()" [userInfo]="_userInfo" [sidebar]="_sidebarV4">
+      <ng-container [ngTemplateOutlet]="projectedContent"></ng-container>
+    </sd-sidebar-v4>
+  } @else {
+    <sd-sidebar-mobile-v4 [menus]="menus()" [userInfo]="_userInfo" [sidebar]="_sidebarV4">
+      <ng-container [ngTemplateOutlet]="projectedContent"></ng-container>
+    </sd-sidebar-mobile-v4>
   }
 }
 

@@ -1,6 +1,12 @@
-import { signal } from '@angular/core';
+import { createEnvironmentInjector, EnvironmentInjector, Provider, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { SdStorageService } from '@sdcorejs/angular/services';
+import {
+  SD_PERSISTENCE_STORAGE_ADAPTER,
+  SdPersistenceStorageAdapter,
+  SdPersistenceStorageArea,
+  SdStorageService,
+} from '@sdcorejs/angular/services';
+import { SdLayoutContext } from '../../configurations';
 import { SdLayoutChildrenMenu, SdLayoutMenu, SdLayoutRootMenu } from '../menu/menu.model';
 import { SD_LAYOUT_STORAGE_NAMESPACE, SdLayoutStorageNamespace, SdLayoutStorageService } from './storage.service';
 
@@ -163,5 +169,177 @@ describe('SdLayoutStorageService user namespacing', () => {
     expect(service.pinnedMenuKeys.get()).toBeUndefined();
     userId.set('user-a');
     expect(service.pinnedMenuKeys.get()).toEqual(['id:dashboard']);
+  });
+});
+
+/** Adapter trong bộ nhớ — tách spec khỏi localStorage thật và mô phỏng được lần ghi bị từ chối. */
+class MemoryStorageAdapter implements SdPersistenceStorageAdapter {
+  readonly local = new Map<string, string>();
+  readonly session = new Map<string, string>();
+  rejectWrites = false;
+
+  getItem(area: SdPersistenceStorageArea, key: string): string | null {
+    return this.#area(area).get(key) ?? null;
+  }
+
+  setItem(area: SdPersistenceStorageArea, key: string, value: string): boolean {
+    if (this.rejectWrites) return false;
+    this.#area(area).set(key, value);
+    return true;
+  }
+
+  removeItem(area: SdPersistenceStorageArea, key: string): boolean {
+    this.#area(area).delete(key);
+    return true;
+  }
+
+  #area(area: SdPersistenceStorageArea): Map<string, string> {
+    return area === 'local' ? this.local : this.session;
+  }
+}
+
+describe('SdLayoutStorageService current context snapshot', () => {
+  const hanoi: SdLayoutContext = { id: 'store-hn', title: 'Hà Nội', subtitle: 'Cửa hàng', avatar: 'https://cdn.example.com/hn.png' };
+  const saigon: SdLayoutContext = { id: 'store-sg', title: 'Sài Gòn' };
+  let adapter: MemoryStorageAdapter;
+
+  afterEach(() => TestBed.resetTestingModule());
+
+  function createFor(namespace?: SdLayoutStorageNamespace): SdLayoutStorageService {
+    adapter = new MemoryStorageAdapter();
+    const providers: Provider[] = [{ provide: SD_PERSISTENCE_STORAGE_ADAPTER, useValue: adapter }];
+    if (namespace !== undefined) providers.push({ provide: SD_LAYOUT_STORAGE_NAMESPACE, useValue: namespace });
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers });
+    return TestBed.inject(SdLayoutStorageService);
+  }
+
+  // why: một SdStorageService riêng trên cùng adapter mô phỏng tab khác — nó giữ entry trong bộ nhớ riêng,
+  // nên ghi ở đó không chạm entry dùng chung của service đang test.
+  function createOtherTab(): { service: SdLayoutStorageService; destroy: () => void } {
+    const injector = createEnvironmentInjector([SdStorageService, SdLayoutStorageService], TestBed.inject(EnvironmentInjector));
+    return { service: injector.get(SdLayoutStorageService), destroy: () => injector.destroy() };
+  }
+
+  it('persists only id, title, subtitle and avatar and reads back an isolated copy', () => {
+    const service = createFor();
+    service.writeCurrentContext({ ...hanoi, role: 'owner', permissions: ['sale'] } as SdLayoutContext);
+
+    expect(service.currentContext.get()).toEqual(hanoi);
+    const read = service.readCurrentContext();
+    expect(read).toEqual(hanoi);
+    if (read) read.title = 'Mutated';
+    expect(service.readCurrentContext()).toEqual(hanoi);
+  });
+
+  it('omits optional fields that are undefined', () => {
+    const service = createFor();
+    service.writeCurrentContext({ ...saigon, subtitle: undefined, avatar: undefined });
+
+    expect(Object.keys(service.currentContext.get() ?? {})).toEqual(['id', 'title']);
+    expect(service.readCurrentContext()).toEqual(saigon);
+  });
+
+  it('adds the currentContext entry as the only new persisted record', () => {
+    const service = createFor();
+    service.writeCurrentContext(hanoi);
+
+    expect(adapter.local.size).toBe(1);
+    expect(adapter.session.size).toBe(0);
+    expect(service.pinnedMenuKeys.has()).toBeFalse();
+    expect(service.versionStates.has()).toBeFalse();
+  });
+
+  it('reads malformed snapshots as null', () => {
+    const service = createFor();
+    const malformed: unknown[] = [
+      null,
+      'store-hn',
+      42,
+      [],
+      {},
+      { id: 'store-hn' },
+      { title: 'Hà Nội' },
+      { id: '   ', title: 'Hà Nội' },
+      { id: 'store-hn', title: '' },
+      { id: 7, title: 'Hà Nội' },
+    ];
+
+    for (const value of malformed) {
+      service.currentContext.set(value as SdLayoutContext);
+      expect(service.readCurrentContext()).withContext(JSON.stringify(value)).toBeNull();
+      expect(service.refreshCurrentContext()).withContext(JSON.stringify(value)).toBeNull();
+    }
+  });
+
+  it('drops non-string optional fields and unknown fields from a stored snapshot', () => {
+    const service = createFor();
+    service.currentContext.set({ id: 'store-hn', title: 'Hà Nội', subtitle: 3, avatar: null, extra: true } as unknown as SdLayoutContext);
+
+    expect(service.readCurrentContext()).toEqual({ id: 'store-hn', title: 'Hà Nội' });
+  });
+
+  it('refreshes a snapshot written by another tab while the in-memory read stays stale', () => {
+    const service = createFor();
+    service.writeCurrentContext(hanoi);
+    const other = createOtherTab();
+    other.service.writeCurrentContext(saigon);
+
+    expect(service.readCurrentContext()).toEqual(hanoi);
+    expect(service.refreshCurrentContext()).toEqual(saigon);
+    expect(service.readCurrentContext()).toEqual(saigon);
+    other.destroy();
+  });
+
+  it('removes the snapshot on clear()', () => {
+    const service = createFor();
+    service.writeCurrentContext(hanoi);
+
+    service.clear();
+
+    expect(service.currentContext.get()).toBeUndefined();
+    expect(service.readCurrentContext()).toBeNull();
+    expect(service.refreshCurrentContext()).toBeNull();
+    const other = createOtherTab();
+    expect(other.service.readCurrentContext()).toBeNull();
+    other.destroy();
+  });
+
+  it('isolates snapshots per namespace and reports the resolved namespace', () => {
+    const userId = signal<string | undefined>('user-a');
+    const service = createFor(() => userId());
+    expect(service.resolvedNamespace()).toBe('user-a');
+    service.writeCurrentContext(hanoi);
+
+    userId.set('user-b');
+    expect(service.resolvedNamespace()).toBe('user-b');
+    expect(service.readCurrentContext()).toBeNull();
+    expect(service.refreshCurrentContext()).toBeNull();
+    service.writeCurrentContext(saigon);
+
+    userId.set('user-a');
+    expect(service.readCurrentContext()).toEqual(hanoi);
+
+    userId.set('   ');
+    expect(service.resolvedNamespace()).toBeUndefined();
+    expect(service.readCurrentContext()).toBeNull();
+
+    userId.set('user-b');
+    expect(service.refreshCurrentContext()).toEqual(saigon);
+  });
+
+  it('resolves a constant namespace trimmed and a missing namespace as undefined', () => {
+    expect(createFor(' tenant-1 ').resolvedNamespace()).toBe('tenant-1');
+    expect(createFor().resolvedNamespace()).toBeUndefined();
+  });
+
+  it('refreshes to null when the snapshot could not be persisted', () => {
+    const service = createFor();
+    adapter.rejectWrites = true;
+    service.writeCurrentContext(hanoi);
+    adapter.rejectWrites = false;
+
+    expect(service.readCurrentContext()).toEqual(hanoi);
+    expect(service.refreshCurrentContext()).toBeNull();
   });
 });
