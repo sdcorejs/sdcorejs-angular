@@ -40,6 +40,7 @@ const expected = {
   teal: ['#0f766e', '#f0f7f6'], copper: ['#9a6324', '#f4f2f1'],
   slate: ['#475569', '#f5f6f8'], forest: ['#356447', '#f3f6f0'],
   plum: ['#7b3f80', '#f7f3f8'], rose: ['#a33d62', '#faf4f5'],
+  graphite: ['#16181d', '#f3f4f7'],
 };
 const tokens = css => Object.fromEntries([...css.matchAll(/--sd-([\w-]+): ([^;]+);/g)].map(m => [m[1], m[2]]));
 const luminance = hex => {
@@ -144,9 +145,10 @@ const V215_DEFAULT = {
   '--sd-disabled-text': 'color-mix(in srgb, var(--sd-text) 60%, transparent)',
 };
 
-// 2.15 values of the keys each named preset overrides.
+// Exact values of the keys each named preset overrides: the eight 2.15 presets, then `graphite` (Sidebar V4
+// handoff, R-010) with its README palette and the default white primary-contrast.
 const PRESET_KEYS = ['primary', 'primary-light', 'primary-dark', 'primary-contrast', 'surface', 'surface-muted', 'text', 'text-secondary', 'border', 'border-strong'];
-const V215_PRESETS = {
+const PRESET_PALETTES = {
   ocean: '#005cbb #e6f0fa #004a96 #ffffff #ffffff #f1f5f9 #182230 #475569 #cbd5e1 #64748b',
   indigo: '#4f46e5 #eeecfd #3730a3 #ffffff #ffffff #f4f4fa #232238 #56546c #d5d3e3 #76738d',
   teal: '#0f766e #e5f3f1 #115e59 #ffffff #ffffff #f0f7f6 #18302d #47635f #c9dcd8 #637f79',
@@ -155,6 +157,7 @@ const V215_PRESETS = {
   forest: '#356447 #e8f0e9 #244831 #ffffff #ffffff #f3f6f0 #253128 #53634f #cfd9c9 #72826c',
   plum: '#7b3f80 #f2eaf4 #592b60 #ffffff #ffffff #f7f3f8 #302334 #68576d #dccfdf #8c7492',
   rose: '#a33d62 #faeaf0 #7d2849 #ffffff #ffffff #faf4f5 #35262c #70565f #e1cfd6 #997480',
+  graphite: '#16181d #e3e5ea #0b0c0f #ffffff #ffffff #f3f4f7 #16181d #5a606b #dadde3 #737985',
 };
 
 const RAMP_FAMILIES = ['primary', 'secondary', 'info', 'success', 'warning', 'error', 'neutral'];
@@ -165,8 +168,8 @@ test('VAL-001: without $mode every 2.15 declaration keeps its exact value', () =
   for (const [name, value] of Object.entries(V215_DEFAULT)) assert.equal(light[name], value, name);
 });
 
-test('VAL-001: named presets keep their 2.15 values, -light/-dark/-contrast included', () => {
-  for (const [preset, values] of Object.entries(V215_PRESETS)) {
+test('VAL-001, AC-020: named presets keep their exact palette values, -light/-dark/-contrast included', () => {
+  for (const [preset, values] of Object.entries(PRESET_PALETTES)) {
     const palette = declarations(compile(`.x { @include sd.theme($preset: '${preset}'); }`));
     values.split(' ').forEach((value, i) => assert.equal(palette[`--sd-${PRESET_KEYS[i]}`], value, `${preset} ${PRESET_KEYS[i]}`));
     for (const family of ['secondary', 'info', 'success', 'warning', 'error']) {
@@ -286,6 +289,73 @@ test('Component tokens exist in both modes with the 2.15 hex as the light value'
   assert.equal(light['--sd-tooltip-bg'], '#616161');
 });
 
+// ---------------------------------------------------------------------------
+// Sidebar V4 colour tokens and preset component overrides (R-005, R-011; D-006, D-007, D-029; INV-007, INV-008)
+// ---------------------------------------------------------------------------
+
+// Same expression in light and dark: each value is resolved against the palette of its own scope.
+const SIDEBAR_V4_COLOUR_TOKENS = {
+  '--sd-sidebar-v4-bg': 'color-mix(in srgb, var(--sd-text) 4%, var(--sd-surface))',
+  '--sd-sidebar-v4-line': 'color-mix(in srgb, var(--sd-border) 45%, var(--sd-surface))',
+  '--sd-sidebar-v4-hover-bg': 'color-mix(in srgb, var(--sd-text) 6%, var(--sd-sidebar-v4-bg))',
+  '--sd-sidebar-v4-active-bg': 'var(--sd-primary-light)',
+  '--sd-sidebar-v4-active-shadow': 'none',
+  '--sd-sidebar-v4-active-ink': 'var(--sd-primary)',
+  '--sd-sidebar-v4-avatar-bg': 'color-mix(in srgb, var(--sd-primary) 14%, var(--sd-surface))',
+  '--sd-sidebar-v4-avatar-ink': 'var(--sd-primary)',
+  '--sd-sidebar-v4-attention': 'var(--sd-warning)',
+  '--sd-sidebar-v4-live': 'var(--sd-success)',
+};
+const GRAPHITE_ACTIVE_SHADOW = '0 0 0 1px var(--sd-border), 0 1px 2px rgba(20, 22, 28, 0.06)';
+const sdKeys = css => Object.keys(declarations(css)).filter(n => n.startsWith('--sd-')).sort();
+const compileComponentTokens = source => sass.compileString(`@use 'themes/component-tokens' as ct; ${source}`, { loadPaths }).css;
+
+test('AC-013: the default theme emits every Sidebar V4 colour token in light and dark, and no size token', () => {
+  for (const mode of ['light', 'dark']) {
+    const theme = declarations(compile(`.x { @include sd.theme($mode: '${mode}'); }`));
+    for (const [name, value] of Object.entries(SIDEBAR_V4_COLOUR_TOKENS)) assert.equal(theme[name], value, `${mode} ${name}`);
+    // D-006: sizes follow density, itemShape and the pointer, so they are declared on the .sd-sidebar-v4 host.
+    assert.deepEqual(Object.keys(theme).filter(n => /^--sd-sidebar-v4-.*(width|height|radius)$/.test(n)), [], `${mode} size tokens`);
+  }
+});
+
+test('INV-007, AC-021: every named preset emits the same --sd-* key set, Sidebar V4 colour tokens included', () => {
+  const baseline = sdKeys(compile('.x { @include sd.theme(); }'));
+  for (const name of Object.keys(SIDEBAR_V4_COLOUR_TOKENS)) assert.ok(baseline.includes(name), name);
+  for (const preset of Object.keys(PRESET_PALETTES)) {
+    assert.deepEqual(sdKeys(compile(`.x { @include sd.theme($preset: '${preset}'); }`)), baseline, preset);
+  }
+});
+
+test('AC-021: graphite raises the active V4 item through its components map, other presets keep the defaults', () => {
+  const graphite = declarations(compile(".x { @include sd.theme($preset: 'graphite'); }"));
+  assert.equal(graphite['--sd-sidebar-v4-active-bg'], 'var(--sd-surface)');
+  assert.equal(graphite['--sd-sidebar-v4-active-shadow'], GRAPHITE_ACTIVE_SHADOW, 'the whole box-shadow list');
+  for (const [name, value] of Object.entries(SIDEBAR_V4_COLOUR_TOKENS).filter(([n]) => !/-active-(bg|shadow)$/.test(n))) {
+    assert.equal(graphite[name], value, `graphite ${name}`);
+  }
+  for (const args of ['', "$preset: 'default'", "$preset: 'ocean'"]) {
+    const theme = declarations(compile(`.x { @include sd.theme(${args}); }`));
+    assert.equal(theme['--sd-sidebar-v4-active-bg'], 'var(--sd-primary-light)', args || 'no arguments');
+    assert.equal(theme['--sd-sidebar-v4-active-shadow'], 'none', args || 'no arguments');
+  }
+});
+
+test('D-029, INV-008: component-token overrides are validated, then replace the default value as-is', () => {
+  // $presets is not configurable from outside, so the unknown-key path is proved on the shared emitter.
+  assert.throws(
+    () => compileComponentTokens('.x { @include ct.emit(light, (unknown-token: red)); }'),
+    /Unknown Core UI component token 'unknown-token'/
+  );
+  const overridden = declarations(compileComponentTokens(
+    `.x { @include ct.emit(light, (sidebar-v4-live: red, sidebar-v4-active-shadow: (${GRAPHITE_ACTIVE_SHADOW}))); }`
+  ));
+  assert.equal(overridden['--sd-sidebar-v4-live'], 'red');
+  assert.equal(overridden['--sd-sidebar-v4-active-shadow'], GRAPHITE_ACTIVE_SHADOW);
+  assert.equal(overridden['--sd-sidebar-v4-bg'], SIDEBAR_V4_COLOUR_TOKENS['--sd-sidebar-v4-bg'], 'keys without an override keep their default');
+  assert.equal(compileComponentTokens('.x { @include ct.emit(dark); }'), compileComponentTokens('.x { @include ct.emit(dark, ()); }'));
+});
+
 test('auto mode: light on the scope plus a prefers-color-scheme block that respects data-sd-theme="light"', () => {
   const css = compile("html { @include sd.theme($mode: 'auto'); }");
   assert.match(ruleBody(css, 'html'), /--sd-surface: #fdfbff;/);
@@ -296,8 +366,10 @@ test('auto mode: light on the scope plus a prefers-color-scheme block that respe
 });
 
 test('Only the default preset has a dark palette; named presets fail with guidance', () => {
-  for (const mode of ['dark', 'auto']) {
-    assert.throws(() => compile(`.x { @include sd.theme($preset: 'ocean', $mode: '${mode}'); }`), /only has a light palette/);
+  for (const preset of ['ocean', 'graphite']) {
+    for (const mode of ['dark', 'auto']) {
+      assert.throws(() => compile(`.x { @include sd.theme($preset: '${preset}', $mode: '${mode}'); }`), /only has a light palette/, `${preset} ${mode}`);
+    }
   }
   assert.throws(() => compile(".x { @include sd.theme($mode: 'dim'); }"), /Unknown Core UI theme mode/);
 });

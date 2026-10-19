@@ -360,6 +360,8 @@ export type ShowcaseExampleSourceKey =
   | "modules/layout/example-sidebar-v1-classic"
   | "modules/layout/example-sidebar-v2-rail"
   | "modules/layout/example-sidebar-v3-collapsible"
+  | "modules/layout/example-sidebar-v4-graphite"
+  | "modules/layout/example-sidebar-v4-navigation"
   | "pipes-utilities/empty/example-gia-tri-co-noi-dung-giu-nguyen"
   | "pipes-utilities/empty/example-gia-tri-rong-hien-thi-dau-gach"
   | "pipes-utilities/format-date/example-dinh-dang-mac-dinh"
@@ -2895,7 +2897,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "guides/theme-tokens",
     sectionId: "example-bang-contrast",
     title: "Bảng contrast",
-    description: "Đo trên trình duyệt cho palette default ở chế độ sáng và tối, cùng cặp và ngưỡng với test:theme (test đó còn chạy cho 8 preset có tên). Đây là kiểm tra palette, không thay cho việc kiểm tra từng trạng thái component.",
+    description: "Đo trên trình duyệt cho palette default ở chế độ sáng và tối, cùng cặp và ngưỡng với test:theme (test đó còn chạy cho 9 preset có tên). Đây là kiểm tra palette, không thay cho việc kiểm tra từng trạng thái component.",
   },
   {
     sourceKey: "modules/generic/example-generic-crud-with-a-mock-adapter",
@@ -2931,6 +2933,20 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-sidebar-v3-collapsible",
     title: "Sidebar V3 - Collapsible",
     description: "Bấm từng nhóm menu để đóng/mở các mục con trên desktop. Tìm kiếm vẫn thấy mục trong nhóm đã đóng; thu gọn cả sidebar giữ trạng thái từng nhóm.",
+  },
+  {
+    sourceKey: "modules/layout/example-sidebar-v4-navigation",
+    pageKey: "modules/layout",
+    sectionId: "example-sidebar-v4-navigation",
+    title: "Sidebar V4 - Navigation",
+    description: "Token-driven V4: section headings, attention badge, count, live status and a coming-soon item; menu search with keyboard result navigation; flyout groups on the collapsed rail; mobile app bar with an opt-in bottom bar. Switching the Project shows a demo notice and restarts the preview instead of reloading the page. On this docs page Ctrl/⌘+K opens the docs search, which handles the shortcut first.",
+  },
+  {
+    sourceKey: "modules/layout/example-sidebar-v4-graphite",
+    pageKey: "modules/layout",
+    sectionId: "example-sidebar-v4-graphite",
+    title: "Sidebar V4 - Graphite",
+    description: "The same V4 inside a scope that includes sd.theme($preset: 'graphite'): near-black primary, and the active item becomes a raised surface through the preset's component tokens. The sidebar has no preset-specific code. CDK overlays (context popover, mobile sheet, rail flyouts) render outside this scoped demo wrapper, so they keep the default primary here; apps apply the preset at :root/html, so overlays follow it. On this docs page Ctrl/⌘+K opens the docs search, which handles the shortcut first, so the V4 search hint opens the docs search here.",
   },
   {
     sourceKey: "pipes-utilities/empty/example-gia-tri-rong-hien-thi-dau-gach",

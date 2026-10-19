@@ -12,8 +12,8 @@
     class="wrapper"
     [style.--sidebar-accent]="_sidebar.brandColor || 'var(--sd-primary, #005cbb)'"
     [style.height]="isMobile() ? '100dvh' : '100%'">
-    <div class="c-header">
-      <div class="c-logo">
+    <div #headerElement class="c-header">
+      <div #logoElement class="c-logo">
         <a
           href="/layout/home"
           [attr.aria-label]="'core.module.layout.home.tab-name' | sdTranslate"
@@ -25,8 +25,20 @@
           }
         </a>
       </div>
-      <div class="c-title-menu-group" [class.d-none]="!_isShowSidebar">
+      <!-- Context switcher (D-010): avatar ngay dưới logo khi thu gọn về rail, dòng phụ dưới tiêu đề khi mở. -->
+      @if (_sidebar.context && !_isShowSidebar) {
+        <sd-layout-context-switcher class="c-rail-context" appearance="rail" [configuration]="_sidebar.context" [anchor]="logoElement" />
+      }
+      <div class="c-title-menu-group" [class.d-none]="!_isShowSidebar" [class.c-title-menu-group--context]="!!_sidebar.context">
         <span>{{ titleMenuGroup() || _sidebar.defaultTitle || 'Back Office' }}</span>
+        @if (_sidebar.context && _isShowSidebar) {
+          <sd-layout-context-switcher
+            #headerContextSwitcher
+            class="c-header-context"
+            appearance="header"
+            [configuration]="_sidebar.context"
+            [anchor]="headerElement" />
+        }
       </div>
     </div>
     <div class="c-body">

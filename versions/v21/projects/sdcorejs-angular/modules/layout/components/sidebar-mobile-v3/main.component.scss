@@ -63,6 +63,15 @@
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+// Context switcher (R-008, D-027): class chỉ có khi cấu hình `context` (INV-001); màu do switcher lấy từ token (D-028).
+// why: tên app và trigger context xếp dọc, chiếm phần còn lại của header để trigger 44px trải hết chiều ngang.
+.sd-sidebar-mobile-v3__brand {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+
 // why: Global search remains discoverable while long navigation trees scroll.
 .sd-sidebar-mobile-v3__search {
   position: sticky;

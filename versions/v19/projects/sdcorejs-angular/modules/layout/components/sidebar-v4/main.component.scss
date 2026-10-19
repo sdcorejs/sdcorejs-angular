@@ -1,0 +1,336 @@
+// why: kích thước khai trên host (D-006) vì đổi theo density, itemShape và loại con trỏ; cây V4 đọc các biến này.
+// Màu chỉ đi qua token (INV-007): --sd-sidebar-v4-* do theme phát, fallback dựng từ --sd-* / color-mix. Không hex.
+:host {
+  --sd-sidebar-v4-width: 280px;
+  --sd-sidebar-v4-rail-width: 72px;
+  --sd-sidebar-v4-item-height: 36px;
+  --sd-sidebar-v4-child-height: 32px;
+  --sd-sidebar-v4-item-radius: 999px;
+  // Popover của Context Switcher nằm dưới header, thụt 12px mỗi bên.
+  --sd-layout-context-switcher-popover-width: calc(var(--sd-sidebar-v4-width) - 24px);
+  --sidebar-bg: var(--sd-sidebar-v4-bg, color-mix(in srgb, var(--sd-text) 4%, var(--sd-surface)));
+  // Viền quanh chấm thông báo của avatar context trên rail phải cùng màu nền sidebar V4.
+  --sd-layout-context-switcher-dot-ring-color: var(--sidebar-bg);
+  --sidebar-line: var(--sd-sidebar-v4-line, color-mix(in srgb, var(--sd-border) 45%, var(--sd-surface)));
+  --sidebar-hover-bg: var(--sd-sidebar-v4-hover-bg, color-mix(in srgb, var(--sd-text) 6%, transparent));
+  --sidebar-muted-ink: var(--sd-text-secondary);
+  --sidebar-focus-ring: inset 0 0 0 2px var(--sd-focus-ring-color, var(--sd-primary));
+  display: block;
+  min-height: 100vh;
+}
+
+:host(.sd-sidebar-v4--comfortable) {
+  --sd-sidebar-v4-item-height: 40px;
+  --sd-sidebar-v4-child-height: 34px;
+}
+
+:host(.sd-sidebar-v4--soft) {
+  --sd-sidebar-v4-item-radius: 8px;
+}
+
+// Drawer -----------------------------------------------------------------------------------------------------
+
+// why: drawer cố định, nội dung route cuộn độc lập; offset của content dùng cùng biến width với drawer.
+.sd-sidebar-v4__drawer {
+  position: fixed;
+  z-index: var(--sd-z-sidebar, 20);
+  inset: 0 auto 0 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: var(--sd-sidebar-v4-width);
+  border-right: 1px solid var(--sidebar-line);
+  background: var(--sidebar-bg);
+  color: var(--sd-text);
+  transition: width 160ms ease;
+}
+
+:host(.sd-sidebar-v4--collapsed) .sd-sidebar-v4__drawer {
+  width: var(--sd-sidebar-v4-rail-width);
+}
+
+.sd-sidebar-v4__content {
+  min-height: 100vh;
+  margin-left: var(--sd-sidebar-v4-width);
+  transition: margin-left 160ms ease;
+}
+
+:host(.sd-sidebar-v4--collapsed) .sd-sidebar-v4__content {
+  margin-left: var(--sd-sidebar-v4-rail-width);
+}
+
+// Header -----------------------------------------------------------------------------------------------------
+
+.sd-sidebar-v4__header {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--sd-space-12, 12px);
+  box-sizing: border-box;
+  height: 64px;
+  padding: 0 12px 0 16px;
+}
+
+// CS1: popover context đang mở thì cả vùng header nhận nền hover, radius 12. Trigger không tô thêm lớp nền thứ hai
+// (selector hai class để thắng rule open/hover của switcher bất kể thứ tự nạp stylesheet).
+.sd-sidebar-v4__header--context-open {
+  border-radius: var(--sd-radius-12, 12px);
+  background: var(--sidebar-hover-bg);
+
+  ::ng-deep .sd-layout-context-switcher__trigger.sd-layout-context-switcher__trigger--header {
+    background: transparent;
+  }
+}
+
+// D4: rail giữ logo trong ô 64px, bên dưới là avatar context, nút mở rộng và nút search.
+:host(.sd-sidebar-v4--collapsed) .sd-sidebar-v4__header {
+  flex-direction: column;
+  gap: 0;
+  height: auto;
+  padding: 18px 0 6px;
+}
+
+.sd-sidebar-v4__logo {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--sd-radius-8, 8px);
+  background: var(--sd-primary);
+  color: var(--sd-primary-contrast);
+  font-size: var(--sd-font-size-14, 14px);
+  font-weight: var(--sd-font-weight-bold, 700);
+  line-height: 1;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+}
+
+.sd-sidebar-v4__logo--image {
+  background: transparent;
+}
+
+:host(.sd-sidebar-v4--collapsed) .sd-sidebar-v4__logo {
+  margin-bottom: 18px;
+}
+
+// why: switcher không render gì khi không có context hợp lệ (host chỉ còn comment) — khi đó không chừa khoảng trống.
+.sd-sidebar-v4__rail-context:not(:empty) {
+  margin: -6px 0 12px;
+}
+
+.sd-sidebar-v4__brand {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sd-sidebar-v4__title {
+  overflow: hidden;
+  font-size: var(--sd-font-size-16, 16px);
+  font-weight: var(--sd-font-weight-medium, 500);
+  line-height: var(--sd-line-height-22, 22px);
+  letter-spacing: -0.2px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sd-sidebar-v4__icon-button,
+.sd-sidebar-v4__search-clear {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--sd-radius-999, 999px);
+  background: transparent;
+  color: var(--sidebar-muted-ink);
+  cursor: pointer;
+  transition: background-color var(--sd-duration-fast, 120ms) ease;
+
+  &:hover {
+    background: var(--sidebar-hover-bg);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--sidebar-focus-ring);
+  }
+}
+
+.sd-sidebar-v4__icon-button {
+  width: 40px;
+  height: 40px;
+}
+
+// Search -----------------------------------------------------------------------------------------------------
+
+.sd-sidebar-v4__search {
+  flex: none;
+  padding: 0 12px 6px;
+}
+
+.sd-sidebar-v4__search-field {
+  display: flex;
+  align-items: center;
+  gap: var(--sd-space-8, 8px);
+  box-sizing: border-box;
+  height: 36px;
+  padding: 0 8px 0 12px;
+  border-radius: var(--sd-radius-999, 999px);
+  background: var(--sd-surface);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sd-border) 50%, var(--sd-surface));
+  color: var(--sidebar-muted-ink);
+
+  &:focus-within {
+    box-shadow: var(--sidebar-focus-ring);
+  }
+}
+
+.sd-sidebar-v4__search-field--filled,
+.sd-sidebar-v4__search-field--filled:focus-within {
+  box-shadow: inset 0 0 0 2px var(--sd-primary);
+}
+
+.sd-sidebar-v4__search-icon {
+  flex: none;
+}
+
+.sd-sidebar-v4__search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--sd-text);
+  font: inherit;
+  font-size: var(--sd-font-size-13, 13px);
+
+  &::placeholder {
+    color: var(--sidebar-muted-ink);
+    opacity: 1;
+  }
+}
+
+.sd-sidebar-v4__search-clear {
+  width: 28px;
+  height: 28px;
+}
+
+.sd-sidebar-v4__search-shortcut {
+  flex: none;
+  padding: 1px 5px;
+  border: 1px solid color-mix(in srgb, var(--sd-border) 70%, var(--sd-surface));
+  border-radius: var(--sd-radius-6, 6px);
+  background: var(--sd-surface);
+  color: var(--sidebar-muted-ink);
+  font-family: 'Roboto Mono', ui-monospace, monospace;
+  font-size: var(--sd-font-size-11, 11px);
+  line-height: var(--sd-line-height-16, 16px);
+  white-space: nowrap;
+}
+
+// List -------------------------------------------------------------------------------------------------------
+
+.sd-sidebar-v4__list {
+  flex: 1 1 auto;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 0 12px 12px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sidebar-line) transparent;
+}
+
+// Rail item 48px căn giữa trong 72px của drawer (không trừ padding ngang).
+:host(.sd-sidebar-v4--collapsed) .sd-sidebar-v4__list {
+  padding: 0 0 12px;
+}
+
+.sd-sidebar-v4__section-label {
+  margin: 0;
+  padding: 14px 12px 4px;
+  color: var(--sidebar-muted-ink);
+  font-size: var(--sd-font-size-11, 11px);
+  font-weight: var(--sd-font-weight-medium, 500);
+  line-height: var(--sd-line-height-16, 16px);
+  letter-spacing: 0.3px;
+}
+
+// why: nhóm đầu không có section thì không có heading — tách khỏi Pinned/Recent để không trông như thuộc section đó.
+.sd-sidebar-v4__tree--separated {
+  margin-top: var(--sd-space-16, 16px);
+}
+
+// Footer -----------------------------------------------------------------------------------------------------
+
+.sd-sidebar-v4__footer {
+  flex: none;
+  box-sizing: border-box;
+  padding: 12px 8px 12px 16px;
+  border-top: 1px solid var(--sidebar-line);
+}
+
+// why: popup tài khoản dùng chung rộng 272px, mở từ padding trái 16px của footer — tràn qua mép drawer 280px. Khi drawer
+// mở rộng, canh popup cách mỗi mép drawer 12px (cùng tiền lệ ::ng-deep của sidebar-v1). Rail giữ popup mở ra ngoài như cũ.
+:host(:not(.sd-sidebar-v4--collapsed)) .sd-sidebar-v4__footer ::ng-deep .sd-layout-user-menu__popup {
+  box-sizing: border-box;
+  left: -4px;
+  width: calc(var(--sd-sidebar-v4-width) - 24px);
+}
+
+// Rail: chỉ còn avatar, căn giữa trong footer cao 64px.
+:host(.sd-sidebar-v4--collapsed) .sd-sidebar-v4__footer {
+  display: flex;
+  justify-content: center;
+  padding: 6px 0;
+}
+
+// Pointer coarse: mọi đích chạm tối thiểu 44px.
+@media (pointer: coarse) {
+  :host,
+  :host(.sd-sidebar-v4--comfortable) {
+    --sd-sidebar-v4-item-height: 44px;
+    --sd-sidebar-v4-child-height: 44px;
+  }
+
+  .sd-sidebar-v4__icon-button,
+  .sd-sidebar-v4__search-clear {
+    width: 44px;
+    height: 44px;
+  }
+
+  .sd-sidebar-v4__search-field {
+    height: 44px;
+    padding-right: 0;
+  }
+
+  // Thiết bị cảm ứng hiếm khi có phím tắt; ẩn gợi ý để nó không chạm mép pill khi bỏ padding phải.
+  .sd-sidebar-v4__search-shortcut {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sd-sidebar-v4__drawer,
+  .sd-sidebar-v4__content,
+  .sd-sidebar-v4__icon-button,
+  .sd-sidebar-v4__search-clear {
+    transition: none;
+  }
+}

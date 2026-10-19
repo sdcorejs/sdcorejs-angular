@@ -3,7 +3,7 @@
      "chạy nhờ" event nổi bọt từ con, đồng thời khiến markup khai báo interaction handler trên
      phần tử không nhận được focus. Host là tổ tiên của tất cả nên hành vi giữ nguyên. -->
 <div class="sd-sidebar-v2">
-  <aside class="sd-sidebar-v2__rail d-flex flex-column align-items-center gap-8 py-12 bg-white border-right border-black200">
+  <aside #railElement class="sd-sidebar-v2__rail d-flex flex-column align-items-center gap-8 py-12 bg-white border-right border-black200">
     <button type="button" class="sd-sidebar-v2__brand d-flex align-items-center justify-content-center" [attr.aria-label]="'core.module.layout.home.tab-name' | sdTranslate">
       @if (sidebar().logoUrl) {
         <img class="sd-sidebar-v2__logo" [src]="sidebar().logoUrl" alt="" />
@@ -11,6 +11,12 @@
         <sd-icon name="apps"></sd-icon>
       }
     </button>
+
+    <!-- Context switcher (D-010): avatar context ngay dưới nút brand; popover mở sang phải từ mép rail.
+         Nằm ngoài <nav> nhóm nên không có mouseenter/focus preview flyout. -->
+    @if (sidebar().context; as context) {
+      <sd-layout-context-switcher class="sd-sidebar-v2__rail-context" appearance="rail" [configuration]="context" [anchor]="railElement" />
+    }
 
     <nav class="d-flex flex-column align-items-center gap-4 flex-1" [attr.aria-label]="'core.module.layout.sidebar.menu-groups' | sdTranslate">
       @for (item of railItems(); track item.key) {

@@ -1,0 +1,347 @@
+@let _presentation = presentation();
+<div data-v4-live class="sd-sidebar-v4-menu-tree__sr-only" aria-live="polite" aria-atomic="true">{{ liveMessage() }}</div>
+@if (_presentation === 'results') {
+  @let _query = query().trim();
+  @if (_query) {
+    @let _rows = resultRows();
+    @let _focused = focusedIndex();
+    <div data-v4-result-count class="sd-sidebar-v4-menu-tree__section-label" [id]="resultCountId">
+      {{ 'core.module.layout.sidebar.result-count' | sdTranslate: { count: _rows.length } }}
+    </div>
+    @if (_rows.length) {
+      <div data-v4-results class="sd-sidebar-v4-menu-tree__results" role="listbox" [id]="resultsId" [attr.aria-labelledby]="resultCountId">
+        @for (row of _rows; track $index; let index = $index) {
+          <!-- Options stay unfocusable: the parent's search input drives them via aria-activedescendant (Up/Down/Enter); click is the pointer path. -->
+          <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+          <div
+            data-v4-result
+            class="sd-sidebar-v4-menu-tree__result"
+            role="option"
+            [id]="resultOptionId(index)"
+            [attr.data-menu-key]="row.key"
+            [attr.aria-selected]="index === _focused"
+            [class.sd-sidebar-v4-menu-tree__result--focused]="index === _focused"
+            (click)="onNavigate(row.menu)">
+            <span class="sd-sidebar-v4-menu-tree__result-title">
+              @for (segment of row.segments; track $index) {
+                <span [class.sd-sidebar-v4-menu-tree__match]="segment.match" [attr.data-v4-match]="segment.match ? '' : null">{{
+                  segment.text
+                }}</span>
+              }
+            </span>
+            @if (row.path) {
+              <span data-v4-result-path class="sd-sidebar-v4-menu-tree__result-path">{{ row.path }}</span>
+            }
+          </div>
+        }
+      </div>
+    } @else {
+      <div data-v4-empty class="sd-sidebar-v4-menu-tree__empty">
+        {{ 'core.module.layout.sidebar.no-match' | sdTranslate: { query: _query } }}
+      </div>
+    }
+    <div data-v4-search-hint class="sd-sidebar-v4-menu-tree__hint">{{ 'core.module.layout.sidebar.search-hint' | sdTranslate }}</div>
+  }
+} @else if (_presentation === 'shortcuts') {
+  @for (row of shortcuts(); track row.key) {
+    <div
+      class="sd-sidebar-v4-menu-tree__item sd-sidebar-v4-menu-tree__item--shortcut"
+      [class.sd-sidebar-v4-menu-tree__item--pinnable]="showPin()"
+      [attr.data-v4-item]="row.key">
+      <button
+        type="button"
+        data-v4-row="shortcut"
+        class="sd-sidebar-v4-menu-tree__row sd-sidebar-v4-menu-tree__row--shortcut"
+        [attr.data-menu-key]="row.key"
+        [attr.aria-current]="row.isActive ? 'page' : null"
+        [attr.aria-disabled]="row.disabled || null"
+        [class.sd-sidebar-v4-menu-tree__row--active]="row.isActive"
+        [class.sd-sidebar-v4-menu-tree__row--disabled]="row.disabled"
+        (click)="onNavigate(row.menu)">
+        <span class="sd-sidebar-v4-menu-tree__label">
+          {{ row.title }}
+          @if (row.path) {
+            <span data-v4-shortcut-path class="sd-sidebar-v4-menu-tree__shortcut-path"> · {{ row.path }}</span>
+          }
+        </span>
+        @if (row.disabled) {
+          <ng-container [ngTemplateOutlet]="trailingTemplate" [ngTemplateOutletContext]="{ $implicit: { kind: 'soon' } }" />
+        }
+      </button>
+      @if (showPin()) {
+        <ng-container
+          [ngTemplateOutlet]="pinTemplate"
+          [ngTemplateOutletContext]="{ $implicit: row.menu, key: row.key, pinned: row.isPinned, label: row.pinLabel }" />
+      }
+    </div>
+  }
+} @else if (isRail()) {
+  @let _flyoutKey = flyoutKey();
+  @let _flyoutMode = collapsedGroup() === 'flyout';
+  <div data-v4-rail class="sd-sidebar-v4-menu-tree__rail">
+    @for (group of railGroups(); track group.key; let first = $first) {
+      @if (!first) {
+        <div data-v4-rail-separator class="sd-sidebar-v4-menu-tree__rail-separator" aria-hidden="true"></div>
+      }
+      @for (item of group.items; track item.key) {
+        <div class="sd-sidebar-v4-menu-tree__rail-cell" [attr.data-v4-rail-cell]="item.key">
+          @if (item.isGroup) {
+            <button
+              #railGroupButton
+              cdkOverlayOrigin
+              #flyoutOrigin="cdkOverlayOrigin"
+              type="button"
+              class="sd-sidebar-v4-menu-tree__rail-item"
+              [attr.data-v4-rail-item]="item.key"
+              [attr.title]="item.title"
+              [attr.aria-label]="item.title"
+              [attr.aria-describedby]="item.description ? item.descriptionId : null"
+              [attr.aria-haspopup]="_flyoutMode && !item.disabled ? 'dialog' : null"
+              [attr.aria-expanded]="_flyoutMode && !item.disabled ? _flyoutKey === item.key : null"
+              [attr.aria-disabled]="item.disabled || null"
+              [class.sd-sidebar-v4-menu-tree__rail-item--active]="item.isActive"
+              [class.sd-sidebar-v4-menu-tree__rail-item--open]="_flyoutKey === item.key"
+              [class.sd-sidebar-v4-menu-tree__rail-item--disabled]="item.disabled"
+              (click)="onRailGroup(item, railGroupButton)">
+              <ng-container [ngTemplateOutlet]="railContent" [ngTemplateOutletContext]="{ $implicit: item }" />
+            </button>
+            <ng-template
+              cdkConnectedOverlay
+              #flyoutOverlay="cdkConnectedOverlay"
+              [cdkConnectedOverlayOrigin]="flyoutOrigin"
+              [cdkConnectedOverlayOpen]="_flyoutKey === item.key"
+              [cdkConnectedOverlayPositions]="flyoutPositions"
+              [cdkConnectedOverlayViewportMargin]="8"
+              [cdkConnectedOverlayFlexibleDimensions]="false"
+              [cdkConnectedOverlayPush]="true"
+              [cdkConnectedOverlayHasBackdrop]="false"
+              [cdkConnectedOverlayDisableClose]="true"
+              (overlayOutsideClick)="onFlyoutOutsideClick()"
+              (overlayKeydown)="onFlyoutKeydown($event)"
+              (attach)="onFlyoutAttach(flyoutOverlay)"
+              (detach)="onFlyoutDetach(item.key)">
+              <div
+                data-v4-flyout
+                class="sd-sidebar-v4-menu-tree__flyout"
+                role="dialog"
+                aria-modal="true"
+                tabindex="-1"
+                [attr.aria-label]="item.title"
+                [style.--sd-sidebar-v4-item-radius]="flyoutRadius()"
+                cdkTrapFocus>
+                <div data-v4-flyout-title class="sd-sidebar-v4-menu-tree__flyout-title">{{ item.title }}</div>
+                @for (node of flyoutNodes(); track node.key) {
+                  @if (node.isGroup) {
+                    <div
+                      data-v4-flyout-heading
+                      class="sd-sidebar-v4-menu-tree__flyout-heading"
+                      [class.sd-sidebar-v4-menu-tree__flyout-heading--disabled]="node.disabled"
+                      [style.padding-left.px]="12 + node.depth * 16">
+                      <span class="sd-sidebar-v4-menu-tree__label">{{ node.title }}</span>
+                      <ng-container [ngTemplateOutlet]="trailingTemplate" [ngTemplateOutletContext]="{ $implicit: node.trailing }" />
+                    </div>
+                  } @else {
+                    <button
+                      type="button"
+                      class="sd-sidebar-v4-menu-tree__row sd-sidebar-v4-menu-tree__row--flyout"
+                      [attr.data-v4-flyout-item]="node.key"
+                      [attr.aria-current]="node.isActive ? 'page' : null"
+                      [attr.aria-disabled]="node.disabled || null"
+                      [class.sd-sidebar-v4-menu-tree__row--active]="node.isActive"
+                      [class.sd-sidebar-v4-menu-tree__row--disabled]="node.disabled"
+                      [style.padding-left.px]="12 + node.depth * 16"
+                      (click)="onFlyoutNavigate(node)">
+                      <span class="sd-sidebar-v4-menu-tree__label">{{ node.title }}</span>
+                      <ng-container [ngTemplateOutlet]="trailingTemplate" [ngTemplateOutletContext]="{ $implicit: node.trailing }" />
+                    </button>
+                  }
+                }
+              </div>
+            </ng-template>
+          } @else {
+            <button
+              type="button"
+              class="sd-sidebar-v4-menu-tree__rail-item"
+              [attr.data-v4-rail-item]="item.key"
+              [attr.title]="item.title"
+              [attr.aria-label]="item.title"
+              [attr.aria-describedby]="item.description ? item.descriptionId : null"
+              [attr.aria-current]="item.isActive ? 'page' : null"
+              [attr.aria-disabled]="item.disabled || null"
+              [class.sd-sidebar-v4-menu-tree__rail-item--active]="item.isActive"
+              [class.sd-sidebar-v4-menu-tree__rail-item--disabled]="item.disabled"
+              (click)="onNavigate(item.menu)">
+              <ng-container [ngTemplateOutlet]="railContent" [ngTemplateOutletContext]="{ $implicit: item }" />
+            </button>
+          }
+          @if (item.description) {
+            <span hidden [id]="item.descriptionId">{{ item.description }}</span>
+          }
+        </div>
+      }
+    }
+  </div>
+} @else {
+  @for (section of sections(); track section.key) {
+    <div
+      class="sd-sidebar-v4-menu-tree__section"
+      [attr.data-v4-section]="section.label ?? ''"
+      [attr.role]="section.label ? 'group' : null"
+      [attr.aria-labelledby]="section.label ? section.labelId : null"
+      [class.sd-sidebar-v4-menu-tree__section--separated]="section.separated">
+      @if (section.label) {
+        <div data-v4-section-label class="sd-sidebar-v4-menu-tree__section-label" [id]="section.labelId">{{ section.label }}</div>
+      }
+      @for (node of section.nodes; track node.key) {
+        <div
+          class="sd-sidebar-v4-menu-tree__item"
+          [class.sd-sidebar-v4-menu-tree__item--nested]="node.depth > 0"
+          [class.sd-sidebar-v4-menu-tree__item--pinnable]="node.pinnable"
+          [attr.data-v4-item]="node.key"
+          [style.padding-left.px]="node.depth ? node.paddingLeft : null">
+          @for (offset of node.branchOffsets; track offset) {
+            <span data-menu-branch class="sd-sidebar-v4-menu-tree__branch" [style.left.px]="offset" aria-hidden="true"></span>
+          }
+          @if (node.isActive && node.depth > 0) {
+            <span data-v4-marker class="sd-sidebar-v4-menu-tree__marker" [style.left.px]="node.markerLeft" aria-hidden="true"></span>
+          }
+          @if (node.isGroup) {
+            <button
+              type="button"
+              data-v4-row="group"
+              class="sd-sidebar-v4-menu-tree__row sd-sidebar-v4-menu-tree__row--group"
+              [class.sd-sidebar-v4-menu-tree__row--child]="node.depth > 0"
+              [class.sd-sidebar-v4-menu-tree__row--disabled]="node.disabled"
+              [attr.data-menu-group]="node.key"
+              [attr.aria-expanded]="node.disabled ? null : node.isExpanded"
+              [attr.aria-disabled]="node.disabled || null"
+              (click)="onToggleGroup(node)">
+              @if (node.depth === 0) {
+                <ng-container
+                  [ngTemplateOutlet]="menuIcon"
+                  [ngTemplateOutletContext]="{ $implicit: node.menu, filled: false, group: true }" />
+              }
+              <span class="sd-sidebar-v4-menu-tree__label">{{ node.title }}</span>
+              <ng-container [ngTemplateOutlet]="trailingTemplate" [ngTemplateOutletContext]="{ $implicit: node.trailing }" />
+              @if (node.showActiveDot) {
+                <span data-v4-active-dot class="sd-sidebar-v4-menu-tree__dot" aria-hidden="true"></span>
+              }
+              @if (!node.disabled) {
+                <sd-icon
+                  data-v4-chevron
+                  class="sd-sidebar-v4-menu-tree__chevron"
+                  [name]="node.isExpanded ? 'expand_less' : 'expand_more'"
+                  size="20px"></sd-icon>
+              }
+            </button>
+          } @else {
+            <button
+              type="button"
+              class="sd-sidebar-v4-menu-tree__row"
+              [class.sd-sidebar-v4-menu-tree__row--child]="node.depth > 0"
+              [class.sd-sidebar-v4-menu-tree__row--active]="node.isActive"
+              [class.sd-sidebar-v4-menu-tree__row--disabled]="node.disabled"
+              [attr.data-v4-row]="node.depth ? 'child' : 'root'"
+              [attr.data-menu-key]="node.key"
+              [attr.aria-current]="node.isActive ? 'page' : null"
+              [attr.aria-disabled]="node.disabled || null"
+              (click)="onNavigate(node.menu)">
+              @if (node.depth === 0) {
+                <ng-container
+                  [ngTemplateOutlet]="menuIcon"
+                  [ngTemplateOutletContext]="{ $implicit: node.menu, filled: node.isActive, group: false }" />
+              }
+              <span class="sd-sidebar-v4-menu-tree__label">{{ node.title }}</span>
+              <ng-container [ngTemplateOutlet]="trailingTemplate" [ngTemplateOutletContext]="{ $implicit: node.trailing }" />
+            </button>
+            @if (node.pinnable) {
+              <ng-container
+                [ngTemplateOutlet]="pinTemplate"
+                [ngTemplateOutletContext]="{ $implicit: node.menu, key: node.key, pinned: node.isPinned, label: node.pinLabel }" />
+            }
+          }
+        </div>
+      }
+    </div>
+  }
+}
+
+<ng-template #menuIcon let-menu let-filled="filled" let-group="group">
+  @if (menu.iconUrl) {
+    <img data-menu-icon class="sd-sidebar-v4-menu-tree__icon-image" [src]="menu.iconUrl" alt="" />
+  } @else {
+    <sd-icon
+      data-menu-icon
+      class="sd-sidebar-v4-menu-tree__icon"
+      [name]="menu.icon || (group ? 'folder' : 'chevron_right')"
+      [fontSet]="filled ? 'material-icons' : 'material-icons-outlined'"
+      size="20px"></sd-icon>
+  }
+</ng-template>
+
+<ng-template #railContent let-item>
+  <ng-container
+    [ngTemplateOutlet]="menuIcon"
+    [ngTemplateOutletContext]="{ $implicit: item.menu, filled: item.isActive, group: item.isGroup }" />
+  @if (item.badge) {
+    <span
+      data-v4-rail-badge
+      class="sd-sidebar-v4-menu-tree__rail-badge"
+      [class.sd-sidebar-v4-menu-tree__badge--warning]="item.badge.tone === 'warning'"
+      [class.sd-sidebar-v4-menu-tree__badge--error]="item.badge.tone === 'error'"
+      aria-hidden="true">
+      {{ item.badge.value }}
+    </span>
+  } @else if (item.liveTone) {
+    <span data-v4-rail-live class="sd-sidebar-v4-menu-tree__rail-live" [attr.data-tone]="item.liveTone" aria-hidden="true"></span>
+  }
+</ng-template>
+
+<ng-template #trailingTemplate let-trailing>
+  @switch (trailing?.kind) {
+    @case ('soon') {
+      <span data-v4-trailing="soon" class="sd-sidebar-v4-menu-tree__trailing sd-sidebar-v4-menu-tree__chip">
+        {{ 'core.module.layout.sidebar.coming-soon' | sdTranslate }}
+      </span>
+    }
+    @case ('count') {
+      <span data-v4-trailing="count" class="sd-sidebar-v4-menu-tree__trailing sd-sidebar-v4-menu-tree__count">{{ trailing.value }}</span>
+    }
+    @case ('badge') {
+      <span
+        data-v4-trailing="badge"
+        class="sd-sidebar-v4-menu-tree__trailing sd-sidebar-v4-menu-tree__badge"
+        [class.sd-sidebar-v4-menu-tree__badge--warning]="trailing.tone === 'warning'"
+        [class.sd-sidebar-v4-menu-tree__badge--error]="trailing.tone === 'error'"
+        role="img"
+        [attr.aria-label]="'core.module.layout.sidebar.badge-pending' | sdTranslate: { count: trailing.value }">
+        {{ trailing.value }}
+      </span>
+    }
+    @case ('status') {
+      <span
+        data-v4-trailing="status"
+        class="sd-sidebar-v4-menu-tree__trailing sd-sidebar-v4-menu-tree__status"
+        [attr.data-tone]="trailing.tone">
+        <span
+          data-v4-status-dot
+          class="sd-sidebar-v4-menu-tree__status-dot"
+          [class.sd-sidebar-v4-menu-tree__status-dot--live]="trailing.live"
+          aria-hidden="true"></span>
+        {{ trailing.label }}
+      </span>
+    }
+  }
+</ng-template>
+
+<ng-template #pinTemplate let-menu let-key="key" let-pinned="pinned" let-label="label">
+  <button
+    type="button"
+    class="sd-sidebar-v4-menu-tree__pin"
+    [attr.data-pin-key]="key"
+    [attr.aria-label]="label"
+    [attr.aria-pressed]="pinned"
+    (click)="onTogglePinned($event, menu)">
+    <sd-icon name="push_pin" [fontSet]="pinned ? 'material-icons' : 'material-icons-outlined'" size="18px"></sd-icon>
+  </button>
+</ng-template>
