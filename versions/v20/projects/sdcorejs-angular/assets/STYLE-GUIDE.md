@@ -590,7 +590,7 @@ All nine presets use `surface: #FFFFFF` and `primary-contrast: #FFFFFF`.
 
 Unlisted tokens inherit the default map in section 3: secondary, info, success, warning, error and their variants keep the same meaning across presets. `text-muted`, `disabled-bg` and `disabled-text` remain derived from `--sd-text`. A preset emits the entire public color token set, not just its differences.
 
-A named preset may also carry an optional `components` map that overrides component tokens for that preset only (single values, keys checked against `$component-tokens`; see [THEME.md](./THEME.md)). `graphite` is the only preset that uses it, to raise the active Sidebar V4 item as a white surface:
+A named preset may also carry an optional `components` map that overrides component tokens for that preset only (single values, keys checked against `$component-tokens`; see [THEME.md](./THEME.md)). `copper` and `teal` use it to keep Sidebar V4 text on a primary tint at 4.5:1 (`sidebar-v4-active-ink` in `copper`, `sidebar-v4-avatar-ink` in both, set to `var(--sd-primary-dark)`). `graphite` uses it to raise the active Sidebar V4 item as a white surface:
 
 ```scss
 // assets/scss/themes/_presets.scss

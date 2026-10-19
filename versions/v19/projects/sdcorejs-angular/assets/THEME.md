@@ -145,6 +145,22 @@ components: (
 ),
 ```
 
+`copper` and `teal` use it for contrast. Their `primary` is too light to reach 4.5:1 on its own tint, so the
+Sidebar V4 text that sits on a tint uses `primary-dark` instead: the active item label and the avatar
+initials in `copper`, the avatar initials in `teal`.
+
+```scss
+// copper
+components: (
+  sidebar-v4-active-ink: var(--sd-primary-dark),
+  sidebar-v4-avatar-ink: var(--sd-primary-dark),
+),
+// teal
+components: (
+  sidebar-v4-avatar-ink: var(--sd-primary-dark),
+),
+```
+
 ### Links and text buttons under `graphite`
 
 `--sd-link` is `var(--sd-primary)`. It is a semantic role, not a palette key, so a preset cannot change it,
@@ -172,9 +188,9 @@ colour.
 | `--sd-sidebar-v4-hover-bg` | `color-mix(in srgb, var(--sd-text) 6%, var(--sd-sidebar-v4-bg))` |
 | `--sd-sidebar-v4-active-bg` | `var(--sd-primary-light)`; `graphite`: `var(--sd-surface)` |
 | `--sd-sidebar-v4-active-shadow` | `none`; `graphite`: the ring and shadow above |
-| `--sd-sidebar-v4-active-ink` | `var(--sd-primary)` |
+| `--sd-sidebar-v4-active-ink` | `var(--sd-primary)`; `copper`: `var(--sd-primary-dark)` |
 | `--sd-sidebar-v4-avatar-bg` | `color-mix(in srgb, var(--sd-primary) 14%, var(--sd-surface))` |
-| `--sd-sidebar-v4-avatar-ink` | `var(--sd-primary)` |
+| `--sd-sidebar-v4-avatar-ink` | `var(--sd-primary)`; `copper`, `teal`: `var(--sd-primary-dark)` |
 | `--sd-sidebar-v4-attention` | `var(--sd-warning)` |
 | `--sd-sidebar-v4-live` | `var(--sd-success)` |
 
