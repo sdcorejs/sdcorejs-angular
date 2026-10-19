@@ -35,6 +35,10 @@ const PAIRS = [
   ['view-value-color', 'surface', 4.5],
   ['view-value-color', 'surface-muted', 4.5],
   ...STATES.map(state => [`status-${state}-fg`, `status-${state}-bg`, 4.5]),
+  // Sidebar V4 text on primary tints: the active item label and the account avatar initials. A preset
+  // whose primary is too light for its own tint darkens the ink through its `components` map.
+  ['sidebar-v4-active-ink', 'sidebar-v4-active-bg', 4.5],
+  ['sidebar-v4-avatar-ink', 'sidebar-v4-avatar-bg', 4.5],
 ];
 
 const tokensOf = args => {
@@ -103,7 +107,7 @@ const contrast = (a, b) => {
 const failures = tokens =>
   PAIRS.flatMap(([fg, bg, min]) => {
     const ratio = contrast(resolve(tokens, `var(--sd-${fg})`), resolve(tokens, `var(--sd-${bg})`));
-    return ratio >= min ? [] : [`${fg} on ${bg}: ${ratio.toFixed(2)} < ${min}`];
+    return ratio >= min ? [] : [`${fg} on ${bg}: ${ratio.toFixed(3)} < ${min}`];
   });
 
 for (const preset of PRESETS) {
