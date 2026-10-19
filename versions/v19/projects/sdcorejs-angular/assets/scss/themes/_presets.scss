@@ -26,12 +26,21 @@ $presets: (
     surface: #ffffff, surface-muted: #f0f7f6,
     text: #18302d, text-secondary: #47635f,
     border: #c9dcd8, border-strong: #637f79,
+    // primary on the avatar tint is 4.498:1, just under WCAG AA; primary-dark reaches 6.23:1.
+    components: (
+      sidebar-v4-avatar-ink: var(--sd-primary-dark),
+    ),
   ),
   'copper': (
     primary: #9a6324, primary-light: #f8efe4, primary-dark: #6b4414,
     surface: #ffffff, surface-muted: #f4f2f1,
     text: #302820, text-secondary: #665a4d,
     border: #dcd3c9, border-strong: #8c7a67,
+    // primary is 4.41:1 on primary-light and 4.18:1 on the avatar tint; primary-dark reaches 7.50:1 and 7.10:1.
+    components: (
+      sidebar-v4-active-ink: var(--sd-primary-dark),
+      sidebar-v4-avatar-ink: var(--sd-primary-dark),
+    ),
   ),
   'slate': (
     primary: #475569, primary-light: #e9edf2, primary-dark: #334155,
