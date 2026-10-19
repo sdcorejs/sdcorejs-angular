@@ -91,6 +91,8 @@ export interface SdTableOptionFilter<T = unknown> {
   onClearFilter?: () => void;
 }
 
+const hasFilterValue = (value: unknown): boolean => value !== undefined && value !== null && value !== '';
+
 // why: `columns` nhận `SdTableColumnAnyRow[]` (= `SdTableColumn<never>[]`). Hàm chỉ đọc
 // `field` / `type` / `filter.operator.default` — không bao giờ chạm dữ liệu hàng — nên không cần generic
 // theo `T`; `never` ở vị trí contravariant khiến mọi `SdTableColumn<T>` vẫn truyền vào được sau khi
@@ -294,6 +296,29 @@ export const SdConvertToPagingReq = (
               },
             });
           }
+        }
+      } else if (column.type === 'number' && typeof value === 'object' && !Array.isArray(value) && ('from' in value || 'to' in value)) {
+        // why: the split-number filter emits an inclusive `{ from, to }`; a missing end leaves that side open, and 0 is a bound.
+        const hasFrom = hasFilterValue(value.from);
+        const hasTo = hasFilterValue(value.to);
+        if (hasFrom && hasTo) {
+          filters!.push({
+            field,
+            operator: 'BETWEEN',
+            data: { from: value.from, to: value.to },
+          });
+        } else if (hasFrom) {
+          filters!.push({
+            field,
+            operator: 'GREATER_OR_EQUAL',
+            data: value.from,
+          });
+        } else if (hasTo) {
+          filters!.push({
+            field,
+            operator: 'LESS_OR_EQUAL',
+            data: value.to,
+          });
         }
       } else {
         if (Array.isArray(value)) {

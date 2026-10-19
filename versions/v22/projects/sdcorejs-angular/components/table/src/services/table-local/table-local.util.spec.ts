@@ -221,4 +221,84 @@ describe('table-local.util', () => {
 
     expect(result.items.map(item => item.data['id'])).toEqual([3, 1]);
   });
+
+  describe('column operators (same meaning as SdConvertToPagingReq)', () => {
+    type ColumnOperator = SdTableFilterRequest<TableLocalTestRow>['columnOperator'];
+    const amountRows = [0, 3, 5, 8, 12].map(amount =>
+      MapToSdTableItem<TableLocalTestRow>({ id: amount, user: { name: `User ${amount}` }, amount, createdAt: '2026-01-01' })
+    );
+    const amountsFor = (rawColumnFilter: Record<string, unknown>, columnOperator = {}, tableColumns = columns) =>
+      filterLocalItems(
+        amountRows,
+        { type: 'local', columns: tableColumns },
+        request(rawColumnFilter, { columnOperator: columnOperator as ColumnOperator })
+      ).items.map(item => item.data.amount);
+
+    it('applies the selected operator to a number column filter', () => {
+      expect(amountsFor({ amount: 5 })).toEqual([5]);
+      expect(amountsFor({ amount: 5 }, { amount: 'EQUAL' })).toEqual([5]);
+      expect(amountsFor({ amount: 5 }, { amount: 'NOT_EQUAL' })).toEqual([0, 3, 8, 12]);
+      expect(amountsFor({ amount: 5 }, { amount: 'GREATER_THAN' })).toEqual([8, 12]);
+      expect(amountsFor({ amount: 5 }, { amount: 'GREATER_OR_EQUAL' })).toEqual([5, 8, 12]);
+      expect(amountsFor({ amount: 5 }, { amount: 'LESS_THAN' })).toEqual([0, 3]);
+      expect(amountsFor({ amount: 5 }, { amount: 'LESS_OR_EQUAL' })).toEqual([0, 3, 5]);
+      expect(amountsFor({ amount: '5' }, { amount: 'GREATER_THAN' })).toEqual([8, 12]);
+    });
+
+    it('falls back to column.filter.operator.default when no operator was chosen', () => {
+      const withDefault: SdTableOption<TableLocalTestRow>['columns'] = [
+        { field: 'amount', title: 'Amount', type: 'number', filter: { operator: { enable: true, default: 'GREATER_THAN' } } },
+      ];
+
+      expect(amountsFor({ amount: 5 }, {}, withDefault)).toEqual([8, 12]);
+      expect(amountsFor({ amount: 5 }, { amount: 'LESS_THAN' }, withDefault)).toEqual([0, 3]);
+    });
+
+    it('treats 0 as a value for both the filter and the row', () => {
+      expect(amountsFor({ amount: 0 }, { amount: 'EQUAL' })).toEqual([0]);
+      expect(amountsFor({ amount: 0 }, { amount: 'GREATER_THAN' })).toEqual([3, 5, 8, 12]);
+      expect(amountsFor({ amount: -1 }, { amount: 'GREATER_OR_EQUAL' })).toEqual([0, 3, 5, 8, 12]);
+      expect(amountsFor({ amount: 4 }, { amount: 'LESS_THAN' })).toEqual([0, 3]);
+    });
+
+    it('keeps the typed comparison prefix, which wins over the operator dropdown', () => {
+      expect(amountsFor({ amount: '>=5' })).toEqual([5, 8, 12]);
+      expect(amountsFor({ amount: '>5' })).toEqual([8, 12]);
+      expect(amountsFor({ amount: '<=5' })).toEqual([0, 3, 5]);
+      expect(amountsFor({ amount: '<5' })).toEqual([0, 3]);
+      expect(amountsFor({ amount: '>= 5' }, { amount: 'EQUAL' })).toEqual([5, 8, 12]);
+    });
+
+    it('filters a split-number range with open ends', () => {
+      expect(amountsFor({ amount: { from: 3, to: 8 } })).toEqual([3, 5, 8]);
+      expect(amountsFor({ amount: { from: 0, to: null } })).toEqual([0, 3, 5, 8, 12]);
+      expect(amountsFor({ amount: { from: null, to: 3 } })).toEqual([0, 3]);
+      expect(amountsFor({ amount: { from: null, to: null } })).toEqual([0, 3, 5, 8, 12]);
+      expect(hasActiveColumnFilter({ amount: { from: 0, to: null } }, columns)).toBeTrue();
+    });
+
+    it('ignores an empty or non-numeric number filter', () => {
+      expect(amountsFor({ amount: '' })).toEqual([0, 3, 5, 8, 12]);
+      expect(amountsFor({ amount: null })).toEqual([0, 3, 5, 8, 12]);
+      expect(amountsFor({ amount: 'abc' })).toEqual([0, 3, 5, 8, 12]);
+    });
+
+    it('applies the selected operator to a string column filter', () => {
+      const names = ['Alice', 'Alicia', 'Bob'].map((name, index) => ({ id: index, user: { name }, amount: 0, createdAt: '2026-01-01' }));
+      const namesFor = (value: string, operator?: string) =>
+        names
+          .filter(row => matchesColumnFilter(row, columns, { 'user.name': value }, operator ? { 'user.name': operator as never } : {}))
+          .map(row => row.user.name);
+
+      expect(namesFor('ali')).toEqual(['Alice', 'Alicia']);
+      expect(namesFor('ALI', 'CONTAIN')).toEqual(['Alice', 'Alicia']);
+      expect(namesFor('ali', 'NOT_CONTAIN')).toEqual(['Bob']);
+      expect(namesFor('alice', 'EQUAL')).toEqual(['Alice']);
+      expect(namesFor('alice', 'NOT_EQUAL')).toEqual(['Alicia', 'Bob']);
+      expect(namesFor('ali', 'START_WITH')).toEqual(['Alice', 'Alicia']);
+      expect(namesFor('b', 'NOT_START_WITH')).toEqual(['Alice', 'Alicia']);
+      expect(namesFor('ce', 'END_WITH')).toEqual(['Alice']);
+      expect(namesFor('ia', 'NOT_END_WITH')).toEqual(['Alice', 'Bob']);
+    });
+  });
 });
