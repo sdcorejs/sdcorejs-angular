@@ -59,7 +59,7 @@ describe('table local filter and sort with ISdCoreConfiguration.timeZone', () =>
   it('filters a range by the zone day bounds', () => {
     const dateTime = service('Asia/Ho_Chi_Minh');
     const filter = { at: { from: '1960/05/20', to: '1960/05/21' } };
-    expect(rows.filter(row => matchesColumnFilter(row, columns('date'), filter, dateTime)).map(row => row.id)).toEqual([1, 2, 3]);
+    expect(rows.filter(row => matchesColumnFilter(row, columns('date'), filter, {}, dateTime)).map(row => row.id)).toEqual([1, 2, 3]);
   });
 
   it('sorts zone-less values as wall clock in the zone', () => {
@@ -79,7 +79,7 @@ describe('table local filter and sort with ISdCoreConfiguration.timeZone', () =>
     const dateTime = service('local');
     const filter = { at: { from: new Date(1960, 4, 20), to: new Date(1960, 4, 20) } };
     for (const row of rows) {
-      expect(matchesColumnFilter(row, columns('date'), filter, dateTime)).toBe(matchesColumnFilter(row, columns('date'), filter));
+      expect(matchesColumnFilter(row, columns('date'), filter, {}, dateTime)).toBe(matchesColumnFilter(row, columns('date'), filter));
     }
     const sorted = filterLocalItems(
       rows,
