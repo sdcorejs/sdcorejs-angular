@@ -432,19 +432,22 @@ The projected checkbox is consumer-owned; it does not automatically add a predic
 - **Click nút Reload** (`reload()`) → table tự commit `this.columnFilter` snapshot vào `filterRegister` (notReload:true) trước khi build filter request — đảm bảo giá trị input vẫn còn focus cũng được gửi lên.
 - **Empty result:** khi `reload.visible` là `true`, nút Reload vẫn enabled với `items.length === 0` hoặc `total === 0`; export và paginator vẫn giữ điều kiện hiển thị hiện tại.
 - **`sd-select` / `sd-date-range` / `sd-date`** vẫn dùng `(sdChange)` → commit + reload tức thì.
+- **Đổi operator** (`sd-operator`) khi ô đã có giá trị → commit + reload tức thì; ô trống chỉ lưu operator vào `filterRegister` (notReload:true). `filter.operatorChange` vẫn được gọi trước.
 - **Dense controls:** custom `sdTableFilterDef` templates, editable table-cell controls, external-filter custom templates, and dashboard/table toolbar controls must use `size="sm"` where supported and `hideInlineError` on SD form components (`sd-input`, `sd-select`, `sd-autocomplete`, `sd-date`, `sd-date-range`, `sd-datetime`, `sd-input-number`, `sd-textarea`, `sd-chip`, `sd-chip-calendar`, `sd-input-color`) so inputs do not inflate row/header/toolbar height or inject inline error text into dense surfaces.
 
 #### Inline column filter — local matching semantics (`type: 'local'`)
 
 Client-side matching sống ở `matchesColumnFilter` (`services/table-local/table-local.util.ts`) và bám theo đúng operator mà `SdConvertToPagingReq` gửi lên server ở `type: 'server'`:
 
-| Column `type`                      | Luật khớp                                                                                              |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `'string'`                         | `CONTAIN`, không phân biệt hoa thường                                                                  |
-| `'number'`                         | `=`, hoặc prefix `>` / `>=` / `<` / `<=` gõ trong ô filter                                             |
-| `'boolean'`                        | `'1'`/`'true'` vs `'0'`/`'false'`                                                                      |
-| `'date'` / `'datetime'` / `'time'` | range `{ from, to }`, thiếu một đầu thì biên đó mở                                                     |
-| `'values'` / `'lazy-values'`       | chọn nhiều giá trị = **OR** (tương đương `IN`); dữ liệu hàng dạng mảng thì khớp khi **giao khác rỗng** |
+| Column `type`                      | Luật khớp                                                                                                                                                                                                                                                                            |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `'string'`                         | operator đã chọn, mặc định `CONTAIN`; hỗ trợ `NOT_CONTAIN`, `EQUAL`, `NOT_EQUAL`, `START_WITH`, `NOT_START_WITH`, `END_WITH`, `NOT_END_WITH`; không phân biệt hoa thường                                                                                                             |
+| `'number'`                         | operator đã chọn, mặc định `EQUAL`; hỗ trợ `NOT_EQUAL`, `GREATER_THAN`, `GREATER_OR_EQUAL`, `LESS_THAN`, `LESS_OR_EQUAL`. Prefix `>` / `>=` / `<` / `<=` gõ trong ô thắng operator. `split-number` `{ from, to }` = khoảng đóng, thiếu một đầu thì biên đó mở. `0` là giá trị hợp lệ |
+| `'boolean'`                        | `'1'`/`'true'` vs `'0'`/`'false'`                                                                                                                                                                                                                                                    |
+| `'date'` / `'datetime'` / `'time'` | range `{ from, to }`, thiếu một đầu thì biên đó mở                                                                                                                                                                                                                                   |
+| `'values'` / `'lazy-values'`       | chọn nhiều giá trị = **OR** (tương đương `IN`); dữ liệu hàng dạng mảng thì khớp khi **giao khác rỗng**                                                                                                                                                                               |
+
+Operator lấy từ `columnOperator[field]` (giá trị chọn trên `sd-operator`), không có thì `column.filter.operator.default` — cùng fallback với `SdConvertToPagingReq`. Trước bản sửa này local bỏ qua operator: cột number luôn so `=`, prefix luôn ra rỗng, filter `0` bị bỏ và dòng có giá trị `0` bị ẩn khi cột đang lọc.
 
 `'values'` / `'lazy-values'` **không** đọc `option.selection` lúc so khớp — nhánh được chọn theo hình dạng giá trị thực tế. Nhờ vậy cột `selection: 'MULTIPLE'` lọc đúng cho cả dữ liệu hàng scalar (`status: 'ACTIVE'`) và dữ liệu hàng mảng (`statuses: [{ id, name }]`), và `filter.default` dạng string trên cột MULTIPLE cũng là input hợp lệ.
 
