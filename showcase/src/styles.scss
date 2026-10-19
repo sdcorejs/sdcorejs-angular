@@ -1,6 +1,4 @@
-// why: package.json của lib không export `./assets/*`, nên Sass qua webpack (target test) không resolve được
-// `@sdcorejs/angular/assets/...`; đi thẳng vào bản copy của `link:library`, giống angular.json nạp sd-core.scss.
-@use '../node_modules/@sdcorejs/angular/assets/scss/themes/default' as sd;
+@use '@sdcorejs/angular/assets/scss/themes/default' as sd;
 
 :root {
   --docs-header-height: 64px;

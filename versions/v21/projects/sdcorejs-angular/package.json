@@ -70,5 +70,11 @@
     "**/*.scss",
     "./fesm2022/sdcorejs-angular-components-code-editor.mjs",
     "./fesm2022/sdcorejs-angular-components-ckeditor-styles.mjs"
-  ]
+  ],
+  "exports": {
+    "./assets/*": {
+      "sass": "./assets/*",
+      "default": "./assets/*"
+    }
+  }
 }
