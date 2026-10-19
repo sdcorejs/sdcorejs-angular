@@ -239,6 +239,53 @@ describe('table-filter.model › SdConvertToPagingReq', () => {
       expect(byField(scalar, 'n')[0]).toEqual({ field: 'n', operator: 'EQUAL', data: 5 });
     });
 
+    describe('number split-number { from, to }', () => {
+      const amount = col({ field: 'amount', type: 'number', filter: { type: 'split-number' } } as any);
+      const convert = (value: any, columnOperator: any = {}) =>
+        SdConvertToPagingReq(makeReq({ rawColumnFilter: { amount: value } as any, columnOperator }), { columns: [amount] });
+
+      it('both ends → BETWEEN with the inclusive { from, to } range, whatever operator is picked', () => {
+        expect(byField(convert({ from: 10, to: 20 }), 'amount')).toEqual([
+          { field: 'amount', operator: 'BETWEEN', data: { from: 10, to: 20 } },
+        ]);
+        expect(byField(convert({ from: 10, to: 20 }, { amount: 'EQUAL' }), 'amount')).toEqual([
+          { field: 'amount', operator: 'BETWEEN', data: { from: 10, to: 20 } },
+        ]);
+      });
+
+      it('only from → GREATER_OR_EQUAL, only to → LESS_OR_EQUAL', () => {
+        expect(byField(convert({ from: 10, to: null }), 'amount')).toEqual([{ field: 'amount', operator: 'GREATER_OR_EQUAL', data: 10 }]);
+        expect(byField(convert({ from: undefined, to: 20 }), 'amount')).toEqual([{ field: 'amount', operator: 'LESS_OR_EQUAL', data: 20 }]);
+      });
+
+      it('no end → no filter', () => {
+        expect(req_filters(convert({ from: null, to: null }))).toEqual([]);
+        expect(req_filters(convert({ from: '', to: undefined }))).toEqual([]);
+        expect(req_filters(convert({ to: null }))).toEqual([]);
+      });
+
+      it('an object without from/to keeps the generic path', () => {
+        const date = new Date(0);
+        expect(byField(convert(date), 'amount')).toEqual([{ field: 'amount', operator: 'EQUAL', data: date }]);
+      });
+
+      it('0 is a bound, not an empty end', () => {
+        expect(byField(convert({ from: 0, to: 0 }), 'amount')).toEqual([
+          { field: 'amount', operator: 'BETWEEN', data: { from: 0, to: 0 } },
+        ]);
+        expect(byField(convert({ from: 0, to: null }), 'amount')).toEqual([{ field: 'amount', operator: 'GREATER_OR_EQUAL', data: 0 }]);
+        expect(byField(convert({ from: null, to: 0 }), 'amount')).toEqual([{ field: 'amount', operator: 'LESS_OR_EQUAL', data: 0 }]);
+      });
+
+      it('applies fieldMapping to the range filter', () => {
+        const r = SdConvertToPagingReq(makeReq({ rawColumnFilter: { amount: { from: 1, to: 2 } } as any }), {
+          columns: [amount],
+          fieldMapping: { amount: 'totalAmount' },
+        });
+        expect(byField(r, 'totalAmount')).toEqual([{ field: 'totalAmount', operator: 'BETWEEN', data: { from: 1, to: 2 } }]);
+      });
+    });
+
     it('uses column.filter.operator.default when columnOperator has no entry', () => {
       const r = SdConvertToPagingReq(makeReq({ rawColumnFilter: { name: 'abc' } as any }), {
         columns: [col({ field: 'name', type: 'string', filter: { operator: { default: 'EQUAL' } } } as any)],
