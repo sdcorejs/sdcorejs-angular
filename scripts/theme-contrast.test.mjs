@@ -15,7 +15,7 @@ const loadPaths = [
   fileURLToPath(new URL('../versions/v19/node_modules', import.meta.url)),
 ];
 
-const PRESETS = ['default', 'ocean', 'indigo', 'teal', 'copper', 'slate', 'forest', 'plum', 'rose'];
+const PRESETS = ['default', 'ocean', 'indigo', 'teal', 'copper', 'slate', 'forest', 'plum', 'rose', 'graphite'];
 const STATES = ['info', 'success', 'warning', 'error'];
 
 /** [foreground token, background token, minimum ratio] — names without the `--sd-` prefix. */

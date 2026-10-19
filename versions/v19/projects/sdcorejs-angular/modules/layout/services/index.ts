@@ -4,3 +4,4 @@ export * from './responsive/responsive.service';
 export * from './navigation-state/navigation-state.service';
 export * from './menu/menu.utils';
 export * from './layout.service';
+export * from './context';

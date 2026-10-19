@@ -34,7 +34,16 @@
       [cdkTrapFocusAutoCapture]="true"
       (keydown)="onDrawerKeydown($event)">
       <header class="d-flex align-items-center justify-content-between gap-8 px-16 py-12 border-bottom border-black200">
-        <span class="T18M text-ellipsis">{{ sidebar().defaultTitle || 'Back Office' }}</span>
+        @if (sidebar().context; as context) {
+          <!-- Context switcher (R-008, D-027): trigger ngay dưới tên app; sheet chọn context mở trong overlay CDK, chồng lên
+               drawer và tự giữ Esc (không đóng drawer). -->
+          <div class="sd-sidebar-mobile-v3__brand">
+            <span class="T18M text-ellipsis">{{ sidebar().defaultTitle || 'Back Office' }}</span>
+            <sd-layout-context-switcher appearance="sheet" [configuration]="context" />
+          </div>
+        } @else {
+          <span class="T18M text-ellipsis">{{ sidebar().defaultTitle || 'Back Office' }}</span>
+        }
         <button
           type="button"
           class="sd-sidebar-mobile-v3__icon-action d-flex align-items-center justify-content-center"

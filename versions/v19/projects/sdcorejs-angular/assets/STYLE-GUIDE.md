@@ -546,7 +546,7 @@ Omit `$source` (or use `'core'`) for independent Core colors. Scoped calls emit 
 
 ### 14.1 Choose a preset
 
-Core ships eight **light** presets in addition to the unchanged `default` palette. They change colors only; typography, spacing, density and corner radius remain unchanged. Only the `default` palette has a dark variant (`$mode`, see [THEME.md](./THEME.md)); combining a named preset with `$mode: 'dark'` or `'auto'` stops the Sass build.
+Core ships nine **light** presets in addition to the unchanged `default` palette. They change colors only; typography, spacing, density and corner radius remain unchanged. Only the `default` palette has a dark variant (`$mode`, see [THEME.md](./THEME.md)); combining a named preset with `$mode: 'dark'` or `'auto'` stops the Sass build.
 
 In the consumer's global `styles.scss`, load Core first, then emit the selected palette:
 
@@ -572,8 +572,9 @@ If `sd-core.scss` is already configured in `angular.json`, do not import it a se
 | `forest` | Muted natural green | `#356447` | `#E8F0E9` | `#244831` | `#F3F6F0` |
 | `plum` | Restrained purple | `#7B3F80` | `#F2EAF4` | `#592B60` | `#F7F3F8` |
 | `rose` | Warm muted pink | `#A33D62` | `#FAEAF0` | `#7D2849` | `#FAF4F5` |
+| `graphite` | Near-black console neutral | `#16181D` | `#E3E5EA` | `#0B0C0F` | `#F3F4F7` |
 
-All eight presets use `surface: #FFFFFF` and `primary-contrast: #FFFFFF`.
+All nine presets use `surface: #FFFFFF` and `primary-contrast: #FFFFFF`.
 
 | Preset | Text | Text secondary | Border | Border strong |
 |---|---|---|---|---|
@@ -585,8 +586,27 @@ All eight presets use `surface: #FFFFFF` and `primary-contrast: #FFFFFF`.
 | `forest` | `#253128` | `#53634F` | `#CFD9C9` | `#72826C` |
 | `plum` | `#302334` | `#68576D` | `#DCCFDF` | `#8C7492` |
 | `rose` | `#35262C` | `#70565F` | `#E1CFD6` | `#997480` |
+| `graphite` | `#16181D` | `#5A606B` | `#DADDE3` | `#737985` |
 
 Unlisted tokens inherit the default map in section 3: secondary, info, success, warning, error and their variants keep the same meaning across presets. `text-muted`, `disabled-bg` and `disabled-text` remain derived from `--sd-text`. A preset emits the entire public color token set, not just its differences.
+
+A named preset may also carry an optional `components` map that overrides component tokens for that preset only (single values, keys checked against `$component-tokens`; see [THEME.md](./THEME.md)). `graphite` is the only preset that uses it, to raise the active Sidebar V4 item as a white surface:
+
+```scss
+// assets/scss/themes/_presets.scss
+'graphite': (
+  primary: #16181d, primary-light: #e3e5ea, primary-dark: #0b0c0f,
+  surface: #ffffff, surface-muted: #f3f4f7,
+  text: #16181d, text-secondary: #5a606b,
+  border: #dadde3, border-strong: #737985,
+  components: (
+    sidebar-v4-active-bg: var(--sd-surface),
+    sidebar-v4-active-shadow: (0 0 0 1px var(--sd-border), 0 1px 2px rgba(20, 22, 28, 0.06)),
+  ),
+),
+```
+
+With `graphite`, `--sd-primary` and `--sd-link` equal the body text color, so links, text and outline buttons, active tab/stepper labels and query-bar values look like body text. No separate link token ships yet; [THEME.md](./THEME.md) lists the affected areas.
 
 ### 14.2 Mixin contract and overrides
 
@@ -598,7 +618,7 @@ Unlisted tokens inherit the default map in section 3: secondary, info, success, 
 |---|---|---|
 | `$theme` | Map of public color tokens from section 3 | `()` |
 | `$source` | `'core'`, `'material'` | `'core'` |
-| `$preset` | `'default'` and the eight lowercase names above | `'default'` |
+| `$preset` | `'default'` and the nine lowercase names above | `'default'` |
 | `$mode` | `'light'`, `'dark'`, `'auto'` — dark and auto only with `$preset: 'default'` (see [THEME.md](./THEME.md)) | `'light'` |
 
 For the Core source, precedence is **default → preset → consumer overrides**. Existing `sd.theme()`, `sd.theme((...))`, and positional `sd.theme((), 'material')` calls remain valid. Unknown preset/source names fail Sass compilation. Combining `$source: 'material'` with any non-default preset also fails: choose one palette owner.
@@ -654,7 +674,7 @@ The preset tests verify white text against primary and primary-dark at **at leas
 - **Unexpected hover tint after override:** set `primary-light` and `primary-dark` as well as `primary`.
 - **Overlay differs from screen:** use a root theme or theme the overlay container in the global stylesheet.
 
-Library maintainers can run `npm run test:theme` from the repository root after installing canonical `versions/v19` dependencies. It compiles consumer Sass and covers all eight presets, token completeness, contrast pairs, override precedence, isolated selectors, legacy Material mode and invalid arguments. Edit only v19 and run `npm run sync` for derived versions.
+Library maintainers can run `npm run test:theme` from the repository root after installing canonical `versions/v19` dependencies. It compiles consumer Sass and covers all nine presets, token completeness (Sidebar V4 color tokens included), contrast pairs, override precedence, preset `components` overrides and unknown keys, isolated selectors, legacy Material mode and invalid arguments. Edit only v19 and run `npm run sync` for derived versions.
 
 ---
 

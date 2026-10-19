@@ -1,10 +1,22 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+  untracked,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { sdIsExternalHttpUrl, sdOpenExternal } from '@sdcorejs/angular/utilities';
 import { SdLayoutUserInfo, SidebarConfigurationV3, resolveSidebarV3Recent } from '../../configurations';
 import { SdLayoutMenu, SdLayoutNavigationStateService, SdLayoutRootMenu, getMenuStableKey, searchMenuLeaves } from '../../services';
+import { SdLayoutContextSwitcher } from '../shared/context-switcher/context-switcher.component';
 import { SdLayoutMenuTreeComponent } from '../shared/menu-tree/menu-tree.component';
 import { SdLayoutSearchFieldComponent } from '../shared/search-field/search-field.component';
 import { SdLayoutUserMenuComponent } from '../shared/user-menu/user-menu.component';
@@ -14,7 +26,14 @@ import { containsMenuPath, resolveActiveMenuPath } from '../../utils';
 @Component({
   selector: 'sd-sidebar-v3',
   standalone: true,
-  imports: [SdIcon, SdLayoutSearchFieldComponent, SdLayoutMenuTreeComponent, SdLayoutUserMenuComponent, SdTranslatePipe],
+  imports: [
+    SdIcon,
+    SdLayoutContextSwitcher,
+    SdLayoutSearchFieldComponent,
+    SdLayoutMenuTreeComponent,
+    SdLayoutUserMenuComponent,
+    SdTranslatePipe,
+  ],
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -23,6 +42,7 @@ export class SdSidebarV3 {
   readonly #router = inject(Router);
   readonly #destroyRef = inject(DestroyRef);
   readonly #navigationState = inject(SdLayoutNavigationStateService);
+  private readonly headerSwitcher = viewChild<SdLayoutContextSwitcher>('headerSwitcher');
   #initialized = false;
 
   menus = input<SdLayoutMenu[]>([]);
@@ -40,6 +60,8 @@ export class SdSidebarV3 {
   collapsedItems = computed(() =>
     this.menus().map(menu => ({ menu, key: getMenuStableKey(menu), title: menu.tooltipTitle || menu.title || 'Menu' }))
   );
+  /** The header Context Switcher popover is open; the whole header then takes the hover background (README CS1). */
+  protected readonly contextOpen = computed(() => this.headerSwitcher()?.isOpen() ?? false);
 
   constructor() {
     effect(() => {

@@ -34,6 +34,38 @@
   letter-spacing: -0.2px;
 }
 
+// Context switcher (R-008, D-010): các class dưới đây chỉ có khi cấu hình `context` (INV-001); màu do switcher lấy
+// từ token theme (D-028).
+// why: tên app và trigger context xếp dọc; cột không cắt overflow để lề âm và viền focus của trigger không bị xén.
+.sd-sidebar-v3__brand-text {
+  // Popover của Context Switcher nằm dưới header, thụt 12px mỗi bên của drawer 304px.
+  --sd-layout-context-switcher-popover-width: calc(304px - 24px);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+// CS1: popover context đang mở thì cả vùng header nhận nền hover, radius 12. Trigger không tô thêm lớp nền thứ hai
+// (selector hai class để thắng rule open/hover của switcher bất kể thứ tự nạp stylesheet).
+.sd-sidebar-v3__header--context-open {
+  border-radius: var(--sd-radius-12, 12px);
+  background: color-mix(in srgb, var(--sd-text) 6%, transparent);
+
+  ::ng-deep .sd-layout-context-switcher__trigger.sd-layout-context-switcher__trigger--header {
+    background: transparent;
+  }
+}
+
+// why: avatar context đứng yên ở đầu rail (không cuộn theo menu). Switcher không render gì khi `items` rỗng (host chỉ
+// còn comment) — khi đó không chừa khoảng trống; có avatar thì cách nút mở rộng và mục đầu tiên đều 12px.
+.sd-sidebar-v3__rail-context {
+  flex: none;
+
+  &:not(:empty) {
+    margin-bottom: 4px;
+  }
+}
+
 .sd-sidebar-v3__search {
   flex-shrink: 0;
 }
