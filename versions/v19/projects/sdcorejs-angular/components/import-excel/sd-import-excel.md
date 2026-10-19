@@ -45,6 +45,14 @@ interface SdImportExcelOption<T = any> {
 
 Column types: `'string' | 'number' | 'bool' | 'date' | 'time' | 'datetime' | 'values' | 'radio' | 'array'`. Each subtype has its own constraints (`min`, `max`, `minlength`, `maxlength`, `format`, `values`, `defaultValue`, `divideString`, ...).
 
+### Date cells and `ISdCoreConfiguration.timeZone`
+
+The stored types do not change: an Excel **date cell** is stored as an ISO string, a **text cell** parsed with the column `format` is stored as a `Date`.
+
+- Without a zone (or `'local'`): a date cell is `value.toISOString()` of the Date exceljs returns, and text is parsed in the browser zone, as before.
+- With a zone, both are read as wall clock **in the zone**. exceljs returns a date cell as a `Date` whose UTC fields are the Excel wall clock; that wall clock becomes an instant of the zone. Under `'Asia/Ho_Chi_Minh'`, a date cell `20/05/1960` and the text `'20/05/1960'` (format `'dd/MM/yyyy'`) both give `1960-05-19T16:00:00.000Z` (UTC+08 in 1960). A time-only format (`'HH:mm'`) takes today in the zone.
+- The preview shows `date` / `datetime` columns in the zone too. See [`SdDateTimeService`](../../services/date-time/sd-date-time.md).
+
 ## Outputs
 | Name | Type | Notes |
 | --- | --- | --- |

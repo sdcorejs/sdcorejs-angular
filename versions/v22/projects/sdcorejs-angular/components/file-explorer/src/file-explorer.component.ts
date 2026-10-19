@@ -29,6 +29,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdInform, SdInformActionDirective } from '@sdcorejs/angular/components/inform';
 import { SdDataState } from '@sdcorejs/angular/components/data-state';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { SdFileExplorerActions } from './components/actions.component';
 import { SdFileExplorerColumnDef } from './file-explorer-column.directive';
@@ -243,6 +244,7 @@ export class SdFileExplorer<T = unknown> {
     });
   });
   readonly #i18n = inject(I18nService);
+  readonly #dateTime = inject(SdDateTimeService);
   readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly #document = inject(DOCUMENT);
   readonly #injector = inject(Injector);
@@ -819,8 +821,8 @@ export class SdFileExplorer<T = unknown> {
         icon: sdFileExplorerIconName(item),
         typeLabel: t(`type.${type}`),
         sizeLabel: item.kind === 'file' ? sdFileExplorerFormatSize(item.size, locale) : '',
-        modifiedLabel: sdFileExplorerFormatDate(item.modifiedAt, now, locale, labels),
-        modifiedTitle: sdFileExplorerFormatDateTime(item.modifiedAt, locale),
+        modifiedLabel: sdFileExplorerFormatDate(item.modifiedAt, now, locale, labels, this.#dateTime),
+        modifiedTitle: sdFileExplorerFormatDateTime(item.modifiedAt, locale, this.#dateTime),
         downloadLabel: t('download-item', { name: item.name }),
         shareLabel: t('share-item', { name: item.name }),
         selectLabel: t('selection.select-item', { name: item.name }),

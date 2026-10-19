@@ -388,6 +388,9 @@ export type ShowcaseExampleSourceKey =
   | "services/confirm/example-nhat-ky-gan-nhat"
   | "services/confirm/example-xac-nhan-co-ban"
   | "services/confirm/example-xac-nhan-xoa"
+  | "services/date-time/example-bang-va-bo-loc-server"
+  | "services/date-time/example-form-ngay-gio"
+  | "services/date-time/example-mui-gio-dang-dung"
   | "services/excel/example-tai-template-trong"
   | "services/excel/example-xuat-file-csv"
   | "services/excel/example-xuat-file-xlsx"
@@ -3129,6 +3132,27 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-icon-shape",
     title: "Icon shape",
     description: "Mặc định square bo 8px (token --sd-icon-shape-radius). circle giữ kiểu tròn cũ; none bỏ nền, giữ kích thước ô.",
+  },
+  {
+    sourceKey: "services/date-time/example-mui-gio-dang-dung",
+    pageKey: "services/date-time",
+    sectionId: "example-mui-gio-dang-dung",
+    title: "Múi giờ đang dùng",
+    description: "Showcase đọc ?timeZone= một lần lúc khởi động. Giá trị không hợp lệ (ví dụ +07:00) bị bỏ qua và trang chạy 'local'.",
+  },
+  {
+    sourceKey: "services/date-time/example-form-ngay-gio",
+    pageKey: "services/date-time",
+    sectionId: "example-form-ngay-gio",
+    title: "Form ngày giờ",
+    description: "Có timeZone thì form.value giữ giá trị model: sd-date 'yyyy/MM/dd', sd-datetime 'yyyy/MM/dd HH:mm:ss', sd-date-range { from, to }; transform ISOString cho instant tính trong múi giờ đó.",
+  },
+  {
+    sourceKey: "services/date-time/example-bang-va-bo-loc-server",
+    pageKey: "services/date-time",
+    sectionId: "example-bang-va-bo-loc-server",
+    title: "Bảng và bộ lọc server",
+    description: "Dòng mẫu là instant 1960-05-19T16:00:00Z. Chọn khoảng ngày để xem pagingReq.filters: một ngày là [đầu ngày, đầu ngày kế tiếp) trong múi giờ đang dùng.",
   },
   {
     sourceKey: "services/excel/example-xuat-file-xlsx",

@@ -4,6 +4,7 @@ import {
   SD_FILE_EXPLORER_ICON_SVGS,
   type SdFileExplorerIconName,
 } from './file-explorer-icons.generated';
+import type { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import type { SdFileExplorerItem } from './file-explorer.model';
 
 /** Family of an item: picks the type label and the preview renderer. The glyph comes from `sdFileExplorerIconName`. */
@@ -142,6 +143,11 @@ export function sdFileExplorerParseDate(value: Date | string | number | null | u
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+/** Date math of `ISdCoreConfiguration.timeZone`; omitted or `'local'` keeps the machine zone. */
+type FileExplorerDateTime = Pick<SdDateTimeService, 'timeZone' | 'parse' | 'toFormat' | 'begin'>;
+
+const zonedOf = (dateTime: FileExplorerDateTime | undefined) => (dateTime && dateTime.timeZone !== 'local' ? dateTime : undefined);
+
 /**
  * Compact modification date: "today" / "yesterday" labels, day + month within the current year,
  * full date otherwise. Order of day and month follows the locale.
@@ -150,8 +156,11 @@ export function sdFileExplorerFormatDate(
   value: Date | string | number | null | undefined,
   now: Date,
   locale: string,
-  labels: { today: string; yesterday: string }
+  labels: { today: string; yesterday: string },
+  dateTime?: FileExplorerDateTime
 ): string {
+  const zoned = zonedOf(dateTime);
+  if (zoned) return formatZonedDate(value, now, locale, labels, zoned);
   const date = sdFileExplorerParseDate(value);
   if (!date) return '';
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
@@ -159,10 +168,31 @@ export function sdFileExplorerFormatDate(
   // why: so sánh theo mốc 0h local (không trừ 86 400 000 ms) để ngày chuyển giờ DST vẫn đúng "hôm qua".
   if (day === startOfToday) return labels.today;
   if (day === new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1).getTime()) return labels.yesterday;
-  const options: Intl.DateTimeFormatOptions =
-    date.getFullYear() === now.getFullYear() ? { day: '2-digit', month: '2-digit' } : { day: '2-digit', month: '2-digit', year: 'numeric' };
+  return dayMonthYear(date, locale, date.getFullYear() === now.getFullYear());
+}
+
+/** Calendar days of the configured zone; yesterday is the day of the last millisecond before today began there. */
+function formatZonedDate(
+  value: Date | string | number | null | undefined,
+  now: Date,
+  locale: string,
+  labels: { today: string; yesterday: string },
+  zoned: FileExplorerDateTime
+): string {
+  const date = value === null || value === undefined || value === '' ? null : zoned.parse(value);
+  if (!date) return '';
+  const day = zoned.toFormat(date, 'yyyy/MM/dd');
+  if (day === zoned.toFormat(now, 'yyyy/MM/dd')) return labels.today;
+  if (day === zoned.toFormat(zoned.begin(now)!.getTime() - 1, 'yyyy/MM/dd')) return labels.yesterday;
+  return dayMonthYear(date, locale, zoned.toFormat(date, 'yyyy') === zoned.toFormat(now, 'yyyy'), zoned.timeZone);
+}
+
+function dayMonthYear(date: Date, locale: string, sameYear: boolean, timeZone?: string): string {
+  const options: Intl.DateTimeFormatOptions = sameYear
+    ? { day: '2-digit', month: '2-digit' }
+    : { day: '2-digit', month: '2-digit', year: 'numeric' };
   // why: lấy THỨ TỰ ngày/tháng theo locale nhưng luôn nối bằng "/" — Chrome format vi-VN ngày+tháng thành "21-09".
-  return new Intl.DateTimeFormat(locale, options)
+  return new Intl.DateTimeFormat(locale, timeZone ? { ...options, timeZone } : options)
     .formatToParts(date)
     .filter(part => part.type === 'day' || part.type === 'month' || part.type === 'year')
     .map(part => part.value)
@@ -170,16 +200,16 @@ export function sdFileExplorerFormatDate(
 }
 
 /** Full date and time, used as tooltip and in the preview metadata. */
-export function sdFileExplorerFormatDateTime(value: Date | string | number | null | undefined, locale: string): string {
-  const date = sdFileExplorerParseDate(value);
+export function sdFileExplorerFormatDateTime(
+  value: Date | string | number | null | undefined,
+  locale: string,
+  dateTime?: FileExplorerDateTime
+): string {
+  const zoned = zonedOf(dateTime);
+  const date = zoned ? (value === null || value === undefined || value === '' ? null : zoned.parse(value)) : sdFileExplorerParseDate(value);
   if (!date) return '';
-  return new Intl.DateTimeFormat(locale, {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date);
+  const options: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+  return new Intl.DateTimeFormat(locale, zoned ? { ...options, timeZone: zoned.timeZone } : options).format(date);
 }
 
 /** Lower-cases and strips Vietnamese accents so "tai lieu" matches "Tài liệu". */

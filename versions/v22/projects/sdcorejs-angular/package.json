@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "@sdcorejs/angular-material-datetime": "1.0.4",
-    "@sdcorejs/utils": "1.2.5",
+    "@sdcorejs/utils": "1.3.0",
     "@lucide/angular": "^1.22.0",
     "date-fns": "^3.6.0",
     "exceljs": "^4.4.0",

@@ -184,7 +184,7 @@ test('matches the canonical v19 runtime registry and expected deployment route c
       .map(category => [category, pages.filter(page => page.category === category).length])
   );
 
-  assert.equal(pages.length, 108);
+  assert.equal(pages.length, 109);
   assert.ok(pages.some(page => page.category === 'components' && page.slug === 'window'));
   assert.ok(pages.some(page => page.category === 'components' && page.slug === 'modal-resizable'));
   assert.ok(pages.some(page => page.category === 'components' && page.slug === 'kanban'));
@@ -198,6 +198,8 @@ test('matches the canonical v19 runtime registry and expected deployment route c
   assert.ok(pages.some(page => page.category === 'pipes-utilities' && page.slug === 'theme'));
   // 3.2 page: the generic CRUD module (modules/generic).
   assert.ok(pages.some(page => page.category === 'modules-integrations' && page.slug === 'generic-crud'));
+  // Fixed time zone: the SdDateTimeService reference page (services/date-time).
+  assert.ok(pages.some(page => page.category === 'services' && page.slug === 'date-time'));
 
   // why: `routes.length` từng là hằng số 5941 và đã mục ngay khi release 1.6 ra (thực tế 7426).
   // Con số đó là TÍCH của hai thứ đã được kiểm ở nơi khác — số release được hỗ trợ và số route mỗi
@@ -219,7 +221,7 @@ test('matches the canonical v19 runtime registry and expected deployment route c
     guides: 4,
     'modules-integrations': 11,
     'pipes-utilities': 11,
-    services: 11,
+    services: 12,
   });
   assert.equal(
     pages.some(page => page.slug === 'icon-configuration'),

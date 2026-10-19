@@ -31,6 +31,7 @@ import {
   SdViewedInput,
   sdLocalStartOfDay,
   sdParseTransformedTemporal,
+  ɵsdParseTransformedInstant,
   sdSerializeTemporalValue,
   sdViewedInline,
   sdViewedTransform,
@@ -42,6 +43,7 @@ import { sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import { SdView } from '@sdcorejs/angular/components/view';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import { DateUtilities } from '@sdcorejs/utils/fns';
 import { BrowserUtilities, Utilities } from '@sdcorejs/utils/fns';
 import { Size } from '@sdcorejs/utils/models';
@@ -153,6 +155,9 @@ export class SdDateRange {
   private cdRef = inject(ChangeDetectorRef);
   private formConfig = inject(SD_FORM_CONFIGURATION, { optional: true });
   readonly #i18n = inject(I18nService);
+  readonly #dateTime = inject(SdDateTimeService);
+  /** why: with `ISdCoreConfiguration.timeZone` set, model values are converted in that zone at the model/control boundary. */
+  readonly #zoned = this.#dateTime.timeZone !== 'local';
   // why: onBlur hoãn 1 macrotask rồi mới emit sdChange. Không giữ handle thì blur ngay trước
   // khi control bị tháo vẫn bắn output sau destroy — consumer đã unsubscribe, hoặc tệ hơn là
   // nhận một lần emit "ma" cho control không còn tồn tại.
@@ -272,6 +277,10 @@ export class SdDateRange {
     const m = this.valueModel();
     const fmt = (d: unknown): string => {
       if (d == null || d === '') return '';
+      if (this.#zoned) {
+        const instant = ɵsdParseTransformedInstant(d);
+        return this.#dateTime.toFormat(d, 'dd/MM/yyyy') || (instant ? this.#dateTime.toFormat(instant, 'dd/MM/yyyy') : '');
+      }
       const dt = d instanceof Date ? d : new Date(String(d));
       if (isNaN(dt.getTime())) return '';
       const dd = String(dt.getDate()).padStart(2, '0');
@@ -378,7 +387,8 @@ export class SdDateRange {
    * nhận control này. Không có transform thì `registered` trả null, form vẫn nhận control tổng.
    */
   readonly #modelFacing = ɵsdModelFacingControl<SdDateRangeValue | undefined | null>({
-    active: computed(() => !!this.transform()),
+    // why: with a zone the picker Dates would serialize to host-dependent instants, so the form gets the model.
+    active: computed(() => !!this.transform() || this.#zoned),
     model: this.valueModel,
     writeModel: value => {
       this.valueModel.set(value);
@@ -415,8 +425,8 @@ export class SdDateRange {
       untracked(() => {
         // why: đi qua `#coerceEndpoint` chứ không gọi thẳng `DateUtilities.isDate` — hàm đó từ chối
         // chuỗi RFC-1123, nên `transform="UTCString"` sẽ không render được chính giá trị nó phát ra.
-        const fromDate = this.#coerceEndpoint(val?.from);
-        const toDate = this.#coerceEndpoint(val?.to);
+        const fromDate = this.#modelEndpoint(val?.from);
+        const toDate = this.#modelEndpoint(val?.to);
         const fromStr = fromDate ? DateUtilities.toFormat(fromDate, 'yyyy/MM/dd') : null;
         const toStr = toDate ? DateUtilities.toFormat(toDate, 'yyyy/MM/dd') : null;
 
@@ -498,7 +508,8 @@ export class SdDateRange {
    */
   #endpointOut(value: Date | null): string | null {
     if (!value) return null;
-    const transformed = sdSerializeTemporalValue(sdLocalStartOfDay(value), this.transform());
+    const startOfDay = sdLocalStartOfDay(value);
+    const transformed = sdSerializeTemporalValue(this.#zoned ? this.#dateTime.fromWallClock(startOfDay) : startOfDay, this.transform());
     return transformed ?? DateUtilities.toFormat(value, 'yyyy/MM/dd') ?? null;
   }
 
@@ -516,7 +527,20 @@ export class SdDateRange {
     return normalized ? parseDate(normalized, 'yyyy/MM/dd', new Date()) : null;
   }
 
+  /** Model endpoint → picker carrier; in a zone an instant takes its calendar day there. */
+  #modelEndpoint(value: unknown): Date | null {
+    if (!this.#zoned) return this.#coerceEndpoint(value);
+    if (value == null || value === '') return null;
+    const instant = ɵsdParseTransformedInstant(value);
+    const day = this.#dateTime.toFormat(value, 'yyyy/MM/dd') || (instant ? this.#dateTime.toFormat(instant, 'yyyy/MM/dd') : '');
+    return day ? parseDate(day, 'yyyy/MM/dd', new Date()) : null;
+  }
+
   #parseDateBoundary(val: any): Date | null {
+    if (this.#zoned) {
+      if (val === 'TODAY') return this.#dateTime.today();
+      return val ? this.#modelEndpoint(val) : null;
+    }
     if (val === 'TODAY') return new Date();
     if (val && DateUtilities.isDate(val)) return new Date(val);
     return null;

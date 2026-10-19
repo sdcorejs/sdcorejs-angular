@@ -1,5 +1,6 @@
 import { TemplateRef } from '@angular/core';
 import type { SdSearch } from '@sdcorejs/angular/forms/models';
+import { ɵSD_LOCAL_DATE_TIME, type SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import { DateUtilities } from '@sdcorejs/utils/fns';
 import { Filter, NestedKeyOf, Operator, Order, PagingReq } from '@sdcorejs/utils/models';
 import { Observable } from 'rxjs';
@@ -91,6 +92,14 @@ export interface SdTableOptionFilter<T = unknown> {
   onClearFilter?: () => void;
 }
 
+type FilterDates = Pick<SdDateTimeService, 'begin' | 'end' | 'beginOfNextDay' | 'parse'>;
+
+/**
+ * Machine-zone date math, exactly the payload sent before time zones: the local bounds of
+ * `SdDateTimeService`, and a datetime still read by `new Date(value)`.
+ */
+const LOCAL_FILTER_DATES: FilterDates = { ...ɵSD_LOCAL_DATE_TIME, parse: value => new Date(value as string | number | Date) };
+
 const hasFilterValue = (value: unknown): boolean => value !== undefined && value !== null && value !== '';
 
 // why: `columns` nhận `SdTableColumnAnyRow[]` (= `SdTableColumn<never>[]`). Hàm chỉ đọc
@@ -105,9 +114,16 @@ export const SdConvertToPagingReq = (
     quickSearch?: SdTableOptionQuickSearch;
     fieldMapping?: Record<string, string>;
     orders?: Order[];
+    /**
+     * `inject(SdDateTimeService)` makes date filters follow `ISdCoreConfiguration.timeZone`: a day is
+     * [its first instant, the first instant of the next calendar day) in the zone, and a zone-less
+     * datetime is wall clock there. Omitted or `'local'`: the machine zone, as before.
+     */
+    dateTime?: Pick<SdDateTimeService, 'timeZone' | 'begin' | 'end' | 'beginOfNextDay' | 'parse'>;
   }
 ): PagingReq => {
   const { externalFilters, columns, fieldMapping } = args;
+  const dates: FilterDates = args.dateTime && args.dateTime.timeZone !== 'local' ? args.dateTime : LOCAL_FILTER_DATES;
   const req: PagingReq = {
     filters: [],
     orders: args?.orders || [],
@@ -148,14 +164,14 @@ export const SdConvertToPagingReq = (
             filters!.push({
               field,
               operator: 'GREATER_OR_EQUAL',
-              data: DateUtilities.begin(value?.from)!.toISOString(),
+              data: dates.begin(value?.from)!.toISOString(),
             });
           }
           if (value?.to) {
             filters!.push({
               field,
               operator: 'LESS_THAN',
-              data: DateUtilities.begin(DateUtilities.addDays(value?.to, 1))!.toISOString(),
+              data: dates.beginOfNextDay(value?.to)!.toISOString(),
             });
           }
         }
@@ -165,14 +181,14 @@ export const SdConvertToPagingReq = (
             filters!.push({
               field,
               operator: 'GREATER_OR_EQUAL',
-              data: DateUtilities.begin(value?.from)!.toISOString(),
+              data: dates.begin(value?.from)!.toISOString(),
             });
           }
           if (value?.to) {
             filters!.push({
               field,
               operator: 'LESS_THAN',
-              data: DateUtilities.begin(DateUtilities.addDays(value?.to, 1))!.toISOString(),
+              data: dates.beginOfNextDay(value?.to)!.toISOString(),
             });
           }
         } else if (DateUtilities.isDate(value)) {
@@ -181,14 +197,14 @@ export const SdConvertToPagingReq = (
               filters!.push({
                 field,
                 operator: 'GREATER_OR_EQUAL',
-                data: DateUtilities.begin(value)!.toISOString(),
+                data: dates.begin(value)!.toISOString(),
               });
             }
             if (externalFilter.defaultOperator === 'LESS_OR_EQUAL') {
               filters!.push({
                 field,
                 operator: 'LESS_THAN',
-                data: DateUtilities.begin(DateUtilities.addDays(value, 1))!.toISOString(),
+                data: dates.beginOfNextDay(value)!.toISOString(),
               });
             }
           } else {
@@ -196,14 +212,14 @@ export const SdConvertToPagingReq = (
               filters!.push({
                 field,
                 operator: 'GREATER_OR_EQUAL',
-                data: new Date(value).toISOString(),
+                data: dates.parse(value)!.toISOString(),
               });
             }
             if (externalFilter.defaultOperator === 'LESS_OR_EQUAL') {
               filters!.push({
                 field,
                 operator: 'LESS_OR_EQUAL',
-                data: new Date(value).toISOString(),
+                data: dates.parse(value)!.toISOString(),
               });
             }
           }
@@ -222,14 +238,14 @@ export const SdConvertToPagingReq = (
             filters!.push({
               field,
               operator: 'GREATER_OR_EQUAL',
-              data: DateUtilities.begin(value?.from)!.toISOString(),
+              data: dates.begin(value?.from)!.toISOString(),
             });
           }
           if (value?.to) {
             filters!.push({
               field,
               operator: 'LESS_THAN',
-              data: DateUtilities.begin(DateUtilities.addDays(value?.to, 1))!.toISOString(),
+              data: dates.beginOfNextDay(value?.to)!.toISOString(),
             });
           }
         } else {
@@ -268,21 +284,21 @@ export const SdConvertToPagingReq = (
               field,
               operator: 'BETWEEN',
               data: {
-                from: DateUtilities.begin(value?.from)!.toISOString(),
-                to: DateUtilities.end(value?.to)!.toISOString(),
+                from: dates.begin(value?.from)!.toISOString(),
+                to: dates.end(value?.to)!.toISOString(),
               },
             });
           } else if (value?.from) {
             filters!.push({
               field,
               operator: 'GREATER_OR_EQUAL',
-              data: DateUtilities.begin(value?.from)!.toISOString(),
+              data: dates.begin(value?.from)!.toISOString(),
             });
           } else if (value?.to) {
             filters!.push({
               field,
               operator: 'LESS_THAN',
-              data: DateUtilities.begin(DateUtilities.addDays(value?.to, 1))!.toISOString(),
+              data: dates.beginOfNextDay(value?.to)!.toISOString(),
             });
           }
         } else {
@@ -291,8 +307,8 @@ export const SdConvertToPagingReq = (
               field,
               operator: 'BETWEEN',
               data: {
-                from: DateUtilities.begin(value)!.toISOString(),
-                to: DateUtilities.end(value)!.toISOString(),
+                from: dates.begin(value)!.toISOString(),
+                to: dates.end(value)!.toISOString(),
               },
             });
           }

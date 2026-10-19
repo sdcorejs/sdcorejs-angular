@@ -36,7 +36,9 @@ export interface ɵSdModelFacingControl<TModel> {
  * and hands *that* one to the form.
  *
  * Both directions are wired, and neither can feed back on the other:
- *  - model changes are pushed in with `emitEvent: false`, so they raise no `valueChanges`;
+ *  - a model change caused by a user edit (the editor control emitted) is pushed in once with events,
+ *    so the parent form emits `valueChanges` with the model value, as the editor control does in local
+ *    mode; every other model change (the parent `[(model)]` binding) is pushed in silently;
  *  - a write that arrives on this control goes to `writeModel`, exactly like a write on the editor
  *    control would, so `modelChange` / `sdChange` still fire once.
  *
@@ -50,15 +52,37 @@ export function ɵsdModelFacingControl<TModel>(options: ɵSdModelFacingControlOp
   const modelEquals = options.modelEquals ?? Object.is;
   const sourceState = sdFormControlState(options.source);
 
-  // Model → control. `emitEvent: false` is what keeps a user commit from bouncing back as a second
-  // `modelChange`; the value is already the committed one by the time it lands here.
+  // why: a user edit reaches the editor control (`source`) first; the form connector then writes the
+  // model from that same `valueChanges`, but it subscribed after this helper. `userEdit` carries "this
+  // model change came from the user" to whichever sync runs next — the effect below or the microtask —
+  // so the parent form emits exactly once. A model write from the parent binding never sets it.
+  let userEdit = false;
+
+  // Model → control. Silent unless the change comes from a user edit; a write through this control
+  // already emitted, and `modelEquals` keeps it from bouncing back as a second `modelChange`.
   effect(() => {
     const value = options.model() as unknown;
     untracked(() => {
       if (!modelEquals(control.value as TModel, value as TModel)) {
-        control.setValue(value, { emitEvent: false });
+        const emitEvent = userEdit;
+        userEdit = false;
+        control.setValue(value, { emitEvent });
       }
     });
+  });
+
+  // Marks user edits, and flushes them when the microtask runs before the effect.
+  effect(onCleanup => {
+    const subscription = options.source().valueChanges.subscribe(() => {
+      userEdit = true;
+      queueMicrotask(() => {
+        if (!userEdit) return;
+        userEdit = false;
+        const value = untracked(options.model) as unknown;
+        if (!modelEquals(control.value as TModel, value as TModel)) control.setValue(value);
+      });
+    });
+    onCleanup(() => subscription.unsubscribe());
   });
 
   // Control → model, for writes the consumer makes through the registered control.

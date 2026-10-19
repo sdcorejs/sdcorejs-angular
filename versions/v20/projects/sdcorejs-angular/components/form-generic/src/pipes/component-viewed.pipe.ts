@@ -1,5 +1,6 @@
 import { inject, Pipe, PipeTransform } from '@angular/core';
 import { SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
+import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import type { SdFormGenericField } from '../models/form-generic-field.model';
 import { sdDisplayValue } from '../rules/form-generic-display';
 
@@ -10,8 +11,13 @@ import { sdDisplayValue } from '../rules/form-generic-display';
 })
 export class ComponentViewedPipe implements PipeTransform {
   readonly #core = inject(SD_CORE_CONFIGURATION, { optional: true });
+  readonly #dateTime = inject(SdDateTimeService);
 
   transform(value: unknown, field: SdFormGenericField, labels?: Readonly<Record<string, string>>): string {
-    return sdDisplayValue(field, value, { labels, numberFormat: this.#core?.format?.number });
+    return sdDisplayValue(field, value, {
+      labels,
+      numberFormat: this.#core?.format?.number,
+      dateFormat: (date, format) => this.#dateTime.toFormat(date, format),
+    });
   }
 }

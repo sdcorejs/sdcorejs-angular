@@ -1,4 +1,4 @@
-import { DateUtilities } from '@sdcorejs/utils/fns';
+import { ɵSD_LOCAL_DATE_TIME, type SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import { NumberUtilities, Utilities } from '@sdcorejs/utils/fns';
 import { Operator } from '@sdcorejs/utils/models';
 import { SdTableColumn, SdTableColumnLazyValues, SdTableColumnValues } from '../../models/table-column.model';
@@ -15,7 +15,11 @@ export interface FilterLocalItemsOption<T> {
   columns: SdTableColumn<T>[];
   tree?: SdTableOptionTree<T>;
   filter?: SdTableOptionFilter;
+  /** Date math of `ISdCoreConfiguration.timeZone`; omitted or `'local'` keeps the machine zone. */
+  dateTime?: LocalDateTime;
 }
+
+type LocalDateTime = Pick<SdDateTimeService, 'timeZone' | 'begin' | 'end' | 'parse'>;
 
 export interface FilterLocalItemsResult<T, TItem> {
   items: TItem[];
@@ -115,8 +119,10 @@ export const matchesColumnFilter = <T>(
   data: T,
   columns: SdTableColumn<T>[] = [],
   rawColumnFilter: Partial<Record<string, any>> = {},
-  columnOperator: Partial<Record<string, Operator>> = {}
+  columnOperator: Partial<Record<string, Operator>> = {},
+  dateTime?: LocalDateTime
 ): boolean => {
+  const zoned = dateTime && dateTime.timeZone !== 'local' ? dateTime : undefined;
   for (const column of columns) {
     const { field, type } = column;
     const rawColVal = resolveFieldValue(data, field);
@@ -164,14 +170,16 @@ export const matchesColumnFilter = <T>(
       } else if (type === 'datetime' || type === 'date' || type === 'time') {
         const from = rawColumnFilter[field]?.from ?? rawColumnFilter[field];
         const to = rawColumnFilter[field]?.to ?? rawColumnFilter[field];
-        const fromDate = DateUtilities.begin(from);
-        const toDate = DateUtilities.end(to);
+        // why: a time of day has no zone, so only date/datetime rows are read in the configured zone.
+        const zone = type === 'time' ? undefined : zoned;
+        const fromDate = (zone ?? ɵSD_LOCAL_DATE_TIME).begin(from);
+        const toDate = (zone ?? ɵSD_LOCAL_DATE_TIME).end(to);
         if (fromDate || toDate) {
           if (!columnValue) {
             return false;
           }
 
-          const columnTime = new Date(columnValue).getTime();
+          const columnTime = zone ? (zone.parse(rawColVal)?.getTime() ?? NaN) : new Date(columnValue).getTime();
           const fromDateTime = fromDate?.getTime() || null;
           const toDateTime = toDate?.getTime() || null;
 
@@ -197,7 +205,7 @@ export const filterLocalItems = <T, TItem extends LocalFilterItem<T>>(
   const { rawColumnFilter, orderBy, orderDirection, pageSize, pageNumber } = filterInfo;
   const quickSearch = option.filter?.disabled ? undefined : option.filter?.quickSearch;
   const matchesData = (data: T) =>
-    matchesColumnFilter(data, columns, rawColumnFilter, filterInfo.columnOperator) &&
+    matchesColumnFilter(data, columns, rawColumnFilter, filterInfo.columnOperator, option.dateTime) &&
     matchesQuickSearch(data, quickSearch, filterInfo.quickSearch);
   const treeOpt = option.tree;
   const treeSearch =
@@ -218,7 +226,7 @@ export const filterLocalItems = <T, TItem extends LocalFilterItem<T>>(
         const dataVal = resolveFieldValue(resolveItemData<T>(tableItemCurrent), field);
         const nextVal = resolveFieldValue(resolveItemData<T>(tableItemNext), field);
 
-        return compareLocalValues(dataVal, nextVal, type, orderDirection);
+        return compareLocalValues(dataVal, nextVal, type, orderDirection, option.dateTime);
       });
     }
   }

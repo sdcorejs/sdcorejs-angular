@@ -27,9 +27,12 @@ import {
 import { ISdCoreConfiguration, SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
 import { provideSdIcon, SD_DATA_TYPE_LUCIDE_ICONS } from '@sdcorejs/angular/modules/icon';
 import { routes } from './app.routes';
+import { showcaseTimeZone } from './showcase-time-zone';
 
 const SHOWCASE_CORE_CONFIG: ISdCoreConfiguration = {
   language: 'vi',
+  // ?timeZone=Asia/Ho_Chi_Minh shows every date in that zone (read once; reload to change it).
+  timeZone: showcaseTimeZone(typeof location === 'undefined' ? '' : location.search),
 };
 
 export const appConfig: ApplicationConfig = {
