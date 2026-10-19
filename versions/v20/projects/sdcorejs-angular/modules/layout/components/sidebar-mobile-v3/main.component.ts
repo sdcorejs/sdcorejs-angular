@@ -5,6 +5,7 @@ import {
   Component,
   DestroyRef,
   ElementRef,
+  Injector,
   computed,
   effect,
   inject,
@@ -18,7 +19,8 @@ import { NavigationEnd, Router } from '@angular/router';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { sdIsExternalHttpUrl, sdOpenExternal } from '@sdcorejs/angular/utilities';
 import { SdLayoutUserInfo, SidebarConfigurationV3, resolveSidebarV3Recent } from '../../configurations';
-import { SdLayoutMenu, SdLayoutNavigationStateService, SdLayoutRootMenu, searchMenuLeaves } from '../../services';
+import { SdLayoutContextService, SdLayoutMenu, SdLayoutNavigationStateService, SdLayoutRootMenu, searchMenuLeaves } from '../../services';
+import { SdLayoutContextSwitcher } from '../shared/context-switcher/context-switcher.component';
 import { SdLayoutMenuTreeComponent } from '../shared/menu-tree/menu-tree.component';
 import { SdLayoutSearchFieldComponent } from '../shared/search-field/search-field.component';
 import { SdLayoutUserMenuComponent } from '../shared/user-menu/user-menu.component';
@@ -27,7 +29,15 @@ import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 @Component({
   selector: 'sd-sidebar-mobile-v3',
   standalone: true,
-  imports: [A11yModule, SdIcon, SdLayoutSearchFieldComponent, SdLayoutMenuTreeComponent, SdLayoutUserMenuComponent, SdTranslatePipe],
+  imports: [
+    A11yModule,
+    SdIcon,
+    SdLayoutContextSwitcher,
+    SdLayoutSearchFieldComponent,
+    SdLayoutMenuTreeComponent,
+    SdLayoutUserMenuComponent,
+    SdTranslatePipe,
+  ],
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,6 +46,7 @@ export class SdSidebarMobileV3 {
   readonly #router = inject(Router);
   readonly #document = inject(DOCUMENT);
   readonly #destroyRef = inject(DestroyRef);
+  readonly #injector = inject(Injector);
   readonly #navigationState = inject(SdLayoutNavigationStateService);
   private readonly trigger = viewChild<ElementRef<HTMLButtonElement>>('trigger');
   #restoreFocusElement: HTMLElement | null = null;
@@ -58,6 +69,15 @@ export class SdSidebarMobileV3 {
       const menus = this.menus();
       const maximum = resolveSidebarV3Recent(this.sidebar()).maxItems;
       untracked(() => this.#navigationState.hydrate(menus, maximum));
+    });
+    // why: switcher chỉ mount khi drawer mở — đối chiếu context ngay lúc khởi tạo (EXEC-D1, D-021) để listener nhiều tab
+    // chạy từ đầu và lần chạm đầu vào menu không kích reload đối chiếu. Không có `context` thì không lấy service: app
+    // không cấu hình context không tạo service lẫn listener.
+    effect(() => {
+      const context = this.sidebar().context;
+      if (!context) return;
+      const items = context.items;
+      untracked(() => this.#injector.get(SdLayoutContextService).syncItems(items));
     });
     this.#router.events.pipe(takeUntilDestroyed(this.#destroyRef)).subscribe(event => {
       if (!(event instanceof NavigationEnd)) return;

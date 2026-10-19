@@ -79,6 +79,39 @@
   overflow-wrap: anywhere;
 }
 
+// Context switcher (R-008, D-010): các class dưới chỉ xuất hiện khi cấu hình `context` (INV-001).
+// Màu do switcher tự lấy từ token theme, không theo brandColor (D-028).
+.c-title-menu-group--context {
+  // Popover nằm dưới header, thụt 12px mỗi bên so với sidebar mở rộng.
+  --sd-layout-context-switcher-popover-width: calc(min(304px, 100vw) - 24px);
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+}
+
+// why: switcher là dòng phụ dưới tiêu đề — không kế thừa chữ đậm và letter-spacing âm của tiêu đề nhóm.
+.c-header-context {
+  font-weight: var(--sd-font-weight-regular, 400);
+  letter-spacing: normal;
+}
+
+// Rail 56px: avatar context nằm ở cột logo, hàng ngay dưới logo (đặt tường minh để tiêu đề ẩn không chiếm hàng).
+.c-rail-context {
+  grid-column: 1;
+  grid-row: 2;
+
+  // why: switcher không render gì khi `items` rỗng (host chỉ còn comment) — khi đó không chừa khoảng trống.
+  &:not(:empty) {
+    margin: 4px 0 6px;
+
+    // why: pointer thô cho trigger vùng chạm 44px tràn 8px quanh avatar 28px — cách ô logo 8px để vùng đó không
+    // lấn lên link trang chủ. Phía dưới đã đủ chỗ (6px margin + 5px padding của rail nhóm).
+    @media (pointer: coarse) {
+      margin-top: 8px;
+    }
+  }
+}
+
 .c-body {
   flex: 1;
   min-height: 0;

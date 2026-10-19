@@ -156,7 +156,11 @@ $modes: 'light', 'dark', 'auto';
   @if $source == 'material' {
     $base: map.merge($base, $material-source-theme);
   }
-  $base: map.merge($base, map.get(presets.$presets, $preset));
+  // why: map `components` của preset là override component token (D-007, D-029), không phải màu palette;
+  // tách ra trước khi merge để nó không lẫn vào palette, rồi chuyển xuống component-tokens.emit().
+  $preset-map: map.get(presets.$presets, $preset);
+  $components: map.get($preset-map, 'components') or ();
+  $base: map.merge($base, map.remove($preset-map, 'components'));
   $palette: map.merge($base, $theme);
 
   @each $color in color.$public-colors {
@@ -173,7 +177,7 @@ $modes: 'light', 'dark', 'auto';
   @include ramps.emit();
   @include semantic.emit($scheme);
   @include scales.emit();
-  @include component-tokens.emit($scheme);
+  @include component-tokens.emit($scheme, $components);
   @include material-tokens.emit();
 
   @if $scheme == dark {

@@ -75,6 +75,22 @@ $icon-color: var(--sd-sidebar-mobile-icon, #8c8c8c);
       }
     }
 
+    // Context switcher (R-008): class chỉ có khi cấu hình `context` (INV-001). Switcher xuống hàng riêng
+    // dưới hàng tiêu đề + nút đóng.
+    &.m-header--context {
+      flex-wrap: wrap;
+    }
+
+    .m-header-context {
+      flex: 0 0 100%;
+      min-width: 0;
+
+      // why: switcher không render gì khi `items` rỗng (host chỉ còn comment) — khi đó không chừa khoảng trống.
+      &:not(:empty) {
+        margin-top: 12px;
+      }
+    }
+
     .m-close-btn {
       background: transparent;
       border: none;

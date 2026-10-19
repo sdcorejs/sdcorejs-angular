@@ -1,10 +1,50 @@
+import { OverlayContainer } from '@angular/cdk/overlay';
 import { DOCUMENT } from '@angular/common';
+import { WritableSignal, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { NavigationEnd, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 
-import { SdLayoutMenu, SdLayoutStorageService } from '../../../../services';
+import { SdLayoutContext } from '../../../../configurations';
+import { SdLayoutContextService, SdLayoutMenu, SdLayoutStorageService } from '../../../../services';
+import { SdLayoutContextSwitcher } from '../../../shared/context-switcher/context-switcher.component';
 import { SdSidebarMobileOverlay } from './sidebar.component';
+
+interface ContextServiceStub {
+  current: WritableSignal<SdLayoutContext | null>;
+  items: WritableSignal<readonly SdLayoutContext[]>;
+  switchingId: WritableSignal<string | null>;
+  switchFailed: WritableSignal<boolean>;
+  changedElsewhere: WritableSignal<boolean>;
+  syncItems: jasmine.Spy;
+  setCurrentContext: jasmine.Spy;
+  reload: jasmine.Spy;
+  getCurrentContext: jasmine.Spy;
+}
+
+// why: service thật reload trang qua runtime — spec sidebar chỉ cần state đã đối chiếu (INV-010).
+function createContextStub(): ContextServiceStub {
+  const stub: ContextServiceStub = {
+    current: signal<SdLayoutContext | null>(null),
+    items: signal<readonly SdLayoutContext[]>([]),
+    switchingId: signal<string | null>(null),
+    switchFailed: signal(false),
+    changedElsewhere: signal(false),
+    syncItems: jasmine.createSpy('syncItems'),
+    setCurrentContext: jasmine.createSpy('setCurrentContext'),
+    reload: jasmine.createSpy('reload'),
+    getCurrentContext: jasmine.createSpy('getCurrentContext'),
+  };
+  stub.syncItems.and.callFake((items: readonly SdLayoutContext[] | null | undefined) => {
+    const list = items ?? [];
+    stub.items.set(list);
+    if (!stub.current() && list.length) stub.current.set(list[0]);
+  });
+  stub.getCurrentContext.and.callFake(() => stub.current());
+  return stub;
+}
 
 describe('SdSidebarMobileOverlay', () => {
   let fixture: ComponentFixture<SdSidebarMobileOverlay>;
@@ -147,5 +187,104 @@ describe('SdSidebarMobileOverlay', () => {
     routerEvents.next(new NavigationEnd(3, '/reports?year=2026', '/reports?year=2026'));
 
     expect(fresh.componentInstance.currentPath()).toBe('/reports');
+  });
+
+  // -------------------------------------------------------------------------
+  // Context switcher (R-008, D-010): bottom sheet mở từ header drawer. Không có `context` thì
+  // DOM giữ nguyên (INV-001). Các spec trên override template rỗng nên block này dùng template thật.
+  // -------------------------------------------------------------------------
+  describe('context switcher (R-008, AC-011, AC-018)', () => {
+    const contexts: SdLayoutContext[] = [
+      { id: 'hq', title: 'Head Office', subtitle: 'Owner' },
+      { id: 'north', title: 'North Branch', subtitle: 'Manager' },
+    ];
+    let context: ContextServiceStub;
+    let ctxFixture: ComponentFixture<SdSidebarMobileOverlay>;
+
+    const root = () => ctxFixture.nativeElement as HTMLElement;
+    const q = (selector: string) => root().querySelector<HTMLElement>(selector);
+    const switchers = () => ctxFixture.debugElement.queryAll(By.directive(SdLayoutContextSwitcher));
+
+    async function create(options: { sidebar?: object; menus?: SdLayoutMenu[] } = {}) {
+      TestBed.resetTestingModule();
+      context = createContextStub();
+      await TestBed.configureTestingModule({
+        imports: [SdSidebarMobileOverlay, NoopAnimationsModule],
+        providers: [
+          {
+            provide: Router,
+            useValue: {
+              events: new Subject<unknown>(),
+              url: '/reports',
+              navigate: jasmine.createSpy('navigate').and.resolveTo(true),
+            },
+          },
+          { provide: SdLayoutStorageService, useValue: storage },
+          { provide: SdLayoutContextService, useValue: context },
+        ],
+      }).compileComponents();
+
+      ctxFixture = TestBed.createComponent(SdSidebarMobileOverlay);
+      ctxFixture.componentRef.setInput('menus', options.menus ?? menus);
+      ctxFixture.componentRef.setInput('userInfo', { fullName: 'Mobile User' });
+      ctxFixture.componentRef.setInput('sidebar', options.sidebar ?? { version: 1 });
+      ctxFixture.componentRef.setInput('isShowSidebar', true);
+      ctxFixture.detectChanges();
+      await ctxFixture.whenStable();
+      ctxFixture.detectChanges();
+    }
+
+    it('renders the sheet switcher in the drawer header under the title row, anchored to the header', async () => {
+      await create({ sidebar: { version: 1, context: { items: contexts } } });
+      const header = q('.m-header')!;
+      const host = switchers()[0].nativeElement as HTMLElement;
+      const instance = switchers()[0].componentInstance as SdLayoutContextSwitcher;
+
+      expect(switchers().length).toBe(1);
+      expect(instance.appearance()).toBe('sheet');
+      expect(instance.anchor()).toBe(header);
+      expect(host.parentElement).toBe(header);
+      expect(context.syncItems).toHaveBeenCalledWith(contexts);
+
+      const titleGroup = q('.m-title-group')!.getBoundingClientRect();
+      const trigger = q('[data-context-trigger]')!.getBoundingClientRect();
+      expect(trigger.top).toBeGreaterThanOrEqual(titleGroup.bottom - 1);
+      // Nút đóng vẫn cùng hàng với tiêu đề, không bị đẩy xuống dưới switcher.
+      expect(q('.m-close-btn')!.getBoundingClientRect().top).toBeLessThan(titleGroup.bottom);
+    });
+
+    it('keeps Escape inside the context sheet from closing the drawer', async () => {
+      await create({ sidebar: { version: 1, context: { items: contexts } } });
+      const closed = jasmine.createSpy('closed');
+      ctxFixture.componentInstance.showSideBar.subscribe(closed);
+
+      q('[data-context-trigger]')!.click();
+      ctxFixture.detectChanges();
+      await ctxFixture.whenStable();
+
+      const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+      const sheet = overlay.querySelector<HTMLElement>('[data-context-sheet]');
+      expect(sheet).withContext('sheet rendered').not.toBeNull();
+      sheet!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      ctxFixture.detectChanges();
+      await ctxFixture.whenStable();
+
+      expect(closed).not.toHaveBeenCalled();
+    });
+
+    it('renders the drawer as before without context, even for menus with V4-only fields (AC-011, INV-001)', async () => {
+      const v4Menus = [
+        { id: 'work', title: 'Work', section: 'Main', badge: { text: '3' }, status: 'new', comingSoon: true, children: [leaf] },
+      ] as unknown as SdLayoutMenu[];
+      await create({ menus: v4Menus });
+
+      expect(q('sd-layout-context-switcher')).toBeNull();
+      expect(q('[data-context-trigger]')).toBeNull();
+      expect(q('.m-header')!.children.length).toBe(2);
+      expect(q('.m-header--context')).toBeNull();
+      expect(root().querySelector('[class*="badge"], [class*="status"], [class*="coming"]')).toBeNull();
+      expect(root().textContent).not.toContain('Main');
+      expect(context.syncItems).not.toHaveBeenCalled();
+    });
   });
 });

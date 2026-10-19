@@ -1,0 +1,229 @@
+@let _items = items();
+@let _appearance = appearance();
+@let _active = activeItem();
+@let _open = isOpen();
+@let _label = customLabel() ?? ('core.module.layout.context.default-label' | sdTranslate);
+@let _chooseTitle = 'core.module.layout.context.choose-title' | sdTranslate: { label: _label };
+@let _triggerName = (_active?.title ?? '') + ', ' + ('core.module.layout.context.trigger' | sdTranslate: { label: _label });
+@if (_items.length) {
+  @if (!canOpen()) {
+    @if (_appearance === 'rail') {
+      <span
+        data-context-static
+        class="sd-layout-context-switcher__rail-avatar"
+        role="img"
+        [attr.title]="_active?.title"
+        [attr.aria-label]="_active?.title">
+        <ng-container
+          [ngTemplateOutlet]="avatar"
+          [ngTemplateOutletContext]="{ $implicit: _active, initial: activeInitial(), active: true }" />
+        @if (changedElsewhere()) {
+          <span data-context-dot class="sd-layout-context-switcher__dot" aria-hidden="true"></span>
+        }
+      </span>
+    } @else {
+      <span
+        data-context-static
+        class="sd-layout-context-switcher__static"
+        [class.sd-layout-context-switcher__static--sheet]="_appearance === 'sheet'">
+        {{ _active?.title }}
+      </span>
+    }
+  } @else if (_appearance === 'sheet') {
+    <button
+      #trigger
+      data-context-trigger
+      type="button"
+      class="sd-layout-context-switcher__trigger sd-layout-context-switcher__trigger--sheet"
+      aria-haspopup="dialog"
+      [attr.aria-expanded]="_open"
+      [attr.aria-label]="_triggerName"
+      (click)="toggle()">
+      <span class="sd-layout-context-switcher__trigger-title">{{ _active?.title }}</span>
+      <sd-icon name="unfold_more" size="20px"></sd-icon>
+    </button>
+  } @else {
+    <button
+      #trigger
+      data-context-trigger
+      cdkOverlayOrigin
+      #origin="cdkOverlayOrigin"
+      type="button"
+      class="sd-layout-context-switcher__trigger"
+      [class.sd-layout-context-switcher__trigger--header]="_appearance === 'header'"
+      [class.sd-layout-context-switcher__trigger--rail]="_appearance === 'rail'"
+      [class.sd-layout-context-switcher__trigger--open]="_open"
+      aria-haspopup="dialog"
+      [attr.aria-expanded]="_open"
+      [attr.aria-label]="_triggerName"
+      [attr.title]="_appearance === 'rail' ? _active?.title : null"
+      (click)="toggle()">
+      @if (_appearance === 'rail') {
+        <span class="sd-layout-context-switcher__rail-avatar">
+          <ng-container
+            [ngTemplateOutlet]="avatar"
+            [ngTemplateOutletContext]="{ $implicit: _active, initial: activeInitial(), active: true }" />
+          @if (changedElsewhere()) {
+            <span data-context-dot class="sd-layout-context-switcher__dot" aria-hidden="true"></span>
+          }
+        </span>
+      } @else {
+        <span class="sd-layout-context-switcher__trigger-title">{{ _active?.title }}</span>
+        <sd-icon [name]="_open ? openIcon : 'unfold_more'" size="16px"></sd-icon>
+      }
+    </button>
+
+    <ng-template
+      cdkConnectedOverlay
+      [cdkConnectedOverlayOrigin]="popoverOrigin() ?? origin"
+      [cdkConnectedOverlayOpen]="_open"
+      [cdkConnectedOverlayPositions]="positions()"
+      [cdkConnectedOverlayViewportMargin]="8"
+      [cdkConnectedOverlayFlexibleDimensions]="false"
+      [cdkConnectedOverlayPush]="true"
+      [cdkConnectedOverlayHasBackdrop]="true"
+      [cdkConnectedOverlayDisableClose]="true"
+      cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop"
+      (backdropClick)="close(false)">
+      <div
+        data-context-popover
+        class="sd-layout-context-switcher__popover"
+        [class.sd-layout-context-switcher__popover--rail]="_appearance === 'rail'"
+        role="dialog"
+        [attr.aria-label]="_chooseTitle"
+        [style.--sd-layout-context-switcher-popover-width]="popoverWidth()"
+        cdkTrapFocus
+        [cdkTrapFocusAutoCapture]="true"
+        (keydown)="onPanelKeydown($event)">
+        @if (_appearance === 'rail' && changedElsewhere()) {
+          <ng-container [ngTemplateOutlet]="notice" />
+        }
+        <ng-container [ngTemplateOutlet]="list" [ngTemplateOutletContext]="{ $implicit: 'popover' }" />
+      </div>
+    </ng-template>
+  }
+
+  @if (_appearance !== 'rail' && changedElsewhere()) {
+    <ng-container [ngTemplateOutlet]="notice" />
+  }
+}
+
+<ng-template #sheet>
+  <div class="sd-layout-context-switcher__sheet-layer">
+    <div class="sd-layout-context-switcher__sheet-backdrop" aria-hidden="true" (click)="close()"></div>
+    <div
+      data-context-sheet
+      class="sd-layout-context-switcher__sheet"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-labelledby]="sheetTitleId"
+      cdkTrapFocus
+      [cdkTrapFocusAutoCapture]="true"
+      (keydown)="onPanelKeydown($event)">
+      <span class="sd-layout-context-switcher__handle" aria-hidden="true"></span>
+      <div class="sd-layout-context-switcher__sheet-header">
+        <h2 class="sd-layout-context-switcher__sheet-title" [id]="sheetTitleId">{{ _chooseTitle }}</h2>
+        <button
+          data-context-close
+          type="button"
+          class="sd-layout-context-switcher__close"
+          [attr.aria-label]="'core.common.close' | sdTranslate"
+          (click)="close()">
+          <sd-icon name="close" size="22px"></sd-icon>
+        </button>
+      </div>
+      <ng-container [ngTemplateOutlet]="list" [ngTemplateOutletContext]="{ $implicit: 'sheet' }" />
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #list let-variant>
+  @let _sheet = variant === 'sheet';
+  @let _switching = isSwitching();
+  @if (searchable()) {
+    @let _placeholder = 'core.module.layout.context.search-placeholder' | sdTranslate: { label: _label };
+    <label data-context-search class="sd-layout-context-switcher__search">
+      <sd-icon name="search" size="20px"></sd-icon>
+      <input
+        type="search"
+        class="sd-layout-context-switcher__search-input"
+        cdkFocusInitial
+        autocomplete="off"
+        [value]="query()"
+        [attr.placeholder]="_placeholder"
+        [attr.aria-label]="_placeholder"
+        (input)="onSearch($event)" />
+    </label>
+  }
+  @if (!_sheet) {
+    <div data-context-label class="sd-layout-context-switcher__label">{{ _label }} · {{ _items.length }}</div>
+  }
+  @if (switchFailed()) {
+    <div data-context-error class="sd-layout-context-switcher__error" role="alert">
+      {{ 'core.module.layout.context.switch-failed' | sdTranslate }}
+    </div>
+  }
+  <div class="sd-layout-context-switcher__list">
+    @for (row of rows(); track row.item.id) {
+      @let _highlighted = row.busy || (row.active && !_switching);
+      <button
+        data-context-row
+        type="button"
+        class="sd-layout-context-switcher__row"
+        [class.sd-layout-context-switcher__row--sheet]="_sheet"
+        [class.sd-layout-context-switcher__row--active]="row.active && !_switching"
+        [class.sd-layout-context-switcher__row--busy]="row.busy"
+        [attr.aria-current]="row.active ? 'true' : null"
+        [attr.aria-busy]="row.busy ? 'true' : null"
+        [attr.cdkFocusInitial]="row.active && !searchable() ? '' : null"
+        [disabled]="row.disabled"
+        (click)="select(row)">
+        <ng-container
+          [ngTemplateOutlet]="avatar"
+          [ngTemplateOutletContext]="{ $implicit: row.item, initial: row.initial, active: _highlighted, large: _sheet }" />
+        <span class="sd-layout-context-switcher__row-text">
+          <span data-context-row-title class="sd-layout-context-switcher__row-title">{{ row.item.title }}</span>
+          @if (row.busy) {
+            <span data-context-row-subtitle class="sd-layout-context-switcher__row-subtitle">
+              {{ 'core.module.layout.context.switching' | sdTranslate }}
+            </span>
+          } @else if (row.item.subtitle) {
+            <span data-context-row-subtitle class="sd-layout-context-switcher__row-subtitle">{{ row.item.subtitle }}</span>
+          }
+        </span>
+        @if (row.busy) {
+          <sd-icon
+            class="sd-layout-context-switcher__row-icon sd-layout-context-switcher__spinner"
+            name="refresh"
+            [size]="_sheet ? '22px' : '20px'"></sd-icon>
+        } @else if (row.active && !_switching) {
+          <sd-icon class="sd-layout-context-switcher__row-icon" name="check" [size]="_sheet ? '22px' : '20px'"></sd-icon>
+        }
+      </button>
+    }
+  </div>
+</ng-template>
+
+<ng-template #avatar let-item let-initial="initial" let-active="active" let-large="large">
+  <span
+    data-context-avatar
+    class="sd-layout-context-switcher__avatar"
+    [class.sd-layout-context-switcher__avatar--active]="active"
+    [class.sd-layout-context-switcher__avatar--large]="large"
+    aria-hidden="true">
+    @if (showAvatarImage(item)) {
+      <img [src]="item.avatar" alt="" (error)="onAvatarError(item.avatar)" />
+    } @else {
+      {{ initial }}
+    }
+  </span>
+</ng-template>
+
+<ng-template #notice>
+  <div data-context-notice class="sd-layout-context-switcher__notice" role="status">
+    <span class="sd-layout-context-switcher__notice-text">{{ 'core.module.layout.context.changed-elsewhere' | sdTranslate }}</span>
+    <button data-context-reload type="button" class="sd-layout-context-switcher__notice-action" (click)="reload()">
+      {{ 'core.common.reload' | sdTranslate }}
+    </button>
+  </div>
+</ng-template>

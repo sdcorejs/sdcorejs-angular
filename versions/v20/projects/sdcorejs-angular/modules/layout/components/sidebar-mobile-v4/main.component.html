@@ -1,0 +1,237 @@
+@let _open = isDrawerOpen();
+@let _configuration = configuration();
+@let _destinations = destinations();
+@let _searchLabel = 'core.module.layout.sidebar.v4-search-placeholder' | sdTranslate;
+@let _navLabel = 'core.module.layout.sidebar.primary-nav' | sdTranslate;
+<header data-v4m-appbar class="sd-sidebar-mobile-v4__appbar">
+  <button
+    #trigger
+    type="button"
+    data-v4m-menu-trigger
+    class="sd-sidebar-mobile-v4__icon-button sd-sidebar-mobile-v4__icon-button--appbar"
+    aria-haspopup="dialog"
+    [attr.aria-label]="'core.module.layout.sidebar.open-menu' | sdTranslate"
+    [attr.aria-expanded]="_open"
+    (click)="openDrawer($event.currentTarget)">
+    <sd-icon name="menu" size="24px"></sd-icon>
+  </button>
+  <span data-v4m-appbar-title class="sd-sidebar-mobile-v4__appbar-title">{{ title() }}</span>
+  <button
+    type="button"
+    data-v4m-search-trigger
+    class="sd-sidebar-mobile-v4__icon-button sd-sidebar-mobile-v4__icon-button--appbar"
+    aria-haspopup="dialog"
+    [attr.aria-label]="_searchLabel"
+    (click)="openSearch($event.currentTarget)">
+    <sd-icon name="search" size="22px"></sd-icon>
+  </button>
+  @let _displayName = displayName();
+  <span
+    data-v4m-avatar
+    class="sd-sidebar-mobile-v4__avatar"
+    [attr.role]="_displayName ? 'img' : null"
+    [attr.aria-label]="_displayName || null"
+    [attr.aria-hidden]="_displayName ? null : 'true'"
+    >{{ userInitials() }}</span
+  >
+</header>
+
+<main data-v4m-content class="sd-sidebar-mobile-v4__content">
+  <ng-content></ng-content>
+</main>
+
+@if (_destinations.length) {
+  <nav data-v4m-bottom-bar class="sd-sidebar-mobile-v4__bottom-bar" [attr.aria-label]="_navLabel">
+    @for (item of _destinations; track item.key) {
+      <button
+        #destinationButton
+        type="button"
+        class="sd-sidebar-mobile-v4__destination"
+        [class.sd-sidebar-mobile-v4__destination--active]="item.isActive"
+        [class.sd-sidebar-mobile-v4__destination--disabled]="item.disabled"
+        [attr.data-v4m-destination]="item.key"
+        [attr.aria-current]="item.isActive ? (item.isGroup ? 'true' : 'page') : null"
+        [attr.aria-disabled]="item.disabled || null"
+        [attr.aria-haspopup]="item.isGroup && !item.disabled ? 'dialog' : null"
+        [attr.aria-describedby]="item.badge || item.liveTone ? item.descriptionId : null"
+        (click)="activateDestination(item, destinationButton)">
+        <span data-v4m-indicator class="sd-sidebar-mobile-v4__indicator">
+          @if (item.menu.iconUrl) {
+            <img class="sd-sidebar-mobile-v4__destination-image" [src]="item.menu.iconUrl" alt="" />
+          } @else {
+            <sd-icon
+              [name]="item.menu.icon || (item.isGroup ? 'folder' : 'chevron_right')"
+              [fontSet]="item.isActive ? 'material-icons' : 'material-icons-outlined'"
+              size="22px"></sd-icon>
+          }
+          @if (item.badge) {
+            <span
+              data-v4m-badge
+              class="sd-sidebar-mobile-v4__badge"
+              [class.sd-sidebar-mobile-v4__badge--error]="item.badge.tone === 'error'"
+              aria-hidden="true">
+              {{ item.badge.value }}
+            </span>
+          } @else if (item.liveTone) {
+            <span data-v4m-live class="sd-sidebar-mobile-v4__live" [attr.data-tone]="item.liveTone" aria-hidden="true"></span>
+          }
+        </span>
+        <span data-v4m-label class="sd-sidebar-mobile-v4__label">{{ item.label }}</span>
+        @if (item.badge) {
+          <span hidden [id]="item.descriptionId">{{
+            'core.module.layout.sidebar.badge-pending' | sdTranslate: { count: item.badge.value }
+          }}</span>
+        } @else if (item.liveTone) {
+          <span hidden [id]="item.descriptionId">{{ item.liveLabel }}</span>
+        }
+      </button>
+    }
+    <button
+      type="button"
+      data-v4m-more
+      class="sd-sidebar-mobile-v4__destination"
+      aria-haspopup="dialog"
+      [attr.aria-expanded]="_open"
+      (click)="openDrawer($event.currentTarget)">
+      <span data-v4m-indicator class="sd-sidebar-mobile-v4__indicator">
+        <sd-icon name="menu" size="22px"></sd-icon>
+      </span>
+      <span data-v4m-label class="sd-sidebar-mobile-v4__label">{{ 'core.module.layout.sidebar.more' | sdTranslate }}</span>
+    </button>
+  </nav>
+}
+
+@if (_open) {
+  @let _query = searchText();
+  @let _hasQuery = hasQuery();
+  @let _focused = focusedResultIndex();
+  @let _hasResults = _focused >= 0;
+  @let _pinned = pinnedMenus();
+  @let _recent = recentMenus();
+  @let _showPinned = !_hasQuery && _pinned.length > 0;
+  @let _showRecent = !_hasQuery && recentConfiguration().enabled && _recent.length > 0;
+  <button
+    type="button"
+    data-v4m-backdrop
+    class="sd-sidebar-mobile-v4__backdrop"
+    [attr.aria-label]="'core.module.layout.sidebar.close-menu' | sdTranslate"
+    (click)="closeFromBackdrop()"></button>
+  <aside
+    data-v4m-drawer
+    class="sd-sidebar-mobile-v4__drawer"
+    role="dialog"
+    aria-modal="true"
+    tabindex="-1"
+    [attr.aria-labelledby]="titleId"
+    cdkTrapFocus
+    [cdkTrapFocusAutoCapture]="true"
+    (keydown)="onDrawerKeydown($event)">
+    <header data-v4m-header class="sd-sidebar-mobile-v4__header">
+      <span class="sd-sidebar-mobile-v4__logo" [class.sd-sidebar-mobile-v4__logo--image]="!!_configuration.logoUrl" aria-hidden="true">
+        @if (_configuration.logoUrl) {
+          <img [src]="_configuration.logoUrl" alt="" />
+        } @else {
+          {{ logoInitial() }}
+        }
+      </span>
+      <div class="sd-sidebar-mobile-v4__brand">
+        <span data-v4m-drawer-title class="sd-sidebar-mobile-v4__title" [id]="titleId">{{ title() }}</span>
+        @if (_configuration.context) {
+          <sd-layout-context-switcher appearance="sheet" [configuration]="_configuration.context" />
+        }
+      </div>
+      <button
+        type="button"
+        data-v4m-close
+        class="sd-sidebar-mobile-v4__icon-button"
+        [attr.aria-label]="'core.common.close' | sdTranslate"
+        (click)="closeFromBackdrop()">
+        <sd-icon name="close" size="22px"></sd-icon>
+      </button>
+    </header>
+
+    <div data-v4m-search class="sd-sidebar-mobile-v4__search">
+      <div data-v4m-search-field class="sd-sidebar-mobile-v4__search-field" [class.sd-sidebar-mobile-v4__search-field--filled]="!!_query">
+        <sd-icon class="sd-sidebar-mobile-v4__search-icon" name="search" size="20px" aria-hidden="true"></sd-icon>
+        <input
+          #searchInput
+          data-v4m-search-input
+          class="sd-sidebar-mobile-v4__search-input"
+          type="text"
+          role="combobox"
+          autocomplete="off"
+          spellcheck="false"
+          aria-autocomplete="list"
+          [attr.cdkFocusInitial]="focusSearchOnOpen() ? '' : null"
+          [attr.aria-label]="_searchLabel"
+          [attr.placeholder]="_searchLabel"
+          [attr.aria-expanded]="_hasResults"
+          [attr.aria-controls]="_hasResults ? mainTree.resultsId : null"
+          [attr.aria-activedescendant]="_hasResults ? mainTree.resultOptionId(_focused) : null"
+          [value]="_query"
+          (input)="onSearchInput($event)"
+          (keydown)="onSearchKeydown($event)" />
+        @if (_query) {
+          <button
+            type="button"
+            data-v4m-search-clear
+            class="sd-sidebar-mobile-v4__search-clear"
+            [attr.aria-label]="'core.module.layout.sidebar.clear-search' | sdTranslate"
+            (click)="clearSearch()">
+            <sd-icon name="close" size="18px"></sd-icon>
+          </button>
+        }
+      </div>
+    </div>
+
+    <nav #list data-v4m-nav class="sd-sidebar-mobile-v4__list" [attr.aria-label]="'core.module.layout.sidebar.all-menu' | sdTranslate">
+      @if (_showPinned) {
+        <section data-v4m-pinned class="sd-sidebar-mobile-v4__shortcuts">
+          <h2 class="sd-sidebar-mobile-v4__section-label">{{ 'core.module.layout.sidebar.pinned' | sdTranslate }}</h2>
+          <sd-sidebar-v4-menu-tree
+            presentation="shortcuts"
+            mode="mobile"
+            [menus]="_pinned"
+            [pathSource]="menus()"
+            [activePath]="activePath()"
+            [pinnedKeys]="pinnedKeys()"
+            (navigate)="navigateMenu($event)"
+            (togglePinned)="onTogglePinned($event)" />
+        </section>
+      }
+      @if (_showRecent) {
+        <section data-v4m-recent class="sd-sidebar-mobile-v4__shortcuts">
+          <h2 class="sd-sidebar-mobile-v4__section-label">{{ 'core.module.layout.sidebar.recent' | sdTranslate }}</h2>
+          <sd-sidebar-v4-menu-tree
+            presentation="shortcuts"
+            mode="mobile"
+            [menus]="_recent"
+            [pathSource]="menus()"
+            [activePath]="activePath()"
+            [showPin]="false"
+            (navigate)="navigateMenu($event)" />
+        </section>
+      }
+      <!-- One tree instance for hierarchy and results: its live region must stay mounted to announce result counts. -->
+      <sd-sidebar-v4-menu-tree
+        #mainTree
+        data-v4m-tree
+        mode="mobile"
+        [class.sd-sidebar-mobile-v4__tree--separated]="(_showPinned || _showRecent) && leadsWithUnsectioned()"
+        [menus]="menus()"
+        [pathSource]="menus()"
+        [activePath]="activePath()"
+        [presentation]="_hasQuery ? 'results' : 'hierarchy'"
+        [(collapsedGroupKeys)]="collapsedGroupKeys"
+        [pinnedKeys]="pinnedKeys()"
+        [query]="_query"
+        [focusedIndex]="_focused"
+        (navigate)="navigateMenu($event)"
+        (togglePinned)="onTogglePinned($event)" />
+    </nav>
+
+    <div data-v4m-footer class="sd-sidebar-mobile-v4__footer">
+      <sd-layout-user-menu [userInfo]="userInfo()"></sd-layout-user-menu>
+    </div>
+  </aside>
+}

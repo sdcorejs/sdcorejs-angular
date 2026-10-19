@@ -46,13 +46,14 @@ interface NormalizedStorageOption {
   serializer: SdPersistenceSerializer;
 }
 
-interface StorageHandleOperations<T> {
-  get: () => T | undefined;
+interface StorageHandleOperations<T, TRead extends T | undefined> {
+  get: () => TRead;
   set: (data: T) => void;
   setSilent: (data: T) => void;
   has: () => boolean;
   remove: () => void;
   destroy: () => void;
+  refresh: () => TRead;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -109,17 +110,19 @@ export class SdStorageService {
 
   #createOptionalHandle<T>(state: StorageState, normalized: NormalizedStorageOption): SdStorage<T> {
     const read = (): T | undefined => this.#readOptional<T>(state, normalized);
+    const project = (entry: StorageEntry | undefined): T | undefined => this.#projectOptional<T>(normalized, entry);
     const subject = new BehaviorSubject<T | undefined>(read());
     const facade: StorageHandleFacade = {
       emit: (present, value) => subject.next(present ? this.#cloneAs<T>(normalized.serializer, value) : undefined),
       complete: () => subject.complete(),
     };
-    const operations = this.#attachHandle(state, normalized, facade, read);
+    const operations = this.#attachHandle<T, T | undefined>(state, normalized, facade, read, project);
     return { ...operations, subject, observer: subject.asObservable() };
   }
 
   #createDefaultHandle<T>(state: StorageState, normalized: NormalizedStorageOption, defaultSnapshot: T): SdStorageWithDefault<T> {
     const read = (): T => this.#readWithDefault(state, normalized, defaultSnapshot);
+    const project = (entry: StorageEntry | undefined): T => this.#projectWithDefault(normalized, entry, defaultSnapshot);
     const subject = new BehaviorSubject<T>(read());
     const facade: StorageHandleFacade = {
       emit: (present, value) => {
@@ -128,22 +131,23 @@ export class SdStorageService {
       },
       complete: () => subject.complete(),
     };
-    const operations = this.#attachHandle(state, normalized, facade, read);
+    const operations = this.#attachHandle<T, T>(state, normalized, facade, read, project);
     return { ...operations, get: read, subject, observer: subject.asObservable() };
   }
 
-  #attachHandle<T>(
+  #attachHandle<T, TRead extends T | undefined>(
     state: StorageState,
     normalized: NormalizedStorageOption,
     facade: StorageHandleFacade,
-    read: () => T | undefined
-  ): StorageHandleOperations<T> {
+    read: () => TRead,
+    project: (entry: StorageEntry | undefined) => TRead
+  ): StorageHandleOperations<T, TRead> {
     state.handles.add(facade);
     let active = true;
     const assertActive = (): void => {
       if (!active || state.disposed || this.#destroyed) throw new Error('Storage handle has been destroyed');
     };
-    const get = (): T | undefined => {
+    const get = (): TRead => {
       assertActive();
       return read();
     };
@@ -178,7 +182,13 @@ export class SdStorageService {
       state.entry = undefined;
       this.#states.delete(normalized.ownerDigest);
     };
-    return { get, set, setSilent, has, remove, destroy };
+    const refresh = (): TRead => {
+      assertActive();
+      // why: trả từ đúng snapshot vừa dùng để quyết định broadcast; gọi read() sẽ đọc adapter lần hai khi
+      // lần đầu 'unavailable', có thể trả giá trị khác thứ observer vừa nhận.
+      return project(this.#refreshState(state, normalized));
+    };
+    return { get, set, setSilent, has, remove, destroy, refresh };
   }
 
   #normalize<T>(key: string | object, option: SdStorageOption<T>): NormalizedStorageOption {
@@ -255,12 +265,18 @@ export class SdStorageService {
   }
 
   #readOptional<T>(state: StorageState, normalized: NormalizedStorageOption): T | undefined {
-    const entry = this.#ensureEntry(state, normalized);
-    return entry ? this.#cloneAs<T>(normalized.serializer, entry.data) : undefined;
+    return this.#projectOptional<T>(normalized, this.#ensureEntry(state, normalized));
   }
 
   #readWithDefault<T>(state: StorageState, normalized: NormalizedStorageOption, defaultSnapshot: T): T {
-    const entry = this.#ensureEntry(state, normalized);
+    return this.#projectWithDefault(normalized, this.#ensureEntry(state, normalized), defaultSnapshot);
+  }
+
+  #projectOptional<T>(normalized: NormalizedStorageOption, entry: StorageEntry | undefined): T | undefined {
+    return entry ? this.#cloneAs<T>(normalized.serializer, entry.data) : undefined;
+  }
+
+  #projectWithDefault<T>(normalized: NormalizedStorageOption, entry: StorageEntry | undefined, defaultSnapshot: T): T {
     return entry ? this.#cloneAs<T>(normalized.serializer, entry.data) : this.#cloneAs<T>(normalized.serializer, defaultSnapshot);
   }
 
@@ -275,6 +291,26 @@ export class SdStorageService {
     const read = this.#readEntry(normalized);
     state.entry = read.status === 'found' ? read.entry : undefined;
     state.hydrated = read.status !== 'unavailable';
+  }
+
+  #refreshState(state: StorageState, normalized: NormalizedStorageOption): StorageEntry | undefined {
+    const previous = state.entry;
+    // why: đi đúng đường hydrate lần đầu, nên owner đã ghi lỗi (read 'unavailable') bị coi là vắng —
+    // giá trị chỉ còn trong bộ nhớ không được báo như đã lưu.
+    this.#hydrateState(state, normalized);
+    if (!this.#sameEntryData(normalized.serializer, previous, state.entry)) this.#broadcast(state);
+    return state.entry;
+  }
+
+  #sameEntryData(serializer: SdPersistenceSerializer, left: StorageEntry | undefined, right: StorageEntry | undefined): boolean {
+    if (left === undefined || right === undefined) return left === right;
+    // why: so dạng serialize của data (bỏ createdOn) thay vì tham chiếu — tab khác ghi lại cùng giá trị
+    // thì không phát lại; serializer không tất định (vd IV ngẫu nhiên) chỉ gây phát thừa, không mất thông báo.
+    try {
+      return this.#stringifyData(serializer, left.data) === this.#stringifyData(serializer, right.data);
+    } catch {
+      return false;
+    }
   }
 
   #broadcast(state: StorageState): void {
@@ -412,8 +448,12 @@ export class SdStorageService {
   }
 
   #cloneAs<T>(serializer: SdPersistenceSerializer, value: unknown): T {
-    const entry = serializer.parse<{ data: T; createdOn: Date }>(serializer.stringify({ data: value, createdOn: new Date(0) }));
+    const entry = serializer.parse<{ data: T; createdOn: Date }>(this.#stringifyData(serializer, value));
     return entry.data;
+  }
+
+  #stringifyData(serializer: SdPersistenceSerializer, value: unknown): string {
+    return serializer.stringify({ data: value, createdOn: new Date(0) });
   }
 
   #isRecord(value: unknown): value is Record<string, unknown> {

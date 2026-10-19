@@ -25,7 +25,7 @@ describe('documentation registry', () => {
     for (const category of DOC_CATEGORIES) {
       expect(getDocPagesByCategory(category)).withContext(category).toHaveSize(EXPECTED_CATEGORY_COUNTS[category]);
     }
-    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(414);
+    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(416);
   });
 
   it('uses unique stable page ids and category/slug pairs', () => {
@@ -47,7 +47,7 @@ describe('documentation registry', () => {
     const exampleIds = DOC_PAGES.flatMap(page => page.examples.map(example => example.id));
 
     expect(new Set(exampleIds).size).toBe(exampleIds.length);
-    expect(exampleIds).toHaveSize(414);
+    expect(exampleIds).toHaveSize(416);
     expect(exampleIds).toContain('forms-segmented-example-types');
     const switchSections = findDocPage('forms', 'switch')?.examples.map(example => example.sectionId);
     expect(switchSections).toContain('example-kich-thuoc');
@@ -164,7 +164,14 @@ describe('documentation registry', () => {
     const layoutPage = findDocPage('modules-integrations', 'layout');
 
     expect(layoutPage?.sourcePath).toBe('showcase/src/app/pages/modules/layout/layout-demo.component.ts');
-    expect(layoutPage?.demoSectionCount).toBe(3);
+    expect(layoutPage?.demoSectionCount).toBe(5);
+    expect(layoutPage?.examples.map(example => example.sectionId)).toEqual([
+      'example-sidebar-v1-classic',
+      'example-sidebar-v2-rail',
+      'example-sidebar-v3-collapsible',
+      'example-sidebar-v4-navigation',
+      'example-sidebar-v4-graphite',
+    ]);
     expect((await layoutPage?.examples[0]?.loadComponent())?.name).toBe('LayoutDemoComponent');
   });
 });

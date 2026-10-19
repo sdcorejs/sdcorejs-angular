@@ -8,3 +8,6 @@ export * from './sidebar-v2/main.component';
 export * from './sidebar-mobile-v2/main.component';
 export * from './sidebar-v3/main.component';
 export * from './sidebar-mobile-v3/main.component';
+export * from './sidebar-v4/main.component';
+export * from './sidebar-mobile-v4/main.component';
+export * from './shared/context-switcher/context-switcher.component';

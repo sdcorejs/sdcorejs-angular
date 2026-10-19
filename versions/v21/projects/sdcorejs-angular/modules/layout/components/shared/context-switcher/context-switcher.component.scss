@@ -1,0 +1,555 @@
+// why: màu chỉ đi qua token theme (D-028) — không đọc brandColor, không hex. Trung tính của mock map về
+// color-mix trên --sd-text / --sd-surface; hover dùng chung một công thức cho trigger và row.
+:host {
+  --sd-layout-context-switcher-hover-bg: color-mix(in srgb, var(--sd-text) 6%, transparent);
+  --sd-layout-context-switcher-muted-ink: color-mix(in srgb, var(--sd-text) 60%, transparent);
+  display: block;
+  min-width: 0;
+  color: var(--sd-text);
+}
+
+:host(.sd-layout-context-switcher--rail) {
+  display: flex;
+  justify-content: center;
+}
+
+// why: popover và sheet được render trong overlay container của CDK, nằm ngoài :host — biến dùng chung phải
+// khai lại trên chính bề mặt overlay.
+.sd-layout-context-switcher__popover,
+.sd-layout-context-switcher__sheet {
+  --sd-layout-context-switcher-hover-bg: color-mix(in srgb, var(--sd-text) 6%, transparent);
+  --sd-layout-context-switcher-muted-ink: color-mix(in srgb, var(--sd-text) 60%, transparent);
+}
+
+// Triggers -------------------------------------------------------------------------------------------------
+
+.sd-layout-context-switcher__trigger {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--sd-duration-fast, 120ms) ease;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--sd-focus-ring-color, var(--sd-primary));
+  }
+}
+
+// CS1 trigger: dòng phụ dưới tên app; padding âm để chữ thẳng hàng với tên app.
+.sd-layout-context-switcher__trigger--header {
+  gap: 2px;
+  margin-inline-start: -6px;
+  padding: 2px 4px 2px 6px;
+  border-radius: var(--sd-radius-12, 12px);
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: var(--sd-line-height-16, 16px);
+
+  &:hover,
+  &.sd-layout-context-switcher__trigger--open {
+    background: var(--sd-layout-context-switcher-hover-bg);
+  }
+}
+
+.sd-layout-context-switcher__trigger--sheet {
+  justify-content: space-between;
+  gap: var(--sd-space-8, 8px);
+  width: 100%;
+  min-height: 44px;
+  padding: 0 var(--sd-space-12, 12px);
+  border-radius: var(--sd-radius-999, 999px);
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-14, 14px);
+  line-height: var(--sd-line-height-20, 20px);
+
+  &:hover {
+    background: var(--sd-layout-context-switcher-hover-bg);
+  }
+}
+
+.sd-layout-context-switcher__trigger-title,
+.sd-layout-context-switcher__static {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sd-layout-context-switcher__static {
+  display: block;
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: var(--sd-line-height-16, 16px);
+}
+
+.sd-layout-context-switcher__static--sheet {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--sd-space-12, 12px);
+  font-size: var(--sd-font-size-14, 14px);
+  line-height: var(--sd-line-height-20, 20px);
+}
+
+// Rail: avatar 28×28 ở đầu rail; nút dùng outline vì ring inset bị ảnh avatar che mất.
+// why: kích thước cố định — host co theo nội dung (cột align-items: center của V2/V4) chỉ rộng 28px, nên
+// `max-width: 100%`/co flex của trigger gốc sẽ ép vùng chạm 44px (pointer thô) về 28px.
+.sd-layout-context-switcher__trigger--rail {
+  flex: none;
+  justify-content: center;
+  width: 28px;
+  max-width: none;
+  height: 28px;
+  border-radius: var(--sd-radius-8, 8px);
+
+  &:focus-visible {
+    outline: 2px solid var(--sd-focus-ring-color, var(--sd-primary));
+    outline-offset: 2px;
+    box-shadow: none;
+  }
+}
+
+.sd-layout-context-switcher__rail-avatar {
+  position: relative;
+  display: inline-flex;
+}
+
+.sd-layout-context-switcher__dot {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--sd-radius-999, 999px);
+  background: var(--sd-primary);
+  // why: viền tách chấm khỏi avatar phải cùng màu nền rail — sidebar có nền khác surface (V4 xám) đặt hook này
+  // trên phần tử bao; mặc định là surface.
+  box-shadow: 0 0 0 2px var(--sd-layout-context-switcher-dot-ring-color, var(--sd-surface));
+}
+
+// Avatar ---------------------------------------------------------------------------------------------------
+
+.sd-layout-context-switcher__avatar {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  overflow: hidden;
+  border-radius: var(--sd-radius-8, 8px);
+  background: color-mix(in srgb, var(--sd-text) 10%, var(--sd-surface));
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-11, 11px);
+  font-weight: var(--sd-font-weight-medium, 500);
+  line-height: 1;
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.sd-layout-context-switcher__avatar--active {
+  background: var(--sd-primary);
+  color: var(--sd-primary-contrast);
+}
+
+.sd-layout-context-switcher__avatar--large {
+  width: 32px;
+  height: 32px;
+  font-size: var(--sd-font-size-12, 12px);
+}
+
+// Popover (CS1) --------------------------------------------------------------------------------------------
+
+.sd-layout-context-switcher__popover {
+  box-sizing: border-box;
+  width: var(--sd-layout-context-switcher-popover-width, min(256px, calc(100vw - 32px)));
+  padding: var(--sd-space-8, 8px);
+  border: 1px solid color-mix(in srgb, var(--sd-border) 45%, var(--sd-surface));
+  border-radius: var(--sd-radius-16, 16px);
+  background: var(--sd-surface);
+  color: var(--sd-text);
+  box-shadow: 0 6px 24px color-mix(in srgb, var(--sd-text) 14%, transparent);
+}
+
+.sd-layout-context-switcher__popover--rail {
+  width: 232px;
+}
+
+.sd-layout-context-switcher__search {
+  display: flex;
+  align-items: center;
+  gap: var(--sd-space-8, 8px);
+  height: 36px;
+  padding: 0 var(--sd-space-12, 12px);
+  border-radius: var(--sd-radius-999, 999px);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sd-border) 55%, var(--sd-surface));
+  color: var(--sd-text-secondary);
+  cursor: text;
+
+  &:focus-within {
+    box-shadow: inset 0 0 0 2px var(--sd-focus-ring-color, var(--sd-primary));
+  }
+}
+
+.sd-layout-context-switcher__search-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--sd-text);
+  font: inherit;
+  font-size: var(--sd-font-size-13, 13px);
+  appearance: none;
+
+  &::-webkit-search-decoration {
+    appearance: none;
+  }
+
+  &::placeholder {
+    color: var(--sd-layout-context-switcher-muted-ink);
+  }
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+.sd-layout-context-switcher__label {
+  padding: 10px var(--sd-space-12, 12px) var(--sd-space-4, 4px);
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-11, 11px);
+  font-weight: var(--sd-font-weight-medium, 500);
+  line-height: var(--sd-line-height-16, 16px);
+  letter-spacing: 0.3px;
+
+  &:first-child {
+    padding-top: var(--sd-space-6, 6px);
+  }
+}
+
+.sd-layout-context-switcher__error {
+  margin: var(--sd-space-4, 4px) var(--sd-space-12, 12px);
+  color: var(--sd-error);
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: var(--sd-line-height-16, 16px);
+}
+
+// why: tối đa 7 row (7 × 48px) — nhiều hơn thì search tự bật, phần còn lại cuộn.
+.sd-layout-context-switcher__list {
+  display: flex;
+  flex-direction: column;
+  max-height: 336px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+// Rows -----------------------------------------------------------------------------------------------------
+
+.sd-layout-context-switcher__row {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--sd-space-12, 12px);
+  width: 100%;
+  min-height: 48px;
+  margin: 0;
+  padding: 0 var(--sd-space-12, 12px);
+  border: 0;
+  border-radius: var(--sd-radius-999, 999px);
+  background: transparent;
+  color: var(--sd-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--sd-duration-fast, 120ms) ease;
+
+  &:hover:not(:disabled) {
+    background: var(--sd-layout-context-switcher-hover-bg);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--sd-focus-ring-color, var(--sd-primary));
+  }
+
+  &:disabled {
+    color: var(--sd-layout-context-switcher-muted-ink);
+    cursor: default;
+
+    .sd-layout-context-switcher__avatar {
+      background: color-mix(in srgb, var(--sd-text) 6%, var(--sd-surface));
+      color: var(--sd-layout-context-switcher-muted-ink);
+    }
+
+    .sd-layout-context-switcher__row-subtitle {
+      color: inherit;
+    }
+  }
+}
+
+.sd-layout-context-switcher__row--active,
+.sd-layout-context-switcher__row--busy {
+  &,
+  &:hover:not(:disabled) {
+    background: var(--sd-primary-light);
+  }
+
+  .sd-layout-context-switcher__row-title {
+    color: var(--sd-primary);
+    font-weight: var(--sd-font-weight-medium, 500);
+  }
+}
+
+.sd-layout-context-switcher__row--busy {
+  cursor: progress;
+}
+
+.sd-layout-context-switcher__row-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sd-layout-context-switcher__row-title,
+.sd-layout-context-switcher__row-subtitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sd-layout-context-switcher__row-title {
+  font-size: var(--sd-font-size-13, 13px);
+  line-height: var(--sd-line-height-18, 18px);
+}
+
+.sd-layout-context-switcher__row-subtitle {
+  color: var(--sd-text-secondary);
+  font-size: 11.5px;
+  line-height: var(--sd-line-height-16, 16px);
+}
+
+.sd-layout-context-switcher__row-icon {
+  color: var(--sd-primary);
+}
+
+.sd-layout-context-switcher__spinner {
+  animation: sd-layout-context-switcher-spin 1s linear infinite;
+}
+
+@keyframes sd-layout-context-switcher-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// CS3: row 56px, avatar 32px, title 14px, subtitle 12px.
+.sd-layout-context-switcher__row--sheet {
+  gap: 14px;
+  min-height: 56px;
+  padding: 0 var(--sd-space-16, 16px);
+
+  .sd-layout-context-switcher__row-title {
+    font-size: var(--sd-font-size-14, 14px);
+    line-height: var(--sd-line-height-20, 20px);
+  }
+
+  .sd-layout-context-switcher__row-subtitle {
+    font-size: var(--sd-font-size-12, 12px);
+  }
+}
+
+// Changed in another tab (R-009) ---------------------------------------------------------------------------
+
+.sd-layout-context-switcher__notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sd-space-4, 4px) var(--sd-space-8, 8px);
+  margin-top: var(--sd-space-6, 6px);
+  padding: var(--sd-space-6, 6px) var(--sd-space-6, 6px) var(--sd-space-6, 6px) var(--sd-space-10, 10px);
+  border-radius: var(--sd-radius-12, 12px);
+  background: var(--sd-primary-light);
+  color: var(--sd-text);
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: var(--sd-line-height-16, 16px);
+
+  .sd-layout-context-switcher__popover > &:first-child {
+    margin: 0 0 var(--sd-space-6, 6px);
+  }
+}
+
+.sd-layout-context-switcher__notice-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sd-layout-context-switcher__notice-action {
+  min-height: 28px;
+  padding: 0 var(--sd-space-10, 10px);
+  border: 0;
+  border-radius: var(--sd-radius-999, 999px);
+  background: transparent;
+  color: var(--sd-primary);
+  font: inherit;
+  font-weight: var(--sd-font-weight-medium, 500);
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--sd-primary) 10%, transparent);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--sd-focus-ring-color, var(--sd-primary));
+  }
+}
+
+// Bottom sheet (CS3, D-027) --------------------------------------------------------------------------------
+
+.sd-layout-context-switcher__sheet-layer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  width: 100%;
+  height: 100%;
+}
+
+.sd-layout-context-switcher__sheet-backdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--sd-overlay-backdrop, color-mix(in srgb, var(--sd-text) 40%, transparent));
+}
+
+.sd-layout-context-switcher__sheet {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  max-height: 85dvh;
+  padding: var(--sd-space-8, 8px) var(--sd-space-8, 8px) calc(28px + env(safe-area-inset-bottom, 0px));
+  border-radius: 28px 28px 0 0;
+  background: var(--sd-surface);
+  color: var(--sd-text);
+
+  .sd-layout-context-switcher__search {
+    flex: none;
+    margin: 0 var(--sd-space-8, 8px) var(--sd-space-8, 8px);
+  }
+
+  .sd-layout-context-switcher__list {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+  }
+}
+
+.sd-layout-context-switcher__handle {
+  flex: none;
+  align-self: center;
+  width: 32px;
+  height: 4px;
+  margin: var(--sd-space-4, 4px) 0 var(--sd-space-8, 8px);
+  border-radius: var(--sd-radius-2, 2px);
+  background: var(--sd-border);
+}
+
+.sd-layout-context-switcher__sheet-header {
+  display: flex;
+  flex: none;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 var(--sd-space-4, 4px) 0 var(--sd-space-16, 16px);
+}
+
+.sd-layout-context-switcher__sheet-title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--sd-text);
+  font-size: var(--sd-font-size-16, 16px);
+  font-weight: var(--sd-font-weight-medium, 500);
+  line-height: var(--sd-line-height-24, 24px);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sd-layout-context-switcher__close {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--sd-radius-999, 999px);
+  background: transparent;
+  color: var(--sd-text-secondary);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--sd-layout-context-switcher-hover-bg);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--sd-focus-ring-color, var(--sd-primary));
+  }
+}
+
+// Touch and motion -----------------------------------------------------------------------------------------
+
+@media (pointer: coarse) {
+  .sd-layout-context-switcher__trigger--header,
+  .sd-layout-context-switcher__notice-action {
+    min-height: 44px;
+  }
+
+  // why: vùng chạm 44px quanh avatar 28px; margin âm (44 − 28) / 2 giữ nguyên chỗ chiếm trong rail.
+  // Ring focus co vào (offset −6px, radius 16 − 6 = 10) để vẫn ôm avatar như ở pointer mịn.
+  .sd-layout-context-switcher__trigger--rail {
+    width: 44px;
+    height: 44px;
+    margin: -8px;
+    border-radius: var(--sd-radius-16, 16px);
+
+    &:focus-visible {
+      outline-offset: -6px;
+    }
+  }
+
+  .sd-layout-context-switcher__search {
+    height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sd-layout-context-switcher__trigger,
+  .sd-layout-context-switcher__row {
+    transition: none;
+  }
+
+  .sd-layout-context-switcher__spinner {
+    animation: none;
+  }
+}

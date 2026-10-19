@@ -18,6 +18,13 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 - View: component tokens `--sd-view-label-color` and `--sd-view-value-color`, and the classes `.sd-view-label` / `.sd-view-value` for custom read-only layouts (see `sd-view.md`, "Styling tokens").
 
 - `SdWindow` / `sd-window` and `components/window` are the preferred public API. Additive `hideClose`, `windowClass`, `beforeClose`, `sdClosed`, `sdCloseError`, `requestClose` and `forceClose` match Core overlay conventions, with stale-guard protection. Added Core header/default-body slots, readable state/action names, docs and four Showcase examples. The nonmodal window intentionally has no backdrop, focus trap or body scroll lock.
+- Layout: Sidebar V4 (`version: 4`) — `SdSidebarV4` / `sd-sidebar-v4` on desktop and `SdSidebarMobileV4` / `sd-sidebar-mobile-v4` below `mobileBreakpoint`. It keeps the V3 routing, Pinned/Recent and collapsed preference (stored in the same version 3 entry), and adds menu section headings, one trailing count, badge, status or "Soon" chip per row, a pill search focused with `Ctrl+K` / `⌘K` and driven with `↑ ↓ Enter Esc`, a 72px rail with section separators and group flyouts, and colours that come only from theme tokens (`brandColor` / `brandLightColor` are ignored). `SidebarConfigurationV4` adds `itemShape` (`'pill'` | `'soft'`), `density` (`'compact'` | `'comfortable'`), `collapsedGroup` (`'flyout'` | `'expand'`) and `mobile.bottomBar` (at most 4 menu ids, plus "More"); `normalizeSidebarConfiguration` fills the defaults. On mobile, V4 has a 56px app bar, a `min(88vw, 360px)` drawer with 44px rows, and the bottom bar when `mobile.bottomBar` is set. See `sd-layout.md`, "Sidebar V4".
+- Layout: Context Switcher for sidebar V1–V4 and their mobile variants. Assign `sidebar.context = { label?, items, searchable? }` (`SdLayoutContextConfiguration`, `SdLayoutContext`); Core persists the selected context in the layout storage namespace, restores it on the next load, falls back to `items[0]` (with at most one reload) when the stored id is missing or stale, and reloads the page after a switch. There is no change event: read the context at bootstrap with `SdLayoutContextService.getCurrentContext()`, for example in `provideAppInitializer`. A switch in another tab shows a "Context changed in another tab" notice with a Reload button and never reloads by itself. `SD_LAYOUT_CONTEXT_RUNTIME` (`SdLayoutContextRuntime`, `createSdLayoutContextBrowserRuntime`, `SD_LAYOUT_CONTEXT_MARKER_KEY`) carries the page reload, `storage` events and the per-tab reconcile marker, so specs and demos can provide a fake. `SdLayoutContextSwitcher` / `sd-layout-context-switcher` is exported; the CSS hooks `--sd-layout-context-switcher-popover-width` (popover width) and `--sd-layout-context-switcher-dot-ring-color` (ring of the rail "changed in another tab" dot) can be set on or above it. Without `context`, every sidebar renders as before. See `sd-layout.md`, "Context switcher".
+- Layout: `SdLayoutMenu` accepts optional `section`, `badge` (`SdLayoutMenuBadge`), `status` (`SdLayoutMenuStatus`) and `comingSoon`. Only Sidebar V4 renders them; V1–V3 ignore them, and a `comingSoon` item still navigates there. New helpers `searchAvailableMenuLeaves`, `groupMenusBySection` and `resolveMenuTrailing`; `searchMenuLeaves` is unchanged.
+- Storage: `SdStorage.refresh()` and `SdStorageWithDefault.refresh()` re-read the persisted value, replace the shared in-memory entry and notify subscribers only when the value changed — for values written by another tab, or to confirm that a write persisted (see `sd-storage.md`).
+- Theme: `graphite` preset (`sd.theme($preset: 'graphite')`), a light-only near-black palette for back-office consoles. A named preset may carry an optional `components` map that overrides component tokens with single values; unknown keys fail the Sass build. `graphite` uses it to raise the active Sidebar V4 item (`--sd-sidebar-v4-active-bg: var(--sd-surface)` plus a ring in `--sd-sidebar-v4-active-shadow`). With `graphite`, links and text buttons share the body text colour because `--sd-link` and `--sd-primary` are the text colour; no link token is added (see `THEME.md`).
+- Theme: Sidebar V4 colour tokens `--sd-sidebar-v4-bg`, `-line`, `-hover-bg`, `-active-bg`, `-active-shadow`, `-active-ink`, `-avatar-bg`, `-avatar-ink`, `-attention` and `-live`, emitted in light and dark and by every preset.
+- i18n: `core.module.layout.sidebar.*` keys for the V4 search, "Soon", badge descriptions, the collapse/expand toggle and the mobile menu button, and `core.module.layout.context.*` keys for the Context Switcher, in all five built-in catalogs.
 
 ### Changed
 
@@ -31,6 +38,8 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 - Form Generic: pages accept an optional plain-text `description`, edited in the page panel and shown above the page fields in every navigation mode (also the `aria-describedby` of the page region with tabs/steps).
 - Form builder: with "Single page" navigation and two or more pages, the form settings show a warning that only the first page is rendered, and every later page in the page strip is muted with a `visibility_off` icon and a screen-reader description. Navigation is not changed automatically; choose Tabs or Steps to show the other pages.
 - Form builder: the page settings card uses the same layout as the Variables and Form validations cards, its fields take the full card width, and the page icon is picked from the group icon presets instead of typed. The Vietnamese label "Xác thực cấp form" becomes "Xác thực của biểu mẫu", and its hint says "biểu mẫu" too. Clicking the selected group icon again removes it, as for the page icon.
+- Layout: `ISdSidebarConfiguration` includes `SidebarConfigurationV4` (`version: 4`), and `SidebarConfigurationBase` gains `context`.
+- Layout: `SdLayoutStorageService` has an eighth handle, `currentContext` — the context snapshot `{ id, title, subtitle?, avatar? }`, namespaced like the other entries and removed by `clear()`. The service also exposes `readCurrentContext()`, `writeCurrentContext()`, `refreshCurrentContext()` and `resolvedNamespace()` for `SdLayoutContextService`; apps keep using `SdLayoutContextService`.
 
 ### Fixed
 
@@ -66,6 +75,18 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 - `SdCKEditorStyles` / `sd-ckeditor-styles` and the legacy stylesheet import path remain deprecated compatibility loaders for shared Core content styles. They no longer load CKEditor CSS.
 - Unsafe content getters/upload and lossy format conversions report `SdEditorImportError` instead of silently exporting stripped content. Handle diagnostics before repairing or replacing stored values.
 - Custom typed i18n catalogs must add the new editor toolbar/content/import/upload/mention keys present in the built-in catalogs. VI/EN labels are localized; other built-in catalogs currently use explicit English fallback for the new keys.
+- Code that switches exhaustively over `ISdSidebarConfiguration['version']` no longer compiles until it handles Sidebar V4:
+
+  ```diff
+   switch (sidebar.version) {
+     case 3:
+       return renderV3(sidebar);
+  +  case 4:
+  +    return renderV4(sidebar); // SidebarConfigurationV4
+   }
+  ```
+- Hand-written implementations of `SdStorage<T>` or `SdStorageWithDefault<T>` (for example test doubles) must add `refresh()`. Code that only calls the storage API is unaffected.
+- Custom typed i18n catalogs must add the new `core.module.layout.sidebar.v4-search-placeholder`, `.result-count`, `.no-match`, `.search-hint`, `.coming-soon`, `.badge-pending`, `.expand`, `.collapse`, `.open-menu` and `core.module.layout.context.*` keys present in the built-in catalogs.
 
 ### Deprecated
 
