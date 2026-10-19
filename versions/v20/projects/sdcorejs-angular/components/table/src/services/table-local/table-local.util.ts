@@ -1,5 +1,6 @@
 import { DateUtilities } from '@sdcorejs/utils/fns';
-import { Utilities } from '@sdcorejs/utils/fns';
+import { NumberUtilities, Utilities } from '@sdcorejs/utils/fns';
+import { Operator } from '@sdcorejs/utils/models';
 import { SdTableColumn, SdTableColumnLazyValues, SdTableColumnValues } from '../../models/table-column.model';
 import { SdTableItem } from '../../models/table-item.model';
 import { SdTableOptionTree } from '../../models/table-option-tree.model';
@@ -30,23 +31,103 @@ const isTableItem = <T>(item: LocalFilterItem<T>): item is SdTableItem<T> =>
 
 const resolveItemData = <T>(item: LocalFilterItem<T>): T => (isTableItem(item) ? item.data : (item as T));
 
+const hasValue = (value: unknown): boolean => value !== undefined && value !== null && value !== '';
+
 export const hasActiveColumnFilter = <T>(rawColumnFilter: Partial<Record<string, any>> = {}, columns: SdTableColumn<T>[] = []): boolean =>
   columns.some(col => {
     const v = rawColumnFilter[col.field];
     if (Array.isArray(v)) return v.length > 0;
-    if (v && typeof v === 'object') return !!v.from || !!v.to;
-    return v !== undefined && v !== null && v !== '';
+    // why: biên 0 của split-number là giá trị, không phải đầu trống.
+    if (v && typeof v === 'object') return hasValue(v.from) || hasValue(v.to);
+    return hasValue(v);
   });
+
+// why: cùng fallback với SdConvertToPagingReq để bảng local lọc giống bảng server.
+const resolveOperator = <T>(column: SdTableColumn<T>, columnOperator: Partial<Record<string, Operator>>): Operator | undefined =>
+  columnOperator[column.field] || column.filter?.operator?.default;
+
+// Hai vế đã trim + lowercase; không có operator thì giữ CONTAIN như trước.
+const matchesText = (value: string, operator: Operator | undefined, operand: string): boolean => {
+  switch (operator) {
+    case 'EQUAL':
+      return value === operand;
+    case 'NOT_EQUAL':
+      return value !== operand;
+    case 'NOT_CONTAIN':
+      return !value.includes(operand);
+    case 'START_WITH':
+      return value.startsWith(operand);
+    case 'NOT_START_WITH':
+      return !value.startsWith(operand);
+    case 'END_WITH':
+      return value.endsWith(operand);
+    case 'NOT_END_WITH':
+      return !value.endsWith(operand);
+    default:
+      return value.includes(operand);
+  }
+};
+
+const NUMBER_PREFIX_OPERATORS: Record<string, Operator> = {
+  '>=': 'GREATER_OR_EQUAL',
+  '<=': 'LESS_OR_EQUAL',
+  '>': 'GREATER_THAN',
+  '<': 'LESS_THAN',
+};
+
+const compareNumber = (value: number, operator: Operator | undefined, operand: number): boolean => {
+  switch (operator) {
+    case 'NOT_EQUAL':
+      return value !== operand;
+    case 'GREATER_THAN':
+      return value > operand;
+    case 'GREATER_OR_EQUAL':
+      return value >= operand;
+    case 'LESS_THAN':
+      return value < operand;
+    case 'LESS_OR_EQUAL':
+      return value <= operand;
+    default:
+      return value === operand;
+  }
+};
+
+const toFiniteNumber = (value: unknown): number | null => NumberUtilities.parseFiniteNumber(value, { trim: true });
+
+const matchesNumberFilter = (rawValue: unknown, filter: any, operator: Operator | undefined): boolean => {
+  // why: filter split-number phát ra `{ from, to }`; thiếu đầu nào thì đầu đó mở.
+  if (filter && typeof filter === 'object' && !Array.isArray(filter)) {
+    const from = toFiniteNumber(filter.from);
+    const to = toFiniteNumber(filter.to);
+    if (from === null && to === null) return true;
+    const value = toFiniteNumber(rawValue);
+    return value !== null && (from === null || value >= from) && (to === null || value <= to);
+  }
+  // why: prefix gõ tay như `>=5` là ý định tường minh nên thắng operator trên dropdown.
+  const prefixed = typeof filter === 'string' ? /^\s*(>=|<=|>|<)(.*)$/.exec(filter) : null;
+  const operand = toFiniteNumber(prefixed ? prefixed[2] : filter);
+  if (operand === null) return true;
+  const value = toFiniteNumber(rawValue);
+  return value !== null && compareNumber(value, prefixed ? NUMBER_PREFIX_OPERATORS[prefixed[1]] : operator, operand);
+};
 
 export const matchesColumnFilter = <T>(
   data: T,
   columns: SdTableColumn<T>[] = [],
-  rawColumnFilter: Partial<Record<string, any>> = {}
+  rawColumnFilter: Partial<Record<string, any>> = {},
+  columnOperator: Partial<Record<string, Operator>> = {}
 ): boolean => {
   for (const column of columns) {
     const { field, type } = column;
-    const filterValue: string = (rawColumnFilter[field] || '').toString().trim().toLowerCase();
     const rawColVal = resolveFieldValue(data, field);
+    // why: cột number đi riêng vì bước chuẩn hoá text bên dưới coi giá trị 0 (filter hoặc dòng) là rỗng.
+    if (type === 'number') {
+      if (!matchesNumberFilter(rawColVal, rawColumnFilter[field], resolveOperator(column, columnOperator))) {
+        return false;
+      }
+      continue;
+    }
+    const filterValue: string = (rawColumnFilter[field] || '').toString().trim().toLowerCase();
     const columnValue: string = (rawColVal || '').toString().trim().toLowerCase();
 
     if (filterValue) {
@@ -54,7 +135,7 @@ export const matchesColumnFilter = <T>(
         return false;
       }
       if (type === 'string') {
-        if (columnValue.indexOf(filterValue) === -1) {
+        if (!matchesText(columnValue, resolveOperator(column, columnOperator), filterValue)) {
           return false;
         }
       } else if (type === 'values' || type === 'lazy-values') {
@@ -73,25 +154,6 @@ export const matchesColumnFilter = <T>(
         // why: nhiều giá trị = OR, khớp đúng operator `IN` mà SdConvertToPagingReq gửi cho server.
         if (filterValues.length && !filterValues.some(fv => columnValues.includes(fv))) {
           return false;
-        }
-      } else if (type === 'number') {
-        const fValue = +filterValue.replace('>=', '').replace('<=', '').replace('>', '').replace('<', '');
-        const cValue = +columnValue;
-        if (fValue || fValue === 0) {
-          if (!cValue && cValue !== 0) {
-            return false;
-          }
-          if (filterValue.indexOf('>=') > -1 && cValue < fValue) {
-            return false;
-          } else if (filterValue.indexOf('<=') > -1 && cValue > fValue) {
-            return false;
-          } else if (filterValue.indexOf('<') > -1 && cValue >= fValue) {
-            return false;
-          } else if (filterValue.indexOf('>') > -1 && cValue <= fValue) {
-            return false;
-          } else if (cValue !== fValue) {
-            return false;
-          }
         }
       } else if (type === 'boolean') {
         if ((filterValue === '1' || filterValue === 'true') && columnValue !== '1' && columnValue !== 'true') {
@@ -135,7 +197,8 @@ export const filterLocalItems = <T, TItem extends LocalFilterItem<T>>(
   const { rawColumnFilter, orderBy, orderDirection, pageSize, pageNumber } = filterInfo;
   const quickSearch = option.filter?.disabled ? undefined : option.filter?.quickSearch;
   const matchesData = (data: T) =>
-    matchesColumnFilter(data, columns, rawColumnFilter) && matchesQuickSearch(data, quickSearch, filterInfo.quickSearch);
+    matchesColumnFilter(data, columns, rawColumnFilter, filterInfo.columnOperator) &&
+    matchesQuickSearch(data, quickSearch, filterInfo.quickSearch);
   const treeOpt = option.tree;
   const treeSearch =
     option.type === 'local' &&

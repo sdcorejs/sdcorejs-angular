@@ -93,7 +93,7 @@ import { SdTreePipe } from './pipes/sd-tree.pipe';
 import { SdTableExportContext, TableExportService, TableFormatService } from './services';
 import { ConfigService } from './services/config.service';
 import { buildColumnWidthMap } from './services/column-width.util';
-import { filterLocalItems } from './services/table-local/table-local.util';
+import { filterLocalItems, hasActiveColumnFilter } from './services/table-local/table-local.util';
 import { canSortReorder, isReorderDisabled as isReorderItemDisabled, reorderTableItems } from './services/table-reorder/table-reorder.util';
 import {
   applyDefaultSelected,
@@ -1841,6 +1841,9 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   onOperatorChange = (column: SdTableColumn, operator: Operator | undefined) => {
     if (operator == null) return;
     this.tableOption()?.filter?.operatorChange?.(column, operator);
+    // why: operator mới đổi nghĩa của giá trị đang có nên lọc lại ngay; ô trống thì chỉ lưu operator.
+    if (hasActiveColumnFilter(this.columnFilter, [column])) this.onFilterChange();
+    else this.onFilterCommit();
   };
 
   trackBy = (index: number, item: SdTableItem) => {

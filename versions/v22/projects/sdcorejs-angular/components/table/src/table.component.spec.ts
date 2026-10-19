@@ -5,6 +5,7 @@ import { By } from '@angular/platform-browser';
 import { SdTable } from './table.component';
 import { SdTableOption } from './models/table-option.model';
 import { SdTableItem } from './models/table-item.model';
+import { SdTableColumn } from './models/table-column.model';
 import { SdGroupPipe } from './pipes/sd-group.pipe';
 import { buildColumnWidthMap } from './services/column-width.util';
 import { SdTableCommandHeaderDefDirective } from './directives/sd-table-command-header-def.directive';
@@ -334,6 +335,38 @@ describe('Filter commit (blur) vs filter change (enter / reload)', () => {
     tick(800);
     flush();
     expect(host.itemsSpy.calls.count()).toBeGreaterThan(callsAfterInit);
+  }));
+
+  it('onOperatorChange trên cột đã có giá trị thì lọc lại với operator mới', fakeAsync(() => {
+    setupTable();
+    table.columnFilter = { id: 5 } as Record<string, unknown>;
+    table.onFilterChange();
+    tick(800);
+    flush();
+    host.itemsSpy.calls.reset();
+
+    table.columnOperator['id'] = 'GREATER_THAN';
+    table.onOperatorChange({ field: 'id', type: 'number', title: 'ID' } as SdTableColumn, 'GREATER_THAN');
+    tick(800);
+    flush();
+
+    expect(table.filterRegister.value.get().columnOperator?.['id']).toBe('GREATER_THAN');
+    expect(host.itemsSpy).toHaveBeenCalled();
+    const pagingReq = host.itemsSpy.calls.mostRecent().args[1] as { filters: { field: string; operator: string; data: unknown }[] };
+    expect(pagingReq.filters).toContain(jasmine.objectContaining({ field: 'id', operator: 'GREATER_THAN', data: 5 }));
+  }));
+
+  it('onOperatorChange trên cột trống chỉ lưu operator, không reload', fakeAsync(() => {
+    setupTable();
+    const callsAfterInit = host.itemsSpy.calls.count();
+
+    table.columnOperator['id'] = 'LESS_THAN';
+    table.onOperatorChange({ field: 'id', type: 'number', title: 'ID' } as SdTableColumn, 'LESS_THAN');
+    tick(800);
+    flush();
+
+    expect(table.filterRegister.value.get().columnOperator?.['id']).toBe('LESS_THAN');
+    expect(host.itemsSpy.calls.count()).toBe(callsAfterInit);
   }));
 
   it('reload() commit columnFilter pending trước khi build filter request — typed value reach API', fakeAsync(() => {
@@ -1817,6 +1850,73 @@ describe('sdTableCommandHeaderDef', () => {
     expect(header.querySelector('.sd-command-header')).toBeNull();
     expect(header.textContent?.trim()).toBe('');
 
+    fixture.destroy();
+  }));
+});
+
+describe('Local column filter operator', () => {
+  interface Row {
+    id: number;
+    amount: number;
+  }
+
+  @Component({
+    changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+    standalone: true,
+    imports: [SdTable],
+    template: `<sd-table [option]="tableOption"></sd-table>`,
+  })
+  class LocalOperatorHostComponent {
+    tableOption: SdTableOption<Row> = {
+      type: 'local',
+      items: () => [0, 3, 5, 8, 12].map(amount => ({ id: amount, amount })),
+      columns: [
+        {
+          field: 'amount',
+          type: 'number',
+          title: 'Amount',
+          filter: { operator: { enable: true, list: ['EQUAL', 'GREATER_THAN', 'LESS_THAN'] } },
+        },
+      ],
+      filter: {},
+    };
+  }
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ imports: [LocalOperatorHostComponent] });
+  });
+
+  it('filters a number column with the selected operator and again when the operator changes', fakeAsync(() => {
+    const fixture = TestBed.createComponent(LocalOperatorHostComponent);
+    fixture.detectChanges();
+    const table = fixture.debugElement.query(By.directive(SdTable)).componentInstance as SdTable<Row>;
+    tick();
+    flush();
+    fixture.detectChanges();
+    tick(800);
+    flush();
+    const amounts = () => table.items().map(item => item.data.amount);
+    expect(amounts()).toEqual([0, 3, 5, 8, 12]);
+
+    table.columnFilter!['amount'] = 5;
+    table.onFilterChange();
+    tick(800);
+    flush();
+    expect(amounts()).toEqual([5]);
+
+    const column = { field: 'amount', type: 'number', title: 'Amount' } as SdTableColumn;
+    table.columnOperator['amount'] = 'GREATER_THAN';
+    table.onOperatorChange(column, 'GREATER_THAN');
+    tick(800);
+    flush();
+    expect(amounts()).toEqual([8, 12]);
+
+    table.columnFilter!['amount'] = 0;
+    table.columnOperator['amount'] = 'EQUAL';
+    table.onOperatorChange(column, 'EQUAL');
+    tick(800);
+    flush();
+    expect(amounts()).toEqual([0]);
     fixture.destroy();
   }));
 });
