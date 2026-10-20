@@ -300,6 +300,26 @@ describe('SdTable paginate.total "unknown"', () => {
       f.destroy();
     }));
 
+    it('on Enter in an inline filter, even when Tab blurs it before the read starts', fakeAsync(() => {
+      const { f, table, loader } = onSecondPage();
+      table.columnFilter!['name'] = 'Row';
+      table.onFilterChange();
+      f.detectChanges();
+      tick(300);
+      // Tab right after Enter: the blur has nothing new to commit.
+      table.onFilterCommit();
+      tick(500);
+      flushMicrotasks();
+      tick();
+      f.detectChanges();
+      expect(loader).toHaveBeenCalledTimes(3);
+      const [filter, paging] = loader.calls.mostRecent().args;
+      expect(paging).toEqual(jasmine.objectContaining({ pageNumber: 0, pageSize: 3 }));
+      expect(filter.rawColumnFilter).toEqual({ name: 'Row' });
+      expect(view(f).range).toBe('1-3');
+      f.destroy();
+    }));
+
     it('on sort change', fakeAsync(() => {
       const { f, table, loader } = onSecondPage();
       table.sort()!.sort({ id: 'name', start: 'desc', disableClear: false });

@@ -594,6 +594,49 @@ describe('SdTable initial read lifecycle with real HTTP loaders', () => {
     expect(loader).toHaveBeenCalledTimes(3);
   }));
 
+  it('keeps an Enter search when the inline filter blurs before the read starts', fakeAsync(() => {
+    prepare();
+    initial();
+    table.columnFilter!['name'] = 'Entered';
+    table.onFilterChange();
+    tick(300);
+    // Tab right after Enter: the blur has nothing new to commit.
+    table.onFilterCommit();
+    tick(1000);
+    const request = paging();
+    expect(request.request.body.filters).toContain(jasmine.objectContaining({ field: 'name', data: 'Entered' }));
+    respond(request, 'Entered');
+    expect(loader).toHaveBeenCalledTimes(2);
+    expect(table.dataItems).toEqual([{ id: 1, name: 'Entered' }]);
+    http.expectNone('/table/paging');
+  }));
+
+  it('lets a blur that commits a newer inline value cancel the pending Enter search', fakeAsync(() => {
+    prepare();
+    initial();
+    table.columnFilter!['name'] = 'Entered';
+    table.onFilterChange();
+    tick(300);
+    table.columnFilter!['name'] = 'Edited';
+    table.onFilterCommit();
+    tick(1000);
+    http.expectNone('/table/paging');
+    expect(loader).toHaveBeenCalledTimes(1);
+    expect(table.filterRegister.value.get().columnFilter?.['name']).toBe('Edited');
+  }));
+
+  it('keeps a runtime setFilter() followed by a notReload commit silent', fakeAsync(() => {
+    prepare();
+    initial();
+    table.setFilter({ columnFilter: { name: 'From URL' } });
+    tick(300);
+    table.filterRegister.value.set({ notReload: true });
+    tick(1000);
+    http.expectNone('/table/paging');
+    expect(loader).toHaveBeenCalledTimes(1);
+    expect(table.filterRegister.value.get().columnFilter?.['name']).toBe('From URL');
+  }));
+
   it('blocks a missing required tenant and ignores responses from the previous tenant', fakeAsync(() => {
     prepare();
     const tenant = signal<number | null>(null);
