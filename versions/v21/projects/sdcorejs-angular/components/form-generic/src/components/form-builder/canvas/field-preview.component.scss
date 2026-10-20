@@ -221,6 +221,24 @@
   min-height: 24px;
 }
 
+// Phần tử Tĩnh / button: hình của renderer; `inert` + `pointer-events: none` của :host chặn tương tác.
+.fbp-element {
+  min-width: 0;
+}
+
+.fbp-element__chips {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 4px;
+}
+
+.fbp-image-empty {
+  justify-content: center;
+  height: 64px;
+  border: 1px dashed var(--sd-border-strong);
+  border-radius: var(--sd-radius-8, 8px);
+}
+
 .fbp-hint {
   margin-top: 4px;
   font-size: var(--sd-font-size-12, 12px);

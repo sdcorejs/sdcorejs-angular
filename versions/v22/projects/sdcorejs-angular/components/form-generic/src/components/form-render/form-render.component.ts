@@ -1,6 +1,7 @@
 import {
   booleanAttribute,
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   computed,
   DestroyRef,
@@ -10,6 +11,7 @@ import {
   input,
   isDevMode,
   model,
+  output,
   signal,
   untracked,
   viewChild,
@@ -29,17 +31,40 @@ import { firstValueFrom, race, timer } from 'rxjs';
 import type { SdFormGenericBreakpoint } from '../../configurations/form-generic-breakpoints';
 import { SD_FORM_GENERIC_CONFIG } from '../../configurations/form-generic-config.token';
 import { sdEffectiveBreakpoint, sdPackRows, type SdFormGenericLayoutRow } from '../../layout/form-generic-layout';
+import type {
+  SdFormGenericAction,
+  SdFormGenericButton,
+  SdFormGenericStatic,
+  SdFormGenericSubmitResult,
+} from '../../models/form-generic-element.model';
 import type { SdFormGenericField, SdFormGenericLayout } from '../../models/form-generic-field.model';
-import { SD_FORM_GENERIC_RESERVED_KEYS, sdIsField, sdIsGroup, sdNormalizeSchema } from '../../models/form-generic-schema';
+import {
+  SD_FORM_GENERIC_RESERVED_KEYS,
+  sdIsButton,
+  sdIsField,
+  sdIsGroup,
+  sdIsStatic,
+  sdNonFieldIssues,
+  sdNormalizeSchema,
+} from '../../models/form-generic-schema';
 import type {
   SdFormGenericGroup,
   SdFormGenericPage,
   SdFormGenericPageElement,
   SdFormGenericSchema,
 } from '../../models/form-generic-schema.model';
-import { sdElementState, sdFilterFieldTypes, sdFormScope, type SdFormGenericElementState } from '../../rules/form-generic-filter';
+import { sdButtonIntent, type SdFormGenericButtonIntent } from '../../rules/form-generic-button';
+import {
+  sdElementState,
+  sdFilterFieldTypes,
+  sdFormScope,
+  sdNonFieldVisible,
+  type SdFormGenericElementState,
+} from '../../rules/form-generic-filter';
+import { sdFormGenericImageSrc, sdFormGenericLinkHref } from '../../rules/form-generic-url';
 import { sdRunFormValidations, type SdFormGenericValidationResult } from '../../rules/form-generic-validation';
 import { sdApplyDefaults } from '../../rules/form-generic-values';
+import { LibButtonElementComponent, LibStaticElementComponent } from '../elements';
 import { LibItemComponent } from './components';
 import { FormRenderCatalog } from './form-render-catalog';
 import { FormRenderContext } from './form-render.context';
@@ -53,16 +78,36 @@ interface FieldNode {
   state: SdFormGenericElementState;
 }
 
+interface StaticNode {
+  kind: 'static';
+  id: string;
+  type: string;
+  layout?: SdFormGenericLayout;
+  element: SdFormGenericStatic;
+}
+
+interface ButtonNode {
+  kind: 'button';
+  id: string;
+  type: 'button';
+  layout?: SdFormGenericLayout;
+  element: SdFormGenericButton;
+  intent: SdFormGenericButtonIntent;
+  state: SdFormGenericElementState;
+}
+
+type LeafNode = FieldNode | StaticNode | ButtonNode;
+
 interface GroupNode {
   kind: 'group';
   id: string;
   type: 'group';
   layout?: undefined;
   group: SdFormGenericGroup;
-  rows: SdFormGenericLayoutRow<FieldNode>[];
+  rows: SdFormGenericLayoutRow<LeafNode>[];
 }
 
-type RenderNode = FieldNode | GroupNode;
+type RenderNode = LeafNode | GroupNode;
 
 /** Chu kỳ (ms) kiểm tra lại `pending` khi chờ validator bất đồng bộ trong `validate()`. */
 const PENDING_POLL_MS = 20;
@@ -78,16 +123,36 @@ interface FieldCell {
   state: SdFormGenericElementState;
 }
 
+interface StaticCell {
+  kind: 'static';
+  id: string;
+  row: number;
+  column: string;
+  element: SdFormGenericStatic;
+}
+
+interface ButtonCell {
+  kind: 'button';
+  id: string;
+  row: number;
+  column: string;
+  element: SdFormGenericButton;
+  intent: SdFormGenericButtonIntent;
+  disabled: boolean;
+}
+
+type LeafCell = FieldCell | StaticCell | ButtonCell;
+
 interface GroupCell {
   kind: 'group';
   id: string;
   row: number;
   column: string;
   group: SdFormGenericGroup;
-  children: FieldCell[];
+  children: LeafCell[];
 }
 
-type RenderCell = FieldCell | GroupCell;
+type RenderCell = LeafCell | GroupCell;
 
 /**
  * Đặt từng phần tử của hàng vào lưới: hàng `i` → `grid-row: i + 1`, cột bắt đầu sau các ô đứng trước.
@@ -106,21 +171,48 @@ const placeCells = <T extends { id: string }>(rows: SdFormGenericLayoutRow<T>[])
     });
   });
 
-const fieldCell = ({ node, row, column }: { node: FieldNode; row: number; column: string }): FieldCell => ({
-  kind: 'field',
-  id: node.id,
-  row,
-  column,
-  field: node.field,
-  state: node.state,
-});
+const leafCell = ({ node, row, column }: { node: LeafNode; row: number; column: string }): LeafCell => {
+  if (node.kind === 'static') return { kind: 'static', id: node.id, row, column, element: node.element };
+  if (node.kind === 'button')
+    return { kind: 'button', id: node.id, row, column, element: node.element, intent: node.intent, disabled: node.state.disabled };
+  return { kind: 'field', id: node.id, row, column, field: node.field, state: node.state };
+};
+
+/**
+ * Cùng nội dung không (so sâu: object thường, mảng, Date theo thời điểm). why: consumer sao chép value nhận được
+ * (`{ ...$event }`, qua store) rồi đặt lại — object mới nhưng cùng nội dung, KHÔNG phải dữ liệu mới để reset về.
+ */
+const sameValue = (left: unknown, right: unknown): boolean => {
+  if (Object.is(left, right)) return true;
+  if (left instanceof Date || right instanceof Date)
+    return left instanceof Date && right instanceof Date && left.getTime() === right.getTime();
+  if (!left || !right || typeof left !== 'object' || typeof right !== 'object') return false;
+  if (Array.isArray(left) !== Array.isArray(right)) return false;
+  const leftKeys = Object.keys(left);
+  const rightKeys = Object.keys(right);
+  if (leftKeys.length !== rightKeys.length) return false;
+  const rightRecord = right as Record<string, unknown>;
+  return leftKeys.every(key => Object.hasOwn(rightRecord, key) && sameValue((left as Record<string, unknown>)[key], rightRecord[key]));
+};
 
 @Component({
   selector: 'sd-form-render',
   templateUrl: './form-render.component.html',
   styleUrl: './form-render.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdSection, SdButton, SdInform, SdTab, SdTabGroup, SdStep, SdStepper, NgTemplateOutlet, LibItemComponent],
+  imports: [
+    SdSection,
+    SdButton,
+    SdInform,
+    SdTab,
+    SdTabGroup,
+    SdStep,
+    SdStepper,
+    NgTemplateOutlet,
+    LibItemComponent,
+    LibStaticElementComponent,
+    LibButtonElementComponent,
+  ],
   providers: [FormRenderContext, FormRenderCatalog],
 })
 export class SdFormRender {
@@ -155,18 +247,33 @@ export class SdFormRender {
   #alive = true;
   #initialized = false;
   #pageOrder: string[] = [];
+  /**
+   * Action của button (hoặc của `submit()` / `reset()`). Renderer không gọi API: consumer xử lý theo `action`.
+   * `value` chưa có kết quả upload — gọi `upload()` trước khi lưu.
+   */
+  readonly sdAction = output<SdFormGenericAction>();
 
   readonly #config = inject(SD_FORM_GENERIC_CONFIG);
   readonly #i18n = inject(I18nService);
   readonly #dateTime = inject(SdDateTimeService);
   // why: rules and validations get a zone only when one is configured, so local evaluation stays as before.
   readonly #ruleTimeZone = this.#dateTime.timeZone === 'local' ? undefined : this.#dateTime.timeZone;
+  readonly #cdr = inject(ChangeDetectorRef);
   readonly #ownForm = new FormGroup({});
   readonly #width = signal(0);
-  readonly #warnedTypes = new Set<string>();
-  readonly #warnedKeys = new Set<string>();
+  readonly #warned = new Set<string>();
+  /** Lỗi cấp form của lượt submit thất bại gần nhất (D-026). */
+  readonly #formErrors = signal<readonly string[]>([]);
+  /** Lượt action có validate đang chạy (D-018): action khác bị bỏ qua, `submit()` trả cùng promise. */
+  #running: Promise<SdFormGenericSubmitResult> | null = null;
+  /** Object value mà renderer ghi gần nhất; value đến khác nó (và khác nội dung) là value của consumer. */
+  #lastWritten: Readonly<Record<string, unknown>> | null = null;
+  /** Value consumer nạp gần nhất — đích của `reset()` (D-019). */
+  #loaded: Readonly<Record<string, unknown>> = {};
+  #destroyed = false;
   // why: signal queries cannot live on ES `#private` members (NG1053).
   private readonly grid = viewChild<ElementRef<HTMLElement>>('grid');
+  private readonly errorBlock = viewChild<ElementRef<HTMLElement>>('formErrors');
   private readonly items = viewChildren(LibItemComponent);
   private readonly pageTabs = viewChild(SdTabGroup);
   private readonly pageStepper = viewChild(SdStepper);
@@ -202,10 +309,14 @@ export class SdFormRender {
     return placeCells(this.#pack(elements)).map(
       ({ node, row, column }): RenderCell =>
         node.kind === 'group'
-          ? { kind: 'group', id: node.id, row, column, group: node.group, children: placeCells(node.rows).map(fieldCell) }
-          : fieldCell({ node, row, column })
+          ? { kind: 'group', id: node.id, row, column, group: node.group, children: placeCells(node.rows).map(leafCell) }
+          : leafCell({ node, row, column })
     );
   }
+  protected readonly formErrors = this.#formErrors.asReadonly();
+  protected readonly formErrorText = computed(() => this.#formErrors().join('\n'));
+  /** Button đang chạy action có validate (hiện trạng thái loading). */
+  protected readonly busyButtonId = signal<string | null>(null);
 
   constructor() {
     inject(DestroyRef).onDestroy(() => {
@@ -220,7 +331,8 @@ export class SdFormRender {
     context.variables = this.#variables;
     context.scope = this.scope;
     context.level = this.level;
-    context.patch = patch => this.value.set({ ...this.#value(), ...patch });
+    context.patch = patch => this.#write({ ...this.#value(), ...patch });
+    inject(DestroyRef).onDestroy(() => (this.#destroyed = true));
 
     effect(() => {
       // Invalidate async attempts whenever their schema, value or registration scope changes.
@@ -248,13 +360,16 @@ export class SdFormRender {
     });
 
     // why: defaults fill keys that are still undefined whenever schema, value or view mode change;
-    // when nothing is missing the effect writes nothing, so it cannot loop.
+    // when nothing is missing the effect writes nothing, so it cannot loop. The reset target is taken HERE,
+    // before the renderer writes the defaults: a value that this renderer did not write, and whose content
+    // differs from what it wrote, came from the consumer (D-019).
     effect(() => {
       const current = this.#value();
+      if (current !== this.#lastWritten && !sameValue(current, this.#lastWritten)) this.#loaded = current;
       const next = sdApplyDefaults(this.normalized(), current, { viewed: this.viewed() });
       // why: Object.is — a NaN already in the value is "unchanged"; `!==` would re-write it forever.
       if (Object.keys(next).some(key => !Object.hasOwn(current, key) || !Object.is(next[key], current[key]))) {
-        untracked(() => this.value.set(next));
+        untracked(() => this.#write(next));
       }
     });
 
@@ -502,9 +617,15 @@ export class SdFormRender {
     }
     this.#pageOrder = nextOrder;
   }
+  /** Field cells of a page, group children included; static elements and buttons own no control. */
+  #fieldCells(cells: readonly RenderCell[]): FieldCell[] {
+    return cells
+      .flatMap(cell => (cell.kind === 'group' ? cell.children : [cell]))
+      .filter((cell): cell is FieldCell => cell.kind === 'field');
+  }
   #controlsFor(page: SdFormGenericPage) {
     const region = this.pageRegions().find(region => region.page.id === page.id);
-    const fields = region?.cells.flatMap(cell => (cell.kind === 'field' ? [cell] : cell.children)) ?? [];
+    const fields = this.#fieldCells(region?.cells ?? []);
     return fields.flatMap(cell => {
       const control = this.#controlFor(cell.field);
       return control ? [control] : [];
@@ -519,9 +640,9 @@ export class SdFormRender {
     return this.pageRegions()
       .filter(region => ids.has(region.page.id))
       .every(region =>
-        region.cells
-          .flatMap(cell => (cell.kind === 'field' ? [cell] : cell.children))
-          .every(cell => this.items().some(item => item.field() === cell.field && item.form() === this.formGroup()))
+        this.#fieldCells(region.cells).every(cell =>
+          this.items().some(item => item.field() === cell.field && item.form() === this.formGroup())
+        )
       );
   }
   #revealInvalid(pages: SdFormGenericPage[]): void {
@@ -535,10 +656,9 @@ export class SdFormRender {
       const panel = Array.from(this.#host.nativeElement.querySelectorAll<HTMLElement>('[data-page-id]')).find(
         element => element.dataset['pageId'] === page.id
       );
-      const cell = this.pageRegions()
-        .find(region => region.page.id === page.id)
-        ?.cells.flatMap(cell => (cell.kind === 'field' ? [cell] : cell.children))
-        .find(cell => this.#controlFor(cell.field)?.invalid);
+      const cell = this.#fieldCells(this.pageRegions().find(region => region.page.id === page.id)?.cells ?? []).find(
+        cell => this.#controlFor(cell.field)?.invalid
+      );
       const element = Array.from(panel?.querySelectorAll<HTMLElement>('[data-element-id]') ?? []).find(
         element => element.dataset['elementId'] === cell?.id
       );
@@ -546,31 +666,113 @@ export class SdFormRender {
     });
   }
 
+  /**
+   * Chạy như bấm button submit: `validate()`, hợp lệ thì phát `(sdAction)` `{ action: 'submit', buttonId: null }`,
+   * không hợp lệ thì hiện lỗi (lỗi cấp form trong khối trước lưới). Đang có lượt chạy thì trả cùng promise.
+   */
+  submit(): Promise<SdFormGenericSubmitResult> {
+    return this.#runValidated('submit', null);
+  }
+
+  /**
+   * Chạy như bấm button reset: value về value consumer nạp gần nhất (áp lại defaultValue), xoá trạng thái đã
+   * chạm/dirty và phát `(sdAction)` `{ action: 'reset', buttonId: null }`. Bị bỏ qua khi một lượt submit đang chạy.
+   */
+  reset(): void {
+    if (this.#running) return;
+    this.#reset(null);
+  }
+
   /** Tải lên các tệp đang chờ của mọi field upload; kết quả được ghi vào value. Gọi trước khi lưu. */
   async upload(): Promise<void> {
     for (const item of this.items()) await item.upload();
+  }
+
+  /** Bấm một button của schema (D-018: một luồng action duy nhất). */
+  protected press(cell: ButtonCell): void {
+    // why: while a validating run is in flight every other action is ignored (no double submit, no reset under it).
+    if (this.#running) return;
+    const { intent } = cell;
+    if (intent.kind === 'reset') return this.#reset(cell.id);
+    if (intent.validates) {
+      void this.#runValidated(intent.action, cell.id);
+      return;
+    }
+    this.sdAction.emit({ action: intent.action, buttonId: cell.id, value: this.#value(), messages: null });
+  }
+
+  #runValidated(action: string, buttonId: string | null): Promise<SdFormGenericSubmitResult> {
+    if (this.#running) return this.#running;
+    // why: the action carries the object that was validated, even if the user types while it runs.
+    const value = this.#value();
+    this.busyButtonId.set(buttonId);
+    const run = (async (): Promise<SdFormGenericSubmitResult> => {
+      try {
+        const result = await this.validate();
+        if (result.valid) {
+          this.#formErrors.set([]);
+          this.sdAction.emit({ action, buttonId, value, messages: result.messages });
+        } else {
+          this.#showFormErrors(result.messages.error);
+        }
+        return { valid: result.valid, messages: result.messages, value };
+      } finally {
+        this.#running = null;
+        this.busyButtonId.set(null);
+      }
+    })();
+    this.#running = run;
+    return run;
+  }
+
+  #reset(buttonId: string | null): void {
+    const next = { ...sdApplyDefaults(this.normalized(), this.#loaded, { viewed: this.viewed() }) };
+    this.#formErrors.set([]);
+    this.#write(next);
+    const form = this.formGroup();
+    form.markAsPristine();
+    form.markAsUntouched();
+    this.sdAction.emit({ action: 'reset', buttonId, value: next, messages: null });
+  }
+
+  /** Khối lỗi cấp form trước lưới, rồi cuộn tới nó (D-026). Chỉ lỗi field thì khối ẩn. */
+  #showFormErrors(errors: readonly string[]): void {
+    this.#formErrors.set(errors);
+    if (!errors.length || this.#destroyed) return;
+    // why: render the block now, so it exists to be scrolled into view.
+    this.#cdr.detectChanges();
+    this.errorBlock()?.nativeElement.scrollIntoView({ block: 'nearest' });
+  }
+
+  #write(next: Record<string, unknown>): void {
+    this.#lastWritten = next;
+    this.value.set(next);
+  }
+
+  #warnOnce(key: string, message: string): void {
+    if (!isDevMode() || this.#warned.has(key)) return;
+    this.#warned.add(key);
+    console.warn(message);
   }
 
   #state(element: SdFormGenericPageElement): SdFormGenericElementState {
     return sdElementState(element, this.scope(), this.#fieldTypes(), this.#ruleTimeZone);
   }
 
-  #fieldNode(element: unknown): FieldNode | null {
+  #leafNode(element: unknown): LeafNode | null {
+    if (sdIsStatic(element) || sdIsButton(element)) return this.#nonFieldNode(element);
     if (!sdIsField(element)) {
       const type = String((element as { type?: unknown })?.type ?? '');
-      if (isDevMode() && !this.#warnedTypes.has(type)) {
-        this.#warnedTypes.add(type);
-        console.warn(`[sd-form-render] element type "${type}" is not supported by this version and is skipped.`);
-      }
+      this.#warnOnce(`type:${type}`, `[sd-form-render] element type "${type}" is not supported by this version and is skipped.`);
       return null;
     }
     // why: a key such as `constructor` is an inherited property of FormGroup.controls — the control would
     // never join the form, so its required/constraints would silently not apply. sdValidateSchema reports it.
     if (element.key && SD_FORM_GENERIC_RESERVED_KEYS.has(element.key)) {
-      if (isDevMode() && !this.#warnedKeys.has(element.key)) {
-        this.#warnedKeys.add(element.key);
-        console.warn(`[sd-form-render] field key "${element.key}" is reserved (Object.prototype) and the field is skipped.`);
-      }
+      this.#warnOnce(
+        `key:${element.key}`,
+        `[sd-form-render] field key "${element.key}" is reserved (Object.prototype) and the field is skipped.`
+      );
       return null;
     }
     const keys = this.#keySet();
@@ -580,18 +782,49 @@ export class SdFormRender {
     return { kind: 'field', id: element.id, type: element.type, layout: element.layout, field: element, state };
   }
 
+  #nonFieldNode(element: SdFormGenericStatic | SdFormGenericButton): StaticNode | ButtonNode | null {
+    // why: a heading level out of range still renders (as 3); any other grammar issue skips the element.
+    const issues = sdNonFieldIssues(element).filter(code => code !== 'heading-level-invalid');
+    if (issues.length) {
+      this.#warnOnce(`element:${element.id}`, `[sd-form-render] ${element.type} "${element.id}" is skipped: ${issues.join(', ')}.`);
+      return null;
+    }
+    const state = this.#state(element);
+    if (!sdNonFieldVisible(element, state, { viewed: this.viewed(), keys: this.#keySet() })) return null;
+    if (sdIsButton(element)) {
+      const intent = sdButtonIntent(element) as SdFormGenericButtonIntent;
+      return { kind: 'button', id: element.id, type: 'button', layout: element.layout, element, intent, state };
+    }
+    this.#warnUnsafeUrl(element);
+    return { kind: 'static', id: element.id, type: element.type, layout: element.layout, element };
+  }
+
+  /** Một cảnh báo dev cho mỗi link/image có URL không an toàn (URL rỗng = chưa đặt, không cảnh báo). */
+  #warnUnsafeUrl(element: SdFormGenericStatic): void {
+    if (element.type === 'link') {
+      const href = typeof element.href === 'string' ? element.href.trim() : '';
+      if (href && !sdFormGenericLinkHref(href))
+        this.#warnOnce(`url:${element.id}`, `[sd-form-render] link "${element.id}" has an unsafe href and is shown as text.`);
+    }
+    if (element.type === 'image') {
+      const src = typeof element.src === 'string' ? element.src.trim() : '';
+      if (src && !sdFormGenericImageSrc(src))
+        this.#warnOnce(`url:${element.id}`, `[sd-form-render] image "${element.id}" has an unsafe src and is not shown.`);
+    }
+  }
+
   #pack(elements: readonly SdFormGenericPageElement[]): SdFormGenericLayoutRow<RenderNode>[] {
     const level = this.level();
     const nodes: RenderNode[] = [];
     for (const element of elements) {
       if (sdIsGroup(element)) {
         if (!this.#state(element).visible) continue;
-        const children = (element.elements ?? []).map(child => this.#fieldNode(child)).filter((node): node is FieldNode => !!node);
+        const children = (element.elements ?? []).map(child => this.#leafNode(child)).filter((node): node is LeafNode => !!node);
         if (!children.length) continue;
         nodes.push({ kind: 'group', id: element.id, type: 'group', group: element, rows: sdPackRows(children, level) });
         continue;
       }
-      const node = this.#fieldNode(element);
+      const node = this.#leafNode(element);
       if (node) nodes.push(node);
     }
     return sdPackRows(nodes, level);

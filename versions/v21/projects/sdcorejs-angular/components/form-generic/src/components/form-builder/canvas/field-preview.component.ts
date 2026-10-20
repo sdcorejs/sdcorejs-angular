@@ -2,11 +2,14 @@ import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import type { SdFormGenericButton, SdFormGenericStatic } from '../../../models/form-generic-element.model';
 import type { SdFormGenericField, SdFormGenericOption } from '../../../models/form-generic-field.model';
 import { HtmlPipe } from '../../../pipes';
 import { sdNumberSuffix, sdTextSubtype } from '../../../presets/form-generic-presets';
+import { sdFormGenericImageSrc } from '../../../rules/form-generic-url';
 import { FormGenericService } from '../../../services/form-generic.service';
-import { BuilderItem, isField } from '../state/builder-document';
+import { LibButtonElementComponent, LibStaticElementComponent } from '../../elements';
+import { BuilderItem, isButton, isStatic, isUnknown } from '../state/builder-document';
 
 type AnyField = SdFormGenericField & Record<string, unknown>;
 
@@ -16,6 +19,9 @@ type AnyField = SdFormGenericField & Record<string, unknown>;
  * datepicker/upload và 300 field vẫn nhẹ. Hình dạng bám theo renderer (`labelPlacement="top"`);
  * bố cục/độ rộng do canvas tính bằng cùng thuật toán với renderer.
  *
+ * Phần tử Tĩnh và button hiện bằng CHÍNH component của renderer, trong vùng `inert` (D-023): giữ giao
+ * diện thật nhưng không Tab/Enter vào được — thẻ của canvas vẫn là control duy nhất.
+ *
  * Phần tử có `type` mà phiên bản này chưa biết hiện thẻ "chưa hỗ trợ" — nội dung được giữ nguyên.
  */
 @Component({
@@ -23,14 +29,27 @@ type AnyField = SdFormGenericField & Record<string, unknown>;
   templateUrl: './field-preview.component.html',
   styleUrl: './field-preview.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgTemplateOutlet, SdIcon, SdTranslatePipe, HtmlPipe],
+  imports: [NgTemplateOutlet, SdIcon, SdTranslatePipe, HtmlPipe, LibStaticElementComponent, LibButtonElementComponent],
 })
 export class FieldPreviewComponent {
   readonly #formGeneric = inject(FormGenericService);
 
   readonly item = input.required<BuilderItem>();
 
-  readonly unsupported = computed(() => !isField(this.item()));
+  readonly unsupported = computed(() => isUnknown(this.item()));
+  readonly staticElement = computed<SdFormGenericStatic | null>(() => {
+    const item = this.item();
+    return isStatic(item) ? item : null;
+  });
+  readonly button = computed<SdFormGenericButton | null>(() => {
+    const item = this.item();
+    return isButton(item) ? item : null;
+  });
+  /** Ảnh chưa có URL, hoặc URL bị chính sách từ chối: renderer không vẽ gì, canvas hiện một khung giữ chỗ. */
+  readonly imageMissing = computed(() => {
+    const item = this.item();
+    return item.type === 'image' && !sdFormGenericImageSrc((item as { src?: unknown }).src);
+  });
   readonly field = computed(() => this.item() as AnyField);
   readonly label = computed(() => (this.item() as { label?: string }).label ?? '');
   readonly required = computed(() => !!(this.item() as { validation?: { required?: boolean } }).validation?.required);
@@ -43,6 +62,8 @@ export class FieldPreviewComponent {
   readonly hidden = computed(() => !!(this.item() as { hidden?: boolean }).hidden);
   readonly readonly = computed(() => !!(this.item() as { viewed?: boolean }).viewed);
   readonly disabled = computed(() => !!(this.item() as { disabled?: boolean }).disabled);
+  /** Phần tử Tĩnh / button không có hàng nhãn — chip trạng thái nằm trên một hàng riêng khi có. */
+  readonly hasChips = computed(() => this.hidden() || this.readonly() || this.disabled() || this.conditional());
   readonly placeholder = computed(() => (this.item() as { placeholder?: string }).placeholder ?? '');
   readonly helperText = computed(() => (this.item() as { helperText?: string }).helperText ?? '');
   readonly suffix = computed(() => {

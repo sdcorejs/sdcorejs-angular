@@ -1,6 +1,13 @@
 import type { Filter } from '@sdcorejs/utils/models';
 import type { SdFormGenericSchema } from '../models/form-generic-schema.model';
-import { sdElementState, sdEvaluateFilter, sdFilterFieldTypes, sdFormScope, sdIsEmptyFilter } from './form-generic-filter';
+import {
+  sdElementState,
+  sdEvaluateFilter,
+  sdFilterFieldTypes,
+  sdFormScope,
+  sdIsEmptyFilter,
+  sdNonFieldVisible,
+} from './form-generic-filter';
 
 const isoDaysAgo = (days: number) => {
   const date = new Date(2026, 8, 30, 10, 0, 0);
@@ -178,6 +185,50 @@ describe('form generic filter evaluation', () => {
       expect(sdIsEmptyFilter({ operator: 'OR', data: [{ operator: 'AND', data: [] }] })).toBeTrue();
       expect(sdIsEmptyFilter({ operator: 'OR', data: [{ field: 'a', operator: 'NULL' } as Filter] })).toBeFalse();
       expect(sdIsEmptyFilter({ field: 'a', operator: 'NOT_NULL' } as Filter)).toBeFalse();
+    });
+  });
+
+  describe('static elements and buttons', () => {
+    const premium: Filter = { field: 'plan', operator: 'EQUAL', data: 'premium' } as Filter;
+    const locked: Filter = { field: 'locked', operator: 'EQUAL', data: true } as Filter;
+    const visible = { visible: true, disabled: false, required: false };
+
+    it('evaluates visible / hidden / disabled rules of a static element or a button like those of a field', () => {
+      const notice = { type: 'notice', rules: { visible: premium } };
+      expect(sdElementState(notice, { plan: 'premium' }).visible).toBeTrue();
+      expect(sdElementState(notice, { plan: 'basic' }).visible).toBeFalse();
+      const buttonTarget = { type: 'button', rules: { hidden: premium, disabled: locked } };
+      expect(sdElementState(buttonTarget, { plan: 'basic', locked: true })).toEqual({ visible: true, disabled: true, required: false });
+      expect(sdElementState(buttonTarget, { plan: 'premium', locked: false })).toEqual({
+        visible: false,
+        disabled: false,
+        required: false,
+      });
+      const hiddenHeading = { type: 'heading', hidden: true };
+      expect(sdElementState(hiddenHeading, {}).visible).toBeFalse();
+    });
+
+    it('hides every static element and button when [keys] is set (keys is an allow-list of fields)', () => {
+      const keys = new Set(['name']);
+      expect(sdNonFieldVisible({ type: 'heading' }, visible, { viewed: false, keys })).toBeFalse();
+      expect(sdNonFieldVisible({ type: 'button', showWhenViewed: true }, visible, { viewed: false, keys })).toBeFalse();
+    });
+
+    it('keeps static elements in view mode and hides buttons unless showWhenViewed', () => {
+      const viewed = { viewed: true, keys: null };
+      expect(sdNonFieldVisible({ type: 'paragraph' }, visible, viewed)).toBeTrue();
+      expect(sdNonFieldVisible({ type: 'button' }, visible, viewed)).toBeFalse();
+      expect(sdNonFieldVisible({ type: 'button', showWhenViewed: false }, visible, viewed)).toBeFalse();
+      expect(sdNonFieldVisible({ type: 'button', showWhenViewed: true }, visible, viewed)).toBeTrue();
+    });
+
+    it('follows the rule state otherwise', () => {
+      const edit = { viewed: false, keys: null };
+      expect(sdNonFieldVisible({ type: 'button' }, visible, edit)).toBeTrue();
+      expect(sdNonFieldVisible({ type: 'image' }, { ...visible, visible: false }, edit)).toBeFalse();
+      expect(
+        sdNonFieldVisible({ type: 'button', showWhenViewed: true }, { ...visible, visible: false }, { viewed: true, keys: null })
+      ).toBeFalse();
     });
   });
 });

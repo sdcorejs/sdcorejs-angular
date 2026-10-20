@@ -1,0 +1,60 @@
+<!-- why: text interpolation only, never an HTML binding — the schema is untrusted data; href/src come from the URL policy. -->
+@switch (element().type) {
+  @case ('heading') {
+    @switch (level()) {
+      @case (2) {
+        <h2 class="sd-fg-heading sd-fg-heading--2">{{ text() }}</h2>
+      }
+      @case (4) {
+        <h4 class="sd-fg-heading sd-fg-heading--4">{{ text() }}</h4>
+      }
+      @default {
+        <h3 class="sd-fg-heading sd-fg-heading--3">{{ text() }}</h3>
+      }
+    }
+  }
+  @case ('paragraph') {
+    <p class="sd-fg-paragraph">{{ text() }}</p>
+  }
+  @case ('quote') {
+    <blockquote class="sd-fg-quote">
+      <p class="sd-fg-quote__text">{{ text() }}</p>
+      @if (cite()) {
+        <footer class="sd-fg-quote__cite">
+          <cite>{{ cite() }}</cite>
+        </footer>
+      }
+    </blockquote>
+  }
+  @case ('image') {
+    @if (safeSrc()) {
+      <figure class="sd-fg-image">
+        <img class="sd-fg-image__img" [src]="safeSrc()" [alt]="alt()" [style.width.px]="width()" loading="lazy" />
+        @if (caption()) {
+          <figcaption class="sd-fg-image__caption">{{ caption() }}</figcaption>
+        }
+      </figure>
+    }
+  }
+  @case ('link') {
+    @if (safeHref()) {
+      <a
+        class="sd-fg-link"
+        [href]="safeHref()"
+        [attr.target]="newTab() ? '_blank' : null"
+        [attr.rel]="newTab() ? 'noopener noreferrer' : null"
+        >{{ text() }}</a
+      >
+    } @else {
+      <span class="sd-fg-link sd-fg-link--plain">{{ text() }}</span>
+    }
+  }
+  @case ('divider') {
+    <hr class="sd-fg-divider" />
+  }
+  @case ('notice') {
+    <div class="sd-fg-notice">
+      <sd-inform [color]="noticeColor()" [title]="noticeTitle()" [description]="text()"></sd-inform>
+    </div>
+  }
+}

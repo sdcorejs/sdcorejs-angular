@@ -16,6 +16,7 @@ import type { Filter } from '@sdcorejs/utils/models';
 import type { SdFormGenericBreakpoint } from '../../../configurations/form-generic-breakpoints';
 import { sdSpanSource, type SdFormGenericSpanSource } from '../../../layout/form-generic-layout';
 import type { SdFormGenericHtmlDefinition, SdFormGenericTemplate } from '../../../models/form-generic-config.model';
+import type { SdFormGenericButton, SdFormGenericNoticeColor, SdFormGenericStatic } from '../../../models/form-generic-element.model';
 import type {
   SdFormGenericField,
   SdFormGenericFieldValidation,
@@ -26,7 +27,7 @@ import type {
   SdFormGenericParam,
   SdFormGenericRules,
 } from '../../../models/form-generic-field.model';
-import { SD_FORM_GENERIC_RESERVED_KEYS } from '../../../models/form-generic-schema';
+import { SD_FORM_GENERIC_RESERVED_ACTION_NAMES, SD_FORM_GENERIC_RESERVED_KEYS } from '../../../models/form-generic-schema';
 import type {
   SdFormGenericGroup,
   SdFormGenericNavigation,
@@ -34,9 +35,11 @@ import type {
   SdFormGenericSchema,
 } from '../../../models/form-generic-schema.model';
 import { sdIsValidPattern, sdNumberPrecision, sdNumberSubtype, sdTextSubtype } from '../../../presets/form-generic-presets';
+import { sdButtonAppearance } from '../../../rules/form-generic-button';
 import { sdIsEmptyFilter } from '../../../rules/form-generic-filter';
 import { sdIsTimeValue } from '../../../rules/form-generic-validation';
 import { sdFindKeyReferences } from '../../../rules/form-generic-references';
+import { sdFormGenericImageSrc, sdFormGenericLinkHref } from '../../../rules/form-generic-url';
 import { FormGenericService } from '../../../services/form-generic.service';
 import { AttributeExpression } from '../components/attribute-expression/attribute-expression.component';
 import { AttributeParameter } from '../components/attribute-parameter/attribute-parameter.component';
@@ -47,12 +50,16 @@ import {
   BuilderDocument,
   BuilderItem,
   cloneJson,
+  collectButtonNames,
   collectKeys,
+  isButton,
   isField,
   isGroup,
+  isStatic,
   isUnknown,
   randomKey,
   SD_FORM_BUILDER_KEY_PATTERN,
+  uniqueName,
 } from '../state/builder-document';
 import { escapeHtml } from '../state/builder-html';
 import { GRID_COLUMNS, itemSpan, layoutOf } from '../state/builder-layout';
@@ -88,6 +95,15 @@ const NONE = '__none__';
 const STATIC_SOURCE = '__static__';
 
 const LEVELS: readonly SdFormGenericBreakpoint[] = ['desktop', 'tablet', 'mobile'];
+
+/** Chuỗi bắt buộc của phần tử Tĩnh / button: sửa qua bản nháp, chỉ ghi schema khi hợp lệ (D-025). */
+type DraftProperty = 'text' | 'label' | 'name';
+
+const NOTICE_COLORS: readonly SdFormGenericNoticeColor[] = ['info', 'success', 'warning', 'error'];
+
+/** URL bị chính sách dùng chung từ chối — cùng điều kiện cảnh báo với renderer (rỗng = chưa đặt). */
+const rejectedUrl = (value: unknown, policy: (value: unknown) => string | null): boolean =>
+  typeof value === 'string' && !!value.trim() && policy(value) === null;
 
 let nextInspectorId = 0;
 
@@ -202,6 +218,17 @@ export class InspectorComponent {
     const item = this.item();
     return isGroup(item) ? item : null;
   });
+  /** Phần tử Tĩnh đang chọn (heading, paragraph, quote, image, link, divider, notice). */
+  readonly staticElement = computed<(SdFormGenericStatic & Record<string, any>) | null>(() => {
+    const item = this.item();
+    return isStatic(item) ? (item as SdFormGenericStatic & Record<string, any>) : null;
+  });
+  readonly button = computed<SdFormGenericButton | null>(() => {
+    const item = this.item();
+    return isButton(item) ? item : null;
+  });
+  /** Phần tử không phải field (Tĩnh hoặc button): không có key, tab Chung / Điều kiện / Bố cục (D-014). */
+  readonly element = computed(() => this.staticElement() ?? this.button());
   /** Phần tử `type` mà phiên bản này chưa hỗ trợ: chỉ xem/xoá/di chuyển, nội dung giữ nguyên. */
   readonly unsupported = computed(() => isUnknown(this.item()));
   readonly type: Signal<SdFormGenericPageElement['type'] | null> = computed(() => this.item()?.type ?? null);
@@ -228,9 +255,12 @@ export class InspectorComponent {
   readonly tabs = computed<InspectorTab[]>(() => {
     const type = this.type();
     if (!type || this.unsupported()) return [];
-    if (type === 'group') return ['general', 'rules', 'layout'];
+    if (type === 'group' || this.element()) return ['general', 'rules', 'layout'];
     return ['general', 'data', 'rules', 'layout'];
   });
+  /** Tab "Quy tắc" của phần tử Tĩnh / button chỉ chứa điều kiện hiển thị — gọi là "Điều kiện" (D-014). */
+  tabLabelKey = (tab: InspectorTab): string =>
+    tab === 'rules' && this.element() ? 'core.component.form-builder.conditions' : `core.component.form-builder.tab.${tab}`;
   readonly activeTab = computed<InspectorTab>(() => {
     const tabs = this.tabs();
     const tab = this.store.inspectorTab();
@@ -438,6 +468,50 @@ export class InspectorComponent {
   readonly structuredReferences = computed(() => this.keyReferences().filter(reference => reference.kind === 'structured').length);
   readonly textReferences = computed(() => this.keyReferences().filter(reference => reference.kind === 'text').length);
 
+  // ── Phần tử Tĩnh / button ─────────────────────────────────────────────────
+  readonly headingLevels: Choice<number>[] = [2, 3, 4].map(level => ({ value: level, display: `H${level}` }));
+  readonly noticeColors = NOTICE_COLORS;
+  readonly buttonActions = computed<Choice[]>(() =>
+    (['submit', 'reset', 'custom'] as const).map(value => ({
+      value,
+      display: this.store.t(`core.component.form-builder.button.action.${value}`),
+    }))
+  );
+  readonly buttonVariants = computed<Choice[]>(() => [
+    { value: NONE, display: this.store.t('core.component.form-builder.default') },
+    ...(['fill', 'light', 'outline', 'text'] as const).map(value => ({
+      value,
+      display: this.store.t(`core.component.form-builder.button.variant.${value}`),
+    })),
+  ]);
+  readonly buttonAligns = computed<Choice[]>(() =>
+    (['start', 'center', 'end', 'stretch'] as const).map(value => ({
+      value,
+      display: this.store.t(`core.component.form-builder.button.align.${value}`),
+    }))
+  );
+  /** Giao diện hiệu lực của button (màu/kiểu mặc định theo action khi chưa đặt). */
+  readonly buttonLook = computed(() => {
+    const button = this.button();
+    return button ? sdButtonAppearance(button) : null;
+  });
+  /** href/src bị chính sách URL dùng chung từ chối — renderer sẽ không tạo liên kết/ảnh (INV-003). */
+  readonly urlWarning = computed(() => {
+    const element = this.staticElement();
+    if (element?.type === 'link' && rejectedUrl(element['href'], sdFormGenericLinkHref))
+      return this.store.t('core.component.form-builder.link.unsafe');
+    if (element?.type === 'image' && rejectedUrl(element['src'], sdFormGenericImageSrc))
+      return this.store.t('core.component.form-builder.image.unsafe');
+    return '';
+  });
+
+  /** Bản nháp chưa ghi (không hợp lệ) của chuỗi bắt buộc, theo phần tử đang chọn. */
+  readonly #drafts = signal<{ readonly id: string | null; readonly values: Readonly<Partial<Record<DraftProperty, string>>> }>({
+    id: null,
+    values: {},
+  });
+  #draftBase: { id: string | null; values: Partial<Record<DraftProperty, unknown>> } = { id: null, values: {} };
+
   constructor() {
     this.#formGeneric.htmlDefinitions().then(list => this.htmlDefinitions.set(list ?? []));
     // why: chỉ nạp lại ô key khi đổi field được chọn hoặc key đổi từ ngoài (undo/redo). Sửa thuộc tính
@@ -453,6 +527,26 @@ export class InspectorComponent {
         if (sameField && this.keyDraft().trim() === key) return;
         this.keyDraft.set(key);
         this.keyMessage.set('');
+      });
+    });
+    // why: undo/redo (hoặc schema mới) đổi một chuỗi bắt buộc từ NGOÀI inspector — bỏ bản nháp chưa ghi của
+    // đúng thuộc tính đó để ô nhập hiện giá trị thật; chọn phần tử khác thì bỏ mọi bản nháp.
+    effect(() => {
+      const element = this.element() as Record<string, unknown> | null;
+      const id = typeof element?.['id'] === 'string' ? element['id'] : null;
+      const values: Partial<Record<DraftProperty, unknown>> = {
+        text: element?.['text'],
+        label: element?.['label'],
+        name: element?.['name'],
+      };
+      untracked(() => {
+        const base = this.#draftBase;
+        this.#draftBase = { id, values };
+        const drafts = this.#drafts();
+        const pending = Object.keys(drafts.values) as DraftProperty[];
+        const kept = drafts.id === id && base.id === id ? pending.filter(property => base.values[property] === values[property]) : [];
+        if (drafts.id === id && kept.length === pending.length) return;
+        this.#drafts.set({ id, values: Object.fromEntries(kept.map(property => [property, drafts.values[property]])) });
       });
     });
   }
@@ -861,6 +955,81 @@ export class InspectorComponent {
     if (!field) return;
     const key = randomKey(paletteIdOf(field), collectKeys(this.store.doc(), field.id));
     this.store.update(field.id, item => ({ ...item, key }) as BuilderItem);
+  }
+
+  // ── Phần tử Tĩnh / button ─────────────────────────────────────────────────
+
+  /** Giá trị của ô chuỗi bắt buộc: bản nháp chưa ghi nếu có, không thì giá trị trong schema. */
+  draftOf = (property: DraftProperty): string => {
+    const element = this.element() as Record<string, unknown> | null;
+    if (!element) return '';
+    const drafts = this.#drafts();
+    const draft = drafts.id === element['id'] ? drafts.values[property] : undefined;
+    if (draft !== undefined) return draft;
+    const value = element[property];
+    return typeof value === 'string' ? value : '';
+  };
+
+  /** Lỗi của ô chuỗi bắt buộc; `''` = hợp lệ. */
+  draftError = (property: DraftProperty): string => this.#textError(property, this.draftOf(property));
+
+  /**
+   * Gõ vào ô chuỗi bắt buộc (text, label, name). Hợp lệ thì ghi ngay — gõ liên tục gộp một bước undo; không
+   * hợp lệ thì chỉ giữ bản nháp ở inspector, schema giữ giá trị hợp lệ gần nhất (INV-008).
+   */
+  setDraft(property: DraftProperty, value: string | null): void {
+    const id = this.#id();
+    if (!id) return;
+    const text = value ?? '';
+    const invalid = !!this.#textError(property, text);
+    const drafts = this.#drafts();
+    const values: Partial<Record<DraftProperty, string>> = { ...(drafts.id === id ? drafts.values : {}) };
+    if (invalid) values[property] = text;
+    else delete values[property];
+    this.#drafts.set({ id, values });
+    if (!invalid) this.#update(next => (next[property] = text), `${id}:${property}`);
+  }
+
+  /** Cùng điều kiện với ngữ pháp (`sdNonFieldIssues`): rỗng sau khi trim, hoặc `name` là submit/reset. */
+  #textError(property: DraftProperty, value: string): string {
+    const text = value.trim();
+    if (!text)
+      return this.store.t(
+        property === 'name' ? 'core.component.form-builder.button.name-missing' : 'core.component.form-builder.text.required'
+      );
+    if (property === 'name' && SD_FORM_GENERIC_RESERVED_ACTION_NAMES.has(text))
+      return this.store.t('core.component.form-builder.button.name-reserved');
+    return '';
+  }
+
+  /** Chuỗi được rỗng nhưng luôn có mặt trong schema (`src`, `alt`, `href`). */
+  setText(property: 'src' | 'alt' | 'href', value: string | null): void {
+    this.#update(next => (next[property] = value ?? ''), `${this.#id()}:${property}`);
+  }
+
+  /** Select có lựa chọn "mặc định" — NONE xoá thuộc tính. */
+  setChoice(property: string, value: string | null): void {
+    this.set(property, value === NONE ? undefined : value);
+  }
+
+  /**
+   * Đổi action. Sang `custom`: tự sinh `name` chưa button nào dùng (D-014); rời `custom`: bỏ `name` và
+   * `validate` — chỉ custom dùng chúng.
+   */
+  setButtonAction(action: string | null): void {
+    const button = this.button();
+    if (!button || !action || action === button.action) return;
+    const current = typeof button.name === 'string' ? button.name.trim() : '';
+    const base = current && !SD_FORM_GENERIC_RESERVED_ACTION_NAMES.has(current) ? current : 'action';
+    const name = uniqueName(base, collectButtonNames(this.store.doc(), button.id));
+    this.#update(next => {
+      next['action'] = action;
+      if (action === 'custom') next['name'] = name;
+      else {
+        delete next['name'];
+        delete next['validate'];
+      }
+    });
   }
 
   // ── Group ─────────────────────────────────────────────────────────────────

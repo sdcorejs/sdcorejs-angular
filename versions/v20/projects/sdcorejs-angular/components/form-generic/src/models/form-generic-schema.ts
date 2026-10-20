@@ -1,4 +1,5 @@
 import { Utilities } from '@sdcorejs/utils/fns';
+import type { SdFormGenericButton, SdFormGenericStatic } from './form-generic-element.model';
 import type { SdFormGenericField } from './form-generic-field.model';
 import type { SdFormGenericGroup, SdFormGenericSchema } from './form-generic-schema.model';
 
@@ -21,6 +22,19 @@ export const SD_FORM_GENERIC_FIELD_TYPES: ReadonlySet<string> = new Set([
   'html',
 ]);
 
+/** Type phần tử Tĩnh (đợt 2): chỉ hiển thị chữ/ảnh/liên kết, không có key. Nội bộ — không export runtime. */
+const SD_FORM_GENERIC_STATIC_TYPES: ReadonlySet<string> = new Set(['heading', 'paragraph', 'quote', 'image', 'link', 'divider', 'notice']);
+
+/** Loại phần tử Tĩnh có `text` bắt buộc. */
+const STATIC_TYPES_WITH_TEXT: ReadonlySet<string> = new Set(['heading', 'paragraph', 'quote', 'link', 'notice']);
+
+const BUTTON_ACTIONS: ReadonlySet<string> = new Set(['submit', 'reset', 'custom']);
+
+/** `name` mà button custom không được dùng: nó là action được phát, nên không được giả submit/reset. */
+export const SD_FORM_GENERIC_RESERVED_ACTION_NAMES: ReadonlySet<string> = new Set(['submit', 'reset']);
+
+const HEADING_LEVELS: ReadonlySet<unknown> = new Set([2, 3, 4]);
+
 /**
  * Key không dùng được cho field hay biến: tên thuộc tính của `Object.prototype` (`__proto__`,
  * `constructor`, `toString`…) và `prototype`. why: value là object thường — các tên này đọc ra thuộc
@@ -38,7 +52,13 @@ export type SdFormGenericSchemaIssueCode =
   | 'key-missing'
   | 'key-reserved'
   | 'key-duplicate'
-  | 'key-variable-conflict';
+  | 'key-variable-conflict'
+  // đợt 2: phần tử Tĩnh và button
+  | 'text-missing'
+  | 'heading-level-invalid'
+  | 'button-action-invalid'
+  | 'button-name-missing'
+  | 'button-name-reserved';
 
 export interface SdFormGenericSchemaIssue {
   code: SdFormGenericSchemaIssueCode;
@@ -58,6 +78,33 @@ export const sdIsGroup = (element: unknown): element is SdFormGenericGroup => is
 
 export const sdIsField = (element: unknown): element is SdFormGenericField =>
   isRecord(element) && typeof element['type'] === 'string' && SD_FORM_GENERIC_FIELD_TYPES.has(element['type']);
+
+/** Phần tử Tĩnh: heading, paragraph, quote, image, link, divider, notice. */
+export const sdIsStatic = (element: unknown): element is SdFormGenericStatic =>
+  isRecord(element) && typeof element['type'] === 'string' && SD_FORM_GENERIC_STATIC_TYPES.has(element['type']);
+
+export const sdIsButton = (element: unknown): element is SdFormGenericButton => isRecord(element) && element['type'] === 'button';
+
+const isText = (value: unknown): value is string => typeof value === 'string' && value.trim() !== '';
+
+/** Lỗi ngữ pháp riêng của một phần tử Tĩnh hoặc button (không gồm id). Mảng rỗng = hợp lệ. */
+export const sdNonFieldIssues = (element: SdFormGenericStatic | SdFormGenericButton): SdFormGenericSchemaIssueCode[] => {
+  const record = element as unknown as JsonRecord;
+  const issues: SdFormGenericSchemaIssueCode[] = [];
+  if (sdIsButton(element)) {
+    if (!isText(record['label'])) issues.push('text-missing');
+    if (!BUTTON_ACTIONS.has(record['action'] as string)) issues.push('button-action-invalid');
+    else if (record['action'] === 'custom') {
+      if (!isText(record['name'])) issues.push('button-name-missing');
+      else if (SD_FORM_GENERIC_RESERVED_ACTION_NAMES.has((record['name'] as string).trim())) issues.push('button-name-reserved');
+    }
+    return issues;
+  }
+  if (STATIC_TYPES_WITH_TEXT.has(element.type) && !isText(record['text'])) issues.push('text-missing');
+  if (element.type === 'heading' && record['level'] !== undefined && !HEADING_LEVELS.has(record['level']))
+    issues.push('heading-level-invalid');
+  return issues;
+};
 
 /** Kiểm tra ngữ pháp; mảng rỗng nghĩa là hợp lệ. Type lạ không bị coi là lỗi. */
 export const sdValidateSchema = (schema: unknown): SdFormGenericSchemaIssue[] => {
@@ -102,6 +149,11 @@ export const sdValidateSchema = (schema: unknown): SdFormGenericSchemaIssue[] =>
     if (element['type'] === 'group') {
       if (insideGroup) issues.push({ code: 'group-nested', path, id: element['id'] as string });
       listOf(element['elements']).forEach((child, index) => visitElement(child, `${path}.elements[${index}]`, true));
+      return;
+    }
+    // why: static elements and buttons hold no value, so they never take part in key checks.
+    if (sdIsStatic(element) || sdIsButton(element)) {
+      for (const code of sdNonFieldIssues(element)) issues.push({ code, path, id: element['id'] as string });
       return;
     }
     const key = element['key'];

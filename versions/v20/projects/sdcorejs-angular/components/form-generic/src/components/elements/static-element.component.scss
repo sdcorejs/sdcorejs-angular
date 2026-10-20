@@ -1,0 +1,94 @@
+// Phần tử Tĩnh của form generic — chỉ token, không mã màu cứng.
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.sd-fg-heading {
+  margin: 0;
+  color: var(--sd-text);
+  font-weight: var(--sd-font-weight-semibold, 600);
+  overflow-wrap: anywhere;
+}
+
+.sd-fg-heading--2 {
+  font-size: var(--sd-font-size-20, 20px);
+  line-height: var(--sd-line-height-28, 28px);
+}
+
+.sd-fg-heading--3 {
+  font-size: var(--sd-font-size-16, 16px);
+  line-height: var(--sd-line-height-24, 24px);
+}
+
+.sd-fg-heading--4 {
+  font-size: var(--sd-font-size-14, 14px);
+  line-height: var(--sd-line-height-20, 20px);
+}
+
+.sd-fg-paragraph,
+.sd-fg-quote__text {
+  margin: 0;
+  color: var(--sd-text);
+  font-size: var(--sd-font-size-14, 14px);
+  line-height: var(--sd-line-height-20, 20px);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.sd-fg-quote {
+  margin: 0;
+  padding: 4px 0 4px 12px;
+  border-left: 3px solid var(--sd-border);
+}
+
+.sd-fg-quote__text {
+  font-style: italic;
+}
+
+.sd-fg-quote__cite {
+  margin-top: 4px;
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-12, 12px);
+}
+
+.sd-fg-image {
+  margin: 0;
+}
+
+.sd-fg-image__img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.sd-fg-image__caption {
+  margin-top: 4px;
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-12, 12px);
+}
+
+.sd-fg-link {
+  font-size: var(--sd-font-size-14, 14px);
+  line-height: var(--sd-line-height-20, 20px);
+  overflow-wrap: anywhere;
+}
+
+a.sd-fg-link {
+  color: var(--sd-primary);
+}
+
+.sd-fg-link--plain {
+  color: var(--sd-text);
+}
+
+.sd-fg-divider {
+  margin: 8px 0;
+  border: 0;
+  border-top: 1px solid var(--sd-border);
+}
+
+// why: sd-inform keeps no line breaks itself; the inherited white-space keeps those of the notice text.
+.sd-fg-notice {
+  white-space: pre-line;
+}

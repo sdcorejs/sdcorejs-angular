@@ -4,6 +4,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
 import {
   SdFormBuilder,
   SdFormRender,
+  type SdFormGenericAction,
   type SdFormGenericField,
   type SdFormGenericPageElement,
   type SdFormGenericSchema,
@@ -16,6 +17,14 @@ const SEED: SdFormGenericSchema = {
     {
       id: 'main',
       elements: [
+        { id: 's-title', type: 'heading', text: 'Đăng ký tham gia chương trình', level: 2 },
+        {
+          id: 's-notice',
+          type: 'notice',
+          color: 'info',
+          title: 'Trước khi bắt đầu',
+          text: 'Các trường có dấu * là bắt buộc.\nThông tin chỉ dùng cho chương trình này.',
+        },
         {
           id: 'g-personal',
           type: 'group',
@@ -166,6 +175,26 @@ const SEED: SdFormGenericSchema = {
             required: { field: 'budget', operator: 'GREATER_THAN', data: 100000000 },
           },
         },
+        { id: 's-divider', type: 'divider' },
+        // why: button chỉ phát (sdAction) — gửi/lưu nháp là việc của trang (xem onAction).
+        {
+          id: 'b-submit',
+          type: 'button',
+          label: 'Gửi đăng ký',
+          icon: 'send',
+          action: 'submit',
+          layout: { span: { desktop: 3, tablet: 4 } },
+        },
+        {
+          id: 'b-draft',
+          type: 'button',
+          label: 'Lưu nháp',
+          icon: 'save',
+          action: 'custom',
+          name: 'save-draft',
+          layout: { span: { desktop: 3, tablet: 4 } },
+        },
+        { id: 'b-reset', type: 'button', label: 'Nhập lại', action: 'reset', variant: 'text', layout: { span: { desktop: 3, tablet: 4 } } },
       ],
     },
   ],
@@ -224,7 +253,7 @@ const PREVIEW_WIDTHS = [null, 1100, 800, 480] as const;
     <demo-page
       #demoPage
       title="Form Generic"
-      description="Form builder nhúng (Desktop | Tablet | Mobile, span theo mức, bắt đầu hàng mới, điều kiện Filter, preset Email/SĐT/Tiền tệ…, kéo-thả, undo/redo) và renderer dùng chung schema SdFormGenericSchema.">
+      description="Form builder nhúng (Desktop | Tablet | Mobile, span theo mức, bắt đầu hàng mới, điều kiện Filter, preset Email/SĐT/Tiền tệ…, phần tử Tĩnh và button, kéo-thả, undo/redo) và renderer dùng chung schema SdFormGenericSchema.">
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-builder-render') {
         <demo-section
           heading="Builder + Render"
@@ -264,11 +293,24 @@ const PREVIEW_WIDTHS = [null, 1100, 800, 480] as const;
               </span>
             </div>
             <div class="render-preview__frame" [style.max-width.px]="previewWidth()">
-              <sd-form-render #renderer [schema]="schema() ?? emptySchema" [(value)]="value" [variables]="variables"></sd-form-render>
+              <sd-form-render
+                #renderer
+                [schema]="schema() ?? emptySchema"
+                [(value)]="value"
+                [variables]="variables"
+                (sdAction)="onAction($event)"></sd-form-render>
             </div>
             @if (result(); as _result) {
               <p class="render-preview__result">{{ _result }}</p>
             }
+            <div class="action-log" aria-live="polite">
+              <span class="action-log__title">(sdAction)</span>
+              @for (entry of actions(); track $index) {
+                <code class="action-log__entry">{{ entry.action }} · {{ entry.buttonId ?? 'code' }}</code>
+              } @empty {
+                <span class="action-log__empty">Bấm một button trong form để xem action được phát.</span>
+              }
+            </div>
             <pre class="render-preview__value">{{ value() | json }}</pre>
           </div>
         </demo-section>
@@ -327,6 +369,25 @@ const PREVIEW_WIDTHS = [null, 1100, 800, 480] as const;
         margin: 8px 0 0;
         font-size: 13px;
       }
+      .action-log {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        margin-top: 8px;
+        font-size: 12px;
+      }
+      .action-log__title {
+        font-weight: 600;
+      }
+      .action-log__entry {
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: var(--sd-surface-muted);
+      }
+      .action-log__empty {
+        color: var(--sd-text-secondary);
+      }
       .render-preview__value {
         max-height: 200px;
         overflow: auto;
@@ -350,6 +411,8 @@ export class FormGenericDemoComponent {
   readonly emptySchema = EMPTY;
   readonly previewWidth = signal<number | null>(null);
   readonly result = signal('');
+  /** Các (sdAction) gần nhất — trang thật gọi API ở đây (sau `upload()` nếu form có field upload). */
+  readonly actions = signal<SdFormGenericAction[]>([]);
 
   seedForm = (): SdFormGenericSchema => structuredClone(SEED);
   emptyForm = (): SdFormGenericSchema => structuredClone(EMPTY);
@@ -387,11 +450,16 @@ export class FormGenericDemoComponent {
     this.schema.set(schema);
     this.value.set({});
     this.result.set('');
+    this.actions.set([]);
     this.changes.set(0);
   }
 
   onChange(): void {
     this.changes.update(value => value + 1);
+  }
+
+  onAction(action: SdFormGenericAction): void {
+    this.actions.update(list => [...list, action].slice(-8));
   }
 
   async check(): Promise<void> {

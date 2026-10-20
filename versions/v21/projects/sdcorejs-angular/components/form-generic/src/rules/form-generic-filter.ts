@@ -144,3 +144,21 @@ export const sdElementState = (
     required: !!target.validation?.required || matches(rules?.required),
   };
 };
+
+/** Chế độ hiển thị của renderer áp lên phần tử không phải field. */
+export interface SdFormGenericDisplayPolicy {
+  viewed: boolean;
+  /** `[keys]` — danh sách trắng của field; `null` = không giới hạn. */
+  keys: ReadonlySet<string> | null;
+}
+
+/**
+ * Phần tử Tĩnh / button có hiện không: `[keys]` không đặt (keys chỉ liệt kê field), không ở `[viewed]` — trừ
+ * phần tử Tĩnh và button bật `showWhenViewed` — và rules cho phép (`state.visible`). `state.disabled` vẫn áp
+ * khi viewed.
+ */
+export const sdNonFieldVisible = (
+  element: { type: string; showWhenViewed?: boolean },
+  state: SdFormGenericElementState,
+  policy: SdFormGenericDisplayPolicy
+): boolean => policy.keys === null && (!policy.viewed || element.type !== 'button' || element.showWhenViewed === true) && state.visible;
