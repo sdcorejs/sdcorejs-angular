@@ -1,0 +1,101 @@
+// why: same layout and Material tokens as mat-paginator's own stylesheet. That stylesheet is only
+// attached once a <mat-paginator> has been created, which never happens on a page that holds only
+// unknown-total tables, so the rules are declared here against the shared `mat-mdc-paginator*` classes.
+// The table footer overrides (compact 40px row, 32px state layer, mobile 44px targets) therefore
+// apply to both paginators unchanged.
+:host {
+  display: block;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  color: var(--mat-paginator-container-text-color, var(--mat-sys-on-surface));
+  background-color: var(--mat-paginator-container-background-color, var(--mat-sys-surface));
+  font-family: var(--mat-paginator-container-text-font, var(--mat-sys-body-small-font));
+  line-height: var(--mat-paginator-container-text-line-height, var(--mat-sys-body-small-line-height));
+  font-size: var(--mat-paginator-container-text-size, var(--mat-sys-body-small-size));
+  font-weight: var(--mat-paginator-container-text-weight, var(--mat-sys-body-small-weight));
+  letter-spacing: var(--mat-paginator-container-text-tracking, var(--mat-sys-body-small-tracking));
+  --mat-form-field-container-height: var(--mat-paginator-form-field-container-height, 40px);
+  --mat-form-field-container-vertical-padding: var(--mat-paginator-form-field-container-vertical-padding, 8px);
+}
+
+:host ::ng-deep {
+  .mat-mdc-select-value {
+    font-size: var(--mat-paginator-select-trigger-text-size, var(--mat-sys-body-small-size));
+  }
+  .mat-mdc-form-field-subscript-wrapper {
+    display: none;
+  }
+  .mat-mdc-select {
+    line-height: 1.5;
+  }
+}
+
+.mat-mdc-paginator-outer-container {
+  display: flex;
+}
+
+.mat-mdc-paginator-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 8px;
+  flex-wrap: wrap;
+  width: 100%;
+  min-height: var(--mat-paginator-container-size, 56px);
+}
+
+.mat-mdc-paginator-page-size {
+  display: flex;
+  align-items: baseline;
+  margin-right: 8px;
+}
+
+:host-context([dir='rtl']) .mat-mdc-paginator-page-size {
+  margin-right: 0;
+  margin-left: 8px;
+}
+
+.mat-mdc-paginator-page-size-label {
+  margin: 0 4px;
+}
+
+.mat-mdc-paginator-page-size-select {
+  margin: 0 4px;
+  width: 84px;
+}
+
+.mat-mdc-paginator-range-label {
+  margin: 0 32px 0 24px;
+}
+
+.mat-mdc-paginator-range-actions {
+  display: flex;
+  align-items: center;
+}
+
+.mat-mdc-paginator-icon {
+  display: inline-block;
+  width: 28px;
+  fill: var(--mat-paginator-enabled-icon-color, var(--mat-sys-on-surface-variant));
+}
+
+.mat-mdc-icon-button[aria-disabled] .mat-mdc-paginator-icon {
+  fill: var(--mat-paginator-disabled-icon-color, color-mix(in srgb, var(--mat-sys-on-surface) 38%, transparent));
+}
+
+:host-context([dir='rtl']) .mat-mdc-paginator-icon {
+  transform: rotate(180deg);
+}
+
+@media (forced-colors: active) {
+  .mat-mdc-icon-button[aria-disabled] .mat-mdc-paginator-icon,
+  .mat-mdc-paginator-icon {
+    fill: currentColor;
+  }
+  .mat-mdc-paginator-range-actions .mat-mdc-icon-button {
+    outline: solid 1px;
+  }
+  .mat-mdc-paginator-range-actions .mat-mdc-icon-button[aria-disabled] {
+    color: GrayText;
+  }
+}

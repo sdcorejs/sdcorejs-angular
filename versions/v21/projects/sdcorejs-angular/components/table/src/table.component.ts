@@ -49,6 +49,18 @@ import { SdTableColumn, SdTableColumnNormal } from './models/table-column.model'
 import { SdTableCommand } from './models/table-command.model';
 import { SdTableOption } from './models/table-option.model';
 import {
+  SdTableUnknownTotalPageEvent,
+  SdTableUnknownTotalPagerState,
+  SdTableUnknownTotalPaginator,
+} from './components/unknown-total-paginator/unknown-total-paginator.component';
+import {
+  isUnknownTotal,
+  readUnknownTotalPage,
+  samePagePosition,
+  SdTablePagePosition,
+  SdTableShownPage,
+} from './services/table-paging/unknown-total.util';
+import {
   SdConvertToPagingReq,
   SdTableFilterRequest,
   TableFilterRegister,
@@ -174,6 +186,18 @@ interface ServerReadRequest<T> {
   valid: () => boolean;
 }
 
+interface TableReadResult<T> {
+  items: SdTableItem<T>[];
+  filteredItems?: SdTableItem<T>[];
+  aggregateComplete?: boolean;
+  total: number;
+  /** Unknown-total mode: whether the loader proved a next page. */
+  hasMore?: boolean;
+  /** Page the read asked for; committed as the shown page by a successful unknown-total render. */
+  page?: SdTablePagePosition;
+  readRevision?: number;
+}
+
 interface ScheduledTableRead {
   force: boolean;
   revision: number;
@@ -274,6 +298,7 @@ const EMPTY_COMMANDS: SdTableCommand[] = [];
     SdTranslatePipe,
     SdTableMobileCardsComponent,
     SdTableMobileActionsComponent,
+    SdTableUnknownTotalPaginator,
   ],
 })
 export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
@@ -375,10 +400,54 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
   items = signal<SdTableItem<T>[]>([]);
   selectedTableItems = signal<SdTableItem<T>[]>([]);
+  /** Record count of a known-total table; stays `undefined` with `paginate.total: 'unknown'`. */
   total = signal<number | undefined>(undefined);
 
   loading = signal(false);
   loadError = signal(false);
+
+  /** `paginate.total: 'unknown'` on a server table. */
+  readonly unknownTotal = computed(() => isUnknownTotal(this.tableOption()));
+  // why: unknown-total paging separates the page a read asks for from the page whose rows are on
+  // screen. Requests use the target; range, row numbers and Next only use the shown page, which a
+  // successful render alone may write, so a failed or stale read can never relabel the rows.
+  readonly #pageTarget = signal<SdTablePagePosition | undefined>(undefined);
+  readonly #shownPage = signal<SdTableShownPage | undefined>(undefined);
+  /** A read is waiting in the schedule (debounce) and has not started loading yet. */
+  readonly #readScheduled = signal(false);
+  readonly unknownTotalPager = computed<SdTableUnknownTotalPagerState | undefined>(() => {
+    if (!this.unknownTotal()) return undefined;
+    const target = this.#unknownTarget();
+    const shown = this.#shownPage();
+    const busy = this.loading() || this.#readScheduled();
+    const settled = this.readState().status !== 'error' && samePagePosition(shown, target);
+    const offset = shown ? shown.pageIndex * shown.pageSize : 0;
+    return {
+      pageIndex: target.pageIndex,
+      pageSize: target.pageSize,
+      // why: rows stay on screen while the next page loads and are removed when it fails, so the
+      // range follows the rendered rows of the shown page, never the target.
+      range: shown?.count && this.items().length ? { from: offset + 1, to: offset + shown.count } : undefined,
+      hasPrevious: !busy && target.pageIndex > 0,
+      hasNext: !busy && settled && !!shown?.hasMore,
+      busy,
+    };
+  });
+  /** Hidden until a page has loaded, and while the first page is the only page (same rule as `total <= pageSize`). */
+  readonly unknownTotalPagerVisible = computed(() => !!this.#shownPage() && this.knownRowCount() === undefined);
+  /**
+   * Size of the whole result when it is known: the total, or an unknown-total result whose first page is
+   * the only page. Drives `filter.hideInlineFilter: 'auto'`.
+   */
+  readonly knownRowCount = computed(() => {
+    if (!this.unknownTotal()) return this.total();
+    const shown = this.#shownPage();
+    return shown && shown.pageIndex === 0 && !shown.hasMore && this.#unknownTarget().pageIndex === 0 ? shown.count : undefined;
+  });
+  /** Rows of a single-page unknown-total result, for the "Đang hiển thị" summary. */
+  readonly unknownTotalSingleCount = computed(() =>
+    this.unknownTotal() && !this.unknownTotalPagerVisible() && this.items().length ? (this.#shownPage()?.count ?? 0) : 0
+  );
   readonly aggregateSnapshot = signal<AggregateSnapshot<T>>({ groups: new Map(), branches: new Map() });
   readonly aggregateRenderHost: AggregateRenderHost<T> = { rows: new WeakMap(), indices: new WeakMap() };
   #aggregateFilteredItems: SdTableItem<T>[] = [];
@@ -681,6 +750,8 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
           const subscription = sort.sortChange.subscribe(state => {
             this.sortState.set(state);
             this.#ref.markForCheck();
+            // why: without a total, page N of the old order says nothing about the new order.
+            this.#resetUnknownTotalPage();
             this.#requestReload(false);
           });
           onCleanup(() => subscription.unsubscribe());
@@ -730,6 +801,8 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
                     if (data !== this.#pendingReload || data.revision !== this.#optionRevision || !this.#configurationReady)
                       return undefined;
                     this.#pendingReload = undefined;
+                    // #load raises `loading` synchronously, so the pager stays busy without a gap.
+                    this.#readScheduled.set(false);
                     const filterInfo = this.getFilterRequest();
                     const result = await this.#load(filterInfo, !this.#loadCompleted || data.force);
                     if (data.revision !== this.#optionRevision || !result) return undefined;
@@ -775,6 +848,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
   #cancelReload = () => {
     this.#pendingReload = undefined;
+    this.#readScheduled.set(false);
     this.#reload.next(undefined);
   };
 
@@ -788,7 +862,53 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     this.#failedRead = undefined;
     this.loading.set(false);
     this.#pendingReload = { force: force || !!this.#pendingReload?.force, revision: this.#optionRevision, delay, source };
+    this.#readScheduled.set(true);
     this.#reload.next(this.#pendingReload);
+  };
+
+  /** Unknown-total mode: the page a read asks for; the first page until the user pages. */
+  #unknownTarget = (): SdTablePagePosition =>
+    this.#pageTarget() ?? { pageIndex: 0, pageSize: this.tableOption()?.paginate?.pageSize || 50 };
+
+  /** Filter, quick search and sort changes restart unknown-total paging at the first page, keeping the page size. */
+  #resetUnknownTotalPage = () => {
+    if (!this.unknownTotal()) return;
+    this.#pageTarget.set({ pageIndex: 0, pageSize: this.#unknownTarget().pageSize });
+  };
+
+  #warnedMissingTotal = false;
+  /** Known-total tables keep `total || 0`; a `{ items, hasMore }` result there is a missing `paginate.total: 'unknown'`. */
+  #warnMissingTotal = (response: unknown) => {
+    const result = response as { total?: unknown; hasMore?: unknown } | null | undefined;
+    if (this.#warnedMissingTotal || !result || typeof result.total === 'number' || typeof result.hasMore !== 'boolean') return;
+    this.#warnedMissingTotal = true;
+    console.warn(
+      `sd-table: items() resolved { items, hasMore } without a total; declare paginate: { total: 'unknown' } to page without a total.`
+    );
+  };
+
+  /** A requested page will not be read after all: point the target back at the shown page. */
+  #settleUnknownTotalTarget = () => {
+    const shown = this.#shownPage();
+    if (!this.unknownTotal() || !shown) return;
+    this.#pageTarget.set({ pageIndex: shown.pageIndex, pageSize: shown.pageSize });
+  };
+
+  /** Previous/Next/First and page-size changes of the unknown-total paginator. */
+  onUnknownTotalPage = (event: SdTableUnknownTotalPageEvent) => {
+    const pager = this.unknownTotalPager();
+    if (!pager || pager.busy) return;
+    const sizeChanged = event.pageSize !== pager.pageSize;
+    if (!sizeChanged) {
+      if (event.pageIndex === pager.pageIndex || event.pageIndex < 0) return;
+      if (event.pageIndex > pager.pageIndex && (!pager.hasNext || event.pageIndex !== pager.pageIndex + 1)) return;
+      if (event.pageIndex < pager.pageIndex && !pager.hasPrevious) return;
+    }
+    this.#pageTarget.set(
+      sizeChanged ? { pageIndex: 0, pageSize: event.pageSize } : { pageIndex: event.pageIndex, pageSize: pager.pageSize }
+    );
+    this.pageRevision.update(n => n + 1);
+    this.#requestReload(false);
   };
 
   #resetStateForNewOption = () => {
@@ -818,6 +938,8 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     this.items.set([]);
     this.selectedTableItems.set([]);
     this.total.set(undefined);
+    this.#pageTarget.set(undefined);
+    this.#shownPage.set(undefined);
     this.loading.set(false);
     this.isSelectAll.set(false);
     this.isSelectIndeterminate.set(false);
@@ -852,6 +974,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
   #initConfiguration = (option: SdTableOption): SdTableOption => {
     option.paginate = {
+      total: option?.paginate?.total,
       hidden: option?.paginate?.hidden,
       pageSize: option?.paginate?.pageSize ?? this.tableConfiguration?.paginate?.pageSize ?? DEFAULT_TABLE_CONFIG.paginate?.pageSize,
       pages: option?.paginate?.pages ?? this.tableConfiguration?.paginate?.pages ?? DEFAULT_TABLE_CONFIG.paginate?.pages,
@@ -949,10 +1072,16 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
         return;
       }
       if (value.notReload) {
-        if (this.#pendingReload?.source === 'filter' && !this.#pendingReload.force) this.#cancelReload();
+        if (this.#pendingReload?.source === 'filter' && !this.#pendingReload.force) {
+          this.#cancelReload();
+          // why: the cancelled filter read had moved the target to the first page; without a read the
+          // paginator must point at the rows still on screen again, not stay locked between two pages.
+          this.#settleUnknownTotalTarget();
+        }
         return;
       }
       if (this.paginator()) this.paginator()!.pageIndex = 0;
+      this.#resetUnknownTotalPage();
       // Giữ thời gian chờ tương tác cũ: filter 500ms + reload 200ms, trên cùng một lịch có thể hủy.
       this.#requestReload(false, 700, 'filter');
     });
@@ -984,6 +1113,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
   getFilterRequest = (): SdTableFilterRequest => {
     const { columnOperator, columnFilter, externalFilter, quickSearch } = this.filterRegister.value.get();
+    const target = this.unknownTotal() ? this.#unknownTarget() : undefined;
     return {
       columnOperator: columnOperator || {},
       rawColumnFilter: columnFilter || {},
@@ -991,8 +1121,8 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       ...(this.quickSearchOption() ? { quickSearch: quickSearch || { term: '', filters: {} } } : {}),
       orderBy: this.sort()?.active || '',
       orderDirection: this.sort()?.direction === 'asc' ? 'ASC' : this.sort()?.direction === 'desc' ? 'DESC' : undefined,
-      pageNumber: this.paginator()?.pageIndex || 0,
-      pageSize: this.paginator()?.pageSize || this.tableOption()?.paginate?.pageSize || 50,
+      pageNumber: target ? target.pageIndex : this.paginator()?.pageIndex || 0,
+      pageSize: target ? target.pageSize : this.paginator()?.pageSize || this.tableOption()?.paginate?.pageSize || 50,
       visibledColumns: ArrayUtilities.union('field', this.configuration()?.firstColumns || [], this.configuration()?.secondColumns || []),
     };
   };
@@ -1049,19 +1179,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     this.requireFiltered.set(!!this.tableOption()?.filter?.externalFilters?.some(e => e.required) || !this.quickSearchValid());
   };
 
-  #load = async (
-    filterReq: SdTableFilterRequest,
-    force = true
-  ): Promise<
-    | {
-        items: SdTableItem<T>[];
-        filteredItems?: SdTableItem<T>[];
-        aggregateComplete?: boolean;
-        total: number;
-        readRevision?: number;
-      }
-    | undefined
-  > => {
+  #load = async (filterReq: SdTableFilterRequest, force = true): Promise<TableReadResult<T> | undefined> => {
     this.#clearAggregate();
     this.loading.set(true);
     if (force || this.tableOption()?.type === 'server') this.loadError.set(false);
@@ -1103,6 +1221,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
           items: [],
           total: 0,
           aggregateComplete: false,
+          page: { pageIndex: filterReq.pageNumber, pageSize: filterReq.pageSize },
         };
       }
       const snapshot = cloneReadRequest(filterReq);
@@ -1153,30 +1272,30 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     return Utilities.hash({ ...request, visibledColumns: request.visibledColumns?.map(column => column.field) });
   };
 
-  #runServerRead = async (request: ServerReadRequest<T>) => {
+  #runServerRead = async (request: ServerReadRequest<T>): Promise<TableReadResult<T> | undefined> => {
     this.#clearAggregate();
     const revision = this.#read.begin(request.valid);
     this.#failedRead = undefined;
     this.loading.set(true);
     try {
       // why: mỗi lần gọi nhận bản sao riêng; loader không được sửa snapshot dành cho retry.
-      const data = await request.option.items(cloneReadRequest(request.filter), cloneReadRequest(request.paging));
+      const response = await request.option.items(cloneReadRequest(request.filter), cloneReadRequest(request.paging));
       if (!this.#read.isCurrent(revision)) return undefined;
+      const page = { pageIndex: request.filter.pageNumber, pageSize: request.filter.pageSize };
+      // why: unknown-total loaders must prove the next page; a malformed result fails this read (with retry).
+      const unknown = isUnknownTotal(request.option) ? readUnknownTotalPage<T>(response, page.pageSize) : undefined;
+      const rows = unknown ? unknown.items : response?.items;
       // why: formatter có await và ghi cache; chỉ commit bản riêng khi request còn hiện hành.
       const values = cloneReadRequest(this.cacheValues);
       const objectValues = cloneReadRequest(this.#cacheObjValues);
-      const formatted = await this.#tableFormatService.format(
-        data?.items,
-        request.option.columns,
-        values,
-        objectValues,
-        request.option.rowKey
-      );
-      if (!this.#read.succeed(revision, data?.items?.length || 0)) return undefined;
+      const formatted = await this.#tableFormatService.format(rows, request.option.columns, values, objectValues, request.option.rowKey);
+      if (!this.#read.succeed(revision, rows?.length || 0)) return undefined;
       if (!this.#read.isCurrent(revision)) return undefined;
       this.cacheValues = values;
       this.#cacheObjValues = objectValues;
-      return { items: formatted, total: data?.total || 0, readRevision: revision };
+      if (!unknown) this.#warnMissingTotal(response);
+      const total = unknown ? 0 : (response as { total?: number } | undefined)?.total || 0;
+      return { items: formatted, total, hasMore: unknown?.hasMore, page, readRevision: revision };
     } catch (error) {
       if (this.#read.isCurrent(revision)) {
         this.#failedRead = request;
@@ -1187,6 +1306,13 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     } finally {
       if (this.#read.isCurrent(revision)) {
         this.loading.set(false);
+        this.#ref.markForCheck();
+      } else if (this.#read.isLatest(revision) && !this.#destroyed) {
+        // why: a filter commit without reload (`notReload`) moves the read context, so this response is
+        // dropped although no newer read will follow; release loading instead of locking the table.
+        this.#read.invalidate();
+        this.loading.set(false);
+        this.#settleUnknownTotalTarget();
         this.#ref.markForCheck();
       }
     }
@@ -1219,13 +1345,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     if (result) await this.#render(result, false, { fromSource: 'RELOAD' });
   };
 
-  #render = async (
-    args:
-      | { items: SdTableItem<T>[]; filteredItems?: SdTableItem<T>[]; aggregateComplete?: boolean; total: number; readRevision?: number }
-      | undefined,
-    scrollTop = true,
-    additionArgs?: { fromSource?: 'PAGING' | 'RELOAD' }
-  ) => {
+  #render = async (args: TableReadResult<T> | undefined, scrollTop = true, additionArgs?: { fromSource?: 'PAGING' | 'RELOAD' }) => {
     if (this.#destroyed) return;
     if (!args || (args.readRevision !== undefined && !this.#read.isCurrent(args.readRevision))) return;
     const optionRevision = this.#optionRevision;
@@ -1249,7 +1369,14 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     }
 
     this.items.set(args?.items || []);
-    this.total.set(args?.total || 0);
+    if (this.unknownTotal()) {
+      // why: rows and their page label change in the same synchronous step; nothing else writes the shown page.
+      this.total.set(undefined);
+      const items = this.items();
+      this.#shownPage.set({ ...(args.page ?? this.#unknownTarget()), count: items.length, hasMore: !!args.hasMore && items.length > 0 });
+    } else {
+      this.total.set(args?.total || 0);
+    }
 
     if (treeOpt) {
       initTreeMeta(this.items(), treeOpt, {
@@ -1350,8 +1477,9 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
           quickSearch: this.quickSearchOption(),
           dateTime: this.#dateTime,
         });
-        const result = opt.items(filterReq, pagingReq);
-        return await result;
+        const result = await opt.items(filterReq, pagingReq);
+        // why: a lookahead row past the chunk would be exported twice once the next chunk starts at its offset.
+        return isUnknownTotal(opt) ? readUnknownTotalPage<T>(result, pageSize) : result;
       } else {
         let exportedItems: T[] = [];
         if (typeof opt.items === 'function') {
@@ -1377,7 +1505,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     return {
       option: this.tableOption()!,
       configuration: this.configuration(),
-      total: this.total() || 0,
+      total: this.unknownTotal() ? undefined : this.total() || 0,
       cacheObjValues: this.#cacheObjValues,
       getFilterInfo: () => this.getFilterRequest(),
       fetchChunk: (pageNumber: number, pageSize: number) => this.#exportedItems(pageNumber, pageSize),
@@ -1859,6 +1987,11 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   // Template chỉ cần đọc pageOffset() rồi cộng `i + 1` (rẻ hơn gọi function).
   pageOffset = computed(() => {
     this.pageRevision();
+    if (this.unknownTotal()) {
+      // why: row numbers belong to the rows on screen, not to a page that is still loading or failed.
+      const shown = this.#shownPage();
+      return shown ? shown.pageIndex * shown.pageSize : 0;
+    }
     const p = this.paginator();
     return (p?.pageIndex ?? 0) * (p?.pageSize ?? 0);
   });

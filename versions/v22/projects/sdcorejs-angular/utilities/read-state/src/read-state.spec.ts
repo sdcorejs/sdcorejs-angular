@@ -45,7 +45,9 @@ describe('control read requests', () => {
     context = 'new';
     expect(channel.succeed(id, 1)).toBeFalse();
     expect(channel.fail(id, 'stale')).toBeFalse();
+    expect(channel.isLatest(id)).withContext('no newer read began; only the context moved').toBeTrue();
     channel.invalidate();
+    expect(channel.isLatest(id)).toBeFalse();
     expect(channel.state().status).toBe('idle');
     expect(channel.isCurrent(id)).toBeFalse();
   });

@@ -29,7 +29,7 @@
   !_isMobile &&
   !_tableOption?.filter?.disabled &&
   _tableOption?.filter?.hideInlineFilter !== true &&
-  !(_tableOption?.filter?.hideInlineFilter === 'auto' && !_isFiltered && _total! <= 10);
+  !(_tableOption?.filter?.hideInlineFilter === 'auto' && !_isFiltered && knownRowCount()! <= 10);
 @let _commandHeaderDef = sdCommandHeaderDef();
 @let _quickSearch = quickSearchOption();
 @let _aggregate = aggregateSnapshot();
@@ -808,21 +808,41 @@
             }
           }
         </div>
-        @let hidePaginator = !_tableOption.paginate?.pageSize || _total === undefined || _total <= _tableOption.paginate?.pageSize!;
-        <mat-paginator
-          [class.sd-mobile-paginator]="_mobileCards"
-          [class.d-none]="_tableOption.paginate?.hidden || hidePaginator"
-          [length]="_total"
-          [pageSize]="_tableOption.paginate?.pageSize"
-          [pageSizeOptions]="_tableOption.paginate?.pages!"
-          [showFirstLastButtons]="!_isMobile && _tableOption.paginate?.showFirstLastButtons"
-          [hidePageSize]="_isMobile || _tableOption.paginate?.hidePageSize"></mat-paginator>
-        <!-- "Đang hiển thị..." chỉ desktop -->
-        @if (!_isMobile) {
-          @if (!_tableOption.paginate?.hidden && hidePaginator && _total !== undefined && _total > 0) {
+        @let _unknownTotalPager = unknownTotalPager();
+        @if (_unknownTotalPager) {
+          <!-- paginate.total 'unknown': no total exists, so mat-paginator (which derives Next/Last and the
+               range from `length`) is replaced by a pager that renders only the rows actually shown. -->
+          @if (!_tableOption.paginate?.hidden && unknownTotalPagerVisible()) {
+            <sd-table-unknown-total-paginator
+              [class.sd-mobile-paginator]="_mobileCards"
+              [state]="_unknownTotalPager"
+              [pageSizeOptions]="_tableOption.paginate?.pages"
+              [hidePageSize]="_isMobile || !!_tableOption.paginate?.hidePageSize"
+              [showFirstButton]="!_isMobile && !!_tableOption.paginate?.showFirstLastButtons"
+              [autoId]="_autoId"
+              (page)="onUnknownTotalPage($event)"></sd-table-unknown-total-paginator>
+          } @else if (!_isMobile && !_tableOption.paginate?.hidden && unknownTotalSingleCount()) {
             <div class="T14R c-summary">
-              {{ 'core.component.table.showing' | sdTranslate }} <span class="T14M ml-2">1-{{ _total }}/{{ _total }}</span>
+              {{ 'core.component.table.showing' | sdTranslate }} <span class="T14M ml-2">1-{{ unknownTotalSingleCount() }}</span>
             </div>
+          }
+        } @else {
+          @let hidePaginator = !_tableOption.paginate?.pageSize || _total === undefined || _total <= _tableOption.paginate?.pageSize!;
+          <mat-paginator
+            [class.sd-mobile-paginator]="_mobileCards"
+            [class.d-none]="_tableOption.paginate?.hidden || hidePaginator"
+            [length]="_total"
+            [pageSize]="_tableOption.paginate?.pageSize"
+            [pageSizeOptions]="_tableOption.paginate?.pages!"
+            [showFirstLastButtons]="!_isMobile && _tableOption.paginate?.showFirstLastButtons"
+            [hidePageSize]="_isMobile || _tableOption.paginate?.hidePageSize"></mat-paginator>
+          <!-- "Đang hiển thị..." chỉ desktop -->
+          @if (!_isMobile) {
+            @if (!_tableOption.paginate?.hidden && hidePaginator && _total !== undefined && _total > 0) {
+              <div class="T14R c-summary">
+                {{ 'core.component.table.showing' | sdTranslate }} <span class="T14M ml-2">1-{{ _total }}/{{ _total }}</span>
+              </div>
+            }
           }
         }
       </div>
