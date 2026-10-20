@@ -207,6 +207,7 @@ export type ShowcaseExampleSourceKey =
   | "components/table/example-nhom-don-hang-theo-khach"
   | "components/table/example-nhom-dong"
   | "components/table/example-quick-search"
+  | "components/table/example-server-khong-biet-tong"
   | "components/table/example-server-side"
   | "components/table/example-the-mobile-va-thao-tac"
   | "components/table/example-toi-gian"
@@ -1907,6 +1908,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-server-side",
     title: "Server-side",
     description: "Existing “Server-side” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/table/example-server-khong-biet-tong",
+    pageKey: "components/table",
+    sectionId: "example-server-khong-biet-tong",
+    title: "Server không biết tổng",
+    description: "API offset/limit không trả tổng: loader lấy pageSize + 1 dòng để biết còn trang sau. Range chỉ tính dòng đã tải, không có nút Trang cuối. Bật 'Lỗi ở lần tải kế tiếp' rồi bấm Trang sau để xem lỗi và Thử lại; 'Xoá bớt dữ liệu nguồn' khi đang ở trang 2 để xem trang rỗng.",
   },
   {
     sourceKey: "components/table/example-giu-selection-xuyen-trang",

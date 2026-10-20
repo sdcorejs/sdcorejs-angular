@@ -6,6 +6,7 @@ import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
 import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
 import { TableAggregateDemoComponent } from './table-aggregate-example.component';
+import { TableUnknownTotalDemoComponent } from './table-unknown-total-example.component';
 import {
   SdTable,
   SdTableOption,
@@ -179,6 +180,7 @@ const TASKS: Task[] = [
     SdCheckbox,
     SdTableQuickSearchRightDefDirective,
     TableAggregateDemoComponent,
+    TableUnknownTotalDemoComponent,
   ],
   template: `
     <demo-page #demoPage
@@ -586,6 +588,14 @@ const TASKS: Task[] = [
         <div class="table-box">
           <sd-table [option]="serverOption"></sd-table>
         </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-server-khong-biet-tong') {
+      <demo-section heading="Server không biết tổng" [props]="[{ name: 'paginate.total', value: 'unknown' }, { name: 'items', value: '{ items, hasMore }' }]"
+        data-example-typescript="./table-unknown-total-example.component.ts" data-example-template="./table-unknown-total-example.component.html"
+        note="API offset/limit không trả tổng: loader lấy pageSize + 1 dòng để biết còn trang sau. Range chỉ tính dòng đã tải, không có nút Trang cuối. Bật 'Lỗi ở lần tải kế tiếp' rồi bấm Trang sau để xem lỗi và Thử lại; 'Xoá bớt dữ liệu nguồn' khi đang ở trang 2 để xem trang rỗng.">
+        <app-table-unknown-total-demo />
       </demo-section>
       }
 

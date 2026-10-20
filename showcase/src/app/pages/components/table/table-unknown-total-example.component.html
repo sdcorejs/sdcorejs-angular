@@ -1,0 +1,31 @@
+<div class="ut-toolbar">
+  <sd-checkbox label="Lỗi ở lần tải kế tiếp" size="sm" [model]="failNext()" (sdChange)="failNext.set(!!$event)" />
+  <sd-checkbox label="Mạng chậm (1,5 giây)" size="sm" [model]="slow()" (sdChange)="slow.set(!!$event)" />
+  <sd-button title="Xoá bớt dữ liệu nguồn" size="sm" type="outline" (click)="shrink()" />
+  <sd-button title="Khôi phục dữ liệu" size="sm" type="outline" (click)="restore()" />
+</div>
+<p class="T14R">
+  Trạng thái đọc: <strong>{{ readState() }}</strong> · Nguồn có {{ sourceSize() }} sự kiện, nhưng API chỉ trả danh sách theo
+  <code>first</code>/<code>max</code>, không trả tổng.
+</p>
+
+<sd-table autoId="unknown-total" [option]="unknownOption" (sdReadStateChange)="readState.set($event.status)">
+  <ng-template [sdTableRowMobileDef]="unknownOption" let-item="item">
+    <strong>{{ item.user }}</strong>
+    <div>{{ item.type }} · {{ item.time | date: 'dd/MM/yyyy HH:mm' }}</div>
+  </ng-template>
+</sd-table>
+
+<ol class="ut-log" aria-label="Nhật ký request">
+  @for (line of log(); track $index) {
+    <li>{{ line }}</li>
+  }
+</ol>
+
+<h4 class="ut-heading T16M">So sánh: cùng API khi có tổng (mặc định, known total)</h4>
+<sd-table autoId="known-total" [option]="knownOption">
+  <ng-template [sdTableRowMobileDef]="knownOption" let-item="item">
+    <strong>{{ item.user }}</strong>
+    <div>{{ item.type }} · {{ item.time | date: 'dd/MM/yyyy HH:mm' }}</div>
+  </ng-template>
+</sd-table>

@@ -74,6 +74,100 @@ Import directive từ `@sdcorejs/angular/components/data-state`; types từ
 `@sdcorejs/angular/utilities/read-state`. Xem
 [contract và migration](../../utilities/read-state/sd-read-state.md).
 
+## Phân trang không biết tổng (`paginate.total: 'unknown'`)
+
+Dùng cho API phân trang theo offset/limit nhưng không trả tổng số bản ghi (ví dụ
+endpoint chỉ nhận `first`/`max` và trả một danh sách). Khai báo tường minh
+`paginate.total: 'unknown'` trên bảng `type: 'server'`; `items()` trả
+`SdTableServerHasMoreResult<T>` = `{ items, hasMore }` thay cho `{ items, total }`.
+Bảng không khai báo (mặc định `'known'`) và bảng `type: 'local'` giữ nguyên hành vi cũ.
+
+```ts
+import { firstValueFrom } from 'rxjs';
+import { SdTableOption, SdTableServerHasMoreResult } from '@sdcorejs/angular/components/table';
+
+readonly option: SdTableOption<AuditEvent> = {
+  type: 'server',
+  rowKey: 'id',
+  paginate: { total: 'unknown', pageSize: 25, pages: [25, 50, 100] },
+  columns: [
+    { field: 'time', type: 'datetime', title: 'Thời điểm' },
+    { field: 'type', type: 'string', title: 'Sự kiện' },
+  ],
+  items: async (filter, paging): Promise<SdTableServerHasMoreResult<AuditEvent>> => {
+    const max = paging.pageSize!;
+    const first = paging.pageNumber! * max; // offset tăng theo pageSize, không theo số dòng lookahead
+    // Lấy dư 1 dòng: có dòng thứ max+1 thì chắc chắn còn trang sau.
+    const rows = await firstValueFrom(this.api.events({ first, max: max + 1, type: filter.rawExternalFilter['type'] }));
+    return { items: rows.slice(0, max), hasMore: rows.length > max };
+  },
+};
+```
+
+| | Known (mặc định) | Unknown |
+| --- | --- | --- |
+| Kết quả `items()` | `{ items, total }` | `{ items, hasMore: boolean }` |
+| Paginator | `mat-paginator`: `1-25/1.234`, first/prev/next/last | Paginator cùng style, token và nhãn `SdTablePaginatorIntl`: page size, range thật (`26-32`), Trước/Sau; nút Trang đầu khi `showFirstLastButtons` (desktop). Không có Trang cuối, không hiện tổng |
+| `table.total()` | Tổng của server | Luôn `undefined` |
+
+**Phân chia trách nhiệm.** Consumer: map `pageNumber`/`pageSize` sang offset/limit
+của API, quyết định `hasMore` (khuyến nghị lấy `pageSize + 1` dòng), giữ HTTP/auth/
+nghiệp vụ trong loader. Không suy `hasMore` chỉ vì `items.length === pageSize` — một
+trang đủ dòng vẫn có thể là trang cuối. Table: lịch đọc, khoá thao tác khi đang tải,
+bỏ response cũ, chỉ commit trang/range khi render thành công, retry đúng request lỗi.
+Table bỏ qua response cũ nhưng không abort HTTP; loader tự huỷ nếu cần.
+
+**Trang yêu cầu và trang đang hiển thị là hai trạng thái riêng.** Request dùng trang
+yêu cầu; range, STT (`index`) và nút Sau chỉ đọc trang đang hiển thị, do một lần render
+thành công ghi. Vì vậy:
+
+- Range chỉ phản ánh dòng đang hiển thị: trang 2 nhận 7 dòng với `pageSize: 25` là
+  `26-32`. Không có dòng thì không có range.
+- Trong lúc trang mới đang tải, dòng cũ vẫn hiển thị với range của chính nó. Trước/Sau,
+  Trang đầu và page size bị khoá từ lúc lên lịch đến khi tải xong (`aria-busy="true"`);
+  nút giữ focus (`disabledInteractive`) nên bấm lặp không tạo request trùng.
+- Sau chỉ bật khi trang đang hiển thị đã ổn định và loader báo `hasMore: true`. Trước
+  tắt ở trang đầu.
+- Lỗi tải trang sau/trước hoặc lỗi đổi page size: theo luật dữ liệu/lỗi không cùng hiển
+  thị, table gỡ dòng cũ và hiện `SdDataState` lỗi cùng Thử lại trong vùng bảng, phía trên
+  paginator; range ẩn, không bao giờ có dòng trang 1 mang nhãn trang 2. Paginator đứng
+  ở trang lỗi: Trước về trang liền trước nó, Sau khoá, page size vẫn đổi được.
+  `retryRead()` gửi lại đúng filter/paging/sort đã lỗi.
+- Đổi filter, quick search hoặc sort: về trang đầu, giữ page size. Đổi page size: về
+  trang đầu với size mới. Paginator khoá ngay trong thời gian debounce nên không bấm
+  được Sau của truy vấn cũ.
+- `items` dài hơn `pageSize`: table cắt về `pageSize` và coi là còn trang sau. Trang rỗng
+  luôn là trang cuối, kể cả khi loader báo `hasMore: true`, nên dữ liệu bị xoá giữa chừng
+  không tạo vòng Sau vô hạn; Trước vẫn mở.
+- Loader trả thiếu `hasMore` boolean (ví dụ vẫn trả `{ items, total }`): lần đọc lỗi
+  với thông báo rõ, table không đoán.
+- Trang đầu là trang duy nhất (`hasMore: false` ở trang 1): paginator ẩn như khi
+  known-total có `total <= pageSize`; desktop hiện `Đang hiển thị 1-N`, không có `/tổng`.
+  Đây cũng là trường hợp duy nhất `filter.hideInlineFilter: 'auto'` biết đủ số dòng để ẩn
+  filter dưới cột (N ≤ 10, chưa lọc).
+- Commit filter không reload (`notReload`, ví dụ `setFilter()` rồi `notReload: true`) hủy
+  lần đọc filter đang chờ hoặc làm response đang tải bị bỏ: paginator quay về trang đang
+  hiển thị, không bị khoá giữa hai trang; lần chuyển trang kế tiếp dùng filter đã commit.
+- Bảng known-total nhận `{ items, hasMore }` không có `total` sẽ `console.warn` một lần
+  (thiếu `paginate.total: 'unknown'`) và giữ hành vi cũ `total = 0`.
+
+**Export mặc định** (không khai báo `export.items`) gọi `items()` theo chunk
+`maxItemsPerRequest` cho đến khi `hasMore: false` hoặc gặp chunk rỗng; dòng lookahead của
+mỗi chunk bị cắt. `export.items` trả mảng thì dừng ở chunk không đúng một trang (ngắn hơn
+là trang cuối, dài hơn là nguồn không phân trang). `export.max` tính theo số dòng đã tải;
+không khai báo `export.max` thì giới hạn là 1.048.575 dòng (một sheet Excel), để nguồn bỏ
+qua offset và luôn báo `hasMore: true` không chạy vô hạn. Nút export không hiện phần trăm.
+
+**Giới hạn.** Offset pagination không có snapshot ổn định: thêm/xoá dữ liệu nguồn giữa
+hai lần chuyển trang có thể làm lặp hoặc sót dòng. Table không quét toàn bộ dữ liệu để
+tính tổng.
+
+**Chuyển từ paginator đặt ngoài table:** bỏ paginator ngoài cùng state offset/`hasMore`/
+loading/error tự quản; thêm `paginate: { total: 'unknown', pageSize, pages }`; chuyển lời
+gọi API vào `items(filter, paging)` với `first = paging.pageNumber * paging.pageSize`; dùng
+`reload()`, `retryRead()`, `sdReadStateChange` và `sdDataStateTemplate` thay cho UI lỗi tự
+dựng.
+
 **Type**: Component (generic over `T`)
 **Selector**: `sd-table`
 **Import path**: `@sdcorejs/angular/components/table` (or barrel: `@sdcorejs/angular/components`)
@@ -113,7 +207,7 @@ Everything is configured via the `SdTableOption<T>` object passed to `[option]`.
 | ------------------- | ---------------------------------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `type`              | `'local' \| 'server'`                                            | yes          | Discriminator.                                                                                                                                                                                                                               |
 | `items` (local)     | `() => T[] \| Promise<T[]>`                                      | yes (local)  | Returns the full dataset. Filtering/sorting/paging done client-side.                                                                                                                                                                         |
-| `items` (server)    | `(filterReq, pagingReq) => Promise<{items: T[]; total: number}>` | yes (server) | Server fetches; both `SdTableFilterRequest` and `PagingReq` are passed.                                                                                                                                                                      |
+| `items` (server)    | `(filterReq, pagingReq) => Promise<{items: T[]; total: number}>` | yes (server) | Server fetches; both `SdTableFilterRequest` and `PagingReq` are passed. With `paginate.total: 'unknown'` it resolves `{ items, hasMore }` instead (`SdTableServerHasMoreResult<T>`).                                                       |
 | `onFilter` (server) | `(filterReq, { externalFilterValid }) => void`                   | no           | Called BEFORE each server fetch; useful to cancel / log / sync URL.                                                                                                                                                                          |
 | `columns`           | `SdTableColumn<T>[]`                                             | yes          | Column definitions (see schema below).                                                                                                                                                                                                       |
 | `key`               | `string`                                                         | no           | Storage key for persisted user column-config (visibility/order/width).                                                                                                                                                                       |
@@ -123,7 +217,7 @@ Everything is configured via the `SdTableOption<T>` object passed to `[option]`.
 | `expand`            | `SdTableOptionExpand<T>`                                         | no           | Per-row expansion (master-detail).                                                                                                                                                                                                           |
 | `tree`              | `SdTableOptionTree<T>`                                           | no           | Tree rows — inline child rows with expand/collapse.                                                                                                                                                                                          |
 | `sort`              | `{ enable?: boolean }`                                           | no           | Master switch for sortable headers. Omitted and `enable: false` create no sort control, sort focus target, `aria-sort`, or sort icon.                                                                                                                                                                        |
-| `paginate`          | `SdTableOptionPaginate`                                          | no           | `{ pageSize?, pages?, showFirstLastButtons?, hidePageSize?, hidden? }`.                                                                                                                                                                      |
+| `paginate`          | `SdTableOptionPaginate`                                          | no           | `{ pageSize?, pages?, showFirstLastButtons?, hidePageSize?, hidden?, total? }`. `total: 'unknown'` (server only) pages without a record count — see **Phân trang không biết tổng**.                                                         |
 | `reload`            | `{ visible?, onReload? }`                                        | no           | Show the reload button and run `onReload` after refresh. When visible, the reload action stays enabled for empty results (`items.length === 0` or `total === 0`) so users can retry.                                                          |
 | `export`            | `SdTableOptionExportDefault \| SdTableOptionExportCustom`        | no           | Excel/CSV/Custom export config.                                                                                                                                                                                                              |
 | `group`             | `{ fields: string[]; htmlTemplate: (rows) => string }`           | no           | Group rows by `fields` and render an HTML group header.                                                                                                                                                                                      |
@@ -429,6 +523,7 @@ The projected checkbox is consumer-owned; it does not automatically add a predic
 
 - **Enter** trên `sd-input` / `sd-input-number` → commit value vào `filterRegister` **và** trigger reload (debounce 500ms + 200ms).
 - **Blur** (focus rời input) → commit value vào `filterRegister` với `notReload: true` — **không** gọi API. Đảm bảo giá trị typed-but-not-entered không bị mất nếu user chuyển sang filter khác hoặc bấm Reload.
+- **Enter rồi Tab** trong lúc lần đọc filter còn chờ → blur không có giá trị mới nên không commit lại và **không** hủy lần đọc Enter vừa lên lịch. Nếu user sửa giá trị trước khi blur, commit `notReload` mới vẫn thay thế và hủy lần đọc đang chờ như cũ.
 - **Click nút Reload** (`reload()`) → table tự commit `this.columnFilter` snapshot vào `filterRegister` (notReload:true) trước khi build filter request — đảm bảo giá trị input vẫn còn focus cũng được gửi lên.
 - **Empty result:** khi `reload.visible` là `true`, nút Reload vẫn enabled với `items.length === 0` hoặc `total === 0`; export và paginator vẫn giữ điều kiện hiển thị hiện tại.
 - **`sd-select` / `sd-date-range` / `sd-date`** vẫn dùng `(sdChange)` → commit + reload tức thì.
@@ -934,7 +1029,7 @@ The desktop table uses subtle 6px outer corners: the existing scroll area rounds
 - **Sticky columns**: any column with `fixed: true` stays pinned while horizontal scroll happens; rendered with a subtle box-shadow on the boundary (via `StickyShadowDirective`).
 - **Group rows**: spanning row with HTML rendered from `group.htmlTemplate`, separating sub-sections.
 - **Empty state**: one of three illustrated messages, for local and server tables alike — filter/search returned nothing (`images.filterEmpty`), a required external filter is still empty (`images.filterRequired`), or there is no data yet (`images.dataEmpty`). A projected `sdDataStateTemplate` replaces it for server reads. It only renders when the table has no rows; loading state shows centered Material spinner.
-- **Pagination bar** (bottom): "Đang hiển thị 1-50/1.234" + page-size selector + first/prev/next/last buttons. Vietnamese labels via `SdTablePaginatorIntl`.
+- **Pagination bar** (bottom): "Đang hiển thị 1-50/1.234" + page-size selector + first/prev/next/last buttons. Vietnamese labels via `SdTablePaginatorIntl`. With `paginate.total: 'unknown'`: page-size selector + loaded range only (`26-32`, no total) + prev/next (first when `showFirstLastButtons`), never a last button; automation ids `<autoId>-paginator`, `-paginator-previous`, `-paginator-next`, `-paginator-first`, `-paginator-page-size`.
 - **Drag handle** (when `rowReorder.enabled`): leftmost icon column `sdReorder` with the configured icon (default `drag_indicator`); rows can be reordered within the same group.
 - **Row-number (STT) column** (when `index.enabled`): sticky `sdIndex` column rendering the global row number (`pageIndex * pageSize + i + 1`). Sits after selector/tree/command(left)/group, before data columns. Title defaults to `'#'`, width `'50px'`. Hidden on group spanning rows.
 - **Column resize handle** (when `config.resizable`): a 6px transparent strip at the right edge of each data-column header. Cursor changes to `col-resize` on hover; a subtle dark overlay appears on hover for affordance. The handle does not show on `sdSelection`/`sdCommand`/`sdGroup`/`sdSubInformation`/`sdReorder`/`sdIndex` columns or on `type: 'children'` parent headers.
