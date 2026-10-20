@@ -41,13 +41,14 @@ import {
   indexDocument,
   isField,
   isGroup,
+  isStatic,
   ItemLocation,
   replaceItem,
   sameDocumentContent,
 } from './builder-document';
 import { BuilderHistory } from './builder-history';
 import { buildRows, DragSubject, DropIntent, DropResult, LayoutMode, LayoutRow, planDrop, SpanOverride } from './builder-layout';
-import { PaletteItem } from './builder-palette';
+import { itemTypeLabelKey, PaletteItem } from './builder-palette';
 
 export type BuilderMode = 'design' | 'preview' | 'schema';
 export type BuilderViewport = LayoutMode;
@@ -511,7 +512,19 @@ export class FormBuilderStore {
 
   labelOf(item: BuilderItem): string {
     const label = 'label' in item ? (item as { label?: string }).label : undefined;
-    return label || ('key' in item && item.key ? `${item.key}` : this.t('core.component.form-builder.untitled'));
+    if (label) return label;
+    if ('key' in item && item.key) return `${item.key}`;
+    if (isStatic(item)) {
+      // why: a static element has no label — name it by its text (one line, shortened), else by its type.
+      const record = item as unknown as Record<string, unknown>;
+      const text = [record['text'], record['alt'], record['caption']].find(value => typeof value === 'string' && value.trim()) as
+        | string
+        | undefined;
+      const line = text?.replace(/\s+/g, ' ').trim();
+      if (line) return line.length > 60 ? `${line.slice(0, 59)}…` : line;
+      return this.t(itemTypeLabelKey(item));
+    }
+    return this.t('core.component.form-builder.untitled');
   }
 
   /** Vùng chứa của phần tử (hoặc `undefined` nếu không có). */

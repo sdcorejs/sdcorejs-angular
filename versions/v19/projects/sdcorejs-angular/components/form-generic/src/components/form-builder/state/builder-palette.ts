@@ -1,12 +1,22 @@
 import { SD_DATA_TYPE_ICON } from '@sdcorejs/angular/modules/icon';
+import type { SdFormGenericButton, SdFormGenericStatic } from '../../../models/form-generic-element.model';
 import type { SdFormGenericField, SdFormGenericLayout } from '../../../models/form-generic-field.model';
 import type { SdFormGenericGroup } from '../../../models/form-generic-schema.model';
 import { BuilderItem, createId, randomKey } from './builder-document';
 
-/** Nhóm của palette. */
-export type PaletteCategory = 'basic' | 'number' | 'choice' | 'datetime' | 'advanced' | 'layout';
+/** Nhóm của palette. `static` = "Tĩnh", `action` = "Nút" (đợt 2); `layout` đổi thành "Cấu trúc" ở đợt 3. */
+export type PaletteCategory = 'basic' | 'number' | 'choice' | 'datetime' | 'advanced' | 'static' | 'action' | 'layout';
 
-export const PALETTE_CATEGORIES: readonly PaletteCategory[] = ['basic', 'number', 'choice', 'datetime', 'advanced', 'layout'];
+export const PALETTE_CATEGORIES: readonly PaletteCategory[] = [
+  'basic',
+  'number',
+  'choice',
+  'datetime',
+  'advanced',
+  'static',
+  'action',
+  'layout',
+];
 
 /** Dịch key i18n (truyền từ component để palette không phụ thuộc DI). */
 export type PaletteTranslate = (key: string, params?: Record<string, string | number>) => string;
@@ -55,6 +65,10 @@ const field = (
     layout: newLayout(),
     ...shape,
   }) as SdFormGenericField;
+
+/** Phần tử Tĩnh mới: không có key, chiếm cả hàng; chữ mặc định dịch theo ngôn ngữ của builder. */
+const staticElement = (shape: Record<string, unknown>): SdFormGenericStatic =>
+  ({ id: createId(), layout: newLayout(), ...shape }) as unknown as SdFormGenericStatic;
 
 const sampleOptions = (context: PaletteCreateContext) => ({
   source: 'static' as const,
@@ -275,6 +289,88 @@ export const SD_FORM_BUILDER_PALETTE: readonly PaletteItem[] = [
     keywords: ['json', 'object', 'code'],
     type: 'json',
     create: c => field(c, 'json', { type: 'json' }),
+  },
+  // ── Tĩnh ──────────────────────────────────────────────────────────────────
+  {
+    id: 'heading',
+    category: 'static',
+    icon: 'title',
+    labelKey: LABEL('heading'),
+    keywords: ['heading', 'title', 'h2', 'h3'],
+    type: 'heading',
+    create: c => staticElement({ type: 'heading', text: c.t(`${LABEL('heading')}.text`) }),
+  },
+  {
+    id: 'paragraph',
+    category: 'static',
+    icon: 'notes',
+    labelKey: LABEL('paragraph'),
+    keywords: ['paragraph', 'text', 'description'],
+    type: 'paragraph',
+    create: c => staticElement({ type: 'paragraph', text: c.t(`${LABEL('paragraph')}.text`) }),
+  },
+  {
+    id: 'quote',
+    category: 'static',
+    icon: 'format_quote',
+    labelKey: LABEL('quote'),
+    keywords: ['quote', 'blockquote', 'cite'],
+    type: 'quote',
+    create: c => staticElement({ type: 'quote', text: c.t(`${LABEL('quote')}.text`) }),
+  },
+  {
+    id: 'image',
+    category: 'static',
+    icon: 'image',
+    labelKey: LABEL('image'),
+    keywords: ['image', 'picture', 'logo'],
+    type: 'image',
+    // why: no URL yet — an empty src is "not set" (nothing rendered, no warning) until the designer types one.
+    create: () => staticElement({ type: 'image', src: '', alt: '' }),
+  },
+  {
+    id: 'link',
+    category: 'static',
+    icon: 'link',
+    labelKey: LABEL('link'),
+    keywords: ['link', 'url', 'href'],
+    type: 'link',
+    create: c => staticElement({ type: 'link', text: c.t(`${LABEL('link')}.text`), href: '' }),
+  },
+  {
+    id: 'divider',
+    category: 'static',
+    icon: 'horizontal_rule',
+    labelKey: LABEL('divider'),
+    keywords: ['divider', 'separator', 'line', 'hr'],
+    type: 'divider',
+    create: () => staticElement({ type: 'divider' }),
+  },
+  {
+    id: 'notice',
+    category: 'static',
+    icon: 'info',
+    labelKey: LABEL('notice'),
+    keywords: ['notice', 'alert', 'info', 'warning'],
+    type: 'notice',
+    create: c => staticElement({ type: 'notice', text: c.t(`${LABEL('notice')}.text`), color: 'info' }),
+  },
+  // ── Nút ───────────────────────────────────────────────────────────────────
+  {
+    id: 'button',
+    category: 'action',
+    icon: 'smart_button',
+    labelKey: LABEL('button'),
+    keywords: ['button', 'submit', 'reset', 'action'],
+    type: 'button',
+    create: c =>
+      ({
+        id: createId(),
+        type: 'button',
+        label: c.t(`${LABEL('button')}.label`),
+        action: 'submit',
+        layout: { span: { desktop: 3, mobile: 12 } },
+      }) as SdFormGenericButton,
   },
   // ── Bố cục ────────────────────────────────────────────────────────────────
   {

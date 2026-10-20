@@ -1,6 +1,9 @@
 @let _item = item();
 @let _field = field();
 @let _group = group();
+@let _static = staticElement();
+@let _button = button();
+@let _element = element();
 @let _type = type();
 @let _tab = activeTab();
 @let _validation = validation();
@@ -201,7 +204,7 @@
           [attr.aria-selected]="_tab === tab"
           [attr.tabindex]="_tab === tab ? 0 : -1"
           (click)="selectTab(tab)">
-          {{ 'core.component.form-builder.tab.' + tab | sdTranslate }}
+          {{ tabLabelKey(tab) | sdTranslate }}
         </button>
       }
     </div>
@@ -357,6 +360,266 @@
                 </div>
               }
             }
+          } @else if (_static) {
+            <!-- why: text là chuỗi bắt buộc — sửa qua bản nháp, chỉ ghi khi không rỗng (D-025). Chữ thuần, không HTML. -->
+            @switch (_type) {
+              @case ('heading') {
+                <sd-input
+                  data-fb-prop="text"
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  [label]="'core.component.form-builder.content' | sdTranslate"
+                  [inlineError]="draftError('text') || undefined"
+                  [model]="draftOf('text')"
+                  (modelChange)="setDraft('text', $event)"
+                  (sdBlur)="sealHistory()"></sd-input>
+                <sd-select
+                  data-fb-prop="level"
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  required
+                  class="ins-fixed-select"
+                  [label]="'core.component.form-builder.heading.level' | sdTranslate"
+                  [items]="headingLevels"
+                  valueField="value"
+                  displayField="display"
+                  [model]="_static['level'] ?? 3"
+                  (modelChange)="set('level', $event)"></sd-select>
+              }
+              @case ('image') {
+                <sd-input
+                  data-fb-prop="src"
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  [label]="'core.component.form-builder.image.src' | sdTranslate"
+                  [model]="_static['src']"
+                  (modelChange)="setText('src', $event)"
+                  (sdBlur)="sealHistory()"></sd-input>
+                <sd-input
+                  data-fb-prop="alt"
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  [label]="'core.component.form-builder.image.alt' | sdTranslate"
+                  [model]="_static['alt']"
+                  (modelChange)="setText('alt', $event)"
+                  (sdBlur)="sealHistory()"></sd-input>
+                <sd-input-number
+                  data-fb-prop="width"
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  type="positive"
+                  [precision]="0"
+                  [label]="'core.component.form-builder.image.width' | sdTranslate"
+                  [model]="_static['width']"
+                  (modelChange)="set('width', numberOrNull($event), true)"
+                  (sdBlur)="sealHistory()"></sd-input-number>
+                <sd-input
+                  data-fb-prop="caption"
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  [label]="'core.component.form-builder.image.caption' | sdTranslate"
+                  [model]="_static['caption']"
+                  (modelChange)="set('caption', $event, true)"
+                  (sdBlur)="sealHistory()"></sd-input>
+              }
+              @case ('link') {
+                <sd-input
+                  data-fb-prop="text"
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  [label]="'core.component.form-builder.content' | sdTranslate"
+                  [inlineError]="draftError('text') || undefined"
+                  [model]="draftOf('text')"
+                  (modelChange)="setDraft('text', $event)"
+                  (sdBlur)="sealHistory()"></sd-input>
+                <sd-input
+                  data-fb-prop="href"
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  [label]="'core.component.form-builder.link.href' | sdTranslate"
+                  [model]="_static['href']"
+                  (modelChange)="setText('href', $event)"
+                  (sdBlur)="sealHistory()"></sd-input>
+                <fb-toggle-row
+                  [label]="'core.component.form-builder.link.new-tab' | sdTranslate"
+                  [model]="!!_static['newTab']"
+                  (modelChange)="setFlag('newTab', $event)"></fb-toggle-row>
+              }
+              @case ('divider') {
+                <p class="ins-note" data-fb-note="divider">{{ 'core.component.form-builder.divider.note' | sdTranslate }}</p>
+              }
+              @case ('notice') {
+                <div class="ins-field">
+                  <div class="ins-field__label">{{ 'core.component.form-builder.color' | sdTranslate }}</div>
+                  <div class="ins-colors" role="group" [attr.aria-label]="'core.component.form-builder.color' | sdTranslate">
+                    @for (color of noticeColors; track color) {
+                      <button
+                        type="button"
+                        class="ins-colors__swatch"
+                        [attr.data-color]="color"
+                        [class.is-active]="(_static['color'] || 'info') === color"
+                        [attr.aria-pressed]="(_static['color'] || 'info') === color"
+                        [attr.aria-label]="color"
+                        (click)="pickColor(color)"></button>
+                    }
+                  </div>
+                </div>
+                <sd-input
+                  data-fb-prop="title"
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  [label]="'core.component.form-builder.notice.title' | sdTranslate"
+                  [model]="_static['title']"
+                  (modelChange)="set('title', $event, true)"
+                  (sdBlur)="sealHistory()"></sd-input>
+                <sd-textarea
+                  data-fb-prop="text"
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  [rows]="3"
+                  [label]="'core.component.form-builder.content' | sdTranslate"
+                  [inlineError]="draftError('text') || undefined"
+                  [model]="draftOf('text')"
+                  (modelChange)="setDraft('text', $event)"
+                  (sdBlur)="sealHistory()"></sd-textarea>
+              }
+              @default {
+                <!-- paragraph, quote: nhiều dòng — xuống dòng được giữ khi hiển thị. -->
+                <sd-textarea
+                  data-fb-prop="text"
+                  size="sm"
+                  labelPlacement="top"
+                  hideInlineError
+                  [rows]="4"
+                  [label]="'core.component.form-builder.content' | sdTranslate"
+                  [inlineError]="draftError('text') || undefined"
+                  [model]="draftOf('text')"
+                  (modelChange)="setDraft('text', $event)"
+                  (sdBlur)="sealHistory()"></sd-textarea>
+                @if (_type === 'quote') {
+                  <sd-input
+                    data-fb-prop="cite"
+                    size="sm"
+                    labelPlacement="top"
+                    hideInlineError
+                    [label]="'core.component.form-builder.quote.cite' | sdTranslate"
+                    [model]="_static['cite']"
+                    (modelChange)="set('cite', $event, true)"
+                    (sdBlur)="sealHistory()"></sd-input>
+                }
+              }
+            }
+            @if (urlWarning(); as _warning) {
+              <div class="ins-warning" role="alert" data-fb-warning="url">
+                <span>{{ _warning }}</span>
+              </div>
+            }
+          } @else if (_button) {
+            @let _look = buttonLook();
+            <sd-input
+              data-fb-prop="label"
+              size="sm"
+              labelPlacement="top"
+              hideInlineError
+              [label]="'core.component.form-builder.display-label' | sdTranslate"
+              [inlineError]="draftError('label') || undefined"
+              [model]="draftOf('label')"
+              (modelChange)="setDraft('label', $event)"
+              (sdBlur)="sealHistory()"></sd-input>
+            <sd-select
+              data-fb-prop="action"
+              size="sm"
+              labelPlacement="top"
+              hideInlineError
+              required
+              class="ins-fixed-select"
+              [label]="'core.component.form-builder.button.action' | sdTranslate"
+              [items]="buttonActions()"
+              valueField="value"
+              displayField="display"
+              [model]="_button.action"
+              (modelChange)="setButtonAction($event)"></sd-select>
+            @if (_button.action === 'custom') {
+              <sd-input
+                data-fb-prop="name"
+                size="sm"
+                labelPlacement="top"
+                hideInlineError
+                [label]="'core.component.form-builder.button.name' | sdTranslate"
+                [inlineError]="draftError('name') || undefined"
+                [model]="draftOf('name')"
+                (modelChange)="setDraft('name', $event)"
+                (sdBlur)="sealHistory()"></sd-input>
+              @if (draftError('name'); as _nameError) {
+                <div class="ins-warning" role="alert" data-fb-warning="name">
+                  <span>{{ _nameError }}</span>
+                </div>
+              }
+              <fb-toggle-row
+                [label]="'core.component.form-builder.button.validate' | sdTranslate"
+                [model]="!!_button.validate"
+                (modelChange)="setFlag('validate', $event)"></fb-toggle-row>
+            }
+            <sd-input
+              data-fb-prop="icon"
+              size="sm"
+              labelPlacement="top"
+              hideInlineError
+              [label]="'core.component.form-builder.button.icon' | sdTranslate"
+              [model]="_button.icon"
+              (modelChange)="set('icon', $event, true)"
+              (sdBlur)="sealHistory()"></sd-input>
+            <sd-select
+              data-fb-prop="variant"
+              size="sm"
+              labelPlacement="top"
+              hideInlineError
+              required
+              class="ins-fixed-select"
+              [label]="'core.component.form-builder.button.variant' | sdTranslate"
+              [items]="buttonVariants()"
+              valueField="value"
+              displayField="display"
+              [model]="_button.variant || NONE"
+              (modelChange)="setChoice('variant', $event)"></sd-select>
+            <div class="ins-field">
+              <div class="ins-field__label">{{ 'core.component.form-builder.color' | sdTranslate }}</div>
+              <div class="ins-colors" role="group" [attr.aria-label]="'core.component.form-builder.color' | sdTranslate">
+                @for (color of colorPresets; track color) {
+                  <button
+                    type="button"
+                    class="ins-colors__swatch"
+                    [attr.data-color]="color"
+                    [class.is-active]="_look?.color === color"
+                    [attr.aria-pressed]="_look?.color === color"
+                    [attr.aria-label]="color"
+                    (click)="pickColor(color)"></button>
+                }
+              </div>
+            </div>
+            <sd-select
+              data-fb-prop="align"
+              size="sm"
+              labelPlacement="top"
+              hideInlineError
+              required
+              class="ins-fixed-select"
+              [label]="'core.component.form-builder.button.align' | sdTranslate"
+              [items]="buttonAligns()"
+              valueField="value"
+              displayField="display"
+              [model]="_look?.align ?? 'start'"
+              (modelChange)="set('align', $event)"></sd-select>
           }
         }
 
@@ -946,6 +1209,49 @@
                 [model]="_rules.hidden"
                 (sdChange)="setRule('hidden', $event)"></attribute-expression>
             </section>
+          } @else if (_element) {
+            <!-- why: phần tử Tĩnh chỉ có ẩn/hiện; button thêm vô hiệu và "hiện ở chế độ xem" (D-014). -->
+            <section class="ins-section">
+              <h3 class="ins-section__title">{{ 'core.component.form-builder.state' | sdTranslate }}</h3>
+              @if (_button) {
+                <fb-toggle-row
+                  [label]="'core.component.form-builder.disabled' | sdTranslate"
+                  [model]="!!_button.disabled"
+                  (modelChange)="setFlag('disabled', $event)"></fb-toggle-row>
+                <fb-toggle-row
+                  [label]="'core.component.form-builder.button.show-when-viewed' | sdTranslate"
+                  [hint]="'core.component.form-builder.button.show-when-viewed.hint' | sdTranslate"
+                  [model]="!!_button.showWhenViewed"
+                  (modelChange)="setFlag('showWhenViewed', $event)"></fb-toggle-row>
+              }
+              <fb-toggle-row
+                [label]="'core.component.form-builder.hide' | sdTranslate"
+                [model]="!!_element.hidden"
+                (modelChange)="setFlag('hidden', $event)"></fb-toggle-row>
+            </section>
+            <section class="ins-section">
+              <h3 class="ins-section__title">{{ 'core.component.form-builder.conditions' | sdTranslate }}</h3>
+              <attribute-expression
+                [label]="'core.component.form-builder.visible-when' | sdTranslate"
+                [elements]="elements()"
+                [variables]="variables()"
+                [model]="_rules.visible"
+                (sdChange)="setRule('visible', $event)"></attribute-expression>
+              <attribute-expression
+                [label]="'core.component.form-builder.hidden-when' | sdTranslate"
+                [elements]="elements()"
+                [variables]="variables()"
+                [model]="_rules.hidden"
+                (sdChange)="setRule('hidden', $event)"></attribute-expression>
+              @if (_button && !_button.disabled) {
+                <attribute-expression
+                  [label]="'core.component.form-builder.disabled-when' | sdTranslate"
+                  [elements]="elements()"
+                  [variables]="variables()"
+                  [model]="_rules.disabled"
+                  (sdChange)="setRule('disabled', $event)"></attribute-expression>
+              }
+            </section>
           }
         }
 
@@ -953,7 +1259,7 @@
         @case ('layout') {
           @let _location = location();
           @let _siblings = store.childrenOf(_location?.parentId ?? null).length;
-          @if (_field) {
+          @if (_field || _element) {
             @let _viewport = viewport();
             @let _viewportLabel = 'core.component.form-builder.viewport.' + _viewport | sdTranslate;
             <section class="ins-section">
@@ -1043,7 +1349,7 @@
                 </button>
               </div>
             </div>
-            @if (_field) {
+            @if (_field || _element) {
               @if (containerChoices().length > 1) {
                 <sd-select
                   size="sm"

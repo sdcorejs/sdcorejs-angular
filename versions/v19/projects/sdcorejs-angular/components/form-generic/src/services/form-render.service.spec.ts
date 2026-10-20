@@ -72,6 +72,31 @@ describe('SdFormRenderService.viewEntities', () => {
     });
   });
 
+  it('ignores static elements and buttons: no entry for them, even when an entity has a matching property', async () => {
+    const withExtras = {
+      pages: [
+        {
+          id: 'p',
+          elements: [
+            { id: 's-title', type: 'heading', text: 'Title' },
+            { id: 'f1', key: 'name', type: 'textfield', label: 'Name' },
+            {
+              id: 'g',
+              type: 'group',
+              label: 'G',
+              elements: [
+                { id: 's-note', type: 'notice', text: 'Note' },
+                { id: 'b-send', type: 'button', label: 'Send', action: 'submit' },
+              ],
+            },
+          ],
+        },
+      ],
+    } as unknown as SdFormGenericSchema;
+    const rows = await create().viewEntities(withExtras, [{ name: 'Lan', 's-title': 'x', 'b-send': 'y' }]);
+    expect(rows).toEqual([{ name: 'Lan' }]);
+  });
+
   it('resolves catalog params from each entity and asks each catalog once per params and values', async () => {
     const service = create();
     await service.viewEntities(schema, [

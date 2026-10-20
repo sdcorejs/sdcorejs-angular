@@ -12,16 +12,19 @@ import {
   canDuplicate,
   childrenOf,
   cloneJson,
+  collectButtonNames,
   collectKeys,
   ContainerId,
   createId,
   documentFromSchema,
   documentToSchema,
   indexDocument,
+  isButton,
   isGroup,
   isUnknown,
   replaceItem,
   uniqueKey,
+  uniqueName,
   withChildren,
 } from './builder-document';
 import { buildRows, DropIntent, DropResult, ensureRowStart, LayoutMode, layoutOf, planDrop, withLayout } from './builder-layout';
@@ -187,11 +190,26 @@ export const cloneWithNewIdentity = (item: BuilderItem, takenKeys: Set<string>):
   return result;
 };
 
+/**
+ * Bản sao của button custom nhận `name` mới (`save-draft` → `save-draft_2`): hai button không phát cùng action
+ * chỉ vì một cái được nhân bản (D-025). Button submit/reset không có name nên giữ nguyên.
+ */
+const withUniqueButtonNames = (item: BuilderItem, taken: Set<string>): BuilderItem => {
+  const rename = (member: BuilderItem): BuilderItem => {
+    if (!isButton(member) || member.action !== 'custom' || typeof member.name !== 'string' || !member.name.trim()) return member;
+    const name = uniqueName(member.name.trim().replace(/_\d+$/, ''), taken);
+    taken.add(name);
+    return { ...member, name };
+  };
+  if (isGroup(item)) return { ...item, elements: (item.elements ?? []).map(child => rename(child) as typeof child) };
+  return rename(item);
+};
+
 /** Nhân bản: bản sao đứng thành hàng mới ngay sau hàng của bản gốc. */
 export const duplicateItem = (doc: BuilderDocument, id: string, mode: LayoutMode): DropResult => {
   const location = indexDocument(doc).get(id);
   if (!location) return { ok: false, reason: 'not-found' };
-  const copy = cloneWithNewIdentity(location.item, collectKeys(doc));
+  const copy = withUniqueButtonNames(cloneWithNewIdentity(location.item, collectKeys(doc)), collectButtonNames(doc));
   const intent = rowAfter(doc, id, mode) ?? endOf(location.parentId);
   return planDrop(doc, intent, { kind: 'new', item: copy }, mode);
 };

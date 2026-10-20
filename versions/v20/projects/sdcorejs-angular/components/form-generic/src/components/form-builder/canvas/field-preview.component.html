@@ -1,5 +1,7 @@
 @let _item = field();
 @let _type = _item.type;
+@let _static = staticElement();
+@let _button = button();
 <!-- Toàn bộ khối này là hình minh hoạ (aria-hidden ở phía canvas) — tên truy cập nằm trên nút chọn field. -->
 @if (unsupported()) {
   <div class="fbp-label">
@@ -7,6 +9,28 @@
   </div>
   <div class="fbp-source">
     <sd-icon name="help" size="16px"></sd-icon>{{ 'core.component.form-builder.unsupported' | sdTranslate }} · {{ _type }}
+  </div>
+} @else if (_static) {
+  @if (hasChips()) {
+    <div class="fbp-element__chips"><ng-container *ngTemplateOutlet="chips"></ng-container></div>
+  }
+  <!-- why: chính component của renderer trong vùng inert (D-023) — giống hệt lúc chạy, nhưng liên kết không
+       nhận focus/Enter; thẻ của canvas vẫn là control duy nhất. -->
+  <div class="fbp-element" inert>
+    <lib-static-element [element]="_static"></lib-static-element>
+    @if (imageMissing()) {
+      <div class="fbp-source fbp-image-empty">
+        <sd-icon name="image" size="20px"></sd-icon>{{ 'core.component.form-builder.preview.image-empty' | sdTranslate }}
+      </div>
+    }
+  </div>
+} @else if (_button) {
+  @if (hasChips()) {
+    <div class="fbp-element__chips"><ng-container *ngTemplateOutlet="chips"></ng-container></div>
+  }
+  <!-- why: không dùng [disabled] của sd-button để chặn bấm — inert giữ đúng giao diện của button. -->
+  <div class="fbp-element" inert>
+    <lib-button-element [button]="_button"></lib-button-element>
   </div>
 } @else {
   @if (_type !== 'checkbox' && _type !== 'html') {
@@ -78,7 +102,9 @@
           }
         </div>
       } @else {
-        <div class="fbp-source"><sd-icon name="cloud_sync" size="16px"></sd-icon>{{ catalog() || ('core.component.form-builder.options.empty' | sdTranslate) }}</div>
+        <div class="fbp-source">
+          <sd-icon name="cloud_sync" size="16px"></sd-icon>{{ catalog() || ('core.component.form-builder.options.empty' | sdTranslate) }}
+        </div>
       }
     }
     @case ('checkbox') {
@@ -91,7 +117,10 @@
     @case ('upload') {
       <div class="fbp-upload">
         <sd-icon [name]="uploadIsImage() ? 'add_photo_alternate' : 'upload_file'" size="20px"></sd-icon>
-        <span>{{ (uploadIsImage() ? 'core.component.form-builder.preview.upload-image' : 'core.component.form-builder.preview.upload-file') | sdTranslate }}</span>
+        <span>{{
+          (uploadIsImage() ? 'core.component.form-builder.preview.upload-image' : 'core.component.form-builder.preview.upload-file')
+            | sdTranslate
+        }}</span>
       </div>
     }
     @case ('html') {
@@ -125,16 +154,22 @@
 <ng-template #chips>
   <span class="fbp-chips">
     @if (hidden()) {
-      <span class="fbp-chip fbp-chip--muted"><sd-icon name="visibility_off" size="14px"></sd-icon>{{ 'core.component.form-builder.hidden' | sdTranslate }}</span>
+      <span class="fbp-chip fbp-chip--muted"
+        ><sd-icon name="visibility_off" size="14px"></sd-icon>{{ 'core.component.form-builder.hidden' | sdTranslate }}</span
+      >
     }
     @if (readonly()) {
-      <span class="fbp-chip"><sd-icon name="edit_off" size="14px"></sd-icon>{{ 'core.component.form-builder.read-only' | sdTranslate }}</span>
+      <span class="fbp-chip"
+        ><sd-icon name="edit_off" size="14px"></sd-icon>{{ 'core.component.form-builder.read-only' | sdTranslate }}</span
+      >
     }
     @if (disabled()) {
       <span class="fbp-chip"><sd-icon name="block" size="14px"></sd-icon>{{ 'core.component.form-builder.disabled' | sdTranslate }}</span>
     }
     @if (conditional()) {
-      <span class="fbp-chip fbp-chip--accent"><sd-icon name="bolt" size="14px"></sd-icon>{{ 'core.component.form-builder.conditional' | sdTranslate }}</span>
+      <span class="fbp-chip fbp-chip--accent"
+        ><sd-icon name="bolt" size="14px"></sd-icon>{{ 'core.component.form-builder.conditional' | sdTranslate }}</span
+      >
     }
   </span>
 </ng-template>

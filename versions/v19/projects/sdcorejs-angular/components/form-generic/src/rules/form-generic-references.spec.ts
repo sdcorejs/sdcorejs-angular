@@ -90,6 +90,41 @@ describe('form generic key references', () => {
     expect(JSON.stringify(renamed)).toContain('{"variable":"org"}');
   });
 
+  it('renames field references in the rules of static elements and buttons, on the page and in a group', () => {
+    const value = deepFreeze({
+      pages: [
+        {
+          id: 'p',
+          elements: [
+            { id: 'f-plan', key: 'plan', type: 'select', label: 'Plan', options: { source: 'static', items: [] } },
+            { id: 's-note', type: 'notice', text: 'Premium', rules: { visible: { field: 'plan', operator: 'EQUAL', data: 'premium' } } },
+            {
+              id: 'g',
+              type: 'group',
+              label: 'G',
+              elements: [
+                { id: 's-hint', type: 'paragraph', text: 'Hint', rules: { hidden: { field: 'plan', operator: 'NULL' } } },
+                { id: 'b-send', type: 'button', label: 'Send', action: 'submit', rules: { disabled: { field: 'plan', operator: 'NULL' } } },
+              ],
+            },
+          ],
+        },
+      ],
+    }) as unknown as SdFormGenericSchema;
+    expect(
+      sdFindKeyReferences(value, 'plan')
+        .map(ref => ref.elementId)
+        .sort()
+    ).toEqual(['b-send', 's-hint', 's-note']);
+    const renamed = sdRenameKey(value, 'plan', 'tier');
+    expect(sdFindKeyReferences(renamed, 'plan')).toEqual([]);
+    expect(
+      sdFindKeyReferences(renamed, 'tier')
+        .map(ref => ref.elementId)
+        .sort()
+    ).toEqual(['b-send', 's-hint', 's-note']);
+  });
+
   it('rejects a target key that already exists', () => {
     expect(() => sdRenameKey(schema(), 'city', 'price')).toThrowError(/price/);
     expect(() => sdRenameKey(schema(), 'city', 'tenant')).toThrowError(/tenant/);

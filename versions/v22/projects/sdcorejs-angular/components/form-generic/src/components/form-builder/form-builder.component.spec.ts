@@ -7,6 +7,7 @@ import { SdConfirmService, SdNotifyOption, SdNotifyService, SdToastData } from '
 import { sdValidateSchema } from '../../models/form-generic-schema';
 import type { SdFormGenericSchema } from '../../models/form-generic-schema.model';
 import { FormGenericService } from '../../services/form-generic.service';
+import { LibButtonElementComponent } from '../elements';
 import { SdFormRender } from '../form-render/form-render.component';
 import { ConfigureValidationComponent } from './components/configure-validation/configure-validation.component';
 import { SdFormBuilder } from './form-builder.component';
@@ -857,7 +858,7 @@ describe('SdFormBuilder (integration)', () => {
         {
           id: 'page',
           elements: [
-            { id: 'h', type: 'heading', label: 'Title', text: 'Hello', layout: { span: { desktop: 6 } } },
+            { id: 'h', type: 'chart', label: 'Title', text: 'Hello', layout: { span: { desktop: 6 } } },
             { id: 'x', key: 'x', type: 'textfield', label: 'X' },
           ],
         },
@@ -877,7 +878,7 @@ describe('SdFormBuilder (integration)', () => {
     await render();
     expect(find(host.emitted[0], 'h')).toEqual({
       id: 'h',
-      type: 'heading',
+      type: 'chart',
       label: 'Title',
       text: 'Hello',
       layout: { span: { desktop: 6 } },
@@ -1669,6 +1670,450 @@ describe('SdFormBuilder (integration)', () => {
       expect(store.setVariables([{ key: 'v', label: 'V' }])).toBeFalse();
       expect(store.setValidations([])).toBeFalse();
       expect(host.emitted.length).toBe(0);
+    });
+  });
+
+  describe('static elements and buttons (phase 2)', () => {
+    const STATIC_TYPES = ['heading', 'paragraph', 'quote', 'image', 'link', 'divider', 'notice'];
+    /** 1×1 GIF: a safe image source that needs no network. */
+    const PIXEL = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    const t = (key: string) => builder().store.t(key);
+    const inspector = (): InspectorComponent => fixture.debugElement.query(By.directive(InspectorComponent)).componentInstance;
+    const select = async (id: string, tab: 'general' | 'data' | 'rules' | 'layout') => {
+      builder().store.select(id);
+      builder().store.inspectorTab.set(tab);
+      await render();
+    };
+    /** The inspector control that edits one schema property. */
+    const control = (property: string) => fixture.debugElement.query(By.css(`fb-inspector [data-fb-prop="${property}"]`));
+    const edit = async (property: string, value: unknown) => {
+      const target = control(property);
+      expect(target).withContext(`inspector control for "${property}"`).not.toBeNull();
+      target.triggerEventHandler('modelChange', value);
+      await render();
+    };
+    const warning = (kind: string) => root().querySelector<HTMLElement>(`fb-inspector [data-fb-warning="${kind}"]`);
+    const toggleRow = (labelKey: string) =>
+      Array.from(root().querySelectorAll<HTMLElement>('fb-inspector fb-toggle-row')).find(
+        row => row.querySelector('.toggle-row__label')!.textContent!.trim() === t(labelKey)
+      );
+    const flip = async (labelKey: string) => {
+      const row = toggleRow(labelKey);
+      expect(row).withContext(`toggle "${labelKey}"`).toBeDefined();
+      row!.querySelector<HTMLElement>('button[role="switch"]')!.click();
+      await render();
+    };
+    const cell = (id: string) => root().querySelector<HTMLElement>(`[data-fb-item="${id}"]`)!;
+    /** INV-008: every builder command emits a schema without grammar issues. */
+    const expectEveryEmitValid = () =>
+      host.emitted.forEach((schema, index) => expect(sdValidateSchema(schema)).withContext(`emit #${index}`).toEqual([]));
+
+    /** Field, every static type and two buttons, at page level and in a group; rules point at the field `email`. */
+    const mixed = (): SdFormGenericSchema =>
+      ({
+        pages: [
+          {
+            id: 'page',
+            elements: [
+              {
+                id: 'g1',
+                type: 'group',
+                label: 'Box',
+                elements: [
+                  { id: 'a', key: 'email', type: 'textfield', label: 'Email', layout: { span: { desktop: 6 } } },
+                  {
+                    id: 'gh',
+                    type: 'heading',
+                    text: 'In group',
+                    layout: { span: { desktop: 6 } },
+                    rules: { hidden: { field: 'email', operator: 'NULL' } },
+                  },
+                ],
+              },
+              { id: 'h', type: 'heading', text: 'Welcome', level: 2, rules: { visible: { field: 'email', operator: 'NOT_NULL' } } },
+              { id: 'p', type: 'paragraph', text: 'Line one\nLine two' },
+              { id: 'q', type: 'quote', text: 'Less is more' },
+              { id: 'img', type: 'image', src: '', alt: '' },
+              { id: 'lnk', type: 'link', text: 'Docs', href: 'https://example.com/docs', newTab: true },
+              { id: 'd', type: 'divider' },
+              { id: 'n', type: 'notice', text: 'Heads up', color: 'warning' },
+              {
+                id: 'save',
+                type: 'button',
+                label: 'Save draft',
+                action: 'custom',
+                name: 'save-draft',
+                layout: { span: { desktop: 3 } },
+                rules: { disabled: { field: 'email', operator: 'NULL' } },
+              },
+              { id: 'send', type: 'button', label: 'Send', action: 'submit', layout: { span: { desktop: 3 } } },
+            ],
+          },
+        ],
+      }) as unknown as SdFormGenericSchema;
+
+    const load = async () => {
+      host.form.set(deepFreeze(mixed()));
+      await render();
+      expect(sdValidateSchema(current())).withContext('fixture').toEqual([]);
+    };
+
+    it('offers a Static group (7 entries) and a Button group before Layout; each entry adds a valid element with defaults (AC-012)', async () => {
+      const sections = Array.from(root().querySelectorAll<HTMLElement>('fb-palette .fb-cat')).map(section => ({
+        title: section.querySelector('.fb-cat__head > span')!.textContent!.trim(),
+        ids: Array.from(section.querySelectorAll('[data-palette-id]')).map(entry => entry.getAttribute('data-palette-id')),
+      }));
+      const at = (category: string) =>
+        sections.findIndex(section => section.title === t(`core.component.form-builder.category.${category}`));
+      expect(sections[at('static')]?.ids).toEqual(STATIC_TYPES);
+      expect(sections[at('action')]?.ids).toEqual(['button']);
+      expect(sections[at('layout')]?.ids).withContext('Layout keeps group and html').toEqual(['group', 'html']);
+      expect(at('static')).toBeLessThan(at('action'));
+      expect(at('action')).toBeLessThan(at('layout'));
+      for (const key of [
+        'core.component.form-builder.category.static',
+        'core.component.form-builder.category.action',
+        ...[...STATIC_TYPES, 'button'].map(type => `core.component.form-builder.preset.${type}`),
+      ])
+        expect(t(key)).withContext(`${key} is translated`).not.toBe(key);
+
+      for (const id of [...STATIC_TYPES, 'button']) {
+        root().querySelector<HTMLButtonElement>(`fb-palette [data-palette-id="${id}"]`)!.click();
+        await render();
+      }
+      expect(host.emitted.length).toBe(8);
+      expectEveryEmitValid();
+      const added = elementsOf(current()).slice(-8);
+      expect(added.map(item => item['type'])).toEqual([...STATIC_TYPES, 'button']);
+      expect(added.every(item => !('key' in item)))
+        .withContext('non-field elements have no key')
+        .toBeTrue();
+      const [heading, paragraph, quote, image, link, divider, notice, button] = added;
+      expect(heading['text']).toBe(t('core.component.form-builder.preset.heading.text'));
+      expect(paragraph['text']).toBe(t('core.component.form-builder.preset.paragraph.text'));
+      expect(quote['text']).toBe(t('core.component.form-builder.preset.quote.text'));
+      expect(image).toEqual(jasmine.objectContaining({ src: '', alt: '' }));
+      expect(link).toEqual(jasmine.objectContaining({ text: t('core.component.form-builder.preset.link.text'), href: '' }));
+      expect(Object.keys(divider).sort()).toEqual(['id', 'layout', 'type']);
+      expect(notice).toEqual(jasmine.objectContaining({ text: t('core.component.form-builder.preset.notice.text'), color: 'info' }));
+      expect(button).toEqual(jasmine.objectContaining({ action: 'submit', label: t('core.component.form-builder.preset.button.label') }));
+      // The canvas previews the real content.
+      expect(cell(heading['id']).querySelector('lib-static-element h3')!.textContent!.trim()).toBe(heading['text']);
+      expect(cell(button['id']).querySelector('lib-button-element')!.textContent).toContain(button['label']);
+    });
+
+    it('gives every new element only the General / Conditions / Layout tabs (AC-013, D-014)', async () => {
+      await load();
+      for (const id of ['h', 'p', 'q', 'img', 'lnk', 'd', 'n', 'save']) {
+        await select(id, 'general');
+        const tabs = Array.from(root().querySelectorAll<HTMLElement>('fb-inspector [role="tab"]'));
+        expect(tabs.map(tab => tab.getAttribute('data-tab')))
+          .withContext(id)
+          .toEqual(['general', 'rules', 'layout']);
+        expect(tabs.map(tab => tab.textContent!.trim()))
+          .withContext(id)
+          .toEqual([
+            t('core.component.form-builder.tab.general'),
+            t('core.component.form-builder.conditions'),
+            t('core.component.form-builder.tab.layout'),
+          ]);
+      }
+      // The Data tab of a field does not carry over.
+      await select('a', 'data');
+      builder().store.select('h');
+      await render();
+      expect(inspector().activeTab()).toBe('general');
+
+      // Conditions: visible/hidden for a static element, plus disabled for a button.
+      await select('h', 'rules');
+      expect(root().querySelectorAll('fb-inspector attribute-expression').length).toBe(2);
+      await flip('core.component.form-builder.hide');
+      expect(find(current(), 'h')!['hidden']).toBeTrue();
+      expect(cell('h').classList).toContain('is-hidden');
+      await select('save', 'rules');
+      expect(root().querySelectorAll('fb-inspector attribute-expression').length).toBe(3);
+      inspector().setRule('visible', { field: 'email', operator: 'NOT_NULL' });
+      await render();
+      expect(find(current(), 'save')!['rules']).toEqual({
+        disabled: { field: 'email', operator: 'NULL' },
+        visible: { field: 'email', operator: 'NOT_NULL' },
+      });
+      await flip('core.component.form-builder.button.show-when-viewed');
+      expect(find(current(), 'save')!['showWhenViewed']).toBeTrue();
+      await flip('core.component.form-builder.disabled');
+      expect(find(current(), 'save')!['disabled']).toBeTrue();
+      expect(root().querySelectorAll('fb-inspector attribute-expression').length)
+        .withContext('no "disabled when" for an always-disabled button')
+        .toBe(2);
+
+      // Layout: span of the current level and "new row", like a field.
+      await select('h', 'layout');
+      inspector().setSpan(6);
+      await render();
+      expect(find(current(), 'h')!['layout']).toEqual({ span: { desktop: 6 } });
+      await flip('core.component.form-builder.new-row');
+      expect(find(current(), 'h')!['layout']).toEqual({ span: { desktop: 6 }, newRow: true });
+      inspector().moveToContainer('g1');
+      await render();
+      expect(ids(find(current(), 'g1')!['elements'])).toContain('h');
+      expectEveryEmitValid();
+    });
+
+    it('edits static content from the General tab, updates the canvas, and keeps an empty text as an unsaved draft (AC-013, D-025)', async () => {
+      await load();
+      await select('h', 'general');
+      await edit('text', 'Hello world');
+      expect(find(current(), 'h')!['text']).toBe('Hello world');
+      expect(cell('h').querySelector('lib-static-element h2')!.textContent!.trim()).toBe('Hello world');
+      await edit('level', 4);
+      expect(find(current(), 'h')!['level']).toBe(4);
+      expect(cell('h').querySelector('lib-static-element h4')).not.toBeNull();
+
+      const emitted = host.emitted.length;
+      await edit('text', '   ');
+      expect(host.emitted.length).withContext('an empty text is never written').toBe(emitted);
+      expect(find(current(), 'h')!['text']).toBe('Hello world');
+      expect(inspector().draftOf('text')).toBe('   ');
+      expect(inspector().draftError('text')).toBe(t('core.component.form-builder.text.required'));
+      // Undo replaces the draft with the restored value.
+      builder().store.undo();
+      builder().store.undo();
+      await render();
+      expect(find(current(), 'h')).toEqual(jasmine.objectContaining({ text: 'Welcome', level: 2 }));
+      expect(inspector().draftOf('text')).toBe('Welcome');
+      expect(inspector().draftError('text')).toBe('');
+
+      await select('p', 'general');
+      await edit('text', 'First\nSecond');
+      expect(cell('p').querySelector('.sd-fg-paragraph')!.textContent).toContain('First\nSecond');
+
+      await select('q', 'general');
+      await edit('cite', 'Mies');
+      expect(find(current(), 'q')!['cite']).toBe('Mies');
+      expect(cell('q').querySelector('cite')!.textContent!.trim()).toBe('Mies');
+      await edit('cite', '');
+      expect('cite' in find(current(), 'q')!)
+        .withContext('an empty optional text is dropped')
+        .toBeFalse();
+
+      await select('n', 'general');
+      expect(root().querySelectorAll('fb-inspector .ins-colors__swatch').length).withContext('notice colours').toBe(4);
+      root().querySelector<HTMLButtonElement>('fb-inspector .ins-colors__swatch[data-color="error"]')!.click();
+      await render();
+      expect(find(current(), 'n')!['color']).toBe('error');
+      expect(cell('n').querySelector('.c-inform.c-error')).withContext('canvas follows the colour').not.toBeNull();
+      await edit('title', 'Careful');
+      expect(find(current(), 'n')!['title']).toBe('Careful');
+      expect(cell('n').querySelector('.c-inform-title')!.textContent!.trim()).toBe('Careful');
+
+      await select('d', 'general');
+      expect(root().querySelector('fb-inspector .ins-body [data-fb-note="divider"]'))
+        .withContext('a divider has no content to edit')
+        .not.toBeNull();
+      expectEveryEmitValid();
+    });
+
+    it('flags an unsafe link or image URL with the shared URL policy and never renders it (AC-013, INV-003)', async () => {
+      await load();
+      await select('lnk', 'general');
+      expect(warning('url')).withContext('a safe https link').toBeNull();
+      await edit('href', 'javascript:alert(1)');
+      expect(find(current(), 'lnk')!['href']).withContext('URL safety is not grammar: stored, then flagged').toBe('javascript:alert(1)');
+      expect(warning('url')!.textContent).toContain(t('core.component.form-builder.link.unsafe'));
+      expect(cell('lnk').querySelector('a')).withContext('no anchor for a rejected href').toBeNull();
+      expect(cell('lnk').textContent).toContain('Docs');
+      await edit('href', 'mailto:team@example.com');
+      expect(warning('url')).toBeNull();
+      const anchor = cell('lnk').querySelector('a')!;
+      expect(anchor.getAttribute('href')).toBe('mailto:team@example.com');
+      expect(anchor.getAttribute('rel')).toBe('noopener noreferrer');
+      await flip('core.component.form-builder.link.new-tab');
+      expect('newTab' in find(current(), 'lnk')!).toBeFalse();
+      expect(cell('lnk').querySelector('a')!.hasAttribute('target')).toBeFalse();
+      await edit('href', '');
+      expect(find(current(), 'lnk')!['href']).withContext('href stays a string').toBe('');
+      expect(warning('url')).withContext('an empty href is "not set", not unsafe').toBeNull();
+
+      await select('img', 'general');
+      expect(cell('img').querySelector('img')).toBeNull();
+      expect(cell('img').querySelector('.fbp-source')!.textContent).toContain(t('core.component.form-builder.preview.image-empty'));
+      await edit('src', 'ftp://example.com/a.png');
+      expect(warning('url')!.textContent).toContain(t('core.component.form-builder.image.unsafe'));
+      expect(cell('img').querySelector('img')).toBeNull();
+      await edit('src', PIXEL);
+      await edit('alt', 'Logo');
+      await edit('width', 120);
+      await edit('caption', 'Our logo');
+      expect(warning('url')).toBeNull();
+      expect(find(current(), 'img')).toEqual(jasmine.objectContaining({ src: PIXEL, alt: 'Logo', width: 120, caption: 'Our logo' }));
+      const image = cell('img').querySelector('img')!;
+      expect(image.getAttribute('src')).toBe(PIXEL);
+      expect(image.getAttribute('alt')).toBe('Logo');
+      expect(cell('img').querySelector('figcaption')!.textContent!.trim()).toBe('Our logo');
+      await edit('alt', '');
+      expect(find(current(), 'img')!['alt']).withContext('alt may be empty (decorative) and stays a string').toBe('');
+      await edit('width', null);
+      expect('width' in find(current(), 'img')!).toBeFalse();
+      expectEveryEmitValid();
+    });
+
+    it('edits a button: custom gets a unique name, reserved or missing names stay drafts and are flagged (AC-013, D-025)', async () => {
+      await load();
+      await select('send', 'general');
+      expect(control('name')).withContext('no name for submit').toBeNull();
+      await edit('action', 'custom');
+      expect(find(current(), 'send')).toEqual(jasmine.objectContaining({ action: 'custom', name: 'action' }));
+
+      // Another button switched to custom does not take a used name.
+      root().querySelector<HTMLButtonElement>('fb-palette [data-palette-id="button"]')!.click();
+      await render();
+      const added = builder().store.selectedId()!;
+      await select(added, 'general');
+      await edit('action', 'custom');
+      expect(find(current(), added)!['name']).toBe('action_2');
+
+      await select('send', 'general');
+      const emitted = host.emitted.length;
+      await edit('name', 'submit');
+      expect(warning('name')!.textContent).toContain(t('core.component.form-builder.button.name-reserved'));
+      await edit('name', ' ');
+      expect(warning('name')!.textContent).toContain(t('core.component.form-builder.button.name-missing'));
+      expect(host.emitted.length).withContext('invalid names stay drafts').toBe(emitted);
+      expect(find(current(), 'send')!['name']).toBe('action');
+      await edit('name', 'send-now');
+      expect(warning('name')).toBeNull();
+      expect(find(current(), 'send')!['name']).toBe('send-now');
+      await flip('core.component.form-builder.button.validate');
+      expect(find(current(), 'send')!['validate']).toBeTrue();
+
+      await edit('label', '');
+      expect(find(current(), 'send')!['label']).withContext('a button keeps its label').toBe('Send');
+      expect(inspector().draftError('label')).toBe(t('core.component.form-builder.text.required'));
+      await edit('label', 'Send now');
+      await edit('icon', 'send');
+      await edit('variant', 'outline');
+      await edit('align', 'stretch');
+      root().querySelector<HTMLButtonElement>('fb-inspector .ins-colors__swatch[data-color="success"]')!.click();
+      await render();
+      expect(find(current(), 'send')).toEqual(
+        jasmine.objectContaining({ label: 'Send now', icon: 'send', variant: 'outline', align: 'stretch', color: 'success' })
+      );
+      const preview = fixture.debugElement.query(By.css('[data-fb-item="send"] lib-button-element'))
+        .componentInstance as LibButtonElementComponent;
+      expect(preview.appearance()).toEqual({ type: 'outline', color: 'success', align: 'stretch', block: true, prefixIcon: 'send' });
+      expect(cell('send').textContent).toContain('Send now');
+      await edit('variant', '__none__');
+      expect('variant' in find(current(), 'send')!)
+        .withContext('"default" drops the variant')
+        .toBeFalse();
+
+      // Back to submit: the custom-only settings go away.
+      await edit('action', 'submit');
+      expect(find(current(), 'send')).toEqual(jasmine.objectContaining({ action: 'submit' }));
+      expect('name' in find(current(), 'send')!).toBeFalse();
+      expect('validate' in find(current(), 'send')!).toBeFalse();
+      expectEveryEmitValid();
+    });
+
+    it('previews new elements on the canvas inside an inert region, with the card as the only control (D-023)', async () => {
+      await load();
+      for (const id of ['gh', 'h', 'p', 'q', 'img', 'lnk', 'd', 'n', 'save', 'send']) {
+        expect(cell(id).querySelector('fb-field-preview [inert]')).withContext(id).not.toBeNull();
+        expect(cell(id).classList).withContext(id).not.toContain('is-unknown');
+      }
+      const button = cell('send').querySelector<HTMLButtonElement>('lib-button-element button')!;
+      expect(button.closest('[inert]')).not.toBeNull();
+      expect(button.disabled).withContext('not made inert through sd-button [disabled]').toBeFalse();
+      expect(cell('lnk').querySelector('a')!.closest('[inert]')).not.toBeNull();
+      expect(cell('lnk').querySelector('a')!.getAttribute('target')).toBe('_blank');
+      expect(cell('p').querySelector('.sd-fg-paragraph')!.textContent).toContain('Line one\nLine two');
+      expect(cell('h').querySelector('[data-fb-card]')!.getAttribute('aria-label')).toBe(
+        `Welcome, ${t('core.component.form-builder.preset.heading')}`
+      );
+      expect(cell('d').querySelector('[data-fb-card]')!.getAttribute('aria-label'))
+        .withContext('the type is not repeated')
+        .toBe(t('core.component.form-builder.preset.divider'));
+      expect(cell('save').querySelector('.fbp-chip--accent')).withContext('conditional chip').not.toBeNull();
+
+      cell('send').querySelector<HTMLElement>('[data-fb-card]')!.click();
+      await render();
+      expect(builder().store.selectedId()).toBe('send');
+      expect(host.emitted.length).withContext('selecting never emits').toBe(0);
+    });
+
+    it('drags, resizes, duplicates and deletes new elements like fields, at page level and in a group (AC-014)', async () => {
+      await load();
+      const store = builder().store;
+
+      const handle = cell('h').querySelector<HTMLElement>('.fb-resize')!;
+      expect(handle).withContext('new elements can be resized').not.toBeNull();
+      const column = cell('h').parentElement!.clientWidth / 12;
+      const start = center(handle);
+      pointer('pointerdown', handle, start.x, start.y);
+      pointer('pointermove', document, start.x - column * 3, start.y);
+      pointer('pointermove', document, start.x - column * 6, start.y);
+      await render();
+      expect(store.resize()).toEqual(jasmine.objectContaining({ id: 'h', span: 6, mode: 'desktop' }));
+      pointer('pointerup', document, start.x - column * 6, start.y);
+      await render();
+      expect(find(current(), 'h')!['layout']).toEqual({ span: { desktop: 6 } });
+
+      // Drag the heading card into the group.
+      const card = cell('h').querySelector<HTMLElement>('[data-fb-card]')!;
+      const from = center(card);
+      const body = root().querySelector<HTMLElement>('[data-fb-group-body="g1"]')!.getBoundingClientRect();
+      const target = { x: body.left + body.width / 2, y: body.bottom - 6 };
+      pointer('pointerdown', card, from.x, from.y);
+      pointer('pointermove', document, from.x + 12, from.y + 12);
+      pointer('pointermove', document, target.x, target.y);
+      await render();
+      pointer('pointerup', document, target.x, target.y);
+      await render();
+      expect(ids(find(current(), 'g1')!['elements'])).toEqual(['a', 'gh', 'h']);
+
+      // Duplicate: a custom button gets a unique name; a heading in a group stays in the group.
+      const copy = store.duplicate('save')!;
+      await render();
+      expect(find(current(), copy)).toEqual(
+        jasmine.objectContaining({ type: 'button', action: 'custom', name: 'save-draft_2', label: 'Save draft' })
+      );
+      const inGroup = store.duplicate('gh')!;
+      await render();
+      const groupIds = ids(find(current(), 'g1')!['elements']);
+      expect(groupIds.indexOf(inGroup)).toBe(groupIds.indexOf('gh') + 1);
+
+      // Delete (with the undo toast), then undo / redo.
+      await builder().remove('n');
+      await render();
+      expect(find(current(), 'n')).toBeUndefined();
+      store.undo();
+      await render();
+      expect(find(current(), 'n')).toEqual(jasmine.objectContaining({ type: 'notice', text: 'Heads up', color: 'warning' }));
+      store.redo();
+      await render();
+      expect(find(current(), 'n')).toBeUndefined();
+      expectEveryEmitValid();
+    });
+
+    it('lists new elements in the Structure panel with icon and text, and renames a field key inside their rules (AC-014)', async () => {
+      await load();
+      builder().store.leftTab.set('structure');
+      await render();
+      const node = (id: string) => root().querySelector<HTMLElement>(`fb-structure [data-tree-id="${id}"]`)!;
+      expect(node('h').querySelector('.fb-tree__icon')!.textContent!.trim()).toBe('title');
+      expect(node('h').querySelector('.fb-tree__label')!.textContent!.trim()).toBe('Welcome');
+      expect(node('save').querySelector('.fb-tree__icon')!.textContent!.trim()).toBe('smart_button');
+      expect(node('save').querySelector('.fb-tree__label')!.textContent!.trim()).toBe('Save draft');
+      expect(node('d').querySelector('.fb-tree__label')!.textContent!.trim()).toBe(t('core.component.form-builder.preset.divider'));
+      expect(node('gh').getAttribute('aria-level')).withContext('inside the group').toBe('2');
+
+      expect(builder().store.renameKey('a', 'contactEmail')).toBe(3);
+      await render();
+      const schema = current();
+      expect(find(schema, 'h')!['rules']).toEqual({ visible: { field: 'contactEmail', operator: 'NOT_NULL' } });
+      expect(find(schema, 'gh')!['rules']).toEqual({ hidden: { field: 'contactEmail', operator: 'NULL' } });
+      expect(find(schema, 'save')!['rules']).toEqual({ disabled: { field: 'contactEmail', operator: 'NULL' } });
+      expectEveryEmitValid();
     });
   });
 });

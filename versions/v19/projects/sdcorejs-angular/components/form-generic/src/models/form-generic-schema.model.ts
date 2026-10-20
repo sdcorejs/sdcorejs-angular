@@ -1,4 +1,5 @@
 import type { Color, Filter } from '@sdcorejs/utils/models';
+import type { SdFormGenericButton, SdFormGenericStatic } from './form-generic-element.model';
 import type { SdFormGenericField } from './form-generic-field.model';
 
 /**
@@ -53,10 +54,10 @@ export interface SdFormGenericGroup {
 }
 
 /**
- * Phần tử đặt trên lưới. Các đợt sau THÊM thành viên vào union (static, button, table) mà không đổi
- * shape thành viên cũ; renderer bỏ qua type chưa biết, builder giữ nguyên khi phát lại.
+ * Phần tử đặt trên lưới: field, phần tử Tĩnh (đợt 2) hoặc button (đợt 2). Đợt sau THÊM thành viên vào union
+ * (table) mà không đổi shape thành viên cũ; renderer bỏ qua type chưa biết, builder giữ nguyên khi phát lại.
  */
-export type SdFormGenericElement = SdFormGenericField;
+export type SdFormGenericElement = SdFormGenericField | SdFormGenericStatic | SdFormGenericButton;
 
 export interface SdFormGenericVariable {
   key: string;

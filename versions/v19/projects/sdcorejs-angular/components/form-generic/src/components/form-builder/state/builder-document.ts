@@ -1,6 +1,7 @@
 import { Utilities } from '@sdcorejs/utils/fns';
+import type { SdFormGenericButton, SdFormGenericStatic } from '../../../models/form-generic-element.model';
 import type { SdFormGenericField } from '../../../models/form-generic-field.model';
-import { sdIsField, sdIsGroup, sdNormalizeSchema, sdStableStringify } from '../../../models/form-generic-schema';
+import { sdIsButton, sdIsField, sdIsGroup, sdIsStatic, sdNormalizeSchema, sdStableStringify } from '../../../models/form-generic-schema';
 import type {
   SdFormGenericGroup,
   SdFormGenericPage,
@@ -10,7 +11,7 @@ import type {
   SdFormGenericVariable,
 } from '../../../models/form-generic-schema.model';
 
-/** Một phần tử trên canvas: field, group, hoặc phần tử type chưa hỗ trợ (giữ nguyên khi phát lại). */
+/** Một phần tử trên canvas: field, group, phần tử Tĩnh, button, hoặc phần tử type chưa hỗ trợ (giữ nguyên khi phát lại). */
 export type BuilderItem = SdFormGenericPageElement;
 
 /** Vùng chứa phần tử: `null` = trang, ngược lại là `id` của group. */
@@ -60,8 +61,14 @@ export const isGroup = (item: BuilderItem | null | undefined): item is SdFormGen
 /** Field thuộc type builder hiểu (không gồm group, phần tử type lạ). */
 export const isField = (item: BuilderItem | null | undefined): item is SdFormGenericField => sdIsField(item);
 
+/** Phần tử Tĩnh (heading, paragraph, quote, image, link, divider, notice). */
+export const isStatic = (item: BuilderItem | null | undefined): item is SdFormGenericStatic => sdIsStatic(item);
+
+export const isButton = (item: BuilderItem | null | undefined): item is SdFormGenericButton => sdIsButton(item);
+
 /** Phần tử type mà phiên bản này chưa hỗ trợ — hiện thẻ "chưa hỗ trợ", giữ nguyên nội dung. */
-export const isUnknown = (item: BuilderItem | null | undefined): boolean => !!item && !isGroup(item) && !isField(item);
+export const isUnknown = (item: BuilderItem | null | undefined): boolean =>
+  !!item && !isGroup(item) && !isField(item) && !isStatic(item) && !isButton(item);
 
 /**
  * Nhân bản được không. why: phần tử type chưa hỗ trợ (kể cả nằm trong group) có thể mang id/key lồng
@@ -176,6 +183,31 @@ export const collectKeys = (doc: BuilderDocument, exceptItemId?: string): Set<st
   for (const page of doc.base.otherPages) visit(page?.elements ?? []);
   for (const variable of doc.variables) if (variable?.key) keys.add(variable.key);
   return keys;
+};
+
+/** `name` của mọi button custom (kể cả trong group và ở trang khác) — action không nên bị trùng khi nhân bản. */
+export const collectButtonNames = (doc: BuilderDocument, exceptItemId?: string): Set<string> => {
+  const names = new Set<string>();
+  const visit = (items: readonly BuilderItem[]) => {
+    for (const item of items) {
+      if (!item) continue;
+      if (isGroup(item)) visit(item.elements ?? []);
+      else if (isButton(item) && item.id !== exceptItemId && item.action === 'custom' && typeof item.name === 'string' && item.name.trim())
+        names.add(item.name.trim());
+    }
+  };
+  visit(doc.elements);
+  for (const page of doc.base.otherPages) visit(page?.elements ?? []);
+  return names;
+};
+
+/** `base`, `base_2`, `base_3`… — tên đầu tiên chưa bị dùng (giữ nguyên ký tự của `base`). */
+export const uniqueName = (base: string, taken: ReadonlySet<string>): string => {
+  const name = base.trim() || 'action';
+  if (!taken.has(name)) return name;
+  let counter = 2;
+  while (taken.has(`${name}_${counter}`)) counter += 1;
+  return `${name}_${counter}`;
 };
 
 /** `base`, `base_2`, `base_3`… — key đầu tiên chưa bị dùng. */

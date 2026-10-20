@@ -1,3 +1,10 @@
+<!-- why: a failed submit whose only errors are form-level validations would otherwise show nothing. The block
+     stands before the grid and is scrolled into view; it hides on a later successful submit or on reset. -->
+@if (formErrors().length) {
+  <div #formErrors class="mb-16" data-sd-fg-form-errors style="white-space: pre-line">
+    <sd-inform color="error" [description]="formErrorText()"></sd-inform>
+  </div>
+}
 <div #grid>
   @if (navigationTip()) {
     <sd-inform
@@ -108,7 +115,17 @@
                   [style.grid-column]="child.column"
                   [attr.data-row]="child.row"
                   [attr.data-element-id]="child.id">
-                  <lib-item [field]="child.field" [state]="child.state" [form]="formGroup()"></lib-item>
+                  @if (child.kind === 'static') {
+                    <lib-static-element [element]="child.element"></lib-static-element>
+                  } @else if (child.kind === 'button') {
+                    <lib-button-element
+                      [button]="child.element"
+                      [disabled]="child.disabled"
+                      [busy]="busyButtonId() === child.id"
+                      (pressed)="press(child)"></lib-button-element>
+                  } @else {
+                    <lib-item [field]="child.field" [state]="child.state" [form]="formGroup()"></lib-item>
+                  }
                 </div>
               }
             </div>
@@ -121,7 +138,17 @@
           [style.grid-column]="cell.column"
           [attr.data-row]="cell.row"
           [attr.data-element-id]="cell.id">
-          <lib-item [field]="cell.field" [state]="cell.state" [form]="formGroup()"></lib-item>
+          @if (cell.kind === 'static') {
+            <lib-static-element [element]="cell.element"></lib-static-element>
+          } @else if (cell.kind === 'button') {
+            <lib-button-element
+              [button]="cell.element"
+              [disabled]="cell.disabled"
+              [busy]="busyButtonId() === cell.id"
+              (pressed)="press(cell)"></lib-button-element>
+          } @else {
+            <lib-item [field]="cell.field" [state]="cell.state" [form]="formGroup()"></lib-item>
+          }
         </div>
       }
     }

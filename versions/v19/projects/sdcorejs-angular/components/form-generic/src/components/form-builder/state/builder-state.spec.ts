@@ -16,18 +16,24 @@ import {
 import {
   BuilderDocument,
   BuilderItem,
+  canDuplicate,
   childrenOf,
+  collectButtonNames,
   collectKeys,
   documentFromSchema,
   documentToSchema,
   EMPTY_BUILDER_DOCUMENT,
+  isGroup,
+  isUnknown,
   randomKey,
   sameDocumentContent,
   SD_FORM_BUILDER_KEY_PATTERN,
   uniqueKey,
+  uniqueName,
 } from './builder-document';
 import { BuilderHistory } from './builder-history';
 import { buildRows, planDrop } from './builder-layout';
+import { PALETTE_CATEGORIES, SD_FORM_BUILDER_PALETTE, type PaletteCreateContext } from './builder-palette';
 
 const deepFreeze = <T>(value: T): T => {
   if (value && typeof value === 'object') {
@@ -65,7 +71,7 @@ describe('builder-document', () => {
           label: 'Main',
           elements: [
             { id: 'a', key: 'a', type: 'textfield', label: 'A', futureOption: { deep: [1, 2] } },
-            { id: 's-1', type: 'heading', content: 'Title', level: 2 },
+            { id: 's-1', type: 'chart', content: 'Title', level: 2 },
             { type: 'group', label: 'G', elements: [] },
           ],
         },
@@ -78,7 +84,7 @@ describe('builder-document', () => {
     const loaded = documentFromSchema(schema);
     const snapshot = documentToSchema(loaded) as unknown as Record<string, any>;
     expect(snapshot['pages'][0].elements[0].futureOption).toEqual({ deep: [1, 2] });
-    expect(snapshot['pages'][0].elements[1]).toEqual({ id: 's-1', type: 'heading', content: 'Title', level: 2 });
+    expect(snapshot['pages'][0].elements[1]).toEqual({ id: 's-1', type: 'chart', content: 'Title', level: 2 });
     expect(snapshot['pages'][0].elements[2].id).toEqual(jasmine.any(String));
     expect(snapshot['pages'][0].label).toBe('Main');
     expect(snapshot['pages'][1]).toEqual({ id: 'p2', elements: [] });
@@ -253,9 +259,92 @@ describe('builder-commands', () => {
   });
 
   it('never edits the layout of an element of an unknown type', () => {
-    const start = doc([field('a', 6), { id: 'h', type: 'heading', layout: { span: { desktop: 6 } } } as unknown as BuilderItem]);
+    const start = doc([field('a', 6), { id: 'h', type: 'chart', layout: { span: { desktop: 6 } } } as unknown as BuilderItem]);
     expect(setNewRow(start, 'h', true)).toBe(start);
     expect(setSpan(start, 'h', 4, 'desktop')).toBe(start);
+  });
+
+  describe('static elements and buttons', () => {
+    const context = (taken: string[] = []): PaletteCreateContext => ({ takenKeys: new Set(taken), t: key => `t(${key})` });
+    const entry = (id: string) => SD_FORM_BUILDER_PALETTE.find(item => item.id === id)!;
+    const staticIds = ['heading', 'paragraph', 'quote', 'image', 'link', 'divider', 'notice'];
+    const custom = (id: string, name: string) =>
+      ({ id, type: 'button', label: id, action: 'custom', name, layout: { span: { desktop: 6 } } }) as unknown as BuilderItem;
+
+    it('offers the groups "static" (7 entries) and "action" (button) before "layout"', () => {
+      expect(PALETTE_CATEGORIES.slice(-3)).toEqual(['static', 'action', 'layout']);
+      expect(SD_FORM_BUILDER_PALETTE.filter(item => item.category === 'static').map(item => item.id)).toEqual(staticIds);
+      expect(SD_FORM_BUILDER_PALETTE.filter(item => item.category === 'action').map(item => item.id)).toEqual(['button']);
+      expect(SD_FORM_BUILDER_PALETTE.filter(item => item.category === 'layout').map(item => item.id)).toEqual(['group', 'html']);
+    });
+
+    it('creates every static element and the button with defaults that pass the grammar, without a key', () => {
+      for (const id of [...staticIds, 'button']) {
+        const created = entry(id).create(context());
+        expect(created.type)
+          .withContext(id)
+          .toBe(id as never);
+        expect('key' in created)
+          .withContext(id)
+          .toBeFalse();
+        expect(isUnknown(created)).withContext(id).toBeFalse();
+        expect(canDuplicate(created)).withContext(id).toBeTrue();
+        const added = planDrop(doc([field('a')]), { kind: 'row', parentId: null, beforeRowKey: null }, { kind: 'new', item: created });
+        if (!added.ok) throw new Error(added.reason);
+        valid(added.plan.doc);
+      }
+      expect(entry('image').create(context())).toEqual(jasmine.objectContaining({ src: '', alt: '' }));
+      expect(entry('link').create(context())).toEqual(
+        jasmine.objectContaining({ href: '', text: 't(core.component.form-builder.preset.link.text)' })
+      );
+      expect(entry('button').create(context())).toEqual(
+        jasmine.objectContaining({ action: 'submit', label: 't(core.component.form-builder.preset.button.label)' })
+      );
+      expect(entry('notice').create(context())).toEqual(jasmine.objectContaining({ color: 'info' }));
+    });
+
+    it('edits the span and "start a new row" of static elements and buttons', () => {
+      const start = doc([
+        field('a', 6),
+        { id: 'h', type: 'heading', text: 'T', layout: { span: { desktop: 6 } } } as unknown as BuilderItem,
+        custom('b', 'x'),
+      ]);
+      expect((setSpan(start, 'h', 4, 'desktop').elements[1] as { layout?: SdFormGenericLayout }).layout).toEqual({ span: { desktop: 4 } });
+      expect(ids(setNewRow(start, 'b', true).elements)).toEqual(['a', 'h', 'b^']);
+    });
+
+    it('gives a duplicated custom button a new unique name, also inside a duplicated group, and keeps submit buttons nameless', () => {
+      const start = doc([
+        custom('b1', 'save-draft'),
+        custom('b2', 'save-draft_2'),
+        group('g', [custom('b3', 'review') as unknown as SdFormGenericField]),
+      ]);
+      const once = duplicateItem(start, 'b1', 'desktop');
+      if (!once.ok) throw new Error(once.reason);
+      valid(once.plan.doc);
+      const names = (d: BuilderDocument) =>
+        d.elements
+          .flatMap(item => (isGroup(item) ? item.elements : [item]))
+          .map(item => (item as { name?: string }).name)
+          .filter(Boolean);
+      // why: b1 and b2 share a row, so the copy of b1 opens the next row, before the group.
+      expect(names(once.plan.doc)).toEqual(['save-draft', 'save-draft_2', 'save-draft_3', 'review']);
+      const groupCopy = duplicateItem(start, 'g', 'desktop');
+      if (!groupCopy.ok) throw new Error(groupCopy.reason);
+      expect(names(groupCopy.plan.doc)).toEqual(['save-draft', 'save-draft_2', 'review', 'review_2']);
+      const submit = doc([{ id: 's', type: 'button', label: 'Send', action: 'submit' } as unknown as BuilderItem]);
+      const copied = duplicateItem(submit, 's', 'desktop');
+      if (!copied.ok) throw new Error(copied.reason);
+      expect('name' in copied.plan.doc.elements[1]).toBeFalse();
+    });
+
+    it('collects custom button names and finds the first free name', () => {
+      const start = doc([custom('b1', 'action'), group('g', [custom('b2', 'action_2') as unknown as SdFormGenericField])]);
+      expect([...collectButtonNames(start)].sort()).toEqual(['action', 'action_2']);
+      expect([...collectButtonNames(start, 'b1')]).toEqual(['action_2']);
+      expect(uniqueName('action', collectButtonNames(start))).toBe('action_3');
+      expect(uniqueName('print', collectButtonNames(start))).toBe('print');
+    });
   });
 
   it('drops an empty layout instead of emitting `layout: {}`', () => {

@@ -39,6 +39,42 @@ describe('FormGenericDemoComponent (live example)', () => {
     expect(fixture.componentInstance.result()).toContain('Chưa hợp lệ');
   });
 
+  it('shows static elements and buttons and logs (sdAction) for a valid submit and a custom action (AC-017)', async () => {
+    const consoleError = spyOn(console, 'error').and.callThrough();
+    const fixture = await create();
+    const root = fixture.nativeElement as HTMLElement;
+    const render = root.querySelector('sd-form-render')!;
+    expect(render.querySelector('h2.sd-fg-heading')?.textContent?.trim()).toBeTruthy();
+    expect(render.querySelector('.sd-fg-notice sd-inform')).withContext('notice').not.toBeNull();
+    expect(render.querySelector('hr.sd-fg-divider')).withContext('divider').not.toBeNull();
+    expect(render.querySelectorAll('lib-button-element').length).withContext('submit, custom and reset buttons').toBe(3);
+    expect(root.querySelector('sd-form-builder [data-fb-item="b-submit"] fb-field-preview [inert]'))
+      .withContext('the builder canvas previews the button')
+      .not.toBeNull();
+
+    const press = async (id: string) => {
+      root.querySelector<HTMLButtonElement>(`sd-form-render [data-element-id="${id}"] button`)!.click();
+      for (let pass = 0; pass < 3; pass += 1) {
+        fixture.detectChanges();
+        await fixture.whenStable();
+      }
+    };
+    const demo = fixture.componentInstance;
+    await press('b-submit');
+    expect(demo.actions()).withContext('an invalid submit emits nothing').toEqual([]);
+
+    demo.value.set({ fullName: 'Nguyễn Lan', email: 'lan@example.com', city: 'hn' });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await press('b-submit');
+    expect(demo.actions().map(entry => entry.action)).toEqual(['submit']);
+    expect(demo.actions()[0]).toEqual(jasmine.objectContaining({ buttonId: 'b-submit' }));
+    await press('b-draft');
+    expect(demo.actions().map(entry => entry.action)).toEqual(['submit', 'save-draft']);
+    expect(root.querySelector('.action-log')!.textContent).toContain('save-draft');
+    expect(consoleError).withContext('no console error').not.toHaveBeenCalled();
+  });
+
   it('loads an empty schema and resets the change counter', async () => {
     const fixture = await create();
     fixture.componentInstance.load(fixture.componentInstance.emptyForm());

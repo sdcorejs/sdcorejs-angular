@@ -107,8 +107,22 @@ describe('form generic layout', () => {
     });
 
     it('packs an element of an unknown type by its layout like any other element', () => {
-      const items = [item('a', { span: { desktop: 6 } }), item('x', { span: { desktop: 6 } }, 'heading'), item('y', undefined, 'heading')];
+      const items = [item('a', { span: { desktop: 6 } }), item('x', { span: { desktop: 6 } }, 'chart'), item('y', undefined, 'chart')];
       expect(rowsOf(items, 'desktop')).toEqual([['a:6', 'x:6'], ['y:12']]);
+    });
+
+    it('packs static elements and buttons as cells like fields, at every level, with newRow', () => {
+      const items = [
+        item('h', undefined, 'heading'),
+        item('a', { span: { desktop: 6, mobile: 6 } }),
+        item('n', { span: { desktop: 6, tablet: 12 } }, 'notice'),
+        item('save', { span: { desktop: 3, mobile: 6 } }, 'button'),
+        item('reset', { span: { desktop: 3, mobile: 6 } }, 'button'),
+        item('d', { newRow: true, span: { desktop: 3 } }, 'divider'),
+      ];
+      expect(rowsOf(items, 'desktop')).toEqual([['h:12'], ['a:6', 'n:6'], ['save:3', 'reset:3'], ['d:3']]);
+      expect(rowsOf(items, 'tablet')).toEqual([['h:12'], ['a:6'], ['n:12'], ['save:3', 'reset:3'], ['d:3']]);
+      expect(rowsOf(items, 'mobile')).toEqual([['h:12'], ['a:6'], ['n:12'], ['save:6', 'reset:6'], ['d:12']]);
     });
   });
 

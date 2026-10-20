@@ -125,7 +125,10 @@ export class CanvasComponent {
 
   /** Tên truy cập của nút chọn field: nhãn, loại, trạng thái. */
   ariaLabelOf = (item: BuilderItem): string => {
-    const parts = [this.labelOf(item), this.store.t(itemTypeLabelKey(item))];
+    const label = this.labelOf(item);
+    const type = this.store.t(itemTypeLabelKey(item));
+    // why: a static element without text is already named by its type ("Đường kẻ") — do not say it twice.
+    const parts = type === label ? [label] : [label, type];
     const required = (item as { validation?: { required?: boolean } }).validation?.required;
     if (required) parts.push(this.store.t('core.component.form-builder.required'));
     if (this.isHidden(item)) parts.push(this.store.t('core.component.form-builder.hidden'));
