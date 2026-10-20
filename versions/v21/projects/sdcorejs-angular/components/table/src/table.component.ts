@@ -1640,11 +1640,28 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   // Blur input filter: chỉ commit giá trị vào filterRegister, KHÔNG trigger reload.
   // Reload chỉ chạy khi user enter hoặc bấm nút tải lại.
   onFilterCommit = () => {
-    this.filterRegister?.value.set({
-      columnOperator: this.columnOperator || {},
+    if (!this.filterRegister) return;
+    const columnOperator = this.columnOperator || {};
+    // why: Tab ngay sau Enter không có gì mới để commit; set notReload lúc đó sẽ hủy lần đọc user vừa yêu cầu.
+    if (this.#isColumnFilterCommitted(columnOperator, this.columnFilter)) return;
+    this.filterRegister.value.set({
+      columnOperator,
       columnFilter: this.columnFilter,
       notReload: true,
     });
+  };
+
+  #isColumnFilterCommitted = (columnOperator: Record<string, Operator>, columnFilter: TableFilterValue['columnFilter']): boolean => {
+    const committed = this.filterRegister.value.get();
+    try {
+      return (
+        Utilities.canonicalStringify({ columnOperator: committed.columnOperator || {}, columnFilter: committed.columnFilter || {} }) ===
+        Utilities.canonicalStringify({ columnOperator, columnFilter: columnFilter || {} })
+      );
+    } catch {
+      // Giá trị không serialize được: commit như cũ.
+      return false;
+    }
   };
 
   onExpand = async (row: SdTableItem<T>) => {

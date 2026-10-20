@@ -523,6 +523,7 @@ The projected checkbox is consumer-owned; it does not automatically add a predic
 
 - **Enter** trên `sd-input` / `sd-input-number` → commit value vào `filterRegister` **và** trigger reload (debounce 500ms + 200ms).
 - **Blur** (focus rời input) → commit value vào `filterRegister` với `notReload: true` — **không** gọi API. Đảm bảo giá trị typed-but-not-entered không bị mất nếu user chuyển sang filter khác hoặc bấm Reload.
+- **Enter rồi Tab** trong lúc lần đọc filter còn chờ → blur không có giá trị mới nên không commit lại và **không** hủy lần đọc Enter vừa lên lịch. Nếu user sửa giá trị trước khi blur, commit `notReload` mới vẫn thay thế và hủy lần đọc đang chờ như cũ.
 - **Click nút Reload** (`reload()`) → table tự commit `this.columnFilter` snapshot vào `filterRegister` (notReload:true) trước khi build filter request — đảm bảo giá trị input vẫn còn focus cũng được gửi lên.
 - **Empty result:** khi `reload.visible` là `true`, nút Reload vẫn enabled với `items.length === 0` hoặc `total === 0`; export và paginator vẫn giữ điều kiện hiển thị hiện tại.
 - **`sd-select` / `sd-date-range` / `sd-date`** vẫn dùng `(sdChange)` → commit + reload tức thì.
