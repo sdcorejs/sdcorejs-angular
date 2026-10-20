@@ -6,14 +6,21 @@ import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import { SdTableColumn } from '../../models/table-column.model';
 import { ConfiguredTableResult } from '../../models/table-option-config.model';
 import { SdTableOptionExportColumn } from '../../models/table-option-export.model';
-import { SdTableOption } from '../../models/table-option.model';
+import { SdTableOption, SdTableServerHasMoreResult } from '../../models/table-option.model';
 import { resolveFieldValue } from '../field-value.util';
 import { SdTableFilterRequest } from '../table-filter/table-filter.model';
+
+/**
+ * Row cap of an export without a known total and without `export.max`: one Excel sheet holds 1,048,576
+ * rows including the header. It also bounds a source that ignores paging and never reports its end.
+ */
+const UNKNOWN_TOTAL_EXPORT_CAP = 1_048_575;
 
 export interface SdTableExportContext<T = any> {
   option: SdTableOption<T>;
   configuration?: ConfiguredTableResult;
-  total: number;
+  /** Table total; `undefined` when `paginate.total: 'unknown'`, so chunks are fetched until the source ends. */
+  total: number | undefined;
   cacheObjValues: Record<string, Record<string, string>>;
 
   // Hàm callback để Service gọi ngược lại Component xin dữ liệu từng trang
@@ -26,6 +33,7 @@ export interface SdTableExportContext<T = any> {
         items: any[];
         total: number;
       }
+    | SdTableServerHasMoreResult
   >;
 
   // Dành cho custom export
@@ -101,10 +109,11 @@ export class TableExportService {
     if (option.export?.type === 'custom') return;
 
     const { isCSV } = args;
-    const limit = this.#exportLimit(option);
+    const totalKnown = total !== undefined;
+    const limit = this.#exportLimit(option) ?? (totalKnown ? undefined : UNKNOWN_TOTAL_EXPORT_CAP);
     // why: `export.max` trước đây khai báo nhưng không ai đọc — export 100.000 dòng vẫn chạy dù đặt
     // `max: 5000`. Chặn ngay khi tổng của bảng (server, hoặc số dòng local sau lọc) đã vượt.
-    if (limit !== undefined && total > limit) {
+    if (limit !== undefined && totalKnown && total > limit) {
       this.#warnExportLimit(limit, total);
       return;
     }
@@ -115,11 +124,14 @@ export class TableExportService {
 
       let pageNumber = 0;
       let exportItems: any[] = [];
-      let currentTotal = total; // Biến cục bộ để track total trả về từ fetchChunk
+      let currentTotal = total ?? 0; // Biến cục bộ để track total trả về từ fetchChunk
+      // Unknown total: the source ended (hasMore false, an empty chunk, or a chunk that is not exactly
+      // one page: shorter means the last page, longer means the source ignores paging and sent everything).
+      let reachedEnd = false;
 
       this.exporting.set(true);
       const items: any[] = [];
-      let promises: Promise<any[] | { items: any[]; total: number }>[] = [];
+      let promises: Promise<any[] | { items: any[]; total: number } | SdTableServerHasMoreResult>[] = [];
       let fetchedCount = 0;
       let exceededTotal: number | undefined;
 
@@ -129,11 +141,16 @@ export class TableExportService {
         exportItems = [];
 
         for (const result of results) {
+          // why: chunks of one batch run in parallel; after the last page they can only be empty or a
+          // newer snapshot of the source, never rows that belong to this export.
+          if (reachedEnd) break;
           if (result && 'items' in result) {
             exportItems = [...exportItems, ...result.items];
-            currentTotal = result.total;
+            if (totalKnown) currentTotal = (result as { total: number }).total;
+            else reachedEnd = !result.items.length || ('hasMore' in result ? !result.hasMore : result.items.length !== pageSize);
           } else if (Array.isArray(result)) {
             exportItems = [...exportItems, ...result];
+            if (!totalKnown) reachedEnd = result.length !== pageSize;
           }
         }
         fetchedCount += exportItems.length;
@@ -150,10 +167,13 @@ export class TableExportService {
           exportItems = mappedResults instanceof Promise ? await mappedResults : mappedResults;
         }
 
-        const totalPage = Math.max(1, currentTotal / pageSize);
-        const percent = Math.round(((pageNumber - 1) * 100.0) / totalPage);
-        // Đảm bảo percent không vượt quá 100
-        this.setExportProgress(percent);
+        // Without a total there is no honest percentage; the button keeps its loading state instead.
+        if (totalKnown) {
+          const totalPage = Math.max(1, currentTotal / pageSize);
+          const percent = Math.round(((pageNumber - 1) * 100.0) / totalPage);
+          // Đảm bảo percent không vượt quá 100
+          this.setExportProgress(percent);
+        }
 
         const allColumns = this.#allColumns(option);
         const allExportedColumns = this.#allExportedColumns(option);
@@ -224,7 +244,7 @@ export class TableExportService {
       };
 
       // Vòng lặp lấy dữ liệu
-      while (pageNumber * pageSize < currentTotal) {
+      while (totalKnown ? pageNumber * pageSize < currentTotal : !reachedEnd) {
         promises.push(fetchChunk(pageNumber, pageSize));
         pageNumber++;
         if (promises.length < batch) continue;

@@ -44,6 +44,11 @@ export class SdReadChannel {
     return revision === this.#revision && this.#valid();
   }
 
+  /** No read began and nothing invalidated since `revision`, even if its context is no longer valid. */
+  isLatest(revision: number): boolean {
+    return revision === this.#revision;
+  }
+
   succeed(revision: number, count: number): boolean {
     if (!this.isCurrent(revision)) return false;
     this.#set({ status: count ? 'ready' : 'empty', operation: this.operation });

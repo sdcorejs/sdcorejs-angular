@@ -653,9 +653,9 @@ const COMPONENT_PAGES = [
     selector: 'sd-table',
     importPath: '@sdcorejs/angular/components/table',
     publishedDocId: 'components/table/sd-table',
-    keywords: ['data grid', 'pagination', 'filter', 'quick search', 'selection', 'server side', 'command header', 'aggregate', 'subtotal'],
+    keywords: ['data grid', 'pagination', 'filter', 'quick search', 'selection', 'server side', 'command header', 'aggregate', 'subtotal', 'unknown total', 'has more'],
     status: 'stable',
-    demoSectionCount: 28,
+    demoSectionCount: 29,
     loadComponent: () => import('../../pages/components/table/table-demo.component').then(m => m.TableDemoComponent),
   }),
   defineDocPage({

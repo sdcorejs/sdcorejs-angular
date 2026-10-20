@@ -1,0 +1,90 @@
+@let _state = state();
+@let _autoId = autoId();
+<div class="mat-mdc-paginator-outer-container">
+  <div class="mat-mdc-paginator-container">
+    @if (!hidePageSize()) {
+      <div class="mat-mdc-paginator-page-size">
+        <div class="mat-mdc-paginator-page-size-label" [attr.id]="pageSizeLabelId">
+          {{ intl.itemsPerPageLabel }}
+        </div>
+        @if (displayedPageSizeOptions().length > 1) {
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" class="mat-mdc-paginator-page-size-select">
+            <mat-select
+              [value]="_state.pageSize"
+              [disabled]="_state.busy"
+              [aria-labelledby]="pageSizeLabelId"
+              [attr.data-autoid]="_autoId ? _autoId + '-paginator-page-size' : null"
+              (selectionChange)="changePageSize($event.value)"
+              hideSingleSelectionIndicator>
+              @for (pageSizeOption of displayedPageSizeOptions(); track pageSizeOption) {
+                <mat-option [value]="pageSizeOption">{{ pageSizeOption }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        } @else {
+          <div class="mat-mdc-paginator-page-size-value">{{ _state.pageSize }}</div>
+        }
+      </div>
+    }
+
+    <div class="mat-mdc-paginator-range-actions">
+      <div class="mat-mdc-paginator-range-label" aria-live="polite">{{ rangeLabel() }}</div>
+
+      <!-- Same contract as mat-paginator: `disabledInteractive` keeps focus on a button that becomes
+           disabled while its page loads, and tabindex -1 keeps disabled buttons out of the tab order. -->
+      @if (showFirstButton()) {
+        <button
+          mat-icon-button
+          type="button"
+          class="mat-mdc-paginator-navigation-first"
+          [attr.data-autoid]="_autoId ? _autoId + '-paginator-first' : null"
+          [attr.aria-label]="intl.firstPageLabel"
+          [matTooltip]="intl.firstPageLabel"
+          [matTooltipDisabled]="previousDisabled()"
+          matTooltipPosition="above"
+          [disabled]="previousDisabled()"
+          [tabindex]="previousDisabled() ? -1 : null"
+          disabledInteractive
+          (click)="first()">
+          <svg class="mat-mdc-paginator-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+            <path d="M18.41 16.59L13.82 12l4.59-4.59L17 6l-6 6 6 6zM6 6h2v12H6z" />
+          </svg>
+        </button>
+      }
+      <button
+        mat-icon-button
+        type="button"
+        class="mat-mdc-paginator-navigation-previous"
+        [attr.data-autoid]="_autoId ? _autoId + '-paginator-previous' : null"
+        [attr.aria-label]="intl.previousPageLabel"
+        [matTooltip]="intl.previousPageLabel"
+        [matTooltipDisabled]="previousDisabled()"
+        matTooltipPosition="above"
+        [disabled]="previousDisabled()"
+        [tabindex]="previousDisabled() ? -1 : null"
+        disabledInteractive
+        (click)="previous()">
+        <svg class="mat-mdc-paginator-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+          <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+        </svg>
+      </button>
+      <button
+        mat-icon-button
+        type="button"
+        class="mat-mdc-paginator-navigation-next"
+        [attr.data-autoid]="_autoId ? _autoId + '-paginator-next' : null"
+        [attr.aria-label]="intl.nextPageLabel"
+        [matTooltip]="intl.nextPageLabel"
+        [matTooltipDisabled]="nextDisabled()"
+        matTooltipPosition="above"
+        [disabled]="nextDisabled()"
+        [tabindex]="nextDisabled() ? -1 : null"
+        disabledInteractive
+        (click)="next()">
+        <svg class="mat-mdc-paginator-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+          <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>

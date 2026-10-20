@@ -186,6 +186,30 @@ interface SdTableLocalOption<T = any> extends SdTableBaseOption<T> {
   items: () => T[] | Promise<T[]>;
 }
 
+/** One server page when the API returns a total (`paginate.total` omitted or `'known'`). */
+export interface SdTableServerTotalResult<T = any> {
+  /** Rows of the requested page. */
+  items: T[];
+  /** Number of records matching the request across all pages. */
+  total: number;
+}
+
+/**
+ * One server page when the API cannot count records (`paginate.total: 'unknown'`).
+ *
+ * The table renders at most `pageSize` rows: extra rows, such as a lookahead row, are dropped and
+ * imply `hasMore: true`. An empty page is always treated as the last page.
+ */
+export interface SdTableServerHasMoreResult<T = any> {
+  /** Rows of the requested page, at most `pageSize`. */
+  items: T[];
+  /**
+   * Whether a next page exists, decided by the loader (for example by fetching `pageSize + 1` rows).
+   * Never derive it from `items.length === pageSize` alone: a full page can be the last page.
+   */
+  hasMore: boolean;
+}
+
 interface SdTableServerOption<T = any> extends SdTableBaseOption<T> {
   /** Dùng dữ liệu từ server, có paging/filter/sort theo request của table. */
   type: 'server';
@@ -193,9 +217,13 @@ interface SdTableServerOption<T = any> extends SdTableBaseOption<T> {
    * Hàm lấy dữ liệu từ server.
    * `filterRequest` chứa trạng thái filter/sort/visible columns ở dạng của table.
    * `pagingReq` là dữ liệu paging đã được chuẩn hóa để dễ map sang API backend.
-   * Hàm cần trả về `{ items, total }` để table render và tính phân trang.
+   * Mặc định hàm trả về `{ items, total }` để table render và tính phân trang.
+   * Khi `paginate.total: 'unknown'`, hàm trả về `{ items, hasMore }` (offset = `pageNumber * pageSize`).
    */
-  items: (filterRequest: SdTableFilterRequest<T>, pagingReq: PagingReq<T>) => Promise<{ items: T[]; total: number }>;
+  items: (
+    filterRequest: SdTableFilterRequest<T>,
+    pagingReq: PagingReq<T>
+  ) => Promise<SdTableServerTotalResult<T> | SdTableServerHasMoreResult<T>>;
   /**
    * Hook chạy khi table phát sinh filter request.
    * Dùng để can thiệp thêm trước/sau khi gọi API, ví dụ sync external state,
