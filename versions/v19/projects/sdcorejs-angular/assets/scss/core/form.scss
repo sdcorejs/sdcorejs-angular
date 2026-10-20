@@ -135,7 +135,7 @@
 
   // Size normal`
   &.sd-md {
-    --mat-form-field-container-height: 40px;
+    --mat-form-field-container-height: var(--sd-control-height-md, 40px);
     --mat-form-field-container-vertical-padding: 3px;
 
     &.mat-form-field-appearance-outline {
@@ -196,7 +196,7 @@
 
   // Size small
   &.sd-sm {
-    --mat-form-field-container-height: 32px;
+    --mat-form-field-container-height: var(--sd-control-height-sm, 32px);
     --mat-form-field-container-vertical-padding: 3px;
 
     // why: Material renders the required marker beside mat-label. Keep the complete
@@ -224,7 +224,7 @@
     &.mat-form-field-appearance-outline {
       .mat-mdc-form-field-infix {
         border-top-width: 6px;
-        min-height: 32px;
+        min-height: var(--sd-control-height-sm, 32px);
         width: auto;
 
         mat-select.mat-mdc-select,

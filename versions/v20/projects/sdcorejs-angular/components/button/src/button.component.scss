@@ -89,7 +89,7 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
 
     &.c-sm {
       font-size: var(--sd-font-size-14, 14px) !important;
-      height: 32px;
+      height: var(--sd-control-height-sm, 32px);
       padding: 2px 12px !important;
 
       .c-button-content-wrapper {
@@ -102,13 +102,13 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
         font-size: var(--sd-font-size-16, 16px) !important;
       }
       &.c-square {
-        width: 32px !important;
+        width: var(--sd-control-height-sm, 32px) !important;
       }
     }
 
     &.c-md {
       font-size: var(--sd-font-size-16, 16px);
-      height: 40px;
+      height: var(--sd-control-height-md, 40px);
       padding: 2px 16px !important;
 
       sd-icon {
@@ -117,17 +117,17 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
         font-size: var(--sd-font-size-20, 20px) !important;
       }
       &.c-square {
-        width: 40px !important;
+        width: var(--sd-control-height-md, 40px) !important;
       }
     }
 
     &.c-lg {
       font-size: var(--sd-font-size-16, 16px) !important;
       padding: 2px 16px !important;
-      height: 48px;
+      height: var(--sd-control-height-lg, 48px);
 
       &.c-square {
-        width: 48px !important;
+        width: var(--sd-control-height-lg, 48px) !important;
       }
 
       sd-icon {

@@ -260,6 +260,10 @@ test('Scale tier exposes space, radius, shadow, z-index, motion and typography',
   assert.equal(light['--sd-font-size-13'], '13px');
   assert.equal(light['--sd-font-weight-medium'], '500');
   assert.equal(light['--sd-line-height-20'], '20px');
+  assert.equal(light['--sd-control-height-sm'], '32px');
+  assert.equal(light['--sd-control-height-md'], '40px');
+  assert.equal(light['--sd-control-height-lg'], '48px');
+  assert.equal(light['--sd-control-height-coarse'], '44px');
 });
 
 test('VAL-002: dark re-declares every light declaration, adds color-scheme and Material dark colors', () => {

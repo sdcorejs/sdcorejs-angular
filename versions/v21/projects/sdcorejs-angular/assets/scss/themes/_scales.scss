@@ -30,6 +30,12 @@ $scales: (
   'radius-16': 16px,
   'radius-24': 24px,
   'radius-999': 999px,
+  // Control height — the heights of sd-button and mat-form-field (sm/md/lg), and the minimum touch height
+  // under `pointer: coarse` (the mobile table already uses 44px).
+  'control-height-sm': 32px,
+  'control-height-md': 40px,
+  'control-height-lg': 48px,
+  'control-height-coarse': 44px,
   // Shadow — Material elevation 1, 2, 4, 8, 16 (the values of the elevation utilities).
   'shadow-xs': (0px 2px 1px -1px rgba(0, 0, 0, 0.2), 0px 1px 1px 0px rgba(0, 0, 0, 0.14), 0px 1px 3px 0px rgba(0, 0, 0, 0.12)),
   'shadow-sm': (0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12)),
