@@ -1,6 +1,9 @@
 // Tô màu nền trắng cho filter
 :host ::ng-deep {
   .c-inline-column {
+    // Label float cắt vòng focus bằng nền của ô — ở đây là nền bảng, không phải surface.
+    --sd-control-label-bg: var(--sd-table-bg, #ffffff);
+
     .mat-mdc-text-field-wrapper {
       background-color: var(--sd-table-bg, #ffffff);
     }

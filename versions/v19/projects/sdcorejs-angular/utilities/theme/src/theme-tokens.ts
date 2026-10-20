@@ -135,6 +135,15 @@ export const SD_COLOR_TOKENS = [
   'overlay-backdrop',
   'overlay-surface',
   'focus-ring-color',
+  // Control roles (outline, focus and disabled state of every box control). `control-ring` and
+  // `control-ring-error` hold a box-shadow, not a bare colour.
+  'control-border',
+  'control-border-hover',
+  'control-border-focus',
+  'control-border-disabled',
+  'control-ring',
+  'control-ring-error',
+  'control-bg-disabled',
 ] as const;
 
 /** Tên một token màu public của Core UI, ví dụ `'primary'`, `'primary-600'`, `'status-error-fg'`. */

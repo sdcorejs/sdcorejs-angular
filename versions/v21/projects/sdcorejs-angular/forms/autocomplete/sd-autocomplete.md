@@ -196,10 +196,10 @@ Applied automatically on `<sd-autocomplete>` for styling hooks:
 
 ## Visual cues (helps agent map screenshots → component)
 
-- Outlined input field with a label that floats on focus
+- Outlined input field with a label that floats on focus. The outline follows the shared control tokens (8px corner, `--sd-control-border`, focus ring); a disabled field has the same `--sd-control-bg-disabled` background as every other control (it used `--sd-surface-muted` before) — see `assets/THEME.md` "Control tokens"
 - Trailing icons: 🔍 search icon when empty; a **slim clear button** (`.sd-clear-btn`, thin `close` icon) when a value is selected; loading spinner when an async source is in flight; optional "+" add button when `[addable]`. The clear button **replaces** the search icon (like `sd-select`), so it is **always shown** when there's a value — NOT hover-gated.
 - Below the field, a Material panel slides down listing matching options; each row uses `displayField` (or custom `sdItemDef` template)
-- Highlighted/selected option painted in primary color
+- The panel has a 10px corner (`--sd-panel-radius`) on all four sides, a thin border and `--sd-shadow-md`; options stay 36px high, are inset 4px with a 6px corner, and the selected one is `--sd-primary-dark` on `--sd-primary-light`, weight 500
 - In `[viewed]="true"` mode: no input box — just plain text (or hyperlink) of the resolved display value
 
 ## Standalone imports and table-cell usage

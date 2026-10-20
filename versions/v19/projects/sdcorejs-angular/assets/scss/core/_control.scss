@@ -1,0 +1,39 @@
+// Control dạng ô tự viết — những ô nhập không dùng mat-form-field (ô lọc trong panel sd-select,
+// sd-entity-picker, ô nhập của editor, form builder, file explorer, query bar). Cùng bộ token với
+// mat-form-field outline (thiết kế đợt 2 · D, xem assets/THEME.md "Control tokens"):
+// - bo `--sd-control-radius`, viền 1px `--sd-control-border`;
+// - hover viền `--sd-control-border-hover`;
+// - focus viền `--sd-control-border-focus` cộng vòng `--sd-control-ring` (box-shadow ngoài khung);
+// - forced colors: box-shadow không hiện, nên vòng là outline Highlight.
+//
+// Trạng thái disabled / viewed / lỗi khác nhau theo từng component nên nằm ở component.
+
+/// Bo, viền, hover và focus của một control dạng ô.
+/// @param $focus - pseudo-class kích hoạt vòng focus: `:focus-within` cho khung bọc input,
+///   `:focus-visible` khi chính phần tử là input.
+/// @param $hover - false khi control có hover riêng.
+@mixin box($focus: ':focus-within', $hover: true) {
+  border: 1px solid var(--sd-control-border, var(--sd-border));
+  border-radius: var(--sd-control-radius, 8px);
+
+  @if $hover {
+    &:hover {
+      border-color: var(--sd-control-border-hover, var(--sd-border-strong));
+    }
+  }
+
+  &#{$focus} {
+    border-color: var(--sd-control-border-focus, var(--sd-primary));
+    box-shadow: var(--sd-control-ring, none);
+    // Vòng focus là box-shadow ở trên, thay cho outline mặc định của trình duyệt.
+    outline: none;
+  }
+
+  @media (forced-colors: active) {
+    &#{$focus} {
+      --sd-control-focus-ring: Highlight;
+      outline: 2px solid var(--sd-control-focus-ring);
+      outline-offset: 2px;
+    }
+  }
+}

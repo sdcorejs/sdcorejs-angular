@@ -125,6 +125,45 @@
     }
   }
 
+  // Token control (thiết kế đợt 2 · D): viền 1px ở mọi trạng thái, focus là viền primary 1px cộng vòng
+  // `--sd-control-ring` bên ngoài. Bo góc và màu viền nằm ở themes/_material-tokens.scss; độ dày đặt ở đây
+  // vì tầng Material chỉ trỏ token Material sang token Core. Khai báo cả tên Material 19 và 20+.
+  &.mat-form-field-appearance-outline {
+    --mdc-outlined-text-field-outline-width: 1px;
+    --mdc-outlined-text-field-focus-outline-width: 1px;
+    --mat-form-field-outlined-outline-width: 1px;
+    --mat-form-field-outlined-focus-outline-width: 1px;
+
+    &.mat-focused .mat-mdc-text-field-wrapper {
+      border-radius: var(--sd-control-radius, 8px);
+      box-shadow: var(--sd-control-ring, none);
+    }
+
+    &.mat-focused.mat-form-field-invalid .mat-mdc-text-field-wrapper {
+      box-shadow: var(--sd-control-ring-error, none);
+    }
+
+    // why: label float nằm đè lên vòng focus ở chỗ notch, nên cần nền để cắt vòng. Chỉ khi focus — lúc
+    // nghỉ không có vòng, và một field đặt trên nền khác surface sẽ lộ mảng nền. Context có nền khác (ô
+    // filter của bảng) đặt lại `--sd-control-label-bg`.
+    &.mat-focused .mdc-floating-label--float-above {
+      background: var(--sd-control-label-bg, var(--sd-surface));
+    }
+
+    // Nền disabled chung cho mọi control dạng ô, để ô vô hiệu không nhầm với ô trống.
+    &.mat-form-field-disabled .mat-mdc-text-field-wrapper {
+      background: var(--sd-control-bg-disabled, #{color.$disabled-bg});
+    }
+
+    // why: box-shadow không hiện trong forced colors, nên vòng focus phải là outline hệ thống.
+    @media (forced-colors: active) {
+      &.mat-focused .mat-mdc-text-field-wrapper {
+        outline: 2px solid Highlight;
+        outline-offset: 2px;
+      }
+    }
+  }
+
   // Bỏ padding nếu hideInlineError. Viền đỏ khi lỗi đến từ token `error-outline-color` ở trên, như
   // mọi field khác.
   &.hide-inline-error {
@@ -298,11 +337,37 @@
 }
 
 // why: chữ option của sd-select / sd-autocomplete 14px, bằng chữ hiển thị trong ô. Option single của
-// Material mặc định là body-large (16px) trong khi trigger/input là 14px. Màu option đang chọn nằm ở
-// themes/_material-tokens.scss.
+// Material mặc định là body-large (16px) trong khi trigger/input là 14px.
+//
+// Panel control (thiết kế đợt 2 · D): bo `--sd-panel-radius` đủ bốn góc, viền mảnh, bóng shadow-md. Option
+// giữ cao 36px, chỉ thụt ngang 4px — virtual scroll tính theo chiều cao cố định nên không thêm khoảng cách
+// dọc. Màu option đang chọn đặt trong phạm vi panel, token global ở themes/_material-tokens.scss giữ nguyên.
 .mat-mdc-select-panel.sd-select-panel,
 .mat-mdc-autocomplete-panel.sd-autocomplete-panel {
   --mat-option-label-text-size: var(--sd-font-size-14, 14px);
+  --mat-option-selected-state-label-text-color: var(--sd-primary-dark);
+  --mat-option-selected-state-layer-color: var(--sd-primary-light);
+  // why: nền panel là surface-container của Material chứ không phải --sd-surface; trộn 5% chữ với surface sẽ
+  // ra màu SÁNG hơn nền panel. Trộn với transparent thì hover luôn đậm hơn nền, ở cả light lẫn dark.
+  --mat-option-hover-state-layer-color: color-mix(in srgb, var(--sd-text) 5%, transparent);
+  --mat-select-container-elevation-shadow: var(--sd-shadow-md);
+  --mat-autocomplete-container-elevation-shadow: var(--sd-shadow-md);
+  // why: Material làm phẳng góc ở phía sát trigger (v19/20 bằng rule `.cdk-overlay-pane:not(...)`, v21+
+  // bằng `border-radius: 0 0 4px 4px`) với độ ưu tiên cao hơn class panel, nên cần !important.
+  border-radius: var(--sd-panel-radius, 10px) !important;
+  // why: tách longhand — nếu theme thiếu token, chỉ màu rơi về mặc định chứ viền 1px không mất.
+  border-width: 1px;
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--sd-border) 60%, var(--sd-surface));
+
+  .mat-mdc-option {
+    margin: 0 4px;
+    border-radius: var(--sd-radius-6, 6px);
+
+    &.mdc-list-item--selected .mdc-list-item__primary-text {
+      font-weight: var(--sd-font-weight-medium, 500);
+    }
+  }
 }
 
 // Override reboot rule `label { margin-bottom: 0.5rem }` cho mat-checkbox layout

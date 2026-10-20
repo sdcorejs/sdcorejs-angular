@@ -36,6 +36,10 @@ $scales: (
   'control-height-md': 40px,
   'control-height-lg': 48px,
   'control-height-coarse': 44px,
+  // Control shape — the corner of every box control (form field, search box, entity picker) and of the
+  // panels they open (select, autocomplete, operator menu, calendar). Equal to radius-8 / radius-10.
+  'control-radius': 8px,
+  'panel-radius': 10px,
   // Shadow — Material elevation 1, 2, 4, 8, 16 (the values of the elevation utilities).
   'shadow-xs': (0px 2px 1px -1px rgba(0, 0, 0, 0.2), 0px 1px 1px 0px rgba(0, 0, 0, 0.14), 0px 1px 3px 0px rgba(0, 0, 0, 0.12)),
   'shadow-sm': (0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12)),

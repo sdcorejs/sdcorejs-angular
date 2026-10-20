@@ -23,14 +23,7 @@
 :host ::ng-deep {
   // Form field color
   .mat-mdc-form-field {
-    // Disabled background & border
-    &.mat-form-field-appearance-outline {
-      &.mat-form-field-disabled {
-        .mat-mdc-text-field-wrapper {
-          background: map.get(color.$color_map, 'surface-muted');
-        }
-      }
-    }
+    // Nền disabled: rule chung cho mọi control dạng ô trong assets/scss/core/form.scss.
     input {
       // Màu của place holder
       &.c-selected::placeholder {

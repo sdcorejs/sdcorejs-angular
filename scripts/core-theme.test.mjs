@@ -198,7 +198,10 @@ test('Material tier: focus and selection use the primary, an error reddens only 
     const tokens = declarations(compile(`.x { @include sd.theme($mode: '${mode}'); }`));
     // Material 19 names first, Material 20+ names second: one source ships to every Angular major.
     for (const prefix of ['--mdc-outlined-text-field-', '--mat-form-field-outlined-']) {
-      assert.equal(tokens[`${prefix}outline-color`], 'var(--sd-border)', `${mode} ${prefix}outline-color`);
+      assert.equal(tokens[`${prefix}container-shape`], 'var(--sd-control-radius)', `${mode} ${prefix}container-shape`);
+      assert.equal(tokens[`${prefix}outline-color`], 'var(--sd-control-border)', `${mode} ${prefix}outline-color`);
+      assert.equal(tokens[`${prefix}hover-outline-color`], 'var(--sd-control-border-hover)', `${mode} ${prefix}hover-outline-color`);
+      assert.equal(tokens[`${prefix}disabled-outline-color`], 'var(--sd-control-border-disabled)', `${mode} ${prefix}disabled-outline-color`);
       assert.equal(tokens[`${prefix}focus-outline-color`], 'var(--sd-primary)', `${mode} ${prefix}focus-outline-color`);
       assert.equal(tokens[`${prefix}focus-label-text-color`], 'var(--sd-primary)', `${mode} ${prefix}focus-label-text-color`);
       assert.equal(tokens[`${prefix}error-outline-color`], 'var(--sd-error)', `${mode} ${prefix}error-outline-color`);
@@ -216,6 +219,7 @@ test('Material tier: focus and selection use the primary, an error reddens only 
     assert.equal(tokens['--mat-full-pseudo-checkbox-selected-icon-color'], 'var(--sd-primary)');
     assert.equal(tokens['--mat-pseudo-checkbox-full-selected-icon-color'], 'var(--sd-primary)');
     assert.equal(tokens['--mat-datepicker-calendar-date-selected-state-background-color'], 'var(--sd-primary)');
+    assert.equal(tokens['--mat-datepicker-calendar-container-shape'], 'var(--sd-panel-radius)');
   }
 });
 
@@ -242,6 +246,17 @@ test('Semantic tier maps roles onto the public palette', () => {
   assert.equal(light['--sd-text-on-solid'], 'var(--sd-primary-contrast)');
   assert.equal(light['--sd-border-focus'], 'var(--sd-primary)');
   assert.equal(light['--sd-border-danger'], 'var(--sd-error)');
+  for (const mode of ['light', 'dark']) {
+    // One set of control expressions for light and dark: they only reference the palette of the scope.
+    const tokens = declarations(compile(`.x { @include sd.theme($mode: '${mode}'); }`));
+    assert.equal(tokens['--sd-control-border'], 'color-mix(in srgb, var(--sd-border-strong) 82%, var(--sd-surface))', mode);
+    assert.equal(tokens['--sd-control-border-hover'], 'var(--sd-border-strong)', mode);
+    assert.equal(tokens['--sd-control-border-focus'], 'var(--sd-border-focus)', mode);
+    assert.equal(tokens['--sd-control-border-disabled'], 'var(--sd-border)', mode);
+    assert.equal(tokens['--sd-control-ring'], '0 0 0 3px color-mix(in srgb, var(--sd-focus-ring-color) 20%, transparent)', mode);
+    assert.equal(tokens['--sd-control-ring-error'], '0 0 0 3px color-mix(in srgb, var(--sd-error) 18%, transparent)', mode);
+    assert.equal(tokens['--sd-control-bg-disabled'], 'var(--sd-disabled-bg)', mode);
+  }
   assert.ok(light['--sd-overlay-backdrop']);
   assert.equal(light['--sd-focus-ring-color'], 'var(--sd-primary)');
   assert.equal(light['--sd-focus-ring-width'], '2px');
@@ -264,6 +279,8 @@ test('Scale tier exposes space, radius, shadow, z-index, motion and typography',
   assert.equal(light['--sd-control-height-md'], '40px');
   assert.equal(light['--sd-control-height-lg'], '48px');
   assert.equal(light['--sd-control-height-coarse'], '44px');
+  assert.equal(light['--sd-control-radius'], '8px');
+  assert.equal(light['--sd-panel-radius'], '10px');
 });
 
 test('VAL-002: dark re-declares every light declaration, adds color-scheme and Material dark colors', () => {

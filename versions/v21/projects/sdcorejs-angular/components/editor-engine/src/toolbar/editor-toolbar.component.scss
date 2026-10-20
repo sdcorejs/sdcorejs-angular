@@ -1,3 +1,5 @@
+@use '../../../../assets/scss/core/control';
+
 :host {
   display: block;
   position: relative;
@@ -52,20 +54,16 @@
   flex-direction: column;
   gap: var(--sd-space-6, 6px);
 }
+// Ô nhập link / ảnh là control dạng ô: bo, viền, hover và focus theo token control.
 .sd-editor-popup input {
   box-sizing: border-box;
   width: 100%;
   min-height: 40px;
   color: var(--sd-text);
   background: var(--sd-surface);
-  border: 1px solid var(--sd-border-strong);
-  border-radius: var(--sd-radius-4, 4px);
   padding: var(--sd-space-8, 8px);
   font: inherit;
-}
-.sd-editor-popup input:focus-visible {
-  outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
-  outline-offset: var(--sd-focus-ring-offset, 2px);
+  @include control.box($focus: ':focus-visible');
 }
 .sd-editor-popup-error {
   color: var(--sd-status-error-fg);

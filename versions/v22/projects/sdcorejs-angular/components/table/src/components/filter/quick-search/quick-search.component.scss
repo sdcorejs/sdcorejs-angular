@@ -5,6 +5,8 @@
   box-sizing: border-box;
   padding: 12px 16px;
   background: var(--sd-table-bg, #ffffff);
+  // Label float của các field trong hàng cắt vòng focus bằng nền bảng.
+  --sd-control-label-bg: var(--sd-table-bg, #ffffff);
 }
 .sd-quick-search-row {
   display: flex;

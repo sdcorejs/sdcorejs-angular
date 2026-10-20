@@ -7,7 +7,10 @@
 // so every theme scope resolves them against its own palette (D-021, INV-008) and an ancestor of a
 // field can still override a Material token for its subtree.
 //
-// - Rest / hover / disabled outline: --sd-border (the colour Core forced on the outline since 2.15).
+// - Outline shape and colours follow the control tokens: --sd-control-radius for the corners,
+//   --sd-control-border at rest, --sd-control-border-hover on hover, --sd-control-border-disabled when
+//   disabled. The 1px widths (rest and focus) live in core/form.scss, since this tier only points
+//   Material tokens at a Core token; the focus ring is a box-shadow there too.
 // - Focus: --sd-primary for the outline, floating label, caret and select arrow.
 // - Error: only the outline (and the filled active indicator) turns --sd-error. The floating label keeps
 //   the colour of a valid field; the error message, error icon and required marker stay red.
@@ -52,9 +55,10 @@ $-pseudo-checkbox-prefixes: (
       #{$prefix}error-hover-label-text-color: var(--sd-text);
       #{$prefix}error-focus-label-text-color: var(--sd-primary);
       @if $appearance == outlined {
-        #{$prefix}outline-color: var(--sd-border);
-        #{$prefix}hover-outline-color: var(--sd-border);
-        #{$prefix}disabled-outline-color: var(--sd-border);
+        #{$prefix}container-shape: var(--sd-control-radius);
+        #{$prefix}outline-color: var(--sd-control-border);
+        #{$prefix}hover-outline-color: var(--sd-control-border-hover);
+        #{$prefix}disabled-outline-color: var(--sd-control-border-disabled);
         #{$prefix}focus-outline-color: var(--sd-primary);
         #{$prefix}error-outline-color: var(--sd-error);
         #{$prefix}error-hover-outline-color: var(--sd-error);
@@ -91,4 +95,6 @@ $-pseudo-checkbox-prefixes: (
   --mat-datepicker-calendar-date-today-outline-color: var(--sd-primary);
   --mat-datepicker-calendar-date-today-selected-state-outline-color: var(--sd-primary-contrast);
   --mat-datepicker-calendar-date-in-range-state-background-color: var(--sd-primary-light);
+  // The calendar opens from a control, so it takes the panel corner like the select and autocomplete.
+  --mat-datepicker-calendar-container-shape: var(--sd-panel-radius);
 }

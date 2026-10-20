@@ -32,10 +32,10 @@ same value, and only adds new custom properties.
 | --- | --- | --- |
 | Palette | `--sd-primary`, `--sd-primary-light`, `--sd-primary-dark`, `--sd-primary-contrast`, the same four for `secondary`, `info`, `success`, `warning`, `error`, then `--sd-surface`, `--sd-surface-muted`, `--sd-text`, `--sd-text-secondary`, `--sd-text-muted`, `--sd-border`, `--sd-border-strong`, `--sd-disabled-bg`, `--sd-disabled-text` | The 33 public colours of 2.15, unchanged. Presets and `$theme` set them. |
 | Ramps | `--sd-{family}-{step}` — families `primary`, `secondary`, `info`, `success`, `warning`, `error`, `neutral`; steps `50 100 200 300 400 500 600 700 800 900 950` | Tints and shades of each family (`color-mix()`), `500` is the base colour. For charts, badges and subtle backgrounds. |
-| Semantic roles | `--sd-status-{info,success,warning,error}-{bg,fg}`, `--sd-link`, `--sd-surface-inverse`, `--sd-text-on-solid`, `--sd-border-focus`, `--sd-border-danger`, `--sd-overlay-backdrop`, `--sd-focus-ring-color` | A role instead of a palette slot, so dark mode and custom palettes change the colour without touching the component. |
-| Scales | `--sd-space-{0…48}`, `--sd-radius-{2…24, 999}`, `--sd-shadow-{xs,sm,md,lg,xl}`, `--sd-z-{sidebar,header,popover,drawer-mobile,floating,backdrop,drawer,dropdown,overlay,modal,devtools}`, `--sd-duration-{fast,base,slow}`, `--sd-ease-standard`, `--sd-font-size-{10…48}`, `--sd-font-weight-{regular,medium,semibold,bold}`, `--sd-line-height-{16…28}`, `--sd-focus-ring-width`, `--sd-focus-ring-offset`, `--sd-control-height-{sm,md,lg,coarse}` | Non-colour tokens. Each value equals a literal the library already used; names carry the pixel value (`--sd-radius-8` is `8px`). Same in light and dark. The control heights are named by size instead: `sm` / `md` / `lg` are 32 / 40 / 48px, the heights of `sd-button` and of the outlined `mat-form-field` at the same size, and `coarse` is 44px, the minimum height of a control under `@media (pointer: coarse)`. |
+| Semantic roles | `--sd-status-{info,success,warning,error}-{bg,fg}`, `--sd-link`, `--sd-surface-inverse`, `--sd-text-on-solid`, `--sd-border-focus`, `--sd-border-danger`, `--sd-overlay-backdrop`, `--sd-focus-ring-color`, `--sd-control-{border,border-hover,border-focus,border-disabled,ring,ring-error,bg-disabled}` | A role instead of a palette slot, so dark mode and custom palettes change the colour without touching the component. The `--sd-control-*` roles style every box control; see [Control tokens](#control-tokens). |
+| Scales | `--sd-space-{0…48}`, `--sd-radius-{2…24, 999}`, `--sd-shadow-{xs,sm,md,lg,xl}`, `--sd-z-{sidebar,header,popover,drawer-mobile,floating,backdrop,drawer,dropdown,overlay,modal,devtools}`, `--sd-duration-{fast,base,slow}`, `--sd-ease-standard`, `--sd-font-size-{10…48}`, `--sd-font-weight-{regular,medium,semibold,bold}`, `--sd-line-height-{16…28}`, `--sd-focus-ring-width`, `--sd-focus-ring-offset`, `--sd-control-height-{sm,md,lg,coarse}`, `--sd-control-radius`, `--sd-panel-radius` | Non-colour tokens. Each value equals a literal the library already used; names carry the pixel value (`--sd-radius-8` is `8px`). Same in light and dark. The control heights are named by size instead: `sm` / `md` / `lg` are 32 / 40 / 48px, the heights of `sd-button` and of the outlined `mat-form-field` at the same size, and `coarse` is 44px, the minimum height of a control under `@media (pointer: coarse)`. `--sd-control-radius` (8px) is the corner of every box control and `--sd-panel-radius` (10px) the corner of the panels they open. |
 | Component tokens | `--sd-{component}-{part}`, for example `--sd-table-header-bg`, `--sd-tooltip-bg`, `--sd-query-bar-bg`, `--sd-scrollbar-thumb` | One colour of one component. Tokens migrated in 3.0 keep the colour the component had in 2.15 as their light value; tokens added later (`--sd-view-label-color`, `--sd-view-value-color`, `--sd-sidebar-v4-*`) document their own. Each has a dark value. |
-| Material tokens | Angular Material component tokens of the form field (outline, label, caret, select arrow), options, pseudo-checkboxes and datepicker, under both the Material 19 names (`--mdc-outlined-text-field-*`, `--mat-full-pseudo-checkbox-*`, …) and the Material 20+ names (`--mat-form-field-outlined-*`, `--mat-pseudo-checkbox-full-*`, …) | Each one points at a Core token (`assets/scss/themes/_material-tokens.scss`): focus and selection use `--sd-primary`, the outline at rest `--sd-border`, and an error reddens only the outline (`--sd-error`); the floating label keeps the colour of a valid field. Override a Material token on any element to change it for that subtree. |
+| Material tokens | Angular Material component tokens of the form field (outline, label, caret, select arrow), options, pseudo-checkboxes and datepicker, under both the Material 19 names (`--mdc-outlined-text-field-*`, `--mat-full-pseudo-checkbox-*`, …) and the Material 20+ names (`--mat-form-field-outlined-*`, `--mat-pseudo-checkbox-full-*`, …) | Each one points at a Core token (`assets/scss/themes/_material-tokens.scss`): focus and selection use `--sd-primary`, the outline takes its corner and its rest / hover / disabled colours from the control tokens (`--sd-control-radius`, `--sd-control-border`, …), the calendar takes `--sd-panel-radius`, and an error reddens only the outline (`--sd-error`); the floating label keeps the colour of a valid field. Override a Material token on any element to change it for that subtree. |
 
 Rules for new code:
 
@@ -209,6 +209,43 @@ background of the theme scope; override `--sd-sidebar-v4-hover-bg` on the same e
 inherits values computed from its parent's palette. Overlays (dialogs, select panels) render under `body`:
 theme the root, or give the overlay container the same scope.
 
+## Control tokens
+
+Every box control shares one set of tokens: the outlined `mat-form-field` (`sd-input`, `sd-input-number`,
+`sd-textarea`, `sd-select`, `sd-autocomplete`, `sd-date`, `sd-datetime`, `sd-date-range`, `sd-time`, the
+box of `sd-input-color`), the filter input in the `sd-select` panel, `sd-entity-picker` and the other
+inputs the library draws itself.
+
+| State | Token | Value |
+| --- | --- | --- |
+| Corner | `--sd-control-radius` | `8px` |
+| Rest outline | `--sd-control-border` | `color-mix(in srgb, var(--sd-border-strong) 82%, var(--sd-surface))`, at least 3:1 on `surface` |
+| Hover outline | `--sd-control-border-hover` | `var(--sd-border-strong)` |
+| Focus outline | `--sd-control-border-focus` | `var(--sd-border-focus)` |
+| Focus ring | `--sd-control-ring` | `0 0 0 3px color-mix(in srgb, var(--sd-focus-ring-color) 20%, transparent)` |
+| Focus ring of an invalid control | `--sd-control-ring-error` | `0 0 0 3px color-mix(in srgb, var(--sd-error) 18%, transparent)` |
+| Disabled outline | `--sd-control-border-disabled` | `var(--sd-border)` |
+| Disabled background | `--sd-control-bg-disabled` | `var(--sd-disabled-bg)` |
+
+- The outline is 1px at rest and on focus; focus adds the ring as a `box-shadow` outside the box. Under
+  `forced-colors: active` the ring becomes a 2px `Highlight` outline, since a box-shadow does not show.
+- A focused floating label gets the background `var(--sd-control-label-bg, var(--sd-surface))` so it cuts the
+  ring at the notch. A container whose background is not `--sd-surface` sets `--sd-control-label-bg` (the
+  column filters and the quick search of `sd-table` set it to `--sd-table-bg`).
+- The select, autocomplete, `sd-operator` menu and calendar panels take `--sd-panel-radius` (10px) on every
+  corner, a thin border and `--sd-shadow-md`. Options keep their 36px height and are inset 4px horizontally
+  with a 6px corner; the selected option is `--sd-primary-dark` on `--sd-primary-light`, weight 500.
+
+To keep the look of 3.1, set the tokens back at the root (or on any subtree):
+
+```scss
+:root {
+  --sd-control-radius: 4px;
+  --sd-control-border: var(--sd-border);
+  --sd-control-ring: none;
+}
+```
+
 ## Focus ring
 
 - Colour: `var(--sd-focus-ring-color)` (the primary colour). Width and offset: `--sd-focus-ring-width` and
@@ -230,6 +267,7 @@ every named preset and the dark palette:
 | `primary-contrast` | `primary` | 4.5 |
 | `status-*-fg` | `status-*-bg` | 4.5 |
 | `border-strong`, `focus-ring-color` | `surface`, `surface-muted` | 3 |
+| `control-border` | `surface` | 3 |
 
 These are palette checks. Recheck real component states after changing colours, and keep labels or icons
 for status information.

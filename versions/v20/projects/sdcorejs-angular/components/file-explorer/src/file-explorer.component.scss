@@ -544,20 +544,36 @@
   color: var(--sd-fe-text-secondary);
 }
 
+// Ô nhập của dialog (tạo thư mục, share link) là control dạng ô: bo và viền nghỉ / hover theo token
+// control. `--sd-file-explorer-border-strong` của consumer vẫn thắng; focus giữ màu accent riêng của
+// file explorer.
 .field-input {
   height: 40px;
   padding: 0 12px;
-  border: 1px solid var(--sd-fe-border-strong);
-  border-radius: var(--sd-radius-8, 8px);
+  border: 1px solid var(--sd-file-explorer-border-strong, var(--sd-control-border, var(--sd-fe-border-strong)));
+  border-radius: var(--sd-control-radius, 8px);
   background: var(--sd-fe-surface);
   color: var(--sd-fe-text);
   font: inherit;
   font-size: var(--sd-font-size-15, 15px);
   outline: none;
 
+  &:hover {
+    border-color: var(--sd-control-border-hover, var(--sd-fe-border-strong));
+  }
+
   &:focus {
     border-color: var(--sd-fe-accent);
     box-shadow: 0 0 0 3px var(--sd-fe-accent-soft);
+  }
+
+  // why: box-shadow không hiện trong forced colors, nên vòng focus phải là outline hệ thống.
+  @media (forced-colors: active) {
+    &:focus {
+      --sd-fe-focus-ring: Highlight;
+      outline: 2px solid var(--sd-fe-focus-ring);
+      outline-offset: 2px;
+    }
   }
 
   &[aria-invalid='true'] {

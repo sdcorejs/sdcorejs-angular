@@ -40,14 +40,7 @@
 :host ::ng-deep {
   // Form field color
   .mat-mdc-form-field {
-    // Disabled background & border
-    &.mat-form-field-appearance-outline {
-      &.mat-form-field-disabled {
-        .mat-mdc-text-field-wrapper {
-          background: color.$disabled-bg;
-        }
-      }
-    }
+    // Nền disabled: rule chung cho mọi control dạng ô trong assets/scss/core/form.scss.
     // Disabled text input color
     input {
       &.mat-mdc-input-element:disabled {

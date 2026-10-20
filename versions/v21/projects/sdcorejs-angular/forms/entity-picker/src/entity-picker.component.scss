@@ -1,15 +1,37 @@
+@use '../../../assets/scss/core/control';
+
 :host {
   display: block;
   min-width: 0;
 }
 
+// Control dạng ô, cùng kiểu với mat-form-field: vòng focus nằm trên cả khung (`:focus-within`) thay cho
+// outline của trigger. Viewed bỏ viền, disabled có nền và viền disabled, lỗi viền error và vòng error.
 .sd-entity-picker__control {
   display: flex;
   align-items: center;
   min-width: 0;
-  border: 1px solid var(--sd-border, #d0d5dd);
-  border-radius: var(--sd-radius-6, 6px);
   background: var(--sd-entity-picker-bg, #ffffff);
+  @include control.box;
+
+  &--invalid,
+  &--invalid:hover,
+  &--invalid:focus-within {
+    border-color: var(--sd-error);
+  }
+
+  &--invalid:focus-within {
+    box-shadow: var(--sd-control-ring-error, none);
+  }
+}
+
+:host(.sd-viewed) .sd-entity-picker__control {
+  border-color: transparent;
+}
+
+:host([data-disabled='true']) .sd-entity-picker__control {
+  border-color: var(--sd-control-border-disabled, var(--sd-border));
+  background: var(--sd-control-bg-disabled, var(--sd-disabled-bg));
 }
 
 .sd-entity-picker__trigger,
@@ -28,9 +50,9 @@
 .sd-entity-picker__trigger {
   cursor: pointer;
 
+  // Vòng focus nằm trên cả khung `.sd-entity-picker__control:focus-within`.
   &:focus-visible {
-    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
-    outline-offset: 2px;
+    outline: none;
   }
 
   &:disabled {

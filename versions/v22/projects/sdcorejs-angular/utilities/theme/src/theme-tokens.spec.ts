@@ -9,7 +9,9 @@ describe('theme tokens', () => {
       expect(SD_COLOR_TOKENS).toContain('status-error-fg');
       expect(SD_COLOR_TOKENS).toContain('focus-ring-color');
       expect(SD_COLOR_TOKENS).toContain('overlay-surface');
-      expect(SD_COLOR_TOKENS.length as number).toBe(33 + 77 + 16);
+      expect(SD_COLOR_TOKENS).toContain('control-border');
+      expect(SD_COLOR_TOKENS).toContain('control-bg-disabled');
+      expect(SD_COLOR_TOKENS.length as number).toBe(33 + 77 + 23);
       expect(new Set(SD_COLOR_TOKENS).size).toBe(SD_COLOR_TOKENS.length);
     });
   });

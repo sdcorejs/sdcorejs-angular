@@ -117,7 +117,7 @@ describe('Form field state colours with the shipped theme', () => {
     expect(getComputedStyle(compact.querySelector('.mat-mdc-form-field-subscript-wrapper')!).display).toBe('none');
   });
 
-  it('renders select options at 14px and the selected one in --sd-primary', async () => {
+  it('renders select options at 14px and the selected one in --sd-primary-dark (control panel, wave 2 · D)', async () => {
     fixture.componentInstance.select().open();
     await settle();
     const options = Array.from(document.querySelectorAll('.sd-select-panel mat-option')) as HTMLElement[];
@@ -126,7 +126,9 @@ describe('Form field state colours with the shipped theme', () => {
     const selected = options.find(option => option.classList.contains('mdc-list-item--selected'))!;
     // Material 22 paints the selected colour only while the option is not the active one, and the selected
     // option is active when the panel opens, so read the token the option resolves rather than its colour.
-    expect(getComputedStyle(selected).getPropertyValue('--mat-option-selected-state-label-text-color').trim()).toBe('#ae7129');
+    // The panel follows the custom primary through --sd-primary-dark, never Material's azure.
+    const primaryDark = getComputedStyle(document.documentElement).getPropertyValue('--sd-primary-dark').trim();
+    expect(getComputedStyle(selected).getPropertyValue('--mat-option-selected-state-label-text-color').trim()).toBe(primaryDark);
     expect(getComputedStyle(fields[2].querySelector('.mat-mdc-select-value')!).fontSize).toBe('14px');
   });
 

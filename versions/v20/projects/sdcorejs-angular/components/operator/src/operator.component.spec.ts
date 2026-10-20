@@ -199,5 +199,21 @@ describe('SdOperator', () => {
       expect(overlay.querySelectorAll('.c-op-row').length).toBe(2);
       overlay.remove();
     });
+
+    it('draws the menu as a control panel: --sd-panel-radius on every corner and a thin border', () => {
+      fixture.componentRef.setInput('operators', ['EQUAL', 'CONTAIN']);
+      fixture.detectChanges();
+
+      component.open();
+      fixture.detectChanges();
+
+      const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+      const panel = getComputedStyle(overlay.querySelector('.mat-mdc-menu-panel.c-op-menu')!);
+      for (const corner of ['TopLeft', 'TopRight', 'BottomLeft', 'BottomRight'] as const) {
+        expect(panel[`border${corner}Radius`]).withContext(corner).toBe('10px');
+      }
+      expect(panel.borderTopWidth).toBe('1px');
+      overlay.remove();
+    });
   });
 });

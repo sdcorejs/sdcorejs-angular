@@ -29,11 +29,7 @@
   }
 
   .mat-mdc-form-field {
-    &.mat-form-field-appearance-outline {
-      .mdc-text-field--disabled {
-        background: color.$disabled-bg;
-      }
-    }
+    // Nền disabled: rule chung cho mọi control dạng ô trong assets/scss/core/form.scss.
 
     textarea {
       &.mat-mdc-input-element:disabled {

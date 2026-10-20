@@ -26,6 +26,19 @@
 // via ::ng-deep. why: Material wraps projected content in `.mat-mdc-menu-item-text`,
 // so the flex row + alignment must live on that wrapper, not on the button.
 ::ng-deep .c-op-menu {
+  // Panel control (thiết kế đợt 2 · D), giống panel của sd-select / sd-autocomplete: bo `--sd-panel-radius`,
+  // viền mảnh, bóng shadow-md; hàng thụt ngang 4px, bo 6px. Token Material đọc ngay trên phần tử panel.
+  &.mat-mdc-menu-panel {
+    --mat-menu-container-shape: var(--sd-panel-radius, 10px);
+    --mat-menu-container-elevation-shadow: var(--sd-shadow-md);
+    // Trộn với transparent: nền menu là surface-container của Material, không phải --sd-surface.
+    --mat-menu-item-hover-state-layer-color: color-mix(in srgb, var(--sd-text) 5%, transparent);
+    // why: tách longhand — nếu theme thiếu token, chỉ màu rơi về mặc định chứ viền 1px không mất.
+    border-width: 1px;
+    border-style: solid;
+    border-color: color-mix(in srgb, var(--sd-border) 60%, var(--sd-surface));
+  }
+
   // why: hàng có 2 dòng (label + code) nên phải bỏ khung 1 dòng của mat-menu-item —
   // min-height/height 48px + line-height 48px sẽ crop dòng thứ hai.
   .c-op-row.mat-mdc-menu-item {
@@ -34,6 +47,10 @@
     padding-top: 6px;
     padding-bottom: 6px;
     line-height: normal;
+    // mat-menu-item rộng 100%, nên trừ đi phần thụt hai bên.
+    width: calc(100% - 8px);
+    margin: 0 4px;
+    border-radius: var(--sd-radius-6, 6px);
   }
 
   .mat-mdc-menu-item-text {
@@ -75,5 +92,12 @@
     white-space: nowrap;
   }
 
-  .c-op-row.c-op-active { background: var(--sd-primary-light, rgba(15, 118, 110, 0.08)); }
+  .c-op-row.c-op-active {
+    background: var(--sd-primary-light, rgba(15, 118, 110, 0.08));
+
+    .c-op-label {
+      color: var(--sd-primary-dark, var(--sd-primary));
+      font-weight: var(--sd-font-weight-medium, 500);
+    }
+  }
 }

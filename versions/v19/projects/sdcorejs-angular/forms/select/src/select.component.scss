@@ -1,4 +1,5 @@
 @use '../../../assets/scss/core/read-state-panel' as readState;
+@use '../../../assets/scss/core/control';
 @use '../../../assets/scss/core/color.scss' as color;
 @use '../../../assets/scss/core/inline-edit' as inline;
 @use 'sass:map';
@@ -91,14 +92,7 @@
 :host ::ng-deep {
   // Form field color
   .mat-mdc-form-field {
-    // Disabled background & border
-    &.mat-form-field-appearance-outline {
-      &.mat-form-field-disabled {
-        .mat-mdc-text-field-wrapper {
-          background: color.$disabled-bg;
-        }
-      }
-    }
+    // Nền disabled: rule chung cho mọi control dạng ô trong assets/scss/core/form.scss.
     // Disabled text input color
     mat-select {
       &.mat-mdc-select-disabled {
@@ -135,13 +129,14 @@
     padding: 8px;
     margin-bottom: 8px;
     z-index: var(--sd-z-dropdown, 1000);
+    // Ô lọc là một control dạng ô: vòng focus nằm trên wrapper, nên ô input bên trong giữ `outline: none`.
     .filter-input-wrapper {
       display: flex;
       align-items: center;
       padding: 4px 8px;
-      border: 1px solid map.get(color.$color_map, 'border');
-      border-radius: var(--sd-radius-4, 4px);
       background-color: var(--sd-select-panel-bg, #ffffff);
+      @include control.box;
+
       sd-icon {
         color: var(--sd-select-icon-muted, #dadada);
       }

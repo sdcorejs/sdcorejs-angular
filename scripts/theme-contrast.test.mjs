@@ -28,6 +28,8 @@ const PAIRS = [
   ['border-strong', 'surface-muted', 3],
   ['focus-ring-color', 'surface', 3],
   ['focus-ring-color', 'surface-muted', 3],
+  // The outline of a control at rest: a non-text boundary on the page surface (WCAG 1.4.11).
+  ['control-border', 'surface', 3],
   ['link', 'surface', 4.5],
   ['primary-contrast', 'primary', 4.5],
   ['view-label-color', 'surface', 4.5],
