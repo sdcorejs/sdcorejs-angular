@@ -22,6 +22,13 @@ export type ShowcaseExampleSourceKey =
   | "components/avatar/example-cac-kich-thuoc"
   | "components/avatar/example-chu-cai-dau-tu-ten"
   | "components/avatar/example-fallback-khi-thieu-du-lieu"
+  | "components/badge-picker/example-chi-xem-va-vo-hieu"
+  | "components/badge-picker/example-chon-badge"
+  | "components/badge-picker/example-gioi-han-lua-chon"
+  | "components/badge-picker/example-kich-thuoc"
+  | "components/badge-picker/example-mo-ta-trong-ban-xem-truoc"
+  | "components/badge-picker/example-nhan-va-placeholder"
+  | "components/badge-picker/example-trong-form"
   | "components/badge/example-bam-duoc"
   | "components/badge/example-dot-va-pulse"
   | "components/badge/example-fontset-switch"
@@ -682,6 +689,55 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-bam-duoc",
     title: "Bấm được",
     description: "Chỉ khi có (click): role button, Tab tới được, Enter/Space. Hover trộn 6% màu đậm vào nền, nhấn 10%; vòng focus giữ bo góc.",
+  },
+  {
+    sourceKey: "components/badge-picker/example-chon-badge",
+    pageKey: "components/badge-picker",
+    sectionId: "example-chon-badge",
+    title: "Chọn badge",
+    description: "Bấm ra ngoài, bấm Xong hoặc Tab ra khỏi panel để ghi; Esc huỷ thay đổi.",
+  },
+  {
+    sourceKey: "components/badge-picker/example-trong-form",
+    pageKey: "components/badge-picker",
+    sectionId: "example-trong-form",
+    title: "Trong form",
+    description: "Value của control là { type, color, icon } | null. Lỗi bắt buộc hiện sau lần đóng panel đầu tiên hoặc khi submit.",
+  },
+  {
+    sourceKey: "components/badge-picker/example-kich-thuoc",
+    pageKey: "components/badge-picker",
+    sectionId: "example-kich-thuoc",
+    title: "Kích thước",
+    description: "Cùng thang với sd-select. Ở cỡ sm ẩn dòng tóm tắt; cỡ lg dùng badge cỡ md trong ô.",
+  },
+  {
+    sourceKey: "components/badge-picker/example-nhan-va-placeholder",
+    pageKey: "components/badge-picker",
+    sectionId: "example-nhan-va-placeholder",
+    title: "Nhãn và placeholder",
+    description: "Existing “Nhãn và placeholder” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/badge-picker/example-gioi-han-lua-chon",
+    pageKey: "components/badge-picker",
+    sectionId: "example-gioi-han-lua-chon",
+    title: "Giới hạn lựa chọn",
+    description: "Existing “Giới hạn lựa chọn” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/badge-picker/example-mo-ta-trong-ban-xem-truoc",
+    pageKey: "components/badge-picker",
+    sectionId: "example-mo-ta-trong-ban-xem-truoc",
+    title: "Mô tả trong bản xem trước",
+    description: "Chỉ hiện ở bản xem trước lớn, với kiểu icon và tag; kiểu khác có ghi chú.",
+  },
+  {
+    sourceKey: "components/badge-picker/example-chi-xem-va-vo-hieu",
+    pageKey: "components/badge-picker",
+    sectionId: "example-chi-xem-va-vo-hieu",
+    title: "Chỉ xem và vô hiệu",
+    description: "Existing “Chỉ xem và vô hiệu” scenario preserved from the showcase.",
   },
   {
     sourceKey: "components/breadcrumb/example-danh-sach-tinh",

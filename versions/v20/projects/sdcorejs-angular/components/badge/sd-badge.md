@@ -201,6 +201,7 @@ None — content is driven by `title`, `description`, and `icon`.
 - Using a badge to convey error STATE that the user must act on — pair with a tooltip or follow-up `<sd-button>` so the user has a path forward
 
 ## Related
+- `<sd-badge-picker>` — lets users choose a badge's type, colour and icon (`sd-badge-picker.md`); `SD_BADGE_TYPE_OPTIONS` lists the six types with i18n keys
 - `<sd-button type="text">` — for clickable text-style actions
 - `<sd-tag>` — for tag/chip inputs in forms
 - `<sd-avatar>` — for user identity (often paired beside a status badge)

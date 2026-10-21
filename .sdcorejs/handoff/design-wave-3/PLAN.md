@@ -103,6 +103,7 @@ Mới (đủ 5 locale vi/en/ja/ko/zh):
 |---|---|---|
 | 1a badge: thang, một dòng, số đếm, description, viền tag, chấm CSS, focus, hover, tooltip | xong | Lệch spec: xem dưới. Ảnh: `.sdcorejs/handoff/screenshots/wave3-1a-badge-*.png` |
 | 1b badge: `solid`, `dot`, `pair`, input `label`, `pulse` | xong | Ảnh: `wave3-1b-badge-solid-dot-pair.png` (chỉ bản sau — type mới). `test:theme` thêm cặp badge |
+| 1c `sd-badge-picker`, `SD_BADGE_TYPE_OPTIONS`, `SD_BADGE_ICON_PRESET` | xong | Ảnh: `wave3-1c-badge-picker.png` (chỉ bản sau — component mới). Trang showcase mới `components/badge-picker` |
 
 Lệch khỏi thông số ở bước 1a (đã báo user):
 - **Type icon to hơn một bậc** (user chọn 2026-10-21, theo HTML thay vì bảng `badge.md`): chữ sm 13/18, md 14/20,
@@ -119,3 +120,13 @@ Ghi chú bước 1b:
 - Chrome trên máy dev báo `prefers-reduced-motion: reduce` (theo cài đặt Windows), nên spec của pulse đọc rule CSS
   thay vì animation đã tính.
 - Dot bấm được có vùng chạm 20px (`::before`) quanh chấm 8px; hover của pair tô từng phần bằng màu đậm của phần đó.
+
+Ghi chú bước 1c:
+- Trigger là `mat-form-field` + `ɵSdBadgePickerControlDirective` (MatFormFieldControl, không `implements` để chạy được
+  trên Material 19–22); panel là `cdkConnectedOverlay` neo vào `getConnectedOverlayOrigin()` của field.
+- Thêm một key i18n ngoài danh sách §7: `core.component.badge.picker.pair-label` ("Nhãn") cho bản xem trước của `pair`.
+- Nháp lần đầu (round · secondary) mà không đổi gì thì đóng panel không ghi và không phát `sdChange`.
+- Placeholder của ô tìm icon dùng lại `core.form.select.search` ("Tìm kiếm") theo §7, thay cho "Tìm icon" của HTML.
+- Lệch có sẵn của bộ field (không sửa ở bước này): trong theme, sd-select md cao 43.5px (rule `min-height: 43.5px` cũ của
+  `.sd-md`), lg là 56px mặc định của Material (sd-select lg còn cộng `margin-top: 10px` → 66px trong Karma). Picker khớp
+  sd-select ở sm/md; thiết kế ghi 32/40/48.

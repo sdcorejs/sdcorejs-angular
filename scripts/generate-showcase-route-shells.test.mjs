@@ -184,7 +184,7 @@ test('matches the canonical v19 runtime registry and expected deployment route c
       .map(category => [category, pages.filter(page => page.category === category).length])
   );
 
-  assert.equal(pages.length, 109);
+  assert.equal(pages.length, 110);
   assert.ok(pages.some(page => page.category === 'components' && page.slug === 'window'));
   assert.ok(pages.some(page => page.category === 'components' && page.slug === 'modal-resizable'));
   assert.ok(pages.some(page => page.category === 'components' && page.slug === 'kanban'));
@@ -200,6 +200,8 @@ test('matches the canonical v19 runtime registry and expected deployment route c
   assert.ok(pages.some(page => page.category === 'modules-integrations' && page.slug === 'generic-crud'));
   // Fixed time zone: the SdDateTimeService reference page (services/date-time).
   assert.ok(pages.some(page => page.category === 'services' && page.slug === 'date-time'));
+  // Design handoff wave 3 · 1c: sd-badge-picker.
+  assert.ok(pages.some(page => page.category === 'components' && page.slug === 'badge-picker'));
 
   // why: `routes.length` từng là hằng số 5941 và đã mục ngay khi release 1.6 ra (thực tế 7426).
   // Con số đó là TÍCH của hai thứ đã được kiểm ở nơi khác — số release được hỗ trợ và số route mỗi
@@ -215,7 +217,7 @@ test('matches the canonical v19 runtime registry and expected deployment route c
     'total = 1 root redirect + one identical block per release'
   );
   assert.deepEqual(categoryCounts, {
-    components: 42,
+    components: 43,
     directives: 6,
     forms: 23,
     guides: 4,
