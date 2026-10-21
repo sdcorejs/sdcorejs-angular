@@ -39,8 +39,63 @@ Không còn mục nào chờ user. Đã trả lời: cột filter một operator
 (quyết định 17), kanban `appearance` (quyết định 18). User đã báo backend về payload NULL / NOT_NULL — cột control mặc
 định gửi `{ field, operator }` không `data`, CHANGELOG ghi "Server payload change" (xong 2026-10-21).
 
-**Còn phải làm (chưa ai làm):** kiểm tra showcase cuối theo PROMPT — light / dark, preset graphite, forced-colors,
-sm / md, `pointer: coarse` — trên các trang PROMPT liệt kê; chưa mở PR (user chỉ yêu cầu push, không merge).
+**Còn phải làm:** sửa 2 lỗi forced-colors tìm thấy ở lượt kiểm tra showcase cuối (mục "Kiểm tra showcase cuối" ngay
+dưới); chưa mở PR (user chỉ yêu cầu push, không merge).
+
+## Kiểm tra showcase cuối (2026-10-21)
+
+Chạy trên lib v19 build từ `260785e4` (chỉ kiểm, không sửa code), showcase `ng serve --prebundle=false`, Playwright headless
+1280×900, Node 26. Contact sheet mỗi trang (cột = mode, hàng = ví dụ): [`screenshots/final-sweep/`](screenshots/final-sweep/).
+
+- **Trang:** input, input-number, textarea, select (đơn, nhiều lựa chọn, cuộn ảo `cuon-ao` có ô lọc), autocomplete, date,
+  datetime, date-range, input-color, entity-picker, checkbox, radio, segmented, button (indicator), kanban, form-generic
+  (form builder, route `modules-integrations/generic`), table (full demo, cột chọn, filter cột). Mỗi trang: 1–3 ví dụ
+  (gồm ví dụ `kich-thuoc` sm / md nếu có) + một thao tác (focus ô, mở panel select / autocomplete / lịch).
+- **Mode:** light default; dark (`data-sd-theme="dark"` trên `<html>`); graphite (class `layout-demo__preview--graphite`
+  trên `<body>`, cách showcase scope preset này); forced-colors (`emulateMedia({ forcedColors: 'active' })`, bảng màu High
+  Contrast White của Chromium); `pointer: coarse` (context `hasTouch`). Từng mode đã xác nhận bằng `matchMedia` / thuộc tính.
+- **Lỗi console / page error:** không có (bỏ qua 404 `docs/versions.json` và log vite của dev server).
+
+### Lỗi tìm thấy (chưa sửa)
+
+1. **Forced-colors: mỗi option của panel select / autocomplete có viền.** `form.scss` (commit `4d07368f`, sửa khoảng cách
+   panel sau review) cho `.mat-mdc-option` `border-top` / `border-bottom: 1px solid transparent` để tạo khoảng cách dọc
+   trong 36px. Forced-colors vẽ viền trong suốt bằng màu hệ thống, nên mỗi option thành một ô có vạch trên / dưới
+   (thấy ở select đơn, nhiều lựa chọn, cuộn ảo, autocomplete). Sheet: `select.jpg`, `select-multiple.jpg`,
+   `select-virtual.jpg`, `autocomplete.jpg` (cột forced). Hướng sửa: trong `@media (forced-colors: active)` bỏ hai viền
+   (`border-block-style: none`) và bù `padding-block: 1px` để giữ 36px cho virtual scroll; thêm spec forced-colors nếu
+   Karma giả lập được, không thì kiểm lại bằng Playwright.
+2. **Forced-colors: chấm indicator của sd-button biến mất.** `.sd-button__indicator--dot` chỉ là khối nền màu, forced-colors
+   ép nền về Canvas nên chấm không còn thấy (nút "Bộ lọc" ở ví dụ indicator). Indicator dạng số vẫn đọc được (còn chữ số,
+   mất nền pill). Sheet: `button.jpg` (cột forced). Hướng sửa: trong `@media (forced-colors: active)` cho indicator
+   `forced-color-adjust: none` với nền `CanvasText` (hoặc viền 1px `CanvasText`), áp cho cả chấm và số.
+
+### Đã kiểm, đạt
+
+- Light / dark / graphite: viền control, vòng focus, panel trắng bo 10px, option thụt 4px, checkbox bo theo cỡ, viền chưa
+  chọn checkbox / radio, segmented, kanban (làn trung tính, thẻ không shadow), form builder (segmented toolbar, tab gạch
+  chân), bảng (màu header / hàng, cột chọn, filter cột) đều đúng; không thấy chữ hay viền mất tương phản.
+- Forced-colors: focus của field, entity-picker, ô tìm kiếm có outline hệ thống; làn kanban có viền `CanvasText`; chữ
+  disabled hiện màu `GrayText` (#600000 của High Contrast White) — đúng hành vi hệ thống.
+- `pointer: coarse`, số đo (chuột → cảm ứng): segmented sm / md / lg 32 / 40 / 48 → 44 / 44 / 48; ô tìm kiếm kanban, quick
+  search của bảng, palette form builder, ô lọc select 32px / 14px → 44px / 16px; hàng checkbox 40 → 44px; công cụ thẻ kanban
+  opacity 0 → 1.
+- sm / md: ví dụ `kich-thuoc` của input, select, date, checkbox, segmented, button nhìn đúng thang ở cả 5 mode (số đo
+  32 / 40 / 48 của button và field đã kiểm ở bước 1, của segmented ở bước 4 và ở trên).
+
+### Ghi chú, không phải lỗi của handoff
+
+- Nền lịch (sd-date, sd-date-range, popup datetime) vẫn là `surface-container` tím nhạt của Material, trong khi panel
+  select / autocomplete đã thành nền trắng ở lượt sửa review — không đồng bộ, user quyết có đổi không.
+- Nền label float khi focus lệch màu trên card nền khác `--sd-surface` (thấy ở dark) — đã biết, giữ như spec (quyết định 15).
+- Ví dụ cơ bản của input-color tràn ngang 8px do `div.row` của trang demo showcase, không phải thư viện.
+- Ở forced-colors, item segmented có viền riêng vì item vốn có `border: 1px solid transparent` từ trước bước 4.
+
+### Không kiểm được
+
+- Windows High Contrast thật và bảng màu tối của nó (chỉ giả lập High Contrast White của Chromium).
+- Hover (ảnh chụp tĩnh, chỉ có hover tình cờ dưới con trỏ), thiết bị cảm ứng thật, RTL.
+- Bản build v20 / v21 / v22 (showcase chỉ dùng lib v19).
 
 Kết quả kiểm tra ở commit sửa panel (Node 22.22.3): Karma v19 7595/7595 (coverage 89.89 / 79.16 / 90.36 / 92.32), lint,
 `test:theme` 51/51, `check:scss-hex` 0 finding, `check:i18n-parity` (1341 key × 5) và `check:i18n` pass, `check:sync` pass,
