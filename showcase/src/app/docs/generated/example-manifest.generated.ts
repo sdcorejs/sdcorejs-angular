@@ -22,8 +22,8 @@ export type ShowcaseExampleSourceKey =
   | "components/avatar/example-cac-kich-thuoc"
   | "components/avatar/example-chu-cai-dau-tu-ten"
   | "components/avatar/example-fallback-khi-thieu-du-lieu"
-  | "components/badge/example-ba-dang"
   | "components/badge/example-bam-duoc"
+  | "components/badge/example-dot-va-pulse"
   | "components/badge/example-fontset-switch"
   | "components/badge/example-kem-mo-ta"
   | "components/badge/example-kich-thuoc-round"
@@ -31,8 +31,11 @@ export type ShowcaseExampleSourceKey =
   | "components/badge/example-mau-sac-icon"
   | "components/badge/example-mau-sac-round"
   | "components/badge/example-mau-sac-tag"
+  | "components/badge/example-pair"
   | "components/badge/example-round-voi-icon"
+  | "components/badge/example-sau-dang"
   | "components/badge/example-so-dem"
+  | "components/badge/example-solid"
   | "components/badge/example-ten-dai-trong-o-hep"
   | "components/breadcrumb/example-danh-sach-tinh"
   | "components/breadcrumb/example-nhan-async"
@@ -576,11 +579,11 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Existing “Fallback khi thiếu dữ liệu” scenario preserved from the showcase.",
   },
   {
-    sourceKey: "components/badge/example-ba-dang",
+    sourceKey: "components/badge/example-sau-dang",
     pageKey: "components/badge",
-    sectionId: "example-ba-dang",
-    title: "Ba dạng",
-    description: "Existing “Ba dạng” scenario preserved from the showcase.",
+    sectionId: "example-sau-dang",
+    title: "Sáu dạng",
+    description: "Existing “Sáu dạng” scenario preserved from the showcase.",
   },
   {
     sourceKey: "components/badge/example-fontset-switch",
@@ -609,6 +612,27 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-mau-sac-icon",
     title: "Màu sắc icon",
     description: "Không có icon thì badge vẽ chấm CSS màu gốc (8px, lg 10px).",
+  },
+  {
+    sourceKey: "components/badge/example-solid",
+    pageKey: "components/badge",
+    sectionId: "example-solid",
+    title: "Solid",
+    description: "Nền màu gốc, chữ màu contrast: trạng thái cần chú ý ngay, tối đa một badge solid mỗi dòng. Title là số thì thành số đếm như round.",
+  },
+  {
+    sourceKey: "components/badge/example-dot-va-pulse",
+    pageKey: "components/badge",
+    sectionId: "example-dot-va-pulse",
+    title: "Dot và pulse",
+    description: "Dot chỉ có chấm; title không hiện mà làm tooltip và tên cho screen reader (bắt buộc). pulse thêm vòng sáng nhấp nháy 1.6s, đứng yên khi giảm chuyển động.",
+  },
+  {
+    sourceKey: "components/badge/example-pair",
+    pageKey: "components/badge",
+    sectionId: "example-pair",
+    title: "Pair",
+    description: "Cặp thuộc tính – giá trị: nhãn nền secondary nhạt, giá trị theo color. Quá dài thì cắt phần giá trị trước, nhãn giữ nguyên.",
   },
   {
     sourceKey: "components/badge/example-kich-thuoc-round",

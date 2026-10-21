@@ -304,7 +304,8 @@ on any ancestor (`:root`, a page, a table). See `components/badge/sd-badge.md`, 
 | `--sd-badge-radius-tag` | `4px` (`md`, `lg` and a tag with a description add 2px) |
 | `--sd-badge-font-weight` | `500` |
 
-Badge colours stay on the palette: `*-light` backgrounds, `*-dark` text and icons, the base colour for the dot, and
+Badge colours stay on the palette: `*-light` backgrounds, `*-dark` text and icons, the base colour for the dot and
+for `solid` (with `*-contrast` text), `--sd-secondary-light` / `--sd-secondary-dark` for the label of `pair`, and
 `color-mix(in srgb, *-dark 22%, *-light)` for the tag border.
 
 ## Button indicator token
@@ -331,6 +332,8 @@ every named preset and the dark palette:
 | `text`, `text-secondary` | `surface`, `surface-muted` | 4.5 |
 | `link` | `surface` | 4.5 |
 | `primary-contrast` | `primary` | 4.5 |
+| `*-contrast` (secondary, info, success, warning, error) | the base colour (badge `solid`) | 4.5 |
+| `*-dark` (all six colours) | `*-light` (badge `round`, `tag`, `pair`) | 4.5 |
 | `status-*-fg` | `status-*-bg` | 4.5 |
 | `border-strong`, `focus-ring-color` | `surface`, `surface-muted` | 3 |
 | `control-border` | `surface` | 3 |

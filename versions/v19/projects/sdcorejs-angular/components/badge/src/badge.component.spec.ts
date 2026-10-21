@@ -615,6 +615,29 @@ describe('SdBadge', () => {
     });
   });
 
+  describe('inputs added in wave 3 · 1b', () => {
+    it('coerces a bare pulse attribute to true and defaults to false', () => {
+      expect(fixture.componentInstance.pulse()).toBeFalse();
+      setInput(fixture, 'pulse', '');
+      expect(fixture.componentInstance.pulse()).toBeTrue();
+    });
+
+    it('reads label as the left part of a pair', () => {
+      setInput(fixture, 'type', 'pair');
+      setInput(fixture, 'label', 'Ưu tiên');
+      setInput(fixture, 'title', 'Cao');
+      expect(queryByCss(fixture, '.c-badge-pair-label').textContent?.trim()).toBe('Ưu tiên');
+    });
+
+    it('treats a number title on solid as a counter, like round', () => {
+      setInput(fixture, 'type', 'solid');
+      setInput(fixture, 'title', 5);
+      expect(fixture.componentInstance.isCount()).toBeTrue();
+      setInput(fixture, 'type', 'tag');
+      expect(fixture.componentInstance.isCount()).toBeFalse();
+    });
+  });
+
   describe('tooltip', () => {
     it('reads tooltip() input value', () => {
       setInput(fixture, 'tooltip', 'My tooltip');

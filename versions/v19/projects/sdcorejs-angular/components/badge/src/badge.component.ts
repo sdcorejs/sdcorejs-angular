@@ -16,7 +16,7 @@ import { SdIcon, type SdIconSet } from '@sdcorejs/angular/modules/icon';
 import { Color, Size } from '@sdcorejs/utils/models';
 
 // Export các Type để dùng chung
-export type SdBadgeType = 'tag' | 'round' | 'icon';
+export type SdBadgeType = 'tag' | 'round' | 'icon' | 'solid' | 'dot' | 'pair';
 
 /** Số đếm lớn hơn giá trị này hiện "99+". */
 const SD_BADGE_COUNT_MAX = 99;
@@ -63,6 +63,8 @@ export class SdBadge {
   });
 
   title = input<string | number | undefined | null>();
+  /** Phần bên trái của type `pair` (nền secondary nhạt). Các type khác bỏ qua. */
+  label = input<string | undefined | null>();
   description = input<string | undefined | null>();
   tooltip = input<string | undefined | null>();
   icon = input<string | undefined | null>();
@@ -70,6 +72,9 @@ export class SdBadge {
   size = input<Size, Size | undefined | null>('sm', {
     transform: value => value || 'sm',
   });
+
+  /** Vòng sáng nhấp nháy quanh chấm của type `dot` và của type `icon` không có icon. */
+  pulse = input(false, { transform: booleanAttribute });
 
   // ==========================================
   // 2. OUTPUT
@@ -110,12 +115,17 @@ export class SdBadge {
     this.#truncated.set(!!el && el.scrollWidth > el.clientWidth);
   };
 
-  /** Chữ của tooltip: `tooltip` nếu có, ngược lại là title đầy đủ khi chữ bị cắt, ngược lại rỗng (không tooltip). */
+  /**
+   * Chữ của tooltip: `tooltip` nếu có; type `dot` luôn dùng title (title không hiện ra); type khác dùng title đầy đủ
+   * khi chữ bị cắt; ngược lại rỗng (không tooltip).
+   */
   tooltipText = computed(() => {
     const tooltip = this.tooltip()?.trim();
     if (tooltip) return tooltip;
     const title = this.title();
-    return this.#truncated() && title !== undefined && title !== null ? String(title) : '';
+    if (title === undefined || title === null) return '';
+    if (this.type() === 'dot') return String(title);
+    return this.#truncated() ? String(title) : '';
   });
 
   // ==========================================
@@ -133,7 +143,10 @@ export class SdBadge {
   });
 
   accessibleName = computed(() => {
-    const visibleText = [this.title(), this.description()]
+    const type = this.type();
+    // why: pair đọc cả nhãn lẫn giá trị ("SLA 4 giờ"); dot chỉ có title; dot/pair bỏ qua description.
+    const texts = type === 'pair' ? [this.label(), this.title()] : type === 'dot' ? [this.title()] : [this.title(), this.description()];
+    const visibleText = texts
       .filter(value => value !== undefined && value !== null && String(value).trim() !== '')
       .map(value => String(value).trim())
       .join(' ');
@@ -145,10 +158,11 @@ export class SdBadge {
     return (this.icon() || this.defaultIcon).replace(/[_-]+/g, ' ').trim();
   });
 
-  /** `title` là số (kể cả 0) với type round: số đếm hình tròn, chữ số đều bề rộng. Chuỗi "12" vẫn là chữ. */
+  /** `title` là số (kể cả 0) với type round/solid: số đếm hình tròn, chữ số đều bề rộng. Chuỗi "12" vẫn là chữ. */
   isCount = computed(() => {
     const title = this.title();
-    return this.type() === 'round' && typeof title === 'number' && Number.isFinite(title);
+    const type = this.type();
+    return (type === 'round' || type === 'solid') && typeof title === 'number' && Number.isFinite(title);
   });
 
   /** Số đếm lớn hơn 99 thì cần đọc số thật cho screen reader, vì phần nhìn thấy chỉ là "99+". */

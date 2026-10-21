@@ -709,12 +709,17 @@ interface FontSetOption {
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdBadge, SdRadio],
   template: \`
-    <demo-page #demoPage title="Badge" description="Nhãn trạng thái / số đếm — có 3 dạng (type): icon, round, tag.">
-      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-ba-dang') {
-        <demo-section heading="Ba dạng" [props]="[{ name: 'type', value: 'icon / round / tag' }]">
-          <sd-badge type="icon" primary icon="check_circle" title="icon"></sd-badge>
-          <sd-badge type="round" primary title="round"></sd-badge>
-          <sd-badge type="tag" primary icon="label" title="tag"></sd-badge>
+    <demo-page #demoPage title="Badge" description="Nhãn trạng thái / số đếm — có 6 dạng (type): icon, round, tag, solid, dot, pair.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-sau-dang') {
+        <demo-section heading="Sáu dạng" [props]="[{ name: 'type', value: 'icon / round / tag / solid / dot / pair' }]">
+          <div class="d-flex flex-wrap align-items-center gap-16">
+            <sd-badge type="icon" primary icon="check_circle" title="icon"></sd-badge>
+            <sd-badge type="round" primary title="round"></sd-badge>
+            <sd-badge type="tag" primary icon="label" title="tag"></sd-badge>
+            <sd-badge type="solid" primary title="solid"></sd-badge>
+            <sd-badge type="dot" primary title="dot"></sd-badge>
+            <sd-badge type="pair" primary label="pair" title="giá trị"></sd-badge>
+          </div>
         </demo-section>
       }
 
@@ -813,6 +818,78 @@ interface FontSetOption {
               <sd-badge type="icon" success title="Đã duyệt"></sd-badge>
               <sd-badge type="icon" warning title="Chờ duyệt"></sd-badge>
               <sd-badge type="icon" error title="Đã huỷ"></sd-badge>
+            </div>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-solid') {
+        <demo-section
+          heading="Solid"
+          [props]="[
+            { name: 'type', value: 'solid' },
+            { name: 'color', value: 'primary / secondary / success / info / warning / error' },
+          ]"
+          note="Nền màu gốc, chữ màu contrast: trạng thái cần chú ý ngay, tối đa một badge solid mỗi dòng. Title là số thì thành số đếm như round.">
+          <div class="d-flex flex-wrap align-items-center gap-16">
+            <sd-badge type="solid" primary title="Mới"></sd-badge>
+            <sd-badge type="solid" secondary title="Nháp"></sd-badge>
+            <sd-badge type="solid" info title="Đang xử lý"></sd-badge>
+            <sd-badge type="solid" success title="Hoàn tất"></sd-badge>
+            <sd-badge type="solid" warning icon="schedule" title="Khẩn"></sd-badge>
+            <sd-badge type="solid" error title="Quá hạn"></sd-badge>
+            <sd-badge type="solid" error [title]="errorsCount()"></sd-badge>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-dot-va-pulse') {
+        <demo-section
+          heading="Dot và pulse"
+          [props]="[
+            { name: 'type', value: 'dot / icon' },
+            { name: 'pulse', value: 'true' },
+            { name: 'size', value: 'sm / md / lg' },
+          ]"
+          note="Dot chỉ có chấm; title không hiện mà làm tooltip và tên cho screen reader (bắt buộc). pulse thêm vòng sáng nhấp nháy 1.6s, đứng yên khi giảm chuyển động.">
+          <div class="d-flex flex-column gap-12">
+            <div class="d-flex flex-wrap align-items-center gap-16">
+              <sd-badge type="dot" primary title="Mới"></sd-badge>
+              <sd-badge type="dot" secondary title="Ngoại tuyến"></sd-badge>
+              <sd-badge type="dot" info title="Đang xử lý"></sd-badge>
+              <sd-badge type="dot" success title="Đang hoạt động"></sd-badge>
+              <sd-badge type="dot" warning title="Vắng mặt"></sd-badge>
+              <sd-badge type="dot" error title="Không làm phiền"></sd-badge>
+            </div>
+            <div class="d-flex flex-wrap align-items-center gap-16">
+              <sd-badge type="dot" success title="Đang gọi" pulse></sd-badge>
+              <sd-badge type="dot" success title="Đang gọi" size="md" pulse></sd-badge>
+              <sd-badge type="dot" success title="Đang gọi" size="lg" pulse></sd-badge>
+              <sd-badge type="icon" success title="Đang gọi" pulse></sd-badge>
+            </div>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-pair') {
+        <demo-section
+          heading="Pair"
+          [props]="[
+            { name: 'type', value: 'pair' },
+            { name: 'label', value: 'text' },
+            { name: 'size', value: 'sm / md / lg' },
+          ]"
+          note="Cặp thuộc tính – giá trị: nhãn nền secondary nhạt, giá trị theo color. Quá dài thì cắt phần giá trị trước, nhãn giữ nguyên.">
+          <div class="d-flex flex-column gap-12">
+            <div class="d-flex flex-wrap align-items-center gap-16">
+              <sd-badge type="pair" warning label="SLA" title="4 giờ"></sd-badge>
+              <sd-badge type="pair" error label="Ưu tiên" title="Cao"></sd-badge>
+              <sd-badge type="pair" info label="Phiên bản" title="2.3.1"></sd-badge>
+              <sd-badge type="pair" success label="Kênh" title="Trực tuyến" size="md"></sd-badge>
+              <sd-badge type="pair" primary label="Kênh" title="Trực tuyến" size="lg"></sd-badge>
+            </div>
+            <div class="badge-demo-cell">
+              <sd-badge type="pair" info label="Phiên bản" title="2.3.1-beta.4 bản dựng thử nghiệm"></sd-badge>
             </div>
           </div>
         </demo-section>
@@ -20123,14 +20200,6 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     </div>
   </demo-section>`,
   },
-  "components/badge/example-ba-dang": {
-    ...SHOWCASE_PAGE_SOURCES["components/badge"],
-    html: `<demo-section heading="Ba dạng" [props]="[{ name: 'type', value: 'icon / round / tag' }]">
-          <sd-badge type="icon" primary icon="check_circle" title="icon"></sd-badge>
-          <sd-badge type="round" primary title="round"></sd-badge>
-          <sd-badge type="tag" primary icon="label" title="tag"></sd-badge>
-        </demo-section>`,
-  },
   "components/badge/example-bam-duoc": {
     ...SHOWCASE_PAGE_SOURCES["components/badge"],
     html: `<demo-section
@@ -20145,6 +20214,34 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
             <sd-badge type="tag" info icon="label" title="Bán buôn" (click)="filterClicks.set(filterClicks() + 1)"></sd-badge>
             <sd-badge type="icon" warning icon="schedule" title="Chờ duyệt" (click)="filterClicks.set(filterClicks() + 1)"></sd-badge>
             <span class="badge-demo-log">Đã bấm {{ filterClicks() }} lần</span>
+          </div>
+        </demo-section>`,
+  },
+  "components/badge/example-dot-va-pulse": {
+    ...SHOWCASE_PAGE_SOURCES["components/badge"],
+    html: `<demo-section
+          heading="Dot và pulse"
+          [props]="[
+            { name: 'type', value: 'dot / icon' },
+            { name: 'pulse', value: 'true' },
+            { name: 'size', value: 'sm / md / lg' },
+          ]"
+          note="Dot chỉ có chấm; title không hiện mà làm tooltip và tên cho screen reader (bắt buộc). pulse thêm vòng sáng nhấp nháy 1.6s, đứng yên khi giảm chuyển động.">
+          <div class="d-flex flex-column gap-12">
+            <div class="d-flex flex-wrap align-items-center gap-16">
+              <sd-badge type="dot" primary title="Mới"></sd-badge>
+              <sd-badge type="dot" secondary title="Ngoại tuyến"></sd-badge>
+              <sd-badge type="dot" info title="Đang xử lý"></sd-badge>
+              <sd-badge type="dot" success title="Đang hoạt động"></sd-badge>
+              <sd-badge type="dot" warning title="Vắng mặt"></sd-badge>
+              <sd-badge type="dot" error title="Không làm phiền"></sd-badge>
+            </div>
+            <div class="d-flex flex-wrap align-items-center gap-16">
+              <sd-badge type="dot" success title="Đang gọi" pulse></sd-badge>
+              <sd-badge type="dot" success title="Đang gọi" size="md" pulse></sd-badge>
+              <sd-badge type="dot" success title="Đang gọi" size="lg" pulse></sd-badge>
+              <sd-badge type="icon" success title="Đang gọi" pulse></sd-badge>
+            </div>
           </div>
         </demo-section>`,
   },
@@ -20288,6 +20385,30 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
           <sd-badge type="tag" error icon="label" title="error"></sd-badge>
         </demo-section>`,
   },
+  "components/badge/example-pair": {
+    ...SHOWCASE_PAGE_SOURCES["components/badge"],
+    html: `<demo-section
+          heading="Pair"
+          [props]="[
+            { name: 'type', value: 'pair' },
+            { name: 'label', value: 'text' },
+            { name: 'size', value: 'sm / md / lg' },
+          ]"
+          note="Cặp thuộc tính – giá trị: nhãn nền secondary nhạt, giá trị theo color. Quá dài thì cắt phần giá trị trước, nhãn giữ nguyên.">
+          <div class="d-flex flex-column gap-12">
+            <div class="d-flex flex-wrap align-items-center gap-16">
+              <sd-badge type="pair" warning label="SLA" title="4 giờ"></sd-badge>
+              <sd-badge type="pair" error label="Ưu tiên" title="Cao"></sd-badge>
+              <sd-badge type="pair" info label="Phiên bản" title="2.3.1"></sd-badge>
+              <sd-badge type="pair" success label="Kênh" title="Trực tuyến" size="md"></sd-badge>
+              <sd-badge type="pair" primary label="Kênh" title="Trực tuyến" size="lg"></sd-badge>
+            </div>
+            <div class="badge-demo-cell">
+              <sd-badge type="pair" info label="Phiên bản" title="2.3.1-beta.4 bản dựng thử nghiệm"></sd-badge>
+            </div>
+          </div>
+        </demo-section>`,
+  },
   "components/badge/example-round-voi-icon": {
     ...SHOWCASE_PAGE_SOURCES["components/badge"],
     html: `<demo-section
@@ -20300,6 +20421,19 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
           <sd-badge type="round" success icon="check_circle" title="sm" size="sm"></sd-badge>
           <sd-badge type="round" success icon="check_circle" title="md" size="md"></sd-badge>
           <sd-badge type="round" success icon="check_circle" title="lg" size="lg"></sd-badge>
+        </demo-section>`,
+  },
+  "components/badge/example-sau-dang": {
+    ...SHOWCASE_PAGE_SOURCES["components/badge"],
+    html: `<demo-section heading="Sáu dạng" [props]="[{ name: 'type', value: 'icon / round / tag / solid / dot / pair' }]">
+          <div class="d-flex flex-wrap align-items-center gap-16">
+            <sd-badge type="icon" primary icon="check_circle" title="icon"></sd-badge>
+            <sd-badge type="round" primary title="round"></sd-badge>
+            <sd-badge type="tag" primary icon="label" title="tag"></sd-badge>
+            <sd-badge type="solid" primary title="solid"></sd-badge>
+            <sd-badge type="dot" primary title="dot"></sd-badge>
+            <sd-badge type="pair" primary label="pair" title="giá trị"></sd-badge>
+          </div>
         </demo-section>`,
   },
   "components/badge/example-so-dem": {
@@ -20317,6 +20451,26 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
           <sd-badge type="round" warning [title]="overflowCount()"></sd-badge>
           <sd-badge type="round" primary [title]="unreadCount()" size="md"></sd-badge>
           <sd-badge type="round" error [title]="errorsCount()" size="md"></sd-badge>
+        </demo-section>`,
+  },
+  "components/badge/example-solid": {
+    ...SHOWCASE_PAGE_SOURCES["components/badge"],
+    html: `<demo-section
+          heading="Solid"
+          [props]="[
+            { name: 'type', value: 'solid' },
+            { name: 'color', value: 'primary / secondary / success / info / warning / error' },
+          ]"
+          note="Nền màu gốc, chữ màu contrast: trạng thái cần chú ý ngay, tối đa một badge solid mỗi dòng. Title là số thì thành số đếm như round.">
+          <div class="d-flex flex-wrap align-items-center gap-16">
+            <sd-badge type="solid" primary title="Mới"></sd-badge>
+            <sd-badge type="solid" secondary title="Nháp"></sd-badge>
+            <sd-badge type="solid" info title="Đang xử lý"></sd-badge>
+            <sd-badge type="solid" success title="Hoàn tất"></sd-badge>
+            <sd-badge type="solid" warning icon="schedule" title="Khẩn"></sd-badge>
+            <sd-badge type="solid" error title="Quá hạn"></sd-badge>
+            <sd-badge type="solid" error [title]="errorsCount()"></sd-badge>
+          </div>
         </demo-section>`,
   },
   "components/badge/example-ten-dai-trong-o-hep": {

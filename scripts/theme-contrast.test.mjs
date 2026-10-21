@@ -49,6 +49,10 @@ const PAIRS = [
   // sd-kanban: card titles and the secondary count sit on the neutral lane.
   ['text', 'kanban-lane-bg', 4.5],
   ['text-secondary', 'kanban-lane-bg', 4.5],
+  // sd-badge: `*-dark` text on the `*-light` tint (round, tag, the value of pair, the secondary label of pair)
+  // and `*-contrast` text on the base colour (solid).
+  ...['primary', 'secondary', ...STATES].map(color => [`${color}-dark`, `${color}-light`, 4.5]),
+  ...['secondary', ...STATES].map(color => [`${color}-contrast`, color, 4.5]),
 ];
 
 const tokensOf = args => {

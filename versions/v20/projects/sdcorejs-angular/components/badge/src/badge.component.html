@@ -7,22 +7,24 @@
 @let _icon = icon();
 @let _tooltipText = tooltipText();
 @let _countOverflow = countOverflow();
+@let _pulse = pulse();
 @let isPointer = click.observed;
 @let _role = isPointer ? 'button' : null;
 @let _tabIndex = isPointer ? 0 : null;
 
-<!-- why: bỏ aria-hidden="true" khỏi cả ba nhánh. Badge mang nội dung thật (title/description) nên
+<!-- why: bỏ aria-hidden="true" khỏi mọi nhánh. Badge mang nội dung thật (title/description) nên
      aria-hidden xoá luôn nội dung đó khỏi accessibility tree; khi badge còn clickable thì nó vừa
      nhận focus vừa không đọc được gì — tệ hơn là không làm gì. Nay role/tabindex/keydown chỉ bật
      khi thực sự có consumer lắng nghe (click).
      why: tooltip dùng [sdTooltip] thay matTooltip — overlay chỉ tạo khi hiện, và chỉ có nội dung khi có
-     `tooltip` hoặc chữ bị cắt (đo lúc hover/focus trên host). -->
-@if (_type === 'round') {
+     `tooltip`, khi chữ bị cắt (đo lúc hover/focus trên host), hoặc với type dot (title không hiện ra). -->
+@if (_type === 'round' || _type === 'solid') {
   <div
     class="c-badge"
     sdTooltipPosition="top"
     [sdTooltip]="_tooltipText ? tooltipContent : ''"
     [ngClass]="containerCombinedClasses()"
+    [class.c-badge--solid]="_type === 'solid'"
     [class.c-badge--has-icon]="!!_icon"
     [class.c-badge--count]="isCount()"
     [class.pointer]="isPointer"
@@ -77,6 +79,42 @@
       }
     </span>
   </div>
+} @else if (_type === 'pair') {
+  <!-- why: nhãn không co lại; quá dài thì chỉ phần giá trị bị cắt. -->
+  <div
+    class="c-badge c-badge--pair"
+    sdTooltipPosition="top"
+    [sdTooltip]="_tooltipText ? tooltipContent : ''"
+    [ngClass]="containerCombinedClasses()"
+    [class.pointer]="isPointer"
+    [attr.role]="_role"
+    [attr.tabindex]="_tabIndex"
+    [attr.aria-label]="isPointer ? _accessibleName : null"
+    (click)="onClick($event)"
+    (keydown.enter)="onActivateKey($event)"
+    (keydown.space)="onActivateKey($event)">
+    @if (label(); as _label) {
+      <span class="c-badge-pair-label">{{ _label }}</span>
+    }
+    <span #titleEl class="c-badge-title">{{ _title }}</span>
+  </div>
+} @else if (_type === 'dot') {
+  <!-- why: title không hiện ra nên chấm tự mang tên: role="img" + aria-label khi chỉ để xem, role="button" khi bấm
+       được. Tooltip luôn là title. -->
+  <span
+    class="c-badge-dotonly"
+    sdTooltipPosition="top"
+    [sdTooltip]="_tooltipText ? tooltipContent : ''"
+    [ngClass]="containerCombinedClasses()"
+    [class.pointer]="isPointer"
+    [attr.role]="isPointer ? 'button' : 'img'"
+    [attr.tabindex]="_tabIndex"
+    [attr.aria-label]="_accessibleName"
+    (click)="onClick($event)"
+    (keydown.enter)="onActivateKey($event)"
+    (keydown.space)="onActivateKey($event)">
+    <span class="c-badge-dot" [ngClass]="baseColorClasses()" [class.c-badge-dot--pulse]="_pulse"></span>
+  </span>
 } @else {
   <div
     class="c-badge-icon"
@@ -102,7 +140,7 @@
           [size]="_iconCssSize"
           [ngClass]="iconCombinedClasses()"></sd-icon>
       } @else {
-        <span class="c-badge-dot" [ngClass]="baseColorClasses()" aria-hidden="true"></span>
+        <span class="c-badge-dot" [ngClass]="baseColorClasses()" [class.c-badge-dot--pulse]="_pulse" aria-hidden="true"></span>
       }
     </span>
     <span class="c-badge-copy">

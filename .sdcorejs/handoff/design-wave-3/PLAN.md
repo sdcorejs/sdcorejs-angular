@@ -102,6 +102,7 @@ Mới (đủ 5 locale vi/en/ja/ko/zh):
 | Bước | Trạng thái | Ghi chú |
 |---|---|---|
 | 1a badge: thang, một dòng, số đếm, description, viền tag, chấm CSS, focus, hover, tooltip | xong | Lệch spec: xem dưới. Ảnh: `.sdcorejs/handoff/screenshots/wave3-1a-badge-*.png` |
+| 1b badge: `solid`, `dot`, `pair`, input `label`, `pulse` | xong | Ảnh: `wave3-1b-badge-solid-dot-pair.png` (chỉ bản sau — type mới). `test:theme` thêm cặp badge |
 
 Lệch khỏi thông số ở bước 1a (đã báo user):
 - **Type icon to hơn một bậc** (user chọn 2026-10-21, theo HTML thay vì bảng `badge.md`): chữ sm 13/18, md 14/20,
@@ -113,3 +114,8 @@ Lệch khỏi thông số ở bước 1a (đã báo user):
   vì nó chỉ biết chữ bị cắt sau khi focus tới (focusin của host chạy sau directive trên phần tử con).
 - Showcase: spec `docs-page.component.spec.ts` đang chờ 8 ví dụ trang button, trang có 9 từ `365168c2` (đợt 1+2) —
   sửa trong commit riêng.
+
+Ghi chú bước 1b:
+- Chrome trên máy dev báo `prefers-reduced-motion: reduce` (theo cài đặt Windows), nên spec của pulse đọc rule CSS
+  thay vì animation đã tính.
+- Dot bấm được có vùng chạm 20px (`::before`) quanh chấm 8px; hover của pair tô từng phần bằng màu đậm của phần đó.
