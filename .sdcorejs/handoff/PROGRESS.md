@@ -24,11 +24,12 @@ Cập nhật: 2026-10-21.
 | 2 | Đợt 2 · D — token control, panel, control tự viết | `50863499` |
 | 3 | Đợt 2 · E — checkbox và radio | `8cc08f67` |
 | 4 | Đợt 1 — sd-segmented | `77d7f449` |
-| 5 | Đợt 1 · B — primitive tìm kiếm `ɵ` | **chờ duyệt đề xuất** (xem dưới) |
+| 5 | Đợt 1 · B — primitive tìm kiếm `ɵ` | commit `feat(forms): draw the four search boxes with one internal search field` |
 | 6–10 | Token table, form-builder, kanban, indicator sd-button, operator trong control | chưa làm |
 
-Kết quả kiểm tra ở commit bước 4: Karma v19 7547/7547 (coverage trên ngưỡng), lint, `test:theme` 48/48,
-`check:scss-hex` 0 finding, `check:sync` pass. Ảnh trước/sau: [`screenshots/`](screenshots/).
+Kết quả kiểm tra ở commit bước 5 (Node 22.22.3): Karma v19 7571/7571 (coverage 89.85 / 79.08 / 90.31 / 92.29), lint,
+`test:theme` 48/48, `check:scss-hex` 0 finding, `check:i18n-parity` (1341 key × 5) và `check:i18n` pass, `check:sync` pass,
+build lib v19 pass. Ảnh trước/sau: [`screenshots/`](screenshots/).
 
 ## Quyết định đã duyệt (2026-10-21)
 
@@ -56,7 +57,7 @@ Kết quả kiểm tra ở commit bước 4: Karma v19 7547/7547 (coverage trên
 - **Đổi:** entity-picker, ô lọc của sd-select, ô nhập link/ảnh của editor, `.opt__input` (form builder), `.fbp-control`
   (preview canvas), `.field-input` của file explorer (nối qua `--sd-fe-*`), `.c-search` và `query-bar.controls.scss`
   (bỏ skin 6px `!important`). Đã làm ở bước 2.
-- **Đổi qua primitive ở bước 5:** `.sd-kanban__search`, `.sd-quick-search-field`, `.fb-search`.
+- **Đổi qua primitive ở bước 5 (đã làm):** `.sd-kanban__search`, `.sd-quick-search-field`, `.fb-search`, `.filter-input-wrapper` của panel sd-select.
 - **Giữ:** sd-inline-text, swatch sd-input-color, ô ngày sd-chip-calendar, `.search` dạng pill của file explorer,
   autoid-inspector, preview-pdf, vùng thả của upload-file, `.vb` của form builder, `.c-pop-input` (CSS chết).
 - **Còn phải xác nhận trên showcase:** `.sd-editor-surface`, `_inline-edit.scss` (inline edit trong bảng).
@@ -75,19 +76,28 @@ Kết quả kiểm tra ở commit bước 4: Karma v19 7547/7547 (coverage trên
 - Bước 3: rule bo 4px áp cho mọi pseudo-checkbox dạng full (cả hàng "Tất cả" của select, vốn không phải `mat-option`).
 - Chưa kiểm được: forced-colors, `pointer: coarse`, hover (môi trường test không giả lập); preset graphite.
 
-## Đề xuất bước 5 (chờ duyệt)
+## Bước 5 — đã làm (duyệt 2026-10-21)
 
-- **Vị trí:** entry point có sẵn `forms/directives` (hiện không phụ thuộc gì). Thêm `src/search-field.component.ts`
-  (+ html / scss / spec), export từ `forms/directives/index.ts`. Thêm phụ thuộc `modules/icon` và `i18n`, cả hai là lá
-  (chỉ import `utilities/models`, `configurations`) nên không tạo vòng. Kanban, table, form-generic (và select) đều import được.
-- **Tên:** component `ɵSdSearchField` (selector `sd-search-field`) + directive `ɵSdSearchFieldInput` gắn lên `<input>` thật.
-  Component dùng chiếu input của mình vào: primitive chỉ lo khung (cỡ sm / md, viền và focus theo `control.box`, icon
-  `search`, nút xoá có aria-label khi `clearable`, slot cuối cho gợi ý ↵), còn mọi binding / phím (Enter, Escape, IME,
-  `aria-describedby`, `data-autoid`, `#searchInput`) giữ nguyên ở nơi dùng. Nhờ vậy ô lọc của sd-select (`matInput` +
-  `[formControl]`) cũng lắp vừa.
-- **Docs:** một mục "Internal (ɵ)" trong `sd-form-directives.md`; không README, không trang showcase.
-- **Phương án khác:** entry mới `forms/search-field`. Nhưng `versions/v19/CLAUDE.md` bắt mỗi entry trong forms có
-  `sd-<name>.md`, và `collect-docs` sẽ publish file đó trong khi registry showcase không có trang tương ứng.
+- **Vị trí và tên:** `forms/directives/src/search-field.component.ts` (+ html / scss / spec), export từ `forms/directives/index.ts`.
+  Component `ɵSdSearchField` (selector `sd-search-field`), directive `ɵSdSearchFieldInputDirective` (selector
+  `input[sdSearchFieldInput]`; đề xuất ghi `ɵSdSearchFieldInput`, nhưng lint `directive-class-suffix` bắt hậu tố `Directive`),
+  type `ɵSdSearchFieldSize`. Docs: mục "Internal (ɵ)" trong `sd-form-directives.md`; không showcase.
+- **API nội bộ:** `size` (sm / md), `clearable` + output `cleared` (đặt tên theo sd-input / sd-input-number), `clearLabel`
+  (mặc định key mới `core.form.search-field.clear`, đủ 5 locale), `autoId` (nút xoá `<autoId>-clear`), slot `[sdSearchFieldEnd]`.
+  Nút xoá chỉ phát `cleared`; giá trị do nơi dùng xoá. Directive đọc value / disabled của input ở `ngDoCheck` + `(input)`.
+- **Nơi dùng:** kanban (sm, giữ 280px), quick search (sm, clearable, ↵ ở slot cuối, nút xoá giữ aria-label và
+  `data-autoid` `…-quick-search-clear`), palette form builder (sm, giữ margin), ô lọc panel sd-select (3 chỗ, sm).
+  Class cũ giữ nguyên trên host để spec / e2e vẫn tìm được.
+
+Lệch thông số và quyết định nhỏ (cần duyệt lại nếu không đồng ý):
+
+- Disabled: nền `--sd-surface-muted` + chữ `--sd-disabled-text` theo README đợt 1 (không phải `--sd-control-bg-disabled` như
+  mat-form-field); viền `--sd-control-border-disabled` (README không nói).
+- Ô lọc panel select chọn size **sm** (32px; trước khoảng 38px) — README không ghi cỡ. Icon đổi từ `--sd-select-icon-muted`
+  sang `--sd-text-secondary` của primitive.
+- Kanban 40px → 32px, palette 36px → 32px và chữ 13px → 14px (đúng README, ghi lại vì là thay đổi hình ảnh).
+- Bấm vào icon / phần đệm vẫn focus input như các wrapper `<label>` cũ (thêm vào primitive).
+- Quick search ở container ≤ 550px: đặt `min-height` / `font-size` lên host và biến local `--sd-search-field-clear-size: 40px`.
 
 ## Ghi chú kỹ thuật
 
@@ -108,6 +118,8 @@ Chụp trong Browser pane hay timeout khi cửa sổ bị ẩn, nên dùng Playw
    `node_modules` thật.
 2. Chép `dist` "trước" vào `showcase/node_modules/@sdcorejs/angular`, xoá thư mục `vite` trong `showcase/.angular/cache`,
    chạy `npm --prefix showcase run ng -- serve showcase --port 4212 --prebundle=false` (không qua `prestart`).
-3. `node .sdcorejs/handoff/tools/shots-stepN.mjs http://localhost:4212 <outDir> before`.
+3. `node .sdcorejs/handoff/tools/shots-stepN.mjs http://localhost:4212 <outDir> before`. Server có thể chạy qua cấu hình
+   `showcase-raw` (port 4212, không qua `prestart`) trong `.claude/launch.json` (gitignored) bằng preview tool. Builder trong
+   showcase luôn < 900px nên palette là panel nổi: `shots-step5.mjs` bấm `.fb-panel-toggle` trước khi chụp.
 4. `npm --prefix showcase run link:library`, chạy lại server, chụp với nhãn `after`.
 5. `node .sdcorejs/handoff/tools/compose.mjs <outDir> <file.png> "<tiêu đề>"` ghép thành một ảnh so sánh.

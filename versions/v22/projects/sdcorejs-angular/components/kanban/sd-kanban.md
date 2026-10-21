@@ -39,7 +39,7 @@ The order of `columns` is displayed unchanged. Within each column, the order of 
 | `ariaLabel`        | `string`                    | localized fallback | Accessible board name.                                             |
 | `autoId`           | `string`                    | —                  | Stable automation prefix.                                          |
 
-`option.searchable` and `option.collapsible` default to `true`. `getSearchText` defaults to `getTitle`. `filter(item)` is an additional consumer predicate; it does not remove items from the model. Headers show the complete count and, when filtered, the visible count. Clearing search restores the complete order.
+`option.searchable` and `option.collapsible` default to `true`. `getSearchText` defaults to `getTitle`. `filter(item)` is an additional consumer predicate; it does not remove items from the model. Headers show the complete count and, when filtered, the visible count. Clearing search restores the complete order. The board search is the shared internal search field at size sm: 32px high, 280px wide (shrinking with the board), control border and focus ring.
 
 ## Move contract
 

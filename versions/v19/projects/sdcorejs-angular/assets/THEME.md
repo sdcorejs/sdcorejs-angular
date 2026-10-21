@@ -214,7 +214,10 @@ theme the root, or give the overlay container the same scope.
 Every box control shares one set of tokens: the outlined `mat-form-field` (`sd-input`, `sd-input-number`,
 `sd-textarea`, `sd-select`, `sd-autocomplete`, `sd-date`, `sd-datetime`, `sd-date-range`, `sd-time`, the
 box of `sd-input-color`), the filter input in the `sd-select` panel, `sd-entity-picker` and the other
-inputs the library draws itself.
+inputs the library draws itself. The search boxes of `sd-kanban`, the `sd-table` quick search, the form
+builder palette and the `sd-select` panel share one internal search field that reads these tokens (see
+`forms/directives/sd-form-directives.md`, "Internal (ɵ)"); a disabled search field keeps the
+`--sd-surface-muted` background of its design instead of `--sd-control-bg-disabled`.
 
 | State | Token | Value |
 | --- | --- | --- |

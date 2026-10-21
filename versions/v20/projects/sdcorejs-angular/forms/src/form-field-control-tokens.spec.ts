@@ -201,6 +201,8 @@ describe('Select panel filter input with the shipped theme', () => {
     fixture.detectChanges();
     const box = document.querySelector('.sd-select-panel .filter-input-wrapper') as HTMLElement;
     expect(box).withContext('filter input of a 12-item select').not.toBeNull();
+    expect(box.tagName.toLowerCase()).withContext('shared search field (wave 1 · B)').toBe('sd-search-field');
+    expect(box.getBoundingClientRect().height).withContext('size sm').toBe(32);
     expect(getComputedStyle(box).borderTopLeftRadius).toBe('8px');
     expect(getComputedStyle(box).borderTopColor).toBe(resolve('color', 'var(--sd-control-border)'));
 

@@ -1007,6 +1007,17 @@ describe('SdFormBuilder (integration)', () => {
     expect(host.emitted.length).toBe(1);
   });
 
+  it('draws the palette search with the shared sm search field and focusPalette() still lands in it', async () => {
+    await render();
+    const field = root().querySelector<HTMLElement>('fb-palette sd-search-field.fb-search')!;
+    expect(field).withContext('palette search uses sd-search-field').not.toBeNull();
+    expect(field.classList).toContain('sd-sm');
+    expect(getComputedStyle(field).marginTop).toBe('12px');
+    builder().focusPalette();
+    await render();
+    expect(document.activeElement).toBe(field.querySelector('input'));
+  });
+
   describe('inspector feedback round', () => {
     const inspector = (): InspectorComponent => fixture.debugElement.query(By.directive(InspectorComponent)).componentInstance;
     const select = async (id: string, tab: 'general' | 'data' | 'rules' | 'layout') => {

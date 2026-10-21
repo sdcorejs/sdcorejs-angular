@@ -322,6 +322,19 @@ describe('SdKanban', () => {
     });
   }
 
+  it('draws the board search with the shared search field (sm, 280px) and keeps its name and keyword binding', () => {
+    const field = fixture.nativeElement.querySelector('sd-search-field.sd-kanban__search') as HTMLElement;
+    expect(field).withContext('board search uses sd-search-field').not.toBeNull();
+    expect(field.classList).toContain('sd-sm');
+    expect(field.getBoundingClientRect().height).toBe(32);
+    expect(field.getBoundingClientRect().width).toBe(280);
+    const search = field.querySelector('input[type="search"]') as HTMLInputElement;
+    expect(search.getAttribute('aria-label')).toBeTruthy();
+    search.value = 'x';
+    search.dispatchEvent(new Event('input'));
+    expect(fixture.componentInstance.keyword()).toBe('x');
+  });
+
   it('preserves focus moved to this board search while persistence is pending', async () => {
     const confirmation = deferred<boolean>();
     fixture.componentRef.setInput('option', { ...option, move: () => confirmation.promise });

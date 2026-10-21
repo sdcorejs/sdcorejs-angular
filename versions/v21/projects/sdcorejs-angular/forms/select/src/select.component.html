@@ -165,19 +165,19 @@
 
           @if (filtered()) {
             <div class="c-filter-input-container">
-              <div class="filter-input-wrapper">
-                <sd-icon name="search" aria-hidden="true"></sd-icon>
+              <sd-search-field class="filter-input-wrapper" size="sm">
                 <!-- why: BỎ aria-hidden — đây là ô lọc THẬT, người dùng focus và gõ vào được, nên
                      aria-hidden chỉ làm screen reader câm. Panel không có <label> nào, nên phải
                      tự đặt tên bằng aria-label, nếu không AT chỉ đọc "edit text" trống trơn. -->
                 <input
+                  sdSearchFieldInput
                   [formControl]="inputControl"
                   matInput
                   autocomplete="off"
                   class="c-search-input"
                   [attr.aria-label]="'core.form.select.search' | sdTranslate"
                   (keydown)="focusReadRetry($event); $event.stopPropagation()" />
-              </div>
+              </sd-search-field>
             </div>
           }
 
@@ -350,19 +350,19 @@
 
           @if (filtered()) {
             <div class="c-filter-input-container">
-              <div class="filter-input-wrapper">
-                <sd-icon name="search" aria-hidden="true"></sd-icon>
+              <sd-search-field class="filter-input-wrapper" size="sm">
                 <!-- why: BỎ aria-hidden — đây là ô lọc THẬT, người dùng focus và gõ vào được, nên
                      aria-hidden chỉ làm screen reader câm. Panel không có <label> nào, nên phải
                      tự đặt tên bằng aria-label, nếu không AT chỉ đọc "edit text" trống trơn. -->
                 <input
+                  sdSearchFieldInput
                   [formControl]="inputControl"
                   matInput
                   autocomplete="off"
                   class="c-search-input"
                   [attr.aria-label]="'core.form.select.search' | sdTranslate"
                   (keydown)="focusReadRetry($event); $event.stopPropagation()" />
-              </div>
+              </sd-search-field>
             </div>
           }
 
@@ -542,9 +542,9 @@
 
       @if (filtered()) {
         <div class="c-filter-input-container">
-          <div class="filter-input-wrapper">
-            <sd-icon name="search" aria-hidden="true"></sd-icon>
+          <sd-search-field class="filter-input-wrapper" size="sm">
             <input
+              sdSearchFieldInput
               [formControl]="inputControl"
               matInput
               autocomplete="off"
@@ -552,7 +552,7 @@
               [attr.aria-label]="'core.form.select.search' | sdTranslate"
               [attr.aria-activedescendant]="virtualActiveDescendant()"
               (keydown)="focusReadRetry($event); onVirtualSearchKeydown($event); $event.stopPropagation()" />
-          </div>
+          </sd-search-field>
         </div>
       }
 

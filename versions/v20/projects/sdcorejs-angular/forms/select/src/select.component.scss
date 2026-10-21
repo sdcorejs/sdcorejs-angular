@@ -1,5 +1,4 @@
 @use '../../../assets/scss/core/read-state-panel' as readState;
-@use '../../../assets/scss/core/control';
 @use '../../../assets/scss/core/color.scss' as color;
 @use '../../../assets/scss/core/inline-edit' as inline;
 @use 'sass:map';
@@ -129,26 +128,10 @@
     padding: 8px;
     margin-bottom: 8px;
     z-index: var(--sd-z-dropdown, 1000);
-    // Ô lọc là một control dạng ô: vòng focus nằm trên wrapper, nên ô input bên trong giữ `outline: none`.
-    .filter-input-wrapper {
-      display: flex;
-      align-items: center;
-      padding: 4px 8px;
+    // Ô lọc dùng primitive sd-search-field (đợt 1 · B, size sm): khung, viền, focus và icon thuộc primitive.
+    // Ở đây chỉ cho nền trùng nền panel.
+    .filter-input-wrapper:not(.sd-disabled) {
       background-color: var(--sd-select-panel-bg, #ffffff);
-      @include control.box;
-
-      sd-icon {
-        color: var(--sd-select-icon-muted, #dadada);
-      }
-      .c-search-input {
-        min-width: 0;
-        width: 100%;
-        background-color: var(--sd-select-panel-bg, #ffffff);
-        border: none;
-        outline: none;
-        flex: 1;
-        padding: 4px;
-      }
     }
   }
 

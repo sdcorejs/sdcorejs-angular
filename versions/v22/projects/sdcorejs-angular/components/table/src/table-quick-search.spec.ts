@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy as SdAngular22ChangeDetectionStrategy } from '@
 import { Component, signal } from '@angular/core';
 import { ComponentFixture, fakeAsync, flush, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdTable } from './table.component';
 import { SdTableOption } from './models/table-option.model';
 import { SdConvertToPagingReq, SdTableFilterRequest } from './services/table-filter/table-filter.model';
@@ -298,7 +299,7 @@ describe('SdTable quick search integration', () => {
     flush();
     fixture.detectChanges();
     expect(table.getFilterRequest().quickSearch).toEqual({ term: 'alice', filters: { tenantId: 0 } });
-    const clear: HTMLButtonElement = fixture.nativeElement.querySelector('.sd-quick-search-clear');
+    const clear: HTMLButtonElement = fixture.nativeElement.querySelector('sd-table-quick-search .sd-search-field__clear');
     expect(clear).not.toBeNull();
     clear?.click();
     fixture.detectChanges();
@@ -306,6 +307,41 @@ describe('SdTable quick search integration', () => {
     flush();
     fixture.detectChanges();
     expect(table.getFilterRequest().quickSearch).toEqual({ term: '', filters: { tenantId: 0 } });
+    fixture.destroy();
+  }));
+
+  it('draws the keyword with the shared sm search field and keeps its hooks, hint and narrow touch size', fakeAsync(() => {
+    mount();
+    const quick: HTMLElement = fixture.nativeElement.querySelector('sd-table-quick-search');
+    const field = quick.querySelector('sd-search-field.sd-quick-search-field') as HTMLElement;
+    expect(field).withContext('keyword uses sd-search-field').not.toBeNull();
+    expect(field.classList).toContain('sd-sm');
+    const input = field.querySelector('input') as HTMLInputElement;
+    expect(input.getAttribute('data-autoid')).toBe('components-table-quick-search-test-quick-search-term');
+    expect(field.querySelector('[sdSearchFieldEnd].sd-quick-search-enter')?.textContent?.trim()).toBe('↵');
+
+    input.value = 'alice';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    const clear = field.querySelector('.sd-search-field__clear') as HTMLButtonElement;
+    expect(clear.getAttribute('data-autoid')).toBe('components-table-quick-search-test-quick-search-clear');
+    expect(clear.getAttribute('aria-label')).toBe(TestBed.inject(I18nService).t('core.component.table.quick-search.clear'));
+
+    quick.style.width = '800px';
+    expect(field.getBoundingClientRect().height).toBe(32);
+    expect(clear.getBoundingClientRect().width).toBe(24);
+    quick.style.width = '400px';
+    expect(field.getBoundingClientRect().height).withContext('narrow container').toBe(44);
+    expect(clear.getBoundingClientRect().width).withContext('narrow container').toBe(40);
+    expect(getComputedStyle(input).fontSize).withContext('narrow container').toBe('16px');
+    fixture.destroy();
+  }));
+
+  it('disables the shared search field while a required filter is missing', fakeAsync(() => {
+    mount(host => host.tenant.set(null));
+    const field = fixture.nativeElement.querySelector('sd-table-quick-search sd-search-field') as HTMLElement;
+    expect(field.classList).toContain('sd-disabled');
+    expect((field.querySelector('input') as HTMLInputElement).disabled).toBeTrue();
     fixture.destroy();
   }));
 

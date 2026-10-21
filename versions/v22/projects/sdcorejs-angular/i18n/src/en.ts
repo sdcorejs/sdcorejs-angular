@@ -959,6 +959,7 @@ export const EN_MESSAGES = {
   'core.form.date-range.open-picker': 'Open calendar',
   'core.form.date-range.clear': 'Clear date range',
   'core.form.select.search': 'Search',
+  'core.form.search-field.clear': 'Clear search',
   'core.component.table.loading': 'Loading table data',
   'core.component.upload-file.loading': 'Uploading file',
   'core.component.import-excel.loading': 'Loading data',

@@ -960,6 +960,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.date-range.open-picker': 'Mở lịch',
   'core.form.date-range.clear': 'Xóa khoảng ngày',
   'core.form.select.search': 'Tìm kiếm',
+  'core.form.search-field.clear': 'Xóa nội dung tìm kiếm',
   'core.component.table.loading': 'Đang tải dữ liệu bảng',
   'core.component.upload-file.loading': 'Đang tải tệp lên',
   'core.component.import-excel.loading': 'Đang tải dữ liệu',

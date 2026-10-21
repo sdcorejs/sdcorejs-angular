@@ -40,7 +40,12 @@ import { SdView } from '@sdcorejs/angular/components/view';
 import { SdDataState, SdDataStateTemplateDirective } from '@sdcorejs/angular/components/data-state';
 import { cloneReadRequest, combineReadStates, SdReadChannel, SdSearchReadState } from '@sdcorejs/angular/utilities/read-state';
 import { SdTooltipDirective } from '@sdcorejs/angular/directives';
-import { SdItemDefDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
+import {
+  SdItemDefDefDirective,
+  SdViewDefDirective,
+  ɵSdSearchField,
+  ɵSdSearchFieldInputDirective,
+} from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import {
   HandleSdCustomValidator,
@@ -141,6 +146,8 @@ class SdSelectVirtualAdapter {
     SdSelectFooterActionDirective,
     SdTranslatePipe,
     ScrollingModule,
+    ɵSdSearchField,
+    ɵSdSearchFieldInputDirective,
   ],
 })
 export class SdSelect<T extends object | string | number = Record<string, unknown>> implements OnInit, DoCheck {

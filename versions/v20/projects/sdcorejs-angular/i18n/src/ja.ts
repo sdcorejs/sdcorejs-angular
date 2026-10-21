@@ -963,6 +963,7 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.date-range.open-picker': 'カレンダーを開く',
   'core.form.date-range.clear': '日付範囲をクリア',
   'core.form.select.search': '検索',
+  'core.form.search-field.clear': '検索をクリア',
   'core.component.table.loading': 'テーブルデータを読み込み中',
   'core.component.upload-file.loading': 'ファイルをアップロード中',
   'core.component.import-excel.loading': 'データを読み込み中',

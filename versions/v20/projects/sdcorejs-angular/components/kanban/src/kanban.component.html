@@ -15,16 +15,16 @@
   [attr.data-autoid]="autoId() ? 'components-kanban-' + autoId() : null">
   @if (_option.searchable !== false) {
     <div class="sd-kanban__toolbar">
-      <label class="sd-kanban__search">
-        <sd-icon name="search" size="sm" />
+      <sd-search-field class="sd-kanban__search" size="sm">
         <input
+          sdSearchFieldInput
           type="search"
           [value]="keyword()"
           [disabled]="disabled()"
           (input)="updateKeyword($event)"
           [attr.aria-label]="'core.component.kanban.search' | sdTranslate"
           [placeholder]="'core.component.kanban.search' | sdTranslate" />
-      </label>
+      </sd-search-field>
       @if (_pending !== null && !pendingAnchored()) {
         <span class="sd-kanban__pending">{{ 'core.component.kanban.saving' | sdTranslate }}</span>
       }

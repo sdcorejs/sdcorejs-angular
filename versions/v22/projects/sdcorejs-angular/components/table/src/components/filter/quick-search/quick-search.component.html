@@ -27,10 +27,16 @@
         hideInlineError />
     }
     <div class="sd-quick-search-keyword">
-      <div class="sd-quick-search-field" [class.sd-quick-search-disabled]="!_valid">
-        <sd-icon name="search" size="18px" aria-hidden="true" />
+      <sd-search-field
+        class="sd-quick-search-field"
+        size="sm"
+        clearable
+        [clearLabel]="'core.component.table.quick-search.clear' | sdTranslate"
+        [autoId]="_autoId ? _autoId + '-quick-search' : undefined"
+        (cleared)="clear(searchInput)">
         <input
           #searchInput
+          sdSearchFieldInput
           [id]="_inputId"
           type="text"
           enterkeyhint="search"
@@ -43,19 +49,8 @@
           [value]="_term"
           (input)="onInput($event)"
           (keydown)="onKeydown($event)" />
-        @if (_term) {
-          <button
-            class="sd-quick-search-clear"
-            type="button"
-            [disabled]="!_valid"
-            [attr.data-autoid]="_autoId ? _autoId + '-quick-search-clear' : null"
-            [attr.aria-label]="'core.component.table.quick-search.clear' | sdTranslate"
-            (click)="clear(searchInput)">
-            <sd-icon name="close" size="16px" aria-hidden="true" />
-          </button>
-        }
-        <span class="sd-quick-search-enter" [matTooltip]="_enterHint" aria-hidden="true">↵</span>
-      </div>
+        <span sdSearchFieldEnd class="sd-quick-search-enter" [matTooltip]="_enterHint" aria-hidden="true">↵</span>
+      </sd-search-field>
     </div>
   </div>
   @if (rightTemplate(); as template) {
