@@ -14768,7 +14768,7 @@ interface Option { value: string; display: string; }
       <demo-section
         heading="Chọn nhiều với dòng Tất cả"
         [props]="[{ name: 'showSelectAll', value: 'true' }, { name: 'multiple', value: 'true' }, { name: 'disabledField', value: 'disabled' }]"
-        note="Row 'Tất cả' đầu panel — chỉ hiện khi multiple + items là mảng tĩnh. Tick chọn toàn bộ items enabled khớp search hiện tại (item disabled 'Pháp chế' không bị đụng); đang search thì tick CHỈ thêm items khớp filter, selection cũ giữ nguyên. Checkbox có 3 trạng thái checked / indeterminate / unchecked.">
+        note="Row 'Tất cả' nằm trong header dính dưới ô tìm kiếm (cuộn vẫn thấy), cuối hàng có bộ đếm đã chọn/tổng — chỉ hiện khi multiple + items là mảng tĩnh. Tick chọn toàn bộ items enabled khớp search hiện tại (item disabled 'Pháp chế' không bị đụng); đang search thì tick CHỈ thêm items khớp filter, selection cũ giữ nguyên. Checkbox có 3 trạng thái checked / indeterminate / unchecked.">
         <div class="select-demo-column">
           <sd-select
             label="Đơn vị tham gia" multiple showSelectAll
@@ -25372,7 +25372,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     html: `<demo-section
     heading="Chọn nhiều với dòng Tất cả"
     [props]="[{ name: 'showSelectAll', value: 'true' }, { name: 'multiple', value: 'true' }, { name: 'disabledField', value: 'disabled' }]"
-    note="Row 'Tất cả' đầu panel — chỉ hiện khi multiple + items là mảng tĩnh. Tick chọn toàn bộ items enabled khớp search hiện tại (item disabled 'Pháp chế' không bị đụng); đang search thì tick CHỈ thêm items khớp filter, selection cũ giữ nguyên. Checkbox có 3 trạng thái checked / indeterminate / unchecked.">
+    note="Row 'Tất cả' nằm trong header dính dưới ô tìm kiếm (cuộn vẫn thấy), cuối hàng có bộ đếm đã chọn/tổng — chỉ hiện khi multiple + items là mảng tĩnh. Tick chọn toàn bộ items enabled khớp search hiện tại (item disabled 'Pháp chế' không bị đụng); đang search thì tick CHỈ thêm items khớp filter, selection cũ giữ nguyên. Checkbox có 3 trạng thái checked / indeterminate / unchecked.">
     <div class="select-demo-column">
       <sd-select
         label="Đơn vị tham gia" multiple showSelectAll

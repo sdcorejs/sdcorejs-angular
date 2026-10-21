@@ -124,12 +124,13 @@ With `size="sm"`, the resting floating label is vertically centered in the 32px 
 
 ## Select all (`showSelectAll`, multiple + static items)
 
-`<sd-select multiple showSelectAll [items]="staticArray">` renders a checkbox row (`.sd-select-all-row`) at the top of the panel, above the option list (below the search box when search is enabled).
+`<sd-select multiple showSelectAll [items]="staticArray">` renders a checkbox row (`.sd-select-all-row`) in the sticky panel header (`.c-filter-input-container`, which also gets `.sd-with-select-all`), below the search box when search is enabled. The row stays visible while the options scroll, and the header's bottom line is the only divider between it and the list. Without a search box (10 items or fewer) the header holds only the row.
 
 - **Scope** = items in the SOURCE array that match the current search text (same `aliasIncludes` rule as the option filter, on both value + display) AND are not disabled via `disabledField`. The scope ignores `limit` paging — ticking selects **all** matching enabled items, not just the rendered ones.
 - **Tick** (from unchecked/indeterminate): selects the whole scope, **union** with the current selection — items selected outside the current search filter are kept (additive).
 - **Untick** (from checked): removes only the scope values. Disabled items that were already selected are kept (disabled items are never touched, in either direction).
 - **Checkbox state**: `checked` when every enabled item in scope is selected · `indeterminate` when some are · unchecked when none.
+- **Counter**: the end of the row shows `selected/total` (`.sd-select-all-count`, 12px `--sd-text-secondary`, tabular figures) over the same scope — `total` is the enabled items matching the search, `selected` how many of them are selected. Disabled items count in neither. The visible counter is `aria-hidden`; the row's `aria-describedby` points to a visually hidden sentence from i18n `core.form.select.selectAllCount` (`{selected}`, `{total}`; vi "Đã chọn 1/3"), so the checkbox keeps "Tất cả" as its name. The component exposes the numbers as `selectAllCount()` (`{ selected, total }`).
 - **Emissions**: unchanged — `sdChange`/`sdSelection` fire only when the panel closes with a changed value.
 - **Not available** for `SdSearch` (lazy/server) items — the full dataset is unknown, so "all" is undefined; the input is silently ignored.
 - **Markup**: the row reuses the option's own `<mat-pseudo-checkbox>` + `.mdc-list-item__primary-text`, so it inherits the option sizing, spacing, and theme colour instead of re-styling a real `mat-checkbox`. The pseudo-checkbox is `aria-hidden`, so the row itself carries `role="checkbox"`, `aria-checked` (`mixed` when indeterminate), `tabindex="0"` and Enter/Space.

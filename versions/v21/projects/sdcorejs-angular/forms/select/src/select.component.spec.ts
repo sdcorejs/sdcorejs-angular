@@ -2426,4 +2426,61 @@ describe('SdSelect (select all)', () => {
     expect(row).not.toBeNull();
     expect(row!.getAttribute('data-autoid')).toBe('forms-select-demo-select-all');
   }));
+
+  // -------------------------------------------------------------------------
+  // AC-010 — hàng nằm trong header dính, có bộ đếm đã chọn/tổng
+  // -------------------------------------------------------------------------
+  function selectAllCount(): string | undefined {
+    return selectAllRow()?.querySelector('.sd-select-all-count')?.textContent?.trim();
+  }
+
+  it('AC-010: row lives in the sticky panel header even when there is no search box', fakeAsync(() => {
+    const { fixture, comp } = createHost();
+    tick(600);
+    fixture.detectChanges();
+    openPanel(fixture, comp);
+
+    const header = selectAllRow()!.closest('.c-filter-input-container');
+    expect(header).withContext('sticky header').not.toBeNull();
+    expect(header!.querySelector('sd-search-field')).withContext('4 items → no search box').toBeNull();
+  }));
+
+  it('AC-010: counter shows selected / total over the enabled items and follows the selection', fakeAsync(() => {
+    const { fixture, comp } = createHost(h => (h.model = [1]));
+    tick(600);
+    fixture.detectChanges();
+    openPanel(fixture, comp);
+
+    // Banana (id 2) bị disabled nên không tính vào tổng — cùng scope với ô tick.
+    expect(selectAllCount()).toBe('1/3');
+    selectAllRow()!.click();
+    tick();
+    fixture.detectChanges();
+    expect(selectAllCount()).toBe('3/3');
+  }));
+
+  it('AC-010: counter follows the search scope', fakeAsync(() => {
+    const { fixture, comp } = createHost(h => (h.model = [1]));
+    tick(600);
+    fixture.detectChanges();
+    openPanel(fixture, comp);
+
+    comp.inputControl.setValue('ber');
+    tick(600);
+    fixture.detectChanges();
+    expect(selectAllCount()).toBe('0/1');
+  }));
+
+  it('AC-010: counter is announced as the row description, not as part of its name', fakeAsync(() => {
+    const { fixture, comp } = createHost(h => (h.model = [1]));
+    tick(600);
+    fixture.detectChanges();
+    openPanel(fixture, comp);
+
+    const row = selectAllRow()!;
+    expect(row.querySelector('.sd-select-all-count')!.getAttribute('aria-hidden')).toBe('true');
+    const describedBy = row.getAttribute('aria-describedby');
+    expect(describedBy).withContext('aria-describedby').toBeTruthy();
+    expect(document.getElementById(describedBy!)?.textContent?.trim()).toBe('Đã chọn 1/3');
+  }));
 });

@@ -100,6 +100,7 @@ const SD_SELECT_VIRTUAL_PAGE = 10;
 /** Same window as Material's typeahead (`withTypeAhead()`). */
 const SD_SELECT_TYPEAHEAD_MS = 200;
 const SD_SELECT_VIRTUAL_NAV_KEYS = new Set(['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End']);
+let nextSelectAllCountId = 0;
 
 /**
  * why (D-026): the only code in sd-select that touches a Material internal for virtual scrolling —
@@ -556,19 +557,29 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
     () => this.showSelectAll() && this.multiple() && Array.isArray(this.actualItems()) && this.selectAllScope().length > 0
   );
 
-  /** Trạng thái checkbox "Tất cả", tính trên items ENABLED trong scope (item disabled bỏ qua). */
-  readonly selectAllState = computed<'checked' | 'indeterminate' | 'unchecked'>(() => {
+  /** Bộ đếm của hàng "Tất cả": số item trong scope đang được chọn / tổng scope (item disabled bỏ qua). */
+  readonly selectAllCount = computed<{ selected: number; total: number }>(() => {
     const scope = this.selectAllScope();
     const val = this.normalizedValue();
     const selected = new Set((Array.isArray(val) ? val : []).map(v => String(v)));
-    if (!scope.length || !selected.size) return 'unchecked';
     let count = 0;
-    for (const item of scope) {
-      if (selected.has(String(this.itemValue(item)))) count++;
+    if (selected.size) {
+      for (const item of scope) {
+        if (selected.has(String(this.itemValue(item)))) count++;
+      }
     }
-    if (count === 0) return 'unchecked';
-    return count === scope.length ? 'checked' : 'indeterminate';
+    return { selected: count, total: scope.length };
   });
+
+  /** Trạng thái checkbox "Tất cả", tính trên items ENABLED trong scope (item disabled bỏ qua). */
+  readonly selectAllState = computed<'checked' | 'indeterminate' | 'unchecked'>(() => {
+    const { selected, total } = this.selectAllCount();
+    if (!total || !selected) return 'unchecked';
+    return selected === total ? 'checked' : 'indeterminate';
+  });
+
+  /** id của mô tả bộ đếm, để hàng "Tất cả" trỏ aria-describedby tới. */
+  protected readonly selectAllCountId = `sd-select-all-count-${++nextSelectAllCountId}`;
 
   // ==========================================
   // 5. GETTER & HELPERS

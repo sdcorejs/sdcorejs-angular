@@ -2693,7 +2693,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "forms/select",
     sectionId: "example-chon-nhieu-voi-dong-tat-ca",
     title: "Chọn nhiều với dòng Tất cả",
-    description: "Row 'Tất cả' đầu panel — chỉ hiện khi multiple + items là mảng tĩnh. Tick chọn toàn bộ items enabled khớp search hiện tại (item disabled 'Pháp chế' không bị đụng); đang search thì tick CHỈ thêm items khớp filter, selection cũ giữ nguyên. Checkbox có 3 trạng thái checked / indeterminate / unchecked.",
+    description: "Row 'Tất cả' nằm trong header dính dưới ô tìm kiếm (cuộn vẫn thấy), cuối hàng có bộ đếm đã chọn/tổng — chỉ hiện khi multiple + items là mảng tĩnh. Tick chọn toàn bộ items enabled khớp search hiện tại (item disabled 'Pháp chế' không bị đụng); đang search thì tick CHỈ thêm items khớp filter, selection cũ giữ nguyên. Checkbox có 3 trạng thái checked / indeterminate / unchecked.",
   },
   {
     sourceKey: "forms/select/example-footer-action-khi-khong-co-ket-qua",

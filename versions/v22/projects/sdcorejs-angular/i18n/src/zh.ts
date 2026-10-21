@@ -282,6 +282,7 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   // ---- Forms: select ----
   'core.form.select.required': '请选择',
   'core.form.select.selectAll': '全部',
+  'core.form.select.selectAllCount': '已选择 {selected}/{total}',
   'core.form.select.selected-count': '已选择 {count} 项',
   'core.form.select.clear': '清除',
 

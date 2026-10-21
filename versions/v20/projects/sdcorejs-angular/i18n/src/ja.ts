@@ -283,6 +283,7 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   // ---- Forms: select ----
   'core.form.select.required': '選択してください',
   'core.form.select.selectAll': 'すべて',
+  'core.form.select.selectAllCount': '{total} 件中 {selected} 件を選択',
   'core.form.select.selected-count': '{count} 件選択',
   'core.form.select.clear': 'クリア',
 

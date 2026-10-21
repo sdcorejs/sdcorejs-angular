@@ -56,6 +56,22 @@ class FilterInputHost {
   readonly select = viewChild.required(SdSelect);
 }
 
+// Ô lọc + hàng "Tất cả" cùng nằm trong header dính (cùng lý do mở đồng bộ như FilterInputHost).
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  imports: [SdFormsModule, LayoutTestTheme],
+  template: `
+    <sd-layout-test-theme />
+    <div style="width: 280px">
+      <sd-select label="Nhiều" [items]="items" valueField="value" displayField="label" [model]="[0, 1, 2]" multiple showSelectAll />
+    </div>
+  `,
+})
+class SelectAllHeaderHost {
+  readonly items = Array.from({ length: 12 }, (_, i) => ({ value: i, label: `Mục ${i}` }));
+  readonly select = viewChild.required(SdSelect);
+}
+
 describe('Form field control tokens with the shipped theme', () => {
   let fixture: ComponentFixture<ControlTokensHost>;
   let fields: HTMLElement[];
@@ -237,12 +253,15 @@ describe('Form field control tokens with the shipped theme', () => {
       const panel = document.querySelector<HTMLElement>('.sd-select-panel.sd-multiple')!;
       const row = panel.querySelector<HTMLElement>('.sd-select-all-row')!;
       const option = panel.querySelector<HTMLElement>('mat-option')!;
-      expect(getComputedStyle(row).marginLeft).toBe('4px');
-      expect(getComputedStyle(row).marginRight).toBe('4px');
+      // The row sits in the sticky header now, whose padding differs from the list: compare boxes, not margins.
+      expect(row.getBoundingClientRect().left).toBeCloseTo(option.getBoundingClientRect().left, 0);
+      expect(row.getBoundingClientRect().right).toBeCloseTo(option.getBoundingClientRect().right, 0);
       const rowBox = row.querySelector('.mat-pseudo-checkbox')!.getBoundingClientRect();
       const optionBox = option.querySelector('.mat-pseudo-checkbox')!.getBoundingClientRect();
       expect(rowBox.left).toBeCloseTo(optionBox.left, 0);
       expect(row.getBoundingClientRect().height).toBe(36);
+      expect(getComputedStyle(row).borderTopLeftRadius).withContext('full radius like an option').toBe('6px');
+      expect(getComputedStyle(row).borderBottomLeftRadius).toBe('6px');
       fixture.componentInstance.all().selectRef()?.close();
     });
   });
@@ -316,5 +335,83 @@ describe('Select panel filter input with the shipped theme', () => {
     expect(header.getBoundingClientRect().top).toBeCloseTo(panelTop, 0);
     const probe = document.elementFromPoint(header.getBoundingClientRect().left + 20, panelTop + 1);
     expect(probe?.closest('mat-option')).withContext('element in the top strip of the scrolled panel').toBeNull();
+  });
+});
+
+describe('Select "select all" row in the sticky header with the shipped theme', () => {
+  let fixture: ComponentFixture<SelectAllHeaderHost>;
+
+  const resolve = (property: string, value: string): string => {
+    const probe = document.createElement('div');
+    probe.style.setProperty(property, value);
+    document.body.appendChild(probe);
+    const computed = getComputedStyle(probe).getPropertyValue(property);
+    probe.remove();
+    return computed;
+  };
+
+  /** Opens the panel synchronously and waits for the 12 options (whenStable hangs here, see FilterInputHost). */
+  const openPanel = async (): Promise<HTMLElement> => {
+    fixture.componentInstance.select().selectRef()?.open();
+    fixture.detectChanges();
+    for (let i = 0; i < 20 && document.querySelectorAll('.sd-select-panel mat-option').length < 12; i++) {
+      await new Promise(resolve => setTimeout(resolve, 25));
+      fixture.detectChanges();
+    }
+    return document.querySelector('.mat-mdc-select-panel.sd-select-panel') as HTMLElement;
+  };
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [SelectAllHeaderHost, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(SelectAllHeaderHost);
+    fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    fixture.componentInstance.select().selectRef()?.close();
+  });
+
+  it('puts the row in the sticky header under the search box, with a single divider below the header', async () => {
+    const panel = await openPanel();
+    const header = panel.querySelector('.c-filter-input-container') as HTMLElement;
+    const row = header.querySelector<HTMLElement>('.sd-select-all-row');
+    expect(row).withContext('select-all row inside the sticky header').not.toBeNull();
+    const search = header.querySelector('sd-search-field')!;
+    expect(row!.getBoundingClientRect().top)
+      .withContext('row below the search box')
+      .toBeGreaterThanOrEqual(search.getBoundingClientRect().bottom);
+    expect(getComputedStyle(row!).borderBottomColor).withContext('no second divider on the row').toBe('rgba(0, 0, 0, 0)');
+    expect(getComputedStyle(header).boxShadow).withContext('the header keeps its divider').not.toBe('none');
+  });
+
+  it('lines the row up with the options and keeps it visible while the list scrolls', async () => {
+    const panel = await openPanel();
+    const row = panel.querySelector<HTMLElement>('.sd-select-all-row')!;
+    const option = panel.querySelector<HTMLElement>('mat-option')!;
+    expect(row.getBoundingClientRect().left).toBeCloseTo(option.getBoundingClientRect().left, 0);
+    expect(row.getBoundingClientRect().right).toBeCloseTo(option.getBoundingClientRect().right, 0);
+    const rowCheck = row.querySelector('.mat-pseudo-checkbox')!.getBoundingClientRect();
+    expect(rowCheck.left).toBeCloseTo(option.querySelector('.mat-pseudo-checkbox')!.getBoundingClientRect().left, 0);
+    expect(row.getBoundingClientRect().height).toBe(36);
+
+    panel.scrollTop = panel.scrollHeight;
+    expect(panel.scrollTop).withContext('the 12-item panel scrolls').toBeGreaterThan(0);
+    const box = row.getBoundingClientRect();
+    const hit = document.elementFromPoint(box.left + 40, box.top + box.height / 2);
+    expect(hit?.closest('.sd-select-all-row')).withContext('row still on top after scrolling').toBe(row);
+  });
+
+  it('shows the selected / total counter at the end of the row in tabular figures', async () => {
+    const panel = await openPanel();
+    const row = panel.querySelector<HTMLElement>('.sd-select-all-row')!;
+    const counter = row.querySelector<HTMLElement>('.sd-select-all-count')!;
+    expect(counter).withContext('counter').not.toBeNull();
+    expect(counter.textContent!.trim()).toBe('3/12');
+    const style = getComputedStyle(counter);
+    expect(style.fontVariantNumeric).toBe('tabular-nums');
+    expect(style.fontSize).toBe('12px');
+    expect(style.color).toBe(resolve('color', 'var(--sd-text-secondary)'));
+    // Right-aligned: it ends where the row's 12px inner padding starts.
+    expect(counter.getBoundingClientRect().right).toBeCloseTo(row.getBoundingClientRect().right - 12, 0);
   });
 });
