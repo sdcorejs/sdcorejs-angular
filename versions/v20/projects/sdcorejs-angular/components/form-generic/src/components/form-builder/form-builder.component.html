@@ -21,56 +21,25 @@
     </span>
   }
 
-  <!-- why: phím mũi tên nổi bọt từ nút radio đang focus (mẫu radiogroup của APG); bản thân nhóm không phải điểm focus. -->
-  <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -->
-  <div
-    class="fb-seg"
-    role="radiogroup"
-    [attr.aria-label]="'core.component.form-builder.mode' | sdTranslate"
-    (keydown)="onSegmentKeydown($event, modes, _mode, applyMode)">
-    @for (mode of modes; track mode) {
-      <button
-        type="button"
-        role="radio"
-        class="fb-seg__btn"
-        [attr.data-value]="mode"
-        [class.is-active]="_mode === mode"
-        [attr.aria-checked]="_mode === mode"
-        [attr.tabindex]="_mode === mode ? 0 : -1"
-        [title]="'core.component.form-builder.mode.' + mode | sdTranslate"
-        (click)="setMode(mode)">
-        <sd-icon [name]="modeIcons[mode]" size="18px"></sd-icon>
-        <span class="fb-seg__label">{{ 'core.component.form-builder.mode.' + mode | sdTranslate }}</span>
-      </button>
-    }
-  </div>
+  <!-- Chế độ và khung nhìn: sd-segmented size sm (thiết kế đợt 1, quy ước "chọn chế độ/kiểu xem"). -->
+  <sd-segmented
+    data-builder-toolbar="mode"
+    size="sm"
+    [items]="modeItems()"
+    [model]="_mode"
+    [ariaLabel]="'core.component.form-builder.mode' | sdTranslate"
+    (sdChange)="onModeChange($event)" />
 
   <!-- why: Desktop/Tablet/Mobile chọn mức bố cục đang thiết kế và mức Xem trước ép cho renderer —
        ẩn ở Schema. -->
   @if (_mode !== 'schema') {
-    @let _viewport = store.viewport();
-    <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -->
-    <div
-      class="fb-seg"
-      role="radiogroup"
-      [attr.aria-label]="'core.component.form-builder.viewport' | sdTranslate"
-      (keydown)="onSegmentKeydown($event, viewports, _viewport, applyViewport)">
-      @for (viewport of viewports; track viewport) {
-        <button
-          type="button"
-          role="radio"
-          class="fb-seg__btn"
-          [attr.data-value]="viewport"
-          [class.is-active]="_viewport === viewport"
-          [attr.aria-checked]="_viewport === viewport"
-          [attr.tabindex]="_viewport === viewport ? 0 : -1"
-          [title]="'core.component.form-builder.viewport.' + viewport | sdTranslate"
-          (click)="setViewport(viewport)">
-          <sd-icon [name]="viewportIcons[viewport]" size="18px"></sd-icon>
-          <span class="fb-seg__label">{{ 'core.component.form-builder.viewport.' + viewport | sdTranslate }}</span>
-        </button>
-      }
-    </div>
+    <sd-segmented
+      data-builder-toolbar="viewport"
+      size="sm"
+      [items]="viewportItems"
+      [model]="store.viewport()"
+      [ariaLabel]="'core.component.form-builder.viewport' | sdTranslate"
+      (sdChange)="onViewportChange($event)" />
   }
 
   <span class="fb-toolbar__spacer"></span>
@@ -148,97 +117,117 @@
     @switch (_mode) {
       @case ('design') {
         <div class="fb-page-editor">
+          <!-- why: "Một trang" (no navigation) renders only the first page; later pages stay in the schema but are
+               never shown, so they are marked and described instead of looking like reachable pages. The note
+               sits outside the tab row so it never takes a flex slot from the strip. -->
+          @let _singleHides = store.singlePageHidesPages();
+          @if (_singleHides) {
+            <span class="sd-visually-hidden" [id]="leftPanelId + '-page-hidden-note'">{{
+              'core.component.form-builder.page.hidden-in-single' | sdTranslate
+            }}</span>
+          }
           <div class="fb-pages" role="group" [attr.aria-label]="'core.component.form-generic.pages' | sdTranslate">
-            <!-- why: "Một trang" (no navigation) renders only the first page; later pages stay in the schema but are
-                 never shown, so they are marked and described instead of looking like reachable pages. -->
-            @let _singleHides = store.singlePageHidesPages();
-            @if (_singleHides) {
-              <span class="sd-visually-hidden" [id]="leftPanelId + '-page-hidden-note'">{{
-                'core.component.form-builder.page.hidden-in-single' | sdTranslate
-              }}</span>
-            }
+            <!-- Tab trang kiểu gạch chân (thiết kế đợt 1). Thao tác trang nằm trong menu ⋯ của tab đang chọn. -->
             <div class="fb-pages__strip">
               @for (page of store.pages(); track page.id; let index = $index) {
                 @let _hiddenAtRuntime = _singleHides && index > 0;
-                <button
-                  type="button"
-                  class="fb-page-tab"
-                  [attr.data-builder-page]="page.id"
-                  [attr.aria-pressed]="store.activePage().id === page.id"
-                  [attr.aria-describedby]="_hiddenAtRuntime ? leftPanelId + '-page-hidden-note' : null"
-                  [class.is-active]="store.activePage().id === page.id"
-                  [class.is-hidden-at-runtime]="_hiddenAtRuntime"
-                  [class.has-rules]="!!page.rules?.visible || !!page.rules?.hidden"
-                  (focus)="revealPageHeader($event)"
-                  (click)="store.inspectPage(page.id); revealPageHeader($event)">
-                  @if (page.icon) {
-                    <sd-icon [name]="page.icon" size="16px"></sd-icon>
+                @let _active = store.activePage().id === page.id;
+                <span class="fb-page-tab-wrap">
+                  <button
+                    type="button"
+                    class="fb-page-tab"
+                    [attr.data-builder-page]="page.id"
+                    [attr.aria-pressed]="_active"
+                    [attr.aria-describedby]="_hiddenAtRuntime ? leftPanelId + '-page-hidden-note' : null"
+                    [class.is-active]="_active"
+                    [class.is-hidden-at-runtime]="_hiddenAtRuntime"
+                    (focus)="revealPageHeader($event)"
+                    (click)="store.inspectPage(page.id); revealPageHeader($event)">
+                    @if (page.icon) {
+                      <sd-icon [name]="page.icon" size="16px"></sd-icon>
+                    }
+                    {{ page.label || ('core.component.form-generic.page' | sdTranslate: { number: index + 1 }) }}
+                    @if (page.rules?.visible || page.rules?.hidden) {
+                      <sd-icon
+                        name="visibility"
+                        size="16px"
+                        [title]="'core.component.form-builder.page.rules-hint' | sdTranslate"></sd-icon>
+                    }
+                    @if (_hiddenAtRuntime) {
+                      <sd-icon
+                        name="visibility_off"
+                        size="16px"
+                        data-page-hidden
+                        [title]="'core.component.form-builder.page.hidden-in-single' | sdTranslate"></sd-icon>
+                    }
+                  </button>
+                  @if (_active) {
+                    <!-- why: native 24px button + mat-menu — sd-button has no 24px size, and sd-button-item's host is
+                         display:none, so it cannot carry data-page-action onto the clickable row. -->
+                    <button
+                      type="button"
+                      class="fb-page-menu-trigger"
+                      data-page-menu-trigger
+                      [matMenuTriggerFor]="pageMenu"
+                      [title]="'core.component.form-builder.page.actions' | sdTranslate"
+                      [attr.aria-label]="'core.component.form-builder.page.actions' | sdTranslate">
+                      <sd-icon name="more_horiz" size="18px"></sd-icon>
+                    </button>
                   }
-                  {{ page.label || ('core.component.form-generic.page' | sdTranslate: { number: index + 1 }) }}
-                  @if (page.rules?.visible || page.rules?.hidden) {
-                    <sd-icon name="visibility" size="16px" [title]="'core.component.form-builder.page.rules-hint' | sdTranslate"></sd-icon>
-                  }
-                  @if (_hiddenAtRuntime) {
-                    <sd-icon
-                      name="visibility_off"
-                      size="16px"
-                      data-page-hidden
-                      [title]="'core.component.form-builder.page.hidden-in-single' | sdTranslate"></sd-icon>
-                  }
-                </button>
+                </span>
               }
-            </div>
-            <div class="fb-pages__actions">
-              <button
-                type="button"
-                data-page-action="add"
-                [title]="'core.component.form-builder.page.add' | sdTranslate"
-                [attr.aria-label]="'core.component.form-builder.page.add' | sdTranslate"
-                (click)="store.addPage()">
+              <button type="button" class="fb-page-add" data-page-action="add" (click)="store.addPage()">
                 <sd-icon name="add" size="18px"></sd-icon>
-              </button>
-              <button
-                type="button"
-                data-page-action="duplicate"
-                [disabled]="!store.canDuplicatePage()"
-                [title]="
-                  (store.canDuplicatePage() ? 'core.component.form-builder.duplicate' : 'core.component.form-builder.page.unsupported')
-                    | sdTranslate
-                "
-                [attr.aria-label]="'core.component.form-builder.duplicate' | sdTranslate"
-                [attr.aria-describedby]="!store.canDuplicatePage() ? leftPanelId + '-page-duplicate-reason' : null"
-                (click)="store.duplicatePage()">
-                <sd-icon name="content_copy" size="18px"></sd-icon>
-              </button>
-              <button
-                type="button"
-                data-page-action="up"
-                [disabled]="pageIndex() <= 0"
-                [title]="'core.component.form-builder.move-up' | sdTranslate"
-                [attr.aria-label]="'core.component.form-builder.move-up' | sdTranslate"
-                (click)="store.movePage(store.activePage().id, -1)">
-                <sd-icon name="arrow_back" size="18px"></sd-icon>
-              </button>
-              <button
-                type="button"
-                data-page-action="down"
-                [disabled]="pageIndex() >= store.pages().length - 1"
-                [title]="'core.component.form-builder.move-down' | sdTranslate"
-                [attr.aria-label]="'core.component.form-builder.move-down' | sdTranslate"
-                (click)="store.movePage(store.activePage().id, 1)">
-                <sd-icon name="arrow_forward" size="18px"></sd-icon>
-              </button>
-              <button
-                type="button"
-                data-page-action="delete"
-                [disabled]="store.pages().length <= 1"
-                [title]="'core.component.form-builder.delete' | sdTranslate"
-                [attr.aria-label]="'core.component.form-builder.delete' | sdTranslate"
-                (click)="removePage()">
-                <sd-icon name="delete" size="18px"></sd-icon>
+                <span>{{ 'core.component.form-builder.page.add' | sdTranslate }}</span>
               </button>
             </div>
           </div>
+          <mat-menu #pageMenu="matMenu" class="fb-page-menu">
+            <button
+              mat-menu-item
+              type="button"
+              data-page-action="duplicate"
+              [disabled]="!store.canDuplicatePage()"
+              [title]="
+                (store.canDuplicatePage() ? 'core.component.form-builder.duplicate' : 'core.component.form-builder.page.unsupported')
+                  | sdTranslate
+              "
+              [attr.aria-describedby]="!store.canDuplicatePage() ? leftPanelId + '-page-duplicate-reason' : null"
+              (click)="store.duplicatePage()">
+              <sd-icon name="content_copy" size="18px"></sd-icon>
+              <span>{{ 'core.component.form-builder.duplicate' | sdTranslate }}</span>
+            </button>
+            <button
+              mat-menu-item
+              type="button"
+              data-page-action="up"
+              [disabled]="pageIndex() <= 0"
+              (click)="store.movePage(store.activePage().id, -1)">
+              <sd-icon name="arrow_back" size="18px"></sd-icon>
+              <span>{{ 'core.component.form-builder.page.move-left' | sdTranslate }}</span>
+            </button>
+            <button
+              mat-menu-item
+              type="button"
+              data-page-action="down"
+              [disabled]="pageIndex() >= store.pages().length - 1"
+              (click)="store.movePage(store.activePage().id, 1)">
+              <sd-icon name="arrow_forward" size="18px"></sd-icon>
+              <span>{{ 'core.component.form-builder.page.move-right' | sdTranslate }}</span>
+            </button>
+            <mat-divider></mat-divider>
+            <!-- Xoá bị khoá khi chỉ còn một trang (giữ điều kiện cũ). -->
+            <button
+              mat-menu-item
+              type="button"
+              class="fb-page-menu__danger"
+              data-page-action="delete"
+              [disabled]="store.pages().length <= 1"
+              (click)="removePage()">
+              <sd-icon name="delete" size="18px"></sd-icon>
+              <span>{{ 'core.component.form-builder.delete' | sdTranslate }}</span>
+            </button>
+          </mat-menu>
           @if (!store.canDuplicatePage()) {
             <p class="fb-page-note" [id]="leftPanelId + '-page-duplicate-reason'">
               {{ 'core.component.form-builder.page.unsupported' | sdTranslate }}

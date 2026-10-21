@@ -70,62 +70,120 @@
   font-size: 12px;
   color: var(--sd-text-secondary);
 }
+// Dải trang: tab gạch chân như `.fb-tabs__tab` của palette (thiết kế đợt 1). Tab đang chọn có nút ⋯
+// mở menu thao tác trang; nút "Thêm trang" đứng cuối dải.
 .fb-pages {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  padding: 6px;
+  padding: 0 8px;
   border-bottom: 1px solid var(--sd-border);
 }
 .fb-pages__strip {
   display: flex;
-  flex: 1 1 180px;
-  padding: 3px;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 4px;
   min-width: 0;
   overflow-x: auto;
-  gap: 4px;
 }
-.fb-pages__actions {
-  display: flex;
+.fb-page-tab-wrap {
+  display: inline-flex;
   flex: 0 0 auto;
+  align-items: center;
+  gap: 2px;
 }
-.fb-page-tab,
-.fb-pages__actions button {
+.fb-page-tab {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 4px;
-  flex: 0 0 auto;
-  min-height: 36px;
-  min-width: 36px;
-  padding: 6px 8px;
-  border: 1px solid transparent;
-  border-radius: var(--sd-radius-4, 4px);
-  background: var(--sd-surface);
-  color: var(--sd-text);
+  padding: 12px 8px 10px;
+  border: 0;
+  background: transparent;
+  color: var(--sd-text-secondary);
   font: inherit;
+  font-size: var(--sd-font-size-14, 14px);
+  font-weight: var(--sd-font-weight-medium, 500);
   cursor: pointer;
   white-space: nowrap;
-  &:focus-visible {
-    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
-    outline-offset: 1px;
+
+  &:hover {
+    color: var(--sd-text);
   }
-  &:disabled {
-    opacity: 0.5;
-    cursor: default;
-  }
+
   &.is-active {
-    border-color: var(--sd-primary);
     color: var(--sd-primary);
-    background: var(--sd-primary-light);
+
+    // why: dải cuộn ngang (overflow-x) nên vạch nằm trong tab, ngay trên đường viền của dải.
+    &::after {
+      content: '';
+      position: absolute;
+      left: 4px;
+      right: 4px;
+      bottom: 0;
+      height: 2px;
+      border-radius: 2px;
+      background: var(--sd-primary);
+    }
   }
-  &.has-rules {
-    border-style: dashed;
-  }
+
   // why: a page that single-page navigation never shows reads as muted, so it does not look reachable.
   &.is-hidden-at-runtime:not(.is-active) {
     color: var(--sd-text-secondary);
   }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: -2px;
+  }
+}
+.fb-page-menu-trigger,
+.fb-page-add {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: -2px;
+  }
+}
+.fb-page-menu-trigger {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--sd-radius-4, 4px);
+  color: var(--sd-text-secondary);
+
+  &:hover,
+  &[aria-expanded='true'] {
+    background: var(--sd-surface-muted);
+    color: var(--sd-text);
+  }
+}
+.fb-page-add {
+  gap: 4px;
+  height: var(--sd-control-height-sm, 32px);
+  margin-left: 4px;
+  padding: 0 8px;
+  border-radius: var(--sd-radius-6, 6px);
+  color: var(--sd-primary);
+  font-size: var(--sd-font-size-14, 14px);
+  font-weight: var(--sd-font-weight-medium, 500);
+  white-space: nowrap;
+
+  &:hover {
+    background: var(--sd-primary-light);
+  }
+}
+.fb-page-menu__danger {
+  --mat-menu-item-label-text-color: var(--sd-error);
+  --mat-menu-item-icon-color: var(--sd-error);
+  color: var(--sd-error);
 }
 
 .fb-toolbar__spacer {
@@ -136,44 +194,6 @@
   display: inline-flex;
   align-items: center;
   gap: 2px;
-}
-
-.fb-seg {
-  display: inline-flex;
-  padding: 2px;
-  border: 1px solid var(--sd-border);
-  border-radius: var(--sd-radius-8, 8px);
-  background: var(--sd-surface-muted);
-}
-
-.fb-seg__btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0 12px;
-  border: 0;
-  border-radius: var(--sd-radius-6, 6px);
-  background: transparent;
-  color: var(--sd-text-secondary);
-  font-size: var(--sd-font-size-13, 13px);
-  font-weight: var(--sd-font-weight-medium, 500);
-  cursor: pointer;
-  white-space: nowrap;
-
-  &:hover {
-    color: var(--sd-text);
-  }
-
-  &.is-active {
-    background: var(--sd-primary);
-    color: var(--sd-primary-contrast);
-  }
-
-  &:focus-visible {
-    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
-    outline-offset: 1px;
-  }
 }
 
 // Nút mở panel nổi (builder hẹp): nút icon như sd-button text, có trạng thái mở (aria-expanded).
@@ -203,22 +223,6 @@
   &:focus-visible {
     outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
     outline-offset: 1px;
-  }
-}
-
-// Container hẹp: chỉ còn icon (tên vẫn ở title/aria qua nhãn ẩn).
-@container sd-form-builder (max-width: 720px) {
-  .fb-seg__label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-  }
-
-  .fb-seg__btn {
-    padding: 0 10px;
   }
 }
 

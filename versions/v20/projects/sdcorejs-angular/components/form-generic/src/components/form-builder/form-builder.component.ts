@@ -17,7 +17,10 @@ import {
 import { SdButton, SdButtonItem, SdButtonItemDivider } from '@sdcorejs/angular/components/button';
 import { SdCodeEditor } from '@sdcorejs/angular/components/code-editor';
 import { SdModal } from '@sdcorejs/angular/components/modal';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatMenuModule } from '@angular/material/menu';
 import { SdInput } from '@sdcorejs/angular/forms/input';
+import { SdSegmentedComponent, SdSegmentedItem, SdSegmentedModel } from '@sdcorejs/angular/forms/segmented';
 import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { SdConfirmService } from '@sdcorejs/angular/services/confirm';
@@ -57,6 +60,8 @@ interface VariableDraft {
 
 /** Bề rộng (px) của builder dưới ngưỡng này thì palette/inspector thành panel nổi bật/tắt được. */
 const COMPACT_WIDTH = 900;
+/** Dưới bề rộng này các lựa chọn chế độ chỉ còn icon (tên vẫn là accessible name). */
+const NARROW_WIDTH = 720;
 
 let nextBuilderId = 0;
 
@@ -106,7 +111,10 @@ const isEditableTarget = (target: EventTarget | null): boolean => {
     SdIcon,
     SdInput,
     SdModal,
+    SdSegmentedComponent,
     SdTranslatePipe,
+    MatMenuModule,
+    MatDividerModule,
   ],
 })
 export class SdFormBuilder {
@@ -167,6 +175,8 @@ export class SdFormBuilder {
 
   /** Container hẹp → palette/inspector thành panel nổi. */
   readonly compact = signal(false);
+  /** Builder < 720px: lựa chọn chế độ trên toolbar chỉ còn icon. Đo cùng ResizeObserver với `compact`. */
+  readonly narrow = signal(false);
   readonly leftOpen = signal(false);
   readonly rightOpen = signal(false);
   readonly #uid = `sd-form-builder-${++nextBuilderId}`;
@@ -179,8 +189,25 @@ export class SdFormBuilder {
 
   readonly modes: readonly BuilderMode[] = ['design', 'preview', 'schema'];
   readonly viewports: readonly BuilderViewport[] = ['desktop', 'tablet', 'mobile'];
-  readonly modeIcons: Record<BuilderMode, string> = { design: 'edit', preview: 'visibility', schema: 'data_object' };
+  readonly modeIcons: Record<BuilderMode, string> = { design: 'design_services', preview: 'visibility', schema: 'data_object' };
   readonly viewportIcons: Record<BuilderViewport, string> = { desktop: 'desktop_windows', tablet: 'tablet_mac', mobile: 'smartphone' };
+  /** Chế độ là sd-segmented size sm (thiết kế đợt 1): nhãn i18n có sẵn, builder hẹp thì chỉ còn icon. */
+  protected readonly modeItems = computed<readonly SdSegmentedItem<BuilderMode>[]>(() => {
+    const iconOnly = this.narrow();
+    return this.modes.map(mode => ({
+      value: mode,
+      label: this.store.t(`core.component.form-builder.mode.${mode}`),
+      prefixIcon: this.modeIcons[mode],
+      iconOnly,
+    }));
+  });
+  /** Khung nhìn luôn chỉ có icon; nhãn giữ làm accessible name. */
+  protected readonly viewportItems: readonly SdSegmentedItem<BuilderViewport>[] = this.viewports.map(viewport => ({
+    value: viewport,
+    label: this.store.t(`core.component.form-builder.viewport.${viewport}`),
+    prefixIcon: this.viewportIcons[viewport],
+    iconOnly: true,
+  }));
 
   readonly isDesign = computed(() => this.store.mode() === 'design');
   readonly schemaText = computed(() => (this.store.mode() === 'schema' ? JSON.stringify(documentToSchema(this.store.doc()), null, 2) : ''));
@@ -249,6 +276,8 @@ export class SdFormBuilder {
         const width = entries[0]?.contentRect.width ?? this.#host.nativeElement.clientWidth;
         const compact = width > 0 && width < COMPACT_WIDTH;
         if (compact !== this.compact()) this.compact.set(compact);
+        const narrow = width > 0 && width < NARROW_WIDTH;
+        if (narrow !== this.narrow()) this.narrow.set(narrow);
       });
       observer.observe(this.#host.nativeElement);
       destroyRef.onDestroy(() => observer.disconnect());
@@ -263,10 +292,11 @@ export class SdFormBuilder {
   /** Keep native focus visible without moving the page or any surrounding scroll container. */
   protected revealPageHeader(event: Event): void {
     const header = event.currentTarget as HTMLElement | null;
-    const strip = header?.parentElement;
-    if (!header || !strip?.classList.contains('fb-pages__strip') || !this.#host.nativeElement.contains(strip)) return;
+    // The tab sits in a wrapper with its ⋯ page menu trigger, so the strip is an ancestor, not the parent.
+    const strip = header?.closest<HTMLElement>('.fb-pages__strip');
+    if (!header || !strip || !this.#host.nativeElement.contains(strip)) return;
     const reveal = () => {
-      if (!header.isConnected || header.parentElement !== strip || header.ownerDocument.activeElement !== header) return;
+      if (!header.isConnected || header.closest('.fb-pages__strip') !== strip || header.ownerDocument.activeElement !== header) return;
       const viewport = strip.getBoundingClientRect();
       const left = viewport.left + strip.clientLeft;
       const right = left + strip.clientWidth;
@@ -307,27 +337,14 @@ export class SdFormBuilder {
     this.store.viewport.set(viewport);
   }
 
-  /** Phím của radiogroup (APG): ←/↑ lùi, →/↓ tiến (vòng), Home/End về đầu/cuối. */
-  onSegmentKeydown(event: KeyboardEvent, values: readonly string[], current: string, apply: (value: string) => void): void {
-    const index = values.indexOf(current);
-    const step: Record<string, number> = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: values.length - 1, ArrowUp: values.length - 1 };
-    const next =
-      event.key === 'Home'
-        ? values[0]
-        : event.key === 'End'
-          ? values[values.length - 1]
-          : event.key in step
-            ? values[(index + step[event.key]) % values.length]
-            : undefined;
-    if (next === undefined) return;
-    event.preventDefault();
-    apply(next);
-    const group = event.currentTarget as HTMLElement | null;
-    queueMicrotask(() => group?.querySelector<HTMLElement>(`[data-value="${next}"]`)?.focus());
+  // sd-segmented phát `SdSegmentedModel<T>` (có thể là mảng/null ở chế độ multiple); toolbar chỉ dùng single.
+  protected onModeChange(value: SdSegmentedModel<BuilderMode>): void {
+    if (typeof value === 'string') this.setMode(value);
   }
 
-  applyMode = (value: string) => this.setMode(value as BuilderMode);
-  applyViewport = (value: string) => this.setViewport(value as BuilderViewport);
+  protected onViewportChange(value: SdSegmentedModel<BuilderViewport>): void {
+    if (typeof value === 'string') this.setViewport(value);
+  }
 
   undo(): void {
     this.store.undo();
