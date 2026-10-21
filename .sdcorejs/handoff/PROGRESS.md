@@ -35,11 +35,10 @@ Cập nhật: 2026-10-21.
 
 ## Đang chờ quyết định (cập nhật 2026-10-21)
 
-Máy khác làm tiếp: hỏi user các mục dưới trước khi đổi code liên quan. Cột filter một operator (quyết định 16) và ba
-điểm thiết kế bước 10 (quyết định 17) đã được trả lời; các mục dưới vẫn chưa.
+Máy khác làm tiếp: hỏi user mục dưới trước khi đổi code liên quan. Cột filter một operator (quyết định 16), ba điểm
+thiết kế bước 10 (quyết định 17) và kanban `appearance` (quyết định 18) đã được trả lời; mục dưới vẫn chưa.
 
-1. **Kanban `appearance`** (bước 8): README nói không thêm option `appearance`; giữ nguyên, ghi để user xác nhận trong PR.
-2. **Báo backend:** NULL / NOT_NULL trên cột control mặc định giờ gửi `{ field, operator }` không `data` (CHANGELOG ghi
+1. **Báo backend:** NULL / NOT_NULL trên cột control mặc định giờ gửi `{ field, operator }` không `data` (CHANGELOG ghi
    "Server payload change").
 
 **Còn phải làm (chưa ai làm):** kiểm tra showcase cuối theo PROMPT — light / dark, preset graphite, forced-colors,
@@ -81,6 +80,8 @@ build lib v19 pass. Ảnh trước/sau: [`screenshots/`](screenshots/).
     - (2) tên trên control: `operators` (`readonly Operator[]`, mặc định `[]`) và `[(operator)]`;
     - (3) `@sdcorejs/utils` đã có `BETWEEN` / `NULL` / `NOT_NULL` nhưng không làm ô "từ – đến"; filter `split-number` /
       `split-date` giữ hai ô như cũ.
+18. (Sau bước 8) Kanban giữ **không** có option `appearance`, đúng README đợt 1: giao diện làn trung tính, chấm màu, số
+    đếm dạng chữ và thẻ không shadow là giao diện duy nhất. Không cần nêu thành câu hỏi mở trong PR nữa.
 
 ### Control dạng ô (README đợt 2, mục D) — đã duyệt
 
@@ -173,7 +174,7 @@ Lệch thông số và quyết định nhỏ (cần duyệt lại nếu không �
   `:has([aria-expanded=true])`; transition tắt khi reduced-motion. Làn đích: `:has(> .sd-kanban__cards.cdk-drop-list-dragging)`.
   Placeholder: `.sd-kanban__card.cdk-drag-placeholder` khe nét đứt 2px, con `visibility: hidden`. forced-colors thêm viền
   `CanvasText` cho làn.
-- **Câu hỏi mở cho PR:** không thêm option `appearance` (giữ nguyên theo README).
+- **Option `appearance`:** không thêm, theo README — user đã xác nhận (quyết định 18), không còn là câu hỏi mở cho PR.
 
 ## Bước 9 — đã làm
 
