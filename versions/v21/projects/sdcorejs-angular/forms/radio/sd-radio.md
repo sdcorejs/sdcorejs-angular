@@ -72,7 +72,7 @@ Radio-button group — user picks exactly ONE option from a small, fixed list. I
 ## Visual cues (helps agent map screenshots → component)
 
 - A horizontal (`display="row"`) or vertical (`display="column"`) group of bullet circles, each with the option label to its right
-- Selected option: filled inner dot in `primary` color; unselected: empty circle outline
+- Selected option: filled inner dot in `primary` color; unselected: empty circle outline in `--sd-border-strong`, `--sd-text-secondary` on hover and focus (the same border as an unchecked `sd-checkbox`)
 - `row` mode adds horizontal spacing (`mr-16`) between options; `column` mode stacks them flush (`m-0`)
 - Required marker shows as a red `*` next to the label (rendered by `<sd-label>`)
 - Inline error message appears below the group in red when `formControl.touched && formControl.errors?.required` (or `inlineError`)

@@ -220,6 +220,15 @@ test('Material tier: focus and selection use the primary, an error reddens only 
     assert.equal(tokens['--mat-pseudo-checkbox-full-selected-icon-color'], 'var(--sd-primary)');
     assert.equal(tokens['--mat-datepicker-calendar-date-selected-state-background-color'], 'var(--sd-primary)');
     assert.equal(tokens['--mat-datepicker-calendar-container-shape'], 'var(--sd-panel-radius)');
+    // Unselected checkbox / radio / pseudo-checkbox: border-strong at rest, text-secondary on hover and focus.
+    for (const prefix of ['--mdc-checkbox-', '--mat-checkbox-', '--mdc-radio-', '--mat-radio-']) {
+      assert.equal(tokens[`${prefix}unselected-icon-color`], 'var(--sd-border-strong)', `${mode} ${prefix}unselected-icon-color`);
+      assert.equal(tokens[`${prefix}unselected-hover-icon-color`], 'var(--sd-text-secondary)', `${mode} ${prefix}unselected-hover`);
+      assert.equal(tokens[`${prefix}unselected-focus-icon-color`], 'var(--sd-text-secondary)', `${mode} ${prefix}unselected-focus`);
+    }
+    for (const prefix of ['--mat-full-pseudo-checkbox-', '--mat-pseudo-checkbox-full-']) {
+      assert.equal(tokens[`${prefix}unselected-icon-color`], 'var(--sd-border-strong)', `${mode} ${prefix}unselected-icon-color`);
+    }
   }
 });
 

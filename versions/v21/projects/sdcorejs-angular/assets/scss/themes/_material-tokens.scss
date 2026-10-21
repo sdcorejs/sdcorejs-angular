@@ -32,6 +32,9 @@ $-text-field-prefixes: (
   ),
 );
 
+// Checkbox and radio: Material 19 `--mdc-{checkbox,radio}-*`, Material 20+ `--mat-{checkbox,radio}-*`.
+$-check-prefixes: ('--mdc-checkbox-', '--mat-checkbox-', '--mdc-radio-', '--mat-radio-');
+
 $-pseudo-checkbox-prefixes: (
   full: (
     '--mat-full-pseudo-checkbox-',
@@ -79,9 +82,18 @@ $-pseudo-checkbox-prefixes: (
 
   --mat-option-selected-state-label-text-color: var(--sd-primary);
   --mat-option-selected-state-layer-color: var(--sd-primary-light);
+  // why: viền chưa chọn mặc định của Material (on-surface-variant) đậm gần bằng chữ, nên cột chọn của bảng
+  // nặng nề. --sd-border-strong vẫn đạt 3:1 trên surface; hover và focus đậm lên --sd-text-secondary.
+  // Khai báo ở tầng theme để cả mat-checkbox dùng trực tiếp (cột chọn của sd-table) cũng nhận.
+  @each $prefix in $-check-prefixes {
+    #{$prefix}unselected-icon-color: var(--sd-border-strong);
+    #{$prefix}unselected-hover-icon-color: var(--sd-text-secondary);
+    #{$prefix}unselected-focus-icon-color: var(--sd-text-secondary);
+  }
   @each $variant, $prefixes in $-pseudo-checkbox-prefixes {
     @each $prefix in $prefixes {
       @if $variant == full {
+        #{$prefix}unselected-icon-color: var(--sd-border-strong);
         #{$prefix}selected-icon-color: var(--sd-primary);
         #{$prefix}selected-checkmark-color: var(--sd-primary-contrast);
       } @else {

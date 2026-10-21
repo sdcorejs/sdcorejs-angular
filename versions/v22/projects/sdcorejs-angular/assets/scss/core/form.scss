@@ -377,6 +377,15 @@ mat-checkbox {
   }
 }
 
+// Bo góc checkbox (thiết kế đợt 2 · E): Material cố định 2px và không có token. sd-checkbox bo theo cỡ
+// (3/4/5px); mat-checkbox dùng trực tiếp (cột chọn của sd-table…) và pseudo-checkbox của select nhiều lựa
+// chọn (cả hàng "Tất cả", vốn không phải mat-option) lấy cỡ md. Hai class để thắng `.mat-pseudo-checkbox`
+// 2px của Material. Màu viền chưa chọn nằm ở themes/_material-tokens.scss.
+.mat-mdc-checkbox .mdc-checkbox__background,
+.mat-pseudo-checkbox.mat-pseudo-checkbox-full {
+  border-radius: var(--sd-radius-4, 4px);
+}
+
 // why: selector radio của <sd-table> (.c-selection, single mode) hiện một dấu chấm tối thừa
 // nằm cạnh vòng radio. Nguồn gốc THẬT là state-layer padding của Material trên `.mdc-radio`
 // (`padding: calc((var(--mdc-radio-state-layer-size) - 20px) / 2)`): trong cột selector, .c-selection
