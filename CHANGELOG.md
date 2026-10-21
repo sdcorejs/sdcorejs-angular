@@ -118,6 +118,10 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 - Hand-written implementations of `SdStorage<T>` or `SdStorageWithDefault<T>` (for example test doubles) must add `refresh()`. Code that only calls the storage API is unaffected.
 - Custom typed i18n catalogs must add the new `core.module.layout.sidebar.v4-search-placeholder`, `.result-count`, `.no-match`, `.search-hint`, `.coming-soon`, `.badge-pending`, `.expand`, `.collapse`, `.open-menu` and `core.module.layout.context.*` keys present in the built-in catalogs.
 
+### Removed
+
+- Form builder: the seven unused component tokens `--sd-form-builder-md-secondary`, `-md-secondary-container`, `-md-on-secondary-container`, `-md-warning`, `-md-warning-container`, `-md-success` and `-md-success-container`, the `--md-sys-color-*` aliases that `sd-form-builder` declared on its host for its configuration widgets (every widget reads the `--sd-*` tokens; the last reader, the number field of the renderer, used it only as a fallback), and the dead `.msi` icon-font rules. Code that set or read these variables inside the builder should use the `--sd-*` tokens.
+
 ### Deprecated
 
 - `SdModalResizable` / `sd-modal-resizable` / `components/modal-resizable` remain aliases of the same Window component; no existing API is removed. Legacy `maximize`/`toggleMaximum`, writable signals, projection slots, CSS hooks and selector autoId prefix remain supported. Prefer `restore`/`toggleFullscreen` and readonly `isMinimized`/`isFullscreen`. See `components/window/sd-window.md` for migration and Core API mapping.

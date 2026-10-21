@@ -3,24 +3,6 @@
 // tối thiểu 520px), không fixed theo viewport, không ghi đè style toàn cục. Chỉ dùng token Core.
 // ─────────────────────────────────────────────────────────────────────────────
 :host {
-  // Tên biến M3 mà các widget cấu hình tái sử dụng (attribute-expression, editor tham số, dialog
-  // xác thực…) đang đọc — map về token Core, không thêm màu mới.
-  --md-sys-color-primary: var(--sd-primary);
-  --md-sys-color-on-primary: var(--sd-primary-contrast);
-  --md-sys-color-primary-container: color-mix(in srgb, var(--sd-primary) 12%, var(--sd-surface));
-  --md-sys-color-surface: var(--sd-surface);
-  --md-sys-color-surface-container-lowest: var(--sd-surface);
-  --md-sys-color-surface-container-low: var(--sd-surface-muted);
-  --md-sys-color-surface-container: var(--sd-surface-muted);
-  --md-sys-color-surface-container-high: var(--sd-surface-muted);
-  --md-sys-color-surface-container-highest: var(--sd-surface-muted);
-  --md-sys-color-on-surface: var(--sd-text);
-  --md-sys-color-on-surface-variant: var(--sd-text-secondary);
-  --md-sys-color-outline: var(--sd-border-strong);
-  --md-sys-color-outline-variant: var(--sd-border);
-  --md-sys-color-error: var(--sd-error);
-  --md-sys-color-error-container: var(--sd-error-light);
-  --md-sys-color-success: var(--sd-success);
   --r-xs: var(--sd-radius-4, 4px);
   --r-sm: var(--sd-radius-8, 8px);
 
@@ -352,20 +334,6 @@
 
 // ── Style dùng chung cho các widget cấu hình tái sử dụng (component con, nên cần ::ng-deep) ──
 :host ::ng-deep {
-  .msi {
-    font-family: 'Material Icons Outlined';
-    font-weight: normal;
-    font-style: normal;
-    line-height: 1;
-    letter-spacing: normal;
-    text-transform: none;
-    display: inline-block;
-    white-space: nowrap;
-    direction: ltr;
-    font-feature-settings: 'liga';
-    -webkit-font-smoothing: antialiased;
-  }
-
   .mono {
     font-family: 'Roboto Mono', ui-monospace, monospace;
   }
@@ -394,10 +362,6 @@
     &:focus-visible {
       outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
     }
-
-    .msi {
-      font-size: var(--sd-font-size-18, 18px);
-    }
   }
 
   details.fb-section {
@@ -424,11 +388,6 @@
     font-size: var(--sd-font-size-13, 13px);
     font-weight: var(--sd-font-weight-semibold, 600);
     user-select: none;
-
-    .msi {
-      font-size: var(--sd-font-size-16, 16px);
-      color: var(--sd-text-secondary);
-    }
 
     .fb-section__title {
       flex: 1;
@@ -483,10 +442,6 @@
     border-radius: var(--sd-radius-6, 6px);
     background: color-mix(in srgb, var(--sd-primary) 10%, var(--sd-surface));
     color: var(--sd-primary);
-
-    .msi {
-      font-size: var(--sd-font-size-16, 16px);
-    }
   }
 
   .fb-column-row__meta {

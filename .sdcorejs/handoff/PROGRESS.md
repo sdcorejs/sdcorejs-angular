@@ -25,8 +25,9 @@ Cập nhật: 2026-10-21.
 | 3 | Đợt 2 · E — checkbox và radio | `8cc08f67` |
 | 4 | Đợt 1 — sd-segmented | `77d7f449` |
 | 5 | Đợt 1 · B — primitive tìm kiếm `ɵ` | `6e6a4259` |
-| 6 | Đợt 1 · C — token table | commit `feat(table): derive the table colours from the palette` |
-| 7–10 | Form-builder, kanban, indicator sd-button, operator trong control | chưa làm |
+| 6 | Đợt 1 · C — token table | `42246293` |
+| 7 | Đợt 1 — sd-form-builder | `f0576fa6` + commit dọn `refactor(form-generic): drop the unused M3 aliases, md tokens and .msi rules` |
+| 8–10 | Kanban, indicator sd-button, operator trong control | đang làm (user duyệt làm hết rồi review một lượt, 2026-10-21) |
 
 Kết quả kiểm tra ở commit bước 6 (Node 22.22.3): Karma v19 7571/7571 (coverage 89.85 / 79.07 / 90.31 / 92.29), lint,
 `test:theme` 49/49, `check:scss-hex` 0 finding, `check:i18n-parity` (1341 key × 5) và `check:i18n` pass, `check:sync` pass,
@@ -114,6 +115,24 @@ Lệch thông số và quyết định nhỏ (cần duyệt lại nếu không �
 - **Docs:** `THEME.md` mục "Table tokens" + dòng Component tokens, `sd-table.md` (Visual cues), CHANGELOG.
 - Ảnh: light gần như không đổi (header nhạt hơn chút, hàng chọn tint primary); dark: hàng chọn bớt xanh đậm, tay nắm
   reorder giờ thấy được (trước là đen 38% trên nền tối). Preset graphite chưa xem bằng mắt — chỉ có test tương phản.
+
+## Bước 7 — đã làm
+
+- **Toolbar:** chế độ và khung nhìn là `sd-segmented size="sm"` (`data-builder-toolbar="mode|viewport"`), item từ `modeItems()` /
+  `viewportItems`; khung nhìn luôn `iconOnly`; builder < 720px (signal `narrow` từ ResizeObserver sẵn có) thì chế độ cũng
+  `iconOnly`. Icon thiết kế `design_services`. Gỡ `.fb-seg`, `onSegmentKeydown`, `applyMode`, `applyViewport`.
+- **Tab trang:** gạch chân như `.fb-tabs__tab`; tab có rule chỉ thêm icon `visibility` (bỏ viền nét đứt); ẩn ở runtime giữ
+  `visibility_off` + text-secondary. Tab đang chọn có nút ⋯ 24px (`data-page-menu-trigger`) mở `mat-menu.fb-page-menu`:
+  Nhân bản / Chuyển sang trái / Chuyển sang phải / divider / Xóa (màu error). `data-page-action` giữ nguyên giá trị
+  (`add`, `duplicate`, `up`, `down`, `delete`). Nút "Thêm trang" là nút text 32px cuối dải.
+- **i18n mới:** `page.actions`, `page.move-left`, `page.move-right` (5 locale). Nhân bản / Xóa dùng lại key cũ (menu
+  hiện "Xóa", không phải "Xoá trang").
+- **Lệch:** sd-segmented ngang chỉ nhận ← → Home End, nên ↑ ↓ không còn đổi chế độ (spec cập nhật). Ghi chú ẩn
+  (`sd-visually-hidden`) chuyển ra ngoài hàng tab: trong Karma không có class global nên nó chiếm chỗ của dải tab.
+- **Dọn (commit riêng):** `.msi` là CSS chết (không template nào dùng) → xoá; 7 token `form-builder-md-*` không còn chỗ
+  dùng → xoá; alias `--md-sys-color-*` chỉ còn một chỗ đọc làm fallback (number field của renderer) → đổi chỗ đó
+  sang `--sd-text-secondary` và gỡ alias. Ghi ở CHANGELOG `### Removed`. Gate phần dọn: theme 49/49, scss-hex 0,
+  form-generic 455/455; full Karma chạy cùng bước 8.
 
 ## Ghi chú kỹ thuật
 
