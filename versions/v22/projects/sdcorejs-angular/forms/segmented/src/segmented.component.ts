@@ -220,9 +220,10 @@ export class SdSegmentedComponent<T extends SdSegmentedValue = SdSegmentedValue>
         // from the stylesheet's tokens/fallbacks, or the drawn outline if larger. The drawn value alone is not
         // reliable: no outline is drawn when `:focus-visible` heuristics miss after script focus, and a consumer
         // transition (e.g. reduced-motion `* { transition-duration: 0.01ms }`) still reports its start
-        // (3px + 0 offset) here, a frame before the final 2px + 2px ring.
+        // (3px + 0 offset) here, a frame before the final 2px + 1px ring. The offset is the control's own
+        // `--sd-segmented-ring-offset`, the variable the stylesheet uses, not the global focus-ring offset.
         const settled =
-          px(buttonStyle.getPropertyValue('--sd-focus-ring-width'), 2) + px(buttonStyle.getPropertyValue('--sd-focus-ring-offset'), 2);
+          px(buttonStyle.getPropertyValue('--sd-focus-ring-width'), 2) + px(buttonStyle.getPropertyValue('--sd-segmented-ring-offset'), 1);
         const drawn = buttonStyle.outlineStyle === 'none' ? 0 : px(buttonStyle.outlineWidth, 0) + px(buttonStyle.outlineOffset, 0);
         const ring = Math.max(0, settled, drawn);
         const box = track.getBoundingClientRect();

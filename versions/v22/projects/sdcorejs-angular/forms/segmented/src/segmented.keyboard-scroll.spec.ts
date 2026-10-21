@@ -7,8 +7,10 @@ import { SdSegmentedItem, SdSegmentedModel, SdSegmentedOption } from './segmente
 // Real-browser layout regression for keyboard navigation inside a scrolling segmented-control track.
 // The host supplies the focus-ring tokens: library Karma loads no theme, and the outline shorthand's
 // `var(--sd-focus-ring-color)` (no fallback) would otherwise make the whole outline invalid (width 0).
-/** `--sd-focus-ring-width` + `--sd-focus-ring-offset` below; used when Chrome does not report `:focus-visible`. */
-const TOKEN_RING = 4;
+// The host also sets the global `--sd-focus-ring-offset: 2px`, which the control must ignore: its ring is
+// offset by its own `--sd-segmented-ring-offset` (1px), so it fits the track's 3px block padding.
+/** `--sd-focus-ring-width` (2px) + `--sd-segmented-ring-offset` (1px); used when Chrome does not report `:focus-visible`. */
+const TOKEN_RING = 3;
 /** Tolerance for "aligned to the edge" (sub-pixel label widths). */
 const EDGE = 1;
 /** Tolerance for "entirely inside" the clipping box. */
@@ -364,7 +366,7 @@ describe('SdSegmentedComponent keyboard scrolling', () => {
     /**
      * Representative reduced-motion CSS (`* { transition-duration: 0.01ms !important }`, all properties) plus the
      * 3px/0 outline Chrome computes before focus. The focus ring and selection then still report their start
-     * values when the component measures, one frame before the settled 2px + 2px ring.
+     * values when the component measures, one frame before the settled 2px + 1px ring.
      */
     async function applyReducedMotion(): Promise<void> {
       style = document.createElement('style');
@@ -387,7 +389,7 @@ describe('SdSegmentedComponent keyboard scrolling', () => {
       await settle();
       expect(document.activeElement).withContext(key).toBe(to);
     }
-    /** The final ring, not a transition frame: settled tokens 2px + 2px, or the token fallback the helper uses. */
+    /** The final ring, not a transition frame: settled tokens 2px + 1px, or the token fallback the helper uses. */
     function expectSettledRing(button: HTMLButtonElement, context: string): void {
       const rect = button.getBoundingClientRect();
       expect(rect.left - ring(button).left)

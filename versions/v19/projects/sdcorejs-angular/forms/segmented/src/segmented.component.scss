@@ -6,7 +6,17 @@
   --sd-segmented-foreground: var(--sd-primary-dark);
   --sd-segmented-background: var(--sd-primary-light);
   --sd-segmented-contrast: var(--sd-primary-contrast);
+  // why: the 2px ring plus this 1px offset is exactly the track's 3px block padding, so the scrolling track
+  // never clips it. `#reveal()` reads the same variable. Local to the control: the global
+  // `--sd-focus-ring-offset` (2px) would not fit.
+  --sd-segmented-ring-offset: 1px;
   font-family: inherit;
+}
+// The label sits 4px above the track, like `.sd-label-top > sd-label` of the form controls; the track
+// itself has no margin, so the control is exactly as tall as a button of the same size.
+sd-label {
+  display: block;
+  margin-bottom: 4px;
 }
 @each $color in primary, secondary, info, success, warning, error {
   :host([data-color='#{$color}']) {
@@ -23,15 +33,15 @@
   box-sizing: border-box;
   max-width: 100%;
   overflow-x: auto;
-  // why: block 4px holds the 2px outline + 2px offset ring. Inline gets 1px more because at the native
-  // scroll limit (notably RTL) Chrome rounds the scroll extent to whole pixels while choice edges stay
-  // fractional, which clipped the end choice's ring by a sub-pixel amount with exactly 4px.
-  padding: 4px 5px;
+  // why: block 3px holds the 2px outline + 1px offset ring, and 1px border + 3px padding on each side make
+  // the track 8px taller than its choices: 32 / 40 / 48px, the control height scale. Inline gets 1px more
+  // because at the native scroll limit (notably RTL) Chrome rounds the scroll extent to whole pixels while
+  // choice edges stay fractional, which clipped the end choice's ring by a sub-pixel amount with exactly 3px.
+  padding: 3px 4px;
   // why: transparent keeps the track edge visible in forced colours without a visual border in light/fill.
   border: 1px solid transparent;
-  border-radius: var(--sd-radius-8, 8px);
+  border-radius: var(--sd-control-radius, 8px);
   background: var(--sd-surface-muted);
-  margin-top: 4px;
 }
 :host([data-type='outline']) .sd-segmented {
   border-color: var(--sd-border);
@@ -54,10 +64,12 @@
   gap: 6px;
   flex: 0 0 auto;
   box-sizing: border-box;
-  min-height: 36px;
-  padding: 6px 14px;
+  // Fixed height (control height minus the track's border + padding); flex centres the label.
+  height: calc(var(--sd-control-height-md, 40px) - 8px);
+  padding: 0 14px;
   border: 1px solid transparent;
-  border-radius: var(--sd-radius-4, 4px);
+  // Concentric with the track: its corner minus the 3px inset.
+  border-radius: calc(var(--sd-control-radius, 8px) - 3px);
   background: transparent;
   color: var(--sd-text);
   font: inherit;
@@ -73,9 +85,9 @@
   &:focus-visible {
     // why: an outward ring sits on the neutral (light/fill) or transparent (outline) track, a pair the theme
     // test keeps >= 3:1. An inset ring disappeared inside a `fill` selection of the same hue. Width 2px +
-    // offset 2px fits the track's 4px block / 5px inline padding and 4px gap, so the scrolling track does not clip it.
+    // offset 1px fits the track's 3px block / 4px inline padding and 4px gap, so the scrolling track does not clip it.
     outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
-    outline-offset: var(--sd-focus-ring-offset, 2px);
+    outline-offset: var(--sd-segmented-ring-offset, 1px);
   }
   &:disabled {
     opacity: 0.5;
@@ -106,12 +118,12 @@
   box-shadow: none;
 }
 :host([data-size='sm']) .sd-segmented__item {
-  min-height: 28px;
-  padding: 4px 10px;
+  height: calc(var(--sd-control-height-sm, 32px) - 8px);
+  padding: 0 10px;
 }
 :host([data-size='lg']) .sd-segmented__item {
-  min-height: 44px;
-  padding: 8px 18px;
+  height: calc(var(--sd-control-height-lg, 48px) - 8px);
+  padding: 0 18px;
   font-size: var(--sd-font-size-16, 16px);
 }
 .sd-segmented__state,
@@ -125,10 +137,11 @@
 .sd-segmented__error {
   color: var(--sd-error);
 }
+// Touch: at least the coarse control height (44px track, 36px choices); lg stays 48px.
 @media (pointer: coarse) {
   .sd-segmented__item,
   :host([data-size='sm']) .sd-segmented__item {
-    min-height: 40px;
+    min-height: calc(var(--sd-control-height-coarse, 44px) - 8px);
   }
 }
 @media (forced-colors: active) {
