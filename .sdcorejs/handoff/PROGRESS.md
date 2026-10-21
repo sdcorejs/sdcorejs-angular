@@ -31,6 +31,32 @@ Cập nhật: 2026-10-21.
 | 9 | Đợt 2 · F — indicator sd-button | `365168c2` |
 | 2b | Góp ý review panel select/autocomplete (2026-10-21) | commit `fix(forms): panel spacing, white surface and autocomplete highlight from review` |
 | 10 | Đợt 2 · G — operator trong control | commit `feat(forms): show the filter operator as a chip inside the controls` |
+| 10b | NULL / NOT_NULL khoá + xoá giá trị (user duyệt 2026-10-21) | commit `feat(forms): lock and clear the field on the NULL and NOT_NULL operators` |
+
+## Đang chờ quyết định (cập nhật 2026-10-21)
+
+Máy khác làm tiếp: hỏi user các mục dưới trước khi đổi code liên quan. Chưa mục nào được trả lời.
+
+1. **Cột filter bảng chỉ có một operator** (`filter: { operator: { enable: true, list: ['EQUAL'] } }`).
+   - README đợt 2 muốn: control có đúng một operator thì không hiện gì và tự đặt operator đó.
+   - Vướng: "tự đặt" = control phát `operatorChange` ngay lúc trang mở → bảng gọi callback `filter.operatorChange` của
+     ứng dụng và commit filter dù user chưa làm gì; PROMPT lại yêu cầu giữ nguyên thời điểm emit.
+   - **Đang làm (a):** riêng trường hợp này giữ icon `sd-operator` rời cạnh ô như trước (column-filter
+     `operatorInControl` yêu cầu ≥ 2 operator). Hành vi không đổi, chỉ khác giao diện với cột có chip.
+   - **Phương án (b):** theo README — truyền cả danh sách một operator xuống control (bỏ điều kiện `> 1` trong
+     `operatorInControl`), chấp nhận thêm một `operatorChange` lúc khởi tạo; spec cần đổi:
+     `column-filter.component.spec.ts` › "keeps the separate sd-operator for a single configured operator…".
+2. **Ba điểm thiết kế của bước 10** (mục "Bước 10 — đã làm" bên dưới). PROMPT bắt trình rồi dừng chờ duyệt trước khi
+   code; vì user bảo làm hết rồi review một lượt nên đã làm luôn. Cần user xác nhận đồng ý (hoặc nói điểm muốn đổi):
+   - (1) chip nội bộ `ɵSdOperatorChip` + `ɵsdOperatorResolver` dùng chung với `sd-operator`, API `sd-operator` không đổi;
+   - (2) tên trên control: `operators` (`readonly Operator[]`, mặc định `[]`) và `[(operator)]`;
+   - (3) utils đã có `BETWEEN` / `NULL` / `NOT_NULL` → không làm ô "từ – đến"; split filter giữ hai ô.
+3. **Kanban `appearance`** (bước 8): README nói không thêm option `appearance`; giữ nguyên, ghi để user xác nhận trong PR.
+4. **Báo backend:** NULL / NOT_NULL trên cột control mặc định giờ gửi `{ field, operator }` không `data` (CHANGELOG ghi
+   "Server payload change").
+
+**Còn phải làm (chưa ai làm):** kiểm tra showcase cuối theo PROMPT — light / dark, preset graphite, forced-colors,
+sm / md, `pointer: coarse` — trên các trang PROMPT liệt kê; chưa mở PR (user chỉ yêu cầu push, không merge).
 
 Kết quả kiểm tra ở commit sửa panel (Node 22.22.3): Karma v19 7595/7595 (coverage 89.89 / 79.16 / 90.36 / 92.32), lint,
 `test:theme` 51/51, `check:scss-hex` 0 finding, `check:i18n-parity` (1341 key × 5) và `check:i18n` pass, `check:sync` pass,
