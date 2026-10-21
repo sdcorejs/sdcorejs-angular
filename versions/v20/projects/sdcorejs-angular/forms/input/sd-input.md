@@ -275,7 +275,8 @@ For filter forms, the field can carry its own operator as a prefix chip instead 
 ```
 
 - The chip is a real `<button type="button">` in the `matPrefix` slot. It shows the operator icon and an `expand_more` arrow; the translated label is in its tooltip, its `aria-label` ("Operator: …") and the menu.
-- While the chip is shown the floating label always floats.
+- While the chip is shown the floating label always floats and the label is not repeated as the placeholder.
+- `NULL` / `NOT_NULL` need no value: picking one in the chip clears the value and disables the entry until another operator is picked; the chip stays usable and keeps the focus.
 - Keyboard: Tab reaches the chip before the field. Enter, Space or Alt+↓ opens the menu. Picking a row moves focus to the text input; Escape closes the menu and returns focus to the chip.
 - The menu is the shared `.c-op-menu` panel of `<sd-operator>`: icon, label, operator code and a tick on the current row.
 - Tone: muted without a value, `--sd-primary-light` / `--sd-primary-dark` once the field has a value, solid `--sd-primary` while the menu is open. The arrow hides when the field is narrower than 120px.

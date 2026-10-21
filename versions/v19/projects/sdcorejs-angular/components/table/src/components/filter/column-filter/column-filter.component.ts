@@ -23,9 +23,8 @@ import { OPERATORS } from '@sdcorejs/utils/constants';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { Operator } from '@sdcorejs/utils/models';
 import { SdTableColumn } from '../../../models/table-column.model';
+import { isDefaultControlFilter } from '../../../services/table-filter/table-filter-operator.util';
 
-/** Kiểu cột có control mặc định nhận chip operator. */
-const CONTROL_OPERATOR_TYPES = new Set(['string', 'number', 'boolean', 'values', 'lazy-values', 'date', 'datetime', 'time']);
 const NO_OPERATORS: readonly Operator[] = [];
 
 @Component({
@@ -101,10 +100,7 @@ export class ColumnFilterComponent {
   // operatorChange lúc khởi tạo, mà hợp đồng của column-filter giữ nguyên thời điểm emit.
   operatorInControl = computed(() => {
     const col = this.column();
-    if (!col || this.templateRef() || this.operatorValues().length < 2) return false;
-    if (col.type === 'number' && col.filter?.type === 'split-number') return false;
-    if ((col.type === 'date' || col.type === 'datetime' || col.type === 'time') && col.filter?.type === 'split-date') return false;
-    return CONTROL_OPERATOR_TYPES.has(col.type);
+    return !!col && this.operatorValues().length > 1 && isDefaultControlFilter(col);
   });
 
   // Operator truyền xuống control mặc định; mảng rỗng cố định khi operator nằm ngoài để input không đổi mỗi lượt CD.

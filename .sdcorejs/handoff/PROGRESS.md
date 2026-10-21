@@ -200,8 +200,7 @@ ghi ở đây để review cùng commit, và bước 10 nằm gọn trong một 
    nhận được mảng hằng; vẫn nhận `Operator[]`.
 3. **Operator khoảng / trống.** `@sdcorejs/utils` **có** `BETWEEN` (OperatorHasData) và `NULL` / `NOT_NULL`
    (OperatorNoData), nên nhánh "nếu không có" của README không áp dụng: không làm ô "từ – đến", `split-number` /
-   `split-date` giữ hai ô và `sd-operator` rời. Chọn `NULL` / `NOT_NULL` trong chip không khoá / xoá giá trị (README không
-   nói) — **câu hỏi mở**.
+   `split-date` giữ hai ô và `sd-operator` rời. **User duyệt 2026-10-21: chọn `NULL` / `NOT_NULL` thì khoá và xoá giá trị** — xem "Sau review" dưới.
 
 **Đã làm:**
 
@@ -263,3 +262,18 @@ Chụp trong Browser pane hay timeout khi cửa sổ bị ẩn, nên dùng Playw
    showcase luôn < 900px nên palette là panel nổi: `shots-step5.mjs` bấm `.fb-panel-toggle` trước khi chụp.
 4. `npm --prefix showcase run link:library`, chạy lại server, chụp với nhãn `after`.
 5. `node .sdcorejs/handoff/tools/compose.mjs <outDir> <file.png> "<tiêu đề>"` ghép thành một ảnh so sánh.
+
+## Bước 10 — sau review (2026-10-21)
+
+- **NULL / NOT_NULL khoá + xoá (user duyệt):** chọn trong chip thì control xoá giá trị ngay trong handler chọn (không
+  trong effect, tránh đổi two-way của cha giữa lượt CD) và khoá ô bằng `disabled` của connector / effect sẵn có
+  (`disabled() || operatorLocked()`); chip vẫn bấm được (`formControl.disabled && !operatorLocked()`) và giữ focus. Đổi sang
+  operator khác thì ô mở khoá, focus về ô sau lượt render (`afterNextRender`).
+- **Bảng:** helper `table-filter-operator.util.ts` (`isDefaultControlFilter`, `isNoDataColumnOperator`) dùng chung cho
+  column-filter, `SdConvertToPagingReq` và lọc local. Cột control mặc định với NULL / NOT_NULL gửi `{ field, operator }`
+  không `data` (kể cả ô trống) — **đổi payload server**, ghi CHANGELOG; local: NULL = `null` / `undefined`.
+  `onOperatorChange` lọc lại khi vào hoặc rời NULL / NOT_NULL (so với operator đã commit trong `filterRegister`).
+  `filterDef` / split giữ cách cũ.
+- Spec RED đã xác nhận cho control (1 spec) và bảng (4 spec). Demo: cột "Họ và tên" có thêm NULL / NOT_NULL.
+- Kiểm tra: table + forms + operator 2504/2504; full Karma 7622/7624 (2 spec `SdImageEditor export` flaky canvas, chạy riêng
+  114/114), coverage 89.86 / 79.16 / 90.35 / 92.29; lint file đổi, `check:scss-hex` 0, `check:sync` pass.

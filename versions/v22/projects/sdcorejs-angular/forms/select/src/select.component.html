@@ -127,9 +127,9 @@
             [(operator)]="operator"
             [size]="size()"
             [hasValue]="operatorHasValue()"
-            [disabled]="formControl.disabled"
+            [disabled]="formControl.disabled && !operatorLocked()"
             [autoId]="autoId() ? autoId() + '-operator' : undefined"
-            (chosen)="focusAfterOperator()" />
+            (chosen)="onOperatorChosen()" />
         }
         @if (_appearance && _label && !_labelTop) {
           <mat-label class="sd-form-field-label">
@@ -318,9 +318,9 @@
             [(operator)]="operator"
             [size]="size()"
             [hasValue]="operatorHasValue()"
-            [disabled]="formControl.disabled"
+            [disabled]="formControl.disabled && !operatorLocked()"
             [autoId]="autoId() ? autoId() + '-operator' : undefined"
-            (chosen)="focusAfterOperator()" />
+            (chosen)="onOperatorChosen()" />
         }
         @if (_appearance && _label && !_labelTop) {
           <mat-label class="sd-form-field-label">
@@ -525,9 +525,9 @@
         [(operator)]="operator"
         [size]="size()"
         [hasValue]="operatorHasValue()"
-        [disabled]="formControl.disabled"
+        [disabled]="formControl.disabled && !operatorLocked()"
         [autoId]="autoId() ? autoId() + '-operator' : undefined"
-        (chosen)="focusAfterOperator()" />
+        (chosen)="onOperatorChosen()" />
     }
     @if (_appearance && _label && !_labelTop) {
       <mat-label class="sd-form-field-label">

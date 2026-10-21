@@ -20,7 +20,8 @@ import { SdFormsModule } from './forms.module';
         valueField="value"
         displayField="label"
         [operators]="listOps"
-        [(operator)]="listOp" />
+        [(operator)]="listOp"
+        [(model)]="status" />
       <sd-date data-case="date" label="Ngày" [operators]="numberOps" [(operator)]="dateOp" />
       <sd-date-range data-case="range" label="Khoảng" [operators]="numberOps" [(operator)]="rangeOp" />
       <sd-input data-case="single" label="Một" [operators]="singleOps" [(operator)]="singleOp" />
@@ -29,9 +30,9 @@ import { SdFormsModule } from './forms.module';
   `,
 })
 class OperatorHost {
-  readonly textOps: Operator[] = ['CONTAIN', 'EQUAL', 'START_WITH'];
+  readonly textOps: Operator[] = ['CONTAIN', 'EQUAL', 'START_WITH', 'NULL', 'NOT_NULL'];
   readonly numberOps: Operator[] = ['EQUAL', 'GREATER_THAN', 'LESS_THAN'];
-  readonly listOps: Operator[] = ['IN', 'NOT_IN'];
+  readonly listOps: Operator[] = ['IN', 'NOT_IN', 'NOT_NULL'];
   readonly singleOps: Operator[] = ['CONTAIN'];
   readonly statuses = [
     { value: 'open', label: 'Mở' },
@@ -45,6 +46,7 @@ class OperatorHost {
   readonly singleOp = signal<Operator | undefined>(undefined);
   readonly text = signal<string | null>(null);
   readonly price = signal<number | null>(null);
+  readonly status = signal<string | null>('open');
 }
 
 describe('Operator chip inside the form controls', () => {
@@ -118,8 +120,44 @@ describe('Operator chip inside the form controls', () => {
     const event = new KeyboardEvent('keydown', { key: 'ArrowDown', altKey: true, bubbles: true, cancelable: true });
     chip('select')!.dispatchEvent(event);
     await settle();
-    expect(rows().length).toBe(2);
+    expect(rows().length).toBe(3);
     expect(overlay.querySelector('.sd-select-panel')).withContext('the select stays closed').toBeNull();
+  });
+
+  it('NULL clears the value and locks the entry, keeps the chip usable, and another operator unlocks it', async () => {
+    host.text.set('abc');
+    await settle();
+    chip('input')!.click();
+    await settle();
+    rows()[3].click();
+    await settle();
+    expect(host.textOp()).toBe('NULL');
+    expect(host.text() ?? null)
+      .withContext('value cleared')
+      .toBeNull();
+    const input = entry('input') as HTMLInputElement;
+    expect(input.disabled).withContext('entry locked').toBeTrue();
+    expect(chip('input')!.disabled).withContext('chip usable').toBeFalse();
+    expect(document.activeElement).withContext('focus stays on the chip').toBe(chip('input'));
+
+    chip('input')!.click();
+    await settle();
+    rows()[0].click();
+    await settle();
+    expect(host.textOp()).toBe('CONTAIN');
+    expect(input.disabled).withContext('entry unlocked').toBeFalse();
+    expect(document.activeElement).withContext('focus moves to the entry').toBe(input);
+  });
+
+  it('NOT_NULL clears and locks a select', async () => {
+    chip('select')!.click();
+    await settle();
+    rows()[2].click();
+    await settle();
+    expect(host.listOp()).toBe('NOT_NULL');
+    expect(host.status()).withContext('value cleared').toBeNull();
+    expect(entry('select').getAttribute('aria-disabled')).withContext('select locked').toBe('true');
+    expect(chip('select')!.disabled).toBeFalse();
   });
 
   it('keeps the operator when the clear button empties the value', async () => {

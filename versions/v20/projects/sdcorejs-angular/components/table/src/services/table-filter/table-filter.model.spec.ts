@@ -176,6 +176,40 @@ describe('table-filter.model › SdConvertToPagingReq', () => {
   describe('column filters', () => {
     const col = (f: Partial<SdTableColumn>): SdTableColumn => ({ ...(f as any) });
 
+    // Wave 2 · G: NULL / NOT_NULL lock the default control and leave it empty, so the filter carries no data.
+    it('NULL / NOT_NULL on a default control → { field, operator } without data, with or without a value', () => {
+      const r = SdConvertToPagingReq(
+        makeReq({ rawColumnFilter: { note: 'stale' } as any, columnOperator: { name: 'NULL', note: 'NOT_NULL' } as any }),
+        {
+          columns: [col({ field: 'name', type: 'string' }), col({ field: 'note', type: 'string' })],
+        }
+      );
+      expect(byField(r, 'name')).toEqual([{ field: 'name', operator: 'NULL' }]);
+      expect(byField(r, 'note')).toEqual([{ field: 'note', operator: 'NOT_NULL' }]);
+    });
+
+    it('NULL from the default operator also applies; filterDef and split filters keep needing a value', () => {
+      const r = SdConvertToPagingReq(makeReq({ rawColumnFilter: { amount: { from: 1, to: 2 } } as any }), {
+        columns: [
+          col({ field: 'name', type: 'string', filter: { operator: { enable: true, default: 'NULL' } } } as any),
+          col({ field: 'custom', type: 'string', filter: { filterDef: {} as any } } as any),
+          col({ field: 'amount', type: 'number', filter: { type: 'split-number' } } as any),
+        ],
+      });
+      const withOperators = SdConvertToPagingReq(
+        makeReq({ rawColumnFilter: { amount: { from: 1, to: 2 } } as any, columnOperator: { custom: 'NULL', amount: 'NULL' } as any }),
+        {
+          columns: [
+            col({ field: 'custom', type: 'string', filter: { filterDef: {} as any } } as any),
+            col({ field: 'amount', type: 'number', filter: { type: 'split-number' } } as any),
+          ],
+        }
+      );
+      expect(byField(r, 'name')).toEqual([{ field: 'name', operator: 'NULL' }]);
+      expect(byField(withOperators, 'custom')).toEqual([]);
+      expect(byField(withOperators, 'amount')).toEqual([{ field: 'amount', operator: 'BETWEEN', data: { from: 1, to: 2 } }]);
+    });
+
     it('string → CONTAIN by default, columnOperator overrides', () => {
       const r1 = SdConvertToPagingReq(makeReq({ rawColumnFilter: { name: 'abc' } as any }), {
         columns: [col({ field: 'name', type: 'string' })],

@@ -7,6 +7,7 @@ import { SdTableOptionTree } from '../../models/table-option-tree.model';
 import { SdTableFilterRequest, SdTableOptionFilter } from '../table-filter/table-filter.model';
 import { matchesQuickSearch, quickSearchConditions } from '../table-filter/table-quick-search.util';
 import { resolveFieldValue } from '../field-value.util';
+import { isNoDataColumnOperator } from '../table-filter/table-filter-operator.util';
 import { subtreeMatches } from '../tree/tree.util';
 import { compareLocalValues } from './table-local-sort.util';
 
@@ -37,8 +38,14 @@ const resolveItemData = <T>(item: LocalFilterItem<T>): T => (isTableItem(item) ?
 
 const hasValue = (value: unknown): boolean => value !== undefined && value !== null && value !== '';
 
-export const hasActiveColumnFilter = <T>(rawColumnFilter: Partial<Record<string, any>> = {}, columns: SdTableColumn<T>[] = []): boolean =>
+export const hasActiveColumnFilter = <T>(
+  rawColumnFilter: Partial<Record<string, any>> = {},
+  columns: SdTableColumn<T>[] = [],
+  columnOperator: Partial<Record<string, Operator>> = {}
+): boolean =>
   columns.some(col => {
+    // why: NULL / NOT_NULL lọc mà không cần giá trị (ô bị khoá, để trống).
+    if (isNoDataColumnOperator(col, resolveOperator(col, columnOperator))) return true;
     const v = rawColumnFilter[col.field];
     if (Array.isArray(v)) return v.length > 0;
     // why: biên 0 của split-number là giá trị, không phải đầu trống.
@@ -126,6 +133,12 @@ export const matchesColumnFilter = <T>(
   for (const column of columns) {
     const { field, type } = column;
     const rawColVal = resolveFieldValue(data, field);
+    const operator = resolveOperator(column, columnOperator);
+    // why: cùng nghĩa với Operator của @sdcorejs/utils — NULL là null / undefined, NOT_NULL là có giá trị khác null.
+    if (isNoDataColumnOperator(column, operator)) {
+      if ((rawColVal === null || rawColVal === undefined) !== (operator === 'NULL')) return false;
+      continue;
+    }
     // why: cột number đi riêng vì bước chuẩn hoá text bên dưới coi giá trị 0 (filter hoặc dòng) là rỗng.
     if (type === 'number') {
       if (!matchesNumberFilter(rawColVal, rawColumnFilter[field], resolveOperator(column, columnOperator))) {
@@ -211,7 +224,8 @@ export const filterLocalItems = <T, TItem extends LocalFilterItem<T>>(
   const treeSearch =
     option.type === 'local' &&
     treeOpt?.loadType === 'static' &&
-    (hasActiveColumnFilter(rawColumnFilter, columns) || quickSearchConditions(quickSearch, filterInfo.quickSearch).length > 0);
+    (hasActiveColumnFilter(rawColumnFilter, columns, filterInfo.columnOperator) ||
+      quickSearchConditions(quickSearch, filterInfo.quickSearch).length > 0);
   const treeSearchPredicate = treeSearch ? matchesData : undefined;
 
   const items = treeSearch

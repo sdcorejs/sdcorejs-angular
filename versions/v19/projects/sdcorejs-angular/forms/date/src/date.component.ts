@@ -17,6 +17,8 @@ import {
   untracked,
   viewChild,
   contentChild,
+  Injector,
+  afterNextRender,
 } from '@angular/core';
 import { AbstractControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn } from '@angular/forms';
 import { MAT_DATE_LOCALE } from '@angular/material/core';
@@ -58,7 +60,7 @@ import { enUS as dfEnUS } from 'date-fns/locale';
 import { Subscription } from 'rxjs';
 
 import { dateControlsEqual, formatDateInput, getCaretPosition, isPartialDateInput, parseDateInput } from './date-input.util';
-import { ɵSdOperatorChip, ɵsdOperatorHasValue, ɵsdSingleOperator } from '@sdcorejs/angular/components/operator';
+import { ɵSdOperatorChip, ɵsdIsNoDataOperator, ɵsdOperatorHasValue, ɵsdSingleOperator } from '@sdcorejs/angular/components/operator';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 type SdDateModelValue = string | number | Date | undefined | null;
@@ -191,10 +193,28 @@ export class SdDate implements OnDestroy, OnInit {
   protected readonly operatorChip = computed(() => this.operators().length > 1);
   protected readonly operatorHasValue = computed(() => ɵsdOperatorHasValue(this.valueModel()));
   readonly #singleOperator = ɵsdSingleOperator(this.operators, this.operator);
+  /**
+   * NULL / NOT_NULL không cần giá trị: chọn trong chip thì xoá giá trị, ô bị khoá (disabled) tới khi đổi sang
+   * operator khác; chip vẫn dùng được.
+   */
+  protected readonly operatorLocked = computed(() => this.operators().length > 0 && ɵsdIsNoDataOperator(this.operator()));
+  // why: query signal không đặt được trên field ES private (#).
+  private readonly operatorChipRef = viewChild(ɵSdOperatorChip);
+  readonly #operatorInjector = inject(Injector);
 
-  /** Chọn xong operator trong chip thì focus về ô nhập (thiết kế đợt 2 · G). */
-  protected focusAfterOperator(): void {
-    this.inputRef()?.nativeElement.focus();
+  /**
+   * Chọn xong operator trong chip (thiết kế đợt 2 · G): focus về ô nhập. NULL / NOT_NULL thì xoá giá trị và giữ focus
+   * ở chip. why: xoá ngay trong handler chọn (không trong effect) để giá trị two-way của cha đổi trong event, không
+   * đổi giữa lượt change detection.
+   */
+  protected onOperatorChosen(): void {
+    if (this.operatorLocked()) {
+      if (this.operatorHasValue()) this.clear(undefined);
+      this.operatorChipRef()?.focus();
+      return;
+    }
+    // why: ô vừa mở khoá chỉ enable sau lượt render tới (effect disabled), focus ngay sẽ hụt.
+    afterNextRender(() => this.inputRef()?.nativeElement.focus(), { injector: this.#operatorInjector });
   }
   // Ghi (TransformT): any (để không bị lỗi typing khi cha truyền vào)
   form = input<FormGroup | undefined, any>(undefined, {
@@ -393,7 +413,7 @@ export class SdDate implements OnDestroy, OnInit {
     controlEquals: dateControlsEqual,
     validators: this.#validators,
     required: this.required,
-    disabled: this.disabled,
+    disabled: computed(() => this.disabled() || this.operatorLocked()),
     viewed: this.viewed,
     validationError: computed(() => this.errorMessage()),
   });

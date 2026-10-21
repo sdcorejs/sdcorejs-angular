@@ -145,6 +145,15 @@ export function ɵsdOperatorHasValue(value: unknown): boolean {
 }
 
 /**
+ * `NULL` / `NOT_NULL` không cần giá trị: control khoá ô nhập và xoá giá trị khi chọn một trong hai.
+ *
+ * Nội bộ (`ɵ`): không nằm trong SemVer, ứng dụng không dùng trực tiếp.
+ */
+export function ɵsdIsNoDataOperator(operator: Operator | null | undefined): boolean {
+  return operator === 'NULL' || operator === 'NOT_NULL';
+}
+
+/**
  * Có đúng một operator thì control dùng luôn operator đó và không hiện chip. Gọi trong injection context.
  *
  * Nội bộ (`ɵ`): không nằm trong SemVer, ứng dụng không dùng trực tiếp.

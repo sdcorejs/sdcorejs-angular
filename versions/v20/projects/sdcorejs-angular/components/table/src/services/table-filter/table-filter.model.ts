@@ -7,6 +7,7 @@ import { Observable } from 'rxjs';
 import { SdTableColumn, SdTableColumnAnyRow } from '../../models/table-column.model';
 import { SdTableOptionQuickSearch, SdTableQuickSearchValue } from './table-quick-search.model';
 import { quickSearchConditions } from './table-quick-search.util';
+import { isNoDataColumnOperator } from './table-filter-operator.util';
 export type {
   SdTableOptionQuickSearch,
   SdTableQuickSearchFilter,
@@ -263,6 +264,11 @@ export const SdConvertToPagingReq = (
     const value = rawColumnFilter?.[column.field];
     const field = fieldMapping?.[column.field] || column.field;
     const operator = columnOperator?.[column.field] || column.filter?.operator?.default;
+    // why: NULL / NOT_NULL trên control mặc định — ô bị khoá và để trống — là filter không cần giá trị.
+    if (isNoDataColumnOperator(column, operator)) {
+      filters!.push({ field, operator });
+      continue;
+    }
     // Nếu có giá trị thì mới xử lý filter
     if (value !== undefined && value !== null && value !== '') {
       if (column.type === 'string') {

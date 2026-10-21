@@ -19,6 +19,8 @@ import {
   TemplateRef,
   viewChild,
   contentChild,
+  Injector,
+  afterNextRender,
 } from '@angular/core';
 import { Utilities } from '@sdcorejs/utils/fns';
 import {
@@ -65,7 +67,7 @@ import { NumberUtilities } from '@sdcorejs/utils/fns';
 import type { SdLabelPlacement } from '@sdcorejs/angular/forms/models';
 import { Operator, Size } from '@sdcorejs/utils/models';
 import { Subscription } from 'rxjs';
-import { ɵSdOperatorChip, ɵsdOperatorHasValue, ɵsdSingleOperator } from '@sdcorejs/angular/components/operator';
+import { ɵSdOperatorChip, ɵsdIsNoDataOperator, ɵsdOperatorHasValue, ɵsdSingleOperator } from '@sdcorejs/angular/components/operator';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 class SdInputNumberErrotStateMatcher implements ErrorStateMatcher {
@@ -167,10 +169,28 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   protected readonly operatorChip = computed(() => this.operators().length > 1);
   protected readonly operatorHasValue = computed(() => ɵsdOperatorHasValue(this.valueModel()));
   readonly #singleOperator = ɵsdSingleOperator(this.operators, this.operator);
+  /**
+   * NULL / NOT_NULL không cần giá trị: chọn trong chip thì xoá giá trị, ô bị khoá (disabled) tới khi đổi sang
+   * operator khác; chip vẫn dùng được.
+   */
+  protected readonly operatorLocked = computed(() => this.operators().length > 0 && ɵsdIsNoDataOperator(this.operator()));
+  // why: query signal không đặt được trên field ES private (#).
+  private readonly operatorChipRef = viewChild(ɵSdOperatorChip);
+  readonly #operatorInjector = inject(Injector);
 
-  /** Chọn xong operator trong chip thì focus về ô nhập (thiết kế đợt 2 · G). */
-  protected focusAfterOperator(): void {
-    this.control()?.nativeElement.focus();
+  /**
+   * Chọn xong operator trong chip (thiết kế đợt 2 · G): focus về ô nhập. NULL / NOT_NULL thì xoá giá trị và giữ focus
+   * ở chip. why: xoá ngay trong handler chọn (không trong effect) để giá trị two-way của cha đổi trong event, không
+   * đổi giữa lượt change detection.
+   */
+  protected onOperatorChosen(): void {
+    if (this.operatorLocked()) {
+      if (this.operatorHasValue()) this.clear();
+      this.operatorChipRef()?.focus();
+      return;
+    }
+    // why: ô vừa mở khoá chỉ enable sau lượt render tới (effect disabled), focus ngay sẽ hụt.
+    afterNextRender(() => this.control()?.nativeElement.focus(), { injector: this.#operatorInjector });
   }
   // Ghi (TransformT): any (để không bị lỗi typing khi cha truyền vào)
   form = input<FormGroup | undefined, any>(undefined, {
@@ -333,7 +353,7 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
 
     // EFFECT 2: Sync Disable
     effect(() => {
-      if (this.disabled()) {
+      if (this.disabled() || this.operatorLocked()) {
         this.inputControl.disable({ emitEvent: false });
         this.formControl.disable({ emitEvent: false });
       } else {
