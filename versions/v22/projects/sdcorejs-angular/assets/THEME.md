@@ -236,8 +236,10 @@ builder palette and the `sd-select` panel share one internal search field that r
   ring at the notch. A container whose background is not `--sd-surface` sets `--sd-control-label-bg` (the
   column filters and the quick search of `sd-table` set it to `--sd-table-bg`).
 - The select, autocomplete, `sd-operator` menu and calendar panels take `--sd-panel-radius` (10px) on every
-  corner, a thin border and `--sd-shadow-md`. Options keep their 36px height and are inset 4px horizontally
-  with a 6px corner; the selected option is `--sd-primary-dark` on `--sd-primary-light`, weight 500.
+  corner, a thin border and `--sd-shadow-md`. The select and autocomplete panels open 6px from the field, use
+  `--sd-select-panel-bg` and have 4px of vertical padding. Options keep their 36px height and are inset 4px horizontally
+  with a 6px corner, with a 2px gap between neighbouring backgrounds (a transparent 1px border inside the 36px); the
+  selected option is `--sd-primary-dark` on `--sd-primary-light`, weight 500.
 
 To keep the look of 3.1, set the tokens back at the root (or on any subtree):
 

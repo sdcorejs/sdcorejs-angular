@@ -28,10 +28,11 @@ Cập nhật: 2026-10-21.
 | 6 | Đợt 1 · C — token table | `42246293` |
 | 7 | Đợt 1 — sd-form-builder | `f0576fa6` + dọn `5c39c40b` |
 | 8 | Đợt 1 — sd-kanban | `cbaaa034` |
-| 9 | Đợt 2 · F — indicator sd-button | commit `feat(button): add the indicator dot and count` |
+| 9 | Đợt 2 · F — indicator sd-button | `365168c2` |
+| 2b | Góp ý review panel select/autocomplete (2026-10-21) | commit `fix(forms): panel spacing, white surface and autocomplete highlight from review` |
 | 10 | Operator trong control | đang làm (user duyệt làm hết rồi review một lượt, 2026-10-21) |
 
-Kết quả kiểm tra ở commit bước 9 (Node 22.22.3): Karma v19 7590/7590 (coverage 89.87 / 79.11 / 90.35 / 92.3), lint,
+Kết quả kiểm tra ở commit sửa panel (Node 22.22.3): Karma v19 7595/7595 (coverage 89.89 / 79.16 / 90.36 / 92.32), lint,
 `test:theme` 51/51, `check:scss-hex` 0 finding, `check:i18n-parity` (1341 key × 5) và `check:i18n` pass, `check:sync` pass,
 build lib v19 pass. Ảnh trước/sau: [`screenshots/`](screenshots/).
 
@@ -161,6 +162,25 @@ Lệch thông số và quyết định nhỏ (cần duyệt lại nếu không �
   chạy `npm run generate:showcase-examples`. Ảnh: `screenshots/step9-indicator.png` (không có bản trước).
 - **Lưu ý gate:** lần full Karma đầu đỏ 3 spec do timeout (select virtual 10k, thumbnail preview-pdf) vì server showcase
   của bước 8 còn chạy và rebuild trong nền; tắt server, chạy lại 7590/7590. Nhớ `preview_stop` trước khi chạy Karma.
+
+## Góp ý review panel (sau bước 9)
+
+User review panel bước 2 và gửi 6 điểm; đã sửa trong một commit riêng (đo theo HTML đợt 2 phần "Đề xuất"):
+
+1. Panel không có ô lọc: option đầu sát mép trên → panel `padding: 4px 0` (select trước đó `padding: 0`; autocomplete
+   Material 8px → 4px). Ô lọc sticky vẫn dính mép trên khi cuộn.
+2. Không có khe giữa hai option → viền trong suốt 1px trên/dưới + `background-clip: padding-box`, padding dọc option
+   8px → 7px để vẫn cao 36px (virtual scroll không đổi). Khe nhìn thấy 2px, nền option còn 34px (thiết kế 36 + gap 2).
+3. Hàng "Tất cả" lệch ô tick 4px → cùng `margin: 0 4px`, `padding: 0 12px`, cao 36px, đường chia giữ ở viền dưới.
+4. Nền panel trắng: **đã sửa** sang `--sd-select-panel-bg` (#fff / dark #1d1f23) cho cả select và autocomplete — token sẵn có,
+   ô lọc và footer sticky cũng dùng nên không lệch màu; hover vẫn trộn 5% chữ vào transparent.
+5. Autocomplete mở lại không highlight giá trị → class `sd-option--selected` trên option khớp `model` (Material
+   autocomplete không có selection model và dựng lại option), cùng màu với option đang chọn của select.
+6. Panel sát control → `margin-top: 6px` (hoặc `margin-bottom` khi pane có `.mat-mdc-select-panel-above` /
+   `.mat-mdc-autocomplete-panel-above`, đã xác minh class có ở Material 19 và 22).
+
+Menu `sd-operator` (`.c-op-menu`) chưa đổi nền ở commit này; làm cùng chip operator ở bước 10. Ảnh:
+`screenshots/panels-review-before-after.png`, script `tools/shots-panels.mjs`.
 
 ## Ghi chú kỹ thuật
 

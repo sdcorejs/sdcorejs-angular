@@ -347,8 +347,8 @@
   --mat-option-label-text-size: var(--sd-font-size-14, 14px);
   --mat-option-selected-state-label-text-color: var(--sd-primary-dark);
   --mat-option-selected-state-layer-color: var(--sd-primary-light);
-  // why: nền panel là surface-container của Material chứ không phải --sd-surface; trộn 5% chữ với surface sẽ
-  // ra màu SÁNG hơn nền panel. Trộn với transparent thì hover luôn đậm hơn nền, ở cả light lẫn dark.
+  // why: trộn 5% chữ với transparent thay vì với surface — hover luôn đậm hơn đúng nền panel bên dưới, kể cả
+  // khi consumer đổi --sd-select-panel-bg, ở cả light lẫn dark.
   --mat-option-hover-state-layer-color: color-mix(in srgb, var(--sd-text) 5%, transparent);
   --mat-select-container-elevation-shadow: var(--sd-shadow-md);
   --mat-autocomplete-container-elevation-shadow: var(--sd-shadow-md);
@@ -359,15 +359,48 @@
   border-width: 1px;
   border-style: solid;
   border-color: color-mix(in srgb, var(--sd-border) 60%, var(--sd-surface));
+  // Nền panel trắng như thiết kế (góp ý review): token panel sẵn có thay cho surface-container ánh tím của
+  // Material; ô lọc và footer sticky của sd-select cũng dùng token này nên không lộ mảng lệch màu.
+  background-color: var(--sd-select-panel-bg, var(--sd-surface));
+  // 4px trên/dưới để option đầu và cuối không sát mép panel; option chỉ thụt ngang.
+  padding-top: 4px;
+  padding-bottom: 4px;
 
   .mat-mdc-option {
     margin: 0 4px;
     border-radius: var(--sd-radius-6, 6px);
+    // why: thiết kế có khe 2px giữa hai option. Virtual scroll tính theo chiều cao cố định nên không thêm
+    // margin dọc: viền trong suốt 1px trên/dưới nằm TRONG 36px và nền (hover, đang chọn) chỉ tô tới padding.
+    border-top: 1px solid transparent;
+    border-bottom: 1px solid transparent;
+    background-clip: padding-box;
 
     &.mdc-list-item--selected .mdc-list-item__primary-text {
       font-weight: var(--sd-font-weight-medium, 500);
     }
+
+    // Autocomplete không có selection model: option khớp giá trị đang có mang class này để mở lại vẫn thấy
+    // giá trị đã chọn, cùng màu với option đang chọn của sd-select.
+    &.sd-option--selected:not(.mdc-list-item--disabled) {
+      background-color: var(--mat-option-selected-state-layer-color);
+
+      .mdc-list-item__primary-text {
+        color: var(--mat-option-selected-state-label-text-color);
+        font-weight: var(--sd-font-weight-medium, 500);
+      }
+    }
   }
+}
+
+// Panel cách control 6px như thiết kế. Material đặt class `-panel-above` lên overlay pane khi panel lật lên
+// trên (v19–v22), nên khoảng hở luôn nằm ở phía sát control.
+.cdk-overlay-pane:not(.mat-mdc-select-panel-above) .mat-mdc-select-panel.sd-select-panel,
+.cdk-overlay-pane:not(.mat-mdc-autocomplete-panel-above) .mat-mdc-autocomplete-panel.sd-autocomplete-panel {
+  margin-top: 6px;
+}
+.mat-mdc-select-panel-above .mat-mdc-select-panel.sd-select-panel,
+.mat-mdc-autocomplete-panel-above .mat-mdc-autocomplete-panel.sd-autocomplete-panel {
+  margin-bottom: 6px;
 }
 
 // Override reboot rule `label { margin-bottom: 0.5rem }` cho mat-checkbox layout

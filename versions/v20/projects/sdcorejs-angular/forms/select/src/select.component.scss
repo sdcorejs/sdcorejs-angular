@@ -114,10 +114,10 @@
 }
 
 ::ng-deep .sd-select-panel {
-  // Giảm chiều cao của mỗi dòng option
+  // Giảm chiều cao của mỗi dòng option. Padding dọc 7px + viền trong suốt 1px (core/form.scss) = 36px như cũ.
   .mat-mdc-option {
     min-height: 36px !important;
-    padding: 8px 12px !important;
+    padding: 7px 12px !important;
   }
 
   .c-filter-input-container {
@@ -155,14 +155,19 @@
     display: flex;
     align-items: center;
     justify-content: flex-start;
+    box-sizing: border-box;
     min-height: 36px;
-    padding: 8px 12px;
+    // why: cùng thụt 4px như option (core/form.scss) để ô tick thẳng cột với các option bên dưới.
+    margin: 0 4px;
+    padding: 0 12px;
+    border-radius: var(--sd-radius-6, 6px) var(--sd-radius-6, 6px) 0 0;
     cursor: pointer;
     user-select: none;
-    // why: KHÔNG set background — mat-option để trong suốt (`background: rgba(0,0,0,0)`) và ăn nền
-    // panel, vốn là surface-container của M3 chứ không phải trắng. Hardcode #fff làm row nổi lên
-    // như một mảng trắng giữa danh sách xám.
+    // why: KHÔNG set background — row ăn nền panel như mat-option. Viền dưới là đường chia với danh sách;
+    // nền hover chỉ tô tới padding nên không phủ lên nó.
+    border-top: 1px solid transparent;
     border-bottom: 1px solid var(--sd-border, #f2f2f2);
+    background-clip: padding-box;
 
     // why: mượn đúng state-layer token mà Material dùng cho option hover, để row sáng lên y hệt
     // các dòng bên dưới; fallback cho theme M2 chưa có token M3.
@@ -184,7 +189,8 @@
 }
 
 ::ng-deep .mat-mdc-select-panel.sd-select-panel {
-  padding: 0;
+  // 4px trên/dưới như thiết kế (core/form.scss); ô lọc sticky vẫn dính sát mép trên khi cuộn.
+  padding: 4px 0;
   .mat-mdc-option.mdc-list-item--disabled.sd-empty {
     .mdc-list-item__primary-text {
       opacity: 0.8;

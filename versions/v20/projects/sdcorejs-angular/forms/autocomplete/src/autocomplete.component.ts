@@ -354,6 +354,18 @@ export class SdAutocomplete<T = unknown> implements OnInit, OnDestroy {
   /** Row the keyboard made active in the full filtered list, or -1 (reset when the results change, like Material). */
   readonly virtualActiveIndex = signal(-1);
 
+  /**
+   * Option khớp giá trị hiện tại — tô như option đang chọn khi mở lại panel. why: MatAutocomplete không có
+   * selection model, và option được dựng lại mỗi lần lọc nên trạng thái `selected` của Material không còn.
+   */
+  protected isSelectedOption(item: unknown): boolean {
+    const current = this.valueModel();
+    if (current == null || current === '') return false;
+    if (typeof item === 'string' || typeof item === 'number') return item === current;
+    const valueField = this.valueField();
+    return !!valueField && this.getNestedValue(item, valueField) === current;
+  }
+
   // ==========================================
   // [NEW]: Hàm đọc thuộc tính lồng nhau (a.b.c)
   // ==========================================
