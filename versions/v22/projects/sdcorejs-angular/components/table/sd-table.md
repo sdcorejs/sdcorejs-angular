@@ -304,7 +304,7 @@ A discriminated union over `type`. All variants share `SdTableColumnBase`:
 | `'lazy-values'`                  | `option: { items: SdSearch<K>; valueField; displayField; views?(values) => Promise<K[]>; selection?: 'MULTIPLE' }`                                         |
 | `'children'`                     | `children: SdTableColumnNormal<T>[]` — produces a multi-row header with this group on top of its children.                                                 |
 
-`Badge` shape: `{ type?, color?, icon?, title? }` — maps to a `<sd-badge>` rendered in the cell.
+`Badge` shape: `{ type?, color?, icon?, title? }` — maps to a `<sd-badge>` rendered in the cell. The badge is a button (`role="button"`, focusable, hover) only when the column has `click`; otherwise it is a plain status. The cell tooltip goes to the badge's own `tooltip` input, so a badge whose text is cut still shows a single tooltip.
 
 **Grouped column headers:** `type: 'children'` uses a compact group title with a subtle background and divider above its child columns. Standalone titles are vertically centered across both title rows. Filters occupy a separate aligned sticky row; `filter.hideInlineFilter` (including `'auto'`) shows or hides that row consistently for all columns. No consumer CSS is required. Numeric child titles keep their configured alignment.
 

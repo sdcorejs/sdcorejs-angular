@@ -1,7 +1,10 @@
 import { ChangeDetectionStrategy as SdAngular22ChangeDetectionStrategy } from '@angular/core';
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { SdBadge } from '@sdcorejs/angular/components/badge';
+import { SdTooltipDirective } from '@sdcorejs/angular/directives';
 
 import { ViewComponent } from './view.component';
 import { SdTableColumn } from '../../../models/table-column.model';
@@ -89,5 +92,66 @@ describe('ViewComponent — clickable HTML cell accessibility', () => {
     inner.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
 
     expect(host.clickSpy).not.toHaveBeenCalled();
+  });
+});
+
+// why (đợt 3 · QĐ 3, 4): `(click)` từng luôn được bind lên sd-badge nên mọi badge trong bảng thành role="button"
+// + tabindex=0 dù cột không có `click`; tooltip gắn [sdTooltip] lên host thì thêm tooltip thứ hai khi chữ bị cắt.
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  standalone: true,
+  imports: [ViewComponent],
+  template: `<view autoId="cell-1" [column]="column" [item]="item"></view>`,
+})
+class BadgeCellHost {
+  clickSpy = jasmine.createSpy('cellClick');
+
+  column = { field: 'status', title: 'Trạng thái' } as SdTableColumn;
+
+  item: SdTableItem<{ status: string }> = MapToSdTableItem({ status: 'APPROVED' });
+
+  show(options: { click?: boolean; tooltip?: string }): void {
+    this.item.meta.display['status'] = {
+      data: 'Đã duyệt',
+      isHtml: false,
+      badge: { type: 'round', color: 'success' },
+      tooltip: options.tooltip,
+      click: options.click ? () => this.clickSpy() : undefined,
+    };
+  }
+}
+
+describe('ViewComponent — badge cell', () => {
+  let fixture: ComponentFixture<BadgeCellHost>;
+
+  const render = (options: { click?: boolean; tooltip?: string }) => {
+    fixture = TestBed.createComponent(BadgeCellHost);
+    fixture.componentInstance.show(options);
+    fixture.detectChanges();
+    return fixture.debugElement.query(By.directive(SdBadge));
+  };
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [BadgeCellHost, NoopAnimationsModule] }).compileComponents();
+  });
+
+  it('leaves the badge a plain status when the column has no click', () => {
+    const badge = render({});
+    expect(badge.nativeElement.querySelector('[role="button"]')).toBeNull();
+    expect(badge.nativeElement.querySelector('[tabindex]')).toBeNull();
+  });
+
+  it('makes the badge a button that runs the column click when the column has one', () => {
+    const badge = render({ click: true });
+    const button = badge.nativeElement.querySelector('[role="button"]') as HTMLElement;
+    expect(button).not.toBeNull();
+    button.click();
+    expect(fixture.componentInstance.clickSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('passes the cell tooltip to the badge instead of adding a second tooltip on its host', () => {
+    const badge = render({ tooltip: 'Duyệt lúc 14:30' });
+    expect((badge.componentInstance as SdBadge).tooltip()).toBe('Duyệt lúc 14:30');
+    expect(badge.injector.get(SdTooltipDirective, null)).toBeNull();
   });
 });

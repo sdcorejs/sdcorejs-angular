@@ -23,8 +23,8 @@ export type ShowcaseExampleSourceKey =
   | "components/avatar/example-chu-cai-dau-tu-ten"
   | "components/avatar/example-fallback-khi-thieu-du-lieu"
   | "components/badge/example-ba-dang"
+  | "components/badge/example-bam-duoc"
   | "components/badge/example-fontset-switch"
-  | "components/badge/example-icon-va-noi-dung-dai"
   | "components/badge/example-kem-mo-ta"
   | "components/badge/example-kich-thuoc-round"
   | "components/badge/example-kich-thuoc-tag"
@@ -33,6 +33,7 @@ export type ShowcaseExampleSourceKey =
   | "components/badge/example-mau-sac-tag"
   | "components/badge/example-round-voi-icon"
   | "components/badge/example-so-dem"
+  | "components/badge/example-ten-dai-trong-o-hep"
   | "components/breadcrumb/example-danh-sach-tinh"
   | "components/breadcrumb/example-nhan-async"
   | "components/breadcrumb/example-router-generated"
@@ -607,7 +608,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "components/badge",
     sectionId: "example-mau-sac-icon",
     title: "Màu sắc icon",
-    description: "Existing “Màu sắc icon” scenario preserved from the showcase.",
+    description: "Không có icon thì badge vẽ chấm CSS màu gốc (8px, lg 10px).",
   },
   {
     sourceKey: "components/badge/example-kich-thuoc-round",
@@ -635,21 +636,28 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "components/badge",
     sectionId: "example-kem-mo-ta",
     title: "Kèm mô tả",
-    description: "Existing “Kèm mô tả” scenario preserved from the showcase.",
+    description: "Description 12px. Tag có description thành khối hai dòng; icon căn theo dòng đầu.",
   },
   {
     sourceKey: "components/badge/example-so-dem",
     pageKey: "components/badge",
     sectionId: "example-so-dem",
     title: "Số đếm",
-    description: "Existing “Số đếm” scenario preserved from the showcase.",
+    description: "Title là số: hình tròn khi một chữ số, chữ số đều bề rộng; lớn hơn 99 hiện 99+ (screen reader vẫn đọc số thật).",
   },
   {
-    sourceKey: "components/badge/example-icon-va-noi-dung-dai",
+    sourceKey: "components/badge/example-ten-dai-trong-o-hep",
     pageKey: "components/badge",
-    sectionId: "example-icon-va-noi-dung-dai",
-    title: "Icon và nội dung dài",
-    description: "Icon giữ nguyên kích thước và căn giữa với toàn bộ phần chữ khi nội dung xuống dòng.",
+    sectionId: "example-ten-dai-trong-o-hep",
+    title: "Tên dài trong ô hẹp",
+    description: "Luôn một dòng, chữ dài bị cắt bằng dấu ba chấm. Tooltip chỉ hiện khi chữ bị cắt (title đầy đủ) hoặc khi có tooltip riêng.",
+  },
+  {
+    sourceKey: "components/badge/example-bam-duoc",
+    pageKey: "components/badge",
+    sectionId: "example-bam-duoc",
+    title: "Bấm được",
+    description: "Chỉ khi có (click): role button, Tab tới được, Enter/Space. Hover trộn 6% màu đậm vào nền, nhấn 10%; vòng focus giữ bo góc.",
   },
   {
     sourceKey: "components/breadcrumb/example-danh-sach-tinh",

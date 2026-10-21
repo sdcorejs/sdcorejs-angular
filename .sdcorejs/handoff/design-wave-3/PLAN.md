@@ -1,7 +1,8 @@
 # Kế hoạch đợt 3 (badge, avatar, tab-router, upload-file)
 
 Trình theo mục "Trước khi code" của `PROMPT.md`. Đã duyệt (2026-10-21): mục 1–6 và làm trên nhánh hiện tại
-`feat/design-handoff-wave-1-2` (đợt 1+2 chưa merge, user chấp nhận lên cùng). Mục 7–8 chờ duyệt.
+`feat/design-handoff-wave-1-2` (đợt 1+2 chưa merge, user chấp nhận lên cùng). Mục 7 (i18n) và 8 (quyết định 2–15)
+duyệt nguyên văn cùng ngày.
 `LIB` = `versions/v19/projects/sdcorejs-angular`.
 
 ## 1. File và commit
@@ -96,3 +97,19 @@ Mới (đủ 5 locale vi/en/ja/ko/zh):
     mục `file-types` không được ship ra app consumer.
 14. Upload: `size` là bytes (đúng code và showcase); sửa JSDoc ghi "MB".
 15. Upload: `IMAGE_EXTENSIONS` thiếu gif/webp/svg — ghi lại, không đổi trong đợt này.
+
+## 9. Tiến độ
+| Bước | Trạng thái | Ghi chú |
+|---|---|---|
+| 1a badge: thang, một dòng, số đếm, description, viền tag, chấm CSS, focus, hover, tooltip | xong | Lệch spec: xem dưới. Ảnh: `.sdcorejs/handoff/screenshots/wave3-1a-badge-*.png` |
+
+Lệch khỏi thông số ở bước 1a (đã báo user):
+- **Type icon to hơn một bậc** (user chọn 2026-10-21, theo HTML thay vì bảng `badge.md`): chữ sm 13/18, md 14/20,
+  lg 14/20, weight 400, `--sd-text`; icon 16/18/18px. Round/tag theo bảng md.
+- **Token kích thước đọc bằng fallback, không khai trên `:host`** (QĐ 6): khai trên `:host` thành rule
+  `[_nghost-…]` thắng mọi override của consumer ở `:root` hay `sd-badge {}`. Vẫn không nằm trong
+  `_component-tokens.scss`. Bo tag md/lg = `--sd-badge-radius-tag` + 2px (một token cho cả hai bậc).
+- `sdTooltip` mở khi nội dung tới trong lúc tooltip "đang được muốn" (hết delay hover hoặc đang focus): cần cho badge
+  vì nó chỉ biết chữ bị cắt sau khi focus tới (focusin của host chạy sau directive trên phần tử con).
+- Showcase: spec `docs-page.component.spec.ts` đang chờ 8 ví dụ trang button, trang có 9 từ `365168c2` (đợt 1+2) —
+  sửa trong commit riêng.

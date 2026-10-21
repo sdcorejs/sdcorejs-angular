@@ -1,11 +1,12 @@
 @let _type = type();
-@let _tooltip = tooltip();
-@let _title = title();
+@let _title = displayTitle();
 @let _description = description();
 @let _fontSet = fontSet();
 @let _iconCssSize = iconCssSize();
 @let _accessibleName = accessibleName();
-@let iconName = icon() || defaultIcon;
+@let _icon = icon();
+@let _tooltipText = tooltipText();
+@let _countOverflow = countOverflow();
 @let isPointer = click.observed;
 @let _role = isPointer ? 'button' : null;
 @let _tabIndex = isPointer ? 0 : null;
@@ -13,15 +14,17 @@
 <!-- why: bỏ aria-hidden="true" khỏi cả ba nhánh. Badge mang nội dung thật (title/description) nên
      aria-hidden xoá luôn nội dung đó khỏi accessibility tree; khi badge còn clickable thì nó vừa
      nhận focus vừa không đọc được gì — tệ hơn là không làm gì. Nay role/tabindex/keydown chỉ bật
-     khi thực sự có consumer lắng nghe (click). -->
+     khi thực sự có consumer lắng nghe (click).
+     why: tooltip dùng [sdTooltip] thay matTooltip — overlay chỉ tạo khi hiện, và chỉ có nội dung khi có
+     `tooltip` hoặc chữ bị cắt (đo lúc hover/focus trên host). -->
 @if (_type === 'round') {
   <div
     class="c-badge"
-    matTooltipPosition="above"
-    [matTooltip]="_tooltip || ''"
-    matTooltipClass="sd-multiline-tooltip"
+    sdTooltipPosition="top"
+    [sdTooltip]="_tooltipText ? tooltipContent : ''"
     [ngClass]="containerCombinedClasses()"
-    [class.c-badge--has-icon]="!!icon()"
+    [class.c-badge--has-icon]="!!_icon"
+    [class.c-badge--count]="isCount()"
     [class.pointer]="isPointer"
     [attr.role]="_role"
     [attr.tabindex]="_tabIndex"
@@ -29,23 +32,27 @@
     (click)="onClick($event)"
     (keydown.enter)="onActivateKey($event)"
     (keydown.space)="onActivateKey($event)">
-    @if (icon()) {
+    @if (_icon) {
       <sd-icon
         class="c-material-icon"
-        [name]="iconName"
+        [name]="_icon"
         [fontSet]="_fontSet"
         [size]="_iconCssSize"
         [ngClass]="tagIconCombinedClasses()"></sd-icon>
     }
-    <span class="c-badge-title">{{ _title }}</span>
+    <!-- why: "99+" chỉ để nhìn; screen reader đọc số thật ở span ẩn ngay sau. -->
+    <span #titleEl class="c-badge-title" [attr.aria-hidden]="_countOverflow ? 'true' : null">{{ _title }}</span>
+    @if (_countOverflow) {
+      <span class="sd-visually-hidden">{{ title() }}</span>
+    }
   </div>
 } @else if (_type === 'tag') {
   <div
     class="c-badge c-badge--tag"
-    matTooltipPosition="above"
-    [matTooltip]="_tooltip || ''"
-    matTooltipClass="sd-multiline-tooltip"
+    sdTooltipPosition="top"
+    [sdTooltip]="_tooltipText ? tooltipContent : ''"
     [ngClass]="containerCombinedClasses()"
+    [class.c-badge--has-desc]="!!_description"
     [class.pointer]="isPointer"
     [attr.role]="_role"
     [attr.tabindex]="_tabIndex"
@@ -53,30 +60,30 @@
     (click)="onClick($event)"
     (keydown.enter)="onActivateKey($event)"
     (keydown.space)="onActivateKey($event)">
-    <div class="c-icon d-flex align-items-center">
-      @if (icon()) {
+    @if (_icon) {
+      <span class="c-badge-lead">
         <sd-icon
-          class="c-material-icon mr-4"
-          [name]="iconName"
+          class="c-material-icon"
+          [name]="_icon"
           [fontSet]="_fontSet"
           [size]="_iconCssSize"
           [ngClass]="tagIconCombinedClasses()"></sd-icon>
+      </span>
+    }
+    <span class="c-badge-copy">
+      <span #titleEl class="c-badge-title">{{ _title }}</span>
+      @if (_description) {
+        <span class="c-badge-description">{{ _description }}</span>
       }
-      <div class="d-flex flex-column align-items-start">
-        <span class="T14R c-badge-title">{{ _title }}</span>
-        @if (_description) {
-          <span class="T12R c-badge-description">{{ _description }}</span>
-        }
-      </div>
-    </div>
+    </span>
   </div>
 } @else {
   <div
-    class="d-flex"
-    matTooltipPosition="above"
-    [matTooltip]="_tooltip || ''"
-    matTooltipClass="sd-multiline-tooltip"
-    [class.c-badge-icon]="_type === 'icon'"
+    class="c-badge-icon"
+    sdTooltipPosition="top"
+    [sdTooltip]="_tooltipText ? tooltipContent : ''"
+    [ngClass]="containerCombinedClasses()"
+    [class.c-badge-icon--has-desc]="!!_description"
     [class.pointer]="isPointer"
     [attr.role]="_role"
     [attr.tabindex]="_tabIndex"
@@ -84,19 +91,29 @@
     (click)="onClick($event)"
     (keydown.enter)="onActivateKey($event)"
     (keydown.space)="onActivateKey($event)">
-    <div class="c-icon d-flex align-items-center">
-      <sd-icon
-        class="c-material-icon"
-        [name]="iconName"
-        [fontSet]="_fontSet"
-        [size]="_iconCssSize"
-        [ngClass]="iconCombinedClasses()"></sd-icon>
-      <div class="c-badge-copy">
-        <span class="T14R c-badge-title">{{ _title }}</span>
-        @if (_description) {
-          <span class="T10R c-badge-description">{{ _description }}</span>
-        }
-      </div>
-    </div>
+    <!-- why: ô dẫn đầu cao bằng line-height của title nên icon (hoặc chấm) luôn nằm giữa DÒNG ĐẦU, kể cả khi có
+         description. Không có icon thì vẽ chấm bằng CSS thay cho glyph fiber_manual_record. -->
+    <span class="c-badge-lead">
+      @if (_icon) {
+        <sd-icon
+          class="c-material-icon"
+          [name]="_icon"
+          [fontSet]="_fontSet"
+          [size]="_iconCssSize"
+          [ngClass]="iconCombinedClasses()"></sd-icon>
+      } @else {
+        <span class="c-badge-dot" [ngClass]="baseColorClasses()" aria-hidden="true"></span>
+      }
+    </span>
+    <span class="c-badge-copy">
+      <span #titleEl class="c-badge-title">{{ _title }}</span>
+      @if (_description) {
+        <span class="c-badge-description">{{ _description }}</span>
+      }
+    </span>
   </div>
 }
+
+<ng-template #tooltipContent>
+  <span class="c-badge-tooltip">{{ _tooltipText }}</span>
+</ng-template>

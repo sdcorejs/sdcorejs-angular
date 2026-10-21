@@ -177,7 +177,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/badge/sd-badge',
     keywords: ['status', 'count', 'tag', 'label'],
     status: 'stable',
-    demoSectionCount: 11,
+    demoSectionCount: 12,
     loadComponent: () => import('../../pages/components/badge/badge-demo.component').then(m => m.BadgeDemoComponent),
   }),
   defineDocPage({

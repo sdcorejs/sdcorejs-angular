@@ -1,11 +1,25 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Output, booleanAttribute, computed, input } from '@angular/core';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  EventEmitter,
+  Output,
+  booleanAttribute,
+  computed,
+  input,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { SdTooltipDirective } from '@sdcorejs/angular/directives';
 import { SdIcon, type SdIconSet } from '@sdcorejs/angular/modules/icon';
 import { Color, Size } from '@sdcorejs/utils/models';
 
 // Export các Type để dùng chung
 export type SdBadgeType = 'tag' | 'round' | 'icon';
+
+/** Số đếm lớn hơn giá trị này hiện "99+". */
+const SD_BADGE_COUNT_MAX = 99;
 
 @Component({
   selector: 'sd-badge',
@@ -13,9 +27,17 @@ export type SdBadgeType = 'tag' | 'round' | 'icon';
   styleUrl: './badge.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [CommonModule, SdIcon, MatTooltipModule],
+  imports: [CommonModule, SdIcon, SdTooltipDirective],
+  host: {
+    // why: `<sd-badge title="…">` để lại attribute title trên host, trình duyệt hiện tooltip riêng chồng lên
+    // tooltip của badge. Giá trị vẫn tới input `title`.
+    '[attr.title]': 'null',
+    '(mouseenter)': 'measureTruncation()',
+    '(focusin)': 'measureTruncation()',
+  },
 })
 export class SdBadge {
+  /** Tên dùng làm accessible name dự phòng khi badge bấm được không có chữ và không có icon. */
   defaultIcon = 'fiber_manual_record';
 
   // ==========================================
@@ -74,7 +96,30 @@ export class SdBadge {
   };
 
   // ==========================================
-  // 3. COMPUTED STATE
+  // 3. TOOLTIP
+  // ==========================================
+  private readonly titleRef = viewChild<ElementRef<HTMLElement>>('titleEl');
+  readonly #truncated = signal(false);
+
+  /**
+   * Đo lúc hover/focus xem chữ có bị cắt không; chỉ khi bị cắt (hoặc có `tooltip`) badge mới có tooltip.
+   */
+  // why: đo theo sự kiện thay vì ResizeObserver — bảng có hàng trăm badge, phần lớn không bao giờ được rê chuột.
+  measureTruncation = (): void => {
+    const el = this.titleRef()?.nativeElement;
+    this.#truncated.set(!!el && el.scrollWidth > el.clientWidth);
+  };
+
+  /** Chữ của tooltip: `tooltip` nếu có, ngược lại là title đầy đủ khi chữ bị cắt, ngược lại rỗng (không tooltip). */
+  tooltipText = computed(() => {
+    const tooltip = this.tooltip()?.trim();
+    if (tooltip) return tooltip;
+    const title = this.title();
+    return this.#truncated() && title !== undefined && title !== null ? String(title) : '';
+  });
+
+  // ==========================================
+  // 4. COMPUTED STATE
   // ==========================================
 
   effectiveColor = computed(() => {
@@ -100,6 +145,17 @@ export class SdBadge {
     return (this.icon() || this.defaultIcon).replace(/[_-]+/g, ' ').trim();
   });
 
+  /** `title` là số (kể cả 0) với type round: số đếm hình tròn, chữ số đều bề rộng. Chuỗi "12" vẫn là chữ. */
+  isCount = computed(() => {
+    const title = this.title();
+    return this.type() === 'round' && typeof title === 'number' && Number.isFinite(title);
+  });
+
+  /** Số đếm lớn hơn 99 thì cần đọc số thật cho screen reader, vì phần nhìn thấy chỉ là "99+". */
+  countOverflow = computed(() => this.isCount() && (this.title() as number) > SD_BADGE_COUNT_MAX);
+
+  displayTitle = computed(() => (this.countOverflow() ? `${SD_BADGE_COUNT_MAX}+` : this.title()));
+
   baseColorClasses = computed(() => {
     const c = this.effectiveColor();
     return {
@@ -112,17 +168,7 @@ export class SdBadge {
     };
   });
 
-  iconColorClasses = computed(() => {
-    const c = this.effectiveColor();
-    return {
-      'c-primary': c === 'primary',
-      'c-secondary': c === 'secondary',
-      'c-info': c === 'info',
-      'c-success': c === 'success',
-      'c-warning': c === 'warning',
-      'c-error': c === 'error',
-    };
-  });
+  iconColorClasses = computed(() => this.baseColorClasses());
 
   iconSizeAndFontClasses = computed(() => {
     const s = this.size();
@@ -133,11 +179,13 @@ export class SdBadge {
     };
   });
 
+  // why: type icon nằm trong dòng chữ nên to hơn một bậc so với round/tag (thiết kế đợt 3 · 1a).
   iconCssSize = computed(() => {
     const s = this.size();
-    if (s === 'md') return '18px';
-    if (s === 'lg') return '24px';
-    return '16px';
+    if (this.type() === 'icon') return s === 'sm' ? '16px' : '18px';
+    if (s === 'md') return '16px';
+    if (s === 'lg') return '18px';
+    return '14px';
   });
 
   // why: keep container size classes separate from icon element size classes.
@@ -156,7 +204,7 @@ export class SdBadge {
     ...this.baseColorClasses(),
   }));
 
-  // GỘP CLASS CHO CONTAINER round/tag (color tint + size modifier)
+  // GỘP CLASS CHO CONTAINER (màu + size modifier), dùng cho cả ba type
   containerCombinedClasses = computed(() => ({
     ...this.baseColorClasses(),
     ...this.containerSizeClasses(),

@@ -100,13 +100,27 @@ interface FontSetOption {
           [props]="[
             { name: 'type', value: 'icon' },
             { name: 'color', value: 'primary / secondary / success / info / warning / error' },
-          ]">
-          <sd-badge type="icon" primary icon="circle" title="primary"></sd-badge>
-          <sd-badge type="icon" secondary icon="circle" title="secondary"></sd-badge>
-          <sd-badge type="icon" success icon="circle" title="success"></sd-badge>
-          <sd-badge type="icon" info icon="circle" title="info"></sd-badge>
-          <sd-badge type="icon" warning icon="circle" title="warning"></sd-badge>
-          <sd-badge type="icon" error icon="circle" title="error"></sd-badge>
+            { name: 'icon', value: 'name / —' },
+          ]"
+          note="Không có icon thì badge vẽ chấm CSS màu gốc (8px, lg 10px).">
+          <div class="d-flex flex-column gap-12">
+            <div class="d-flex flex-wrap align-items-center gap-16">
+              <sd-badge type="icon" primary icon="flag" title="Mới"></sd-badge>
+              <sd-badge type="icon" secondary icon="edit_note" title="Nháp"></sd-badge>
+              <sd-badge type="icon" info icon="sync" title="Đang xử lý"></sd-badge>
+              <sd-badge type="icon" success icon="check_circle" title="Đã duyệt"></sd-badge>
+              <sd-badge type="icon" warning icon="schedule" title="Chờ duyệt"></sd-badge>
+              <sd-badge type="icon" error icon="cancel" title="Đã huỷ"></sd-badge>
+            </div>
+            <div class="d-flex flex-wrap align-items-center gap-16">
+              <sd-badge type="icon" primary title="Mới"></sd-badge>
+              <sd-badge type="icon" secondary title="Nháp"></sd-badge>
+              <sd-badge type="icon" info title="Đang xử lý"></sd-badge>
+              <sd-badge type="icon" success title="Đã duyệt"></sd-badge>
+              <sd-badge type="icon" warning title="Chờ duyệt"></sd-badge>
+              <sd-badge type="icon" error title="Đã huỷ"></sd-badge>
+            </div>
+          </div>
         </demo-section>
       }
 
@@ -151,9 +165,16 @@ interface FontSetOption {
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-kem-mo-ta') {
-        <demo-section heading="Kèm mô tả" [props]="[{ name: 'description', value: 'text' }]">
-          <sd-badge type="icon" success icon="check_circle" title="title" description="description"></sd-badge>
-          <sd-badge type="tag" primary icon="star" title="title" description="description"></sd-badge>
+        <demo-section
+          heading="Kèm mô tả"
+          [props]="[
+            { name: 'description', value: 'text' },
+            { name: 'type', value: 'icon / tag' },
+          ]"
+          note="Description 12px. Tag có description thành khối hai dòng; icon căn theo dòng đầu.">
+          <sd-badge type="icon" success icon="check_circle" title="Đã duyệt" description="Bởi Nguyễn Văn A"></sd-badge>
+          <sd-badge type="icon" info title="Đang xử lý" description="Bước 2 / 3"></sd-badge>
+          <sd-badge type="tag" info icon="label" title="Hợp đồng dài hạn" description="Gia hạn 12 tháng"></sd-badge>
         </demo-section>
       }
 
@@ -163,40 +184,77 @@ interface FontSetOption {
           [props]="[
             { name: 'type', value: 'round' },
             { name: 'title', value: 'number' },
-          ]">
+            { name: 'size', value: 'sm / md' },
+          ]"
+          note="Title là số: hình tròn khi một chữ số, chữ số đều bề rộng; lớn hơn 99 hiện 99+ (screen reader vẫn đọc số thật).">
           <sd-badge type="round" primary [title]="unreadCount()"></sd-badge>
           <sd-badge type="round" error [title]="errorsCount()"></sd-badge>
-          <sd-badge type="round" warning title="99+"></sd-badge>
+          <sd-badge type="round" warning [title]="overflowCount()"></sd-badge>
+          <sd-badge type="round" primary [title]="unreadCount()" size="md"></sd-badge>
+          <sd-badge type="round" error [title]="errorsCount()" size="md"></sd-badge>
         </demo-section>
       }
-      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-icon-va-noi-dung-dai') {
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-ten-dai-trong-o-hep') {
         <demo-section
-          heading="Icon và nội dung dài"
+          heading="Tên dài trong ô hẹp"
           [props]="[
-            { name: 'type', value: 'icon' },
-            { name: 'size', value: 'sm / md / lg' },
+            { name: 'type', value: 'icon / round / tag' },
+            { name: 'tooltip', value: 'text' },
           ]"
-          note="Icon giữ nguyên kích thước và căn giữa với toàn bộ phần chữ khi nội dung xuống dòng.">
-          <div style="display:flex;flex-wrap:wrap;gap:24px">
-            @for (size of iconSizes; track size) {
-              <sd-badge
-                style="display:block;width:140px"
-                type="icon"
-                [size]="size"
-                icon="check_circle"
-                color="success"
-                title="Đã xác nhận thông tin khách hàng"
-                description="Nội dung bổ sung" />
-            }
+          note="Luôn một dòng, chữ dài bị cắt bằng dấu ba chấm. Tooltip chỉ hiện khi chữ bị cắt (title đầy đủ) hoặc khi có tooltip riêng.">
+          <div class="d-flex flex-wrap gap-24">
+            <div class="badge-demo-cell">
+              <sd-badge type="round" warning title="Đã chuyển sang kế toán xử lý"></sd-badge>
+            </div>
+            <div class="badge-demo-cell">
+              <sd-badge type="tag" info icon="label" title="Hợp đồng dài hạn có điều khoản gia hạn"></sd-badge>
+            </div>
+            <div class="badge-demo-cell">
+              <sd-badge type="icon" success icon="check_circle" title="Đã xác nhận thông tin khách hàng"></sd-badge>
+            </div>
+            <div class="badge-demo-cell">
+              <sd-badge type="round" success title="Đã duyệt" tooltip="Phê duyệt lúc 14:30
+Bởi Nguyễn Văn A"></sd-badge>
+            </div>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bam-duoc') {
+        <demo-section
+          heading="Bấm được"
+          [props]="[
+            { name: '(click)', value: 'output' },
+            { name: 'type', value: 'round / tag / icon' },
+          ]"
+          note="Chỉ khi có (click): role button, Tab tới được, Enter/Space. Hover trộn 6% màu đậm vào nền, nhấn 10%; vòng focus giữ bo góc.">
+          <div class="d-flex flex-wrap align-items-center gap-16">
+            <sd-badge type="round" primary title="Lọc: Mới" (click)="filterClicks.set(filterClicks() + 1)"></sd-badge>
+            <sd-badge type="tag" info icon="label" title="Bán buôn" (click)="filterClicks.set(filterClicks() + 1)"></sd-badge>
+            <sd-badge type="icon" warning icon="schedule" title="Chờ duyệt" (click)="filterClicks.set(filterClicks() + 1)"></sd-badge>
+            <span class="badge-demo-log">Đã bấm {{ filterClicks() }} lần</span>
           </div>
         </demo-section>
       }
     </demo-page>
   `,
+  styles: [
+    `
+      .badge-demo-cell {
+        width: 160px;
+        padding: 8px;
+        border: 1px dashed var(--sd-border);
+        border-radius: 6px;
+      }
+      .badge-demo-log {
+        font-size: 12px;
+        color: var(--sd-text-secondary);
+      }
+    `,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BadgeDemoComponent {
-  readonly iconSizes = ['sm', 'md', 'lg'] as const;
   readonly fontSetForm = new FormGroup({});
   readonly selectedFontSet = signal<SdIconSet>('lucide');
   readonly fontSetOptions: FontSetOption[] = [
@@ -206,5 +264,7 @@ export class BadgeDemoComponent {
   ];
 
   readonly unreadCount = signal(7);
-  readonly errorsCount = signal(3);
+  readonly errorsCount = signal(12);
+  readonly overflowCount = signal(150);
+  readonly filterClicks = signal(0);
 }

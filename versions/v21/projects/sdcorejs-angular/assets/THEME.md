@@ -293,6 +293,20 @@ light and dark. The column colour only marks the 8px dot or the prefix icon.
 
 `npm run test:theme` checks `--sd-text` and `--sd-text-secondary` on the lane (at least 4.5:1) for every preset and dark.
 
+## Badge size tokens
+
+`sd-badge` reads three size tokens with a fallback; they are not part of `sd.theme()` and have no dark value. Set them
+on any ancestor (`:root`, a page, a table). See `components/badge/sd-badge.md`, "Size tokens".
+
+| Token | Default |
+| --- | --- |
+| `--sd-badge-height-sm`, `--sd-badge-height-md`, `--sd-badge-height-lg` | `20px`, `24px`, `28px` |
+| `--sd-badge-radius-tag` | `4px` (`md`, `lg` and a tag with a description add 2px) |
+| `--sd-badge-font-weight` | `500` |
+
+Badge colours stay on the palette: `*-light` backgrounds, `*-dark` text and icons, the base colour for the dot, and
+`color-mix(in srgb, *-dark 22%, *-light)` for the tag border.
+
 ## Button indicator token
 
 `--sd-button-indicator-ring` (`var(--sd-surface)` in light and dark) is the 2px ring that separates the `sd-button`

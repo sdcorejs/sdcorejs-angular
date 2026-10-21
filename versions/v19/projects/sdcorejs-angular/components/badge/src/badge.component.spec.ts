@@ -17,6 +17,8 @@ function parseCssRgb(value: string): Rgb {
     ?.slice(0, 3)
     .map(Number);
   if (!channels || channels.length !== 3) throw new Error(`Unsupported CSS color: ${value}`);
+  // why: Chrome serialises a color-mix() result as `color(srgb r g b)` with 0–1 channels.
+  if (value.startsWith('color(srgb')) return channels.map(channel => channel * 255) as unknown as Rgb;
   return channels as unknown as Rgb;
 }
 
@@ -52,10 +54,11 @@ describe('SdBadge', () => {
   });
 
   describe('default render', () => {
-    it('defaults type to "icon" with default icon fiber_manual_record', () => {
+    // why: chấm mặc định vẽ bằng CSS (đợt 3 · 1a), không còn glyph fiber_manual_record.
+    it('defaults type to "icon" with a CSS dot instead of the fiber_manual_record glyph', () => {
       fixture.detectChanges();
-      const icon = queryByCss(fixture, 'sd-icon.c-material-icon mat-icon');
-      expect(icon.textContent?.trim()).toBe('fiber_manual_record');
+      expect(fixture.nativeElement.querySelector('sd-icon')).toBeNull();
+      expect(fixture.nativeElement.querySelector('.c-badge-icon .c-badge-dot.c-secondary')).not.toBeNull();
     });
 
     it('coerces falsy type back to "icon"', () => {
@@ -311,7 +314,13 @@ describe('SdBadge', () => {
         const background = parseCssRgb(styles.backgroundColor);
 
         expect(foreground).withContext(color).toEqual(dark);
-        expect(parseCssRgb(styles.borderTopColor)).withContext(`${color} border`).toEqual(dark);
+        // why: viền tag nhạt đi (đợt 3 · 1a) — 22% *-dark trộn vào *-light, để tag không trông như nút outlined.
+        const border = parseCssRgb(styles.borderTopColor);
+        mixRgb(dark, 0.22, light).forEach((channel, index) =>
+          expect(Math.abs(border[index] - channel))
+            .withContext(`${color} border`)
+            .toBeLessThanOrEqual(1)
+        );
         expect(contrastRatio(foreground, background)).withContext(color).toBeGreaterThanOrEqual(4.5);
       });
     }
@@ -388,12 +397,14 @@ describe('SdBadge', () => {
 
     it('iconColorClasses: secondary → c-secondary (icon type, default color)', () => {
       setInput(fixture, 'type', 'icon');
+      setInput(fixture, 'icon', 'info');
       const icon = queryByCss<HTMLElement>(fixture, 'sd-icon.c-material-icon');
       expect(icon.classList.contains('c-secondary')).toBe(true);
     });
 
     it('iconColorClasses: info → c-info (icon type)', () => {
       setInput(fixture, 'type', 'icon');
+      setInput(fixture, 'icon', 'info');
       setInput(fixture, 'info', true);
       const icon = queryByCss<HTMLElement>(fixture, 'sd-icon.c-material-icon');
       expect(icon.classList.contains('c-info')).toBe(true);
@@ -401,6 +412,7 @@ describe('SdBadge', () => {
 
     it('iconColorClasses: warning → c-warning (icon type)', () => {
       setInput(fixture, 'type', 'icon');
+      setInput(fixture, 'icon', 'info');
       setInput(fixture, 'warning', true);
       const icon = queryByCss<HTMLElement>(fixture, 'sd-icon.c-material-icon');
       expect(icon.classList.contains('c-warning')).toBe(true);
@@ -408,6 +420,7 @@ describe('SdBadge', () => {
 
     it('iconColorClasses: error → c-error (icon type)', () => {
       setInput(fixture, 'type', 'icon');
+      setInput(fixture, 'icon', 'info');
       setInput(fixture, 'error', true);
       const icon = queryByCss<HTMLElement>(fixture, 'sd-icon.c-material-icon');
       expect(icon.classList.contains('c-error')).toBe(true);
@@ -417,17 +430,20 @@ describe('SdBadge', () => {
   describe('size variants', () => {
     it('size="sm" → c-sm on icon element (default)', () => {
       setInput(fixture, 'type', 'icon');
+      setInput(fixture, 'icon', 'info');
       expect(queryByCss(fixture, 'sd-icon.c-material-icon').classList.contains('c-sm')).toBe(true);
     });
 
     it('size="md" → c-md on icon element', () => {
       setInput(fixture, 'type', 'icon');
+      setInput(fixture, 'icon', 'info');
       setInput(fixture, 'size', 'md');
       expect(queryByCss(fixture, 'sd-icon.c-material-icon').classList.contains('c-md')).toBe(true);
     });
 
     it('size="lg" → c-lg on icon element', () => {
       setInput(fixture, 'type', 'icon');
+      setInput(fixture, 'icon', 'info');
       setInput(fixture, 'size', 'lg');
       expect(queryByCss(fixture, 'sd-icon.c-material-icon').classList.contains('c-lg')).toBe(true);
     });
@@ -439,6 +455,7 @@ describe('SdBadge', () => {
 
     it('centers icon glyph within the declared icon box', () => {
       setInput(fixture, 'type', 'icon');
+      setInput(fixture, 'icon', 'info');
       const icon = queryByCss<HTMLElement>(fixture, 'sd-icon.c-material-icon');
       const style = getComputedStyle(icon);
 
@@ -460,8 +477,8 @@ describe('SdBadge', () => {
       expect(style.display).toContain('flex');
       expect(style.alignItems).toBe('center');
       expect(style.justifyContent).toBe('center');
-      expect(style.width).toBe('16px');
-      expect(style.height).toBe('16px');
+      expect(style.width).toBe('14px');
+      expect(style.height).toBe('14px');
     });
 
     it('centers round icon within the declared badge icon box', () => {
@@ -473,8 +490,8 @@ describe('SdBadge', () => {
       expect(style.display).toContain('flex');
       expect(style.alignItems).toBe('center');
       expect(style.justifyContent).toBe('center');
-      expect(style.width).toBe('16px');
-      expect(style.height).toBe('16px');
+      expect(style.width).toBe('14px');
+      expect(style.height).toBe('14px');
     });
   });
 
@@ -540,6 +557,7 @@ describe('SdBadge', () => {
   describe('icon renderer configuration', () => {
     it('uses SdIcon default fontSet when fontSet is not provided', () => {
       setInput(fixture, 'type', 'icon');
+      setInput(fixture, 'icon', 'info');
       const icon = getIconComponent();
 
       expect(icon.resolvedFontSet()).toBe('material-icons-outlined');
@@ -547,6 +565,7 @@ describe('SdBadge', () => {
 
     it('passes fontSet to SdIcon', () => {
       setInput(fixture, 'type', 'icon');
+      setInput(fixture, 'icon', 'info');
       setInput(fixture, 'fontSet', 'material-icons');
       const icon = getIconComponent();
 
@@ -555,6 +574,7 @@ describe('SdBadge', () => {
 
     it('lets fontSet override the Material icon font set', () => {
       setInput(fixture, 'type', 'icon');
+      setInput(fixture, 'icon', 'info');
       setInput(fixture, 'fontSet', 'material-icons-round');
       const icon = getIconComponent();
 
