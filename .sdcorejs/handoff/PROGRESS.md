@@ -35,16 +35,11 @@ Cập nhật: 2026-10-21.
 
 ## Đang chờ quyết định (cập nhật 2026-10-21)
 
-Máy khác làm tiếp: hỏi user các mục dưới trước khi đổi code liên quan. Cột filter một operator đã được trả lời
-(quyết định 16); các mục dưới vẫn chưa.
+Máy khác làm tiếp: hỏi user các mục dưới trước khi đổi code liên quan. Cột filter một operator (quyết định 16) và ba
+điểm thiết kế bước 10 (quyết định 17) đã được trả lời; các mục dưới vẫn chưa.
 
-1. **Ba điểm thiết kế của bước 10** (mục "Bước 10 — đã làm" bên dưới). PROMPT bắt trình rồi dừng chờ duyệt trước khi
-   code; vì user bảo làm hết rồi review một lượt nên đã làm luôn. Cần user xác nhận đồng ý (hoặc nói điểm muốn đổi):
-   - (1) chip nội bộ `ɵSdOperatorChip` + `ɵsdOperatorResolver` dùng chung với `sd-operator`, API `sd-operator` không đổi;
-   - (2) tên trên control: `operators` (`readonly Operator[]`, mặc định `[]`) và `[(operator)]`;
-   - (3) utils đã có `BETWEEN` / `NULL` / `NOT_NULL` → không làm ô "từ – đến"; split filter giữ hai ô.
-2. **Kanban `appearance`** (bước 8): README nói không thêm option `appearance`; giữ nguyên, ghi để user xác nhận trong PR.
-3. **Báo backend:** NULL / NOT_NULL trên cột control mặc định giờ gửi `{ field, operator }` không `data` (CHANGELOG ghi
+1. **Kanban `appearance`** (bước 8): README nói không thêm option `appearance`; giữ nguyên, ghi để user xác nhận trong PR.
+2. **Báo backend:** NULL / NOT_NULL trên cột control mặc định giờ gửi `{ field, operator }` không `data` (CHANGELOG ghi
    "Server payload change").
 
 **Còn phải làm (chưa ai làm):** kiểm tra showcase cuối theo PROMPT — light / dark, preset graphite, forced-colors,
@@ -80,6 +75,12 @@ build lib v19 pass. Ảnh trước/sau: [`screenshots/`](screenshots/).
     có từ 2 operator (`operatorInControl`). Lệch có chủ đích so với README đợt 2 ("đúng một operator thì không hiện chip và
     tự đặt operator đó"). Spec khoá hành vi: `column-filter.component.spec.ts` › "keeps the separate sd-operator for a
     single configured operator…".
+17. (Sau bước 10) Xác nhận ba điểm thiết kế của bước 10 như đã làm — cổng duyệt của PROMPT bước 10 coi như đã qua:
+    - (1) chip nội bộ `ɵSdOperatorChip` (`components/operator/src/operator-chip.component.ts`) và `ɵsdOperatorResolver`
+      (`operator-items.ts`) dùng chung với `sd-operator`; public API của `sd-operator` không đổi, query-bar vẫn dùng `open()`;
+    - (2) tên trên control: `operators` (`readonly Operator[]`, mặc định `[]`) và `[(operator)]`;
+    - (3) `@sdcorejs/utils` đã có `BETWEEN` / `NULL` / `NOT_NULL` nhưng không làm ô "từ – đến"; filter `split-number` /
+      `split-date` giữ hai ô như cũ.
 
 ### Control dạng ô (README đợt 2, mục D) — đã duyệt
 
