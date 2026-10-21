@@ -24,11 +24,12 @@ Cập nhật: 2026-10-21.
 | 2 | Đợt 2 · D — token control, panel, control tự viết | `50863499` |
 | 3 | Đợt 2 · E — checkbox và radio | `8cc08f67` |
 | 4 | Đợt 1 — sd-segmented | `77d7f449` |
-| 5 | Đợt 1 · B — primitive tìm kiếm `ɵ` | commit `feat(forms): draw the four search boxes with one internal search field` |
-| 6–10 | Token table, form-builder, kanban, indicator sd-button, operator trong control | chưa làm |
+| 5 | Đợt 1 · B — primitive tìm kiếm `ɵ` | `6e6a4259` |
+| 6 | Đợt 1 · C — token table | commit `feat(table): derive the table colours from the palette` |
+| 7–10 | Form-builder, kanban, indicator sd-button, operator trong control | chưa làm |
 
-Kết quả kiểm tra ở commit bước 5 (Node 22.22.3): Karma v19 7571/7571 (coverage 89.85 / 79.08 / 90.31 / 92.29), lint,
-`test:theme` 48/48, `check:scss-hex` 0 finding, `check:i18n-parity` (1341 key × 5) và `check:i18n` pass, `check:sync` pass,
+Kết quả kiểm tra ở commit bước 6 (Node 22.22.3): Karma v19 7571/7571 (coverage 89.85 / 79.07 / 90.31 / 92.29), lint,
+`test:theme` 49/49, `check:scss-hex` 0 finding, `check:i18n-parity` (1341 key × 5) và `check:i18n` pass, `check:sync` pass,
 build lib v19 pass. Ảnh trước/sau: [`screenshots/`](screenshots/).
 
 ## Quyết định đã duyệt (2026-10-21)
@@ -98,6 +99,21 @@ Lệch thông số và quyết định nhỏ (cần duyệt lại nếu không �
 - Kanban 40px → 32px, palette 36px → 32px và chữ 13px → 14px (đúng README, ghi lại vì là thay đổi hình ảnh).
 - Bấm vào icon / phần đệm vẫn focus input như các wrapper `<label>` cũ (thêm vào primitive).
 - Quick search ở container ≤ 550px: đặt `min-height` / `font-size` lên host và biến local `--sd-search-field-clear-size: 40px`.
+
+## Bước 6 — đã làm
+
+- **Token** (`_component-tokens.scss`): 11 token `table-*` theo README đợt 1 mục C, cùng biểu thức light / dark; giữ `table-bg`,
+  `table-tree-level-*`, `table-export-*`. Header comment D-014 ghi ngoại lệ cho token dẫn xuất (Sidebar V4, sd-view, table).
+- **`table.component.scss`:** icon sort giữ data-URI, thành `mask-image` trên `::after` (`--sd-text-secondary`, cột đang sort
+  `--sd-text`; `.sd-table-sort-header` thêm `position: relative`); drag preview `--sd-table-bg` / `--sd-table-row-divider` /
+  `--sd-shadow-md`; icon reorder `--sd-text-muted`; hover resize và tree toggle `color-mix(text 8%, transparent)`;
+  `.c-btn-add` `--sd-shadow-sm`. Không đụng `.c-loading`, `.lds-ring`, empty state.
+- **Test:** `core-theme.test.mjs` assert 11 biểu thức + giá trị giữ nguyên; `theme-contrast.test.mjs` thêm 3 cặp ≥ 4.5:1
+  (header-text / header-bg, text / row-selected-bg, text / row-activated-bg — cặp cuối thêm ngoài README) cho mọi preset
+  và dark; a11y spec của table assert icon sort là mask có màu theme (RED trên SCSS cũ đã xác nhận).
+- **Docs:** `THEME.md` mục "Table tokens" + dòng Component tokens, `sd-table.md` (Visual cues), CHANGELOG.
+- Ảnh: light gần như không đổi (header nhạt hơn chút, hàng chọn tint primary); dark: hàng chọn bớt xanh đậm, tay nắm
+  reorder giờ thấy được (trước là đen 38% trên nền tối). Preset graphite chưa xem bằng mắt — chỉ có test tương phản.
 
 ## Ghi chú kỹ thuật
 

@@ -4,6 +4,10 @@
 // - Light = the exact hex the component used in 2.15, so migrating a component to its token changes
 //   nothing on screen (D-014, INV-001).
 // - Dark = chosen for the default dark palette and checked in scripts/theme-contrast.test.mjs.
+// - Exception to the 2.15 hex rule: tokens derived from the palette (Sidebar V4, sd-view, and since design
+//   handoff wave 1 · C the sd-table colours) hold one `var()` / `color-mix()` expression for both modes.
+//   Each scope resolves it against its own palette, so presets and dark follow without a second value.
+//   Their contrast pairs are in scripts/theme-contrast.test.mjs.
 // - Surfaces that are dark in both modes (code editor, image/PDF viewer shell, overlays) keep one
 //   value; the image/PDF viewers' own `theme="light"` variant keeps its colours too, because that input
 //   is an explicit choice independent of the app mode.
@@ -231,19 +235,20 @@ $component-tokens: (
   'tab-router-item-text': (#757575, #a4a6b0),
   'tab-router-badge-bg': (#5c6bc0, #9fa8da),
   'tab-router-nav-bg': (#f9f9f9, #16171a),
-  // table
+  // table — derived from the palette and mixed with --sd-table-bg (not surface), one expression for light
+  // and dark (design handoff wave 1 · C). table-bg, the tree levels and the export panel keep their values.
   'table-bg': (#ffffff, #1d1f23),
-  'table-header-bg': (#f2f3f4, #25272c),
-  'table-header-text': (#212121, #e3e2e6),
-  'table-group-header-mix': (#f2f3f4, #25272c),
-  'table-row-divider': (#f2f2f2, #34373d),
-  'table-row-hover-bg': (#f5f5f5, #25272c),
-  'table-row-selected-bg': (#eef2ff, #25324d),
-  'table-row-activated-bg': (#e5ecff, #2b3a5a),
-  'table-spinner': (#cceeff, #4a6f8a),
-  'table-select-arrow': (#a6a6a6, #8e9099),
-  'table-group-row-bg': (#f5f7fc, #22252c),
-  'table-group-row-border': (#e6e9f2, #34373d),
+  'table-header-bg': (color-mix(in srgb, var(--sd-surface-muted) 50%, var(--sd-table-bg)), color-mix(in srgb, var(--sd-surface-muted) 50%, var(--sd-table-bg))),
+  'table-header-text': (var(--sd-text), var(--sd-text)),
+  'table-group-header-mix': (var(--sd-table-header-bg), var(--sd-table-header-bg)),
+  'table-row-divider': (color-mix(in srgb, var(--sd-border) 45%, var(--sd-table-bg)), color-mix(in srgb, var(--sd-border) 45%, var(--sd-table-bg))),
+  'table-row-hover-bg': (color-mix(in srgb, var(--sd-text) 4%, var(--sd-table-bg)), color-mix(in srgb, var(--sd-text) 4%, var(--sd-table-bg))),
+  'table-row-selected-bg': (color-mix(in srgb, var(--sd-primary) 9%, var(--sd-table-bg)), color-mix(in srgb, var(--sd-primary) 9%, var(--sd-table-bg))),
+  'table-row-activated-bg': (color-mix(in srgb, var(--sd-primary) 14%, var(--sd-table-bg)), color-mix(in srgb, var(--sd-primary) 14%, var(--sd-table-bg))),
+  'table-spinner': (var(--sd-primary), var(--sd-primary)),
+  'table-select-arrow': (var(--sd-text-secondary), var(--sd-text-secondary)),
+  'table-group-row-bg': (color-mix(in srgb, var(--sd-primary) 4%, var(--sd-table-bg)), color-mix(in srgb, var(--sd-primary) 4%, var(--sd-table-bg))),
+  'table-group-row-border': (var(--sd-table-row-divider), var(--sd-table-row-divider)),
   'table-tree-level-0-bg': (#fbfcfe, #1b1d21),
   'table-tree-level-1-bg': (#ffffff, #1d1f23),
   'table-tree-level-2-bg': (#fafbfd, #202226),

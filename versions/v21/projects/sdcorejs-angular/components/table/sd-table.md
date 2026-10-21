@@ -1019,6 +1019,8 @@ When rendering SD form controls in `sdTableFilterDef`, editable cells, external-
 
 The column settings dialog uses compact rows with 4px vertical cell padding and checkboxes centered with the input editors, including the label wrapper used by Angular Material 22. Its table uses the modal body's existing gutters, aligning the outer border with the footer actions.
 
+Colours come from the theme (see `assets/THEME.md`, "Table tokens"): the header band, row dividers, hover, selected, activated and group rows are `color-mix()` of the palette over `--sd-table-bg`, so dark mode and presets follow. Sort arrows are tinted `--sd-text-secondary` at rest and `--sd-text` on the sorted column; the drag preview, reorder handle and hover overlays use theme tokens too.
+
 The desktop table uses subtle 6px outer corners: the existing scroll area rounds the top corners and the paginator rounds the bottom corners. No additional clipping or scroll container is introduced, preserving sticky headers and columns. Mobile cards retain their existing shape.
 
 - **Toolbar** (top): external-filter form (collapsible), reload button, column-config gear, export menu, selection-action bar (when rows selected).

@@ -41,6 +41,11 @@ const PAIRS = [
   // whose primary is too light for its own tint darkens the ink through its `components` map.
   ['sidebar-v4-active-ink', 'sidebar-v4-active-bg', 4.5],
   ['sidebar-v4-avatar-ink', 'sidebar-v4-avatar-bg', 4.5],
+  // sd-table: header text on the header band and body text on a selected or activated row, all derived
+  // from the palette and --sd-table-bg.
+  ['table-header-text', 'table-header-bg', 4.5],
+  ['text', 'table-row-selected-bg', 4.5],
+  ['text', 'table-row-activated-bg', 4.5],
 ];
 
 const tokensOf = args => {

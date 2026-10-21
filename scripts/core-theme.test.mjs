@@ -319,6 +319,35 @@ test('Component tokens exist in both modes with the 2.15 hex as the light value'
   assert.equal(light['--sd-tooltip-bg'], '#616161');
 });
 
+// Wave 1 · C: table colours derive from the palette, mixed with --sd-table-bg (not surface), and use the
+// same expression in light and dark. table-bg, the tree levels and the export panel keep their values.
+const TABLE_DERIVED_TOKENS = {
+  '--sd-table-header-bg': 'color-mix(in srgb, var(--sd-surface-muted) 50%, var(--sd-table-bg))',
+  '--sd-table-header-text': 'var(--sd-text)',
+  '--sd-table-group-header-mix': 'var(--sd-table-header-bg)',
+  '--sd-table-row-divider': 'color-mix(in srgb, var(--sd-border) 45%, var(--sd-table-bg))',
+  '--sd-table-row-hover-bg': 'color-mix(in srgb, var(--sd-text) 4%, var(--sd-table-bg))',
+  '--sd-table-row-selected-bg': 'color-mix(in srgb, var(--sd-primary) 9%, var(--sd-table-bg))',
+  '--sd-table-row-activated-bg': 'color-mix(in srgb, var(--sd-primary) 14%, var(--sd-table-bg))',
+  '--sd-table-group-row-bg': 'color-mix(in srgb, var(--sd-primary) 4%, var(--sd-table-bg))',
+  '--sd-table-group-row-border': 'var(--sd-table-row-divider)',
+  '--sd-table-select-arrow': 'var(--sd-text-secondary)',
+  '--sd-table-spinner': 'var(--sd-primary)',
+};
+
+test('Table tokens derive from the palette and --sd-table-bg with one expression in light and dark', () => {
+  const light = declarations(compile('.x { @include sd.theme(); }'));
+  const dark = declarations(compile(".x { @include sd.theme($mode: 'dark'); }"));
+  for (const [name, value] of Object.entries(TABLE_DERIVED_TOKENS)) {
+    assert.equal(light[name], value, `light ${name}`);
+    assert.equal(dark[name], value, `dark ${name}`);
+  }
+  assert.equal(light['--sd-table-bg'], '#ffffff');
+  assert.equal(dark['--sd-table-bg'], '#1d1f23');
+  assert.equal(light['--sd-table-tree-level-0-bg'], '#fbfcfe');
+  assert.equal(light['--sd-table-export-panel-bg'], '#f6f6f6');
+});
+
 // ---------------------------------------------------------------------------
 // Sidebar V4 colour tokens and preset component overrides (R-005, R-011; D-006, D-007, D-029; INV-007, INV-008)
 // ---------------------------------------------------------------------------
