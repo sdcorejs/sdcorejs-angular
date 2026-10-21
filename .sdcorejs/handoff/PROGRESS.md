@@ -227,7 +227,7 @@ ghi ở đây để review cùng commit, và bước 10 nằm gọn trong một 
 - Kiểm tra: spec operator / forms / table / query-bar / query-builder / public-api 2808/2808, column-filter + preview 237/237,
   lint file đổi, `test:theme` 51/51, `check:scss-hex` 0, `check:i18n-parity` (1346 × 5), `check:i18n`, `check:sync`, build lib v19.
   Full Karma lần 1: 7615/7617 — 2 spec thumbnail `SdPreviewPdf` timeout (flaky canvas đã biết, chạy riêng pass). Full Karma
-  lần cuối (sau sửa placeholder) đang chạy lúc commit — **cần chạy lại xác nhận**.
+  lần cuối (sau sửa placeholder): 7618/7618, coverage 89.88 / 79.12 / 90.34 / 92.31.
 - Ảnh: `screenshots/step10-before-after.png` (filter bảng, menu sd-operator), `screenshots/step10-controls.png` (demo mới),
   script `tools/shots-step10.mjs`, `tools/compose-only.mjs`.
 
