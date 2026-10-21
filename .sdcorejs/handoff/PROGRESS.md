@@ -35,24 +35,16 @@ Cập nhật: 2026-10-21.
 
 ## Đang chờ quyết định (cập nhật 2026-10-21)
 
-Máy khác làm tiếp: hỏi user các mục dưới trước khi đổi code liên quan. Chưa mục nào được trả lời.
+Máy khác làm tiếp: hỏi user các mục dưới trước khi đổi code liên quan. Cột filter một operator đã được trả lời
+(quyết định 16); các mục dưới vẫn chưa.
 
-1. **Cột filter bảng chỉ có một operator** (`filter: { operator: { enable: true, list: ['EQUAL'] } }`).
-   - README đợt 2 muốn: control có đúng một operator thì không hiện gì và tự đặt operator đó.
-   - Vướng: "tự đặt" = control phát `operatorChange` ngay lúc trang mở → bảng gọi callback `filter.operatorChange` của
-     ứng dụng và commit filter dù user chưa làm gì; PROMPT lại yêu cầu giữ nguyên thời điểm emit.
-   - **Đang làm (a):** riêng trường hợp này giữ icon `sd-operator` rời cạnh ô như trước (column-filter
-     `operatorInControl` yêu cầu ≥ 2 operator). Hành vi không đổi, chỉ khác giao diện với cột có chip.
-   - **Phương án (b):** theo README — truyền cả danh sách một operator xuống control (bỏ điều kiện `> 1` trong
-     `operatorInControl`), chấp nhận thêm một `operatorChange` lúc khởi tạo; spec cần đổi:
-     `column-filter.component.spec.ts` › "keeps the separate sd-operator for a single configured operator…".
-2. **Ba điểm thiết kế của bước 10** (mục "Bước 10 — đã làm" bên dưới). PROMPT bắt trình rồi dừng chờ duyệt trước khi
+1. **Ba điểm thiết kế của bước 10** (mục "Bước 10 — đã làm" bên dưới). PROMPT bắt trình rồi dừng chờ duyệt trước khi
    code; vì user bảo làm hết rồi review một lượt nên đã làm luôn. Cần user xác nhận đồng ý (hoặc nói điểm muốn đổi):
    - (1) chip nội bộ `ɵSdOperatorChip` + `ɵsdOperatorResolver` dùng chung với `sd-operator`, API `sd-operator` không đổi;
    - (2) tên trên control: `operators` (`readonly Operator[]`, mặc định `[]`) và `[(operator)]`;
    - (3) utils đã có `BETWEEN` / `NULL` / `NOT_NULL` → không làm ô "từ – đến"; split filter giữ hai ô.
-3. **Kanban `appearance`** (bước 8): README nói không thêm option `appearance`; giữ nguyên, ghi để user xác nhận trong PR.
-4. **Báo backend:** NULL / NOT_NULL trên cột control mặc định giờ gửi `{ field, operator }` không `data` (CHANGELOG ghi
+2. **Kanban `appearance`** (bước 8): README nói không thêm option `appearance`; giữ nguyên, ghi để user xác nhận trong PR.
+3. **Báo backend:** NULL / NOT_NULL trên cột control mặc định giờ gửi `{ field, operator }` không `data` (CHANGELOG ghi
    "Server payload change").
 
 **Còn phải làm (chưa ai làm):** kiểm tra showcase cuối theo PROMPT — light / dark, preset graphite, forced-colors,
@@ -82,6 +74,12 @@ build lib v19 pass. Ảnh trước/sau: [`screenshots/`](screenshots/).
 13. Màu và độ đậm option đang chọn đặt trong phạm vi `.sd-select-panel` / `.sd-autocomplete-panel`; token global giữ nguyên.
 14. Thêm cả 7 `--sd-control-*` vào `SD_COLOR_TOKENS` (ghi chú `control-ring*` là box-shadow).
 15. (Sau bước 2) Giữ nền label float khi focus như spec, không đổi sang vòng `clip-path`.
+16. (Sau bước 10) Cột filter bảng chỉ có **một** operator (`filter: { operator: { enable: true, list: ['EQUAL'] } }`)
+    giữ phương án (a): vẫn dùng icon `sd-operator` rời cạnh ô như trước, không đưa vào chip trong control, nên không phát
+    `operatorChange` lúc khởi tạo (giữ thời điểm emit như PROMPT yêu cầu). Column-filter chỉ đưa operator vào control khi
+    có từ 2 operator (`operatorInControl`). Lệch có chủ đích so với README đợt 2 ("đúng một operator thì không hiện chip và
+    tự đặt operator đó"). Spec khoá hành vi: `column-filter.component.spec.ts` › "keeps the separate sd-operator for a
+    single configured operator…".
 
 ### Control dạng ô (README đợt 2, mục D) — đã duyệt
 
