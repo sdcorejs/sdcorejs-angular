@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Roboto:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0..1,0" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:#f4f4f1;color:#1a1b1f;-webkit-font-smoothing:antialiased}
+a{color:#005cbb;text-decoration:none}
+a:hover{color:#004a99;text-decoration:underline}
+</style>
+</helmet>
+<div style="font-family:'Be Vietnam Pro',sans-serif;font-size:15px;line-height:1.6;color:#1a1b1f;max-width:1240px;margin:0 auto;padding:56px 32px 96px;box-sizing:border-box">
+
+<header data-screen-label="00 Header" style="display:flex;flex-direction:column;gap:16px;padding-bottom:40px;border-bottom:1px solid #dddcd6">
+  <div style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#6b6d73;display:flex;flex-wrap:wrap;gap:6px 16px"><span>sdcorejs/sdcorejs-angular · main @ 773d7de</span><span>versions/v19 · components/avatar</span></div>
+  <h1 style="margin:0;font-weight:600;font-size:44px;line-height:1.12;letter-spacing:-0.02em;max-width:900px;text-wrap:balance">sd-avatar: trạng thái và nhóm avatar</h1>
+  <p style="margin:0;max-width:780px;color:#3a3c42;font-size:17px;text-wrap:pretty">Hiện sd-avatar chỉ có <span style="font-family:'JetBrains Mono',monospace;font-size:15px">src</span> và <span style="font-family:'JetBrains Mono',monospace;font-size:15px">size</span>. Trang này bổ sung chấm trạng thái theo phương án A đã chọn ở <a href="Badge Review.dc.html#type-moi">Badge Review</a>, và một component mới để xếp nhiều avatar chồng nhau. Cách hiển thị avatar hiện tại (nền light, chữ đậm cùng tông, màu theo tên) giữ nguyên.</p>
+  <nav style="display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px;padding-top:8px">
+    <a href="#trang-thai">01 Chấm trạng thái</a>
+    <a href="#nhom">02 Nhóm avatar</a>
+    <a href="#api">03 API</a>
+  </nav>
+</header>
+
+<section id="trang-thai" data-screen-label="01 Chấm trạng thái" style="padding-top:56px;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">01</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Chấm trạng thái</h2>
+  </div>
+  <div style="max-width:820px;padding:16px 20px;border-radius:10px;background:#ffffff;border:1px solid #e3e2dc;display:flex;flex-direction:column;gap:8px;font-size:14px;line-height:1.6;color:#2b2c30">
+    <strong style="font-weight:600">statusLabel là gì?</strong>
+    <span>Chấm chỉ có màu, nên người dùng không biết xanh nghĩa là gì và screen reader không đọc được màu. <span style="font-family:'JetBrains Mono',monospace;font-size:13px">statusLabel</span> là chữ mô tả trạng thái, ví dụ “Đang hoạt động”. Chữ này được dùng ở hai chỗ:</span>
+    <ul style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:2px">
+      <li>tooltip khi rê chuột vào chấm;</li>
+      <li>tên khả truy cập của avatar, ví dụ screen reader đọc “Lê Lan Anh, Đang hoạt động”.</li>
+    </ul>
+    <span>Khi có <span style="font-family:'JetBrains Mono',monospace;font-size:13px">status</span> thì <span style="font-family:'JetBrains Mono',monospace;font-size:13px">statusLabel</span> là bắt buộc. Thiếu thì ở chế độ dev sẽ có cảnh báo trong console. Lý do: màu không mang nghĩa cố định (success có thể là “trực tuyến”, cũng có thể là “đã duyệt”).</span>
+  </div>
+
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #dddcd6">
+      <span style="display:flex;align-items:center;gap:8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#005cbb"><span style="width:8px;height:8px;border-radius:999px;background:#005cbb"></span>Đề xuất · status trên sd-avatar</span>
+      <span style="font:400 12px/16px 'JetBrains Mono',monospace;color:#6b6d73">đổi cỡ, trạng thái, pulse · rê chuột vào chấm để xem tooltip</span>
+    </div>
+    <div style="background:#f9f9f9;padding:28px 32px;display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:32px;font-family:Roboto,'Helvetica Neue',sans-serif;color:#1a1b1f">
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:12px;font-weight:500;color:#44474f"><span style="font-family:'JetBrains Mono',monospace">size</span></span>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <sc-for list="{{ sizeOpts }}" as="o" hint-placeholder-count="5"><span onClick="{{ o.pick }}" style="flex:0 0 auto;white-space:nowrap;height:28px;box-sizing:border-box;display:inline-flex;align-items:center;padding:0 12px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font:500 12px 'JetBrains Mono',monospace;cursor:pointer">{{ o.label }}</span></sc-for>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:12px;font-weight:500;color:#44474f"><span style="font-family:'JetBrains Mono',monospace">status</span> · <span style="font-family:'JetBrains Mono',monospace">statusLabel</span></span>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <sc-for list="{{ statusOpts }}" as="o" hint-placeholder-count="5"><span onClick="{{ o.pick }}" style="flex:0 0 auto;white-space:nowrap;height:28px;box-sizing:border-box;display:inline-flex;align-items:center;gap:6px;padding:0 12px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12px;cursor:pointer"><span style="width:8px;height:8px;border-radius:999px;background:{{ o.dot }}"></span>{{ o.label }}</span></sc-for>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span onClick="{{ togglePulse }}" style="position:relative;width:36px;height:20px;border-radius:999px;background:{{ pulseTrack }};cursor:pointer;flex:0 0 auto"><span style="position:absolute;top:2px;left:{{ pulseKnob }}px;width:16px;height:16px;border-radius:999px;background:#ffffff;box-shadow:0 1px 2px rgba(0,0,0,.2)"></span></span>
+          <span style="font-size:12px;font-weight:500;color:#44474f"><span style="font-family:'JetBrains Mono',monospace">statusPulse</span> · vòng sáng cho trạng thái đang diễn ra</span>
+        </div>
+        <pre style="margin:0;padding:12px 14px;border-radius:8px;background:#1f2024;color:#e3e3e8;font:12px/1.65 'JetBrains Mono',monospace;white-space:pre-wrap;word-break:break-word">{{ code }}</pre>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="min-height:150px;border-radius:10px;background:#fdfbff;border:1px solid #e3e2dc;display:flex;align-items:center;justify-content:center">
+          <span style="position:relative;display:inline-flex;flex:0 0 auto;width:{{ demo.sz }}px;height:{{ demo.sz }}px">
+            <span style="width:100%;height:100%;border-radius:999px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:{{ demo.bg }};color:{{ demo.fg }};font-family:Roboto,sans-serif;font-weight:600;font-size:{{ demo.fs }}px;line-height:1">{{ demo.ini }}</span>
+            <sc-if value="{{ demo.hasStatus }}" hint-placeholder-val="{{ true }}"><span title="{{ demo.statusLabel }}" style="position:absolute;right:{{ demo.off }}px;bottom:{{ demo.off }}px;width:{{ demo.dot }}px;height:{{ demo.dot }}px;box-sizing:border-box;border-radius:999px;background:{{ demo.statusColor }};border:{{ demo.dotRing }}px solid #fdfbff;box-shadow:{{ demo.halo }};cursor:help"></span></sc-if>
+          </span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;height:56px;padding:0 14px;border-radius:10px;background:#fdfbff;border:1px solid #e3e2dc">
+          <span style="position:relative;display:inline-flex;flex:0 0 auto;width:32px;height:32px">
+            <span style="width:100%;height:100%;border-radius:999px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:{{ row.bg }};color:{{ row.fg }};font-family:Roboto,sans-serif;font-weight:600;font-size:{{ row.fs }}px;line-height:1">{{ row.ini }}</span>
+            <sc-if value="{{ row.hasStatus }}" hint-placeholder-val="{{ true }}"><span title="{{ row.statusLabel }}" style="position:absolute;right:{{ row.off }}px;bottom:{{ row.off }}px;width:{{ row.dot }}px;height:{{ row.dot }}px;box-sizing:border-box;border-radius:999px;background:{{ row.statusColor }};border:{{ row.dotRing }}px solid #fdfbff;box-shadow:{{ row.halo }}"></span></sc-if>
+          </span>
+          <span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:14px;line-height:20px">Lê Lan Anh</span><span style="font-size:12px;line-height:16px;color:#44474f">{{ rowText }}</span></span>
+        </div>
+        <div style="font-family:'Be Vietnam Pro',sans-serif;font-size:13px;line-height:1.55;color:#3a3c42">Screen reader đọc: <strong style="font-weight:600;color:#1a1b1f">“{{ a11y }}”</strong></div>
+      </div>
+    </div>
+  </div>
+  <ul style="margin:0;padding-left:20px;max-width:860px;font-size:14px;line-height:1.6;color:#3a3c42;display:flex;flex-direction:column;gap:6px">
+    <li><strong style="font-weight:600;color:#1a1b1f">Hình học:</strong> đường kính chấm là <span style="font-family:'JetBrains Mono',monospace;font-size:13px">clamp(8px, size × 0.25, 20px)</span>. Viền 2px khi avatar nhỏ hơn 64px, 3px khi từ 64px trở lên. Vị trí <span style="font-family:'JetBrains Mono',monospace;font-size:13px">right = bottom = size × 0.146 − (chấm + 2 × viền) / 2</span> đặt tâm chấm trên mép avatar ở góc 45°. Màu viền dùng <span style="font-family:'JetBrains Mono',monospace;font-size:13px">--sd-avatar-status-ring</span>, mặc định là <span style="font-family:'JetBrains Mono',monospace;font-size:13px">--sd-surface</span>.</li>
+    <li><strong style="font-weight:600;color:#1a1b1f">Cấu trúc:</strong> <span style="font-family:'JetBrains Mono',monospace;font-size:13px">.sd-avatar</span> đang có <span style="font-family:'JetBrains Mono',monospace;font-size:13px">overflow: hidden</span>, nên chấm phải là phần tử anh em của <span style="font-family:'JetBrains Mono',monospace;font-size:13px">.sd-avatar</span>, không nằm bên trong. Host đổi thành <span style="font-family:'JetBrains Mono',monospace;font-size:13px">position: relative; display: inline-flex</span>. Chấm được render bằng <span style="font-family:'JetBrains Mono',monospace;font-size:13px">sd-badge type="dot"</span>, nên dùng lại màu và pulse của badge.</li>
+    <li><strong style="font-weight:600;color:#1a1b1f">A11y:</strong> host có <span style="font-family:'JetBrains Mono',monospace;font-size:13px">role="img"</span> và <span style="font-family:'JetBrains Mono',monospace;font-size:13px">aria-label</span> = tên + statusLabel. Ảnh bên trong có <span style="font-family:'JetBrains Mono',monospace;font-size:13px">alt=""</span> để không đọc lặp, thay cho <span style="font-family:'JetBrains Mono',monospace;font-size:13px">alt="avatar"</span> hiện tại. Chấm không nhận focus. Pulse tắt khi <span style="font-family:'JetBrains Mono',monospace;font-size:13px">prefers-reduced-motion</span>.</li>
+  </ul>
+</section>
+
+<section id="nhom" data-screen-label="02 Nhóm avatar" style="padding-top:72px;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">02</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Nhóm avatar · sd-avatar-group (mới)</h2>
+  </div>
+  <p style="margin:0;max-width:780px;color:#3a3c42;text-wrap:pretty">Đúng là sd-avatar chưa có khả năng nhóm. Hiện consumer phải tự viết margin âm và z-index, nên mỗi màn làm một kiểu. Component mới nhận danh sách người, hiện tối đa <span style="font-family:'JetBrains Mono',monospace;font-size:13px">max</span> avatar, phần còn lại gộp vào ô “+N”; bấm vào ô này để xem danh sách đầy đủ.</p>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #dddcd6">
+      <span style="display:flex;align-items:center;gap:8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#005cbb"><span style="width:8px;height:8px;border-radius:999px;background:#005cbb"></span>Đề xuất · sd-avatar-group · 7 người</span>
+      <span style="font:400 12px/16px 'JetBrains Mono',monospace;color:#6b6d73">đổi max, size · bấm “+N”</span>
+    </div>
+    <div style="background:#f9f9f9;padding:28px 32px;display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:32px;font-family:Roboto,'Helvetica Neue',sans-serif;color:#1a1b1f">
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:12px;font-weight:500;color:#44474f;font-family:'JetBrains Mono',monospace">max</span>
+          <div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ maxOpts }}" as="o" hint-placeholder-count="3"><span onClick="{{ o.pick }}" style="flex:0 0 auto;white-space:nowrap;height:28px;box-sizing:border-box;display:inline-flex;align-items:center;padding:0 12px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font:500 12px 'JetBrains Mono',monospace;cursor:pointer">{{ o.label }}</span></sc-for></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:12px;font-weight:500;color:#44474f;font-family:'JetBrains Mono',monospace">size</span>
+          <div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ gSizeOpts }}" as="o" hint-placeholder-count="3"><span onClick="{{ o.pick }}" style="flex:0 0 auto;white-space:nowrap;height:28px;box-sizing:border-box;display:inline-flex;align-items:center;padding:0 12px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font:500 12px 'JetBrains Mono',monospace;cursor:pointer">{{ o.label }}</span></sc-for></div>
+        </div>
+        <pre style="margin:0;padding:12px 14px;border-radius:8px;background:#1f2024;color:#e3e3e8;font:12px/1.65 'JetBrains Mono',monospace;white-space:pre-wrap;word-break:break-word">{{ gCode }}</pre>
+      </div>
+      <div style="position:relative;min-height:340px;display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:center;gap:12px;padding:16px;border-radius:10px;background:#fdfbff;border:1px solid #e3e2dc">
+          <span style="font-size:13px;color:#44474f;flex:0 0 auto">Người phụ trách</span>
+          <span style="position:relative;display:flex;align-items:center">
+            <sc-for list="{{ group }}" as="a" hint-placeholder-count="4">
+              <span title="{{ a.title }}" style="position:relative;z-index:{{ a.z }};margin-left:{{ a.ml }}px;display:inline-flex;flex:0 0 auto;width:{{ a.sz }}px;height:{{ a.sz }}px;border-radius:999px;box-shadow:0 0 0 2px #fdfbff">
+                <span style="width:100%;height:100%;border-radius:999px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:{{ a.bg }};color:{{ a.fg }};font-family:Roboto,sans-serif;font-weight:600;font-size:{{ a.fs }}px;line-height:1">{{ a.ini }}</span>
+                <sc-if value="{{ a.hasStatus }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;right:{{ a.off }}px;bottom:{{ a.off }}px;width:{{ a.dot }}px;height:{{ a.dot }}px;box-sizing:border-box;border-radius:999px;background:{{ a.statusColor }};border:{{ a.dotRing }}px solid #fdfbff;box-shadow:{{ a.halo }}"></span></sc-if>
+              </span>
+            </sc-for>
+            <sc-if value="{{ hasMore }}" hint-placeholder-val="{{ true }}">
+              <span onClick="{{ toggleMore }}" style="position:relative;z-index:0;margin-left:{{ moreMl }}px;width:{{ gsz }}px;height:{{ gsz }}px;flex:0 0 auto;border-radius:999px;background:{{ moreBg }};color:#44474f;box-shadow:{{ moreRing }};display:flex;align-items:center;justify-content:center;font-family:Roboto,sans-serif;font-weight:600;font-size:{{ moreFs }}px;line-height:1;cursor:pointer" style-hover="background:#dcdde3">+{{ moreN }}</span>
+            </sc-if>
+          </span>
+        </div>
+        <sc-if value="{{ moreOpen }}" hint-placeholder-val="{{ false }}">
+          <div style="width:280px;box-sizing:border-box;background:#ffffff;border:1px solid #e3e4ea;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.14),0 1px 3px rgba(0,0,0,.08);padding:6px;display:flex;flex-direction:column;margin-left:120px;margin-top:-8px">
+            <span style="padding:6px 10px;font-size:12px;font-weight:500;line-height:16px;color:#44474f">{{ moreTitle }}</span>
+            <sc-for list="{{ rest }}" as="a" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:10px;height:44px;padding:0 10px;border-radius:6px" style-hover="background:#f0f1f5">
+                <span style="position:relative;display:inline-flex;flex:0 0 auto;width:28px;height:28px">
+                  <span style="width:100%;height:100%;border-radius:999px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:{{ a.bg }};color:{{ a.fg }};font-family:Roboto,sans-serif;font-weight:600;font-size:{{ a.fs }}px;line-height:1">{{ a.ini }}</span>
+                  <sc-if value="{{ a.hasStatus }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;right:{{ a.off }}px;bottom:{{ a.off }}px;width:{{ a.dot }}px;height:{{ a.dot }}px;box-sizing:border-box;border-radius:999px;background:{{ a.statusColor }};border:{{ a.dotRing }}px solid #ffffff"></span></sc-if>
+                </span>
+                <span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:13px;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.name }}</span><span style="font-size:12px;line-height:16px;color:#44474f">{{ a.statusText }}</span></span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+  <ul style="margin:0;padding-left:20px;max-width:860px;font-size:14px;line-height:1.6;color:#3a3c42;display:flex;flex-direction:column;gap:6px">
+    <li><strong style="font-weight:600;color:#1a1b1f">Chồng nhau:</strong> mỗi avatar lấn sang avatar trước nó <span style="font-family:'JetBrains Mono',monospace;font-size:13px">round(size × 0.15)</span> (5px khi cỡ 32), đủ nhỏ để không che chữ viết tắt của avatar phía sau. Mỗi avatar có vòng 2px màu nền (3px khi từ 64px). Avatar bên trái nằm trên, z-index giảm dần sang phải, nên chấm trạng thái không bị avatar kế tiếp che.</li>
+    <li><strong style="font-weight:600;color:#1a1b1f">Ô “+N”:</strong> cùng cỡ với avatar, nền surface-muted, chữ text-secondary weight 600, nằm dưới cùng. Ô này là <span style="font-family:'JetBrains Mono',monospace;font-size:13px">&lt;button&gt;</span>; bấm vào mở popover rộng 280px liệt kê những người bị ẩn, mỗi dòng cao 44px gồm avatar 28px, tên và trạng thái. Popover cuộn được khi cao hơn 320px.</li>
+    <li><strong style="font-weight:600;color:#1a1b1f">Tooltip:</strong> rê chuột vào từng avatar hiện tên kèm statusLabel. Nhóm có <span style="font-family:'JetBrains Mono',monospace;font-size:13px">role="group"</span> và <span style="font-family:'JetBrains Mono',monospace;font-size:13px">aria-label</span> “7 người”; ô “+N” có <span style="font-family:'JetBrains Mono',monospace;font-size:13px">aria-label</span> “Xem thêm 3 người”.</li>
+    <li><strong style="font-weight:600;color:#1a1b1f">Số lượng:</strong> nếu chỉ dư đúng 1 người thì hiện luôn người đó, thay vì ô “+1”, vì ô +1 chiếm đúng một chỗ avatar.</li>
+  </ul>
+</section>
+
+<section id="api" data-screen-label="03 API" style="padding-top:72px;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">03</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">API</h2>
+  </div>
+  <div style="display:flex;flex-direction:column;border:1px solid #dddcd6;border-radius:12px;overflow:hidden;font-size:13px;background:#ffffff;max-width:980px">
+    <div style="display:grid;grid-template-columns:minmax(120px,0.9fr) minmax(140px,1fr) minmax(0,0.6fr) minmax(0,2fr);gap:12px;padding:10px 16px;background:#f7f7f4;font:500 11px 'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.06em;color:#6b6d73"><span>Input</span><span>Kiểu</span><span>Mặc định</span><span>Ghi chú</span></div>
+    <sc-for list="{{ apiRows }}" as="r" hint-placeholder-count="10">
+      <div style="display:grid;grid-template-columns:minmax(120px,0.9fr) minmax(140px,1fr) minmax(0,0.6fr) minmax(0,2fr);gap:12px;padding:10px 16px;border-top:1px solid #ecebe6;line-height:1.5;background:{{ r.bg }}"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600">{{ r.name }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#44474f">{{ r.type }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#44474f">{{ r.def }}</span><span style="color:#3a3c42">{{ r.note }}</span></div>
+    </sc-for>
+  </div>
+  <p style="margin:0;max-width:780px;font-size:14px;line-height:1.6;color:#3a3c42">CHANGELOG ghi các mục sau. <strong style="font-weight:600;color:#1a1b1f">Added:</strong> status, statusLabel, statusPulse trên sd-avatar và component sd-avatar-group. <strong style="font-weight:600;color:#1a1b1f">Changed:</strong> host của sd-avatar đổi sang <span style="font-family:'JetBrains Mono',monospace;font-size:13px">inline-flex</span> với <span style="font-family:'JetBrains Mono',monospace;font-size:13px">position: relative</span>, và <span style="font-family:'JetBrains Mono',monospace;font-size:13px">alt</span> của ảnh đổi thành rỗng khi host đã có aria-label.</p>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { sz: 40, st: 'success', pulse: false, gmax: 4, gsz: 32, more: false };
+
+  renderVals() {
+    const PAL = ['#1abc9c', '#2ecc71', '#3498db', '#9b59b6', '#34495e', '#16a085', '#27ae60', '#2980b9', '#8e44ad', '#2c3e50', '#f1c40f', '#e67e22', '#e74c3c', '#95a5a6', '#f39c12', '#d35400', '#c0392b', '#bdc3c7', '#7f8c8d'];
+    const P = { primary: '#005cbb', secondary: '#5c6270', info: '#006a6a', success: '#2e7d32', warning: '#a66300', error: '#ba1a1a' };
+    const hash = n => { let h = 0; for (let i = 0; i < n.length; i++) h = n.charCodeAt(i) + ((h << 5) - h); return PAL[Math.abs(h) % PAL.length]; };
+    const initials = n => { const w = n.trim().split(' ').filter(Boolean); return w.length === 1 ? w[0][0].toUpperCase() : (w[0][0] + w[w.length - 1][0]).toUpperCase(); };
+    const vis = (name, sz, st, label, pulse) => {
+      const c = hash(name), d = Math.min(20, Math.max(8, Math.round(sz * 0.25))), r = sz >= 64 ? 3 : 2, total = d + r * 2;
+      return {
+        name, sz, ini: initials(name), fs: Math.round(sz / 2.5 * 10) / 10,
+        bg: `color-mix(in srgb, ${c} 14%, #ffffff)`, fg: `color-mix(in srgb, ${c} 45%, #000000)`,
+        hasStatus: !!st, statusLabel: label || '', statusColor: st ? P[st] : 'transparent',
+        dot: total, dotRing: r, off: Math.round(sz * 0.146 - total / 2),
+        halo: st && pulse ? `0 0 0 3px color-mix(in srgb, ${P[st]} 28%, transparent)` : 'none',
+        title: label ? `${name} · ${label}` : name, statusText: label || 'Không có trạng thái',
+      };
+    };
+    const chip = (sel) => ({ bd: sel ? '#005cbb' : '#c4c6d0', bg: sel ? '#e6f0fa' : '#ffffff', fg: sel ? '#004a96' : '#44474f' });
+    const { sz, st, pulse, gmax, gsz, more } = this.state;
+
+    const STATUS = [[null, 'Không'], ['success', 'Đang hoạt động'], ['warning', 'Vắng mặt'], ['error', 'Không làm phiền'], ['secondary', 'Ngoại tuyến']];
+    const label = (STATUS.find(s => s[0] === st) || [])[1];
+    const demo = vis('Lê Lan Anh', sz, st, st ? label : '', pulse);
+    const row = vis('Lê Lan Anh', 32, st, st ? label : '', pulse);
+    const attrs = st ? `\n  status="${st}" statusLabel="${label}"${pulse ? ' statusPulse' : ''}` : '';
+
+    const PEOPLE = [
+      ['Lê Lan Anh', 'success', 'Đang hoạt động', false], ['Phạm Minh Quân', 'success', 'Đang gọi', true], ['Trần Thu Hà', 'secondary', 'Ngoại tuyến', false],
+      ['Đỗ Đức Huy', 'warning', 'Vắng mặt', false], ['Nguyễn Bảo Ngọc', 'success', 'Đang hoạt động', false], ['Vũ Hoàng Long', 'error', 'Không làm phiền', false], ['Hoàng Mai Chi', null, '', false],
+    ];
+    const showN = PEOPLE.length - gmax === 1 ? PEOPLE.length : gmax;
+    const overlap = Math.round(gsz * 0.15);
+    const group = PEOPLE.slice(0, showN).map(([n, s, l, pl], i) => ({ ...vis(n, gsz, s, l, pl), z: showN - i + 1, ml: i ? -overlap : 0 }));
+    const rest = PEOPLE.slice(showN).map(([n, s, l]) => vis(n, 28, s, l, false));
+    const moreN = PEOPLE.length - showN;
+
+    return {
+      sizeOpts: [24, 32, 40, 64, 96].map(v => ({ label: String(v), ...chip(v === sz), pick: () => this.setState({ sz: v }) })),
+      statusOpts: STATUS.map(([k, l]) => ({ label: l, dot: k ? P[k] : 'transparent', ...chip(k === st), pick: () => this.setState({ st: k }) })),
+      togglePulse: () => this.setState(s => ({ pulse: !s.pulse })),
+      pulseTrack: pulse ? '#005cbb' : '#c4c6d0', pulseKnob: pulse ? 18 : 2,
+      demo, row,
+      rowText: st ? label : 'Kỹ sư dự án',
+      a11y: st ? `Lê Lan Anh, ${label}` : 'Lê Lan Anh',
+      code: `<sd-avatar src="Lê Lan Anh" [size]="${sz}"${attrs}></sd-avatar>`,
+
+      maxOpts: [3, 4, 5].map(v => ({ label: String(v), ...chip(v === gmax), pick: () => this.setState({ gmax: v, more: false }) })),
+      gSizeOpts: [24, 32, 40].map(v => ({ label: String(v), ...chip(v === gsz), pick: () => this.setState({ gsz: v }) })),
+      group, rest, gsz,
+      hasMore: moreN > 0, moreN, moreMl: -overlap, moreFs: Math.round(gsz / 2.5 * 10) / 10,
+      moreOpen: more && moreN > 0,
+      moreBg: more ? '#dcdde3' : '#e7e8ed',
+      moreRing: more ? '0 0 0 2px #fdfbff, 0 0 0 4px #005cbb' : '0 0 0 2px #fdfbff',
+      toggleMore: () => this.setState(s => ({ more: !s.more })),
+      moreTitle: `${moreN} người khác`,
+      gCode: `<sd-avatar-group [items]="members" [max]="${gmax}" [size]="${gsz}"\n  ariaLabel="Người phụ trách"></sd-avatar-group>\n\n// members: SdAvatarGroupItem[]\n{ src: 'Lê Lan Anh', status: 'success', statusLabel: 'Đang hoạt động' }`,
+
+      apiRows: [
+        { name: 'status', type: 'Color | null', def: 'null', note: 'sd-avatar · màu chấm. Không có thì không hiện chấm.', bg: '#ffffff' },
+        { name: 'statusLabel', type: 'string', def: '—', note: 'sd-avatar · chữ mô tả trạng thái, dùng cho tooltip và aria-label. Bắt buộc khi có status.', bg: '#ffffff' },
+        { name: 'statusPulse', type: 'boolean', def: 'false', note: 'sd-avatar · vòng sáng nhấp nháy 1.6s, tắt khi reduced-motion.', bg: '#ffffff' },
+        { name: 'items', type: 'SdAvatarGroupItem[]', def: '[]', note: 'sd-avatar-group · { src, name?, status?, statusLabel?, statusPulse? }. name dùng cho tooltip khi src là URL ảnh.', bg: '#f9f9f7' },
+        { name: 'max', type: 'number', def: '4', note: 'sd-avatar-group · số avatar hiện. Nếu chỉ dư 1 người thì hiện luôn người đó.', bg: '#f9f9f7' },
+        { name: 'size', type: 'number', def: '32', note: 'sd-avatar-group · truyền xuống từng avatar. Độ lấn = round(size × 0.15).', bg: '#f9f9f7' },
+        { name: 'ariaLabel', type: 'string', def: '“{n} người”', note: 'sd-avatar-group · tên của nhóm cho screen reader.', bg: '#f9f9f7' },
+        { name: 'moreClick', type: 'output<SdAvatarGroupItem[]>', def: '—', note: 'sd-avatar-group · phát ra khi bấm “+N”. Nếu consumer lắng nghe thì không mở popover mặc định, để consumer tự mở màn khác.', bg: '#f9f9f7' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>
