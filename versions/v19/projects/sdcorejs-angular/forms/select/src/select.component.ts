@@ -406,6 +406,8 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
 
   loading = signal<boolean>(false);
   focused = signal<boolean>(false);
+  /** why: tooltip tóm tắt lựa chọn chỉ hiện khi panel đóng — lúc mở, panel đã cho thấy đủ lựa chọn. */
+  protected readonly panelOpen = signal(false);
   allSelected = false;
 
   #cache: Record<string, any[]> = {};
@@ -1267,6 +1269,7 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   };
 
   onOpenedChange = (isOpened: boolean) => {
+    this.panelOpen.set(isOpened);
     if (isOpened) {
       this.focused.set(true);
       this.clearSearch();

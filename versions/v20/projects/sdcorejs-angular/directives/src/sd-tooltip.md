@@ -39,6 +39,7 @@ None.
 - `focusin` on host (the host or any element inside it): shows the tooltip **immediately** (no delay) through the same singleton, so `aria-describedby` is already set when the screen reader announces the focused element.
 - `focusout` to an element outside the host: hides the tooltip — unless the pointer is still over the host. Hover and focus are tracked separately: the tooltip stays while either one still holds it.
 - `Escape` while the tooltip is visible: hides it without moving the pointer or focus. The listener runs on `document` in the capture phase, only while a tooltip is visible, and stops the key only when it actually hid a tooltip — so the same `Escape` does not also close a dialog or drawer underneath, and the next `Escape` reaches it normally. The tooltip does not come back until the pointer re-enters or focus returns.
+- Empty content (`''`) means "no tooltip": nothing opens, and a tooltip that is already visible hides as soon as the bound content becomes empty, without waiting for `mouseleave` or `focusout`. Use this to suppress a tooltip while some state holds (for example `sd-select` while its panel is open).
 - Position strategy: `flexibleConnectedTo(host)` with prioritized fallbacks (preferred edge first, then opposites).
 - Scroll strategy: `close` — tooltip closes when the page scrolls.
 - `DestroyRef.onDestroy`: clears timeouts, removes the `Escape` listener and its `aria-describedby` id, disposes the overlay, releases the singleton slot if held.

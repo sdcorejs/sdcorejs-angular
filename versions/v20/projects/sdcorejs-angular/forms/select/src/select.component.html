@@ -12,6 +12,7 @@
 @let _required = required();
 @let _normalizedValue = $any(normalizedValue());
 @let _focused = $any(focused());
+@let _panelOpen = panelOpen();
 @let _isInline = isInline();
 @let _labelTop = labelPlacement() === 'top';
 <!-- why: có chip operator thì label luôn float, placeholder không lặp lại label. -->
@@ -48,7 +49,7 @@
          .sd-inline-editor) để mở panel. Text giữ nguyên, chỉ đổi khi commit giá trị mới. -->
     <span
       class="sd-inline-view"
-      [sdTooltip]="_multiple && _tooltip ? selectionTooltip : ''"
+      [sdTooltip]="_multiple && _tooltip && !_panelOpen ? selectionTooltip : ''"
       sdTooltipPosition="top"
       role="button"
       tabindex="0"
@@ -111,7 +112,7 @@
       }
     } @else if (_multiple) {
       <mat-form-field
-        [sdTooltip]="_tooltip ? selectionTooltip : ''"
+        [sdTooltip]="_tooltip && !_panelOpen ? selectionTooltip : ''"
         sdTooltipPosition="top"
         [class.sd-md]="_size === 'md'"
         [class.sd-sm]="_size === 'sm'"
@@ -509,7 +510,7 @@
      hidden sentinel option keeps the trigger rendered while the selected rows are scrolled away. -->
 <ng-template #virtualField let-multiple>
   <mat-form-field
-    [sdTooltip]="multiple && _tooltip ? selectionTooltip : ''"
+    [sdTooltip]="multiple && _tooltip && !_panelOpen ? selectionTooltip : ''"
     sdTooltipPosition="top"
     [class.sd-md]="_size === 'md'"
     [class.sd-sm]="_size === 'sm'"

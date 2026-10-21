@@ -293,4 +293,25 @@ describe('Select panel filter input with the shipped theme', () => {
     expect(getComputedStyle(box).borderTopColor).toBe(resolve('color', 'var(--sd-control-border-focus)'));
     expect(getComputedStyle(box).boxShadow).toBe(resolve('box-shadow', 'var(--sd-control-ring)'));
   });
+
+  it('keeps the sticky filter flush with the top of the panel while the options scroll under it', async () => {
+    fixture.componentInstance.select().selectRef()?.open();
+    fixture.detectChanges();
+    // why: items arrive through an observable; whenStable() hangs with a filtered select (see the host),
+    // so wait for the options with short macrotasks instead.
+    for (let i = 0; i < 20 && document.querySelectorAll('.sd-select-panel mat-option').length < 12; i++) {
+      await new Promise(resolve => setTimeout(resolve, 25));
+      fixture.detectChanges();
+    }
+    const panel = document.querySelector('.mat-mdc-select-panel.sd-select-panel') as HTMLElement;
+    const header = panel.querySelector('.c-filter-input-container') as HTMLElement;
+    panel.scrollTop = panel.scrollHeight;
+    expect(panel.scrollTop).withContext('the 12-item panel scrolls').toBeGreaterThan(0);
+
+    // The panel's 4px top padding must not leave a strip where scrolled options show above the filter.
+    const panelTop = panel.getBoundingClientRect().top + panel.clientTop;
+    expect(header.getBoundingClientRect().top).toBeCloseTo(panelTop, 0);
+    const probe = document.elementFromPoint(header.getBoundingClientRect().left + 20, panelTop + 1);
+    expect(probe?.closest('mat-option')).withContext('element in the top strip of the scrolled panel').toBeNull();
+  });
 });

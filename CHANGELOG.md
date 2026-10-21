@@ -77,6 +77,9 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ### Fixed
 
+- Select: options no longer show through a 4px strip above the panel's sticky search box while the list scrolls. The search box now covers the panel's top padding when stuck; at rest the panel keeps its 4px padding.
+- Select: the multiple-selection summary tooltip ("N selected • …") shows only while the panel is closed. Opening the panel hides a tooltip that is already visible.
+- Tooltip: `[sdTooltip]` hides a visible tooltip as soon as its bound content becomes empty, instead of keeping it until the pointer or focus leaves.
 - Table: a response dropped because a filter was committed without reload (`notReload`) no longer leaves the table loading; the read returns to `idle` and the spinner stops. `SdReadChannel` (internal) gains `isLatest(revision)`.
 - Table: `type: 'local'` tables apply the inline filter operator. Local matching ignored `columnOperator`, so a number column always compared with `=` whatever operator was picked and a string column always used `CONTAIN`. It now reads `columnOperator[field]`, then `column.filter.operator.default`, the same fallback `SdConvertToPagingReq` uses for server tables. Number columns support `EQUAL`, `NOT_EQUAL`, `GREATER_THAN`, `GREATER_OR_EQUAL`, `LESS_THAN` and `LESS_OR_EQUAL`. String columns support `CONTAIN` (default), `NOT_CONTAIN`, `EQUAL`, `NOT_EQUAL`, `START_WITH`, `NOT_START_WITH`, `END_WITH` and `NOT_END_WITH`, case-insensitive.
 - Table: local number filters treat `0` as a value. A filter of `0` was dropped, and rows whose value is `0` were hidden whenever the column was filtered. The typed `>`, `>=`, `<`, `<=` prefix works (any prefix returned no rows) and wins over the operator dropdown. `filter.type: 'split-number'` filters local rows by its inclusive `{ from, to }` range, with open ends; it filtered nothing before.

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy as SdAngular22ChangeDetectionStrategy } from '@angular/core';
 import { OverlayContainer } from '@angular/cdk/overlay';
 import { Component, signal, ViewChild } from '@angular/core';
-import { ComponentFixture, TestBed, fakeAsync, flushMicrotasks, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, flush, flushMicrotasks, tick } from '@angular/core/testing';
 import { AsyncValidatorFn, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { By } from '@angular/platform-browser';
@@ -514,6 +514,54 @@ describe('SdSelect (multi-select mode)', () => {
       tick(300);
     }));
   }
+
+  it('shows the selection tooltip only while the panel is closed', fakeAsync(() => {
+    host.items = [
+      { id: 1, name: 'Apple, green' },
+      { id: 2, name: 'Banana' },
+    ];
+    host.model = [1, 2];
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+    const trigger = fixture.nativeElement.querySelector('mat-form-field') as HTMLElement;
+    const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+    const tooltip = () => overlay.querySelector('.sd-select-tooltip');
+
+    // A tooltip already visible from hovering the field goes away when the panel opens.
+    trigger.dispatchEvent(new MouseEvent('mouseenter'));
+    tick(100);
+    fixture.detectChanges();
+    expect(tooltip()).withContext('closed panel, hover').not.toBeNull();
+    comp.selectRef()?.open();
+    fixture.detectChanges();
+    tick(100);
+    fixture.detectChanges();
+    expect(tooltip()).withContext('panel opened while the tooltip was visible').toBeNull();
+
+    // Hovering again while the panel is open shows nothing.
+    trigger.dispatchEvent(new MouseEvent('mouseleave'));
+    tick(300);
+    trigger.dispatchEvent(new MouseEvent('mouseenter'));
+    tick(100);
+    fixture.detectChanges();
+    expect(tooltip()).withContext('open panel, hover').toBeNull();
+
+    // Closed again: the tooltip is back. openedChange(false) lands during tick(), so render after it.
+    comp.selectRef()?.close();
+    fixture.detectChanges();
+    tick(100);
+    fixture.detectChanges();
+    trigger.dispatchEvent(new MouseEvent('mouseleave'));
+    tick(300);
+    trigger.dispatchEvent(new MouseEvent('mouseenter'));
+    tick(100);
+    fixture.detectChanges();
+    expect(tooltip()).withContext('closed again, hover').not.toBeNull();
+    trigger.dispatchEvent(new MouseEvent('mouseleave'));
+    tick(300);
+    flush();
+  }));
 
   it('does not show a selection tooltip for an empty selection', fakeAsync(() => {
     const trigger = fixture.nativeElement.querySelector('mat-form-field') as HTMLElement;

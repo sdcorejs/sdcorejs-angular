@@ -122,7 +122,10 @@
 
   .c-filter-input-container {
     position: sticky;
-    top: 0;
+    // why: sticky dừng ở mép trong padding của panel, nên `top: 0` chừa dải 4px phía trên ô lọc và option
+    // cuộn qua vẫn lộ ra ở đó. Kéo lên đúng bằng padding để ô lọc phủ kín mép trên; lúc chưa cuộn vẫn
+    // giữ 4px như thiết kế.
+    top: calc(-1 * var(--sd-select-panel-padding-block, 4px));
     background-color: var(--sd-select-panel-bg, #ffffff);
     box-shadow: 0px 1px 0px 0px var(--sd-select-panel-divider, #f2f2f2);
     padding: 8px;
@@ -189,8 +192,9 @@
 }
 
 ::ng-deep .mat-mdc-select-panel.sd-select-panel {
-  // 4px trên/dưới như thiết kế (core/form.scss); ô lọc sticky vẫn dính sát mép trên khi cuộn.
-  padding: 4px 0;
+  // 4px trên/dưới như thiết kế (core/form.scss). Ô lọc sticky đọc cùng biến để kéo `top` lên đúng bằng padding.
+  --sd-select-panel-padding-block: 4px;
+  padding: var(--sd-select-panel-padding-block) 0;
   .mat-mdc-option.mdc-list-item--disabled.sd-empty {
     .mdc-list-item__primary-text {
       opacity: 0.8;

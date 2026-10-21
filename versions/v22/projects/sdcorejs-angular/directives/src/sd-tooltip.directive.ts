@@ -12,6 +12,8 @@ import {
   Component,
   ChangeDetectorRef,
   computed,
+  effect,
+  untracked,
 } from '@angular/core';
 import { DOCUMENT, NgTemplateOutlet } from '@angular/common';
 import { Overlay, OverlayRef, ConnectionPositionPair } from '@angular/cdk/overlay';
@@ -126,6 +128,11 @@ export class SdTooltipDirective {
   constructor() {
     this.destroyRef.onDestroy(() => {
       this.#cleanup();
+    });
+    // why: nội dung rỗng nghĩa là "không có tooltip". Host đổi nội dung thành rỗng khi tooltip đang hiện
+    // (ví dụ sd-select khi mở panel) thì phải ẩn ngay, không đợi mouseleave.
+    effect(() => {
+      if (!this.content()) untracked(() => this.forceHide());
     });
   }
 
