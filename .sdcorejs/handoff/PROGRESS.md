@@ -35,11 +35,9 @@ Cập nhật: 2026-10-21.
 
 ## Đang chờ quyết định (cập nhật 2026-10-21)
 
-Máy khác làm tiếp: hỏi user mục dưới trước khi đổi code liên quan. Cột filter một operator (quyết định 16), ba điểm
-thiết kế bước 10 (quyết định 17) và kanban `appearance` (quyết định 18) đã được trả lời; mục dưới vẫn chưa.
-
-1. **Báo backend:** NULL / NOT_NULL trên cột control mặc định giờ gửi `{ field, operator }` không `data` (CHANGELOG ghi
-   "Server payload change").
+Không còn mục nào chờ user. Đã trả lời: cột filter một operator (quyết định 16), ba điểm thiết kế bước 10
+(quyết định 17), kanban `appearance` (quyết định 18). User đã báo backend về payload NULL / NOT_NULL — cột control mặc
+định gửi `{ field, operator }` không `data`, CHANGELOG ghi "Server payload change" (xong 2026-10-21).
 
 **Còn phải làm (chưa ai làm):** kiểm tra showcase cuối theo PROMPT — light / dark, preset graphite, forced-colors,
 sm / md, `pointer: coarse` — trên các trang PROMPT liệt kê; chưa mở PR (user chỉ yêu cầu push, không merge).
