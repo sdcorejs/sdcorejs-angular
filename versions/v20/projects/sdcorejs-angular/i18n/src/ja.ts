@@ -94,6 +94,8 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Operators (operator.model.ts) ----
   'core.operator.equal.display': '等しい',
+  'core.component.operator.current': '演算子: {operator}',
+  'core.component.operator.choose': '演算子を選択',
   'core.operator.not-equal.display': '等しくない',
   'core.operator.greater-than.display': 'より大きい',
   'core.operator.less-than.display': 'より小さい',

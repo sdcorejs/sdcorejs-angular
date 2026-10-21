@@ -30,7 +30,7 @@ Cập nhật: 2026-10-21.
 | 8 | Đợt 1 — sd-kanban | `cbaaa034` |
 | 9 | Đợt 2 · F — indicator sd-button | `365168c2` |
 | 2b | Góp ý review panel select/autocomplete (2026-10-21) | commit `fix(forms): panel spacing, white surface and autocomplete highlight from review` |
-| 10 | Operator trong control | đang làm (user duyệt làm hết rồi review một lượt, 2026-10-21) |
+| 10 | Đợt 2 · G — operator trong control | commit `feat(forms): show the filter operator as a chip inside the controls` |
 
 Kết quả kiểm tra ở commit sửa panel (Node 22.22.3): Karma v19 7595/7595 (coverage 89.89 / 79.16 / 90.36 / 92.32), lint,
 `test:theme` 51/51, `check:scss-hex` 0 finding, `check:i18n-parity` (1341 key × 5) và `check:i18n` pass, `check:sync` pass,
@@ -181,6 +181,63 @@ User review panel bước 2 và gửi 6 điểm; đã sửa trong một commit r
 
 Menu `sd-operator` (`.c-op-menu`) chưa đổi nền ở commit này; làm cùng chip operator ở bước 10. Ảnh:
 `screenshots/panels-review-before-after.png`, script `tools/shots-panels.mjs`.
+
+## Bước 10 — đã làm (cổng thiết kế chưa trình riêng)
+
+User duyệt "làm hết các bước rồi review một lượt", nên cổng "trình 3 điểm rồi dừng" của PROMPT không dừng lại; ba điểm
+ghi ở đây để review cùng commit, và bước 10 nằm gọn trong một commit để dễ đổi hướng.
+
+**Ba điểm thiết kế (README đợt 2, mục G):**
+
+1. **Kiến trúc trigger.** `operator-items.ts`: `ɵsdOperatorResolver()` (resolve `OPERATORS`, dịch label, sanitize icon SVG,
+   icon phễu khi chưa có operator) dùng chung cho `SdOperator` và chip mới `ɵSdOperatorChip` (`sd-operator-chip`, cùng
+   entry point `@sdcorejs/angular/components/operator`). Style menu tách thành partial `_operator-menu.scss`
+   (`@mixin panel`), cả hai include. `sd-operator` giữ nguyên input / output / `open()` / `static FALLBACK_ICON`; chỉ
+   thêm dấu tick và nền trắng cho menu.
+2. **API trên control.** `operators = input<readonly Operator[]>([])` và `operator = model<Operator | undefined>()` trên
+   sd-input, sd-input-number, sd-select, sd-date, sd-date-range — đặt theo `operator` model / `operatorChange` của
+   column-filter và `[operators]` của sd-operator. `readonly Operator[]` (không phải `Operator[]` như sd-operator) để
+   nhận được mảng hằng; vẫn nhận `Operator[]`.
+3. **Operator khoảng / trống.** `@sdcorejs/utils` **có** `BETWEEN` (OperatorHasData) và `NULL` / `NOT_NULL`
+   (OperatorNoData), nên nhánh "nếu không có" của README không áp dụng: không làm ô "từ – đến", `split-number` /
+   `split-date` giữ hai ô và `sd-operator` rời. Chọn `NULL` / `NOT_NULL` trong chip không khoá / xoá giá trị (README không
+   nói) — **câu hỏi mở**.
+
+**Đã làm:**
+
+- Chip: `matPrefix`, `<button type="button">`, icon 16/18px + `expand_more` 14/16px, nhãn trong tooltip + `aria-label`
+  (key mới `core.component.operator.current` "Toán tử: {operator}" và `.choose` "Chọn toán tử", 5 locale). Cao 24/28px,
+  padding và khoảng cách theo bảng, bo `calc(var(--sd-control-radius, 8px) - 3px)`, 3 tông + hover 6% + focus-visible.
+  Ô < 120px (ResizeObserver trên `.mat-mdc-text-field-wrapper`; container query không đo được field từ trong chip)
+  ẩn mũi tên. Enter / Space / Alt+↓ mở; chọn hàng → `chosen` → control focus ô nhập; Escape → focus chip. Click trên chip
+  không nổi bọt (mat-form-field / mat-select không mở).
+- Control: chip chỉ khi `operators.length > 1`; đúng 1 thì `ɵsdSingleOperator` đặt `operator`; label `floatLabel="always"`
+  khi có chip. Đổi operator giữ giá trị, nút xoá giữ operator. `autoId` → chip `data-autoid="<autoId>-operator"`.
+  sd-select đặt chip trên cả 3 mat-form-field (single / multiple / virtual).
+- column-filter: control mặc định nhận `[operators]` + `[(operator)]`, gỡ `<sd-operator class="mr-4">`. Giữ sd-operator rời
+  cho `filterDef`, `split-number` / `split-date` **và danh sách đúng một operator** — control nhận một operator sẽ tự đặt
+  nó, tức phát `operatorChange` lúc khởi tạo (spec cũ đã bắt được), trái ràng buộc giữ thời điểm emit. `operatorChange`,
+  `filterChange`, `filterCommit` không đổi.
+- Showcase: section "Trong control" trên trang Operator (registry 4 → 5, tổng 421 → 422); bật operator cho cột "Họ và tên"
+  và "Lương" của bảng "Full demo (local)" để thấy chip trong filter.
+- Docs: `sd-operator.md`, 5 md control (dòng input + mục "Operator chip"), `sd-table.md`, CHANGELOG (Added + 2 Changed).
+
+- Sửa sau ảnh đầu: label luôn float + placeholder mặc định bằng label làm chữ lặp hai lần ("Lương" / "Lương") → có chip thì
+  placeholder không lấy label (input, input-number, date, select; spec RED đã xác nhận).
+- Kiểm tra: spec operator / forms / table / query-bar / query-builder / public-api 2808/2808, column-filter + preview 237/237,
+  lint file đổi, `test:theme` 51/51, `check:scss-hex` 0, `check:i18n-parity` (1346 × 5), `check:i18n`, `check:sync`, build lib v19.
+  Full Karma lần 1: 7615/7617 — 2 spec thumbnail `SdPreviewPdf` timeout (flaky canvas đã biết, chạy riêng pass). Full Karma
+  lần cuối (sau sửa placeholder) đang chạy lúc commit — **cần chạy lại xác nhận**.
+- Ảnh: `screenshots/step10-before-after.png` (filter bảng, menu sd-operator), `screenshots/step10-controls.png` (demo mới),
+  script `tools/shots-step10.mjs`, `tools/compose-only.mjs`.
+
+**Lệch / chưa làm:**
+
+- README nói "container query trên field" cho ô < 120px; dùng ResizeObserver (chip nằm trong field, không tự query
+  được container của chính nó mà không thêm `container-type` lên mọi mat-form-field).
+- Kiểu cột không hỗ trợ vẫn render `sd-input disabled` (README: ghi vào PR như việc còn lại của redesign table).
+- `formatHtml` của prettier gom thẻ `<sd-label>` thành một dòng ở input / input-number / date — đã trả về như cũ để diff
+  gọn. Bốn template này có dòng CRLF lẫn LF trong blob; commit bằng `core.autocrlf=false` để không đổi cả file.
 
 ## Ghi chú kỹ thuật
 

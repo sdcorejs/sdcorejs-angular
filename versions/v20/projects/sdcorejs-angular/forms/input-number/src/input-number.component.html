@@ -7,7 +7,8 @@
 @let _required = required();
 @let _isInline = isInline();
 @let _labelTop = labelPlacement() === 'top';
-@let _placeholder = placeholder() || (_labelTop ? '' : _label) || '';
+<!-- why: có chip operator thì label luôn float, placeholder không lặp lại label. -->
+@let _placeholder = placeholder() || (_labelTop || operatorChip() ? '' : _label) || '';
 <!-- why: một cổng gate duy nhất cho <mat-error>, aria-invalid và aria-describedby — trước đây
      message hiện nhưng control không báo invalid nên screen reader không biết ô đang lỗi. -->
 @let _errorVisible = !!_errorMessage && formControl.touched;
@@ -66,7 +67,19 @@
       [class.hide-inline-error]="_hideInlineError"
       [class.sd-label-top]="_labelTop"
       [appearance]="_appearance!"
-      [floatLabel]="floatLabel()">
+      [floatLabel]="operatorChip() ? 'always' : floatLabel()">
+      <!-- Operator (thiết kế đợt 2 · G): chip tiền tố khi có từ hai operator. -->
+      @if (operatorChip()) {
+        <sd-operator-chip
+          matPrefix
+          [operators]="operators()"
+          [(operator)]="operator"
+          [size]="size()"
+          [hasValue]="operatorHasValue()"
+          [disabled]="formControl.disabled"
+          [autoId]="autoId() ? autoId() + '-operator' : undefined"
+          (chosen)="focusAfterOperator()" />
+      }
       @if (_appearance && _label && !_labelTop) {
         <mat-label class="sd-form-field-label">
           <span>{{ _label }}</span>

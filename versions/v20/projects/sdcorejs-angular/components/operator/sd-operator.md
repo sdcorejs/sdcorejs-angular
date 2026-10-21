@@ -44,13 +44,14 @@ Compact operator picker for filter UIs. The trigger shows only the current opera
 - Trigger is an icon-only button; tooltip is the translated label of the current operator.
 - Empty model shows a funnel fallback icon.
 - Menu rows are two-line: the icon sits left of a text block whose first line is the translated label (normal weight) and whose second line is the raw operator code in muted grey monospace. The label never wraps — a long one such as `Lớn hơn, hoặc bằng` widens the panel instead of folding, which is what the previous single-row layout did in narrow table-filter columns.
-- The menu is a control panel like the `sd-select` one: 10px corner (`--sd-panel-radius`), thin border, `--sd-shadow-md`, rows inset 4px with a 6px corner and a light hover.
-- Active operator row gets the active class (`--sd-primary-light` background, label in `--sd-primary-dark`, weight 500); disabled trigger cannot open the menu.
+- The menu is a control panel like the `sd-select` one: 10px corner (`--sd-panel-radius`), thin border, `--sd-shadow-md`, the same surface as the select panel (`--sd-select-panel-bg`, white by default), rows inset 4px with a 6px corner and a light hover.
+- Active operator row gets the active class (`--sd-primary-light` background, label in `--sd-primary-dark`, weight 500) and a `check` tick at the trailing edge (`.c-op-check`, `--sd-primary-dark`); disabled trigger cannot open the menu.
 
 ## Behavior notes
 - Icons and labels resolve from `OPERATORS` in `@sdcorejs/utils/constants`.
 - `OPERATORS[].display` is an i18n key and is translated through `I18nService`; do not pass already-translated labels here.
 - Operator icons are canonical internal SVG fragments. The component wraps and sanitizes them itself.
+- The resolution of `OPERATORS` (labels, icons, fallback funnel) and the `.c-op-menu` panel styles are shared with the operator chip that `sd-input`, `sd-input-number`, `sd-select`, `sd-date` and `sd-date-range` render for their `operators` input. The chip is internal (`ɵSdOperatorChip`); use the controls' `[operators]` / `[(operator)]` instead of the chip directly.
 
 ## Examples
 
@@ -85,5 +86,6 @@ startChoosingOperator(): void {
 ## Related
 - `<sd-query-bar>` — uses this picker for filter chips.
 - `<sd-query-builder>` — uses this picker for rule operators.
-- `<sd-table>` — column/external filters share the same `Operator` vocabulary.
+- `<sd-table>` — column/external filters share the same `Operator` vocabulary. Default column-filter controls with two or more operators show the operator as a chip inside the field; `filterDef` templates, split filters and single-operator lists keep this standalone picker.
+- `<sd-input>`, `<sd-input-number>`, `<sd-select>`, `<sd-date>`, `<sd-date-range>` — `[operators]` / `[(operator)]` render the same menu as a prefix chip inside the field.
 - `OPERATORS` / `Operator` from `@sdcorejs/utils` — source of truth for allowed operator codes, icons, and i18n keys.

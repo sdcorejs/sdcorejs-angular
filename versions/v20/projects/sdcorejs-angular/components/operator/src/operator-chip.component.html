@@ -1,0 +1,37 @@
+@let _current = operator();
+@let _sm = size() === 'sm';
+<!-- why: chặn click nổi bọt — mat-form-field coi click vào khung là mở select / focus ô nhập. -->
+<button
+  #button
+  type="button"
+  class="sd-operator-chip__trigger"
+  [class.sd-operator-chip__trigger--value]="hasValue()"
+  [class.sd-operator-chip__trigger--open]="menuOpen()"
+  [disabled]="disabled()"
+  [matMenuTriggerFor]="menu"
+  [matMenuTriggerRestoreFocus]="false"
+  [matTooltip]="currentLabel()"
+  matTooltipPosition="above"
+  [attr.aria-label]="ariaLabel()"
+  [attr.data-autoid]="autoId() ?? null"
+  (menuOpened)="menuOpen.set(true)"
+  (click)="$event.stopPropagation()"
+  (keydown)="onKeydown($event)">
+  <span class="sd-operator-chip__icon" aria-hidden="true" [innerHTML]="currentIcon()"></span>
+  <sd-icon class="sd-operator-chip__arrow" name="expand_more" [size]="_sm ? '14px' : '16px'" aria-hidden="true" />
+</button>
+
+<mat-menu #menu="matMenu" class="c-op-menu" (closed)="onClosed($event)">
+  @for (item of items(); track item.value) {
+    <button type="button" mat-menu-item class="c-op-row" [class.c-op-active]="item.value === _current" (click)="choose(item.value)">
+      <span class="c-op-icon" [innerHTML]="item.icon"></span>
+      <span class="c-op-text">
+        <span class="c-op-label">{{ item.display }}</span>
+        <span class="c-op-code">{{ item.value }}</span>
+      </span>
+      @if (item.value === _current) {
+        <sd-icon class="c-op-check" name="check" size="18px" aria-hidden="true" />
+      }
+    </button>
+  }
+</mat-menu>

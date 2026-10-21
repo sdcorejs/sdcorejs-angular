@@ -30,6 +30,8 @@ Single-date picker — Material datepicker with date-fns adapter (`dd/MM/yyyy` p
 | `autoId`          | `string \| null \| undefined`                   | `undefined`                                 | Generates `data-autoId="forms-date-<value>"` for E2E hooks.                                                                                                                                                                                                                      |
 | `name`            | `string`                                        | random uuid                                 | Control name registered into `[form]`.                                                                                                                                                                                                                                           |
 | `size`            | `Size` (`'sm' \| 'md' \| 'lg'`)                 | `'md'`                                      | Field height. Use `size="sm"` inside `<sd-table>` filters/cells or other dense table UI.                                                                                                                                                                                         |
+| `operators`       | `readonly Operator[]`                           | `[]`                                        | Operators offered by the prefix chip, in display order (wave 2 · G). Two or more show the chip; exactly one sets `operator` to it without a chip; none hides it. Keep the array as a class property.                                                                             |
+| `operator`        | `Operator \| undefined` (model)                 | `undefined`                                 | Current operator, two-way via `[(operator)]`. Changing it keeps the value; the clear button clears only the value.                                                                                                                                                               |
 | `form`            | `FormGroup \| NgForm \| undefined`              | `undefined`                                 | Parent form. NgForm auto-unwrapped. Object containing a `.form` is also accepted.                                                                                                                                                                                                |
 | `label`           | `string \| undefined`                           | `undefined`                                 | Field label.                                                                                                                                                                                                                                                                     |
 | `labelPlacement` | `'float' \| 'top'` | `'float'` | `'float'` (default) keeps the Material floating label. `'top'` renders `label` above the field as a real `<label for>` bound to the `<input>`, never repeats it as the placeholder, and shows `helperText` as a described-by hint under the field that a validation error replaces. Used by `<sd-form-render>`. |
@@ -248,6 +250,22 @@ When this control is rendered in dashboard cards, filter bars, external filter p
 ```html
 <sd-date label="Ngày tạo" [model]="model.createdAt" [viewed]="true" hyperlink="/audit/{{ model.id }}"> </sd-date>
 ```
+
+## Operator chip (`operators`)
+
+For filter forms, the field can carry its own operator as a prefix chip instead of a separate `<sd-operator>` beside it.
+
+```html
+<sd-date label="…" [(model)]="createdAt" [operators]="['EQUAL', 'GREATER_THAN', 'LESS_THAN']" [(operator)]="operator" />
+```
+
+- The chip is a real `<button type="button">` in the `matPrefix` slot. It shows the operator icon and an `expand_more` arrow; the translated label is in its tooltip, its `aria-label` ("Operator: …") and the menu.
+- While the chip is shown the floating label always floats.
+- Keyboard: Tab reaches the chip before the field. Enter, Space or Alt+↓ opens the menu. Picking a row moves focus to the date input; Escape closes the menu and returns focus to the chip.
+- The menu is the shared `.c-op-menu` panel of `<sd-operator>`: icon, label, operator code and a tick on the current row.
+- Tone: muted without a value, `--sd-primary-light` / `--sd-primary-dark` once the field has a value, solid `--sd-primary` while the menu is open. The arrow hides when the field is narrower than 120px.
+- `autoId` gives the chip `data-autoid="<autoId>-operator"`.
+- `<sd-table>` column filters pass their operator list here automatically (see `sd-table.md`).
 
 ## E2E test attributes
 

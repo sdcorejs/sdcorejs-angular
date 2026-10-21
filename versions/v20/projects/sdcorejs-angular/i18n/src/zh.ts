@@ -94,6 +94,8 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Operators (operator.model.ts) ----
   'core.operator.equal.display': '等于',
+  'core.component.operator.current': '运算符：{operator}',
+  'core.component.operator.choose': '选择运算符',
   'core.operator.not-equal.display': '不等于',
   'core.operator.greater-than.display': '大于',
   'core.operator.less-than.display': '小于',

@@ -94,6 +94,8 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Operators (operator.model.ts) ----
   'core.operator.equal.display': '같음',
+  'core.component.operator.current': '연산자: {operator}',
+  'core.component.operator.choose': '연산자 선택',
   'core.operator.not-equal.display': '같지 않음',
   'core.operator.greater-than.display': '초과',
   'core.operator.less-than.display': '미만',

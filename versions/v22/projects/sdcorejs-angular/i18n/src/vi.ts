@@ -94,6 +94,8 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Operators (operator.model.ts) ----
   'core.operator.equal.display': 'Bằng',
+  'core.component.operator.current': 'Toán tử: {operator}',
+  'core.component.operator.choose': 'Chọn toán tử',
   'core.operator.not-equal.display': 'Không bằng',
   'core.operator.greater-than.display': 'Lớn hơn',
   'core.operator.less-than.display': 'Nhỏ hơn',

@@ -24,6 +24,9 @@
         <span class="c-op-label">{{ item.display }}</span>
         <span class="c-op-code">{{ item.value }}</span>
       </span>
+      @if (item.value === _model) {
+        <sd-icon class="c-op-check" name="check" size="18px" aria-hidden="true" />
+      }
     </button>
   }
 </mat-menu>

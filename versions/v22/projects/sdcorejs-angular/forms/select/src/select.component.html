@@ -14,7 +14,8 @@
 @let _focused = $any(focused());
 @let _isInline = isInline();
 @let _labelTop = labelPlacement() === 'top';
-@let _placeholder = placeholder() || (_labelTop ? '' : _label) || '';
+<!-- why: có chip operator thì label luôn float, placeholder không lặp lại label. -->
+@let _placeholder = placeholder() || (_labelTop || operatorChip() ? '' : _label) || '';
 @let _bare = _isInline;
 @let _hasValue = _multiple ? !!_normalizedValue?.length : _normalizedValue !== undefined && _normalizedValue !== null;
 @let _display = display();
@@ -117,7 +118,19 @@
         [class.hide-inline-error]="_hideInlineError"
         [class.sd-label-top]="_labelTop"
         [appearance]="_appearance!"
-        [floatLabel]="_floatLabel">
+        [floatLabel]="operatorChip() ? 'always' : _floatLabel">
+        <!-- Operator (thiết kế đợt 2 · G): chip tiền tố khi có từ hai operator. -->
+        @if (operatorChip()) {
+          <sd-operator-chip
+            matPrefix
+            [operators]="operators()"
+            [(operator)]="operator"
+            [size]="size()"
+            [hasValue]="operatorHasValue()"
+            [disabled]="formControl.disabled"
+            [autoId]="autoId() ? autoId() + '-operator' : undefined"
+            (chosen)="focusAfterOperator()" />
+        }
         @if (_appearance && _label && !_labelTop) {
           <mat-label class="sd-form-field-label">
             <span>{{ _label }}</span>
@@ -296,7 +309,19 @@
         [class.hide-inline-error]="_hideInlineError"
         [class.sd-label-top]="_labelTop"
         [appearance]="_appearance!"
-        [floatLabel]="_floatLabel">
+        [floatLabel]="operatorChip() ? 'always' : _floatLabel">
+        <!-- Operator (thiết kế đợt 2 · G): chip tiền tố khi có từ hai operator. -->
+        @if (operatorChip()) {
+          <sd-operator-chip
+            matPrefix
+            [operators]="operators()"
+            [(operator)]="operator"
+            [size]="size()"
+            [hasValue]="operatorHasValue()"
+            [disabled]="formControl.disabled"
+            [autoId]="autoId() ? autoId() + '-operator' : undefined"
+            (chosen)="focusAfterOperator()" />
+        }
         @if (_appearance && _label && !_labelTop) {
           <mat-label class="sd-form-field-label">
             <span>{{ _label }}</span>
@@ -491,7 +516,19 @@
     [class.hide-inline-error]="_hideInlineError"
     [class.sd-label-top]="_labelTop"
     [appearance]="_appearance!"
-    [floatLabel]="_floatLabel">
+    [floatLabel]="operatorChip() ? 'always' : _floatLabel">
+    <!-- Operator (thiết kế đợt 2 · G): chip tiền tố khi có từ hai operator. -->
+    @if (operatorChip()) {
+      <sd-operator-chip
+        matPrefix
+        [operators]="operators()"
+        [(operator)]="operator"
+        [size]="size()"
+        [hasValue]="operatorHasValue()"
+        [disabled]="formControl.disabled"
+        [autoId]="autoId() ? autoId() + '-operator' : undefined"
+        (chosen)="focusAfterOperator()" />
+    }
     @if (_appearance && _label && !_labelTop) {
       <mat-label class="sd-form-field-label">
         <span>{{ _label }}</span>

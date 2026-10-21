@@ -14,6 +14,7 @@ import {
   TemplateRef,
   viewChild,
   contentChild,
+  ElementRef,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidationErrors, ValidatorFn } from '@angular/forms';
@@ -46,9 +47,10 @@ import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import { DateUtilities } from '@sdcorejs/utils/fns';
 import { BrowserUtilities, Utilities } from '@sdcorejs/utils/fns';
-import { Size } from '@sdcorejs/utils/models';
+import { Operator, Size } from '@sdcorejs/utils/models';
 import { parse as parseDate } from 'date-fns';
 import { enUS as dfEnUS } from 'date-fns/locale';
+import { ɵSdOperatorChip, ɵsdOperatorHasValue, ɵsdSingleOperator } from '@sdcorejs/angular/components/operator';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 export interface SdDateRangeValue {
@@ -123,6 +125,7 @@ function rangeIsComplete(value: unknown): boolean {
   ],
   standalone: true,
   imports: [
+    ɵSdOperatorChip,
     SdIcon,
     CommonModule,
     FormsModule,
@@ -203,6 +206,24 @@ export class SdDateRange {
   name = input<string>(Utilities.generateUuid());
 
   size = input<Size>('md');
+
+  /**
+   * Operator cho phép trong chip tiền tố của ô (thiết kế đợt 2 · G), theo thứ tự hiển thị. Từ hai operator
+   * thì chip hiện; đúng một thì control dùng luôn operator đó và không hiện chip.
+   */
+  readonly operators = input<readonly Operator[]>([]);
+  /** Operator hiện tại — `[(operator)]`. Đổi operator không xoá giá trị; nút xoá chỉ xoá giá trị. */
+  readonly operator = model<Operator | undefined>(undefined);
+  protected readonly operatorChip = computed(() => this.operators().length > 1);
+  protected readonly operatorHasValue = computed(() => ɵsdOperatorHasValue(this.valueModel()));
+  readonly #singleOperator = ɵsdSingleOperator(this.operators, this.operator);
+  // why: query signal không đặt được trên field ES private (#).
+  private readonly startInput = viewChild<ElementRef<HTMLInputElement>>('startInput');
+
+  /** Chọn xong operator trong chip thì focus về ô nhập (thiết kế đợt 2 · G). */
+  protected focusAfterOperator(): void {
+    this.startInput()?.nativeElement.focus();
+  }
   // Ghi (TransformT): any (để không bị lỗi typing khi cha truyền vào)
   form = input<FormGroup | undefined, any>(undefined, {
     transform: (val: any): FormGroup | undefined => {

@@ -483,7 +483,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/operator/sd-operator',
     keywords: ['filter', 'comparison', 'query', 'condition'],
     status: 'stable',
-    demoSectionCount: 4,
+    demoSectionCount: 5,
     loadComponent: () => import('../../pages/components/operator/operator-demo.component').then(m => m.OperatorDemoComponent),
   }),
   defineDocPage({

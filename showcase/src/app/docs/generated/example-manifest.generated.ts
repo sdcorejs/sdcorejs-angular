@@ -123,6 +123,7 @@ export type ShowcaseExampleSourceKey =
   | "components/operator/example-toan-tu-chuoi"
   | "components/operator/example-toan-tu-ngay"
   | "components/operator/example-toan-tu-so"
+  | "components/operator/example-trong-control"
   | "components/operator/example-vo-hieu-hoa"
   | "components/org-chart/example-card-mac-dinh"
   | "components/org-chart/example-custom-bang-directive"
@@ -1286,6 +1287,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-vo-hieu-hoa",
     title: "Vô hiệu hoá",
     description: "Existing “Vô hiệu hoá” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/operator/example-trong-control",
+    pageKey: "components/operator",
+    sectionId: "example-trong-control",
+    title: "Trong control",
+    description: "sd-input, sd-input-number, sd-select, sd-date, sd-date-range nhận [operators] / [(operator)] và vẽ operator thành chip tiền tố trong ô. Tab vào chip trước ô nhập; Enter, Space hoặc Alt+↓ mở menu; chọn xong focus về ô nhập.",
   },
   {
     sourceKey: "components/org-chart/example-card-mac-dinh",
