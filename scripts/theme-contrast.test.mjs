@@ -46,6 +46,9 @@ const PAIRS = [
   ['table-header-text', 'table-header-bg', 4.5],
   ['text', 'table-row-selected-bg', 4.5],
   ['text', 'table-row-activated-bg', 4.5],
+  // sd-kanban: card titles and the secondary count sit on the neutral lane.
+  ['text', 'kanban-lane-bg', 4.5],
+  ['text-secondary', 'kanban-lane-bg', 4.5],
 ];
 
 const tokensOf = args => {

@@ -275,6 +275,22 @@ the reorder handle, the resize and tree-toggle hovers and the add button shadow 
 scale. `npm run test:theme` checks header text on the header band and text on a selected or activated row
 (at least 4.5:1) for every preset and dark.
 
+## Kanban tokens
+
+`sd-kanban` lanes are neutral and its drop target and card outline derive from the palette, with one expression for
+light and dark. The column colour only marks the 8px dot or the prefix icon.
+
+| Token | Value |
+| --- | --- |
+| `--sd-kanban-lane-bg` | `color-mix(in srgb, var(--sd-text) 4%, var(--sd-surface))` |
+| `--sd-kanban-lane-target-bg` | `color-mix(in srgb, var(--sd-primary) 6%, var(--sd-surface))` |
+| `--sd-kanban-lane-target-border` | `color-mix(in srgb, var(--sd-primary) 45%, var(--sd-surface))` |
+| `--sd-kanban-drop-slot-border` | `color-mix(in srgb, var(--sd-primary) 55%, var(--sd-surface))` |
+| `--sd-kanban-card-border` | `color-mix(in srgb, var(--sd-border) 80%, var(--sd-surface))` |
+| `--sd-kanban-card-hover-border` | `color-mix(in srgb, var(--sd-border-strong) 70%, var(--sd-surface))` |
+
+`npm run test:theme` checks `--sd-text` and `--sd-text-secondary` on the lane (at least 4.5:1) for every preset and dark.
+
 ## Focus ring
 
 - Colour: `var(--sd-focus-ring-color)` (the primary colour). Width and offset: `--sd-focus-ring-width` and

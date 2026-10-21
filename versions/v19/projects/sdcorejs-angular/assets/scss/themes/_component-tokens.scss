@@ -115,6 +115,14 @@ $component-tokens: (
   'history-line': (#94b0ff, #5d78c9),
   'history-meta': (#757575, #a4a6b0),
   'history-meta-strong': (#000000, #e3e2e6),
+  // kanban — neutral lanes, drop target and card outline derived from the palette, one expression for light
+  // and dark (design handoff wave 1).
+  'kanban-lane-bg': (color-mix(in srgb, var(--sd-text) 4%, var(--sd-surface)), color-mix(in srgb, var(--sd-text) 4%, var(--sd-surface))),
+  'kanban-lane-target-bg': (color-mix(in srgb, var(--sd-primary) 6%, var(--sd-surface)), color-mix(in srgb, var(--sd-primary) 6%, var(--sd-surface))),
+  'kanban-lane-target-border': (color-mix(in srgb, var(--sd-primary) 45%, var(--sd-surface)), color-mix(in srgb, var(--sd-primary) 45%, var(--sd-surface))),
+  'kanban-drop-slot-border': (color-mix(in srgb, var(--sd-primary) 55%, var(--sd-surface)), color-mix(in srgb, var(--sd-primary) 55%, var(--sd-surface))),
+  'kanban-card-border': (color-mix(in srgb, var(--sd-border) 80%, var(--sd-surface)), color-mix(in srgb, var(--sd-border) 80%, var(--sd-surface))),
+  'kanban-card-hover-border': (color-mix(in srgb, var(--sd-border-strong) 70%, var(--sd-surface)), color-mix(in srgb, var(--sd-border-strong) 70%, var(--sd-surface))),
   // modal-resizable
   'modal-resizable-bg': (var(--sd-overlay-surface), var(--sd-overlay-surface)),
   'modal-resizable-title': (var(--sd-text), var(--sd-text)),

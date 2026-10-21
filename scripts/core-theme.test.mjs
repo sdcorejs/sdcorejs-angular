@@ -319,6 +319,25 @@ test('Component tokens exist in both modes with the 2.15 hex as the light value'
   assert.equal(light['--sd-tooltip-bg'], '#616161');
 });
 
+// Wave 1 · sd-kanban: neutral lanes and drop target derived from the palette, one expression for light and dark.
+const KANBAN_TOKENS = {
+  '--sd-kanban-lane-bg': 'color-mix(in srgb, var(--sd-text) 4%, var(--sd-surface))',
+  '--sd-kanban-lane-target-bg': 'color-mix(in srgb, var(--sd-primary) 6%, var(--sd-surface))',
+  '--sd-kanban-lane-target-border': 'color-mix(in srgb, var(--sd-primary) 45%, var(--sd-surface))',
+  '--sd-kanban-drop-slot-border': 'color-mix(in srgb, var(--sd-primary) 55%, var(--sd-surface))',
+  '--sd-kanban-card-border': 'color-mix(in srgb, var(--sd-border) 80%, var(--sd-surface))',
+  '--sd-kanban-card-hover-border': 'color-mix(in srgb, var(--sd-border-strong) 70%, var(--sd-surface))',
+};
+
+test('Kanban tokens derive from the palette with one expression in light and dark', () => {
+  const light = declarations(compile('.x { @include sd.theme(); }'));
+  const dark = declarations(compile(".x { @include sd.theme($mode: 'dark'); }"));
+  for (const [name, value] of Object.entries(KANBAN_TOKENS)) {
+    assert.equal(light[name], value, `light ${name}`);
+    assert.equal(dark[name], value, `dark ${name}`);
+  }
+});
+
 // Wave 1 · C: table colours derive from the palette, mixed with --sd-table-bg (not surface), and use the
 // same expression in light and dark. table-bg, the tree levels and the export panel keep their values.
 const TABLE_DERIVED_TOKENS = {

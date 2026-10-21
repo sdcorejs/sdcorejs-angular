@@ -26,11 +26,12 @@ Cập nhật: 2026-10-21.
 | 4 | Đợt 1 — sd-segmented | `77d7f449` |
 | 5 | Đợt 1 · B — primitive tìm kiếm `ɵ` | `6e6a4259` |
 | 6 | Đợt 1 · C — token table | `42246293` |
-| 7 | Đợt 1 — sd-form-builder | `f0576fa6` + commit dọn `refactor(form-generic): drop the unused M3 aliases, md tokens and .msi rules` |
-| 8–10 | Kanban, indicator sd-button, operator trong control | đang làm (user duyệt làm hết rồi review một lượt, 2026-10-21) |
+| 7 | Đợt 1 — sd-form-builder | `f0576fa6` + dọn `5c39c40b` |
+| 8 | Đợt 1 — sd-kanban | commit `feat(kanban): neutral lanes, colour dot, text count and quiet card tools` |
+| 9–10 | Indicator sd-button, operator trong control | đang làm (user duyệt làm hết rồi review một lượt, 2026-10-21) |
 
-Kết quả kiểm tra ở commit bước 6 (Node 22.22.3): Karma v19 7571/7571 (coverage 89.85 / 79.07 / 90.31 / 92.29), lint,
-`test:theme` 49/49, `check:scss-hex` 0 finding, `check:i18n-parity` (1341 key × 5) và `check:i18n` pass, `check:sync` pass,
+Kết quả kiểm tra ở commit bước 8 (Node 22.22.3): Karma v19 7581/7581 (coverage 89.86 / 79.1 / 90.35 / 92.3), lint,
+`test:theme` 50/50, `check:scss-hex` 0 finding, `check:i18n-parity` (1341 key × 5) và `check:i18n` pass, `check:sync` pass,
 build lib v19 pass. Ảnh trước/sau: [`screenshots/`](screenshots/).
 
 ## Quyết định đã duyệt (2026-10-21)
@@ -133,6 +134,19 @@ Lệch thông số và quyết định nhỏ (cần duyệt lại nếu không �
   dùng → xoá; alias `--md-sys-color-*` chỉ còn một chỗ đọc làm fallback (number field của renderer) → đổi chỗ đó
   sang `--sd-text-secondary` và gỡ alias. Ghi ở CHANGELOG `### Removed`. Gate phần dọn: theme 49/49, scss-hex 0,
   form-generic 455/455; full Karma chạy cùng bước 8.
+
+## Bước 8 — đã làm
+
+- 6 token `kanban-*` (light = dark) trong `_component-tokens.scss`; `test:theme` assert biểu thức + cặp `text` /
+  `text-secondary` trên `kanban-lane-bg` ≥ 4.5:1 cho mọi preset và dark.
+- Làn nền `--sd-kanban-lane-bg` (bỏ `--sd-kanban-column-tint`); chấm 8px `.sd-kanban__dot` (aria-hidden) khi cột không có
+  `prefixIcon`; làn thu gọn xếp theo `order`: nút, chấm, số, nhãn. Số đếm chữ 13px tabular, `2/5` (bỏ khoảng trắng —
+  spec cũ `1 / 2` đổi theo). Thẻ viền `--sd-kanban-card-border`, không shadow, hover đậm viền.
+- Công cụ thẻ: `opacity: 0` trong `(hover: hover) and (pointer: fine)`, hiện khi hover / focus-within / pending / failed /
+  `:has([aria-expanded=true])`; transition tắt khi reduced-motion. Làn đích: `:has(> .sd-kanban__cards.cdk-drop-list-dragging)`.
+  Placeholder: `.sd-kanban__card.cdk-drag-placeholder` khe nét đứt 2px, con `visibility: hidden`. forced-colors thêm viền
+  `CanvasText` cho làn.
+- **Câu hỏi mở cho PR:** không thêm option `appearance` (giữ nguyên theo README).
 
 ## Ghi chú kỹ thuật
 

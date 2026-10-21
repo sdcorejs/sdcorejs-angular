@@ -38,10 +38,9 @@
     outline-offset: -2px;
   }
 }
+// Làn trung tính (thiết kế đợt 1): màu cột chỉ còn ở chấm 8px hoặc prefixIcon, không tô cả làn.
 .sd-kanban__column {
-  // why: the lane tint is the palette `-light` role, which already mixes with the dark surface in dark mode.
   --sd-kanban-column-color: var(--sd-secondary);
-  --sd-kanban-column-tint: var(--sd-secondary-light);
   flex: 1 0 280px;
   width: 280px;
   min-width: 0;
@@ -49,18 +48,29 @@
   // why: transparent keeps the lane edge visible in forced colours.
   border: 1px solid transparent;
   border-radius: var(--sd-radius-12, 12px);
-  background: var(--sd-kanban-column-tint);
+  background: var(--sd-kanban-lane-bg);
+  // Chỉ làn đang ở dưới con trỏ khi kéo (CDK đặt class lên đúng drop list đó), không phải mọi làn nhận được.
+  &:has(> .sd-kanban__cards.cdk-drop-list-dragging) {
+    border-color: var(--sd-kanban-lane-target-border);
+    background: var(--sd-kanban-lane-target-bg);
+  }
 }
 @each $color in primary, secondary, info, success, warning, error {
   .sd-kanban__column[data-color='#{$color}'] {
     --sd-kanban-column-color: var(--sd-#{$color});
-    --sd-kanban-column-tint: var(--sd-#{$color}-light);
   }
+}
+.sd-kanban__dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--sd-kanban-column-color);
 }
 .sd-kanban__header {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   min-height: 48px;
   box-sizing: border-box;
   padding-block: 8px;
@@ -80,17 +90,12 @@
     }
   }
 }
+// Số đếm dạng chữ (không còn pill), "2/5" khi đang lọc.
 .sd-kanban__count {
   flex: 0 0 auto;
-  min-width: 24px;
-  box-sizing: border-box;
-  padding: 2px 8px;
-  border-radius: var(--sd-radius-999, 999px);
-  background: var(--sd-surface);
   color: var(--sd-text-secondary);
-  font-size: var(--sd-font-size-12, 12px);
-  font-weight: var(--sd-font-weight-semibold, 600);
-  text-align: center;
+  font-size: var(--sd-font-size-13, 13px);
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 .sd-kanban__cards {
@@ -115,11 +120,14 @@
   min-width: 0;
   padding-block: 10px;
   padding-inline: 12px 6px;
-  border: 1px solid var(--sd-border);
+  border: 1px solid var(--sd-kanban-card-border);
   border-radius: var(--sd-radius-8, 8px);
   background: var(--sd-surface);
-  box-shadow: var(--sd-shadow-xs);
+  box-shadow: none;
   overflow-wrap: anywhere;
+  &:hover {
+    border-color: var(--sd-kanban-card-hover-border);
+  }
   &.sd-kanban__card--pending {
     border-color: var(--sd-primary);
   }
@@ -142,6 +150,28 @@
   display: flex;
   align-items: flex-start;
   gap: 2px;
+}
+// Công cụ thẻ chỉ hiện khi cần trên chuột: opacity (không display/visibility) để tay nắm vẫn Tab tới được.
+// Cảm ứng (pointer: coarse) luôn thấy công cụ.
+@media (hover: hover) and (pointer: fine) {
+  .sd-kanban__card-tools {
+    opacity: 0;
+    transition: opacity var(--sd-duration-fast, 120ms) var(--sd-ease-standard, ease);
+  }
+  .sd-kanban__card:hover,
+  .sd-kanban__card:focus-within,
+  .sd-kanban__card--pending,
+  .sd-kanban__card--failed,
+  .sd-kanban__card:has([aria-expanded='true']) {
+    .sd-kanban__card-tools {
+      opacity: 1;
+    }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-kanban__card-tools {
+    transition: none;
+  }
 }
 .sd-kanban__card-actions {
   grid-area: actions;
@@ -232,9 +262,22 @@
 .sd-kanban__column--collapsed {
   flex: 0 0 64px;
   width: 64px;
+  // Làn thu gọn, từ trên xuống: nút mở, chấm, số đếm, nhãn dọc.
   .sd-kanban__header {
-    flex-direction: column-reverse;
+    flex-direction: column;
     padding: 12px 6px;
+    > button {
+      order: 1;
+    }
+    .sd-kanban__dot {
+      order: 2;
+    }
+    .sd-kanban__count {
+      order: 3;
+    }
+    h3 {
+      order: 4;
+    }
   }
   h3 {
     writing-mode: vertical-rl;
@@ -276,8 +319,14 @@
 .cdk-drag-preview {
   box-shadow: var(--sd-shadow-md);
 }
-.cdk-drag-placeholder {
-  opacity: 0.3;
+// Chỗ thả: khe nét đứt cùng chiều cao thẻ; nội dung ẩn bằng visibility để giữ chiều cao.
+.sd-kanban__card.cdk-drag-placeholder {
+  opacity: 1;
+  border: 2px dashed var(--sd-kanban-drop-slot-border);
+  background: var(--sd-kanban-lane-target-bg);
+  > * {
+    visibility: hidden;
+  }
 }
 @media (max-width: 599px) {
   .sd-kanban__column {
@@ -299,6 +348,9 @@
   }
 }
 @media (forced-colors: active) {
+  .sd-kanban__column {
+    border-color: CanvasText;
+  }
   .sd-kanban__card--pending,
   .sd-kanban__card--failed {
     outline: 2px solid Highlight;
