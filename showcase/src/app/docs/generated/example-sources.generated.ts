@@ -1092,6 +1092,45 @@ export class ButtonIconOnlyExampleComponent {}`,
   flex-basis: 100%;
 }`,
   },
+  "components/button/example-indicator": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdButton } from '@sdcorejs/angular/components/button';
+
+@Component({
+  selector: 'app-button-indicator-example',
+  standalone: true,
+  imports: [SdButton],
+  templateUrl: './button-indicator.example.html',
+  styleUrl: './button-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ButtonIndicatorExampleComponent {
+  readonly unread = signal(3);
+
+  addUnread(): void {
+    this.unread.update(count => count + 1);
+  }
+
+  clearUnread(): void {
+    this.unread.set(0);
+  }
+}`,
+    scss: `:host {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.button-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex-basis: 100%;
+}`,
+  },
   "components/button/example-kich-thuoc": {
     typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { SdButton } from '@sdcorejs/angular/components/button';
@@ -20221,6 +20260,23 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     html: `<sd-button type="light" color="primary" prefixIcon="edit" tooltip="edit"></sd-button>
 <sd-button type="light" color="error" prefixIcon="delete" tooltip="delete"></sd-button>
 <sd-button type="outline" color="secondary" suffixIcon="more_vert" tooltip="Thêm thao tác" autoId="suffix-only"></sd-button>`,
+  },
+  "components/button/example-indicator": {
+    ...SHOWCASE_PAGE_SOURCES["components/button/example-indicator"],
+    html: `<sd-button
+  type="text"
+  prefixIcon="notifications"
+  tooltip="Thông báo"
+  [indicator]="unread()"
+  [indicatorLabel]="unread() + ' thông báo mới'"
+  autoId="indicator-notifications"></sd-button>
+<sd-button type="outline" title="Bộ lọc" prefixIcon="filter_list" [indicator]="true" indicatorColor="primary" indicatorLabel="Đang có bộ lọc"></sd-button>
+<sd-button type="fill" color="primary" title="Hộp thư" [indicator]="128" indicatorLabel="128 thư chưa đọc"></sd-button>
+<sd-button size="md" prefixIcon="chat" tooltip="Tin nhắn" [indicator]="12" [indicatorMax]="9" indicatorColor="success"></sd-button>
+<sd-button size="lg" prefixIcon="shopping_cart" tooltip="Giỏ hàng" [indicator]="2" indicatorColor="info"></sd-button>
+<sd-button type="outline" title="Vô hiệu" [indicator]="5" disabled></sd-button>
+<sd-button type="text" color="primary" title="Thêm thông báo" prefixIcon="add" (click)="addUnread()"></sd-button>
+<sd-button type="text" color="secondary" title="Đọc hết" (click)="clearUnread()"></sd-button>`,
   },
   "components/button/example-kich-thuoc": {
     ...SHOWCASE_PAGE_SOURCES["components/button/example-kich-thuoc"],

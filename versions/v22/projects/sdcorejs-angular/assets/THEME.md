@@ -291,6 +291,11 @@ light and dark. The column colour only marks the 8px dot or the prefix icon.
 
 `npm run test:theme` checks `--sd-text` and `--sd-text-secondary` on the lane (at least 4.5:1) for every preset and dark.
 
+## Button indicator token
+
+`--sd-button-indicator-ring` (`var(--sd-surface)` in light and dark) is the 2px ring that separates the `sd-button`
+indicator from the button. Set it to the background behind the button when that is not `--sd-surface`.
+
 ## Focus ring
 
 - Colour: `var(--sd-focus-ring-color)` (the primary colour). Width and offset: `--sd-focus-ring-width` and

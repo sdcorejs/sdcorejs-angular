@@ -27,11 +27,12 @@ Cập nhật: 2026-10-21.
 | 5 | Đợt 1 · B — primitive tìm kiếm `ɵ` | `6e6a4259` |
 | 6 | Đợt 1 · C — token table | `42246293` |
 | 7 | Đợt 1 — sd-form-builder | `f0576fa6` + dọn `5c39c40b` |
-| 8 | Đợt 1 — sd-kanban | commit `feat(kanban): neutral lanes, colour dot, text count and quiet card tools` |
-| 9–10 | Indicator sd-button, operator trong control | đang làm (user duyệt làm hết rồi review một lượt, 2026-10-21) |
+| 8 | Đợt 1 — sd-kanban | `cbaaa034` |
+| 9 | Đợt 2 · F — indicator sd-button | commit `feat(button): add the indicator dot and count` |
+| 10 | Operator trong control | đang làm (user duyệt làm hết rồi review một lượt, 2026-10-21) |
 
-Kết quả kiểm tra ở commit bước 8 (Node 22.22.3): Karma v19 7581/7581 (coverage 89.86 / 79.1 / 90.35 / 92.3), lint,
-`test:theme` 50/50, `check:scss-hex` 0 finding, `check:i18n-parity` (1341 key × 5) và `check:i18n` pass, `check:sync` pass,
+Kết quả kiểm tra ở commit bước 9 (Node 22.22.3): Karma v19 7590/7590 (coverage 89.87 / 79.11 / 90.35 / 92.3), lint,
+`test:theme` 51/51, `check:scss-hex` 0 finding, `check:i18n-parity` (1341 key × 5) và `check:i18n` pass, `check:sync` pass,
 build lib v19 pass. Ảnh trước/sau: [`screenshots/`](screenshots/).
 
 ## Quyết định đã duyệt (2026-10-21)
@@ -147,6 +148,19 @@ Lệch thông số và quyết định nhỏ (cần duyệt lại nếu không �
   Placeholder: `.sd-kanban__card.cdk-drag-placeholder` khe nét đứt 2px, con `visibility: hidden`. forced-colors thêm viền
   `CanvasText` cho làn.
 - **Câu hỏi mở cho PR:** không thêm option `appearance` (giữ nguyên theo README).
+
+## Bước 9 — đã làm
+
+- Input `indicator` (`boolean | number | null`), `indicatorColor` (`Color`, mặc định `error`), `indicatorMax` (99),
+  `indicatorLabel` trên `SdButton` (signal input, `readonly`, transform giống các input sẵn có). `span.sd-button__indicator`
+  là anh em của nút gốc (`aria-hidden`, `pointer-events: none`, `data-size` / `data-color`); `indicatorLabel` thành span
+  ẩn có id nối vào `aria-describedby` của cả 4 biến thể nút. Host thêm `position: relative`.
+- Hình học bằng Sass map theo size từ `--sd-control-height-*` × 0.146; token mới `button-indicator-ring`
+  (`var(--sd-surface)`); test theme + 13 spec (ẩn/chấm/số/max, vị trí 3 cỡ, màu, disabled, describedby, kích thước nút).
+- Showcase: example `button-indicator` + demo-section "Indicator" (registry 8 → 9, tổng 420 → 421, spec spacing),
+  chạy `npm run generate:showcase-examples`. Ảnh: `screenshots/step9-indicator.png` (không có bản trước).
+- **Lưu ý gate:** lần full Karma đầu đỏ 3 spec do timeout (select virtual 10k, thumbnail preview-pdf) vì server showcase
+  của bước 8 còn chạy và rebuild trong nền; tắt server, chạy lại 7590/7590. Nhớ `preview_stop` trước khi chạy Karma.
 
 ## Ghi chú kỹ thuật
 

@@ -13,6 +13,8 @@
 @let _width = width();
 @let _tooltip = tooltip();
 @let _ariaLabel = ariaLabel();
+@let _describedBy = indicatorDescribedBy();
+@let _indicator = indicatorView();
 
 @if (_type === 'fill') {
   <button
@@ -21,6 +23,7 @@
     [attr.aria-expanded]="_hasActions ? _opened : null"
     [attr.aria-controls]="_opened ? popover.id : null"
     [attr.aria-label]="_ariaLabel"
+    [attr.aria-describedby]="_describedBy"
     (keydown)="onTriggerKeydown($event)"
     (pointerenter)="onTriggerPointerEnter($event)"
     (pointerleave)="popover.scheduleHoverClose()"
@@ -46,6 +49,7 @@
     [attr.aria-expanded]="_hasActions ? _opened : null"
     [attr.aria-controls]="_opened ? popover.id : null"
     [attr.aria-label]="_ariaLabel"
+    [attr.aria-describedby]="_describedBy"
     (keydown)="onTriggerKeydown($event)"
     (pointerenter)="onTriggerPointerEnter($event)"
     (pointerleave)="popover.scheduleHoverClose()"
@@ -71,6 +75,7 @@
     [attr.aria-expanded]="_hasActions ? _opened : null"
     [attr.aria-controls]="_opened ? popover.id : null"
     [attr.aria-label]="_ariaLabel"
+    [attr.aria-describedby]="_describedBy"
     (keydown)="onTriggerKeydown($event)"
     (pointerenter)="onTriggerPointerEnter($event)"
     (pointerleave)="popover.scheduleHoverClose()"
@@ -96,6 +101,7 @@
     [attr.aria-expanded]="_hasActions ? _opened : null"
     [attr.aria-controls]="_opened ? popover.id : null"
     [attr.aria-label]="_ariaLabel"
+    [attr.aria-describedby]="_describedBy"
     (keydown)="onTriggerKeydown($event)"
     (pointerenter)="onTriggerPointerEnter($event)"
     (pointerleave)="popover.scheduleHoverClose()"
@@ -114,6 +120,22 @@
     (click)="onInternalClick($event)">
     <ng-container *ngTemplateOutlet="contentTpl"></ng-container>
   </button>
+}
+
+<!-- Indicator (thiết kế đợt 2 · F): anh em của nút gốc, không nằm trong nút, để ripple và overflow không cắt nó. -->
+@if (_indicator) {
+  <span
+    class="sd-button__indicator"
+    aria-hidden="true"
+    [class.sd-button__indicator--dot]="_indicator.dot"
+    [class.sd-button__indicator--count]="!_indicator.dot"
+    [attr.data-size]="size()"
+    [attr.data-color]="indicatorColor()"
+    >{{ _indicator.text }}</span
+  >
+  @if (_describedBy) {
+    <span class="sd-button__indicator-label" [id]="_describedBy">{{ indicatorLabel() }}</span>
+  }
 }
 
 <ng-template #contentTpl>

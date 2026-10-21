@@ -40,6 +40,10 @@ Standard action button — used everywhere a user triggers an action (save, canc
 | `disabled` | `boolean` | `false` | Disables clicks AND adds `.sd-disabled` host class. |
 | `loading` | `boolean` | `false` | Shows spinner instead of prefix icon; clicks suppressed. |
 | `block` | `boolean` | `false` | Stretches to 100% width of parent (`.sd-block` host class). |
+| `indicator` | `boolean \| number \| null` | `null` | Dot or count at the top-end corner. `true`: dot. A number > 0: that number, floored. `0`, negative, `NaN`, `false`, `null`: hidden. See [Indicator](#indicator). |
+| `indicatorColor` | `Color` | `'error'` | Background `--sd-{color}`, text `--sd-{color}-contrast`. |
+| `indicatorMax` | `number` | `99` | A larger count shows `{max}+`. |
+| `indicatorLabel` | `string` | — | Text for screen readers, linked to the button through `aria-describedby`. |
 
 > **Coerce note**: `disabled`, `loading`, `block` use `booleanAttribute` transform — bare attribute presence (e.g. `<sd-button disabled>`) is treated as `true`.
 
@@ -80,6 +84,21 @@ The button itself does NOT enforce permission — wrap with the `*sdPermission` 
   (click)="onCreate()">
 </sd-button>
 ```
+
+## Indicator
+
+A dot or a count on the top-end corner, for unread items, pending work or a status. It never changes the size or the layout of the button.
+
+```html
+<sd-button prefixIcon="notifications" tooltip="Thông báo" [indicator]="unread" indicatorLabel="{{ unread }} thông báo mới" />
+<sd-button type="outline" title="Bộ lọc" [indicator]="hasFilters" indicatorColor="primary" />
+```
+
+- **Geometry**: the anchor is 0.146 × the button height (`--sd-control-height-sm/md/lg`), the 45° point of the top-end corner arc: 4.7 / 5.9 / 7px. The dot (8 / 8 / 10px) is centred on the anchor. The count (16 / 18 / 20px high, 4 / 5 / 6px side padding, 11 / 11 / 12px semibold tabular figures, pill corner) is centred vertically on the anchor and starts half its height before it, so a longer count grows to the right. The same rule applies to icon-only round buttons, pill buttons and all four types.
+- **Ring**: a 2px `--sd-button-indicator-ring` (`var(--sd-surface)`) box-shadow separates it from the button.
+- **States**: a disabled button greys it (`--sd-disabled-text` background, `--sd-surface` text); loading keeps it.
+- **DOM**: `span.sd-button__indicator` is a sibling of the native button inside the host, so the ripple and the button overflow never clip it. It is `aria-hidden` and has no pointer events. Automation can read `.sd-button__indicator` (`--dot` / `--count`, `data-size`, `data-color`).
+- **Accessibility**: `indicatorLabel` renders as a visually hidden span whose id is added to the button's `aria-describedby`; the button keeps its accessible name (`title`, or `tooltip` when icon-only). Without a label the indicator is decorative. A changing count is not announced (no live region).
 
 ## Accessibility
 - Always set `title` OR `tooltip` for icon-only buttons: an icon-only button exposes its `tooltip` as `aria-label` on the inner `<button>` (the icon itself is `aria-hidden`). Buttons with a visible `title` keep that text as their accessible name.

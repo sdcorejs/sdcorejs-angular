@@ -190,7 +190,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/button/sd-button',
     keywords: ['action', 'submit', 'loading', 'icon'],
     status: 'stable',
-    demoSectionCount: 8,
+    demoSectionCount: 9,
     loadComponent: () => import('../../pages/components/button/button-demo.component').then(m => m.ButtonDemoComponent),
   }),
   defineDocPage({

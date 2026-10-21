@@ -319,6 +319,14 @@ test('Component tokens exist in both modes with the 2.15 hex as the light value'
   assert.equal(light['--sd-tooltip-bg'], '#616161');
 });
 
+// Wave 2 · F: the sd-button indicator ring separates it from the button with the page surface.
+test('Button indicator ring is the page surface in light and dark', () => {
+  for (const mode of ['light', 'dark']) {
+    const tokens = declarations(compile(`.x { @include sd.theme($mode: '${mode}'); }`));
+    assert.equal(tokens['--sd-button-indicator-ring'], 'var(--sd-surface)', mode);
+  }
+});
+
 // Wave 1 · sd-kanban: neutral lanes and drop target derived from the palette, one expression for light and dark.
 const KANBAN_TOKENS = {
   '--sd-kanban-lane-bg': 'color-mix(in srgb, var(--sd-text) 4%, var(--sd-surface))',

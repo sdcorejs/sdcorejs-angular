@@ -40,6 +40,7 @@ export type ShowcaseExampleSourceKey =
   | "components/button/example-bang-mau"
   | "components/button/example-bien-the"
   | "components/button/example-chi-icon"
+  | "components/button/example-indicator"
   | "components/button/example-kich-thuoc"
   | "components/button/example-secondary-vs-black"
   | "components/button/example-toggle-icon-set-bang-alias"
@@ -725,6 +726,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-trang-thai",
     title: "Trạng thái",
     description: "Existing “Trạng thái” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/button/example-indicator",
+    pageKey: "components/button",
+    sectionId: "example-indicator",
+    title: "Indicator",
+    description: "Chấm hoặc số ở góc trên phải, không đổi kích thước nút. Số lớn hơn indicatorMax hiện {max}+; indicatorLabel nối vào aria-describedby.",
   },
   {
     sourceKey: "components/card/example-standalone-card",

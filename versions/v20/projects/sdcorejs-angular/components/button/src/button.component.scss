@@ -1,4 +1,5 @@
 @use '../../../assets/scss/core/color.scss' as color;
+@use 'sass:list';
 @use 'sass:map';
 
 $button-outline-border-color: var(
@@ -15,6 +16,8 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
 
 :host {
   display: inline-block;
+  // Neo cho indicator (đợt 2 · F); không đổi kích thước hay layout của nút.
+  position: relative;
 
   // [FIX QUAN TRỌNG] Đặt là auto để Host hứng được sự kiện click
   // Giúp HostListener trong TS có thể stopPropagation (chặn lan ra Header)
@@ -466,4 +469,82 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
 .c-projected-label-empty,
 .c-projected-label[hidden] {
   display: none;
+}
+
+// ── Indicator (thiết kế đợt 2 · F) ──────────────────────────────────────────────
+// Neo a = 0.146 × chiều cao nút (điểm 45° trên cung góc trên phải): 4.7 / 5.9 / 7px. Chấm canh tâm vào điểm neo;
+// số canh tâm dọc vào điểm neo và dài ra về bên phải. Cùng công thức cho nút tròn icon-only, nút pill và cả 4 type.
+// size: (chiều cao nút, cạnh chấm, chiều cao số, padding ngang của số, cỡ chữ)
+$button-indicator-sizes: (
+  sm: (var(--sd-control-height-sm, 32px), 8px, 16px, 4px, var(--sd-font-size-11, 11px)),
+  md: (var(--sd-control-height-md, 40px), 8px, 18px, 5px, var(--sd-font-size-11, 11px)),
+  lg: (var(--sd-control-height-lg, 48px), 10px, 20px, 6px, var(--sd-font-size-12, 12px)),
+);
+
+.sd-button__indicator {
+  position: absolute;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: var(--sd-error);
+  color: var(--sd-error-contrast);
+  box-shadow: 0 0 0 2px var(--sd-button-indicator-ring);
+  font-weight: var(--sd-font-weight-semibold, 600);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+@each $size, $values in $button-indicator-sizes {
+  $height: list.nth($values, 1);
+  $dot: list.nth($values, 2);
+  $count: list.nth($values, 3);
+  $anchor: calc(#{$height} * 0.146);
+
+  .sd-button__indicator--dot[data-size='#{$size}'] {
+    top: $anchor;
+    right: $anchor;
+    width: $dot;
+    height: $dot;
+    transform: translate(50%, -50%);
+  }
+
+  .sd-button__indicator--count[data-size='#{$size}'] {
+    top: $anchor;
+    left: calc(100% - #{$height} * 0.146 - #{$count} / 2);
+    min-width: $count;
+    height: $count;
+    padding: 0 list.nth($values, 4);
+    font-size: list.nth($values, 5);
+    line-height: $count;
+    transform: translateY(-50%);
+  }
+}
+
+@each $color in primary, secondary, info, success, warning, error {
+  .sd-button__indicator[data-color='#{$color}'] {
+    background: var(--sd-#{$color});
+    color: var(--sd-#{$color}-contrast);
+  }
+}
+
+// Sau vòng màu để thắng cùng độ ưu tiên. Loading giữ nguyên màu.
+:host(.sd-disabled) .sd-button__indicator {
+  background: var(--sd-disabled-text);
+  color: var(--sd-surface);
+}
+
+.sd-button__indicator-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }

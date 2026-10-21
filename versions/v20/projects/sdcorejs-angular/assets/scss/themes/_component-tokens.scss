@@ -88,6 +88,8 @@ $component-tokens: (
   'code-editor-syntax-keyword': (#cc99cd, #cc99cd),
   'code-editor-syntax-string': (#7ec699, #7ec699),
   'code-editor-syntax-operator': (#67cdcc, #67cdcc),
+  // button — ring that separates the indicator from the button (design handoff wave 2 · F).
+  'button-indicator-ring': (var(--sd-surface), var(--sd-surface)),
   // file-explorer — bases for the accent color-mix() shades and tints
   'file-explorer-mix-shade': (#000000, #ffffff),
   'file-explorer-mix-tint': (#ffffff, #1d1f23),
