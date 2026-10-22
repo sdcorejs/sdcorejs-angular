@@ -1,6 +1,6 @@
 import { A11yModule } from '@angular/cdk/a11y';
 import { ConnectedPosition, OverlayModule } from '@angular/cdk/overlay';
-import { CommonModule } from '@angular/common';
+import { CommonModule, formatDate } from '@angular/common';
 import {
   AfterViewInit,
   booleanAttribute,
@@ -15,6 +15,7 @@ import {
   inject,
   input,
   isDevMode,
+  LOCALE_ID,
   model,
   output,
   TemplateRef,
@@ -83,6 +84,13 @@ export type SdChipCalendarDate = Date | string | number | null | undefined;
 /** `removable`: all chips, none, or a predicate that receives the normalised `yyyy/MM/dd` day. */
 export type SdChipCalendarRemovable = boolean | ((day: string) => boolean);
 
+/** Icon sizes of the field by size (handoff 2 · Kích thước): chip ✕ / lock, clear button, calendar button. */
+const FIELD_ICONS = {
+  sm: { chip: '14px', clear: '16px', open: '18px' },
+  md: { chip: '16px', clear: '18px', open: '20px' },
+  lg: { chip: '18px', clear: '20px', open: '22px' },
+} as const;
+
 const FULL_DATE: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
 
 /** Same days in the same order. */
@@ -139,6 +147,7 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
   // giữ cờ `submitted`; MatInput cũng lấy đúng hai directive này cho ErrorStateMatcher.
   readonly #parentForm = inject(FormGroupDirective, { optional: true }) ?? inject(NgForm, { optional: true });
   readonly #host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
+  readonly #locale = inject(LOCALE_ID);
   // why: focus hoãn 100ms; handle phải bị clear khi destroy, nếu không timer vẫn chạm
   // input của view đã tháo.
   readonly #timers = ɵsdTimerScope();
@@ -161,8 +170,11 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
   readonly isOpen = signal(false);
   /** Month the popup opened at (4.2), fixed for one opening. */
   readonly openAt = signal<Date | null>(null);
-  /** The popup hangs from the field box, like the select panel. */
-  readonly overlayOrigin = computed(() => this.field()?.getConnectedOverlayOrigin());
+  /**
+   * The popup hangs from the field box (the outline), like the select panel. Read in `open()`: `_textField` of
+   * `MatFormField` is a view query, and read too early the origin falls back to the whole field with its subscript row.
+   */
+  readonly overlayOrigin = signal<ElementRef<HTMLElement> | undefined>(undefined);
   // why: cách khung ô 6px như panel sd-select / menu operator / badge picker (quyết định 3 của PLAN); lật lên khi thiếu chỗ.
   readonly positions: ConnectedPosition[] = [
     { originX: 'start', originY: 'bottom', overlayX: 'start', overlayY: 'top', offsetY: 6 },
@@ -267,6 +279,15 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
   startAt = input<SdChipCalendarDate>(null);
   /** Shows “Xoá hết” in the popup (and the clear button of the field). Off by default, like `clearable` of `<sd-date>`. */
   clearable = input(false, { transform: booleanAttribute });
+  /**
+   * Chips shown while the popup is closed; the rest fold into a “+N” button that opens it. `null` shows them all.
+   * `2` is the suggestion inside `<sd-table>` filters.
+   */
+  maxVisible = input<number | null | undefined>(null);
+  /** Date format of the chips and of the viewed text, in Angular `DatePipe` syntax. */
+  displayFormat = input<string, string | null | undefined>('dd/MM/yyyy', {
+    transform: (v): string => v || 'dd/MM/yyyy',
+  });
   disabled = input(false, { transform: booleanAttribute });
   /** Display mode: `false` edit · `true` static view · `'inline'` interactive (disabled `'inline'` → static). */
   viewed = input<SdViewed, SdViewedInput>(false, { transform: sdViewedTransform });
@@ -362,6 +383,27 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
     void this.removable();
     return this.days().some(day => this.isRemovable(day));
   });
+  /** Chosen days by date (B2). Display only: the model keeps its order. `yyyy/MM/dd` sorts as text in date order. */
+  readonly sortedDays = computed(() => [...this.days()].sort());
+  /** Chips on screen: all while the popup is open, else at most `maxVisible` (B3). */
+  readonly visibleDays = computed(() => {
+    const days = this.sortedDays();
+    const max = this.maxVisible();
+    if (this.isOpen() || max === null || max === undefined || max < 0 || days.length <= max) return days;
+    return days.slice(0, max);
+  });
+  /** Icon sizes of the chips and suffix buttons for the current size. */
+  readonly iconSizes = computed(() => FIELD_ICONS[this.size() === 'sm' || this.size() === 'lg' ? this.size() : 'md']);
+  /** Days folded into “+N”. */
+  readonly hiddenCount = computed(() => this.sortedDays().length - this.visibleDays().length);
+  /** Viewed text: days by date in `displayFormat`, joined by “, ” (C3). */
+  readonly viewText = computed(() =>
+    this.sortedDays()
+      .map(day => this.formatDay(day))
+      .join(', ')
+  );
+  /** Placeholder: the input, else “Chọn ngày” — no longer the label (B1). */
+  readonly effectivePlaceholder = computed(() => this.placeholder() || this.#i18n.t('core.form.chip-calendar.placeholder'));
   readonly resolvedMinDate = computed(() => this.#toDate(this.minDate()));
   readonly resolvedMaxDate = computed(() => this.#toDate(this.maxDate()));
   /**
@@ -485,6 +527,11 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
     return this.isRemovable(day) ? full : `${full}, ${this.#i18n.t('core.form.chip-calendar.locked')}`;
   }
 
+  /** A chip day in `displayFormat` (Angular `DatePipe` / `formatDate` syntax, as the chips used before). */
+  formatDay(day: string): string {
+    return formatDate(dayToDate(day), this.displayFormat(), this.#locale);
+  }
+
   /** Accessible name of the ✕ button of a chip. */
   removeLabel(day: string): string {
     return this.#i18n.t('core.form.chip-calendar.remove', { date: this.#fullDate().format(dayToDate(day)) });
@@ -494,6 +541,7 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
   open(): void {
     if (this.#formControl.disabled || this.isViewed() || this.isOpen()) return;
     this.openAt.set(this.#firstMonth());
+    this.overlayOrigin.set(this.field()?.getConnectedOverlayOrigin());
     this.isOpen.set(true);
     this.#ref.markForCheck();
   }
@@ -529,6 +577,19 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
 
   /** Click on the empty part of the field or on the input opens the popup; chips stop the click (3 · 2). */
   onFieldClick(): void {
+    this.open();
+  }
+
+  /** Calendar button of the suffix: opens or closes the popup without the field click opening it again. */
+  onToggleClick(event: Event): void {
+    event.stopPropagation();
+    if (this.isOpen()) this.close();
+    else this.open();
+  }
+
+  /** “+N” opens the popup, where every chip shows. */
+  onMoreClick(event: Event): void {
+    event.stopPropagation();
     this.open();
   }
 

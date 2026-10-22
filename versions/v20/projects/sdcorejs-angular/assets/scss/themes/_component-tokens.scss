@@ -284,6 +284,9 @@ $component-tokens: (
   'autocomplete-selected-text': (#000000, #e3e2e6),
   'chip-bg': (#ebecf0, #34373d),
   'chip-calendar-bg': (#ebecf0, #34373d),
+  // Suy từ palette (handoff sd-chip-calendar): nền chip không bỏ được và nền hover của nút “+N”.
+  'chip-calendar-chip-locked-bg': (color-mix(in srgb, var(--sd-surface-muted) 55%, var(--sd-surface)), color-mix(in srgb, var(--sd-surface-muted) 55%, var(--sd-surface))),
+  'chip-calendar-more-hover-bg': (color-mix(in srgb, var(--sd-text) 6%, var(--sd-surface-muted)), color-mix(in srgb, var(--sd-text) 6%, var(--sd-surface-muted))),
   // Kích thước, không phải màu (handoff sd-chip-calendar): rộng popup = 8 + 7 × 40 + 8.
   'chip-calendar-panel-width': (296px, 296px),
   'entity-picker-bg': (#ffffff, #1d1f23),

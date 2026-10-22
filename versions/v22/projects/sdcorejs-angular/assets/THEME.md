@@ -344,6 +344,13 @@ seven 40px day columns, 8px padding. It is a size, the one non-colour entry of t
 panel surface of the select panel (`--sd-select-panel-bg`, `--sd-panel-radius`, `--sd-shadow-md`), and `--sd-chip-calendar-bg`
 stays the hover background of the `sdViewDef` face.
 
+Two colours of the field derive from the palette, one expression for light and dark:
+
+- `--sd-chip-calendar-chip-locked-bg`: the background of a chip that `removable` keeps (55% `--sd-surface-muted` on
+  `--sd-surface`). The chip shows a lock icon in place of the remove button.
+- `--sd-chip-calendar-more-hover-bg`: the hover background of the “+N” button (6% `--sd-text` on
+  `--sd-surface-muted`, its rest background).
+
 ## Focus ring
 
 - Colour: `var(--sd-focus-ring-color)` (the primary colour). Width and offset: `--sd-focus-ring-width` and

@@ -8,7 +8,7 @@ chưa push.
 | 0 | Gói handoff + kế hoạch | xong |
 | 1 | Sửa lỗi và model (A1, A2, A4, A6) | xong |
 | 2 | Popup mới (A3, A5, B4, B5, B6, C1) | xong |
-| 3 | Field mới (B1, B2, B3, C2, C3) | chưa |
+| 3 | Field mới (B1, B2, B3, C2, C3) | xong |
 | 4 | Dọn code, form-render, tài liệu (D1, D2) | chưa |
 
 ## Bước 1
@@ -51,3 +51,32 @@ chưa push.
 - Kiểm tra: spec chip-calendar 102/102 (15 spec mới RED trước), full Karma 7809/7809, lint, `test:theme` 53/53,
   `check:scss-hex` 0, i18n parity (1391 × 5), `check:i18n`, `check:sync`. Ảnh: [`progress/step2-before-after.png`](progress/step2-before-after.png).
 - Còn ở bước 3: viền field ở trạng thái focus khi popup mở (thông số mục 2 · Trạng thái field).
+
+## Bước 3
+
+- Suffix (B1): nút lịch `data-chip-calendar-open` (mở / đóng popup, `aria-haspopup="dialog"`, `aria-expanded`, primary khi
+  mở) và nút bỏ hết (`clearable`, ẩn khi `required`, hover-gated như sd-date, luôn hiện khi popup mở; giữ ngày khoá, không mở
+  popup). Disabled thì ẩn cả hai. Placeholder mặc định “Chọn ngày” (i18n `placeholder`), không lấy label nữa.
+- Chip (B2): sắp theo ngày khi hiện (model giữ thứ tự), chữ theo input mới `displayFormat` (cú pháp `DatePipe`, mặc định
+  `dd/MM/yyyy`), icon ✕ `close`; ngày khoá có nền `--sd-chip-calendar-chip-locked-bg` và icon `lock` có tooltip thay cho ✕.
+- `maxVisible` (B3): popup đóng thì chỉ hiện `maxVisible` chip đầu, phần còn lại gộp vào nút “+N” (i18n `more`), bấm mở
+  popup; popup mở thì hiện đủ.
+- Thang cỡ (C2): field một dòng 32 / 40 / 48, chip 20 / 24 / 28 nằm giữa (padding infix = (field − chip) / 2), nút suffix
+  24 / 28 / 32, icon theo cỡ. `core/form.scss` bỏ field này khỏi rule padding infix `!important` của sd-sm / sd-md
+  (`:not(.sd-chip-calendar-field)`); thay cho margin bù 10px / 2px cũ của chip set.
+- Popup mở: field ở trạng thái focus (viền + label primary, `--sd-control-ring`).
+- Viewed (C3): ngày sắp xếp, theo `displayFormat`, nối bằng “, ”.
+- Token mới, suy từ palette (một biểu thức cho light và dark): `chip-calendar-chip-locked-bg`,
+  `chip-calendar-more-hover-bg`; cặp tương phản trong `scripts/theme-contrast.test.mjs`; THEME.md.
+- i18n mới (5 locale): `placeholder`, `clear`, `more`. Dọn dòng trống thừa giữa các key chip-calendar mà script bước 1–2
+  chèn vào.
+- Lưu ý kỹ thuật: `matSuffix` / `matChipRemove` chỉ được chiếu đúng chỗ khi khối `@if` có một phần tử gốc (khối lồng nhiều
+  gốc đẩy icon vào nhãn chip, nút vào infix). Rule toàn cục `.mat-mdc-form-field-infix input.mat-mdc-input-element
+  { margin-top: 10px }` cần selector mạnh hơn (`input.mat-mdc-chip-input.mat-mdc-input-element`).
+- Sửa lỗi của bước 2: popup mở bên dưới cách viền ~27px thay vì 6px. `overlayOrigin` là `computed` đọc
+  `MatFormField.getConnectedOverlayOrigin()` trước khi view query `_textField` có giá trị, nên rơi về cả `mat-form-field`
+  (gồm dòng subscript 20px) và giữ luôn. Giờ origin đọc trong `open()`. Spec kiểm origin là khung viền (khung Karma quá thấp
+  để đo khoảng cách); đo trên showcase: viền dưới 163.73px, popup 169.73px. Khi lật lên vốn đã đúng 6px.
+- Kiểm tra: spec chip-calendar 116/116 (field spec mới RED trước, kể cả spec origin), full Karma 7823/7823,
+  `test:theme`, `check:scss-hex` 0, i18n parity (1394 × 5), `check:i18n`, `test:theme-token-list`, prettier + eslint
+  file đổi, `npm run sync`, `check:sync`. Ảnh: [`progress/step3-before-after.png`](progress/step3-before-after.png).

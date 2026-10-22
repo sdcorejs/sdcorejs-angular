@@ -166,30 +166,17 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.chip-calendar.required': '请输入内容',
   'core.form.chip-calendar.minlength': '请至少输入 {min} 个值',
   'core.form.chip-calendar.maxlength': '最多输入 {max} 个值',
-
   'core.form.chip-calendar.remove': '移除 {date}',
-
   'core.form.chip-calendar.locked': '此日期无法移除',
-
-
+  'core.form.chip-calendar.placeholder': '选择日期',
+  'core.form.chip-calendar.clear': '移除所有日期',
+  'core.form.chip-calendar.more': '再显示 {count} 天',
   'core.form.chip-calendar.dialog-label': '选择日期',
-
-
   'core.form.chip-calendar.selected-count': '已选 {count} 天',
-
-
   'core.form.chip-calendar.max-count': '最多 {max}',
-
-
   'core.form.chip-calendar.no-limit': '不限',
-
-
   'core.form.chip-calendar.full': '已选满 {max} 天。取消一天后才能选择其他日期。',
-
-
   'core.form.chip-calendar.clear-all': '全部清除',
-
-
   'core.form.chip-calendar.done': '完成',
 
   // ---- Forms: date ----

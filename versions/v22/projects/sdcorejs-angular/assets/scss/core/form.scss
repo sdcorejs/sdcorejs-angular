@@ -192,7 +192,8 @@
     --mat-form-field-container-vertical-padding: 3px;
 
     &.mat-form-field-appearance-outline {
-      .mat-mdc-form-field-infix {
+      // why: sd-chip-calendar tự đặt padding / chiều cao infix theo thang chip của nó (handoff chip-calendar 2 · C2).
+      &:not(.sd-chip-calendar-field) .mat-mdc-form-field-infix {
         padding: 0 0 8px 0 !important;
         border-top-width: 11.5px;
         min-height: 43.5px;
@@ -275,7 +276,7 @@
     }
 
     &.mat-form-field-appearance-outline {
-      .mat-mdc-form-field-infix {
+      &:not(.sd-chip-calendar-field) .mat-mdc-form-field-infix {
         border-top-width: 6px;
         min-height: var(--sd-control-height-sm, 32px);
         width: auto;

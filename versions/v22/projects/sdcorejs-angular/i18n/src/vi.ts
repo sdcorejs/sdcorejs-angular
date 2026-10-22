@@ -166,30 +166,17 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.chip-calendar.required': 'Vui lòng nhập thông tin',
   'core.form.chip-calendar.minlength': 'Vui lòng nhập ít nhất {min} giá trị',
   'core.form.chip-calendar.maxlength': 'Vui lòng nhập tối đa {max} giá trị',
-
   'core.form.chip-calendar.remove': 'Bỏ ngày {date}',
-
   'core.form.chip-calendar.locked': 'Không bỏ được ngày này',
-
-
+  'core.form.chip-calendar.placeholder': 'Chọn ngày',
+  'core.form.chip-calendar.clear': 'Bỏ hết ngày',
+  'core.form.chip-calendar.more': 'Xem thêm {count} ngày',
   'core.form.chip-calendar.dialog-label': 'Chọn ngày',
-
-
   'core.form.chip-calendar.selected-count': 'Đã chọn {count} ngày',
-
-
   'core.form.chip-calendar.max-count': 'Tối đa {max}',
-
-
   'core.form.chip-calendar.no-limit': 'Không giới hạn',
-
-
   'core.form.chip-calendar.full': 'Đã đủ {max} ngày. Bỏ bớt một ngày để chọn ngày khác.',
-
-
   'core.form.chip-calendar.clear-all': 'Xoá hết',
-
-
   'core.form.chip-calendar.done': 'Xong',
 
   // ---- Forms: date ----

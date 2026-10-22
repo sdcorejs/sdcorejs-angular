@@ -49,6 +49,9 @@ const PAIRS = [
   // sd-kanban: card titles and the secondary count sit on the neutral lane.
   ['text', 'kanban-lane-bg', 4.5],
   ['text-secondary', 'kanban-lane-bg', 4.5],
+  // sd-chip-calendar: the date of a locked chip, and the “+N” count on its hover background.
+  ['text', 'chip-calendar-chip-locked-bg', 4.5],
+  ['text-secondary', 'chip-calendar-more-hover-bg', 4.5],
   // sd-badge: `*-dark` text on the `*-light` tint (round, tag, the value of pair, the secondary label of pair)
   // and `*-contrast` text on the base colour (solid).
   ...['primary', 'secondary', ...STATES].map(color => [`${color}-dark`, `${color}-light`, 4.5]),
