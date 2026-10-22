@@ -4,12 +4,20 @@
 
 `3.2.json` compares all four candidates with their same-major published `*.3.1`
 baseline. Candidates are the actual `19.3.2` / `20.3.2` / `21.3.2` / `22.3.2`
-tarballs staged by the official `deploy.ps1 -PatchVersion 3.2 -DryRun` from source
-`1fe7b69e753aa8d2cffba0c59f098ea58afd51ea` with exact Node `22.22.3` (portable
-Windows build, SHA-256 checked against the nodejs.org `SHASUMS256.txt`; npm `10.9.8`).
-The snapshot was then checked by `release-package-contract.mjs --compile-consumers`
-against those artifacts. The canonical surface fingerprint reader excludes only
-`version` and `frameworkMajor`.
+tarballs built on Linux by the `publish-npm.yml` run `39852344872` for the first
+`v3.2` tag (source `6aae0c722d9ca1e3b4ca04652bfde90f3510e627`, the squash of #97, exact
+Node `22.22.3`), downloaded from that run's retained artifacts. That run stopped at
+"Verify all four retained packages" and published nothing. The snapshot was checked
+with `release-package-contract.mjs --compile-consumers` against the same artifacts.
+The canonical surface fingerprint reader excludes only `version` and `frameworkMajor`.
+
+The first snapshot came from a Windows `deploy.ps1 -DryRun` and matched every
+section except the candidate `files` inventory. `modules/generic` is the first entry
+point code-split by ng-packagr into content-hashed FESM chunks
+(`…-generic-list.page-<hash>.mjs`). A CRLF checkout inlines `\r\n` into compiled
+component templates, so a Windows build produces other chunk hashes, and therefore
+other file names, than the Linux CI build. Dependencies, exports and the public
+surface (declarations and LF-normalised sources) were identical.
 
 The export map adds `./assets/*`, `components/editor-engine`, `components/window`,
 `modules/generic` and `services/date-time`; no export is removed. Dependencies move
