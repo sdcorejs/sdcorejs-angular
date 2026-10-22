@@ -6,6 +6,10 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+### Fixed
+
+- Tab router: navigations that finish one after another while an earlier tab is still being activated (for example while the outlet loads an NgModule lazy route) each open their own tab. The outlet read the router state when the queued activation ran, so the tab of an earlier URL got the component, route and name of the later one; it now captures the route when `NavigationEnd` is emitted.
+
 ### Removed
 
 - Tab router: the component token `--sd-tab-router-badge-bg`, deprecated in 3.2. Its only reader filled the icon of the old tab, which had not been rendered since the tabs moved to `sd-badge`, so no tab used it. Code that set or read it can drop it. `--sd-tab-router-item-muted-bg` stays deprecated.

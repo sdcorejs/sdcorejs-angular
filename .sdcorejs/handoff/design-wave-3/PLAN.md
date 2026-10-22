@@ -171,6 +171,10 @@ Ghi chú bước 3a:
   trước nhận nhầm component/route của URL sau (tên tab sai). Demo `/demo/tab-router` né bằng cách đợi
   `currentTabChanges` báo đúng URL rồi mới đi tiếp. Nên hỏi user có mở việc riêng để sửa (chụp snapshot theo
   `event.id` lúc NavigationEnd thay vì đọc lại routerState trong hàng đợi).
+  **Đã sửa 2026-10-23** (nhánh `fix/tab-router-followups`, sau khi 3.2 merge): outlet chụp route lá + ActivatedRoute ngay
+  trong bước `map` của `router.events` (đồng bộ với NavigationEnd / NavigationSkipped) và truyền vào tác vụ kích hoạt;
+  sau `await` vẫn thử tìm trong cây mới, không thấy thì dùng ActivatedRoute đã chụp. Spec tái hiện bằng route lazy
+  NgModule giữ hàng đợi bận trong lúc điều hướng `/a` rồi `/b`.
 
 Ghi chú bước 3b (2026-10-23, sau khi đợt 1–3a đã merge vào `main` qua #95; user chọn làm đủ 3b trước release 3.2):
 - Cấu trúc thanh: `.tab-router__nav` (40px, nền, ẩn khi ≤ 1 tab) > `.tab-router__tabs` (relative) > `.tab-router__scroller`

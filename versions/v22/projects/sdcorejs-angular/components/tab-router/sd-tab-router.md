@@ -51,6 +51,7 @@ None.
 - A failed router-event activation is reported through Angular's `ErrorHandler` without terminating the router subscription. Later menu navigation and explicit same-URL retries continue to work; the failed activation is not retried automatically.
 
 - Listens to raw router events only (it never unwraps `Scroll`): `RoutesRecognized` captures `extras.state`, `NavigationEnd` applies the route after redirects, `NavigationSkipped` handles an explicitly forced same-URL reload, and `NavigationCancel` / `NavigationError` discard pending state
+- The leaf route snapshot and its `ActivatedRoute` are captured when `NavigationEnd` / `NavigationSkipped` is emitted, not when the queued activation runs, so navigations that finish while an earlier activation is still pending (for example an NgModule lazy route) each get their own component, route and tab name
 - Navigation state is snapshotted synchronously before serialized async handling. In-flight state is stored by navigation id so overlapping navigations cannot overwrite one another
 - `NavigationSkipped` continues only for `NavigationSkippedCode.IgnoredSameUrlNavigation` with a directly snapshotted `state.forceReload === true`; this is why reloading the currently active identical URL works even though Angular does not emit `NavigationEnd`
 - Tab identity = hash of `url + queryParams` — ordinary same-key navigation preserves the per-tab injector, `tabInfoChanges` stream, and component instance/state; the `SdTabRouterTab` descriptor may be immutably copied when `isActive` changes

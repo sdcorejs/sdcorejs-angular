@@ -47,6 +47,9 @@ type TabRouterNavigationEvent = RoutesRecognized | NavigationEnd | NavigationSki
 interface TabRouterNavigationContext {
   event: TabRouterNavigationEvent;
   navigationState: Record<string, any>;
+  /** Route lá và ActivatedRoute của nó, chụp đúng lúc router phát NavigationEnd / NavigationSkipped. */
+  route?: ActivatedRouteSnapshot | null;
+  activatedRoute?: ActivatedRoute | null;
 }
 
 @Component({
@@ -104,12 +107,21 @@ export class SdTabRouterOutletComponent implements OnDestroy {
               event instanceof NavigationError
           ),
           // Chụp getCurrentNavigation đồng bộ vì concatMap có thể chạy sau khi Angular đã xoá navigation hiện tại.
-          map(
-            (event): TabRouterNavigationContext => ({
+          // why: route của tab cũng phải chụp ở đây. Khi hàng đợi kích hoạt còn bận (tab trước chờ nạp module lazy),
+          // router đã sang URL sau trước khi tác vụ của URL này chạy; đọc routerState lúc đó làm tab nhận component,
+          // route và tên của URL sau.
+          map((event): TabRouterNavigationContext => {
+            const context: TabRouterNavigationContext = {
               event,
               navigationState: this.#router.getCurrentNavigation()?.extras?.state ?? {},
-            })
-          ),
+            };
+            if (event instanceof NavigationEnd || event instanceof NavigationSkipped) {
+              const route = this.#getActivatedRouteSnapshot(this.#router.routerState.snapshot.root);
+              context.route = route;
+              context.activatedRoute = route ? this.#findActivatedRouteForSnapshot(this.#router.routerState.root, route) : null;
+            }
+            return context;
+          }),
           // Serialize: #handleEvent async (await getBestInjector). 2 nav liên tiếp
           // không await xen kẽ → tránh race đọc this.tabs() = [] khi tab đầu chưa kịp set.
           concatMap(context =>
@@ -160,7 +172,7 @@ export class SdTabRouterOutletComponent implements OnDestroy {
     return run;
   };
 
-  #handleEvent = async ({ event, navigationState }: TabRouterNavigationContext): Promise<void> => {
+  #handleEvent = async ({ event, navigationState, route, activatedRoute }: TabRouterNavigationContext): Promise<void> => {
     if (this.disabled()) {
       this.#pendingNavigationStates.clear();
       return;
@@ -191,9 +203,8 @@ export class SdTabRouterOutletComponent implements OnDestroy {
     }
 
     await this.#scheduleActivation(async () => {
-      const route = this.#getActivatedRouteSnapshot(this.#router.routerState.snapshot.root);
       this.#rootRoute = this.#router.routerState.root;
-      await this.#activeRoute(fullUrl, route, state);
+      await this.#activeRoute(fullUrl, route ?? null, state, activatedRoute ?? null);
     });
   };
 
@@ -265,7 +276,12 @@ export class SdTabRouterOutletComponent implements OnDestroy {
     }
   };
 
-  #activeRoute = async (fullUrl: string, route: ActivatedRouteSnapshot | null, state: Record<string, any> = {}) => {
+  #activeRoute = async (
+    fullUrl: string,
+    route: ActivatedRouteSnapshot | null,
+    state: Record<string, any> = {},
+    capturedActivatedRoute: ActivatedRoute | null = null
+  ) => {
     if (this.disabled()) return;
     if (!route?.component) return;
 
@@ -348,8 +364,10 @@ export class SdTabRouterOutletComponent implements OnDestroy {
 
     const finalInjector = await getBestInjector(route);
     // Refresh root sau await: lazy route tree có thể hoàn tất trong lúc resolve injector.
+    // why: router có thể đã sang URL khác trong lúc await — snapshot của route này không còn trong cây mới, nên dùng
+    // ActivatedRoute đã chụp lúc NavigationEnd.
     this.#rootRoute = this.#router.routerState.root;
-    const activatedRoute = this.#findActivatedRouteForSnapshot(this.#rootRoute, route);
+    const activatedRoute = this.#findActivatedRouteForSnapshot(this.#rootRoute, route) ?? capturedActivatedRoute;
 
     const sdInjector = new SdOutletInjector(activatedRoute, finalInjector);
     const newTab: SdTabRouterTab = {
