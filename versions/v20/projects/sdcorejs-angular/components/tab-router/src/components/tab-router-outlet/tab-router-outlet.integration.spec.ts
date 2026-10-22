@@ -21,9 +21,9 @@ class PageCComponent {}
 
 // NgModule lazy route: the outlet calls loadChildren() again to build the tab injector, so the test can hold that call
 // and keep the activation queue busy while the router moves on.
-@Component({ template: '<span data-cy="page-lazy"></span>' })
+@Component({ standalone: true, template: '<span data-cy="page-lazy"></span>' })
 class LazyPageComponent {}
-@NgModule({ declarations: [LazyPageComponent], imports: [RouterModule.forChild([{ path: '', component: LazyPageComponent }])] })
+@NgModule({ imports: [RouterModule.forChild([{ path: '', component: LazyPageComponent }])] })
 class LazyPageModule {}
 
 @Component({

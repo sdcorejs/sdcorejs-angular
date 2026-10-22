@@ -36,10 +36,11 @@ class PageCComponent {}
 // and keep the activation queue busy while the router moves on.
 @Component({
   changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  standalone: true,
   template: '<span data-cy="page-lazy"></span>',
 })
 class LazyPageComponent {}
-@NgModule({ declarations: [LazyPageComponent], imports: [RouterModule.forChild([{ path: '', component: LazyPageComponent }])] })
+@NgModule({ imports: [RouterModule.forChild([{ path: '', component: LazyPageComponent }])] })
 class LazyPageModule {}
 
 @Component({
