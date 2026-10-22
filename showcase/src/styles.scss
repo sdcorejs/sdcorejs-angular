@@ -97,6 +97,25 @@ h3 {
   @include sd.theme($preset: 'graphite');
 }
 
+// Theme & tokens page, "Preset có sẵn": one card per palette, each under exactly the include it prints. Default light is
+// emitted too, so its card stays light while the page is dark.
+.tt-preset--default {
+  color-scheme: light;
+  @include sd.theme();
+}
+
+.tt-preset--default-dark {
+  color-scheme: dark;
+  @include sd.theme($mode: 'dark');
+}
+
+@each $preset in ('ocean', 'indigo', 'teal', 'copper', 'slate', 'forest', 'plum', 'rose', 'graphite') {
+  .tt-preset--#{$preset} {
+    color-scheme: light;
+    @include sd.theme($preset: $preset);
+  }
+}
+
 .docs-visually-hidden {
   position: absolute;
   width: 1px;

@@ -383,6 +383,7 @@ export type ShowcaseExampleSourceKey =
   | "forms/tree-select/example-unloaded-key-va-viewed"
   | "guides/theme-tokens/example-bang-contrast"
   | "guides/theme-tokens/example-palette-va-che-do-sang-toi"
+  | "guides/theme-tokens/example-preset-co-san"
   | "guides/theme-tokens/example-ramp"
   | "guides/theme-tokens/example-semantic-va-scale"
   | "modules/generic/example-generic-configuration-screen"
@@ -3120,6 +3121,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-palette-va-che-do-sang-toi",
     title: "Palette và chế độ sáng tối",
     description: "Nút dưới đây đặt data-sd-theme trên thẻ html (thư viện không tự ghi thuộc tính này). Dark chỉ có cho palette default. Giá trị hiển thị đọc bằng readSdTokens().",
+  },
+  {
+    sourceKey: "guides/theme-tokens/example-preset-co-san",
+    pageKey: "guides/theme-tokens",
+    sectionId: "example-preset-co-san",
+    title: "Preset có sẵn",
+    description: "Mỗi thẻ là một vùng dựng bằng đúng dòng include ghi trong thẻ, nên nút, badge, checkbox và liên kết bên trong là component thật dưới preset đó. Preset chỉ đổi màu (chữ, khoảng cách, bo góc giữ nguyên); preset có tên chỉ có bản sáng, chỉ default có dark. Trong app, đặt dòng include trong html {} của styles.scss sau Core (xem STYLE-GUIDE §14.1).",
   },
   {
     sourceKey: "guides/theme-tokens/example-ramp",
