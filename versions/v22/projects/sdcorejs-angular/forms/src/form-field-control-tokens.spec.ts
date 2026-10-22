@@ -97,6 +97,8 @@ describe('Form field control tokens with the shipped theme', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({ imports: [ControlTokensHost, NoopAnimationsModule] }).compileComponents();
     fixture = TestBed.createComponent(ControlTokensHost);
+    // why: ghim host ở đỉnh để panel đo được luôn mở xuống, trong khung (xem spec “select all” bên dưới).
+    Object.assign((fixture.nativeElement as HTMLElement).style, { position: 'fixed', top: '0', left: '0' });
     await settle();
     fields = Array.from(fixture.nativeElement.querySelectorAll('mat-form-field'));
   });
@@ -321,6 +323,8 @@ describe('Select panel filter input with the shipped theme', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({ imports: [FilterInputHost, NoopAnimationsModule] }).compileComponents();
     fixture = TestBed.createComponent(FilterInputHost);
+    // why: ghim host ở đỉnh để panel đo được luôn mở xuống, trong khung (xem spec “select all” bên dưới).
+    Object.assign((fixture.nativeElement as HTMLElement).style, { position: 'fixed', top: '0', left: '0' });
     fixture.detectChanges();
   });
 
@@ -391,6 +395,9 @@ describe('Select "select all" row in the sticky header with the shipped theme', 
   beforeEach(async () => {
     await TestBed.configureTestingModule({ imports: [SelectAllHeaderHost, NoopAnimationsModule] }).compileComponents();
     fixture = TestBed.createComponent(SelectAllHeaderHost);
+    // why: DOM do spec khác để lại có thể đẩy select xuống đáy khung Karma; panel khi đó nằm sát hoặc ngoài khung nên
+    // `elementFromPoint` trả null. Ghim host ở đỉnh để panel luôn mở xuống, trong khung.
+    Object.assign((fixture.nativeElement as HTMLElement).style, { position: 'fixed', top: '0', left: '0' });
     fixture.detectChanges();
   });
 
