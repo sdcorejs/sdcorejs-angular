@@ -281,6 +281,10 @@ mat-form-field {
     @include chip-token(label-text-size, var(--sd-chip-calendar-chip-font-size));
     @include chip-token(label-text-weight, var(--sd-font-weight-regular, 400));
     @include chip-token(with-trailing-icon-trailing-icon-color, var(--sd-text-secondary));
+    // why: lớp hover / focus của Material là `::after` có hộp không vuông với `border-radius: 50%`, thành hình bầu dục
+    // chồng lên nền tròn của nút ✕. Chỉ làm trong suốt màu của nó: `::after` vẫn là vùng bấm 24×24 khi pointer: coarse.
+    @include chip-token(trailing-action-state-layer-color, transparent);
+    @include chip-token(selected-trailing-action-state-layer-color, transparent);
 
     .mdc-evolution-chip__action--primary {
       padding-left: var(--sd-chip-calendar-chip-padding);
@@ -297,10 +301,25 @@ mat-form-field {
       white-space: nowrap;
     }
 
+    // why: Material ép icon trailing của chip thành 18px (`.mat-mdc-chip-remove .mat-icon`) bất kể `--sd-icon-size`, nên ✕
+    // to hơn icon khoá. Trả cỡ về `--sd-icon-size` mà sd-icon đặt trên chính host của nút.
+    .mat-mdc-chip-remove,
+    .mat-mdc-chip-remove .mat-icon {
+      width: var(--sd-icon-size);
+      height: var(--sd-icon-size);
+      font-size: var(--sd-icon-size);
+      line-height: var(--sd-icon-size);
+    }
+
+    // Nút ✕: nền hover tròn, rộng hơn icon 2px mỗi bên (16 / 18 / 20px ở sm / md / lg).
+    // why: nút ✕ chính là phần tử trailing action của Material, nên `padding: 2px` đè mất đệm cuối 3px ở rule trên —
+    // đặt lại bằng margin để vòng hover cách mép chip 3px.
     .mat-mdc-chip-remove {
       position: relative;
-      padding: 1px;
-      border-radius: 4px;
+      box-sizing: content-box;
+      margin-right: 3px;
+      padding: 2px;
+      border-radius: 50%;
       color: var(--sd-text-secondary);
       opacity: 1;
 
@@ -315,13 +334,24 @@ mat-form-field {
   .sd-chip-calendar__chip--locked.mat-mdc-chip-row {
     @include chip-token(elevated-container-color, var(--sd-chip-calendar-chip-locked-bg));
 
+    // why: khoá nằm trong nhãn (chip khoá không có ô trailing), nên nhãn xếp flex để khoá canh giữa theo chiều cao chip
+    // thay vì theo baseline của chữ.
+    .mdc-evolution-chip__text-label {
+      display: inline-flex;
+      align-items: center;
+    }
+
+    // Đệm cuối 3px như chip có nút ✕.
     .mdc-evolution-chip__action--primary {
       padding-right: 3px;
     }
   }
 
+  // Khoá chiếm đúng chỗ của nút ✕ trên chip bỏ được: cùng hộp đệm 2px, cùng khoảng cách tới chữ và tới mép phải chip.
   .sd-chip-calendar__lock {
-    margin-left: -1px;
+    box-sizing: content-box;
+    margin-left: 2px;
+    padding: 2px;
     color: var(--sd-text-muted);
   }
 

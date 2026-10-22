@@ -565,6 +565,9 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.selector-action.more': '更多',
   'core.component.table.selector-action.default-msg': '项已选择',
   'core.component.tab-router.too-many-tabs': '您已打开过多标签页。',
+  'core.component.tab-router.close-tab': '关闭标签页',
+  'core.component.tab-router.open-tabs': '已打开 {count} 个标签页',
+  'core.component.tab-router.tab-list': '标签页列表',
 
   // ---- Component: upload-file ----
   'core.component.upload-file.upload': '上传文件',

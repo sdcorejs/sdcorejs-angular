@@ -11,7 +11,8 @@
   (focusin)="measureTruncation()"
   (click)="onTabClick($event)"
   (mousedown)="onMousedown($event)"
-  (mouseup)="onMouseup($event)">
+  (mouseup)="onMouseup($event)"
+  (auxclick)="onAuxclick($event)">
   <!-- why: đợt 3 · 3a bỏ sd-badge — badge ép cỡ chữ và chiều rộng riêng, và tự hiện chấm khi tab không có icon. -->
   @if (info.icon) {
     <sd-icon class="tab-router__icon c-{{ info.color || 'primary' }}" aria-hidden="true" size="16px" [fontIcon]="info.icon"></sd-icon>

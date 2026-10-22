@@ -148,6 +148,16 @@ describe('SdTabRouterOutletComponent (integration)', () => {
       expect(tabs[0].component).toBe(PageAComponent);
     });
 
+    // why: danh sách tab (đợt 3 · 3b) dựng hàng của nó khi mở menu, sau khi màn hình đã gửi tên qua `tabInfoChanges`.
+    it('replays the last tab info to a late subscriber', async () => {
+      await navigateAndStabilize(router, fixture, '/a');
+      const tab = outletCmp.tabs()[0];
+      tab.tabInfoChanges.next({ name: 'Đơn hàng #DH-10234' });
+      const received: string[] = [];
+      tab.tabInfoChanges.subscribe(info => received.push(info.name)).unsubscribe();
+      expect(received).toEqual(['Đơn hàng #DH-10234']);
+    });
+
     it('keeps both tabs when navigating to two different routes', async () => {
       await navigateAndStabilize(router, fixture, '/a');
       await navigateAndStabilize(router, fixture, '/b');

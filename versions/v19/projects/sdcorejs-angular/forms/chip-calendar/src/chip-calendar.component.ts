@@ -82,11 +82,14 @@ export type SdChipCalendarDate = Date | string | number | null | undefined;
 /** `removable`: all chips, none, or a predicate that receives the normalised `yyyy/MM/dd` day. */
 export type SdChipCalendarRemovable = boolean | ((day: string) => boolean);
 
-/** Icon sizes of the field by size (handoff 2 · Kích thước): chip ✕ / lock, clear button, calendar button. */
+/**
+ * Icon sizes of the field by size (handoff 2 · Kích thước): chip ✕ / lock, clear button, calendar button.
+ * The chip icons are one step below the handoff table (14 / 16 / 18px looked heavy next to the 13–14px date).
+ */
 const FIELD_ICONS = {
-  sm: { chip: '14px', clear: '16px', open: '18px' },
-  md: { chip: '16px', clear: '18px', open: '20px' },
-  lg: { chip: '18px', clear: '20px', open: '22px' },
+  sm: { chip: '12px', clear: '16px', open: '18px' },
+  md: { chip: '14px', clear: '18px', open: '20px' },
+  lg: { chip: '16px', clear: '20px', open: '22px' },
 } as const;
 
 const FULL_DATE: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };

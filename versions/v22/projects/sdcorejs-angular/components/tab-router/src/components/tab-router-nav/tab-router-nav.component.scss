@@ -7,9 +7,8 @@
 .tab-router__nav {
   display: flex;
   flex-wrap: nowrap;
-  align-items: flex-end;
+  align-items: stretch;
   height: 40px;
-  padding: 0 8px;
   box-sizing: border-box;
   overflow: hidden;
   background: var(--sd-tab-router-nav-bg);
@@ -31,6 +30,121 @@
   .tab-router__nav--hidden {
     transition: none;
   }
+}
+
+// Đợt 3 · 3b: khi tổng min-width của tab vượt bề rộng thanh, phần tab cuộn ngang (ẩn thanh cuộn); lớp mờ chỉ hiện
+// ở cạnh còn tab bị khuất.
+.tab-router__tabs {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.tab-router__scroller {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  min-width: 0;
+  padding: 0 8px;
+  box-sizing: border-box;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.tab-router__fade {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 32px;
+  pointer-events: none;
+}
+
+.tab-router__fade--start {
+  left: 0;
+  background: linear-gradient(90deg, var(--sd-tab-router-nav-bg), transparent);
+}
+
+.tab-router__fade--end {
+  right: 0;
+  background: linear-gradient(270deg, var(--sd-tab-router-nav-bg), transparent);
+}
+
+// Nút danh sách tab: chỉ có khi thanh tràn, nằm cố định cuối thanh, ngăn với phần tab bằng vạch 1px.
+.tab-router__more {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  padding: 0 6px 0 4px;
+  border-left: 1px solid var(--sd-tab-router-item-divider);
+  box-sizing: border-box;
+}
+
+.tab-router__list-button {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 30px;
+  padding: 0 6px 0 8px;
+  border: 0;
+  border-radius: 8px;
+  box-sizing: border-box;
+  background: none;
+  color: var(--sd-text);
+  font: inherit;
+  font-size: var(--sd-font-size-12, 12px);
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover,
+  &[aria-expanded='true'] {
+    background: var(--sd-tab-router-item-hover-bg);
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
+    outline-offset: -2px;
+  }
+}
+
+.tab-router__list-count {
+  font-variant-numeric: tabular-nums;
+}
+
+// Menu danh sách tab (render trong overlay từ template của component): rộng 320px, panel token, đệm 6px.
+.tab-router__menu {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: 320px;
+  max-width: calc(100vw - 16px);
+  padding: 6px;
+  color: var(--sd-text);
+  background-color: var(--sd-select-panel-bg, var(--sd-surface));
+  border: 1px solid color-mix(in srgb, var(--sd-border) 60%, var(--sd-surface));
+  border-radius: var(--sd-panel-radius, 10px);
+  box-shadow: var(--sd-shadow-md, none);
+}
+
+.tab-router__menu-title {
+  padding: 6px 10px;
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-12, 12px);
+  font-weight: 500;
+  line-height: 16px;
+}
+
+.tab-router__menu-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 300px;
+  overflow-y: auto;
 }
 
 // Vạch ngăn nằm bên phải mỗi tab: ẩn ở hai bên tab đang mở và tab đang hover — tức vạch của chính tab đó và của tab

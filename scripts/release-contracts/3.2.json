@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "suffix": "3.2",
+  "baselineSuffix": "3.1",
+  "reviewedSourceSha": "1fe7b69e753aa8d2cffba0c59f098ea58afd51ea",
+  "artifactSource": "Actual 19.3.2 / 20.3.2 / 21.3.2 / 22.3.2 tarballs produced by the official deploy.ps1 dry-run from the source SHA above with exact Node v22.22.3 (portable, SHA-256 checked against nodejs.org SHASUMS256.txt) on Windows. Same-major registry 3.1 baselines packed from npm. Canonical publicSurface fingerprints exclude only version/frameworkMajor. This is a prepared review snapshot; final immutable-head gates, strict consumers, independent review and publication remain mandatory. CI never regenerates the snapshot.",
+  "targets": {
+    "19.3.2": {
+      "version": "19.3.2",
+      "baselineVersion": "19.3.1",
+      "dependencies": {
+        "baseline": "f77acc1c41d5a64b1d9ae09e38d3de06313265c7d0be887019e46cbbc2e1d733",
+        "candidate": "d156c3f5a6580b305d5b81fc10c9eca9ab658aa044c863e8cb0484209e121e37"
+      },
+      "exports": {
+        "baseline": "bac4835242d887aedcbb76e3451f873fb3c12b4a1a3aebe9437bb56db4c4f554",
+        "candidate": "4ad9bd081a968161a55934305ca2667ce3aeb7171ffb1cf9eb7c0192f8811a07"
+      },
+      "files": {
+        "baseline": "d7f0eef1ea01f1d7a794d646409765412fb4d66262f3bf615aa0b5ff146ade68",
+        "candidate": "b4f160021ab8126ac731c87220c86ef48d84a97e509d43394afd19c7c91fae8d"
+      },
+      "publicSurface": {
+        "baseline": "9b09fcca26c1534cfb6e8de41821f50548bec241e40ba10693b74d137eb813d4",
+        "candidate": "09055f63c25cabdfd7b2b9fef9950e1d9aab0666ab9a95a88c4cc4ef2505d2d9"
+      }
+    },
+    "20.3.2": {
+      "version": "20.3.2",
+      "baselineVersion": "20.3.1",
+      "dependencies": {
+        "baseline": "f77acc1c41d5a64b1d9ae09e38d3de06313265c7d0be887019e46cbbc2e1d733",
+        "candidate": "d156c3f5a6580b305d5b81fc10c9eca9ab658aa044c863e8cb0484209e121e37"
+      },
+      "exports": {
+        "baseline": "bac4835242d887aedcbb76e3451f873fb3c12b4a1a3aebe9437bb56db4c4f554",
+        "candidate": "4ad9bd081a968161a55934305ca2667ce3aeb7171ffb1cf9eb7c0192f8811a07"
+      },
+      "files": {
+        "baseline": "ab03731082be4453a3c97e01253aca3c3ddbcea9a147052c876375e04a7d5914",
+        "candidate": "4078a06cdd5fa2904a378bc5acac3340c0a4367202049056c86394a6fac76dc9"
+      },
+      "publicSurface": {
+        "baseline": "42407dbfe2ffa47c70bc00fb169a95f0fb862d7d86defb554f703c286d57dced",
+        "candidate": "159035e4d7e9fc5bb21f63d61bb5f2c7d8f7e506bdc93d30aa99229ed517dbcb"
+      }
+    },
+    "21.3.2": {
+      "version": "21.3.2",
+      "baselineVersion": "21.3.1",
+      "dependencies": {
+        "baseline": "f77acc1c41d5a64b1d9ae09e38d3de06313265c7d0be887019e46cbbc2e1d733",
+        "candidate": "d156c3f5a6580b305d5b81fc10c9eca9ab658aa044c863e8cb0484209e121e37"
+      },
+      "exports": {
+        "baseline": "7455ee35c17f585b53848bfb016c7b5acfe0259e6e266469e02dfd1d58c5f73a",
+        "candidate": "b064bfe1f7d627795a0ae87ee74ff06591d319e1a83abbf754869a45364e7489"
+      },
+      "files": {
+        "baseline": "dd5a7619708335935c4d7ea65240801cb692e15e834256a7184a22cafb77fb57",
+        "candidate": "e36a2b8fbc5d433e607f591efc89201685a906ccc39d31b8f62f8649c9b307ff"
+      },
+      "publicSurface": {
+        "baseline": "168bfff11740ae6ffe6cf0df22a267b060ff48323da2b0e0a29fb522c8c53d27",
+        "candidate": "194b4314369be72608c91c8335fcf75ce38353e18b4267d8ae4faef10391f8c3"
+      }
+    },
+    "22.3.2": {
+      "version": "22.3.2",
+      "baselineVersion": "22.3.1",
+      "dependencies": {
+        "baseline": "f77acc1c41d5a64b1d9ae09e38d3de06313265c7d0be887019e46cbbc2e1d733",
+        "candidate": "d156c3f5a6580b305d5b81fc10c9eca9ab658aa044c863e8cb0484209e121e37"
+      },
+      "exports": {
+        "baseline": "7455ee35c17f585b53848bfb016c7b5acfe0259e6e266469e02dfd1d58c5f73a",
+        "candidate": "b064bfe1f7d627795a0ae87ee74ff06591d319e1a83abbf754869a45364e7489"
+      },
+      "files": {
+        "baseline": "dd5a7619708335935c4d7ea65240801cb692e15e834256a7184a22cafb77fb57",
+        "candidate": "471aacb148033fc975a652a983b23f35f51a308b92afbb8c1fb89835456a0cc7"
+      },
+      "publicSurface": {
+        "baseline": "bd1b63e9bd2b4c055de253acc040a2183ab5b3f6abd3eda37c38292d9e4e226f",
+        "candidate": "e888eedeb923cb925a1f5c7fdace4ec9210c1c4af5ac02857ce872f6001b63a2"
+      }
+    }
+  }
+}

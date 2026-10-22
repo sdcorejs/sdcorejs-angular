@@ -97,41 +97,12 @@ describe('SdTabRouterNav', () => {
     expect(items.length).toBe(2);
   });
 
-  it('defaults mode to "default"', () => {
-    const cmp = fixture.debugElement.query(By.directive(SdTabRouterNavComponent)).componentInstance as SdTabRouterNavComponent;
-    expect(cmp.mode).toBe('default');
-  });
-
-  it('checkUI sets mode to "compact" when tabs are many and container is narrow', () => {
-    const cmp = fixture.debugElement.query(By.directive(SdTabRouterNavComponent)).componentInstance as SdTabRouterNavComponent;
-
-    // formula: (width - tabs * 68) / tabs <= 20 → nameWidth <= 20
-    // With 5 tabs and width=100: (100 - 5*68)/5 = -48 → compact
-    const tabs = Array.from({ length: 5 }, (_, i) => makeTab({ key: `k${i}`, url: `/r${i}` }));
-    host.tabs = tabs;
-    fixture.detectChanges();
-
-    // Directly stub the nav element via the underlying DOM node width
-    const navEl = fixture.nativeElement.querySelector('.tab-router__nav') as HTMLElement;
-    // JSDOM always reports 0 for clientWidth; manually stub by overriding clientWidth
-    Object.defineProperty(navEl, 'clientWidth', { value: 100, configurable: true });
-
-    cmp.checkUI();
-    fixture.detectChanges();
-
-    expect(cmp.mode).toBe('compact');
-  });
-
-  it('checkUI sets mode back to "default" when tabs list is empty', () => {
-    const cmp = fixture.debugElement.query(By.directive(SdTabRouterNavComponent)).componentInstance as SdTabRouterNavComponent;
-
-    // Force compact first
-    cmp.mode = 'compact' as any;
-    host.tabs = [];
-    fixture.detectChanges();
-
-    cmp.checkUI();
-    expect(cmp.mode).toBe('default');
+  // why: đợt 3 · 3b — thanh cuộn ngang khi tab không còn vừa, nên compact mode (`mode`, `checkUI`, nghe resize cửa sổ)
+  // bị gỡ; outlet cũng không còn gọi `checkUI()`.
+  it('has no compact mode or checkUI any more, the bar scrolls instead', () => {
+    const cmp = fixture.debugElement.query(By.directive(SdTabRouterNavComponent)).componentInstance as Record<string, unknown>;
+    expect('mode' in cmp).toBe(false);
+    expect('checkUI' in cmp).toBe(false);
   });
 
   it('no longer marks the nav with a mode class (compact styles targeted classes that were gone)', () => {

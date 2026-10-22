@@ -159,13 +159,14 @@ describe('SdChipCalendar · design handoff step 3 · field', () => {
   template: `
     <sd-layout-test-theme />
     <div style="width: 420px">
-      <sd-chip-calendar label="Ngày nghỉ" [size]="size" [model]="model" />
+      <sd-chip-calendar label="Ngày nghỉ" [size]="size" [model]="model" [removable]="removable" />
     </div>
   `,
 })
 class SizeHost {
   size: Size = 'md';
   model: string[] = ['2031/10/05'];
+  removable: boolean | ((day: string) => boolean) = true;
 }
 
 describe('SdChipCalendar · design handoff step 3 · size scale (C2)', () => {
@@ -194,6 +195,72 @@ describe('SdChipCalendar · design handoff step 3 · size scale (C2)', () => {
       expect(Math.abs(top - bottom))
         .withContext('centred')
         .toBeLessThanOrEqual(1);
+    });
+  }
+
+  // why: icon ✕ / khoá nhỏ hơn bảng handoff một bậc (user chọn 2026-10-23: 16px trong chip 24px trông to). Material ép
+  // icon của `.mat-mdc-chip-remove` thành 18px bất kể `--sd-icon-size`, và vẽ lớp hover `::after` hình bầu dục (hộp không
+  // vuông + `border-radius: 50%`) chồng lên nền bo 4px — nên ✕ to hơn khoá và nền hover không tròn.
+  for (const [size, icon] of [
+    ['sm', 12],
+    ['md', 14],
+    ['lg', 16],
+  ] as const) {
+    it(`${size}: ✕ and lock are ${icon}px, the ✕ hover is a ${icon + 4}px circle`, async () => {
+      const fixture = TestBed.createComponent(SizeHost);
+      fixture.componentInstance.size = size;
+      fixture.componentInstance.model = ['2031/10/05', '2031/10/12'];
+      fixture.componentInstance.removable = day => day !== '2031/10/05';
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+      const host = fixture.nativeElement as HTMLElement;
+      const remove = host.querySelector('.mat-mdc-chip-remove') as HTMLElement;
+      const removeGlyph = remove.querySelector('mat-icon') as HTMLElement;
+      const lockGlyph = host.querySelector('.sd-chip-calendar__lock mat-icon') as HTMLElement;
+
+      expect(getComputedStyle(removeGlyph).fontSize).withContext('✕ glyph').toBe(`${icon}px`);
+      expect(removeGlyph.getBoundingClientRect().width).withContext('✕ glyph box').toBeCloseTo(icon, 0);
+      expect(getComputedStyle(lockGlyph).fontSize).withContext('lock glyph').toBe(`${icon}px`);
+      expect(remove.getBoundingClientRect().width)
+        .withContext('✕ button width')
+        .toBeCloseTo(icon + 4, 0);
+      expect(remove.getBoundingClientRect().height)
+        .withContext('✕ button height')
+        .toBeCloseTo(icon + 4, 0);
+      expect(getComputedStyle(remove).borderRadius).withContext('✕ button corner').toBe('50%');
+      // `::after` vẫn còn (vùng bấm 24×24 khi pointer: coarse), chỉ lớp màu hover / focus của Material là trong suốt.
+      expect(getComputedStyle(remove, '::after').backgroundColor).withContext('Material state layer').toBe('rgba(0, 0, 0, 0)');
+    });
+
+    // why: khoá từng nằm trong dòng chữ với `margin-left: -1px` — lấn vào chữ 1px, lệch xuống theo baseline và cách mép
+    // phải khác ✕. Chip khoá phải giống hệt chip bỏ được, chỉ khác icon.
+    it(`${size}: the lock sits where the ✕ sits on a removable chip`, async () => {
+      const fixture = TestBed.createComponent(SizeHost);
+      fixture.componentInstance.size = size;
+      fixture.componentInstance.model = ['2031/10/05', '2031/10/12'];
+      fixture.componentInstance.removable = day => day !== '2031/10/05';
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+      const host = fixture.nativeElement as HTMLElement;
+      const geometry = (chip: HTMLElement, glyph: HTMLElement) => {
+        const c = chip.getBoundingClientRect();
+        const t = chip.querySelector('.sd-chip-calendar__chip-text')!.getBoundingClientRect();
+        const g = glyph.getBoundingClientRect();
+        return { textToGlyph: g.left - t.right, glyphToEdge: c.right - g.right, centre: g.top + g.height / 2 - (c.top + c.height / 2) };
+      };
+      const locked = host.querySelector('.sd-chip-calendar__chip--locked') as HTMLElement;
+      const removable = host.querySelector('.sd-chip-calendar__chip:not(.sd-chip-calendar__chip--locked)') as HTMLElement;
+      const lock = geometry(locked, locked.querySelector('.sd-chip-calendar__lock mat-icon') as HTMLElement);
+      const close = geometry(removable, removable.querySelector('.mat-mdc-chip-remove mat-icon') as HTMLElement);
+
+      // ✕: 2px đệm của nút + 3px đệm cuối chip (handoff) — vòng hover cách mép chip 3px, không chạm viền.
+      expect(close.textToGlyph).withContext('text → ✕').toBeCloseTo(4, 0);
+      expect(close.glyphToEdge).withContext('✕ → chip edge').toBeCloseTo(5, 0);
+      expect(lock.textToGlyph).withContext('text → lock').toBeCloseTo(close.textToGlyph, 0);
+      expect(lock.glyphToEdge).withContext('lock → chip edge').toBeCloseTo(close.glyphToEdge, 0);
+      expect(Math.abs(lock.centre)).withContext('lock centred in the chip').toBeLessThanOrEqual(0.5);
     });
   }
 

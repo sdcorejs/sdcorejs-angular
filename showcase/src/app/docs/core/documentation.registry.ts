@@ -364,7 +364,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'assets/THEME',
     keywords: ['theme', 'tokens', 'dark mode', 'color-scheme', 'contrast', 'preset', 'css variables'],
     status: 'stable',
-    demoSectionCount: 4,
+    demoSectionCount: 5,
     loadComponent: () => import('../../pages/guides/theme-tokens/theme-tokens-demo.component').then(m => m.ThemeTokensDemoComponent),
   }),
   defineDocPage({

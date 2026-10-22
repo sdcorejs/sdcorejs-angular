@@ -126,3 +126,17 @@ Script [`tools/check-chip-calendar.mjs`](../tools/check-chip-calendar.mjs) (Play
 
 Chưa kiểm: screen reader thật (VoiceOver / NVDA) — chỉ kiểm tên chip, nút ✕, `role="dialog"` và vùng live bằng spec / DOM.
 Trong sd-table thật và trong form-render trên showcase chưa chụp (đã có spec wrapper form-render).
+
+## Sau review (2026-10-23)
+
+- **Lệch bảng kích thước, user chọn:** icon ✕ / khoá trên chip nhỏ hơn bảng handoff một bậc — 12 / 14 / 16px thay cho
+  14 / 16 / 18px ở sm / md / lg (16px trong chip 24px trông to). Nút ✕ có nền hover tròn rộng hơn icon 2px mỗi bên
+  (16 / 18 / 20px) thay cho ô bo 4px.
+- Lỗi sửa kèm: Material ép icon trong `.mat-mdc-chip-remove` thành 18px bất kể `--sd-icon-size`, nên ✕ luôn 18px (to hơn
+  khoá); lớp hover `::after` của Material (hộp không vuông, `border-radius: 50%`) vẽ hình bầu dục chồng lên nền của mình.
+  Cỡ icon giờ theo `--sd-icon-size`; màu lớp trạng thái của Material là `transparent` (token
+  `trailing-action-state-layer-color`), còn `::after` vẫn là vùng bấm 24×24 khi `pointer: coarse`.
+- Vị trí icon (user báo khoá lệch và sát chữ): khoá nằm trong nhãn với `margin-left: -1px` nên lấn chữ 1px và canh theo
+  baseline (lệch xuống ~0.6px); nút ✕ là chính phần tử trailing action nên `padding` của nó đè mất đệm cuối 3px, ✕ chỉ
+  cách mép chip 2px (vòng hover chạm viền). Giờ cả hai: chữ → icon 4px, icon → mép chip 5px (vòng hover cách mép 3px), khoá
+  canh giữa theo chiều cao chip (nhãn của chip khoá xếp flex). Spec so hình học của khoá với ✕ ở cả ba cỡ.

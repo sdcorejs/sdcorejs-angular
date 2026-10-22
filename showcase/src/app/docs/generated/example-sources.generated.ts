@@ -16646,10 +16646,37 @@ export class TreeSelectDemoComponent {
   "guides/theme-tokens": {
     typescript: `import { afterNextRender, ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject, signal, viewChildren } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
+import { SdBadge } from '@sdcorejs/angular/components/badge';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
 import { readSdTokens, SdColorToken } from '@sdcorejs/angular/utilities/theme';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 
 type ThemeMode = 'light' | 'dark';
+
+interface ThemePreset {
+  /** Class suffix of the scope in showcase styles.scss (\`.tt-preset--{id}\`). */
+  readonly id: string;
+  readonly name: string;
+  readonly direction: string;
+  readonly include: string;
+}
+
+/** Named presets of \`sd.theme()\` (STYLE-GUIDE §14.1), plus default in light and dark. */
+const PRESETS: readonly ThemePreset[] = [
+  { id: 'default', name: 'default', direction: 'Palette mặc định', include: '@include sd.theme();' },
+  { id: 'default-dark', name: 'default · dark', direction: 'Bản tối — chỉ default có', include: "@include sd.theme($mode: 'dark');" },
+  { id: 'ocean', name: 'ocean', direction: 'Xanh dương rõ, quen thuộc', include: "@include sd.theme($preset: 'ocean');" },
+  { id: 'indigo', name: 'indigo', direction: 'Xanh tím, dễ nhận ra', include: "@include sd.theme($preset: 'indigo');" },
+  { id: 'teal', name: 'teal', direction: 'Xanh lục lam, điềm tĩnh', include: "@include sd.theme($preset: 'teal');" },
+  { id: 'copper', name: 'copper', direction: 'Nâu ấm', include: "@include sd.theme($preset: 'copper');" },
+  { id: 'slate', name: 'slate', direction: 'Trung tính, tối giản', include: "@include sd.theme($preset: 'slate');" },
+  { id: 'forest', name: 'forest', direction: 'Xanh lá trầm, tự nhiên', include: "@include sd.theme($preset: 'forest');" },
+  { id: 'plum', name: 'plum', direction: 'Tím mận, tiết chế', include: "@include sd.theme($preset: 'plum');" },
+  { id: 'rose', name: 'rose', direction: 'Hồng trầm, ấm', include: "@include sd.theme($preset: 'rose');" },
+  { id: 'graphite', name: 'graphite', direction: 'Gần đen, cho màn quản trị', include: "@include sd.theme($preset: 'graphite');" },
+];
+const PRESET_DOTS = ['primary', 'secondary', 'info', 'success', 'warning', 'error'] as const;
 
 interface ContrastCell {
   readonly ratio: number;
@@ -16729,7 +16756,7 @@ const SCOPES = [
 @Component({
   selector: 'app-theme-tokens-demo',
   standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent],
+  imports: [DemoPageComponent, DemoSectionComponent, SdBadge, SdButton, SdCheckbox],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: \`
     <demo-page
@@ -16755,6 +16782,42 @@ const SCOPES = [
                 </div>
               }
             </div>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-preset-co-san') {
+        <demo-section
+          heading="Preset có sẵn"
+          [props]="[
+            { name: '$preset', value: 'default · ocean · indigo · teal · copper · slate · forest · plum · rose · graphite' },
+            { name: '$mode', value: 'light | dark' }
+          ]"
+          note="Mỗi thẻ là một vùng dựng bằng đúng dòng include ghi trong thẻ, nên nút, badge, checkbox và liên kết bên trong là component thật dưới preset đó. Preset chỉ đổi màu (chữ, khoảng cách, bo góc giữ nguyên); preset có tên chỉ có bản sáng, chỉ default có dark. Trong app, đặt dòng include trong html {} của styles.scss sau Core (xem STYLE-GUIDE §14.1).">
+          <div class="tt-presets">
+            @for (preset of presets; track preset.id) {
+              <article class="tt-preset tt-preset--{{ preset.id }}" [attr.aria-label]="'Preset ' + preset.name">
+                <div class="tt-preset__head">
+                  <strong class="tt-preset__name">{{ preset.name }}</strong>
+                  <span class="tt-preset__direction">{{ preset.direction }}</span>
+                </div>
+                <div class="tt-preset__dots">
+                  @for (dot of presetDots; track dot) {
+                    <span class="tt-preset__dot" [style.background]="'var(--sd-' + dot + ')'" [attr.title]="'--sd-' + dot"></span>
+                  }
+                </div>
+                <div class="tt-preset__sample">
+                  <sd-button type="fill" color="primary" title="Lưu"></sd-button>
+                  <sd-button type="outline" color="primary" title="Huỷ"></sd-button>
+                  <sd-badge type="round" color="success" title="Đã duyệt"></sd-badge>
+                </div>
+                <div class="tt-preset__sample">
+                  <sd-checkbox label="Ghi nhớ" [model]="true"></sd-checkbox>
+                  <span class="tt-preset__text">Chữ phụ · <a class="tt-link" href="#" (click)="$event.preventDefault()">liên kết</a></span>
+                </div>
+                <code class="tt-preset__code">{{ preset.include }}</code>
+              </article>
+            }
           </div>
         </demo-section>
       }
@@ -16927,6 +16990,60 @@ const SCOPES = [
         color: var(--sd-text-secondary);
         overflow-wrap: anywhere;
       }
+      .tt-presets {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 12px;
+        width: 100%;
+      }
+      .tt-preset {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-width: 0;
+        padding: 14px;
+        border: 1px solid var(--sd-border);
+        border-radius: var(--sd-radius-12, 12px);
+        background: var(--sd-surface);
+        color: var(--sd-text);
+      }
+      .tt-preset__head {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .tt-preset__name {
+        font-size: 15px;
+      }
+      .tt-preset__direction,
+      .tt-preset__text {
+        font-size: 12px;
+        color: var(--sd-text-secondary);
+      }
+      .tt-preset__dots {
+        display: flex;
+        gap: 6px;
+      }
+      .tt-preset__dot {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sd-text) 12%, transparent);
+      }
+      .tt-preset__sample {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+      .tt-preset__code {
+        padding: 6px 8px;
+        border-radius: var(--sd-radius-6, 6px);
+        background: var(--sd-surface-muted);
+        color: var(--sd-text);
+        font-size: 11px;
+        overflow-wrap: anywhere;
+      }
       .tt-ramps {
         display: flex;
         flex-direction: column;
@@ -17040,6 +17157,8 @@ export class ThemeTokensDemoComponent {
   private readonly probes = viewChildren<ElementRef<HTMLElement>>('probe');
 
   readonly palette = PALETTE;
+  readonly presets = PRESETS;
+  readonly presetDots = PRESET_DOTS;
   readonly rampFamilies = RAMP_FAMILIES;
   readonly rampSteps = RAMP_STEPS;
   readonly states = STATES;
@@ -17181,6 +17300,60 @@ function contrastRatio(foreground: [number, number, number], background: [number
 .tt-swatch__value {
   font-size: 11px;
   color: var(--sd-text-secondary);
+  overflow-wrap: anywhere;
+}
+.tt-presets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+.tt-preset {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--sd-border);
+  border-radius: var(--sd-radius-12, 12px);
+  background: var(--sd-surface);
+  color: var(--sd-text);
+}
+.tt-preset__head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.tt-preset__name {
+  font-size: 15px;
+}
+.tt-preset__direction,
+.tt-preset__text {
+  font-size: 12px;
+  color: var(--sd-text-secondary);
+}
+.tt-preset__dots {
+  display: flex;
+  gap: 6px;
+}
+.tt-preset__dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sd-text) 12%, transparent);
+}
+.tt-preset__sample {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.tt-preset__code {
+  padding: 6px 8px;
+  border-radius: var(--sd-radius-6, 6px);
+  background: var(--sd-surface-muted);
+  color: var(--sd-text);
+  font-size: 11px;
   overflow-wrap: anywhere;
 }
 .tt-ramps {
@@ -27205,6 +27378,42 @@ Bởi Nguyễn Văn A"></sd-badge>
             </div>
           }
         </div>
+      </div>
+    </demo-section>`,
+  },
+  "guides/theme-tokens/example-preset-co-san": {
+    ...SHOWCASE_PAGE_SOURCES["guides/theme-tokens"],
+    html: `<demo-section
+      heading="Preset có sẵn"
+      [props]="[
+        { name: '$preset', value: 'default · ocean · indigo · teal · copper · slate · forest · plum · rose · graphite' },
+        { name: '$mode', value: 'light | dark' }
+      ]"
+      note="Mỗi thẻ là một vùng dựng bằng đúng dòng include ghi trong thẻ, nên nút, badge, checkbox và liên kết bên trong là component thật dưới preset đó. Preset chỉ đổi màu (chữ, khoảng cách, bo góc giữ nguyên); preset có tên chỉ có bản sáng, chỉ default có dark. Trong app, đặt dòng include trong html {} của styles.scss sau Core (xem STYLE-GUIDE §14.1).">
+      <div class="tt-presets">
+        @for (preset of presets; track preset.id) {
+          <article class="tt-preset tt-preset--{{ preset.id }}" [attr.aria-label]="'Preset ' + preset.name">
+            <div class="tt-preset__head">
+              <strong class="tt-preset__name">{{ preset.name }}</strong>
+              <span class="tt-preset__direction">{{ preset.direction }}</span>
+            </div>
+            <div class="tt-preset__dots">
+              @for (dot of presetDots; track dot) {
+                <span class="tt-preset__dot" [style.background]="'var(--sd-' + dot + ')'" [attr.title]="'--sd-' + dot"></span>
+              }
+            </div>
+            <div class="tt-preset__sample">
+              <sd-button type="fill" color="primary" title="Lưu"></sd-button>
+              <sd-button type="outline" color="primary" title="Huỷ"></sd-button>
+              <sd-badge type="round" color="success" title="Đã duyệt"></sd-badge>
+            </div>
+            <div class="tt-preset__sample">
+              <sd-checkbox label="Ghi nhớ" [model]="true"></sd-checkbox>
+              <span class="tt-preset__text">Chữ phụ · <a class="tt-link" href="#" (click)="$event.preventDefault()">liên kết</a></span>
+            </div>
+            <code class="tt-preset__code">{{ preset.include }}</code>
+          </article>
+        }
       </div>
     </demo-section>`,
   },
