@@ -110,11 +110,17 @@ describe('ɵSdOperatorChip', () => {
     expect(getComputedStyle(button()).color).toBe('rgb(255, 255, 255)');
   });
 
-  // Review 2026-10-22: the highlight marks the current operator; no tick.
-  it('lists the operators with their label and code, and highlights the current one without a tick', async () => {
+  // Review 2026-10-22: the highlight marks the current operator; no tick. The code only shows with showCode (handoff
+  // sd-operator B1), and the current row is the checked menuitemradio (A3).
+  it('lists the operators with their label, and highlights the current one without a tick', async () => {
     button().click();
     await settle();
-    expect(rows().map(row => row.querySelector('.c-op-code')!.textContent?.trim())).toEqual(['EQUAL', 'GREATER_THAN', 'LESS_THAN']);
+    const i18n = TestBed.inject(I18nService);
+    expect(rows().map(row => row.textContent?.trim())).toEqual(
+      ['equal', 'greater-than', 'less-than'].map(key => i18n.t(`core.operator.${key}.display`))
+    );
+    expect(overlay.querySelector('.c-op-code')).toBeNull();
+    expect(rows().map(row => row.getAttribute('aria-checked'))).toEqual(['true', 'false', 'false']);
     expect(rows()[0].classList).toContain('c-op-active');
     expect(rows()[1].classList).not.toContain('c-op-active');
     expect(overlay.querySelector('.c-op-check')).toBeNull();

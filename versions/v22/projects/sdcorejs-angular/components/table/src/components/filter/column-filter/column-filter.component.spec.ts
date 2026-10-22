@@ -294,7 +294,8 @@ describe('ColumnFilterComponent', () => {
     it('does NOT render an operator when none is configured', () => {
       bootstrap({ field: 'name', type: 'string' } as SdTableColumn);
       expect(fixture.nativeElement.querySelector('sd-operator')).toBeNull();
-      expect(fixture.debugElement.query(By.directive(ɵSdOperatorChip))).toBeNull();
+      // sd-operator rời cũng render chip (standalone) cho trigger của nó; ở đây chỉ hỏi chip nằm trong control.
+      expect(fixture.nativeElement.querySelector('sd-operator-chip:not(.sd-operator-chip--standalone)')).toBeNull();
     });
 
     it('two-way model round-trip: the chip operatorChange updates operator', () => {
@@ -320,7 +321,8 @@ describe('ColumnFilterComponent', () => {
       fixture.componentRef.setInput('columnFilter', {});
       fixture.detectChanges();
       fixture.detectChanges();
-      expect(fixture.debugElement.query(By.directive(ɵSdOperatorChip))).toBeNull();
+      // sd-operator rời cũng render chip (standalone) cho trigger của nó; ở đây chỉ hỏi chip nằm trong control.
+      expect(fixture.nativeElement.querySelector('sd-operator-chip:not(.sd-operator-chip--standalone)')).toBeNull();
       expect(fixture.nativeElement.querySelector('sd-operator')).not.toBeNull();
       expect(emitted).toEqual([]);
       expect(component.operator()).toBeUndefined();
@@ -331,7 +333,8 @@ describe('ColumnFilterComponent', () => {
       const op = fixture.debugElement.query(By.directive(SdOperator));
       expect(op).withContext('separate sd-operator').not.toBeNull();
       expect((op.componentInstance as SdOperator).operators()).toEqual(['EQUAL', 'CONTAIN']);
-      expect(fixture.debugElement.query(By.directive(ɵSdOperatorChip))).toBeNull();
+      // sd-operator rời cũng render chip (standalone) cho trigger của nó; ở đây chỉ hỏi chip nằm trong control.
+      expect(fixture.nativeElement.querySelector('sd-operator-chip:not(.sd-operator-chip--standalone)')).toBeNull();
       op.triggerEventHandler('modelChange', 'CONTAIN');
       fixture.detectChanges();
       expect(component.operator()).toBe('CONTAIN');

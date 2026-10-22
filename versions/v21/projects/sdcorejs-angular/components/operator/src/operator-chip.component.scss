@@ -4,6 +4,7 @@
 // sm 32px → chip 24px, padding 0 2px 0 6px, cách mép trái 4px, icon 16px, mũi tên 14px;
 // md 40px → chip 28px, padding 0 4px 0 8px, cách mép trái 6px, icon 18px, mũi tên 16px.
 // `--sd-operator-chip-bg` (local) giữ nền của trạng thái hiện tại để hover trộn thêm 6% chữ lên đúng nền đó.
+// Trigger của sd-operator (`standalone`) không cách mép; cỡ `xs` là glyph trơn (handoff sd-operator mục 3).
 :host {
   display: inline-flex;
   flex: 0 0 auto;
@@ -13,6 +14,10 @@
 
 :host(.sd-sm) {
   margin-left: 4px;
+}
+
+:host(.sd-operator-chip--standalone) {
+  margin-left: 0;
 }
 
 .sd-operator-chip__trigger {
@@ -62,21 +67,29 @@
   padding: 0 2px 0 6px;
 }
 
-.sd-operator-chip__icon {
-  display: inline-flex;
-  width: 18px;
-  height: 18px;
+// xs: glyph 14px, không nền, theo màu chữ bao quanh. Vùng bấm 24px (padding 5px) nhưng margin −5px nên layout chỉ chiếm
+// 14px (A4); hover / focus vẽ trên vùng bấm, bo 4px.
+.sd-operator-chip__trigger.sd-operator-chip__trigger--glyph {
+  --sd-operator-chip-bg: transparent;
+  height: auto;
+  margin: -5px;
+  padding: 5px;
+  border-radius: 4px;
+  color: inherit;
 
-  ::ng-deep svg {
-    display: block;
-    width: 100%;
-    height: 100%;
+  &:disabled {
+    --sd-operator-chip-bg: transparent;
+    color: var(--sd-disabled-text);
   }
 }
 
-:host(.sd-sm) .sd-operator-chip__icon {
-  width: 16px;
-  height: 16px;
+// Cỡ glyph do thuộc tính width / height của <svg> quyết định (14 / 16 / 18px, nét theo cỡ).
+.sd-operator-chip__icon {
+  display: inline-flex;
+
+  ::ng-deep svg {
+    display: block;
+  }
 }
 
 // Mọi chip đều có mũi tên, kể cả trong ô filter hẹp (review 2026-10-22).
@@ -85,7 +98,7 @@
 }
 
 @media (forced-colors: active) {
-  .sd-operator-chip__trigger {
+  .sd-operator-chip__trigger:not(.sd-operator-chip__trigger--glyph) {
     border: 1px solid ButtonText;
   }
 }

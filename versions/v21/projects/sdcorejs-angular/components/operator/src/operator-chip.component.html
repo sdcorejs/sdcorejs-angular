@@ -1,15 +1,19 @@
 @let _current = operator();
-@let _sm = size() === 'sm';
+@let _size = size();
+@let _glyph = _size === 'xs';
+@let _showCode = showCode();
 <!-- why: chặn click nổi bọt — mat-form-field coi click vào khung là mở select / focus ô nhập. -->
 <button
   #button
   type="button"
   class="sd-operator-chip__trigger"
+  [class.c-op-trigger]="standalone()"
+  [class.sd-operator-chip__trigger--glyph]="_glyph"
   [class.sd-operator-chip__trigger--value]="hasValue()"
   [class.sd-operator-chip__trigger--open]="menuOpen()"
   [disabled]="disabled()"
   [matMenuTriggerFor]="menu"
-  [matMenuTriggerRestoreFocus]="false"
+  [matMenuTriggerRestoreFocus]="standalone()"
   [matTooltip]="currentLabel()"
   matTooltipPosition="above"
   [attr.aria-label]="ariaLabel()"
@@ -18,17 +22,36 @@
   (click)="$event.stopPropagation()"
   (keydown)="onKeydown($event)">
   <span class="sd-operator-chip__icon" aria-hidden="true" [innerHTML]="currentIcon()"></span>
-  <sd-icon class="sd-operator-chip__arrow" name="expand_more" [size]="_sm ? '14px' : '16px'" aria-hidden="true" />
+  @if (!_glyph) {
+    <sd-icon
+      class="sd-operator-chip__arrow"
+      [name]="menuOpen() ? 'expand_less' : 'expand_more'"
+      [size]="_size === 'sm' ? '14px' : '16px'"
+      aria-hidden="true" />
+  }
 </button>
 
 <mat-menu #menu="matMenu" class="c-op-menu" (closed)="onClosed($event)">
+  <!-- Một dòng 36px (B1): icon, nhãn, mã khi `showCode`. Hàng đang chọn: highlight + menuitemradio / aria-checked, không
+       tick (quyết định 19). Đường chia khi đổi họ (B2). -->
   @for (item of items(); track item.value) {
-    <button type="button" mat-menu-item class="c-op-row" [class.c-op-active]="item.value === _current" (click)="choose(item.value)">
+    @if (item.separated) {
+      <div class="c-op-divider" role="separator"></div>
+    }
+    @let _checked = item.value === _current;
+    <button
+      type="button"
+      mat-menu-item
+      role="menuitemradio"
+      class="c-op-row"
+      [class.c-op-active]="_checked"
+      [attr.aria-checked]="_checked"
+      (click)="choose(item.value)">
       <span class="c-op-icon" [innerHTML]="item.icon"></span>
-      <span class="c-op-text">
-        <span class="c-op-label">{{ item.display }}</span>
+      <span class="c-op-label">{{ item.display }}</span>
+      @if (_showCode) {
         <span class="c-op-code">{{ item.value }}</span>
-      </span>
+      }
     </button>
   }
 </mat-menu>
