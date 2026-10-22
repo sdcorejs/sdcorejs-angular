@@ -33,6 +33,8 @@ Two-date range picker — user picks a start date AND an end date through a sing
 | `autoId`          | `string \| null \| undefined`                                         | `undefined`                                 | Generates `data-autoId="forms-date-range-<value>"` for E2E selectors.                                                                           |
 | `name`            | `string`                                                              | random uuid                                 | FormGroup control name when bound via `[form]`. This is the ONLY key the component adds to the parent form.                                     |
 | `size`            | `Size` (`'sm' \| 'md' \| 'lg'`)                                       | `'md'`                                      | Field height. Use `size="sm"` inside `<sd-table>` filters/cells or other dense table UI.                                                        |
+| `operators`       | `readonly Operator[]`                                                 | `[]`                                        | Operators offered by the prefix chip, in display order (wave 2 · G). Two or more show the chip; exactly one sets `operator` to it without a chip; none hides it. Keep the array as a class property. |
+| `operator`        | `Operator \| undefined` (model)                                       | `undefined`                                 | Current operator, two-way via `[(operator)]`. Changing it keeps the value; the clear button clears only the value.                              |
 | `form`            | `NgForm \| FormGroup \| undefined`                                    | `undefined`                                 | Parent form. NgForm is auto-unwrapped to its inner `FormGroup`.                                                                                 |
 | `label`           | `string \| undefined`                                                 | `undefined`                                 | Field label (rendered via `<sd-label>`).                                                                                                        |
 | `helperText`      | `string \| undefined`                                                 | `undefined`                                 | Hint icon + tooltip in the label area.                                                                                                          |
@@ -271,6 +273,23 @@ screen reader landed on it and announced nothing.
 - ❌ Treating the model as two separate strings — it is `{ from, to }`. Splitting it across two `<sd-date>` defeats the purpose (no shared calendar, no aggregate validation).
 - ❌ Mutating `model.from` / `model.to` directly — assign a new object literal so the `effect` re-runs.
 - ❌ Using this for date-and-time intervals — neither end carries time. Use two `<sd-datetime>` if you need that.
+
+## Operator chip (`operators`)
+
+For filter forms, the field can carry its own operator as a prefix chip instead of a separate `<sd-operator>` beside it.
+
+```html
+<sd-date-range label="…" [(model)]="period" [operators]="['EQUAL', 'GREATER_THAN', 'LESS_THAN']" [(operator)]="operator" />
+```
+
+- The chip is a real `<button type="button">` in the `matPrefix` slot. It shows the operator icon and an `expand_more` arrow; the translated label is in its tooltip, its `aria-label` ("Operator: …") and the menu.
+- While the chip is shown the floating label always floats and the label is not repeated as the placeholder.
+- `NULL` / `NOT_NULL` need no value: picking one in the chip clears the value and disables the entry until another operator is picked; the chip stays usable and keeps the focus.
+- Keyboard: Tab reaches the chip before the field. Enter, Space or Alt+↓ opens the menu. Picking a row moves focus to the "from" input; Escape closes the menu and returns focus to the chip.
+- The menu is the shared `.c-op-menu` panel of `<sd-operator>`: icon, label and operator code, the current row highlighted. Like the `sd-select` panel it opens 6px away from the field box and lines up with the field start.
+- Tone: muted without a value, `--sd-primary-light` / `--sd-primary-dark` once the field has a value, solid `--sd-primary` while the menu is open.
+- `autoId` gives the chip `data-autoid="<autoId>-operator"`.
+- `<sd-table>` column filters pass their operator list here automatically (see `sd-table.md`).
 
 ## E2E test attributes
 

@@ -15,16 +15,16 @@
   [attr.data-autoid]="autoId() ? 'components-kanban-' + autoId() : null">
   @if (_option.searchable !== false) {
     <div class="sd-kanban__toolbar">
-      <label class="sd-kanban__search">
-        <sd-icon name="search" size="sm" />
+      <sd-search-field class="sd-kanban__search" size="sm">
         <input
+          sdSearchFieldInput
           type="search"
           [value]="keyword()"
           [disabled]="disabled()"
           (input)="updateKeyword($event)"
           [attr.aria-label]="'core.component.kanban.search' | sdTranslate"
           [placeholder]="'core.component.kanban.search' | sdTranslate" />
-      </label>
+      </sd-search-field>
       @if (_pending !== null && !pendingAnchored()) {
         <span class="sd-kanban__pending">{{ 'core.component.kanban.saving' | sdTranslate }}</span>
       }
@@ -57,6 +57,10 @@
           [attr.data-color]="view.column.color || 'secondary'"
           [attr.aria-labelledby]="id + '-heading-' + _columnToken">
           <header class="sd-kanban__header">
+            <!-- Màu cột: chấm 8px trước nhãn; cột có prefixIcon thì icon tô màu thay cho chấm. -->
+            @if (!view.column.prefixIcon) {
+              <span class="sd-kanban__dot" aria-hidden="true"></span>
+            }
             <h3 [id]="id + '-heading-' + _columnToken">
               @if (_columnTemplate) {
                 <ng-container [ngTemplateOutlet]="_columnTemplate.template" [ngTemplateOutletContext]="columnContext(view)" />
@@ -68,10 +72,7 @@
               }
             </h3>
             <span class="sd-kanban__count" [attr.aria-label]="'core.component.kanban.count' | sdTranslate: { count: view.count }">
-              @if (view.cards.length !== view.count) {
-                {{ view.cards.length }} /
-              }
-              {{ view.count }}
+              {{ view.cards.length !== view.count ? view.cards.length + '/' + view.count : view.count }}
             </span>
             @if (_columnActionsTemplate && !_collapsed) {
               <ng-container [ngTemplateOutlet]="_columnActionsTemplate.template" [ngTemplateOutletContext]="columnContext(view)" />

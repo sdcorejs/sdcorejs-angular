@@ -2,7 +2,7 @@
 @let _detailTemplate = detailTemplate();
 @let _errorMessage = visibleErrorMessage();
 
-<div class="sd-entity-picker__control">
+<div class="sd-entity-picker__control" [class.sd-entity-picker__control--invalid]="!!_errorMessage">
   @if (connectorState().isViewed) {
     <div data-entity-picker-view class="sd-entity-picker__view">
       @if (_selectedTemplate) {

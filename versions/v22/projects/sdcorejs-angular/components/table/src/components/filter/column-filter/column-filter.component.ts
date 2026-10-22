@@ -23,6 +23,9 @@ import { OPERATORS } from '@sdcorejs/utils/constants';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { Operator } from '@sdcorejs/utils/models';
 import { SdTableColumn } from '../../../models/table-column.model';
+import { isDefaultControlFilter } from '../../../services/table-filter/table-filter-operator.util';
+
+const NO_OPERATORS: readonly Operator[] = [];
 
 @Component({
   selector: 'column-filter',
@@ -90,6 +93,18 @@ export class ColumnFilterComponent {
 
   // Chỉ các Operator value cho phép — truyền vào <sd-operator [operators]>.
   operatorValues = computed(() => this.operators().map(o => o.value));
+
+  // Operator nằm trong control mặc định dưới dạng chip tiền tố (thiết kế đợt 2 · G). Template custom (filterDef)
+  // và filter split (split-number / split-date, hai control) giữ sd-operator rời vì không chèn chip vào được.
+  // why: danh sách đúng một operator cũng giữ sd-operator rời — control sẽ tự đặt operator đó, tức phát
+  // operatorChange lúc khởi tạo, mà hợp đồng của column-filter giữ nguyên thời điểm emit.
+  operatorInControl = computed(() => {
+    const col = this.column();
+    return !!col && this.operatorValues().length > 1 && isDefaultControlFilter(col);
+  });
+
+  // Operator truyền xuống control mặc định; mảng rỗng cố định khi operator nằm ngoài để input không đổi mỗi lượt CD.
+  controlOperators = computed<readonly Operator[]>(() => (this.operatorInControl() ? this.operatorValues() : NO_OPERATORS));
 
   // Items cho sd-select khi column type = values / lazy-values
   items = computed<any[] | Signal<any[]> | SdSearch>(() => {

@@ -8,10 +8,10 @@
 @let _valueTemplate = (sdValueTemplate() ?? _sdViewDef?.templateRef) || undefined;
 @let _errorMessage = errorMessage();
 @let _size = size();
-@let _removable = removable();
 @let _labelTop = labelPlacement() === 'top';
+@let _icons = iconSizes();
 <!-- why: một cổng gate duy nhất cho <mat-error>, aria-invalid và aria-describedby. -->
-@let _errorVisible = !!_errorMessage && formControl.touched;
+@let _errorVisible = isErrorShown();
 @let _showInlineError = !_hideInlineError && _errorVisible;
 @let _viewTemplate = _sdViewDef?.templateRef;
 
@@ -20,7 +20,7 @@
     [label]="_label"
     [labelTemplate]="_labelTemplate"
     [value]="formControl.value"
-    [display]="formControl.value"
+    [display]="viewText()"
     [hyperlink]="hyperlink()"
     [valueTemplate]="_valueTemplate">
   </sd-view>
@@ -56,44 +56,71 @@
       </div>
     } @else {
       <mat-form-field
+        class="sd-chip-calendar-field"
         [class.sd-md]="_size === 'md'"
         [class.sd-sm]="_size === 'sm'"
+        [class.sd-lg]="_size === 'lg'"
+        [class.sd-chip-calendar-field--open]="isOpen()"
         [class.hide-inline-error]="_hideInlineError"
         [class.sd-label-top]="_labelTop"
         [appearance]="_appearance"
-        [floatLabel]="floatLabel()">
+        [floatLabel]="floatLabel()"
+        (click)="onFieldClick()">
         @if (_appearance && _label && !_labelTop) {
           <mat-label>{{ _label }}</mat-label>
         }
         <mat-chip-grid [formControl]="formControl" #chipList [class.sd-md]="_size === 'md'" [class.sd-sm]="_size === 'sm'">
-          @for (item of formControl.value; track item) {
-            @if (item) {
-              <mat-chip-row
-                [class.sd-md]="_size === 'md'"
-                [class.sd-sm]="_size === 'sm'"
-                [removable]="_removable"
-                (removed)="onRemove(item)"
-                [disabled]="inputControl.disabled"
-                (click)="onClickChip($event, item)"
-                [value]="item">
-                <span>{{ item | date: 'dd/MM/yyyy' }}</span>
-                @if (!inputControl.disabled && item | sdRemovableChip: _removable) {
-                  <sd-icon matChipRemove name="cancel"></sd-icon>
-                }
-              </mat-chip-row>
-            }
+          <!-- why: chip là ngày đã chuẩn hoá (yyyy/MM/dd), hiện theo ngày (B2) và gộp “+N” khi popup đóng (B3). `removable` áp
+               cả cho Backspace / Delete trên chip (A1); chip có tên đầy đủ, nút ✕ có tên riêng (A6). -->
+          @for (item of visibleDays(); track item) {
+            @let _itemRemovable = isRemovable(item);
+            <mat-chip-row
+              class="sd-chip-calendar__chip"
+              [class.sd-chip-calendar__chip--locked]="!_itemRemovable"
+              [removable]="_itemRemovable"
+              [aria-label]="chipLabel(item)"
+              (removed)="onRemove(item)"
+              [disabled]="inputControl.disabled"
+              (click)="onClickChip($event, item)"
+              [value]="item">
+              <span class="sd-chip-calendar__chip-text">{{ formatDay(item) }}</span>
+              <!-- why: mỗi khối @if một phần tử gốc, để ✕ được chiếu vào ô trailing của mat-chip-row ([matChipRemove]). -->
+              @if (!inputControl.disabled && _itemRemovable) {
+                <sd-icon matChipRemove name="close" [size]="_icons.chip" [ariaLabel]="removeLabel(item)"></sd-icon>
+              }
+              @if (!inputControl.disabled && !_itemRemovable) {
+                <sd-icon
+                  class="sd-chip-calendar__lock"
+                  name="lock"
+                  [size]="_icons.chip"
+                  [matTooltip]="'core.form.chip-calendar.locked' | sdTranslate"></sd-icon>
+              }
+            </mat-chip-row>
+          }
+          @if (hiddenCount() > 0) {
+            <button
+              type="button"
+              class="sd-chip-calendar__more"
+              [attr.aria-label]="'core.form.chip-calendar.more' | sdTranslate: { count: hiddenCount() }"
+              [attr.data-autoid]="autoId() ? autoId() + '-more' : null"
+              (click)="onMoreClick($event)">
+              +{{ hiddenCount() }}
+            </button>
           }
 
           <input
             class="sd-chip-input"
             [formControl]="inputControl"
             [id]="inputId"
-            [placeholder]="placeholder() || (_labelTop ? '' : _label)"
+            [placeholder]="effectivePlaceholder()"
             [matChipInputFor]="chipList"
             autocomplete="off"
             [errorStateMatcher]="matcher"
-            [matMenuTriggerFor]="calendarMenu"
             [required]="_required"
+            aria-haspopup="dialog"
+            [attr.aria-expanded]="isOpen()"
+            [attr.aria-controls]="isOpen() ? panelId : null"
+            (keydown)="onInputKeydown($event)"
             matInput
             [attr.data-autoId]="autoId()"
             [attr.data-disabled]="dataDisabled()"
@@ -108,27 +135,128 @@
             #input />
         </mat-chip-grid>
 
-        <mat-menu #calendarMenu="matMenu" overlapTrigger="false" (closed)="onCloseCalendar()">
-          <!-- why: aria-hidden="true" ở đây từng ẩn NGUYÊN <mat-calendar> — tức toàn bộ lưới ngày,
-               nút chuyển tháng và ô ngày đang chọn — khỏi accessibility tree, dù lịch vẫn nhận
-               focus và điều hướng bằng phím mũi tên. role="presentation" chỉ vô hiệu hoá cái div
-               bọc (nó chỉ tồn tại để chặn nổi bọt click làm đóng menu), KHÔNG lan xuống lịch. -->
-          <div style="width: 280px" role="presentation" (click)="$event.stopPropagation()">
-            <mat-calendar (selectedChange)="onSelectDate($event)" [dateClass]="dateClass"> </mat-calendar>
-          </div>
-        </mat-menu>
         @if (_hideInlineError && _errorVisible) {
           <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
         }
         @if (_hideInlineError && _errorVisible) {
           <span class="sd-visually-hidden" [id]="errorId" matSuffix>{{ _errorMessage }}</span>
-
+        }
+        <!-- Suffix (thiết kế 2): nút bỏ hết (hover-gated như sd-date, luôn hiện khi popup mở) rồi nút lịch. Ẩn khi disabled. -->
+        <!-- why: mỗi khối @if một phần tử gốc, để matSuffix được chiếu vào vùng suffix. -->
+        @if (!formControl.disabled && clearable() && !_required && hasRemovable()) {
+          <button
+            type="button"
+            matSuffix
+            class="sd-clear-btn sd-chip-calendar__suffix"
+            [class.sd-hover]="!isOpen()"
+            [attr.aria-label]="'core.form.chip-calendar.clear' | sdTranslate"
+            [attr.data-autoid]="autoId() ? autoId() + '-clear' : null"
+            (click)="onClear($event)">
+            <sd-icon name="close" [size]="_icons.clear"></sd-icon>
+          </button>
+        }
+        @if (!formControl.disabled) {
+          <button
+            type="button"
+            matSuffix
+            class="sd-chip-calendar__open sd-chip-calendar__suffix"
+            [class.sd-chip-calendar__open--active]="isOpen()"
+            data-chip-calendar-open
+            [attr.aria-label]="'core.form.date.open-picker' | sdTranslate"
+            aria-haspopup="dialog"
+            [attr.aria-expanded]="isOpen()"
+            [attr.aria-controls]="isOpen() ? panelId : null"
+            [attr.data-autoid]="autoId() ? autoId() + '-open' : null"
+            (click)="onToggleClick($event)">
+            <sd-icon name="calendar_month" [size]="_icons.open"></sd-icon>
+          </button>
         }
 
         @if (_showInlineError) {
           <mat-error [id]="errorId">{{ _errorMessage }}</mat-error>
         }
       </mat-form-field>
+
+      <!-- Popup (thiết kế 3): CDK overlay role="dialog" treo dưới khung ô. Chọn ngày không đóng; đóng bằng “Xong”, Esc
+           hoặc bấm ra ngoài. why: mat-menu cũ đóng khi Tab và không phải dialog (A3). Không aria-hidden ở đâu cả:
+           lưới ngày, nút chuyển tháng và ô đang chọn đều phải đọc được. -->
+      <ng-template
+        cdkConnectedOverlay
+        [cdkConnectedOverlayOrigin]="overlayOrigin()!"
+        [cdkConnectedOverlayOpen]="isOpen()"
+        [cdkConnectedOverlayPositions]="positions"
+        [cdkConnectedOverlayPush]="true"
+        [cdkConnectedOverlayViewportMargin]="8"
+        cdkConnectedOverlayPanelClass="sd-chip-calendar-pane"
+        (attach)="onAttach()"
+        (overlayOutsideClick)="onOutsideClick($event)"
+        (overlayKeydown)="onOverlayKeydown($event)">
+        @let _days = days();
+        @let _maxCount = effectiveMaxCount();
+        @let _full = full();
+        <div
+          class="sd-chip-calendar-panel"
+          role="dialog"
+          cdkTrapFocus
+          [id]="panelId"
+          [attr.aria-label]="_label || ('core.form.chip-calendar.dialog-label' | sdTranslate)"
+          [attr.data-autoid]="autoId() ? autoId() + '-panel' : null">
+          <div class="sd-chip-calendar-panel__head">
+            <div class="sd-chip-calendar-panel__summary">
+              <span class="sd-chip-calendar-panel__count">{{
+                'core.form.chip-calendar.selected-count' | sdTranslate: { count: _days.length }
+              }}</span>
+              <span class="sd-chip-calendar-panel__limit">
+                {{
+                  _maxCount > 0
+                    ? ('core.form.chip-calendar.max-count' | sdTranslate: { max: _maxCount })
+                    : ('core.form.chip-calendar.no-limit' | sdTranslate)
+                }}
+              </span>
+            </div>
+            <!-- why: vùng live luôn có mặt (rỗng khi chưa đủ) để screen reader đọc câu “đã đủ” ngay khi nó xuất hiện. -->
+            <p class="sd-chip-calendar-panel__full" aria-live="polite">
+              @if (_full) {
+                {{ 'core.form.chip-calendar.full' | sdTranslate: { max: _maxCount } }}
+              }
+            </p>
+          </div>
+
+          <mat-calendar
+            [headerComponent]="calendarHeader"
+            [startAt]="openAt()"
+            [minDate]="resolvedMinDate()"
+            [maxDate]="resolvedMaxDate()"
+            [dateFilter]="calendarFilter()"
+            [dateClass]="calendarDateClass()"
+            (selectedChange)="onSelectDate($event)">
+          </mat-calendar>
+
+          <div class="sd-chip-calendar-panel__footer">
+            @if (clearable()) {
+              <sd-button
+                data-chip-calendar-clear-all
+                type="text"
+                color="primary"
+                size="sm"
+                [disabled]="!hasRemovable()"
+                [autoId]="autoId() ? autoId() + '-clear-all' : undefined"
+                [title]="'core.form.chip-calendar.clear-all' | sdTranslate"
+                (click)="onClear()"></sd-button>
+            } @else {
+              <span></span>
+            }
+            <sd-button
+              data-chip-calendar-done
+              type="fill"
+              color="primary"
+              size="sm"
+              [autoId]="autoId() ? autoId() + '-done' : undefined"
+              [title]="'core.form.chip-calendar.done' | sdTranslate"
+              (click)="close(true)"></sd-button>
+          </div>
+        </div>
+      </ng-template>
     }
   </div>
 }

@@ -83,6 +83,13 @@ export const routes: Routes = [
     ],
   },
   {
+    // Live sd-tab-router-outlet of the Tab Router page: child routes are screens decorated with @SdTabComponent.
+    path: 'demo/tab-router',
+    title: `Tab router demo | ${PACKAGE_TITLE}`,
+    loadComponent: () => import('./pages/components/tab-router/live/tab-router-live.component').then(m => m.TabRouterLiveComponent),
+    loadChildren: () => import('./pages/components/tab-router/live/tab-router-live.pages').then(m => m.TAB_ROUTER_LIVE_ROUTES),
+  },
+  {
     // Live generic module screens of the Generic CRUD page, backed by an in-memory adapter.
     path: 'demo',
     title: `Generic CRUD demo | ${PACKAGE_TITLE}`,

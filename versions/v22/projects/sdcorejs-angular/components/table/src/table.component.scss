@@ -166,7 +166,7 @@
           z-index: 2;
 
           &:hover {
-            background: rgba(0, 0, 0, 0.08);
+            background: color-mix(in srgb, var(--sd-text) 8%, transparent);
           }
         }
       }
@@ -274,7 +274,7 @@
   button {
     &.c-btn-add {
       background-color: var(--sd-table-bg, #ffffff);
-      box-shadow: 0px 2px 4px rgba(47, 49, 54, 0.16);
+      box-shadow: var(--sd-shadow-sm);
     }
   }
 
@@ -331,7 +331,7 @@
   .sd-reorder-cell {
     sd-icon {
       cursor: grab;
-      color: rgba(0, 0, 0, 0.38);
+      color: var(--sd-text-muted);
       display: flex;
       align-items: center;
 
@@ -432,23 +432,43 @@
     }
   }
 
+  // why: icon là data-URI có màu xám viết cứng; dùng nó làm mask trên ::after để tô bằng token theme
+  // (thiết kế đợt 1 · C): nghỉ `--sd-text-secondary`, cột đang sort `--sd-text`. Template không đổi.
   th[aria-sort] .sd-table-sort-header {
-    background-repeat: no-repeat;
-    background-position: center right 0;
-    background-size: 16px 16px;
+    position: relative;
     padding-right: 24px;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: 0;
+      width: 16px;
+      height: 16px;
+      transform: translateY(-50%);
+      background-color: var(--sd-text-secondary);
+      mask-repeat: no-repeat;
+      mask-position: center;
+      mask-size: 16px 16px;
+      pointer-events: none;
+    }
   }
 
-  th[aria-sort='none'] .sd-table-sort-header {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 0 24 24' width='24px' fill='%23000000'%3E%3Cpath d='M0 0h24v24H0V0z' fill='none'/%3E%3Cpath fill='%237A7A7A' d='M12 5.83L15.17 9l1.41-1.41L12 3 7.41 7.59 8.83 9 12 5.83zm0 12.34L8.83 15l-1.41 1.41L12 21l4.59-4.59L15.17 15 12 18.17z'/%3E%3C/svg%3E");
+  th[aria-sort='ascending'] .sd-table-sort-header::after,
+  th[aria-sort='descending'] .sd-table-sort-header::after {
+    background-color: var(--sd-text);
   }
 
-  th[aria-sort='ascending'] .sd-table-sort-header {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 0 24 24' width='24px' fill='%23000000'%3E%3Cpath d='M0 0h24v24H0V0z' fill='none'/%3E%3Cpath fill='%237A7A7A' d='M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z'/%3E%3C/svg%3E");
+  th[aria-sort='none'] .sd-table-sort-header::after {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 0 24 24' width='24px' fill='%23000000'%3E%3Cpath d='M0 0h24v24H0V0z' fill='none'/%3E%3Cpath fill='%237A7A7A' d='M12 5.83L15.17 9l1.41-1.41L12 3 7.41 7.59 8.83 9 12 5.83zm0 12.34L8.83 15l-1.41 1.41L12 21l4.59-4.59L15.17 15 12 18.17z'/%3E%3C/svg%3E");
   }
 
-  th[aria-sort='descending'] .sd-table-sort-header {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 0 24 24' width='24px' fill='%23000000'%3E%3Cpath d='M0 0h24v24H0V0z' fill='none'/%3E%3Cpath fill='%237A7A7A' d='M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z'/%3E%3C/svg%3E");
+  th[aria-sort='ascending'] .sd-table-sort-header::after {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 0 24 24' width='24px' fill='%23000000'%3E%3Cpath d='M0 0h24v24H0V0z' fill='none'/%3E%3Cpath fill='%237A7A7A' d='M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z'/%3E%3C/svg%3E");
+  }
+
+  th[aria-sort='descending'] .sd-table-sort-header::after {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 0 24 24' width='24px' fill='%23000000'%3E%3Cpath d='M0 0h24v24H0V0z' fill='none'/%3E%3Cpath fill='%237A7A7A' d='M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z'/%3E%3C/svg%3E");
   }
 }
 
@@ -478,14 +498,14 @@
 :host ::ng-deep {
   // CDK drag visual feedback
   .cdk-drag-preview {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    background: white;
+    box-shadow: var(--sd-shadow-md);
+    background: var(--sd-table-bg);
     display: table;
     width: 100%;
 
     td {
       padding: 0 8px;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+      border-bottom: 1px solid var(--sd-table-row-divider);
     }
   }
 
@@ -584,7 +604,7 @@
     }
 
     &:hover {
-      background-color: rgba(15, 23, 42, 0.08);
+      background-color: color-mix(in srgb, var(--sd-text) 8%, transparent);
     }
   }
 

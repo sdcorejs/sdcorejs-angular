@@ -23,14 +23,7 @@
 :host ::ng-deep {
   // Form field color
   .mat-mdc-form-field {
-    // Disabled background & border
-    &.mat-form-field-appearance-outline {
-      &.mat-form-field-disabled {
-        .mat-mdc-text-field-wrapper {
-          background: map.get(color.$color_map, 'surface-muted');
-        }
-      }
-    }
+    // Nền disabled: rule chung cho mọi control dạng ô trong assets/scss/core/form.scss.
     input {
       // Màu của place holder
       &.c-selected::placeholder {
@@ -94,7 +87,8 @@
   // Thu nhỏ chiều cao của từng dòng option (Mặc định thường là 48px)
   .mat-mdc-option {
     min-height: 36px !important;
-    padding: 8px 12px !important; // Giảm padding để phù hợp với chiều cao mới
+    // Padding dọc 7px + viền trong suốt 1px (core/form.scss, khe 2px giữa option) = 36px như cũ.
+    padding: 7px 12px !important;
   }
 
   // (Tùy chọn) Chỉnh lại cỡ chữ cho phù hợp với độ cao mới

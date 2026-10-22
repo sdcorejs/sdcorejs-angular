@@ -25,6 +25,10 @@ const ROWS: EmployeeRow[] = [
   { id: 2, name: 'Bob', age: 28 },
 ];
 
+// Sort icon tint: --sd-text-secondary at rest, --sd-text on the sorted column.
+const ICON_REST = 'rgb(1, 2, 3)';
+const ICON_ACTIVE = 'rgb(4, 5, 6)';
+
 const WCAG_21_AA_OPTIONS: RunOptions = {
   runOnly: {
     type: 'tag',
@@ -103,6 +107,9 @@ describe('SdTable sort accessibility', () => {
 
   function settleWith(option: SdTableOption<EmployeeRow>): void {
     host.option.set(option);
+    // Distinct theme colours so the sort icon tint is checked without loading the theme.
+    (fixture.nativeElement as HTMLElement).style.setProperty('--sd-text-secondary', ICON_REST);
+    (fixture.nativeElement as HTMLElement).style.setProperty('--sd-text', ICON_ACTIVE);
     fixture.detectChanges();
     tick(800);
     flushMicrotasks();
@@ -176,6 +183,9 @@ describe('SdTable sort accessibility', () => {
       expect(title.getAttribute('role')).not.toBe('button');
       expect(title.tabIndex).withContext(`plain title tabindex for ${title.textContent?.trim()}`).toBe(-1);
       expect(getComputedStyle(title).backgroundImage).withContext(`plain title icon for ${title.textContent?.trim()}`).toBe('none');
+      expect(getComputedStyle(title, '::after').maskImage || 'none')
+        .withContext(`plain title mask for ${title.textContent?.trim()}`)
+        .toBe('none');
     }
   }
 
@@ -183,11 +193,16 @@ describe('SdTable sort accessibility', () => {
     const headerCell = header.closest('th');
     expect(headerCell).not.toBeNull();
     expect(headerCell!.getAttribute('aria-sort')).toBe(state);
-    const backgroundImage = getComputedStyle(header).backgroundImage;
-    expect(backgroundImage).withContext(`custom ${state} icon`).not.toBe('none');
-    expect(backgroundImage.match(/url\(/g)?.length ?? 0)
+    // Wave 1 · C: the data-URI icon is a mask on ::after, tinted by the theme instead of its baked-in grey.
+    expect(getComputedStyle(header).backgroundImage).withContext(`no ${state} background icon`).toBe('none');
+    const icon = getComputedStyle(header, '::after');
+    const mask = icon.maskImage || icon.getPropertyValue('-webkit-mask-image');
+    expect(mask.match(/url\(/g)?.length ?? 0)
       .withContext(`custom ${state} icon count`)
       .toBe(1);
+    expect(icon.backgroundColor)
+      .withContext(`${state} icon colour`)
+      .toBe(state === 'none' ? ICON_REST : ICON_ACTIVE);
 
     expect(headerCell!.querySelectorAll('.mat-sort-header-arrow').length)
       .withContext('no Material arrow node may coexist with the custom icon')

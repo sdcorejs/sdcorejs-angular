@@ -1,0 +1,32 @@
+<!-- why: thứ tự DOM = thứ tự Tab của thông số (trước, nhãn, sau). Nhãn mô tả nằm trong vùng aria-live ẩn như header
+     mặc định của Material, để screen reader đọc kỳ mới khi chuyển tháng. -->
+<div class="sd-chip-calendar-header">
+  <span [id]="_periodButtonLabelId" class="sd-visually-hidden" aria-live="polite">{{ periodButtonDescription }}</span>
+  <button
+    type="button"
+    class="sd-chip-calendar-header__nav"
+    data-chip-calendar-previous
+    [disabled]="!previousEnabled()"
+    [attr.aria-label]="prevButtonLabel"
+    (click)="previousClicked()">
+    <sd-icon name="chevron_left" size="20px" aria-hidden="true" />
+  </button>
+  <button
+    type="button"
+    class="sd-chip-calendar-header__period"
+    data-chip-calendar-period
+    [attr.aria-label]="periodButtonLabel"
+    [attr.aria-describedby]="_periodButtonLabelId"
+    (click)="currentPeriodClicked()">
+    <span aria-hidden="true">{{ periodText }}</span>
+  </button>
+  <button
+    type="button"
+    class="sd-chip-calendar-header__nav"
+    data-chip-calendar-next
+    [disabled]="!nextEnabled()"
+    [attr.aria-label]="nextButtonLabel"
+    (click)="nextClicked()">
+    <sd-icon name="chevron_right" size="20px" aria-hidden="true" />
+  </button>
+</div>

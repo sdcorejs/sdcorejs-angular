@@ -58,7 +58,19 @@
       [class.sd-sm]="_size === 'sm'"
       [class.hide-inline-error]="_hideInlineError"
       [appearance]="_appearance!"
-      [floatLabel]="floatLabel()">
+      [floatLabel]="operatorChip() ? 'always' : floatLabel()">
+      <!-- Operator (thiết kế đợt 2 · G): chip tiền tố khi có từ hai operator. -->
+      @if (operatorChip()) {
+        <sd-operator-chip
+          matPrefix
+          [operators]="operators()"
+          [(operator)]="operator"
+          [size]="size()"
+          [hasValue]="operatorHasValue()"
+          [disabled]="formControl.disabled && !operatorLocked()"
+          [autoId]="autoId() ? autoId() + '-operator' : undefined"
+          (chosen)="onOperatorChosen()" />
+      }
       @if (_appearance && _label) {
         <mat-label class="sd-form-field-label">
           <span>{{ _label }}</span>
@@ -87,6 +99,7 @@
           [id]="id1"
           autocomplete="off"
           autocorrect="off"
+          #startInput
           matStartDate
           [formControl]="control1"
           [placeholder]="formControl.disabled ? '' : ('core.form.date-range.from' | sdTranslate)"

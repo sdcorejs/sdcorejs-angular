@@ -12,6 +12,8 @@ import {
   Component,
   ChangeDetectorRef,
   computed,
+  effect,
+  untracked,
 } from '@angular/core';
 import { DOCUMENT, NgTemplateOutlet } from '@angular/common';
 import { Overlay, OverlayRef, ConnectionPositionPair } from '@angular/cdk/overlay';
@@ -122,10 +124,22 @@ export class SdTooltipDirective {
   // kia còn giữ thì tooltip phải còn hiện.
   #hovered = false;
   #focused = false;
+  // why: true từ lúc tooltip "đáng được hiện" (hết delay hover, hoặc vừa focus) tới lúc ẩn. Host đổi nội dung từ rỗng
+  // sang có trong khoảng đó thì hiện luôn — sd-badge chỉ biết chữ bị cắt sau khi focus đã tới.
+  #wantsOpen = false;
 
   constructor() {
     this.destroyRef.onDestroy(() => {
       this.#cleanup();
+    });
+    // why: nội dung rỗng nghĩa là "không có tooltip". Host đổi nội dung thành rỗng khi tooltip đang hiện
+    // (ví dụ sd-select khi mở panel) thì phải ẩn ngay, không đợi mouseleave.
+    effect(() => {
+      const content = this.content();
+      untracked(() => {
+        if (!content) this.forceHide();
+        else if (this.#wantsOpen) this.#show();
+      });
     });
   }
 
@@ -135,6 +149,7 @@ export class SdTooltipDirective {
     this.#activate();
     this.#clearTimeouts();
     this.showTimeout = setTimeout(() => {
+      this.#wantsOpen = true;
       this.#show();
     }, this.sdTooltipDelay());
   }
@@ -159,6 +174,7 @@ export class SdTooltipDirective {
     this.#focused = true;
     this.#activate();
     this.#clearTimeouts();
+    this.#wantsOpen = true;
     this.#show();
   }
 
@@ -213,6 +229,7 @@ export class SdTooltipDirective {
   };
 
   #hide = (): void => {
+    this.#wantsOpen = false;
     this.document.removeEventListener('keydown', this.#onDocumentKeydown, true);
     this.#removeDescribedBy();
     if (this.tooltipInstance && this.overlayRef?.hasAttached()) {

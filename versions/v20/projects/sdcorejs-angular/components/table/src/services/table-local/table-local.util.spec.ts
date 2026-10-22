@@ -223,6 +223,19 @@ describe('table-local.util', () => {
   });
 
   describe('column operators (same meaning as SdConvertToPagingReq)', () => {
+    it('NULL / NOT_NULL match a missing value and ignore the cell value; the filter is active without one', () => {
+      const noteRows = [{ id: 1, note: null }, { id: 2, note: 'a' }, { id: 3 }, { id: 4, note: '' }];
+      const noteColumns = [{ field: 'note', title: 'Note', type: 'string' }] as unknown as SdTableOption<TableLocalTestRow>['columns'];
+      const ids = (operator: string) =>
+        noteRows
+          .filter(row => matchesColumnFilter(row as never, noteColumns, { note: 'ignored' }, { note: operator } as never))
+          .map(row => row.id);
+      expect(ids('NULL')).toEqual([1, 3]);
+      expect(ids('NOT_NULL')).toEqual([2, 4]);
+      expect(hasActiveColumnFilter({}, noteColumns, { note: 'NULL' } as never)).toBeTrue();
+      expect(hasActiveColumnFilter({}, noteColumns, { note: 'CONTAIN' } as never)).toBeFalse();
+    });
+
     type ColumnOperator = SdTableFilterRequest<TableLocalTestRow>['columnOperator'];
     const amountRows = [0, 3, 5, 8, 12].map(amount =>
       MapToSdTableItem<TableLocalTestRow>({ id: amount, user: { name: `User ${amount}` }, amount, createdAt: '2026-01-01' })

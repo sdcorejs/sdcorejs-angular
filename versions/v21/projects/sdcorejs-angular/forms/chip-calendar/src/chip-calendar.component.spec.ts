@@ -289,18 +289,10 @@ describe('SdChipCalendar', () => {
       expect(host.modelEmissions[0]).toEqual(['2026/05/02']);
     });
 
-    it('emits modelChange and leaves the caller array untouched when an autocomplete option is selected', () => {
-      const original: (string | number)[] = ['2026/05/01'];
-      host.model = original;
-      fixture.detectChanges();
-      host.modelEmissions.length = 0;
-
-      comp.onSelect({ option: { value: '2026/05/03' } } as any);
-      fixture.detectChanges();
-
-      expect(original).toEqual(['2026/05/01']);
-      expect(host.modelEmissions.length).toBe(1);
-      expect(host.modelEmissions[0]).toEqual(['2026/05/01', '2026/05/03']);
+    // Design handoff sd-chip-calendar · D1: the field never had an autocomplete panel; its handler is gone.
+    it('has no autocomplete handler', () => {
+      expect('onSelect' in comp).toBeFalse();
+      expect(fixture.nativeElement.querySelector('[matAutocomplete], mat-autocomplete')).toBeNull();
     });
 
     it('emits modelChange and leaves the caller array untouched when a chip is removed', () => {

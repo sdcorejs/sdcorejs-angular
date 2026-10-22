@@ -5,7 +5,6 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Subject } from 'rxjs';
 
-import { SdBadge } from '@sdcorejs/angular/components/badge';
 import { SdTabInfo, SdTabRouterTab } from '../../models/tab-router.model';
 import { SdTabRouterService } from '../../services/tab-router.service';
 import { SdTabRouterItemComponent } from './tab-router-item.component';
@@ -114,18 +113,16 @@ describe('SdTabRouterItemComponent close delegation', () => {
     expect(tabRouterServiceSpy.close).toHaveBeenCalledOnceWith(component.tab);
   });
 
-  // why: badge không còn nhân bản (click)="onTabClick" — nó chỉ nuốt event khi có consumer, nên
-  // click trên badge bọt lên <a> cha như bình thường và badge không thành nút lồng trong <a>.
-  it('does not turn the badge into a nested interactive element inside the anchor', () => {
-    const badgeRoot = fixture.nativeElement.querySelector('sd-badge > *') as HTMLElement;
+  // why: tab không còn bọc sd-badge (đợt 3 · 3a), nên trong tab chỉ còn đúng một phần tử tương tác lồng: nút đóng.
+  it('nests no interactive element other than the close button', () => {
+    const anchor = fixture.nativeElement.querySelector('a') as HTMLElement;
+    const nested = anchor.querySelectorAll('a, button, [role="button"], [tabindex]');
 
-    expect(badgeRoot.getAttribute('role')).toBeNull();
-    expect(badgeRoot.getAttribute('tabindex')).toBeNull();
-    expect(badgeRoot.hasAttribute('aria-hidden')).toBe(false);
+    expect(Array.from(nested)).toEqual([fixture.nativeElement.querySelector('button.tab-router__close')]);
   });
 });
 
-describe('SdTabRouterItemComponent badge bindings', () => {
+describe('SdTabRouterItemComponent tab info', () => {
   let fixture: ComponentFixture<SdTabRouterItemComponent>;
   let tabInfoChanges: Subject<SdTabInfo>;
 
@@ -163,22 +160,19 @@ describe('SdTabRouterItemComponent badge bindings', () => {
     fixture.detectChanges();
   });
 
-  // why: template từng có `[title]="info.icon"` ngay trên `[title]="info.name"` — binding chết do
-  // copy-paste, ghi đè ngay lập tức và bắt sd-badge nhận hai giá trị title mỗi lần CD.
-  it('binds the tab name to the badge title and the icon only to the badge icon', () => {
-    const badge = fixture.debugElement.query(By.directive(SdBadge)).componentInstance as SdBadge;
+  it('renders the icon as a decorative sd-icon and the tab name as the label', () => {
+    const icon = fixture.nativeElement.querySelector('.tab-router__icon') as HTMLElement;
+    const name = fixture.nativeElement.querySelector('.tab-router__name') as HTMLElement;
 
-    expect(badge.title()).toBe(tabInfo.name);
-    expect(badge.icon()).toBe(tabInfo.icon);
-
-    fixture.detectChanges();
-
-    expect(badge.title()).toBe(tabInfo.name);
+    expect(icon.getAttribute('aria-hidden')).toBe('true');
+    expect(icon.classList).toContain('c-primary');
+    expect(name.textContent?.trim()).toBe(tabInfo.name);
   });
 
-  it('renders the tab name, not the icon name, as the badge label', () => {
-    const label = fixture.nativeElement.querySelector('.c-badge-title') as HTMLElement;
+  it('updates the name when tabInfoChanges emits again', () => {
+    tabInfoChanges.next({ ...tabInfo, name: 'Hợp đồng HD-2026-118' });
+    fixture.detectChanges();
 
-    expect(label.textContent?.trim()).toBe(tabInfo.name);
+    expect((fixture.nativeElement.querySelector('.tab-router__name') as HTMLElement).textContent?.trim()).toBe('Hợp đồng HD-2026-118');
   });
 });

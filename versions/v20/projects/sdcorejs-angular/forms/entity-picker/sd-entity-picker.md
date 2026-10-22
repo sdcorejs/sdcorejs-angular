@@ -112,7 +112,11 @@ Public signals include `connectorState`, `errorMessage` (raw message for the cur
 - `required` → shared select message (i18n key `core.form.select.required`; the catalog has no picker-specific key yet).
 - `inlineError` → the exact string you passed.
 - The message is **interaction-gated**: it stays hidden until the control is `touched` or `dirty`, so a freshly rendered form is not painted red. `applySelection()` and `clear()` mark the control touched + dirty; a parent `markAllAsTouched()` on submit also reveals it.
-- While the message is visible, the trigger carries `aria-invalid="true"` and `aria-describedby` pointing at the message element.
+- While the message is visible, the trigger carries `aria-invalid="true"` and `aria-describedby` pointing at the message element, and the control box gets the error outline (`--sd-error`) and, when focused, the error ring.
+
+## Appearance
+
+The control box `.sd-entity-picker__control` is drawn like an outlined form field, from the shared control tokens (see `assets/THEME.md` "Control tokens"): 8px corner (`--sd-control-radius`), `--sd-control-border` at rest, `--sd-control-border-hover` on hover, and on focus (`:focus-within`, so the trigger and the clear button both count) the `--sd-control-border-focus` outline plus the `--sd-control-ring` ring around the whole box instead of an outline on the trigger. Under `forced-colors: active` the ring is a 2px `Highlight` outline. A disabled picker has the disabled outline and `--sd-control-bg-disabled` background; in `[viewed]` mode the box has no outline.
 
 ## Error and accessibility behavior
 

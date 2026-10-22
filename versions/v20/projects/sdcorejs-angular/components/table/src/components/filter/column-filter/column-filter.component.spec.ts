@@ -1,8 +1,16 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { SdOperator } from '@sdcorejs/angular/components/operator';
+import { Component, TemplateRef, viewChild } from '@angular/core';
+import { SdOperator, ɵSdOperatorChip } from '@sdcorejs/angular/components/operator';
 import { ColumnFilterComponent } from './column-filter.component';
 import { SdTableColumn } from '../../../models/table-column.model';
+
+@Component({
+  template: '<ng-template #tpl><span class="custom-filter">custom</span></ng-template>',
+})
+class FilterDefHost {
+  readonly template = viewChild.required<TemplateRef<unknown>>('tpl');
+}
 
 describe('ColumnFilterComponent', () => {
   let fixture: ComponentFixture<ColumnFilterComponent>;
@@ -260,47 +268,80 @@ describe('ColumnFilterComponent', () => {
     });
   });
 
-  describe('sd-operator integration', () => {
-    it('renders <sd-operator> with the allowed operator values when operators exist', () => {
-      bootstrap({
+  // Wave 2 · G: the operator is a prefix chip inside the default control; a custom filterDef template and the
+  // split filters (two controls) keep the separate sd-operator.
+  describe('operator placement', () => {
+    const withOperators = (extra: Record<string, unknown> = {}) =>
+      ({
         field: 'name',
         type: 'string',
-        filter: { operator: { enable: true, list: ['EQUAL', 'CONTAIN'] } },
-      } as unknown as SdTableColumn);
+        ...extra,
+        filter: { operator: { enable: true, list: ['EQUAL', 'CONTAIN'] }, ...((extra['filter'] as object) ?? {}) },
+      }) as unknown as SdTableColumn;
 
-      const opEl = fixture.nativeElement.querySelector('sd-operator');
-      expect(opEl).not.toBeNull();
-      expect(component.operatorValues()).toEqual(['EQUAL', 'CONTAIN']);
+    it('puts the chip inside the default control and renders no separate sd-operator', () => {
+      bootstrap(withOperators());
+      expect(fixture.nativeElement.querySelector('sd-operator')).toBeNull();
+      const chip = fixture.debugElement.query(By.directive(ɵSdOperatorChip));
+      expect(chip).withContext('chip').not.toBeNull();
+      expect(chip.nativeElement.closest('sd-input')).withContext('inside sd-input').not.toBeNull();
+      expect((chip.componentInstance as ɵSdOperatorChip).operators()).toEqual(['EQUAL', 'CONTAIN']);
+      expect(component.operatorInControl()).toBeTrue();
     });
 
-    it('does NOT render <sd-operator> when no operators configured', () => {
+    it('does NOT render an operator when none is configured', () => {
       bootstrap({ field: 'name', type: 'string' } as SdTableColumn);
       expect(fixture.nativeElement.querySelector('sd-operator')).toBeNull();
+      expect(fixture.debugElement.query(By.directive(ɵSdOperatorChip))).toBeNull();
     });
 
-    it('binds [operators] = operatorValues() to the rendered sd-operator', () => {
-      bootstrap({
-        field: 'name',
-        type: 'string',
-        filter: { operator: { enable: true, list: ['EQUAL', 'CONTAIN'] } },
-      } as unknown as SdTableColumn);
-
-      const op = fixture.debugElement.query(By.directive(SdOperator)).componentInstance as SdOperator;
-      expect(op.operators()).toEqual(['EQUAL', 'CONTAIN']);
-    });
-
-    it('two-way model round-trip: sd-operator modelChange updates operator', () => {
-      bootstrap({
-        field: 'name',
-        type: 'string',
-        filter: { operator: { enable: true, list: ['EQUAL', 'CONTAIN'] } },
-      } as unknown as SdTableColumn);
-
-      const opDe = fixture.debugElement.query(By.directive(SdOperator));
-      opDe.triggerEventHandler('modelChange', 'CONTAIN');
+    it('two-way model round-trip: the chip operatorChange updates operator', () => {
+      bootstrap(withOperators());
+      fixture.debugElement.query(By.directive(ɵSdOperatorChip)).triggerEventHandler('operatorChange', 'CONTAIN');
       fixture.detectChanges();
-
       expect(component.operator()).toBe('CONTAIN');
+    });
+
+    // A control given one operator sets it on its own, which would emit operatorChange at start-up; the column
+    // filter keeps its emit timing, so a single operator stays on the separate sd-operator.
+    it('keeps the separate sd-operator for a single configured operator and emits nothing at start-up', () => {
+      const emitted: unknown[] = [];
+      fixture = TestBed.createComponent(ColumnFilterComponent);
+      component = fixture.componentInstance;
+      // `operator` is a model: subscribing listens to its operatorChange output.
+      component.operator.subscribe(value => emitted.push(value));
+      fixture.componentRef.setInput('column', {
+        field: 'name',
+        type: 'string',
+        filter: { operator: { enable: true, list: ['EQUAL'] } },
+      } as unknown as SdTableColumn);
+      fixture.componentRef.setInput('columnFilter', {});
+      fixture.detectChanges();
+      fixture.detectChanges();
+      expect(fixture.debugElement.query(By.directive(ɵSdOperatorChip))).toBeNull();
+      expect(fixture.nativeElement.querySelector('sd-operator')).not.toBeNull();
+      expect(emitted).toEqual([]);
+      expect(component.operator()).toBeUndefined();
+    });
+
+    it('keeps the separate sd-operator for a split filter, bound to operatorValues()', () => {
+      bootstrap(withOperators({ field: 'price', type: 'number', filter: { type: 'split-number' } }));
+      const op = fixture.debugElement.query(By.directive(SdOperator));
+      expect(op).withContext('separate sd-operator').not.toBeNull();
+      expect((op.componentInstance as SdOperator).operators()).toEqual(['EQUAL', 'CONTAIN']);
+      expect(fixture.debugElement.query(By.directive(ɵSdOperatorChip))).toBeNull();
+      op.triggerEventHandler('modelChange', 'CONTAIN');
+      fixture.detectChanges();
+      expect(component.operator()).toBe('CONTAIN');
+    });
+
+    it('keeps the separate sd-operator next to a custom filterDef template', () => {
+      const templateHost = TestBed.createComponent(FilterDefHost);
+      templateHost.detectChanges();
+      bootstrap(withOperators({ filter: { filterDef: templateHost.componentInstance.template() } }));
+      expect(fixture.nativeElement.querySelector('sd-operator')).not.toBeNull();
+      expect(fixture.nativeElement.querySelector('.custom-filter')).not.toBeNull();
+      expect(component.operatorInControl()).toBeFalse();
     });
   });
 

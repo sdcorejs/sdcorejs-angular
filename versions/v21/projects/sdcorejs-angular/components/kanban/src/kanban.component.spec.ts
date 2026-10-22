@@ -46,6 +46,115 @@ describe('SdKanban', () => {
     fixture.componentRef.setInput('model', data);
     fixture.detectChanges();
   });
+  describe('wave 1 look (neutral lanes, dot, text count, borderless-shadow cards)', () => {
+    const host = (): HTMLElement => fixture.nativeElement as HTMLElement;
+    const column = (id: string): HTMLElement => host().querySelector<HTMLElement>(`.sd-kanban__column[data-column-id="${id}"]`)!;
+    beforeEach(() => {
+      // Distinct token values so each rule is checked without loading the theme; no transition delay.
+      const style = host().style;
+      style.setProperty('--sd-kanban-lane-bg', 'rgb(10, 10, 10)');
+      style.setProperty('--sd-kanban-lane-target-bg', 'rgb(20, 20, 20)');
+      style.setProperty('--sd-kanban-lane-target-border', 'rgb(30, 30, 30)');
+      style.setProperty('--sd-kanban-drop-slot-border', 'rgb(40, 40, 40)');
+      style.setProperty('--sd-kanban-card-border', 'rgb(50, 50, 50)');
+      style.setProperty('--sd-kanban-card-hover-border', 'rgb(60, 60, 60)');
+      style.setProperty('--sd-text-secondary', 'rgb(70, 70, 70)');
+      style.setProperty('--sd-duration-fast', '0s');
+    });
+
+    it('paints every lane with the neutral lane token instead of the column tint', () => {
+      fixture.componentRef.setInput('columns', [
+        { id: 'open', label: 'Open', color: 'success' },
+        { id: 'done', label: 'Done', color: 'error' },
+      ]);
+      fixture.detectChanges();
+      const tokens = ['open', 'done'].map(id => fixture.componentInstance['token'](id));
+      for (const token of tokens) expect(getComputedStyle(column(token)).backgroundColor).toBe('rgb(10, 10, 10)');
+    });
+
+    it('marks the column colour with an 8px aria-hidden dot before the label, or with the prefix icon', () => {
+      fixture.componentRef.setInput('columns', [
+        { id: 'open', label: 'Open', color: 'success' },
+        { id: 'done', label: 'Done', prefixIcon: 'check_circle' },
+      ]);
+      fixture.detectChanges();
+      const open = column(fixture.componentInstance['token']('open'));
+      const dot = open.querySelector<HTMLElement>('.sd-kanban__dot')!;
+      expect(dot).withContext('dot').not.toBeNull();
+      expect(dot.getAttribute('aria-hidden')).toBe('true');
+      expect(dot.getBoundingClientRect().width).toBe(8);
+      expect(dot.getBoundingClientRect().height).toBe(8);
+      expect(dot.getBoundingClientRect().right).toBeLessThanOrEqual(open.querySelector('h3')!.getBoundingClientRect().left + 0.5);
+      const done = column(fixture.componentInstance['token']('done'));
+      expect(done.querySelector('.sd-kanban__dot')).withContext('the icon replaces the dot').toBeNull();
+      expect(done.querySelector('h3 sd-icon')).not.toBeNull();
+    });
+
+    it('keeps the dot between the toggle and the count in a collapsed lane', () => {
+      const token = fixture.componentInstance['token']('open');
+      column(token).querySelector<HTMLButtonElement>('.sd-kanban__header button[aria-expanded]')!.click();
+      fixture.detectChanges();
+      const lane = column(token);
+      const top = (selector: string) => lane.querySelector<HTMLElement>(selector)!.getBoundingClientRect().top;
+      expect(top('.sd-kanban__header button[aria-expanded]')).toBeLessThan(top('.sd-kanban__dot'));
+      expect(top('.sd-kanban__dot')).toBeLessThan(top('.sd-kanban__count'));
+    });
+
+    it('shows the count as 13px secondary tabular text, "visible/total" while filtering', () => {
+      const count = column(fixture.componentInstance['token']('open')).querySelector<HTMLElement>('.sd-kanban__count')!;
+      const style = getComputedStyle(count);
+      expect(style.fontSize).toBe('13px');
+      expect(style.color).toBe('rgb(70, 70, 70)');
+      expect(style.fontVariantNumeric).toBe('tabular-nums');
+      expect(style.backgroundColor).toBe('rgba(0, 0, 0, 0)');
+      expect(count.textContent?.trim()).toBe('2');
+      fixture.componentInstance.keyword.set('First');
+      fixture.detectChanges();
+      expect(count.textContent?.replace(/\s+/g, '')).toBe('1/2');
+      expect(count.getAttribute('aria-label')).toBeTruthy();
+    });
+
+    it('draws cards with the card border token and no shadow; pending and failed keep their border', () => {
+      const card = host().querySelector<HTMLElement>('.sd-kanban__card')!;
+      expect(getComputedStyle(card).borderTopColor).toBe('rgb(50, 50, 50)');
+      expect(getComputedStyle(card).boxShadow).toBe('none');
+    });
+
+    it('hides the card tools with opacity on a fine pointer until the card is hovered or focused', () => {
+      if (!matchMedia('(hover: hover) and (pointer: fine)').matches) {
+        pending('this browser does not report a fine hover pointer');
+        return;
+      }
+      const card = host().querySelector<HTMLElement>('.sd-kanban__card')!;
+      const tools = card.querySelector<HTMLElement>('.sd-kanban__card-tools')!;
+      expect(getComputedStyle(tools).opacity).toBe('0');
+      expect(getComputedStyle(tools).visibility).withContext('still reachable by Tab').toBe('visible');
+      card.querySelector<HTMLButtonElement>('[data-kanban-handle]')!.focus();
+      expect(getComputedStyle(tools).opacity).withContext(':focus-within').toBe('1');
+    });
+
+    it('highlights only the lane being dragged into and draws the placeholder as a dashed slot', () => {
+      const lane = column(fixture.componentInstance['token']('done'));
+      const list = lane.querySelector<HTMLElement>('.sd-kanban__cards')!;
+      list.classList.add('cdk-drop-list-dragging');
+      expect(getComputedStyle(lane).backgroundColor).toBe('rgb(20, 20, 20)');
+      expect(getComputedStyle(lane).borderTopColor).toBe('rgb(30, 30, 30)');
+      expect(getComputedStyle(column(fixture.componentInstance['token']('open'))).backgroundColor).toBe('rgb(10, 10, 10)');
+      list.classList.remove('cdk-drop-list-dragging');
+
+      const card = host().querySelector<HTMLElement>('.sd-kanban__card')!;
+      card.classList.add('cdk-drag-placeholder');
+      const style = getComputedStyle(card);
+      expect(style.opacity).toBe('1');
+      expect(style.borderTopStyle).toBe('dashed');
+      expect(style.borderTopWidth).toBe('2px');
+      expect(style.borderTopColor).toBe('rgb(40, 40, 40)');
+      expect(style.backgroundColor).toBe('rgb(20, 20, 20)');
+      expect(getComputedStyle(card.querySelector<HTMLElement>('.sd-kanban__card-body')!).visibility).toBe('hidden');
+      card.classList.remove('cdk-drag-placeholder');
+    });
+  });
+
   it('commits a local move once and emits the complete dataset', async () => {
     const change = jasmine.createSpy('change');
     const moved = jasmine.createSpy('moved');
@@ -164,7 +273,7 @@ describe('SdKanban', () => {
     expect(fixture.nativeElement.querySelectorAll('article').length).toBe(1);
     expect(
       fixture.nativeElement.querySelector('[data-column-id="string-open"] .sd-kanban__count').textContent.replace(/\s+/g, ' ').trim()
-    ).toBe('1 / 2');
+    ).toBe('1/2');
     expect(fixture.componentInstance.model()).toBe(data);
     fixture.componentRef.setInput('keyword', '');
     fixture.detectChanges();
@@ -321,6 +430,19 @@ describe('SdKanban', () => {
       }
     });
   }
+
+  it('draws the board search with the shared search field (sm, 280px) and keeps its name and keyword binding', () => {
+    const field = fixture.nativeElement.querySelector('sd-search-field.sd-kanban__search') as HTMLElement;
+    expect(field).withContext('board search uses sd-search-field').not.toBeNull();
+    expect(field.classList).toContain('sd-sm');
+    expect(field.getBoundingClientRect().height).toBe(32);
+    expect(field.getBoundingClientRect().width).toBe(280);
+    const search = field.querySelector('input[type="search"]') as HTMLInputElement;
+    expect(search.getAttribute('aria-label')).toBeTruthy();
+    search.value = 'x';
+    search.dispatchEvent(new Event('input'));
+    expect(fixture.componentInstance.keyword()).toBe('x');
+  });
 
   it('preserves focus moved to this board search while persistence is pending', async () => {
     const confirmation = deferred<boolean>();

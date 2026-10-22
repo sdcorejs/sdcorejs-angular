@@ -1,4 +1,5 @@
 // sd-query-bar — design tokens mirror refs/design_handoff_sd_query_bar/README.md
+@use '../../../assets/scss/core/control';
 
 // Brand colors map to theme CSS vars (--sd-*) so changing the portal theme
 // re-tints the query-bar automatically.
@@ -67,9 +68,9 @@ $qb-radius-input:   6px;
   gap: 6px;
   min-width: 220px;
   padding: 0 10px;
-  border: 1px solid $qb-border;
-  border-radius: $qb-radius-input;
   background: $qb-bg;
+  // Control dạng ô: vòng focus nằm trên khung, nên ô input bên trong không cần outline riêng.
+  @include control.box;
 
   .c-density-compact & { height: 28px; }
   .c-density-comfortable & { height: 32px; }
@@ -88,13 +89,6 @@ $qb-radius-input:   6px;
     font-size: var(--sd-font-size-13, 13px);
     color: $qb-text;
     &::placeholder { color: $qb-text-muted; }
-    // why: ô này không có border riêng nên `outline: none` xoá SẠCH mọi chỉ báo focus — người dùng
-    // bàn phím không biết con trỏ đang ở đâu. Trả lại vòng focus khi điều hướng bằng phím.
-    &:focus-visible {
-      outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
-      outline-offset: 1px;
-      border-radius: var(--sd-radius-4, 4px);
-    }
   }
   .c-search-kbd {
     font-family: 'Roboto Mono', monospace;

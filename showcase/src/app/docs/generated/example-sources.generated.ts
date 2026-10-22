@@ -570,6 +570,7 @@ export class AuditDiffDemoComponent {
   },
   "components/avatar": {
     typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Color } from '@sdcorejs/utils/models';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdAvatar } from '@sdcorejs/angular/components/avatar';
 
@@ -652,6 +653,67 @@ import { SdAvatar } from '@sdcorejs/angular/components/avatar';
         </div>
       </demo-section>
       }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-cham-trang-thai') {
+      <demo-section
+        heading="Chấm trạng thái"
+        [props]="[
+          { name: 'status', value: 'success / warning / error / secondary' },
+          { name: 'statusLabel', value: 'text' },
+          { name: 'statusPulse', value: 'true' },
+        ]"
+        note="Chấm nằm trên mép avatar ở góc 45°, đường kính 25% cỡ avatar (8–20px), vòng viền màu nền. statusLabel là tooltip của chấm và được đọc cùng tên, ví dụ “Lê Lan Anh, Đang hoạt động”.">
+        <div class="row">
+          @for (item of statuses; track item.label) {
+            <div class="card">
+              <sd-avatar src="Lê Lan Anh" [size]="40" [status]="item.status" [statusLabel]="item.label" [statusPulse]="item.pulse"></sd-avatar>
+              <span>{{ item.label }}</span>
+            </div>
+          }
+        </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-cham-theo-kich-thuoc') {
+      <demo-section heading="Chấm theo kích thước" [props]="[{ name: 'size', value: '24 / 32 / 40 / 64 / 96' }]">
+        <div class="row size-row">
+          @for (size of statusSizes; track size) {
+            <div class="card">
+              <sd-avatar src="Lê Lan Anh" [size]="size" status="success" statusLabel="Đang hoạt động"></sd-avatar>
+              <span>{{ size }}</span>
+            </div>
+          }
+        </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-anh-co-ten') {
+      <demo-section
+        heading="Ảnh có tên"
+        [props]="[{ name: 'name', value: 'text' }]"
+        note="Rê chuột vào ảnh để xem tên. Ảnh lỗi thì chữ viết tắt và màu lấy từ name.">
+        <div class="row">
+          <sd-avatar src="https://i.pravatar.cc/80?img=11" name="Phạm Minh Quân" [size]="48" status="success" statusLabel="Đang gọi" statusPulse></sd-avatar>
+          <sd-avatar src="https://example.invalid/missing.png" name="Trần Thu Hà" [size]="48"></sd-avatar>
+        </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trong-danh-sach') {
+      <demo-section heading="Trong danh sách" [props]="[{ name: 'status', value: 'color' }, { name: 'statusLabel', value: 'text' }]">
+        <div class="people">
+          @for (person of people; track person.name) {
+            <div class="person">
+              <sd-avatar aria-hidden="true" [src]="person.name" [size]="32" [status]="person.status" [statusLabel]="person.label"></sd-avatar>
+              <span class="person-text">
+                <span class="person-name">{{ person.name }}</span>
+                <span class="person-status">{{ person.label }}</span>
+              </span>
+            </div>
+          }
+        </div>
+      </demo-section>
+      }
     </demo-page>
   \`,
   styles: [\`
@@ -662,6 +724,34 @@ import { SdAvatar } from '@sdcorejs/angular/components/avatar';
       align-items: center;
     }
     .size-row { align-items: flex-end; }
+    .people {
+      display: flex;
+      flex-direction: column;
+      width: 280px;
+      border: 1px solid var(--sd-border);
+      border-radius: 8px;
+    }
+    .person {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+    }
+    .person + .person {
+      border-top: 1px solid var(--sd-border);
+    }
+    .person-text {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .person-name {
+      font-size: 13px;
+    }
+    .person-status {
+      font-size: 12px;
+      color: var(--sd-text-secondary);
+    }
     .card {
       display: flex;
       flex-direction: column;
@@ -673,7 +763,21 @@ import { SdAvatar } from '@sdcorejs/angular/components/avatar';
   \`],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AvatarDemoComponent {}
+export class AvatarDemoComponent {
+  readonly statuses: { status: Color; label: string; pulse: boolean }[] = [
+    { status: 'success', label: 'Đang hoạt động', pulse: false },
+    { status: 'success', label: 'Đang gọi', pulse: true },
+    { status: 'warning', label: 'Vắng mặt', pulse: false },
+    { status: 'error', label: 'Không làm phiền', pulse: false },
+    { status: 'secondary', label: 'Ngoại tuyến', pulse: false },
+  ];
+  readonly statusSizes = [24, 32, 40, 64, 96];
+  readonly people: { name: string; status: Color; label: string }[] = [
+    { name: 'Lê Lan Anh', status: 'success', label: 'Đang hoạt động' },
+    { name: 'Phạm Minh Quân', status: 'warning', label: 'Vắng mặt' },
+    { name: 'Trần Thu Hà', status: 'secondary', label: 'Ngoại tuyến · 2 giờ trước' },
+  ];
+}
 `,
     scss: `.row {
   display: flex;
@@ -682,6 +786,34 @@ export class AvatarDemoComponent {}
   align-items: center;
 }
 .size-row { align-items: flex-end; }
+.people {
+  display: flex;
+  flex-direction: column;
+  width: 280px;
+  border: 1px solid var(--sd-border);
+  border-radius: 8px;
+}
+.person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+}
+.person + .person {
+  border-top: 1px solid var(--sd-border);
+}
+.person-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.person-name {
+  font-size: 13px;
+}
+.person-status {
+  font-size: 12px;
+  color: var(--sd-text-secondary);
+}
 .card {
   display: flex;
   flex-direction: column;
@@ -689,6 +821,141 @@ export class AvatarDemoComponent {}
   gap: 6px;
   font-size: 12px;
   color: #555;
+}`,
+  },
+  "components/avatar-group": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdAvatarGroup, SdAvatarGroupItem } from '@sdcorejs/angular/components/avatar';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+const MEMBERS: SdAvatarGroupItem[] = [
+  { src: 'Lê Lan Anh', status: 'success', statusLabel: 'Đang hoạt động' },
+  { src: 'Phạm Minh Quân', status: 'success', statusLabel: 'Đang gọi', statusPulse: true },
+  { src: 'Trần Thu Hà', status: 'secondary', statusLabel: 'Ngoại tuyến' },
+  { src: 'Đỗ Hải', status: 'warning', statusLabel: 'Vắng mặt' },
+  { src: 'Nguyễn Bảo Ngọc', status: 'success', statusLabel: 'Đang hoạt động' },
+  { src: 'https://i.pravatar.cc/80?img=12', name: 'Vũ Hoàng Long', status: 'error', statusLabel: 'Không làm phiền' },
+  { src: 'Hoàng Mai Chi' },
+];
+
+@Component({
+  selector: 'app-avatar-group-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, SdAvatarGroup],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Avatar group"
+      description="Nhóm avatar chồng nhau: hiện tối đa max người, phần còn lại gộp vào ô “+N”; bấm ô này để xem danh sách đầy đủ.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-nhom-avatar') {
+        <demo-section
+          heading="Nhóm avatar"
+          [props]="[
+            { name: 'items', value: '[…]' },
+            { name: 'max', value: '3 / 4 / 5' },
+            { name: 'ariaLabel', value: 'text' },
+          ]"
+          note="Rê chuột vào từng avatar để xem tên và trạng thái; bấm “+N” để mở danh sách (Esc đóng và trả focus về ô).">
+          <div class="group-demo-rows">
+            @for (max of maxes; track max) {
+              <div class="group-demo-row">
+                <span class="group-demo-label">max {{ max }}</span>
+                <sd-avatar-group [items]="members" [max]="max" ariaLabel="Người phụ trách" />
+              </div>
+            }
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-kich-thuoc') {
+        <demo-section heading="Kích thước" [props]="[{ name: 'size', value: '24 / 32 / 40 / 64' }]">
+          <div class="group-demo-rows">
+            @for (size of sizes; track size) {
+              <div class="group-demo-row">
+                <span class="group-demo-label">{{ size }}</span>
+                <sd-avatar-group [items]="members" [size]="size" />
+              </div>
+            }
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-du-dung-mot-nguoi') {
+        <demo-section
+          heading="Dư đúng một người"
+          [props]="[{ name: 'max', value: '6' }]"
+          note="7 người với max 6: hiện luôn người thứ 7 thay cho ô “+1”.">
+          <sd-avatar-group [items]="members" [max]="6" />
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tu-mo-man-hinh-khac') {
+        <demo-section
+          heading="Tự mở màn hình khác"
+          [props]="[{ name: '(moreClick)', value: 'output' }]"
+          note="Có người nghe moreClick thì “+N” không mở popover mặc định mà phát danh sách người bị ẩn.">
+          <div class="group-demo-row">
+            <sd-avatar-group [items]="members" (moreClick)="onMore($event)" />
+            <span class="group-demo-log">{{ moreLog() }}</span>
+          </div>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  styles: [
+    \`
+      .group-demo-rows {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .group-demo-row {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .group-demo-label {
+        width: 48px;
+        font-size: 12px;
+        color: var(--sd-text-secondary);
+      }
+      .group-demo-log {
+        font-size: 12px;
+        color: var(--sd-text-secondary);
+      }
+    \`,
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class AvatarGroupDemoComponent {
+  readonly members = MEMBERS;
+  readonly maxes = [3, 4, 5];
+  readonly sizes = [24, 32, 40, 64];
+  readonly moreLog = signal('Chưa bấm “+N”.');
+
+  onMore(hidden: SdAvatarGroupItem[]): void {
+    this.moreLog.set(\`moreClick: \${hidden.map(item => item.name || item.src).join(', ')}\`);
+  }
+}
+`,
+    scss: `.group-demo-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.group-demo-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.group-demo-label {
+  width: 48px;
+  font-size: 12px;
+  color: var(--sd-text-secondary);
+}
+.group-demo-log {
+  font-size: 12px;
+  color: var(--sd-text-secondary);
 }`,
   },
   "components/badge": {
@@ -709,12 +976,17 @@ interface FontSetOption {
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdBadge, SdRadio],
   template: \`
-    <demo-page #demoPage title="Badge" description="Nhãn trạng thái / số đếm — có 3 dạng (type): icon, round, tag.">
-      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-ba-dang') {
-        <demo-section heading="Ba dạng" [props]="[{ name: 'type', value: 'icon / round / tag' }]">
-          <sd-badge type="icon" primary icon="check_circle" title="icon"></sd-badge>
-          <sd-badge type="round" primary title="round"></sd-badge>
-          <sd-badge type="tag" primary icon="label" title="tag"></sd-badge>
+    <demo-page #demoPage title="Badge" description="Nhãn trạng thái / số đếm — có 6 dạng (type): icon, round, tag, solid, dot, pair.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-sau-dang') {
+        <demo-section heading="Sáu dạng" [props]="[{ name: 'type', value: 'icon / round / tag / solid / dot / pair' }]">
+          <div class="d-flex flex-wrap align-items-center gap-16">
+            <sd-badge type="icon" primary icon="check_circle" title="icon"></sd-badge>
+            <sd-badge type="round" primary title="round"></sd-badge>
+            <sd-badge type="tag" primary icon="label" title="tag"></sd-badge>
+            <sd-badge type="solid" primary title="solid"></sd-badge>
+            <sd-badge type="dot" primary title="dot"></sd-badge>
+            <sd-badge type="pair" primary label="pair" title="giá trị"></sd-badge>
+          </div>
         </demo-section>
       }
 
@@ -794,13 +1066,99 @@ interface FontSetOption {
           [props]="[
             { name: 'type', value: 'icon' },
             { name: 'color', value: 'primary / secondary / success / info / warning / error' },
-          ]">
-          <sd-badge type="icon" primary icon="circle" title="primary"></sd-badge>
-          <sd-badge type="icon" secondary icon="circle" title="secondary"></sd-badge>
-          <sd-badge type="icon" success icon="circle" title="success"></sd-badge>
-          <sd-badge type="icon" info icon="circle" title="info"></sd-badge>
-          <sd-badge type="icon" warning icon="circle" title="warning"></sd-badge>
-          <sd-badge type="icon" error icon="circle" title="error"></sd-badge>
+            { name: 'icon', value: 'name / —' },
+          ]"
+          note="Không có icon thì badge vẽ chấm CSS màu gốc (8px, lg 10px).">
+          <div class="d-flex flex-column gap-12">
+            <div class="d-flex flex-wrap align-items-center gap-16">
+              <sd-badge type="icon" primary icon="flag" title="Mới"></sd-badge>
+              <sd-badge type="icon" secondary icon="edit_note" title="Nháp"></sd-badge>
+              <sd-badge type="icon" info icon="sync" title="Đang xử lý"></sd-badge>
+              <sd-badge type="icon" success icon="check_circle" title="Đã duyệt"></sd-badge>
+              <sd-badge type="icon" warning icon="schedule" title="Chờ duyệt"></sd-badge>
+              <sd-badge type="icon" error icon="cancel" title="Đã huỷ"></sd-badge>
+            </div>
+            <div class="d-flex flex-wrap align-items-center gap-16">
+              <sd-badge type="icon" primary title="Mới"></sd-badge>
+              <sd-badge type="icon" secondary title="Nháp"></sd-badge>
+              <sd-badge type="icon" info title="Đang xử lý"></sd-badge>
+              <sd-badge type="icon" success title="Đã duyệt"></sd-badge>
+              <sd-badge type="icon" warning title="Chờ duyệt"></sd-badge>
+              <sd-badge type="icon" error title="Đã huỷ"></sd-badge>
+            </div>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-solid') {
+        <demo-section
+          heading="Solid"
+          [props]="[
+            { name: 'type', value: 'solid' },
+            { name: 'color', value: 'primary / secondary / success / info / warning / error' },
+          ]"
+          note="Nền màu gốc, chữ màu contrast: trạng thái cần chú ý ngay, tối đa một badge solid mỗi dòng. Title là số thì thành số đếm như round.">
+          <div class="d-flex flex-wrap align-items-center gap-16">
+            <sd-badge type="solid" primary title="Mới"></sd-badge>
+            <sd-badge type="solid" secondary title="Nháp"></sd-badge>
+            <sd-badge type="solid" info title="Đang xử lý"></sd-badge>
+            <sd-badge type="solid" success title="Hoàn tất"></sd-badge>
+            <sd-badge type="solid" warning icon="schedule" title="Khẩn"></sd-badge>
+            <sd-badge type="solid" error title="Quá hạn"></sd-badge>
+            <sd-badge type="solid" error [title]="errorsCount()"></sd-badge>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-dot-va-pulse') {
+        <demo-section
+          heading="Dot và pulse"
+          [props]="[
+            { name: 'type', value: 'dot / icon' },
+            { name: 'pulse', value: 'true' },
+            { name: 'size', value: 'sm / md / lg' },
+          ]"
+          note="Dot chỉ có chấm; title không hiện mà làm tooltip và tên cho screen reader (bắt buộc). pulse thêm vòng sáng nhấp nháy 1.6s, đứng yên khi giảm chuyển động.">
+          <div class="d-flex flex-column gap-12">
+            <div class="d-flex flex-wrap align-items-center gap-16">
+              <sd-badge type="dot" primary title="Mới"></sd-badge>
+              <sd-badge type="dot" secondary title="Ngoại tuyến"></sd-badge>
+              <sd-badge type="dot" info title="Đang xử lý"></sd-badge>
+              <sd-badge type="dot" success title="Đang hoạt động"></sd-badge>
+              <sd-badge type="dot" warning title="Vắng mặt"></sd-badge>
+              <sd-badge type="dot" error title="Không làm phiền"></sd-badge>
+            </div>
+            <div class="d-flex flex-wrap align-items-center gap-16">
+              <sd-badge type="dot" success title="Đang gọi" pulse></sd-badge>
+              <sd-badge type="dot" success title="Đang gọi" size="md" pulse></sd-badge>
+              <sd-badge type="dot" success title="Đang gọi" size="lg" pulse></sd-badge>
+              <sd-badge type="icon" success title="Đang gọi" pulse></sd-badge>
+            </div>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-pair') {
+        <demo-section
+          heading="Pair"
+          [props]="[
+            { name: 'type', value: 'pair' },
+            { name: 'label', value: 'text' },
+            { name: 'size', value: 'sm / md / lg' },
+          ]"
+          note="Cặp thuộc tính – giá trị: nhãn nền secondary nhạt, giá trị theo color. Quá dài thì cắt phần giá trị trước, nhãn giữ nguyên.">
+          <div class="d-flex flex-column gap-12">
+            <div class="d-flex flex-wrap align-items-center gap-16">
+              <sd-badge type="pair" warning label="SLA" title="4 giờ"></sd-badge>
+              <sd-badge type="pair" error label="Ưu tiên" title="Cao"></sd-badge>
+              <sd-badge type="pair" info label="Phiên bản" title="2.3.1"></sd-badge>
+              <sd-badge type="pair" success label="Kênh" title="Trực tuyến" size="md"></sd-badge>
+              <sd-badge type="pair" primary label="Kênh" title="Trực tuyến" size="lg"></sd-badge>
+            </div>
+            <div class="badge-demo-cell">
+              <sd-badge type="pair" info label="Phiên bản" title="2.3.1-beta.4 bản dựng thử nghiệm"></sd-badge>
+            </div>
+          </div>
         </demo-section>
       }
 
@@ -845,9 +1203,16 @@ interface FontSetOption {
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-kem-mo-ta') {
-        <demo-section heading="Kèm mô tả" [props]="[{ name: 'description', value: 'text' }]">
-          <sd-badge type="icon" success icon="check_circle" title="title" description="description"></sd-badge>
-          <sd-badge type="tag" primary icon="star" title="title" description="description"></sd-badge>
+        <demo-section
+          heading="Kèm mô tả"
+          [props]="[
+            { name: 'description', value: 'text' },
+            { name: 'type', value: 'icon / tag' },
+          ]"
+          note="Description 12px. Tag có description thành khối hai dòng; icon căn theo dòng đầu.">
+          <sd-badge type="icon" success icon="check_circle" title="Đã duyệt" description="Bởi Nguyễn Văn A"></sd-badge>
+          <sd-badge type="icon" info title="Đang xử lý" description="Bước 2 / 3"></sd-badge>
+          <sd-badge type="tag" info icon="label" title="Hợp đồng dài hạn" description="Gia hạn 12 tháng"></sd-badge>
         </demo-section>
       }
 
@@ -857,40 +1222,77 @@ interface FontSetOption {
           [props]="[
             { name: 'type', value: 'round' },
             { name: 'title', value: 'number' },
-          ]">
+            { name: 'size', value: 'sm / md' },
+          ]"
+          note="Title là số: hình tròn khi một chữ số, chữ số đều bề rộng; lớn hơn 99 hiện 99+ (screen reader vẫn đọc số thật).">
           <sd-badge type="round" primary [title]="unreadCount()"></sd-badge>
           <sd-badge type="round" error [title]="errorsCount()"></sd-badge>
-          <sd-badge type="round" warning title="99+"></sd-badge>
+          <sd-badge type="round" warning [title]="overflowCount()"></sd-badge>
+          <sd-badge type="round" primary [title]="unreadCount()" size="md"></sd-badge>
+          <sd-badge type="round" error [title]="errorsCount()" size="md"></sd-badge>
         </demo-section>
       }
-      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-icon-va-noi-dung-dai') {
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-ten-dai-trong-o-hep') {
         <demo-section
-          heading="Icon và nội dung dài"
+          heading="Tên dài trong ô hẹp"
           [props]="[
-            { name: 'type', value: 'icon' },
-            { name: 'size', value: 'sm / md / lg' },
+            { name: 'type', value: 'icon / round / tag' },
+            { name: 'tooltip', value: 'text' },
           ]"
-          note="Icon giữ nguyên kích thước và căn giữa với toàn bộ phần chữ khi nội dung xuống dòng.">
-          <div style="display:flex;flex-wrap:wrap;gap:24px">
-            @for (size of iconSizes; track size) {
-              <sd-badge
-                style="display:block;width:140px"
-                type="icon"
-                [size]="size"
-                icon="check_circle"
-                color="success"
-                title="Đã xác nhận thông tin khách hàng"
-                description="Nội dung bổ sung" />
-            }
+          note="Luôn một dòng, chữ dài bị cắt bằng dấu ba chấm. Tooltip chỉ hiện khi chữ bị cắt (title đầy đủ) hoặc khi có tooltip riêng.">
+          <div class="d-flex flex-wrap gap-24">
+            <div class="badge-demo-cell">
+              <sd-badge type="round" warning title="Đã chuyển sang kế toán xử lý"></sd-badge>
+            </div>
+            <div class="badge-demo-cell">
+              <sd-badge type="tag" info icon="label" title="Hợp đồng dài hạn có điều khoản gia hạn"></sd-badge>
+            </div>
+            <div class="badge-demo-cell">
+              <sd-badge type="icon" success icon="check_circle" title="Đã xác nhận thông tin khách hàng"></sd-badge>
+            </div>
+            <div class="badge-demo-cell">
+              <sd-badge type="round" success title="Đã duyệt" tooltip="Phê duyệt lúc 14:30
+Bởi Nguyễn Văn A"></sd-badge>
+            </div>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bam-duoc') {
+        <demo-section
+          heading="Bấm được"
+          [props]="[
+            { name: '(click)', value: 'output' },
+            { name: 'type', value: 'round / tag / icon' },
+          ]"
+          note="Chỉ khi có (click): role button, Tab tới được, Enter/Space. Hover trộn 6% màu đậm vào nền, nhấn 10%; vòng focus giữ bo góc.">
+          <div class="d-flex flex-wrap align-items-center gap-16">
+            <sd-badge type="round" primary title="Lọc: Mới" (click)="filterClicks.set(filterClicks() + 1)"></sd-badge>
+            <sd-badge type="tag" info icon="label" title="Bán buôn" (click)="filterClicks.set(filterClicks() + 1)"></sd-badge>
+            <sd-badge type="icon" warning icon="schedule" title="Chờ duyệt" (click)="filterClicks.set(filterClicks() + 1)"></sd-badge>
+            <span class="badge-demo-log">Đã bấm {{ filterClicks() }} lần</span>
           </div>
         </demo-section>
       }
     </demo-page>
   \`,
+  styles: [
+    \`
+      .badge-demo-cell {
+        width: 160px;
+        padding: 8px;
+        border: 1px dashed var(--sd-border);
+        border-radius: 6px;
+      }
+      .badge-demo-log {
+        font-size: 12px;
+        color: var(--sd-text-secondary);
+      }
+    \`,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BadgeDemoComponent {
-  readonly iconSizes = ['sm', 'md', 'lg'] as const;
   readonly fontSetForm = new FormGroup({});
   readonly selectedFontSet = signal<SdIconSet>('lucide');
   readonly fontSetOptions: FontSetOption[] = [
@@ -900,9 +1302,273 @@ export class BadgeDemoComponent {
   ];
 
   readonly unreadCount = signal(7);
-  readonly errorsCount = signal(3);
+  readonly errorsCount = signal(12);
+  readonly overflowCount = signal(150);
+  readonly filterClicks = signal(0);
 }
 `,
+    scss: `.badge-demo-cell {
+  width: 160px;
+  padding: 8px;
+  border: 1px dashed var(--sd-border);
+  border-radius: 6px;
+}
+.badge-demo-log {
+  font-size: 12px;
+  color: var(--sd-text-secondary);
+}`,
+  },
+  "components/badge-picker": {
+    typescript: `import { JsonPipe } from '@angular/common';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { FormGroup } from '@angular/forms';
+import { SdBadge, SdBadgePicker, SdBadgePickerValue, SdBadgeType } from '@sdcorejs/angular/components/badge';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { Color } from '@sdcorejs/utils/models';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+@Component({
+  selector: 'app-badge-picker-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, JsonPipe, SdBadge, SdBadgePicker, SdButton],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Badge picker"
+      description="Chọn cùng lúc kiểu, màu và icon của sd-badge trong một panel. Panel chỉ sửa bản nháp; đóng panel mới ghi giá trị và phát sdChange một lần.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chon-badge') {
+        <demo-section
+          heading="Chọn badge"
+          [props]="[
+            { name: '[(type)]', value: 'two-way' },
+            { name: '[(color)]', value: 'two-way' },
+            { name: '[(icon)]', value: 'two-way' },
+            { name: 'previewTitle', value: 'text' },
+            { name: '(sdChange)', value: 'output' },
+          ]"
+          note="Bấm ra ngoài, bấm Xong hoặc Tab ra khỏi panel để ghi; Esc huỷ thay đổi.">
+          <div class="picker-demo-row">
+            <sd-badge-picker
+              class="picker-demo-field"
+              label="Hiển thị trạng thái"
+              previewTitle="Đã duyệt"
+              autoId="status"
+              [(type)]="type"
+              [(color)]="color"
+              [(icon)]="icon"
+              (sdChange)="onChange($event)" />
+            <div class="picker-demo-log">
+              <div>type: {{ type() ?? 'undefined' }} · color: {{ color() ?? 'undefined' }} · icon: {{ icon() ?? 'null' }}</div>
+              <div>sdChange: {{ lastChange() ? (lastChange() | json) : 'chưa phát' }} ({{ changeCount() }} lần)</div>
+              @if (type(); as currentType) {
+                <div class="picker-demo-result">
+                  Trong bảng:
+                  <sd-badge [type]="currentType" [color]="color()" [icon]="icon()" title="Đã duyệt" label="SLA" />
+                </div>
+              }
+            </div>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trong-form') {
+        <demo-section
+          heading="Trong form"
+          [props]="[
+            { name: '[form]', value: 'FormGroup' },
+            { name: 'name', value: 'statusBadge' },
+            { name: 'required', value: 'true' },
+          ]"
+          note="Value của control là { type, color, icon } | null. Lỗi bắt buộc hiện sau lần đóng panel đầu tiên hoặc khi submit.">
+          <div class="picker-demo-row">
+            <sd-badge-picker class="picker-demo-field" [form]="form" name="statusBadge" label="Hiển thị trạng thái" required />
+            <div class="picker-demo-log">
+              <div>form.value: {{ formValue() | json }}</div>
+              <div class="d-flex gap-8 mt-8">
+                <sd-button type="outline" title="Kiểm tra" (click)="validate()"></sd-button>
+                <sd-button type="light" title="Đặt lại" (click)="reset()"></sd-button>
+              </div>
+            </div>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-kich-thuoc') {
+        <demo-section
+          heading="Kích thước"
+          [props]="[{ name: 'size', value: 'sm / md / lg' }]"
+          note="Cùng thang với sd-select. Ở cỡ sm ẩn dòng tóm tắt; cỡ lg dùng badge cỡ md trong ô.">
+          <div class="picker-demo-column">
+            <sd-badge-picker label="Cỡ sm" size="sm" type="round" color="success" icon="check_circle" previewTitle="Đã duyệt" />
+            <sd-badge-picker label="Cỡ md" size="md" type="round" color="success" icon="check_circle" previewTitle="Đã duyệt" />
+            <sd-badge-picker label="Cỡ lg" size="lg" type="round" color="success" icon="check_circle" previewTitle="Đã duyệt" />
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-nhan-va-placeholder') {
+        <demo-section
+          heading="Nhãn và placeholder"
+          [props]="[
+            { name: 'floatLabel', value: 'auto / always' },
+            { name: 'labelPlacement', value: 'top' },
+            { name: 'helperText', value: 'text' },
+          ]">
+          <div class="picker-demo-column">
+            <sd-badge-picker label="floatLabel auto" />
+            <sd-badge-picker label="floatLabel always" floatLabel="always" />
+            <sd-badge-picker
+              label="Hiển thị trạng thái"
+              labelPlacement="top"
+              helperText="Áp dụng cho cột Trạng thái của bảng đơn hàng"
+              type="round"
+              color="success" />
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-gioi-han-lua-chon') {
+        <demo-section
+          heading="Giới hạn lựa chọn"
+          [props]="[
+            { name: 'types', value: '[…]' },
+            { name: 'colors', value: '[…]' },
+            { name: 'icons', value: '[…]' },
+          ]">
+          <div class="picker-demo-column">
+            <sd-badge-picker
+              label="Mức ưu tiên"
+              previewTitle="Khẩn"
+              [types]="priorityTypes"
+              [colors]="priorityColors"
+              [icons]="priorityIcons" />
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-mo-ta-trong-ban-xem-truoc') {
+        <demo-section
+          heading="Mô tả trong bản xem trước"
+          [props]="[{ name: 'previewDescription', value: 'text' }]"
+          note="Chỉ hiện ở bản xem trước lớn, với kiểu icon và tag; kiểu khác có ghi chú.">
+          <div class="picker-demo-column">
+            <sd-badge-picker label="Hiển thị trạng thái" previewTitle="Đã duyệt" previewDescription="Bởi Nguyễn Văn A" type="tag" color="success" />
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chi-xem-va-vo-hieu') {
+        <demo-section
+          heading="Chỉ xem và vô hiệu"
+          [props]="[
+            { name: 'viewed', value: 'true' },
+            { name: 'disabled', value: 'true' },
+          ]">
+          <div class="picker-demo-column">
+            <sd-badge-picker label="Chỉ xem" viewed type="round" color="success" icon="check_circle" previewTitle="Đã duyệt" />
+            <sd-badge-picker label="Vô hiệu" disabled type="solid" color="error" previewTitle="Quá hạn" />
+          </div>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  styles: [
+    \`
+      .picker-demo-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        align-items: flex-start;
+      }
+      .picker-demo-field {
+        width: 320px;
+        max-width: 100%;
+      }
+      .picker-demo-column {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: 320px;
+        max-width: 100%;
+      }
+      .picker-demo-log {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--sd-text-secondary);
+      }
+      .picker-demo-result {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+    \`,
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class BadgePickerDemoComponent {
+  readonly type = signal<SdBadgeType | undefined>('round');
+  readonly color = signal<Color | undefined>('success');
+  readonly icon = signal<string | null>('check_circle');
+  readonly lastChange = signal<SdBadgePickerValue | null>(null);
+  readonly changeCount = signal(0);
+
+  readonly form = new FormGroup({});
+  readonly formValue = signal<unknown>(null);
+
+  readonly priorityTypes: SdBadgeType[] = ['round', 'solid'];
+  readonly priorityColors: Color[] = ['info', 'warning', 'error'];
+  readonly priorityIcons = ['flag', 'bolt', 'schedule'];
+
+  constructor() {
+    this.form.valueChanges.subscribe(() => this.formValue.set((this.form.getRawValue() as Record<string, unknown>)['statusBadge'] ?? null));
+  }
+
+  onChange(value: SdBadgePickerValue): void {
+    this.lastChange.set(value);
+    this.changeCount.update(count => count + 1);
+  }
+
+  validate(): void {
+    this.form.markAllAsTouched();
+  }
+
+  reset(): void {
+    this.form.reset();
+    this.formValue.set(null);
+  }
+}
+`,
+    scss: `.picker-demo-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: flex-start;
+}
+.picker-demo-field {
+  width: 320px;
+  max-width: 100%;
+}
+.picker-demo-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 320px;
+  max-width: 100%;
+}
+.picker-demo-log {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--sd-text-secondary);
+}
+.picker-demo-result {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}`,
   },
   "components/breadcrumb": {
     typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
@@ -1076,6 +1742,45 @@ import { SdButton } from '@sdcorejs/angular/components/button';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ButtonIconOnlyExampleComponent {}`,
+    scss: `:host {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.button-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex-basis: 100%;
+}`,
+  },
+  "components/button/example-indicator": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdButton } from '@sdcorejs/angular/components/button';
+
+@Component({
+  selector: 'app-button-indicator-example',
+  standalone: true,
+  imports: [SdButton],
+  templateUrl: './button-indicator.example.html',
+  styleUrl: './button-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ButtonIndicatorExampleComponent {
+  readonly unread = signal(3);
+
+  addUnread(): void {
+    this.unread.update(count => count + 1);
+  }
+
+  clearUnread(): void {
+    this.unread.set(0);
+  }
+}`,
     scss: `:host {
   display: flex;
   flex-wrap: wrap;
@@ -6581,12 +7286,17 @@ export class ModalDemoComponent {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdOperator } from '@sdcorejs/angular/components/operator';
+import { SdDate } from '@sdcorejs/angular/forms/date';
+import { SdDateRange } from '@sdcorejs/angular/forms/date-range';
+import { SdInput } from '@sdcorejs/angular/forms/input';
+import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
+import { SdSelect } from '@sdcorejs/angular/forms/select';
 import type { Operator } from '@sdcorejs/utils/models';
 
 @Component({
   selector: 'app-operator-demo',
   standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, SdOperator],
+  imports: [DemoPageComponent, DemoSectionComponent, SdOperator, SdInput, SdInputNumber, SdSelect, SdDate, SdDateRange],
   template: \`
     <demo-page #demoPage
       title="Operator"
@@ -6622,6 +7332,34 @@ import type { Operator } from '@sdcorejs/utils/models';
         <sd-operator [(model)]="stringOp" [operators]="stringOps" [disabled]="true"></sd-operator>
       </demo-section>
       }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trong-control') {
+      <demo-section
+        heading="Trong control"
+        [props]="[
+          { name: 'operators', value: 'Operator[] (≥ 2 thì hiện chip)' },
+          { name: '[(operator)]', value: 'Operator' },
+          { name: 'size', value: 'sm / md' },
+        ]"
+        note="sd-input, sd-input-number, sd-select, sd-date, sd-date-range nhận [operators] / [(operator)] và vẽ operator thành chip tiền tố trong ô. Tab vào chip trước ô nhập; Enter, Space hoặc Alt+↓ mở menu; chọn xong focus về ô nhập.">
+        <div class="control-grid">
+          <sd-input label="Họ tên" clearable [operators]="stringOps" [(operator)]="nameOp" [(model)]="name" />
+          <sd-input-number label="Lương" [operators]="numberOps" [(operator)]="salaryOp" [(model)]="salary" />
+          <sd-select
+            label="Trạng thái"
+            [items]="statuses"
+            valueField="value"
+            displayField="label"
+            [operators]="listOps"
+            [(operator)]="statusOp"
+            [(model)]="status" />
+          <sd-date label="Ngày tạo" [operators]="dateOps" [(operator)]="createdOp" />
+          <sd-date-range label="Khoảng ngày" [operators]="rangeOps" [(operator)]="rangeOp" />
+          <sd-input size="sm" label="Cỡ sm" [operators]="stringOps" [(operator)]="smallOp" />
+        </div>
+        <span class="row-value">{{ nameOp() }} · {{ salaryOp() }} · {{ statusOp() }} · {{ createdOp() }} · {{ rangeOp() }}</span>
+      </demo-section>
+      }
     </demo-page>
   \`,
   styles: [\`
@@ -6629,6 +7367,12 @@ import type { Operator } from '@sdcorejs/utils/models';
       font-size: 13px;
       color: #4a4a4a;
       min-width: 96px;
+    }
+    .control-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 12px 16px;
+      width: 100%;
     }
     .row-value {
       font-size: 13px;
@@ -6647,12 +7391,34 @@ export class OperatorDemoComponent {
   readonly stringOp = signal<Operator | undefined>('CONTAIN');
   readonly numberOp = signal<Operator | undefined>('GREATER_OR_EQUAL');
   readonly dateOp = signal<Operator | undefined>('BETWEEN');
+
+  readonly listOps: Operator[] = ['IN', 'NOT_IN'];
+  readonly rangeOps: Operator[] = ['BETWEEN', 'NULL', 'NOT_NULL'];
+  readonly statuses = [
+    { value: 'open', label: 'Đang mở' },
+    { value: 'done', label: 'Hoàn tất' },
+  ];
+  readonly nameOp = signal<Operator | undefined>('CONTAIN');
+  readonly salaryOp = signal<Operator | undefined>('GREATER_OR_EQUAL');
+  readonly statusOp = signal<Operator | undefined>('IN');
+  readonly createdOp = signal<Operator | undefined>('EQUAL');
+  readonly rangeOp = signal<Operator | undefined>('BETWEEN');
+  readonly smallOp = signal<Operator | undefined>('EQUAL');
+  readonly name = signal<string | null>('Nguyễn');
+  readonly salary = signal<number | null>(null);
+  readonly status = signal<string | null>('open');
 }
 `,
     scss: `.row-label {
   font-size: 13px;
   color: #4a4a4a;
   min-width: 96px;
+}
+.control-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px 16px;
+  width: 100%;
 }
 .row-value {
   font-size: 13px;
@@ -8955,37 +9721,36 @@ export class TabDemoComponent {
 }`,
   },
   "components/tab-router": {
-    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+    typescript: `import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { SdButton } from '@sdcorejs/angular/components/button';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
-import { SdBadge } from '@sdcorejs/angular/components/badge';
+import { TAB_ROUTER_DEMO_BASE } from './live/tab-router-live.component';
 
-// TODO: <sd-tab-router-outlet> là router-shell, cần Router + nhiều route được decorate
-// bằng @SdTabComponent để hoạt động đầy đủ. Trong môi trường showcase đơn giản (route phẳng,
-// mỗi trang là một demo độc lập) không thể demo trực tiếp mà không thay đổi cấu trúc route.
-// Trang này hiển thị mô tả + ảnh minh họa pill, kèm hướng dẫn xem ví dụ thật trong code.
+// why: outlet nghe toàn bộ router, nên không nhúng được vào trang docs (route lá ở đây là chính trang docs). Demo
+// sống chạy ở route riêng \`/demo/tab-router\` với các màn con được \`@SdTabComponent\` khai tên và icon.
 
 @Component({
   selector: 'app-tab-router-demo',
   standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, SdBadge],
+  imports: [DemoPageComponent, DemoSectionComponent, SdButton],
   template: \`
     <demo-page #demoPage
       title="Tab Router"
       description="Shell router dạng tab kiểu trình duyệt — mỗi URL được mở thành một tab, giữ nguyên state khi chuyển qua lại.">
 
-      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-preview-dai-tab') {
-      <demo-section heading="Preview dải tab" [props]="[{ name: 'routes', value: '[…]' }]">
-        <div class="strip">
-          <sd-badge type="tag" primary icon="dashboard" title="Trang chủ"></sd-badge>
-          <sd-badge type="tag" info icon="person" title="Nhân viên #001"></sd-badge>
-          <sd-badge type="tag" warning icon="edit" title="Đang chỉnh sửa hợp đồng"></sd-badge>
-          <sd-badge type="tag" success icon="check_circle" title="Phê duyệt yêu cầu"></sd-badge>
-          <sd-badge type="tag" secondary icon="settings" title="Cài đặt hệ thống"></sd-badge>
-        </div>
-        <p class="note">
-          Mỗi pill ở trên đại diện cho một tab. Click sẽ điều hướng đến URL tương ứng;
-          tab giữ state (form, scroll, request) khi user chuyển sang tab khác và quay lại.
-        </p>
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-thu-truc-tiep') {
+      <demo-section
+        heading="Thử trực tiếp"
+        [props]="[{ name: 'routes', value: '[…]' }, { name: '@SdTabComponent', value: 'template' }]"
+        note="Mở một màn có sd-tab-router-outlet thật: một tab thì thanh ẩn, mở thêm tab thì thanh hiện; thử 16 tab, rê chuột vào tên bị cắt để xem tooltip.">
+        <sd-button
+          data-tab-router-link="live"
+          type="fill"
+          color="primary"
+          prefixIcon="open_in_new"
+          title="Mở demo tab router"
+          (click)="openLive()"></sd-button>
       </demo-section>
       }
 
@@ -9015,16 +9780,6 @@ import { SdBadge } from '@sdcorejs/angular/components/badge';
     </demo-page>
   \`,
   styles: [\`
-    .strip {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      padding: 12px;
-      border: 1px dashed #d6d6d6;
-      border-radius: 8px;
-      background: #fafafa;
-      width: 100%;
-    }
     .note {
       width: 100%;
       font-size: 13px;
@@ -9047,6 +9802,12 @@ import { SdBadge } from '@sdcorejs/angular/components/badge';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TabRouterDemoComponent {
+  readonly #router = inject(Router);
+
+  openLive = (): void => {
+    void this.#router.navigateByUrl(\`\${TAB_ROUTER_DEMO_BASE}/overview\`);
+  };
+
   readonly snippet1 = \`<!-- app.component.html -->
 <sd-page>
   <sd-tab-router-outlet></sd-tab-router-outlet>
@@ -9074,17 +9835,7 @@ this.tab.beforeClose = async () => {
 };\`;
 }
 `,
-    scss: `.strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 12px;
-  border: 1px dashed #d6d6d6;
-  border-radius: 8px;
-  background: #fafafa;
-  width: 100%;
-}
-.note {
+    scss: `.note {
   width: 100%;
   font-size: 13px;
   color: #555;
@@ -9895,7 +10646,7 @@ export class TableDemoComponent {
     },
     export: { visible: 'EXCEL' },
     columns: [
-      { field: 'name', type: 'string', title: 'Họ và tên', width: '180px', sortable: true },
+      { field: 'name', type: 'string', title: 'Họ và tên', width: '180px', sortable: true, filter: { operator: { enable: true, default: 'CONTAIN', list: ['CONTAIN', 'EQUAL', 'START_WITH', 'END_WITH', 'NULL', 'NOT_NULL'] } } },
       { field: 'email', type: 'string', title: 'Email', width: '220px' },
       {
         field: 'department', type: 'values', title: 'Phòng ban', width: '140px',
@@ -9912,7 +10663,7 @@ export class TableDemoComponent {
         },
       },
       { field: 'position', type: 'string', title: 'Chức vụ', width: '160px' },
-      { field: 'salary', type: 'number', title: 'Lương', width: '140px', align: 'right', sortable: true },
+      { field: 'salary', type: 'number', title: 'Lương', width: '140px', align: 'right', sortable: true, filter: { operator: { enable: true, default: 'GREATER_OR_EQUAL', list: ['EQUAL', 'GREATER_OR_EQUAL', 'LESS_OR_EQUAL'] } } },
       {
         field: 'status', type: 'values', title: 'Trạng thái', width: '130px',
         option: {
@@ -12875,7 +13626,14 @@ export class ChipDemoComponent {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
-import { SdChipCalendar } from '@sdcorejs/angular/forms/chip-calendar';
+import { SdChipCalendar, SdChipCalendarModel } from '@sdcorejs/angular/forms/chip-calendar';
+
+/** \`yyyy/MM/dd\` of today plus \`offset\` days. */
+const day = (offset: number): string => {
+  const date = new Date();
+  date.setDate(date.getDate() + offset);
+  return \`\${date.getFullYear()}/\${String(date.getMonth() + 1).padStart(2, '0')}/\${String(date.getDate()).padStart(2, '0')}\`;
+};
 
 @Component({
   selector: 'app-chip-calendar-demo',
@@ -12886,8 +13644,7 @@ import { SdChipCalendar } from '@sdcorejs/angular/forms/chip-calendar';
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-lien-ket-hai-chieu') {
       <demo-section heading="Liên kết hai chiều" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Mở lịch và chọn nhiều ngày.">
         <div style="width: 460px; display:flex; flex-direction:column; gap:8px">
-          <sd-chip-calendar label="Ngày nghỉ phép" helperText="Chọn các ngày dự kiến nghỉ"
-            [(model)]="leaves" [form]="form"></sd-chip-calendar>
+          <sd-chip-calendar label="Ngày nghỉ phép" [(model)]="leaves" [form]="form"></sd-chip-calendar>
           <div style="font-size:12px; color:#555">
             Đã chọn <b>{{ leaves().length }}</b> ngày: {{ leaves().join(' · ') || '(trống)' }}
           </div>
@@ -12895,15 +13652,65 @@ import { SdChipCalendar } from '@sdcorejs/angular/forms/chip-calendar';
       </demo-section>
       }
 
-      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bat-buoc-so-toi-thieu') {
-      <demo-section heading="Bắt buộc & số tối thiểu" [props]="[{ name: 'required', value: 'true' }, { name: 'min', value: '3' }]" note="Cần tối thiểu 3 ngày. Bấm Kiểm tra để xem lỗi.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-kich-thuoc') {
+      <demo-section heading="Kích thước" [props]="[{ name: 'size', value: 'sm | md | lg' }]" note="Field một dòng 32 / 40 / 48px, chip 20 / 24 / 28px.">
         <div style="width: 460px; display:flex; flex-direction:column; gap:12px">
-          <sd-chip-calendar label="required + min=3"
-            [(model)]="duty" [form]="formValid" required [min]="3"></sd-chip-calendar>
+          <sd-chip-calendar label="sm" size="sm" [(model)]="sizes" [form]="form"></sd-chip-calendar>
+          <sd-chip-calendar label="md" [(model)]="sizes" [form]="form"></sd-chip-calendar>
+          <sd-chip-calendar label="lg" size="lg" [(model)]="sizes" [form]="form"></sd-chip-calendar>
+        </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bat-buoc-so-toi-thieu') {
+      <demo-section heading="Bắt buộc & số tối thiểu" [props]="[{ name: 'required', value: 'true' }, { name: 'minCount', value: '3' }]" note="Cần tối thiểu 3 ngày. Lỗi hiện khi đóng lịch hoặc bấm Kiểm tra.">
+        <div style="width: 460px; display:flex; flex-direction:column; gap:12px">
+          <sd-chip-calendar label="required + minCount=3"
+            [(model)]="duty" [form]="formValid" required [minCount]="3"></sd-chip-calendar>
           <div style="display:flex; gap:8px">
             <button type="button" (click)="check()">Kiểm tra</button>
             <button type="button" (click)="reset()">Đặt lại</button>
           </div>
+        </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-gioi-han-ngay-va-so-luong') {
+      <demo-section heading="Giới hạn ngày và số lượng"
+        [props]="[{ name: 'minDate', value: 'TODAY' }, { name: 'dateFilter', value: 'thứ 2 – thứ 6' }, { name: 'maxCount', value: '3' }, { name: 'clearable', value: 'true' }]"
+        note="Chỉ chọn ngày làm việc từ hôm nay, tối đa 3 ngày. Đủ 3 ngày thì các ô còn lại bị khoá.">
+        <div style="width: 460px">
+          <sd-chip-calendar label="Ngày trực" [(model)]="limited" [form]="form"
+            minDate="TODAY" [dateFilter]="weekday" [maxCount]="3" clearable></sd-chip-calendar>
+        </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-khoa-ngay-da-qua') {
+      <demo-section heading="Khoá ngày đã qua" [props]="[{ name: 'removable', value: '(day) => day >= today' }, { name: 'clearable', value: 'true' }]"
+        note="Ngày đã qua hiện ổ khoá thay cho ✕; Backspace, bấm lại trên lịch và Xoá hết đều giữ lại.">
+        <div style="width: 460px">
+          <sd-chip-calendar label="Ngày training" [(model)]="training" [form]="form"
+            [removable]="canRemove" clearable></sd-chip-calendar>
+        </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-gon-trong-bo-loc-bang') {
+      <demo-section heading="Gọn trong bộ lọc bảng" [props]="[{ name: 'size', value: 'sm' }, { name: 'maxVisible', value: '2' }, { name: 'hideInlineError', value: 'true' }]"
+        note="Chỉ hiện 2 chip đầu, phần còn lại gộp vào “+N”; mở lịch thì hiện đủ.">
+        <div style="width: 320px">
+          <sd-chip-calendar size="sm" hideInlineError [maxVisible]="2" [(model)]="filterDays" [form]="form"></sd-chip-calendar>
+        </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-kieu-model-va-transform') {
+      <demo-section heading="Kiểu model và transform" [props]="[{ name: '[model]', value: 'Date | number | string' }, { name: 'transform', value: 'ISOString' }]"
+        note="Model nhận Date, timestamp, chuỗi ISO lẫn yyyy/MM/dd; sau thao tác đầu, model là string[] theo transform.">
+        <div style="width: 460px; display:flex; flex-direction:column; gap:8px">
+          <sd-chip-calendar label="Model trộn kiểu" [(model)]="mixed" [form]="form" transform="ISOString"></sd-chip-calendar>
+          <pre style="margin:0; font-size:12px; color:#555; white-space:pre-wrap">{{ mixedText() }}</pre>
         </div>
       </demo-section>
       }
@@ -12933,9 +13740,23 @@ export class ChipCalendarDemoComponent {
   formValid = new FormGroup({});
 
   leaves = signal<string[]>(['2025/01/15', '2025/01/20']);
+  sizes = signal<string[]>(['2026/10/05', '2026/10/12', '2026/10/27']);
   duty = signal<string[]>([]);
+  limited = signal<string[]>([]);
+  training = signal<string[]>([day(-9), day(-2), day(3), day(10)]);
+  filterDays = signal<string[]>(['2026/10/27', '2026/10/05', '2026/10/12', '2026/10/19', '2026/10/26']);
+  mixed = signal<SdChipCalendarModel>([new Date(2026, 9, 5), new Date(2026, 9, 12).getTime(), '2026-10-19T00:00:00', '2026/10/26']);
   lockedDates = signal<string[]>(['2025/01/10', '2025/01/11', '2025/01/12']);
   inlineDates = signal<string[]>(['2026/05/01', '2026/05/20']);
+
+  /** Thứ 2 – thứ 6. */
+  weekday = (date: Date) => date.getDay() !== 0 && date.getDay() !== 6;
+  /** Ngày đã qua không bỏ được; \`yyyy/MM/dd\` so được như chuỗi. */
+  canRemove = (value: string) => value >= day(0);
+
+  mixedText() {
+    return JSON.stringify(this.mixed(), null, 1);
+  }
 
   check() { this.formValid.markAllAsTouched(); }
   reset() { this.formValid.reset(); this.formValid.markAsUntouched(); }
@@ -14668,7 +15489,7 @@ interface Option { value: string; display: string; }
       <demo-section
         heading="Chọn nhiều với dòng Tất cả"
         [props]="[{ name: 'showSelectAll', value: 'true' }, { name: 'multiple', value: 'true' }, { name: 'disabledField', value: 'disabled' }]"
-        note="Row 'Tất cả' đầu panel — chỉ hiện khi multiple + items là mảng tĩnh. Tick chọn toàn bộ items enabled khớp search hiện tại (item disabled 'Pháp chế' không bị đụng); đang search thì tick CHỈ thêm items khớp filter, selection cũ giữ nguyên. Checkbox có 3 trạng thái checked / indeterminate / unchecked.">
+        note="Row 'Tất cả' nằm trong header dính dưới ô tìm kiếm (cuộn vẫn thấy), cuối hàng có bộ đếm đã chọn/tổng — chỉ hiện khi multiple + items là mảng tĩnh. Tick chọn toàn bộ items enabled khớp search hiện tại (item disabled 'Pháp chế' không bị đụng); đang search thì tick CHỈ thêm items khớp filter, selection cũ giữ nguyên. Checkbox có 3 trạng thái checked / indeterminate / unchecked.">
         <div class="select-demo-column">
           <sd-select
             label="Đơn vị tham gia" multiple showSelectAll
@@ -19882,6 +20703,72 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
       <sd-audit-diff [before]="linesBefore" [after]="linesAfter" [options]="linesOptions" mode="detail-list"></sd-audit-diff>
     </demo-section>`,
   },
+  "components/avatar-group/example-du-dung-mot-nguoi": {
+    ...SHOWCASE_PAGE_SOURCES["components/avatar-group"],
+    html: `<demo-section
+      heading="Dư đúng một người"
+      [props]="[{ name: 'max', value: '6' }]"
+      note="7 người với max 6: hiện luôn người thứ 7 thay cho ô “+1”.">
+      <sd-avatar-group [items]="members" [max]="6" />
+    </demo-section>`,
+  },
+  "components/avatar-group/example-kich-thuoc": {
+    ...SHOWCASE_PAGE_SOURCES["components/avatar-group"],
+    html: `<demo-section heading="Kích thước" [props]="[{ name: 'size', value: '24 / 32 / 40 / 64' }]">
+      <div class="group-demo-rows">
+        @for (size of sizes; track size) {
+          <div class="group-demo-row">
+            <span class="group-demo-label">{{ size }}</span>
+            <sd-avatar-group [items]="members" [size]="size" />
+          </div>
+        }
+      </div>
+    </demo-section>`,
+  },
+  "components/avatar-group/example-nhom-avatar": {
+    ...SHOWCASE_PAGE_SOURCES["components/avatar-group"],
+    html: `<demo-section
+      heading="Nhóm avatar"
+      [props]="[
+        { name: 'items', value: '[…]' },
+        { name: 'max', value: '3 / 4 / 5' },
+        { name: 'ariaLabel', value: 'text' },
+      ]"
+      note="Rê chuột vào từng avatar để xem tên và trạng thái; bấm “+N” để mở danh sách (Esc đóng và trả focus về ô).">
+      <div class="group-demo-rows">
+        @for (max of maxes; track max) {
+          <div class="group-demo-row">
+            <span class="group-demo-label">max {{ max }}</span>
+            <sd-avatar-group [items]="members" [max]="max" ariaLabel="Người phụ trách" />
+          </div>
+        }
+      </div>
+    </demo-section>`,
+  },
+  "components/avatar-group/example-tu-mo-man-hinh-khac": {
+    ...SHOWCASE_PAGE_SOURCES["components/avatar-group"],
+    html: `<demo-section
+      heading="Tự mở màn hình khác"
+      [props]="[{ name: '(moreClick)', value: 'output' }]"
+      note="Có người nghe moreClick thì “+N” không mở popover mặc định mà phát danh sách người bị ẩn.">
+      <div class="group-demo-row">
+        <sd-avatar-group [items]="members" (moreClick)="onMore($event)" />
+        <span class="group-demo-log">{{ moreLog() }}</span>
+      </div>
+    </demo-section>`,
+  },
+  "components/avatar/example-anh-co-ten": {
+    ...SHOWCASE_PAGE_SOURCES["components/avatar"],
+    html: `<demo-section
+    heading="Ảnh có tên"
+    [props]="[{ name: 'name', value: 'text' }]"
+    note="Rê chuột vào ảnh để xem tên. Ảnh lỗi thì chữ viết tắt và màu lấy từ name.">
+    <div class="row">
+      <sd-avatar src="https://i.pravatar.cc/80?img=11" name="Phạm Minh Quân" [size]="48" status="success" statusLabel="Đang gọi" statusPulse></sd-avatar>
+      <sd-avatar src="https://example.invalid/missing.png" name="Trần Thu Hà" [size]="48"></sd-avatar>
+    </div>
+  </demo-section>`,
+  },
   "components/avatar/example-anh-url": {
     ...SHOWCASE_PAGE_SOURCES["components/avatar"],
     html: `<demo-section heading="Ảnh URL" [props]="[{ name: 'src', value: 'url' }]">
@@ -19920,6 +20807,39 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     </div>
   </demo-section>`,
   },
+  "components/avatar/example-cham-theo-kich-thuoc": {
+    ...SHOWCASE_PAGE_SOURCES["components/avatar"],
+    html: `<demo-section heading="Chấm theo kích thước" [props]="[{ name: 'size', value: '24 / 32 / 40 / 64 / 96' }]">
+    <div class="row size-row">
+      @for (size of statusSizes; track size) {
+        <div class="card">
+          <sd-avatar src="Lê Lan Anh" [size]="size" status="success" statusLabel="Đang hoạt động"></sd-avatar>
+          <span>{{ size }}</span>
+        </div>
+      }
+    </div>
+  </demo-section>`,
+  },
+  "components/avatar/example-cham-trang-thai": {
+    ...SHOWCASE_PAGE_SOURCES["components/avatar"],
+    html: `<demo-section
+    heading="Chấm trạng thái"
+    [props]="[
+      { name: 'status', value: 'success / warning / error / secondary' },
+      { name: 'statusLabel', value: 'text' },
+      { name: 'statusPulse', value: 'true' },
+    ]"
+    note="Chấm nằm trên mép avatar ở góc 45°, đường kính 25% cỡ avatar (8–20px), vòng viền màu nền. statusLabel là tooltip của chấm và được đọc cùng tên, ví dụ “Lê Lan Anh, Đang hoạt động”.">
+    <div class="row">
+      @for (item of statuses; track item.label) {
+        <div class="card">
+          <sd-avatar src="Lê Lan Anh" [size]="40" [status]="item.status" [statusLabel]="item.label" [statusPulse]="item.pulse"></sd-avatar>
+          <span>{{ item.label }}</span>
+        </div>
+      }
+    </div>
+  </demo-section>`,
+  },
   "components/avatar/example-chu-cai-dau-tu-ten": {
     ...SHOWCASE_PAGE_SOURCES["components/avatar"],
     html: `<demo-section heading="Chữ cái đầu từ tên" [props]="[{ name: 'src', value: 'initials' }]">
@@ -19953,182 +20873,455 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     </div>
   </demo-section>`,
   },
-  "components/badge/example-ba-dang": {
-    ...SHOWCASE_PAGE_SOURCES["components/badge"],
-    html: `<demo-section heading="Ba dạng" [props]="[{ name: 'type', value: 'icon / round / tag' }]">
-      <sd-badge type="icon" primary icon="check_circle" title="icon"></sd-badge>
-      <sd-badge type="round" primary title="round"></sd-badge>
-      <sd-badge type="tag" primary icon="label" title="tag"></sd-badge>
+  "components/avatar/example-trong-danh-sach": {
+    ...SHOWCASE_PAGE_SOURCES["components/avatar"],
+    html: `<demo-section heading="Trong danh sách" [props]="[{ name: 'status', value: 'color' }, { name: 'statusLabel', value: 'text' }]">
+    <div class="people">
+      @for (person of people; track person.name) {
+        <div class="person">
+          <sd-avatar aria-hidden="true" [src]="person.name" [size]="32" [status]="person.status" [statusLabel]="person.label"></sd-avatar>
+          <span class="person-text">
+            <span class="person-name">{{ person.name }}</span>
+            <span class="person-status">{{ person.label }}</span>
+          </span>
+        </div>
+      }
+    </div>
+  </demo-section>`,
+  },
+  "components/badge-picker/example-chi-xem-va-vo-hieu": {
+    ...SHOWCASE_PAGE_SOURCES["components/badge-picker"],
+    html: `<demo-section
+      heading="Chỉ xem và vô hiệu"
+      [props]="[
+        { name: 'viewed', value: 'true' },
+        { name: 'disabled', value: 'true' },
+      ]">
+      <div class="picker-demo-column">
+        <sd-badge-picker label="Chỉ xem" viewed type="round" color="success" icon="check_circle" previewTitle="Đã duyệt" />
+        <sd-badge-picker label="Vô hiệu" disabled type="solid" color="error" previewTitle="Quá hạn" />
+      </div>
     </demo-section>`,
+  },
+  "components/badge-picker/example-chon-badge": {
+    ...SHOWCASE_PAGE_SOURCES["components/badge-picker"],
+    html: `<demo-section
+      heading="Chọn badge"
+      [props]="[
+        { name: '[(type)]', value: 'two-way' },
+        { name: '[(color)]', value: 'two-way' },
+        { name: '[(icon)]', value: 'two-way' },
+        { name: 'previewTitle', value: 'text' },
+        { name: '(sdChange)', value: 'output' },
+      ]"
+      note="Bấm ra ngoài, bấm Xong hoặc Tab ra khỏi panel để ghi; Esc huỷ thay đổi.">
+      <div class="picker-demo-row">
+        <sd-badge-picker
+          class="picker-demo-field"
+          label="Hiển thị trạng thái"
+          previewTitle="Đã duyệt"
+          autoId="status"
+          [(type)]="type"
+          [(color)]="color"
+          [(icon)]="icon"
+          (sdChange)="onChange($event)" />
+        <div class="picker-demo-log">
+          <div>type: {{ type() ?? 'undefined' }} · color: {{ color() ?? 'undefined' }} · icon: {{ icon() ?? 'null' }}</div>
+          <div>sdChange: {{ lastChange() ? (lastChange() | json) : 'chưa phát' }} ({{ changeCount() }} lần)</div>
+          @if (type(); as currentType) {
+            <div class="picker-demo-result">
+              Trong bảng:
+              <sd-badge [type]="currentType" [color]="color()" [icon]="icon()" title="Đã duyệt" label="SLA" />
+            </div>
+          }
+        </div>
+      </div>
+    </demo-section>`,
+  },
+  "components/badge-picker/example-gioi-han-lua-chon": {
+    ...SHOWCASE_PAGE_SOURCES["components/badge-picker"],
+    html: `<demo-section
+      heading="Giới hạn lựa chọn"
+      [props]="[
+        { name: 'types', value: '[…]' },
+        { name: 'colors', value: '[…]' },
+        { name: 'icons', value: '[…]' },
+      ]">
+      <div class="picker-demo-column">
+        <sd-badge-picker
+          label="Mức ưu tiên"
+          previewTitle="Khẩn"
+          [types]="priorityTypes"
+          [colors]="priorityColors"
+          [icons]="priorityIcons" />
+      </div>
+    </demo-section>`,
+  },
+  "components/badge-picker/example-kich-thuoc": {
+    ...SHOWCASE_PAGE_SOURCES["components/badge-picker"],
+    html: `<demo-section
+      heading="Kích thước"
+      [props]="[{ name: 'size', value: 'sm / md / lg' }]"
+      note="Cùng thang với sd-select. Ở cỡ sm ẩn dòng tóm tắt; cỡ lg dùng badge cỡ md trong ô.">
+      <div class="picker-demo-column">
+        <sd-badge-picker label="Cỡ sm" size="sm" type="round" color="success" icon="check_circle" previewTitle="Đã duyệt" />
+        <sd-badge-picker label="Cỡ md" size="md" type="round" color="success" icon="check_circle" previewTitle="Đã duyệt" />
+        <sd-badge-picker label="Cỡ lg" size="lg" type="round" color="success" icon="check_circle" previewTitle="Đã duyệt" />
+      </div>
+    </demo-section>`,
+  },
+  "components/badge-picker/example-mo-ta-trong-ban-xem-truoc": {
+    ...SHOWCASE_PAGE_SOURCES["components/badge-picker"],
+    html: `<demo-section
+      heading="Mô tả trong bản xem trước"
+      [props]="[{ name: 'previewDescription', value: 'text' }]"
+      note="Chỉ hiện ở bản xem trước lớn, với kiểu icon và tag; kiểu khác có ghi chú.">
+      <div class="picker-demo-column">
+        <sd-badge-picker label="Hiển thị trạng thái" previewTitle="Đã duyệt" previewDescription="Bởi Nguyễn Văn A" type="tag" color="success" />
+      </div>
+    </demo-section>`,
+  },
+  "components/badge-picker/example-nhan-va-placeholder": {
+    ...SHOWCASE_PAGE_SOURCES["components/badge-picker"],
+    html: `<demo-section
+      heading="Nhãn và placeholder"
+      [props]="[
+        { name: 'floatLabel', value: 'auto / always' },
+        { name: 'labelPlacement', value: 'top' },
+        { name: 'helperText', value: 'text' },
+      ]">
+      <div class="picker-demo-column">
+        <sd-badge-picker label="floatLabel auto" />
+        <sd-badge-picker label="floatLabel always" floatLabel="always" />
+        <sd-badge-picker
+          label="Hiển thị trạng thái"
+          labelPlacement="top"
+          helperText="Áp dụng cho cột Trạng thái của bảng đơn hàng"
+          type="round"
+          color="success" />
+      </div>
+    </demo-section>`,
+  },
+  "components/badge-picker/example-trong-form": {
+    ...SHOWCASE_PAGE_SOURCES["components/badge-picker"],
+    html: `<demo-section
+      heading="Trong form"
+      [props]="[
+        { name: '[form]', value: 'FormGroup' },
+        { name: 'name', value: 'statusBadge' },
+        { name: 'required', value: 'true' },
+      ]"
+      note="Value của control là { type, color, icon } | null. Lỗi bắt buộc hiện sau lần đóng panel đầu tiên hoặc khi submit.">
+      <div class="picker-demo-row">
+        <sd-badge-picker class="picker-demo-field" [form]="form" name="statusBadge" label="Hiển thị trạng thái" required />
+        <div class="picker-demo-log">
+          <div>form.value: {{ formValue() | json }}</div>
+          <div class="d-flex gap-8 mt-8">
+            <sd-button type="outline" title="Kiểm tra" (click)="validate()"></sd-button>
+            <sd-button type="light" title="Đặt lại" (click)="reset()"></sd-button>
+          </div>
+        </div>
+      </div>
+    </demo-section>`,
+  },
+  "components/badge/example-bam-duoc": {
+    ...SHOWCASE_PAGE_SOURCES["components/badge"],
+    html: `<demo-section
+          heading="Bấm được"
+          [props]="[
+            { name: '(click)', value: 'output' },
+            { name: 'type', value: 'round / tag / icon' },
+          ]"
+          note="Chỉ khi có (click): role button, Tab tới được, Enter/Space. Hover trộn 6% màu đậm vào nền, nhấn 10%; vòng focus giữ bo góc.">
+          <div class="d-flex flex-wrap align-items-center gap-16">
+            <sd-badge type="round" primary title="Lọc: Mới" (click)="filterClicks.set(filterClicks() + 1)"></sd-badge>
+            <sd-badge type="tag" info icon="label" title="Bán buôn" (click)="filterClicks.set(filterClicks() + 1)"></sd-badge>
+            <sd-badge type="icon" warning icon="schedule" title="Chờ duyệt" (click)="filterClicks.set(filterClicks() + 1)"></sd-badge>
+            <span class="badge-demo-log">Đã bấm {{ filterClicks() }} lần</span>
+          </div>
+        </demo-section>`,
+  },
+  "components/badge/example-dot-va-pulse": {
+    ...SHOWCASE_PAGE_SOURCES["components/badge"],
+    html: `<demo-section
+          heading="Dot và pulse"
+          [props]="[
+            { name: 'type', value: 'dot / icon' },
+            { name: 'pulse', value: 'true' },
+            { name: 'size', value: 'sm / md / lg' },
+          ]"
+          note="Dot chỉ có chấm; title không hiện mà làm tooltip và tên cho screen reader (bắt buộc). pulse thêm vòng sáng nhấp nháy 1.6s, đứng yên khi giảm chuyển động.">
+          <div class="d-flex flex-column gap-12">
+            <div class="d-flex flex-wrap align-items-center gap-16">
+              <sd-badge type="dot" primary title="Mới"></sd-badge>
+              <sd-badge type="dot" secondary title="Ngoại tuyến"></sd-badge>
+              <sd-badge type="dot" info title="Đang xử lý"></sd-badge>
+              <sd-badge type="dot" success title="Đang hoạt động"></sd-badge>
+              <sd-badge type="dot" warning title="Vắng mặt"></sd-badge>
+              <sd-badge type="dot" error title="Không làm phiền"></sd-badge>
+            </div>
+            <div class="d-flex flex-wrap align-items-center gap-16">
+              <sd-badge type="dot" success title="Đang gọi" pulse></sd-badge>
+              <sd-badge type="dot" success title="Đang gọi" size="md" pulse></sd-badge>
+              <sd-badge type="dot" success title="Đang gọi" size="lg" pulse></sd-badge>
+              <sd-badge type="icon" success title="Đang gọi" pulse></sd-badge>
+            </div>
+          </div>
+        </demo-section>`,
   },
   "components/badge/example-fontset-switch": {
     ...SHOWCASE_PAGE_SOURCES["components/badge"],
     html: `<demo-section
-      heading="fontSet switch"
-      [props]="[
-        { name: 'fontSet', value: 'material-icons / material-icons-outlined / lucide' },
-        { name: 'type', value: 'icon / round / tag' },
-      ]"
-      note="Chon fontSet bang radio de so sanh alignment cua cung mot bo badge icon.">
-      <div class="d-flex flex-column gap-16 w-full">
-        <sd-radio
-          label="fontSet"
-          [items]="fontSetOptions"
-          valueField="value"
-          displayField="display"
-          [(model)]="selectedFontSet"
-          [form]="fontSetForm"></sd-radio>
+          heading="fontSet switch"
+          [props]="[
+            { name: 'fontSet', value: 'material-icons / material-icons-outlined / lucide' },
+            { name: 'type', value: 'icon / round / tag' },
+          ]"
+          note="Chon fontSet bang radio de so sanh alignment cua cung mot bo badge icon.">
+          <div class="d-flex flex-column gap-16 w-full">
+            <sd-radio
+              label="fontSet"
+              [items]="fontSetOptions"
+              valueField="value"
+              displayField="display"
+              [(model)]="selectedFontSet"
+              [form]="fontSetForm"></sd-radio>
 
-        <div class="d-flex flex-wrap align-items-center gap-16">
-          <sd-badge type="icon" success icon="check_circle" [fontSet]="selectedFontSet()" title="Approved"></sd-badge>
-          <sd-badge type="icon" info icon="visibility" [fontSet]="selectedFontSet()" title="Visible"></sd-badge>
-          <sd-badge type="icon" warning icon="warning" [fontSet]="selectedFontSet()" title="Warning"></sd-badge>
-        </div>
+            <div class="d-flex flex-wrap align-items-center gap-16">
+              <sd-badge type="icon" success icon="check_circle" [fontSet]="selectedFontSet()" title="Approved"></sd-badge>
+              <sd-badge type="icon" info icon="visibility" [fontSet]="selectedFontSet()" title="Visible"></sd-badge>
+              <sd-badge type="icon" warning icon="warning" [fontSet]="selectedFontSet()" title="Warning"></sd-badge>
+            </div>
 
-        <div class="d-flex flex-wrap align-items-center gap-16">
-          <sd-badge type="round" success icon="check_circle" [fontSet]="selectedFontSet()" title="Round success"></sd-badge>
-          <sd-badge type="round" info icon="local_offer" [fontSet]="selectedFontSet()" title="Round offer"></sd-badge>
-          <sd-badge type="round" error icon="delete" [fontSet]="selectedFontSet()" title="Round error"></sd-badge>
-        </div>
+            <div class="d-flex flex-wrap align-items-center gap-16">
+              <sd-badge type="round" success icon="check_circle" [fontSet]="selectedFontSet()" title="Round success"></sd-badge>
+              <sd-badge type="round" info icon="local_offer" [fontSet]="selectedFontSet()" title="Round offer"></sd-badge>
+              <sd-badge type="round" error icon="delete" [fontSet]="selectedFontSet()" title="Round error"></sd-badge>
+            </div>
 
-        <div class="d-flex flex-wrap align-items-center gap-16">
-          <sd-badge type="tag" primary icon="local_offer" [fontSet]="selectedFontSet()" title="Tag primary"></sd-badge>
-          <sd-badge type="tag" warning icon="warning" [fontSet]="selectedFontSet()" title="Tag warning"></sd-badge>
-          <sd-badge type="tag" secondary icon="visibility" [fontSet]="selectedFontSet()" title="Tag secondary"></sd-badge>
-        </div>
-      </div>
-    </demo-section>`,
-  },
-  "components/badge/example-icon-va-noi-dung-dai": {
-    ...SHOWCASE_PAGE_SOURCES["components/badge"],
-    html: `<demo-section
-      heading="Icon và nội dung dài"
-      [props]="[
-        { name: 'type', value: 'icon' },
-        { name: 'size', value: 'sm / md / lg' },
-      ]"
-      note="Icon giữ nguyên kích thước và căn giữa với toàn bộ phần chữ khi nội dung xuống dòng.">
-      <div style="display:flex;flex-wrap:wrap;gap:24px">
-        @for (size of iconSizes; track size) {
-          <sd-badge
-            style="display:block;width:140px"
-            type="icon"
-            [size]="size"
-            icon="check_circle"
-            color="success"
-            title="Đã xác nhận thông tin khách hàng"
-            description="Nội dung bổ sung" />
-        }
-      </div>
-    </demo-section>`,
+            <div class="d-flex flex-wrap align-items-center gap-16">
+              <sd-badge type="tag" primary icon="local_offer" [fontSet]="selectedFontSet()" title="Tag primary"></sd-badge>
+              <sd-badge type="tag" warning icon="warning" [fontSet]="selectedFontSet()" title="Tag warning"></sd-badge>
+              <sd-badge type="tag" secondary icon="visibility" [fontSet]="selectedFontSet()" title="Tag secondary"></sd-badge>
+            </div>
+          </div>
+        </demo-section>`,
   },
   "components/badge/example-kem-mo-ta": {
     ...SHOWCASE_PAGE_SOURCES["components/badge"],
-    html: `<demo-section heading="Kèm mô tả" [props]="[{ name: 'description', value: 'text' }]">
-      <sd-badge type="icon" success icon="check_circle" title="title" description="description"></sd-badge>
-      <sd-badge type="tag" primary icon="star" title="title" description="description"></sd-badge>
-    </demo-section>`,
+    html: `<demo-section
+          heading="Kèm mô tả"
+          [props]="[
+            { name: 'description', value: 'text' },
+            { name: 'type', value: 'icon / tag' },
+          ]"
+          note="Description 12px. Tag có description thành khối hai dòng; icon căn theo dòng đầu.">
+          <sd-badge type="icon" success icon="check_circle" title="Đã duyệt" description="Bởi Nguyễn Văn A"></sd-badge>
+          <sd-badge type="icon" info title="Đang xử lý" description="Bước 2 / 3"></sd-badge>
+          <sd-badge type="tag" info icon="label" title="Hợp đồng dài hạn" description="Gia hạn 12 tháng"></sd-badge>
+        </demo-section>`,
   },
   "components/badge/example-kich-thuoc-round": {
     ...SHOWCASE_PAGE_SOURCES["components/badge"],
     html: `<demo-section
-      heading="Kích thước round"
-      [props]="[
-        { name: 'type', value: 'round' },
-        { name: 'size', value: 'sm / md / lg' },
-      ]">
-      <sd-badge type="round" primary title="sm" size="sm"></sd-badge>
-      <sd-badge type="round" primary title="md" size="md"></sd-badge>
-      <sd-badge type="round" primary title="lg" size="lg"></sd-badge>
-    </demo-section>`,
+          heading="Kích thước round"
+          [props]="[
+            { name: 'type', value: 'round' },
+            { name: 'size', value: 'sm / md / lg' },
+          ]">
+          <sd-badge type="round" primary title="sm" size="sm"></sd-badge>
+          <sd-badge type="round" primary title="md" size="md"></sd-badge>
+          <sd-badge type="round" primary title="lg" size="lg"></sd-badge>
+        </demo-section>`,
   },
   "components/badge/example-kich-thuoc-tag": {
     ...SHOWCASE_PAGE_SOURCES["components/badge"],
     html: `<demo-section
-      heading="Kích thước tag"
-      [props]="[
-        { name: 'type', value: 'tag' },
-        { name: 'size', value: 'sm / md / lg' },
-      ]">
-      <sd-badge type="tag" info icon="label" title="sm" size="sm"></sd-badge>
-      <sd-badge type="tag" info icon="label" title="md" size="md"></sd-badge>
-      <sd-badge type="tag" info icon="label" title="lg" size="lg"></sd-badge>
-    </demo-section>`,
+          heading="Kích thước tag"
+          [props]="[
+            { name: 'type', value: 'tag' },
+            { name: 'size', value: 'sm / md / lg' },
+          ]">
+          <sd-badge type="tag" info icon="label" title="sm" size="sm"></sd-badge>
+          <sd-badge type="tag" info icon="label" title="md" size="md"></sd-badge>
+          <sd-badge type="tag" info icon="label" title="lg" size="lg"></sd-badge>
+        </demo-section>`,
   },
   "components/badge/example-mau-sac-icon": {
     ...SHOWCASE_PAGE_SOURCES["components/badge"],
     html: `<demo-section
-      heading="Màu sắc icon"
-      [props]="[
-        { name: 'type', value: 'icon' },
-        { name: 'color', value: 'primary / secondary / success / info / warning / error' },
-      ]">
-      <sd-badge type="icon" primary icon="circle" title="primary"></sd-badge>
-      <sd-badge type="icon" secondary icon="circle" title="secondary"></sd-badge>
-      <sd-badge type="icon" success icon="circle" title="success"></sd-badge>
-      <sd-badge type="icon" info icon="circle" title="info"></sd-badge>
-      <sd-badge type="icon" warning icon="circle" title="warning"></sd-badge>
-      <sd-badge type="icon" error icon="circle" title="error"></sd-badge>
-    </demo-section>`,
+          heading="Màu sắc icon"
+          [props]="[
+            { name: 'type', value: 'icon' },
+            { name: 'color', value: 'primary / secondary / success / info / warning / error' },
+            { name: 'icon', value: 'name / —' },
+          ]"
+          note="Không có icon thì badge vẽ chấm CSS màu gốc (8px, lg 10px).">
+          <div class="d-flex flex-column gap-12">
+            <div class="d-flex flex-wrap align-items-center gap-16">
+              <sd-badge type="icon" primary icon="flag" title="Mới"></sd-badge>
+              <sd-badge type="icon" secondary icon="edit_note" title="Nháp"></sd-badge>
+              <sd-badge type="icon" info icon="sync" title="Đang xử lý"></sd-badge>
+              <sd-badge type="icon" success icon="check_circle" title="Đã duyệt"></sd-badge>
+              <sd-badge type="icon" warning icon="schedule" title="Chờ duyệt"></sd-badge>
+              <sd-badge type="icon" error icon="cancel" title="Đã huỷ"></sd-badge>
+            </div>
+            <div class="d-flex flex-wrap align-items-center gap-16">
+              <sd-badge type="icon" primary title="Mới"></sd-badge>
+              <sd-badge type="icon" secondary title="Nháp"></sd-badge>
+              <sd-badge type="icon" info title="Đang xử lý"></sd-badge>
+              <sd-badge type="icon" success title="Đã duyệt"></sd-badge>
+              <sd-badge type="icon" warning title="Chờ duyệt"></sd-badge>
+              <sd-badge type="icon" error title="Đã huỷ"></sd-badge>
+            </div>
+          </div>
+        </demo-section>`,
   },
   "components/badge/example-mau-sac-round": {
     ...SHOWCASE_PAGE_SOURCES["components/badge"],
     html: `<demo-section
-      heading="Màu sắc round"
-      [props]="[
-        { name: 'type', value: 'round' },
-        { name: 'color', value: 'primary / secondary / success / info / warning / error' },
-      ]">
-      <sd-badge type="round" primary title="primary"></sd-badge>
-      <sd-badge type="round" secondary title="secondary"></sd-badge>
-      <sd-badge type="round" success title="success"></sd-badge>
-      <sd-badge type="round" info title="info"></sd-badge>
-      <sd-badge type="round" warning title="warning"></sd-badge>
-      <sd-badge type="round" error title="error"></sd-badge>
-    </demo-section>`,
+          heading="Màu sắc round"
+          [props]="[
+            { name: 'type', value: 'round' },
+            { name: 'color', value: 'primary / secondary / success / info / warning / error' },
+          ]">
+          <sd-badge type="round" primary title="primary"></sd-badge>
+          <sd-badge type="round" secondary title="secondary"></sd-badge>
+          <sd-badge type="round" success title="success"></sd-badge>
+          <sd-badge type="round" info title="info"></sd-badge>
+          <sd-badge type="round" warning title="warning"></sd-badge>
+          <sd-badge type="round" error title="error"></sd-badge>
+        </demo-section>`,
   },
   "components/badge/example-mau-sac-tag": {
     ...SHOWCASE_PAGE_SOURCES["components/badge"],
     html: `<demo-section
-      heading="Màu sắc tag"
-      [props]="[
-        { name: 'type', value: 'tag' },
-        { name: 'color', value: 'primary / secondary / success / info / warning / error' },
-      ]">
-      <sd-badge type="tag" primary icon="label" title="primary"></sd-badge>
-      <sd-badge type="tag" secondary icon="label" title="secondary"></sd-badge>
-      <sd-badge type="tag" success icon="label" title="success"></sd-badge>
-      <sd-badge type="tag" info icon="label" title="info"></sd-badge>
-      <sd-badge type="tag" warning icon="label" title="warning"></sd-badge>
-      <sd-badge type="tag" error icon="label" title="error"></sd-badge>
-    </demo-section>`,
+          heading="Màu sắc tag"
+          [props]="[
+            { name: 'type', value: 'tag' },
+            { name: 'color', value: 'primary / secondary / success / info / warning / error' },
+          ]">
+          <sd-badge type="tag" primary icon="label" title="primary"></sd-badge>
+          <sd-badge type="tag" secondary icon="label" title="secondary"></sd-badge>
+          <sd-badge type="tag" success icon="label" title="success"></sd-badge>
+          <sd-badge type="tag" info icon="label" title="info"></sd-badge>
+          <sd-badge type="tag" warning icon="label" title="warning"></sd-badge>
+          <sd-badge type="tag" error icon="label" title="error"></sd-badge>
+        </demo-section>`,
+  },
+  "components/badge/example-pair": {
+    ...SHOWCASE_PAGE_SOURCES["components/badge"],
+    html: `<demo-section
+          heading="Pair"
+          [props]="[
+            { name: 'type', value: 'pair' },
+            { name: 'label', value: 'text' },
+            { name: 'size', value: 'sm / md / lg' },
+          ]"
+          note="Cặp thuộc tính – giá trị: nhãn nền secondary nhạt, giá trị theo color. Quá dài thì cắt phần giá trị trước, nhãn giữ nguyên.">
+          <div class="d-flex flex-column gap-12">
+            <div class="d-flex flex-wrap align-items-center gap-16">
+              <sd-badge type="pair" warning label="SLA" title="4 giờ"></sd-badge>
+              <sd-badge type="pair" error label="Ưu tiên" title="Cao"></sd-badge>
+              <sd-badge type="pair" info label="Phiên bản" title="2.3.1"></sd-badge>
+              <sd-badge type="pair" success label="Kênh" title="Trực tuyến" size="md"></sd-badge>
+              <sd-badge type="pair" primary label="Kênh" title="Trực tuyến" size="lg"></sd-badge>
+            </div>
+            <div class="badge-demo-cell">
+              <sd-badge type="pair" info label="Phiên bản" title="2.3.1-beta.4 bản dựng thử nghiệm"></sd-badge>
+            </div>
+          </div>
+        </demo-section>`,
   },
   "components/badge/example-round-voi-icon": {
     ...SHOWCASE_PAGE_SOURCES["components/badge"],
     html: `<demo-section
-      heading="Round với icon"
-      [props]="[
-        { name: 'type', value: 'round' },
-        { name: 'icon', value: 'name' },
-        { name: 'size', value: 'sm / md / lg' },
-      ]">
-      <sd-badge type="round" success icon="check_circle" title="sm" size="sm"></sd-badge>
-      <sd-badge type="round" success icon="check_circle" title="md" size="md"></sd-badge>
-      <sd-badge type="round" success icon="check_circle" title="lg" size="lg"></sd-badge>
-    </demo-section>`,
+          heading="Round với icon"
+          [props]="[
+            { name: 'type', value: 'round' },
+            { name: 'icon', value: 'name' },
+            { name: 'size', value: 'sm / md / lg' },
+          ]">
+          <sd-badge type="round" success icon="check_circle" title="sm" size="sm"></sd-badge>
+          <sd-badge type="round" success icon="check_circle" title="md" size="md"></sd-badge>
+          <sd-badge type="round" success icon="check_circle" title="lg" size="lg"></sd-badge>
+        </demo-section>`,
+  },
+  "components/badge/example-sau-dang": {
+    ...SHOWCASE_PAGE_SOURCES["components/badge"],
+    html: `<demo-section heading="Sáu dạng" [props]="[{ name: 'type', value: 'icon / round / tag / solid / dot / pair' }]">
+          <div class="d-flex flex-wrap align-items-center gap-16">
+            <sd-badge type="icon" primary icon="check_circle" title="icon"></sd-badge>
+            <sd-badge type="round" primary title="round"></sd-badge>
+            <sd-badge type="tag" primary icon="label" title="tag"></sd-badge>
+            <sd-badge type="solid" primary title="solid"></sd-badge>
+            <sd-badge type="dot" primary title="dot"></sd-badge>
+            <sd-badge type="pair" primary label="pair" title="giá trị"></sd-badge>
+          </div>
+        </demo-section>`,
   },
   "components/badge/example-so-dem": {
     ...SHOWCASE_PAGE_SOURCES["components/badge"],
     html: `<demo-section
-      heading="Số đếm"
-      [props]="[
-        { name: 'type', value: 'round' },
-        { name: 'title', value: 'number' },
-      ]">
-      <sd-badge type="round" primary [title]="unreadCount()"></sd-badge>
-      <sd-badge type="round" error [title]="errorsCount()"></sd-badge>
-      <sd-badge type="round" warning title="99+"></sd-badge>
-    </demo-section>`,
+          heading="Số đếm"
+          [props]="[
+            { name: 'type', value: 'round' },
+            { name: 'title', value: 'number' },
+            { name: 'size', value: 'sm / md' },
+          ]"
+          note="Title là số: hình tròn khi một chữ số, chữ số đều bề rộng; lớn hơn 99 hiện 99+ (screen reader vẫn đọc số thật).">
+          <sd-badge type="round" primary [title]="unreadCount()"></sd-badge>
+          <sd-badge type="round" error [title]="errorsCount()"></sd-badge>
+          <sd-badge type="round" warning [title]="overflowCount()"></sd-badge>
+          <sd-badge type="round" primary [title]="unreadCount()" size="md"></sd-badge>
+          <sd-badge type="round" error [title]="errorsCount()" size="md"></sd-badge>
+        </demo-section>`,
+  },
+  "components/badge/example-solid": {
+    ...SHOWCASE_PAGE_SOURCES["components/badge"],
+    html: `<demo-section
+          heading="Solid"
+          [props]="[
+            { name: 'type', value: 'solid' },
+            { name: 'color', value: 'primary / secondary / success / info / warning / error' },
+          ]"
+          note="Nền màu gốc, chữ màu contrast: trạng thái cần chú ý ngay, tối đa một badge solid mỗi dòng. Title là số thì thành số đếm như round.">
+          <div class="d-flex flex-wrap align-items-center gap-16">
+            <sd-badge type="solid" primary title="Mới"></sd-badge>
+            <sd-badge type="solid" secondary title="Nháp"></sd-badge>
+            <sd-badge type="solid" info title="Đang xử lý"></sd-badge>
+            <sd-badge type="solid" success title="Hoàn tất"></sd-badge>
+            <sd-badge type="solid" warning icon="schedule" title="Khẩn"></sd-badge>
+            <sd-badge type="solid" error title="Quá hạn"></sd-badge>
+            <sd-badge type="solid" error [title]="errorsCount()"></sd-badge>
+          </div>
+        </demo-section>`,
+  },
+  "components/badge/example-ten-dai-trong-o-hep": {
+    ...SHOWCASE_PAGE_SOURCES["components/badge"],
+    html: `<demo-section
+          heading="Tên dài trong ô hẹp"
+          [props]="[
+            { name: 'type', value: 'icon / round / tag' },
+            { name: 'tooltip', value: 'text' },
+          ]"
+          note="Luôn một dòng, chữ dài bị cắt bằng dấu ba chấm. Tooltip chỉ hiện khi chữ bị cắt (title đầy đủ) hoặc khi có tooltip riêng.">
+          <div class="d-flex flex-wrap gap-24">
+            <div class="badge-demo-cell">
+              <sd-badge type="round" warning title="Đã chuyển sang kế toán xử lý"></sd-badge>
+            </div>
+            <div class="badge-demo-cell">
+              <sd-badge type="tag" info icon="label" title="Hợp đồng dài hạn có điều khoản gia hạn"></sd-badge>
+            </div>
+            <div class="badge-demo-cell">
+              <sd-badge type="icon" success icon="check_circle" title="Đã xác nhận thông tin khách hàng"></sd-badge>
+            </div>
+            <div class="badge-demo-cell">
+              <sd-badge type="round" success title="Đã duyệt" tooltip="Phê duyệt lúc 14:30
+Bởi Nguyễn Văn A"></sd-badge>
+            </div>
+          </div>
+        </demo-section>`,
   },
   "components/breadcrumb/example-danh-sach-tinh": {
     ...SHOWCASE_PAGE_SOURCES["components/breadcrumb"],
@@ -20221,6 +21414,23 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     html: `<sd-button type="light" color="primary" prefixIcon="edit" tooltip="edit"></sd-button>
 <sd-button type="light" color="error" prefixIcon="delete" tooltip="delete"></sd-button>
 <sd-button type="outline" color="secondary" suffixIcon="more_vert" tooltip="Thêm thao tác" autoId="suffix-only"></sd-button>`,
+  },
+  "components/button/example-indicator": {
+    ...SHOWCASE_PAGE_SOURCES["components/button/example-indicator"],
+    html: `<sd-button
+  type="text"
+  prefixIcon="notifications"
+  tooltip="Thông báo"
+  [indicator]="unread()"
+  [indicatorLabel]="unread() + ' thông báo mới'"
+  autoId="indicator-notifications"></sd-button>
+<sd-button type="outline" title="Bộ lọc" prefixIcon="filter_list" [indicator]="true" indicatorColor="primary" indicatorLabel="Đang có bộ lọc"></sd-button>
+<sd-button type="fill" color="primary" title="Hộp thư" [indicator]="128" indicatorLabel="128 thư chưa đọc"></sd-button>
+<sd-button size="md" prefixIcon="chat" tooltip="Tin nhắn" [indicator]="12" [indicatorMax]="9" indicatorColor="success"></sd-button>
+<sd-button size="lg" prefixIcon="shopping_cart" tooltip="Giỏ hàng" [indicator]="2" indicatorColor="info"></sd-button>
+<sd-button type="outline" title="Vô hiệu" [indicator]="5" disabled></sd-button>
+<sd-button type="text" color="primary" title="Thêm thông báo" prefixIcon="add" (click)="addUnread()"></sd-button>
+<sd-button type="text" color="secondary" title="Đọc hết" (click)="clearUnread()"></sd-button>`,
   },
   "components/button/example-kich-thuoc": {
     ...SHOWCASE_PAGE_SOURCES["components/button/example-kich-thuoc"],
@@ -21777,6 +22987,34 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     <span class="row-value">{{ numberOp() ?? '—' }}</span>
   </demo-section>`,
   },
+  "components/operator/example-trong-control": {
+    ...SHOWCASE_PAGE_SOURCES["components/operator"],
+    html: `<demo-section
+    heading="Trong control"
+    [props]="[
+      { name: 'operators', value: 'Operator[] (≥ 2 thì hiện chip)' },
+      { name: '[(operator)]', value: 'Operator' },
+      { name: 'size', value: 'sm / md' },
+    ]"
+    note="sd-input, sd-input-number, sd-select, sd-date, sd-date-range nhận [operators] / [(operator)] và vẽ operator thành chip tiền tố trong ô. Tab vào chip trước ô nhập; Enter, Space hoặc Alt+↓ mở menu; chọn xong focus về ô nhập.">
+    <div class="control-grid">
+      <sd-input label="Họ tên" clearable [operators]="stringOps" [(operator)]="nameOp" [(model)]="name" />
+      <sd-input-number label="Lương" [operators]="numberOps" [(operator)]="salaryOp" [(model)]="salary" />
+      <sd-select
+        label="Trạng thái"
+        [items]="statuses"
+        valueField="value"
+        displayField="label"
+        [operators]="listOps"
+        [(operator)]="statusOp"
+        [(model)]="status" />
+      <sd-date label="Ngày tạo" [operators]="dateOps" [(operator)]="createdOp" />
+      <sd-date-range label="Khoảng ngày" [operators]="rangeOps" [(operator)]="rangeOp" />
+      <sd-input size="sm" label="Cỡ sm" [operators]="stringOps" [(operator)]="smallOp" />
+    </div>
+    <span class="row-value">{{ nameOp() }} · {{ salaryOp() }} · {{ statusOp() }} · {{ createdOp() }} · {{ rangeOp() }}</span>
+  </demo-section>`,
+  },
   "components/operator/example-vo-hieu-hoa": {
     ...SHOWCASE_PAGE_SOURCES["components/operator"],
     html: `<demo-section heading="Vô hiệu hoá" [props]="[{ name: 'disabled', value: 'true' }]">
@@ -22905,22 +24143,6 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
       </div>
     </demo-section>`,
   },
-  "components/tab-router/example-preview-dai-tab": {
-    ...SHOWCASE_PAGE_SOURCES["components/tab-router"],
-    html: `<demo-section heading="Preview dải tab" [props]="[{ name: 'routes', value: '[…]' }]">
-    <div class="strip">
-      <sd-badge type="tag" primary icon="dashboard" title="Trang chủ"></sd-badge>
-      <sd-badge type="tag" info icon="person" title="Nhân viên #001"></sd-badge>
-      <sd-badge type="tag" warning icon="edit" title="Đang chỉnh sửa hợp đồng"></sd-badge>
-      <sd-badge type="tag" success icon="check_circle" title="Phê duyệt yêu cầu"></sd-badge>
-      <sd-badge type="tag" secondary icon="settings" title="Cài đặt hệ thống"></sd-badge>
-    </div>
-    <p class="note">
-      Mỗi pill ở trên đại diện cho một tab. Click sẽ điều hướng đến URL tương ứng;
-      tab giữ state (form, scroll, request) khi user chuyển sang tab khác và quay lại.
-    </p>
-  </demo-section>`,
-  },
   "components/tab-router/example-replacetab-beforeclose": {
     ...SHOWCASE_PAGE_SOURCES["components/tab-router"],
     html: `<demo-section heading="replaceTab + beforeClose" [props]="[{ name: 'replaceTab', value: 'fn' }, { name: 'beforeClose', value: 'fn' }]">
@@ -22931,6 +24153,21 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
       Truyền <code>state.replaceTab</code> để thay tab hiện tại thay vì mở thêm. Gán
       <code>tab.beforeClose</code> để xác nhận trước khi đóng (vd: cảnh báo unsaved changes).
     </p>
+  </demo-section>`,
+  },
+  "components/tab-router/example-thu-truc-tiep": {
+    ...SHOWCASE_PAGE_SOURCES["components/tab-router"],
+    html: `<demo-section
+    heading="Thử trực tiếp"
+    [props]="[{ name: 'routes', value: '[…]' }, { name: '@SdTabComponent', value: 'template' }]"
+    note="Mở một màn có sd-tab-router-outlet thật: một tab thì thanh ẩn, mở thêm tab thì thanh hiện; thử 16 tab, rê chuột vào tên bị cắt để xem tooltip.">
+    <sd-button
+      data-tab-router-link="live"
+      type="fill"
+      color="primary"
+      prefixIcon="open_in_new"
+      title="Mở demo tab router"
+      (click)="openLive()"></sd-button>
   </demo-section>`,
   },
   "components/tab-router/example-tich-hop-app-shell": {
@@ -24309,10 +25546,10 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
   },
   "forms/chip-calendar/example-bat-buoc-so-toi-thieu": {
     ...SHOWCASE_PAGE_SOURCES["forms/chip-calendar"],
-    html: `<demo-section heading="Bắt buộc & số tối thiểu" [props]="[{ name: 'required', value: 'true' }, { name: 'min', value: '3' }]" note="Cần tối thiểu 3 ngày. Bấm Kiểm tra để xem lỗi.">
+    html: `<demo-section heading="Bắt buộc & số tối thiểu" [props]="[{ name: 'required', value: 'true' }, { name: 'minCount', value: '3' }]" note="Cần tối thiểu 3 ngày. Lỗi hiện khi đóng lịch hoặc bấm Kiểm tra.">
     <div style="width: 460px; display:flex; flex-direction:column; gap:12px">
-      <sd-chip-calendar label="required + min=3"
-        [(model)]="duty" [form]="formValid" required [min]="3"></sd-chip-calendar>
+      <sd-chip-calendar label="required + minCount=3"
+        [(model)]="duty" [form]="formValid" required [minCount]="3"></sd-chip-calendar>
       <div style="display:flex; gap:8px">
         <button type="button" (click)="check()">Kiểm tra</button>
         <button type="button" (click)="reset()">Đặt lại</button>
@@ -24329,12 +25566,61 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     </div>
   </demo-section>`,
   },
+  "forms/chip-calendar/example-gioi-han-ngay-va-so-luong": {
+    ...SHOWCASE_PAGE_SOURCES["forms/chip-calendar"],
+    html: `<demo-section heading="Giới hạn ngày và số lượng"
+    [props]="[{ name: 'minDate', value: 'TODAY' }, { name: 'dateFilter', value: 'thứ 2 – thứ 6' }, { name: 'maxCount', value: '3' }, { name: 'clearable', value: 'true' }]"
+    note="Chỉ chọn ngày làm việc từ hôm nay, tối đa 3 ngày. Đủ 3 ngày thì các ô còn lại bị khoá.">
+    <div style="width: 460px">
+      <sd-chip-calendar label="Ngày trực" [(model)]="limited" [form]="form"
+        minDate="TODAY" [dateFilter]="weekday" [maxCount]="3" clearable></sd-chip-calendar>
+    </div>
+  </demo-section>`,
+  },
+  "forms/chip-calendar/example-gon-trong-bo-loc-bang": {
+    ...SHOWCASE_PAGE_SOURCES["forms/chip-calendar"],
+    html: `<demo-section heading="Gọn trong bộ lọc bảng" [props]="[{ name: 'size', value: 'sm' }, { name: 'maxVisible', value: '2' }, { name: 'hideInlineError', value: 'true' }]"
+    note="Chỉ hiện 2 chip đầu, phần còn lại gộp vào “+N”; mở lịch thì hiện đủ.">
+    <div style="width: 320px">
+      <sd-chip-calendar size="sm" hideInlineError [maxVisible]="2" [(model)]="filterDays" [form]="form"></sd-chip-calendar>
+    </div>
+  </demo-section>`,
+  },
+  "forms/chip-calendar/example-khoa-ngay-da-qua": {
+    ...SHOWCASE_PAGE_SOURCES["forms/chip-calendar"],
+    html: `<demo-section heading="Khoá ngày đã qua" [props]="[{ name: 'removable', value: '(day) => day >= today' }, { name: 'clearable', value: 'true' }]"
+    note="Ngày đã qua hiện ổ khoá thay cho ✕; Backspace, bấm lại trên lịch và Xoá hết đều giữ lại.">
+    <div style="width: 460px">
+      <sd-chip-calendar label="Ngày training" [(model)]="training" [form]="form"
+        [removable]="canRemove" clearable></sd-chip-calendar>
+    </div>
+  </demo-section>`,
+  },
+  "forms/chip-calendar/example-kich-thuoc": {
+    ...SHOWCASE_PAGE_SOURCES["forms/chip-calendar"],
+    html: `<demo-section heading="Kích thước" [props]="[{ name: 'size', value: 'sm | md | lg' }]" note="Field một dòng 32 / 40 / 48px, chip 20 / 24 / 28px.">
+    <div style="width: 460px; display:flex; flex-direction:column; gap:12px">
+      <sd-chip-calendar label="sm" size="sm" [(model)]="sizes" [form]="form"></sd-chip-calendar>
+      <sd-chip-calendar label="md" [(model)]="sizes" [form]="form"></sd-chip-calendar>
+      <sd-chip-calendar label="lg" size="lg" [(model)]="sizes" [form]="form"></sd-chip-calendar>
+    </div>
+  </demo-section>`,
+  },
+  "forms/chip-calendar/example-kieu-model-va-transform": {
+    ...SHOWCASE_PAGE_SOURCES["forms/chip-calendar"],
+    html: `<demo-section heading="Kiểu model và transform" [props]="[{ name: '[model]', value: 'Date | number | string' }, { name: 'transform', value: 'ISOString' }]"
+    note="Model nhận Date, timestamp, chuỗi ISO lẫn yyyy/MM/dd; sau thao tác đầu, model là string[] theo transform.">
+    <div style="width: 460px; display:flex; flex-direction:column; gap:8px">
+      <sd-chip-calendar label="Model trộn kiểu" [(model)]="mixed" [form]="form" transform="ISOString"></sd-chip-calendar>
+      <pre style="margin:0; font-size:12px; color:#555; white-space:pre-wrap">{{ mixedText() }}</pre>
+    </div>
+  </demo-section>`,
+  },
   "forms/chip-calendar/example-lien-ket-hai-chieu": {
     ...SHOWCASE_PAGE_SOURCES["forms/chip-calendar"],
     html: `<demo-section heading="Liên kết hai chiều" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Mở lịch và chọn nhiều ngày.">
     <div style="width: 460px; display:flex; flex-direction:column; gap:8px">
-      <sd-chip-calendar label="Ngày nghỉ phép" helperText="Chọn các ngày dự kiến nghỉ"
-        [(model)]="leaves" [form]="form"></sd-chip-calendar>
+      <sd-chip-calendar label="Ngày nghỉ phép" [(model)]="leaves" [form]="form"></sd-chip-calendar>
       <div style="font-size:12px; color:#555">
         Đã chọn <b>{{ leaves().length }}</b> ngày: {{ leaves().join(' · ') || '(trống)' }}
       </div>
@@ -25227,7 +26513,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     html: `<demo-section
     heading="Chọn nhiều với dòng Tất cả"
     [props]="[{ name: 'showSelectAll', value: 'true' }, { name: 'multiple', value: 'true' }, { name: 'disabledField', value: 'disabled' }]"
-    note="Row 'Tất cả' đầu panel — chỉ hiện khi multiple + items là mảng tĩnh. Tick chọn toàn bộ items enabled khớp search hiện tại (item disabled 'Pháp chế' không bị đụng); đang search thì tick CHỈ thêm items khớp filter, selection cũ giữ nguyên. Checkbox có 3 trạng thái checked / indeterminate / unchecked.">
+    note="Row 'Tất cả' nằm trong header dính dưới ô tìm kiếm (cuộn vẫn thấy), cuối hàng có bộ đếm đã chọn/tổng — chỉ hiện khi multiple + items là mảng tĩnh. Tick chọn toàn bộ items enabled khớp search hiện tại (item disabled 'Pháp chế' không bị đụng); đang search thì tick CHỈ thêm items khớp filter, selection cũ giữ nguyên. Checkbox có 3 trạng thái checked / indeterminate / unchecked.">
     <div class="select-demo-column">
       <sd-select
         label="Đơn vị tham gia" multiple showSelectAll

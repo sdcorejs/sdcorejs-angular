@@ -67,6 +67,39 @@ export function setInput<TComponent>(fixture: ComponentFixture<TComponent>, key:
 }
 
 /**
+ * Rule CSS đầu tiên có selector (đã bỏ thuộc tính `[_ngcontent…]` / `[_nghost…]` của emulated encapsulation) khớp
+ * `selector`, chỉ tìm trong `@media` khớp `media` khi có. Dùng cho trạng thái trình duyệt test không giả lập được
+ * (vd `forced-colors: active`): kiểm rule có mặt và giá trị của nó.
+ */
+export function findCssRule(selector: RegExp, media?: RegExp): CSSStyleDeclaration | undefined {
+  const strip = (text: string) => text.replace(/\[_ng(content|host)-[^\]]*\]/g, '');
+  const walk = (rules: CSSRuleList, inMedia: boolean): CSSStyleDeclaration | undefined => {
+    for (const rule of Array.from(rules)) {
+      if (rule instanceof CSSMediaRule) {
+        if (media?.test(rule.conditionText)) {
+          const found = walk(rule.cssRules, true);
+          if (found) return found;
+        }
+      } else if (rule instanceof CSSStyleRule && inMedia === !!media && selector.test(strip(rule.selectorText))) {
+        return rule.style;
+      }
+    }
+    return undefined;
+  };
+  for (const sheet of Array.from(document.styleSheets)) {
+    let rules: CSSRuleList;
+    try {
+      rules = sheet.cssRules;
+    } catch {
+      continue;
+    }
+    const found = walk(rules, false);
+    if (found) return found;
+  }
+  return undefined;
+}
+
+/**
  * Component test wrapper rỗng — dùng làm anchor cho TestBed khi cần Module-only config.
  */
 @Component({

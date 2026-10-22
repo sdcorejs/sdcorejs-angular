@@ -4,6 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormGroup } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { PagingReq } from '@sdcorejs/utils/models';
+import { LayoutTestTheme } from '../../../testing/layout-theme.spec';
 import { SdTableFilterRequest } from '@sdcorejs/angular/components/table';
 import {
   SdEntityPicker,
@@ -261,3 +262,71 @@ function deferred<T>(): { promise: Promise<T>; resolve(value: T): void; reject(e
   });
   return { promise, resolve, reject };
 }
+
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  standalone: true,
+  imports: [SdEntityPicker, LayoutTestTheme],
+  template: `
+    <sd-layout-test-theme />
+    <sd-entity-picker [provider]="provider" valueField="id" displayField="name" />
+    <sd-entity-picker [provider]="provider" valueField="id" displayField="name" [viewed]="true" [model]="1" />
+    <sd-entity-picker [provider]="provider" valueField="id" displayField="name" [disabled]="true" />
+  `,
+})
+class EntityPickerControlTokensHost {
+  provider: SdEntityPickerDataProvider<User, number> = {
+    load: () => ({ items: USERS, total: USERS.length }),
+    hydrate: () => [USERS[0]],
+  };
+}
+
+describe('SdEntityPicker control tokens', () => {
+  let fixture: ComponentFixture<EntityPickerControlTokensHost>;
+  let controls: HTMLElement[];
+
+  /** The computed value of `property: value` on a probe that inherits the theme of <html>. */
+  const resolve = (property: string, value: string): string => {
+    const probe = document.createElement('div');
+    probe.style.setProperty(property, value);
+    document.body.appendChild(probe);
+    const computed = getComputedStyle(probe).getPropertyValue(property);
+    probe.remove();
+    return computed;
+  };
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [NoopAnimationsModule, EntityPickerControlTokensHost] }).compileComponents();
+    fixture = TestBed.createComponent(EntityPickerControlTokensHost);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    controls = Array.from(fixture.nativeElement.querySelectorAll('.sd-entity-picker__control'));
+  });
+
+  it('draws the control like a form field: control radius and control border', () => {
+    const style = getComputedStyle(controls[0]);
+    expect(style.borderTopLeftRadius).toBe('8px');
+    expect(style.borderTopColor).toBe(resolve('color', 'var(--sd-control-border)'));
+  });
+
+  it('moves focus onto the whole control: focus border plus control ring, no outline on the trigger', () => {
+    const trigger = controls[0].querySelector('[data-entity-picker-trigger]') as HTMLButtonElement;
+    trigger.focus();
+    fixture.detectChanges();
+    const style = getComputedStyle(controls[0]);
+    expect(style.borderTopColor).toBe(resolve('color', 'var(--sd-control-border-focus)'));
+    expect(style.boxShadow).toBe(resolve('box-shadow', 'var(--sd-control-ring)'));
+    expect(getComputedStyle(trigger).outlineStyle).toBe('none');
+  });
+
+  it('drops the border in viewed mode', () => {
+    expect(getComputedStyle(controls[1]).borderTopColor).toBe('rgba(0, 0, 0, 0)');
+  });
+
+  it('paints a disabled control with the disabled background and border', () => {
+    const style = getComputedStyle(controls[2]);
+    expect(style.backgroundColor).toBe(resolve('background-color', 'var(--sd-control-bg-disabled)'));
+    expect(style.borderTopColor).toBe(resolve('color', 'var(--sd-control-border-disabled)'));
+  });
+});

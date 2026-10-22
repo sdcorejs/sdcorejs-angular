@@ -8,7 +8,7 @@
         data-mobile-account-row
         class="sd-layout-user-menu__mobile-row sd-layout-user-menu__mobile--inline d-flex align-items-center gap-8">
         <div data-user-summary class="sd-layout-user-menu__summary d-flex align-items-center gap-8 flex-1">
-          <sd-avatar [src]="avatar()" [size]="40"></sd-avatar>
+          <sd-avatar aria-hidden="true" [src]="avatar()" [size]="40"></sd-avatar>
           <span class="d-flex flex-column flex-1 overflow-hidden">
             <span class="T14M text-ellipsis">{{ displayName() }}</span>
             @if (userInfo().email) {
@@ -102,7 +102,7 @@
       [attr.aria-label]="compact() ? displayName() : null"
       [attr.aria-expanded]="isOpen()"
       (click)="toggle()">
-      <sd-avatar [src]="avatar()" [size]="compact() ? 32 : 40"></sd-avatar>
+      <sd-avatar aria-hidden="true" [src]="avatar()" [size]="compact() ? 32 : 40"></sd-avatar>
       @if (!compact()) {
         <span class="d-flex flex-column flex-1 overflow-hidden">
           <span class="T14M text-ellipsis">{{ displayName() }}</span>
@@ -123,7 +123,7 @@
         tabindex="-1"
         (keydown)="onMenuKeydown($event)">
         <div data-user-identity class="sd-layout-user-menu__identity d-flex align-items-center gap-8 px-8 py-4">
-          <sd-avatar [src]="avatar()" [size]="40"></sd-avatar>
+          <sd-avatar aria-hidden="true" [src]="avatar()" [size]="40"></sd-avatar>
           <span class="d-flex flex-column flex-1 overflow-hidden">
             <span class="T14M text-ellipsis">{{ displayName() }}</span>
             @if (userInfo().email) {

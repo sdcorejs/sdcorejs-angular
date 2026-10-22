@@ -1,25 +1,43 @@
-.tab-router__nav {
-  background: var(--sd-tab-router-nav-bg, #f9f9f9);
-  overflow: hidden;
+:host {
+  display: block;
 }
 
-.tab-router__nav--compact::ng-deep {
-  .tab-router__name {
-    display: none;
-  }
-  .tab-router__icon {
-    margin: 0 !important;
-  }
+// Thanh tab đợt 3 · 3a: cao 40px, tab căn đáy. Một tab (hoặc không có tab) thì ẩn thanh; tab thứ hai mở thì thanh
+// cao dần từ 0 lên 40px trong 150ms.
+.tab-router__nav {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  height: 40px;
+  padding: 0 8px;
+  box-sizing: border-box;
+  overflow: hidden;
+  background: var(--sd-tab-router-nav-bg);
+  transition: height 150ms ease-out;
+}
 
-  .tab-router__item--active {
-    min-width: 240px;
+// why: `visibility` chứ không chỉ height 0 — tab trong thanh đã ẩn không được nhận focus bằng phím Tab. Lúc ẩn,
+// visibility đổi sau khi chiều cao chạy xong; lúc hiện thì đổi ngay (rule trên không transition visibility).
+.tab-router__nav--hidden {
+  height: 0;
+  visibility: hidden;
+  transition:
+    height 150ms ease-out,
+    visibility 0s 150ms;
+}
 
-    .tab-router__icon {
-      margin-right: 8px !important;
-    }
-
-    .tab-router__name {
-      display: -webkit-box;
-    }
+@media (prefers-reduced-motion: reduce) {
+  .tab-router__nav,
+  .tab-router__nav--hidden {
+    transition: none;
   }
+}
+
+// Vạch ngăn nằm bên phải mỗi tab: ẩn ở hai bên tab đang mở và tab đang hover — tức vạch của chính tab đó và của tab
+// ngay trước nó.
+sd-tab-router-item.sd-tab-router-item--active::after,
+sd-tab-router-item:has(+ sd-tab-router-item.sd-tab-router-item--active)::after,
+sd-tab-router-item:hover::after,
+sd-tab-router-item:has(+ sd-tab-router-item:hover)::after {
+  opacity: 0;
 }

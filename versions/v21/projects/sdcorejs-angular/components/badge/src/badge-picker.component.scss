@@ -1,0 +1,310 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+// Trigger: badge đã ghi + dòng tóm tắt, trong infix của mat-form-field (khung, label, vòng focus thuộc field).
+.sd-badge-picker__trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 20px;
+  cursor: pointer;
+  outline: none;
+
+  &[aria-disabled='true'] {
+    cursor: default;
+  }
+
+  // why: badge giữ nguyên bề ngang; khi chật thì dòng tóm tắt bị cắt trước.
+  > sd-badge {
+    flex: 0 0 auto;
+    max-width: 100%;
+  }
+}
+
+// why: infix của outline sm/md giữ padding cũ của core/form.scss (sd-select bù bằng margin-top của mat-select), nên
+// trigger cũng bù để badge nằm giữa ô và không đè lên label nổi. lg dùng padding mặc định của Material, đã cân.
+.mat-mdc-form-field.mat-form-field-appearance-outline {
+  &.sd-sm .sd-badge-picker__trigger {
+    margin-top: 3px;
+  }
+
+  &.sd-md .sd-badge-picker__trigger {
+    margin-top: 12px;
+  }
+}
+
+.sd-badge-picker__summary {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: var(--sd-line-height-16, 16px);
+  color: var(--sd-text-secondary, rgba(0, 0, 0, 0.6));
+}
+
+// Cỡ chữ như giá trị và placeholder của sd-select (14px), không phải 16px mặc định của infix.
+.sd-badge-picker__placeholder {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--sd-font-size-14, 14px);
+  line-height: var(--sd-line-height-20, 20px);
+  color: var(--sd-text-secondary, rgba(0, 0, 0, 0.6));
+}
+
+// ── panel (render trong overlay, nhưng từ template của component nên vẫn ăn style này) ─────────────────────
+.sd-badge-picker-panel {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: 400px;
+  max-width: calc(100vw - 32px);
+  max-height: min(640px, calc(100vh - 32px));
+  overflow: hidden;
+  color: var(--sd-text, rgba(0, 0, 0, 0.87));
+  font-size: var(--sd-font-size-14, 14px);
+  background-color: var(--sd-select-panel-bg, var(--sd-surface));
+  border: 1px solid color-mix(in srgb, var(--sd-border) 60%, var(--sd-surface));
+  border-radius: var(--sd-panel-radius, 10px);
+  box-shadow: var(--sd-shadow-md, none);
+}
+
+.sd-badge-picker-panel__eyebrow {
+  font-size: var(--sd-font-size-11, 11px);
+  line-height: var(--sd-line-height-16, 16px);
+  font-weight: var(--sd-font-weight-medium, 500);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sd-text-secondary, rgba(0, 0, 0, 0.6));
+}
+
+.sd-badge-picker-panel__preview {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-sizing: border-box;
+  min-height: 56px;
+  padding: 12px 16px;
+  background-color: color-mix(in srgb, var(--sd-surface-muted) 60%, var(--sd-surface));
+  border-bottom: 1px solid var(--sd-select-panel-divider, var(--sd-border));
+}
+
+.sd-badge-picker-panel__preview-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  min-width: 0;
+}
+
+.sd-badge-picker-panel__hint {
+  font-size: var(--sd-font-size-11, 11px);
+  line-height: 14px;
+  color: var(--sd-text-secondary, rgba(0, 0, 0, 0.6));
+  text-align: end;
+}
+
+.sd-badge-picker-panel__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  padding: 14px 16px 16px;
+  overflow: auto;
+}
+
+.sd-badge-picker-panel__group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sd-badge-picker-panel__group-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.sd-badge-picker-panel__color-name {
+  font-size: var(--sd-font-size-12, 12px);
+  color: var(--sd-text, rgba(0, 0, 0, 0.87));
+}
+
+// Nhóm "Kiểu": lưới 3 cột, ô cao 60px.
+.sd-badge-picker-panel__types {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.sd-badge-picker-panel__type {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  height: 60px;
+  padding: 0 8px;
+  font: inherit;
+  color: inherit;
+  background-color: transparent;
+  border: 1px solid var(--sd-border, rgba(0, 0, 0, 0.12));
+  border-radius: 8px;
+  cursor: pointer;
+
+  &:hover:not([aria-checked='true']) {
+    background-color: color-mix(in srgb, var(--sd-text) 4%, transparent);
+  }
+
+  &[aria-checked='true'] {
+    border-color: var(--sd-primary);
+    background-color: color-mix(in srgb, var(--sd-primary) 6%, transparent);
+  }
+}
+
+.sd-badge-picker-panel__type-preview {
+  display: flex;
+  justify-content: center;
+  max-width: 100%;
+  min-width: 0;
+  pointer-events: none;
+}
+
+.sd-badge-picker-panel__type-name {
+  font-size: var(--sd-font-size-11, 11px);
+  line-height: 14px;
+  color: var(--sd-text-secondary, rgba(0, 0, 0, 0.6));
+}
+
+// Nhóm "Màu": ô tròn 24px; ô đang chọn có vòng 2px màu chữ, cách 2px.
+.sd-badge-picker-panel__swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 4px;
+}
+
+.sd-badge-picker-panel__swatch {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+
+  &[aria-checked='true'] {
+    box-shadow:
+      0 0 0 2px var(--sd-select-panel-bg, var(--sd-surface)),
+      0 0 0 4px var(--sd-text);
+  }
+}
+
+// Nhóm "Icon": lưới 8 cột, ô 36px.
+.sd-badge-picker-panel__icons {
+  display: grid;
+  grid-template-columns: repeat(8, 36px);
+  justify-content: space-between;
+  row-gap: 4px;
+}
+
+.sd-badge-picker-panel__icon-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  color: var(--sd-text-secondary, rgba(0, 0, 0, 0.6));
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+
+  &--none {
+    border-color: var(--sd-border, rgba(0, 0, 0, 0.12));
+  }
+
+  &:hover:not([aria-checked='true']) {
+    background-color: color-mix(in srgb, var(--sd-text) 5%, transparent);
+  }
+
+  &[aria-checked='true'] {
+    color: var(--sd-primary-dark);
+    background-color: var(--sd-primary-light);
+    border-color: var(--sd-primary);
+  }
+}
+
+.sd-badge-picker-panel__empty {
+  margin: 0;
+  font-size: var(--sd-font-size-12, 12px);
+  color: var(--sd-text-secondary, rgba(0, 0, 0, 0.6));
+}
+
+.sd-badge-picker-panel__footer {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-sizing: border-box;
+  min-height: 52px;
+  padding: 0 12px 0 16px;
+  border-top: 1px solid var(--sd-select-panel-divider, var(--sd-border));
+}
+
+.sd-badge-picker-panel__esc {
+  font-size: var(--sd-font-size-12, 12px);
+  color: var(--sd-text-secondary, rgba(0, 0, 0, 0.6));
+}
+
+// Nắp phím Esc trong câu gợi ý: viền dưới dày hơn như phím bấm, cùng kiểu `kbd` của bảng phím tắt form builder.
+.sd-badge-picker-panel__kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 22px;
+  height: 20px;
+  // Khoảng cách với chữ đến từ dấu cách trong câu dịch; 2px cho ngôn ngữ dính liền (ko "{key}로").
+  margin: 0 2px;
+  padding: 0 5px;
+  border: 1px solid var(--sd-border-strong);
+  border-bottom-width: 2px;
+  border-radius: var(--sd-radius-4, 4px);
+  background: var(--sd-surface-muted);
+  color: var(--sd-text);
+  font: var(--sd-font-weight-medium, 500) var(--sd-font-size-11, 11px) / 1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  vertical-align: middle;
+}
+
+.sd-badge-picker-panel__type,
+.sd-badge-picker-panel__swatch,
+.sd-badge-picker-panel__icon-cell {
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: var(--sd-focus-ring-offset, 2px);
+  }
+}
+
+@media (forced-colors: active) {
+  // why: dưới forced-colors nền bị bỏ — ô màu phải tự giữ màu, và lựa chọn đánh dấu bằng viền hệ thống.
+  .sd-badge-picker-panel__swatch {
+    forced-color-adjust: none;
+    border: 1px solid CanvasText;
+  }
+
+  .sd-badge-picker-panel__type[aria-checked='true'],
+  .sd-badge-picker-panel__icon-cell[aria-checked='true'] {
+    border: 2px solid Highlight;
+  }
+}

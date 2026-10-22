@@ -1,214 +1,471 @@
-@use '../../../assets/scss/core/color.scss' as color;
-@use 'sass:map';
+// Thang kích thước đợt 3 · 1a: round/tag cao cố định 20/24/28px, chữ 12/13/14px; type icon to hơn một bậc (nằm
+// trong dòng chữ). Token `--sd-badge-height-{sm,md,lg}`, `--sd-badge-radius-tag`, `--sd-badge-font-weight` đọc
+// bằng fallback chứ không khai trên :host.
+// why: khai trên :host thành rule `[_nghost-…]`, thắng mọi override của consumer ở `:root` hay `sd-badge {}`.
 
-// why: 'xs' đã bị loại khỏi Size/SdSize (utils >=1.1.0); giữ lại sm/md/lg đồng bộ với các sd-* khác.
-$badgeIconSize:
-  'sm' 16,
-  'md' 18,
-  'lg' 24;
+:host {
+  display: inline-flex;
+  vertical-align: middle;
+  max-width: 100%;
+  min-width: 0;
+}
 
-$badgeIconColor:
-  'primary' map.get(color.$color_map, 'primary-dark'),
-  'secondary' map.get(color.$color_map, 'secondary-dark'),
-  'info' map.get(color.$color_map, 'info-dark'),
-  'success' map.get(color.$color_map, 'success-dark'),
-  'error' map.get(color.$color_map, 'error-dark'),
-  'warning' map.get(color.$color_map, 'warning-dark');
-
-$badgeDescriptionColor: map.get(color.$color_map, 'text-secondary');
-
-// why: size map cho container .c-badge — round (pill) và tag dùng chung biến này
-// (sm = giữ giá trị hiện tại để không vỡ UI hiện hữu; md/lg là mới).
-$badgeRoundPadding:
-  'sm' 2px 10px,
-  'md' 4px 12px,
-  'lg' 6px 16px;
-
-$badgeTagPadding:
-  'sm' 1px 7px,
-  'md' 2px 10px,
-  'lg' 4px 12px;
-
-$badgeFontSize:
-  'sm' 14px,
-  'md' 16px,
-  'lg' 18px;
-
-$badgeDescFontSize:
-  'sm' 12px,
-  'md' 13px,
-  'lg' 14px;
-
-$badges: '';
-.c-badge {
-  border-radius: 20px;
-  padding: 2px 10px;
-  display: inline-block;
-  text-align: center;
-  overflow-wrap: break-word;
-
-  // why: round + icon → cần flex để icon-title canh giữa, gap nhỏ.
-  &.c-badge--has-icon {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  // why: icon size áp dụng cho cả tag VÀ round-có-icon (cùng nằm trong .c-badge).
-  // Trước đây chỉ scope dưới .c-badge--tag → round không có font-size icon.
-  .c-material-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    line-height: 1;
-    @each $name, $size in $badgeIconSize {
-      &.c-#{$name} {
-        font-size: #{$size}px;
-        width: #{$size}px;
-        height: #{$size}px;
-      }
-    }
-  }
-
-  // size modifier cho round (chỉ áp dụng khi KHÔNG có .c-badge--tag)
-  @each $name, $py, $px in $badgeRoundPadding {
-    &.c-badge--#{$name}:not(.c-badge--tag) {
-      padding: $py $px;
-    }
-  }
-
-  // font-size container (áp cho cả round + tag)
-  @each $name, $fs in $badgeFontSize {
-    &.c-badge--#{$name} .c-badge-title {
-      font-size: $fs;
-    }
-  }
-  @each $name, $fs in $badgeDescFontSize {
-    &.c-badge--#{$name} .c-badge-description {
-      font-size: $fs;
-    }
-  }
-
-  &.c-primary {
-    background: map.get(color.$color_map, 'primary-light');
-    color: map.get(color.$color_map, 'primary-dark');
-    &.c-badge--tag {
-      border: 1px solid map.get(color.$color_map, 'primary-dark');
-    }
-  }
-  &.c-secondary {
-    background: map.get(color.$color_map, 'secondary-light');
-    color: map.get(color.$color_map, 'secondary-dark');
-    &.c-badge--tag {
-      border: 1px solid map.get(color.$color_map, 'secondary-dark');
-    }
-  }
-  &.c-info {
-    background: map.get(color.$color_map, 'info-light');
-    color: map.get(color.$color_map, 'info-dark');
-    &.c-badge--tag {
-      border: 1px solid map.get(color.$color_map, 'info-dark');
-    }
-  }
-  &.c-warning {
-    background: map.get(color.$color_map, 'warning-light');
-    color: map.get(color.$color_map, 'warning-dark');
-    &.c-badge--tag {
-      border: 1px solid map.get(color.$color_map, 'warning-dark');
-    }
-  }
-  &.c-success {
-    background: map.get(color.$color_map, 'success-light');
-    color: map.get(color.$color_map, 'success-dark');
-    &.c-badge--tag {
-      border: 1px solid map.get(color.$color_map, 'success-dark');
-    }
-  }
-  &.c-error {
-    background: map.get(color.$color_map, 'error-light');
-    color: map.get(color.$color_map, 'error-dark');
-    &.c-badge--tag {
-      border: 1px solid map.get(color.$color_map, 'error-dark');
-    }
-  }
-
-  &.c-badge--tag {
-    border-radius: var(--sd-radius-4, 4px);
-    padding: 1px 7px;
-
-    // size modifier cho tag — override padding mặc định
-    @each $name, $py, $px in $badgeTagPadding {
-      &.c-badge--#{$name} {
-        padding: $py $px;
-      }
-    }
+// Màu: class màu chỉ đặt biến nội bộ, các type đọc lại. Nền `*-light`, chữ/icon `*-dark`, chấm và nền solid màu gốc,
+// chữ solid `*-contrast`.
+@each $name in primary, secondary, info, success, warning, error {
+  .c-#{$name} {
+    --badge-tone: var(--sd-#{$name});
+    --badge-tone-light: var(--sd-#{$name}-light);
+    --badge-tone-dark: var(--sd-#{$name}-dark);
+    --badge-tone-contrast: var(--sd-#{$name}-contrast);
   }
 }
 
+.c-badge,
 .c-badge-icon {
   display: inline-flex;
   align-items: center;
-  min-width: 0;
+  box-sizing: border-box;
   max-width: 100%;
+  min-width: 0;
+  vertical-align: middle;
+}
 
-  .c-icon {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    min-width: 0;
-    max-width: 100%;
-  }
+// Một dòng: chữ không xuống dòng, cắt bằng ellipsis trong phần còn lại của ô.
+.c-badge-title,
+.c-badge-description {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 
-  .c-material-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 auto;
-    padding: 0;
-    line-height: 1;
-    @each $name, $size in $badgeIconSize {
-      &.c-#{$name} {
-        width: #{$size}px;
-        height: #{$size}px;
-        font-size: #{$size}px;
-      }
-    }
-    @each $name, $color in $badgeIconColor {
-      &.c-#{$name} {
-        color: $color;
-      }
-    }
-  }
+.c-badge-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
 
-  .c-badge-copy {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
+.c-badge-lead {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
 
-  .c-badge-title {
-    line-height: var(--sd-line-height-20, 20px);
-  }
-
-  .c-badge-description {
-    line-height: 14px;
-  }
+.c-material-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding: 0;
+  line-height: 1;
 }
 
 .c-badge-description {
-  color: $badgeDescriptionColor;
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: var(--sd-line-height-16, 16px);
+  font-weight: 400;
+  color: var(--sd-text-secondary, rgba(0, 0, 0, 0.6));
 }
 
-// why: badge clickable giờ nhận tabindex="0" nên BẮT BUỘC phải có focus ring nhìn thấy được —
-// không có thì người dùng bàn phím tab vào mà không biết mình đang đứng ở đâu. Dùng :focus-visible
-// để chuột không bị viền.
-:host [role='button']:focus-visible {
-  outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
-  outline-offset: 2px;
+// ── round + tag ──────────────────────────────────────────────────────────────
+.c-badge {
+  height: var(--sd-badge-height-sm, 20px);
+  gap: 4px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background-color: var(--badge-tone-light);
+  color: var(--badge-tone-dark);
+  // why: nền biến mất dưới forced-colors; viền trong suốt được trình duyệt tô lại nên pill vẫn có khung.
+  outline: 1px solid transparent;
+  outline-offset: -1px;
+
+  .c-badge-title {
+    font-size: var(--sd-font-size-12, 12px);
+    line-height: var(--sd-line-height-16, 16px);
+    font-weight: var(--sd-badge-font-weight, 500);
+  }
+
+  .c-material-icon {
+    width: 14px;
+    height: 14px;
+    font-size: 14px;
+  }
+
+  // Icon bên trái thì padding trái bớt 2px để icon không lọt thỏm (chỉ ở sm).
+  &.c-badge--has-icon {
+    padding: 0 8px 0 6px;
+  }
+
+  &.c-badge--md {
+    height: var(--sd-badge-height-md, 24px);
+    padding: 0 10px;
+
+    .c-badge-title {
+      font-size: var(--sd-font-size-13, 13px);
+      line-height: var(--sd-line-height-18, 18px);
+    }
+
+    .c-material-icon {
+      width: 16px;
+      height: 16px;
+      font-size: 16px;
+    }
+  }
+
+  &.c-badge--lg {
+    height: var(--sd-badge-height-lg, 28px);
+    gap: 6px;
+    padding: 0 12px;
+
+    .c-badge-title {
+      font-size: var(--sd-font-size-14, 14px);
+      line-height: var(--sd-line-height-20, 20px);
+    }
+
+    .c-material-icon {
+      width: 18px;
+      height: 18px;
+      font-size: 18px;
+    }
+  }
+}
+
+// Số đếm (title là số): hình tròn khi một chữ số — min-width bằng chiều cao, chữ số đều bề rộng.
+.c-badge.c-badge--count {
+  justify-content: center;
+  min-width: var(--sd-badge-height-sm, 20px);
+  padding: 0 6px;
+
+  .c-badge-title {
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+
+  &.c-badge--md {
+    min-width: var(--sd-badge-height-md, 24px);
+    padding: 0 7px;
+  }
+
+  &.c-badge--lg {
+    min-width: var(--sd-badge-height-lg, 28px);
+    padding: 0 8px;
+  }
+}
+
+.c-badge.c-badge--tag {
+  padding: 0 6px;
+  border: 1px solid color-mix(in srgb, var(--badge-tone-dark) 22%, var(--badge-tone-light));
+  border-radius: var(--sd-badge-radius-tag, 4px);
+  outline: none;
+
+  // why: một token cho bo góc tag; md/lg (và tag có description) bo thêm 2px như thiết kế (4 → 6px).
+  &.c-badge--md {
+    padding: 0 8px;
+    border-radius: calc(var(--sd-badge-radius-tag, 4px) + 2px);
+  }
+
+  &.c-badge--lg {
+    padding: 0 10px;
+    border-radius: calc(var(--sd-badge-radius-tag, 4px) + 2px);
+  }
+
+  // Tag có description: khối hai dòng, icon căn theo dòng đầu.
+  &.c-badge--has-desc {
+    align-items: flex-start;
+    height: auto;
+    padding: 4px 8px;
+    border-radius: calc(var(--sd-badge-radius-tag, 4px) + 2px);
+
+    .c-badge-title {
+      font-size: var(--sd-font-size-13, 13px);
+      line-height: var(--sd-line-height-18, 18px);
+    }
+
+    .c-badge-lead {
+      height: var(--sd-line-height-18, 18px);
+    }
+  }
+}
+
+// Solid: hình học của round, nền màu gốc. `*-contrast` trên màu gốc đạt 4.5:1 ở mọi preset và dark (test:theme).
+.c-badge.c-badge--solid {
+  background-color: var(--badge-tone);
+  color: var(--badge-tone-contrast);
+}
+
+// Pair: nhãn secondary nhạt ghép liền với giá trị màu nhạt; nhãn không co, giá trị cắt trước.
+// why: hai phần là block cao bằng badge (line-height = chiều cao) thay vì flex, vì ellipsis không chạy trên chữ
+// nằm trực tiếp trong flex container.
+.c-badge.c-badge--pair {
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: transparent;
+  border-radius: var(--sd-badge-radius-tag, 4px);
+
+  .c-badge-pair-label,
+  .c-badge-title {
+    padding: 0 6px;
+    font-size: var(--sd-font-size-12, 12px);
+    line-height: var(--sd-badge-height-sm, 20px);
+  }
+
+  .c-badge-pair-label {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    background-color: var(--sd-secondary-light);
+    color: var(--sd-secondary-dark);
+    font-weight: 400;
+  }
+
+  .c-badge-title {
+    background-color: var(--badge-tone-light);
+    color: var(--badge-tone-dark);
+  }
+
+  &.c-badge--md {
+    border-radius: calc(var(--sd-badge-radius-tag, 4px) + 2px);
+
+    .c-badge-pair-label,
+    .c-badge-title {
+      padding: 0 8px;
+      font-size: var(--sd-font-size-13, 13px);
+      line-height: var(--sd-badge-height-md, 24px);
+    }
+  }
+
+  &.c-badge--lg {
+    border-radius: calc(var(--sd-badge-radius-tag, 4px) + 2px);
+
+    .c-badge-pair-label,
+    .c-badge-title {
+      padding: 0 10px;
+      font-size: var(--sd-font-size-14, 14px);
+      line-height: var(--sd-badge-height-lg, 28px);
+    }
+  }
+}
+
+// Dot: chỉ có chấm. Bấm được thì vùng chạm 20px quanh chấm 8px.
+.c-badge-dotonly {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  border-radius: 50%;
+
+  &.pointer {
+    cursor: pointer;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+  }
+}
+
+// ── type icon ───────────────────────────────────────────────────────────────
+.c-badge-icon {
+  gap: 6px;
+  min-height: var(--sd-badge-height-sm, 20px);
+  color: var(--sd-text, rgba(0, 0, 0, 0.87));
+  // why: chỉ thấy khi focus hoặc hover lúc bấm được.
   border-radius: var(--sd-radius-4, 4px);
+
+  .c-badge-title {
+    font-size: var(--sd-font-size-13, 13px);
+    line-height: var(--sd-line-height-18, 18px);
+    font-weight: 400;
+  }
+
+  // Ô dẫn đầu cao bằng line-height của title: icon/chấm nằm giữa dòng đầu.
+  .c-badge-lead {
+    height: var(--sd-line-height-18, 18px);
+  }
+
+  .c-material-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    color: var(--badge-tone-dark);
+  }
+
+  &.c-badge--md,
+  &.c-badge--lg {
+    .c-badge-title {
+      font-size: var(--sd-font-size-14, 14px);
+      line-height: var(--sd-line-height-20, 20px);
+    }
+
+    .c-badge-lead {
+      height: var(--sd-line-height-20, 20px);
+    }
+
+    .c-material-icon {
+      width: 18px;
+      height: 18px;
+      font-size: 18px;
+    }
+  }
+
+  &.c-badge--md {
+    min-height: var(--sd-badge-height-md, 24px);
+  }
+
+  &.c-badge--lg {
+    min-height: var(--sd-badge-height-lg, 28px);
+  }
+
+  &.c-badge-icon--has-desc {
+    align-items: flex-start;
+  }
+}
+
+// Chấm mặc định (type icon không có icon): vẽ bằng CSS, màu gốc.
+// why: `--sd-badge-dot-size` là hook để nơi đặt chấm tự chọn đường kính (sd-avatar tính theo cỡ avatar).
+.c-badge-dot {
+  display: block;
+  width: var(--sd-badge-dot-size, 8px);
+  height: var(--sd-badge-dot-size, 8px);
+  border-radius: 50%;
+  background-color: var(--badge-tone);
+}
+
+.c-badge-icon.c-badge--lg .c-badge-dot,
+.c-badge-dotonly.c-badge--lg .c-badge-dot {
+  width: var(--sd-badge-dot-size, 10px);
+  height: var(--sd-badge-dot-size, 10px);
+}
+
+// Pulse: vòng sáng 3px (28% màu gốc) nhấp nháy chu kỳ 1.6s; reduced-motion thì vòng đứng yên.
+.c-badge-dot--pulse {
+  --badge-halo: color-mix(in srgb, var(--badge-tone) 28%, transparent);
+  box-shadow: 0 0 0 3px var(--badge-halo);
+  animation: sd-badge-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes sd-badge-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px var(--badge-halo);
+  }
+
+  50% {
+    box-shadow: 0 0 0 3px transparent;
+  }
+}
+
+// ── bấm được ────────────────────────────────────────────────────────────────
+// why: hover 6% / active 10% thay cho 10% / 16% của spec — 16% hạ chữ warning còn 4.20:1 và success 4.44:1
+// (dưới AA), warning fail từ 12% (quyết định 2 của đợt 3).
+.c-badge.pointer {
+  --badge-bg-hover: color-mix(in srgb, var(--badge-tone-dark) 6%, var(--badge-tone-light));
+  --badge-bg-active: color-mix(in srgb, var(--badge-tone-dark) 10%, var(--badge-tone-light));
+}
+
+.c-badge-icon.pointer {
+  --badge-bg-hover: color-mix(in srgb, var(--badge-tone-dark) 6%, transparent);
+  --badge-bg-active: color-mix(in srgb, var(--badge-tone-dark) 10%, transparent);
+}
+
+.c-badge.c-badge--solid.pointer {
+  --badge-bg-hover: color-mix(in srgb, var(--badge-tone-dark) 6%, var(--badge-tone));
+  --badge-bg-active: color-mix(in srgb, var(--badge-tone-dark) 10%, var(--badge-tone));
+}
+
+// Pair: nền nằm ở hai phần nên hover tô từng phần, mỗi phần trộn màu đậm của chính nó.
+.c-badge.c-badge--pair.pointer {
+  &:hover {
+    .c-badge-pair-label {
+      background-color: color-mix(in srgb, var(--sd-secondary-dark) 6%, var(--sd-secondary-light));
+    }
+
+    .c-badge-title {
+      background-color: color-mix(in srgb, var(--badge-tone-dark) 6%, var(--badge-tone-light));
+    }
+  }
+
+  &:active {
+    .c-badge-pair-label {
+      background-color: color-mix(in srgb, var(--sd-secondary-dark) 10%, var(--sd-secondary-light));
+    }
+
+    .c-badge-title {
+      background-color: color-mix(in srgb, var(--badge-tone-dark) 10%, var(--badge-tone-light));
+    }
+  }
+}
+
+.c-badge.pointer,
+.c-badge-icon.pointer {
+  cursor: pointer;
+  transition: background-color 120ms ease;
+
+  &:hover {
+    background-color: var(--badge-bg-hover);
+  }
+
+  &:active {
+    background-color: var(--badge-bg-active);
+  }
+}
+
+// why: badge clickable nhận tabindex="0" nên BẮT BUỘC có vòng focus nhìn thấy được. Vòng giữ nguyên bo góc
+// của badge — rule cũ đổi `border-radius` lúc focus làm pill mất bo.
+.c-badge[role='button']:focus-visible,
+.c-badge-icon[role='button']:focus-visible,
+.c-badge-dotonly[role='button']:focus-visible {
+  outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+  outline-offset: var(--sd-focus-ring-offset, 2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .c-badge.pointer,
+  .c-badge-icon.pointer {
+    transition: none;
+  }
+
+  .c-badge-dot--pulse {
+    animation: none;
+    box-shadow: 0 0 0 3px var(--badge-halo);
+  }
+}
+
+@media (forced-colors: active) {
+  // why: nền bị bỏ dưới forced-colors nên chấm phải tự giữ màu, nếu không nó biến mất.
+  .c-badge-dot {
+    forced-color-adjust: none;
+    background-color: CanvasText;
+  }
+}
+
+// Số thật của số đếm "99+" cho screen reader.
+.sd-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// Nội dung tooltip (render trong overlay từ template của badge) giữ xuống dòng của `tooltip`.
+.c-badge-tooltip {
+  white-space: pre-line;
 }
 
 // Css để sử dụng \n tooltip

@@ -21,11 +21,14 @@ import {
   numberAttribute,
   OnInit,
   output,
-  signal, // THÊM IMPORT NÀY
+  signal,
+  // THÊM IMPORT NÀY
   Signal,
   TemplateRef,
   untracked,
   viewChild,
+  Injector,
+  afterNextRender,
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, FormGroupDirective, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
@@ -40,7 +43,12 @@ import { SdView } from '@sdcorejs/angular/components/view';
 import { SdDataState, SdDataStateTemplateDirective } from '@sdcorejs/angular/components/data-state';
 import { cloneReadRequest, combineReadStates, SdReadChannel, SdSearchReadState } from '@sdcorejs/angular/utilities/read-state';
 import { SdTooltipDirective } from '@sdcorejs/angular/directives';
-import { SdItemDefDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
+import {
+  SdItemDefDefDirective,
+  SdViewDefDirective,
+  ɵSdSearchField,
+  ɵSdSearchFieldInputDirective,
+} from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import {
   HandleSdCustomValidator,
@@ -63,11 +71,12 @@ import type { SdLabelPlacement } from '@sdcorejs/angular/forms/models';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { ArrayUtilities, StringUtilities, Utilities } from '@sdcorejs/utils/fns';
-import { NestedKeyOf, Size } from '@sdcorejs/utils/models';
+import { NestedKeyOf, Operator, Size } from '@sdcorejs/utils/models';
 
 import { combineLatest, timer } from 'rxjs';
 import { debounce, filter, map, shareReplay, startWith, switchMap, tap } from 'rxjs/operators';
 import { SdSelectFooterActionDirective, SdSelectFooterActionWhenFn } from './select-footer-action.directive';
+import { ɵSdOperatorChip, ɵsdIsNoDataOperator, ɵsdOperatorHasValue, ɵsdSingleOperator } from '@sdcorejs/angular/components/operator';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 interface SelectReadRequest {
@@ -91,6 +100,7 @@ const SD_SELECT_VIRTUAL_PAGE = 10;
 /** Same window as Material's typeahead (`withTypeAhead()`). */
 const SD_SELECT_TYPEAHEAD_MS = 200;
 const SD_SELECT_VIRTUAL_NAV_KEYS = new Set(['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End']);
+let nextSelectAllCountId = 0;
 
 /**
  * why (D-026): the only code in sd-select that touches a Material internal for virtual scrolling —
@@ -123,6 +133,7 @@ class SdSelectVirtualAdapter {
     '[class.sd-label-top]': "labelPlacement() === 'top'",
   },
   imports: [
+    ɵSdOperatorChip,
     SdDataState,
     SdDataStateTemplateDirective,
     SdTooltipDirective,
@@ -141,6 +152,8 @@ class SdSelectVirtualAdapter {
     SdSelectFooterActionDirective,
     SdTranslatePipe,
     ScrollingModule,
+    ɵSdSearchField,
+    ɵSdSearchFieldInputDirective,
   ],
 })
 export class SdSelect<T extends object | string | number = Record<string, unknown>> implements OnInit, DoCheck {
@@ -217,6 +230,40 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   name = input<string>(Utilities.generateUuid());
 
   size = input<Size>('md');
+
+  /**
+   * Operator cho phép trong chip tiền tố của ô (thiết kế đợt 2 · G), theo thứ tự hiển thị. Từ hai operator
+   * thì chip hiện; đúng một thì control dùng luôn operator đó và không hiện chip.
+   */
+  readonly operators = input<readonly Operator[]>([]);
+  /** Operator hiện tại — `[(operator)]`. Đổi operator không xoá giá trị; nút xoá chỉ xoá giá trị. */
+  readonly operator = model<Operator | undefined>(undefined);
+  protected readonly operatorChip = computed(() => this.operators().length > 1);
+  protected readonly operatorHasValue = computed(() => ɵsdOperatorHasValue(this.valueModel()));
+  readonly #singleOperator = ɵsdSingleOperator(this.operators, this.operator);
+  /**
+   * NULL / NOT_NULL không cần giá trị: chọn trong chip thì xoá giá trị, ô bị khoá (disabled) tới khi đổi sang
+   * operator khác; chip vẫn dùng được.
+   */
+  protected readonly operatorLocked = computed(() => this.operators().length > 0 && ɵsdIsNoDataOperator(this.operator()));
+  // why: query signal không đặt được trên field ES private (#).
+  private readonly operatorChipRef = viewChild(ɵSdOperatorChip);
+  readonly #operatorInjector = inject(Injector);
+
+  /**
+   * Chọn xong operator trong chip (thiết kế đợt 2 · G): focus về ô nhập. NULL / NOT_NULL thì xoá giá trị và giữ focus
+   * ở chip. why: xoá ngay trong handler chọn (không trong effect) để giá trị two-way của cha đổi trong event, không
+   * đổi giữa lượt change detection.
+   */
+  protected onOperatorChosen(): void {
+    if (this.operatorLocked()) {
+      if (this.operatorHasValue()) this.clear();
+      this.operatorChipRef()?.focus();
+      return;
+    }
+    // why: ô vừa mở khoá chỉ enable sau lượt render tới (effect disabled), focus ngay sẽ hụt.
+    afterNextRender(() => this.selectRef()?.focus(), { injector: this.#operatorInjector });
+  }
   // Ghi (TransformT): any (để không bị lỗi typing khi cha truyền vào)
   form = input<FormGroup | undefined, any>(undefined, {
     transform: (val: any): FormGroup | undefined => {
@@ -360,6 +407,8 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
 
   loading = signal<boolean>(false);
   focused = signal<boolean>(false);
+  /** why: tooltip tóm tắt lựa chọn chỉ hiện khi panel đóng — lúc mở, panel đã cho thấy đủ lựa chọn. */
+  protected readonly panelOpen = signal(false);
   allSelected = false;
 
   #cache: Record<string, any[]> = {};
@@ -508,19 +557,29 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
     () => this.showSelectAll() && this.multiple() && Array.isArray(this.actualItems()) && this.selectAllScope().length > 0
   );
 
-  /** Trạng thái checkbox "Tất cả", tính trên items ENABLED trong scope (item disabled bỏ qua). */
-  readonly selectAllState = computed<'checked' | 'indeterminate' | 'unchecked'>(() => {
+  /** Bộ đếm của hàng "Tất cả": số item trong scope đang được chọn / tổng scope (item disabled bỏ qua). */
+  readonly selectAllCount = computed<{ selected: number; total: number }>(() => {
     const scope = this.selectAllScope();
     const val = this.normalizedValue();
     const selected = new Set((Array.isArray(val) ? val : []).map(v => String(v)));
-    if (!scope.length || !selected.size) return 'unchecked';
     let count = 0;
-    for (const item of scope) {
-      if (selected.has(String(this.itemValue(item)))) count++;
+    if (selected.size) {
+      for (const item of scope) {
+        if (selected.has(String(this.itemValue(item)))) count++;
+      }
     }
-    if (count === 0) return 'unchecked';
-    return count === scope.length ? 'checked' : 'indeterminate';
+    return { selected: count, total: scope.length };
   });
+
+  /** Trạng thái checkbox "Tất cả", tính trên items ENABLED trong scope (item disabled bỏ qua). */
+  readonly selectAllState = computed<'checked' | 'indeterminate' | 'unchecked'>(() => {
+    const { selected, total } = this.selectAllCount();
+    if (!total || !selected) return 'unchecked';
+    return selected === total ? 'checked' : 'indeterminate';
+  });
+
+  /** id của mô tả bộ đếm, để hàng "Tất cả" trỏ aria-describedby tới. */
+  protected readonly selectAllCountId = `sd-select-all-count-${++nextSelectAllCountId}`;
 
   // ==========================================
   // 5. GETTER & HELPERS
@@ -654,7 +713,7 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
     });
 
     effect(() => {
-      if (this.disabled()) this.formControl.disable({ emitEvent: false });
+      if (this.disabled() || this.operatorLocked()) this.formControl.disable({ emitEvent: false });
       else this.formControl.enable({ emitEvent: false });
     });
 
@@ -1221,6 +1280,7 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   };
 
   onOpenedChange = (isOpened: boolean) => {
+    this.panelOpen.set(isOpened);
     if (isOpened) {
       this.focused.set(true);
       this.clearSearch();

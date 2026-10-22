@@ -1,22 +1,25 @@
 @use '../../../assets/scss/core/color.scss' as color;
 @use 'sass:map';
 
-@mixin checkbox-size($box, $state-layer, $label-gap) {
+// why: bo góc khoảng 22% cạnh (thiết kế đợt 2 · E) — cùng họ với ô nhập bo 8px nhưng vẫn giữ dáng vuông;
+// bo quá ~30% thì đặt cạnh radio khó phân biệt và dấu check bị chật.
+@mixin checkbox-size($box, $state-layer, $label-gap, $radius) {
   --sd-checkbox-size: #{$box};
   --sd-checkbox-state-layer-size: #{$state-layer};
   --sd-checkbox-label-gap: #{$label-gap};
+  --sd-checkbox-radius: #{$radius};
 }
 
 :host {
-  @include checkbox-size(18px, 40px, 4px);
+  @include checkbox-size(18px, 40px, 4px, var(--sd-radius-4, 4px));
 }
 
 :host([data-size='sm']) {
-  @include checkbox-size(14px, 32px, 2px);
+  @include checkbox-size(14px, 32px, 2px, 3px);
 }
 
 :host([data-size='lg']) {
-  @include checkbox-size(22px, 48px, 6px);
+  @include checkbox-size(22px, 48px, 6px, 5px);
 }
 
 :host ::ng-deep .mat-mdc-checkbox,
@@ -39,6 +42,11 @@
     height: var(--sd-checkbox-size);
     top: calc((var(--sd-checkbox-state-layer-size) - var(--sd-checkbox-size)) / 2);
     left: calc((var(--sd-checkbox-state-layer-size) - var(--sd-checkbox-size)) / 2);
+  }
+
+  // Bo theo cỡ. Thêm `.mat-mdc-checkbox` để thắng rule 4px chung cho mat-checkbox trong core/form.scss.
+  .mat-mdc-checkbox .mdc-checkbox__background {
+    border-radius: var(--sd-checkbox-radius);
   }
 
   // why: checkmark SVG và mixedmark của Material dùng width:100%, tự theo box.

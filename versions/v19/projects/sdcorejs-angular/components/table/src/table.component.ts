@@ -107,6 +107,7 @@ import { SdTableExportContext, TableExportService, TableFormatService } from './
 import { ConfigService } from './services/config.service';
 import { buildColumnWidthMap } from './services/column-width.util';
 import { filterLocalItems, hasActiveColumnFilter } from './services/table-local/table-local.util';
+import { isNoDataColumnOperator } from './services/table-filter/table-filter-operator.util';
 import { canSortReorder, isReorderDisabled as isReorderItemDisabled, reorderTableItems } from './services/table-reorder/table-reorder.util';
 import {
   applyDefaultSelected,
@@ -1991,8 +1992,11 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   onOperatorChange = (column: SdTableColumn, operator: Operator | undefined) => {
     if (operator == null) return;
     this.tableOption()?.filter?.operatorChange?.(column, operator);
-    // why: operator mới đổi nghĩa của giá trị đang có nên lọc lại ngay; ô trống thì chỉ lưu operator.
-    if (hasActiveColumnFilter(this.columnFilter, [column])) this.onFilterChange();
+    // why: operator mới đổi nghĩa của giá trị đang có nên lọc lại ngay; ô trống thì chỉ lưu operator. NULL / NOT_NULL
+    // lọc không cần giá trị, và rời khỏi NULL / NOT_NULL (operator đã commit trước đó) thì filter đó mất — cả hai lọc lại.
+    const committed = this.filterRegister?.value.get().columnOperator?.[column.field] ?? column.filter?.operator?.default;
+    const leftNoData = committed !== operator && isNoDataColumnOperator(column, committed);
+    if (leftNoData || hasActiveColumnFilter(this.columnFilter, [column], { [column.field]: operator })) this.onFilterChange();
     else this.onFilterCommit();
   };
 

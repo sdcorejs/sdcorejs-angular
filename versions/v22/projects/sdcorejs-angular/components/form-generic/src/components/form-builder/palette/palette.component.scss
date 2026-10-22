@@ -51,33 +51,9 @@
   min-height: 0;
 }
 
+// Khung, viền và focus thuộc primitive sd-search-field (đợt 1 · B, size sm); ở đây chỉ giữ khoảng cách.
 .fb-search {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   margin: 12px 12px 8px;
-  padding: 0 10px;
-  height: 36px;
-  border: 1px solid var(--sd-border);
-  border-radius: var(--sd-radius-8, 8px);
-  color: var(--sd-text-secondary);
-  background: var(--sd-surface);
-
-  &:focus-within {
-    border-color: var(--sd-primary);
-    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
-    outline-offset: -1px;
-  }
-}
-
-.fb-search__input {
-  flex: 1;
-  min-width: 0;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--sd-text);
-  font-size: var(--sd-font-size-13, 13px);
 }
 
 .fb-target {

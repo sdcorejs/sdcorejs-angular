@@ -4,7 +4,8 @@
   width: 100%;
   // Allow flex children to shrink within host height; prevents overflow instead of scrolling.
   min-height: 0;
-  height: 100vh;
+  height: 100vh; // fallback cho trình duyệt chưa hỗ trợ dvh
+  height: 100dvh; // trên mobile, trừ phần thanh địa chỉ đang hiện
 }
 
 :host ::ng-deep {

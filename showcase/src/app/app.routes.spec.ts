@@ -23,6 +23,14 @@ describe('showcase documentation routes', () => {
     expect(routes[demoIndex].children?.[0]?.path).toBe('generic/:module/:entity');
   });
 
+  it('mounts the live tab-router demo with its own child routes before the generic demo', () => {
+    const index = routes.findIndex(route => route.path === 'demo/tab-router');
+    expect(index).toBeGreaterThan(-1);
+    expect(index).toBeLessThan(routes.findIndex(route => route.path === 'demo'));
+    expect(routes[index].loadComponent).toBeDefined();
+    expect(routes[index].loadChildren).toBeDefined();
+  });
+
   it('preserves legacy category/slug URLs through a redirect guard', () => {
     const legacy = routes.find(route => route.path === ':category/:slug');
     expect(legacy?.canActivate?.length).toBeGreaterThan(0);

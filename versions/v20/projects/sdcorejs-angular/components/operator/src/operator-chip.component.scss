@@ -1,0 +1,95 @@
+@use './operator-menu';
+
+// Chip operator trong ô (thiết kế đợt 2 · G). Kích thước theo cỡ ô:
+// sm 32px → chip 24px, padding 0 2px 0 6px, cách mép trái 4px, icon 16px, mũi tên 14px;
+// md 40px → chip 28px, padding 0 4px 0 8px, cách mép trái 6px, icon 18px, mũi tên 16px.
+// `--sd-operator-chip-bg` (local) giữ nền của trạng thái hiện tại để hover trộn thêm 6% chữ lên đúng nền đó.
+:host {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  margin-left: 6px;
+}
+
+:host(.sd-sm) {
+  margin-left: 4px;
+}
+
+.sd-operator-chip__trigger {
+  --sd-operator-chip-bg: color-mix(in srgb, var(--sd-surface-muted) 75%, var(--sd-surface));
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  box-sizing: border-box;
+  height: 28px;
+  margin: 0;
+  padding: 0 4px 0 8px;
+  border: 0;
+  border-radius: calc(var(--sd-control-radius, 8px) - 3px);
+  background: var(--sd-operator-chip-bg);
+  color: var(--sd-text-secondary);
+  font: inherit;
+  cursor: pointer;
+
+  &.sd-operator-chip__trigger--value {
+    --sd-operator-chip-bg: var(--sd-primary-light);
+    color: var(--sd-primary-dark);
+  }
+
+  &.sd-operator-chip__trigger--open {
+    --sd-operator-chip-bg: var(--sd-primary);
+    color: var(--sd-primary-contrast);
+  }
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--sd-text) 6%, var(--sd-operator-chip-bg));
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: 1px;
+  }
+
+  &:disabled {
+    --sd-operator-chip-bg: var(--sd-control-bg-disabled, var(--sd-disabled-bg));
+    color: var(--sd-disabled-text);
+    cursor: default;
+  }
+}
+
+:host(.sd-sm) .sd-operator-chip__trigger {
+  height: 24px;
+  padding: 0 2px 0 6px;
+}
+
+.sd-operator-chip__icon {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+
+  ::ng-deep svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+:host(.sd-sm) .sd-operator-chip__icon {
+  width: 16px;
+  height: 16px;
+}
+
+// Mọi chip đều có mũi tên, kể cả trong ô filter hẹp (review 2026-10-22).
+.sd-operator-chip__arrow {
+  flex: 0 0 auto;
+}
+
+@media (forced-colors: active) {
+  .sd-operator-chip__trigger {
+    border: 1px solid ButtonText;
+  }
+}
+
+::ng-deep {
+  @include operator-menu.panel;
+}

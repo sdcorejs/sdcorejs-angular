@@ -789,7 +789,7 @@ export class TableDemoComponent {
     },
     export: { visible: 'EXCEL' },
     columns: [
-      { field: 'name', type: 'string', title: 'Họ và tên', width: '180px', sortable: true },
+      { field: 'name', type: 'string', title: 'Họ và tên', width: '180px', sortable: true, filter: { operator: { enable: true, default: 'CONTAIN', list: ['CONTAIN', 'EQUAL', 'START_WITH', 'END_WITH', 'NULL', 'NOT_NULL'] } } },
       { field: 'email', type: 'string', title: 'Email', width: '220px' },
       {
         field: 'department', type: 'values', title: 'Phòng ban', width: '140px',
@@ -806,7 +806,7 @@ export class TableDemoComponent {
         },
       },
       { field: 'position', type: 'string', title: 'Chức vụ', width: '160px' },
-      { field: 'salary', type: 'number', title: 'Lương', width: '140px', align: 'right', sortable: true },
+      { field: 'salary', type: 'number', title: 'Lương', width: '140px', align: 'right', sortable: true, filter: { operator: { enable: true, default: 'GREATER_OR_EQUAL', list: ['EQUAL', 'GREATER_OR_EQUAL', 'LESS_OR_EQUAL'] } } },
       {
         field: 'status', type: 'values', title: 'Trạng thái', width: '130px',
         option: {

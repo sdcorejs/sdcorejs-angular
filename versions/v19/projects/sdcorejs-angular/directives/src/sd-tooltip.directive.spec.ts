@@ -60,6 +60,19 @@ describe('SdTooltipDirective', () => {
   }));
 
   describe('show / hide', () => {
+    it('hides a visible tooltip as soon as its content becomes empty', fakeAsync(() => {
+      trigger.dispatchEvent(new MouseEvent('mouseenter'));
+      tick(100);
+      fixture.detectChanges();
+      expect(overlayContainerEl.querySelector('.c-sd-tooltip-container')).not.toBeNull();
+
+      // e.g. sd-select clears its selection tooltip while the panel is open
+      host.content = '';
+      fixture.detectChanges();
+      flush();
+      expect(overlayContainerEl.querySelector('.c-sd-tooltip-container')).toBeNull();
+    }));
+
     it('does not show immediately on mouseenter', () => {
       trigger.dispatchEvent(new MouseEvent('mouseenter'));
       fixture.detectChanges();
@@ -198,6 +211,57 @@ describe('SdTooltipDirective', () => {
       fixture.detectChanges();
       expect(bubble()).toBeNull();
       flush();
+    }));
+
+    // e.g. sd-badge only gets content once it has measured that its text is cut, after focus arrived
+    it('shows as soon as content arrives while the host is focused', fakeAsync(() => {
+      host.content = '';
+      fixture.detectChanges();
+      focusIn();
+      fixture.detectChanges();
+      expect(bubble()).toBeNull();
+
+      host.content = 'Late text';
+      fixture.detectChanges();
+      flush();
+      expect(bubble()?.textContent?.trim()).toBe('Late text');
+    }));
+
+    it('shows as soon as content arrives after the hover delay while the pointer is still over the host', fakeAsync(() => {
+      host.content = '';
+      fixture.detectChanges();
+      trigger.dispatchEvent(new MouseEvent('mouseenter'));
+      tick(100);
+      fixture.detectChanges();
+      expect(bubble()).toBeNull();
+
+      host.content = 'Late text';
+      fixture.detectChanges();
+      flush();
+      expect(bubble()?.textContent?.trim()).toBe('Late text');
+    }));
+
+    it('does not open for content that arrives after the pointer left or after Escape', fakeAsync(() => {
+      host.content = '';
+      fixture.detectChanges();
+      trigger.dispatchEvent(new MouseEvent('mouseenter'));
+      tick(100);
+      trigger.dispatchEvent(new MouseEvent('mouseleave'));
+      tick(300);
+      host.content = 'Late text';
+      fixture.detectChanges();
+      flush();
+      expect(bubble()).withContext('after mouseleave').toBeNull();
+
+      host.content = 'Tooltip text';
+      fixture.detectChanges();
+      focusIn();
+      fixture.detectChanges();
+      escape();
+      host.content = 'Changed';
+      fixture.detectChanges();
+      flush();
+      expect(bubble()).withContext('after Escape').toBeNull();
     }));
 
     it('ignores focus moving between elements inside the host', fakeAsync(() => {

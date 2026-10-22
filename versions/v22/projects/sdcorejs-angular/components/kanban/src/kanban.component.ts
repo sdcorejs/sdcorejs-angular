@@ -21,6 +21,7 @@ import { CdkDrag, CdkDragDrop, CdkDropList, DragDropModule } from '@angular/cdk/
 import { MatMenuModule } from '@angular/material/menu';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { SdDataState } from '@sdcorejs/angular/components/data-state';
+import { ɵSdSearchField, ɵSdSearchFieldInputDirective } from '@sdcorejs/angular/forms/directives';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdKanbanColumn, SdKanbanId, SdKanbanMoveError, SdKanbanMoveRequest, SdKanbanMoveSource, SdKanbanOption } from './kanban.model';
@@ -62,7 +63,16 @@ interface MoveFocus {
 @Component({
   selector: 'sd-kanban',
   standalone: true,
-  imports: [NgTemplateOutlet, DragDropModule, MatMenuModule, SdIcon, SdDataState, SdTranslatePipe],
+  imports: [
+    NgTemplateOutlet,
+    DragDropModule,
+    MatMenuModule,
+    SdIcon,
+    SdDataState,
+    SdTranslatePipe,
+    ɵSdSearchField,
+    ɵSdSearchFieldInputDirective,
+  ],
   templateUrl: './kanban.component.html',
   styleUrl: './kanban.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

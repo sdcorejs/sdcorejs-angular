@@ -198,7 +198,10 @@ test('Material tier: focus and selection use the primary, an error reddens only 
     const tokens = declarations(compile(`.x { @include sd.theme($mode: '${mode}'); }`));
     // Material 19 names first, Material 20+ names second: one source ships to every Angular major.
     for (const prefix of ['--mdc-outlined-text-field-', '--mat-form-field-outlined-']) {
-      assert.equal(tokens[`${prefix}outline-color`], 'var(--sd-border)', `${mode} ${prefix}outline-color`);
+      assert.equal(tokens[`${prefix}container-shape`], 'var(--sd-control-radius)', `${mode} ${prefix}container-shape`);
+      assert.equal(tokens[`${prefix}outline-color`], 'var(--sd-control-border)', `${mode} ${prefix}outline-color`);
+      assert.equal(tokens[`${prefix}hover-outline-color`], 'var(--sd-control-border-hover)', `${mode} ${prefix}hover-outline-color`);
+      assert.equal(tokens[`${prefix}disabled-outline-color`], 'var(--sd-control-border-disabled)', `${mode} ${prefix}disabled-outline-color`);
       assert.equal(tokens[`${prefix}focus-outline-color`], 'var(--sd-primary)', `${mode} ${prefix}focus-outline-color`);
       assert.equal(tokens[`${prefix}focus-label-text-color`], 'var(--sd-primary)', `${mode} ${prefix}focus-label-text-color`);
       assert.equal(tokens[`${prefix}error-outline-color`], 'var(--sd-error)', `${mode} ${prefix}error-outline-color`);
@@ -216,6 +219,16 @@ test('Material tier: focus and selection use the primary, an error reddens only 
     assert.equal(tokens['--mat-full-pseudo-checkbox-selected-icon-color'], 'var(--sd-primary)');
     assert.equal(tokens['--mat-pseudo-checkbox-full-selected-icon-color'], 'var(--sd-primary)');
     assert.equal(tokens['--mat-datepicker-calendar-date-selected-state-background-color'], 'var(--sd-primary)');
+    assert.equal(tokens['--mat-datepicker-calendar-container-shape'], 'var(--sd-panel-radius)');
+    // Unselected checkbox / radio / pseudo-checkbox: border-strong at rest, text-secondary on hover and focus.
+    for (const prefix of ['--mdc-checkbox-', '--mat-checkbox-', '--mdc-radio-', '--mat-radio-']) {
+      assert.equal(tokens[`${prefix}unselected-icon-color`], 'var(--sd-border-strong)', `${mode} ${prefix}unselected-icon-color`);
+      assert.equal(tokens[`${prefix}unselected-hover-icon-color`], 'var(--sd-text-secondary)', `${mode} ${prefix}unselected-hover`);
+      assert.equal(tokens[`${prefix}unselected-focus-icon-color`], 'var(--sd-text-secondary)', `${mode} ${prefix}unselected-focus`);
+    }
+    for (const prefix of ['--mat-full-pseudo-checkbox-', '--mat-pseudo-checkbox-full-']) {
+      assert.equal(tokens[`${prefix}unselected-icon-color`], 'var(--sd-border-strong)', `${mode} ${prefix}unselected-icon-color`);
+    }
   }
 });
 
@@ -242,6 +255,17 @@ test('Semantic tier maps roles onto the public palette', () => {
   assert.equal(light['--sd-text-on-solid'], 'var(--sd-primary-contrast)');
   assert.equal(light['--sd-border-focus'], 'var(--sd-primary)');
   assert.equal(light['--sd-border-danger'], 'var(--sd-error)');
+  for (const mode of ['light', 'dark']) {
+    // One set of control expressions for light and dark: they only reference the palette of the scope.
+    const tokens = declarations(compile(`.x { @include sd.theme($mode: '${mode}'); }`));
+    assert.equal(tokens['--sd-control-border'], 'color-mix(in srgb, var(--sd-border-strong) 82%, var(--sd-surface))', mode);
+    assert.equal(tokens['--sd-control-border-hover'], 'var(--sd-border-strong)', mode);
+    assert.equal(tokens['--sd-control-border-focus'], 'var(--sd-border-focus)', mode);
+    assert.equal(tokens['--sd-control-border-disabled'], 'var(--sd-border)', mode);
+    assert.equal(tokens['--sd-control-ring'], '0 0 0 3px color-mix(in srgb, var(--sd-focus-ring-color) 20%, transparent)', mode);
+    assert.equal(tokens['--sd-control-ring-error'], '0 0 0 3px color-mix(in srgb, var(--sd-error) 18%, transparent)', mode);
+    assert.equal(tokens['--sd-control-bg-disabled'], 'var(--sd-disabled-bg)', mode);
+  }
   assert.ok(light['--sd-overlay-backdrop']);
   assert.equal(light['--sd-focus-ring-color'], 'var(--sd-primary)');
   assert.equal(light['--sd-focus-ring-width'], '2px');
@@ -260,6 +284,12 @@ test('Scale tier exposes space, radius, shadow, z-index, motion and typography',
   assert.equal(light['--sd-font-size-13'], '13px');
   assert.equal(light['--sd-font-weight-medium'], '500');
   assert.equal(light['--sd-line-height-20'], '20px');
+  assert.equal(light['--sd-control-height-sm'], '32px');
+  assert.equal(light['--sd-control-height-md'], '40px');
+  assert.equal(light['--sd-control-height-lg'], '48px');
+  assert.equal(light['--sd-control-height-coarse'], '44px');
+  assert.equal(light['--sd-control-radius'], '8px');
+  assert.equal(light['--sd-panel-radius'], '10px');
 });
 
 test('VAL-002: dark re-declares every light declaration, adds color-scheme and Material dark colors', () => {
@@ -287,6 +317,88 @@ test('Component tokens exist in both modes with the 2.15 hex as the light value'
   assert.equal(dark['--sd-query-bar-bg'], '#1d1f23');
   assert.equal(light['--sd-code-editor-bg'], dark['--sd-code-editor-bg'], 'always-dark surfaces keep one value');
   assert.equal(light['--sd-tooltip-bg'], '#616161');
+});
+
+// Wave 2 · F: the sd-button indicator ring separates it from the button with the page surface.
+test('Button indicator ring is the page surface in light and dark', () => {
+  for (const mode of ['light', 'dark']) {
+    const tokens = declarations(compile(`.x { @include sd.theme($mode: '${mode}'); }`));
+    assert.equal(tokens['--sd-button-indicator-ring'], 'var(--sd-surface)', mode);
+  }
+});
+
+// Wave 3 · 3a: the sd-tab-router bar derives from the palette with one expression in light and dark.
+const TAB_ROUTER_TOKENS = {
+  '--sd-tab-router-nav-bg': 'color-mix(in srgb, var(--sd-surface-muted) 60%, var(--sd-surface))',
+  '--sd-tab-router-item-hover-bg': 'color-mix(in srgb, var(--sd-text) 6%, var(--sd-tab-router-nav-bg))',
+  '--sd-tab-router-item-active-bg': 'var(--sd-surface)',
+  '--sd-tab-router-item-text': 'var(--sd-text-secondary)',
+  '--sd-tab-router-item-divider': 'color-mix(in srgb, var(--sd-border) 70%, var(--sd-tab-router-nav-bg))',
+  // Deprecated: kept one release as an alias of the bar background.
+  '--sd-tab-router-item-muted-bg': 'var(--sd-tab-router-nav-bg)',
+};
+
+test('Tab router tokens derive from the palette with one expression in light and dark', () => {
+  for (const mode of ['light', 'dark']) {
+    const tokens = declarations(compile(`.x { @include sd.theme($mode: '${mode}'); }`));
+    for (const [name, value] of Object.entries(TAB_ROUTER_TOKENS)) assert.equal(tokens[name], value, `${mode} ${name}`);
+  }
+});
+
+// Wave 3 · 2a: the ring around the sd-avatar status dot separates it from the avatar with the page surface.
+test('Avatar status ring is the page surface in light and dark', () => {
+  for (const mode of ['light', 'dark']) {
+    const tokens = declarations(compile(`.x { @include sd.theme($mode: '${mode}'); }`));
+    assert.equal(tokens['--sd-avatar-status-ring'], 'var(--sd-surface)', mode);
+  }
+});
+
+// Wave 1 · sd-kanban: neutral lanes and drop target derived from the palette, one expression for light and dark.
+const KANBAN_TOKENS = {
+  '--sd-kanban-lane-bg': 'color-mix(in srgb, var(--sd-text) 4%, var(--sd-surface))',
+  '--sd-kanban-lane-target-bg': 'color-mix(in srgb, var(--sd-primary) 6%, var(--sd-surface))',
+  '--sd-kanban-lane-target-border': 'color-mix(in srgb, var(--sd-primary) 45%, var(--sd-surface))',
+  '--sd-kanban-drop-slot-border': 'color-mix(in srgb, var(--sd-primary) 55%, var(--sd-surface))',
+  '--sd-kanban-card-border': 'color-mix(in srgb, var(--sd-border) 80%, var(--sd-surface))',
+  '--sd-kanban-card-hover-border': 'color-mix(in srgb, var(--sd-border-strong) 70%, var(--sd-surface))',
+};
+
+test('Kanban tokens derive from the palette with one expression in light and dark', () => {
+  const light = declarations(compile('.x { @include sd.theme(); }'));
+  const dark = declarations(compile(".x { @include sd.theme($mode: 'dark'); }"));
+  for (const [name, value] of Object.entries(KANBAN_TOKENS)) {
+    assert.equal(light[name], value, `light ${name}`);
+    assert.equal(dark[name], value, `dark ${name}`);
+  }
+});
+
+// Wave 1 · C: table colours derive from the palette, mixed with --sd-table-bg (not surface), and use the
+// same expression in light and dark. table-bg, the tree levels and the export panel keep their values.
+const TABLE_DERIVED_TOKENS = {
+  '--sd-table-header-bg': 'color-mix(in srgb, var(--sd-surface-muted) 50%, var(--sd-table-bg))',
+  '--sd-table-header-text': 'var(--sd-text)',
+  '--sd-table-group-header-mix': 'var(--sd-table-header-bg)',
+  '--sd-table-row-divider': 'color-mix(in srgb, var(--sd-border) 45%, var(--sd-table-bg))',
+  '--sd-table-row-hover-bg': 'color-mix(in srgb, var(--sd-text) 4%, var(--sd-table-bg))',
+  '--sd-table-row-selected-bg': 'color-mix(in srgb, var(--sd-primary) 9%, var(--sd-table-bg))',
+  '--sd-table-row-activated-bg': 'color-mix(in srgb, var(--sd-primary) 14%, var(--sd-table-bg))',
+  '--sd-table-group-row-bg': 'color-mix(in srgb, var(--sd-primary) 4%, var(--sd-table-bg))',
+  '--sd-table-group-row-border': 'var(--sd-table-row-divider)',
+  '--sd-table-select-arrow': 'var(--sd-text-secondary)',
+  '--sd-table-spinner': 'var(--sd-primary)',
+};
+
+test('Table tokens derive from the palette and --sd-table-bg with one expression in light and dark', () => {
+  const light = declarations(compile('.x { @include sd.theme(); }'));
+  const dark = declarations(compile(".x { @include sd.theme($mode: 'dark'); }"));
+  for (const [name, value] of Object.entries(TABLE_DERIVED_TOKENS)) {
+    assert.equal(light[name], value, `light ${name}`);
+    assert.equal(dark[name], value, `dark ${name}`);
+  }
+  assert.equal(light['--sd-table-bg'], '#ffffff');
+  assert.equal(dark['--sd-table-bg'], '#1d1f23');
+  assert.equal(light['--sd-table-tree-level-0-bg'], '#fbfcfe');
+  assert.equal(light['--sd-table-export-panel-bg'], '#f6f6f6');
 });
 
 // ---------------------------------------------------------------------------

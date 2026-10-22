@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ButtonColorsExampleComponent } from './button-colors.example';
 import { ButtonIconOnlyExampleComponent } from './button-icon-only.example';
 import { ButtonIconSetExampleComponent } from './button-icon-set.example';
+import { ButtonIndicatorExampleComponent } from './button-indicator.example';
 import { ButtonSecondaryBlackExampleComponent } from './button-secondary-black.example';
 import { ButtonSizesExampleComponent } from './button-sizes.example';
 import { ButtonStatesExampleComponent } from './button-states.example';
@@ -12,6 +13,7 @@ const EXAMPLES: readonly { readonly name: string; readonly component: Type<unkno
   { name: 'colors', component: ButtonColorsExampleComponent },
   { name: 'icon only', component: ButtonIconOnlyExampleComponent },
   { name: 'icon set', component: ButtonIconSetExampleComponent },
+  { name: 'indicator', component: ButtonIndicatorExampleComponent },
   { name: 'secondary and black', component: ButtonSecondaryBlackExampleComponent },
   { name: 'sizes', component: ButtonSizesExampleComponent },
   { name: 'states', component: ButtonStatesExampleComponent },

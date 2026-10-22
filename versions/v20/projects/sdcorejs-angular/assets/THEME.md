@@ -32,10 +32,10 @@ same value, and only adds new custom properties.
 | --- | --- | --- |
 | Palette | `--sd-primary`, `--sd-primary-light`, `--sd-primary-dark`, `--sd-primary-contrast`, the same four for `secondary`, `info`, `success`, `warning`, `error`, then `--sd-surface`, `--sd-surface-muted`, `--sd-text`, `--sd-text-secondary`, `--sd-text-muted`, `--sd-border`, `--sd-border-strong`, `--sd-disabled-bg`, `--sd-disabled-text` | The 33 public colours of 2.15, unchanged. Presets and `$theme` set them. |
 | Ramps | `--sd-{family}-{step}` — families `primary`, `secondary`, `info`, `success`, `warning`, `error`, `neutral`; steps `50 100 200 300 400 500 600 700 800 900 950` | Tints and shades of each family (`color-mix()`), `500` is the base colour. For charts, badges and subtle backgrounds. |
-| Semantic roles | `--sd-status-{info,success,warning,error}-{bg,fg}`, `--sd-link`, `--sd-surface-inverse`, `--sd-text-on-solid`, `--sd-border-focus`, `--sd-border-danger`, `--sd-overlay-backdrop`, `--sd-focus-ring-color` | A role instead of a palette slot, so dark mode and custom palettes change the colour without touching the component. |
-| Scales | `--sd-space-{0…48}`, `--sd-radius-{2…24, 999}`, `--sd-shadow-{xs,sm,md,lg,xl}`, `--sd-z-{sidebar,header,popover,drawer-mobile,floating,backdrop,drawer,dropdown,overlay,modal,devtools}`, `--sd-duration-{fast,base,slow}`, `--sd-ease-standard`, `--sd-font-size-{10…48}`, `--sd-font-weight-{regular,medium,semibold,bold}`, `--sd-line-height-{16…28}`, `--sd-focus-ring-width`, `--sd-focus-ring-offset` | Non-colour tokens. Each value equals a literal the library already used; names carry the pixel value (`--sd-radius-8` is `8px`). Same in light and dark. |
-| Component tokens | `--sd-{component}-{part}`, for example `--sd-table-header-bg`, `--sd-tooltip-bg`, `--sd-query-bar-bg`, `--sd-scrollbar-thumb` | One colour of one component. Tokens migrated in 3.0 keep the colour the component had in 2.15 as their light value; tokens added later (`--sd-view-label-color`, `--sd-view-value-color`, `--sd-sidebar-v4-*`) document their own. Each has a dark value. |
-| Material tokens | Angular Material component tokens of the form field (outline, label, caret, select arrow), options, pseudo-checkboxes and datepicker, under both the Material 19 names (`--mdc-outlined-text-field-*`, `--mat-full-pseudo-checkbox-*`, …) and the Material 20+ names (`--mat-form-field-outlined-*`, `--mat-pseudo-checkbox-full-*`, …) | Each one points at a Core token (`assets/scss/themes/_material-tokens.scss`): focus and selection use `--sd-primary`, the outline at rest `--sd-border`, and an error reddens only the outline (`--sd-error`); the floating label keeps the colour of a valid field. Override a Material token on any element to change it for that subtree. |
+| Semantic roles | `--sd-status-{info,success,warning,error}-{bg,fg}`, `--sd-link`, `--sd-surface-inverse`, `--sd-text-on-solid`, `--sd-border-focus`, `--sd-border-danger`, `--sd-overlay-backdrop`, `--sd-focus-ring-color`, `--sd-control-{border,border-hover,border-focus,border-disabled,ring,ring-error,bg-disabled}` | A role instead of a palette slot, so dark mode and custom palettes change the colour without touching the component. The `--sd-control-*` roles style every box control; see [Control tokens](#control-tokens). |
+| Scales | `--sd-space-{0…48}`, `--sd-radius-{2…24, 999}`, `--sd-shadow-{xs,sm,md,lg,xl}`, `--sd-z-{sidebar,header,popover,drawer-mobile,floating,backdrop,drawer,dropdown,overlay,modal,devtools}`, `--sd-duration-{fast,base,slow}`, `--sd-ease-standard`, `--sd-font-size-{10…48}`, `--sd-font-weight-{regular,medium,semibold,bold}`, `--sd-line-height-{16…28}`, `--sd-focus-ring-width`, `--sd-focus-ring-offset`, `--sd-control-height-{sm,md,lg,coarse}`, `--sd-control-radius`, `--sd-panel-radius` | Non-colour tokens. Each value equals a literal the library already used; names carry the pixel value (`--sd-radius-8` is `8px`). Same in light and dark. The control heights are named by size instead: `sm` / `md` / `lg` are 32 / 40 / 48px, the heights of `sd-button` and of the outlined `mat-form-field` at the same size, and `coarse` is 44px, the minimum height of a control under `@media (pointer: coarse)`. `--sd-control-radius` (8px) is the corner of every box control and `--sd-panel-radius` (10px) the corner of the panels they open. |
+| Component tokens | `--sd-{component}-{part}`, for example `--sd-table-header-bg`, `--sd-tooltip-bg`, `--sd-query-bar-bg`, `--sd-scrollbar-thumb` | One colour of one component. Tokens migrated in 3.0 keep the colour the component had in 2.15 as their light value; tokens added later (`--sd-view-label-color`, `--sd-view-value-color`, `--sd-sidebar-v4-*`) document their own. Each has a dark value. Tokens derived from the palette (`--sd-view-*`, `--sd-sidebar-v4-*` and most `--sd-table-*`, see [Table tokens](#table-tokens)) hold one `var()` / `color-mix()` expression for both modes. |
+| Material tokens | Angular Material component tokens of the form field (outline, label, caret, select arrow), options, checkboxes, radios, pseudo-checkboxes and datepicker, under both the Material 19 names (`--mdc-outlined-text-field-*`, `--mat-full-pseudo-checkbox-*`, …) and the Material 20+ names (`--mat-form-field-outlined-*`, `--mat-pseudo-checkbox-full-*`, …) | Each one points at a Core token (`assets/scss/themes/_material-tokens.scss`): focus and selection use `--sd-primary`, the outline takes its corner and its rest / hover / disabled colours from the control tokens (`--sd-control-radius`, `--sd-control-border`, …), the calendar takes `--sd-panel-radius`, an unchecked checkbox, radio or pseudo-checkbox has a `--sd-border-strong` border (`--sd-text-secondary` on hover and focus), and an error reddens only the outline (`--sd-error`); the floating label keeps the colour of a valid field. Override a Material token on any element to change it for that subtree. |
 
 Rules for new code:
 
@@ -209,6 +209,148 @@ background of the theme scope; override `--sd-sidebar-v4-hover-bg` on the same e
 inherits values computed from its parent's palette. Overlays (dialogs, select panels) render under `body`:
 theme the root, or give the overlay container the same scope.
 
+## Control tokens
+
+Every box control shares one set of tokens: the outlined `mat-form-field` (`sd-input`, `sd-input-number`,
+`sd-textarea`, `sd-select`, `sd-autocomplete`, `sd-date`, `sd-datetime`, `sd-date-range`, `sd-time`, the
+box of `sd-input-color`), the filter input in the `sd-select` panel, `sd-entity-picker` and the other
+inputs the library draws itself. The search boxes of `sd-kanban`, the `sd-table` quick search, the form
+builder palette and the `sd-select` panel share one internal search field that reads these tokens (see
+`forms/directives/sd-form-directives.md`, "Internal (ɵ)"); a disabled search field keeps the
+`--sd-surface-muted` background of its design instead of `--sd-control-bg-disabled`.
+
+| State | Token | Value |
+| --- | --- | --- |
+| Corner | `--sd-control-radius` | `8px` |
+| Rest outline | `--sd-control-border` | `color-mix(in srgb, var(--sd-border-strong) 82%, var(--sd-surface))`, at least 3:1 on `surface` |
+| Hover outline | `--sd-control-border-hover` | `var(--sd-border-strong)` |
+| Focus outline | `--sd-control-border-focus` | `var(--sd-border-focus)` |
+| Focus ring | `--sd-control-ring` | `0 0 0 3px color-mix(in srgb, var(--sd-focus-ring-color) 20%, transparent)` |
+| Focus ring of an invalid control | `--sd-control-ring-error` | `0 0 0 3px color-mix(in srgb, var(--sd-error) 18%, transparent)` |
+| Disabled outline | `--sd-control-border-disabled` | `var(--sd-border)` |
+| Disabled background | `--sd-control-bg-disabled` | `var(--sd-disabled-bg)` |
+
+- The outline is 1px at rest and on focus; focus adds the ring as a `box-shadow` outside the box. Under
+  `forced-colors: active` the ring becomes a 2px `Highlight` outline, since a box-shadow does not show.
+- A focused floating label gets the background `var(--sd-control-label-bg, var(--sd-surface))` so it cuts the
+  ring at the notch. A container whose background is not `--sd-surface` sets `--sd-control-label-bg` (the
+  column filters and the quick search of `sd-table` set it to `--sd-table-bg`).
+- The select, autocomplete, `sd-operator` menu and calendar panels take `--sd-panel-radius` (10px) on every
+  corner, a thin border and `--sd-shadow-md`. The select and autocomplete panels open 6px from the field, use
+  `--sd-select-panel-bg` and have 4px of vertical padding. Options keep their 36px height and are inset 4px horizontally
+  with a 6px corner, with a 2px gap between neighbouring backgrounds (a transparent 1px border inside the 36px); the
+  selected option is `--sd-primary-dark` on `--sd-primary-light`, weight 500.
+
+To keep the look of 3.1, set the tokens back at the root (or on any subtree):
+
+```scss
+:root {
+  --sd-control-radius: 4px;
+  --sd-control-border: var(--sd-border);
+  --sd-control-ring: none;
+}
+```
+
+## Table tokens
+
+The colours of `sd-table` derive from the palette and are mixed with `--sd-table-bg` (not `--sd-surface`), with the
+same expression in light and dark, so presets, dark mode and a custom palette change them without new values.
+
+| Token | Value |
+| --- | --- |
+| `--sd-table-header-bg` | `color-mix(in srgb, var(--sd-surface-muted) 50%, var(--sd-table-bg))` |
+| `--sd-table-header-text` | `var(--sd-text)` |
+| `--sd-table-group-header-mix` | `var(--sd-table-header-bg)` |
+| `--sd-table-row-divider` | `color-mix(in srgb, var(--sd-border) 45%, var(--sd-table-bg))` |
+| `--sd-table-row-hover-bg` | `color-mix(in srgb, var(--sd-text) 4%, var(--sd-table-bg))` |
+| `--sd-table-row-selected-bg` | `color-mix(in srgb, var(--sd-primary) 9%, var(--sd-table-bg))` |
+| `--sd-table-row-activated-bg` | `color-mix(in srgb, var(--sd-primary) 14%, var(--sd-table-bg))` |
+| `--sd-table-group-row-bg` | `color-mix(in srgb, var(--sd-primary) 4%, var(--sd-table-bg))` |
+| `--sd-table-group-row-border` | `var(--sd-table-row-divider)` |
+| `--sd-table-select-arrow` | `var(--sd-text-secondary)` |
+| `--sd-table-spinner` | `var(--sd-primary)` |
+
+`--sd-table-bg` (`#ffffff` / `#1d1f23`), the tree level backgrounds and the export panel keep their values.
+The sort arrows are a mask tinted `--sd-text-secondary` (`--sd-text` on the sorted column); the drag preview,
+the reorder handle, the resize and tree-toggle hovers and the add button shadow use `--sd-table-bg`,
+`--sd-table-row-divider`, `--sd-text-muted`, `color-mix(in srgb, var(--sd-text) 8%, transparent)` and the shadow
+scale. `npm run test:theme` checks header text on the header band and text on a selected or activated row
+(at least 4.5:1) for every preset and dark.
+
+## Kanban tokens
+
+`sd-kanban` lanes are neutral and its drop target and card outline derive from the palette, with one expression for
+light and dark. The column colour only marks the 8px dot or the prefix icon.
+
+| Token | Value |
+| --- | --- |
+| `--sd-kanban-lane-bg` | `color-mix(in srgb, var(--sd-text) 4%, var(--sd-surface))` |
+| `--sd-kanban-lane-target-bg` | `color-mix(in srgb, var(--sd-primary) 6%, var(--sd-surface))` |
+| `--sd-kanban-lane-target-border` | `color-mix(in srgb, var(--sd-primary) 45%, var(--sd-surface))` |
+| `--sd-kanban-drop-slot-border` | `color-mix(in srgb, var(--sd-primary) 55%, var(--sd-surface))` |
+| `--sd-kanban-card-border` | `color-mix(in srgb, var(--sd-border) 80%, var(--sd-surface))` |
+| `--sd-kanban-card-hover-border` | `color-mix(in srgb, var(--sd-border-strong) 70%, var(--sd-surface))` |
+
+`npm run test:theme` checks `--sd-text` and `--sd-text-secondary` on the lane (at least 4.5:1) for every preset and dark.
+
+## Tab router tokens
+
+The `sd-tab-router` bar derives from the palette, with one expression for light and dark (design handoff wave 3).
+
+| Token | Value |
+| --- | --- |
+| `--sd-tab-router-nav-bg` | `color-mix(in srgb, var(--sd-surface-muted) 60%, var(--sd-surface))` |
+| `--sd-tab-router-item-hover-bg` | `color-mix(in srgb, var(--sd-text) 6%, var(--sd-tab-router-nav-bg))` |
+| `--sd-tab-router-item-active-bg` | `var(--sd-surface)` — the open tab joins the content below it |
+| `--sd-tab-router-item-text` | `var(--sd-text-secondary)` — tabs that are not open; the open tab uses `--sd-text` |
+| `--sd-tab-router-item-divider` | `color-mix(in srgb, var(--sd-border) 70%, var(--sd-tab-router-nav-bg))` |
+
+Deprecated, no longer read by the bar and removed in a later release: `--sd-tab-router-item-muted-bg` (now an alias of
+`--sd-tab-router-nav-bg`) and `--sd-tab-router-badge-bg`.
+
+`npm run test:theme` checks `--sd-tab-router-item-text` on the bar and on a hovered tab, and `--sd-text` on the open
+tab (at least 4.5:1) for every preset and dark.
+
+## Badge size tokens
+
+`sd-badge` reads three size tokens with a fallback; they are not part of `sd.theme()` and have no dark value. Set them
+on any ancestor (`:root`, a page, a table). See `components/badge/sd-badge.md`, "Size tokens".
+
+| Token | Default |
+| --- | --- |
+| `--sd-badge-height-sm`, `--sd-badge-height-md`, `--sd-badge-height-lg` | `20px`, `24px`, `28px` |
+| `--sd-badge-radius-tag` | `4px` (`md`, `lg` and a tag with a description add 2px) |
+| `--sd-badge-font-weight` | `500` |
+
+Badge colours stay on the palette: `*-light` backgrounds, `*-dark` text and icons, the base colour for the dot and
+for `solid` (with `*-contrast` text), `--sd-secondary-light` / `--sd-secondary-dark` for the label of `pair`, and
+`color-mix(in srgb, *-dark 22%, *-light)` for the tag border.
+
+## Avatar status ring token
+
+`--sd-avatar-status-ring` (`var(--sd-surface)` in light and dark) is the ring around the `sd-avatar` status dot that
+separates it from the avatar. Set it to the background behind the avatar when that is not `--sd-surface` (a dark
+header, a selected row).
+
+## Button indicator token
+
+`--sd-button-indicator-ring` (`var(--sd-surface)` in light and dark) is the 2px ring that separates the `sd-button`
+indicator from the button. Set it to the background behind the button when that is not `--sd-surface`.
+
+## Chip calendar tokens
+
+`--sd-chip-calendar-panel-width` (`296px` in light and dark) is the width of the `sd-chip-calendar` popup: 8px padding,
+seven 40px day columns, 8px padding. It is a size, the one non-colour entry of the component tier. The popup itself uses the
+panel surface of the select panel (`--sd-select-panel-bg`, `--sd-panel-radius`, `--sd-shadow-md`), and `--sd-chip-calendar-bg`
+stays the hover background of the `sdViewDef` face.
+
+Two colours of the field derive from the palette, one expression for light and dark:
+
+- `--sd-chip-calendar-chip-locked-bg`: the background of a chip that `removable` keeps (55% `--sd-surface-muted` on
+  `--sd-surface`). The chip shows a lock icon in place of the remove button.
+- `--sd-chip-calendar-more-hover-bg`: the hover background of the “+N” button (6% `--sd-text` on
+  `--sd-surface-muted`, its rest background).
+
 ## Focus ring
 
 - Colour: `var(--sd-focus-ring-color)` (the primary colour). Width and offset: `--sd-focus-ring-width` and
@@ -228,8 +370,11 @@ every named preset and the dark palette:
 | `text`, `text-secondary` | `surface`, `surface-muted` | 4.5 |
 | `link` | `surface` | 4.5 |
 | `primary-contrast` | `primary` | 4.5 |
+| `*-contrast` (secondary, info, success, warning, error) | the base colour (badge `solid`) | 4.5 |
+| `*-dark` (all six colours) | `*-light` (badge `round`, `tag`, `pair`) | 4.5 |
 | `status-*-fg` | `status-*-bg` | 4.5 |
 | `border-strong`, `focus-ring-color` | `surface`, `surface-muted` | 3 |
+| `control-border` | `surface` | 3 |
 
 These are palette checks. Recheck real component states after changing colours, and keep labels or icons
 for status information.

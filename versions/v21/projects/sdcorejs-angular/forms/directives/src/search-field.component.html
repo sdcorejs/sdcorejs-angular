@@ -1,0 +1,16 @@
+@let _sm = size() === 'sm';
+@let _autoId = autoId();
+<sd-icon class="sd-search-field__icon" name="search" [size]="_sm ? '18px' : '20px'" aria-hidden="true" />
+<ng-content />
+@if (showClear()) {
+  <button
+    class="sd-search-field__clear"
+    type="button"
+    [disabled]="disabled()"
+    [attr.data-autoid]="_autoId ? _autoId + '-clear' : null"
+    [attr.aria-label]="clearLabel() || ('core.form.search-field.clear' | sdTranslate)"
+    (click)="cleared.emit()">
+    <sd-icon name="close" [size]="_sm ? '16px' : '18px'" aria-hidden="true" />
+  </button>
+}
+<ng-content select="[sdSearchFieldEnd]" />

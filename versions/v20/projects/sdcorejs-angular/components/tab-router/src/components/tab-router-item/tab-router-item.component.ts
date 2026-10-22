@@ -1,8 +1,19 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  Input,
+  OnDestroy,
+  OnInit,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { Subscription } from 'rxjs';
 import { debounceTime, startWith } from 'rxjs/operators';
 
-import { SdBadge } from '@sdcorejs/angular/components/badge';
+import { SdTooltipDirective } from '@sdcorejs/angular/directives';
 import { SdTabRouterTab, SdTabInfo } from '../../models';
 import { SdTabRouterService } from '../../services/tab-router.service';
 import { Router } from '@angular/router';
@@ -17,7 +28,11 @@ import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
   styleUrl: './tab-router-item.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [SdIcon, CommonModule, SdBadge, SdTabInfoPipe, SdTranslatePipe],
+  imports: [SdIcon, CommonModule, SdTabInfoPipe, SdTooltipDirective, SdTranslatePipe],
+  host: {
+    // why: nav cần biết tab nào đang mở trên chính phần tử host để ẩn vạch ngăn ở hai bên nó.
+    '[class.sd-tab-router-item--active]': 'tab.isActive',
+  },
 })
 export class SdTabRouterItemComponent implements OnInit, OnDestroy {
   private cdRef = inject(ChangeDetectorRef);
@@ -26,21 +41,26 @@ export class SdTabRouterItemComponent implements OnInit, OnDestroy {
 
   @Input({ required: true }) tab!: SdTabRouterTab;
 
-  #subsctiption: Subscription = new Subscription();
+  #subscription: Subscription = new Subscription();
   tabInfo?: SdTabInfo;
+
+  private readonly nameRef = viewChild<ElementRef<HTMLElement>>('name');
+  readonly #truncated = signal(false);
+  /** Tên tab đang bị cắt (ellipsis): chỉ khi đó tooltip mới lặp lại tên. */
+  readonly truncated = this.#truncated.asReadonly();
 
   /** Inserted by Angular inject() migration for backwards compatibility */
   constructor(...args: unknown[]);
   constructor() {}
 
   ngOnInit(): void {
-    this.#subsctiption.add(
+    this.#subscription.add(
       this.tabRouterService.events.pipe(debounceTime(100)).subscribe(() => {
         this.cdRef.markForCheck();
       })
     );
 
-    this.#subsctiption.add(
+    this.#subscription.add(
       this.tab.tabInfoChanges.pipe(startWith(null)).subscribe(tabInfo => {
         if (tabInfo) {
           this.tabInfo = tabInfo;
@@ -51,8 +71,14 @@ export class SdTabRouterItemComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.#subsctiption.unsubscribe();
+    this.#subscription.unsubscribe();
   }
+
+  // why: đo lúc chuột vào hoặc focus tới, không đo theo resize — tooltip chỉ cần biết vào đúng lúc nó sắp hiện.
+  measureTruncation = (): void => {
+    const el = this.nameRef()?.nativeElement;
+    this.#truncated.set(!!el && el.scrollWidth > el.clientWidth);
+  };
 
   onTabClick = (event: Event) => {
     event.preventDefault();

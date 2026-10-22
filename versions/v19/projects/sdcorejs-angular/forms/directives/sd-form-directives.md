@@ -139,7 +139,7 @@ Multi-select gets the whole array:
 ```html
 <sd-select [(model)]="userId" [items]="users">
   <ng-container *sdItemDef="let user">
-    <sd-avatar [name]="user.display" size="sm"></sd-avatar>
+    <sd-avatar [src]="user.data?.avatarUrl || user.display" [name]="user.display" [size]="24"></sd-avatar>
     <span class="name">{{ user.display }}</span>
     <span class="email">{{ user.data?.email }}</span>
   </ng-container>
@@ -153,6 +153,34 @@ Multi-select gets the whole array:
 - ❌ Expecting a context from `sdSuffixDef` / `sdLabelDef`. Their context type is `Record<string, never>`; read component state from the surrounding template instead.
 - ❌ Rendering focusable controls inside `sdItemDef`. The row itself is the click target of the picker panel; nested interactive elements swallow the selection click.
 - ❌ Projecting two of the same directive into one control — each is read with `contentChild()`, so only the first is used.
+
+## Internal (ɵ): search field primitive
+
+The entry point also exports `ɵSdSearchField` (selector `sd-search-field`), the directive `ɵSdSearchFieldInputDirective` (selector `input[sdSearchFieldInput]`) and the type `ɵSdSearchFieldSize`. **Everything with a `ɵ` prefix is internal and is NOT covered by SemVer**: it can be renamed, changed or removed in any release, including a patch. Application code must not import it. It is listed here only so maintainers can find it.
+
+It draws the library's self-built search boxes the same way: the `sd-kanban` board search, the `sd-table` quick-search keyword, the form builder palette search and the filter box of the `sd-select` panel. The primitive owns only the frame. Each consumer keeps its own logic (debounce, Enter to apply, Escape to clear), bindings, key handling, accessible name, `aria-describedby` and `data-autoid` on its real `<input>`.
+
+```html
+<sd-search-field size="sm" clearable [clearLabel]="clearLabel" [autoId]="autoId" (cleared)="clear()">
+  <input sdSearchFieldInput type="text" [attr.aria-label]="label" [value]="term" (input)="onInput($event)" />
+  <span sdSearchFieldEnd aria-hidden="true">↵</span>
+</sd-search-field>
+```
+
+| Member | Kind | Notes |
+| --- | --- | --- |
+| `size` | `'sm' \| 'md'`, default `'md'` | sm: `--sd-control-height-sm` (32px) high, 8px padding, 6px gap, 18px icon. md: `--sd-control-height-md` (40px), 12px padding, 8px gap, 20px icon. Text is 14px. |
+| `clearable` | `boolean`, default `false` | Shows a clear `<button>` after the input while the input holds a value: 24px with a 16px icon (sm), 28px with an 18px icon (md). |
+| `clearLabel` | `string` | Accessible name of the clear button. Default: key `core.form.search-field.clear`. |
+| `autoId` | `string` | The clear button gets `data-autoid="<autoId>-clear"`. |
+| `cleared` | output `void` | Emitted by the clear button. The primitive does not change the value; the consumer clears it (and moves focus if it wants). |
+| `[sdSearchFieldEnd]` | content slot | Trailing content after the clear button, for example the ↵ hint of the table quick search. |
+
+- **Frame**: the host is the box. It uses the control tokens (see `assets/THEME.md`, "Control tokens"): `--sd-control-radius`, a 1px `--sd-control-border`, `--sd-control-border-hover` on hover, and on `:focus-within` `--sd-control-border-focus` plus `--sd-control-ring`. With forced colors the ring is a `Highlight` outline. Background `--sd-surface`; icon and placeholder `--sd-text-secondary`. Consumers set width, margin or background on the host with their own class.
+- **Disabled** follows the projected input: background `--sd-surface-muted`, text `--sd-disabled-text`, border `--sd-control-border-disabled`; the clear button is disabled too.
+- **Coarse pointer**: at least `--sd-control-height-coarse` (44px) high, 16px text (no iOS zoom on focus) and a 40px clear button. A context that switches to touch size on its own condition sets `min-height` and `font-size` on the host and the local variable `--sd-search-field-clear-size` (the table quick search does this at container widths of 550px or less).
+- Clicking the icon or the padding focuses the input, as the former `<label>` wrappers did.
+- **Accessibility**: the search icon is `aria-hidden`; the input and the frame never are. The input must carry its own accessible name.
 
 ## Related
 

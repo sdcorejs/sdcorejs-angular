@@ -174,6 +174,23 @@ describe('SdOperator', () => {
       expect(active[0].querySelector('.c-op-code')?.textContent?.trim()).toBe('CONTAIN');
     });
 
+    it('opens the menu 6px below its trigger, without a tick on the current row', () => {
+      // why: DOM do spec khác để lại có thể đẩy trigger xuống đáy khung Karma; menu khi đó lật lên và vị trí đo ngay sau khi
+      // mở chưa ổn định. Ghim host ở đỉnh để menu luôn mở xuống.
+      Object.assign((fixture.nativeElement as HTMLElement).style, { position: 'fixed', top: '0', left: '0' });
+      fixture.componentRef.setInput('operators', ['EQUAL', 'CONTAIN']);
+      fixture.componentRef.setInput('model', 'CONTAIN');
+      fixture.detectChanges();
+
+      const container = openMenu();
+      const trigger = (fixture.nativeElement.querySelector('.c-op-trigger') as HTMLElement).getBoundingClientRect();
+      const panel = container.querySelector<HTMLElement>('.mat-mdc-menu-panel.c-op-menu')!;
+      const box = panel.getBoundingClientRect();
+      const gap = panel.classList.contains('mat-menu-above') ? trigger.top - box.bottom : box.top - trigger.bottom;
+      expect(gap).toBeCloseTo(6, 0);
+      expect(container.querySelector('.c-op-check')).toBeNull();
+    });
+
     it('clicking a row sets the model', () => {
       fixture.componentRef.setInput('operators', ['EQUAL', 'CONTAIN']);
       fixture.detectChanges();
@@ -197,6 +214,22 @@ describe('SdOperator', () => {
 
       const overlay = TestBed.inject(OverlayContainer).getContainerElement();
       expect(overlay.querySelectorAll('.c-op-row').length).toBe(2);
+      overlay.remove();
+    });
+
+    it('draws the menu as a control panel: --sd-panel-radius on every corner and a thin border', () => {
+      fixture.componentRef.setInput('operators', ['EQUAL', 'CONTAIN']);
+      fixture.detectChanges();
+
+      component.open();
+      fixture.detectChanges();
+
+      const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+      const panel = getComputedStyle(overlay.querySelector('.mat-mdc-menu-panel.c-op-menu')!);
+      for (const corner of ['TopLeft', 'TopRight', 'BottomLeft', 'BottomRight'] as const) {
+        expect(panel[`border${corner}Radius`]).withContext(corner).toBe('10px');
+      }
+      expect(panel.borderTopWidth).toBe('1px');
       overlay.remove();
     });
   });

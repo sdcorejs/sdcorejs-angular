@@ -18,21 +18,40 @@ export type ShowcaseExampleSourceKey =
   | "components/audit-diff/example-format-redact-va-order"
   | "components/audit-diff/example-nested-table"
   | "components/audit-diff/example-stable-key-array"
+  | "components/avatar-group/example-du-dung-mot-nguoi"
+  | "components/avatar-group/example-kich-thuoc"
+  | "components/avatar-group/example-nhom-avatar"
+  | "components/avatar-group/example-tu-mo-man-hinh-khac"
+  | "components/avatar/example-anh-co-ten"
   | "components/avatar/example-anh-url"
   | "components/avatar/example-cac-kich-thuoc"
+  | "components/avatar/example-cham-theo-kich-thuoc"
+  | "components/avatar/example-cham-trang-thai"
   | "components/avatar/example-chu-cai-dau-tu-ten"
   | "components/avatar/example-fallback-khi-thieu-du-lieu"
-  | "components/badge/example-ba-dang"
+  | "components/avatar/example-trong-danh-sach"
+  | "components/badge-picker/example-chi-xem-va-vo-hieu"
+  | "components/badge-picker/example-chon-badge"
+  | "components/badge-picker/example-gioi-han-lua-chon"
+  | "components/badge-picker/example-kich-thuoc"
+  | "components/badge-picker/example-mo-ta-trong-ban-xem-truoc"
+  | "components/badge-picker/example-nhan-va-placeholder"
+  | "components/badge-picker/example-trong-form"
+  | "components/badge/example-bam-duoc"
+  | "components/badge/example-dot-va-pulse"
   | "components/badge/example-fontset-switch"
-  | "components/badge/example-icon-va-noi-dung-dai"
   | "components/badge/example-kem-mo-ta"
   | "components/badge/example-kich-thuoc-round"
   | "components/badge/example-kich-thuoc-tag"
   | "components/badge/example-mau-sac-icon"
   | "components/badge/example-mau-sac-round"
   | "components/badge/example-mau-sac-tag"
+  | "components/badge/example-pair"
   | "components/badge/example-round-voi-icon"
+  | "components/badge/example-sau-dang"
   | "components/badge/example-so-dem"
+  | "components/badge/example-solid"
+  | "components/badge/example-ten-dai-trong-o-hep"
   | "components/breadcrumb/example-danh-sach-tinh"
   | "components/breadcrumb/example-nhan-async"
   | "components/breadcrumb/example-router-generated"
@@ -40,6 +59,7 @@ export type ShowcaseExampleSourceKey =
   | "components/button/example-bang-mau"
   | "components/button/example-bien-the"
   | "components/button/example-chi-icon"
+  | "components/button/example-indicator"
   | "components/button/example-kich-thuoc"
   | "components/button/example-secondary-vs-black"
   | "components/button/example-toggle-icon-set-bang-alias"
@@ -122,6 +142,7 @@ export type ShowcaseExampleSourceKey =
   | "components/operator/example-toan-tu-chuoi"
   | "components/operator/example-toan-tu-ngay"
   | "components/operator/example-toan-tu-so"
+  | "components/operator/example-trong-control"
   | "components/operator/example-vo-hieu-hoa"
   | "components/org-chart/example-card-mac-dinh"
   | "components/org-chart/example-custom-bang-directive"
@@ -174,8 +195,8 @@ export type ShowcaseExampleSourceKey =
   | "components/stepper/example-linear-wizard"
   | "components/stepper/example-optional-step"
   | "components/stepper/example-vi-tri-nhan"
-  | "components/tab-router/example-preview-dai-tab"
   | "components/tab-router/example-replacetab-beforeclose"
+  | "components/tab-router/example-thu-truc-tiep"
   | "components/tab-router/example-tich-hop-app-shell"
   | "components/tab/example-bang-mau-color"
   | "components/tab/example-can-tab-sang-phai"
@@ -258,6 +279,11 @@ export type ShowcaseExampleSourceKey =
   | "forms/checkbox/example-trang-thai"
   | "forms/chip-calendar/example-bat-buoc-so-toi-thieu"
   | "forms/chip-calendar/example-chinh-sua-noi-tuyen"
+  | "forms/chip-calendar/example-gioi-han-ngay-va-so-luong"
+  | "forms/chip-calendar/example-gon-trong-bo-loc-bang"
+  | "forms/chip-calendar/example-khoa-ngay-da-qua"
+  | "forms/chip-calendar/example-kich-thuoc"
+  | "forms/chip-calendar/example-kieu-model-va-transform"
   | "forms/chip-calendar/example-lien-ket-hai-chieu"
   | "forms/chip-calendar/example-vo-hieu-hoa"
   | "forms/chip/example-bat-buoc-so-toi-thieu"
@@ -573,11 +599,67 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Existing “Fallback khi thiếu dữ liệu” scenario preserved from the showcase.",
   },
   {
-    sourceKey: "components/badge/example-ba-dang",
+    sourceKey: "components/avatar/example-cham-trang-thai",
+    pageKey: "components/avatar",
+    sectionId: "example-cham-trang-thai",
+    title: "Chấm trạng thái",
+    description: "Chấm nằm trên mép avatar ở góc 45°, đường kính 25% cỡ avatar (8–20px), vòng viền màu nền. statusLabel là tooltip của chấm và được đọc cùng tên, ví dụ “Lê Lan Anh, Đang hoạt động”.",
+  },
+  {
+    sourceKey: "components/avatar/example-cham-theo-kich-thuoc",
+    pageKey: "components/avatar",
+    sectionId: "example-cham-theo-kich-thuoc",
+    title: "Chấm theo kích thước",
+    description: "Existing “Chấm theo kích thước” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/avatar/example-anh-co-ten",
+    pageKey: "components/avatar",
+    sectionId: "example-anh-co-ten",
+    title: "Ảnh có tên",
+    description: "Rê chuột vào ảnh để xem tên. Ảnh lỗi thì chữ viết tắt và màu lấy từ name.",
+  },
+  {
+    sourceKey: "components/avatar/example-trong-danh-sach",
+    pageKey: "components/avatar",
+    sectionId: "example-trong-danh-sach",
+    title: "Trong danh sách",
+    description: "Existing “Trong danh sách” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/avatar-group/example-nhom-avatar",
+    pageKey: "components/avatar-group",
+    sectionId: "example-nhom-avatar",
+    title: "Nhóm avatar",
+    description: "Rê chuột vào từng avatar để xem tên và trạng thái; bấm “+N” để mở danh sách (Esc đóng và trả focus về ô).",
+  },
+  {
+    sourceKey: "components/avatar-group/example-kich-thuoc",
+    pageKey: "components/avatar-group",
+    sectionId: "example-kich-thuoc",
+    title: "Kích thước",
+    description: "Existing “Kích thước” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/avatar-group/example-du-dung-mot-nguoi",
+    pageKey: "components/avatar-group",
+    sectionId: "example-du-dung-mot-nguoi",
+    title: "Dư đúng một người",
+    description: "7 người với max 6: hiện luôn người thứ 7 thay cho ô “+1”.",
+  },
+  {
+    sourceKey: "components/avatar-group/example-tu-mo-man-hinh-khac",
+    pageKey: "components/avatar-group",
+    sectionId: "example-tu-mo-man-hinh-khac",
+    title: "Tự mở màn hình khác",
+    description: "Có người nghe moreClick thì “+N” không mở popover mặc định mà phát danh sách người bị ẩn.",
+  },
+  {
+    sourceKey: "components/badge/example-sau-dang",
     pageKey: "components/badge",
-    sectionId: "example-ba-dang",
-    title: "Ba dạng",
-    description: "Existing “Ba dạng” scenario preserved from the showcase.",
+    sectionId: "example-sau-dang",
+    title: "Sáu dạng",
+    description: "Existing “Sáu dạng” scenario preserved from the showcase.",
   },
   {
     sourceKey: "components/badge/example-fontset-switch",
@@ -605,7 +687,28 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "components/badge",
     sectionId: "example-mau-sac-icon",
     title: "Màu sắc icon",
-    description: "Existing “Màu sắc icon” scenario preserved from the showcase.",
+    description: "Không có icon thì badge vẽ chấm CSS màu gốc (8px, lg 10px).",
+  },
+  {
+    sourceKey: "components/badge/example-solid",
+    pageKey: "components/badge",
+    sectionId: "example-solid",
+    title: "Solid",
+    description: "Nền màu gốc, chữ màu contrast: trạng thái cần chú ý ngay, tối đa một badge solid mỗi dòng. Title là số thì thành số đếm như round.",
+  },
+  {
+    sourceKey: "components/badge/example-dot-va-pulse",
+    pageKey: "components/badge",
+    sectionId: "example-dot-va-pulse",
+    title: "Dot và pulse",
+    description: "Dot chỉ có chấm; title không hiện mà làm tooltip và tên cho screen reader (bắt buộc). pulse thêm vòng sáng nhấp nháy 1.6s, đứng yên khi giảm chuyển động.",
+  },
+  {
+    sourceKey: "components/badge/example-pair",
+    pageKey: "components/badge",
+    sectionId: "example-pair",
+    title: "Pair",
+    description: "Cặp thuộc tính – giá trị: nhãn nền secondary nhạt, giá trị theo color. Quá dài thì cắt phần giá trị trước, nhãn giữ nguyên.",
   },
   {
     sourceKey: "components/badge/example-kich-thuoc-round",
@@ -633,21 +736,77 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "components/badge",
     sectionId: "example-kem-mo-ta",
     title: "Kèm mô tả",
-    description: "Existing “Kèm mô tả” scenario preserved from the showcase.",
+    description: "Description 12px. Tag có description thành khối hai dòng; icon căn theo dòng đầu.",
   },
   {
     sourceKey: "components/badge/example-so-dem",
     pageKey: "components/badge",
     sectionId: "example-so-dem",
     title: "Số đếm",
-    description: "Existing “Số đếm” scenario preserved from the showcase.",
+    description: "Title là số: hình tròn khi một chữ số, chữ số đều bề rộng; lớn hơn 99 hiện 99+ (screen reader vẫn đọc số thật).",
   },
   {
-    sourceKey: "components/badge/example-icon-va-noi-dung-dai",
+    sourceKey: "components/badge/example-ten-dai-trong-o-hep",
     pageKey: "components/badge",
-    sectionId: "example-icon-va-noi-dung-dai",
-    title: "Icon và nội dung dài",
-    description: "Icon giữ nguyên kích thước và căn giữa với toàn bộ phần chữ khi nội dung xuống dòng.",
+    sectionId: "example-ten-dai-trong-o-hep",
+    title: "Tên dài trong ô hẹp",
+    description: "Luôn một dòng, chữ dài bị cắt bằng dấu ba chấm. Tooltip chỉ hiện khi chữ bị cắt (title đầy đủ) hoặc khi có tooltip riêng.",
+  },
+  {
+    sourceKey: "components/badge/example-bam-duoc",
+    pageKey: "components/badge",
+    sectionId: "example-bam-duoc",
+    title: "Bấm được",
+    description: "Chỉ khi có (click): role button, Tab tới được, Enter/Space. Hover trộn 6% màu đậm vào nền, nhấn 10%; vòng focus giữ bo góc.",
+  },
+  {
+    sourceKey: "components/badge-picker/example-chon-badge",
+    pageKey: "components/badge-picker",
+    sectionId: "example-chon-badge",
+    title: "Chọn badge",
+    description: "Bấm ra ngoài, bấm Xong hoặc Tab ra khỏi panel để ghi; Esc huỷ thay đổi.",
+  },
+  {
+    sourceKey: "components/badge-picker/example-trong-form",
+    pageKey: "components/badge-picker",
+    sectionId: "example-trong-form",
+    title: "Trong form",
+    description: "Value của control là { type, color, icon } | null. Lỗi bắt buộc hiện sau lần đóng panel đầu tiên hoặc khi submit.",
+  },
+  {
+    sourceKey: "components/badge-picker/example-kich-thuoc",
+    pageKey: "components/badge-picker",
+    sectionId: "example-kich-thuoc",
+    title: "Kích thước",
+    description: "Cùng thang với sd-select. Ở cỡ sm ẩn dòng tóm tắt; cỡ lg dùng badge cỡ md trong ô.",
+  },
+  {
+    sourceKey: "components/badge-picker/example-nhan-va-placeholder",
+    pageKey: "components/badge-picker",
+    sectionId: "example-nhan-va-placeholder",
+    title: "Nhãn và placeholder",
+    description: "Existing “Nhãn và placeholder” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/badge-picker/example-gioi-han-lua-chon",
+    pageKey: "components/badge-picker",
+    sectionId: "example-gioi-han-lua-chon",
+    title: "Giới hạn lựa chọn",
+    description: "Existing “Giới hạn lựa chọn” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/badge-picker/example-mo-ta-trong-ban-xem-truoc",
+    pageKey: "components/badge-picker",
+    sectionId: "example-mo-ta-trong-ban-xem-truoc",
+    title: "Mô tả trong bản xem trước",
+    description: "Chỉ hiện ở bản xem trước lớn, với kiểu icon và tag; kiểu khác có ghi chú.",
+  },
+  {
+    sourceKey: "components/badge-picker/example-chi-xem-va-vo-hieu",
+    pageKey: "components/badge-picker",
+    sectionId: "example-chi-xem-va-vo-hieu",
+    title: "Chỉ xem và vô hiệu",
+    description: "Existing “Chỉ xem và vô hiệu” scenario preserved from the showcase.",
   },
   {
     sourceKey: "components/breadcrumb/example-danh-sach-tinh",
@@ -725,6 +884,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-trang-thai",
     title: "Trạng thái",
     description: "Existing “Trạng thái” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/button/example-indicator",
+    pageKey: "components/button",
+    sectionId: "example-indicator",
+    title: "Indicator",
+    description: "Chấm hoặc số ở góc trên phải, không đổi kích thước nút. Số lớn hơn indicatorMax hiện {max}+; indicatorLabel nối vào aria-describedby.",
   },
   {
     sourceKey: "components/card/example-standalone-card",
@@ -1280,6 +1446,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Existing “Vô hiệu hoá” scenario preserved from the showcase.",
   },
   {
+    sourceKey: "components/operator/example-trong-control",
+    pageKey: "components/operator",
+    sectionId: "example-trong-control",
+    title: "Trong control",
+    description: "sd-input, sd-input-number, sd-select, sd-date, sd-date-range nhận [operators] / [(operator)] và vẽ operator thành chip tiền tố trong ô. Tab vào chip trước ô nhập; Enter, Space hoặc Alt+↓ mở menu; chọn xong focus về ô nhập.",
+  },
+  {
     sourceKey: "components/org-chart/example-card-mac-dinh",
     pageKey: "components/org-chart",
     sectionId: "example-card-mac-dinh",
@@ -1700,11 +1873,11 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Existing “Điều khiển từ ngoài” scenario preserved from the showcase.",
   },
   {
-    sourceKey: "components/tab-router/example-preview-dai-tab",
+    sourceKey: "components/tab-router/example-thu-truc-tiep",
     pageKey: "components/tab-router",
-    sectionId: "example-preview-dai-tab",
-    title: "Preview dải tab",
-    description: "Existing “Preview dải tab” scenario preserved from the showcase.",
+    sectionId: "example-thu-truc-tiep",
+    title: "Thử trực tiếp",
+    description: "Mở một màn có sd-tab-router-outlet thật: một tab thì thanh ẩn, mở thêm tab thì thanh hiện; thử 16 tab, rê chuột vào tên bị cắt để xem tooltip.",
   },
   {
     sourceKey: "components/tab-router/example-tich-hop-app-shell",
@@ -2253,11 +2426,46 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Mở lịch và chọn nhiều ngày.",
   },
   {
+    sourceKey: "forms/chip-calendar/example-kich-thuoc",
+    pageKey: "forms/chip-calendar",
+    sectionId: "example-kich-thuoc",
+    title: "Kích thước",
+    description: "Field một dòng 32 / 40 / 48px, chip 20 / 24 / 28px.",
+  },
+  {
     sourceKey: "forms/chip-calendar/example-bat-buoc-so-toi-thieu",
     pageKey: "forms/chip-calendar",
     sectionId: "example-bat-buoc-so-toi-thieu",
     title: "Bắt buộc & số tối thiểu",
-    description: "Cần tối thiểu 3 ngày. Bấm Kiểm tra để xem lỗi.",
+    description: "Cần tối thiểu 3 ngày. Lỗi hiện khi đóng lịch hoặc bấm Kiểm tra.",
+  },
+  {
+    sourceKey: "forms/chip-calendar/example-gioi-han-ngay-va-so-luong",
+    pageKey: "forms/chip-calendar",
+    sectionId: "example-gioi-han-ngay-va-so-luong",
+    title: "Giới hạn ngày và số lượng",
+    description: "Chỉ chọn ngày làm việc từ hôm nay, tối đa 3 ngày. Đủ 3 ngày thì các ô còn lại bị khoá.",
+  },
+  {
+    sourceKey: "forms/chip-calendar/example-khoa-ngay-da-qua",
+    pageKey: "forms/chip-calendar",
+    sectionId: "example-khoa-ngay-da-qua",
+    title: "Khoá ngày đã qua",
+    description: "Ngày đã qua hiện ổ khoá thay cho ✕; Backspace, bấm lại trên lịch và Xoá hết đều giữ lại.",
+  },
+  {
+    sourceKey: "forms/chip-calendar/example-gon-trong-bo-loc-bang",
+    pageKey: "forms/chip-calendar",
+    sectionId: "example-gon-trong-bo-loc-bang",
+    title: "Gọn trong bộ lọc bảng",
+    description: "Chỉ hiện 2 chip đầu, phần còn lại gộp vào “+N”; mở lịch thì hiện đủ.",
+  },
+  {
+    sourceKey: "forms/chip-calendar/example-kieu-model-va-transform",
+    pageKey: "forms/chip-calendar",
+    sectionId: "example-kieu-model-va-transform",
+    title: "Kiểu model và transform",
+    description: "Model nhận Date, timestamp, chuỗi ISO lẫn yyyy/MM/dd; sau thao tác đầu, model là string[] theo transform.",
   },
   {
     sourceKey: "forms/chip-calendar/example-vo-hieu-hoa",
@@ -2677,7 +2885,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "forms/select",
     sectionId: "example-chon-nhieu-voi-dong-tat-ca",
     title: "Chọn nhiều với dòng Tất cả",
-    description: "Row 'Tất cả' đầu panel — chỉ hiện khi multiple + items là mảng tĩnh. Tick chọn toàn bộ items enabled khớp search hiện tại (item disabled 'Pháp chế' không bị đụng); đang search thì tick CHỈ thêm items khớp filter, selection cũ giữ nguyên. Checkbox có 3 trạng thái checked / indeterminate / unchecked.",
+    description: "Row 'Tất cả' nằm trong header dính dưới ô tìm kiếm (cuộn vẫn thấy), cuối hàng có bộ đếm đã chọn/tổng — chỉ hiện khi multiple + items là mảng tĩnh. Tick chọn toàn bộ items enabled khớp search hiện tại (item disabled 'Pháp chế' không bị đụng); đang search thì tick CHỈ thêm items khớp filter, selection cũ giữ nguyên. Checkbox có 3 trạng thái checked / indeterminate / unchecked.",
   },
   {
     sourceKey: "forms/select/example-footer-action-khi-khong-co-ket-qua",

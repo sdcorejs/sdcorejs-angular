@@ -1,0 +1,127 @@
+// Hàng avatar chồng nhau. Biến nội bộ đặt trên host: cỡ, độ lấn round(size × 0.15) và độ dày vòng (2px, 3px từ 64).
+:host {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+
+.sd-avatar-group__item,
+.sd-avatar-group__more {
+  position: relative;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  // why: vòng màu nền tách các avatar chồng nhau; cùng token với vòng của chấm trạng thái.
+  box-shadow: 0 0 0 var(--sd-avatar-group-ring) var(--sd-avatar-status-ring, var(--sd-surface));
+
+  & + & {
+    margin-left: calc(-1 * var(--sd-avatar-group-overlap));
+  }
+}
+
+.sd-avatar-group__item {
+  display: inline-flex;
+}
+
+// "+N": cùng cỡ avatar, nằm dưới cùng.
+.sd-avatar-group__more {
+  z-index: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: var(--sd-avatar-group-size);
+  height: var(--sd-avatar-group-size);
+  padding: 0;
+  font-family: inherit;
+  font-weight: var(--sd-font-weight-semibold, 600);
+  line-height: 1;
+  color: var(--sd-text-secondary, rgba(0, 0, 0, 0.6));
+  background-color: var(--sd-surface-muted, rgba(0, 0, 0, 0.04));
+  border: 0;
+  cursor: pointer;
+
+  &:hover {
+    background-color: color-mix(in srgb, var(--sd-text) 8%, var(--sd-surface-muted));
+  }
+
+  &:focus-visible,
+  &[aria-expanded='true'] {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: var(--sd-focus-ring-offset, 2px);
+  }
+}
+
+// ── popover (render trong overlay từ template của component) ─────────────────────────────────────────────────
+.sd-avatar-group__popover {
+  box-sizing: border-box;
+  width: 280px;
+  max-width: calc(100vw - 16px);
+  padding: 6px;
+  color: var(--sd-text, rgba(0, 0, 0, 0.87));
+  background-color: var(--sd-select-panel-bg, var(--sd-surface));
+  border: 1px solid color-mix(in srgb, var(--sd-border) 60%, var(--sd-surface));
+  border-radius: var(--sd-panel-radius, 10px);
+  box-shadow: var(--sd-shadow-md, none);
+  // why: vòng của chấm trong popover theo nền popover.
+  --sd-avatar-status-ring: var(--sd-select-panel-bg, var(--sd-surface));
+}
+
+.sd-avatar-group__popover-title {
+  padding: 6px 10px;
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: var(--sd-line-height-16, 16px);
+  font-weight: var(--sd-font-weight-medium, 500);
+  color: var(--sd-text-secondary, rgba(0, 0, 0, 0.6));
+}
+
+.sd-avatar-group__list {
+  max-height: 320px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.sd-avatar-group__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  height: 44px;
+  padding: 0 10px;
+  border-radius: var(--sd-radius-6, 6px);
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: -2px;
+  }
+}
+
+.sd-avatar-group__row-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sd-avatar-group__row-name {
+  overflow: hidden;
+  font-size: var(--sd-font-size-13, 13px);
+  line-height: var(--sd-line-height-18, 18px);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sd-avatar-group__row-status {
+  overflow: hidden;
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: var(--sd-line-height-16, 16px);
+  color: var(--sd-text-secondary, rgba(0, 0, 0, 0.6));
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@media (forced-colors: active) {
+  .sd-avatar-group__more {
+    border: 1px solid ButtonText;
+  }
+}

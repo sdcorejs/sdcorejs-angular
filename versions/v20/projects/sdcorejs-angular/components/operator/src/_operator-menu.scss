@@ -1,0 +1,103 @@
+// Operator menu panel, shared by sd-operator and the internal operator chip of the form controls.
+// Rows render in a document.body overlay, so the component styles include this under ::ng-deep and target the
+// panel class forwarded by <mat-menu class="c-op-menu">. why: Material wraps projected content in
+// `.mat-mdc-menu-item-text`, so the flex row + alignment must live on that wrapper, not on the button.
+@mixin panel {
+  .c-op-menu {
+    // Panel control (thiết kế đợt 2 · D), giống panel sd-select / sd-autocomplete: bo `--sd-panel-radius`, viền
+    // mảnh, bóng shadow-md, nền `--sd-select-panel-bg` (trắng); hàng thụt ngang 4px, bo 6px. Token Material đọc
+    // ngay trên phần tử panel.
+    &.mat-mdc-menu-panel {
+      --mat-menu-container-shape: var(--sd-panel-radius, 10px);
+      --mat-menu-container-elevation-shadow: var(--sd-shadow-md);
+      --mat-menu-container-color: var(--sd-select-panel-bg, var(--sd-surface));
+      // Trộn với transparent: hover luôn đậm hơn đúng nền panel bên dưới.
+      --mat-menu-item-hover-state-layer-color: color-mix(in srgb, var(--sd-text) 5%, transparent);
+      // why: tách longhand — nếu theme thiếu token, chỉ màu rơi về mặc định chứ viền 1px không mất.
+      border-width: 1px;
+      border-style: solid;
+      border-color: color-mix(in srgb, var(--sd-border) 60%, var(--sd-surface));
+      background-color: var(--sd-select-panel-bg, var(--sd-surface));
+    }
+
+    // Cách control 6px về phía menu mở, như panel sd-select (Material đặt `mat-menu-below/above/after/before` lên panel,
+    // v19–v22). Chip trong ô đặt thêm các biến `--sd-operator-menu-*` = khoảng từ chip tới khung ô, để khe tính từ
+    // khung ô và menu thẳng mép đầu ô; sd-operator đứng riêng để trống nên khe tính từ chính trigger.
+    &.mat-mdc-menu-panel.mat-menu-below {
+      margin-top: calc(var(--sd-operator-menu-below, 0px) + 6px);
+    }
+    &.mat-mdc-menu-panel.mat-menu-above {
+      margin-bottom: calc(var(--sd-operator-menu-above, 0px) + 6px);
+    }
+    &.mat-mdc-menu-panel.mat-menu-after {
+      margin-inline-start: calc(-1 * var(--sd-operator-menu-start, 0px));
+    }
+    &.mat-mdc-menu-panel.mat-menu-before {
+      margin-inline-end: calc(-1 * var(--sd-operator-menu-end, 0px));
+    }
+
+    // why: hàng có 2 dòng (label + code) nên phải bỏ khung 1 dòng của mat-menu-item —
+    // min-height/height 48px + line-height 48px sẽ crop dòng thứ hai.
+    .c-op-row.mat-mdc-menu-item {
+      min-height: 0;
+      height: auto;
+      padding-top: 6px;
+      padding-bottom: 6px;
+      line-height: normal;
+      // mat-menu-item rộng 100%, nên trừ đi phần thụt hai bên.
+      width: calc(100% - 8px);
+      margin: 0 4px;
+      border-radius: var(--sd-radius-6, 6px);
+    }
+
+    .mat-mdc-menu-item-text {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .c-op-icon {
+      display: inline-flex;
+      align-items: center;
+      flex: 0 0 auto;
+
+      svg {
+        display: block;
+      }
+    }
+
+    // Label dòng 1, code dòng 2. why: trước đây label và code nằm cùng một hàng ngang, nên trong
+    // filter cột hẹp label dài ('Lớn hơn, hoặc bằng') bị wrap thành 2 dòng và hàng cao lệch nhau.
+    .c-op-text {
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      align-items: flex-start;
+      min-width: 0;
+    }
+
+    .c-op-label {
+      font-weight: var(--sd-font-weight-regular, 400);
+      line-height: 1.3;
+      white-space: nowrap;
+    }
+
+    .c-op-code {
+      color: var(--sd-text-muted, #7a7a7a);
+      font-size: var(--sd-font-size-11, 11px);
+      line-height: 1.2;
+      font-family: monospace;
+      white-space: nowrap;
+    }
+
+    .c-op-row.c-op-active {
+      background: var(--sd-primary-light, rgba(15, 118, 110, 0.08));
+
+      .c-op-label {
+        color: var(--sd-primary-dark, var(--sd-primary));
+        font-weight: var(--sd-font-weight-medium, 500);
+      }
+    }
+  }
+}

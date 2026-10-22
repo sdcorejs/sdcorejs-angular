@@ -1,5 +1,5 @@
 // Biểu diễn thiết kế của field — kích thước/màu bám theo control Core ở labelPlacement="top"
-// (nhãn T14M, khung outline 40px bo 4px, helper 12px). Chỉ dùng token, không mã màu cứng.
+// (nhãn T14M, khung outline 40px bo và viền theo token control, helper 12px). Chỉ dùng token, không mã màu cứng.
 :host {
   display: block;
   min-width: 0;
@@ -69,13 +69,15 @@
   gap: 8px;
   height: 40px;
   padding: 0 12px;
-  border: 1px solid var(--sd-border);
-  border-radius: var(--sd-radius-4, 4px);
+  // Bản mô phỏng tĩnh của sd-input: chỉ bo và viền nghỉ của control thật, không có hover / focus.
+  border: 1px solid var(--sd-control-border, var(--sd-border));
+  border-radius: var(--sd-control-radius, 8px);
   background: var(--sd-surface);
   min-width: 0;
 
   &.is-disabled {
-    background: var(--sd-disabled-bg);
+    border-color: var(--sd-control-border-disabled, var(--sd-border));
+    background: var(--sd-control-bg-disabled, var(--sd-disabled-bg));
   }
 }
 

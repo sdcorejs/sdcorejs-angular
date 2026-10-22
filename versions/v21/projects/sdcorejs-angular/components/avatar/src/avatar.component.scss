@@ -1,3 +1,12 @@
+// why: host là hộp neo cho chấm trạng thái (đặt tuyệt đối); inline-flex + vertical-align giữ avatar ảnh và avatar
+// chữ cùng nằm giữa dòng khi đứng cạnh chữ.
+:host {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  vertical-align: middle;
+}
+
 .sd-avatar {
   display: inline-flex;
   align-items: center;
@@ -14,4 +23,14 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+// Vòng viền quanh chấm tách chấm khỏi avatar; nơi có nền khác (header tối, hàng đang chọn) đặt lại
+// --sd-avatar-status-ring.
+.sd-avatar__status {
+  position: absolute;
+  display: flex;
+  border-radius: 50%;
+  background-color: var(--sd-avatar-status-ring, var(--sd-surface));
+  line-height: 0;
 }

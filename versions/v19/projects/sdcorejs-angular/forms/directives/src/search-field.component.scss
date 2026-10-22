@@ -1,0 +1,113 @@
+@use '../../../assets/scss/core/control';
+
+// Primitive tìm kiếm (thiết kế đợt 1 · B; bo, viền, hover và focus theo đợt 2 · D).
+// Khung chính là host, nên nơi dùng đặt width / margin / background lên host bằng class của mình.
+// `--sd-search-field-clear-size` (local, không phải component token): context đặt lại cỡ nút xoá khi
+// tự chuyển sang cỡ chạm theo điều kiện riêng, ví dụ quick search của table ở container hẹp.
+:host {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  min-width: 0;
+  height: var(--sd-control-height-md, 40px);
+  padding: 0 12px;
+  background: var(--sd-surface);
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-14, 14px);
+  line-height: var(--sd-line-height-20, 20px);
+  @include control.box;
+}
+
+:host(.sd-sm) {
+  height: var(--sd-control-height-sm, 32px);
+  padding: 0 8px;
+  gap: 6px;
+}
+
+// Sau control.box để thắng hover cùng độ ưu tiên: ô disabled không đổi viền khi rê chuột.
+:host(.sd-disabled) {
+  border-color: var(--sd-control-border-disabled, var(--sd-border));
+  background: var(--sd-surface-muted);
+  color: var(--sd-disabled-text);
+}
+
+.sd-search-field__icon {
+  flex: 0 0 auto;
+}
+
+// why: input là nội dung chiếu từ nơi dùng, không mang attribute encapsulation của primitive.
+:host ::ng-deep input[sdSearchFieldInput] {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  // Vòng focus nằm trên khung (`:focus-within`), không vẽ thêm outline trên input.
+  outline: none;
+  background: transparent;
+  color: var(--sd-text);
+  font: inherit;
+
+  &::placeholder {
+    color: var(--sd-text-secondary);
+    opacity: 1;
+  }
+
+  &:disabled {
+    color: inherit;
+  }
+
+  &:disabled::placeholder {
+    color: inherit;
+  }
+}
+
+.sd-search-field__clear {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: var(--sd-search-field-clear-size, 28px);
+  height: var(--sd-search-field-clear-size, 28px);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--sd-text) 8%, transparent);
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
+:host(.sd-sm) .sd-search-field__clear {
+  width: var(--sd-search-field-clear-size, 24px);
+  height: var(--sd-search-field-clear-size, 24px);
+}
+
+// Chữ 16px tránh iOS tự zoom khi focus; ô và nút xoá đủ cỡ chạm.
+@media (pointer: coarse) {
+  :host {
+    min-height: var(--sd-control-height-coarse, 44px);
+    font-size: var(--sd-font-size-16, 16px);
+  }
+
+  :host .sd-search-field__clear,
+  :host(.sd-sm) .sd-search-field__clear {
+    width: var(--sd-search-field-clear-size, 40px);
+    height: var(--sd-search-field-clear-size, 40px);
+  }
+}

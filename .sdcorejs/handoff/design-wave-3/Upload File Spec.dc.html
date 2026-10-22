@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Roboto:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0..1,0" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:#f4f4f1;color:#1a1b1f;-webkit-font-smoothing:antialiased}
+a{color:#005cbb;text-decoration:none}
+a:hover{color:#004a99;text-decoration:underline}
+</style>
+</helmet>
+<div style="font-family:'Be Vietnam Pro',sans-serif;font-size:15px;line-height:1.6;color:#1a1b1f;max-width:1240px;margin:0 auto;padding:56px 32px 96px;box-sizing:border-box">
+
+<header style="display:flex;flex-direction:column;gap:12px;padding-bottom:32px;margin-bottom:40px;border-bottom:1px solid #dddcd6">
+  <div style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#6b6d73">sdcorejs/sdcorejs-angular · versions/v19 · components/upload-file</div>
+  <h1 style="margin:0;font-weight:600;font-size:36px;line-height:1.15;letter-spacing:-0.02em">Handoff · sd-upload-file</h1>
+  <p style="margin:0;max-width:780px;color:#3a3c42">Bản tham chiếu cho README.md cùng thư mục. Popup đã chốt phương án A; phương án B chỉ để tham khảo, ngoài phạm vi.</p>
+</header>
+<section id="upload-file" data-screen-label="07 sd-upload-file" style="padding-top:0;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">07</span>
+    <h2 style="margin:0;font:600 30px/1.2 'JetBrains Mono',monospace;letter-spacing:-0.01em">sd-upload-file</h2>
+    <span style="font:600 11px/1 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:5px 9px;border-radius:999px;background:#1a1b1f;color:#ffffff">Ưu tiên 1 · Redesign</span>
+    <span style="font:400 12px 'JetBrains Mono',monospace;color:#6b6d73">components/upload-file/src</span>
+  </div>
+  <p style="margin:0;max-width:780px;color:#3a3c42;text-wrap:pretty">sd-upload-file gồm ô tải lên (vùng chọn/thả tệp, ô ảnh, hàng tài liệu) và popup preview. Popup đã chốt phương án A (mục 7.2). Ô tải lên nên sửa cùng đợt để hai phần dùng chung icon, cách hiển thị dung lượng và thứ tự file.</p>
+
+  <h3 style="margin:8px 0 0;display:flex;align-items:baseline;gap:10px;font-weight:600;font-size:20px;line-height:1.3"><span style="font:500 12px 'JetBrains Mono',monospace;color:#6b6d73">7.1</span>Ô tải lên</h3>
+  <p style="margin:0;max-width:780px;color:#3a3c42;text-wrap:pretty">Ảnh hiển thị thành ô 50×50 xếp trên một hàng ngang, tài liệu là danh sách bên dưới, còn ô tải lên đứng đầu hàng ảnh. Mockup dùng giá trị mặc định: <span style="font-family:'JetBrains Mono',monospace;font-size:13px">previewWidth/Height 50px</span>, <span style="font-family:'JetBrains Mono',monospace;font-size:13px">max 10</span>, <span style="font-family:'JetBrains Mono',monospace;font-size:13px">maxOfImage 3</span>.</p>
+
+  <sc-if value="{{ cur }}" hint-placeholder-val="{{ true }}">
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #dddcd6">
+      <span style="display:flex;align-items:center;gap:8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#4a4c52"><span style="width:8px;height:8px;border-radius:999px;background:#9a9b9f"></span>Hiện trạng</span>
+      <span style="font:400 12px/16px 'JetBrains Mono',monospace;color:#6b6d73">upload-file.component.html · upload-file.component.scss · ảnh thứ 2 đang hover</span>
+    </div>
+    <div style="overflow-x:auto;background:#f9f9f9">
+      <div style="padding:40px 32px 36px;width:max-content;min-width:100%;box-sizing:border-box;display:flex;justify-content:center;font-family:Roboto,'Helvetica Neue',sans-serif;font-size:14px;color:#1a1b1f">
+        <div style="width:460px;display:flex;flex-direction:column;gap:4px">
+          <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:14px;font-weight:500;line-height:20px">Hồ sơ đính kèm <span style="color:#ba1a1a">*</span></span><span style="font-size:12px;line-height:16px;color:#44474f">jpg, png, pdf, zip · tối đa 20MB</span></div>
+          <div style="position:relative;margin-top:16px">
+            <div style="display:flex;overflow:hidden">
+              <span style="width:50px;height:50px;margin:3px;flex:0 0 auto;box-sizing:border-box;border:1px dashed #005cbb;border-radius:8px;opacity:.6;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:18px;line-height:1;color:#005cbb">file_upload</span>
+              <span style="position:relative;width:50px;height:50px;margin:3px;flex:0 0 auto;box-sizing:border-box;border:1px solid #c4c6d0;border-radius:8px;opacity:.9;display:flex;align-items:center;justify-content:center"><span style="width:48px;height:32px;background:repeating-linear-gradient(135deg,#d6d5cf 0 6px,#e2e1dc 6px 12px)"></span><span style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;box-sizing:border-box;border-radius:50%;background:#e6e6e6;border:2px solid #ffffff;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:16px;line-height:1;color:#000000">close</span></span>
+              <span style="position:relative;width:50px;height:50px;margin:3px;flex:0 0 auto;box-sizing:border-box;border:1px solid #c4c6d0;border-radius:8px;opacity:.9;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center"><span style="width:48px;height:36px;opacity:.2;background:repeating-linear-gradient(135deg,#f4f3ef 0 6px,#fbfaf7 6px 12px)"></span><span style="position:absolute;left:15px;top:15px;font-family:'Material Symbols Outlined';font-size:18px;line-height:1;color:#ffffff">zoom_in</span><span style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;box-sizing:border-box;border-radius:50%;background:#e6e6e6;border:2px solid #ffffff;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:16px;line-height:1;color:#000000">close</span></span>
+              <span style="position:relative;width:50px;height:50px;margin:3px;flex:0 0 auto;box-sizing:border-box;border:1px solid #c4c6d0;border-radius:8px;opacity:.9;background:#f2f3f4;display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;box-sizing:border-box;border-radius:999px;border:2px solid #c4c6d0;border-top-color:#005cbb"></span><span style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;box-sizing:border-box;border-radius:50%;background:#e6e6e6;border:2px solid #ffffff;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:16px;line-height:1;color:#000000">close</span></span>
+            </div>
+            <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-14px;left:-10px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">1</span></sc-if>
+            <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-20px;left:94px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">2</span></sc-if>
+            <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-20px;left:147px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">3</span></sc-if>
+            <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-20px;left:200px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">6</span></sc-if>
+          </div>
+          <div style="position:relative;margin-top:4px;display:flex;align-items:center;gap:8px;height:32px;padding:0 0 0 8px;box-sizing:border-box;border:1px dashed #c4c6d0;border-radius:8px;background:#ffffff">
+            <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-11px;left:-11px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">4</span></sc-if>
+            <span style="font-family:'Material Symbols Outlined';font-size:22px;line-height:1;color:#d93025">picture_as_pdf</span>
+            <span style="font-size:14px;font-weight:500;color:#005cbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">hop-dong-thue-van-phong.pdf</span>
+            <span style="font-size:12px;color:#44474f;white-space:nowrap">- 2.457KB</span>
+            <span style="margin-left:auto;width:32px;height:32px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:16px;line-height:1;color:#44474f">close</span>
+          </div>
+          <div style="position:relative;margin-top:4px;display:flex;align-items:center;gap:8px;height:32px;padding:0 0 0 8px;box-sizing:border-box;border:1px dashed #c4c6d0;border-radius:8px;background:#ffffff">
+            <span style="font-family:'Material Symbols Outlined';font-size:22px;line-height:1;color:#5f6368">folder_zip</span>
+            <span style="font-size:14px;font-weight:500;color:#005cbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">ban-ve-thi-cong.zip</span>
+            <span style="position:relative;font-size:12px;color:#44474f;white-space:nowrap">- 18.636KB<sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-16px;right:-16px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">5</span></sc-if></span>
+            <span style="margin-left:auto;width:32px;height:32px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:16px;line-height:1;color:#44474f">close</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ol style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px 32px;font-size:14px;line-height:1.6;color:#2b2c30">
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">1</span><span><strong style="font-weight:600">Ô tải lên khó nhận ra.</strong> Ô chỉ có icon 18px và đang ở opacity .6; khi hover lại giảm xuống .3, tức mờ hơn khi người dùng trỏ vào. Không có chữ “kéo thả / chọn tệp”. Template và SCSS không có trạng thái nào cho lúc đang kéo tệp vào.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">2</span><span><strong style="font-weight:600">Nút xoá nằm ngoài ô.</strong> Badge 24px đặt ở <span style="font-family:'JetBrains Mono',monospace;font-size:13px">top/right: -8px</span>, trong khi ô chỉ có margin 3px và <span style="font-family:'JetBrains Mono',monospace;font-size:13px">:host</span> đặt <span style="font-family:'JetBrains Mono',monospace;font-size:13px">overflow-y: hidden</span>, nên phần trên của badge bị cắt và badge đè sang ô bên cạnh. Trên màn ≤ 600px nút thành 44px, gần bằng cả ô 50px.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">3</span><span><strong style="font-weight:600">Ảnh luôn bị bạc màu, hover gần như mất ảnh.</strong> Cả ô đặt opacity .9. Khi hover, ô phủ đen 40% và ảnh giảm còn opacity .2 chỉ để hiện icon zoom 18px. Ảnh dùng max-height theo kiểu contain nên ảnh ngang để lại dải trống trong ô.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">4</span><span><strong style="font-weight:600">Ảnh và tài liệu tách thành hai khối.</strong> Ảnh nằm một hàng ngang không xuống dòng (cuộn ngang trong <span style="font-family:'JetBrains Mono',monospace;font-size:13px">:host</span>), tài liệu nằm thành danh sách bên dưới. Vì vậy thứ tự hiển thị khác thứ tự tải lên, và chỉ ảnh kéo đổi thứ tự được. Hàng tài liệu viền đứt nét nên trông giống vùng thả tệp.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">5</span><span><strong style="font-weight:600">Bấm tên tài liệu là tải file về, không mở preview.</strong> Dung lượng luôn tính bằng KB (<span style="font-family:'JetBrains Mono',monospace;font-size:13px">fileSize / 1024</span>), nên file 18 MB hiện thành “18.636KB”, và được ngăn với tên bằng “ - ”.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">6</span><span><strong style="font-weight:600">Trạng thái của từng file không rõ.</strong> Khi đang tải lên chỉ có spinner 18px trên nền xám. Các lỗi quá dung lượng, sai định dạng, quá số lượng hay tải lên thất bại đều chỉ báo bằng toast; danh sách không cho biết file nào bị lỗi.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;border:1.5px solid #c2255c;box-sizing:border-box;color:#c2255c;font:700 12px/19px 'Be Vietnam Pro',sans-serif;text-align:center">7</span><span><strong style="font-weight:600">Code.</strong> Nhiều màu cứng (<span style="font-family:'JetBrains Mono',monospace;font-size:13px">rgba(242,243,244)</span>, <span style="font-family:'JetBrains Mono',monospace;font-size:13px">rgba(0,0,0,.4)</span>, <span style="font-family:'JetBrains Mono',monospace;font-size:13px">#e6e6e6</span>, <span style="font-family:'JetBrains Mono',monospace;font-size:13px">grey</span>). Bố cục dựa vào <span style="font-family:'JetBrains Mono',monospace;font-size:13px">display: table</span>. Còn class thừa <span style="font-family:'JetBrains Mono',monospace;font-size:13px">.c-img-eror</span>, <span style="font-family:'JetBrains Mono',monospace;font-size:13px">.c-icon</span>, <span style="font-family:'JetBrains Mono',monospace;font-size:13px">.mat-icon-button</span>. Bảng map icon bị lặp thêm hai lần trong file này.</span></li>
+  </ol>
+  </sc-if>
+
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #dddcd6">
+      <span style="display:flex;align-items:center;gap:8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#005cbb"><span style="width:8px;height:8px;border-radius:999px;background:#005cbb"></span>Đề xuất · type=image và type=document</span>
+      <span style="font:400 12px/16px 'JetBrains Mono',monospace;color:#6b6d73">ô ảnh thứ 2 đang hover · rê chuột vào hàng tài liệu để xem nút xoá</span>
+    </div>
+    <div style="background:#f9f9f9;padding:40px 32px 36px;display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:40px;font-family:Roboto,'Helvetica Neue',sans-serif;font-size:14px;color:#1a1b1f">
+      <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+        <span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#6b6d73">type = image</span>
+        <div style="display:flex;flex-direction:column;gap:2px"><span style="display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px"><span style="font-size:14px;font-weight:500;line-height:20px">Ảnh hiện trường <span style="color:#ba1a1a">*</span></span><span style="font:500 12px 'JetBrains Mono',monospace;color:#44474f">4 / 10</span></span><span style="font-size:12px;line-height:16px;color:#44474f">JPG, PNG · tối đa 5 MB mỗi ảnh</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">
+          <span style="position:relative;display:inline-flex">
+            <span style="width:72px;height:72px;box-sizing:border-box;border:1px dashed #74777f;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#005cbb"><span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1">add_photo_alternate</span><span style="font-size:11px;font-weight:500;line-height:14px">Thêm ảnh</span></span>
+            <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-11px;left:-11px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">1</span></sc-if>
+          </span>
+          <span style="width:72px;height:72px;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);background:repeating-linear-gradient(135deg,#d6d5cf 0 8px,#e2e1dc 8px 16px)"></span>
+          <span style="position:relative;display:inline-flex">
+            <span style="position:relative;width:72px;height:72px;border-radius:8px;background:repeating-linear-gradient(135deg,#f4f3ef 0 8px,#fbfaf7 8px 16px)"><span style="position:absolute;inset:0;border-radius:8px;background:rgba(0,0,0,.24)"></span><span style="position:absolute;top:-7px;right:-7px;z-index:2;width:20px;height:20px;box-sizing:border-box;border-radius:999px;background:#ffffff;border:1px solid #c4c6d0;box-shadow:0 1px 2px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:14px;line-height:1;color:#44474f;cursor:pointer;transition:opacity .12s" style-hover="color:#ba1a1a;border-color:#ba1a1a">close</span></span>
+            <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-11px;left:-11px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">2</span></sc-if>
+          </span>
+          <span style="position:relative;display:inline-flex">
+            <span style="position:relative;width:72px;height:72px;border-radius:8px;overflow:hidden;background:repeating-linear-gradient(135deg,#cfcec8 0 8px,#dcdbd6 8px 16px);display:flex;align-items:center;justify-content:center"><span style="position:absolute;inset:0;background:rgba(253,251,255,.6)"></span><span style="position:relative;width:22px;height:22px;box-sizing:border-box;border-radius:999px;border:2.5px solid rgba(0,92,187,.18);border-top-color:#005cbb"></span></span>
+            <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;bottom:-11px;left:-11px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">5</span></sc-if>
+          </span>
+          <span style="position:relative;width:72px;height:72px;box-sizing:border-box;border-radius:8px;background:#ffdad6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#93000a"><span style="font-family:'Material Symbols Outlined';font-size:20px;line-height:1">error</span><span style="font-size:11px;font-weight:500;line-height:14px">Thử lại</span><span style="position:absolute;top:-7px;right:-7px;z-index:2;width:20px;height:20px;box-sizing:border-box;border-radius:999px;background:#ffffff;border:1px solid #c4c6d0;box-shadow:0 1px 2px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:14px;line-height:1;color:#44474f;cursor:pointer;transition:opacity .12s" style-hover="color:#ba1a1a;border-color:#ba1a1a">close</span></span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+        <span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#6b6d73">type = document · file</span>
+        <div style="display:flex;flex-direction:column;gap:2px"><span style="display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px"><span style="font-size:14px;font-weight:500;line-height:20px">Hồ sơ đính kèm <span style="color:#ba1a1a">*</span></span><span style="font:500 12px 'JetBrains Mono',monospace;color:#44474f">4 / 10</span></span><span style="font-size:12px;line-height:16px;color:#44474f">PDF, DOCX, XLSX, ZIP · tối đa 20 MB mỗi tệp</span></div>
+        <div style="position:relative;min-height:56px;box-sizing:border-box;border:1px dashed #74777f;border-radius:8px;display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 16px;color:#44474f">
+          <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-11px;left:-11px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">1</span></sc-if>
+          <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;color:#005cbb">upload_file</span>
+          <span>Kéo thả tệp vào đây hoặc <span style="color:#005cbb;font-weight:500">chọn tệp</span></span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div onMouseEnter="{{ enDocPdf }}" onMouseLeave="{{ offHov }}" style="position:relative;display:flex;align-items:center;gap:12px;min-height:52px;padding:6px 8px 6px 12px;box-sizing:border-box;border:1px solid #e0e2ec;border-radius:8px;background:#fdfbff;cursor:pointer" style-hover="background:#f3f6fb">
+            <span style="position:absolute;top:-7px;right:-7px;z-index:2;width:20px;height:20px;box-sizing:border-box;border-radius:999px;background:#ffffff;border:1px solid #c4c6d0;box-shadow:0 1px 2px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:14px;line-height:1;color:#44474f;cursor:pointer;transition:opacity .12s;opacity:{{ oDocPdf }}" style-hover="color:#ba1a1a;border-color:#ba1a1a">close</span>
+            <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-11px;left:-11px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">4</span></sc-if>
+            <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;color:#d93025">picture_as_pdf</span>
+            <span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:14px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">hop-dong-thue-van-phong.pdf</span><span style="font-size:12px;line-height:16px;color:#44474f">PDF · 2,4 MB</span></span>
+            <span style="width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:20px;line-height:1;color:#44474f">download</span>
+          </div>
+          <div onMouseEnter="{{ enDocZip }}" onMouseLeave="{{ offHov }}" style="position:relative;display:flex;align-items:center;gap:12px;min-height:52px;padding:6px 8px 6px 12px;box-sizing:border-box;border:1px solid #e0e2ec;border-radius:8px;background:#fdfbff;cursor:pointer" style-hover="background:#f3f6fb">
+            <span style="position:absolute;top:-7px;right:-7px;z-index:2;width:20px;height:20px;box-sizing:border-box;border-radius:999px;background:#ffffff;border:1px solid #c4c6d0;box-shadow:0 1px 2px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:14px;line-height:1;color:#44474f;cursor:pointer;transition:opacity .12s;opacity:{{ oDocZip }}" style-hover="color:#ba1a1a;border-color:#ba1a1a">close</span>
+            <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;color:#5f6368">folder_zip</span>
+            <span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:14px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">ban-ve-thi-cong.zip</span><span style="font-size:12px;line-height:16px;color:#44474f">ZIP · 18,2 MB</span></span>
+            <span style="width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:20px;line-height:1;color:#44474f">download</span>
+          </div>
+          <div style="position:relative;display:flex;align-items:center;gap:12px;min-height:52px;padding:6px 4px 6px 12px;box-sizing:border-box;border:1px solid #e0e2ec;border-radius:8px;background:#fdfbff;overflow:hidden">
+            <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;color:#1e7e45">table_chart</span>
+            <span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:14px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">du-toan-chi-phi.xlsx</span><span style="font-size:12px;line-height:16px;color:#44474f">Đang tải lên…</span></span>
+            <span style="width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:20px;line-height:1;color:#44474f">close</span>
+            <span style="position:absolute;left:0;right:0;bottom:0;height:2px;background:rgba(0,92,187,.16)"></span><span style="position:absolute;left:0;bottom:0;height:2px;width:38%;background:#005cbb"></span>
+          </div>
+          <div style="position:relative;display:flex;align-items:center;gap:12px;min-height:52px;padding:6px 4px 6px 12px;box-sizing:border-box;border:1px solid #ffb4ab;border-radius:8px;background:#fff8f7">
+            <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-11px;left:-11px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">5</span></sc-if>
+            <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;color:#ba1a1a">error</span>
+            <span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:14px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">bien-ban-nghiem-thu.docx</span><span style="font-size:12px;line-height:16px;color:#ba1a1a">Tải lên thất bại</span></span>
+            <span style="width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:20px;line-height:1;color:#44474f">refresh</span>
+            <span style="width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:20px;line-height:1;color:#44474f">close</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #dddcd6">
+      <span style="display:flex;align-items:center;gap:8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#005cbb"><span style="width:8px;height:8px;border-radius:999px;background:#005cbb"></span>Đề xuất · vùng thả và chế độ chỉ xem</span>
+      <span style="font:400 12px/16px 'JetBrains Mono',monospace;color:#6b6d73">disabled: maxOfImage 3, có 7 ảnh</span>
+    </div>
+    <div style="background:#f9f9f9;padding:28px 32px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px 20px;font-family:Roboto,'Helvetica Neue',sans-serif;font-size:14px;color:#1a1b1f">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="min-height:56px;box-sizing:border-box;border:1px dashed #74777f;border-radius:8px;display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 16px;color:#44474f"><span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;color:#005cbb">upload_file</span><span>Kéo thả hoặc <span style="color:#005cbb;font-weight:500">chọn tệp</span></span></div>
+        <div style="font-family:'Be Vietnam Pro',sans-serif;font-size:13px;line-height:1.55;color:#3a3c42"><strong style="font-weight:600;color:#1a1b1f">Mặc định.</strong> Khi hover, nền đổi sang primary 6% và viền chuyển màu primary. Khi đủ <span style="font-family:'JetBrains Mono',monospace;font-size:12px">max</span> thì ẩn vùng thả như hiện nay.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="min-height:56px;box-sizing:border-box;border:1px solid #005cbb;border-radius:8px;background:#eef3fb;display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 16px;color:#005cbb;font-weight:500"><span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1">upload_file</span>Thả để tải lên</div>
+        <div style="font-family:'Be Vietnam Pro',sans-serif;font-size:13px;line-height:1.55;color:#3a3c42"><strong style="font-weight:600;color:#1a1b1f">Đang kéo tệp vào.</strong> Gắn một class khi nhận dragenter và gỡ khi dragleave/drop, trong 4 listener đã có sẵn. Với type=image, ô “Thêm ảnh” cũng đổi theo trạng thái này.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="min-height:56px;box-sizing:border-box;border:1px dashed #ba1a1a;border-radius:8px;display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 16px;color:#44474f"><span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;color:#005cbb">upload_file</span><span>Kéo thả hoặc <span style="color:#005cbb;font-weight:500">chọn tệp</span></span></div>
+          <span style="display:flex;align-items:center;gap:4px;font-size:12px;line-height:16px;color:#ba1a1a"><span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1">error</span>Vui lòng tải lên tệp</span>
+        </div>
+        <div style="font-family:'Be Vietnam Pro',sans-serif;font-size:13px;line-height:1.55;color:#3a3c42"><strong style="font-weight:600;color:#1a1b1f">Lỗi bắt buộc.</strong> Viền đổi màu error, message dùng cùng kiểu với lỗi của các field khác thay vì <span style="font-family:'JetBrains Mono',monospace;font-size:12px">padding: 4px 8px</span> riêng.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="min-height:56px;display:flex;align-items:center;gap:8px">
+          <span style="width:56px;height:56px;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);background:repeating-linear-gradient(135deg,#d6d5cf 0 8px,#e2e1dc 8px 16px)"></span>
+          <span style="width:56px;height:56px;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);background:repeating-linear-gradient(135deg,#f4f3ef 0 8px,#fbfaf7 8px 16px)"></span>
+          <span style="position:relative;width:56px;height:56px;border-radius:8px;overflow:hidden;background:repeating-linear-gradient(135deg,#cfcec8 0 8px,#dcdbd6 8px 16px);display:flex;align-items:center;justify-content:center"><span style="position:absolute;inset:0;background:rgba(20,21,24,.6)"></span><span style="position:relative;color:#ffffff;font-size:16px;font-weight:500">+4</span></span>
+        </div>
+        <div style="font-family:'Be Vietnam Pro',sans-serif;font-size:13px;line-height:1.55;color:#3a3c42"><strong style="font-weight:600;color:#1a1b1f">Chỉ xem.</strong> Lớp “+N” phủ kín ô cuối thay vì một hộp 65% ở giữa. Bấm ô nào thì mở popup tại đúng ảnh đó. Hàng tài liệu bỏ nút xoá, chỉ giữ nút tải xuống.</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #dddcd6">
+      <span style="display:flex;align-items:center;gap:8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#005cbb"><span style="width:8px;height:8px;border-radius:999px;background:#005cbb"></span>Đề xuất · type=file và hiển thị trong table</span>
+      <span style="font:400 12px/16px 'JetBrains Mono',monospace;color:#6b6d73">rê chuột vào ảnh và hàng tài liệu · table: HS-0244 đang hover ảnh thứ 2</span>
+    </div>
+    <div style="background:#f9f9f9;padding:40px 32px 36px;display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:40px;font-family:Roboto,'Helvetica Neue',sans-serif;font-size:14px;color:#1a1b1f">
+      <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+        <span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#6b6d73">type = file</span>
+        <div style="display:flex;flex-direction:column;gap:2px"><span style="display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px"><span style="font-size:14px;font-weight:500;line-height:20px">Hồ sơ hiện trường <span style="color:#ba1a1a">*</span></span><span style="font:500 12px 'JetBrains Mono',monospace;color:#44474f">5 / 10</span></span><span style="font-size:12px;line-height:16px;color:#44474f">Ảnh và tài liệu · tối đa 20 MB mỗi tệp</span></div>
+        <div style="position:relative;display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">
+          <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-11px;left:-11px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">6</span></sc-if>
+          <span style="width:72px;height:72px;box-sizing:border-box;border:1px dashed #74777f;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#005cbb"><span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1">upload_file</span><span style="font-size:11px;font-weight:500;line-height:14px">Tải lên</span></span>
+          <span onMouseEnter="{{ enImg1 }}" onMouseLeave="{{ offHov }}" style="position:relative;width:72px;height:72px;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);background:repeating-linear-gradient(135deg,#d6d5cf 0 8px,#e2e1dc 8px 16px);cursor:zoom-in"><span style="position:absolute;inset:0;border-radius:8px;background:rgba(0,0,0,.24);transition:opacity .12s;opacity:{{ oImg1 }}"></span><span style="position:absolute;top:-7px;right:-7px;z-index:2;width:20px;height:20px;box-sizing:border-box;border-radius:999px;background:#ffffff;border:1px solid #c4c6d0;box-shadow:0 1px 2px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:14px;line-height:1;color:#44474f;cursor:pointer;transition:opacity .12s;opacity:{{ oImg1 }}" style-hover="color:#ba1a1a;border-color:#ba1a1a">close</span></span>
+          <span onMouseEnter="{{ enImg2 }}" onMouseLeave="{{ offHov }}" style="position:relative;width:72px;height:72px;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);background:repeating-linear-gradient(135deg,#f4f3ef 0 8px,#fbfaf7 8px 16px);cursor:zoom-in"><span style="position:absolute;inset:0;border-radius:8px;background:rgba(0,0,0,.24);transition:opacity .12s;opacity:{{ oImg2 }}"></span><span style="position:absolute;top:-7px;right:-7px;z-index:2;width:20px;height:20px;box-sizing:border-box;border-radius:999px;background:#ffffff;border:1px solid #c4c6d0;box-shadow:0 1px 2px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:14px;line-height:1;color:#44474f;cursor:pointer;transition:opacity .12s;opacity:{{ oImg2 }}" style-hover="color:#ba1a1a;border-color:#ba1a1a">close</span></span>
+          <span onMouseEnter="{{ enImg3 }}" onMouseLeave="{{ offHov }}" style="position:relative;width:72px;height:72px;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);background:repeating-linear-gradient(135deg,#cfcec8 0 8px,#dcdbd6 8px 16px);cursor:zoom-in"><span style="position:absolute;inset:0;border-radius:8px;background:rgba(0,0,0,.24);transition:opacity .12s;opacity:{{ oImg3 }}"></span><span style="position:absolute;top:-7px;right:-7px;z-index:2;width:20px;height:20px;box-sizing:border-box;border-radius:999px;background:#ffffff;border:1px solid #c4c6d0;box-shadow:0 1px 2px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:14px;line-height:1;color:#44474f;cursor:pointer;transition:opacity .12s;opacity:{{ oImg3 }}" style-hover="color:#ba1a1a;border-color:#ba1a1a">close</span></span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div onMouseEnter="{{ enFilePdf }}" onMouseLeave="{{ offHov }}" style="position:relative;display:flex;align-items:center;gap:12px;min-height:52px;padding:6px 8px 6px 12px;box-sizing:border-box;border:1px solid #e0e2ec;border-radius:8px;background:#fdfbff;cursor:pointer" style-hover="background:#f3f6fb">
+            <span style="position:absolute;top:-7px;right:-7px;z-index:2;width:20px;height:20px;box-sizing:border-box;border-radius:999px;background:#ffffff;border:1px solid #c4c6d0;box-shadow:0 1px 2px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:14px;line-height:1;color:#44474f;cursor:pointer;transition:opacity .12s;opacity:{{ oFilePdf }}" style-hover="color:#ba1a1a;border-color:#ba1a1a">close</span>
+            <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;color:#d93025">picture_as_pdf</span>
+            <span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:14px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">hop-dong-thue-van-phong.pdf</span><span style="font-size:12px;line-height:16px;color:#44474f">PDF · 2,4 MB</span></span>
+            <span style="width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:20px;line-height:1;color:#44474f">download</span>
+          </div>
+          <div onMouseEnter="{{ enFileXlsx }}" onMouseLeave="{{ offHov }}" style="position:relative;display:flex;align-items:center;gap:12px;min-height:52px;padding:6px 8px 6px 12px;box-sizing:border-box;border:1px solid #e0e2ec;border-radius:8px;background:#fdfbff;cursor:pointer" style-hover="background:#f3f6fb">
+            <span style="position:absolute;top:-7px;right:-7px;z-index:2;width:20px;height:20px;box-sizing:border-box;border-radius:999px;background:#ffffff;border:1px solid #c4c6d0;box-shadow:0 1px 2px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:14px;line-height:1;color:#44474f;cursor:pointer;transition:opacity .12s;opacity:{{ oFileXlsx }}" style-hover="color:#ba1a1a;border-color:#ba1a1a">close</span>
+            <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;color:#1e7e45">table_chart</span>
+            <span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:14px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">du-toan-chi-phi.xlsx</span><span style="font-size:12px;line-height:16px;color:#44474f">XLSX · 96 KB</span></span>
+            <span style="width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:20px;line-height:1;color:#44474f">download</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+        <span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#6b6d73">variant = inline · trong sd-table</span>
+        <div style="position:relative;margin-top:8px;border:1px solid #e0e2ec;border-radius:8px;background:#fdfbff;font-size:14px">
+          <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-11px;right:-11px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">7</span></sc-if>
+          <div style="display:grid;grid-template-columns:84px 96px minmax(0,1fr);align-items:center;height:40px;padding:0 12px;gap:12px;background:#f3f3f7;border-radius:8px 8px 0 0;font-size:12px;font-weight:500;color:#44474f"><span>Hồ sơ</span><span>Người tạo</span><span>Đính kèm</span></div>
+          <div style="display:grid;grid-template-columns:84px 96px minmax(0,1fr);align-items:center;height:48px;padding:0 12px;gap:12px;border-top:1px solid #e0e2ec">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:13px">HS-0241</span><span>Lan Anh</span>
+            <span style="display:flex;align-items:center;gap:4px;min-width:0"><span style="width:32px;height:32px;flex:0 0 auto;box-sizing:border-box;border:1px dashed #74777f;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:18px;line-height:1;color:#005cbb">upload_file</span><span style="width:32px;height:32px;flex:0 0 auto;border-radius:6px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);background:repeating-linear-gradient(135deg,#d6d5cf 0 6px,#e2e1dc 6px 12px)"></span><span style="width:32px;height:32px;flex:0 0 auto;border-radius:6px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);background:repeating-linear-gradient(135deg,#f4f3ef 0 6px,#fbfaf7 6px 12px)"></span><span style="height:32px;min-width:0;box-sizing:border-box;padding:0 8px;border-radius:6px;background:#eff0f7;display:flex;align-items:center;gap:4px"><span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:1;color:#d93025">picture_as_pdf</span><span style="font-size:12px;max-width:72px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">hop-dong-thue.pdf</span></span><span style="height:32px;min-width:32px;flex:0 0 auto;box-sizing:border-box;padding:0 6px;border-radius:6px;background:#e0e2ec;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#44474f">+2</span></span>
+          </div>
+          <div style="display:grid;grid-template-columns:84px 96px minmax(0,1fr);align-items:center;height:48px;padding:0 12px;gap:12px;border-top:1px solid #e0e2ec">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:13px">HS-0242</span><span>Minh Quân</span>
+            <span style="display:flex;align-items:center;gap:4px;min-width:0"><span style="width:32px;height:32px;flex:0 0 auto;box-sizing:border-box;border:1px dashed #74777f;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:18px;line-height:1;color:#005cbb">upload_file</span><span style="height:32px;min-width:0;box-sizing:border-box;padding:0 8px;border-radius:6px;background:#eff0f7;display:flex;align-items:center;gap:4px"><span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:1;color:#2b579a">description</span><span style="font-size:12px;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">bien-ban-nghiem-thu.docx</span></span></span>
+          </div>
+          <div style="display:grid;grid-template-columns:84px 96px minmax(0,1fr);align-items:center;height:48px;padding:0 12px;gap:12px;border-top:1px solid #e0e2ec">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:13px">HS-0243</span><span>Thu Hà</span>
+            <span style="display:flex;align-items:center;gap:8px;min-width:0"><span style="width:32px;height:32px;flex:0 0 auto;box-sizing:border-box;border:1px dashed #74777f;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:18px;line-height:1;color:#005cbb">upload_file</span><span style="font-size:13px;color:#74777f">Chưa có tệp</span></span>
+          </div>
+          <div style="display:grid;grid-template-columns:84px 96px minmax(0,1fr);align-items:center;height:48px;padding:0 12px;gap:12px;border-top:1px solid #e0e2ec;background:#f3f6fb;border-radius:0 0 8px 8px">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:13px">HS-0244</span><span>Đức Huy</span>
+            <span style="display:flex;align-items:center;gap:4px;min-width:0"><span style="width:32px;height:32px;flex:0 0 auto;box-sizing:border-box;border:1px dashed #74777f;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:18px;line-height:1;color:#005cbb">upload_file</span><span style="width:32px;height:32px;flex:0 0 auto;border-radius:6px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);background:repeating-linear-gradient(135deg,#cfcec8 0 6px,#dcdbd6 6px 12px)"></span><span style="position:relative;width:32px;height:32px;flex:0 0 auto;border-radius:6px;background:repeating-linear-gradient(135deg,#d6d5cf 0 6px,#e2e1dc 6px 12px)"><span style="position:absolute;inset:0;border-radius:6px;background:rgba(0,0,0,.24)"></span><span style="position:absolute;top:-4px;right:-4px;z-index:2;width:16px;height:16px;box-sizing:border-box;border-radius:999px;background:#ffffff;border:1px solid #c4c6d0;box-shadow:0 1px 2px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:11px;line-height:1;color:#44474f;cursor:pointer;transition:opacity .12s" style-hover="color:#ba1a1a;border-color:#ba1a1a">close</span></span><span style="height:32px;min-width:32px;flex:0 0 auto;box-sizing:border-box;padding:0 6px;border-radius:6px;background:#e0e2ec;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#44474f">+4</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ol style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px 32px;font-size:14px;line-height:1.6;color:#2b2c30">
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">1</span><span><strong style="font-weight:600">Ô tải lên vuông vẫn đứng đầu.</strong> Với type=image và type=file, ô tải lên 72px nằm đầu lưới như hiện nay, có thêm chữ “Thêm ảnh” hoặc “Tải lên”. Riêng type=document dùng vùng thả rộng hết field. Số lượng “4 / 10” đặt ngay sau label, nên không bị đẩy ra mép phải khi field rộng. Ô tải lên và vùng thả không dùng opacity.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">2</span><span><strong style="font-weight:600">Nút xoá là badge 20px neo ở góc trên phải.</strong> Nút chỉ hiện khi hover hoặc focus; trên thiết bị cảm ứng luôn hiện. Badge nhô ra ngoài góc ô 7px, nên container cần <span style="font-family:'JetBrains Mono',monospace;font-size:13px">padding-top: 8px</span> thay cho <span style="font-family:'JetBrains Mono',monospace;font-size:13px">overflow-y: hidden</span> để badge không bị cắt như hiện nay. Bấm vào ô mở popup A, nên bỏ icon zoom và lớp phủ 40%.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">3</span><span><strong style="font-weight:600">Ô ảnh 72px, ảnh cover.</strong> Đổi mặc định <span style="font-family:'JetBrains Mono',monospace;font-size:13px">previewWidth/Height</span> từ 50px lên 72px và dùng <span style="font-family:'JetBrains Mono',monospace;font-size:13px">object-fit: cover</span>. Bỏ opacity .9. Lưới xuống dòng thay vì cuộn ngang.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">4</span><span><strong style="font-weight:600">Mỗi tài liệu là một hàng.</strong> Hàng có viền liền 1px. Tên file là chữ thường; bấm vào hàng hoặc tên mở popup A. Dòng phụ là “PDF · 2,4 MB”, tự đổi đơn vị KB/MB. Nút tải xuống luôn hiện. Nút xoá là cùng loại badge 20px, đặt ở góc trên phải của hàng. Nút chỉ hiện khi hover hoặc focus (trên thiết bị cảm ứng luôn hiện) và không chiếm chỗ trong hàng. Hàng đang tải hoặc bị lỗi luôn hiện các nút hành động.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">5</span><span><strong style="font-weight:600">Trạng thái hiện trên từng file.</strong> Khi đang tải lên: ô ảnh dùng ảnh local làm mờ kèm spinner, hàng tài liệu có thanh chạy 2px. File lỗi ở lại trong danh sách, ghi lý do và có nút thử lại (khi tải lên thất bại) hoặc chỉ nút xoá (khi sai định dạng hoặc quá dung lượng). Toast chỉ còn dùng cho lỗi chung như quá số lượng.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">6</span><span><strong style="font-weight:600">type=file: ảnh nằm trong lưới, tài liệu thành hàng bên dưới.</strong> Giữ cấu trúc như hiện nay: ô tải lên vuông nằm đầu lưới ảnh và nhận mọi loại tệp. Ô vuông 72px không đủ chỗ cho tên tài liệu, nên không gộp tài liệu vào lưới. Kéo đổi thứ tự được trong từng nhóm.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">7</span><span><strong style="font-weight:600">variant=inline cho table.</strong> Tất cả nằm trên một dòng cao 32px (bằng control size sm), vừa hàng 48px. Thứ tự: ô tải lên 32px, rồi ảnh 32px, rồi tài liệu dạng chip gồm icon và tên. Khi vượt <span style="font-family:'JetBrains Mono',monospace;font-size:13px">maxOfImage</span> thì hiện “+N”, bấm vào mở popup A. Không có kéo đổi thứ tự. Hover vào ảnh hoặc chip thì hiện nút xoá 16px. Khi kéo tệp vào, cả cell đổi nền primary 6%.</span></li>
+  </ol>
+  <p style="margin:0;max-width:780px;font-size:14px;line-height:1.6;color:#3a3c42"><strong style="font-weight:600;color:#1a1b1f">Code.</strong> Thay màu cứng bằng token (surface-muted, scrim, error-container), bỏ <span style="font-family:'JetBrains Mono',monospace;font-size:13px">display: table</span> và các class thừa. Field và popup dùng chung một helper icon cùng một hàm format dung lượng. Chỉ thêm một input <span style="font-family:'JetBrains Mono',monospace;font-size:13px">variant: 'default' | 'inline'</span>, mặc định là default. Việc đổi mặc định 50px → 72px phải ghi “Changed”.</p>
+
+  <h3 style="margin:24px 0 0;display:flex;align-items:baseline;gap:10px;font-weight:600;font-size:20px;line-height:1.3"><span style="font:500 12px 'JetBrains Mono',monospace;color:#6b6d73">7.2</span>Popup preview</h3>
+  <p style="margin:0;max-width:780px;color:#3a3c42;text-wrap:pretty">Popup preview là một sd-modal chứa rail thumbnail dọc và một khung xem. Popup chỉ hiển thị được ảnh. Với các loại file khác nó hiện icon kèm một nút, không có toolbar, header không cho biết đang xem file nào, và nhiều lỗi nhỏ cộng lại làm popup trông chưa hoàn thiện.</p>
+
+  <sc-if value="{{ cur }}" hint-placeholder-val="{{ true }}">
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #dddcd6">
+      <span style="display:flex;align-items:center;gap:8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#4a4c52"><span style="width:8px;height:8px;border-radius:999px;background:#9a9b9f"></span>Hiện trạng</span>
+      <span style="font:400 12px/16px 'JetBrains Mono',monospace;color:#6b6d73">preview.component.html · preview.component.scss</span>
+    </div>
+    <div style="overflow-x:auto;background:#f9f9f9">
+      <div style="padding:36px 32px;width:max-content;min-width:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:28px;font-family:Roboto,'Helvetica Neue',sans-serif;font-size:14px;color:#1a1b1f">
+        <div style="width:880px;background:#fdfbff;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.14),0 1px 3px rgba(0,0,0,.1);display:flex;flex-direction:column">
+          <div style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 24px;border-bottom:1px solid #e0e2ec">
+            <span style="position:relative;font-size:18px;font-weight:500">Xem trước<sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-6px;right:-32px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">1</span></sc-if></span>
+            <span style="width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:22px;line-height:1;color:#44474f">close</span>
+          </div>
+          <div style="padding:16px;display:flex;gap:8px;height:440px">
+            <div style="position:relative;width:120px;flex:0 0 auto;display:flex;flex-direction:column;gap:8px;overflow:hidden">
+              <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:4px;left:84px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">3</span></sc-if>
+              <span style="width:100px;height:100px;flex:0 0 auto;box-sizing:border-box;border:2px solid #005cbb;background:repeating-linear-gradient(135deg,#d6d5cf 0 10px,#e2e1dc 10px 20px)"></span>
+              <span style="width:100px;height:100px;flex:0 0 auto;padding:4px;box-sizing:border-box;display:flex;align-items:center;justify-content:center"><span style="width:72px;height:90px;box-sizing:border-box;border:1px solid #c4c6d0;border-radius:4px;background:#ffffff;display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px"><span style="font:700 11px/1 Roboto,sans-serif;color:#ffffff;background:#d93025;padding:3px 6px;border-radius:2px">PDF</span></span></span>
+              <span style="width:100px;height:100px;flex:0 0 auto;background:repeating-linear-gradient(135deg,#d6d5cf 0 10px,#e2e1dc 10px 20px)"></span>
+              <span style="width:100px;height:100px;flex:0 0 auto;padding:4px;box-sizing:border-box;display:flex;align-items:center;justify-content:center"><span style="width:72px;height:90px;box-sizing:border-box;border:1px solid #c4c6d0;border-radius:4px;background:#ffffff;display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px"><span style="font:700 11px/1 Roboto,sans-serif;color:#ffffff;background:#d93025;padding:3px 6px;border-radius:2px">PDF</span></span></span>
+            </div>
+            <div style="flex:1;position:relative;background:#eeedf1;display:flex;align-items:center;justify-content:center">
+              <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-11px;right:-11px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">2</span></sc-if>
+              <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;bottom:-11px;left:-11px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">5</span></sc-if>
+              <span style="width:586px;height:440px;box-sizing:border-box;background:repeating-linear-gradient(135deg,#f4f3ef 0 10px,#fbfaf7 10px 20px);display:flex;align-items:flex-end;padding:10px 12px;font:500 11px 'JetBrains Mono',monospace;color:#6b6d73">ảnh nền trắng · object-fit: contain</span>
+              <span style="position:absolute;left:8px;top:45%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:18px;line-height:1;color:rgba(0,0,0,.54)">arrow_back_ios_new<sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-14px;right:-14px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">4</span></sc-if></span>
+              <span style="position:absolute;right:8px;top:45%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:18px;line-height:1;color:rgba(0,0,0,.54)">arrow_forward_ios</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:24px">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="position:relative;width:420px;height:220px;background:#eeedf1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
+              <span style="width:52px;height:64px;box-sizing:border-box;border:1px solid #c4c6d0;border-radius:4px;background:#ffffff;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px"><span style="font:700 9px/1 Roboto,sans-serif;color:#ffffff;background:#d93025;padding:2px 4px;border-radius:2px">PDF</span></span>
+              <span style="font-size:14px;font-weight:500">hop-dong-thue-van-phong.pdf</span>
+              <span style="position:relative;height:40px;box-sizing:border-box;display:inline-flex;align-items:center;padding:0 16px;border-radius:999px;background:#005cbb;color:#ffffff;font-size:14px;font-weight:500">Tải lên<sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-11px;right:-11px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">6</span></sc-if></span>
+            </div>
+            <span style="font:400 12px 'JetBrains Mono',monospace;color:#6b6d73">nhánh tài liệu · PDF, DOCX, XLSX…</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="position:relative;width:420px;height:220px;background:#eeedf1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#ba1a1a">
+              <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-11px;right:-11px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">7</span></sc-if>
+              <span style="font-family:'Material Symbols Outlined';font-size:36px;line-height:1">warning</span>
+              <span style="font-size:14px">Đã xảy ra lỗi</span>
+            </div>
+            <span style="font:400 12px 'JetBrains Mono',monospace;color:#6b6d73">nhánh lỗi · isImgError</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ol style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px 32px;font-size:14px;line-height:1.6;color:#2b2c30">
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">1</span><span><strong style="font-weight:600">Header không cho biết đang xem gì.</strong> Tiêu đề luôn là “Xem trước”. Tên file chỉ hiện ở nhánh tài liệu, không có vị trí “3 / 7”. Dung lượng có trong <span style="font-family:'JetBrains Mono',monospace;font-size:13px">SdUploadFileDetail.size</span> nhưng không được hiển thị.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">2</span><span><strong style="font-weight:600">Không có toolbar.</strong> Ảnh không tải xuống được vì nút tải chỉ nằm trong nhánh tài liệu. Không có phóng to, xoay hay mở trong tab mới.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">3</span><span><strong style="font-weight:600">Rail dọc chiếm 120px kể cả khi chỉ có 1 file.</strong> Thumbnail tài liệu là icon phóng to, nên hai PDF trông giống hệt nhau và không có tên. Trạng thái đang chọn là viền 2px gán bằng <span style="font-family:'JetBrains Mono',monospace;font-size:13px">ngStyle</span>; không có hover hay focus-visible.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">4</span><span><strong style="font-weight:600">Nút trước/sau hiện cả khi chỉ có 1 file</strong> và đè lên ảnh. Nút dùng <span style="font-family:'JetBrains Mono',monospace;font-size:13px">z-index: var(--sd-z-overlay, 9999)</span> và màu rgba cứng, không có phím ← / →. <span style="font-family:'JetBrains Mono',monospace;font-size:13px">#scrollView</span> tìm id <span style="font-family:'JetBrains Mono',monospace;font-size:13px">thumbnailImage{i}</span> nhưng thumbnail không gán id, nên rail không cuộn theo file đang xem.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">5</span><span><strong style="font-weight:600">Khung cố định 60vh trên nền surface-muted sáng.</strong> Ảnh nền trắng và tài liệu scan lẫn vào nền. Chưa có trạng thái đang tải, nên khi ảnh lớn đang tải thì khung để trống.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">6</span><span><strong style="font-weight:600">PDF có URL nhưng chỉ hiện icon 64px.</strong> Nút tải xuống dùng key <span style="font-family:'JetBrains Mono',monospace;font-size:13px">core.component.upload-file.upload</span>, tức nhãn của hành động tải lên.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;border:1.5px solid #c2255c;box-sizing:border-box;color:#c2255c;font:700 12px/19px 'Be Vietnam Pro',sans-serif;text-align:center">7</span><span><strong style="font-weight:600">Trạng thái lỗi chỉ có icon và chữ đỏ.</strong> Người dùng không có cách thử lại hay tải file về để mở.</span></li>
+  </ol>
+  <p style="margin:0;max-width:780px;font-size:13px;line-height:1.6;color:#6b6d73"><strong style="font-weight:600;color:#3a3c42">Ghi chú code.</strong> ppt/pptx đang map sang icon xls/xlsx. Thư mục <span style="font-family:'JetBrains Mono',monospace">file-types</span> có khoảng 50 icon nhưng chỉ 13 đuôi được map, và danh sách class bị lặp ở hai chỗ. Thuộc tính <span style="font-family:'JetBrains Mono',monospace">thumbnailPosition</span> được khai báo nhưng không dùng. <span style="font-family:'JetBrains Mono',monospace">fill</span> và <span style="font-family:'JetBrains Mono',monospace">priority</span> trên &lt;img&gt; là thuộc tính của NgOptimizedImage, nhưng directive này không được import.</p>
+  </sc-if>
+
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #dddcd6">
+      <span style="display:flex;align-items:center;gap:8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#005cbb"><span style="width:8px;height:8px;border-radius:999px;background:#005cbb"></span>Đề xuất A · Viewer tối, filmstrip dưới · đã chốt</span>
+      <span style="font:400 12px/16px 'JetBrains Mono',monospace;color:#6b6d73">đang xem ảnh · 3 / 7</span>
+    </div>
+    <div style="overflow-x:auto;background:#f9f9f9">
+      <div style="padding:36px 32px;width:max-content;min-width:100%;box-sizing:border-box;display:flex;justify-content:center;font-family:Roboto,'Helvetica Neue',sans-serif;font-size:14px">
+        <div style="width:960px;height:600px;background:#141518;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.28);display:flex;flex-direction:column;color:#e3e3e8">
+          <div style="height:56px;flex:0 0 auto;display:flex;align-items:center;gap:4px;padding:0 8px 0 16px;border-bottom:1px solid rgba(255,255,255,.08)">
+            <div style="position:relative;flex:1;min-width:0;display:flex;align-items:center;gap:12px">
+              <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-6px;left:-14px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #141518">1</span></sc-if>
+              <span style="font-family:'Material Symbols Outlined';font-size:22px;line-height:1;color:#a8c7fa">image</span>
+              <div style="min-width:0;display:flex;flex-direction:column">
+                <span style="font-size:15px;font-weight:500;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">mat-bang-tang-3.jpg</span>
+                <span style="font-size:12px;line-height:16px;color:#a3a4ab">JPG · 1,8 MB</span>
+              </div>
+            </div>
+            <span style="font:500 13px 'JetBrains Mono',monospace;color:#a3a4ab;padding:0 12px">3 / 7</span>
+            <div style="position:relative;display:flex;align-items:center;gap:2px">
+              <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-10px;left:-8px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #141518">2</span></sc-if>
+              <span style="width:40px;height:40px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:20px;line-height:1">zoom_out</span>
+              <span style="height:32px;padding:0 8px;border-radius:6px;display:inline-flex;align-items:center;font:500 13px 'JetBrains Mono',monospace">100%</span>
+              <span style="width:40px;height:40px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:20px;line-height:1">zoom_in</span>
+              <span style="width:40px;height:40px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:20px;line-height:1">rotate_right</span>
+            </div>
+            <span style="width:1px;height:24px;background:rgba(255,255,255,.14);margin:0 6px"></span>
+            <span style="width:40px;height:40px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:20px;line-height:1">download</span>
+            <span style="width:40px;height:40px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:20px;line-height:1">open_in_new</span>
+            <span style="width:1px;height:24px;background:rgba(255,255,255,.14);margin:0 6px"></span>
+            <span style="width:40px;height:40px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:22px;line-height:1">close</span>
+          </div>
+          <div style="position:relative;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:24px 72px">
+            <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:14px;left:14px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #141518">5</span></sc-if>
+            <span style="width:533px;height:400px;box-sizing:border-box;background:repeating-linear-gradient(135deg,#f4f3ef 0 10px,#fbfaf7 10px 20px);display:flex;align-items:flex-end;padding:10px 12px;font:500 11px 'JetBrains Mono',monospace;color:#6b6d73">ảnh nền trắng · vừa khung</span>
+            <span style="position:absolute;left:16px;top:50%;margin-top:-20px;width:40px;height:40px;border-radius:999px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:24px;line-height:1">chevron_left</span>
+            <span style="position:absolute;right:16px;top:50%;margin-top:-20px;width:40px;height:40px;border-radius:999px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:24px;line-height:1">chevron_right<sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-12px;right:-6px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #141518">3</span></sc-if></span>
+          </div>
+          <div style="position:relative;height:88px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:8px;border-top:1px solid rgba(255,255,255,.08)">
+            <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-11px;left:250px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #141518">4</span></sc-if>
+            <span style="width:56px;height:56px;border-radius:6px;opacity:.6;background:repeating-linear-gradient(135deg,#d6d5cf 0 8px,#e2e1dc 8px 16px)"></span>
+            <span style="width:56px;height:56px;border-radius:6px;opacity:.6;background:#2a2b31;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px"><span style="font-family:'Material Symbols Outlined';font-size:22px;line-height:1;color:#c4c6d0">description</span><span style="font:600 9px/1 'JetBrains Mono',monospace;color:#ff8a80">PDF</span></span>
+            <span style="width:56px;height:56px;border-radius:6px;outline:2px solid #a8c7fa;outline-offset:2px;background:repeating-linear-gradient(135deg,#f4f3ef 0 8px,#fbfaf7 8px 16px)"></span>
+            <span style="width:56px;height:56px;border-radius:6px;opacity:.6;background:#2a2b31;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px"><span style="font-family:'Material Symbols Outlined';font-size:22px;line-height:1;color:#c4c6d0">description</span><span style="font:600 9px/1 'JetBrains Mono',monospace;color:#8ab4f8">DOCX</span></span>
+            <span style="width:56px;height:56px;border-radius:6px;opacity:.6;background:repeating-linear-gradient(135deg,#cfcec8 0 8px,#dcdbd6 8px 16px)"></span>
+            <span style="width:56px;height:56px;border-radius:6px;opacity:.6;background:#2a2b31;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px"><span style="font-family:'Material Symbols Outlined';font-size:22px;line-height:1;color:#c4c6d0">table_chart</span><span style="font:600 9px/1 'JetBrains Mono',monospace;color:#81c995">XLSX</span></span>
+            <span style="width:56px;height:56px;border-radius:6px;opacity:.6;background:#2a2b31;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px"><span style="font-family:'Material Symbols Outlined';font-size:22px;line-height:1;color:#c4c6d0">folder_zip</span><span style="font:600 9px/1 'JetBrains Mono',monospace;color:#c4c6d0">ZIP</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ol style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px 32px;font-size:14px;line-height:1.6;color:#2b2c30">
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">1</span><span><strong style="font-weight:600">Header là file đang xem.</strong> Hiện icon theo loại, tên file, loại · dung lượng, và vị trí “3 / 7”. Bỏ tiêu đề chung “Xem trước”. Nếu <span style="font-family:'JetBrains Mono',monospace;font-size:13px">PreviewFile</span> chưa có <span style="font-family:'JetBrains Mono',monospace;font-size:13px">size</span> thì lấy từ <span style="font-family:'JetBrains Mono',monospace;font-size:13px">SdUploadFileDetail</span>.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">2</span><span><strong style="font-weight:600">Toolbar thay đổi theo loại file.</strong> Mọi loại file đều có Tải xuống, Mở tab mới và Đóng. Ảnh có thêm thu nhỏ, phóng to và xoay 90°; bấm vào nút “%” để đưa ảnh về vừa khung. PDF không có nút zoom vì trình xem PDF của trình duyệt đã có sẵn.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">3</span><span><strong style="font-weight:600">Nút trước/sau chỉ hiện khi có từ 2 file.</strong> Nút tròn 40px nằm ở lề khung xem, không đè lên ảnh. Phím ← / → để chuyển file, + / − / 0 để zoom, Esc để đóng. Dừng ở file đầu và cuối thay vì quay vòng, vì đã có “3 / 7” để biết vị trí.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">4</span><span><strong style="font-weight:600">Filmstrip ngang ở đáy, ô 56px.</strong> File đang chọn có outline 2px, offset 2px; các file còn lại mờ 60%. Tài liệu hiện icon kèm đuôi file. Filmstrip ẩn khi chỉ có 1 file. Để filmstrip cuộn theo file đang chọn, gọi <span style="font-family:'JetBrains Mono',monospace;font-size:13px">scrollTo</span> trên container thay vì tìm id.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">5</span><span><strong style="font-weight:600">Khung xem nền tối trung tính, popup lớn.</strong> Kích thước <span style="font-family:'JetBrains Mono',monospace;font-size:13px">min(1200px, 100vw − 48px) × (100vh − 48px)</span>; màn hình ≤ 600px thì full-screen. Ảnh và trang giấy nền trắng tách rõ khỏi nền.</span></li>
+  </ol>
+
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #dddcd6">
+      <span style="display:flex;align-items:center;gap:8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#005cbb"><span style="width:8px;height:8px;border-radius:999px;background:#005cbb"></span>Đề xuất A · Trạng thái khung xem</span>
+      <span style="font:400 12px/16px 'JetBrains Mono',monospace;color:#6b6d73">thay cho nhánh tài liệu và nhánh lỗi hiện tại</span>
+    </div>
+    <div style="background:#f9f9f9;padding:28px 32px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px 20px">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="height:220px;border-radius:10px;background:#141518;display:flex;align-items:center;justify-content:center">
+          <div style="width:136px;height:192px;box-sizing:border-box;background:#ffffff;box-shadow:0 2px 10px rgba(0,0,0,.4);padding:20px 16px;display:flex;flex-direction:column;gap:7px">
+            <span style="height:7px;width:62%;background:#c9c9cf"></span><span style="height:4px;margin-top:6px;background:#e1e1e6"></span><span style="height:4px;background:#e1e1e6"></span><span style="height:4px;width:88%;background:#e1e1e6"></span><span style="height:4px;background:#e1e1e6"></span><span style="height:4px;width:70%;background:#e1e1e6"></span><span style="height:4px;margin-top:6px;background:#e1e1e6"></span><span style="height:4px;width:92%;background:#e1e1e6"></span><span style="height:4px;width:54%;background:#e1e1e6"></span>
+          </div>
+        </div>
+        <div style="font-size:13px;line-height:1.55;color:#3a3c42"><strong style="font-weight:600;color:#1a1b1f">PDF hiển thị ngay trong popup.</strong> Dùng &lt;iframe&gt; trỏ tới <span style="font-family:'JetBrains Mono',monospace;font-size:12px">cdn</span> để tận dụng trình xem của trình duyệt. Nếu server chặn nhúng thì chuyển sang trạng thái “không xem trước”.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="height:220px;border-radius:10px;background:#141518;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#e3e3e8;font-family:Roboto,'Helvetica Neue',sans-serif;text-align:center;padding:0 16px">
+          <span style="font-family:'Material Symbols Outlined';font-size:40px;line-height:1;color:#8ab4f8">description</span>
+          <span style="font-size:14px;font-weight:500">bien-ban-nghiem-thu.docx</span>
+          <span style="font-size:12px;color:#a3a4ab">DOCX · 640 KB · Không xem trước được</span>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <span style="height:36px;box-sizing:border-box;display:inline-flex;align-items:center;gap:6px;padding:0 16px 0 12px;border-radius:999px;background:#a8c7fa;color:#062e6f;font-size:14px;font-weight:500"><span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:1">download</span>Tải xuống</span>
+            <span style="height:36px;display:inline-flex;align-items:center;padding:0 12px;color:#a8c7fa;font-size:14px;font-weight:500">Mở tab mới</span>
+          </div>
+        </div>
+        <div style="font-size:13px;line-height:1.55;color:#3a3c42"><strong style="font-weight:600;color:#1a1b1f">Không xem trước được</strong> (DOCX, XLSX, ZIP…). Trạng thái này đặt hành động tải xuống làm nội dung chính, không chỉ hiện icon.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="height:220px;border-radius:10px;background:#141518;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-family:Roboto,'Helvetica Neue',sans-serif">
+          <span style="width:32px;height:32px;box-sizing:border-box;border-radius:999px;border:3px solid rgba(255,255,255,.14);border-top-color:#a8c7fa"></span>
+          <span style="font-size:13px;color:#a3a4ab">Đang tải…</span>
+        </div>
+        <div style="font-size:13px;line-height:1.55;color:#3a3c42"><strong style="font-weight:600;color:#1a1b1f">Đang tải.</strong> Hiện ngay khi chuyển file, để khung xem không bị trống trong lúc ảnh lớn hoặc PDF đang tải.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="height:220px;border-radius:10px;background:#141518;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#e3e3e8;font-family:Roboto,'Helvetica Neue',sans-serif;text-align:center;padding:0 16px">
+          <span style="font-family:'Material Symbols Outlined';font-size:36px;line-height:1;color:#ffb4ab">broken_image</span>
+          <span style="font-size:14px;font-weight:500">Không tải được tệp</span>
+          <span style="font-size:12px;color:#a3a4ab">Thử lại hoặc tải xuống để mở bằng ứng dụng khác.</span>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <span style="height:36px;box-sizing:border-box;display:inline-flex;align-items:center;padding:0 16px;border-radius:999px;border:1px solid rgba(255,255,255,.3);font-size:14px;font-weight:500">Thử lại</span>
+            <span style="height:36px;display:inline-flex;align-items:center;padding:0 12px;color:#a8c7fa;font-size:14px;font-weight:500">Tải xuống</span>
+          </div>
+        </div>
+        <div style="font-size:13px;line-height:1.55;color:#3a3c42"><strong style="font-weight:600;color:#1a1b1f">Lỗi.</strong> Có nút thử lại và tải xuống. Ô filmstrip tương ứng hiện icon <span style="font-family:'JetBrains Mono',monospace;font-size:12px">broken_image</span>.</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #dddcd6">
+      <span style="display:flex;align-items:center;gap:8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#4a4c52"><span style="width:8px;height:8px;border-radius:999px;border:1.5px solid #005cbb;box-sizing:border-box"></span>Phương án B · Popup sáng, danh sách bên phải</span>
+      <span style="font:400 12px/16px 'JetBrains Mono',monospace;color:#6b6d73">đang xem PDF · 2 / 7</span>
+    </div>
+    <div style="overflow-x:auto;background:#f9f9f9">
+      <div style="padding:36px 32px;width:max-content;min-width:100%;box-sizing:border-box;display:flex;justify-content:center;font-family:Roboto,'Helvetica Neue',sans-serif;font-size:14px;color:#1a1b1f">
+        <div style="width:960px;height:560px;background:#fdfbff;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.14),0 1px 3px rgba(0,0,0,.1);display:flex;flex-direction:column;overflow:hidden">
+          <div style="height:64px;flex:0 0 auto;display:flex;align-items:center;gap:4px;padding:0 8px 0 24px;border-bottom:1px solid #e0e2ec;color:#44474f">
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+              <span style="font-size:16px;font-weight:500;line-height:22px;color:#1a1b1f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">hop-dong-thue-van-phong.pdf</span>
+              <span style="font-size:12px;line-height:16px">PDF · 2,4 MB</span>
+            </div>
+            <span style="width:40px;height:40px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:22px;line-height:1">chevron_left</span>
+            <span style="font:500 13px 'JetBrains Mono',monospace;padding:0 2px">2 / 7</span>
+            <span style="width:40px;height:40px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:22px;line-height:1">chevron_right</span>
+            <span style="width:1px;height:24px;background:#e0e2ec;margin:0 6px"></span>
+            <span style="width:40px;height:40px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:20px;line-height:1">download</span>
+            <span style="width:40px;height:40px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:20px;line-height:1">open_in_new</span>
+            <span style="width:1px;height:24px;background:#e0e2ec;margin:0 6px"></span>
+            <span style="width:40px;height:40px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:22px;line-height:1">close</span>
+          </div>
+          <div style="flex:1;min-height:0;display:flex">
+            <div style="flex:1;min-width:0;background:#e4e3e8;display:flex;align-items:center;justify-content:center">
+              <div style="width:296px;height:418px;box-sizing:border-box;background:#ffffff;box-shadow:0 2px 12px rgba(0,0,0,.16);padding:40px 32px;display:flex;flex-direction:column;gap:12px">
+                <span style="height:12px;width:58%;background:#c9c9cf"></span><span style="height:6px;margin-top:10px;background:#e1e1e6"></span><span style="height:6px;background:#e1e1e6"></span><span style="height:6px;width:90%;background:#e1e1e6"></span><span style="height:6px;background:#e1e1e6"></span><span style="height:6px;width:72%;background:#e1e1e6"></span><span style="height:6px;margin-top:10px;background:#e1e1e6"></span><span style="height:6px;width:94%;background:#e1e1e6"></span><span style="height:6px;background:#e1e1e6"></span><span style="height:6px;width:60%;background:#e1e1e6"></span>
+              </div>
+            </div>
+            <div style="width:288px;flex:0 0 auto;border-left:1px solid #e0e2ec;display:flex;flex-direction:column;overflow:hidden">
+              <span style="padding:16px 16px 8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#44474f">7 tệp</span>
+              <div style="display:flex;flex-direction:column;gap:2px;padding:0 8px 8px">
+                <div style="height:56px;display:flex;align-items:center;gap:12px;padding:0 8px;border-radius:8px"><span style="width:40px;height:40px;flex:0 0 auto;border-radius:6px;background:repeating-linear-gradient(135deg,#d6d5cf 0 6px,#e2e1dc 6px 12px)"></span><span style="min-width:0;display:flex;flex-direction:column"><span style="font-size:14px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">anh-hien-truong-01.jpg</span><span style="font-size:12px;line-height:16px;color:#44474f">JPG · 2,1 MB</span></span></div>
+                <div style="height:56px;display:flex;align-items:center;gap:12px;padding:0 8px;border-radius:8px;background:#d7e3ff;color:#001b3e"><span style="width:40px;height:40px;flex:0 0 auto;border-radius:6px;background:#ffffff;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:22px;line-height:1;color:#d93025">description</span><span style="min-width:0;display:flex;flex-direction:column"><span style="font-size:14px;line-height:20px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">hop-dong-thue-van-phong.pdf</span><span style="font-size:12px;line-height:16px">PDF · 2,4 MB</span></span></div>
+                <div style="height:56px;display:flex;align-items:center;gap:12px;padding:0 8px;border-radius:8px"><span style="width:40px;height:40px;flex:0 0 auto;border-radius:6px;background:repeating-linear-gradient(135deg,#ecebe7 0 6px,#f6f5f2 6px 12px);box-shadow:inset 0 0 0 1px #e0e2ec"></span><span style="min-width:0;display:flex;flex-direction:column"><span style="font-size:14px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">mat-bang-tang-3.jpg</span><span style="font-size:12px;line-height:16px;color:#44474f">JPG · 1,8 MB</span></span></div>
+                <div style="height:56px;display:flex;align-items:center;gap:12px;padding:0 8px;border-radius:8px"><span style="width:40px;height:40px;flex:0 0 auto;border-radius:6px;background:#eff0f7;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:22px;line-height:1;color:#2b579a">description</span><span style="min-width:0;display:flex;flex-direction:column"><span style="font-size:14px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">bien-ban-nghiem-thu.docx</span><span style="font-size:12px;line-height:16px;color:#44474f">DOCX · 640 KB</span></span></div>
+                <div style="height:56px;display:flex;align-items:center;gap:12px;padding:0 8px;border-radius:8px"><span style="width:40px;height:40px;flex:0 0 auto;border-radius:6px;background:repeating-linear-gradient(135deg,#cfcec8 0 6px,#dcdbd6 6px 12px)"></span><span style="min-width:0;display:flex;flex-direction:column"><span style="font-size:14px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">anh-hien-truong-02.jpg</span><span style="font-size:12px;line-height:16px;color:#44474f">JPG · 1,2 MB</span></span></div>
+                <div style="height:56px;display:flex;align-items:center;gap:12px;padding:0 8px;border-radius:8px"><span style="width:40px;height:40px;flex:0 0 auto;border-radius:6px;background:#eff0f7;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:22px;line-height:1;color:#1e7e45">table_chart</span><span style="min-width:0;display:flex;flex-direction:column"><span style="font-size:14px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">du-toan-chi-phi.xlsx</span><span style="font-size:12px;line-height:16px;color:#44474f">XLSX · 96 KB</span></span></div>
+                <div style="height:56px;display:flex;align-items:center;gap:12px;padding:0 8px;border-radius:8px"><span style="width:40px;height:40px;flex:0 0 auto;border-radius:6px;background:#eff0f7;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:22px;line-height:1;color:#5f6368">folder_zip</span><span style="min-width:0;display:flex;flex-direction:column"><span style="font-size:14px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">ban-ve-thi-cong.zip</span><span style="font-size:12px;line-height:16px;color:#44474f">ZIP · 18,2 MB</span></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p style="margin:0;max-width:780px;font-size:14px;line-height:1.6;color:#2b2c30">Phương án B giữ popup sáng và thay rail thumbnail bằng danh sách file có tên và dung lượng. Phương án này hợp với các module hồ sơ có nhiều PDF/DOCX, nơi thumbnail không giúp phân biệt file. Nút điều hướng nằm trên header, cạnh “2 / 7”. Toolbar không có nút zoom khi file đang xem là PDF. Các trạng thái khung xem giống A, chỉ đổi sang nền sáng.</p>
+  <p style="margin:0;max-width:780px;font-size:14px;line-height:1.6"><strong style="font-weight:600">Đã chốt A.</strong> Giữ B làm tham khảo. Nếu sau này cần cả hai, thay <span style="font-family:'JetBrains Mono',monospace;font-size:13px">thumbnailPosition</span> (đang không dùng) bằng <span style="font-family:'JetBrains Mono',monospace;font-size:13px">layout: 'gallery' | 'list'</span>.</p>
+  <ul style="margin:0;padding-left:20px;max-width:780px;font-size:14px;line-height:1.6;color:#3a3c42;display:flex;flex-direction:column;gap:6px">
+    <li><strong style="font-weight:600;color:#1a1b1f">Icon:</strong> lấy đường dẫn <span style="font-family:'JetBrains Mono',monospace;font-size:13px">file-types/${ext}.svg</span> theo danh sách đuôi file có sẵn trong assets, fallback về <span style="font-family:'JetBrains Mono',monospace;font-size:13px">file.svg</span>. Cách này bỏ được hai khối <span style="font-family:'JetBrains Mono',monospace;font-size:13px">[class]</span> lặp và sửa lỗi ppt/pptx.</li>
+    <li><strong style="font-weight:600;color:#1a1b1f">i18n:</strong> thêm key cho tải xuống (thay key <span style="font-family:'JetBrains Mono',monospace;font-size:13px">upload</span>), mở tab mới, phóng to, thu nhỏ, xoay, thử lại, đang tải và không xem trước được.</li>
+    <li><strong style="font-weight:600;color:#1a1b1f">A11y:</strong> khi mở popup, chuyển focus vào khung xem. Bộ đếm có <span style="font-family:'JetBrains Mono',monospace;font-size:13px">aria-live="polite"</span>, nút icon có <span style="font-family:'JetBrains Mono',monospace;font-size:13px">aria-label</span>, ô đang chọn có <span style="font-family:'JetBrains Mono',monospace;font-size:13px">aria-current</span>.</li>
+    <li><strong style="font-weight:600;color:#1a1b1f">Dọn dẹp:</strong> bỏ <span style="font-family:'JetBrains Mono',monospace;font-size:13px">--sd-z-overlay</span> và màu rgba cứng trên nút điều hướng, bỏ thuộc tính <span style="font-family:'JetBrains Mono',monospace;font-size:13px">fill</span>/<span style="font-family:'JetBrains Mono',monospace;font-size:13px">priority</span>. Giữ nguyên <span style="font-family:'JetBrains Mono',monospace;font-size:13px">open(files, index)</span> và các output <span style="font-family:'JetBrains Mono',monospace;font-size:13px">download</span> / <span style="font-family:'JetBrains Mono',monospace;font-size:13px">close</span>.</li>
+  </ul>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showAnnotations&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;showCurrent&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { hov: null };
+  renderVals() {
+    const h = this.state.hov;
+    const on = k => () => this.setState({ hov: k });
+    const o = k => (h === k ? 1 : 0);
+    const keys = ['DocPdf', 'DocZip', 'FilePdf', 'FileXlsx', 'Img1', 'Img2', 'Img3'];
+    const hov = {};
+    keys.forEach(k => { hov['en' + k] = on(k); hov['o' + k] = o(k); });
+    return {
+      ann: this.props.showAnnotations ?? true,
+      cur: this.props.showCurrent ?? true,
+      offHov: () => this.setState({ hov: null }),
+      ...hov,
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -148,7 +148,25 @@ describe('SdFormBuilder (integration)', () => {
   };
   const ids = (list: AnyItem[] = []) => list.map(item => item['id']);
   const current = () => builder().getSchema();
-  const toolbarButton = (value: string) => root().querySelector<HTMLButtonElement>(`sd-form-builder .fb-toolbar [data-value="${value}"]`)!;
+  // Wave 1 · sd-form-builder: the mode and viewport toggles are sd-segmented groups; a value is found by its index.
+  const TOOLBAR_GROUPS: Record<string, readonly string[]> = {
+    mode: ['design', 'preview', 'schema'],
+    viewport: ['desktop', 'tablet', 'mobile'],
+  };
+  const toolbarButton = (value: string) => {
+    const group = TOOLBAR_GROUPS['mode'].includes(value) ? 'mode' : 'viewport';
+    const index = TOOLBAR_GROUPS[group].indexOf(value);
+    return root().querySelector<HTMLButtonElement>(`sd-form-builder [data-builder-toolbar="${group}"] [data-segmented-index="${index}"]`)!;
+  };
+  // Duplicate / move / delete live in the ⋯ menu of the active page tab (rendered in the overlay); add stays in the strip.
+  const pageAction = async (action: string): Promise<HTMLButtonElement | null> => {
+    if (action === 'add') return root().querySelector<HTMLButtonElement>('[data-page-action="add"]');
+    if (!document.querySelector(`.fb-page-menu [data-page-action="${action}"]`)) {
+      root().querySelector<HTMLButtonElement>('[data-page-menu-trigger]')?.click();
+      await render();
+    }
+    return document.querySelector<HTMLButtonElement>(`.fb-page-menu [data-page-action="${action}"]`);
+  };
 
   const pointer = (type: string, target: EventTarget, x: number, y: number) =>
     target.dispatchEvent(
@@ -188,7 +206,7 @@ describe('SdFormBuilder (integration)', () => {
     expect(current().pages.map(page => page.id)).toEqual(['page', 'second']);
     expect(builder().store.canUndo()).toBeFalse();
     expect(host.emitted.length).toBe(emitted);
-    const add = root().querySelector<HTMLButtonElement>('[data-page-action="add"]');
+    const add = await pageAction('add');
     expect(add).not.toBeNull();
     add?.click();
     await render();
@@ -200,6 +218,102 @@ describe('SdFormBuilder (integration)', () => {
   });
 
   // why: page settings used to share one card with the form-level navigation, which users mixed up.
+  it('draws mode and viewport as sm sd-segmented groups: labelled modes with icons, icon-only viewports', async () => {
+    await render();
+    expect(root().querySelector('.fb-seg')).withContext('hand-written radiogroup is gone').toBeNull();
+    const mode = root().querySelector<HTMLElement>('sd-form-builder sd-segmented[data-builder-toolbar="mode"]')!;
+    const viewport = root().querySelector<HTMLElement>('sd-form-builder sd-segmented[data-builder-toolbar="viewport"]')!;
+    expect(mode).withContext('mode segmented').not.toBeNull();
+    expect(viewport).withContext('viewport segmented').not.toBeNull();
+    for (const group of [mode, viewport]) {
+      expect(group.querySelector<HTMLElement>('.sd-segmented')!.getBoundingClientRect().height).withContext('size sm').toBe(32);
+    }
+    expect(mode.querySelector('.sd-segmented')!.getAttribute('aria-label')).toBe(builder().store.t('core.component.form-builder.mode'));
+    const t = (key: string) => builder().store.t(key);
+    expect(toolbarButton('design').textContent).toContain('design_services');
+    expect(toolbarButton('preview').textContent).toContain('visibility');
+    expect(toolbarButton('schema').textContent).toContain('data_object');
+    expect(mode.querySelectorAll('.sd-segmented__item > span').length).withContext('mode labels shown').toBe(3);
+    expect(viewport.querySelectorAll('.sd-segmented__item > span').length).withContext('viewports are icon-only').toBe(0);
+    expect(toolbarButton('tablet').getAttribute('aria-label')).toBe(t('core.component.form-builder.viewport.tablet'));
+    expect(toolbarButton('design').getAttribute('aria-checked')).toBe('true');
+    toolbarButton('schema').click();
+    await render();
+    expect(builder().store.mode()).toBe('schema');
+    expect(root().querySelector('sd-form-builder sd-segmented[data-builder-toolbar="viewport"]'))
+      .withContext('no viewport in schema')
+      .toBeNull();
+  });
+
+  it('makes the mode choices icon-only, keeping their names, when the builder is narrower than 720px', async () => {
+    await render();
+    const labels = () => root().querySelectorAll('[data-builder-toolbar="mode"] .sd-segmented__item > span').length;
+    expect(labels()).toBe(3);
+    root().querySelector<HTMLElement>('.host')!.style.width = '640px';
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    await render();
+    expect(labels()).toBe(0);
+    expect(toolbarButton('preview').getAttribute('aria-label')).toBe(builder().store.t('core.component.form-builder.mode.preview'));
+  });
+
+  it('draws pages as underline tabs, gives the active tab a ⋯ page menu and ends the strip with an add button', async () => {
+    host.form.set({
+      ...seed(),
+      navigation: { type: 'tabs' },
+      pages: [...seed().pages, { id: 'second', label: 'Second', elements: [] }, { id: 'third', label: 'Third', elements: [] }],
+    } as unknown as SdFormGenericSchema);
+    await render();
+    const t = (key: string) => builder().store.t(key);
+    const strip = root().querySelector<HTMLElement>('.fb-pages__strip')!;
+    const tab = (id: string) => strip.querySelector<HTMLButtonElement>(`[data-builder-page="${id}"]`)!;
+    expect(root().querySelector('.fb-pages__actions')).withContext('no icon-button cluster').toBeNull();
+
+    const active = tab('page');
+    expect(active.getAttribute('aria-pressed')).toBe('true');
+    expect(getComputedStyle(active).borderTopWidth).withContext('underline tab, no box').toBe('0px');
+    expect(getComputedStyle(active, '::after').height).withContext('active underline').toBe('2px');
+    expect(getComputedStyle(tab('second'), '::after').content)
+      .withContext('inactive tab has no underline')
+      .toBe('none');
+
+    const triggers = strip.querySelectorAll<HTMLButtonElement>('[data-page-menu-trigger]');
+    expect(triggers.length).withContext('one ⋯ trigger, on the active tab').toBe(1);
+    expect(triggers[0].previousElementSibling).toBe(active);
+    expect(triggers[0].getAttribute('aria-label')).toBe(t('core.component.form-builder.page.actions'));
+    expect(triggers[0].getAttribute('aria-haspopup')).toBe('menu');
+    expect(triggers[0].getBoundingClientRect().width).toBe(24);
+    expect(triggers[0].getBoundingClientRect().height).toBe(24);
+
+    const add = strip.querySelector<HTMLButtonElement>('[data-page-action="add"]')!;
+    expect(add).withContext('add button inside the strip').not.toBeNull();
+    expect(strip.lastElementChild).withContext('add ends the strip').toBe(add);
+    expect(add.textContent).toContain(t('core.component.form-builder.page.add'));
+    expect(add.getBoundingClientRect().height).toBe(32);
+
+    document.documentElement.style.setProperty('--sd-error', 'rgb(200, 0, 0)');
+    try {
+      triggers[0].click();
+      await render();
+      const actions = Array.from(document.querySelectorAll<HTMLButtonElement>('.fb-page-menu [data-page-action]'));
+      expect(actions.map(action => action.dataset['pageAction'])).toEqual(['duplicate', 'up', 'down', 'delete']);
+      const texts = actions.map(action => action.textContent?.replace(/\s+/g, ' ').trim() ?? '');
+      expect(texts[0]).toContain(t('core.component.form-builder.duplicate'));
+      expect(texts[1]).toContain(t('core.component.form-builder.page.move-left'));
+      expect(texts[2]).toContain(t('core.component.form-builder.page.move-right'));
+      expect(texts[3]).toContain(t('core.component.form-builder.delete'));
+      expect(document.querySelectorAll('.fb-page-menu mat-divider').length).withContext('divider before delete').toBe(1);
+      expect(actions[1].disabled).withContext('first page cannot move left').toBeTrue();
+      expect(actions[2].disabled).toBeFalse();
+      expect(actions[3].disabled).toBeFalse();
+      expect(getComputedStyle(actions[3]).color).withContext('delete is drawn in the error colour').toBe('rgb(200, 0, 0)');
+      actions[2].click();
+      await render();
+      expect(current().pages.map(page => page.id)).toEqual(['second', 'page', 'third']);
+    } finally {
+      document.documentElement.style.removeProperty('--sd-error');
+    }
+  });
+
   it('keeps page settings (title, description, icon, rules) apart from the form settings', async () => {
     const store = () => builder().store;
     const panel = () => root().querySelector<HTMLElement>('[data-inspector-panel]')?.getAttribute('data-inspector-panel');
@@ -316,7 +430,7 @@ describe('SdFormBuilder (integration)', () => {
     } as unknown as SdFormGenericSchema;
     host.form.set(schema);
     await render();
-    const duplicate = root().querySelector<HTMLButtonElement>('[data-page-action="duplicate"]');
+    const duplicate = await pageAction('duplicate');
     expect(duplicate).not.toBeNull();
     if (!duplicate) return;
     duplicate.click();
@@ -340,8 +454,8 @@ describe('SdFormBuilder (integration)', () => {
     } as unknown as SdFormGenericSchema;
     host.form.set(schema);
     await render();
-    const duplicate = root().querySelector<HTMLButtonElement>('[data-page-action="duplicate"]');
-    const remove = root().querySelector<HTMLButtonElement>('[data-page-action="delete"]');
+    const duplicate = await pageAction('duplicate');
+    const remove = await pageAction('delete');
     expect(duplicate).not.toBeNull();
     expect(remove).not.toBeNull();
     expect(duplicate?.disabled).toBeTrue();
@@ -349,7 +463,7 @@ describe('SdFormBuilder (integration)', () => {
     expect(duplicate?.getAttribute('title')).toBeTruthy();
     host.form.set({ ...schema, pages: [...schema.pages, { id: 'empty', elements: [] }] });
     await render();
-    root().querySelector<HTMLButtonElement>('[data-page-action="delete"]')?.click();
+    (await pageAction('delete'))?.click();
     await render();
     expect(confirm).toHaveBeenCalledTimes(1);
     expect(current().pages.map(page => page.id)).toEqual(['empty']);
@@ -503,7 +617,7 @@ describe('SdFormBuilder (integration)', () => {
         .toBeLessThanOrEqual(strip.right + 1);
       expect(label.left).toBeGreaterThanOrEqual(strip.left - 1);
       expect(document.activeElement).toBe(selected);
-      expect(root().querySelector<HTMLButtonElement>('[data-page-action="duplicate"]')!.disabled).toBeFalse();
+      expect((await pageAction('duplicate'))!.disabled).toBeFalse();
     });
   }
 
@@ -1005,6 +1119,17 @@ describe('SdFormBuilder (integration)', () => {
     expect(host.emitted.length).toBe(1);
   });
 
+  it('draws the palette search with the shared sm search field and focusPalette() still lands in it', async () => {
+    await render();
+    const field = root().querySelector<HTMLElement>('fb-palette sd-search-field.fb-search')!;
+    expect(field).withContext('palette search uses sd-search-field').not.toBeNull();
+    expect(field.classList).toContain('sd-sm');
+    expect(getComputedStyle(field).marginTop).toBe('12px');
+    builder().focusPalette();
+    await render();
+    expect(document.activeElement).toBe(field.querySelector('input'));
+  });
+
   describe('inspector feedback round', () => {
     const inspector = (): InspectorComponent => fixture.debugElement.query(By.directive(InspectorComponent)).componentInstance;
     const select = async (id: string, tab: 'general' | 'data' | 'rules' | 'layout') => {
@@ -1331,7 +1456,7 @@ describe('SdFormBuilder (integration)', () => {
       expect(find(current(), 'b')!['validation']).toEqual({ min: 0 });
     });
 
-    it('links the inspector tabs with their panel and moves the toolbar radios with Up/Down/Home/End', async () => {
+    it('links the inspector tabs with their panel and moves the toolbar radios with Left/Home/End', async () => {
       await select('a', 'data');
       const panel = root().querySelector<HTMLElement>('fb-inspector [role="tabpanel"]')!;
       const active = root().querySelector<HTMLElement>('fb-inspector [role="tab"][aria-selected="true"]')!;
@@ -1343,7 +1468,7 @@ describe('SdFormBuilder (integration)', () => {
       press(toolbarButton('design'), 'End');
       await render();
       expect(builder().store.mode()).toBe('schema');
-      press(toolbarButton('schema'), 'ArrowUp');
+      press(toolbarButton('schema'), 'ArrowLeft');
       await render();
       expect(builder().store.mode()).toBe('preview');
       press(toolbarButton('preview'), 'Home');

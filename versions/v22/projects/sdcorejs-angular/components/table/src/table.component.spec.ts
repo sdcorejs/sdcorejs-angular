@@ -369,6 +369,30 @@ describe('Filter commit (blur) vs filter change (enter / reload)', () => {
     expect(host.itemsSpy.calls.count()).toBe(callsAfterInit);
   }));
 
+  it('onOperatorChange sang NULL trên cột trống thì lọc ngay, rời NULL thì lọc lại không còn filter đó', fakeAsync(() => {
+    setupTable();
+    host.itemsSpy.calls.reset();
+    const column = { field: 'id', type: 'number', title: 'ID' } as SdTableColumn;
+    interface Req {
+      filters: { field: string; operator: string; data?: unknown }[];
+    }
+
+    table.columnOperator['id'] = 'NULL';
+    table.onOperatorChange(column, 'NULL');
+    tick(800);
+    flush();
+    expect(host.itemsSpy).toHaveBeenCalled();
+    expect((host.itemsSpy.calls.mostRecent().args[1] as Req).filters).toContain({ field: 'id', operator: 'NULL' });
+
+    host.itemsSpy.calls.reset();
+    table.columnOperator['id'] = 'EQUAL';
+    table.onOperatorChange(column, 'EQUAL');
+    tick(800);
+    flush();
+    expect(host.itemsSpy).withContext('leaving NULL reloads').toHaveBeenCalled();
+    expect((host.itemsSpy.calls.mostRecent().args[1] as Req).filters.filter(item => item.field === 'id')).toEqual([]);
+  }));
+
   it('reload() commit columnFilter pending trước khi build filter request — typed value reach API', fakeAsync(() => {
     setupTable();
     host.itemsSpy.calls.reset();

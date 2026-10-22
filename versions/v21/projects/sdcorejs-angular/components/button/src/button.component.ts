@@ -33,6 +33,8 @@ export type SdButtonSize = 'sm' | 'md' | 'lg';
 export type SdButtonHtmlType = 'button' | 'submit' | 'reset';
 export type SdButtonColor = Color | 'black';
 
+let nextIndicatorId = 0;
+
 @Component({
   selector: 'sd-button',
   templateUrl: './button.component.html',
@@ -126,6 +128,20 @@ export class SdButton implements OnInit, OnDestroy {
     transform: value => value || 'button',
   });
 
+  /**
+   * Chấm hoặc số ở góc trên phải (thiết kế đợt 2 · F). `true`: chấm; số > 0: số (làm tròn xuống);
+   * `0`, số âm, `NaN`, `false`, `null`: ẩn. Không đổi kích thước hay layout của nút.
+   */
+  readonly indicator = input<boolean | number | null | undefined>(null);
+  /** Màu nền của indicator: `--sd-{color}`, chữ `--sd-{color}-contrast`. */
+  readonly indicatorColor = input<Color, Color | undefined | null>('error', { transform: value => value || 'error' });
+  /** Vượt ngưỡng thì hiện `{max}+`. */
+  readonly indicatorMax = input<number, number | undefined | null>(99, {
+    transform: value => (value == null || !Number.isFinite(value) || value < 1 ? 99 : Math.floor(value)),
+  });
+  /** Văn bản cho screen reader, nối vào `aria-describedby` của nút (không thay `aria-label`). */
+  readonly indicatorLabel = input<string | undefined | null>(undefined);
+
   // ==========================================
   // 3. COMPUTED STATE
   // ==========================================
@@ -140,6 +156,20 @@ export class SdButton implements OnInit, OnDestroy {
     // why: nút chỉ có icon thì icon bị aria-hidden → không set aria-label là nút không có tên với screen reader.
     return this.isIconOnly() ? this.tooltip() || null : null;
   });
+
+  protected readonly indicatorId = `sd-button-indicator-${++nextIndicatorId}`;
+  /** Indicator đang hiện: chấm (`text` rỗng) hoặc số đã chặn trên; `null` khi ẩn. */
+  protected readonly indicatorView = computed<{ dot: boolean; text: string } | null>(() => {
+    const value = this.indicator();
+    if (value === true) return { dot: true, text: '' };
+    if (typeof value !== 'number' || Number.isNaN(value)) return null;
+    const count = Math.floor(value);
+    if (count <= 0) return null;
+    const max = this.indicatorMax();
+    return { dot: false, text: count > max ? `${max}+` : String(count) };
+  });
+  /** Id của nhãn ẩn khi indicator đang hiện và có `indicatorLabel`. Số đổi không dùng live region. */
+  protected readonly indicatorDescribedBy = computed(() => (this.indicatorView() && this.indicatorLabel() ? this.indicatorId : null));
 
   buttonClasses = computed(() => ({
     'c-square': this.isIconOnly(),

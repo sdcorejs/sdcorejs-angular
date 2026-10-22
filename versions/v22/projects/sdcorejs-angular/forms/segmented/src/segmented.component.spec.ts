@@ -1,5 +1,9 @@
+import { ChangeDetectionStrategy as SdAngular22ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { UntypedFormGroup } from '@angular/forms';
+import { SdButton } from '../../../components/button';
+import { LayoutTestTheme } from '../../../testing/layout-theme.spec';
 import { SdSegmentedComponent } from './segmented.component';
 
 describe('SdSegmentedComponent', () => {
@@ -258,5 +262,72 @@ describe('SdSegmentedComponent', () => {
     expect(buttons(fixture)[0].tabIndex).toBe(-1);
     expect(buttons(fixture)[1].tabIndex).toBe(0);
     expect(fixture.componentInstance.model()).toEqual(['list']);
+  });
+});
+
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  imports: [SdSegmentedComponent, SdButton, LayoutTestTheme],
+  template: `
+    <sd-layout-test-theme />
+    <sd-segmented [size]="size" [items]="items" model="list" />
+    <sd-button [size]="size" title="Lọc" />
+    <sd-segmented class="labelled" label="Kiểu xem" [items]="items" model="list" />
+  `,
+})
+class SegmentedGeometryHost {
+  size: 'sm' | 'md' | 'lg' = 'md';
+  readonly items = [
+    { value: 'list', label: 'List' },
+    { value: 'grid', label: 'Grid' },
+  ];
+}
+
+// Thiết kế đợt 1 · sd-segmented: cùng thang chiều cao với sd-button, track không còn margin-top, bo đồng tâm và
+// vòng focus offset 1px nằm gọn trong padding 3px của track.
+describe('SdSegmentedComponent geometry', () => {
+  let fixture: ComponentFixture<SegmentedGeometryHost>;
+  const el = (selector: string) => fixture.nativeElement.querySelector(selector) as HTMLElement;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [SegmentedGeometryHost] }).compileComponents();
+    fixture = TestBed.createComponent(SegmentedGeometryHost);
+    fixture.detectChanges();
+  });
+
+  for (const [size, total, item] of [
+    ['sm', 32, 24],
+    ['md', 40, 32],
+    ['lg', 48, 40],
+  ] as const) {
+    it(`is as tall as an sd-button of size ${size}: ${total}px track, ${item}px choices`, () => {
+      fixture.componentInstance.size = size;
+      fixture.detectChanges();
+      const track = el('sd-segmented .sd-segmented');
+      expect(track.getBoundingClientRect().height).toBe(total);
+      expect(el('sd-button button').getBoundingClientRect().height).toBe(total);
+      expect(el('sd-segmented .sd-segmented__item').getBoundingClientRect().height).toBe(item);
+    });
+  }
+
+  it('drops the track margin and spaces a label 4px above it', () => {
+    expect(getComputedStyle(el('sd-segmented .sd-segmented')).marginTop).toBe('0px');
+    const label = el('sd-segmented.labelled sd-label');
+    expect(getComputedStyle(label).display).toBe('block');
+    expect(getComputedStyle(label).marginBottom).toBe('4px');
+  });
+
+  it('rounds the track with the control radius and the choices concentric to it', () => {
+    expect(getComputedStyle(el('sd-segmented .sd-segmented')).borderTopLeftRadius).toBe('8px');
+    expect(getComputedStyle(el('sd-segmented .sd-segmented__item')).borderTopLeftRadius).toBe('5px');
+  });
+
+  it('offsets the focus ring by --sd-segmented-ring-offset (1px), not the global 2px', () => {
+    const host = el('sd-segmented');
+    expect(getComputedStyle(host).getPropertyValue('--sd-segmented-ring-offset').trim()).toBe('1px');
+    const item = el('sd-segmented .sd-segmented__item');
+    item.focus();
+    expect(item.matches(':focus-visible')).withContext('script focus matches :focus-visible').toBeTrue();
+    expect(getComputedStyle(item).outlineOffset).toBe('1px');
   });
 });

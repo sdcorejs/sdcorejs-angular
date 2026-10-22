@@ -157,7 +157,9 @@ export class CheckboxTableComponent {
 
 `Size` is the existing shared type from `@sdcorejs/utils/models`, as used by `sd-switch`; no checkbox-specific size type is introduced. The host exposes `data-size="sm|md|lg"`.
 
-The box is 14 / 18 / 22px, the state layer is 32 / 40 / 48px, and label padding is 2 / 4 / 6px. Check and Material indeterminate marks scale with the box. The default `md` retains the original geometry. The Material touch target remains 48px; coarse pointers reserve at least 44px vertically. Label typography, viewed rendering, model, validation and disabled behavior are unchanged. Unlike `sd-switch`, checkbox sizes are not implicitly overridden inside `sd-table`.
+The box is 14 / 18 / 22px with a 3 / 4 / 5px corner (about 22% of the side), the state layer is 32 / 40 / 48px, and label padding is 2 / 4 / 6px. Check and Material indeterminate marks scale with the box. The default `md` retains the original geometry. The Material touch target remains 48px; coarse pointers reserve at least 44px vertically. Label typography, viewed rendering, model, validation and disabled behavior are unchanged. Unlike `sd-switch`, checkbox sizes are not implicitly overridden inside `sd-table`.
+
+An unchecked box has a 2px `--sd-border-strong` border that turns `--sd-text-secondary` on hover and focus; a checked box keeps the `color` of the control. The theme sets these through the Material checkbox tokens (`--mdc-checkbox-unselected-*` for Material 19, `--mat-checkbox-unselected-*` for 20+), so a `mat-checkbox` used directly — the selection column of `sd-table`, for example — gets the same border and a 4px corner.
 
 ## Anti-patterns
 

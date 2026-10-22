@@ -91,14 +91,7 @@
 :host ::ng-deep {
   // Form field color
   .mat-mdc-form-field {
-    // Disabled background & border
-    &.mat-form-field-appearance-outline {
-      &.mat-form-field-disabled {
-        .mat-mdc-text-field-wrapper {
-          background: color.$disabled-bg;
-        }
-      }
-    }
+    // Nền disabled: rule chung cho mọi control dạng ô trong assets/scss/core/form.scss.
     // Disabled text input color
     mat-select {
       &.mat-mdc-select-disabled {
@@ -121,39 +114,33 @@
 }
 
 ::ng-deep .sd-select-panel {
-  // Giảm chiều cao của mỗi dòng option
+  // Giảm chiều cao của mỗi dòng option. Padding dọc 7px + viền trong suốt 1px (core/form.scss) = 36px như cũ.
   .mat-mdc-option {
     min-height: 36px !important;
-    padding: 8px 12px !important;
+    padding: 7px 12px !important;
   }
 
   .c-filter-input-container {
     position: sticky;
-    top: 0;
+    // why: sticky dừng ở mép trong padding của panel, nên `top: 0` chừa dải 4px phía trên ô lọc và option
+    // cuộn qua vẫn lộ ra ở đó. Kéo lên đúng bằng padding để ô lọc phủ kín mép trên; lúc chưa cuộn vẫn
+    // giữ 4px như thiết kế.
+    top: calc(-1 * var(--sd-select-panel-padding-block, 4px));
     background-color: var(--sd-select-panel-bg, #ffffff);
     box-shadow: 0px 1px 0px 0px var(--sd-select-panel-divider, #f2f2f2);
     padding: 8px;
     margin-bottom: 8px;
     z-index: var(--sd-z-dropdown, 1000);
-    .filter-input-wrapper {
-      display: flex;
-      align-items: center;
-      padding: 4px 8px;
-      border: 1px solid map.get(color.$color_map, 'border');
-      border-radius: var(--sd-radius-4, 4px);
+    // Ô lọc dùng primitive sd-search-field (đợt 1 · B, size sm): khung, viền, focus và icon thuộc primitive.
+    // Ở đây chỉ cho nền trùng nền panel.
+    .filter-input-wrapper:not(.sd-disabled) {
       background-color: var(--sd-select-panel-bg, #ffffff);
-      sd-icon {
-        color: var(--sd-select-icon-muted, #dadada);
-      }
-      .c-search-input {
-        min-width: 0;
-        width: 100%;
-        background-color: var(--sd-select-panel-bg, #ffffff);
-        border: none;
-        outline: none;
-        flex: 1;
-        padding: 4px;
-      }
+    }
+
+    // Hàng "Tất cả" nằm trong header: dưới hàng chỉ chừa 4px như khe giữa các option, rồi tới đường chia.
+    &.sd-with-select-all {
+      padding-bottom: 4px;
+      margin-bottom: 4px;
     }
   }
 
@@ -169,22 +156,41 @@
   }
 
   // Row "Tất cả" — không phải mat-option, nhưng phải khớp từng pixel với một option multiple.
-  // why: chỉ lặp lại đúng box model của .mat-mdc-option (min-height 36px + padding 8px 12px như
-  // override ở trên). Scale/margin của ô tick KHÔNG set ở đây — nó dùng chính <mat-pseudo-checkbox>
-  // nên rule .sd-select-panel.sd-multiple .mat-pseudo-checkbox bên dưới đã lo, và màu tick cũng tự
-  // theo panel (class mat-primary) giống hệt các option.
+  // why: chỉ lặp lại đúng box model của .mat-mdc-option (min-height 36px + padding 12px ngang + viền trong
+  // suốt 1px trên/dưới như core/form.scss). Scale/margin của ô tick KHÔNG set ở đây — nó dùng chính
+  // <mat-pseudo-checkbox> nên rule .sd-select-panel.sd-multiple .mat-pseudo-checkbox bên dưới đã lo, và màu
+  // tick cũng tự theo panel (class mat-primary) giống hệt các option.
   .sd-select-all-row {
     display: flex;
     align-items: center;
     justify-content: flex-start;
+    box-sizing: border-box;
     min-height: 36px;
-    padding: 8px 12px;
+    // why: header có padding ngang 8px còn option chỉ thụt 4px (core/form.scss) — kéo hàng ra 4px để mép và
+    // ô tick thẳng cột với các option bên dưới.
+    margin: 0 -4px;
+    padding: 0 12px;
+    border-radius: var(--sd-radius-6, 6px);
     cursor: pointer;
     user-select: none;
-    // why: KHÔNG set background — mat-option để trong suốt (`background: rgba(0,0,0,0)`) và ăn nền
-    // panel, vốn là surface-container của M3 chứ không phải trắng. Hardcode #fff làm row nổi lên
-    // như một mảng trắng giữa danh sách xám.
-    border-bottom: 1px solid var(--sd-border, #f2f2f2);
+    // why: KHÔNG set background — row ăn nền panel như mat-option. Đường chia duy nhất là của header.
+    border-top: 1px solid transparent;
+    border-bottom: 1px solid transparent;
+    background-clip: padding-box;
+
+    // Forced colors: viền trong suốt bị vẽ thành vạch — lấy Canvas như option (core/form.scss).
+    @media (forced-colors: active) {
+      border-top-color: Canvas;
+      border-bottom-color: Canvas;
+    }
+
+    // Dưới ô lọc: cách 4px. Không có ô lọc: hàng là phần tử đầu, chừa 4px trên cho cân với 4px dưới.
+    &:not(:first-child) {
+      margin-top: 4px;
+    }
+    &:first-child {
+      margin-top: -4px;
+    }
 
     // why: mượn đúng state-layer token mà Material dùng cho option hover, để row sáng lên y hệt
     // các dòng bên dưới; fallback cho theme M2 chưa có token M3.
@@ -199,6 +205,29 @@
       white-space: normal;
     }
   }
+
+  // Bộ đếm "đã chọn/tổng" ở cuối hàng; chữ số đều bề rộng để con số không nhảy khi tick.
+  .sd-select-all-count {
+    margin-left: auto;
+    padding-left: 8px;
+    flex-shrink: 0;
+    font-size: var(--sd-font-size-12, 12px);
+    color: var(--sd-text-secondary, rgba(0, 0, 0, 0.6));
+    font-variant-numeric: tabular-nums;
+  }
+
+  // Câu mô tả bộ đếm cho AT (aria-describedby của hàng "Tất cả").
+  .sd-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
 }
 
 ::ng-deep .sd-multiline-tooltip {
@@ -206,7 +235,9 @@
 }
 
 ::ng-deep .mat-mdc-select-panel.sd-select-panel {
-  padding: 0;
+  // 4px trên/dưới như thiết kế (core/form.scss). Ô lọc sticky đọc cùng biến để kéo `top` lên đúng bằng padding.
+  --sd-select-panel-padding-block: 4px;
+  padding: var(--sd-select-panel-padding-block) 0;
   .mat-mdc-option.mdc-list-item--disabled.sd-empty {
     .mdc-list-item__primary-text {
       opacity: 0.8;

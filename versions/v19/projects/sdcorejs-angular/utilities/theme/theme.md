@@ -8,7 +8,7 @@ theme (`@include sd.theme(...)`); see `assets/THEME.md` for tiers, dark mode and
 
 | Name | Kind | Purpose |
 | --- | --- | --- |
-| `SD_COLOR_TOKENS` | `readonly` tuple | Every public colour token name, without the `--sd-` prefix: the 33-token palette of 2.15, the `50`–`950` ramps of `primary`, `secondary`, `info`, `success`, `warning`, `error`, `neutral`, and the semantic roles (`status-*-bg/fg`, `link`, `surface-inverse`, `text-on-solid`, `border-focus`, `border-danger`, `overlay-backdrop`, `focus-ring-color`). |
+| `SD_COLOR_TOKENS` | `readonly` tuple | Every public colour token name, without the `--sd-` prefix: the 33-token palette of 2.15, the `50`–`950` ramps of `primary`, `secondary`, `info`, `success`, `warning`, `error`, `neutral`, and the semantic roles (`status-*-bg/fg`, `link`, `surface-inverse`, `text-on-solid`, `border-focus`, `border-danger`, `overlay-backdrop`, `focus-ring-color`, and the control roles `control-border`, `control-border-hover`, `control-border-focus`, `control-border-disabled`, `control-ring`, `control-ring-error`, `control-bg-disabled`). `control-ring` and `control-ring-error` hold a `box-shadow` value, not a bare colour. |
 | `SdColorToken` | type | Union of the names in `SD_COLOR_TOKENS`. |
 | `readSdTokens` | `(element?, tokens?) => Partial<Record<SdColorToken, string>>` | Reads the computed values from `element` (default `<html>`). |
 

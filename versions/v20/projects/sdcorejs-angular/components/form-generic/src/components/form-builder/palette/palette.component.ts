@@ -11,6 +11,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import { ɵSdSearchField, ɵSdSearchFieldInputDirective } from '@sdcorejs/angular/forms/directives';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { isGroup } from '../state/builder-document';
 import { BuilderDragService } from '../state/builder-drag';
@@ -35,7 +36,7 @@ interface PaletteSection {
   templateUrl: './palette.component.html',
   styleUrl: './palette.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdIcon, SdTranslatePipe, StructureComponent],
+  imports: [SdIcon, SdTranslatePipe, StructureComponent, ɵSdSearchField, ɵSdSearchFieldInputDirective],
 })
 export class PaletteComponent {
   readonly store = inject(FormBuilderStore);

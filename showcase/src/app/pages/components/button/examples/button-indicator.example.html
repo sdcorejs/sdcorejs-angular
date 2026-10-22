@@ -1,0 +1,14 @@
+<sd-button
+  type="text"
+  prefixIcon="notifications"
+  tooltip="Thông báo"
+  [indicator]="unread()"
+  [indicatorLabel]="unread() + ' thông báo mới'"
+  autoId="indicator-notifications"></sd-button>
+<sd-button type="outline" title="Bộ lọc" prefixIcon="filter_list" [indicator]="true" indicatorColor="primary" indicatorLabel="Đang có bộ lọc"></sd-button>
+<sd-button type="fill" color="primary" title="Hộp thư" [indicator]="128" indicatorLabel="128 thư chưa đọc"></sd-button>
+<sd-button size="md" prefixIcon="chat" tooltip="Tin nhắn" [indicator]="12" [indicatorMax]="9" indicatorColor="success"></sd-button>
+<sd-button size="lg" prefixIcon="shopping_cart" tooltip="Giỏ hàng" [indicator]="2" indicatorColor="info"></sd-button>
+<sd-button type="outline" title="Vô hiệu" [indicator]="5" disabled></sd-button>
+<sd-button type="text" color="primary" title="Thêm thông báo" prefixIcon="add" (click)="addUnread()"></sd-button>
+<sd-button type="text" color="secondary" title="Đọc hết" (click)="clearUnread()"></sd-button>

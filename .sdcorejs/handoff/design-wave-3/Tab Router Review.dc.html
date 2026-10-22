@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Roboto:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0..1,0" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:#f4f4f1;color:#1a1b1f;-webkit-font-smoothing:antialiased}
+a{color:#005cbb;text-decoration:none}
+a:hover{color:#004a99;text-decoration:underline}
+</style>
+</helmet>
+<div style="font-family:'Be Vietnam Pro',sans-serif;font-size:15px;line-height:1.6;color:#1a1b1f;max-width:1240px;margin:0 auto;padding:56px 32px 96px;box-sizing:border-box">
+
+<header data-screen-label="00 Header" style="display:flex;flex-direction:column;gap:16px;padding-bottom:40px;border-bottom:1px solid #dddcd6">
+  <div style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#6b6d73;display:flex;flex-wrap:wrap;gap:6px 16px"><span>sdcorejs/sdcorejs-angular · main @ 773d7de</span><span>versions/v19 · components/tab-router</span></div>
+  <h1 style="margin:0;font-weight:600;font-size:44px;line-height:1.12;letter-spacing:-0.02em;max-width:900px;text-wrap:balance">Design review: sd-tab-router</h1>
+  <p style="margin:0;max-width:780px;color:#3a3c42;font-size:17px;text-wrap:pretty">Phạm vi là thanh tab (sd-tab-router-nav, sd-tab-router-item) và vùng nội dung của sd-tab-router-outlet. Logic định tuyến, decorator và beforeClose giữ nguyên.</p>
+  <nav style="display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px;padding-top:8px">
+    <a href="#hien-trang">01 Hiện trạng</a>
+    <a href="#de-xuat">02 Đề xuất</a>
+    <a href="#tran-tab">03 Khi có nhiều tab</a>
+    <a href="#tuong-tac">04 Bàn phím, kéo thả, menu</a>
+    <a href="#thong-so">05 Thông số</a>
+    <a href="#mot-tab">06 Một tab và tiêu đề trình duyệt</a>
+    <a href="#quyet-dinh">07 Quyết định</a>
+  </nav>
+</header>
+
+<sc-if value="{{ cur }}" hint-placeholder-val="{{ true }}">
+<section id="hien-trang" data-screen-label="01 Hiện trạng" style="padding-top:56px;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">01</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Hiện trạng</h2>
+  </div>
+  <p style="margin:0;max-width:780px;color:#3a3c42;text-wrap:pretty">Mỗi tab là một thẻ &lt;a&gt; chứa sd-badge (icon và tên) cùng nút đóng. Tab co giãn theo <span style="font-family:'JetBrains Mono',monospace;font-size:13px">flex: 1 1 64px</span>, rộng tối đa 240px. Mockup dưới dựng theo SCSS hiện tại, với tab thứ 2 đang mở và tab thứ 3 đang được rê chuột.</p>
+
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #dddcd6">
+      <span style="display:flex;align-items:center;gap:8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#4a4c52"><span style="width:8px;height:8px;border-radius:999px;background:#9a9b9f"></span>Hiện trạng · 5 tab</span>
+      <span style="font:400 12px/16px 'JetBrains Mono',monospace;color:#6b6d73">tab-router-item.component.scss · tab-router-nav.component.scss · badge.component.scss</span>
+    </div>
+    <div style="overflow-x:auto;background:#f9f9f9">
+      <div style="padding:40px 32px 36px;width:max-content;min-width:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:40px;font-family:Roboto,'Helvetica Neue',sans-serif;color:#1a1b1f">
+        <div style="width:1000px;border:1px solid #e0e2ec;background:#ffffff">
+          <div style="position:relative;display:flex;background:#f9f9f9">
+            <div style="position:relative;flex:0 0 200px;display:flex;align-items:center;gap:8px;padding:8px;box-sizing:border-box;background:#f2f3f4;font-size:12px;line-height:16px;overflow:hidden">
+              <span style="display:flex;align-items:center;gap:4px;min-width:0;overflow:hidden;white-space:nowrap"><span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1;color:#004a99">dashboard</span><span style="font-size:14px;line-height:20px;flex:0 0 auto">Tổng quan</span></span>
+              <span style="margin-left:auto;flex:0 0 16px;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:12px;line-height:1;color:#757575">close</span>
+              <span style="position:absolute;right:0;top:10px;width:1px;height:16px;background:#dde0e5"></span>
+            </div>
+            <div style="position:relative;flex:0 0 200px;display:flex;align-items:center;gap:8px;padding:8px;box-sizing:border-box;background:#ffffff;border-radius:8px 8px 0 0;font-size:12px;line-height:16px;overflow:hidden">
+              <span style="display:flex;align-items:center;gap:4px;min-width:0;overflow:hidden;white-space:nowrap"><span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1;color:#1e6b3a">receipt_long</span><span style="font-size:14px;line-height:20px;flex:0 0 auto">Đơn hàng #DH-10234</span></span>
+              <span style="margin-left:auto;flex:0 0 16px;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:12px;line-height:1;color:#757575">close</span>
+              <span style="position:absolute;right:0;top:10px;width:1px;height:16px;background:#dde0e5"></span>
+            </div>
+            <div style="position:relative;flex:0 0 200px;display:flex;align-items:center;gap:8px;padding:8px;box-sizing:border-box;background:#ffffff;font-size:12px;line-height:16px;overflow:hidden">
+              <span style="display:flex;align-items:center;gap:4px;min-width:0;overflow:hidden;white-space:nowrap"><span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1;color:#004a99">group</span><span style="font-size:14px;line-height:20px;flex:0 0 auto">Danh sách khách hàng</span></span>
+              <span style="margin-left:auto;flex:0 0 16px;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:12px;line-height:1;color:#757575">close</span>
+              <span style="position:absolute;right:0;top:10px;width:1px;height:16px;background:#dde0e5"></span>
+            </div>
+            <div style="position:relative;flex:0 0 200px;display:flex;align-items:center;gap:8px;padding:8px;box-sizing:border-box;background:#f2f3f4;font-size:12px;line-height:16px;overflow:hidden">
+              <span style="display:flex;align-items:center;gap:4px;min-width:0;overflow:hidden;white-space:nowrap"><span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1;color:#8a5300">description</span><span style="font-size:14px;line-height:20px;flex:0 0 auto">Hợp đồng HD-2026-118</span></span>
+              <span style="margin-left:auto;flex:0 0 16px;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:12px;line-height:1;color:#757575">close</span>
+              <span style="position:absolute;right:0;top:10px;width:1px;height:16px;background:#dde0e5"></span>
+            </div>
+            <div style="position:relative;flex:0 0 200px;display:flex;align-items:center;gap:8px;padding:8px;box-sizing:border-box;background:#f2f3f4;font-size:12px;line-height:16px;overflow:hidden">
+              <span style="display:flex;align-items:center;gap:4px;min-width:0;overflow:hidden;white-space:nowrap"><span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1;color:#004a99">fiber_manual_record</span><span style="font-size:14px;line-height:20px;flex:0 0 auto">Báo cáo doanh thu Q3</span></span>
+              <span style="margin-left:auto;flex:0 0 16px;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:12px;line-height:1;color:#757575">close</span>
+            </div>
+            <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-14px;left:400px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">1</span></sc-if>
+            <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:30px;left:389px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">2</span></sc-if>
+            <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-14px;left:740px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">3</span></sc-if>
+            <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-14px;left:800px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">4</span></sc-if>
+            <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-14px;left:968px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">5</span></sc-if>
+          </div>
+          <div style="padding:20px 24px;display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:20px;font-weight:600;line-height:28px">Đơn hàng #DH-10234</span>
+            <span style="height:8px;width:60%;background:#ecebe6"></span><span style="height:8px;width:42%;background:#ecebe6"></span>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start">
+          <span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#6b6d73">16 tab trong 1000px</span>
+          <div style="position:relative;width:1000px;display:flex;background:#f9f9f9;border:1px solid #e0e2ec">
+            <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-11px;left:-11px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">6</span></sc-if>
+            <sc-for list="{{ crampedTabs }}" as="t" hint-placeholder-count="16">
+              <div style="position:relative;flex:1 1 0;min-width:0;display:flex;align-items:center;gap:8px;padding:8px;box-sizing:border-box;background:{{ t.bg }};border-radius:{{ t.radius }};overflow:hidden">
+                <span style="display:flex;align-items:center;gap:4px;min-width:0;overflow:hidden;white-space:nowrap"><span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1;color:#004a99">{{ t.icon }}</span><span style="font-size:14px;line-height:20px;flex:0 0 auto">{{ t.name }}</span></span>
+                <span style="margin-left:auto;flex:0 0 16px;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:12px;line-height:1;color:#757575">close</span>
+                <span style="position:absolute;right:0;top:10px;width:1px;height:16px;background:#dde0e5"></span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ol style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px 32px;font-size:14px;line-height:1.6;color:#2b2c30">
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">1</span><span><strong style="font-weight:600">Hover trông giống tab đang mở.</strong> Cả hai đều có nền trắng (<span style="font-family:'JetBrains Mono',monospace;font-size:13px">--sd-tab-router-item-active-bg</span>), chỉ khác ở bo góc trên. Tab chưa mở có nền #f2f3f4, đậm hơn nền thanh #f9f9f9, nên tab đang mở lại là tab nhạt nhất.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">2</span><span><strong style="font-weight:600">Vạch ngăn luôn hiện.</strong> Vạch 1×16px nằm ở cạnh phải của mọi tab, kể cả sát tab đang mở hoặc đang hover, nên nó cắt ngang mảng trắng của tab đang mở.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">3</span><span><strong style="font-weight:600">Tên tab bị cắt cụt, không có “…”.</strong> <span style="font-family:'JetBrains Mono',monospace;font-size:13px">.c-badge-title</span> được ép <span style="font-family:'JetBrains Mono',monospace;font-size:13px">width: 184px</span> qua <span style="font-family:'JetBrains Mono',monospace;font-size:13px">::ng-deep</span>. Khi tab hẹp hơn, badge bị cắt theo <span style="font-family:'JetBrains Mono',monospace;font-size:13px">overflow: hidden</span> trước khi dấu ellipsis kịp hiện. Badge dùng T14R (14px), trong khi item đặt cỡ chữ 12px.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">4</span><span><strong style="font-weight:600">Tab không khai báo icon vẫn hiện một chấm tròn.</strong> Đó là <span style="font-family:'JetBrains Mono',monospace;font-size:13px">defaultIcon</span> của sd-badge (<span style="font-family:'JetBrains Mono',monospace;font-size:13px">fiber_manual_record</span>). Tooltip luôn bật vì dùng <span style="font-family:'JetBrains Mono',monospace;font-size:13px">tooltip || name</span>, kể cả khi tên đã hiện đủ.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">5</span><span><strong style="font-weight:600">Nút đóng 16px luôn hiện trên mọi tab.</strong> Vùng bấm nhỏ, lại chiếm chỗ của tên khi tab hẹp. Màu hover <span style="font-family:'JetBrains Mono',monospace;font-size:13px">rgba(0,0,0,.12)</span> là giá trị cứng.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">6</span><span><strong style="font-weight:600">Khi có nhiều tab, tab co lại chỉ còn vài pixel.</strong> Thanh tab không cuộn và không có menu cho tab bị khuất. Chế độ compact đang nhắm vào <span style="font-family:'JetBrains Mono',monospace;font-size:13px">.tab-router__name</span> và <span style="font-family:'JetBrains Mono',monospace;font-size:13px">.tab-router__icon</span>, nhưng template đã chuyển sang sd-badge nên hai class đó không còn, và compact không có tác dụng gì.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;border:1.5px solid #c2255c;box-sizing:border-box;color:#c2255c;font:700 12px/19px 'Be Vietnam Pro',sans-serif;text-align:center">7</span><span><strong style="font-weight:600">Thanh tab bị ẩn khi có hơn 1 tab.</strong> Template dùng <span style="font-family:'JetBrains Mono',monospace;font-size:13px">[class.d-none]="tabs().length &gt; 1"</span>, và chính sd-tab-router.md cũng ghi chú rằng điều kiện này bị ngược. Cần xác nhận ý định (xem mục 06).</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;border:1.5px solid #c2255c;box-sizing:border-box;color:#c2255c;font:700 12px/19px 'Be Vietnam Pro',sans-serif;text-align:center">8</span><span><strong style="font-weight:600">Bàn phím.</strong> Mỗi tab tạo ra hai điểm dừng Tab (thẻ &lt;a&gt; và nút đóng). Thanh tab không có role tablist/tab, không có <span style="font-family:'JetBrains Mono',monospace;font-size:13px">aria-selected</span>, không điều hướng bằng phím mũi tên, và thẻ &lt;a&gt; không có kiểu focus-visible riêng.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;border:1.5px solid #c2255c;box-sizing:border-box;color:#c2255c;font:700 12px/19px 'Be Vietnam Pro',sans-serif;text-align:center">9</span><span><strong style="font-weight:600">Kéo đổi thứ tự.</strong> Chưa có style riêng cho placeholder và bản xem trước khi kéo. <span style="font-family:'JetBrains Mono',monospace;font-size:13px">onDrop</span> gọi <span style="font-family:'JetBrains Mono',monospace;font-size:13px">moveItemInArray</span> sửa thẳng trên mảng của signal input.</span></li>
+  </ol>
+  <p style="margin:0;max-width:780px;font-size:13px;line-height:1.6;color:#6b6d73"><strong style="font-weight:600;color:#3a3c42">Ghi chú code.</strong> Fallback hex trong component token (#f9f9f9, #f2f3f4, #dde0e5, #757575). Còn các class thừa <span style="font-family:'JetBrains Mono',monospace">.flex-1</span>, <span style="font-family:'JetBrains Mono',monospace">.tab-router__icon</span>, <span style="font-family:'JetBrains Mono',monospace">.tab-router__name</span>. <span style="font-family:'JetBrains Mono',monospace">checkUI</span> chỉ chạy khi resize cửa sổ hoặc khi outlet gọi tới. Outlet cố định <span style="font-family:'JetBrains Mono',monospace">height: 100vh</span>. Khi không có tab nào, <span style="font-family:'JetBrains Mono',monospace">.tab-router__empty</span> chỉ là một div trống.</p>
+</section>
+</sc-if>
+
+<section id="de-xuat" data-screen-label="02 Đề xuất" style="padding-top:72px;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">02</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Đề xuất</h2>
+  </div>
+  <p style="margin:0;max-width:780px;color:#3a3c42;text-wrap:pretty">Giữ kiểu tab trình duyệt, nhưng tab đang mở phải là tab nổi bật nhất. Tab chưa mở không có nền riêng; khi hover thì có một lớp nền nhẹ, khác hẳn tab đang mở. Tab có độ rộng ưu tiên cố định thay vì kéo giãn lấp đầy thanh. Rê chuột vào các tab trong mockup để xem nút đóng và vạch ngăn thay đổi.</p>
+
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #dddcd6">
+      <span style="display:flex;align-items:center;gap:8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#005cbb"><span style="width:8px;height:8px;border-radius:999px;background:#005cbb"></span>Đề xuất · 5 tab</span>
+      <span style="font:400 12px/16px 'JetBrains Mono',monospace;color:#6b6d73">tab 2 đang mở · tab 4 có thay đổi chưa lưu</span>
+    </div>
+    <div style="overflow-x:auto;background:#f9f9f9">
+      <div style="padding:40px 32px 36px;width:max-content;min-width:100%;box-sizing:border-box;display:flex;justify-content:center;font-family:Roboto,'Helvetica Neue',sans-serif;color:#1a1b1f">
+        <div style="width:1000px;border:1px solid #e0e2ec;border-radius:12px;background:#ffffff">
+          <div style="position:relative;height:40px;display:flex;align-items:flex-end;padding:0 8px;background:#f0f1f5;border-radius:12px 12px 0 0">
+            <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-11px;left:-11px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">5</span></sc-if>
+            <div onMouseEnter="{{ enT1 }}" onMouseLeave="{{ offHov }}" style="position:relative;flex:0 1 200px;min-width:120px;height:34px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 6px 0 12px;border-radius:8px 8px 0 0;color:#44474f;font-size:13px;line-height:18px;cursor:pointer" style-hover="background:#e4e6ec">
+              <span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1;color:#004a99">dashboard</span>
+              <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Tổng quan</span>
+              <span style="width:20px;height:20px;flex:0 0 auto;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:14px;line-height:1;color:#44474f;transition:opacity .12s;opacity:{{ oT1 }}" style-hover="background:rgba(26,27,31,.08)">close</span>
+              <span style="position:absolute;right:0;top:9px;width:1px;height:16px;background:#d5d7de;opacity:{{ dT1 }}"></span>
+            </div>
+            <div style="position:relative;flex:0 1 200px;min-width:120px;height:34px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 6px 0 12px;border-radius:8px 8px 0 0;background:#ffffff;color:#1a1b1f;font-size:13px;line-height:18px;font-weight:500">
+              <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-14px;left:6px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">1</span></sc-if>
+              <span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1;color:#1e6b3a">receipt_long</span>
+              <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Đơn hàng #DH-10234</span>
+              <span style="width:20px;height:20px;flex:0 0 auto;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:14px;line-height:1;color:#44474f;cursor:pointer" style-hover="background:rgba(26,27,31,.08)">close</span>
+            </div>
+            <div onMouseEnter="{{ enT3 }}" onMouseLeave="{{ offHov }}" style="position:relative;flex:0 1 200px;min-width:120px;height:34px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 6px 0 12px;border-radius:8px 8px 0 0;color:#44474f;font-size:13px;line-height:18px;cursor:pointer" style-hover="background:#e4e6ec">
+              <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-14px;left:6px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">2</span></sc-if>
+              <span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1;color:#004a99">group</span>
+              <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Danh sách khách hàng</span>
+              <span style="width:20px;height:20px;flex:0 0 auto;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:14px;line-height:1;color:#44474f;transition:opacity .12s;opacity:{{ oT3 }}" style-hover="background:rgba(26,27,31,.08)">close</span>
+              <span style="position:absolute;right:0;top:9px;width:1px;height:16px;background:#d5d7de;opacity:{{ dT3 }}"></span>
+            </div>
+            <div onMouseEnter="{{ enT4 }}" onMouseLeave="{{ offHov }}" style="position:relative;flex:0 1 200px;min-width:120px;height:34px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 6px 0 12px;border-radius:8px 8px 0 0;color:#44474f;font-size:13px;line-height:18px;cursor:pointer" style-hover="background:#e4e6ec">
+              <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-14px;right:2px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">3</span></sc-if>
+              <span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1;color:#8a5300">description</span>
+              <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Hợp đồng HD-2026-118</span>
+              <span style="position:relative;width:20px;height:20px;flex:0 0 auto">
+                <span style="position:absolute;left:6px;top:6px;width:8px;height:8px;border-radius:999px;background:#44474f;transition:opacity .12s;opacity:{{ dotT4 }}"></span>
+                <span style="position:absolute;inset:0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:14px;line-height:1;color:#44474f;transition:opacity .12s;opacity:{{ oT4 }}" style-hover="background:rgba(26,27,31,.08)">close</span>
+              </span>
+              <span style="position:absolute;right:0;top:9px;width:1px;height:16px;background:#d5d7de;opacity:{{ dT4 }}"></span>
+            </div>
+            <div onMouseEnter="{{ enT5 }}" onMouseLeave="{{ offHov }}" style="position:relative;flex:0 1 200px;min-width:120px;height:34px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 6px 0 12px;border-radius:8px 8px 0 0;color:#44474f;font-size:13px;line-height:18px;cursor:pointer" style-hover="background:#e4e6ec">
+              <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-14px;left:70px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">4</span></sc-if>
+              <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Báo cáo doanh thu quý 3 năm 2026</span>
+              <span style="width:20px;height:20px;flex:0 0 auto;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:14px;line-height:1;color:#44474f;transition:opacity .12s;opacity:{{ oT5 }}" style-hover="background:rgba(26,27,31,.08)">close</span>
+            </div>
+          </div>
+          <div style="padding:20px 24px;display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:20px;font-weight:600;line-height:28px">Đơn hàng #DH-10234</span>
+            <span style="height:8px;width:60%;background:#ecebe6"></span><span style="height:8px;width:42%;background:#ecebe6"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ol style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px 32px;font-size:14px;line-height:1.6;color:#2b2c30">
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">1</span><span><strong style="font-weight:600">Tab đang mở liền khối với nội dung bên dưới.</strong> Nền trắng (surface), bo góc trên 8px, chữ đậm 500 màu text. Nút đóng luôn hiện ở tab này.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">2</span><span><strong style="font-weight:600">Tab chưa mở không có nền riêng.</strong> Chữ màu text-secondary. Khi hover thì có lớp nền text 6%, có cùng hình dạng với tab đang mở nhưng không bao giờ trắng. Nút đóng chỉ hiện khi hover hoặc focus; trên thiết bị cảm ứng thì luôn hiện. Vạch ngăn ẩn ở hai bên tab đang mở và tab đang hover.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">3</span><span><strong style="font-weight:600">Chấm “chưa lưu”.</strong> Chấm 8px nằm ở vị trí nút đóng; khi hover, chấm đổi thành nút đóng. Trạng thái lấy từ cờ mới <span style="font-family:'JetBrains Mono',monospace;font-size:13px">SdTabInfo.dirty</span> (mục 07).</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">4</span><span><strong style="font-weight:600">Tên tab có ellipsis đúng chuẩn và không dùng icon mặc định.</strong> Không dùng sd-badge trong tab nữa; tab tự render icon và tên (13px/18px, <span style="font-family:'JetBrains Mono',monospace;font-size:13px">min-width: 0</span>, <span style="font-family:'JetBrains Mono',monospace;font-size:13px">text-overflow: ellipsis</span>). Builder không khai icon thì tab không có icon. Tooltip chỉ hiện khi tên bị cắt, hoặc khi builder khai <span style="font-family:'JetBrains Mono',monospace;font-size:13px">tooltip</span>.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">5</span><span><strong style="font-weight:600">Độ rộng ưu tiên 200px, không kéo giãn lấp đầy thanh.</strong> Tab co tối thiểu tới 120px. Nếu vẫn không đủ chỗ thì thanh tab cuộn ngang (mục 03), thay cho chế độ compact.</span></li>
+  </ol>
+</section>
+
+<section id="tran-tab" data-screen-label="03 Nhiều tab" style="padding-top:72px;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">03</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Khi có nhiều tab</h2>
+  </div>
+  <p style="margin:0;max-width:780px;color:#3a3c42;text-wrap:pretty">Khi tổng độ rộng tối thiểu (120px mỗi tab) vượt quá thanh tab, thanh tab chuyển sang cuộn ngang. Cạnh bị khuất có lớp mờ dần. Ở cuối thanh có nút mở danh sách tất cả các tab đang mở. Mockup: 14 tab, tab đang mở là “Công nợ phải thu”, menu đang mở.</p>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #dddcd6">
+      <span style="display:flex;align-items:center;gap:8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#005cbb"><span style="width:8px;height:8px;border-radius:999px;background:#005cbb"></span>Đề xuất · 14 tab</span>
+      <span style="font:400 12px/16px 'JetBrains Mono',monospace;color:#6b6d73">đã cuộn tới tab đang mở · menu đang mở</span>
+    </div>
+    <div style="overflow-x:auto;background:#f9f9f9">
+      <div style="padding:40px 32px 36px;width:max-content;min-width:100%;box-sizing:border-box;display:flex;justify-content:center;font-family:Roboto,'Helvetica Neue',sans-serif;color:#1a1b1f">
+        <div style="position:relative;width:1000px;height:420px;border:1px solid #e0e2ec;border-radius:12px;background:#ffffff">
+          <div style="height:40px;display:flex;align-items:flex-end;background:#f0f1f5;border-radius:12px 12px 0 0">
+            <div style="position:relative;flex:1;min-width:0;height:40px;display:flex;align-items:flex-end;overflow:hidden;padding-left:8px">
+              <div style="display:flex;align-items:flex-end;margin-left:-64px">
+                <sc-for list="{{ manyTabs }}" as="t" hint-placeholder-count="9">
+                  <div style="position:relative;flex:0 0 128px;height:34px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 6px 0 12px;border-radius:8px 8px 0 0;background:{{ t.bg }};color:{{ t.color }};font-weight:{{ t.weight }};font-size:13px;line-height:18px">
+                    <span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1;color:#004a99;font-weight:400">{{ t.icon }}</span>
+                    <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.name }}</span>
+                    <span style="width:20px;height:20px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:14px;line-height:1;color:#44474f;font-weight:400;opacity:{{ t.closeOp }}">close</span>
+                    <span style="position:absolute;right:0;top:9px;width:1px;height:16px;background:#d5d7de;opacity:{{ t.divOp }}"></span>
+                  </div>
+                </sc-for>
+              </div>
+              <span style="position:absolute;left:0;top:0;bottom:0;width:32px;background:linear-gradient(90deg,#f0f1f5,rgba(240,241,245,0))"></span>
+              <span style="position:absolute;right:0;top:0;bottom:0;width:32px;background:linear-gradient(270deg,#f0f1f5,rgba(240,241,245,0))"></span>
+            </div>
+            <div style="position:relative;flex:0 0 auto;height:40px;display:flex;align-items:center;padding:0 6px 0 4px;border-left:1px solid #d5d7de;box-sizing:border-box">
+              <span style="height:30px;box-sizing:border-box;display:flex;align-items:center;gap:2px;padding:0 6px 0 8px;border-radius:8px;background:#e4e6ec;color:#1a1b1f;font-size:12px;font-weight:500"><span style="font-variant-numeric:tabular-nums">14</span><span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:1">expand_more</span></span>
+              <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-11px;right:-11px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">2</span></sc-if>
+            </div>
+          </div>
+          <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-11px;left:-11px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">1</span></sc-if>
+          <div style="padding:20px 24px;display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:20px;font-weight:600;line-height:28px">Công nợ phải thu</span>
+            <span style="height:8px;width:52%;background:#ecebe6"></span><span style="height:8px;width:36%;background:#ecebe6"></span>
+          </div>
+          <div style="position:absolute;top:44px;right:6px;width:320px;box-sizing:border-box;background:#ffffff;border:1px solid #e3e4ea;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.14),0 1px 3px rgba(0,0,0,.08);padding:6px;display:flex;flex-direction:column">
+            <span style="padding:6px 10px 6px;font-size:12px;font-weight:500;line-height:16px;color:#44474f">14 tab đang mở</span>
+            <div style="display:flex;flex-direction:column;max-height:300px;overflow:hidden">
+              <div style="display:flex;flex-direction:column;margin-top:-108px">
+              <sc-for list="{{ menuTabs }}" as="t" hint-placeholder-count="8">
+                <div style="height:36px;flex:0 0 36px;display:flex;align-items:center;gap:10px;padding:0 6px 0 10px;border-radius:6px;background:{{ t.bg }};font-size:13px;line-height:18px;color:#1a1b1f;font-weight:{{ t.weight }}">
+                  <span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1;color:#004a99;font-weight:400">{{ t.icon }}</span>
+                  <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.name }}</span>
+                  <span style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:14px;line-height:1;color:#44474f;font-weight:400;opacity:{{ t.closeOp }}">close</span>
+                </div>
+              </sc-for>
+              </div>
+            </div>
+            <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:30px;left:-11px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">3</span></sc-if>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ol style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px 32px;font-size:14px;line-height:1.6;color:#2b2c30">
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">1</span><span><strong style="font-weight:600">Thanh tab cuộn ngang và luôn giữ tab đang mở trong tầm nhìn.</strong> Lăn chuột dọc trên thanh tab cũng cuộn ngang. Khi đổi tab, thanh tự cuộn bằng <span style="font-family:'JetBrains Mono',monospace;font-size:13px">scrollLeft</span> để tab đang mở hiện trọn. Lớp mờ 32px chỉ hiện ở cạnh còn nội dung bị khuất. Bỏ chế độ compact và <span style="font-family:'JetBrains Mono',monospace;font-size:13px">checkUI</span>.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">2</span><span><strong style="font-weight:600">Nút danh sách tab chỉ hiện khi thanh bị tràn.</strong> Nút cao 30px, hiện số tab và icon <span style="font-family:'JetBrains Mono',monospace;font-size:13px">expand_more</span>. Nút nằm cố định ở cuối thanh, ngăn với phần tab bằng vạch 1px.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">3</span><span><strong style="font-weight:600">Menu liệt kê tất cả các tab.</strong> Menu rộng 320px, bo 10px theo panel token, mỗi mục cao 36px. Mục đang mở được tô nền primary 8% và chữ đậm. Nút đóng hiện khi hover mục. Bấm vào mục là chuyển sang tab đó. Danh sách cuộn được khi dài hơn 300px.</span></li>
+  </ol>
+</section>
+
+<section id="tuong-tac" data-screen-label="04 Tương tác" style="padding-top:72px;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">04</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Bàn phím, kéo thả, menu</h2>
+  </div>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #dddcd6">
+      <span style="display:flex;align-items:center;gap:8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#005cbb"><span style="width:8px;height:8px;border-radius:999px;background:#005cbb"></span>Đề xuất · trạng thái</span>
+      <span style="font:400 12px/16px 'JetBrains Mono',monospace;color:#6b6d73">cắt từ thanh tab</span>
+    </div>
+    <div style="background:#f9f9f9;padding:28px 32px;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:28px 24px;font-family:Roboto,'Helvetica Neue',sans-serif;color:#1a1b1f">
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+        <div style="height:40px;display:flex;align-items:flex-end;padding:0 8px;background:#f0f1f5;border-radius:10px 10px 0 0;overflow:hidden">
+          <div style="position:relative;flex:0 0 150px;height:34px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 6px 0 12px;border-radius:8px 8px 0 0;background:#ffffff;font-size:13px;font-weight:500"><span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1;color:#1e6b3a;font-weight:400">receipt_long</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Đơn hàng #DH-10234</span></div>
+          <div style="position:relative;flex:0 0 150px;height:34px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 6px 0 12px;border-radius:8px 8px 0 0;color:#44474f;font-size:13px;outline:2px solid #005cbb;outline-offset:-2px"><span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1;color:#004a99">group</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Danh sách khách hàng</span><span style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:14px;line-height:1">close</span></div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;color:#44474f;align-items:center">
+          <span style="display:flex;align-items:center;gap:4px"><span style="font:500 11px 'JetBrains Mono',monospace;padding:2px 6px;border:1px solid #c4c6d0;border-radius:4px;background:#ffffff">←</span><span style="font:500 11px 'JetBrains Mono',monospace;padding:2px 6px;border:1px solid #c4c6d0;border-radius:4px;background:#ffffff">→</span>chuyển focus</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="font:500 11px 'JetBrains Mono',monospace;padding:2px 6px;border:1px solid #c4c6d0;border-radius:4px;background:#ffffff">Enter</span>mở</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="font:500 11px 'JetBrains Mono',monospace;padding:2px 6px;border:1px solid #c4c6d0;border-radius:4px;background:#ffffff">Delete</span>đóng</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="font:500 11px 'JetBrains Mono',monospace;padding:2px 6px;border:1px solid #c4c6d0;border-radius:4px;background:#ffffff">Home</span><span style="font:500 11px 'JetBrains Mono',monospace;padding:2px 6px;border:1px solid #c4c6d0;border-radius:4px;background:#ffffff">End</span></span>
+        </div>
+        <div style="font-family:'Be Vietnam Pro',sans-serif;font-size:13px;line-height:1.55;color:#3a3c42"><strong style="font-weight:600;color:#1a1b1f">Focus bàn phím.</strong> Thanh có <span style="font-family:'JetBrains Mono',monospace;font-size:12px">role="tablist"</span>; mỗi tab có <span style="font-family:'JetBrains Mono',monospace;font-size:12px">role="tab"</span>, <span style="font-family:'JetBrains Mono',monospace;font-size:12px">aria-selected</span> và <span style="font-family:'JetBrains Mono',monospace;font-size:12px">aria-controls</span> trỏ tới pane. Dùng roving tabindex: cả thanh tab chỉ có một điểm dừng Tab. Nút đóng có <span style="font-family:'JetBrains Mono',monospace;font-size:12px">tabindex="-1"</span>, đóng bằng phím Delete. Vòng focus 2px vẽ vào trong tab.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+        <div style="position:relative;height:40px;display:flex;align-items:flex-end;padding:0 8px;background:#f0f1f5;border-radius:10px 10px 0 0">
+          <div style="flex:0 0 120px;height:34px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 6px 0 12px;border-radius:8px 8px 0 0;background:#ffffff;font-size:13px;font-weight:500"><span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1;color:#1e6b3a;font-weight:400">receipt_long</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Đơn hàng #DH-10234</span></div>
+          <div style="flex:0 0 120px;height:34px;box-sizing:border-box;border-radius:8px 8px 0 0;background:#dde7f6;box-shadow:inset 0 0 0 1px #9fbde6"></div>
+          <div style="flex:0 0 120px;height:34px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 6px 0 12px;color:#44474f;font-size:13px"><span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1;color:#8a5300">description</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Hợp đồng HD-2026-118</span></div>
+          <div style="position:absolute;left:156px;top:-2px;width:120px;height:34px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 6px 0 12px;border-radius:8px;background:#ffffff;color:#1a1b1f;font-size:13px;box-shadow:0 6px 16px rgba(0,0,0,.18),0 1px 3px rgba(0,0,0,.1);cursor:grabbing"><span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1;color:#004a99">group</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Danh sách khách hàng</span></div>
+        </div>
+        <div style="font-family:'Be Vietnam Pro',sans-serif;font-size:13px;line-height:1.55;color:#3a3c42"><strong style="font-weight:600;color:#1a1b1f">Kéo đổi thứ tự.</strong> Tab đang kéo nổi lên với bóng, bo đủ 4 góc. Chỗ sẽ thả là một ô nền primary 12% có viền mảnh. Giữ khoá trục X. <span style="font-family:'JetBrains Mono',monospace;font-size:12px">onDrop</span> phát ra mảng mới thay vì sửa thẳng mảng của input.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+        <div style="position:relative;height:128px">
+          <div style="height:40px;display:flex;align-items:flex-end;padding:0 8px;background:#f0f1f5;border-radius:10px 10px 0 0">
+            <div style="flex:0 0 150px;height:34px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 6px 0 12px;border-radius:8px 8px 0 0;background:#e4e6ec;color:#44474f;font-size:13px"><span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1;color:#004a99">group</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Danh sách khách hàng</span><span style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:14px;line-height:1">close</span></div>
+          </div>
+          <div style="position:absolute;top:30px;left:96px;width:224px;box-sizing:border-box;background:#ffffff;border:1px solid #e3e4ea;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.14),0 1px 3px rgba(0,0,0,.08);padding:6px;display:flex;flex-direction:column;font-size:13px;line-height:18px">
+            <span style="height:34px;display:flex;align-items:center;gap:10px;padding:0 10px;border-radius:6px;background:#f0f1f5"><span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:1;color:#44474f">close</span>Đóng tab</span>
+            <span style="height:34px;display:flex;align-items:center;gap:10px;padding:0 10px 0 38px;border-radius:6px">Đóng các tab khác</span>
+          </div>
+        </div>
+        <div style="font-family:'Be Vietnam Pro',sans-serif;font-size:13px;line-height:1.55;color:#3a3c42"><strong style="font-weight:600;color:#1a1b1f">Menu chuột phải.</strong> Chỉ có hai mục: đóng tab và đóng các tab khác. “Đóng các tab khác” vẫn chạy <span style="font-family:'JetBrains Mono',monospace;font-size:12px">beforeClose</span> của từng tab; tab nào trả về false thì được giữ lại. Bàn phím: Shift+F10 hoặc phím Menu mở menu này trên tab đang focus.</div>
+      </div>
+    </div>
+  </div>
+  <p style="margin:0;max-width:780px;font-size:14px;line-height:1.6;color:#3a3c42">Đóng bằng nút chuột giữa vẫn giữ như hiện tại. Khi tab đang mở bị đóng, focus và trạng thái mở chuyển sang tab bên phải nó; nếu không có thì sang tab bên trái.</p>
+</section>
+
+<section id="thong-so" data-screen-label="05 Thông số" style="padding-top:72px;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">05</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Thông số</h2>
+  </div>
+  <div style="display:flex;flex-direction:column;border:1px solid #dddcd6;border-radius:12px;overflow:hidden;font-size:13px;background:#ffffff;max-width:900px">
+    <div style="display:grid;grid-template-columns:minmax(140px,1fr) minmax(0,2fr) minmax(0,2fr);gap:12px;padding:10px 16px;background:#f7f7f4;font:500 11px 'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.06em;color:#6b6d73"><span>Phần</span><span>Hiện tại</span><span>Đề xuất</span></div>
+    <sc-for list="{{ specRows }}" as="r" hint-placeholder-count="9">
+      <div style="display:grid;grid-template-columns:minmax(140px,1fr) minmax(0,2fr) minmax(0,2fr);gap:12px;padding:10px 16px;border-top:1px solid #ecebe6;line-height:1.5"><span style="font-weight:600">{{ r.part }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#6b6d73">{{ r.now }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px">{{ r.next }}</span></div>
+    </sc-for>
+  </div>
+  <p style="margin:0;max-width:780px;font-size:14px;line-height:1.6;color:#3a3c42">Màu lấy từ token có sẵn, không thêm hex. Giữ tên các component token hiện có (<span style="font-family:'JetBrains Mono',monospace;font-size:13px">--sd-tab-router-nav-bg</span>, <span style="font-family:'JetBrains Mono',monospace;font-size:13px">-item-active-bg</span>, <span style="font-family:'JetBrains Mono',monospace;font-size:13px">-item-divider</span>, <span style="font-family:'JetBrains Mono',monospace;font-size:13px">-item-text</span>) và đổi giá trị của chúng sang semantic token. <span style="font-family:'JetBrains Mono',monospace;font-size:13px">-item-muted-bg</span> không còn dùng; giữ alias một bản phát hành rồi mới xoá.</p>
+</section>
+
+<section id="mot-tab" data-screen-label="06 Một tab" style="padding-top:72px;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">06</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Một tab và tiêu đề trình duyệt</h2>
+  </div>
+  <p style="margin:0;max-width:780px;color:#3a3c42;text-wrap:pretty">Ẩn thanh tab khi chỉ có 1 tab là hợp lý: một tab duy nhất không cần chỗ để chuyển hay sắp xếp. Đổi lại có hai điều cần xử lý. Thứ nhất, nội dung bị đẩy xuống 40px khi tab thứ hai mở ra. Thứ hai, người dùng không còn thấy tên của tab đang mở. Đưa tên tab lên tiêu đề của tab trình duyệt sẽ giải quyết điều thứ hai, và cũng hữu ích cả khi đang có nhiều tab.</p>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #dddcd6">
+      <span style="display:flex;align-items:center;gap:8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#005cbb"><span style="width:8px;height:8px;border-radius:999px;background:#005cbb"></span>Đề xuất · 1 tab và 2 tab</span>
+      <span style="font:400 12px/16px 'JetBrains Mono',monospace;color:#6b6d73">khung trình duyệt chỉ để minh hoạ</span>
+    </div>
+    <div style="background:#f9f9f9;padding:32px;display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:28px;font-family:Roboto,'Helvetica Neue',sans-serif;color:#1a1b1f">
+      <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+        <span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#6b6d73">1 tab · thanh tab ẩn</span>
+        <div style="border:1px solid #d5d7de;border-radius:10px;overflow:hidden;background:#ffffff;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+          <div style="height:38px;display:flex;align-items:flex-end;gap:8px;padding:0 10px;background:#e3e4e9">
+            <span style="display:flex;gap:6px;align-self:center;margin-right:6px"><span style="width:10px;height:10px;border-radius:999px;background:#c4c6d0"></span><span style="width:10px;height:10px;border-radius:999px;background:#c4c6d0"></span><span style="width:10px;height:10px;border-radius:999px;background:#c4c6d0"></span></span>
+            <div style="position:relative;width:240px;height:30px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 8px 0 10px;border-radius:8px 8px 0 0;background:#ffffff;font-size:12px;line-height:16px;color:#1a1b1f">
+              <span style="width:16px;height:16px;flex:0 0 auto;border-radius:4px;background:#005cbb;color:#ffffff;font:700 10px/16px Roboto,sans-serif;text-align:center">S</span>
+              <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Đơn hàng #DH-10234 – SD Portal</span>
+              <span style="font-family:'Material Symbols Outlined';font-size:14px;line-height:1;color:#44474f">close</span>
+              <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-14px;left:40px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">2</span></sc-if>
+            </div>
+          </div>
+          <div style="height:34px;display:flex;align-items:center;padding:0 10px;border-bottom:1px solid #e3e4e9"><span style="flex:1;height:24px;border-radius:999px;background:#f0f1f5;display:flex;align-items:center;padding:0 12px;font:400 11px 'JetBrains Mono',monospace;color:#6b6d73">portal.example.vn/…</span></div>
+          <div style="position:relative;height:0"><sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-11px;right:12px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">1</span></sc-if></div>
+          <div style="padding:16px 20px;display:flex;flex-direction:column;gap:8px"><span style="font-size:16px;font-weight:600;line-height:22px">Đơn hàng #DH-10234</span><span style="height:7px;width:62%;background:#ecebe6"></span><span style="height:7px;width:44%;background:#ecebe6"></span></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+        <span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#6b6d73">2 tab · tab đang mở có thay đổi chưa lưu</span>
+        <div style="border:1px solid #d5d7de;border-radius:10px;overflow:hidden;background:#ffffff;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+          <div style="height:38px;display:flex;align-items:flex-end;gap:8px;padding:0 10px;background:#e3e4e9">
+            <span style="display:flex;gap:6px;align-self:center;margin-right:6px"><span style="width:10px;height:10px;border-radius:999px;background:#c4c6d0"></span><span style="width:10px;height:10px;border-radius:999px;background:#c4c6d0"></span><span style="width:10px;height:10px;border-radius:999px;background:#c4c6d0"></span></span>
+            <div style="position:relative;width:240px;height:30px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 8px 0 10px;border-radius:8px 8px 0 0;background:#ffffff;font-size:12px;line-height:16px;color:#1a1b1f">
+              <span style="width:16px;height:16px;flex:0 0 auto;border-radius:4px;background:#005cbb;color:#ffffff;font:700 10px/16px Roboto,sans-serif;text-align:center">S</span>
+              <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">● Hợp đồng HD-2026-118 – SD Portal</span>
+              <span style="font-family:'Material Symbols Outlined';font-size:14px;line-height:1;color:#44474f">close</span>
+              <sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-14px;left:40px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">2</span></sc-if>
+            </div>
+          </div>
+          <div style="height:34px;display:flex;align-items:center;padding:0 10px;border-bottom:1px solid #e3e4e9"><span style="flex:1;height:24px;border-radius:999px;background:#f0f1f5;display:flex;align-items:center;padding:0 12px;font:400 11px 'JetBrains Mono',monospace;color:#6b6d73">portal.example.vn/…</span></div>
+          <div style="position:relative;height:36px;display:flex;align-items:flex-end;padding:0 8px;background:#f0f1f5"><div style="position:relative;flex:0 1 180px;min-width:0;height:30px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 6px 0 10px;border-radius:8px 8px 0 0;color:#44474f;font-size:12px;line-height:16px"><span style="font-family:'Material Symbols Outlined';font-size:15px;line-height:1;color:#1e6b3a;font-weight:400">receipt_long</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Đơn hàng #DH-10234</span></div><div style="position:relative;flex:0 1 180px;min-width:0;height:30px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 6px 0 10px;border-radius:8px 8px 0 0;background:#ffffff;color:#1a1b1f;font-weight:500;font-size:12px;line-height:16px"><span style="font-family:'Material Symbols Outlined';font-size:15px;line-height:1;color:#8a5300;font-weight:400">description</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Hợp đồng HD-2026-118</span><span style="font-family:'Material Symbols Outlined';font-size:13px;line-height:1;color:#44474f;font-weight:400">close</span></div><sc-if value="{{ ann }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-11px;right:12px;z-index:6;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">3</span></sc-if></div>
+          <div style="padding:16px 20px;display:flex;flex-direction:column;gap:8px"><span style="font-size:16px;font-weight:600;line-height:22px">Hợp đồng HD-2026-118</span><span style="height:7px;width:62%;background:#ecebe6"></span><span style="height:7px;width:44%;background:#ecebe6"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ol style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px 32px;font-size:14px;line-height:1.6;color:#2b2c30">
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">1</span><span><strong style="font-weight:600">Ẩn thanh tab khi chỉ có 1 tab.</strong> Đây là hành vi mặc định, không thêm input. Sửa điều kiện thành <span style="font-family:'JetBrains Mono',monospace;font-size:13px">tabs().length &lt;= 1</span>. Khi tab thứ hai mở, thanh tab hiện ra với chiều cao chạy từ 0 lên 40px trong 150ms, để nội dung không nhảy giật (tắt khi <span style="font-family:'JetBrains Mono',monospace;font-size:13px">prefers-reduced-motion</span>). Khi thanh tab ẩn, tab duy nhất không đóng được bằng giao diện; điều này chấp nhận được.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">2</span><span><strong style="font-weight:600">Tiêu đề trình duyệt theo tab đang mở.</strong> Định dạng là <span style="font-family:'JetBrains Mono',monospace;font-size:13px">{tên tab} – {tên app}</span>. Tên app là tiêu đề trang tại thời điểm outlet khởi tạo, tức giá trị trong index.html hoặc giá trị app đã đặt trước đó. Tiêu đề cập nhật khi đổi tab và khi <span style="font-family:'JetBrains Mono',monospace;font-size:13px">tabInfoChanges</span> đổi tên tab. Tab có thay đổi chưa lưu thì thêm “● ” vào đầu tiêu đề. Dùng service <span style="font-family:'JetBrains Mono',monospace;font-size:13px">Title</span> của Angular; khi outlet bị huỷ hoặc <span style="font-family:'JetBrains Mono',monospace;font-size:13px">disabled</span> thì trả lại tiêu đề cũ.</span></li>
+    <li style="display:flex;gap:12px"><span style="flex:0 0 22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">3</span><span><strong style="font-weight:600">Từ 2 tab trở lên, thanh tab hiện như mục 02.</strong> Tiêu đề trình duyệt vẫn đi theo tab đang mở.</span></li>
+  </ol>
+  <p style="margin:0;max-width:780px;font-size:14px;line-height:1.6;color:#3a3c42"><strong style="font-weight:600;color:#1a1b1f">API đề xuất.</strong> Thêm input boolean <span style="font-family:'JetBrains Mono',monospace;font-size:13px">syncBrowserTitle</span> trên outlet, mặc định <span style="font-family:'JetBrains Mono',monospace;font-size:13px">false</span>, để app nào đang dùng <span style="font-family:'JetBrains Mono',monospace;font-size:13px">TitleStrategy</span> riêng không bị ảnh hưởng. Nếu sau này cần đổi định dạng thì thêm <span style="font-family:'JetBrains Mono',monospace;font-size:13px">browserTitleFormat: (info: SdTabInfo, appTitle: string) =&gt; string</span>. Không cần làm ngay.</p>
+</section>
+
+<section id="quyet-dinh" data-screen-label="07 Quyết định" style="padding-top:72px;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">07</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Quyết định</h2>
+  </div>
+  <ol style="margin:0;padding-left:20px;max-width:820px;font-size:14px;line-height:1.6;color:#2b2c30;display:flex;flex-direction:column;gap:10px">
+    <li><strong style="font-weight:600">Menu chuột phải chỉ có Đóng tab và Đóng các tab khác.</strong> Thêm <span style="font-family:'JetBrains Mono',monospace;font-size:13px">closeOthers(tab)</span> vào <span style="font-family:'JetBrains Mono',monospace;font-size:13px">SdTabRouterService</span>.</li>
+    <li><strong style="font-weight:600">Có chấm “chưa lưu”.</strong> Thêm <span style="font-family:'JetBrains Mono',monospace;font-size:13px">SdTabInfo.dirty?: boolean</span>, đẩy qua <span style="font-family:'JetBrains Mono',monospace;font-size:13px">tabInfoChanges</span>. Màn hình đã có <span style="font-family:'JetBrains Mono',monospace;font-size:13px">beforeClose</span> nên dùng cùng một nguồn trạng thái.</li>
+    <li><strong style="font-weight:600">Ẩn thanh tab khi chỉ có 1 tab.</strong> Đây là hành vi mặc định, không có input. Sửa điều kiện bị ngược, và thêm chuyển động khi thanh tab hiện ra.</li>
+    <li><strong style="font-weight:600">Tiêu đề trình duyệt theo tab đang mở.</strong> Bật bằng input boolean <span style="font-family:'JetBrains Mono',monospace;font-size:13px">syncBrowserTitle</span>, mặc định tắt. Tên app lấy từ tiêu đề trang lúc outlet khởi tạo.</li>
+    <li><strong style="font-weight:600">Bỏ sd-badge trong tab và bỏ chế độ compact.</strong> Không đổi API công khai, vì <span style="font-family:'JetBrains Mono',monospace;font-size:13px">mode</span> là thuộc tính nội bộ.</li>
+  </ol>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showAnnotations&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;showCurrent&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { hov: null };
+  renderVals() {
+    const h = this.state.hov, act = 'T2';
+    const v = {
+      ann: this.props.showAnnotations ?? true,
+      cur: this.props.showCurrent ?? true,
+      offHov: () => this.setState({ hov: null }),
+    };
+    const ids = ['T1', 'T2', 'T3', 'T4', 'T5'];
+    ids.forEach((k, i) => {
+      v['en' + k] = () => this.setState({ hov: k });
+      v['o' + k] = k === act || h === k ? 1 : 0;
+      const next = ids[i + 1];
+      if (next) v['d' + k] = [k, next].some(x => x === act || x === h) ? 0 : 1;
+    });
+    v.oT4 = h === 'T4' ? 1 : 0;
+    v.dotT4 = h === 'T4' ? 0 : 1;
+
+    const names = [
+      ['dashboard', 'Tổng quan'], ['receipt_long', 'Đơn hàng #DH-10234'], ['group', 'Danh sách khách hàng'],
+      ['description', 'Hợp đồng HD-2026-118'], ['bar_chart', 'Báo cáo doanh thu Q3'], ['inventory_2', 'Phiếu nhập kho PNK-0912'],
+      ['storefront', 'Nhà cung cấp'], ['receipt_long', 'Đơn hàng #DH-10251'], ['account_balance_wallet', 'Công nợ phải thu'],
+      ['sell', 'Bảng giá 2026'], ['badge', 'Nhân viên'], ['task_alt', 'Phê duyệt chi phí'],
+      ['warehouse', 'Kho hàng Hà Nội'], ['settings', 'Cấu hình hệ thống'],
+    ];
+    v.crampedTabs = names.concat([['payments', 'Thu chi'], ['local_shipping', 'Vận chuyển']]).map(([icon, name], i) => ({
+      icon, name, bg: i === 1 ? '#ffffff' : '#f2f3f4', radius: i === 1 ? '8px 8px 0 0' : '0',
+    }));
+    const activeIdx = 8, start = 4;
+    v.manyTabs = names.slice(start, start + 9).map(([icon, name], j) => {
+      const i = start + j, isAct = i === activeIdx, nextAct = i + 1 === activeIdx;
+      return {
+        icon, name,
+        bg: isAct ? '#ffffff' : 'transparent',
+        color: isAct ? '#1a1b1f' : '#44474f',
+        weight: isAct ? 500 : 400,
+        closeOp: isAct ? 1 : 0,
+        divOp: isAct || nextAct ? 0 : 1,
+      };
+    });
+    v.menuTabs = names.map(([icon, name], i) => ({
+      icon, name,
+      bg: i === activeIdx ? 'rgba(0,92,187,.08)' : i === 6 ? '#f0f1f5' : 'transparent',
+      weight: i === activeIdx ? 500 : 400,
+      closeOp: i === 6 ? 1 : 0,
+    }));
+
+    v.specRows = [
+      { part: 'Thanh tab', now: 'cao theo item (36px) · nền #f9f9f9', next: 'cao 40px · padding 0 8px · nền surface-container · tab căn đáy' },
+      { part: 'Tab · kích thước', now: 'flex: 1 1 64px · max-width 240px · padding 8px', next: 'flex: 0 1 200px · min-width 120px · cao 34px · padding 0 6px 0 12px · gap 8px' },
+      { part: 'Tab · chưa mở', now: 'nền #f2f3f4', next: 'không nền · chữ text-secondary' },
+      { part: 'Tab · hover', now: 'nền trắng (giống active)', next: 'nền text 6% · bo 8px 8px 0 0' },
+      { part: 'Tab · đang mở', now: 'nền trắng · bo 8px 8px 0 0', next: 'nền surface · bo 8px 8px 0 0 · chữ 500 text' },
+      { part: 'Nội dung tab', now: 'sd-badge · T14R 14px · width 184px', next: 'icon 16px · tên 13px/18px · ellipsis' },
+      { part: 'Nút đóng', now: '16px · icon 12px · luôn hiện', next: '20px · bo 6px · icon 14px · hiện khi active/hover/focus · coarse luôn hiện, vùng chạm 32px' },
+      { part: 'Vạch ngăn', now: '1×16px · luôn hiện', next: '1×16px · ẩn cạnh tab active và tab hover' },
+      { part: 'Focus', now: 'chỉ nút đóng có ring', next: 'ring 2px primary · outline-offset -2px trên tab' },
+      { part: 'Tràn', now: 'tab co tới ~0 · compact không chạy', next: 'cuộn ngang · lớp mờ 32px · nút danh sách 30px · menu 320px, mục 36px' },
+    ];
+    return v;
+  }
+}
+</script>
+</body>
+</html>

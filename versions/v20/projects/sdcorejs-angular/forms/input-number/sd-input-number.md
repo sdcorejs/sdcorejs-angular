@@ -33,6 +33,8 @@ Numeric input with locale-aware formatting (VN `1.234.567,89` or ISO `1,234,567.
 | `autoId`          | `string \| null \| undefined`           | `undefined`                                 | Generates `data-autoid="forms-input-number-<value>"` for E2E selectors.                                                                                                                                                                                                                               |
 | `name`            | `string`                                | random uuid                                 | FormGroup control name when bound via `[form]`.                                                                                                                                                                                                                                                       |
 | `size`            | `Size` (`'sm' \| 'md' \| 'lg'`)         | `'md'`                                      | Field height. Use `size="sm"` inside `<sd-table>` filters/cells or other dense table UI.                                                                                                                                                                                                              |
+| `operators`       | `readonly Operator[]`                   | `[]`                                        | Operators offered by the prefix chip, in display order (wave 2 · G). Two or more show the chip; exactly one sets `operator` to it without a chip; none hides it. Keep the array as a class property.                                                                                                  |
+| `operator`        | `Operator \| undefined` (model)         | `undefined`                                 | Current operator, two-way via `[(operator)]`. Changing it keeps the value; the clear button clears only the value.                                                                                                                                                                                    |
 | `form`            | `NgForm \| FormGroup \| undefined`      | `undefined`                                 | Parent form. NgForm is auto-unwrapped to its inner `FormGroup`.                                                                                                                                                                                                                                       |
 | `label`           | `string \| undefined`                   | `undefined`                                 | Field label (rendered via `<sd-label>`).                                                                                                                                                                                                                                                              |
 | `labelPlacement` | `'float' \| 'top'` | `'float'` | `'float'` (default) keeps the Material floating label. `'top'` renders `label` above the field as a real `<label for>` bound to the `<input>`, never repeats it as the placeholder, and shows `helperText` as a described-by hint under the field that a validation error replaces. Used by `<sd-form-render>`. |
@@ -75,6 +77,23 @@ Numeric input with locale-aware formatting (VN `1.234.567,89` or ISO `1,234,567.
 | ---------------- | ------------------ | --------------------------------------------------------------------------------------------------------------- |
 | `clear($event?)` | `(Event?) => void` | Resets display + value to `null` and emits `sdChange(null)` **exactly once**. Re-validates and surfaces the resulting message (e.g. `required`) immediately. No-op when empty. Backs the built-in clear button. |
 | `showClear()`    | `() => boolean`    | Whether the built-in clear button renders: `clearable`, has a value, and not `required`/`disabled`/`readonly`.  |
+
+## Operator chip (`operators`)
+
+For filter forms, the field can carry its own operator as a prefix chip instead of a separate `<sd-operator>` beside it.
+
+```html
+<sd-input-number label="…" [(model)]="price" [operators]="['EQUAL', 'GREATER_THAN', 'LESS_THAN']" [(operator)]="operator" />
+```
+
+- The chip is a real `<button type="button">` in the `matPrefix` slot. It shows the operator icon and an `expand_more` arrow; the translated label is in its tooltip, its `aria-label` ("Operator: …") and the menu.
+- While the chip is shown the floating label always floats and the label is not repeated as the placeholder.
+- `NULL` / `NOT_NULL` need no value: picking one in the chip clears the value and disables the entry until another operator is picked; the chip stays usable and keeps the focus.
+- Keyboard: Tab reaches the chip before the field. Enter, Space or Alt+↓ opens the menu. Picking a row moves focus to the number input; Escape closes the menu and returns focus to the chip.
+- The menu is the shared `.c-op-menu` panel of `<sd-operator>`: icon, label and operator code, the current row highlighted. Like the `sd-select` panel it opens 6px away from the field box and lines up with the field start.
+- Tone: muted without a value, `--sd-primary-light` / `--sd-primary-dark` once the field has a value, solid `--sd-primary` while the menu is open.
+- `autoId` gives the chip `data-autoid="<autoId>-operator"`.
+- `<sd-table>` column filters pass their operator list here automatically (see `sd-table.md`).
 
 ## E2E test attributes
 

@@ -12,6 +12,6 @@
     [model]="value()"
     (modelChange)="setValue($event)"
     [required]="required()"
-    [max]="item.validation?.maxItems"
+    [maxCount]="item.validation?.maxItems"
     [disabled]="disabled()"></sd-chip-calendar>
 }

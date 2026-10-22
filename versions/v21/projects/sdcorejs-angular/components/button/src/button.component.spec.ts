@@ -4,7 +4,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { LucideDownload } from '@lucide/angular';
 import { provideSdIcon, SdIcon } from '@sdcorejs/angular/modules/icon';
 import { SdButton } from './button.component';
-import { queryByCss, setInput } from '../../../testing/test-utils';
+import { findCssRule, queryByCss, setInput } from '../../../testing/test-utils';
 
 describe('SdButton', () => {
   let fixture: ComponentFixture<SdButton>;
@@ -158,6 +158,138 @@ describe('SdButton', () => {
       setInput(fixture, 'title', 'X');
       setInput(fixture, 'size', 'lg');
       expect(queryByCss<HTMLButtonElement>(fixture, 'button.c-button').classList.contains('c-lg')).toBe(true);
+    });
+  });
+
+  describe('indicator (wave 2 · F)', () => {
+    const host = (): HTMLElement => fixture.nativeElement as HTMLElement;
+    const indicator = (): HTMLElement | null => host().querySelector<HTMLElement>(':scope > .sd-button__indicator');
+    const nativeButton = (): HTMLButtonElement => host().querySelector<HTMLButtonElement>('button.c-button')!;
+
+    beforeEach(() => {
+      // Distinct colours so the colour rules are checked without loading the theme.
+      const style = host().style;
+      style.setProperty('--sd-error', 'rgb(200, 0, 0)');
+      style.setProperty('--sd-error-contrast', 'rgb(255, 255, 255)');
+      style.setProperty('--sd-success', 'rgb(0, 120, 0)');
+      style.setProperty('--sd-success-contrast', 'rgb(250, 250, 250)');
+      style.setProperty('--sd-disabled-text', 'rgb(100, 100, 100)');
+      style.setProperty('--sd-surface', 'rgb(254, 254, 254)');
+      style.setProperty('--sd-button-indicator-ring', 'rgb(1, 2, 3)');
+      setInput(fixture, 'prefixIcon', 'notifications');
+      setInput(fixture, 'tooltip', 'Thông báo');
+    });
+
+    it('renders nothing for null, false, 0, a negative number or NaN', () => {
+      for (const value of [null, false, 0, -3, Number.NaN]) {
+        setInput(fixture, 'indicator', value);
+        expect(indicator()).withContext(String(value)).toBeNull();
+      }
+    });
+
+    it('renders a dot for true and the floored number for a positive number, capped by indicatorMax', () => {
+      setInput(fixture, 'indicator', true);
+      expect(indicator()!.classList).toContain('sd-button__indicator--dot');
+      expect(indicator()!.textContent?.trim()).toBe('');
+
+      setInput(fixture, 'indicator', 3.9);
+      expect(indicator()!.classList).toContain('sd-button__indicator--count');
+      expect(indicator()!.textContent?.trim()).toBe('3');
+
+      setInput(fixture, 'indicator', 120);
+      expect(indicator()!.textContent?.trim()).toBe('99+');
+
+      setInput(fixture, 'indicatorMax', 9);
+      setInput(fixture, 'indicator', 12);
+      expect(indicator()!.textContent?.trim()).toBe('9+');
+    });
+
+    it('sits next to the native button, aria-hidden, without pointer events or a change of button size', () => {
+      const before = nativeButton().getBoundingClientRect();
+      setInput(fixture, 'indicator', 42);
+      const element = indicator()!;
+      expect(element.parentElement).toBe(host());
+      expect(nativeButton().contains(element)).toBeFalse();
+      expect(element.getAttribute('aria-hidden')).toBe('true');
+      expect(getComputedStyle(element).pointerEvents).toBe('none');
+      const after = nativeButton().getBoundingClientRect();
+      expect([after.width, after.height, after.top, after.left]).toEqual([before.width, before.height, before.top, before.left]);
+    });
+
+    it('uses the error colour by default, indicatorColor otherwise, and a ring of --sd-button-indicator-ring', () => {
+      setInput(fixture, 'indicator', 5);
+      let style = getComputedStyle(indicator()!);
+      expect(style.backgroundColor).toBe('rgb(200, 0, 0)');
+      expect(style.color).toBe('rgb(255, 255, 255)');
+      expect(style.boxShadow).toBe('rgb(1, 2, 3) 0px 0px 0px 2px');
+      setInput(fixture, 'indicatorColor', 'success');
+      style = getComputedStyle(indicator()!);
+      expect(style.backgroundColor).toBe('rgb(0, 120, 0)');
+      expect(style.color).toBe('rgb(250, 250, 250)');
+    });
+
+    it('turns grey with the button disabled and stays while loading', () => {
+      setInput(fixture, 'indicator', 5);
+      setInput(fixture, 'disabled', true);
+      expect(getComputedStyle(indicator()!).backgroundColor).toBe('rgb(100, 100, 100)');
+      expect(getComputedStyle(indicator()!).color).toBe('rgb(254, 254, 254)');
+      setInput(fixture, 'disabled', false);
+      setInput(fixture, 'loading', true);
+      expect(indicator()).withContext('loading keeps the indicator').not.toBeNull();
+    });
+
+    it('describes the native button with indicatorLabel without replacing its accessible name', () => {
+      setInput(fixture, 'indicator', 3);
+      expect(nativeButton().hasAttribute('aria-describedby')).toBeFalse();
+      setInput(fixture, 'indicatorLabel', '3 thông báo mới');
+      const describedBy = nativeButton().getAttribute('aria-describedby')!;
+      const description = host().querySelector<HTMLElement>(`[id="${describedBy}"]`)!;
+      expect(description.textContent?.trim()).toBe('3 thông báo mới');
+      expect(description.getBoundingClientRect().width).withContext('visually hidden').toBeLessThanOrEqual(1);
+      expect(nativeButton().getAttribute('aria-label')).toBe('Thông báo');
+      expect(description.closest('[aria-live]')).withContext('no live region').toBeNull();
+      setInput(fixture, 'indicator', null);
+      expect(nativeButton().hasAttribute('aria-describedby')).withContext('no indicator, no description').toBeFalse();
+    });
+
+    // Anchor a = 0.146 × button height (the 45° point of the top-end corner arc): 4.7 / 5.9 / 7px.
+    for (const [size, height, dot, count] of [
+      ['sm', 32, 8, 16],
+      ['md', 40, 8, 18],
+      ['lg', 48, 10, 20],
+    ] as const) {
+      it(`places the ${size} dot and number on the corner anchor`, () => {
+        setInput(fixture, 'size', size);
+        const anchor = 0.146 * height;
+        setInput(fixture, 'indicator', true);
+        const button = nativeButton().getBoundingClientRect();
+        const dotBox = indicator()!.getBoundingClientRect();
+        expect(dotBox.width).toBeCloseTo(dot, 0);
+        expect(dotBox.left + dotBox.width / 2).toBeCloseTo(button.right - anchor, 0);
+        expect(dotBox.top + dotBox.height / 2).toBeCloseTo(button.top + anchor, 0);
+
+        setInput(fixture, 'indicator', 7);
+        const countBox = indicator()!.getBoundingClientRect();
+        expect(countBox.height).toBeCloseTo(count, 0);
+        expect(countBox.width).toBeGreaterThanOrEqual(count - 0.5);
+        expect(countBox.left).toBeCloseTo(button.right - anchor - count / 2, 0);
+        expect(countBox.top + countBox.height / 2).toBeCloseTo(button.top + anchor, 0);
+      });
+    }
+
+    // Forced colours drop author backgrounds, so the dot (a coloured block only) vanished and the count lost its pill.
+    it('draws the dot and the count with system colours under forced colours, greyed when disabled', () => {
+      setInput(fixture, 'title', 'Lọc');
+      setInput(fixture, 'indicator', true);
+      const forced = /forced-colors:\s*active/;
+      const rule = findCssRule(/(^|,\s*)\.sd-button__indicator\[data-color\](,|$)/, forced);
+      expect(rule).withContext('forced-colors rule').toBeDefined();
+      expect(rule!.getPropertyValue('forced-color-adjust')).toBe('none');
+      expect(rule!.backgroundColor.toLowerCase()).toBe('canvastext');
+      expect(rule!.color.toLowerCase()).toBe('canvas');
+      expect(rule!.boxShadow.toLowerCase()).toContain('canvas');
+      const disabled = findCssRule(/\.sd-disabled \.sd-button__indicator$/, forced);
+      expect(disabled?.backgroundColor.toLowerCase()).withContext('disabled').toBe('graytext');
     });
   });
 

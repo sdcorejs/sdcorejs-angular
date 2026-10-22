@@ -28,6 +28,8 @@ const PAIRS = [
   ['border-strong', 'surface-muted', 3],
   ['focus-ring-color', 'surface', 3],
   ['focus-ring-color', 'surface-muted', 3],
+  // The outline of a control at rest: a non-text boundary on the page surface (WCAG 1.4.11).
+  ['control-border', 'surface', 3],
   ['link', 'surface', 4.5],
   ['primary-contrast', 'primary', 4.5],
   ['view-label-color', 'surface', 4.5],
@@ -39,6 +41,25 @@ const PAIRS = [
   // whose primary is too light for its own tint darkens the ink through its `components` map.
   ['sidebar-v4-active-ink', 'sidebar-v4-active-bg', 4.5],
   ['sidebar-v4-avatar-ink', 'sidebar-v4-avatar-bg', 4.5],
+  // sd-table: header text on the header band and body text on a selected or activated row, all derived
+  // from the palette and --sd-table-bg.
+  ['table-header-text', 'table-header-bg', 4.5],
+  ['text', 'table-row-selected-bg', 4.5],
+  ['text', 'table-row-activated-bg', 4.5],
+  // sd-kanban: card titles and the secondary count sit on the neutral lane.
+  ['text', 'kanban-lane-bg', 4.5],
+  ['text-secondary', 'kanban-lane-bg', 4.5],
+  // sd-chip-calendar: the date of a locked chip, and the “+N” count on its hover background.
+  ['text', 'chip-calendar-chip-locked-bg', 4.5],
+  ['text-secondary', 'chip-calendar-more-hover-bg', 4.5],
+  // sd-badge: `*-dark` text on the `*-light` tint (round, tag, the value of pair, the secondary label of pair)
+  // and `*-contrast` text on the base colour (solid).
+  ...['primary', 'secondary', ...STATES].map(color => [`${color}-dark`, `${color}-light`, 4.5]),
+  ...['secondary', ...STATES].map(color => [`${color}-contrast`, color, 4.5]),
+  // sd-tab-router: tab names on the bar, on a hovered tab and on the open tab.
+  ['tab-router-item-text', 'tab-router-nav-bg', 4.5],
+  ['tab-router-item-text', 'tab-router-item-hover-bg', 4.5],
+  ['text', 'tab-router-item-active-bg', 4.5],
 ];
 
 const tokensOf = args => {

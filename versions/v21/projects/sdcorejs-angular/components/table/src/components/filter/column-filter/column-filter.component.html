@@ -3,6 +3,7 @@
 @let _autoId = autoId();
 @let _templateRef = templateRef();
 @let _operators = operators();
+@let _controlOperators = controlOperators();
 @let _items = items();
 @let _label = label();
 @let _context = { columnFilter: _columnFilter, autoId: _autoId };
@@ -18,8 +19,9 @@
     _column.type === 'datetime' ||
     _column.type === 'time'
   ) {
-    <!-- Operator filter -->
-    @if (_operators.length) {
+    <!-- Operator: chip trong control mặc định (thiết kế đợt 2 · G). Template custom (filterDef) và filter split
+         (hai control) không chèn chip được nên giữ sd-operator rời như cũ. -->
+    @if (_operators.length && !operatorInControl()) {
       <sd-operator class="mr-4" [(model)]="operator" [operators]="operatorValues()" />
     }
 
@@ -37,6 +39,8 @@
           type="text"
           [label]="_label"
           [(model)]="_columnFilter[_column.field]"
+          [operators]="_controlOperators"
+          [(operator)]="operator"
           (keyupEnter)="onFilterChange()"
           (sdBlur)="onFilterCommit()"
           (cleared)="onFilterChange()"
@@ -52,6 +56,8 @@
             size="sm"
             [label]="_label"
             [(model)]="_columnFilter[_column.field]"
+            [operators]="_controlOperators"
+            [(operator)]="operator"
             (keyupEnter)="onFilterChange()"
             (sdBlur)="onFilterCommit()"
             (cleared)="onFilterChange()"
@@ -78,6 +84,8 @@
           valueField="value"
           displayField="display"
           [(model)]="_columnFilter[_column.field]"
+          [operators]="_controlOperators"
+          [(operator)]="operator"
           (sdChange)="onFilterChange()"
           [disabled]="_column.filter?.disabled"
           hideInlineError>
@@ -101,6 +109,8 @@
           [valueField]="_column.option.valueField"
           [displayField]="_column.option.displayField"
           [(model)]="_columnFilter[_column.field]"
+          [operators]="_controlOperators"
+          [(operator)]="operator"
           (sdChange)="onFilterChange()"
           [disabled]="_column.filter?.disabled"
           [multiple]="_column.option.selection === 'MULTIPLE'"
@@ -118,6 +128,8 @@
           [valueField]="_column.option.valueField"
           [displayField]="_column.option.displayField"
           [(model)]="_columnFilter[_column.field]"
+          [operators]="_controlOperators"
+          [(operator)]="operator"
           (sdChange)="onFilterChange()"
           [disabled]="_column.filter?.disabled"
           [multiple]="_column.option.selection === 'MULTIPLE'"
@@ -130,6 +142,8 @@
             size="sm"
             [label]="_label"
             [(model)]="_columnFilter[_column.field]"
+            [operators]="_controlOperators"
+            [(operator)]="operator"
             (sdChange)="onFilterChange()"
             [disabled]="_column.filter?.disabled"
             hideInlineError>
@@ -142,6 +156,8 @@
             size="sm"
             [label]="_label"
             [(model)]="_columnFilter[_column.field]"
+            [operators]="_controlOperators"
+            [(operator)]="operator"
             (sdChange)="onFilterChange()"
             [disabled]="_column.filter?.disabled"
             clearable

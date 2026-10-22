@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Color } from '@sdcorejs/utils/models';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdAvatar } from '@sdcorejs/angular/components/avatar';
 
@@ -81,6 +82,67 @@ import { SdAvatar } from '@sdcorejs/angular/components/avatar';
         </div>
       </demo-section>
       }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-cham-trang-thai') {
+      <demo-section
+        heading="Chấm trạng thái"
+        [props]="[
+          { name: 'status', value: 'success / warning / error / secondary' },
+          { name: 'statusLabel', value: 'text' },
+          { name: 'statusPulse', value: 'true' },
+        ]"
+        note="Chấm nằm trên mép avatar ở góc 45°, đường kính 25% cỡ avatar (8–20px), vòng viền màu nền. statusLabel là tooltip của chấm và được đọc cùng tên, ví dụ “Lê Lan Anh, Đang hoạt động”.">
+        <div class="row">
+          @for (item of statuses; track item.label) {
+            <div class="card">
+              <sd-avatar src="Lê Lan Anh" [size]="40" [status]="item.status" [statusLabel]="item.label" [statusPulse]="item.pulse"></sd-avatar>
+              <span>{{ item.label }}</span>
+            </div>
+          }
+        </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-cham-theo-kich-thuoc') {
+      <demo-section heading="Chấm theo kích thước" [props]="[{ name: 'size', value: '24 / 32 / 40 / 64 / 96' }]">
+        <div class="row size-row">
+          @for (size of statusSizes; track size) {
+            <div class="card">
+              <sd-avatar src="Lê Lan Anh" [size]="size" status="success" statusLabel="Đang hoạt động"></sd-avatar>
+              <span>{{ size }}</span>
+            </div>
+          }
+        </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-anh-co-ten') {
+      <demo-section
+        heading="Ảnh có tên"
+        [props]="[{ name: 'name', value: 'text' }]"
+        note="Rê chuột vào ảnh để xem tên. Ảnh lỗi thì chữ viết tắt và màu lấy từ name.">
+        <div class="row">
+          <sd-avatar src="https://i.pravatar.cc/80?img=11" name="Phạm Minh Quân" [size]="48" status="success" statusLabel="Đang gọi" statusPulse></sd-avatar>
+          <sd-avatar src="https://example.invalid/missing.png" name="Trần Thu Hà" [size]="48"></sd-avatar>
+        </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trong-danh-sach') {
+      <demo-section heading="Trong danh sách" [props]="[{ name: 'status', value: 'color' }, { name: 'statusLabel', value: 'text' }]">
+        <div class="people">
+          @for (person of people; track person.name) {
+            <div class="person">
+              <sd-avatar aria-hidden="true" [src]="person.name" [size]="32" [status]="person.status" [statusLabel]="person.label"></sd-avatar>
+              <span class="person-text">
+                <span class="person-name">{{ person.name }}</span>
+                <span class="person-status">{{ person.label }}</span>
+              </span>
+            </div>
+          }
+        </div>
+      </demo-section>
+      }
     </demo-page>
   `,
   styles: [`
@@ -91,6 +153,34 @@ import { SdAvatar } from '@sdcorejs/angular/components/avatar';
       align-items: center;
     }
     .size-row { align-items: flex-end; }
+    .people {
+      display: flex;
+      flex-direction: column;
+      width: 280px;
+      border: 1px solid var(--sd-border);
+      border-radius: 8px;
+    }
+    .person {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+    }
+    .person + .person {
+      border-top: 1px solid var(--sd-border);
+    }
+    .person-text {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .person-name {
+      font-size: 13px;
+    }
+    .person-status {
+      font-size: 12px;
+      color: var(--sd-text-secondary);
+    }
     .card {
       display: flex;
       flex-direction: column;
@@ -102,4 +192,18 @@ import { SdAvatar } from '@sdcorejs/angular/components/avatar';
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AvatarDemoComponent {}
+export class AvatarDemoComponent {
+  readonly statuses: { status: Color; label: string; pulse: boolean }[] = [
+    { status: 'success', label: 'Đang hoạt động', pulse: false },
+    { status: 'success', label: 'Đang gọi', pulse: true },
+    { status: 'warning', label: 'Vắng mặt', pulse: false },
+    { status: 'error', label: 'Không làm phiền', pulse: false },
+    { status: 'secondary', label: 'Ngoại tuyến', pulse: false },
+  ];
+  readonly statusSizes = [24, 32, 40, 64, 96];
+  readonly people: { name: string; status: Color; label: string }[] = [
+    { name: 'Lê Lan Anh', status: 'success', label: 'Đang hoạt động' },
+    { name: 'Phạm Minh Quân', status: 'warning', label: 'Vắng mặt' },
+    { name: 'Trần Thu Hà', status: 'secondary', label: 'Ngoại tuyến · 2 giờ trước' },
+  ];
+}

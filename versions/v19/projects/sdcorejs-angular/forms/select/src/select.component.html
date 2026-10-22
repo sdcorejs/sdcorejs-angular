@@ -12,9 +12,11 @@
 @let _required = required();
 @let _normalizedValue = $any(normalizedValue());
 @let _focused = $any(focused());
+@let _panelOpen = panelOpen();
 @let _isInline = isInline();
 @let _labelTop = labelPlacement() === 'top';
-@let _placeholder = placeholder() || (_labelTop ? '' : _label) || '';
+<!-- why: có chip operator thì label luôn float, placeholder không lặp lại label. -->
+@let _placeholder = placeholder() || (_labelTop || operatorChip() ? '' : _label) || '';
 @let _bare = _isInline;
 @let _hasValue = _multiple ? !!_normalizedValue?.length : _normalizedValue !== undefined && _normalizedValue !== null;
 @let _display = display();
@@ -47,7 +49,7 @@
          .sd-inline-editor) để mở panel. Text giữ nguyên, chỉ đổi khi commit giá trị mới. -->
     <span
       class="sd-inline-view"
-      [sdTooltip]="_multiple && _tooltip ? selectionTooltip : ''"
+      [sdTooltip]="_multiple && _tooltip && !_panelOpen ? selectionTooltip : ''"
       sdTooltipPosition="top"
       role="button"
       tabindex="0"
@@ -110,14 +112,26 @@
       }
     } @else if (_multiple) {
       <mat-form-field
-        [sdTooltip]="_tooltip ? selectionTooltip : ''"
+        [sdTooltip]="_tooltip && !_panelOpen ? selectionTooltip : ''"
         sdTooltipPosition="top"
         [class.sd-md]="_size === 'md'"
         [class.sd-sm]="_size === 'sm'"
         [class.hide-inline-error]="_hideInlineError"
         [class.sd-label-top]="_labelTop"
         [appearance]="_appearance!"
-        [floatLabel]="_floatLabel">
+        [floatLabel]="operatorChip() ? 'always' : _floatLabel">
+        <!-- Operator (thiết kế đợt 2 · G): chip tiền tố khi có từ hai operator. -->
+        @if (operatorChip()) {
+          <sd-operator-chip
+            matPrefix
+            [operators]="operators()"
+            [(operator)]="operator"
+            [size]="size()"
+            [hasValue]="operatorHasValue()"
+            [disabled]="formControl.disabled && !operatorLocked()"
+            [autoId]="autoId() ? autoId() + '-operator' : undefined"
+            (chosen)="onOperatorChosen()" />
+        }
         @if (_appearance && _label && !_labelTop) {
           <mat-label class="sd-form-field-label">
             <span>{{ _label }}</span>
@@ -163,47 +177,30 @@
             }
           </mat-select-trigger>
 
-          @if (filtered()) {
-            <div class="c-filter-input-container">
-              <div class="filter-input-wrapper">
-                <sd-icon name="search" aria-hidden="true"></sd-icon>
-                <!-- why: BỎ aria-hidden — đây là ô lọc THẬT, người dùng focus và gõ vào được, nên
-                     aria-hidden chỉ làm screen reader câm. Panel không có <label> nào, nên phải
-                     tự đặt tên bằng aria-label, nếu không AT chỉ đọc "edit text" trống trơn. -->
-                <input
-                  [formControl]="inputControl"
-                  matInput
-                  autocomplete="off"
-                  class="c-search-input"
-                  [attr.aria-label]="'core.form.select.search' | sdTranslate"
-                  (keydown)="focusReadRetry($event); $event.stopPropagation()" />
-              </div>
-            </div>
-          }
-
-          <!-- why: row "Tất cả" KHÔNG phải mat-option thật — nếu là option, giá trị của nó lọt vào
-               formControl.value và keyboard navigation của mat-select. Nhưng nó phải TRÔNG y hệt một
-               option: dùng chính <mat-pseudo-checkbox> + .mdc-list-item__primary-text mà mat-option
-               render, nên ăn cùng scale/margin (rule .sd-multiple) và cùng màu theme (panel mang
-               class mat-primary) — mat-checkbox MDC thật thì lệch cột và ăn accent của theme.
-               Vì pseudo-checkbox là decorative + aria-hidden, chính div mang role/aria/keyboard. -->
-          @if (selectAllVisible()) {
-            @let _selectAllState = selectAllState();
-            <div
-              class="sd-select-all-row"
-              role="checkbox"
-              tabindex="0"
-              [attr.aria-checked]="_selectAllState === 'indeterminate' ? 'mixed' : _selectAllState === 'checked'"
-              [attr.data-autoid]="_autoId ? _autoId + '-select-all' : null"
-              (click)="toggleSelectAll()"
-              (keydown.enter)="toggleSelectAll(); $event.preventDefault()"
-              (keydown.space)="toggleSelectAll(); $event.preventDefault()"
-              (keydown)="$event.stopPropagation()">
-              <mat-pseudo-checkbox
-                class="mat-mdc-option-pseudo-checkbox"
-                [state]="_selectAllState"
-                aria-hidden="true"></mat-pseudo-checkbox>
-              <span class="mdc-list-item__primary-text">{{ 'core.form.select.selectAll' | sdTranslate }}</span>
+          @let _filtered = filtered();
+          @let _selectAllVisible = selectAllVisible();
+          <!-- why: hàng "Tất cả" nằm chung header dính với ô lọc — cuộn danh sách vẫn thấy nó, và chỉ còn một
+               đường chia dưới header. Danh sách không đủ dài để có ô lọc thì header chỉ chứa hàng này. -->
+          @if (_filtered || _selectAllVisible) {
+            <div class="c-filter-input-container" [class.sd-with-select-all]="_selectAllVisible">
+              @if (_filtered) {
+                <sd-search-field class="filter-input-wrapper" size="sm">
+                  <!-- why: BỎ aria-hidden — đây là ô lọc THẬT, người dùng focus và gõ vào được, nên
+                       aria-hidden chỉ làm screen reader câm. Panel không có <label> nào, nên phải
+                       tự đặt tên bằng aria-label, nếu không AT chỉ đọc "edit text" trống trơn. -->
+                  <input
+                    sdSearchFieldInput
+                    [formControl]="inputControl"
+                    matInput
+                    autocomplete="off"
+                    class="c-search-input"
+                    [attr.aria-label]="'core.form.select.search' | sdTranslate"
+                    (keydown)="focusReadRetry($event); $event.stopPropagation()" />
+                </sd-search-field>
+              }
+              @if (_selectAllVisible) {
+                <ng-container [ngTemplateOutlet]="selectAllRow"></ng-container>
+              }
             </div>
           }
 
@@ -296,7 +293,19 @@
         [class.hide-inline-error]="_hideInlineError"
         [class.sd-label-top]="_labelTop"
         [appearance]="_appearance!"
-        [floatLabel]="_floatLabel">
+        [floatLabel]="operatorChip() ? 'always' : _floatLabel">
+        <!-- Operator (thiết kế đợt 2 · G): chip tiền tố khi có từ hai operator. -->
+        @if (operatorChip()) {
+          <sd-operator-chip
+            matPrefix
+            [operators]="operators()"
+            [(operator)]="operator"
+            [size]="size()"
+            [hasValue]="operatorHasValue()"
+            [disabled]="formControl.disabled && !operatorLocked()"
+            [autoId]="autoId() ? autoId() + '-operator' : undefined"
+            (chosen)="onOperatorChosen()" />
+        }
         @if (_appearance && _label && !_labelTop) {
           <mat-label class="sd-form-field-label">
             <span>{{ _label }}</span>
@@ -350,19 +359,19 @@
 
           @if (filtered()) {
             <div class="c-filter-input-container">
-              <div class="filter-input-wrapper">
-                <sd-icon name="search" aria-hidden="true"></sd-icon>
+              <sd-search-field class="filter-input-wrapper" size="sm">
                 <!-- why: BỎ aria-hidden — đây là ô lọc THẬT, người dùng focus và gõ vào được, nên
                      aria-hidden chỉ làm screen reader câm. Panel không có <label> nào, nên phải
                      tự đặt tên bằng aria-label, nếu không AT chỉ đọc "edit text" trống trơn. -->
                 <input
+                  sdSearchFieldInput
                   [formControl]="inputControl"
                   matInput
                   autocomplete="off"
                   class="c-search-input"
                   [attr.aria-label]="'core.form.select.search' | sdTranslate"
                   (keydown)="focusReadRetry($event); $event.stopPropagation()" />
-              </div>
+              </sd-search-field>
             </div>
           }
 
@@ -478,20 +487,61 @@
   }
 </ng-template>
 
+<!-- why: row "Tất cả" KHÔNG phải mat-option thật — nếu là option, giá trị của nó lọt vào
+     formControl.value và keyboard navigation của mat-select. Nhưng nó phải TRÔNG y hệt một
+     option: dùng chính <mat-pseudo-checkbox> + .mdc-list-item__primary-text mà mat-option
+     render, nên ăn cùng scale/margin (rule .sd-multiple) và cùng màu theme (panel mang
+     class mat-primary) — mat-checkbox MDC thật thì lệch cột và ăn accent của theme.
+     Vì pseudo-checkbox là decorative + aria-hidden, chính div mang role/aria/keyboard.
+     Bộ đếm "đã chọn/tổng" chỉ để nhìn (aria-hidden); AT nghe nó qua aria-describedby bằng câu i18n đầy đủ.
+     Câu đó nằm NGOÀI div, vì checkbox lấy tên từ nội dung — đặt bên trong thì tên thành "Tất cả Đã chọn 1/3". -->
+<ng-template #selectAllRow>
+  @let _selectAllState = selectAllState();
+  @let _selectAllCount = selectAllCount();
+  <div
+    class="sd-select-all-row"
+    role="checkbox"
+    tabindex="0"
+    [attr.aria-checked]="_selectAllState === 'indeterminate' ? 'mixed' : _selectAllState === 'checked'"
+    [attr.aria-describedby]="selectAllCountId"
+    [attr.data-autoid]="_autoId ? _autoId + '-select-all' : null"
+    (click)="toggleSelectAll()"
+    (keydown.enter)="toggleSelectAll(); $event.preventDefault()"
+    (keydown.space)="toggleSelectAll(); $event.preventDefault()"
+    (keydown)="$event.stopPropagation()">
+    <mat-pseudo-checkbox class="mat-mdc-option-pseudo-checkbox" [state]="_selectAllState" aria-hidden="true"></mat-pseudo-checkbox>
+    <span class="mdc-list-item__primary-text">{{ 'core.form.select.selectAll' | sdTranslate }}</span>
+    <span class="sd-select-all-count" aria-hidden="true">{{ _selectAllCount.selected }}/{{ _selectAllCount.total }}</span>
+  </div>
+  <span class="sd-visually-hidden" [id]="selectAllCountId">{{ 'core.form.select.selectAllCount' | sdTranslate: _selectAllCount }}</span>
+</ng-template>
+
 <!-- Virtual scroll branch (D-026, D-030 V1). mat-select is only the shell: it gets the value one way
      ([value] + virtualCompareWith) and never a formControl — the component owns the value, the keyboard
      over the whole list and aria-activedescendant. Rows are real mat-options inside a CDK viewport; one
      hidden sentinel option keeps the trigger rendered while the selected rows are scrolled away. -->
 <ng-template #virtualField let-multiple>
   <mat-form-field
-    [sdTooltip]="multiple && _tooltip ? selectionTooltip : ''"
+    [sdTooltip]="multiple && _tooltip && !_panelOpen ? selectionTooltip : ''"
     sdTooltipPosition="top"
     [class.sd-md]="_size === 'md'"
     [class.sd-sm]="_size === 'sm'"
     [class.hide-inline-error]="_hideInlineError"
     [class.sd-label-top]="_labelTop"
     [appearance]="_appearance!"
-    [floatLabel]="_floatLabel">
+    [floatLabel]="operatorChip() ? 'always' : _floatLabel">
+    <!-- Operator (thiết kế đợt 2 · G): chip tiền tố khi có từ hai operator. -->
+    @if (operatorChip()) {
+      <sd-operator-chip
+        matPrefix
+        [operators]="operators()"
+        [(operator)]="operator"
+        [size]="size()"
+        [hasValue]="operatorHasValue()"
+        [disabled]="formControl.disabled && !operatorLocked()"
+        [autoId]="autoId() ? autoId() + '-operator' : undefined"
+        (chosen)="onOperatorChosen()" />
+    }
     @if (_appearance && _label && !_labelTop) {
       <mat-label class="sd-form-field-label">
         <span>{{ _label }}</span>
@@ -540,36 +590,26 @@
         }
       </mat-select-trigger>
 
-      @if (filtered()) {
-        <div class="c-filter-input-container">
-          <div class="filter-input-wrapper">
-            <sd-icon name="search" aria-hidden="true"></sd-icon>
-            <input
-              [formControl]="inputControl"
-              matInput
-              autocomplete="off"
-              class="c-search-input"
-              [attr.aria-label]="'core.form.select.search' | sdTranslate"
-              [attr.aria-activedescendant]="virtualActiveDescendant()"
-              (keydown)="focusReadRetry($event); onVirtualSearchKeydown($event); $event.stopPropagation()" />
-          </div>
-        </div>
-      }
-
-      @if (multiple && selectAllVisible()) {
-        @let _selectAllState = selectAllState();
-        <div
-          class="sd-select-all-row"
-          role="checkbox"
-          tabindex="0"
-          [attr.aria-checked]="_selectAllState === 'indeterminate' ? 'mixed' : _selectAllState === 'checked'"
-          [attr.data-autoid]="_autoId ? _autoId + '-select-all' : null"
-          (click)="toggleSelectAll()"
-          (keydown.enter)="toggleSelectAll(); $event.preventDefault()"
-          (keydown.space)="toggleSelectAll(); $event.preventDefault()"
-          (keydown)="$event.stopPropagation()">
-          <mat-pseudo-checkbox class="mat-mdc-option-pseudo-checkbox" [state]="_selectAllState" aria-hidden="true"></mat-pseudo-checkbox>
-          <span class="mdc-list-item__primary-text">{{ 'core.form.select.selectAll' | sdTranslate }}</span>
+      @let _filtered = filtered();
+      @let _selectAllVisible = multiple && selectAllVisible();
+      @if (_filtered || _selectAllVisible) {
+        <div class="c-filter-input-container" [class.sd-with-select-all]="_selectAllVisible">
+          @if (_filtered) {
+            <sd-search-field class="filter-input-wrapper" size="sm">
+              <input
+                sdSearchFieldInput
+                [formControl]="inputControl"
+                matInput
+                autocomplete="off"
+                class="c-search-input"
+                [attr.aria-label]="'core.form.select.search' | sdTranslate"
+                [attr.aria-activedescendant]="virtualActiveDescendant()"
+                (keydown)="focusReadRetry($event); onVirtualSearchKeydown($event); $event.stopPropagation()" />
+            </sd-search-field>
+          }
+          @if (_selectAllVisible) {
+            <ng-container [ngTemplateOutlet]="selectAllRow"></ng-container>
+          }
         </div>
       }
 

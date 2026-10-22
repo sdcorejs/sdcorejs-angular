@@ -1,16 +1,32 @@
 @let _size = size();
 <div
   class="sd-avatar"
+  sdTooltipPosition="top"
+  [sdTooltip]="tooltipText()"
   [style.width.px]="_size"
   [style.height.px]="_size"
   [style.line-height.px]="_size"
   [style.backgroundColor]="bgColor()"
   [style.color]="textColor()">
   @if (isUrl()) {
-    <img [src]="src()" (error)="handleError()" alt="avatar" />
+    <!-- why: alt rỗng — tên đã nằm ở aria-label của host, đặt lại ở ảnh thì screen reader đọc lặp. -->
+    <img [src]="src()" (error)="handleError()" alt="" />
   } @else {
     <span class="sd-avatar-text" [style.fontSize.px]="_size / 2.5">
       {{ initials() }}
     </span>
   }
 </div>
+<!-- why: .sd-avatar cắt nội dung (overflow hidden) nên chấm là phần tử anh em, đặt tuyệt đối trên host. Span mang
+     vòng viền (nền --sd-avatar-status-ring, dày bằng padding) và báo đường kính cho chấm của sd-badge. -->
+@if (status(); as _status) {
+  @let _offset = statusOffset();
+  <span
+    class="sd-avatar__status"
+    [style.--sd-badge-dot-size]="statusDotSize() + 'px'"
+    [style.padding.px]="statusRingWidth()"
+    [style.right.px]="_offset"
+    [style.bottom.px]="_offset">
+    <sd-badge type="dot" [color]="_status" [title]="statusLabel()" [pulse]="statusPulse()" />
+  </span>
+}

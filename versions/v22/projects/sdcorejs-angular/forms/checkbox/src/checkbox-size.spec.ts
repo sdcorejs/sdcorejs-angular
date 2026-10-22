@@ -38,16 +38,18 @@ describe('SdCheckbox size', () => {
     material.indeterminate = true;
     control.formControl.markAsTouched();
     control.formControl.setErrors({ custom: true });
-    for (const [size, box, layer, gap] of [
-      ['sm', 14, 32, 2],
-      ['md', 18, 40, 4],
-      ['lg', 22, 48, 6],
+    // Bo góc khoảng 22% cạnh (thiết kế đợt 2 · E): đủ cùng họ với ô nhập mà vẫn giữ dáng vuông.
+    for (const [size, box, layer, gap, radius] of [
+      ['sm', 14, 32, 2, 3],
+      ['md', 18, 40, 4, 4],
+      ['lg', 22, 48, 6, 5],
     ] as const) {
       fixture.componentInstance.size = size;
       fixture.detectChanges();
       expect(element.querySelector('sd-checkbox')!.getAttribute('data-size')).toBe(size);
       expect(rect('.mdc-checkbox__background').width).toBe(box);
       expect(rect('.mdc-checkbox__background').height).toBe(box);
+      expect(getComputedStyle(element.querySelector('.mdc-checkbox__background')!).borderTopLeftRadius).toBe(`${radius}px`);
       // why: Material xoay checkmark 45deg khi indeterminate; đo width trước transform.
       expect(getComputedStyle(element.querySelector('.mdc-checkbox__checkmark')!).width).toBe(`${box - 4}px`);
       expect(rect('.mdc-checkbox__mixedmark').width).toBe(box - 4);

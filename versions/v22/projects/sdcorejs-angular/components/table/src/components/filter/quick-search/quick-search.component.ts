@@ -14,9 +14,9 @@ import {
 } from '@angular/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdViewportService } from '@sdcorejs/angular/services/viewport';
+import { ɵSdSearchField, ɵSdSearchFieldInputDirective } from '@sdcorejs/angular/forms/directives';
 import { SdSelect } from '@sdcorejs/angular/forms/select';
 import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
-import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { FilterValuesPipe } from '../../../pipes';
 import {
@@ -31,7 +31,16 @@ import { quickSearchValid, sameQuickSearchValue } from '../../../services/table-
   selector: 'sd-table-quick-search',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AsyncPipe, NgTemplateOutlet, MatTooltipModule, SdSelect, SdIcon, SdTranslatePipe, FilterValuesPipe],
+  imports: [
+    AsyncPipe,
+    NgTemplateOutlet,
+    MatTooltipModule,
+    SdSelect,
+    SdTranslatePipe,
+    FilterValuesPipe,
+    ɵSdSearchField,
+    ɵSdSearchFieldInputDirective,
+  ],
   templateUrl: './quick-search.component.html',
   styleUrl: './quick-search.component.scss',
 })

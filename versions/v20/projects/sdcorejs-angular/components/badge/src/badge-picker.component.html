@@ -1,0 +1,260 @@
+@let _value = value();
+@let _label = label();
+@let _helperText = helperText();
+@let _appearance = appearance();
+@let _size = size();
+@let _required = required();
+@let _open = isOpen();
+@let _state = connectorState();
+@let _disabled = _state.disabled;
+@let _errorMessage = visibleErrorMessage();
+@let _hideInlineError = hideInlineError();
+@let _labelTop = labelPlacement() === 'top';
+@let _autoId = autoId();
+@let _previewTitle = effectivePreviewTitle();
+@let _pairLabel = pairLabel();
+
+@if (_state.isViewed) {
+  <!-- Chỉ xem: nhãn và badge, không có ô. -->
+  <sd-view class="sd-badge-picker__view" data-badge-picker-view [label]="_label" [value]="_value" [display]="summary()" [valueTemplate]="viewValue" />
+  <ng-template #viewValue>
+    @if (_value) {
+      <sd-badge [type]="_value.type" [color]="_value.color" [icon]="iconOf(_value)" [title]="_previewTitle" [label]="_pairLabel" />
+    } @else {
+      —
+    }
+  </ng-template>
+} @else {
+  @if (!_appearance || _labelTop) {
+    @if (_label) {
+      <sd-label [label]="_label" [required]="_required"></sd-label>
+    }
+  }
+
+  <mat-form-field
+    [class.sd-md]="_size === 'md'"
+    [class.sd-sm]="_size === 'sm'"
+    [class.hide-inline-error]="_hideInlineError"
+    [class.sd-label-top]="_labelTop"
+    [appearance]="_appearance!"
+    [floatLabel]="floatLabel()">
+    @if (_appearance && _label && !_labelTop) {
+      <mat-label class="sd-form-field-label">
+        <span>{{ _label }}</span>
+        @if (_helperText) {
+          <sd-icon [matTooltip]="_helperText" matTooltipPosition="below" name="info"></sd-icon>
+        }
+      </mat-label>
+    }
+
+    <!-- why: trigger là div role="combobox" mang MatFormFieldControl (ɵSdBadgePickerControl) chứ không phải
+         <input readonly> như tree-select: nó phải chứa chính sd-badge đã chọn và dòng tóm tắt. -->
+    <div
+      #trigger
+      #control="sdBadgePickerControl"
+      sdBadgePickerControl
+      data-badge-picker-trigger
+      class="sd-badge-picker__trigger"
+      role="combobox"
+      aria-haspopup="dialog"
+      [attr.tabindex]="_disabled ? -1 : 0"
+      [attr.aria-expanded]="_open"
+      [attr.aria-controls]="_open ? panelId : null"
+      [attr.aria-label]="_label || effectivePlaceholder()"
+      [attr.aria-describedby]="control.describedBy()"
+      [attr.aria-invalid]="_errorMessage ? 'true' : null"
+      [attr.aria-required]="_required ? 'true' : null"
+      [attr.aria-disabled]="_disabled ? 'true' : null"
+      [attr.data-autoid]="_autoId"
+      (click)="toggle()"
+      (keydown)="onTriggerKeydown($event)"
+      (focus)="triggerFocused.set(true)"
+      (blur)="triggerFocused.set(false)">
+      @if (_value) {
+        <sd-badge
+          [type]="_value.type"
+          [color]="_value.color"
+          [icon]="iconOf(_value)"
+          [title]="_previewTitle"
+          [label]="_pairLabel"
+          [size]="triggerBadgeSize()" />
+        @if (_size !== 'sm') {
+          <span class="sd-badge-picker__summary">{{ summary() }}</span>
+        }
+      } @else if (showPlaceholder()) {
+        <span class="sd-badge-picker__placeholder">{{ effectivePlaceholder() }}</span>
+      }
+    </div>
+
+    @if (_hideInlineError && _errorMessage) {
+      <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
+    }
+    <sd-icon matSuffix class="sd-suffix-icon cursor-pointer" [name]="_open ? 'keyboard_arrow_up' : 'keyboard_arrow_down'"></sd-icon>
+
+    @if (!_hideInlineError && _errorMessage) {
+      <mat-error [id]="errorId">{{ _errorMessage }}</mat-error>
+    } @else if (_labelTop && _helperText) {
+      <mat-hint [id]="hintId">{{ _helperText }}</mat-hint>
+    }
+  </mat-form-field>
+}
+
+<ng-template
+  cdkConnectedOverlay
+  [cdkConnectedOverlayOrigin]="overlayOrigin()!"
+  [cdkConnectedOverlayOpen]="_open"
+  [cdkConnectedOverlayPositions]="positions"
+  [cdkConnectedOverlayDisableClose]="true"
+  [cdkConnectedOverlayPush]="true"
+  [cdkConnectedOverlayViewportMargin]="8"
+  cdkConnectedOverlayPanelClass="sd-badge-picker-pane"
+  (attach)="onAttach()"
+  (overlayOutsideClick)="onOutsideClick($event)"
+  (overlayKeydown)="onOverlayKeydown($event)">
+  @let _draft = draft();
+  <div
+    #panel
+    class="sd-badge-picker-panel"
+    role="dialog"
+    [id]="panelId"
+    [attr.aria-label]="_label || effectivePlaceholder()"
+    [attr.data-autoid]="_autoId ? _autoId + '-panel' : null"
+    (keydown)="onPanelKeydown($event)">
+    <div class="sd-badge-picker-panel__preview">
+      <span class="sd-badge-picker-panel__eyebrow">{{ 'core.component.badge.picker.preview' | sdTranslate }}</span>
+      <div class="sd-badge-picker-panel__preview-badge">
+        <sd-badge
+          [type]="_draft.type"
+          [color]="_draft.color"
+          [icon]="iconOf(_draft)"
+          [title]="_previewTitle"
+          [label]="_pairLabel"
+          [description]="previewDescriptionShown()" />
+        @if (showDescriptionHint()) {
+          <span class="sd-badge-picker-panel__hint">{{ 'core.component.badge.picker.description-hint' | sdTranslate }}</span>
+        }
+      </div>
+    </div>
+
+    <div class="sd-badge-picker-panel__body">
+      <!-- why: mỗi nhóm là một radiogroup với một tab stop (radio đang chọn); mũi tên chỉ di chuyển focus,
+           Enter/Space (click của <button>) mới chọn — như thiết kế. -->
+      <section class="sd-badge-picker-panel__group">
+        <span class="sd-badge-picker-panel__eyebrow" [id]="typeGroupId">{{ 'core.component.badge.picker.type' | sdTranslate }}</span>
+        <div class="sd-badge-picker-panel__types" role="radiogroup" [attr.aria-labelledby]="typeGroupId">
+          @for (option of typeOptions(); track option.value) {
+            @let _checked = option.value === _draft.type;
+            <button
+              type="button"
+              role="radio"
+              class="sd-badge-picker-panel__type"
+              [attr.data-badge-picker-type]="option.value"
+              [attr.aria-checked]="_checked"
+              [attr.aria-label]="option.label"
+              [attr.tabindex]="_checked ? 0 : -1"
+              (keydown)="onRadioKeydown($event, 3)"
+              (click)="setDraftType(option.value)">
+              <span class="sd-badge-picker-panel__type-preview" aria-hidden="true">
+                <sd-badge
+                  [type]="option.value"
+                  [color]="_draft.color"
+                  [icon]="iconOf({ type: option.value, color: _draft.color, icon: _draft.icon })"
+                  [title]="_previewTitle"
+                  [label]="_pairLabel" />
+              </span>
+              <span class="sd-badge-picker-panel__type-name">{{ option.label }}</span>
+            </button>
+          }
+        </div>
+      </section>
+
+      <section class="sd-badge-picker-panel__group">
+        <div class="sd-badge-picker-panel__group-head">
+          <span class="sd-badge-picker-panel__eyebrow" [id]="colorGroupId">{{ 'core.component.badge.picker.color' | sdTranslate }}</span>
+          <span class="sd-badge-picker-panel__color-name">{{ colorLabel(_draft.color) }}</span>
+        </div>
+        <div class="sd-badge-picker-panel__swatches" role="radiogroup" [attr.aria-labelledby]="colorGroupId">
+          @for (option of colorOptions(); track option.value) {
+            @let _checked = option.value === _draft.color;
+            <button
+              type="button"
+              role="radio"
+              class="sd-badge-picker-panel__swatch"
+              [style.background-color]="'var(--sd-' + option.value + ')'"
+              [attr.data-badge-picker-color]="option.value"
+              [attr.aria-checked]="_checked"
+              [attr.aria-label]="option.label"
+              [attr.tabindex]="_checked ? 0 : -1"
+              (keydown)="onRadioKeydown($event, colorOptions().length)"
+              (click)="setDraftColor(option.value)"></button>
+          }
+        </div>
+      </section>
+
+      @if (draftHasIcon()) {
+        @let _iconTabStop = iconTabStop();
+        <section class="sd-badge-picker-panel__group" data-badge-picker-icons>
+          <span class="sd-badge-picker-panel__eyebrow" [id]="iconGroupId">{{ 'core.component.badge.picker.icon' | sdTranslate }}</span>
+          <sd-search-field size="sm">
+            <input
+              sdSearchFieldInput
+              type="text"
+              autocomplete="off"
+              [value]="iconQuery()"
+              [placeholder]="'core.form.select.search' | sdTranslate"
+              [attr.aria-label]="'core.form.select.search' | sdTranslate"
+              [attr.data-autoid]="_autoId ? _autoId + '-search' : null"
+              (input)="onIconQuery($event)" />
+          </sd-search-field>
+          <div class="sd-badge-picker-panel__icons" role="radiogroup" [attr.aria-labelledby]="iconGroupId">
+            <button
+              type="button"
+              role="radio"
+              class="sd-badge-picker-panel__icon-cell sd-badge-picker-panel__icon-cell--none"
+              data-badge-picker-icon-none
+              [attr.aria-checked]="!_draft.icon"
+              [attr.aria-label]="noneIconLabel()"
+              [attr.tabindex]="_iconTabStop === null ? 0 : -1"
+              (keydown)="onRadioKeydown($event, 8)"
+              (click)="setDraftIcon(null)">
+              <sd-icon [name]="_draft.type === 'icon' ? 'fiber_manual_record' : 'block'" size="20px" aria-hidden="true" />
+            </button>
+            @for (name of filteredIcons(); track name) {
+              <button
+                type="button"
+                role="radio"
+                class="sd-badge-picker-panel__icon-cell"
+                [attr.data-badge-picker-icon]="name"
+                [attr.aria-checked]="name === _draft.icon"
+                [attr.aria-label]="name"
+                [attr.tabindex]="name === _iconTabStop ? 0 : -1"
+                (keydown)="onRadioKeydown($event, 8)"
+                (click)="setDraftIcon(name)">
+                <sd-icon [name]="name" size="20px" aria-hidden="true" />
+              </button>
+            }
+          </div>
+          @if (!filteredIcons().length) {
+            <p class="sd-badge-picker-panel__empty">{{ 'core.component.badge.picker.no-icon-match' | sdTranslate }}</p>
+          }
+        </section>
+      }
+    </div>
+
+    <div class="sd-badge-picker-panel__footer">
+      @let _escHint = escHint();
+      <!-- Phím Esc vẽ như nắp phím trong câu đã dịch (`{key}` của i18n); catalog không có `{key}` thì chỉ hiện chữ. -->
+      <span class="sd-badge-picker-panel__esc"
+        >{{ _escHint[0] }}@if (_escHint.length > 1) {<kbd class="sd-badge-picker-panel__kbd">Esc</kbd>{{ _escHint[1] }}}</span
+      >
+      <sd-button
+        data-badge-picker-done
+        type="fill"
+        color="primary"
+        size="sm"
+        [autoId]="autoIdInput() ? autoIdInput() + '-done' : undefined"
+        [title]="'core.component.badge.picker.done' | sdTranslate"
+        (click)="done()"></sd-button>
+    </div>
+  </div>
+</ng-template>

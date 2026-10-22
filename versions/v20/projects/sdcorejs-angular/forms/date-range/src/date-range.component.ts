@@ -14,6 +14,9 @@ import {
   TemplateRef,
   viewChild,
   contentChild,
+  ElementRef,
+  Injector,
+  afterNextRender,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidationErrors, ValidatorFn } from '@angular/forms';
@@ -46,9 +49,10 @@ import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import { DateUtilities } from '@sdcorejs/utils/fns';
 import { BrowserUtilities, Utilities } from '@sdcorejs/utils/fns';
-import { Size } from '@sdcorejs/utils/models';
+import { Operator, Size } from '@sdcorejs/utils/models';
 import { parse as parseDate } from 'date-fns';
 import { enUS as dfEnUS } from 'date-fns/locale';
+import { ɵSdOperatorChip, ɵsdIsNoDataOperator, ɵsdOperatorHasValue, ɵsdSingleOperator } from '@sdcorejs/angular/components/operator';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 export interface SdDateRangeValue {
@@ -123,6 +127,7 @@ function rangeIsComplete(value: unknown): boolean {
   ],
   standalone: true,
   imports: [
+    ɵSdOperatorChip,
     SdIcon,
     CommonModule,
     FormsModule,
@@ -203,6 +208,42 @@ export class SdDateRange {
   name = input<string>(Utilities.generateUuid());
 
   size = input<Size>('md');
+
+  /**
+   * Operator cho phép trong chip tiền tố của ô (thiết kế đợt 2 · G), theo thứ tự hiển thị. Từ hai operator
+   * thì chip hiện; đúng một thì control dùng luôn operator đó và không hiện chip.
+   */
+  readonly operators = input<readonly Operator[]>([]);
+  /** Operator hiện tại — `[(operator)]`. Đổi operator không xoá giá trị; nút xoá chỉ xoá giá trị. */
+  readonly operator = model<Operator | undefined>(undefined);
+  protected readonly operatorChip = computed(() => this.operators().length > 1);
+  protected readonly operatorHasValue = computed(() => ɵsdOperatorHasValue(this.valueModel()));
+  readonly #singleOperator = ɵsdSingleOperator(this.operators, this.operator);
+  /**
+   * NULL / NOT_NULL không cần giá trị: chọn trong chip thì xoá giá trị, ô bị khoá (disabled) tới khi đổi sang
+   * operator khác; chip vẫn dùng được.
+   */
+  protected readonly operatorLocked = computed(() => this.operators().length > 0 && ɵsdIsNoDataOperator(this.operator()));
+  // why: query signal không đặt được trên field ES private (#).
+  private readonly operatorChipRef = viewChild(ɵSdOperatorChip);
+  readonly #operatorInjector = inject(Injector);
+  // why: query signal không đặt được trên field ES private (#).
+  private readonly startInput = viewChild<ElementRef<HTMLInputElement>>('startInput');
+
+  /**
+   * Chọn xong operator trong chip (thiết kế đợt 2 · G): focus về ô nhập. NULL / NOT_NULL thì xoá giá trị và giữ focus
+   * ở chip. why: xoá ngay trong handler chọn (không trong effect) để giá trị two-way của cha đổi trong event, không
+   * đổi giữa lượt change detection.
+   */
+  protected onOperatorChosen(): void {
+    if (this.operatorLocked()) {
+      if (this.operatorHasValue()) this.clear();
+      this.operatorChipRef()?.focus();
+      return;
+    }
+    // why: ô vừa mở khoá chỉ enable sau lượt render tới (effect disabled), focus ngay sẽ hụt.
+    afterNextRender(() => this.startInput()?.nativeElement.focus(), { injector: this.#operatorInjector });
+  }
   // Ghi (TransformT): any (để không bị lỗi typing khi cha truyền vào)
   form = input<FormGroup | undefined, any>(undefined, {
     transform: (val: any): FormGroup | undefined => {
@@ -343,14 +384,14 @@ export class SdDateRange {
     name: computed(() => undefined),
     control: computed(() => this.control1),
     required: this.required,
-    disabled: this.disabled,
+    disabled: computed(() => this.disabled() || this.operatorLocked()),
   });
   readonly #toConnector = ɵsdFormControlConnector<unknown, unknown>({
     form: this.form,
     name: computed(() => undefined),
     control: computed(() => this.control2),
     required: this.required,
-    disabled: this.disabled,
+    disabled: computed(() => this.disabled() || this.operatorLocked()),
   });
 
   /**
@@ -406,7 +447,7 @@ export class SdDateRange {
     control: computed(() => this.formControl),
     registeredControl: this.#modelFacing.registered,
     validators: this.#validators,
-    disabled: this.disabled,
+    disabled: computed(() => this.disabled() || this.operatorLocked()),
   });
 
   #isFocus = false;

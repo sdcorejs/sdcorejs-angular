@@ -37,18 +37,17 @@
 
 @if (_tab === 'components') {
   <div class="fb-palette" role="tabpanel" [id]="uid + '-panel'" [attr.aria-labelledby]="uid + '-components'">
-    <label class="fb-search">
-      <sd-icon name="search" size="18px"></sd-icon>
+    <sd-search-field class="fb-search" size="sm">
       <input
         #searchInput
+        sdSearchFieldInput
         type="search"
-        class="fb-search__input"
         [value]="search()"
         [placeholder]="'core.component.form-builder.search-components' | sdTranslate"
         [attr.aria-label]="'core.component.form-builder.search-components' | sdTranslate"
         (input)="search.set($any($event.target).value)"
         (keydown.escape)="clearSearch($event)" />
-    </label>
+    </sd-search-field>
 
     @let _target = target();
     <div class="fb-target" aria-live="polite">

@@ -4,6 +4,7 @@ import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-pa
 import { ButtonColorsExampleComponent } from './examples/button-colors.example';
 import { ButtonIconOnlyExampleComponent } from './examples/button-icon-only.example';
 import { ButtonIconSetExampleComponent } from './examples/button-icon-set.example';
+import { ButtonIndicatorExampleComponent } from './examples/button-indicator.example';
 import { ButtonSecondaryBlackExampleComponent } from './examples/button-secondary-black.example';
 import { ButtonSizesExampleComponent } from './examples/button-sizes.example';
 import { ButtonStatesExampleComponent } from './examples/button-states.example';
@@ -23,6 +24,7 @@ import { ButtonVariantsExampleComponent } from './examples/button-variants.examp
     ButtonIconSetExampleComponent,
     ButtonStatesExampleComponent,
     ButtonActionPopoverExampleComponent,
+    ButtonIndicatorExampleComponent,
   ],
   template: `<demo-page
     #demoPage
@@ -113,6 +115,22 @@ import { ButtonVariantsExampleComponent } from './examples/button-variants.examp
           { name: 'block', value: 'true' },
         ]">
         <app-button-states-example></app-button-states-example>
+      </demo-section>
+    }
+    @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-indicator') {
+      <demo-section
+        heading="Indicator"
+        data-example-typescript="./examples/button-indicator.example.ts"
+        data-example-template="./examples/button-indicator.example.html"
+        data-example-style="./examples/button-example.scss"
+        [props]="[
+          { name: 'indicator', value: 'true / number' },
+          { name: 'indicatorColor', value: 'error / primary / success / info' },
+          { name: 'indicatorMax', value: '9' },
+          { name: 'indicatorLabel', value: 'text' },
+        ]"
+        note="Chấm hoặc số ở góc trên phải, không đổi kích thước nút. Số lớn hơn indicatorMax hiện {max}+; indicatorLabel nối vào aria-describedby.">
+        <app-button-indicator-example></app-button-indicator-example>
       </demo-section>
     }
   </demo-page>`,
