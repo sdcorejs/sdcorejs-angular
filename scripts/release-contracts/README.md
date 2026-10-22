@@ -1,5 +1,32 @@
 # Reviewed release snapshots
 
+## Release 3.2
+
+`3.2.json` compares all four candidates with their same-major published `*.3.1`
+baseline. Candidates are the actual `19.3.2` / `20.3.2` / `21.3.2` / `22.3.2`
+tarballs staged by the official `deploy.ps1 -PatchVersion 3.2 -DryRun` from source
+`1fe7b69e753aa8d2cffba0c59f098ea58afd51ea` with exact Node `22.22.3` (portable
+Windows build, SHA-256 checked against the nodejs.org `SHASUMS256.txt`; npm `10.9.8`).
+The snapshot was then checked by `release-package-contract.mjs --compile-consumers`
+against those artifacts. The canonical surface fingerprint reader excludes only
+`version` and `frameworkMajor`.
+
+The export map adds `./assets/*`, `components/editor-engine`, `components/window`,
+`modules/generic` and `services/date-time`; no export is removed. Dependencies move
+`@sdcorejs/utils` from `1.2.5` to `1.3.1`, drop `@ckeditor/ckeditor5-angular` and
+`ckeditor5`, and add the Tiptap `3.31.4` packages, `@floating-ui/dom` `1.8.0` and
+`parse5` `7.3.0`, as the changelog documents. Angular 19 adds 103 packed files and
+drops six internal deep-path declarations (the old CKEditor image-upload plugin, the
+modal-resizable registry and the chip-calendar removable pipe), none of them an entry
+point; later Angular lines add 25 bundled declaration entries. Peers and engines are
+unchanged for each line.
+
+The source and declaration changes cover design handoff waves 1–3, Sidebar V4 and the
+context switcher, the generic CRUD module, form-generic static elements and buttons,
+the configured time zone, unknown-total table pagination, the Tiptap editor engine and
+the chip calendar. They must be independently reviewed with this snapshot; CI never
+regenerates expectations.
+
 ## Release 3.1
 
 `3.1.json` compares all four candidates with their exact same-major published
