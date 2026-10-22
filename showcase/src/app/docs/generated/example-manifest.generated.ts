@@ -279,6 +279,11 @@ export type ShowcaseExampleSourceKey =
   | "forms/checkbox/example-trang-thai"
   | "forms/chip-calendar/example-bat-buoc-so-toi-thieu"
   | "forms/chip-calendar/example-chinh-sua-noi-tuyen"
+  | "forms/chip-calendar/example-gioi-han-ngay-va-so-luong"
+  | "forms/chip-calendar/example-gon-trong-bo-loc-bang"
+  | "forms/chip-calendar/example-khoa-ngay-da-qua"
+  | "forms/chip-calendar/example-kich-thuoc"
+  | "forms/chip-calendar/example-kieu-model-va-transform"
   | "forms/chip-calendar/example-lien-ket-hai-chieu"
   | "forms/chip-calendar/example-vo-hieu-hoa"
   | "forms/chip/example-bat-buoc-so-toi-thieu"
@@ -2421,11 +2426,46 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Mở lịch và chọn nhiều ngày.",
   },
   {
+    sourceKey: "forms/chip-calendar/example-kich-thuoc",
+    pageKey: "forms/chip-calendar",
+    sectionId: "example-kich-thuoc",
+    title: "Kích thước",
+    description: "Field một dòng 32 / 40 / 48px, chip 20 / 24 / 28px.",
+  },
+  {
     sourceKey: "forms/chip-calendar/example-bat-buoc-so-toi-thieu",
     pageKey: "forms/chip-calendar",
     sectionId: "example-bat-buoc-so-toi-thieu",
     title: "Bắt buộc & số tối thiểu",
-    description: "Cần tối thiểu 3 ngày. Bấm Kiểm tra để xem lỗi.",
+    description: "Cần tối thiểu 3 ngày. Lỗi hiện khi đóng lịch hoặc bấm Kiểm tra.",
+  },
+  {
+    sourceKey: "forms/chip-calendar/example-gioi-han-ngay-va-so-luong",
+    pageKey: "forms/chip-calendar",
+    sectionId: "example-gioi-han-ngay-va-so-luong",
+    title: "Giới hạn ngày và số lượng",
+    description: "Chỉ chọn ngày làm việc từ hôm nay, tối đa 3 ngày. Đủ 3 ngày thì các ô còn lại bị khoá.",
+  },
+  {
+    sourceKey: "forms/chip-calendar/example-khoa-ngay-da-qua",
+    pageKey: "forms/chip-calendar",
+    sectionId: "example-khoa-ngay-da-qua",
+    title: "Khoá ngày đã qua",
+    description: "Ngày đã qua hiện ổ khoá thay cho ✕; Backspace, bấm lại trên lịch và Xoá hết đều giữ lại.",
+  },
+  {
+    sourceKey: "forms/chip-calendar/example-gon-trong-bo-loc-bang",
+    pageKey: "forms/chip-calendar",
+    sectionId: "example-gon-trong-bo-loc-bang",
+    title: "Gọn trong bộ lọc bảng",
+    description: "Chỉ hiện 2 chip đầu, phần còn lại gộp vào “+N”; mở lịch thì hiện đủ.",
+  },
+  {
+    sourceKey: "forms/chip-calendar/example-kieu-model-va-transform",
+    pageKey: "forms/chip-calendar",
+    sectionId: "example-kieu-model-va-transform",
+    title: "Kiểu model và transform",
+    description: "Model nhận Date, timestamp, chuỗi ISO lẫn yyyy/MM/dd; sau thao tác đầu, model là string[] theo transform.",
   },
   {
     sourceKey: "forms/chip-calendar/example-vo-hieu-hoa",

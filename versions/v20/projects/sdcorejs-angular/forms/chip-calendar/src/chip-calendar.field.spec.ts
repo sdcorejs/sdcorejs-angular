@@ -92,6 +92,15 @@ describe('SdChipCalendar · design handoff step 3 · field', () => {
       create({ model: [] });
       expect(el().querySelector('input')!.getAttribute('placeholder')).toBe(i18n.t('core.form.chip-calendar.placeholder'));
     });
+
+    // Design handoff · field: the placeholder only shows while no day is chosen, like the prototype.
+    it('shows the placeholder only while no day is chosen', () => {
+      create({ model: ['2031/10/05'], placeholder: 'Chọn ngày nghỉ' });
+      expect(el().querySelector('input')!.getAttribute('placeholder') ?? '').toBe('');
+      fixture.componentRef.setInput('model', []);
+      fixture.detectChanges();
+      expect(el().querySelector('input')!.getAttribute('placeholder')).toBe('Chọn ngày nghỉ');
+    });
   });
 
   describe('B2 / C3 · chips', () => {
@@ -154,7 +163,7 @@ describe('SdChipCalendar · design handoff step 3 · field', () => {
 })
 class SizeHost {
   size: Size = 'md';
-  model = ['2031/10/05'];
+  model: string[] = ['2031/10/05'];
 }
 
 describe('SdChipCalendar · design handoff step 3 · size scale (C2)', () => {
@@ -185,6 +194,19 @@ describe('SdChipCalendar · design handoff step 3 · size scale (C2)', () => {
         .toBeLessThanOrEqual(1);
     });
   }
+
+  // why: Material cho ô nhập chip `flex: 1 0 150px`, nên ba chip trong ô 420px đã đẩy ô nhập xuống dòng hai (field 2 dòng
+  // dù chip còn vừa). Ô nhập chỉ lấp phần còn lại của dòng.
+  it('keeps three chips and the input on one line', async () => {
+    const fixture = TestBed.createComponent(SizeHost);
+    fixture.componentInstance.model = ['2031/10/05', '2031/10/12', '2031/10/27'];
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const wrapper = fixture.nativeElement.querySelector('.mat-mdc-text-field-wrapper') as HTMLElement;
+    expect(fixture.nativeElement.querySelectorAll('mat-chip-row').length).toBe(3);
+    expect(wrapper.getBoundingClientRect().height).withContext('field').toBeCloseTo(40, 0);
+  });
 
   // why: `MatFormField._textField` là view query, chỉ có sau khi view của form-field dựng xong. Origin đọc quá sớm rơi về
   // cả `mat-form-field` (gồm dòng subscript ~20px) nên popup mở bên dưới cách viền ~26px thay vì 6px. Khung Karma quá thấp để

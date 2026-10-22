@@ -788,7 +788,7 @@ const FORM_PAGES = [
     publishedDocId: 'forms/chip-calendar/sd-chip-calendar',
     keywords: ['multiple dates', 'calendar', 'chips', 'schedule'],
     status: 'stable',
-    demoSectionCount: 4,
+    demoSectionCount: 9,
     loadComponent: () => import('../../pages/forms/chip-calendar/chip-calendar-demo.component').then(m => m.ChipCalendarDemoComponent),
   }),
   defineDocPage({

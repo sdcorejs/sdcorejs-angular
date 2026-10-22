@@ -18,50 +18,17 @@
   padding-top: 0;
 }
 
-:host ::ng-deep {
-  .mat-mdc-form-field {
-    // Bỏ padding nếu disableError
-    &.no-padding-wrapper {
-      .mat-mdc-text-field-wrapper {
-        padding-bottom: 0;
-      }
-    }
-  }
-
-  mat-form-field {
-    &.c-md {
-      .mat-mdc-standard-chip {
-        padding: 7px 10px;
-        min-height: 26px;
-
-        .mat-mdc-chip-trailing-icon {
-          padding-top: 7px;
-          padding-bottom: 7px;
-          padding-right: 7px;
-          padding-left: 10px;
-        }
-      }
-    }
-  }
-}
-
 /* CSS sdViewDef */
 .sd-view {
   &:not(.c-focused):not(.c-disabled) {
     &:hover {
-      background-color: var(--sd-chip-calendar-bg, #ebecf0);
+      background-color: var(--sd-chip-calendar-bg);
     }
   }
 }
 
 mat-form-field {
   width: 100%;
-}
-
-mat-chip-listbox {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
 }
 
 // why: mặt sdViewDef giờ là phần tử role="button" + tabindex=0 (bàn phím mở được đúng như
@@ -218,6 +185,24 @@ mat-chip-listbox {
     outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
     outline-offset: 1px;
   }
+
+  // why: forced colors bỏ nền primary của ô đã chọn, chỉ còn chữ đậm. Ô đã chọn dùng Highlight / HighlightText như lựa
+  // chọn hệ thống; ô khoá để trình duyệt ép màu (nền focus của ô active là màu tác giả), chữ và viền GrayText. Ô của
+  // Material không có viền sẵn nên khai đủ `border`.
+  @media (forced-colors: active) {
+    .mat-calendar-body-cell.sd-chip-calendar-selected > .mat-calendar-body-cell-content {
+      forced-color-adjust: none;
+      background-color: Highlight;
+      color: HighlightText;
+    }
+
+    .mat-calendar-body-cell.sd-chip-calendar-locked > .mat-calendar-body-cell-content {
+      forced-color-adjust: auto;
+      border: 1px solid GrayText;
+      background-color: Canvas;
+      color: GrayText;
+    }
+  }
 }
 
 // ── Field (thiết kế 2) ─────────────────────────────────────────────────────────────────────────────────────────────
@@ -275,10 +260,14 @@ mat-chip-listbox {
     margin: 0;
   }
 
-  // why: rule chung của core/form.scss cho input trong infix (margin-top 10px, 0,4,1) phải thua ở đây.
+  // why: rule chung của core/form.scss cho input trong infix (margin-top 10px, 0,4,1) phải thua ở đây. Material cho ô nhập
+  // `flex: 1 0 150px` nên nó rớt xuống dòng mới dù chip còn vừa một dòng; ô nhập chỉ readonly (nhận focus và phím mở popup),
+  // nên nó lấp phần còn lại của dòng và co về 0 khi hết chỗ. Khe 4px đã có từ `gap`.
   .mat-mdc-form-field-infix input.mat-mdc-chip-input.mat-mdc-input-element {
+    flex: 1 1 0;
+    min-width: 0;
     height: var(--sd-chip-calendar-chip-height);
-    margin: 0 0 0 4px;
+    margin: 0;
   }
 
   // Chip: bo 6px, viền --sd-border, nền surface, chữ 400 tabular-nums một dòng; khe chữ–icon 2px, đệm cuối 3px.

@@ -36,13 +36,11 @@ import {
   ValidatorFn,
   Validators,
 } from '@angular/forms';
-import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatChipsModule } from '@angular/material/chips';
 import { ErrorStateMatcher, MatNativeDateModule } from '@angular/material/core';
 import { MatCalendar, MatDatepickerModule } from '@angular/material/datepicker';
 import { FloatLabelType, MatFormField, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdView } from '@sdcorejs/angular/components/view';
@@ -125,8 +123,6 @@ function dayToDate(day: string): Date {
     MatInputModule,
     MatTooltipModule,
     MatFormFieldModule,
-    MatAutocompleteModule,
-    MatProgressSpinnerModule,
     MatChipsModule,
     MatDatepickerModule,
     MatNativeDateModule,
@@ -153,7 +149,6 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
   readonly #timers = ɵsdTimerScope();
   #subscription = new Subscription();
   #name = Utilities.generateUuid();
-  #isBlurring = false;
   #warnedUnreadable = false;
   #warnedDeprecated = false;
   /** why: id ổn định của <mat-error> để ô nhập chip trỏ `aria-describedby` sang — thông báo
@@ -402,8 +397,10 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
       .map(day => this.formatDay(day))
       .join(', ')
   );
-  /** Placeholder: the input, else “Chọn ngày” — no longer the label (B1). */
-  readonly effectivePlaceholder = computed(() => this.placeholder() || this.#i18n.t('core.form.chip-calendar.placeholder'));
+  /** Placeholder while no day is chosen: the input, else “Chọn ngày” — no longer the label (B1). Empty once there are chips. */
+  readonly effectivePlaceholder = computed(() =>
+    this.days().length ? '' : this.placeholder() || this.#i18n.t('core.form.chip-calendar.placeholder')
+  );
   readonly resolvedMinDate = computed(() => this.#toDate(this.minDate()));
   readonly resolvedMaxDate = computed(() => this.#toDate(this.maxDate()));
   /**
@@ -715,18 +712,6 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
     this.#focus();
   };
 
-  #select = (event: MatAutocompleteSelectedEvent) => {
-    const day = ɵsdNormalizeCalendarDay(event.option.value, this.#zoned ? this.#dateTime : null);
-    const days = this.#currentDays();
-    // why: PHẢI tạo mảng MỚI — không sửa mảng của consumer, và `model()` so Object.is.
-    if (day && !days.includes(day)) this.#commit([...days, day]);
-    const inputEl = this.input();
-    if (inputEl) inputEl.nativeElement.value = '';
-    this.#inputControl.setValue('', {
-      emitEvent: false,
-    });
-  };
-
   #onClick = () => {
     if (this.sdViewDef()?.templateRef) {
       if (!this.#formControl.disabled && !this.isFocused) {
@@ -737,7 +722,6 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
 
   #focus = () => {
     this.isFocused = true;
-    this.#isBlurring = false;
     // why: vẫn 100ms như cũ — chỉ scope handle theo DestroyRef.
     this.#timers.schedule(() => {
       if (this.isFocused) {
@@ -777,7 +761,6 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
 
   onClickChip = (event: Event, item: any) => this.#clickChip(event, item);
   onRemove = (item: string) => this.#remove(item);
-  onSelect = (event: MatAutocompleteSelectedEvent) => this.#select(event);
   onClick = () => this.#onClick();
   /**
    * why: khi `sdViewDef` đang hiển thị thì bên trong KHÔNG còn phần tử nào focus được, nên
