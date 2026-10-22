@@ -124,6 +124,9 @@ describe('ɵSdOperatorChip', () => {
 
   // Like the sd-select panel: 6px from the field box on the side it opens, lined up with the field start.
   it('opens its menu 6px away from the field and lines it up with the field start', async () => {
+    // why: DOM do spec khác để lại có thể đẩy field xuống đáy khung Karma; menu khi đó lật lên và vị trí đo ngay sau khi mở
+    // chưa ổn định. Ghim host ở đỉnh để menu luôn mở xuống.
+    Object.assign((fixture.nativeElement as HTMLElement).style, { position: 'fixed', top: '0', left: '0' });
     button().click();
     await settle();
     const field = (fixture.nativeElement as HTMLElement).querySelector('.mat-mdc-text-field-wrapper')!.getBoundingClientRect();

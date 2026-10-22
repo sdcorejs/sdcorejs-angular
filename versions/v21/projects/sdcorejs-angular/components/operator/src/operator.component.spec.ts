@@ -175,6 +175,9 @@ describe('SdOperator', () => {
     });
 
     it('opens the menu 6px below its trigger, without a tick on the current row', () => {
+      // why: DOM do spec khác để lại có thể đẩy trigger xuống đáy khung Karma; menu khi đó lật lên và vị trí đo ngay sau khi
+      // mở chưa ổn định. Ghim host ở đỉnh để menu luôn mở xuống.
+      Object.assign((fixture.nativeElement as HTMLElement).style, { position: 'fixed', top: '0', left: '0' });
       fixture.componentRef.setInput('operators', ['EQUAL', 'CONTAIN']);
       fixture.componentRef.setInput('model', 'CONTAIN');
       fixture.detectChanges();
