@@ -327,6 +327,14 @@ test('Button indicator ring is the page surface in light and dark', () => {
   }
 });
 
+// Wave 3 · 2a: the ring around the sd-avatar status dot separates it from the avatar with the page surface.
+test('Avatar status ring is the page surface in light and dark', () => {
+  for (const mode of ['light', 'dark']) {
+    const tokens = declarations(compile(`.x { @include sd.theme($mode: '${mode}'); }`));
+    assert.equal(tokens['--sd-avatar-status-ring'], 'var(--sd-surface)', mode);
+  }
+});
+
 // Wave 1 · sd-kanban: neutral lanes and drop target derived from the palette, one expression for light and dark.
 const KANBAN_TOKENS = {
   '--sd-kanban-lane-bg': 'color-mix(in srgb, var(--sd-text) 4%, var(--sd-surface))',

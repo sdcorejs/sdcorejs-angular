@@ -333,18 +333,19 @@
 }
 
 // Chấm mặc định (type icon không có icon): vẽ bằng CSS, màu gốc.
+// why: `--sd-badge-dot-size` là hook để nơi đặt chấm tự chọn đường kính (sd-avatar tính theo cỡ avatar).
 .c-badge-dot {
   display: block;
-  width: 8px;
-  height: 8px;
+  width: var(--sd-badge-dot-size, 8px);
+  height: var(--sd-badge-dot-size, 8px);
   border-radius: 50%;
   background-color: var(--badge-tone);
 }
 
 .c-badge-icon.c-badge--lg .c-badge-dot,
 .c-badge-dotonly.c-badge--lg .c-badge-dot {
-  width: 10px;
-  height: 10px;
+  width: var(--sd-badge-dot-size, 10px);
+  height: var(--sd-badge-dot-size, 10px);
 }
 
 // Pulse: vòng sáng 3px (28% màu gốc) nhấp nháy chu kỳ 1.6s; reduced-motion thì vòng đứng yên.

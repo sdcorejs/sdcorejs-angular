@@ -139,7 +139,7 @@ Multi-select gets the whole array:
 ```html
 <sd-select [(model)]="userId" [items]="users">
   <ng-container *sdItemDef="let user">
-    <sd-avatar [name]="user.display" size="sm"></sd-avatar>
+    <sd-avatar [src]="user.data?.avatarUrl || user.display" [name]="user.display" [size]="24"></sd-avatar>
     <span class="name">{{ user.display }}</span>
     <span class="email">{{ user.data?.email }}</span>
   </ng-container>

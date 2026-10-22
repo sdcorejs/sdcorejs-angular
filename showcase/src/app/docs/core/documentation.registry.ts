@@ -164,7 +164,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/avatar/sd-avatar',
     keywords: ['profile', 'initials', 'image', 'user'],
     status: 'stable',
-    demoSectionCount: 4,
+    demoSectionCount: 8,
     loadComponent: () => import('../../pages/components/avatar/avatar-demo.component').then(m => m.AvatarDemoComponent),
   }),
   defineDocPage({

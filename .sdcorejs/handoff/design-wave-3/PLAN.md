@@ -104,6 +104,7 @@ Mới (đủ 5 locale vi/en/ja/ko/zh):
 | 1a badge: thang, một dòng, số đếm, description, viền tag, chấm CSS, focus, hover, tooltip | xong | Lệch spec: xem dưới. Ảnh: `.sdcorejs/handoff/screenshots/wave3-1a-badge-*.png` |
 | 1b badge: `solid`, `dot`, `pair`, input `label`, `pulse` | xong | Ảnh: `wave3-1b-badge-solid-dot-pair.png` (chỉ bản sau — type mới). `test:theme` thêm cặp badge |
 | 1c `sd-badge-picker`, `SD_BADGE_TYPE_OPTIONS`, `SD_BADGE_ICON_PRESET` | xong | Ảnh: `wave3-1c-badge-picker.png` (chỉ bản sau — component mới). Trang showcase mới `components/badge-picker` |
+| 2a avatar: `status`, `statusLabel`, `statusPulse`, `name`, token `avatar-status-ring` | xong | Ảnh: `wave3-2a-avatar-status.png` (ví dụ cũ không đổi giao diện nên chỉ chụp ví dụ mới) |
 
 Lệch khỏi thông số ở bước 1a (đã báo user):
 - **Type icon to hơn một bậc** (user chọn 2026-10-21, theo HTML thay vì bảng `badge.md`): chữ sm 13/18, md 14/20,
@@ -130,3 +131,9 @@ Ghi chú bước 1c:
 - Lệch có sẵn của bộ field (không sửa ở bước này): trong theme, sd-select md cao 43.5px (rule `min-height: 43.5px` cũ của
   `.sd-md`), lg là 56px mặc định của Material (sd-select lg còn cộng `margin-top: 10px` → 66px trong Karma). Picker khớp
   sd-select ở sm/md; thiết kế ghi 32/40/48.
+
+Ghi chú bước 2a:
+- Đường kính chấm đặt qua hook mới của badge `--sd-badge-dot-size` (span bọc chấm mang vòng viền và vị trí).
+- Avatar không có tên lẫn trạng thái thì để trang trí (không role, không aria-label) — thay vì `role="img"` không tên.
+- User menu của layout: thêm `aria-hidden` cho avatar vì tên người dùng hiện ngay cạnh, tránh đọc hai lần.
+- QĐ 8 đã áp dụng: ảnh lỗi + có `name` thì chữ viết tắt và màu lấy từ `name`.

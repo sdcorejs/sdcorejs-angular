@@ -88,6 +88,7 @@ Read with a fallback, so set them on any ancestor (`:root`, a page, a table):
 | `--sd-badge-height-sm` / `-md` / `-lg` | `20px` / `24px` / `28px` (also the counter min-width) |
 | `--sd-badge-radius-tag` | `4px` (`tag` and `pair`); `md`, `lg` and a tag with a description add 2px |
 | `--sd-badge-font-weight` | `500` (titles of `round`, `tag` and `solid`, value of `pair`) |
+| `--sd-badge-dot-size` | `8px` (`10px` at `lg`): diameter of the dot of `dot` and of `icon` without an icon. `sd-avatar` sets it from its size. |
 
 ## Behaviour
 - **One line**: title and description never wrap; the badge is at most as wide as its container (`max-width: 100%`) and cuts the text with an ellipsis.

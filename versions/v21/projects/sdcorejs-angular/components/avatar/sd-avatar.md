@@ -8,7 +8,7 @@
 **Change detection**: `OnPush`
 
 ## One-line purpose
-Circular user avatar — auto-displays a profile image when `src` is a URL, otherwise generates colorful initials from the name (deterministic per name).
+Circular user avatar — auto-displays a profile image when `src` is a URL, otherwise generates colorful initials from the name (deterministic per name). Optionally shows a status dot (online, away…) on its lower-right edge.
 
 ## When to use
 - Display a user's photo in a profile card, comment, or row
@@ -28,6 +28,10 @@ Circular user avatar — auto-displays a profile image when `src` is a URL, othe
 | --- | --- | --- | --- |
 | `src` | `string \| undefined \| null` | (required) | The data string. Treated as an image URL if it starts with `http`, `https`, `data:image`, or `/`; otherwise treated as a name → initials + deterministic color. Empty/null → `?` on a neutral grey. |
 | `size` | `number` | `32` | Width/height in pixels. Font size of initials is `size / 2.5`. |
+| `name` | `string \| null \| undefined` | — | The person's name. It is the accessible name and, for an image avatar, the tooltip. When the image fails to load, the initials and colour come from `name` (without it: from the URL text, as before). With a name in `src`, `src` is used. |
+| `status` | `Color \| null \| undefined` | `null` | Colour of the status dot. No value, no dot. |
+| `statusLabel` | `string \| null \| undefined` | — | Text of the status, e.g. "Đang hoạt động": the dot's tooltip, appended to the accessible name. **Required with `status`** — a dev-mode `console.warn` says when it is missing, because the colour alone means nothing to a screen reader (and success can mean "online" or "approved"). |
+| `statusPulse` | `boolean` | `false` | `booleanAttribute`. A pulsing ring around the dot (the `pulse` of `sd-badge`), still under `prefers-reduced-motion`. |
 
 ## Outputs
 None. (Image-load failure is handled internally — falls back to initials of the literal text.)
@@ -41,7 +45,25 @@ None.
 - **Initials mode** (free text): renders 1 or 2 uppercase initials (first letter of first word + first letter of last word).
 - **Fallback** (empty/null `src`): `?` on `#bdc3c7` (neutral grey).
 - **Background color** (initials mode): deterministic — same name always gets the same color from a fixed 19-color palette (greens, blues, purples, oranges, reds, greys). Hashed by char codes.
-- **Image-load error**: silently switches to initials of the literal `src` string (so a broken `https://...` URL becomes letters `H`/`H` etc.).
+- **Image-load error**: switches to initials — of `name` when it is set, otherwise of the literal `src` string (so a broken `https://...` URL without a name becomes letters `H`/`H` etc.).
+- **Host**: `display: inline-flex; position: relative; vertical-align: middle` (it used to be the default inline box), so the dot can sit on the edge and image and initials avatars line up in text.
+- **Status dot**: an `<sd-badge type="dot">` beside the circle (the circle clips its content), with the colour of `status`, `statusLabel` as its title and `statusPulse` as its pulse. Diameter `clamp(8px, size × 0.25, 20px)`; a ring of 2px (3px from size 64) in `--sd-avatar-status-ring`; placed at `right = bottom = size × 0.146 − (dot + 2 × ring) / 2`, so its centre is on the circle edge at 45°.
+
+  | size | dot | ring |
+  | --- | --- | --- |
+  | 24 | 8 | 2 |
+  | 32 | 8 | 2 |
+  | 40 | 10 | 2 |
+  | 64 | 16 | 3 |
+  | 96 | 20 | 3 |
+
+- **`--sd-avatar-status-ring`**: component token, `var(--sd-surface)` in light and dark. Set it where the avatar sits on another background (a dark header, a selected row).
+
+## Accessibility
+- The host is `role="img"` with `aria-label` = the name, plus ", {statusLabel}" when there is a status (e.g. "Lê Lan Anh, Đang hoạt động"). The name is `name`, or `src` when `src` is a name.
+- Without a name and without a status the avatar is decorative: no role, no label.
+- The inner `<img>` has `alt=""` (it used to be `alt="avatar"`), so the name is not read twice.
+- The dot never takes focus. Next to a visible name, also show the status as text where there is room.
 
 ## Examples
 
@@ -67,7 +89,13 @@ None.
 </div>
 ```
 
-### 4. Larger avatar on a profile header
+### 4. With a status
+```html
+<sd-avatar src="Lê Lan Anh" [size]="40" status="success" statusLabel="Đang hoạt động"></sd-avatar>
+<sd-avatar [src]="user.photoUrl" [name]="user.fullName" status="success" statusLabel="Đang gọi" statusPulse></sd-avatar>
+```
+
+### 5. Larger avatar on a profile header
 ```html
 <sd-avatar [src]="profile.avatarUrl || profile.fullName" [size]="96"></sd-avatar>
 ```
@@ -80,7 +108,7 @@ None.
 - Adding click handlers expecting a built-in click output — wrap in a parent `<button>` or `<a>` if interactive
 
 ## Related
-- `<sd-badge>` — for status indicators (e.g. online/offline dot beside the avatar)
+- `<sd-badge>` — the status dot is an `sd-badge type="dot"`; use a badge directly for statuses that are not about a person
 - `<sd-button>` — to make an avatar clickable, wrap or pair as needed
 - `<sd-tag>` — for non-user labels
 

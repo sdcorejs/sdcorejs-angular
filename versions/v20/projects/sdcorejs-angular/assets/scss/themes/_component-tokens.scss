@@ -41,6 +41,8 @@ $component-tokens: (
   // avatar — bases the initials chip mixes its palette colour with
   'avatar-tint': (#ffffff, #2b2d33),
   'avatar-ink': (#000000, #ffffff),
+  // avatar — ring around the status dot that separates it from the avatar (design handoff wave 3 · 2a).
+  'avatar-status-ring': (var(--sd-surface), var(--sd-surface)),
   // avatar — grey of an empty avatar and the name palette (picked by a hash of the name). Same value in
   // both modes: the tint/ink mix above is what adapts the chip to dark.
   'avatar-neutral': (#bdc3c7, #bdc3c7),

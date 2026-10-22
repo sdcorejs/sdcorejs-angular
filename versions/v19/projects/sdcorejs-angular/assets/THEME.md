@@ -308,6 +308,12 @@ Badge colours stay on the palette: `*-light` backgrounds, `*-dark` text and icon
 for `solid` (with `*-contrast` text), `--sd-secondary-light` / `--sd-secondary-dark` for the label of `pair`, and
 `color-mix(in srgb, *-dark 22%, *-light)` for the tag border.
 
+## Avatar status ring token
+
+`--sd-avatar-status-ring` (`var(--sd-surface)` in light and dark) is the ring around the `sd-avatar` status dot that
+separates it from the avatar. Set it to the background behind the avatar when that is not `--sd-surface` (a dark
+header, a selected row).
+
 ## Button indicator token
 
 `--sd-button-indicator-ring` (`var(--sd-surface)` in light and dark) is the 2px ring that separates the `sd-button`

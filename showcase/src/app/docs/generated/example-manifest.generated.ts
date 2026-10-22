@@ -18,10 +18,14 @@ export type ShowcaseExampleSourceKey =
   | "components/audit-diff/example-format-redact-va-order"
   | "components/audit-diff/example-nested-table"
   | "components/audit-diff/example-stable-key-array"
+  | "components/avatar/example-anh-co-ten"
   | "components/avatar/example-anh-url"
   | "components/avatar/example-cac-kich-thuoc"
+  | "components/avatar/example-cham-theo-kich-thuoc"
+  | "components/avatar/example-cham-trang-thai"
   | "components/avatar/example-chu-cai-dau-tu-ten"
   | "components/avatar/example-fallback-khi-thieu-du-lieu"
+  | "components/avatar/example-trong-danh-sach"
   | "components/badge-picker/example-chi-xem-va-vo-hieu"
   | "components/badge-picker/example-chon-badge"
   | "components/badge-picker/example-gioi-han-lua-chon"
@@ -584,6 +588,34 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-fallback-khi-thieu-du-lieu",
     title: "Fallback khi thiếu dữ liệu",
     description: "Existing “Fallback khi thiếu dữ liệu” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/avatar/example-cham-trang-thai",
+    pageKey: "components/avatar",
+    sectionId: "example-cham-trang-thai",
+    title: "Chấm trạng thái",
+    description: "Chấm nằm trên mép avatar ở góc 45°, đường kính 25% cỡ avatar (8–20px), vòng viền màu nền. statusLabel là tooltip của chấm và được đọc cùng tên, ví dụ “Lê Lan Anh, Đang hoạt động”.",
+  },
+  {
+    sourceKey: "components/avatar/example-cham-theo-kich-thuoc",
+    pageKey: "components/avatar",
+    sectionId: "example-cham-theo-kich-thuoc",
+    title: "Chấm theo kích thước",
+    description: "Existing “Chấm theo kích thước” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/avatar/example-anh-co-ten",
+    pageKey: "components/avatar",
+    sectionId: "example-anh-co-ten",
+    title: "Ảnh có tên",
+    description: "Rê chuột vào ảnh để xem tên. Ảnh lỗi thì chữ viết tắt và màu lấy từ name.",
+  },
+  {
+    sourceKey: "components/avatar/example-trong-danh-sach",
+    pageKey: "components/avatar",
+    sectionId: "example-trong-danh-sach",
+    title: "Trong danh sách",
+    description: "Existing “Trong danh sách” scenario preserved from the showcase.",
   },
   {
     sourceKey: "components/badge/example-sau-dang",
