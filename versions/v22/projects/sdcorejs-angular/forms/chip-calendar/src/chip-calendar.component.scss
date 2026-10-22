@@ -1,6 +1,3 @@
-@use '../../../assets/scss/core/color.scss' as color;
-@use 'sass:map';
-
 :host {
   display: block;
 }
@@ -17,7 +14,9 @@
 }
 
 // why: viewed mode hiển thị sd-view (text only) → bỏ đệm trên.
-:host(.sd-viewed) { padding-top: 0; }
+:host(.sd-viewed) {
+  padding-top: 0;
+}
 
 :host ::ng-deep {
   .mat-mdc-form-field {
@@ -87,13 +86,6 @@ mat-chip-listbox {
   gap: 4px;
 }
 
-/* ✅ Highlight màu nền ngày được chọn */
-// Đặt tên class dài để tránh bị ảnh hưởng vì cái này phải bọc ::ng-deep
-::ng-deep .sd-chip-calendar-selected-date .mat-calendar-body-cell-content {
-  background-color: map.get(color.$color_map, 'primary-light') !important;
-  color: map.get(color.$color_map, 'primary') !important;
-  border-radius: 50%;
-}
 // why: mặt sdViewDef giờ là phần tử role="button" + tabindex=0 (bàn phím mở được đúng như
 // chuột) — cần focus ring rõ ràng và không được đổi layout so với bản <div> trần cũ.
 .sd-chip-calendar__view-trigger {
@@ -105,5 +97,147 @@ mat-chip-listbox {
   &:focus-visible {
     outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
     outline-offset: 2px;
+  }
+}
+
+// ── Popup (thiết kế 3) ─────────────────────────────────────────────────────────────────────────────────────────────
+// Panel nằm trong template của component (overlay render ng-template này), nên style của nó scope theo component; phần
+// bên trong mat-calendar thuộc view của Material nên đi qua ::ng-deep, nhưng luôn dưới .sd-chip-calendar-panel (C1).
+.sd-chip-calendar-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-sizing: border-box;
+  width: var(--sd-chip-calendar-panel-width, 296px);
+  padding: 12px 8px 8px;
+  // Cùng bề mặt với panel sd-select / menu operator / badge picker (đợt 2 · D).
+  border: 1px solid color-mix(in srgb, var(--sd-border) 60%, var(--sd-surface));
+  border-radius: var(--sd-panel-radius, 10px);
+  background-color: var(--sd-select-panel-bg, var(--sd-surface));
+  box-shadow: var(--sd-shadow-md, none);
+  color: var(--sd-text);
+  animation: sd-chip-calendar-panel-in var(--sd-duration-fast, 120ms) var(--sd-ease-standard, ease-out);
+
+  // Token của mat-calendar đặt trên panel: không cần !important để ghi đè style mặc định.
+  --mat-datepicker-calendar-date-text-color: var(--sd-text);
+  --mat-datepicker-calendar-date-hover-state-background-color: color-mix(in srgb, var(--sd-text) 5%, transparent);
+  // why: focus là vòng outline chuẩn (bên dưới), không phải nền — để ô đã chọn vẫn thấy rõ focus.
+  --mat-datepicker-calendar-date-focus-state-background-color: transparent;
+  --mat-datepicker-calendar-date-today-outline-color: var(--sd-primary);
+  --mat-datepicker-calendar-date-disabled-state-text-color: var(--sd-disabled-text);
+  --mat-datepicker-calendar-date-today-disabled-state-outline-color: transparent;
+  --mat-datepicker-calendar-header-text-color: var(--sd-text-secondary);
+  --mat-datepicker-calendar-header-text-size: var(--sd-font-size-11, 11px);
+  --mat-datepicker-calendar-header-text-weight: var(--sd-font-weight-medium, 500);
+  --mat-datepicker-calendar-header-divider-color: transparent;
+  --mat-datepicker-calendar-text-size: var(--sd-font-size-13, 13px);
+}
+
+@keyframes sd-chip-calendar-panel-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sd-chip-calendar-panel {
+    animation: none;
+  }
+}
+
+.sd-chip-calendar-panel__head {
+  padding: 0 8px;
+}
+
+.sd-chip-calendar-panel__summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sd-chip-calendar-panel__count {
+  font-size: var(--sd-font-size-13, 13px);
+  font-weight: var(--sd-font-weight-semibold, 600);
+}
+
+.sd-chip-calendar-panel__limit {
+  font-size: var(--sd-font-size-12, 12px);
+  color: var(--sd-text-secondary);
+}
+
+.sd-chip-calendar-panel__full {
+  margin: 0;
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: 16px;
+  color: var(--sd-warning-dark);
+
+  &:empty {
+    display: none;
+  }
+}
+
+.sd-chip-calendar-panel__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+  padding: 8px 4px 0;
+  border-top: 1px solid var(--sd-select-panel-divider, var(--sd-border));
+}
+
+.sd-chip-calendar-panel ::ng-deep {
+  // Lưới 7 × 40px vừa khít bề rộng nội dung (296 − 2 × 8); bỏ lề của Material.
+  .mat-calendar-content {
+    padding: 0;
+  }
+
+  .mat-calendar-table-header th {
+    padding: 0;
+    line-height: 24px;
+  }
+
+  .mat-calendar-body-label {
+    // Nhãn tháng trong lưới (“TH 10”) trùng với header riêng.
+    visibility: hidden;
+  }
+
+  .mat-calendar-body-cell-content {
+    font-variant-numeric: tabular-nums;
+  }
+
+  // Đã chọn: vòng primary đặc; hover đậm hơn; focus giữ nền (token focus của ô = nền này).
+  .mat-calendar-body-cell.sd-chip-calendar-selected {
+    --mat-datepicker-calendar-date-hover-state-background-color: var(--sd-primary-600, var(--sd-primary-dark));
+    --mat-datepicker-calendar-date-focus-state-background-color: var(--sd-primary);
+    --mat-datepicker-calendar-date-today-outline-color: transparent;
+
+    > .mat-calendar-body-cell-content {
+      background-color: var(--sd-primary);
+      color: var(--sd-primary-contrast);
+      font-weight: var(--sd-font-weight-semibold, 600);
+    }
+  }
+
+  // Đã chọn nhưng không bỏ được: ô bị Material coi là disabled — ghi đè màu disabled bằng token, nền primary-light.
+  .mat-calendar-body-cell.sd-chip-calendar-locked {
+    --mat-datepicker-calendar-date-disabled-state-text-color: var(--sd-primary-dark);
+    --mat-datepicker-calendar-date-hover-state-background-color: var(--sd-primary-light);
+    --mat-datepicker-calendar-date-focus-state-background-color: var(--sd-primary-light);
+
+    > .mat-calendar-body-cell-content {
+      background-color: var(--sd-primary-light);
+      color: var(--sd-primary-dark);
+    }
+  }
+
+  .mat-calendar-body-cell:focus-visible > .mat-calendar-body-cell-content {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: 1px;
   }
 }

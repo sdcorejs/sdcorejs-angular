@@ -284,6 +284,8 @@ $component-tokens: (
   'autocomplete-selected-text': (#000000, #e3e2e6),
   'chip-bg': (#ebecf0, #34373d),
   'chip-calendar-bg': (#ebecf0, #34373d),
+  // Kích thước, không phải màu (handoff sd-chip-calendar): rộng popup = 8 + 7 × 40 + 8.
+  'chip-calendar-panel-width': (296px, 296px),
   'entity-picker-bg': (#ffffff, #1d1f23),
   'input-color-checker': (#dddddd, #5a5d66),
   'input-color-bg': (#ffffff, #1d1f23),

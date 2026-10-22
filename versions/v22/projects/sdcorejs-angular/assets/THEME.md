@@ -337,6 +337,13 @@ header, a selected row).
 `--sd-button-indicator-ring` (`var(--sd-surface)` in light and dark) is the 2px ring that separates the `sd-button`
 indicator from the button. Set it to the background behind the button when that is not `--sd-surface`.
 
+## Chip calendar tokens
+
+`--sd-chip-calendar-panel-width` (`296px` in light and dark) is the width of the `sd-chip-calendar` popup: 8px padding,
+seven 40px day columns, 8px padding. It is a size, the one non-colour entry of the component tier. The popup itself uses the
+panel surface of the select panel (`--sd-select-panel-bg`, `--sd-panel-radius`, `--sd-shadow-md`), and `--sd-chip-calendar-bg`
+stays the hover background of the `sdViewDef` face.
+
 ## Focus ring
 
 - Colour: `var(--sd-focus-ring-color)` (the primary colour). Width and offset: `--sd-focus-ring-width` and

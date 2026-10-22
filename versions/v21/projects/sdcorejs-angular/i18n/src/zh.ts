@@ -171,6 +171,27 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   'core.form.chip-calendar.locked': '此日期无法移除',
 
+
+  'core.form.chip-calendar.dialog-label': '选择日期',
+
+
+  'core.form.chip-calendar.selected-count': '已选 {count} 天',
+
+
+  'core.form.chip-calendar.max-count': '最多 {max}',
+
+
+  'core.form.chip-calendar.no-limit': '不限',
+
+
+  'core.form.chip-calendar.full': '已选满 {max} 天。取消一天后才能选择其他日期。',
+
+
+  'core.form.chip-calendar.clear-all': '全部清除',
+
+
+  'core.form.chip-calendar.done': '完成',
+
   // ---- Forms: date ----
   'core.form.date.required': '请输入内容',
   'core.form.date.min-date': '最小日期: {date}',

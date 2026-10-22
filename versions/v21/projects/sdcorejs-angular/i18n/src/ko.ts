@@ -171,6 +171,27 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   'core.form.chip-calendar.locked': '이 날짜는 제거할 수 없습니다',
 
+
+  'core.form.chip-calendar.dialog-label': '날짜 선택',
+
+
+  'core.form.chip-calendar.selected-count': '{count}일 선택됨',
+
+
+  'core.form.chip-calendar.max-count': '최대 {max}',
+
+
+  'core.form.chip-calendar.no-limit': '제한 없음',
+
+
+  'core.form.chip-calendar.full': '{max}일을 모두 선택했습니다. 다른 날짜를 선택하려면 하나를 해제하세요.',
+
+
+  'core.form.chip-calendar.clear-all': '모두 지우기',
+
+
+  'core.form.chip-calendar.done': '완료',
+
   // ---- Forms: date ----
   'core.form.date.required': '정보를 입력해 주세요',
   'core.form.date.min-date': '최소 날짜: {date}',

@@ -142,6 +142,7 @@ describe('SdChipCalendar · design handoff step 1', () => {
 
     it('marks the control touched when the calendar closes', () => {
       create();
+      comp.open();
       comp.onCloseCalendar();
       expect(comp.formControl.touched).toBeTrue();
     });

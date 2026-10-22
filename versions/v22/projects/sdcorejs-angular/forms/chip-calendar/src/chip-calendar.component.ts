@@ -1,3 +1,5 @@
+import { A11yModule } from '@angular/cdk/a11y';
+import { ConnectedPosition, OverlayModule } from '@angular/cdk/overlay';
 import { CommonModule } from '@angular/common';
 import {
   AfterViewInit,
@@ -18,6 +20,7 @@ import {
   TemplateRef,
   viewChild,
   OnDestroy,
+  signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Utilities } from '@sdcorejs/utils/fns';
@@ -36,11 +39,11 @@ import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/ma
 import { MatChipsModule } from '@angular/material/chips';
 import { ErrorStateMatcher, MatNativeDateModule } from '@angular/material/core';
 import { MatCalendar, MatDatepickerModule } from '@angular/material/datepicker';
-import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
+import { FloatLabelType, MatFormField, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdView } from '@sdcorejs/angular/components/view';
 import { SdLabelDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
@@ -60,18 +63,22 @@ import {
   ɵsdTimerScope,
 } from '@sdcorejs/angular/forms/models';
 import type { SdLabelPlacement } from '@sdcorejs/angular/forms/models';
-import { I18nService } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { DateUtilities } from '@sdcorejs/utils/fns';
 import { Size } from '@sdcorejs/utils/models';
 import { Subscription } from 'rxjs';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { ɵSdChipCalendarHeader } from './chip-calendar-header.component';
 
 /** One date of the model: canonical `yyyy/MM/dd`, ISO / RFC-1123 string, `Date` or timestamp (read like `<sd-date>`). */
 export type SdChipCalendarValue = string | number | Date;
 /** Model of `<sd-chip-calendar>`: read wide, written back as `string[]` (see `transform`). */
 export type SdChipCalendarModel = SdChipCalendarValue[] | null | undefined;
+
+/** A date input (`minDate`, `maxDate`, `startAt`): read like an item of the model; `'TODAY'` is today in the configured zone. */
+export type SdChipCalendarDate = Date | string | number | null | undefined;
 
 /** `removable`: all chips, none, or a predicate that receives the normalised `yyyy/MM/dd` day. */
 export type SdChipCalendarRemovable = boolean | ((day: string) => boolean);
@@ -115,7 +122,10 @@ function dayToDate(day: string): Date {
     MatChipsModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatMenuModule,
+    OverlayModule,
+    A11yModule,
+    SdButton,
+    SdTranslatePipe,
     SdLabel,
     SdView,
   ],
@@ -128,6 +138,7 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
   // why: lỗi phải hiện khi form cha đã submit dù field chưa chạm (A4). NgForm / FormGroupDirective tổ tiên
   // giữ cờ `submitted`; MatInput cũng lấy đúng hai directive này cho ErrorStateMatcher.
   readonly #parentForm = inject(FormGroupDirective, { optional: true }) ?? inject(NgForm, { optional: true });
+  readonly #host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   // why: focus hoãn 100ms; handle phải bị clear khi destroy, nếu không timer vẫn chạm
   // input của view đã tháo.
   readonly #timers = ɵsdTimerScope();
@@ -135,12 +146,30 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
   #name = Utilities.generateUuid();
   #isBlurring = false;
   #warnedUnreadable = false;
+  #warnedDeprecated = false;
   /** why: id ổn định của <mat-error> để ô nhập chip trỏ `aria-describedby` sang — thông báo
    *  lỗi phải đọc được từ chính control, không chỉ hiện ra màn hình. */
   readonly errorId = `sd-chip-calendar-error-${Utilities.generateUuid()}`;
 
-  menuTrigger = viewChild(MatMenuTrigger);
   calendar = viewChild<MatCalendar<Date>>(MatCalendar);
+  // why: query signal không đặt được trên field ES private (#).
+  private readonly field = viewChild(MatFormField);
+  /** Header of the popup calendar (handoff 3 · 2). */
+  readonly calendarHeader = ɵSdChipCalendarHeader;
+  readonly panelId = `sd-chip-calendar-panel-${Utilities.generateUuid()}`;
+  /** Whether the popup is open. */
+  readonly isOpen = signal(false);
+  /** Month the popup opened at (4.2), fixed for one opening. */
+  readonly openAt = signal<Date | null>(null);
+  /** The popup hangs from the field box, like the select panel. */
+  readonly overlayOrigin = computed(() => this.field()?.getConnectedOverlayOrigin());
+  // why: cách khung ô 6px như panel sd-select / menu operator / badge picker (quyết định 3 của PLAN); lật lên khi thiếu chỗ.
+  readonly positions: ConnectedPosition[] = [
+    { originX: 'start', originY: 'bottom', overlayX: 'start', overlayY: 'top', offsetY: 6 },
+    { originX: 'start', originY: 'top', overlayX: 'start', overlayY: 'bottom', offsetY: -6 },
+    { originX: 'end', originY: 'bottom', overlayX: 'end', overlayY: 'top', offsetY: 6 },
+    { originX: 'end', originY: 'top', overlayX: 'end', overlayY: 'bottom', offsetY: -6 },
+  ];
 
   autoIdInput = input<string | undefined, string | null | undefined>(undefined, {
     alias: 'autoId',
@@ -212,12 +241,32 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
   });
   hideInlineError = input(false, { transform: booleanAttribute });
   required = input(false, { transform: booleanAttribute });
+  /** Fewest days to pick; > 0 adds `Validators.minLength`. Replaces `min`. */
+  minCount = input<number | undefined, number | null | undefined>(undefined, {
+    transform: (v): number | undefined => v ?? undefined,
+  });
+  /** Most days to pick; > 0 adds `Validators.maxLength` and blocks picking more in the calendar (4.3). Replaces `max`. */
+  maxCount = input<number | undefined, number | null | undefined>(undefined, {
+    transform: (v): number | undefined => v ?? undefined,
+  });
+  /** @deprecated Use `minCount`; `minCount` wins when both are set. */
   min = input<number, number | null | undefined>(0, {
     transform: (v): number => v ?? 0,
   });
+  /** @deprecated Use `maxCount`; `maxCount` wins when both are set. */
   max = input<number, number | null | undefined>(0, {
     transform: (v): number => v ?? 0,
   });
+  /** Earliest day that can be picked; same reading as `minDate` of `<sd-date>` (`'TODAY'` = today in the zone). */
+  minDate = input<SdChipCalendarDate>(null);
+  /** Latest day that can be picked; same reading as `maxDate` of `<sd-date>`. */
+  maxDate = input<SdChipCalendarDate>(null);
+  /** `false` makes a day unpickable. A chosen day stays removable even when the filter refuses it. Name of `mat-calendar`. */
+  dateFilter = input<((date: Date) => boolean) | null | undefined>(null);
+  /** Month the popup opens at; without it, the chosen day nearest to today, else today (4.2). */
+  startAt = input<SdChipCalendarDate>(null);
+  /** Shows “Xoá hết” in the popup (and the clear button of the field). Off by default, like `clearable` of `<sd-date>`. */
+  clearable = input(false, { transform: booleanAttribute });
   disabled = input(false, { transform: booleanAttribute });
   /** Display mode: `false` edit · `true` static view · `'inline'` interactive (disabled `'inline'` → static). */
   viewed = input<SdViewed, SdViewedInput>(false, { transform: sdViewedTransform });
@@ -259,10 +308,14 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
   // why: `min`/`max` là validator do CHÍNH component sở hữu; `required` đi qua option riêng của
   // connector. Connector chỉ add/remove đúng phần này nên validator do consumer tự gắn vào
   // `formControl` public không bị xoá — trước đây `clearValidators()` + `setValidators()` xoá sạch.
+  /** `minCount`, else the deprecated `min`. */
+  readonly effectiveMinCount = computed(() => this.minCount() ?? this.min() ?? 0);
+  /** `maxCount`, else the deprecated `max`. */
+  readonly effectiveMaxCount = computed(() => this.maxCount() ?? this.max() ?? 0);
   readonly #validators = computed<readonly ValidatorFn[]>(() => {
     const validators: ValidatorFn[] = [];
-    const min = this.min();
-    const max = this.max();
+    const min = this.effectiveMinCount();
+    const max = this.effectiveMaxCount();
     if (min > 0) validators.push(Validators.minLength(min));
     if (max > 0) validators.push(Validators.maxLength(max));
     return validators;
@@ -297,6 +350,49 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
 
   readonly #fullDate = computed(() => new Intl.DateTimeFormat(this.#i18n.locale(), FULL_DATE));
 
+  /** Chosen days, normalised (`yyyy/MM/dd`, model order). */
+  readonly days = computed(() => this.#days(this.model()) ?? []);
+  /** `maxCount` reached: unchosen days are disabled and the popup says so (4.3). */
+  readonly full = computed(() => {
+    const max = this.effectiveMaxCount();
+    return max > 0 && this.days().length >= max;
+  });
+  /** At least one chosen day may be removed (enables “Xoá hết”). */
+  readonly hasRemovable = computed(() => {
+    void this.removable();
+    return this.days().some(day => this.isRemovable(day));
+  });
+  readonly resolvedMinDate = computed(() => this.#toDate(this.minDate()));
+  readonly resolvedMaxDate = computed(() => this.#toDate(this.maxDate()));
+  /**
+   * `dateFilter` handed to `mat-calendar` (4.1): a chosen day is pickable exactly when it may be removed (even against the
+   * consumer filter), an unchosen one when the limit is not reached and the consumer filter allows it. A new function on
+   * every change makes `mat-calendar` render its cells again.
+   */
+  readonly calendarFilter = computed(() => {
+    const chosen = new Set(this.days());
+    const full = this.full();
+    const consumer = this.dateFilter();
+    void this.removable();
+    return (date: Date | null): boolean => {
+      if (!date) return false;
+      const day = DateUtilities.toFormat(date, 'yyyy/MM/dd');
+      if (chosen.has(day)) return this.isRemovable(day);
+      return !full && (!consumer || consumer(date));
+    };
+  });
+  /** Cell classes: `sd-chip-calendar-selected`, plus `sd-chip-calendar-locked` for a chosen day that cannot go. */
+  readonly calendarDateClass = computed(() => {
+    const chosen = new Set(this.days());
+    void this.removable();
+    return (date: Date, view: 'month' | 'year' | 'multi-year' = 'month'): string => {
+      if (view !== 'month') return '';
+      const day = DateUtilities.toFormat(date, 'yyyy/MM/dd');
+      if (!chosen.has(day)) return '';
+      return this.isRemovable(day) ? 'sd-chip-calendar-selected' : 'sd-chip-calendar-selected sd-chip-calendar-locked';
+    };
+  });
+
   constructor() {
     effect(() => {
       const isDisabled = this.disabled();
@@ -315,6 +411,13 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
       const nameVal = this.name();
       if (nameVal) {
         this.#name = nameVal;
+      }
+    });
+
+    effect(() => {
+      if ((this.min() > 0 || this.max() > 0) && !this.#warnedDeprecated && isDevMode()) {
+        this.#warnedDeprecated = true;
+        console.warn('[sd-chip-calendar] `min` / `max` are deprecated; use `minCount` / `maxCount`.');
       }
     });
 
@@ -341,8 +444,8 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
   readonly errorMessage = computed<string | undefined>(() => {
     void this.#state();
     void this.required();
-    const min = this.min();
-    const max = this.max();
+    const min = this.effectiveMinCount();
+    const max = this.effectiveMaxCount();
     const errors = this.#formControl.errors;
     if (!errors) return undefined;
 
@@ -385,6 +488,56 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
   /** Accessible name of the ✕ button of a chip. */
   removeLabel(day: string): string {
     return this.#i18n.t('core.form.chip-calendar.remove', { date: this.#fullDate().format(dayToDate(day)) });
+  }
+
+  /** Opens the popup at the month of 4.2. No-op when disabled, viewed or already open. */
+  open(): void {
+    if (this.#formControl.disabled || this.isViewed() || this.isOpen()) return;
+    this.openAt.set(this.#firstMonth());
+    this.isOpen.set(true);
+    this.#ref.markForCheck();
+  }
+
+  /** Closes the popup and marks the field touched (A4); `returnFocus` puts focus back on the input (Esc, “Xong”). */
+  close(returnFocus = false): void {
+    if (!this.isOpen()) return;
+    this.isOpen.set(false);
+    this.isFocused = false;
+    this.#formConnector.markAsTouched();
+    this.#ref.markForCheck();
+    if (returnFocus) this.input()?.nativeElement.focus();
+  }
+
+  /** Focus goes to the active day of the grid once the panel is attached. */
+  onAttach(): void {
+    this.#timers.schedule(() => this.calendar()?.focusActiveCell(), 0);
+  }
+
+  onOverlayKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape' || event.key === 'Esc') {
+      event.preventDefault();
+      this.close(true);
+    }
+  }
+
+  /** A click outside closes; a click on the field itself is left to the field (it keeps the popup open). */
+  onOutsideClick(event: MouseEvent): void {
+    const target = event.target as Node | null;
+    if (target && this.#host.contains(target)) return;
+    this.close();
+  }
+
+  /** Click on the empty part of the field or on the input opens the popup; chips stop the click (3 · 2). */
+  onFieldClick(): void {
+    this.open();
+  }
+
+  /** Enter, Space, ArrowDown and Alt+ArrowDown on the input open the popup. */
+  onInputKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') {
+      event.preventDefault();
+      this.open();
+    }
   }
 
   ngAfterViewInit() {
@@ -448,6 +601,33 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
   #currentDays(): string[] {
     const value = this.#formControl.value;
     return Array.isArray(value) ? value : [];
+  }
+
+  /** Today as a local-midnight carrier: in the configured zone, else the machine's. */
+  #today(): Date {
+    return this.#zoned ? this.#dateTime.today() : sdLocalStartOfDay(new Date());
+  }
+
+  /** `minDate` / `maxDate` / `startAt` → local-midnight carrier, read like a model item. */
+  #toDate(value: SdChipCalendarDate): Date | null {
+    if (value === 'TODAY') return this.#today();
+    const day = ɵsdNormalizeCalendarDay(value, this.#zoned ? this.#dateTime : null);
+    return day ? dayToDate(day) : null;
+  }
+
+  /** 4.2: `startAt`; else the chosen day nearest to today (a later one on a tie); else today. */
+  #firstMonth(): Date {
+    const start = this.#toDate(this.startAt());
+    if (start) return start;
+    const today = this.#today().getTime();
+    let best: Date | null = null;
+    for (const day of this.days()) {
+      const date = dayToDate(day);
+      const distance = Math.abs(date.getTime() - today);
+      const bestDistance = best ? Math.abs(best.getTime() - today) : Infinity;
+      if (distance < bestDistance || (distance === bestDistance && best !== null && date > best)) best = date;
+    }
+    return best ?? this.#today();
   }
 
   /** Every user action ends here: a new array of days, written once (the connector writes the model). */
@@ -526,20 +706,12 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
     } else {
       this.#commit([...days, day]);
     }
-    this.calendar()?.updateTodaysDate();
-  };
-
-  #closeCalendar = () => {
-    this.isFocused = false;
-    this.input()?.nativeElement?.blur();
-    // A4: đóng lịch là đã tương tác — lỗi (vd thiếu so với `min`) hiện từ đây.
-    this.#formConnector.markAsTouched();
-    this.#ref.markForCheck();
-  };
-
-  #dateClass = (cellDate: Date) => {
-    const day = DateUtilities.toFormat(cellDate, 'yyyy/MM/dd');
-    return this.#currentDays().includes(day) ? 'sd-chip-calendar-selected-date' : '';
+    // why: dateFilter mới làm mat-calendar dựng lại ô; giữ ô vừa bấm là ô active và trả focus về nó cho bàn phím.
+    const calendar = this.calendar();
+    if (calendar && date) {
+      calendar.activeDate = date;
+      this.#timers.schedule(() => this.calendar()?.focusActiveCell(), 0);
+    }
   };
 
   onClickChip = (event: Event, item: any) => this.#clickChip(event, item);
@@ -558,6 +730,8 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
   };
   onClear = (evt?: any) => this.#clear(evt);
   onSelectDate = (date: Date | null) => this.#selectDate(date);
-  onCloseCalendar = () => this.#closeCalendar();
-  dateClass = (cellDate: Date) => this.#dateClass(cellDate);
+  /** Closes the popup without moving focus (outside click); marks the field touched. */
+  onCloseCalendar = () => this.close();
+  /** Classes of a month-view cell; see `calendarDateClass`. */
+  dateClass = (cellDate: Date) => this.calendarDateClass()(cellDate);
 }

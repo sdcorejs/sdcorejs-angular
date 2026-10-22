@@ -170,6 +170,27 @@ export const EN_MESSAGES = {
 
   'core.form.chip-calendar.locked': 'This date cannot be removed',
 
+
+  'core.form.chip-calendar.dialog-label': 'Choose dates',
+
+
+  'core.form.chip-calendar.selected-count': '{count} selected',
+
+
+  'core.form.chip-calendar.max-count': 'Up to {max}',
+
+
+  'core.form.chip-calendar.no-limit': 'No limit',
+
+
+  'core.form.chip-calendar.full': 'All {max} days are chosen. Remove one to choose another.',
+
+
+  'core.form.chip-calendar.clear-all': 'Clear all',
+
+
+  'core.form.chip-calendar.done': 'Done',
+
   // ---- Forms: date ----
   'core.form.date.required': 'Please enter information',
   'core.form.date.min-date': 'Minimum date: {date}',

@@ -172,6 +172,27 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   'core.form.chip-calendar.locked': 'この日付は削除できません',
 
+
+  'core.form.chip-calendar.dialog-label': '日付を選択',
+
+
+  'core.form.chip-calendar.selected-count': '{count} 日選択済み',
+
+
+  'core.form.chip-calendar.max-count': '最大 {max}',
+
+
+  'core.form.chip-calendar.no-limit': '上限なし',
+
+
+  'core.form.chip-calendar.full': '{max} 日に達しました。別の日を選ぶには 1 日外してください。',
+
+
+  'core.form.chip-calendar.clear-all': 'すべてクリア',
+
+
+  'core.form.chip-calendar.done': '完了',
+
   // ---- Forms: date ----
   'core.form.date.required': '入力してください',
   'core.form.date.min-date': '最小日付: {date}',

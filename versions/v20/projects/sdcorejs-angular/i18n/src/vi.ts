@@ -171,6 +171,27 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   'core.form.chip-calendar.locked': 'Không bỏ được ngày này',
 
+
+  'core.form.chip-calendar.dialog-label': 'Chọn ngày',
+
+
+  'core.form.chip-calendar.selected-count': 'Đã chọn {count} ngày',
+
+
+  'core.form.chip-calendar.max-count': 'Tối đa {max}',
+
+
+  'core.form.chip-calendar.no-limit': 'Không giới hạn',
+
+
+  'core.form.chip-calendar.full': 'Đã đủ {max} ngày. Bỏ bớt một ngày để chọn ngày khác.',
+
+
+  'core.form.chip-calendar.clear-all': 'Xoá hết',
+
+
+  'core.form.chip-calendar.done': 'Xong',
+
   // ---- Forms: date ----
   'core.form.date.required': 'Vui lòng nhập thông tin',
   'core.form.date.min-date': 'Ngày nhỏ nhất: {date}',
