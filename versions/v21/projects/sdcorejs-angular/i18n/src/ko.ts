@@ -1499,7 +1499,7 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.badge.picker.dot': '점(아이콘 없음)',
   'core.component.badge.picker.no-icon': '아이콘 없음',
   'core.component.badge.picker.no-icon-match': '일치하는 아이콘이 없습니다',
-  'core.component.badge.picker.esc-hint': 'Esc로 변경 취소',
+  'core.component.badge.picker.esc-hint': '{key}로 변경 취소',
   'core.component.badge.picker.done': '완료',
   'core.component.badge.picker.description-hint': '설명은 아이콘과 태그 유형에서만 표시됩니다',
   'core.component.badge.picker.required': '표시 스타일을 선택하세요',

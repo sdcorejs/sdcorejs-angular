@@ -242,7 +242,11 @@
     </div>
 
     <div class="sd-badge-picker-panel__footer">
-      <span class="sd-badge-picker-panel__esc">{{ 'core.component.badge.picker.esc-hint' | sdTranslate }}</span>
+      @let _escHint = escHint();
+      <!-- Phím Esc vẽ như nắp phím trong câu đã dịch (`{key}` của i18n); catalog không có `{key}` thì chỉ hiện chữ. -->
+      <span class="sd-badge-picker-panel__esc"
+        >{{ _escHint[0] }}@if (_escHint.length > 1) {<kbd class="sd-badge-picker-panel__kbd">Esc</kbd>{{ _escHint[1] }}}</span
+      >
       <sd-button
         data-badge-picker-done
         type="fill"

@@ -302,6 +302,8 @@ export class SdBadgePicker {
   readonly showPlaceholder = computed(() => !this.value() && (this.isOpen() || this.floatLabel() === 'always' || !this.label()));
 
   typeLabel = (type: SdBadgeType): string => this.#i18n.t(`core.component.badge.type.${type}`);
+  /** Câu gợi ý Esc ở chân panel, tách quanh `{key}` để phím Esc vẽ như nắp phím (review 2026-10-22). */
+  readonly escHint = computed(() => this.#i18n.t('core.component.badge.picker.esc-hint').split('{key}'));
   colorLabel = (color: Color): string => this.#i18n.t(`core.component.badge.color.${color}`);
   /** Icon thực sự đưa vào `sd-badge` (type không có icon thì không truyền). */
   iconOf = (value: SdBadgePickerValue): string | null => (hasIcon(value.type) ? value.icon : null);

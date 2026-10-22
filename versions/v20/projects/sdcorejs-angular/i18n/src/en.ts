@@ -1500,7 +1500,7 @@ export const EN_MESSAGES = {
   'core.component.badge.picker.dot': 'Dot (no icon)',
   'core.component.badge.picker.no-icon': 'No icon',
   'core.component.badge.picker.no-icon-match': 'No matching icon',
-  'core.component.badge.picker.esc-hint': 'Esc discards changes',
+  'core.component.badge.picker.esc-hint': '{key} discards changes',
   'core.component.badge.picker.done': 'Done',
   'core.component.badge.picker.description-hint': 'The description only shows on the icon and tag types',
   'core.component.badge.picker.required': 'Please choose a display style',

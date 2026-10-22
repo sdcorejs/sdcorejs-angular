@@ -1504,7 +1504,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.badge.picker.dot': 'Chấm (không icon)',
   'core.component.badge.picker.no-icon': 'Không icon',
   'core.component.badge.picker.no-icon-match': 'Không có icon khớp',
-  'core.component.badge.picker.esc-hint': 'Esc huỷ thay đổi',
+  'core.component.badge.picker.esc-hint': '{key} huỷ thay đổi',
   'core.component.badge.picker.done': 'Xong',
   'core.component.badge.picker.description-hint': 'Mô tả chỉ hiện ở kiểu icon và tag',
   'core.component.badge.picker.required': 'Vui lòng chọn kiểu hiển thị',

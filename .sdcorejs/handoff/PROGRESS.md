@@ -386,3 +386,14 @@ Chụp trong Browser pane hay timeout khi cửa sổ bị ẩn, nên dùng Playw
   `sd-operator` đứng riêng không đặt biến → khe 6px từ trigger.
 - Mũi tên luôn hiện: bỏ `narrow` signal, ResizeObserver, class `sd-operator-chip--narrow` và rule CSS.
 - Spec RED trước: 3 spec chip (không tick, khe + mép, mũi tên ở ô 100px) + 1 spec `sd-operator` (khe 6px, không tick).
+
+## Review 2026-10-22 — Esc, size lg, góc ô trên nền khác
+
+- **Esc dạng nắp phím** (badge picker): i18n `core.component.badge.picker.esc-hint` đổi sang `{key}` (5 locale); component
+  tách câu quanh `{key}` và vẽ `<kbd class="sd-badge-picker-panel__kbd">Esc</kbd>` (viền dưới 2px, nền `--sd-surface-muted`,
+  giống `kbd` của bảng phím tắt form builder). Catalog custom không có `{key}` → chỉ hiện chữ.
+- **Suffix cỡ lg sát viền phải** (badge picker, sd-input, sd-date…): `core/form.scss` chỉ đệm suffix ở `sd-sm` / `sd-md`;
+  thêm rule cho field không có class size (= lg) với padding `0 12px`, gap 8px như md.
+- **Góc trắng sau ô bo tròn** (hàng filter bảng nền xám, ô disabled): wrapper mang nền nhưng chỉ bo 8px lúc focus, lúc
+  nghỉ Material bo 4px trên / 0px dưới → nền tràn ra ngoài cung viền. Bo `--sd-control-radius` ở mọi trạng thái.
+- Spec RED trước cho cả ba (`badge-picker.component.spec.ts`, `form-field-control-tokens.spec.ts`).

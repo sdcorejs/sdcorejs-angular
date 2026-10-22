@@ -73,7 +73,7 @@ The three models also emit their own `typeChange` / `colorChange` / `iconChange`
   - **Kiểu**: 3-column grid of 60px tiles, each with a preview in the drafted colour and icon and the type name; the chosen tile has a primary border and a 6% primary background.
   - **Màu**: six 24px swatches; the chosen one has a 2px ring in the text colour, 2px away. The colour name follows the group label.
   - **Icon**: a 32px search box (`sd-search-field` `sm`) and an 8-column grid of 36px cells; the chosen cell is `--sd-primary-light` with a primary border. "Không có icon khớp" when the search finds nothing.
-  - Footer (52px): "Esc huỷ thay đổi" on the left, **Done** (`sd-button` fill, `sm`) on the right.
+  - Footer (52px): "Esc huỷ thay đổi" on the left, with Esc drawn as a key cap (`kbd.sd-badge-picker-panel__kbd`; the i18n text carries a `{key}` placeholder), **Done** (`sd-button` fill, `sm`) on the right.
 
 ## Accessibility
 - The trigger is `role="combobox"` with `aria-haspopup="dialog"`, `aria-expanded`, `aria-controls` (the panel id while open), `aria-invalid`, `aria-required` and `aria-disabled`; its name is the label (or placeholder) and `aria-describedby` points to the error or hint. Enter, Space, ↓ or ↑ open the panel.

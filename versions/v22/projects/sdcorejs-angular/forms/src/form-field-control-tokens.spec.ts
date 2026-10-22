@@ -112,6 +112,14 @@ describe('Form field control tokens with the shipped theme', () => {
     expect(outline.borderTopLeftRadius).toBe('8px');
   });
 
+  // A field on a non-surface background (the table filter row) or with the disabled background painted the
+  // wrapper with Material's 4px corner under the 8px outline, so square-ish corners showed outside the outline.
+  it('rounds the field background with the outline at rest, also when disabled', () => {
+    expect(wrapper(fields[0]).borderTopLeftRadius).toBe('8px');
+    expect(wrapper(fields[0]).borderBottomRightRadius).toBe('8px');
+    expect(wrapper(fields[2]).borderTopLeftRadius).withContext('disabled').toBe('8px');
+  });
+
   it('keeps a 1px outline on focus and adds the control ring around the field', async () => {
     const field = fields[0];
     field.querySelector('input')!.focus();
@@ -432,5 +440,43 @@ describe('Select "select all" row in the sticky header with the shipped theme', 
     expect(style.color).toBe(resolve('color', 'var(--sd-text-secondary)'));
     // Right-aligned: it ends where the row's 12px inner padding starts.
     expect(counter.getBoundingClientRect().right).toBeCloseTo(row.getBoundingClientRect().right - 12, 0);
+  });
+});
+
+// lg uses Material's own field metrics, which give an sd-icon or icon button suffix no padding: it sat on the border.
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  imports: [SdFormsModule, LayoutTestTheme],
+  template: `
+    <sd-layout-test-theme />
+    <div style="width: 320px">
+      @for (size of sizes; track size) {
+        <sd-input [class]="'input-' + size" [size]="size" label="Tên" clearable [(model)]="text" />
+        <sd-date [class]="'date-' + size" [size]="size" label="Ngày" />
+      }
+    </div>
+  `,
+})
+class SuffixSizeHost {
+  readonly sizes = ['md', 'lg'] as const;
+  text = 'abc';
+}
+
+describe('Form field suffix spacing by size', () => {
+  it('keeps the last suffix as far from the right border at lg as at md', async () => {
+    await TestBed.configureTestingModule({ imports: [SuffixSizeHost, NoopAnimationsModule] }).compileComponents();
+    const fixture = TestBed.createComponent(SuffixSizeHost);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const gap = (selector: string) => {
+      const wrapper = fixture.nativeElement.querySelector(`${selector} .mat-mdc-text-field-wrapper`) as HTMLElement;
+      const items = Array.from(wrapper.querySelectorAll<HTMLElement>('.mat-mdc-form-field-icon-suffix > *')).filter(
+        item => item.getBoundingClientRect().width > 0
+      );
+      return wrapper.getBoundingClientRect().right - items[items.length - 1].getBoundingClientRect().right;
+    };
+    expect(gap('.input-lg')).withContext('sd-input').toBeCloseTo(gap('.input-md'), 0);
+    expect(gap('.date-lg')).withContext('sd-date').toBeCloseTo(gap('.date-md'), 0);
   });
 });

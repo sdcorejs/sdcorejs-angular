@@ -174,6 +174,21 @@ describe('SdBadgePicker', () => {
       }
     }));
 
+    // lg uses Material's own field metrics, which give an sd-icon suffix no padding: the arrow sat on the border.
+    it('keeps the arrow as far from the right border at lg as at md', fakeAsync(() => {
+      const gap = (size: Size) => {
+        const fixture = TestBed.createComponent(SizeHost);
+        fixture.componentInstance.size = size;
+        settle(fixture);
+        const wrapper = fixture.nativeElement.querySelector('.picker .mat-mdc-text-field-wrapper') as HTMLElement;
+        const arrow = wrapper.querySelector('.mat-mdc-form-field-icon-suffix .sd-suffix-icon') as HTMLElement;
+        const value = wrapper.getBoundingClientRect().right - arrow.getBoundingClientRect().right;
+        fixture.destroy();
+        return value;
+      };
+      expect(gap('lg')).toBeCloseTo(gap('md'), 0);
+    }));
+
     it('centres the badge in the field and cuts the summary before the badge', fakeAsync(() => {
       for (const size of ['sm', 'md', 'lg'] as const) {
         const fixture = TestBed.createComponent(SizeHost);
@@ -265,6 +280,21 @@ describe('SdBadgePicker', () => {
       expect(fixture.componentInstance.type).toBe('solid');
       expect(fixture.componentInstance.changes.length).toBe(1);
       expect(panel()).toBeNull();
+    }));
+
+    // Review 2026-10-22: the Esc of the footer hint reads as a key cap, like other UIs.
+    it('draws Esc in the footer hint as a key cap inside the translated sentence', fakeAsync(() => {
+      const fixture = createHost();
+      open(fixture);
+      const hint = panel()!.querySelector('.sd-badge-picker-panel__esc') as HTMLElement;
+      const kbd = hint.querySelector('kbd') as HTMLElement;
+      expect(kbd).withContext('kbd').not.toBeNull();
+      expect(kbd.textContent?.trim()).toBe('Esc');
+      expect(hint.textContent?.replace(/\s+/g, ' ').trim()).toBe('Esc huỷ thay đổi');
+      const style = getComputedStyle(kbd);
+      expect(style.borderTopStyle).toBe('solid');
+      expect(parseFloat(style.borderBottomWidth)).toBeGreaterThan(parseFloat(style.borderTopWidth));
+      expect(parseFloat(style.paddingLeft)).toBeGreaterThan(0);
     }));
 
     it('discards the draft on Esc without emitting', fakeAsync(() => {

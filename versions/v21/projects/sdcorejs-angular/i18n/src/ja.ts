@@ -1505,7 +1505,7 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.badge.picker.dot': 'ドット（アイコンなし）',
   'core.component.badge.picker.no-icon': 'アイコンなし',
   'core.component.badge.picker.no-icon-match': '一致するアイコンがありません',
-  'core.component.badge.picker.esc-hint': 'Esc で変更を破棄',
+  'core.component.badge.picker.esc-hint': '{key} で変更を破棄',
   'core.component.badge.picker.done': '完了',
   'core.component.badge.picker.description-hint': '説明はアイコンとタグの種類でのみ表示されます',
   'core.component.badge.picker.required': '表示スタイルを選択してください',

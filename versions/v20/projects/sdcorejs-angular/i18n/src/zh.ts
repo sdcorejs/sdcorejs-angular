@@ -1487,7 +1487,7 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.badge.picker.dot': '圆点（无图标）',
   'core.component.badge.picker.no-icon': '无图标',
   'core.component.badge.picker.no-icon-match': '没有匹配的图标',
-  'core.component.badge.picker.esc-hint': '按 Esc 放弃更改',
+  'core.component.badge.picker.esc-hint': '按 {key} 放弃更改',
   'core.component.badge.picker.done': '完成',
   'core.component.badge.picker.description-hint': '说明仅在图标和标签类型中显示',
   'core.component.badge.picker.required': '请选择显示样式',

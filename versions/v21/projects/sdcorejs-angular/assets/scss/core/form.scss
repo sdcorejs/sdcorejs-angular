@@ -134,8 +134,13 @@
     --mat-form-field-outlined-outline-width: 1px;
     --mat-form-field-outlined-focus-outline-width: 1px;
 
-    &.mat-focused .mat-mdc-text-field-wrapper {
+    // why: wrapper mang nền của ô (nền bảng ở hàng filter, nền disabled) và vòng focus; Material bo nó 4px ở trên,
+    // 0px ở dưới nên nền tràn ra ngoài cung 8px của viền thành góc vuông trên nền khác. Bo theo viền ở mọi trạng thái.
+    .mat-mdc-text-field-wrapper {
       border-radius: var(--sd-control-radius, 8px);
+    }
+
+    &.mat-focused .mat-mdc-text-field-wrapper {
       box-shadow: var(--sd-control-ring, none);
     }
 
@@ -170,6 +175,15 @@
     .mat-mdc-form-field-subscript-wrapper {
       display: none;
     }
+  }
+
+  // Size lg = số đo mặc định của Material (không có class size). why: Material chỉ đệm `mat-icon` trong suffix, nên
+  // sd-icon / nút icon của suffix (mũi tên, xoá, lịch…) nằm sát viền phải. Đệm và khoảng cách như sd-md.
+  &:not(.sd-sm):not(.sd-md).mat-form-field-appearance-outline .mat-mdc-form-field-icon-suffix {
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   // Size normal`
