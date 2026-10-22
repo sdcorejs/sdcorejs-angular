@@ -43,6 +43,16 @@ describe('SdOperator', () => {
       expect(items[0].display).toBeTruthy();
     });
 
+    // Design handoff sd-operator · C1–C6: the glyphs of @sdcorejs/utils 1.3.1 (∈ for IN, ring and dot for NOT_NULL).
+    it('draws the @sdcorejs/utils 1.3.1 glyphs', () => {
+      fixture.componentRef.setInput('operators', ['IN', 'NOT_NULL']);
+      fixture.detectChanges();
+      const sanitizer = TestBed.inject(DomSanitizer);
+      const [inItem, notNull] = component.items();
+      expect(html(sanitizer, inItem.icon)).toContain('<path d="M17 6.5h-4.5a5.5 5.5 0 0 0 0 11H17M7 12h9"');
+      expect(html(sanitizer, notNull.icon)).toContain('<circle cx="12" cy="12" r="2.75" fill="currentColor" stroke="none"');
+    });
+
     it('skips operators not present in OPERATORS', () => {
       fixture.componentRef.setInput('operators', ['EQUAL', 'NOT_A_REAL_OP' as any]);
       fixture.detectChanges();
