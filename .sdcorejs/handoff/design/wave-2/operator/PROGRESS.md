@@ -7,7 +7,7 @@ Kế hoạch đã duyệt: [`PLAN.md`](PLAN.md) (2026-10-22). Nhánh `feat/sd-op
 | 0 | Gói handoff + kế hoạch | xong |
 | 1 | Nâng `@sdcorejs/utils` 1.3.1 (C1–C6) | xong |
 | 2 | sd-operator (A1, A3, B1, B2, B4, B5 hình, C7, D1) | xong |
-| 3 | column-filter (B3, B5) | chưa |
+| 3 | column-filter (B3, B5) | xong |
 | 4 | query-bar (A2, A4, D1) | chưa |
 | 5 | Nhãn vi, tài liệu, showcase, CHANGELOG (B6, D2) | chưa |
 
@@ -42,3 +42,15 @@ Kế hoạch đã duyệt: [`PLAN.md`](PLAN.md) (2026-10-22). Nhánh `feat/sd-op
 - Kiểm tra: spec operator 60/60, filter 35/35, full Karma 7843 + 2 spec column-filter đã sửa, `test:theme` 53/53,
   `check:scss-hex` 0, i18n parity, `check:i18n`, sync, `check:sync`. Ảnh: [`progress/step2-before-after.png`](progress/step2-before-after.png).
 - Tạm thời tới bước 4: chip chỉ-xem của query-bar đang là chip md disabled (query-bar còn `[disabled]="true"`).
+
+## Bước 3
+
+- B3: `operators` của column-filter theo đúng thứ tự `column.filter.operator.list` (tra `OPERATORS`, bỏ mục không có);
+  trước đây theo thứ tự của `OPERATORS`. Chip trong control và sd-operator rời đều nhận thứ tự này.
+- B5 phương án (b): không gán operator mặc định, không emit; chưa có operator thì sd-operator rời hiện phễu xám.
+- sd-operator rời (split filter, `filterDef`, cột một operator): `size="sm"` và `[active]` = cột đang có giá trị
+  (`hasFilterValue()`, dùng `ɵsdOperatorHasValue`; method vì `columnFilter` là object cha sửa tại chỗ).
+- Spec: 3 spec mới (RED trước): thứ tự theo list + bỏ mục lạ; sd-operator rời `sm`, xám khi trống, không gán operator;
+  `active` khi cột có giá trị.
+- Kiểm tra: filter specs 38/38, full Karma 7848/7848, prettier + eslint, sync, `check:sync`.
+  Ảnh: [`progress/step3-before-after.png`](progress/step3-before-after.png) (menu cột “Họ và tên” của Full demo).

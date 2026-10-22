@@ -268,6 +268,39 @@ describe('ColumnFilterComponent', () => {
       expect(values).toContain('GREATER_THAN');
       expect(values).not.toContain('LESS_THAN');
     });
+
+    // Handoff sd-operator B3: the menu follows the column configuration, not the order of OPERATORS.
+    it('follows the order of column.filter.operator.list and drops unknown entries', () => {
+      bootstrap({
+        field: 'price',
+        type: 'number',
+        filter: { operator: { enable: true, list: ['LESS_THAN', 'NOT_AN_OPERATOR', 'EQUAL', 'GREATER_THAN'] } },
+      } as unknown as SdTableColumn);
+      expect(component.operatorValues()).toEqual(['LESS_THAN', 'EQUAL', 'GREATER_THAN']);
+    });
+  });
+
+  // Handoff sd-operator B5 / mục 7: the separate sd-operator (split filter, filterDef, single operator) is the 24px
+  // chip, tinted while the column has a filter value. Without an operator it stays undefined (option b).
+  describe('separate sd-operator look', () => {
+    const split = {
+      field: 'price',
+      type: 'number',
+      filter: { type: 'split-number', operator: { enable: true, list: ['EQUAL', 'GREATER_THAN'] } },
+    } as unknown as SdTableColumn;
+    const separate = () => fixture.debugElement.query(By.directive(SdOperator)).componentInstance as SdOperator;
+
+    it('uses size sm, grey while the column has no value', () => {
+      bootstrap(split, {});
+      expect(separate().size()).toBe('sm');
+      expect(separate().active()).toBeFalse();
+      expect(component.operator()).withContext('no default operator is picked (option b)').toBeUndefined();
+    });
+
+    it('is active while the column has a value', () => {
+      bootstrap(split, { price: { from: 10, to: null } });
+      expect(separate().active()).toBeTrue();
+    });
   });
 
   // Wave 2 · G: the operator is a prefix chip inside the default control; a custom filterDef template and the
