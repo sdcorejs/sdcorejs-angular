@@ -167,6 +167,10 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.chip-calendar.minlength': '请至少输入 {min} 个值',
   'core.form.chip-calendar.maxlength': '最多输入 {max} 个值',
 
+  'core.form.chip-calendar.remove': '移除 {date}',
+
+  'core.form.chip-calendar.locked': '此日期无法移除',
+
   // ---- Forms: date ----
   'core.form.date.required': '请输入内容',
   'core.form.date.min-date': '最小日期: {date}',

@@ -166,6 +166,10 @@ export const EN_MESSAGES = {
   'core.form.chip-calendar.minlength': 'Please enter at least {min} values',
   'core.form.chip-calendar.maxlength': 'Please enter at most {max} values',
 
+  'core.form.chip-calendar.remove': 'Remove {date}',
+
+  'core.form.chip-calendar.locked': 'This date cannot be removed',
+
   // ---- Forms: date ----
   'core.form.date.required': 'Please enter information',
   'core.form.date.min-date': 'Minimum date: {date}',

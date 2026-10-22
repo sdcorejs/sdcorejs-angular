@@ -1,4 +1,3 @@
-import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { CommonModule } from '@angular/common';
 import {
   AfterViewInit,
@@ -7,19 +6,23 @@ import {
   ChangeDetectorRef,
   Component,
   computed,
+  DestroyRef,
   ElementRef,
   contentChild,
   effect,
   inject,
   input,
+  isDevMode,
   model,
   output,
   TemplateRef,
   viewChild,
   OnDestroy,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Utilities } from '@sdcorejs/utils/fns';
 import {
+  AbstractControl,
   FormControl,
   FormGroup,
   FormGroupDirective,
@@ -44,28 +47,48 @@ import { SdLabel } from '@sdcorejs/angular/forms/label';
 import {
   SdFormControl,
   sdFormControlState,
+  SdTemporalValueTransform,
   SdViewed,
   SdViewedInput,
+  sdLocalStartOfDay,
+  sdSerializeTemporalValue,
   sdViewedInline,
   sdViewedTransform,
   ɵsdFormControlConnector,
+  ɵsdModelFacingControl,
+  ɵsdNormalizeCalendarDay,
   ɵsdTimerScope,
 } from '@sdcorejs/angular/forms/models';
 import type { SdLabelPlacement } from '@sdcorejs/angular/forms/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
+import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { DateUtilities } from '@sdcorejs/utils/fns';
 import { Size } from '@sdcorejs/utils/models';
 import { Subscription } from 'rxjs';
-import { SdRemovableChipPipe } from './pipes';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
-class SdChipCalendarErrorStateMatcher implements ErrorStateMatcher {
-  constructor(private formControl: FormControl) {}
-  isErrorState(control: FormControl | null, form: FormGroupDirective | NgForm | null): boolean {
-    const isSubmitted = form && form.submitted;
-    return !!(this.formControl?.invalid && (this.formControl?.dirty || this.formControl?.touched || isSubmitted));
-  }
+/** One date of the model: canonical `yyyy/MM/dd`, ISO / RFC-1123 string, `Date` or timestamp (read like `<sd-date>`). */
+export type SdChipCalendarValue = string | number | Date;
+/** Model of `<sd-chip-calendar>`: read wide, written back as `string[]` (see `transform`). */
+export type SdChipCalendarModel = SdChipCalendarValue[] | null | undefined;
+
+/** `removable`: all chips, none, or a predicate that receives the normalised `yyyy/MM/dd` day. */
+export type SdChipCalendarRemovable = boolean | ((day: string) => boolean);
+
+const FULL_DATE: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+
+/** Same days in the same order. */
+function sameDays(left: readonly unknown[] | null | undefined, right: readonly unknown[] | null | undefined): boolean {
+  if (left === right) return true;
+  if (!left || !right || left.length !== right.length) return false;
+  return left.every((value, index) => Object.is(value, right[index]));
+}
+
+/** `yyyy/MM/dd` → local midnight of that day (the carrier `mat-calendar` and `Intl` work with). */
+function dayToDate(day: string): Date {
+  const [year, month, date] = day.split('/').map(Number);
+  return new Date(year, month - 1, date);
 }
 
 @Component({
@@ -95,18 +118,23 @@ class SdChipCalendarErrorStateMatcher implements ErrorStateMatcher {
     MatMenuModule,
     SdLabel,
     SdView,
-    SdRemovableChipPipe,
   ],
 })
 export class SdChipCalendar implements AfterViewInit, OnDestroy {
   #ref = inject(ChangeDetectorRef);
   readonly #i18n = inject(I18nService);
+  readonly #dateTime = inject(SdDateTimeService);
+  readonly #zoned = this.#dateTime.timeZone !== 'local';
+  // why: lỗi phải hiện khi form cha đã submit dù field chưa chạm (A4). NgForm / FormGroupDirective tổ tiên
+  // giữ cờ `submitted`; MatInput cũng lấy đúng hai directive này cho ErrorStateMatcher.
+  readonly #parentForm = inject(FormGroupDirective, { optional: true }) ?? inject(NgForm, { optional: true });
   // why: focus hoãn 100ms; handle phải bị clear khi destroy, nếu không timer vẫn chạm
   // input của view đã tháo.
   readonly #timers = ɵsdTimerScope();
   #subscription = new Subscription();
   #name = Utilities.generateUuid();
   #isBlurring = false;
+  #warnedUnreadable = false;
   /** why: id ổn định của <mat-error> để ô nhập chip trỏ `aria-describedby` sang — thông báo
    *  lỗi phải đọc được từ chính control, không chỉ hiện ra màn hình. */
   readonly errorId = `sd-chip-calendar-error-${Utilities.generateUuid()}`;
@@ -174,8 +202,13 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
   placeholder = input<string | undefined, string | null | undefined>(undefined, {
     transform: (v): string | undefined => v ?? undefined,
   });
-  removable = input<boolean | ((item: any) => boolean), boolean | ((item: any) => boolean) | null | undefined>(true, {
-    transform: (v): boolean | ((item: any) => boolean) => v ?? true,
+  /**
+   * `true` / `false` for every chip, or a predicate. The predicate receives the normalised `yyyy/MM/dd` day and is
+   * applied on every removal path: the ✕ button, Backspace / Delete on a chip, pressing the day again in the
+   * calendar and clearing.
+   */
+  removable = input<SdChipCalendarRemovable, SdChipCalendarRemovable | null | undefined>(true, {
+    transform: (v): SdChipCalendarRemovable => v ?? true,
   });
   hideInlineError = input(false, { transform: booleanAttribute });
   required = input(false, { transform: booleanAttribute });
@@ -188,6 +221,12 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
   disabled = input(false, { transform: booleanAttribute });
   /** Display mode: `false` edit · `true` static view · `'inline'` interactive (disabled `'inline'` → static). */
   viewed = input<SdViewed, SdViewedInput>(false, { transform: sdViewedTransform });
+  /**
+   * String form of each day when the value leaves the component, same contract as `<sd-date>`: `undefined` →
+   * `yyyy/MM/dd`, `'ISOString'` / `'UTCString'` → the start of the day (in `ISdCoreConfiguration.timeZone` when
+   * configured). Display is not affected.
+   */
+  transform = input<SdTemporalValueTransform | undefined>();
 
   // why: tri-state viewed — `'inline'` keeps it interactive; disabled `'inline'` falls back to static.
   readonly #viewedState = sdViewedInline(this.viewed, undefined, this.disabled);
@@ -197,11 +236,14 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
     transform: (v): string | undefined => v ?? undefined,
   });
 
-  // Two-way model
-  model = model<(string | number)[] | undefined>(undefined);
+  /**
+   * Two-way model. Read wide (each item `string | number | Date`, like `<sd-date>`), written back only on a user
+   * action, as `string[]`. A model from the parent is never rewritten.
+   */
+  model = model<SdChipCalendarModel>(undefined);
 
   // Outputs (modelChange auto-generated by model() signal)
-  sdChange = output<any[]>();
+  sdChange = output<string[]>();
 
   input = viewChild<ElementRef<HTMLInputElement>>('input');
   sdViewDef = contentChild(SdViewDefDirective);
@@ -211,6 +253,8 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
 
   isFocused = false;
   #inputControl = new FormControl();
+  /** Holds the normalised days (`yyyy/MM/dd`, no duplicates, model order); the parent form gets this control
+   *  unless a `transform` is set. */
   #formControl = new SdFormControl();
   // why: `min`/`max` là validator do CHÍNH component sở hữu; `required` đi qua option riêng của
   // connector. Connector chỉ add/remove đúng phần này nên validator do consumer tự gắn vào
@@ -223,33 +267,48 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
     if (max > 0) validators.push(Validators.maxLength(max));
     return validators;
   });
-  readonly #formConnector = ɵsdFormControlConnector<unknown, unknown>({
+
+  /**
+   * why: with a `transform` the model holds ISO / RFC-1123 strings while the control keeps `yyyy/MM/dd`. Like
+   * `<sd-date>`, the parent form then gets a control that carries the model, so `form.value` equals `modelChange`.
+   */
+  readonly #modelFacing = ɵsdModelFacingControl<SdChipCalendarModel>({
+    active: computed(() => !!this.transform()),
+    model: this.model,
+    writeModel: value => this.#writeModel(value),
+    source: computed<AbstractControl>(() => this.#formControl),
+    modelEquals: (left, right) => this.#modelsEqual(left, right),
+  });
+  readonly #formConnector = ɵsdFormControlConnector<SdChipCalendarModel, string[] | null>({
     form: this.form,
     name: computed(() => this.name() || this.#name),
-    control: computed(() => this.#formControl),
+    control: computed<AbstractControl<string[] | null>>(() => this.#formControl),
+    registeredControl: this.#modelFacing.registered,
+    model: this.model,
+    writeModel: value => this.#writeModel(value),
+    modelToControl: value => this.#days(value),
+    controlToModel: days => this.#serializeDays(days),
+    modelEquals: (left, right) => this.#modelsEqual(left, right),
+    controlEquals: sameDays,
     validators: this.#validators,
     required: this.required,
   });
-  #matcher!: SdChipCalendarErrorStateMatcher;
-  readonly separatorKeysCodes = [ENTER, COMMA];
+  #matcher!: ErrorStateMatcher;
+
+  readonly #fullDate = computed(() => new Intl.DateTimeFormat(this.#i18n.locale(), FULL_DATE));
 
   constructor() {
     effect(() => {
-      const values = this.model();
-      if (Array.isArray(values)) {
-        this.#formControl.setValue(values);
-      }
-    });
-
-    effect(() => {
       const isDisabled = this.disabled();
-      if (isDisabled) {
-        this.#formControl.disable();
-        this.#inputControl.disable();
-      } else {
-        this.#formControl.enable();
-        this.#inputControl.enable();
+      // why: `enable()` / `disable()` phát `valueChanges`; connector sẽ coi đó là thao tác và ghi model (đã
+      // transform) ngược lên cha. Chỉ đổi khi trạng thái thật sự khác, và không phát event.
+      if (isDisabled !== this.#formControl.disabled) {
+        if (isDisabled) this.#formControl.disable({ emitEvent: false });
+        else this.#formControl.enable({ emitEvent: false });
+        this.#ref.markForCheck();
       }
+      if (isDisabled) this.#inputControl.disable();
+      else this.#inputControl.enable();
     });
 
     effect(() => {
@@ -259,7 +318,10 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
       }
     });
 
-    this.#matcher = new SdChipCalendarErrorStateMatcher(this.#formControl);
+    // why: `submitted` của form cha không phải signal; submit phải vẽ lại lỗi dưới OnPush.
+    this.#parentForm?.ngSubmit.pipe(takeUntilDestroyed(inject(DestroyRef))).subscribe(() => this.#ref.markForCheck());
+
+    this.#matcher = { isErrorState: (_control, form) => this.#errorGate(form) };
   }
 
   get formControl() {
@@ -294,6 +356,37 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
     return this.#matcher;
   }
 
+  /**
+   * The one place that decides whether the error shows (A4): `ErrorStateMatcher`, `<mat-error>`, `aria-invalid` and
+   * the `hideInlineError` icon all read it. Invalid and touched, or the parent form was submitted; a selection that
+   * is still too short while the user picks (dirty only) shows nothing.
+   */
+  isErrorShown(): boolean {
+    return !!this.errorMessage() && this.#errorGate();
+  }
+
+  #errorGate(form?: FormGroupDirective | NgForm | null): boolean {
+    const control = this.#formControl;
+    return control.invalid && (control.touched || !!(form ?? this.#parentForm)?.submitted);
+  }
+
+  /** Whether `day` (`yyyy/MM/dd`) may be removed, per `removable`. */
+  isRemovable(day: string): boolean {
+    const removable = this.removable();
+    return typeof removable === 'function' ? !!removable(day) : removable;
+  }
+
+  /** Accessible name of a chip: the full date in the current locale, plus the locked note. */
+  chipLabel(day: string): string {
+    const full = this.#fullDate().format(dayToDate(day));
+    return this.isRemovable(day) ? full : `${full}, ${this.#i18n.t('core.form.chip-calendar.locked')}`;
+  }
+
+  /** Accessible name of the ✕ button of a chip. */
+  removeLabel(day: string): string {
+    return this.#i18n.t('core.form.chip-calendar.remove', { date: this.#fullDate().format(dayToDate(day)) });
+  }
+
   ngAfterViewInit() {
     this.#subscription.add(
       this.#formControl.sdChanges.subscribe(() => {
@@ -306,6 +399,63 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
     this.#subscription.unsubscribe();
   }
 
+  /** Normalised days of a model: one `yyyy/MM/dd` per calendar day, model order, unreadable items skipped. */
+  #days(value: SdChipCalendarModel): string[] | null {
+    if (!Array.isArray(value)) return null;
+    const zone = this.#zoned ? this.#dateTime : null;
+    const days: string[] = [];
+    let unreadable = false;
+    for (const item of value) {
+      const day = ɵsdNormalizeCalendarDay(item, zone);
+      if (!day) {
+        unreadable = true;
+        continue;
+      }
+      if (!days.includes(day)) days.push(day);
+    }
+    if (unreadable && !this.#warnedUnreadable && isDevMode()) {
+      this.#warnedUnreadable = true;
+      console.warn('[sd-chip-calendar] Skipped model items that are not dates:', value);
+    }
+    return days;
+  }
+
+  /** Days → the model written back: `yyyy/MM/dd`, or the start of each day per `transform` (like `<sd-date>`). */
+  #serializeDays(days: string[] | null): SdChipCalendarModel {
+    if (!days) return days;
+    const transform = this.transform();
+    if (!transform) return [...days];
+    return days.map(day => {
+      const startOfDay = sdLocalStartOfDay(dayToDate(day));
+      return sdSerializeTemporalValue(this.#zoned ? this.#dateTime.fromWallClock(startOfDay) : startOfDay, transform) ?? day;
+    });
+  }
+
+  /**
+   * why: không có transform thì so theo ngày, để `[Date]` từ cha và `['yyyy/MM/dd']` của chính ta là một (không ghi
+   * ngược model của cha). Có transform thì so nguyên văn, như sd-date: đổi transform rồi thao tác phải ra chuỗi mới.
+   */
+  #modelsEqual(left: SdChipCalendarModel, right: SdChipCalendarModel): boolean {
+    if (this.transform()) return sameDays(left, right);
+    return sameDays(this.#days(left), this.#days(right));
+  }
+
+  #writeModel(value: SdChipCalendarModel): void {
+    this.model.set(value);
+    this.sdChange.emit(value ? (value as string[]) : []);
+  }
+
+  #currentDays(): string[] {
+    const value = this.#formControl.value;
+    return Array.isArray(value) ? value : [];
+  }
+
+  /** Every user action ends here: a new array of days, written once (the connector writes the model). */
+  #commit(next: string[]): void {
+    this.#formControl.setValue(next);
+    this.#ref.markForCheck();
+  }
+
   #clickChip = (event: Event, item: any) => {
     event.stopPropagation();
     event.stopImmediatePropagation();
@@ -314,40 +464,26 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
     }
   };
 
-  #remove = (item: string): void => {
-    const values: string[] = this.#formControl.value ?? [];
-    if (typeof item === 'string') {
-      // why: `filter` đã trả mảng mới nên reference đổi → `model.set` phát `modelChange`.
-      const next = values.filter(value => item !== value);
-      this.#formControl.setValue(next);
-      this.model.set(next);
-      this.sdChange.emit(next);
+  #remove = (day: string): void => {
+    if (typeof day === 'string' && this.isRemovable(day)) {
+      const days = this.#currentDays();
+      // why: `filter` đã trả mảng mới nên reference đổi → model ghi một lần.
+      if (days.includes(day)) this.#commit(days.filter(value => value !== day));
     }
     this.#inputControl.setValue('');
     this.#focus();
   };
 
   #select = (event: MatAutocompleteSelectedEvent) => {
-    const item = event.option.value;
-    const values: (string | number)[] = this.#formControl.value ?? [];
-    if (item) {
-      if (typeof item === 'string' || typeof item === 'number') {
-        if (!values.includes(item)) {
-          // why: PHẢI tạo mảng MỚI. `values` là chính mảng của consumer (model đi thẳng vào
-          // formControl), nên `push` vừa sửa trộm mảng của họ, vừa giữ nguyên reference —
-          // `model()` dùng equality Object.is nên `model.set(sameRef)` KHÔNG phát `modelChange`.
-          const next = [...values, item];
-          this.#formControl.setValue(next);
-          this.model.set(next);
-          this.sdChange.emit(next);
-        }
-      }
-      const inputEl = this.input();
-      if (inputEl) inputEl.nativeElement.value = '';
-      this.#inputControl.setValue('', {
-        emitEvent: false,
-      });
-    }
+    const day = ɵsdNormalizeCalendarDay(event.option.value, this.#zoned ? this.#dateTime : null);
+    const days = this.#currentDays();
+    // why: PHẢI tạo mảng MỚI — không sửa mảng của consumer, và `model()` so Object.is.
+    if (day && !days.includes(day)) this.#commit([...days, day]);
+    const inputEl = this.input();
+    if (inputEl) inputEl.nativeElement.value = '';
+    this.#inputControl.setValue('', {
+      emitEvent: false,
+    });
   };
 
   #onClick = () => {
@@ -369,43 +505,41 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
     }, 100);
   };
 
+  /** Removes every day the predicate allows; kept days stay. One change, none when nothing goes. */
   #clear = (evt?: any) => {
     evt?.stopPropagation();
     this.#inputControl.setValue('');
-    this.#formControl.setValue([]);
-    this.model.set(this.#formControl.value);
-    this.sdChange.emit(this.#formControl.value);
+    const days = this.#currentDays();
+    const kept = days.filter(day => !this.isRemovable(day));
+    if (kept.length !== days.length) this.#commit(kept);
     this.#ref.detectChanges();
   };
 
   #selectDate = (date: Date | null) => {
-    const value = DateUtilities.toFormat(date, 'yyyy/MM/dd');
-    const values: (string | number)[] = this.#formControl.value ?? [];
-    if (value) {
-      // why: toggle ngày — cả nhánh thêm lẫn nhánh bỏ đều dựng mảng MỚI. Nhánh thêm trước đây
-      // `push` thẳng vào mảng của consumer: reference không đổi nên `model.set` im lặng
-      // (Object.is) → `[(model)]` không nhận ngày vừa chọn, mà mảng gốc lại bị sửa trộm.
-      const next = values.includes(value) ? values.filter(date => value !== date) : [...values, value];
-      this.#formControl.setValue(next);
-      this.model.set(next);
-      this.sdChange.emit(next);
-      this.calendar()?.updateTodaysDate();
-      this.#ref.markForCheck();
+    // why: ô lịch là ngày lịch (nửa đêm local của native adapter), không phải instant → chỉ đọc chữ số.
+    const day = DateUtilities.toFormat(date, 'yyyy/MM/dd');
+    if (!day) return;
+    const days = this.#currentDays();
+    if (days.includes(day)) {
+      // A1: bấm lại ngày đã chọn chỉ bỏ khi predicate cho phép.
+      if (this.isRemovable(day)) this.#commit(days.filter(value => value !== day));
+    } else {
+      this.#commit([...days, day]);
     }
+    this.calendar()?.updateTodaysDate();
   };
 
   #closeCalendar = () => {
     this.isFocused = false;
     this.input()?.nativeElement?.blur();
+    // A4: đóng lịch là đã tương tác — lỗi (vd thiếu so với `min`) hiện từ đây.
+    this.#formConnector.markAsTouched();
+    this.#ref.markForCheck();
   };
 
   #dateClass = (cellDate: Date) => {
-    const dates: string[] = this.#formControl.value || [];
-    if (Array.isArray(dates)) {
-      const selected = dates.some(date => date === DateUtilities.toFormat(cellDate, 'yyyy/MM/dd'));
-      return selected ? 'sd-chip-calendar-selected-date' : '';
-    }
-    return '';
+    const day = DateUtilities.toFormat(cellDate, 'yyyy/MM/dd');
+    return this.#currentDays().includes(day) ? 'sd-chip-calendar-selected-date' : '';
   };
 
   onClickChip = (event: Event, item: any) => this.#clickChip(event, item);

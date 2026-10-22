@@ -167,6 +167,10 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.chip-calendar.minlength': '최소 {min}개의 값을 입력해 주세요',
   'core.form.chip-calendar.maxlength': '최대 {max}개의 값을 입력해 주세요',
 
+  'core.form.chip-calendar.remove': '{date} 제거',
+
+  'core.form.chip-calendar.locked': '이 날짜는 제거할 수 없습니다',
+
   // ---- Forms: date ----
   'core.form.date.required': '정보를 입력해 주세요',
   'core.form.date.min-date': '최소 날짜: {date}',

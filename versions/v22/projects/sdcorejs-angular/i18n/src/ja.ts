@@ -168,6 +168,10 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.chip-calendar.minlength': '{min}件以上入力してください',
   'core.form.chip-calendar.maxlength': '{max}件以内で入力してください',
 
+  'core.form.chip-calendar.remove': '{date} を削除',
+
+  'core.form.chip-calendar.locked': 'この日付は削除できません',
+
   // ---- Forms: date ----
   'core.form.date.required': '入力してください',
   'core.form.date.min-date': '最小日付: {date}',

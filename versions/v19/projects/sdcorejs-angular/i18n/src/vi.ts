@@ -167,6 +167,10 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.chip-calendar.minlength': 'Vui lòng nhập ít nhất {min} giá trị',
   'core.form.chip-calendar.maxlength': 'Vui lòng nhập tối đa {max} giá trị',
 
+  'core.form.chip-calendar.remove': 'Bỏ ngày {date}',
+
+  'core.form.chip-calendar.locked': 'Không bỏ được ngày này',
+
   // ---- Forms: date ----
   'core.form.date.required': 'Vui lòng nhập thông tin',
   'core.form.date.min-date': 'Ngày nhỏ nhất: {date}',

@@ -8,10 +8,9 @@
 @let _valueTemplate = (sdValueTemplate() ?? _sdViewDef?.templateRef) || undefined;
 @let _errorMessage = errorMessage();
 @let _size = size();
-@let _removable = removable();
 @let _labelTop = labelPlacement() === 'top';
 <!-- why: một cổng gate duy nhất cho <mat-error>, aria-invalid và aria-describedby. -->
-@let _errorVisible = !!_errorMessage && formControl.touched;
+@let _errorVisible = isErrorShown();
 @let _showInlineError = !_hideInlineError && _errorVisible;
 @let _viewTemplate = _sdViewDef?.templateRef;
 
@@ -66,22 +65,24 @@
           <mat-label>{{ _label }}</mat-label>
         }
         <mat-chip-grid [formControl]="formControl" #chipList [class.sd-md]="_size === 'md'" [class.sd-sm]="_size === 'sm'">
+          <!-- why: chip là ngày đã chuẩn hoá (yyyy/MM/dd). `removable` áp cả cho Backspace / Delete trên chip (A1),
+               và chip có tên đầy đủ, nút ✕ có tên riêng (A6). -->
           @for (item of formControl.value; track item) {
-            @if (item) {
-              <mat-chip-row
-                [class.sd-md]="_size === 'md'"
-                [class.sd-sm]="_size === 'sm'"
-                [removable]="_removable"
-                (removed)="onRemove(item)"
-                [disabled]="inputControl.disabled"
-                (click)="onClickChip($event, item)"
-                [value]="item">
-                <span>{{ item | date: 'dd/MM/yyyy' }}</span>
-                @if (!inputControl.disabled && item | sdRemovableChip: _removable) {
-                  <sd-icon matChipRemove name="cancel"></sd-icon>
-                }
-              </mat-chip-row>
-            }
+            @let _itemRemovable = isRemovable(item);
+            <mat-chip-row
+              [class.sd-md]="_size === 'md'"
+              [class.sd-sm]="_size === 'sm'"
+              [removable]="_itemRemovable"
+              [aria-label]="chipLabel(item)"
+              (removed)="onRemove(item)"
+              [disabled]="inputControl.disabled"
+              (click)="onClickChip($event, item)"
+              [value]="item">
+              <span>{{ item | date: 'dd/MM/yyyy' }}</span>
+              @if (!inputControl.disabled && _itemRemovable) {
+                <sd-icon matChipRemove name="cancel" [ariaLabel]="removeLabel(item)"></sd-icon>
+              }
+            </mat-chip-row>
           }
 
           <input

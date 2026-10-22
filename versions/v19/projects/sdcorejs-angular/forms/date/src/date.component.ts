@@ -38,10 +38,9 @@ import {
   SdViewed,
   SdViewedInput,
   sdLocalStartOfDay,
-  sdParseTransformedTemporal,
   sdSerializeTemporalValue,
   sdViewedInline,
-  ɵsdParseTransformedInstant,
+  ɵsdNormalizeCalendarDay,
   sdViewedTransform,
   ɵsdFormControlConnector,
   ɵsdModelFacingControl,
@@ -66,13 +65,9 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
 type SdDateModelValue = string | number | Date | undefined | null;
 type SdDateKeyupEvent = Event | { target?: { value?: string | null } };
 
+// why: cách đọc dùng chung với sd-chip-calendar (`ɵsdNormalizeCalendarDay` trong forms/models).
 function normalizeDateModel(value: SdDateModelValue): string | null {
-  if (DateUtilities.isDate(value)) return DateUtilities.toFormat(value, 'yyyy/MM/dd') || null;
-  // why: chỉ chạy SAU khi parser hiện có từ chối. `DateUtilities.isDate` đã nhận Date, timestamp,
-  // canonical `yyyy/MM/dd` và ISO — nhưng KHÔNG nhận chuỗi RFC-1123 của `toUTCString()`, nên nếu
-  // không có nhánh này thì `<sd-date transform="UTCString">` không đọc lại được chính output của nó.
-  const parsed = sdParseTransformedTemporal(value);
-  return parsed ? DateUtilities.toFormat(parsed, 'yyyy/MM/dd') || null : null;
+  return ɵsdNormalizeCalendarDay(value);
 }
 
 function dateModelToControl(value: SdDateModelValue): Date | null {
@@ -373,11 +368,7 @@ export class SdDate implements OnDestroy, OnInit {
 
   /** Model → `yyyy/MM/dd`. In a zone an instant takes its calendar day there; zone-less days keep their digits. */
   #normalizeModel(value: SdDateModelValue): string | null {
-    if (!this.#zoned) return normalizeDateModel(value);
-    const day = this.#dateTime.toFormat(value, 'yyyy/MM/dd');
-    if (day) return day;
-    const instant = ɵsdParseTransformedInstant(value);
-    return instant ? this.#dateTime.toFormat(instant, 'yyyy/MM/dd') || null : null;
+    return ɵsdNormalizeCalendarDay(value, this.#zoned ? this.#dateTime : null);
   }
 
   /** Model → picker carrier (local midnight of the calendar day). */
