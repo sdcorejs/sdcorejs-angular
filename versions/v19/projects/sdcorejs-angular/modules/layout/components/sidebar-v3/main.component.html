@@ -14,7 +14,8 @@
       [class.justify-content-between]="!collapsed"
       [class.justify-content-center]="collapsed">
       @if (!collapsed) {
-        <div data-v3-brand class="d-flex align-items-center gap-8 overflow-hidden">
+        <!-- why: 12px giữa icon và tên (như V4) — 8px trông dính vào khối tên hai dòng khi có context. -->
+        <div data-v3-brand class="d-flex align-items-center gap-12 overflow-hidden">
           @if (configuration.logoUrl) {
             <img class="sd-sidebar-v3__logo" [src]="configuration.logoUrl" alt="" />
           } @else {
