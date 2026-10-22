@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Roboto:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0..1,0" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:#f4f4f1;color:#1a1b1f;-webkit-font-smoothing:antialiased}
+a{color:#005cbb;text-decoration:none}
+a:hover{color:#004a99;text-decoration:underline}
+</style>
+</helmet>
+<div style="font-family:'Be Vietnam Pro',sans-serif;font-size:15px;line-height:1.6;color:#1a1b1f;max-width:1240px;margin:0 auto;padding:56px 32px 96px;box-sizing:border-box">
+
+<header data-screen-label="00 Header" style="display:flex;flex-direction:column;gap:16px;padding-bottom:40px;border-bottom:1px solid #dddcd6">
+  <div style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#6b6d73;display:flex;flex-wrap:wrap;gap:6px 16px"><span>sdcorejs/sdcorejs-angular · main @ 773d7de</span><span>versions/v19 · forms/chip-calendar</span></div>
+  <h1 style="margin:0;font-weight:600;font-size:44px;line-height:1.12;letter-spacing:-0.02em;max-width:900px;text-wrap:balance">sd-chip-calendar: review và các điểm nên cải thiện</h1>
+  <p style="margin:0;max-width:780px;color:#3a3c42;font-size:17px;text-wrap:pretty">Review dựa trên template, SCSS, logic của component, file sd-chip-calendar.md và wrapper trong form-render. Có 17 vấn đề, chia 4 nhóm theo mức ưu tiên. Nhóm A là lỗi hành vi và khả truy cập, nên sửa trước. Mục 03 là bản dựng đề xuất có thể bấm thử.</p>
+  <nav style="display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px;padding-top:8px">
+    <a href="#hien-trang">01 Hiện trạng</a>
+    <a href="#van-de">02 Vấn đề</a>
+    <a href="#de-xuat">03 Đề xuất</a>
+    <a href="#api">04 API</a>
+  </nav>
+</header>
+
+<section id="hien-trang" data-screen-label="01 Hiện trạng" style="padding-top:56px;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">01</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Hiện trạng</h2>
+  </div>
+  <p style="margin:0;max-width:780px;color:#3a3c42;text-wrap:pretty">Dựng lại từ template: field outline của Material, mỗi ngày là một <span style="font-family:'JetBrains Mono',monospace;font-size:13px">mat-chip-row</span> mặc định, bấm vào ô nhập readonly để mở <span style="font-family:'JetBrains Mono',monospace;font-size:13px">mat-calendar</span> trong <span style="font-family:'JetBrains Mono',monospace;font-size:13px">mat-menu</span> rộng 280px. Dữ liệu mẫu: chọn lần lượt 27/10, 05/10, 14/10, 03/11, 23/10; hôm nay là 22/10/2026.</p>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #dddcd6">
+      <span style="display:flex;align-items:center;gap:8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#6b6d73"><span style="width:8px;height:8px;border-radius:999px;background:#6b6d73"></span>Hiện tại · size="md"</span>
+      <span style="font:400 12px/16px 'JetBrains Mono',monospace;color:#6b6d73">minh hoạ tĩnh</span>
+    </div>
+    <div style="background:#f9f9f9;padding:28px 32px;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:32px;font-family:Roboto,'Helvetica Neue',sans-serif;color:#1a1b1f">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="position:relative;max-width:400px;padding-top:4px">
+          <div style="min-height:40px;box-sizing:border-box;border:1px solid #c4c6d0;border-radius:8px;background:#ffffff;padding:10px 12px 8px;display:flex;flex-wrap:wrap;gap:8px">
+            <sc-for list="{{ curChips }}" as="c" hint-placeholder-count="5"><span style="flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;height:32px;box-sizing:border-box;padding:0 6px 0 12px;border-radius:8px;border:1px solid #c4c6d0;font-size:14px;color:#1a1b1f;white-space:nowrap">{{ c }}<span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:1;color:#5c6270;font-variation-settings:'FILL' 1">cancel</span></span></sc-for>
+          </div>
+          <span style="position:absolute;top:-4px;left:10px;padding:0 4px;background:#ffffff;font-size:12px;line-height:16px;color:#44474f">Ngày nghỉ</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;font-size:12px;color:#44474f;align-items:center">Liên quan:
+          <a href="#b1" style="font:600 11px/18px 'JetBrains Mono',monospace;padding:0 7px;border-radius:999px;background:#fff1e0;color:#8a5200">B1 không có icon lịch</a>
+          <a href="#b2" style="font:600 11px/18px 'JetBrains Mono',monospace;padding:0 7px;border-radius:999px;background:#fff1e0;color:#8a5200">B2 thứ tự bấm</a>
+          <a href="#b3" style="font:600 11px/18px 'JetBrains Mono',monospace;padding:0 7px;border-radius:999px;background:#fff1e0;color:#8a5200">B3 cao dần</a>
+          <a href="#c2" style="font:600 11px/18px 'JetBrains Mono',monospace;padding:0 7px;border-radius:999px;background:#ddf0ef;color:#00504f">C2 chip 32px</a>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="width:280px;box-sizing:border-box;background:#ffffff;border-radius:4px;box-shadow:0 2px 4px -1px rgba(0,0,0,.2),0 4px 5px rgba(0,0,0,.14),0 1px 10px rgba(0,0,0,.12);padding:8px 8px 12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;height:44px;padding:0 4px 0 8px">
+            <span style="display:flex;align-items:center;gap:2px;font-size:14px;font-weight:500">THG 10 2026<span style="font-family:'Material Symbols Outlined';font-size:20px;line-height:1">arrow_drop_down</span></span>
+            <span style="display:flex;gap:4px;color:#44474f"><span style="font-family:'Material Symbols Outlined';font-size:22px;line-height:1;padding:6px">chevron_left</span><span style="font-family:'Material Symbols Outlined';font-size:22px;line-height:1;padding:6px">chevron_right</span></span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);font-size:11px;color:#6b6d73;text-align:center;padding:4px 0 6px;border-bottom:1px solid #e3e4ea;margin-bottom:6px"><span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span></div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);row-gap:2px">
+            <sc-for list="{{ curCells }}" as="c" hint-placeholder-count="35"><span style="height:36px;display:flex;align-items:center;justify-content:center"><span style="width:32px;height:32px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:13px;background:{{ c.bg }};color:{{ c.fg }};box-shadow:{{ c.ring }}">{{ c.label }}</span></span></sc-for>
+          </div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;font-size:12px;color:#44474f;align-items:center">Liên quan:
+          <a href="#a3" style="font:600 11px/18px 'JetBrains Mono',monospace;padding:0 7px;border-radius:999px;background:#ffe3df;color:#93000a">A3 Tab đóng popup</a>
+          <a href="#a1" style="font:600 11px/18px 'JetBrains Mono',monospace;padding:0 7px;border-radius:999px;background:#ffe3df;color:#93000a">A1 05/10 vẫn bỏ được</a>
+          <a href="#b4" style="font:600 11px/18px 'JetBrains Mono',monospace;padding:0 7px;border-radius:999px;background:#fff1e0;color:#8a5200">B4 03/11 ở tháng khác</a>
+          <a href="#c1" style="font:600 11px/18px 'JetBrains Mono',monospace;padding:0 7px;border-radius:999px;background:#ddf0ef;color:#00504f">C1 ô đã chọn</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="van-de" data-screen-label="02 Vấn đề" style="padding-top:72px;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">02</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Vấn đề</h2>
+  </div>
+
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 20px;background:#f7f7f4">
+      <span style="display:flex;align-items:center;gap:10px;font-weight:600;font-size:16px"><span style="width:10px;height:10px;border-radius:999px;background:#ba1a1a"></span>A · Lỗi hành vi và khả truy cập</span>
+      <span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#93000a">Ưu tiên 1 · 6 mục</span>
+    </div>
+
+    <div id="a1" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#ba1a1a">A1</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Chip đã khoá vẫn bỏ được bằng phím và bằng lịch</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><span style="font-family:'JetBrains Mono',monospace;font-size:13px">[removable]="_removable"</span> truyền nguyên hàm predicate vào input boolean của <span style="font-family:'JetBrains Mono',monospace;font-size:13px">mat-chip-row</span>. Hàm luôn truthy, nên Backspace hoặc Delete trên chip vẫn phát <span style="font-family:'JetBrains Mono',monospace;font-size:13px">(removed)</span>. Pipe <span style="font-family:'JetBrains Mono',monospace;font-size:13px">sdRemovableChip</span> chỉ ẩn icon. Bấm lại ngày đó trong lịch thì <span style="font-family:'JetBrains Mono',monospace;font-size:13px">#selectDate</span> bỏ chọn mà không hỏi predicate. Ví dụ “khoá ngày đã qua” trong tài liệu vì vậy không khoá được.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> tính <span style="font-family:'JetBrains Mono',monospace;font-size:13px">canRemove(item)</span> một lần, dùng cho <span style="font-family:'JetBrains Mono',monospace;font-size:13px">[removable]</span> từng chip, icon, nút xoá hết và ô trong lịch (ô khoá không toggle được).</span>
+        <span style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#6b6d73">chip-calendar.component.html · #selectDate</span>
+      </div>
+    </div>
+
+    <div id="a2" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#ba1a1a">A2</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Giá trị kiểu số không xoá được và không được tô trong lịch</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><span style="font-family:'JetBrains Mono',monospace;font-size:13px">model</span> khai báo <span style="font-family:'JetBrains Mono',monospace;font-size:13px">(string | number)[]</span>, nhưng <span style="font-family:'JetBrains Mono',monospace;font-size:13px">#remove</span> chỉ lọc khi <span style="font-family:'JetBrains Mono',monospace;font-size:13px">typeof item === 'string'</span>. Với số, mảng giữ nguyên còn ô nhập vẫn reset và focus, người dùng thấy bấm ✕ không có tác dụng. <span style="font-family:'JetBrains Mono',monospace;font-size:13px">#dateClass</span> so sánh bằng chuỗi nên ngày kiểu số cũng không được tô.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> giữ <span style="font-family:'JetBrains Mono',monospace;font-size:13px">model()</span> signal, nhận <span style="font-family:'JetBrains Mono',monospace;font-size:13px">string | number | Date</span> cho từng phần tử và đọc bằng hàm chuẩn hoá của sd-date (theo time zone cấu hình). Mọi so sánh dùng dạng <span style="font-family:'JetBrains Mono',monospace;font-size:13px">yyyy/MM/dd</span>; output luôn là <span style="font-family:'JetBrains Mono',monospace;font-size:13px">string[]</span>, có <span style="font-family:'JetBrains Mono',monospace;font-size:13px">transform</span> như sd-date.</span>
+        <span style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#6b6d73">chip-calendar.component.ts · #remove, #dateClass</span>
+      </div>
+    </div>
+
+    <div id="a3" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#ba1a1a">A3</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Phím Tab trong lịch đóng popup</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Lịch nằm trong <span style="font-family:'JetBrains Mono',monospace;font-size:13px">mat-menu</span>. Key manager của menu coi Tab là thoát menu và đóng nó, nên từ nút chuyển tháng không Tab xuống lưới ngày được. Panel mang <span style="font-family:'JetBrains Mono',monospace;font-size:13px">role="menu"</span> nhưng không có <span style="font-family:'JetBrains Mono',monospace;font-size:13px">menuitem</span> nào, screen reader đọc là một menu rỗng.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> thay <span style="font-family:'JetBrains Mono',monospace;font-size:13px">mat-menu</span> bằng CDK overlay như mat-datepicker: <span style="font-family:'JetBrains Mono',monospace;font-size:13px">role="dialog"</span>, <span style="font-family:'JetBrains Mono',monospace;font-size:13px">aria-label</span> theo label, focus trap, Esc đóng và trả focus về ô nhập.</span>
+        <span style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#6b6d73">chip-calendar.component.html · mat-menu #calendarMenu</span>
+      </div>
+    </div>
+
+    <div id="a4" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#ba1a1a">A4</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Viền đỏ nhưng không có thông báo lỗi</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><span style="font-family:'JetBrains Mono',monospace;font-size:13px">SdChipCalendarErrorStateMatcher</span> báo lỗi khi <span style="font-family:'JetBrains Mono',monospace;font-size:13px">dirty || touched || submitted</span>, còn <span style="font-family:'JetBrains Mono',monospace;font-size:13px">mat-error</span> và <span style="font-family:'JetBrains Mono',monospace;font-size:13px">aria-invalid</span> chỉ hiện khi <span style="font-family:'JetBrains Mono',monospace;font-size:13px">touched</span>. Bấm Lưu khi chưa chạm vào ô, hoặc chọn ngày trong lịch rồi chưa blur, sẽ cho viền đỏ không có chữ, và screen reader không biết ô đang lỗi.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> matcher và <span style="font-family:'JetBrains Mono',monospace;font-size:13px">_errorVisible</span> dùng chung một điều kiện.</span>
+        <span style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#6b6d73">chip-calendar.component.ts · ErrorStateMatcher · template @let _errorVisible</span>
+      </div>
+    </div>
+
+    <div id="a5" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#ba1a1a">A5</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Đã đủ max vẫn chọn thêm được</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><span style="font-family:'JetBrains Mono',monospace;font-size:13px">max</span> chỉ thêm <span style="font-family:'JetBrains Mono',monospace;font-size:13px">Validators.maxLength</span>, lịch không chặn gì. Người dùng chọn ngày thứ 21 rồi mới thấy lỗi, và phải tự tìm ngày để bỏ.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> khi đủ số lượng, ô chưa chọn bị vô hiệu và đầu popup báo “Đã đủ 20 ngày”. Validator vẫn giữ cho trường hợp model được gán từ ngoài.</span>
+        <span style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#6b6d73">chip-calendar.component.ts · #validators, #selectDate</span>
+      </div>
+    </div>
+
+    <div id="a6" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#ba1a1a">A6</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Nút ✕ trên chip không có tên</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><span style="font-family:'JetBrains Mono',monospace;font-size:13px">&lt;sd-icon matChipRemove&gt;</span> không có <span style="font-family:'JetBrains Mono',monospace;font-size:13px">aria-label</span>, screen reader chỉ đọc “nút”. Chip cũng chỉ có chuỗi số, đọc thành “không chín gạch không năm gạch hai nghìn…”.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> nút ✕ có <span style="font-family:'JetBrains Mono',monospace;font-size:13px">aria-label</span> “Bỏ ngày 9 tháng 5, 2026” (i18n); chip có <span style="font-family:'JetBrains Mono',monospace;font-size:13px">aria-label</span> dạng ngày đầy đủ.</span>
+        <span style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#6b6d73">chip-calendar.component.html · mat-chip-row</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 20px;background:#f7f7f4">
+      <span style="display:flex;align-items:center;gap:10px;font-weight:600;font-size:16px"><span style="width:10px;height:10px;border-radius:999px;background:#a66300"></span>B · Trải nghiệm</span>
+      <span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#8a5200">Ưu tiên 2 · 6 mục</span>
+    </div>
+
+    <div id="b1" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#a66300">B1</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Không nhìn ra đây là ô chọn ngày</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Không có icon lịch ở cuối field. Tài liệu mô tả icon này nhưng template không render. Khi trống, ô chỉ có label; placeholder mặc định lấy lại label nên lúc focus thấy cùng một chữ hai lần.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> suffix <span style="font-family:'JetBrains Mono',monospace;font-size:13px">calendar_month</span> là nút mở popup; placeholder mặc định là chuỗi i18n “Chọn ngày”.</span>
+      </div>
+    </div>
+
+    <div id="b2" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#a66300">B2</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Chip xếp theo thứ tự bấm</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Chọn 27/10 rồi 05/10 thì 27/10 đứng trước. Danh sách dài rất khó dò xem đã chọn ngày nào.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> chip hiển thị theo thứ tự ngày tăng dần. Chuỗi <span style="font-family:'JetBrains Mono',monospace;font-size:13px">yyyy/MM/dd</span> sắp xếp theo chữ đã đúng thứ tự ngày. Model giữ nguyên thứ tự để không ảnh hưởng consumer.</span>
+      </div>
+    </div>
+
+    <div id="b3" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#a66300">B3</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Field cao lên không giới hạn</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Mỗi ngày là một chip. Với ví dụ <span style="font-family:'JetBrains Mono',monospace;font-size:13px">[max]="20"</span> trong tài liệu, field rộng 400px cần khoảng 7 dòng. Trong <span style="font-family:'JetBrains Mono',monospace;font-size:13px">sd-table</span> với <span style="font-family:'JetBrains Mono',monospace;font-size:13px">size="sm"</span>, hàng bảng giãn theo.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> input <span style="font-family:'JetBrains Mono',monospace;font-size:13px">maxVisible</span>: khi popup đóng chỉ hiện N chip, phần còn lại gộp thành “+N”, bấm vào thì mở popup.</span>
+      </div>
+    </div>
+
+    <div id="b4" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#a66300">B4</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Lịch luôn mở ở tháng hiện tại</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><span style="font-family:'JetBrains Mono',monospace;font-size:13px">mat-calendar</span> không có <span style="font-family:'JetBrains Mono',monospace;font-size:13px">startAt</span>. Muốn sửa các ngày ở tháng khác phải bấm chuyển tháng mỗi lần mở.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> mở ở tháng của ngày đã chọn gần hôm nay nhất; input <span style="font-family:'JetBrains Mono',monospace;font-size:13px">startAt</span> để ghi đè.</span>
+      </div>
+    </div>
+
+    <div id="b5" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#a66300">B5</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Không giới hạn được ngày nào chọn được</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Không có <span style="font-family:'JetBrains Mono',monospace;font-size:13px">minDate</span>, <span style="font-family:'JetBrains Mono',monospace;font-size:13px">maxDate</span>, <span style="font-family:'JetBrains Mono',monospace;font-size:13px">dateFilter</span>, dù <span style="font-family:'JetBrains Mono',monospace;font-size:13px">mat-calendar</span> đều hỗ trợ. Không chặn được ngày đã qua, cuối tuần hay ngày ngoài kỳ. Tên <span style="font-family:'JetBrains Mono',monospace;font-size:13px">min</span>/<span style="font-family:'JetBrains Mono',monospace;font-size:13px">max</span> hiện là số lượng ngày, dễ đọc nhầm thành ngày nhỏ nhất và lớn nhất.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> thêm ba input trên; đổi tên thành <span style="font-family:'JetBrains Mono',monospace;font-size:13px">minCount</span>/<span style="font-family:'JetBrains Mono',monospace;font-size:13px">maxCount</span>, giữ <span style="font-family:'JetBrains Mono',monospace;font-size:13px">min</span>/<span style="font-family:'JetBrains Mono',monospace;font-size:13px">max</span> làm alias deprecated.</span>
+      </div>
+    </div>
+
+    <div id="b6" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#a66300">B6</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Không xoá hết được, popup không cho biết đã chọn bao nhiêu</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><span style="font-family:'JetBrains Mono',monospace;font-size:13px">onClear</span> có trong code nhưng không gắn vào UI; tài liệu mô tả nút ✕ ở cuối field. Trong popup chỉ thấy các ô được tô của tháng đang xem.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> nút xoá hết ở suffix (chỉ bỏ ngày bỏ được); đầu popup ghi “Đã chọn N ngày”.</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 20px;background:#f7f7f4">
+      <span style="display:flex;align-items:center;gap:10px;font-weight:600;font-size:16px"><span style="width:10px;height:10px;border-radius:999px;background:#006a6a"></span>C · Hình ảnh</span>
+      <span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#00504f">Ưu tiên 2 · 3 mục</span>
+    </div>
+
+    <div id="c1" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#006a6a">C1</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Ô đã chọn khó phân biệt và che mất focus</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Ô đã chọn dùng nền primary-light và chữ primary, khác ô đã chọn mặc định của mat-calendar (nền primary đặc). Rule viết <span style="font-family:'JetBrains Mono',monospace;font-size:13px">::ng-deep</span> toàn cục với <span style="font-family:'JetBrains Mono',monospace;font-size:13px">!important</span> trên background, nên đè trạng thái hover và focus bàn phím của Material: ô đã chọn đang được focus trông giống hệt ô không focus.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> ô đã chọn nền primary đặc, chữ on-primary; ô khoá dùng primary-light; focus ring theo <span style="font-family:'JetBrains Mono',monospace;font-size:13px">--sd-focus-ring-*</span>; bỏ <span style="font-family:'JetBrains Mono',monospace;font-size:13px">!important</span> và scope theo panelClass của overlay.</span>
+        <span style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#6b6d73">chip-calendar.component.scss · .sd-chip-calendar-selected-date</span>
+      </div>
+    </div>
+
+    <div id="c2" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#006a6a">C2</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Chip không theo thang kích thước</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><span style="font-family:'JetBrains Mono',monospace;font-size:13px">sm</span>: chip 20px. <span style="font-family:'JetBrains Mono',monospace;font-size:13px">md</span>: chip mặc định 32px của Material trong field 40px, bù bằng <span style="font-family:'JetBrains Mono',monospace;font-size:13px">margin-top: 10px</span> cho chip set. <span style="font-family:'JetBrains Mono',monospace;font-size:13px">lg</span>: không có style. Rule <span style="font-family:'JetBrains Mono',monospace;font-size:13px">.c-md</span> không bao giờ khớp vì template gắn <span style="font-family:'JetBrains Mono',monospace;font-size:13px">sd-md</span>.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> chip 20/24/28 cho field 32/40/48, cùng thang với badge; chữ 12/13/14; bỏ margin-top.</span>
+      </div>
+    </div>
+
+    <div id="c3" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#006a6a">C3</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Định dạng ngày cố định và lệch giữa các chế độ</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Chip dùng cứng <span style="font-family:'JetBrains Mono',monospace;font-size:13px">date: 'dd/MM/yyyy'</span>, không theo locale. Chế độ <span style="font-family:'JetBrains Mono',monospace;font-size:13px">[viewed]</span> truyền mảng <span style="font-family:'JetBrains Mono',monospace;font-size:13px">yyyy/MM/dd</span> thô vào <span style="font-family:'JetBrains Mono',monospace;font-size:13px">sd-view</span>, nên cùng dữ liệu hiển thị hai kiểu khác nhau giữa sửa và xem.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> input <span style="font-family:'JetBrains Mono',monospace;font-size:13px">displayFormat</span>, dùng chung cho chip, viewed và aria-label; viewed hiển thị danh sách đã sắp xếp.</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 20px;background:#f7f7f4">
+      <span style="display:flex;align-items:center;gap:10px;font-weight:600;font-size:16px"><span style="width:10px;height:10px;border-radius:999px;background:#5c6270"></span>D · Code và tài liệu</span>
+      <span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#44474f">Ưu tiên 3 · 2 mục</span>
+    </div>
+
+    <div id="d1" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#5c6270">D1</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Tài liệu lệch với code</strong>
+        <ul style="margin:0;padding-left:18px;font-size:14px;color:#3a3c42;display:flex;flex-direction:column;gap:2px">
+          <li>Icon lịch ở suffix và nút ✕ xoá hết: có trong “Visual cues”, không có trong template.</li>
+          <li><span style="font-family:'JetBrains Mono',monospace;font-size:13px">#sdValue</span> ghi là “custom chip value rendering”, thực tế chỉ dùng trong chế độ viewed.</li>
+          <li>Visual cues ghi chip hiện <span style="font-family:'JetBrains Mono',monospace;font-size:13px">2026/05/09</span>; thực tế là <span style="font-family:'JetBrains Mono',monospace;font-size:13px">09/05/2026</span>. Viewed ghi là “read-only chip strip”; thực tế là text của <span style="font-family:'JetBrains Mono',monospace;font-size:13px">sd-view</span>.</li>
+          <li>Bảng E2E liệt kê <span style="font-family:'JetBrains Mono',monospace;font-size:13px">data-invalid</span> nhưng template không render; template render <span style="font-family:'JetBrains Mono',monospace;font-size:13px">data-count</span> nhưng bảng không có.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div id="d2" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#5c6270">D2</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Code thừa và wrapper form-render thiếu input</strong>
+        <ul style="margin:0;padding-left:18px;font-size:14px;color:#3a3c42;display:flex;flex-direction:column;gap:2px">
+          <li>TS còn từ bản autocomplete: <span style="font-family:'JetBrains Mono',monospace;font-size:13px">MatAutocompleteModule</span>, <span style="font-family:'JetBrains Mono',monospace;font-size:13px">onSelect</span>/<span style="font-family:'JetBrains Mono',monospace;font-size:13px">#select</span>, <span style="font-family:'JetBrains Mono',monospace;font-size:13px">separatorKeysCodes</span>, <span style="font-family:'JetBrains Mono',monospace;font-size:13px">MatProgressSpinnerModule</span>, <span style="font-family:'JetBrains Mono',monospace;font-size:13px">#isBlurring</span>.</li>
+          <li>SCSS không khớp phần tử nào: <span style="font-family:'JetBrains Mono',monospace;font-size:13px">.c-md</span>, <span style="font-family:'JetBrains Mono',monospace;font-size:13px">.sd-md {}</span> rỗng, <span style="font-family:'JetBrains Mono',monospace;font-size:13px">mat-chip-listbox</span> (template dùng <span style="font-family:'JetBrains Mono',monospace;font-size:13px">mat-chip-grid</span>), <span style="font-family:'JetBrains Mono',monospace;font-size:13px">.no-padding-wrapper</span>.</li>
+          <li>Wrapper trong form-render chỉ truyền <span style="font-family:'JetBrains Mono',monospace;font-size:13px">[max]</span> từ <span style="font-family:'JetBrains Mono',monospace;font-size:13px">validation.maxItems</span>, không có min, nên form-generic không đặt được số ngày tối thiểu.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="de-xuat" data-screen-label="03 Đề xuất" style="padding-top:72px;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">03</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Đề xuất</h2>
+  </div>
+  <p style="margin:0;max-width:780px;color:#3a3c42;text-wrap:pretty">Bản dựng gộp các sửa đổi ở mục 02. Hôm nay là 22/10/2026. Bấm vào field, chip, “+N”, ô ngày, nút chuyển tháng để thử.</p>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #dddcd6">
+      <span style="display:flex;align-items:center;gap:8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#005cbb"><span style="width:8px;height:8px;border-radius:999px;background:#005cbb"></span>Đề xuất · sd-chip-calendar</span>
+      <span style="font:400 12px/16px 'JetBrains Mono',monospace;color:#6b6d73">đổi size, maxCount, giới hạn ngày</span>
+    </div>
+    <div style="background:#f9f9f9;padding:28px 32px;display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:32px;font-family:Roboto,'Helvetica Neue',sans-serif;color:#1a1b1f">
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:12px;font-weight:500;color:#44474f;font-family:'JetBrains Mono',monospace">size</span>
+          <div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ sizeOpts }}" as="o" hint-placeholder-count="3"><span onClick="{{ o.pick }}" style="flex:0 0 auto;white-space:nowrap;height:28px;box-sizing:border-box;display:inline-flex;align-items:center;padding:0 12px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font:500 12px 'JetBrains Mono',monospace;cursor:pointer">{{ o.label }}</span></sc-for></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:12px;font-weight:500;color:#44474f;font-family:'JetBrains Mono',monospace">maxCount</span>
+          <div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ maxOpts }}" as="o" hint-placeholder-count="3"><span onClick="{{ o.pick }}" style="flex:0 0 auto;white-space:nowrap;height:28px;box-sizing:border-box;display:inline-flex;align-items:center;padding:0 12px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font:500 12px 'JetBrains Mono',monospace;cursor:pointer">{{ o.label }}</span></sc-for></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ toggles }}" as="t" hint-placeholder-count="3">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span onClick="{{ t.flip }}" style="position:relative;width:36px;height:20px;border-radius:999px;background:{{ t.track }};cursor:pointer;flex:0 0 auto"><span style="position:absolute;top:2px;left:{{ t.knob }}px;width:16px;height:16px;border-radius:999px;background:#ffffff;box-shadow:0 1px 2px rgba(0,0,0,.2)"></span></span>
+              <span style="font-size:12px;font-weight:500;color:#44474f">{{ t.label }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px;font-size:12px;color:#44474f">
+          <span style="display:flex;align-items:center;gap:8px"><span style="width:22px;height:22px;border-radius:999px;background:#005cbb;flex:0 0 auto"></span>Đã chọn</span>
+          <span style="display:flex;align-items:center;gap:8px"><span style="width:22px;height:22px;border-radius:999px;background:#dbe7f7;flex:0 0 auto"></span>Đã chọn, không bỏ được</span>
+          <span style="display:flex;align-items:center;gap:8px"><span style="width:22px;height:22px;box-sizing:border-box;border-radius:999px;border:1px solid #005cbb;flex:0 0 auto"></span>Hôm nay</span>
+          <span style="display:flex;align-items:center;gap:8px"><span style="width:22px;height:22px;border-radius:999px;background:#ffffff;color:#a3a6ad;font-size:11px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;border:1px dashed #d6d8de;box-sizing:border-box">8</span>Không chọn được</span>
+        </div>
+        <pre style="margin:0;padding:12px 14px;border-radius:8px;background:#1f2024;color:#e3e3e8;font:12px/1.65 'JetBrains Mono',monospace;white-space:pre-wrap;word-break:break-word">{{ code }}</pre>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:6px;min-height:560px">
+        <div style="position:relative;max-width:400px;padding-top:4px">
+          <div onClick="{{ toggleOpen }}" style="min-height:{{ f.h }}px;box-sizing:border-box;border:1px solid {{ f.bd }};box-shadow:{{ f.sh }};border-radius:8px;background:#ffffff;display:flex;align-items:center;gap:6px;padding:{{ f.pv }}px 4px {{ f.pv }}px 12px;cursor:pointer">
+            <div style="flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:4px">
+              <sc-for list="{{ chips }}" as="c" hint-placeholder-count="3"><span title="{{ c.title }}" style="flex:0 0 auto;display:inline-flex;align-items:center;gap:2px;height:{{ c.h }}px;box-sizing:border-box;padding:0 3px 0 {{ c.pl }}px;border-radius:6px;border:1px solid #c4c6d0;background:{{ c.bg }};font-size:{{ c.fs }}px;color:#1a1b1f;font-variant-numeric:tabular-nums;white-space:nowrap">{{ c.label }}<sc-if value="{{ c.removable }}" hint-placeholder-val="{{ true }}"><span onClick="{{ c.remove }}" style="font-family:'Material Symbols Outlined';font-size:{{ c.ic }}px;line-height:1;color:#5c6270;border-radius:4px;padding:1px;cursor:pointer" style-hover="background:#e7e8ed;color:#1a1b1f">close</span></sc-if><sc-if value="{{ c.locked }}" hint-placeholder-val="{{ false }}"><span style="font-family:'Material Symbols Outlined';font-size:{{ c.ic }}px;line-height:1;color:#8a8d95;padding:1px">lock</span></sc-if></span></sc-for>
+              <sc-if value="{{ hasMore }}" hint-placeholder-val="{{ true }}"><span onClick="{{ openMore }}" style="flex:0 0 auto;display:inline-flex;align-items:center;height:{{ f.chip }}px;box-sizing:border-box;padding:0 8px;border-radius:6px;background:#e7e8ed;font-size:{{ f.fs }}px;font-weight:500;color:#44474f;cursor:pointer" style-hover="background:#dcdde3">{{ moreLabel }}</span></sc-if>
+              <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}"><span style="font-size:14px;color:#6b6d73">Chọn ngày</span></sc-if>
+            </div>
+            <div style="display:flex;align-items:center;flex:0 0 auto">
+              <sc-if value="{{ hasClearable }}" hint-placeholder-val="{{ true }}"><span onClick="{{ clearFromField }}" title="Bỏ hết ngày" style="width:{{ f.btn }}px;height:{{ f.btn }}px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:{{ f.sfxS }}px;line-height:1;color:#5c6270;cursor:pointer" style-hover="background:#eef0f4">close</span></sc-if>
+              <span onClick="{{ toggleOpenIcon }}" title="Mở lịch" style="width:{{ f.btn }}px;height:{{ f.btn }}px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:{{ f.sfx }}px;line-height:1;color:{{ f.iconC }};cursor:pointer" style-hover="background:#eef0f4">calendar_month</span>
+            </div>
+          </div>
+          <span style="position:absolute;top:-4px;left:10px;padding:0 4px;background:#ffffff;font-size:12px;line-height:16px;color:{{ f.labelC }}">Ngày nghỉ</span>
+        </div>
+
+        <sc-if value="{{ open }}" hint-placeholder-val="{{ true }}">
+          <div style="width:296px;box-sizing:border-box;background:#ffffff;border:1px solid #e3e4ea;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12),0 1px 3px rgba(0,0,0,.08);padding:12px 8px 8px;display:flex;flex-direction:column;gap:4px">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:0 8px">
+              <span style="font-size:13px;font-weight:600">{{ countLabel }}</span>
+              <span style="font-size:12px;color:#6b6d73">{{ maxLabel }}</span>
+            </div>
+            <sc-if value="{{ full }}" hint-placeholder-val="{{ false }}"><span style="padding:0 8px;font-size:12px;line-height:16px;color:#8a5200">{{ fullMsg }}</span></sc-if>
+            <div style="display:flex;align-items:center;justify-content:space-between;height:40px;padding:0 2px;margin-top:4px">
+              <span onClick="{{ prev }}" title="Tháng trước" style="width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:20px;line-height:1;color:#44474f;cursor:pointer" style-hover="background:#eef0f4">chevron_left</span>
+              <span style="font-size:14px;font-weight:600">{{ monthLabel }}</span>
+              <span onClick="{{ next }}" title="Tháng sau" style="width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:20px;line-height:1;color:#44474f;cursor:pointer" style-hover="background:#eef0f4">chevron_right</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(7,40px);font-size:11px;font-weight:500;color:#6b6d73;text-align:center;line-height:24px"><span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span></div>
+            <div style="display:grid;grid-template-columns:repeat(7,40px)">
+              <sc-for list="{{ cells }}" as="c" hint-placeholder-count="35"><span onClick="{{ c.pick }}" title="{{ c.title }}" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:{{ c.cursor }}"><span style="width:36px;height:36px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:13px;font-variant-numeric:tabular-nums;font-weight:{{ c.fw }};background:{{ c.bg }};color:{{ c.fg }};box-shadow:{{ c.ring }}" style-hover="background:{{ c.hov }}">{{ c.label }}</span></span></sc-for>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid #ecedf1;margin-top:4px;padding:8px 4px 0">
+              <span onClick="{{ clearAll }}" style="height:32px;display:flex;align-items:center;padding:0 10px;border-radius:8px;font-size:13px;font-weight:500;color:{{ clearC }};cursor:pointer" style-hover="background:#eef0f4">Xoá hết</span>
+              <span onClick="{{ close }}" style="height:32px;display:flex;align-items:center;padding:0 16px;border-radius:8px;background:#005cbb;color:#ffffff;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#004a99">Xong</span>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+  <ul style="margin:0;padding-left:20px;max-width:860px;font-size:14px;line-height:1.6;color:#3a3c42;display:flex;flex-direction:column;gap:6px">
+    <li><strong style="font-weight:600;color:#1a1b1f">Field:</strong> cao 32/40/48 khi một dòng. Suffix gồm nút bỏ hết (chỉ hiện khi còn ngày bỏ được) và nút lịch, cả hai là <span style="font-family:'JetBrains Mono',monospace;font-size:13px">&lt;button&gt;</span> có aria-label. Chip luôn xếp theo ngày tăng dần. Khi popup đóng và có <span style="font-family:'JetBrains Mono',monospace;font-size:13px">maxVisible</span>, chip dư gộp thành “+N”.</li>
+    <li><strong style="font-weight:600;color:#1a1b1f">Chip:</strong> cao 20/24/28, bo 6px, viền 1px <span style="font-family:'JetBrains Mono',monospace;font-size:13px">--sd-border</span>, chữ 12/13/14 tabular-nums. Ngày không bỏ được có nền surface-muted, icon <span style="font-family:'JetBrains Mono',monospace;font-size:13px">lock</span> thay cho ✕, tooltip giải thích lý do.</li>
+    <li><strong style="font-weight:600;color:#1a1b1f">Popup:</strong> overlay <span style="font-family:'JetBrains Mono',monospace;font-size:13px">role="dialog"</span> rộng 296px, ô 40px, vòng 36px. Đầu popup đếm số ngày và báo khi đủ <span style="font-family:'JetBrains Mono',monospace;font-size:13px">maxCount</span>; khi đó ô chưa chọn bị vô hiệu. Mở ở tháng của ngày đã chọn gần hôm nay nhất. Cuối popup có “Xoá hết” và “Xong”. Chọn ngày không đóng popup.</li>
+    <li><strong style="font-weight:600;color:#1a1b1f">Bàn phím:</strong> mũi tên di chuyển trong lưới, Enter hoặc Space chọn/bỏ, PageUp/PageDown đổi tháng, Tab đi qua header, lưới, footer mà không đóng popup. Esc đóng và trả focus về ô nhập. Trên chip, Backspace/Delete chỉ bỏ ngày bỏ được.</li>
+  </ul>
+</section>
+
+<section id="api" data-screen-label="04 API" style="padding-top:72px;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">04</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">API</h2>
+  </div>
+  <div style="display:flex;flex-direction:column;border:1px solid #dddcd6;border-radius:12px;overflow:hidden;font-size:13px;background:#ffffff;max-width:980px">
+    <div style="display:grid;grid-template-columns:minmax(110px,0.8fr) minmax(150px,1fr) minmax(0,0.6fr) minmax(0,2fr);gap:12px;padding:10px 16px;background:#f7f7f4;font:500 11px 'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.06em;color:#6b6d73"><span>Input</span><span>Kiểu</span><span>Mặc định</span><span>Ghi chú</span></div>
+    <sc-for list="{{ apiRows }}" as="r" hint-placeholder-count="11">
+      <div style="display:grid;grid-template-columns:minmax(110px,0.8fr) minmax(150px,1fr) minmax(0,0.6fr) minmax(0,2fr);gap:12px;padding:10px 16px;border-top:1px solid #ecebe6;line-height:1.5;background:{{ r.bg }}"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600">{{ r.name }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#44474f;word-break:break-word">{{ r.type }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#44474f">{{ r.def }}</span><span style="color:#3a3c42">{{ r.note }}</span></div>
+    </sc-for>
+  </div>
+  <p style="margin:0;max-width:780px;font-size:14px;line-height:1.6;color:#3a3c42">Hàng nền trắng là input mới, hàng nền xám là input có sẵn đổi hành vi. CHANGELOG: <strong style="font-weight:600;color:#1a1b1f">Added</strong> minDate, maxDate, dateFilter, minCount, maxCount, maxVisible, clearable, startAt, displayFormat, transform. <strong style="font-weight:600;color:#1a1b1f">Changed</strong> model nhận string, number, Date như sd-date; popup từ mat-menu sang overlay dialog; chip sắp xếp theo ngày, cao 20/24/28; ô đã chọn nền primary đặc; removable áp cho mọi đường bỏ ngày. <strong style="font-weight:600;color:#1a1b1f">Deprecated</strong> min, max. <strong style="font-weight:600;color:#1a1b1f">Removed</strong> code autocomplete và SCSS không dùng.</p>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { size: 'md', open: true, y: 2026, m: 9, sel: ['2026/10/27', '2026/10/05', '2026/10/14', '2026/11/03', '2026/10/23'], noWeekend: true, lockPast: true, maxCount: 10, collapse: true };
+
+  renderVals() {
+    const TODAY = '2026/10/22';
+    const pad = n => String(n).padStart(2, '0');
+    const key = (y, m, d) => `${y}/${pad(m + 1)}/${pad(d)}`;
+    const fmt = k => k.split('/').reverse().join('/');
+    const stop = e => { if (e && e.stopPropagation) e.stopPropagation(); };
+    const opt = on => ({ bd: on ? '#005cbb' : '#c4c6d0', bg: on ? '#e6f0fa' : '#ffffff', fg: on ? '#004a96' : '#44474f' });
+    const { size, open, y, m, sel, noWeekend, lockPast, maxCount, collapse } = this.state;
+    const Z = { sm: { h: 32, chip: 20, fs: 12, ic: 14, btn: 24, sfx: 18, sfxS: 16 }, md: { h: 40, chip: 24, fs: 13, ic: 16, btn: 28, sfx: 20, sfxS: 18 }, lg: { h: 48, chip: 28, fs: 14, ic: 18, btn: 32, sfx: 22, sfxS: 20 } }[size];
+
+    const locked = k => lockPast && k < TODAY;
+    const full = maxCount > 0 && sel.length >= maxCount;
+    const toggle = k => {
+      if (sel.includes(k)) { if (!locked(k)) this.setState({ sel: sel.filter(x => x !== k) }); }
+      else if (!full) this.setState({ sel: [...sel, k] });
+    };
+    const clearAll = () => this.setState({ sel: sel.filter(locked) });
+    const hasClearable = sel.some(k => !locked(k));
+
+    const sorted = [...sel].sort();
+    const VIS = 2;
+    const collapsed = collapse && !open && sorted.length > VIS;
+    const shown = collapsed ? sorted.slice(0, VIS) : sorted;
+    const chips = shown.map(k => ({
+      label: fmt(k), h: Z.chip, fs: Z.fs, ic: Z.ic, pl: size === 'lg' ? 10 : 8,
+      removable: !locked(k), locked: locked(k), bg: locked(k) ? '#f2f3f6' : '#ffffff',
+      title: locked(k) ? 'Không bỏ được ngày đã qua' : '',
+      remove: e => { stop(e); toggle(k); },
+    }));
+
+    const lead = (new Date(y, m, 1).getDay() + 6) % 7;
+    const dim = new Date(y, m + 1, 0).getDate();
+    const cells = [];
+    for (let i = 0; i < lead; i++) cells.push({ label: '', bg: 'transparent', fg: 'transparent', hov: 'transparent', ring: 'none', fw: 400, cursor: 'default', pick: null, title: '' });
+    for (let d = 1; d <= dim; d++) {
+      const k = key(y, m, d), dow = (lead + d - 1) % 7;
+      const isSel = sel.includes(k), isLock = isSel && locked(k);
+      const weekend = noWeekend && dow >= 5, past = lockPast && k < TODAY;
+      const off = !isSel && (weekend || past || full);
+      let bg = 'transparent', fg = '#1a1b1f', hov = '#eef1f6', title = '';
+      if (isSel && !isLock) { bg = '#005cbb'; fg = '#ffffff'; hov = '#004a99'; title = 'Bấm để bỏ chọn'; }
+      else if (isLock) { bg = '#dbe7f7'; fg = '#00408a'; hov = '#dbe7f7'; title = 'Ngày đã qua, không bỏ được'; }
+      else if (off) { fg = '#a3a6ad'; hov = 'transparent'; title = weekend ? 'dateFilter: không chọn cuối tuần' : past ? 'Trước minDate' : `Đã đủ ${maxCount} ngày`; }
+      const inactive = off || isLock;
+      cells.push({ label: String(d), bg, fg, hov, title, fw: isSel ? 600 : 400, ring: k === TODAY && !isSel ? 'inset 0 0 0 1px #005cbb' : 'none', cursor: inactive ? 'default' : 'pointer', pick: inactive ? null : () => toggle(k) });
+    }
+
+    const CUR = ['2026/10/27', '2026/10/05', '2026/10/14', '2026/10/23'];
+    const curCells = [];
+    for (let i = 0; i < (new Date(2026, 9, 1).getDay() + 6) % 7; i++) curCells.push({ label: '', bg: 'transparent', fg: 'transparent', ring: 'none' });
+    for (let d = 1; d <= 31; d++) {
+      const k = key(2026, 9, d), s = CUR.includes(k);
+      curCells.push({ label: String(d), bg: s ? '#dbe7f7' : 'transparent', fg: s ? '#005cbb' : '#1a1b1f', ring: k === TODAY ? 'inset 0 0 0 1px #44474f' : 'none' });
+    }
+
+    const flip = k => () => this.setState(s => ({ [k]: !s[k] }));
+    const tg = (label, on, k) => ({ label, track: on ? '#005cbb' : '#c4c6d0', knob: on ? 18 : 2, flip: flip(k) });
+    const lines = [
+      `<sd-chip-calendar [form]="form" name="offDays" label="Ngày nghỉ"`,
+      `  size="${size}" [(model)]="model.offDays"`,
+      maxCount ? `  [maxCount]="${maxCount}"` : null,
+      lockPast ? `  minDate="TODAY" [removable]="notPast"` : null,
+      noWeekend ? `  [dateFilter]="noWeekend"` : null,
+      collapse ? `  [maxVisible]="${VIS}"` : null,
+      `  clearable`,
+    ].filter(Boolean);
+
+    return {
+      curChips: ['27/10/2026', '05/10/2026', '14/10/2026', '03/11/2026', '23/10/2026'],
+      curCells,
+      sizeOpts: ['sm', 'md', 'lg'].map(v => ({ label: v, ...opt(v === size), pick: () => this.setState({ size: v }) })),
+      maxOpts: [[5, '5'], [10, '10'], [0, 'không giới hạn']].map(([v, l]) => ({ label: l, ...opt(v === maxCount), pick: () => this.setState({ maxCount: v }) })),
+      toggles: [
+        tg('dateFilter · không chọn thứ 7, CN', noWeekend, 'noWeekend'),
+        tg('minDate = hôm nay · ngày đã qua không bỏ được', lockPast, 'lockPast'),
+        tg(`maxVisible = ${VIS} · gộp “+N” khi popup đóng`, collapse, 'collapse'),
+      ],
+      code: lines.join('\n') + '>\n</sd-chip-calendar>',
+      f: {
+        h: Z.h, pv: (Z.h - 2 - Z.chip) / 2, chip: Z.chip, fs: Z.fs, btn: Z.btn, sfx: Z.sfx, sfxS: Z.sfxS,
+        bd: open ? '#005cbb' : '#c4c6d0', sh: open ? 'inset 0 0 0 1px #005cbb' : 'none',
+        labelC: open ? '#005cbb' : '#44474f', iconC: open ? '#005cbb' : '#44474f',
+      },
+      chips,
+      hasMore: collapsed, moreLabel: `+${sorted.length - VIS}`,
+      openMore: e => { stop(e); this.setState({ open: true }); },
+      isEmpty: sel.length === 0,
+      hasClearable,
+      clearFromField: e => { stop(e); clearAll(); },
+      toggleOpen: () => this.setState(s => ({ open: !s.open })),
+      toggleOpenIcon: e => { stop(e); this.setState(s => ({ open: !s.open })); },
+      open, full,
+      countLabel: `Đã chọn ${sel.length} ngày`,
+      maxLabel: maxCount ? `Tối đa ${maxCount}` : 'Không giới hạn',
+      fullMsg: `Đã đủ ${maxCount} ngày. Bỏ bớt một ngày để chọn ngày khác.`,
+      monthLabel: `Tháng ${m + 1}, ${y}`,
+      prev: () => this.setState(s => (s.m === 0 ? { m: 11, y: s.y - 1 } : { m: s.m - 1 })),
+      next: () => this.setState(s => (s.m === 11 ? { m: 0, y: s.y + 1 } : { m: s.m + 1 })),
+      cells,
+      clearAll, clearC: hasClearable ? '#005cbb' : '#a3a6ad',
+      close: () => this.setState({ open: false }),
+      apiRows: [
+        { name: 'minDate', type: "Date | string | 'TODAY'", def: '—', note: 'Ngày nhỏ nhất chọn được, cùng kiểu với sd-date. Ô trước đó mờ và không bấm được.', bg: '#ffffff' },
+        { name: 'maxDate', type: "Date | string | 'TODAY'", def: '—', note: 'Ngày lớn nhất chọn được.', bg: '#ffffff' },
+        { name: 'dateFilter', type: '(d: Date) => boolean', def: '—', note: 'Trả false thì ô đó không chọn được, ví dụ cuối tuần, ngày lễ.', bg: '#ffffff' },
+        { name: 'minCount', type: 'number', def: '0', note: 'Thay cho min. Validator minLength.', bg: '#ffffff' },
+        { name: 'maxCount', type: 'number', def: '0', note: 'Thay cho max. Khi đủ số lượng, ô chưa chọn bị vô hiệu và đầu popup báo.', bg: '#ffffff' },
+        { name: 'maxVisible', type: 'number', def: '—', note: 'Số chip hiện khi popup đóng, còn lại gộp “+N”. Không đặt thì hiện tất cả như hiện nay. Trong sd-table nên đặt 2.', bg: '#ffffff' },
+        { name: 'clearable', type: 'boolean', def: 'false', note: 'Nút bỏ hết ở suffix (hiện khi hover/focus, như sd-date) và “Xoá hết” trong popup. Chỉ bỏ ngày bỏ được.', bg: '#ffffff' },
+        { name: 'startAt', type: 'Date | string', def: '—', note: 'Tháng mở đầu tiên. Mặc định là tháng của ngày đã chọn gần hôm nay nhất, không có thì tháng hiện tại.', bg: '#ffffff' },
+        { name: 'displayFormat', type: 'string', def: "'dd/MM/yyyy'", note: 'Định dạng cho chip, chế độ viewed và aria-label của chip.', bg: '#ffffff' },
+        { name: 'transform', type: 'SdTemporalValueTransform', def: 'undefined', note: 'Như sd-date: dạng chuỗi của từng phần tử khi rời component (yyyy/MM/dd, ISOString, UTCString).', bg: '#ffffff' },
+        { name: 'min / max', type: 'number', def: '0', note: 'Giữ làm alias của minCount/maxCount, đánh dấu @deprecated, cảnh báo ở dev mode.', bg: '#f9f9f7' },
+        { name: 'removable', type: 'boolean | (item) => boolean', def: 'true', note: 'Không đổi kiểu. Predicate áp cho ✕, Backspace/Delete, ô trong lịch và nút bỏ hết.', bg: '#f9f9f7' },
+        { name: 'model', type: '(string | number | Date)[]', def: 'undefined', note: 'Vẫn là model() signal. Đọc từng phần tử giống sd-date (theo time zone cấu hình), output luôn string[]. Model từ cha không bị ghi ngược.', bg: '#f9f9f7' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>
