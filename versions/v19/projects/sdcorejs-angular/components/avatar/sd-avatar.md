@@ -31,6 +31,7 @@ Circular user avatar — auto-displays a profile image when `src` is a URL, othe
 | `name` | `string \| null \| undefined` | — | The person's name. It is the accessible name and, for an image avatar, the tooltip. When the image fails to load, the initials and colour come from `name` (without it: from the URL text, as before). With a name in `src`, `src` is used. |
 | `status` | `Color \| null \| undefined` | `null` | Colour of the status dot. No value, no dot. |
 | `statusLabel` | `string \| null \| undefined` | — | Text of the status, e.g. "Đang hoạt động": the dot's tooltip, appended to the accessible name. **Required with `status`** — a dev-mode `console.warn` says when it is missing, because the colour alone means nothing to a screen reader (and success can mean "online" or "approved"). |
+| `tooltip` | `string | null | undefined` | — | Tooltip of the avatar; replaces the default one (the `name` of an image avatar). `sd-avatar-group` sets "{name} · {statusLabel}". |
 | `statusPulse` | `boolean` | `false` | `booleanAttribute`. A pulsing ring around the dot (the `pulse` of `sd-badge`), still under `prefers-reduced-motion`. |
 
 ## Outputs
@@ -108,6 +109,7 @@ None.
 - Adding click handlers expecting a built-in click output — wrap in a parent `<button>` or `<a>` if interactive
 
 ## Related
+- `<sd-avatar-group>` — overlapping avatars with a "+N" list (`sd-avatar-group.md`)
 - `<sd-badge>` — the status dot is an `sd-badge type="dot"`; use a badge directly for statuses that are not about a person
 - `<sd-button>` — to make an avatar clickable, wrap or pair as needed
 - `<sd-tag>` — for non-user labels

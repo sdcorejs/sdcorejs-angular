@@ -1504,4 +1504,7 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.badge.picker.description-hint': '설명은 아이콘과 태그 유형에서만 표시됩니다',
   'core.component.badge.picker.required': '표시 스타일을 선택하세요',
   'core.component.badge.picker.pair-label': '라벨',
+  'core.component.avatar.group-label': '{count}명',
+  'core.component.avatar.more-label': '{count}명 더 보기',
+  'core.component.avatar.more-title': '외 {count}명',
 };

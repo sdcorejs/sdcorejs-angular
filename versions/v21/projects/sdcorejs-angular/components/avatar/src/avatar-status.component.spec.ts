@@ -15,7 +15,14 @@ import { SdAvatar } from './avatar.component';
   template: `
     <sd-layout-test-theme />
     <div style="padding: 32px">
-      <sd-avatar [src]="src" [size]="size" [name]="name" [status]="status" [statusLabel]="statusLabel" [statusPulse]="statusPulse" />
+      <sd-avatar
+        [src]="src"
+        [size]="size"
+        [name]="name"
+        [status]="status"
+        [statusLabel]="statusLabel"
+        [statusPulse]="statusPulse"
+        [tooltip]="tooltip" />
     </div>
   `,
 })
@@ -26,6 +33,7 @@ class AvatarHost {
   status: Color | null = null;
   statusLabel: string | undefined;
   statusPulse = false;
+  tooltip: string | undefined;
 }
 
 /** The computed value of `property: value` on a probe that inherits the theme of <html>. */
@@ -174,6 +182,14 @@ describe('SdAvatar status, name and accessible name', () => {
       tick(150);
       fixture.detectChanges();
       expect(overlay.querySelector('.c-sd-tooltip-container')?.textContent?.trim()).toBe('Lê Lan Anh');
+    }));
+
+    it('shows the tooltip input over any avatar, instead of the image name', fakeAsync(() => {
+      render({ tooltip: 'Lê Lan Anh · Đang hoạt động' });
+      circle().dispatchEvent(new MouseEvent('mouseenter'));
+      tick(150);
+      fixture.detectChanges();
+      expect(overlay.querySelector('.c-sd-tooltip-container')?.textContent?.trim()).toBe('Lê Lan Anh · Đang hoạt động');
     }));
 
     it('shows the status label over the dot', fakeAsync(() => {

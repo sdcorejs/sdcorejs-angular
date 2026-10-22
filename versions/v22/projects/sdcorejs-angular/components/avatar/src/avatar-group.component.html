@@ -1,0 +1,73 @@
+@let _size = size();
+@let _hidden = hidden();
+@let _open = isOpen();
+@let _visible = visible();
+
+@for (item of _visible; track $index) {
+  <!-- why: z-index giảm dần sang phải — avatar bên trái nằm trên nên chấm ở góc dưới phải không bị avatar kế tiếp che. -->
+  <span class="sd-avatar-group__item" [style.z-index]="_visible.length - $index + 1">
+    <sd-avatar
+      [src]="item.src"
+      [size]="_size"
+      [name]="item.name"
+      [status]="item.status"
+      [statusLabel]="item.statusLabel"
+      [statusPulse]="!!item.statusPulse"
+      [tooltip]="tooltipOf(item)" />
+  </span>
+}
+
+@if (_hidden.length) {
+  <button
+    #more
+    cdkOverlayOrigin
+    #origin="cdkOverlayOrigin"
+    type="button"
+    class="sd-avatar-group__more"
+    [style.font-size.px]="moreFontSize()"
+    [attr.aria-label]="'core.component.avatar.more-label' | sdTranslate: { count: _hidden.length }"
+    [attr.aria-expanded]="_open"
+    (click)="onMore()">
+    +{{ _hidden.length }}
+  </button>
+
+  <ng-template
+    cdkConnectedOverlay
+    [cdkConnectedOverlayOrigin]="origin"
+    [cdkConnectedOverlayOpen]="_open"
+    [cdkConnectedOverlayPositions]="positions"
+    [cdkConnectedOverlayViewportMargin]="8"
+    [cdkConnectedOverlayPush]="true"
+    [cdkConnectedOverlayHasBackdrop]="true"
+    [cdkConnectedOverlayDisableClose]="true"
+    cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop"
+    (backdropClick)="close(false)"
+    (overlayKeydown)="onOverlayKeydown($event)">
+    @let _title = 'core.component.avatar.more-title' | sdTranslate: { count: _hidden.length };
+    <!-- why: trap focus và tự đưa focus vào dòng đầu khi mở (mẫu context-switcher); Esc trả focus về "+N". -->
+    <div class="sd-avatar-group__popover" role="dialog" [attr.aria-label]="_title" cdkTrapFocus [cdkTrapFocusAutoCapture]="true">
+      <div class="sd-avatar-group__popover-title" aria-hidden="true">{{ _title }}</div>
+      <ul class="sd-avatar-group__list">
+        @for (item of _hidden; track $index) {
+          <li class="sd-avatar-group__row" tabindex="0">
+            <!-- why: tên và trạng thái đã có chữ ngay bên cạnh, avatar không đọc lại. -->
+            <sd-avatar
+              aria-hidden="true"
+              [src]="item.src"
+              [size]="28"
+              [name]="item.name"
+              [status]="item.status"
+              [statusLabel]="item.statusLabel"
+              [statusPulse]="!!item.statusPulse" />
+            <span class="sd-avatar-group__row-text">
+              <span class="sd-avatar-group__row-name">{{ nameOf(item) }}</span>
+              @if (item.status && item.statusLabel) {
+                <span class="sd-avatar-group__row-status">{{ item.statusLabel }}</span>
+              }
+            </span>
+          </li>
+        }
+      </ul>
+    </div>
+  </ng-template>
+}

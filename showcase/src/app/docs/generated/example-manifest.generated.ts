@@ -18,6 +18,10 @@ export type ShowcaseExampleSourceKey =
   | "components/audit-diff/example-format-redact-va-order"
   | "components/audit-diff/example-nested-table"
   | "components/audit-diff/example-stable-key-array"
+  | "components/avatar-group/example-du-dung-mot-nguoi"
+  | "components/avatar-group/example-kich-thuoc"
+  | "components/avatar-group/example-nhom-avatar"
+  | "components/avatar-group/example-tu-mo-man-hinh-khac"
   | "components/avatar/example-anh-co-ten"
   | "components/avatar/example-anh-url"
   | "components/avatar/example-cac-kich-thuoc"
@@ -616,6 +620,34 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-trong-danh-sach",
     title: "Trong danh sách",
     description: "Existing “Trong danh sách” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/avatar-group/example-nhom-avatar",
+    pageKey: "components/avatar-group",
+    sectionId: "example-nhom-avatar",
+    title: "Nhóm avatar",
+    description: "Rê chuột vào từng avatar để xem tên và trạng thái; bấm “+N” để mở danh sách (Esc đóng và trả focus về ô).",
+  },
+  {
+    sourceKey: "components/avatar-group/example-kich-thuoc",
+    pageKey: "components/avatar-group",
+    sectionId: "example-kich-thuoc",
+    title: "Kích thước",
+    description: "Existing “Kích thước” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/avatar-group/example-du-dung-mot-nguoi",
+    pageKey: "components/avatar-group",
+    sectionId: "example-du-dung-mot-nguoi",
+    title: "Dư đúng một người",
+    description: "7 người với max 6: hiện luôn người thứ 7 thay cho ô “+1”.",
+  },
+  {
+    sourceKey: "components/avatar-group/example-tu-mo-man-hinh-khac",
+    pageKey: "components/avatar-group",
+    sectionId: "example-tu-mo-man-hinh-khac",
+    title: "Tự mở màn hình khác",
+    description: "Có người nghe moreClick thì “+N” không mở popover mặc định mà phát danh sách người bị ẩn.",
   },
   {
     sourceKey: "components/badge/example-sau-dang",

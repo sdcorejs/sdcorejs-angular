@@ -63,6 +63,8 @@ export class SdAvatar {
   readonly statusLabel = input<string | null | undefined>();
   /** Vòng sáng nhấp nháy quanh chấm. */
   readonly statusPulse = input(false, { transform: booleanAttribute });
+  /** Tooltip của avatar, thay cho tooltip mặc định (tên của avatar ảnh). `sd-avatar-group` đặt "{tên} · {trạng thái}". */
+  readonly tooltip = input<string | null | undefined>();
 
   readonly #imageError = signal<boolean>(false);
 
@@ -110,6 +112,8 @@ export class SdAvatar {
 
   /** Tooltip của avatar ảnh: tên (avatar chữ đã hiện chữ viết tắt). */
   readonly imageTooltip = computed(() => (this.isUrl() ? this.name()?.trim() || '' : ''));
+  /** Tooltip hiển thị: `tooltip` nếu có, ngược lại tooltip mặc định của avatar ảnh. */
+  readonly tooltipText = computed(() => this.tooltip()?.trim() || this.imageTooltip());
 
   // Hình học chấm: đường kính clamp(8px, size × 0.25, 20px); viền 2px (3px từ size 64); tâm chấm nằm trên mép
   // avatar ở góc 45° nên right = bottom = size × 0.146 − (chấm + 2 × viền) / 2.

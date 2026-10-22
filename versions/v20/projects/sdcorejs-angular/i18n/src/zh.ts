@@ -1492,4 +1492,7 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.badge.picker.description-hint': '说明仅在图标和标签类型中显示',
   'core.component.badge.picker.required': '请选择显示样式',
   'core.component.badge.picker.pair-label': '标签',
+  'core.component.avatar.group-label': '{count} 人',
+  'core.component.avatar.more-label': '查看另外 {count} 人',
+  'core.component.avatar.more-title': '另外 {count} 人',
 };

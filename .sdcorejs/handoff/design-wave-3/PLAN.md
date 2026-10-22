@@ -105,6 +105,7 @@ Mới (đủ 5 locale vi/en/ja/ko/zh):
 | 1b badge: `solid`, `dot`, `pair`, input `label`, `pulse` | xong | Ảnh: `wave3-1b-badge-solid-dot-pair.png` (chỉ bản sau — type mới). `test:theme` thêm cặp badge |
 | 1c `sd-badge-picker`, `SD_BADGE_TYPE_OPTIONS`, `SD_BADGE_ICON_PRESET` | xong | Ảnh: `wave3-1c-badge-picker.png` (chỉ bản sau — component mới). Trang showcase mới `components/badge-picker` |
 | 2a avatar: `status`, `statusLabel`, `statusPulse`, `name`, token `avatar-status-ring` | xong | Ảnh: `wave3-2a-avatar-status.png` (ví dụ cũ không đổi giao diện nên chỉ chụp ví dụ mới) |
+| 2b `sd-avatar-group` | xong | Ảnh: `wave3-2b-avatar-group.png`. Trang showcase mới `components/avatar-group`. Thêm input `tooltip` cho sd-avatar |
 
 Lệch khỏi thông số ở bước 1a (đã báo user):
 - **Type icon to hơn một bậc** (user chọn 2026-10-21, theo HTML thay vì bảng `badge.md`): chữ sm 13/18, md 14/20,
@@ -137,3 +138,8 @@ Ghi chú bước 2a:
 - Avatar không có tên lẫn trạng thái thì để trang trí (không role, không aria-label) — thay vì `role="img"` không tên.
 - User menu của layout: thêm `aria-hidden` cho avatar vì tên người dùng hiện ngay cạnh, tránh đọc hai lần.
 - QĐ 8 đã áp dụng: ảnh lỗi + có `name` thì chữ viết tắt và màu lấy từ `name`.
+
+Ghi chú bước 2b:
+- sd-avatar có thêm input `tooltip` (ngoài spec) để group đặt "{tên} · {trạng thái}" mà không chồng tooltip ảnh của avatar.
+- Popover: dòng có `tabindex=0` trong `cdkTrapFocus` (focus dòng đầu khi mở); avatar trong dòng `aria-hidden` vì tên và trạng thái đã viết bên cạnh.
+- Trạng thái trống thì để trống (theo md), không hiện "Không có trạng thái" như HTML.

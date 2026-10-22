@@ -1510,4 +1510,7 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.badge.picker.description-hint': '説明はアイコンとタグの種類でのみ表示されます',
   'core.component.badge.picker.required': '表示スタイルを選択してください',
   'core.component.badge.picker.pair-label': 'ラベル',
+  'core.component.avatar.group-label': '{count} 人',
+  'core.component.avatar.more-label': 'ほか {count} 人を表示',
+  'core.component.avatar.more-title': 'ほか {count} 人',
 };

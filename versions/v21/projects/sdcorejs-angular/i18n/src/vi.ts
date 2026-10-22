@@ -1509,4 +1509,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.badge.picker.description-hint': 'Mô tả chỉ hiện ở kiểu icon và tag',
   'core.component.badge.picker.required': 'Vui lòng chọn kiểu hiển thị',
   'core.component.badge.picker.pair-label': 'Nhãn',
+  'core.component.avatar.group-label': '{count} người',
+  'core.component.avatar.more-label': 'Xem thêm {count} người',
+  'core.component.avatar.more-title': '{count} người khác',
 };

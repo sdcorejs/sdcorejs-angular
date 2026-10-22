@@ -1505,4 +1505,7 @@ export const EN_MESSAGES = {
   'core.component.badge.picker.description-hint': 'The description only shows on the icon and tag types',
   'core.component.badge.picker.required': 'Please choose a display style',
   'core.component.badge.picker.pair-label': 'Label',
+  'core.component.avatar.group-label': '{count} people',
+  'core.component.avatar.more-label': 'Show {count} more people',
+  'core.component.avatar.more-title': '{count} more people',
 } as const;
