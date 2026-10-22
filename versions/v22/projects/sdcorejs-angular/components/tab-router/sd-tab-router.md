@@ -181,7 +181,7 @@ interface SdTabInfo {
 
 ## Theming
 
-Tokens (see `assets/THEME.md`, "Tab router tokens"): `--sd-tab-router-nav-bg`, `--sd-tab-router-item-hover-bg`, `--sd-tab-router-item-active-bg`, `--sd-tab-router-item-text`, `--sd-tab-router-item-divider`. All derive from the palette with one expression for light and dark. Deprecated and no longer read: `--sd-tab-router-item-muted-bg`, `--sd-tab-router-badge-bg`.
+Tokens (see `assets/THEME.md`, "Tab router tokens"): `--sd-tab-router-nav-bg`, `--sd-tab-router-item-hover-bg`, `--sd-tab-router-item-active-bg`, `--sd-tab-router-item-text`, `--sd-tab-router-item-divider`. All derive from the palette with one expression for light and dark. Deprecated and no longer read: `--sd-tab-router-item-muted-bg`. `--sd-tab-router-badge-bg` (deprecated in 3.2) is removed.
 
 ## Visual cues (helps agent map screenshots → component)
 

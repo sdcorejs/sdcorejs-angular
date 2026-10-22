@@ -6,6 +6,10 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+### Removed
+
+- Tab router: the component token `--sd-tab-router-badge-bg`, deprecated in 3.2. Its only reader filled the icon of the old tab, which had not been rendered since the tabs moved to `sd-badge`, so no tab used it. Code that set or read it can drop it. `--sd-tab-router-item-muted-bg` stays deprecated.
+
 ## [3.2] - 2026-10-23
 
 Release suffix `3.2` targets `19.3.2`, `20.3.2`, `21.3.2`, and `22.3.2`, validated against `*.3.1`. Repo-owned: design handoff waves 1–3 (control tokens and box controls, operator chip in the form controls, select panel, checkbox and radio, segmented, kanban, badge, badge picker, avatar status and group, tab bar with scrolling and a tab list), Sidebar V4 with the context switcher and the `graphite` preset, the generic CRUD module, form-generic static elements and buttons, a fixed app time zone, unknown-total table pagination, the Tiptap editor engine and `sd-chip-calendar` limits and popup. Read `Changed (BREAKING for consumers)` before upgrading: custom i18n catalogs need new keys, the CKEditor-specific editor API is gone, exhaustive switches over `SdFormGenericField['type']` and the sidebar `version` need new cases, and the server payload changes for `NULL` / `NOT_NULL` and `split-number` table filters.
