@@ -88,7 +88,13 @@ describe('SdQueryInlineChip', () => {
     fixture.detectChanges();
     const op = fixture.debugElement.query(By.directive(SdOperator));
     expect(op).not.toBeNull();
-    expect((op.componentInstance as SdOperator).disabled()).toBe(true);
+    // Handoff sd-operator A2: a read-only xs glyph with a name and a tooltip, not a disabled trigger.
+    const operator = op.componentInstance as SdOperator;
+    expect(operator.readonly()).toBeTrue();
+    expect(operator.disabled()).toBeFalse();
+    expect(operator.size()).toBe('xs');
+    expect(op.nativeElement.querySelector('[role="img"]').getAttribute('aria-label')).toBeTruthy();
+    expect(op.nativeElement.querySelector('button')).toBeNull();
     expect(fixture.nativeElement.querySelector('.c-token-sep')).toBeNull();
   });
 

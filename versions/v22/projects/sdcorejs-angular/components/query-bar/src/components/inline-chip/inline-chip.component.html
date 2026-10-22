@@ -17,7 +17,7 @@
   <span class="c-token-field">{{ _field.label }}</span>
 
   @if (!_isNoData && showOperator()) {
-    <sd-operator class="c-token-op" [operators]="[_operator]" [model]="_operator" [disabled]="true" />
+    <sd-operator class="c-token-op" [operators]="[_operator]" [model]="_operator" size="xs" readonly />
   } @else if (!_isNoData) {
     <span class="c-token-sep">:</span>
   }

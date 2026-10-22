@@ -86,10 +86,3 @@ $qb-radius-chip:   999px;
     &:hover { background: rgba(0, 0, 0, 0.06); }
   }
 }
-
-// Embedded <sd-operator> icon — size to 14px + follow currentColor (sd-operator
-// hardcodes a teal default + 4px padding on its trigger).
-.c-chip-operator {
-  ::ng-deep .c-op-trigger { padding: 0; color: inherit; }
-  ::ng-deep .c-op-icon svg { width: 14px; height: 14px; display: block; }
-}

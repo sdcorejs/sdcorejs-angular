@@ -46,10 +46,7 @@ $qb-radius-chip:    999px;
 .c-token-op {
   display: inline-flex;
   align-items: center;
-  color: inherit;
-
-  ::ng-deep .c-op-trigger { padding: 0; color: inherit; }
-  ::ng-deep .c-op-icon svg { width: 14px; height: 14px; display: block; }
+  color: inherit; // sd-operator size="xs" follows currentColor
 }
 
 .c-token-sep { color: $qb-text-muted; }

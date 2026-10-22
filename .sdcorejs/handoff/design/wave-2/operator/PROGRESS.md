@@ -8,7 +8,7 @@ Kế hoạch đã duyệt: [`PLAN.md`](PLAN.md) (2026-10-22). Nhánh `feat/sd-op
 | 1 | Nâng `@sdcorejs/utils` 1.3.1 (C1–C6) | xong |
 | 2 | sd-operator (A1, A3, B1, B2, B4, B5 hình, C7, D1) | xong |
 | 3 | column-filter (B3, B5) | xong |
-| 4 | query-bar (A2, A4, D1) | chưa |
+| 4 | query-bar (A2, A4, D1) | xong |
 | 5 | Nhãn vi, tài liệu, showcase, CHANGELOG (B6, D2) | chưa |
 
 ## Bước 1
@@ -54,3 +54,22 @@ Kế hoạch đã duyệt: [`PLAN.md`](PLAN.md) (2026-10-22). Nhánh `feat/sd-op
   `active` khi cột có giá trị.
 - Kiểm tra: filter specs 38/38, full Karma 7848/7848, prettier + eslint, sync, `check:sync`.
   Ảnh: [`progress/step3-before-after.png`](progress/step3-before-after.png) (menu cột “Họ và tên” của Full demo).
+
+## Bước 4
+
+- `inline-chip`, `inline-value-chip`, `popover-chip` và bước value của `build-chip`: `size="xs" readonly` thay cho
+  `[disabled]="true"` (A2): glyph 14px có tên + tooltip, không nút. Bước operator của `build-chip`: `size="xs"`, vùng bấm 24px
+  (A4); `open()` giữ nguyên. Sửa comment “icon + tooltip” của build-chip.
+- `chip-popover` (ô operator ở đầu popover): `size="sm"` (quyết định 5 của PLAN).
+- Gỡ 4 đoạn `::ng-deep .c-op-trigger` / `.c-op-icon svg` ở `query-bar.component.scss`, `inline-chip`, `build-chip`,
+  `popover-chip` (D1).
+- Lỗi tìm thêm khi chụp ảnh: rule `.c-pop-header sd-icon { color: primary; 16px }` của popover tô cả mũi tên của chip
+  operator → thu về `> sd-icon` (chỉ icon của field) ở `chip-popover.component.scss` và bản lặp trong
+  `query-bar.component.scss`.
+- Còn lại (ngoài phạm vi): nền chip xám của ô operator ở đầu popover gần trùng nền panel query-bar (`#EFEDF0`, panel
+  mat-menu mặc định của query-bar), nên chip ít nổi; mũi tên và glyph vẫn rõ.
+- Spec: 6 spec RED trước (inline-chip, inline-value-chip, popover-chip: readonly xs có tên, không nút; build-chip: xs 24px ở
+  bước operator, readonly xs ở bước value; chip-popover: `sm`).
+- Kiểm tra: query-bar specs 171/171, full Karma 7850/7850, eslint, `check:scss-hex` 0, sync, `check:sync`. File query-bar
+  vốn chưa theo prettier từ trước (17 file, cả file không đụng) nên không format lại cả file.
+  Ảnh: [`progress/step4-before-after.png`](progress/step4-before-after.png); “trước” là lib dựng từ operator của `main`.
