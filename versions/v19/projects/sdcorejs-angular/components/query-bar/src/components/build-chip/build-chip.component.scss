@@ -44,12 +44,7 @@ $qb-radius-chip:    999px;
 .c-token-op {
   display: inline-flex;
   align-items: center;
-  color: inherit; // grey, grouped with the label
-
-  // Embedded <sd-operator> trigger: 14px icon, follow currentColor (sd-operator
-  // hardcodes its own teal + 4px padding).
-  ::ng-deep .c-op-trigger { padding: 0; color: inherit; }
-  ::ng-deep .c-op-icon svg { width: 14px; height: 14px; display: block; }
+  color: inherit; // grey, grouped with the label; sd-operator size="xs" follows currentColor
 }
 
 .c-token-value {

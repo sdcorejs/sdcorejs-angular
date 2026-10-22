@@ -69,6 +69,12 @@ describe('SdQueryBuildChip', () => {
     expect(opDe).not.toBeNull();
     const op = opDe.componentInstance as SdOperator;
     expect(op.operators()).toEqual(host.allowedOperators);
+    // Handoff sd-operator A4: xs glyph with a 24px hit area.
+    expect(op.size()).toBe('xs');
+    expect(op.readonly()).toBeFalse();
+    const button = opDe.nativeElement.querySelector('button') as HTMLButtonElement;
+    expect(button.getBoundingClientRect().width).toBe(24);
+    expect(button.getBoundingClientRect().height).toBe(24);
   });
 
   // ---- 2: step='operator' operator menu emit triggers pickOperator
@@ -239,7 +245,7 @@ describe('SdQueryBuildChip', () => {
   });
 
   // ---- 13: disabled operator badge in value step
-  it("step='value' renders a disabled <sd-operator> displaying the chosen operator", () => {
+  it("step='value' renders a read-only xs <sd-operator> displaying the chosen operator", () => {
     const field = {
       key: 'status',
       label: 'Status',
@@ -253,7 +259,9 @@ describe('SdQueryBuildChip', () => {
     const opDe = fixture.debugElement.query(By.directive(SdOperator));
     expect(opDe).not.toBeNull();
     const op = opDe.componentInstance as SdOperator;
-    expect(op.disabled()).toBe(true);
+    expect(op.readonly()).toBeTrue();
+    expect(op.disabled()).toBeFalse();
+    expect(op.size()).toBe('xs');
     expect(op.model()).toBe('IN');
   });
 

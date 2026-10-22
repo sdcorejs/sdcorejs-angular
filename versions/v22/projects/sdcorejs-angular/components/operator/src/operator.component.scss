@@ -1,30 +1,16 @@
-@use './operator-menu';
-
-.c-op-trigger {
+// Trigger và menu nằm trong chip operator dùng chung (`operator-chip.component.scss`, `_operator-menu.scss`).
+:host {
   display: inline-flex;
+  vertical-align: middle;
   align-items: center;
-  justify-content: center;
-  padding: 4px;
-  border: none;
-  background: transparent;
-  color: var(--sd-primary, #0f766e);
-  cursor: pointer;
-  border-radius: var(--sd-radius-4, 4px);
-
-  &:hover:not([disabled]) { background: rgba(0, 0, 0, 0.04); }
-  &[disabled] { color: rgba(0, 0, 0, 0.26); cursor: default; }
 }
 
-// Trigger icon (in :host).
-.c-op-icon {
+// readonly: glyph không nền, theo màu chữ của chip chứa nó.
+.sd-operator__glyph {
   display: inline-flex;
-  align-items: center;
+  color: inherit;
 
-  svg { display: block; }
-}
-
-// Menu rows render in a document.body overlay, so component-scoped styles can't reach them — the shared
-// partial targets the panel class (forwarded by <mat-menu class="c-op-menu">) via ::ng-deep.
-::ng-deep {
-  @include operator-menu.panel;
+  ::ng-deep svg {
+    display: block;
+  }
 }

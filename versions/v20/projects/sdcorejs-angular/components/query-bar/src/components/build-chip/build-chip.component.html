@@ -25,17 +25,19 @@
       <sd-operator
         #buildOperator
         class="c-token-op"
+        size="xs"
         [operators]="allowedOperators()"
         [model]="_building.operator"
         (modelChange)="pickOperator.emit($any($event))" />
     } @else {
-      <!-- why: badge readonly cho operator đã chọn — vẫn render <sd-operator>
-           để giữ thị giác giống chip hoàn thành (icon + tooltip). -->
+      <!-- why: operator đã chọn hiện như chip hoàn thành — glyph chỉ-xem có tên và tooltip (readonly), không phải nút
+           disabled nên tooltip vẫn chạy. -->
       <sd-operator
         class="c-token-op"
         [operators]="[$any(_building.operator)]"
         [model]="$any(_building.operator)"
-        [disabled]="true" />
+        size="xs"
+        readonly />
 
       @if (_building.field.type === 'values' || _building.field.type === 'lazy-values') {
         @let _bopt = $any(_building.field).option;

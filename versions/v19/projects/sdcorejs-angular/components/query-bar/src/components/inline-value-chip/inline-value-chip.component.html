@@ -29,7 +29,7 @@
     <sd-icon class="c-seamless__icon" [name]="icon()"></sd-icon>
     <span class="c-seamless__field">{{ field().label }}</span>
     @if (showOperator() && !_isNoData) {
-      <sd-operator class="c-seamless__op" [operators]="[_operator]" [model]="_operator" [disabled]="true" />
+      <sd-operator class="c-seamless__op" [operators]="[_operator]" [model]="_operator" size="xs" readonly />
     } @else if (!_isNoData) {
       <span class="c-seamless__sep">:</span>
     }

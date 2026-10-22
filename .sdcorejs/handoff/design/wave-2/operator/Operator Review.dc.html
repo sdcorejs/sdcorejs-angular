@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Roboto:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0..1,0" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:#f4f4f1;color:#1a1b1f;-webkit-font-smoothing:antialiased}
+a{color:#005cbb;text-decoration:none}
+a:hover{color:#004a99;text-decoration:underline}
+</style>
+</helmet>
+<div style="font-family:'Be Vietnam Pro',sans-serif;font-size:15px;line-height:1.6;color:#1a1b1f;max-width:1240px;margin:0 auto;padding:56px 32px 96px;box-sizing:border-box">
+
+<header data-screen-label="00 Header" style="display:flex;flex-direction:column;gap:16px;padding-bottom:40px;border-bottom:1px solid #dddcd6">
+  <div style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#6b6d73;display:flex;flex-wrap:wrap;gap:6px 16px"><span>sdcorejs/sdcorejs-angular · main @ 773d7de</span><span>versions/v19 · components/operator</span><span>sdcorejs/sdcorejs-utils · constants/operator.constants.ts</span></div>
+  <h1 style="margin:0;font-weight:600;font-size:44px;line-height:1.12;letter-spacing:-0.02em;max-width:900px;text-wrap:balance">sd-operator: review dropdown và bộ icon</h1>
+  <p style="margin:0;max-width:780px;color:#3a3c42;font-size:17px;text-wrap:pretty">Review dựa trên template, SCSS, logic của sd-operator, bảng OPERATORS trong @sdcorejs/utils, file sd-operator.md và các nơi dùng: column-filter, query-bar, query-builder. Dropdown dùng được nhưng mỗi hàng có thêm dòng mã API, danh sách không chia nhóm và hàng đang chọn khó nhận ra. Bộ icon có ba glyph dễ đọc nhầm (&gt; và &lt; giống chevron, IN giống radio, NOT_NULL giống chấm trạng thái), còn nhóm văn bản gần như không phân biệt được ở 14px. Có 19 vấn đề chia 4 nhóm; mục 04 là bản dựng đề xuất bấm thử được.</p>
+  <nav style="display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px;padding-top:8px">
+    <a href="#hien-trang">01 Hiện trạng</a>
+    <a href="#bo-icon">02 Bộ icon</a>
+    <a href="#van-de">03 Vấn đề</a>
+    <a href="#de-xuat">04 Đề xuất</a>
+    <a href="#api">05 API</a>
+  </nav>
+</header>
+
+<section id="hien-trang" data-screen-label="01 Hiện trạng" style="padding-top:56px;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">01</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Hiện trạng</h2>
+  </div>
+  <p style="margin:0;max-width:780px;color:#3a3c42;text-wrap:pretty">Dựng lại từ template và SCSS: trigger là nút icon 28px (padding 4px, SVG 20px, màu primary) đứng cạnh control với <span style="font-family:'JetBrains Mono',monospace;font-size:13px">mr-4</span>. Menu là <span style="font-family:'JetBrains Mono',monospace;font-size:13px">mat-menu</span> mặc định, mỗi hàng hai dòng: nhãn đã dịch và mã operator. query-bar ghi đè trigger thành glyph 14px. Dữ liệu mẫu: cột Tổng tiền với 9 operator kiểu số, đang chọn “Lớn hơn, hoặc bằng”.</p>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #dddcd6">
+      <span style="display:flex;align-items:center;gap:8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#6b6d73"><span style="width:8px;height:8px;border-radius:999px;background:#6b6d73"></span>Hiện tại</span>
+      <span style="font:400 12px/16px 'JetBrains Mono',monospace;color:#6b6d73">minh hoạ tĩnh</span>
+    </div>
+    <div style="background:#f9f9f9;padding:28px 32px;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:32px;font-family:Roboto,'Helvetica Neue',sans-serif;color:#1a1b1f">
+
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <span style="font:500 12px 'JetBrains Mono',monospace;color:#6b6d73">column-filter · menu đang mở</span>
+        <div style="width:260px;display:flex;align-items:center">
+          <span style="flex:0 0 auto;width:28px;height:28px;box-sizing:border-box;padding:4px;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#005cbb;background:rgba(0,0,0,.04);margin-right:4px">{{ curGE20 }}</span>
+          <div style="flex:1;min-width:0;height:32px;box-sizing:border-box;border:1px solid #c4c6d0;border-radius:4px;background:#ffffff;display:flex;align-items:center;padding:0 8px;font-size:14px">1.000.000</div>
+        </div>
+        <div style="width:max-content;min-width:112px;max-width:280px;background:#ffffff;border-radius:4px;box-shadow:0 2px 4px -1px rgba(0,0,0,.2),0 4px 5px rgba(0,0,0,.14),0 1px 10px rgba(0,0,0,.12);padding:8px 0">
+          <sc-for list="{{ curMenu }}" as="r" hint-placeholder-count="9">
+            <div style="display:flex;align-items:center;gap:8px;padding:6px 16px;background:{{ r.bg }};font-size:14px;color:#1a1b1f">
+              <span style="display:inline-flex;flex:0 0 auto">{{ r.icon }}</span>
+              <span style="display:flex;flex-direction:column;align-items:flex-start"><span style="line-height:1.3;white-space:nowrap">{{ r.label }}</span><span style="font:400 11px/1.2 monospace;color:#7a7a7a;white-space:nowrap">{{ r.code }}</span></span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;font-size:12px;color:#44474f;align-items:center">Liên quan:
+          <a href="#a1" style="font:600 11px/18px 'JetBrains Mono',monospace;padding:0 7px;border-radius:999px;background:#ffe3df;color:#93000a">A1 không có tên</a>
+          <a href="#a3" style="font:600 11px/18px 'JetBrains Mono',monospace;padding:0 7px;border-radius:999px;background:#ffe3df;color:#93000a">A3 hàng chọn</a>
+          <a href="#b1" style="font:600 11px/18px 'JetBrains Mono',monospace;padding:0 7px;border-radius:999px;background:#fff1e0;color:#8a5200">B1 dòng mã</a>
+          <a href="#b4" style="font:600 11px/18px 'JetBrains Mono',monospace;padding:0 7px;border-radius:999px;background:#fff1e0;color:#8a5200">B4 không giống dropdown</a>
+          <a href="#c1" style="font:600 11px/18px 'JetBrains Mono',monospace;padding:0 7px;border-radius:999px;background:#ddf0ef;color:#00504f">C1 &gt; như chevron</a>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:32px">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <span style="font:500 12px 'JetBrains Mono',monospace;color:#6b6d73">column-filter · chưa chọn operator</span>
+          <div style="width:260px;display:flex;align-items:center">
+            <span style="flex:0 0 auto;width:28px;height:28px;box-sizing:border-box;padding:4px;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#005cbb;margin-right:4px">{{ curFunnel20 }}</span>
+            <div style="flex:1;min-width:0;height:32px;box-sizing:border-box;border:1px solid #c4c6d0;border-radius:4px;background:#ffffff;display:flex;align-items:center;padding:0 8px;font-size:14px;color:#74777f">Tổng tiền</div>
+          </div>
+          <span style="font-size:13px;line-height:1.5;color:#3a3c42;max-width:360px">Hình phễu màu primary, tooltip rỗng. Cột chưa lọc vẫn có icon màu primary như cột đang lọc.</span>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;font-size:12px;color:#44474f;align-items:center">Liên quan:
+            <a href="#b5" style="font:600 11px/18px 'JetBrains Mono',monospace;padding:0 7px;border-radius:999px;background:#fff1e0;color:#8a5200">B5 trạng thái trống</a>
+            <a href="#d1" style="font:600 11px/18px 'JetBrains Mono',monospace;padding:0 7px;border-radius:999px;background:#ecebe6;color:#44474f">D1 màu khoá cứng</a>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <span style="font:500 12px 'JetBrains Mono',monospace;color:#6b6d73">query-bar · chip, operator readonly 14px</span>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;gap:8px">
+            <span style="height:32px;display:inline-flex;align-items:center;gap:4px;padding:0 4px 0 10px;border-radius:999px;border:1px solid #d6e3f7;background:#e3edf9;font-size:13px;font-weight:500;color:#5f6368;box-sizing:border-box">Tổng tiền<span style="display:inline-flex">{{ qbGE14 }}</span><span style="color:#005cbb">1.000.000</span><span style="width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:14px;line-height:1;color:#7a7a7a">close</span></span>
+            <span style="height:32px;display:inline-flex;align-items:center;gap:4px;padding:0 4px 0 10px;border-radius:999px;border:1px solid #d6e3f7;background:#e3edf9;font-size:13px;font-weight:500;color:#5f6368;box-sizing:border-box">Tên khách hàng<span style="display:inline-flex">{{ qbCT14 }}</span><span style="color:#005cbb">Nguyễn</span><span style="width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:14px;line-height:1;color:#7a7a7a">close</span></span>
+            <span style="height:32px;display:inline-flex;align-items:center;gap:4px;padding:0 4px 0 10px;border-radius:999px;border:1px solid #d6e3f7;background:#e3edf9;font-size:13px;font-weight:500;color:#5f6368;box-sizing:border-box">Ghi chú<span style="display:inline-flex">{{ qbNN14 }}</span><span style="width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:14px;line-height:1;color:#7a7a7a">close</span></span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;font-size:12px;color:#44474f;align-items:center">Liên quan:
+            <a href="#a2" style="font:600 11px/18px 'JetBrains Mono',monospace;padding:0 7px;border-radius:999px;background:#ffe3df;color:#93000a">A2 không có tooltip</a>
+            <a href="#c3" style="font:600 11px/18px 'JetBrains Mono',monospace;padding:0 7px;border-radius:999px;background:#ddf0ef;color:#00504f">C3 “chứa” ở 14px</a>
+            <a href="#c6" style="font:600 11px/18px 'JetBrains Mono',monospace;padding:0 7px;border-radius:999px;background:#ddf0ef;color:#00504f">C6 đĩa đặc</a>
+            <a href="#c7" style="font:600 11px/18px 'JetBrains Mono',monospace;padding:0 7px;border-radius:999px;background:#ddf0ef;color:#00504f">C7 nét mảnh</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section id="bo-icon" data-screen-label="02 Bộ icon" style="padding-top:72px;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">02</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Bộ icon</h2>
+  </div>
+  <p style="margin:0;max-width:780px;color:#3a3c42;text-wrap:pretty">Hình lấy nguyên từ <span style="font-family:'JetBrains Mono',monospace;font-size:13px">OPERATORS</span>, vẽ ở ba cỡ đang dùng: 20px (trigger), 16px (chip sm của đợt 2), 14px (chip query-bar). Cột đề xuất đặt mọi glyph trong vùng 5–19 của viewBox 24, dùng một nét gạch phủ định chung và tăng stroke ở cỡ nhỏ. Hai cột cùng màu để so hình.</p>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow-x:auto">
+    <div style="min-width:760px">
+      <div style="display:grid;grid-template-columns:minmax(170px,1.1fr) 112px 112px minmax(240px,2fr);gap:16px;padding:10px 16px;background:#f7f7f4;font:500 11px 'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.06em;color:#6b6d73"><span>Operator</span><span>Hiện tại 20·16·14</span><span style="color:#005cbb">Đề xuất 20·16·14</span><span>Ghi chú</span></div>
+      <sc-for list="{{ iconGroups }}" as="g" hint-placeholder-count="5">
+        <div style="padding:8px 16px;background:#fafaf8;border-top:1px solid #ecebe6;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#6b6d73">{{ g.name }}</div>
+        <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="3">
+          <div style="display:grid;grid-template-columns:minmax(170px,1.1fr) 112px 112px minmax(240px,2fr);gap:16px;align-items:center;padding:8px 16px;border-top:1px solid #ecebe6">
+            <div style="display:flex;flex-direction:column;min-width:0"><span style="font-size:14px;line-height:20px">{{ r.label }}</span><span style="font:400 11px/16px 'JetBrains Mono',monospace;color:#6b6d73">{{ r.code }}</span></div>
+            <div style="display:flex;gap:4px;color:#2b2c30">
+              <span style="width:32px;height:32px;border-radius:6px;background:#f4f4f1;display:flex;align-items:center;justify-content:center">{{ r.c20 }}</span>
+              <span style="width:32px;height:32px;border-radius:6px;background:#f4f4f1;display:flex;align-items:center;justify-content:center">{{ r.c16 }}</span>
+              <span style="width:32px;height:32px;border-radius:6px;background:#f4f4f1;display:flex;align-items:center;justify-content:center">{{ r.c14 }}</span>
+            </div>
+            <div style="display:flex;gap:4px;color:#2b2c30">
+              <span style="width:32px;height:32px;border-radius:6px;background:#eef3fa;display:flex;align-items:center;justify-content:center">{{ r.p20 }}</span>
+              <span style="width:32px;height:32px;border-radius:6px;background:#eef3fa;display:flex;align-items:center;justify-content:center">{{ r.p16 }}</span>
+              <span style="width:32px;height:32px;border-radius:6px;background:#eef3fa;display:flex;align-items:center;justify-content:center">{{ r.p14 }}</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:8px;font-size:13px;line-height:1.5;color:#3a3c42">
+              <sc-if value="{{ r.tag }}" hint-placeholder-val="{{ false }}"><a href="{{ r.href }}" style="flex:0 0 auto;font:600 11px/18px 'JetBrains Mono',monospace;padding:0 7px;border-radius:999px;background:{{ r.tagBg }};color:{{ r.tagFg }}">{{ r.tag }}</a></sc-if>
+              <span style="text-wrap:pretty">{{ r.note }}</span>
+            </div>
+          </div>
+        </sc-for>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(360px,100%),1fr));gap:24px;align-items:start">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <span style="display:flex;align-items:center;gap:8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#4a4c52"><span style="width:8px;height:8px;border-radius:999px;background:#9a9b9f"></span>Đặt cạnh glyph điều hướng · 20px</span>
+      <div style="display:flex;flex-wrap:wrap;gap:28px;padding:20px 24px;background:#ffffff;border:1px solid #dddcd6;border-radius:12px;color:#2b2c30">
+        <div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;align-items:center;gap:6px;height:32px">{{ evCurGT }}<span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1">chevron_right</span><span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1">arrow_drop_down</span></div><span style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#6b6d73">GREATER_THAN hiện tại · chevron_right · arrow_drop_down</span></div>
+        <div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;align-items:center;gap:6px;height:32px">{{ evProGT }}{{ evProGE }}<span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1">chevron_right</span></div><span style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#005cbb">&gt; và ≥ đề xuất · chevron_right</span></div>
+      </div>
+      <span style="font-size:13px;line-height:1.55;color:#3a3c42">Chevron Material có tỉ lệ gần như polyline 9,5 16,12 9,19. Góc 10×10 mở rộng hơn, đọc như dấu so sánh.</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <span style="display:flex;align-items:center;gap:8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#005cbb"><span style="width:8px;height:8px;border-radius:999px;background:#005cbb"></span>Quy tắc vẽ đề xuất</span>
+      <ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.6;color:#2b2c30">
+        <li>Vùng vẽ 5–19 trên viewBox 24, tâm 12. Pill nhóm văn bản là ngoại lệ, rộng 2,5–21,5.</li>
+        <li>Một nét gạch phủ định: <span style="font-family:'JetBrains Mono',monospace;font-size:13px">17,5 → 7,19</span>, dùng cho ≠, ∉, ∅ và các dạng “không” của nhóm văn bản.</li>
+        <li>Nhóm toán (= ≠ &gt; &lt; ≥ ≤ ∈ ∉ ∅) cùng bề rộng 10–12 đơn vị.</li>
+        <li>Stroke theo cỡ: 20px → 2, 18px → 2,1, 16px → 2,25, 14px → 2,5. Wrapper SVG trong <span style="font-family:'JetBrains Mono',monospace;font-size:13px">#svg()</span> đặt giá trị, OPERATORS không cần biết cỡ.</li>
+        <li>Phần tô đặc chỉ dùng cho chấm nhỏ (r ≤ 2,75), không dùng cho cả glyph.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section id="van-de" data-screen-label="03 Vấn đề" style="padding-top:72px;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">03</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Vấn đề</h2>
+  </div>
+
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 20px;background:#f7f7f4">
+      <span style="display:flex;align-items:center;gap:10px;font-weight:600;font-size:16px"><span style="width:10px;height:10px;border-radius:999px;background:#ba1a1a"></span>A · Lỗi và khả truy cập</span>
+      <span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#93000a">Ưu tiên 1 · 4 mục</span>
+    </div>
+    <div id="a1" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#ba1a1a">A1</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Nút trigger không có tên truy cập</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Trigger chỉ chứa SVG chèn bằng <span style="font-family:'JetBrains Mono',monospace;font-size:13px">[innerHTML]</span>. <span style="font-family:'JetBrains Mono',monospace;font-size:13px">matTooltip</span> gắn nhãn qua <span style="font-family:'JetBrains Mono',monospace;font-size:13px">aria-describedby</span>, không phải tên nút, nên screen reader đọc “nút, có menu” mà không nói đang là điều kiện gì. SVG không có <span style="font-family:'JetBrains Mono',monospace;font-size:13px">aria-hidden</span>.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> <span style="font-family:'JetBrains Mono',monospace;font-size:13px">[attr.aria-label]</span> = “Điều kiện: {nhãn}”, trống thì “Chọn điều kiện” (key i18n mới, đủ 5 locale). SVG thêm <span style="font-family:'JetBrains Mono',monospace;font-size:13px">aria-hidden="true" focusable="false"</span>.</span>
+        <span style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#6b6d73">operator.component.html · operator.component.ts #svg()</span>
+      </div>
+    </div>
+    <div id="a2" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#ba1a1a">A2</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Badge chỉ-xem dùng disabled nên mất tooltip</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">query-bar render <span style="font-family:'JetBrains Mono',monospace;font-size:13px">&lt;sd-operator [disabled]="true"&gt;</span> làm badge ở inline-chip, inline-value-chip, popover-chip và build-chip. Nút disabled không nhận sự kiện chuột nên tooltip không hiện, và nút bị bỏ khỏi thứ tự Tab. Nhãn operator vì vậy không xuất hiện ở đâu, dù comment trong build-chip ghi là giữ “icon + tooltip”.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> input <span style="font-family:'JetBrains Mono',monospace;font-size:13px">readonly</span> render <span style="font-family:'JetBrains Mono',monospace;font-size:13px">&lt;span role="img" [attr.aria-label]&gt;</span> có tooltip, không mở menu. <span style="font-family:'JetBrains Mono',monospace;font-size:13px">disabled</span> giữ cho trường hợp vô hiệu thật.</span>
+        <span style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#6b6d73">query-bar/…/inline-chip, inline-value-chip, popover-chip, build-chip .html</span>
+      </div>
+    </div>
+    <div id="a3" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#ba1a1a">A3</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Hàng đang chọn chỉ khác ở màu nền</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><span style="font-family:'JetBrains Mono',monospace;font-size:13px">.c-op-active</span> chỉ đổi nền sang <span style="font-family:'JetBrains Mono',monospace;font-size:13px">--sd-primary-light</span>. Không có dấu tick, không có <span style="font-family:'JetBrains Mono',monospace;font-size:13px">aria-checked</span>, và nền này gần với state layer khi hover hoặc focus bằng phím mũi tên. Đi phím qua hàng đang chọn thì khó biết đâu là focus, đâu là giá trị.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> hàng dùng <span style="font-family:'JetBrains Mono',monospace;font-size:13px">role="menuitemradio"</span> + <span style="font-family:'JetBrains Mono',monospace;font-size:13px">[attr.aria-checked]</span>; hàng chọn có tick ở cuối và chữ 500.</span>
+        <span style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#6b6d73">operator.component.html · .scss .c-op-active</span>
+      </div>
+    </div>
+    <div id="a4" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#ba1a1a">A4</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Vùng bấm 14px trong chip query-bar</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Ở bước chọn operator, build-chip ghi đè <span style="font-family:'JetBrains Mono',monospace;font-size:13px">.c-op-trigger { padding: 0 }</span> và SVG 14px, nên nút mở menu chỉ còn 14×14px, dưới mức 24×24px của WCAG 2.5.8.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> <span style="font-family:'JetBrains Mono',monospace;font-size:13px">size="xs"</span> giữ glyph 14px nhưng vùng bấm tối thiểu 24px (padding bù bằng margin âm để không đẩy layout chip).</span>
+        <span style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#6b6d73">build-chip.component.scss · .c-token-op</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 20px;background:#f7f7f4">
+      <span style="display:flex;align-items:center;gap:10px;font-weight:600;font-size:16px"><span style="width:10px;height:10px;border-radius:999px;background:#a66300"></span>B · Dropdown và trigger</span>
+      <span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#8a5200">Ưu tiên 2 · 6 mục</span>
+    </div>
+    <div id="b1" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#a66300">B1</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Dòng mã API hiện cho người dùng cuối</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Mỗi hàng có dòng thứ hai là mã thô như <span style="font-family:'JetBrains Mono',monospace;font-size:13px">GREATER_OR_EQUAL</span>. Đây là giá trị gửi API, luôn là tiếng Anh dù locale là vi, ja, ko hay zh, và không giúp người dùng chọn. Hàng cao khoảng 44px, trong khi option của sd-select là 36px.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> ẩn mặc định, thêm <span style="font-family:'JetBrains Mono',monospace;font-size:13px">showCode</span> cho màn hình kỹ thuật. Khi bật, mã nằm bên phải cùng dòng. Handoff đợt 2 ghi “giữ dòng mã nếu đang có”; mục này đề xuất đổi thành tuỳ chọn.</span>
+        <span style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#6b6d73">operator.component.html · .c-op-code</span>
+      </div>
+    </div>
+    <div id="b2" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#a66300">B2</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Danh sách dài, không chia nhóm</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Bảng OPERATORS có 17 mục, cột chuỗi thường bật 10 mục trở lên. Với hàng 44px, 17 hàng cao khoảng 750px, vượt chiều cao màn hình laptop khi mở từ hàng filter. Các họ so sánh, văn bản, danh sách, khoảng và trống nằm liền nhau không có ranh giới.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> hàng 36px, divider khi đổi họ, không thêm tiêu đề nhóm. Panel theo mục D của đợt 2. 17 hàng còn khoảng 680px; cột thường dùng 6–10 hàng.</span>
+      </div>
+    </div>
+    <div id="b3" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#a66300">B3</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Thứ tự trong column-filter không theo cấu hình cột</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">column-filter tính <span style="font-family:'JetBrains Mono',monospace;font-size:13px">OPERATORS.filter(e =&gt; list.includes(e.value))</span>, nên menu luôn theo thứ tự bảng OPERATORS và bỏ qua thứ tự trong <span style="font-family:'JetBrains Mono',monospace;font-size:13px">filter.operator.list</span>. sd-operator.md mô tả <span style="font-family:'JetBrains Mono',monospace;font-size:13px">operators</span> là “in display order”.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> map theo <span style="font-family:'JetBrains Mono',monospace;font-size:13px">list</span> rồi tra OPERATORS cho từng mục.</span>
+        <span style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#6b6d73">column-filter.component.ts · operators</span>
+      </div>
+    </div>
+    <div id="b4" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#a66300">B4</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Trigger không trông như dropdown</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Trigger là icon trơn màu primary, không có mũi tên. Đặt cạnh ô nhập và mũi tên của sd-select, người dùng khó nhận ra đây là nút đổi điều kiện. Màu primary hiện cả khi cột chưa lọc, nên cột nào cũng trông như đang lọc.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> trigger thành chip icon + <span style="font-family:'JetBrains Mono',monospace;font-size:13px">expand_more</span>, cùng phần dùng chung (ɵ) với chip operator trong control ở đợt 2. Xám khi chưa lọc, tint primary khi <span style="font-family:'JetBrains Mono',monospace;font-size:13px">active</span>.</span>
+      </div>
+    </div>
+    <div id="b5" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#a66300">B5</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Chưa chọn thì hiện phễu, tooltip rỗng</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Khi <span style="font-family:'JetBrains Mono',monospace;font-size:13px">model</span> chưa có, trigger hiện <span style="font-family:'JetBrains Mono',monospace;font-size:13px">FALLBACK_ICON</span> hình phễu, là icon lọc chung, và <span style="font-family:'JetBrains Mono',monospace;font-size:13px">currentLabel</span> trả chuỗi rỗng. Người dùng không biết filter đang áp điều kiện nào.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> column-filter và query-builder đặt operator mặc định là mục đầu của list. Còn trống thì giữ phễu, màu xám, aria-label “Chọn điều kiện”.</span>
+      </div>
+    </div>
+    <div id="b6" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#a66300">B6</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Nhãn tiếng Việt chưa thống nhất</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">“Lớn hơn, hoặc bằng” và “Nhỏ hơn, hoặc bằng” có dấu phẩy thừa. “Là rỗng / Không rỗng” khác chữ “Trống” đã dùng ở đợt 2. “Bắt đầu bởi / Kết thúc bởi” đọc như câu bị động.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> Lớn hơn hoặc bằng, Nhỏ hơn hoặc bằng, Bắt đầu bằng, Kết thúc bằng (và dạng “Không …”), Trống, Không trống, Khác (thay Không bằng). Chỉ đổi vi.ts.</span>
+        <span style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#6b6d73">i18n/src/vi.ts · core.operator.*.display</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 20px;background:#f7f7f4">
+      <span style="display:flex;align-items:center;gap:10px;font-weight:600;font-size:16px"><span style="width:10px;height:10px;border-radius:999px;background:#006a6a"></span>C · Icon</span>
+      <span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#00504f">Ưu tiên 2 · 7 mục</span>
+    </div>
+    <div id="c1" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#006a6a">C1</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">&gt; và &lt; trùng chevron điều hướng</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Polyline <span style="font-family:'JetBrains Mono',monospace;font-size:13px">9,5 16,12 9,19</span> cao 14, rộng 7, gần như <span style="font-family:'JetBrains Mono',monospace;font-size:13px">chevron_right</span> / <span style="font-family:'JetBrains Mono',monospace;font-size:13px">chevron_left</span> của Material. Trong bảng có nút phân trang và mũi tên của sd-select, glyph này dễ đọc thành “mở” hoặc “trang sau”.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> góc 10×10 (<span style="font-family:'JetBrains Mono',monospace;font-size:13px">7,7 17,12 7,17</span>), tỉ lệ như dấu so sánh.</span>
+      </div>
+    </div>
+    <div id="c2" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#006a6a">C2</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">≥ và ≤ cao hơn và lệch tâm</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Góc 4–18 cộng gạch ở y=21 làm glyph cao 17 đơn vị và nặng phía dưới; góc nằm cao hơn &gt; 1 đơn vị. Đổi qua lại giữa &gt; và ≥ thì icon nhảy.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> góc <span style="font-family:'JetBrains Mono',monospace;font-size:13px">7,5 17,10 7,15</span>, gạch ở y=19; cả glyph nằm trong 5–19.</span>
+      </div>
+    </div>
+    <div id="c3" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#006a6a">C3</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Nhóm văn bản không phân biệt được ở 14–16px</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Đoạn tô 5×2,5 đơn vị trong viewBox 24. Ở 14px chỉ còn khoảng 3×1,5px; chứa, bắt đầu và kết thúc khác nhau 1–2px vị trí.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> pill 19×10, đoạn tô 6×4, ba vị trí cách nhau 3,5 đơn vị.</span>
+      </div>
+    </div>
+    <div id="c4" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#006a6a">C4</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Ba kiểu nét gạch phủ định</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">NOT_EQUAL dùng <span style="font-family:'JetBrains Mono',monospace;font-size:13px">18,5 → 6,19</span>; NOT_CONTAIN, NOT_START_WITH, NOT_END_WITH, NOT_IN dùng <span style="font-family:'JetBrains Mono',monospace;font-size:13px">19,5 → 5,19</span>; NULL dùng <span style="font-family:'JetBrains Mono',monospace;font-size:13px">17.5,6.5 → 6.5,17.5</span>. Cùng nghĩa “không” nhưng khác độ dốc và độ dài.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> một nét chung <span style="font-family:'JetBrains Mono',monospace;font-size:13px">17,5 → 7,19</span>.</span>
+      </div>
+    </div>
+    <div id="c5" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#006a6a">C5</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">IN lệch tâm và giống radio</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Hình tròn đặt ở <span style="font-family:'JetBrains Mono',monospace;font-size:13px">cx=13</span>, lệch 1 đơn vị sang phải; nét gạch của NOT_IN vẫn qua tâm 12 nên lệch khỏi hình tròn. Vòng tròn có chấm giữa trông như radio đã chọn.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> ký hiệu ∈ / ∉, cùng họ toán với = ≠ &gt; ≥.</span>
+      </div>
+    </div>
+    <div id="c6" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#006a6a">C6</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">NULL và NOT_NULL không cân nhau</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">NOT_NULL là đĩa đặc r=7, glyph nặng nhất bộ; trên chip query-bar nó giống chấm trạng thái. NULL dùng viền đứt 2,4/2,6, ở 14px mỗi đoạn còn khoảng 1,4px và nhoè thành vòng mờ.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> NULL = ∅ (vòng r=6,5 + nét gạch chung), NOT_NULL = vòng r=6,5 + chấm. Vòng + chấm là hình IN cũ, nên đổi IN sang ∈ trong cùng bản phát hành.</span>
+      </div>
+    </div>
+    <div id="c7" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#006a6a">C7</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Nét mảnh ở cỡ nhỏ</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><span style="font-family:'JetBrains Mono',monospace;font-size:13px">stroke-width="2"</span> cố định trên viewBox 24 cho ra 1,67px ở 20px, 1,33px ở 16px và 1,17px ở 14px. Glyph trong chip query-bar nhạt hơn chữ 13px 500 bên cạnh.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> wrapper SVG đặt stroke theo cỡ: 20 → 2, 18 → 2,1, 16 → 2,25, 14 → 2,5 (thực tế 1,5–1,7px).</span>
+        <span style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#6b6d73">operator.component.ts · #svg()</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 20px;background:#f7f7f4">
+      <span style="display:flex;align-items:center;gap:10px;font-weight:600;font-size:16px"><span style="width:10px;height:10px;border-radius:999px;background:#5c6270"></span>D · Code và tài liệu</span>
+      <span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#44474f">Ưu tiên 3 · 2 mục</span>
+    </div>
+    <div id="d1" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#5c6270">D1</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Cỡ và màu khoá cứng, 4 nơi phải ::ng-deep</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><span style="font-family:'JetBrains Mono',monospace;font-size:13px">#svg()</span> ghi cứng width/height 20. Trigger dùng <span style="font-family:'JetBrains Mono',monospace;font-size:13px">var(--sd-primary, #0f766e)</span> (fallback teal, khác primary mặc định), padding 4px, hover <span style="font-family:'JetBrains Mono',monospace;font-size:13px">rgba(0,0,0,.04)</span>, disabled <span style="font-family:'JetBrains Mono',monospace;font-size:13px">rgba(0,0,0,.26)</span>. query-bar.component.scss, inline-chip, build-chip và popover-chip đều ghi đè <span style="font-family:'JetBrains Mono',monospace;font-size:13px">.c-op-trigger { padding: 0; color: inherit }</span> và SVG 14px.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> input <span style="font-family:'JetBrains Mono',monospace;font-size:13px">size</span> và <span style="font-family:'JetBrains Mono',monospace;font-size:13px">readonly</span>; màu lấy từ token. Gỡ 4 đoạn ::ng-deep sau khi chuyển.</span>
+      </div>
+    </div>
+    <div id="d2" style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid #ecebe6">
+      <span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#5c6270">D2</span>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:860px">
+        <strong style="font-weight:600;font-size:16px;line-height:24px">Tài liệu và spec</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">sd-operator.md ghi nhãn dài “widens the panel instead of folding”, nhưng mat-menu giới hạn max-width 280px nên câu này chỉ đúng tới giới hạn đó. Spec chưa kiểm tra tên truy cập, aria-checked và thứ tự operators.</span>
+        <span style="font-size:14px;color:#1a1b1f"><strong style="font-weight:600">Sửa:</strong> cập nhật md theo mục 05; thêm spec cho aria-label, readonly, menuitemradio và thứ tự.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="de-xuat" data-screen-label="04 Đề xuất" style="padding-top:72px;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">04</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Đề xuất</h2>
+  </div>
+  <p style="margin:0;max-width:780px;color:#3a3c42;text-wrap:pretty">sd-operator rời (query-builder, template custom của column-filter) dùng cùng chip với operator trong control ở README đợt 2 · mục G. Bản dựng dưới đây bấm được: bấm chip để mở menu, Esc để đóng; đổi cột để xem menu kiểu chuỗi.</p>
+
+  <div style="display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center">
+    <sc-for list="{{ controls }}" as="c" hint-placeholder-count="3">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font:500 12px 'JetBrains Mono',monospace;color:#6b6d73">{{ c.label }}</span>
+        <div style="display:flex;gap:4px">
+          <sc-for list="{{ c.opts }}" as="o" hint-placeholder-count="2">
+            <button type="button" onClick="{{ o.click }}" style="height:30px;padding:0 12px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font:500 13px 'Be Vietnam Pro',sans-serif;cursor:pointer">{{ o.t }}</button>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(440px,100%),1fr));gap:24px;align-items:start">
+    <div style="position:relative;min-height:520px;padding:24px;background:#fdfbff;border:1px solid #dddcd6;border-radius:12px;font-family:Roboto,'Helvetica Neue',sans-serif;font-size:14px;color:#1a1b1f;box-sizing:border-box">
+      <div style="font:500 12px 'JetBrains Mono',monospace;color:#6b6d73;margin-bottom:12px">sd-query-builder · một điều kiện</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div style="flex:0 0 160px;height:{{ z.field }}px;box-sizing:border-box;border:1px solid #8f9199;border-radius:8px;background:#ffffff;display:flex;align-items:center;padding:0 4px 0 12px;font-size:{{ z.fs }}px"><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ fieldName }}</span><span style="font-family:'Material Symbols Outlined';font-size:20px;line-height:1;color:#44474f">arrow_drop_down</span></div>
+        <div style="position:relative;flex:0 0 auto">
+          <button type="button" aria-haspopup="menu" aria-expanded="{{ openStr }}" aria-label="{{ chipLabel }}" title="{{ chipTitle }}" onClick="{{ toggle }}" style="height:{{ z.chip }}px;display:inline-flex;align-items:center;gap:2px;padding:{{ z.pad }};border:none;border-radius:5px;background:{{ chipBg }};color:{{ chipFg }};cursor:pointer;box-sizing:border-box">{{ chipIcon }}<span style="font-family:'Material Symbols Outlined';font-size:{{ z.chev }}px;line-height:1">{{ chev }}</span></button>
+          <sc-if value="{{ open }}" hint-placeholder-val="{{ false }}">
+            <div role="menu" aria-label="Điều kiện" style="position:absolute;top:calc(100% + 6px);left:0;z-index:5;min-width:220px;width:max-content;background:#ffffff;border:1px solid color-mix(in srgb,#c4c6d0 60%,#ffffff);border-radius:10px;box-shadow:0 8px 24px rgba(20,22,28,.12),0 2px 6px rgba(20,22,28,.06);padding:4px;display:flex;flex-direction:column;gap:2px;font-size:14px">
+              <sc-for list="{{ items }}" as="it" hint-placeholder-count="9">
+                <sc-if value="{{ it.divider }}" hint-placeholder-val="{{ false }}"><div style="height:1px;margin:3px 6px;background:color-mix(in srgb,#c4c6d0 60%,#ffffff)"></div></sc-if>
+                <div role="menuitemradio" aria-checked="{{ it.checked }}" onClick="{{ it.pick }}" style="height:36px;display:flex;align-items:center;gap:10px;padding:0 8px 0 10px;border-radius:6px;cursor:pointer;white-space:nowrap;background:{{ it.bg }};color:{{ it.fg }};font-weight:{{ it.fw }}" style-hover="background:{{ it.hov }}">
+                  <span style="flex:0 0 20px;height:20px;display:flex;align-items:center;justify-content:center;color:{{ it.icFg }}">{{ it.icon }}</span>
+                  <span style="flex:1;min-width:0">{{ it.label }}</span>
+                  <sc-if value="{{ it.showCode }}" hint-placeholder-val="{{ false }}"><span style="font:400 11px 'JetBrains Mono',monospace;color:#6b6d73;padding-left:12px">{{ it.code }}</span></sc-if>
+                  <span style="flex:0 0 18px;font-family:'Material Symbols Outlined';font-size:18px;line-height:1">{{ it.check }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+        <div style="flex:1 1 180px;min-width:0;height:{{ z.field }}px;box-sizing:border-box;border:1px solid #8f9199;border-radius:8px;background:{{ valBg }};display:flex;align-items:center;padding:0 12px;font-size:{{ z.fs }}px;color:{{ valFg }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums">{{ valText }}</div>
+      </div>
+      <sc-if value="{{ open }}" hint-placeholder-val="{{ false }}"><div onClick="{{ close }}" style="position:fixed;inset:0;z-index:4"></div></sc-if>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font:600 12px 'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.06em;color:#005cbb">Trigger</span>
+        <ul style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.6;color:#2b2c30">
+          <li>Cùng thông số chip ở đợt 2 mục G: cao 24px (sm) / 28px (md), padding 0 2px 0 6px / 0 4px 0 8px, bo <span style="font-family:'JetBrains Mono',monospace;font-size:13px">calc(var(--sd-control-radius) - 3px)</span>, icon 16 / 18px cộng <span style="font-family:'JetBrains Mono',monospace;font-size:13px">expand_more</span> 14 / 16px.</li>
+          <li>Xám trung tính khi chưa lọc, tint primary 14% khi <span style="font-family:'JetBrains Mono',monospace;font-size:13px">active</span>, nền primary đặc khi menu mở.</li>
+          <li>Focus-visible: viền <span style="font-family:'JetBrains Mono',monospace;font-size:13px">var(--sd-focus-ring-width)</span> màu focus ring, offset 1px.</li>
+          <li><span style="font-family:'JetBrains Mono',monospace;font-size:13px">aria-label</span> “Điều kiện: Lớn hơn hoặc bằng”; Material tự thêm aria-haspopup và aria-expanded.</li>
+        </ul>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font:600 12px 'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.06em;color:#005cbb">Menu</span>
+        <ul style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.6;color:#2b2c30">
+          <li>Panel theo mục D đợt 2: bo 10px, viền 1px, bóng md, padding 4px, rộng tối thiểu 220px.</li>
+          <li>Hàng 36px, icon 18px màu text-secondary trong ô 20px, nhãn 14px một dòng.</li>
+          <li>Hàng đang chọn: nền tint, chữ 500, tick 18px ở cuối; <span style="font-family:'JetBrains Mono',monospace;font-size:13px">role="menuitemradio"</span>, <span style="font-family:'JetBrains Mono',monospace;font-size:13px">aria-checked</span>.</li>
+          <li>Divider 1px khi đổi họ operator, không có tiêu đề nhóm.</li>
+          <li><span style="font-family:'JetBrains Mono',monospace;font-size:13px">showCode</span>: mã 11px mono bên phải, không thêm dòng.</li>
+          <li>Chọn xong đóng menu, focus về trigger.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <span style="display:flex;align-items:center;gap:8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#005cbb"><span style="width:8px;height:8px;border-radius:999px;background:#005cbb"></span>Đề xuất · trạng thái trigger (md)</span>
+    <div style="display:flex;flex-wrap:wrap;gap:24px 32px;align-items:flex-end;padding:56px 24px 24px;background:#fdfbff;border:1px solid #dddcd6;border-radius:12px;font-family:Roboto,'Helvetica Neue',sans-serif;font-size:13px;color:#1a1b1f">
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start"><span style="height:28px;display:inline-flex;align-items:center;gap:2px;padding:0 4px 0 8px;border-radius:5px;box-sizing:border-box;background:color-mix(in srgb,#e7e8ed 75%,#fdfbff);color:#44474f">{{ specGE18 }}<span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1">expand_more</span></span><span style="font:400 11px 'JetBrains Mono',monospace;color:#6b6d73">mặc định</span></div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start"><span style="height:28px;display:inline-flex;align-items:center;gap:2px;padding:0 4px 0 8px;border-radius:5px;box-sizing:border-box;background:color-mix(in srgb,#1a1b1f 6%,color-mix(in srgb,#e7e8ed 75%,#fdfbff));color:#2b2c30">{{ specGE18 }}<span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1">expand_more</span></span><span style="font:400 11px 'JetBrains Mono',monospace;color:#6b6d73">hover</span></div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start"><span style="height:28px;display:inline-flex;align-items:center;gap:2px;padding:0 4px 0 8px;border-radius:5px;box-sizing:border-box;background:color-mix(in srgb,#e7e8ed 75%,#fdfbff);color:#44474f;outline:2px solid #005cbb;outline-offset:1px">{{ specGE18 }}<span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1">expand_more</span></span><span style="font:400 11px 'JetBrains Mono',monospace;color:#6b6d73">focus-visible</span></div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start"><span style="height:28px;display:inline-flex;align-items:center;gap:2px;padding:0 4px 0 8px;border-radius:5px;box-sizing:border-box;background:color-mix(in srgb,#005cbb 14%,white);color:color-mix(in srgb,#005cbb 84%,black)">{{ specGE18 }}<span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1">expand_more</span></span><span style="font:400 11px 'JetBrains Mono',monospace;color:#6b6d73">active</span></div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start"><span style="height:28px;display:inline-flex;align-items:center;gap:2px;padding:0 4px 0 8px;border-radius:5px;box-sizing:border-box;background:#005cbb;color:#ffffff">{{ specGE18 }}<span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1">expand_less</span></span><span style="font:400 11px 'JetBrains Mono',monospace;color:#6b6d73">menu mở</span></div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start"><span style="height:28px;display:inline-flex;align-items:center;gap:2px;padding:0 4px 0 8px;border-radius:5px;box-sizing:border-box;background:#f2f3f6;color:rgba(26,27,31,.38)">{{ specGE18 }}<span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1">expand_more</span></span><span style="font:400 11px 'JetBrains Mono',monospace;color:#6b6d73">disabled</span></div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start"><span style="height:28px;display:inline-flex;align-items:center;gap:2px;padding:0 4px 0 8px;border-radius:5px;box-sizing:border-box;background:color-mix(in srgb,#e7e8ed 75%,#fdfbff);color:#44474f">{{ specFunnel18 }}<span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1">expand_more</span></span><span style="font:400 11px 'JetBrains Mono',monospace;color:#6b6d73">chưa chọn</span></div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start">
+        <div style="position:relative">
+          <span style="position:absolute;bottom:calc(100% + 6px);left:80px;transform:translateX(-50%);padding:4px 8px;border-radius:4px;background:#2f3036;color:#ffffff;font-size:12px;line-height:16px;white-space:nowrap">Lớn hơn hoặc bằng</span>
+          <span style="height:32px;display:inline-flex;align-items:center;gap:4px;padding:0 4px 0 10px;border-radius:999px;border:1px solid #d6e3f7;background:#e3edf9;font-size:13px;font-weight:500;color:#5f6368;box-sizing:border-box">Tổng tiền<span style="display:inline-flex">{{ specGE14 }}</span><span style="color:#005cbb">1.000.000</span><span style="width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:14px;line-height:1;color:#7a7a7a">close</span></span>
+        </div>
+        <span style="font:400 11px 'JetBrains Mono',monospace;color:#6b6d73">readonly · xs, trong chip query-bar</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="api" data-screen-label="05 API" style="padding-top:72px;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">05</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">API</h2>
+  </div>
+  <div style="display:flex;flex-direction:column;border:1px solid #dddcd6;border-radius:12px;overflow:hidden;font-size:13px;background:#ffffff;max-width:980px">
+    <div style="display:grid;grid-template-columns:minmax(100px,0.7fr) minmax(150px,1fr) minmax(0,0.5fr) minmax(0,2fr);gap:12px;padding:10px 16px;background:#f7f7f4;font:500 11px 'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.06em;color:#6b6d73"><span>Input</span><span>Kiểu</span><span>Mặc định</span><span>Ghi chú</span></div>
+    <sc-for list="{{ apiRows }}" as="r" hint-placeholder-count="6">
+      <div style="display:grid;grid-template-columns:minmax(100px,0.7fr) minmax(150px,1fr) minmax(0,0.5fr) minmax(0,2fr);gap:12px;padding:10px 16px;border-top:1px solid #ecebe6;line-height:1.5;background:{{ r.bg }}"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600">{{ r.name }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#44474f;word-break:break-word">{{ r.type }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#44474f">{{ r.def }}</span><span style="color:#3a3c42">{{ r.note }}</span></div>
+    </sc-for>
+  </div>
+  <div style="padding:16px 20px;background:#1a1b1f;border-radius:10px;font:400 13px/1.7 'JetBrains Mono',monospace;color:#e3e2e6;overflow-x:auto;white-space:pre;max-width:980px;box-sizing:border-box">&lt;!-- query-builder: chọn được --&gt;
+&lt;sd-operator size="sm" [active]="hasValue(rule)"
+  [operators]="ops" [(model)]="rule.operator" /&gt;
+
+&lt;!-- chip query-bar: chỉ xem, thay [disabled]="true" --&gt;
+&lt;sd-operator size="xs" readonly
+  [operators]="[op]" [model]="op" /&gt;</div>
+  <p style="margin:0;max-width:780px;font-size:14px;line-height:1.6;color:#3a3c42">Hàng nền trắng là input mới, hàng nền xám là input có sẵn đổi hành vi. Hình icon mới đã phát hành trong <span style="font-family:'JetBrains Mono',monospace;font-size:13px">@sdcorejs/utils 1.3.1</span>; sd-operator nâng dependency và đổi stroke theo cỡ. CHANGELOG: <strong style="font-weight:600;color:#1a1b1f">Added</strong> size, readonly, active, showCode; aria-label cho trigger; menuitemradio + aria-checked. <strong style="font-weight:600;color:#1a1b1f">Changed</strong> trigger thành chip có mũi tên, mặc định xám; menu một dòng 36px, có divider giữa các họ, tick ở hàng chọn; icon &gt; &lt; ≥ ≤, nhóm văn bản, IN, NOT_IN, NULL, NOT_NULL; nhãn vi. <strong style="font-weight:600;color:#1a1b1f">Fixed</strong> column-filter giữ thứ tự operators theo cấu hình cột.</p>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;demoIcons&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Đề xuất&quot;,&quot;Hiện tại&quot;],&quot;default&quot;:&quot;Đề xuất&quot;,&quot;tsType&quot;:&quot;'Đề xuất' | 'Hiện tại'&quot;,&quot;section&quot;:&quot;Demo mục 04&quot;},&quot;groupDividers&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo mục 04&quot;}}">
+class Component extends DCLogic {
+  state = { col: 'num', size: 'md', showCode: false, open: false, ops: { num: 'GREATER_OR_EQUAL', str: 'CONTAIN' } };
+
+  componentDidMount() {
+    this._k = e => { if (e.key === 'Escape' && this.state.open) this.setState({ open: false }); };
+    window.addEventListener('keydown', this._k);
+  }
+  componentWillUnmount() { window.removeEventListener('keydown', this._k); }
+
+  _sets() {
+    if (this._S) return this._S;
+    const F = { fill: 'currentColor', stroke: 'none' };
+    const L = (x1, y1, x2, y2) => ['line', { x1, y1, x2, y2 }];
+    const P = points => ['polyline', { points }];
+    const R = (x, y, width, height, rx, f) => ['rect', Object.assign({ x, y, width, height, rx }, f ? F : {})];
+    const C = (cx, cy, r, ex) => ['circle', Object.assign({ cx, cy, r }, ex || {})];
+    const D = d => ['path', { d }];
+    const funnel = D('M4 5h16l-6.5 7.5V19l-3 2v-8.5z');
+
+    const cPill = R(3, 8, 18, 8, 4), cS = L(19, 5, 5, 19);
+    const cEq = [L(5.5, 9.5, 18.5, 9.5), L(5.5, 14.5, 18.5, 14.5)];
+    const CUR = {
+      EQUAL: cEq,
+      NOT_EQUAL: [...cEq, L(18, 5, 6, 19)],
+      GREATER_THAN: [P('9,5 16,12 9,19')],
+      LESS_THAN: [P('15,5 8,12 15,19')],
+      GREATER_OR_EQUAL: [P('8,4 15,11 8,18'), L(7, 21, 17, 21)],
+      LESS_OR_EQUAL: [P('16,4 9,11 16,18'), L(7, 21, 17, 21)],
+      CONTAIN: [cPill, R(9.5, 10.75, 5, 2.5, 1.25, 1)],
+      NOT_CONTAIN: [cPill, R(9.5, 10.75, 5, 2.5, 1.25, 1), cS],
+      START_WITH: [cPill, R(5, 10.75, 5, 2.5, 1.25, 1)],
+      NOT_START_WITH: [cPill, R(5, 10.75, 5, 2.5, 1.25, 1), cS],
+      END_WITH: [cPill, R(14, 10.75, 5, 2.5, 1.25, 1)],
+      NOT_END_WITH: [cPill, R(14, 10.75, 5, 2.5, 1.25, 1), cS],
+      IN: [C(13, 12, 6), C(13, 12, 2.1, F)],
+      NOT_IN: [C(13, 12, 6), C(13, 12, 2.1, F), cS],
+      BETWEEN: [L(6, 12, 18, 12), C(6, 12, 2.75, F), C(18, 12, 2.75, F)],
+      NULL: [C(12, 12, 7, { strokeDasharray: '2.4 2.6' }), L(17.5, 6.5, 6.5, 17.5)],
+      NOT_NULL: [C(12, 12, 7, F)],
+      FALLBACK: [funnel],
+    };
+
+    const S = L(17, 5, 7, 19), pill = R(2.5, 7, 19, 10, 5);
+    const eq = [L(6, 9.5, 18, 9.5), L(6, 14.5, 18, 14.5)];
+    const elem = D('M17 6.5h-4.5a5.5 5.5 0 0 0 0 11H17M7 12h9');
+    const PRO = {
+      EQUAL: eq,
+      NOT_EQUAL: [...eq, S],
+      GREATER_THAN: [P('7,7 17,12 7,17')],
+      LESS_THAN: [P('17,7 7,12 17,17')],
+      GREATER_OR_EQUAL: [P('7,5 17,10 7,15'), L(7, 19, 17, 19)],
+      LESS_OR_EQUAL: [P('17,5 7,10 17,15'), L(7, 19, 17, 19)],
+      CONTAIN: [pill, R(9, 10, 6, 4, 2, 1)],
+      NOT_CONTAIN: [pill, R(9, 10, 6, 4, 2, 1), S],
+      START_WITH: [pill, R(5.5, 10, 6, 4, 2, 1)],
+      NOT_START_WITH: [pill, R(5.5, 10, 6, 4, 2, 1), S],
+      END_WITH: [pill, R(12.5, 10, 6, 4, 2, 1)],
+      NOT_END_WITH: [pill, R(12.5, 10, 6, 4, 2, 1), S],
+      IN: [elem],
+      NOT_IN: [elem, S],
+      BETWEEN: [L(7, 12, 17, 12), C(7, 12, 2.5, F), C(17, 12, 2.5, F)],
+      NULL: [C(12, 12, 6.5), S],
+      NOT_NULL: [C(12, 12, 6.5), C(12, 12, 2.75, F)],
+      FALLBACK: [funnel],
+    };
+
+    const META = {
+      EQUAL: { l: 'Bằng', g: 'cmp', n: 'Giữ hình, thu nét 13 → 12 đơn vị cho cùng bề rộng với > và ≥.' },
+      NOT_EQUAL: { l: 'Không bằng', nl: 'Khác', g: 'cmp', n: 'Nét gạch theo kiểu chung.', t: 'C4' },
+      GREATER_THAN: { l: 'Lớn hơn', g: 'cmp', n: 'Gần như chevron_right. Đổi thành góc 10×10.', t: 'C1' },
+      LESS_THAN: { l: 'Nhỏ hơn', g: 'cmp', n: 'Gần như chevron_left.', t: 'C1' },
+      GREATER_OR_EQUAL: { l: 'Lớn hơn, hoặc bằng', nl: 'Lớn hơn hoặc bằng', g: 'cmp', n: 'Cao 17 đơn vị, nặng phía dưới. Căn về vùng 5–19.', t: 'C2' },
+      LESS_OR_EQUAL: { l: 'Nhỏ hơn, hoặc bằng', nl: 'Nhỏ hơn hoặc bằng', g: 'cmp', n: 'Như ≥.', t: 'C2' },
+      CONTAIN: { l: 'Chứa', g: 'txt', n: 'Đoạn tô 5×2,5 → 6×4, pill 18×8 → 19×10.', t: 'C3' },
+      NOT_CONTAIN: { l: 'Không chứa', g: 'txt', n: 'Như trên, thêm nét gạch chung.', t: 'C3' },
+      START_WITH: { l: 'Bắt đầu bởi', nl: 'Bắt đầu bằng', g: 'txt', n: 'Đoạn tô ở đầu pill.', t: 'C3' },
+      NOT_START_WITH: { l: 'Không bắt đầu bởi', nl: 'Không bắt đầu bằng', g: 'txt', n: 'Như trên, thêm nét gạch chung.', t: 'C3' },
+      END_WITH: { l: 'Kết thúc bởi', nl: 'Kết thúc bằng', g: 'txt', n: 'Đoạn tô ở cuối pill.', t: 'C3' },
+      NOT_END_WITH: { l: 'Không kết thúc bởi', nl: 'Không kết thúc bằng', g: 'txt', n: 'Như trên, thêm nét gạch chung.', t: 'C3' },
+      IN: { l: 'Nằm trong', g: 'set', n: 'Tâm cx=13 lệch 1 đơn vị, trông như radio. Đổi sang ∈.', t: 'C5' },
+      NOT_IN: { l: 'Không nằm trong', g: 'set', n: 'Gạch qua tâm 12, lệch khỏi hình tròn. Đổi sang ∉.', t: 'C5' },
+      BETWEEN: { l: 'Trong khoảng', g: 'rng', n: 'Giữ ý, thu bề rộng 3–21 → 4,5–19,5.' },
+      NULL: { l: 'Là rỗng', nl: 'Trống', g: 'emp', n: 'Viền đứt nhoè ở 14px. Đổi sang ∅.', t: 'C6' },
+      NOT_NULL: { l: 'Không rỗng', nl: 'Không trống', g: 'emp', n: 'Đĩa đặc r=7, nặng nhất bộ. Đổi sang vòng + chấm.', t: 'C6' },
+      FALLBACK: { l: 'Phễu (chưa chọn)', g: 'none', n: 'Giữ hình, đổi sang màu xám, kèm aria-label.', t: 'B5' },
+    };
+    this._S = { CUR, PRO, META };
+    return this._S;
+  }
+
+  _ico(shapes, size, sw) {
+    return React.createElement('svg', {
+      viewBox: '0 0 24 24', width: size, height: size, fill: 'none', stroke: 'currentColor', strokeWidth: sw,
+      strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': 'true', focusable: 'false',
+      style: { display: 'block', flex: '0 0 auto' },
+    }, shapes.map((s, i) => React.createElement(s[0], Object.assign({ key: i }, s[1]))));
+  }
+
+  renderVals() {
+    const { CUR, PRO, META } = this._sets();
+    const SW = { 20: 2, 18: 2.1, 16: 2.25, 14: 2.5 };
+    const ic = (set, v, s) => this._ico((set === 'cur' ? CUR : PRO)[v], s, set === 'cur' ? 2 : SW[s]);
+    const TAG = { A: ['#ffe3df', '#93000a'], B: ['#fff1e0', '#8a5200'], C: ['#ddf0ef', '#00504f'], D: ['#ecebe6', '#44474f'] };
+    const TINT = 'color-mix(in srgb,#005cbb 14%,white)', TINT_FG = 'color-mix(in srgb,#005cbb 84%,black)';
+    const HOV = 'color-mix(in srgb,#1a1b1f 6%,#ffffff)';
+
+    const NUM = ['EQUAL', 'NOT_EQUAL', 'GREATER_THAN', 'LESS_THAN', 'GREATER_OR_EQUAL', 'LESS_OR_EQUAL', 'BETWEEN', 'NULL', 'NOT_NULL'];
+    const curMenu = NUM.map(v => ({ icon: ic('cur', v, 20), label: META[v].l, code: v, bg: v === 'GREATER_OR_EQUAL' ? '#dfe9f7' : '#ffffff' }));
+
+    const GN = [['cmp', 'So sánh'], ['txt', 'Văn bản'], ['set', 'Danh sách'], ['rng', 'Khoảng'], ['emp', 'Trống'], ['none', 'Chưa chọn operator']];
+    const iconGroups = GN.map(([g, name]) => ({
+      name,
+      rows: Object.keys(META).filter(v => META[v].g === g).map(v => {
+        const m = META[v], t = m.t, c = t ? TAG[t[0]] : null;
+        return {
+          label: m.l, code: v === 'FALLBACK' ? 'FALLBACK_ICON' : v, note: m.n,
+          tag: t || '', href: t ? '#' + t.toLowerCase() : '#', tagBg: c ? c[0] : 'transparent', tagFg: c ? c[1] : 'inherit',
+          c20: ic('cur', v, 20), c16: ic('cur', v, 16), c14: ic('cur', v, 14),
+          p20: ic('pro', v, 20), p16: ic('pro', v, 16), p14: ic('pro', v, 14),
+        };
+      }),
+    }));
+
+    const { col, size, showCode, open, ops } = this.state;
+    const useCur = (this.props.demoIcons ?? 'Đề xuất') === 'Hiện tại';
+    const groupDiv = this.props.groupDividers ?? true;
+    const z = size === 'sm'
+      ? { field: 32, chip: 24, ic: 16, chev: 14, fs: 13, pad: '0 2px 0 6px' }
+      : { field: 40, chip: 28, ic: 18, chev: 16, fs: 14, pad: '0 4px 0 8px' };
+    const COLS = {
+      num: { field: 'Tổng tiền', list: ['EQUAL', 'NOT_EQUAL', 'GREATER_THAN', 'GREATER_OR_EQUAL', 'LESS_THAN', 'LESS_OR_EQUAL', 'BETWEEN', 'NULL', 'NOT_NULL'] },
+      str: { field: 'Tên khách hàng', list: ['CONTAIN', 'NOT_CONTAIN', 'START_WITH', 'END_WITH', 'EQUAL', 'NOT_EQUAL', 'IN', 'NOT_IN', 'NULL', 'NOT_NULL'] },
+    };
+    const c = COLS[col], cur = ops[col];
+    const lbl = v => useCur ? META[v].l : (META[v].nl || META[v].l);
+    const dset = useCur ? 'cur' : 'pro';
+    const items = c.list.map((v, i) => {
+      const sel = v === cur, prev = i ? c.list[i - 1] : null;
+      return {
+        label: lbl(v), code: v, icon: ic(dset, v, 18), showCode,
+        divider: groupDiv && !!prev && META[prev].g !== META[v].g,
+        checked: sel ? 'true' : 'false', check: sel ? 'check' : '',
+        bg: sel ? TINT : 'transparent', hov: sel ? TINT : HOV, fg: sel ? TINT_FG : '#1a1b1f', icFg: sel ? TINT_FG : '#44474f', fw: sel ? 500 : 400,
+        pick: () => this.setState(s => ({ ops: Object.assign({}, s.ops, { [col]: v }), open: false })),
+      };
+    });
+
+    const noVal = cur === 'NULL' || cur === 'NOT_NULL';
+    let valText = col === 'num' ? '1.000.000' : 'Nguyễn';
+    if (cur === 'BETWEEN') valText = '1.000.000 – 5.000.000';
+    if (cur === 'IN' || cur === 'NOT_IN') valText = 'Nguyễn An, Trần Bình';
+    if (noVal) valText = 'Không cần giá trị';
+
+    const seg = (label, key, options) => ({
+      label,
+      opts: options.map(([val, t]) => {
+        const on = this.state[key] === val;
+        return { t, bg: on ? '#1a1b1f' : '#ffffff', fg: on ? '#ffffff' : '#3a3c42', bd: on ? '#1a1b1f' : '#c9c8c2', click: () => this.setState({ [key]: val, open: false }) };
+      }),
+    });
+
+    const apiRows = [
+      { name: 'size', type: "'xs' | 'sm' | 'md'", def: "'md'", note: 'xs: glyph 14px không nền, vùng bấm 24px, cho chip query-bar. sm: chip 24px, icon 16px. md: chip 28px, icon 18px. Thay 4 đoạn ::ng-deep.', bg: '#ffffff' },
+      { name: 'readonly', type: 'boolean', def: 'false', note: 'Chỉ hiện glyph và tooltip: role="img" + aria-label, không mở menu, không vào Tab. Thay cách dùng [disabled]="true" trong query-bar.', bg: '#ffffff' },
+      { name: 'active', type: 'boolean', def: 'false', note: 'Chip tint primary khi điều kiện đang có giá trị. Mặc định xám.', bg: '#ffffff' },
+      { name: 'showCode', type: 'boolean', def: 'false', note: 'Hiện mã operator bên phải mỗi hàng menu, cùng dòng.', bg: '#ffffff' },
+      { name: 'operators', type: 'Operator[]', def: '[]', note: 'Không đổi kiểu. Menu giữ đúng thứ tự truyền vào; column-filter sửa để truyền theo filter.operator.list.', bg: '#f7f7f4' },
+      { name: 'disabled', type: 'boolean', def: 'false', note: 'Không đổi kiểu. Chỉ dùng khi vô hiệu thật: chip nền xám nhạt, chữ 38%.', bg: '#f7f7f4' },
+    ];
+
+    return {
+      curMenu, iconGroups, apiRows,
+      curGE20: ic('cur', 'GREATER_OR_EQUAL', 20), curFunnel20: ic('cur', 'FALLBACK', 20),
+      qbGE14: ic('cur', 'GREATER_OR_EQUAL', 14), qbCT14: ic('cur', 'CONTAIN', 14), qbNN14: ic('cur', 'NOT_NULL', 14),
+      evCurGT: ic('cur', 'GREATER_THAN', 24), evProGT: ic('pro', 'GREATER_THAN', 24), evProGE: ic('pro', 'GREATER_OR_EQUAL', 24),
+      specGE18: ic('pro', 'GREATER_OR_EQUAL', 18), specGE14: ic('pro', 'GREATER_OR_EQUAL', 14), specFunnel18: ic('pro', 'FALLBACK', 18),
+      controls: [
+        seg('Cột', 'col', [['num', 'Tổng tiền · số'], ['str', 'Tên khách hàng · chuỗi']]),
+        seg('Cỡ', 'size', [['sm', 'sm'], ['md', 'md']]),
+        seg('Mã operator', 'showCode', [[false, 'Ẩn'], [true, 'Hiện']]),
+      ],
+      z, fieldName: c.field, items, open,
+      openStr: open ? 'true' : 'false',
+      chipLabel: 'Điều kiện: ' + lbl(cur), chipTitle: lbl(cur),
+      chipIcon: ic(dset, cur, z.ic),
+      chipBg: open ? '#005cbb' : TINT, chipFg: open ? '#ffffff' : TINT_FG, chev: open ? 'expand_less' : 'expand_more',
+      toggle: () => this.setState(s => ({ open: !s.open })),
+      close: () => this.setState({ open: false }),
+      valText, valBg: noVal ? '#f2f3f6' : '#ffffff', valFg: noVal ? '#6b6d73' : '#1a1b1f',
+    };
+  }
+}
+</script>
+</body>
+</html>

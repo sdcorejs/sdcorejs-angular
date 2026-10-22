@@ -23,7 +23,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Operator, Size } from '@sdcorejs/utils/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
-import { ɵsdOperatorResolver } from './operator-items';
+import { ɵSD_OPERATOR_GLYPHS, ɵsdOperatorResolver } from './operator-items';
 
 /**
  * Chip operator đặt làm `matPrefix` trong ô của sd-input, sd-input-number, sd-select, sd-date, sd-date-range
@@ -31,6 +31,9 @@ import { ɵsdOperatorResolver } from './operator-items';
  *
  * Bàn phím: Enter / Space / Alt+↓ mở menu; chọn xong phát `chosen` để control đưa focus về ô nhập; Escape
  * đóng menu và trả focus về chip.
+ *
+ * `sd-operator` cũng render chip này cho trigger của nó (`standalone`): không cách mép ô, chọn xong focus về chip, và
+ * thêm cỡ `xs` (glyph trơn, vùng bấm 24px) — handoff sd-operator mục 3.
  *
  * Nội bộ (`ɵ`): không nằm trong SemVer, ứng dụng không dùng trực tiếp.
  */
@@ -42,8 +45,10 @@ import { ɵsdOperatorResolver } from './operator-items';
   imports: [MatMenuModule, MatTooltipModule, SdIcon],
   host: {
     class: 'sd-operator-chip',
+    '[class.sd-xs]': "size() === 'xs'",
     '[class.sd-sm]': "size() === 'sm'",
-    '[class.sd-md]': "size() !== 'sm'",
+    '[class.sd-md]': "size() !== 'sm' && size() !== 'xs'",
+    '[class.sd-operator-chip--standalone]': 'standalone()',
   },
 })
 export class ɵSdOperatorChip {
@@ -57,17 +62,24 @@ export class ɵSdOperatorChip {
   readonly operators = input<readonly Operator[]>([]);
   /** Operator hiện tại. */
   readonly operator = model<Operator | undefined>();
-  /** Cỡ của ô chứa chip; `lg` dùng hình học của `md`. */
-  readonly size = input<Size>('md');
+  /** Cỡ của ô chứa chip; `lg` dùng hình học của `md`. `xs` là glyph trơn của `sd-operator`. */
+  readonly size = input<Size | 'xs'>('md');
   /** Ô đang có giá trị: chip đổi sang tông primary. */
   readonly hasValue = input(false, { transform: booleanAttribute });
   readonly disabled = input(false, { transform: booleanAttribute });
   readonly autoId = input<string>();
+  /** Hiện mã operator (`EQUAL`…) sau nhãn trong menu (B1). */
+  readonly showCode = input(false, { transform: booleanAttribute });
+  /** Trigger của `sd-operator`: không cách mép ô, chọn xong focus về chip. */
+  readonly standalone = input(false, { transform: booleanAttribute });
   /** Đã chọn một operator trong menu (control đưa focus về ô nhập). */
   readonly chosen = output<Operator>();
 
   protected readonly items = computed(() => this.#operators.items(this.operators()));
-  protected readonly currentIcon = computed(() => this.#operators.icon(this.operator()));
+  protected readonly currentIcon = computed(() => {
+    const size = this.size();
+    return this.#operators.icon(this.operator(), size === 'xs' || size === 'sm' ? ɵSD_OPERATOR_GLYPHS[size] : ɵSD_OPERATOR_GLYPHS.md);
+  });
   protected readonly currentLabel = computed(() => this.#operators.label(this.operator()));
   protected readonly ariaLabel = computed(() => {
     const label = this.currentLabel();
@@ -92,7 +104,8 @@ export class ɵSdOperatorChip {
 
   protected onMenuOpened(): void {
     this.menuOpen.set(true);
-    afterNextRender(() => this.#alignMenu(), { injector: this.#injector });
+    // Đứng riêng thì menu cách chính chip 6px; trong ô mới đo khoảng tới khung ô.
+    if (!this.standalone()) afterNextRender(() => this.#alignMenu(), { injector: this.#injector });
   }
 
   /**
@@ -127,7 +140,10 @@ export class ɵSdOperatorChip {
   protected onClosed(reason: MenuCloseReason): void {
     this.menuOpen.set(false);
     // Chọn một hàng: focus về ô nhập (control lo). Escape: focus về chip. Tab / click ngoài: để focus tự nhiên.
-    if (reason === 'click') {
+    // Đứng riêng (`sd-operator`): mat-menu tự trả focus về chip.
+    if (this.standalone()) {
+      if (reason === 'click' && this.operator() !== undefined) this.chosen.emit(this.operator()!);
+    } else if (reason === 'click') {
       const value = this.operator();
       if (value !== undefined) this.chosen.emit(value);
     } else if (reason === 'keydown') {

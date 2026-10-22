@@ -43,6 +43,16 @@ describe('SdOperator', () => {
       expect(items[0].display).toBeTruthy();
     });
 
+    // Design handoff sd-operator · C1–C6: the glyphs of @sdcorejs/utils 1.3.1 (∈ for IN, ring and dot for NOT_NULL).
+    it('draws the @sdcorejs/utils 1.3.1 glyphs', () => {
+      fixture.componentRef.setInput('operators', ['IN', 'NOT_NULL']);
+      fixture.detectChanges();
+      const sanitizer = TestBed.inject(DomSanitizer);
+      const [inItem, notNull] = component.items();
+      expect(html(sanitizer, inItem.icon)).toContain('<path d="M17 6.5h-4.5a5.5 5.5 0 0 0 0 11H17M7 12h9"');
+      expect(html(sanitizer, notNull.icon)).toContain('<circle cx="12" cy="12" r="2.75" fill="currentColor" stroke="none"');
+    });
+
     it('skips operators not present in OPERATORS', () => {
       fixture.componentRef.setInput('operators', ['EQUAL', 'NOT_A_REAL_OP' as any]);
       fixture.detectChanges();
@@ -109,7 +119,7 @@ describe('SdOperator', () => {
       fixture.componentRef.setInput('model', 'EQUAL');
       fixture.detectChanges();
 
-      const svg = fixture.nativeElement.querySelector('.c-op-trigger .c-op-icon svg');
+      const svg = fixture.nativeElement.querySelector('.c-op-trigger svg');
       expect(svg).not.toBeNull();
     });
 
@@ -137,8 +147,9 @@ describe('SdOperator', () => {
       overlayContainer?.getContainerElement().remove();
     });
 
-    it('lists exactly the allowed operators in order, each with label + code', () => {
+    it('lists exactly the allowed operators in order, each with label + code when showCode is on', () => {
       fixture.componentRef.setInput('operators', ['EQUAL', 'NOT_EQUAL', 'CONTAIN']);
+      fixture.componentRef.setInput('showCode', true);
       fixture.detectChanges();
 
       const panel = openMenu();
@@ -149,18 +160,18 @@ describe('SdOperator', () => {
       expect(codes).toEqual(['EQUAL', 'NOT_EQUAL', 'CONTAIN']);
     });
 
-    it('stacks the label above the code inside one text block', () => {
-      // asserts: label và code là 2 dòng trong cùng một khối text (label trước, code sau),
-      // không còn nằm cùng một hàng ngang — đó là điều khiến label dài bị wrap khi cột hẹp.
+    // Handoff sd-operator B1: the row is one 36px line (label, then the code with showCode) instead of the label stacked
+    // over the code; see operator.handoff.spec.ts.
+    it('keeps the label and the code on one row when showCode is on', () => {
       fixture.componentRef.setInput('operators', ['GREATER_OR_EQUAL']);
+      fixture.componentRef.setInput('showCode', true);
       fixture.detectChanges();
 
       const panel = openMenu();
-      const text = panel.querySelector('.c-op-row .c-op-text') as HTMLElement;
-      expect(text).not.toBeNull();
-      expect(Array.from(text.children).map(c => c.getAttribute('class'))).toEqual(['c-op-label', 'c-op-code']);
-      expect(text.querySelector('.c-op-label')?.textContent?.trim()).toBe(component.items()[0].display);
-      expect(text.querySelector('.c-op-code')?.textContent?.trim()).toBe('GREATER_OR_EQUAL');
+      const row = panel.querySelector('.c-op-row') as HTMLElement;
+      expect(row.querySelector('.c-op-text')).toBeNull();
+      expect(row.querySelector('.c-op-label')?.textContent?.trim()).toBe(component.items()[0].display);
+      expect(row.querySelector('.c-op-code')?.textContent?.trim()).toBe('GREATER_OR_EQUAL');
     });
 
     it('marks the row matching model as active', () => {
@@ -171,7 +182,7 @@ describe('SdOperator', () => {
       const panel = openMenu();
       const active = panel.querySelectorAll('.c-op-row.c-op-active');
       expect(active.length).toBe(1);
-      expect(active[0].querySelector('.c-op-code')?.textContent?.trim()).toBe('CONTAIN');
+      expect(active[0].querySelector('.c-op-label')?.textContent?.trim()).toBe(component.items()[1].display);
     });
 
     it('opens the menu 6px below its trigger, without a tick on the current row', () => {

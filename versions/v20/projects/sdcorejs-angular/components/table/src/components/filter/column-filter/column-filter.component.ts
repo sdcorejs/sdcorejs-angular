@@ -12,7 +12,7 @@ import {
   Signal,
 } from '@angular/core';
 import { SdBadge } from '@sdcorejs/angular/components/badge';
-import { SdOperator } from '@sdcorejs/angular/components/operator';
+import { SdOperator, ɵsdOperatorHasValue } from '@sdcorejs/angular/components/operator';
 import { SdDate } from '@sdcorejs/angular/forms/date';
 import { SdInput } from '@sdcorejs/angular/forms/input';
 import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
@@ -82,11 +82,17 @@ export class ColumnFilterComponent {
     return typeof title === 'string' ? title : title.title || col?.field;
   });
 
-  // Danh sách operator hiển thị dựa trên column config
+  // Danh sách operator hiển thị theo đúng thứ tự `filter.operator.list` của cột (handoff sd-operator B3); mục không có
+  // trong OPERATORS bị bỏ.
   operators = computed(() => {
     const col = this.column();
     if (!col?.filter?.disabled && col?.filter?.operator?.enable) {
-      return OPERATORS.filter(e => col.filter?.operator?.list?.includes?.(e.value));
+      const out: (typeof OPERATORS)[number][] = [];
+      for (const value of col.filter.operator.list ?? []) {
+        const entry = OPERATORS.find(e => e.value === value);
+        if (entry) out.push(entry);
+      }
+      return out;
     }
     return [];
   });
@@ -102,6 +108,15 @@ export class ColumnFilterComponent {
     const col = this.column();
     return !!col && this.operatorValues().length > 1 && isDefaultControlFilter(col);
   });
+
+  /**
+   * Cột đang có giá trị filter: sd-operator rời đổi sang tông primary. why: method chứ không computed — `columnFilter`
+   * là object cha sửa tại chỗ, computed không thấy thay đổi.
+   */
+  hasFilterValue(): boolean {
+    const field = this.column()?.field;
+    return !!field && ɵsdOperatorHasValue(this.columnFilter()?.[field]);
+  }
 
   // Operator truyền xuống control mặc định; mảng rỗng cố định khi operator nằm ngoài để input không đổi mỗi lượt CD.
   controlOperators = computed<readonly Operator[]>(() => (this.operatorInControl() ? this.operatorValues() : NO_OPERATORS));

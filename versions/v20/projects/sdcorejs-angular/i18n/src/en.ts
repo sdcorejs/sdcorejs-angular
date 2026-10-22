@@ -92,8 +92,8 @@ export const EN_MESSAGES = {
 
   // ---- Operators (operator.model.ts) ----
   'core.operator.equal.display': 'Equal',
-  'core.component.operator.current': 'Operator: {operator}',
-  'core.component.operator.choose': 'Choose an operator',
+  'core.component.operator.current': 'Condition: {operator}',
+  'core.component.operator.choose': 'Choose condition',
   'core.operator.not-equal.display': 'Not equal',
   'core.operator.greater-than.display': 'Greater than',
   'core.operator.less-than.display': 'Less than',

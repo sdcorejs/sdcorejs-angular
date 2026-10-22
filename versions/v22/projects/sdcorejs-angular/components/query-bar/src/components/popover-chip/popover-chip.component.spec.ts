@@ -61,7 +61,13 @@ describe('SdQueryPopoverChip', () => {
   it('renders sd-operator when showOperator=true', () => {
     host.showOperator = true;
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('sd-operator')).not.toBeNull();
+    const op = fixture.nativeElement.querySelector('sd-operator') as HTMLElement;
+    expect(op).not.toBeNull();
+    // Handoff sd-operator A2: a read-only xs glyph (14px) named after the operator, no button inside the chip.
+    const glyph = op.querySelector('[role="img"]')!;
+    expect(glyph.getAttribute('aria-label')).toBeTruthy();
+    expect(glyph.querySelector('svg')!.getAttribute('width')).toBe('14');
+    expect(op.querySelector('button')).toBeNull();
     expect(fixture.nativeElement.querySelector('.c-chip-sep')).toBeNull();
   });
 

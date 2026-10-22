@@ -7333,6 +7333,51 @@ import type { Operator } from '@sdcorejs/utils/models';
       </demo-section>
       }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-kich-thuoc') {
+      <demo-section
+        heading="Kích thước"
+        [props]="[{ name: 'size', value: 'xs | sm | md' }, { name: 'active', value: 'true' }]"
+        note="md: chip 28px (mặc định). sm: chip 24px cho filter bảng. xs: glyph 14px có vùng bấm 24px, dùng trong chip. Cột 2 có active (điều kiện đang có giá trị), cột 3 chưa chọn operator.">
+        <div class="size-grid">
+          <span class="row-label">md</span>
+          <sd-operator [(model)]="numberOp" [operators]="numberOps" />
+          <sd-operator [(model)]="numberOp" [operators]="numberOps" active />
+          <sd-operator [operators]="numberOps" />
+          <span class="row-label">sm</span>
+          <sd-operator size="sm" [(model)]="numberOp" [operators]="numberOps" />
+          <sd-operator size="sm" [(model)]="numberOp" [operators]="numberOps" active />
+          <sd-operator size="sm" [operators]="numberOps" />
+          <span class="row-label">xs</span>
+          <sd-operator size="xs" [(model)]="numberOp" [operators]="numberOps" />
+          <sd-operator size="xs" [(model)]="numberOp" [operators]="numberOps" active />
+          <sd-operator size="xs" [operators]="numberOps" />
+        </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chi-xem') {
+      <demo-section
+        heading="Chỉ xem"
+        [props]="[{ name: 'readonly', value: 'true' }]"
+        note="Glyph có tên và tooltip, không mở menu, không nhận Tab — cho chip điều kiện đã xong (query-bar). Màu theo chip chứa nó. disabled thắng readonly.">
+        <span class="demo-chip">Email <sd-operator size="xs" readonly [operators]="stringOps" model="CONTAIN" /> nguyen</span>
+        <span class="demo-chip">Lương <sd-operator size="xs" readonly [operators]="numberOps" model="GREATER_OR_EQUAL" /> 10.000.000</span>
+        <span class="row-label">readonly + disabled</span>
+        <sd-operator size="sm" readonly disabled [operators]="stringOps" model="CONTAIN" />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-hien-ma-va-du-17-toan-tu') {
+      <demo-section
+        heading="Hiện mã và đủ 17 toán tử"
+        [props]="[{ name: 'showCode', value: 'true' }]"
+        note="Mã operator nằm cùng dòng với nhãn — cho màn kỹ thuật cần biết giá trị gửi lên API. Danh sách trên 4 mục có đường chia giữa các họ (so sánh, văn bản, danh sách, khoảng, trống); thứ tự giữ đúng như truyền vào.">
+        <span class="row-label">Điều kiện</span>
+        <sd-operator showCode [(model)]="allOp" [operators]="allOps" />
+        <span class="row-value">{{ allOp() ?? '—' }}</span>
+      </demo-section>
+      }
+
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trong-control') {
       <demo-section
         heading="Trong control"
@@ -7368,6 +7413,23 @@ import type { Operator } from '@sdcorejs/utils/models';
       color: #4a4a4a;
       min-width: 96px;
     }
+    .size-grid {
+      display: grid;
+      grid-template-columns: 40px repeat(3, max-content);
+      align-items: center;
+      gap: 12px 24px;
+    }
+    .demo-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 28px;
+      padding: 0 12px;
+      border-radius: 14px;
+      background: var(--sd-primary-light);
+      color: var(--sd-primary-dark);
+      font-size: 13px;
+    }
     .control-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -7387,6 +7449,13 @@ export class OperatorDemoComponent {
   readonly stringOps: Operator[] = ['EQUAL', 'NOT_EQUAL', 'CONTAIN', 'NOT_CONTAIN', 'START_WITH', 'END_WITH', 'NULL', 'NOT_NULL'];
   readonly numberOps: Operator[] = ['EQUAL', 'NOT_EQUAL', 'GREATER_THAN', 'LESS_THAN', 'GREATER_OR_EQUAL', 'LESS_OR_EQUAL', 'NULL', 'NOT_NULL'];
   readonly dateOps: Operator[] = ['EQUAL', 'NOT_EQUAL', 'GREATER_THAN', 'LESS_THAN', 'BETWEEN', 'NULL', 'NOT_NULL'];
+
+  readonly allOps: Operator[] = [
+    'EQUAL', 'NOT_EQUAL', 'GREATER_THAN', 'LESS_THAN', 'GREATER_OR_EQUAL', 'LESS_OR_EQUAL',
+    'CONTAIN', 'NOT_CONTAIN', 'START_WITH', 'NOT_START_WITH', 'END_WITH', 'NOT_END_WITH',
+    'IN', 'NOT_IN', 'BETWEEN', 'NULL', 'NOT_NULL',
+  ];
+  readonly allOp = signal<Operator | undefined>('START_WITH');
 
   readonly stringOp = signal<Operator | undefined>('CONTAIN');
   readonly numberOp = signal<Operator | undefined>('GREATER_OR_EQUAL');
@@ -7413,6 +7482,23 @@ export class OperatorDemoComponent {
   font-size: 13px;
   color: #4a4a4a;
   min-width: 96px;
+}
+.size-grid {
+  display: grid;
+  grid-template-columns: 40px repeat(3, max-content);
+  align-items: center;
+  gap: 12px 24px;
+}
+.demo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 14px;
+  background: var(--sd-primary-light);
+  color: var(--sd-primary-dark);
+  font-size: 13px;
 }
 .control-grid {
   display: grid;
@@ -22962,6 +23048,51 @@ Bởi Nguyễn Văn A"></sd-badge>
         </div>
       </sd-modal>
     </demo-section>`,
+  },
+  "components/operator/example-chi-xem": {
+    ...SHOWCASE_PAGE_SOURCES["components/operator"],
+    html: `<demo-section
+    heading="Chỉ xem"
+    [props]="[{ name: 'readonly', value: 'true' }]"
+    note="Glyph có tên và tooltip, không mở menu, không nhận Tab — cho chip điều kiện đã xong (query-bar). Màu theo chip chứa nó. disabled thắng readonly.">
+    <span class="demo-chip">Email <sd-operator size="xs" readonly [operators]="stringOps" model="CONTAIN" /> nguyen</span>
+    <span class="demo-chip">Lương <sd-operator size="xs" readonly [operators]="numberOps" model="GREATER_OR_EQUAL" /> 10.000.000</span>
+    <span class="row-label">readonly + disabled</span>
+    <sd-operator size="sm" readonly disabled [operators]="stringOps" model="CONTAIN" />
+  </demo-section>`,
+  },
+  "components/operator/example-hien-ma-va-du-17-toan-tu": {
+    ...SHOWCASE_PAGE_SOURCES["components/operator"],
+    html: `<demo-section
+    heading="Hiện mã và đủ 17 toán tử"
+    [props]="[{ name: 'showCode', value: 'true' }]"
+    note="Mã operator nằm cùng dòng với nhãn — cho màn kỹ thuật cần biết giá trị gửi lên API. Danh sách trên 4 mục có đường chia giữa các họ (so sánh, văn bản, danh sách, khoảng, trống); thứ tự giữ đúng như truyền vào.">
+    <span class="row-label">Điều kiện</span>
+    <sd-operator showCode [(model)]="allOp" [operators]="allOps" />
+    <span class="row-value">{{ allOp() ?? '—' }}</span>
+  </demo-section>`,
+  },
+  "components/operator/example-kich-thuoc": {
+    ...SHOWCASE_PAGE_SOURCES["components/operator"],
+    html: `<demo-section
+    heading="Kích thước"
+    [props]="[{ name: 'size', value: 'xs | sm | md' }, { name: 'active', value: 'true' }]"
+    note="md: chip 28px (mặc định). sm: chip 24px cho filter bảng. xs: glyph 14px có vùng bấm 24px, dùng trong chip. Cột 2 có active (điều kiện đang có giá trị), cột 3 chưa chọn operator.">
+    <div class="size-grid">
+      <span class="row-label">md</span>
+      <sd-operator [(model)]="numberOp" [operators]="numberOps" />
+      <sd-operator [(model)]="numberOp" [operators]="numberOps" active />
+      <sd-operator [operators]="numberOps" />
+      <span class="row-label">sm</span>
+      <sd-operator size="sm" [(model)]="numberOp" [operators]="numberOps" />
+      <sd-operator size="sm" [(model)]="numberOp" [operators]="numberOps" active />
+      <sd-operator size="sm" [operators]="numberOps" />
+      <span class="row-label">xs</span>
+      <sd-operator size="xs" [(model)]="numberOp" [operators]="numberOps" />
+      <sd-operator size="xs" [(model)]="numberOp" [operators]="numberOps" active />
+      <sd-operator size="xs" [operators]="numberOps" />
+    </div>
+  </demo-section>`,
   },
   "components/operator/example-toan-tu-chuoi": {
     ...SHOWCASE_PAGE_SOURCES["components/operator"],

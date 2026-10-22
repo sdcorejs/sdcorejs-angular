@@ -5,6 +5,7 @@ import { By } from '@angular/platform-browser';
 import { MatMenu, MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
+import { SdOperator } from '@sdcorejs/angular/components/operator';
 import { SdQueryChipPopover } from './chip-popover.component';
 import { Filter } from '@sdcorejs/utils/models';
 import { SdQueryField } from '../../query-bar.model';
@@ -184,6 +185,16 @@ describe('SdQueryChipPopover', () => {
 
     expect(host.child()!.editingOptions()).toEqual([{ id: 'x', name: 'X' }]);
     expect(host.child()!.editingOptionsLoading()).toBe(false);
+  });
+
+  // Plan decision 5: the operator in the popover header is the sm (24px) chip.
+  it('uses the sm chip for the operator in the header', () => {
+    host.child()!.seed(host.filter, host.field!);
+    fixture.detectChanges();
+    openPopover();
+    const op = fixture.debugElement.query(By.directive(SdOperator));
+    expect(op).withContext('header sd-operator').not.toBeNull();
+    expect((op.componentInstance as SdOperator).size()).toBe('sm');
   });
 
   // ---- 8: operator change single → multi reshapes value into array

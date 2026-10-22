@@ -22,7 +22,9 @@
     <!-- Operator: chip trong control mặc định (thiết kế đợt 2 · G). Template custom (filterDef) và filter split
          (hai control) không chèn chip được nên giữ sd-operator rời như cũ. -->
     @if (_operators.length && !operatorInControl()) {
-      <sd-operator class="mr-4" [(model)]="operator" [operators]="operatorValues()" />
+      <!-- Chip 24px như chip trong control; tint primary khi cột đang có giá trị. Chưa có operator: phễu xám, không gán
+           mặc định (handoff sd-operator B5, phương án b). -->
+      <sd-operator class="mr-4" size="sm" [active]="hasFilterValue()" [(model)]="operator" [operators]="operatorValues()" />
     }
 
     <!-- Nếu filter nhận vào template -->

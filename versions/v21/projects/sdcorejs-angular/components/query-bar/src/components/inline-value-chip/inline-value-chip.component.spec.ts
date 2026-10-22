@@ -32,6 +32,18 @@ describe('SdQueryInlineValueChip', () => {
     expect(component).toBeTruthy();
   });
 
+  // Handoff sd-operator A2: the operator inside the seamless chip is a read-only xs glyph with a name.
+  it('shows the operator as a read-only xs glyph', () => {
+    fixture.componentRef.setInput('showOperator', true);
+    setup(stringField, 'abc');
+    const op = fixture.nativeElement.querySelector('sd-operator') as HTMLElement;
+    expect(op).not.toBeNull();
+    expect(op.querySelector('button')).toBeNull();
+    const glyph = op.querySelector('[role="img"]')!;
+    expect(glyph.getAttribute('aria-label')).toBeTruthy();
+    expect(glyph.querySelector('svg')!.getAttribute('width')).toBe('14');
+  });
+
   describe('state', () => {
     it('is pending when empty and not focused', () => {
       setup(stringField, null);
