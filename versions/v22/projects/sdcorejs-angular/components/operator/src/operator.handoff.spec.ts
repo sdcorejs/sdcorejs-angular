@@ -97,6 +97,23 @@ describe('SdOperator · design handoff', () => {
     });
   });
 
+  // Handoff sd-operator B6: shorter Vietnamese labels.
+  it('uses the Vietnamese labels of the handoff', () => {
+    const expected: [Operator, string][] = [
+      ['NOT_EQUAL', 'Khác'],
+      ['GREATER_OR_EQUAL', 'Lớn hơn hoặc bằng'],
+      ['LESS_OR_EQUAL', 'Nhỏ hơn hoặc bằng'],
+      ['START_WITH', 'Bắt đầu bằng'],
+      ['NOT_START_WITH', 'Không bắt đầu bằng'],
+      ['END_WITH', 'Kết thúc bằng'],
+      ['NOT_END_WITH', 'Không kết thúc bằng'],
+      ['NULL', 'Trống'],
+      ['NOT_NULL', 'Không trống'],
+    ];
+    i18n.setLanguage('vi', { reload: false });
+    expect(expected.map(([operator]) => [operator, label(operator)])).toEqual(expected);
+  });
+
   describe('readonly (A2)', () => {
     it('renders a glyph with a name and a tooltip, without a button or a menu', async () => {
       set({ readonly: true });

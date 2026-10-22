@@ -139,6 +139,9 @@ export type ShowcaseExampleSourceKey =
   | "components/modal/example-custom-header-left-right"
   | "components/modal/example-long-scroll-body"
   | "components/modal/example-read-only-modal-without-footer"
+  | "components/operator/example-chi-xem"
+  | "components/operator/example-hien-ma-va-du-17-toan-tu"
+  | "components/operator/example-kich-thuoc"
   | "components/operator/example-toan-tu-chuoi"
   | "components/operator/example-toan-tu-ngay"
   | "components/operator/example-toan-tu-so"
@@ -1444,6 +1447,27 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-vo-hieu-hoa",
     title: "Vô hiệu hoá",
     description: "Existing “Vô hiệu hoá” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/operator/example-kich-thuoc",
+    pageKey: "components/operator",
+    sectionId: "example-kich-thuoc",
+    title: "Kích thước",
+    description: "md: chip 28px (mặc định). sm: chip 24px cho filter bảng. xs: glyph 14px có vùng bấm 24px, dùng trong chip. Cột 2 có active (điều kiện đang có giá trị), cột 3 chưa chọn operator.",
+  },
+  {
+    sourceKey: "components/operator/example-chi-xem",
+    pageKey: "components/operator",
+    sectionId: "example-chi-xem",
+    title: "Chỉ xem",
+    description: "Glyph có tên và tooltip, không mở menu, không nhận Tab — cho chip điều kiện đã xong (query-bar). Màu theo chip chứa nó. disabled thắng readonly.",
+  },
+  {
+    sourceKey: "components/operator/example-hien-ma-va-du-17-toan-tu",
+    pageKey: "components/operator",
+    sectionId: "example-hien-ma-va-du-17-toan-tu",
+    title: "Hiện mã và đủ 17 toán tử",
+    description: "Mã operator nằm cùng dòng với nhãn — cho màn kỹ thuật cần biết giá trị gửi lên API. Danh sách trên 4 mục có đường chia giữa các họ (so sánh, văn bản, danh sách, khoảng, trống); thứ tự giữ đúng như truyền vào.",
   },
   {
     sourceKey: "components/operator/example-trong-control",

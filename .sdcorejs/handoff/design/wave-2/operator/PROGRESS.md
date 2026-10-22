@@ -9,7 +9,7 @@ Kế hoạch đã duyệt: [`PLAN.md`](PLAN.md) (2026-10-22). Nhánh `feat/sd-op
 | 2 | sd-operator (A1, A3, B1, B2, B4, B5 hình, C7, D1) | xong |
 | 3 | column-filter (B3, B5) | xong |
 | 4 | query-bar (A2, A4, D1) | xong |
-| 5 | Nhãn vi, tài liệu, showcase, CHANGELOG (B6, D2) | chưa |
+| 5 | Nhãn vi, tài liệu, showcase, CHANGELOG (B6, D2) | xong |
 
 ## Bước 1
 
@@ -73,3 +73,35 @@ Kế hoạch đã duyệt: [`PLAN.md`](PLAN.md) (2026-10-22). Nhánh `feat/sd-op
 - Kiểm tra: query-bar specs 171/171, full Karma 7850/7850, eslint, `check:scss-hex` 0, sync, `check:sync`. File query-bar
   vốn chưa theo prettier từ trước (17 file, cả file không đụng) nên không format lại cả file.
   Ảnh: [`progress/step4-before-after.png`](progress/step4-before-after.png); “trước” là lib dựng từ operator của `main`.
+
+## Bước 5
+
+- `vi.ts`: 9 nhãn operator theo mục 6 (Khác, Lớn hơn hoặc bằng, …, Trống, Không trống). Locale khác giữ nguyên. Spec RED
+  trước (“uses the Vietnamese labels of the handoff”).
+- `sd-operator.md` viết lại: input mới, `SdOperatorSize`, visual cues, a11y, ví dụ `readonly` / `showCode`, hook E2E;
+  `sd-query-bar.md` (glyph chỉ-xem, bước operator xs, header sm, không còn `::ng-deep`); `sd-table.md` (thứ tự theo
+  `list`, sd-operator rời `sm`).
+- Showcase operator: 3 ví dụ mới (Kích thước, Chỉ xem, Hiện mã và đủ 17 toán tử); `demoSectionCount` 5 → 8, tổng registry
+  446 → 449, sinh lại example sources.
+- CHANGELOG `[Unreleased]`: Added (input mới), Changed (trigger, menu, nhãn, column-filter, query-bar, `@sdcorejs/utils`
+  1.3.1), Fixed (tên trigger, tooltip glyph query-bar, vùng bấm, mũi tên header popover).
+- Kiểm tra: spec operator 61/61, full Karma 7850/7851 — 1 fail là spec `SdImageEditor` “keeps a ratio fixed…” đã biết hay
+  lỗi ngẫu nhiên, chạy riêng file đó 33/33. Hai lần full trước hỏng do môi trường (Chrome headless mất kết nối, không tạo được
+  thư mục tạm, `detectIncognito` không đọc được storage quota; đã dừng 2 Chrome headless mồ côi của lần chạy hỏng).
+  `check:scss-hex` 0, i18n parity (1394 × 5), `check:i18n`, `test:showcase-generators`, `test:collect-docs`, sync, `check:sync`.
+
+### Kiểm tra cuối trên showcase
+
+Script [`tools/check-operator.mjs`](../../../tools/check-operator.mjs) (Playwright, lib v19 build mới):
+
+- Cỡ: md 48×28, sm 40×24, xs vùng bấm 24×24 (layout 14px); có / không model, `active`.
+- `readonly`: glyph `role="img"` tên “Chứa”, “Lớn hơn hoặc bằng”; `readonly` + `disabled` ra nút disabled.
+- `showCode` + 17 operator: 17 hàng, 4 đường chia, hàng `aria-checked` là operator hiện tại.
+- Bàn phím: tên “Điều kiện: Bắt đầu bằng”, Alt+↓ mở, mũi tên + Enter chọn, focus về trigger.
+- Locale en: “Condition: Greater than or equal”, nhãn en không đổi.
+- Dark, graphite, forced colors: [`progress/step5-modes.png`](progress/step5-modes.png). Không có lỗi console.
+- Query-builder: rule hiện chip md; query-bar (bước 4) và table (bước 3) đã chụp ở các bước trước.
+  Ảnh: [`progress/step5-showcase.png`](progress/step5-showcase.png).
+
+Chưa kiểm: screen reader thật (VoiceOver / NVDA) — tên trigger, `menuitemradio` / `aria-checked` và glyph `role="img"` kiểm
+bằng spec và DOM. Trong forced colors hàng đang chọn chỉ còn chữ đậm (nền primary-light bị ép), giống chip G hiện tại.
