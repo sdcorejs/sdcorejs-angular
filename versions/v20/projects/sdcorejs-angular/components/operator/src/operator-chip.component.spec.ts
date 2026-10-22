@@ -10,7 +10,10 @@ import { ɵSdOperatorChip } from './operator-chip.component';
 @Component({
   imports: [ɵSdOperatorChip],
   template: `
-    <div class="mat-mdc-text-field-wrapper" [style.width.px]="width()" style="display: flex; align-items: center">
+    <div
+      class="mat-mdc-text-field-wrapper"
+      [style.width.px]="width()"
+      style="display: flex; align-items: center; height: 40px; box-sizing: border-box">
       <sd-operator-chip
         [operators]="operators()"
         [(operator)]="operator"
@@ -107,13 +110,26 @@ describe('ɵSdOperatorChip', () => {
     expect(getComputedStyle(button()).color).toBe('rgb(255, 255, 255)');
   });
 
-  it('lists the operators with their label and code, and ticks the current one', async () => {
+  // Review 2026-10-22: the highlight marks the current operator; no tick.
+  it('lists the operators with their label and code, and highlights the current one without a tick', async () => {
     button().click();
     await settle();
     expect(rows().map(row => row.querySelector('.c-op-code')!.textContent?.trim())).toEqual(['EQUAL', 'GREATER_THAN', 'LESS_THAN']);
     expect(rows()[0].classList).toContain('c-op-active');
-    expect(rows()[0].querySelector('.c-op-check')).not.toBeNull();
-    expect(rows()[1].querySelector('.c-op-check')).toBeNull();
+    expect(rows()[1].classList).not.toContain('c-op-active');
+    expect(overlay.querySelector('.c-op-check')).toBeNull();
+  });
+
+  // Like the sd-select panel: 6px from the field box on the side it opens, lined up with the field start.
+  it('opens its menu 6px away from the field and lines it up with the field start', async () => {
+    button().click();
+    await settle();
+    const field = (fixture.nativeElement as HTMLElement).querySelector('.mat-mdc-text-field-wrapper')!.getBoundingClientRect();
+    const panel = overlay.querySelector<HTMLElement>('.mat-mdc-menu-panel.c-op-menu')!;
+    const box = panel.getBoundingClientRect();
+    const gap = panel.classList.contains('mat-menu-above') ? field.top - box.bottom : box.top - field.bottom;
+    expect(gap).toBeCloseTo(6, 0);
+    if (panel.classList.contains('mat-menu-after')) expect(box.left).toBeCloseTo(field.left, 0);
   });
 
   it('opens with Alt+ArrowDown', async () => {
@@ -148,13 +164,13 @@ describe('ɵSdOperatorChip', () => {
     expect(spy).not.toHaveBeenCalled();
   });
 
-  it('hides its arrow when the field is narrower than 120px', async () => {
-    expect(getComputedStyle(chip().querySelector('.sd-operator-chip__arrow')!).display).not.toBe('none');
+  // Review 2026-10-22: every chip shows its arrow, also in a narrow table filter cell.
+  it('keeps its arrow in a field narrower than 120px', async () => {
     host.width.set(100);
     fixture.detectChanges();
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     fixture.detectChanges();
-    expect(getComputedStyle(chip().querySelector('.sd-operator-chip__arrow')!).display).toBe('none');
+    expect(getComputedStyle(chip().querySelector('.sd-operator-chip__arrow')!).display).not.toBe('none');
   });
 
   it('cannot open while disabled', async () => {

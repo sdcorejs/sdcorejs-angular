@@ -3,7 +3,6 @@ import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SafeHtml } from '@angular/platform-browser';
 import { Operator } from '@sdcorejs/utils/models';
-import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { ɵSD_OPERATOR_FALLBACK_ICON, ɵSdOperatorItem, ɵsdOperatorResolver } from './operator-items';
 
 @Component({
@@ -12,7 +11,7 @@ import { ɵSD_OPERATOR_FALLBACK_ICON, ɵSdOperatorItem, ɵsdOperatorResolver } f
   styleUrl: './operator.component.scss',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatMenuModule, MatTooltipModule, SdIcon],
+  imports: [MatMenuModule, MatTooltipModule],
 })
 export class SdOperator {
   // Inner SVG markup (hình phễu) dùng khi chưa chọn operator.

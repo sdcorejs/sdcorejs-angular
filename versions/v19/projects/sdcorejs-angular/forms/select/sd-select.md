@@ -405,8 +405,8 @@ For filter forms, the field can carry its own operator as a prefix chip instead 
 - While the chip is shown the floating label always floats and the label is not repeated as the placeholder.
 - `NULL` / `NOT_NULL` need no value: picking one in the chip clears the value and disables the entry until another operator is picked; the chip stays usable and keeps the focus.
 - Keyboard: Tab reaches the chip before the field. Enter, Space or Alt+↓ opens the menu. Picking a row moves focus to the select trigger (the panel stays closed); Escape closes the menu and returns focus to the chip.
-- The menu is the shared `.c-op-menu` panel of `<sd-operator>`: icon, label, operator code and a tick on the current row.
-- Tone: muted without a value, `--sd-primary-light` / `--sd-primary-dark` once the field has a value, solid `--sd-primary` while the menu is open. The arrow hides when the field is narrower than 120px.
+- The menu is the shared `.c-op-menu` panel of `<sd-operator>`: icon, label and operator code, the current row highlighted. Like the `sd-select` panel it opens 6px away from the field box and lines up with the field start.
+- Tone: muted without a value, `--sd-primary-light` / `--sd-primary-dark` once the field has a value, solid `--sd-primary` while the menu is open.
 - `autoId` gives the chip `data-autoid="<autoId>-operator"`.
 - `<sd-table>` column filters pass their operator list here automatically (see `sd-table.md`).
 

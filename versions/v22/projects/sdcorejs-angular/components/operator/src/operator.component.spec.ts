@@ -174,6 +174,20 @@ describe('SdOperator', () => {
       expect(active[0].querySelector('.c-op-code')?.textContent?.trim()).toBe('CONTAIN');
     });
 
+    it('opens the menu 6px below its trigger, without a tick on the current row', () => {
+      fixture.componentRef.setInput('operators', ['EQUAL', 'CONTAIN']);
+      fixture.componentRef.setInput('model', 'CONTAIN');
+      fixture.detectChanges();
+
+      const container = openMenu();
+      const trigger = (fixture.nativeElement.querySelector('.c-op-trigger') as HTMLElement).getBoundingClientRect();
+      const panel = container.querySelector<HTMLElement>('.mat-mdc-menu-panel.c-op-menu')!;
+      const box = panel.getBoundingClientRect();
+      const gap = panel.classList.contains('mat-menu-above') ? trigger.top - box.bottom : box.top - trigger.bottom;
+      expect(gap).toBeCloseTo(6, 0);
+      expect(container.querySelector('.c-op-check')).toBeNull();
+    });
+
     it('clicking a row sets the model', () => {
       fixture.componentRef.setInput('operators', ['EQUAL', 'CONTAIN']);
       fixture.detectChanges();

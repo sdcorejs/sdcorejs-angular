@@ -20,6 +20,22 @@
       background-color: var(--sd-select-panel-bg, var(--sd-surface));
     }
 
+    // Cách control 6px về phía menu mở, như panel sd-select (Material đặt `mat-menu-below/above/after/before` lên panel,
+    // v19–v22). Chip trong ô đặt thêm các biến `--sd-operator-menu-*` = khoảng từ chip tới khung ô, để khe tính từ
+    // khung ô và menu thẳng mép đầu ô; sd-operator đứng riêng để trống nên khe tính từ chính trigger.
+    &.mat-mdc-menu-panel.mat-menu-below {
+      margin-top: calc(var(--sd-operator-menu-below, 0px) + 6px);
+    }
+    &.mat-mdc-menu-panel.mat-menu-above {
+      margin-bottom: calc(var(--sd-operator-menu-above, 0px) + 6px);
+    }
+    &.mat-mdc-menu-panel.mat-menu-after {
+      margin-inline-start: calc(-1 * var(--sd-operator-menu-start, 0px));
+    }
+    &.mat-mdc-menu-panel.mat-menu-before {
+      margin-inline-end: calc(-1 * var(--sd-operator-menu-end, 0px));
+    }
+
     // why: hàng có 2 dòng (label + code) nên phải bỏ khung 1 dòng của mat-menu-item —
     // min-height/height 48px + line-height 48px sẽ crop dòng thứ hai.
     .c-op-row.mat-mdc-menu-item {
@@ -73,13 +89,6 @@
       line-height: 1.2;
       font-family: monospace;
       white-space: nowrap;
-    }
-
-    // Dấu tick của hàng đang chọn, sát mép phải (thiết kế đợt 2 · G).
-    .c-op-check {
-      flex: 0 0 auto;
-      margin-left: auto;
-      color: var(--sd-primary-dark, var(--sd-primary));
     }
 
     .c-op-row.c-op-active {

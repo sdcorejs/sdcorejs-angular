@@ -79,13 +79,9 @@
   height: 16px;
 }
 
+// Mọi chip đều có mũi tên, kể cả trong ô filter hẹp (review 2026-10-22).
 .sd-operator-chip__arrow {
   flex: 0 0 auto;
-}
-
-// Ô hẹp dưới 120px: bỏ mũi tên, chip chỉ còn icon.
-:host(.sd-operator-chip--narrow) .sd-operator-chip__arrow {
-  display: none;
 }
 
 @media (forced-colors: active) {

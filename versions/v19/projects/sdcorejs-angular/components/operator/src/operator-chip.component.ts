@@ -1,8 +1,8 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
   ElementRef,
+  Injector,
   ModelSignal,
   Signal,
   afterNextRender,
@@ -17,15 +17,13 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { MatMenuModule, MatMenuTrigger, type MenuCloseReason } from '@angular/material/menu';
+import { DOCUMENT } from '@angular/common';
+import { MatMenu, MatMenuModule, MatMenuTrigger, type MenuCloseReason } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Operator, Size } from '@sdcorejs/utils/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { ɵsdOperatorResolver } from './operator-items';
-
-/** Dưới bề rộng này (px) của ô chứa chip, mũi tên của chip bị ẩn. */
-const NARROW_FIELD_WIDTH = 120;
 
 /**
  * Chip operator đặt làm `matPrefix` trong ô của sd-input, sd-input-number, sd-select, sd-date, sd-date-range
@@ -46,13 +44,14 @@ const NARROW_FIELD_WIDTH = 120;
     class: 'sd-operator-chip',
     '[class.sd-sm]': "size() === 'sm'",
     '[class.sd-md]': "size() !== 'sm'",
-    '[class.sd-operator-chip--narrow]': 'narrow()',
   },
 })
 export class ɵSdOperatorChip {
   readonly #operators = ɵsdOperatorResolver();
   readonly #i18n = inject(I18nService);
   readonly #host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
+  readonly #document = inject(DOCUMENT);
+  readonly #injector = inject(Injector);
 
   /** Operator cho phép, theo thứ tự hiển thị. */
   readonly operators = input<readonly Operator[]>([]);
@@ -75,26 +74,11 @@ export class ɵSdOperatorChip {
     return label ? this.#i18n.t('core.component.operator.current', { operator: label }) : this.#i18n.t('core.component.operator.choose');
   });
   protected readonly menuOpen = signal(false);
-  protected readonly narrow = signal(false);
 
   // why: query signal không đặt được trên field ES private (#).
   private readonly trigger = viewChild(MatMenuTrigger);
+  private readonly menu = viewChild.required(MatMenu);
   private readonly button = viewChild.required<ElementRef<HTMLButtonElement>>('button');
-
-  constructor() {
-    const destroyRef = inject(DestroyRef);
-    afterNextRender(() => {
-      // Ô hẹp (cột filter của bảng…): bỏ mũi tên để còn chỗ cho giá trị. Đo khung của mat-form-field.
-      const field = this.#host.closest<HTMLElement>('.mat-mdc-text-field-wrapper') ?? this.#host.parentElement;
-      if (!field || typeof ResizeObserver === 'undefined') return;
-      const observer = new ResizeObserver(entries => {
-        const width = entries[0]?.contentRect.width ?? field.clientWidth;
-        this.narrow.set(width > 0 && width < NARROW_FIELD_WIDTH);
-      });
-      observer.observe(field);
-      destroyRef.onDestroy(() => observer.disconnect());
-    });
-  }
 
   /** Mở menu bằng code (dùng cho Alt+↓ và spec). */
   open(): void {
@@ -104,6 +88,29 @@ export class ɵSdOperatorChip {
   /** Focus nút chip. */
   focus(): void {
     this.button().nativeElement.focus();
+  }
+
+  protected onMenuOpened(): void {
+    this.menuOpen.set(true);
+    afterNextRender(() => this.#alignMenu(), { injector: this.#injector });
+  }
+
+  /**
+   * Menu bám chip, mà chip nằm lọt trong khung ô: đặt lên panel khoảng từ chip tới khung ô theo từng phía để CSS
+   * của `_operator-menu.scss` đẩy menu cách khung ô 6px và thẳng mép đầu ô, như panel sd-select (review 2026-10-22).
+   */
+  #alignMenu(): void {
+    const panel = this.#document.getElementById(this.menu().panelId);
+    const field = this.#host.closest<HTMLElement>('.mat-mdc-text-field-wrapper');
+    if (!panel || !field) return;
+    const box = field.getBoundingClientRect();
+    const chip = this.button().nativeElement.getBoundingClientRect();
+    const rtl = getComputedStyle(field).direction === 'rtl';
+    const px = (value: number) => `${Math.max(0, value)}px`;
+    panel.style.setProperty('--sd-operator-menu-below', px(box.bottom - chip.bottom));
+    panel.style.setProperty('--sd-operator-menu-above', px(chip.top - box.top));
+    panel.style.setProperty('--sd-operator-menu-start', px(rtl ? box.right - chip.right : chip.left - box.left));
+    panel.style.setProperty('--sd-operator-menu-end', px(rtl ? chip.left - box.left : box.right - chip.right));
   }
 
   protected onKeydown(event: KeyboardEvent): void {

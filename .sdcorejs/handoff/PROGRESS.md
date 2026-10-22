@@ -136,6 +136,11 @@ build lib v19 pass. Ảnh trước/sau: [`screenshots/`](screenshots/).
       `split-date` giữ hai ô như cũ.
 18. (Sau bước 8) Kanban giữ **không** có option `appearance`, đúng README đợt 1: giao diện làn trung tính, chấm màu, số
     đếm dạng chữ và thẻ không shadow là giao diện duy nhất. Không cần nêu thành câu hỏi mở trong PR nữa.
+19. (Review 2026-10-22) Menu operator **không** có dấu tick — nền highlight của hàng đang chọn là đủ (lệch README đợt 2
+    mục G "hàng đang chọn có dấu tick"; áp cho cả `sd-operator` và chip).
+20. (Review 2026-10-22) Menu operator cách control 6px như panel sd-select; menu của chip tính khe từ khung ô và thẳng
+    mép đầu ô (không bám chip).
+21. (Review 2026-10-22) Chip operator **luôn** có mũi tên — bỏ luật ẩn mũi tên khi ô < 120px của README đợt 2 mục G.
 
 ### Control dạng ô (README đợt 2, mục D) — đã duyệt
 
@@ -287,8 +292,7 @@ ghi ở đây để review cùng commit, và bước 10 nằm gọn trong một 
 - Chip: `matPrefix`, `<button type="button">`, icon 16/18px + `expand_more` 14/16px, nhãn trong tooltip + `aria-label`
   (key mới `core.component.operator.current` "Toán tử: {operator}" và `.choose` "Chọn toán tử", 5 locale). Cao 24/28px,
   padding và khoảng cách theo bảng, bo `calc(var(--sd-control-radius, 8px) - 3px)`, 3 tông + hover 6% + focus-visible.
-  Ô < 120px (ResizeObserver trên `.mat-mdc-text-field-wrapper`; container query không đo được field từ trong chip)
-  ẩn mũi tên. Enter / Space / Alt+↓ mở; chọn hàng → `chosen` → control focus ô nhập; Escape → focus chip. Click trên chip
+  (Luật ẩn mũi tên khi ô < 120px đã bỏ theo quyết định 21.) Enter / Space / Alt+↓ mở; chọn hàng → `chosen` → control focus ô nhập; Escape → focus chip. Click trên chip
   không nổi bọt (mat-form-field / mat-select không mở).
 - Control: chip chỉ khi `operators.length > 1`; đúng 1 thì `ɵsdSingleOperator` đặt `operator`; label `floatLabel="always"`
   khi có chip. Đổi operator giữ giá trị, nút xoá giữ operator. `autoId` → chip `data-autoid="<autoId>-operator"`.
@@ -312,8 +316,7 @@ ghi ở đây để review cùng commit, và bước 10 nằm gọn trong một 
 
 **Lệch / chưa làm:**
 
-- README nói "container query trên field" cho ô < 120px; dùng ResizeObserver (chip nằm trong field, không tự query
-  được container của chính nó mà không thêm `container-type` lên mọi mat-form-field).
+- ~~README nói "container query trên field" cho ô < 120px; dùng ResizeObserver~~ — bỏ hẳn luật này (quyết định 21).
 - Kiểu cột không hỗ trợ vẫn render `sd-input disabled` (README: ghi vào PR như việc còn lại của redesign table).
 - `formatHtml` của prettier gom thẻ `<sd-label>` thành một dòng ở input / input-number / date — đã trả về như cũ để diff
   gọn. Bốn template này có dòng CRLF lẫn LF trong blob; commit bằng `core.autocrlf=false` để không đổi cả file.
@@ -373,3 +376,13 @@ Chụp trong Browser pane hay timeout khi cửa sổ bị ẩn, nên dùng Playw
 - **Kiểm tra:** button + select + autocomplete + panel 340/341 (1 timeout spec cuộn ảo 10k, chạy riêng 13/13 cả trước và
   sau sửa), `test:theme` 53/53, `check:scss-hex` 0, lint file đổi, `check:sync`. Full Karma chưa chạy lại (showcase đang
   mở cho user review).
+
+## Review menu operator (2026-10-22)
+
+- Bỏ dấu tick (`.c-op-check`, `sd-icon check`) ở menu `sd-operator` và chip; `sd-operator` không còn import `SdIcon`.
+- Khe 6px: `_operator-menu.scss` đặt margin theo class vị trí Material (`mat-menu-below/above/after/before`, có ở v19 và
+  v22). Chip đo khoảng từ chip tới `.mat-mdc-text-field-wrapper` khi menu mở (`afterNextRender`) và đặt các biến
+  `--sd-operator-menu-below/above/start/end` lên panel, nên khe tính từ khung ô và menu thẳng mép đầu ô (có xét RTL).
+  `sd-operator` đứng riêng không đặt biến → khe 6px từ trigger.
+- Mũi tên luôn hiện: bỏ `narrow` signal, ResizeObserver, class `sd-operator-chip--narrow` và rule CSS.
+- Spec RED trước: 3 spec chip (không tick, khe + mép, mũi tên ở ô 100px) + 1 spec `sd-operator` (khe 6px, không tick).
