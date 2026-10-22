@@ -1,12 +1,63 @@
-<div
-  #tabRouterNav
-  cdkDropList
-  cdkDropListLockAxis="x"
-  cdkDropListOrientation="horizontal"
-  (cdkDropListDropped)="onDrop($event)"
-  class="tab-router__nav"
-  [class.tab-router__nav--hidden]="tabs().length <= 1">
-  @for (tab of tabs(); track tab.injector ?? tab.key) {
-    <sd-tab-router-item [tab]="tab" cdkDrag [cdkDragBoundary]="elementRef.nativeElement"></sd-tab-router-item>
+@let _tabs = tabs();
+@let _open = listOpen();
+<div class="tab-router__nav" [class.tab-router__nav--hidden]="_tabs.length <= 1">
+  <div class="tab-router__tabs">
+    <div
+      #scroller
+      class="tab-router__scroller"
+      cdkDropList
+      cdkDropListLockAxis="x"
+      cdkDropListOrientation="horizontal"
+      (cdkDropListDropped)="onDrop($event)">
+      @for (tab of _tabs; track tab.injector ?? tab.key) {
+        <sd-tab-router-item [tab]="tab" cdkDrag [cdkDragBoundary]="elementRef.nativeElement"></sd-tab-router-item>
+      }
+    </div>
+    @if (fadeStart()) {
+      <span class="tab-router__fade tab-router__fade--start" aria-hidden="true"></span>
+    }
+    @if (fadeEnd()) {
+      <span class="tab-router__fade tab-router__fade--end" aria-hidden="true"></span>
+    }
+  </div>
+
+  @if (overflowing()) {
+    <div class="tab-router__more" cdkOverlayOrigin #listOrigin="cdkOverlayOrigin">
+      <button
+        #listButton
+        type="button"
+        class="tab-router__list-button"
+        [attr.aria-label]="'core.component.tab-router.tab-list' | sdTranslate"
+        aria-haspopup="dialog"
+        [attr.aria-expanded]="_open"
+        (click)="toggleList()">
+        <span class="tab-router__list-count">{{ _tabs.length }}</span>
+        <sd-icon aria-hidden="true" size="18px" fontIcon="expand_more"></sd-icon>
+      </button>
+    </div>
+
+    <ng-template
+      cdkConnectedOverlay
+      [cdkConnectedOverlayOrigin]="listOrigin"
+      [cdkConnectedOverlayOpen]="_open"
+      [cdkConnectedOverlayPositions]="listPositions"
+      [cdkConnectedOverlayViewportMargin]="8"
+      [cdkConnectedOverlayPush]="true"
+      [cdkConnectedOverlayHasBackdrop]="true"
+      [cdkConnectedOverlayDisableClose]="true"
+      cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop"
+      (backdropClick)="closeList(false)"
+      (overlayKeydown)="onListKeydown($event)">
+      @let _title = 'core.component.tab-router.open-tabs' | sdTranslate: { count: _tabs.length };
+      <!-- why: trap focus và tự đưa focus vào hàng đầu khi mở (mẫu sd-avatar-group); Esc trả focus về nút. -->
+      <div class="tab-router__menu" role="dialog" [attr.aria-label]="_title" cdkTrapFocus [cdkTrapFocusAutoCapture]="true">
+        <div class="tab-router__menu-title" aria-hidden="true">{{ _title }}</div>
+        <div class="tab-router__menu-list" role="list">
+          @for (tab of _tabs; track tab.injector ?? tab.key) {
+            <sd-tab-router-list-item [tab]="tab" (pick)="pickTab(tab)" (closeTab)="closeTab(tab)"></sd-tab-router-list-item>
+          }
+        </div>
+      </div>
+    </ng-template>
   }
 </div>

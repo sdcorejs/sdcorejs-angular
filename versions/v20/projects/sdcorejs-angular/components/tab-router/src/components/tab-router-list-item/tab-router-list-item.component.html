@@ -1,0 +1,17 @@
+@let _tab = tab();
+@let info = tabInfo() | sdTabInfo: _tab;
+<button type="button" class="tab-router__menu-tab" [attr.aria-current]="_tab.isActive ? 'page' : null" (click)="pick.emit()">
+  @if (info.icon) {
+    <sd-icon class="tab-router__menu-icon c-{{ info.color || 'primary' }}" aria-hidden="true" size="16px" [fontIcon]="info.icon"></sd-icon>
+  }
+  <span class="tab-router__menu-name" [id]="nameId">{{ info.name }}</span>
+</button>
+<!-- why: tên lấy từ hàng (aria-describedby), nên screen reader đọc "Đóng tab, {tên}" thay cho một loạt "Đóng tab" giống nhau. -->
+<button
+  type="button"
+  class="tab-router__menu-close"
+  [attr.aria-label]="'core.component.tab-router.close-tab' | sdTranslate"
+  [attr.aria-describedby]="nameId"
+  (click)="closeTab.emit()">
+  <sd-icon aria-hidden="true" size="14px" fontIcon="close"></sd-icon>
+</button>

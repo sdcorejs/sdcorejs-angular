@@ -1,14 +1,17 @@
 import { ChangeDetectionStrategy as SdAngular22ChangeDetectionStrategy } from '@angular/core';
+import { OverlayContainer } from '@angular/cdk/overlay';
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { provideRouter } from '@angular/router';
-import { Subject } from 'rxjs';
+import { provideRouter, Router } from '@angular/router';
+import { ReplaySubject } from 'rxjs';
 
 import { SdTooltipDirective } from '@sdcorejs/angular/directives';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { LayoutTestTheme } from '../../../../../testing/layout-theme.spec';
 import { SdTabInfo, SdTabRouterTab } from '../../models/tab-router.model';
+import { SdTabRouterService } from '../../services/tab-router.service';
 import { SdTabRouterItemComponent } from '../tab-router-item/tab-router-item.component';
 import { SdTabRouterNavComponent } from './tab-router-nav.component';
 
@@ -40,7 +43,8 @@ const makeTabs = (count: number, active = 1): SdTabRouterTab[] => {
     queryParams: {},
     params: {},
     data: {},
-    tabInfoChanges: new Subject<SdTabInfo>(),
+    // why: như outlet — ReplaySubject(1) để danh sách tab (mở sau) vẫn đọc được tên đã gửi trước đó.
+    tabInfoChanges: new ReplaySubject<SdTabInfo>(1),
   }));
 };
 
@@ -129,13 +133,15 @@ describe('SdTabRouterNav bar (wave 3 · 3a)', () => {
   });
 
   describe('bar', () => {
-    it('is 40px tall with 0 8px padding on --sd-tab-router-nav-bg, tabs aligned to the bottom', () => {
+    // why: từ 3b phần đệm 0 8px nằm trên vùng cuộn (nút danh sách tab nằm ngoài vùng cuộn, sát mép phải thanh).
+    it('is 40px tall on --sd-tab-router-nav-bg with 0 8px padding around the tabs, aligned to the bottom', () => {
       const style = getComputedStyle(nav());
+      const scroller = getComputedStyle(fixture.nativeElement.querySelector('.tab-router__scroller'));
       expect(nav().getBoundingClientRect().height).toBe(40);
-      expect(style.paddingLeft).toBe('8px');
-      expect(style.paddingRight).toBe('8px');
+      expect(scroller.paddingLeft).toBe('8px');
+      expect(scroller.paddingRight).toBe('8px');
       expect(style.backgroundColor).toBe(resolve('background-color', 'var(--sd-tab-router-nav-bg)'));
-      expect(style.alignItems).toBe('flex-end');
+      expect(scroller.alignItems).toBe('flex-end');
       expect(items()[0].getBoundingClientRect().bottom).toBe(nav().getBoundingClientRect().bottom);
     });
 
@@ -296,6 +302,218 @@ describe('SdTabRouterNav bar (wave 3 · 3a)', () => {
     it('hides on both sides of the hovered tab', () => {
       expect(cssRule(/sd-tab-router-item:hover::after/)?.opacity).toBe('0');
       expect(cssRule(/sd-tab-router-item:has\(\+ sd-tab-router-item:hover\)::after/)?.opacity).toBe('0');
+    });
+  });
+
+  // Thanh tab đợt 3 · 3b (design handoff `tab-router.md`, mục "Khi có nhiều tab"): cuộn ngang, lớp mờ ở cạnh còn tab
+  // khuất, nút và menu danh sách tab.
+  describe('many tabs (wave 3 · 3b)', () => {
+    let i18n: I18nService;
+    const scroller = () => fixture.nativeElement.querySelector('.tab-router__scroller') as HTMLElement;
+    const listButton = () => fixture.nativeElement.querySelector('.tab-router__list-button') as HTMLButtonElement | null;
+    const fade = (side: 'start' | 'end') => fixture.nativeElement.querySelector(`.tab-router__fade--${side}`) as HTMLElement | null;
+    const overlay = () => TestBed.inject(OverlayContainer).getContainerElement();
+    const menu = () => overlay().querySelector('.tab-router__menu') as HTMLElement | null;
+    const rows = () => Array.from(overlay().querySelectorAll('.tab-router__menu-row')) as HTMLElement[];
+    // why: đo sau render (afterNextRender) và sau ResizeObserver / sự kiện scroll — cả hai chạy ở frame sau.
+    const settle = async () => {
+      fixture.detectChanges();
+      await fixture.whenStable();
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      fixture.detectChanges();
+    };
+    const scrollTo = async (left: number) => {
+      scroller().scrollLeft = left;
+      scroller().dispatchEvent(new Event('scroll'));
+      await settle();
+    };
+    const openList = async () => {
+      listButton()!.click();
+      await settle();
+    };
+
+    beforeEach(() => {
+      i18n = TestBed.inject(I18nService);
+    });
+
+    afterEach(() => (overlay().innerHTML = ''));
+
+    it('needs no scrolling, list button or fade while the tabs fit at 120px', async () => {
+      await settle();
+      expect(scroller().scrollWidth).toBe(scroller().clientWidth);
+      expect(listButton()).toBeNull();
+      expect(fade('start')).toBeNull();
+      expect(fade('end')).toBeNull();
+    });
+
+    it('scrolls horizontally with a hidden scrollbar once the tabs no longer fit', async () => {
+      render({ tabs: makeTabs(16, 0) });
+      await settle();
+      const style = getComputedStyle(scroller());
+      expect(style.overflowX).toBe('auto');
+      expect(style.scrollbarWidth).toBe('none');
+      expect(scroller().offsetHeight - scroller().clientHeight).withContext('no scrollbar track').toBe(0);
+      expect(scroller().scrollWidth).toBeGreaterThan(scroller().clientWidth);
+      expect(hosts()[0].getBoundingClientRect().width).toBe(120);
+    });
+
+    it('fades only the edges that still hide tabs, 32px from the bar colour', async () => {
+      render({ tabs: makeTabs(16, 0) });
+      await settle();
+      expect(fade('start')).withContext('at the start').toBeNull();
+      expect(fade('end')).withContext('at the start').not.toBeNull();
+      const style = getComputedStyle(fade('end')!);
+      expect(style.width).toBe('32px');
+      expect(style.pointerEvents).toBe('none');
+      expect(style.backgroundImage).toContain('linear-gradient');
+      expect(fade('end')!.getAttribute('aria-hidden')).toBe('true');
+
+      await scrollTo(200);
+      expect(fade('start')).withContext('in the middle').not.toBeNull();
+      expect(fade('end')).withContext('in the middle').not.toBeNull();
+
+      await scrollTo(scroller().scrollWidth);
+      expect(fade('start')).withContext('at the end').not.toBeNull();
+      expect(fade('end')).withContext('at the end').toBeNull();
+    });
+
+    it('turns a vertical wheel over the bar into a horizontal scroll, only while it overflows', async () => {
+      render({ tabs: makeTabs(16, 0) });
+      await settle();
+      const wheel = new WheelEvent('wheel', { deltaY: 100, bubbles: true, cancelable: true });
+      scroller().dispatchEvent(wheel);
+      expect(scroller().scrollLeft).toBe(100);
+      expect(wheel.defaultPrevented).toBe(true);
+
+      render({ tabs: makeTabs(4, 0) });
+      await settle();
+      const idle = new WheelEvent('wheel', { deltaY: 100, bubbles: true, cancelable: true });
+      scroller().dispatchEvent(idle);
+      expect(scroller().scrollLeft).toBe(0);
+      expect(idle.defaultPrevented).withContext('the page keeps the wheel').toBe(false);
+    });
+
+    it('scrolls the open tab fully into view, clear of the fades, whenever the open tab changes', async () => {
+      render({ tabs: makeTabs(16, 15) });
+      await settle();
+      const visible = (index: number) => {
+        const box = scroller().getBoundingClientRect();
+        const tab = hosts()[index].getBoundingClientRect();
+        return tab.left >= box.left + (scroller().scrollLeft > 0 ? 32 : 0) - 0.5 && tab.right <= box.right + 0.5;
+      };
+      expect(scroller().scrollLeft).toBeGreaterThan(0);
+      expect(visible(15)).withContext('last tab').toBe(true);
+
+      render({ tabs: fixture.componentInstance.tabs.map((tab, i) => ({ ...tab, isActive: i === 6 })) });
+      await settle();
+      expect(visible(6)).withContext('a middle tab').toBe(true);
+
+      render({ tabs: fixture.componentInstance.tabs.map((tab, i) => ({ ...tab, isActive: i === 0 })) });
+      await settle();
+      expect(scroller().scrollLeft).withContext('first tab').toBe(0);
+    });
+
+    it('shows a 30px list button with the tab count after a 1px divider, fixed at the end of the bar', async () => {
+      render({ tabs: makeTabs(16, 0) });
+      await settle();
+      const button = listButton()!;
+      expect(button).not.toBeNull();
+      const wrap = button.parentElement as HTMLElement;
+      expect(button.getBoundingClientRect().height).toBe(30);
+      expect(getComputedStyle(button).borderTopLeftRadius).toBe('8px');
+      const count = button.querySelector('.tab-router__list-count') as HTMLElement;
+      expect(count.textContent!.trim()).toBe('16');
+      expect(getComputedStyle(count).fontVariantNumeric).toBe('tabular-nums');
+      expect(button.querySelector('sd-icon')!.textContent).toContain('expand_more');
+      expect(getComputedStyle(wrap).borderLeftWidth).toBe('1px');
+      expect(getComputedStyle(wrap).borderLeftColor).toBe(resolve('border-left-color', 'var(--sd-tab-router-item-divider)'));
+      expect(wrap.getBoundingClientRect().right).toBe(nav().getBoundingClientRect().right);
+      expect(scroller().getBoundingClientRect().right).toBeLessThanOrEqual(wrap.getBoundingClientRect().left);
+      expect(button.getAttribute('aria-label')).toBe(i18n.t('core.component.tab-router.tab-list'));
+      expect(button.getAttribute('aria-haspopup')).toBe('dialog');
+      expect(button.getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('opens a 320px list of every tab under the bar, the open tab tinted, and picks a tab from it', async () => {
+      const router = TestBed.inject(Router);
+      const navigate = spyOn(router, 'navigate').and.resolveTo(true);
+      // why: ghim host ở góc trên trái và để thanh hẹp hơn khung Karma (~730px) — DOM của spec khác có thể đẩy thanh xuống
+      // đáy khung, và thanh rộng hơn khung thì menu bị đẩy vào trong; cả hai làm số đo vị trí sai.
+      Object.assign((fixture.nativeElement as HTMLElement).style, { position: 'fixed', top: '0', left: '0' });
+      render({ tabs: makeTabs(16, 3), width: 640 });
+      await settle();
+      await openList();
+
+      const panel = menu()!;
+      expect(panel).not.toBeNull();
+      expect(listButton()!.getAttribute('aria-expanded')).toBe('true');
+      expect(panel.getAttribute('role')).toBe('dialog');
+      expect(panel.getBoundingClientRect().width).toBe(320);
+      expect(getComputedStyle(panel).paddingTop).toBe('6px');
+      expect(getComputedStyle(panel).borderTopLeftRadius).toBe(resolve('border-top-left-radius', 'var(--sd-panel-radius)'));
+      const wrap = listButton()!.parentElement!.getBoundingClientRect();
+      expect(panel.getBoundingClientRect().top - wrap.bottom).withContext('4px under the bar').toBeCloseTo(4, 0);
+      expect(panel.getBoundingClientRect().right).withContext('lined up with the button').toBeCloseTo(listButton()!.getBoundingClientRect().right, 0);
+
+      const title = panel.querySelector('.tab-router__menu-title') as HTMLElement;
+      expect(title.textContent!.trim()).toBe(i18n.t('core.component.tab-router.open-tabs', { count: 16 }));
+      expect(panel.getAttribute('aria-label')).toBe(title.textContent!.trim());
+      const list = panel.querySelector('.tab-router__menu-list') as HTMLElement;
+      expect(getComputedStyle(list).maxHeight).toBe('300px');
+      expect(getComputedStyle(list).overflowY).toBe('auto');
+
+      expect(rows().length).toBe(16);
+      expect(rows()[0].getBoundingClientRect().height).toBe(36);
+      expect(rows()[1].textContent).toContain(INFOS[1].name);
+      const active = rows()[3];
+      expect(getComputedStyle(active).backgroundColor).toBe(
+        resolve('background-color', 'color-mix(in srgb, var(--sd-primary) 8%, transparent)')
+      );
+      expect(getComputedStyle(active).fontWeight).toBe('500');
+      expect(active.querySelector('.tab-router__menu-tab')!.getAttribute('aria-current')).toBe('page');
+      expect(rows()[0].querySelector('.tab-router__menu-tab')!.hasAttribute('aria-current')).toBe(false);
+
+      (rows()[7].querySelector('.tab-router__menu-tab') as HTMLButtonElement).click();
+      await settle();
+      expect(navigate).toHaveBeenCalledOnceWith(['/tab/7'], { queryParams: {}, state: { switchTab: true } });
+      expect(menu()).withContext('closes').toBeNull();
+      expect(document.activeElement).withContext('focus back on the button').toBe(listButton());
+    });
+
+    it('closes a tab from the list with a close button named after the tab, shown on hover', async () => {
+      const service = TestBed.inject(SdTabRouterService);
+      const close = spyOn(service, 'close');
+      render({ tabs: makeTabs(16, 0) });
+      await settle();
+      await openList();
+
+      const button = rows()[2].querySelector('.tab-router__menu-close') as HTMLButtonElement;
+      expect(button.getAttribute('aria-label')).toBe(i18n.t('core.component.tab-router.close-tab'));
+      expect(document.getElementById(button.getAttribute('aria-describedby')!)!.textContent!.trim()).toBe(INFOS[2].name);
+      expect(getComputedStyle(button).opacity).toBe('0');
+      expect(cssRule(/\.tab-router__menu-row:hover \.tab-router__menu-close/)?.opacity).toBe('1');
+      button.click();
+      expect(close).toHaveBeenCalledOnceWith(fixture.componentInstance.tabs[2]);
+    });
+
+    it('closes the list on Escape and returns focus to the button', async () => {
+      render({ tabs: makeTabs(16, 0) });
+      await settle();
+      await openList();
+      expect(menu()!.contains(document.activeElement)).withContext('focus moves into the list').toBe(true);
+
+      menu()!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+      await settle();
+      expect(menu()).toBeNull();
+      expect(document.activeElement).toBe(listButton());
+    });
+
+    it('shows the latest tab info in the list, also info sent before the list opened', async () => {
+      render({ tabs: makeTabs(16, 0) });
+      await settle();
+      fixture.componentInstance.tabs[5].tabInfoChanges.next({ name: 'Công nợ phải thu', icon: 'account_balance_wallet' });
+      await openList();
+      expect(rows()[5].textContent).toContain('Công nợ phải thu');
     });
   });
 });

@@ -85,12 +85,15 @@ The host is `height: 100vh` followed by `height: 100dvh`: browsers that support 
 
 ### Behaviors
 
-- The bar is 40px tall, padding `0 8px`, background `--sd-tab-router-nav-bg`; tabs sit on its bottom edge
+- The bar is 40px tall, background `--sd-tab-router-nav-bg`; the tabs sit on its bottom edge inside a scroll area padded `0 8px` (`.tab-router__scroller`)
 - Hidden (`height: 0; visibility: hidden`) while there is one tab or none — the default, with no input. When the second tab opens the bar grows from 0 to 40px in 150ms (no motion under `prefers-reduced-motion`). While the bar is hidden the only tab cannot be closed from the UI
-- Each tab prefers 200px and shrinks to 120px at least; extra tabs are clipped by the bar
+- Each tab prefers 200px and shrinks to 120px at least
+- **Many tabs:** once the tabs no longer fit at 120px, the tab area scrolls horizontally with a hidden scrollbar. A vertical mouse wheel over it scrolls it sideways (until an end is reached, then the page takes the wheel). Whenever the open tab changes, and whenever the area changes width, the bar scrolls (`scrollLeft`) so the open tab is fully visible and clear of the fades. A 32px fade from `--sd-tab-router-nav-bg` shows only on an edge that still hides tabs (`.tab-router__fade--start` / `--end`, `aria-hidden`)
+- **Tab list button:** shown only while the tabs overflow, fixed at the end of the bar after a 1px `--sd-tab-router-item-divider` line. 30px tall, 8px corners, the tab count (tabular figures) and `expand_more`; `--sd-tab-router-item-hover-bg` on hover and while open. Accessible name `core.component.tab-router.tab-list` ("Danh sách tab"), `aria-haspopup="dialog"`, `aria-expanded`
+- **Tab list menu:** a 320px `role="dialog"` panel 4px under the bar, its right edge lined up with the button (panel surface, border, `--sd-panel-radius`, `--sd-shadow-md`, 6px padding). Title `core.component.tab-router.open-tabs` ("{count} tab đang mở"), also the dialog name. One 36px row per tab — icon, name (ellipsis) and a close button shown on hover or focus (always under `pointer: coarse`); the open tab's row is `--sd-primary` 8% at weight 500 with `aria-current="page"`. The list scrolls past 300px. Focus moves into the list when it opens; picking a tab closes the list, returns focus to the button and switches tabs like a click on the bar; a close button calls `SdTabRouterService.close(tab)` (named "Đóng tab" + the tab name through `aria-describedby`); Escape or a click outside closes it
 - The 1×16px divider on the right of each tab hides on both sides of the open tab and of the hovered tab
 - `cdkDropList` lockaxis x → user drags tabs left/right to reorder (mutates `tabs` in place via `moveItemInArray`)
-- `mode` and `checkUI()` remain public members but no longer change the look (the old `compact` styles targeted classes that no longer existed)
+- The old compact mode is gone: `mode`, `checkUI()` and the window `resize` listener were removed (the bar scrolls instead); the outlet no longer calls `checkUI()`
 
 ## `<sd-tab-router-item>`
 
@@ -105,7 +108,7 @@ The host is `height: 100vh` followed by `height: 100dvh`: browsers that support 
 - Click → router navigates to `tab.url` with `tab.queryParams` and `state: { switchTab: true }` (so the outlet doesn't recreate, it just activates)
 - Middle-click (`mousedown` button 1 default-prevented; `mouseup` triggers close; `auxclick` button 1 default-prevented so the browser does not also open the tab url in a new browser tab) → close tab
 - Close `×` / middle-click → `tabRouterService.close(tab)`; outlet `#closeTab` runs `tab.beforeClose` if defined. It closes only on `true`; `false`, throw, and rejection all fail closed.
-- Tab info (`name`, `icon`, `tooltip`, `color`) is reactive via `tab.tabInfoChanges: Subject<SdTabInfo>` — components can call `next(...)` to update their tab pill at runtime (e.g. show unsaved-changes dot, change name after rename)
+- Tab info (`name`, `icon`, `tooltip`, `color`) is reactive via `tab.tabInfoChanges: Subject<SdTabInfo>` — components can call `next(...)` to update their tab pill at runtime (e.g. show unsaved-changes dot, change name after rename). The outlet creates it as a `ReplaySubject(1)`, so the tab list menu (built when it opens) and any later subscriber get the last info sent
 - The tab shows the icon (16px, `--sd-<color>-dark` of `color`, primary when unset; nothing when there is no icon) and the name (13px/18px, one line, ellipsis). It does not use `<sd-badge>`
 - Tooltip (`[sdTooltip]`): the builder's `tooltip` when set; otherwise the full name, only when the name is cut. Whether the name is cut is measured on `mouseenter` / `focusin` (`measureTruncation()`, `truncated()`)
 - Not open: no background, `--sd-tab-router-item-text`. Hover: `--sd-tab-router-item-hover-bg`. Open (`tab-router__item--active`, and `sd-tab-router-item--active` on the host): `--sd-tab-router-item-active-bg`, `--sd-text`, weight 500
@@ -164,7 +167,7 @@ interface SdTabRouterTab {
   params?: Record<string, string | number>;
   queryParams?: Record<string, string | number>;
   data?: Record<string, any>;
-  tabInfoChanges: Subject<SdTabInfo>;
+  tabInfoChanges: Subject<SdTabInfo>; // a ReplaySubject(1) when the outlet creates the tab
   beforeClose?: () => boolean | Promise<boolean>;
 }
 
@@ -188,6 +191,7 @@ Tokens (see `assets/THEME.md`, "Tab router tokens"): `--sd-tab-router-nav-bg`, `
   - Coloured 16px icon on the left, name in the middle (ellipsis), close `×` (Material `close` icon) on the right
   - The open tab (`tab-router__item--active`) has the surface background and joins the content below; other tabs have no background
   - Drag-handle: the whole tab is draggable horizontally
+- With many tabs the strip scrolls sideways, fades out on an edge that hides tabs, and ends with a "16 ⌄" button that opens a list of every open tab
 - Below the strip is `.tab-router__list`, a stack of `.tab-router__pane` divs — only the one with `.active` is visible (display toggled in CSS); others are kept in DOM (state preserved)
 - No tab: the list is empty (the page should render its own welcome content via a default route)
 

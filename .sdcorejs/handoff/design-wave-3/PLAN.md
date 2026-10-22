@@ -107,7 +107,7 @@ Mới (đủ 5 locale vi/en/ja/ko/zh):
 | 2a avatar: `status`, `statusLabel`, `statusPulse`, `name`, token `avatar-status-ring` | xong | Ảnh: `wave3-2a-avatar-status.png` (ví dụ cũ không đổi giao diện nên chỉ chụp ví dụ mới) |
 | 2b `sd-avatar-group` | xong | Ảnh: `wave3-2b-avatar-group.png`. Trang showcase mới `components/avatar-group`. Thêm input `tooltip` cho sd-avatar |
 | 3a thanh tab, bỏ badge, điều kiện ẩn, dọn code, token, route showcase sống | xong | Ảnh: `wave3-3a-tab-bar.png` (chỉ bản sau — bản cũ không có route sống để chụp). Route mới `/demo/tab-router` |
-| 3b cuộn, lớp mờ, nút + menu danh sách | chưa | Làm tiếp từ đây — xem "Bàn giao" |
+| 3b cuộn, lớp mờ, nút + menu danh sách | xong | Ảnh: `wave3-3b-many-tabs.png` (light, dark, graphite, forced colors, phone 390px). Làm trên `chore/release-3.2` (2026-10-23) |
 | 3c tablist, roving, kéo thả, menu chuột phải | chưa | |
 | 3d `dirty`, `syncBrowserTitle` | chưa | |
 | 4a–4d upload-file | chưa | |
@@ -170,9 +170,32 @@ Ghi chú bước 3a:
   `currentTabChanges` báo đúng URL rồi mới đi tiếp. Nên hỏi user có mở việc riêng để sửa (chụp snapshot theo
   `event.id` lúc NavigationEnd thay vì đọc lại routerState trong hàng đợi).
 
+Ghi chú bước 3b (2026-10-23, sau khi đợt 1–3a đã merge vào `main` qua #95; user chọn làm đủ 3b trước release 3.2):
+- Cấu trúc thanh: `.tab-router__nav` (40px, nền, ẩn khi ≤ 1 tab) > `.tab-router__tabs` (relative) > `.tab-router__scroller`
+  (vừa là `cdkDropList` vừa là vùng cuộn, đệm 0 8px, `overflow-x: auto`, `scrollbar-width: none`) + hai `.tab-router__fade`;
+  sau đó `.tab-router__more` (vạch 1px, đệm 0 6px 0 4px) chứa `.tab-router__list-button`. Spec 3a về đệm 0 8px đổi sang đo
+  trên vùng cuộn.
+- Đo tràn / lớp mờ: `scroll` + `wheel` nghe ngoài zone, `ResizeObserver` trên vùng cuộn, và `afterNextRender` sau mỗi lần
+  `tabs` đổi. Cuộn tới tab đang mở khi key tab đang mở đổi, hoặc khi vùng cuộn đổi bề rộng (nút danh sách hiện ra sau lần
+  đo đầu làm vùng cuộn hẹp lại). Tab đang mở được đưa ra khỏi lớp mờ 32px.
+- Wheel: chỉ đổi lăn dọc → ngang khi thanh tràn và `|deltaY| > |deltaX|`; tới đầu / cuối thì không `preventDefault`, trang
+  nhận cú lăn.
+- Nút danh sách: thiết kế chỉ có mockup lúc menu đang mở (nền #e4e6ec). Chọn: lúc nghỉ không nền, hover và khi mở
+  `--sd-tab-router-item-hover-bg` — giống tab (không nền tới khi hover).
+- Menu: `cdkConnectedOverlay` + `cdkTrapFocus` như `sd-avatar-group`, `role="dialog"` tên = tiêu đề. Treo dưới khối nút
+  (cao 40px) 4px, `offsetX: -6` để mép phải thẳng mép phải nút. Hàng là component nội bộ `sd-tab-router-list-item`
+  (`role="listitem"`): nút tên (`aria-current="page"` ở tab đang mở) + nút đóng (`close-tab` + `aria-describedby` tên).
+  Hover hàng = `--sd-tab-router-nav-bg` (mockup #f0f1f5), không thêm token.
+- `tabInfoChanges` do outlet tạo giờ là `ReplaySubject(1)` (vẫn là `Subject`, không đổi API): hàng dựng lúc menu mở vẫn
+  nhận tên đã đổi trước đó. Cũng dùng được cho `syncBrowserTitle` ở 3d.
+- i18n mới đủ 5 locale: `core.component.tab-router.{tab-list, open-tabs, close-tab}` (`close-others` thêm ở 3c).
+- `tabRouterNav` của outlet giữ lại (thuộc tính public của class đã export) dù không còn gọi `checkUI()`.
+- Kiểm: spec tab-router 147/147; bộ kiểm đầy đủ chạy một lần ở bước release 3.2 thay cho `run-checks.sh` riêng bước này.
+
 ## 10. Bàn giao (máy khác tiếp tục)
 
-Cập nhật 2026-10-22, sau commit bước 3a. Nhánh `feat/design-handoff-wave-1-2` đã push lên origin. Làm tiếp từ **3b**.
+Cập nhật 2026-10-23, sau commit bước 3b. 1a–3a đã merge vào `main` (#95); 3b nằm trên nhánh `chore/release-3.2` (cắt từ
+`main`, chưa push) và đi cùng release 3.2. Làm tiếp từ **3c** trên một nhánh mới cắt từ `main` sau khi 3.2 merge.
 
 **Yêu cầu của user cho phần còn lại:** làm hết các bước còn lại (3b, 3c, 3d, 4a, 4b, 4c, 4d) liền một mạch, không dừng
 hỏi giữa các bước, rồi gửi **một báo cáo tổng** để review một lượt: file, spec, kết quả check, ảnh, các điểm lệch spec.

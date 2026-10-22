@@ -566,6 +566,9 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.selector-action.more': '더 보기',
   'core.component.table.selector-action.default-msg': '개 선택됨',
   'core.component.tab-router.too-many-tabs': '너무 많은 탭이 열려 있습니다.',
+  'core.component.tab-router.close-tab': '탭 닫기',
+  'core.component.tab-router.open-tabs': '열린 탭 {count}개',
+  'core.component.tab-router.tab-list': '탭 목록',
 
   // ---- Component: upload-file ----
   'core.component.upload-file.upload': '파일 업로드',

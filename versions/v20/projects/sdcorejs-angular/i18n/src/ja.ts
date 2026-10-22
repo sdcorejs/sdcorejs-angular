@@ -567,6 +567,9 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.selector-action.more': 'その他',
   'core.component.table.selector-action.default-msg': '件選択中',
   'core.component.tab-router.too-many-tabs': 'タブを開きすぎています。',
+  'core.component.tab-router.close-tab': 'タブを閉じる',
+  'core.component.tab-router.open-tabs': '開いているタブ: {count}',
+  'core.component.tab-router.tab-list': 'タブ一覧',
 
   // ---- Component: upload-file ----
   'core.component.upload-file.upload': 'ファイルをアップロード',

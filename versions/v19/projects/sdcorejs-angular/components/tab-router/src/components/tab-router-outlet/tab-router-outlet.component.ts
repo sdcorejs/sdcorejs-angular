@@ -27,7 +27,7 @@ import {
 } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { defer, EMPTY, Subject, Subscription, isObservable, lastValueFrom } from 'rxjs';
+import { defer, EMPTY, ReplaySubject, Subscription, isObservable, lastValueFrom } from 'rxjs';
 import { catchError, concatMap, filter, map } from 'rxjs/operators';
 
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
@@ -36,7 +36,7 @@ import { Utilities } from '@sdcorejs/utils/fns';
 import { SdTabActivated, SdTabDeactivated } from '../../events/tab-router.event';
 import { ɵsdConnectTabComponentBuilders } from '../../decorators/tab.decorator';
 import { SdTabAction } from '../../actions/tab-router.action';
-import { SdTabRouterTab, SD_TAB } from '../../models';
+import { SdTabInfo, SdTabRouterTab, SD_TAB } from '../../models';
 import { SdTabDecoratorService } from '../../services/tab-decorator.service';
 import { SdTabRouterService } from '../../services/tab-router.service';
 import { SdTabRouterNavComponent } from '../tab-router-nav/tab-router-nav.component';
@@ -260,7 +260,6 @@ export class SdTabRouterOutletComponent implements OnDestroy {
       }
     } else {
       this.tabs.set(currentTabs.filter(({ key }) => key !== tab.key));
-      this.tabRouterNav()?.checkUI();
     }
   };
 
@@ -360,7 +359,9 @@ export class SdTabRouterOutletComponent implements OnDestroy {
       params,
       queryParams,
       data,
-      tabInfoChanges: new Subject(),
+      // why: ReplaySubject(1) (vẫn là một Subject) — danh sách tab của thanh dựng hàng khi menu mở, sau khi màn hình đã
+      // gửi tên qua đây; Subject thường làm hàng đó mất tên đã đổi.
+      tabInfoChanges: new ReplaySubject<SdTabInfo>(1),
     };
     sdInjector.setTab(newTab);
 
@@ -405,8 +406,6 @@ export class SdTabRouterOutletComponent implements OnDestroy {
         this.#sdNotifyService.warning(this.#i18n.t('core.component.tab-router.too-many-tabs'));
       }
     }
-
-    this.tabRouterNav()?.checkUI();
   };
 
   // Lần xuống deepest firstChild để lấy snapshot của route lá (route thực sự render component).

@@ -1,0 +1,114 @@
+// Hàng của menu danh sách tab (đợt 3 · 3b): cao 36px, bo 6px. Hover nền thanh tab; hàng của tab đang mở nền primary 8%,
+// chữ 500. Nút đóng chỉ hiện khi hover hoặc focus trong hàng.
+
+:host {
+  display: flex;
+  flex: 0 0 36px;
+  align-items: center;
+  gap: 4px;
+  height: 36px;
+  padding: 0 6px 0 0;
+  border-radius: 6px;
+  box-sizing: border-box;
+  color: var(--sd-text);
+  font-size: var(--sd-font-size-13, 13px);
+  line-height: 18px;
+
+  &:hover {
+    background: var(--sd-tab-router-nav-bg);
+  }
+}
+
+:host(.tab-router__menu-row--active) {
+  background: color-mix(in srgb, var(--sd-primary) 8%, transparent);
+  font-weight: 500;
+}
+
+.tab-router__menu-tab {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  height: 100%;
+  padding: 0 0 0 10px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
+    outline-offset: -2px;
+  }
+}
+
+@each $name in primary, secondary, info, success, warning, error {
+  .tab-router__menu-icon.c-#{$name} {
+    color: var(--sd-#{$name}-dark);
+  }
+}
+
+.tab-router__menu-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tab-router__menu-close {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--sd-text-secondary);
+  cursor: pointer;
+  opacity: 0;
+
+  &:hover {
+    background: color-mix(in srgb, var(--sd-text) 8%, transparent);
+  }
+
+  &:focus-visible {
+    opacity: 1;
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
+    outline-offset: -2px;
+  }
+}
+
+:host(.tab-router__menu-row:hover) .tab-router__menu-close,
+:host(.tab-router__menu-row:focus-within) .tab-router__menu-close {
+  opacity: 1;
+}
+
+// Màn hình cảm ứng không có hover: nút đóng luôn hiện, vùng chạm 32px (như nút đóng trên thanh tab).
+@media (pointer: coarse) {
+  .tab-router__menu-close {
+    opacity: 1;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: -6px;
+    }
+  }
+}
+
+// why: forced-colors bỏ nền, hàng của tab đang mở chỉ còn khác ở độ đậm chữ — vẽ khung bằng màu hệ thống.
+@media (forced-colors: active) {
+  :host(.tab-router__menu-row--active) {
+    outline: 1px solid CanvasText;
+    outline-offset: -1px;
+  }
+}
