@@ -6,6 +6,10 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+## [3.2] - 2026-10-23
+
+Release suffix `3.2` targets `19.3.2`, `20.3.2`, `21.3.2`, and `22.3.2`, validated against `*.3.1`. Repo-owned: design handoff waves 1–3 (control tokens and box controls, operator chip in the form controls, select panel, checkbox and radio, segmented, kanban, badge, badge picker, avatar status and group, tab bar with scrolling and a tab list), Sidebar V4 with the context switcher and the `graphite` preset, the generic CRUD module, form-generic static elements and buttons, a fixed app time zone, unknown-total table pagination, the Tiptap editor engine and `sd-chip-calendar` limits and popup. Read `Changed (BREAKING for consumers)` before upgrading: custom i18n catalogs need new keys, the CKEditor-specific editor API is gone, exhaustive switches over `SdFormGenericField['type']` and the sidebar `version` need new cases, and the server payload changes for `NULL` / `NOT_NULL` and `split-number` table filters.
+
 ### Added
 
 - Avatar: `sd-avatar-group` (`SdAvatarGroup`, in `@sdcorejs/angular/components/avatar`) shows `items` (`SdAvatarGroupItem`: `src`, `name`, `status`, `statusLabel`, `statusPulse`) as overlapping avatars — each overlaps the previous one by `round(size × 0.15)`, has a 2px ring (3px from 64) in `--sd-avatar-status-ring`, and the left one is on top. At most `max` (default 4) are shown; the rest fold into a "+N" button, except that one leftover person is shown instead of "+1". "+N" opens a 280px list of the hidden people (avatar, name, status; focus on the first row, Esc returns to the button), or emits `moreClick` with them when that output is listened to. The host is `role="group"` named by `ariaLabel` (default "{n} người"). `sd-avatar` gains a `tooltip` input, which the group sets to "{name} · {statusLabel}". New i18n keys `core.component.avatar.group-label`, `.more-label` and `.more-title` are in all five built-in catalogs.
