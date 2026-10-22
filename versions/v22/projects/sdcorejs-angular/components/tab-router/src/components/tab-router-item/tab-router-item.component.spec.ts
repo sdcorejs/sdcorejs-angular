@@ -69,6 +69,37 @@ describe('SdTabRouterItemComponent close delegation', () => {
     expect(beforeCloseSpy).not.toHaveBeenCalled();
   });
 
+  // why: Chrome mở link ở tab mới khi xử lý `auxclick` của chuột giữa; chặn ở `mousedown`/`mouseup`
+  // không huỷ được. Trước đây chỉ "chạy" khi thẻ <a> bị gỡ khỏi DOM ngay trong `mouseup` — với
+  // `eventCoalescing`, zoneless hay `beforeClose` async thì tab vừa đóng vừa mở trong trình duyệt.
+  it('cancels the middle-click auxclick so the browser does not open the tab url in a new tab', () => {
+    const anchor = fixture.nativeElement.querySelector('a') as HTMLAnchorElement;
+    const auxclick = new MouseEvent('auxclick', { button: 1, bubbles: true, cancelable: true });
+
+    anchor.dispatchEvent(auxclick);
+
+    expect(auxclick.defaultPrevented).toBe(true);
+  });
+
+  it('keeps the auxclick of other buttons, so the context menu still works', () => {
+    const anchor = fixture.nativeElement.querySelector('a') as HTMLAnchorElement;
+    const auxclick = new MouseEvent('auxclick', { button: 2, bubbles: true, cancelable: true });
+
+    anchor.dispatchEvent(auxclick);
+
+    expect(auxclick.defaultPrevented).toBe(false);
+  });
+
+  it('closes the tab once for a full middle click (mousedown, mouseup, auxclick)', () => {
+    const anchor = fixture.nativeElement.querySelector('a') as HTMLAnchorElement;
+
+    for (const type of ['mousedown', 'mouseup', 'auxclick']) {
+      anchor.dispatchEvent(new MouseEvent(type, { button: 1, bubbles: true, cancelable: true }));
+    }
+
+    expect(tabRouterServiceSpy.close).toHaveBeenCalledOnceWith(component.tab);
+  });
+
   // why: bản cũ bind `[href]="[tab.url]"` — một MẢNG vào thuộc tính DOM kiểu chuỗi, chỉ "chạy
   // được" nhờ mảng 1 phần tử tự stringify. `properties['href']` đọc thẳng giá trị đã bind (chưa
   // qua stringify) nên phân biệt được hai cách bind.

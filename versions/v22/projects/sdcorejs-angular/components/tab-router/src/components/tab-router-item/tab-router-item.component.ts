@@ -108,6 +108,15 @@ export class SdTabRouterItemComponent implements OnInit, OnDestroy {
     }
   };
 
+  // why: trình duyệt mở link ở tab mới khi xử lý `auxclick` của chuột giữa, nên chỉ huỷ ở đây mới chặn được.
+  // Tab đã đóng ở `mouseup`; trước đây không mở tab mới chỉ vì <a> bị gỡ khỏi DOM trước `auxclick`, điều không
+  // còn đúng khi app bật `eventCoalescing`, chạy zoneless hay `beforeClose` chạy async.
+  onAuxclick = (event: MouseEvent) => {
+    if (event.button === 1) {
+      event.preventDefault();
+    }
+  };
+
   #closeTab = () => {
     this.tabRouterService.close(this.tab);
   };

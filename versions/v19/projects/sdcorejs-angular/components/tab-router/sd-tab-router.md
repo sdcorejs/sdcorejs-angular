@@ -103,7 +103,7 @@ The host is `height: 100vh` followed by `height: 100dvh`: browsers that support 
 ### Behaviors
 
 - Click → router navigates to `tab.url` with `tab.queryParams` and `state: { switchTab: true }` (so the outlet doesn't recreate, it just activates)
-- Middle-click (`mousedown` button 1 default-prevented; `mouseup` triggers close) → close tab
+- Middle-click (`mousedown` button 1 default-prevented; `mouseup` triggers close; `auxclick` button 1 default-prevented so the browser does not also open the tab url in a new browser tab) → close tab
 - Close `×` / middle-click → `tabRouterService.close(tab)`; outlet `#closeTab` runs `tab.beforeClose` if defined. It closes only on `true`; `false`, throw, and rejection all fail closed.
 - Tab info (`name`, `icon`, `tooltip`, `color`) is reactive via `tab.tabInfoChanges: Subject<SdTabInfo>` — components can call `next(...)` to update their tab pill at runtime (e.g. show unsaved-changes dot, change name after rename)
 - The tab shows the icon (16px, `--sd-<color>-dark` of `color`, primary when unset; nothing when there is no icon) and the name (13px/18px, one line, ellipsis). It does not use `<sd-badge>`
