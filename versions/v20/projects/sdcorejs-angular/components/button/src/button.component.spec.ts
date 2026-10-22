@@ -4,7 +4,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { LucideDownload } from '@lucide/angular';
 import { provideSdIcon, SdIcon } from '@sdcorejs/angular/modules/icon';
 import { SdButton } from './button.component';
-import { queryByCss, setInput } from '../../../testing/test-utils';
+import { findCssRule, queryByCss, setInput } from '../../../testing/test-utils';
 
 describe('SdButton', () => {
   let fixture: ComponentFixture<SdButton>;
@@ -276,6 +276,21 @@ describe('SdButton', () => {
         expect(countBox.top + countBox.height / 2).toBeCloseTo(button.top + anchor, 0);
       });
     }
+
+    // Forced colours drop author backgrounds, so the dot (a coloured block only) vanished and the count lost its pill.
+    it('draws the dot and the count with system colours under forced colours, greyed when disabled', () => {
+      setInput(fixture, 'title', 'Lọc');
+      setInput(fixture, 'indicator', true);
+      const forced = /forced-colors:\s*active/;
+      const rule = findCssRule(/(^|,\s*)\.sd-button__indicator\[data-color\](,|$)/, forced);
+      expect(rule).withContext('forced-colors rule').toBeDefined();
+      expect(rule!.getPropertyValue('forced-color-adjust')).toBe('none');
+      expect(rule!.backgroundColor.toLowerCase()).toBe('canvastext');
+      expect(rule!.color.toLowerCase()).toBe('canvas');
+      expect(rule!.boxShadow.toLowerCase()).toContain('canvas');
+      const disabled = findCssRule(/\.sd-disabled \.sd-button__indicator$/, forced);
+      expect(disabled?.backgroundColor.toLowerCase()).withContext('disabled').toBe('graytext');
+    });
   });
 
   describe('autoId computed', () => {

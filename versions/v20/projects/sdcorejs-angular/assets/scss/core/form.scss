@@ -375,6 +375,13 @@
     border-bottom: 1px solid transparent;
     background-clip: padding-box;
 
+    // why: forced colors vẽ cả viền trong suốt bằng màu hệ thống, thành vạch trên/dưới mỗi option. Màu hệ thống do
+    // tác giả đặt thì được giữ: viền lấy Canvas (nền panel lúc đó) nên khe vẫn vô hình, option vẫn cao 36px.
+    @media (forced-colors: active) {
+      border-top-color: Canvas;
+      border-bottom-color: Canvas;
+    }
+
     &.mdc-list-item--selected .mdc-list-item__primary-text {
       font-weight: var(--sd-font-weight-medium, 500);
     }

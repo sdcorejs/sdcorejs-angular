@@ -537,6 +537,22 @@ $button-indicator-sizes: (
   color: var(--sd-surface);
 }
 
+// why: forced colors bỏ nền của tác giả — chấm chỉ là khối nền nên biến mất, số mất nền pill. Tự vẽ bằng màu hệ thống
+// (`[data-color]` để thắng vòng màu ở trên); disabled dùng GrayText như phần còn lại của nút.
+@media (forced-colors: active) {
+  .sd-button__indicator,
+  .sd-button__indicator[data-color] {
+    forced-color-adjust: none;
+    background: CanvasText;
+    color: Canvas;
+    box-shadow: 0 0 0 2px Canvas;
+  }
+
+  :host(.sd-disabled) .sd-button__indicator {
+    background: GrayText;
+  }
+}
+
 .sd-button__indicator-label {
   position: absolute;
   width: 1px;

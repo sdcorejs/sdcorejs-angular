@@ -39,8 +39,9 @@ Không còn mục nào chờ user. Đã trả lời: cột filter một operator
 (quyết định 17), kanban `appearance` (quyết định 18). User đã báo backend về payload NULL / NOT_NULL — cột control mặc
 định gửi `{ field, operator }` không `data`, CHANGELOG ghi "Server payload change" (xong 2026-10-21).
 
-**Còn phải làm:** sửa 2 lỗi forced-colors tìm thấy ở lượt kiểm tra showcase cuối (mục "Kiểm tra showcase cuối" ngay
-dưới); chưa mở PR (user chỉ yêu cầu push, không merge).
+**Còn phải làm:** chưa mở PR (user chỉ yêu cầu push, không merge). Hai lỗi forced-colors của lượt kiểm tra showcase cuối đã sửa
+(2026-10-22, mục "Sửa 2 lỗi forced-colors" cuối file).
+
 
 ## Kiểm tra showcase cuối (2026-10-21)
 
@@ -356,3 +357,19 @@ Chụp trong Browser pane hay timeout khi cửa sổ bị ẩn, nên dùng Playw
 - Spec RED đã xác nhận cho control (1 spec) và bảng (4 spec). Demo: cột "Họ và tên" có thêm NULL / NOT_NULL.
 - Kiểm tra: table + forms + operator 2504/2504; full Karma 7622/7624 (2 spec `SdImageEditor export` flaky canvas, chạy riêng
   114/114), coverage 89.86 / 79.16 / 90.35 / 92.29; lint file đổi, `check:scss-hex` 0, `check:sync` pass.
+
+## Sửa 2 lỗi forced-colors (2026-10-22)
+
+- **Vạch giữa option** (select đơn / nhiều / cuộn ảo, autocomplete, hàng "Tất cả"): trong `@media (forced-colors: active)` viền
+  trong suốt 1px trên/dưới lấy `Canvas` (`core/form.scss` cho `.mat-mdc-option`, `select.component.scss` cho
+  `.sd-select-all-row`). Màu hệ thống do tác giả đặt được giữ trong forced colors, Canvas trùng nền panel nên khe vô hình,
+  option vẫn 36px (không đụng padding, virtual scroll không đổi).
+- **Chấm indicator sd-button**: `forced-color-adjust: none`, nền `CanvasText`, chữ `Canvas`, vòng 2px `Canvas`; disabled `GrayText`.
+  Selector `.sd-button__indicator[data-color]` để thắng vòng màu theo `indicatorColor`.
+- **Spec** (RED trước): helper mới `findCssRule(selector, media?)` trong `testing/test-utils.ts` (đọc rule trong
+  `@media (forced-colors: active)` vì Karma không giả lập được forced colors); spec ở `form-field-control-tokens.spec.ts` và
+  `button.component.spec.ts`. Kiểm bằng Playwright `emulateMedia({ forcedColors: 'active' })`:
+  `tools/check-forced-colors.mjs` — viền option = Canvas, 36px; chấm và số nền CanvasText.
+- **Kiểm tra:** button + select + autocomplete + panel 340/341 (1 timeout spec cuộn ảo 10k, chạy riêng 13/13 cả trước và
+  sau sửa), `test:theme` 53/53, `check:scss-hex` 0, lint file đổi, `check:sync`. Full Karma chưa chạy lại (showcase đang
+  mở cho user review).

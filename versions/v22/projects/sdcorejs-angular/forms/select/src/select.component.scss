@@ -178,6 +178,12 @@
     border-bottom: 1px solid transparent;
     background-clip: padding-box;
 
+    // Forced colors: viền trong suốt bị vẽ thành vạch — lấy Canvas như option (core/form.scss).
+    @media (forced-colors: active) {
+      border-top-color: Canvas;
+      border-bottom-color: Canvas;
+    }
+
     // Dưới ô lọc: cách 4px. Không có ô lọc: hàng là phần tử đầu, chừa 4px trên cho cân với 4px dưới.
     &:not(:first-child) {
       margin-top: 4px;

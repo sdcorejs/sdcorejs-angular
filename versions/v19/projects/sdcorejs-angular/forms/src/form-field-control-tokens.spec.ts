@@ -7,6 +7,7 @@ import { SdAutocomplete } from '../autocomplete';
 import { SdInput } from '../input';
 import { SdSelect } from '../select';
 import { SdFormsModule } from './forms.module';
+import { findCssRule } from '../../testing/test-utils';
 
 // Control tokens (design handoff wave 2 · D) on the shipped theme: radius, outline, focus ring, label
 // background, disabled background and the select / autocomplete panels.
@@ -209,6 +210,24 @@ describe('Form field control tokens with the shipped theme', () => {
       expect(style.borderTopColor).toBe('rgba(0, 0, 0, 0)');
       expect(style.backgroundClip).toBe('padding-box');
       expect(option.getBoundingClientRect().height).toBe(36);
+    });
+
+    // Forced colours paint even a transparent border in a system colour, which drew a line above and below every
+    // option; the gap borders take the panel's Canvas colour there instead (height and gap unchanged).
+    it('keeps the option gap invisible under forced colours', async () => {
+      fixture.componentInstance.single().open();
+      await settle();
+      const forced = /forced-colors:\s*active/;
+      for (const selector of [
+        /\.sd-select-panel \.mat-mdc-option(,|$)/,
+        /\.sd-autocomplete-panel \.mat-mdc-option(,|$)/,
+        /\.sd-select-all-row$/,
+      ]) {
+        const rule = findCssRule(selector, forced);
+        expect(rule).withContext(String(selector)).toBeDefined();
+        expect(rule!.borderTopColor.toLowerCase()).withContext(String(selector)).toBe('canvas');
+        expect(rule!.borderBottomColor.toLowerCase()).withContext(String(selector)).toBe('canvas');
+      }
     });
 
     it('paints the select and autocomplete panels with --sd-select-panel-bg', async () => {
