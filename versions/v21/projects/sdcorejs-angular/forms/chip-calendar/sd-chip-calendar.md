@@ -110,7 +110,7 @@ Applied automatically on `<sd-chip-calendar>` for styling hooks:
 
 ## Visual cues (helps agent map screenshots → component)
 
-- Outlined field with one chip per chosen day, sorted by date and shown as `09/05/2026`; each chip has a ✕, or a lock icon when `removable` keeps it (locked chips have a lighter background). Both icons are 12 / 14 / 16 px at `sm` / `md` / `lg`; hovering the ✕ shows a round background 2px wider than the icon on each side
+- Outlined field with one chip per chosen day, sorted by date and shown as `09/05/2026`; each chip has a ✕, or a lock icon when `removable` keeps it (locked chips have a lighter background). Both icons are 12 / 14 / 16 px at `sm` / `md` / `lg`, 4px after the date and 5px from the chip's end, centred in the chip (the lock takes the place of the ✕); hovering the ✕ shows a round background 2px wider than the icon on each side, 3px from the chip's end
 - With `maxVisible`, a borderless “+N” button after the visible chips
 - Suffix: a clear button (`clearable`, on hover or while the popup is open) and a calendar button that turns primary while the popup is open
 - While the popup is open, the field keeps its focused outline

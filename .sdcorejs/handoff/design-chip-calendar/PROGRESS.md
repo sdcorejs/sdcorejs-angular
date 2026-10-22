@@ -136,3 +136,7 @@ Trong sd-table thật và trong form-render trên showcase chưa chụp (đã c�
   khoá); lớp hover `::after` của Material (hộp không vuông, `border-radius: 50%`) vẽ hình bầu dục chồng lên nền của mình.
   Cỡ icon giờ theo `--sd-icon-size`; màu lớp trạng thái của Material là `transparent` (token
   `trailing-action-state-layer-color`), còn `::after` vẫn là vùng bấm 24×24 khi `pointer: coarse`.
+- Vị trí icon (user báo khoá lệch và sát chữ): khoá nằm trong nhãn với `margin-left: -1px` nên lấn chữ 1px và canh theo
+  baseline (lệch xuống ~0.6px); nút ✕ là chính phần tử trailing action nên `padding` của nó đè mất đệm cuối 3px, ✕ chỉ
+  cách mép chip 2px (vòng hover chạm viền). Giờ cả hai: chữ → icon 4px, icon → mép chip 5px (vòng hover cách mép 3px), khoá
+  canh giữa theo chiều cao chip (nhãn của chip khoá xếp flex). Spec so hình học của khoá với ✕ ở cả ba cỡ.

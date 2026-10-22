@@ -228,6 +228,36 @@ describe('SdChipCalendar · design handoff step 3 · size scale (C2)', () => {
       // `::after` vẫn còn (vùng bấm 24×24 khi pointer: coarse), chỉ lớp màu hover / focus của Material là trong suốt.
       expect(getComputedStyle(remove, '::after').backgroundColor).withContext('Material state layer').toBe('rgba(0, 0, 0, 0)');
     });
+
+    // why: khoá từng nằm trong dòng chữ với `margin-left: -1px` — lấn vào chữ 1px, lệch xuống theo baseline và cách mép
+    // phải khác ✕. Chip khoá phải giống hệt chip bỏ được, chỉ khác icon.
+    it(`${size}: the lock sits where the ✕ sits on a removable chip`, async () => {
+      const fixture = TestBed.createComponent(SizeHost);
+      fixture.componentInstance.size = size;
+      fixture.componentInstance.model = ['2031/10/05', '2031/10/12'];
+      fixture.componentInstance.removable = day => day !== '2031/10/05';
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+      const host = fixture.nativeElement as HTMLElement;
+      const geometry = (chip: HTMLElement, glyph: HTMLElement) => {
+        const c = chip.getBoundingClientRect();
+        const t = chip.querySelector('.sd-chip-calendar__chip-text')!.getBoundingClientRect();
+        const g = glyph.getBoundingClientRect();
+        return { textToGlyph: g.left - t.right, glyphToEdge: c.right - g.right, centre: g.top + g.height / 2 - (c.top + c.height / 2) };
+      };
+      const locked = host.querySelector('.sd-chip-calendar__chip--locked') as HTMLElement;
+      const removable = host.querySelector('.sd-chip-calendar__chip:not(.sd-chip-calendar__chip--locked)') as HTMLElement;
+      const lock = geometry(locked, locked.querySelector('.sd-chip-calendar__lock mat-icon') as HTMLElement);
+      const close = geometry(removable, removable.querySelector('.mat-mdc-chip-remove mat-icon') as HTMLElement);
+
+      // ✕: 2px đệm của nút + 3px đệm cuối chip (handoff) — vòng hover cách mép chip 3px, không chạm viền.
+      expect(close.textToGlyph).withContext('text → ✕').toBeCloseTo(4, 0);
+      expect(close.glyphToEdge).withContext('✕ → chip edge').toBeCloseTo(5, 0);
+      expect(lock.textToGlyph).withContext('text → lock').toBeCloseTo(close.textToGlyph, 0);
+      expect(lock.glyphToEdge).withContext('lock → chip edge').toBeCloseTo(close.glyphToEdge, 0);
+      expect(Math.abs(lock.centre)).withContext('lock centred in the chip').toBeLessThanOrEqual(0.5);
+    });
   }
 
   // why: Material cho ô nhập chip `flex: 1 0 150px`, nên ba chip trong ô 420px đã đẩy ô nhập xuống dòng hai (field 2 dòng
