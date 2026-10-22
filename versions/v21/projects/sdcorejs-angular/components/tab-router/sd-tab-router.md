@@ -30,8 +30,8 @@ Browser-style multi-tab router shell — every navigated route becomes a tab; ta
 | Layer  | Selector               | Role                                                                                                                                                                                                                                                                     |
 | ------ | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Outlet | `sd-tab-router-outlet` | Replaces `<router-outlet>`. Listens to raw router events, builds the tab list, hosts component instances via `*ngComponentOutlet`, manages activate / deactivate / close / explicit reload, and supports `replaceTab`, `switchTab`, and `forceReload` navigation states. |
-| Nav    | `sd-tab-router-nav`    | Renders the horizontal tab strip on top. Supports drag-to-reorder (CDK Drag-Drop, locked to X-axis). Auto-switches between `default` and `compact` modes based on available width / number of tabs.                                                                      |
-| Item   | `sd-tab-router-item`   | One tab pill — contains an `<sd-badge>` showing icon + name + tooltip, plus a close `×` button. Supports middle-click close; close requests delegate to `SdTabRouterService.close()` (outlet runs `beforeClose` if set).                                                 |
+| Nav    | `sd-tab-router-nav`    | Renders the 40px tab bar on top, hidden while there is one tab or none. Supports drag-to-reorder (CDK Drag-Drop, locked to X-axis).                                                                      |
+| Item   | `sd-tab-router-item`   | One tab — a 16px icon, the name (ellipsis) and a close `×` button. Supports middle-click close; close requests delegate to `SdTabRouterService.close()` (outlet runs `beforeClose` if set).                                                 |
 
 > Tab metadata (name, icon, tooltip, color) is provided **per-component** via the `@SdTabComponent` decorator (see Decorator below). Routes don't declare the metadata — the destination component does.
 
@@ -67,6 +67,14 @@ None.
 - Soft cap warning: if the user opens more than 30 tabs, `SdNotifyService.warning('Bạn đã mở quá nhiều tab.')` fires
 - Closing the active tab navigates to the neighbor (next, then previous, else `/`)
 
+### Height
+
+The host is `height: 100vh` followed by `height: 100dvh`: browsers that support `dvh` (Chrome 108, Safari 15.4, Firefox 101) leave out the mobile address bar, older ones keep `100vh`. Under a header, set the height on the element — an inline style wins over the component's `:host` rule:
+
+```html
+<sd-tab-router-outlet style="height: calc(100dvh - 56px)"></sd-tab-router-outlet>
+```
+
 ## `<sd-tab-router-nav>`
 
 ### Inputs
@@ -77,11 +85,12 @@ None.
 
 ### Behaviors
 
-- Renders the strip horizontally, scrollable / wrapped depending on count
-- `mode` is internal: switches to `'compact'` when `(width − tabs*68) / tabs <= 20` — i.e. when each tab would be too narrow to show a name, items collapse to icon-only
+- The bar is 40px tall, padding `0 8px`, background `--sd-tab-router-nav-bg`; tabs sit on its bottom edge
+- Hidden (`height: 0; visibility: hidden`) while there is one tab or none — the default, with no input. When the second tab opens the bar grows from 0 to 40px in 150ms (no motion under `prefers-reduced-motion`). While the bar is hidden the only tab cannot be closed from the UI
+- Each tab prefers 200px and shrinks to 120px at least; extra tabs are clipped by the bar
+- The 1×16px divider on the right of each tab hides on both sides of the open tab and of the hovered tab
 - `cdkDropList` lockaxis x → user drags tabs left/right to reorder (mutates `tabs` in place via `moveItemInArray`)
-- Hidden when only 1 tab exists (`[class.d-none]="tabs.length > 1"` — note: this template condition hides the bar when MORE than 1 tab; check carefully if you fork)
-- Re-checks UI mode on `window:resize`
+- `mode` and `checkUI()` remain public members but no longer change the look (the old `compact` styles targeted classes that no longer existed)
 
 ## `<sd-tab-router-item>`
 
@@ -97,7 +106,11 @@ None.
 - Middle-click (`mousedown` button 1 default-prevented; `mouseup` triggers close) → close tab
 - Close `×` / middle-click → `tabRouterService.close(tab)`; outlet `#closeTab` runs `tab.beforeClose` if defined. It closes only on `true`; `false`, throw, and rejection all fail closed.
 - Tab info (`name`, `icon`, `tooltip`, `color`) is reactive via `tab.tabInfoChanges: Subject<SdTabInfo>` — components can call `next(...)` to update their tab pill at runtime (e.g. show unsaved-changes dot, change name after rename)
-- `<sd-badge>` renders the visual: `icon` → `[icon]`, `name` → `[title]` (the pill label), `tooltip` (falls back to `name`) → `[tooltip]`, `color` → `[color]`
+- The tab shows the icon (16px, `--sd-<color>-dark` of `color`, primary when unset; nothing when there is no icon) and the name (13px/18px, one line, ellipsis). It does not use `<sd-badge>`
+- Tooltip (`[sdTooltip]`): the builder's `tooltip` when set; otherwise the full name, only when the name is cut. Whether the name is cut is measured on `mouseenter` / `focusin` (`measureTruncation()`, `truncated()`)
+- Not open: no background, `--sd-tab-router-item-text`. Hover: `--sd-tab-router-item-hover-bg`. Open (`tab-router__item--active`, and `sd-tab-router-item--active` on the host): `--sd-tab-router-item-active-bg`, `--sd-text`, weight 500
+- Close button: 20×20, 6px corners, 14px icon. Always shown on the open tab and under `pointer: coarse` (32px hit area); on other tabs only on hover or focus
+- Focus: a 2px ring drawn inside the tab (`outline-offset: -2px`). Under `forced-colors` the open tab is outlined in `CanvasText`, because backgrounds are dropped
 
 ## Decorator: `@SdTabComponent`
 
@@ -118,8 +131,8 @@ export class EmployeeDetailComponent { ... }
 | `component` | `Type<any>` (REQUIRED)       | The component class this metadata belongs to.                           |
 | `name`      | `string \| (args) => string` | Tab label. Function form receives `{ url, params, queryParams, data }`. |
 | `icon`      | `string \| (args) => string` | Material icon name.                                                     |
-| `tooltip`   | `string \| (args) => string` | Hover tooltip on the badge.                                             |
-| `color`     | `Color \| (args) => Color`   | Badge color token.                                                      |
+| `tooltip`   | `string \| (args) => string` | Tooltip of the tab; without it the name is the tooltip only when cut. |
+| `color`     | `Color \| (args) => Color`   | Colour of the icon (`--sd-<color>-dark`); primary when unset.          |
 
 The decorator writes the builder into a plain module-level collection at class-definition time. `<sd-tab-router-outlet>` drains that collection into `SdTabRouterService` when it initialises, and any class decorated later (lazy routes) is forwarded straight to the connected outlet.
 
@@ -163,17 +176,20 @@ interface SdTabInfo {
 }
 ```
 
+## Theming
+
+Tokens (see `assets/THEME.md`, "Tab router tokens"): `--sd-tab-router-nav-bg`, `--sd-tab-router-item-hover-bg`, `--sd-tab-router-item-active-bg`, `--sd-tab-router-item-text`, `--sd-tab-router-item-divider`. All derive from the palette with one expression for light and dark. Deprecated and no longer read: `--sd-tab-router-item-muted-bg`, `--sd-tab-router-badge-bg`.
+
 ## Visual cues (helps agent map screenshots → component)
 
 - A horizontal strip of "tab pills" at the top of the main content area, browser-style
 - Each pill (`.tab-router__item`):
-  - Pill / chip shape rendered via `<sd-badge>` (rounded, colored)
-  - Icon on the left, name in the middle, close `×` (Material `close` icon) on the right
-  - Active tab has class `tab-router__item--active` — typically a brighter background and a bottom indicator
-  - Drag-handle: the whole pill is draggable horizontally (cursor changes to `grab` on hover)
-- Compact mode (when too many tabs): names disappear, only icon + close remain
+  - Browser-style tab with 8px top corners, 34px tall, on a 40px grey bar; no bar at all while one tab is open
+  - Coloured 16px icon on the left, name in the middle (ellipsis), close `×` (Material `close` icon) on the right
+  - The open tab (`tab-router__item--active`) has the surface background and joins the content below; other tabs have no background
+  - Drag-handle: the whole tab is draggable horizontally
 - Below the strip is `.tab-router__list`, a stack of `.tab-router__pane` divs — only the one with `.active` is visible (display toggled in CSS); others are kept in DOM (state preserved)
-- Empty state: an empty `.tab-router__empty` div (intentionally blank — the page should render its own welcome content via a default route)
+- No tab: the list is empty (the page should render its own welcome content via a default route)
 
 ## Examples
 
@@ -280,12 +296,12 @@ this.tab.tabInfoChanges.next({
 
 - Tabs are `<a>` anchors with `[href]` bound to the `tab.url` string → right-click "open in new tab" works (creates a new browser tab, leaves the SPA-tab list alone)
 - Close button is a real `<button type="button">` with an i18n `aria-label` (`core.common.close`) and a `:focus-visible` ring. It is keyboard reachable and Enter/Space close the tab. It previously carried `aria-hidden="true"` — which still let it take tab focus while announcing nothing, strictly worse than doing nothing.
-- The `<sd-badge>` inside a tab is **not** interactive: no `role`, no `tabindex`, no `(click)` binding. Clicks bubble up to the enclosing `<a>`, so there is no interactive-inside-interactive nesting.
+- The icon is decorative (`aria-hidden`); the close button is the only interactive element inside a tab.
 - No `role="tablist" / "tab" / "tabpanel"` ARIA wiring (this is a router shell, not WAI-ARIA tabs)
 
 ## Related
 
-- `<sd-badge>` — used to render each tab pill
+- `[sdTooltip]` — the tooltip of a tab whose name is cut
 - Angular `Router` — drives all tab creation / activation
 - `SdTabRouterService` — programmatic API for `setCurrentTab`, `close`, event stream
 - `SdTabDecoratorService` — legacy wiring layer; still publishes `SdTabRouterService` on a static `BehaviorSubject`, but `@SdTabComponent` no longer subscribes to it

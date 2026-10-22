@@ -190,7 +190,7 @@ None — content is driven by `title`, `description`, and `icon`.
 - The CSS dot of `type="icon"` is decorative (`aria-hidden`); the title carries the meaning.
 - `type="dot"` shows no text, so its root carries the name: `role="img"` + `aria-label` from `title` (`role="button"` when clickable). Always pass `title`; where there is room, show the status in text next to the dot as well.
 - An interactive `pair` is named from `label` + `title` ("SLA 4 giờ").
-- `onClick` only calls `stopPropagation()` when the `click` output actually has a subscriber. A badge with no listener lets the event bubble to the enclosing control — this is how `<sd-tab-router>` can place a badge inside its `<a>` without nesting two interactive elements.
+- `onClick` only calls `stopPropagation()` when the `click` output actually has a subscriber. A badge with no listener lets the event bubble to the enclosing control, so a badge inside a link or a clickable row does not nest two interactive elements.
 
 ## Anti-patterns
 - Using `<sd-badge>` as a primary action — it's a status indicator; for actions use `<sd-button>` or `<sd-quick-action>`

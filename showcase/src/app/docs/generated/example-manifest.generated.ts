@@ -195,8 +195,8 @@ export type ShowcaseExampleSourceKey =
   | "components/stepper/example-linear-wizard"
   | "components/stepper/example-optional-step"
   | "components/stepper/example-vi-tri-nhan"
-  | "components/tab-router/example-preview-dai-tab"
   | "components/tab-router/example-replacetab-beforeclose"
+  | "components/tab-router/example-thu-truc-tiep"
   | "components/tab-router/example-tich-hop-app-shell"
   | "components/tab/example-bang-mau-color"
   | "components/tab/example-can-tab-sang-phai"
@@ -1868,11 +1868,11 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Existing “Điều khiển từ ngoài” scenario preserved from the showcase.",
   },
   {
-    sourceKey: "components/tab-router/example-preview-dai-tab",
+    sourceKey: "components/tab-router/example-thu-truc-tiep",
     pageKey: "components/tab-router",
-    sectionId: "example-preview-dai-tab",
-    title: "Preview dải tab",
-    description: "Existing “Preview dải tab” scenario preserved from the showcase.",
+    sectionId: "example-thu-truc-tiep",
+    title: "Thử trực tiếp",
+    description: "Mở một màn có sd-tab-router-outlet thật: một tab thì thanh ẩn, mở thêm tab thì thanh hiện; thử 16 tab, rê chuột vào tên bị cắt để xem tooltip.",
   },
   {
     sourceKey: "components/tab-router/example-tich-hop-app-shell",

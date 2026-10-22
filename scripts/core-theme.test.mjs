@@ -327,6 +327,24 @@ test('Button indicator ring is the page surface in light and dark', () => {
   }
 });
 
+// Wave 3 · 3a: the sd-tab-router bar derives from the palette with one expression in light and dark.
+const TAB_ROUTER_TOKENS = {
+  '--sd-tab-router-nav-bg': 'color-mix(in srgb, var(--sd-surface-muted) 60%, var(--sd-surface))',
+  '--sd-tab-router-item-hover-bg': 'color-mix(in srgb, var(--sd-text) 6%, var(--sd-tab-router-nav-bg))',
+  '--sd-tab-router-item-active-bg': 'var(--sd-surface)',
+  '--sd-tab-router-item-text': 'var(--sd-text-secondary)',
+  '--sd-tab-router-item-divider': 'color-mix(in srgb, var(--sd-border) 70%, var(--sd-tab-router-nav-bg))',
+  // Deprecated: kept one release as an alias of the bar background.
+  '--sd-tab-router-item-muted-bg': 'var(--sd-tab-router-nav-bg)',
+};
+
+test('Tab router tokens derive from the palette with one expression in light and dark', () => {
+  for (const mode of ['light', 'dark']) {
+    const tokens = declarations(compile(`.x { @include sd.theme($mode: '${mode}'); }`));
+    for (const [name, value] of Object.entries(TAB_ROUTER_TOKENS)) assert.equal(tokens[name], value, `${mode} ${name}`);
+  }
+});
+
 // Wave 3 · 2a: the ring around the sd-avatar status dot separates it from the avatar with the page surface.
 test('Avatar status ring is the page surface in light and dark', () => {
   for (const mode of ['light', 'dark']) {

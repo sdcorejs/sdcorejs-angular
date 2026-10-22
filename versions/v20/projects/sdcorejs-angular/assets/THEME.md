@@ -293,6 +293,24 @@ light and dark. The column colour only marks the 8px dot or the prefix icon.
 
 `npm run test:theme` checks `--sd-text` and `--sd-text-secondary` on the lane (at least 4.5:1) for every preset and dark.
 
+## Tab router tokens
+
+The `sd-tab-router` bar derives from the palette, with one expression for light and dark (design handoff wave 3).
+
+| Token | Value |
+| --- | --- |
+| `--sd-tab-router-nav-bg` | `color-mix(in srgb, var(--sd-surface-muted) 60%, var(--sd-surface))` |
+| `--sd-tab-router-item-hover-bg` | `color-mix(in srgb, var(--sd-text) 6%, var(--sd-tab-router-nav-bg))` |
+| `--sd-tab-router-item-active-bg` | `var(--sd-surface)` — the open tab joins the content below it |
+| `--sd-tab-router-item-text` | `var(--sd-text-secondary)` — tabs that are not open; the open tab uses `--sd-text` |
+| `--sd-tab-router-item-divider` | `color-mix(in srgb, var(--sd-border) 70%, var(--sd-tab-router-nav-bg))` |
+
+Deprecated, no longer read by the bar and removed in a later release: `--sd-tab-router-item-muted-bg` (now an alias of
+`--sd-tab-router-nav-bg`) and `--sd-tab-router-badge-bg`.
+
+`npm run test:theme` checks `--sd-tab-router-item-text` on the bar and on a hovered tab, and `--sd-text` on the open
+tab (at least 4.5:1) for every preset and dark.
+
 ## Badge size tokens
 
 `sd-badge` reads three size tokens with a fallback; they are not part of `sd.theme()` and have no dark value. Set them

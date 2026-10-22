@@ -127,9 +127,9 @@ describe('SdTabRouterNav', () => {
     expect(cmp.mode).toBe('default');
   });
 
-  it('applies tab-router__nav--default class when mode is default', () => {
-    const nav = fixture.nativeElement.querySelector('.tab-router__nav--default') as HTMLElement;
-    expect(nav).not.toBeNull();
+  it('no longer marks the nav with a mode class (compact styles targeted classes that were gone)', () => {
+    expect(fixture.nativeElement.querySelector('.tab-router__nav--default')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.tab-router__nav--compact')).toBeNull();
   });
 
   it('onDrop reorders tabs via moveItemInArray', () => {
@@ -146,20 +146,19 @@ describe('SdTabRouterNav', () => {
     expect(host.tabs[2].key).toBe('k1');
   });
 
-  it('hides nav (d-none) when only 1 tab is present (docs: condition is tabs.length > 1)', () => {
-    // The template: [class.d-none]="tabs().length > 1" hides when MORE than 1
+  // why: điều kiện cũ `[class.d-none]="tabs().length > 1"` bị ngược — thanh ẩn đúng lúc có nhiều tab (đợt 3 · 3a).
+  it('hides the nav when only 1 tab is present', () => {
     host.tabs = [makeTab({ key: 'k1', url: '/a' })];
     fixture.detectChanges();
     const nav = fixture.nativeElement.querySelector('.tab-router__nav') as HTMLElement;
-    // With 1 tab, tabs().length > 1 is false → d-none NOT applied
-    expect(nav.classList.contains('d-none')).toBe(false);
+    expect(nav.classList.contains('tab-router__nav--hidden')).toBe(true);
   });
 
-  it('applies d-none class when more than 1 tab', () => {
+  it('shows the nav when more than 1 tab is present', () => {
     host.tabs = [makeTab({ key: 'k1', url: '/a' }), makeTab({ key: 'k2', url: '/b' })];
     fixture.detectChanges();
     const nav = fixture.nativeElement.querySelector('.tab-router__nav') as HTMLElement;
-    expect(nav.classList.contains('d-none')).toBe(true);
+    expect(nav.classList.contains('tab-router__nav--hidden')).toBe(false);
   });
 });
 
@@ -334,12 +333,24 @@ describe('SdTabRouterOutlet', () => {
     expect(nav).not.toBeNull();
   });
 
-  it('shows tab-router__empty when tabs signal is empty', () => {
-    // Initial state: no tabs
+  // why: `100vh` trên mobile tính cả phần thanh địa chỉ đang hiện; `100dvh` thì không (đợt 3 · 3a). Dòng 100vh đứng
+  // trước làm fallback; CSSOM chỉ giữ khai báo thắng nên spec chỉ thấy được 100dvh.
+  it('sizes the host to 100dvh', () => {
+    const hostRules = Array.from(document.styleSheets)
+      .flatMap(sheet => Array.from(sheet.cssRules))
+      .filter((rule): rule is CSSStyleRule => rule instanceof CSSStyleRule && /^\[_nghost-[^\]]+\]$/.test(rule.selectorText))
+      .filter(rule =>
+        Array.from(rule.parentStyleSheet!.cssRules).some(r => /tab-router__pane/.test((r as CSSStyleRule).selectorText ?? ''))
+      );
+    expect(hostRules.length).toBe(1);
+    expect(hostRules[0].style.height).toBe('100dvh');
+  });
+
+  // why: `.tab-router__empty` từng là một div trống không có style hay nội dung — đã bỏ (đợt 3 · 3a).
+  it('renders no pane and no placeholder when the tabs signal is empty', () => {
     expect((outletCmp as any).tabs()).toEqual([]);
     fixture.detectChanges();
-    const empty = fixture.nativeElement.querySelector('.tab-router__empty');
-    expect(empty).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.tab-router__list')!.children.length).toBe(0);
   });
 
   it('tabTrackBy returns tab.key', () => {

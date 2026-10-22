@@ -106,6 +106,11 @@ Mới (đủ 5 locale vi/en/ja/ko/zh):
 | 1c `sd-badge-picker`, `SD_BADGE_TYPE_OPTIONS`, `SD_BADGE_ICON_PRESET` | xong | Ảnh: `wave3-1c-badge-picker.png` (chỉ bản sau — component mới). Trang showcase mới `components/badge-picker` |
 | 2a avatar: `status`, `statusLabel`, `statusPulse`, `name`, token `avatar-status-ring` | xong | Ảnh: `wave3-2a-avatar-status.png` (ví dụ cũ không đổi giao diện nên chỉ chụp ví dụ mới) |
 | 2b `sd-avatar-group` | xong | Ảnh: `wave3-2b-avatar-group.png`. Trang showcase mới `components/avatar-group`. Thêm input `tooltip` cho sd-avatar |
+| 3a thanh tab, bỏ badge, điều kiện ẩn, dọn code, token, route showcase sống | xong | Ảnh: `wave3-3a-tab-bar.png` (chỉ bản sau — bản cũ không có route sống để chụp). Route mới `/demo/tab-router` |
+| 3b cuộn, lớp mờ, nút + menu danh sách | chưa | Làm tiếp từ đây — xem "Bàn giao" |
+| 3c tablist, roving, kéo thả, menu chuột phải | chưa | |
+| 3d `dirty`, `syncBrowserTitle` | chưa | |
+| 4a–4d upload-file | chưa | |
 
 Lệch khỏi thông số ở bước 1a (đã báo user):
 - **Type icon to hơn một bậc** (user chọn 2026-10-21, theo HTML thay vì bảng `badge.md`): chữ sm 13/18, md 14/20,
@@ -143,3 +148,101 @@ Ghi chú bước 2b:
 - sd-avatar có thêm input `tooltip` (ngoài spec) để group đặt "{tên} · {trạng thái}" mà không chồng tooltip ảnh của avatar.
 - Popover: dòng có `tabindex=0` trong `cdkTrapFocus` (focus dòng đầu khi mở); avatar trong dòng `aria-hidden` vì tên và trạng thái đã viết bên cạnh.
 - Trạng thái trống thì để trống (theo md), không hiện "Không có trạng thái" như HTML.
+
+Ghi chú bước 3a:
+- Tab vẫn là `<a href>` ở bước này; đổi sang phần tử `role="tab"` (QĐ 11) thuộc bước 3c.
+- `mode` / `checkUI()` của nav vẫn còn (outlet còn gọi `checkUI()`), chỉ bỏ style compact (nhắm vào class không còn tồn
+  tại). Gỡ hẳn ở 3b khi có cuộn ngang. Thanh hiện `overflow: hidden`, tab thừa bị xén.
+- Ẩn thanh bằng `height: 0; visibility: hidden` (class `tab-router__nav--hidden`) — `visibility` để tab trong thanh ẩn không
+  nhận focus. Transition height 150ms; reduced-motion tắt.
+- Vạch ngăn: `::after` trên host item; nav ẩn nó bằng `:has(+ …)` cho tab trước tab đang mở / đang hover. Host item có class
+  `sd-tab-router-item--active` (host binding mới) để nav nhìn thấy tab đang mở.
+- Tooltip của tab: `[sdTooltip]` trên `<a>`, nội dung = `tooltip` của builder, nếu không thì tên khi bị cắt (đo khi
+  `mouseenter`/`focusin`, dùng `#wantsOpen` của sdTooltip như badge).
+- Thêm (ngoài md): dưới `forced-colors` tab đang mở có khung 1px `CanvasText` (nền bị bỏ nên không còn phân biệt được).
+- Màu icon `--sd-<color>-dark`, mặc định primary (HTML: #004a99 / #1e6b3a / #8a5300). Icon qua input `size` của sd-icon
+  (CSS `width` trên host sd-icon không thắng `--sd-icon-size`).
+- Token: `--sd-tab-router-badge-bg` cũng không còn ai đọc (chỉ `.tab-router__icon` cũ dùng) → ghi Deprecated cùng
+  `item-muted-bg` (ngoài danh sách md, cần user xác nhận).
+- **Bug có sẵn phát hiện khi viết demo (chưa sửa, ngoài phạm vi):** outlet dựng tab bất đồng bộ sau `NavigationEnd` và đọc
+  `router.routerState` lúc đó. Điều hướng liên tiếp nhanh (await `navigateByUrl` rồi điều hướng tiếp) làm tab của URL
+  trước nhận nhầm component/route của URL sau (tên tab sai). Demo `/demo/tab-router` né bằng cách đợi
+  `currentTabChanges` báo đúng URL rồi mới đi tiếp. Nên hỏi user có mở việc riêng để sửa (chụp snapshot theo
+  `event.id` lúc NavigationEnd thay vì đọc lại routerState trong hàng đợi).
+
+## 10. Bàn giao (máy khác tiếp tục)
+
+Cập nhật 2026-10-22, sau commit bước 3a. Nhánh `feat/design-handoff-wave-1-2` đã push lên origin. Làm tiếp từ **3b**.
+
+**Yêu cầu của user cho phần còn lại:** làm hết các bước còn lại (3b, 3c, 3d, 4a, 4b, 4c, 4d) liền một mạch, không dừng
+hỏi giữa các bước, rồi gửi **một báo cáo tổng** để review một lượt: file, spec, kết quả check, ảnh, các điểm lệch spec.
+Mỗi bước vẫn một commit local. Không tag, không publish. Push chỉ khi user bảo.
+
+**Cài đặt trên máy mới** (Node đúng 22.22.3 theo CLAUDE.md; máy cũ chạy Node 26 vẫn được nhưng CI mới là chuẩn):
+```bash
+git pull
+npm --prefix versions/v19 ci --legacy-peer-deps
+npm --prefix showcase ci --legacy-peer-deps
+cd versions/v19 && npx ng build sdcorejs-angular && cd ../..
+npm --prefix showcase run link:library
+```
+
+**Quy trình mỗi bước** (giữ như 1a–3a):
+1. Đọc lại md của component trong `design-wave-3/`, mục tương ứng của file `.dc.html` và QĐ ở §8.
+2. Viết spec RED trước; kiểm RED bằng `bash .sdcorejs/handoff/tools/kt.sh 'components/<x>/**/*.spec.ts'`.
+3. Implement chỉ trong `versions/v19/**` (không sửa tay v20/v21/v22, published-*).
+4. Cùng commit: `sd-<x>.md`, `CHANGELOG.md` mục `[Unreleased]` (Added/Changed/Fixed/Deprecated), `assets/THEME.md` nếu đổi
+   token (+ `scripts/core-theme.test.mjs`, cặp contrast trong `scripts/theme-contrast.test.mjs`), i18n đủ 5 locale
+   (`en.ts` là type chuẩn), showcase. Không hex trong SCSS ngoài fallback của `var()`; focus dùng `--sd-focus-ring-*`.
+5. Chạy nền `bash .sdcorejs/handoff/tools/run-checks.sh <bước> projects/sdcorejs-angular/components/<x>` (~15–20 phút;
+   log `$TEMP/claude/full-<bước>.log`, dòng cuối `DONE`). Tất cả phải xanh: build, Karma đủ bộ + coverage, lint,
+   test:theme, check:scss-hex, sync + check:sync, script tests, showcase tests.
+6. Ảnh: showcase `npm --prefix showcase start` (port 4210), `node .sdcorejs/handoff/tools/shots-page.mjs
+   http://localhost:4210 <dir> components/<slug>` hoặc script riêng như `shots-wave3-3a.mjs`; ghép bằng
+   `compose-only.mjs <dir> .sdcorejs/handoff/screenshots/wave3-<bước>-<tên>.png "<tiêu đề>"`.
+7. Ghi dòng tiến độ + ghi chú lệch spec vào §9, quét mojibake các file đã sửa, commit local
+   (`feat(tab-router): …`, kèm dòng Co-Authored-By như các commit trước).
+
+**Bẫy đã gặp:**
+- Karma resolve `@sdcorejs/angular/*` từ `dist` trước source → build lib trước khi chạy spec có import entry khác.
+- Chrome trên máy dev báo `prefers-reduced-motion: reduce` → computed `animation`/`transition` là none; spec đọc rule CSS
+  (helper `cssRule()` trong `tab-router-bar.component.spec.ts`). CI không bật reduced-motion → spec đo kích thước sau
+  transition phải tắt transition inline. CSSOM chỉ giữ khai báo thắng (không thấy dòng fallback `100vh`).
+- Showcase test báo "export 'X' was not found" → xoá `showcase/.angular/cache/*/angular-webpack` và `babel-webpack`
+  (run-checks đã làm).
+- Thêm/bớt trang showcase: sửa số đếm cứng ở `showcase/.../documentation.registry.spec.ts` và
+  `scripts/generate-showcase-route-shells.test.mjs`; chạy `npm run generate:showcase-examples` rồi
+  `git checkout -- showcase/src/app/docs/generated/changelog.generated.ts`.
+- `viewChild` không dùng được trên field `#private` (lỗi NG1053). Repo `core.autocrlf=true`, file có CRLF — script sửa
+  file nên chuẩn hoá về LF. Heredoc của bash làm mất dấu `\` (regex trong spec) → viết script ra file rồi chạy, hoặc dùng Edit.
+- Quét mojibake: `node .sdcorejs/handoff/tools/mojibake-scan.mjs [base-ref]` (`5992185b` = cả đợt 3).
+- Dev server showcase (esbuild) bắt export mọi component dùng trong `imports` của component khác cùng file (TS-993004);
+  Karma (webpack) không bắt, nên luôn mở thử trang trên dev server.
+- Spec trong nav dùng key tab khác nhau mỗi lần dựng: `@for` track theo key, key trùng thì item giữ subscription tới
+  `tabInfoChanges` của tab cũ.
+
+**Ghi chú thiết kế cho các bước còn lại** (đã chốt lúc lập kế hoạch, theo `tab-router.md`):
+- **3b:** bỏ `mode`, `checkUI`, `@HostListener('window:resize')` của nav và các lệnh gọi `tabRouterNav()?.checkUI()` trong
+  outlet (sửa spec cũ `checkUI …` trong `tab-router.component.spec.ts`). Thanh `overflow-x: auto` ẩn scrollbar; lăn dọc
+  → cuộn ngang; đổi tab thì đặt `scrollLeft` (sau `afterNextRender`) để tab đang mở hiện trọn. Lớp mờ 32px gradient từ
+  `--sd-tab-router-nav-bg`, chỉ ở cạnh còn nội dung khuất. Nút danh sách chỉ hiện khi tràn: cố định cuối thanh, vạch 1px,
+  cao 30px, bo 8px, số tab (tabular-nums) + `expand_more`. Menu 320px, bo/viền/bóng panel token, padding 6px, tiêu đề
+  "{n} tab đang mở", mục 36px (icon, tên ellipsis, nút đóng khi hover), mục đang mở nền primary 8% + weight 500, cuộn khi
+  >300px. i18n mới (5 locale): `core.component.tab-router.{open-tabs, tab-list}` (+ `close-tab`, `close-others` dùng ở 3c).
+- **3c:** đổi `<a href>` thành phần tử `role="tab"` không href (QĐ 11; spec cũ về `href` trong
+  `tab-router-item.component.spec.ts` phải viết lại). Thanh `role="tablist"`; tab có `aria-selected`, `aria-controls` trỏ
+  pane (id pane hiện là `tab.key` — hash, cần tiền tố để thành id hợp lệ). Roving tabindex: ←/→, Home/End, Enter/Space mở,
+  Delete đóng; nút đóng `tabindex="-1"`. Đóng tab đang mở → focus + mở tab bên phải, không có thì bên trái. Kéo thả: giữ
+  khoá trục X, preview nổi có bóng + bo 4 góc 8px, placeholder nền primary 12% viền primary mảnh; `onDrop` phát mảng mới
+  (output mới ở nav, outlet set signal `tabs`) thay vì `moveItemInArray` trên input. Menu chuột phải (chuột phải,
+  Shift+F10, phím Menu): "Đóng tab" (icon `close`), "Đóng các tab khác"; mục 34px, panel token. `SdTabRouterService
+  .closeOthers(tab)` (action mới) chạy `beforeClose` của từng tab, tab trả false thì giữ.
+- **3d:** `SdTabInfo.dirty?: boolean` qua `tabInfoChanges`; chấm 8px `--sd-text-secondary` ở chỗ nút đóng, hover/focus thì
+  thành nút đóng; tab đang mở mà dirty hiện chấm tới khi hover. Outlet input `syncBrowserTitle` (mặc định false): service
+  `Title`, "{tên tab} – {tên app}" (tên app = `document.title` lúc outlet khởi tạo), cập nhật khi đổi tab và khi tên đổi,
+  dirty thì thêm "● " đầu; huỷ outlet hoặc `disabled` thì trả tiêu đề cũ. Demo: nút bật dirty + công tắc
+  `syncBrowserTitle` trong `/demo/tab-router` (`showcase/src/app/pages/components/tab-router/live/`).
+- **4a–4d:** theo §1, §6, QĐ 10, 13, 14, 15 và `upload-file.md`.
+
+**Cuối cùng:** quét mojibake toàn bộ diff đợt 3; một báo cáo tổng cho user (gồm các điểm cần user xác nhận đã ghi trong
+§9: `tab-router-badge-bg` Deprecated, bug race của outlet, các lệch spec từng bước).

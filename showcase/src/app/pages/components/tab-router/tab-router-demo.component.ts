@@ -1,34 +1,33 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { SdButton } from '@sdcorejs/angular/components/button';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
-import { SdBadge } from '@sdcorejs/angular/components/badge';
+import { TAB_ROUTER_DEMO_BASE } from './live/tab-router-live.component';
 
-// TODO: <sd-tab-router-outlet> là router-shell, cần Router + nhiều route được decorate
-// bằng @SdTabComponent để hoạt động đầy đủ. Trong môi trường showcase đơn giản (route phẳng,
-// mỗi trang là một demo độc lập) không thể demo trực tiếp mà không thay đổi cấu trúc route.
-// Trang này hiển thị mô tả + ảnh minh họa pill, kèm hướng dẫn xem ví dụ thật trong code.
+// why: outlet nghe toàn bộ router, nên không nhúng được vào trang docs (route lá ở đây là chính trang docs). Demo
+// sống chạy ở route riêng `/demo/tab-router` với các màn con được `@SdTabComponent` khai tên và icon.
 
 @Component({
   selector: 'app-tab-router-demo',
   standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, SdBadge],
+  imports: [DemoPageComponent, DemoSectionComponent, SdButton],
   template: `
     <demo-page #demoPage
       title="Tab Router"
       description="Shell router dạng tab kiểu trình duyệt — mỗi URL được mở thành một tab, giữ nguyên state khi chuyển qua lại.">
 
-      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-preview-dai-tab') {
-      <demo-section heading="Preview dải tab" [props]="[{ name: 'routes', value: '[…]' }]">
-        <div class="strip">
-          <sd-badge type="tag" primary icon="dashboard" title="Trang chủ"></sd-badge>
-          <sd-badge type="tag" info icon="person" title="Nhân viên #001"></sd-badge>
-          <sd-badge type="tag" warning icon="edit" title="Đang chỉnh sửa hợp đồng"></sd-badge>
-          <sd-badge type="tag" success icon="check_circle" title="Phê duyệt yêu cầu"></sd-badge>
-          <sd-badge type="tag" secondary icon="settings" title="Cài đặt hệ thống"></sd-badge>
-        </div>
-        <p class="note">
-          Mỗi pill ở trên đại diện cho một tab. Click sẽ điều hướng đến URL tương ứng;
-          tab giữ state (form, scroll, request) khi user chuyển sang tab khác và quay lại.
-        </p>
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-thu-truc-tiep') {
+      <demo-section
+        heading="Thử trực tiếp"
+        [props]="[{ name: 'routes', value: '[…]' }, { name: '@SdTabComponent', value: 'template' }]"
+        note="Mở một màn có sd-tab-router-outlet thật: một tab thì thanh ẩn, mở thêm tab thì thanh hiện; thử 16 tab, rê chuột vào tên bị cắt để xem tooltip.">
+        <sd-button
+          data-tab-router-link="live"
+          type="fill"
+          color="primary"
+          prefixIcon="open_in_new"
+          title="Mở demo tab router"
+          (click)="openLive()"></sd-button>
       </demo-section>
       }
 
@@ -58,16 +57,6 @@ import { SdBadge } from '@sdcorejs/angular/components/badge';
     </demo-page>
   `,
   styles: [`
-    .strip {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      padding: 12px;
-      border: 1px dashed #d6d6d6;
-      border-radius: 8px;
-      background: #fafafa;
-      width: 100%;
-    }
     .note {
       width: 100%;
       font-size: 13px;
@@ -90,6 +79,12 @@ import { SdBadge } from '@sdcorejs/angular/components/badge';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TabRouterDemoComponent {
+  readonly #router = inject(Router);
+
+  openLive = (): void => {
+    void this.#router.navigateByUrl(`${TAB_ROUTER_DEMO_BASE}/overview`);
+  };
+
   readonly snippet1 = `<!-- app.component.html -->
 <sd-page>
   <sd-tab-router-outlet></sd-tab-router-outlet>

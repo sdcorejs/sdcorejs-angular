@@ -53,6 +53,10 @@ const PAIRS = [
   // and `*-contrast` text on the base colour (solid).
   ...['primary', 'secondary', ...STATES].map(color => [`${color}-dark`, `${color}-light`, 4.5]),
   ...['secondary', ...STATES].map(color => [`${color}-contrast`, color, 4.5]),
+  // sd-tab-router: tab names on the bar, on a hovered tab and on the open tab.
+  ['tab-router-item-text', 'tab-router-nav-bg', 4.5],
+  ['tab-router-item-text', 'tab-router-item-hover-bg', 4.5],
+  ['text', 'tab-router-item-active-bg', 4.5],
 ];
 
 const tokensOf = args => {
