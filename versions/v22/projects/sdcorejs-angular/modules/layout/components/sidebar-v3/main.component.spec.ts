@@ -307,7 +307,9 @@ describe('SdSidebarV3', () => {
     const header = fixture.nativeElement.querySelector('[data-v3-header]') as HTMLElement;
     const accountTrigger = fixture.nativeElement.querySelector('[data-user-trigger]') as HTMLButtonElement;
     expect(header.querySelector('[data-v3-brand]')).not.toBeNull();
-    expect(getComputedStyle(header.querySelector('[data-v3-brand]')!).columnGap).withContext('icon → title').toBe('12px');
+    expect(getComputedStyle(header.querySelector('[data-v3-brand]')!).columnGap)
+      .withContext('icon → title')
+      .toBe('12px');
     expect(header.textContent).toContain('Back Office');
     expect(getComputedStyle(header).justifyContent).toBe('space-between');
     expect(accountTrigger.textContent).toContain('Demo User');
@@ -504,7 +506,9 @@ describe('SdSidebarV3', () => {
       const brand = q('[data-v3-brand]') as HTMLElement;
       const icon = brand.querySelector('sd-icon') as HTMLElement;
       const text = brand.querySelector('.sd-sidebar-v3__brand-text') as HTMLElement;
-      expect(text.getBoundingClientRect().left - icon.getBoundingClientRect().right).withContext('icon → title').toBe(12);
+      expect(text.getBoundingClientRect().left - icon.getBoundingClientRect().right)
+        .withContext('icon → title')
+        .toBe(12);
       expect(context.syncItems).toHaveBeenCalledWith(contexts);
       // INV-006: switcher không đổi bề rộng 304px của V3.
       expect((q('[data-v3-sidebar]') as HTMLElement).getBoundingClientRect().width).toBe(304);

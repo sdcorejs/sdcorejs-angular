@@ -154,7 +154,8 @@ export class SdTabRouterNavComponent {
   #onWheel = (event: WheelEvent): void => {
     const scroller = this.scroller().nativeElement;
     if (scroller.scrollWidth - scroller.clientWidth <= 1 || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
-    const unit = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 16 : event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? scroller.clientWidth : 1;
+    const unit =
+      event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 16 : event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? scroller.clientWidth : 1;
     const before = scroller.scrollLeft;
     scroller.scrollLeft = before + event.deltaY * unit;
     if (scroller.scrollLeft !== before) event.preventDefault();

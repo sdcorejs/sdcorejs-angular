@@ -222,8 +222,12 @@ describe('SdChipCalendar · design handoff step 3 · size scale (C2)', () => {
       expect(getComputedStyle(removeGlyph).fontSize).withContext('✕ glyph').toBe(`${icon}px`);
       expect(removeGlyph.getBoundingClientRect().width).withContext('✕ glyph box').toBeCloseTo(icon, 0);
       expect(getComputedStyle(lockGlyph).fontSize).withContext('lock glyph').toBe(`${icon}px`);
-      expect(remove.getBoundingClientRect().width).withContext('✕ button width').toBeCloseTo(icon + 4, 0);
-      expect(remove.getBoundingClientRect().height).withContext('✕ button height').toBeCloseTo(icon + 4, 0);
+      expect(remove.getBoundingClientRect().width)
+        .withContext('✕ button width')
+        .toBeCloseTo(icon + 4, 0);
+      expect(remove.getBoundingClientRect().height)
+        .withContext('✕ button height')
+        .toBeCloseTo(icon + 4, 0);
       expect(getComputedStyle(remove).borderRadius).withContext('✕ button corner').toBe('50%');
       // `::after` vẫn còn (vùng bấm 24×24 khi pointer: coarse), chỉ lớp màu hover / focus của Material là trong suốt.
       expect(getComputedStyle(remove, '::after').backgroundColor).withContext('Material state layer').toBe('rgba(0, 0, 0, 0)');

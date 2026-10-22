@@ -345,7 +345,9 @@ describe('SdTabRouterNav bar (wave 3 · 3a)', () => {
       const style = getComputedStyle(scroller());
       expect(style.overflowX).toBe('auto');
       expect(style.scrollbarWidth).toBe('none');
-      expect(scroller().offsetHeight - scroller().clientHeight).withContext('no scrollbar track').toBe(0);
+      expect(scroller().offsetHeight - scroller().clientHeight)
+        .withContext('no scrollbar track')
+        .toBe(0);
       expect(scroller().scrollWidth).toBeGreaterThan(scroller().clientWidth);
       expect(hosts()[0].getBoundingClientRect().width).toBe(120);
     });
@@ -445,8 +447,12 @@ describe('SdTabRouterNav bar (wave 3 · 3a)', () => {
       expect(getComputedStyle(panel).paddingTop).toBe('6px');
       expect(getComputedStyle(panel).borderTopLeftRadius).toBe(resolve('border-top-left-radius', 'var(--sd-panel-radius)'));
       const wrap = listButton()!.parentElement!.getBoundingClientRect();
-      expect(panel.getBoundingClientRect().top - wrap.bottom).withContext('4px under the bar').toBeCloseTo(4, 0);
-      expect(panel.getBoundingClientRect().right).withContext('lined up with the button').toBeCloseTo(listButton()!.getBoundingClientRect().right, 0);
+      expect(panel.getBoundingClientRect().top - wrap.bottom)
+        .withContext('4px under the bar')
+        .toBeCloseTo(4, 0);
+      expect(panel.getBoundingClientRect().right)
+        .withContext('lined up with the button')
+        .toBeCloseTo(listButton()!.getBoundingClientRect().right, 0);
 
       const title = panel.querySelector('.tab-router__menu-title') as HTMLElement;
       expect(title.textContent!.trim()).toBe(i18n.t('core.component.tab-router.open-tabs', { count: 16 }));
