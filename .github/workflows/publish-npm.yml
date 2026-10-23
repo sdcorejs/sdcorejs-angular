@@ -43,7 +43,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22.22.3'
+          node-version: '24.22.1'
           registry-url: 'https://registry.npmjs.org'
           cache: npm
           cache-dependency-path: |
@@ -93,7 +93,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22.22.3'
+          node-version: '24.22.1'
           registry-url: 'https://registry.npmjs.org'
           cache: npm
           cache-dependency-path: versions/v19/package-lock.json
@@ -148,7 +148,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22.22.3'
+          node-version: '24.22.1'
           registry-url: 'https://registry.npmjs.org'
           cache: npm
           cache-dependency-path: versions/${{ matrix.version }}/package-lock.json
@@ -265,7 +265,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22.22.3'
+          node-version: '24.22.1'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Pin npm used by package verification
@@ -307,7 +307,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22.22.3'
+          node-version: '24.22.1'
           # Configure the registry through the job env; this action's auth setup
           # injects a placeholder token and an _authToken npmrc entry.
 
@@ -343,7 +343,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22.22.3'
+          node-version: '24.22.1'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Pin npm used for postpublish verification

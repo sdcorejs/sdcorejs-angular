@@ -954,7 +954,7 @@ export async function runReleaseCli({
   publishBundle = publishValidatedBundle,
   writeOutput = output => process.stdout.write(output),
 } = {}) {
-  invariant(nodeVersion === 'v22.22.3', `Release verification requires exact Node v22.22.3; found ${nodeVersion}.`);
+  invariant(nodeVersion === 'v24.22.1', `Release verification requires exact Node v24.22.1; found ${nodeVersion}.`);
   const artifactRootArg = getArg('artifact-root', argv);
   const artifactRoot = resolve(artifactRootArg ?? '');
   const suffix = getArg('suffix', argv);

@@ -313,7 +313,7 @@ test('trusted publishing is OIDC-only, least-privilege and pinned to Node/npm', 
   }
 
   for (const job of jobEntries(workflow).filter(job => /(?:\bnpm pack\b|release-package-contract\.mjs)/u.test(executableCommands(job.source)))) {
-    has(job.source, /node-version:\s*['"]?22\.22\.3['"]?/u, `${job.id} must pin Node 22.22.3`);
+    has(job.source, /node-version:\s*['"]?24\.22\.1['"]?/u, `${job.id} must pin Node 24.22.1`);
     if (job.id === publisher.id) {
       has(job.source, /^    env:\s*\r?\n      NPM_CONFIG_REGISTRY:\s*['"]?https:\/\/registry\.npmjs\.org['"]?\s*$/mu,
         'publisher must configure the public registry without creating token authentication');

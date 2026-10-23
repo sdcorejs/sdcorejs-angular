@@ -51,7 +51,7 @@ npm install --legacy-peer-deps
 ```
 
 **Bắt buộc `--legacy-peer-deps`**: lockfile của v20/v21 vẫn pin Angular 19 (sync bump
-`package.json` nhưng không regen lockfile). Đây là known issue có sẵn, ghi trong `CLAUDE.md`.
+`package.json` nhưng không regen lockfile). Đây là known issue có sẵn, ghi trong `AGENTS.md`.
 
 Môi trường đã dùng: **Node v22.22.2, npm 10.9.7**, Windows + PowerShell.
 
@@ -245,7 +245,7 @@ Không phải theo đường dẫn source. Đúng dạng là
 
 ## 7. Quy trình bắt buộc khi làm tiếp
 
-Ghi lại từ `CLAUDE.md` vì đây là chỗ dễ sai nhất:
+Ghi lại từ `AGENTS.md` vì đây là chỗ dễ sai nhất:
 
 1. **Chỉ sửa `versions/v19/**`.** v20 và v21 là bản sinh ra. Sửa tay vào đó sẽ bị
    `npm run sync` ghi đè.
@@ -303,7 +303,7 @@ Nếu làm tiếp các đợt lớn, **giữ bước 3**.
 | Báo cáo review gốc (đánh giá đầy đủ **trước** khi sửa) | `.sdcorejs/docs/2026-08-11-full-scan-review.md` |
 | Bảng migration breaking | `CHANGELOG.md` → `### Changed (BREAKING for consumers)` |
 | Nguồn gốc code GPL (đã xoá 2026-08-11) | git history: `NOTICE` + `services/docx/sd-docx.md` trước commit xoá |
-| Luật cứng của repo | `CLAUDE.md` (đầy đủ) · `AGENTS.md` (bản rút gọn, phải sửa cùng lúc) |
+| Luật cứng của repo | `AGENTS.md` (nguồn duy nhất; `CLAUDE.md` chỉ import nó) |
 | Ánh xạ alias `@deprecated` đã xoá | `versions/v19/projects/sdcorejs-angular/utilities/models/models.md` |
 | Ràng buộc `filters` của query-bar | `components/query-bar/sd-query-bar.md` → "Chip identity" |
 | Vì sao `modal-resizable` không có `.md` | Comment trong `modal-resizable.component.ts` |

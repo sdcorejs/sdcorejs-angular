@@ -4,7 +4,7 @@ name: Deploy published pages to GitHub Pages
 #   published-pages/<suffix>/  one self-contained site per retained release
 #   published-docs/<version>/  raw versioned API docs
 # A new release page is produced locally/at release time by
-# `npm run build:page -- --suffix <x.y>` and committed; see CLAUDE.md.
+# `npm run build:page -- --suffix <x.y>` and committed; see AGENTS.md.
 #
 # Trigger:
 #   - Push lên main khi published-pages/** hoặc published-docs/** đổi.
@@ -52,7 +52,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '24.22.1'
 
       - name: Verify committed page artifacts
         # There is no Angular build here. Each release suffix under published-pages/ was built

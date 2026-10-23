@@ -2,6 +2,7 @@
 
 Multi-version source + publish pipeline cho npm package `@sdcorejs/angular`.
 
+> **File này là nguồn luật duy nhất cho mọi agent** (Claude Code, Codex, Cursor, Copilot…). [`CLAUDE.md`](CLAUDE.md) chỉ chứa đúng một dòng `@AGENTS.md` để Claude Code tự nạp file này — đừng viết thêm nội dung vào `CLAUDE.md`; đổi luật cứng / canonical path / release ritual thì sửa ở đây.
 
 **Final legacy sync đã chốt:** `vn-angular@d12478a1` vào 2026-06-24. Từ mốc này, `@sdcorejs/angular` phát triển độc lập trong repo này; không quay về `vn-angular` cho thay đổi mới.
 
@@ -82,25 +83,25 @@ Skill pack chạy lại sẽ tự dựng `specs/`, `plans/`, `docs/` dưới `.s
 
 ### Quy trình phát triển độc lập
 
-Các install/build Angular workspace dùng exact Node `22.22.3`; không tiếp tục nếu shell đang chạy runtime khác.
+Các install/build Angular workspace dùng exact Node `24.22.1`; không tiếp tục nếu shell đang chạy runtime khác.
 
 ```powershell
-# sdcorejs-angular - Agent Instructions
+# 1. Sửa shared code/docs/test trong versions/v19 (showcase sống ở root)
 cd versions/v19
 npm ci --legacy-peer-deps
 npm test -- --watch=false
 
-# sdcorejs-angular - Agent Instructions
+# 2. Lan toả v19 → v20 + v21 + v22
 cd ../..
 npm run sync
 npm run check:sync
 
-# sdcorejs-angular - Agent Instructions
+# 3. Verify install policy bằng exact Node 24.22.1
 npm --prefix versions/v20 ci --legacy-peer-deps
 npm --prefix versions/v21 ci --legacy-peer-deps
 npm --prefix versions/v22 ci
 
-# sdcorejs-angular - Agent Instructions
+# 4. Verify/build rồi commit
 git add -A
 git commit -m "<type>: <summary>"
 git push
@@ -123,7 +124,7 @@ Workflow `publish-npm.yml` pin đúng tag `v3.2`; snapshot `scripts/release-cont
 đối chiếu từng line với bản `*.3.1` cùng Angular major qua baseline patch `3.1`.
 Fallback từ Angular 22 sang 21 chỉ áp dụng cho release khởi đầu `22.2.5`.
 
-Workflow: `.github/workflows/publish-npm.yml`. Auth qua **npm trusted publishing (OIDC)** — không dùng `NPM_TOKEN`, `NODE_AUTH_TOKEN` hay `npm login` local. Mọi release build/verify/publish job pin exact Node `22.22.3`; publisher cài exact `npm@11.5.1`, dùng job env `NPM_CONFIG_REGISTRY: https://registry.npmjs.org` và là job duy nhất có `permissions: id-token: write`. Không truyền `registry-url` cho `setup-node` trong job publisher vì action tự tạo token giả cùng `.npmrc` chứa `_authToken`, làm guard OIDC chặn publish. Trusted publisher trên npmjs.com pin theo repo + tên file workflow, nên đổi tên `publish-npm.yml` là phải khai báo lại bên npm.
+Workflow: `.github/workflows/publish-npm.yml`. Auth qua **npm trusted publishing (OIDC)** — không dùng `NPM_TOKEN`, `NODE_AUTH_TOKEN` hay `npm login` local. Mọi release build/verify/publish job pin exact Node `24.22.1`; publisher cài exact `npm@11.5.1`, dùng job env `NPM_CONFIG_REGISTRY: https://registry.npmjs.org` và là job duy nhất có `permissions: id-token: write`. Không truyền `registry-url` cho `setup-node` trong job publisher vì action tự tạo token giả cùng `.npmrc` chứa `_authToken`, làm guard OIDC chặn publish. Trusted publisher trên npmjs.com pin theo repo + tên file workflow, nên đổi tên `publish-npm.yml` là phải khai báo lại bên npm.
 
 **Trigger**:
 - Push tag `v<release-suffix>` → tạo đúng bốn version `19.<suffix>` / `20.<suffix>` / `21.<suffix>` / `22.<suffix>`.
@@ -169,7 +170,7 @@ Suffix `x.0` (vd `3.0`) không có patch trước để suy baseline, nên phả
 1. Tag lần đầu.
 2. Lần chạy `publish-npm.yml` đầu tiên dừng ở "Verify all four retained packages" và không publish gì.
 3. Tải bốn artifact `sdcorejs-angular-v{19,20,21,22}-<suffix>` của run đó (`gh run download`).
-4. Dựng snapshot từ chúng trên Node `22.22.3`, rồi kiểm bằng `release-package-contract.mjs --compile-consumers` trong một worktree ở đúng source SHA.
+4. Dựng snapshot từ chúng trên Node `24.22.1`, rồi kiểm bằng `release-package-contract.mjs --compile-consumers` trong một worktree ở đúng source SHA.
 5. Merge snapshot vào main, rồi đặt lại tag lên commit mới.
 
 Dry-run Windows vẫn dùng được để kiểm build và pack.
@@ -196,11 +197,11 @@ Layout site tại `https://sdcorejs.github.io/sdcorejs-angular/`:
 #### Sinh 1 page mới
 
 ```powershell
-# sdcorejs-angular - Agent Instructions
+# 1. Lib phải build trước — showcase ăn dist
 cd versions/v19
 npx ng build sdcorejs-angular
 
-# sdcorejs-angular - Agent Instructions
+# 2. Build + commit page cho release suffix
 cd ..\..
 npm run build:page -- --suffix 1.6
 ```
@@ -314,7 +315,7 @@ Tag format `^\d+\.\d+$` (vd `1.0`) — major digit **bị khoá theo Angular lin
 
 ## Known issues
 
-- **Install policy khác nhau có chủ đích**: v19/v20/v21 dùng exact `npm ci --legacy-peer-deps`; v22 dùng clean `npm ci` và cấm `--legacy-peer-deps`, `--force`, override, local tarball hay Git dependency. Mọi Angular workspace install/build của release chạy trên exact Node `22.22.3`.
+- **Install policy khác nhau có chủ đích**: v19/v20/v21 dùng exact `npm ci --legacy-peer-deps`; v22 dùng clean `npm ci` và cấm `--legacy-peer-deps`, `--force`, override, local tarball hay Git dependency. Mọi Angular workspace install/build của release chạy trên exact Node `24.22.1`.
 
 - **Legacy sync archived**: `scripts/sync-from-vn-angular.ps1` chỉ chạy khi truyền `-AllowLegacySync`; không dùng cho phát triển thường ngày.
 - **BOM UTF-8 trong md files**: file md có BOM (`﻿`) ở đầu — không ảnh hưởng render, nhưng nếu có script đọc file bằng latin1 thì lại sinh mojibake. Cẩn thận với encoding khi viết tool xử lý docs.
@@ -336,7 +337,3 @@ Run `npm run test:scripts` for root script verification. Approved dependency/shi
 Publisher permissions remain `contents: read` plus `id-token: write`.
 Explicit-baseline release planning uses `releaseTargets('3.0', { baselineSuffix: '2.15' })`; follow the current release contract for actual releases.
 Local ignored workspace guides remain scoped to their workspace. Root instructions govern layout, integration, checkpoint handling and releases; older local examples do not override current root policy.
-
-## Instruction provenance
-
-Unique guidance from [CLAUDE.md](CLAUDE.md) is consolidated here. Existing AGENTS scope, approval rules and confirmed conventions remain authoritative. CLAUDE.md is retained; update shared conventions together rather than maintaining independent conflicting rules.
