@@ -160,6 +160,7 @@ export const EN_MESSAGES = {
   'core.form.chip.required': 'Please enter information',
   'core.form.chip.minlength': 'Please enter at least {min} values',
   'core.form.chip.maxlength': 'Please enter at most {max} values',
+  'core.form.chip.remove': 'Remove {value}',
 
   // ---- Forms: chip-calendar ----
   'core.form.chip-calendar.required': 'Please enter information',

@@ -77,3 +77,27 @@
     }
   }
 }
+
+// why: mặt sdViewDef giờ là phần tử role="button" + tabindex=0 (bàn phím mở được đúng như chuột, A7) — cần focus
+// ring rõ ràng và không được đổi layout so với wrapper cũ. Cùng kiểu với `.sd-chip-calendar__view-trigger`.
+.sd-chip__view-trigger {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
+    outline-offset: 2px;
+  }
+
+  &[aria-disabled='true'] {
+    cursor: default;
+  }
+}
+
+// why: icon lỗi và chữ ẩn của `hideInlineError` chung một phần tử suffix (A8); giữ icon thẳng hàng như trước.
+.sd-chip__error-suffix {
+  display: inline-flex;
+  align-items: center;
+}

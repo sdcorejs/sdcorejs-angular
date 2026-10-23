@@ -161,6 +161,7 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.chip.required': '정보를 입력해 주세요',
   'core.form.chip.minlength': '최소 {min}개의 값을 입력해 주세요',
   'core.form.chip.maxlength': '최대 {max}개의 값을 입력해 주세요',
+  'core.form.chip.remove': '{value} 제거',
 
   // ---- Forms: chip-calendar ----
   'core.form.chip-calendar.required': '정보를 입력해 주세요',

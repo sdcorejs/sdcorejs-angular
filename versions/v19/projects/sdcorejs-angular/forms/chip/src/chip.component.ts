@@ -7,6 +7,7 @@ import {
   ChangeDetectorRef,
   Component,
   computed,
+  DestroyRef,
   ElementRef,
   contentChild,
   effect,
@@ -18,6 +19,7 @@ import {
   viewChild,
   OnDestroy,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Utilities } from '@sdcorejs/utils/fns';
 import {
   FormControl,
@@ -30,7 +32,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
-import { MatChipInputEvent, MatChipsModule } from '@angular/material/chips';
+import { MatChipGrid, MatChipInputEvent, MatChipsModule } from '@angular/material/chips';
 import { ErrorStateMatcher } from '@angular/material/core';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -54,16 +56,10 @@ import { I18nService } from '@sdcorejs/angular/i18n';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { Size } from '@sdcorejs/utils/models';
 import { Subscription } from 'rxjs';
-import { SdRemovableChipPipe } from './pipes';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
-class SdChipErrorStateMatcher implements ErrorStateMatcher {
-  constructor(private formControl: FormControl) {}
-  isErrorState(control: FormControl | null, form: FormGroupDirective | NgForm | null): boolean {
-    const isSubmitted = form && form.submitted;
-    return !!(this.formControl?.invalid && (this.formControl?.dirty || this.formControl?.touched || isSubmitted));
-  }
-}
+/** Items that never become a chip; `0` and `false` still do (A2). */
+const isChipItem = (item: unknown): boolean => item !== null && item !== undefined && item !== '';
 
 @Component({
   selector: 'sd-chip',
@@ -75,6 +71,7 @@ class SdChipErrorStateMatcher implements ErrorStateMatcher {
     '[class.sd-has-label]': '!!label()',
     '[class.sd-viewed]': 'isViewed()',
     '[class.sd-label-top]': "labelPlacement() === 'top'",
+    '(focusout)': 'onFocusOut($event)',
   },
   imports: [
     SdIcon,
@@ -89,12 +86,17 @@ class SdChipErrorStateMatcher implements ErrorStateMatcher {
     MatChipsModule,
     SdLabel,
     SdView,
-    SdRemovableChipPipe,
   ],
 })
 export class SdChip implements AfterViewInit, OnDestroy {
   #ref = inject(ChangeDetectorRef);
   readonly #i18n = inject(I18nService);
+  // why: lỗi phải hiện khi form cha đã submit dù field chưa chạm (A5). NgForm / FormGroupDirective tổ tiên
+  // giữ cờ `submitted`; MatInput cũng lấy đúng hai directive này cho ErrorStateMatcher.
+  readonly #parentForm = inject(FormGroupDirective, { optional: true }) ?? inject(NgForm, { optional: true });
+  readonly #host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
+  /** why: id ổn định của lỗi (`<mat-error>` hoặc chữ ẩn của `hideInlineError`) để ô nhập trỏ `aria-describedby` sang (A8). */
+  readonly errorId = `sd-chip-error-${Utilities.generateUuid()}`;
   // why: blur hoãn 150ms rồi gọi #ref.detectChanges(). Gỡ chip / đổi route trong 150ms đó là
   // đủ để detectChanges() chạy trên view đã destroy → ViewDestroyedError. Scope handle theo
   // DestroyRef để timer bị clear cùng lúc view tháo.
@@ -195,6 +197,7 @@ export class SdChip implements AfterViewInit, OnDestroy {
 
   // Template properties
   input = viewChild<ElementRef<HTMLInputElement>>('input');
+  readonly chipGrid = viewChild(MatChipGrid);
   sdViewDef = contentChild(SdViewDefDirective);
   sdLabelDef = contentChild(SdLabelDefDirective);
   sdLabelTemplate = contentChild<TemplateRef<any>>('sdLabel');
@@ -205,6 +208,12 @@ export class SdChip implements AfterViewInit, OnDestroy {
   isFocused = false;
   #inputControl = new FormControl();
   #formControl = new SdFormControl();
+  /**
+   * Control of `mat-chip-grid` only. why: the grid is a ControlValueAccessor that writes the text of the rendered chips
+   * into its control on blur, after a timeout (numbers became strings, a form reset was undone). It still needs an
+   * ngControl to work out its error state on every check, so it gets this one; nothing reads its value.
+   */
+  readonly gridControl = new FormControl<unknown>(null);
   // why: `min`/`max` chỉ là validator do CHÍNH component sở hữu; `required` đi qua option riêng
   // của connector. Connector add/remove đúng phần này (addValidators/removeValidators) nên
   // validator do consumer tự gắn vào `formControl` public KHÔNG bị xoá — trước đây
@@ -224,17 +233,26 @@ export class SdChip implements AfterViewInit, OnDestroy {
     validators: this.#validators,
     required: this.required,
   });
-  #matcher!: SdChipErrorStateMatcher;
+  #matcher!: ErrorStateMatcher;
   readonly separatorKeysCodes = [ENTER, COMMA];
   readonly selectable = true;
+
+  /**
+   * Items rendered as chips: every value except `null`, `undefined` and `''`, so `0` shows (A2). Display only: the
+   * model is never rewritten. why: exact duplicates are dropped too, because the chips are tracked by value.
+   */
+  readonly chips = computed<(string | number)[]>(() => {
+    const value = this.#state().value;
+    return Array.isArray(value) ? [...new Set<string | number>(value.filter(isChipItem))] : [];
+  });
 
   constructor() {
     // Update model
     effect(() => {
       const values = this.model();
-      if (Array.isArray(values)) {
-        this.#formControl.setValue(values);
-      }
+      // why: `null` / `undefined` từ cha phải xoá chip và đưa control về `[]`; trước đây control giữ mảng cũ và
+      // vẫn gửi nó đi khi submit (A4).
+      this.#formControl.setValue(Array.isArray(values) ? values : []);
     });
 
     // Handle disabled state
@@ -243,9 +261,11 @@ export class SdChip implements AfterViewInit, OnDestroy {
       if (isDisabled) {
         this.#formControl.disable();
         this.#inputControl.disable();
+        this.gridControl.disable();
       } else {
         this.#formControl.enable();
         this.#inputControl.enable();
+        this.gridControl.enable();
       }
     });
 
@@ -256,7 +276,18 @@ export class SdChip implements AfterViewInit, OnDestroy {
       }
     });
 
-    this.#matcher = new SdChipErrorStateMatcher(this.#formControl);
+    // why: `[required]` trên mat-chip-grid khớp selector `[required][formControl]` của RequiredValidator, nên
+    // `gridControl` sẽ invalid khi rỗng và MatChipInput gắn aria-invalid="true" lúc field chưa chạm. Gán thẳng thuộc
+    // tính của grid: mat-form-field vẫn hiện dấu * và ô nhập vẫn có aria-required.
+    effect(() => {
+      const grid = this.chipGrid();
+      if (grid) grid.required = this.required();
+    });
+
+    // why: `submitted` của form cha không phải signal; submit phải vẽ lại lỗi dưới OnPush.
+    this.#parentForm?.ngSubmit.pipe(takeUntilDestroyed(inject(DestroyRef))).subscribe(() => this.#ref.markForCheck());
+
+    this.#matcher = { isErrorState: (_control, form) => this.#errorGate(form) };
   }
 
   get formControl() {
@@ -291,6 +322,44 @@ export class SdChip implements AfterViewInit, OnDestroy {
     return this.#matcher;
   }
 
+  /**
+   * The one place that decides whether the error shows (A5): the `ErrorStateMatcher` of the chip grid and the input,
+   * `<mat-error>`, the `hideInlineError` icon and `aria-invalid` all read it. Invalid and touched, or the parent form
+   * was submitted; a field that is only dirty shows nothing.
+   */
+  isErrorShown(): boolean {
+    return !!this.errorMessage() && this.#errorGate();
+  }
+
+  #errorGate(form?: FormGroupDirective | NgForm | null): boolean {
+    const control = this.#formControl;
+    return control.invalid && (control.touched || !!(form ?? this.#parentForm)?.submitted);
+  }
+
+  /** Whether `item` may be removed, per `removable`; applied on every removal path (A1). */
+  isRemovable(item: string | number): boolean {
+    const removable = this.removable();
+    return typeof removable === 'function' ? !!removable(item) : removable;
+  }
+
+  /** Accessible name of the ✕ button of a chip (A6). */
+  removeLabel(item: string | number): string {
+    return this.#i18n.t('core.form.chip.remove', { value: String(item) });
+  }
+
+  /**
+   * Marks the field touched once focus leaves it; moving between the input and the chips does not count.
+   * why: `mat-chip-grid` is no longer bound to the control. As a ControlValueAccessor it wrote the text of the rendered
+   * chips back into the control on blur (numbers became strings, a form reset was undone), so the component marks
+   * touched itself, like the grid did.
+   */
+  onFocusOut(event: FocusEvent): void {
+    const next = event.relatedTarget as Node | null;
+    if (next && this.#host.contains(next)) return;
+    this.#formConnector.markAsTouched();
+    this.#ref.markForCheck();
+  }
+
   ngAfterViewInit() {
     this.#subscription.add(
       this.#formControl.sdChanges.subscribe(() => {
@@ -306,7 +375,8 @@ export class SdChip implements AfterViewInit, OnDestroy {
   #add = (event: MatChipInputEvent): void => {
     const value = (event.value ?? '').toString().trim();
     const values: (string | number)[] = this.#formControl.value ?? [];
-    if (value && this.addable() && !values.includes(value)) {
+    // why: so trùng theo chuỗi — model `[1]` và chữ "1" vừa gõ là một chip (A3).
+    if (value && this.addable() && !values.some(item => String(item) === value)) {
       // why: PHẢI tạo mảng MỚI. `values` chính là mảng của consumer (model đi thẳng vào
       // formControl), nên `push` vừa sửa trộm mảng của họ, vừa giữ nguyên reference —
       // `model()` dùng equality Object.is nên `model.set(sameRef)` KHÔNG phát `modelChange`,
@@ -331,7 +401,8 @@ export class SdChip implements AfterViewInit, OnDestroy {
 
   #remove = (item: any): void => {
     const values: (string | number)[] = this.#formControl.value ?? [];
-    if (typeof item === 'string' || typeof item === 'number') {
+    // why: `removable` áp cho mọi đường xoá, kể cả Backspace / Delete trên chip mà Material vẫn phát `(removed)` (A1).
+    if ((typeof item === 'string' || typeof item === 'number') && this.isRemovable(item)) {
       // why: `filter` đã trả mảng mới nên reference đổi → `model.set` phát `modelChange`.
       const next = values.filter(value => item !== value);
       this.#formControl.setValue(next);
@@ -420,6 +491,15 @@ export class SdChip implements AfterViewInit, OnDestroy {
   onFocus = () => this.#onFocus();
   onBlur = () => this.#onBlur();
   onClick = () => this.#onClick();
+  /**
+   * why: khi `sdViewDef` đang hiển thị thì bên trong không còn phần tử nào focus được, nên phần tử view là lối vào
+   * duy nhất để chuyển sang chế độ sửa. Bàn phím phải mở được y hệt chuột → Enter/Space chạy chung handler;
+   * preventDefault chặn Space cuộn trang (A7).
+   */
+  onViewKeydown = (event: Event) => {
+    event.preventDefault();
+    this.#onClick();
+  };
   focus = () => this.#focus();
   onClear = ($event?: any) => this.#clear($event);
 }

@@ -161,6 +161,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.chip.required': 'Vui lòng nhập thông tin',
   'core.form.chip.minlength': 'Vui lòng nhập ít nhất {min} giá trị',
   'core.form.chip.maxlength': 'Vui lòng nhập tối đa {max} giá trị',
+  'core.form.chip.remove': 'Xoá {value}',
 
   // ---- Forms: chip-calendar ----
   'core.form.chip-calendar.required': 'Vui lòng nhập thông tin',

@@ -162,6 +162,7 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.chip.required': '入力してください',
   'core.form.chip.minlength': '{min}件以上入力してください',
   'core.form.chip.maxlength': '{max}件以内で入力してください',
+  'core.form.chip.remove': '{value} を削除',
 
   // ---- Forms: chip-calendar ----
   'core.form.chip-calendar.required': '入力してください',

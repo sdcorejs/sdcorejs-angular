@@ -291,6 +291,7 @@ export type ShowcaseExampleSourceKey =
   | "forms/chip-calendar/example-vo-hieu-hoa"
   | "forms/chip/example-bat-buoc-so-toi-thieu"
   | "forms/chip/example-chinh-sua-noi-tuyen"
+  | "forms/chip/example-chip-khoa"
   | "forms/chip/example-kich-thuoc"
   | "forms/chip/example-lien-ket-hai-chieu"
   | "forms/chip/example-vo-hieu-hoa"
@@ -2420,7 +2421,14 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "forms/chip",
     sectionId: "example-bat-buoc-so-toi-thieu",
     title: "Bắt buộc & số tối thiểu",
-    description: "Cần ít nhất 3 chip. Bấm Kiểm tra để hiện lỗi.",
+    description: "Cần ít nhất 3 chip. Lỗi chỉ hiện khi đã chạm field hoặc đã bấm Gửi; field dưới ẩn lỗi vào icon.",
+  },
+  {
+    sourceKey: "forms/chip/example-chip-khoa",
+    pageKey: "forms/chip",
+    sectionId: "example-chip-khoa",
+    title: "Chip khoá",
+    description: "Predicate áp cho nút ✕, Backspace và Delete: chip “Quản trị” không xoá được.",
   },
   {
     sourceKey: "forms/chip/example-vo-hieu-hoa",
