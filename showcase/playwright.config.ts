@@ -22,9 +22,10 @@ export default defineConfig({
   ],
   webServer: {
     // prestart copies the built library into the Showcase (npm run link:library).
-    // why: with Vite prebundling the dev server loads @sdcorejs/angular twice (NG0912), so the
-    // SD_CORE_CONFIGURATION of app.config.ts and the one SdDateTimeService injects are different tokens.
-    command: `npm run start -- --port ${PORT} --prebundle=false`,
+    // why: the start script passes --prebundle=false. With Vite prebundling the dev server loads
+    // @sdcorejs/angular twice (NG0912), so the SD_CORE_CONFIGURATION of app.config.ts and the one
+    // SdDateTimeService injects are different tokens.
+    command: `npm run start -- --port ${PORT}`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env['CI'],
     timeout: 300_000,

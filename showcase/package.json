@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "ng": "ng",
-    "start": "ng serve showcase",
+    "start": "ng serve showcase --prebundle=false",
     "build": "node --max_old_space_size=8000 ./node_modules/@angular/cli/bin/ng build showcase",
     "build:prod": "node --max_old_space_size=8000 ./node_modules/@angular/cli/bin/ng build showcase --configuration production",
     "test": "ng test showcase --watch=false --browsers=ChromeHeadless --source-map=false",
