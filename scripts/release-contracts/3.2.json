@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "suffix": "3.2",
   "baselineSuffix": "3.1",
-  "reviewedSourceSha": "1fe7b69e753aa8d2cffba0c59f098ea58afd51ea",
-  "artifactSource": "Actual 19.3.2 / 20.3.2 / 21.3.2 / 22.3.2 tarballs produced by the official deploy.ps1 dry-run from the source SHA above with exact Node v22.22.3 (portable, SHA-256 checked against nodejs.org SHASUMS256.txt) on Windows. Same-major registry 3.1 baselines packed from npm. Canonical publicSurface fingerprints exclude only version/frameworkMajor. This is a prepared review snapshot; final immutable-head gates, strict consumers, independent review and publication remain mandatory. CI never regenerates the snapshot.",
+  "reviewedSourceSha": "6aae0c722d9ca1e3b4ca04652bfde90f3510e627",
+  "artifactSource": "Actual 19.3.2 / 20.3.2 / 21.3.2 / 22.3.2 tarballs built on Linux by the publish-npm.yml run 39852344872 for tag v3.2 (source SHA above, exact Node 22.22.3), downloaded from its retained artifacts. A Windows deploy.ps1 dry-run cannot pin the packed file list: modules/generic is code-split into content-hashed FESM chunks and a CRLF checkout inlines \r\n into compiled templates, so the chunk names differ. Same-major registry 3.1 baselines packed from npm. Canonical publicSurface fingerprints exclude only version/frameworkMajor. This is a prepared review snapshot; final immutable-head gates, strict consumers, independent review and publication remain mandatory. CI never regenerates the snapshot.",
   "targets": {
     "19.3.2": {
       "version": "19.3.2",
@@ -18,7 +18,7 @@
       },
       "files": {
         "baseline": "d7f0eef1ea01f1d7a794d646409765412fb4d66262f3bf615aa0b5ff146ade68",
-        "candidate": "b4f160021ab8126ac731c87220c86ef48d84a97e509d43394afd19c7c91fae8d"
+        "candidate": "abcd0428b710ff42fa52e7fb84b0c5f8bc14f995c013bd51f3211f8c220bda24"
       },
       "publicSurface": {
         "baseline": "9b09fcca26c1534cfb6e8de41821f50548bec241e40ba10693b74d137eb813d4",
@@ -38,7 +38,7 @@
       },
       "files": {
         "baseline": "ab03731082be4453a3c97e01253aca3c3ddbcea9a147052c876375e04a7d5914",
-        "candidate": "4078a06cdd5fa2904a378bc5acac3340c0a4367202049056c86394a6fac76dc9"
+        "candidate": "04da695243242c2fb297bf00d577d5f5b06f46709b11bda3cdaad395eda72661"
       },
       "publicSurface": {
         "baseline": "42407dbfe2ffa47c70bc00fb169a95f0fb862d7d86defb554f703c286d57dced",
@@ -58,7 +58,7 @@
       },
       "files": {
         "baseline": "dd5a7619708335935c4d7ea65240801cb692e15e834256a7184a22cafb77fb57",
-        "candidate": "e36a2b8fbc5d433e607f591efc89201685a906ccc39d31b8f62f8649c9b307ff"
+        "candidate": "4d50245a68f6c1227d655e82e0a959f18faa7e03344eb13c8d5cba57bfb08858"
       },
       "publicSurface": {
         "baseline": "168bfff11740ae6ffe6cf0df22a267b060ff48323da2b0e0a29fb522c8c53d27",
