@@ -14,13 +14,14 @@ describe('showcase documentation routes', () => {
     expect(typeof docsRoute?.children?.find(route => route.path === ':tab')?.title).toBe('function');
   });
 
-  it('mounts the generic module demo routes before the legacy category/slug route', () => {
+  it('lazily mounts the generic demo before the legacy category/slug route', () => {
     const demoIndex = routes.findIndex(route => route.path === 'demo');
     const legacyIndex = routes.findIndex(route => route.path === ':category/:slug');
     expect(demoIndex).toBeGreaterThan(-1);
     expect(demoIndex).toBeLessThan(legacyIndex);
-    expect(routes[demoIndex].providers?.length).toBeGreaterThan(0);
-    expect(routes[demoIndex].children?.[0]?.path).toBe('generic/:module/:entity');
+    expect(routes[demoIndex].loadChildren).toBeDefined();
+    expect(routes[demoIndex].providers).toBeUndefined();
+    expect(routes[demoIndex].children).toBeUndefined();
   });
 
   it('mounts the live tab-router demo with its own child routes before the generic demo', () => {

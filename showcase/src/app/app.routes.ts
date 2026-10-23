@@ -1,9 +1,7 @@
 import { Routes } from '@angular/router';
-import { provideSdGeneric, sdGenericRoutes } from '@sdcorejs/angular/modules/generic';
 import { docsVersionGuard, legacyDocsRedirectGuard } from './docs/core/docs-route.guards';
 import { isDocCategory } from './docs/core/documentation.models';
 import { findDocNavigationGroup, findDocPage } from './docs/core/documentation.registry';
-import { GenericDemoMockAdapter } from './pages/modules/generic/generic-demo.mock-adapter';
 
 const PACKAGE_TITLE = '@sdcorejs/angular — Documentation & Live Examples';
 
@@ -93,8 +91,7 @@ export const routes: Routes = [
     // Live generic module screens of the Generic CRUD page, backed by an in-memory adapter.
     path: 'demo',
     title: `Generic CRUD demo | ${PACKAGE_TITLE}`,
-    providers: [provideSdGeneric({ adapters: [GenericDemoMockAdapter], permission: false })],
-    children: sdGenericRoutes(),
+    loadChildren: () => import('./pages/modules/generic/generic-demo.routes').then(m => m.GENERIC_DEMO_ROUTES),
   },
   {
     path: ':category/:slug',
