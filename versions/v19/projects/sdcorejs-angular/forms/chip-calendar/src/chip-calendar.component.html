@@ -73,11 +73,11 @@
           <!-- why: chip là ngày đã chuẩn hoá (yyyy/MM/dd), hiện theo ngày (B2) và gộp “+N” khi popup đóng (B3). `removable` áp
                cả cho Backspace / Delete trên chip (A1); chip có tên đầy đủ, nút ✕ có tên riêng (A6). -->
           @for (item of visibleDays(); track item) {
-            @let _itemRemovable = isRemovable(item);
+            @let _removable = isRemovable(item);
             <mat-chip-row
               class="sd-chip-calendar__chip"
-              [class.sd-chip-calendar__chip--locked]="!_itemRemovable"
-              [removable]="_itemRemovable"
+              [class.sd-chip-calendar__chip--locked]="!_removable"
+              [removable]="_removable"
               [aria-label]="chipLabel(item)"
               (removed)="onRemove(item)"
               [disabled]="inputControl.disabled"
@@ -85,10 +85,10 @@
               [value]="item">
               <span class="sd-chip-calendar__chip-text">{{ formatDay(item) }}</span>
               <!-- why: mỗi khối @if một phần tử gốc, để ✕ được chiếu vào ô trailing của mat-chip-row ([matChipRemove]). -->
-              @if (!inputControl.disabled && _itemRemovable) {
+              @if (!inputControl.disabled && _removable) {
                 <sd-icon matChipRemove name="close" [size]="_icons.chip" [ariaLabel]="removeLabel(item)"></sd-icon>
               }
-              @if (!inputControl.disabled && !_itemRemovable) {
+              @if (!inputControl.disabled && !_removable) {
                 <sd-icon
                   class="sd-chip-calendar__lock"
                   name="lock"

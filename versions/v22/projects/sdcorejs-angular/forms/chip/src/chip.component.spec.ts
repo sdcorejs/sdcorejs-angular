@@ -114,9 +114,9 @@ describe('SdChip', () => {
       expect(input).not.toBeNull();
     });
 
-    it('renders label via sd-label when appearance is not set (falsy)', () => {
-      // default appearance is 'outline' — the @if(!_app && _lbl) branch won't fire,
-      // but the mat-label inside mat-form-field should render
+    it('renders the floating mat-label with the default outline appearance', () => {
+      // why: tên cũ "renders label via sd-label when appearance is not set" sai — với appearance mặc định
+      // 'outline' nhánh sd-label không chạy; test này kiểm <mat-label> trong mat-form-field (D4).
       host.label = 'Tags';
       fixture.detectChanges();
       // mat-label is rendered inside mat-form-field since appearance='outline'

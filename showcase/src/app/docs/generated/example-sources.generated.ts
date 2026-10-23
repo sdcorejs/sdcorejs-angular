@@ -13630,7 +13630,7 @@ export class CheckboxDemoComponent {
   },
   "forms/chip": {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormGroupDirective, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdChip } from '@sdcorejs/angular/forms/chip';
 
@@ -13653,14 +13653,25 @@ import { SdChip } from '@sdcorejs/angular/forms/chip';
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bat-buoc-so-toi-thieu') {
-      <demo-section heading="Bắt buộc & số tối thiểu" [props]="[{ name: 'required', value: 'true' }, { name: 'min', value: '3' }]" note="Cần ít nhất 3 chip. Bấm Kiểm tra để hiện lỗi.">
-        <div style="width: 420px; display:flex; flex-direction:column; gap:12px">
+      <demo-section heading="Bắt buộc & số tối thiểu" [props]="[{ name: 'required', value: 'true' }, { name: 'min', value: '3' }, { name: 'hideInlineError', value: 'true' }]" note="Cần ít nhất 3 chip. Lỗi chỉ hiện khi đã chạm field hoặc đã bấm Gửi; field dưới ẩn lỗi vào icon.">
+        <form [formGroup]="formValid" #validForm="ngForm" style="width: 420px; display:flex; flex-direction:column; gap:12px">
           <sd-chip label="required + min=3" placeholder="Nhập rồi Enter..."
             [(model)]="tags" [form]="formValid" required [min]="3"></sd-chip>
+          <sd-chip label="hideInlineError" name="compactTags" size="sm" placeholder="Nhập rồi Enter..."
+            [(model)]="compactTags" [form]="formValid" required hideInlineError></sd-chip>
           <div style="display:flex; gap:8px">
+            <button type="submit">Gửi</button>
             <button type="button" (click)="check()">Kiểm tra</button>
-            <button type="button" (click)="reset()">Đặt lại</button>
+            <button type="button" (click)="reset(validForm)">Đặt lại</button>
           </div>
+        </form>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chip-khoa') {
+      <demo-section heading="Chip khoá" [props]="[{ name: 'removable', value: 'predicate' }]" note="Predicate áp cho nút ✕, Backspace và Delete: chip “Quản trị” không xoá được.">
+        <div style="width: 420px">
+          <sd-chip label="Vai trò" placeholder="Nhập rồi Enter..." [(model)]="roles" [form]="form" [removable]="canRemoveRole"></sd-chip>
         </div>
       </demo-section>
       }
@@ -13699,12 +13710,17 @@ export class ChipDemoComponent {
 
   skills = signal<string[]>(['Angular', 'TypeScript', 'RxJS']);
   tags = signal<string[]>([]);
+  compactTags = signal<string[]>([]);
+  roles = signal<string[]>(['Quản trị', 'Biên tập', 'Xem']);
   lockedTags = signal<string[]>(['Đã khoá 1', 'Đã khoá 2']);
   filters = signal<string[]>([]);
   inlineTags = signal<(string | number)[]>(['alpha', 'beta']);
 
+  canRemoveRole = (role: string | number) => role !== 'Quản trị';
+
   check() { this.formValid.markAllAsTouched(); }
-  reset() { this.formValid.reset(); this.formValid.markAsUntouched(); }
+  // why: resetForm() đưa cả cờ \`submitted\` về false, nên lỗi sau “Gửi” cũng mất.
+  reset(form: FormGroupDirective) { form.resetForm(); }
 }
 `,
   },
@@ -25941,15 +25957,18 @@ Bởi Nguyễn Văn A"></sd-badge>
   },
   "forms/chip/example-bat-buoc-so-toi-thieu": {
     ...SHOWCASE_PAGE_SOURCES["forms/chip"],
-    html: `<demo-section heading="Bắt buộc & số tối thiểu" [props]="[{ name: 'required', value: 'true' }, { name: 'min', value: '3' }]" note="Cần ít nhất 3 chip. Bấm Kiểm tra để hiện lỗi.">
-    <div style="width: 420px; display:flex; flex-direction:column; gap:12px">
+    html: `<demo-section heading="Bắt buộc & số tối thiểu" [props]="[{ name: 'required', value: 'true' }, { name: 'min', value: '3' }, { name: 'hideInlineError', value: 'true' }]" note="Cần ít nhất 3 chip. Lỗi chỉ hiện khi đã chạm field hoặc đã bấm Gửi; field dưới ẩn lỗi vào icon.">
+    <form [formGroup]="formValid" #validForm="ngForm" style="width: 420px; display:flex; flex-direction:column; gap:12px">
       <sd-chip label="required + min=3" placeholder="Nhập rồi Enter..."
         [(model)]="tags" [form]="formValid" required [min]="3"></sd-chip>
+      <sd-chip label="hideInlineError" name="compactTags" size="sm" placeholder="Nhập rồi Enter..."
+        [(model)]="compactTags" [form]="formValid" required hideInlineError></sd-chip>
       <div style="display:flex; gap:8px">
+        <button type="submit">Gửi</button>
         <button type="button" (click)="check()">Kiểm tra</button>
-        <button type="button" (click)="reset()">Đặt lại</button>
+        <button type="button" (click)="reset(validForm)">Đặt lại</button>
       </div>
-    </div>
+    </form>
   </demo-section>`,
   },
   "forms/chip/example-chinh-sua-noi-tuyen": {
@@ -25958,6 +25977,14 @@ Bởi Nguyễn Văn A"></sd-badge>
     <div style="width: 420px; display:flex; flex-direction:column; gap:8px">
       <sd-chip label="Tags (inline)" [viewed]="'inline'" [(model)]="inlineTags" [form]="form"></sd-chip>
       <sd-chip label="disabled + inline → tĩnh" [viewed]="'inline'" [(model)]="inlineTags" [form]="form" disabled></sd-chip>
+    </div>
+  </demo-section>`,
+  },
+  "forms/chip/example-chip-khoa": {
+    ...SHOWCASE_PAGE_SOURCES["forms/chip"],
+    html: `<demo-section heading="Chip khoá" [props]="[{ name: 'removable', value: 'predicate' }]" note="Predicate áp cho nút ✕, Backspace và Delete: chip “Quản trị” không xoá được.">
+    <div style="width: 420px">
+      <sd-chip label="Vai trò" placeholder="Nhập rồi Enter..." [(model)]="roles" [form]="form" [removable]="canRemoveRole"></sd-chip>
     </div>
   </demo-section>`,
   },

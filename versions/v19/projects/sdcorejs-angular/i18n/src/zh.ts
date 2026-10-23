@@ -161,6 +161,7 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.chip.required': '请输入内容',
   'core.form.chip.minlength': '请至少输入 {min} 个值',
   'core.form.chip.maxlength': '最多输入 {max} 个值',
+  'core.form.chip.remove': '移除 {value}',
 
   // ---- Forms: chip-calendar ----
   'core.form.chip-calendar.required': '请输入内容',
