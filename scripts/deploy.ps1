@@ -115,8 +115,8 @@ if (
 }
 
 $nodeVersionOutput = & node --version
-if ($LASTEXITCODE -ne 0 -or ($nodeVersionOutput | Select-Object -First 1).Trim() -ne "v22.22.3") {
-  throw "Release staging requires exact Node v22.22.3."
+if ($LASTEXITCODE -ne 0 -or ($nodeVersionOutput | Select-Object -First 1).Trim() -ne "v24.22.1") {
+  throw "Release staging requires exact Node v24.22.1."
 }
 
 if (-not $DryRun) {

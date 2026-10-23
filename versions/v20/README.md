@@ -261,7 +261,7 @@ Custom keys: dùng `TranslatePipe` (`{{ 'my.key' | translate }}`) hoặc service
 ## 🧪 Development
 
 ```bash
-# From versions/v19, using exact Node 22.22.3:
+# From versions/v19, using exact Node 24.22.1:
 npm ci --legacy-peer-deps
 npm run test:ci          # full test suite (2700+ tests)
 npm run build            # build the sd-angular library
@@ -276,7 +276,7 @@ npm --prefix showcase run start
 
 ## 🚀 Publishing
 
-Source workflow: shared changes land in `versions/v19`, then root `npm run sync` derives `v20` / `v21` / `v22`. Release builds use exact Node `22.22.3` with `npm ci --legacy-peer-deps` for v19–v21 and clean `npm ci` for v22. All four immutable tarballs are built and verified before one non-matrix publisher releases v19/v20/v21 sequentially under `angular19`/`angular20`/`angular21`, then v22 under `latest`. Release `v2.5` publishes `19.2.5`, `20.2.5`, `21.2.5`, and the v22 inception package `22.2.5`.
+Source workflow: shared changes land in `versions/v19`, then root `npm run sync` derives `v20` / `v21` / `v22`. Release builds use exact Node `24.22.1` with `npm ci --legacy-peer-deps` for v19–v21 and clean `npm ci` for v22. All four immutable tarballs are built and verified before one non-matrix publisher releases v19/v20/v21 sequentially under `angular19`/`angular20`/`angular21`, then v22 under `latest`. Release `v2.5` publishes `19.2.5`, `20.2.5`, `21.2.5`, and the v22 inception package `22.2.5`.
 
 Publishing uses npm trusted publishing (OIDC) with exact `npm@11.5.1`; the workflow intentionally has no `NPM_TOKEN` or `NODE_AUTH_TOKEN` and never mutates dist-tags separately.
 

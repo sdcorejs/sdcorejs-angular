@@ -287,7 +287,7 @@ Read `versions.json` to select a release that matches the installed package, the
 
 The repository uses `versions/v19` as the canonical source workspace. Work on shared library code, tests, and package documentation there; the root sync process derives the v20, v21, and v22 workspaces. The standalone `showcase/` consumes the built v19 library rather than being mirrored into version workspaces.
 
-Prerequisites: exact Node.js `22.22.3`, npm, and a Chromium installation for the headless Karma suite.
+Prerequisites: exact Node.js `24.22.1`, npm, and a Chromium installation for the headless Karma suite.
 
 ```bash
 git clone https://github.com/sdcorejs/sdcorejs-angular.git
@@ -332,7 +332,7 @@ npm run check:sync
 
 Keep public imports backward compatible where possible. Record consumer-breaking behavior under `Changed (BREAKING for consumers)` in the changelog.
 
-Release-preparation branches keep package versions unchanged while review is in progress. Apply the shared release suffix only after the reviewed changes are merged into `main`. The release workflow builds and verifies all four immutable tarballs before one sequential publisher releases Angular 19/20/21 under `angular19`/`angular20`/`angular21`, then Angular 22 under `latest`. Trusted publishing is OIDC-only on exact Node `22.22.3` and npm `11.5.1`; it does not use `NODE_AUTH_TOKEN` or a separate `npm dist-tag` mutation.
+Release-preparation branches keep package versions unchanged while review is in progress. Apply the shared release suffix only after the reviewed changes are merged into `main`. The release workflow builds and verifies all four immutable tarballs before one sequential publisher releases Angular 19/20/21 under `angular19`/`angular20`/`angular21`, then Angular 22 under `latest`. Trusted publishing is OIDC-only on exact Node `24.22.1` and npm `11.5.1`; it does not use `NODE_AUTH_TOKEN` or a separate `npm dist-tag` mutation.
 
 ## Support and issue reporting
 

@@ -108,9 +108,9 @@ test('CLI fails closed at its argument boundary before touching release artifact
   assert.equal(result.status, 1);
   assert.match(
     result.stderr,
-    process.version === 'v22.22.3'
+    process.version === 'v24.22.1'
       ? /Required: --artifact-root, --suffix, --baseline-suffix and --datetime-version\./u
-      : /Release verification requires exact Node v22\.22\.3/u,
+      : /Release verification requires exact Node v24\.22\.1/u,
   );
 });
 
@@ -129,13 +129,13 @@ test('CLI enforces exact runtime, provenance pairing, OIDC and token-free truste
   ];
   const base = { argv, pathExists: () => true, materialize: () => assert.fail('must fail before materialization') };
 
-  await assert.rejects(() => runReleaseCli({ ...base, nodeVersion: 'v22.22.2' }), /requires exact Node v22\.22\.3/u);
+  await assert.rejects(() => runReleaseCli({ ...base, nodeVersion: 'v24.22.0' }), /requires exact Node v24\.22\.1/u);
   await assert.rejects(
-    () => runReleaseCli({ ...base, nodeVersion: 'v22.22.3', argv: [...argv, '--require-provenance'] }),
+    () => runReleaseCli({ ...base, nodeVersion: 'v24.22.1', argv: [...argv, '--require-provenance'] }),
     /valid only with --publish/u,
   );
   await assert.rejects(
-    () => runReleaseCli({ ...base, nodeVersion: 'v22.22.3', argv: [...argv, '--publish'], env: { GITHUB_ACTIONS: 'true' } }),
+    () => runReleaseCli({ ...base, nodeVersion: 'v24.22.1', argv: [...argv, '--publish'], env: { GITHUB_ACTIONS: 'true' } }),
     /GitHub OIDC environment is unavailable/u,
   );
   // The workflow must avoid creating setup-node's placeholder, rather than exempt it here.
@@ -148,7 +148,7 @@ test('CLI enforces exact runtime, provenance pairing, OIDC and token-free truste
       () =>
         runReleaseCli({
           ...base,
-          nodeVersion: 'v22.22.3',
+          nodeVersion: 'v24.22.1',
           argv: [...argv, '--publish'],
           env: {
             GITHUB_ACTIONS: 'true',
@@ -180,7 +180,7 @@ test('CLI validation compiles consumers without publishing and authorized mode d
   const events = [];
   const outputs = [];
   const common = {
-    nodeVersion: 'v22.22.3',
+    nodeVersion: 'v24.22.1',
     pathExists: () => true,
     materialize: options => {
       events.push(`materialize:${options.suffix}:${options.baselineSuffix}:${options.datetimeVersion}`);
@@ -704,7 +704,7 @@ test('CLI passes an x.0 baseline through and reports the targets it validated', 
   const output = await runReleaseCli({
     argv: ['node', 'release-package-contract.mjs', '--artifact-root', 'release-artifacts', '--suffix', '3.0', '--baseline-suffix', '2.15', '--datetime-version', '1.0.4'],
     env: {},
-    nodeVersion: 'v22.22.3',
+    nodeVersion: 'v24.22.1',
     pathExists: () => true,
     materialize: options => {
       events.push(`materialize:${options.suffix}:${options.baselineSuffix}`);
