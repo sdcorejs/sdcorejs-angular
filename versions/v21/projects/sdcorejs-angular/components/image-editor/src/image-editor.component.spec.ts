@@ -19,11 +19,13 @@ import {
   gifBlob,
   grayPng,
   near,
+  parkable,
+  parkPending,
   pixel,
-  quadrantBlob,
+  quadrantJpeg,
+  quadrantPng,
   sameCorners,
-  stopPolling,
-  transparentBlob,
+  transparentPng,
   truncatedPng,
   until,
   wait,
@@ -75,6 +77,18 @@ function editor(): SdImageEditor {
  */
 const LARGE_IMAGE_TIMEOUT = 30_000;
 
+/**
+ * Budget of a spec in which the editor encodes (Apply, `getResult()`, the size shown in the panel). Chrome encodes
+ * `toBlob()` PNG and JPEG on the main thread in idle time only: when a busy run leaves none, each encode waits 1 s
+ * before Chrome forces it, whatever the image size — measured 1.0–1.1 s per encode with the main thread kept busy, so
+ * a spec with two encodes took 2.2 s there before any CI slowdown. The sources themselves are written as bytes, so
+ * the specs that only load and edit never wait for an encode.
+ */
+const ENCODE_TIMEOUT = 15_000;
+
+// Every await in these specs goes through `parkable()` (directly or via the fixtures), so a spec that timed out stops
+// at its next await instead of running into the next spec.
+
 async function setup(source: Blob | null, option: SdImageEditorOption = {}, width = 1000, timeout?: number): Promise<void> {
   fixture = TestBed.createComponent(HostComponent);
   host = fixture.componentInstance;
@@ -86,12 +100,13 @@ async function setup(source: Blob | null, option: SdImageEditorOption = {}, widt
   if (source) await ready(timeout);
 }
 
+/** Waits for the load, then for the crop box. The default budgets stay under the 5 s spec default so a slow step is named. */
 async function ready(timeout?: number): Promise<void> {
-  await until(() => editor().status() === 'ready' || editor().status() === 'error', timeout ?? 5000, 'editor ready');
+  await until(() => editor().status() === 'ready' || editor().status() === 'error', timeout ?? 3000, 'editor ready');
   fixture.detectChanges();
-  await fixture.whenStable();
+  await parkable(fixture.whenStable());
   // ResizeObserver delivers the stage size asynchronously.
-  await until(() => !!query(id('crop')) || editor().status() === 'error', timeout ?? 2000, 'crop box');
+  await until(() => !!query(id('crop')) || editor().status() === 'error', timeout ?? 1500, 'crop box');
   fixture.detectChanges();
 }
 
@@ -101,19 +116,19 @@ async function click(suffix: string): Promise<void> {
   if (!button) throw new Error(`no button ${suffix}`);
   button.click();
   fixture.detectChanges();
-  await fixture.whenStable();
+  await parkable(fixture.whenStable());
 }
 
 /** What a consumer's own Apply button does. */
 async function apply(): Promise<SdImageEditorResult> {
-  const result = await editor().getResult();
+  const result = await parkable(editor().getResult());
   fixture.detectChanges();
   return result;
 }
 
 async function failureOf(promise: Promise<unknown>): Promise<SdImageEditorError> {
   try {
-    await promise;
+    await parkable(promise);
   } catch (error) {
     return error as SdImageEditorError;
   }
@@ -172,7 +187,7 @@ function selectFormat(format: string): void {
 describe('SdImageEditor', () => {
   // The first load in a document waits for a probe of the encodable formats (1 × 1 encodes, cached per document).
   // Probe here, so that wait never lands in whichever spec happens to load first.
-  beforeAll(() => sdImageEditorEncodableFormats(document));
+  beforeAll(() => sdImageEditorEncodableFormats(document), ENCODE_TIMEOUT);
 
   beforeEach(() => {
     TestBed.configureTestingModule({ imports: [HostComponent], providers: [provideNoopAnimations()] });
@@ -180,7 +195,7 @@ describe('SdImageEditor', () => {
   });
 
   afterEach(() => {
-    stopPolling();
+    parkPending();
     host?.shown.set(false);
     fixture?.detectChanges();
     fixture?.destroy();
@@ -203,7 +218,7 @@ describe('SdImageEditor', () => {
     });
 
     it('loads a PNG and shows its facts', async () => {
-      await setup(await quadrantBlob(400, 200));
+      await setup(await quadrantPng(400, 200));
       expect(editor().sourceInfo()).toEqual(
         jasmine.objectContaining({ mimeType: 'image/png', width: 400, height: 200, hasAlpha: false, exifOrientation: 1 })
       );
@@ -223,7 +238,7 @@ describe('SdImageEditor', () => {
     });
 
     it('uses the Core floating label for the number fields and the format, and one label style for the rest', async () => {
-      await setup(await quadrantBlob(400, 200));
+      await setup(await quadrantPng(400, 200));
       const floating: [string, string][] = [
         ['crop-x', 'X'],
         ['crop-y', 'Y'],
@@ -264,7 +279,7 @@ describe('SdImageEditor', () => {
     });
 
     it('enforces the source limits before decoding', async () => {
-      const source = await quadrantBlob(400, 200);
+      const source = await quadrantPng(400, 200);
       const decodeSpy = spyOn(window, 'createImageBitmap').and.callThrough();
       await setup(source, { limits: { maxSourcePixels: 1000 } });
       expect(host.errors[0]?.code).toBe('source-too-many-pixels');
@@ -279,7 +294,7 @@ describe('SdImageEditor', () => {
     });
 
     it('centres the image while an ancestor is scaled, as during a modal opening animation', async () => {
-      const source = await quadrantBlob(400, 200);
+      const source = await quadrantPng(400, 200);
       fixture = TestBed.createComponent(HostComponent);
       host = fixture.componentInstance;
       host.option.set({ autoId: 'test' });
@@ -301,7 +316,7 @@ describe('SdImageEditor', () => {
     });
 
     it('switches to the compact layout in a narrow container', async () => {
-      await setup(await quadrantBlob(40, 20), {}, 480);
+      await setup(await quadrantPng(40, 20), {}, 480);
       await until(
         () => (fixture.nativeElement.querySelector('sd-image-editor') as HTMLElement).classList.contains('sd-image-editor--compact'),
         2000,
@@ -323,72 +338,84 @@ describe('SdImageEditor', () => {
   });
 
   describe('export', () => {
-    it('rotates, crops, resizes and applies from the real source pixels', async () => {
-      const source = await quadrantBlob(400, 200);
-      const original = await bytes(source, source.size);
-      await setup(source);
-      await click('rotate-right');
-      expect(editor().edits()).toEqual(jasmine.objectContaining({ rotate: 90, crop: { x: 0, y: 0, width: 200, height: 400 } }));
-      // Keep the top half of the rotated image: blue (left) and red (right).
-      setNumber('crop-height', 200);
-      expect(editor().edits()?.crop).toEqual({ x: 0, y: 0, width: 200, height: 200 });
-      setNumber('output-width', 100);
-      expect(numberValue('output-height')).toBe('100');
-      const result = await apply();
-      expect([result.width, result.height]).toEqual([100, 100]);
-      expect(result.mimeType).toBe('image/png');
-      expect(result.size).toBe(result.blob.size);
-      expect(sdImageEditorSniffFormat(await bytes(result.blob))).toBe('image/png');
-      const decoded = await decode(result.blob);
-      expect([decoded.width, decoded.height]).toEqual([100, 100]);
-      expect(near(pixel(decoded, 20, 50), BLUE)).toBeTrue();
-      expect(near(pixel(decoded, 80, 50), RED)).toBeTrue();
-      // The source was never modified.
-      expect(await bytes(source, source.size)).toEqual(original);
-    });
+    it(
+      'rotates, crops, resizes and applies from the real source pixels',
+      async () => {
+        const source = await quadrantPng(400, 200);
+        const original = await bytes(source, source.size);
+        await setup(source);
+        await click('rotate-right');
+        expect(editor().edits()).toEqual(jasmine.objectContaining({ rotate: 90, crop: { x: 0, y: 0, width: 200, height: 400 } }));
+        // Keep the top half of the rotated image: blue (left) and red (right).
+        setNumber('crop-height', 200);
+        expect(editor().edits()?.crop).toEqual({ x: 0, y: 0, width: 200, height: 200 });
+        setNumber('output-width', 100);
+        expect(numberValue('output-height')).toBe('100');
+        const result = await apply();
+        expect([result.width, result.height]).toEqual([100, 100]);
+        expect(result.mimeType).toBe('image/png');
+        expect(result.size).toBe(result.blob.size);
+        expect(sdImageEditorSniffFormat(await bytes(result.blob))).toBe('image/png');
+        const decoded = await decode(result.blob);
+        expect([decoded.width, decoded.height]).toEqual([100, 100]);
+        expect(near(pixel(decoded, 20, 50), BLUE)).toBeTrue();
+        expect(near(pixel(decoded, 80, 50), RED)).toBeTrue();
+        // The source was never modified.
+        expect(await bytes(source, source.size)).toEqual(original);
+      },
+      ENCODE_TIMEOUT
+    );
 
-    it('produces what the preview shows after flips in either order', async () => {
-      await setup(await quadrantBlob(40, 20));
-      await click('flip-vertical');
-      await click('rotate-right');
-      const a = await decode((await apply()).blob);
-      expect(sameCorners(corners(a), { tl: RED, tr: BLUE, bl: GREEN, br: YELLOW }, 0)).toBeTrue();
-      // Stored as a mirror plus a 270° turn — the transpose of the source.
-      expect(editor().edits()).toEqual(jasmine.objectContaining({ flip: true, rotate: 270 }));
-    });
+    it(
+      'produces what the preview shows after flips in either order',
+      async () => {
+        await setup(await quadrantPng(40, 20));
+        await click('flip-vertical');
+        await click('rotate-right');
+        const a = await decode((await apply()).blob);
+        expect(sameCorners(corners(a), { tl: RED, tr: BLUE, bl: GREEN, br: YELLOW }, 0)).toBeTrue();
+        // Stored as a mirror plus a 270° turn — the transpose of the source.
+        expect(editor().edits()).toEqual(jasmine.objectContaining({ flip: true, rotate: 270 }));
+      },
+      ENCODE_TIMEOUT
+    );
 
-    it('ignores zoom and pan in the exported image', async () => {
-      await setup(await quadrantBlob(400, 200));
-      const fitZoom = query(id('zoom-value'))?.textContent;
-      const fitTransform = query<HTMLCanvasElement>(id('preview'))?.style.transform;
-      await click('zoom-in');
-      await wait(320);
-      await click('zoom-in');
-      const stage = query(id('stage')) as HTMLElement;
-      const rect = stage.getBoundingClientRect();
-      // Pan by dragging the stage itself (not the crop box).
-      pointer('pointerdown', stage, rect.left + 4, rect.top + 4);
-      pointer('pointermove', stage, rect.left + 60, rect.top + 40);
-      pointer('pointerup', stage, rect.left + 60, rect.top + 40);
-      fixture.detectChanges();
-      expect(query(id('zoom-value'))?.textContent).not.toBe(fitZoom);
-      expect(query<HTMLCanvasElement>(id('preview'))?.style.transform).not.toBe(fitTransform);
-      // A crop across the four quadrants, typed while zoomed in, never encoded before.
-      setNumber('crop-width', 100);
-      setNumber('crop-height', 100);
-      setNumber('crop-x', 150);
-      setNumber('crop-y', 50);
-      const result = await apply();
-      expect(result.edits.crop).toEqual({ x: 150, y: 50, width: 100, height: 100 });
-      expect([result.width, result.height]).toEqual([100, 100]);
-      const decoded = await decode(result.blob);
-      expect(pixel(decoded, 49, 10)).toEqual(RED);
-      expect(pixel(decoded, 50, 10)).toEqual(GREEN);
-      expect(pixel(decoded, 10, 49)).toEqual(RED);
-      expect(pixel(decoded, 10, 50)).toEqual(BLUE);
-      expect(pixel(decoded, 90, 90)).toEqual(YELLOW);
-      expect(editor().edits()).toEqual(jasmine.objectContaining({ flip: false, rotate: 0, resize: null }));
-    });
+    it(
+      'ignores zoom and pan in the exported image',
+      async () => {
+        await setup(await quadrantPng(400, 200));
+        const fitZoom = query(id('zoom-value'))?.textContent;
+        const fitTransform = query<HTMLCanvasElement>(id('preview'))?.style.transform;
+        await click('zoom-in');
+        await wait(320);
+        await click('zoom-in');
+        const stage = query(id('stage')) as HTMLElement;
+        const rect = stage.getBoundingClientRect();
+        // Pan by dragging the stage itself (not the crop box).
+        pointer('pointerdown', stage, rect.left + 4, rect.top + 4);
+        pointer('pointermove', stage, rect.left + 60, rect.top + 40);
+        pointer('pointerup', stage, rect.left + 60, rect.top + 40);
+        fixture.detectChanges();
+        expect(query(id('zoom-value'))?.textContent).not.toBe(fitZoom);
+        expect(query<HTMLCanvasElement>(id('preview'))?.style.transform).not.toBe(fitTransform);
+        // A crop across the four quadrants, typed while zoomed in, never encoded before.
+        setNumber('crop-width', 100);
+        setNumber('crop-height', 100);
+        setNumber('crop-x', 150);
+        setNumber('crop-y', 50);
+        const result = await apply();
+        expect(result.edits.crop).toEqual({ x: 150, y: 50, width: 100, height: 100 });
+        expect([result.width, result.height]).toEqual([100, 100]);
+        const decoded = await decode(result.blob);
+        expect(pixel(decoded, 49, 10)).toEqual(RED);
+        expect(pixel(decoded, 50, 10)).toEqual(GREEN);
+        expect(pixel(decoded, 10, 49)).toEqual(RED);
+        expect(pixel(decoded, 10, 50)).toEqual(BLUE);
+        expect(pixel(decoded, 90, 90)).toEqual(YELLOW);
+        expect(editor().edits()).toEqual(jasmine.objectContaining({ flip: false, rotate: 0, resize: null }));
+      },
+      ENCODE_TIMEOUT
+    );
 
     it(
       'exports from the full-resolution source, not the downscaled preview',
@@ -410,88 +437,112 @@ describe('SdImageEditor', () => {
       LARGE_IMAGE_TIMEOUT
     );
 
-    it('does not rotate an EXIF-oriented photo twice', async () => {
-      await setup(await withExifOrientation(await quadrantBlob(40, 20, 'image/jpeg'), 6));
-      expect(editor().sourceInfo()).toEqual(
-        jasmine.objectContaining({ width: 20, height: 40, exifOrientation: 6, mimeType: 'image/jpeg' })
-      );
-      const result = await apply();
-      expect(result.mimeType).toBe('image/jpeg');
-      const decoded = await decode(result.blob);
-      expect([decoded.width, decoded.height]).toEqual([20, 40]);
-      expect(sameCorners(corners(decoded), { tl: UPRIGHT.bl, tr: UPRIGHT.tl, bl: UPRIGHT.br, br: UPRIGHT.tr }, 48)).toBeTrue();
-    });
+    it(
+      'does not rotate an EXIF-oriented photo twice',
+      async () => {
+        await setup(await withExifOrientation(quadrantJpeg(32, 16), 6));
+        expect(editor().sourceInfo()).toEqual(
+          jasmine.objectContaining({ width: 16, height: 32, exifOrientation: 6, mimeType: 'image/jpeg' })
+        );
+        const result = await apply();
+        expect(result.mimeType).toBe('image/jpeg');
+        const decoded = await decode(result.blob);
+        expect([decoded.width, decoded.height]).toEqual([16, 32]);
+        expect(sameCorners(corners(decoded), { tl: UPRIGHT.bl, tr: UPRIGHT.tl, bl: UPRIGHT.br, br: UPRIGHT.tr }, 48)).toBeTrue();
+      },
+      ENCODE_TIMEOUT
+    );
 
-    it('flattens transparency on a JPEG background and keeps it in PNG', async () => {
-      await setup(await transparentBlob(20, 10), { output: { background: 'rgb(0, 0, 255)' } });
-      expect(query(id('background'))).toBeNull();
-      expect(query(id('quality'))).toBeNull();
-      const png = await decode((await apply()).blob);
-      expect(pixel(png, 2, 5)[3]).toBe(0);
-      selectFormat('image/jpeg');
-      expect(query(id('background'))).not.toBeNull();
-      expect(query(id('quality'))).not.toBeNull();
-      const result = await apply();
-      expect(result.mimeType).toBe('image/jpeg');
-      expect(result.quality).toBeCloseTo(0.92, 5);
-      const jpeg = await decode(result.blob);
-      expect(near(pixel(jpeg, 2, 5), BLUE, 16)).toBeTrue();
-      expect(near(pixel(jpeg, 15, 5), RED, 16)).toBeTrue();
-    });
+    it(
+      'flattens transparency on a JPEG background and keeps it in PNG',
+      async () => {
+        await setup(await transparentPng(20, 10), { output: { background: 'rgb(0, 0, 255)' } });
+        expect(query(id('background'))).toBeNull();
+        expect(query(id('quality'))).toBeNull();
+        const png = await decode((await apply()).blob);
+        expect(pixel(png, 2, 5)[3]).toBe(0);
+        selectFormat('image/jpeg');
+        expect(query(id('background'))).not.toBeNull();
+        expect(query(id('quality'))).not.toBeNull();
+        const result = await apply();
+        expect(result.mimeType).toBe('image/jpeg');
+        expect(result.quality).toBeCloseTo(0.92, 5);
+        const jpeg = await decode(result.blob);
+        expect(near(pixel(jpeg, 2, 5), BLUE, 16)).toBeTrue();
+        expect(near(pixel(jpeg, 15, 5), RED, 16)).toBeTrue();
+      },
+      ENCODE_TIMEOUT
+    );
 
-    it('returns a File named after the real format when the source is a File', async () => {
-      const png = await quadrantBlob(40, 20);
-      await setup(new File([png], 'holiday.png', { type: 'image/png' }), { output: { format: 'image/jpeg' } });
-      const result = await apply();
-      expect(result.file).toBeInstanceOf(File);
-      expect(result.blob).toBe(result.file as File);
-      expect(result.fileName).toBe('holiday.jpg');
-      expect(result.file?.name).toBe('holiday.jpg');
-      expect(result.file?.type).toBe('image/jpeg');
-    });
+    it(
+      'returns a File named after the real format when the source is a File',
+      async () => {
+        const png = await quadrantPng(40, 20);
+        await setup(new File([png], 'holiday.png', { type: 'image/png' }), { output: { format: 'image/jpeg' } });
+        const result = await apply();
+        expect(result.file).toBeInstanceOf(File);
+        expect(result.blob).toBe(result.file as File);
+        expect(result.fileName).toBe('holiday.jpg');
+        expect(result.file?.name).toBe('holiday.jpg');
+        expect(result.file?.type).toBe('image/jpeg');
+      },
+      ENCODE_TIMEOUT
+    );
 
-    it('returns a plain Blob for a Blob source unless a File is requested', async () => {
-      await setup(await quadrantBlob(40, 20));
-      const blobResult = await apply();
-      expect(blobResult.file).toBeNull();
-      expect(blobResult.blob instanceof File).toBeFalse();
-      expect(blobResult.fileName).toBe('image.png');
-      host.option.set({ autoId: 'test', output: { resultType: 'file', fileName: 'avatar' } });
-      fixture.detectChanges();
-      const fileResult = await apply();
-      expect(fileResult.file?.name).toBe('avatar.png');
-    });
+    it(
+      'returns a plain Blob for a Blob source unless a File is requested',
+      async () => {
+        await setup(await quadrantPng(40, 20));
+        const blobResult = await apply();
+        expect(blobResult.file).toBeNull();
+        expect(blobResult.blob instanceof File).toBeFalse();
+        expect(blobResult.fileName).toBe('image.png');
+        host.option.set({ autoId: 'test', output: { resultType: 'file', fileName: 'avatar' } });
+        fixture.detectChanges();
+        const fileResult = await apply();
+        expect(fileResult.file?.name).toBe('avatar.png');
+      },
+      ENCODE_TIMEOUT
+    );
 
-    it('scales to the default output box and reports limits', async () => {
-      await setup(await quadrantBlob(400, 200), { output: { width: 100 } });
-      let result = await apply();
-      expect([result.width, result.height, result.sizeLimited]).toEqual([100, 50, false]);
-      host.option.set({ autoId: 'test', limits: { maxOutputPixels: 5000 } });
-      fixture.detectChanges();
-      expect(query(id('limited'))).not.toBeNull();
-      result = await apply();
-      expect(result.sizeLimited).toBeTrue();
-      expect(result.width * result.height).toBeLessThanOrEqual(5000);
-    });
+    it(
+      'scales to the default output box and reports limits',
+      async () => {
+        await setup(await quadrantPng(400, 200), { output: { width: 100 } });
+        let result = await apply();
+        expect([result.width, result.height, result.sizeLimited]).toEqual([100, 50, false]);
+        host.option.set({ autoId: 'test', limits: { maxOutputPixels: 5000 } });
+        fixture.detectChanges();
+        expect(query(id('limited'))).not.toBeNull();
+        result = await apply();
+        expect(result.sizeLimited).toBeTrue();
+        expect(result.width * result.height).toBeLessThanOrEqual(5000);
+      },
+      ENCODE_TIMEOUT
+    );
 
     it('never upscales a typed size unless allowed', async () => {
-      await setup(await quadrantBlob(40, 20));
+      await setup(await quadrantPng(40, 20));
       setNumber('output-width', 400);
       expect(editor().edits()?.resize).toEqual({ width: 40, height: 20 });
       expect(fixture.nativeElement.textContent).toContain('Reduced to 40 × 20 px');
     });
 
-    it('shows the real encoded size and reuses that encoding on Apply', async () => {
-      await setup(await quadrantBlob(400, 200));
-      await until(() => /\d+(\.\d+)? (B|KB)/.test(query(id('meta-size'))?.textContent ?? ''), 3000, 'size');
-      const encodes = spyOn(HTMLCanvasElement.prototype, 'toBlob').and.callThrough();
-      const result = await apply();
-      expect(encodes).not.toHaveBeenCalled();
-      expect(query(id('meta-size'))?.textContent?.trim()).toBe(sdImageEditorFormatBytes(result.size, 'en-US'));
-    });
+    it(
+      'shows the real encoded size and reuses that encoding on Apply',
+      async () => {
+        await setup(await quadrantPng(400, 200));
+        await until(() => /\d+(\.\d+)? (B|KB)/.test(query(id('meta-size'))?.textContent ?? ''), 10_000, 'size');
+        const encodes = spyOn(HTMLCanvasElement.prototype, 'toBlob').and.callThrough();
+        const result = await apply();
+        expect(encodes).not.toHaveBeenCalled();
+        expect(query(id('meta-size'))?.textContent?.trim()).toBe(sdImageEditorFormatBytes(result.size, 'en-US'));
+      },
+      ENCODE_TIMEOUT
+    );
 
     it('rejects getResult() on an encoding failure, shows it and stays editable', async () => {
-      await setup(await quadrantBlob(40, 20));
+      await setup(await quadrantPng(40, 20));
       spyOn(HTMLCanvasElement.prototype, 'toBlob').and.callFake((callback: BlobCallback) => callback(null));
       // Change the output so no cached encoding can be reused.
       setNumber('output-width', 20);
@@ -504,50 +555,58 @@ describe('SdImageEditor', () => {
       expect(query(id('export-error'))?.textContent).toContain('could not be created');
     });
 
-    it('offers getFile(), getBlob() and shares one encoding between concurrent calls', async () => {
-      await setup(await quadrantBlob(40, 20));
-      setNumber('output-width', 20);
-      const first = editor().getResult();
-      const second = editor().getResult();
-      expect(second).toBe(first);
-      expect(editor().status()).toBe('exporting');
-      const result = await first;
-      expect(editor().status()).toBe('ready');
-      const file = await editor().getFile('receipt-0042.heic');
-      expect(file).toBeInstanceOf(File);
-      expect(file.name).toBe('receipt-0042.png');
-      expect(file.type).toBe('image/png');
-      expect(file.size).toBe(result.size);
-      expect((await editor().getFile()).name).toBe('image.png');
-      const blob = await editor().getBlob();
-      expect([...(await bytes(blob, blob.size))]).toEqual([...(await bytes(result.blob, result.blob.size))]);
-    });
+    it(
+      'offers getFile(), getBlob() and shares one encoding between concurrent calls',
+      async () => {
+        await setup(await quadrantPng(40, 20));
+        setNumber('output-width', 20);
+        const first = editor().getResult();
+        const second = editor().getResult();
+        expect(second).toBe(first);
+        expect(editor().status()).toBe('exporting');
+        const result = await parkable(first);
+        expect(editor().status()).toBe('ready');
+        const file = await parkable(editor().getFile('receipt-0042.heic'));
+        expect(file).toBeInstanceOf(File);
+        expect(file.name).toBe('receipt-0042.png');
+        expect(file.type).toBe('image/png');
+        expect(file.size).toBe(result.size);
+        expect((await parkable(editor().getFile())).name).toBe('image.png');
+        const blob = await parkable(editor().getBlob());
+        expect([...(await bytes(blob, blob.size))]).toEqual([...(await bytes(result.blob, result.blob.size))]);
+      },
+      ENCODE_TIMEOUT
+    );
 
-    it('rejects a result whose source was replaced while encoding', async () => {
-      await setup(await quadrantBlob(40, 20));
-      const replacement = await quadrantBlob(60, 30);
-      setNumber('output-width', 30);
-      const native = HTMLCanvasElement.prototype.toBlob;
-      spyOn(HTMLCanvasElement.prototype, 'toBlob').and.callFake(function (
-        this: HTMLCanvasElement,
-        callback: BlobCallback,
-        type?: string,
-        q?: number
-      ) {
-        setTimeout(() => native.call(this, callback, type, q), 150);
-      });
-      const pending = editor().getResult();
-      host.source.set(replacement);
-      fixture.detectChanges();
-      expect((await failureOf(pending)).code).toBe('not-ready');
-      await ready();
-      expect(editor().sourceInfo()?.width).toBe(60);
-    });
+    it(
+      'rejects a result whose source was replaced while encoding',
+      async () => {
+        await setup(await quadrantPng(40, 20));
+        const replacement = await quadrantPng(60, 30);
+        setNumber('output-width', 30);
+        const native = HTMLCanvasElement.prototype.toBlob;
+        spyOn(HTMLCanvasElement.prototype, 'toBlob').and.callFake(function (
+          this: HTMLCanvasElement,
+          callback: BlobCallback,
+          type?: string,
+          q?: number
+        ) {
+          setTimeout(() => native.call(this, callback, type, q), 150);
+        });
+        const pending = editor().getResult();
+        host.source.set(replacement);
+        fixture.detectChanges();
+        expect((await failureOf(pending)).code).toBe('not-ready');
+        await ready();
+        expect(editor().sourceInfo()?.width).toBe(60);
+      },
+      ENCODE_TIMEOUT
+    );
   });
 
   describe('editing', () => {
     it('moves and resizes the crop with the pointer, staying inside the image', async () => {
-      await setup(await quadrantBlob(400, 200));
+      await setup(await quadrantPng(400, 200));
       const crop = query(id('crop')) as HTMLElement;
       drag(query(id('handle-se')) as HTMLElement, -2000, -2000);
       const small = editor().edits()?.crop;
@@ -562,7 +621,7 @@ describe('SdImageEditor', () => {
     });
 
     it('keeps a ratio fixed by the application while dragging, with the keep-ratio toggle disabled', async () => {
-      await setup(await quadrantBlob(400, 200), { aspectRatio: 1, lockAspectRatio: true });
+      await setup(await quadrantPng(400, 200), { aspectRatio: 1, lockAspectRatio: true });
       expect(query(id('ratio-1-1'))).toBeNull();
       const toggle = query<HTMLButtonElement>(id('keep-ratio')) as HTMLButtonElement;
       expect(toggle.disabled).toBeTrue();
@@ -586,7 +645,7 @@ describe('SdImageEditor', () => {
     });
 
     it('frees the crop when keep ratio is turned off, and locks the current shape when turned on', async () => {
-      await setup(await quadrantBlob(400, 200), { aspectRatio: 1 });
+      await setup(await quadrantPng(400, 200), { aspectRatio: 1 });
       const toggle = query<HTMLButtonElement>(id('keep-ratio')) as HTMLButtonElement;
       expect(toggle.disabled).toBeFalse();
       expect(toggle.getAttribute('aria-pressed')).toBe('true');
@@ -619,7 +678,7 @@ describe('SdImageEditor', () => {
     });
 
     it('edits the crop from the keyboard, merging quick nudges into one undo step', async () => {
-      await setup(await quadrantBlob(400, 200));
+      await setup(await quadrantPng(400, 200));
       setNumber('crop-width', 100);
       setNumber('crop-height', 100);
       const crop = query(id('crop')) as HTMLElement;
@@ -637,7 +696,7 @@ describe('SdImageEditor', () => {
     });
 
     it('applies a ratio chip around the crop centre', async () => {
-      await setup(await quadrantBlob(400, 200));
+      await setup(await quadrantPng(400, 200));
       await click('ratio-1-1');
       expect(editor().edits()).toEqual(jasmine.objectContaining({ aspectRatio: 1, crop: { x: 100, y: 0, width: 200, height: 200 } }));
       expect(query(id('ratio-1-1'))?.getAttribute('aria-pressed')).toBe('true');
@@ -646,7 +705,7 @@ describe('SdImageEditor', () => {
     });
 
     it('undoes, redoes and resets, from buttons and shortcuts', async () => {
-      await setup(await quadrantBlob(40, 20));
+      await setup(await quadrantPng(40, 20));
       await click('rotate-right');
       await click('flip-horizontal');
       expect(editor().edits()).toEqual(jasmine.objectContaining({ flip: true, rotate: 270 }));
@@ -670,7 +729,7 @@ describe('SdImageEditor', () => {
     });
 
     it('leaves Ctrl+Z to a focused number field', async () => {
-      await setup(await quadrantBlob(40, 20));
+      await setup(await quadrantPng(40, 20));
       await click('rotate-right');
       const input = query<HTMLInputElement>(`${id('crop-x')} input`) as HTMLInputElement;
       input.focus();
@@ -680,28 +739,32 @@ describe('SdImageEditor', () => {
       expect(editor().canUndo()).toBeTrue();
     });
 
-    it("exposes rotate(), flip() and reset() for the consumer's own controls", async () => {
-      await setup(await quadrantBlob(40, 20));
-      editor().rotate('right');
-      editor().flip('vertical');
-      // Rotated right (blue, red / yellow, green) then mirrored top ↔ bottom.
-      expect(editor().edits()).toEqual(jasmine.objectContaining({ flip: true, rotate: 90 }));
-      expect(editor().dirty()).toBeTrue();
-      const moved = await decode((await apply()).blob);
-      expect(sameCorners(corners(moved), { tl: YELLOW, tr: GREEN, bl: BLUE, br: RED }, 0)).toBeTrue();
-      editor().reset();
-      expect(editor().dirty()).toBeFalse();
-      editor().rotate('left');
-      expect(editor().edits()?.rotate).toBe(270);
-      editor().undo();
-      expect(editor().edits()?.rotate).toBe(0);
-    });
+    it(
+      "exposes rotate(), flip() and reset() for the consumer's own controls",
+      async () => {
+        await setup(await quadrantPng(40, 20));
+        editor().rotate('right');
+        editor().flip('vertical');
+        // Rotated right (blue, red / yellow, green) then mirrored top ↔ bottom.
+        expect(editor().edits()).toEqual(jasmine.objectContaining({ flip: true, rotate: 90 }));
+        expect(editor().dirty()).toBeTrue();
+        const moved = await decode((await apply()).blob);
+        expect(sameCorners(corners(moved), { tl: YELLOW, tr: GREEN, bl: BLUE, br: RED }, 0)).toBeTrue();
+        editor().reset();
+        expect(editor().dirty()).toBeFalse();
+        editor().rotate('left');
+        expect(editor().edits()?.rotate).toBe(270);
+        editor().undo();
+        expect(editor().edits()?.rotate).toBe(0);
+      },
+      ENCODE_TIMEOUT
+    );
   });
 
   describe('lifecycle', () => {
     it('keeps the newest source when an older one finishes decoding later', async () => {
-      const first = await quadrantBlob(40, 20);
-      const second = await quadrantBlob(60, 30);
+      const first = await quadrantPng(40, 20);
+      const second = await quadrantPng(60, 30);
       const native = window.createImageBitmap.bind(window) as (...args: unknown[]) => Promise<ImageBitmap>;
       let release!: () => void;
       const gate = new Promise<void>(resolve => (release = resolve));
@@ -726,7 +789,7 @@ describe('SdImageEditor', () => {
       await wait(20);
       host.source.set(second);
       fixture.detectChanges();
-      await until(() => editor().status() === 'ready' && editor().sourceInfo()?.width === 60, 5000, 'second source');
+      await until(() => editor().status() === 'ready' && editor().sourceInfo()?.width === 60, 3000, 'second source');
       release();
       await until(() => slow !== null, 2000, 'stale decode');
       await wait(20);
@@ -748,7 +811,7 @@ describe('SdImageEditor', () => {
         closed.add(this);
         close.call(this);
       });
-      const source = await quadrantBlob(40, 20);
+      const source = await quadrantPng(40, 20);
       await setup(source);
       for (let i = 0; i < 4; i++) {
         host.shown.set(false);
@@ -766,7 +829,7 @@ describe('SdImageEditor', () => {
     });
 
     it('releases a bitmap that finishes decoding after the editor was destroyed', async () => {
-      const source = await quadrantBlob(40, 20);
+      const source = await quadrantPng(40, 20);
       const native = window.createImageBitmap.bind(window) as (...args: unknown[]) => Promise<ImageBitmap>;
       let release!: () => void;
       const gate = new Promise<void>(resolve => (release = resolve));

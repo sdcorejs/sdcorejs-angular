@@ -1,6 +1,6 @@
-// Shared fixtures for the image-editor specs. Images are drawn with a real canvas and encoded by the browser (large
-// sources are written as PNG bytes, see `grayPng()`), so the specs exercise real decoding and encoding — nothing
-// about the canvas is mocked here.
+// Shared fixtures for the image-editor specs. Images are drawn with a real canvas and encoded by the browser, or
+// written byte by byte where a canvas encode would make the spec wait on Chrome's idle time (see `png()`), so the
+// specs exercise real decoding and encoding — nothing about the canvas is mocked here.
 
 export type Rgba = readonly [number, number, number, number];
 
@@ -51,8 +51,10 @@ export function quadrants(width: number, height: number, corners: Corners = UPRI
 }
 
 export function toBlob(element: HTMLCanvasElement, type = 'image/png', quality?: number): Promise<Blob> {
-  return new Promise((resolve, reject) =>
-    element.toBlob(blob => (blob ? resolve(blob) : reject(new Error(`toBlob(${type}) returned null`))), type, quality)
+  return parkable(
+    new Promise((resolve, reject) =>
+      element.toBlob(blob => (blob ? resolve(blob) : reject(new Error(`toBlob(${type}) returned null`))), type, quality)
+    )
   );
 }
 
@@ -87,26 +89,109 @@ function pngChunk(type: string, data: Uint8Array) {
   return out;
 }
 
+/** PNG colour type for 1 (grey), 3 (RGB) or 4 (RGBA) samples per pixel. */
+const PNG_COLOR_TYPE = { 1: 0, 3: 2, 4: 6 } as const;
+
 /**
- * Opaque 8-bit grey PNG whose every row is `row` (one grey value per column), written byte by byte — for large
- * sources. Chrome encodes `canvas.toBlob()` PNG on the main thread in idle time only: a busy run that leaves no idle
- * time delays the start by up to 1 s and the end by up to 5.7 s more, so a multi-megapixel canvas encode can stall a
- * spec for seconds. Writing the bytes needs only `CompressionStream`; the browser still decodes the image.
+ * 8-bit PNG written byte by byte; `rowAt(y)` returns the samples of row `y`. Chrome encodes `canvas.toBlob()` PNG and
+ * JPEG on the main thread in idle time only: a busy run that leaves no idle time delays every encode by 1 s, whatever
+ * the image size (measured 1.07 s for a 40 × 20 fixture), and a large one by up to 5.7 s more. Writing the bytes
+ * needs only `CompressionStream`; the browser still decodes the image.
  */
-export async function grayPng(row: Uint8Array, height: number): Promise<Blob> {
-  const stride = row.length + 1; // filter byte 0 (none), then the pixels
+async function png(width: number, height: number, channels: 1 | 3 | 4, rowAt: (y: number) => Uint8Array): Promise<Blob> {
+  const stride = width * channels + 1; // filter byte 0 (none), then the samples
   const raw = new Uint8Array(stride * height);
-  for (let y = 0; y < height; y++) raw.set(row, y * stride + 1);
-  const idat = new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream('deflate'))).arrayBuffer());
+  for (let y = 0; y < height; y++) raw.set(rowAt(y), y * stride + 1);
+  const idat = new Uint8Array(
+    await parkable(new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream('deflate'))).arrayBuffer())
+  );
   const ihdr = new Uint8Array(13);
   const view = new DataView(ihdr.buffer);
-  view.setUint32(0, row.length);
+  view.setUint32(0, width);
   view.setUint32(4, height);
-  ihdr[8] = 8; // bit depth; colour type 0 (grey), no interlace
+  ihdr[8] = 8; // bit depth
+  ihdr[9] = PNG_COLOR_TYPE[channels]; // no interlace
   const signature = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
   return new Blob([signature, pngChunk('IHDR', ihdr), pngChunk('IDAT', idat), pngChunk('IEND', new Uint8Array(0))], {
     type: 'image/png',
   });
+}
+
+/** Opaque grey PNG whose every row is `row` (one grey value per column), written byte by byte — for large sources. */
+export function grayPng(row: Uint8Array, height: number): Promise<Blob> {
+  return png(row.length, height, 1, () => row);
+}
+
+/** The quadrant fixture as an opaque RGB PNG written byte by byte. Width and height should be even. */
+export function quadrantPng(width = 40, height = 20, corners: Corners = UPRIGHT): Promise<Blob> {
+  const row = (left: Rgba, right: Rgba) => {
+    const samples = new Uint8Array(width * 3);
+    for (let x = 0; x < width; x++) samples.set((x < width / 2 ? left : right).slice(0, 3), x * 3);
+    return samples;
+  };
+  const top = row(corners.tl, corners.tr);
+  const bottom = row(corners.bl, corners.br);
+  return png(width, height, 3, y => (y < height / 2 ? top : bottom));
+}
+
+/** RGBA PNG written byte by byte: left half fully transparent, right half opaque red. Width should be even. */
+export function transparentPng(width = 20, height = 10): Promise<Blob> {
+  const row = new Uint8Array(width * 4);
+  for (let x = width / 2; x < width; x++) row.set(RED, x * 4);
+  return png(width, height, 4, () => row);
+}
+
+/**
+ * The quadrant fixture as a baseline JPEG written byte by byte (see `png()` for why). Every 8 × 8 block is one colour,
+ * so only its DC coefficient is coded: a quantisation table of ones, a DC Huffman table of 4-bit codes (code = bit
+ * length of the difference) and an AC table holding end-of-block only. Width and height must be multiples of 16, so
+ * that no block straddles two quadrants.
+ */
+export function quadrantJpeg(width = 32, height = 16, corners: Corners = UPRIGHT): Blob {
+  const segment = (marker: number, data: number[]) => [0xff, marker, (data.length + 2) >> 8, (data.length + 2) & 0xff, ...data];
+  const out = [
+    ...[0xff, 0xd8], // SOI
+    ...segment(0xdb, [0, ...new Array<number>(64).fill(1)]), // DQT 0
+    ...segment(0xc0, [8, height >> 8, height & 0xff, width >> 8, width & 0xff, 3, 1, 0x11, 0, 2, 0x11, 0, 3, 0x11, 0]), // SOF0, YCbCr 4:4:4
+    ...segment(0xc4, [0x00, 0, 0, 0, 12, ...new Array<number>(12).fill(0), ...Array.from({ length: 12 }, (_, i) => i)]), // DHT DC 0
+    ...segment(0xc4, [0x10, 1, ...new Array<number>(15).fill(0), 0x00]), // DHT AC 0
+    ...segment(0xda, [3, 1, 0x00, 2, 0x00, 3, 0x00, 0, 63, 0]), // SOS
+  ];
+  let pending = 0;
+  let count = 0;
+  const put = (value: number, length: number) => {
+    for (let i = length - 1; i >= 0; i--) {
+      pending = (pending << 1) | ((value >> i) & 1);
+      if (++count < 8) continue;
+      out.push(pending, ...(pending === 0xff ? [0] : [])); // byte stuffing
+      pending = 0;
+      count = 0;
+    }
+  };
+  const previous = [0, 0, 0];
+  for (let y = 0; y < height; y += 8) {
+    for (let x = 0; x < width; x += 8) {
+      const top = y < height / 2;
+      const [r, g, b] = x < width / 2 ? (top ? corners.tl : corners.bl) : top ? corners.tr : corners.br;
+      const ycc = [
+        0.299 * r + 0.587 * g + 0.114 * b,
+        128 - 0.168736 * r - 0.331264 * g + 0.5 * b,
+        128 + 0.5 * r - 0.418688 * g - 0.081312 * b,
+      ];
+      ycc.forEach((value, component) => {
+        const dc = Math.round(8 * (value - 128));
+        const diff = dc - previous[component];
+        previous[component] = dc;
+        const size = diff === 0 ? 0 : Math.floor(Math.log2(Math.abs(diff))) + 1;
+        put(size, 4);
+        put(diff < 0 ? diff + (1 << size) - 1 : diff, size);
+        put(0, 1); // end of block
+      });
+    }
+  }
+  put(0xff, (8 - count) % 8); // pad the last byte with ones
+  out.push(0xff, 0xd9); // EOI
+  return new Blob([new Uint8Array(out)], { type: 'image/jpeg' });
 }
 
 export interface Decoded {
@@ -132,7 +217,7 @@ export interface Region {
  * pass the region the spec looks at: a full read-back copies tens of MB.
  */
 export async function decode(blob: Blob, region?: Region): Promise<Decoded> {
-  const bitmap = await createImageBitmap(blob);
+  const bitmap = await parkable(createImageBitmap(blob));
   try {
     const { x, y, width, height } = region ?? { x: 0, y: 0, width: bitmap.width, height: bitmap.height };
     const element = canvas(width, height, ctx => ctx.drawImage(bitmap, x, y, width, height, 0, 0, width, height));
@@ -175,7 +260,7 @@ export function sameCorners(actual: Corners, expected: Corners, tolerance = 2): 
 }
 
 export async function bytes(blob: Blob, length = 64): Promise<Uint8Array> {
-  return new Uint8Array(await blob.slice(0, length).arrayBuffer());
+  return new Uint8Array(await parkable(blob.slice(0, length).arrayBuffer()));
 }
 
 /**
@@ -183,7 +268,7 @@ export async function bytes(blob: Blob, length = 64): Promise<Uint8Array> {
  * The pixels stay as stored; a viewer must apply the orientation.
  */
 export async function withExifOrientation(jpeg: Blob, orientation: number, littleEndian = false): Promise<Blob> {
-  const source = new Uint8Array(await jpeg.arrayBuffer());
+  const source = new Uint8Array(await parkable(jpeg.arrayBuffer()));
   const tiff = new Uint8Array(26);
   const view = new DataView(tiff.buffer);
   tiff.set(littleEndian ? [0x49, 0x49] : [0x4d, 0x4d], 0);
@@ -207,7 +292,7 @@ export async function withExifOrientation(jpeg: Blob, orientation: number, littl
 
 /** A PNG with an `acTL` chunk (APNG) inserted after IHDR. The CRC is not checked by the header reader. */
 export async function animatedPng(): Promise<Blob> {
-  const png = new Uint8Array(await (await quadrantBlob(8, 8)).arrayBuffer());
+  const png = new Uint8Array(await parkable((await quadrantPng(8, 8)).arrayBuffer()));
   const ihdrEnd = 8 + 8 + 13 + 4;
   const actl = new Uint8Array([0, 0, 0, 8, 0x61, 0x63, 0x54, 0x4c, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0]);
   const out = new Uint8Array(png.length + actl.length);
@@ -239,31 +324,45 @@ export function gifBlob(): Blob {
 
 /** Bytes that start like a PNG but stop inside the IHDR chunk. */
 export async function truncatedPng(): Promise<Blob> {
-  const png = new Uint8Array(await (await quadrantBlob(8, 8)).arrayBuffer());
+  const png = new Uint8Array(await parkable((await quadrantPng(8, 8)).arrayBuffer()));
   return new Blob([png.subarray(0, 40)], { type: 'image/png' });
 }
 
 export function wait(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return parkable(new Promise(resolve => setTimeout(resolve, ms)));
 }
 
-let pollGeneration = 0;
-
-/**
- * Stops every `until()` still polling: it never settles. Call it in `afterEach` — a spec that timed out keeps running,
- * and Jasmine reports what it throws later on whichever spec is running then, so one timeout would fail two specs.
- */
-export function stopPolling(): void {
-  pollGeneration++;
-}
-
-/** Polls `check` until it returns true or `timeout` ms elapse. Never settles once `stopPolling()` has been called. */
+/** Polls `check` until it returns true or `timeout` ms elapse. */
 export async function until(check: () => boolean, timeout = 4000, label = 'condition'): Promise<void> {
-  const generation = pollGeneration;
   const start = Date.now();
-  while (generation === pollGeneration && !check()) {
+  while (!check()) {
     if (Date.now() - start > timeout) throw new Error(`Timed out waiting for ${label}`);
     await wait(10);
   }
-  if (generation !== pollGeneration) await new Promise<never>(() => undefined);
+}
+
+let generation = 0;
+
+/**
+ * Parks every `parkable()` promise still pending: it never settles. Call it in `afterEach`. A spec that timed out keeps
+ * running, and Jasmine reports what it throws or expects later on whichever spec is running then — so one timeout
+ * would fail two specs, and a late `setup()` would replace the next spec's fixture. The fixtures above await through
+ * `parkable()`, so a timed-out spec that awaits only them (and its own helpers built the same way) stops for good at
+ * its next await.
+ */
+export function parkPending(): void {
+  generation++;
+}
+
+/** Settles like `promise`, or never when `parkPending()` is called before it settles. */
+export function parkable<T>(promise: Promise<T>): Promise<T> {
+  const started = generation;
+  const never = () => new Promise<never>(() => undefined);
+  return promise.then(
+    value => (started === generation ? value : never()),
+    (error: unknown) => {
+      if (started !== generation) return never();
+      throw error;
+    }
+  );
 }
