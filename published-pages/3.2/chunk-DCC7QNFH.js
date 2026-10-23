@@ -1,0 +1,1 @@
+function t(r){let n=/^v?(\d+)(?:\.|$)/.exec(r?.trim()??"");return n?Number(n[1]):null}function a(r){let n=t(r);return`npm install @sdcorejs/angular${n?`@^${n}`:""}`}function l(r){let n=t(r),e=n?`@^${n}`:"";return`npm install @sdcorejs/angular${e} @angular/material${e} @angular/material-date-fns-adapter${e}`}export{a,l as b};
