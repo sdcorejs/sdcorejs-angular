@@ -239,10 +239,8 @@ $component-tokens: (
   'tab-router-item-active-bg': (var(--sd-surface), var(--sd-surface)),
   'tab-router-item-text': (var(--sd-text-secondary), var(--sd-text-secondary)),
   'tab-router-item-divider': (color-mix(in srgb, var(--sd-border) 70%, var(--sd-tab-router-nav-bg)), color-mix(in srgb, var(--sd-border) 70%, var(--sd-tab-router-nav-bg))),
-  // Deprecated (wave 3 · 3a): no longer read by the tab bar, removed in a later release. muted-bg aliases the bar
-  // background; badge-bg filled the old letter icon, which the bar stopped rendering.
+  // Deprecated (wave 3 · 3a): no longer read by the tab bar, removed in a later release; aliases the bar background.
   'tab-router-item-muted-bg': (var(--sd-tab-router-nav-bg), var(--sd-tab-router-nav-bg)),
-  'tab-router-badge-bg': (#5c6bc0, #9fa8da),
   // table — derived from the palette and mixed with --sd-table-bg (not surface), one expression for light
   // and dark (design handoff wave 1 · C). table-bg, the tree levels and the export panel keep their values.
   'table-bg': (#ffffff, #1d1f23),

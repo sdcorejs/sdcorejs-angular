@@ -38,14 +38,24 @@ const pagingFilters = async (page: Page): Promise<unknown[]> =>
 /** The calendar of an open picker. */
 const calendar = (page: Page): Locator => page.locator('.mat-datepicker-content');
 
-/** Navigates an open calendar to a month through the year and multi-year views. */
+/**
+ * Navigates an open calendar to a past month through the year and multi-year views.
+ * why: reads the page range from the period label and waits for it to change after each "Previous 24 years". Checking
+ * `isVisible()` right after a click raced the re-render on a slow runner: the loop paged past the target and never found it.
+ */
 const goToMonth = async (page: Page, year: number, month: string): Promise<void> => {
   const panel = calendar(page);
   await panel.getByRole('button', { name: 'Choose month and year' }).click();
-  const yearCell = panel.getByRole('button', { name: String(year), exact: true });
-  for (let step = 0; step < 6 && !(await yearCell.isVisible()); step++) {
+  await expect(panel.locator('mat-multi-year-view')).toBeVisible();
+  const period = panel.locator('.mat-calendar-period-button');
+  for (let step = 0; step < 6; step++) {
+    const label = (await period.textContent()) ?? '';
+    const start = Number(label.match(/\d{4}/)?.[0]);
+    if (!start || start <= year) break;
     await panel.getByRole('button', { name: 'Previous 24 years' }).click();
+    await expect(period).not.toHaveText(label);
   }
+  const yearCell = panel.getByRole('button', { name: String(year), exact: true });
   await yearCell.click();
   await panel.getByRole('button', { name: new RegExp(`^${month} ${year}$`) }).click();
 };

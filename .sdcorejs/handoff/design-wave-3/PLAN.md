@@ -163,12 +163,18 @@ Ghi chú bước 3a:
 - Màu icon `--sd-<color>-dark`, mặc định primary (HTML: #004a99 / #1e6b3a / #8a5300). Icon qua input `size` của sd-icon
   (CSS `width` trên host sd-icon không thắng `--sd-icon-size`).
 - Token: `--sd-tab-router-badge-bg` cũng không còn ai đọc (chỉ `.tab-router__icon` cũ dùng) → ghi Deprecated cùng
-  `item-muted-bg` (ngoài danh sách md, cần user xác nhận).
+  `item-muted-bg` (ngoài danh sách md). User trả lời 2026-10-23: chưa ai dùng, **xoá hẳn**. PR #97 (3.2) đã merge trước khi
+  kịp đưa vào, nên 3.2 ship với Deprecated và token bị xoá ở `[Unreleased]` (bản sau 3.2); `item-muted-bg` vẫn
+  Deprecated.
 - **Bug có sẵn phát hiện khi viết demo (chưa sửa, ngoài phạm vi):** outlet dựng tab bất đồng bộ sau `NavigationEnd` và đọc
   `router.routerState` lúc đó. Điều hướng liên tiếp nhanh (await `navigateByUrl` rồi điều hướng tiếp) làm tab của URL
   trước nhận nhầm component/route của URL sau (tên tab sai). Demo `/demo/tab-router` né bằng cách đợi
   `currentTabChanges` báo đúng URL rồi mới đi tiếp. Nên hỏi user có mở việc riêng để sửa (chụp snapshot theo
   `event.id` lúc NavigationEnd thay vì đọc lại routerState trong hàng đợi).
+  **Đã sửa 2026-10-23** (nhánh `fix/tab-router-followups`, sau khi 3.2 merge): outlet chụp route lá + ActivatedRoute ngay
+  trong bước `map` của `router.events` (đồng bộ với NavigationEnd / NavigationSkipped) và truyền vào tác vụ kích hoạt;
+  sau `await` vẫn thử tìm trong cây mới, không thấy thì dùng ActivatedRoute đã chụp. Spec tái hiện bằng route lazy
+  NgModule giữ hàng đợi bận trong lúc điều hướng `/a` rồi `/b`.
 
 Ghi chú bước 3b (2026-10-23, sau khi đợt 1–3a đã merge vào `main` qua #95; user chọn làm đủ 3b trước release 3.2):
 - Cấu trúc thanh: `.tab-router__nav` (40px, nền, ẩn khi ≤ 1 tab) > `.tab-router__tabs` (relative) > `.tab-router__scroller`
@@ -268,4 +274,5 @@ npm --prefix showcase run link:library
 - **4a–4d:** theo §1, §6, QĐ 10, 13, 14, 15 và `upload-file.md`.
 
 **Cuối cùng:** quét mojibake toàn bộ diff đợt 3; một báo cáo tổng cho user (gồm các điểm cần user xác nhận đã ghi trong
-§9: `tab-router-badge-bg` Deprecated, bug race của outlet, các lệch spec từng bước).
+§9: các lệch spec từng bước). Đã chốt 2026-10-23: `tab-router-badge-bg` xoá ở bản sau 3.2; bug race của outlet sửa ở nhánh
+riêng cắt từ `main` sau khi PR #97 merge.

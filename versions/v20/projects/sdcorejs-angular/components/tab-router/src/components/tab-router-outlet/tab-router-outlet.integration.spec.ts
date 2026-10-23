@@ -1,8 +1,8 @@
-import { Component, ErrorHandler } from '@angular/core';
+import { Component, ErrorHandler, NgModule } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, flush, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { Router, provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule, provideRouter } from '@angular/router';
 import { Subject } from 'rxjs';
 
 import { SdTabRouterOutletComponent } from './tab-router-outlet.component';
@@ -18,6 +18,13 @@ class PageAComponent {}
 class PageBComponent {}
 @Component({ standalone: true, template: '<span data-cy="page-c"></span>' })
 class PageCComponent {}
+
+// NgModule lazy route: the outlet calls loadChildren() again to build the tab injector, so the test can hold that call
+// and keep the activation queue busy while the router moves on.
+@Component({ standalone: true, template: '<span data-cy="page-lazy"></span>' })
+class LazyPageComponent {}
+@NgModule({ imports: [RouterModule.forChild([{ path: '', component: LazyPageComponent }])] })
+class LazyPageModule {}
 
 @Component({
   standalone: true,
@@ -359,6 +366,35 @@ describe('SdTabRouterOutletComponent (integration)', () => {
 
       expect(outletCmp.tabs().length).toBe(1);
     }));
+
+    // why: tác vụ kích hoạt tab từng đọc `router.routerState` lúc nó chạy chứ không phải lúc NavigationEnd. Khi hàng đợi
+    // còn bận (tab trước chờ nạp module lazy), router đã sang URL sau nên tab của URL trước nhận component, route và tên của
+    // URL sau.
+    it('gives each tab the component and route of its own URL when navigations finish while an activation is pending', async () => {
+      let release!: () => void;
+      const outletLoad = new Promise<void>(resolve => (release = resolve));
+      let loads = 0;
+      router.resetConfig([
+        ...router.config,
+        { path: 'lazy', loadChildren: () => (++loads === 1 ? Promise.resolve(LazyPageModule) : outletLoad.then(() => LazyPageModule)) },
+      ]);
+
+      await router.navigateByUrl('/lazy');
+      await router.navigateByUrl('/a');
+      await router.navigateByUrl('/b');
+      release();
+      // why: ba lần kích hoạt nối nhau qua concatMap và hàng đợi Promise của outlet — đợi vài vòng cho cả ba chạy xong.
+      for (let round = 0; round < 5; round++) {
+        fixture.detectChanges();
+        await fixture.whenStable();
+        await new Promise(resolve => setTimeout(resolve));
+      }
+
+      const tabs = outletCmp.tabs();
+      expect(tabs.map(tab => tab.url)).toEqual(['/lazy', '/a', '/b']);
+      expect(tabs.map(tab => tab.component)).toEqual([LazyPageComponent, PageAComponent, PageBComponent]);
+      expect(tabs[1].injector.get(ActivatedRoute, null)?.snapshot.routeConfig?.path).withContext('route of /a').toBe('a');
+    });
   });
 
   describe('beforeClose guard', () => {
