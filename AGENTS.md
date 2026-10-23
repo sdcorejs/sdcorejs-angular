@@ -164,6 +164,16 @@ powershell -ExecutionPolicy Bypass -File ./scripts/deploy.ps1 `
 
 Suffix `x.0` (vd `3.0`) không có patch trước để suy baseline, nên phải truyền baseline tường minh có minor nhỏ hơn — `-PatchVersion "3.0" -BaselineSuffix "2.15"` (cùng giá trị cho `--baseline-suffix` của `release-package-contract.mjs` và field `baselineSuffix` của snapshot `scripts/release-contracts/3.0.json`). Suffix patch vẫn tự suy `patch - 1`; `-BaselineSuffix` khác giá trị đó bị từ chối.
 
+**Snapshot phải dựng từ artifact Linux của CI, không từ dry-run Windows** (từ 3.2). `modules/generic` bị ng-packagr tách thành chunk FESM có hash nội dung (`…-generic-list.page-<hash>.mjs`). Checkout CRLF trên Windows đưa `\r\n` vào template đã biên dịch, nên hash và tên chunk khác bản Linux, và fingerprint `files` lệch dù dependency, exports và public surface khớp. Quy trình:
+
+1. Tag lần đầu.
+2. Lần chạy `publish-npm.yml` đầu tiên dừng ở "Verify all four retained packages" và không publish gì.
+3. Tải bốn artifact `sdcorejs-angular-v{19,20,21,22}-<suffix>` của run đó (`gh run download`).
+4. Dựng snapshot từ chúng trên Node `22.22.3`, rồi kiểm bằng `release-package-contract.mjs --compile-consumers` trong một worktree ở đúng source SHA.
+5. Merge snapshot vào main, rồi đặt lại tag lên commit mới.
+
+Dry-run Windows vẫn dùng được để kiểm build và pack.
+
 ### GitHub Pages — mỗi release 1 page, deploy KHÔNG build
 
 Workflow: `.github/workflows/deploy-pages.yml`. **Không có Angular build trong workflow.** Nó chỉ assemble từ artifact đã commit rồi upload.
