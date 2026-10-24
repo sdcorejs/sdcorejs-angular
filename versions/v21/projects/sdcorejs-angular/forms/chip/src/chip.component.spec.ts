@@ -131,12 +131,13 @@ describe('SdChip', () => {
       expect(input.getAttribute('placeholder')).toBe('Type something');
     });
 
-    it('falls back to label when placeholder is undefined', () => {
+    it('falls back to the default placeholder, not the label, when placeholder is undefined', () => {
+      // why: placeholder lặp lại label (B5); mặc định là `core.form.chip.placeholder`.
       host.placeholder = undefined;
       host.label = 'My Label';
       fixture.detectChanges();
       const input = queryByCss<HTMLInputElement>(fixture, '.sd-chip-input');
-      expect(input.getAttribute('placeholder')).toBe('My Label');
+      expect(input.getAttribute('placeholder')).toBe('Nhập rồi nhấn Enter');
     });
   });
 
@@ -485,10 +486,11 @@ describe('SdChip', () => {
       expect(chip.isFocused).toBe(true);
     });
 
-    it('clears inputControl value on onFocus', () => {
+    it('keeps the typed text on onFocus', () => {
+      // why: focus từng xoá chữ đang gõ (B1); giờ chữ chỉ đi khi thành chip hoặc khi `[addOnBlur]="false"` lúc blur.
       chip.inputControl.setValue('typing...');
       chip.onFocus();
-      expect(chip.inputControl.value).toBe('');
+      expect(chip.inputControl.value).toBe('typing...');
     });
   });
 
