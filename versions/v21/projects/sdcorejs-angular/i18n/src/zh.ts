@@ -162,6 +162,14 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.chip.minlength': '请至少输入 {min} 个值',
   'core.form.chip.maxlength': '最多输入 {max} 个值',
   'core.form.chip.remove': '移除 {value}',
+  'core.form.chip.placeholder': '输入后按 Enter',
+  'core.form.chip.locked': '无法移除',
+  'core.form.chip.duplicate': '“{value}” 已存在',
+  'core.form.chip.full': '已达到 {max} 个',
+  'core.form.chip.added': '已添加 {count} 个',
+  'core.form.chip.skipped': '跳过 {count} 个重复项',
+  'core.form.chip.more': '再显示 {count} 个',
+  'core.form.chip.clear': '全部移除',
 
   // ---- Forms: chip-calendar ----
   'core.form.chip-calendar.required': '请输入内容',

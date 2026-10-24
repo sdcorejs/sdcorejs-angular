@@ -292,8 +292,10 @@ export type ShowcaseExampleSourceKey =
   | "forms/chip/example-bat-buoc-so-toi-thieu"
   | "forms/chip/example-chinh-sua-noi-tuyen"
   | "forms/chip/example-chip-khoa"
+  | "forms/chip/example-gon-trong-o-bang"
   | "forms/chip/example-kich-thuoc"
   | "forms/chip/example-lien-ket-hai-chieu"
+  | "forms/chip/example-nguoi-nhan-email"
   | "forms/chip/example-vo-hieu-hoa"
   | "forms/date-range/example-chinh-sua-noi-tuyen"
   | "forms/date-range/example-chuan-hoa-gia-tri-dau-ra"
@@ -2422,6 +2424,20 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-bat-buoc-so-toi-thieu",
     title: "Bắt buộc & số tối thiểu",
     description: "Cần ít nhất 3 chip. Lỗi chỉ hiện khi đã chạm field hoặc đã bấm Gửi; field dưới ẩn lỗi vào icon.",
+  },
+  {
+    sourceKey: "forms/chip/example-nguoi-nhan-email",
+    pageKey: "forms/chip",
+    sectionId: "example-nguoi-nhan-email",
+    title: "Người nhận email",
+    description: "Gõ abc rồi Enter: báo lỗi, chữ còn trong ô. Gõ AN@congty.vn: chip đã có nháy lên. Gõ rồi Tab ra ngoài: vẫn thành chip. Dán “a@x.vn, b@x.vn; abc”: thêm nhiều chip một lần. Đủ 5 thì không thêm được nữa. Chip toi@congty.vn không xoá được.",
+  },
+  {
+    sourceKey: "forms/chip/example-gon-trong-o-bang",
+    pageKey: "forms/chip",
+    sectionId: "example-gon-trong-o-bang",
+    title: "Gọn trong ô bảng",
+    description: "Khi không focus chỉ hiện 2 chip và “+N”; bấm “+N” hoặc focus vào ô để thấy hết. Chip dài hơn 240px bị cắt kèm tooltip.",
   },
   {
     sourceKey: "forms/chip/example-chip-khoa",

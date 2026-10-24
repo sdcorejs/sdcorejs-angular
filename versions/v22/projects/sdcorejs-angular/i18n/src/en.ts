@@ -161,6 +161,14 @@ export const EN_MESSAGES = {
   'core.form.chip.minlength': 'Please enter at least {min} values',
   'core.form.chip.maxlength': 'Please enter at most {max} values',
   'core.form.chip.remove': 'Remove {value}',
+  'core.form.chip.placeholder': 'Type, then press Enter',
+  'core.form.chip.locked': 'Cannot be removed',
+  'core.form.chip.duplicate': '“{value}” is already added',
+  'core.form.chip.full': 'All {max} values are added',
+  'core.form.chip.added': 'Added {count}',
+  'core.form.chip.skipped': 'skipped {count} duplicates',
+  'core.form.chip.more': 'Show {count} more',
+  'core.form.chip.clear': 'Remove all',
 
   // ---- Forms: chip-calendar ----
   'core.form.chip-calendar.required': 'Please enter information',

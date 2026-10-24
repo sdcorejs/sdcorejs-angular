@@ -162,6 +162,14 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.chip.minlength': '최소 {min}개의 값을 입력해 주세요',
   'core.form.chip.maxlength': '최대 {max}개의 값을 입력해 주세요',
   'core.form.chip.remove': '{value} 제거',
+  'core.form.chip.placeholder': '입력 후 Enter를 누르세요',
+  'core.form.chip.locked': '제거할 수 없습니다',
+  'core.form.chip.duplicate': '“{value}”은(는) 이미 있습니다',
+  'core.form.chip.full': '{max}개를 모두 추가했습니다',
+  'core.form.chip.added': '{count}개 추가됨',
+  'core.form.chip.skipped': '중복 {count}개 제외',
+  'core.form.chip.more': '{count}개 더 보기',
+  'core.form.chip.clear': '모두 제거',
 
   // ---- Forms: chip-calendar ----
   'core.form.chip-calendar.required': '정보를 입력해 주세요',
