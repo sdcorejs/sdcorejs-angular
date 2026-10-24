@@ -6,7 +6,7 @@
 @let _sdViewDef = sdViewDef();
 @let _labelTemplate = (sdLabelTemplate() ?? sdLabelDef()?.templateRef) || undefined;
 @let _valueTemplate = (sdValueTemplate() ?? _sdViewDef?.templateRef) || undefined;
-@let _errorMessage = errorMessage();
+@let _errorMessage = errorText();
 @let _size = size();
 @let _labelTop = labelPlacement() === 'top';
 <!-- why: một cổng duy nhất cho <mat-error>, chữ lỗi ẩn và aria-invalid (A5). -->
@@ -73,30 +73,59 @@
           [class.sd-sm]="_size === 'sm'">
           <!-- why: chips() giữ cả 0 và track theo giá trị, nên xoá một chip không dựng lại các chip sau nó (A2).
                `[removable]` nhận boolean của từng chip: predicate truyền thẳng luôn truthy và Backspace / Delete vẫn
-               xoá chip khoá (A1). -->
-          @for (item of chips(); track item) {
+               xoá chip khoá (A1). Khi không focus chỉ hiện `maxVisible` chip, phần dư gộp vào “+N” (B7). -->
+          @for (item of visibleChips(); track item) {
             @let _removable = isRemovable(item);
+            @let _text = chipText(item);
             <mat-chip-row
               [class.sd-md]="_size === 'md'"
               [class.sd-sm]="_size === 'sm'"
+              [class.sd-chip__chip--duplicate]="duplicateChip() === item"
               [removable]="_removable"
               (removed)="onRemove(item)"
+              (keydown)="onChipKeydown($event, item)"
               [disabled]="inputControl.disabled"
               (click)="onClickChip($event, item)">
-              <span class="sd-chip__chip-text">{{ item }}</span>
+              <span
+                #chipTextEl
+                class="sd-chip__chip-text"
+                [attr.data-chip]="_text"
+                [matTooltip]="_text"
+                [matTooltipDisabled]="!truncatedChips().has(_text)"
+                >{{ item }}</span
+              >
               @if (!inputControl.disabled && _removable) {
                 <sd-icon matChipRemove name="close" [ariaLabel]="removeLabel(item)"></sd-icon>
               }
             </mat-chip-row>
           }
+          @if (hiddenCount() > 0) {
+            <button
+              type="button"
+              class="sd-chip__more"
+              [attr.aria-label]="moreLabel()"
+              [attr.data-autoid]="autoId() ? autoId() + '-more' : null"
+              (click)="onMoreClick($event)">
+              +{{ hiddenCount() }}
+            </button>
+          }
+          <!-- why: phím tách so theo `KeyboardEvent.key` trong onInputKeydown (keyCode của `;` khác nhau theo bố cục bàn phím),
+               nên Material không nhận phím nào; nó chỉ còn phát matChipInputTokenEnd khi blur (`addOnBlur`). `addable` false
+               vẫn giữ ô nhập vì mat-chip-grid cần matChipInputFor, nhưng chỉ đọc và ra khỏi thứ tự Tab. -->
           <input
             class="sd-chip-input"
             [formControl]="inputControl"
             [id]="inputId"
-            [placeholder]="placeholder() || (_labelTop ? '' : _label)"
+            [placeholder]="effectivePlaceholder()"
+            [readonly]="!addable()"
+            [attr.tabindex]="addable() ? null : -1"
             [matChipInputFor]="chipList"
-            [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+            [matChipInputSeparatorKeyCodes]="noSeparatorKeys"
+            [matChipInputAddOnBlur]="addOnBlur()"
             (matChipInputTokenEnd)="onAdd($event)"
+            (keydown)="onInputKeydown($event)"
+            (input)="onInputText()"
+            (paste)="onPaste($event)"
             autocomplete="off"
             [errorStateMatcher]="matcher"
             (focus)="onFocus()"
@@ -123,11 +152,40 @@
             <span class="sd-visually-hidden" [id]="errorId">{{ _errorMessage }}</span>
           </span>
         }
+        <!-- why: nút bỏ hết như `.sd-clear-btn` của sd-date (hiện khi hover / focus-within). Luôn giữ chỗ: khi không còn chip
+             nào bỏ được thì chỉ ẩn bằng visibility, không gỡ khỏi DOM, để field không nhảy (B6). -->
+        @if (clearable() && !formControl.disabled && !_required) {
+          @let _canClear = hasRemovable();
+          <button
+            type="button"
+            matSuffix
+            class="sd-clear-btn sd-chip__clear"
+            [class.sd-hover]="_canClear"
+            [class.sd-chip__clear--empty]="!_canClear"
+            [attr.aria-label]="clearLabel()"
+            [attr.data-autoid]="autoId() ? autoId() + '-clear' : null"
+            (click)="onClear($event)">
+            <sd-icon name="close"></sd-icon>
+          </button>
+        }
 
         @if (!_hideInlineError && _errorVisible) {
           <mat-error [id]="errorId">{{ _errorMessage }}</mat-error>
         }
+        @if (effectiveMaxCount() > 0) {
+          <mat-hint align="end" class="sd-chip__counter" [class.sd-chip__counter--full]="full()">
+            {{ chips().length }}/{{ effectiveMaxCount() }}
+          </mat-hint>
+        }
       </mat-form-field>
     }
   </div>
+  <!-- why: vùng live luôn có mặt để screen reader đọc “đã có”, “đã đủ”, kết quả dán và “không xoá được” ngay khi chúng
+       xuất hiện (B2, B3); id mới dựng lại chữ để câu lặp lại vẫn được đọc. -->
+  @let _live = liveMessage();
+  <span class="sd-visually-hidden sd-chip__live" aria-live="polite">
+    @for (message of _live ? [_live] : []; track message.id) {
+      <span>{{ message.text }}</span>
+    }
+  </span>
 }

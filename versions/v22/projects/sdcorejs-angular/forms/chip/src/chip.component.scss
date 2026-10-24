@@ -101,3 +101,75 @@
   display: inline-flex;
   align-items: center;
 }
+
+// why: Material 19 đọc `--mdc-chip-*`, Material 20+ đọc `--mat-chip-*`; gán cả hai như sd-chip-calendar.
+@mixin chip-token($name, $value) {
+  --mdc-chip-#{$name}: #{$value};
+  --mat-chip-#{$name}: #{$value};
+}
+
+// Chữ chip dừng ở 240px rồi cắt "…"; tooltip chỉ bật cho chip bị cắt (B7).
+.sd-chip__chip-text {
+  display: inline-block;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+// Giá trị gõ trùng: chip đã có sáng nền và viền warning trong 1,4 giây (B3).
+.mat-mdc-chip-row.sd-chip__chip--duplicate {
+  @include chip-token(elevated-container-color, var(--sd-chip-duplicate-bg));
+  @include chip-token(outline-color, var(--sd-warning));
+}
+
+// why: hiệu ứng chuyển màu chỉ chạy khi người dùng không yêu cầu giảm chuyển động; khi giảm thì màu đổi tức thì.
+@media (prefers-reduced-motion: no-preference) {
+  .mat-mdc-chip-row {
+    transition: background-color 150ms ease;
+  }
+}
+
+// “+N” (B7): nút cao bằng chip, không viền, nền surface-muted, chữ phụ 500.
+.sd-chip__more {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: var(--mdc-chip-container-height, 32px);
+  margin: 4px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--sd-radius-6, 6px);
+  background-color: var(--sd-surface-muted);
+  color: var(--sd-text-secondary);
+  font: inherit;
+  font-weight: var(--sd-font-weight-medium, 500);
+  cursor: pointer;
+
+  &:hover {
+    background-color: color-mix(in srgb, var(--sd-text) 6%, var(--sd-surface-muted));
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
+    outline-offset: 1px;
+  }
+}
+
+// Nút bỏ hết (B6): luôn giữ chỗ, chỉ ẩn khi không còn chip nào bỏ được.
+.sd-chip__clear--empty {
+  visibility: hidden;
+}
+
+// why: hover chỉ là lớp bổ sung — trên màn chạm không có hover, nên nút bỏ hết luôn hiện khi còn chip bỏ được.
+@media (pointer: coarse) {
+  .sd-chip__clear.sd-hover {
+    visibility: visible;
+  }
+}
+
+// Bộ đếm n/max (B3) đổi sang màu warning khi đã đủ.
+.sd-chip__counter--full {
+  color: var(--sd-warning);
+}

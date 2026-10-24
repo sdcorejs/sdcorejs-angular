@@ -775,7 +775,7 @@ const FORM_PAGES = [
     publishedDocId: 'forms/chip/sd-chip',
     keywords: ['tags', 'token', 'multiple values', 'list'],
     status: 'stable',
-    demoSectionCount: 6,
+    demoSectionCount: 8,
     loadComponent: () => import('../../pages/forms/chip/chip-demo.component').then(m => m.ChipDemoComponent),
   }),
   defineDocPage({

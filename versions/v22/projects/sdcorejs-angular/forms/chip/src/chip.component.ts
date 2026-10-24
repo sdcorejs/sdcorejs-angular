@@ -1,6 +1,7 @@
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { CommonModule } from '@angular/common';
 import {
+  afterRenderEffect,
   AfterViewInit,
   booleanAttribute,
   ChangeDetectionStrategy,
@@ -13,10 +14,14 @@ import {
   effect,
   inject,
   input,
+  isDevMode,
   model,
   output,
+  signal,
   TemplateRef,
+  untracked,
   viewChild,
+  viewChildren,
   OnDestroy,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -61,6 +66,15 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
 /** Items that never become a chip; `0` and `false` still do (A2). */
 const isChipItem = (item: unknown): boolean => item !== null && item !== undefined && item !== '';
 
+/** Keys that commit the typed text by default (`KeyboardEvent.key`). */
+const DEFAULT_SEPARATORS: readonly string[] = ['Enter', ','];
+/** Default `chipTransform`: the text without surrounding spaces. */
+const trimChip = (raw: string): string => raw.trim();
+/** Character a separator key stands for in pasted text; key names other than Enter / Tab have none. */
+const separatorChar = (key: string): string | null => (key === 'Enter' ? '\n' : key === 'Tab' ? '\t' : key.length === 1 ? key : null);
+/** Duplicate highlight (B3), the same 1.4s as the review. */
+const DUPLICATE_FLASH_MS = 1400;
+
 @Component({
   selector: 'sd-chip',
   templateUrl: './chip.component.html',
@@ -71,6 +85,7 @@ const isChipItem = (item: unknown): boolean => item !== null && item !== undefin
     '[class.sd-has-label]': '!!label()',
     '[class.sd-viewed]': 'isViewed()',
     '[class.sd-label-top]': "labelPlacement() === 'top'",
+    '(focusin)': 'onFocusIn($event)',
     '(focusout)': 'onFocusOut($event)',
   },
   imports: [
@@ -170,13 +185,43 @@ export class SdChip implements AfterViewInit, OnDestroy {
   });
   hideInlineError = input(false, { transform: booleanAttribute });
   required = input(false, { transform: booleanAttribute });
+  /** Fewest chips; > 0 adds `Validators.minLength`. Replaces `min`. */
+  minCount = input<number | undefined, number | null | undefined>(undefined, {
+    transform: (v): number | undefined => v ?? undefined,
+  });
+  /** Most chips; > 0 adds `Validators.maxLength` (for a model set from outside) and stops adding once reached. Replaces `max`. */
+  maxCount = input<number | undefined, number | null | undefined>(undefined, {
+    transform: (v): number | undefined => v ?? undefined,
+  });
+  /** @deprecated Use `minCount`; `minCount` wins when both are set. */
   min = input<number, number | null | undefined>(0, {
     transform: (v): number => v ?? 0,
   });
+  /** @deprecated Use `maxCount`; `maxCount` wins when both are set. */
   max = input<number, number | null | undefined>(0, {
     transform: (v): number => v ?? 0,
   });
+  /** `false` keeps the field read-only for typing: the input stays (mat-chip-grid needs it) but is read-only and out of the Tab order. */
   addable = input(true, { transform: booleanAttribute });
+  /** Leaving the field turns the typed text into a chip. `false` drops the text instead, as before. */
+  addOnBlur = input(true, { transform: booleanAttribute });
+  /** Keys that commit the typed text (`KeyboardEvent.key`). A paste also splits on these characters, new lines and tabs. */
+  separators = input<readonly string[], readonly string[] | null | undefined>(DEFAULT_SEPARATORS, {
+    transform: (v): readonly string[] => v ?? DEFAULT_SEPARATORS,
+  });
+  /** Normalises typed or pasted text before it is compared and stored; `null` or `''` drops it. Default: trim. */
+  chipTransform = input<(raw: string) => string | number | null, ((raw: string) => string | number | null) | null | undefined>(trimChip, {
+    transform: (v): ((raw: string) => string | number | null) => v ?? trimChip,
+  });
+  /**
+   * Checks a normalised value: an i18n key (or the message itself) when it is refused, else `null`. A refused value does
+   * not become a chip; its text stays in the input and the message shows under the field.
+   */
+  chipValidator = input<((value: string | number) => string | null) | null | undefined>(null);
+  /** Shows a button that removes every chip `removable` allows. Off by default, like `clearable` of `<sd-date>`. */
+  clearable = input(false, { transform: booleanAttribute });
+  /** Chips shown while the field is not focused; the rest fold into “+N”. `null` shows them all. `2` suits `<sd-table>` cells. */
+  maxVisible = input<number | null | undefined>(null);
   disabled = input(false, { transform: booleanAttribute });
   /** Display mode: `false` edit · `true` static view · `'inline'` interactive (disabled `'inline'` → static). */
   viewed = input<SdViewed, SdViewedInput>(false, { transform: sdViewedTransform });
@@ -198,6 +243,8 @@ export class SdChip implements AfterViewInit, OnDestroy {
   // Template properties
   input = viewChild<ElementRef<HTMLInputElement>>('input');
   readonly chipGrid = viewChild(MatChipGrid);
+  // why: query signal không đặt được trên field ES private (#).
+  private readonly chipTextElements = viewChildren<ElementRef<HTMLElement>>('chipTextEl');
   sdViewDef = contentChild(SdViewDefDirective);
   sdLabelDef = contentChild(SdLabelDefDirective);
   sdLabelTemplate = contentChild<TemplateRef<any>>('sdLabel');
@@ -218,10 +265,14 @@ export class SdChip implements AfterViewInit, OnDestroy {
   // của connector. Connector add/remove đúng phần này (addValidators/removeValidators) nên
   // validator do consumer tự gắn vào `formControl` public KHÔNG bị xoá — trước đây
   // `clearValidators()` + `setValidators()` thổi bay tất cả mỗi lần input đổi.
+  /** `minCount`, else the deprecated `min`. */
+  readonly effectiveMinCount = computed(() => this.minCount() ?? this.min() ?? 0);
+  /** `maxCount`, else the deprecated `max`. */
+  readonly effectiveMaxCount = computed(() => this.maxCount() ?? this.max() ?? 0);
   readonly #validators = computed<readonly ValidatorFn[]>(() => {
     const validators: ValidatorFn[] = [];
-    const min = this.min();
-    const max = this.max();
+    const min = this.effectiveMinCount();
+    const max = this.effectiveMaxCount();
     if (min > 0) validators.push(Validators.minLength(min));
     if (max > 0) validators.push(Validators.maxLength(max));
     return validators;
@@ -235,6 +286,8 @@ export class SdChip implements AfterViewInit, OnDestroy {
   });
   #matcher!: ErrorStateMatcher;
   readonly separatorKeysCodes = [ENTER, COMMA];
+  /** why: phím tách do `separators` + onInputKeydown xử lý, nên Material không nhận phím nào. */
+  readonly noSeparatorKeys: number[] = [];
   readonly selectable = true;
 
   /**
@@ -245,6 +298,47 @@ export class SdChip implements AfterViewInit, OnDestroy {
     const value = this.#state().value;
     return Array.isArray(value) ? [...new Set<string | number>(value.filter(isChipItem))] : [];
   });
+
+  /** Focus is in the input or on a chip; “+N” only folds chips while it is not (B7). */
+  readonly #focusWithin = signal(false);
+  /** Message of a typed or pasted value that `chipValidator` refused; it shows under the field until the text changes (B4). */
+  readonly inputError = signal<string | null>(null);
+  /** Last polite announcement; a new id re-renders the text so a repeated message is read again. */
+  readonly liveMessage = signal<{ id: number; text: string } | null>(null);
+  #liveId = 0;
+  /** Chip that the typed value duplicates, highlighted for 1.4s (B3). */
+  readonly duplicateChip = signal<string | number | null>(null);
+  /** Text of the chips that the 240px limit cuts; only they get a tooltip (B7). */
+  readonly truncatedChips = signal<ReadonlySet<string>>(new Set());
+  #warnedDeprecated = false;
+
+  /** `maxCount` reached: typing and pasting add nothing more (B3). */
+  readonly full = computed(() => {
+    const max = this.effectiveMaxCount();
+    return max > 0 && this.chips().length >= max;
+  });
+  /** Chips on screen: all while the field has focus, else at most `maxVisible` (B7). */
+  readonly visibleChips = computed(() => {
+    const chips = this.chips();
+    const max = this.maxVisible();
+    if (this.#focusWithin() || max === null || max === undefined || max < 0 || chips.length <= max) return chips;
+    return chips.slice(0, max);
+  });
+  /** Chips folded into “+N”. */
+  readonly hiddenCount = computed(() => this.chips().length - this.visibleChips().length);
+  /** At least one chip may be removed, so the clear button has something to do (B6). */
+  readonly hasRemovable = computed(() => {
+    void this.removable();
+    return this.chips().some(chip => this.isRemovable(chip));
+  });
+  /** Placeholder: “Đã đủ …” once full, else the input, else “Nhập rồi nhấn Enter” — never the label (B5). None when not addable. */
+  readonly effectivePlaceholder = computed<string | null>(() => {
+    if (!this.addable()) return null;
+    if (this.full()) return this.#i18n.t('core.form.chip.full', { max: this.effectiveMaxCount() });
+    return this.placeholder() || this.#i18n.t('core.form.chip.placeholder');
+  });
+  readonly clearLabel = computed(() => this.#i18n.t('core.form.chip.clear'));
+  readonly moreLabel = computed(() => this.#i18n.t('core.form.chip.more', { count: this.hiddenCount() }));
 
   constructor() {
     // Update model
@@ -284,10 +378,27 @@ export class SdChip implements AfterViewInit, OnDestroy {
       if (grid) grid.required = this.required();
     });
 
+    effect(() => {
+      if ((this.min() > 0 || this.max() > 0) && !this.#warnedDeprecated && isDevMode()) {
+        this.#warnedDeprecated = true;
+        console.warn('[sd-chip] `min` / `max` are deprecated; use `minCount` / `maxCount`.');
+      }
+    });
+
+    // why: chữ chip dừng ở 240px rồi cắt "…" (B7); chỉ chip thật sự bị cắt mới cần tooltip, và chỉ đo được sau khi vẽ.
+    afterRenderEffect(() => {
+      const cut = new Set<string>();
+      for (const { nativeElement } of this.chipTextElements()) {
+        if (nativeElement.scrollWidth > nativeElement.clientWidth) cut.add(nativeElement.dataset['chip'] ?? '');
+      }
+      const current = untracked(this.truncatedChips);
+      if (cut.size !== current.size || [...cut].some(text => !current.has(text))) this.truncatedChips.set(cut);
+    });
+
     // why: `submitted` của form cha không phải signal; submit phải vẽ lại lỗi dưới OnPush.
     this.#parentForm?.ngSubmit.pipe(takeUntilDestroyed(inject(DestroyRef))).subscribe(() => this.#ref.markForCheck());
 
-    this.#matcher = { isErrorState: (_control, form) => this.#errorGate(form) };
+    this.#matcher = { isErrorState: (_control, form) => !!this.inputError() || this.#errorGate(form) };
   }
 
   get formControl() {
@@ -307,8 +418,8 @@ export class SdChip implements AfterViewInit, OnDestroy {
   readonly errorMessage = computed<string | undefined>(() => {
     void this.#state();
     void this.required();
-    const min = this.min();
-    const max = this.max();
+    const min = this.effectiveMinCount();
+    const max = this.effectiveMaxCount();
     const errors = this.#formControl.errors;
     if (!errors) return undefined;
 
@@ -328,8 +439,11 @@ export class SdChip implements AfterViewInit, OnDestroy {
    * was submitted; a field that is only dirty shows nothing.
    */
   isErrorShown(): boolean {
-    return !!this.errorMessage() && this.#errorGate();
+    return !!this.inputError() || (!!this.errorMessage() && this.#errorGate());
   }
+
+  /** Text under the field: the `chipValidator` message of the typed value first, else the form error. */
+  readonly errorText = computed(() => this.inputError() ?? this.errorMessage());
 
   #errorGate(form?: FormGroupDirective | NgForm | null): boolean {
     const control = this.#formControl;
@@ -347,6 +461,93 @@ export class SdChip implements AfterViewInit, OnDestroy {
     return this.#i18n.t('core.form.chip.remove', { value: String(item) });
   }
 
+  /** Text of a chip, also its key for `truncatedChips`. */
+  chipText(item: string | number): string {
+    return String(item);
+  }
+
+  /** A separator key (`separators`) commits the typed text; the key itself is not typed (B2 / separators). */
+  onInputKeydown(event: KeyboardEvent): void {
+    if (event.isComposing || !this.separators().includes(event.key)) return;
+    event.preventDefault();
+    this.#commitText(this.input()?.nativeElement.value ?? '');
+  }
+
+  /** The refused-value message goes as soon as the text changes (B4). */
+  onInputText(): void {
+    if (this.inputError()) this.inputError.set(null);
+  }
+
+  /**
+   * A paste that holds a separator, a new line or a tab becomes several chips in one change (B2). Duplicates are
+   * skipped, refused values and values past `maxCount` stay in the input, and the result is announced. A paste with
+   * no separator is left to the browser.
+   */
+  onPaste(event: ClipboardEvent): void {
+    if (!this.addable()) return;
+    const text = event.clipboardData?.getData('text') ?? '';
+    const chars = new Set(['\n', '\r', '\t']);
+    for (const key of this.separators()) {
+      const char = separatorChar(key);
+      if (char) chars.add(char);
+    }
+    const parts = text.split(new RegExp(`[${[...chars].map(char => char.replace(/[\\\]^-]/g, '\\$&')).join('')}]`));
+    if (parts.length < 2) return;
+    event.preventDefault();
+
+    const next = [...this.#currentValues()];
+    const max = this.effectiveMaxCount();
+    const kept: string[] = [];
+    let added = 0;
+    let skipped = 0;
+    let overflow = false;
+    let error: string | null = null;
+    for (const raw of parts) {
+      const value = this.#normalise(raw);
+      if (value === null) continue;
+      if (next.some(item => String(item) === String(value))) {
+        skipped++;
+        continue;
+      }
+      const refused = this.#refusal(value);
+      if (refused || (max > 0 && next.length >= max)) {
+        if (refused) error ??= refused;
+        else overflow = true;
+        kept.push(raw.trim());
+        continue;
+      }
+      next.push(value);
+      added++;
+    }
+    if (added) this.#commit(next);
+    this.#setInputText(kept.join(', '));
+    this.inputError.set(error);
+    const notes = [this.#i18n.t('core.form.chip.added', { count: added })];
+    if (skipped) notes.push(this.#i18n.t('core.form.chip.skipped', { count: skipped }));
+    if (overflow) notes.push(this.#i18n.t('core.form.chip.full', { max }));
+    this.#announce(notes.join(' · '));
+  }
+
+  /** Backspace / Delete on a chip that `removable` keeps says why nothing happened (A1, B3). */
+  onChipKeydown(event: KeyboardEvent, item: string | number): void {
+    if ((event.key === 'Backspace' || event.key === 'Delete') && !this.isRemovable(item)) {
+      this.#announce(this.#i18n.t('core.form.chip.locked'));
+    }
+  }
+
+  /** “+N” moves focus to the input, where every chip shows (B7). */
+  onMoreClick(event: Event): void {
+    event.stopPropagation();
+    this.#focus();
+  }
+
+  /** Focus entering the input or a chip unfolds “+N”; focus on the “+N” button itself does not (B7). */
+  onFocusIn(event: FocusEvent): void {
+    const target = event.target as HTMLElement | null;
+    if (target?.classList.contains('sd-chip__more')) return;
+    this.#focusWithin.set(true);
+  }
+
   /**
    * Marks the field touched once focus leaves it; moving between the input and the chips does not count.
    * why: `mat-chip-grid` is no longer bound to the control. As a ControlValueAccessor it wrote the text of the rendered
@@ -356,6 +557,7 @@ export class SdChip implements AfterViewInit, OnDestroy {
   onFocusOut(event: FocusEvent): void {
     const next = event.relatedTarget as Node | null;
     if (next && this.#host.contains(next)) return;
+    this.#focusWithin.set(false);
     this.#formConnector.markAsTouched();
     this.#ref.markForCheck();
   }
@@ -372,24 +574,88 @@ export class SdChip implements AfterViewInit, OnDestroy {
     this.#subscription.unsubscribe();
   }
 
-  #add = (event: MatChipInputEvent): void => {
-    const value = (event.value ?? '').toString().trim();
-    const values: (string | number)[] = this.#formControl.value ?? [];
-    // why: so trùng theo chuỗi — model `[1]` và chữ "1" vừa gõ là một chip (A3).
-    if (value && this.addable() && !values.some(item => String(item) === value)) {
-      // why: PHẢI tạo mảng MỚI. `values` chính là mảng của consumer (model đi thẳng vào
-      // formControl), nên `push` vừa sửa trộm mảng của họ, vừa giữ nguyên reference —
-      // `model()` dùng equality Object.is nên `model.set(sameRef)` KHÔNG phát `modelChange`,
-      // làm `[(model)]` lệch âm thầm.
-      const next = [...values, value];
-      this.#formControl.setValue(next);
-      this.model.set(next);
-      this.sdChange.emit(next);
+  #add = (event: MatChipInputEvent): void => this.#commitText(event.value ?? '');
+
+  /**
+   * Typed text → chip (a separator key, blur, or `onAdd`): normalise, then a duplicate flashes the chip it repeats, a full
+   * field says so, a refused value stays in the input with its message, and anything else is added in one change.
+   */
+  #commitText(raw: string): void {
+    if (!this.addable()) return;
+    const value = this.#normalise(String(raw));
+    if (value === null) {
+      this.#setInputText('');
+      return;
     }
+    const values = this.#currentValues();
+    // why: so trùng theo chuỗi — model `[1]` và chữ "1" vừa gõ là một chip (A3).
+    const existing = values.find(item => String(item) === String(value));
+    if (existing !== undefined) {
+      this.#flashDuplicate(existing);
+      this.#announce(this.#i18n.t('core.form.chip.duplicate', { value: String(value) }));
+      this.#setInputText('');
+      return;
+    }
+    if (this.full()) {
+      this.#announce(this.#i18n.t('core.form.chip.full', { max: this.effectiveMaxCount() }));
+      return;
+    }
+    const refused = this.#refusal(value);
+    if (refused) {
+      this.inputError.set(refused);
+      return;
+    }
+    // why: PHẢI tạo mảng MỚI. `values` chính là mảng của consumer (model đi thẳng vào formControl), nên `push` vừa sửa
+    // trộm mảng của họ, vừa giữ nguyên reference — `model()` dùng equality Object.is nên `model.set(sameRef)` KHÔNG phát
+    // `modelChange`, làm `[(model)]` lệch âm thầm.
+    this.#commit([...values, value]);
+    this.#setInputText('');
+  }
+
+  /** `chipTransform` of the text; `null`, `undefined` or `''` means nothing to add. */
+  #normalise(raw: string): string | number | null {
+    const value = this.chipTransform()(raw);
+    return value === null || value === undefined || value === '' ? null : value;
+  }
+
+  /** Message of `chipValidator` for `value`, translated when it is a key, else `null`. */
+  #refusal(value: string | number): string | null {
+    const result = this.chipValidator()?.(value) ?? null;
+    if (!result) return null;
+    // why: I18nService.t trả lại chính chuỗi kèm cảnh báo khi không có key; app hay trả thẳng câu thông báo.
+    return result in this.#i18n.messages() ? this.#i18n.t(result) : result;
+  }
+
+  #currentValues(): (string | number)[] {
+    const value = this.#formControl.value;
+    return Array.isArray(value) ? value : [];
+  }
+
+  /** Every user change ends here: one new array, written once to the control, the model and `sdChange`. */
+  #commit(next: (string | number)[]): void {
+    this.inputError.set(null);
+    this.#formControl.setValue(next);
+    this.model.set(next);
+    this.sdChange.emit(next);
+    this.#ref.markForCheck();
+  }
+
+  #setInputText(text: string): void {
     const inputEl = this.input();
-    if (inputEl) inputEl.nativeElement.value = '';
-    this.#inputControl.setValue('');
-  };
+    if (inputEl) inputEl.nativeElement.value = text;
+    this.#inputControl.setValue(text);
+  }
+
+  #announce(text: string): void {
+    this.liveMessage.set({ id: ++this.#liveId, text });
+  }
+
+  #flashDuplicate(item: string | number): void {
+    this.duplicateChip.set(item);
+    this.#timers.schedule(() => {
+      if (this.duplicateChip() === item) this.duplicateChip.set(null);
+    }, DUPLICATE_FLASH_MS);
+  }
 
   #clickChip = ($event: Event, item: any) => {
     $event.stopPropagation();
@@ -434,22 +700,20 @@ export class SdChip implements AfterViewInit, OnDestroy {
     }
   };
 
+  // why: focus không còn xoá chữ đang gõ (B1).
   #onFocus = () => {
     this.isFocused = true;
     this.#isBlurring = false;
-    this.#inputControl.setValue('');
   };
 
   #onBlur = () => {
     this.#isBlurring = true;
-    // why: vẫn 150ms như cũ (cửa sổ để click vào chip/option huỷ blur) — chỉ scope handle
-    // theo DestroyRef.
+    // why: vẫn 150ms như cũ (cửa sổ để click vào chip/option huỷ blur) — chỉ scope handle theo DestroyRef. Chữ đang gõ
+    // thành chip qua `matChipInputAddOnBlur`; chỉ khi `[addOnBlur]="false"` mới bỏ chữ như trước (B1).
     this.#timers.schedule(() => {
       if (this.#isBlurring) {
         this.isFocused = false;
-        this.#inputControl.setValue('', {
-          emitEvent: false,
-        });
+        if (!this.addOnBlur()) this.#setInputText('');
         this.#ref.detectChanges();
       }
     }, 150);
@@ -474,13 +738,17 @@ export class SdChip implements AfterViewInit, OnDestroy {
     }, 100);
   };
 
+  /** Removes every chip `removable` allows; locked chips stay. One change, none when nothing goes (B6). */
   #clear = ($event?: any) => {
     $event?.stopPropagation();
-    this.#inputControl.setValue('');
-    this.#formControl.setValue([]);
-    this.model.set(this.#formControl.value);
-    this.sdChange.emit(this.#formControl.value);
-    this.#ref.detectChanges();
+    this.#setInputText('');
+    this.inputError.set(null);
+    const values = this.#currentValues();
+    const kept = values.filter(value => !this.isRemovable(value));
+    if (kept.length !== values.length) this.#commit(kept);
+    // why: nút vừa bấm ẩn đi (visibility) khi không còn chip nào bỏ được, nên focus trên nó sẽ mất; đưa về ô nhập.
+    if ($event) this.#focus();
+    this.#ref.markForCheck();
   };
 
   // Public method to expose private methods for template

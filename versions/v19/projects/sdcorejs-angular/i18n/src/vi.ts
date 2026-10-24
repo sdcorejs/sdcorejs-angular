@@ -162,6 +162,14 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.chip.minlength': 'Vui lòng nhập ít nhất {min} giá trị',
   'core.form.chip.maxlength': 'Vui lòng nhập tối đa {max} giá trị',
   'core.form.chip.remove': 'Xoá {value}',
+  'core.form.chip.placeholder': 'Nhập rồi nhấn Enter',
+  'core.form.chip.locked': 'Không xoá được',
+  'core.form.chip.duplicate': '“{value}” đã có',
+  'core.form.chip.full': 'Đã đủ {max} giá trị',
+  'core.form.chip.added': 'Đã thêm {count}',
+  'core.form.chip.skipped': 'bỏ {count} trùng',
+  'core.form.chip.more': 'Xem thêm {count}',
+  'core.form.chip.clear': 'Xoá tất cả',
 
   // ---- Forms: chip-calendar ----
   'core.form.chip-calendar.required': 'Vui lòng nhập thông tin',
