@@ -8,6 +8,15 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ### Fixed
 
+- Chip: `removable` now applies on every removal path. A predicate used to reach `mat-chip-row` as a function, which is always truthy, so Backspace / Delete on a chip (or Backspace twice from the empty input) removed a chip the predicate kept; each chip now gets its own boolean and `onRemove` checks it again.
+- Chip: every model item except `null`, `undefined` and `''` is a chip, so `0` shows (it was counted but hidden). Chips are tracked by value, so removing one no longer rebuilds the chips after it and moves focus.
+- Chip: a typed value that equals an existing chip as a string is a duplicate: a model `[1, 2]` plus a typed “1” stays `[1, 2]`.
+- Chip: setting `model` to `null` or `undefined` clears the chips and sets `formControl` to `[]`. The control used to keep the old array and send it on submit.
+- Chip: one rule decides when the error shows — invalid, and touched or the parent `NgForm` / `FormGroupDirective` submitted — for the red outline, `<mat-error>`, the `hideInlineError` icon and `aria-invalid`. A submit without touching the field used to show a red outline without a message, a field that was only dirty turned red, and the input carried `aria-invalid="true"` before any interaction.
+- Chip: the ✕ button of a chip is named “Xoá {value}” (`core.form.chip.remove`, in the five locales) and uses the `close` icon; it was hidden from assistive technology.
+- Chip: the wrapper around the field is layout only. It used to sit in the Tab order with no role or name, disabled included; with `sdViewDef` the face itself is now a `role="button"` that Enter or Space opens, and it leaves the Tab order when disabled.
+- Chip: with `hideInlineError`, the hidden error text has an id and the input points `aria-describedby` at it.
+- Chip: leaving the field no longer rewrites its value. `mat-chip-grid`, bound to the control as its value accessor, wrote the text of the rendered chips into the control after every blur: number items became strings without a `modelChange`, and a form reset made while the input had focus was undone. The grid now has a control of its own, and the field is marked touched when focus leaves it (moving between the input and its chips does not count).
 - Tab router: navigations that finish one after another while an earlier tab is still being activated (for example while the outlet loads an NgModule lazy route) each open their own tab. The outlet read the router state when the queued activation ran, so the tab of an earlier URL got the component, route and name of the later one; it now captures the route when `NavigationEnd` is emitted.
 
 ### Removed
