@@ -338,6 +338,12 @@ header, a selected row).
 `--sd-button-indicator-ring` (`var(--sd-surface)` in light and dark) is the 2px ring that separates the `sd-button`
 indicator from the button. Set it to the background behind the button when that is not `--sd-surface`.
 
+## Chip tokens
+
+`--sd-chip-duplicate-bg` derives from the palette, one expression for light and dark: the background of the `sd-chip` chip that a
+typed value duplicates, for 1.4 seconds (16% `--sd-warning` on `--sd-surface` in light, 24% in dark). Its outline uses
+`--sd-warning` directly. Under `prefers-reduced-motion: reduce` the colour changes without a transition.
+
 ## Chip calendar tokens
 
 `--sd-chip-calendar-panel-width` (`296px` in light and dark) is the width of the `sd-chip-calendar` popup: 8px padding,

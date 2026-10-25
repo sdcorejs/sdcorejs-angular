@@ -281,6 +281,8 @@ $component-tokens: (
   // forms
   'autocomplete-selected-text': (#000000, #e3e2e6),
   'chip-bg': (#ebecf0, #34373d),
+  // Suy từ palette (handoff design-icon-chip-table, B3): nền chip mà giá trị vừa gõ bị trùng, nháy 1,4 giây.
+  'chip-duplicate-bg': (color-mix(in srgb, var(--sd-warning) 16%, var(--sd-surface)), color-mix(in srgb, var(--sd-warning) 24%, var(--sd-surface))),
   'chip-calendar-bg': (#ebecf0, #34373d),
   // Suy từ palette (handoff sd-chip-calendar): nền chip không bỏ được và nền hover của nút “+N”.
   'chip-calendar-chip-locked-bg': (color-mix(in srgb, var(--sd-surface-muted) 55%, var(--sd-surface)), color-mix(in srgb, var(--sd-surface-muted) 55%, var(--sd-surface))),

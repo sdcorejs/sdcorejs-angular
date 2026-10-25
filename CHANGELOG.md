@@ -6,6 +6,28 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+### Added
+
+- Chip: `minCount` / `maxCount` replace `min` / `max`. `maxCount` also stops adding once reached: an `n/max` counter shows under the field, the placeholder says “Đã đủ {max} giá trị”, and typing or pasting more is announced instead of added.
+- Chip: `addOnBlur` (default `true`) turns the typed text into a chip when the field loses focus.
+- Chip: `separators` (default `['Enter', ',']`) sets the keys that commit the typed text, compared with `KeyboardEvent.key`. Pasting a list that holds a separator, a new line or a tab adds every value in one change, skips duplicates, keeps refused values in the input and announces the result (“Đã thêm 3 · bỏ 1 trùng”).
+- Chip: `chipTransform(raw)` normalises typed and pasted text before it is compared and stored (default trim; `null` drops it). `chipValidator(value)` refuses a value with an i18n key or a message: the value does not become a chip, its text stays in the input and the message shows under the field.
+- Chip: `clearable` (default `false`) shows a clear-all button like `<sd-date>`, reachable by keyboard and always visible on touch screens. It removes every chip `removable` allows in one change and keeps the locked ones.
+- Chip: `maxVisible` folds the chips past that number into a “+N” button while the field is not focused; `2` suits `<sd-table>` cells. Chip text stops at 240px with an ellipsis and a tooltip.
+- Chip: a duplicate highlights the chip it repeats for 1.4s and is announced, and Backspace / Delete on a locked chip announces “Không xoá được”, through a polite live region. New keys `core.form.chip.placeholder`, `locked`, `duplicate`, `full`, `added`, `skipped`, `more`, `clear` in the five locales, and the component token `--sd-chip-duplicate-bg`.
+
+### Changed
+
+- Chip: leaving the field now adds the typed text as a chip (`addOnBlur` defaults to `true`). It used to drop the text, and so did focusing the input again. For the old behaviour set `[addOnBlur]="false"`.
+- Chip: the placeholder no longer repeats the label; without `placeholder` it is “Nhập rồi nhấn Enter”.
+- Chip: with `[addable]="false"` the input is read-only and out of the Tab order instead of accepting text that was then thrown away.
+- Chip: `onClear()` keeps the chips `removable` keeps and emits nothing when no chip goes.
+- Form Generic: chip fields pass `validation.maxItems` as `maxCount`.
+
+### Deprecated
+
+- Chip: `min` / `max`; use `minCount` / `maxCount`. Both still work, the new name wins when both are set, and each instance warns once in dev mode.
+
 ### Fixed
 
 - Chip: `removable` now applies on every removal path. A predicate used to reach `mat-chip-row` as a function, which is always truthy, so Backspace / Delete on a chip (or Backspace twice from the empty input) removed a chip the predicate kept; each chip now gets its own boolean and `onRemove` checks it again.

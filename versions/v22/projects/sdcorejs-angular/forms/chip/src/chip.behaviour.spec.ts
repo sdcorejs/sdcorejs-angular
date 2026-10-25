@@ -187,7 +187,8 @@ describe('SdChip · design handoff CH1', () => {
       create({ required: true, hideInlineError: true });
       comp.formControl.markAsTouched();
       fixture.detectChanges();
-      const hidden = host().querySelectorAll('.sd-visually-hidden');
+      // why: chỉ đếm chữ lỗi ẩn trong suffix; vùng aria-live (CH2) cũng là sd-visually-hidden.
+      const hidden = host().querySelectorAll('.sd-chip__error-suffix .sd-visually-hidden');
       expect(hidden.length).withContext('one hidden error text').toBe(1);
       const id = hidden[0].getAttribute('id');
       expect(id).toBeTruthy();

@@ -163,6 +163,14 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.chip.minlength': '{min}件以上入力してください',
   'core.form.chip.maxlength': '{max}件以内で入力してください',
   'core.form.chip.remove': '{value} を削除',
+  'core.form.chip.placeholder': '入力して Enter を押す',
+  'core.form.chip.locked': '削除できません',
+  'core.form.chip.duplicate': '「{value}」は追加済みです',
+  'core.form.chip.full': '{max} 件に達しました',
+  'core.form.chip.added': '{count} 件を追加',
+  'core.form.chip.skipped': '重複 {count} 件を除外',
+  'core.form.chip.more': 'さらに {count} 件を表示',
+  'core.form.chip.clear': 'すべて削除',
 
   // ---- Forms: chip-calendar ----
   'core.form.chip-calendar.required': '入力してください',

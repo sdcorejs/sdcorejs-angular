@@ -35,19 +35,27 @@ Multi-value tag input — user types and presses Enter/comma to add a chip; chip
 | `form`            | `NgForm \| FormGroup \| undefined`   | `undefined` | Parent form; NgForm auto-unwrapped.                                                                                                                                                                                                                                                                                                                     |
 | `label`           | `string`                             | `''`        | Field label.                                                                                                                                                                                                                                                                                                                                            |
 | `labelPlacement` | `'float' \| 'top'` | `'float'` | `'float'` (default) keeps the Material floating label. `'top'` renders `label` above the field as a real `<label for>` bound to the chip `<input>`, never repeats it as the placeholder, and shows `helperText` as a described-by hint under the field that a validation error replaces. Used by `<sd-form-render>`. |
-| `placeholder`     | `string \| undefined`                | `undefined` | Placeholder for the typing area.                                                                                                                                                                                                                                                                                                                        |
+| `placeholder`     | `string \| undefined`                | `undefined` | Placeholder for the typing area. Without it: `core.form.chip.placeholder` (“Nhập rồi nhấn Enter”), never the label. Once `maxCount` is reached: “Đã đủ {max} giá trị”. |
 | `removable`       | `boolean \| ((item:any) => boolean)` | `true`      | `true` / `false` for every chip, or a per-item predicate. Applied on every removal path: the ✕ button, Backspace / Delete on a chip and `onRemove`. A chip it keeps shows no ✕.                                                                                                                                                                                                                                                                                    |
 | `model`           | `(string \| number)[] \| undefined`  | `undefined` | Current array of chip values (one-way input — pair with `(modelChange)`). `null` / `undefined` clears the chips and sets `formControl` to `[]`. Every item except `null`, `undefined` and `''` is a chip, `0` included.                                                                                                                                                                                                                                                                               |
-| `min`             | `number`                             | `0`         | When > 0, adds `Validators.minLength(min)`.                                                                                                                                                                                                                                                                                                             |
-| `max`             | `number`                             | `0`         | When > 0, adds `Validators.maxLength(max)`.                                                                                                                                                                                                                                                                                                             |
-| `addable`         | `boolean`                            | `true`      | When `false`, typing in new values is suppressed.                                                                                                                                                                                                                                                                                                       |
+| `minCount`        | `number \| undefined`                | `undefined` | Fewest chips; > 0 adds `Validators.minLength`. Replaces `min`. |
+| `maxCount`        | `number \| undefined`                | `undefined` | Most chips; > 0 adds `Validators.maxLength` (for a model set from outside) and stops adding once reached: an `n/max` counter shows under the field, the placeholder says the field is full, and typing or pasting more is announced instead of added. Replaces `max`. |
+| `min`             | `number`                             | `0`         | **Deprecated**, use `minCount`. Still adds `Validators.minLength`; `minCount` wins when both are set. Warns once per instance in dev mode. |
+| `max`             | `number`                             | `0`         | **Deprecated**, use `maxCount`. Still adds `Validators.maxLength`; `maxCount` wins when both are set. Warns once per instance in dev mode. |
+| `addable`         | `boolean`                            | `true`      | When `false`, nothing can be typed or pasted: the input stays (mat-chip-grid needs it) but is read-only, out of the Tab order and has no placeholder. Existing chips stay. |
+| `addOnBlur`       | `boolean`                            | `true`      | Leaving the field turns the typed text into a chip. `false` drops the text instead, as before. |
+| `separators`      | `string[]`                           | `['Enter', ',']` | Keys that commit the typed text, compared with `KeyboardEvent.key`. A paste also splits on these characters, new lines and tabs. Add `';'` for e-mail lists. |
+| `chipTransform`   | `(raw: string) => string \| number \| null` | trim  | Normalises typed or pasted text before it is compared and stored. `null` or `''` drops it. |
+| `chipValidator`   | `((value: string \| number) => string \| null) \| null` | `null` | Checks a normalised value. Return an i18n key (or the message itself) to refuse it: it does not become a chip, its text stays in the input and the message shows under the field until the text changes. |
+| `clearable`       | `boolean`                            | `false`     | Shows a clear-all button (`.sd-clear-btn`, like `<sd-date>`) on hover or focus, always on touch screens. It removes every chip `removable` allows in one change and keeps its place while there is nothing to clear. Not shown when `required` or `disabled`. |
+| `maxVisible`      | `number \| null`                     | `null`      | Chips shown while the field is not focused; the rest fold into a “+N” button that moves focus to the input, where every chip shows. Use `2` inside `<sd-table>` cells. |
 | `required`        | `boolean`                            | `false`     | Adds `Validators.required`.                                                                                                                                                                                                                                                                                                                             |
 | `disabled`        | `boolean`                            | `false`     | Disables both the chip strip and the input.                                                                                                                                                                                                                                                                                                             |
 | `viewed`          | `boolean \| 'inline'`                | `false`     | Display mode. `false` = edit. `true` = static read-only `<sd-view>` (chips render, not editable); `<ng-template sdViewDef>` (if present) overrides the rendering. `'inline'` = the editable chip strip stays mounted (no separate read-only face — chips are already compact), but a **disabled** `'inline'` falls back to `true` (static `<sd-view>`). |
 | `hideInlineError` | `boolean`                            | `false`     | Hide inline error; expose via `errorMessage`. The field shows an error icon with a tooltip, and the input points `aria-describedby` at a visually hidden copy of the message.                                                                                                                                                                                                                                                                                                           |
 | `hyperlink`       | `string \| null \| undefined`        | `undefined` | Used in static `[viewed]` mode to link the chip text.                                                                                                                                                                                                                                                                                                   |
 
-> **Coerce**: `addable`, `required`, `disabled`, `hideInlineError` use `booleanAttribute` — bare attribute = `true`. `viewed` uses the shared `sdViewedTransform` (accepts `'' | true | false | null | undefined` plus the literal `'inline'`); computed `isViewed()` (`true`, or disabled `'inline'`) drives the static `<sd-view>` branch and the host `.sd-viewed` class.
+> **Coerce**: `addable`, `addOnBlur`, `clearable`, `required`, `disabled`, `hideInlineError` use `booleanAttribute` — bare attribute = `true`. `viewed` uses the shared `sdViewedTransform` (accepts `'' | true | false | null | undefined` plus the literal `'inline'`); computed `isViewed()` (`true`, or disabled `'inline'`) drives the static `<sd-view>` branch and the host `.sd-viewed` class.
 
 ## Outputs
 
@@ -78,16 +86,19 @@ Applied automatically on `<sd-chip>` for styling hooks:
 - **`formControlName` and `[(ngModel)]` are NOT supported.** Use `[model]` + `(modelChange)` (or `[(model)]` shorthand) and `[form]+[name]`.
 - **`[viewed]="true"`** = DETAIL read-only mode: chips display without ✕, no input box; honors `<ng-template sdViewDef>` for custom rendering and `hyperlink` for clickable values.
 - **`[viewed]="'inline'"`** keeps the editable chip strip (chips are already compact, so there is no separate text face) — except when `[disabled]`, where it collapses to the static `<sd-view>`. Use `'inline'` to embed an editable chip field in a mostly-read-only DETAIL layout without the full mat-form-field shell standing out.
-- **Validators**: `[required]`, `[min]` (→ `minLength`), `[max]` (→ `maxLength`). Error tooltip messages: required → "Vui lòng nhập thông tin"; minlength → "Vui lòng nhập ít nhất N giá trị"; maxlength → "Vui lòng nhập tối đa N giá trị".
+- **Validators**: `[required]`, `[minCount]` (→ `minLength`), `[maxCount]` (→ `maxLength`); the deprecated `[min]` / `[max]` still work. Error tooltip messages: required → "Vui lòng nhập thông tin"; minlength → "Vui lòng nhập ít nhất N giá trị"; maxlength → "Vui lòng nhập tối đa N giá trị".
 - **When the error shows** — one rule for the red outline, `<mat-error>` (or the `hideInlineError` icon) and `aria-invalid`: the control is invalid and either touched or its parent `NgForm` / `FormGroupDirective` was submitted. A field that is only dirty, or untouched before a submit, shows nothing. The field becomes touched when focus leaves it; moving between the typing input and the chips does not count. Leaving the field never rewrites `formControl` (number items stay numbers, a reset stays a reset).
-- **Reactive validator updates (additive)** — validator inputs (`required` / `min` / `max`) are signal inputs routed through the shared form connector, which **adds and removes only the validators this component owns**. Toggle them at runtime and the control re-validates automatically. Validators you attach yourself to the public `formControl` (`formControl.addValidators(...)`) are preserved — the component no longer calls `clearValidators()` / `setValidators()`.
+- **Reactive validator updates (additive)** — validator inputs (`required` / `minCount` / `maxCount`, and the deprecated `min` / `max`) are signal inputs routed through the shared form connector, which **adds and removes only the validators this component owns**. Toggle them at runtime and the control re-validates automatically. Validators you attach yourself to the public `formControl` (`formControl.addValidators(...)`) are preserved — the component no longer calls `clearValidators()` / `setValidators()`.
 - **`[disabled]` reactive** — toggling `disabled` calls `formControl.disable() / enable()` and `inputControl.disable() / enable()` via an effect — both the chip strip and the typing area are gated together.
 - **`[(model)]` two-way** — host-side writes propagate via an effect: when `model` changes, the component calls `formControl.setValue(values)` (`[]` for `null` / `undefined`). The reverse direction (add/remove/clear chip → `modelChange` emit) runs through the component's `onAdd` / `onRemove` / `onClear` handlers.
 - **The model array is replaced, never mutated** — every add/select/remove/clear builds a **new array** and emits it. The array you pass into `[model]` is never written to, and because the reference always changes, `modelChange` fires reliably (signal equality is `Object.is`, so an in-place `push` would have been swallowed).
-- **Separator keys** — Enter (`ENTER`) and comma (`COMMA`) from `@angular/cdk/keycodes` both commit a new chip. Duplicate values and empty strings are silently ignored.
-- **Duplicate guard** — `onAdd` compares the typed text with every chip as a string before appending, so a model `[1]` and a typed `1` are the same chip; identical chip values are never repeated.
-- **Accessible names** — the ✕ button of a chip is named `core.form.chip.remove` (“Xoá {value}”).
-- **`addable=false` guard** — when `[addable]="false"`, typing new text is accepted in the input but `onAdd` silently discards it; existing chips remain.
+- **Separator keys** — the keys in `separators` (default Enter and comma) commit the typed text, compared with `KeyboardEvent.key`, so `';'` works on every keyboard layout. Typing in an IME composition never commits. Leaving the field commits too (`addOnBlur`).
+- **One path for every addition** — typed, separator, blur and pasted text all go through `chipTransform`, then the duplicate check, the `maxCount` limit and `chipValidator`, and every change writes one new array once.
+- **Duplicate guard** — values compare as strings after `chipTransform`, so a model `[1]` and a typed `1` are the same chip. The comparison is case-sensitive: “Tag” and “tag” are two chips, unless `chipTransform` lower-cases them (see the e-mail example). A duplicate highlights the chip it repeats for 1.4s (`--sd-chip-duplicate-bg`, warning outline, no transition under `prefers-reduced-motion`) and is announced as “{value} đã có”.
+- **Paste a list** — a paste that holds a separator, a new line or a tab adds every value in one change. Duplicates are skipped, refused values and values past `maxCount` stay in the input for fixing, and the result is announced (“Đã thêm 3 · bỏ 1 trùng”). A paste without a separator is left to the browser.
+- **Announcements** — a polite live region reads the duplicate, full and paste messages, and “Không xoá được” when Backspace / Delete reaches a chip `removable` keeps.
+- **Accessible names** — the ✕ button of a chip is named `core.form.chip.remove` (“Xoá {value}”), the clear-all button `core.form.chip.clear` (“Xoá tất cả”), the “+N” button `core.form.chip.more` (“Xem thêm {count}”).
+- **Long values** — the chip text stops at 240px with an ellipsis, and a chip that is cut shows its whole value in a tooltip.
 
 ### Three ways to integrate
 
@@ -159,11 +170,11 @@ export class ChipTableComponent {
 }
 ```
 
-Inside `<sd-table>` custom cells, always use `size="sm"` and `hideInlineError`.
+Inside `<sd-table>` custom cells, always use `size="sm"` and `hideInlineError`, and `[maxVisible]="2"` so ten tags or a long URL do not make the row three times taller.
 
 ```html
 <ng-template sdTableCellDef="tags" let-row>
-  <sd-chip size="sm" hideInlineError [(model)]="row.tags"></sd-chip>
+  <sd-chip size="sm" hideInlineError [maxVisible]="2" [(model)]="row.tags"></sd-chip>
 </ng-template>
 ```
 
@@ -186,17 +197,31 @@ When this control is rendered in dashboard cards, filter bars, external filter p
 ### 1. Tag/keyword input
 
 ```html
-<sd-chip [form]="form" name="tags" label="Tags" placeholder="Nhập tag, Enter để thêm" [(model)]="model.tags" [min]="1" [max]="10" required>
+<sd-chip [form]="form" name="tags" label="Tags" placeholder="Nhập tag, Enter để thêm" [(model)]="model.tags" [minCount]="1" [maxCount]="10" required>
 </sd-chip>
 ```
 
-### 2. Email recipients with custom remove rule
+### 2. Email recipients: normalise, validate, limit, custom remove rule
 
 ```html
-<sd-chip [form]="form" name="recipients" label="Người nhận" [(model)]="model.recipients" [removable]="canRemoveRecipient"> </sd-chip>
+<sd-chip
+  [form]="form"
+  name="recipients"
+  label="Người nhận"
+  [(model)]="model.recipients"
+  [separators]="['Enter', ',', ';']"
+  [chipTransform]="toEmail"
+  [chipValidator]="checkEmail"
+  [maxCount]="5"
+  [removable]="canRemoveRecipient"
+  clearable>
+</sd-chip>
 ```
 
 ```ts
+// why: the duplicate check is case-sensitive, so lower-case e-mails before they are compared and stored.
+toEmail = (raw: string) => raw.trim().toLowerCase();
+checkEmail = (email: string | number) => (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(email)) ? null : 'Email không hợp lệ');
 canRemoveRecipient = (email: string) => email !== this.currentUserEmail;
 ```
 
