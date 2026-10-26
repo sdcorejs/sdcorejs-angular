@@ -1168,3 +1168,35 @@ describe('SdDate (transform absent)', () => {
     expect(host.changes).toEqual(['2026/08/15']);
   });
 });
+
+// why: a user edit must mark the control of the parent form dirty before writing it, as Angular's value accessors do:
+// `form.dirty` and the default `'control'` mode of unsaved changes read that flag.
+describe('SdDate (user edits mark the form control dirty)', () => {
+  let fg: FormGroup;
+  let fixture: ComponentFixture<FgHost>;
+  let comp: SdDate;
+
+  beforeEach(async () => {
+    fg = new FormGroup({});
+    await TestBed.configureTestingModule({
+      imports: [FgHost, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(FgHost);
+    fixture.componentInstance.fg = fg;
+    fixture.detectChanges();
+    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdDate).componentInstance as SdDate;
+  });
+
+  it('marks the control dirty when a day is picked', () => {
+    comp.onChange({ value: new Date(2026, 9, 27) } as unknown as Parameters<SdDate['onChange']>[0]);
+    expect(fg.get('dob')?.value).toEqual(new Date(2026, 9, 27));
+    expect(fg.get('dob')?.dirty).toBeTrue();
+  });
+
+  it('marks the control dirty when the clear button empties it', () => {
+    fg.get('dob')?.setValue(new Date(2026, 9, 27));
+    comp.clear(null);
+    expect(fg.get('dob')?.value).toBeNull();
+    expect(fg.get('dob')?.dirty).toBeTrue();
+  });
+});
