@@ -104,6 +104,28 @@ for (const viewport of VIEWPORTS) {
       }
     });
 
+    // why: doc 10 also asks for a bare screen with only sd-table (no quick search, no filter row, no footer buttons),
+    // where the footer holds only the paginator or the "Đang hiển thị" line.
+    test('E1-1/2/3 on a screen with only sd-table', async ({ page }) => {
+      const bare = { quickSearch: false, inlineFilter: false, footerButtons: false };
+      const states: readonly [string, Cfg, boolean][] = [
+        ['bare, 128 records', bare, true],
+        ['bare, 0 records', { ...bare, records: 0 }, false],
+        ['bare, 3 records', { ...bare, records: 3 }, true],
+        ['bare, 20 records', { ...bare, records: 20 }, true],
+        ['bare, loading', { ...bare, state: 'loading' }, false],
+        ['bare, error', { ...bare, state: 'error' }, false],
+      ];
+      let base: Layout | undefined;
+      for (const [label, cfg, rows] of states) {
+        await open(page, cfg, rows);
+        const layout = await measure(page);
+        expectFits(layout, label);
+        if (base) expectSamePlace(layout, base, label);
+        else base = layout;
+      }
+    });
+
     test('E1-2/3: the footer stays put on a tab change, a quick search and a selection', async ({ page }) => {
       await open(page, { tabs: true, selector: true });
       const base = await measure(page);

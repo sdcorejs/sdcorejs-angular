@@ -43,7 +43,7 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 ### Changed
 
 - Table: a one-line row is 36px high instead of Material's 52px (`--mat-table-row-item-container-height: 36px` on `<sd-table>`), as the table's dense design intended. Rows with longer text or buttons still grow. A screen that relied on 52px rows can set the token back with a selector more specific than the component's own, for example `.orders sd-table { --mat-table-row-item-container-height: 52px; }`.
-- Page: the `title` of `<sd-page>` renders in an `<h1 class="T20M">` instead of a `<div class="T20M">`, with its margin reset, so the page has one main heading. Pages that project `[headerLeft]` are not affected. `SdPageComponent` now uses `OnPush`.
+- Page: the header of `<sd-page>` is a `<header class="c-page-header bg-white">` instead of a `<div>`, and its `title` renders in an `<h1 class="T20M">` instead of a `<div class="T20M">`, with its margin reset, so the page has one main heading. Pages that project `[headerLeft]` are not affected. `SdPageComponent` now uses `OnPush`.
 - Chip: leaving the field now adds the typed text as a chip (`addOnBlur` defaults to `true`). It used to drop the text, and so did focusing the input again. For the old behaviour set `[addOnBlur]="false"`.
 - Chip: the placeholder no longer repeats the label; without `placeholder` it is “Nhập rồi nhấn Enter”.
 - Chip: with `[addable]="false"` the input is read-only and out of the Tab order instead of accepting text that was then thrown away.
