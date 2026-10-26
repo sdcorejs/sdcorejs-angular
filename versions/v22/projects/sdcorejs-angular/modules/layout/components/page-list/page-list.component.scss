@@ -36,7 +36,9 @@
 }
 
 // Trang con (detail="page") nằm ngay sau router-outlet: lấp toàn bộ chiều cao thay cho danh sách.
-:host ::ng-deep > router-outlet ~ * {
+// why: chỉ khi danh sách đang ẩn. Với detail="drawer" host của route con chỉ chứa drawer (nội dung ra body); nếu
+// cũng flex 1 1 0 thì nó chiếm nửa chiều cao và bảng co về mức tối thiểu suốt lúc drawer mở.
+:host(.sd-page-list--child-page) ::ng-deep > router-outlet ~ * {
   display: flex;
   flex-direction: column;
   flex: 1 1 0;

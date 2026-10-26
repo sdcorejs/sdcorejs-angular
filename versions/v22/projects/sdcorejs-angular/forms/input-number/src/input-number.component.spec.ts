@@ -514,6 +514,26 @@ describe('SdInputNumber', () => {
       comp.formControl.updateValueAndValidity();
       expect(comp.formControl.hasError('inlineError')).toBe(false);
     });
+
+    // why: a save that the API rejects sets [inlineError] on a touched field, with no value change and no
+    // updateValueAndValidity() from outside; the validator is installed with emitEvent: false, so no control event fires.
+    it('shows an inlineError set at runtime on a touched field without any control event', () => {
+      comp.formControl.markAsTouched();
+      fixture.detectChanges();
+      host.inlineError = 'Từ 5 đến 480 phút.';
+      fixture.detectChanges();
+      fixture.detectChanges();
+      const element: HTMLElement = fixture.nativeElement;
+      expect(element.querySelector('mat-error')?.textContent).toContain('Từ 5 đến 480 phút.');
+      expect(element.querySelector('input')?.getAttribute('data-invalid')).toBe('true');
+      expect(element.querySelector('input')?.getAttribute('aria-invalid')).toBe('true');
+
+      host.inlineError = undefined;
+      fixture.detectChanges();
+      fixture.detectChanges();
+      expect(element.querySelector('mat-error')).toBeNull();
+      expect(element.querySelector('input')?.getAttribute('data-invalid')).toBe('false');
+    });
   });
 
   // -------------------------------------------------------------------------

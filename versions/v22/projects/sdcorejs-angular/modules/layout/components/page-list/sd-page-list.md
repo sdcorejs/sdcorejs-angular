@@ -35,7 +35,7 @@ The feature writes no height class, no SCSS and no `h-full` wrapper.
 | `backLink`    | `SdPageBackLink \| null \| undefined`         | `undefined` | As `sd-page`.                                                                                                              |
 | `badges`      | `readonly SdBadgeData[] \| null \| undefined` | `undefined` | As `sd-page`.                                                                                                              |
 | `width`       | `SdPageWidth \| null \| undefined`            | `undefined` | As `sd-page`; a list stays `full` by default.                                                                              |
-| `detail`      | `SdPageListDetail`                            | `'page'`    | `'page' \| 'drawer'`: how the child route opens, see *Detail as a child route*.                                            |
+| `detail`      | `SdPageListDetail`                            | `'page'`    | `'page' \| 'drawer' \| 'none'`: how the child route opens, see *Detail as a child route*.                                  |
 | `autoCompact` | `boolean`                                     | `true`      | Shrinks secondary areas when the viewport is short, see *Short viewport*. Turn off to always show them in full; the body then scrolls when space runs out. |
 
 ## Slots
@@ -99,11 +99,11 @@ Injected by the body content and by child routes, for example `readonly list = i
 - `sd-page-list` renders the `<router-outlet>`; the feature does not.
 - `detail="page"`: while a child route is open the list is hidden (not destroyed) and the child page takes the whole height. Coming back (browser Back or `backLink`) shows the list with its filters, page, selection and the scroll position of the data area as they were, and focus returns to the element that opened the child.
 - `detail="drawer"`: the list stays on screen. The child component opens an `sd-side-drawer` (width per E9) and navigates back to the list on `sdClosed` — `router.navigate(['../..'], { relativeTo: route })` from an `:id/detail` route, because relative navigation climbs one URL segment per `..`; X, Esc, the backdrop and browser Back all close it, and focus returns to the cell that opened it. Refresh the list after a successful save.
-- A split view (list and detail side by side) is a pattern: `sd-page-list` with `sd-splitter` in the body and the router outlet in the right panel.
+- `detail="none"`: `sd-page-list` renders no router outlet; the screen puts its own outlet in the body. A split view (list and detail side by side) uses it: `sd-splitter` as `[sdPageListMain]`, the list in the left panel and the router outlet in the right one. `childActive()` stays `false`.
 
 ## Live demo
 
-`/demo/page-list` shows the list with its parts switched by `?cfg=` (tabs, score card, quick search, external filter, selection, record count, page size, loading/error, `autoCompact`, `detail`). The Playwright suite `showcase/e2e/page-list.e2e.ts` measures the height chain on it at 1440×960, 1440×800, 1280×768 and 1440×650.
+`/pattern/order` of `@sdcorejs/angular/modules/pattern` shows the list with its parts switched by its "Tuỳ chỉnh hiển thị" drawer or `?cfg=` (tabs, score card, quick search, external filter, selection, record count, page size, loading/error, `autoCompact`, `detail`). The Playwright suite `showcase/e2e/page-list.e2e.ts` measures the height chain on it at 1440×960, 1440×800, 1280×768 and 1440×650.
 
 ## Related
 

@@ -1,0 +1,22 @@
+<sd-page-list title="Khách hàng" description="Khách cá nhân và doanh nghiệp đang giao dịch." [detail]="detailMode()">
+  <sd-button
+    headerRight
+    *sdPermission="'PATTERN_CUSTOMER_C_CREATE'"
+    title="Tạo khách hàng"
+    prefixIcon="add"
+    type="fill"
+    color="primary"
+    autoId="customer-create"
+    [routerLink]="['create']" />
+
+  <summary-cards [counts]="counts()" [(segment)]="segment" />
+
+  <sd-table autoId="customer-list" [option]="tableOption">
+    <ng-template sdTableCellDef="code" let-customer="item">
+      <a *sdPermission="'PATTERN_CUSTOMER_R_DETAIL'" [routerLink]="[customer.id, 'detail']">{{ customer.code }}</a>
+      @if (!canOpenDetail) {
+        <span>{{ customer.code }}</span>
+      }
+    </ng-template>
+  </sd-table>
+</sd-page-list>

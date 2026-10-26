@@ -43,3 +43,6 @@ Thumbs.db
 
 # Generated: single 1.4MB string literal (pdf.js worker) — prettier must not touch it
 projects/sdcorejs-angular/components/preview/src/preview-pdf/pdf-worker-inline.generated.ts
+
+# Generated: Source manifest of modules/pattern (npm run pattern:docs)
+projects/sdcorejs-angular/modules/pattern/core/pattern-shell/source/pattern-source.generated.ts

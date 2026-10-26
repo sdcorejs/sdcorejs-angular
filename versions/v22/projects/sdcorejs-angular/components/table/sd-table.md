@@ -625,6 +625,7 @@ None. All callbacks live inside the `option` object (`onSelect`, `onReload`, `co
 ```
 
 - `tableRef.reload(force = true, scrollTop = true)` — re-fetch (server) or re-filter (local)
+- `tableRef.reloadFirstPage()` — read the first page again with the current filters and sort. Call it when a condition outside the table changes (status tabs, score cards): `reload()` keeps the current page.
 - `tableRef.dataItems: T[]` — current rendered rows (data only)
 - `tableRef.selectedItems: T[]` — current selection
 - `tableRef.clearFilter()` — resets column, external and quick-search filters to defaults; quick-search term becomes empty and signal defaults are read again

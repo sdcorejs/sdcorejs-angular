@@ -73,19 +73,24 @@ describe('unsaved changes adapters', () => {
     expect(service.hasChanges()).toBeTrue();
   });
 
-  it("compares the value with the snapshot when dirty is 'value'", () => {
+  // A user edit marks the control dirty before it writes the value, like the DefaultValueAccessor does.
+  const edit = (control: FormControl, value: unknown): void => {
+    control.markAsDirty();
+    control.setValue(value);
+  };
+
+  it("compares the edited value with the value before the edit when dirty is 'value'", () => {
     const form = new FormGroup({ name: new FormControl('Initial'), tags: new FormControl<string[]>(['a']) });
     registerSdUnsavedChangesForm(service, form, { id: 'profile', dirty: 'value' });
 
-    form.controls.name.setValue('Changed');
-    form.markAsDirty();
+    edit(form.controls.name, 'Changed');
     expect(service.hasChanges()).toBeTrue();
 
     form.controls.name.setValue('Initial');
     expect(form.dirty).toBeTrue();
     expect(service.hasChanges()).toBeFalse();
 
-    form.controls.tags.setValue(['a', 'b']);
+    edit(form.controls.tags as FormControl, ['a', 'b']);
     expect(service.hasChanges()).toBeTrue();
     form.controls.tags.setValue(['a']);
     expect(service.hasChanges()).toBeFalse();
@@ -94,12 +99,34 @@ describe('unsaved changes adapters', () => {
   it("takes a saved value as the new baseline when dirty is 'value'", async () => {
     const form = new FormGroup({ name: new FormControl('Initial') });
     const ref = registerSdUnsavedChangesForm(service, form, { id: 'profile', dirty: 'value', save: () => undefined });
-    form.controls.name.setValue('Saved');
+    edit(form.controls.name, 'Saved');
     expect(await ref.save()).toBeTrue();
     expect(service.hasChanges()).toBeFalse();
 
-    form.controls.name.setValue('Initial');
+    edit(form.controls.name, 'Initial');
     expect(service.hasChanges()).toBeTrue();
+  });
+
+  it("does not count controls that join later or values written while pristine when dirty is 'value'", () => {
+    // As a page with <sd-input [form] name [model]>: registered first, the controls arrive afterwards and the
+    // entity value is written without an event.
+    const form = new FormGroup<Record<string, FormControl<string | null>>>({});
+    registerSdUnsavedChangesForm(service, form, { id: 'product-update', dirty: 'value' });
+    const code = new FormControl<string | null>('');
+    const name = new FormControl<string | null>('');
+    form.addControl('code', code);
+    form.addControl('name', name);
+    code.setValue('SP-001', { emitEvent: false });
+    name.setValue('Sữa tươi', { emitEvent: false });
+    expect(service.hasChanges()).toBeFalse();
+
+    edit(name, 'Sữa tươi 1L');
+    expect(service.hasChanges()).toBeTrue();
+    name.setValue('Sữa tươi');
+    expect(service.hasChanges()).toBeFalse();
+
+    form.reset({ code: 'SP-002', name: 'Nước suối' });
+    expect(service.hasChanges()).toBeFalse();
   });
 
   it('creates close and functional route guards scoped to the registry', async () => {
