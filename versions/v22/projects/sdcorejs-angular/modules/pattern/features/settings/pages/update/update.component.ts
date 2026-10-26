@@ -210,8 +210,8 @@ export class UpdateComponent {
     try {
       const saved = await firstValueFrom(this.#settingsService.update({ ...this.entity(), ...this.form.getRawValue() } as SettingsSaveReq));
       this.entity.set(saved);
-      // Ở lại trang: giá trị vừa lưu là mốc so sánh mới, sửa tiếp vẫn được bảo vệ khi rời trang.
-      this.form.markAsPristine();
+      // Ở lại trang: giá trị vừa lưu là mốc so sánh mới (`markPristine()` ở chế độ value), sửa tiếp vẫn được bảo vệ khi rời trang.
+      this.unsaved.markPristine();
       this.#notify.success('Đã lưu cài đặt.');
     } catch (error) {
       if (this.apiErrors.set(error)) this.#focusFirstInvalid();

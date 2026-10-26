@@ -108,7 +108,15 @@ export class SdTextarea implements OnInit, OnDestroy {
 
   readonly #state = sdFormControlState(computed(() => this.formControl));
   readonly dataDisabled = computed(() => (this.#state().disabled ? 'true' : 'false'));
-  readonly dataInvalid = computed(() => (this.#state().invalid ? 'true' : 'false'));
+  readonly dataInvalid = computed(() => {
+    // why: như `errorMessage`: validator cài bằng `emitEvent: false` không làm `#state` tick, nên `[inlineError]` đổi lúc
+    // runtime phải đọc thêm `required` và `#validators`. Cùng điều kiện với sdFormControlState: chạm hoặc sửa rồi mới báo.
+    void this.#state();
+    void this.required();
+    void this.#validators();
+    const control = this.formControl;
+    return control.invalid && (control.touched || control.dirty) ? 'true' : 'false';
+  });
   readonly dataEmpty = computed(() => (sdIsEmpty(this.#state().value) ? 'true' : 'false'));
   readonly dataValue = computed(() => sdSerializeDataValue(this.#state().value));
 

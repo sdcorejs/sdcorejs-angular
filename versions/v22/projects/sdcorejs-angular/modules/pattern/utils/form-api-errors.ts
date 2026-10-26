@@ -1,7 +1,5 @@
-import { computed, signal, type Signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { computed, DestroyRef, inject, signal, type Signal } from '@angular/core';
 import type { FormGroup } from '@angular/forms';
-import { map } from 'rxjs';
 import { apiFieldErrors } from './api-error';
 
 /** `lines.2.quantity` → value of that control. */
@@ -31,9 +29,11 @@ export interface FormApiErrors {
  */
 export function formApiErrors(form: FormGroup): FormApiErrors {
   const failure = signal<{ errors: Record<string, string>; value: Record<string, unknown> } | null>(null);
-  const value = toSignal(form.valueChanges.pipe(map(() => form.getRawValue() as Record<string, unknown>)), {
-    initialValue: form.getRawValue() as Record<string, unknown>,
-  });
+  // why: Core fields write their model with `emitEvent: false`; until the user edits, `valueChanges` has not seen
+  // those values. `set()` reads the value again, so the error of a save made without edits still shows.
+  const value = signal(form.getRawValue() as Record<string, unknown>);
+  const subscription = form.valueChanges.subscribe(() => value.set(form.getRawValue() as Record<string, unknown>));
+  inject(DestroyRef).onDestroy(() => subscription.unsubscribe());
   const errors = computed(() => {
     const current = failure();
     if (!current) return {};
@@ -47,7 +47,9 @@ export function formApiErrors(form: FormGroup): FormApiErrors {
     set: error => {
       // A field the form does not show (`parentId` of a drawer opened under a parent) is left to the message of the caller.
       const fields = Object.fromEntries(Object.entries(apiFieldErrors(error)).filter(([field]) => !!form.get(field)));
-      failure.set({ errors: fields, value: form.getRawValue() as Record<string, unknown> });
+      const current = form.getRawValue() as Record<string, unknown>;
+      value.set(current);
+      failure.set({ errors: fields, value: current });
       return Object.keys(fields).length > 0;
     },
     clear: () => failure.set(null),

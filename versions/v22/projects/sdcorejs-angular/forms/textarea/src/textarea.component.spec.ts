@@ -242,10 +242,12 @@ describe('SdTextarea', () => {
       const element: HTMLElement = fixture.nativeElement;
       expect(element.querySelector('mat-error')?.textContent).toContain('Cần ít nhất một dòng.');
       expect(element.querySelector('textarea')?.getAttribute('aria-invalid')).toBe('true');
+      expect(element.querySelector('textarea')?.getAttribute('data-invalid')).toBe('true');
 
       host.inlineError = undefined;
       fixture.detectChanges();
       expect(element.querySelector('mat-error')).toBeNull();
+      expect(element.querySelector('textarea')?.getAttribute('data-invalid')).toBe('false');
     });
   });
 

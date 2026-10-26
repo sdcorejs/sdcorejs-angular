@@ -101,7 +101,7 @@ import { sdPageFormLeaveGuard } from '@sdcorejs/angular/modules/layout';
 import { SdPermissionGuard } from '@sdcorejs/angular/modules/permission';
 import { CustomerService } from '../customer/services/customer.service';
 import { ProductService } from '../product/services/product.service';
-import { entityResolver } from './entity.resolver';
+import { entityResolver, updatableEntityResolver } from './entity.resolver';
 import { OrderService } from './services/order.service';
 
 /**
@@ -140,7 +140,7 @@ export const routes: Routes = [
             path: ':id/update',
             title: 'Cập nhật đơn hàng',
             data: { permission: 'PATTERN_ORDER_U_UPDATE', detail: 'page' },
-            resolve: { entity: entityResolver },
+            resolve: { entity: updatableEntityResolver },
             runGuardsAndResolvers: 'paramsChange',
             canDeactivate: [sdPageFormLeaveGuard],
             loadComponent: () => import('./pages/update/update.component').then(module => module.UpdateComponent),

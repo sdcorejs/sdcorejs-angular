@@ -46,6 +46,21 @@ describe('formApiErrors', () => {
     expect(api.errors()).toEqual({});
   });
 
+  it('shows the error of a save made without edits, when the fields wrote their values without an event', () => {
+    // As <sd-*> fields do: the control joins the form, then its model is written with emitEvent: false.
+    const form = new FormGroup<Record<string, FormControl<number | null>>>({});
+    const api = create(form);
+    const minutes = new FormControl<number | null>(null);
+    form.addControl('sessionMinutes', minutes);
+    minutes.setValue(3, { emitEvent: false });
+
+    expect(api.set(rejected([{ field: 'sessionMinutes', message: 'Từ 5 đến 480 phút.' }]))).toBeTrue();
+    expect(api.errors()).toEqual({ sessionMinutes: 'Từ 5 đến 480 phút.' });
+
+    minutes.setValue(30);
+    expect(api.errors()).toEqual({});
+  });
+
   it('reads the field of a row by its path', () => {
     const row = (quantity: number) => new FormGroup({ quantity: new FormControl(quantity) });
     const form = new FormGroup({ lines: new FormArray([row(1), row(60)]) });
