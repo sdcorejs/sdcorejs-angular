@@ -1,0 +1,52 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.tab-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab-toolbar--end {
+  justify-content: flex-end;
+}
+
+.tab-note {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// Breathing room between the tab header and its content.
+.tab-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-block: 16px;
+}
+
+.view-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 12px;
+}
+
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  small {
+    display: block;
+    color: var(--sd-text-secondary, #5f6368);
+  }
+}

@@ -1,14 +1,21 @@
 import { ButtonActionPopoverExampleComponent } from './examples/button-action-popover.example';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+import { ButtonAsyncExampleComponent } from './examples/button-async.example';
 import { ButtonColorsExampleComponent } from './examples/button-colors.example';
+import { ButtonCrudEntityExampleComponent } from './examples/button-crud-entity.example';
+import { ButtonCrudExampleComponent } from './examples/button-crud.example';
+import { ButtonDangerExampleComponent } from './examples/button-danger.example';
+import { ButtonGroupedExampleComponent } from './examples/button-grouped.example';
 import { ButtonIconOnlyExampleComponent } from './examples/button-icon-only.example';
 import { ButtonIconSetExampleComponent } from './examples/button-icon-set.example';
 import { ButtonIndicatorExampleComponent } from './examples/button-indicator.example';
+import { ButtonQueryExampleComponent } from './examples/button-query.example';
 import { ButtonSecondaryBlackExampleComponent } from './examples/button-secondary-black.example';
 import { ButtonSizesExampleComponent } from './examples/button-sizes.example';
 import { ButtonStatesExampleComponent } from './examples/button-states.example';
 import { ButtonVariantsExampleComponent } from './examples/button-variants.example';
+import { ButtonWorkflowExampleComponent } from './examples/button-workflow.example';
 
 @Component({
   selector: 'app-button-demo',
@@ -25,13 +32,21 @@ import { ButtonVariantsExampleComponent } from './examples/button-variants.examp
     ButtonStatesExampleComponent,
     ButtonActionPopoverExampleComponent,
     ButtonIndicatorExampleComponent,
+    ButtonCrudExampleComponent,
+    ButtonCrudEntityExampleComponent,
+    ButtonQueryExampleComponent,
+    ButtonWorkflowExampleComponent,
+    ButtonDangerExampleComponent,
+    ButtonGroupedExampleComponent,
+    ButtonAsyncExampleComponent,
   ],
   template: `<demo-page
     #demoPage
     title="Button"
     description="Nút thao tác chuẩn: 4 biến thể (fill / light / outline / text), 3 kích thước, hỗ trợ icon và trạng thái loading.">
     @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-action-popover') {
-      <demo-section heading="Action Popover"
+      <demo-section
+        heading="Action Popover"
         data-example-typescript="./examples/button-action-popover.example.ts"
         data-example-template="./examples/button-action-popover.example.html"
         data-example-style="./examples/button-example.scss"
@@ -131,6 +146,106 @@ import { ButtonVariantsExampleComponent } from './examples/button-variants.examp
         ]"
         note="Chấm hoặc số ở góc trên phải, không đổi kích thước nút. Số lớn hơn indicatorMax hiện {max}+; indicatorLabel nối vào aria-describedby.">
         <app-button-indicator-example></app-button-indicator-example>
+      </demo-section>
+    }
+    @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-crud-chung-khuyen-khich') {
+      <demo-section
+        heading="CRUD chung (khuyến khích)"
+        data-example-typescript="./examples/button-crud.example.ts"
+        data-example-template="./examples/button-crud.example.html"
+        data-example-style="./examples/button-example.scss"
+        [props]="[
+          { name: 'type', value: 'fill' },
+          { name: 'color', value: 'primary / error' },
+          { name: 'prefixIcon', value: 'add / edit / save / delete' },
+        ]"
+        note="Tạo mới (add), Cập nhật (edit), Lưu (save): primary fill. Xoá (delete): error fill. Chi tiết dùng hyperlink mã hoặc tên.">
+        <app-button-crud-example></app-button-crud-example>
+      </demo-section>
+    }
+    @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-crud-theo-doi-tuong') {
+      <demo-section
+        heading="CRUD theo đối tượng"
+        data-example-typescript="./examples/button-crud-entity.example.ts"
+        data-example-template="./examples/button-crud-entity.example.html"
+        data-example-style="./examples/button-example.scss"
+        [props]="[
+          { name: 'title', value: 'tác vụ + đối tượng' },
+          { name: 'prefixIcon', value: 'add / edit / save' },
+        ]"
+        note="Tạo khách hàng, Cập nhật khách hàng, Lưu khách hàng: primary fill, kèm icon add / edit / save.">
+        <app-button-crud-entity-example></app-button-crud-entity-example>
+      </demo-section>
+    }
+    @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-search-filter') {
+      <demo-section
+        heading="Search / filter"
+        data-example-typescript="./examples/button-query.example.ts"
+        data-example-template="./examples/button-query.example.html"
+        data-example-style="./examples/button-example.scss"
+        [props]="[
+          { name: 'type', value: 'light' },
+          { name: 'color', value: 'primary / info / secondary' },
+        ]"
+        note="Tìm kiếm, Áp dụng bộ lọc, Xóa bộ lọc; live search không thêm nút Tìm kiếm dư thừa.">
+        <app-button-query-example></app-button-query-example>
+      </demo-section>
+    }
+    @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tac-vu-nghiep-vu') {
+      <demo-section
+        heading="Tác vụ nghiệp vụ"
+        data-example-typescript="./examples/button-workflow.example.ts"
+        data-example-template="./examples/button-workflow.example.html"
+        data-example-style="./examples/button-example.scss"
+        [props]="[
+          { name: 'type', value: 'light' },
+          { name: 'color', value: 'primary / success / error / warning / info / secondary' },
+          { name: 'tooltip', value: 'icon-only' },
+        ]"
+        note="Dùng light, màu theo ý nghĩa nghiệp vụ: primary/info cho gửi và xử lý, success cho duyệt, warning cho tạm dừng, error cho từ chối. Có mẫu kèm icon, không icon và icon-only có tooltip.">
+        <app-button-workflow-example></app-button-workflow-example>
+      </demo-section>
+    }
+    @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-hanh-dong-nguy-hiem') {
+      <demo-section
+        heading="Hành động nguy hiểm"
+        data-example-typescript="./examples/button-danger.example.ts"
+        data-example-template="./examples/button-danger.example.html"
+        data-example-style="./examples/button-example.scss"
+        [props]="[
+          { name: 'color', value: 'error' },
+          { name: 'SdConfirmService', value: 'confirm' },
+        ]"
+        note="Nút Xoá dùng icon delete, error fill. Ghi rõ đối tượng và hậu quả trong hộp xác nhận; nút thoát là Giữ lại.">
+        <app-button-danger-example></app-button-danger-example>
+      </demo-section>
+    }
+    @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tac-vu-gop-popover') {
+      <demo-section
+        heading="Tác vụ gộp · Popover"
+        data-example-typescript="./examples/button-grouped.example.ts"
+        data-example-template="./examples/button-grouped.example.html"
+        data-example-style="./examples/button-example.scss"
+        [props]="[
+          { name: 'sd-button-item-divider', value: 'title' },
+          { name: 'tooltip', value: 'icon-only' },
+        ]"
+        note="Dùng SdButton với SdButtonItem và SdButtonItemDivider. Popover hỗ trợ chuột, bàn phím, Escape và tooltip cho nút chỉ có icon.">
+        <app-button-grouped-example></app-button-grouped-example>
+      </demo-section>
+    }
+    @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-dang-luu-loi-thu-lai') {
+      <demo-section
+        heading="Đang lưu / lỗi / thử lại"
+        data-example-typescript="./examples/button-async.example.ts"
+        data-example-template="./examples/button-async.example.html"
+        data-example-style="./examples/button-example.scss"
+        [props]="[
+          { name: 'loading', value: 'true' },
+          { name: 'disabled', value: 'pending' },
+        ]"
+        note="Đang lưu… disabled chống gửi lặp; lỗi giữ input và có Thử lại.">
+        <app-button-async-example></app-button-async-example>
       </demo-section>
     }
   </demo-page>`,

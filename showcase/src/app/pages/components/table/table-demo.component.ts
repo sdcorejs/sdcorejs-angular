@@ -7,6 +7,12 @@ import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
 import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
 import { TableAggregateDemoComponent } from './table-aggregate-example.component';
 import { TableUnknownTotalDemoComponent } from './table-unknown-total-example.component';
+import { TableCustomCellsExampleComponent } from './examples/table-custom-cells.example';
+import { TableInlineEditExampleComponent } from './examples/table-inline-edit.example';
+import { TableInlineErrorsExampleComponent } from './examples/table-inline-errors.example';
+import { TableInlineOperatorExampleComponent } from './examples/table-inline-operator.example';
+import { TableStandardExampleComponent } from './examples/table-standard.example';
+import { TableStatesExampleComponent } from './examples/table-states.example';
 import {
   SdTable,
   SdTableOption,
@@ -181,6 +187,12 @@ const TASKS: Task[] = [
     SdTableQuickSearchRightDefDirective,
     TableAggregateDemoComponent,
     TableUnknownTotalDemoComponent,
+    TableStandardExampleComponent,
+    TableInlineOperatorExampleComponent,
+    TableCustomCellsExampleComponent,
+    TableInlineEditExampleComponent,
+    TableInlineErrorsExampleComponent,
+    TableStatesExampleComponent,
   ],
   template: `
     <demo-page #demoPage
@@ -604,6 +616,60 @@ const TASKS: Task[] = [
         <div class="table-box">
           <sd-table [option]="preserveSelectionOption"></sd-table>
         </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tra-cuu-co-ban') {
+      <demo-section heading="Tra cứu cơ bản"
+        data-example-typescript="./examples/table-standard.example.ts" data-example-template="./examples/table-standard.example.html" data-example-style="./examples/table-pattern-example.scss"
+        [props]="[{ name: 'sdTableCellDef', value: 'link' }, { name: 'columns[].sortable', value: 'true' }, { name: 'columns[].useBadge', value: 'callback' }]"
+        note="Định danh có link; số căn phải; phân trang sau lọc/sort.">
+        <app-table-standard-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-inline-filter-operator') {
+      <demo-section heading="Inline filter + operator"
+        data-example-typescript="./examples/table-inline-operator.example.ts" data-example-template="./examples/table-inline-operator.example.html" data-example-style="./examples/table-pattern-example.scss"
+        [props]="[{ name: 'columns[].filter.operator', value: 'enable / list' }, { name: 'type', value: 'server' }, { name: 'columnOperator', value: 'request' }]"
+        note="Dùng column.filter.operator với enable và list; type server gửi columnOperator tới adapter dữ liệu demo để lọc trước khi phân trang. Khách hàng: chứa, bằng, bắt đầu bằng. Giá trị: bằng, lớn hơn, nhỏ hơn và các phép so sánh bao gồm bằng. Nhập rồi Enter để áp dụng; nhiều cột kết hợp AND.">
+        <app-table-inline-operator-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-custom-th-td') {
+      <demo-section heading="Custom TH / TD"
+        data-example-typescript="./examples/table-custom-cells.example.ts" data-example-template="./examples/table-custom-cells.example.html" data-example-style="./examples/table-pattern-example.scss"
+        [props]="[{ name: 'sdTableTitleDef', value: 'template' }, { name: 'sdTableCellDef', value: 'template' }]"
+        note="Dùng sdTableTitleDef và sdTableCellDef. Giữ hyperlink định danh và căn phải giá trị số.">
+        <app-table-custom-cells-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-nhap-lieu-inline-them-xoa') {
+      <demo-section heading="Nhập liệu inline · Thêm / xoá"
+        data-example-typescript="./examples/table-inline-edit.example.ts" data-example-template="./examples/table-inline-edit.example.html" data-example-style="./examples/table-pattern-example.scss"
+        [props]="[{ name: 'sdTableCellDef', value: 'sd-input / sd-input-number' }, { name: 'sdTableCommandHeaderDef', value: 'template' }, { name: 'command.commands', value: 'delete' }]"
+        note="Custom TD dùng SdInput/SdInputNumber size sm, hideInlineError; thêm/xoá dòng, tổng cập nhật theo dữ liệu nhập và Lưu chung. Nút thêm dòng ở sdTableCommandHeaderDef chỉ có icon add kèm tooltip, primary light, size sm; xoá từng dòng bằng command delete.">
+        <app-table-inline-edit-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-nhap-lieu-inline-bao-loi') {
+      <demo-section heading="Nhập liệu inline · Báo lỗi"
+        data-example-typescript="./examples/table-inline-errors.example.ts" data-example-template="./examples/table-inline-errors.example.html" data-example-style="./examples/table-pattern-example.scss"
+        [props]="[{ name: 'inlineError', value: 'string' }, { name: 'hideInlineError', value: 'true' }, { name: 'sd-inform', value: 'warning / error' }]"
+        note="Lưu dữ liệu chưa hợp lệ: SdInform warning và ô lỗi có tooltip. Sản phẩm trùng: BE mẫu trả error; dữ liệu được giữ để sửa.">
+        <app-table-inline-errors-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-loading-empty-error') {
+      <demo-section heading="Loading / empty / error"
+        data-example-typescript="./examples/table-states.example.ts" data-example-template="./examples/table-states.example.html" data-example-style="./examples/table-pattern-example.scss"
+        [props]="[{ name: 'sdDataStateTemplate', value: 'template' }, { name: 'filter.quickSearch', value: 'containFields' }, { name: 'retry', value: 'keeps query' }]"
+        note="Dùng luồng tải của SdTable: loading khi chờ request, empty/no-results từ kết quả trả về, lỗi có retry giữ query. Tùy chỉnh nội dung bằng sdDataStateTemplate và SdDataState.">
+        <app-table-states-example />
       </demo-section>
       }
     </demo-page>

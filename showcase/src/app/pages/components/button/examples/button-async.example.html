@@ -1,0 +1,11 @@
+<sd-input label="Tên khách hàng" size="sm" hideInlineError [disabled]="saving()" [(model)]="name" />
+<sd-button
+  prefixIcon="save"
+  type="fill"
+  color="primary"
+  autoId="async-save"
+  [title]="title()"
+  [loading]="saving()"
+  [disabled]="saving()"
+  (click)="save()" />
+<p class="button-note" role="status">{{ message() }}</p>

@@ -1669,6 +1669,20 @@ export class ButtonActionPopoverExampleComponent {
   align-items: center;
   gap: 8px;
   flex-basis: 100%;
+}
+
+// A full-width line of text under the buttons: a hint, a link or the role="status" result.
+.button-note {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.button-label {
+  min-width: 120px;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
 }`,
   },
   "components/button/example-bang-mau": {
@@ -1698,6 +1712,20 @@ export class ButtonColorsExampleComponent {}`,
   align-items: center;
   gap: 8px;
   flex-basis: 100%;
+}
+
+// A full-width line of text under the buttons: a hint, a link or the role="status" result.
+.button-note {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.button-label {
+  min-width: 120px;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
 }`,
   },
   "components/button/example-bien-the": {
@@ -1727,6 +1755,20 @@ export class ButtonVariantsExampleComponent {}`,
   align-items: center;
   gap: 8px;
   flex-basis: 100%;
+}
+
+// A full-width line of text under the buttons: a hint, a link or the role="status" result.
+.button-note {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.button-label {
+  min-width: 120px;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
 }`,
   },
   "components/button/example-chi-icon": {
@@ -1756,6 +1798,280 @@ export class ButtonIconOnlyExampleComponent {}`,
   align-items: center;
   gap: 8px;
   flex-basis: 100%;
+}
+
+// A full-width line of text under the buttons: a hint, a link or the role="status" result.
+.button-note {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.button-label {
+  min-width: 120px;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}`,
+  },
+  "components/button/example-crud-chung-khuyen-khich": {
+    typescript: `import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdConfirmService } from '@sdcorejs/angular/services/confirm';
+
+@Component({
+  selector: 'app-button-crud-example',
+  standalone: true,
+  imports: [RouterLink, SdButton],
+  templateUrl: './button-crud.example.html',
+  styleUrl: './button-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ButtonCrudExampleComponent {
+  readonly #confirm = inject(SdConfirmService);
+  readonly saving = signal(false);
+  readonly deleted = signal(false);
+  readonly message = signal('');
+
+  async save(): Promise<void> {
+    if (this.saving()) return;
+    this.saving.set(true);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    this.saving.set(false);
+    this.message.set('Đã lưu thay đổi.');
+  }
+
+  async remove(): Promise<void> {
+    try {
+      await this.#confirm.confirm('Khách hàng KH-0001 sẽ bị xoá khỏi danh sách mẫu này.', {
+        title: 'Xoá khách hàng KH-0001?',
+        yesTitle: 'Xoá',
+        noTitle: 'Giữ lại',
+        yesButtonColor: 'error',
+      });
+      this.deleted.set(true);
+      this.message.set('Đã xoá khách hàng KH-0001 trong dữ liệu mẫu.');
+    } catch {
+      this.message.set('Đã giữ lại bản ghi.');
+    }
+  }
+}`,
+    scss: `:host {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.button-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex-basis: 100%;
+}
+
+// A full-width line of text under the buttons: a hint, a link or the role="status" result.
+.button-note {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.button-label {
+  min-width: 120px;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}`,
+  },
+  "components/button/example-crud-theo-doi-tuong": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { SdButton } from '@sdcorejs/angular/components/button';
+
+@Component({
+  selector: 'app-button-crud-entity-example',
+  standalone: true,
+  imports: [RouterLink, SdButton],
+  templateUrl: './button-crud-entity.example.html',
+  styleUrl: './button-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ButtonCrudEntityExampleComponent {
+  readonly saving = signal(false);
+  readonly message = signal('');
+
+  async save(): Promise<void> {
+    if (this.saving()) return;
+    this.saving.set(true);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    this.saving.set(false);
+    this.message.set('Đã lưu khách hàng.');
+  }
+}`,
+    scss: `:host {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.button-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex-basis: 100%;
+}
+
+// A full-width line of text under the buttons: a hint, a link or the role="status" result.
+.button-note {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.button-label {
+  min-width: 120px;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}`,
+  },
+  "components/button/example-dang-luu-loi-thu-lai": {
+    typescript: `import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdInput } from '@sdcorejs/angular/forms/input';
+
+@Component({
+  selector: 'app-button-async-example',
+  standalone: true,
+  imports: [SdButton, SdInput],
+  templateUrl: './button-async.example.html',
+  styleUrl: './button-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ButtonAsyncExampleComponent {
+  readonly name = signal('Công ty An Phát');
+  readonly saving = signal(false);
+  readonly failed = signal(false);
+  readonly message = signal('');
+  readonly title = computed(() => (this.saving() ? 'Đang lưu…' : this.failed() ? 'Thử lại' : 'Lưu'));
+  #attempt = 0;
+
+  async save(): Promise<void> {
+    // Disabled while pending, so a second click cannot send the request twice.
+    if (this.saving()) return;
+    this.saving.set(true);
+    this.message.set('');
+    await new Promise(resolve => setTimeout(resolve, 500));
+    this.saving.set(false);
+    // The first attempt fails on purpose; the input keeps its value for the retry.
+    this.failed.set(++this.#attempt === 1);
+    this.message.set(this.failed() ? 'Không thể lưu. Dữ liệu được giữ nguyên; vui lòng thử lại.' : 'Đã lưu thay đổi.');
+  }
+}`,
+    scss: `:host {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.button-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex-basis: 100%;
+}
+
+// A full-width line of text under the buttons: a hint, a link or the role="status" result.
+.button-note {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.button-label {
+  min-width: 120px;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}`,
+  },
+  "components/button/example-hanh-dong-nguy-hiem": {
+    typescript: `import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdConfirmService } from '@sdcorejs/angular/services/confirm';
+
+@Component({
+  selector: 'app-button-danger-example',
+  standalone: true,
+  imports: [SdButton],
+  templateUrl: './button-danger.example.html',
+  styleUrl: './button-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ButtonDangerExampleComponent {
+  readonly #confirm = inject(SdConfirmService);
+  readonly deleted = signal(false);
+  readonly message = signal('');
+
+  async remove(): Promise<void> {
+    // Name the record and the consequence; the way out is "Giữ lại", not a generic "Huỷ".
+    try {
+      await this.#confirm.confirm('Đơn hàng DH-1024 của An Phát sẽ bị xoá khỏi danh sách mẫu này.', {
+        title: 'Xoá đơn hàng DH-1024?',
+        yesTitle: 'Xoá',
+        noTitle: 'Giữ lại',
+        yesButtonColor: 'error',
+      });
+      this.deleted.set(true);
+      this.message.set('Đã xoá đơn hàng DH-1024 trong dữ liệu mẫu.');
+    } catch {
+      this.message.set('Đã giữ lại bản ghi.');
+    }
+  }
+
+  restore(): void {
+    this.deleted.set(false);
+    this.message.set('');
+  }
+}`,
+    scss: `:host {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.button-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex-basis: 100%;
+}
+
+// A full-width line of text under the buttons: a hint, a link or the role="status" result.
+.button-note {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.button-label {
+  min-width: 120px;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
 }`,
   },
   "components/button/example-indicator": {
@@ -1795,6 +2111,20 @@ export class ButtonIndicatorExampleComponent {
   align-items: center;
   gap: 8px;
   flex-basis: 100%;
+}
+
+// A full-width line of text under the buttons: a hint, a link or the role="status" result.
+.button-note {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.button-label {
+  min-width: 120px;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
 }`,
   },
   "components/button/example-kich-thuoc": {
@@ -1824,6 +2154,65 @@ export class ButtonSizesExampleComponent {}`,
   align-items: center;
   gap: 8px;
   flex-basis: 100%;
+}
+
+// A full-width line of text under the buttons: a hint, a link or the role="status" result.
+.button-note {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.button-label {
+  min-width: 120px;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}`,
+  },
+  "components/button/example-search-filter": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdButton } from '@sdcorejs/angular/components/button';
+
+@Component({
+  selector: 'app-button-query-example',
+  standalone: true,
+  imports: [SdButton],
+  templateUrl: './button-query.example.html',
+  styleUrl: './button-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ButtonQueryExampleComponent {
+  readonly message = signal('');
+}`,
+    scss: `:host {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.button-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex-basis: 100%;
+}
+
+// A full-width line of text under the buttons: a hint, a link or the role="status" result.
+.button-note {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.button-label {
+  min-width: 120px;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
 }`,
   },
   "components/button/example-secondary-vs-black": {
@@ -1853,6 +2242,137 @@ export class ButtonSecondaryBlackExampleComponent {}`,
   align-items: center;
   gap: 8px;
   flex-basis: 100%;
+}
+
+// A full-width line of text under the buttons: a hint, a link or the role="status" result.
+.button-note {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.button-label {
+  min-width: 120px;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}`,
+  },
+  "components/button/example-tac-vu-gop-popover": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdButton, SdButtonItem, SdButtonItemDivider } from '@sdcorejs/angular/components/button';
+
+@Component({
+  selector: 'app-button-grouped-example',
+  standalone: true,
+  imports: [SdButton, SdButtonItem, SdButtonItemDivider],
+  templateUrl: './button-grouped.example.html',
+  styleUrl: './button-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ButtonGroupedExampleComponent {
+  readonly workflowActions = [
+    { title: 'Gửi duyệt', icon: 'send', color: 'primary' },
+    { title: 'Duyệt', icon: 'check_circle', color: 'success' },
+    { title: 'Từ chối', icon: 'cancel', color: 'error' },
+    { title: 'Tạm dừng', icon: 'pause_circle', color: 'warning' },
+  ] as const;
+  readonly dataActions = [
+    { title: 'Xuất dữ liệu', icon: 'download', color: 'info' },
+    { title: 'In', icon: 'print', color: 'secondary' },
+  ] as const;
+  readonly message = signal('');
+
+  run(title: string): void {
+    this.message.set(\`Đã thực hiện tác vụ mẫu: \${title}.\`);
+  }
+}`,
+    scss: `:host {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.button-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex-basis: 100%;
+}
+
+// A full-width line of text under the buttons: a hint, a link or the role="status" result.
+.button-note {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.button-label {
+  min-width: 120px;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}`,
+  },
+  "components/button/example-tac-vu-nghiep-vu": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdButton } from '@sdcorejs/angular/components/button';
+
+@Component({
+  selector: 'app-button-workflow-example',
+  standalone: true,
+  imports: [SdButton],
+  templateUrl: './button-workflow.example.html',
+  styleUrl: './button-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ButtonWorkflowExampleComponent {
+  // Colour follows the business meaning of each action.
+  readonly actions = [
+    { title: 'Gửi duyệt', icon: 'send', color: 'primary' },
+    { title: 'Duyệt', icon: 'check_circle', color: 'success' },
+    { title: 'Từ chối', icon: 'cancel', color: 'error' },
+    { title: 'Tạm dừng', icon: 'pause_circle', color: 'warning' },
+    { title: 'Xuất dữ liệu', icon: 'download', color: 'info' },
+    { title: 'In', icon: 'print', color: 'secondary' },
+  ] as const;
+  readonly message = signal('');
+
+  run(title: string): void {
+    this.message.set(\`Đã thực hiện tác vụ mẫu: \${title}.\`);
+  }
+}`,
+    scss: `:host {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.button-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex-basis: 100%;
+}
+
+// A full-width line of text under the buttons: a hint, a link or the role="status" result.
+.button-note {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.button-label {
+  min-width: 120px;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
 }`,
   },
   "components/button/example-toggle-icon-set-bang-alias": {
@@ -1889,6 +2409,20 @@ export class ButtonIconSetExampleComponent {
   align-items: center;
   gap: 8px;
   flex-basis: 100%;
+}
+
+// A full-width line of text under the buttons: a hint, a link or the role="status" result.
+.button-note {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.button-label {
+  min-width: 120px;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
 }`,
   },
   "components/button/example-trang-thai": {
@@ -1932,6 +2466,184 @@ export class ButtonStatesExampleComponent {
   align-items: center;
   gap: 8px;
   flex-basis: 100%;
+}
+
+// A full-width line of text under the buttons: a hint, a link or the role="status" result.
+.button-note {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.button-label {
+  min-width: 120px;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}`,
+  },
+  "components/card/example-count-card-de-loc": {
+    typescript: `import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { SdBadge } from '@sdcorejs/angular/components/badge';
+import { SdCard, SdCardGroup } from '@sdcorejs/angular/components/card';
+import { SdInput } from '@sdcorejs/angular/forms/input';
+
+type OrderStatus = 'pending' | 'active' | 'done';
+
+interface Order {
+  id: number;
+  code: string;
+  name: string;
+  status: OrderStatus;
+}
+
+const STATUS = {
+  pending: { label: 'Chờ xử lý', color: 'warning' },
+  active: { label: 'Đang xử lý', color: 'info' },
+  done: { label: 'Hoàn tất', color: 'success' },
+} as const;
+const CUSTOMERS = ['An Phát', 'Minh Long', 'Bình Minh', 'Đại Việt', 'Hải Nam', 'Phú Gia', 'Thiên An', 'Trường Sơn'];
+
+const ORDERS: Order[] = Array.from({ length: 24 }, (_, index) => ({
+  id: 2400 - index,
+  code: \`ĐH-\${2400 - index}\`,
+  name: CUSTOMERS[index % CUSTOMERS.length],
+  status: (['pending', 'active', 'done'] as const)[index % 3],
+}));
+
+const normalize = (value: string): string =>
+  value
+    .normalize('NFD')
+    .replace(/[\\u0300-\\u036f]/g, '')
+    .replace(/[đĐ]/g, 'd')
+    .toLowerCase()
+    .trim();
+
+@Component({
+  selector: 'app-card-score-filter-example',
+  standalone: true,
+  imports: [SdBadge, SdCard, SdCardGroup, SdInput],
+  templateUrl: './card-score-filter.example.html',
+  styleUrl: './card-score-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CardScoreFilterExampleComponent {
+  readonly status = STATUS;
+  readonly total = ORDERS.length;
+  // Counts cover the whole dataset and do not change with the search or the selected card.
+  readonly cards = [
+    { id: '', label: 'Tất cả', value: ORDERS.length },
+    ...(Object.keys(STATUS) as OrderStatus[]).map(id => ({
+      id,
+      label: STATUS[id].label,
+      value: ORDERS.filter(order => order.status === id).length,
+    })),
+  ];
+  readonly selected = signal<string | null>('');
+  readonly search = signal('');
+  // The list is the intersection of the selected card and the search.
+  readonly filtered = computed(() => {
+    const term = normalize(this.search() ?? '');
+    return ORDERS.filter(
+      order => (!this.selected() || order.status === this.selected()) && normalize(\`\${order.code} \${order.name}\`).includes(term)
+    );
+  });
+
+  onSelect(value: string | string[] | null): void {
+    if (value === null) this.selected.set('');
+  }
+}`,
+    scss: `:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+// The consumer owns the grid; score cards wrap to one column on narrow screens.
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.score {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+}
+
+.score--compact {
+  gap: 4px;
+  padding: 12px;
+}
+
+.score__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--sd-text-secondary, #5f6368);
+}
+
+.score__value {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.score--compact .score__value {
+  font-size: 22px;
+}
+
+.score__hint {
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// 24px icon centred in a 44px tile; the tile colour comes from the bg-*-light utility.
+.score__tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+}
+
+.score__progress {
+  width: 100%;
+}
+
+.score-search {
+  max-width: 320px;
+}
+
+.score-result {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.score-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th,
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--sd-border, #e0e0e0);
+    text-align: left;
+  }
+
+  th {
+    color: var(--sd-text-secondary, #5f6368);
+    font-weight: 600;
+  }
 }`,
   },
   "components/card/example-disabled-va-color": {
@@ -1992,6 +2704,606 @@ export class CardStatesExampleComponent {
   margin: 0;
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   font-size: 12px;
+}`,
+  },
+  "components/card/example-icon-canh-nhan": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdSection } from '@sdcorejs/angular/components/section';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
+
+@Component({
+  selector: 'app-card-score-icon-inline-example',
+  standalone: true,
+  imports: [SdSection, SdIcon],
+  templateUrl: './card-score-icon-inline.example.html',
+  styleUrl: './card-score-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CardScoreIconInlineExampleComponent {
+  readonly metrics = [
+    { id: 'orders', label: 'Tổng đơn hàng', value: '24', hint: 'Toàn bộ dữ liệu mẫu', icon: 'receipt_long', color: 'info' },
+    { id: 'customers', label: 'Khách hàng', value: '8', hint: 'Khách hàng có đơn hàng', icon: 'groups', color: 'success' },
+    { id: 'amount', label: 'Giá trị đơn hàng', value: '567 triệu ₫', hint: 'Toàn bộ dữ liệu mẫu', icon: 'payments', color: 'warning' },
+  ];
+}`,
+    scss: `:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+// The consumer owns the grid; score cards wrap to one column on narrow screens.
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.score {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+}
+
+.score--compact {
+  gap: 4px;
+  padding: 12px;
+}
+
+.score__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--sd-text-secondary, #5f6368);
+}
+
+.score__value {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.score--compact .score__value {
+  font-size: 22px;
+}
+
+.score__hint {
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// 24px icon centred in a 44px tile; the tile colour comes from the bg-*-light utility.
+.score__tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+}
+
+.score__progress {
+  width: 100%;
+}
+
+.score-search {
+  max-width: 320px;
+}
+
+.score-result {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.score-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th,
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--sd-border, #e0e0e0);
+    text-align: left;
+  }
+
+  th {
+    color: var(--sd-text-secondary, #5f6368);
+    font-weight: 600;
+  }
+}`,
+  },
+  "components/card/example-icon-click-de-loc": {
+    typescript: `import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { SdBadge } from '@sdcorejs/angular/components/badge';
+import { SdCard, SdCardGroup } from '@sdcorejs/angular/components/card';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
+
+type OrderStatus = 'pending' | 'active' | 'done';
+
+interface Order {
+  id: number;
+  code: string;
+  name: string;
+  status: OrderStatus;
+}
+
+const STATUS = {
+  pending: { label: 'Chờ xử lý', icon: 'schedule', color: 'warning' },
+  active: { label: 'Đang xử lý', icon: 'sync', color: 'info' },
+  done: { label: 'Hoàn tất', icon: 'check_circle', color: 'success' },
+} as const;
+const CUSTOMERS = ['An Phát', 'Minh Long', 'Bình Minh', 'Đại Việt', 'Hải Nam', 'Phú Gia', 'Thiên An', 'Trường Sơn'];
+
+const ORDERS: Order[] = Array.from({ length: 24 }, (_, index) => ({
+  id: 2400 - index,
+  code: \`ĐH-\${2400 - index}\`,
+  name: CUSTOMERS[index % CUSTOMERS.length],
+  status: (['pending', 'active', 'done'] as const)[index % 3],
+}));
+
+@Component({
+  selector: 'app-card-score-icon-filter-example',
+  standalone: true,
+  imports: [SdBadge, SdCard, SdCardGroup, SdIcon],
+  templateUrl: './card-score-icon-filter.example.html',
+  styleUrl: './card-score-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CardScoreIconFilterExampleComponent {
+  readonly status = STATUS;
+  readonly total = ORDERS.length;
+  // Counts always describe the whole dataset; the selection only filters the list below.
+  readonly cards = [
+    { id: '', label: 'Tất cả đơn hàng', value: ORDERS.length, icon: 'receipt_long', color: 'primary' },
+    ...(Object.keys(STATUS) as OrderStatus[]).map(id => ({
+      id,
+      label: STATUS[id].label,
+      value: ORDERS.filter(order => order.status === id).length,
+      icon: STATUS[id].icon,
+      color: STATUS[id].color,
+    })),
+  ];
+  readonly selected = signal<string | null>('');
+  readonly filtered = computed(() => ORDERS.filter(order => !this.selected() || order.status === this.selected()));
+
+  /** Clicking the selected card clears the group; fall back to "Tất cả" so one card stays selected. */
+  onSelect(value: string | string[] | null): void {
+    if (value === null) this.selected.set('');
+  }
+}`,
+    scss: `:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+// The consumer owns the grid; score cards wrap to one column on narrow screens.
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.score {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+}
+
+.score--compact {
+  gap: 4px;
+  padding: 12px;
+}
+
+.score__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--sd-text-secondary, #5f6368);
+}
+
+.score__value {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.score--compact .score__value {
+  font-size: 22px;
+}
+
+.score__hint {
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// 24px icon centred in a 44px tile; the tile colour comes from the bg-*-light utility.
+.score__tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+}
+
+.score__progress {
+  width: 100%;
+}
+
+.score-search {
+  max-width: 320px;
+}
+
+.score-result {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.score-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th,
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--sd-border, #e0e0e0);
+    text-align: left;
+  }
+
+  th {
+    color: var(--sd-text-secondary, #5f6368);
+    font-weight: 600;
+  }
+}`,
+  },
+  "components/card/example-icon-trang-thai": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdSection } from '@sdcorejs/angular/components/section';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
+
+@Component({
+  selector: 'app-card-score-icon-status-example',
+  standalone: true,
+  imports: [SdSection, SdIcon],
+  templateUrl: './card-score-icon-status.example.html',
+  styleUrl: './card-score-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CardScoreIconStatusExampleComponent {
+  // The label names the state; icon and colour only support it.
+  readonly statuses = [
+    { id: 'pending', label: 'Chờ xử lý', value: 8, hint: 'Chưa có người nhận', icon: 'schedule', color: 'warning' },
+    { id: 'active', label: 'Đang xử lý', value: 8, hint: 'Đang được thực hiện', icon: 'sync', color: 'info' },
+    { id: 'done', label: 'Hoàn tất', value: 8, hint: 'Đã giao cho khách hàng', icon: 'check_circle', color: 'success' },
+  ];
+}`,
+    scss: `:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+// The consumer owns the grid; score cards wrap to one column on narrow screens.
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.score {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+}
+
+.score--compact {
+  gap: 4px;
+  padding: 12px;
+}
+
+.score__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--sd-text-secondary, #5f6368);
+}
+
+.score__value {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.score--compact .score__value {
+  font-size: 22px;
+}
+
+.score__hint {
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// 24px icon centred in a 44px tile; the tile colour comes from the bg-*-light utility.
+.score__tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+}
+
+.score__progress {
+  width: 100%;
+}
+
+.score-search {
+  max-width: 320px;
+}
+
+.score-result {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.score-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th,
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--sd-border, #e0e0e0);
+    text-align: left;
+  }
+
+  th {
+    color: var(--sd-text-secondary, #5f6368);
+    font-weight: 600;
+  }
+}`,
+  },
+  "components/card/example-icon-trong-nen-mau": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdSection } from '@sdcorejs/angular/components/section';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
+
+@Component({
+  selector: 'app-card-score-icon-tile-example',
+  standalone: true,
+  imports: [SdSection, SdIcon],
+  templateUrl: './card-score-icon-tile.example.html',
+  styleUrl: './card-score-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CardScoreIconTileExampleComponent {
+  readonly metrics = [
+    { id: 'orders', label: 'Tổng đơn hàng', value: '24', hint: 'Toàn bộ dữ liệu mẫu', icon: 'receipt_long', color: 'info' },
+    { id: 'customers', label: 'Khách hàng', value: '8', hint: 'Khách hàng có đơn hàng', icon: 'groups', color: 'success' },
+    { id: 'amount', label: 'Giá trị đơn hàng', value: '567 triệu ₫', hint: 'Toàn bộ dữ liệu mẫu', icon: 'payments', color: 'warning' },
+  ];
+}`,
+    scss: `:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+// The consumer owns the grid; score cards wrap to one column on narrow screens.
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.score {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+}
+
+.score--compact {
+  gap: 4px;
+  padding: 12px;
+}
+
+.score__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--sd-text-secondary, #5f6368);
+}
+
+.score__value {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.score--compact .score__value {
+  font-size: 22px;
+}
+
+.score__hint {
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// 24px icon centred in a 44px tile; the tile colour comes from the bg-*-light utility.
+.score__tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+}
+
+.score__progress {
+  width: 100%;
+}
+
+.score-search {
+  max-width: 320px;
+}
+
+.score-result {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.score-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th,
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--sd-border, #e0e0e0);
+    text-align: left;
+  }
+
+  th {
+    color: var(--sd-text-secondary, #5f6368);
+    font-weight: 600;
+  }
+}`,
+  },
+  "components/card/example-metric-chi-doc": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdSection } from '@sdcorejs/angular/components/section';
+
+@Component({
+  selector: 'app-card-score-metric-example',
+  standalone: true,
+  imports: [SdSection],
+  templateUrl: './card-score-metric.example.html',
+  styleUrl: './card-score-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CardScoreMetricExampleComponent {
+  readonly metric = { label: 'Giá trị đơn hàng', value: '567 triệu ₫', hint: '24 đơn hàng · Toàn bộ dữ liệu mẫu' };
+}`,
+    scss: `:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+// The consumer owns the grid; score cards wrap to one column on narrow screens.
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.score {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+}
+
+.score--compact {
+  gap: 4px;
+  padding: 12px;
+}
+
+.score__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--sd-text-secondary, #5f6368);
+}
+
+.score__value {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.score--compact .score__value {
+  font-size: 22px;
+}
+
+.score__hint {
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// 24px icon centred in a 44px tile; the tile colour comes from the bg-*-light utility.
+.score__tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+}
+
+.score__progress {
+  width: 100%;
+}
+
+.score-search {
+  max-width: 320px;
+}
+
+.score-result {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.score-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th,
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--sd-border, #e0e0e0);
+    text-align: left;
+  }
+
+  th {
+    color: var(--sd-text-secondary, #5f6368);
+    font-weight: 600;
+  }
 }`,
   },
   "components/card/example-multiple-selection": {
@@ -2142,6 +3454,118 @@ export class CardCompareExampleComponent {
   font-size: 12px;
 }`,
   },
+  "components/card/example-score-card-gon": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdSection } from '@sdcorejs/angular/components/section';
+
+@Component({
+  selector: 'app-card-score-compact-example',
+  standalone: true,
+  imports: [SdSection],
+  templateUrl: './card-score-compact.example.html',
+  styleUrl: './card-score-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CardScoreCompactExampleComponent {
+  readonly statuses = [
+    { id: 'pending', label: 'Chờ xử lý', value: 8, hint: 'Toàn bộ dữ liệu mẫu' },
+    { id: 'active', label: 'Đang xử lý', value: 8, hint: 'Toàn bộ dữ liệu mẫu' },
+    { id: 'done', label: 'Hoàn tất', value: 8, hint: 'Toàn bộ dữ liệu mẫu' },
+  ];
+}`,
+    scss: `:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+// The consumer owns the grid; score cards wrap to one column on narrow screens.
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.score {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+}
+
+.score--compact {
+  gap: 4px;
+  padding: 12px;
+}
+
+.score__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--sd-text-secondary, #5f6368);
+}
+
+.score__value {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.score--compact .score__value {
+  font-size: 22px;
+}
+
+.score__hint {
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// 24px icon centred in a 44px tile; the tile colour comes from the bg-*-light utility.
+.score__tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+}
+
+.score__progress {
+  width: 100%;
+}
+
+.score-search {
+  max-width: 320px;
+}
+
+.score-result {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.score-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th,
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--sd-border, #e0e0e0);
+    text-align: left;
+  }
+
+  th {
+    color: var(--sd-text-secondary, #5f6368);
+    font-weight: 600;
+  }
+}`,
+  },
   "components/card/example-single-selection": {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { SdCard, SdCardGroup } from '@sdcorejs/angular/components/card';
@@ -2215,6 +3639,147 @@ export class CardSingleExampleComponent {
   font-size: 12px;
 }`,
   },
+  "components/card/example-so-sanh-hai-ky": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdSection } from '@sdcorejs/angular/components/section';
+
+interface Comparison {
+  id: string;
+  label: string;
+  current: number;
+  previous: number;
+  previousLabel: string;
+  unit: string;
+  /** Whether an increase is good news for this metric; never assume it. */
+  higherIsBetter: boolean;
+}
+
+@Component({
+  selector: 'app-card-score-comparison-example',
+  standalone: true,
+  imports: [SdSection],
+  templateUrl: './card-score-comparison.example.html',
+  styleUrl: './card-score-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CardScoreComparisonExampleComponent {
+  readonly items: Comparison[] = [
+    { id: 'orders', label: 'Đơn hàng tháng 9', current: 120, previous: 100, previousLabel: 'Tháng 8', unit: 'đơn', higherIsBetter: true },
+    {
+      id: 'returns',
+      label: 'Đơn đổi trả tháng 9',
+      current: 18,
+      previous: 12,
+      previousLabel: 'Tháng 8',
+      unit: 'đơn',
+      higherIsBetter: false,
+    },
+  ];
+
+  delta(item: Comparison): string {
+    const percent = item.previous ? Math.round(((item.current - item.previous) / item.previous) * 100) : 0;
+    return \`\${percent > 0 ? '+' : ''}\${percent}%\`;
+  }
+
+  deltaColor(item: Comparison): string {
+    if (item.current === item.previous) return 'text-secondary';
+    const increased = item.current > item.previous;
+    return increased === item.higherIsBetter ? 'text-success' : 'text-error';
+  }
+}`,
+    scss: `:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+// The consumer owns the grid; score cards wrap to one column on narrow screens.
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.score {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+}
+
+.score--compact {
+  gap: 4px;
+  padding: 12px;
+}
+
+.score__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--sd-text-secondary, #5f6368);
+}
+
+.score__value {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.score--compact .score__value {
+  font-size: 22px;
+}
+
+.score__hint {
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// 24px icon centred in a 44px tile; the tile colour comes from the bg-*-light utility.
+.score__tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+}
+
+.score__progress {
+  width: 100%;
+}
+
+.score-search {
+  max-width: 320px;
+}
+
+.score-result {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.score-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th,
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--sd-border, #e0e0e0);
+    text-align: left;
+  }
+
+  th {
+    color: var(--sd-text-secondary, #5f6368);
+    font-weight: 600;
+  }
+}`,
+  },
   "components/card/example-standalone-card": {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { SdCard } from '@sdcorejs/angular/components/card';
@@ -2275,6 +3840,130 @@ export class CardStandaloneExampleComponent {
   margin: 0;
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   font-size: 12px;
+}`,
+  },
+  "components/card/example-tien-do-ty-le": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdSection } from '@sdcorejs/angular/components/section';
+
+interface Progress {
+  id: string;
+  label: string;
+  done: number;
+  total: number;
+  unit: string;
+}
+
+@Component({
+  selector: 'app-card-score-progress-example',
+  standalone: true,
+  imports: [SdSection],
+  templateUrl: './card-score-progress.example.html',
+  styleUrl: './card-score-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CardScoreProgressExampleComponent {
+  readonly items: Progress[] = [
+    { id: 'requests', label: 'Tiến độ hoàn tất', done: 31, total: 50, unit: 'yêu cầu' },
+    { id: 'returns', label: 'Đổi trả đã xử lý', done: 0, total: 0, unit: 'yêu cầu' },
+  ];
+
+  /** A zero total shows 0% instead of dividing by zero. */
+  percent(item: Progress): number {
+    return item.total ? Math.round((item.done / item.total) * 100) : 0;
+  }
+}`,
+    scss: `:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+// The consumer owns the grid; score cards wrap to one column on narrow screens.
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.score {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+}
+
+.score--compact {
+  gap: 4px;
+  padding: 12px;
+}
+
+.score__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--sd-text-secondary, #5f6368);
+}
+
+.score__value {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.score--compact .score__value {
+  font-size: 22px;
+}
+
+.score__hint {
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// 24px icon centred in a 44px tile; the tile colour comes from the bg-*-light utility.
+.score__tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+}
+
+.score__progress {
+  width: 100%;
+}
+
+.score-search {
+  max-width: 320px;
+}
+
+.score-result {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.score-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th,
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--sd-border, #e0e0e0);
+    text-align: left;
+  }
+
+  th {
+    color: var(--sd-text-secondary, #5f6368);
+    font-weight: 600;
+  }
 }`,
   },
   "components/code-editor": {
@@ -8055,7 +9744,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdTable, type SdTableOption } from '@sdcorejs/angular/components/table';
 import { SdPageList } from '@sdcorejs/angular/modules/layout';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
-import { ORDER_STATUSES, ORDERS, PAGE_LIST_DEMO_BASE, type Order } from './live/page-list-live.data';
+import { ORDER_STATUSES, ORDERS, type Order } from './page-list-demo.data';
 
 @Component({
   selector: 'app-page-list-demo',
@@ -8078,7 +9767,7 @@ import { ORDER_STATUSES, ORDERS, PAGE_LIST_DEMO_BASE, type Order } from './live/
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-man-song-toan-trang') {
-      <demo-section heading="Màn sống toàn trang" [props]="[{ name: 'detail', value: 'page | drawer' }, { name: 'route', value: '/demo/page-list' }]" note="Mở màn mẫu toàn trang; cấu hình đổi bằng ?cfg= (tab, score card, external filter, chọn nhiều, autoCompact, cách mở chi tiết).">
+      <demo-section heading="Màn sống toàn trang" [props]="[{ name: 'detail', value: 'page | drawer' }, { name: 'route', value: '/pattern/order' }]" note="Mở màn đơn hàng của @sdcorejs/angular/modules/pattern; cấu hình đổi bằng ?cfg= hoặc drawer Tuỳ chỉnh hiển thị (tab, score card, external filter, chọn nhiều, autoCompact, cách mở chi tiết).">
         <div class="links">
           @for (link of links; track link.label) {
             <a class="link" [routerLink]="base" [queryParams]="{ cfg: link.cfg }">{{ link.label }}</a>
@@ -8115,7 +9804,7 @@ import { ORDER_STATUSES, ORDERS, PAGE_LIST_DEMO_BASE, type Order } from './live/
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PageListDemoComponent {
-  readonly base = PAGE_LIST_DEMO_BASE;
+  readonly base = '/pattern/order';
   readonly links = [
     { label: 'Mặc định (drawer)', cfg: JSON.stringify({}) },
     { label: 'Tab + score card', cfg: JSON.stringify({ tabs: true, score: true }) },
@@ -9882,6 +11571,15 @@ code {
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdTab, SdTabClosedEvent, SdTabGroup } from '@sdcorejs/angular/components/tab';
 import { SdButton } from '@sdcorejs/angular/components/button';
+import { TabClosableExampleComponent } from './examples/tab-closable.example';
+import { TabCountsExampleComponent } from './examples/tab-counts.example';
+import { TabDisabledExampleComponent } from './examples/tab-disabled.example';
+import { TabFormExampleComponent } from './examples/tab-form.example';
+import { TabLoadingExampleComponent } from './examples/tab-loading.example';
+import { TabManyExampleComponent } from './examples/tab-many.example';
+import { TabMixedExampleComponent } from './examples/tab-mixed.example';
+import { TabTableExampleComponent } from './examples/tab-table.example';
+import { TabViewsExampleComponent } from './examples/tab-views.example';
 
 interface FileTab {
   id: string;
@@ -9891,7 +11589,22 @@ interface FileTab {
 @Component({
   selector: 'app-tab-demo',
   standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, SdTabGroup, SdTab, SdButton],
+  imports: [
+    DemoPageComponent,
+    DemoSectionComponent,
+    SdTabGroup,
+    SdTab,
+    SdButton,
+    TabManyExampleComponent,
+    TabCountsExampleComponent,
+    TabViewsExampleComponent,
+    TabMixedExampleComponent,
+    TabTableExampleComponent,
+    TabFormExampleComponent,
+    TabLoadingExampleComponent,
+    TabDisabledExampleComponent,
+    TabClosableExampleComponent,
+  ],
   template: \`
     <demo-page #demoPage
       title="Tab Group"
@@ -10065,6 +11778,87 @@ interface FileTab {
             <sd-tab label="Bước 3">Nội dung bước 3.</sd-tab>
           </sd-tab-group>
         </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-nhieu-nhom-noi-dung') {
+      <demo-section heading="Nhiều nhóm nội dung"
+        data-example-typescript="./examples/tab-many.example.ts" data-example-template="./examples/tab-many.example.html" data-example-style="./examples/tab-pattern-example.scss"
+        [props]="[{ name: 'stretchTabs', value: 'false' }, { name: 'sd-tab', value: '10 nhóm' }]"
+        note="Thanh tab tự cuộn khi thiếu chỗ; không ép toàn bộ nhãn vào một hàng.">
+        <app-tab-many-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-phan-nhom-co-so-luong') {
+      <demo-section heading="Phân nhóm có số lượng"
+        data-example-typescript="./examples/tab-counts.example.ts" data-example-template="./examples/tab-counts.example.html" data-example-style="./examples/tab-pattern-example.scss"
+        [props]="[{ name: 'badge', value: 'count' }, { name: '[(selectedIndex)]', value: 'two-way' }]"
+        note="Badge dùng số lượng thật của từng nhóm; bấm hoàn tất để thấy số lượng thay đổi.">
+        <app-tab-counts-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chuyen-cach-xem-du-lieu') {
+      <demo-section heading="Chuyển cách xem dữ liệu"
+        data-example-typescript="./examples/tab-views.example.ts" data-example-template="./examples/tab-views.example.html" data-example-style="./examples/tab-pattern-example.scss"
+        [props]="[{ name: 'variant', value: 'segmented' }]"
+        note="Segmented cho hai cách xem. Giữ nguyên nguồn dữ liệu khi chuyển.">
+        <app-tab-views-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-noi-dung-hon-hop') {
+      <demo-section heading="Nội dung hỗn hợp"
+        data-example-typescript="./examples/tab-mixed.example.ts" data-example-template="./examples/tab-mixed.example.html" data-example-style="./examples/tab-pattern-example.scss"
+        [props]="[{ name: 'sd-section', value: 'thông tin' }, { name: 'sd-table', value: 'danh sách' }, { name: 'list', value: 'lịch sử' }]"
+        note="Chọn cấu trúc phù hợp từng tab, không ép mọi nội dung thành bảng.">
+        <app-tab-mixed-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tab-chua-bang') {
+      <demo-section heading="Tab chứa bảng"
+        data-example-typescript="./examples/tab-table.example.ts" data-example-template="./examples/tab-table.example.html" data-example-style="./examples/tab-pattern-example.scss"
+        [props]="[{ name: 'filter.quickSearch', value: 'containFields' }, { name: 'paginate', value: 'pageSize / pages' }]"
+        note="Dùng quickSearch từ option Core Table; bảng tự quản lý trang và số dòng.">
+        <app-tab-table-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-form-chia-nhom') {
+      <demo-section heading="Form chia nhóm"
+        data-example-typescript="./examples/tab-form.example.ts" data-example-template="./examples/tab-form.example.html" data-example-style="./examples/tab-pattern-example.scss"
+        [props]="[{ name: '[(selectedIndex)]', value: 'two-way' }, { name: 'SdNotifyService', value: 'warning / success' }]"
+        note="Giữ dữ liệu khi đổi tab; khi lưu, chuyển tới nhóm lỗi và báo Notify.">
+        <app-tab-form-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tai-rong-loi') {
+      <demo-section heading="Tải / Rỗng / Lỗi"
+        data-example-typescript="./examples/tab-loading.example.ts" data-example-template="./examples/tab-loading.example.html" data-example-style="./examples/tab-pattern-example.scss"
+        [props]="[{ name: 'sd-data-state', value: 'loading / empty / error' }, { name: '(selectedIndexChange)', value: 'event' }]"
+        note="Loading 1–2 giây; lỗi có thử lại; trạng thái rỗng có lời giải thích.">
+        <app-tab-loading-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-nhom-chua-kha-dung') {
+      <demo-section heading="Nhóm chưa khả dụng"
+        data-example-typescript="./examples/tab-disabled.example.ts" data-example-template="./examples/tab-disabled.example.html" data-example-style="./examples/tab-pattern-example.scss"
+        [props]="[{ name: 'disabled', value: 'theo điều kiện' }, { name: 'sd-inform', value: 'giải thích' }]"
+        note="Không chỉ vô hiệu hóa: giải thích điều kiện và cung cấp thao tác đáp ứng điều kiện.">
+        <app-tab-disabled-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-mo-nhieu-ho-so') {
+      <demo-section heading="Mở nhiều hồ sơ"
+        data-example-typescript="./examples/tab-closable.example.ts" data-example-template="./examples/tab-closable.example.html" data-example-style="./examples/tab-pattern-example.scss"
+        [props]="[{ name: 'closable', value: 'true' }, { name: 'beforeClose', value: 'SdTabBeforeClose' }, { name: '(close)', value: 'event' }]"
+        note="Tab đóng được; thay tên rồi đóng để thử xác nhận dữ liệu chưa lưu.">
+        <app-tab-closable-example />
       </demo-section>
       }
     </demo-page>
@@ -10242,6 +12036,895 @@ this.tab.beforeClose = async () => {
 .code pre { margin: 0; white-space: pre; }
 code { background: #f4f4f4; padding: 1px 4px; border-radius: 3px; font-size: 12px; }`,
   },
+  "components/tab/example-chuyen-cach-xem-du-lieu": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
+import { SdTab, SdTabGroup } from '@sdcorejs/angular/components/tab';
+import { SdTable, SdTableOption } from '@sdcorejs/angular/components/table';
+
+interface Order {
+  id: number;
+  code: string;
+  name: string;
+  region: string;
+}
+
+const CUSTOMERS = ['An Phát', 'Minh Long', 'Bình Minh', 'Đại Việt', 'Hải Nam', 'Phú Gia'];
+const REGIONS = ['Miền Bắc', 'Miền Trung', 'Miền Nam'];
+
+@Component({
+  selector: 'app-tab-views-example',
+  standalone: true,
+  imports: [SdSection, SdSectionItem, SdTab, SdTabGroup, SdTable],
+  templateUrl: './tab-views.example.html',
+  styleUrl: './tab-pattern-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TabViewsExampleComponent {
+  // One data source for both views: switching only changes how it is shown.
+  readonly orders: Order[] = Array.from({ length: 6 }, (_, index) => ({
+    id: 2400 - index,
+    code: \`ĐH-\${2400 - index}\`,
+    name: CUSTOMERS[index % CUSTOMERS.length],
+    region: REGIONS[index % REGIONS.length],
+  }));
+  readonly option: SdTableOption<Order> = {
+    type: 'local',
+    items: () => this.orders,
+    rowKey: 'id',
+    paginate: { hidden: true, pageSize: 20 },
+    filter: { hideInlineFilter: true },
+    columns: [
+      { field: 'code', title: 'Mã đơn', type: 'string', width: '120px' },
+      { field: 'name', title: 'Khách hàng', type: 'string', width: '200px' },
+      { field: 'region', title: 'Khu vực', type: 'string', width: '140px' },
+    ],
+  };
+}`,
+    scss: `:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.tab-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab-toolbar--end {
+  justify-content: flex-end;
+}
+
+.tab-note {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// Breathing room between the tab header and its content.
+.tab-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-block: 16px;
+}
+
+.view-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 12px;
+}
+
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  small {
+    display: block;
+    color: var(--sd-text-secondary, #5f6368);
+  }
+}`,
+  },
+  "components/tab/example-form-chia-nhom": {
+    typescript: `import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdSection } from '@sdcorejs/angular/components/section';
+import { SdTab, SdTabGroup } from '@sdcorejs/angular/components/tab';
+import { SdInput } from '@sdcorejs/angular/forms/input';
+import { SdNotifyService } from '@sdcorejs/angular/services/notify';
+
+const EMAIL = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+
+@Component({
+  selector: 'app-tab-form-example',
+  standalone: true,
+  imports: [SdButton, SdSection, SdTab, SdTabGroup, SdInput],
+  templateUrl: './tab-form.example.html',
+  styleUrl: './tab-pattern-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TabFormExampleComponent {
+  readonly #notify = inject(SdNotifyService);
+  // The values live here, not in the tab body, so switching tabs keeps them.
+  readonly name = signal('Công ty An Phát');
+  readonly email = signal('contact@anphat.example');
+  readonly selectedIndex = signal(0);
+  readonly saving = signal(false);
+
+  async save(): Promise<void> {
+    if (this.saving()) return;
+    const nameMissing = !this.name()?.trim();
+    if (nameMissing || !EMAIL.test(this.email() ?? '')) {
+      // Open the group that holds the first invalid field.
+      this.selectedIndex.set(nameMissing ? 0 : 1);
+      this.#notify.warning('Nhập tên khách hàng và email hợp lệ.');
+      return;
+    }
+    this.saving.set(true);
+    await new Promise(resolve => setTimeout(resolve, 800));
+    this.saving.set(false);
+    this.#notify.success('Đã lưu thông tin khách hàng.');
+  }
+}`,
+    scss: `:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.tab-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab-toolbar--end {
+  justify-content: flex-end;
+}
+
+.tab-note {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// Breathing room between the tab header and its content.
+.tab-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-block: 16px;
+}
+
+.view-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 12px;
+}
+
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  small {
+    display: block;
+    color: var(--sd-text-secondary, #5f6368);
+  }
+}`,
+  },
+  "components/tab/example-mo-nhieu-ho-so": {
+    typescript: `import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdSection } from '@sdcorejs/angular/components/section';
+import { SdTab, SdTabGroup, type SdTabBeforeClose } from '@sdcorejs/angular/components/tab';
+import { SdInput } from '@sdcorejs/angular/forms/input';
+import { SdConfirmService } from '@sdcorejs/angular/services/confirm';
+
+const SAVED_NAMES: Record<string, string> = {
+  'CUS-001': 'Công ty An Phát',
+  'CUS-002': 'Công ty Minh Long',
+  'CUS-003': 'Công ty Bình Minh',
+};
+const CODES = Object.keys(SAVED_NAMES);
+
+@Component({
+  selector: 'app-tab-closable-example',
+  standalone: true,
+  imports: [SdButton, SdSection, SdTab, SdTabGroup, SdInput],
+  templateUrl: './tab-closable.example.html',
+  styleUrl: './tab-pattern-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TabClosableExampleComponent {
+  readonly #confirm = inject(SdConfirmService);
+  readonly records = signal(CODES);
+  readonly drafts: Record<string, string> = { ...SAVED_NAMES };
+  /** One guard per record: an unchanged record closes at once, an edited one asks first. */
+  readonly beforeClose: Record<string, SdTabBeforeClose> = Object.fromEntries(CODES.map(code => [code, () => this.confirmClose(code)]));
+
+  close(code: string): void {
+    this.drafts[code] = SAVED_NAMES[code];
+    this.records.update(records => records.filter(record => record !== code));
+  }
+
+  reopen(): void {
+    this.records.set(CODES);
+  }
+
+  private async confirmClose(code: string): Promise<boolean> {
+    if (this.drafts[code] === SAVED_NAMES[code]) return true;
+    try {
+      await this.#confirm.confirm('Tên khách hàng vừa nhập chưa được lưu và sẽ bị mất.', {
+        title: \`Đóng hồ sơ \${code}?\`,
+        yesTitle: 'Bỏ thay đổi',
+        noTitle: 'Tiếp tục chỉnh sửa',
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}`,
+    scss: `:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.tab-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab-toolbar--end {
+  justify-content: flex-end;
+}
+
+.tab-note {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// Breathing room between the tab header and its content.
+.tab-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-block: 16px;
+}
+
+.view-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 12px;
+}
+
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  small {
+    display: block;
+    color: var(--sd-text-secondary, #5f6368);
+  }
+}`,
+  },
+  "components/tab/example-nhieu-nhom-noi-dung": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
+import { SdTab, SdTabGroup } from '@sdcorejs/angular/components/tab';
+
+@Component({
+  selector: 'app-tab-many-example',
+  standalone: true,
+  imports: [SdSection, SdSectionItem, SdTab, SdTabGroup],
+  templateUrl: './tab-many.example.html',
+  styleUrl: './tab-pattern-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TabManyExampleComponent {
+  // Ten groups with long labels: the header scrolls instead of squeezing every label into one row.
+  readonly tabs = [
+    { label: 'Tổng quan', icon: 'dashboard' },
+    { label: 'Thông tin liên hệ', icon: 'contacts' },
+    { label: 'Đơn hàng', icon: 'receipt_long' },
+    { label: 'Hợp đồng', icon: 'description' },
+    { label: 'Địa chỉ giao hàng', icon: 'location_on' },
+    { label: 'Công nợ', icon: 'account_balance' },
+    { label: 'Thanh toán', icon: 'payments' },
+    { label: 'Tài liệu', icon: 'folder' },
+    { label: 'Lịch sử', icon: 'history' },
+    { label: 'Cấu hình', icon: 'settings' },
+  ];
+}`,
+    scss: `:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.tab-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab-toolbar--end {
+  justify-content: flex-end;
+}
+
+.tab-note {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// Breathing room between the tab header and its content.
+.tab-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-block: 16px;
+}
+
+.view-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 12px;
+}
+
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  small {
+    display: block;
+    color: var(--sd-text-secondary, #5f6368);
+  }
+}`,
+  },
+  "components/tab/example-nhom-chua-kha-dung": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdInform } from '@sdcorejs/angular/components/inform';
+import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
+import { SdTab, SdTabGroup } from '@sdcorejs/angular/components/tab';
+
+@Component({
+  selector: 'app-tab-disabled-example',
+  standalone: true,
+  imports: [SdButton, SdInform, SdSection, SdSectionItem, SdTab, SdTabGroup],
+  templateUrl: './tab-disabled.example.html',
+  styleUrl: './tab-pattern-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TabDisabledExampleComponent {
+  // "Hợp đồng" depends on a completed profile: explain the condition and offer the action that meets it.
+  readonly profileComplete = signal(false);
+}`,
+    scss: `:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.tab-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab-toolbar--end {
+  justify-content: flex-end;
+}
+
+.tab-note {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// Breathing room between the tab header and its content.
+.tab-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-block: 16px;
+}
+
+.view-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 12px;
+}
+
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  small {
+    display: block;
+    color: var(--sd-text-secondary, #5f6368);
+  }
+}`,
+  },
+  "components/tab/example-noi-dung-hon-hop": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
+import { SdTab, SdTabGroup } from '@sdcorejs/angular/components/tab';
+import { SdTable, SdTableOption } from '@sdcorejs/angular/components/table';
+
+interface Order {
+  id: number;
+  code: string;
+  createdAt: string;
+  amount: number;
+}
+
+@Component({
+  selector: 'app-tab-mixed-example',
+  standalone: true,
+  imports: [SdSection, SdSectionItem, SdTab, SdTabGroup, SdTable],
+  templateUrl: './tab-mixed.example.html',
+  styleUrl: './tab-pattern-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TabMixedExampleComponent {
+  // Each tab takes the shape of its content: facts, a table, then a timeline.
+  readonly orders: Order[] = [
+    { id: 2400, code: 'ĐH-2400', createdAt: '12/09/2026', amount: 12_500_000 },
+    { id: 2391, code: 'ĐH-2391', createdAt: '28/08/2026', amount: 4_200_000 },
+    { id: 2377, code: 'ĐH-2377', createdAt: '03/08/2026', amount: 9_750_000 },
+  ];
+  readonly ordersOption: SdTableOption<Order> = {
+    type: 'local',
+    items: () => this.orders,
+    rowKey: 'id',
+    paginate: { hidden: true, pageSize: 20 },
+    filter: { hideInlineFilter: true },
+    columns: [
+      { field: 'code', title: 'Mã đơn', type: 'string', width: '120px' },
+      { field: 'createdAt', title: 'Ngày tạo', type: 'string', width: '140px' },
+      { field: 'amount', title: 'Giá trị (VND)', type: 'number', align: 'right', width: '160px' },
+    ],
+  };
+  readonly history = [
+    { time: '15/09/2026 09:12', text: 'Nguyễn An cập nhật hồ sơ khách hàng' },
+    { time: '12/09/2026 14:30', text: 'Tạo đơn hàng ĐH-2400' },
+    { time: '01/09/2026 08:05', text: 'Chuyển khách hàng sang nhóm doanh nghiệp' },
+  ];
+}`,
+    scss: `:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.tab-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab-toolbar--end {
+  justify-content: flex-end;
+}
+
+.tab-note {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// Breathing room between the tab header and its content.
+.tab-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-block: 16px;
+}
+
+.view-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 12px;
+}
+
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  small {
+    display: block;
+    color: var(--sd-text-secondary, #5f6368);
+  }
+}`,
+  },
+  "components/tab/example-phan-nhom-co-so-luong": {
+    typescript: `import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdTab, SdTabGroup } from '@sdcorejs/angular/components/tab';
+import { SdTable, SdTableOption } from '@sdcorejs/angular/components/table';
+
+type OrderStatus = 'pending' | 'done';
+
+interface Order {
+  id: number;
+  code: string;
+  name: string;
+  status: OrderStatus;
+}
+
+const CUSTOMERS = ['An Phát', 'Minh Long', 'Bình Minh', 'Đại Việt', 'Hải Nam', 'Phú Gia'];
+
+@Component({
+  selector: 'app-tab-counts-example',
+  standalone: true,
+  imports: [SdButton, SdTab, SdTabGroup, SdTable],
+  templateUrl: './tab-counts.example.html',
+  styleUrl: './tab-pattern-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TabCountsExampleComponent {
+  readonly orders = signal<Order[]>(
+    Array.from({ length: 12 }, (_, index) => ({
+      id: 2400 - index,
+      code: \`ĐH-\${2400 - index}\`,
+      name: CUSTOMERS[index % CUSTOMERS.length],
+      status: index % 3 === 0 ? 'done' : 'pending',
+    }))
+  );
+  readonly selectedIndex = signal(0);
+  // Each badge is the real size of its group, recomputed from the data.
+  readonly tabs = computed(() => {
+    const orders = this.orders();
+    return [
+      { label: 'Tất cả', icon: 'list_alt', rows: orders },
+      { label: 'Chờ xử lý', icon: 'schedule', rows: orders.filter(order => order.status === 'pending') },
+      { label: 'Hoàn tất', icon: 'check_circle', rows: orders.filter(order => order.status === 'done') },
+    ].map(tab => ({ ...tab, option: this.tableOption(tab.rows) }));
+  });
+
+  complete(): void {
+    const first = this.orders().find(order => order.status === 'pending');
+    if (first) this.orders.update(orders => orders.map(order => (order.id === first.id ? { ...order, status: 'done' } : order)));
+  }
+
+  private tableOption(rows: Order[]): SdTableOption<Order> {
+    return {
+      type: 'local',
+      items: () => rows,
+      rowKey: 'id',
+      paginate: { pageSize: 5, pages: [5, 10] },
+      filter: { hideInlineFilter: true },
+      columns: [
+        { field: 'code', title: 'Mã đơn', type: 'string', width: '120px' },
+        { field: 'name', title: 'Khách hàng', type: 'string', width: '200px' },
+        {
+          field: 'status',
+          title: 'Trạng thái',
+          type: 'string',
+          width: '150px',
+          useBadge: value => (value === 'done' ? { title: 'Hoàn tất', color: 'success' } : { title: 'Chờ xử lý', color: 'warning' }),
+        },
+      ],
+    };
+  }
+}`,
+    scss: `:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.tab-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab-toolbar--end {
+  justify-content: flex-end;
+}
+
+.tab-note {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// Breathing room between the tab header and its content.
+.tab-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-block: 16px;
+}
+
+.view-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 12px;
+}
+
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  small {
+    display: block;
+    color: var(--sd-text-secondary, #5f6368);
+  }
+}`,
+  },
+  "components/tab/example-tab-chua-bang": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdTab, SdTabGroup } from '@sdcorejs/angular/components/tab';
+import { SdTable, SdTableOption } from '@sdcorejs/angular/components/table';
+
+interface Order {
+  id: number;
+  code: string;
+  name: string;
+  amount: number;
+}
+
+interface Customer {
+  id: number;
+  code: string;
+  name: string;
+  region: string;
+}
+
+const CUSTOMERS = ['An Phát', 'Minh Long', 'Bình Minh', 'Đại Việt', 'Hải Nam', 'Phú Gia', 'Thiên An', 'Trường Sơn'];
+const REGIONS = ['Miền Bắc', 'Miền Trung', 'Miền Nam'];
+
+@Component({
+  selector: 'app-tab-table-example',
+  standalone: true,
+  imports: [SdTab, SdTabGroup, SdTable],
+  templateUrl: './tab-table.example.html',
+  styleUrl: './tab-pattern-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TabTableExampleComponent {
+  // Quick search and paging come from the Core table option; the tab only hosts the table.
+  readonly ordersOption: SdTableOption<Order> = {
+    type: 'local',
+    items: () =>
+      Array.from({ length: 24 }, (_, index) => ({
+        id: 2400 - index,
+        code: \`ĐH-\${2400 - index}\`,
+        name: CUSTOMERS[index % CUSTOMERS.length],
+        amount: (index + 2) * 1_750_000,
+      })),
+    rowKey: 'id',
+    paginate: { pageSize: 6, pages: [6, 12, 24] },
+    filter: { hideInlineFilter: true, quickSearch: { containFields: ['code', 'name'], placeholder: 'Tìm mã đơn hoặc khách hàng' } },
+    columns: [
+      { field: 'code', title: 'Mã đơn', type: 'string', width: '120px' },
+      { field: 'name', title: 'Khách hàng', type: 'string', width: '200px' },
+      { field: 'amount', title: 'Giá trị (VND)', type: 'number', align: 'right', width: '160px' },
+    ],
+  };
+  readonly customersOption: SdTableOption<Customer> = {
+    type: 'local',
+    items: () =>
+      CUSTOMERS.map((name, index) => ({
+        id: index + 1,
+        code: \`KH-\${String(index + 1).padStart(4, '0')}\`,
+        name: \`Công ty \${name}\`,
+        region: REGIONS[index % REGIONS.length],
+      })),
+    rowKey: 'id',
+    paginate: { pageSize: 6, pages: [6, 12] },
+    filter: { hideInlineFilter: true, quickSearch: { containFields: ['code', 'name'], placeholder: 'Tìm mã hoặc tên khách hàng' } },
+    columns: [
+      { field: 'code', title: 'Mã KH', type: 'string', width: '120px' },
+      { field: 'name', title: 'Khách hàng', type: 'string', width: '220px' },
+      { field: 'region', title: 'Khu vực', type: 'string', width: '140px' },
+    ],
+  };
+}`,
+    scss: `:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.tab-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab-toolbar--end {
+  justify-content: flex-end;
+}
+
+.tab-note {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// Breathing room between the tab header and its content.
+.tab-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-block: 16px;
+}
+
+.view-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 12px;
+}
+
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  small {
+    display: block;
+    color: var(--sd-text-secondary, #5f6368);
+  }
+}`,
+  },
+  "components/tab/example-tai-rong-loi": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdDataState } from '@sdcorejs/angular/components/data-state';
+import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
+import { SdTab, SdTabGroup } from '@sdcorejs/angular/components/tab';
+
+type Scenario = 'ready' | 'empty' | 'error';
+
+@Component({
+  selector: 'app-tab-loading-example',
+  standalone: true,
+  imports: [SdButton, SdDataState, SdSection, SdSectionItem, SdTab, SdTabGroup],
+  templateUrl: './tab-loading.example.html',
+  styleUrl: './tab-pattern-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TabLoadingExampleComponent {
+  readonly tabs = [
+    { label: 'Thông tin chung', icon: 'info', content: 'Khách hàng doanh nghiệp · Miền Bắc' },
+    { label: 'Đơn hàng', icon: 'receipt_long', content: '24 đơn hàng · Giao hàng theo đợt' },
+    { label: 'Lịch sử', icon: 'history', content: 'Nguyễn An cập nhật hồ sơ · 15/09/2026' },
+  ];
+  readonly scenario = signal<Scenario>('ready');
+  readonly loading = signal(false);
+  readonly selectedIndex = signal(0);
+
+  /** Every tab has its own source: opening one loads it again (simulated 1.2 s). */
+  async load(scenario = this.scenario()): Promise<void> {
+    this.scenario.set(scenario);
+    this.loading.set(true);
+    await new Promise(resolve => setTimeout(resolve, 1200));
+    this.loading.set(false);
+  }
+
+  open(index: number): void {
+    this.selectedIndex.set(index);
+    void this.load();
+  }
+}`,
+    scss: `:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.tab-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab-toolbar--end {
+  justify-content: flex-end;
+}
+
+.tab-note {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// Breathing room between the tab header and its content.
+.tab-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-block: 16px;
+}
+
+.view-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 12px;
+}
+
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  small {
+    display: block;
+    color: var(--sd-text-secondary, #5f6368);
+  }
+}`,
+  },
   "components/table": {
     typescript: `import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
@@ -10252,6 +12935,12 @@ import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
 import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
 import { TableAggregateDemoComponent } from './table-aggregate-example.component';
 import { TableUnknownTotalDemoComponent } from './table-unknown-total-example.component';
+import { TableCustomCellsExampleComponent } from './examples/table-custom-cells.example';
+import { TableInlineEditExampleComponent } from './examples/table-inline-edit.example';
+import { TableInlineErrorsExampleComponent } from './examples/table-inline-errors.example';
+import { TableInlineOperatorExampleComponent } from './examples/table-inline-operator.example';
+import { TableStandardExampleComponent } from './examples/table-standard.example';
+import { TableStatesExampleComponent } from './examples/table-states.example';
 import {
   SdTable,
   SdTableOption,
@@ -10426,6 +13115,12 @@ const TASKS: Task[] = [
     SdTableQuickSearchRightDefDirective,
     TableAggregateDemoComponent,
     TableUnknownTotalDemoComponent,
+    TableStandardExampleComponent,
+    TableInlineOperatorExampleComponent,
+    TableCustomCellsExampleComponent,
+    TableInlineEditExampleComponent,
+    TableInlineErrorsExampleComponent,
+    TableStatesExampleComponent,
   ],
   template: \`
     <demo-page #demoPage
@@ -10849,6 +13544,60 @@ const TASKS: Task[] = [
         <div class="table-box">
           <sd-table [option]="preserveSelectionOption"></sd-table>
         </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tra-cuu-co-ban') {
+      <demo-section heading="Tra cứu cơ bản"
+        data-example-typescript="./examples/table-standard.example.ts" data-example-template="./examples/table-standard.example.html" data-example-style="./examples/table-pattern-example.scss"
+        [props]="[{ name: 'sdTableCellDef', value: 'link' }, { name: 'columns[].sortable', value: 'true' }, { name: 'columns[].useBadge', value: 'callback' }]"
+        note="Định danh có link; số căn phải; phân trang sau lọc/sort.">
+        <app-table-standard-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-inline-filter-operator') {
+      <demo-section heading="Inline filter + operator"
+        data-example-typescript="./examples/table-inline-operator.example.ts" data-example-template="./examples/table-inline-operator.example.html" data-example-style="./examples/table-pattern-example.scss"
+        [props]="[{ name: 'columns[].filter.operator', value: 'enable / list' }, { name: 'type', value: 'server' }, { name: 'columnOperator', value: 'request' }]"
+        note="Dùng column.filter.operator với enable và list; type server gửi columnOperator tới adapter dữ liệu demo để lọc trước khi phân trang. Khách hàng: chứa, bằng, bắt đầu bằng. Giá trị: bằng, lớn hơn, nhỏ hơn và các phép so sánh bao gồm bằng. Nhập rồi Enter để áp dụng; nhiều cột kết hợp AND.">
+        <app-table-inline-operator-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-custom-th-td') {
+      <demo-section heading="Custom TH / TD"
+        data-example-typescript="./examples/table-custom-cells.example.ts" data-example-template="./examples/table-custom-cells.example.html" data-example-style="./examples/table-pattern-example.scss"
+        [props]="[{ name: 'sdTableTitleDef', value: 'template' }, { name: 'sdTableCellDef', value: 'template' }]"
+        note="Dùng sdTableTitleDef và sdTableCellDef. Giữ hyperlink định danh và căn phải giá trị số.">
+        <app-table-custom-cells-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-nhap-lieu-inline-them-xoa') {
+      <demo-section heading="Nhập liệu inline · Thêm / xoá"
+        data-example-typescript="./examples/table-inline-edit.example.ts" data-example-template="./examples/table-inline-edit.example.html" data-example-style="./examples/table-pattern-example.scss"
+        [props]="[{ name: 'sdTableCellDef', value: 'sd-input / sd-input-number' }, { name: 'sdTableCommandHeaderDef', value: 'template' }, { name: 'command.commands', value: 'delete' }]"
+        note="Custom TD dùng SdInput/SdInputNumber size sm, hideInlineError; thêm/xoá dòng, tổng cập nhật theo dữ liệu nhập và Lưu chung. Nút thêm dòng ở sdTableCommandHeaderDef chỉ có icon add kèm tooltip, primary light, size sm; xoá từng dòng bằng command delete.">
+        <app-table-inline-edit-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-nhap-lieu-inline-bao-loi') {
+      <demo-section heading="Nhập liệu inline · Báo lỗi"
+        data-example-typescript="./examples/table-inline-errors.example.ts" data-example-template="./examples/table-inline-errors.example.html" data-example-style="./examples/table-pattern-example.scss"
+        [props]="[{ name: 'inlineError', value: 'string' }, { name: 'hideInlineError', value: 'true' }, { name: 'sd-inform', value: 'warning / error' }]"
+        note="Lưu dữ liệu chưa hợp lệ: SdInform warning và ô lỗi có tooltip. Sản phẩm trùng: BE mẫu trả error; dữ liệu được giữ để sửa.">
+        <app-table-inline-errors-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-loading-empty-error') {
+      <demo-section heading="Loading / empty / error"
+        data-example-typescript="./examples/table-states.example.ts" data-example-template="./examples/table-states.example.html" data-example-style="./examples/table-pattern-example.scss"
+        [props]="[{ name: 'sdDataStateTemplate', value: 'template' }, { name: 'filter.quickSearch', value: 'containFields' }, { name: 'retry', value: 'keeps query' }]"
+        note="Dùng luồng tải của SdTable: loading khi chờ request, empty/no-results từ kết quả trả về, lỗi có retry giữ query. Tùy chỉnh nội dung bằng sdDataStateTemplate và SdDataState.">
+        <app-table-states-example />
       </demo-section>
       }
     </demo-page>
@@ -11855,6 +14604,784 @@ export class TableAggregateDemoComponent {
   };
 }`,
   },
+  "components/table/example-custom-th-td": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { SdTable, SdTableCellDefDirective, SdTableOption, SdTableTitleDefDirective } from '@sdcorejs/angular/components/table';
+import { SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
+
+interface Order {
+  id: number;
+  code: string;
+  name: string;
+  region: string;
+  owner: string;
+  amount: number;
+}
+
+const CUSTOMERS = ['An Phát', 'Minh Long', 'Bình Minh', 'Đại Việt', 'Hải Nam', 'Phú Gia', 'Thiên An', 'Trường Sơn'];
+const REGIONS = ['Miền Bắc', 'Miền Trung', 'Miền Nam'];
+const OWNERS = ['Lan', 'Minh', 'Hà', 'Nam'];
+
+const ORDERS: Order[] = Array.from({ length: 12 }, (_, index) => ({
+  id: 2400 - index,
+  code: \`ĐH-\${2400 - index}\`,
+  name: CUSTOMERS[index % CUSTOMERS.length],
+  region: REGIONS[Math.floor(index / 3) % REGIONS.length],
+  owner: OWNERS[index % OWNERS.length],
+  amount: (index + 2) * 1_750_000,
+}));
+
+@Component({
+  selector: 'app-table-custom-cells-example',
+  standalone: true,
+  imports: [RouterLink, SdTable, SdTableCellDefDirective, SdTableTitleDefDirective, SdFormatNumberPipe],
+  templateUrl: './table-custom-cells.example.html',
+  styleUrl: './table-pattern-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TableCustomCellsExampleComponent {
+  readonly option: SdTableOption<Order> = {
+    type: 'local',
+    items: () => ORDERS,
+    rowKey: 'id',
+    sort: { enable: true },
+    paginate: { pageSize: 6, pages: [6, 12] },
+    filter: { hideInlineFilter: true },
+    columns: [
+      { field: 'code', title: 'Mã đơn', type: 'string', width: '120px', sortable: true },
+      { field: 'name', title: 'Khách hàng', type: 'string', width: '220px', sortable: true },
+      { field: 'amount', title: 'Giá trị đơn hàng', type: 'number', align: 'right', width: '180px', sortable: true },
+    ],
+  };
+}`,
+    scss: `:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.table-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.table-note {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.table-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// Two-line header and cell content of the "Custom TH / TD" example.
+.cell-stack small {
+  display: block;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+// Money stays right-aligned in custom cells, as in the built-in number column.
+.cell-amount {
+  display: block;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.cell-amount--primary {
+  color: var(--sd-primary, #005cbb);
+}
+
+// Inputs inside a row keep the 36px row readable.
+.cell-input {
+  display: block;
+  padding-block: 6px;
+}
+
+.required-mark {
+  color: var(--sd-error, #d32f2f);
+}`,
+  },
+  "components/table/example-inline-filter-operator": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdTable, SdTableOption } from '@sdcorejs/angular/components/table';
+
+interface Order {
+  id: number;
+  code: string;
+  name: string;
+  region: string;
+  amount: number;
+}
+
+const CUSTOMERS = ['An Phát', 'Minh Long', 'Bình Minh', 'Đại Việt', 'Hải Nam', 'Phú Gia', 'Thiên An', 'Trường Sơn'];
+const REGIONS = ['Miền Bắc', 'Miền Trung', 'Miền Nam'];
+
+const ORDERS: Order[] = Array.from({ length: 24 }, (_, index) => ({
+  id: 2400 - index,
+  code: \`ĐH-\${2400 - index}\`,
+  name: CUSTOMERS[index % CUSTOMERS.length],
+  region: REGIONS[Math.floor(index / 3) % REGIONS.length],
+  amount: (index + 2) * 1_750_000,
+}));
+
+const normalize = (value: unknown): string =>
+  String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\\u0300-\\u036f]/g, '')
+    .replace(/[đĐ]/g, 'd')
+    .toLowerCase()
+    .trim();
+
+/** Demo backend: applies the operator the table sends for each inline column filter. */
+function matchesText(actual: string, filter: unknown, operator = 'CONTAIN'): boolean {
+  const left = normalize(actual);
+  const right = normalize(filter);
+  if (!right) return true;
+  if (operator === 'EQUAL') return left === right;
+  if (operator === 'START_WITH') return left.startsWith(right);
+  return left.includes(right);
+}
+
+function matchesNumber(actual: number, filter: unknown, operator = 'EQUAL'): boolean {
+  if (filter === null || filter === undefined || filter === '') return true;
+  const right = Number(filter);
+  switch (operator) {
+    case 'GREATER_THAN':
+      return actual > right;
+    case 'GREATER_OR_EQUAL':
+      return actual >= right;
+    case 'LESS_THAN':
+      return actual < right;
+    case 'LESS_OR_EQUAL':
+      return actual <= right;
+    default:
+      return actual === right;
+  }
+}
+
+@Component({
+  selector: 'app-table-inline-operator-example',
+  standalone: true,
+  imports: [SdTable],
+  templateUrl: './table-inline-operator.example.html',
+  styleUrl: './table-pattern-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TableInlineOperatorExampleComponent {
+  readonly option: SdTableOption<Order> = {
+    type: 'server',
+    rowKey: 'id',
+    items: async ({ rawColumnFilter, columnOperator, pageNumber, pageSize }) => {
+      await new Promise(resolve => setTimeout(resolve, 400));
+      // Every column condition must hold (AND); paging runs after filtering.
+      const rows = ORDERS.filter(
+        row =>
+          matchesText(row.name, rawColumnFilter.name, columnOperator.name) &&
+          matchesNumber(row.amount, rawColumnFilter.amount, columnOperator.amount)
+      );
+      return { items: rows.slice(pageNumber * pageSize, (pageNumber + 1) * pageSize), total: rows.length };
+    },
+    paginate: { pageSize: 6, pages: [6, 12, 24] },
+    filter: { cacheable: false, hideInlineFilter: false },
+    columns: [
+      { field: 'code', title: 'Mã đơn', type: 'string', width: '120px', filter: { disabled: true } },
+      {
+        field: 'name',
+        title: 'Khách hàng',
+        type: 'string',
+        width: '240px',
+        filter: { operator: { enable: true, list: ['CONTAIN', 'EQUAL', 'START_WITH'] } },
+      },
+      { field: 'region', title: 'Khu vực', type: 'string', width: '120px', filter: { disabled: true } },
+      {
+        field: 'amount',
+        title: 'Giá trị (VND)',
+        type: 'number',
+        align: 'right',
+        width: '240px',
+        filter: { operator: { enable: true, list: ['EQUAL', 'GREATER_THAN', 'GREATER_OR_EQUAL', 'LESS_THAN', 'LESS_OR_EQUAL'] } },
+      },
+    ],
+  };
+}`,
+    scss: `:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.table-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.table-note {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.table-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// Two-line header and cell content of the "Custom TH / TD" example.
+.cell-stack small {
+  display: block;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+// Money stays right-aligned in custom cells, as in the built-in number column.
+.cell-amount {
+  display: block;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.cell-amount--primary {
+  color: var(--sd-primary, #005cbb);
+}
+
+// Inputs inside a row keep the 36px row readable.
+.cell-input {
+  display: block;
+  padding-block: 6px;
+}
+
+.required-mark {
+  color: var(--sd-error, #d32f2f);
+}`,
+  },
+  "components/table/example-loading-empty-error": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdDataState, SdDataStateTemplateDirective, type SdDataStateKind } from '@sdcorejs/angular/components/data-state';
+import { SdTable, SdTableOption } from '@sdcorejs/angular/components/table';
+
+type Scenario = 'ready' | 'empty' | 'error';
+
+interface Order {
+  id: number;
+  code: string;
+  name: string;
+  region: string;
+  amount: number;
+}
+
+const CUSTOMERS = ['An Phát', 'Minh Long', 'Bình Minh', 'Đại Việt', 'Hải Nam', 'Phú Gia', 'Thiên An', 'Trường Sơn'];
+const REGIONS = ['Miền Bắc', 'Miền Trung', 'Miền Nam'];
+
+const ORDERS: Order[] = Array.from({ length: 12 }, (_, index) => ({
+  id: 2400 - index,
+  code: \`ĐH-\${2400 - index}\`,
+  name: CUSTOMERS[index % CUSTOMERS.length],
+  region: REGIONS[Math.floor(index / 3) % REGIONS.length],
+  amount: (index + 2) * 1_750_000,
+}));
+
+const normalize = (value: string): string =>
+  value
+    .normalize('NFD')
+    .replace(/[\\u0300-\\u036f]/g, '')
+    .replace(/[đĐ]/g, 'd')
+    .toLowerCase()
+    .trim();
+
+@Component({
+  selector: 'app-table-states-example',
+  standalone: true,
+  imports: [SdButton, SdDataState, SdDataStateTemplateDirective, SdTable],
+  templateUrl: './table-states.example.html',
+  styleUrl: './table-pattern-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TableStatesExampleComponent {
+  readonly table = viewChild.required(SdTable<Order>);
+  readonly scenario = signal<Scenario>('ready');
+  // Only the first read after choosing "error" fails, so Retry succeeds and keeps the query.
+  #failNextRead = false;
+
+  readonly option: SdTableOption<Order> = {
+    type: 'server',
+    rowKey: 'id',
+    items: async ({ quickSearch, pageNumber, pageSize }) => {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      if (this.#failNextRead) {
+        this.#failNextRead = false;
+        throw new Error('Không thể tải đơn hàng mẫu.');
+      }
+      const term = normalize(quickSearch?.term ?? '');
+      const rows = this.scenario() === 'empty' ? [] : ORDERS.filter(row => normalize(\`\${row.code} \${row.name}\`).includes(term));
+      return { items: rows.slice(pageNumber * pageSize, (pageNumber + 1) * pageSize), total: rows.length };
+    },
+    selector: { visible: false },
+    paginate: { pageSize: 6, pages: [6, 12] },
+    filter: {
+      cacheable: false,
+      hideInlineFilter: true,
+      quickSearch: { containFields: ['code', 'name'], placeholder: 'Tìm mã hoặc tên khách hàng' },
+    },
+    columns: [
+      { field: 'code', title: 'Mã đơn', type: 'string', width: '120px' },
+      { field: 'name', title: 'Khách hàng', type: 'string', width: '180px' },
+      { field: 'region', title: 'Khu vực', type: 'string', width: '120px' },
+      { field: 'amount', title: 'Giá trị (VND)', type: 'number', align: 'right', width: '150px' },
+    ],
+  };
+
+  show(scenario: Scenario): void {
+    this.scenario.set(scenario);
+    this.#failNextRead = scenario === 'error';
+    void this.table().reload(true);
+  }
+
+  title(state: SdDataStateKind): string {
+    if (state === 'loading') return 'Đang tải đơn hàng…';
+    if (state === 'error') return 'Không thể tải đơn hàng';
+    return this.scenario() === 'empty' ? 'Chưa có đơn hàng' : 'Không có kết quả phù hợp';
+  }
+
+  message(state: SdDataStateKind): string {
+    if (state === 'loading') return '';
+    if (state === 'error') return 'Lỗi mô phỏng. Thử lại sẽ tải thành công và giữ nguyên từ khóa tìm kiếm.';
+    return this.scenario() === 'empty' ? 'Chọn Tải dữ liệu để xem danh sách mẫu.' : 'Thử từ khóa khác hoặc xóa từ khóa tìm kiếm.';
+  }
+}`,
+    scss: `:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.table-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.table-note {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.table-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// Two-line header and cell content of the "Custom TH / TD" example.
+.cell-stack small {
+  display: block;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+// Money stays right-aligned in custom cells, as in the built-in number column.
+.cell-amount {
+  display: block;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.cell-amount--primary {
+  color: var(--sd-primary, #005cbb);
+}
+
+// Inputs inside a row keep the 36px row readable.
+.cell-input {
+  display: block;
+  padding-block: 6px;
+}
+
+.required-mark {
+  color: var(--sd-error, #d32f2f);
+}`,
+  },
+  "components/table/example-nhap-lieu-inline-bao-loi": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdInform } from '@sdcorejs/angular/components/inform';
+import { SdTable, SdTableCellDefDirective, SdTableOption, SdTableTitleDefDirective } from '@sdcorejs/angular/components/table';
+import { SdInput } from '@sdcorejs/angular/forms/input';
+import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
+
+interface OrderLine {
+  id: number;
+  name: string;
+  quantity: number | null;
+  price: number | null;
+}
+
+type LineField = 'name' | 'quantity' | 'price';
+type LineErrors = Partial<Record<LineField, string>>;
+
+const normalize = (value: string): string => value.trim().toLowerCase();
+
+@Component({
+  selector: 'app-table-inline-errors-example',
+  standalone: true,
+  imports: [SdButton, SdInform, SdTable, SdTableCellDefDirective, SdTableTitleDefDirective, SdInput, SdInputNumber],
+  templateUrl: './table-inline-errors.example.html',
+  styleUrl: './table-pattern-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TableInlineErrorsExampleComponent {
+  // Starts invalid on purpose: quantity 0 on line 1 and no product on line 2.
+  readonly lines: OrderLine[] = [
+    { id: 1, name: 'Máy in', quantity: 0, price: 3_000_000 },
+    { id: 2, name: '', quantity: 1, price: 2_500_000 },
+    { id: 3, name: 'Màn hình', quantity: 2, price: 2_500_000 },
+  ];
+  readonly saving = signal(false);
+  readonly errors = signal<Record<number, LineErrors | undefined>>({});
+  readonly inform = signal<{ color: 'warning' | 'error' | 'success'; title: string; description: string } | null>(null);
+
+  readonly option: SdTableOption<OrderLine> = {
+    type: 'local',
+    items: () => this.lines,
+    rowKey: 'id',
+    selector: { visible: false },
+    filter: { disabled: true },
+    paginate: { hidden: true, pageSize: 100 },
+    columns: [
+      { field: 'id', title: 'Dòng', type: 'number', width: '70px' },
+      { field: 'name', title: 'Sản phẩm', type: 'string', width: '260px' },
+      { field: 'quantity', title: 'Số lượng', type: 'number', width: '150px' },
+      { field: 'price', title: 'Đơn giá (VND)', type: 'number', width: '180px' },
+    ],
+  };
+
+  /** Editing a line clears its errors; the next save validates again. */
+  clearErrors(id: number): void {
+    this.errors.update(errors => {
+      const next = { ...errors };
+      delete next[id];
+      return next;
+    });
+  }
+
+  async save(): Promise<void> {
+    if (this.saving()) return;
+    this.inform.set(null);
+
+    // Front-end validation: warning, and every invalid cell carries its message in a tooltip.
+    const errors: Record<number, LineErrors> = {};
+    for (const line of this.lines) {
+      const lineErrors: LineErrors = {};
+      if (!line.name.trim()) lineErrors.name = 'Nhập sản phẩm.';
+      if (!Number.isInteger(line.quantity) || (line.quantity ?? 0) < 1) lineErrors.quantity = 'Số lượng phải là số nguyên lớn hơn 0.';
+      if (line.price === null || line.price < 0) lineErrors.price = 'Đơn giá phải từ 0 trở lên.';
+      if (Object.keys(lineErrors).length) errors[line.id] = lineErrors;
+    }
+    this.errors.set(errors);
+    if (Object.keys(errors).length) {
+      this.inform.set({
+        color: 'warning',
+        title: 'Kiểm tra dòng hàng',
+        description: \`Dòng \${Object.keys(errors).join(', ')} chưa hợp lệ. Di chuột vào ô lỗi để xem chi tiết.\`,
+      });
+      return;
+    }
+
+    this.saving.set(true);
+    await new Promise(resolve => setTimeout(resolve, 600));
+    this.saving.set(false);
+
+    // Sample back end: a product may appear only once per order. The input is kept for fixing.
+    const duplicates = this.lines.filter(line =>
+      this.lines.some(other => other !== line && normalize(other.name) === normalize(line.name))
+    );
+    if (duplicates.length) {
+      this.errors.set(Object.fromEntries(duplicates.map(line => [line.id, { name: 'Sản phẩm đã có ở dòng khác.' }])));
+      this.inform.set({
+        color: 'error',
+        title: 'Không thể lưu',
+        description: \`Sản phẩm bị trùng tại dòng \${duplicates.map(line => line.id).join(', ')}. Sửa sản phẩm hoặc xoá dòng trùng.\`,
+      });
+      return;
+    }
+    this.inform.set({ color: 'success', title: 'Lưu thành công', description: \`Đã lưu \${this.lines.length} dòng hàng.\` });
+  }
+}`,
+    scss: `:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.table-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.table-note {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.table-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// Two-line header and cell content of the "Custom TH / TD" example.
+.cell-stack small {
+  display: block;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+// Money stays right-aligned in custom cells, as in the built-in number column.
+.cell-amount {
+  display: block;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.cell-amount--primary {
+  color: var(--sd-primary, #005cbb);
+}
+
+// Inputs inside a row keep the 36px row readable.
+.cell-input {
+  display: block;
+  padding-block: 6px;
+}
+
+.required-mark {
+  color: var(--sd-error, #d32f2f);
+}`,
+  },
+  "components/table/example-nhap-lieu-inline-them-xoa": {
+    typescript: `import { ChangeDetectionStrategy, Component, computed, signal, viewChild } from '@angular/core';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdInform } from '@sdcorejs/angular/components/inform';
+import { SdTable, SdTableCellDefDirective, SdTableCommandHeaderDefDirective, SdTableOption } from '@sdcorejs/angular/components/table';
+import { SdInput } from '@sdcorejs/angular/forms/input';
+import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
+import { SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
+
+interface OrderLine {
+  id: number;
+  name: string;
+  quantity: number | null;
+  price: number | null;
+  /** Shown by the cell template from quantity × price; declared so the column has a field. */
+  amount?: number;
+}
+
+@Component({
+  selector: 'app-table-inline-edit-example',
+  standalone: true,
+  imports: [
+    SdButton,
+    SdInform,
+    SdTable,
+    SdTableCellDefDirective,
+    SdTableCommandHeaderDefDirective,
+    SdInput,
+    SdInputNumber,
+    SdFormatNumberPipe,
+  ],
+  templateUrl: './table-inline-edit.example.html',
+  styleUrl: './table-pattern-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TableInlineEditExampleComponent {
+  readonly table = viewChild.required(SdTable<OrderLine>);
+  readonly lines = signal<OrderLine[]>([
+    { id: 1, name: 'Máy in', quantity: 2, price: 3_000_000 },
+    { id: 2, name: 'Màn hình', quantity: 1, price: 2_500_000 },
+  ]);
+  readonly saving = signal(false);
+  readonly saved = signal('');
+  // Inputs write straight into the row objects; this counter tells the total to recompute.
+  readonly revision = signal(0);
+  readonly total = computed(() => {
+    this.revision();
+    return this.lines().reduce((sum, line) => sum + this.amount(line), 0);
+  });
+  #nextId = 3;
+
+  readonly option: SdTableOption<OrderLine> = {
+    type: 'local',
+    items: () => this.lines(),
+    rowKey: 'id',
+    selector: { visible: false },
+    filter: { disabled: true },
+    paginate: { hidden: true, pageSize: 100 },
+    columns: [
+      { field: 'name', title: 'Sản phẩm', type: 'string', width: '260px' },
+      { field: 'quantity', title: 'Số lượng', type: 'number', width: '140px' },
+      { field: 'price', title: 'Đơn giá (VND)', type: 'number', width: '180px' },
+      { field: 'amount', title: 'Thành tiền (VND)', type: 'number', align: 'right', width: '160px' },
+    ],
+    command: {
+      commands: [{ title: 'Xoá dòng', icon: 'delete', color: 'error', disabled: () => this.saving(), click: line => this.remove(line.id) }],
+    },
+  };
+
+  amount(line: OrderLine): number {
+    return (line.quantity ?? 0) * (line.price ?? 0);
+  }
+
+  changed(): void {
+    this.revision.update(value => value + 1);
+    this.saved.set('');
+  }
+
+  async add(): Promise<void> {
+    this.lines.update(lines => [...lines, { id: this.#nextId++, name: '', quantity: 1, price: 0 }]);
+    this.changed();
+    await this.table().reload(true);
+  }
+
+  async remove(id: number): Promise<void> {
+    this.lines.update(lines => lines.filter(line => line.id !== id));
+    this.changed();
+    await this.table().reload(true);
+  }
+
+  async save(): Promise<void> {
+    if (this.saving()) return;
+    this.saving.set(true);
+    await new Promise(resolve => setTimeout(resolve, 600));
+    this.saving.set(false);
+    this.saved.set(\`Đã lưu \${this.lines().length} dòng hàng trong một lần lưu.\`);
+  }
+}`,
+    scss: `:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.table-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.table-note {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.table-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// Two-line header and cell content of the "Custom TH / TD" example.
+.cell-stack small {
+  display: block;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+// Money stays right-aligned in custom cells, as in the built-in number column.
+.cell-amount {
+  display: block;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.cell-amount--primary {
+  color: var(--sd-primary, #005cbb);
+}
+
+// Inputs inside a row keep the 36px row readable.
+.cell-input {
+  display: block;
+  padding-block: 6px;
+}
+
+.required-mark {
+  color: var(--sd-error, #d32f2f);
+}`,
+  },
   "components/table/example-server-khong-biet-tong": {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
@@ -12042,6 +15569,139 @@ export class TableUnknownTotalDemoComponent {
     this.sourceSize.set(32);
     this.#write('Khôi phục 32 sự kiện');
   }
+}`,
+  },
+  "components/table/example-tra-cuu-co-ban": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { SdTable, SdTableCellDefDirective, SdTableOption } from '@sdcorejs/angular/components/table';
+
+type OrderStatus = 'pending' | 'active' | 'done';
+
+interface Order {
+  id: number;
+  code: string;
+  name: string;
+  region: string;
+  status: OrderStatus;
+  amount: number;
+}
+
+const STATUSES = [
+  { id: 'pending', name: 'Chờ xử lý' },
+  { id: 'active', name: 'Đang xử lý' },
+  { id: 'done', name: 'Hoàn tất' },
+];
+const CUSTOMERS = ['An Phát', 'Minh Long', 'Bình Minh', 'Đại Việt', 'Hải Nam', 'Phú Gia', 'Thiên An', 'Trường Sơn'];
+const REGIONS = ['Miền Bắc', 'Miền Trung', 'Miền Nam'];
+
+const ORDERS: Order[] = Array.from({ length: 24 }, (_, index) => ({
+  id: 2400 - index,
+  code: \`ĐH-\${2400 - index}\`,
+  name: CUSTOMERS[index % CUSTOMERS.length],
+  region: REGIONS[Math.floor(index / 3) % REGIONS.length],
+  status: (['pending', 'active', 'done'] as const)[index % 3],
+  amount: (index + 2) * 1_750_000,
+}));
+
+@Component({
+  selector: 'app-table-standard-example',
+  standalone: true,
+  imports: [RouterLink, SdTable, SdTableCellDefDirective],
+  templateUrl: './table-standard.example.html',
+  styleUrl: './table-pattern-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TableStandardExampleComponent {
+  readonly option: SdTableOption<Order> = {
+    type: 'local',
+    items: () => ORDERS,
+    rowKey: 'id',
+    sort: { enable: true },
+    paginate: { pageSize: 6, pages: [6, 12, 24] },
+    filter: { hideInlineFilter: true },
+    columns: [
+      { field: 'code', title: 'Mã đơn', type: 'string', width: '120px', sortable: true },
+      { field: 'name', title: 'Khách hàng', type: 'string', width: '180px', sortable: true },
+      { field: 'region', title: 'Khu vực', type: 'string', width: '120px' },
+      {
+        field: 'status',
+        title: 'Trạng thái',
+        type: 'values',
+        width: '150px',
+        option: { items: STATUSES, valueField: 'id', displayField: 'name' },
+        useBadge: (_value, row) => ({
+          title: STATUSES.find(status => status.id === row.status)?.name ?? row.status,
+          color: row.status === 'pending' ? 'warning' : row.status === 'done' ? 'success' : 'info',
+        }),
+      },
+      { field: 'amount', title: 'Giá trị (VND)', type: 'number', align: 'right', width: '150px', sortable: true },
+    ],
+  };
+}`,
+    scss: `:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.table-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.table-note {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.table-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// Two-line header and cell content of the "Custom TH / TD" example.
+.cell-stack small {
+  display: block;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+// Money stays right-aligned in custom cells, as in the built-in number column.
+.cell-amount {
+  display: block;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.cell-amount--primary {
+  color: var(--sd-primary, #005cbb);
+}
+
+// Inputs inside a row keep the 36px row readable.
+.cell-input {
+  display: block;
+  padding-block: 6px;
+}
+
+.required-mark {
+  color: var(--sd-error, #d32f2f);
 }`,
   },
   "components/tree": {
@@ -22019,6 +25679,54 @@ Bởi Nguyễn Văn A"></sd-badge>
 <sd-button type="light" color="error" prefixIcon="delete" tooltip="delete"></sd-button>
 <sd-button type="outline" color="secondary" suffixIcon="more_vert" tooltip="Thêm thao tác" autoId="suffix-only"></sd-button>`,
   },
+  "components/button/example-crud-chung-khuyen-khich": {
+    ...SHOWCASE_PAGE_SOURCES["components/button/example-crud-chung-khuyen-khich"],
+    html: `<sd-button title="Tạo mới" prefixIcon="add" type="fill" color="primary" routerLink="/pattern/customer/create" />
+<sd-button title="Cập nhật" prefixIcon="edit" type="fill" color="primary" routerLink="/pattern/customer/1/update" />
+<sd-button title="Lưu" prefixIcon="save" type="fill" color="primary" [loading]="saving()" [disabled]="saving()" (click)="save()" />
+<sd-button title="Xoá" prefixIcon="delete" type="fill" color="error" [disabled]="deleted()" (click)="remove()" />
+<p class="button-note">Xem chi tiết qua hyperlink mã: <a routerLink="/pattern/customer/1/detail">KH-0001</a>.</p>
+<p class="button-note" role="status">{{ message() }}</p>`,
+  },
+  "components/button/example-crud-theo-doi-tuong": {
+    ...SHOWCASE_PAGE_SOURCES["components/button/example-crud-theo-doi-tuong"],
+    html: `<sd-button title="Tạo khách hàng" prefixIcon="add" type="fill" color="primary" routerLink="/pattern/customer/create" />
+<sd-button title="Cập nhật khách hàng" prefixIcon="edit" type="fill" color="primary" routerLink="/pattern/customer/1/update" />
+<sd-button
+  title="Lưu khách hàng"
+  prefixIcon="save"
+  type="fill"
+  color="primary"
+  [loading]="saving()"
+  [disabled]="saving()"
+  (click)="save()" />
+<p class="button-note">Chi tiết: <a routerLink="/pattern/customer/1/detail">KH-0001</a></p>
+<p class="button-note" role="status">{{ message() }}</p>`,
+  },
+  "components/button/example-dang-luu-loi-thu-lai": {
+    ...SHOWCASE_PAGE_SOURCES["components/button/example-dang-luu-loi-thu-lai"],
+    html: `<sd-input label="Tên khách hàng" size="sm" hideInlineError [disabled]="saving()" [(model)]="name" />
+<sd-button
+  prefixIcon="save"
+  type="fill"
+  color="primary"
+  autoId="async-save"
+  [title]="title()"
+  [loading]="saving()"
+  [disabled]="saving()"
+  (click)="save()" />
+<p class="button-note" role="status">{{ message() }}</p>`,
+  },
+  "components/button/example-hanh-dong-nguy-hiem": {
+    ...SHOWCASE_PAGE_SOURCES["components/button/example-hanh-dong-nguy-hiem"],
+    html: `@if (!deleted()) {
+  <span>Đơn hàng mẫu DH-1024 · An Phát</span>
+  <sd-button title="Xoá" prefixIcon="delete" type="fill" color="error" (click)="remove()" />
+} @else {
+  <sd-button title="Khôi phục dữ liệu mẫu" prefixIcon="restore" type="light" color="info" (click)="restore()" />
+}
+<p class="button-note" role="status">{{ message() }}</p>`,
+  },
   "components/button/example-indicator": {
     ...SHOWCASE_PAGE_SOURCES["components/button/example-indicator"],
     html: `<sd-button
@@ -22042,6 +25750,23 @@ Bởi Nguyễn Văn A"></sd-badge>
 <sd-button type="fill" color="primary" size="md" title="md" prefixIcon="add"></sd-button>
 <sd-button type="fill" color="primary" size="lg" title="lg" prefixIcon="add"></sd-button>`,
   },
+  "components/button/example-search-filter": {
+    ...SHOWCASE_PAGE_SOURCES["components/button/example-search-filter"],
+    html: `<sd-button title="Tìm kiếm" prefixIcon="search" type="light" color="primary" (click)="message.set('Đã tìm theo từ khóa mẫu.')" />
+<sd-button
+  title="Áp dụng bộ lọc"
+  prefixIcon="filter_alt"
+  type="light"
+  color="info"
+  (click)="message.set('Đã áp dụng điều kiện lọc mẫu.')" />
+<sd-button
+  title="Xóa bộ lọc"
+  prefixIcon="filter_alt_off"
+  type="light"
+  color="secondary"
+  (click)="message.set('Đã đặt lại điều kiện tìm kiếm mẫu.')" />
+<p class="button-note" role="status">{{ message() }}</p>`,
+  },
   "components/button/example-secondary-vs-black": {
     ...SHOWCASE_PAGE_SOURCES["components/button/example-secondary-vs-black"],
     html: `<sd-button type="fill" color="secondary" title="secondary fill"></sd-button>
@@ -22052,6 +25777,51 @@ Bởi Nguyễn Văn A"></sd-badge>
 <sd-button type="outline" color="black" title="black outline"></sd-button>
 <sd-button type="text" color="secondary" title="secondary text"></sd-button>
 <sd-button type="text" color="black" title="black text"></sd-button>`,
+  },
+  "components/button/example-tac-vu-gop-popover": {
+    ...SHOWCASE_PAGE_SOURCES["components/button/example-tac-vu-gop-popover"],
+    html: `<sd-button title="Tác vụ" prefixIcon="bolt" suffixIcon="expand_more" type="light" color="primary" autoId="grouped-actions">
+  <sd-button-item-divider title="Xử lý hồ sơ" />
+  @for (action of workflowActions; track action.title) {
+    <sd-button-item [prefixIcon]="action.icon" [color]="action.color" (click)="run(action.title)">{{ action.title }}</sd-button-item>
+  }
+  <sd-button-item-divider title="Dữ liệu" />
+  @for (action of dataActions; track action.title) {
+    <sd-button-item [prefixIcon]="action.icon" [color]="action.color" (click)="run(action.title)">{{ action.title }}</sd-button-item>
+  }
+</sd-button>
+<sd-button prefixIcon="more_horiz" tooltip="Tác vụ khác" type="light" color="secondary" autoId="grouped-more">
+  @for (action of workflowActions; track action.title) {
+    <sd-button-item [prefixIcon]="action.icon" [color]="action.color" (click)="run(action.title)">{{ action.title }}</sd-button-item>
+  }
+  <sd-button-item-divider />
+  @for (action of dataActions; track action.title) {
+    <sd-button-item [prefixIcon]="action.icon" [color]="action.color" (click)="run(action.title)">{{ action.title }}</sd-button-item>
+  }
+</sd-button>
+<p class="button-note" role="status">{{ message() }}</p>`,
+  },
+  "components/button/example-tac-vu-nghiep-vu": {
+    ...SHOWCASE_PAGE_SOURCES["components/button/example-tac-vu-nghiep-vu"],
+    html: `<div class="button-toolbar">
+  <span class="button-label">Có icon</span>
+  @for (action of actions; track action.title) {
+    <sd-button type="light" [title]="action.title" [prefixIcon]="action.icon" [color]="action.color" (click)="run(action.title)" />
+  }
+</div>
+<div class="button-toolbar">
+  <span class="button-label">Không icon</span>
+  @for (action of actions; track action.title) {
+    <sd-button type="light" [title]="action.title" [color]="action.color" (click)="run(action.title)" />
+  }
+</div>
+<div class="button-toolbar">
+  <span class="button-label">Icon-only</span>
+  @for (action of actions; track action.title) {
+    <sd-button type="light" [prefixIcon]="action.icon" [tooltip]="action.title" [color]="action.color" (click)="run(action.title)" />
+  }
+</div>
+<p class="button-note" role="status">{{ message() }}</p>`,
   },
   "components/button/example-toggle-icon-set-bang-alias": {
     ...SHOWCASE_PAGE_SOURCES["components/button/example-toggle-icon-set-bang-alias"],
@@ -22082,6 +25852,40 @@ Bởi Nguyễn Văn A"></sd-badge>
     disabled
     autoId="secondary-icon-disabled"></sd-button>
 </div>`,
+  },
+  "components/card/example-count-card-de-loc": {
+    ...SHOWCASE_PAGE_SOURCES["components/card/example-count-card-de-loc"],
+    html: `<sd-card-group class="score-grid" autoId="score-filter" [(model)]="selected" (sdChange)="onSelect($event)">
+  @for (card of cards; track card.id) {
+    <sd-card [value]="card.id" [color]="card.id === 'pending' ? 'warning' : card.id === 'done' ? 'success' : 'primary'">
+      <div class="score">
+        <span class="score__label">{{ card.label }}</span>
+        <strong class="score__value">{{ card.value }}</strong>
+        <span class="score__hint">{{ selected() === card.id ? 'Đang lọc' : 'Toàn bộ dữ liệu mẫu' }}</span>
+      </div>
+    </sd-card>
+  }
+</sd-card-group>
+<sd-input class="score-search" size="sm" hideInlineError placeholder="Tìm mã đơn hoặc khách hàng" [(model)]="search" />
+<p class="score-result" role="status">{{ filtered().length }} / {{ total }} đơn hàng phù hợp · Hiển thị 4 dòng đầu.</p>
+<table class="score-table">
+  <thead>
+    <tr>
+      <th scope="col">Mã đơn</th>
+      <th scope="col">Khách hàng</th>
+      <th scope="col">Trạng thái</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (order of filtered().slice(0, 4); track order.id) {
+      <tr>
+        <td>{{ order.code }}</td>
+        <td>{{ order.name }}</td>
+        <td><sd-badge size="sm" [color]="status[order.status].color" [title]="status[order.status].label" /></td>
+      </tr>
+    }
+  </tbody>
+</table>`,
   },
   "components/card/example-disabled-va-color": {
     ...SHOWCASE_PAGE_SOURCES["components/card/example-disabled-va-color"],
@@ -22126,6 +25930,110 @@ Bởi Nguyễn Văn A"></sd-badge>
   <p class="model-readout">Standalone selected(): {{ standaloneSelected() }}</p>
 </div>`,
   },
+  "components/card/example-icon-canh-nhan": {
+    ...SHOWCASE_PAGE_SOURCES["components/card/example-icon-canh-nhan"],
+    html: `<div class="score-grid">
+  @for (metric of metrics; track metric.id) {
+    <sd-section hideHeader>
+      <div class="score">
+        <span class="score__label">
+          <sd-icon [name]="metric.icon" [class]="'text-' + metric.color" />
+          {{ metric.label }}
+        </span>
+        <strong class="score__value">{{ metric.value }}</strong>
+        <span class="score__hint">{{ metric.hint }}</span>
+      </div>
+    </sd-section>
+  }
+</div>`,
+  },
+  "components/card/example-icon-click-de-loc": {
+    ...SHOWCASE_PAGE_SOURCES["components/card/example-icon-click-de-loc"],
+    html: `<sd-card-group class="score-grid" autoId="score-icon-filter" [(model)]="selected" (sdChange)="onSelect($event)">
+  @for (card of cards; track card.id) {
+    <sd-card [value]="card.id" [color]="card.id === 'pending' ? 'warning' : card.id === 'done' ? 'success' : 'primary'">
+      <div class="score">
+        <span class="score__label">
+          <sd-icon aria-hidden="true" [name]="card.icon" [class]="'text-' + card.color" />
+          {{ card.label }}
+        </span>
+        <strong class="score__value">{{ card.value }}</strong>
+        <span class="score__hint">{{ selected() === card.id ? 'Đang lọc' : 'Chọn để lọc' }}</span>
+      </div>
+    </sd-card>
+  }
+</sd-card-group>
+<p class="score-result" role="status">{{ filtered().length }} / {{ total }} đơn hàng phù hợp · Hiển thị 4 dòng đầu.</p>
+<table class="score-table">
+  <thead>
+    <tr>
+      <th scope="col">Mã đơn</th>
+      <th scope="col">Khách hàng</th>
+      <th scope="col">Trạng thái</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (order of filtered().slice(0, 4); track order.id) {
+      <tr>
+        <td>{{ order.code }}</td>
+        <td>{{ order.name }}</td>
+        <td><sd-badge size="sm" [color]="status[order.status].color" [title]="status[order.status].label" /></td>
+      </tr>
+    }
+  </tbody>
+</table>`,
+  },
+  "components/card/example-icon-trang-thai": {
+    ...SHOWCASE_PAGE_SOURCES["components/card/example-icon-trang-thai"],
+    html: `<div class="score-grid">
+  @for (status of statuses; track status.id) {
+    <sd-section hideHeader>
+      <div class="score">
+        <span class="score__label">
+          <span class="score__tile" [class]="'bg-' + status.color + '-light'">
+            <sd-icon [name]="status.icon" [class]="'text-' + status.color" />
+          </span>
+          {{ status.label }}
+        </span>
+        <strong class="score__value">{{ status.value }}</strong>
+        <span class="score__hint">{{ status.hint }}</span>
+      </div>
+    </sd-section>
+  }
+</div>`,
+  },
+  "components/card/example-icon-trong-nen-mau": {
+    ...SHOWCASE_PAGE_SOURCES["components/card/example-icon-trong-nen-mau"],
+    html: `<div class="score-grid">
+  @for (metric of metrics; track metric.id) {
+    <sd-section hideHeader>
+      <div class="score">
+        <span class="score__label">
+          <span class="score__tile" [class]="'bg-' + metric.color + '-light'">
+            <sd-icon [name]="metric.icon" [class]="'text-' + metric.color" />
+          </span>
+          {{ metric.label }}
+        </span>
+        <strong class="score__value">{{ metric.value }}</strong>
+        <span class="score__hint">{{ metric.hint }}</span>
+      </div>
+    </sd-section>
+  }
+</div>`,
+  },
+  "components/card/example-metric-chi-doc": {
+    ...SHOWCASE_PAGE_SOURCES["components/card/example-metric-chi-doc"],
+    html: `<!-- Read-only: a plain section, not an sd-card, so there is no hover, cursor or focus to suggest an action. -->
+<div class="score-grid">
+  <sd-section hideHeader>
+    <div class="score">
+      <span class="score__label">{{ metric.label }}</span>
+      <strong class="score__value">{{ metric.value }}</strong>
+      <span class="score__hint">{{ metric.hint }}</span>
+    </div>
+  </sd-section>
+</div>`,
+  },
   "components/card/example-multiple-selection": {
     ...SHOWCASE_PAGE_SOURCES["components/card/example-multiple-selection"],
     html: `<div class="example-stack">
@@ -22160,6 +26068,21 @@ Bởi Nguyễn Văn A"></sd-badge>
   <p class="model-readout">Model object name: {{ selectedStatus()?.name ?? 'none' }}</p>
 </div>`,
   },
+  "components/card/example-score-card-gon": {
+    ...SHOWCASE_PAGE_SOURCES["components/card/example-score-card-gon"],
+    html: `<!-- score--compact trims padding and the value size only; the text stays readable. -->
+<div class="score-grid">
+  @for (status of statuses; track status.id) {
+    <sd-section hideHeader>
+      <div class="score score--compact">
+        <span class="score__label">{{ status.label }}</span>
+        <strong class="score__value">{{ status.value }}</strong>
+        <span class="score__hint">{{ status.hint }}</span>
+      </div>
+    </sd-section>
+  }
+</div>`,
+  },
   "components/card/example-single-selection": {
     ...SHOWCASE_PAGE_SOURCES["components/card/example-single-selection"],
     html: `<div class="example-stack">
@@ -22177,6 +26100,23 @@ Bởi Nguyễn Văn A"></sd-badge>
   <p class="model-readout">sdChange gần nhất: {{ lastChange() }}</p>
 </div>`,
   },
+  "components/card/example-so-sanh-hai-ky": {
+    ...SHOWCASE_PAGE_SOURCES["components/card/example-so-sanh-hai-ky"],
+    html: `<div class="score-grid">
+  @for (item of items; track item.id) {
+    <sd-section hideHeader>
+      <div class="score">
+        <span class="score__label">{{ item.label }}</span>
+        <strong class="score__value">{{ item.current }} {{ item.unit }}</strong>
+        <span class="score__hint">
+          {{ item.previousLabel }}: {{ item.previous }} {{ item.unit }} · Chênh lệch
+          <strong [class]="deltaColor(item)">{{ delta(item) }}</strong>
+        </span>
+      </div>
+    </sd-section>
+  }
+</div>`,
+  },
   "components/card/example-standalone-card": {
     ...SHOWCASE_PAGE_SOURCES["components/card/example-standalone-card"],
     html: `<div class="example-stack">
@@ -22188,6 +26128,21 @@ Bởi Nguyễn Văn A"></sd-badge>
     </div>
   </sd-card>
   <p class="model-readout">selected(): {{ lastSelected() }}</p>
+</div>`,
+  },
+  "components/card/example-tien-do-ty-le": {
+    ...SHOWCASE_PAGE_SOURCES["components/card/example-tien-do-ty-le"],
+    html: `<div class="score-grid">
+  @for (item of items; track item.id) {
+    <sd-section hideHeader>
+      <div class="score">
+        <span class="score__label">{{ item.label }}</span>
+        <strong class="score__value">{{ percent(item) }}%</strong>
+        <progress class="score__progress" max="100" [value]="percent(item)" [attr.aria-label]="item.label"></progress>
+        <span class="score__hint">{{ item.done }} / {{ item.total }} {{ item.unit }} đã hoàn tất</span>
+      </div>
+    </sd-section>
+  }
 </div>`,
   },
   "components/code-editor/example-che-do-xem-json": {
@@ -23764,7 +27719,7 @@ Bởi Nguyễn Văn A"></sd-badge>
   },
   "components/page-list/example-man-song-toan-trang": {
     ...SHOWCASE_PAGE_SOURCES["components/page-list"],
-    html: `<demo-section heading="Màn sống toàn trang" [props]="[{ name: 'detail', value: 'page | drawer' }, { name: 'route', value: '/demo/page-list' }]" note="Mở màn mẫu toàn trang; cấu hình đổi bằng ?cfg= (tab, score card, external filter, chọn nhiều, autoCompact, cách mở chi tiết).">
+    html: `<demo-section heading="Màn sống toàn trang" [props]="[{ name: 'detail', value: 'page | drawer' }, { name: 'route', value: '/pattern/order' }]" note="Mở màn đơn hàng của @sdcorejs/angular/modules/pattern; cấu hình đổi bằng ?cfg= hoặc drawer Tuỳ chỉnh hiển thị (tab, score card, external filter, chọn nhiều, autoCompact, cách mở chi tiết).">
     <div class="links">
       @for (link of links; track link.label) {
         <a class="link" [routerLink]="base" [queryParams]="{ cfg: link.cfg }">{{ link.label }}</a>
@@ -24977,6 +28932,26 @@ Bởi Nguyễn Văn A"></sd-badge>
     </div>
   </demo-section>`,
   },
+  "components/tab/example-chuyen-cach-xem-du-lieu": {
+    ...SHOWCASE_PAGE_SOURCES["components/tab/example-chuyen-cach-xem-du-lieu"],
+    html: `<sd-tab-group autoId="tab-views" variant="segmented" [stretchTabs]="false" animationDuration="0ms">
+  <sd-tab label="Bảng" icon="table_chart">
+    <div class="tab-body">
+      <sd-table [option]="option" />
+    </div>
+  </sd-tab>
+  <sd-tab label="Thẻ" icon="view_module">
+    <div class="tab-body view-cards">
+      @for (order of orders; track order.id) {
+        <sd-section [title]="order.code">
+          <sd-section-item label="Khách hàng">{{ order.name }}</sd-section-item>
+          <sd-section-item label="Khu vực">{{ order.region }}</sd-section-item>
+        </sd-section>
+      }
+    </div>
+  </sd-tab>
+</sd-tab-group>`,
+  },
   "components/tab/example-dieu-khien-tu-ngoai": {
     ...SHOWCASE_PAGE_SOURCES["components/tab"],
     html: `<demo-section heading="Điều khiển từ ngoài" [props]="[{ name: '[(selectedIndex)]', value: 'two-way' }]">
@@ -24993,6 +28968,167 @@ Bởi Nguyễn Văn A"></sd-badge>
       </sd-tab-group>
     </div>
   </demo-section>`,
+  },
+  "components/tab/example-form-chia-nhom": {
+    ...SHOWCASE_PAGE_SOURCES["components/tab/example-form-chia-nhom"],
+    html: `<sd-tab-group autoId="tab-form" [stretchTabs]="false" animationDuration="0ms" [(selectedIndex)]="selectedIndex">
+  <sd-tab label="Thông tin chung" icon="info">
+    <div class="tab-body">
+      <sd-section title="Thông tin chung">
+        <sd-input label="Tên khách hàng" required [disabled]="saving()" [(model)]="name" />
+      </sd-section>
+    </div>
+  </sd-tab>
+  <sd-tab label="Liên hệ" icon="mail">
+    <div class="tab-body">
+      <sd-section title="Liên hệ">
+        <sd-input label="Email" required pattern="EMAIL" [disabled]="saving()" [(model)]="email" />
+      </sd-section>
+    </div>
+  </sd-tab>
+</sd-tab-group>
+<div class="tab-toolbar tab-toolbar--end">
+  <sd-button title="Lưu" prefixIcon="save" type="fill" color="primary" [loading]="saving()" [disabled]="saving()" (click)="save()" />
+</div>`,
+  },
+  "components/tab/example-mo-nhieu-ho-so": {
+    ...SHOWCASE_PAGE_SOURCES["components/tab/example-mo-nhieu-ho-so"],
+    html: `<div class="tab-toolbar">
+  <sd-button
+    title="Mở lại 3 hồ sơ"
+    prefixIcon="folder_open"
+    type="fill"
+    color="primary"
+    [disabled]="records().length === 3"
+    (click)="reopen()" />
+</div>
+<sd-tab-group autoId="tab-closable" [stretchTabs]="false" animationDuration="0ms">
+  @for (code of records(); track code) {
+    <sd-tab [label]="code" icon="business" closable [beforeClose]="beforeClose[code]" (close)="close(code)">
+      <div class="tab-body">
+        <sd-section [title]="'Chi tiết khách hàng #' + code">
+          <sd-input label="Tên khách hàng" [(model)]="drafts[code]" />
+        </sd-section>
+      </div>
+    </sd-tab>
+  }
+</sd-tab-group>
+@if (records().length === 0) {
+  <p class="tab-note">Đã đóng tất cả hồ sơ.</p>
+}`,
+  },
+  "components/tab/example-nhieu-nhom-noi-dung": {
+    ...SHOWCASE_PAGE_SOURCES["components/tab/example-nhieu-nhom-noi-dung"],
+    html: `<sd-tab-group autoId="tab-many" [stretchTabs]="false" animationDuration="0ms">
+  @for (tab of tabs; track tab.label) {
+    <sd-tab [label]="tab.label" [icon]="tab.icon">
+      <div class="tab-body">
+        <sd-section [title]="tab.label">
+          <sd-section-item label="Khách hàng">Công ty An Phát</sd-section-item>
+        </sd-section>
+      </div>
+    </sd-tab>
+  }
+</sd-tab-group>`,
+  },
+  "components/tab/example-nhom-chua-kha-dung": {
+    ...SHOWCASE_PAGE_SOURCES["components/tab/example-nhom-chua-kha-dung"],
+    html: `@if (!profileComplete()) {
+  <sd-inform color="info" title="Hợp đồng chưa khả dụng" description="Tab Hợp đồng mở sau khi hồ sơ khách hàng được hoàn tất." />
+}
+<div class="tab-toolbar">
+  <sd-button
+    title="Hoàn tất hồ sơ để mở Hợp đồng"
+    prefixIcon="check"
+    type="fill"
+    color="primary"
+    [disabled]="profileComplete()"
+    (click)="profileComplete.set(true)" />
+</div>
+<sd-tab-group autoId="tab-disabled" [stretchTabs]="false" animationDuration="0ms">
+  <sd-tab label="Thông tin chung" icon="info">
+    <div class="tab-body">
+      <sd-section title="Thông tin chung">
+        <sd-section-item label="Khách hàng">Công ty An Phát</sd-section-item>
+        <sd-section-item label="Hồ sơ">{{ profileComplete() ? 'Đã hoàn tất' : 'Chưa hoàn tất' }}</sd-section-item>
+      </sd-section>
+    </div>
+  </sd-tab>
+  <sd-tab label="Hợp đồng" icon="description" [disabled]="!profileComplete()">
+    <div class="tab-body">
+      <sd-section title="Hợp đồng">
+        <sd-section-item label="Số hợp đồng">HĐ-2026-018</sd-section-item>
+      </sd-section>
+    </div>
+  </sd-tab>
+</sd-tab-group>`,
+  },
+  "components/tab/example-noi-dung-hon-hop": {
+    ...SHOWCASE_PAGE_SOURCES["components/tab/example-noi-dung-hon-hop"],
+    html: `<sd-tab-group autoId="tab-mixed" [stretchTabs]="false" animationDuration="0ms">
+  <sd-tab label="Thông tin chung" icon="info">
+    <div class="tab-body">
+      <sd-section title="Thông tin chung">
+        <sd-section-item label="Khách hàng">Công ty An Phát</sd-section-item>
+        <sd-section-item label="Phân loại">Khách hàng doanh nghiệp · Miền Bắc</sd-section-item>
+        <sd-section-item label="Liên hệ">contact&#64;anphat.example</sd-section-item>
+      </sd-section>
+    </div>
+  </sd-tab>
+  <sd-tab label="Đơn hàng" icon="receipt_long" [badge]="orders.length">
+    <div class="tab-body">
+      <sd-table [option]="ordersOption" />
+    </div>
+  </sd-tab>
+  <sd-tab label="Lịch sử" icon="history">
+    <div class="tab-body">
+      <ul class="history">
+        @for (event of history; track event.time) {
+          <li>
+            <small>{{ event.time }}</small>
+            {{ event.text }}
+          </li>
+        }
+      </ul>
+    </div>
+  </sd-tab>
+</sd-tab-group>`,
+  },
+  "components/tab/example-phan-nhom-co-so-luong": {
+    ...SHOWCASE_PAGE_SOURCES["components/tab/example-phan-nhom-co-so-luong"],
+    html: `<div class="tab-toolbar">
+  <sd-button
+    title="Hoàn tất một đơn chờ xử lý"
+    prefixIcon="check"
+    type="fill"
+    color="primary"
+    [disabled]="tabs()[1].rows.length === 0"
+    (click)="complete()" />
+</div>
+<sd-tab-group autoId="tab-counts" [stretchTabs]="false" animationDuration="0ms" [(selectedIndex)]="selectedIndex">
+  @for (tab of tabs(); track tab.label) {
+    <sd-tab [label]="tab.label" [icon]="tab.icon" [badge]="tab.rows.length">
+      <div class="tab-body">
+        <sd-table [option]="tab.option" />
+      </div>
+    </sd-tab>
+  }
+</sd-tab-group>`,
+  },
+  "components/tab/example-tab-chua-bang": {
+    ...SHOWCASE_PAGE_SOURCES["components/tab/example-tab-chua-bang"],
+    html: `<sd-tab-group autoId="tab-table" [stretchTabs]="false" animationDuration="0ms">
+  <sd-tab label="Đơn hàng" icon="receipt_long">
+    <div class="tab-body">
+      <sd-table autoId="tab-table-orders" [option]="ordersOption" />
+    </div>
+  </sd-tab>
+  <sd-tab label="Khách hàng" icon="groups">
+    <div class="tab-body">
+      <sd-table autoId="tab-table-customers" [option]="customersOption" />
+    </div>
+  </sd-tab>
+</sd-tab-group>`,
   },
   "components/tab/example-tab-co-ban": {
     ...SHOWCASE_PAGE_SOURCES["components/tab"],
@@ -25079,6 +29215,45 @@ Bởi Nguyễn Văn A"></sd-badge>
       </sd-tab-group>
     </div>
   </demo-section>`,
+  },
+  "components/tab/example-tai-rong-loi": {
+    ...SHOWCASE_PAGE_SOURCES["components/tab/example-tai-rong-loi"],
+    html: `<div class="tab-toolbar">
+  <sd-button title="Có dữ liệu" type="fill" color="primary" (click)="load('ready')" />
+  <sd-button title="Không có dữ liệu" type="light" (click)="load('empty')" />
+  <sd-button title="Mô phỏng lỗi" type="light" color="warning" (click)="load('error')" />
+</div>
+<sd-tab-group
+  autoId="tab-loading"
+  [stretchTabs]="false"
+  animationDuration="0ms"
+  [selectedIndex]="selectedIndex()"
+  (selectedIndexChange)="open($event)">
+  @for (tab of tabs; track tab.label) {
+    <sd-tab [label]="tab.label" [icon]="tab.icon">
+      <div class="tab-body">
+        @if (loading()) {
+          <sd-data-state state="loading" title="Đang tải dữ liệu…" />
+        } @else if (scenario() === 'error') {
+          <sd-data-state
+            state="error"
+            title="Không tải được dữ liệu"
+            message="Vui lòng thử lại để tải nội dung của tab này."
+            [retryable]="true"
+            retryLabel="Thử lại"
+            (sdRetry)="load('ready')" />
+        } @else if (scenario() === 'empty') {
+          <sd-data-state state="empty" title="Chưa có dữ liệu trong nhóm này" message="Dữ liệu sẽ hiển thị tại đây khi có bản ghi." />
+        } @else {
+          <sd-section [title]="tab.label">
+            <sd-section-item label="Khách hàng">Công ty An Phát</sd-section-item>
+            <sd-section-item label="Nội dung">{{ tab.content }}</sd-section-item>
+          </sd-section>
+        }
+      </div>
+    </sd-tab>
+  }
+</sd-tab-group>`,
   },
   "components/tab/example-variant-pills": {
     ...SHOWCASE_PAGE_SOURCES["components/tab"],
@@ -25193,6 +29368,30 @@ Bởi Nguyễn Văn A"></sd-badge>
 <p class="mt-16">Lazy: tổng leaves chưa đầy đủ cho đến khi mở nhánh tải dữ liệu. Aggregate không tự gọi API.</p>
 <sd-table autoId="aggregate-lazy" [option]="lazyOption" />`,
   },
+  "components/table/example-custom-th-td": {
+    ...SHOWCASE_PAGE_SOURCES["components/table/example-custom-th-td"],
+    html: `<sd-table autoId="pattern-custom-cells" [option]="option">
+  <ng-template sdTableTitleDef="name">
+    <span class="cell-stack"><strong>Khách hàng</strong><small>Khu vực · Phụ trách</small></span>
+  </ng-template>
+  <ng-template sdTableTitleDef="amount">
+    <span class="cell-stack"><strong>Giá trị đơn hàng</strong><small>Đơn vị: VND</small></span>
+  </ng-template>
+
+  <ng-template sdTableCellDef="code" let-row="item">
+    <a [routerLink]="['/pattern/order', row.id, 'detail']">{{ row.code }}</a>
+  </ng-template>
+  <ng-template sdTableCellDef="name" let-row="item">
+    <span class="cell-stack">
+      <strong>{{ row.name }}</strong>
+      <small>{{ row.region }} · {{ row.owner }}</small>
+    </span>
+  </ng-template>
+  <ng-template sdTableCellDef="amount" let-row="item">
+    <strong class="cell-amount cell-amount--primary">{{ row.amount | sdFormatNumber: 0 }} ₫</strong>
+  </ng-template>
+</sd-table>`,
+  },
   "components/table/example-dong-mo-rong": {
     ...SHOWCASE_PAGE_SOURCES["components/table"],
     html: `<demo-section heading="Dòng mở rộng" [props]="[{ name: 'expand', value: 'true' }, { name: 'sdTableExpandDef', value: 'template' }]">
@@ -25286,6 +29485,11 @@ Bởi Nguyễn Văn A"></sd-badge>
     </div>
   </demo-section>`,
   },
+  "components/table/example-inline-filter-operator": {
+    ...SHOWCASE_PAGE_SOURCES["components/table/example-inline-filter-operator"],
+    html: `<sd-table autoId="pattern-inline-operator" [option]="option" />
+<p class="table-note">Thử “Giá trị” lớn hơn 20000000 rồi “Khách hàng” bắt đầu bằng “an”: hai điều kiện kết hợp AND.</p>`,
+  },
   "components/table/example-keo-tha-doi-thu-tu": {
     ...SHOWCASE_PAGE_SOURCES["components/table"],
     html: `<demo-section heading="Kéo thả đổi thứ tự" [props]="[{ name: 'rowReorder', value: 'true' }]">
@@ -25326,6 +29530,29 @@ Bởi Nguyễn Văn A"></sd-badge>
       <sd-table [option]="commandRightOption"></sd-table>
     </div>
   </demo-section>`,
+  },
+  "components/table/example-loading-empty-error": {
+    ...SHOWCASE_PAGE_SOURCES["components/table/example-loading-empty-error"],
+    html: `<div class="table-actions">
+  <sd-button title="Tải dữ liệu" prefixIcon="refresh" [type]="scenario() === 'ready' ? 'fill' : 'outline'" (click)="show('ready')" />
+  <sd-button title="Chưa có dữ liệu" [type]="scenario() === 'empty' ? 'fill' : 'outline'" (click)="show('empty')" />
+  <sd-button title="Lỗi rồi thử lại" [type]="scenario() === 'error' ? 'fill' : 'outline'" (click)="show('error')" />
+</div>
+<p class="table-note">
+  Mỗi lượt tải mất 1,5 giây. Chọn “Tải dữ liệu”, tìm “khong-ton-tai” để xem trạng thái không khớp bộ lọc; xóa từ khóa để khôi phục danh
+  sách.
+</p>
+<sd-table autoId="pattern-states" [option]="option">
+  <ng-template sdDataStateTemplate let-current let-retry="retry">
+    <sd-data-state
+      [state]="current"
+      [title]="title(current)"
+      [message]="message(current)"
+      [retryable]="current === 'error'"
+      retryLabel="Thử lại"
+      (sdRetry)="retry()" />
+  </ng-template>
+</sd-table>`,
   },
   "components/table/example-mobile-chon-du-lieu": {
     ...SHOWCASE_PAGE_SOURCES["components/table"],
@@ -25377,6 +29604,102 @@ Bởi Nguyễn Văn A"></sd-badge>
       </sd-table>
     </sd-side-drawer>
   </demo-section>`,
+  },
+  "components/table/example-nhap-lieu-inline-bao-loi": {
+    ...SHOWCASE_PAGE_SOURCES["components/table/example-nhap-lieu-inline-bao-loi"],
+    html: `<div class="table-toolbar">
+  <strong>Dòng hàng của đơn ĐH-2400</strong>
+  <sd-button title="Lưu" prefixIcon="save" type="fill" color="primary" [loading]="saving()" [disabled]="saving()" (click)="save()" />
+</div>
+@if (inform(); as message) {
+  <sd-inform [color]="message.color" [title]="message.title" [description]="message.description" />
+}
+<sd-table autoId="pattern-inline-errors" [option]="option">
+  <ng-template sdTableTitleDef="name"><strong>Sản phẩm</strong> <span class="required-mark">*</span></ng-template>
+  <ng-template sdTableTitleDef="quantity"><strong>Số lượng</strong> <span class="required-mark">*</span></ng-template>
+  <ng-template sdTableTitleDef="price"><strong>Đơn giá (VND)</strong> <span class="required-mark">*</span></ng-template>
+
+  <ng-template sdTableCellDef="name" let-row="item">
+    <sd-input
+      class="cell-input"
+      size="sm"
+      hideInlineError
+      [disabled]="saving()"
+      [inlineError]="errors()[row.id]?.name"
+      [(model)]="row.name"
+      (modelChange)="clearErrors(row.id)" />
+  </ng-template>
+  <ng-template sdTableCellDef="quantity" let-row="item">
+    <sd-input-number
+      class="cell-input"
+      size="sm"
+      hideInlineError
+      [precision]="0"
+      [disabled]="saving()"
+      [inlineError]="errors()[row.id]?.quantity"
+      [(model)]="row.quantity"
+      (modelChange)="clearErrors(row.id)" />
+  </ng-template>
+  <ng-template sdTableCellDef="price" let-row="item">
+    <sd-input-number
+      class="cell-input"
+      size="sm"
+      hideInlineError
+      [precision]="0"
+      [disabled]="saving()"
+      [inlineError]="errors()[row.id]?.price"
+      [(model)]="row.price"
+      (modelChange)="clearErrors(row.id)" />
+  </ng-template>
+</sd-table>
+<p class="table-note">Sửa hết lỗi rồi nhập “Máy in” ở dòng 2 và Lưu để xem lỗi trùng sản phẩm do BE mẫu trả về.</p>`,
+  },
+  "components/table/example-nhap-lieu-inline-them-xoa": {
+    ...SHOWCASE_PAGE_SOURCES["components/table/example-nhap-lieu-inline-them-xoa"],
+    html: `<div class="table-toolbar">
+  <strong>Dòng hàng của đơn ĐH-2400</strong>
+  <sd-button title="Lưu" prefixIcon="save" type="fill" color="primary" [loading]="saving()" [disabled]="saving()" (click)="save()" />
+</div>
+@if (saved()) {
+  <sd-inform color="success" title="Lưu thành công" [description]="saved()" />
+}
+<sd-table autoId="pattern-inline-edit" [option]="option">
+  <ng-template sdTableCommandHeaderDef>
+    <sd-button tooltip="Thêm dòng" prefixIcon="add" size="sm" type="light" color="primary" [disabled]="saving()" (click)="add()" />
+  </ng-template>
+  <ng-template sdTableCellDef="name" let-row="item">
+    <sd-input class="cell-input" size="sm" hideInlineError [disabled]="saving()" [(model)]="row.name" (modelChange)="changed()" />
+  </ng-template>
+  <ng-template sdTableCellDef="quantity" let-row="item">
+    <sd-input-number
+      class="cell-input"
+      size="sm"
+      hideInlineError
+      [min]="1"
+      [precision]="0"
+      [disabled]="saving()"
+      [(model)]="row.quantity"
+      (modelChange)="changed()" />
+  </ng-template>
+  <ng-template sdTableCellDef="price" let-row="item">
+    <sd-input-number
+      class="cell-input"
+      size="sm"
+      hideInlineError
+      [min]="0"
+      [precision]="0"
+      [disabled]="saving()"
+      [(model)]="row.price"
+      (modelChange)="changed()" />
+  </ng-template>
+  <ng-template sdTableCellDef="amount" let-row="item">
+    <strong class="cell-amount">{{ amount(row) | sdFormatNumber: 0 }} ₫</strong>
+  </ng-template>
+</sd-table>
+<div class="table-summary">
+  <span>{{ lines().length }} dòng hàng</span>
+  <strong>Tổng cộng: {{ total() | sdFormatNumber: 0 }} ₫</strong>
+</div>`,
   },
   "components/table/example-nhom-don-hang-theo-khach": {
     ...SHOWCASE_PAGE_SOURCES["components/table"],
@@ -25508,6 +29831,15 @@ Bởi Nguyễn Văn A"></sd-badge>
       <sd-table [option]="productOption"></sd-table>
     </div>
   </demo-section>`,
+  },
+  "components/table/example-tra-cuu-co-ban": {
+    ...SHOWCASE_PAGE_SOURCES["components/table/example-tra-cuu-co-ban"],
+    html: `<sd-table autoId="pattern-standard" [option]="option">
+  <ng-template sdTableCellDef="code" let-row="item">
+    <a [routerLink]="['/pattern/order', row.id, 'detail']">{{ row.code }}</a>
+  </ng-template>
+</sd-table>
+<p class="table-note">Mã đơn mở màn chi tiết đơn hàng của /pattern/order.</p>`,
   },
   "components/table/example-tree-khong-cot-stt-chevron-nam-trong-cot-dau-don-vi": {
     ...SHOWCASE_PAGE_SOURCES["components/table"],

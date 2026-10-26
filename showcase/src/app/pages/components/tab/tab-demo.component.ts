@@ -2,6 +2,15 @@ import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdTab, SdTabClosedEvent, SdTabGroup } from '@sdcorejs/angular/components/tab';
 import { SdButton } from '@sdcorejs/angular/components/button';
+import { TabClosableExampleComponent } from './examples/tab-closable.example';
+import { TabCountsExampleComponent } from './examples/tab-counts.example';
+import { TabDisabledExampleComponent } from './examples/tab-disabled.example';
+import { TabFormExampleComponent } from './examples/tab-form.example';
+import { TabLoadingExampleComponent } from './examples/tab-loading.example';
+import { TabManyExampleComponent } from './examples/tab-many.example';
+import { TabMixedExampleComponent } from './examples/tab-mixed.example';
+import { TabTableExampleComponent } from './examples/tab-table.example';
+import { TabViewsExampleComponent } from './examples/tab-views.example';
 
 interface FileTab {
   id: string;
@@ -11,7 +20,22 @@ interface FileTab {
 @Component({
   selector: 'app-tab-demo',
   standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, SdTabGroup, SdTab, SdButton],
+  imports: [
+    DemoPageComponent,
+    DemoSectionComponent,
+    SdTabGroup,
+    SdTab,
+    SdButton,
+    TabManyExampleComponent,
+    TabCountsExampleComponent,
+    TabViewsExampleComponent,
+    TabMixedExampleComponent,
+    TabTableExampleComponent,
+    TabFormExampleComponent,
+    TabLoadingExampleComponent,
+    TabDisabledExampleComponent,
+    TabClosableExampleComponent,
+  ],
   template: `
     <demo-page #demoPage
       title="Tab Group"
@@ -185,6 +209,87 @@ interface FileTab {
             <sd-tab label="Bước 3">Nội dung bước 3.</sd-tab>
           </sd-tab-group>
         </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-nhieu-nhom-noi-dung') {
+      <demo-section heading="Nhiều nhóm nội dung"
+        data-example-typescript="./examples/tab-many.example.ts" data-example-template="./examples/tab-many.example.html" data-example-style="./examples/tab-pattern-example.scss"
+        [props]="[{ name: 'stretchTabs', value: 'false' }, { name: 'sd-tab', value: '10 nhóm' }]"
+        note="Thanh tab tự cuộn khi thiếu chỗ; không ép toàn bộ nhãn vào một hàng.">
+        <app-tab-many-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-phan-nhom-co-so-luong') {
+      <demo-section heading="Phân nhóm có số lượng"
+        data-example-typescript="./examples/tab-counts.example.ts" data-example-template="./examples/tab-counts.example.html" data-example-style="./examples/tab-pattern-example.scss"
+        [props]="[{ name: 'badge', value: 'count' }, { name: '[(selectedIndex)]', value: 'two-way' }]"
+        note="Badge dùng số lượng thật của từng nhóm; bấm hoàn tất để thấy số lượng thay đổi.">
+        <app-tab-counts-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chuyen-cach-xem-du-lieu') {
+      <demo-section heading="Chuyển cách xem dữ liệu"
+        data-example-typescript="./examples/tab-views.example.ts" data-example-template="./examples/tab-views.example.html" data-example-style="./examples/tab-pattern-example.scss"
+        [props]="[{ name: 'variant', value: 'segmented' }]"
+        note="Segmented cho hai cách xem. Giữ nguyên nguồn dữ liệu khi chuyển.">
+        <app-tab-views-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-noi-dung-hon-hop') {
+      <demo-section heading="Nội dung hỗn hợp"
+        data-example-typescript="./examples/tab-mixed.example.ts" data-example-template="./examples/tab-mixed.example.html" data-example-style="./examples/tab-pattern-example.scss"
+        [props]="[{ name: 'sd-section', value: 'thông tin' }, { name: 'sd-table', value: 'danh sách' }, { name: 'list', value: 'lịch sử' }]"
+        note="Chọn cấu trúc phù hợp từng tab, không ép mọi nội dung thành bảng.">
+        <app-tab-mixed-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tab-chua-bang') {
+      <demo-section heading="Tab chứa bảng"
+        data-example-typescript="./examples/tab-table.example.ts" data-example-template="./examples/tab-table.example.html" data-example-style="./examples/tab-pattern-example.scss"
+        [props]="[{ name: 'filter.quickSearch', value: 'containFields' }, { name: 'paginate', value: 'pageSize / pages' }]"
+        note="Dùng quickSearch từ option Core Table; bảng tự quản lý trang và số dòng.">
+        <app-tab-table-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-form-chia-nhom') {
+      <demo-section heading="Form chia nhóm"
+        data-example-typescript="./examples/tab-form.example.ts" data-example-template="./examples/tab-form.example.html" data-example-style="./examples/tab-pattern-example.scss"
+        [props]="[{ name: '[(selectedIndex)]', value: 'two-way' }, { name: 'SdNotifyService', value: 'warning / success' }]"
+        note="Giữ dữ liệu khi đổi tab; khi lưu, chuyển tới nhóm lỗi và báo Notify.">
+        <app-tab-form-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tai-rong-loi') {
+      <demo-section heading="Tải / Rỗng / Lỗi"
+        data-example-typescript="./examples/tab-loading.example.ts" data-example-template="./examples/tab-loading.example.html" data-example-style="./examples/tab-pattern-example.scss"
+        [props]="[{ name: 'sd-data-state', value: 'loading / empty / error' }, { name: '(selectedIndexChange)', value: 'event' }]"
+        note="Loading 1–2 giây; lỗi có thử lại; trạng thái rỗng có lời giải thích.">
+        <app-tab-loading-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-nhom-chua-kha-dung') {
+      <demo-section heading="Nhóm chưa khả dụng"
+        data-example-typescript="./examples/tab-disabled.example.ts" data-example-template="./examples/tab-disabled.example.html" data-example-style="./examples/tab-pattern-example.scss"
+        [props]="[{ name: 'disabled', value: 'theo điều kiện' }, { name: 'sd-inform', value: 'giải thích' }]"
+        note="Không chỉ vô hiệu hóa: giải thích điều kiện và cung cấp thao tác đáp ứng điều kiện.">
+        <app-tab-disabled-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-mo-nhieu-ho-so') {
+      <demo-section heading="Mở nhiều hồ sơ"
+        data-example-typescript="./examples/tab-closable.example.ts" data-example-template="./examples/tab-closable.example.html" data-example-style="./examples/tab-pattern-example.scss"
+        [props]="[{ name: 'closable', value: 'true' }, { name: 'beforeClose', value: 'SdTabBeforeClose' }, { name: '(close)', value: 'event' }]"
+        note="Tab đóng được; thay tên rồi đóng để thử xác nhận dữ liệu chưa lưu.">
+        <app-tab-closable-example />
       </demo-section>
       }
     </demo-page>

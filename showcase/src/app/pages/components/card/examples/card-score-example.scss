@@ -1,0 +1,92 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+// The consumer owns the grid; score cards wrap to one column on narrow screens.
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.score {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+}
+
+.score--compact {
+  gap: 4px;
+  padding: 12px;
+}
+
+.score__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--sd-text-secondary, #5f6368);
+}
+
+.score__value {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.score--compact .score__value {
+  font-size: 22px;
+}
+
+.score__hint {
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// 24px icon centred in a 44px tile; the tile colour comes from the bg-*-light utility.
+.score__tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+}
+
+.score__progress {
+  width: 100%;
+}
+
+.score-search {
+  max-width: 320px;
+}
+
+.score-result {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.score-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th,
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--sd-border, #e0e0e0);
+    text-align: left;
+  }
+
+  th {
+    color: var(--sd-text-secondary, #5f6368);
+    font-weight: 600;
+  }
+}

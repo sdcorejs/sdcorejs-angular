@@ -1,0 +1,64 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.table-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.table-note {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.table-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// Two-line header and cell content of the "Custom TH / TD" example.
+.cell-stack small {
+  display: block;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+// Money stays right-aligned in custom cells, as in the built-in number column.
+.cell-amount {
+  display: block;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.cell-amount--primary {
+  color: var(--sd-primary, #005cbb);
+}
+
+// Inputs inside a row keep the 36px row readable.
+.cell-input {
+  display: block;
+  padding-block: 6px;
+}
+
+.required-mark {
+  color: var(--sd-error, #d32f2f);
+}

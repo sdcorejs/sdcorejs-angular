@@ -1,0 +1,18 @@
+<div class="tab-toolbar">
+  <sd-button
+    title="Hoàn tất một đơn chờ xử lý"
+    prefixIcon="check"
+    type="fill"
+    color="primary"
+    [disabled]="tabs()[1].rows.length === 0"
+    (click)="complete()" />
+</div>
+<sd-tab-group autoId="tab-counts" [stretchTabs]="false" animationDuration="0ms" [(selectedIndex)]="selectedIndex">
+  @for (tab of tabs(); track tab.label) {
+    <sd-tab [label]="tab.label" [icon]="tab.icon" [badge]="tab.rows.length">
+      <div class="tab-body">
+        <sd-table [option]="tab.option" />
+      </div>
+    </sd-tab>
+  }
+</sd-tab-group>

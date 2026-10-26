@@ -1,0 +1,20 @@
+<div class="table-actions">
+  <sd-button title="Tải dữ liệu" prefixIcon="refresh" [type]="scenario() === 'ready' ? 'fill' : 'outline'" (click)="show('ready')" />
+  <sd-button title="Chưa có dữ liệu" [type]="scenario() === 'empty' ? 'fill' : 'outline'" (click)="show('empty')" />
+  <sd-button title="Lỗi rồi thử lại" [type]="scenario() === 'error' ? 'fill' : 'outline'" (click)="show('error')" />
+</div>
+<p class="table-note">
+  Mỗi lượt tải mất 1,5 giây. Chọn “Tải dữ liệu”, tìm “khong-ton-tai” để xem trạng thái không khớp bộ lọc; xóa từ khóa để khôi phục danh
+  sách.
+</p>
+<sd-table autoId="pattern-states" [option]="option">
+  <ng-template sdDataStateTemplate let-current let-retry="retry">
+    <sd-data-state
+      [state]="current"
+      [title]="title(current)"
+      [message]="message(current)"
+      [retryable]="current === 'error'"
+      retryLabel="Thử lại"
+      (sdRetry)="retry()" />
+  </ng-template>
+</sd-table>

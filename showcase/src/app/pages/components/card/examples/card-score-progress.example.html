@@ -1,0 +1,12 @@
+<div class="score-grid">
+  @for (item of items; track item.id) {
+    <sd-section hideHeader>
+      <div class="score">
+        <span class="score__label">{{ item.label }}</span>
+        <strong class="score__value">{{ percent(item) }}%</strong>
+        <progress class="score__progress" max="100" [value]="percent(item)" [attr.aria-label]="item.label"></progress>
+        <span class="score__hint">{{ item.done }} / {{ item.total }} {{ item.unit }} đã hoàn tất</span>
+      </div>
+    </sd-section>
+  }
+</div>

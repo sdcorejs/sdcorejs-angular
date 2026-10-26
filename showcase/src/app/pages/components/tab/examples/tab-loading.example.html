@@ -1,0 +1,36 @@
+<div class="tab-toolbar">
+  <sd-button title="Có dữ liệu" type="fill" color="primary" (click)="load('ready')" />
+  <sd-button title="Không có dữ liệu" type="light" (click)="load('empty')" />
+  <sd-button title="Mô phỏng lỗi" type="light" color="warning" (click)="load('error')" />
+</div>
+<sd-tab-group
+  autoId="tab-loading"
+  [stretchTabs]="false"
+  animationDuration="0ms"
+  [selectedIndex]="selectedIndex()"
+  (selectedIndexChange)="open($event)">
+  @for (tab of tabs; track tab.label) {
+    <sd-tab [label]="tab.label" [icon]="tab.icon">
+      <div class="tab-body">
+        @if (loading()) {
+          <sd-data-state state="loading" title="Đang tải dữ liệu…" />
+        } @else if (scenario() === 'error') {
+          <sd-data-state
+            state="error"
+            title="Không tải được dữ liệu"
+            message="Vui lòng thử lại để tải nội dung của tab này."
+            [retryable]="true"
+            retryLabel="Thử lại"
+            (sdRetry)="load('ready')" />
+        } @else if (scenario() === 'empty') {
+          <sd-data-state state="empty" title="Chưa có dữ liệu trong nhóm này" message="Dữ liệu sẽ hiển thị tại đây khi có bản ghi." />
+        } @else {
+          <sd-section [title]="tab.label">
+            <sd-section-item label="Khách hàng">Công ty An Phát</sd-section-item>
+            <sd-section-item label="Nội dung">{{ tab.content }}</sd-section-item>
+          </sd-section>
+        }
+      </div>
+    </sd-tab>
+  }
+</sd-tab-group>

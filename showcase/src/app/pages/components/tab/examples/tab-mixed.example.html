@@ -1,0 +1,28 @@
+<sd-tab-group autoId="tab-mixed" [stretchTabs]="false" animationDuration="0ms">
+  <sd-tab label="Thông tin chung" icon="info">
+    <div class="tab-body">
+      <sd-section title="Thông tin chung">
+        <sd-section-item label="Khách hàng">Công ty An Phát</sd-section-item>
+        <sd-section-item label="Phân loại">Khách hàng doanh nghiệp · Miền Bắc</sd-section-item>
+        <sd-section-item label="Liên hệ">contact&#64;anphat.example</sd-section-item>
+      </sd-section>
+    </div>
+  </sd-tab>
+  <sd-tab label="Đơn hàng" icon="receipt_long" [badge]="orders.length">
+    <div class="tab-body">
+      <sd-table [option]="ordersOption" />
+    </div>
+  </sd-tab>
+  <sd-tab label="Lịch sử" icon="history">
+    <div class="tab-body">
+      <ul class="history">
+        @for (event of history; track event.time) {
+          <li>
+            <small>{{ event.time }}</small>
+            {{ event.text }}
+          </li>
+        }
+      </ul>
+    </div>
+  </sd-tab>
+</sd-tab-group>

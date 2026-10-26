@@ -1,0 +1,16 @@
+<div class="score-grid">
+  @for (status of statuses; track status.id) {
+    <sd-section hideHeader>
+      <div class="score">
+        <span class="score__label">
+          <span class="score__tile" [class]="'bg-' + status.color + '-light'">
+            <sd-icon [name]="status.icon" [class]="'text-' + status.color" />
+          </span>
+          {{ status.label }}
+        </span>
+        <strong class="score__value">{{ status.value }}</strong>
+        <span class="score__hint">{{ status.hint }}</span>
+      </div>
+    </sd-section>
+  }
+</div>

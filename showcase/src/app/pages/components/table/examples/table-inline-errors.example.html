@@ -1,0 +1,46 @@
+<div class="table-toolbar">
+  <strong>Dòng hàng của đơn ĐH-2400</strong>
+  <sd-button title="Lưu" prefixIcon="save" type="fill" color="primary" [loading]="saving()" [disabled]="saving()" (click)="save()" />
+</div>
+@if (inform(); as message) {
+  <sd-inform [color]="message.color" [title]="message.title" [description]="message.description" />
+}
+<sd-table autoId="pattern-inline-errors" [option]="option">
+  <ng-template sdTableTitleDef="name"><strong>Sản phẩm</strong> <span class="required-mark">*</span></ng-template>
+  <ng-template sdTableTitleDef="quantity"><strong>Số lượng</strong> <span class="required-mark">*</span></ng-template>
+  <ng-template sdTableTitleDef="price"><strong>Đơn giá (VND)</strong> <span class="required-mark">*</span></ng-template>
+
+  <ng-template sdTableCellDef="name" let-row="item">
+    <sd-input
+      class="cell-input"
+      size="sm"
+      hideInlineError
+      [disabled]="saving()"
+      [inlineError]="errors()[row.id]?.name"
+      [(model)]="row.name"
+      (modelChange)="clearErrors(row.id)" />
+  </ng-template>
+  <ng-template sdTableCellDef="quantity" let-row="item">
+    <sd-input-number
+      class="cell-input"
+      size="sm"
+      hideInlineError
+      [precision]="0"
+      [disabled]="saving()"
+      [inlineError]="errors()[row.id]?.quantity"
+      [(model)]="row.quantity"
+      (modelChange)="clearErrors(row.id)" />
+  </ng-template>
+  <ng-template sdTableCellDef="price" let-row="item">
+    <sd-input-number
+      class="cell-input"
+      size="sm"
+      hideInlineError
+      [precision]="0"
+      [disabled]="saving()"
+      [inlineError]="errors()[row.id]?.price"
+      [(model)]="row.price"
+      (modelChange)="clearErrors(row.id)" />
+  </ng-template>
+</sd-table>
+<p class="table-note">Sửa hết lỗi rồi nhập “Máy in” ở dòng 2 và Lưu để xem lỗi trùng sản phẩm do BE mẫu trả về.</p>

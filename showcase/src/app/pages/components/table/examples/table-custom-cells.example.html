@@ -1,0 +1,21 @@
+<sd-table autoId="pattern-custom-cells" [option]="option">
+  <ng-template sdTableTitleDef="name">
+    <span class="cell-stack"><strong>Khách hàng</strong><small>Khu vực · Phụ trách</small></span>
+  </ng-template>
+  <ng-template sdTableTitleDef="amount">
+    <span class="cell-stack"><strong>Giá trị đơn hàng</strong><small>Đơn vị: VND</small></span>
+  </ng-template>
+
+  <ng-template sdTableCellDef="code" let-row="item">
+    <a [routerLink]="['/pattern/order', row.id, 'detail']">{{ row.code }}</a>
+  </ng-template>
+  <ng-template sdTableCellDef="name" let-row="item">
+    <span class="cell-stack">
+      <strong>{{ row.name }}</strong>
+      <small>{{ row.region }} · {{ row.owner }}</small>
+    </span>
+  </ng-template>
+  <ng-template sdTableCellDef="amount" let-row="item">
+    <strong class="cell-amount cell-amount--primary">{{ row.amount | sdFormatNumber: 0 }} ₫</strong>
+  </ng-template>
+</sd-table>

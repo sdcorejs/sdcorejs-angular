@@ -1,0 +1,6 @@
+<sd-table autoId="pattern-standard" [option]="option">
+  <ng-template sdTableCellDef="code" let-row="item">
+    <a [routerLink]="['/pattern/order', row.id, 'detail']">{{ row.code }}</a>
+  </ng-template>
+</sd-table>
+<p class="table-note">Mã đơn mở màn chi tiết đơn hàng của /pattern/order.</p>

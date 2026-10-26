@@ -1,0 +1,33 @@
+<sd-card-group class="score-grid" autoId="score-icon-filter" [(model)]="selected" (sdChange)="onSelect($event)">
+  @for (card of cards; track card.id) {
+    <sd-card [value]="card.id" [color]="card.id === 'pending' ? 'warning' : card.id === 'done' ? 'success' : 'primary'">
+      <div class="score">
+        <span class="score__label">
+          <sd-icon aria-hidden="true" [name]="card.icon" [class]="'text-' + card.color" />
+          {{ card.label }}
+        </span>
+        <strong class="score__value">{{ card.value }}</strong>
+        <span class="score__hint">{{ selected() === card.id ? 'Đang lọc' : 'Chọn để lọc' }}</span>
+      </div>
+    </sd-card>
+  }
+</sd-card-group>
+<p class="score-result" role="status">{{ filtered().length }} / {{ total }} đơn hàng phù hợp · Hiển thị 4 dòng đầu.</p>
+<table class="score-table">
+  <thead>
+    <tr>
+      <th scope="col">Mã đơn</th>
+      <th scope="col">Khách hàng</th>
+      <th scope="col">Trạng thái</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (order of filtered().slice(0, 4); track order.id) {
+      <tr>
+        <td>{{ order.code }}</td>
+        <td>{{ order.name }}</td>
+        <td><sd-badge size="sm" [color]="status[order.status].color" [title]="status[order.status].label" /></td>
+      </tr>
+    }
+  </tbody>
+</table>

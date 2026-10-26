@@ -216,7 +216,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/button/sd-button',
     keywords: ['action', 'submit', 'loading', 'icon'],
     status: 'stable',
-    demoSectionCount: 9,
+    demoSectionCount: 16,
     loadComponent: () => import('../../pages/components/button/button-demo.component').then(m => m.ButtonDemoComponent),
   }),
   defineDocPage({
@@ -229,7 +229,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/card/sd-card',
     keywords: ['selection', 'toggle', 'filter', 'compareWith', 'multiple'],
     status: 'stable',
-    demoSectionCount: 5,
+    demoSectionCount: 14,
     loadComponent: () => import('../../pages/components/card/card-demo.component').then(m => m.CardDemoComponent),
   }),
   defineDocPage({
@@ -681,7 +681,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/tab/sd-tab',
     keywords: ['tabs', 'navigation', 'closable', 'lazy'],
     status: 'stable',
-    demoSectionCount: 9,
+    demoSectionCount: 18,
     loadComponent: () => import('../../pages/components/tab/tab-demo.component').then(m => m.TabDemoComponent),
   }),
   defineDocPage({
@@ -707,7 +707,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/table/sd-table',
     keywords: ['data grid', 'pagination', 'filter', 'quick search', 'selection', 'server side', 'command header', 'aggregate', 'subtotal', 'unknown total', 'has more'],
     status: 'stable',
-    demoSectionCount: 29,
+    demoSectionCount: 35,
     loadComponent: () => import('../../pages/components/table/table-demo.component').then(m => m.TableDemoComponent),
   }),
   defineDocPage({
