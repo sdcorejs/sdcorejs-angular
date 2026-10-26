@@ -6,6 +6,7 @@ import {
   ChangeDetectorRef,
   Component,
   Directive,
+  ElementRef,
   Injectable,
   Input,
   OnDestroy,
@@ -97,7 +98,7 @@ import { DesktopCellComponent } from './components/desktop-cell/desktop-cell.com
 import { DesktopCommand } from './components/command/desktop-command.component';
 import { SdPopupExport } from './components/popup-export/popup-export.component';
 import { SelectorActionComponent } from './components/selector-action/selector-action.component';
-import { DEFAULT_TABLE_CONFIG, ISdTableConfiguration, SD_TABLE_CONFIGURATION } from './configurations';
+import { DEFAULT_TABLE_CONFIG, ISdTableConfiguration, SD_TABLE_CONFIGURATION, SD_TABLE_LAYOUT } from './configurations';
 import { SdColumnResizeDirective, StickyShadowDirective } from './directives';
 import { SdTableItem } from './models/table-item.model';
 import { ConfiguredTable, ConfiguredTableResult } from './models/table-option-config.model';
@@ -245,6 +246,7 @@ const EMPTY_COMMANDS: SdTableCommand[] = [];
     '[attr.data-autoid]': 'autoId()',
     tabindex: '0',
     '[attr.data-loading]': 'loading() ? "true" : "false"',
+    '[class.sd-table--fill]': 'fill()',
   },
   providers: [
     DatePipe,
@@ -684,7 +686,47 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   // 2. Public & Optional Token
   tableConfiguration = inject<ISdTableConfiguration>(SD_TABLE_CONFIGURATION, { optional: true });
 
+  readonly #host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
+  readonly #layout = inject(SD_TABLE_LAYOUT, { optional: true });
+  /** Bảng chính của khung trang (sd-page-list): lấp phần chiều cao còn lại, giữ tối thiểu header + 5 dòng. */
+  readonly fill = computed(() => {
+    const target = this.#layout?.fillTarget();
+    return !!target && (target === this.#host || target.contains(this.#host));
+  });
+  /** External filter của bảng chính thu gọn khi khung trang đang ở chế độ màn thấp. */
+  readonly externalFilterCollapsedByDefault = computed(() => this.fill() && !!this.#layout?.externalFilterCollapsed());
+
   constructor() {
+    // why: ở chế độ fill bảng co theo chỗ còn lại nhưng vùng dữ liệu giữ tối thiểu header + 5 dòng. Header cao khác
+    // nhau (hàng filter dưới cột, header nhóm) và phần cố định của bảng (external filter, quick search, thanh chọn,
+    // footer) đổi theo cấu hình, nên đo lại mỗi khi DOM của bảng đổi. min-height: auto không dùng được: nó lấy chiều
+    // cao của toàn bộ dòng đang có chứ không phải 5 dòng.
+    effect(onCleanup => {
+      if (!this.fill()) return;
+      const host = this.#host;
+      const sync = (): void => {
+        const data = host.querySelector<HTMLElement>('.c-container > .c-table');
+        const head = data?.querySelector<HTMLElement>('thead')?.offsetHeight ?? 0;
+        const row = parseFloat(getComputedStyle(host).getPropertyValue('--mat-table-row-item-container-height')) || 36;
+        const dataMin = head + 5 * row;
+        const fixed = data ? host.offsetHeight - data.offsetHeight : 0;
+        host.style.setProperty('--sd-table-fill-head', `${head}px`);
+        host.style.setProperty('--sd-table-fill-min', `${fixed + dataMin}px`);
+      };
+      const observer = new MutationObserver(sync);
+      observer.observe(host, { childList: true, subtree: true });
+      // why: chiều cao phần cố định còn đổi mà không đổi DOM (class fill vừa gắn, chữ xuống dòng khi hẹp).
+      const resize = typeof ResizeObserver === 'function' ? new ResizeObserver(sync) : null;
+      resize?.observe(host);
+      sync();
+      onCleanup(() => {
+        observer.disconnect();
+        resize?.disconnect();
+        host.style.removeProperty('--sd-table-fill-head');
+        host.style.removeProperty('--sd-table-fill-min');
+      });
+    });
+
     effect(() => {
       const option = this.option();
       if (option) {

@@ -221,7 +221,7 @@ Everything is configured via the `SdTableOption<T>` object passed to `[option]`.
 | `reload`            | `{ visible?, onReload? }`                                        | no           | Show the reload button and run `onReload` after refresh. When visible, the reload action stays enabled for empty results (`items.length === 0` or `total === 0`) so users can retry.                                                          |
 | `export`            | `SdTableOptionExportDefault \| SdTableOptionExportCustom`        | no           | Excel/CSV/Custom export config.                                                                                                                                                                                                              |
 | `group`             | `{ fields: string[]; htmlTemplate: (rows) => string }`           | no           | Group rows by `fields` and render an HTML group header.                                                                                                                                                                                      |
-| `filter`            | `SdTableOptionFilter`                                            | no           | `{ hideInlineFilter?, externalFilterPerRow?, manualFilter?, collapsible?, hideExternalFilterToolbar?, externalFilters?, operatorChange? }`.                                                                                                  |
+| `filter`            | `SdTableOptionFilter`                                            | no           | `{ hideInlineFilter?, externalFilterPerRow?, manualFilter?, collapsible?, externalFilterCollapsed?, hideExternalFilterToolbar?, externalFilters?, operatorChange? }`.                                                                                                  |
 | `commands`          | `SdTableCommand<T>[]`                                            | no           | Per-row action buttons.                                                                                                                                                                                                                      |
 | `command`           | `{ align?: 'left' \| 'right'; commands?: SdTableCommand<T>[] }`  | no           | Newer per-row commands API with alignment.                                                                                                                                                                                                   |
 | `style`             | `{ shadow?, maxHeight?, minHeight?, rowCss? }`                   | no           | Shadow toggle, scroll bounds, per-row CSS.                                                                                                                                                                                                   |
@@ -429,6 +429,8 @@ tree: {
 **Filter placement rule for generated pages:** treat inline column filters and `filter.externalFilters` as mutually exclusive per field. If a field already has an enabled column filter, do not repeat that same field in `externalFilters`. Use `externalFilters` only for global search, fields that are not rendered as columns, or fields whose column filter is disabled/hidden intentionally.
 
 Built-in `filter.externalFilters` controls use `size="sm"` and `hideInlineError`. Their section body provides 16px spacing around the filter grid and manual Search action, aligned with the section header. Custom filter templates own their control size and error presentation.
+
+**Collapsed external filter (`filter.externalFilterCollapsed`).** `true` starts the external filter section collapsed, `false` open. Unset: open, except in the main table of `sd-page-list` on a short viewport (`compact()`), where it starts collapsed. A user who opens or closes it keeps that state until the default changes. Ignored when `collapsible` is `false`.
 
 #### Quick search (`filter.quickSearch`)
 
@@ -858,6 +860,19 @@ Showcase **Column aggregate** có bộ dữ liệu với `null`, `undefined`, `'
 `0`, `false`, lựa chọn numeric operation và page/filtered, COUNT string/boolean/
 array, date MIN/datetime MAX, callback, template-only, built-in + template,
 footer cùng tổng, grouped headers, nhóm dòng, static tree và lazy caveat.
+
+## Row height and fill mode
+
+A one-line row is 36px high (`--mat-table-row-item-container-height: 36px` on the host; Material's default is 52px). Rows with longer text, buttons or other taller content grow as before.
+
+Inside `sd-page-list`, the main table runs in **fill mode**: the page list provides `SD_TABLE_LAYOUT` (`@sdcorejs/angular/components/table`) and names the table, or a wrapper around it, as its fill target. The host then gets the class `sd-table--fill` and:
+
+- takes the height left in its flex column (`flex: 1 1 0`) instead of `height: 100%`;
+- keeps the data area at least as tall as the header plus five 36px rows; when that does not fit, the host keeps its minimum and the page body scrolls instead of the table;
+- gives the footer at least 48px, so the paginator does not move between the paginator, the "Đang hiển thị" line and an empty footer;
+- starts its external filter collapsed while `compact()` is on (see `filter.externalFilterCollapsed`).
+
+The minimum is measured from the rendered header and the fixed parts of the table (quick search, external filter, selection bar, footer). Tables outside `sd-page-list`, and other tables on a page list, keep their own height. See `modules/layout/components/page-list/sd-page-list.md`.
 
 ## Content projection (slots / directive children)
 

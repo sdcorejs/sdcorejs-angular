@@ -151,6 +151,8 @@ export type ShowcaseExampleSourceKey =
   | "components/org-chart/example-custom-bang-directive"
   | "components/org-chart/example-custom-bang-templateref-input"
   | "components/org-chart/example-node-co-mau"
+  | "components/page-list/example-danh-sach-vua-khit-khung"
+  | "components/page-list/example-man-song-toan-trang"
   | "components/page/example-be-rong-cot-noi-dung"
   | "components/page/example-header-co-nut-quay-lai-va-badge"
   | "components/page/example-man-cu-chi-dung-title-va-headerright"
@@ -1555,6 +1557,20 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-man-cu-chi-dung-title-va-headerright",
     title: "Màn cũ chỉ dùng title và headerRight",
     description: "Không dùng input hay slot mới thì header và thân giữ nguyên như trước; title vẫn xuống dòng.",
+  },
+  {
+    sourceKey: "components/page-list/example-danh-sach-vua-khit-khung",
+    pageKey: "components/page-list",
+    sectionId: "example-danh-sach-vua-khit-khung",
+    title: "Danh sách vừa khít khung",
+    description: "Khung cao 420px: bảng lấp phần còn lại, chỉ vùng dữ liệu cuộn, footer đứng yên.",
+  },
+  {
+    sourceKey: "components/page-list/example-man-song-toan-trang",
+    pageKey: "components/page-list",
+    sectionId: "example-man-song-toan-trang",
+    title: "Màn sống toàn trang",
+    description: "Mở màn mẫu toàn trang; cấu hình đổi bằng ?cfg= (tab, score card, external filter, chọn nhiều, autoCompact, cách mở chi tiết).",
   },
   {
     sourceKey: "components/preview/example-thu-vien-anh",

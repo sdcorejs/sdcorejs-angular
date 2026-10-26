@@ -184,7 +184,7 @@ test('matches the canonical v19 runtime registry and expected deployment route c
       .map(category => [category, pages.filter(page => page.category === category).length])
   );
 
-  assert.equal(pages.length, 112);
+  assert.equal(pages.length, 113);
   assert.ok(pages.some(page => page.category === 'components' && page.slug === 'window'));
   assert.ok(pages.some(page => page.category === 'components' && page.slug === 'modal-resizable'));
   assert.ok(pages.some(page => page.category === 'components' && page.slug === 'kanban'));
@@ -205,6 +205,7 @@ test('matches the canonical v19 runtime registry and expected deployment route c
   assert.ok(pages.some(page => page.category === 'components' && page.slug === 'avatar-group'));
   // Page layouts handoff · P0: sd-page (modules/layout).
   assert.ok(pages.some(page => page.category === 'components' && page.slug === 'page'));
+  assert.ok(pages.some(page => page.category === 'components' && page.slug === 'page-list'));
 
   // why: `routes.length` từng là hằng số 5941 và đã mục ngay khi release 1.6 ra (thực tế 7426).
   // Con số đó là TÍCH của hai thứ đã được kiểm ở nơi khác — số release được hỗ trợ và số route mỗi
@@ -220,7 +221,7 @@ test('matches the canonical v19 runtime registry and expected deployment route c
     'total = 1 root redirect + one identical block per release'
   );
   assert.deepEqual(categoryCounts, {
-    components: 45,
+    components: 46,
     directives: 6,
     forms: 23,
     guides: 4,

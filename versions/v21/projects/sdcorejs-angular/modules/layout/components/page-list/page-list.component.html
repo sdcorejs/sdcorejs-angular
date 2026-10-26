@@ -1,0 +1,16 @@
+<sd-page
+  [title]="title()"
+  [description]="description()"
+  [backLink]="backLink()"
+  [badges]="badges()"
+  [width]="width()"
+  [style.display]="hidesList() ? 'none' : null">
+  <!-- why: chuyển tiếp slot của sd-page. Không chuyển tiếp headerLeft: ng-container rỗng vẫn chiếm slot và làm mất
+       title mặc định của sd-page. -->
+  <ng-container ngProjectAs="[sdHeaderRight]"><ng-content select="[headerRight],[sdHeaderRight]"></ng-content></ng-container>
+  <ng-container ngProjectAs="[sdSubheader]"><ng-content select="[sdSubheader]"></ng-content></ng-container>
+  <ng-container ngProjectAs="[sdFooterLeft]"><ng-content select="[sdFooterLeft]"></ng-content></ng-container>
+  <ng-container ngProjectAs="[sdFooterRight]"><ng-content select="[sdFooterRight]"></ng-content></ng-container>
+  <ng-content></ng-content>
+</sd-page>
+<router-outlet (activate)="onActivate()" (deactivate)="onDeactivate()"></router-outlet>

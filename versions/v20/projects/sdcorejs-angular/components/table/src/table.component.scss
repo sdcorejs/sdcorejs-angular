@@ -8,6 +8,9 @@
   overflow: auto;
   width: 100%;
   height: 100%;
+  // why: dòng một dòng chữ cao 36px (Material mặc định 52px) như comment ở footer đã giả định; dòng nhiều chữ
+  // hoặc có nút vẫn tự cao lên theo nội dung.
+  --mat-table-row-item-container-height: 36px;
 
   // CSS này mục đích là để title 1 dòng hay 2 dòng cũng sẽ chiếm diện tích
   .c-header-title {
@@ -684,4 +687,28 @@
 .sd-aggregate-cell {
   background: inherit;
   border-top: 1px solid var(--sd-border);
+}
+
+// Bảng chính của sd-page-list (SD_TABLE_LAYOUT): lấp phần chiều cao còn lại của cột flex chứa nó. Không co nhỏ
+// hơn header + 5 dòng; khi không đủ chỗ thì thân trang cuộn chứ không phải bảng. Footer cao tối thiểu 48px để
+// paginator đứng yên khi đổi giữa paginator, dòng "Đang hiển thị" và footer rỗng.
+:host(.sd-table--fill) {
+  flex: 1 1 0;
+  height: auto;
+  // --sd-table-fill-min = phần cố định của bảng + header + 5 dòng, do SdTable đo (xem effect fill).
+  min-height: var(--sd-table-fill-min, 0px);
+  overflow: visible;
+
+  .c-container {
+    min-height: 0;
+  }
+
+  .c-container > .c-table {
+    min-height: calc(var(--sd-table-fill-head, 40px) + 5 * var(--mat-table-row-item-container-height, 36px));
+  }
+
+  .c-container > .c-paginator {
+    flex: none;
+    min-height: 48px;
+  }
 }

@@ -13,7 +13,8 @@
       icon="filter_alt"
       iconColor="secondary"
       [title]="'core.component.table.filter' | sdTranslate"
-      [collapsible]="_filter?.collapsible ?? true">
+      [collapsible]="_filter?.collapsible ?? true"
+      [(collapsed)]="collapsed">
       <div class="d-flex gap-8 mr-4" sdHeaderRight>
         <sd-button
           [autoId]="_autoId + 'clear'"
