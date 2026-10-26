@@ -26,6 +26,22 @@ test('shows the save state, asks before leaving with changes and stays on the pa
   await expect(page).toHaveURL(/\/pattern$/);
 });
 
+// why: <sd-input-number> writes a typed number without marking its control dirty; the save state compares values.
+test('shows a changed number as unsaved, also after a save', async ({ page }) => {
+  await openPattern(page, 'settings');
+  const minutes = page.getByLabel('Hết phiên sau (phút)');
+  await minutes.fill('45');
+  await expect(state(page)).toContainText('Có thay đổi chưa lưu');
+  await minutes.fill('30');
+  await expect(state(page)).toContainText('Đã lưu lúc');
+
+  await minutes.fill('60');
+  await page.getByRole('button', { name: 'Lưu' }).click();
+  await expect(state(page)).toContainText('Đã lưu lúc');
+  await minutes.fill('90');
+  await expect(state(page)).toContainText('Có thay đổi chưa lưu');
+});
+
 test('shows the API error on the field and focuses it', async ({ page }) => {
   await openPattern(page, 'settings');
   const minutes = page.locator('sd-input-number').filter({ hasText: 'Hết phiên sau' }).locator('input');

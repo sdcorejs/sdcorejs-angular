@@ -133,6 +133,18 @@ test.describe('product update', () => {
     await expect(page).toHaveURL(/\/pattern\/product\/1\/detail$/);
   });
 
+  // why: <sd-input-number> writes a typed number without marking its control dirty; the guard compares values.
+  test('asks before leaving when only the price changed', async ({ page }) => {
+    await openPattern(page, 'product/1/update');
+    const price = page.getByLabel('Giá bán (₫)');
+    await expect(price).not.toHaveValue('');
+    await price.fill('9999');
+    await page.getByRole('button', { name: 'Huỷ' }).click();
+    await expect(confirmDialog(page)).toContainText('Rời trang khi chưa lưu?');
+    await confirmDialog(page).getByRole('button', { name: 'Ở lại' }).click();
+    await expect(page).toHaveURL(/\/pattern\/product\/1\/update$/);
+  });
+
   test('keeps the draft when saving fails and saves it on retry', async ({ page }) => {
     await openPattern(page, 'product/2/update');
     const name = page.getByLabel('Tên sản phẩm');

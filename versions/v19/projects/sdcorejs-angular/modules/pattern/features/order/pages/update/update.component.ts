@@ -1,4 +1,15 @@
-import { afterNextRender, ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject, Injector, signal } from '@angular/core';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  effect,
+  ElementRef,
+  inject,
+  Injector,
+  signal,
+  untracked,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -64,6 +75,17 @@ export class UpdateComponent {
 
   constructor() {
     inject(DestroyRef).onDestroy(() => this.#unsaved.destroy());
+    // why: chỉ đổi `:id` thì trang được dùng lại; khi đơn mới đã vào form, nó là mốc so sánh mới và lỗi cũ bỏ đi.
+    let loaded = this.entity();
+    effect(() => {
+      const entity = this.entity();
+      if (entity === loaded) return;
+      loaded = entity;
+      untracked(() => {
+        this.apiErrors.clear();
+        afterNextRender(() => this.#unsaved.markPristine(), { injector: this.#injector });
+      });
+    });
   }
 
   protected cancel(): void {

@@ -291,7 +291,7 @@ Dòng hàng nhập trực tiếp, tổng tự tính, lỗi của API hiện trê
 
 <!-- @source features/order/components/lines-form/lines-form.component.ts -->
 ```ts
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, input, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject, input, signal, untracked } from '@angular/core';
 import { FormArray, FormGroup } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { SdButton } from '@sdcorejs/angular/components/button';
@@ -434,7 +434,7 @@ interface LineRow {
     }
   `,
 })
-export class LinesFormComponent implements OnInit {
+export class LinesFormComponent {
   readonly #productService = inject(ProductService);
   readonly form = input.required<OrderForm>();
   /** Dòng ban đầu (cập nhật) hoặc một dòng trống (tạo mới). */
@@ -456,12 +456,11 @@ export class LinesFormComponent implements OnInit {
   constructor() {
     const subscription = this.#array.valueChanges.subscribe(() => this.#version.update(version => version + 1));
     inject(DestroyRef).onDestroy(() => subscription.unsubscribe());
-  }
-
-  ngOnInit(): void {
-    const seed = this.seed().length ? this.seed() : [{ productId: '', quantity: 1, unitPrice: 0 }];
-    seed.forEach(line => this.#push(line));
-    this.form().setControl('lines', this.#array);
+    // why: trang cập nhật được dùng lại khi chỉ đổi `:id`; dòng hàng phải theo đơn mới, không giữ dòng của đơn trước.
+    effect(() => {
+      const seed = this.seed();
+      untracked(() => this.#load(seed));
+    });
   }
 
   protected add(): void {
@@ -482,6 +481,13 @@ export class LinesFormComponent implements OnInit {
     if (!productId) return;
     const product = await firstValueFrom(this.#productService.cachedDetail(productId));
     row.group.get('unitPrice')?.setValue(product.price);
+  }
+
+  #load(seed: readonly OrderLineDto[]): void {
+    this.#array.clear();
+    this.rows.set([]);
+    (seed.length ? seed : [{ productId: '', quantity: 1, unitPrice: 0 }]).forEach(line => this.#push(line));
+    if (this.form().get('lines') !== this.#array) this.form().setControl('lines', this.#array);
   }
 
   #push(seed: OrderLineDto): void {

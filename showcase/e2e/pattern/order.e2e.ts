@@ -93,6 +93,13 @@ test.describe('order detail and workflow', () => {
     await expect(page.locator('approval-steps')).toContainText('Sai đơn giá dòng 1.');
   });
 
+  test('opens the detail instead of the form of an order that can no longer change', async ({ page }) => {
+    // ĐH-2399 ships already.
+    await openPattern(page, 'order/2399/update');
+    await expect(page).toHaveURL(/\/pattern\/order\/2399\/detail$/);
+    await expect(page.locator('toast').filter({ hasText: 'không còn sửa được' }).first()).toBeVisible();
+  });
+
   test('update keeps the stopped customer and shows the API error on the line', async ({ page }) => {
     await openPattern(page, 'order/2400/update');
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Cập nhật đơn hàng #ĐH-2400');
