@@ -53,6 +53,24 @@ class HostWithSlotsComponent {
   collapsed = false;
 }
 
+// why: sd-table đặt tabindex="0" trên host; external filter của nó là một sd-section nằm bên trong. Phần tử cha
+// có tabindex không phải là action của header.
+@Component({
+  standalone: true,
+  imports: [SdSection],
+  template: `
+    <div tabindex="0" class="focusable-parent">
+      <sd-section title="Bộ lọc" [collapsible]="true" [(collapsed)]="collapsed">
+        <button sdHeaderRight>Xoá bộ lọc</button>
+        <p class="body-content">Body text</p>
+      </sd-section>
+    </div>
+  `,
+})
+class HostInFocusableParentComponent {
+  collapsed = false;
+}
+
 // ---------------------------------------------------------------------------
 // Host helper — SdSectionItem
 // ---------------------------------------------------------------------------
@@ -431,6 +449,43 @@ describe('SdSection', () => {
 // ---------------------------------------------------------------------------
 // Suite: SdSectionItem
 // ---------------------------------------------------------------------------
+
+describe('SdSection inside a focusable parent', () => {
+  let parentFixture: ComponentFixture<HostInFocusableParentComponent>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [HostInFocusableParentComponent, NoopAnimationsModule],
+    }).compileComponents();
+    parentFixture = TestBed.createComponent(HostInFocusableParentComponent);
+    parentFixture.detectChanges();
+  });
+
+  it('still collapses on a header whitespace click', () => {
+    const header = parentFixture.nativeElement.querySelector('.sd-section-header') as HTMLElement;
+
+    header.click();
+    parentFixture.detectChanges();
+
+    expect(parentFixture.componentInstance.collapsed).toBeTrue();
+  });
+
+  it('still collapses on a click on the title', () => {
+    const title = parentFixture.nativeElement.querySelector('.sd-section-title') as HTMLElement;
+
+    title.click();
+    parentFixture.detectChanges();
+
+    expect(parentFixture.componentInstance.collapsed).toBeTrue();
+  });
+
+  it('does not collapse when a projected header action is clicked', () => {
+    (parentFixture.nativeElement.querySelector('[sdHeaderRight]') as HTMLButtonElement).click();
+    parentFixture.detectChanges();
+
+    expect(parentFixture.componentInstance.collapsed).toBeFalse();
+  });
+});
 
 describe('SdSectionItem', () => {
   let fixture: ComponentFixture<ItemHostComponent>;

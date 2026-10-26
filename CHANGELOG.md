@@ -59,6 +59,7 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ### Fixed
 
+- Section: clicking the header of a collapsible `<sd-section>` placed inside a focusable element collapses it again. The click was ignored whenever any ancestor had a `tabindex`, so the external filter header of `<sd-table>` (whose host has `tabindex="0"`) only toggled from its chevron button. Clicks on actions inside the header still do not toggle.
 - Chip: `removable` now applies on every removal path. A predicate used to reach `mat-chip-row` as a function, which is always truthy, so Backspace / Delete on a chip (or Backspace twice from the empty input) removed a chip the predicate kept; each chip now gets its own boolean and `onRemove` checks it again.
 - Chip: every model item except `null`, `undefined` and `''` is a chip, so `0` shows (it was counted but hidden). Chips are tracked by value, so removing one no longer rebuilds the chips after it and moves focus.
 - Chip: a typed value that equals an existing chip as a string is a duplicate: a model `[1, 2]` plus a typed “1” stays `[1, 2]`.

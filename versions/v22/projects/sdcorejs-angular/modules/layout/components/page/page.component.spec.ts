@@ -169,8 +169,9 @@ describe('SdPageComponent', () => {
       fixture.detectChanges();
     });
 
-    it('keeps the old header DOM, with the title in an h1', () => {
+    it('keeps the old header DOM in a <header> element, with the title in an h1', () => {
       const header = page(fixture).querySelector(':scope > .c-page-header') as HTMLElement;
+      expect(header.tagName).toBe('HEADER');
       expect(header.className).toBe('c-page-header bg-white');
       expect(header.children.length).toBe(1);
 

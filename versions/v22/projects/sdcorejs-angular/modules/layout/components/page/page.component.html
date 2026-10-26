@@ -2,7 +2,7 @@
 @let _badges = visibleBadges();
 @let _hasLead = hasLead();
 @if (!noHeader()) {
-  <div class="c-page-header bg-white">
+  <header class="c-page-header bg-white">
     <div class="p-16 d-flex align-items-center w-full justify-content-between">
       <div class="d-flex" [class.c-page-lead]="_hasLead">
         <ng-content select="[headerLeft],[sdHeaderLeft]">
@@ -38,7 +38,7 @@
       <ng-content select="[headerRight],[sdHeaderRight]"></ng-content>
     </div>
     <ng-content select="[sdSubheader]"></ng-content>
-  </div>
+  </header>
 }
 
 <!-- why: px-0 là utility !important; cột có giới hạn bề rộng cần padding riêng nên bỏ nó đi. -->

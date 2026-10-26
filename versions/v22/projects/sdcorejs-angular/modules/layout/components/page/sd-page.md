@@ -136,7 +136,7 @@ async save(): Promise<void> {
 
 ## Accessibility
 
-- The header title is the page's `<h1>`. A page that projects `[headerLeft]` renders its own heading (generic-list, generic-form-host and generic-configuration do).
+- The header is a `<header>` element (classes `c-page-header bg-white` unchanged) and its title is the page's `<h1>`. A page that projects `[headerLeft]` renders its own heading (generic-list, generic-form-host and generic-configuration do).
 - The footer is a `role="group"` labelled `core.module.layout.page.actions` ("Thao tác của trang" / "Page actions"); it is hidden from assistive technology while empty.
 - No focus trap.
 
