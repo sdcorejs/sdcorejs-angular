@@ -225,6 +225,7 @@ test('[workspace] root lint and script gates enumerate every line in order', () 
   assert.equal(scripts['test:release-package-contract'], 'node --test scripts/release-package-contract.test.mjs');
   assert.equal(scripts['test:publish-npm-workflow'], 'node --test scripts/publish-npm-workflow.test.mjs');
   assert.equal(scripts['test:file-explorer-icons'], 'node --test scripts/generate-file-explorer-icons.test.mjs');
+  assert.equal(scripts['test:pattern-docs'], 'node --test scripts/pattern-docs.test.mjs');
   assert.equal(scripts['test:theme'], 'node --test scripts/core-theme.test.mjs scripts/theme-contrast.test.mjs');
   assert.equal(scripts['test:theme-token-list'], 'node --test scripts/theme-token-list.test.mjs');
   assert.equal(scripts['test:window-api'], 'node --test scripts/window-public-api.test.mjs scripts/annotate-window-deprecation.test.mjs');
@@ -242,6 +243,7 @@ test('[workspace] root lint and script gates enumerate every line in order', () 
     'npm run test:publish-npm-workflow',
     'npm run test:ci-selection',
     'npm run test:file-explorer-icons',
+    'npm run test:pattern-docs',
     'npm run test:theme',
     'npm run test:theme-token-list',
     'npm run test:window-api',

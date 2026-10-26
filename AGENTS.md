@@ -78,6 +78,7 @@ Skill pack chạy lại sẽ tự dựng `specs/`, `plans/`, `docs/` dưới `.s
 | `scripts/build-published-page.mjs` | Build `showcase/` → `published-pages/<suffix>/` + prune retention (`npm run build:page -- --suffix 1.6`) | Mỗi release, sau khi lib đã build |
 | `scripts/collect-docs.mjs` | Sinh 1 archive `published-docs/<version>/` (pin link theo tag + per-version CHANGELOG) | Qua `collect-release-docs`, hoặc debug đơn lẻ |
 | `scripts/generate-file-explorer-icons.mjs` | Nhúng bộ icon SVG của `file-explorer` (`versions/v19/.../file-explorer/src/assets/icons`) thành `file-explorer-icons.generated.ts` (`npm run generate:file-explorer-icons`) | Sau khi sửa SVG/`manifest.json`, rồi `npm run sync`; `test:scripts` fail nếu file sinh cũ |
+| `scripts/pattern-docs.mjs` | Điền code mẫu vào `modules/pattern/docs/*.md` theo marker `<!-- @source path[#region] -->` và ghi manifest source cho drawer "Xem source" (`npm run pattern:docs`; `--check` chỉ kiểm) | Sau khi sửa `modules/pattern/features/**` hay docs pattern; `test:pattern-docs` (trong `test:scripts`) fail nếu docs lệch source |
 
 `npm run sync` là entry point rollout bình thường: lấy `versions/v19` làm nguồn rồi đồng bộ sang `versions/v20`, `versions/v21` và `versions/v22`. `npm run check:sync` là release guard read-only; nếu fail thì chạy lại `npm run sync`, review diff, rồi commit đầy đủ trước khi tag. Nếu cần tái hiện mirror cũ để điều tra lịch sử, dùng `npm run legacy:sync-from-vn-angular` trên một branch sạch.
 
@@ -106,6 +107,15 @@ git add -A
 git commit -m "<type>: <summary>"
 git push
 ```
+
+## UI pattern: `modules/pattern`
+
+Mẫu màn hình chuẩn của Core UI (list, detail, form, flow, drawer, split, select, relation, header actions, states) sống trong `versions/v19/projects/sdcorejs-angular/modules/pattern/` và ship trong npm package. Khi dựng màn mới hay review màn có sẵn, đọc theo thứ tự `node_modules/@sdcorejs/angular/modules/pattern/README.md` (bảng chọn pattern) → `docs/<pattern>.md` → `features/<entity>/`. Tài liệu khác chỉ trỏ tới đường dẫn này, không chép nội dung pattern.
+
+- `features/**` là code Angular thật: lint, unit test, e2e trong `showcase/e2e/pattern/`. Showcase mount nó ở `/pattern` bằng `SD_PATTERN_ROUTES` + `provideSdPatterns()`. Raw source và docs vào dist qua assets của root `ng-package.json`.
+- Code mẫu trong `docs/*.md` sinh từ source bằng `npm run pattern:docs`; không sửa tay code block trong docs.
+- `collect-docs` bỏ qua `modules/pattern`: docs pattern không vào `published-docs/`.
+- Mã quyền mẫu: `PATTERN_<ENTITY>_<R|C|U|D>_<ACTION>`, khai trong `core/permission/pattern-permission.ts`; mỗi mã phải được một feature dùng.
 
 ## Review bắt buộc: naming và public API consistency
 

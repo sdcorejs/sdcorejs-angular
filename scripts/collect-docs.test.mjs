@@ -8,6 +8,7 @@ import {
   pinRepoLinks,
   previousArchiveVersion,
   releaseTagFor,
+  workspaceDocIds,
 } from './collect-docs.mjs';
 import { releaseMajorsForSuffix } from './collect-release-docs.mjs';
 
@@ -17,6 +18,16 @@ test('[release] Angular 22 docs start at suffix 2.5 without fabricating historic
   assert.deepEqual(releaseMajorsForSuffix('2.5-beta.1'), [19, 20, 21]);
   assert.deepEqual(releaseMajorsForSuffix('2.5'), [19, 20, 21, 22]);
   assert.deepEqual(releaseMajorsForSuffix('2.6'), [19, 20, 21, 22]);
+});
+
+test('pattern guides of modules/pattern stay out of the API doc sweep', () => {
+  const ids = workspaceDocIds('v19');
+  assert.ok(ids.length > 0);
+  assert.deepEqual(
+    ids.filter(id => id.startsWith('modules/pattern/')),
+    [],
+    'modules/pattern/README.md and docs/*.md ship in the package for agents, not in the API archive'
+  );
 });
 
 test('releaseTagFor derives the release tag from an archive version', () => {

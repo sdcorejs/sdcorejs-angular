@@ -1,0 +1,20 @@
+<sd-page-list title="Danh mục" description="Danh mục sản phẩm ba cấp." detail="drawer">
+  <sd-button
+    headerRight
+    *sdPermission="'PATTERN_CATEGORY_C_CREATE'"
+    title="Tạo danh mục"
+    prefixIcon="add"
+    type="fill"
+    color="primary"
+    autoId="category-create"
+    [routerLink]="['create']" />
+
+  <sd-table autoId="categories" [option]="option">
+    <ng-template sdTableCellDef="name" let-category="item">
+      <a *sdPermission="'PATTERN_CATEGORY_U_UPDATE'" [routerLink]="[category.id, 'update']">{{ category.name }}</a>
+      @if (!canUpdate) {
+        <span>{{ category.name }}</span>
+      }
+    </ng-template>
+  </sd-table>
+</sd-page-list>
