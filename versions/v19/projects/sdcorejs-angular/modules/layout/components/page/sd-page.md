@@ -1,15 +1,25 @@
-# `<sd-page>`
+# `<sd-page>` · `<sd-page-detail>` · `<sd-page-form>`
 
 Page frame inside the application shell: a header with the title, an optional back link and badges, a scrolling body, an optional subheader, aside column and footer. Use it as the root of every routed screen.
+
+One component, three selectors chosen by purpose. The selector only changes defaults:
+
+| Selector         | Use for                         | `width` default | Main button (`headerRight`) |
+| ---------------- | ------------------------------- | --------------- | --------------------------- |
+| `sd-page`        | Any other screen, pattern base  | `full`          | Depends on the screen       |
+| `sd-page-detail` | Viewing one record              | `wide`          | Cập nhật                    |
+| `sd-page-form`   | Creating or updating one record | `medium`        | Huỷ · Lưu                   |
+
+A list screen uses `sd-page-list` (its own component).
 
 ## Import
 
 ```ts
-import { SdPageComponent } from '@sdcorejs/angular/modules/layout';
+import { SdPageComponent, sdPageFormLeaveGuard } from '@sdcorejs/angular/modules/layout';
 ```
 
 - **Class:** `SdPageComponent`
-- **Selector:** `sd-page`
+- **Selectors:** `sd-page`, `sd-page-detail`, `sd-page-form`
 - **Standalone:** yes
 - **Change detection:** `OnPush`
 
@@ -22,7 +32,9 @@ import { SdPageComponent } from '@sdcorejs/angular/modules/layout';
 | `noHeader`    | `boolean`                                           | `false`     | Hides the header and the subheader. Bare attribute = true.                                                                                                                      |
 | `backLink`    | `SdPageBackLink \| null \| undefined`               | `undefined` | `string \| readonly unknown[]`: a URL or router commands, as `routerLink`. Shows a ← link before the title. The title, description and badges still come from the inputs.       |
 | `badges`      | `readonly SdBadgeData[] \| null \| undefined`       | `undefined` | At most two badges next to the title, see *Badges*.                                                                                                                             |
-| `width`       | `SdPageWidth \| null \| undefined`                  | `undefined` | `'full' \| 'wide' \| 'medium' \| 'narrow'`. Unset or `null` uses the default of the selector: `full` for `sd-page`. See *Width*.                                             |
+| `width`       | `SdPageWidth \| null \| undefined`                  | `undefined` | `'full' \| 'wide' \| 'medium' \| 'narrow'`. Unset or `null` uses the default of the selector: `full` for `sd-page`, `wide` for `sd-page-detail`, `medium` for `sd-page-form`. See *Width*. |
+| `aside`       | `SdPageAside \| null \| undefined`                  | `undefined` | `'end' \| 'start'`. Unset or `null` means `end`. `start` puts the aside column (or the table of contents) before the body. Below 1200px of viewport the aside always moves under the body. |
+| `toc`         | `boolean`                                           | `false`     | Shows a table of contents in the aside column, see *Table of contents*. Bare attribute = true.                                                                                  |
 
 `SdBadgeData` comes from `@sdcorejs/angular/components/badge` (see `sd-badge.md`, "Model").
 
@@ -82,6 +94,46 @@ The limit includes the 24px side padding. The subheader and the footer use the s
 - A badge without `title` (`null`, `undefined` or `''`) is skipped; `0` is a title.
 - In dev mode, more than two badges or two badges of the same `type` (counting the default `'round'`) log a `console.warn`. Production renders them and does not throw.
 
+## `sd-page-detail`
+
+- `width` defaults to `wide` (1200px).
+- An `[sdAside]` makes a 320px column at the end; `aside="start"` puts it first. Without `[sdAside]` the page has one column.
+- Header: ← back to the list, the title, at most two badges, the description as a meta line, and "Cập nhật" (`type="fill"`) as the main button in `headerRight`.
+- Load the record with `detail(id)` in a resolver; tabs (`sd-tab` in `[sdSubheader]`) load their own data when opened.
+
+## `sd-page-form`
+
+- `width` defaults to `medium` (960px).
+- The buttons are "Huỷ" (outline) and "Lưu" (fill, primary) in `headerRight`. There is no `actions` input and a form page does not use the footer, so the main button stays in place while the body scrolls.
+- `toc` adds a table of contents (below).
+- Protect the route with `sdPageFormLeaveGuard` (below).
+
+### Table of contents
+
+With `toc`, the aside column lists every `<sd-section>` of the body that has a `title` and is not inside another `sd-section`. Clicking an entry scrolls the page to that section; the entry of the section at the top of the scroll area is marked current (`aria-current="true"`). The list is a `<nav>` labelled `core.module.layout.page.toc` ("Mục lục"). Below 1200px of viewport the table of contents is hidden. Do not use `toc` together with `[sdAside]`: both would take an aside column.
+
+### Leave guard
+
+```ts
+// routes
+{ path: ':id/update', component: ProductUpdatePage, canDeactivate: [sdPageFormLeaveGuard] }
+
+// ProductUpdatePage
+readonly #unsaved = inject(SdUnsavedChangesService);
+readonly #formRef = registerSdUnsavedChangesForm(this.#unsaved, this.form, { id: 'product-form', dirty: 'value' });
+
+async save(): Promise<void> {
+  const product = await this.api.update(this.id, this.form.getRawValue());
+  this.#formRef.markPristine(); // before navigating, so the guard does not ask
+  await this.router.navigate(['..', 'detail'], { relativeTo: this.route });
+}
+```
+
+- `sdPageFormLeaveGuard` is a `CanDeactivateFn` over `SdUnsavedChangesService`. When a watcher is dirty it asks with the Core confirm dialog (`SdConfirmService`): "Rời trang khi chưa lưu?", "Thay đổi chưa lưu sẽ bị mất.", "Ở lại" / "Rời trang". The watcher's own `message` replaces the default text.
+- The guard passes its own adapter for that one prompt, so the app-wide `SD_UNSAVED_CHANGES_CONFIRMATION_ADAPTER` (and `sdUnsavedChangesGuard`) keep their behaviour.
+- `dirty: 'value'` counts the form as changed only while its value differs from the last saved value: a field typed back to what it was is no change.
+- Closing the browser tab while dirty triggers the browser's `beforeunload` prompt (`SdUnsavedChangesService`).
+
 ## Accessibility
 
 - The header title is the page's `<h1>`. A page that projects `[headerLeft]` renders its own heading (generic-list, generic-form-host and generic-configuration do).
@@ -113,6 +165,29 @@ The limit includes the 24px side padding. The subheader and the footer use the s
   <sd-section title="Thông tin chung">…</sd-section>
   <div sdAside>Người phụ trách, lịch sử</div>
 </sd-page>
+```
+
+### Detail with the aside first
+
+```html
+<sd-page-detail [title]="'Chi tiết sản phẩm #' + product.code" backLink=".." aside="start">
+  <sd-button headerRight title="Cập nhật" type="fill" (click)="update()"></sd-button>
+  <sd-section title="Thông tin chung">…</sd-section>
+  <div sdAside>Người phụ trách, lịch sử</div>
+</sd-page-detail>
+```
+
+### Form with a table of contents
+
+```html
+<sd-page-form title="Cập nhật sản phẩm" backLink="../detail" toc>
+  <div headerRight class="d-flex gap-8">
+    <sd-button title="Huỷ" type="outline" (click)="cancel()"></sd-button>
+    <sd-button title="Lưu" type="fill" color="primary" [loading]="saving()" (click)="save()"></sd-button>
+  </div>
+  <sd-section title="Thông tin chung">…</sd-section>
+  <sd-section title="Giá">…</sd-section>
+</sd-page-form>
 ```
 
 ### Flow with step buttons in the footer

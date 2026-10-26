@@ -636,6 +636,11 @@ export const EN_MESSAGES = {
 
   // ---- Module: layout (not-found page) ----
   'core.module.layout.page.actions': 'Page actions',
+  'core.module.layout.page.toc': 'Contents',
+  'core.module.layout.page.leave.title': 'Leave this page without saving?',
+  'core.module.layout.page.leave.message': 'Unsaved changes will be lost.',
+  'core.module.layout.page.leave.stay': 'Stay',
+  'core.module.layout.page.leave.leave': 'Leave',
   'core.module.layout.not-found.title': '404 - Page not found',
   'core.module.layout.not-found.message':
     "The page you're looking for doesn't exist or has been removed. Please check the URL or go back to the home page to continue.",

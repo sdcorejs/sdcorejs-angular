@@ -125,7 +125,8 @@ $column-gutter: max(24px, calc((100% - var(--sd-page-column-max)) / 2 + 24px));
 // Cột phụ 320px dính khi cuộn, cuộn riêng; viewport < 1200px thì xuống dưới nội dung, full width.
 // why: ::ng-deep để Angular không gắn attribute scope vào [sdAside] bên trong :has() — phần tử đó thuộc
 // template của consumer nên không mang attribute của sd-page.
-:host ::ng-deep > .c-page-wrapper:has(> [sdAside]) {
+:host ::ng-deep > .c-page-wrapper:has(> [sdAside]),
+:host ::ng-deep > .c-page-wrapper:has(> .c-page-toc) {
   gap: 16px;
 
   > .c-page-content {
@@ -133,7 +134,8 @@ $column-gutter: max(24px, calc((100% - var(--sd-page-column-max)) / 2 + 24px));
   }
 }
 
-.c-page-wrapper ::ng-deep > [sdAside] {
+.c-page-wrapper ::ng-deep > [sdAside],
+.c-page-wrapper > .c-page-toc {
   flex: 0 0 320px;
   width: 320px;
   box-sizing: border-box;
@@ -144,7 +146,47 @@ $column-gutter: max(24px, calc((100% - var(--sd-page-column-max)) / 2 + 24px));
   overflow-y: auto;
 }
 
+@media (min-width: 1200px) {
+  :host(.sd-page--aside-start) ::ng-deep > .c-page-wrapper > [sdAside],
+  :host(.sd-page--aside-start) > .c-page-wrapper > .c-page-toc {
+    order: -1;
+  }
+}
+
+// Mục lục (toc): cùng cột với [sdAside]; dưới 1200px ẩn đi vì một mục lục nằm dưới form không giúp được gì.
+.c-page-toc {
+  display: flex;
+  flex-direction: column;
+}
+
+.c-page-toc-item {
+  padding: 8px 24px;
+  border: 0;
+  border-left: 2px solid var(--sd-secondary-light);
+  background: transparent;
+  color: var(--sd-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &.active {
+    border-left-color: var(--sd-primary);
+    color: var(--sd-primary);
+    font-weight: var(--sd-font-weight-bold, 700);
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
+    outline-offset: -2px;
+  }
+}
+
 @media (max-width: 1199.98px) {
+  .c-page-wrapper > .c-page-toc {
+    display: none;
+  }
+
+
   :host ::ng-deep > .c-page-wrapper:has(> [sdAside]) {
     flex-direction: column;
 

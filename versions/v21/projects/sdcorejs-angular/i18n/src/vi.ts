@@ -637,6 +637,11 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Module: layout (not-found page) ----
   'core.module.layout.page.actions': 'Thao tác của trang',
+  'core.module.layout.page.toc': 'Mục lục',
+  'core.module.layout.page.leave.title': 'Rời trang khi chưa lưu?',
+  'core.module.layout.page.leave.message': 'Thay đổi chưa lưu sẽ bị mất.',
+  'core.module.layout.page.leave.stay': 'Ở lại',
+  'core.module.layout.page.leave.leave': 'Rời trang',
   'core.module.layout.not-found.title': '404 - Trang không tồn tại',
   'core.module.layout.not-found.message':
     'Trang bạn tìm không tồn tại hoặc đã bị xóa. Vui lòng kiểm tra lại địa chỉ URL hoặc quay lại trang chủ để tiếp tục.',

@@ -44,4 +44,6 @@ export interface SdUnsavedChangesRegistration {
 export interface SdUnsavedChangesConfirmOptions {
   readonly scope?: unknown;
   readonly reason?: SdUnsavedChangesReason;
+  /** Asks with this adapter for this call only, instead of `SD_UNSAVED_CHANGES_CONFIRMATION_ADAPTER`. */
+  readonly adapter?: SdUnsavedChangesConfirmationAdapter;
 }

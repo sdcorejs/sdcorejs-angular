@@ -42,11 +42,27 @@
 }
 
 <!-- why: px-0 là utility !important; cột có giới hạn bề rộng cần padding riêng nên bỏ nó đi. -->
-<div class="c-page-wrapper" [class.px-0]="resolvedWidth() === 'full'">
+<div #wrapper class="c-page-wrapper" [class.px-0]="resolvedWidth() === 'full'">
   <div class="c-page-content">
     <ng-content></ng-content>
   </div>
   <ng-content select="[sdAside]"></ng-content>
+  @let _tocItems = tocItems();
+  @if (_tocItems.length) {
+    @let _activeToc = activeTocIndex();
+    <nav class="c-page-toc" [attr.aria-label]="'core.module.layout.page.toc' | sdTranslate">
+      @for (item of _tocItems; track item.el; let index = $index) {
+        <button
+          type="button"
+          class="c-page-toc-item"
+          [class.active]="index === _activeToc"
+          [attr.aria-current]="index === _activeToc ? 'true' : null"
+          (click)="scrollToSection(index)">
+          {{ item.title }}
+        </button>
+      }
+    </nav>
+  }
 </div>
 
 <!-- why: footer chỉ có hai slot chiếu thẳng vào, không có wrapper, nên CSS :empty ẩn nó khi màn không dùng footer. -->

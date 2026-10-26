@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import type { SdBadgeData } from '@sdcorejs/angular/components/badge';
 import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdSection } from '@sdcorejs/angular/components/section';
 import { SdTab, SdTabGroup } from '@sdcorejs/angular/components/tab';
 import { SdSegmentedComponent, SdSegmentedItem, SdSegmentedModel } from '@sdcorejs/angular/forms/segmented';
 import { SdPageComponent, SdPageWidth } from '@sdcorejs/angular/modules/layout';
@@ -9,7 +10,7 @@ import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-pa
 @Component({
   selector: 'app-page-demo',
   standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, SdPageComponent, SdButton, SdTabGroup, SdTab, SdSegmentedComponent],
+  imports: [DemoPageComponent, DemoSectionComponent, SdPageComponent, SdButton, SdSection, SdTabGroup, SdTab, SdSegmentedComponent],
   template: `
     <demo-page #demoPage
       title="Page"
@@ -57,6 +58,35 @@ import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-pa
       </demo-section>
       }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trang-chi-tiet-co-cot-phu-o-dau') {
+      <demo-section heading="Trang chi tiết có cột phụ ở đầu" [props]="[{ name: 'selector', value: 'sd-page-detail' }, { name: 'width', value: 'wide (mặc định)' }, { name: 'aside', value: 'start' }]">
+        <div class="frame frame-tall">
+          <sd-page-detail title="Chi tiết sản phẩm #SP-1024" backLink="." aside="start" [badges]="productBadges">
+            <sd-button headerRight title="Cập nhật" type="fill" color="primary"></sd-button>
+            <sd-section title="Thông tin chung"><div class="body">Tên, mã, nhóm hàng.</div></sd-section>
+            <sd-section title="Giá"><div class="body">Giá bán, giá vốn.</div></sd-section>
+            <div sdAside class="aside">Người phụ trách và lịch sử thay đổi. Dưới 1200px viewport cột này xuống dưới nội dung.</div>
+          </sd-page-detail>
+        </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trang-form-co-muc-luc') {
+      <demo-section heading="Trang form có mục lục" [props]="[{ name: 'selector', value: 'sd-page-form' }, { name: 'width', value: 'medium (mặc định)' }, { name: 'toc', value: 'true' }]" note="Mục lục liệt kê các sd-section có title ở cấp ngoài cùng; ẩn khi viewport dưới 1200px.">
+        <div class="frame frame-tall">
+          <sd-page-form title="Cập nhật sản phẩm" backLink="." toc>
+            <div headerRight class="d-flex gap-8">
+              <sd-button title="Huỷ" type="outline"></sd-button>
+              <sd-button title="Lưu" type="fill" color="primary"></sd-button>
+            </div>
+            @for (group of formGroups; track group) {
+              <sd-section [title]="group"><div class="body body-tall">Các trường của nhóm {{ group }}.</div></sd-section>
+            }
+          </sd-page-form>
+        </div>
+      </demo-section>
+      }
+
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-man-cu-chi-dung-title-va-headerright') {
       <demo-section heading="Màn cũ chỉ dùng title và headerRight" [props]="[{ name: 'title', value: 'string' }, { name: 'headerRight', value: 'slot' }]" note="Không dùng input hay slot mới thì header và thân giữ nguyên như trước; title vẫn xuống dòng.">
         <div class="frame">
@@ -89,6 +119,9 @@ import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-pa
       background: #ffffff;
       border-radius: 6px;
     }
+    .body-tall {
+      height: 160px;
+    }
     .aside {
       padding: 16px;
       background: #ffffff;
@@ -114,4 +147,6 @@ export class PageDemoComponent {
     return typeof choice === 'string' ? choice : null;
   });
   readonly lines = [1, 2, 3, 4, 5, 6, 7, 8];
+  readonly productBadges: readonly SdBadgeData[] = [{ title: 'Đang bán', color: 'success' }];
+  readonly formGroups = ['Thông tin chung', 'Giá', 'Kho', 'Mô tả'];
 }

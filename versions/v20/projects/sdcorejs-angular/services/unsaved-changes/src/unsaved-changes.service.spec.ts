@@ -97,6 +97,17 @@ describe('SdUnsavedChangesService', () => {
     expect(discard).toHaveBeenCalledTimes(1);
   });
 
+  it('asks the adapter passed to confirmLeave instead of the provided one', async () => {
+    const dirty = signal(true);
+    service.register({ id: 'editor', isDirty: dirty, message: 'Đơn hàng chưa lưu.', discard: () => dirty.set(false) });
+    const own = jasmine.createSpy('own').and.resolveTo('discard');
+
+    expect(await service.confirmLeave({ reason: 'navigation', adapter: { confirm: own } })).toBeTrue();
+    expect(own).toHaveBeenCalledOnceWith(jasmine.objectContaining({ reason: 'navigation', message: 'Đơn hàng chưa lưu.' }));
+    expect(confirm).not.toHaveBeenCalled();
+    expect(dirty()).toBeFalse();
+  });
+
   it('does not share pending prompt results between different scopes', async () => {
     const firstDirty = signal(true);
     const secondDirty = signal(true);

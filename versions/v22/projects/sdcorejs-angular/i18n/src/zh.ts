@@ -635,6 +635,11 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Module: layout (not-found page) ----
   'core.module.layout.page.actions': '页面操作',
+  'core.module.layout.page.toc': '目录',
+  'core.module.layout.page.leave.title': '未保存就离开页面?',
+  'core.module.layout.page.leave.message': '未保存的更改将会丢失。',
+  'core.module.layout.page.leave.stay': '留在此页',
+  'core.module.layout.page.leave.leave': '离开页面',
   'core.module.layout.not-found.title': '404 - 页面未找到',
   'core.module.layout.not-found.message': '您正在查找的页面不存在或已被移除。请检查 URL 或返回首页继续。',
   'core.module.layout.not-found.back': '返回',

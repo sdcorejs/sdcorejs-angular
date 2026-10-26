@@ -4,9 +4,10 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { SdBadge, type SdBadgeData } from '@sdcorejs/angular/components/badge';
+import { SdSection } from '@sdcorejs/angular/components/section';
 import { I18nService } from '@sdcorejs/angular/i18n';
 
-import { SdPageComponent, type SdPageWidth } from './page.component';
+import { SdPageComponent, type SdPageAside, type SdPageWidth } from './page.component';
 
 const page = (fixture: ComponentFixture<unknown>): HTMLElement => fixture.nativeElement.querySelector('sd-page');
 
@@ -106,13 +107,56 @@ class LayoutHost {
 })
 class AsideHost {}
 
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  imports: [SdPageComponent],
+  template: `
+    <div style="width: 1600px; height: 360px; display: flex; flex-direction: column">
+      <sd-page-detail title="Chi tiết sản phẩm" [aside]="aside()">
+        <div id="body" style="height: 40px">Nội dung</div>
+        @if (withAside()) {
+          <div sdAside id="aside">Tóm tắt</div>
+        }
+      </sd-page-detail>
+    </div>
+  `,
+})
+class DetailHost {
+  readonly aside = signal<SdPageAside>('end');
+  readonly withAside = signal(true);
+}
+
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  imports: [SdPageComponent, SdSection],
+  template: `
+    <div style="width: 1600px; height: 360px; display: flex; flex-direction: column">
+      <sd-page-form title="Cập nhật sản phẩm" [toc]="toc()" [width]="width()">
+        <form>
+          <sd-section title="Thông tin chung" id="general">
+            <div style="height: 300px"></div>
+            <sd-section title="Nhóm con"><div style="height: 20px"></div></sd-section>
+          </sd-section>
+          <sd-section title="Giá" id="price"><div style="height: 300px"></div></sd-section>
+          <sd-section><div style="height: 50px">Không có title</div></sd-section>
+          <sd-section title="Kho" id="stock"><div style="height: 300px"></div></sd-section>
+        </form>
+      </sd-page-form>
+    </div>
+  `,
+})
+class FormHost {
+  readonly toc = signal(true);
+  readonly width = signal<SdPageWidth | null>(null);
+}
+
 describe('SdPageComponent', () => {
   let warn: jasmine.Spy;
 
   beforeEach(async () => {
     warn = spyOn(console, 'warn');
     await TestBed.configureTestingModule({
-      imports: [PlainHost, BackLinkHost, BackLinkWithLeftHost, HeaderSlotHost, BadgeHost, LayoutHost, AsideHost],
+      imports: [PlainHost, BackLinkHost, BackLinkWithLeftHost, HeaderSlotHost, BadgeHost, LayoutHost, AsideHost, DetailHost, FormHost],
       providers: [provideRouter([])],
     }).compileComponents();
   });
@@ -358,6 +402,101 @@ describe('SdPageComponent', () => {
         expect(aside.width).toBe(320);
         expect(aside.left - content.right).toBe(16);
       }
+    });
+  });
+
+  describe('sd-page-detail', () => {
+    let fixture: ComponentFixture<DetailHost>;
+    const detail = () => fixture.nativeElement.querySelector('sd-page-detail') as HTMLElement;
+    const stacked = () => matchMedia('(max-width: 1199.98px)').matches;
+
+    beforeEach(() => {
+      fixture = TestBed.createComponent(DetailHost);
+      fixture.detectChanges();
+    });
+
+    it('is wide by default, with the aside at the end', () => {
+      expect(detail().classList).toContain('sd-page--wide');
+      expect(detail().classList).not.toContain('sd-page--aside-start');
+      expect(detail().querySelector('.c-page-content')!.getBoundingClientRect().width).toBe(stacked() ? 1152 : 1152 - 16 - 320);
+    });
+
+    it('puts the aside first with aside="start", and still under the content below 1200px', () => {
+      fixture.componentInstance.aside.set('start');
+      fixture.detectChanges();
+
+      expect(detail().classList).toContain('sd-page--aside-start');
+      const content = detail().querySelector('.c-page-content')!.getBoundingClientRect();
+      const aside = detail().querySelector('#aside')!.getBoundingClientRect();
+      if (stacked()) {
+        expect(aside.top).toBeGreaterThanOrEqual(content.bottom);
+      } else {
+        expect(content.left - aside.right).toBe(16);
+      }
+    });
+
+    it('keeps one column without [sdAside]', () => {
+      fixture.componentInstance.withAside.set(false);
+      fixture.detectChanges();
+
+      expect(detail().querySelector('#aside')).toBeNull();
+      expect(detail().querySelector('.c-page-content')!.getBoundingClientRect().width).toBe(1152);
+    });
+  });
+
+  describe('sd-page-form', () => {
+    let fixture: ComponentFixture<FormHost>;
+    const form = () => fixture.nativeElement.querySelector('sd-page-form') as HTMLElement;
+    const items = () => [...form().querySelectorAll<HTMLButtonElement>('.c-page-toc button')];
+    const wrapper = () => form().querySelector('.c-page-wrapper') as HTMLElement;
+
+    beforeEach(async () => {
+      fixture = TestBed.createComponent(FormHost);
+      await settle();
+    });
+
+    // why: mục lục được thu thập sau khi render (section lồng chỉ vào DOM khi view của section cha render).
+    const settle = async () => {
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+    };
+
+    it('is medium by default and keeps an explicit width', () => {
+      expect(form().classList).toContain('sd-page--medium');
+      fixture.componentInstance.width.set('narrow');
+      fixture.detectChanges();
+      expect(form().classList).toContain('sd-page--narrow');
+      expect(form().classList).not.toContain('sd-page--medium');
+    });
+
+    it('lists the titled top-level sections in a labelled table of contents', () => {
+      const nav = form().querySelector('nav.c-page-toc') as HTMLElement;
+      expect(nav.getAttribute('aria-label')).toBe(TestBed.inject(I18nService).t('core.module.layout.page.toc'));
+      expect(items().map(item => item.textContent?.trim())).toEqual(['Thông tin chung', 'Giá', 'Kho']);
+      expect(items()[0].getAttribute('aria-current')).toBe('true');
+    });
+
+    it('scrolls to a section when its entry is clicked', () => {
+      const stock = form().querySelector('#stock') as HTMLElement;
+      const scroll = spyOn(stock, 'scrollIntoView');
+      items()[2].click();
+      expect(scroll).toHaveBeenCalledWith(jasmine.objectContaining({ block: 'start' }));
+    });
+
+    it('marks the section at the top of the scroll area as current', () => {
+      const price = form().querySelector('#price') as HTMLElement;
+      wrapper().scrollTop += price.getBoundingClientRect().top - wrapper().getBoundingClientRect().top;
+      wrapper().dispatchEvent(new Event('scroll'));
+      fixture.detectChanges();
+
+      expect(items().map(item => item.getAttribute('aria-current'))).toEqual([null, 'true', null]);
+    });
+
+    it('renders no table of contents without toc', async () => {
+      fixture.componentInstance.toc.set(false);
+      await settle();
+      expect(form().querySelector('.c-page-toc')).toBeNull();
     });
   });
 });

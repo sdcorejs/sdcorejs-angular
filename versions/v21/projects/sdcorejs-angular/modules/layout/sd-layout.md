@@ -23,7 +23,7 @@ The V1 menu search uses a native search input with a leading Material Icons Outl
 | API                                                | Purpose                                                                                        |
 | -------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | `SdLayoutComponent` / `sd-layout`                  | Selects the configured V1, V2, V3, or V4 desktop/mobile pair and projects page content         |
-| `SdPageComponent` / `sd-page`                      | Page frame: title, back link, badges, width, slots. See `components/page/sd-page.md`           |
+| `SdPageComponent` / `sd-page`                      | Page frame; also `sd-page-detail`, `sd-page-form`. See `components/page/sd-page.md`            |
 | `SdSidebarV1`, `SdSidebarMobileV1`   | Existing classic sidebar and mobile drawer                                                     |
 | `SdSidebarV2`, `SdSidebarMobileV2`   | Compact primary rail with contextual flyout or mobile bottom sheet                             |
 | `SdSidebarV3`, `SdSidebarMobileV3`   | Collapsible navigation with search, Pinned, and Recent sections                                |

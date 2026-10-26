@@ -63,6 +63,45 @@ describe('unsaved changes adapters', () => {
     expect(form.getRawValue()).toEqual({ name: 'Saved' });
   });
 
+  it('keeps the control dirty flag by default, so a value typed back still counts as a change', () => {
+    const form = new FormGroup({ name: new FormControl('Initial') });
+    registerSdUnsavedChangesForm(service, form, { id: 'profile' });
+    form.controls.name.setValue('Changed');
+    form.markAsDirty();
+    form.controls.name.setValue('Initial');
+
+    expect(service.hasChanges()).toBeTrue();
+  });
+
+  it("compares the value with the snapshot when dirty is 'value'", () => {
+    const form = new FormGroup({ name: new FormControl('Initial'), tags: new FormControl<string[]>(['a']) });
+    registerSdUnsavedChangesForm(service, form, { id: 'profile', dirty: 'value' });
+
+    form.controls.name.setValue('Changed');
+    form.markAsDirty();
+    expect(service.hasChanges()).toBeTrue();
+
+    form.controls.name.setValue('Initial');
+    expect(form.dirty).toBeTrue();
+    expect(service.hasChanges()).toBeFalse();
+
+    form.controls.tags.setValue(['a', 'b']);
+    expect(service.hasChanges()).toBeTrue();
+    form.controls.tags.setValue(['a']);
+    expect(service.hasChanges()).toBeFalse();
+  });
+
+  it("takes a saved value as the new baseline when dirty is 'value'", async () => {
+    const form = new FormGroup({ name: new FormControl('Initial') });
+    const ref = registerSdUnsavedChangesForm(service, form, { id: 'profile', dirty: 'value', save: () => undefined });
+    form.controls.name.setValue('Saved');
+    expect(await ref.save()).toBeTrue();
+    expect(service.hasChanges()).toBeFalse();
+
+    form.controls.name.setValue('Initial');
+    expect(service.hasChanges()).toBeTrue();
+  });
+
   it('creates close and functional route guards scoped to the registry', async () => {
     const dirty = signal(true);
     service.register({ id: 'editor', scope: 'page-a', isDirty: dirty, discard: () => dirty.set(false) });

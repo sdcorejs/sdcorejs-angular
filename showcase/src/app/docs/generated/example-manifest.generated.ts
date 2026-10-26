@@ -155,6 +155,8 @@ export type ShowcaseExampleSourceKey =
   | "components/page/example-header-co-nut-quay-lai-va-badge"
   | "components/page/example-man-cu-chi-dung-title-va-headerright"
   | "components/page/example-subheader-cot-phu-va-footer"
+  | "components/page/example-trang-chi-tiet-co-cot-phu-o-dau"
+  | "components/page/example-trang-form-co-muc-luc"
   | "components/preview/example-anh-don"
   | "components/preview/example-nguon-video-bi-chan"
   | "components/preview/example-pdf-nang-cao"
@@ -1532,6 +1534,20 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-subheader-cot-phu-va-footer",
     title: "Subheader, cột phụ và footer",
     description: "Existing “Subheader, cột phụ và footer” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/page/example-trang-chi-tiet-co-cot-phu-o-dau",
+    pageKey: "components/page",
+    sectionId: "example-trang-chi-tiet-co-cot-phu-o-dau",
+    title: "Trang chi tiết có cột phụ ở đầu",
+    description: "Existing “Trang chi tiết có cột phụ ở đầu” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/page/example-trang-form-co-muc-luc",
+    pageKey: "components/page",
+    sectionId: "example-trang-form-co-muc-luc",
+    title: "Trang form có mục lục",
+    description: "Mục lục liệt kê các sd-section có title ở cấp ngoài cùng; ẩn khi viewport dưới 1200px.",
   },
   {
     sourceKey: "components/page/example-man-cu-chi-dung-title-va-headerright",

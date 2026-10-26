@@ -12,6 +12,11 @@ export interface SdUnsavedChangesFormOptions<TValue> {
   readonly save?: (value: TValue) => SdUnsavedChangesMaybeAsync<void | boolean>;
   readonly reset?: (form: FormGroup) => SdUnsavedChangesMaybeAsync<void | boolean>;
   readonly discard?: (form: FormGroup) => SdUnsavedChangesMaybeAsync<void | boolean>;
+  /**
+   * `'control'` (default): the form's own `dirty` flag. `'value'`: dirty only while `getRawValue()` differs from
+   * the snapshot, so a value typed back to what it was is no change.
+   */
+  readonly dirty?: 'control' | 'value';
 }
 
 export function registerSdUnsavedChangesForm<TValue extends Record<string, unknown>>(
@@ -20,8 +25,9 @@ export function registerSdUnsavedChangesForm<TValue extends Record<string, unkno
   options: SdUnsavedChangesFormOptions<TValue>
 ): SdUnsavedChangesRegistration {
   let snapshot = cloneValue(form.getRawValue()) as TValue;
-  const dirty = signal(form.dirty);
-  const subscription = form.events.subscribe(() => dirty.set(form.dirty));
+  const readFormDirty = (): boolean => (options.dirty === 'value' ? !sameValue(form.getRawValue(), snapshot) : form.dirty);
+  const dirty = signal(readFormDirty());
+  const subscription = form.events.subscribe(() => dirty.set(readFormDirty()));
   const resetToSnapshot = (): void => {
     form.reset(cloneValue(snapshot));
     form.markAsPristine();
@@ -81,4 +87,19 @@ function cloneValue<T>(value: T): T {
     return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, cloneValue(item)])) as T;
   }
   return value;
+}
+
+function sameValue(a: unknown, b: unknown): boolean {
+  if (Object.is(a, b)) return true;
+  if (a instanceof Date && b instanceof Date) return a.getTime() === b.getTime();
+  if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((item, index) => sameValue(item, b[index]));
+  if (a && b && typeof a === 'object' && typeof b === 'object' && !Array.isArray(a) && !Array.isArray(b)) {
+    const aKeys = Object.keys(a);
+    const bKeys = Object.keys(b);
+    return (
+      aKeys.length === bKeys.length &&
+      aKeys.every(key => sameValue((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key]))
+    );
+  }
+  return false;
 }
