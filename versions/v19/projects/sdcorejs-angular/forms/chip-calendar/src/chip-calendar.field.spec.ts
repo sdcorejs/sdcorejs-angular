@@ -157,7 +157,7 @@ describe('SdChipCalendar · design handoff step 3 · field', () => {
   template: `
     <sd-layout-test-theme />
     <div style="width: 420px">
-      <sd-chip-calendar label="Ngày nghỉ" [size]="size" [model]="model" [removable]="removable" />
+      <sd-chip-calendar label="Ngày nghỉ" [size]="size" [model]="model" [removable]="removable" [clearable]="clearable" />
     </div>
   `,
 })
@@ -165,6 +165,7 @@ class SizeHost {
   size: Size = 'md';
   model: string[] = ['2031/10/05'];
   removable: boolean | ((day: string) => boolean) = true;
+  clearable = false;
 }
 
 describe('SdChipCalendar · design handoff step 3 · size scale (C2)', () => {
@@ -259,6 +260,29 @@ describe('SdChipCalendar · design handoff step 3 · size scale (C2)', () => {
       expect(lock.textToGlyph).withContext('text → lock').toBeCloseTo(close.textToGlyph, 0);
       expect(lock.glyphToEdge).withContext('lock → chip edge').toBeCloseTo(close.glyphToEdge, 0);
       expect(Math.abs(lock.centre)).withContext('lock centred in the chip').toBeLessThanOrEqual(0.5);
+    });
+  }
+
+  // why: `.sd-clear-btn sd-icon` của core/form.scss ép icon 16px, nên icon 18 / 20px của md / lg chưa từng hiện. Thang nút
+  // bỏ hết giờ nằm trong mixin sd-chip-row() dùng chung với sd-chip (handoff design-icon-chip-table · C1).
+  for (const [size, button, icon] of [
+    ['sm', 24, 16],
+    ['md', 28, 18],
+    ['lg', 32, 20],
+  ] as const) {
+    it(`${size}: the clear button is ${button}px with a ${icon}px icon`, async () => {
+      const fixture = TestBed.createComponent(SizeHost);
+      fixture.componentInstance.size = size;
+      fixture.componentInstance.clearable = true;
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+      const clear = fixture.nativeElement.querySelector('button.sd-clear-btn') as HTMLElement;
+      expect(clear.getBoundingClientRect().width).withContext('width').toBeCloseTo(button, 0);
+      expect(clear.getBoundingClientRect().height).withContext('height').toBeCloseTo(button, 0);
+      expect(getComputedStyle(clear.querySelector('mat-icon')!).fontSize)
+        .withContext('icon')
+        .toBe(`${icon}px`);
     });
   }
 

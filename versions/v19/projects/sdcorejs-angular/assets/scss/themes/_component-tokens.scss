@@ -283,10 +283,14 @@ $component-tokens: (
   'chip-bg': (#ebecf0, #34373d),
   // Suy từ palette (handoff design-icon-chip-table, B3): nền chip mà giá trị vừa gõ bị trùng, nháy 1,4 giây.
   'chip-duplicate-bg': (color-mix(in srgb, var(--sd-warning) 16%, var(--sd-surface)), color-mix(in srgb, var(--sd-warning) 24%, var(--sd-surface))),
+  // Suy từ palette (handoff design-icon-chip-table, C3): nền chip không bỏ được và nền hover của nút “+N”, chung cho
+  // sd-chip và sd-chip-calendar qua mixin sd-chip-row() (core/form.scss).
+  'chip-locked-bg': (color-mix(in srgb, var(--sd-surface-muted) 55%, var(--sd-surface)), color-mix(in srgb, var(--sd-surface-muted) 55%, var(--sd-surface))),
+  'chip-more-hover-bg': (color-mix(in srgb, var(--sd-text) 6%, var(--sd-surface-muted)), color-mix(in srgb, var(--sd-text) 6%, var(--sd-surface-muted))),
   'chip-calendar-bg': (#ebecf0, #34373d),
-  // Suy từ palette (handoff sd-chip-calendar): nền chip không bỏ được và nền hover của nút “+N”.
-  'chip-calendar-chip-locked-bg': (color-mix(in srgb, var(--sd-surface-muted) 55%, var(--sd-surface)), color-mix(in srgb, var(--sd-surface-muted) 55%, var(--sd-surface))),
-  'chip-calendar-more-hover-bg': (color-mix(in srgb, var(--sd-text) 6%, var(--sd-surface-muted)), color-mix(in srgb, var(--sd-text) 6%, var(--sd-surface-muted))),
+  // why: hai token của sd-chip-calendar giữ tên cũ (app có thể đã đặt lại) nhưng mặc định trỏ sang token chip chung.
+  'chip-calendar-chip-locked-bg': (var(--sd-chip-locked-bg), var(--sd-chip-locked-bg)),
+  'chip-calendar-more-hover-bg': (var(--sd-chip-more-hover-bg), var(--sd-chip-more-hover-bg)),
   // Kích thước, không phải màu (handoff sd-chip-calendar): rộng popup = 8 + 7 × 40 + 8.
   'chip-calendar-panel-width': (296px, 296px),
   'entity-picker-bg': (#ffffff, #1d1f23),

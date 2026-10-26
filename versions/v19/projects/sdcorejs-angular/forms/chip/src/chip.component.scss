@@ -14,72 +14,33 @@
 }
 
 // why: viewed mode hiển thị sd-view (text only) → bỏ đệm trên.
-:host(.sd-viewed) { padding-top: 0; }
-
-.sd-chip-input {
-  margin-top: 0 !important;
+:host(.sd-viewed) {
+  padding-top: 0;
 }
 
-:host ::ng-deep {
-  .mat-mdc-form-field {
-    // Bỏ padding nếu disableError
-    &.no-padding-wrapper {
-      .mat-mdc-text-field-wrapper {
-        padding-bottom: 0;
-      }
-    }
-  }
+// Thang, chip, chip khoá, nháy khi trùng, “+N” và nút bỏ hết dùng chung với sd-chip-calendar qua mixin sd-chip-row()
+// trong core/form.scss (handoff design-icon-chip-table · C1 C2 C3), áp lên `mat-form-field.sd-chip-field`.
 
-  mat-form-field {
-    &.c-md {
-      .mat-mdc-standard-chip {
-        padding: 7px 10px;
-        min-height: 26px;
-
-        .mat-mdc-chip-trailing-icon {
-          padding-top: 7px;
-          padding-bottom: 7px;
-          padding-right: 7px;
-          padding-left: 10px;
-        }
-      }
-    }
-  }
-
-  // Size normal (md) for mat-chip-grid
-  .mat-mdc-chip-row {
-    &.sd-md {
-      // Add styles for md size if needed
-    }
-
-    &.sd-sm {
-      --mdc-chip-label-text-size: 12px;
-      --mdc-chip-container-height: 20px;
-    }
-  }
-
-  .mat-mdc-chip-set {
-    &.sd-md {
-      margin-top: 10px;
-    }
-
-    &.sd-sm {
-      margin-top: 2px;
-    }
-  }
+// Chữ chip dừng ở 240px rồi cắt "…"; tooltip chỉ bật cho chip bị cắt (B7).
+.sd-chip__chip-text {
+  display: inline-block;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
 }
 
 /* CSS sdViewDef */
 .sd-view {
   &:not(.c-focused):not(.c-disabled) {
     &:hover {
-      background-color: var(--sd-chip-bg, #ebecf0);
+      background-color: var(--sd-chip-bg);
     }
   }
 }
 
-// why: mặt sdViewDef giờ là phần tử role="button" + tabindex=0 (bàn phím mở được đúng như chuột, A7) — cần focus
-// ring rõ ràng và không được đổi layout so với wrapper cũ. Cùng kiểu với `.sd-chip-calendar__view-trigger`.
+// why: mặt sdViewDef là phần tử role="button" + tabindex=0 (bàn phím mở được đúng như chuột, A7) — cần focus ring rõ
+// ràng và không được đổi layout so với wrapper cũ. Cùng kiểu với `.sd-chip-calendar__view-trigger`.
 .sd-chip__view-trigger {
   display: flex;
   align-items: center;
@@ -100,61 +61,6 @@
 .sd-chip__error-suffix {
   display: inline-flex;
   align-items: center;
-}
-
-// why: Material 19 đọc `--mdc-chip-*`, Material 20+ đọc `--mat-chip-*`; gán cả hai như sd-chip-calendar.
-@mixin chip-token($name, $value) {
-  --mdc-chip-#{$name}: #{$value};
-  --mat-chip-#{$name}: #{$value};
-}
-
-// Chữ chip dừng ở 240px rồi cắt "…"; tooltip chỉ bật cho chip bị cắt (B7).
-.sd-chip__chip-text {
-  display: inline-block;
-  max-width: 240px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  vertical-align: bottom;
-}
-
-// Giá trị gõ trùng: chip đã có sáng nền và viền warning trong 1,4 giây (B3).
-.mat-mdc-chip-row.sd-chip__chip--duplicate {
-  @include chip-token(elevated-container-color, var(--sd-chip-duplicate-bg));
-  @include chip-token(outline-color, var(--sd-warning));
-}
-
-// why: hiệu ứng chuyển màu chỉ chạy khi người dùng không yêu cầu giảm chuyển động; khi giảm thì màu đổi tức thì.
-@media (prefers-reduced-motion: no-preference) {
-  .mat-mdc-chip-row {
-    transition: background-color 150ms ease;
-  }
-}
-
-// “+N” (B7): nút cao bằng chip, không viền, nền surface-muted, chữ phụ 500.
-.sd-chip__more {
-  display: inline-flex;
-  align-items: center;
-  box-sizing: border-box;
-  height: var(--mdc-chip-container-height, 32px);
-  margin: 4px;
-  padding: 0 8px;
-  border: 0;
-  border-radius: var(--sd-radius-6, 6px);
-  background-color: var(--sd-surface-muted);
-  color: var(--sd-text-secondary);
-  font: inherit;
-  font-weight: var(--sd-font-weight-medium, 500);
-  cursor: pointer;
-
-  &:hover {
-    background-color: color-mix(in srgb, var(--sd-text) 6%, var(--sd-surface-muted));
-  }
-
-  &:focus-visible {
-    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
-    outline-offset: 1px;
-  }
 }
 
 // Nút bỏ hết (B6): luôn giữ chỗ, chỉ ẩn khi không còn chip nào bỏ được.

@@ -294,21 +294,6 @@ describe('SdChip', () => {
       expect(chip.formControl.value).not.toBe(original);
     });
 
-    it('emits modelChange and leaves the caller array untouched when an autocomplete option is selected', () => {
-      const original: (string | number)[] = ['alpha'];
-      host.model = original;
-      fixture.detectChanges();
-      host.modelEmissions.length = 0;
-
-      chip.onSelect({ option: { value: 'beta' } } as any);
-      fixture.detectChanges();
-
-      expect(original).toEqual(['alpha']);
-      expect(host.modelEmissions.length).toBe(1);
-      expect(host.modelEmissions[0]).toEqual(['alpha', 'beta']);
-      expect(host.model).not.toBe(original);
-    });
-
     it('emits modelChange and leaves the caller array untouched when a chip is removed', () => {
       const original: (string | number)[] = ['alpha', 'beta'];
       host.model = original;
@@ -483,7 +468,7 @@ describe('SdChip', () => {
   describe('focus tracking', () => {
     it('sets isFocused = true on onFocus', () => {
       chip.onFocus();
-      expect(chip.isFocused).toBe(true);
+      expect(chip.isFocused()).toBe(true);
     });
 
     it('keeps the typed text on onFocus', () => {
@@ -799,7 +784,7 @@ describe('SdChip deferred timer lifetime', () => {
     expect(() => tick(300)).not.toThrow();
     expect(detectChanges).not.toHaveBeenCalled();
     // why: cả thân timer bị huỷ, không chỉ riêng detectChanges.
-    expect(chip.isFocused).toBeTrue();
+    expect(chip.isFocused()).toBeTrue();
   }));
 
   it('does not focus the chip input after the view is destroyed inside the 100ms focus window', fakeAsync(() => {
@@ -822,14 +807,14 @@ describe('SdChip deferred timer lifetime', () => {
     const chip = chipOf(fixture);
 
     chip.onFocus();
-    expect(chip.isFocused).toBeTrue();
+    expect(chip.isFocused()).toBeTrue();
 
     chip.onBlur();
     tick(149);
-    expect(chip.isFocused).toBeTrue();
+    expect(chip.isFocused()).toBeTrue();
 
     tick(1);
-    expect(chip.isFocused).toBeFalse();
+    expect(chip.isFocused()).toBeFalse();
 
     fixture.destroy();
   }));

@@ -1,8 +1,6 @@
-import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { CommonModule } from '@angular/common';
 import {
   afterRenderEffect,
-  AfterViewInit,
   booleanAttribute,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -22,7 +20,6 @@ import {
   untracked,
   viewChild,
   viewChildren,
-  OnDestroy,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Utilities } from '@sdcorejs/utils/fns';
@@ -36,12 +33,10 @@ import {
   ValidatorFn,
   Validators,
 } from '@angular/forms';
-import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatChipGrid, MatChipInputEvent, MatChipsModule } from '@angular/material/chips';
 import { ErrorStateMatcher } from '@angular/material/core';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdView } from '@sdcorejs/angular/components/view';
 import { SdLabelDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
@@ -60,7 +55,6 @@ import type { SdLabelPlacement } from '@sdcorejs/angular/forms/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { Size } from '@sdcorejs/utils/models';
-import { Subscription } from 'rxjs';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 /** Items that never become a chip; `0` and `false` still do (A2). */
@@ -74,6 +68,16 @@ const trimChip = (raw: string): string => raw.trim();
 const separatorChar = (key: string): string | null => (key === 'Enter' ? '\n' : key === 'Tab' ? '\t' : key.length === 1 ? key : null);
 /** Duplicate highlight (B3), the same 1.4s as the review. */
 const DUPLICATE_FLASH_MS = 1400;
+/**
+ * Icon sizes by field size: chip ✕ / lock and the clear button (C1). why: the chip icons are one step below the handoff
+ * table (14 / 16 / 18px), as on `<sd-chip-calendar>` (chosen 2026-10-23: 16px looked heavy in a 24px chip), so both chip
+ * fields look the same.
+ */
+const CHIP_ICONS = {
+  sm: { chip: '12px', clear: '16px' },
+  md: { chip: '14px', clear: '18px' },
+  lg: { chip: '16px', clear: '20px' },
+} as const;
 
 @Component({
   selector: 'sd-chip',
@@ -96,14 +100,12 @@ const DUPLICATE_FLASH_MS = 1400;
     MatInputModule,
     MatTooltipModule,
     MatFormFieldModule,
-    MatAutocompleteModule,
-    MatProgressSpinnerModule,
     MatChipsModule,
     SdLabel,
     SdView,
   ],
 })
-export class SdChip implements AfterViewInit, OnDestroy {
+export class SdChip {
   #ref = inject(ChangeDetectorRef);
   readonly #i18n = inject(I18nService);
   // why: lỗi phải hiện khi form cha đã submit dù field chưa chạm (A5). NgForm / FormGroupDirective tổ tiên
@@ -112,12 +114,13 @@ export class SdChip implements AfterViewInit, OnDestroy {
   readonly #host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   /** why: id ổn định của lỗi (`<mat-error>` hoặc chữ ẩn của `hideInlineError`) để ô nhập trỏ `aria-describedby` sang (A8). */
   readonly errorId = `sd-chip-error-${Utilities.generateUuid()}`;
-  // why: blur hoãn 150ms rồi gọi #ref.detectChanges(). Gỡ chip / đổi route trong 150ms đó là
-  // đủ để detectChanges() chạy trên view đã destroy → ViewDestroyedError. Scope handle theo
-  // DestroyRef để timer bị clear cùng lúc view tháo.
+  // why: blur hoãn 150ms, focus 100ms. Gỡ chip / đổi route trong khoảng đó thì timer chạy trên view đã destroy (từng
+  // gọi detectChanges() → ViewDestroyedError, giờ vẫn focus một ô nhập đã tháo). Scope handle theo DestroyRef để timer
+  // bị clear cùng lúc view tháo.
   readonly #timers = ɵsdTimerScope();
-  #subscription = new Subscription();
-  #name = Utilities.generateUuid();
+  readonly #destroyRef = inject(DestroyRef);
+  /** Control name when `name` is not set. */
+  readonly #name = Utilities.generateUuid();
 
   // Signals - inputs (accept null|undefined at boundary, transform to canonical)
   autoIdInput = input<string | undefined, string | null | undefined>(undefined, {
@@ -252,7 +255,8 @@ export class SdChip implements AfterViewInit, OnDestroy {
 
   // Local states
   #isBlurring = false;
-  isFocused = false;
+  /** The field is being edited: the `sdViewDef` face gives way to the field. A signal, so OnPush redraws without `detectChanges()` (D1). */
+  readonly isFocused = signal(false);
   #inputControl = new FormControl();
   #formControl = new SdFormControl();
   /**
@@ -285,10 +289,8 @@ export class SdChip implements AfterViewInit, OnDestroy {
     required: this.required,
   });
   #matcher!: ErrorStateMatcher;
-  readonly separatorKeysCodes = [ENTER, COMMA];
   /** why: phím tách do `separators` + onInputKeydown xử lý, nên Material không nhận phím nào. */
   readonly noSeparatorKeys: number[] = [];
-  readonly selectable = true;
 
   /**
    * Items rendered as chips: every value except `null`, `undefined` and `''`, so `0` shows (A2). Display only: the
@@ -331,13 +333,20 @@ export class SdChip implements AfterViewInit, OnDestroy {
     void this.removable();
     return this.chips().some(chip => this.isRemovable(chip));
   });
-  /** Placeholder: “Đã đủ …” once full, else the input, else “Nhập rồi nhấn Enter” — never the label (B5). None when not addable. */
+  /**
+   * Placeholder: “Đã đủ …” once full, else the input, else “Nhập rồi nhấn Enter” — never the label (B5). None when not
+   * addable, or while chips are folded into “+N”: nobody types then, and the input only fills the rest of the line (C1).
+   */
   readonly effectivePlaceholder = computed<string | null>(() => {
-    if (!this.addable()) return null;
+    if (!this.addable() || this.hiddenCount() > 0) return null;
     if (this.full()) return this.#i18n.t('core.form.chip.full', { max: this.effectiveMaxCount() });
     return this.placeholder() || this.#i18n.t('core.form.chip.placeholder');
   });
   readonly clearLabel = computed(() => this.#i18n.t('core.form.chip.clear'));
+  /** Tooltip of the lock on a chip that `removable` keeps (C3). */
+  readonly lockedLabel = computed(() => this.#i18n.t('core.form.chip.locked'));
+  /** Sizes of the chip ✕ / lock and of the clear-button icon for the current `size` (C1). */
+  readonly iconSizes = computed(() => CHIP_ICONS[this.size() === 'sm' || this.size() === 'lg' ? this.size() : 'md']);
   readonly moreLabel = computed(() => this.#i18n.t('core.form.chip.more', { count: this.hiddenCount() }));
 
   constructor() {
@@ -360,13 +369,6 @@ export class SdChip implements AfterViewInit, OnDestroy {
         this.#formControl.enable();
         this.#inputControl.enable();
         this.gridControl.enable();
-      }
-    });
-
-    effect(() => {
-      const nameVal = this.name();
-      if (nameVal) {
-        this.#name = nameVal;
       }
     });
 
@@ -396,7 +398,8 @@ export class SdChip implements AfterViewInit, OnDestroy {
     });
 
     // why: `submitted` của form cha không phải signal; submit phải vẽ lại lỗi dưới OnPush.
-    this.#parentForm?.ngSubmit.pipe(takeUntilDestroyed(inject(DestroyRef))).subscribe(() => this.#ref.markForCheck());
+    this.#parentForm?.ngSubmit.pipe(takeUntilDestroyed(this.#destroyRef)).subscribe(() => this.#ref.markForCheck());
+    this.#formControl.sdChanges.pipe(takeUntilDestroyed(this.#destroyRef)).subscribe(() => this.#ref.markForCheck());
 
     this.#matcher = { isErrorState: (_control, form) => !!this.inputError() || this.#errorGate(form) };
   }
@@ -459,6 +462,11 @@ export class SdChip implements AfterViewInit, OnDestroy {
   /** Accessible name of the ✕ button of a chip (A6). */
   removeLabel(item: string | number): string {
     return this.#i18n.t('core.form.chip.remove', { value: String(item) });
+  }
+
+  /** Accessible name of a chip that `removable` keeps: its text plus “, Không xoá được” (C3). A removable chip keeps its text. */
+  chipLabel(item: string | number): string | null {
+    return this.isRemovable(item) ? null : `${String(item)}, ${this.lockedLabel()}`;
   }
 
   /** Text of a chip, also its key for `truncatedChips`. */
@@ -560,18 +568,6 @@ export class SdChip implements AfterViewInit, OnDestroy {
     this.#focusWithin.set(false);
     this.#formConnector.markAsTouched();
     this.#ref.markForCheck();
-  }
-
-  ngAfterViewInit() {
-    this.#subscription.add(
-      this.#formControl.sdChanges.subscribe(() => {
-        this.#ref.markForCheck();
-      })
-    );
-  }
-
-  ngOnDestroy() {
-    this.#subscription.unsubscribe();
   }
 
   #add = (event: MatChipInputEvent): void => this.#commitText(event.value ?? '');
@@ -679,30 +675,9 @@ export class SdChip implements AfterViewInit, OnDestroy {
     this.#focus();
   };
 
-  #select = (event: MatAutocompleteSelectedEvent) => {
-    const item = event.option.value;
-    const values: (string | number)[] = this.#formControl.value ?? [];
-    if (item) {
-      if (typeof item === 'string' || typeof item === 'number') {
-        if (!values.includes(item)) {
-          // why: giống #add — mảng mới, không `push` lên mảng của consumer.
-          const next = [...values, item];
-          this.#formControl.setValue(next);
-          this.model.set(next);
-          this.sdChange.emit(next);
-        }
-      }
-      const inputEl = this.input();
-      if (inputEl) inputEl.nativeElement.value = '';
-      this.#inputControl.setValue('', {
-        emitEvent: false,
-      });
-    }
-  };
-
   // why: focus không còn xoá chữ đang gõ (B1).
   #onFocus = () => {
-    this.isFocused = true;
+    this.isFocused.set(true);
     this.#isBlurring = false;
   };
 
@@ -712,27 +687,26 @@ export class SdChip implements AfterViewInit, OnDestroy {
     // thành chip qua `matChipInputAddOnBlur`; chỉ khi `[addOnBlur]="false"` mới bỏ chữ như trước (B1).
     this.#timers.schedule(() => {
       if (this.#isBlurring) {
-        this.isFocused = false;
+        this.isFocused.set(false);
         if (!this.addOnBlur()) this.#setInputText('');
-        this.#ref.detectChanges();
       }
     }, 150);
   };
 
   #onClick = () => {
     if (this.sdViewDef()?.templateRef) {
-      if (!this.#formControl.disabled && !this.isFocused) {
+      if (!this.#formControl.disabled && !this.isFocused()) {
         this.#focus();
       }
     }
   };
 
   #focus = () => {
-    this.isFocused = true;
+    this.isFocused.set(true);
     this.#isBlurring = false;
     // why: vẫn 100ms như cũ — chỉ scope handle theo DestroyRef.
     this.#timers.schedule(() => {
-      if (this.isFocused) {
+      if (this.isFocused()) {
         this.input()?.nativeElement?.focus();
       }
     }, 100);
@@ -755,7 +729,6 @@ export class SdChip implements AfterViewInit, OnDestroy {
   onAdd = (event: MatChipInputEvent) => this.#add(event);
   onClickChip = (event: Event, item: any) => this.#clickChip(event, item);
   onRemove = (item: any) => this.#remove(item);
-  onSelect = (event: MatAutocompleteSelectedEvent) => this.#select(event);
   onFocus = () => this.#onFocus();
   onBlur = () => this.#onBlur();
   onClick = () => this.#onClick();
