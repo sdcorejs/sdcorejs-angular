@@ -65,7 +65,10 @@ export class SdSection {
 
     const header = target.closest('.sd-section-header');
     if (!header || header.closest('sd-section') !== this.#el.nativeElement) return;
-    if (target.closest(SECTION_INTERACTIVE_SELECTOR)) return;
+    // why: chỉ action nằm trong header mới chặn việc thu gọn. Phần tử tương tác bọc ngoài section (ví dụ host
+    // sd-table có tabindex="0") không phải action của header.
+    const interactive = target.closest(SECTION_INTERACTIVE_SELECTOR);
+    if (interactive && header.contains(interactive)) return;
 
     this.toggleCollapse();
   };
