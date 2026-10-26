@@ -221,7 +221,7 @@
                   <mat-option [value]="itemValue(item)" [disabled]="itemDisabled(item)">
                     <div>
                       @if (iDefTpl) {
-                        <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { item: item }"> </ng-container>
+                        <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { $implicit: item, item: item }"> </ng-container>
                       } @else {
                         {{ itemDisplay(item) }}
                       }
@@ -233,7 +233,7 @@
                   <mat-option [value]="item">
                     <div>
                       @if (iDefTpl) {
-                        <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { item: item }"> </ng-container>
+                        <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { $implicit: item, item: item }"> </ng-container>
                       } @else {
                         {{ item }}
                       }
@@ -393,7 +393,7 @@
                   <mat-option [value]="itemValue(item)" [disabled]="itemDisabled(item)">
                     <div>
                       @if (iDefTpl) {
-                        <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { item: item }"> </ng-container>
+                        <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { $implicit: item, item: item }"> </ng-container>
                       } @else {
                         {{ itemDisplay(item) }}
                       }
@@ -405,7 +405,7 @@
                   <mat-option [value]="item">
                     <div>
                       @if (iDefTpl) {
-                        <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { item: item }"> </ng-container>
+                        <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { $implicit: item, item: item }"> </ng-container>
                       } @else {
                         {{ item }}
                       }
@@ -641,7 +641,7 @@
             [style.height.px]="_itemSize">
             <div class="sd-select-virtual-label">
               @if (iDefTpl) {
-                <ng-container *ngTemplateOutlet="iDefTpl; context: { item: item }"></ng-container>
+                <ng-container *ngTemplateOutlet="iDefTpl; context: { $implicit: item, item: item }"></ng-container>
               } @else {
                 {{ itemDisplay(item) }}
               }

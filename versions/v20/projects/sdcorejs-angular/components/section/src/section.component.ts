@@ -1,7 +1,8 @@
-import { booleanAttribute, Component, computed, effect, ElementRef, inject, input, model } from '@angular/core';
+import { booleanAttribute, Component, computed, DestroyRef, effect, ElementRef, inject, input, model } from '@angular/core';
 import { Color } from '@sdcorejs/utils/models';
 import { SD_ICON_CONFIGURATION, SdIcon, type SdIconShape } from '@sdcorejs/angular/modules/icon';
 import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import { SD_SECTION_REGISTRY } from './section-registry';
 
 const SECTION_INTERACTIVE_SELECTOR =
   'a[href], button, input, select, textarea, [role="button"], [role="link"], [contenteditable="true"], [tabindex]';
@@ -40,6 +41,14 @@ export class SdSection {
   readonly bodyId = `sd-section-body-${++sectionBodyIdSeq}`;
 
   constructor() {
+    // why: chỉ section ngoài cùng đăng ký với vùng chứa (mục lục của sd-page); section lồng là một phần của section cha.
+    const registry = inject(SD_SECTION_REGISTRY, { optional: true });
+    const nested = inject(SdSection, { optional: true, skipSelf: true });
+    if (registry && !nested) {
+      const remove = registry.register(this, this.#el.nativeElement);
+      inject(DestroyRef).onDestroy(remove);
+    }
+
     effect(() => {
       if (this.title()) {
         this.#el.nativeElement.removeAttribute('title');

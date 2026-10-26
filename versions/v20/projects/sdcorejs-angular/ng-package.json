@@ -36,6 +36,22 @@
       "glob": "*.html",
       "input": "modules/keycloak/htmls",
       "output": "/modules/keycloak/htmls"
+    },
+    {
+      "glob": "**/*.{ts,html,scss}",
+      "input": "modules/pattern/features",
+      "ignore": ["**/*.spec.ts"],
+      "output": "/modules/pattern/features"
+    },
+    {
+      "glob": "**/*.md",
+      "input": "modules/pattern/docs",
+      "output": "/modules/pattern/docs"
+    },
+    {
+      "glob": "README.md",
+      "input": "modules/pattern",
+      "output": "/modules/pattern"
     }
   ]
 }
