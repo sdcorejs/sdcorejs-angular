@@ -5,10 +5,99 @@
   background-color: var(--sd-page-bg, #f9f9f9);
 }
 
+// Cột nội dung có giới hạn: padding hai bên = max(24px, phần dư chia đôi + 24px), tức một cột rộng tối đa
+// --sd-page-column-max (kể cả 24px padding) nằm giữa. % của padding tính theo bề rộng của sd-page nên
+// header, subheader và footer dùng cùng công thức là thẳng cột với nội dung.
+$column-gutter: max(24px, calc((100% - var(--sd-page-column-max)) / 2 + 24px));
+
+:host(.sd-page--wide) {
+  --sd-page-column-max: 1200px;
+}
+:host(.sd-page--medium) {
+  --sd-page-column-max: 960px;
+}
+:host(.sd-page--narrow) {
+  --sd-page-column-max: 720px;
+}
+
 .c-page-header {
   box-shadow: 0px 1px 2px 0px var(--sd-page-shadow, rgba(47, 49, 54, 0.1019607843));
   z-index: 1;
   position: relative;
+
+  h1 {
+    margin: 0;
+  }
+}
+
+// Header có nút ← hoặc badge: vùng trái co được để title cắt "…" thay vì đẩy headerRight.
+.c-page-lead {
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.c-page-title-block {
+  min-width: 0;
+}
+
+.c-page-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+
+  sd-badge {
+    flex: none;
+  }
+}
+
+.c-page-title {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.c-page-back {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: var(--sd-page-back-fg, #44474e);
+  text-decoration: none;
+
+  &:hover {
+    background-color: var(--sd-page-back-hover-bg, #eceef2);
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
+    outline-offset: 2px;
+  }
+}
+
+// Subheader được chiếu thẳng (không wrapper) nên màn không dùng nó giữ nguyên DOM.
+.c-page-header ::ng-deep > [sdSubheader] {
+  display: block;
+  border-top: 1px solid var(--sd-page-divider, #eceef2);
+}
+
+:host(.sd-page--wide),
+:host(.sd-page--medium),
+:host(.sd-page--narrow) {
+  > .c-page-wrapper {
+    padding: 16px $column-gutter;
+  }
+  > .c-page-header ::ng-deep > [sdSubheader] {
+    padding-inline: $column-gutter;
+  }
+  > .c-page-footer {
+    padding-inline: $column-gutter;
+  }
 }
 
 .c-page-wrapper {
@@ -18,6 +107,7 @@
   width: 100%;
   overflow-y: auto;
   max-height: 100vh;
+  box-sizing: border-box;
   .c-page-content {
     flex: 1;
     height: 100%;
@@ -29,5 +119,69 @@
     top: 0;
     height: 100%;
     overflow-y: auto;
+  }
+}
+
+// Cột phụ 320px dính khi cuộn, cuộn riêng; viewport < 1200px thì xuống dưới nội dung, full width.
+// why: ::ng-deep để Angular không gắn attribute scope vào [sdAside] bên trong :has() — phần tử đó thuộc
+// template của consumer nên không mang attribute của sd-page.
+:host ::ng-deep > .c-page-wrapper:has(> [sdAside]) {
+  gap: 16px;
+
+  > .c-page-content {
+    min-width: 0;
+  }
+}
+
+.c-page-wrapper ::ng-deep > [sdAside] {
+  flex: 0 0 320px;
+  width: 320px;
+  box-sizing: border-box;
+  align-self: flex-start;
+  position: sticky;
+  top: 0;
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+@media (max-width: 1199.98px) {
+  :host ::ng-deep > .c-page-wrapper:has(> [sdAside]) {
+    flex-direction: column;
+
+    > .c-page-content {
+      flex: none;
+      height: auto;
+    }
+  }
+
+  .c-page-wrapper ::ng-deep > [sdAside] {
+    flex: none;
+    width: auto;
+    align-self: stretch;
+    position: static;
+    max-height: none;
+    overflow-y: visible;
+  }
+}
+
+// Footer ghim đáy, ngoài vùng cuộn; ẩn khi cả sdFooterLeft và sdFooterRight đều rỗng.
+.c-page-footer {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--sd-page-divider, #eceef2);
+  background-color: var(--sd-surface, #ffffff);
+
+  &:empty {
+    display: none;
+  }
+
+  ::ng-deep > [sdFooterRight] {
+    margin-left: auto;
+  }
+  ::ng-deep > [sdFooterRight] ~ [sdFooterRight] {
+    margin-left: 0;
   }
 }

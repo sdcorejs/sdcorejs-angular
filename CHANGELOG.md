@@ -25,6 +25,7 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ### Added
 
+- Page: `<sd-page>` gains `backLink` (a ← link before the title, URL or router commands), `[badges]` (at most two `SdBadgeData` next to the title, `round` by default) and `width` (`full` · `wide` 1200px · `medium` 960px · `narrow` 720px). New slots: `[sdSubheader]` under the header row, `[sdAside]` as a 320px sticky column that moves under the body below 1200px, and `[sdFooterLeft]` / `[sdFooterRight]` in a footer pinned to the bottom and hidden while empty. `[sdHeaderLeft]` / `[sdHeaderRight]` are aliases of `[headerLeft]` / `[headerRight]`. New keys `core.common.back` and `core.module.layout.page.actions`, new component tokens `--sd-page-divider`, `--sd-page-back-fg` and `--sd-page-back-hover-bg`, and a new doc `sd-page.md` with its showcase page. A page that uses none of these renders the same header and body as before.
 - Badge: `SdBadgeData` (`{ title, type, color, icon, label, tooltip }`) is exported from `@sdcorejs/angular/components/badge`. `useBadge` of `<sd-table>` columns returns it, so a cell badge can show the `label` of `type: 'pair'` and a `tooltip`. The column `tooltip` still wins when both are set. Objects of the old `{ type, color, icon, title }` shape still type-check.
 - Theme: the component tokens `--sd-chip-locked-bg` and `--sd-chip-more-hover-bg`, shared by `<sd-chip>` and `<sd-chip-calendar>`. `--sd-chip-calendar-chip-locked-bg` and `--sd-chip-calendar-more-hover-bg` keep their names and now default to them.
 - Chip: `minCount` / `maxCount` replace `min` / `max`. `maxCount` also stops adding once reached: an `n/max` counter shows under the field, the placeholder says “Đã đủ {max} giá trị”, and typing or pasting more is announced instead of added.
@@ -37,6 +38,7 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ### Changed
 
+- Page: the `title` of `<sd-page>` renders in an `<h1 class="T20M">` instead of a `<div class="T20M">`, with its margin reset, so the page has one main heading. Pages that project `[headerLeft]` are not affected. `SdPageComponent` now uses `OnPush`.
 - Chip: leaving the field now adds the typed text as a chip (`addOnBlur` defaults to `true`). It used to drop the text, and so did focusing the input again. For the old behaviour set `[addOnBlur]="false"`.
 - Chip: the placeholder no longer repeats the label; without `placeholder` it is “Nhập rồi nhấn Enter”.
 - Chip: with `[addable]="false"` the input is read-only and out of the Tab order instead of accepting text that was then thrown away.

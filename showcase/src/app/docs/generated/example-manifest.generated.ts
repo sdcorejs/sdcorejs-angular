@@ -151,6 +151,10 @@ export type ShowcaseExampleSourceKey =
   | "components/org-chart/example-custom-bang-directive"
   | "components/org-chart/example-custom-bang-templateref-input"
   | "components/org-chart/example-node-co-mau"
+  | "components/page/example-be-rong-cot-noi-dung"
+  | "components/page/example-header-co-nut-quay-lai-va-badge"
+  | "components/page/example-man-cu-chi-dung-title-va-headerright"
+  | "components/page/example-subheader-cot-phu-va-footer"
   | "components/preview/example-anh-don"
   | "components/preview/example-nguon-video-bi-chan"
   | "components/preview/example-pdf-nang-cao"
@@ -1507,6 +1511,34 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-custom-bang-templateref-input",
     title: "Custom bằng TemplateRef input",
     description: "Existing “Custom bằng TemplateRef input” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/page/example-header-co-nut-quay-lai-va-badge",
+    pageKey: "components/page",
+    sectionId: "example-header-co-nut-quay-lai-va-badge",
+    title: "Header có nút quay lại và badge",
+    description: "Existing “Header có nút quay lại và badge” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/page/example-be-rong-cot-noi-dung",
+    pageKey: "components/page",
+    sectionId: "example-be-rong-cot-noi-dung",
+    title: "Bề rộng cột nội dung",
+    description: "Existing “Bề rộng cột nội dung” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/page/example-subheader-cot-phu-va-footer",
+    pageKey: "components/page",
+    sectionId: "example-subheader-cot-phu-va-footer",
+    title: "Subheader, cột phụ và footer",
+    description: "Existing “Subheader, cột phụ và footer” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/page/example-man-cu-chi-dung-title-va-headerright",
+    pageKey: "components/page",
+    sectionId: "example-man-cu-chi-dung-title-va-headerright",
+    title: "Màn cũ chỉ dùng title và headerRight",
+    description: "Không dùng input hay slot mới thì header và thân giữ nguyên như trước; title vẫn xuống dòng.",
   },
   {
     sourceKey: "components/preview/example-thu-vien-anh",
