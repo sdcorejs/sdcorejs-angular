@@ -487,6 +487,9 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
     // #state (sdFormControlState) không tick → errorMessage (computed theo #state) không
     // recompute → message lỗi không hiển thị (dù form invalid + viền đỏ). Để event lan ra để
     // #state tick. formControl.valueChanges không có subscriber nào nên không gây vòng lặp.
+    // why: người dùng sửa thì control của form phải dirty trước khi nhận giá trị, như value accessor của Angular;
+    // ô hiển thị là inputControl nên formControl không tự dirty. Chỉ khi giá trị đổi: blur một ô trống không tính.
+    if (!Object.is(this.formControl.value ?? null, value ?? null)) this.formControl.markAsDirty();
     this.formControl.setValue(value ?? null);
   };
 

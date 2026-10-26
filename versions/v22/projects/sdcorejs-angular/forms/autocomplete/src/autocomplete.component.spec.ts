@@ -1076,3 +1076,35 @@ describe('SdAutocomplete (accessibility)', () => {
     expect(el.getAttribute('aria-describedby')).toContain(cmp.errorId);
   });
 });
+
+// why: a user edit must mark the control of the parent form dirty before writing it, as Angular's value accessors do:
+// `form.dirty` and the default `'control'` mode of unsaved changes read that flag.
+describe('SdAutocomplete (user edits mark the form control dirty)', () => {
+  let fg: FormGroup;
+  let fixture: ComponentFixture<FgHost>;
+  let comp: SdAutocomplete;
+
+  beforeEach(async () => {
+    fg = new FormGroup({});
+    await TestBed.configureTestingModule({
+      imports: [FgHost, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(FgHost);
+    fixture.componentInstance.fg = fg;
+    fixture.detectChanges();
+    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdAutocomplete).componentInstance as SdAutocomplete;
+  });
+
+  it('marks the control dirty when an option is chosen', () => {
+    comp.onSelect('Hà Nội' as never);
+    expect(fg.get('city')?.value).toBe('Hà Nội');
+    expect(fg.get('city')?.dirty).toBeTrue();
+  });
+
+  it('marks the control dirty when the clear button empties it', () => {
+    fg.get('city')?.setValue('Huế');
+    comp.clear();
+    expect(fg.get('city')?.value).toBeNull();
+    expect(fg.get('city')?.dirty).toBeTrue();
+  });
+});

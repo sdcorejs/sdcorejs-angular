@@ -1167,3 +1167,36 @@ describe('SdInputNumber (accessibility)', () => {
     expect(el.getAttribute('aria-describedby')).toContain(cmp.errorId);
   });
 });
+
+// why: a user edit must mark the control of the parent form dirty before writing it, as Angular's value accessors do:
+// `form.dirty` and the default `'control'` mode of unsaved changes read that flag.
+describe('SdInputNumber (user edits mark the form control dirty)', () => {
+  let fg: FormGroup;
+  let fixture: ComponentFixture<FgHost>;
+  let comp: SdInputNumber;
+
+  beforeEach(async () => {
+    fg = new FormGroup({});
+    await TestBed.configureTestingModule({
+      imports: [FgHost, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(FgHost);
+    fixture.componentInstance.fg = fg;
+    fixture.detectChanges();
+    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdInputNumber).componentInstance as SdInputNumber;
+  });
+
+  it('marks the control dirty when a number is typed', () => {
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    input.value = '25';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(fg.get('amount')?.value).toBe(25);
+    expect(fg.get('amount')?.dirty).toBeTrue();
+  });
+
+  it('keeps the control pristine when an empty field only loses focus', () => {
+    comp.onBlur();
+    expect(fg.get('amount')?.dirty).toBeFalse();
+  });
+});

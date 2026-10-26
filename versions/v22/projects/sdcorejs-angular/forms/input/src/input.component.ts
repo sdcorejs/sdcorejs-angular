@@ -520,6 +520,9 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
     }
     if (this.formControl.value !== result.raw) {
       this.#pendingMaskResult = this.valueModel() === result.raw ? undefined : result;
+      // why: người dùng sửa thì control của form phải dirty trước khi nhận giá trị, như value accessor của Angular;
+      // ô có mask gõ vào displayControl nên formControl không tự dirty.
+      this.formControl.markAsDirty();
       this.formControl.setValue(result.raw);
     } else {
       this.#pendingMaskResult = undefined;
@@ -570,6 +573,7 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
     // lỗi đã sửa ở #onChange của sd-input-number, chỉ sót nhánh clear().
     // displayControl thì VẪN giữ emitEvent:false — valueChanges của nó có subscriber
     // (#onMaskedDisplayChange) sẽ parse ngược và ghi đè lại formControl.
+    this.formControl.markAsDirty();
     this.#isClearing = true;
     try {
       this.formControl.setValue(null);

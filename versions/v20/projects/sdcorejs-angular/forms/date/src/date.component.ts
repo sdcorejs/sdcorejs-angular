@@ -579,6 +579,9 @@ export class SdDate implements OnDestroy, OnInit {
     this.#setDateError(false);
 
     if (!dateControlsEqual(this.formControl.value as Date | null, value)) {
+      // why: người dùng sửa thì control của form phải dirty trước khi nhận giá trị, như value accessor của Angular;
+      // ngày chọn trên lịch và nút xoá không đi qua value accessor của ô nhập.
+      this.formControl.markAsDirty();
       this.formControl.setValue(value);
     }
   };
@@ -586,6 +589,7 @@ export class SdDate implements OnDestroy, OnInit {
   clear = ($event: any) => {
     $event?.stopPropagation();
     if (this.formControl.value) {
+      this.formControl.markAsDirty();
       this.formControl.setValue(null);
     }
   };

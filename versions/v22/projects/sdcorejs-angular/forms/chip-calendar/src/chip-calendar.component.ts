@@ -693,6 +693,9 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
 
   /** Every user action ends here: a new array of days, written once (the connector writes the model). */
   #commit(next: string[]): void {
+    // why: người dùng sửa thì control của form phải dirty trước khi nhận giá trị, như value accessor của Angular;
+    // chọn ngày trên lịch và xoá chip không đi qua value accessor.
+    this.#formControl.markAsDirty();
     this.#formControl.setValue(next);
     this.#ref.markForCheck();
   }

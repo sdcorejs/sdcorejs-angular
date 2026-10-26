@@ -824,3 +824,33 @@ describe('SdChip deferred timer lifetime', () => {
     fixture.destroy();
   }));
 });
+
+// why: a user edit must mark the control of the parent form dirty before writing it, as Angular's value accessors do:
+// `form.dirty` and the default `'control'` mode of unsaved changes read that flag.
+describe('SdChip (user edits mark the form control dirty)', () => {
+  let fg: FormGroup;
+  let fixture: ComponentFixture<FgHost>;
+  let comp: SdChip;
+
+  beforeEach(async () => {
+    fg = new FormGroup({});
+    await TestBed.configureTestingModule({
+      imports: [FgHost, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(FgHost);
+    fixture.componentInstance.fg = fg;
+    fixture.detectChanges();
+    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdChip).componentInstance as SdChip;
+  });
+
+  it('marks the control dirty when a chip is added and when one is removed', () => {
+    comp.onAdd({ value: 'mới', chipInput: { clear: () => undefined } } as unknown as Parameters<SdChip['onAdd']>[0]);
+    expect(fg.get('tags')?.value).toEqual(['mới']);
+    expect(fg.get('tags')?.dirty).toBeTrue();
+
+    fg.get('tags')?.markAsPristine();
+    comp.onRemove('mới');
+    expect(fg.get('tags')?.value).toEqual([]);
+    expect(fg.get('tags')?.dirty).toBeTrue();
+  });
+});
