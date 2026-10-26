@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import type { SdBadgeData } from '@sdcorejs/angular/components/badge';
 import { SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
 import { TableFormatService } from './table-format.service';
 import { SdTableColumn } from '../../models/table-column.model';
@@ -451,6 +452,39 @@ describe('TableFormatService.format', () => {
 
     const result = await service.format(raw, cols, {}, {});
     expect(result[0].meta.display['status'].data).toBe('Active');
+  });
+
+  it('passes the label and tooltip of useBadge to the cell badge', async () => {
+    const raw = [{ channel: 'ONLINE' }];
+    const cols: SdTableColumn[] = [
+      {
+        field: 'channel',
+        title: 'Kênh',
+        type: 'string',
+        useBadge: () => ({ type: 'pair', color: 'info', label: 'Kênh', title: 'Online', tooltip: 'Đặt trên web' }),
+      },
+    ];
+
+    const result = await service.format(raw, cols, {}, {});
+    const display = result[0].meta.display['channel'];
+    expect(display.badge).toEqual(jasmine.objectContaining({ type: 'pair', color: 'info', label: 'Kênh', tooltip: 'Đặt trên web' }));
+    expect(display.data).toBe('Online');
+    // why: tooltip của badge chỉ là dự phòng ở ô; nó không được thay tooltip của cột.
+    expect(display.tooltip).toBeUndefined();
+  });
+
+  it('types useBadge with SdBadgeData and still accepts the older badge shape', async () => {
+    // why: model cũ cho phép title null; SdBadgeData phải nhận lại đúng các object đó để không vỡ code consumer.
+    const legacy = { type: 'round' as const, color: 'success' as const, icon: 'check', title: null };
+    const data: SdBadgeData = legacy;
+    const raw = [{ ok: true }];
+    const cols: SdTableColumn<{ ok: boolean }>[] = [
+      { field: 'ok', title: 'OK', type: 'boolean', useBadge: () => legacy },
+      { field: 'ok', title: 'OK again', type: 'boolean', useBadge: (): SdBadgeData => data },
+    ];
+
+    const result = await service.format(raw, cols, {}, {});
+    expect(result[0].meta.display['ok'].badge).toEqual(jasmine.objectContaining({ type: 'round', color: 'success', icon: 'check' }));
   });
 
   // -----------------------------------------------------------------------

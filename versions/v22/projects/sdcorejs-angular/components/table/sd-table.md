@@ -296,15 +296,15 @@ A discriminated union over `type`. All variants share `SdTableColumnBase`:
 
 | `type`                           | Extra fields                                                                                                                                               |
 | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `'string'`                       | `useBadge?: (value, row) => Badge`                                                                                                                         |
+| `'string'`                       | `useBadge?: (value, row) => SdBadgeData`                                                                                                                   |
 | `'number'`                       | `useBadge?`, `filter?: { type?: 'split-number' }`                                                                                                          |
 | `'boolean'`                      | `useBadge?`, `option?: { displayOnTrue?, displayOnFalse? }`                                                                                                |
 | `'date' \| 'datetime' \| 'time'` | `useBadge?`, `filter?: { type?: 'daterange' \| 'date' \| 'split-date' }`                                                                                   |
-| `'values'`                       | `option: { items: K[] \| Signal<K[]> \| () => Promise<K[]>; valueField; displayField; selection?: 'MULTIPLE' }`, `useBadge?: (value, row, items) => Badge` |
+| `'values'`                       | `option: { items: K[] \| Signal<K[]> \| () => Promise<K[]>; valueField; displayField; selection?: 'MULTIPLE' }`, `useBadge?: (value, row, items) => SdBadgeData` |
 | `'lazy-values'`                  | `option: { items: SdSearch<K>; valueField; displayField; views?(values) => Promise<K[]>; selection?: 'MULTIPLE' }`                                         |
 | `'children'`                     | `children: SdTableColumnNormal<T>[]` — produces a multi-row header with this group on top of its children.                                                 |
 
-`Badge` shape: `{ type?, color?, icon?, title? }` — maps to a `<sd-badge>` rendered in the cell. The badge is a button (`role="button"`, focusable, hover) only when the column has `click`; otherwise it is a plain status. The cell tooltip goes to the badge's own `tooltip` input, so a badge whose text is cut still shows a single tooltip.
+`useBadge` returns `SdBadgeData` (`@sdcorejs/angular/components/badge`): `{ title?, type?, color?, icon?, label?, tooltip? }`, rendered as a `<sd-badge>` in the cell. `type` defaults to `'round'`. `title` replaces the cell text. `label` is the left part of `type: 'pair'`. `tooltip` shows only when the column has no `tooltip`. The badge is a button (`role="button"`, focusable, hover) only when the column has `click`; otherwise it is a plain status. The cell tooltip goes to the badge's own `tooltip` input, so a badge whose text is cut still shows a single tooltip.
 
 **Grouped column headers:** `type: 'children'` uses a compact group title with a subtle background and divider above its child columns. Standalone titles are vertically centered across both title rows. Filters occupy a separate aligned sticky row; `filter.hideInlineFilter` (including `'auto'`) shows or hides that row consistently for all columns. No consumer CSS is required. Numeric child titles keep their configured alignment.
 

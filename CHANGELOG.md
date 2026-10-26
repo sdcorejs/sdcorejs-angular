@@ -25,6 +25,7 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ### Added
 
+- Badge: `SdBadgeData` (`{ title, type, color, icon, label, tooltip }`) is exported from `@sdcorejs/angular/components/badge`. `useBadge` of `<sd-table>` columns returns it, so a cell badge can show the `label` of `type: 'pair'` and a `tooltip`. The column `tooltip` still wins when both are set. Objects of the old `{ type, color, icon, title }` shape still type-check.
 - Theme: the component tokens `--sd-chip-locked-bg` and `--sd-chip-more-hover-bg`, shared by `<sd-chip>` and `<sd-chip-calendar>`. `--sd-chip-calendar-chip-locked-bg` and `--sd-chip-calendar-more-hover-bg` keep their names and now default to them.
 - Chip: `minCount` / `maxCount` replace `min` / `max`. `maxCount` also stops adding once reached: an `n/max` counter shows under the field, the placeholder says “Đã đủ {max} giá trị”, and typing or pasting more is announced instead of added.
 - Chip: `addOnBlur` (default `true`) turns the typed text into a chip when the field loses focus.

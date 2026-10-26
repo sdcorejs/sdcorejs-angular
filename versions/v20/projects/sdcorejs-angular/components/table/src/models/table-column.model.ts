@@ -1,8 +1,7 @@
 import { Signal, TemplateRef } from '@angular/core';
-import { SdBadge } from '@sdcorejs/angular/components/badge';
+import type { SdBadgeData } from '@sdcorejs/angular/components/badge';
 import type { SdSearch } from '@sdcorejs/angular/forms/models';
 import { NestedKeyOf, Operator } from '@sdcorejs/utils/models';
-import { SdUnwrapSignal } from '@sdcorejs/angular/utilities/models';
 import type { SdTableAggregateOperation, SdTableColumnAggregate } from './table-aggregate.model';
 
 export type SdTableColumn<T = unknown> =
@@ -41,22 +40,15 @@ export type SdTableColumnTransformFunc<T = unknown> = (
   }
 ) => string | Promise<string>;
 
-interface Badge {
-  type?: SdUnwrapSignal<SdBadge['type']>;
-  color?: SdUnwrapSignal<SdBadge['color']>;
-  icon?: SdUnwrapSignal<SdBadge['icon']>;
-  title?: SdUnwrapSignal<SdBadge['title']>;
-}
-
 // 1. Dành cho các cột bình thường (Không có items)
-type UseBadgeFunc<T = unknown> = (value: any, rowData: T) => Badge;
+type UseBadgeFunc<T = unknown> = (value: any, rowData: T) => SdBadgeData;
 // 2. Dành cho cột có items (values / lazy-values)
 // Thêm Generic K đại diện cho kiểu của 1 item trong danh sách
 type UseBadgeValuesFunc<T = unknown, K = unknown> = (
   value: any,
   rowData: T,
   items: K[] // <-- Trả về mảng dữ liệu đã load để tiện tra cứu
-) => Badge;
+) => SdBadgeData;
 
 interface ColumnTitleOption {
   title: string;
