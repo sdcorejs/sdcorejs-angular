@@ -201,6 +201,9 @@ test.describe('E1-6 detail as a child route', () => {
     await page.locator('sd-page-list .mat-mdc-paginator-navigation-next').click();
     await settle(page);
     await expect(page.locator('sd-page-list .mat-mdc-paginator-range-label')).toContainText('21');
+    // why: the range label changes on click, the rows only when the delayed read lands; on a slow runner the
+    // first row was still ĐH-2400 of page 1 when it was checked. Wait for the first row of page 2.
+    await expect(rowCode(page, 0)).toHaveText('ĐH-2380');
     await page.locator('sd-page-list sd-table tr.c-row input[type="checkbox"]').first().check();
     const data = page.locator('sd-page-list sd-table .c-table');
     await data.evaluate(element => (element.scrollTop = 100));
