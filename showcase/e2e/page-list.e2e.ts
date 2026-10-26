@@ -1,9 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
+import { initPattern } from './pattern/pattern.support';
 
-// E1 acceptance of sd-page-list (docs/10 of the page-layouts handoff) on the live screen /demo/page-list.
-// Its parts are switched with ?cfg=<json> (see showcase/src/app/pages/components/page-list/live/page-list-live.data.ts).
+// E1 acceptance of sd-page-list (docs/10 of the page-layouts handoff) on /pattern/order of @sdcorejs/angular/modules/pattern.
+// Its parts are switched with ?cfg=<json>: the settings of its "Tuỳ chỉnh hiển thị" drawer (PatternOrderSettings in
+// modules/pattern/core/pattern-shell/settings/pattern-settings.store.ts).
 
-const BASE = '/demo/page-list';
+const BASE = '/pattern/order';
 const VIEWPORTS = [
   { width: 1440, height: 960 },
   { width: 1440, height: 800 },
@@ -26,14 +28,36 @@ interface Layout {
 }
 
 // why: the layout does not depend on the browser zone; run once instead of once per zone project.
-test.beforeEach(({}, testInfo) => test.skip(testInfo.project.name !== 'asia-bangkok', 'layout only'));
+test.beforeEach(async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'asia-bangkok', 'layout only');
+  // Mock API without latency, so a state is measured once its rows are in.
+  await initPattern(page);
+});
 
 const url = (cfg: Cfg = {}): string => `${BASE}?cfg=${encodeURIComponent(JSON.stringify(cfg))}`;
+
+/** Viewport height each test asked for: the height of the screen under test. */
+const screenHeights = new WeakMap<Page, number>();
 
 /** Opens the screen and waits until the main table is in fill mode and has measured its minimum. */
 async function open(page: Page, cfg: Cfg = {}, rows = true): Promise<void> {
   await page.goto(url(cfg));
+  await fitScreen(page);
   await settle(page, rows);
+}
+
+/**
+ * why: /pattern puts its sample toolbar under the screen; that toolbar is not part of the screen E1 measures. Grow
+ * the viewport by its height so the screen itself gets the height the test names, as a portal page would.
+ */
+async function fitScreen(page: Page): Promise<void> {
+  const size = page.viewportSize()!;
+  const screen = screenHeights.get(page) ?? size.height;
+  screenHeights.set(page, screen);
+  const body = page.locator('.sd-pattern-shell__body');
+  await expect(body).toBeVisible();
+  const chrome = await body.evaluate(element => innerHeight - element.getBoundingClientRect().height);
+  if (size.height !== screen + chrome) await page.setViewportSize({ width: size.width, height: screen + chrome });
 }
 
 async function settle(page: Page, rows = true): Promise<void> {
@@ -84,6 +108,8 @@ for (const viewport of VIEWPORTS) {
     test.use({ viewport });
 
     test('E1-1/2/3: the page fits and the footer stays put for every record count, page size and read state', async ({ page }) => {
+      // why: every state is a full page load of the app; eight of them pass 60 s on a busy runner.
+      test.slow();
       const states: readonly [string, Cfg, boolean][] = [
         ['128 records', {}, true],
         ['0 records', { records: 0 }, false],
@@ -91,8 +117,8 @@ for (const viewport of VIEWPORTS) {
         ['20 records', { records: 20 }, true],
         ['page size 10', { pageSize: 10 }, true],
         ['page size 50', { pageSize: 50 }, true],
-        ['loading', { state: 'loading' }, false],
-        ['error', { state: 'error' }, false],
+        ['loading', { read: 'loading' }, false],
+        ['error', { read: 'error' }, false],
       ];
       let base: Layout | undefined;
       for (const [label, cfg, rows] of states) {
@@ -107,14 +133,16 @@ for (const viewport of VIEWPORTS) {
     // why: doc 10 also asks for a bare screen with only sd-table (no quick search, no filter row, no footer buttons),
     // where the footer holds only the paginator or the "Đang hiển thị" line.
     test('E1-1/2/3 on a screen with only sd-table', async ({ page }) => {
+      // why: every state is a full page load of the app; eight of them pass 60 s on a busy runner.
+      test.slow();
       const bare = { quickSearch: false, inlineFilter: false, footerButtons: false };
       const states: readonly [string, Cfg, boolean][] = [
         ['bare, 128 records', bare, true],
         ['bare, 0 records', { ...bare, records: 0 }, false],
         ['bare, 3 records', { ...bare, records: 3 }, true],
         ['bare, 20 records', { ...bare, records: 20 }, true],
-        ['bare, loading', { ...bare, state: 'loading' }, false],
-        ['bare, error', { ...bare, state: 'error' }, false],
+        ['bare, loading', { ...bare, read: 'loading' }, false],
+        ['bare, error', { ...bare, read: 'error' }, false],
       ];
       let base: Layout | undefined;
       for (const [label, cfg, rows] of states) {
@@ -193,8 +221,8 @@ test.describe('E1-5 at 1440×650', () => {
 
   test('compact folds the score card and the external filter so the page still fits', async ({ page }) => {
     await open(page, crowded);
-    await expect(page.locator('[data-e2e="score"]')).toHaveClass(/summary--compact/);
-    expect(Math.round((await page.locator('[data-e2e="score"]').boundingBox())!.height)).toBe(36);
+    await expect(page.locator('[data-autoid="components-card-group-order-summary"]')).toHaveClass(/summary--compact/);
+    expect(Math.round((await page.locator('[data-autoid="components-card-group-order-summary"]').boundingBox())!.height)).toBe(36);
     await expect(page.locator('sd-page-list external-filter .sd-external-filter-body')).toHaveCount(0);
     expectFits(await measure(page), 'compact');
   });
@@ -234,8 +262,8 @@ test.describe('E1-6 detail as a child route', () => {
     const code = (await rowCode(page, opened).textContent())?.trim();
 
     await rowCode(page, opened).click();
-    await expect(page).toHaveURL(/\/demo\/page-list\/\d+\/detail/);
-    await expect(page.locator('[data-e2e="detail-page"]')).toBeVisible();
+    await expect(page).toHaveURL(/\/pattern\/order\/\d+\/detail/);
+    await expect(page.locator('sd-page-detail')).toBeVisible();
     await expect(page.locator('sd-page-list > sd-page')).toBeHidden();
 
     await page.goBack();
@@ -260,12 +288,14 @@ test.describe('E1-6 detail as a child route', () => {
       const code = (await opener.textContent())?.trim();
       await opener.focus();
       await opener.click();
-      await expect(page).toHaveURL(/\/demo\/page-list\/\d+\/detail/);
+      await expect(page).toHaveURL(/\/pattern\/order\/\d+\/detail/);
       await expect(page.locator('.sd-side-drawer-active')).toBeVisible();
       await expect(page.locator('sd-page-list > sd-page')).toBeVisible();
 
       await closeDrawer(page);
-      await expect(page).toHaveURL(/\/demo\/page-list\?cfg=/);
+      // why: closing navigates to the list route ('..'), which drops ?cfg= (the settings were read when the screen
+      // opened); browser Back returns to the URL that still has it.
+      await expect(page).toHaveURL(/\/pattern\/order(\?cfg=[^/]*)?$/);
       await expect(page.locator('.sd-side-drawer-active')).toHaveCount(0);
       await expect.poll(() => page.evaluate(() => document.activeElement?.textContent?.trim())).toBe(code);
     });

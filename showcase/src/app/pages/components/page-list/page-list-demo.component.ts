@@ -4,7 +4,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdTable, type SdTableOption } from '@sdcorejs/angular/components/table';
 import { SdPageList } from '@sdcorejs/angular/modules/layout';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
-import { ORDER_STATUSES, ORDERS, PAGE_LIST_DEMO_BASE, type Order } from './live/page-list-live.data';
+import { ORDER_STATUSES, ORDERS, type Order } from './page-list-demo.data';
 
 @Component({
   selector: 'app-page-list-demo',
@@ -27,7 +27,7 @@ import { ORDER_STATUSES, ORDERS, PAGE_LIST_DEMO_BASE, type Order } from './live/
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-man-song-toan-trang') {
-      <demo-section heading="Màn sống toàn trang" [props]="[{ name: 'detail', value: 'page | drawer' }, { name: 'route', value: '/demo/page-list' }]" note="Mở màn mẫu toàn trang; cấu hình đổi bằng ?cfg= (tab, score card, external filter, chọn nhiều, autoCompact, cách mở chi tiết).">
+      <demo-section heading="Màn sống toàn trang" [props]="[{ name: 'detail', value: 'page | drawer' }, { name: 'route', value: '/pattern/order' }]" note="Mở màn đơn hàng của @sdcorejs/angular/modules/pattern; cấu hình đổi bằng ?cfg= hoặc drawer Tuỳ chỉnh hiển thị (tab, score card, external filter, chọn nhiều, autoCompact, cách mở chi tiết).">
         <div class="links">
           @for (link of links; track link.label) {
             <a class="link" [routerLink]="base" [queryParams]="{ cfg: link.cfg }">{{ link.label }}</a>
@@ -64,7 +64,7 @@ import { ORDER_STATUSES, ORDERS, PAGE_LIST_DEMO_BASE, type Order } from './live/
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PageListDemoComponent {
-  readonly base = PAGE_LIST_DEMO_BASE;
+  readonly base = '/pattern/order';
   readonly links = [
     { label: 'Mặc định (drawer)', cfg: JSON.stringify({}) },
     { label: 'Tab + score card', cfg: JSON.stringify({ tabs: true, score: true }) },

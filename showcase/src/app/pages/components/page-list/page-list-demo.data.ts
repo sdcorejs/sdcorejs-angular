@@ -1,7 +1,4 @@
-import type { SdPageListDetail } from '@sdcorejs/angular/modules/layout';
-
-/** Route sống của trang Page List, mount bởi `app.routes.ts`; e2e/page-list.e2e.ts đo tiêu chí E1 trên route này. */
-export const PAGE_LIST_DEMO_BASE = '/demo/page-list';
+/** Dữ liệu của ví dụ nhúng trên trang Page List (128 đơn, PRNG Park–Miller seed 20261024, giống seed của /pattern/order). */
 
 export type OrderStatus = 'pending' | 'shipping' | 'done' | 'cancelled';
 
@@ -15,53 +12,6 @@ export interface Order {
   readonly status: OrderStatus;
   readonly warehouse: string;
   readonly payment: string;
-}
-
-/**
- * Cấu hình của màn mẫu, đọc từ query `?cfg=<json>`; khoá không có dùng giá trị mặc định (doc 08 của handoff).
- * Chỉ e2e và trang Examples đổi cấu hình; code feature thật không có phần này.
- */
-export interface PageListDemoConfig {
-  readonly tabs: boolean;
-  readonly score: boolean;
-  readonly quickSearch: boolean;
-  readonly warehouse: boolean;
-  readonly inlineFilter: boolean | 'auto';
-  readonly externalFilter: boolean;
-  readonly externalFilterCollapsed: boolean;
-  readonly selector: boolean;
-  readonly footerButtons: boolean;
-  readonly records: 0 | 3 | 20 | 128;
-  readonly pageSize: 10 | 20 | 50;
-  readonly state: 'normal' | 'loading' | 'error';
-  readonly autoCompact: boolean;
-  readonly detail: SdPageListDetail;
-}
-
-export const PAGE_LIST_DEMO_DEFAULTS: PageListDemoConfig = {
-  tabs: false,
-  score: false,
-  quickSearch: true,
-  warehouse: true,
-  inlineFilter: true,
-  externalFilter: false,
-  externalFilterCollapsed: false,
-  selector: false,
-  footerButtons: true,
-  records: 128,
-  pageSize: 20,
-  state: 'normal',
-  autoCompact: true,
-  detail: 'drawer',
-};
-
-export function readPageListDemoConfig(raw: string | null): PageListDemoConfig {
-  if (!raw) return PAGE_LIST_DEMO_DEFAULTS;
-  try {
-    return { ...PAGE_LIST_DEMO_DEFAULTS, ...(JSON.parse(raw) as Partial<PageListDemoConfig>) };
-  } catch {
-    return PAGE_LIST_DEMO_DEFAULTS;
-  }
 }
 
 export const ORDER_STATUSES: readonly { readonly value: OrderStatus; readonly display: string; readonly color: 'warning' | 'info' | 'success' | 'secondary' }[] = [

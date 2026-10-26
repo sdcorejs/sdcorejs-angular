@@ -20,6 +20,7 @@ describe('ShellComponent', () => {
           { path: 'v/:version/components/button/:tab', component: RoutedDocumentationStubComponent },
           { path: 'v/:version/changelog', component: RoutedDocumentationStubComponent },
           { path: 'about', component: RoutedDocumentationStubComponent },
+          { path: 'pattern/order', component: RoutedDocumentationStubComponent },
         ]),
         {
           provide: DocsVersionService,
@@ -213,6 +214,18 @@ describe('ShellComponent', () => {
 
     expect(document.activeElement).not.toBe(fixture.nativeElement.querySelector('h1'));
     expect(document.activeElement).toBe(fixture.nativeElement.querySelector('#example-anchor'));
+  });
+
+  it('leaves focus where the /pattern sample app put it', async () => {
+    const trigger = fixture.nativeElement.querySelector('.search-trigger') as HTMLButtonElement;
+    trigger.focus();
+
+    await TestBed.inject(Router).navigateByUrl('/pattern/order?cfg=%7B%7D');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise(resolve => setTimeout(resolve));
+
+    expect(document.activeElement).toBe(trigger);
   });
 
   it('leaves focus on the TOC control for a same-route fragment change', async () => {
