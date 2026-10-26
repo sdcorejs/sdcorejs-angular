@@ -1,5 +1,5 @@
 import { signal } from '@angular/core';
-import { FormGroup } from '@angular/forms';
+import { FormGroup, PristineChangeEvent, type ControlEvent } from '@angular/forms';
 import { CanDeactivateFn } from '@angular/router';
 import { SdUnsavedChangesConfirmOptions, SdUnsavedChangesMaybeAsync, SdUnsavedChangesRegistration } from './unsaved-changes.model';
 import { SdUnsavedChangesService } from './unsaved-changes.service';
@@ -13,8 +13,10 @@ export interface SdUnsavedChangesFormOptions<TValue> {
   readonly reset?: (form: FormGroup) => SdUnsavedChangesMaybeAsync<void | boolean>;
   readonly discard?: (form: FormGroup) => SdUnsavedChangesMaybeAsync<void | boolean>;
   /**
-   * `'control'` (default): the form's own `dirty` flag. `'value'`: dirty only while `getRawValue()` differs from
-   * the snapshot, so a value typed back to what it was is no change.
+   * `'control'` (default): the form's own `dirty` flag. `'value'`: dirty only while a control the user edited
+   * holds a value other than the one it had before the edit, so a value typed back to what it was is no change.
+   * In `'value'` mode the baseline of a control follows its value while the control is pristine: controls that
+   * `<sd-*>` components register after this call, model values they write and `form.reset()` are no change.
    */
   readonly dirty?: 'control' | 'value';
 }
@@ -25,9 +27,33 @@ export function registerSdUnsavedChangesForm<TValue extends Record<string, unkno
   options: SdUnsavedChangesFormOptions<TValue>
 ): SdUnsavedChangesRegistration {
   let snapshot = cloneValue(form.getRawValue()) as TValue;
+  const edited = new Set<string>();
+  // why: `<sd-*>` controls join the form in an effect after the page is created and write their model with
+  // `emitEvent: false`, so a snapshot taken here would be `{}` and every form would open dirty. A pristine
+  // control therefore moves its baseline along. A user edit marks the control dirty BEFORE writing the new
+  // value, so the PristineChangeEvent of that edit still sees the value it started from.
+  const syncBaseline = (event?: ControlEvent): void => {
+    const value = form.getRawValue() as Record<string, unknown>;
+    const baseline = snapshot as Record<string, unknown>;
+    for (const [key, control] of Object.entries(form.controls)) {
+      if (control.pristine) {
+        edited.delete(key);
+        baseline[key] = cloneValue(value[key]);
+      } else if (!edited.has(key)) {
+        edited.add(key);
+        if (event instanceof PristineChangeEvent || !(key in baseline)) baseline[key] = cloneValue(value[key]);
+      }
+    }
+    for (const key of Object.keys(baseline)) {
+      if (!(key in form.controls)) delete baseline[key];
+    }
+  };
   const readFormDirty = (): boolean => (options.dirty === 'value' ? !sameValue(form.getRawValue(), snapshot) : form.dirty);
   const dirty = signal(readFormDirty());
-  const subscription = form.events.subscribe(() => dirty.set(readFormDirty()));
+  const subscription = form.events.subscribe(event => {
+    if (options.dirty === 'value') syncBaseline(event);
+    dirty.set(readFormDirty());
+  });
   const resetToSnapshot = (): void => {
     form.reset(cloneValue(snapshot));
     form.markAsPristine();

@@ -192,6 +192,11 @@ export class SdTextarea implements OnInit, OnDestroy {
    */
   readonly errorMessage = computed<string | undefined>(() => {
     void this.#state();
+    // why: connector cài/gỡ validator bằng `updateValueAndValidity({ emitEvent: false })` → `#state` không tick. Đọc
+    // `required` và `#validators` làm dependency để `[inlineError]` (lỗi API gắn sau khi lưu) đổi lúc runtime vẫn hiện
+    // message dưới OnPush (cùng cách của sd-input).
+    void this.required();
+    void this.#validators();
     const errors = this.formControl.errors;
     if (!errors) return undefined;
 

@@ -1555,6 +1555,16 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     };
   };
 
+  /**
+   * Reads the first page again with the current filters and sort. For a condition the table does not own (status
+   * tabs, score cards above the table): changing it must restart paging, as a filter of the table does.
+   */
+  reloadFirstPage = async (): Promise<void> => {
+    if (this.paginator()) this.paginator()!.pageIndex = 0;
+    this.#resetUnknownTotalPage();
+    await this.reload(true, true);
+  };
+
   exportExcel = (columns?: SdExcelColumn[]) => {
     this.#tableExportService.exportExcel(this.#createExportContext(), columns);
   };

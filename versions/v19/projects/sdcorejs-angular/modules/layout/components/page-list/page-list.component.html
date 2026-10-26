@@ -13,4 +13,6 @@
   <ng-container ngProjectAs="[sdFooterRight]"><ng-content select="[sdFooterRight]"></ng-content></ng-container>
   <ng-content></ng-content>
 </sd-page>
-<router-outlet (activate)="onActivate()" (deactivate)="onDeactivate()"></router-outlet>
+@if (detail() !== 'none') {
+  <router-outlet (activate)="onActivate()" (deactivate)="onDeactivate()"></router-outlet>
+}
