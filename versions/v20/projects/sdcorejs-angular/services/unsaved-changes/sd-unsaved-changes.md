@@ -60,6 +60,15 @@ readonly formRef = registerSdUnsavedChangesForm(this.unsaved, this.form, {
 
 The adapter snapshots `getRawValue()`. `reset()` and `discard()` restore that snapshot unless custom callbacks are supplied. A successful `save()` promotes the saved value to the new snapshot. Destroying the registration unsubscribes from `form.events`.
 
+`dirty` picks what counts as a change:
+
+- `'control'` (default): the form's own `dirty` flag. Typing a value back to what it was still counts.
+- `'value'`: dirty only while `getRawValue()` differs from the snapshot (dates by time, arrays and objects by content). `sd-page-form` pages use it with `sdPageFormLeaveGuard` (see `modules/layout/components/page/sd-page.md`).
+
+```ts
+registerSdUnsavedChangesForm(this.unsaved, this.form, { id: 'product-form', dirty: 'value' });
+```
+
 ## Modal, drawer, and tab close hooks
 
 ```ts
@@ -95,6 +104,12 @@ providers: [
 
 An adapter returns `'save'`, `'discard'`, `'cancel'`, or a boolean (`true` means discard). The built-in browser adapter uses `window.confirm`, maps accept to discard, and returns cancel when no browser confirmation API exists.
 
+To ask differently for one prompt only, pass `adapter` to `confirmLeave`; the provided adapter stays the default for every other call:
+
+```ts
+service.confirmLeave({ reason: 'navigation', adapter: { confirm: context => openMyDialog(context) } });
+```
+
 ## Service API
 
 | Member                   | Purpose                                                    |
@@ -103,7 +118,7 @@ An adapter returns `'save'`, `'discard'`, `'cancel'`, or a boolean (`true` means
 | `dirty`                  | `true` when any active watcher is dirty.                   |
 | `register(watcher)`      | Register or return the existing ref for the same scope/id. |
 | `hasChanges(scope?)`     | Check the whole registry or one scope.                     |
-| `confirmLeave(options?)` | Prompt once per scope and apply save/discard/cancel.       |
+| `confirmLeave(options?)` | Prompt once per scope; `adapter` overrides the default.    |
 | `saveAll(scope?)`        | Save dirty watchers sequentially; stop on failure.         |
 | `resetAll(scope?)`       | Reset dirty watchers sequentially; stop on failure.        |
 | `discardAll(scope?)`     | Discard dirty watchers sequentially; stop on failure.      |

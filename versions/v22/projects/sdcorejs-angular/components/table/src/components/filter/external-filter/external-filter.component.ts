@@ -49,6 +49,8 @@ export class ExternalFilterComponent {
   filter = input<SdTableOptionFilter | undefined>(undefined);
   externalFilters = input<SdTableExternalFilter[] | null | undefined>([]);
   filterRegister = input<TableFilterRegister | undefined>(undefined);
+  /** Mặc định thu gọn khi option không đặt `externalFilterCollapsed` (bảng chính của sd-page-list lúc màn thấp). */
+  collapsedByDefault = input(false);
 
   // ==========================================
   // 2. INJECT
@@ -61,6 +63,8 @@ export class ExternalFilterComponent {
   externalFilter = signal<Record<string, any>>({});
   inlineExternal = signal<Record<string, boolean>>({});
   filtered = signal<boolean>(false);
+  /** Trạng thái thu gọn của sd-section; người dùng mở/thu thì giữ đến khi mặc định đổi. */
+  collapsed = signal(false);
   isMobileOrTablet = BrowserUtilities.isMobile();
   // FormGroup là instance, parent đọc qua viewChild — giữ readonly field.
   readonly form = new FormGroup({});
@@ -80,7 +84,17 @@ export class ExternalFilterComponent {
   // Normalize externalFilters về mảng (input có thể null/undefined).
   filterItems = computed(() => this.externalFilters() || []);
 
+  readonly #initialCollapsed = computed(() => {
+    const filter = this.filter();
+    if (filter?.collapsible === false) return false;
+    return filter?.externalFilterCollapsed ?? this.collapsedByDefault();
+  });
+
   constructor() {
+    // why: mặc định đổi (ví dụ màn chuyển giữa thấp và cao) thì áp lại; giữa hai lần đổi, lựa chọn của người dùng
+    // được giữ.
+    effect(() => this.collapsed.set(this.#initialCollapsed()));
+
     // Subscribe filterRegister observers — re-subscribe khi input đổi, cleanup khi đổi/destroy.
     // QUAN TRỌNG: phải wrap untracked(). Observer có startWith() → emit ĐỒNG BỘ ngay khi
     // subscribe, callback đọc this.externalFilter() (qua #filtered) sẽ bị effect track →

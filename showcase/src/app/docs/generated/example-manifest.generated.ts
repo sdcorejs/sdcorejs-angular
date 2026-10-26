@@ -151,6 +151,14 @@ export type ShowcaseExampleSourceKey =
   | "components/org-chart/example-custom-bang-directive"
   | "components/org-chart/example-custom-bang-templateref-input"
   | "components/org-chart/example-node-co-mau"
+  | "components/page-list/example-danh-sach-vua-khit-khung"
+  | "components/page-list/example-man-song-toan-trang"
+  | "components/page/example-be-rong-cot-noi-dung"
+  | "components/page/example-header-co-nut-quay-lai-va-badge"
+  | "components/page/example-man-cu-chi-dung-title-va-headerright"
+  | "components/page/example-subheader-cot-phu-va-footer"
+  | "components/page/example-trang-chi-tiet-co-cot-phu-o-dau"
+  | "components/page/example-trang-form-co-muc-luc"
   | "components/preview/example-anh-don"
   | "components/preview/example-nguon-video-bi-chan"
   | "components/preview/example-pdf-nang-cao"
@@ -1507,6 +1515,62 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-custom-bang-templateref-input",
     title: "Custom bằng TemplateRef input",
     description: "Existing “Custom bằng TemplateRef input” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/page/example-header-co-nut-quay-lai-va-badge",
+    pageKey: "components/page",
+    sectionId: "example-header-co-nut-quay-lai-va-badge",
+    title: "Header có nút quay lại và badge",
+    description: "Existing “Header có nút quay lại và badge” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/page/example-be-rong-cot-noi-dung",
+    pageKey: "components/page",
+    sectionId: "example-be-rong-cot-noi-dung",
+    title: "Bề rộng cột nội dung",
+    description: "Existing “Bề rộng cột nội dung” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/page/example-subheader-cot-phu-va-footer",
+    pageKey: "components/page",
+    sectionId: "example-subheader-cot-phu-va-footer",
+    title: "Subheader, cột phụ và footer",
+    description: "Existing “Subheader, cột phụ và footer” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/page/example-trang-chi-tiet-co-cot-phu-o-dau",
+    pageKey: "components/page",
+    sectionId: "example-trang-chi-tiet-co-cot-phu-o-dau",
+    title: "Trang chi tiết có cột phụ ở đầu",
+    description: "Existing “Trang chi tiết có cột phụ ở đầu” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/page/example-trang-form-co-muc-luc",
+    pageKey: "components/page",
+    sectionId: "example-trang-form-co-muc-luc",
+    title: "Trang form có mục lục",
+    description: "Mục lục liệt kê các sd-section có title ở cấp ngoài cùng; ẩn khi viewport dưới 1200px.",
+  },
+  {
+    sourceKey: "components/page/example-man-cu-chi-dung-title-va-headerright",
+    pageKey: "components/page",
+    sectionId: "example-man-cu-chi-dung-title-va-headerright",
+    title: "Màn cũ chỉ dùng title và headerRight",
+    description: "Không dùng input hay slot mới thì header và thân giữ nguyên như trước; title vẫn xuống dòng.",
+  },
+  {
+    sourceKey: "components/page-list/example-danh-sach-vua-khit-khung",
+    pageKey: "components/page-list",
+    sectionId: "example-danh-sach-vua-khit-khung",
+    title: "Danh sách vừa khít khung",
+    description: "Khung cao 420px: bảng lấp phần còn lại, chỉ vùng dữ liệu cuộn, footer đứng yên.",
+  },
+  {
+    sourceKey: "components/page-list/example-man-song-toan-trang",
+    pageKey: "components/page-list",
+    sectionId: "example-man-song-toan-trang",
+    title: "Màn sống toàn trang",
+    description: "Mở màn mẫu toàn trang; cấu hình đổi bằng ?cfg= (tab, score card, external filter, chọn nhiều, autoCompact, cách mở chi tiết).",
   },
   {
     sourceKey: "components/preview/example-thu-vien-anh",

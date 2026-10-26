@@ -92,10 +92,11 @@ export class SdUnsavedChangesService {
 
     const watchers = this.#dirtyEntries(options.scope).map(entry => entry.ref);
     const message = watchers.find(watcher => watcher.message)?.message ?? this.#i18n.t('core.service.unsaved-changes.message');
+    const adapter = options.adapter ?? this.#adapter;
     const run = async (): Promise<boolean> => {
       try {
         const rawDecision = await Promise.resolve(
-          this.#adapter.confirm({ reason: options.reason ?? 'manual', scope: options.scope, message, watchers })
+          adapter.confirm({ reason: options.reason ?? 'manual', scope: options.scope, message, watchers })
         );
         const decision: SdUnsavedChangesDecision = typeof rawDecision === 'boolean' ? (rawDecision ? 'discard' : 'cancel') : rawDecision;
         if (decision === 'save') return this.saveAll(options.scope);

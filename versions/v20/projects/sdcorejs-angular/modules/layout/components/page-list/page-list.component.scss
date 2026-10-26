@@ -1,0 +1,44 @@
+// Chuỗi chiều cao E1: sd-page-list (100%) → sd-page (phần còn lại) → .c-page-wrapper (vùng cuộn duy nhất) →
+// .c-page-content (cột flex, gap 12px) → bảng chính (flex 1 1 0, xem sd-table--fill). Feature không viết chiều cao.
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+:host > sd-page {
+  flex: 1 1 0;
+  min-height: 0;
+  height: auto;
+}
+
+// why: ::ng-deep vì .c-page-wrapper/.c-page-content thuộc template của sd-page. px-0 của sd-page (width full) là
+// utility !important nên padding ngang cũng phải !important.
+:host ::ng-deep > sd-page > .c-page-wrapper {
+  padding: 16px !important;
+
+  > .c-page-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+    min-height: 0;
+  }
+}
+
+// Feature bọc bảng trong component riêng: wrapper gắn sdPageListMain lấp phần còn lại, bảng bên trong lấp wrapper.
+:host ::ng-deep > sd-page > .c-page-wrapper > .c-page-content > [sdPageListMain] {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+// Trang con (detail="page") nằm ngay sau router-outlet: lấp toàn bộ chiều cao thay cho danh sách.
+:host ::ng-deep > router-outlet ~ * {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+}

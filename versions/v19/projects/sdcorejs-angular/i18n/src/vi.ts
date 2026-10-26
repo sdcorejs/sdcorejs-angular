@@ -34,6 +34,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.mobile.reorder': 'Kéo để đổi thứ tự dòng',
   'core.component.table.mobile.details': 'Chi tiết',
   'core.component.table.mobile.summary': 'Tổng hợp',
+  'core.common.back': 'Quay lại',
   'core.common.cancel': 'Hủy',
   'core.common.close': 'Đóng',
   'core.common.reload': 'Tải lại trang',
@@ -635,6 +636,12 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.module.layout.forbidden.back-home': 'Quay lại trang chủ',
 
   // ---- Module: layout (not-found page) ----
+  'core.module.layout.page.actions': 'Thao tác của trang',
+  'core.module.layout.page.toc': 'Mục lục',
+  'core.module.layout.page.leave.title': 'Rời trang khi chưa lưu?',
+  'core.module.layout.page.leave.message': 'Thay đổi chưa lưu sẽ bị mất.',
+  'core.module.layout.page.leave.stay': 'Ở lại',
+  'core.module.layout.page.leave.leave': 'Rời trang',
   'core.module.layout.not-found.title': '404 - Trang không tồn tại',
   'core.module.layout.not-found.message':
     'Trang bạn tìm không tồn tại hoặc đã bị xóa. Vui lòng kiểm tra lại địa chỉ URL hoặc quay lại trang chủ để tiếp tục.',

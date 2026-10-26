@@ -1,23 +1,72 @@
+@let _backLink = backLink();
+@let _badges = visibleBadges();
+@let _hasLead = hasLead();
 @if (!noHeader()) {
-  <div class="c-page-header bg-white">
+  <header class="c-page-header bg-white">
     <div class="p-16 d-flex align-items-center w-full justify-content-between">
-      <div class="d-flex">
-        <ng-content select="[headerLeft]">
-          <div class="d-flex flex-column">
-            <div class="T20M">{{ title() }}</div>
+      <div class="d-flex" [class.c-page-lead]="_hasLead">
+        <ng-content select="[headerLeft],[sdHeaderLeft]">
+          @if (_backLink) {
+            <a class="c-page-back" [routerLink]="_backLink" [attr.aria-label]="'core.common.back' | sdTranslate">
+              <sd-icon name="arrow_back"></sd-icon>
+            </a>
+          }
+          <div #titleBlock class="d-flex flex-column" [class.c-page-title-block]="_hasLead">
+            @if (_badges.length) {
+              <div class="c-page-title-row">
+                <h1 class="T20M c-page-title">{{ title() }}</h1>
+                @for (badge of _badges; track $index) {
+                  <sd-badge
+                    size="md"
+                    [type]="badge.type ?? 'round'"
+                    [color]="badge.color"
+                    [icon]="badge.icon"
+                    [title]="badge.title"
+                    [label]="badge.label"
+                    [tooltip]="badge.tooltip"></sd-badge>
+                }
+              </div>
+            } @else {
+              <h1 class="T20M" [class.c-page-title]="_hasLead">{{ title() }}</h1>
+            }
             @if (description()) {
               <div class="T14R text-secondary mt-4">{{ description() }}</div>
             }
           </div>
         </ng-content>
       </div>
-      <ng-content select="[headerRight]"></ng-content>
+      <ng-content select="[headerRight],[sdHeaderRight]"></ng-content>
     </div>
-  </div>
+    <ng-content select="[sdSubheader]"></ng-content>
+  </header>
 }
 
-<div class="c-page-wrapper px-0">
+<!-- why: px-0 là utility !important; cột có giới hạn bề rộng cần padding riêng nên bỏ nó đi. -->
+<div #wrapper class="c-page-wrapper" [class.px-0]="resolvedWidth() === 'full'">
   <div class="c-page-content">
     <ng-content></ng-content>
   </div>
+  <ng-content select="[sdAside]"></ng-content>
+  @let _tocItems = tocItems();
+  @if (_tocItems.length) {
+    @let _activeToc = activeTocIndex();
+    <nav class="c-page-toc" [attr.aria-label]="'core.module.layout.page.toc' | sdTranslate">
+      @for (item of _tocItems; track item.el; let index = $index) {
+        <button
+          type="button"
+          class="c-page-toc-item"
+          [class.active]="index === _activeToc"
+          [attr.aria-current]="index === _activeToc ? 'true' : null"
+          (click)="scrollToSection(index)">
+          {{ item.title }}
+        </button>
+      }
+    </nav>
+  }
 </div>
+
+<!-- why: footer chỉ có hai slot chiếu thẳng vào, không có wrapper, nên CSS :empty ẩn nó khi màn không dùng footer. -->
+<footer class="c-page-footer" role="group" [attr.aria-label]="'core.module.layout.page.actions' | sdTranslate">
+  <ng-content select="[sdFooterLeft]"></ng-content>
+  <ng-content select="[sdFooterRight]"></ng-content>
+</footer>

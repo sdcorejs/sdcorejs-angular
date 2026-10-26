@@ -83,15 +83,18 @@
       @if (view.data) {
         <!-- why: chỉ bind (click) khi cột có `click` — badge thành role="button" + tabindex=0 ngay khi output có
              người lắng nghe, nên bind vô điều kiện biến mọi badge trong bảng thành nút. Tooltip đi qua input
-             `tooltip` của badge: [sdTooltip] trên host thêm tooltip thứ hai khi chữ của badge bị cắt. -->
+             `tooltip` của badge: [sdTooltip] trên host thêm tooltip thứ hai khi chữ của badge bị cắt.
+             Tooltip của cột đứng trước tooltip do useBadge trả về. -->
+        @let _badgeTooltip = view.tooltip || view.badge.tooltip;
         @if (view.click) {
           <sd-badge
             [attr.data-autoId]="_autoId"
             [type]="view.badge.type"
             [title]="view.data"
+            [label]="view.badge.label"
             [color]="view.badge.color"
             [icon]="view.badge.icon"
-            [tooltip]="view.tooltip"
+            [tooltip]="_badgeTooltip"
             (click)="view.click()">
           </sd-badge>
         } @else {
@@ -99,9 +102,10 @@
             [attr.data-autoId]="_autoId"
             [type]="view.badge.type"
             [title]="view.data"
+            [label]="view.badge.label"
             [color]="view.badge.color"
             [icon]="view.badge.icon"
-            [tooltip]="view.tooltip">
+            [tooltip]="_badgeTooltip">
           </sd-badge>
         }
       }

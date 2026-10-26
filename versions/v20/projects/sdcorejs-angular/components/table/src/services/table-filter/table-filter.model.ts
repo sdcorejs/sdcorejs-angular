@@ -86,6 +86,12 @@ export interface SdTableOptionFilter<T = unknown> {
   /** Có thể thu gọn bộ lọc hay không */
   collapsible?: boolean;
 
+  /**
+   * Trạng thái thu gọn ban đầu của external filter. Không đặt thì bảng chính của `sd-page-list` thu gọn khi màn
+   * thấp (`compact`), các bảng khác mở. Bỏ qua khi `collapsible` là `false`.
+   */
+  externalFilterCollapsed?: boolean;
+
   /** Ẩn toolbar (xóa bộ lọc, thiết lập) của external filter, khi có ít external filter user không cần chức năng này */
   hideExternalFilterToolbar?: boolean;
 

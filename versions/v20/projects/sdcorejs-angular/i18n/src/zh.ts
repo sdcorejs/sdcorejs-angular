@@ -34,6 +34,7 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.mobile.reorder': '拖动以调整行顺序',
   'core.component.table.mobile.details': '详情',
   'core.component.table.mobile.summary': '汇总',
+  'core.common.back': '返回',
   'core.common.cancel': '取消',
   'core.common.close': '关闭',
   'core.common.reload': '重新加载页面',
@@ -633,6 +634,12 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.module.layout.forbidden.back-home': '返回首页',
 
   // ---- Module: layout (not-found page) ----
+  'core.module.layout.page.actions': '页面操作',
+  'core.module.layout.page.toc': '目录',
+  'core.module.layout.page.leave.title': '未保存就离开页面?',
+  'core.module.layout.page.leave.message': '未保存的更改将会丢失。',
+  'core.module.layout.page.leave.stay': '留在此页',
+  'core.module.layout.page.leave.leave': '离开页面',
   'core.module.layout.not-found.title': '404 - 页面未找到',
   'core.module.layout.not-found.message': '您正在查找的页面不存在或已被移除。请检查 URL 或返回首页继续。',
   'core.module.layout.not-found.back': '返回',

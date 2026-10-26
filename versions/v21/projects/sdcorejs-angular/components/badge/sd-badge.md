@@ -201,6 +201,20 @@ None — content is driven by `title`, `description`, and `icon`.
 - A `dot` without `title` — it has no visible text, so it would have no name
 - Using a badge to convey error STATE that the user must act on — pair with a tooltip or follow-up `<sd-button>` so the user has a path forward
 
+## Model: `SdBadgeData`
+Data for one badge passed through an option instead of an `<sd-badge>` tag. Exported from `@sdcorejs/angular/components/badge`. `sd-table` columns return it from `useBadge`.
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `title` | `string \| number \| null` | Text or count, as the `title` input. In a table cell it replaces the cell text. |
+| `type` | `SdBadgeType` | The place that renders the badge picks the default: `sd-table` uses `'round'`. |
+| `color` | `Color` | As the `color` input. |
+| `icon` | `string \| null` | As the `icon` input. |
+| `label` | `string \| null` | Left part of `type: 'pair'`. |
+| `tooltip` | `string \| null` | As the `tooltip` input. In a table cell, the column `tooltip` wins when both are set. |
+
+There is no `size`, `description`, `pulse` or `fontSet`: the place that renders the badge sets them. `SdBadgePickerValue` (`{ type, color, icon }`) stays the value of `<sd-badge-picker>`.
+
 ## Related
 - `<sd-badge-picker>` — lets users choose a badge's type, colour and icon (`sd-badge-picker.md`); `SD_BADGE_TYPE_OPTIONS` lists the six types with i18n keys
 - `<sd-button type="text">` — for clickable text-style actions

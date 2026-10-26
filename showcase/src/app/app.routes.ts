@@ -88,6 +88,13 @@ export const routes: Routes = [
     loadChildren: () => import('./pages/components/tab-router/live/tab-router-live.pages').then(m => m.TAB_ROUTER_LIVE_ROUTES),
   },
   {
+    // Live sd-page-list screen of the Page List page: ?cfg= toggles its parts; e2e/page-list.e2e.ts measures E1 on it.
+    // Must stay above the generic 'demo' route, which would match the prefix.
+    path: 'demo/page-list',
+    title: `Page list demo | ${PACKAGE_TITLE}`,
+    loadChildren: () => import('./pages/components/page-list/live/page-list-live.routes').then(m => m.PAGE_LIST_LIVE_ROUTES),
+  },
+  {
     // Live generic module screens of the Generic CRUD page, backed by an in-memory adapter.
     path: 'demo',
     title: `Generic CRUD demo | ${PACKAGE_TITLE}`,

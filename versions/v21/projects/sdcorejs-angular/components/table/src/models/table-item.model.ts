@@ -1,5 +1,5 @@
 import { isDevMode } from '@angular/core';
-import { SdBadge } from '@sdcorejs/angular/components/badge';
+import { SdBadge, type SdBadgeData } from '@sdcorejs/angular/components/badge';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { SdUnwrapSignal } from '@sdcorejs/angular/utilities/models';
 import type { SdTableGroupDefContext } from '../directives/sd-table-group-def.directive';
@@ -42,6 +42,9 @@ export interface SdTableDisplay {
     color: SdUnwrapSignal<SdBadge['color']>;
     icon?: SdUnwrapSignal<SdBadge['icon']>;
     title?: SdUnwrapSignal<SdBadge['title']>;
+    label?: SdBadgeData['label'];
+    /** Tooltip của badge; ô chỉ dùng khi cột không có `tooltip`. */
+    tooltip?: SdBadgeData['tooltip'];
   };
   cellStyle?: Record<string, string>;
   data: string | number | undefined | null;

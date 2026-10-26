@@ -7866,6 +7866,308 @@ export class OrgChartDemoComponent {
   font-size: 12px;
 }`,
   },
+  "components/page": {
+    typescript: `import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import type { SdBadgeData } from '@sdcorejs/angular/components/badge';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdSection } from '@sdcorejs/angular/components/section';
+import { SdTab, SdTabGroup } from '@sdcorejs/angular/components/tab';
+import { SdSegmentedComponent, SdSegmentedItem, SdSegmentedModel } from '@sdcorejs/angular/forms/segmented';
+import { SdPageComponent, SdPageWidth } from '@sdcorejs/angular/modules/layout';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+@Component({
+  selector: 'app-page-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, SdPageComponent, SdButton, SdSection, SdTabGroup, SdTab, SdSegmentedComponent],
+  template: \`
+    <demo-page #demoPage
+      title="Page"
+      description="Khung trang trong shell: header có title, nút quay lại và badge, thân cuộn, cùng subheader, cột phụ và footer khi cần.">
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-header-co-nut-quay-lai-va-badge') {
+      <demo-section heading="Header có nút quay lại và badge" [props]="[{ name: 'backLink', value: 'url | commands' }, { name: 'badges', value: 'SdBadgeData[] (tối đa 2)' }]">
+        <div class="frame">
+          <sd-page title="Đơn hàng ĐH-2400" description="Tạo lúc 08:30 · Nguyễn An" backLink="." [badges]="orderBadges">
+            <sd-button headerRight title="Cập nhật" type="fill" color="primary"></sd-button>
+            <div class="body">Nội dung chi tiết đơn hàng.</div>
+          </sd-page>
+        </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-be-rong-cot-noi-dung') {
+      <demo-section heading="Bề rộng cột nội dung" [props]="[{ name: 'width', value: 'full | wide | medium | narrow' }]">
+        <sd-segmented label="width" [items]="widths" [(model)]="widthChoice" />
+        <div class="frame mt-12">
+          <sd-page title="Sản phẩm" description="Cột nội dung canh giữa, padding 16px / 24px." [width]="width()">
+            <div class="body">Bề rộng tối đa của cột tính cả 24px padding hai bên.</div>
+          </sd-page>
+        </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-subheader-cot-phu-va-footer') {
+      <demo-section heading="Subheader, cột phụ và footer" [props]="[{ name: 'sdSubheader', value: 'sd-tab-group' }, { name: 'sdAside', value: '320px' }, { name: 'sdFooterLeft', value: 'slot' }, { name: 'sdFooterRight', value: 'slot' }]">
+        <div class="frame frame-tall">
+          <sd-page title="Nhập dữ liệu" backLink="." width="wide">
+            <sd-tab-group sdSubheader>
+              <sd-tab label="Nguồn"></sd-tab>
+              <sd-tab label="Ánh xạ"></sd-tab>
+              <sd-tab label="Xác nhận"></sd-tab>
+            </sd-tab-group>
+            @for (line of lines; track line) {
+              <div class="body">Dòng nội dung {{ line }}</div>
+            }
+            <div sdAside class="aside">Cột phụ 320px, dính khi cuộn. Dưới 1200px viewport nó xuống dưới nội dung.</div>
+            <sd-button sdFooterLeft title="Quay lại" type="outline"></sd-button>
+            <sd-button sdFooterRight title="Tiếp tục" type="fill" color="primary"></sd-button>
+          </sd-page>
+        </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trang-chi-tiet-co-cot-phu-o-dau') {
+      <demo-section heading="Trang chi tiết có cột phụ ở đầu" [props]="[{ name: 'selector', value: 'sd-page-detail' }, { name: 'width', value: 'wide (mặc định)' }, { name: 'aside', value: 'start' }]">
+        <div class="frame frame-tall">
+          <sd-page-detail title="Chi tiết sản phẩm #SP-1024" backLink="." aside="start" [badges]="productBadges">
+            <sd-button headerRight title="Cập nhật" type="fill" color="primary"></sd-button>
+            <sd-section title="Thông tin chung"><div class="body">Tên, mã, nhóm hàng.</div></sd-section>
+            <sd-section title="Giá"><div class="body">Giá bán, giá vốn.</div></sd-section>
+            <div sdAside class="aside">Người phụ trách và lịch sử thay đổi. Dưới 1200px viewport cột này xuống dưới nội dung.</div>
+          </sd-page-detail>
+        </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trang-form-co-muc-luc') {
+      <demo-section heading="Trang form có mục lục" [props]="[{ name: 'selector', value: 'sd-page-form' }, { name: 'width', value: 'medium (mặc định)' }, { name: 'toc', value: 'true' }]" note="Mục lục liệt kê các sd-section có title ở cấp ngoài cùng; ẩn khi viewport dưới 1200px.">
+        <div class="frame frame-tall">
+          <sd-page-form title="Cập nhật sản phẩm" backLink="." toc>
+            <div headerRight class="d-flex gap-8">
+              <sd-button title="Huỷ" type="outline"></sd-button>
+              <sd-button title="Lưu" type="fill" color="primary"></sd-button>
+            </div>
+            @for (group of formGroups; track group) {
+              <sd-section [title]="group"><div class="body body-tall">Các trường của nhóm {{ group }}.</div></sd-section>
+            }
+          </sd-page-form>
+        </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-man-cu-chi-dung-title-va-headerright') {
+      <demo-section heading="Màn cũ chỉ dùng title và headerRight" [props]="[{ name: 'title', value: 'string' }, { name: 'headerRight', value: 'slot' }]" note="Không dùng input hay slot mới thì header và thân giữ nguyên như trước; title vẫn xuống dòng.">
+        <div class="frame">
+          <sd-page title="Danh sách khách hàng">
+            <sd-button headerRight title="Tạo mới" prefixIcon="add" type="fill" color="primary"></sd-button>
+            <div class="body">Nội dung danh sách.</div>
+          </sd-page>
+        </div>
+      </demo-section>
+      }
+    </demo-page>
+  \`,
+  styles: [\`
+    .frame {
+      width: 100%;
+      box-sizing: border-box;
+      height: 280px;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid #e6e6e6;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .frame-tall {
+      height: 420px;
+    }
+    .body {
+      padding: 16px;
+      margin-bottom: 8px;
+      background: #ffffff;
+      border-radius: 6px;
+    }
+    .body-tall {
+      height: 160px;
+    }
+    .aside {
+      padding: 16px;
+      background: #ffffff;
+      border-radius: 6px;
+    }
+  \`],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class PageDemoComponent {
+  readonly orderBadges: readonly SdBadgeData[] = [
+    { title: 'Chờ xác nhận', color: 'warning' },
+    { type: 'pair', label: 'Kênh', title: 'Online', color: 'info' },
+  ];
+  readonly widths: readonly SdSegmentedItem<SdPageWidth>[] = [
+    { value: 'full', label: 'full' },
+    { value: 'wide', label: 'wide' },
+    { value: 'medium', label: 'medium' },
+    { value: 'narrow', label: 'narrow' },
+  ];
+  readonly widthChoice = signal<SdSegmentedModel<SdPageWidth>>('medium');
+  readonly width = computed(() => {
+    const choice = this.widthChoice();
+    return typeof choice === 'string' ? choice : null;
+  });
+  readonly lines = [1, 2, 3, 4, 5, 6, 7, 8];
+  readonly productBadges: readonly SdBadgeData[] = [{ title: 'Đang bán', color: 'success' }];
+  readonly formGroups = ['Thông tin chung', 'Giá', 'Kho', 'Mô tả'];
+}
+`,
+    scss: `.frame {
+  width: 100%;
+  box-sizing: border-box;
+  height: 280px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.frame-tall {
+  height: 420px;
+}
+.body {
+  padding: 16px;
+  margin-bottom: 8px;
+  background: #ffffff;
+  border-radius: 6px;
+}
+.body-tall {
+  height: 160px;
+}
+.aside {
+  padding: 16px;
+  background: #ffffff;
+  border-radius: 6px;
+}`,
+  },
+  "components/page-list": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdTable, type SdTableOption } from '@sdcorejs/angular/components/table';
+import { SdPageList } from '@sdcorejs/angular/modules/layout';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+import { ORDER_STATUSES, ORDERS, PAGE_LIST_DEMO_BASE, type Order } from './live/page-list-live.data';
+
+@Component({
+  selector: 'app-page-list-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, SdPageList, SdTable, SdButton, RouterLink],
+  template: \`
+    <demo-page #demoPage
+      title="Page List"
+      description="Màn danh sách có sd-table: thân vừa khít màn hình, paginator luôn thấy, chi tiết là route con.">
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-danh-sach-vua-khit-khung') {
+      <demo-section heading="Danh sách vừa khít khung" [props]="[{ name: 'sd-table', value: 'bảng chính' }, { name: 'autoCompact', value: 'true' }]" note="Khung cao 420px: bảng lấp phần còn lại, chỉ vùng dữ liệu cuộn, footer đứng yên.">
+        <div class="frame">
+          <sd-page-list title="Đơn hàng" description="Đơn bán lẻ từ mọi kênh.">
+            <sd-button headerRight title="Tạo đơn hàng" prefixIcon="add" type="fill" color="primary"></sd-button>
+            <sd-table [option]="option"></sd-table>
+          </sd-page-list>
+        </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-man-song-toan-trang') {
+      <demo-section heading="Màn sống toàn trang" [props]="[{ name: 'detail', value: 'page | drawer' }, { name: 'route', value: '/demo/page-list' }]" note="Mở màn mẫu toàn trang; cấu hình đổi bằng ?cfg= (tab, score card, external filter, chọn nhiều, autoCompact, cách mở chi tiết).">
+        <div class="links">
+          @for (link of links; track link.label) {
+            <a class="link" [routerLink]="base" [queryParams]="{ cfg: link.cfg }">{{ link.label }}</a>
+          }
+        </div>
+      </demo-section>
+      }
+    </demo-page>
+  \`,
+  styles: [\`
+    .frame {
+      width: 100%;
+      box-sizing: border-box;
+      height: 420px;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid #e6e6e6;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .link {
+      padding: 6px 12px;
+      border: 1px solid #e3e4ea;
+      border-radius: 6px;
+      color: var(--sd-primary, #005cbb);
+      text-decoration: none;
+    }
+  \`],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class PageListDemoComponent {
+  readonly base = PAGE_LIST_DEMO_BASE;
+  readonly links = [
+    { label: 'Mặc định (drawer)', cfg: JSON.stringify({}) },
+    { label: 'Tab + score card', cfg: JSON.stringify({ tabs: true, score: true }) },
+    { label: 'External filter', cfg: JSON.stringify({ quickSearch: false, externalFilter: true }) },
+    { label: 'Chọn nhiều', cfg: JSON.stringify({ selector: true }) },
+    { label: 'Chi tiết dạng trang', cfg: JSON.stringify({ detail: 'page' }) },
+    { label: 'Tắt autoCompact', cfg: JSON.stringify({ tabs: true, score: true, externalFilter: true, quickSearch: false, autoCompact: false }) },
+  ];
+  readonly option: SdTableOption<Order> = {
+    type: 'local',
+    rowKey: 'id',
+    items: () => ORDERS.slice(0, 40),
+    columns: [
+      { field: 'code', title: 'Mã đơn', type: 'string', width: '130px' },
+      { field: 'customer', title: 'Khách hàng', type: 'string' },
+      { field: 'total', title: 'Tổng tiền (₫)', type: 'number', width: '130px', align: 'right' },
+      {
+        field: 'status',
+        title: 'Trạng thái',
+        type: 'values',
+        width: '150px',
+        option: { items: [...ORDER_STATUSES], valueField: 'value', displayField: 'display' },
+        useBadge: value => ({ type: 'round', color: ORDER_STATUSES.find(item => item.value === value)?.color }),
+      },
+    ],
+    paginate: { pageSize: 10, pages: [10, 20] },
+  } as SdTableOption<Order>;
+}
+`,
+    scss: `.frame {
+  width: 100%;
+  box-sizing: border-box;
+  height: 420px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.link {
+  padding: 6px 12px;
+  border: 1px solid #e3e4ea;
+  border-radius: 6px;
+  color: var(--sd-primary, #005cbb);
+  text-decoration: none;
+}`,
+  },
   "components/preview": {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
@@ -23446,6 +23748,109 @@ Bởi Nguyễn Văn A"></sd-badge>
     ]">
     <div class="org-demo-stage">
       <sd-org-chart [items]="coloredItems" autoId="colored"></sd-org-chart>
+    </div>
+  </demo-section>`,
+  },
+  "components/page-list/example-danh-sach-vua-khit-khung": {
+    ...SHOWCASE_PAGE_SOURCES["components/page-list"],
+    html: `<demo-section heading="Danh sách vừa khít khung" [props]="[{ name: 'sd-table', value: 'bảng chính' }, { name: 'autoCompact', value: 'true' }]" note="Khung cao 420px: bảng lấp phần còn lại, chỉ vùng dữ liệu cuộn, footer đứng yên.">
+    <div class="frame">
+      <sd-page-list title="Đơn hàng" description="Đơn bán lẻ từ mọi kênh.">
+        <sd-button headerRight title="Tạo đơn hàng" prefixIcon="add" type="fill" color="primary"></sd-button>
+        <sd-table [option]="option"></sd-table>
+      </sd-page-list>
+    </div>
+  </demo-section>`,
+  },
+  "components/page-list/example-man-song-toan-trang": {
+    ...SHOWCASE_PAGE_SOURCES["components/page-list"],
+    html: `<demo-section heading="Màn sống toàn trang" [props]="[{ name: 'detail', value: 'page | drawer' }, { name: 'route', value: '/demo/page-list' }]" note="Mở màn mẫu toàn trang; cấu hình đổi bằng ?cfg= (tab, score card, external filter, chọn nhiều, autoCompact, cách mở chi tiết).">
+    <div class="links">
+      @for (link of links; track link.label) {
+        <a class="link" [routerLink]="base" [queryParams]="{ cfg: link.cfg }">{{ link.label }}</a>
+      }
+    </div>
+  </demo-section>`,
+  },
+  "components/page/example-be-rong-cot-noi-dung": {
+    ...SHOWCASE_PAGE_SOURCES["components/page"],
+    html: `<demo-section heading="Bề rộng cột nội dung" [props]="[{ name: 'width', value: 'full | wide | medium | narrow' }]">
+    <sd-segmented label="width" [items]="widths" [(model)]="widthChoice" />
+    <div class="frame mt-12">
+      <sd-page title="Sản phẩm" description="Cột nội dung canh giữa, padding 16px / 24px." [width]="width()">
+        <div class="body">Bề rộng tối đa của cột tính cả 24px padding hai bên.</div>
+      </sd-page>
+    </div>
+  </demo-section>`,
+  },
+  "components/page/example-header-co-nut-quay-lai-va-badge": {
+    ...SHOWCASE_PAGE_SOURCES["components/page"],
+    html: `<demo-section heading="Header có nút quay lại và badge" [props]="[{ name: 'backLink', value: 'url | commands' }, { name: 'badges', value: 'SdBadgeData[] (tối đa 2)' }]">
+    <div class="frame">
+      <sd-page title="Đơn hàng ĐH-2400" description="Tạo lúc 08:30 · Nguyễn An" backLink="." [badges]="orderBadges">
+        <sd-button headerRight title="Cập nhật" type="fill" color="primary"></sd-button>
+        <div class="body">Nội dung chi tiết đơn hàng.</div>
+      </sd-page>
+    </div>
+  </demo-section>`,
+  },
+  "components/page/example-man-cu-chi-dung-title-va-headerright": {
+    ...SHOWCASE_PAGE_SOURCES["components/page"],
+    html: `<demo-section heading="Màn cũ chỉ dùng title và headerRight" [props]="[{ name: 'title', value: 'string' }, { name: 'headerRight', value: 'slot' }]" note="Không dùng input hay slot mới thì header và thân giữ nguyên như trước; title vẫn xuống dòng.">
+    <div class="frame">
+      <sd-page title="Danh sách khách hàng">
+        <sd-button headerRight title="Tạo mới" prefixIcon="add" type="fill" color="primary"></sd-button>
+        <div class="body">Nội dung danh sách.</div>
+      </sd-page>
+    </div>
+  </demo-section>`,
+  },
+  "components/page/example-subheader-cot-phu-va-footer": {
+    ...SHOWCASE_PAGE_SOURCES["components/page"],
+    html: `<demo-section heading="Subheader, cột phụ và footer" [props]="[{ name: 'sdSubheader', value: 'sd-tab-group' }, { name: 'sdAside', value: '320px' }, { name: 'sdFooterLeft', value: 'slot' }, { name: 'sdFooterRight', value: 'slot' }]">
+    <div class="frame frame-tall">
+      <sd-page title="Nhập dữ liệu" backLink="." width="wide">
+        <sd-tab-group sdSubheader>
+          <sd-tab label="Nguồn"></sd-tab>
+          <sd-tab label="Ánh xạ"></sd-tab>
+          <sd-tab label="Xác nhận"></sd-tab>
+        </sd-tab-group>
+        @for (line of lines; track line) {
+          <div class="body">Dòng nội dung {{ line }}</div>
+        }
+        <div sdAside class="aside">Cột phụ 320px, dính khi cuộn. Dưới 1200px viewport nó xuống dưới nội dung.</div>
+        <sd-button sdFooterLeft title="Quay lại" type="outline"></sd-button>
+        <sd-button sdFooterRight title="Tiếp tục" type="fill" color="primary"></sd-button>
+      </sd-page>
+    </div>
+  </demo-section>`,
+  },
+  "components/page/example-trang-chi-tiet-co-cot-phu-o-dau": {
+    ...SHOWCASE_PAGE_SOURCES["components/page"],
+    html: `<demo-section heading="Trang chi tiết có cột phụ ở đầu" [props]="[{ name: 'selector', value: 'sd-page-detail' }, { name: 'width', value: 'wide (mặc định)' }, { name: 'aside', value: 'start' }]">
+    <div class="frame frame-tall">
+      <sd-page-detail title="Chi tiết sản phẩm #SP-1024" backLink="." aside="start" [badges]="productBadges">
+        <sd-button headerRight title="Cập nhật" type="fill" color="primary"></sd-button>
+        <sd-section title="Thông tin chung"><div class="body">Tên, mã, nhóm hàng.</div></sd-section>
+        <sd-section title="Giá"><div class="body">Giá bán, giá vốn.</div></sd-section>
+        <div sdAside class="aside">Người phụ trách và lịch sử thay đổi. Dưới 1200px viewport cột này xuống dưới nội dung.</div>
+      </sd-page-detail>
+    </div>
+  </demo-section>`,
+  },
+  "components/page/example-trang-form-co-muc-luc": {
+    ...SHOWCASE_PAGE_SOURCES["components/page"],
+    html: `<demo-section heading="Trang form có mục lục" [props]="[{ name: 'selector', value: 'sd-page-form' }, { name: 'width', value: 'medium (mặc định)' }, { name: 'toc', value: 'true' }]" note="Mục lục liệt kê các sd-section có title ở cấp ngoài cùng; ẩn khi viewport dưới 1200px.">
+    <div class="frame frame-tall">
+      <sd-page-form title="Cập nhật sản phẩm" backLink="." toc>
+        <div headerRight class="d-flex gap-8">
+          <sd-button title="Huỷ" type="outline"></sd-button>
+          <sd-button title="Lưu" type="fill" color="primary"></sd-button>
+        </div>
+        @for (group of formGroups; track group) {
+          <sd-section [title]="group"><div class="body body-tall">Các trường của nhóm {{ group }}.</div></sd-section>
+        }
+      </sd-page-form>
     </div>
   </demo-section>`,
   },

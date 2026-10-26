@@ -34,6 +34,7 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.mobile.reorder': '드래그하여 행 순서 변경',
   'core.component.table.mobile.details': '세부 정보',
   'core.component.table.mobile.summary': '요약',
+  'core.common.back': '뒤로',
   'core.common.cancel': '취소',
   'core.common.close': '닫기',
   'core.common.reload': '페이지 새로고침',
@@ -635,6 +636,12 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.module.layout.forbidden.back-home': '홈으로 돌아가기',
 
   // ---- Module: layout (not-found page) ----
+  'core.module.layout.page.actions': '페이지 작업',
+  'core.module.layout.page.toc': '목차',
+  'core.module.layout.page.leave.title': '저장하지 않고 페이지를 떠나시겠습니까?',
+  'core.module.layout.page.leave.message': '저장하지 않은 변경 사항은 사라집니다.',
+  'core.module.layout.page.leave.stay': '머무르기',
+  'core.module.layout.page.leave.leave': '페이지 떠나기',
   'core.module.layout.not-found.title': '404 - 페이지를 찾을 수 없습니다',
   'core.module.layout.not-found.message':
     '찾으시는 페이지가 존재하지 않거나 삭제되었습니다. URL을 확인하거나 홈으로 돌아가 계속 진행해 주세요.',

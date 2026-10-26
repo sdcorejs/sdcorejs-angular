@@ -8,7 +8,7 @@ import { SdTooltipDirective } from '@sdcorejs/angular/directives';
 
 import { ViewComponent } from './view.component';
 import { SdTableColumn } from '../../../models/table-column.model';
-import { MapToSdTableItem, SdTableItem } from '../../../models/table-item.model';
+import { MapToSdTableItem, SdTableDisplay, SdTableItem } from '../../../models/table-item.model';
 
 // why: ô HTML clickable của bảng từng là `<div (click)> + aria-hidden="true"` — vừa xoá nội dung ô
 // khỏi accessibility tree vừa để lại một vùng bấm chuột "câm" mà bàn phím không tới được.
@@ -97,6 +97,12 @@ describe('ViewComponent — clickable HTML cell accessibility', () => {
 
 // why (đợt 3 · QĐ 3, 4): `(click)` từng luôn được bind lên sd-badge nên mọi badge trong bảng thành role="button"
 // + tabindex=0 dù cột không có `click`; tooltip gắn [sdTooltip] lên host thì thêm tooltip thứ hai khi chữ bị cắt.
+interface BadgeCellOptions {
+  click?: boolean;
+  tooltip?: string;
+  badge?: SdTableDisplay['badge'];
+}
+
 @Component({
   changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
   standalone: true,
@@ -110,11 +116,11 @@ class BadgeCellHost {
 
   item: SdTableItem<{ status: string }> = MapToSdTableItem({ status: 'APPROVED' });
 
-  show(options: { click?: boolean; tooltip?: string }): void {
+  show(options: BadgeCellOptions): void {
     this.item.meta.display['status'] = {
       data: 'Đã duyệt',
       isHtml: false,
-      badge: { type: 'round', color: 'success' },
+      badge: options.badge ?? { type: 'round', color: 'success' },
       tooltip: options.tooltip,
       click: options.click ? () => this.clickSpy() : undefined,
     };
@@ -124,7 +130,7 @@ class BadgeCellHost {
 describe('ViewComponent — badge cell', () => {
   let fixture: ComponentFixture<BadgeCellHost>;
 
-  const render = (options: { click?: boolean; tooltip?: string }) => {
+  const render = (options: BadgeCellOptions) => {
     fixture = TestBed.createComponent(BadgeCellHost);
     fixture.componentInstance.show(options);
     fixture.detectChanges();
@@ -153,5 +159,21 @@ describe('ViewComponent — badge cell', () => {
     const badge = render({ tooltip: 'Duyệt lúc 14:30' });
     expect((badge.componentInstance as SdBadge).tooltip()).toBe('Duyệt lúc 14:30');
     expect(badge.injector.get(SdTooltipDirective, null)).toBeNull();
+  });
+
+  it('renders the label of a pair badge', () => {
+    const badge = render({ badge: { type: 'pair', color: 'info', label: 'Kênh' } });
+    expect((badge.componentInstance as SdBadge).label()).toBe('Kênh');
+    expect(badge.nativeElement.textContent).toContain('Kênh');
+  });
+
+  it('uses the badge tooltip when the column has no tooltip', () => {
+    const badge = render({ badge: { type: 'round', color: 'success', tooltip: 'Duyệt bởi An' } });
+    expect((badge.componentInstance as SdBadge).tooltip()).toBe('Duyệt bởi An');
+  });
+
+  it('keeps the column tooltip ahead of the badge tooltip', () => {
+    const badge = render({ tooltip: 'Duyệt lúc 14:30', badge: { type: 'round', color: 'success', tooltip: 'Duyệt bởi An' } });
+    expect((badge.componentInstance as SdBadge).tooltip()).toBe('Duyệt lúc 14:30');
   });
 });

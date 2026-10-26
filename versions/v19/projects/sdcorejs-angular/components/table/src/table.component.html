@@ -47,7 +47,8 @@
       [autoId]="_autoId"
       [filterRegister]="filterRegister"
       [filter]="_tableOption.filter!"
-      [externalFilters]="_tableOption.filter?.externalFilters!">
+      [externalFilters]="_tableOption.filter?.externalFilters!"
+      [collapsedByDefault]="externalFilterCollapsedByDefault()">
     </external-filter>
   }
   @let groupedItems = _items | sdTree: _tableOption.tree : treeRevision() | sdGroup: _tableOption : groupExpandState : groupHost;

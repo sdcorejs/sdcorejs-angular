@@ -34,6 +34,7 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.mobile.reorder': 'ドラッグして行を並べ替え',
   'core.component.table.mobile.details': '詳細',
   'core.component.table.mobile.summary': '集計',
+  'core.common.back': '戻る',
   'core.common.cancel': 'キャンセル',
   'core.common.close': '閉じる',
   'core.common.reload': 'ページを再読み込み',
@@ -638,6 +639,12 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.module.layout.forbidden.back-home': 'ホームに戻る',
 
   // ---- Module: layout (not-found page) ----
+  'core.module.layout.page.actions': 'ページの操作',
+  'core.module.layout.page.toc': '目次',
+  'core.module.layout.page.leave.title': '保存せずにページを離れますか?',
+  'core.module.layout.page.leave.message': '保存されていない変更は失われます。',
+  'core.module.layout.page.leave.stay': 'このページに留まる',
+  'core.module.layout.page.leave.leave': 'ページを離れる',
   'core.module.layout.not-found.title': '404 - ページが見つかりません',
   'core.module.layout.not-found.message':
     'お探しのページは存在しないか、削除されました。URLを確認するか、ホームページに戻って続行してください。',

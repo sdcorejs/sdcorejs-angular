@@ -339,6 +339,8 @@ export class TableFormatService {
             type: badge.type ?? 'round',
             color: badge.color,
             icon: badge.icon,
+            label: badge.label,
+            tooltip: badge.tooltip,
           },
           title: badge.title,
         };
