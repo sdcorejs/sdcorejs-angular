@@ -4,10 +4,10 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  contentChildren,
   DestroyRef,
   effect,
   ElementRef,
+  forwardRef,
   inject,
   Injector,
   input,
@@ -18,7 +18,7 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SdBadge, type SdBadgeData } from '@sdcorejs/angular/components/badge';
-import { SdSection } from '@sdcorejs/angular/components/section';
+import { SD_SECTION_REGISTRY, type SdSection, type SdSectionRegistry } from '@sdcorejs/angular/components/section';
 import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
@@ -57,8 +57,9 @@ interface SdPageTocItem {
     '[class.sd-page--narrow]': "resolvedWidth() === 'narrow'",
     '[class.sd-page--aside-start]': "aside() === 'start'",
   },
+  providers: [{ provide: SD_SECTION_REGISTRY, useExisting: forwardRef(() => SdPageComponent) }],
 })
-export class SdPageComponent {
+export class SdPageComponent implements SdSectionRegistry {
   private el = inject(ElementRef);
   readonly #zone = inject(NgZone);
   readonly #destroyRef = inject(DestroyRef);
@@ -87,9 +88,9 @@ export class SdPageComponent {
   /** Header có nút ← hoặc badge: title một dòng, cắt bằng dấu "…". Màn cũ giữ title xuống dòng như trước. */
   protected readonly hasLead = computed(() => !!this.backLink() || this.visibleBadges().length > 0);
 
-  // why: signal query không chạy trên field #private (NG1053).
-  private readonly sections = contentChildren(SdSection, { descendants: true });
-  private readonly sectionElements = contentChildren(SdSection, { descendants: true, read: ElementRef });
+  // why: section tự đăng ký qua SD_SECTION_REGISTRY, kể cả section nằm trong component con của thân trang (form
+  // tách theo nhóm), điều mà contentChildren không thấy được.
+  readonly #sections = signal<readonly { readonly section: SdSection; readonly el: HTMLElement }[]>([]);
   // why: section lồng được chèn vào section cha khi view của section cha render, tức sau template của sd-page,
   // nên danh sách tính lại sau mỗi lần render chứ không tính ngay trong computed.
   protected readonly tocItems = signal<readonly SdPageTocItem[]>([]);
@@ -109,10 +110,8 @@ export class SdPageComponent {
 
     effect(() => {
       const enabled = this.toc();
-      const sections = this.sections();
-      const elements = this.sectionElements();
-      const titles = sections.map(section => section.title());
-      afterNextRender(() => this.tocItems.set(enabled ? this.#collectToc(titles, elements) : []), { injector: this.#injector });
+      const entries = this.#sections().map(entry => ({ title: entry.section.title(), el: entry.el }));
+      afterNextRender(() => this.tocItems.set(enabled ? this.#collectToc(entries) : []), { injector: this.#injector });
     });
 
     afterNextRender(() => {
@@ -134,9 +133,18 @@ export class SdPageComponent {
         }
       });
       effect(() => {
-        if (this.backLink() && !this.noHeader() && !this.titleBlock()) {
-          console.warn('[sd-page] backLink bị bỏ qua vì headerLeft/sdHeaderLeft đã thay cả vùng trái của header.');
-        }
+        const backLink = this.backLink();
+        const noHeader = this.noHeader();
+        // why: the effect of a routed page runs before its view exists, when titleBlock is still undefined; read it
+        // after render, or every page with a backLink warns once.
+        afterNextRender(
+          () => {
+            if (backLink && !noHeader && !this.titleBlock()) {
+              console.warn('[sd-page] backLink bị bỏ qua vì headerLeft/sdHeaderLeft đã thay cả vùng trái của header.');
+            }
+          },
+          { injector: this.#injector }
+        );
       });
     }
   }
@@ -150,14 +158,17 @@ export class SdPageComponent {
     item.el.scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' });
   }
 
-  #collectToc(titles: readonly (string | null | undefined)[], elements: readonly ElementRef[]): SdPageTocItem[] {
-    const host = this.el.nativeElement as HTMLElement;
-    return titles.flatMap((title, index) => {
-      const el = elements[index]?.nativeElement as HTMLElement | undefined;
-      // why: chỉ lấy section ngoài cùng; section lồng bên trong là một phần của section cha.
-      const outer = el?.parentElement?.closest('sd-section');
-      return el && title && !(outer && host.contains(outer)) ? [{ title, el }] : [];
-    });
+  /** Thêm một section ngoài cùng của thân trang vào mục lục (gọi bởi `sd-section`). */
+  register(section: SdSection, el: HTMLElement): () => void {
+    this.#sections.update(entries => [...entries, { section, el }]);
+    return () => this.#sections.update(entries => entries.filter(entry => entry.section !== section));
+  }
+
+  #collectToc(entries: readonly { readonly title: string | null | undefined; readonly el: HTMLElement }[]): SdPageTocItem[] {
+    const content = (this.el.nativeElement as HTMLElement).querySelector(':scope > .c-page-wrapper > .c-page-content');
+    return entries
+      .filter((entry): entry is SdPageTocItem => !!entry.title && !!content?.contains(entry.el))
+      .sort((left, right) => (left.el.compareDocumentPosition(right.el) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
   }
 
   #syncActiveToc(): void {

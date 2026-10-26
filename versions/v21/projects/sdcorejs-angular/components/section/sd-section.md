@@ -89,3 +89,7 @@ Each item row uses `8px 16px` padding and projects the value in the default slot
 - When `collapsible` is **not** set, the header stays non-interactive and no collapse trigger is rendered.
 - Header whitespace remains clickable for compatibility. Clicks from projected links, buttons, form controls, editable content, roles, or explicit tab stops do not bubble into a second collapse action. Only elements inside the header count: a focusable element around the section, such as `<sd-table>` (`tabindex="0"`) around its external filter, does not block the header click.
 - Collapsed body content is removed from the DOM, so focusable descendants are never left inside an `aria-hidden` container.
+
+## Inside a page with a table of contents
+
+Every outermost `sd-section` registers itself with the nearest `SD_SECTION_REGISTRY` (exported from this entry), also when it sits in a child component. `sd-page` provides the registry for its `toc`, so a form split into `-form` components still lists all its groups. A section inside another `sd-section` does not register: it is part of its parent.

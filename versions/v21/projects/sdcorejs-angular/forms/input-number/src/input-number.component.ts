@@ -21,6 +21,7 @@ import {
   contentChild,
   Injector,
   afterNextRender,
+  signal,
 } from '@angular/core';
 import { Utilities } from '@sdcorejs/utils/fns';
 import {
@@ -143,8 +144,17 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   autoId = computed(() => (this.autoIdInput() ? `forms-input-number-${this.autoIdInput()}` : undefined));
 
   readonly #state = sdFormControlState(computed(() => this.formControl));
+  // why: `#updateValidator` cài validator bằng `updateValueAndValidity({ emitEvent: false })` → `formControl.errors`
+  // đổi mà không phát event nào → `#state` không tick. Đếm số lần cài validator để `[inlineError]` (lỗi API gắn sau khi
+  // lưu) và `[required]` đổi lúc runtime vẫn hiện message, viền đỏ và `data-invalid` dưới OnPush.
+  readonly #validatorVersion = signal(0);
   readonly dataDisabled = computed(() => (this.#state().disabled ? 'true' : 'false'));
-  readonly dataInvalid = computed(() => (this.#state().invalid ? 'true' : 'false'));
+  readonly dataInvalid = computed(() => {
+    void this.#validatorVersion();
+    const control = this.formControl;
+    // Cùng điều kiện với sdFormControlState: chỉ báo invalid sau khi người dùng chạm hoặc sửa.
+    return this.#state() && control.invalid && (control.touched || control.dirty) ? 'true' : 'false';
+  });
   readonly dataEmpty = computed(() => (sdIsEmpty(this.#state().value) ? 'true' : 'false'));
   readonly dataValue = computed(() => sdSerializeDataValue(this.#state().value));
 
@@ -252,6 +262,7 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
    */
   readonly errorMessage = computed<string | undefined>(() => {
     void this.#state();
+    void this.#validatorVersion();
     const errors = this.formControl.errors;
     if (!errors) return undefined;
 
@@ -464,6 +475,7 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
     this.formControl.setValidators(validators.length ? validators : null);
     this.formControl.setAsyncValidators(asyncValidators.length ? asyncValidators : null);
     this.formControl.updateValueAndValidity({ emitEvent: false });
+    this.#validatorVersion.update(version => version + 1);
   };
 
   #onChange = (value: any) => {

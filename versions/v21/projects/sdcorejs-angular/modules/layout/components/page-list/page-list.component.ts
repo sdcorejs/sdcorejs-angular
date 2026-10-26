@@ -20,8 +20,11 @@ import type { SdBadgeData } from '@sdcorejs/angular/components/badge';
 import { SD_TABLE_LAYOUT, type SdTableLayout } from '@sdcorejs/angular/components/table';
 import { SdPageComponent, type SdPageBackLink, type SdPageWidth } from '../page/page.component';
 
-/** Cách mở chi tiết (route con của danh sách): thay danh sách bằng một trang, hoặc drawer đè lên danh sách. */
-export type SdPageListDetail = 'page' | 'drawer';
+/**
+ * Cách mở chi tiết (route con của danh sách): thay danh sách bằng một trang, drawer đè lên danh sách, hoặc `'none'`:
+ * `sd-page-list` không đặt router-outlet, route con hiện trong outlet do màn tự đặt trong thân (chia đôi).
+ */
+export type SdPageListDetail = 'page' | 'drawer' | 'none';
 
 /** Trạng thái `sd-page-list` mà nội dung bên trong (score card, route con…) đọc qua `SD_PAGE_LIST`. */
 export interface SdPageListContext {
@@ -48,6 +51,7 @@ interface SavedScroll {
   styleUrl: './page-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [SdPageComponent, RouterOutlet],
+  host: { '[class.sd-page-list--child-page]': 'hidesList()' },
   providers: [
     { provide: SD_PAGE_LIST, useExisting: forwardRef(() => SdPageList) },
     { provide: SD_TABLE_LAYOUT, useExisting: forwardRef(() => SdPageList) },
@@ -102,9 +106,13 @@ export class SdPageList implements SdPageListContext, SdTableLayout {
   protected onActivate(): void {
     const active = document.activeElement;
     const list = this.#list();
-    this.#returnFocus = active instanceof HTMLElement && list?.contains(active) ? active : null;
+    // why: một route con thay route con khác (chi tiết → cập nhật) thì phần tử đang focus nằm trong route con cũ;
+    // giữ phần tử của danh sách đã mở route con đầu tiên, và vị trí cuộn ghi lúc danh sách còn hiện.
+    const opener = active instanceof HTMLElement && list?.contains(active) ? active : null;
+    this.#returnFocus = opener ?? this.#returnFocus;
     // why: display:none làm mất vị trí cuộn; ghi lại trước khi ẩn danh sách để trả về khi quay lại.
-    this.#savedScroll = this.detail() === 'page' && list ? this.#captureScroll(list) : [];
+    const scroll = this.detail() === 'page' && list ? this.#captureScroll(list) : [];
+    this.#savedScroll = scroll.length ? scroll : this.#savedScroll;
     this.childActive.set(true);
   }
 
@@ -112,6 +120,8 @@ export class SdPageList implements SdPageListContext, SdTableLayout {
     this.childActive.set(false);
     afterNextRender(
       () => {
+        // Route con khác đã mở ngay sau (đổi route con): danh sách vẫn ẩn, giữ focus và vị trí cuộn cho lúc quay về.
+        if (this.childActive()) return;
         for (const saved of this.#savedScroll) {
           saved.el.scrollTop = saved.top;
           saved.el.scrollLeft = saved.left;

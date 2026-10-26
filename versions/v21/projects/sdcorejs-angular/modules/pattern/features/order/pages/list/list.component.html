@@ -1,0 +1,38 @@
+@let _settings = settings();
+<sd-page-list title="Đơn hàng" description="Đơn bán lẻ từ mọi kênh." [detail]="detailMode()" [autoCompact]="_settings.autoCompact">
+  <div headerRight class="d-flex align-items-center gap-8 flex-wrap">
+    <!-- Chỉ có ở /pattern. -->
+    <sd-pattern-settings-button />
+    <sd-button
+      *sdPermission="'PATTERN_ORDER_C_CREATE'"
+      title="Tạo đơn hàng"
+      prefixIcon="add"
+      type="fill"
+      color="primary"
+      autoId="order-create"
+      [routerLink]="['create']" />
+  </div>
+
+  @if (_settings.tabs) {
+    <sd-tab-group sdSubheader [selectedIndex]="tabIndex()" (selectedIndexChange)="selectTab($event)">
+      @for (tab of tabs; track tab.label) {
+        <sd-tab [label]="tab.label" [badge]="counts()?.[tab.status ?? 'all']" />
+      }
+    </sd-tab-group>
+  }
+  @if (_settings.score) {
+    <summary-cards [counts]="counts()" [(status)]="status" />
+  }
+  @if (bulkResult(); as result) {
+    <bulk-result [result]="result" (retry)="retryFailed()" (dismiss)="bulkResult.set(null)" />
+  }
+
+  <sd-table autoId="orders" [option]="option()">
+    <ng-template sdTableCellDef="code" let-order="item">
+      <a *sdPermission="'PATTERN_ORDER_R_DETAIL'" [routerLink]="[order.id, 'detail']">{{ order.code }}</a>
+      @if (!canOpenDetail) {
+        <span>{{ order.code }}</span>
+      }
+    </ng-template>
+  </sd-table>
+</sd-page-list>
