@@ -9,6 +9,7 @@
 @let _errorMessage = errorText();
 @let _size = size();
 @let _labelTop = labelPlacement() === 'top';
+@let _icons = iconSizes();
 <!-- why: một cổng duy nhất cho <mat-error>, chữ lỗi ẩn và aria-invalid (A5). -->
 @let _errorVisible = isErrorShown();
 @let _viewTemplate = _sdViewDef?.templateRef;
@@ -23,10 +24,12 @@
     [valueTemplate]="_valueTemplate">
   </sd-view>
 } @else {
-  @if ((!_appearance || _labelTop) && _labelTemplate) {
+  <!-- why: nhãn rời (`labelPlacement="top"`) là chỗ duy nhất dùng `#sdLabel` / `sdLabelDef` khi sửa, như sd-date và
+       sd-select; nhãn nổi là <mat-label> chữ (D1). -->
+  @if (_labelTop && _labelTemplate) {
     <ng-container *ngTemplateOutlet="_labelTemplate"></ng-container>
   }
-  @if ((!_appearance || _labelTop) && _label && !_labelTemplate) {
+  @if (_labelTop && _label && !_labelTemplate) {
     <sd-label [label]="_label" [required]="_required" [for]="_labelTop ? inputId : null"></sd-label>
   }
 
@@ -36,9 +39,9 @@
   <div
     class="d-flex align-items-center"
     [class.sd-view]="!!_viewTemplate"
-    [class.c-focused]="isFocused"
+    [class.c-focused]="isFocused()"
     [class.c-disabled]="formControl.disabled">
-    @if (_viewTemplate && !isFocused) {
+    @if (_viewTemplate && !isFocused()) {
       <!-- why: KHÔNG đặt aria-label — nội dung sdViewDef chính là nhãn nhìn thấy được. -->
       <div
         class="sd-chip__view-trigger"
@@ -51,37 +54,39 @@
         <ng-container *ngTemplateOutlet="_viewTemplate; context: { value: formControl.value }"></ng-container>
       </div>
     } @else {
+      <!-- why: `.sd-chip-field` nhận mixin sd-chip-row() của core/form.scss — thang chip, chip khoá, “+N”, nút bỏ hết dùng
+           chung với sd-chip-calendar (C1, C2). -->
       <mat-form-field
+        class="sd-chip-field"
         [class.sd-md]="_size === 'md'"
         [class.sd-sm]="_size === 'sm'"
+        [class.sd-lg]="_size === 'lg'"
+        [class.sd-chip-field--folded]="hiddenCount() > 0"
         [class.hide-inline-error]="_hideInlineError"
         [class.sd-label-top]="_labelTop"
         [appearance]="_appearance"
         [floatLabel]="floatLabel()">
-        @if (_appearance && _label && !_labelTop) {
+        @if (_label && !_labelTop) {
           <mat-label>{{ _label }}</mat-label>
         }
         <!-- why: grid nối `gridControl` riêng, không phải `formControl`: là ControlValueAccessor, khi blur nó ghi text của
              các chip đang render vào control (số thành chuỗi, reset bị đè lại). Vẫn cần một ngControl để grid tự tính
              errorState mỗi lần check; matcher của sd-chip quyết định viền đỏ (A5). `required` gán trong component, xem
              `chipGrid`. -->
-        <mat-chip-grid
-          [formControl]="gridControl"
-          #chipList
-          [errorStateMatcher]="matcher"
-          [class.sd-md]="_size === 'md'"
-          [class.sd-sm]="_size === 'sm'">
+        <mat-chip-grid [formControl]="gridControl" #chipList [errorStateMatcher]="matcher">
           <!-- why: chips() giữ cả 0 và track theo giá trị, nên xoá một chip không dựng lại các chip sau nó (A2).
                `[removable]` nhận boolean của từng chip: predicate truyền thẳng luôn truthy và Backspace / Delete vẫn
-               xoá chip khoá (A1). Khi không focus chỉ hiện `maxVisible` chip, phần dư gộp vào “+N” (B7). -->
+               xoá chip khoá (A1). Khi không focus chỉ hiện `maxVisible` chip, phần dư gộp vào “+N” (B7). Chip khoá có nền
+               riêng, icon khoá và tên nối “, không xoá được” (C3). -->
           @for (item of visibleChips(); track item) {
             @let _removable = isRemovable(item);
             @let _text = chipText(item);
             <mat-chip-row
-              [class.sd-md]="_size === 'md'"
-              [class.sd-sm]="_size === 'sm'"
+              class="sd-chip__chip"
+              [class.sd-chip__chip--locked]="!_removable"
               [class.sd-chip__chip--duplicate]="duplicateChip() === item"
               [removable]="_removable"
+              [aria-label]="chipLabel(item)"
               (removed)="onRemove(item)"
               (keydown)="onChipKeydown($event, item)"
               [disabled]="inputControl.disabled"
@@ -94,8 +99,12 @@
                 [matTooltipDisabled]="!truncatedChips().has(_text)"
                 >{{ item }}</span
               >
+              <!-- why: mỗi khối @if một phần tử gốc, để ✕ được chiếu vào ô trailing của mat-chip-row ([matChipRemove]). -->
               @if (!inputControl.disabled && _removable) {
-                <sd-icon matChipRemove name="close" [ariaLabel]="removeLabel(item)"></sd-icon>
+                <sd-icon matChipRemove name="close" [size]="_icons.chip" [ariaLabel]="removeLabel(item)"></sd-icon>
+              }
+              @if (!inputControl.disabled && !_removable) {
+                <sd-icon class="sd-chip__lock" name="lock" [size]="_icons.chip" [matTooltip]="lockedLabel()"></sd-icon>
               }
             </mat-chip-row>
           }
@@ -159,13 +168,13 @@
           <button
             type="button"
             matSuffix
-            class="sd-clear-btn sd-chip__clear"
+            class="sd-clear-btn sd-chip__clear sd-chip__suffix"
             [class.sd-hover]="_canClear"
             [class.sd-chip__clear--empty]="!_canClear"
             [attr.aria-label]="clearLabel()"
             [attr.data-autoid]="autoId() ? autoId() + '-clear' : null"
             (click)="onClear($event)">
-            <sd-icon name="close"></sd-icon>
+            <sd-icon name="close" [size]="_icons.clear"></sd-icon>
           </button>
         }
 

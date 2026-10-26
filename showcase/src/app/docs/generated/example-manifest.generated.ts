@@ -2444,7 +2444,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "forms/chip",
     sectionId: "example-chip-khoa",
     title: "Chip khoá",
-    description: "Predicate áp cho nút ✕, Backspace và Delete: chip “Quản trị” không xoá được.",
+    description: "Predicate áp cho nút ✕, Backspace, Delete và nút bỏ hết: chip “Quản trị” không xoá được — nền nhạt hơn, icon khoá có tooltip “Không xoá được”, screen reader đọc “Quản trị, Không xoá được”.",
   },
   {
     sourceKey: "forms/chip/example-vo-hieu-hoa",
@@ -2458,7 +2458,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "forms/chip",
     sectionId: "example-kich-thuoc",
     title: "Kích thước",
-    description: "Chip thu gọn cho bảng / toolbar.",
+    description: "Field một dòng 32 / 40 / 48px, chip 20 / 24 / 28px nằm giữa — cùng thang với sd-chip-calendar. Dùng sm cho bảng / toolbar.",
   },
   {
     sourceKey: "forms/chip/example-chinh-sua-noi-tuyen",

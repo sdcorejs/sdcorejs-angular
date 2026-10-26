@@ -6,8 +6,26 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+### Changed (BREAKING for consumers)
+
+- Chip: the unused autocomplete path is gone — `onSelect()`, `selectable`, `separatorKeysCodes` and the `MatAutocompleteModule` / `MatProgressSpinnerModule` imports. The template never rendered an autocomplete, so only code that called `onSelect()` itself is affected; add the value through `[(model)]`.
+- Chip: `SdRemovableChipPipe` (`sdRemovableChip`) is no longer exported from `@sdcorejs/angular/forms/chip`; `<sd-chip>` stopped using it. Apply the `removable` value yourself.
+- Chip: `isFocused` is a signal (read `isFocused()`), and `SdChip` no longer has `ngAfterViewInit()` / `ngOnDestroy()`.
+
+```diff
+- chip.onSelect(event);
++ model = [...model, event.option.value];
+
+- @let canRemove = item | sdRemovableChip: removable;
++ @let canRemove = typeof removable === 'function' ? removable(item) : removable;
+
+- if (chip.isFocused) { … }
++ if (chip.isFocused()) { … }
+```
+
 ### Added
 
+- Theme: the component tokens `--sd-chip-locked-bg` and `--sd-chip-more-hover-bg`, shared by `<sd-chip>` and `<sd-chip-calendar>`. `--sd-chip-calendar-chip-locked-bg` and `--sd-chip-calendar-more-hover-bg` keep their names and now default to them.
 - Chip: `minCount` / `maxCount` replace `min` / `max`. `maxCount` also stops adding once reached: an `n/max` counter shows under the field, the placeholder says “Đã đủ {max} giá trị”, and typing or pasting more is announced instead of added.
 - Chip: `addOnBlur` (default `true`) turns the typed text into a chip when the field loses focus.
 - Chip: `separators` (default `['Enter', ',']`) sets the keys that commit the typed text, compared with `KeyboardEvent.key`. Pasting a list that holds a separator, a new line or a tab adds every value in one change, skips duplicates, keeps refused values in the input and announces the result (“Đã thêm 3 · bỏ 1 trùng”).
@@ -23,6 +41,9 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 - Chip: with `[addable]="false"` the input is read-only and out of the Tab order instead of accepting text that was then thrown away.
 - Chip: `onClear()` keeps the chips `removable` keeps and emits nothing when no chip goes.
 - Form Generic: chip fields pass `validation.maxItems` as `maxCount`.
+- Chip: chips look like those of `<sd-chip-calendar>`, through one SCSS mixin (`sd-chip-row()` in `core/form.scss`): 20 / 24 / 28px chips centred in a 32 / 40 / 48px field at `sm` / `md` / `lg` (`size="lg"` had no style), a 6px radius, a 1px `--sd-border` outline on `--sd-surface`, tabular digits, 4px between chips, and a square clear-all button of 24 / 28 / 32px. The `md` field is no longer taller than other controls (its chips sat 10px lower). The typing area wraps to a new line only when less than 80px is left (Material kept 150px), and while chips are folded into “+N” it only fills the rest of the line and shows no placeholder, so a table cell stays one line.
+- Chip: a chip that `removable` keeps has the locked background (`--sd-chip-locked-bg`), a lock icon whose tooltip says “Không xoá được”, and an accessible name that ends with “, Không xoá được”. It used to differ only by the missing ✕.
+- Chip calendar: the field and chip styles moved to the shared mixin, with no visible change except the clear-button icon below.
 
 ### Deprecated
 
@@ -39,6 +60,7 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 - Chip: the wrapper around the field is layout only. It used to sit in the Tab order with no role or name, disabled included; with `sdViewDef` the face itself is now a `role="button"` that Enter or Space opens, and it leaves the Tab order when disabled.
 - Chip: with `hideInlineError`, the hidden error text has an id and the input points `aria-describedby` at it.
 - Chip: leaving the field no longer rewrites its value. `mat-chip-grid`, bound to the control as its value accessor, wrote the text of the rendered chips into the control after every blur: number items became strings without a `modelChange`, and a form reset made while the input had focus was undone. The grid now has a control of its own, and the field is marked touched when focus leaves it (moving between the input and its chips does not count).
+- Chip calendar: the clear button icon is 18 / 20px at `md` / `lg`, as designed. A shared `.sd-clear-btn sd-icon` rule forced 16px.
 - Tab router: navigations that finish one after another while an earlier tab is still being activated (for example while the outlet loads an NgModule lazy route) each open their own tab. The outlet read the router state when the queued activation ran, so the tab of an earlier URL got the component, route and name of the later one; it now captures the route when `NavigationEnd` is emitted.
 
 ### Removed

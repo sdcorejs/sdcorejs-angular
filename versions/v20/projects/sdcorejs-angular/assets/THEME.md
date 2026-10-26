@@ -340,9 +340,19 @@ indicator from the button. Set it to the background behind the button when that 
 
 ## Chip tokens
 
-`--sd-chip-duplicate-bg` derives from the palette, one expression for light and dark: the background of the `sd-chip` chip that a
-typed value duplicates, for 1.4 seconds (16% `--sd-warning` on `--sd-surface` in light, 24% in dark). Its outline uses
-`--sd-warning` directly. Under `prefers-reduced-motion: reduce` the colour changes without a transition.
+`sd-chip` and `sd-chip-calendar` draw their chips with one mixin, `sd-chip-row()` in `core/form.scss`: a 20 / 24 / 28px chip
+centred in a 32 / 40 / 48px field, 6px radius (`--sd-radius-6`), 1px `--sd-border` outline, `--sd-surface` background and
+`--sd-text` text. Three colours derive from the palette, one expression for light and dark:
+
+- `--sd-chip-locked-bg`: the background of a chip that `removable` keeps (55% `--sd-surface-muted` on `--sd-surface`). The chip
+  shows a lock icon in place of the remove button.
+- `--sd-chip-more-hover-bg`: the hover background of the “+N” button (6% `--sd-text` on `--sd-surface-muted`, its rest
+  background).
+- `--sd-chip-duplicate-bg`: the background of the `sd-chip` chip that a typed value duplicates, for 1.4 seconds (16%
+  `--sd-warning` on `--sd-surface` in light, 24% in dark). Its outline uses `--sd-warning` directly.
+
+Under `prefers-reduced-motion: reduce` the colours change without a transition. `--sd-chip-bg` stays the hover background of the
+`sdViewDef` face.
 
 ## Chip calendar tokens
 
@@ -351,12 +361,11 @@ seven 40px day columns, 8px padding. It is a size, the one non-colour entry of t
 panel surface of the select panel (`--sd-select-panel-bg`, `--sd-panel-radius`, `--sd-shadow-md`), and `--sd-chip-calendar-bg`
 stays the hover background of the `sdViewDef` face.
 
-Two colours of the field derive from the palette, one expression for light and dark:
+The chips of the field use the shared chip look above. Two colours keep their own names, so an app that set them keeps its
+values; by default they point at the shared tokens:
 
-- `--sd-chip-calendar-chip-locked-bg`: the background of a chip that `removable` keeps (55% `--sd-surface-muted` on
-  `--sd-surface`). The chip shows a lock icon in place of the remove button.
-- `--sd-chip-calendar-more-hover-bg`: the hover background of the “+N” button (6% `--sd-text` on
-  `--sd-surface-muted`, its rest background).
+- `--sd-chip-calendar-chip-locked-bg`: `var(--sd-chip-locked-bg)`, the background of a chip that `removable` keeps.
+- `--sd-chip-calendar-more-hover-bg`: `var(--sd-chip-more-hover-bg)`, the hover background of the “+N” button.
 
 ## Focus ring
 

@@ -13643,8 +13643,7 @@ import { SdChip } from '@sdcorejs/angular/forms/chip';
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-lien-ket-hai-chieu') {
       <demo-section heading="Liên kết hai chiều" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Mỗi chip là một string trong mảng.">
         <div style="width: 420px; display:flex; flex-direction:column; gap:8px">
-          <sd-chip label="Kỹ năng" placeholder="Nhập rồi Enter..." helperText="Có thể thêm nhiều giá trị"
-            [(model)]="skills" [form]="form"></sd-chip>
+          <sd-chip label="Kỹ năng" placeholder="Nhập rồi Enter..." [(model)]="skills" [form]="form"></sd-chip>
           <div style="font-size:12px; color:#555">
             Số chip: <b>{{ skills().length }}</b> — [{{ skills().join(', ') }}]
           </div>
@@ -13686,7 +13685,7 @@ import { SdChip } from '@sdcorejs/angular/forms/chip';
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chip-khoa') {
-      <demo-section heading="Chip khoá" [props]="[{ name: 'removable', value: 'predicate' }]" note="Predicate áp cho nút ✕, Backspace và Delete: chip “Quản trị” không xoá được.">
+      <demo-section heading="Chip khoá" [props]="[{ name: 'removable', value: 'predicate' }]" note="Predicate áp cho nút ✕, Backspace, Delete và nút bỏ hết: chip “Quản trị” không xoá được — nền nhạt hơn, icon khoá có tooltip “Không xoá được”, screen reader đọc “Quản trị, Không xoá được”.">
         <div style="width: 420px">
           <sd-chip label="Vai trò" placeholder="Nhập rồi Enter..." [(model)]="roles" [form]="form" [removable]="canRemoveRole"></sd-chip>
         </div>
@@ -13702,9 +13701,11 @@ import { SdChip } from '@sdcorejs/angular/forms/chip';
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-kich-thuoc') {
-      <demo-section heading="Kích thước" [props]="[{ name: 'size', value: 'sm' }]" note="Chip thu gọn cho bảng / toolbar.">
-        <div style="width: 420px">
-          <sd-chip label="sm" size="sm" placeholder="Nhập nhãn..." [(model)]="filters" [form]="form"></sd-chip>
+      <demo-section heading="Kích thước" [props]="[{ name: 'size', value: 'sm | md | lg' }]" note="Field một dòng 32 / 40 / 48px, chip 20 / 24 / 28px nằm giữa — cùng thang với sd-chip-calendar. Dùng sm cho bảng / toolbar.">
+        <div style="width: 420px; display:flex; flex-direction:column; gap:12px">
+          <sd-chip label="sm" size="sm" [(model)]="sizeTags" [form]="form" [removable]="canRemoveRole" clearable></sd-chip>
+          <sd-chip label="md" [(model)]="sizeTags" [form]="form" [removable]="canRemoveRole" clearable></sd-chip>
+          <sd-chip label="lg" size="lg" [(model)]="sizeTags" [form]="form" [removable]="canRemoveRole" clearable></sd-chip>
         </div>
       </demo-section>
       }
@@ -13730,7 +13731,7 @@ export class ChipDemoComponent {
   compactTags = signal<string[]>([]);
   roles = signal<string[]>(['Quản trị', 'Biên tập', 'Xem']);
   lockedTags = signal<string[]>(['Đã khoá 1', 'Đã khoá 2']);
-  filters = signal<string[]>([]);
+  sizeTags = signal<string[]>(['Quản trị', 'Angular', 'RxJS']);
   inlineTags = signal<(string | number)[]>(['alpha', 'beta']);
 
   canRemoveRole = (role: string | number) => role !== 'Quản trị';
@@ -26008,7 +26009,7 @@ Bởi Nguyễn Văn A"></sd-badge>
   },
   "forms/chip/example-chip-khoa": {
     ...SHOWCASE_PAGE_SOURCES["forms/chip"],
-    html: `<demo-section heading="Chip khoá" [props]="[{ name: 'removable', value: 'predicate' }]" note="Predicate áp cho nút ✕, Backspace và Delete: chip “Quản trị” không xoá được.">
+    html: `<demo-section heading="Chip khoá" [props]="[{ name: 'removable', value: 'predicate' }]" note="Predicate áp cho nút ✕, Backspace, Delete và nút bỏ hết: chip “Quản trị” không xoá được — nền nhạt hơn, icon khoá có tooltip “Không xoá được”, screen reader đọc “Quản trị, Không xoá được”.">
     <div style="width: 420px">
       <sd-chip label="Vai trò" placeholder="Nhập rồi Enter..." [(model)]="roles" [form]="form" [removable]="canRemoveRole"></sd-chip>
     </div>
@@ -26024,9 +26025,11 @@ Bởi Nguyễn Văn A"></sd-badge>
   },
   "forms/chip/example-kich-thuoc": {
     ...SHOWCASE_PAGE_SOURCES["forms/chip"],
-    html: `<demo-section heading="Kích thước" [props]="[{ name: 'size', value: 'sm' }]" note="Chip thu gọn cho bảng / toolbar.">
-    <div style="width: 420px">
-      <sd-chip label="sm" size="sm" placeholder="Nhập nhãn..." [(model)]="filters" [form]="form"></sd-chip>
+    html: `<demo-section heading="Kích thước" [props]="[{ name: 'size', value: 'sm | md | lg' }]" note="Field một dòng 32 / 40 / 48px, chip 20 / 24 / 28px nằm giữa — cùng thang với sd-chip-calendar. Dùng sm cho bảng / toolbar.">
+    <div style="width: 420px; display:flex; flex-direction:column; gap:12px">
+      <sd-chip label="sm" size="sm" [(model)]="sizeTags" [form]="form" [removable]="canRemoveRole" clearable></sd-chip>
+      <sd-chip label="md" [(model)]="sizeTags" [form]="form" [removable]="canRemoveRole" clearable></sd-chip>
+      <sd-chip label="lg" size="lg" [(model)]="sizeTags" [form]="form" [removable]="canRemoveRole" clearable></sd-chip>
     </div>
   </demo-section>`,
   },
@@ -26034,8 +26037,7 @@ Bởi Nguyễn Văn A"></sd-badge>
     ...SHOWCASE_PAGE_SOURCES["forms/chip"],
     html: `<demo-section heading="Liên kết hai chiều" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Mỗi chip là một string trong mảng.">
     <div style="width: 420px; display:flex; flex-direction:column; gap:8px">
-      <sd-chip label="Kỹ năng" placeholder="Nhập rồi Enter..." helperText="Có thể thêm nhiều giá trị"
-        [(model)]="skills" [form]="form"></sd-chip>
+      <sd-chip label="Kỹ năng" placeholder="Nhập rồi Enter..." [(model)]="skills" [form]="form"></sd-chip>
       <div style="font-size:12px; color:#555">
         Số chip: <b>{{ skills().length }}</b> — [{{ skills().join(', ') }}]
       </div>
