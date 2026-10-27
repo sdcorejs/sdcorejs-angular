@@ -78,8 +78,7 @@ const pick = async (page: Page, host: Locator, year: number, month: string, day:
   await calendar(page).getByRole('button', { name: day }).first().click();
 };
 
-const host = (page: Page, autoId: string, tag: string): Locator =>
-  page.locator(tag, { has: page.locator(`[data-autoid="${autoId}"]`) });
+const host = (page: Page, autoId: string, tag: string): Locator => page.locator(tag, { has: page.locator(`[data-autoid="${autoId}"]`) });
 
 test.describe('services/date-time demo with ?timeZone=Asia/Ho_Chi_Minh', () => {
   test('AC-001 picking 20/05/1960 in sd-date commits the day of the zone', async ({ page }) => {
