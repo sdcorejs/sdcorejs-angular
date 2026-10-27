@@ -62,6 +62,17 @@ const goToMonth = async (page: Page, year: number, month: string): Promise<void>
 
 /** Opens the picker of a control and clicks a day. */
 const pick = async (page: Page, host: Locator, year: number, month: string, day: RegExp): Promise<void> => {
+  // why: picking a day closes the calendar with an animation. Opening the next one right away let
+  // `.mat-datepicker-content` resolve to the one still leaving the screen, and the click waited on it until the timeout.
+  await expect(calendar(page)).toHaveCount(0);
+  // why: the calendar (about 350px) opens below or above its field. A field left near an edge by the click's own
+  // minimal scroll (or pushed by previews rendering above it) had room on neither side of a 720px viewport, and the
+  // calendar ended partly outside it, where Playwright cannot click: AC-003 timed out on CI now and then. Put the
+  // field in the upper third, below the docs header, so the calendar always fits under it.
+  await host.evaluate(element => {
+    element.scrollIntoView({ block: 'start', behavior: 'instant' });
+    window.scrollBy({ top: -Math.round(window.innerHeight / 4), behavior: 'instant' });
+  });
   await host.getByRole('button', { name: 'Mở lịch' }).click();
   await goToMonth(page, year, month);
   await calendar(page).getByRole('button', { name: day }).first().click();
@@ -106,7 +117,8 @@ test.describe('services/date-time demo with ?timeZone=Asia/Ho_Chi_Minh', () => {
     await calendar(page).getByRole('button', { name: day }).first().click();
     await expect.poll(async () => (await formValue(page))['range']).toEqual({ from: '1975/06/12', to: '1975/06/12' });
 
-    await reveal(page, TABLE);
+    // The table has its rows before the filter is used, so the section no longer grows while the calendar is open.
+    await expect((await reveal(page, TABLE)).locator('[data-e2e="table"]')).toContainText('20/05/1960');
     await pick(page, host(page, 'forms-date-range-components-table-tz-table-external-period', 'sd-date-range'), 1975, 'June', day);
     await calendar(page).getByRole('button', { name: day }).first().click();
     await expect
