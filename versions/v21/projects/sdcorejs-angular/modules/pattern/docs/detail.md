@@ -62,7 +62,8 @@ import { PRODUCT_STATUS_OPTIONS, productStatusBadge, type ProductDto } from '../
       <sd-button
         headerRight
         *sdPermission="'PATTERN_PRODUCT_U_UPDATE'"
-        title="Cập nhật"
+        title="Cập nhật sản phẩm"
+        prefixIcon="edit"
         type="fill"
         color="primary"
         autoId="product-update"
@@ -150,6 +151,7 @@ type TabKey = (typeof TABS)[number]['key'];
         headerRight
         *sdPermission="'PATTERN_CUSTOMER_U_UPDATE'"
         title="Cập nhật khách hàng"
+        prefixIcon="edit"
         type="fill"
         color="primary"
         autoId="customer-profile-update"

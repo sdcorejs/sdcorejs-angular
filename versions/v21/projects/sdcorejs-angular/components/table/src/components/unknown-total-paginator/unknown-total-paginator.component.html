@@ -15,6 +15,7 @@
               [aria-labelledby]="pageSizeLabelId"
               [attr.data-autoid]="_autoId ? _autoId + '-paginator-page-size' : null"
               (selectionChange)="changePageSize($event.value)"
+              [panelClass]="['sd-select-panel', 'sd-table-page-size-panel']"
               hideSingleSelectionIndicator>
               @for (pageSizeOption of displayedPageSizeOptions(); track pageSizeOption) {
                 <mat-option [value]="pageSizeOption">{{ pageSizeOption }}</mat-option>

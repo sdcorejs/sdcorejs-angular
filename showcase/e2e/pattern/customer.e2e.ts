@@ -34,12 +34,32 @@ test.describe('customer list', () => {
     await expect(page).toHaveURL(/\/pattern\/customer\/1\/detail$/);
     await expect(drawer(page)).toContainText('Chi tiết khách hàng #KH-0001');
     // The X of the drawer is labelled "Đóng"; the footer has no Close/Cancel button besides it.
-    await expect(drawer(page).locator('button:not(.sd-side-drawer-close-btn)').filter({ hasText: /^\s*(Đóng|Huỷ)\s*$/ })).toHaveCount(0);
+    await expect(
+      drawer(page)
+        .locator('button:not(.sd-side-drawer-close-btn)')
+        .filter({ hasText: /^\s*(Đóng|Huỷ)\s*$/ })
+    ).toHaveCount(0);
 
     await drawer(page).locator('.sd-side-drawer-close-btn').click();
     await expect(page).toHaveURL(/\/pattern\/customer$/);
     await expect(drawer(page)).toHaveCount(0);
     await expect(link).toBeFocused();
+  });
+
+  test('keeps delete as a red icon next to X and opens the 360° profile from a button', async ({ page }) => {
+    await openPattern(page, 'customer/1/detail');
+    const remove = drawer(page).locator('.sd-side-drawer-header-right').getByRole('button', { name: 'Xoá khách hàng' });
+    await expect(remove).toBeVisible();
+    await expect(remove).not.toContainText('Xoá');
+
+    await remove.click();
+    await expect(confirmDialog(page)).toContainText('Xoá khách hàng');
+    await confirmDialog(page).getByRole('button', { name: 'Không xoá' }).click();
+    await expect(confirmDialog(page)).toHaveCount(0);
+    await expect(page).toHaveURL(/\/pattern\/customer\/1\/detail$/);
+
+    await drawer(page).getByRole('button', { name: 'Hồ sơ 360°' }).click();
+    await expect(page).toHaveURL(/\/pattern\/customer\/1\/360$/);
   });
 });
 
@@ -80,7 +100,11 @@ test.describe('customer drawers', () => {
     await drawer(page).getByLabel('Điện thoại').fill('0901234567');
     await throttleGap(page);
     await save.click();
-    await expect(drawer(page).locator('sd-input').filter({ has: page.getByLabel('Email') })).toContainText('khách hàng khác');
+    await expect(
+      drawer(page)
+        .locator('sd-input')
+        .filter({ has: page.getByLabel('Email') })
+    ).toContainText('khách hàng khác');
 
     await drawer(page).getByLabel('Email').fill('khach.thu@mail.vn');
     await throttleGap(page);

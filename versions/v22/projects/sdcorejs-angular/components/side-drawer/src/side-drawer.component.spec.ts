@@ -819,3 +819,34 @@ describe('SdSideDrawer — [container]', () => {
     close();
   }));
 });
+
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  standalone: true,
+  imports: [SdSideDrawer],
+  template: `
+    <sd-side-drawer title="Chi tiết">
+      <button sdHeaderRight id="header-action" type="button">Xoá</button>
+      <span>drawer body</span>
+    </sd-side-drawer>
+  `,
+})
+class HeaderActionHost {}
+
+describe('SdSideDrawer (initial focus)', () => {
+  // why: a destructive action in sdHeaderRight (Xoá) comes before X in the tab order; opening the drawer must not
+  // put the focus, and so an Enter, on it.
+  it('focuses the close button on open, not an action of the header', fakeAsync(() => {
+    TestBed.configureTestingModule({ imports: [HeaderActionHost, NoopAnimationsModule] });
+    const fixture = TestBed.createComponent(HeaderActionHost);
+    document.body.appendChild(fixture.nativeElement);
+    fixture.detectChanges();
+    (fixture.debugElement.query(By.directive(SdSideDrawer)).componentInstance as SdSideDrawer).open();
+    fixture.detectChanges();
+    tick(500);
+    fixture.detectChanges();
+    expect((document.activeElement as HTMLElement | null)?.classList.contains('sd-side-drawer-close-btn')).toBeTrue();
+    fixture.destroy();
+    document.body.style.overflow = '';
+  }));
+});

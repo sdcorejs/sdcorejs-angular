@@ -477,25 +477,70 @@
 
 :host ::ng-deep {
   .c-paginator {
-    // Xử lý CSS của dropdown chọn pageSize của paginator
-    .mat-mdc-paginator {
-      .mdc-text-field--outlined .mat-mdc-form-field-infix,
-      .mdc-text-field--no-label .mat-mdc-form-field-infix {
-        padding-top: 2px;
-        padding-bottom: 2px;
-        min-height: 32px;
-      }
-    }
     // Giảm bớt margin của thông tin trang 1-20/20
     .mat-mdc-paginator-range-label {
       margin: 0 4px;
     }
+    // why: dropdown số dòng mỗi trang cùng dáng sd-select (cả mat-paginator lẫn pager unknown-total, cùng class):
+    // chữ 14px thay 12px của paginator, ô cao 32px với chữ và chevron giữa ô, chevron `keyboard_arrow_down` 16px
+    // màu text-secondary thay mũi tên tam giác của mat-select, cách mép phải 8px như sd-icon hậu tố của sd-select.
+    // Nhãn "Đang hiển thị" canh giữa theo ô thay vì theo baseline (chữ của ô đã lớn hơn nhãn).
+    .mat-mdc-paginator-page-size {
+      align-items: center;
+    }
+
     .mat-mdc-paginator-page-size-select {
-      mat-select {
-        margin-top: 2px !important;
+      --mat-select-trigger-text-size: var(--sd-font-size-14, 14px);
+      --mat-paginator-select-trigger-text-size: var(--sd-font-size-14, 14px);
+
+      .mat-mdc-form-field-infix {
+        display: flex;
+        align-items: center;
+        height: 32px;
+        min-height: 32px;
+        padding-top: 0;
+        padding-bottom: 0;
+      }
+
+      // why: form.scss đẩy mat-select của mọi field outline xuống 10px; ô này canh giữa bằng flex của infix.
+      &.mat-mdc-form-field .mat-mdc-form-field-infix mat-select.mat-mdc-select {
+        margin-top: 0;
+      }
+
+      .mat-mdc-text-field-wrapper {
+        padding-right: 8px;
+      }
+
+      .mat-mdc-select-arrow-wrapper {
+        width: 20px;
+        justify-content: center;
+      }
+
+      .mat-mdc-select-arrow {
+        width: 16px;
+        height: 16px;
+        color: var(--sd-text-secondary);
+        background-color: currentColor;
+        mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z'/%3E%3C/svg%3E")
+          center / 16px 16px no-repeat;
+
+        svg {
+          display: none;
+        }
+      }
+
+      .mat-mdc-form-field-flex:hover .mat-mdc-select-arrow {
+        color: var(--sd-text);
       }
     }
   }
+}
+
+// why: panel số dòng mỗi trang mang class panel của sd-select (bo góc, viền, nền, chữ 14px ở core/form.scss).
+// Option cao 36px nằm trong style của sd-select, nên nhắc lại cho trang chỉ có sd-table.
+::ng-deep .mat-mdc-select-panel.sd-select-panel.sd-table-page-size-panel .mat-mdc-option {
+  min-height: 36px;
+  padding: 7px 12px;
 }
 
 :host ::ng-deep {

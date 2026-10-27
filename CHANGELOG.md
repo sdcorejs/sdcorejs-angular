@@ -46,6 +46,7 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ### Changed
 
+- Table: the page-size dropdown of the paginator looks like `<sd-select>`: 14px text and a `keyboard_arrow_down` chevron instead of Material's 12px text and triangle, centred in a 32px field, and its list opens in the `<sd-select>` panel (rounded, bordered, 36px options). Same for the pager of `paginate.total: 'unknown'`.
 - Table: a one-line row is 36px high instead of Material's 52px (`--mat-table-row-item-container-height: 36px` on `<sd-table>`), as the table's dense design intended. Rows with longer text or buttons still grow. A screen that relied on 52px rows can set the token back with a selector more specific than the component's own, for example `.orders sd-table { --mat-table-row-item-container-height: 52px; }`.
 - Page: the header of `<sd-page>` is a `<header class="c-page-header bg-white">` instead of a `<div>`, and its `title` renders in an `<h1 class="T20M">` instead of a `<div class="T20M">`, with its margin reset, so the page has one main heading. Pages that project `[headerLeft]` are not affected. `SdPageComponent` now uses `OnPush`.
 - Chip: leaving the field now adds the typed text as a chip (`addOnBlur` defaults to `true`). It used to drop the text, and so did focusing the input again. For the old behaviour set `[addOnBlur]="false"`.
@@ -63,6 +64,7 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ### Fixed
 
+- Side drawer: opening a drawer focuses its close button (X) also when `[sdHeaderRight]` holds actions, which come before X in the tab order. It used to focus the first of them, such as a Delete icon, where an Enter started the deletion prompt.
 - Forms: a user edit now marks the control of the parent form dirty before writing its value, as Angular's value accessors do, so `form.dirty` and the default `'control'` mode of `registerSdUnsavedChangesForm` see it. Before, the control stayed pristine for a number typed into `<sd-input-number>`, the clear button of `<sd-input>`, `<sd-select>`, `<sd-date>`, `<sd-datetime>` and `<sd-autocomplete>`, a masked `<sd-input>`, select-all and the virtual list of `<sd-select>`, a day picked in `<sd-date>` or `<sd-datetime>`, an option chosen in `<sd-autocomplete>`, chips added or removed in `<sd-chip>` and `<sd-chip-calendar>`, and `<sd-date-range>`; leaving a page after such an edit did not ask. Blurring an empty `<sd-input-number>` still leaves it pristine.
 - Select, Autocomplete: the `sdItemDef` template context has `$implicit` as well as `item`, so `<ng-template sdItemDef let-option>` gets the item; it used to be `undefined` and the template threw. `let-item="item"` keeps working.
 - Input number, Textarea: an `[inlineError]` set while the field is already touched — the field error of a save the API rejected — shows its message, `data-invalid` and `aria-invalid` (and the red outline of `<sd-input-number>`) at once. It stayed hidden until the value changed, because the validator was installed without a control event.

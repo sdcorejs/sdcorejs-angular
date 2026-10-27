@@ -46,6 +46,16 @@ describe('SdTableUnknownTotalPaginator', () => {
     };
   }
 
+  // why: same page-size list as the known-total paginator: the panel of sd-select.
+  it('opens the page-size list in the sd-select panel', () => {
+    const { select } = render();
+    select!.click();
+    fixture.detectChanges();
+    const panel = document.querySelector('.mat-mdc-select-panel');
+    expect(panel?.classList).toContain('sd-select-panel');
+    expect(panel?.classList).toContain('sd-table-page-size-panel');
+  });
+
   it('shows only the rows on screen, never a total or a last-page button', () => {
     const { host, range } = render();
     expect(range.textContent?.trim()).toBe('26-32');

@@ -14,14 +14,15 @@ Danh sách và chi tiết cạnh nhau để xử lý nhanh từng mục: `sd-pag
 <sd-page-list title="Phê duyệt" description="Đề nghị thanh toán chờ xử lý. Dùng ↑ ↓ để chuyển mục." detail="none">
   <div sdPageListMain class="approval" [class.approval--narrow]="narrow()" [class.approval--active]="active()">
     <sd-splitter [option]="splitter">
-      <sd-splitter-panel panelId="list" [size]="440" unit="px" [minSize]="320">
+      <!-- Kéo trong khoảng 360–760px; panel chi tiết nhận phần còn lại (unit flex: minSize là trọng số, không phải px). -->
+      <sd-splitter-panel class="approval__list" panelId="list" [size]="520" unit="px" [minSize]="360" [maxSize]="760">
         <sd-table autoId="approval-list" [option]="option">
           <ng-template sdTableCellDef="code" let-item="item">
             <a [routerLink]="[item.id]" [attr.aria-current]="item.id === selectedId() ? 'true' : null">{{ item.code }}</a>
           </ng-template>
         </sd-table>
       </sd-splitter-panel>
-      <sd-splitter-panel panelId="detail" [size]="1" [minSize]="360">
+      <sd-splitter-panel class="approval__detail" panelId="detail" [size]="1">
         <router-outlet (activate)="active.set(true)" (deactivate)="active.set(false)" />
         @if (!active()) {
           <sd-data-state state="empty" icon="inbox" title="Chọn một mục" message="Chọn một đề nghị bên trái để xem chi tiết và xử lý." />
@@ -76,6 +77,22 @@ const NARROW = '(max-width: 767.98px)';
       flex: 1 1 0;
       min-height: 0;
     }
+    .approval sd-splitter-panel {
+      display: flex;
+      flex-direction: column;
+    }
+    .approval__list {
+      background: var(--sd-surface, #ffffff);
+      border: 1px solid var(--sd-border, #e3e5ea);
+      border-radius: 8px;
+    }
+    .approval__list > sd-table {
+      flex: 1 1 0;
+      min-height: 0;
+    }
+    .approval__detail {
+      overflow-y: auto;
+    }
     .approval--narrow.approval--active sd-splitter-panel:first-child,
     .approval--narrow:not(.approval--active) sd-splitter-panel:last-of-type {
       display: none;
@@ -108,14 +125,14 @@ export class ListComponent extends ApprovalInbox {
     },
     paginate: { pageSize: 20, pages: [20, 50] },
     columns: [
-      { field: 'code', title: 'Mã', type: 'string', width: '110px' },
-      { field: 'title', title: 'Nội dung', type: 'string', minWidth: '160px' },
-      { field: 'amount', title: 'Số tiền (₫)', type: 'number', width: '130px', align: 'right' },
+      { field: 'code', title: 'Mã', type: 'string', width: '96px' },
+      { field: 'title', title: 'Nội dung', type: 'string', minWidth: '140px' },
+      { field: 'amount', title: 'Số tiền (₫)', type: 'number', width: '120px', align: 'right' },
       {
         field: 'status',
         title: 'Trạng thái',
         type: 'values',
-        width: '140px',
+        width: '128px',
         option: { items: APPROVAL_STATUS_OPTIONS, valueField: 'id', displayField: 'name' },
         useBadge: status => approvalStatusBadge(status),
         // Hộp duyệt mở sẵn các đề nghị đang chờ; đổi bộ lọc để xem đề nghị đã xử lý.
@@ -320,6 +337,7 @@ export class DetailComponent {
 - MUST hiện trạng thái trống ("Chọn một mục") khi chưa mở mục nào.
 - MUST cho ↑ ↓ chuyển mục khi focus không ở ô nhập; tô nền dòng đang mở.
 - MUST giữ bộ lọc, trang và vị trí cuộn khi chuyển mục và sau khi xử lý; tải lại bằng `reload(true, false)`.
+- MUST cho panel danh sách bề rộng px (`unit="px"`) với `minSize`/`maxSize` px, panel chi tiết `unit="flex"` nhận phần còn lại; đặt `display: flex; flex-direction: column` cho panel để bảng lấp chiều cao và paginator luôn hiện.
 - SHOULD lưu bề rộng panel (`storageKey` của `sd-splitter`).
 - SHOULD dưới 768px cho chi tiết thay hẳn danh sách, có liên kết quay lại.
 
@@ -327,4 +345,6 @@ export class DetailComponent {
 
 - Để `sd-page-list` mặc định (`detail="page"`): route con hiện thay chỗ cả danh sách, không còn cạnh nhau.
 - Đặt `sdPageListMain` trực tiếp lên `sd-splitter`: kiểu cột của vùng chính đè hướng ngang của splitter.
+- Đặt `[minSize]="360"` lên panel `unit="flex"` để giữ chỗ cho chi tiết: với panel flex, `minSize` là trọng số chứ không phải px, nên handle không kéo được. Giới hạn bằng `maxSize` px của panel danh sách.
+- Để panel ở `display: block` mặc định: bảng ở chế độ fill không co theo panel, dòng cuối và paginator bị cắt.
 - Chọn mục kế sau khi đã tải lại danh sách: mục vừa xử lý đã biến mất khỏi bộ lọc, vị trí kế bị lệch. Lấy mục kế trước khi tải lại.

@@ -91,6 +91,7 @@ import {
         <sd-button
           *sdPermission="'PATTERN_ORDER_U_UPDATE'"
           title="Cập nhật đơn hàng"
+          prefixIcon="edit"
           type="fill"
           color="primary"
           autoId="order-update"

@@ -836,7 +836,8 @@
             [pageSize]="_tableOption.paginate?.pageSize"
             [pageSizeOptions]="_tableOption.paginate?.pages!"
             [showFirstLastButtons]="!_isMobile && _tableOption.paginate?.showFirstLastButtons"
-            [hidePageSize]="_isMobile || _tableOption.paginate?.hidePageSize"></mat-paginator>
+            [hidePageSize]="_isMobile || _tableOption.paginate?.hidePageSize"
+            [selectConfig]="{ panelClass: ['sd-select-panel', 'sd-table-page-size-panel'] }"></mat-paginator>
           <!-- "Đang hiển thị..." chỉ desktop -->
           @if (!_isMobile) {
             @if (!_tableOption.paginate?.hidden && hidePaginator && _total !== undefined && _total > 0) {
