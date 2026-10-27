@@ -172,3 +172,43 @@
     outline-offset: -1px;
   }
 }
+
+// Đợt 3 · 3d: chấm "chưa lưu" 8px `--sd-text-secondary` ở chỗ nút đóng (`SdTabInfo.dirty`). Ô nút đóng luôn hiện để chứa
+// chấm; hover tab hoặc focus bàn phím thì chấm đổi thành nút đóng. Tab đang mở cũng giữ chấm tới khi hover.
+.tab-router__dirty {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: var(--sd-text-secondary);
+  pointer-events: none;
+}
+
+.tab-router__item--dirty .tab-router__close {
+  opacity: 1;
+}
+
+.tab-router__item--dirty .tab-router__close sd-icon {
+  opacity: 0;
+}
+
+.tab-router__item--dirty:hover .tab-router__dirty,
+.tab-router__item--dirty:focus-visible .tab-router__dirty,
+.tab-router__item--dirty .tab-router__close:focus-visible .tab-router__dirty {
+  opacity: 0;
+}
+
+.tab-router__item--dirty:hover .tab-router__close sd-icon,
+.tab-router__item--dirty:focus-visible .tab-router__close sd-icon,
+.tab-router__item--dirty .tab-router__close:focus-visible sd-icon {
+  opacity: 1;
+}
+
+@media (forced-colors: active) {
+  .tab-router__dirty {
+    background: CanvasText;
+  }
+}

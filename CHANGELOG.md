@@ -57,6 +57,8 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 - Tab router: the tab bar works from the keyboard as a WAI-ARIA tablist with one tab stop (roving tabindex): ←/→ move focus (wrapping), Home/End go to the first/last tab, Enter/Space open the focused tab, Delete closes it. Focus coming back into the bar lands on the open tab, and when the focused tab closes, focus moves to the tab on its right (on its left at the end).
 - Tab router: a right-click menu on a tab, also opened with Shift+F10 or the Menu key, with “Đóng tab” and “Đóng các tab khác”. New `SdTabRouterService.closeOthers(tab?)` closes every other tab after asking each `beforeClose` in turn; tabs that refuse stay, and the kept tab opens when the open tab was closed. New key `core.component.tab-router.close-others` in the five locales.
 - Tab router: while a tab is dragged it floats with a shadow and four 8px corners over a `--sd-primary` 12% drop spot, and the other tabs slide aside (no motion under `prefers-reduced-motion`).
+- Tab router: `SdTabInfo.dirty` shows an 8px dot where the close button of the tab is; on hover or keyboard focus it turns into the close button, and the open tab keeps the dot until hover. Screen readers hear “Chưa lưu” (new key `core.component.tab-router.unsaved` in the five locales). Send it through `tabInfoChanges`, from the same state as `beforeClose`.
+- Tab router: `syncBrowserTitle` on `<sd-tab-router-outlet>` (default `false`) sets the browser title to “{tab name} – {app name}”, with “● ” in front while the tab is dirty. The app name is the title when the outlet starts; turning the input off, `disabled` or destroying the outlet gives it back.
 
 ### Changed
 

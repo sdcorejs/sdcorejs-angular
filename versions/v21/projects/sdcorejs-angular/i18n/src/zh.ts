@@ -577,6 +577,7 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.tab-router.too-many-tabs': '您已打开过多标签页。',
   'core.component.tab-router.close-tab': '关闭标签页',
   'core.component.tab-router.close-others': '关闭其他标签页',
+  'core.component.tab-router.unsaved': '有未保存的更改',
   'core.component.tab-router.open-tabs': '已打开 {count} 个标签页',
   'core.component.tab-router.tab-list': '标签页列表',
 

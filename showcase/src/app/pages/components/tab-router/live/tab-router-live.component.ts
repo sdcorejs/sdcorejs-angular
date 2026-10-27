@@ -30,6 +30,10 @@ const TAB_URLS = [
           <sd-button data-tab-live="five" title="Mở 5 tab" (click)="openMany(5)"></sd-button>
           <sd-button data-tab-live="sixteen" title="Mở 16 tab" (click)="openMany(16)"></sd-button>
           <sd-button data-tab-live="reset" prefixIcon="restart_alt" title="Về một tab" (click)="reset()"></sd-button>
+          <label class="tab-live__switch">
+            <input type="checkbox" data-tab-live="sync-title" [checked]="syncTitle()" (change)="syncTitle.set(!syncTitle())" />
+            <span>Đồng bộ tiêu đề trình duyệt (syncBrowserTitle)</span>
+          </label>
         </div>
         <p class="tab-live__hint">
           Một tab thì thanh tab ẩn; mở tab thứ hai thì thanh hiện ra. Kéo tab để đổi thứ tự; chuột phải vào tab để đóng tab
@@ -38,7 +42,7 @@ const TAB_URLS = [
       </header>
       @if (alive()) {
         <!-- Ví dụ trong sd-tab-router.md: inline style thắng :host { height: 100dvh } của outlet. -->
-        <sd-tab-router-outlet class="tab-live__outlet" style="height: 560px"></sd-tab-router-outlet>
+        <sd-tab-router-outlet class="tab-live__outlet" style="height: 560px" [syncBrowserTitle]="syncTitle()"></sd-tab-router-outlet>
       }
     </div>
   `,
@@ -64,6 +68,12 @@ const TAB_URLS = [
         flex-wrap: wrap;
         gap: 8px;
       }
+      .tab-live__switch {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+      }
       .tab-live__hint {
         flex-basis: 100%;
         margin: 0;
@@ -85,6 +95,7 @@ export class TabRouterLiveComponent {
   readonly #tabRouter = inject(SdTabRouterService);
   readonly #cdr = inject(ChangeDetectorRef);
   readonly alive = signal(true);
+  readonly syncTitle = signal(false);
   #next = 1;
   // why: mỗi nút xếp hàng sau nút trước, để "Về một tab" bấm giữa lúc đang mở 16 tab không chen vào giữa chừng.
   #queue: Promise<void> = Promise.resolve();

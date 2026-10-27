@@ -7,6 +7,11 @@ export interface SdTabInfo {
   icon?: string;
   tooltip?: string;
   color?: Color;
+  /**
+   * Màn có thay đổi chưa lưu: tab hiện chấm ở chỗ nút đóng, và `syncBrowserTitle` thêm "● " vào đầu tiêu đề. Dùng
+   * cùng nguồn trạng thái với `beforeClose`.
+   */
+  dirty?: boolean;
 }
 
 export interface SdTabRouterTab {

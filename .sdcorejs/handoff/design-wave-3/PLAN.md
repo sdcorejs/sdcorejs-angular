@@ -109,7 +109,7 @@ Mới (đủ 5 locale vi/en/ja/ko/zh):
 | 3a thanh tab, bỏ badge, điều kiện ẩn, dọn code, token, route showcase sống | xong | Ảnh: `wave3-3a-tab-bar.png` (chỉ bản sau — bản cũ không có route sống để chụp). Route mới `/demo/tab-router` |
 | 3b cuộn, lớp mờ, nút + menu danh sách | xong | Ảnh: `wave3-3b-many-tabs.png` (light, dark, graphite, forced colors, phone 390px). Làm trên `chore/release-3.2` (2026-10-23) |
 | 3c tablist, roving, kéo thả, menu chuột phải | xong | Nhánh `feat/wave3-tab-router-upload-file` (cắt từ `main` a35ba11e, 2026-10-27). Ảnh chung với 3d: `wave3-3cd-*.png` |
-| 3d `dirty`, `syncBrowserTitle` | chưa | |
+| 3d `dirty`, `syncBrowserTitle` | xong | Ảnh chung với 3c: `wave3-3cd-*.png`. Demo `/demo/tab-router`: ô "Có thay đổi chưa lưu" trong màn, công tắc `syncBrowserTitle` |
 | 4a–4d upload-file | chưa | |
 
 Lệch khỏi thông số ở bước 1a (đã báo user):
@@ -175,6 +175,18 @@ Ghi chú bước 3a:
   trong bước `map` của `router.events` (đồng bộ với NavigationEnd / NavigationSkipped) và truyền vào tác vụ kích hoạt;
   sau `await` vẫn thử tìm trong cây mới, không thấy thì dùng ActivatedRoute đã chụp. Spec tái hiện bằng route lazy
   NgModule giữ hàng đợi bận trong lúc điều hướng `/a` rồi `/b`.
+
+Ghi chú bước 3d (2026-10-27):
+- Chấm nằm trong nút đóng (ô nút đóng luôn hiện với tab dirty), icon `close` ẩn bằng opacity; hover tab / focus bàn phím
+  (tab hoặc nút) thì đổi. `pointer: coarse` không có hover nên vẫn thấy chấm; chạm chấm vẫn là đóng tab (`beforeClose`
+  chạy) — md không nói, ghi lại để user xác nhận.
+- Screen reader: thêm chữ ẩn "Chưa lưu" sau tên (key mới `core.component.tab-router.unsaved`, ngoài danh sách §7); chấm
+  `aria-hidden`. Menu danh sách tab (3b) không hiện chấm (md không yêu cầu).
+- `syncBrowserTitle`: effect theo tab đang mở + `tabInfoChanges` (ReplaySubject nên nhận tên đã gửi trước); trước khi màn
+  gửi tên thì lấy từ `@SdTabComponent` (tách `sdTabInfoFromBuilders` ra khỏi `SdTabInfoPipe`, dùng chung). Bật lên thì
+  `title` của route do Router đặt bị ghi đè sau mỗi lần điều hướng (ghi trong md).
+- Demo: `TabLivePageComponent` có input `icon` / `color` để gửi lại đủ tab info cùng `dirty` (tab info gửi qua
+  `tabInfoChanges` thay cả bộ của builder).
 
 Ghi chú bước 3c (2026-10-27):
 - Tab là `<div role="tab">` không href (QĐ 11), `id="sd-tab-router-tab-<key>"`, `aria-selected`, `aria-controls` = id pane.

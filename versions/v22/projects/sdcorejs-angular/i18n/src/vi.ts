@@ -577,6 +577,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.tab-router.too-many-tabs': 'Bạn đã mở quá nhiều tab.',
   'core.component.tab-router.close-tab': 'Đóng tab',
   'core.component.tab-router.close-others': 'Đóng các tab khác',
+  'core.component.tab-router.unsaved': 'Chưa lưu',
   'core.component.tab-router.open-tabs': '{count} tab đang mở',
   'core.component.tab-router.tab-list': 'Danh sách tab',
 

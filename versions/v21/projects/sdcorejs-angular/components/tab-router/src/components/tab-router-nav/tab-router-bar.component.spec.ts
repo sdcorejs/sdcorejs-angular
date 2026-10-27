@@ -272,6 +272,56 @@ describe('SdTabRouterNav bar (wave 3 · 3a)', () => {
     });
   });
 
+  // Thanh tab đợt 3 · 3d (design handoff `tab-router.md`, mục "Chấm chưa lưu").
+  describe('unsaved dot (wave 3 · 3d)', () => {
+    const dot = (i: number) => items()[i].querySelector('.tab-router__dirty') as HTMLElement | null;
+    const close = (i: number) => items()[i].querySelector('.tab-router__close') as HTMLElement;
+    const closeIcon = (i: number) => close(i).querySelector('sd-icon') as HTMLElement;
+    const markDirty = (i: number, dirty = true) => {
+      fixture.componentInstance.tabs[i].tabInfoChanges.next({ ...INFOS[i % INFOS.length], dirty });
+      fixture.detectChanges();
+    };
+
+    it('shows an 8px --sd-text-secondary dot where the close button is, and no dot on a saved tab', () => {
+      markDirty(2);
+      expect(dot(0)).toBeNull();
+      const box = dot(2)!.getBoundingClientRect();
+      expect([box.width, box.height]).toEqual([8, 8]);
+      expect(getComputedStyle(dot(2)!).backgroundColor).toBe(resolve('background-color', 'var(--sd-text-secondary)'));
+      expect(close(2).contains(dot(2))).toBe(true);
+      expect(getComputedStyle(close(2)).opacity)
+        .withContext('the slot shows on a tab that is not open')
+        .toBe('1');
+      expect(getComputedStyle(closeIcon(2)).opacity).toBe('0');
+    });
+
+    it('turns the dot into the close button on hover or keyboard focus', () => {
+      expect(cssRule(/\.tab-router__item--dirty:hover \.tab-router__dirty/)?.opacity).toBe('0');
+      expect(cssRule(/\.tab-router__item--dirty:focus-visible \.tab-router__dirty/)?.opacity).toBe('0');
+      expect(cssRule(/\.tab-router__item--dirty:hover \.tab-router__close sd-icon/)?.opacity).toBe('1');
+      expect(cssRule(/\.tab-router__item--dirty \.tab-router__close:focus-visible sd-icon/)?.opacity).toBe('1');
+    });
+
+    it('keeps the dot on the open tab until hover, instead of its close button', () => {
+      markDirty(1);
+      expect(items()[1].classList).toContain('tab-router__item--active');
+      expect(getComputedStyle(dot(1)!).opacity).toBe('1');
+      expect(getComputedStyle(closeIcon(1)).opacity).toBe('0');
+    });
+
+    it('tells assistive technology that the tab has unsaved changes, and drops the dot once saved', () => {
+      const i18n = TestBed.inject(I18nService);
+      markDirty(2);
+      expect(dot(2)!.getAttribute('aria-hidden')).toBe('true');
+      const hidden = items()[2].querySelector('.sd-visually-hidden') as HTMLElement;
+      expect(hidden.textContent!.trim()).toBe(i18n.t('core.component.tab-router.unsaved'));
+
+      markDirty(2, false);
+      expect(dot(2)).toBeNull();
+      expect(items()[2].querySelector('.sd-visually-hidden')).toBeNull();
+    });
+  });
+
   describe('divider', () => {
     const after = (i: number) => getComputedStyle(hosts()[i], '::after');
 

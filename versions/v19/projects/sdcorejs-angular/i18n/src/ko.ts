@@ -578,6 +578,7 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.tab-router.too-many-tabs': '너무 많은 탭이 열려 있습니다.',
   'core.component.tab-router.close-tab': '탭 닫기',
   'core.component.tab-router.close-others': '다른 탭 닫기',
+  'core.component.tab-router.unsaved': '저장되지 않은 변경 사항',
   'core.component.tab-router.open-tabs': '열린 탭 {count}개',
   'core.component.tab-router.tab-list': '탭 목록',
 

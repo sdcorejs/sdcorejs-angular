@@ -42,6 +42,7 @@ Browser-style multi-tab router shell — every navigated route becomes a tab; ta
 | Name       | Type                                       | Default | Notes                                                                                                                                                                                                                                       |
 | ---------- | ------------------------------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `disabled` | `boolean` (coerced via `booleanAttribute`) | `false` | When `true`, the outlet bypasses all tab management. Navigation falls through to a standard `<router-outlet>` instead. Useful for embedding the outlet in contexts where tab behaviour should be suppressed (e.g. print view, modal shell). |
+| `syncBrowserTitle` | `boolean` (coerced via `booleanAttribute`) | `false` | When `true`, the browser title follows the open tab: `{tab name} – {app name}`, with `● ` in front while the tab is `dirty`. The app name is `document.title` when the outlet is created. Turning it off, `disabled`, or destroying the outlet gives that title back. |
 
 ### Outputs
 
@@ -67,6 +68,7 @@ None.
 - Per-tab `Injector` overrides `ActivatedRoute` so each tab's component injects its OWN route, not the router's current one — avoids state-leak between tabs
 - Soft cap warning: if the user opens more than 30 tabs, `SdNotifyService.warning('Bạn đã mở quá nhiều tab.')` fires
 - Closing the active tab navigates to the neighbor (next, then previous, else `/`)
+- **Browser title (`syncBrowserTitle`):** set through Angular `Title`, updated when the open tab changes and whenever its `tabInfoChanges` sends a new name or `dirty`. Before the screen sends tab info, the name comes from `@SdTabComponent` (else the URL). With the input on, route `title`s set by the router are overwritten after each navigation
 - `SdTabRouterService.closeOthers(tab)` (right-click menu "Đóng các tab khác") asks `beforeClose` of every other tab in turn, keeps the tabs that refuse, and removes the rest at once. When the open tab is among them, `tab` is opened
 - Each pane is `role="tabpanel"`, keeps `id` = `tab.key` and is labelled by its tab (`aria-labelledby="sd-tab-router-tab-<key>"`)
 - The outlet binds the bar two-way (`[(tabs)]`): a drop in the bar sets the outlet `tabs` signal, so panes follow the new order
@@ -116,11 +118,12 @@ The host is `height: 100vh` followed by `height: 100dvh`: browsers that support 
 - Click, or Enter/Space on the tab itself → router navigates to `tab.url` with `tab.queryParams` and `state: { switchTab: true }` (so the outlet doesn't recreate, it just activates)
 - Middle-click (`mousedown` button 1 default-prevented; `mouseup` triggers close) → close tab
 - Close `×` / middle-click → `tabRouterService.close(tab)`; outlet `#closeTab` runs `tab.beforeClose` if defined. It closes only on `true`; `false`, throw, and rejection all fail closed.
-- Tab info (`name`, `icon`, `tooltip`, `color`) is reactive via `tab.tabInfoChanges: Subject<SdTabInfo>` — components can call `next(...)` to update their tab pill at runtime (e.g. show unsaved-changes dot, change name after rename). The outlet creates it as a `ReplaySubject(1)`, so the tab list menu (built when it opens) and any later subscriber get the last info sent
+- Tab info (`name`, `icon`, `tooltip`, `color`, `dirty`) is reactive via `tab.tabInfoChanges: Subject<SdTabInfo>` — components can call `next(...)` to update their tab pill at runtime (e.g. show unsaved-changes dot, change name after rename). The outlet creates it as a `ReplaySubject(1)`, so the tab list menu (built when it opens) and any later subscriber get the last info sent
 - The tab shows the icon (16px, `--sd-<color>-dark` of `color`, primary when unset; nothing when there is no icon) and the name (13px/18px, one line, ellipsis). It does not use `<sd-badge>`
 - Tooltip (`[sdTooltip]`): the builder's `tooltip` when set; otherwise the full name, only when the name is cut. Whether the name is cut is measured on `mouseenter` / `focusin` (`measureTruncation()`, `truncated()`)
 - Not open: no background, `--sd-tab-router-item-text`. Hover: `--sd-tab-router-item-hover-bg`. Open (`tab-router__item--active`, and `sd-tab-router-item--active` on the host): `--sd-tab-router-item-active-bg`, `--sd-text`, weight 500
 - Close button: 20×20, 6px corners, 14px icon. Always shown on the open tab and under `pointer: coarse` (32px hit area); on other tabs only on hover or focus
+- **Unsaved dot (`SdTabInfo.dirty`):** an 8px `--sd-text-secondary` dot sits where the close button is (the slot is shown on every dirty tab). On hover or keyboard focus the dot turns into the close button; the open tab keeps the dot until hover. Under `forced-colors` the dot is `CanvasText`. Assistive technology hears `core.component.tab-router.unsaved` ("Chưa lưu") after the name; the dot itself is `aria-hidden`. Under `pointer: coarse` there is no hover, so the dot stays and a tap on it still closes the tab (`beforeClose` runs)
 - Focus: a 2px ring drawn inside the tab (`outline-offset: -2px`). Under `forced-colors` the open tab is outlined in `CanvasText`, because backgrounds are dropped
 
 ## Decorator: `@SdTabComponent`
@@ -184,6 +187,7 @@ interface SdTabInfo {
   icon?: string;
   tooltip?: string;
   color?: Color;
+  dirty?: boolean; // unsaved changes: dot on the tab, "● " in the browser title
 }
 ```
 
@@ -291,9 +295,16 @@ An explicit `forceReload` does not call this hook; use it only when the caller i
 ```ts
 this.tab.tabInfoChanges.next({
   name: this.employee.name, // tab name now matches the loaded record
-  icon: this.form.dirty ? 'edit' : 'person',
-  color: this.form.dirty ? 'warning' : 'primary',
+  icon: 'person',
+  dirty: this.form.dirty, // same source as beforeClose: dot on the tab while there are unsaved changes
 });
+```
+
+### 8. Browser title follows the open tab
+
+```html
+<!-- "Nhân viên #12 – Portal", "● Nhân viên #12 – Portal" while dirty -->
+<sd-tab-router-outlet syncBrowserTitle></sd-tab-router-outlet>
 ```
 
 ## Anti-patterns
