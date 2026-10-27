@@ -5,7 +5,6 @@ import {
   Component,
   DestroyRef,
   ElementRef,
-  afterNextRender,
   computed,
   contentChild,
   effect,
@@ -38,10 +37,18 @@ import {
   SdUploadFileFuncDetails,
   SdUploadFileFuncUpload,
 } from './configurations';
-import { FilterDocumentPipe, FilterImagePipe, SdUploadFileMetaPipe } from './pipes';
+import { FilterDocumentPipe, FilterImagePipe, SdUploadFileMetaPipe, SdUploadFileReasonPipe } from './pipes';
 import { IsImage, PreviewFile, UploadFileService } from './services';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+
+/** File bị từ chối khi chọn hoặc thả (đợt 3 · 4c): giữ `File` và lý do, không nằm trong giá trị. */
+export interface SdUploadFileFailure {
+  id: number;
+  file: File;
+  fileName: string;
+  reason: string;
+}
 
 // https://stackoverflow.com/questions/4459379/preview-an-image-before-it-is-uploaded
 @Component({
@@ -59,10 +66,19 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
     FilterImagePipe,
     FilterDocumentPipe,
     SdUploadFileMetaPipe,
+    SdUploadFileReasonPipe,
     SdUploadFileTypeIcon,
     MatProgressSpinner,
     SdTranslatePipe,
   ],
+  host: {
+    class: 'sd-upload-file',
+    '[class.sd-upload-file--dragging]': 'dragging()',
+    '(dragenter)': 'onDragEnter($event)',
+    '(dragover)': 'onDragOver($event)',
+    '(dragleave)': 'onDragLeave()',
+    '(drop)': 'onDropFiles($event)',
+  },
 })
 export class SdUploadFile<TArgs = unknown> {
   // ─── Injected Services ────────────────────────────────────────────────
@@ -101,7 +117,23 @@ export class SdUploadFile<TArgs = unknown> {
 
   // ─── Signals (state) ──────────────────────────────────────────────────
   readonly previewFiles = signal<PreviewFile[]>([]);
+  /** @deprecated Đợt 3 · 4c: chạm ô ảnh trên màn cảm ứng mở popup, không còn chọn ô. Không còn đọc ở đâu. */
   readonly selectedFile = signal<PreviewFile | null | undefined>(undefined);
+  /** Đang kéo tệp từ máy vào component: ô tải lên / vùng thả đổi trạng thái. */
+  readonly dragging = signal(false);
+  /**
+   * File bị từ chối khi chọn hoặc thả (sai định dạng, quá dung lượng, không phải ảnh…): giữ trong danh sách cùng lý do tới
+   * khi người dùng xoá. Không nằm trong `model` hay giá trị form.
+   */
+  readonly failures = signal<SdUploadFileFailure[]>([]);
+  /** Khoá trong `model` của các file local đang được `upload()` gửi lên. */
+  readonly uploadingKeys = signal<ReadonlySet<string | number>>(new Set());
+  /** Khoá của các file local mà lần `upload()` gần nhất thất bại (vẫn trong `model`, thử lại được). */
+  readonly uploadFailedKeys = signal<ReadonlySet<string | number>>(new Set());
+  // why: PreviewFile không mang khoá của model; nhớ khoá từng PreviewFile để biết ô nào đang tải lên / lỗi.
+  readonly #previewKeys = new WeakMap<PreviewFile, string | number>();
+  #dragDepth = 0;
+  #nextFailureId = 0;
 
   // ─── Query Signals ────────────────────────────────────────────────────
   readonly previewFileComponent = viewChild(PreviewComponent);
@@ -123,8 +155,8 @@ export class SdUploadFile<TArgs = unknown> {
   readonly label = input<string>();
   readonly key = input<string | undefined>(undefined);
   readonly description = input<string>();
-  readonly previewWidth = input<string>('50px');
-  readonly previewHeight = input<string>('50px');
+  readonly previewWidth = input<string>('72px');
+  readonly previewHeight = input<string>('72px');
   readonly align = input<'left' | 'center'>('left');
   readonly uploadInput = input<SdUploadFileFuncUpload<any> | undefined>(undefined, { alias: 'upload' });
   readonly details = input<SdUploadFileFuncDetails<any>>();
@@ -202,6 +234,19 @@ export class SdUploadFile<TArgs = unknown> {
     return undefined;
   });
 
+  /** Số file trong giá trị (`model`), không tính file bị từ chối. */
+  readonly count = computed(() => {
+    const model = this.model();
+    return Array.isArray(model) ? model.filter(value => value !== null && value !== undefined && value !== '').length : 0;
+  });
+  /** Bộ đếm `{n} / {max}` cạnh nhãn: chỉ khi có nhãn, được chọn nhiều file và field không disabled. */
+  readonly showCounter = computed(() => (!!this.label() || !!this.sdLabelDef()?.templateRef) && this.max() > 1 && !this.disabled());
+  /** Còn thêm được file: chưa đủ `max` và không disabled. */
+  readonly canAdd = computed(() => {
+    void this.#state();
+    return this.previewFiles().length < this.max() && !this.formControl.disabled;
+  });
+
   // ─── Output Signals ───────────────────────────────────────────────────
   readonly loaded = output<PreviewFile[]>();
   readonly filesChanged = output<(string | File)[]>();
@@ -216,14 +261,6 @@ export class SdUploadFile<TArgs = unknown> {
 
   constructor() {
     this.#validateDuplicateConfigurationKeys();
-
-    // Sync form group & register form control
-    afterNextRender(() => {
-      // Drag & drop setup
-      if (!this.#isMobileOrTablet) {
-        this.#setupDropContainer();
-      }
-    });
 
     // Reactive sync for model changes
     effect(onCleanup => {
@@ -288,56 +325,44 @@ export class SdUploadFile<TArgs = unknown> {
     });
   }
 
-  // ─── Drop container setup ─────────────────────────────────────────────
-  #setupDropContainer() {
-    const dropEls = this.dropElements();
-    if (dropEls?.length > 0) {
-      const dropContainer = dropEls[0].nativeElement;
-      this.#bindDropEvents(dropContainer);
-    }
-  }
+  // ─── Kéo tệp từ máy vào ───────────────────────────────────────────────
+  // why: host listener (Angular tự gỡ khi huỷ) thay cho 4 addEventListener tự quản trên ô tải lên. Đếm enter/leave để
+  // trạng thái không nháy khi rê qua phần tử con. Chỉ xử lý khi đang kéo tệp (`Files`) và còn thêm được file.
+  onDragEnter = (event: DragEvent): void => {
+    if (!this.#acceptsDrag(event)) return;
+    event.preventDefault();
+    this.#dragDepth++;
+    this.dragging.set(true);
+  };
 
-  #bindDropEvents(dropContainer: HTMLElement) {
-    // why: 4 listener này trước đây là hàm ẩn danh nên không bao giờ gỡ được. Drop container
-    // có thể sống lâu hơn component (consumer giữ element, hoặc element bị tách khỏi view mà
-    // vẫn còn tham chiếu) → handler giữ luôn component đã destroy kèm cả injector subtree,
-    // và một cú drop sau teardown vẫn chạy #uploadFile trên state đã chết.
-    // Giữ reference + gỡ trong DestroyRef.onDestroy để teardown là tất định.
-    const onDragOver = (evt: Event): void => {
-      evt.preventDefault();
-      (dropContainer as any).style.opacity = 0.9;
-      dropContainer.style.border = '2px solid grey';
-    };
-    const onDragEnter = (evt: Event): void => {
-      evt.preventDefault();
-    };
-    const onDragLeave = (): void => {
-      (dropContainer as any).style.opacity = 0.6;
-      dropContainer.style.border = '2px dashed grey';
-    };
-    const onDrop = async (evt: DragEvent): Promise<void> => {
-      evt.preventDefault();
-      (dropContainer as any).style.opacity = 0.6;
-      dropContainer.style.border = '2px dashed grey';
-      const files: File[] = [];
-      for (const file of evt.dataTransfer?.files || []) {
-        files.push(file);
-      }
-      await this.#uploadFile(files);
-    };
+  onDragOver = (event: DragEvent): void => {
+    if (!this.#acceptsDrag(event)) return;
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+    this.dragging.set(true);
+  };
 
-    dropContainer.addEventListener('dragover', onDragOver);
-    dropContainer.addEventListener('dragenter', onDragEnter);
-    dropContainer.addEventListener('dragleave', onDragLeave);
-    dropContainer.addEventListener('drop', onDrop);
+  onDragLeave = (): void => {
+    if (!this.dragging()) return;
+    this.#dragDepth = Math.max(0, this.#dragDepth - 1);
+    if (this.#dragDepth === 0) this.dragging.set(false);
+  };
 
-    this.#destroyRef.onDestroy(() => {
-      dropContainer.removeEventListener('dragover', onDragOver);
-      dropContainer.removeEventListener('dragenter', onDragEnter);
-      dropContainer.removeEventListener('dragleave', onDragLeave);
-      dropContainer.removeEventListener('drop', onDrop);
-    });
-  }
+  onDropFiles = async (event: DragEvent): Promise<void> => {
+    if (!this.#acceptsDrag(event)) return;
+    event.preventDefault();
+    this.#dragDepth = 0;
+    this.dragging.set(false);
+    const files = Array.from(event.dataTransfer?.files ?? []);
+    if (files.length) await this.#uploadFile(files);
+  };
+
+  #acceptsDrag = (event: DragEvent): boolean => {
+    if (this.#destroyed || !this.canAdd()) return false;
+    const types = event.dataTransfer?.types;
+    // why: không có dataTransfer (sự kiện tự tạo) thì coi như kéo tệp; có thì chỉ nhận khi trong đó có tệp.
+    return !types || Array.from(types).includes('Files');
+  };
 
   // ─── Private Methods ──────────────────────────────────────────────────
   #touch = () => {
@@ -467,9 +492,11 @@ export class SdUploadFile<TArgs = unknown> {
 
   // ─── Public Event Handlers ────────────────────────────────────────────
   onUpload = () => {
+    // why: đợt 3 · 4c — picker chỉ lọc theo đuôi (`accept`), không tự kiểm dung lượng / đuôi: `#validate` của component
+    // kiểm từng file để file lỗi nằm trong danh sách cùng lý do, file hợp lệ trong cùng lần chọn vẫn được thêm.
+    const extensions = this.extensions();
     BrowserUtilities.upload({
-      maxSizeInMb: this.maxSize(),
-      extensions: this.extensions(),
+      accept: extensions.length ? extensions.map(extension => '.' + extension.replace(/^\./, '')).join(',') : undefined,
       multiple: this.max() > 1,
     })
       .then(async result => {
@@ -493,6 +520,7 @@ export class SdUploadFile<TArgs = unknown> {
   #uploadFile = async (originFiles: File[]) => {
     const pickedFiles = new Map<string, File>();
     const pickedKeys: string[] = [];
+    const rejected: SdUploadFileFailure[] = [];
     if (originFiles.length + (this.model() || []).length > this.max()) {
       this.#notifyService.warning(this.#i18n.t('core.component.upload-file.too-many-files'));
       return;
@@ -504,8 +532,9 @@ export class SdUploadFile<TArgs = unknown> {
       }
       const message = await this.#validate(file!);
       if (message) {
-        this.#notifyService.warning(message);
-        return;
+        // why: lỗi của một file không làm mất các file hợp lệ trước/sau nó trong cùng lần chọn.
+        rejected.push({ id: this.#nextFailureId++, file, fileName: file.name, reason: message });
+        continue;
       }
       const hashedKey = this.#uploadFileService.add(file);
       if (hashedKey) {
@@ -514,6 +543,8 @@ export class SdUploadFile<TArgs = unknown> {
       }
     }
     if (this.#destroyed) return;
+    if (rejected.length) this.failures.update(failures => [...failures, ...rejected]);
+    if (!pickedKeys.length) return;
     // why: resize/validate có await; upload(), xoá, sắp xếp hoặc lần chọn khác có thể đã đổi model.
     // Nối batch vào model MỚI NHẤT, không ghi lại bản chụp cũ làm mất ID vừa upload hay file vừa chọn.
     const currentModel = [...(this.model() || []), ...pickedKeys];
@@ -558,9 +589,59 @@ export class SdUploadFile<TArgs = unknown> {
     }
   };
 
-  onDrop = (event: CdkDragDrop<string[]>) => {
+  /** Huỷ một file đang tải lên: bỏ khỏi `model` ngay (không hỏi xác nhận); lô đang chạy không ghi lại nó. */
+  onCancel = (file: PreviewFile) => {
+    const files = this.previewFiles();
+    const idx = files.indexOf(file);
+    if (idx < 0) return;
+    this.previewFiles.set(files.filter((_, i) => i !== idx));
     const currentModel = [...(this.model() || [])];
-    moveItemInArray(currentModel, event.previousIndex, event.currentIndex);
+    currentModel.splice(idx, 1);
+    this.model.set(currentModel);
+    this.#touch();
+  };
+
+  /** Bỏ một file bị từ chối khỏi danh sách (file đó chưa từng vào giá trị). */
+  removeFailure = (failure: SdUploadFileFailure) => {
+    this.failures.update(failures => failures.filter(item => item !== failure));
+  };
+
+  /** Thử lại lần `upload()` thất bại với các File đã giữ. Lỗi lần này vẫn hiện trên ô / hàng, không toast. */
+  retryUpload = () => {
+    this.upload().catch(() => undefined);
+  };
+
+  isUploading = (file: PreviewFile): boolean => this.#hasKey(this.uploadingKeys(), file);
+
+  hasUploadFailed = (file: PreviewFile): boolean => !this.isUploading(file) && this.#hasKey(this.uploadFailedKeys(), file);
+
+  #hasKey = (keys: ReadonlySet<string | number>, file: PreviewFile): boolean => {
+    const key = this.#previewKeys.get(file);
+    return key !== undefined && keys.has(key);
+  };
+
+  /**
+   * Kéo đổi thứ tự trong lưới ảnh (`group: 'image'`, mặc định) hoặc trong danh sách tài liệu (`'document'`).
+   * why: `model` là một mảng chung theo thứ tự thêm. Kéo trong một nhóm chỉ hoán vị các vị trí thuộc nhóm đó, vị trí của
+   * nhóm kia giữ nguyên. Bản cũ lấy index trong nhóm ảnh áp thẳng vào mảng trộn.
+   */
+  onDrop = (event: Pick<CdkDragDrop<unknown>, 'previousIndex' | 'currentIndex'>, group: 'image' | 'document' = 'image') => {
+    if (event.previousIndex === event.currentIndex) return;
+    const files = this.previewFiles();
+    const members = (group === 'image' ? new FilterImagePipe() : new FilterDocumentPipe()).transform(files);
+    const positions = members.map(file => files.indexOf(file));
+    if (!positions.length || positions.some(position => position < 0)) return;
+    const currentModel = [...(this.model() || [])];
+    const values = positions.map(position => currentModel[position]);
+    const reordered = [...members];
+    moveItemInArray(values, event.previousIndex, event.currentIndex);
+    moveItemInArray(reordered, event.previousIndex, event.currentIndex);
+    const previews = [...files];
+    positions.forEach((position, i) => {
+      currentModel[position] = values[i];
+      previews[position] = reordered[i];
+    });
+    this.previewFiles.set(previews);
     this.model.set(currentModel);
     this.#touch();
   };
@@ -570,6 +651,7 @@ export class SdUploadFile<TArgs = unknown> {
     this.previewFiles.set([...this.previewFiles()]);
   };
 
+  /** @deprecated Đợt 3 · 4c: chạm ô ảnh mở popup. Giữ để không đổi API của class. */
   onSelect = (file: PreviewFile) => {
     if (!this.#isMobileOrTablet) {
       return;
@@ -735,17 +817,31 @@ export class SdUploadFile<TArgs = unknown> {
       );
       return;
     }
-    const idOrKeys = await uploadHandler(
-      pending.map(entry => entry.file!),
-      this.args()
-    );
-    if (
-      !Array.isArray(idOrKeys) ||
-      idOrKeys.length !== pending.length ||
-      pending.some((_, index) => typeof idOrKeys[index] !== 'string' || !idOrKeys[index])
-    ) {
-      throw new Error('[sd-upload-file] Upload must return one non-empty string ID per file.');
+    const pendingKeys = new Set<string | number>(pending.map(entry => entry.key));
+    this.uploadingKeys.set(pendingKeys);
+    this.uploadFailedKeys.update(keys => new Set([...keys].filter(key => !pendingKeys.has(key))));
+    let idOrKeys: string[];
+    try {
+      idOrKeys = await uploadHandler(
+        pending.map(entry => entry.file!),
+        this.args()
+      );
+      if (
+        !Array.isArray(idOrKeys) ||
+        idOrKeys.length !== pending.length ||
+        pending.some((_, index) => typeof idOrKeys[index] !== 'string' || !idOrKeys[index])
+      ) {
+        throw new Error('[sd-upload-file] Upload must return one non-empty string ID per file.');
+      }
+    } catch (error) {
+      // why: lô lỗi thì cả lô thành ô / hàng lỗi (file vẫn trong `model` và cache, thử lại được); `upload()` vẫn reject.
+      if (!this.#destroyed) {
+        this.uploadingKeys.set(new Set());
+        this.uploadFailedKeys.update(keys => new Set([...keys, ...pendingKeys]));
+      }
+      throw error;
     }
+    this.uploadingKeys.set(new Set());
     const replacements = new Map(pending.map((entry, index) => [entry.key, idOrKeys[index]]));
     for (const entry of pending) {
       this.#uploadFileService.remove(entry.key.toString());
@@ -761,10 +857,11 @@ export class SdUploadFile<TArgs = unknown> {
   };
 
   /**
-   * Mở popup preview ảnh.
+   * Mở popup xem tệp, tại `file` khi có (mặc định file đầu).
    */
-  preview = async () => {
-    this.previewFileComponent()?.open(this.previewFiles());
+  preview = async (file?: PreviewFile) => {
+    const files = this.previewFiles();
+    this.previewFileComponent()?.open(files, file ? Math.max(0, files.indexOf(file)) : 0);
   };
 
   /**
@@ -825,12 +922,16 @@ export class SdUploadFile<TArgs = unknown> {
       }
     }
     const results: PreviewFile[] = [];
+    const remember = (key: string | number, preview: PreviewFile) => {
+      this.#previewKeys.set(preview, key);
+      results.push(preview);
+    };
     for (const { key, file } of entries) {
       if (this.#isCdn(key)) {
         const cdn = key?.toString();
         const extension = this.#getExtension(cdn);
         const isPreviewImage = this.type() === 'image' || IsImage(extension);
-        results.push({
+        remember(key, {
           idOrKey: cdn,
           fileName: cdn,
           file: null,
@@ -843,7 +944,7 @@ export class SdUploadFile<TArgs = unknown> {
         const lastDot = file.name.lastIndexOf('.');
         const extension = file.name.substring(lastDot + 1);
         const isPreviewImage = (file.type.split('/')[0] === 'image' && file.type !== 'image/tiff') || IsImage(extension);
-        results.push({
+        remember(key, {
           file,
           isPreviewImage,
           previewSrc: null,
@@ -858,7 +959,7 @@ export class SdUploadFile<TArgs = unknown> {
           const { idOrKey, cdn, name, size } = detail;
           const extension = detail.extension || this.#getExtension(name) || this.#getExtension(cdn);
           const isPreviewImage = this.type() === 'image' || IsImage(extension);
-          results.push({
+          remember(key, {
             idOrKey: idOrKey || cdn,
             fileName: name,
             fileSize: size,

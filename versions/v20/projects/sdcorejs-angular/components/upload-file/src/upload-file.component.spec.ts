@@ -656,15 +656,18 @@ describe('SdUploadFile', () => {
   // ─── onDrop (reorder) ────────────────────────────────────────────────────
 
   describe('onDrop (CDK drag-drop)', () => {
-    it('reorders model when items are dropped', fakeAsync(() => {
+    // why: đợt 3 · 4c — kéo trong lưới ảnh chỉ hoán vị vị trí của ảnh (bản cũ áp index của nhóm ảnh vào mảng trộn).
+    it('reorders the images of the model when an image is dropped', fakeAsync(() => {
       fixture.detectChanges();
-      component.model.set(['a', 'b', 'c']);
+      const [a, b, c] = ['http://x/a.jpg', 'http://x/b.jpg', 'http://x/c.jpg'];
+      component.model.set([a, b, c]);
+      fixture.detectChanges();
       tick(0);
 
       const fakeEvent = { previousIndex: 0, currentIndex: 2 } as any;
       component.onDrop(fakeEvent);
 
-      expect(component.model()).toEqual(['b', 'c', 'a']);
+      expect(component.model()).toEqual([b, c, a]);
     }));
   });
 
@@ -1046,8 +1049,12 @@ describe('SdUploadFilePreview', () => {
 describe('SdUploadFile drag & drop listener teardown', () => {
   let fixture: ComponentFixture<SdUploadFile>;
 
+  // why: đợt 3 · 4c — listener nằm trên host (Angular gỡ khi huỷ), nhận sự kiện nổi bọt từ ô tải lên; chỉ xử lý khi
+  // đang kéo tệp.
   function dispatchDrag(target: HTMLElement, type: string): boolean {
-    const event = new DragEvent(type, { cancelable: true });
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(new File(['x'], 'a.txt', { type: 'text/plain' }));
+    const event = new DragEvent(type, { cancelable: true, bubbles: true, dataTransfer });
     target.dispatchEvent(event);
     return event.defaultPrevented;
   }
@@ -1073,13 +1080,15 @@ describe('SdUploadFile drag & drop listener teardown', () => {
   it('binds the drag listeners while the component is alive', () => {
     const zone = dropZone();
 
-    expect(dispatchDrag(zone, 'dragover')).toBeTrue();
-    expect(zone.style.border).toBe('2px solid grey');
-
     expect(dispatchDrag(zone, 'dragenter')).toBeTrue();
+    fixture.detectChanges();
+    expect(dropZone().classList).toContain('sd-upload-file__add--dragging');
+    expect(dispatchDrag(zone, 'dragover')).toBeTrue();
 
     dispatchDrag(zone, 'dragleave');
-    expect(zone.style.border).toBe('2px dashed grey');
+    fixture.detectChanges();
+    expect(dropZone().classList).not.toContain('sd-upload-file__add--dragging');
+    expect(zone.style.border).withContext('no inline styles any more').toBe('');
   });
 
   it('stops invoking the drag listeners once the component is destroyed', () => {

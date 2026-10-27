@@ -13,13 +13,14 @@ class UploadTableCellHost {}
 
 describe('Upload compact presentation', () => {
   beforeEach(() => TestBed.configureTestingModule({ imports: [SdUploadFile, NoopAnimationsModule] }));
-  it('keeps the default upload tile small and keyboard accessible', () => {
+  // why: đợt 3 · 4c đổi mặc định previewWidth/previewHeight 50px → 72px (Changed trong CHANGELOG).
+  it('keeps the default upload tile compact (72px) and keyboard accessible', () => {
     const f = TestBed.createComponent(SdUploadFile);
     f.detectChanges();
     const zone = f.nativeElement.querySelector('.c-area-upload') as HTMLElement;
-    expect(zone.style.width).toBe('50px');
-    expect(zone.style.height).toBe('50px');
-    expect(zone.getBoundingClientRect().height).toBeLessThanOrEqual(56);
+    expect(zone.style.width).toBe('72px');
+    expect(zone.style.height).toBe('72px');
+    expect(zone.getBoundingClientRect().height).toBeLessThanOrEqual(72);
     expect(zone.querySelector('.c-upload-copy')).toBeNull();
     expect(zone.getAttribute('role')).toBe('button');
     expect(zone.tabIndex).toBe(0);
@@ -38,7 +39,8 @@ describe('Upload compact presentation', () => {
     const zone = cell.querySelector('.c-area-upload') as HTMLElement;
     expect(zone.getBoundingClientRect().width).toBeGreaterThan(0);
     expect(zone.getBoundingClientRect().width).toBeLessThanOrEqual(cell.getBoundingClientRect().width);
-    expect(cell.getBoundingClientRect().height).toBeLessThan(80);
+    // 72px tile + 8px room above it for the remove badge.
+    expect(cell.getBoundingClientRect().height).toBeLessThanOrEqual(84);
   });
   it('retains explicitly configured compact dimensions', () => {
     const f = TestBed.createComponent(SdUploadFile);

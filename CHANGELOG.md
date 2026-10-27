@@ -79,10 +79,16 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 - Upload file: file sizes read `{n} KB` below 1 MB (whole kilobytes, rounded up) and `{n} MB` with one decimal from 1 MB, in the number format of the current language (`2,4 MB`); a document row shows `{EXT} · {size}`. Sizes used to be always `fileSize / 1024` KB.
 - Upload file: file-type icons cover the 51 SVGs of the set (pdf, doc/docx, xls/xlsx, ppt/pptx, csv, zip, txt, mp4, …, `jpeg` → jpg, `tif` → tiff), the generic file icon for the rest, through one internal icon component shared by the field and the popup; the bundle no longer inlines the SVGs three times.
 - Upload file: the preview popup is a dark viewer (CDK `Dialog`, `min(1200px, 100vw − 48px)` × `100vh − 48px`, full screen at ≤ 600px): a top bar with the file name, `{EXT} · {size}` and the position (`3 / 7`), zoom (fit, 50–400%), rotate, download and open in a new tab for images, download and open in a new tab for other files; a stage that shows a PDF inline in an `<iframe>`, a loading state after 150ms and an error state with Retry; previous / next buttons that stop at the ends instead of wrapping; and an 88px filmstrip. ←/→, `+`/`=`/`-`/`0` and Esc work from the keyboard; focus moves to the stage and back to the opener. It used to be an `sd-modal` with a fixed “Xem ảnh” title, a vertical thumbnail rail and no toolbar.
+- Upload file: `previewWidth` / `previewHeight` default to `72px` (they were `50px`). Bind `previewWidth="50px" previewHeight="50px"` to keep the old size, or use `variant="inline"` in table cells.
+- Upload file: the field follows the new design (variant `default`): the label with a `{n} / {max}` counter right after it; a wrapping image grid whose first tile is the upload tile (“Thêm ảnh” / “Tải lên”, dashed `--sd-border-strong`, tinted while files are dragged over the field); image tiles that open the popup at that image (no zoom icon or dark overlay) with a scrim and a 20px remove badge on hover or focus (always under `pointer: coarse`); a full-width drop zone for `type="document"`; 52px document rows (icon, name, `{EXT} · {size}`, download) whose click opens the popup at that file instead of downloading it; a read-only grid whose last tile is covered by `+N`; and the required error as an icon and 12px text like other fields.
+- Upload file: a file refused when picked or dropped (wrong extension, too large, not an image, image size) stays in the list with its reason, outside the value, until removed; the valid files of the same pick are still added (one invalid file used to drop the whole pick). Only “too many files” still uses a toast. The file dialog filters by `extensions` (`accept`) and no longer refuses files itself.
+- Upload file: while `upload()` runs, its files show as uploading (spinner on an image, “Đang tải tệp lên…”, a cancel button and an indeterminate bar on a row); when it fails they show as failed with Retry, which calls `upload()` again. `upload()` still rejects.
+- Upload file: drag listeners are host listeners that Angular removes on destroy, and react only while files are dragged.
 
 ### Deprecated
 
 - Chip: `min` / `max`; use `minCount` / `maxCount`. Both still work, the new name wins when both are set, and each instance warns once in dev mode.
+- Upload file: `selectedFile`, `onSelect()` and `onSelectKeydown()` — a tap on a tile opens the popup and the remove badge is always shown on touch screens. They are no longer used.
 
 ### Fixed
 
@@ -107,6 +113,8 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 - Badge: the title of an `md` round, solid or tag badge, counters included, sits 1px lower, in the middle of the badge. With Roboto at 13px the baseline of the 18px line falls on a half pixel, so digits and capitals were drawn 0.5–1.6px above the middle, depending on the badge's position and the screen scale. `sm`, `lg`, `pair` and a tag with a description are unchanged.
 - Upload file: ppt and pptx files show their own icons (they showed the xls / xlsx ones). `SdUploadFileDetail.size` is documented in bytes, as the component always read it (the JSDoc said MB).
 - Upload file: the download button of the popup is labelled “Tải xuống”; it used the upload key (“Tải file”). The thumbnail rail followed the current file only by looking up ids that were never set; the filmstrip now scrolls to it.
+- Upload file: dragging an image to reorder moves it among the image positions of `model` only; the index of the image group used to be applied to the mixed array of images and documents. Documents can be reordered too.
+- Upload file: the remove badge is no longer clipped (the field had `overflow-y: hidden` and the badge sat at −8px of a 3px margin).
 
 ### Removed
 
