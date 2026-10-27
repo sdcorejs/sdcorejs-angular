@@ -23,6 +23,17 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 + if (chip.isFocused()) { … }
 ```
 
+- Upload file: `upload()` rejects with an `Error` when the `upload` handler does not return exactly one non-empty string ID per file it received, in the same order (a non-array, too few or too many IDs, an empty or non-string ID). It used to drop from `model`, without an error, the local files it got no ID for. `model` and the cache keep the local files, so the call can be retried. The handler also receives each distinct local file once: a file that appears twice in `model` is uploaded once and both positions get its ID.
+
+```diff
+  upload: async files => {
+    const res = await api.upload(files);
+-   return res.ids.filter(Boolean);
++   if (res.ids.length !== files.length) throw new Error('Upload returned no ID for some files');
++   return res.ids.map(String); // one ID per file, in the order of `files`
+  },
+```
+
 ### Added
 
 - Pattern: new entry point `@sdcorejs/angular/modules/pattern` with sample screens by entity that a host app mounts: `SD_PATTERN_ROUTES` (`product`, `customer`, `order`, `approval`, `category`, `import`, `partner/create`, `settings` and an index page) and `provideSdPatterns({ mockApi, apiBaseUrl, latencyMs, storage, forbiddenUrl })`. The routes get their own `HttpClient` with a mock API over seeded data kept in `sessionStorage` (the blueprint list request, field errors on 400/409, bulk actions with a result per record), sample roles over `PATTERN_<ENTITY>_<R|C|U|D>_<ACTION>` permission codes, and a toolbar that switches the role, the latency and a simulated failure (500, timeout, 404, 403), resets the data and shows the source of the screen. Each pattern has a doc in `modules/pattern/docs/` — list, detail, form, flow, drawer, split, select, relation, header actions, states — whose code blocks are extracted from `features/` by `npm run pattern:docs`, and `modules/pattern/README.md` picks the pattern for a screen. The package ships the `features/` source, the docs and the README, so an app reads them under `node_modules/@sdcorejs/angular/modules/pattern/`. The showcase mounts it at `/pattern`; Playwright suites in `showcase/e2e/pattern/`.
@@ -80,6 +91,8 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 - Chip: leaving the field no longer rewrites its value. `mat-chip-grid`, bound to the control as its value accessor, wrote the text of the rendered chips into the control after every blur: number items became strings without a `modelChange`, and a form reset made while the input had focus was undone. The grid now has a control of its own, and the field is marked touched when focus leaves it (moving between the input and its chips does not count).
 - Chip calendar: the clear button icon is 18 / 20px at `md` / `lg`, as designed. A shared `.sd-clear-btn sd-icon` rule forced 16px.
 - Tab router: navigations that finish one after another while an earlier tab is still being activated (for example while the outlet loads an NgModule lazy route) each open their own tab. The outlet read the router state when the queued activation ran, so the tab of an earlier URL got the component, route and name of the later one; it now captures the route when `NavigationEnd` is emitted.
+- Upload file: a `details` response that arrives after `model` changed no longer replaces the preview or emits `filesChanged`, and the `FileReader`s of a replaced preview are aborted. `upload()` reads the local files from `model` instead of the preview, so a file whose preview is still loading is uploaded, server IDs and URLs without metadata stay in `model`, and a missing handler keeps the local files. The returned IDs replace the local keys in the latest `model`: files removed, reordered or added while the upload ran keep that change. Concurrent calls share one upload. Each control keeps its own picked files, so uploading the same file from another control no longer loses this control's pending file. A pick that finishes its checks (resize, image validation) after `model` changed adds its files to the current value and checks `max` again; it used to write back the value from before, which replaced the IDs of an upload that finished meanwhile with stale keys. After destruction, no callback updates `model`.
+- Select: with an async `items` loader, the selected value shows its label once a `SEARCH` result contains it, also when the `VALUE` request returned nothing or failed: `selectedItems`, the trigger, custom selected templates, the read-only and inline views and the tooltip update together, also with `virtualScroll`, without `modelChange`, `sdChange` or `sdSelection`. A retry updates them the same way. A response for a replaced loader, `cacheChecksum`, field mapping, search text or selection — such as the ward list after the province changed — no longer sets the label.
 - Badge: the title of an `md` round, solid or tag badge, counters included, sits 1px lower, in the middle of the badge. With Roboto at 13px the baseline of the 18px line falls on a half pixel, so digits and capitals were drawn 0.5–1.6px above the middle, depending on the badge's position and the screen scale. `sm`, `lg`, `pair` and a tag with a description are unchanged.
 
 ### Removed

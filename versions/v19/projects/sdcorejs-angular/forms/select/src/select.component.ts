@@ -906,30 +906,24 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
           );
         });
       }),
-      filter((items): items is any[] => items !== undefined),
-      // why: selectedItems và display cùng dùng một request VALUE, kể cả khi retry.
-      shareReplay({ bufferSize: 1, refCount: true })
+      filter((items): items is any[] => items !== undefined)
     );
 
     const filteredItems$ = allItems$.pipe(map(this.#visibleItems));
-
-    const display$ = selectedItems$.pipe(
-      map(items => items?.map(item => (this.displayField() ? this.itemDisplay(item) : item))?.join(', ') || '')
-    );
 
     filteredItems$.pipe(takeUntilDestroyed(this.#destroyRef)).subscribe(val => {
       this.filteredItems.set(val || []);
       this.#ref.markForCheck();
     });
-    selectedItems$.pipe(takeUntilDestroyed(this.#destroyRef)).subscribe(val => {
-      this.selectedItems.set(val || []);
-      this.#ref.markForCheck();
-    });
-    display$.pipe(takeUntilDestroyed(this.#destroyRef)).subscribe(val => {
-      this.display.set(val || '');
-      this.#ref.markForCheck();
-    });
+    selectedItems$.pipe(takeUntilDestroyed(this.#destroyRef)).subscribe(items => this.#setSelectedItems(items));
   }
+
+  #setSelectedItems = (items: T[]): void => {
+    // why: VALUE, SEARCH và retry phải cập nhật cùng một nhãn cho trigger, template và tooltip.
+    this.selectedItems.set(items);
+    this.display.set(items.map(item => (this.displayField() ? this.itemDisplay(item) : item)).join(', '));
+    this.#ref.markForCheck();
+  };
 
   /** Rows the panel shows: the non-virtual list is cut at `limit`; the virtual list is not (D-026). */
   #visibleItems = (allItems: T[]): T[] => (this.virtualScroll() ? allItems : this.#pageReadItems(allItems));
@@ -1077,9 +1071,14 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
 
     // why: continuation của loader cũ không được mở revision VALUE sau khi đổi items/context.
     if (!request.valid()) return undefined;
-    const selectedItems = await this.#loadSelectedItems(this.valueModel(), items);
+    const value = cloneReadRequest(this.valueModel());
+    const valueKey = Utilities.hash(value);
+    const selectedItems = await this.#loadSelectedItems(value, items);
 
-    if (!request.valid() || selectedItems === undefined) return undefined;
+    if (!request.valid() || valueKey !== Utilities.hash(this.valueModel()) || selectedItems === undefined) return undefined;
+
+    // why: SEARCH có thể tìm được nhãn sau VALUE rỗng/lỗi; model không đổi nên selectedItems$ không chạy lại.
+    this.#setSelectedItems(selectedItems);
 
     const finalMap = new Map();
     [...selectedItems, ...(this.#cache[key] || [])].forEach(e => {
@@ -1135,8 +1134,7 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
     if (state.operation === 'VALUE') {
       const items = await this.#loadSelectedItems(request.args.value, request.loader, true);
       if (!request.valid() || !items) return;
-      this.selectedItems.set(items);
-      this.display.set(items.map(item => this.itemDisplay(item)).join(', '));
+      this.#setSelectedItems(items);
       const selectedKeys = new Set(items.map(item => this.itemValue(item)));
       this.filteredItems.set([...items, ...this.filteredItems().filter(item => !selectedKeys.has(this.itemValue(item)))]);
     } else {
