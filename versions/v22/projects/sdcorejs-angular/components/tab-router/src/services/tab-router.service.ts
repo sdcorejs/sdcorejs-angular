@@ -91,6 +91,20 @@ export class SdTabRouterService {
     }
   };
 
+  /**
+   * Đóng mọi tab trừ `tab` (mặc định tab hiện tại). Outlet chạy `beforeClose` của từng tab; tab trả về false thì được
+   * giữ lại. Tab hiện tại nằm trong số bị đóng thì `tab` được mở.
+   */
+  closeOthers = (tab?: SdTabRouterTab) => {
+    tab = tab || this.#currentTab;
+    if (tab) {
+      this.actions.next({
+        type: 'close-others',
+        tab,
+      });
+    }
+  };
+
   // Gọi hàm này để thực hiện update tab
   updateTab = (tab: SdTabRouterTab) => {};
 }

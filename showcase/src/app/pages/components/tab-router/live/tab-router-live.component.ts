@@ -31,7 +31,10 @@ const TAB_URLS = [
           <sd-button data-tab-live="sixteen" title="Mở 16 tab" (click)="openMany(16)"></sd-button>
           <sd-button data-tab-live="reset" prefixIcon="restart_alt" title="Về một tab" (click)="reset()"></sd-button>
         </div>
-        <p class="tab-live__hint">Một tab thì thanh tab ẩn; mở tab thứ hai thì thanh hiện ra.</p>
+        <p class="tab-live__hint">
+          Một tab thì thanh tab ẩn; mở tab thứ hai thì thanh hiện ra. Kéo tab để đổi thứ tự; chuột phải vào tab để đóng tab
+          hoặc đóng các tab khác. Bàn phím: Tab vào thanh, ←/→ chuyển, Enter mở, Delete đóng, Shift+F10 mở menu.
+        </p>
       </header>
       @if (alive()) {
         <!-- Ví dụ trong sd-tab-router.md: inline style thắng :host { height: 100dvh } của outlet. -->

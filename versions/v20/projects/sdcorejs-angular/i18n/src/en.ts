@@ -575,6 +575,7 @@ export const EN_MESSAGES = {
   'core.component.table.selector-action.default-msg': 'items selected',
   'core.component.tab-router.too-many-tabs': 'You have opened too many tabs.',
   'core.component.tab-router.close-tab': 'Close tab',
+  'core.component.tab-router.close-others': 'Close other tabs',
   'core.component.tab-router.open-tabs': '{count} open tabs',
   'core.component.tab-router.tab-list': 'Tab list',
 

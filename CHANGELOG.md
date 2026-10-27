@@ -54,6 +54,9 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 - Chip: `clearable` (default `false`) shows a clear-all button like `<sd-date>`, reachable by keyboard and always visible on touch screens. It removes every chip `removable` allows in one change and keeps the locked ones.
 - Chip: `maxVisible` folds the chips past that number into a “+N” button while the field is not focused; `2` suits `<sd-table>` cells. Chip text stops at 240px with an ellipsis and a tooltip.
 - Chip: a duplicate highlights the chip it repeats for 1.4s and is announced, and Backspace / Delete on a locked chip announces “Không xoá được”, through a polite live region. New keys `core.form.chip.placeholder`, `locked`, `duplicate`, `full`, `added`, `skipped`, `more`, `clear` in the five locales, and the component token `--sd-chip-duplicate-bg`.
+- Tab router: the tab bar works from the keyboard as a WAI-ARIA tablist with one tab stop (roving tabindex): ←/→ move focus (wrapping), Home/End go to the first/last tab, Enter/Space open the focused tab, Delete closes it. Focus coming back into the bar lands on the open tab, and when the focused tab closes, focus moves to the tab on its right (on its left at the end).
+- Tab router: a right-click menu on a tab, also opened with Shift+F10 or the Menu key, with “Đóng tab” and “Đóng các tab khác”. New `SdTabRouterService.closeOthers(tab?)` closes every other tab after asking each `beforeClose` in turn; tabs that refuse stay, and the kept tab opens when the open tab was closed. New key `core.component.tab-router.close-others` in the five locales.
+- Tab router: while a tab is dragged it floats with a shadow and four 8px corners over a `--sd-primary` 12% drop spot, and the other tabs slide aside (no motion under `prefers-reduced-motion`).
 
 ### Changed
 
@@ -68,6 +71,8 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 - Chip: chips look like those of `<sd-chip-calendar>`, through one SCSS mixin (`sd-chip-row()` in `core/form.scss`): 20 / 24 / 28px chips centred in a 32 / 40 / 48px field at `sm` / `md` / `lg` (`size="lg"` had no style), a 6px radius, a 1px `--sd-border` outline on `--sd-surface`, tabular digits, 4px between chips, and a square clear-all button of 24 / 28 / 32px. The `md` field is no longer taller than other controls (its chips sat 10px lower). The typing area wraps to a new line only when less than 80px is left (Material kept 150px), and while chips are folded into “+N” it only fills the rest of the line and shows no placeholder, so a table cell stays one line.
 - Chip: a chip that `removable` keeps has the locked background (`--sd-chip-locked-bg`), a lock icon whose tooltip says “Không xoá được”, and an accessible name that ends with “, Không xoá được”. It used to differ only by the missing ✕.
 - Chip calendar: the field and chip styles moved to the shared mixin, with no visible change except the clear-button icon below.
+- Tab router: a tab is a `role="tab"` element without `href` instead of an `<a href>` (selector `.tab-router__item` is unchanged), with `aria-selected` and `aria-controls`; panes are `role="tabpanel"`. With the link, CDK drag cancelled the mouse-down of the natively draggable anchor, so clicking a tab did not focus it. The browser no longer offers “Open link in new tab” on a tab; the bar menu takes its place. The close button is out of the Tab order (`tabindex="-1"`); the keyboard closes a tab with Delete.
+- Tab router: `tabs` of `<sd-tab-router-nav>` is a `model`. Dropping a dragged tab emits a reordered copy through `tabsChange`, which the outlet binds two-way, instead of reordering the outlet array in place; a tab dropped where it started emits nothing.
 
 ### Deprecated
 

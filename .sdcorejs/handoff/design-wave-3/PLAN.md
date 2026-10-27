@@ -108,7 +108,7 @@ Mới (đủ 5 locale vi/en/ja/ko/zh):
 | 2b `sd-avatar-group` | xong | Ảnh: `wave3-2b-avatar-group.png`. Trang showcase mới `components/avatar-group`. Thêm input `tooltip` cho sd-avatar |
 | 3a thanh tab, bỏ badge, điều kiện ẩn, dọn code, token, route showcase sống | xong | Ảnh: `wave3-3a-tab-bar.png` (chỉ bản sau — bản cũ không có route sống để chụp). Route mới `/demo/tab-router` |
 | 3b cuộn, lớp mờ, nút + menu danh sách | xong | Ảnh: `wave3-3b-many-tabs.png` (light, dark, graphite, forced colors, phone 390px). Làm trên `chore/release-3.2` (2026-10-23) |
-| 3c tablist, roving, kéo thả, menu chuột phải | chưa | |
+| 3c tablist, roving, kéo thả, menu chuột phải | xong | Nhánh `feat/wave3-tab-router-upload-file` (cắt từ `main` a35ba11e, 2026-10-27). Ảnh chung với 3d: `wave3-3cd-*.png` |
 | 3d `dirty`, `syncBrowserTitle` | chưa | |
 | 4a–4d upload-file | chưa | |
 
@@ -175,6 +175,26 @@ Ghi chú bước 3a:
   trong bước `map` của `router.events` (đồng bộ với NavigationEnd / NavigationSkipped) và truyền vào tác vụ kích hoạt;
   sau `await` vẫn thử tìm trong cây mới, không thấy thì dùng ActivatedRoute đã chụp. Spec tái hiện bằng route lazy
   NgModule giữ hàng đợi bận trong lúc điều hướng `/a` rồi `/b`.
+
+Ghi chú bước 3c (2026-10-27):
+- Tab là `<div role="tab">` không href (QĐ 11), `id="sd-tab-router-tab-<key>"`, `aria-selected`, `aria-controls` = id pane.
+  **Id pane giữ `tab.key`** (không thêm tiền tố như dự tính ở §10): hash là id HTML hợp lệ (không khoảng trắng), giữ
+  nguyên DOM cho code đang tìm pane theo key. Pane có `role="tabpanel"` + `aria-labelledby`.
+- ←/→ **quay vòng** ở hai đầu (theo APG; md không nói). Tablist không có `aria-label` (không thêm key i18n).
+- Bàn phím và menu xử lý ở nav (uỷ quyền sự kiện trên vùng cuộn, `interactive-supports-focus` tắt có lý do như
+  tablist của form-builder inspector); Enter/Space nằm trên tab. Focus rời thanh thì điểm dừng Tab về tab đang mở.
+- Tab đang focus bị đóng (Delete, menu, nút đóng) thì focus sang tab bên phải, không có thì bên trái — cùng tab outlet
+  mở khi tab bị đóng là tab đang mở. Chỉ lấy lại focus khi nó đã rơi về body.
+- Menu chuột phải: `cdkConnectedOverlay` tại con trỏ (Point origin), Shift+F10 / phím Menu treo dưới tab; không backdrop,
+  không trap focus — Tab, Esc, bấm ra ngoài (kể cả chuột phải vào tab khác) đều đóng. `contextmenu` mà trình duyệt phát
+  ngay sau phím Menu không mở lại menu. Rộng 224px, mục 34px, mục không icon thụt 38px (theo HTML).
+- Kéo: bóng `--sd-shadow-md` (HTML: 0 6px 16px), viền chỗ thả primary 35% (HTML #9fbde6 ≈ 33%), forced-colors viền
+  đứt `CanvasText`. Tab khác trượt 250ms, tắt khi reduced-motion.
+- `tabs` của nav là `model`; outlet bind `[(tabs)]` lên signal `tabs`. Thả tại chỗ cũ không phát.
+- `closeOthers`: hỏi `beforeClose` lần lượt (không song song — mỗi tab có thể mở hộp xác nhận), đọc lại `tabs` sau các
+  lần await. Không có `beforeClose` thì đóng ngay trong cùng lượt (giữ hành vi đồng bộ của `close`).
+- Bỏ handler `auxclick` (không còn href để chặn mở tab mới). i18n mới: `core.component.tab-router.close-others`.
+- Showcase: spec `docs-page.component.spec.ts` (trang button chờ 9 ví dụ, nay 16) đỏ sẵn trên `main`, không do 3c.
 
 Ghi chú bước 3b (2026-10-23, sau khi đợt 1–3a đã merge vào `main` qua #95; user chọn làm đủ 3b trước release 3.2):
 - Cấu trúc thanh: `.tab-router__nav` (40px, nền, ẩn khi ≤ 1 tab) > `.tab-router__tabs` (relative) > `.tab-router__scroller`

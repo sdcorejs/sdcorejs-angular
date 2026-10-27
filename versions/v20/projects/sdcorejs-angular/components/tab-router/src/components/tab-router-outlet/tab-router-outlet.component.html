@@ -3,10 +3,15 @@
     <router-outlet></router-outlet>
   </div>
 } @else {
-  <sd-tab-router-nav [tabs]="tabs()" #tabRouterNav></sd-tab-router-nav>
+  <sd-tab-router-nav [(tabs)]="tabs" #tabRouterNav></sd-tab-router-nav>
   <div class="tab-router__list">
     @for (tab of tabs(); track tab.injector ?? tab.key) {
-      <div class="tab-router__pane" [class.active]="tab.isActive" [id]="tab.key">
+      <div
+        class="tab-router__pane"
+        role="tabpanel"
+        [class.active]="tab.isActive"
+        [id]="tab.key"
+        [attr.aria-labelledby]="'sd-tab-router-tab-' + tab.key">
         <div class="tab-router__content">
           <ng-container *ngComponentOutlet="tab.component; injector: tab.injector"></ng-container>
         </div>

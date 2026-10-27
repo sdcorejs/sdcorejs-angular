@@ -1,6 +1,6 @@
 import { SdTabRouterTab } from '../models/tab-router.model';
 
 export interface SdTabAction {
-  type: 'close';
+  type: 'close' | 'close-others';
   tab: SdTabRouterTab;
 }

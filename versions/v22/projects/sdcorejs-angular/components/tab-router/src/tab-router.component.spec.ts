@@ -110,18 +110,36 @@ describe('SdTabRouterNav', () => {
     expect(fixture.nativeElement.querySelector('.tab-router__nav--compact')).toBeNull();
   });
 
-  it('onDrop reorders tabs via moveItemInArray', () => {
+  // why: đợt 3 · 3c — `moveItemInArray` trên mảng của input sửa thẳng state của outlet sau lưng signal. Nav phát một
+  // mảng mới qua `tabsChange` (two-way `[(tabs)]`), outlet set lại signal.
+  it('onDrop emits a reordered copy through tabsChange and leaves the input array alone', () => {
     const tabs = [makeTab({ key: 'k1', url: '/a' }), makeTab({ key: 'k2', url: '/b' }), makeTab({ key: 'k3', url: '/c' })];
     host.tabs = tabs;
     fixture.detectChanges();
 
     const cmp = fixture.debugElement.query(By.directive(SdTabRouterNavComponent)).componentInstance as SdTabRouterNavComponent;
+    const emitted: SdTabRouterTab[][] = [];
+    cmp.tabs.subscribe(value => emitted.push(value));
 
     // Simulate drag from index 0 to index 2
     cmp.onDrop({ previousIndex: 0, currentIndex: 2 } as any);
 
-    expect(host.tabs[0].key).toBe('k2');
-    expect(host.tabs[2].key).toBe('k1');
+    expect(tabs.map(tab => tab.key)).toEqual(['k1', 'k2', 'k3']);
+    expect(emitted.length).toBe(1);
+    expect(emitted[0]).not.toBe(tabs);
+    expect(emitted[0].map(tab => tab.key)).toEqual(['k2', 'k3', 'k1']);
+  });
+
+  it('emits nothing when a tab is dropped where it started', () => {
+    host.tabs = [makeTab({ key: 'k1', url: '/a' }), makeTab({ key: 'k2', url: '/b' })];
+    fixture.detectChanges();
+    const cmp = fixture.debugElement.query(By.directive(SdTabRouterNavComponent)).componentInstance as SdTabRouterNavComponent;
+    const emitted: SdTabRouterTab[][] = [];
+    cmp.tabs.subscribe(value => emitted.push(value));
+
+    cmp.onDrop({ previousIndex: 1, currentIndex: 1 } as any);
+
+    expect(emitted).toEqual([]);
   });
 
   // why: điều kiện cũ `[class.d-none]="tabs().length > 1"` bị ngược — thanh ẩn đúng lúc có nhiều tab (đợt 3 · 3a).
@@ -178,24 +196,23 @@ describe('SdTabRouterItem', () => {
     expect(de.componentInstance).toBeTruthy();
   });
 
-  it('renders an anchor element with tab url href', () => {
-    const anchor = fixture.nativeElement.querySelector('a.tab-router__item') as HTMLAnchorElement;
-    expect(anchor).not.toBeNull();
-    // href is set via [href]="[tab.url]" (array binding results in comma-joined string)
-    expect(anchor.getAttribute('href')).toBeTruthy();
+  it('renders a role="tab" element without href', () => {
+    const tab = fixture.nativeElement.querySelector('.tab-router__item') as HTMLElement;
+    expect(tab.getAttribute('role')).toBe('tab');
+    expect(tab.hasAttribute('href')).toBe(false);
   });
 
   it('applies tab-router__item--active class when tab.isActive is true', () => {
     host.tab = makeTab({ key: 'k1', url: '/a', isActive: true });
     fixture.detectChanges();
-    const anchor = fixture.nativeElement.querySelector('a.tab-router__item') as HTMLElement;
+    const anchor = fixture.nativeElement.querySelector('.tab-router__item') as HTMLElement;
     expect(anchor.classList.contains('tab-router__item--active')).toBe(true);
   });
 
   it('does NOT apply tab-router__item--active when tab.isActive is false', () => {
     host.tab = makeTab({ key: 'k1', url: '/a', isActive: false });
     fixture.detectChanges();
-    const anchor = fixture.nativeElement.querySelector('a.tab-router__item') as HTMLElement;
+    const anchor = fixture.nativeElement.querySelector('.tab-router__item') as HTMLElement;
     expect(anchor.classList.contains('tab-router__item--active')).toBe(false);
   });
 
@@ -203,7 +220,7 @@ describe('SdTabRouterItem', () => {
     const router = TestBed.inject(Router);
     const navigateSpy = spyOn(router, 'navigate').and.returnValue(Promise.resolve(true));
 
-    const anchor = fixture.nativeElement.querySelector('a.tab-router__item') as HTMLElement;
+    const anchor = fixture.nativeElement.querySelector('.tab-router__item') as HTMLElement;
     const ev = new MouseEvent('click', { bubbles: true, cancelable: true });
     anchor.dispatchEvent(ev);
     fixture.detectChanges();
@@ -399,5 +416,95 @@ describe('SdTabRouterOutlet', () => {
 
     const remaining = (outletCmp as any).tabs() as SdTabRouterTab[];
     expect(remaining.length).toBe(1);
+  });
+
+  // Đợt 3 · 3c: menu chuột phải "Đóng các tab khác".
+  describe('closeOthers', () => {
+    const keys = () => ((outletCmp as any).tabs() as SdTabRouterTab[]).map(tab => tab.key);
+    const settle = async () => {
+      await fixture.whenStable();
+      fixture.detectChanges();
+    };
+
+    it('closes every other tab and keeps the one asked for', async () => {
+      const navigateSpy = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+      const keep = makeTab({ key: 'k2', url: '/b', isActive: true });
+      (outletCmp as any).tabs.set([makeTab({ key: 'k1', url: '/a' }), keep, makeTab({ key: 'k3', url: '/c' })]);
+
+      tabRouterService.closeOthers(keep);
+      await settle();
+
+      expect(keys()).toEqual(['k2']);
+      expect(navigateSpy).withContext('the kept tab was already open').not.toHaveBeenCalled();
+    });
+
+    it('runs beforeClose of each other tab in order and keeps those that return false', async () => {
+      const calls: string[] = [];
+      const guard = (key: string, result: boolean | Promise<boolean>) => () => {
+        calls.push(key);
+        return result;
+      };
+      const keep = makeTab({ key: 'k1', url: '/a', isActive: true, beforeClose: guard('k1', false) });
+      (outletCmp as any).tabs.set([
+        keep,
+        makeTab({ key: 'k2', url: '/b', beforeClose: guard('k2', false) }),
+        makeTab({ key: 'k3', url: '/c', beforeClose: guard('k3', Promise.resolve(true)) }),
+        makeTab({ key: 'k4', url: '/d' }),
+      ]);
+
+      tabRouterService.closeOthers(keep);
+      await settle();
+
+      expect(calls).withContext('the kept tab is not asked').toEqual(['k2', 'k3']);
+      expect(keys()).toEqual(['k1', 'k2']);
+    });
+
+    it('opens the kept tab when the open tab was among those closed', async () => {
+      const navigateSpy = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+      const keep = makeTab({ key: 'k1', url: '/a', queryParams: { id: 7 } });
+      (outletCmp as any).tabs.set([keep, makeTab({ key: 'k2', url: '/b', isActive: true })]);
+
+      tabRouterService.closeOthers(keep);
+      await settle();
+
+      expect(keys()).toEqual(['k1']);
+      expect(navigateSpy).toHaveBeenCalledOnceWith(['/a'], { queryParams: { id: 7 }, state: { switchTab: true } });
+    });
+
+    it('does nothing while disabled', async () => {
+      host.disabled = true;
+      fixture.detectChanges();
+      const keep = makeTab({ key: 'k1', url: '/a', isActive: true });
+      (outletCmp as any).tabs.set([keep, makeTab({ key: 'k2', url: '/b' })]);
+
+      tabRouterService.closeOthers(keep);
+      await settle();
+
+      expect(keys()).toEqual(['k1', 'k2']);
+    });
+  });
+
+  it('binds the bar two-way, so a drop in the bar reorders the panes', () => {
+    (outletCmp as any).tabs.set([makeTab({ key: 'k1', url: '/a', isActive: true }), makeTab({ key: 'k2', url: '/b' })]);
+    fixture.detectChanges();
+    const nav = fixture.debugElement.query(By.directive(SdTabRouterNavComponent)).componentInstance as SdTabRouterNavComponent;
+
+    nav.onDrop({ previousIndex: 0, currentIndex: 1 } as any);
+    fixture.detectChanges();
+
+    expect(((outletCmp as any).tabs() as SdTabRouterTab[]).map(tab => tab.key)).toEqual(['k2', 'k1']);
+    const panes = Array.from(fixture.nativeElement.querySelectorAll('.tab-router__pane')) as HTMLElement[];
+    expect(panes.map(pane => pane.id)).toEqual(['k2', 'k1']);
+  });
+
+  it('labels each pane as the tabpanel of its tab', () => {
+    (outletCmp as any).tabs.set([makeTab({ key: 'k1', url: '/a', isActive: true }), makeTab({ key: 'k2', url: '/b' })]);
+    fixture.detectChanges();
+
+    const pane = fixture.nativeElement.querySelector('.tab-router__pane') as HTMLElement;
+    expect(pane.getAttribute('role')).toBe('tabpanel');
+    expect(pane.id).toBe('k1');
+    expect(pane.getAttribute('aria-labelledby')).toBe('sd-tab-router-tab-k1');
+    expect(fixture.nativeElement.querySelector('#sd-tab-router-tab-k1')!.getAttribute('aria-controls')).toBe('k1');
   });
 });

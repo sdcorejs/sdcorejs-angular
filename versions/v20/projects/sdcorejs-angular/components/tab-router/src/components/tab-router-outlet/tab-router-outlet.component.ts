@@ -141,6 +141,8 @@ export class SdTabRouterOutletComponent implements OnDestroy {
 
         if (event?.type === 'close') {
           this.#closeTab(event.tab);
+        } else if (event?.type === 'close-others') {
+          void this.#closeOthers(event.tab);
         }
       })
     );
@@ -238,19 +240,20 @@ export class SdTabRouterOutletComponent implements OnDestroy {
 
   tabTrackBy = (index: number, tab: SdTabRouterTab) => tab.key;
 
+  // `beforeClose` chỉ cho đóng khi trả về true; false, throw hay reject đều giữ tab lại.
+  #canClose = async (tab: SdTabRouterTab): Promise<boolean> => {
+    try {
+      const result = tab.beforeClose ? tab.beforeClose() : true;
+      return typeof result === 'boolean' ? result : await result;
+    } catch {
+      return false;
+    }
+  };
+
   #closeTab = async (tab: SdTabRouterTab): Promise<void> => {
     if (this.disabled()) return;
-
-    if (tab.beforeClose) {
-      let canClose: boolean;
-      try {
-        const result = tab.beforeClose();
-        canClose = typeof result === 'boolean' ? result : await result;
-      } catch {
-        canClose = false;
-      }
-      if (!canClose) return;
-    }
+    // why: không có `beforeClose` thì đóng ngay trong cùng lượt (không await), như trước.
+    if (tab.beforeClose && !(await this.#canClose(tab))) return;
 
     const currentTabs = this.tabs();
     const { isActive, key: activeKey } = tab;
@@ -271,6 +274,30 @@ export class SdTabRouterOutletComponent implements OnDestroy {
       }
     } else {
       this.tabs.set(currentTabs.filter(({ key }) => key !== tab.key));
+    }
+  };
+
+  // Menu chuột phải "Đóng các tab khác" (đợt 3 · 3c). Hỏi `beforeClose` lần lượt từng tab (mỗi tab có thể mở hộp xác
+  // nhận riêng), rồi gỡ một lần những tab cho đóng. Tab đang mở nằm trong số đó thì mở `keep`.
+  #closeOthers = async (keep: SdTabRouterTab): Promise<void> => {
+    if (this.disabled()) return;
+    const closing = new Set<string>();
+    for (const tab of this.tabs()) {
+      if (tab.key !== keep.key && (!tab.beforeClose || (await this.#canClose(tab)))) closing.add(tab.key);
+    }
+    if (!closing.size || this.disabled()) return;
+
+    // why: đọc lại sau các lần await — tab có thể đã đổi trong lúc chờ hộp xác nhận.
+    const currentTabs = this.tabs();
+    const kept = currentTabs.find(({ key }) => key === keep.key);
+    const closesActive = currentTabs.some(({ key, isActive }) => isActive && closing.has(key));
+    this.tabs.set(currentTabs.filter(({ key }) => !closing.has(key)));
+
+    if (closesActive && kept) {
+      this.#router.navigate([kept.url], {
+        queryParams: { ...(kept.queryParams || {}) },
+        state: { switchTab: true },
+      });
     }
   };
 

@@ -1,32 +1,38 @@
-<!-- why: [href] là thuộc tính DOM kiểu CHUỖI. Bản cũ bind `[tab.url]` — một MẢNG — và chỉ "chạy
-     được" nhờ mảng 1 phần tử tự stringify lúc Angular sanitize URL. Bind thẳng chuỗi: đúng kiểu,
-     bỏ một slot pure-function thừa, và giá trị bind khớp đúng thứ render ra DOM. -->
 @let info = tabInfo | sdTabInfo: tab;
-<a
-  [href]="tab.url"
+<!-- why: đợt 3 · 3c (QĐ 11) — phần tử role="tab" không href. Với <a href>, CDK drag chặn mousedown (thẻ link kéo được
+     theo kiểu native) nên bấm chuột không focus được tab, và menu chuột phải của trình duyệt chiếm chỗ menu của thanh.
+     tabindex do nav chọn (roving: cả thanh một điểm dừng Tab); ←/→/Home/End/Delete và menu do nav xử lý. -->
+<div
+  role="tab"
   class="tab-router__item"
   [class.tab-router__item--active]="tab.isActive"
+  [id]="'sd-tab-router-tab-' + tab.key"
+  [attr.aria-selected]="tab.isActive"
+  [attr.aria-controls]="tab.key"
+  [attr.tabindex]="focusable() ? 0 : -1"
   [sdTooltip]="info.tooltip || (truncated() ? info.name : '')"
   (mouseenter)="measureTruncation()"
   (focusin)="measureTruncation()"
   (click)="onTabClick($event)"
+  (keydown.enter)="onTabKeydown($event)"
+  (keydown.space)="onTabKeydown($event)"
   (mousedown)="onMousedown($event)"
-  (mouseup)="onMouseup($event)"
-  (auxclick)="onAuxclick($event)">
+  (mouseup)="onMouseup($event)">
   <!-- why: đợt 3 · 3a bỏ sd-badge — badge ép cỡ chữ và chiều rộng riêng, và tự hiện chấm khi tab không có icon. -->
   @if (info.icon) {
     <sd-icon class="tab-router__icon c-{{ info.color || 'primary' }}" aria-hidden="true" size="16px" [fontIcon]="info.icon"></sd-icon>
   }
   <span #name class="tab-router__name">{{ info.name }}</span>
-  <!-- why: bỏ aria-hidden="true" khỏi nút đóng — nó là <button> thật, vẫn nhận tab focus nhưng
-       screen reader không đọc được gì (nút chỉ có icon). Gắn type + aria-label i18n. -->
+  <!-- why: nút đóng là <button> thật có nhãn i18n, nhưng tabindex="-1" — bàn phím đóng tab bằng Delete trên tab, nên
+       nút không thêm điểm dừng Tab thứ hai cho mỗi tab. -->
   <button
     type="button"
     class="tab-router__close"
+    tabindex="-1"
     [attr.aria-label]="'core.common.close' | sdTranslate"
     (click)="close($event)"
     (mousedown)="$event.stopPropagation()">
     <!-- Icon thuần trang trí — nút đã có aria-label nên giữ aria-hidden ở đây là đúng. -->
     <sd-icon aria-hidden="true" size="14px" fontIcon="close"></sd-icon>
   </button>
-</a>
+</div>

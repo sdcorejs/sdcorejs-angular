@@ -132,3 +132,43 @@
     }
   }
 }
+
+// Đợt 3 · 3c: kéo đổi thứ tự. CDK nhân bản host làm bản kéo (gắn vào body) và chỗ thả; bản sao giữ thuộc tính
+// `_nghost`/`_ngcontent` nên rule của component vẫn áp.
+// - Bản kéo: nổi lên với bóng, bo đủ 4 góc 8px, nền và chữ của tab đang mở.
+// - Chỗ thả: ô nền primary 12% có viền primary mảnh, nội dung ẩn.
+:host(.cdk-drag-preview) {
+  &::after {
+    content: none;
+  }
+
+  .tab-router__item {
+    border-radius: 8px;
+    background: var(--sd-surface);
+    color: var(--sd-text);
+    box-shadow: var(--sd-shadow-md, none);
+    cursor: grabbing;
+  }
+}
+
+:host(.cdk-drag-placeholder) {
+  &::after {
+    opacity: 0;
+  }
+
+  .tab-router__item {
+    background: color-mix(in srgb, var(--sd-primary) 12%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sd-primary) 35%, transparent);
+
+    > * {
+      visibility: hidden;
+    }
+  }
+}
+
+@media (forced-colors: active) {
+  :host(.cdk-drag-placeholder) .tab-router__item {
+    outline: 1px dashed CanvasText;
+    outline-offset: -1px;
+  }
+}

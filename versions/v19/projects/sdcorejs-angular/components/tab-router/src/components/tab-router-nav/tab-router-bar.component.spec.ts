@@ -515,4 +515,226 @@ describe('SdTabRouterNav bar (wave 3 · 3a)', () => {
       expect(rows()[5].textContent).toContain('Công nợ phải thu');
     });
   });
+
+  // Thanh tab đợt 3 · 3c (design handoff `tab-router.md`, mục "Bàn phím, kéo thả, menu chuột phải").
+  describe('keyboard, drag and context menu (wave 3 · 3c)', () => {
+    let i18n: I18nService;
+    const tabEls = () => Array.from(fixture.nativeElement.querySelectorAll('[role="tab"]')) as HTMLElement[];
+    const overlay = () => TestBed.inject(OverlayContainer).getContainerElement();
+    const menu = () => overlay().querySelector('.tab-router__context-menu') as HTMLElement | null;
+    const menuItems = () => Array.from(overlay().querySelectorAll('[role="menuitem"]')) as HTMLElement[];
+    const settle = async () => {
+      fixture.detectChanges();
+      await fixture.whenStable();
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      fixture.detectChanges();
+    };
+    const key = (target: Element, init: KeyboardEventInit) => {
+      const event = new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init });
+      target.dispatchEvent(event);
+      fixture.detectChanges();
+      return event;
+    };
+    const tabStops = () => tabEls().map(tab => tab.getAttribute('tabindex'));
+
+    beforeEach(() => {
+      i18n = TestBed.inject(I18nService);
+      // why: ghim host ở góc trên trái để số đo vị trí menu không phụ thuộc DOM của spec khác.
+      Object.assign((fixture.nativeElement as HTMLElement).style, { position: 'fixed', top: '0', left: '0' });
+    });
+
+    afterEach(() => (overlay().innerHTML = ''));
+
+    it('is a tablist with one tab stop, on the open tab', () => {
+      const tablist = fixture.nativeElement.querySelector('[role="tablist"]') as HTMLElement;
+      expect(tablist).not.toBeNull();
+      expect(tablist.contains(tabEls()[0])).toBe(true);
+      expect(tabStops()).toEqual(['-1', '0', '-1', '-1']);
+    });
+
+    it('moves focus with ←/→ (wrapping), Home and End, and takes the tab stop along without opening the tab', () => {
+      const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+      tabEls()[1].focus();
+
+      key(tabEls()[1], { key: 'ArrowRight' });
+      expect(document.activeElement).toBe(tabEls()[2]);
+      expect(tabStops()).toEqual(['-1', '-1', '0', '-1']);
+
+      key(tabEls()[2], { key: 'End' });
+      expect(document.activeElement).toBe(tabEls()[3]);
+      key(tabEls()[3], { key: 'ArrowRight' });
+      expect(document.activeElement).withContext('wraps to the first tab').toBe(tabEls()[0]);
+      key(tabEls()[0], { key: 'ArrowLeft' });
+      expect(document.activeElement).withContext('wraps to the last tab').toBe(tabEls()[3]);
+      const home = key(tabEls()[3], { key: 'Home' });
+      expect(document.activeElement).toBe(tabEls()[0]);
+      expect(home.defaultPrevented).toBe(true);
+      expect(navigate).not.toHaveBeenCalled();
+    });
+
+    it('gives the tab stop back to the open tab once focus leaves the bar', () => {
+      const outside = document.createElement('button');
+      document.body.appendChild(outside);
+      tabEls()[1].focus();
+      key(tabEls()[1], { key: 'ArrowRight' });
+      expect(tabStops()).toEqual(['-1', '-1', '0', '-1']);
+
+      outside.focus();
+      fixture.detectChanges();
+      expect(tabStops()).toEqual(['-1', '0', '-1', '-1']);
+      outside.remove();
+    });
+
+    it('closes the focused tab with Delete and moves focus to the tab on its right, or on its left at the end', async () => {
+      const close = spyOn(TestBed.inject(SdTabRouterService), 'close');
+      const tabs = fixture.componentInstance.tabs;
+      tabEls()[1].focus();
+      key(tabEls()[1], { key: 'ArrowRight' });
+
+      key(tabEls()[2], { key: 'Delete' });
+      expect(close).toHaveBeenCalledOnceWith(tabs[2]);
+      render({ tabs: tabs.filter((_, i) => i !== 2) });
+      await settle();
+      expect(document.activeElement).withContext('the tab that was on its right').toBe(tabEls()[2]);
+      expect(tabEls()[2].textContent).toContain(INFOS[2].name);
+
+      key(tabEls()[2], { key: 'Delete' });
+      render({ tabs: fixture.componentInstance.tabs.slice(0, 2) });
+      await settle();
+      expect(document.activeElement).withContext('the last tab: its left neighbour').toBe(tabEls()[1]);
+    });
+
+    it('floats the dragged tab with a shadow and four 8px corners, and marks the drop spot primary 12% with a thin ring', () => {
+      const [first, second] = hosts();
+      first.classList.add('cdk-drag-preview');
+      second.classList.add('cdk-drag-placeholder');
+      fixture.detectChanges();
+
+      const preview = getComputedStyle(first.querySelector('.tab-router__item')!);
+      expect([
+        preview.borderTopLeftRadius,
+        preview.borderTopRightRadius,
+        preview.borderBottomLeftRadius,
+        preview.borderBottomRightRadius,
+      ]).toEqual(['8px', '8px', '8px', '8px']);
+      expect(preview.boxShadow).not.toBe('none');
+      expect(preview.backgroundColor).toBe(resolve('background-color', 'var(--sd-surface)'));
+      expect(getComputedStyle(first, '::after').content).withContext('no divider on the floating tab').toBe('none');
+
+      const spot = getComputedStyle(second.querySelector('.tab-router__item')!);
+      expect(spot.backgroundColor).toBe(resolve('background-color', 'color-mix(in srgb, var(--sd-primary) 12%, transparent)'));
+      expect(spot.boxShadow).toContain('inset');
+      expect(getComputedStyle(second.querySelector('.tab-router__name')!).visibility).toBe('hidden');
+    });
+
+    it('locks dragging to the x axis', () => {
+      const list = fixture.nativeElement.querySelector('.tab-router__scroller') as HTMLElement;
+      expect(list.classList).toContain('cdk-drop-list');
+      expect(cssRule(/cdk-drop-list-dragging sd-tab-router-item:not\(\.cdk-drag-placeholder\)/)?.transition).toContain('transform');
+    });
+
+    describe('context menu', () => {
+      const rightClick = (index: number) => {
+        const rect = tabEls()[index].getBoundingClientRect();
+        const event = new MouseEvent('contextmenu', {
+          bubbles: true,
+          cancelable: true,
+          button: 2,
+          clientX: rect.left + 20,
+          clientY: rect.top + 10,
+        });
+        tabEls()[index].dispatchEvent(event);
+        return { event, x: rect.left + 20, y: rect.top + 10 };
+      };
+
+      it('opens on right click at the pointer with "Close tab" (close icon) and "Close other tabs", 34px each', async () => {
+        const { event, x, y } = rightClick(2);
+        await settle();
+
+        expect(event.defaultPrevented).withContext('no browser menu').toBe(true);
+        const panel = menu()!;
+        expect(panel).not.toBeNull();
+        expect(panel.getAttribute('role')).toBe('menu');
+        expect(panel.getBoundingClientRect().width).toBe(224);
+        expect(panel.getBoundingClientRect().left).toBeCloseTo(x, 0);
+        expect(panel.getBoundingClientRect().top).toBeCloseTo(y, 0);
+        expect(getComputedStyle(panel).paddingTop).toBe('6px');
+        expect(getComputedStyle(panel).borderTopLeftRadius).toBe(resolve('border-top-left-radius', 'var(--sd-panel-radius)'));
+
+        const [closeItem, othersItem] = menuItems();
+        expect(menuItems().length).toBe(2);
+        expect(closeItem.getBoundingClientRect().height).toBe(34);
+        expect(closeItem.textContent).toContain(i18n.t('core.component.tab-router.close-tab'));
+        expect(closeItem.querySelector('sd-icon')!.textContent).toContain('close');
+        expect(othersItem.textContent!.trim()).toBe(i18n.t('core.component.tab-router.close-others'));
+        expect(othersItem.querySelector('sd-icon')).toBeNull();
+        expect(document.activeElement).withContext('focus on the first item').toBe(closeItem);
+      });
+
+      it('closes the tab from "Close tab", then gives focus back to the tab', async () => {
+        const close = spyOn(TestBed.inject(SdTabRouterService), 'close');
+        rightClick(2);
+        await settle();
+
+        menuItems()[0].click();
+        await settle();
+
+        expect(close).toHaveBeenCalledOnceWith(fixture.componentInstance.tabs[2]);
+        expect(menu()).toBeNull();
+        expect(document.activeElement).toBe(tabEls()[2]);
+      });
+
+      it('closes the other tabs from "Close other tabs"', async () => {
+        const closeOthers = spyOn(TestBed.inject(SdTabRouterService), 'closeOthers');
+        rightClick(0);
+        await settle();
+
+        menuItems()[1].click();
+        await settle();
+
+        expect(closeOthers).toHaveBeenCalledOnceWith(fixture.componentInstance.tabs[0]);
+        expect(menu()).toBeNull();
+      });
+
+      it('opens on the focused tab with Shift+F10 or the Menu key, under the tab, only once', async () => {
+        tabEls()[1].focus();
+        key(tabEls()[1], { key: 'ArrowRight' });
+        const shiftF10 = key(tabEls()[2], { key: 'F10', shiftKey: true });
+        await settle();
+        expect(shiftF10.defaultPrevented).toBe(true);
+        expect(menu()).not.toBeNull();
+        const tab = tabEls()[2].getBoundingClientRect();
+        expect(menu()!.getBoundingClientRect().left).toBeCloseTo(tab.left, 0);
+        expect(menu()!.getBoundingClientRect().top).toBeGreaterThanOrEqual(tab.bottom);
+
+        // why: trình duyệt phát thêm `contextmenu` sau phím Menu / Shift+F10 — không mở menu thứ hai.
+        tabEls()[2].dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
+        await settle();
+        expect(overlay().querySelectorAll('.tab-router__context-menu').length).toBe(1);
+
+        menu()!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+        await settle();
+        key(tabEls()[2], { key: 'ContextMenu' });
+        await settle();
+        expect(menu()).not.toBeNull();
+      });
+
+      it('moves between items with ↑/↓ and closes on Escape with focus back on the tab', async () => {
+        rightClick(3);
+        await settle();
+
+        menuItems()[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }));
+        expect(document.activeElement).toBe(menuItems()[1]);
+        menuItems()[1].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }));
+        expect(document.activeElement).withContext('wraps').toBe(menuItems()[0]);
+        menuItems()[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true }));
+        expect(document.activeElement).toBe(menuItems()[1]);
+
+        menu()!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+        await settle();
+        expect(menu()).toBeNull();
+        expect(document.activeElement).toBe(tabEls()[3]);
+      });
+    });
+  });
 });
