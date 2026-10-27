@@ -1,14 +1,15 @@
 <sd-page-list title="Phê duyệt" description="Đề nghị thanh toán chờ xử lý. Dùng ↑ ↓ để chuyển mục." detail="none">
   <div sdPageListMain class="approval" [class.approval--narrow]="narrow()" [class.approval--active]="active()">
     <sd-splitter [option]="splitter">
-      <sd-splitter-panel panelId="list" [size]="440" unit="px" [minSize]="320">
+      <!-- Kéo trong khoảng 360–760px; panel chi tiết nhận phần còn lại (unit flex: minSize là trọng số, không phải px). -->
+      <sd-splitter-panel class="approval__list" panelId="list" [size]="520" unit="px" [minSize]="360" [maxSize]="760">
         <sd-table autoId="approval-list" [option]="option">
           <ng-template sdTableCellDef="code" let-item="item">
             <a [routerLink]="[item.id]" [attr.aria-current]="item.id === selectedId() ? 'true' : null">{{ item.code }}</a>
           </ng-template>
         </sd-table>
       </sd-splitter-panel>
-      <sd-splitter-panel panelId="detail" [size]="1" [minSize]="360">
+      <sd-splitter-panel class="approval__detail" panelId="detail" [size]="1">
         <router-outlet (activate)="active.set(true)" (deactivate)="active.set(false)" />
         @if (!active()) {
           <sd-data-state state="empty" icon="inbox" title="Chọn một mục" message="Chọn một đề nghị bên trái để xem chi tiết và xử lý." />

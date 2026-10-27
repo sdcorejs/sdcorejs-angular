@@ -9,7 +9,7 @@ Xem, tạo, cập nhật ngay trên danh sách: `sd-side-drawer` trong route con
 
 ## Code mẫu
 
-Chi tiết trong drawer: bản ghi tải bằng `detail(id)` qua resolver, footer có Cập nhật, đóng bằng X điều hướng về danh sách:
+Chi tiết trong drawer: bản ghi tải bằng `detail(id)` qua resolver, footer có Hồ sơ 360° và Cập nhật, Xoá là icon đỏ cạnh X, đóng bằng X điều hướng về danh sách:
 
 <!-- @source features/customer/components/detail-side-drawer/detail-side-drawer.component.ts -->
 ```ts
@@ -31,6 +31,7 @@ import { GeneralInformationViewComponent } from '../general-information-view/gen
 /**
  * Chi tiết khách hàng trong drawer (route con `:id/detail` của danh sách). Bản ghi do resolver tải bằng
  * `detail(id)`, không lấy dữ liệu của dòng. Chỉ đóng bằng X (cùng Esc, backdrop): không có nút Đóng (E4).
+ * Xoá là tác vụ hiếm dùng và phá huỷ: nút chỉ có icon màu đỏ ở header, cạnh X; footer giữ tác vụ thường dùng.
  */
 @Component({
   selector: 'detail-side-drawer',
@@ -47,22 +48,23 @@ import { GeneralInformationViewComponent } from '../general-information-view/gen
         </div>
         <span class="T14R text-secondary">{{ typeName() }} · {{ customer.phone }}</span>
       </div>
+      <sd-button
+        sdHeaderRight
+        *sdPermission="'PATTERN_CUSTOMER_D_DELETE'"
+        prefixIcon="delete"
+        tooltip="Xoá khách hàng"
+        type="text"
+        color="error"
+        autoId="customer-delete"
+        [loading]="deleting()"
+        (click)="delete()" />
       <general-information-view [customer]="customer" />
-      <div sdFooterLeft class="d-flex align-items-center gap-8">
-        <sd-button
-          *sdPermission="'PATTERN_CUSTOMER_D_DELETE'"
-          title="Xoá"
-          type="text"
-          color="error"
-          autoId="customer-delete"
-          [loading]="deleting()"
-          (click)="delete()" />
-        <a [routerLink]="['../360']">Hồ sơ 360°</a>
-      </div>
       <div sdFooterRight class="d-flex align-items-center gap-8">
+        <sd-button title="Hồ sơ 360°" prefixIcon="contact_page" type="outline" autoId="customer-profile" [routerLink]="['../360']" />
         <sd-button
           *sdPermission="'PATTERN_CUSTOMER_U_UPDATE'"
           title="Cập nhật khách hàng"
+          prefixIcon="edit"
           type="fill"
           color="primary"
           autoId="customer-update"
@@ -468,7 +470,8 @@ export const routes: Routes = [
 - MUST đặt drawer trong component của route con (`create`, `:id/detail`, `:id/update`) và mở khi component sẵn sàng; `sdClosed` điều hướng về danh sách (`'../..'` từ route hai segment), nên Back của trình duyệt cũng đóng drawer.
 - MUST chỉ đóng bằng X, Esc, backdrop (E4); không có nút Đóng hay Huỷ thường trực.
 - MUST đi qua `beforeClose` cho mọi đường đóng khi còn thay đổi; đồng ý bỏ thì `markPristine()` để guard của route không hỏi lần hai.
-- MUST đặt nút chính và tác vụ ở `sdFooterRight`; `sdFooterLeft` cho tác vụ phụ (Xoá, liên kết).
+- MUST đặt tác vụ thường dùng ở `sdFooterRight`: nút chính (`fill`, có icon) ở ngoài cùng bên phải, nút phụ (`outline`) bên trái nó. Mở màn khác (Hồ sơ 360°) cũng là nút, không phải link.
+- MUST đặt tác vụ phá huỷ ít dùng (Xoá) ở `sdHeaderRight`, cạnh X: nút chỉ có icon màu đỏ (`type="text"`, `color="error"`) với `tooltip` làm tên, và vẫn hỏi xác nhận (E13).
 - MUST tải chi tiết bằng `detail(id)`; không dùng object của dòng làm dữ liệu chi tiết.
 - MUST chỉ tải lại danh sách khi lưu thành công; trả focus về phần tử đã mở drawer (`sd-page-list` giữ phần tử này kể cả khi chi tiết chuyển sang cập nhật).
 - SHOULD dùng bề rộng 600px cho chi tiết và form thường, 480px cho nội dung ngắn, tối đa 800px (E9).

@@ -16,6 +16,7 @@ import { GeneralInformationViewComponent } from '../general-information-view/gen
 /**
  * Chi tiết khách hàng trong drawer (route con `:id/detail` của danh sách). Bản ghi do resolver tải bằng
  * `detail(id)`, không lấy dữ liệu của dòng. Chỉ đóng bằng X (cùng Esc, backdrop): không có nút Đóng (E4).
+ * Xoá là tác vụ hiếm dùng và phá huỷ: nút chỉ có icon màu đỏ ở header, cạnh X; footer giữ tác vụ thường dùng.
  */
 @Component({
   selector: 'detail-side-drawer',
@@ -32,22 +33,23 @@ import { GeneralInformationViewComponent } from '../general-information-view/gen
         </div>
         <span class="T14R text-secondary">{{ typeName() }} · {{ customer.phone }}</span>
       </div>
+      <sd-button
+        sdHeaderRight
+        *sdPermission="'PATTERN_CUSTOMER_D_DELETE'"
+        prefixIcon="delete"
+        tooltip="Xoá khách hàng"
+        type="text"
+        color="error"
+        autoId="customer-delete"
+        [loading]="deleting()"
+        (click)="delete()" />
       <general-information-view [customer]="customer" />
-      <div sdFooterLeft class="d-flex align-items-center gap-8">
-        <sd-button
-          *sdPermission="'PATTERN_CUSTOMER_D_DELETE'"
-          title="Xoá"
-          type="text"
-          color="error"
-          autoId="customer-delete"
-          [loading]="deleting()"
-          (click)="delete()" />
-        <a [routerLink]="['../360']">Hồ sơ 360°</a>
-      </div>
       <div sdFooterRight class="d-flex align-items-center gap-8">
+        <sd-button title="Hồ sơ 360°" prefixIcon="contact_page" type="outline" autoId="customer-profile" [routerLink]="['../360']" />
         <sd-button
           *sdPermission="'PATTERN_CUSTOMER_U_UPDATE'"
           title="Cập nhật khách hàng"
+          prefixIcon="edit"
           type="fill"
           color="primary"
           autoId="customer-update"

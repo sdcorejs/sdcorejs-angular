@@ -142,6 +142,7 @@ import {
         <sd-button
           *sdPermission="'PATTERN_ORDER_U_UPDATE'"
           title="Cập nhật đơn hàng"
+          prefixIcon="edit"
           type="fill"
           color="primary"
           autoId="order-update"
@@ -328,7 +329,7 @@ export class BulkResultComponent {
 
 - MUST có một nút chính nổi bật; nút phụ dùng kiểu nhẹ hơn và thứ tự ổn định.
 - MUST tối đa ba tác vụ cấp ngoài trong mỗi vùng; từ bốn tác vụ, giữ hai tác vụ ưu tiên và gom từ tác vụ thứ ba vào "Thao tác khác".
-- MUST dùng "Cập nhật <entity>", không dùng "Chỉnh sửa" (E5).
+- MUST dùng "Cập nhật <entity>", không dùng "Chỉnh sửa" (E5); nút cập nhật có icon `edit`.
 - MUST gắn `*sdPermission` cho từng tác vụ và cho menu; điều kiện trạng thái tính trong TS. Không có nhóm rỗng khi mọi tác vụ con bị ẩn.
 - MUST hỏi xác nhận trước Xoá, Duyệt, Từ chối và mọi tác vụ đổi trạng thái, cả từng bản ghi lẫn hàng loạt; Từ chối và Huỷ bắt buộc lý do (E13).
 - MUST báo kết quả hàng loạt theo từng bản ghi: "Đã xác nhận 8/10. 2 đơn lỗi.", giữ dòng lỗi đang chọn, có "Thử lại phần lỗi".

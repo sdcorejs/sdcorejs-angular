@@ -51,6 +51,7 @@ type TabKey = (typeof TABS)[number]['key'];
         headerRight
         *sdPermission="'PATTERN_CUSTOMER_U_UPDATE'"
         title="Cập nhật khách hàng"
+        prefixIcon="edit"
         type="fill"
         color="primary"
         autoId="customer-profile-update"

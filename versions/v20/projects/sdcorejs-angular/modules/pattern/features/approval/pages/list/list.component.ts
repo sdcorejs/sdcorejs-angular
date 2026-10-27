@@ -40,6 +40,22 @@ const NARROW = '(max-width: 767.98px)';
       flex: 1 1 0;
       min-height: 0;
     }
+    .approval sd-splitter-panel {
+      display: flex;
+      flex-direction: column;
+    }
+    .approval__list {
+      background: var(--sd-surface, #ffffff);
+      border: 1px solid var(--sd-border, #e3e5ea);
+      border-radius: 8px;
+    }
+    .approval__list > sd-table {
+      flex: 1 1 0;
+      min-height: 0;
+    }
+    .approval__detail {
+      overflow-y: auto;
+    }
     .approval--narrow.approval--active sd-splitter-panel:first-child,
     .approval--narrow:not(.approval--active) sd-splitter-panel:last-of-type {
       display: none;
@@ -72,14 +88,14 @@ export class ListComponent extends ApprovalInbox {
     },
     paginate: { pageSize: 20, pages: [20, 50] },
     columns: [
-      { field: 'code', title: 'Mã', type: 'string', width: '110px' },
-      { field: 'title', title: 'Nội dung', type: 'string', minWidth: '160px' },
-      { field: 'amount', title: 'Số tiền (₫)', type: 'number', width: '130px', align: 'right' },
+      { field: 'code', title: 'Mã', type: 'string', width: '96px' },
+      { field: 'title', title: 'Nội dung', type: 'string', minWidth: '140px' },
+      { field: 'amount', title: 'Số tiền (₫)', type: 'number', width: '120px', align: 'right' },
       {
         field: 'status',
         title: 'Trạng thái',
         type: 'values',
-        width: '140px',
+        width: '128px',
         option: { items: APPROVAL_STATUS_OPTIONS, valueField: 'id', displayField: 'name' },
         useBadge: status => approvalStatusBadge(status),
         // Hộp duyệt mở sẵn các đề nghị đang chờ; đổi bộ lọc để xem đề nghị đã xử lý.

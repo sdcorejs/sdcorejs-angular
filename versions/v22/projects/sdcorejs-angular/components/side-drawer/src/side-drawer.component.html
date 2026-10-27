@@ -28,7 +28,9 @@
             <ng-content select="[sdHeaderRight]"></ng-content>
             @if (!hideClose()) {
               <!-- why: aria-label="Close" là chuỗi tiếng Anh cứng trong một thư viện đã có i18n. -->
+              <!-- why: cdkFocusInitial: mở drawer thì focus vào X, không vào tác vụ của sdHeaderRight (Xoá) đứng trước nó. -->
               <button
+                cdkFocusInitial
                 type="button"
                 class="sd-side-drawer-close-btn"
                 (click)="close()"
