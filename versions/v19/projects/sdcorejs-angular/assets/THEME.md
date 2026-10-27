@@ -367,6 +367,35 @@ values; by default they point at the shared tokens:
 - `--sd-chip-calendar-chip-locked-bg`: `var(--sd-chip-locked-bg)`, the background of a chip that `removable` keeps.
 - `--sd-chip-calendar-more-hover-bg`: `var(--sd-chip-more-hover-bg)`, the hover background of the “+N” button.
 
+## Upload file tokens
+
+`sd-upload-file` (design handoff wave 3 · 4b–4d). Field colours come from the palette (`--sd-primary`, `--sd-border-strong`,
+`--sd-status-error-*`, `--sd-surface-muted`); two roles have their own token, one expression for light and dark:
+
+| Token | Value | Role |
+| --- | --- | --- |
+| `--sd-upload-file-scrim` | black 24% | Scrim over an image tile on hover or focus |
+| `--sd-upload-file-empty-text` | `--sd-text` 70% on `--sd-surface` | “Chưa có tệp” of the inline variant (4.5:1 in every preset; `--sd-text-muted` is not) |
+
+The preview popup is dark in light and dark mode. Its background and text are fixed; the other roles mix from them, and the
+accent, the text on it and the error colour come from the palette ramps:
+
+| Token | Light | Dark | Role |
+| --- | --- | --- | --- |
+| `--sd-upload-file-viewer-bg` | `#141518` | `#141518` | Viewer background |
+| `--sd-upload-file-viewer-fg` | `#e3e3e8` | `#e3e3e8` | File name, icon buttons |
+| `--sd-upload-file-viewer-fg-muted` | fg 70% on bg | same | Size, position, filmstrip icons |
+| `--sd-upload-file-viewer-divider` | fg 8% | same | Lines under the top bar and above the filmstrip |
+| `--sd-upload-file-viewer-control-bg` | fg 10% | same | Hover of icon buttons, previous / next buttons |
+| `--sd-upload-file-viewer-thumb-bg` | fg 10% on bg | same | Filmstrip tile of a document |
+| `--sd-upload-file-viewer-accent` | `--sd-primary-200` | `--sd-primary` | File-type icon, focus ring, text buttons, current filmstrip tile |
+| `--sd-upload-file-viewer-on-accent` | `--sd-primary-900` | `--sd-primary-contrast` | Text of the filled “Tải xuống” button |
+| `--sd-upload-file-viewer-error` | `--sd-error-200` | `--sd-error` | Icon of the error state |
+| `--sd-upload-file-viewer-ext-pdf` / `-word` / `-excel` | `--sd-error-300` / `--sd-primary-300` / `--sd-success-300` | same | Extension label of a filmstrip tile |
+
+Contrast pairs are in `scripts/theme-contrast.test.mjs`. `--sd-upload-file-overlay-fg` (“+N” over the last visible
+image) keeps its value.
+
 ## Focus ring
 
 - Colour: `var(--sd-focus-ring-color)` (the primary colour). Width and offset: `--sd-focus-ring-width` and

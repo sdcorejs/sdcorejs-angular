@@ -334,15 +334,25 @@ Typically not used standalone, but accessible via `viewChild(PreviewComponent)` 
 
 | Member                          | Type                                        | Notes                                                                                    |
 | ------------------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `open(files, index?)`           | `(PreviewFile[], number?) => Promise<void>` | Opens the gallery modal at the given index (default 0). No-op if array is empty or null. |
-| `updateCurrentImage(direction)` | `(1 \| -1) => void`                         | Navigates forward (1) or backward (-1) with wrap-around.                                 |
+| `open(files, index?)`           | `(PreviewFile[], number?) => Promise<void>` | Opens the viewer at the given index (default 0). No-op if array is empty or null. |
+| `updateCurrentImage(direction)` | `(1 \| -1) => void`                         | Previous (−1) / next (1) file; stops at the first and last file (wave 3 · 4b — it used to wrap). |
 | `onClickThumbnailImage(index)`  | `(number) => void`                          | Jumps to thumbnail at `index`.                                                           |
 | `onDownload(previewFile)`       | `(PreviewFile) => void`                     | Emits the `download` output.                                                             |
-| `onClose()`                     | `() => void`                                | Emits the `close` output.                                                                |
-| `activeIndex`                   | `number`                                    | Currently selected image index.                                                          |
-| `previewFiles`                  | `PreviewFile[]`                             | Files loaded into the gallery.                                                           |
+| `onClose()`                     | `() => void`                                | Closes the viewer; `close` is emitted once it has closed.                                |
+| `activeIndex`                   | `number` (read-only)                        | Index of the file shown.                                                                 |
+| `previewFiles`                  | `PreviewFile[]` (read-only)                 | Files loaded into the viewer.                                                            |
 | `@Output() download`            | `EventEmitter<PreviewFile>`                 | Emitted when user clicks the download button on a non-image file.                        |
-| `@Output() close`               | `EventEmitter<void>`                        | Emitted when the modal is dismissed.                                                     |
+| `@Output() close`               | `EventEmitter<void>`                        | Emitted when the viewer closes (Esc, close button, a click around it).                   |
+
+The viewer (wave 3 · 4b, option A) is a CDK `Dialog`, not `sd-modal` (which turns into a bottom sheet on phones, caps the
+width, pads the body and does not close on Esc). `thumbnailPosition` was never read nor exported and is removed.
+
+- **Frame**: `min(1200px, 100vw − 48px)` × `100vh − 48px`, 12px corners, dark in light and dark mode (`--sd-upload-file-viewer-*`, see THEME.md); full screen without corners at ≤ 600px. A click on the dark area around it closes it.
+- **Top bar** (56px): file-type icon (accent) · name (15px/20px, ellipsis) over `{EXT} · {size}` · position `3 / 7` (`aria-live="polite"`, hidden with one file) · for a loaded image: zoom out, the `%` button (fits again), zoom in, rotate · download · open in a new tab (when the file has a safe URL or is a local file) · close. 40px icon buttons. ≤ 600px hides the zoom group.
+- **Stage**: the image fitted (`contain`), zoom levels fit → 50 → 75 → 100 → 150 → 200 → 300 → 400%, drag to pan when larger than the stage, rotate by 90°; another file resets zoom and rotation. A PDF with a safe URL (or a local PDF, through an object URL) is shown in an `<iframe>` named after the file — a server that refuses framing shows its own page there, and "open in a new tab" stays on the toolbar. Other files show their icon, name, `{EXT} · {size} · Không xem trước được`, **Tải xuống** and **Mở tab mới**. Loading shows a spinner only after 150ms; a failed image shows "Không tải được tệp" with **Thử lại** (loads the image again) and **Tải xuống**.
+- **Previous / next**: 40px round buttons 16px from the edges, hidden with one file, disabled at the first / last file.
+- **Filmstrip** (88px): one 56px button per file (`aria-label` = name, `aria-current` on the shown one): images cover, documents show an icon and the extension (PDF red, Word blue, Excel green), a failed image `broken_image`. It scrolls to centre the shown file (`scrollTo`, no smooth scroll under reduced motion).
+- **Keyboard**: ←/→ previous / next, `+` / `=` zoom in, `-` zoom out, `0` fit, Esc closes. Focus moves to the stage on open and back to the opener on close.
 
 ## `SdUploadFileDetail` interface
 
@@ -364,7 +374,7 @@ interface SdUploadFileDetail {
 - `SD_UPLOAD_FILE_CONFIGURATION` injection token — central upload/details/download wiring
 - `SdUploadFileDetail` — shape returned by `details()` (fields: `idOrKey`, `cdn`, `name`, `size`, `extension`)
 - `UploadFileService` — internal `providedIn: 'root'` service that acts as a temporary in-memory cache for `File` objects between selection and upload; managed automatically by the component
-- `<sd-modal>` — used internally by the preview popup
+- CDK `Dialog` — hosts the preview popup
 - `*sdPermission` — wrap to gate by permission
 
 ## Accessibility

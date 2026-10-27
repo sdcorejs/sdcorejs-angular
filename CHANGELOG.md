@@ -59,6 +59,7 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 - Tab router: while a tab is dragged it floats with a shadow and four 8px corners over a `--sd-primary` 12% drop spot, and the other tabs slide aside (no motion under `prefers-reduced-motion`).
 - Tab router: `SdTabInfo.dirty` shows an 8px dot where the close button of the tab is; on hover or keyboard focus it turns into the close button, and the open tab keeps the dot until hover. Screen readers hear “Chưa lưu” (new key `core.component.tab-router.unsaved` in the five locales). Send it through `tabInfoChanges`, from the same state as `beforeClose`.
 - Tab router: `syncBrowserTitle` on `<sd-tab-router-outlet>` (default `false`) sets the browser title to “{tab name} – {app name}”, with “● ” in front while the tab is dirty. The app name is the title when the outlet starts; turning the input off, `disabled` or destroying the outlet gives it back.
+- Theme: component tokens `--sd-upload-file-viewer-*` (bg, fg, fg-muted, divider, control-bg, thumb-bg, accent, on-accent, error, ext-pdf / -word / -excel) for the dark viewer, and `--sd-upload-file-scrim` / `--sd-upload-file-empty-text` for the field. New i18n keys `core.component.upload-file.viewer.*`, `retry`, `add-image`, `upload-tile`, `drop-hint`, `choose-file`, `drop-to-upload`, `remove-named` and `no-files` in the five locales.
 
 ### Changed
 
@@ -77,6 +78,7 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 - Tab router: `tabs` of `<sd-tab-router-nav>` is a `model`. Dropping a dragged tab emits a reordered copy through `tabsChange`, which the outlet binds two-way, instead of reordering the outlet array in place; a tab dropped where it started emits nothing.
 - Upload file: file sizes read `{n} KB` below 1 MB (whole kilobytes, rounded up) and `{n} MB` with one decimal from 1 MB, in the number format of the current language (`2,4 MB`); a document row shows `{EXT} · {size}`. Sizes used to be always `fileSize / 1024` KB.
 - Upload file: file-type icons cover the 51 SVGs of the set (pdf, doc/docx, xls/xlsx, ppt/pptx, csv, zip, txt, mp4, …, `jpeg` → jpg, `tif` → tiff), the generic file icon for the rest, through one internal icon component shared by the field and the popup; the bundle no longer inlines the SVGs three times.
+- Upload file: the preview popup is a dark viewer (CDK `Dialog`, `min(1200px, 100vw − 48px)` × `100vh − 48px`, full screen at ≤ 600px): a top bar with the file name, `{EXT} · {size}` and the position (`3 / 7`), zoom (fit, 50–400%), rotate, download and open in a new tab for images, download and open in a new tab for other files; a stage that shows a PDF inline in an `<iframe>`, a loading state after 150ms and an error state with Retry; previous / next buttons that stop at the ends instead of wrapping; and an 88px filmstrip. ←/→, `+`/`=`/`-`/`0` and Esc work from the keyboard; focus moves to the stage and back to the opener. It used to be an `sd-modal` with a fixed “Xem ảnh” title, a vertical thumbnail rail and no toolbar.
 
 ### Deprecated
 
@@ -104,10 +106,12 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 - Select: with an async `items` loader, the selected value shows its label once a `SEARCH` result contains it, also when the `VALUE` request returned nothing or failed: `selectedItems`, the trigger, custom selected templates, the read-only and inline views and the tooltip update together, also with `virtualScroll`, without `modelChange`, `sdChange` or `sdSelection`. A retry updates them the same way. A response for a replaced loader, `cacheChecksum`, field mapping, search text or selection — such as the ward list after the province changed — no longer sets the label.
 - Badge: the title of an `md` round, solid or tag badge, counters included, sits 1px lower, in the middle of the badge. With Roboto at 13px the baseline of the 18px line falls on a half pixel, so digits and capitals were drawn 0.5–1.6px above the middle, depending on the badge's position and the screen scale. `sm`, `lg`, `pair` and a tag with a description are unchanged.
 - Upload file: ppt and pptx files show their own icons (they showed the xls / xlsx ones). `SdUploadFileDetail.size` is documented in bytes, as the component always read it (the JSDoc said MB).
+- Upload file: the download button of the popup is labelled “Tải xuống”; it used the upload key (“Tải file”). The thumbnail rail followed the current file only by looking up ids that were never set; the filmstrip now scrolls to it.
 
 ### Removed
 
 - Tab router: the component token `--sd-tab-router-badge-bg`, deprecated in 3.2. Its only reader filled the icon of the old tab, which had not been rendered since the tabs moved to `sd-badge`, so no tab used it. Code that set or read it can drop it. `--sd-tab-router-item-muted-bg` stays deprecated.
+- Upload file: the unused `thumbnailPosition` and `title` fields of the internal preview component (`<preview>`), and its `modal` reference.
 
 ## [3.2] - 2026-10-23
 

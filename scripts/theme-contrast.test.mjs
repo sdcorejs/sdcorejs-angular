@@ -62,6 +62,18 @@ const PAIRS = [
   ['tab-router-item-text', 'tab-router-nav-bg', 4.5],
   ['tab-router-item-text', 'tab-router-item-hover-bg', 4.5],
   ['text', 'tab-router-item-active-bg', 4.5],
+  // sd-upload-file (wave 3 · 4b/4d): the dark viewer — name and secondary text, the accent (icons, focus, text buttons),
+  // the text of the filled button, the error icon, the extension labels on a filmstrip tile — and the "Chưa có tệp" text.
+  ['upload-file-viewer-fg', 'upload-file-viewer-bg', 4.5],
+  ['upload-file-viewer-fg-muted', 'upload-file-viewer-bg', 4.5],
+  ['upload-file-viewer-fg-muted', 'upload-file-viewer-thumb-bg', 4.5],
+  ['upload-file-viewer-accent', 'upload-file-viewer-bg', 4.5],
+  ['upload-file-viewer-on-accent', 'upload-file-viewer-accent', 4.5],
+  ['upload-file-viewer-error', 'upload-file-viewer-bg', 3],
+  ['upload-file-viewer-ext-pdf', 'upload-file-viewer-thumb-bg', 4.5],
+  ['upload-file-viewer-ext-word', 'upload-file-viewer-thumb-bg', 4.5],
+  ['upload-file-viewer-ext-excel', 'upload-file-viewer-thumb-bg', 4.5],
+  ['upload-file-empty-text', 'surface', 4.5],
 ];
 
 const tokensOf = args => {

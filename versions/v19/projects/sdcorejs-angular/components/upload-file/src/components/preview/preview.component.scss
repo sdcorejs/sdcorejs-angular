@@ -1,95 +1,435 @@
-@use '../../../../../assets/scss/core/color.scss' as color;
-@use 'sass:map';
+// Popup xem tệp (đợt 3 · 4b, design handoff `upload-file.md` mục H2, phương án A). Viewer luôn nền tối ở cả light và
+// dark: màu đọc từ `--sd-upload-file-viewer-*` (`_component-tokens.scss`). Nội dung render trong overlay của CDK Dialog
+// từ template của component, nên rule ở đây vẫn áp (phần tử mang thuộc tính `_ngcontent`).
 
-$image-viewer-height: 60vh;
-$thumbnail-size: 100px;
-$gap-size: 0.5rem;
-
-.image-gallery {
+.sd-upload-file-viewer-shell {
   display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   width: 100%;
-  max-height: 60vh;
-  min-height: 60vh;
+  height: 100%;
+  padding: 24px;
+}
 
-  .main-image-container {
-    flex: 1;
-    position: relative;
-    background-color: map.get(color.$color_map, 'surface-muted');
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    gap: 8px;
-    .next-icon {
-      position: absolute;
-      top: 45%;
-      right: 8px;
-      cursor: pointer;
-      color: rgba(0, 0, 0, 0.54);
-      z-index: var(--sd-z-overlay, 9999);
-    }
+.sd-upload-file-viewer {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: min(1200px, 100vw - 48px);
+  height: calc(100vh - 48px);
+  overflow: hidden;
+  border-radius: var(--sd-radius-12, 12px);
+  background: var(--sd-upload-file-viewer-bg, #141518);
+  color: var(--sd-upload-file-viewer-fg, #e3e3e8);
+  box-shadow: var(--sd-shadow-xl, none);
+  // why: viewer nền tối ở cả hai mode — vòng focus dùng màu accent sáng của viewer thay cho primary của trang.
+  --sd-focus-ring-color: var(--sd-upload-file-viewer-accent);
+}
 
-    .back-icon {
-      position: absolute;
-      top: 45%;
-      left: 8px;
-      cursor: pointer;
-      color: rgba(0, 0, 0, 0.54);
-      z-index: var(--sd-z-overlay, 9999);
-    }
-
-    .c-image-error {
-      text-align: center;
-      color: map.get(color.$color_map, 'error');
-      sd-icon {
-        height: 36px;
-        width: 36px;
-        font-size: 36px;
-      }
-    }
-  }
-
-  .thumbnail-container {
-    width: calc($thumbnail-size + 20px);
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    box-sizing: border-box;
-  }
-
-  .thumbnail-wrapper {
-    position: relative;
-    width: $thumbnail-size;
-    aspect-ratio: 1;
-    flex: 0 0 auto;
-    overflow: hidden;
+// ≤ 600px: full-screen, không bo góc.
+@media (max-width: 600px) {
+  .sd-upload-file-viewer-shell {
     padding: 0;
-    border: none;
-    background: transparent;
-    .thumbnail-img {
-      object-fit: cover;
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-    &.c-image-error {
-      background-color: map.get(color.$color_map, 'border');
-    }
   }
 
-  .main-image {
-    object-fit: contain;
-    width: 100%;
-    height: 100%;
-    display: block;
-  }
-
-  .main-document {
-    object-fit: contain;
-    height: 64px;
-    width: 64px;
-    display: block;
+  .sd-upload-file-viewer {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    border-radius: 0;
   }
 }
 
+// ─── Top bar ─────────────────────────────────────────────────────────────
+.sd-upload-file-viewer__bar {
+  display: flex;
+  flex: 0 0 56px;
+  align-items: center;
+  box-sizing: border-box;
+  height: 56px;
+  padding: 0 8px 0 16px;
+  border-bottom: 1px solid var(--sd-upload-file-viewer-divider, rgba(255, 255, 255, 0.08));
+}
+
+.sd-upload-file-viewer__info {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.sd-upload-file-viewer__type {
+  flex: 0 0 auto;
+  color: var(--sd-upload-file-viewer-accent, #a8c7fa);
+}
+
+.sd-upload-file-viewer__text {
+  min-width: 0;
+}
+
+.sd-upload-file-viewer__name {
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 20px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sd-upload-file-viewer__meta,
+.sd-upload-file-viewer__position {
+  color: var(--sd-upload-file-viewer-fg-muted, #a3a4ab);
+}
+
+.sd-upload-file-viewer__meta {
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: 16px;
+}
+
+.sd-upload-file-viewer__position {
+  flex: 0 0 auto;
+  padding: 0 12px;
+  font-size: var(--sd-font-size-13, 13px);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.sd-upload-file-viewer__zoom {
+  display: flex;
+  align-items: center;
+}
+
+.sd-upload-file-viewer__divider {
+  flex: 0 0 auto;
+  width: 1px;
+  height: 24px;
+  margin: 0 6px;
+  background: var(--sd-upload-file-viewer-divider, rgba(255, 255, 255, 0.08));
+}
+
+// ≤ 600px: bỏ nhóm zoom (người dùng pinch-zoom), giữ các nút còn lại.
+@media (max-width: 600px) {
+  .sd-upload-file-viewer__zoom,
+  .sd-upload-file-viewer__divider--zoom {
+    display: none;
+  }
+}
+
+%viewer-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--sd-upload-file-viewer-control-bg, rgba(255, 255, 255, 0.1));
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.38;
+    cursor: default;
+  }
+}
+
+.sd-upload-file-viewer__button {
+  @extend %viewer-control;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  color: var(--sd-upload-file-viewer-fg, #e3e3e8);
+}
+
+.sd-upload-file-viewer__percent {
+  @extend %viewer-control;
+  min-width: 52px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 6px;
+  font-size: var(--sd-font-size-13, 13px);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+// ─── Stage ───────────────────────────────────────────────────────────────
+.sd-upload-file-viewer__stage {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 0;
+  padding: 24px 72px;
+  overflow: hidden;
+  outline: none;
+}
+
+// PDF chiếm cả stage, nút điều hướng nổi trên lề.
+.sd-upload-file-viewer__stage--pdf {
+  padding: 0;
+}
+
+.sd-upload-file-viewer__image {
+  flex: 0 0 auto;
+  max-width: none;
+  user-select: none;
+  transform-origin: center;
+}
+
+.sd-upload-file-viewer__image--hidden {
+  visibility: hidden;
+}
+
+.sd-upload-file-viewer__image--pannable {
+  cursor: grab;
+  touch-action: none;
+}
+
+.sd-upload-file-viewer__image--panning {
+  cursor: grabbing;
+}
+
+.sd-upload-file-viewer__frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--sd-surface, #fdfbff);
+}
+
+.sd-upload-file-viewer__state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 0 16px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.sd-upload-file-viewer__state-icon {
+  color: var(--sd-upload-file-viewer-fg-muted, #a3a4ab);
+}
+
+.sd-upload-file-viewer__state-icon--error {
+  color: var(--sd-upload-file-viewer-error, #ffb4ab);
+}
+
+.sd-upload-file-viewer__state-title {
+  max-width: 100%;
+  font-size: var(--sd-font-size-14, 14px);
+  font-weight: 500;
+  line-height: 20px;
+}
+
+.sd-upload-file-viewer__state-title--name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sd-upload-file-viewer__state-text {
+  color: var(--sd-upload-file-viewer-fg-muted, #a3a4ab);
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: 16px;
+}
+
+.sd-upload-file-viewer__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+%viewer-pill {
+  @extend %viewer-control;
+  gap: 6px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-size: var(--sd-font-size-14, 14px);
+  font-weight: 500;
+}
+
+.sd-upload-file-viewer__filled {
+  @extend %viewer-pill;
+  padding: 0 16px 0 12px;
+  background: var(--sd-upload-file-viewer-accent, #a8c7fa);
+  color: var(--sd-upload-file-viewer-on-accent, #062e6f);
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--sd-upload-file-viewer-on-accent, #062e6f) 8%, var(--sd-upload-file-viewer-accent, #a8c7fa));
+  }
+}
+
+.sd-upload-file-viewer__outlined {
+  @extend %viewer-pill;
+  border: 1px solid color-mix(in srgb, var(--sd-upload-file-viewer-fg, #e3e3e8) 44%, transparent);
+  color: var(--sd-upload-file-viewer-fg, #e3e3e8);
+}
+
+.sd-upload-file-viewer__text-button {
+  @extend %viewer-pill;
+  padding: 0 12px;
+  color: var(--sd-upload-file-viewer-accent, #a8c7fa);
+}
+
+.sd-upload-file-viewer__loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--sd-upload-file-viewer-fg-muted, #a3a4ab);
+  font-size: var(--sd-font-size-13, 13px);
+  pointer-events: none;
+}
+
+.sd-upload-file-viewer__spinner {
+  width: 32px;
+  height: 32px;
+  box-sizing: border-box;
+  border: 3px solid color-mix(in srgb, var(--sd-upload-file-viewer-fg, #e3e3e8) 16%, transparent);
+  border-top-color: var(--sd-upload-file-viewer-accent, #a8c7fa);
+  border-radius: 50%;
+  animation: sd-upload-file-viewer-spin 0.8s linear infinite;
+}
+
+@keyframes sd-upload-file-viewer-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Nút trước/sau: tròn 40px, cách mép 16px, giữa theo chiều dọc; ở file đầu/cuối thì mờ (không quay vòng).
+.sd-upload-file-viewer__nav {
+  @extend %viewer-control;
+  position: absolute;
+  top: 50%;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--sd-upload-file-viewer-control-bg, rgba(255, 255, 255, 0.1));
+  color: var(--sd-upload-file-viewer-fg, #e3e3e8);
+  transform: translateY(-50%);
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--sd-upload-file-viewer-fg, #e3e3e8) 18%, transparent);
+  }
+}
+
+.sd-upload-file-viewer__nav--prev {
+  left: 16px;
+}
+
+.sd-upload-file-viewer__nav--next {
+  right: 16px;
+}
+
+// ─── Filmstrip ───────────────────────────────────────────────────────────
+.sd-upload-file-viewer__strip {
+  display: flex;
+  flex: 0 0 88px;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  height: 88px;
+  padding: 0 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-top: 1px solid var(--sd-upload-file-viewer-divider, rgba(255, 255, 255, 0.08));
+  scrollbar-width: thin;
+
+  // why: `justify-content: center` cắt mất phần đầu khi dải tràn; margin auto căn giữa mà vẫn cuộn được tới ô đầu.
+  > :first-child {
+    margin-left: auto;
+  }
+
+  > :last-child {
+    margin-right: auto;
+  }
+}
+
+.sd-upload-file-viewer__thumb {
+  @extend %viewer-control;
+  flex: 0 0 56px;
+  flex-direction: column;
+  gap: 3px;
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--sd-upload-file-viewer-thumb-bg, #2a2b31);
+  color: var(--sd-upload-file-viewer-fg-muted, #a3a4ab);
+  opacity: 0.6;
+
+  &:hover:not(:disabled) {
+    background: var(--sd-upload-file-viewer-thumb-bg, #2a2b31);
+    opacity: 1;
+  }
+}
+
+.sd-upload-file-viewer__thumb--active {
+  outline: 2px solid var(--sd-upload-file-viewer-accent, #a8c7fa);
+  outline-offset: 2px;
+  opacity: 1;
+}
+
+.sd-upload-file-viewer__thumb-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sd-upload-file-viewer__ext {
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 10px;
+  text-transform: uppercase;
+}
+
+.sd-upload-file-viewer__ext--pdf {
+  color: var(--sd-upload-file-viewer-ext-pdf, #ff8a80);
+}
+
+.sd-upload-file-viewer__ext--word {
+  color: var(--sd-upload-file-viewer-ext-word, #8ab4f8);
+}
+
+.sd-upload-file-viewer__ext--excel {
+  color: var(--sd-upload-file-viewer-ext-excel, #81c995);
+}
+
+// Spinner đứng yên (đầu màu accent vẫn cho thấy đang tải).
+@media (prefers-reduced-motion: reduce) {
+  .sd-upload-file-viewer__spinner {
+    animation: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .sd-upload-file-viewer {
+    border: 1px solid CanvasText;
+  }
+
+  .sd-upload-file-viewer__thumb--active {
+    outline-color: Highlight;
+  }
+}

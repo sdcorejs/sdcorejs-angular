@@ -1,47 +1,213 @@
-<sd-modal [title]="title" (sdClosed)="close.emit()" #modal>
-  <div class="p-16" style="overflow: hidden; height: 100%">
-    <div style="gap: 8px" class="image-gallery">
-      <div class="thumbnail-container">
-        @for (file of previewFiles; track $index; let i = $index) {
+<ng-template #viewer>
+  @let _files = files();
+  @let _index = index();
+  @let _file = current();
+  @let _kind = kind();
+  @let _status = status();
+  @let _many = _files.length > 1;
+  <!-- Lớp phủ cả màn hình: bấm vào vùng tối quanh khung thì đóng (pane của dialog che backdrop). -->
+  <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+  <div class="sd-upload-file-viewer-shell" (click)="onShellClick($event)">
+    <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -->
+    <div class="sd-upload-file-viewer" (keydown)="onKeydown($event)">
+      <!-- ─── Top bar ─────────────────────────────────────────────── -->
+      <div class="sd-upload-file-viewer__bar">
+        <div class="sd-upload-file-viewer__info">
+          <sd-icon class="sd-upload-file-viewer__type" aria-hidden="true" size="22px" [fontIcon]="symbol(extension())"></sd-icon>
+          <div class="sd-upload-file-viewer__text">
+            <div class="sd-upload-file-viewer__name" [id]="nameId">{{ name() }}</div>
+            @if (meta()) {
+              <div class="sd-upload-file-viewer__meta">{{ meta() }}</div>
+            }
+          </div>
+        </div>
+        @if (_many) {
+          <div class="sd-upload-file-viewer__position" aria-live="polite">
+            <span class="sd-visually-hidden">{{ 'core.component.upload-file.viewer.position' | sdTranslate: { index: _index + 1, total: _files.length } }}</span>
+            <span aria-hidden="true">{{ _index + 1 }} / {{ _files.length }}</span>
+          </div>
+        }
+        @if (_kind === 'image' && _status === 'loaded') {
+          <div class="sd-upload-file-viewer__zoom">
+            <button
+              type="button"
+              class="sd-upload-file-viewer__button"
+              [disabled]="!canZoomOut()"
+              [attr.aria-label]="'core.component.upload-file.viewer.zoom-out' | sdTranslate"
+              (click)="zoomOut()">
+              <sd-icon aria-hidden="true" size="20px" fontIcon="zoom_out"></sd-icon>
+            </button>
+            <button
+              type="button"
+              class="sd-upload-file-viewer__percent"
+              [attr.aria-label]="'core.component.upload-file.viewer.fit' | sdTranslate"
+              (click)="fit()">
+              {{ percent() }}%
+            </button>
+            <button
+              type="button"
+              class="sd-upload-file-viewer__button"
+              [disabled]="!canZoomIn()"
+              [attr.aria-label]="'core.component.upload-file.viewer.zoom-in' | sdTranslate"
+              (click)="zoomIn()">
+              <sd-icon aria-hidden="true" size="20px" fontIcon="zoom_in"></sd-icon>
+            </button>
+            <button
+              type="button"
+              class="sd-upload-file-viewer__button"
+              [attr.aria-label]="'core.component.upload-file.viewer.rotate' | sdTranslate"
+              (click)="rotate()">
+              <sd-icon aria-hidden="true" size="20px" fontIcon="rotate_right"></sd-icon>
+            </button>
+          </div>
+          <span class="sd-upload-file-viewer__divider sd-upload-file-viewer__divider--zoom" aria-hidden="true"></span>
+        } @else {
+          <span class="sd-upload-file-viewer__divider" aria-hidden="true"></span>
+        }
+        <button
+          type="button"
+          class="sd-upload-file-viewer__button"
+          [attr.aria-label]="'core.component.upload-file.viewer.download' | sdTranslate"
+          (click)="onDownload()">
+          <sd-icon aria-hidden="true" size="20px" fontIcon="download"></sd-icon>
+        </button>
+        @if (url()) {
           <button
             type="button"
-            class="thumbnail-wrapper"
-            [class.c-image-error]="file.isImgError"
-            (click)="onClickThumbnailImage(i)"
-            [ngStyle]="{
-              border: activeIndex === i ? '2px solid var(--sd-primary, #005cbb)' : 'none'
-            }">
-            @if(file.isImgError) {
-              <img fill alt="thumbnail" class="thumbnail-img sd-image-image-error" style="width: 24px; height: 24px; justify-self: center;" />
-            } @else if (file.isPreviewImage && (file.previewSrc || file.src)) {
-              <img fill [src]="file.previewSrc || file.src" alt="thumbnail" class="thumbnail-img" />
-            } @else {
-              <sd-upload-file-type-icon class="thumbnail-img" [extension]="file.extension" [size]="48"></sd-upload-file-type-icon>
+            class="sd-upload-file-viewer__button"
+            [attr.aria-label]="'core.component.upload-file.viewer.open-new-tab' | sdTranslate"
+            (click)="openInNewTab()">
+            <sd-icon aria-hidden="true" size="20px" fontIcon="open_in_new"></sd-icon>
+          </button>
+        }
+        <span class="sd-upload-file-viewer__divider" aria-hidden="true"></span>
+        <button
+          type="button"
+          class="sd-upload-file-viewer__button sd-upload-file-viewer__close"
+          [attr.aria-label]="'core.common.close' | sdTranslate"
+          (click)="closeViewer()">
+          <sd-icon aria-hidden="true" size="22px" fontIcon="close"></sd-icon>
+        </button>
+      </div>
+
+      <!-- ─── Stage ───────────────────────────────────────────────── -->
+      <div
+        #stage
+        class="sd-upload-file-viewer__stage"
+        tabindex="-1"
+        [class.sd-upload-file-viewer__stage--pdf]="_kind === 'pdf' && _status !== 'error'">
+        @if (_file) {
+          @if (_kind === 'image' && _status !== 'error') {
+            @for (attempt of [attempt()]; track attempt) {
+               
+              <img
+                class="sd-upload-file-viewer__image"
+                [class.sd-upload-file-viewer__image--pannable]="pannable()"
+                [class.sd-upload-file-viewer__image--panning]="panning()"
+                [class.sd-upload-file-viewer__image--hidden]="_status !== 'loaded'"
+                [src]="imageSrc()"
+                [alt]="name()"
+                [style.width.px]="imageBox()?.width"
+                [style.height.px]="imageBox()?.height"
+                [style.transform]="imageTransform()"
+                draggable="false"
+                (load)="onImageLoad($event)"
+                (error)="onImageError()"
+                (pointerdown)="onPointerDown($event)"
+                (pointermove)="onPointerMove($event)"
+                (pointerup)="onPointerUp($event)"
+                (pointercancel)="onPointerUp($event)" />
             }
+          } @else if (_kind === 'pdf') {
+            @if (pdfUrl(); as src) {
+              <iframe class="sd-upload-file-viewer__frame" [src]="src" [title]="name()" (load)="onFrameLoad()"></iframe>
+            }
+          } @else if (_status === 'error') {
+            <div class="sd-upload-file-viewer__state" role="alert">
+              <sd-icon class="sd-upload-file-viewer__state-icon--error" aria-hidden="true" size="36px" fontIcon="broken_image"></sd-icon>
+              <div class="sd-upload-file-viewer__state-title">{{ 'core.component.upload-file.viewer.load-error' | sdTranslate }}</div>
+              <div class="sd-upload-file-viewer__state-text">{{ 'core.component.upload-file.viewer.load-error-hint' | sdTranslate }}</div>
+              <div class="sd-upload-file-viewer__actions">
+                <button type="button" class="sd-upload-file-viewer__outlined" (click)="retry()">
+                  {{ 'core.component.upload-file.retry' | sdTranslate }}
+                </button>
+                <button type="button" class="sd-upload-file-viewer__text-button" (click)="onDownload()">
+                  {{ 'core.component.upload-file.viewer.download' | sdTranslate }}
+                </button>
+              </div>
+            </div>
+          } @else {
+            <div class="sd-upload-file-viewer__state">
+              <sd-icon class="sd-upload-file-viewer__state-icon" aria-hidden="true" size="40px" [fontIcon]="symbol(extension())"></sd-icon>
+              <div class="sd-upload-file-viewer__state-title sd-upload-file-viewer__state-title--name">{{ name() }}</div>
+              <div class="sd-upload-file-viewer__state-text">
+                {{ meta() ? meta() + ' · ' : '' }}{{ 'core.component.upload-file.viewer.no-preview' | sdTranslate }}
+              </div>
+              <div class="sd-upload-file-viewer__actions">
+                <button type="button" class="sd-upload-file-viewer__filled" (click)="onDownload()">
+                  <sd-icon aria-hidden="true" size="18px" fontIcon="download"></sd-icon>
+                  {{ 'core.component.upload-file.viewer.download' | sdTranslate }}
+                </button>
+                @if (url()) {
+                  <button type="button" class="sd-upload-file-viewer__text-button" (click)="openInNewTab()">
+                    {{ 'core.component.upload-file.viewer.open-new-tab' | sdTranslate }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+          @if (_status === 'loading' && showLoading()) {
+            <div class="sd-upload-file-viewer__loading" role="status">
+              <span class="sd-upload-file-viewer__spinner" aria-hidden="true"></span>
+              {{ 'core.component.upload-file.viewer.loading' | sdTranslate }}
+            </div>
+          }
+        }
+        @if (_many) {
+          <button
+            type="button"
+            class="sd-upload-file-viewer__nav sd-upload-file-viewer__nav--prev"
+            [disabled]="_index === 0"
+            [attr.aria-label]="'core.component.upload-file.viewer.prev' | sdTranslate"
+            (click)="select(_index - 1)">
+            <sd-icon aria-hidden="true" size="24px" fontIcon="chevron_left"></sd-icon>
+          </button>
+          <button
+            type="button"
+            class="sd-upload-file-viewer__nav sd-upload-file-viewer__nav--next"
+            [disabled]="_index === _files.length - 1"
+            [attr.aria-label]="'core.component.upload-file.viewer.next' | sdTranslate"
+            (click)="select(_index + 1)">
+            <sd-icon aria-hidden="true" size="24px" fontIcon="chevron_right"></sd-icon>
           </button>
         }
       </div>
-      <div class="main-image-container" #mainImage>
-        @let selectedFile = previewFiles[activeIndex];
-        @if(selectedFile) {
-          @if(selectedFile.isImgError) {
-            <div class="c-image-error">
-              <sd-icon name="warning_amber"></sd-icon>
-              <div class="T14R">{{ 'core.component.upload-file.error-occurred' | sdTranslate }}</div>
-            </div>
-          } @else if (selectedFile.isPreviewImage && (selectedFile.previewSrc || selectedFile.src)) {
-            <img fill priority [src]="selectedFile.previewSrc || selectedFile.src" class="main-image" alt="Main display image" />
-          } @else {
-            <sd-upload-file-type-icon class="main-document" [extension]="selectedFile.extension" [size]="64"></sd-upload-file-type-icon>
-              @if(selectedFile.fileName) {
-                <div class="T14M">{{selectedFile.fileName}}</div>
+
+      <!-- ─── Filmstrip ───────────────────────────────────────────── -->
+      @if (_many) {
+        <div #strip class="sd-upload-file-viewer__strip">
+          @for (file of _files; track $index; let i = $index) {
+            @let thumb = thumbSrc(file);
+            @let ext = thumbExtension(file);
+            <button
+              type="button"
+              class="sd-upload-file-viewer__thumb"
+              [class.sd-upload-file-viewer__thumb--active]="i === _index"
+              [attr.aria-current]="i === _index ? 'true' : null"
+              [attr.aria-label]="file.fileName || file.src || ext"
+              (click)="select(i)">
+              @if (thumbFailed(i)) {
+                <sd-icon aria-hidden="true" size="22px" fontIcon="broken_image"></sd-icon>
+              } @else if (thumb) {
+                <img class="sd-upload-file-viewer__thumb-image" [src]="thumb" alt="" (error)="onThumbError(i)" />
+              } @else {
+                <sd-icon aria-hidden="true" size="22px" [fontIcon]="symbol(ext)"></sd-icon>
+                <span class="sd-upload-file-viewer__ext sd-upload-file-viewer__ext--{{ group(ext) }}" aria-hidden="true">{{ ext }}</span>
               }
-              <sd-button [title]="'core.component.upload-file.upload' | sdTranslate" (click)="onDownload(selectedFile)" type="fill" color="primary"></sd-button>
+            </button>
           }
-        }
-        <sd-button prefixIcon="arrow_forward_ios" class="next-icon" (click)="updateCurrentImage(1)"></sd-button>
-        <sd-button prefixIcon="arrow_back_ios_new" class="back-icon" (click)="updateCurrentImage(-1)"></sd-button>
-      </div>
+        </div>
+      }
     </div>
   </div>
-</sd-modal>
+</ng-template>
