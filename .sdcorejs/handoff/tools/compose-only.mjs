@@ -17,7 +17,8 @@ const html = `<!doctype html><meta charset="utf-8"><style>
   img{border:1px solid #c4c6d0;max-width:900px;display:block}
 </style><h1>${title}</h1>${rows}`;
 
-const browser = await chromium.launch();
+// why: PW_EXECUTABLE cho máy có bản Chromium của Playwright khác bản showcase đang ghim.
+const browser = await chromium.launch(process.env.PW_EXECUTABLE ? { executablePath: process.env.PW_EXECUTABLE } : {});
 const page = await browser.newPage({ viewport: { width: 980, height: 800 } });
 await page.setContent(html);
 await page.screenshot({ path: out, fullPage: true });
