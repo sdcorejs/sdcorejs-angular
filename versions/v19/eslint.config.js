@@ -26,7 +26,11 @@ module.exports = tseslint.config(
     // why: pdf-worker-inline.generated.ts is a ~1.4MB machine-generated string literal produced by
     // `npm run generate:pdf-worker`. Linting it is pure cost, and `--fix` previously rewrote its
     // `/* eslint-disable */` header, which broke `npm run check:pdf-worker`.
-    ignores: ['projects/sdcorejs-angular/components/preview/src/preview-pdf/pdf-worker-inline.generated.ts'],
+    // The Source manifest of modules/pattern (`npm run pattern:docs`) is the same kind of generated literal map.
+    ignores: [
+      'projects/sdcorejs-angular/components/preview/src/preview-pdf/pdf-worker-inline.generated.ts',
+      'projects/sdcorejs-angular/modules/pattern/core/pattern-shell/source/pattern-source.generated.ts',
+    ],
   },
   {
     files: ['**/*.ts'],

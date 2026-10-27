@@ -1,0 +1,14 @@
+<div class="score-grid">
+  @for (item of items; track item.id) {
+    <sd-section hideHeader>
+      <div class="score">
+        <span class="score__label">{{ item.label }}</span>
+        <strong class="score__value">{{ item.current }} {{ item.unit }}</strong>
+        <span class="score__hint">
+          {{ item.previousLabel }}: {{ item.previous }} {{ item.unit }} · Chênh lệch
+          <strong [class]="deltaColor(item)">{{ delta(item) }}</strong>
+        </span>
+      </div>
+    </sd-section>
+  }
+</div>

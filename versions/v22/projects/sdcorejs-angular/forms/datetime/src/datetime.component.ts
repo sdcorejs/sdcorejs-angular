@@ -496,6 +496,9 @@ export class SdDatetime implements OnDestroy, OnInit {
     this.#setDatetimeError(false);
     const display = DateUtilities.toFormat(value, this.showSeconds() ? 'dd/MM/yyyy HH:mm:ss' : 'dd/MM/yyyy HH:mm') || null;
     if (this.formControl.value !== display) {
+      // why: người dùng sửa thì control của form phải dirty trước khi nhận giá trị, như value accessor của Angular;
+      // giá trị chọn trên picker và nút xoá không đi qua value accessor của ô nhập.
+      this.formControl.markAsDirty();
       this.formControl.setValue(display);
     }
   }
@@ -635,6 +638,7 @@ export class SdDatetime implements OnDestroy, OnInit {
     // field vừa được xoá trắng.
     this.#setDatetimeError(false);
     if (this.formControl.value) {
+      this.formControl.markAsDirty();
       this.formControl.setValue(null);
     }
   };

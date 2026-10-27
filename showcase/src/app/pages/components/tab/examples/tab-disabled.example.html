@@ -1,0 +1,29 @@
+@if (!profileComplete()) {
+  <sd-inform color="info" title="Hợp đồng chưa khả dụng" description="Tab Hợp đồng mở sau khi hồ sơ khách hàng được hoàn tất." />
+}
+<div class="tab-toolbar">
+  <sd-button
+    title="Hoàn tất hồ sơ để mở Hợp đồng"
+    prefixIcon="check"
+    type="fill"
+    color="primary"
+    [disabled]="profileComplete()"
+    (click)="profileComplete.set(true)" />
+</div>
+<sd-tab-group autoId="tab-disabled" [stretchTabs]="false" animationDuration="0ms">
+  <sd-tab label="Thông tin chung" icon="info">
+    <div class="tab-body">
+      <sd-section title="Thông tin chung">
+        <sd-section-item label="Khách hàng">Công ty An Phát</sd-section-item>
+        <sd-section-item label="Hồ sơ">{{ profileComplete() ? 'Đã hoàn tất' : 'Chưa hoàn tất' }}</sd-section-item>
+      </sd-section>
+    </div>
+  </sd-tab>
+  <sd-tab label="Hợp đồng" icon="description" [disabled]="!profileComplete()">
+    <div class="tab-body">
+      <sd-section title="Hợp đồng">
+        <sd-section-item label="Số hợp đồng">HĐ-2026-018</sd-section-item>
+      </sd-section>
+    </div>
+  </sd-tab>
+</sd-tab-group>

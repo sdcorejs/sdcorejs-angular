@@ -1510,3 +1510,36 @@ describe('SdDatetime (transform absent)', () => {
     expect(host.model).toBe('2026/08/15 14:30:00');
   });
 });
+
+// why: a user edit must mark the control of the parent form dirty before writing it, as Angular's value accessors do:
+// `form.dirty` and the default `'control'` mode of unsaved changes read that flag.
+describe('SdDatetime (user edits mark the form control dirty)', () => {
+  let fg: FormGroup;
+  let fixture: ComponentFixture<FgHost>;
+  let comp: SdDatetime;
+
+  beforeEach(async () => {
+    fg = new FormGroup({});
+    await TestBed.configureTestingModule({
+      imports: [FgHost, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(FgHost);
+    fixture.componentInstance.fg = fg;
+    fixture.detectChanges();
+    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdDatetime).componentInstance as SdDatetime;
+  });
+
+  it('marks the control dirty when a moment is confirmed in the picker', () => {
+    comp.onPickerConfirm(new Date(2026, 9, 27, 9, 30));
+    expect(fg.get('startAt')?.value).toBeTruthy();
+    expect(fg.get('startAt')?.dirty).toBeTrue();
+  });
+
+  it('marks the control dirty when the clear button empties it', () => {
+    comp.onPickerConfirm(new Date(2026, 9, 27, 9, 30));
+    fg.get('startAt')?.markAsPristine();
+    comp.clear(null);
+    expect(fg.get('startAt')?.value).toBeNull();
+    expect(fg.get('startAt')?.dirty).toBeTrue();
+  });
+});

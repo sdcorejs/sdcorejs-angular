@@ -1,7 +1,7 @@
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideHttpClient, withFetch } from '@angular/common/http';
-import { provideRouter, withInMemoryScrolling } from '@angular/router';
+import { provideRouter, withInMemoryScrolling, withNavigationErrorHandler, withRouterConfig } from '@angular/router';
 import {
   LucideChevronDown,
   LucideChevronRight,
@@ -27,6 +27,7 @@ import {
 import { ISdCoreConfiguration, SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
 import { provideSdIcon, SD_DATA_TYPE_LUCIDE_ICONS } from '@sdcorejs/angular/modules/icon';
 import { routes } from './app.routes';
+import { patternNavigationError } from './pages/pattern/pattern-navigation-error';
 import { showcaseTimeZone } from './showcase-time-zone';
 
 const SHOWCASE_CORE_CONFIG: ISdCoreConfiguration = {
@@ -40,7 +41,13 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideAnimations(),
     provideHttpClient(withFetch()),
-    provideRouter(routes, withInMemoryScrolling({ anchorScrolling: 'enabled', scrollPositionRestoration: 'enabled' })),
+    provideRouter(
+      routes,
+      withInMemoryScrolling({ anchorScrolling: 'enabled', scrollPositionRestoration: 'enabled' }),
+      withNavigationErrorHandler(patternNavigationError),
+      // why: a leave guard that cancels browser Back/Forward (sd-page-form under /pattern) restores the history index.
+      withRouterConfig({ canceledNavigationResolution: 'computed' })
+    ),
     provideSdIcon({
       defaultFontSet: 'material-icons-outlined',
       lucideIcons: [

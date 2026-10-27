@@ -126,6 +126,30 @@ class DetailHost {
   readonly withAside = signal(true);
 }
 
+/** A form group in its own component, as the blueprint splits a form: its section is still in the table of contents. */
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  selector: 'app-lines-form',
+  imports: [SdSection],
+  template: `<sd-section title="Dòng hàng" id="lines"><div style="height: 300px"></div></sd-section>`,
+})
+class LinesForm {}
+
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  imports: [SdPageComponent, SdSection, LinesForm],
+  template: `
+    <div style="width: 1600px; height: 360px; display: flex; flex-direction: column">
+      <sd-page-form title="Tạo đơn hàng" toc>
+        <sd-section title="Thông tin chung" id="general"><div style="height: 300px"></div></sd-section>
+        <app-lines-form />
+        <sd-section title="Ghi chú" id="note"><div style="height: 300px"></div></sd-section>
+      </sd-page-form>
+    </div>
+  `,
+})
+class ChildSectionHost {}
+
 @Component({
   changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
   imports: [SdPageComponent, SdSection],
@@ -156,7 +180,18 @@ describe('SdPageComponent', () => {
   beforeEach(async () => {
     warn = spyOn(console, 'warn');
     await TestBed.configureTestingModule({
-      imports: [PlainHost, BackLinkHost, BackLinkWithLeftHost, HeaderSlotHost, BadgeHost, LayoutHost, AsideHost, DetailHost, FormHost],
+      imports: [
+        PlainHost,
+        BackLinkHost,
+        BackLinkWithLeftHost,
+        HeaderSlotHost,
+        BadgeHost,
+        LayoutHost,
+        AsideHost,
+        DetailHost,
+        FormHost,
+        ChildSectionHost,
+      ],
       providers: [provideRouter([])],
     }).compileComponents();
   });
@@ -268,15 +303,21 @@ describe('SdPageComponent', () => {
       expect(link()!.getAttribute('href')).toBe('/orders/5');
     });
 
+    it('does not warn about a backLink that is shown', async () => {
+      await fixture.whenStable();
+      expect(warn).not.toHaveBeenCalled();
+    });
+
     it('cuts a long title to one line', () => {
       const h1 = page(fixture).querySelector('h1')!;
       expect(getComputedStyle(h1).whiteSpace).toBe('nowrap');
       expect(getComputedStyle(h1).textOverflow).toBe('ellipsis');
     });
 
-    it('is dropped with a dev warning when headerLeft replaces the left area', () => {
+    it('is dropped with a dev warning when headerLeft replaces the left area', async () => {
       const withLeft = TestBed.createComponent(BackLinkWithLeftHost);
       withLeft.detectChanges();
+      await withLeft.whenStable();
       expect(page(withLeft).querySelector('a')).toBeNull();
       expect(page(withLeft).querySelector('#custom-left')).not.toBeNull();
       expect(warn).toHaveBeenCalledWith(jasmine.stringMatching(/backLink/));
@@ -442,6 +483,19 @@ describe('SdPageComponent', () => {
 
       expect(detail().querySelector('#aside')).toBeNull();
       expect(detail().querySelector('.c-page-content')!.getBoundingClientRect().width).toBe(1152);
+    });
+  });
+
+  describe('table of contents with a section inside a child component', () => {
+    it('lists it in document order', async () => {
+      const fixture = TestBed.createComponent(ChildSectionHost);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+      const titles = [...fixture.nativeElement.querySelectorAll('.c-page-toc button')].map((button: HTMLElement) =>
+        button.textContent?.trim()
+      );
+      expect(titles).toEqual(['Thông tin chung', 'Dòng hàng', 'Ghi chú']);
     });
   });
 

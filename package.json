@@ -28,6 +28,8 @@
     "generate:showcase-route-shells": "node scripts/generate-showcase-route-shells.mjs",
     "generate:showcase": "npm run generate:showcase-changelog && npm run generate:showcase-examples",
     "generate:file-explorer-icons": "node scripts/generate-file-explorer-icons.mjs",
+    "pattern:docs": "node scripts/pattern-docs.mjs",
+    "test:pattern-docs": "node --test scripts/pattern-docs.test.mjs",
     "check:file-explorer-icons": "node scripts/generate-file-explorer-icons.mjs --check",
     "test:file-explorer-icons": "node --test scripts/generate-file-explorer-icons.test.mjs",
     "test:showcase-changelog": "node --test scripts/generate-showcase-changelog.test.mjs",
@@ -46,7 +48,7 @@
     "build:page": "node scripts/build-published-page.mjs",
     "prune:pages": "node scripts/build-published-page.mjs --prune-only",
     "test:showcase-generators": "npm run test:showcase-changelog && npm run test:showcase-examples && npm run test:showcase-route-shells",
-    "test:scripts": "npm run test:showcase-generators && npm run test:showcase-branding && npm run test:collect-docs && npm run test:published-page && npm run test:check-i18n && npm run test:supported-versions && npm run test:version-sync-contract && npm run test:release-package-contract && npm run test:publish-npm-workflow && npm run test:ci-selection && npm run test:file-explorer-icons && npm run test:theme && npm run test:theme-token-list && npm run test:window-api && npm run test:check-scss-hex",
+    "test:scripts": "npm run test:showcase-generators && npm run test:showcase-branding && npm run test:collect-docs && npm run test:published-page && npm run test:check-i18n && npm run test:supported-versions && npm run test:version-sync-contract && npm run test:release-package-contract && npm run test:publish-npm-workflow && npm run test:ci-selection && npm run test:file-explorer-icons && npm run test:pattern-docs && npm run test:theme && npm run test:theme-token-list && npm run test:window-api && npm run test:check-scss-hex",
     "changeset": "changeset"
   },
   "devDependencies": {

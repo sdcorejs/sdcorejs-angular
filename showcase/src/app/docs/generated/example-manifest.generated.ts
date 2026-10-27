@@ -59,16 +59,32 @@ export type ShowcaseExampleSourceKey =
   | "components/button/example-bang-mau"
   | "components/button/example-bien-the"
   | "components/button/example-chi-icon"
+  | "components/button/example-crud-chung-khuyen-khich"
+  | "components/button/example-crud-theo-doi-tuong"
+  | "components/button/example-dang-luu-loi-thu-lai"
+  | "components/button/example-hanh-dong-nguy-hiem"
   | "components/button/example-indicator"
   | "components/button/example-kich-thuoc"
+  | "components/button/example-search-filter"
   | "components/button/example-secondary-vs-black"
+  | "components/button/example-tac-vu-gop-popover"
+  | "components/button/example-tac-vu-nghiep-vu"
   | "components/button/example-toggle-icon-set-bang-alias"
   | "components/button/example-trang-thai"
+  | "components/card/example-count-card-de-loc"
   | "components/card/example-disabled-va-color"
+  | "components/card/example-icon-canh-nhan"
+  | "components/card/example-icon-click-de-loc"
+  | "components/card/example-icon-trang-thai"
+  | "components/card/example-icon-trong-nen-mau"
+  | "components/card/example-metric-chi-doc"
   | "components/card/example-multiple-selection"
   | "components/card/example-object-comparewith"
+  | "components/card/example-score-card-gon"
   | "components/card/example-single-selection"
+  | "components/card/example-so-sanh-hai-ky"
   | "components/card/example-standalone-card"
+  | "components/card/example-tien-do-ty-le"
   | "components/code-editor/example-che-do-xem-json"
   | "components/code-editor/example-ngon-ngu-html"
   | "components/code-editor/example-ngon-ngu-typescript"
@@ -211,17 +227,27 @@ export type ShowcaseExampleSourceKey =
   | "components/tab-router/example-tich-hop-app-shell"
   | "components/tab/example-bang-mau-color"
   | "components/tab/example-can-tab-sang-phai"
+  | "components/tab/example-chuyen-cach-xem-du-lieu"
   | "components/tab/example-dieu-khien-tu-ngoai"
+  | "components/tab/example-form-chia-nhom"
+  | "components/tab/example-mo-nhieu-ho-so"
+  | "components/tab/example-nhieu-nhom-noi-dung"
+  | "components/tab/example-nhom-chua-kha-dung"
+  | "components/tab/example-noi-dung-hon-hop"
+  | "components/tab/example-phan-nhom-co-so-luong"
+  | "components/tab/example-tab-chua-bang"
   | "components/tab/example-tab-co-ban"
   | "components/tab/example-tab-co-icon-badge-disabled"
   | "components/tab/example-tab-dong-duoc"
   | "components/tab/example-tab-long-tab"
+  | "components/tab/example-tai-rong-loi"
   | "components/tab/example-variant-pills"
   | "components/tab/example-variant-segmented"
   | "components/table/example-action-da-chon-co-menu-con"
   | "components/table/example-cell-template-tuy-chinh"
   | "components/table/example-chon-mot-dong"
   | "components/table/example-column-aggregate"
+  | "components/table/example-custom-th-td"
   | "components/table/example-dong-mo-rong"
   | "components/table/example-external-filters"
   | "components/table/example-filter-onchange"
@@ -229,13 +255,17 @@ export type ShowcaseExampleSourceKey =
   | "components/table/example-full-demo-local"
   | "components/table/example-giu-selection-xuyen-trang"
   | "components/table/example-hanh-dong-o-header-cot-command"
+  | "components/table/example-inline-filter-operator"
   | "components/table/example-keo-tha-doi-thu-tu"
   | "components/table/example-khong-co-filler"
   | "components/table/example-lenh-dong-co-menu-con"
   | "components/table/example-lenh-dong-phai"
+  | "components/table/example-loading-empty-error"
   | "components/table/example-mobile-chon-du-lieu"
   | "components/table/example-mobile-qua-nhieu-trang"
   | "components/table/example-mobile-trong-hop-thoai"
+  | "components/table/example-nhap-lieu-inline-bao-loi"
+  | "components/table/example-nhap-lieu-inline-them-xoa"
   | "components/table/example-nhom-don-hang-theo-khach"
   | "components/table/example-nhom-dong"
   | "components/table/example-quick-search"
@@ -243,6 +273,7 @@ export type ShowcaseExampleSourceKey =
   | "components/table/example-server-side"
   | "components/table/example-the-mobile-va-thao-tac"
   | "components/table/example-toi-gian"
+  | "components/table/example-tra-cuu-co-ban"
   | "components/table/example-tree-khong-cot-stt-chevron-nam-trong-cot-dau-don-vi"
   | "components/table/example-tree-lazy-nap-con-khi-bung-co-loading"
   | "components/table/example-tree-rows-search-o-cap-con-go-ten-don-vi-con-de-loc"
@@ -908,6 +939,55 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Chấm hoặc số ở góc trên phải, không đổi kích thước nút. Số lớn hơn indicatorMax hiện {max}+; indicatorLabel nối vào aria-describedby.",
   },
   {
+    sourceKey: "components/button/example-crud-chung-khuyen-khich",
+    pageKey: "components/button",
+    sectionId: "example-crud-chung-khuyen-khich",
+    title: "CRUD chung (khuyến khích)",
+    description: "Tạo mới (add), Cập nhật (edit), Lưu (save): primary fill. Xoá (delete): error fill. Chi tiết dùng hyperlink mã hoặc tên.",
+  },
+  {
+    sourceKey: "components/button/example-crud-theo-doi-tuong",
+    pageKey: "components/button",
+    sectionId: "example-crud-theo-doi-tuong",
+    title: "CRUD theo đối tượng",
+    description: "Tạo khách hàng, Cập nhật khách hàng, Lưu khách hàng: primary fill, kèm icon add / edit / save.",
+  },
+  {
+    sourceKey: "components/button/example-search-filter",
+    pageKey: "components/button",
+    sectionId: "example-search-filter",
+    title: "Search / filter",
+    description: "Tìm kiếm, Áp dụng bộ lọc, Xóa bộ lọc; live search không thêm nút Tìm kiếm dư thừa.",
+  },
+  {
+    sourceKey: "components/button/example-tac-vu-nghiep-vu",
+    pageKey: "components/button",
+    sectionId: "example-tac-vu-nghiep-vu",
+    title: "Tác vụ nghiệp vụ",
+    description: "Dùng light, màu theo ý nghĩa nghiệp vụ: primary/info cho gửi và xử lý, success cho duyệt, warning cho tạm dừng, error cho từ chối. Có mẫu kèm icon, không icon và icon-only có tooltip.",
+  },
+  {
+    sourceKey: "components/button/example-hanh-dong-nguy-hiem",
+    pageKey: "components/button",
+    sectionId: "example-hanh-dong-nguy-hiem",
+    title: "Hành động nguy hiểm",
+    description: "Nút Xoá dùng icon delete, error fill. Ghi rõ đối tượng và hậu quả trong hộp xác nhận; nút thoát là Giữ lại.",
+  },
+  {
+    sourceKey: "components/button/example-tac-vu-gop-popover",
+    pageKey: "components/button",
+    sectionId: "example-tac-vu-gop-popover",
+    title: "Tác vụ gộp · Popover",
+    description: "Dùng SdButton với SdButtonItem và SdButtonItemDivider. Popover hỗ trợ chuột, bàn phím, Escape và tooltip cho nút chỉ có icon.",
+  },
+  {
+    sourceKey: "components/button/example-dang-luu-loi-thu-lai",
+    pageKey: "components/button",
+    sectionId: "example-dang-luu-loi-thu-lai",
+    title: "Đang lưu / lỗi / thử lại",
+    description: "Đang lưu… disabled chống gửi lặp; lỗi giữ input và có Thử lại.",
+  },
+  {
     sourceKey: "components/card/example-standalone-card",
     pageKey: "components/card",
     sectionId: "example-standalone-card",
@@ -941,6 +1021,69 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-disabled-va-color",
     title: "Disabled và color",
     description: "Gồm selected+disabled, group disabled, inherited color, override color và standalone selected state.",
+  },
+  {
+    sourceKey: "components/card/example-metric-chi-doc",
+    pageKey: "components/card",
+    sectionId: "example-metric-chi-doc",
+    title: "Metric chỉ đọc",
+    description: "Có đơn vị và phạm vi; không tạo hover/cursor hành động khi không click được.",
+  },
+  {
+    sourceKey: "components/card/example-icon-canh-nhan",
+    pageKey: "components/card",
+    sectionId: "example-icon-canh-nhan",
+    title: "Icon cạnh nhãn",
+    description: "Icon 20–24px cùng hàng nhãn; giá trị vẫn là điểm nhìn chính. Icon không thay tên chỉ số.",
+  },
+  {
+    sourceKey: "components/card/example-icon-trong-nen-mau",
+    pageKey: "components/card",
+    sectionId: "example-icon-trong-nen-mau",
+    title: "Icon trong nền màu",
+    description: "Icon 24px trong ô 44px; màu theo vai trò/status, cùng một phong cách icon. Metric chỉ đọc không có hành vi click.",
+  },
+  {
+    sourceKey: "components/card/example-icon-trang-thai",
+    pageKey: "components/card",
+    sectionId: "example-icon-trang-thai",
+    title: "Icon trạng thái",
+    description: "Clock / đang xử lý / check đi cùng nhãn trạng thái; chữ giải thích ý nghĩa, không chỉ màu.",
+  },
+  {
+    sourceKey: "components/card/example-icon-click-de-loc",
+    pageKey: "components/card",
+    sectionId: "example-icon-click-de-loc",
+    title: "Icon + click để lọc",
+    description: "Cả card là một button, icon decorative; aria-pressed và dấu chọn thể hiện selection. Click lại về Tất cả; counts không đổi theo lựa chọn.",
+  },
+  {
+    sourceKey: "components/card/example-count-card-de-loc",
+    pageKey: "components/card",
+    sectionId: "example-count-card-de-loc",
+    title: "Count card để lọc",
+    description: "Một card được chọn; aria-pressed, toggle, count toàn bộ dataset, giao tập với search.",
+  },
+  {
+    sourceKey: "components/card/example-tien-do-ty-le",
+    pageKey: "components/card",
+    sectionId: "example-tien-do-ty-le",
+    title: "Tiến độ / tỷ lệ",
+    description: "Hiển thị cả tử số/mẫu số; tổng 0 thì 0%, không chia cho 0.",
+  },
+  {
+    sourceKey: "components/card/example-so-sanh-hai-ky",
+    pageKey: "components/card",
+    sectionId: "example-so-sanh-hai-ky",
+    title: "So sánh hai kỳ",
+    description: "Delta ghi đơn vị và kỳ; không mặc định tăng là tốt cho mọi chỉ số.",
+  },
+  {
+    sourceKey: "components/card/example-score-card-gon",
+    pageKey: "components/card",
+    sectionId: "example-score-card-gon",
+    title: "Score card gọn",
+    description: "Giảm khoảng trắng, không giảm chữ đến khó đọc.",
   },
   {
     sourceKey: "components/code-editor/example-ngon-ngu-typescript",
@@ -1570,7 +1713,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "components/page-list",
     sectionId: "example-man-song-toan-trang",
     title: "Màn sống toàn trang",
-    description: "Mở màn mẫu toàn trang; cấu hình đổi bằng ?cfg= (tab, score card, external filter, chọn nhiều, autoCompact, cách mở chi tiết).",
+    description: "Mở màn đơn hàng của @sdcorejs/angular/modules/pattern; cấu hình đổi bằng ?cfg= hoặc drawer Tuỳ chỉnh hiển thị (tab, score card, external filter, chọn nhiều, autoCompact, cách mở chi tiết).",
   },
   {
     sourceKey: "components/preview/example-thu-vien-anh",
@@ -1965,6 +2108,69 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Existing “Điều khiển từ ngoài” scenario preserved from the showcase.",
   },
   {
+    sourceKey: "components/tab/example-nhieu-nhom-noi-dung",
+    pageKey: "components/tab",
+    sectionId: "example-nhieu-nhom-noi-dung",
+    title: "Nhiều nhóm nội dung",
+    description: "Thanh tab tự cuộn khi thiếu chỗ; không ép toàn bộ nhãn vào một hàng.",
+  },
+  {
+    sourceKey: "components/tab/example-phan-nhom-co-so-luong",
+    pageKey: "components/tab",
+    sectionId: "example-phan-nhom-co-so-luong",
+    title: "Phân nhóm có số lượng",
+    description: "Badge dùng số lượng thật của từng nhóm; bấm hoàn tất để thấy số lượng thay đổi.",
+  },
+  {
+    sourceKey: "components/tab/example-chuyen-cach-xem-du-lieu",
+    pageKey: "components/tab",
+    sectionId: "example-chuyen-cach-xem-du-lieu",
+    title: "Chuyển cách xem dữ liệu",
+    description: "Segmented cho hai cách xem. Giữ nguyên nguồn dữ liệu khi chuyển.",
+  },
+  {
+    sourceKey: "components/tab/example-noi-dung-hon-hop",
+    pageKey: "components/tab",
+    sectionId: "example-noi-dung-hon-hop",
+    title: "Nội dung hỗn hợp",
+    description: "Chọn cấu trúc phù hợp từng tab, không ép mọi nội dung thành bảng.",
+  },
+  {
+    sourceKey: "components/tab/example-tab-chua-bang",
+    pageKey: "components/tab",
+    sectionId: "example-tab-chua-bang",
+    title: "Tab chứa bảng",
+    description: "Dùng quickSearch từ option Core Table; bảng tự quản lý trang và số dòng.",
+  },
+  {
+    sourceKey: "components/tab/example-form-chia-nhom",
+    pageKey: "components/tab",
+    sectionId: "example-form-chia-nhom",
+    title: "Form chia nhóm",
+    description: "Giữ dữ liệu khi đổi tab; khi lưu, chuyển tới nhóm lỗi và báo Notify.",
+  },
+  {
+    sourceKey: "components/tab/example-tai-rong-loi",
+    pageKey: "components/tab",
+    sectionId: "example-tai-rong-loi",
+    title: "Tải / Rỗng / Lỗi",
+    description: "Loading 1–2 giây; lỗi có thử lại; trạng thái rỗng có lời giải thích.",
+  },
+  {
+    sourceKey: "components/tab/example-nhom-chua-kha-dung",
+    pageKey: "components/tab",
+    sectionId: "example-nhom-chua-kha-dung",
+    title: "Nhóm chưa khả dụng",
+    description: "Không chỉ vô hiệu hóa: giải thích điều kiện và cung cấp thao tác đáp ứng điều kiện.",
+  },
+  {
+    sourceKey: "components/tab/example-mo-nhieu-ho-so",
+    pageKey: "components/tab",
+    sectionId: "example-mo-nhieu-ho-so",
+    title: "Mở nhiều hồ sơ",
+    description: "Tab đóng được; thay tên rồi đóng để thử xác nhận dữ liệu chưa lưu.",
+  },
+  {
     sourceKey: "components/tab-router/example-thu-truc-tiep",
     pageKey: "components/tab-router",
     sectionId: "example-thu-truc-tiep",
@@ -2187,6 +2393,48 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-giu-selection-xuyen-trang",
     title: "Giữ selection xuyên trang",
     description: "Existing “Giữ selection xuyên trang” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/table/example-tra-cuu-co-ban",
+    pageKey: "components/table",
+    sectionId: "example-tra-cuu-co-ban",
+    title: "Tra cứu cơ bản",
+    description: "Định danh có link; số căn phải; phân trang sau lọc/sort.",
+  },
+  {
+    sourceKey: "components/table/example-inline-filter-operator",
+    pageKey: "components/table",
+    sectionId: "example-inline-filter-operator",
+    title: "Inline filter + operator",
+    description: "Dùng column.filter.operator với enable và list; type server gửi columnOperator tới adapter dữ liệu demo để lọc trước khi phân trang. Khách hàng: chứa, bằng, bắt đầu bằng. Giá trị: bằng, lớn hơn, nhỏ hơn và các phép so sánh bao gồm bằng. Nhập rồi Enter để áp dụng; nhiều cột kết hợp AND.",
+  },
+  {
+    sourceKey: "components/table/example-custom-th-td",
+    pageKey: "components/table",
+    sectionId: "example-custom-th-td",
+    title: "Custom TH / TD",
+    description: "Dùng sdTableTitleDef và sdTableCellDef. Giữ hyperlink định danh và căn phải giá trị số.",
+  },
+  {
+    sourceKey: "components/table/example-nhap-lieu-inline-them-xoa",
+    pageKey: "components/table",
+    sectionId: "example-nhap-lieu-inline-them-xoa",
+    title: "Nhập liệu inline · Thêm / xoá",
+    description: "Custom TD dùng SdInput/SdInputNumber size sm, hideInlineError; thêm/xoá dòng, tổng cập nhật theo dữ liệu nhập và Lưu chung. Nút thêm dòng ở sdTableCommandHeaderDef chỉ có icon add kèm tooltip, primary light, size sm; xoá từng dòng bằng command delete.",
+  },
+  {
+    sourceKey: "components/table/example-nhap-lieu-inline-bao-loi",
+    pageKey: "components/table",
+    sectionId: "example-nhap-lieu-inline-bao-loi",
+    title: "Nhập liệu inline · Báo lỗi",
+    description: "Lưu dữ liệu chưa hợp lệ: SdInform warning và ô lỗi có tooltip. Sản phẩm trùng: BE mẫu trả error; dữ liệu được giữ để sửa.",
+  },
+  {
+    sourceKey: "components/table/example-loading-empty-error",
+    pageKey: "components/table",
+    sectionId: "example-loading-empty-error",
+    title: "Loading / empty / error",
+    description: "Dùng luồng tải của SdTable: loading khi chờ request, empty/no-results từ kết quả trả về, lỗi có retry giữ query. Tùy chỉnh nội dung bằng sdDataStateTemplate và SdDataState.",
   },
   {
     sourceKey: "components/tree/example-static-tree",

@@ -514,6 +514,26 @@ describe('SdInputNumber', () => {
       comp.formControl.updateValueAndValidity();
       expect(comp.formControl.hasError('inlineError')).toBe(false);
     });
+
+    // why: a save that the API rejects sets [inlineError] on a touched field, with no value change and no
+    // updateValueAndValidity() from outside; the validator is installed with emitEvent: false, so no control event fires.
+    it('shows an inlineError set at runtime on a touched field without any control event', () => {
+      comp.formControl.markAsTouched();
+      fixture.detectChanges();
+      host.inlineError = 'Từ 5 đến 480 phút.';
+      fixture.detectChanges();
+      fixture.detectChanges();
+      const element: HTMLElement = fixture.nativeElement;
+      expect(element.querySelector('mat-error')?.textContent).toContain('Từ 5 đến 480 phút.');
+      expect(element.querySelector('input')?.getAttribute('data-invalid')).toBe('true');
+      expect(element.querySelector('input')?.getAttribute('aria-invalid')).toBe('true');
+
+      host.inlineError = undefined;
+      fixture.detectChanges();
+      fixture.detectChanges();
+      expect(element.querySelector('mat-error')).toBeNull();
+      expect(element.querySelector('input')?.getAttribute('data-invalid')).toBe('false');
+    });
   });
 
   // -------------------------------------------------------------------------
@@ -1151,5 +1171,38 @@ describe('SdInputNumber (accessibility)', () => {
     expect(error.id).toBe(cmp.errorId);
     expect(el.getAttribute('aria-invalid')).toBe('true');
     expect(el.getAttribute('aria-describedby')).toContain(cmp.errorId);
+  });
+});
+
+// why: a user edit must mark the control of the parent form dirty before writing it, as Angular's value accessors do:
+// `form.dirty` and the default `'control'` mode of unsaved changes read that flag.
+describe('SdInputNumber (user edits mark the form control dirty)', () => {
+  let fg: FormGroup;
+  let fixture: ComponentFixture<FgHost>;
+  let comp: SdInputNumber;
+
+  beforeEach(async () => {
+    fg = new FormGroup({});
+    await TestBed.configureTestingModule({
+      imports: [FgHost, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(FgHost);
+    fixture.componentInstance.fg = fg;
+    fixture.detectChanges();
+    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdInputNumber).componentInstance as SdInputNumber;
+  });
+
+  it('marks the control dirty when a number is typed', () => {
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    input.value = '25';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(fg.get('amount')?.value).toBe(25);
+    expect(fg.get('amount')?.dirty).toBeTrue();
+  });
+
+  it('keeps the control pristine when an empty field only loses focus', () => {
+    comp.onBlur();
+    expect(fg.get('amount')?.dirty).toBeFalse();
   });
 });

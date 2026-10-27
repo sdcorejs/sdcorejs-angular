@@ -1,0 +1,17 @@
+<sd-tab-group autoId="tab-views" variant="segmented" [stretchTabs]="false" animationDuration="0ms">
+  <sd-tab label="Bảng" icon="table_chart">
+    <div class="tab-body">
+      <sd-table [option]="option" />
+    </div>
+  </sd-tab>
+  <sd-tab label="Thẻ" icon="view_module">
+    <div class="tab-body view-cards">
+      @for (order of orders; track order.id) {
+        <sd-section [title]="order.code">
+          <sd-section-item label="Khách hàng">{{ order.name }}</sd-section-item>
+          <sd-section-item label="Khu vực">{{ order.region }}</sd-section-item>
+        </sd-section>
+      }
+    </div>
+  </sd-tab>
+</sd-tab-group>

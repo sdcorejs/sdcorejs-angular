@@ -1,0 +1,12 @@
+<!-- score--compact trims padding and the value size only; the text stays readable. -->
+<div class="score-grid">
+  @for (status of statuses; track status.id) {
+    <sd-section hideHeader>
+      <div class="score score--compact">
+        <span class="score__label">{{ status.label }}</span>
+        <strong class="score__value">{{ status.value }}</strong>
+        <span class="score__hint">{{ status.hint }}</span>
+      </div>
+    </sd-section>
+  }
+</div>

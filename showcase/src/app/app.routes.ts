@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { provideSdPatterns } from '@sdcorejs/angular/modules/pattern';
 import { docsVersionGuard, legacyDocsRedirectGuard } from './docs/core/docs-route.guards';
 import { isDocCategory } from './docs/core/documentation.models';
 import { findDocNavigationGroup, findDocPage } from './docs/core/documentation.registry';
@@ -88,11 +89,18 @@ export const routes: Routes = [
     loadChildren: () => import('./pages/components/tab-router/live/tab-router-live.pages').then(m => m.TAB_ROUTER_LIVE_ROUTES),
   },
   {
-    // Live sd-page-list screen of the Page List page: ?cfg= toggles its parts; e2e/page-list.e2e.ts measures E1 on it.
-    // Must stay above the generic 'demo' route, which would match the prefix.
-    path: 'demo/page-list',
-    title: `Page list demo | ${PACKAGE_TITLE}`,
-    loadChildren: () => import('./pages/components/page-list/live/page-list-live.routes').then(m => m.PAGE_LIST_LIVE_ROUTES),
+    // @sdcorejs/angular/modules/pattern: sample screens by entity over its mock API, as a portal mounts them.
+    path: 'pattern',
+    title: `Pattern | ${PACKAGE_TITLE}`,
+    providers: [provideSdPatterns({ forbiddenUrl: '/pattern-error/forbidden' })],
+    loadComponent: () => import('./pages/pattern/pattern-host.component').then(m => m.PatternHostComponent),
+    loadChildren: () => import('@sdcorejs/angular/modules/pattern').then(m => m.SD_PATTERN_ROUTES),
+  },
+  {
+    // Error page of the host for /pattern: 404/timeout of a resolver (pattern-navigation-error.ts) and 403 of the guard.
+    path: 'pattern-error/:kind',
+    title: `Pattern | ${PACKAGE_TITLE}`,
+    loadComponent: () => import('./pages/pattern/pattern-error.component').then(m => m.PatternErrorComponent),
   },
   {
     // Live generic module screens of the Generic CRUD page, backed by an in-memory adapter.

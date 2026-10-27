@@ -120,6 +120,9 @@ export class ShellComponent {
           }
           return;
         }
+        // why: /pattern là một app mẫu có focus riêng; sd-page-list trả focus về link đã mở drawer hay trang con.
+        // Focus h1 sau mỗi lần đổi route con sẽ lấy mất phần tử đó.
+        if (/^\/pattern(?:[/?#]|$)/.test(nextUrl)) return;
         queueMicrotask(() => {
           const content = this.content()?.nativeElement;
           const heading = content?.querySelector<HTMLElement>('h1');

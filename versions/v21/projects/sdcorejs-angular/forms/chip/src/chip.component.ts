@@ -630,6 +630,9 @@ export class SdChip {
   /** Every user change ends here: one new array, written once to the control, the model and `sdChange`. */
   #commit(next: (string | number)[]): void {
     this.inputError.set(null);
+    // why: người dùng sửa thì control của form phải dirty trước khi nhận giá trị, như value accessor của Angular;
+    // ô gõ là inputControl nên control của chip không tự dirty.
+    this.#formControl.markAsDirty();
     this.#formControl.setValue(next);
     this.model.set(next);
     this.sdChange.emit(next);
@@ -667,6 +670,7 @@ export class SdChip {
     if ((typeof item === 'string' || typeof item === 'number') && this.isRemovable(item)) {
       // why: `filter` đã trả mảng mới nên reference đổi → `model.set` phát `modelChange`.
       const next = values.filter(value => item !== value);
+      this.#formControl.markAsDirty();
       this.#formControl.setValue(next);
       this.model.set(next);
       this.sdChange.emit(next);

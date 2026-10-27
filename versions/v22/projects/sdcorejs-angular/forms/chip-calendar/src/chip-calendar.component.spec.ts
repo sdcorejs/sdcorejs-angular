@@ -877,3 +877,28 @@ describe('SdChipCalendar (accessibility)', () => {
     expect(cmp.isFocused).toBe(true);
   });
 });
+
+// why: a user edit must mark the control of the parent form dirty before writing it, as Angular's value accessors do:
+// `form.dirty` and the default `'control'` mode of unsaved changes read that flag.
+describe('SdChipCalendar (user edits mark the form control dirty)', () => {
+  let fg: FormGroup;
+  let fixture: ComponentFixture<FgHost>;
+  let comp: SdChipCalendar;
+
+  beforeEach(async () => {
+    fg = new FormGroup({});
+    await TestBed.configureTestingModule({
+      imports: [FgHost, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(FgHost);
+    fixture.componentInstance.fg = fg;
+    fixture.detectChanges();
+    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdChipCalendar).componentInstance as SdChipCalendar;
+  });
+
+  it('marks the control dirty when a day is picked', () => {
+    comp.onSelectDate(new Date(2026, 9, 27));
+    expect((fg.get('dates')?.value as string[]).length).toBe(1);
+    expect(fg.get('dates')?.dirty).toBeTrue();
+  });
+});

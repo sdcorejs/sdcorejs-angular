@@ -6,7 +6,7 @@ import { AsyncValidatorFn, FormGroup, FormsModule, NgForm, ReactiveFormsModule, 
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { By } from '@angular/platform-browser';
 import { SD_FORM_CONFIGURATION, SdInlineErrorValidator } from '@sdcorejs/angular/forms/models';
-import { SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
+import { SdItemDefDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdSelect } from './select.component';
 import { SdSelectFooterActionContext, SdSelectFooterActionDirective } from './select-footer-action.directive';
 
@@ -2510,4 +2510,80 @@ describe('SdSelect (select all)', () => {
     expect(describedBy).withContext('aria-describedby').toBeTruthy();
     expect(document.getElementById(describedBy!)?.textContent?.trim()).toBe('Đã chọn 1/3');
   }));
+});
+
+// ---------------------------------------------------------------------------
+// sdItemDef — the option template gets the item as $implicit and as `item`
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (sdItemDef context)', () => {
+  // why: the outlet passed only `{ item }`, so `<ng-template sdItemDef let-item>` and `*sdItemDef="let item"` — the
+  // spellings the docs show — rendered with `item` undefined and threw on the first field read.
+  @Component({
+    changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+    standalone: true,
+    imports: [SdSelect, SdItemDefDefDirective],
+    template: `<sd-select [items]="items" valueField="id" displayField="name">
+      <ng-template sdItemDef let-implicit let-named="item">{{ implicit.name }}|{{ named.code }}</ng-template>
+    </sd-select>`,
+  })
+  class ItemDefHost {
+    items = [
+      { id: 1, name: 'Cam', code: 'C1' },
+      { id: 2, name: 'Táo', code: 'T2' },
+    ];
+  }
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [ItemDefHost, NoopAnimationsModule] }).compileComponents();
+  });
+
+  afterEach(() => {
+    document.querySelectorAll('.cdk-overlay-container').forEach(el => (el.innerHTML = ''));
+  });
+
+  it('exposes the item both as $implicit and as item', fakeAsync(() => {
+    const fixture = TestBed.createComponent(ItemDefHost);
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    const comp = getComp(fixture);
+    comp.open();
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+
+    const labels = Array.from(document.querySelectorAll('.sd-select-panel mat-option')).map(el => (el.textContent || '').trim());
+    expect(labels).toEqual(['Cam|C1', 'Táo|T2']);
+
+    comp.selectRef()?.close();
+    fixture.detectChanges();
+    tick(600);
+  }));
+});
+
+// why: a user edit must mark the control of the parent form dirty before writing it, as Angular's value accessors do:
+// `form.dirty` and the default `'control'` mode of unsaved changes read that flag.
+describe('SdSelect (user edits mark the form control dirty)', () => {
+  let fg: FormGroup;
+  let fixture: ComponentFixture<FgHost>;
+  let comp: SdSelect;
+
+  beforeEach(async () => {
+    fg = new FormGroup({});
+    await TestBed.configureTestingModule({
+      imports: [FgHost, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(FgHost);
+    fixture.componentInstance.fg = fg;
+    fixture.detectChanges();
+    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdSelect).componentInstance as SdSelect;
+  });
+
+  it('marks the control dirty when the clear button empties it', () => {
+    fg.get('status')?.setValue('a');
+    comp.clear();
+    expect(fg.get('status')?.value).toBeNull();
+    expect(fg.get('status')?.dirty).toBeTrue();
+  });
 });

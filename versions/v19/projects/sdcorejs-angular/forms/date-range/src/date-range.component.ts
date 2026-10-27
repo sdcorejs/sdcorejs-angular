@@ -606,6 +606,9 @@ export class SdDateRange {
 
     if (newFrom !== currentModel?.from || newTo !== currentModel?.to) {
       const nextModel = { from: newFrom, to: newTo };
+      // why: người dùng sửa thì control của form phải dirty trước khi nhận giá trị, như value accessor của Angular;
+      // control tổng chỉ được ghi từ control1/control2, không có value accessor riêng.
+      this.formControl.markAsDirty();
       this.#syncAggregate();
       this.valueModel.set(nextModel);
       this.#isModelChange = true;
@@ -617,6 +620,7 @@ export class SdDateRange {
     const emptyModel = { from: null, to: null };
     this.control1.setValue(null);
     this.control2.setValue(null);
+    this.formControl.markAsDirty();
     this.#syncAggregate();
 
     this.valueModel.set(emptyModel);

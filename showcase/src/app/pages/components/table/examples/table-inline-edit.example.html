@@ -1,0 +1,44 @@
+<div class="table-toolbar">
+  <strong>Dòng hàng của đơn ĐH-2400</strong>
+  <sd-button title="Lưu" prefixIcon="save" type="fill" color="primary" [loading]="saving()" [disabled]="saving()" (click)="save()" />
+</div>
+@if (saved()) {
+  <sd-inform color="success" title="Lưu thành công" [description]="saved()" />
+}
+<sd-table autoId="pattern-inline-edit" [option]="option">
+  <ng-template sdTableCommandHeaderDef>
+    <sd-button tooltip="Thêm dòng" prefixIcon="add" size="sm" type="light" color="primary" [disabled]="saving()" (click)="add()" />
+  </ng-template>
+  <ng-template sdTableCellDef="name" let-row="item">
+    <sd-input class="cell-input" size="sm" hideInlineError [disabled]="saving()" [(model)]="row.name" (modelChange)="changed()" />
+  </ng-template>
+  <ng-template sdTableCellDef="quantity" let-row="item">
+    <sd-input-number
+      class="cell-input"
+      size="sm"
+      hideInlineError
+      [min]="1"
+      [precision]="0"
+      [disabled]="saving()"
+      [(model)]="row.quantity"
+      (modelChange)="changed()" />
+  </ng-template>
+  <ng-template sdTableCellDef="price" let-row="item">
+    <sd-input-number
+      class="cell-input"
+      size="sm"
+      hideInlineError
+      [min]="0"
+      [precision]="0"
+      [disabled]="saving()"
+      [(model)]="row.price"
+      (modelChange)="changed()" />
+  </ng-template>
+  <ng-template sdTableCellDef="amount" let-row="item">
+    <strong class="cell-amount">{{ amount(row) | sdFormatNumber: 0 }} ₫</strong>
+  </ng-template>
+</sd-table>
+<div class="table-summary">
+  <span>{{ lines().length }} dòng hàng</span>
+  <strong>Tổng cộng: {{ total() | sdFormatNumber: 0 }} ₫</strong>
+</div>

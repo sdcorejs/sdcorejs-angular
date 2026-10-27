@@ -1,0 +1,11 @@
+<sd-tab-group autoId="tab-many" [stretchTabs]="false" animationDuration="0ms">
+  @for (tab of tabs; track tab.label) {
+    <sd-tab [label]="tab.label" [icon]="tab.icon">
+      <div class="tab-body">
+        <sd-section [title]="tab.label">
+          <sd-section-item label="Khách hàng">Công ty An Phát</sd-section-item>
+        </sd-section>
+      </div>
+    </sd-tab>
+  }
+</sd-tab-group>

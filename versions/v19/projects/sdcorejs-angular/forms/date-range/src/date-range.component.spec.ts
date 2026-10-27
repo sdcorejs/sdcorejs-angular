@@ -1209,3 +1209,27 @@ describe('SdDateRange (transform absent)', () => {
     expect(fg.get('period')!.value.from instanceof Date).toBeTrue();
   });
 });
+
+// why: a user edit must mark the control of the parent form dirty before writing it, as Angular's value accessors do:
+// `form.dirty` and the default `'control'` mode of unsaved changes read that flag.
+describe('SdDateRange (user edits mark the form control dirty)', () => {
+  let fg: FormGroup;
+  let fixture: ComponentFixture<FgHost>;
+  let comp: SdDateRange;
+
+  beforeEach(async () => {
+    fg = new FormGroup({});
+    await TestBed.configureTestingModule({
+      imports: [FgHost, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(FgHost);
+    fixture.componentInstance.fg = fg;
+    fixture.detectChanges();
+    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdDateRange).componentInstance as SdDateRange;
+  });
+
+  it('marks the control dirty when the clear button empties the range', () => {
+    comp.clear();
+    expect(fg.get('period')?.dirty).toBeTrue();
+  });
+});

@@ -1,0 +1,14 @@
+<sd-button title="Tìm kiếm" prefixIcon="search" type="light" color="primary" (click)="message.set('Đã tìm theo từ khóa mẫu.')" />
+<sd-button
+  title="Áp dụng bộ lọc"
+  prefixIcon="filter_alt"
+  type="light"
+  color="info"
+  (click)="message.set('Đã áp dụng điều kiện lọc mẫu.')" />
+<sd-button
+  title="Xóa bộ lọc"
+  prefixIcon="filter_alt_off"
+  type="light"
+  color="secondary"
+  (click)="message.set('Đã đặt lại điều kiện tìm kiếm mẫu.')" />
+<p class="button-note" role="status">{{ message() }}</p>

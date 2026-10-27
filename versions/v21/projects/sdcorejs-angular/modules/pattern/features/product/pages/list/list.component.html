@@ -1,0 +1,30 @@
+<sd-page-list title="Sản phẩm" description="Danh mục sản phẩm đang kinh doanh.">
+  <div headerRight class="d-flex align-items-center gap-8 flex-wrap">
+    <sd-button
+      *sdPermission="'PATTERN_PRODUCT_R_MENU'"
+      title="Nhập/Xuất"
+      suffixIcon="expand_more"
+      type="outline"
+      autoId="product-data-menu">
+      <sd-button-item *sdPermission="'PATTERN_PRODUCT_C_IMPORT'" prefixIcon="upload" (click)="openImport()">Nhập dữ liệu</sd-button-item>
+      <sd-button-item *sdPermission="'PATTERN_PRODUCT_R_EXPORT'" prefixIcon="download" (click)="exportData()">Xuất dữ liệu</sd-button-item>
+    </sd-button>
+    <sd-button
+      *sdPermission="'PATTERN_PRODUCT_C_CREATE'"
+      title="Tạo mới"
+      prefixIcon="add"
+      type="fill"
+      color="primary"
+      autoId="product-create"
+      [routerLink]="['create']" />
+  </div>
+
+  <sd-table autoId="product-list" [option]="tableOption">
+    <ng-template sdTableCellDef="code" let-product="item">
+      <a *sdPermission="'PATTERN_PRODUCT_R_DETAIL'" [routerLink]="[product.id, 'detail']">{{ product.code }}</a>
+      @if (!canOpenDetail) {
+        <span>{{ product.code }}</span>
+      }
+    </ng-template>
+  </sd-table>
+</sd-page-list>

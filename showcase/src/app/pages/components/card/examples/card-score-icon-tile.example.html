@@ -1,0 +1,16 @@
+<div class="score-grid">
+  @for (metric of metrics; track metric.id) {
+    <sd-section hideHeader>
+      <div class="score">
+        <span class="score__label">
+          <span class="score__tile" [class]="'bg-' + metric.color + '-light'">
+            <sd-icon [name]="metric.icon" [class]="'text-' + metric.color" />
+          </span>
+          {{ metric.label }}
+        </span>
+        <strong class="score__value">{{ metric.value }}</strong>
+        <span class="score__hint">{{ metric.hint }}</span>
+      </div>
+    </sd-section>
+  }
+</div>

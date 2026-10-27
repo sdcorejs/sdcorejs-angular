@@ -1,0 +1,19 @@
+<div class="button-toolbar">
+  <span class="button-label">Có icon</span>
+  @for (action of actions; track action.title) {
+    <sd-button type="light" [title]="action.title" [prefixIcon]="action.icon" [color]="action.color" (click)="run(action.title)" />
+  }
+</div>
+<div class="button-toolbar">
+  <span class="button-label">Không icon</span>
+  @for (action of actions; track action.title) {
+    <sd-button type="light" [title]="action.title" [color]="action.color" (click)="run(action.title)" />
+  }
+</div>
+<div class="button-toolbar">
+  <span class="button-label">Icon-only</span>
+  @for (action of actions; track action.title) {
+    <sd-button type="light" [prefixIcon]="action.icon" [tooltip]="action.title" [color]="action.color" (click)="run(action.title)" />
+  }
+</div>
+<p class="button-note" role="status">{{ message() }}</p>

@@ -63,6 +63,12 @@ class ListPage {
 })
 class DetailPage {}
 
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  template: `<button id="save" type="button">Lưu</button>`,
+})
+class UpdatePage {}
+
 describe('SdPageList', () => {
   let harness: RouterTestingHarness;
   const host = () => harness.routeNativeElement!.querySelector('sd-page-list') as HTMLElement;
@@ -74,7 +80,18 @@ describe('SdPageList', () => {
     state.autoCompact.set(true);
     state.wrapMain.set(false);
     TestBed.configureTestingModule({
-      providers: [provideRouter([{ path: 'orders', component: ListPage, children: [{ path: ':id', component: DetailPage }] }])],
+      providers: [
+        provideRouter([
+          {
+            path: 'orders',
+            component: ListPage,
+            children: [
+              { path: ':id/update', component: UpdatePage },
+              { path: ':id', component: DetailPage },
+            ],
+          },
+        ]),
+      ],
     });
     harness = await RouterTestingHarness.create('/orders');
     await harness.fixture.whenStable();
@@ -157,6 +174,36 @@ describe('SdPageList', () => {
       expect((host().querySelector('#scrollbox') as HTMLElement).scrollTop).toBe(50);
       expect(document.activeElement).toBe(host().querySelector('#open'));
     });
+
+    it('keeps the opener and the scroll when a child route replaces another one', async () => {
+      const scrollbox = host().querySelector('#scrollbox') as HTMLElement;
+      scrollbox.scrollTop = 30;
+      (host().querySelector('#open') as HTMLAnchorElement).focus();
+
+      await harness.navigateByUrl('/orders/7');
+      await harness.fixture.whenStable();
+      // Chi tiết → cập nhật: focus đang ở trong route con, danh sách vẫn ẩn.
+      (harness.routeNativeElement!.querySelector('#detail') as HTMLElement).tabIndex = -1;
+      (harness.routeNativeElement!.querySelector('#detail') as HTMLElement).focus();
+      await harness.navigateByUrl('/orders/7/update');
+      await harness.fixture.whenStable();
+      expect(list().childActive()).toBeTrue();
+      expect(document.activeElement).not.toBe(host().querySelector('#open'));
+
+      await harness.navigateByUrl('/orders');
+      await harness.fixture.whenStable();
+      expect((host().querySelector('#scrollbox') as HTMLElement).scrollTop).toBe(30);
+      expect(document.activeElement).toBe(host().querySelector('#open'));
+    });
+  });
+
+  describe('detail="none"', () => {
+    it('renders no router outlet, so the screen can place its own (split view)', () => {
+      state.detail.set('none');
+      harness.detectChanges();
+      expect(host().querySelector(':scope > router-outlet')).toBeNull();
+      expect(list().childActive()).toBeFalse();
+    });
   });
 
   describe('detail="drawer"', () => {
@@ -167,6 +214,10 @@ describe('SdPageList', () => {
       await harness.navigateByUrl('/orders/7');
       expect(list().childActive()).toBeTrue();
       expect(getComputedStyle(innerPage()).display).not.toBe('none');
+      // The child host holds only the drawer: it takes no height from the list.
+      const child = host().querySelector(':scope > router-outlet ~ *') as HTMLElement;
+      expect(getComputedStyle(child).flexGrow).toBe('0');
+      expect(innerPage().getBoundingClientRect().height).toBeGreaterThan(400);
     });
   });
 });

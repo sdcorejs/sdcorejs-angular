@@ -150,7 +150,7 @@
                 [disabled]="_disabledField ? getNestedValue(item, _disabledField) : false"
                 [style.height.px]="_itemSize">
                 @if (iDefTpl) {
-                  <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { item: item }"> </ng-container>
+                  <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { $implicit: item, item: item }"> </ng-container>
                 } @else {
                   {{ _displayField ? getNestedValue(item, _displayField) : item }}
                 }
@@ -165,7 +165,7 @@
                 [matTooltip]="_displayField ? getNestedValue(item, _displayField) : item"
                 [disabled]="_disabledField ? getNestedValue(item, _disabledField) : false">
                 @if (iDefTpl) {
-                  <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { item: item }"> </ng-container>
+                  <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { $implicit: item, item: item }"> </ng-container>
                 } @else {
                   {{ _displayField ? getNestedValue(item, _displayField) : item }}
                 }

@@ -1200,7 +1200,12 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
       next = [...currentArr, ...scopeValues.filter(v => !existing.has(String(v)))];
     }
 
-    if (this.formControl.value !== next) this.formControl.setValue(next);
+    if (this.formControl.value !== next) {
+      // why: người dùng sửa thì control của form phải dirty trước khi nhận giá trị, như value accessor của Angular;
+      // chọn tất cả và nút xoá không đi qua value accessor của mat-select.
+      this.formControl.markAsDirty();
+      this.formControl.setValue(next);
+    }
     this.#onChange(next);
   };
 
@@ -1216,6 +1221,7 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
 
   clear = ($event?: any) => {
     $event?.stopPropagation();
+    this.formControl.markAsDirty();
     if (this.multiple()) {
       this.formControl.setValue([]);
       this.valueModel.set([]);
@@ -1542,7 +1548,10 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   #commitVirtualValue = (next: unknown): void => {
     // why: same rules as toggleSelectAll — setValue with its event (async validator kept) and the `!==`
     // guard so one choice emits one valueChanges.
-    if (this.formControl.value !== next) this.formControl.setValue(next);
+    if (this.formControl.value !== next) {
+      this.formControl.markAsDirty();
+      this.formControl.setValue(next);
+    }
     this.#onChange(next as boolean | number | string | (number | string)[]);
   };
 

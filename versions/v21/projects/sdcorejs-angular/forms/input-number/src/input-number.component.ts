@@ -21,6 +21,7 @@ import {
   contentChild,
   Injector,
   afterNextRender,
+  signal,
 } from '@angular/core';
 import { Utilities } from '@sdcorejs/utils/fns';
 import {
@@ -143,8 +144,17 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   autoId = computed(() => (this.autoIdInput() ? `forms-input-number-${this.autoIdInput()}` : undefined));
 
   readonly #state = sdFormControlState(computed(() => this.formControl));
+  // why: `#updateValidator` cài validator bằng `updateValueAndValidity({ emitEvent: false })` → `formControl.errors`
+  // đổi mà không phát event nào → `#state` không tick. Đếm số lần cài validator để `[inlineError]` (lỗi API gắn sau khi
+  // lưu) và `[required]` đổi lúc runtime vẫn hiện message, viền đỏ và `data-invalid` dưới OnPush.
+  readonly #validatorVersion = signal(0);
   readonly dataDisabled = computed(() => (this.#state().disabled ? 'true' : 'false'));
-  readonly dataInvalid = computed(() => (this.#state().invalid ? 'true' : 'false'));
+  readonly dataInvalid = computed(() => {
+    void this.#validatorVersion();
+    const control = this.formControl;
+    // Cùng điều kiện với sdFormControlState: chỉ báo invalid sau khi người dùng chạm hoặc sửa.
+    return this.#state() && control.invalid && (control.touched || control.dirty) ? 'true' : 'false';
+  });
   readonly dataEmpty = computed(() => (sdIsEmpty(this.#state().value) ? 'true' : 'false'));
   readonly dataValue = computed(() => sdSerializeDataValue(this.#state().value));
 
@@ -252,6 +262,7 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
    */
   readonly errorMessage = computed<string | undefined>(() => {
     void this.#state();
+    void this.#validatorVersion();
     const errors = this.formControl.errors;
     if (!errors) return undefined;
 
@@ -464,6 +475,7 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
     this.formControl.setValidators(validators.length ? validators : null);
     this.formControl.setAsyncValidators(asyncValidators.length ? asyncValidators : null);
     this.formControl.updateValueAndValidity({ emitEvent: false });
+    this.#validatorVersion.update(version => version + 1);
   };
 
   #onChange = (value: any) => {
@@ -475,6 +487,9 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
     // #state (sdFormControlState) không tick → errorMessage (computed theo #state) không
     // recompute → message lỗi không hiển thị (dù form invalid + viền đỏ). Để event lan ra để
     // #state tick. formControl.valueChanges không có subscriber nào nên không gây vòng lặp.
+    // why: người dùng sửa thì control của form phải dirty trước khi nhận giá trị, như value accessor của Angular;
+    // ô hiển thị là inputControl nên formControl không tự dirty. Chỉ khi giá trị đổi: blur một ô trống không tính.
+    if (!Object.is(this.formControl.value ?? null, value ?? null)) this.formControl.markAsDirty();
     this.formControl.setValue(value ?? null);
   };
 

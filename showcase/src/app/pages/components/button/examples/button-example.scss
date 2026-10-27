@@ -13,3 +13,17 @@
   gap: 8px;
   flex-basis: 100%;
 }
+
+// A full-width line of text under the buttons: a hint, a link or the role="status" result.
+.button-note {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.button-label {
+  min-width: 120px;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}

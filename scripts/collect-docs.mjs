@@ -60,6 +60,10 @@ const UNPINNED_BLOB_PREFIX = `${REPO_BLOB_PREFIX}main/`;
 // Internal / non-API md that must never be published.
 const EXCLUDE_FILES = new Set(['HANDOFF.md']);
 const EXCLUDE_DIRS = new Set(['node_modules', 'dist', '.angular', 'coverage', '.git']);
+// why: modules/pattern ships its README, docs/ and feature source inside the npm package for AI agents to
+// read from node_modules (README → docs → features). Those docs are pattern guides, not API docs of a
+// component, so they have no showcase registry page and no place in the per-version API archive.
+export const EXCLUDE_SOURCE_DIRS = new Set(['modules/pattern']);
 
 // `19.1.5` -> `v1.5`. The archive version is `<angular-major>.<release-suffix>` and the
 // release tag is `v<release-suffix>`, so the tag is recoverable from the version alone.
@@ -247,12 +251,12 @@ function todayIso() {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-function walk(dir, acc = []) {
+function walk(dir, acc = [], root = dir) {
   for (const name of readdirSync(dir)) {
     const full = join(dir, name);
     const st = statSync(full);
     if (st.isDirectory()) {
-      if (!EXCLUDE_DIRS.has(name)) walk(full, acc);
+      if (!EXCLUDE_DIRS.has(name) && !EXCLUDE_SOURCE_DIRS.has(relative(root, full).split(sep).join('/'))) walk(full, acc, root);
     } else if (name.endsWith('.md') && !EXCLUDE_FILES.has(name)) {
       acc.push(full);
     }

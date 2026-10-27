@@ -1,0 +1,12 @@
+<sd-tab-group autoId="tab-table" [stretchTabs]="false" animationDuration="0ms">
+  <sd-tab label="Đơn hàng" icon="receipt_long">
+    <div class="tab-body">
+      <sd-table autoId="tab-table-orders" [option]="ordersOption" />
+    </div>
+  </sd-tab>
+  <sd-tab label="Khách hàng" icon="groups">
+    <div class="tab-body">
+      <sd-table autoId="tab-table-customers" [option]="customersOption" />
+    </div>
+  </sd-tab>
+</sd-tab-group>

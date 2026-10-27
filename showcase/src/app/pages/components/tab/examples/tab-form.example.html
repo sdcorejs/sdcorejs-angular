@@ -1,0 +1,19 @@
+<sd-tab-group autoId="tab-form" [stretchTabs]="false" animationDuration="0ms" [(selectedIndex)]="selectedIndex">
+  <sd-tab label="Thông tin chung" icon="info">
+    <div class="tab-body">
+      <sd-section title="Thông tin chung">
+        <sd-input label="Tên khách hàng" required [disabled]="saving()" [(model)]="name" />
+      </sd-section>
+    </div>
+  </sd-tab>
+  <sd-tab label="Liên hệ" icon="mail">
+    <div class="tab-body">
+      <sd-section title="Liên hệ">
+        <sd-input label="Email" required pattern="EMAIL" [disabled]="saving()" [(model)]="email" />
+      </sd-section>
+    </div>
+  </sd-tab>
+</sd-tab-group>
+<div class="tab-toolbar tab-toolbar--end">
+  <sd-button title="Lưu" prefixIcon="save" type="fill" color="primary" [loading]="saving()" [disabled]="saving()" (click)="save()" />
+</div>

@@ -1,0 +1,20 @@
+<sd-button title="Tác vụ" prefixIcon="bolt" suffixIcon="expand_more" type="light" color="primary" autoId="grouped-actions">
+  <sd-button-item-divider title="Xử lý hồ sơ" />
+  @for (action of workflowActions; track action.title) {
+    <sd-button-item [prefixIcon]="action.icon" [color]="action.color" (click)="run(action.title)">{{ action.title }}</sd-button-item>
+  }
+  <sd-button-item-divider title="Dữ liệu" />
+  @for (action of dataActions; track action.title) {
+    <sd-button-item [prefixIcon]="action.icon" [color]="action.color" (click)="run(action.title)">{{ action.title }}</sd-button-item>
+  }
+</sd-button>
+<sd-button prefixIcon="more_horiz" tooltip="Tác vụ khác" type="light" color="secondary" autoId="grouped-more">
+  @for (action of workflowActions; track action.title) {
+    <sd-button-item [prefixIcon]="action.icon" [color]="action.color" (click)="run(action.title)">{{ action.title }}</sd-button-item>
+  }
+  <sd-button-item-divider />
+  @for (action of dataActions; track action.title) {
+    <sd-button-item [prefixIcon]="action.icon" [color]="action.color" (click)="run(action.title)">{{ action.title }}</sd-button-item>
+  }
+</sd-button>
+<p class="button-note" role="status">{{ message() }}</p>

@@ -1,0 +1,23 @@
+<div class="tab-toolbar">
+  <sd-button
+    title="Mở lại 3 hồ sơ"
+    prefixIcon="folder_open"
+    type="fill"
+    color="primary"
+    [disabled]="records().length === 3"
+    (click)="reopen()" />
+</div>
+<sd-tab-group autoId="tab-closable" [stretchTabs]="false" animationDuration="0ms">
+  @for (code of records(); track code) {
+    <sd-tab [label]="code" icon="business" closable [beforeClose]="beforeClose[code]" (close)="close(code)">
+      <div class="tab-body">
+        <sd-section [title]="'Chi tiết khách hàng #' + code">
+          <sd-input label="Tên khách hàng" [(model)]="drafts[code]" />
+        </sd-section>
+      </div>
+    </sd-tab>
+  }
+</sd-tab-group>
+@if (records().length === 0) {
+  <p class="tab-note">Đã đóng tất cả hồ sơ.</p>
+}

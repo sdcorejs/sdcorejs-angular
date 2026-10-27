@@ -1,0 +1,7 @@
+@if (!deleted()) {
+  <span>Đơn hàng mẫu DH-1024 · An Phát</span>
+  <sd-button title="Xoá" prefixIcon="delete" type="fill" color="error" (click)="remove()" />
+} @else {
+  <sd-button title="Khôi phục dữ liệu mẫu" prefixIcon="restore" type="light" color="info" (click)="restore()" />
+}
+<p class="button-note" role="status">{{ message() }}</p>

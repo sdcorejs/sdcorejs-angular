@@ -231,6 +231,24 @@ describe('SdTextarea', () => {
       textarea.formControl.updateValueAndValidity();
       expect(textarea.formControl.hasError('inlineError')).toBe(false);
     });
+
+    // why: an error set at runtime on a touched field (a failed save, a step that cannot go on) installs the validator
+    // with emitEvent: false; no control event fires, yet the message must show.
+    it('shows an inlineError set at runtime on a touched field without any control event', () => {
+      textarea.formControl.markAsTouched();
+      fixture.detectChanges();
+      host.inlineError = 'Cần ít nhất một dòng.';
+      fixture.detectChanges();
+      const element: HTMLElement = fixture.nativeElement;
+      expect(element.querySelector('mat-error')?.textContent).toContain('Cần ít nhất một dòng.');
+      expect(element.querySelector('textarea')?.getAttribute('aria-invalid')).toBe('true');
+      expect(element.querySelector('textarea')?.getAttribute('data-invalid')).toBe('true');
+
+      host.inlineError = undefined;
+      fixture.detectChanges();
+      expect(element.querySelector('mat-error')).toBeNull();
+      expect(element.querySelector('textarea')?.getAttribute('data-invalid')).toBe('false');
+    });
   });
 
   // -------------------------------------------------------------------------

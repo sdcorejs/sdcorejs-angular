@@ -636,6 +636,9 @@ export class SdAutocomplete<T = unknown> implements OnInit, OnDestroy {
     // set valueModel (guard `!==`), và onSelect set lại valueModel cùng giá trị (no-op) → không lặp.
     if (typeof item === 'string' || typeof item === 'number') {
       if (this.formControl.value !== item) {
+        // why: người dùng sửa thì control của form phải dirty trước khi nhận giá trị, như value accessor của Angular;
+        // ô gõ tìm là inputControl nên formControl không tự dirty.
+        this.formControl.markAsDirty();
         this.formControl.setValue(item);
         this.valueModel.set(item);
         this.sdChange.emit(item);
@@ -645,6 +648,7 @@ export class SdAutocomplete<T = unknown> implements OnInit, OnDestroy {
       // [UPDATED]: Lấy giá trị val = getNestedValue(item, vField)
       const val = this.getNestedValue(item, vField) ?? null;
       if (this.formControl.value !== val) {
+        this.formControl.markAsDirty();
         this.formControl.setValue(val);
         this.valueModel.set(val);
         this.sdChange.emit(val);
@@ -759,6 +763,7 @@ export class SdAutocomplete<T = unknown> implements OnInit, OnDestroy {
       // hiện/không clear sau khi xoá. Đúng lỗi mà comment ở onSelect nói là đã fix. Subscriber
       // formControl.valueChanges set valueModel có guard `!==`, và clear() set lại cùng giá trị
       // (no-op) → không lặp.
+      this.formControl.markAsDirty();
       this.formControl.setValue(null);
       this.valueModel.set(null);
       this.sdChange.emit(null);
