@@ -127,6 +127,33 @@ describe('SdBadge geometry with the shipped theme', () => {
       expect(getComputedStyle(root()).padding).toBe('0px 12px');
     });
 
+    // why: at 13px/18px Roboto puts the baseline on a half pixel, so md digits and capitals sat 0.5–1.6px above the
+    // centre (pixel-measured at DPR 1, 1.25 and 2). A 1px drop brings them within 0.5px; sm and lg stay unchanged.
+    it('lowers the md title of round, solid, tag and counter by 1px, but not pair, a tag with a description, sm or lg', () => {
+      const base = { title: 'Đã duyệt', icon: null, description: null };
+      for (const [name, patch, top] of [
+        ['round md', { type: 'round', size: 'md' }, '1px'],
+        ['solid md', { type: 'solid', size: 'md' }, '1px'],
+        ['tag md', { type: 'tag', size: 'md' }, '1px'],
+        ['counter md', { type: 'round', size: 'md', title: 7 }, '1px'],
+        ['pair md', { type: 'pair', size: 'md' }, '0px'],
+        ['tag md with description', { type: 'tag', size: 'md', description: 'Gia hạn 12 tháng' }, '0px'],
+        ['round sm', { type: 'round', size: 'sm' }, '0px'],
+        ['counter lg', { type: 'round', size: 'lg', title: 7 }, '0px'],
+      ] as [string, Partial<BadgeHost>, string][]) {
+        render({ ...base, ...patch });
+        const style = getComputedStyle(title());
+        expect(style.position === 'relative' ? style.top : '0px')
+          .withContext(name)
+          .toBe(top);
+      }
+      render({ ...base, type: 'round', size: 'md', title: 7 });
+      expect(box(title()).top - box(root()).top)
+        .withContext('18px line in a 24px circle, 1px lower')
+        .toBe(4);
+      expect(box(root()).height).toBe(24);
+    });
+
     it('pads tag 0 6px, 0 8px and 0 10px', () => {
       for (const [size, padding] of [
         ['sm', '0px 6px'],
