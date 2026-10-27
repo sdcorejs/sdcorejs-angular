@@ -58,7 +58,7 @@ If multiple configs are provided as an array, **duplicate `key` values throw on 
 | `previewWidth`   | `string`                              | `'50px'`    | Width of each thumbnail and the compact upload tile.                                                                                                                                                                                                                                                                                                                                                                                          |
 | `previewHeight`  | `string`                              | `'50px'`    | Height of each thumbnail and the compact upload tile.                                                                                                                                                                                                                                                                                                                                                                                         |
 | `align`          | `'left' \| 'center'`                  | `'left'`    | Horizontal alignment of the thumbnail row.                                                                                                                                                                                                                                                                                                                                                                                    |
-| `upload`         | `SdUploadFileFuncUpload<TArgs>`       | `undefined` | `(files, args) => Promise<string[]>` — returns idOrKeys after server upload. Overrides config.                                                                                                                                                                                                                                                                                                                                |
+| `upload`         | `SdUploadFileFuncUpload<TArgs>`       | `undefined` | `(files, args) => Promise<string[]>` — must return exactly one non-empty string ID for each supplied file, in the same order. Overrides config. A batch contains one file per distinct local key.                                                                                                                                                                                                                                                                                                                                |
 | `details`        | `SdUploadFileFuncDetails<TArgs>`      | `undefined` | `(idOrKeys, args) => Promise<SdUploadFileDetail[]>` — fetches metadata to render existing files. Overrides config.                                                                                                                                                                                                                                                                                                            |
 | `download`       | `SdUploadFileFuncDownload<TArgs>`     | `undefined` | `(idOrKey, args) => Promise<void>` — called when the user clicks a file. **When set, it ALWAYS takes priority over the detail `src` URL** for server files (those that have an `idOrKey`): the click triggers this handler instead of opening the URL. Use it for authenticated / proxied downloads. A freshly-picked local `File` (not yet uploaded, no `idOrKey`) still downloads directly from the blob. Overrides config. |
 | `type`           | `'image' \| 'document' \| 'file'`     | `'file'`    | Layout switch: `image`=square thumbnails, `document`=row with file-type icon, `file`=mixed.                                                                                                                                                                                                                                                                                                                                   |
@@ -80,7 +80,7 @@ If multiple configs are provided as an array, **duplicate `key` values throw on 
 | Name           | Type                                | Notes                                                                                                                                                                                                                               |
 | -------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `loaded`       | `OutputRef<PreviewFile[]>`          | Declared output — reserved for future use; currently not emitted. Do not rely on it until the API is stabilised.                                                                                                                    |
-| `filesChanged` | `OutputRef<(string \| File)[]>`     | Emits whenever the file set changes (add, remove, reorder). Items are mixed: server keys (string), CDN URLs (string), or freshly-picked `File` objects. Emitted after every `#details` resolution.                                  |
+| `filesChanged` | `OutputRef<(string \| File)[]>`     | Emits the resolved preview items after the current metadata refresh, and immediately on confirmed removal. Items are server keys, CDN URLs, or freshly-picked `File` objects. Superseded refreshes and callbacks after destruction do not emit. Missing server metadata can omit an item from this output; use `model` for the authoritative key list.                                  |
 | `model`        | `ModelSignal<(string \| number)[]>` | **Two-way bindable via `[(model)]`**. Holds idOrKeys / cdn URLs / hashed-keys-of-pending-uploads. Set this from your form to pre-populate. Updating the array triggers `#details()` to resolve metadata and refresh `previewFiles`. |
 
 ## Public API (call via template ref)
@@ -89,14 +89,66 @@ If multiple configs are provided as an array, **duplicate `key` values throw on 
 @ViewChild(SdUploadFile) uploadRef!: SdUploadFile;
 ```
 
-- `uploadRef.upload()` → `Promise<void>` — **Must be called before submitting the form to the server.** Sends pending `File` objects to the configured `upload` handler, replaces hashed-keys in `model` with returned idOrKeys.
-- `uploadRef.getFiles()` → `Promise<File[]>` — Returns raw `File` objects still pending (not yet uploaded).
+- `uploadRef.upload()` → `Promise<void>` — **Must be awaited before submitting the form to the server.** Reads pending files from the current model and per-control local snapshots/cache, independently of preview loading, then replaces their keys with returned IDs. Resolves to `void`; the next metadata refresh may still be pending. See the concurrency and error rules below.
+- `uploadRef.getFiles()` → `Promise<File[]>` — Returns local `File` objects in the current preview. This method retains its preview-based behavior and may lag behind `model` while metadata is loading; it is not the source used by `upload()`.
 - `uploadRef.preview()` → opens the popup gallery with all preview files.
 - `uploadRef.onDownload(previewFile)` — triggers download via the configured handler.
 - `uploadRef.onRemove(previewFile)` — shows a confirmation dialog and removes the file from `model` + `previewFiles` on confirm.
 - `uploadRef.formControl` — internal `SdFormControl` registered in the parent `FormGroup`. Use for programmatic `touched`/`dirty` checks if needed.
 - `uploadRef.previewFiles()` — read the current `PreviewFile[]` signal (useful for testing or parent inspection).
 - `uploadRef.showRequiredError()` — `computed<boolean>` driving the inline required-error message: `true` when not disabled, the control is touched, and the `required` validator is failing. Backed by `sdFormControlState(formControl)` so it ticks on every control event (value / status / **touched**) — this is what lets the OnPush view re-render the error when the parent form submits (`markAllAsTouched()`), without a manual `detectChanges`.
+
+## Async preview and upload consistency
+
+Only the current model refresh may replace the preview or emit `filesChanged`.
+Changing the model invalidates older responses, including a response that resolves
+before Angular runs the next effect. Each refresh snapshots local `File` references
+before waiting for server metadata, so a concurrent upload removing a hash from
+the cache cannot change how that refresh classifies its files.
+Each control retains its own selected local files, so uploading the same file in
+another control cannot evict this control's pending upload. Local references are
+released when their keys leave the observed model, upload succeeds, or the
+control is destroyed.
+
+Pending preview `FileReader`s are detached and aborted when the refresh is
+superseded or the component is destroyed. Queued reader callbacks cannot update
+the new preview. The Promise-based `details` and `upload` callback APIs do not
+accept an `AbortSignal`: existing network requests may finish, but obsolete
+preview results and model writes after destruction are ignored.
+
+Upload behavior:
+
+- Server IDs and URLs remain in the model even if their metadata has not loaded
+  or the metadata callback fails. Upload does not depend on `previewFiles`.
+- Each distinct local key is uploaded once per batch. Duplicate occurrences
+  retain their positions and share the returned server ID.
+- Concurrent calls to `upload()` return the same in-flight Promise. The batch
+  captures the local files at its start; additions made during that batch remain
+  pending for a subsequent call. Finish file selection before submitting a form,
+  or disable editing during submission.
+- Successful IDs replace matching local keys in the **latest** model. Reordering
+  is preserved, removed keys are not restored, and unrelated new keys are retained.
+- A handler rejection or synchronous throw propagates to the caller without
+  changing the model or cache. A missing handler shows the configuration error
+  and resolves without changing either.
+- A malformed result (wrong count, non-array, empty/non-string ID, or sparse
+  array) rejects with `Error` before changing the model or cache. There is no
+  automatic retry or server-side rollback; the application owns reconciliation
+  if the server uploaded files but did not return valid IDs.
+- After destruction, new calls are no-ops. An already-started upload can still
+  settle and release successfully uploaded cache entries, but cannot update the
+  model or emit model changes.
+
+Migration: the public method and callback signatures are unchanged. Upload
+handlers must return complete ordered ID arrays; partial or malformed success
+responses now reject instead of silently dropping local files. Do not rely on
+duplicate local keys causing duplicate backend uploads, or on `filesChanged`
+events from superseded requests.
+
+Regression coverage lives in `src/upload-file-race.spec.ts`. It uses Angular
+TestBed, real component templates, deferred callback Promises and controlled
+FileReader events to exercise response ordering, early upload, cache changes,
+concurrent calls, model edits, failures, and teardown without live APIs.
 
 ## Internal data model: `PreviewFile`
 
