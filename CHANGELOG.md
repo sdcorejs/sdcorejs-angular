@@ -80,6 +80,7 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 - Chip: leaving the field no longer rewrites its value. `mat-chip-grid`, bound to the control as its value accessor, wrote the text of the rendered chips into the control after every blur: number items became strings without a `modelChange`, and a form reset made while the input had focus was undone. The grid now has a control of its own, and the field is marked touched when focus leaves it (moving between the input and its chips does not count).
 - Chip calendar: the clear button icon is 18 / 20px at `md` / `lg`, as designed. A shared `.sd-clear-btn sd-icon` rule forced 16px.
 - Tab router: navigations that finish one after another while an earlier tab is still being activated (for example while the outlet loads an NgModule lazy route) each open their own tab. The outlet read the router state when the queued activation ran, so the tab of an earlier URL got the component, route and name of the later one; it now captures the route when `NavigationEnd` is emitted.
+- Badge: the title of an `md` round, solid or tag badge, counters included, sits 1px lower, in the middle of the badge. With Roboto at 13px the baseline of the 18px line falls on a half pixel, so digits and capitals were drawn 0.5–1.6px above the middle, depending on the badge's position and the screen scale. `sm`, `lg`, `pair` and a tag with a description are unchanged.
 
 ### Removed
 

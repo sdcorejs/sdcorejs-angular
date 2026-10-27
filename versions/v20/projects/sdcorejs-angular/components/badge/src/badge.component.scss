@@ -250,6 +250,15 @@
   }
 }
 
+// why: Roboto 13px làm tròn ascent/descent thành 12/3 nên baseline của dòng 18px trong ô 24px rơi vào nửa pixel;
+// Chrome bắt chữ theo lưới pixel và số, chữ hoa (không có phần dưới baseline) của md nằm cao hơn tâm 0.5–1.6px tuỳ
+// vị trí và DPR. Đo pixel ở DPR 1/1.25/2: hạ 1px còn lệch ≤0.5px. sm (hạ 0.5px hay 1px đều lệch ngược nhiều hơn) và
+// lg (đã giữa) giữ nguyên; pair (nền nằm trên phần chữ) và tag có description (khối hai dòng) không áp dụng.
+.c-badge.c-badge--md:not(.c-badge--pair, .c-badge--has-desc) .c-badge-title {
+  position: relative;
+  top: 1px;
+}
+
 // Dot: chỉ có chấm. Bấm được thì vùng chạm 20px quanh chấm 8px.
 .c-badge-dotonly {
   position: relative;
