@@ -79,6 +79,9 @@ export class SdUploadFile<TArgs = unknown> {
   readonly #isMobileOrTablet = BrowserUtilities.isMobile();
   readonly #canvas1 = `C${Utilities.generateUuid()}`;
   readonly #canvas2 = `C${Utilities.generateUuid()}`;
+  #uploadPromise?: Promise<void>;
+  #destroyed = false;
+  readonly #localFiles = new Map<string, File>();
   readonly formControl = new SdFormControl();
 
   // why: component là OnPush nhưng template đọc formControl.touched/errors như thuộc tính
@@ -220,21 +223,34 @@ export class SdUploadFile<TArgs = unknown> {
     });
 
     // Reactive sync for model changes
-    effect(() => {
-      const values = this.model() || [];
+    effect(onCleanup => {
+      const modelValue = this.model();
+      const values = modelValue || [];
+      let active = true;
+      let cancelReaders: (() => void) | undefined;
+      // why: model có thể đổi trước lần effect kế tiếp; cleanup thôi chưa chặn được
+      // Promise cũ resolve trong khoảng đó. Destroy cũng phải chặn mọi emit/ghi state.
+      const isCurrent = () => active && !this.#destroyed && this.model() === modelValue;
+      onCleanup(() => {
+        active = false;
+        cancelReaders?.();
+      });
       this.formControl.setValue(values);
 
       if (Array.isArray(values)) {
         this.#details(values).then(previewFiles => {
+          if (!isCurrent()) return;
           this.previewFiles.set(previewFiles);
           this.filesChanged.emit(
             this.previewFiles()
               .map(e => e.file || e.idOrKey || e.src)
               .filter(val => !!val) as (string | File)[]
           );
-          this.#preview();
+          // why: consumer của filesChanged có thể đổi model hoặc destroy đồng bộ.
+          if (isCurrent()) cancelReaders = this.#preview(isCurrent);
         });
       } else {
+        this.#localFiles.clear();
         this.previewFiles.set([]);
       }
     });
@@ -263,6 +279,8 @@ export class SdUploadFile<TArgs = unknown> {
 
     // Cleanup on destroy
     this.#destroyRef.onDestroy(() => {
+      this.#destroyed = true;
+      this.#localFiles.clear();
       this.#revokePreviewBlobURLs();
     });
   }
@@ -422,17 +440,26 @@ export class SdUploadFile<TArgs = unknown> {
     return null;
   };
 
-  #preview = () => {
+  #preview = (isCurrent: () => boolean) => {
+    const readers: FileReader[] = [];
     for (const previewFile of this.previewFiles().filter(e => e.file)) {
       const reader = new FileReader();
       reader.onload = evt => {
+        if (!isCurrent()) return;
         previewFile.previewSrc = evt.target!.result;
         previewFile.isPreviewImage = previewFile.file?.type.split('/')[0] === 'image' && previewFile.file?.type !== 'image/tiff';
         // trigger signal update
         this.previewFiles.set([...this.previewFiles()]);
       };
+      readers.push(reader);
       reader.readAsDataURL(previewFile.file!);
     }
+    return () => {
+      for (const reader of readers) {
+        reader.onload = null;
+        if (reader.readyState === FileReader.LOADING) reader.abort();
+      }
+    };
   };
 
   // ─── Public Event Handlers ────────────────────────────────────────────
@@ -461,8 +488,9 @@ export class SdUploadFile<TArgs = unknown> {
   };
 
   #uploadFile = async (originFiles: File[]) => {
-    const currentModel = [...(this.model() || [])];
-    if (originFiles.length + currentModel.length > this.max()) {
+    const pickedFiles = new Map<string, File>();
+    const pickedKeys: string[] = [];
+    if (originFiles.length + (this.model() || []).length > this.max()) {
       this.#notifyService.warning(this.#i18n.t('core.component.upload-file.too-many-files'));
       return;
     }
@@ -478,9 +506,22 @@ export class SdUploadFile<TArgs = unknown> {
       }
       const hashedKey = this.#uploadFileService.add(file);
       if (hashedKey) {
-        currentModel.push(hashedKey);
+        pickedFiles.set(hashedKey, file);
+        pickedKeys.push(hashedKey);
       }
     }
+    if (this.#destroyed) return;
+    // why: resize/validate có await; upload(), xoá, sắp xếp hoặc lần chọn khác có thể đã đổi model.
+    // Nối batch vào model MỚI NHẤT, không ghi lại bản chụp cũ làm mất ID vừa upload hay file vừa chọn.
+    const currentModel = [...(this.model() || []), ...pickedKeys];
+    if (currentModel.length > this.max()) {
+      this.#notifyService.warning(this.#i18n.t('core.component.upload-file.too-many-files'));
+      return;
+    }
+    // why: giữ batch riêng qua từng await validate/resize; cache chung và effect của
+    // model cũ có thể mất hash trước khi picker hoàn tất. Chỉ nhận ownership khi commit.
+    for (const [key, file] of pickedFiles) this.#localFiles.set(key, file);
+    this.#snapshotFiles(currentModel);
     this.model.set(currentModel);
     this.#touch();
   };
@@ -632,50 +673,88 @@ export class SdUploadFile<TArgs = unknown> {
   };
 
   /**
-   * Thực hiện upload các file và gán giá trị, output trả ra mảng idOrKeys.
-   * HÀM NÀY BẮT BUỘC PHẢI GỌI TRƯỚC KHI GỌI VỀ SERVER.
+   * Upload the local files referenced by the model, then replace their temporary
+   * keys with server IDs. Call and await this method before submitting the model.
+   *
+   * Files are read from the model and local snapshots/cache, so pending or failed metadata
+   * requests do not omit files. Each distinct local key is uploaded once per
+   * batch; duplicate occurrences retain their positions and share the returned ID.
+   * Server IDs and URLs are preserved even when they have no preview metadata.
+   *
+   * Concurrent calls share the active batch. Changes made while it is pending
+   * are preserved: removed keys stay removed, reordering is retained, and newly
+   * added local keys remain pending for a subsequent call. After destruction, no
+   * new upload starts and an in-flight upload cannot update the model.
+   *
+   * @returns A promise resolving to void after the batch finishes. The preview
+   * metadata refresh may still be pending. With no local files this is a no-op.
+   * A missing upload handler displays the configuration error and resolves
+   * without changing the model or cache.
+   * @throws The upload handler's error, without changing the model or cache.
+   * @throws Error if the handler does not return exactly one non-empty string ID
+   * per distinct local key; the model and cache are retained in that case.
+   *
+   * @example
+   * import { SdUploadFile } from '@sdcorejs/angular/components/upload-file';
+   *
+   * async function submit(control: SdUploadFile) {
+   *   await control.upload();
+   *   return control.model(); // Server IDs/URLs for the uploaded batch.
+   * }
    */
-  upload = async () => {
-    const items = this.previewFiles()?.filter(val => !!val) || [];
-    if (!Array.isArray(items)) {
-      this.model.set([]);
+  upload = (): Promise<void> => {
+    if (this.#destroyed) return Promise.resolve();
+    if (!this.#uploadPromise) {
+      // why: hai lần submit đồng thời phải dùng chung batch, tránh upload trùng File.
+      this.#uploadPromise = this.#uploadPendingFiles().finally(() => {
+        this.#uploadPromise = undefined;
+      });
+    }
+    return this.#uploadPromise;
+  };
+
+  #uploadPendingFiles = async (): Promise<void> => {
+    const pending = [
+      ...new Map(
+        this.#snapshotFiles(this.model())
+          .filter(entry => entry.file)
+          .map(entry => [entry.key, entry] as const)
+      ).values(),
+    ];
+    if (!pending.length) return;
+    const uploadHandler = this.#getUploadHandler();
+    if (!uploadHandler) {
+      const key = this.key();
+      this.#notifyService.error(
+        key === undefined
+          ? this.#i18n.t('core.component.upload-file.no-configuration')
+          : this.#i18n.t('core.component.upload-file.no-configuration-key', { key })
+      );
       return;
     }
-    const results: (string | number)[] = [];
-    const uploadedFiles = items.map(e => e?.file).filter(file => !!file);
-    let idOrKeys: string[] = [];
-    if (uploadedFiles.length) {
-      const uploadHandler = this.#getUploadHandler();
-      if (uploadHandler) {
-        idOrKeys = await uploadHandler(uploadedFiles, this.args()).then(results => {
-          for (const uploadedFile of uploadedFiles) {
-            this.#uploadFileService.remove(uploadedFile);
-          }
-          return results;
-        });
-      } else {
-        const key = this.key();
-        this.#notifyService.error(
-          key === undefined
-            ? this.#i18n.t('core.component.upload-file.no-configuration')
-            : this.#i18n.t('core.component.upload-file.no-configuration-key', { key })
-        );
-      }
+    const idOrKeys = await uploadHandler(
+      pending.map(entry => entry.file!),
+      this.args()
+    );
+    if (
+      !Array.isArray(idOrKeys) ||
+      idOrKeys.length !== pending.length ||
+      pending.some((_, index) => typeof idOrKeys[index] !== 'string' || !idOrKeys[index])
+    ) {
+      throw new Error('[sd-upload-file] Upload must return one non-empty string ID per file.');
     }
-    let idx = 0;
-    for (const item of items) {
-      if (!item.file) {
-        if (item.idOrKey) {
-          results.push(item.idOrKey);
-        }
-      } else {
-        if (idOrKeys?.[idx]) {
-          results.push(idOrKeys[idx]);
-          idx++;
-        }
-      }
+    const replacements = new Map(pending.map((entry, index) => [entry.key, idOrKeys[index]]));
+    for (const entry of pending) {
+      this.#uploadFileService.remove(entry.key.toString());
+      this.#localFiles.delete(entry.key.toString());
     }
-    this.model.set(results);
+    if (this.#destroyed) return;
+    // why: thay đúng hash trên model MỚI NHẤT, không phục hồi file đã xoá hoặc
+    // ghi đè các thao tác thêm/sắp xếp trong lúc upload đang chờ.
+    const values = this.model();
+    if (Array.isArray(values)) {
+      this.model.set(values.map(key => replacements.get(key) ?? key));
+    }
   };
 
   /**
@@ -728,20 +807,22 @@ export class SdUploadFile<TArgs = unknown> {
    * cần render ra ảnh/tệp tương ứng.
    */
   #details = async (keys: (string | number)[]) => {
-    if (!Array.isArray(keys) || !keys.length) {
+    const entries = this.#snapshotFiles(keys);
+    if (!entries.length) {
       return [];
     }
-    const idOrKeys = keys.filter(key => !!key && !this.#isCdn(key) && !this.#isHashedKey(key)) as (string | number)[];
+    const idOrKeys = entries.filter(entry => !this.#isCdn(entry.key) && !entry.file).map(entry => entry.key);
     let detailsList: SdUploadFileDetail[] = [];
     const detailsHandler = this.#getDetailsHandler();
     if (idOrKeys.length && detailsHandler) {
-      detailsList = await detailsHandler(idOrKeys, this.args()).catch(error => {
+      try {
+        detailsList = await detailsHandler(idOrKeys, this.args());
+      } catch (error) {
         console.error(error);
-        return [];
-      });
+      }
     }
     const results: PreviewFile[] = [];
-    for (const key of keys.filter(val => !!val)) {
+    for (const { key, file } of entries) {
       if (this.#isCdn(key)) {
         const cdn = key?.toString();
         const extension = this.#getExtension(cdn);
@@ -755,9 +836,7 @@ export class SdUploadFile<TArgs = unknown> {
           isPreviewImage,
           extension,
         });
-      } else if (this.#isHashedKey(key)) {
-        const hashedKey = key?.toString();
-        const file = this.#uploadFileService.get(hashedKey)!;
+      } else if (file) {
         const lastDot = file.name.lastIndexOf('.');
         const extension = file.name.substring(lastDot + 1);
         const isPreviewImage = (file.type.split('/')[0] === 'image' && file.type !== 'image/tiff') || IsImage(extension);
@@ -798,9 +877,24 @@ export class SdUploadFile<TArgs = unknown> {
     return idOrKey.startsWith('http');
   };
 
-  #isHashedKey = (idOrKey: string | number) => {
-    if (typeof idOrKey !== 'string') return false;
-    return this.#uploadFileService.isHashedKey(idOrKey);
+  #snapshotFiles = (keys: (string | number)[]) => {
+    const values = Array.isArray(keys) ? keys : [];
+    const activeKeys = new Set(values);
+    for (const key of this.#localFiles.keys()) {
+      if (!activeKeys.has(key)) this.#localFiles.delete(key);
+    }
+    // why: cache có thể bị upload xoá trong lúc chờ details; giữ File theo snapshot
+    // của từng ô và request, kể cả khi ô khác upload cùng hash rồi xoá cache chung.
+    return values
+      .filter(key => !!key)
+      .map(key => {
+        let file: File | null = null;
+        if (typeof key === 'string' && !this.#isCdn(key)) {
+          file = this.#localFiles.get(key) ?? this.#uploadFileService.get(key);
+          if (file) this.#localFiles.set(key, file);
+        }
+        return { key, file };
+      });
   };
 
   #getExtension = (cdn: string | undefined) => {
