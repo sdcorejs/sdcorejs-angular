@@ -283,6 +283,8 @@ export type ShowcaseExampleSourceKey =
   | "components/tree/example-lazy-tree"
   | "components/tree/example-selection-va-command"
   | "components/tree/example-static-tree"
+  | "components/upload-file/example-anh-va-tai-lieu-xem-truoc"
+  | "components/upload-file/example-inline-trong-bang"
   | "components/upload-file/example-tai-nhieu-anh-co-gioi-han"
   | "components/upload-file/example-tai-tai-lieu-bao-loi-required"
   | "components/upload-file/example-vo-hieu-hoa-chi-doc"
@@ -2484,6 +2486,20 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-tai-tai-lieu-bao-loi-required",
     title: "Tải tài liệu + báo lỗi required",
     description: "Bấm Kiểm tra (mô phỏng submit → markAllAsTouched) khi chưa đính kèm file: message lỗi đỏ 'Vui lòng tải tệp' hiện ngay dưới vùng upload. Đính kèm 1 file rồi Kiểm tra lại → lỗi biến mất.",
+  },
+  {
+    sourceKey: "components/upload-file/example-anh-va-tai-lieu-xem-truoc",
+    pageKey: "components/upload-file",
+    sectionId: "example-anh-va-tai-lieu-xem-truoc",
+    title: "Ảnh và tài liệu, xem trước",
+    description: "Bấm một ảnh hay một hàng tài liệu để mở popup tại đúng file đó (←/→, +/−/0, Esc). Thả tệp từ máy vào ô Tải lên; tệp sai định dạng hay quá 5 MB nằm lại trong danh sách cùng lý do. Gọi upload() để thấy hàng đang tải lên; bật mô phỏng lỗi để thấy hàng lỗi và nút Thử lại.",
+  },
+  {
+    sourceKey: "components/upload-file/example-inline-trong-bang",
+    pageKey: "components/upload-file",
+    sectionId: "example-inline-trong-bang",
+    title: "Inline trong bảng",
+    description: "Một dòng cao 32px: ô tải lên, ảnh, chip tài liệu và +N cho phần còn lại. Không nhãn, mô tả hay bộ đếm.",
   },
   {
     sourceKey: "components/upload-file/example-vo-hieu-hoa-chi-doc",

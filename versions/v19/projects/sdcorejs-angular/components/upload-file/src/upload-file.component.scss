@@ -502,3 +502,213 @@ button.sd-upload-file__row-name {
   }
 }
 
+// ─── Variant inline (đợt 3 · 4d) ─────────────────────────────────────────
+// Một dòng cao 32px, không wrap: ô tải lên → ảnh → chip tài liệu → "+N". Padding trên 4px là chỗ cho badge xoá (−4px);
+// kéo tệp vào thì cả component đổi nền primary 6%.
+.sd-upload-file__inline {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px;
+  box-sizing: content-box;
+  height: 32px;
+  min-width: 0;
+  padding: 4px 4px 0 0;
+  border-radius: 6px;
+}
+
+.sd-upload-file__inline--dragging {
+  background: color-mix(in srgb, var(--sd-primary) 6%, transparent);
+}
+
+.sd-upload-file__inline-add {
+  @extend %focus-ring;
+  display: flex;
+  flex: 0 0 32px;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 32px;
+  height: 32px;
+  border: 1px dashed var(--sd-border-strong);
+  border-radius: 6px;
+  color: var(--sd-primary);
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--sd-primary);
+    background: color-mix(in srgb, var(--sd-primary) 6%, var(--sd-surface));
+  }
+}
+
+.sd-upload-file__inline-add--error {
+  border-color: var(--sd-error);
+}
+
+.sd-upload-file__inline-item {
+  position: relative;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.sd-upload-file__inline-item--image {
+  flex: 0 0 32px;
+}
+
+%inline-control {
+  @extend %focus-ring;
+  position: relative;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 32px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 6px;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.sd-upload-file__inline-thumb {
+  @extend %inline-control;
+  justify-content: center;
+  width: 32px;
+  background: var(--sd-surface-muted);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sd-text) 8%, transparent);
+  color: var(--sd-text-secondary);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.sd-upload-file__chip {
+  @extend %inline-control;
+  gap: 6px;
+  max-width: 140px;
+  padding: 0 8px;
+  background: var(--sd-surface-muted);
+  color: var(--sd-text);
+}
+
+.sd-upload-file__chip-name {
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sd-upload-file__inline-busy {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--sd-surface) 60%, transparent);
+  --mdc-circular-progress-active-indicator-color: var(--sd-primary);
+  --mat-progress-spinner-active-indicator-color: var(--sd-primary);
+}
+
+// Lỗi tải lên / file bị từ chối: viền error, icon error; bấm để thử lại (tải lên).
+.sd-upload-file__inline-item--failed .sd-upload-file__chip,
+.sd-upload-file__inline-item--failed .sd-upload-file__inline-thumb {
+  background: var(--sd-status-error-bg);
+  box-shadow: inset 0 0 0 1px var(--sd-error);
+}
+
+.sd-upload-file__inline-error-icon {
+  color: var(--sd-error);
+}
+
+.sd-upload-file__inline-more {
+  @extend %inline-control;
+  flex: 0 0 auto;
+  justify-content: center;
+  min-width: 32px;
+  padding: 0 6px;
+  background: var(--sd-surface-muted);
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-12, 12px);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.sd-upload-file__empty {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--sd-upload-file-empty-text, var(--sd-text-secondary));
+  font-size: var(--sd-font-size-13, 13px);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Badge xoá inline: 16×16, icon 11px, góc trên phải −4px; hover / focus trong mục thì hiện, `pointer: coarse` luôn hiện.
+.sd-upload-file__inline-remove {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 1px solid var(--sd-border);
+  border-radius: 50%;
+  background: var(--sd-surface);
+  box-shadow: var(--sd-shadow-xs, none);
+  color: var(--sd-text-secondary);
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 120ms ease-out,
+    visibility 0s 120ms;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--sd-error);
+    color: var(--sd-error);
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
+    outline-offset: 1px;
+  }
+}
+
+.sd-upload-file__inline-item:hover .sd-upload-file__inline-remove,
+.sd-upload-file__inline-item:focus-within .sd-upload-file__inline-remove,
+.sd-upload-file__inline-item--failed .sd-upload-file__inline-remove {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 120ms ease-out;
+}
+
+@media (pointer: coarse) {
+  .sd-upload-file__inline-remove {
+    opacity: 1;
+    visibility: visible;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: -14px;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sd-upload-file__inline-remove {
+    transition: none;
+  }
+}

@@ -73,6 +73,7 @@ export interface SdUploadFileFailure {
   ],
   host: {
     class: 'sd-upload-file',
+    '[class.sd-upload-file--inline]': "variant() === 'inline'",
     '[class.sd-upload-file--dragging]': 'dragging()',
     '(dragenter)': 'onDragEnter($event)',
     '(dragover)': 'onDragOver($event)',
@@ -158,6 +159,11 @@ export class SdUploadFile<TArgs = unknown> {
   readonly previewWidth = input<string>('72px');
   readonly previewHeight = input<string>('72px');
   readonly align = input<'left' | 'center'>('left');
+  /**
+   * `default`: nhãn, lưới ảnh / vùng thả và danh sách tài liệu. `inline` (đợt 3 · 4d): một dòng cao 32px cho ô của
+   * `sd-table` và danh sách dày — ô tải lên, ảnh, chip tài liệu, "+N"; không nhãn, mô tả hay bộ đếm.
+   */
+  readonly variant = input<'default' | 'inline'>('default');
   readonly uploadInput = input<SdUploadFileFuncUpload<any> | undefined>(undefined, { alias: 'upload' });
   readonly details = input<SdUploadFileFuncDetails<any>>();
   readonly downloadInput = input<SdUploadFileFuncDownload<any> | undefined>(undefined, { alias: 'download' });
@@ -245,6 +251,14 @@ export class SdUploadFile<TArgs = unknown> {
   readonly canAdd = computed(() => {
     void this.#state();
     return this.previewFiles().length < this.max() && !this.formControl.disabled;
+  });
+
+  /** Variant inline: ảnh rồi tài liệu, `maxOfImage` mục đầu hiện ra, phần còn lại gộp vào "+N". */
+  readonly inlineItems = computed(() => {
+    const files = this.previewFiles();
+    const items = [...new FilterImagePipe().transform(files), ...new FilterDocumentPipe().transform(files)];
+    const visible = Math.max(0, this.maxOfImage());
+    return { visible: items.slice(0, visible), hidden: items.slice(visible) };
   });
 
   // ─── Output Signals ───────────────────────────────────────────────────

@@ -13,6 +13,108 @@
 @let _requiredError = showRequiredError();
 @let _images = _previewFiles | filterImage;
 @let _documents = _previewFiles | filterDocument;
+@if (variant() === 'inline') {
+  <!-- Đợt 3 · 4d: variant inline — một dòng 32px cho ô của sd-table: ô tải lên → ảnh → chip tài liệu → "+N". Không nhãn,
+       mô tả hay bộ đếm (cột bảng đã có tiêu đề); lỗi bắt buộc là viền error quanh ô tải lên. -->
+  @let _inline = inlineItems();
+  <div class="sd-upload-file__inline" [class.sd-upload-file__inline--dragging]="_dragging">
+    @if (_canAdd) {
+      <div
+        #dropElement
+        class="sd-upload-file__inline-add c-area-upload"
+        role="button"
+        tabindex="0"
+        [class.sd-upload-file__inline-add--error]="_requiredError"
+        [attr.aria-label]="'core.component.upload-file.upload-tile' | sdTranslate"
+        [attr.aria-invalid]="_requiredError || null"
+        (click)="onUpload()"
+        (keydown.enter)="onUploadKeydown($event)"
+        (keydown.space)="onUploadKeydown($event)"
+        [attr.data-autoId]="autoId()"
+        [attr.data-disabled]="dataDisabled()"
+        [attr.data-empty]="dataEmpty()"
+        [attr.data-count]="dataCount()">
+        <sd-icon aria-hidden="true" size="18px" fontIcon="upload_file"></sd-icon>
+      </div>
+    }
+    @for (item of _inline.visible; track item; let idx = $index) {
+      @let uploading = isUploading(item);
+      @let failed = hasUploadFailed(item);
+      @let image = item.isPreviewImage && (item.file || item.src);
+      <div
+        class="sd-upload-file__inline-item"
+        [class.c-view]="image"
+        [class.sd-upload-file__inline-item--failed]="failed"
+        [class.sd-upload-file__inline-item--image]="image">
+        <button
+          type="button"
+          [class]="image ? 'sd-upload-file__inline-thumb' : 'sd-upload-file__chip'"
+          [attr.aria-label]="failed ? ('core.component.upload-file.retry' | sdTranslate) + ', ' + (item.fileName || '') : item.fileName || ('core.component.upload-file.preview-title' | sdTranslate)"
+          (click)="failed ? retryUpload() : preview(item)">
+          @if (failed) {
+            <sd-icon class="sd-upload-file__inline-error-icon" aria-hidden="true" size="18px" fontIcon="error"></sd-icon>
+          } @else if (image) {
+            @if (item.isImgError) {
+              <sd-icon aria-hidden="true" size="18px" fontIcon="broken_image"></sd-icon>
+            } @else if (item.previewSrc || item.src) {
+              <img class="c-img" [src]="item.previewSrc || item.src" alt="" (error)="onImgError(item)" />
+            }
+          } @else {
+            <sd-upload-file-type-icon [extension]="item.extension" [size]="18"></sd-upload-file-type-icon>
+          }
+          @if (!image) {
+            <span class="sd-upload-file__chip-name">{{ item.fileName || 'file' }}</span>
+          }
+          @if (uploading || (image && !item.previewSrc && !item.src)) {
+            <span class="sd-upload-file__inline-busy" role="status" [attr.aria-label]="'core.component.upload-file.loading' | sdTranslate">
+              <mat-spinner strokeWidth="2" mode="indeterminate" diameter="16"></mat-spinner>
+            </span>
+          }
+        </button>
+        @if (!_disabled && !uploading) {
+          <button
+            type="button"
+            class="sd-upload-file__inline-remove"
+            [attr.aria-label]="'core.component.upload-file.remove-named' | sdTranslate: { name: item.fileName || '' }"
+            [attr.data-autoId]="removeAutoId(idx)"
+            (click)="onRemove(item)">
+            <sd-icon aria-hidden="true" size="11px" fontIcon="close"></sd-icon>
+          </button>
+        }
+      </div>
+    }
+    @for (failure of _failures; track failure.id) {
+      <div class="sd-upload-file__inline-item sd-upload-file__inline-item--failed">
+        <span class="sd-upload-file__chip" role="img" [attr.aria-label]="failure.fileName + ': ' + (failure.reason | sdUploadFileReason)">
+          <sd-icon class="sd-upload-file__inline-error-icon" aria-hidden="true" size="18px" fontIcon="error"></sd-icon>
+          <span class="sd-upload-file__chip-name" aria-hidden="true">{{ failure.fileName }}</span>
+        </span>
+        <button
+          type="button"
+          class="sd-upload-file__inline-remove"
+          [attr.aria-label]="'core.component.upload-file.remove-named' | sdTranslate: { name: failure.fileName }"
+          (click)="removeFailure(failure)">
+          <sd-icon aria-hidden="true" size="11px" fontIcon="close"></sd-icon>
+        </button>
+      </div>
+    }
+    @if (_inline.hidden.length) {
+      <button
+        type="button"
+        class="sd-upload-file__inline-more"
+        [attr.aria-label]="'core.component.upload-file.view-all' | sdTranslate"
+        (click)="preview(_inline.hidden[0])">
+        +{{ _inline.hidden.length }}
+      </button>
+    }
+    @if (!_previewFiles.length && !_failures.length) {
+      <span class="sd-upload-file__empty">{{ 'core.component.upload-file.no-files' | sdTranslate }}</span>
+    }
+    @if (_requiredError) {
+      <span class="sd-visually-hidden" role="alert">{{ 'core.component.upload-file.please-upload' | sdTranslate }}</span>
+    }
+  </div>
+} @else {
 <div class="sd-upload-file__field">
   <!-- Đợt 3 · 4c: nhãn và bộ đếm `{n} / {max}` trên cùng một dòng; mô tả ngay dưới. Với `sdLabelDef` cũng vậy — sd-label
        không có chỗ chèn bộ đếm, nên upload-file tự vẽ mô tả dưới hàng. -->
@@ -290,4 +392,5 @@
     </div>
   }
 </div>
+}
 <preview (download)="onDownload($event)"></preview>
