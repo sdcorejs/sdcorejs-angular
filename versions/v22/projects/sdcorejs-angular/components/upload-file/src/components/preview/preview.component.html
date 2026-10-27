@@ -16,24 +16,7 @@
             } @else if (file.isPreviewImage && (file.previewSrc || file.src)) {
               <img fill [src]="file.previewSrc || file.src" alt="thumbnail" class="thumbnail-img" />
             } @else {
-              <img
-                class="thumbnail-img file"
-                [class]="{
-                  png: file.extension === 'png',
-                  jpg: file.extension === 'jpg',
-                  pdf: file.extension === 'pdf',
-                  doc: file.extension === 'doc',
-                  docx: file.extension === 'docx',
-                  xls: file.extension === 'xls',
-                  xlsx: file.extension === 'xlsx',
-                  ppt: file.extension === 'ppt',
-                  pptx: file.extension === 'pptx',
-                  csv: file.extension === 'csv',
-                  psd: file.extension === 'psd',
-                  xml: file.extension === 'xml',
-                  zip: file.extension === 'zip'
-                }"
-                alt="thumbnail" />
+              <sd-upload-file-type-icon class="thumbnail-img" [extension]="file.extension" [size]="48"></sd-upload-file-type-icon>
             }
           </button>
         }
@@ -49,24 +32,7 @@
           } @else if (selectedFile.isPreviewImage && (selectedFile.previewSrc || selectedFile.src)) {
             <img fill priority [src]="selectedFile.previewSrc || selectedFile.src" class="main-image" alt="Main display image" />
           } @else {
-            <img
-              class="main-document file"
-              [class]="{
-                png: selectedFile.extension === 'png',
-                jpg: selectedFile.extension === 'jpg',
-                pdf: selectedFile.extension === 'pdf',
-                doc: selectedFile.extension === 'doc',
-                docx: selectedFile.extension === 'docx',
-                xls: selectedFile.extension === 'xls',
-                xlsx: selectedFile.extension === 'xlsx',
-                ppt: selectedFile.extension === 'ppt',
-                pptx: selectedFile.extension === 'pptx',
-                csv: selectedFile.extension === 'csv',
-                psd: selectedFile.extension === 'psd',
-                xml: selectedFile.extension === 'xml',
-                zip: selectedFile.extension === 'zip'
-              }"
-              alt="Main display image" />
+            <sd-upload-file-type-icon class="main-document" [extension]="selectedFile.extension" [size]="64"></sd-upload-file-type-icon>
               @if(selectedFile.fileName) {
                 <div class="T14M">{{selectedFile.fileName}}</div>
               }

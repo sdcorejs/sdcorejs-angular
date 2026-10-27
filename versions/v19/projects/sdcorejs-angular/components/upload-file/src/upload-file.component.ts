@@ -23,13 +23,13 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { SdLabelDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import { SdFormControl, sdFormControlState, ɵsdFormControlConnector } from '@sdcorejs/angular/forms/models';
-import { SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
 import { SdConfirmService, SdNotifyService } from '@sdcorejs/angular/services';
 import { BrowserUtilities, Utilities } from '@sdcorejs/utils/fns';
 import { FilePickerCancelledError } from '@sdcorejs/utils/errors';
 import { sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { SdUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { PreviewComponent } from './components/preview/preview.component';
+import { SdUploadFileTypeIcon } from './components/file-type-icon/file-type-icon.component';
 import {
   ISdUploadFileConfiguration,
   SD_UPLOAD_FILE_CONFIGURATION,
@@ -38,7 +38,7 @@ import {
   SdUploadFileFuncDetails,
   SdUploadFileFuncUpload,
 } from './configurations';
-import { FilterDocumentPipe, FilterImagePipe } from './pipes';
+import { FilterDocumentPipe, FilterImagePipe, SdUploadFileMetaPipe } from './pipes';
 import { IsImage, PreviewFile, UploadFileService } from './services';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
@@ -58,7 +58,8 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
     PreviewComponent,
     FilterImagePipe,
     FilterDocumentPipe,
-    SdFormatNumberPipe,
+    SdUploadFileMetaPipe,
+    SdUploadFileTypeIcon,
     MatProgressSpinner,
     SdTranslatePipe,
   ],
@@ -73,6 +74,8 @@ export class SdUploadFile<TArgs = unknown> {
   readonly #uploadFileService = inject(UploadFileService);
   readonly #destroyRef = inject(DestroyRef);
   readonly #i18n = inject(I18nService);
+  /** Locale hiện tại cho dung lượng file (`2,4 MB` ở vi). */
+  readonly locale = this.#i18n.locale;
 
   // ─── Internal State ───────────────────────────────────────────────────
   readonly id = `I${Utilities.generateUuid()}`;

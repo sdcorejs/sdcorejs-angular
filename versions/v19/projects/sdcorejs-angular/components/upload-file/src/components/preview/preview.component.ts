@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ViewChild, injec
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { PreviewFile } from '../../services';
+import { SdUploadFileTypeIcon } from '../file-type-icon/file-type-icon.component';
 import { MatIcon } from '@angular/material/icon';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
@@ -12,7 +13,7 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   templateUrl: './preview.component.html',
   styleUrl: './preview.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdIcon, SdModal, SdButton, CommonModule, MatIcon, SdTranslatePipe],
+  imports: [SdIcon, SdModal, SdButton, CommonModule, MatIcon, SdTranslatePipe, SdUploadFileTypeIcon],
 })
 export class PreviewComponent {
   private cd = inject(ChangeDetectorRef);

@@ -133,32 +133,14 @@
   @let previewDocuments = _previewFiles | filterDocument;
   @for (document of previewDocuments; track $index; let docIdx = $index) {
     <div class="c-document-container">
-      <img
-        [style.max-height]="_previewHeight"
-        class="c-document-image"
-        [class]="{
-          png: document.extension === 'png',
-          jpg: document.extension === 'jpg',
-          pdf: document.extension === 'pdf',
-          doc: document.extension === 'doc',
-          docx: document.extension === 'docx',
-          xls: document.extension === 'xls',
-          xlsx: document.extension === 'xlsx',
-          ppt: document.extension === 'ppt',
-          pptx: document.extension === 'pptx',
-          csv: document.extension === 'csv',
-          psd: document.extension === 'psd',
-          xml: document.extension === 'xml',
-          zip: document.extension === 'zip',
-          tiff: document.extension === 'tiff',
-        }"
-        alt="Preview" />
+      <sd-upload-file-type-icon class="c-document-image" [extension]="document.extension" [size]="24"></sd-upload-file-type-icon>
       <!-- why: `href="javascript:;"` là link giả — screen reader đọc "link" dù không điều hướng, và bị CSP
            chặn `javascript:` URL. Hành động tải xuống là button. -->
       <button type="button" class="c-file-name T14M" (click)="onDownload(document)">{{ document.fileName || 'file' }}</button>
-      @if (document.fileSize) {
+      @let meta = document | sdUploadFileMeta: locale();
+      @if (meta) {
         <span class="T12R text-secondary"> - </span>
-        <span class="T12R text-secondary flex-shrink-0">{{ document.fileSize / 1024 | sdFormatNumber }}KB</span>
+        <span class="T12R text-secondary flex-shrink-0">{{ meta }}</span>
       }
 
       @if (!formControl.disabled) {

@@ -548,13 +548,32 @@ describe('SdUploadFile', () => {
       component.previewFiles.set([makePreviewFile({ fileName: 'hop-dong.pdf', extension: 'pdf' })]);
       fixture.detectChanges();
 
-      const image = fixture.nativeElement.querySelector('.c-document-image') as HTMLElement;
-      const content = getComputedStyle(image).content;
+      const icon = fixture.nativeElement.querySelector('.c-document-image') as HTMLElement;
+      const image = getComputedStyle(icon).backgroundImage;
 
+      // Đợt 3 · 4a: một component icon dùng chung thay ba bảng `[class]` + `content: url(...)`.
       // Bộ icon là SVG: build có thể giữ nguyên đường dẫn hoặc inline thành data URI, cả hai đều
       // phải là svg — không được rơi lại về .png cũ.
-      expect(content).toMatch(/svg/);
-      expect(content).not.toMatch(/\.png/);
+      expect(icon.tagName).toBe('SD-UPLOAD-FILE-TYPE-ICON');
+      expect(icon.classList).toContain('sd-upload-file-type-icon--pdf');
+      expect(image).toMatch(/svg/);
+      expect(image).not.toMatch(/\.png/);
+    });
+
+    // why: dung lượng từng luôn tính KB (`fileSize / 1024`), kể cả file vài MB.
+    it('shows the extension and the size in KB or MB in the number format of the language', async () => {
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      component.previewFiles.set([
+        makePreviewFile({ fileName: 'hop-dong.pdf', extension: 'pdf', fileSize: 2.4 * 1024 * 1024 }),
+        makePreviewFile({ fileName: 'bien-ban.docx', extension: 'docx', fileSize: 640 * 1024 }),
+      ]);
+      fixture.detectChanges();
+
+      const rows = Array.from(fixture.nativeElement.querySelectorAll('.c-document-container')) as HTMLElement[];
+      expect(rows[0].textContent).toContain('PDF · 2,4 MB');
+      expect(rows[1].textContent).toContain('DOCX · 640 KB');
     });
   });
 
