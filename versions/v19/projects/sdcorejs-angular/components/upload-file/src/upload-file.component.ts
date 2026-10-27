@@ -488,9 +488,9 @@ export class SdUploadFile<TArgs = unknown> {
   };
 
   #uploadFile = async (originFiles: File[]) => {
-    const currentModel = [...(this.model() || [])];
     const pickedFiles = new Map<string, File>();
-    if (originFiles.length + currentModel.length > this.max()) {
+    const pickedKeys: string[] = [];
+    if (originFiles.length + (this.model() || []).length > this.max()) {
       this.#notifyService.warning(this.#i18n.t('core.component.upload-file.too-many-files'));
       return;
     }
@@ -507,8 +507,16 @@ export class SdUploadFile<TArgs = unknown> {
       const hashedKey = this.#uploadFileService.add(file);
       if (hashedKey) {
         pickedFiles.set(hashedKey, file);
-        currentModel.push(hashedKey);
+        pickedKeys.push(hashedKey);
       }
+    }
+    if (this.#destroyed) return;
+    // why: resize/validate có await; upload(), xoá, sắp xếp hoặc lần chọn khác có thể đã đổi model.
+    // Nối batch vào model MỚI NHẤT, không ghi lại bản chụp cũ làm mất ID vừa upload hay file vừa chọn.
+    const currentModel = [...(this.model() || []), ...pickedKeys];
+    if (currentModel.length > this.max()) {
+      this.#notifyService.warning(this.#i18n.t('core.component.upload-file.too-many-files'));
+      return;
     }
     // why: giữ batch riêng qua từng await validate/resize; cache chung và effect của
     // model cũ có thể mất hash trước khi picker hoàn tất. Chỉ nhận ownership khi commit.

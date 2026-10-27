@@ -128,6 +128,10 @@ Upload behavior:
   or disable editing during submission.
 - Successful IDs replace matching local keys in the **latest** model. Reordering
   is preserved, removed keys are not restored, and unrelated new keys are retained.
+- A file pick that finishes its checks (resize, image validation) after `model`
+  changed appends its keys to the **latest** model and checks `max` again, so it
+  cannot restore keys replaced by a finished upload or drop another pick. A pick
+  that finishes after destruction does not update the model.
 - A handler rejection or synchronous throw propagates to the caller without
   changing the model or cache. A missing handler shows the configuration error
   and resolves without changing either.

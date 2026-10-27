@@ -217,6 +217,100 @@ describe('SdUploadFile asynchronous model consistency', () => {
     secondFixture.destroy();
   }));
 
+  describe('a pick that finishes validation after the model changed', () => {
+    let images: HTMLImageElement[];
+    let picker: jasmine.Spy;
+    let warning: jasmine.Spy;
+
+    beforeEach(() => {
+      images = [];
+      spyOn(window, 'Image').and.callFake(function () {
+        const img = { width: 1, height: 1, onload: null, src: '' } as unknown as HTMLImageElement;
+        images.push(img);
+        return img;
+      });
+      spyOn(URL, 'createObjectURL').and.returnValue('blob:synthetic-validation');
+      picker = spyOn(BrowserUtilities, 'upload');
+      warning = spyOn(TestBed.inject(SdNotifyService), 'warning');
+      fixture.componentRef.setInput('imageValidator', () => null);
+    });
+
+    // why: imageValidator giữ #uploadFile ở await validate cho tới khi test gọi onload.
+    function pick(file: File) {
+      picker.and.resolveTo(file);
+      component.onUpload();
+      flushMicrotasks();
+      return images[images.length - 1];
+    }
+
+    function validate(image: HTMLImageElement) {
+      image.onload!.call(image, new Event('load'));
+      render();
+    }
+
+    const localNames = () => component.model().map(key => cache.get(String(key))?.name ?? key);
+
+    it('keeps the server ID of an upload that settled during validation', fakeAsync(() => {
+      const { hash } = addFile();
+      const fileC = makeFile('C.png');
+      const image = pick(fileC);
+      component.upload();
+      render();
+      expect(component.model()).toEqual(['B']);
+
+      validate(image);
+      expect(component.model()).not.toContain(hash);
+      expect(localNames()).toEqual(['B', 'C.png']);
+
+      upload.and.resolveTo(['C']);
+      component.upload();
+      render();
+      expect(upload.calls.mostRecent().args[0]).toEqual([fileC]);
+      expect(component.model()).toEqual(['B', 'C']);
+    }));
+
+    it('keeps a pick that committed while an earlier pick was validating', fakeAsync(() => {
+      const fileB = makeFile();
+      const fileC = makeFile('C.png');
+      const first = pick(fileB);
+      const second = pick(fileC);
+      validate(second);
+      validate(first);
+      expect(localNames()).toEqual(['C.png', 'B.png']);
+
+      upload.and.resolveTo(['C', 'B']);
+      component.upload();
+      render();
+      expect(upload).toHaveBeenCalledOnceWith([fileC, fileB], undefined);
+      expect(component.model()).toEqual(['C', 'B']);
+    }));
+
+    it('rechecks max against the latest model before committing', fakeAsync(() => {
+      fixture.componentRef.setInput('max', 2);
+      addFile();
+      const first = pick(makeFile('C.png'));
+      const second = pick(makeFile('D.png'));
+      validate(second);
+      validate(first);
+      expect(localNames()).toEqual(['B.png', 'D.png']);
+      expect(warning).toHaveBeenCalledTimes(1);
+    }));
+
+    it('does not commit a pick after destruction', fakeAsync(() => {
+      const { hash } = addFile();
+      const image = pick(makeFile('C.png'));
+      const modelChanged = jasmine.createSpy('modelChanged');
+      component.model.subscribe(modelChanged);
+      fixture.destroy();
+      const warn = spyOn(console, 'warn');
+      image.onload!.call(image, new Event('load'));
+      flushMicrotasks();
+      expect(component.model()).toEqual([hash]);
+      expect(modelChanged).not.toHaveBeenCalled();
+      expect(warn).not.toHaveBeenCalled();
+    }));
+  });
+
   for (const cleared of [[], null, 'invalid']) {
     it(
       'releases local ownership after observing cleared model: ' + JSON.stringify(cleared),
