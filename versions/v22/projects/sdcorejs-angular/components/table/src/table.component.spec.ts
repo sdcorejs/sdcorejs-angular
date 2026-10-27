@@ -627,6 +627,16 @@ describe('empty result reload action', () => {
 
     fixture.destroy();
   }));
+
+  // why: the page-size list opens in the panel of sd-select (rounded, bordered, 36px options from core/form.scss).
+  it('opens the page-size list in the sd-select panel', fakeAsync(() => {
+    const fixture = createLoadedFixture();
+    const paginator = fixture.debugElement.query(By.css('mat-paginator')).componentInstance as { selectConfig: { panelClass?: unknown } };
+
+    expect(paginator.selectConfig.panelClass).toEqual(['sd-select-panel', 'sd-table-page-size-panel']);
+
+    fixture.destroy();
+  }));
 });
 
 describe('STT (index) column — renderIndex fix (multiTemplateDataRows)', () => {
