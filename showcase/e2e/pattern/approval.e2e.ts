@@ -44,3 +44,19 @@ test('replaces the list with the detail on a narrow screen, with a way back', as
   await expect(page).toHaveURL(/\/pattern\/approval$/);
   await expect(rows.first()).toBeVisible();
 });
+
+test('resizes the list by dragging the splitter and keeps its paginator in view', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openPattern(page, 'approval');
+  await tableRows(page);
+  const list = page.locator('sd-splitter-panel').first();
+  const handle = page.locator('sd-splitter').getByRole('separator');
+  const before = (await list.boundingBox())!.width;
+  const box = (await handle.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + 120, box.y + box.height / 2, { steps: 8 });
+  await page.mouse.up();
+  await expect.poll(async () => Math.round((await list.boundingBox())!.width)).toBe(Math.round(before) + 120);
+  await expect(list.locator('sd-table .c-paginator')).toBeInViewport();
+});

@@ -16,12 +16,15 @@ export interface PatternState {
  * keep what the test changed since, like a real browser tab.
  */
 export async function initPattern(page: Page, state: PatternState = {}): Promise<void> {
-  await page.addInitScript(({ role, latencyMs, failure }) => {
-    if (sessionStorage.getItem('sd-pattern.e2e')) return;
-    sessionStorage.setItem('sd-pattern.e2e', '1');
-    sessionStorage.setItem('sd-pattern.role', JSON.stringify(role));
-    sessionStorage.setItem('sd-pattern.mock-api', JSON.stringify({ latencyMs, failure }));
-  }, { role: state.role ?? 'admin', latencyMs: state.latencyMs ?? 0, failure: state.failure ?? 'none' });
+  await page.addInitScript(
+    ({ role, latencyMs, failure }) => {
+      if (sessionStorage.getItem('sd-pattern.e2e')) return;
+      sessionStorage.setItem('sd-pattern.e2e', '1');
+      sessionStorage.setItem('sd-pattern.role', JSON.stringify(role));
+      sessionStorage.setItem('sd-pattern.mock-api', JSON.stringify({ latencyMs, failure }));
+    },
+    { role: state.role ?? 'admin', latencyMs: state.latencyMs ?? 0, failure: state.failure ?? 'none' }
+  );
 }
 
 /** Opens a pattern route with the given toolbar state. */
@@ -39,7 +42,10 @@ export async function tableRows(page: Page, scope: Locator | Page = page): Promi
 
 /** Types a quick search term and applies it with Enter (sd-table applies quick search on Enter). */
 export async function quickSearch(page: Page, term: string): Promise<void> {
-  const input = page.locator('sd-table').getByPlaceholder(/Tìm theo/).first();
+  const input = page
+    .locator('sd-table')
+    .getByPlaceholder(/Tìm theo/)
+    .first();
   await input.fill(term);
   await input.press('Enter');
 }
