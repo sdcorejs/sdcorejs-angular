@@ -34,6 +34,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.3] - 2026-10-29
+
+Packages `19.3.3` · `20.3.3` · `21.3.3` · `22.3.3`, validated against `*.3.2`.
+
 > [!IMPORTANT]
 > **Before upgrading:** `SdChip` drops its unused autocomplete path (`onSelect()`, `selectable`, `separatorKeysCodes`), stops exporting `SdRemovableChipPipe`, and `isFocused` becomes a signal. Upload file `upload()` now rejects unless the handler returns one non-empty string ID per file, in order. Defaults that change: chips are added on blur, one-line table rows are 36px, upload previews are 72px, and `<sd-table>` no longer covers itself with a dark overlay while loading (skeleton rows, or a progress bar after 300 ms); apps that styled `.c-loading` or `.lds-ring` inside the table must drop those overrides.
 
@@ -2688,7 +2692,8 @@ Packages `19.0.0` · `20.0.0` · `21.0.0`.
 
 ---
 
-[Unreleased]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.2...HEAD
+[Unreleased]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.3...HEAD
+[3.3]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.2...v3.3
 [3.2]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.1...v3.2
 [3.1]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.0...v3.1
 [3.0]: https://github.com/sdcorejs/sdcorejs-angular/compare/v2.15...v3.0
