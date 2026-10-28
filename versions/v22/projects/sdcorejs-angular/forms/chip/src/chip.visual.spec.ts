@@ -256,6 +256,46 @@ describe('SdChip · design handoff CH3 · chip scale and look', () => {
       expect(name(free)).withContext('a removable chip keeps its text as its name').toBeNull();
     });
 
+    // why: Material để các ô của chip `min-width: auto`, nên chữ dài không co khi field hẹp hơn chip: chip co theo
+    // `max-width: 100%` còn ✕ / khoá bị đẩy ra ngoài viền (tới 100px ở field 180px).
+    it('keeps a chip with long text as wide as its 240px text when the field has room', async () => {
+      const long = 'https://sdcorejs.github.io/sdcorejs-angular/v/latest/forms/chip/examples';
+      await create({ width: 420, model: [long, `${long}/locked`], removable: item => item === long });
+      for (const row of rows()) {
+        const name = row.classList.contains('sd-chip__chip--locked') ? 'lock' : '✕';
+        const glyph = row.querySelector('.mat-mdc-chip-remove mat-icon, .sd-chip__lock mat-icon') as HTMLElement;
+        const text = row.querySelector('.sd-chip__chip-text') as HTMLElement;
+        expect(box(text).width).withContext(`${name}: text`).toBeCloseTo(240, 0);
+        expect(box(glyph).left - box(text).right)
+          .withContext(`text → ${name}, no gap`)
+          .toBeCloseTo(4, 0);
+        expect(box(row).right - box(glyph).right)
+          .withContext(`${name} → chip edge`)
+          .toBeCloseTo(5, 0);
+      }
+    });
+
+    for (const width of [300, 200]) {
+      it(`keeps ✕ and lock inside a chip whose long text a ${width}px field cuts`, async () => {
+        const long = 'https://sdcorejs.github.io/sdcorejs-angular/v/latest/forms/chip/examples';
+        await create({ width, model: [long, `${long}/locked`], removable: item => item === long });
+        expect(rows().length).toBe(2);
+        for (const row of rows()) {
+          const name = row.classList.contains('sd-chip__chip--locked') ? 'lock' : '✕';
+          const glyph = row.querySelector('.mat-mdc-chip-remove mat-icon, .sd-chip__lock mat-icon') as HTMLElement;
+          const text = row.querySelector('.sd-chip__chip-text') as HTMLElement;
+          expect(box(row).right).withContext(`${name}: chip inside the field`).toBeLessThanOrEqual(box(wrapper()).right);
+          expect(box(row).right - box(glyph).right)
+            .withContext(`${name} → chip edge`)
+            .toBeCloseTo(5, 0);
+          expect(box(glyph).left - box(text).right)
+            .withContext(`text → ${name}`)
+            .toBeCloseTo(4, 0);
+          expect(text.scrollWidth).withContext(`${name}: text is cut`).toBeGreaterThan(text.clientWidth);
+        }
+      });
+    }
+
     it('shows neither ✕ nor lock while disabled', async () => {
       await create({ model: ['alpha'], removable: false, disabled: true });
       expect(host().querySelector('.sd-chip__lock')).toBeNull();

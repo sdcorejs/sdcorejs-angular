@@ -22,12 +22,15 @@
 // trong core/form.scss (handoff design-icon-chip-table · C1 C2 C3), áp lên `mat-form-field.sd-chip-field`.
 
 // Chữ chip dừng ở 240px rồi cắt "…"; tooltip chỉ bật cho chip bị cắt (B7).
+// why: khối (block) thì chữ lấp đúng bề rộng nhãn, nên field hẹp hơn chip làm chữ co và ✕ / khoá vẫn nằm trong chip (xem
+// rule `.sd-chip-field` trong core/form.scss cho các ô của mat-chip-row). Không dùng `max-width: min(240px, 100%)`: phần
+// trăm bị bỏ qua khi đo bề rộng tự nhiên, nên chip chữ dài giãn hết dòng.
 .sd-chip__chip-text {
-  display: inline-block;
+  display: block;
+  min-width: 0;
   max-width: 240px;
   overflow: hidden;
   text-overflow: ellipsis;
-  vertical-align: bottom;
 }
 
 /* CSS sdViewDef */

@@ -746,6 +746,21 @@ mat-checkbox {
 
 .mat-mdc-form-field.sd-chip-field {
   @include sd-chip-row('sd-chip', var(--sd-chip-locked-bg), var(--sd-chip-more-hover-bg), $duplicate-bg: var(--sd-chip-duplicate-bg));
+
+  // why: Material để các ô của chip `min-width: auto`, nên chữ dài (tới 240px) giữ nguyên bề rộng khi field hẹp hơn chip:
+  // chip co theo `max-width: 100%` còn ✕ (hoặc khoá) bị đẩy ra ngoài viền. Cho các ô co tới 0 để chữ cắt "…" trong nhãn;
+  // khoá nằm trong nhãn nên không được co theo chữ. Chỉ sd-chip có chữ tự do dài; chip ngày của sd-chip-calendar thì không.
+  .sd-chip__chip.mat-mdc-chip-row {
+    .mdc-evolution-chip__cell--primary,
+    .mdc-evolution-chip__action--primary,
+    .mdc-evolution-chip__text-label {
+      min-width: 0;
+    }
+  }
+
+  .sd-chip__lock {
+    flex-shrink: 0;
+  }
 }
 
 .mat-mdc-form-field.sd-chip-calendar-field {
