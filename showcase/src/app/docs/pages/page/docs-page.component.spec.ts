@@ -199,6 +199,81 @@ describe('DocsPageComponent', () => {
     expect(fixture?.nativeElement.querySelectorAll('.page-header__identity button')).toHaveSize(2);
   });
 
+  it('renders API tables as filterable rows with deep links and hides groups without matches', async () => {
+    const inputs: MarkdownSection = {
+      heading: 'Inputs',
+      id: 'inputs',
+      level: 2,
+      markdown: "| Name | Type | Default | Notes |\n| --- | --- | --- | --- |\n| `type` | `'fill' \\| 'light'` | `'light'` | Visual variant. |\n| `size` | `'sm' \\| 'md'` | `'sm'` | Height. |",
+    };
+    const outputs: MarkdownSection = {
+      heading: 'Outputs',
+      id: 'outputs',
+      level: 2,
+      markdown: '| Name | Type | Notes |\n| --- | --- | --- |\n| `click` | `Event` | Throttled. |',
+    };
+    await setup({ tab: 'api', viewModel: publishedView({ api: [inputs, outputs] }) });
+    const element = fixture!.nativeElement as HTMLElement;
+
+    expect([...element.querySelectorAll('.api-row')].map(row => row.id)).toEqual(['api-inputs-type', 'api-inputs-size', 'api-outputs-click']);
+    expect([...element.querySelectorAll('#api-inputs-type .api-row__type')].map(chip => chip.textContent)).toEqual(["'fill'", "'light'"]);
+    expect(element.querySelector('#api-inputs-type .api-row__default')?.textContent).toContain("'light'");
+    expect(element.querySelector('.api-filter__count')?.textContent?.trim()).toBe('3 entries');
+
+    const filter = element.querySelector('.api-filter input') as HTMLInputElement;
+    filter.value = 'throttled';
+    filter.dispatchEvent(new Event('input'));
+    fixture!.detectChanges();
+    expect(element.querySelector('#inputs')).toBeNull();
+    expect([...element.querySelectorAll('.api-row')].map(row => row.id)).toEqual(['api-outputs-click']);
+    expect(element.querySelector('.api-filter__count')?.textContent?.trim()).toBe('1 entries');
+
+    filter.value = 'nothing-matches';
+    filter.dispatchEvent(new Event('input'));
+    fixture!.detectChanges();
+    expect(element.querySelector('.api-empty')?.textContent?.trim()).toBe('No matching entries');
+  });
+
+  it('renders service methods as cards with shared options collapsed', async () => {
+    const method = (name: string, extra: string): MarkdownSection => ({
+      heading: `\`${name}(message, option?): Promise<string>\``,
+      id: name,
+      level: 3,
+      markdown: [
+        `${name} dialog.`,
+        '',
+        '```typescript',
+        `${name}(`,
+        '  option?: {',
+        "    title?: string;   // default: 'Xác nhận'",
+        `    ${extra}?: string;`,
+        '  }',
+        '): Promise<string>;',
+        '```',
+      ].join('\n'),
+    });
+    await setup({
+      category: 'services',
+      slug: 'confirm',
+      tab: 'api',
+      viewModel: publishedView({ api: [section('Public API', 'public-api'), method('confirm', 'width'), method('withInput', 'label')] }),
+    });
+    const element = fixture!.nativeElement as HTMLElement;
+
+    expect([...element.querySelectorAll('.method')].map(card => card.id)).toEqual(['api-methods-confirm', 'api-methods-withInput']);
+    expect([...element.querySelectorAll('#api-methods-confirm .method-option__name')].map(name => name.textContent)).toEqual(['width']);
+    const toggle = element.querySelector('#api-methods-confirm .method__toggle') as HTMLButtonElement;
+    expect(toggle.textContent).toContain('Show 1 shared options');
+
+    toggle.click();
+    fixture!.detectChanges();
+    expect([...element.querySelectorAll('#api-methods-confirm .method-option__name')].map(name => name.textContent)).toEqual([
+      'width',
+      'title',
+    ]);
+    expect(element.querySelector('#api-methods-confirm .method-option__default')?.textContent).toContain("'Xác nhận'");
+  });
+
   it('clearly distinguishes archived documentation from current live examples', async () => {
     await setup({ version: '20.1.2', latestVersion: '21.1.2' });
 

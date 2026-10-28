@@ -80,4 +80,13 @@ export const VI_UI_STRINGS: DocsUiStrings = {
   changedIn: 'Thay đổi trong {v}',
   fullChangelog: 'Xem toàn bộ thay đổi',
   quickStart: 'Bắt đầu nhanh',
+  defaultValue: 'Mặc định',
+  filterApi: 'Lọc theo tên, kiểu hoặc mô tả',
+  entries: '{n} mục',
+  notTranslated: 'Chưa có bản dịch. Đang hiển thị tiếng Anh.',
+  options: 'Tùy chọn',
+  sharedOption: 'dùng chung',
+  showShared: 'Hiện {n} tùy chọn dùng chung',
+  hideShared: 'Ẩn tùy chọn dùng chung',
+  methods: 'Phương thức',
 };

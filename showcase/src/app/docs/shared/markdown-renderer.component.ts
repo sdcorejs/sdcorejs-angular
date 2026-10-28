@@ -2,12 +2,25 @@ import { DOCUMENT, Location } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, input, signal } from '@angular/core';
 import { Params, Router } from '@angular/router';
 import Prism from 'prismjs';
+import { ApiTypeChip, booleanAttributeNames, isApiTable, matchesApiQuery, parseApiTable } from '../core/api-table.parser';
+import { DocsI18nService } from '../core/docs-i18n.service';
 import { toMarkdownAnchor, toMarkdownBlocks } from '../core/markdown-parser';
 import { DOC_PAGES } from '../core/documentation.registry';
 import { buildDocsFragmentHref } from './docs-fragment-link.directive';
 
+interface ApiRowView {
+  readonly id: string;
+  readonly href: string;
+  readonly name: string;
+  readonly types: readonly ApiTypeChip[];
+  readonly flag: string | null;
+  readonly defaultValue: string | null;
+  readonly descriptionHtml: string;
+}
+
 interface MarkdownBlockView {
-  readonly kind: 'heading' | 'paragraph' | 'quote' | 'list' | 'code' | 'table';
+  readonly kind: 'heading' | 'paragraph' | 'quote' | 'list' | 'code' | 'table' | 'api';
+  readonly apiRows?: readonly ApiRowView[];
   readonly level?: number;
   readonly id?: string;
   readonly html?: string;
@@ -154,6 +167,29 @@ function highlightCode(code: string, language: string): string {
                 aria-label="Scrollable code block"><code [class]="'language-' + (block.language || 'text')" [innerHTML]="block.html"></code></pre>
             </div>
           }
+          @case ('api') {
+            <div class="api-rows">
+              @for (row of block.apiRows; track row.id) {
+                <div class="api-row" [id]="row.id">
+                  <div class="api-row__head">
+                    <a class="api-row__name" [href]="row.href"><code>{{ row.name }}</code></a>
+                    @for (type of row.types; track $index) {
+                      <code class="api-row__type" [class.api-row__type--literal]="type.literal">{{ type.text }}</code>
+                    }
+                    @if (row.flag) {
+                      <span class="api-row__flag">{{ row.flag }}</span>
+                    }
+                    @if (row.defaultValue) {
+                      <span class="api-row__default">{{ i18n.t().defaultValue }} <code>{{ row.defaultValue }}</code></span>
+                    }
+                  </div>
+                  @if (row.descriptionHtml) {
+                    <div class="api-row__description" [innerHTML]="row.descriptionHtml"></div>
+                  }
+                </div>
+              }
+            </div>
+          }
           @case ('table') {
             <div class="docs-table-wrap" tabindex="0" aria-label="Scrollable API table">
               <table>
@@ -193,6 +229,11 @@ export class MarkdownRendererComponent {
   readonly version = input<string | null>(null);
   readonly sourcePublishedDocId = input<string | null>(null);
   readonly language = input<string | null>(null);
+  /** When set, member tables (Name / Type / Default / Notes…) render as API rows with ids api-<group>-<name>. */
+  readonly apiGroupId = input<string | null>(null);
+  /** API filter; rows that do not match are left out. */
+  readonly apiQuery = input('');
+  readonly i18n = inject(DocsI18nService);
   readonly copyResult = signal<{ readonly code: string; readonly status: 'success' | 'error' } | null>(null);
   readonly copyAnnouncement = computed(() => {
     const result = this.copyResult();
@@ -200,12 +241,31 @@ export class MarkdownRendererComponent {
     if (result?.status === 'error') return 'Code block could not be copied.';
     return '';
   });
-  readonly blocks = computed<readonly MarkdownBlockView[]>(() =>
-    toMarkdownBlocks(this.markdown()).map((block): MarkdownBlockView => {
+  readonly blocks = computed<readonly MarkdownBlockView[]>(() => {
+    const markdown = this.markdown();
+    const apiGroupId = this.apiGroupId();
+    const apiQuery = this.apiQuery();
+    const booleanAttributes = apiGroupId ? booleanAttributeNames(markdown) : new Set<string>();
+    const { pathname, search } = this.#document.location;
+    return toMarkdownBlocks(markdown).map((block): MarkdownBlockView => {
       const renderInline = (value: string): string =>
-        renderInlineMarkdown(value, this.linkBaseUrl(), this.#document.location.pathname, this.#document.location.search, target =>
-          this.#resolveInternalDocsLink(target)
-        );
+        renderInlineMarkdown(value, this.linkBaseUrl(), pathname, search, target => this.#resolveInternalDocsLink(target));
+      if (block.kind === 'table' && apiGroupId && isApiTable(block.headers)) {
+        return {
+          kind: 'api',
+          apiRows: parseApiTable(block.headers, block.rows, apiGroupId, booleanAttributes)
+            .filter(row => matchesApiQuery(row, apiQuery))
+            .map(row => ({
+              id: row.id,
+              href: buildDocsFragmentHref(pathname, search, row.id),
+              name: row.name,
+              types: row.types,
+              flag: row.flag,
+              defaultValue: row.defaultValue,
+              descriptionHtml: row.description ? renderInline(row.description) : '',
+            })),
+        };
+      }
       switch (block.kind) {
         case 'heading':
           return { kind: block.kind, level: block.level, id: block.id, html: renderInline(block.text) };
@@ -223,8 +283,8 @@ export class MarkdownRendererComponent {
             rows: block.rows.map(row => row.map(renderInline)),
           };
       }
-    })
-  );
+    });
+  });
   #copyRequestId = 0;
   #copyResetTimeout: number | undefined;
 

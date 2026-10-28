@@ -4,7 +4,9 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router, RouterLink, Scroll } from '@angular/router';
 import { filter } from 'rxjs';
+import { ApiMethod, ApiRow, apiRowsOfMarkdown, matchesApiQuery, parseApiMethod } from '../../core/api-table.parser';
 import { DocsI18nService } from '../../core/docs-i18n.service';
+import { foldSearchText } from '../../core/docs-search.utils';
 import { DocsReleaseNotesService } from '../../core/docs-release-notes.service';
 import { DocsVersionService } from '../../core/docs-version.service';
 import { buildVersionRoute } from '../../core/docs-version.utils';
@@ -14,7 +16,7 @@ import { MarkdownSection, PublishedDocTabsViewModel } from '../../core/published
 import { PublishedDocsService } from '../../core/published-docs.service';
 import { ExampleViewerComponent } from '../../shared/example-viewer.component';
 import { MarkdownRendererComponent } from '../../shared/markdown-renderer.component';
-import { DocsApiSummaryComponent } from '../../shared/docs-api-summary.component';
+import { DocsApiMethodsComponent } from '../../shared/docs-api-methods.component';
 import { DocsPageHeaderComponent } from '../../shared/docs-page-header.component';
 import { DocsPageTabLink, DocsPageTabsComponent } from '../../shared/docs-page-tabs.component';
 import { DocsTableOfContentsComponent, DocsTocItem } from '../../shared/docs-table-of-contents.component';
@@ -23,19 +25,23 @@ import { resolveDocsPageAvailability } from '../../shared/docs-page-availability
 const LIBRARY_SOURCE_ROOT = 'https://github.com/sdcorejs/sdcorejs-angular/blob/main/versions/v19/projects/sdcorejs-angular/';
 const PURPOSE_HEADING = /^one-line purpose$/i;
 
-/** Number of body rows in the Markdown tables of the API sections (the API tab count). */
-export function countApiTableRows(sections: readonly MarkdownSection[]): number {
-  let rows = 0;
-  for (const section of sections) {
-    const lines = section.markdown.split(/\r?\n/).map(line => line.trim());
-    for (let index = 0; index < lines.length; index += 1) {
-      const isRow = lines[index].startsWith('|');
-      const isHeader = isRow && /^\|?\s*:?-{2,}/.test(lines[index + 1] ?? '');
-      const isSeparator = /^\|?\s*:?-{2,}/.test(lines[index]);
-      if (isRow && !isHeader && !isSeparator) rows += 1;
-    }
-  }
-  return rows;
+interface ApiSectionView {
+  readonly section: MarkdownSection;
+  readonly method: ApiMethod | null;
+  readonly rows: readonly ApiRow[];
+}
+
+/** API sections with their parsed member rows; method signature sections become method cards. */
+export function toApiSections(sections: readonly MarkdownSection[]): ApiSectionView[] {
+  return sections.map(section => {
+    const method = parseApiMethod(section.heading, section.markdown);
+    return { section, method, rows: method ? [] : apiRowsOfMarkdown(section.markdown, section.id) };
+  });
+}
+
+/** API members of a document (table rows and method options): the API tab count. */
+export function countApiEntries(sections: readonly MarkdownSection[]): number {
+  return toApiSections(sections).reduce((total, item) => total + item.rows.length + (item.method?.options.length ?? 0), 0);
 }
 
 /** First paragraph of a Markdown section as plain text with `code` kept. */
@@ -55,7 +61,7 @@ export function firstParagraph(markdown: string): string | null {
     MatIconModule,
     MarkdownRendererComponent,
     ExampleViewerComponent,
-    DocsApiSummaryComponent,
+    DocsApiMethodsComponent,
     DocsPageHeaderComponent,
     DocsPageTabsComponent,
     DocsTableOfContentsComponent,
@@ -100,10 +106,9 @@ export class DocsPageComponent {
       .map(tab => ({
         ...tab,
         commands: ['/v', this.version(), page.category, page.slug, tab.id],
-        count: tab.id === 'api' && view ? countApiTableRows(view.api) || null : tab.id === 'examples' ? page.examples.length || null : null,
+        count: tab.id === 'api' && view ? countApiEntries(view.api) || null : tab.id === 'examples' ? page.examples.length || null : null,
       }));
   });
-  readonly metadata = computed(() => Object.entries(this.viewModel()?.parsed.metadata ?? {}));
   readonly metadataRecord = computed<Readonly<Record<string, string>>>(() => this.viewModel()?.parsed.metadata ?? {});
   readonly purposeSection = computed(() => this.viewModel()?.overview.find(section => PURPOSE_HEADING.test(section.heading.trim())) ?? null);
   readonly lead = computed(() => {
@@ -122,6 +127,29 @@ export class DocsPageComponent {
     return page && this.isLatestRelease() ? this.#releaseNotes.entriesFor(page.id) : [];
   });
   readonly changelogLink = computed(() => ['/v', this.version(), 'changelog']);
+  readonly untranslated = computed(() => this.i18n.language() === 'vi');
+  readonly apiQuery = signal('');
+  readonly apiSections = computed(() => (this.tab() === 'api' ? toApiSections(this.sections()) : []));
+  readonly apiMethods = computed(() => this.apiSections().flatMap(item => (item.method ? [item.method] : [])));
+  readonly firstMethodSectionId = computed(() => this.apiSections().find(item => item.method)?.section.id ?? null);
+  /** Rows matching the API filter per section id; sections without rows count as 0. */
+  readonly apiMatches = computed(() => {
+    const query = this.apiQuery();
+    return new Map(this.apiSections().map(item => [item.section.id, item.rows.filter(row => matchesApiQuery(row, query)).length]));
+  });
+  readonly apiMatchCount = computed(() => {
+    const term = foldSearchText(this.apiQuery().trim());
+    const rows = [...this.apiMatches().values()].reduce((total, count) => total + count, 0);
+    const options = this.apiMethods().reduce(
+      (total, method) =>
+        total +
+        method.options.filter(
+          option => !term || foldSearchText([option.name, ...option.types.map(type => type.text), option.description].join(' ')).includes(term)
+        ).length,
+      0
+    );
+    return rows + options;
+  });
   readonly editUrl = computed(() => {
     const path = this.viewModel()?.document.path;
     return path ? `${LIBRARY_SOURCE_ROOT}${path}` : null;
@@ -161,11 +189,13 @@ export class DocsPageComponent {
           ]
         : liveExamples;
     }
-    const items: DocsTocItem[] = this.sections().map(section => ({
-      id: section.id,
-      label: section.heading,
-      level: section.level,
-    }));
+    const methods = new Map(this.apiSections().flatMap(item => (item.method ? [[item.section.id, item.method] as const] : [])));
+    const items: DocsTocItem[] = this.sections().map(section => {
+      const method = methods.get(section.id);
+      return method
+        ? { id: method.id, label: `${method.name}()`, level: section.level }
+        : { id: section.id, label: section.heading.replace(/`/g, ''), level: section.level };
+    });
     if (this.tab() === 'overview' && this.changes().length) {
       items.unshift({ id: 'changed', label: this.i18n.format('changedIn', { v: this.release() }), level: 2 });
     }
@@ -234,6 +264,15 @@ export class DocsPageComponent {
     this.#tabScrollTarget = Math.min(view.scrollY, tabsTop);
   }
 
+  onApiQuery(event: Event): void {
+    this.apiQuery.set((event.target as HTMLInputElement).value);
+  }
+
+  /** While filtering, sections without a matching member are hidden. */
+  showApiSection(sectionId: string): boolean {
+    return !this.apiQuery().trim() || (this.apiMatches().get(sectionId) ?? 0) > 0;
+  }
+
   retry(): void {
     const params = this.params();
     void this.#load(params.get('version'), params.get('category'), params.get('slug'), params.get('tab'));
@@ -253,6 +292,7 @@ export class DocsPageComponent {
 
     const sequence = ++this.#loadSequence;
     this.#loadedKey = null;
+    this.apiQuery.set('');
     this.loading.set(true);
     this.error.set(null);
     this.notFound.set(false);

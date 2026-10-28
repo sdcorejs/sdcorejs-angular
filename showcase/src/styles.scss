@@ -215,6 +215,22 @@ h3 {
   }
 }
 
+// Inline code inside rendered Markdown. The renderer writes this HTML through [innerHTML], so component styles
+// cannot reach it; these rules are global and scoped by the renderer's classes.
+.docs-markdown :is(p, li, td, th, blockquote, h3, h4) code,
+.api-row__description code {
+  border-radius: var(--docs-radius-chip);
+  background: var(--docs-bg-3);
+  padding: 1px 5px;
+  color: var(--docs-fg);
+  font-size: 0.88em;
+}
+
+.api-row__description a,
+.docs-markdown a {
+  color: var(--docs-acc);
+}
+
 // Prism tokens of highlighted code in the docs (Markdown code blocks and example sources).
 :is(pre, code) .token {
   &.comment,

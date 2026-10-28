@@ -65,6 +65,15 @@ export interface DocsUiStrings {
   readonly changedIn: string;
   readonly fullChangelog: string;
   readonly quickStart: string;
+  readonly defaultValue: string;
+  readonly filterApi: string;
+  readonly entries: string;
+  readonly notTranslated: string;
+  readonly options: string;
+  readonly sharedOption: string;
+  readonly showShared: string;
+  readonly hideShared: string;
+  readonly methods: string;
 }
 
 export type DocsLanguage = 'en' | 'vi';

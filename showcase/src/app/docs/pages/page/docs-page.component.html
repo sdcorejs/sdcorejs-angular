@@ -98,8 +98,27 @@
               </section>
             }
 
-            @if (tab() === 'api') {
-              <docs-api-summary [page]="currentPage" [metadata]="metadata()"></docs-api-summary>
+            @if (tab() === 'api' && apiSections().length) {
+              <label class="api-filter">
+                <mat-icon aria-hidden="true">search</mat-icon>
+                <input
+                  type="search"
+                  autocomplete="off"
+                  aria-describedby="docs-api-count"
+                  [attr.aria-label]="t.filterApi"
+                  [placeholder]="t.filterApi"
+                  [value]="apiQuery()"
+                  (input)="onApiQuery($event)" />
+                <span id="docs-api-count" class="api-filter__count">{{ i18n.format('entries', { n: apiMatchCount() }) }}</span>
+              </label>
+              <span class="docs-visually-hidden" role="status" aria-live="polite" aria-atomic="true">
+                {{ apiQuery().trim() ? (apiMatchCount() ? i18n.format('entries', { n: apiMatchCount() }) : t.noResults) : '' }}
+              </span>
+              @if (apiQuery().trim() && !apiMatchCount()) {
+                <p class="api-empty">{{ t.noResults }}</p>
+              }
+            } @else if (untranslated() && sections().length) {
+              <p class="untranslated"><mat-icon aria-hidden="true">translate</mat-icon>{{ t.notTranslated }}</p>
             }
 
             @if (notAvailable()) {
@@ -120,17 +139,51 @@
               </div>
             }
 
-            @for (section of sections(); track section.id) {
-              <section class="doc-section" [id]="section.id">
-                <h2>{{ section.heading }}</h2>
-                <docs-markdown-renderer
-                  [markdown]="section.markdown"
-                  [linkBaseUrl]="documentUrl()"
-                  language="vi"
-                  [version]="version()"
-                  [sourcePublishedDocId]="currentPage.publishedDocId">
-                </docs-markdown-renderer>
-              </section>
+            @if (tab() === 'api') {
+              @for (item of apiSections(); track item.section.id) {
+                @if (item.method) {
+                  @if (item.section.id === firstMethodSectionId()) {
+                    @if (untranslated()) {
+                      <p class="untranslated"><mat-icon aria-hidden="true">translate</mat-icon>{{ t.notTranslated }}</p>
+                    }
+                    <docs-api-methods [methods]="apiMethods()" [query]="apiQuery()"></docs-api-methods>
+                  }
+                } @else if (showApiSection(item.section.id)) {
+                  <section class="doc-section" [id]="item.section.id">
+                    <h2>
+                      {{ item.section.heading }}
+                      @if (item.rows.length) {
+                        <span class="doc-section__count">{{ apiMatches().get(item.section.id) }}</span>
+                      }
+                    </h2>
+                    @if (untranslated() && item.rows.length) {
+                      <p class="untranslated"><mat-icon aria-hidden="true">translate</mat-icon>{{ t.notTranslated }}</p>
+                    }
+                    <docs-markdown-renderer
+                      [markdown]="item.section.markdown"
+                      [linkBaseUrl]="documentUrl()"
+                      language="en"
+                      [version]="version()"
+                      [sourcePublishedDocId]="currentPage.publishedDocId"
+                      [apiGroupId]="item.section.id"
+                      [apiQuery]="apiQuery()">
+                    </docs-markdown-renderer>
+                  </section>
+                }
+              }
+            } @else {
+              @for (section of sections(); track section.id) {
+                <section class="doc-section" [id]="section.id">
+                  <h2>{{ section.heading }}</h2>
+                  <docs-markdown-renderer
+                    [markdown]="section.markdown"
+                    [linkBaseUrl]="documentUrl()"
+                    language="en"
+                    [version]="version()"
+                    [sourcePublishedDocId]="currentPage.publishedDocId">
+                  </docs-markdown-renderer>
+                </section>
+              }
             }
 
             @if (tab() === 'styling' && styleGuideSections().length) {

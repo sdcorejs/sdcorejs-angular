@@ -80,4 +80,13 @@ export const EN_UI_STRINGS: DocsUiStrings = {
   changedIn: 'What changed in {v}',
   fullChangelog: 'Full changelog',
   quickStart: 'Quick start',
+  defaultValue: 'Default',
+  filterApi: 'Filter by name, type or text',
+  entries: '{n} entries',
+  notTranslated: 'Not yet translated. Showing English.',
+  options: 'Options',
+  sharedOption: 'shared',
+  showShared: 'Show {n} shared options',
+  hideShared: 'Hide shared options',
+  methods: 'Methods',
 };

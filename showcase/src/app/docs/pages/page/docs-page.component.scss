@@ -54,6 +54,82 @@
   }
 }
 
+.doc-section__count {
+  margin-left: 10px;
+  color: var(--docs-fg-3);
+  font-family: var(--docs-font-mono);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+// API filter: matches name, type and description; the count and empty state follow it.
+.api-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  border: 1px solid var(--docs-line-2);
+  border-radius: var(--docs-radius-control);
+  background: var(--docs-bg);
+  padding: 0 12px;
+
+  &:focus-within {
+    border-color: var(--docs-acc);
+    box-shadow: 0 0 0 3px var(--docs-acc-soft);
+  }
+
+  mat-icon {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    color: var(--docs-fg-3);
+    font-size: 18px;
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--docs-fg);
+    font-size: 14.5px;
+
+    &::placeholder {
+      color: var(--docs-fg-3);
+    }
+  }
+
+  &__count {
+    flex: none;
+    color: var(--docs-fg-3);
+    font-family: var(--docs-font-mono);
+    font-size: 12px;
+  }
+}
+
+.api-empty {
+  margin: 32px 0;
+  color: var(--docs-fg-3);
+}
+
+.untranslated {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 10px;
+  color: var(--docs-fg-3);
+  font-size: 13px;
+
+  mat-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+  }
+}
+
 // "What changed in <release>" card at the top of Overview.
 .release-changes {
   scroll-margin-top: var(--docs-scroll-offset);
