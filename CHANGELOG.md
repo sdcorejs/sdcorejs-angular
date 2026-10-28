@@ -144,7 +144,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - `filter.externalFilterCollapsed` sets the initial collapsed state of the external filter.
 - `option.loading` and `SD_TABLE_CONFIGURATION.loading` (`SdTableOptionLoading`, merged field by field, option first) tune the loading layer: `skeleton` (default `true`), `skeletonRows` (5, or enough to fill a fixed-height table; 1–20), `showDelay` (300 ms), `minDuration` (400 ms) and `dim` (`true`).
   - The host attribute `data-loading-view` is `none`, `skeleton` or `refresh`; `data-loading` keeps following `loading()` at once.
-  - New i18n key `core.component.table.loaded` (“Đã tải xong {count} dòng”) in the five locales.
+  - New i18n keys `core.component.table.loaded` (“Đã tải xong {count} dòng”) and `core.component.table.loaded-one` in the five locales.
 
 #### Theme
 
@@ -198,13 +198,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - The page-size dropdown of the paginator looks like `<sd-select>`: 14px text and a `keyboard_arrow_down` chevron instead of Material's 12px text and triangle, centred in a 32px field, and its list opens in the `<sd-select>` panel (rounded, bordered, 36px options). Same for the pager of `paginate.total: 'unknown'`.
 - A one-line row is 36px high instead of Material's 52px (`--mat-table-row-item-container-height: 36px` on `<sd-table>`), as the table's dense design intended.
+  - Rows with longer text or buttons still grow. A screen that relied on 52px rows can set the token back with a selector more specific than the component's own, for example `.orders sd-table { --mat-table-row-item-container-height: 52px; }`.
 - Loading no longer covers the table with a dark overlay and a 100px spinner (which also blocked the header, filters and scrollbars, and stopped 56px above the bottom whatever the footer). The header, filters, sort, paginator and scrolling stay usable, and the keyboard is never blocked.
   - No rows yet (first read, after an empty result or an error, before the configuration is ready): skeleton rows under the real header at once, aligned with the columns; mobile cards show up to 3 skeleton cards.
-  - Rows on screen: they stay; a read longer than 300 ms dims them to 55% (pointer input off) and shows a 2px progress bar under the last header row, kept at least 400 ms. Faster reads show nothing.
-  - A hidden status region (`.sd-table-live`) reads “Đang tải dữ liệu bảng” when that layer shows and “Đã tải xong {count} dòng” when the read ends; the overlay's own status role is gone.
-  - A tree toggle or expand button that is loading stays in place with a 16px spinner (`aria-busy`), so keyboard focus no longer falls back to the page and the row keeps its height; mobile buttons swap `hourglass_empty` for the same spinner.
+  - Rows on screen: they stay; a read longer than 300 ms dims the table body to 55% (pointer input off, buttons in cells included) and shows a 2px progress bar under the last header row, kept at least 400 ms. Faster reads show nothing.
+  - A hidden status region (`.sd-table-live`) reads “Đang tải dữ liệu bảng” when that layer shows for a running read and “Đã tải xong {count} dòng” (rows on screen, expanded tree rows included) when the read ends; the overlay's own status role is gone.
+  - A tree toggle or expand button that is loading stays in place, so keyboard focus no longer falls back to the page and the row keeps its height: the tree chevron becomes a 16px spinner (`aria-busy`, `aria-disabled`), the expand `sd-button` shows its own loading spinner (`aria-busy` on `<sd-button>`). Mobile tree and expand buttons swap `hourglass_empty` for the 16px spinner.
 - A failed local read shows the same `sd-data-state` error block as a server table (title, message, “Thử lại” calling `reload()`, `sdDataStateTemplate`) instead of a line of text and a “Tải lại” button. The warning toast stays.
-  - Rows with longer text or buttons still grow. A screen that relied on 52px rows can set the token back with a selector more specific than the component's own, for example `.orders sd-table { --mat-table-row-item-container-height: 52px; }`.
 
 #### Upload file
 

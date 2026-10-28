@@ -999,6 +999,7 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.search-field.clear': '검색어 지우기',
   'core.component.table.loading': '표 데이터를 불러오는 중',
   'core.component.table.loaded': '{count}개 행을 불러왔습니다',
+  'core.component.table.loaded-one': '1개 행을 불러왔습니다',
   'core.component.upload-file.loading': '파일 업로드 중',
   'core.component.import-excel.loading': '데이터를 불러오는 중',
   'core.component.upload-file.remove': '파일 삭제',

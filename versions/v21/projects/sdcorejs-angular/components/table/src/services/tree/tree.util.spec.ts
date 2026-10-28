@@ -3,6 +3,7 @@ import { SdTableOptionTree, TableOptionTreeLazy, TableOptionTreeStatic } from '.
 import {
   collectFormattedTreeRows,
   clearTreeChildCache,
+  countVisibleTreeRows,
   filterMatchingChildren,
   flattenDataTree,
   flattenTree,
@@ -212,6 +213,17 @@ describe('tree.util', () => {
     const child = item({ id: 2, name: 'c' }, { level: 1, hasChildren: true, childItems: [grand] });
     const root = item({ id: 1, name: 'r' }, { hasChildren: true, childItems: [child] });
     expect(collectFormattedTreeRows([root]).map(r => r.data.id)).toEqual([1, 2, 3]);
+  });
+
+  it('countVisibleTreeRows counts roots and the children of expanded rows only', () => {
+    const grand = item({ id: 4, name: 'g' }, { level: 2, hasChildren: false });
+    const open = item({ id: 2, name: 'open' }, { level: 1, hasChildren: true, isExpanded: true, childItems: [grand] });
+    const closed = item({ id: 3, name: 'closed' }, { level: 1, hasChildren: true, isExpanded: false, childItems: [grand] });
+    const root = item({ id: 1, name: 'r' }, { hasChildren: true, isExpanded: true, childItems: [open, closed] });
+    const leaf = item({ id: 5, name: 'leaf' }, { hasChildren: false });
+    expect(countVisibleTreeRows([root, leaf])).toBe(5);
+    root.meta.tree!.isExpanded = false;
+    expect(countVisibleTreeRows([root, leaf])).toBe(2);
   });
 
   it('getChildrenFromData reads custom key', () => {

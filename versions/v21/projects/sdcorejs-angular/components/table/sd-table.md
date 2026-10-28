@@ -88,18 +88,19 @@ blocked. What shows depends on whether rows are on screen:
 | --- | --- | --- |
 | `none` | not loading, or a read faster than `showDelay` | the rows |
 | `skeleton` | `loading()` with no rows (first read, after an empty result or an error); also before the configuration is ready and while the first read of an option waits in its debounce | skeleton rows under the real header (`aria-hidden`), at once; mobile cards: up to 3 skeleton cards |
-| `refresh` | `loading()` with rows for longer than `showDelay` (300 ms), then at least `minDuration` (400 ms) | the old rows at `--sd-table-loading-dim` and ignoring the pointer, plus a 2px progress bar under the last header row (mobile: at the top of the card list) |
+| `refresh` | `loading()` with rows for longer than `showDelay` (300 ms), then at least `minDuration` (400 ms) | the table body (`tbody`) at `--sd-table-loading-dim` and ignoring the pointer, buttons in cells included, plus a 2px progress bar under the last header row (mobile: the card list, bar at its top) |
 
 - New rows render as soon as they arrive; only the bar and the dimming wait for `minDuration`.
   An empty or failed result ends `refresh` at once, so the empty/error region shows.
-- A read that replaces another (paging, sort, filter) keeps an already visible bar through the
-  debounce between them; a debounce alone never shows it.
+- A read that replaces another (paging, sort, filter) keeps an already visible bar or skeleton
+  through the debounce between them; a debounce alone never shows the bar.
 - `data-loading` and `aria-busy` are unchanged: they follow `loading()` at once, without delay.
 - Skeleton rows: 5, or enough to fill a table with a fixed height (fill mode, `style.maxHeight`),
   at most `paginate.pageSize` and 20. Bar widths follow the column type and `align`.
-- Tree and expand buttons stay in the DOM while their children/details load, so focus stays on
-  them: the tree chevron becomes a 16px spinner (`aria-busy`, `aria-disabled`); the expand
-  `sd-button` shows its loading spinner (`aria-busy` on the `sd-button`).
+- Desktop tree and expand buttons stay in the DOM while their children/details load, so focus
+  stays on them: the tree chevron becomes a 16px spinner (`aria-busy`, `aria-disabled`); the
+  expand `sd-button` shows its own loading spinner (`aria-busy` on the `sd-button`). Mobile tree
+  and expand buttons show the 16px spinner and stay `disabled` while loading.
 
 ```ts
 // Per table (wins field by field)
@@ -1098,7 +1099,7 @@ The desktop table uses subtle 6px outer corners: the existing scroll area rounds
 - **Sticky columns**: any column with `fixed: true` stays pinned while horizontal scroll happens; rendered with a subtle box-shadow on the boundary (via `StickyShadowDirective`).
 - **Group rows**: spanning row with HTML rendered from `group.htmlTemplate`, separating sub-sections.
 - **Empty state**: one of three illustrated messages, for local and server tables alike — filter/search returned nothing (`images.filterEmpty`), a required external filter is still empty (`images.filterRequired`), or there is no data yet (`images.dataEmpty`). A projected `sdDataStateTemplate` replaces it for server reads. It only renders when the table has no rows. A failed read, local or server, shows the `sd-data-state` error block with a retry button.
-- **Loading**: no overlay. Without rows: grey skeleton bars under the real header (mobile: skeleton cards). With rows, after 300 ms: the rows fade to 55% and a 2px bar runs under the last header row. A tree chevron or expand button that is loading shows a small spinner in place of its icon. See **Loading**.
+- **Loading**: no overlay. Without rows: grey skeleton bars under the real header (mobile: skeleton cards). With rows, after 300 ms: the table body fades to 55% and a 2px bar runs under the last header row. A tree chevron or expand button that is loading shows a small spinner in place of its icon. See **Loading**.
 - **Pagination bar** (bottom): "Đang hiển thị 1-50/1.234" + page-size selector + first/prev/next/last buttons. Vietnamese labels via `SdTablePaginatorIntl`. With `paginate.total: 'unknown'`: page-size selector + loaded range only (`26-32`, no total) + prev/next (first when `showFirstLastButtons`), never a last button; automation ids `<autoId>-paginator`, `-paginator-previous`, `-paginator-next`, `-paginator-first`, `-paginator-page-size`.
 - **Drag handle** (when `rowReorder.enabled`): leftmost icon column `sdReorder` with the configured icon (default `drag_indicator`); rows can be reordered within the same group.
 - **Row-number (STT) column** (when `index.enabled`): sticky `sdIndex` column rendering the global row number (`pageIndex * pageSize + i + 1`). Sits after selector/tree/command(left)/group, before data columns. Title defaults to `'#'`, width `'50px'`. Hidden on group spanning rows.
@@ -1390,7 +1391,7 @@ Rendered directly on the `<sd-table>` host element:
 | -------------- | --------------------------- | ------------------------------------------------------------- |
 | `data-autoid`  | `components-table-<autoId>` | input `autoId`                                                |
 | `data-loading` | `"true"` / `"false"`        | `loading` signal (toggled by paging + external-filter submit) |
-| `data-loading-view` | `"none"` / `"skeleton"` / `"refresh"` | what the loading layer draws (see **Loading**); lags `data-loading` by `showDelay` and `minDuration` |
+| `data-loading-view` | `"none"` / `"skeleton"` / `"refresh"` | what the loading layer draws (see **Loading**). `skeleton` shows at once and also while `data-loading` is `"false"` (before the configuration, during the first read's debounce); `refresh` starts `showDelay` after `data-loading` and can stay `minDuration` after it |
 
 Selector example:
 
@@ -1427,8 +1428,8 @@ All interactive children derive their autoId from the table base `components-tab
 ## Accessibility
 
 - **Sort state belongs to the semantic header cell.** For an enabled sortable leaf, `aria-sort` is emitted only on the native `<th>` and the title-only control supplies the accessible name plus mouse/Enter/Space activation. Inline filters and resize handles remain siblings outside that control, so they cannot become nested interactive content or trigger sorting. Disabled, omitted and non-sortable paths emit no sort control, focus target, `aria-sort`, or icon. The Material arrow is not instantiated; the existing SdTable background indicator is the single visible icon in unsorted, ascending and descending states.
-- **Loading is announced.** A visually hidden `span.sd-table-live` (`role="status" aria-live="polite" aria-atomic="true"`) is always in the DOM. It reads `core.component.table.loading` when the skeleton or the progress bar shows, then `core.component.table.loaded` with the number of rows once the read ends. An empty result or the default error block announces itself, so the region is cleared; with a custom `sdDataStateTemplate` it reads `core.component.table.error-occurred`. Reads faster than `showDelay` announce nothing. The scroll container gets `aria-busy="true"` while `loading()` is set. Skeleton rows and the progress bar are `aria-hidden`.
-- **Loading buttons keep focus.** A tree toggle or expand button that is loading stays in the DOM (`aria-busy`; the tree toggle also `aria-disabled`), so keyboard focus does not fall back to the page.
+- **Loading is announced.** A visually hidden `span.sd-table-live` (`role="status" aria-live="polite" aria-atomic="true"`) is always in the DOM. It reads `core.component.table.loading` when the skeleton or the progress bar shows for a running read, then `core.component.table.loaded` (`loaded-one` for one row) with the number of rows on screen, expanded tree rows included, once the read ends. A new read clears an earlier count. A skeleton that resolves without a running read (column lookups, synchronous local data) announces nothing. An empty result or the default error block announces itself, so the region is cleared; with a custom `sdDataStateTemplate` it reads `core.component.table.error-occurred`. Reads faster than `showDelay` announce nothing. The scroll container gets `aria-busy="true"` while `loading()` is set. Skeleton rows and the progress bar are `aria-hidden`.
+- **Loading buttons keep focus (desktop).** A tree toggle or expand button that is loading stays in the DOM (`aria-busy`; the tree toggle also `aria-disabled`), so keyboard focus does not fall back to the page. Mobile cards keep their tree and expand buttons `disabled` while loading.
 - **Empty state is announced.** The `no-results` / `choose-filter` / `no-data` block is `role="status" aria-live="polite"`, so a fetch that returns zero rows is reported instead of leaving the user waiting silently.
 - **Row commands are named.** The per-row command buttons (`desktop-command`) dropped `aria-hidden="true"` — they are real `<button>`s that still took tab focus while announcing nothing, because they render an icon with no text. They now expose `aria-label` from the command title, plus `aria-haspopup="menu"` on the submenu trigger.
 - **Clickable HTML cells are keyboard reachable.** A cell whose display config supplies `click` renders as `role="button"` + `tabindex="0"` with Enter/Space mirroring the click (it previously carried `aria-hidden="true"`). The handler ignores key events bubbling from consumer-supplied markup inside the cell, so nested controls do not double-fire.

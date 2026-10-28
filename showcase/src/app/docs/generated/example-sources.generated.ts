@@ -14970,6 +14970,8 @@ export class TableStatesExampleComponent {
     selector: { visible: false },
     sort: { enable: true },
     paginate: { pageSize: 6, pages: [6, 12] },
+    // The defaults, written out: the bar shows after 300 ms with rows on screen and stays at least 400 ms.
+    loading: { showDelay: 300, minDuration: 400 },
     filter: {
       cacheable: false,
       hideInlineFilter: true,
@@ -29710,8 +29712,8 @@ Bởi Nguyễn Văn A"></sd-badge>
   <sd-button title="Chưa có dữ liệu" [type]="scenario() === 'empty' ? 'fill' : 'outline'" (click)="show('empty')" />
   <sd-button title="Lỗi rồi thử lại" [type]="scenario() === 'error' ? 'fill' : 'outline'" (click)="show('error')" />
 </div>
-<div class="table-actions table-delays" role="group" aria-label="Độ trễ giả">
-  <span class="table-note">Độ trễ giả</span>
+<div class="table-actions table-delays" role="group" aria-labelledby="table-states-delay-label">
+  <span id="table-states-delay-label" class="table-note">Độ trễ giả</span>
   @for (ms of delays; track ms) {
     <sd-button [title]="ms + ' ms'" [type]="delay() === ms ? 'fill' : 'outline'" (click)="delay.set(ms)" />
   }

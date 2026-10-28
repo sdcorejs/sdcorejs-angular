@@ -998,6 +998,7 @@ export const EN_MESSAGES = {
   'core.form.search-field.clear': 'Clear search',
   'core.component.table.loading': 'Loading table data',
   'core.component.table.loaded': 'Loaded {count} rows',
+  'core.component.table.loaded-one': 'Loaded 1 row',
   'core.component.upload-file.loading': 'Uploading file',
   'core.component.import-excel.loading': 'Loading data',
   'core.component.upload-file.remove': 'Remove file',

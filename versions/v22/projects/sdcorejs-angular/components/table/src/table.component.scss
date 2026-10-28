@@ -48,8 +48,7 @@
     flex-direction: column;
     // overflow: auto;
     flex: 1;
-    // why: giữ z-index của ô sticky (CDK: header 100+, footer 10+, cột sticky 1–2) trong bảng, để thanh tiến trình
-    // nằm giữa chúng mà không đè lên phần khác của trang.
+    // why: giữ z-index của thanh tiến trình (và của bảng) trong .c-container, để chúng không đè lên phần khác của trang.
     isolation: isolate;
 
     .c-table {
@@ -519,22 +518,7 @@
   }
 
   .cdk-drop-list-dragging tr.c-row:not(.cdk-drag-placeholder) {
-    transition:
-      transform 250ms cubic-bezier(0, 0, 0.2, 1),
-      opacity var(--sd-duration-fast, 120ms);
-  }
-
-  // Dòng thân bảng mờ dần khi lớp loading làm mờ (xem .sd-table-dim). Đặt ở đây, specificity thấp hơn rule kéo thả
-  // ở trên, để rule đó giữ transition transform của nó.
-  tr.c-row,
-  tr.c-detail-row,
-  tr.c-group-row-tr,
-  tr.sd-aggregate-row {
-    transition: opacity var(--sd-duration-fast, 120ms);
-
-    @media (prefers-reduced-motion: reduce) {
-      transition: none;
-    }
+    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
   }
 
   .sd-selection-cell {
@@ -733,7 +717,13 @@
     }
   }
 
-  // Trước khi có configuration: 5 dòng × 4 cột, không header.
+  // Trước khi có configuration: 5 dòng × 4 cột, không header, trên cùng nền và bo góc với bảng sắp hiện.
+  .sd-table-skeleton-block {
+    overflow: hidden;
+    border-radius: var(--sd-radius-6, 6px);
+    background: var(--sd-surface);
+  }
+
   .sd-table-skeleton-block-row {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -746,20 +736,35 @@
     }
   }
 
-  // why: mờ trên tr chứ không trên td. Opacity của tr gộp cả dòng thành một lớp nên ô sticky vẫn che phần cuộn
-  // dưới nó; mờ từng td thì ô sticky trong suốt. Dòng footer (tfoot) không mờ vì cùng lý do.
-  .c-table.sd-table-dim {
-    tr.c-row,
-    tr.c-detail-row,
-    tr.c-group-row-tr,
-    tr.sd-aggregate-row {
-      opacity: var(--sd-table-loading-dim, 0.55);
-      pointer-events: none;
-    }
+  // why: mờ cả tbody của bảng này thành một lớp, không mờ từng td: ô sticky vẫn che phần cuộn dưới nó (mờ từng td thì
+  // ô sticky trong suốt), thead và tfoot (footer sticky) không mờ, bảng lồng trong dòng mở rộng không mờ chồng, và chỉ
+  // có một transition. Selector bám `> table > tbody` để không chạm tbody của bảng lồng.
+  .c-table > table > ::ng-deep tbody {
+    transition: opacity var(--sd-duration-fast, 120ms);
 
-    // Cuộn chuột/chạm vẫn rơi xuống .c-table; con trỏ chỉ đổi trên thân bảng, header vẫn bấm được.
-    ::ng-deep tbody {
-      cursor: progress;
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  // Con trỏ progress chỉ trên thân bảng; thead/tfoot giữ con trỏ của chúng.
+  .c-table.c-table--dim {
+    cursor: progress;
+
+    > table > ::ng-deep thead,
+    > table > ::ng-deep tfoot {
+      cursor: auto;
+    }
+  }
+
+  .c-table.c-table--dim > table > ::ng-deep tbody {
+    opacity: var(--sd-table-loading-dim, 0.55);
+
+    // why: sd-button đặt lại `pointer-events: auto` trên host và nút bên trong, nên phải chặn cả phần tử con.
+    // Cuộn chuột/chạm vẫn rơi xuống .c-table; bàn phím không bị chặn.
+    &,
+    * {
+      pointer-events: none !important;
     }
   }
 
@@ -768,7 +773,8 @@
     top: var(--sd-table-head-h, 0px);
     right: 0;
     left: 0;
-    // Trên ô sticky của thân bảng (1–2) và footer sticky (10+), dưới header sticky (100+) và mọi overlay.
+    // .c-table là một stacking context riêng (sdScroll đặt translate3d) nên thanh nằm trên cả bảng; nó không đè
+    // header chỉ vì luôn đặt ngay dưới thead đã đo. Dưới mọi overlay (CDK overlay nằm ngoài .c-container).
     z-index: 20;
     @include loading.progress-bar;
   }

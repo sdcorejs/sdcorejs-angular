@@ -8,10 +8,12 @@ import {
   Directive,
   ElementRef,
   Injectable,
+  Injector,
   Input,
   NgZone,
   OnDestroy,
   OnInit,
+  afterNextRender,
   computed,
   contentChild,
   contentChildren,
@@ -66,6 +68,7 @@ import {
   buildTableSkeleton,
   resolveTableLoading,
   SdTableLoadingView,
+  pixelLength,
   skeletonFillRows,
   TABLE_GENERIC_SKELETON,
   TABLE_SKELETON_ROWS,
@@ -137,6 +140,7 @@ import { SdTableFilterService } from './services/table-filter/table-filter.servi
 import {
   clearTreeChildCache,
   collectFormattedTreeRows,
+  countVisibleTreeRows,
   flattenDataTree,
   getChildrenFromData,
   getChildrenKey,
@@ -433,18 +437,23 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   /** `option.loading`, then `SD_TABLE_CONFIGURATION.loading`, then the defaults, field by field. */
   readonly loadingSettings = computed(() => resolveTableLoading(this.tableOption()?.loading, this.tableConfiguration?.loading));
   readonly #refresh = new TableRefreshTimer((callback, ms) => {
-    // why: the timer only sets a signal; running it inside the zone would check the whole app for nothing.
-    const id = this.#zone.runOutsideAngular(() => setTimeout(callback, ms));
+    // why: a waiting timer outside the zone keeps it stable (whenStable, hydration); the callback runs inside it,
+    // so its signal write also renders in zone apps that ignore changes outside the zone.
+    const id = this.#zone.runOutsideAngular(() => setTimeout(() => this.#zone.run(callback), ms));
     return () => clearTimeout(id);
   });
+  /** The skeleton showed for a read that a scheduled read now replaces (sort, page, filter during the read). */
+  readonly #skeletonHeld = signal(false);
   /**
-   * Nothing to show yet but something is on its way: the configuration (column lookups) is not ready, or the
-   * first read of the option waits in the schedule. Without it the empty-state block shows before that read.
+   * Nothing to show yet but something is on its way: the configuration (column lookups) is not ready, the first
+   * read of the option waits in the schedule, or a read replaces one that showed the skeleton. Without it the
+   * empty-state block shows during that debounce.
    */
   readonly #readPending = computed(
     () =>
       this.readState().status !== 'error' &&
-      (!this.configuration() || (this.#readScheduled() && this.total() === undefined && this.#shownPage() === undefined))
+      (!this.configuration() ||
+        (this.#readScheduled() && ((this.total() === undefined && this.#shownPage() === undefined) || this.#skeletonHeld())))
   );
   /**
    * What the loading layer draws (host `data-loading-view`). Derived only; `loading()`, `data-loading` and
@@ -455,18 +464,19 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       skeleton: this.loadingSettings().skeleton,
       loading: this.loading(),
       pending: this.#readPending(),
+      scheduled: this.#readScheduled(),
       rows: this.items().length > 0,
       refresh: this.#refresh.shown(),
     })
   );
   readonly #liveMessage = signal('');
   /** Text of the `.sd-table-live` status region: "loading" once the loading layer shows, then the result. */
-  readonly liveMessage = this.#liveMessage.asReadonly();
+  protected readonly liveMessage = this.#liveMessage.asReadonly();
   #liveLoading = false;
   /** Rows that fill a table with a fixed height, measured when the skeleton shows. */
   readonly #skeletonFill = signal<number | undefined>(undefined);
   /** Skeleton rows of the desktop table (`matNoDataRow`) while `loadingView()` is `skeleton`; empty otherwise. */
-  readonly skeleton = computed<TableSkeletonCell[][]>(() => {
+  protected readonly skeleton = computed<TableSkeletonCell[][]>(() => {
     const config = this.configuration();
     if (!config || this.loadingView() !== 'skeleton') return [];
     const columns = new Map([...config.firstColumns, ...config.secondColumns].map(column => [column.field, column]));
@@ -491,7 +501,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     );
   });
   /** What the table shows before its configuration is ready: 5 rows × 4 bars, without a header. */
-  readonly genericSkeleton = TABLE_GENERIC_SKELETON;
+  protected readonly genericSkeleton = TABLE_GENERIC_SKELETON;
   readonly unknownTotalPager = computed<SdTableUnknownTotalPagerState | undefined>(() => {
     if (!this.unknownTotal()) return undefined;
     const target = this.#unknownTarget();
@@ -698,6 +708,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   // 1. Private Services
   #ref = inject(ChangeDetectorRef);
   readonly #zone = inject(NgZone);
+  readonly #injector = inject(Injector);
 
   #configService = inject(ConfigService);
   #gridFilterService = inject(SdTableFilterService);
@@ -809,8 +820,16 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       const scheduled = this.#readScheduled();
       const view = this.loadingView();
       untracked(() => {
-        this.#refresh.update({ loading, scheduled, skeleton: view === 'skeleton', rows: this.items().length > 0 }, this.loadingSettings());
-        this.#announceLoading(view === 'skeleton' || (view === 'refresh' && (loading || scheduled)));
+        const rows = this.items().length > 0;
+        this.#refresh.update({ loading, scheduled, skeleton: view === 'skeleton', rows }, this.loadingSettings());
+        if (view === 'skeleton' && loading) this.#skeletonHeld.set(true);
+        else if (!scheduled || rows) this.#skeletonHeld.set(false);
+        // why: "loading" is announced only once a read really runs, so a skeleton that resolves at once (column
+        // lookups, synchronous local data) says nothing; it stays active through the debounce of a replacing read.
+        const active = view !== 'none' && (loading || (this.#liveLoading && scheduled));
+        // A new read clears an earlier "loaded N", so the virtual cursor never reads a count that is out of date.
+        if (loading && !active && this.#liveMessage()) this.#liveMessage.set('');
+        this.#announceLoading(active);
         // why: measured before the skeleton renders, under the header that is already on screen, so the row
         // count is right in the first frame instead of jumping from 5.
         if (view === 'skeleton') this.#skeletonFill.set(this.#measureSkeletonFill());
@@ -823,14 +842,21 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     effect(onCleanup => {
       if (this.loadingView() !== 'refresh' || this.mobileCards()) return;
       const host = this.#host;
-      const data = host.querySelector<HTMLElement>('.c-container > .c-table');
-      const head = data?.querySelector<HTMLElement>(':scope > table > thead');
-      if (!data || !head) return;
-      const sync = (): void => host.style.setProperty('--sd-table-head-h', `${data.offsetTop + head.offsetHeight}px`);
-      const resize = typeof ResizeObserver === 'function' ? new ResizeObserver(sync) : null;
-      resize?.observe(head);
-      sync();
+      let resize: ResizeObserver | null = null;
+      const measure = (): boolean => {
+        const data = host.querySelector<HTMLElement>('.c-container > .c-table');
+        const head = data?.querySelector<HTMLElement>(':scope > table > thead');
+        if (!data || !head) return false;
+        const sync = (): void => host.style.setProperty('--sd-table-head-h', `${data.offsetTop + head.offsetHeight}px`);
+        resize = typeof ResizeObserver === 'function' ? new ResizeObserver(sync) : null;
+        resize?.observe(head);
+        sync();
+        return true;
+      };
+      // why: right after a mobile → desktop switch the table is not in the DOM yet when this runs.
+      const later = measure() ? undefined : afterNextRender(() => void measure(), { injector: this.#injector });
       onCleanup(() => {
+        later?.destroy();
         resize?.disconnect();
         host.style.removeProperty('--sd-table-head-h');
       });
@@ -995,9 +1021,11 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       this.#liveMessage.set(this.#i18n.t('core.component.table.loading'));
       return;
     }
-    const count = this.items().length;
+    // Rows on screen: a tree also shows the children of its expanded rows.
+    const count = this.tableOption()?.tree ? countVisibleTreeRows(this.items()) : this.items().length;
     const failed = this.readState().status === 'error' || this.loadError();
-    if (count) this.#liveMessage.set(this.#i18n.t('core.component.table.loaded', { count }));
+    if (count)
+      this.#liveMessage.set(this.#i18n.t(count === 1 ? 'core.component.table.loaded-one' : 'core.component.table.loaded', { count }));
     else if (failed && !!this.dataStateTemplate() && !this.hideReadError())
       this.#liveMessage.set(this.#i18n.t('core.component.table.error-occurred'));
     else this.#liveMessage.set('');
@@ -1010,7 +1038,9 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     if ((!fill && !option?.style?.maxHeight) || this.mobileCards()) return undefined;
     const data = this.#host.querySelector<HTMLElement>('.c-container > .c-table');
     if (!data) return undefined;
-    const box = fill ? data.clientHeight : parseFloat(getComputedStyle(data).maxHeight);
+    // A percentage max-height resolves to a percentage, not pixels: fall back to the default count.
+    const box = fill ? data.clientHeight : pixelLength(getComputedStyle(data).maxHeight);
+    if (box === undefined) return undefined;
     const head = data.querySelector<HTMLElement>(':scope > table > thead')?.offsetHeight ?? 0;
     const row = parseFloat(getComputedStyle(this.#host).getPropertyValue('--mat-table-row-item-container-height')) || 36;
     return skeletonFillRows(box - head, row, option?.paginate?.pageSize);

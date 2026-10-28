@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy as SdAngular22ChangeDetectionStrategy } from '@angular/core';
-import { Component, signal } from '@angular/core';
+import { ApplicationRef, Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, flush, flushMicrotasks, tick } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { I18nService } from '@sdcorejs/angular/i18n';
@@ -73,14 +73,17 @@ describe('SdTable loading view', () => {
   let reads: ReturnType<typeof deferred<Page>>[];
 
   // why: the Karma frame counts as mobile; unless a test says so, these are desktop tables (inline filter, header rows).
-  const configure = (configuration?: ISdTableConfiguration, mobile = false) =>
-    TestBed.configureTestingModule({
+  const viewport = signal(false);
+  const configure = (configuration?: ISdTableConfiguration, mobile = false) => {
+    viewport.set(mobile);
+    return TestBed.configureTestingModule({
       imports: [SdTable, NoopAnimationsModule],
       providers: [
-        { provide: SdViewportService, useValue: { isMobile: signal(mobile) } },
+        { provide: SdViewportService, useValue: { isMobile: viewport } },
         ...(configuration ? [{ provide: SD_TABLE_CONFIGURATION, useValue: configuration }] : []),
       ],
     });
+  };
 
   /** Creates a server table; its first read is started (loading) but not answered. */
   function create(extra: Partial<ServerOption> = {}): void {
@@ -318,19 +321,29 @@ describe('SdTable loading view', () => {
       expect(region.getAttribute('role')).toBe('status');
       expect(region.getAttribute('aria-live')).toBe('polite');
       expect(region.getAttribute('aria-atomic')).toBe('true');
-      expect(live()).toBe(t('core.component.table.loading'));
+      // The skeleton before the configuration is ready says nothing until a read really runs.
+      expect(live()).toBe('');
       tick(250);
+      expect(table.loading()).toBeTrue();
+      expect(live()).toBe(t('core.component.table.loading'));
       answer(page(5));
       expect(live()).toBe(t('core.component.table.loaded', { count: 5 }));
       expect(f.nativeElement.querySelector('.sd-table-live')).toBe(region);
 
-      // Faster than showDelay: nothing changes.
+      // Faster than showDelay: nothing is announced, and the earlier count is cleared, not left out of date.
       reload();
       tick(100);
       answer(page(4));
       tick(500);
       f.detectChanges();
-      expect(live()).toBe(t('core.component.table.loaded', { count: 5 }));
+      expect(live()).toBe('');
+
+      reload();
+      tick(300);
+      f.detectChanges();
+      answer(page(1));
+      expect(live()).toBe(t('core.component.table.loaded-one'));
+      tick(400);
 
       reload();
       tick(300);
@@ -359,6 +372,82 @@ describe('SdTable loading view', () => {
         flush();
       }).not.toThrow();
       expect(table.loadingView()).toBe('none');
+    }));
+
+    it('stops a held progress bar on destroy without setting it afterwards', fakeAsync(() => {
+      createWithRows();
+      reload();
+      tick(450);
+      answer(page(5));
+      expect(view()).toBe('refresh');
+      f.destroy();
+      tick(1000);
+      flush();
+      // The hold timer was cleared, so nothing switched the bar off after destroy.
+      expect(table.loadingView()).toBe('refresh');
+    }));
+
+    it('drops a held progress bar when the option changes, so the new rows are not dimmed', fakeAsync(() => {
+      createWithRows();
+      reload();
+      tick(450);
+      answer(page(5));
+      expect(view()).toBe('refresh');
+      f.componentRef.setInput('option', {
+        type: 'server',
+        items: () => {
+          const read = deferred<Page>();
+          reads.push(read);
+          return read.promise;
+        },
+        columns: [{ field: 'name', type: 'string', title: 'Name' }],
+        paginate: { pageSize: 10 },
+      } as ServerOption);
+      f.detectChanges();
+      expect(view()).toBe('skeleton');
+      // The new first read starts 200 ms later and answers while the old hold would still run.
+      tick(210);
+      expect(table.loading()).toBeTrue();
+      answer(page(4));
+      expect(view()).toBe('none');
+      expect(f.nativeElement.querySelector('.c-table')?.classList).not.toContain('c-table--dim');
+      flush();
+    }));
+
+    it('keeps the skeleton, not the empty block, while a read replaces one that showed it', fakeAsync(() => {
+      createWithRows(5, { sort: { enable: true }, columns: [{ field: 'name', type: 'string', title: 'Name', sortable: true }] });
+      reload();
+      answer(page(0, 0));
+      reload();
+      expect(view()).toBe('skeleton');
+      table.sort()!.sort({ id: 'name', start: 'asc', disableClear: false });
+      f.detectChanges();
+      expect(table.loading()).toBeFalse();
+      for (let elapsed = 0; elapsed < 200; elapsed += 50) {
+        expect(view()).toBe('skeleton');
+        expect(f.nativeElement.querySelector('.c-no-data-row')).toBeNull();
+        tick(50);
+      }
+      expect(table.loading()).toBeTrue();
+      answer(page(2));
+      expect(view()).toBe('none');
+      flush();
+    }));
+
+    it('announces nothing for a local table whose data is ready at once', fakeAsync(() => {
+      f = TestBed.createComponent(SdTable<Row>);
+      table = f.componentInstance;
+      f.componentRef.setInput('option', {
+        type: 'local',
+        items: () => rows(3),
+        columns: [{ field: 'name', type: 'string', title: 'Name' }],
+      } as SdTableOption<Row>);
+      f.detectChanges();
+      expect(live()).toBe('');
+      tick(800);
+      flush();
+      expect(f.nativeElement.querySelectorAll('tr.c-row').length).toBe(3);
+      expect(live()).toBe('');
     }));
   });
 
@@ -390,6 +479,30 @@ describe('SdTable loading view', () => {
       expect(view()).toBe('refresh');
       answer(page(5));
       expect(view()).toBe('none');
+      flush();
+    }));
+  });
+
+  describe('replacing reads', () => {
+    it('keeps the bar, not the empty block, while a read replaces the first one of a table without rows (skeleton off)', fakeAsync(() => {
+      configure();
+      create({
+        loading: { skeleton: false },
+        sort: { enable: true },
+        columns: [{ field: 'name', type: 'string', title: 'Name', sortable: true }],
+      });
+      tick(300);
+      expect(view()).toBe('refresh');
+      table.sort()!.sort({ id: 'name', start: 'asc', disableClear: false });
+      f.detectChanges();
+      expect(table.loading()).toBeFalse();
+      for (let elapsed = 0; elapsed < 200; elapsed += 50) {
+        expect(view()).toBe('refresh');
+        expect(f.nativeElement.querySelector('.c-no-data-row')).toBeNull();
+        tick(50);
+      }
+      expect(table.loading()).toBeTrue();
+      answer(page(2));
       flush();
     }));
   });
@@ -438,6 +551,29 @@ describe('SdTable loading view', () => {
       answer(page(3));
       expect(all('tr.sd-table-skeleton-row').length).toBe(0);
       expect(all('tr.c-row').length).toBe(3);
+      flush();
+    }));
+
+    it('blocks the pointer on everything in the dimmed body, sd-button included', fakeAsync(() => {
+      createWithRows(5, { expand: { onExpand: () => undefined } });
+      reload();
+      tick(300);
+      f.detectChanges();
+      const button = el('td.mat-column-sdSubInformationAction sd-button')!;
+      expect(getComputedStyle(button).pointerEvents).toBe('none');
+      expect(getComputedStyle(button.querySelector('button')!).pointerEvents).toBe('none');
+      expect(getComputedStyle(el('thead th')!).pointerEvents).not.toBe('none');
+      answer(page(5));
+      tick(400);
+      f.detectChanges();
+      expect(getComputedStyle(el('td.mat-column-sdSubInformationAction sd-button button')!).pointerEvents).toBe('auto');
+      flush();
+    }));
+
+    it('falls back to the default skeleton rows for a percentage max-height', fakeAsync(() => {
+      create({ style: { maxHeight: '100%' } });
+      expect(all('tr.sd-table-skeleton-row').length).toBe(5);
+      answer(page(1));
       flush();
     }));
 
@@ -499,7 +635,7 @@ describe('SdTable loading view', () => {
       f.detectChanges();
       const data = el('.c-table')!;
       const bar = el('.sd-table-progress')!;
-      expect(data.classList).toContain('sd-table-dim');
+      expect(data.classList).toContain('c-table--dim');
       expect(bar.getAttribute('aria-hidden')).toBe('true');
       expect(bar.parentElement?.classList).toContain('c-container');
       const row = el('tr.c-row')!;
@@ -509,7 +645,7 @@ describe('SdTable loading view', () => {
       tick(400);
       f.detectChanges();
       expect(el('.sd-table-progress')).toBeNull();
-      expect(el('.c-table')!.classList).not.toContain('sd-table-dim');
+      expect(el('.c-table')!.classList).not.toContain('c-table--dim');
       expect(getComputedStyle(el('tr.c-row')!).pointerEvents).toBe('auto');
       flush();
     }));
@@ -520,7 +656,7 @@ describe('SdTable loading view', () => {
       tick(300);
       f.detectChanges();
       expect(el('.sd-table-progress')).not.toBeNull();
-      expect(el('.c-table')!.classList).not.toContain('sd-table-dim');
+      expect(el('.c-table')!.classList).not.toContain('c-table--dim');
       expect(getComputedStyle(el('tr.c-row')!).pointerEvents).toBe('auto');
       answer(page(5));
       flush();
@@ -819,6 +955,7 @@ describe('SdTable loading view', () => {
       const list = q('.sd-mobile-list')!;
       expect(list.classList).toContain('sd-mobile-list--dim');
       expect(getComputedStyle(list).pointerEvents).toBe('none');
+      expect(getComputedStyle(q('.sd-mobile-card')!).pointerEvents).toBe('none');
       const header = q('.c-table > .sd-mobile-command-header')!;
       const anchor = q('.c-table > .sd-table-progress-anchor')!;
       const bar = anchor.querySelector('.sd-table-progress') as HTMLElement;
@@ -854,6 +991,26 @@ describe('SdTable loading view', () => {
       host.detectChanges();
       expect(toggle.getAttribute('aria-busy')).toBeNull();
       expect(toggle.querySelector('.sd-table-spinner')).toBeNull();
+    }));
+
+    it('puts the progress bar under the header after a switch from cards to the table during a refresh', fakeAsync(() => {
+      mount();
+      respond(page(3));
+      tick();
+      void mobileTable().reload();
+      host.detectChanges();
+      tick(300);
+      host.detectChanges();
+      expect(q('.sd-table-progress-anchor')).not.toBeNull();
+      viewport.set(false);
+      host.detectChanges();
+      // The table was not rendered when the measuring effect ran; it measures after render.
+      TestBed.inject(ApplicationRef).tick();
+      const bar = q('.c-container > .sd-table-progress')!;
+      const head = q('.c-table > table > thead')!;
+      expect(Math.abs(bar.getBoundingClientRect().top - head.getBoundingClientRect().bottom)).toBeLessThan(1);
+      respond(page(3));
+      flush();
     }));
 
     it('with dim: false shows only the progress bar', fakeAsync(() => {

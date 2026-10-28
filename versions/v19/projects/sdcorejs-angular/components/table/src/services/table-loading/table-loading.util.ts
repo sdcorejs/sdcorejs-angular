@@ -103,20 +103,28 @@ export function skeletonFillRows(body: number, rowHeight: number, pageSize?: num
   return Math.min(rows, TABLE_SKELETON_MAX_ROWS, pageSize && pageSize > 0 ? pageSize : TABLE_SKELETON_MAX_ROWS);
 }
 
+/** A resolved `max-height` in pixels; `undefined` for `none`, percentages and anything else not measurable. */
+export function pixelLength(value: string | null | undefined): number | undefined {
+  return value && /^-?\d+(\.\d+)?px$/.test(value.trim()) ? parseFloat(value) : undefined;
+}
+
 /**
  * - `skeleton`: the table has no rows and something is on its way — a read is loading, the first read of the
- *   option is scheduled, or the configuration is not ready yet (`pending`).
- * - `refresh`: the progress bar is on and there is something under it (a read, or the rows it keeps).
+ *   option is scheduled, the configuration is not ready yet, or a read replaces one that showed the skeleton
+ *   (`pending`).
+ * - `refresh`: the progress bar is on and there is something under it: a read, a read waiting to replace it
+ *   (`scheduled`), or the rows it keeps.
  */
 export function tableLoadingView(state: {
   skeleton: boolean;
   loading: boolean;
   pending: boolean;
+  scheduled: boolean;
   rows: boolean;
   refresh: boolean;
 }): SdTableLoadingView {
   if (state.skeleton && !state.rows && (state.loading || state.pending)) return 'skeleton';
-  return state.refresh && (state.loading || state.rows) ? 'refresh' : 'none';
+  return state.refresh && (state.loading || state.scheduled || state.rows) ? 'refresh' : 'none';
 }
 
 /** Cancels a callback that `schedule` registered. */
@@ -153,13 +161,25 @@ export class TableRefreshTimer {
     settings: Pick<TableLoadingSettings, 'showDelay' | 'minDuration'>
   ): void {
     if (this.#destroyed) return;
+    // why: rows that went away while nothing loads (an option change resets the table) leave nothing for a held
+    // bar to cover; it must not come back over the next rows.
+    if (!state.loading && !state.scheduled && !state.rows && this.#shown()) {
+      this.#clear();
+      this.#shown.set(false);
+    }
     const busy = state.loading || (this.#shown() && state.scheduled);
     if (busy === this.#busy) return;
     this.#busy = busy;
     this.#clear();
     if (busy) {
+      // why: a skeleton read has no rows to keep; a bar still held over rows that are gone (an option change
+      // during the hold) must not come back over the new rows.
+      if (state.skeleton) {
+        this.#shown.set(false);
+        return;
+      }
       // A new read while the bar shows (or is being held) keeps it and its start time.
-      if (this.#shown() || state.skeleton) return;
+      if (this.#shown()) return;
       this.#after(settings.showDelay, () => {
         this.#shownAt = this.now();
         this.#shown.set(true);

@@ -69,6 +69,8 @@ export class TableStatesExampleComponent {
     selector: { visible: false },
     sort: { enable: true },
     paginate: { pageSize: 6, pages: [6, 12] },
+    // The defaults, written out: the bar shows after 300 ms with rows on screen and stays at least 400 ms.
+    loading: { showDelay: 300, minDuration: 400 },
     filter: {
       cacheable: false,
       hideInlineFilter: true,

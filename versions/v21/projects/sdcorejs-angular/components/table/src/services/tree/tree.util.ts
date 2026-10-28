@@ -187,6 +187,13 @@ export const collectFormattedTreeRows = <T>(roots: SdTableItem<T>[]): SdTableIte
   return result;
 };
 
+/** Rows a tree table shows: the roots plus the formatted children of every expanded row, at every level. */
+export const countVisibleTreeRows = <T>(roots: SdTableItem<T>[]): number =>
+  roots.reduce((count, row) => {
+    const children = row.meta.tree?.isExpanded ? row.meta.tree.childItems : undefined;
+    return count + 1 + (children?.length ? countVisibleTreeRows(children) : 0);
+  }, 0);
+
 /** Flatten ALL nodes regardless of expand state — used for export */
 export const flattenTreeAll = <T>(
   roots: SdTableItem<T>[],

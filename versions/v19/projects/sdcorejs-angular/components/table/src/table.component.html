@@ -176,7 +176,7 @@
         stickyShadow
         matSort
         [matSortDisabled]="!_tableOption.sort?.enable"
-        [class.sd-table-dim]="_loadingView === 'refresh' && loadingSettings().dim"
+        [class.c-table--dim]="_loadingView === 'refresh' && loadingSettings().dim"
         [attr.aria-busy]="_loading ? 'true' : null"
         [style.max-height]="_tableOption.style?.maxHeight"
         [style.min-height]="_tableOption.style?.minHeight">
@@ -656,7 +656,7 @@
         @let _readError = _readState.status === 'error';
         <!-- why: dòng cũ bị gỡ khi lần đọc hiện hành lỗi, nên vùng lỗi/empty chỉ hiện khi bảng không còn dòng nào
              — end user không bao giờ thấy dữ liệu và lỗi cùng lúc (NSP-4877). -->
-        @let _noRows = !_readError && !_loading && !_total && !_items.length && _loadingView !== 'skeleton';
+        @let _noRows = !_readError && !_loading && !_total && !_items.length && _loadingView === 'none';
         @if ((_readError && !_hideReadError) || (_noRows && _readState.status === 'empty' && !!_dataStateTemplate)) {
           <sd-data-state [state]="_readError ? 'error' : 'empty'" [retryable]="_readError" (sdRetry)="retryRead()">
             @if (_dataStateTemplate; as custom) {

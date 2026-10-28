@@ -17,9 +17,14 @@
   }
 }
 // Loading layer, refresh: the old cards stay readable but dimmed and take no taps; scrolling and the keyboard work.
+// Descendants too: sd-button sets `pointer-events: auto` on its host and inner button.
 .sd-mobile-list--dim {
   opacity: var(--sd-table-loading-dim, 0.55);
-  pointer-events: none;
+
+  &,
+  * {
+    pointer-events: none !important;
+  }
 }
 .sd-mobile-card,
 .sd-mobile-skeleton-card {

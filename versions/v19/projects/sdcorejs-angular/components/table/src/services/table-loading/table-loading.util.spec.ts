@@ -3,6 +3,7 @@ import {
   TABLE_GENERIC_SKELETON,
   TableRefreshTimer,
   buildTableSkeleton,
+  pixelLength,
   resolveTableLoading,
   skeletonFillRows,
   tableLoadingView,
@@ -58,6 +59,17 @@ describe('buildTableSkeleton', () => {
   });
 });
 
+describe('pixelLength', () => {
+  it('reads only pixel lengths', () => {
+    expect(pixelLength('300px')).toBe(300);
+    expect(pixelLength('12.5px')).toBe(12.5);
+    expect(pixelLength('100%')).toBeUndefined();
+    expect(pixelLength('none')).toBeUndefined();
+    expect(pixelLength('')).toBeUndefined();
+    expect(pixelLength(undefined)).toBeUndefined();
+  });
+});
+
 describe('skeletonFillRows', () => {
   it('fills the body, at most the page size and 20', () => {
     expect(skeletonFillRows(260, 36)).toBe(7);
@@ -105,7 +117,7 @@ describe('resolveTableLoading', () => {
 });
 
 describe('tableLoadingView', () => {
-  const state = { skeleton: true, loading: false, pending: false, rows: false, refresh: false };
+  const state = { skeleton: true, loading: false, pending: false, scheduled: false, rows: false, refresh: false };
 
   it('draws skeleton rows while a table without rows loads or waits for its first read', () => {
     expect(tableLoadingView({ ...state, loading: true })).toBe('skeleton');
@@ -118,6 +130,8 @@ describe('tableLoadingView', () => {
     expect(tableLoadingView({ ...state, refresh: true, loading: true, rows: true })).toBe('refresh');
     expect(tableLoadingView({ ...state, refresh: true, rows: true })).toBe('refresh');
     expect(tableLoadingView({ ...state, refresh: true, loading: true, skeleton: false })).toBe('refresh');
+    // A read that replaces the running one keeps the bar through its debounce, rows or not.
+    expect(tableLoadingView({ ...state, refresh: true, scheduled: true, skeleton: false })).toBe('refresh');
     // An empty or failed result removed the rows: the empty/error region takes over at once.
     expect(tableLoadingView({ ...state, refresh: true })).toBe('none');
   });
@@ -217,6 +231,30 @@ describe('TableRefreshTimer', () => {
 
   it('never switches the bar on for a scheduled read alone', () => {
     timer.update({ ...idle, scheduled: true }, settings);
+    advanceTo(1000);
+    expect(timer.shown()).toBeFalse();
+  });
+
+  it('drops a bar still held over rows that are gone when a skeleton read starts', () => {
+    timer.update({ ...idle, loading: true }, settings);
+    advanceTo(450);
+    timer.update(idle, settings);
+    expect(timer.shown()).toBeTrue();
+    advanceTo(500);
+    timer.update({ ...idle, loading: true, skeleton: true, rows: false }, settings);
+    expect(timer.shown()).toBeFalse();
+    advanceTo(520);
+    timer.update(idle, settings);
+    expect(timer.shown()).toBeFalse();
+  });
+
+  it('drops a held bar when the rows go away while nothing loads (option change)', () => {
+    timer.update({ ...idle, loading: true }, settings);
+    advanceTo(450);
+    timer.update(idle, settings);
+    expect(timer.shown()).toBeTrue();
+    timer.update({ ...idle, rows: false }, settings);
+    expect(timer.shown()).toBeFalse();
     advanceTo(1000);
     expect(timer.shown()).toBeFalse();
   });
