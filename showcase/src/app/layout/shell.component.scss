@@ -9,20 +9,19 @@
   top: 8px;
   left: 8px;
   transform: translateY(-160%);
-  border-radius: 8px;
-  background: var(--sd-primary, #005cbb);
+  border-radius: var(--docs-radius-control);
+  background: var(--docs-acc);
   padding: 9px 12px;
-  color: var(--sd-primary-contrast, white);
+  color: var(--docs-acc-on);
 
   &:focus {
     transform: translateY(0);
   }
 }
 
-// why: The sticky header keeps search, version context, and primary navigation reachable.
 .shell {
   min-height: 100vh;
-  background: var(--docs-surface);
+  background: var(--docs-bg);
 
   &__body {
     display: grid;
@@ -31,140 +30,246 @@
   }
 }
 
+// why: The sticky header keeps search, version context, and primary navigation reachable.
 .topbar {
   position: sticky;
   z-index: 70;
   top: 0;
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 14px;
   height: var(--docs-header-height);
-  border-bottom: 1px solid var(--docs-border-color);
-  background: color-mix(in srgb, var(--docs-surface-raised) 92%, transparent);
+  border-bottom: 1px solid var(--docs-line);
+  background: var(--docs-bg-glass);
   padding: 0 20px;
-  backdrop-filter: blur(14px);
+  backdrop-filter: blur(12px);
+
+  &__search {
+    flex: 1 1 auto;
+    max-width: 300px;
+    min-width: 0;
+    margin-left: 8px;
+  }
 
   &__tools {
     display: flex;
+    flex: none;
     align-items: center;
-    gap: 9px;
+    gap: 14px;
     margin-left: auto;
   }
 }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 236px;
-  min-height: var(--docs-control-height-lg, 44px);
-  color: var(--docs-text);
-
-  &:hover {
-    text-decoration: none;
-  }
-
-  &__mark {
-    display: grid;
-    place-items: center;
-    width: 36px;
-    height: 36px;
-    overflow: hidden;
-    border-radius: 10px;
-    background: var(--docs-surface-raised);
-  }
-
-  &__logo {
-    display: block;
-    width: 100%;
-    height: 100%;
-    transform: scale(1.3);
-    object-fit: contain;
-  }
-
-  > span:last-child {
-    display: grid;
-    gap: 1px;
-  }
-
-  strong {
-    font-size: 13px;
-    font-weight: 600;
-  }
-
-  small {
-    color: var(--docs-text-muted);
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-}
-
-.topnav {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-
-  a {
-    display: inline-flex;
-    align-items: center;
-    min-height: var(--docs-control-height-lg, 44px);
-    border-radius: 7px;
-    padding: 8px 10px;
-    color: var(--docs-text-secondary);
-    font-size: 13px;
-    font-weight: 600;
-
-    &.active,
-    &:hover {
-      background: var(--docs-surface-muted);
-      color: var(--docs-text);
-      text-decoration: none;
-    }
-  }
-}
-
-.theme-toggle,
-.github-link {
+// 36px visual controls keep a 44px hit area: the box is 44px with a -4px margin and the visual sits in ::before.
+.icon-button {
+  position: relative;
   display: inline-grid;
+  flex: none;
   place-items: center;
-  flex: 0 0 var(--docs-control-height-lg, 44px);
-  width: var(--docs-control-height-lg, 44px);
-  height: var(--docs-control-height-lg, 44px);
-  box-sizing: border-box;
-  border: 1px solid var(--docs-border-color);
-  border-radius: 10px;
-  background: var(--docs-surface-raised);
-  color: var(--docs-text-secondary);
+  width: 44px;
+  height: 44px;
+  margin: -4px;
+  border: 0;
+  background: transparent;
   padding: 0;
+  color: var(--docs-fg-2);
   cursor: pointer;
 
+  &::before {
+    position: absolute;
+    inset: 4px;
+    border-radius: var(--docs-radius-control);
+    content: '';
+  }
+
+  &--bordered::before {
+    border: 1px solid var(--docs-line-2);
+  }
+
   &:hover {
-    background: var(--docs-bg-3);
     color: var(--docs-fg);
     text-decoration: none;
+
+    &::before {
+      background: var(--docs-bg-3);
+    }
+  }
+
+  > * {
+    position: relative;
   }
 
   mat-icon {
-    width: 20px;
-    height: 20px;
-    font-size: 20px;
+    width: 19px;
+    height: 19px;
+    font-size: 19px;
   }
 
   svg {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
   }
 }
 
 .mobile-menu {
   display: none;
-  width: var(--docs-control-height-lg, 44px);
-  height: var(--docs-control-height-lg, 44px);
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--docs-text);
+  color: var(--docs-fg);
+
+  mat-icon {
+    width: 22px;
+    height: 22px;
+    font-size: 22px;
+  }
+}
+
+.brand {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  color: var(--docs-fg);
+
+  &:hover {
+    text-decoration: none;
+  }
+
+  &__logo {
+    display: block;
+    width: 30px;
+    height: 30px;
+    transform: scale(1.3);
+    object-fit: contain;
+  }
+
+  &__name {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+}
+
+.topnav {
+  display: none;
+  gap: 2px;
+  margin-left: 8px;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 10px;
+    color: var(--docs-fg-2);
+    font-size: 14px;
+    font-weight: 600;
+
+    &:hover {
+      color: var(--docs-fg);
+      text-decoration: none;
+    }
+
+    &.active {
+      color: var(--docs-fg);
+    }
+  }
+}
+
+// The active top-nav pill is the 6px-radius --bg-3 fill of the design, drawn behind a 44px-tall link.
+.topnav a {
+  position: relative;
+  isolation: isolate;
+
+  &::before {
+    position: absolute;
+    z-index: -1;
+    inset: 5px 0;
+    border-radius: var(--docs-radius-nav);
+    content: '';
+  }
+
+  &.active::before {
+    background: var(--docs-bg-3);
+  }
+}
+
+.language-switch {
+  display: flex;
+  flex: none;
+  height: 36px;
+  border: 1px solid var(--docs-line-2);
+  border-radius: var(--docs-radius-control);
+  padding: 3px;
+
+  button {
+    position: relative;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    padding: 0 8px;
+    color: var(--docs-fg-3);
+    font-family: var(--docs-font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &::after {
+      position: absolute;
+      inset: -7px 0;
+      content: '';
+    }
+
+    &[aria-pressed='true'] {
+      background: var(--docs-bg-3);
+      color: var(--docs-fg);
+    }
+  }
+}
+
+.language-toggle {
+  display: none;
+  color: var(--docs-fg);
+  font-family: var(--docs-font-mono);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.github-link {
+  display: none;
+}
+
+// Old-release banner: a full-width strip at the top of the content column.
+.release-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  border-bottom: 1px solid var(--docs-line);
+  background: var(--docs-warn-soft);
+  padding: 10px 24px;
+  color: var(--docs-fg);
+  font-size: 14px;
+
+  mat-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--docs-warn);
+    font-size: 18px;
+  }
+
+  button {
+    min-height: 44px;
+    margin: -12px 0;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    color: var(--docs-acc);
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 }
 
 // why: Desktop navigation remains independently scrollable for the full documentation catalog.
@@ -175,8 +280,8 @@
   flex-direction: column;
   height: calc(100vh - var(--docs-header-height));
   overflow-y: auto;
-  border-right: 1px solid var(--docs-border-color);
-  background: var(--docs-surface-raised);
+  border-right: 1px solid var(--docs-line);
+  background: var(--docs-bg-2);
   padding: 14px 10px 0;
 
   &__heading {
@@ -184,7 +289,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 4px 10px 10px;
-    color: var(--docs-text-muted);
+    color: var(--docs-fg-3);
     font-size: 11px;
     text-transform: uppercase;
   }
@@ -193,9 +298,9 @@
     display: flex;
     justify-content: space-between;
     margin-top: auto;
-    border-top: 1px solid var(--docs-border-color);
+    border-top: 1px solid var(--docs-line);
     padding: 12px 10px;
-    color: var(--docs-text-muted);
+    color: var(--docs-fg-3);
     font-size: 11px;
   }
 }
@@ -204,23 +309,23 @@
   display: none;
   gap: var(--docs-space-1);
   margin-bottom: var(--docs-space-3);
-  border-bottom: 1px solid var(--docs-border-color);
+  border-bottom: 1px solid var(--docs-line);
   padding: 0 var(--docs-space-2) var(--docs-space-3);
 
   a {
     display: flex;
     align-items: center;
-    min-height: var(--docs-control-height-lg, 44px);
-    border-radius: var(--docs-radius-sm);
+    min-height: 44px;
+    border-radius: var(--docs-radius-nav);
     padding-inline: var(--docs-space-3);
-    color: var(--docs-text-secondary);
-    font-size: 13px;
+    color: var(--docs-fg-2);
+    font-size: 14px;
     font-weight: 600;
 
     &:hover,
     &.active {
-      background: var(--sd-primary-light, #e8f1ff);
-      color: var(--sd-primary, #005cbb);
+      background: var(--docs-acc-soft);
+      color: var(--docs-acc);
       text-decoration: none;
     }
   }
@@ -236,21 +341,21 @@
     gap: 8px;
     width: 100%;
     border: 0;
-    border-radius: 8px;
+    border-radius: var(--docs-radius-control);
     background: transparent;
     padding: 9px 10px;
-    color: var(--docs-text-secondary);
+    color: var(--docs-fg-2);
     text-align: left;
     cursor: pointer;
 
     &:hover {
-      background: var(--docs-surface-muted);
+      background: var(--docs-bg-3);
     }
 
     mat-icon {
       width: 18px;
       height: 18px;
-      color: var(--sd-primary, #005cbb);
+      color: var(--docs-acc);
       font-size: 18px;
     }
 
@@ -260,8 +365,8 @@
     }
 
     small {
-      border-radius: 999px;
-      background: var(--docs-surface-muted);
+      border-radius: var(--docs-radius-pill);
+      background: var(--docs-bg-3);
       padding: 2px 6px;
     }
   }
@@ -278,25 +383,25 @@
     justify-content: space-between;
     gap: 8px;
     border-left: 2px solid transparent;
-    border-radius: 0 7px 7px 0;
+    border-radius: 0 var(--docs-radius-nav) var(--docs-radius-nav) 0;
     padding: 7px 9px;
-    color: var(--docs-text-secondary);
-    font-size: 12px;
+    color: var(--docs-fg-2);
+    font-size: 13px;
 
     &:hover,
     &.active {
-      background: var(--sd-primary-light, #e8f1ff);
-      color: var(--sd-primary, #005cbb);
+      background: var(--docs-acc-soft);
+      color: var(--docs-acc);
       text-decoration: none;
     }
 
     &.active {
-      border-left-color: var(--sd-primary, #005cbb);
+      border-left-color: var(--docs-acc);
       font-weight: 600;
     }
 
     small {
-      color: var(--docs-text-muted);
+      color: var(--docs-fg-3);
     }
   }
 }
@@ -313,32 +418,24 @@
   display: none;
 }
 
-@media (max-width: 1160px) {
+@media (min-width: 1180px) {
   .topnav {
-    display: none;
+    display: flex;
   }
 
-  // why: The catalog becomes an accessible off-canvas drawer below desktop width.
+  .github-link {
+    display: inline-grid;
+  }
+}
+
+@media (max-width: 979.98px) {
+  // why: The catalog becomes an accessible off-canvas drawer below 980px.
   .shell__body {
-    grid-template-columns: 1fr;
-  }
-
-  .topbar {
-    gap: 10px;
-    padding-inline: 12px;
-  }
-
-  .brand {
-    min-width: 0;
-
-    small {
-      display: none;
-    }
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .mobile-menu {
     display: inline-grid;
-    place-items: center;
   }
 
   .sidebar__primary {
@@ -367,32 +464,35 @@
     inset: var(--docs-header-height) 0 0;
     display: block;
     border: 0;
-    background: rgb(15 23 42 / 45%);
+    background: var(--docs-backdrop);
   }
 
   .nav-group__header,
   .nav-group li a {
-    min-height: var(--docs-control-height-lg, 44px);
+    min-height: 44px;
   }
 }
 
-@media (max-width: 620px) {
-  .topbar {
-    overflow: hidden;
-  }
-
-  .brand {
-    flex: 0 0 var(--docs-control-height-lg, 44px);
-    justify-content: center;
-  }
-
+@media (max-width: 639.98px) {
+  .topbar,
   .topbar__tools {
-    min-width: 0;
     gap: 6px;
   }
 
-  .brand > span:last-child,
-  .github-link {
+  .topbar {
+    padding: 0 12px;
+  }
+
+  .brand__name,
+  .language-switch {
     display: none;
+  }
+
+  .language-toggle {
+    display: inline-grid;
+  }
+
+  .release-banner {
+    padding: 10px 16px;
   }
 }

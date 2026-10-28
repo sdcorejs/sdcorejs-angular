@@ -15,14 +15,16 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatIconModule } from '@angular/material/icon';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
+import { DocsClipboardService } from '../docs/core/docs-clipboard.service';
+import { DocsI18nService } from '../docs/core/docs-i18n.service';
 import { DocsThemeService } from '../docs/core/docs-theme.service';
 import { DocsVersionService } from '../docs/core/docs-version.service';
 import { DOC_NAV_GROUPS } from '../docs/core/documentation.registry';
 import { PublishedDocsService } from '../docs/core/published-docs.service';
 import { DocsFragmentLinkDirective } from '../docs/shared/docs-fragment-link.directive';
 import { resolveDocsPageAvailability } from '../docs/shared/docs-page-availability';
+import { DocsVersionControlComponent } from '../docs/shared/docs-version-control.component';
 import { GlobalSearchComponent } from '../docs/shared/global-search.component';
-import { VersionSelectorComponent } from '../docs/shared/version-selector.component';
 import { MOBILE_NAV_BREAKPOINT_PX, buildPrimaryNavigation, resolvePrimaryNavigationId } from './primary-navigation.config';
 
 @Component({
@@ -35,7 +37,7 @@ import { MOBILE_NAV_BREAKPOINT_PX, buildPrimaryNavigation, resolvePrimaryNavigat
     RouterLinkActive,
     DocsFragmentLinkDirective,
     GlobalSearchComponent,
-    VersionSelectorComponent,
+    DocsVersionControlComponent,
   ],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.scss',
@@ -47,6 +49,8 @@ export class ShellComponent {
   readonly #publishedDocs = inject(PublishedDocsService);
   readonly versions = inject(DocsVersionService);
   readonly theme = inject(DocsThemeService);
+  readonly i18n = inject(DocsI18nService);
+  readonly clipboard = inject(DocsClipboardService);
   readonly mobileNavOpen = signal(false);
   readonly searchOpen = signal(false);
   readonly isMobile = signal(typeof window !== 'undefined' && window.innerWidth <= MOBILE_NAV_BREAKPOINT_PX);
@@ -58,7 +62,10 @@ export class ShellComponent {
   private readonly sidebar = viewChild<ElementRef<HTMLElement>>('sidebar');
   private readonly content = viewChild<ElementRef<HTMLElement>>('content');
   readonly currentVersion = computed(() => (this.versions.selectedVersion() ?? this.versions.latestVersion()) || 'latest');
-  readonly primaryNavigation = computed(() => buildPrimaryNavigation(this.currentVersion()));
+  readonly primaryNavigation = computed(() => {
+    const t = this.i18n.t();
+    return buildPrimaryNavigation(this.currentVersion()).map(item => ({ ...item, label: t[item.id] }));
+  });
   readonly docsHomeLink = computed(() => this.primaryNavigation()[0]?.commands ?? ['/v', this.currentVersion()]);
   readonly activePrimaryNavigationId = computed(() => resolvePrimaryNavigationId(this.currentUrl()));
   readonly navGroups = computed(() =>
@@ -198,6 +205,10 @@ export class ShellComponent {
   closeMobileNav(restoreFocus = false): void {
     this.mobileNavOpen.set(false);
     if (restoreFocus) queueMicrotask(() => this.mobileMenu()?.nativeElement.focus());
+  }
+
+  goToLatestRelease(): void {
+    void this.versions.selectRelease(this.versions.latestRelease()).catch(() => undefined);
   }
 
   onSearchOpenChange(open: boolean): void {

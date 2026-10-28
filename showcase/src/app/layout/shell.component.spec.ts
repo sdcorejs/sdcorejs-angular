@@ -1,6 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
+import { DocsI18nService } from '../docs/core/docs-i18n.service';
 import { DocsVersionService } from '../docs/core/docs-version.service';
 import { DOC_PAGES } from '../docs/core/documentation.registry';
 import { PublishedDocsService } from '../docs/core/published-docs.service';
@@ -11,8 +12,20 @@ class RoutedDocumentationStubComponent {}
 
 describe('ShellComponent', () => {
   let fixture: ComponentFixture<ShellComponent>;
+  let versionState: {
+    manifest: ReturnType<typeof signal<object | null>>;
+    isLatestRelease: ReturnType<typeof signal<boolean>>;
+    selectedRelease: ReturnType<typeof signal<string>>;
+    selectRelease: jasmine.Spy;
+  };
 
   beforeEach(async () => {
+    versionState = {
+      manifest: signal<object | null>(null),
+      isLatestRelease: signal(true),
+      selectedRelease: signal('1.2'),
+      selectRelease: jasmine.createSpy().and.resolveTo(undefined),
+    };
     await TestBed.configureTestingModule({
       imports: [ShellComponent],
       providers: [
@@ -32,6 +45,15 @@ describe('ShellComponent', () => {
             loading: signal(false),
             error: signal<string | null>(null),
             versionGroups: signal([]),
+            manifest: versionState.manifest,
+            isLatestRelease: versionState.isLatestRelease,
+            selectedRelease: versionState.selectedRelease,
+            latestRelease: signal('1.2'),
+            selectedAngularMajor: signal(21),
+            resolvedPackageVersion: signal('21.1.2'),
+            currentRelease: signal(null),
+            menuReleaseGroups: signal([]),
+            selectRelease: versionState.selectRelease,
           },
         },
         {
@@ -51,8 +73,51 @@ describe('ShellComponent', () => {
   });
 
   afterEach(() => {
+    TestBed.inject(DocsI18nService).set('en');
     fixture.nativeElement.remove();
     fixture.destroy();
+  });
+
+  it('switches the chrome language and mirrors it on <html lang>', () => {
+    const vi = fixture.nativeElement.querySelector('.language-switch button[lang="vi"]') as HTMLButtonElement;
+
+    vi.click();
+    fixture.detectChanges();
+
+    expect(document.documentElement.getAttribute('lang')).toBe('vi');
+    expect(vi.getAttribute('aria-pressed')).toBe('true');
+    expect([...fixture.nativeElement.querySelectorAll('.topnav a')].map((link: Element) => link.textContent?.trim())).toEqual([
+      'Tài liệu',
+      'Thay đổi',
+      'Giới thiệu',
+    ]);
+  });
+
+  it('shows the old-release banner and goes to the latest release from it', () => {
+    expect(fixture.nativeElement.querySelector('.release-banner')).toBeNull();
+
+    versionState.manifest.set({});
+    versionState.isLatestRelease.set(false);
+    versionState.selectedRelease.set('1.1');
+    fixture.detectChanges();
+
+    const banner = fixture.nativeElement.querySelector('.release-banner') as HTMLElement;
+    expect(banner.textContent).toContain('You are viewing docs for release 1.1.');
+    (banner.querySelector('button') as HTMLButtonElement).click();
+    expect(versionState.selectRelease).toHaveBeenCalledWith('1.2');
+  });
+
+  it('offers a theme toggle that names the theme it switches to', () => {
+    const toggle = fixture.nativeElement.querySelector('.theme-toggle') as HTMLButtonElement;
+    const before = document.documentElement.getAttribute('data-sd-theme');
+
+    toggle.click();
+    fixture.detectChanges();
+
+    const after = document.documentElement.getAttribute('data-sd-theme');
+    expect(after).not.toBe(before);
+    expect(toggle.getAttribute('aria-label')).toBe(after === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+    toggle.click();
   });
 
   it('captures focus on open, traps Tab, and restores the trigger on Escape', async () => {

@@ -8,7 +8,8 @@ export interface PrimaryNavigationItem {
   readonly commands: string[];
 }
 
-export const MOBILE_NAV_BREAKPOINT_PX = 1160;
+/** Widest viewport that shows the catalog as a drawer; the design switches at < 980px. */
+export const MOBILE_NAV_BREAKPOINT_PX = 979;
 
 /** Builds one navigation model for both the desktop header and mobile drawer. */
 export function buildPrimaryNavigation(version: string): PrimaryNavigationItem[] {
