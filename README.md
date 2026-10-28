@@ -162,7 +162,7 @@ The published [documentation manifest](https://sdcorejs.github.io/sdcorejs-angul
 
 - `SdTable` covers local and server data, paging, sorting, filters, selection, grouping, tree rows, custom cell templates, and export-oriented workflows.
 - `SdQueryBuilder` and `SdQueryBar` build typed filtering experiences without coupling the UI to a specific backend.
-- `SdDocumentBuilder`, the editor components, Excel import, and upload controls support document-heavy application flows.
+- The editor components, Excel import, and upload controls support document-heavy application flows.
 - `SdEntityPicker` and `SdTreeSelect` compose existing table/tree primitives for typed server and lazy-data selection.
 - `SdTaskService` + `SdJobProgress`, `SdUnsavedChangesService`, and `SdAuditDiff` cover long-running work, safe exits, and audit presentation.
 - `SdGraphSerializer` is shared by cache/storage so `Date`, `Map`, `Set`, shared references, and cycles survive a versioned persistence round-trip.

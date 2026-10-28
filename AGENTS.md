@@ -279,6 +279,7 @@ Toàn bộ API docs (`*.md`) của lib được publish dạng raw Markdown trê
 - **Một entry cho cả 4 major từ suffix `2.5`.** Tag `v<release-suffix>` publish 19.x.y / 20.x.y / 21.x.y / 22.x.y **cùng public API** — chỉ khác dependency/peer/shim Angular-major. Các entry lịch sử trước `2.5` vẫn chỉ thuộc ba line đã tồn tại khi đó.
 - **Legacy sync KHÔNG đụng changelog.** Không còn `versions/v<N>/CHANGELOG.md`. Per-version tra `SYNC-STATUS.md` / workspace status.
 - **Đừng đưa shim per-major vào changelog** (vd `DomPortalOutlet` 4-arg vs 3-arg) — plumbing của sync, không phải API consumer.
+- **Format theo template** trong comment HTML ở đầu `CHANGELOG.md`: dòng `Packages …`, khối `> [!IMPORTANT]` với **Before upgrading:** khi có breaking, **Highlights** khi có tính năng chính; section theo thứ tự Changed/Removed (BREAKING) → Added → Changed → Deprecated → Removed → Fixed → Security; bullet gom dưới `#### Component` A–Z (`#### General` cuối), chi tiết là bullet con, code block thụt 2 space dưới bullet. Dòng heading `## [x.y] - YYYY-MM-DD` giữ nguyên — `generate-showcase-changelog.mjs` và `collect-docs.mjs` parse nó; `npm run test:showcase-changelog` kiểm mọi heading của file.
 
 ### Release ritual (đúng thứ tự)
 
@@ -287,10 +288,12 @@ Changelog viết TRỰC TIẾP ở repo này:
 ```
 1. sdcorejs-angular: sửa code/docs/test trong versions/v19
                      → rollout v19 sang v20/v21/v22 bằng sync-multi-version-workspaces.ps1
-2. sdcorejs-angular: sửa root CHANGELOG.md
+2. sdcorejs-angular: sửa root CHANGELOG.md theo template ở đầu file
                      ## [Unreleased]  →  ## [<release-suffix>] - YYYY-MM-DD
-                     thêm: Published 19.<suffix>/20.<suffix>/21.<suffix>/22.<suffix> + repo-owned summary
+                     thêm dòng: Packages `19.<suffix>` · `20.<suffix>` · `21.<suffix>` · `22.<suffix>`, validated against `*.<baseline>`
+                     + > [!IMPORTANT] **Before upgrading:** (nếu breaking) + **Highlights** (nếu có tính năng chính)
                      thêm ## [Unreleased] rỗng mới ở trên
+                     cuối file: [Unreleased] → compare/v<suffix>...HEAD, thêm [<suffix>] → compare/v<prev>...v<suffix>
 3. sdcorejs-angular: full test/lint/build/package-contract trên bốn line + Showcase
 4. sdcorejs-angular: git add -A && commit, merge vào main
                      git tag v<release-suffix> && git push origin v<release-suffix>
