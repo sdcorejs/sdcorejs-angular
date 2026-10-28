@@ -77,3 +77,35 @@
     }
   }
 }
+
+// 16px ring for a tree or expand button that is loading: 2px stroke, a 25% arc in --sd-table-spinner over a
+// --sd-table-progress-track ring. Reduced motion: the arc stands still.
+@mixin spinner {
+  display: inline-block;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--sd-table-progress-track);
+  border-top-color: var(--sd-table-spinner);
+  border-radius: 50%;
+  animation: sd-table-spin 0.8s linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+
+  @media (forced-colors: active) {
+    forced-color-adjust: none;
+    border-color: GrayText;
+    border-top-color: Highlight;
+  }
+}
+
+@mixin spinner-keyframes {
+  @keyframes sd-table-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}

@@ -102,23 +102,23 @@
       <span class="sd-tree-indent" [style.width.px]="(_tree.level ?? 0) * (_tableOption.tree?.indentSize ?? 20)"></span>
       <span class="sd-tree-toggle-slot">
         @if (_tree.hasChildren) {
-          @if (_tree.isExpanding) {
-            <span class="lds-ring sd-tree-spinner">
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-            </span>
-          } @else {
-            @let _aid = _autoId;
-            <button
-              type="button"
-              class="sd-tree-toggle-btn"
-              [attr.data-autoid]="_aid ? _aid + '-tree-toggle-' + row.meta.id : null"
-              (click)="onTreeToggle(row); $event.stopPropagation()">
+          @let _aid = _autoId;
+          @let _expanding = !!_tree.isExpanding;
+          <!-- why: nút luôn nằm trong DOM, chỉ đổi icon thành spinner khi đang tải con; gỡ nút làm focus bàn phím rơi
+               về body. Click trong lúc tải bị onTreeToggle bỏ qua. -->
+          <button
+            type="button"
+            class="sd-tree-toggle-btn"
+            [attr.data-autoid]="_aid ? _aid + '-tree-toggle-' + row.meta.id : null"
+            [attr.aria-busy]="_expanding ? 'true' : null"
+            [attr.aria-disabled]="_expanding ? 'true' : null"
+            (click)="onTreeToggle(row); $event.stopPropagation()">
+            @if (_expanding) {
+              <span class="sd-table-spinner" aria-hidden="true"></span>
+            } @else {
               <sd-icon [name]="_tree.isExpanded ? 'expand_more' : 'chevron_right'"></sd-icon>
-            </button>
-          }
+            }
+          </button>
         }
       </span>
     }
@@ -264,22 +264,20 @@
                 style="width: 1px"
                 [attr.rowspan]="_configuration.multipleHeader ? 2 : 1"></th>
               <td mat-cell *matCellDef="let element">
-                @if (!element.meta.expand?.isExpanding && !_tableOption.expand?.always) {
+                @if (!_tableOption.expand?.always) {
+                  @let _expanding = !!element.meta.expand?.isExpanding;
+                  <!-- why: nút 35px giữ nguyên khi đang tải ([loading] thay prefix icon bằng spinner) để focus bàn phím
+                       không mất; onExpand bỏ qua click trong lúc tải. color primary chỉ để spinner theo màu nhấn. -->
                   <sd-button
                     [autoId]="_autoId ? _autoId + '-expand-' + element.meta.id : null"
                     type="text"
+                    [color]="_expanding ? 'primary' : null"
+                    [loading]="_expanding"
+                    [attr.aria-busy]="_expanding ? 'true' : null"
                     [prefixIcon]="element.meta.expand?.isExpanded ? 'expand_less' : 'expand_more'"
                     (click)="onExpand(element)"
                     width="35px">
                   </sd-button>
-                }
-                @if (element.meta.expand?.isExpanding) {
-                  <div class="lds-ring">
-                    <div></div>
-                    <div></div>
-                    <div></div>
-                    <div></div>
-                  </div>
                 }
               </td>
             </ng-container>

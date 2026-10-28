@@ -110,6 +110,11 @@ button:focus-visible {
   padding: 4px 0;
   min-width: 0;
 }
+// Loading layer, tree/expand button that is loading: 16px spinner in place of the icon.
+@include loading.spinner-keyframes;
+.sd-table-spinner {
+  @include loading.spinner;
+}
 // Loading layer, skeleton: card frame of .sd-mobile-card, three bars 14/12/12px at 60/85/40%.
 @include loading.skeleton-keyframes;
 .sd-mobile-skeleton-body {

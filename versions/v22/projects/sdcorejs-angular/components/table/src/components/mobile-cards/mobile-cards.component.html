@@ -89,12 +89,16 @@
                 mat-icon-button
                 type="button"
                 [disabled]="_meta.tree?.isExpanding"
+                [attr.aria-busy]="_meta.tree?.isExpanding ? 'true' : null"
                 [attr.aria-label]="card.expandLabel"
                 [attr.aria-expanded]="_meta.tree?.isExpanded"
                 [attr.data-autoid]="_autoId ? _autoId + '-tree-toggle-' + _meta.id : null"
                 (click)="_table.onTreeToggle(_row)">
-                <sd-icon
-                  [name]="_meta.tree?.isExpanding ? 'hourglass_empty' : _meta.tree?.isExpanded ? 'expand_more' : 'chevron_right'"></sd-icon>
+                @if (_meta.tree?.isExpanding) {
+                  <span class="sd-table-spinner" aria-hidden="true"></span>
+                } @else {
+                  <sd-icon [name]="_meta.tree?.isExpanded ? 'expand_more' : 'chevron_right'"></sd-icon>
+                }
               </button>
             }
             @if (_option.index?.enabled) {
@@ -123,14 +127,16 @@
                 mat-button
                 type="button"
                 [disabled]="card.expandDisabled || _meta.expand?.isExpanding"
+                [attr.aria-busy]="_meta.expand?.isExpanding ? 'true' : null"
                 [attr.aria-expanded]="_meta.expand?.isExpanded"
                 [attr.aria-label]="card.expandLabel"
                 [attr.data-autoid]="_autoId ? _autoId + '-expand-' + _meta.id : null"
                 (click)="_table.onExpand(_row)">
-                <sd-icon
-                  [name]="
-                    _meta.expand?.isExpanding ? 'hourglass_empty' : _meta.expand?.isExpanded ? 'expand_less' : 'expand_more'
-                  "></sd-icon>
+                @if (_meta.expand?.isExpanding) {
+                  <span class="sd-table-spinner" aria-hidden="true"></span>
+                } @else {
+                  <sd-icon [name]="_meta.expand?.isExpanded ? 'expand_less' : 'expand_more'"></sd-icon>
+                }
                 {{ 'core.component.table.mobile.details' | sdTranslate }}
               </button>
             }

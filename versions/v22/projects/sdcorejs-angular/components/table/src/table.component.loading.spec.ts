@@ -561,6 +561,90 @@ describe('SdTable loading view', () => {
     }));
   });
 
+  describe('tree and expand buttons', () => {
+    beforeEach(() => configure());
+
+    /** A local table whose only row has children that load on demand. */
+    function createLocal(extra: Partial<Extract<SdTableOption<Row>, { type: 'local' }>>): void {
+      f = TestBed.createComponent(SdTable<Row>);
+      table = f.componentInstance;
+      f.componentRef.setInput('option', {
+        type: 'local',
+        rowKey: 'id',
+        items: () => rows(1),
+        columns: [{ field: 'name', type: 'string', title: 'Name' }],
+        ...extra,
+      } as SdTableOption<Row>);
+      f.detectChanges();
+      tick(800);
+      flush();
+      f.detectChanges();
+    }
+
+    it('keeps the tree toggle focused and busy with a 16px spinner while children load', fakeAsync(() => {
+      const children = deferred<Row[]>();
+      const loader = jasmine.createSpy('onExpandChildren').and.returnValue(children.promise);
+      createLocal({ tree: { loadType: 'lazy', hasChildren: () => true, onExpandChildren: loader } });
+      const toggle = f.nativeElement.querySelector('button.sd-tree-toggle-btn') as HTMLButtonElement;
+      toggle.focus();
+      toggle.click();
+      f.detectChanges();
+
+      expect(f.nativeElement.querySelector('button.sd-tree-toggle-btn')).toBe(toggle);
+      expect(document.activeElement).toBe(toggle);
+      expect(toggle.getAttribute('aria-busy')).toBe('true');
+      expect(toggle.getAttribute('aria-disabled')).toBe('true');
+      const spinner = toggle.querySelector('.sd-table-spinner') as HTMLElement;
+      expect(spinner.getAttribute('aria-hidden')).toBe('true');
+      // Computed size: the bounding box of a rotating ring grows up to 16 × √2.
+      expect(getComputedStyle(spinner).width).toBe('16px');
+      expect(f.nativeElement.querySelector('.lds-ring')).toBeNull();
+      toggle.click();
+      expect(loader).toHaveBeenCalledTimes(1);
+
+      children.resolve([{ id: 11, name: 'Child' }]);
+      flushMicrotasks();
+      f.detectChanges();
+      flush();
+      f.detectChanges();
+      expect(f.nativeElement.querySelector('button.sd-tree-toggle-btn')).toBe(toggle);
+      expect(document.activeElement).toBe(toggle);
+      expect(toggle.getAttribute('aria-busy')).toBeNull();
+      expect(toggle.querySelector('.sd-table-spinner')).toBeNull();
+      expect(toggle.querySelector('sd-icon')).not.toBeNull();
+    }));
+
+    it('keeps the expand button focused and busy while its details load', fakeAsync(() => {
+      const details = deferred<unknown>();
+      const onExpand = jasmine.createSpy('onExpand').and.returnValue(details.promise);
+      createLocal({ expand: { onExpand } });
+      const host = f.nativeElement.querySelector('td.mat-column-sdSubInformationAction sd-button') as HTMLElement | null;
+      const button = host!.querySelector('button') as HTMLButtonElement;
+      button.focus();
+      button.click();
+      f.detectChanges();
+
+      expect(f.nativeElement.querySelector('td.mat-column-sdSubInformationAction sd-button')).toBe(host);
+      expect(host!.querySelector('button')).toBe(button);
+      expect(document.activeElement).toBe(button);
+      expect(host!.getAttribute('aria-busy')).toBe('true');
+      expect(button.getAttribute('data-loading')).toBe('true');
+      expect(f.nativeElement.querySelector('.lds-ring')).toBeNull();
+      button.click();
+      expect(onExpand).toHaveBeenCalledTimes(1);
+
+      details.resolve({});
+      flushMicrotasks();
+      f.detectChanges();
+      flush();
+      f.detectChanges();
+      expect(host!.querySelector('button')).toBe(button);
+      expect(document.activeElement).toBe(button);
+      expect(host!.getAttribute('aria-busy')).toBeNull();
+      expect(button.getAttribute('data-loading')).toBe('false');
+    }));
+  });
+
   describe('mobile cards', () => {
     let host: ComponentFixture<MobileHost>;
     beforeEach(() => configure(undefined, true));
@@ -643,6 +727,29 @@ describe('SdTable loading view', () => {
       expect(q('.sd-table-progress')).toBeNull();
       expect(q('.sd-mobile-list')!.classList).not.toContain('sd-mobile-list--dim');
       flush();
+    }));
+
+    it('shows the 16px spinner in the disabled, busy tree button while children load', fakeAsync(() => {
+      const children = deferred<Row[]>();
+      mount(undefined, { rowKey: 'id', tree: { loadType: 'lazy', hasChildren: () => true, onExpandChildren: () => children.promise } });
+      respond(page(1, 1));
+      tick();
+      host.detectChanges();
+      const toggle = q('sd-table-mobile-cards button[aria-expanded]') as HTMLButtonElement;
+      expect(toggle.querySelector('.sd-table-spinner')).toBeNull();
+      toggle.click();
+      host.detectChanges();
+      expect(toggle.disabled).toBeTrue();
+      expect(toggle.getAttribute('aria-busy')).toBe('true');
+      expect(getComputedStyle(toggle.querySelector('.sd-table-spinner') as HTMLElement).width).toBe('16px');
+      expect(toggle.querySelector('sd-icon')).toBeNull();
+      children.resolve([{ id: 11, name: 'Child' }]);
+      flushMicrotasks();
+      host.detectChanges();
+      flush();
+      host.detectChanges();
+      expect(toggle.getAttribute('aria-busy')).toBeNull();
+      expect(toggle.querySelector('.sd-table-spinner')).toBeNull();
     }));
 
     it('with dim: false shows only the progress bar', fakeAsync(() => {
