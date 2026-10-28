@@ -813,6 +813,18 @@
     z-index: 20;
     @include loading.progress-bar;
   }
+
+  // Mobile cards: neo cao 0 ở mép trên danh sách thẻ, dính mép trên vùng cuộn của bảng.
+  .sd-table-progress-anchor {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    height: 0;
+
+    > .sd-table-progress {
+      top: 0;
+    }
+  }
 }
 // Summaries use Core surface tokens and share the table grid, including sticky cells.
 .sd-aggregate-row,

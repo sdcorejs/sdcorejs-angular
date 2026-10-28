@@ -1,10 +1,13 @@
-import { signal } from '@angular/core';
+import { ChangeDetectionStrategy as SdAngular22ChangeDetectionStrategy } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, flush, flushMicrotasks, tick } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdViewportService } from '@sdcorejs/angular/services/viewport';
 import { SdTable } from './table.component';
 import { ISdTableConfiguration, SD_TABLE_CONFIGURATION } from './configurations';
+import { SdTableRowMobileDefDirective } from './directives/sd-table-row-mobile-def.directive';
+import { SdTableCommandHeaderDefDirective } from './directives/sd-table-command-header-def.directive';
 import { SdTableOption } from './models/table-option.model';
 import { SdTableOptionLoading } from './models/table-option-loading.model';
 
@@ -26,6 +29,22 @@ function deferred<T>() {
     reject = rej;
   });
   return { promise, resolve, reject };
+}
+
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  imports: [SdTable, SdTableRowMobileDefDirective, SdTableCommandHeaderDefDirective],
+  template: `
+    <sd-table [option]="option">
+      <ng-template [sdTableRowMobileDef]="option" let-row="item"
+        ><span class="row-content">{{ row.name }}</span></ng-template
+      >
+      <ng-template sdTableCommandHeaderDef><button type="button" class="command-header">Add</button></ng-template>
+    </sd-table>
+  `,
+})
+class MobileHost {
+  option!: Extract<SdTableOption<Row>, { type: 'server' }>;
 }
 
 const rows = (count: number): Row[] => Array.from({ length: count }, (_, index) => ({ id: index + 1, name: `Row ${index + 1}` }));
@@ -538,6 +557,105 @@ describe('SdTable loading view', () => {
       const bar = el('.sd-table-progress')!;
       expect(Math.abs(bar.getBoundingClientRect().top - last.getBoundingClientRect().bottom)).toBeLessThan(1);
       answer(page(5));
+      flush();
+    }));
+  });
+
+  describe('mobile cards', () => {
+    let host: ComponentFixture<MobileHost>;
+    beforeEach(() => configure(undefined, true));
+    afterEach(() => host?.destroy());
+
+    const q = (selector: string) => host.nativeElement.querySelector(selector) as HTMLElement | null;
+    const qa = (selector: string) => Array.from(host.nativeElement.querySelectorAll(selector)) as HTMLElement[];
+    const mobileTable = () => host.debugElement.children[0].componentInstance as SdTable<Row>;
+
+    /** Mounts a mobile-card server table; its first read is started but not answered. */
+    function mount(loading?: SdTableOptionLoading, extra: Partial<ServerOption> = {}): void {
+      reads = [];
+      host = TestBed.createComponent(MobileHost);
+      host.componentInstance.option = {
+        type: 'server',
+        items: () => {
+          const read = deferred<Page>();
+          reads.push(read);
+          return read.promise;
+        },
+        columns: [{ field: 'name', type: 'string', title: 'Name' }],
+        paginate: { pageSize: 10 },
+        ...(loading ? { loading } : {}),
+        ...extra,
+      };
+      host.detectChanges();
+      tick(250);
+      host.detectChanges();
+    }
+
+    function respond(result: Page): void {
+      reads[reads.length - 1].resolve(result);
+      flushMicrotasks();
+      host.detectChanges();
+    }
+
+    it('shows at most three hidden skeleton cards, then the real cards', fakeAsync(() => {
+      mount();
+      const skeleton = qa('sd-table-mobile-cards .sd-mobile-skeleton-card');
+      expect(skeleton.length).toBe(3);
+      expect(skeleton.every(card => card.getAttribute('aria-hidden') === 'true')).toBeTrue();
+      expect(skeleton.every(card => card.querySelectorAll('.sd-mobile-skeleton-bar').length === 3)).toBeTrue();
+      expect(q('.sd-mobile-list')?.getAttribute('role')).toBeNull();
+      expect(qa('.sd-mobile-card').length).toBe(0);
+      expect(q('.c-no-data-row')).toBeNull();
+      respond(page(2));
+      expect(qa('.sd-mobile-skeleton-card').length).toBe(0);
+      expect(qa('.sd-mobile-card').length).toBe(2);
+      expect(q('.sd-mobile-list')?.getAttribute('role')).toBe('list');
+      flush();
+    }));
+
+    it('honours a smaller skeletonRows', fakeAsync(() => {
+      mount({ skeletonRows: 2 });
+      expect(qa('.sd-mobile-skeleton-card').length).toBe(2);
+      respond(page(1));
+      flush();
+    }));
+
+    it('dims the cards and shows the progress bar under the command header while refreshing', fakeAsync(() => {
+      mount();
+      respond(page(3));
+      tick();
+      void mobileTable().reload();
+      host.detectChanges();
+      tick(300);
+      host.detectChanges();
+      const list = q('.sd-mobile-list')!;
+      expect(list.classList).toContain('sd-mobile-list--dim');
+      expect(getComputedStyle(list).pointerEvents).toBe('none');
+      const header = q('.c-table > .sd-mobile-command-header')!;
+      const anchor = q('.c-table > .sd-table-progress-anchor')!;
+      const bar = anchor.querySelector('.sd-table-progress') as HTMLElement;
+      expect(bar.getAttribute('aria-hidden')).toBe('true');
+      expect(header.compareDocumentPosition(anchor) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(Math.abs(bar.getBoundingClientRect().top - header.getBoundingClientRect().bottom)).toBeLessThan(1);
+      respond(page(3));
+      tick(400);
+      host.detectChanges();
+      expect(q('.sd-table-progress')).toBeNull();
+      expect(q('.sd-mobile-list')!.classList).not.toContain('sd-mobile-list--dim');
+      flush();
+    }));
+
+    it('with dim: false shows only the progress bar', fakeAsync(() => {
+      mount({ dim: false });
+      respond(page(3));
+      tick();
+      void mobileTable().reload();
+      host.detectChanges();
+      tick(300);
+      host.detectChanges();
+      expect(q('.sd-table-progress')).not.toBeNull();
+      expect(q('.sd-mobile-list')!.classList).not.toContain('sd-mobile-list--dim');
+      respond(page(3));
       flush();
     }));
   });

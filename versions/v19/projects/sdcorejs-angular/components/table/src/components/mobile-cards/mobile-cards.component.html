@@ -6,6 +6,7 @@
 @let _actions = actions();
 @let _active = active();
 @let _expandTemplate = _table.sdSubInformation();
+@let _skeletonCards = skeletonCards();
 
 @if (_option.selector?.visible) {
   <span class="sd-mobile-sr-only" role="status" aria-live="polite" aria-atomic="true">{{ selectionSummary() }}</span>
@@ -13,12 +14,24 @@
 
 <div
   class="sd-mobile-list"
-  role="list"
+  [class.sd-mobile-list--dim]="dimmed()"
+  [attr.role]="_skeletonCards.length ? null : 'list'"
   cdkDropList
   [cdkDropListData]="dataRows() ?? rows()"
   [cdkDropListDisabled]="!_option.rowReorder?.enabled"
   [cdkDropListSortPredicate]="_table.reorderSortPredicate"
   (cdkDropListDropped)="_table.onReorderDrop($event)">
+  <!-- why: khung xương chỉ có khi chưa có thẻ nào, nằm trong cùng danh sách để giữ gap/đệm; trang trí nên aria-hidden
+       (vùng .sd-table-live của bảng báo "đang tải"). -->
+  @for (index of _skeletonCards; track index) {
+    <div class="sd-mobile-skeleton-card" aria-hidden="true">
+      <div class="sd-mobile-skeleton-body">
+        <span class="sd-mobile-skeleton-bar"></span>
+        <span class="sd-mobile-skeleton-bar"></span>
+        <span class="sd-mobile-skeleton-bar"></span>
+      </div>
+    </div>
+  }
   @for (card of cards(); track card.row.meta.id) {
     @let _row = card.row;
     @let _meta = _row.meta;

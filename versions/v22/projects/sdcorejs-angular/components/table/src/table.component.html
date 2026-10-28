@@ -184,6 +184,13 @@
           @if (_commandHeaderDef) {
             <div class="sd-mobile-command-header"><ng-container *ngTemplateOutlet="_commandHeaderDef.templateRef"></ng-container></div>
           }
+          @if (_loadingView === 'refresh') {
+            <!-- Mobile: không có header bảng; thanh nằm ở mép trên danh sách thẻ, dưới command header. Anchor cao 0
+                 nên thanh hiện/ẩn không đẩy thẻ. -->
+            <div class="sd-table-progress-anchor">
+              <div class="sd-table-progress" aria-hidden="true"></div>
+            </div>
+          }
           <sd-table-mobile-cards
             [table]="this"
             [rows]="renderItems"
