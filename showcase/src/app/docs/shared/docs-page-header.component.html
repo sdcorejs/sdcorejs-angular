@@ -1,0 +1,53 @@
+@let t = i18n.t();
+@let currentPage = page();
+<nav class="breadcrumbs" [attr.aria-label]="t.breadcrumb">
+  <a [routerLink]="['/v', version()]">{{ t.docs }}</a>
+  <mat-icon aria-hidden="true">chevron_right</mat-icon>
+  <a [routerLink]="['/v', version(), currentPage.category]">{{ t.categories[currentPage.category] }}</a>
+  <mat-icon aria-hidden="true">chevron_right</mat-icon>
+  <span aria-current="page">{{ currentPage.title }}</span>
+</nav>
+
+@if (invalidVersion(); as invalid) {
+  <div class="version-notice" role="status">Version “{{ invalid }}” is unavailable. Showing v{{ version() }} instead.</div>
+}
+
+<header class="page-header">
+  <div class="page-header__badges">
+    <span class="pill">{{ t.pageTypes[currentPage.category] }}</span>
+    @if (currentPage.status !== 'stable') {
+      <span class="pill pill--warn">{{ currentPage.status }}</span>
+    }
+    @if (badgeText(); as text) {
+      <span class="pill pill--accent">{{ text }}</span>
+    }
+  </div>
+  <h1>{{ currentPage.title }}</h1>
+  @let lead = leadText();
+  <p class="page-header__lead" [attr.lang]="lead.lang">
+    @for (segment of lead.segments; track $index) {
+      @if (segment.code) {
+        <code>{{ segment.text }}</code>
+      } @else {
+        {{ segment.text }}
+      }
+    }
+  </p>
+
+  <div class="page-header__identity" role="group" [attr.aria-label]="t.identity">
+    @for (cell of identity(); track cell.key) {
+      <div class="identity-cell" [class.identity-cell--grow]="cell.grow">
+        <span class="identity-cell__label">{{ cell.label }}</span>
+        <code class="identity-cell__value" [title]="cell.value">{{ cell.value }}</code>
+        <button
+          class="identity-cell__copy"
+          type="button"
+          [title]="t.copy"
+          [attr.aria-label]="i18n.format('copyValue', { label: cell.label })"
+          (click)="copy(cell)">
+          <mat-icon aria-hidden="true">{{ clipboard.isCopied('identity-' + cell.key) ? 'check' : 'content_copy' }}</mat-icon>
+        </button>
+      </div>
+    }
+  </div>
+</header>

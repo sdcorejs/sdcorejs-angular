@@ -1,45 +1,98 @@
 :host {
   display: block;
-  container: docs-page / inline-size;
 }
 
-// why: Documentation pages need a reading column plus optional sticky local table of contents.
-.docs-page {
+// why: an 820px reading column plus, at >= 1260px, the sticky 200px "On this page" column.
+.docs-layout {
   display: grid;
-  grid-template-columns: minmax(0, var(--docs-content-max-width)) var(--docs-toc-width);
-  justify-content: center;
-  gap: 34px;
-  padding: 28px 32px 80px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 56px;
+  max-width: var(--docs-content-max-width);
+  margin: 0 auto;
+  padding: 36px 48px 120px;
+}
 
-  &__main {
-    min-width: 0;
-  }
+.docs-article {
+  width: 100%;
+  min-width: 0;
+  max-width: var(--docs-article-max-width);
+}
+
+.docs-tabs-anchor {
+  height: 32px;
 }
 
 .historical-notice {
   margin-bottom: 18px;
-  border: 1px solid var(--sd-info, #0288d1);
-  border-radius: 9px;
-  background: color-mix(in srgb, var(--sd-info, #0288d1) 9%, var(--docs-surface));
+  border-radius: var(--docs-radius-code);
+  background: var(--docs-acc-soft);
   padding: 11px 14px;
-  color: var(--docs-text-secondary);
+  color: var(--docs-fg-2);
   font-size: 13px;
 }
 
 .docs-page__content {
   min-width: 0;
   min-height: 360px;
-  padding-top: 24px;
+  padding-top: 28px;
 }
 
 .doc-section {
-  scroll-margin-top: calc(var(--docs-header-height) + 24px);
-  padding: 20px 0;
-  border-bottom: 1px solid var(--docs-border-color);
+  scroll-margin-top: var(--docs-scroll-offset);
+  padding: 0 0 8px;
 
   > h2 {
-    margin-bottom: 14px;
-    font-size: 25px;
+    margin: 40px 0 14px;
+    font-size: var(--docs-fs-h2);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+  }
+
+  &:first-child > h2 {
+    margin-top: 12px;
+  }
+}
+
+// "What changed in <release>" card at the top of Overview.
+.release-changes {
+  scroll-margin-top: var(--docs-scroll-offset);
+  margin-bottom: 12px;
+  border: 1px solid var(--docs-line);
+  border-radius: var(--docs-radius-code);
+  background: var(--docs-bg-2);
+  padding: 16px 18px;
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    color: var(--docs-fg);
+    font-size: 14px;
+    font-weight: 600;
+
+    mat-icon {
+      width: 18px;
+      height: 18px;
+      color: var(--docs-acc);
+      font-size: 18px;
+    }
+  }
+
+  &__entry {
+    display: block;
+    margin: 6px 0 0;
+    color: var(--docs-fg-2);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  &__link {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 13.5px;
+    font-weight: 500;
   }
 }
 
@@ -133,28 +186,40 @@
 
 .page-pagination {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-top: 36px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 64px;
+  border-top: 1px solid var(--docs-line);
+  padding-top: 24px;
 
   a {
-    display: grid;
-    gap: 4px;
-    border: 1px solid var(--docs-border-color);
-    border-radius: 10px;
-    background: var(--docs-surface-raised);
-    padding: 14px;
-    color: var(--docs-text);
+    display: block;
+    border: 1px solid var(--docs-line);
+    border-radius: var(--docs-radius-code);
+    padding: 14px 16px;
+    color: var(--docs-fg);
 
-    &:last-child {
-      text-align: right;
+    &:hover {
+      border-color: var(--docs-acc);
+      text-decoration: none;
     }
   }
 
+  &__next {
+    grid-column: -2;
+    text-align: right;
+  }
+
   span {
-    color: var(--docs-text-muted);
-    font-size: 11px;
-    text-transform: uppercase;
+    display: block;
+    color: var(--docs-fg-3);
+    font-size: 12.5px;
+  }
+
+  strong {
+    display: block;
+    font-size: 15px;
+    font-weight: 600;
   }
 }
 
@@ -175,22 +240,14 @@
   }
 }
 
-@container docs-page (max-width: 1080px) {
-  // why: Right TOC disappears before it competes with primary documentation content.
-  .docs-page {
-    grid-template-columns: minmax(0, var(--docs-content-max-width));
+@media (min-width: 1260px) {
+  .docs-layout--toc {
+    grid-template-columns: minmax(0, 1fr) var(--docs-toc-width);
   }
 }
 
-@media (max-width: 1368px) {
-  // why: Viewport fallback preserves the container-query layout in older browsers.
-  .docs-page {
-    grid-template-columns: minmax(0, var(--docs-content-max-width));
-  }
-}
-
-@media (max-width: 680px) {
-  .docs-page {
-    padding-inline: 18px;
+@media (max-width: 639.98px) {
+  .docs-layout {
+    padding: 24px 16px 104px;
   }
 }

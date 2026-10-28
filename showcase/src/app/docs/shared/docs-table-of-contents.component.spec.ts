@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { DocsTableOfContentsComponent } from './docs-table-of-contents.component';
+import { DOCS_TOC_OFFSET_PX, DocsTableOfContentsComponent } from './docs-table-of-contents.component';
 
 describe('DocsTableOfContentsComponent', () => {
   let fixture: ComponentFixture<DocsTableOfContentsComponent>;
@@ -12,17 +12,16 @@ describe('DocsTableOfContentsComponent', () => {
       { id: 'disabled-input', label: 'disabled', level: 3 },
       { id: 'outputs', label: 'Outputs', level: 2 },
     ]);
+    fixture.componentRef.setInput('editUrl', 'https://github.com/sdcorejs/sdcorejs-angular/blob/main/button.md');
     fixture.detectChanges();
   });
 
-  it('renders nested sections with a visible hierarchy', () => {
-    const links = fixture.nativeElement.querySelectorAll('.toc-link');
+  it('indents nested sections inside one flat list', () => {
+    const links = [...fixture.nativeElement.querySelectorAll('.toc-link')] as HTMLAnchorElement[];
 
     expect(links).toHaveSize(3);
-    expect(links[0].getAttribute('data-depth')).toBe('0');
-    expect(links[1].getAttribute('data-depth')).toBe('1');
-    expect(fixture.nativeElement.querySelector('.toc > ol > li > ol .toc-link')?.textContent).toContain('disabled');
-    expect(fixture.nativeElement.querySelectorAll('.toc > ol > li')).toHaveSize(2);
+    expect(links.map(link => link.getAttribute('data-depth'))).toEqual(['0', '1', '0']);
+    expect(links[1].style.paddingLeft).toBe('26px');
   });
 
   it('marks the selected section as the current location', () => {
@@ -34,17 +33,25 @@ describe('DocsTableOfContentsComponent', () => {
     expect(links[0].getAttribute('aria-current')).toBeNull();
   });
 
-  it('updates the current location while the document scrolls', () => {
+  it('spies the section that passed the 124px offset', () => {
     const target = document.createElement('section');
     target.id = 'outputs';
-    spyOn(target, 'getBoundingClientRect').and.returnValue({ top: 80 } as DOMRect);
+    spyOn(target, 'getBoundingClientRect').and.returnValue({ top: DOCS_TOC_OFFSET_PX } as DOMRect);
     document.body.appendChild(target);
 
-    document.dispatchEvent(new Event('scroll'));
+    fixture.componentInstance.updateActiveSection();
     fixture.detectChanges();
 
     const active = fixture.nativeElement.querySelector('[aria-current="location"]') as HTMLAnchorElement;
     expect(active?.getAttribute('href')).toContain('#outputs');
     target.remove();
+  });
+
+  it('offers edit, report and back-to-top links', () => {
+    const labels = [...fixture.nativeElement.querySelectorAll('.toc__links a')].map((link: Element) => link.textContent?.trim());
+
+    expect(labels).toEqual(['editEdit this page on GitHub', 'bug_reportReport an issue', 'arrow_upwardBack to top']);
+    const external = fixture.nativeElement.querySelector('.toc__links a[target="_blank"]') as HTMLAnchorElement;
+    expect(external.rel).toContain('noopener');
   });
 });

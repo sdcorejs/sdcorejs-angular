@@ -42,6 +42,29 @@ export interface DocsUiStrings {
   readonly badgeUpdated: string;
   readonly liveDemo: string;
   readonly categories: Readonly<Record<DocCategory, string>>;
+  readonly pageTypes: Readonly<Record<DocCategory, string>>;
+  readonly breadcrumb: string;
+  readonly updatedIn: string;
+  readonly newIn: string;
+  readonly selector: string;
+  readonly importPath: string;
+  readonly className: string;
+  readonly providedIn: string;
+  readonly copyValue: string;
+  readonly identity: string;
+  readonly sections: string;
+  readonly tabs: Readonly<Record<'overview' | 'styling' | 'api' | 'examples', string>>;
+  readonly onThisPage: string;
+  readonly editPage: string;
+  readonly reportIssue: string;
+  readonly backToTop: string;
+  readonly viewDemoSource: string;
+  readonly previous: string;
+  readonly next: string;
+  readonly pagination: string;
+  readonly changedIn: string;
+  readonly fullChangelog: string;
+  readonly quickStart: string;
 }
 
 export type DocsLanguage = 'en' | 'vi';

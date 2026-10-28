@@ -1,4 +1,5 @@
 @let currentPage = page();
+@let t = i18n.t();
 @if (notFound()) {
   <main class="docs-state">
     <span>404</span>
@@ -7,21 +8,20 @@
     <a routerLink="/">Back to documentation home</a>
   </main>
 } @else if (currentPage) {
-  <main class="docs-page">
-    <div class="docs-page__main">
+  <div class="docs-layout" [class.docs-layout--toc]="tableOfContents().length > 0">
+    <article class="docs-article">
       <docs-page-header
         [page]="currentPage"
         [version]="version()"
+        [release]="release()"
         [invalidVersion]="versions.invalidVersion()"
-        [sourceUrl]="sourceUrl()"
-        [showIdentity]="tab() === 'overview'">
+        [metadata]="metadataRecord()"
+        [lead]="lead()"
+        [badge]="releaseBadge()">
       </docs-page-header>
 
-      <docs-page-tabs [links]="tabLinks()" [activeTab]="tab()"></docs-page-tabs>
-
-      @if (tableOfContents().length) {
-        <docs-table-of-contents mode="inline" [items]="tableOfContents()"></docs-table-of-contents>
-      }
+      <div #tabsAnchor class="docs-tabs-anchor"></div>
+      <docs-page-tabs [links]="tabLinks()" [activeTab]="tab()" (tabSelected)="onTabSelected()"></docs-page-tabs>
 
       <section class="docs-page__content">
         @let errorMessage = error();
@@ -86,6 +86,18 @@
               </section>
             }
           } @else {
+            @if (tab() === 'overview' && changes().length) {
+              <section id="changed" class="release-changes">
+                <h2 class="release-changes__title">
+                  <mat-icon aria-hidden="true">new_releases</mat-icon>{{ i18n.format('changedIn', { v: release() }) }}
+                </h2>
+                @for (change of changes(); track $index) {
+                  <docs-markdown-renderer class="release-changes__entry" [markdown]="change" [version]="version()"></docs-markdown-renderer>
+                }
+                <a class="release-changes__link" [routerLink]="changelogLink()">{{ t.fullChangelog }} →</a>
+              </section>
+            }
+
             @if (tab() === 'api') {
               <docs-api-summary [page]="currentPage" [metadata]="metadata()"></docs-api-summary>
             }
@@ -145,24 +157,22 @@
         }
       </section>
 
-      <nav class="page-pagination" aria-label="Previous and next documentation pages">
+      <nav class="page-pagination" [attr.aria-label]="t.pagination">
         @if (previousPage(); as previous) {
-          <a [routerLink]="previousLink()"
-            ><span>Previous</span><strong>← {{ previous.title }}</strong></a
-          >
-        } @else {
-          <span></span>
+          <a class="page-pagination__previous" [routerLink]="previousLink()">
+            <span>← {{ t.previous }}</span><strong>{{ previous.title }}</strong>
+          </a>
         }
         @if (nextPage(); as next) {
-          <a [routerLink]="nextLink()"
-            ><span>Next</span><strong>{{ next.title }} →</strong></a
-          >
+          <a class="page-pagination__next" [routerLink]="nextLink()">
+            <span>{{ t.next }} →</span><strong>{{ next.title }}</strong>
+          </a>
         }
       </nav>
-    </div>
+    </article>
 
     @if (tableOfContents().length) {
-      <docs-table-of-contents mode="aside" [items]="tableOfContents()"></docs-table-of-contents>
+      <docs-table-of-contents [items]="tableOfContents()" [editUrl]="editUrl()" [sourceUrl]="sourceUrl()"></docs-table-of-contents>
     }
-  </main>
+  </div>
 }

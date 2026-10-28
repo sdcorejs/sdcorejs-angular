@@ -19,10 +19,9 @@ import { DocsClipboardService } from '../docs/core/docs-clipboard.service';
 import { DocsI18nService } from '../docs/core/docs-i18n.service';
 import { DocsThemeService } from '../docs/core/docs-theme.service';
 import { DocsVersionService } from '../docs/core/docs-version.service';
-import { deriveReleaseBadges } from '../docs/core/docs-release-badges';
+import { DocsReleaseNotesService } from '../docs/core/docs-release-notes.service';
 import { foldSearchText } from '../docs/core/docs-search.utils';
-import { DOC_NAV_GROUPS, DOC_PAGES } from '../docs/core/documentation.registry';
-import type { ShowcaseChangelogRelease } from '../docs/generated/changelog.generated';
+import { DOC_NAV_GROUPS } from '../docs/core/documentation.registry';
 import { PublishedDocsService } from '../docs/core/published-docs.service';
 import { DocsFragmentLinkDirective } from '../docs/shared/docs-fragment-link.directive';
 import { resolveDocsPageAvailability } from '../docs/shared/docs-page-availability';
@@ -31,6 +30,7 @@ import { GlobalSearchComponent } from '../docs/shared/global-search.component';
 import {
   MOBILE_NAV_BREAKPOINT_PX,
   buildPrimaryNavigation,
+  isTabSwitch,
   resolvePrimaryNavigationId,
   routeCategory,
   routeHasSidebar,
@@ -81,14 +81,8 @@ export class ShellComponent {
   });
   readonly docsHomeLink = computed(() => this.primaryNavigation()[0]?.commands ?? ['/v', this.currentVersion()]);
   readonly activePrimaryNavigationId = computed(() => resolvePrimaryNavigationId(this.currentUrl()));
-  /** Parsed CHANGELOG.md, loaded lazily: it is large and only feeds the New/Updated badges here. */
-  readonly changelogReleases = signal<readonly ShowcaseChangelogRelease[]>([]);
-  readonly releaseBadges = computed(() =>
-    deriveReleaseBadges(
-      this.changelogReleases().find(release => release.suffix === this.versions.selectedRelease()),
-      DOC_PAGES
-    )
-  );
+  readonly #releaseNotes = inject(DocsReleaseNotesService);
+  readonly releaseBadges = this.#releaseNotes.badges;
   readonly navGroups = computed(() => {
     const term = foldSearchText(this.navQuery().trim());
     const overrides = this.groupOverrides();
@@ -117,9 +111,7 @@ export class ShellComponent {
 
   constructor() {
     void this.versions.load().catch(() => undefined);
-    void import('../docs/generated/changelog.generated')
-      .then(module => this.changelogReleases.set(module.SHOWCASE_CHANGELOG_RELEASES))
-      .catch(() => undefined);
+    void this.#releaseNotes.load();
     effect(() => {
       const version = this.versions.selectedVersion();
       if (!version) return;
@@ -164,6 +156,8 @@ export class ShellComponent {
         // why: /pattern là một app mẫu có focus riêng; sd-page-list trả focus về link đã mở drawer hay trang con.
         // Focus h1 sau mỗi lần đổi route con sẽ lấy mất phần tử đó.
         if (/^\/pattern(?:[/?#]|$)/.test(nextUrl)) return;
+        // why: a tab switch keeps focus on the tab the reader chose instead of jumping back to the page title.
+        if (isTabSwitch(previousUrl, nextUrl)) return;
         queueMicrotask(() => {
           const content = this.content()?.nativeElement;
           const heading = content?.querySelector<HTMLElement>('h1');

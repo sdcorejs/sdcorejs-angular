@@ -1,5 +1,7 @@
-import { DOCUMENT, NgTemplateOutlet } from '@angular/common';
+import { DOCUMENT } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject, input, signal } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
+import { DocsI18nService } from '../core/docs-i18n.service';
 import { DocsFragmentLinkDirective } from './docs-fragment-link.directive';
 
 export interface DocsTocItem {
@@ -12,144 +14,122 @@ interface DocsTocLink extends DocsTocItem {
   readonly depth: number;
 }
 
-interface DocsTocNode extends DocsTocLink {
-  readonly children: DocsTocNode[];
-}
+/** Distance from the viewport top at which a section counts as current, and the offset used when jumping to it. */
+export const DOCS_TOC_OFFSET_PX = 124;
 
+const ISSUES_URL = 'https://github.com/sdcorejs/sdcorejs-angular/issues';
+
+/** Sticky "On this page" column: scroll-spy over the page sections plus Edit / Report / Back to top. */
 @Component({
   selector: 'docs-table-of-contents',
   standalone: true,
-  imports: [DocsFragmentLinkDirective, NgTemplateOutlet],
-  host: {
-    '[class.docs-toc-host--inline]': 'mode() === "inline"',
-    '[class.docs-toc-host--aside]': 'mode() === "aside"',
-  },
+  imports: [DocsFragmentLinkDirective, MatIconModule],
   template: `
-    <ng-template #tocTree let-nodes>
-      <ol>
-        @for (link of nodes; track link.id) {
-          <li>
-            <a
-              class="toc-link"
-              [docsFragmentLink]="link.id"
-              [attr.data-depth]="link.depth"
-              [attr.aria-current]="activeId() === link.id ? 'location' : null"
-              [class.active]="activeId() === link.id"
-              (click)="activeId.set(link.id)"
-              >{{ link.label }}</a
-            >
-            @if (link.children.length) {
-              <ng-container [ngTemplateOutlet]="tocTree" [ngTemplateOutletContext]="{ $implicit: link.children }"></ng-container>
-            }
-          </li>
+    @let t = i18n.t();
+    <aside class="toc" [attr.aria-label]="t.onThisPage">
+      <p class="toc__title" aria-hidden="true">{{ t.onThisPage }}</p>
+      <nav class="toc__nav" [attr.aria-label]="t.onThisPage">
+        @for (link of links(); track link.id) {
+          <a
+            class="toc-link"
+            [docsFragmentLink]="link.id"
+            [attr.data-depth]="link.depth"
+            [style.padding-left.px]="14 + link.depth * 12"
+            [attr.aria-current]="activeId() === link.id ? 'location' : null"
+            [class.active]="activeId() === link.id"
+            (click)="jump($event, link.id)"
+            >{{ link.label }}</a
+          >
         }
-      </ol>
-    </ng-template>
-
-    @if (mode() === 'inline') {
-      <details class="toc-inline">
-        <summary>On this page</summary>
-        <nav aria-label="On this page">
-          <ng-container [ngTemplateOutlet]="tocTree" [ngTemplateOutletContext]="{ $implicit: tree() }"></ng-container>
-        </nav>
-      </details>
-    } @else {
-      <aside class="toc" aria-label="On this page">
-        <strong>On this page</strong>
-        <ng-container [ngTemplateOutlet]="tocTree" [ngTemplateOutletContext]="{ $implicit: tree() }"></ng-container>
-      </aside>
-    }
+      </nav>
+      <div class="toc__links">
+        @if (editUrl(); as url) {
+          <a [href]="url" target="_blank" rel="noopener noreferrer"><mat-icon aria-hidden="true">edit</mat-icon>{{ t.editPage }}</a>
+        }
+        @if (sourceUrl(); as url) {
+          <a [href]="url" target="_blank" rel="noopener noreferrer"><mat-icon aria-hidden="true">code</mat-icon>{{ t.viewDemoSource }}</a>
+        }
+        <a [href]="issuesUrl" target="_blank" rel="noopener noreferrer"><mat-icon aria-hidden="true">bug_report</mat-icon>{{ t.reportIssue }}</a>
+        <a [docsFragmentLink]="'docs-content'" (click)="backToTop($event)"><mat-icon aria-hidden="true">arrow_upward</mat-icon>{{ t.backToTop }}</a>
+      </div>
+    </aside>
   `,
   styles: [
     `
       :host {
-        min-width: 0;
-      }
-      :host(.docs-toc-host--inline) {
         display: none;
+        min-width: 0;
       }
       .toc {
         position: sticky;
-        top: calc(var(--docs-header-height) + 24px);
-        max-height: calc(100vh - var(--docs-header-height) - 48px);
+        top: 132px;
+        max-height: calc(100vh - 150px);
         overflow-y: auto;
         overscroll-behavior: contain;
-        align-self: start;
-        border-left: 1px solid var(--docs-border-color);
-        padding: 0 6px 4px 18px;
-        scrollbar-gutter: stable;
+        padding-top: 4px;
       }
-      .toc strong {
-        display: block;
-        margin-bottom: 8px;
+      .toc__title {
+        margin: 0 0 10px;
+        color: var(--docs-fg-3);
         font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
         text-transform: uppercase;
       }
-      ol {
+      .toc__nav {
         display: grid;
-        gap: 3px;
-        margin: 0;
-        padding: 0;
-        list-style: none;
-      }
-      ol ol {
-        margin-inline-start: 12px;
+        border-left: 1px solid var(--docs-line);
       }
       .toc-link {
-        display: flex;
-        align-items: center;
-        min-height: 44px;
-        border-left: 2px solid transparent;
-        border-radius: 0 6px 6px 0;
-        padding: 5px 6px 5px 8px;
-        color: var(--docs-text-muted);
-        font-size: 13px;
-        line-height: 1.45;
+        display: block;
+        margin-left: -1px;
+        border-left: 1px solid transparent;
+        padding: 5px 0 5px 14px;
+        color: var(--docs-fg-3);
+        font-size: 13.5px;
+        line-height: 1.4;
       }
       .toc-link:hover {
-        color: var(--docs-text);
+        color: var(--docs-fg);
         text-decoration: none;
       }
       .toc-link.active {
-        border-left-color: var(--sd-primary, #005cbb);
-        background: var(--sd-primary-light, #e8f1ff);
-        color: var(--sd-primary, #005cbb);
-        font-weight: 600;
+        border-left-color: var(--docs-acc);
+        color: var(--docs-acc);
       }
-      .toc-inline {
-        margin-top: 16px;
-        border: 1px solid var(--docs-border-color);
-        border-radius: 9px;
-        background: var(--docs-surface-muted);
-        padding: 0 12px;
+      .toc__links {
+        display: grid;
+        gap: 10px;
+        margin-top: 24px;
+        border-top: 1px solid var(--docs-line);
+        padding-top: 16px;
+        font-size: 13px;
       }
-      .toc-inline summary {
+      .toc__links a {
         display: flex;
         align-items: center;
-        min-height: 44px;
+        gap: 6px;
+        color: var(--docs-fg-3);
         cursor: pointer;
-        font-weight: 600;
       }
-      .toc-inline nav {
-        max-height: 320px;
-        overflow-y: auto;
-        padding: 0 0 12px;
-        scrollbar-gutter: stable;
+      .toc__links a:hover {
+        color: var(--docs-fg);
       }
-      @container docs-page (max-width: 1080px) {
-        :host(.docs-toc-host--inline) {
+      .toc__links mat-icon {
+        width: 16px;
+        height: 16px;
+        font-size: 16px;
+      }
+      @media (min-width: 1260px) {
+        :host {
           display: block;
         }
-        :host(.docs-toc-host--aside) {
-          display: none;
-        }
       }
-      @media (max-width: 1368px) {
-        :host(.docs-toc-host--inline) {
-          display: block;
-        }
-        :host(.docs-toc-host--aside) {
-          display: none;
+      @media (pointer: coarse) {
+        .toc-link,
+        .toc__links a {
+          min-height: 44px;
+          align-content: center;
         }
       }
     `,
@@ -159,57 +139,69 @@ interface DocsTocNode extends DocsTocLink {
 export class DocsTableOfContentsComponent {
   readonly #document = inject(DOCUMENT);
   readonly #destroyRef = inject(DestroyRef);
+  readonly i18n = inject(DocsI18nService);
+  readonly issuesUrl = ISSUES_URL;
   readonly items = input.required<readonly DocsTocItem[]>();
-  readonly mode = input<'inline' | 'aside'>('aside');
+  readonly editUrl = input<string | null>(null);
+  readonly sourceUrl = input<string | null>(null);
   readonly activeId = signal('');
   readonly links = computed<readonly DocsTocLink[]>(() => {
     const items = this.items();
     const baseLevel = Math.min(...items.map(item => item.level ?? 2));
-    return items.map(item => {
-      const depth = Math.max(0, (item.level ?? baseLevel) - baseLevel);
-      return { ...item, depth };
-    });
-  });
-  readonly tree = computed<readonly DocsTocNode[]>(() => {
-    const roots: DocsTocNode[] = [];
-    const stack: DocsTocNode[] = [];
-    for (const link of this.links()) {
-      const node: DocsTocNode = { ...link, children: [] };
-      while (stack.length && stack.at(-1)!.depth >= node.depth) stack.pop();
-      const parent = stack.at(-1);
-      (parent?.children ?? roots).push(node);
-      stack.push(node);
-    }
-    return roots;
+    return items.map(item => ({ ...item, depth: Math.max(0, (item.level ?? baseLevel) - baseLevel) }));
   });
 
   constructor() {
-    const updateActiveSection = () => this.#updateActiveSection();
-    this.#document.addEventListener('scroll', updateActiveSection, { passive: true });
-    this.#document.defaultView?.addEventListener('scroll', updateActiveSection, { passive: true });
-    this.#document.defaultView?.addEventListener('resize', updateActiveSection, { passive: true });
+    const view = this.#document.defaultView;
+    let frame = 0;
+    const scheduleUpdate = () => {
+      if (frame || !view) return;
+      frame = view.requestAnimationFrame(() => {
+        frame = 0;
+        this.updateActiveSection();
+      });
+    };
+    view?.addEventListener('scroll', scheduleUpdate, { passive: true });
+    view?.addEventListener('resize', scheduleUpdate, { passive: true });
     this.#destroyRef.onDestroy(() => {
-      this.#document.removeEventListener('scroll', updateActiveSection);
-      this.#document.defaultView?.removeEventListener('scroll', updateActiveSection);
-      this.#document.defaultView?.removeEventListener('resize', updateActiveSection);
+      view?.removeEventListener('scroll', scheduleUpdate);
+      view?.removeEventListener('resize', scheduleUpdate);
+      if (frame) view?.cancelAnimationFrame(frame);
     });
 
     effect(() => {
       const links = this.links();
       if (!links.some(link => link.id === this.activeId())) this.activeId.set(links[0]?.id ?? '');
-      queueMicrotask(updateActiveSection);
+      queueMicrotask(() => this.updateActiveSection());
     });
   }
 
-  #updateActiveSection(): void {
+  /** Smooth jump that leaves the section heading clear of the sticky header and tab bar. */
+  jump(event: MouseEvent, id: string): void {
+    const view = this.#document.defaultView;
+    const target = this.#document.getElementById(id);
+    this.activeId.set(id);
+    if (!view || !target || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey) return;
+    event.preventDefault();
+    const top = target.getBoundingClientRect().top + view.scrollY - DOCS_TOC_OFFSET_PX;
+    view.scrollTo({ top, behavior: 'smooth' });
+    view.history.replaceState(view.history.state, '', (event.currentTarget as HTMLAnchorElement).getAttribute('href') ?? '');
+    target.tabIndex = -1;
+    target.focus({ preventScroll: true });
+  }
+
+  backToTop(event: MouseEvent): void {
+    event.preventDefault();
+    this.#document.defaultView?.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  updateActiveSection(): void {
     const links = this.links();
     if (!links.length) return;
-
-    const threshold = 112;
     let current = links[0].id;
     for (const link of links) {
       const target = this.#document.getElementById(link.id);
-      if (target && target.getBoundingClientRect().top <= threshold) current = link.id;
+      if (target && target.getBoundingClientRect().top <= DOCS_TOC_OFFSET_PX + 1) current = link.id;
     }
     this.activeId.set(current);
   }

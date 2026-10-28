@@ -86,6 +86,8 @@ describe('DocsPageComponent', () => {
             invalidVersion: signal<string | null>(null),
             selectedVersion: signal(version),
             latestVersion: signal(options.latestVersion ?? '21.1.2'),
+            selectedRelease: signal(version.split('.').slice(1).join('.')),
+            isLatestRelease: signal(version === (options.latestVersion ?? '21.1.2')),
           },
         },
         { provide: PublishedDocsService, useValue: publishedDocs },
@@ -125,7 +127,9 @@ describe('DocsPageComponent', () => {
       viewModel: publishedView({ styling: [], api: [], examples: [] }),
     });
 
-    const labels = [...fixture!.nativeElement.querySelectorAll('.docs-tabs a')].map((link: HTMLAnchorElement) => link.textContent?.trim());
+    const labels = [...fixture!.nativeElement.querySelectorAll('.docs-tabs a > span:first-child')].map((label: HTMLElement) =>
+      label.textContent?.trim()
+    );
 
     expect(labels).toEqual(['Overview', 'Examples']);
   });
@@ -147,9 +151,42 @@ describe('DocsPageComponent', () => {
     expect(fixture?.nativeElement.querySelector('.examples-summary strong')?.textContent?.trim()).toBe(String(button?.demoSectionCount));
     expect(fixture?.nativeElement.querySelector('.examples-summary span')?.textContent?.trim()).toBe('interactive examples');
     expect(fixture?.nativeElement.textContent).not.toContain('preserved');
-    expect(fixture?.nativeElement.querySelector('.page-header > a')?.textContent?.trim()).toBe('View demo source');
-    expect(fixture?.nativeElement.querySelector('.page-header > a')?.getAttribute('href')).toBe(
+    const source = fixture?.nativeElement.querySelector('.toc__links a[href*="button-demo"]') as HTMLAnchorElement;
+    expect(source.textContent).toContain('View demo source');
+    expect(source.getAttribute('href')).toBe(
       'https://github.com/sdcorejs/sdcorejs-angular/blob/main/showcase/src/app/pages/components/button/button-demo.component.ts'
+    );
+  });
+
+  it('shows tab counts, the English purpose as lead and an edit link to the published source', async () => {
+    const purpose: MarkdownSection = {
+      heading: 'One-line purpose',
+      id: 'one-line-purpose',
+      level: 2,
+      markdown: 'Standard action button with `sd-button`.',
+    };
+    const api: MarkdownSection = {
+      heading: 'Inputs',
+      id: 'inputs',
+      level: 2,
+      markdown: '| Name | Type |\n| --- | --- |\n| `type` | `string` |\n| `size` | `string` |',
+    };
+    await setup({
+      tab: 'overview',
+      viewModel: publishedView({ overview: [purpose, section('When to use', 'when-to-use')], api: [api] }),
+    });
+
+    const tabs = [...fixture!.nativeElement.querySelectorAll('.docs-tabs a')] as HTMLAnchorElement[];
+    const button = DOC_PAGES.find(page => page.category === 'components' && page.slug === 'button');
+    expect(tabs.map(tab => tab.querySelector('.docs-tabs__count')?.textContent ?? null)).toEqual([
+      null,
+      '2',
+      String(button?.examples.length),
+    ]);
+    expect(fixture!.nativeElement.querySelector('.page-header__lead')?.textContent).toContain('Standard action button');
+    expect(fixture!.nativeElement.querySelector('#one-line-purpose')).toBeNull();
+    expect((fixture!.nativeElement.querySelector('.toc__links a') as HTMLAnchorElement).href).toBe(
+      'https://github.com/sdcorejs/sdcorejs-angular/blob/main/versions/v19/projects/sdcorejs-angular/button.md'
     );
   });
 

@@ -1,6 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { DOCUMENT } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { MatIconModule } from '@angular/material/icon';
+import { ActivatedRoute, Router, RouterLink, Scroll } from '@angular/router';
+import { filter } from 'rxjs';
+import { DocsI18nService } from '../../core/docs-i18n.service';
+import { DocsReleaseNotesService } from '../../core/docs-release-notes.service';
 import { DocsVersionService } from '../../core/docs-version.service';
 import { buildVersionRoute } from '../../core/docs-version.utils';
 import { DocPageDefinition, DocTabId, isDocCategory } from '../../core/documentation.models';
@@ -15,11 +20,39 @@ import { DocsPageTabLink, DocsPageTabsComponent } from '../../shared/docs-page-t
 import { DocsTableOfContentsComponent, DocsTocItem } from '../../shared/docs-table-of-contents.component';
 import { resolveDocsPageAvailability } from '../../shared/docs-page-availability';
 
+const LIBRARY_SOURCE_ROOT = 'https://github.com/sdcorejs/sdcorejs-angular/blob/main/versions/v19/projects/sdcorejs-angular/';
+const PURPOSE_HEADING = /^one-line purpose$/i;
+
+/** Number of body rows in the Markdown tables of the API sections (the API tab count). */
+export function countApiTableRows(sections: readonly MarkdownSection[]): number {
+  let rows = 0;
+  for (const section of sections) {
+    const lines = section.markdown.split(/\r?\n/).map(line => line.trim());
+    for (let index = 0; index < lines.length; index += 1) {
+      const isRow = lines[index].startsWith('|');
+      const isHeader = isRow && /^\|?\s*:?-{2,}/.test(lines[index + 1] ?? '');
+      const isSeparator = /^\|?\s*:?-{2,}/.test(lines[index]);
+      if (isRow && !isHeader && !isSeparator) rows += 1;
+    }
+  }
+  return rows;
+}
+
+/** First paragraph of a Markdown section as plain text with `code` kept. */
+export function firstParagraph(markdown: string): string | null {
+  const paragraph = markdown
+    .split(/\r?\n\s*\r?\n/)
+    .map(block => block.trim())
+    .find(block => block && !/^(#|[-*] |\||```|>)/.test(block));
+  return paragraph ? paragraph.replace(/\s*\r?\n\s*/g, ' ').replace(/\*\*([^*]+)\*\*/g, '$1') : null;
+}
+
 @Component({
   selector: 'docs-page',
   standalone: true,
   imports: [
     RouterLink,
+    MatIconModule,
     MarkdownRendererComponent,
     ExampleViewerComponent,
     DocsApiSummaryComponent,
@@ -34,10 +67,17 @@ import { resolveDocsPageAvailability } from '../../shared/docs-page-availability
 export class DocsPageComponent {
   readonly #route = inject(ActivatedRoute);
   readonly #router = inject(Router);
+  readonly #document = inject(DOCUMENT);
   readonly #publishedDocs = inject(PublishedDocsService);
+  readonly #releaseNotes = inject(DocsReleaseNotesService);
   readonly params = toSignal(this.#route.paramMap, { initialValue: this.#route.snapshot.paramMap });
+  readonly tabsAnchor = viewChild<ElementRef<HTMLElement>>('tabsAnchor');
   #loadSequence = 0;
+  #loadedKey: string | null = null;
+  /** Scroll position to restore after a tab switch, set just before the router navigates. */
+  #tabScrollTarget: number | null = null;
 
+  readonly i18n = inject(DocsI18nService);
   readonly versions = inject(DocsVersionService);
   readonly page = signal<DocPageDefinition | null>(null);
   readonly tab = signal<DocTabId>('overview');
@@ -54,20 +94,44 @@ export class DocsPageComponent {
     const page = this.page();
     if (!page) return [];
     const availableTabs = new Set(this.#availableTabs(page, this.viewModel()));
+    const view = this.viewModel();
     return page.tabs
       .filter(tab => availableTabs.has(tab.id))
       .map(tab => ({
         ...tab,
         commands: ['/v', this.version(), page.category, page.slug, tab.id],
+        count: tab.id === 'api' && view ? countApiTableRows(view.api) || null : tab.id === 'examples' ? page.examples.length || null : null,
       }));
   });
   readonly metadata = computed(() => Object.entries(this.viewModel()?.parsed.metadata ?? {}));
+  readonly metadataRecord = computed<Readonly<Record<string, string>>>(() => this.viewModel()?.parsed.metadata ?? {});
+  readonly purposeSection = computed(() => this.viewModel()?.overview.find(section => PURPOSE_HEADING.test(section.heading.trim())) ?? null);
+  readonly lead = computed(() => {
+    const section = this.purposeSection();
+    return section ? firstParagraph(section.markdown) : null;
+  });
+  readonly release = computed(() => this.versions.selectedRelease());
+  readonly isLatestRelease = computed(() => this.versions.isLatestRelease());
+  readonly releaseBadge = computed(() => {
+    const page = this.page();
+    return page && this.isLatestRelease() ? (this.#releaseNotes.badges().get(page.id) ?? null) : null;
+  });
+  /** "What changed in <release>": changelog entries of the current release that name this page. */
+  readonly changes = computed(() => {
+    const page = this.page();
+    return page && this.isLatestRelease() ? this.#releaseNotes.entriesFor(page.id) : [];
+  });
+  readonly changelogLink = computed(() => ['/v', this.version(), 'changelog']);
+  readonly editUrl = computed(() => {
+    const path = this.viewModel()?.document.path;
+    return path ? `${LIBRARY_SOURCE_ROOT}${path}` : null;
+  });
   readonly sections = computed<readonly MarkdownSection[]>(() => {
     const view = this.viewModel();
     if (!view) return [];
     switch (this.tab()) {
       case 'overview':
-        return view.overview;
+        return view.overview.filter(section => section !== this.purposeSection());
       case 'styling':
         return view.styling;
       case 'api':
@@ -102,6 +166,9 @@ export class DocsPageComponent {
       label: section.heading,
       level: section.level,
     }));
+    if (this.tab() === 'overview' && this.changes().length) {
+      items.unshift({ id: 'changed', label: this.i18n.format('changedIn', { v: this.release() }), level: 2 });
+    }
     if (this.tab() === 'styling' && this.styleGuideSections().length) {
       items.push(
         { id: 'shared-style-guide', label: 'Shared style guide', level: 2 },
@@ -137,10 +204,34 @@ export class DocsPageComponent {
   );
 
   constructor() {
+    void this.#releaseNotes.load();
     effect(() => {
       const params = this.params();
       void this.#load(params.get('version'), params.get('category'), params.get('slug'), params.get('tab'));
     });
+    // why: the router scrolls to the top after every navigation; a tab switch keeps the reader at the tab bar.
+    this.#router.events
+      .pipe(
+        filter((event): event is Scroll => event instanceof Scroll),
+        takeUntilDestroyed()
+      )
+      .subscribe(() => {
+        const target = this.#tabScrollTarget;
+        this.#tabScrollTarget = null;
+        const view = this.#document.defaultView;
+        if (target === null || !view) return;
+        view.setTimeout(() => view.requestAnimationFrame(() => view.scrollTo({ top: target })));
+      });
+  }
+
+  /** Called before a tab link navigates: stay where the reader is, or at the tab bar once it is sticky. */
+  onTabSelected(): void {
+    const view = this.#document.defaultView;
+    const anchor = this.tabsAnchor()?.nativeElement;
+    if (!view || !anchor) return;
+    const header = parseFloat(view.getComputedStyle(this.#document.documentElement).getPropertyValue('--docs-header-height')) || 60;
+    const tabsTop = anchor.getBoundingClientRect().bottom + view.scrollY - header;
+    this.#tabScrollTarget = Math.min(view.scrollY, tabsTop);
   }
 
   retry(): void {
@@ -149,7 +240,19 @@ export class DocsPageComponent {
   }
 
   async #load(requestedVersion: string | null, categoryValue: string | null, slug: string | null, tabValue: string | null): Promise<void> {
+    const loadedPage = this.page();
+    const sameDocument =
+      !!loadedPage && !!this.viewModel() && !this.loading() && this.#loadedKey === `${requestedVersion}|${categoryValue}|${slug}`;
+    const sameTab = loadedPage?.tabs.find(candidate => candidate.id === tabValue)?.id;
+    if (sameDocument && sameTab && sameTab !== 'styling' && this.#availableTabs(loadedPage, this.viewModel()).includes(sameTab)) {
+      // why: switching tabs of the loaded document keeps its content instead of collapsing to a loading state.
+      ++this.#loadSequence;
+      this.tab.set(sameTab);
+      return;
+    }
+
     const sequence = ++this.#loadSequence;
+    this.#loadedKey = null;
     this.loading.set(true);
     this.error.set(null);
     this.notFound.set(false);
@@ -194,6 +297,7 @@ export class DocsPageComponent {
         if (sequence !== this.#loadSequence) return;
         this.viewModel.set(view);
         this.notAvailable.set(!view);
+        if (view) this.#loadedKey = `${version}|${page.category}|${page.slug}`;
       }
 
       const availableTabs = this.#availableTabs(page, this.viewModel());

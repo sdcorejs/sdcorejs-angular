@@ -51,6 +51,31 @@ export function deriveReleaseBadges(
   return badges;
 }
 
+/** Changelog entries of one release that name a page, in changelog order; the "Name:" lead is dropped. */
+export function changelogEntriesForPage(
+  release: ShowcaseChangelogRelease | null | undefined,
+  page: BadgeTarget,
+  pages: readonly BadgeTarget[]
+): readonly string[] {
+  if (!release) return [];
+  const byTag = new Map<string, string[]>();
+  for (const candidate of pages) {
+    const tag = foldSearchText(candidate.title).replace(/[^a-z0-9]+/g, ' ').trim();
+    byTag.set(tag, [...(byTag.get(tag) ?? []), candidate.id]);
+  }
+  const entries: string[] = [];
+  for (const section of release.sections) {
+    if (!badgeForSection(section)) continue;
+    for (const item of section.items) {
+      const tag = changelogEntryTag(item.text);
+      if (tag && byTag.get(matchPageTag(tag, byTag))?.includes(page.id)) {
+        entries.push(item.text.replace(/^\s*[^:\n]{2,80}?:\s+/, ''));
+      }
+    }
+  }
+  return entries;
+}
+
 /** Longest page title that starts the tag on a word boundary: "button outline" → "button", "tab router" → "tab router". */
 function matchPageTag(tag: string, byTag: ReadonlyMap<string, readonly string[]>): string {
   const words = tag.split(' ');
