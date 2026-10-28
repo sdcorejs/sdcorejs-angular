@@ -17,6 +17,7 @@ import { PublishedDocsService } from '../../core/published-docs.service';
 import { ExampleViewerComponent } from '../../shared/example-viewer.component';
 import { MarkdownRendererComponent } from '../../shared/markdown-renderer.component';
 import { DocsApiMethodsComponent } from '../../shared/docs-api-methods.component';
+import { DocsNotFoundComponent } from '../not-found/docs-not-found.component';
 import { DocsPageHeaderComponent } from '../../shared/docs-page-header.component';
 import { DocsPageTabLink, DocsPageTabsComponent } from '../../shared/docs-page-tabs.component';
 import { DocsTableOfContentsComponent, DocsTocItem } from '../../shared/docs-table-of-contents.component';
@@ -62,6 +63,7 @@ export function firstParagraph(markdown: string): string | null {
     MarkdownRendererComponent,
     ExampleViewerComponent,
     DocsApiMethodsComponent,
+    DocsNotFoundComponent,
     DocsPageHeaderComponent,
     DocsPageTabsComponent,
     DocsTableOfContentsComponent,

@@ -1,0 +1,102 @@
+@let t = i18n.t();
+@let q = query().trim();
+<div class="search-page">
+  <h1 class="docs-visually-hidden">{{ t.searchResults }}</h1>
+  <label class="search-field">
+    <mat-icon aria-hidden="true">search</mat-icon>
+    <input
+      type="search"
+      role="combobox"
+      autocomplete="off"
+      aria-autocomplete="list"
+      aria-controls="docs-search-page-results"
+      [attr.aria-expanded]="flatHits().length > 0"
+      [attr.aria-activedescendant]="flatHits().length ? 'docs-search-hit-' + selected() : null"
+      [attr.aria-label]="t.search"
+      [placeholder]="t.searchPlaceholder"
+      [value]="query()"
+      (input)="onInput($event)"
+      (keydown)="onKeydown($event)" />
+    @if (query()) {
+      <button type="button" [attr.aria-label]="t.clearSearch" (click)="clear()"><mat-icon aria-hidden="true">close</mat-icon></button>
+    }
+  </label>
+
+  <div class="search-meta">
+    <p role="status" aria-live="polite" aria-atomic="true">
+      @if (q) {
+        {{ i18n.format('resultsFor', { n: hits().length, q: q }) }}
+        {{ i18n.format('inScope', { v: versions.selectedRelease(), ng: versions.selectedAngularMajor() ?? '' }) }}
+      }
+      @if (indexing()) {
+        <span class="search-meta__indexing">{{ t.indexing }}</span>
+      }
+    </p>
+    @if (q && hits().length) {
+      <div class="search-chips">
+        <button type="button" [class.active]="activeType() === 'all'" [attr.aria-pressed]="activeType() === 'all'" (click)="selectType('all')">
+          {{ t.filterAll }}<span>{{ hits().length }}</span>
+        </button>
+        @for (group of allGroups(); track group.id) {
+          <button
+            type="button"
+            [class.active]="activeType() === group.id"
+            [attr.aria-pressed]="activeType() === group.id"
+            (click)="selectType(group.id)">
+            {{ groupLabel(group.id) }}<span>{{ group.count }}</span>
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  @if (!hits().length) {
+    <div class="search-empty">
+      <p class="search-empty__title">{{ q ? i18n.format('noResultsFor', { q: q, v: versions.selectedRelease() }) : t.popular }}</p>
+      <p>{{ t.checkSpelling }}</p>
+      <div class="search-empty__links">
+        @for (item of popular(); track item.label) {
+          <a [routerLink]="item.commands">{{ item.label }}</a>
+        }
+      </div>
+    </div>
+  }
+
+  <div id="docs-search-page-results" role="listbox" [attr.aria-label]="t.searchResults">
+    @for (group of groups(); track group.id) {
+      <section class="search-group" role="group" [attr.aria-label]="groupLabel(group.id)">
+        <h2>{{ groupLabel(group.id) }}<span>{{ group.count }}</span></h2>
+        <div class="search-group__list">
+          @for (view of group.views; track view.hit.id) {
+            <a
+              class="search-hit"
+              role="option"
+              [id]="'docs-search-hit-' + view.index"
+              [attr.aria-selected]="selected() === view.index"
+              [class.active]="selected() === view.index"
+              [routerLink]="view.hit.commands"
+              [fragment]="view.hit.fragment ?? undefined"
+              (mouseenter)="selected.set(view.index)">
+              <mat-icon class="search-hit__icon" aria-hidden="true">{{ view.hit.icon }}</mat-icon>
+              <span class="search-hit__body">
+                <span class="search-hit__title"
+                  >{{ view.title.before }}<mark>{{ view.title.match }}</mark>{{ view.title.after }}</span
+                >
+                <span class="search-hit__path">{{ view.hit.path }}</span>
+                @if (view.snippet; as snippet) {
+                  <span class="search-hit__snippet">{{ snippet.before }}<mark>{{ snippet.match }}</mark>{{ snippet.after }}</span>
+                }
+              </span>
+              <mat-icon class="search-hit__arrow" aria-hidden="true">{{ selected() === view.index ? 'keyboard_return' : 'arrow_forward' }}</mat-icon>
+            </a>
+          }
+        </div>
+      </section>
+    }
+  </div>
+
+  <div class="search-keys" aria-hidden="true">
+    <span><kbd>↑</kbd><kbd>↓</kbd>{{ t.navigateHint }}</span>
+    <span><kbd>↵</kbd>{{ t.openHint }}</span>
+  </div>
+</div>

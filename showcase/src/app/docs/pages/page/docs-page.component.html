@@ -1,12 +1,7 @@
 @let currentPage = page();
 @let t = i18n.t();
 @if (notFound()) {
-  <main class="docs-state">
-    <span>404</span>
-    <h1>Documentation entry not found</h1>
-    <p>This slug, category, or tab is not present in the central documentation registry.</p>
-    <a routerLink="/">Back to documentation home</a>
-  </main>
+  <docs-not-found></docs-not-found>
 } @else if (currentPage) {
   <div class="docs-layout" [class.docs-layout--toc]="tableOfContents().length > 0">
     <article class="docs-article">

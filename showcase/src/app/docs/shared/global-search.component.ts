@@ -204,7 +204,10 @@ function resolveMetadata(
             </section>
           }
         </div>
-        <footer><span>↑↓ Navigate</span><span>Enter Open</span><span>Esc Close</span></footer>
+        <footer>
+          <span>↑↓ Navigate</span><span>Enter Open</span><span>Esc Close</span>
+          <button class="search-dialog__all" type="button" (click)="openResultsPage()">{{ i18n.t().allResults }} →</button>
+        </footer>
       </section>
     }
   `,
@@ -360,6 +363,14 @@ export class GlobalSearchComponent {
     event.preventDefault();
     const result = this.displayedResults()[this.activeIndex()];
     if (result) this.navigate(result);
+  }
+
+  /** Opens the full results page (pages, API members and guide sections) for the current query. */
+  openResultsPage(): void {
+    const version = this.#versions.selectedVersion() ?? 'latest';
+    const q = this.query().trim();
+    this.closeSearch(false);
+    void this.#router.navigate(['/v', version, 'search'], { queryParams: { q: q || null } });
   }
 
   navigate(result: DocsSearchResult): void {

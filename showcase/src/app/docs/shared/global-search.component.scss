@@ -173,11 +173,24 @@
 
   footer {
     display: flex;
+    align-items: center;
     gap: 16px;
     border-top: 1px solid var(--docs-border-color);
-    padding: 8px 14px;
+    padding: 0 6px 0 14px;
     color: var(--docs-text-muted);
     font-size: 11px;
+  }
+
+  &__all {
+    min-height: 44px;
+    margin-left: auto;
+    border: 0;
+    background: transparent;
+    padding: 0 8px;
+    color: var(--docs-acc);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
   }
 }
 
@@ -283,7 +296,7 @@
       padding: 8px;
     }
 
-    footer {
+    footer span {
       display: none;
     }
   }
