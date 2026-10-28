@@ -1,0 +1,178 @@
+:host {
+  display: block;
+}
+
+.breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  color: var(--docs-fg-3);
+  font-size: 13px;
+
+  a {
+    color: var(--docs-fg-3);
+  }
+
+  mat-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+  }
+
+  [aria-current] {
+    color: var(--docs-fg-2);
+  }
+}
+
+.version-notice {
+  margin-top: 16px;
+  border-radius: var(--docs-radius-code);
+  background: var(--docs-acc-soft);
+  padding: 11px 14px;
+  color: var(--docs-fg-2);
+  font-size: 13px;
+}
+
+.page-header {
+  &__badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 20px 0 10px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: var(--docs-fs-h1);
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+  }
+
+  &__lead {
+    max-width: 700px;
+    margin: 14px 0 0;
+    color: var(--docs-fg-2);
+    font-size: var(--docs-fs-lead);
+    line-height: 1.6;
+    text-wrap: pretty;
+
+    code {
+      border-radius: var(--docs-radius-chip);
+      background: var(--docs-bg-3);
+      padding: 1px 5px;
+      color: var(--docs-fg);
+      font-size: 0.88em;
+    }
+  }
+
+  // Identity strip: one bordered row of copyable cells that wraps on narrow screens.
+  &__identity {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 24px;
+    overflow: hidden;
+    border: 1px solid var(--docs-line);
+    border-radius: var(--docs-radius-code);
+  }
+}
+
+.pill {
+  border-radius: var(--docs-radius-pill);
+  background: var(--docs-bg-3);
+  padding: 2px 8px;
+  color: var(--docs-fg-2);
+  font-size: 12px;
+  font-weight: 600;
+
+  &--accent {
+    background: var(--docs-acc-soft);
+    color: var(--docs-acc);
+  }
+
+  &--warn {
+    background: var(--docs-warn-soft);
+    color: var(--docs-warn);
+  }
+}
+
+.identity-cell {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  margin: 0 -1px -1px 0;
+  border-right: 1px solid var(--docs-line);
+  border-bottom: 1px solid var(--docs-line);
+  padding: 8px 6px 8px 14px;
+
+  &--grow {
+    flex: 1 1 340px;
+  }
+
+  &__label {
+    flex: none;
+    color: var(--docs-fg-3);
+    font-size: var(--docs-fs-label);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  &__value {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--docs-fg);
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__copy {
+    position: relative;
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: var(--docs-radius-nav);
+    background: transparent;
+    padding: 0;
+    color: var(--docs-fg-3);
+    cursor: pointer;
+
+    // why: 30px visual, 44px hit area.
+    &::after {
+      position: absolute;
+      inset: -7px;
+      content: '';
+    }
+
+    &:hover {
+      background: var(--docs-bg-3);
+      color: var(--docs-fg);
+    }
+
+    mat-icon {
+      width: 16px;
+      height: 16px;
+      font-size: 16px;
+    }
+  }
+}
+
+@media (max-width: 639.98px) {
+  .page-header h1 {
+    font-size: 36px;
+  }
+
+  .identity-cell {
+    flex: 1 1 100%;
+  }
+}

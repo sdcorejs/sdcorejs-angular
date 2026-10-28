@@ -5,41 +5,95 @@
 }
 
 .search-trigger {
+  position: relative;
   display: flex;
+  flex: 1;
   align-items: center;
-  gap: 9px;
-  width: clamp(220px, 24vw, 300px);
+  gap: 8px;
   min-width: 0;
-  height: var(--docs-control-height-lg, 44px);
+  height: 36px;
   box-sizing: border-box;
-  border: 1px solid var(--docs-border-color);
-  border-radius: 10px;
-  background: var(--docs-surface-raised);
-  padding: 0 8px 0 12px;
-  color: var(--docs-text-secondary);
-  box-shadow: 0 1px 2px rgb(15 23 42 / 5%);
+  border: 1px solid var(--docs-line-2);
+  border-radius: var(--docs-radius-control);
+  background: var(--docs-bg);
+  padding: 0 8px 0 10px;
+  color: var(--docs-fg-3);
+  font-size: 14px;
+  text-align: left;
   cursor: pointer;
+
+  // why: 36px visual, 44px hit area.
+  &::after {
+    position: absolute;
+    inset: -5px 0;
+    content: '';
+  }
 
   mat-icon {
     flex: 0 0 18px;
     width: 18px;
     height: 18px;
-    color: var(--docs-text-muted);
     font-size: 18px;
   }
 
   &:hover {
-    border-color: color-mix(in srgb, var(--sd-primary, #005cbb) 42%, var(--docs-border-color));
-    color: var(--docs-text);
+    border-color: var(--docs-acc);
+  }
+
+  &__label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   kbd {
-    margin-left: auto;
-    border: 1px solid var(--docs-border-color);
-    border-radius: 5px;
-    background: var(--docs-surface-muted);
-    padding: 2px 5px;
+    flex: none;
+    border: 1px solid var(--docs-line-2);
+    border-radius: var(--docs-radius-chip);
+    padding: 1px 6px;
+    color: var(--docs-fg-3);
     font-size: 11px;
+  }
+}
+
+// Below 760px the trigger collapses to a borderless 36px icon button.
+@media (max-width: 759.98px) {
+  :host {
+    flex: none;
+  }
+
+  .search-trigger {
+    flex: none;
+    justify-content: center;
+    width: 36px;
+    border-color: transparent;
+    background: transparent;
+    padding: 0;
+    color: var(--docs-fg-2);
+
+    &::after {
+      inset: -4px;
+    }
+
+    &:hover {
+      border-color: transparent;
+      background: var(--docs-bg-3);
+      color: var(--docs-fg);
+    }
+
+    mat-icon {
+      flex-basis: 21px;
+      width: 21px;
+      height: 21px;
+      font-size: 21px;
+    }
+
+    &__label,
+    kbd {
+      display: none;
+    }
   }
 }
 
@@ -119,11 +173,24 @@
 
   footer {
     display: flex;
+    align-items: center;
     gap: 16px;
     border-top: 1px solid var(--docs-border-color);
-    padding: 8px 14px;
+    padding: 0 6px 0 14px;
     color: var(--docs-text-muted);
     font-size: 11px;
+  }
+
+  &__all {
+    min-height: 44px;
+    margin-left: auto;
+    border: 0;
+    background: transparent;
+    padding: 0 8px;
+    color: var(--docs-acc);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
   }
 }
 
@@ -151,7 +218,7 @@
 
     &.active,
     &:hover {
-      background: var(--sd-primary-light, #e8f1ff);
+      background: var(--docs-acc-soft);
     }
   }
 }
@@ -163,7 +230,7 @@
 .search-result__title mark,
 .search-result__meta mark {
   border-radius: 2px;
-  background: #fff1a8;
+  background: var(--docs-mark);
   color: inherit;
 }
 
@@ -196,20 +263,7 @@
   text-align: center;
 }
 
-@media (max-width: 760px) {
-  // why: Mobile header has room for an icon trigger but not the full search affordance.
-  .search-trigger {
-    justify-content: center;
-    width: var(--docs-control-height-lg, 44px);
-    min-width: var(--docs-control-height-lg, 44px);
-    padding: 0;
-
-    &__label,
-    kbd {
-      display: none;
-    }
-  }
-
+@media (max-width: 759.98px) {
   .search-dialog {
     top: 12px;
     width: calc(100vw - 24px);
@@ -229,7 +283,7 @@
       padding: 8px;
     }
 
-    footer {
+    footer span {
       display: none;
     }
   }

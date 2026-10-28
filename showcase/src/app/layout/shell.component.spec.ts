@@ -1,6 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
+import { DocsI18nService } from '../docs/core/docs-i18n.service';
 import { DocsVersionService } from '../docs/core/docs-version.service';
 import { DOC_PAGES } from '../docs/core/documentation.registry';
 import { PublishedDocsService } from '../docs/core/published-docs.service';
@@ -11,8 +12,20 @@ class RoutedDocumentationStubComponent {}
 
 describe('ShellComponent', () => {
   let fixture: ComponentFixture<ShellComponent>;
+  let versionState: {
+    manifest: ReturnType<typeof signal<object | null>>;
+    isLatestRelease: ReturnType<typeof signal<boolean>>;
+    selectedRelease: ReturnType<typeof signal<string>>;
+    selectRelease: jasmine.Spy;
+  };
 
   beforeEach(async () => {
+    versionState = {
+      manifest: signal<object | null>(null),
+      isLatestRelease: signal(true),
+      selectedRelease: signal('1.2'),
+      selectRelease: jasmine.createSpy().and.resolveTo(undefined),
+    };
     await TestBed.configureTestingModule({
       imports: [ShellComponent],
       providers: [
@@ -32,6 +45,15 @@ describe('ShellComponent', () => {
             loading: signal(false),
             error: signal<string | null>(null),
             versionGroups: signal([]),
+            manifest: versionState.manifest,
+            isLatestRelease: versionState.isLatestRelease,
+            selectedRelease: versionState.selectedRelease,
+            latestRelease: signal('1.2'),
+            selectedAngularMajor: signal(21),
+            resolvedPackageVersion: signal('21.1.2'),
+            currentRelease: signal(null),
+            menuReleaseGroups: signal([]),
+            selectRelease: versionState.selectRelease,
           },
         },
         {
@@ -48,11 +70,119 @@ describe('ShellComponent', () => {
     fixture = TestBed.createComponent(ShellComponent);
     document.body.appendChild(fixture.nativeElement);
     fixture.detectChanges();
+    // why: the catalog sidebar only exists on guide, component and service pages.
+    await TestBed.inject(Router).navigateByUrl('/v/21.1.2/components/button/overview');
+    fixture.detectChanges();
+    await fixture.whenStable();
+  });
+
+  function groupByTitle(title: string): HTMLElement | undefined {
+    return ([...fixture.nativeElement.querySelectorAll('.nav-group')] as HTMLElement[]).find(
+      group => group.querySelector('.nav-group__header span')?.textContent?.trim() === title
+    );
+  }
+
+  it('opens only the current category by default and lets the reader toggle others', () => {
+    expect(groupByTitle('Components')?.querySelector('.nav-group__header')?.getAttribute('aria-expanded')).toBe('true');
+    const guides = groupByTitle('Guides')?.querySelector('.nav-group__header') as HTMLButtonElement;
+    expect(guides.getAttribute('aria-expanded')).toBe('false');
+
+    guides.click();
+    fixture.detectChanges();
+    expect(guides.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('filters across every category, opens matching groups and reports the count', () => {
+    const input = fixture.nativeElement.querySelector('.nav-filter input') as HTMLInputElement;
+
+    input.value = 'date';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    const titles = [...fixture.nativeElement.querySelectorAll('.nav-group li a .nav-item__title')].map(
+      (title: Element) => title.textContent?.trim() ?? ''
+    );
+    expect(titles.length).toBeGreaterThan(1);
+    expect(titles.every(title => /date/i.test(title))).toBeTrue();
+    expect(fixture.nativeElement.querySelector('.nav-filter__count')?.textContent?.trim()).toBe(String(titles.length));
+    expect(fixture.nativeElement.querySelector('.sidebar__filter [role="status"]')?.textContent?.trim()).toBe(
+      `${titles.length} pages match`
+    );
+
+    input.value = 'zzzz';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.sidebar__empty')?.textContent?.trim()).toBe('No matching entries');
+
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.navQuery()).toBe('');
+  });
+
+  it('drops the catalog on pages without a sidebar but keeps a drawer with the primary links below 980px', async () => {
+    await TestBed.inject(Router).navigateByUrl('/v/21.1.2/changelog');
+    fixture.componentInstance.isMobile.set(false);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.sidebar')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.topbar')?.classList).toContain('topbar--no-sidebar');
+    expect(fixture.nativeElement.querySelector('.shell__body')?.classList).toContain('shell__body--no-sidebar');
+
+    fixture.componentInstance.isMobile.set(true);
+    fixture.detectChanges();
+
+    const drawer = fixture.nativeElement.querySelector('.sidebar') as HTMLElement;
+    expect(drawer.querySelector('.sidebar__nav')).toBeNull();
+    expect(drawer.querySelector('.sidebar__filter')).toBeNull();
+    expect(drawer.querySelectorAll('.sidebar__primary a').length).toBe(3);
   });
 
   afterEach(() => {
+    TestBed.inject(DocsI18nService).set('en');
     fixture.nativeElement.remove();
     fixture.destroy();
+  });
+
+  it('switches the chrome language and mirrors it on <html lang>', () => {
+    const vi = fixture.nativeElement.querySelector('.language-switch button[lang="vi"]') as HTMLButtonElement;
+
+    vi.click();
+    fixture.detectChanges();
+
+    expect(document.documentElement.getAttribute('lang')).toBe('vi');
+    expect(vi.getAttribute('aria-pressed')).toBe('true');
+    expect([...fixture.nativeElement.querySelectorAll('.topnav a')].map((link: Element) => link.textContent?.trim())).toEqual([
+      'Tài liệu',
+      'Thay đổi',
+      'Giới thiệu',
+    ]);
+  });
+
+  it('shows the old-release banner and goes to the latest release from it', () => {
+    expect(fixture.nativeElement.querySelector('.release-banner')).toBeNull();
+
+    versionState.manifest.set({});
+    versionState.isLatestRelease.set(false);
+    versionState.selectedRelease.set('1.1');
+    fixture.detectChanges();
+
+    const banner = fixture.nativeElement.querySelector('.release-banner') as HTMLElement;
+    expect(banner.textContent).toContain('You are viewing docs for release 1.1.');
+    (banner.querySelector('button') as HTMLButtonElement).click();
+    expect(versionState.selectRelease).toHaveBeenCalledWith('1.2');
+  });
+
+  it('offers a theme toggle that names the theme it switches to', () => {
+    const toggle = fixture.nativeElement.querySelector('.theme-toggle') as HTMLButtonElement;
+    const before = document.documentElement.getAttribute('data-sd-theme');
+
+    toggle.click();
+    fixture.detectChanges();
+
+    const after = document.documentElement.getAttribute('data-sd-theme');
+    expect(after).not.toBe(before);
+    expect(toggle.getAttribute('aria-label')).toBe(after === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+    toggle.click();
   });
 
   it('captures focus on open, traps Tab, and restores the trigger on Escape', async () => {
@@ -64,7 +194,7 @@ describe('ShellComponent', () => {
     expect(document.activeElement).toBe(trigger);
     fixture.detectChanges();
     await fixture.whenStable();
-    const focusable = [...fixture.nativeElement.querySelectorAll('.sidebar a[href], .sidebar button:not([disabled])')] as HTMLElement[];
+    const focusable = [...fixture.nativeElement.querySelectorAll('.sidebar input, .sidebar a[href], .sidebar button:not([disabled])')] as HTMLElement[];
     const sidebar = fixture.nativeElement.querySelector('.sidebar') as HTMLElement;
     expect(sidebar.hasAttribute('inert')).toBeFalse();
     expect(document.activeElement).toBe(focusable[0]);
@@ -73,7 +203,13 @@ describe('ShellComponent', () => {
     const tab = new KeyboardEvent('keydown', { key: 'Tab', cancelable: true });
     fixture.componentInstance.onDocumentKeydown(tab);
     expect(tab.defaultPrevented).toBeTrue();
-    expect(document.activeElement).toBe(focusable[0]);
+    // why: the header button that closes the drawer is part of the Tab cycle.
+    expect(document.activeElement).toBe(trigger);
+
+    const shiftTab = new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, cancelable: true });
+    fixture.componentInstance.onDocumentKeydown(shiftTab);
+    expect(shiftTab.defaultPrevented).toBeTrue();
+    expect(document.activeElement).toBe(focusable.at(-1) ?? null);
 
     const escape = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true });
     fixture.componentInstance.onDocumentKeydown(escape);
@@ -111,22 +247,17 @@ describe('ShellComponent', () => {
     expect(drawerLabels).toEqual(headerLabels);
   });
 
-  it('labels example counts instead of presenting an unexplained number', async () => {
-    await fixture.whenStable();
-    fixture.detectChanges();
-    const buttonLink = ([...fixture.nativeElement.querySelectorAll('.nav-group li a')] as HTMLAnchorElement[]).find(link =>
-      link.textContent?.includes('Button')
-    );
-    const count = buttonLink?.querySelector('small');
+  it('marks the active page and shows the package version in the catalog footer', () => {
+    const active = fixture.nativeElement.querySelector('.nav-group li a.active') as HTMLAnchorElement;
 
-    expect(count?.textContent?.trim()).toMatch(/^\d+ ex\.$/);
-    expect(count?.getAttribute('aria-label')).toMatch(/^\d+ examples$/);
+    expect(active.querySelector('.nav-item__title')?.textContent?.trim()).toBe('Button');
+    expect(active.getAttribute('aria-current')).toBe('page');
+    expect(fixture.nativeElement.querySelector('.sidebar footer code')?.textContent?.trim()).toBe('v21.1.2');
   });
 
   it('lists Form Generic under Components with its canonical route', () => {
-    const groups = [...fixture.nativeElement.querySelectorAll('.nav-group')] as HTMLElement[];
-    const components = groups.find(group => group.querySelector('.nav-group__header span')?.textContent?.trim() === 'Components');
-    const modules = groups.find(group => group.querySelector('.nav-group__header span')?.textContent?.trim() === 'Modules & Integrations');
+    const components = groupByTitle('Components');
+    const modules = groupByTitle('Modules & Integrations');
     const formGeneric = ([...(components?.querySelectorAll('li a') ?? [])] as HTMLAnchorElement[]).find(link =>
       link.textContent?.includes('Form Generic')
     );
@@ -147,7 +278,7 @@ describe('ShellComponent', () => {
   });
 
   it('connects each catalog disclosure button to the list it controls', () => {
-    const button = fixture.nativeElement.querySelector('.nav-group__header') as HTMLButtonElement;
+    const button = groupByTitle('Components')?.querySelector('.nav-group__header') as HTMLButtonElement;
     const controlledId = button.getAttribute('aria-controls');
 
     expect(button.getAttribute('aria-expanded')).toBe('true');

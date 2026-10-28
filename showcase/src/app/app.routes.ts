@@ -39,6 +39,11 @@ export const routes: Routes = [
         loadComponent: () => import('./docs/pages/changelog/changelog.component').then(module => module.ChangelogComponent),
       },
       {
+        path: 'search',
+        title: `Search | ${PACKAGE_TITLE}`,
+        loadComponent: () => import('./docs/pages/search/docs-search.component').then(module => module.DocsSearchComponent),
+      },
+      {
         path: 'getting-started',
         title: `Getting started | ${PACKAGE_TITLE}`,
         loadComponent: () =>

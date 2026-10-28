@@ -1,28 +1,25 @@
+@let t = i18n.t();
 <div class="shell">
-  <a class="skip-link" [docsFragmentLink]="'docs-content'">Skip to documentation content</a>
-  <header class="topbar">
+  <a class="skip-link" [docsFragmentLink]="'docs-content'">{{ t.skipToContent }}</a>
+  <header class="topbar" [class.topbar--no-sidebar]="!hasSidebar()">
     <button
       #mobileMenu
-      class="mobile-menu"
+      class="mobile-menu icon-button"
       type="button"
-      aria-label="Toggle documentation navigation"
+      [attr.aria-label]="mobileNavOpen() ? t.closeMenu : t.openMenu"
       aria-controls="docs-sidebar"
       [attr.aria-expanded]="mobileNavOpen()"
       [attr.inert]="searchOpen() ? '' : null"
       (click)="toggleMobileNav()">
-      <mat-icon>{{ mobileNavOpen() ? 'close' : 'menu' }}</mat-icon>
+      <mat-icon aria-hidden="true">{{ mobileNavOpen() ? 'close' : 'menu' }}</mat-icon>
     </button>
 
-    <a
-      class="brand"
-      [routerLink]="docsHomeLink()"
-      aria-label="SDCoreJS Angular documentation home"
-      [attr.inert]="mobileNavOpen() || searchOpen() ? '' : null">
-      <span class="brand__mark" aria-hidden="true"><img class="brand__logo" src="assets/brand/sdcorejs-logo.png" alt="" /></span>
-      <span><strong>&#64;sdcorejs/angular</strong><small>Documentation</small></span>
+    <a class="brand" [routerLink]="docsHomeLink()" [attr.aria-label]="t.brandHome" [attr.inert]="mobileNavOpen() || searchOpen() ? '' : null">
+      <img class="brand__logo" src="assets/brand/sdcorejs-logo.png" alt="" />
+      <strong class="brand__name">&#64;sdcorejs/angular</strong>
     </a>
 
-    <nav class="topnav" aria-label="Primary navigation" [attr.inert]="mobileNavOpen() || searchOpen() ? '' : null">
+    <nav class="topnav" [attr.aria-label]="t.primaryNavigation" [attr.inert]="mobileNavOpen() || searchOpen() ? '' : null">
       @for (item of primaryNavigation(); track item.id) {
         <a
           [routerLink]="item.commands"
@@ -33,17 +30,32 @@
       }
     </nav>
 
-    <div class="topbar__tools" [attr.inert]="mobileNavOpen() ? '' : null">
-      <docs-global-search (openedChange)="onSearchOpenChange($event)"></docs-global-search>
-      <docs-version-selector [attr.inert]="searchOpen() ? '' : null"></docs-version-selector>
+    <docs-global-search class="topbar__search" (openedChange)="onSearchOpenChange($event)" [attr.inert]="mobileNavOpen() ? '' : null"></docs-global-search>
+
+    <div class="topbar__tools" [attr.inert]="mobileNavOpen() || searchOpen() ? '' : null">
+      <docs-version-control></docs-version-control>
+      <div class="language-switch" role="group" [attr.aria-label]="t.languageGroup">
+        <button type="button" lang="en" [attr.aria-pressed]="i18n.language() === 'en'" (click)="i18n.set('en')">EN</button>
+        <button type="button" lang="vi" [attr.aria-pressed]="i18n.language() === 'vi'" (click)="i18n.set('vi')">VI</button>
+      </div>
+      <button class="language-toggle icon-button icon-button--bordered" type="button" [attr.aria-label]="t.switchLanguage" (click)="i18n.toggle()">
+        {{ i18n.language() === 'en' ? 'EN' : 'VI' }}
+      </button>
+      <button
+        class="theme-toggle icon-button icon-button--bordered"
+        type="button"
+        [attr.aria-label]="theme.theme() === 'dark' ? t.themeToLight : t.themeToDark"
+        [title]="theme.theme() === 'dark' ? t.themeToLight : t.themeToDark"
+        (click)="theme.toggle()">
+        <mat-icon aria-hidden="true">{{ theme.theme() === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon>
+      </button>
       <a
-        class="github-link"
+        class="github-link icon-button icon-button--bordered"
         href="https://github.com/sdcorejs/sdcorejs-angular"
         target="_blank"
         rel="noopener noreferrer"
-        title="Open GitHub repository"
-        aria-label="Open GitHub repository"
-        [attr.inert]="searchOpen() ? '' : null">
+        [title]="t.github"
+        [attr.aria-label]="t.github">
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <path
             fill="currentColor"
@@ -54,71 +66,99 @@
   </header>
 
   @if (mobileNavOpen()) {
-    <button class="nav-backdrop" type="button" aria-label="Close navigation" (click)="closeMobileNav(true)"></button>
+    <button class="nav-backdrop" type="button" tabindex="-1" [attr.aria-label]="t.closeMenu" (click)="closeMobileNav(true)"></button>
   }
 
-  <div class="shell__body" [attr.inert]="searchOpen() ? '' : null" [attr.aria-hidden]="searchOpen() ? 'true' : null">
-    <aside
-      #sidebar
-      id="docs-sidebar"
-      class="sidebar"
-      [class.open]="mobileNavOpen()"
-      [attr.aria-hidden]="sidebarHidden()"
-      [attr.inert]="sidebarHidden() ? '' : null"
-      aria-label="Documentation catalog">
-      <div class="sidebar__heading">
-        <span>Catalog</span><strong>{{ navGroups().length }} categories</strong>
-      </div>
-      <nav class="sidebar__primary" aria-label="Primary navigation">
-        @for (item of primaryNavigation(); track item.id) {
-          <a
-            [routerLink]="item.commands"
-            [class.active]="activePrimaryNavigationId() === item.id"
-            [attr.aria-current]="activePrimaryNavigationId() === item.id ? 'page' : null"
-            (click)="closeMobileNav()">
-            {{ item.label }}
-          </a>
+  <div
+    class="shell__body"
+    [class.shell__body--no-sidebar]="!hasSidebar()"
+    [attr.inert]="searchOpen() ? '' : null"
+    [attr.aria-hidden]="searchOpen() ? 'true' : null">
+    <!-- why: pages without the catalog still open the drawer below 980px, for Docs, Changelog and About. -->
+    @if (hasSidebar() || isMobile()) {
+      <aside
+        #sidebar
+        id="docs-sidebar"
+        class="sidebar"
+        [class.open]="mobileNavOpen()"
+        [attr.aria-hidden]="sidebarHidden()"
+        [attr.inert]="sidebarHidden() ? '' : null"
+        [attr.aria-label]="hasSidebar() ? t.catalog : null">
+        @if (hasSidebar()) {
+          <div class="sidebar__filter">
+            <label class="nav-filter">
+              <mat-icon aria-hidden="true">filter_list</mat-icon>
+              <input
+                type="search"
+                autocomplete="off"
+                aria-describedby="docs-nav-count"
+                [attr.aria-label]="t.filterPages"
+                [placeholder]="t.filterPages"
+                [value]="navQuery()"
+                (input)="onNavQuery($event)"
+                (keydown.escape)="clearNavQuery($event)" />
+              <span id="docs-nav-count" class="nav-filter__count">{{ navMatchCount() }}</span>
+            </label>
+            <span class="docs-visually-hidden" role="status" aria-live="polite" aria-atomic="true">
+              {{ navQuery().trim() ? (navMatchCount() ? i18n.format('pagesMatching', { n: navMatchCount() }) : t.noResults) : '' }}
+            </span>
+          </div>
         }
-      </nav>
-      <nav aria-label="Documentation pages">
-        @for (group of navGroups(); track group.category) {
-          <section class="nav-group">
-            <button
-              class="nav-group__header"
-              type="button"
-              [attr.aria-controls]="'nav-group-' + group.category"
-              [attr.aria-expanded]="!group.collapsed"
-              (click)="toggleGroup(group.category)">
-              <mat-icon>{{ group.icon }}</mat-icon>
-              <span>{{ group.title }}</span>
-              <small>{{ group.pages.length }}</small>
-              <mat-icon>{{ group.collapsed ? 'expand_more' : 'expand_less' }}</mat-icon>
-            </button>
-            <ul [id]="'nav-group-' + group.category" [hidden]="group.collapsed">
-              @if (!group.collapsed) {
-                @for (page of group.pages; track page.id) {
-                  <li>
-                    <a [routerLink]="page.commands" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="closeMobileNav()">
-                      <span>{{ page.title }}</span>
-                      @if (page.availability === 'live-demo') {
-                        <small class="availability-label">Current live demo</small>
-                      } @else if (page.demoSectionCount > 0) {
-                        <small [attr.aria-label]="page.demoSectionCount + ' examples'" [title]="page.demoSectionCount + ' examples'">
-                          {{ page.demoSectionCount }} ex.
-                        </small>
-                      }
-                    </a>
-                  </li>
-                }
-              }
-            </ul>
-          </section>
+        <nav class="sidebar__primary" [attr.aria-label]="t.primaryNavigation">
+          @for (item of primaryNavigation(); track item.id) {
+            <a
+              [routerLink]="item.commands"
+              [class.active]="activePrimaryNavigationId() === item.id"
+              [attr.aria-current]="activePrimaryNavigationId() === item.id ? 'page' : null"
+              (click)="closeMobileNav()">
+              {{ item.label }}
+            </a>
+          }
+        </nav>
+        @if (hasSidebar()) {
+          <nav class="sidebar__nav" [attr.aria-label]="t.docsPages">
+            @if (!navGroups().length) {
+              <p class="sidebar__empty">{{ t.noResults }}</p>
+            }
+            @for (group of navGroups(); track group.category) {
+              <section class="nav-group">
+                <button
+                  class="nav-group__header"
+                  type="button"
+                  [attr.aria-controls]="'nav-group-' + group.category"
+                  [attr.aria-expanded]="group.open"
+                  (click)="toggleGroup(group.category)">
+                  <mat-icon aria-hidden="true">{{ group.open ? 'expand_more' : 'chevron_right' }}</mat-icon>
+                  <span>{{ group.title }}</span>
+                  <small>{{ group.pages.length }}</small>
+                </button>
+                <ul [id]="'nav-group-' + group.category" [hidden]="!group.open">
+                  @if (group.open) {
+                    @for (page of group.pages; track page.id) {
+                      <li>
+                        <a [routerLink]="page.commands" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="closeMobileNav()">
+                          <span class="nav-item__title">{{ page.title }}</span>
+                          @if (page.availability === 'live-demo') {
+                            <small class="nav-badge availability-label">{{ t.liveDemo }}</small>
+                          } @else if (page.badge === 'new') {
+                            <small class="nav-badge nav-badge--new">{{ t.badgeNew }}</small>
+                          } @else if (page.badge === 'updated') {
+                            <small class="nav-badge nav-badge--updated">{{ t.badgeUpdated }}</small>
+                          }
+                        </a>
+                      </li>
+                    }
+                  }
+                </ul>
+              </section>
+            }
+          </nav>
+          <footer>
+            <span>{{ t.package }}</span><code>v{{ currentVersion() }}</code>
+          </footer>
         }
-      </nav>
-      <footer>
-        <span>Published docs</span><strong>v{{ currentVersion() }}</strong>
-      </footer>
-    </aside>
+      </aside>
+    }
 
     <section
       #content
@@ -128,7 +168,15 @@
       aria-label="Documentation content"
       [attr.aria-hidden]="mobileNavOpen() ? 'true' : null"
       [attr.inert]="mobileNavOpen() ? '' : null">
+      @if (versions.manifest() && !versions.isLatestRelease()) {
+        <div class="release-banner" role="note">
+          <mat-icon aria-hidden="true">history</mat-icon>
+          <span>{{ i18n.format('notLatest', { v: versions.selectedRelease() }) }}</span>
+          <button type="button" (click)="goToLatestRelease()">{{ i18n.format('goLatest', { v: versions.latestRelease() }) }} →</button>
+        </div>
+      }
       <router-outlet></router-outlet>
     </section>
   </div>
+  <span class="docs-visually-hidden" role="status" aria-live="polite" aria-atomic="true">{{ clipboard.announcement() }}</span>
 </div>

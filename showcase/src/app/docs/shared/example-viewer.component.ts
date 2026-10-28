@@ -11,18 +11,27 @@ import {
   input,
   OnDestroy,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
+import { DocsClipboardService } from '../core/docs-clipboard.service';
+import { DocsI18nService } from '../core/docs-i18n.service';
 import { DocExample } from '../core/documentation.models';
 import type { ShowcaseExampleSource } from '../generated/example-sources.generated';
-import { DocsFragmentLinkDirective } from './docs-fragment-link.directive';
+import { buildDocsFragmentHref } from './docs-fragment-link.directive';
 import { ExamplePreviewComponent } from './example-preview.component';
+import { highlightCode } from './markdown-renderer.component';
 
 type SourceTab = 'html' | 'typescript' | 'scss';
 interface SourceTabOption {
   readonly id: SourceTab;
   readonly label: string;
+  readonly available: boolean;
 }
+
+const SOURCE_LANGUAGES: Readonly<Record<SourceTab, string>> = { html: 'html', typescript: 'typescript', scss: 'scss' };
+const SOURCE_EXTENSIONS: Readonly<Record<SourceTab, string>> = { html: 'html', typescript: 'ts', scss: 'scss' };
 
 const TABBABLE_SELECTOR = [
   'a[href]',
@@ -46,9 +55,10 @@ export const SHOWCASE_EXAMPLE_SOURCE_LOADER = new InjectionToken<() => Promise<E
 @Component({
   selector: 'docs-example-viewer',
   standalone: true,
-  imports: [DocsFragmentLinkDirective, ExamplePreviewComponent],
+  imports: [MatIconModule, ExamplePreviewComponent],
   template: `
     @let current = example();
+    @let t = i18n.t();
     @if (previewExpanded()) {
       <div class="example-backdrop" aria-hidden="true" (click)="togglePreviewSize()"></div>
     }
@@ -61,33 +71,45 @@ export const SHOWCASE_EXAMPLE_SOURCE_LOADER = new InjectionToken<() => Promise<E
       [attr.aria-modal]="previewExpanded() ? true : null"
       [attr.aria-labelledby]="current.id + '-title'">
       <header class="example__header">
-        <div>
-          <a class="example__anchor" [docsFragmentLink]="current.id" [attr.aria-label]="'Link to ' + current.title">#</a>
-          <h2 [id]="current.id + '-title'" lang="vi">{{ current.title }}</h2>
+        <div class="example__heading">
+          <h3 [id]="current.id + '-title'" lang="vi">{{ current.title }}</h3>
           @if (displayDescription(); as description) {
             <p class="example__description" lang="vi">{{ description }}</p>
           }
         </div>
         <div class="example__actions">
+          <button
+            class="example__icon-button example__anchor"
+            type="button"
+            [title]="t.copyLink"
+            [attr.aria-label]="t.copyLink + ': ' + current.title"
+            (click)="copyLink()">
+            <mat-icon aria-hidden="true">{{ clipboard.isCopied('example-link-' + current.id) ? 'check' : 'link' }}</mat-icon>
+          </button>
           @if (interacted()) {
-            <button type="button" aria-label="Reset live example" (click)="reset()">Reset</button>
+            <button class="example__icon-button" type="button" aria-label="Reset live example" title="Reset" (click)="reset()">
+              <mat-icon aria-hidden="true">restart_alt</mat-icon>
+            </button>
           }
           <button
             #expandButton
+            class="example__icon-button"
             type="button"
+            [title]="previewExpanded() ? 'Exit full width' : 'Full width'"
             [attr.aria-controls]="current.id + '-preview'"
             [attr.aria-expanded]="previewExpanded()"
             [attr.aria-label]="previewExpanded() ? 'Collapse live example' : 'Expand live example'"
             (click)="togglePreviewSize()">
-            {{ previewExpanded() ? 'Exit full width' : 'Full width' }}
+            <mat-icon aria-hidden="true">{{ previewExpanded() ? 'close_fullscreen' : 'open_in_full' }}</mat-icon>
           </button>
           <button
+            class="example__code-toggle"
             type="button"
+            [class.example__code-toggle--open]="expanded()"
             [attr.aria-controls]="current.id + '-source'"
             [attr.aria-expanded]="expanded()"
-            [attr.aria-label]="expanded() ? 'Collapse source' : 'Expand source'"
             (click)="toggleSource()">
-            {{ expanded() ? 'Hide source' : 'View source' }}
+            <mat-icon aria-hidden="true">code</mat-icon>{{ expanded() ? t.hideCode : t.showCode }}
           </button>
         </div>
       </header>
@@ -98,6 +120,7 @@ export const SHOWCASE_EXAMPLE_SOURCE_LOADER = new InjectionToken<() => Promise<E
           class="example__preview"
           [id]="current.id + '-preview'"
           tabindex="0"
+          role="region"
           aria-label="Live example preview"
           lang="vi"
           (click)="markInteracted()"
@@ -136,10 +159,11 @@ export const SHOWCASE_EXAMPLE_SOURCE_LOADER = new InjectionToken<() => Promise<E
           } @else {
             @if (source()) {
               <div class="example__source-toolbar">
-                <div role="group" aria-label="Source language">
+                <div class="example__source-tabs" role="group" aria-label="Source language">
                   @for (tab of sourceTabs(); track tab.id) {
                     <button
                       type="button"
+                      [disabled]="!tab.available"
                       [attr.aria-pressed]="selectedTab() === tab.id"
                       [class.active]="selectedTab() === tab.id"
                       (click)="selectedTab.set(tab.id)">
@@ -147,10 +171,16 @@ export const SHOWCASE_EXAMPLE_SOURCE_LOADER = new InjectionToken<() => Promise<E
                     </button>
                   }
                 </div>
-                <button type="button" aria-label="Copy source code" (click)="copySource()">{{ copyButtonLabel() }}</button>
+                <span class="example__file">{{ fileName() }}</span>
+                <button class="example__copy" type="button" aria-label="Copy source code" (click)="copySource()">
+                  <mat-icon aria-hidden="true">{{ copyStatus() === 'success' ? 'check' : 'content_copy' }}</mat-icon>{{ copyButtonLabel() }}
+                </button>
                 <span class="visually-hidden" role="status" aria-live="polite">{{ copyAnnouncement() }}</span>
               </div>
-              <pre tabindex="0" aria-label="Scrollable example source"><code>{{ currentSource() }}</code></pre>
+              <div class="example__code" tabindex="0" role="region" aria-label="Scrollable example source">
+                <pre class="example__lines" aria-hidden="true">{{ lineNumbers() }}</pre>
+                <pre class="example__pre"><code [innerHTML]="highlightedSource()"></code></pre>
+              </div>
             } @else {
               <p class="example__state example__state--error">Source is not available for this example.</p>
             }
@@ -166,7 +196,12 @@ export class ExampleViewerComponent implements OnDestroy {
   readonly #document = inject(DOCUMENT);
   readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly #sourceLoader = inject(SHOWCASE_EXAMPLE_SOURCE_LOADER);
+  readonly i18n = inject(DocsI18nService);
+  readonly clipboard = inject(DocsClipboardService);
   readonly example = input.required<DocExample>();
+  /** Opens the code panel on first render (the first example of a page). */
+  readonly codeOpen = input(false);
+  #codeAutoOpened = false;
   readonly livePreview = viewChild(ExamplePreviewComponent);
   readonly previewElement = viewChild<ElementRef<HTMLElement>>('preview');
   readonly dialogElement = viewChild<ElementRef<HTMLElement>>('dialogRoot');
@@ -191,17 +226,25 @@ export class ExampleViewerComponent implements OnDestroy {
     if (this.copyStatus() === 'error') return 'Source code could not be copied.';
     return '';
   });
+  /** HTML / TS / SCSS are always listed; a file the example does not have is a disabled tab. */
   readonly sourceTabs = computed<readonly SourceTabOption[]>(() => {
     const source = this.source();
     if (!source) return [];
-    const tabs: SourceTabOption[] = [
-      { id: 'html', label: 'HTML' },
-      { id: 'typescript', label: 'TypeScript' },
+    return [
+      { id: 'html', label: 'HTML', available: !!source.html?.trim() },
+      { id: 'typescript', label: 'TS', available: !!source.typescript?.trim() },
+      { id: 'scss', label: 'SCSS', available: !!source.scss?.trim() },
     ];
-    if (source.scss) tabs.push({ id: 'scss', label: 'SCSS' });
-    return tabs;
   });
   readonly currentSource = computed(() => this.source()?.[this.selectedTab()] ?? '');
+  readonly highlightedSource = computed(() => highlightCode(this.currentSource(), SOURCE_LANGUAGES[this.selectedTab()]));
+  readonly lineNumbers = computed(() =>
+    Array.from({ length: this.currentSource().replace(/\n$/, '').split('\n').length }, (_, index) => index + 1).join('\n')
+  );
+  readonly fileName = computed(() => {
+    const base = this.example().sourceKey.split('/').at(-1) ?? 'example';
+    return `${base}.${SOURCE_EXTENSIONS[this.selectedTab()]}`;
+  });
   readonly displayDescription = computed(() => {
     const description = this.example().description.trim();
     if (!description || /preserved from the showcase/i.test(description) || description === this.example().title) return null;
@@ -222,6 +265,17 @@ export class ExampleViewerComponent implements OnDestroy {
       const timeout = view?.setTimeout(() => this.updateScrollAffordance());
       if (timeout !== undefined) onCleanup(() => view?.clearTimeout(timeout));
     });
+    effect(() => {
+      if (!this.codeOpen() || this.#codeAutoOpened) return;
+      this.#codeAutoOpened = true;
+      untracked(() => void this.toggleSource());
+    });
+  }
+
+  copyLink(): void {
+    const { location } = this.#document;
+    const href = new URL(buildDocsFragmentHref(location.pathname, location.search, this.example().id), location.href).toString();
+    void this.clipboard.copy(href, `example-link-${this.example().id}`);
   }
 
   ngOnDestroy(): void {
@@ -356,7 +410,9 @@ export class ExampleViewerComponent implements OnDestroy {
       this.source.set(module.SHOWCASE_EXAMPLE_SOURCES[key] ?? null);
       if (!this.source()) this.sourceError.set('Source is not registered for this example.');
       const tabs = this.sourceTabs();
-      if (!tabs.some(tab => tab.id === this.selectedTab())) this.selectedTab.set(tabs[0]?.id ?? 'typescript');
+      if (!tabs.some(tab => tab.id === this.selectedTab() && tab.available)) {
+        this.selectedTab.set(tabs.find(tab => tab.available)?.id ?? 'typescript');
+      }
     } catch {
       this.source.set(null);
       this.sourceError.set('The example source could not be loaded.');

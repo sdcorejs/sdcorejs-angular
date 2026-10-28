@@ -1,40 +1,82 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { MatIconModule } from '@angular/material/icon';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { DocsI18nService } from '../../core/docs-i18n.service';
+import { closestPages } from '../../core/docs-search-index';
+import { DocsVersionService } from '../../core/docs-version.service';
+import { DOC_NAV_GROUPS, DOC_PAGES } from '../../core/documentation.registry';
 
+const ICONS = new Map(DOC_NAV_GROUPS.map(group => [group.category, group.icon]));
+const DOC_TABS: ReadonlySet<string> = new Set(['overview', 'styling', 'api', 'examples']);
+
+/** 404: the missing path, closest matches from its slug tokens, a prefilled search and recovery links. */
 @Component({
   selector: 'docs-not-found',
   standalone: true,
-  imports: [RouterLink],
+  imports: [MatIconModule, RouterLink],
   template: `
+    @let t = i18n.t();
     <main class="not-found">
-      <span class="not-found__code">404</span>
-      <h1>Documentation page not found</h1>
-      <p>The requested component, form, service, version, or tab does not exist in this documentation catalog.</p>
-      <div class="not-found__actions">
-        <a routerLink="/">Go to documentation home</a>
-        <a href="https://github.com/sdcorejs/sdcorejs-angular/issues" target="_blank" rel="noreferrer">Report a broken link</a>
+      <p class="not-found__path"><span>404</span>{{ missingPath() }}</p>
+      <h1>{{ i18n.format('nfTitle', { v: release() }) }}</h1>
+      <p class="not-found__lead">{{ t.nfLead }}</p>
+      <a class="not-found__search" [routerLink]="['/v', version(), 'search']" [queryParams]="{ q: searchTerm() }">
+        <mat-icon aria-hidden="true">search</mat-icon>{{ i18n.format('searchFor', { q: searchTerm() }) }}
+      </a>
+      @if (suggestions().length) {
+        <h2 class="not-found__label">{{ t.didYouMean }}</h2>
+        <div class="not-found__list">
+          @for (page of suggestions(); track page.id) {
+            <a [routerLink]="page.commands">
+              <mat-icon aria-hidden="true">{{ page.icon }}</mat-icon>
+              <span><strong>{{ page.title }}</strong><code>{{ page.path }}</code></span>
+              <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+            </a>
+          }
+        </div>
+      }
+      <h2 class="not-found__label">{{ t.orTry }}</h2>
+      <div class="not-found__links">
+        <a [routerLink]="['/v', version()]"><mat-icon aria-hidden="true">home</mat-icon>{{ t.docsHome }}</a>
+        <a [routerLink]="['/v', version(), 'changelog']"><mat-icon aria-hidden="true">history</mat-icon>{{ t.changelog }} {{ release() }}</a>
+        <a href="https://github.com/sdcorejs/sdcorejs-angular/issues" target="_blank" rel="noopener noreferrer"
+          ><mat-icon aria-hidden="true">link_off</mat-icon>{{ t.reportLink }}</a
+        >
       </div>
     </main>
   `,
-  styles: [`
-    .not-found {
-      max-width: 680px;
-      margin: 10vh auto;
-      padding: 40px 24px;
-      text-align: center;
-    }
-    .not-found__code { color: var(--sd-primary); font-size: 72px; font-weight: 700; line-height: 1; }
-    h1 { margin-top: 14px; font-size: clamp(28px, 5vw, 44px); }
-    p { margin: 16px auto 24px; color: var(--docs-text-secondary); line-height: 1.7; }
-    .not-found__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
-    .not-found__actions a {
-      border: 1px solid var(--docs-border-color);
-      border-radius: 9px;
-      background: var(--docs-surface-raised);
-      padding: 10px 14px;
-      font-weight: 600;
-    }
-  `],
+  styleUrl: './docs-not-found.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DocsNotFoundComponent {}
+export class DocsNotFoundComponent {
+  readonly #router = inject(Router);
+  readonly i18n = inject(DocsI18nService);
+  readonly versions = inject(DocsVersionService);
+  readonly queryParams = toSignal(inject(ActivatedRoute).queryParamMap);
+  /** Path to report; defaults to the ?path= of a legacy redirect, then the current URL. */
+  readonly path = input<string | null>(null);
+
+  readonly version = computed(() => this.versions.resolvedPackageVersion() || 'latest');
+  readonly release = computed(() => this.versions.selectedRelease() || this.version());
+  readonly missingPath = computed(() => {
+    const path = this.path() ?? this.queryParams()?.get('path');
+    return path ? `/${path.replace(/^\/+/, '')}` : this.#router.url.split(/[?#]/, 1)[0];
+  });
+  /** Last path segment the reader typed; a trailing docs tab (".../buton/overview") is not the page they looked for. */
+  readonly slug = computed(() => {
+    const segments = this.missingPath().split('/').filter(Boolean);
+    if (segments.length > 1 && DOC_TABS.has(segments.at(-1) ?? '')) segments.pop();
+    return segments.at(-1) ?? '';
+  });
+  readonly searchTerm = computed(() => {
+    const tokens = this.slug().split(/[^A-Za-z0-9]+/).filter(token => token.length >= 4);
+    return tokens.at(-1) ?? this.slug();
+  });
+  readonly suggestions = computed(() =>
+    closestPages(this.slug(), DOC_PAGES).map(page => {
+      const commands = ['/v', this.version(), page.category, page.slug, 'overview'];
+      return { id: page.id, title: page.title, icon: ICONS.get(page.category) ?? 'article', commands, path: commands.slice(0, 4).join('/') };
+    })
+  );
+}

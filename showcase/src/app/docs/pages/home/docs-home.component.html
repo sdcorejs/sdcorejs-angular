@@ -1,0 +1,100 @@
+@let t = i18n.t();
+<main class="home">
+  <section class="hero">
+    @if (latestRelease(); as latest) {
+      <a class="hero__release" [routerLink]="['/v', version(), 'changelog']">
+        <span class="hero__release-new">{{ t.badgeNew }}</span>{{ i18n.format('releasedOn', { v: latest.id, d: latest.released }) }}
+        <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+      </a>
+    }
+    <h1>&#64;sdcorejs/angular</h1>
+    <p class="hero__lead">{{ t.homeLead }}</p>
+    <div class="hero__actions">
+      <a class="hero__primary" [routerLink]="['/v', version(), 'getting-started']">{{ t.getStarted }}<mat-icon aria-hidden="true">arrow_forward</mat-icon></a>
+      <a class="hero__secondary" [routerLink]="['/v', version(), 'components']">{{ t.browseComponents }}</a>
+    </div>
+
+    <div class="install">
+      <div class="install__tabs" role="group" [attr.aria-label]="t.angular">
+        <span class="install__label">{{ t.angular }}</span>
+        @for (item of majors(); track item.major) {
+          <button
+            type="button"
+            [disabled]="!item.published"
+            [class.active]="item.major === angularMajor()"
+            [attr.aria-pressed]="item.major === angularMajor()"
+            (click)="selectMajor(item.major)">
+            {{ item.major }}
+          </button>
+        }
+      </div>
+      <div class="install__command">
+        <code [attr.aria-label]="t.installCommand"
+          ><span class="token keyword">npm</span> install <span class="token string">&#64;sdcorejs/angular&#64;^{{ angularMajor() }}</span>
+          &#64;angular/material&#64;^{{ angularMajor() }} &#64;angular/material-date-fns-adapter&#64;^{{ angularMajor() }}</code
+        >
+        <button type="button" [attr.aria-label]="t.copyInstall" (click)="copyInstall()">
+          <mat-icon aria-hidden="true">{{ clipboard.isCopied('home-install') ? 'check' : 'content_copy' }}</mat-icon>
+          {{ clipboard.isCopied('home-install') ? t.copied : t.copy }}
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="home-section">
+    <h2>{{ t.explore }}</h2>
+    <div class="category-grid">
+      @for (category of categories(); track category.category) {
+        <a class="category-card" [routerLink]="category.commands">
+          <span class="category-card__head">
+            <mat-icon aria-hidden="true">{{ category.icon }}</mat-icon>
+            <span class="category-card__title">{{ category.title }}</span>
+            <span class="category-card__count">{{ category.count }}</span>
+          </span>
+          <span class="category-card__description">{{ category.description }}</span>
+        </a>
+      }
+    </div>
+  </section>
+
+  <section class="home-section home-columns">
+    <div>
+      <h2>{{ i18n.format('newAndUpdatedIn', { v: versions.selectedRelease() }) }}</h2>
+      @for (item of whatsNew(); track item.id) {
+        <a class="news-row" [routerLink]="item.commands">
+          <span class="news-row__name">
+            <strong>{{ item.title }}</strong>
+            <span class="news-row__badge" [class.news-row__badge--new]="item.badge === 'new'">{{
+              item.badge === 'new' ? t.badgeNew : t.badgeUpdated
+            }}</span>
+          </span>
+          <span class="news-row__text">{{ item.text }}</span>
+        </a>
+      }
+    </div>
+    <div>
+      <h2>{{ t.compat }}</h2>
+      <div class="compat">
+        <div class="compat__row compat__row--head">
+          <span>{{ t.angular }}</span><span>{{ t.packageLine }}</span><span>{{ t.latestVersion }}</span>
+        </div>
+        @for (row of compatibility(); track row.major) {
+          <div class="compat__row">
+            <strong>{{ row.major }}.x</strong><code>{{ row.line }}</code><code class="compat__latest">{{ row.latest }}</code>
+          </div>
+        }
+      </div>
+      <p class="compat__note">{{ t.compatNote }}</p>
+    </div>
+  </section>
+
+  <footer class="home-footer">
+    <span>{{ t.maintained }} Trần Thuận Nghĩa · MIT</span>
+    <span class="home-footer__links">
+      <a href="https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json" target="_blank" rel="noopener noreferrer">API manifest</a>
+      <a href="https://github.com/sdcorejs/sdcorejs-angular" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <a href="https://github.com/sdcorejs/sdcorejs-angular/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+      <a href="https://www.npmjs.com/package/@sdcorejs/angular" target="_blank" rel="noopener noreferrer">npm</a>
+    </span>
+  </footer>
+</main>

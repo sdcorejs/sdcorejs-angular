@@ -1,0 +1,91 @@
+@let t = i18n.t();
+@if (versions.error()) {
+  <button class="version-control__retry" type="button" (click)="retry()">{{ t.retryVersions }}</button>
+} @else if (!versions.manifest()) {
+  <span class="version-control__loading" role="status">{{ t.loadingVersions }}</span>
+} @else {
+  <div class="version-control">
+    <button
+      class="version-control__trigger version-control__trigger--release"
+      type="button"
+      [cdkMenuTriggerFor]="releaseMenu"
+      [cdkMenuPosition]="positions"
+      [attr.aria-label]="i18n.format('releaseMenu', { v: release() })">
+      <span class="version-control__label">{{ t.release }}</span>
+      <span class="version-control__value">{{ release() }}</span>
+      @if (versions.isLatestRelease()) {
+        <span class="version-control__pill">{{ t.latest }}</span>
+      }
+      <mat-icon aria-hidden="true">expand_more</mat-icon>
+    </button>
+    <span class="version-control__divider" aria-hidden="true"></span>
+    <button
+      class="version-control__trigger version-control__trigger--angular"
+      type="button"
+      [cdkMenuTriggerFor]="angularMenu"
+      [cdkMenuPosition]="positions"
+      [attr.aria-label]="i18n.format('angularMenu', { ng: angularMajor() ?? '' })">
+      <span class="version-control__label">{{ t.angular }}</span>
+      <span class="version-control__value">{{ angularMajor() }}</span>
+      <mat-icon aria-hidden="true">expand_more</mat-icon>
+    </button>
+  </div>
+}
+
+<ng-template #releaseMenu>
+  <div class="version-menu version-menu--release" cdkMenu>
+    <p class="version-menu__hint">{{ t.versionHint }}</p>
+    @for (group of versions.menuReleaseGroups(); track group.label) {
+      <div class="version-menu__group" cdkMenuGroup role="group" [attr.aria-label]="group.label">
+        <span class="version-menu__group-label" aria-hidden="true">{{ group.label }}</span>
+        @for (item of group.releases; track item.id) {
+          <button
+            class="version-menu__item"
+            type="button"
+            cdkMenuItemRadio
+            [cdkMenuItemChecked]="item.id === release()"
+            [class.version-menu__item--selected]="item.id === release()"
+            (cdkMenuItemTriggered)="selectRelease(item.id)">
+            <span class="version-menu__release">{{ item.id }}</span>
+            @if (item.latest) {
+              <span class="version-control__pill">{{ t.latest }}</span>
+            }
+            <span class="version-menu__meta">{{ item.released }}</span>
+            <mat-icon class="version-menu__check" aria-hidden="true">{{ item.id === release() ? 'check' : '' }}</mat-icon>
+          </button>
+        }
+      </div>
+    }
+  </div>
+</ng-template>
+
+<ng-template #angularMenu>
+  <div class="version-menu version-menu--angular" cdkMenu>
+    <div cdkMenuGroup>
+      @for (item of angularItems(); track item.major) {
+        <button
+          class="version-menu__item version-menu__item--angular"
+          type="button"
+          cdkMenuItemRadio
+          [cdkMenuItemChecked]="item.major === angularMajor()"
+          [cdkMenuItemDisabled]="!item.published"
+          [class.version-menu__item--selected]="item.major === angularMajor()"
+          (cdkMenuItemTriggered)="selectAngularMajor(item.major)">
+          <span class="version-menu__angular">{{ t.angular }} {{ item.major }}</span>
+          <span class="version-menu__meta version-menu__meta--mono">{{ item.packageVersion ?? t.unavailable }}</span>
+          <mat-icon class="version-menu__check" aria-hidden="true">{{ item.major === angularMajor() ? 'check' : '' }}</mat-icon>
+        </button>
+      }
+    </div>
+    <p class="version-menu__footer-label">{{ t.package }}</p>
+    <button
+      class="version-menu__install"
+      type="button"
+      cdkMenuItem
+      [attr.aria-label]="t.copyInstall + ': ' + installCommand()"
+      (cdkMenuItemTriggered)="copyInstall()">
+      <code>{{ installCommand() }}</code>
+      <mat-icon aria-hidden="true">{{ clipboard.isCopied('version-install') ? 'check' : 'content_copy' }}</mat-icon>
+    </button>
+  </div>
+</ng-template>

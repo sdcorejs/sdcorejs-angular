@@ -997,7 +997,7 @@ interface FontSetOption {
             { name: 'fontSet', value: 'material-icons / material-icons-outlined / lucide' },
             { name: 'type', value: 'icon / round / tag' },
           ]"
-          note="Chon fontSet bang radio de so sanh alignment cua cung mot bo badge icon.">
+          note="Chọn fontSet bằng radio để so sánh alignment của cùng một bộ badge icon.">
           <div class="d-flex flex-column gap-16 w-full">
             <sd-radio
               label="fontSet"
@@ -25475,7 +25475,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
             { name: 'fontSet', value: 'material-icons / material-icons-outlined / lucide' },
             { name: 'type', value: 'icon / round / tag' },
           ]"
-          note="Chon fontSet bang radio de so sanh alignment cua cung mot bo badge icon.">
+          note="Chọn fontSet bằng radio để so sánh alignment của cùng một bộ badge icon.">
           <div class="d-flex flex-column gap-16 w-full">
             <sd-radio
               label="fontSet"

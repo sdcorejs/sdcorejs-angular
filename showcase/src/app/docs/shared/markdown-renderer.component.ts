@@ -1,11 +1,24 @@
 import { DOCUMENT, Location, NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, input, signal } from '@angular/core';
 import { Params, Router } from '@angular/router';
+import { MatIconModule } from '@angular/material/icon';
 import Prism from 'prismjs';
+import { ApiTypeChip, booleanAttributeNames, isApiTable, matchesApiQuery, parseApiTable } from '../core/api-table.parser';
+import { DocsI18nService } from '../core/docs-i18n.service';
 import { toMarkdownAnchor, toMarkdownBlocks } from '../core/markdown-parser';
 import { DOC_PAGES } from '../core/documentation.registry';
 import { MarkdownAlertType, MarkdownBlock } from '../core/published-docs.models';
 import { buildDocsFragmentHref } from './docs-fragment-link.directive';
+
+interface ApiRowView {
+  readonly id: string;
+  readonly href: string;
+  readonly name: string;
+  readonly types: readonly ApiTypeChip[];
+  readonly flag: string | null;
+  readonly defaultValue: string | null;
+  readonly descriptionHtml: string;
+}
 
 interface MarkdownListItemView {
   readonly html: string;
@@ -13,7 +26,8 @@ interface MarkdownListItemView {
 }
 
 interface MarkdownBlockView {
-  readonly kind: 'heading' | 'paragraph' | 'quote' | 'alert' | 'list' | 'code' | 'table';
+  readonly kind: 'heading' | 'paragraph' | 'quote' | 'alert' | 'list' | 'code' | 'table' | 'api';
+  readonly apiRows?: readonly ApiRowView[];
   readonly level?: number;
   readonly id?: string;
   readonly html?: string;
@@ -109,7 +123,7 @@ function renderInlineMarkdown(
     .replace(/\[([^\]]+)]\((https?:\/\/[^\s)]+|mailto:[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>');
 }
 
-function highlightCode(code: string, language: string): string {
+export function highlightCode(code: string, language: string): string {
   const languageAliases: Readonly<Record<string, string>> = {
     html: 'markup',
     scss: 'css',
@@ -125,7 +139,7 @@ function highlightCode(code: string, language: string): string {
 @Component({
   selector: 'docs-markdown-renderer',
   standalone: true,
-  imports: [NgTemplateOutlet],
+  imports: [NgTemplateOutlet, MatIconModule],
   template: `
     <div class="docs-markdown" [attr.lang]="language()" (click)="onMarkdownClick($event)">
       <span class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">{{ copyAnnouncement() }}</span>
@@ -147,7 +161,10 @@ function highlightCode(code: string, language: string): string {
             <p [innerHTML]="block.html"></p>
           }
           @case ('quote') {
-            <blockquote [innerHTML]="block.html"></blockquote>
+            <blockquote [class]="'docs-callout docs-callout--' + calloutKind(block.html ?? '')">
+              <mat-icon class="docs-callout__icon" aria-hidden="true">{{ calloutIcon(block.html ?? '') }}</mat-icon>
+              <div [innerHTML]="block.html"></div>
+            </blockquote>
           }
           @case ('alert') {
             <div class="docs-alert" [attr.data-alert]="block.alertType" role="note" [attr.aria-label]="block.title">
@@ -185,18 +202,43 @@ function highlightCode(code: string, language: string): string {
           @case ('code') {
             <div class="docs-code">
               <div class="docs-code__toolbar">
-                <span>{{ block.language || 'text' }}</span>
+                <span class="docs-code__file">{{ block.language || 'text' }}</span>
                 <button type="button" aria-label="Copy code block" (click)="copy(block.code ?? '')">
+                  <mat-icon class="docs-code__copy-icon" aria-hidden="true">{{ copyResult()?.code === block.code && copyResult()?.status === 'success' ? 'check' : 'content_copy' }}</mat-icon>
                   {{ copyLabel(block.code ?? '') }}
                 </button>
               </div>
-              <pre
-                tabindex="0"
-                aria-label="Scrollable code block"><code [class]="'language-' + (block.language || 'text')" [innerHTML]="block.html"></code></pre>
+              <div class="docs-code__body" tabindex="0" role="region" aria-label="Scrollable code block">
+                <pre class="docs-code__lines" aria-hidden="true">{{ lineNumbers(block.code ?? '') }}</pre>
+                <pre class="docs-code__pre"><code [class]="'language-' + (block.language || 'text')" [innerHTML]="block.html"></code></pre>
+              </div>
+            </div>
+          }
+          @case ('api') {
+            <div class="api-rows">
+              @for (row of block.apiRows; track row.id) {
+                <div class="api-row" [id]="row.id">
+                  <div class="api-row__head">
+                    <a class="api-row__name" [href]="row.href"><code>{{ row.name }}</code></a>
+                    @for (type of row.types; track $index) {
+                      <code class="api-row__type" [class.api-row__type--literal]="type.literal">{{ type.text }}</code>
+                    }
+                    @if (row.flag) {
+                      <span class="api-row__flag">{{ row.flag }}</span>
+                    }
+                    @if (row.defaultValue) {
+                      <span class="api-row__default">{{ i18n.t().defaultValue }} <code>{{ row.defaultValue }}</code></span>
+                    }
+                  </div>
+                  @if (row.descriptionHtml) {
+                    <div class="api-row__description" [innerHTML]="row.descriptionHtml"></div>
+                  }
+                </div>
+              }
             </div>
           }
           @case ('table') {
-            <div class="docs-table-wrap" tabindex="0" aria-label="Scrollable API table">
+            <div class="docs-table-wrap" tabindex="0" role="region" aria-label="Scrollable API table">
               <table>
                 <thead>
                   <tr>
@@ -236,6 +278,11 @@ export class MarkdownRendererComponent {
   readonly language = input<string | null>(null);
   /** Prepended to heading ids, so a page that renders several documents keeps them unique. */
   readonly headingIdPrefix = input('');
+  /** When set, member tables (Name / Type / Default / Notes…) render as API rows with ids api-<group>-<name>. */
+  readonly apiGroupId = input<string | null>(null);
+  /** API filter; rows that do not match are left out. */
+  readonly apiQuery = input('');
+  readonly i18n = inject(DocsI18nService);
   readonly copyResult = signal<{ readonly code: string; readonly status: 'success' | 'error' } | null>(null);
   readonly copyAnnouncement = computed(() => {
     const result = this.copyResult();
@@ -244,12 +291,31 @@ export class MarkdownRendererComponent {
     return '';
   });
   readonly blocks = computed<readonly MarkdownBlockView[]>(() => {
+    const markdown = this.markdown();
+    const apiGroupId = this.apiGroupId();
+    const apiQuery = this.apiQuery();
+    const booleanAttributes = apiGroupId ? booleanAttributeNames(markdown) : new Set<string>();
+    const { pathname, search } = this.#document.location;
     const renderInline = (value: string): string =>
-      renderInlineMarkdown(value, this.linkBaseUrl(), this.#document.location.pathname, this.#document.location.search, target =>
-        this.#resolveInternalDocsLink(target)
-      );
+      renderInlineMarkdown(value, this.linkBaseUrl(), pathname, search, target => this.#resolveInternalDocsLink(target));
     const idPrefix = this.headingIdPrefix();
     const toView = (block: MarkdownBlock): MarkdownBlockView => {
+      if (block.kind === 'table' && apiGroupId && isApiTable(block.headers)) {
+        return {
+          kind: 'api',
+          apiRows: parseApiTable(block.headers, block.rows, apiGroupId, booleanAttributes)
+            .filter(row => matchesApiQuery(row, apiQuery))
+            .map(row => ({
+              id: row.id,
+              href: buildDocsFragmentHref(pathname, search, row.id),
+              name: row.name,
+              types: row.types,
+              flag: row.flag,
+              defaultValue: row.defaultValue,
+              descriptionHtml: row.description ? renderInline(row.description) : '',
+            })),
+        };
+      }
       switch (block.kind) {
         case 'heading':
           return { kind: block.kind, level: block.level, id: `${idPrefix}${block.id}`, html: renderInline(block.text) };
@@ -279,7 +345,7 @@ export class MarkdownRendererComponent {
           };
       }
     };
-    return toMarkdownBlocks(this.markdown()).map(toView);
+    return toMarkdownBlocks(markdown).map(toView);
   });
   #copyRequestId = 0;
   #copyResetTimeout: number | undefined;
@@ -346,6 +412,22 @@ export class MarkdownRendererComponent {
     if (!href) return;
     event.preventDefault();
     void this.#router.navigateByUrl(this.#location.normalize(href));
+  }
+
+  lineNumbers(code: string): string {
+    return Array.from({ length: code.replace(/\n$/, '').split('\n').length }, (_, index) => index + 1).join('\n');
+  }
+
+  /** "> **Tip**: …" quotes become tip callouts, "> **Warning**" / Important / Caution become warn, the rest notes. */
+  calloutKind(html: string): 'note' | 'tip' | 'warn' {
+    const lead = /^\s*<strong>([^<]+)<\/strong>/.exec(html)?.[1]?.toLowerCase() ?? '';
+    if (/^tip/.test(lead)) return 'tip';
+    if (/^(warn|important|caution|breaking|do not)/.test(lead)) return 'warn';
+    return 'note';
+  }
+
+  calloutIcon(html: string): string {
+    return { note: 'info', tip: 'lightbulb', warn: 'warning' }[this.calloutKind(html)];
   }
 
   copyLabel(code: string): string {

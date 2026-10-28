@@ -1,19 +1,71 @@
 @use '@sdcorejs/angular/assets/scss/themes/default' as sd;
 
+// Docs site design tokens (design handoff "Docs design system"). Light values live on :root; the theme toggle sets
+// data-sd-theme on <html>, which also switches the library tokens of every live example (sd-core.scss).
 :root {
-  --docs-header-height: 64px;
-  --docs-sidebar-width: 288px;
-  --docs-toc-width: 220px;
-  --docs-content-max-width: 1120px;
-  --docs-border-color: var(--sd-border, #c4c6d0);
-  --docs-surface: var(--sd-surface, #fdfbff);
-  --docs-surface-muted: color-mix(in srgb, var(--sd-surface-muted, #e7e8ed) 58%, var(--docs-surface));
-  --docs-surface-raised: color-mix(in srgb, var(--docs-surface) 94%, white);
-  --docs-text: var(--sd-text, #1a1b1f);
-  --docs-text-secondary: var(--sd-text-secondary, #44474f);
-  --docs-text-muted: var(--sd-text-muted, #686b73);
-  --docs-code-surface: #111827;
-  --docs-code-text: #e5edf8;
+  color-scheme: light;
+  --docs-bg: #ffffff;
+  --docs-bg-glass: rgb(255 255 255 / 86%);
+  --docs-bg-2: #f7f8fa;
+  --docs-bg-3: #eef0f4;
+  --docs-line: #e4e7ec;
+  --docs-line-2: #d0d5dd;
+  --docs-fg: #13161b;
+  --docs-fg-2: #434a56;
+  --docs-fg-3: #5f6876;
+  --docs-acc: var(--sd-primary, #005cbb);
+  --docs-acc-soft: #e9f1fb;
+  --docs-acc-on: #ffffff;
+  --docs-ok: #0a7a4b;
+  --docs-ok-soft: #e6f4ec;
+  --docs-warn: #9a5b00;
+  --docs-warn-soft: #fdf3e1;
+  --docs-err: #b42318;
+  --docs-err-soft: #fdecea;
+  --docs-mark: #fde68a;
+  --docs-code-bg: #f7f8fa;
+  --docs-code-fg: #1f2430;
+  --docs-code-ln: #a3aab5;
+  --docs-syn-tag: #0550ae;
+  --docs-syn-attr: #8250df;
+  --docs-syn-str: #0a7a4b;
+  --docs-syn-kw: #cf222e;
+  --docs-syn-com: #636c76;
+  --docs-syn-type: #953800;
+  --docs-syn-num: #0550ae;
+  --docs-syn-dec: #8250df;
+  --docs-backdrop: rgb(15 23 42 / 42%);
+  --docs-shadow-menu: 0 12px 32px rgb(15 23 42 / 14%);
+
+  --docs-font-sans: 'IBM Plex Sans', Roboto, system-ui, sans-serif;
+  --docs-font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  --docs-fs-hero: 60px;
+  --docs-fs-h1: 44px;
+  --docs-fs-h2: 22px;
+  --docs-fs-h3: 16px;
+  --docs-fs-lead: 17px;
+  --docs-fs-prose: 15.5px;
+  --docs-fs-ui: 14px;
+  --docs-fs-label: 11px;
+  --docs-fs-code: 13px;
+
+  --docs-header-height: 60px;
+  --docs-sidebar-width: 272px;
+  --docs-toc-width: 200px;
+  --docs-content-max-width: 1180px;
+  --docs-article-max-width: 820px;
+  --docs-scroll-offset: 124px;
+
+  // Names used before the redesign, kept as aliases of the tokens above.
+  --docs-border-color: var(--docs-line);
+  --docs-surface: var(--docs-bg);
+  --docs-surface-muted: var(--docs-bg-3);
+  --docs-surface-raised: var(--docs-bg-2);
+  --docs-text: var(--docs-fg);
+  --docs-text-secondary: var(--docs-fg-2);
+  --docs-text-muted: var(--docs-fg-3);
+  --docs-code-surface: var(--docs-code-bg);
+  --docs-code-text: var(--docs-code-fg);
   --docs-space-1: 4px;
   --docs-space-2: 8px;
   --docs-space-3: 12px;
@@ -25,25 +77,72 @@
   --docs-control-height-sm: 32px;
   --docs-control-height-md: 40px;
   --docs-control-height-lg: 44px;
-  --docs-shadow-sm: 0 1px 2px rgb(15 23 42 / 6%);
-  --docs-shadow-overlay: 0 12px 36px rgb(15 23 42 / 12%);
-  --docs-shadow: var(--docs-shadow-overlay);
-  --docs-radius-xs: 4px;
-  --docs-radius-sm: 8px;
-  --docs-radius-control: 10px;
-  --docs-radius-md: 14px;
-  --docs-radius-lg: 22px;
+  --docs-shadow-sm: none;
+  --docs-shadow-overlay: var(--docs-shadow-menu);
+  --docs-shadow: var(--docs-shadow-menu);
+  --docs-radius-chip: 4px;
+  --docs-radius-nav: 6px;
+  --docs-radius-control: 8px;
+  --docs-radius-code: 10px;
+  --docs-radius-card: 12px;
   --docs-radius-pill: 999px;
-  --docs-focus-ring: color-mix(in srgb, var(--sd-primary, #005cbb) 88%, #001b3d);
+  --docs-radius-xs: var(--docs-radius-chip);
+  --docs-radius-sm: var(--docs-radius-control);
+  --docs-radius-md: var(--docs-radius-card);
+  --docs-radius-lg: var(--docs-radius-card);
+  --docs-focus-ring: var(--docs-acc);
+}
+
+:root[data-sd-theme='dark'] {
+  color-scheme: dark;
+  --docs-bg: #0d1015;
+  --docs-bg-glass: rgb(13 16 21 / 86%);
+  --docs-bg-2: #11151b;
+  --docs-bg-3: #1a1f27;
+  --docs-line: #232933;
+  --docs-line-2: #323a46;
+  --docs-fg: #e8ebf0;
+  --docs-fg-2: #b4bbc7;
+  --docs-fg-3: #8992a1;
+  --docs-acc: #7fb0ff;
+  --docs-acc-soft: #14243a;
+  --docs-acc-on: #001b3d;
+  --docs-ok: #5fd39a;
+  --docs-ok-soft: #0f2a1e;
+  --docs-warn: #f2b45a;
+  --docs-warn-soft: #2c2112;
+  --docs-err: #ff8a80;
+  --docs-err-soft: #3a1714;
+  --docs-mark: #5c4a0a;
+  --docs-code-bg: #0a0d11;
+  --docs-code-fg: #d7dce4;
+  --docs-code-ln: #4d5664;
+  --docs-syn-tag: #79c0ff;
+  --docs-syn-attr: #d2a8ff;
+  --docs-syn-str: #7ee2a8;
+  --docs-syn-kw: #ff7b72;
+  --docs-syn-com: #8b949e;
+  --docs-syn-type: #ffa657;
+  --docs-syn-num: #79c0ff;
+  --docs-syn-dec: #d2a8ff;
 }
 
 html,
 body {
   height: 100%;
   margin: 0;
-  font-family: Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background: var(--docs-surface);
-  color: var(--docs-text);
+  font-family: var(--docs-font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  background: var(--docs-bg);
+  color: var(--docs-fg);
+}
+
+code,
+kbd,
+pre,
+samp {
+  font-family: var(--docs-font-mono);
 }
 
 * {
@@ -62,7 +161,7 @@ textarea {
 }
 
 a {
-  color: var(--sd-primary, #005cbb);
+  color: var(--docs-acc);
   text-decoration: none;
 
   &:hover {
@@ -77,8 +176,14 @@ h3 {
 }
 
 :focus-visible {
-  outline: 3px solid var(--docs-focus-ring);
-  outline-offset: 3px;
+  outline: 2px solid var(--docs-focus-ring);
+  outline-offset: 2px;
+}
+
+// why: these controls sit inside overflow containers that would clip a ring drawn outside them.
+:is(.docs-tabs, .example, .docs-code, .quick-start__box, .search-group__list, .not-found__list, .method, .release-rail) :focus-visible,
+[role='region'][tabindex='0']:focus-visible {
+  outline-offset: -2px;
 }
 
 // Programmatically focused route landmarks keep a visible location cue without boxing large content areas.
@@ -113,6 +218,94 @@ h3 {
   .tt-preset--#{$preset} {
     color-scheme: light;
     @include sd.theme($preset: $preset);
+  }
+}
+
+// Docs chrome icons are Material Symbols Outlined (shipped by sd-core.scss); live examples keep their own icon fonts.
+:is(.topbar, .sidebar, .release-banner, .version-menu, .docs-article, .toc, .home, .search-page, .not-found, .changelog)
+  mat-icon.mat-icon:not(.example__preview *) {
+  font-family: 'Material Symbols Outlined';
+}
+
+// Inline code inside rendered Markdown. The renderer writes this HTML through [innerHTML], so component styles
+// cannot reach it; these rules are global and scoped by the renderer's classes. A code block nested in a list
+// item keeps its plain look.
+.docs-markdown :is(p, li, td, th, blockquote, h3, h4) code:not(pre code),
+.api-row__description code {
+  border-radius: var(--docs-radius-chip);
+  background: var(--docs-bg-3);
+  padding: 1px 5px;
+  color: var(--docs-fg);
+  font-size: 0.88em;
+  // why: a long route or token name breaks instead of widening the page on phones.
+  overflow-wrap: anywhere;
+}
+
+// why: links inside prose need more than colour to stand out from the text around them (WCAG 1.4.1).
+.api-row__description a,
+.docs-markdown a {
+  color: var(--docs-acc);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+
+  &:hover {
+    text-decoration-thickness: 2px;
+  }
+}
+
+// Prism tokens of highlighted code in the docs (Markdown code blocks and example sources).
+:is(pre, code) .token {
+  &.comment,
+  &.prolog,
+  &.doctype,
+  &.cdata {
+    color: var(--docs-syn-com);
+  }
+
+  &.tag,
+  &.selector {
+    color: var(--docs-syn-tag);
+  }
+
+  &.attr-name,
+  &.property {
+    color: var(--docs-syn-attr);
+  }
+
+  &.string,
+  &.char,
+  &.attr-value,
+  &.template-string,
+  &.url {
+    color: var(--docs-syn-str);
+  }
+
+  &.keyword,
+  &.boolean,
+  &.atrule,
+  &.important,
+  &.control-flow {
+    color: var(--docs-syn-kw);
+  }
+
+  &.class-name,
+  &.builtin {
+    color: var(--docs-syn-type);
+  }
+
+  &.number {
+    color: var(--docs-syn-num);
+  }
+
+  &.decorator,
+  &.annotation {
+    color: var(--docs-syn-dec);
+  }
+
+  &.punctuation,
+  &.operator {
+    color: inherit;
   }
 }
 

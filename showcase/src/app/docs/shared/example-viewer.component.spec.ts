@@ -175,7 +175,9 @@ describe('ExampleViewerComponent', () => {
   });
 
   it('selects generated source tabs and copies the displayed source', async () => {
-    const sourceToggle = fixture.nativeElement.querySelector('[aria-label="Expand source"]') as HTMLButtonElement;
+    const sourceToggle = fixture.nativeElement.querySelector('.example__code-toggle') as HTMLButtonElement;
+    // why: the visible "Code" text names the button (label in name), aria-expanded carries the state.
+    expect(sourceToggle.hasAttribute('aria-label')).toBeFalse();
     const sourceId = sourceToggle.getAttribute('aria-controls');
     const sourceRegion = fixture.nativeElement.querySelector(`#${sourceId}`) as HTMLElement;
     expect(sourceToggle.getAttribute('aria-expanded')).toBe('false');
@@ -188,18 +190,22 @@ describe('ExampleViewerComponent', () => {
       button.getAttribute('aria-label')
     );
 
-    expect(labels).toContain('Collapse source');
     expect(labels).toContain('Copy source code');
     expect(fixture.nativeElement.querySelector('[role="group"]')).not.toBeNull();
     expect(sourceToggle.getAttribute('aria-expanded')).toBe('true');
     expect(sourceRegion.hidden).toBeFalse();
 
-    const typeScriptButton = [...fixture.nativeElement.querySelectorAll('[aria-label="Source language"] button')].find(
-      (button: HTMLButtonElement) => button.textContent?.trim() === 'TypeScript'
-    ) as HTMLButtonElement;
+    const tabs = [...fixture.nativeElement.querySelectorAll('[aria-label="Source language"] button')] as HTMLButtonElement[];
+    expect(tabs.map(button => button.textContent?.trim())).toEqual(['HTML', 'TS', 'SCSS']);
+    const source = fixture.componentInstance.source();
+    expect(tabs[2].disabled).toBe(!source?.scss?.trim());
+    const typeScriptButton = tabs[1];
     typeScriptButton.click();
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('code')?.textContent).toContain('ButtonVariantsExampleComponent');
+    expect(fixture.nativeElement.querySelector('.example__pre code')?.textContent).toContain('ButtonVariantsExampleComponent');
+    expect(fixture.nativeElement.querySelector('.example__file')?.textContent?.trim()).toBe('example-bien-the.ts');
+    const lineCount = (fixture.nativeElement.querySelector('.example__lines')?.textContent ?? '').split('\n').length;
+    expect(lineCount).toBe(fixture.componentInstance.currentSource().replace(/\n$/, '').split('\n').length);
 
     await fixture.componentInstance.copySource();
     expect(clipboardWrite).toHaveBeenCalledWith(fixture.componentInstance.currentSource());
@@ -234,6 +240,28 @@ describe('ExampleViewerComponent', () => {
     await firstCopy;
 
     expect(fixture.componentInstance.copyStatus()).toBe('success');
+  });
+
+  it('opens the code panel on first render when asked (the first example of a page)', async () => {
+    const opened = TestBed.createComponent(ExampleViewerComponent);
+    opened.componentRef.setInput('example', example);
+    opened.componentRef.setInput('codeOpen', true);
+    opened.detectChanges();
+    await opened.whenStable();
+    opened.detectChanges();
+
+    expect(opened.componentInstance.expanded()).toBeTrue();
+    expect((opened.nativeElement.querySelector('.example__code-toggle') as HTMLButtonElement).textContent).toContain('Hide code');
+    opened.destroy();
+  });
+
+  it('copies a deep link to the example', async () => {
+    (fixture.nativeElement.querySelector('.example__anchor') as HTMLButtonElement).click();
+    await new Promise(resolve => setTimeout(resolve));
+    fixture.detectChanges();
+
+    expect(clipboardWrite).toHaveBeenCalledWith(jasmine.stringMatching(/#components-button-showcase$/));
+    expect(fixture.nativeElement.querySelector('.example__anchor mat-icon')?.textContent?.trim()).toBe('check');
   });
 
   it('resets a stateful preview by recreating its component instance', async () => {

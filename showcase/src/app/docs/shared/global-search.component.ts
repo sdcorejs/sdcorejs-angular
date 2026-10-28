@@ -15,6 +15,7 @@ import {
 } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
+import { DocsI18nService } from '../core/docs-i18n.service';
 import { DocsSearchResult, foldSearchText, groupSearchResults, searchDocumentation } from '../core/docs-search.utils';
 import { DocsVersionService } from '../core/docs-version.service';
 import { DOC_PAGES } from '../core/documentation.registry';
@@ -128,12 +129,13 @@ function resolveMetadata(
     <button
       class="search-trigger"
       type="button"
-      aria-label="Search documentation"
+      [attr.aria-label]="i18n.t().search"
+      [attr.aria-keyshortcuts]="isApplePlatform ? 'Meta+K' : 'Control+K'"
       [attr.inert]="opened() ? '' : null"
       (click)="openSearch()">
       <mat-icon aria-hidden="true">search</mat-icon>
-      <span class="search-trigger__label">Search docs</span>
-      <kbd>Ctrl K</kbd>
+      <span class="search-trigger__label">{{ i18n.t().search }}</span>
+      <kbd aria-hidden="true">{{ isApplePlatform ? '⌘K' : 'Ctrl K' }}</kbd>
     </button>
 
     @if (opened()) {
@@ -202,7 +204,10 @@ function resolveMetadata(
             </section>
           }
         </div>
-        <footer><span>↑↓ Navigate</span><span>Enter Open</span><span>Esc Close</span></footer>
+        <footer>
+          <span>↑↓ Navigate</span><span>Enter Open</span><span>Esc Close</span>
+          <button class="search-dialog__all" type="button" (click)="openResultsPage()">{{ i18n.t().allResults }} →</button>
+        </footer>
       </section>
     }
   `,
@@ -215,6 +220,9 @@ export class GlobalSearchComponent {
   readonly #injector = inject(Injector);
   readonly #versions = inject(DocsVersionService);
   readonly #publishedDocs = inject(PublishedDocsService);
+  readonly i18n = inject(DocsI18nService);
+  /** The shortcut hint reads ⌘K on Apple platforms and Ctrl K elsewhere; both shortcuts work everywhere. */
+  readonly isApplePlatform = /Mac|iPhone|iPad/.test(this.#document.defaultView?.navigator.platform ?? '');
   private readonly searchInput = viewChild<ElementRef<HTMLInputElement>>('searchInput');
   private readonly searchDialog = viewChild<ElementRef<HTMLElement>>('searchDialog');
   #focusBeforeOpen: HTMLElement | null = null;
@@ -355,6 +363,14 @@ export class GlobalSearchComponent {
     event.preventDefault();
     const result = this.displayedResults()[this.activeIndex()];
     if (result) this.navigate(result);
+  }
+
+  /** Opens the full results page (pages, API members and guide sections) for the current query. */
+  openResultsPage(): void {
+    const version = this.#versions.selectedVersion() ?? 'latest';
+    const q = this.query().trim();
+    this.closeSearch(false);
+    void this.#router.navigate(['/v', version, 'search'], { queryParams: { q: q || null } });
   }
 
   navigate(result: DocsSearchResult): void {

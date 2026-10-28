@@ -1,7 +1,9 @@
 import { ComponentFixture, fakeAsync, flushMicrotasks, TestBed, tick } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { DocsClipboardService } from '../core/docs-clipboard.service';
+import { DocsI18nService } from '../core/docs-i18n.service';
 import { DOC_PAGES } from '../core/documentation.registry';
-import { DocsPageHeaderComponent } from './docs-page-header.component';
+import { DocsPageHeaderComponent, inlineCodeSegments, metadataCode } from './docs-page-header.component';
 
 describe('DocsPageHeaderComponent', () => {
   let fixture: ComponentFixture<DocsPageHeaderComponent>;
@@ -27,66 +29,105 @@ describe('DocsPageHeaderComponent', () => {
 
     fixture = TestBed.createComponent(DocsPageHeaderComponent);
     fixture.componentRef.setInput('page', page);
-    fixture.componentRef.setInput('version', '21.1.2');
-    fixture.componentRef.setInput('showIdentity', true);
+    fixture.componentRef.setInput('version', '21.3.1');
+    fixture.componentRef.setInput('release', '3.1');
+    fixture.componentRef.setInput('metadata', { Class: '`SdButton` (implements `OnInit`, `OnDestroy`)' });
+    fixture.componentRef.setInput('lead', 'Standard action button with `sd-button`.');
     fixture.detectChanges();
   });
 
   afterEach(() => {
+    TestBed.inject(DocsI18nService).set('en');
     fixture?.destroy();
     if (clipboardDescriptor) Object.defineProperty(window.navigator, 'clipboard', clipboardDescriptor);
     else delete (window.navigator as { clipboard?: Clipboard }).clipboard;
   });
 
-  it('announces selector copy success only after the clipboard write resolves, then resets', fakeAsync(() => {
-    let resolveWrite!: () => void;
-    clipboardWrite.and.returnValue(new Promise<void>(resolve => (resolveWrite = resolve)));
-    const selectorButton = fixture.nativeElement.querySelector('[aria-label^="Copy selector"]') as HTMLButtonElement;
-    const selector = fixture.componentInstance.page().selector;
-    const liveRegion = fixture.nativeElement.querySelector('[aria-live="polite"]') as HTMLElement;
+  function cells(): HTMLElement[] {
+    return [...fixture.nativeElement.querySelectorAll('.identity-cell')];
+  }
 
-    selectorButton.click();
+  it('shows the breadcrumb, type pill and identity strip of a component', () => {
+    expect(fixture.nativeElement.querySelector('.breadcrumbs')?.textContent).toContain('Components');
+    expect(fixture.nativeElement.querySelector('.pill')?.textContent?.trim()).toBe('Component');
+    expect(cells().map(cell => cell.querySelector('.identity-cell__label')?.textContent?.trim())).toEqual(['Selector', 'Import', 'Class']);
+    expect(cells().map(cell => cell.querySelector('code')?.textContent?.trim())).toEqual([
+      'sd-button',
+      '@sdcorejs/angular/components/button',
+      'SdButton',
+    ]);
+  });
+
+  it('marks the page Updated in the current release', () => {
+    fixture.componentRef.setInput('badge', 'updated');
     fixture.detectChanges();
 
-    expect(clipboardWrite).toHaveBeenCalledOnceWith(selector);
-    expect(liveRegion.textContent?.trim()).toBe('');
+    expect(fixture.nativeElement.querySelector('.pill--accent')?.textContent?.trim()).toBe('Updated in 3.1');
+  });
 
-    resolveWrite();
+  it('uses the English purpose as lead and the Vietnamese registry text in VI', () => {
+    const lead = () => fixture.nativeElement.querySelector('.page-header__lead') as HTMLElement;
+    expect(lead().getAttribute('lang')).toBe('en');
+    expect(lead().querySelector('code')?.textContent).toBe('sd-button');
+
+    TestBed.inject(DocsI18nService).set('vi');
+    fixture.detectChanges();
+    expect(lead().getAttribute('lang')).toBe('vi');
+    expect(lead().textContent?.trim()).toBe(fixture.componentInstance.page().description);
+  });
+
+  it('copies one cell, shows a check for 1.4s and announces the result', fakeAsync(() => {
+    const clipboard = TestBed.inject(DocsClipboardService);
+    const button = cells()[0].querySelector('button') as HTMLButtonElement;
+
+    expect(button.getAttribute('aria-label')).toBe('Copy Selector');
+    button.click();
     flushMicrotasks();
     fixture.detectChanges();
 
-    expect(liveRegion.textContent).toContain('Selector copied to clipboard.');
+    expect(clipboardWrite).toHaveBeenCalledOnceWith('sd-button');
+    expect(button.querySelector('mat-icon')?.textContent?.trim()).toBe('check');
+    expect(clipboard.announcement()).toBe('Copied to clipboard.');
 
-    tick(1600);
+    tick(1400);
     fixture.detectChanges();
-    expect(liveRegion.textContent?.trim()).toBe('');
+    expect(button.querySelector('mat-icon')?.textContent?.trim()).toBe('content_copy');
+    expect(clipboard.announcement()).toBe('');
   }));
 
-  it('identifies an import-path copy rejection without claiming success', fakeAsync(() => {
+  it('announces a failed copy without showing the check', fakeAsync(() => {
     clipboardWrite.and.rejectWith(new Error('denied'));
-    const importButton = fixture.nativeElement.querySelector('[aria-label="Copy import path"]') as HTMLButtonElement;
+    const button = cells()[1].querySelector('button') as HTMLButtonElement;
 
-    importButton.click();
+    button.click();
     flushMicrotasks();
     fixture.detectChanges();
 
-    const announcement = fixture.nativeElement.querySelector('[aria-live="polite"]')?.textContent ?? '';
-    expect(announcement).toContain('Import path could not be copied.');
-    expect(announcement).not.toContain('copied to clipboard');
+    expect(button.querySelector('mat-icon')?.textContent?.trim()).toBe('content_copy');
+    expect(TestBed.inject(DocsClipboardService).announcement()).toContain('Could not copy');
+    tick(1400);
   }));
 
-  it('announces an unavailable clipboard and retains 44px identity copy targets', () => {
-    Object.defineProperty(window.navigator, 'clipboard', { configurable: true, value: undefined });
-    const buttons = [...fixture.nativeElement.querySelectorAll('.page-header__identity button')] as HTMLButtonElement[];
+  it('keeps a 44px hit area around the 30px copy buttons', () => {
+    const button = cells()[0].querySelector('button') as HTMLButtonElement;
+    const hitArea = getComputedStyle(button, '::after');
 
-    buttons[0]?.click();
-    fixture.detectChanges();
+    expect(button.getBoundingClientRect().height - parseFloat(hitArea.top) - parseFloat(hitArea.bottom)).toBeGreaterThanOrEqual(44);
+  });
+});
 
-    expect(fixture.nativeElement.querySelector('[aria-live="polite"]')?.textContent).toContain(
-      'Clipboard is unavailable. Copy the selector manually.'
-    );
-    expect(buttons).toHaveSize(2);
-    expect(buttons.every(button => getComputedStyle(button).minWidth === '44px')).toBeTrue();
-    expect(buttons.every(button => getComputedStyle(button).minHeight === '44px')).toBeTrue();
+describe('page header helpers', () => {
+  it('reads the first code span of a metadata value', () => {
+    expect(metadataCode('`SdButton` (implements `OnInit`)')).toBe('SdButton');
+    expect(metadataCode("`'root'`")).toBe("'root'");
+    expect(metadataCode(undefined)).toBeNull();
+  });
+
+  it('splits inline code segments', () => {
+    expect(inlineCodeSegments('Use `sd-button` here')).toEqual([
+      { text: 'Use ', code: false },
+      { text: 'sd-button', code: true },
+      { text: ' here', code: false },
+    ]);
   });
 });

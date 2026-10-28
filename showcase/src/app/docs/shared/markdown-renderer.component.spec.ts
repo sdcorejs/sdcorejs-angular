@@ -202,6 +202,23 @@ describe('MarkdownRendererComponent', () => {
     expect(container.getAttribute('lang')).toBe('vi');
   });
 
+  it('renders note, tip and warn callouts and numbered code lines', () => {
+    fixture.componentRef.setInput(
+      'markdown',
+      '> **Tip**: keep it short.\n\n> **Warning**: breaks.\n\n> Plain note.\n\n```ts\nconst a = 1;\nconst b = 2;\n```'
+    );
+    fixture.detectChanges();
+
+    const callouts = [...fixture.nativeElement.querySelectorAll('.docs-callout')] as HTMLElement[];
+    expect(callouts.map(callout => [...callout.classList].find(name => name.startsWith('docs-callout--')))).toEqual([
+      'docs-callout--tip',
+      'docs-callout--warn',
+      'docs-callout--note',
+    ]);
+    expect(fixture.nativeElement.querySelector('.docs-code__lines')?.textContent).toBe('1\n2');
+    expect(fixture.nativeElement.querySelector('.docs-code__file')?.textContent?.trim()).toBe('ts');
+  });
+
   it('announces clipboard success and rejection accurately', async () => {
     fixture.componentRef.setInput('markdown', '```ts\nconst ready = true;\n```');
     fixture.detectChanges();

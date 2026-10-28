@@ -1,27 +1,22 @@
 @let currentPage = page();
+@let t = i18n.t();
 @if (notFound()) {
-  <main class="docs-state">
-    <span>404</span>
-    <h1>Documentation entry not found</h1>
-    <p>This slug, category, or tab is not present in the central documentation registry.</p>
-    <a routerLink="/">Back to documentation home</a>
-  </main>
+  <docs-not-found></docs-not-found>
 } @else if (currentPage) {
-  <main class="docs-page">
-    <div class="docs-page__main">
+  <div class="docs-layout" [class.docs-layout--toc]="tableOfContents().length > 0">
+    <article class="docs-article">
       <docs-page-header
         [page]="currentPage"
         [version]="version()"
+        [release]="release()"
         [invalidVersion]="versions.invalidVersion()"
-        [sourceUrl]="sourceUrl()"
-        [showIdentity]="tab() === 'overview'">
+        [metadata]="metadataRecord()"
+        [lead]="lead()"
+        [badge]="releaseBadge()">
       </docs-page-header>
 
-      <docs-page-tabs [links]="tabLinks()" [activeTab]="tab()"></docs-page-tabs>
-
-      @if (tableOfContents().length) {
-        <docs-table-of-contents mode="inline" [items]="tableOfContents()"></docs-table-of-contents>
-      }
+      <div #tabsAnchor class="docs-tabs-anchor"></div>
+      <docs-page-tabs [links]="tabLinks()" [activeTab]="tab()" (tabSelected)="onTabSelected()"></docs-page-tabs>
 
       <section class="docs-page__content">
         @let errorMessage = error();
@@ -42,13 +37,14 @@
               <div class="historical-notice" role="note">{{ liveExamplesNotice() }}</div>
             }
             <section class="live-examples" aria-labelledby="live-examples-title">
-              <h2 id="live-examples-title" class="examples-summary">
+              <!-- why: the tab pill already shows the count; the heading stays for screen readers. -->
+              <h2 id="live-examples-title" class="examples-summary docs-visually-hidden">
                 <strong>{{ currentPage.demoSectionCount }}</strong>
                 <span>interactive examples</span>
               </h2>
               <div class="examples-list">
-                @for (example of currentPage.examples; track example.id) {
-                  <docs-example-viewer [example]="example"></docs-example-viewer>
+                @for (example of currentPage.examples; track example.id; let first = $first) {
+                  <docs-example-viewer [example]="example" [codeOpen]="first"></docs-example-viewer>
                 }
               </div>
             </section>
@@ -86,8 +82,59 @@
               </section>
             }
           } @else {
-            @if (tab() === 'api') {
-              <docs-api-summary [page]="currentPage" [metadata]="metadata()"></docs-api-summary>
+            @if (tab() === 'overview' && changes().length) {
+              <section id="changed" class="release-changes">
+                <h2 class="release-changes__title">
+                  <mat-icon aria-hidden="true">new_releases</mat-icon>{{ i18n.format('changedIn', { v: release() }) }}
+                </h2>
+                @for (change of changes(); track $index) {
+                  <docs-markdown-renderer class="release-changes__entry" [markdown]="change" [version]="version()"></docs-markdown-renderer>
+                }
+                <a class="release-changes__link" [routerLink]="changelogLink()">{{ t.fullChangelog }} →</a>
+              </section>
+            }
+
+            @if (tab() === 'overview' && quickStart(); as start) {
+              <section id="quick-start" class="quick-start">
+                <h2>{{ t.quickStart }}</h2>
+                <div class="quick-start__box">
+                  <div class="quick-start__install">
+                    <span aria-hidden="true">$</span>
+                    <code><span class="token keyword">npm</span> i <span class="token string">&#64;sdcorejs/angular&#64;{{ version() }}</span></code>
+                    <button type="button" [attr.aria-label]="t.copyInstall" (click)="clipboard.copy(installCommand(), 'page-install')">
+                      <mat-icon aria-hidden="true">{{ clipboard.isCopied('page-install') ? 'check' : 'content_copy' }}</mat-icon>
+                      {{ clipboard.isCopied('page-install') ? t.copied : t.copy }}
+                    </button>
+                  </div>
+                  <div class="quick-start__code" tabindex="0" role="region" [attr.aria-label]="t.quickStart">
+                    <pre class="quick-start__lines" aria-hidden="true">{{ start.lines }}</pre>
+                    <pre class="quick-start__pre"><code [innerHTML]="start.html"></code></pre>
+                  </div>
+                </div>
+              </section>
+            }
+
+            @if (tab() === 'api' && apiSections().length) {
+              <label class="api-filter">
+                <mat-icon aria-hidden="true">search</mat-icon>
+                <input
+                  type="search"
+                  autocomplete="off"
+                  aria-describedby="docs-api-count"
+                  [attr.aria-label]="t.filterApi"
+                  [placeholder]="t.filterApi"
+                  [value]="apiQuery()"
+                  (input)="onApiQuery($event)" />
+                <span id="docs-api-count" class="api-filter__count">{{ i18n.format('entries', { n: apiMatchCount() }) }}</span>
+              </label>
+              <span class="docs-visually-hidden" role="status" aria-live="polite" aria-atomic="true">
+                {{ apiQuery().trim() ? (apiMatchCount() ? i18n.format('entries', { n: apiMatchCount() }) : t.noResults) : '' }}
+              </span>
+              @if (apiQuery().trim() && !apiMatchCount()) {
+                <p class="api-empty">{{ t.noResults }}</p>
+              }
+            } @else if (untranslated() && sections().length) {
+              <p class="untranslated"><mat-icon aria-hidden="true">translate</mat-icon>{{ t.notTranslated }}</p>
             }
 
             @if (notAvailable()) {
@@ -108,17 +155,51 @@
               </div>
             }
 
-            @for (section of sections(); track section.id) {
-              <section class="doc-section" [id]="section.id">
-                <h2>{{ section.heading }}</h2>
-                <docs-markdown-renderer
-                  [markdown]="section.markdown"
-                  [linkBaseUrl]="documentUrl()"
-                  language="vi"
-                  [version]="version()"
-                  [sourcePublishedDocId]="currentPage.publishedDocId">
-                </docs-markdown-renderer>
-              </section>
+            @if (tab() === 'api') {
+              @for (item of apiSections(); track item.section.id) {
+                @if (item.method) {
+                  @if (item.section.id === firstMethodSectionId()) {
+                    @if (untranslated()) {
+                      <p class="untranslated"><mat-icon aria-hidden="true">translate</mat-icon>{{ t.notTranslated }}</p>
+                    }
+                    <docs-api-methods [methods]="apiMethods()" [apiQuery]="apiQuery()"></docs-api-methods>
+                  }
+                } @else if (showApiSection(item.section.id)) {
+                  <section class="doc-section" [id]="item.section.id">
+                    <h2>
+                      {{ item.section.heading }}
+                      @if (item.rows.length) {
+                        <span class="doc-section__count">{{ apiMatches().get(item.section.id) }}</span>
+                      }
+                    </h2>
+                    @if (untranslated() && item.rows.length) {
+                      <p class="untranslated"><mat-icon aria-hidden="true">translate</mat-icon>{{ t.notTranslated }}</p>
+                    }
+                    <docs-markdown-renderer
+                      [markdown]="item.section.markdown"
+                      [linkBaseUrl]="documentUrl()"
+                      language="en"
+                      [version]="version()"
+                      [sourcePublishedDocId]="currentPage.publishedDocId"
+                      [apiGroupId]="item.section.id"
+                      [apiQuery]="apiQuery()">
+                    </docs-markdown-renderer>
+                  </section>
+                }
+              }
+            } @else {
+              @for (section of sections(); track section.id) {
+                <section class="doc-section" [id]="section.id">
+                  <h2>{{ section.heading }}</h2>
+                  <docs-markdown-renderer
+                    [markdown]="section.markdown"
+                    [linkBaseUrl]="documentUrl()"
+                    language="en"
+                    [version]="version()"
+                    [sourcePublishedDocId]="currentPage.publishedDocId">
+                  </docs-markdown-renderer>
+                </section>
+              }
             }
 
             @if (tab() === 'styling' && styleGuideSections().length) {
@@ -145,24 +226,22 @@
         }
       </section>
 
-      <nav class="page-pagination" aria-label="Previous and next documentation pages">
+      <nav class="page-pagination" [attr.aria-label]="t.pagination">
         @if (previousPage(); as previous) {
-          <a [routerLink]="previousLink()"
-            ><span>Previous</span><strong>← {{ previous.title }}</strong></a
-          >
-        } @else {
-          <span></span>
+          <a class="page-pagination__previous" [routerLink]="previousLink()">
+            <span>← {{ t.previous }}</span><strong>{{ previous.title }}</strong>
+          </a>
         }
         @if (nextPage(); as next) {
-          <a [routerLink]="nextLink()"
-            ><span>Next</span><strong>{{ next.title }} →</strong></a
-          >
+          <a class="page-pagination__next" [routerLink]="nextLink()">
+            <span>{{ t.next }} →</span><strong>{{ next.title }}</strong>
+          </a>
         }
       </nav>
-    </div>
+    </article>
 
     @if (tableOfContents().length) {
-      <docs-table-of-contents mode="aside" [items]="tableOfContents()"></docs-table-of-contents>
+      <docs-table-of-contents [items]="tableOfContents()" [editUrl]="editUrl()" [sourceUrl]="sourceUrl()"></docs-table-of-contents>
     }
-  </main>
+  </div>
 }

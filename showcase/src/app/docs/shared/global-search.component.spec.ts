@@ -179,9 +179,11 @@ describe('GlobalSearchComponent', () => {
     expect(titles).not.toContain('Button');
   });
 
-  it('uses at least a 44px search action target', () => {
+  it('uses at least a 44px search action target around the 36px control', () => {
     const trigger = fixture.nativeElement.querySelector('.search-trigger') as HTMLButtonElement;
-    expect(trigger.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+    const hitArea = getComputedStyle(trigger, '::after');
+    const height = trigger.getBoundingClientRect().height - parseFloat(hitArea.top) - parseFloat(hitArea.bottom);
+    expect(height).toBeGreaterThanOrEqual(44);
   });
 
   it('gives the combobox and categorized result groups accessible names', () => {

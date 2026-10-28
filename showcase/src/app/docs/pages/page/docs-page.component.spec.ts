@@ -8,7 +8,7 @@ import { DOC_PAGES } from '../../core/documentation.registry';
 import { MarkdownSection, PublishedDocTabsViewModel } from '../../core/published-docs.models';
 import { PublishedDocsService } from '../../core/published-docs.service';
 import { ExampleViewerComponent } from '../../shared/example-viewer.component';
-import { DocsPageComponent } from './docs-page.component';
+import { DocsPageComponent, quickStartCode } from './docs-page.component';
 
 @Component({
   selector: 'docs-example-viewer',
@@ -18,6 +18,7 @@ import { DocsPageComponent } from './docs-page.component';
 })
 class ExampleViewerStubComponent {
   readonly example = input.required<DocExample>();
+  readonly codeOpen = input(false);
 }
 
 interface SetupOptions {
@@ -86,6 +87,9 @@ describe('DocsPageComponent', () => {
             invalidVersion: signal<string | null>(null),
             selectedVersion: signal(version),
             latestVersion: signal(options.latestVersion ?? '21.1.2'),
+            selectedRelease: signal(version.split('.').slice(1).join('.')),
+            // why: the release is the version without its Angular major, so 20.1.2 and 21.1.2 are the same release.
+            isLatestRelease: signal(version.split('.').slice(1).join('.') === (options.latestVersion ?? '21.1.2').split('.').slice(1).join('.')),
           },
         },
         { provide: PublishedDocsService, useValue: publishedDocs },
@@ -125,7 +129,9 @@ describe('DocsPageComponent', () => {
       viewModel: publishedView({ styling: [], api: [], examples: [] }),
     });
 
-    const labels = [...fixture!.nativeElement.querySelectorAll('.docs-tabs a')].map((link: HTMLAnchorElement) => link.textContent?.trim());
+    const labels = [...fixture!.nativeElement.querySelectorAll('.docs-tabs a > span:first-child')].map((label: HTMLElement) =>
+      label.textContent?.trim()
+    );
 
     expect(labels).toEqual(['Overview', 'Examples']);
   });
@@ -136,23 +142,56 @@ describe('DocsPageComponent', () => {
       viewModel: publishedView({ styling: [], api: [], examples: [] }),
     });
 
-    expect(router.navigate).toHaveBeenCalledWith(['/v', '21.1.2', 'components', 'button', 'overview'], { replaceUrl: true });
+    expect(router.navigate).toHaveBeenCalledWith(['/v', '21.1.2', 'components', 'button', 'overview'], {
+      replaceUrl: true,
+      preserveFragment: true,
+    });
   });
 
   it('uses current-demo copy and removes migration language on the latest examples page', async () => {
     await setup();
 
     expect(fixture?.nativeElement.querySelector('.historical-notice')).toBeNull();
-    // why: test:showcase-examples guards the count itself; this checks the page shows the registry value.
-    const buttonPage = DOC_PAGES.find(page => page.category === 'components' && page.slug === 'button');
-    expect(fixture?.nativeElement.querySelector('.examples-summary strong')?.textContent?.trim()).toBe(
-      String(buttonPage?.demoSectionCount)
-    );
+    const button = DOC_PAGES.find(page => page.category === 'components' && page.slug === 'button');
+    expect(fixture?.nativeElement.querySelector('.examples-summary strong')?.textContent?.trim()).toBe(String(button?.demoSectionCount));
     expect(fixture?.nativeElement.querySelector('.examples-summary span')?.textContent?.trim()).toBe('interactive examples');
     expect(fixture?.nativeElement.textContent).not.toContain('preserved');
-    expect(fixture?.nativeElement.querySelector('.page-header > a')?.textContent?.trim()).toBe('View demo source');
-    expect(fixture?.nativeElement.querySelector('.page-header > a')?.getAttribute('href')).toBe(
+    const source = fixture?.nativeElement.querySelector('.toc__links a[href*="button-demo"]') as HTMLAnchorElement;
+    expect(source.textContent).toContain('View demo source');
+    expect(source.getAttribute('href')).toBe(
       'https://github.com/sdcorejs/sdcorejs-angular/blob/main/showcase/src/app/pages/components/button/button-demo.component.ts'
+    );
+  });
+
+  it('shows tab counts, the English purpose as lead and an edit link to the published source', async () => {
+    const purpose: MarkdownSection = {
+      heading: 'One-line purpose',
+      id: 'one-line-purpose',
+      level: 2,
+      markdown: 'Standard action button with `sd-button`.',
+    };
+    const api: MarkdownSection = {
+      heading: 'Inputs',
+      id: 'inputs',
+      level: 2,
+      markdown: '| Name | Type |\n| --- | --- |\n| `type` | `string` |\n| `size` | `string` |',
+    };
+    await setup({
+      tab: 'overview',
+      viewModel: publishedView({ overview: [purpose, section('When to use', 'when-to-use')], api: [api] }),
+    });
+
+    const tabs = [...fixture!.nativeElement.querySelectorAll('.docs-tabs a')] as HTMLAnchorElement[];
+    const button = DOC_PAGES.find(page => page.category === 'components' && page.slug === 'button');
+    expect(tabs.map(tab => tab.querySelector('.docs-tabs__count')?.textContent ?? null)).toEqual([
+      null,
+      '2',
+      String(button?.examples.length),
+    ]);
+    expect(fixture!.nativeElement.querySelector('.page-header__lead')?.textContent).toContain('Standard action button');
+    expect(fixture!.nativeElement.querySelector('#one-line-purpose')).toBeNull();
+    expect((fixture!.nativeElement.querySelector('.toc__links a') as HTMLAnchorElement).href).toBe(
+      'https://github.com/sdcorejs/sdcorejs-angular/blob/main/versions/v19/projects/sdcorejs-angular/button.md'
     );
   });
 
@@ -165,12 +204,103 @@ describe('DocsPageComponent', () => {
     expect(fixture?.nativeElement.querySelectorAll('.page-header__identity button')).toHaveSize(2);
   });
 
+  it('renders API tables as filterable rows with deep links and hides groups without matches', async () => {
+    const inputs: MarkdownSection = {
+      heading: 'Inputs',
+      id: 'inputs',
+      level: 2,
+      markdown: "| Name | Type | Default | Notes |\n| --- | --- | --- | --- |\n| `type` | `'fill' \\| 'light'` | `'light'` | Visual variant. |\n| `size` | `'sm' \\| 'md'` | `'sm'` | Height. |",
+    };
+    const outputs: MarkdownSection = {
+      heading: 'Outputs',
+      id: 'outputs',
+      level: 2,
+      markdown: '| Name | Type | Notes |\n| --- | --- | --- |\n| `click` | `Event` | Throttled. |',
+    };
+    await setup({ tab: 'api', viewModel: publishedView({ api: [inputs, outputs] }) });
+    const element = fixture!.nativeElement as HTMLElement;
+
+    expect([...element.querySelectorAll('.api-row')].map(row => row.id)).toEqual(['api-inputs-type', 'api-inputs-size', 'api-outputs-click']);
+    expect([...element.querySelectorAll('#api-inputs-type .api-row__type')].map(chip => chip.textContent)).toEqual(["'fill'", "'light'"]);
+    expect(element.querySelector('#api-inputs-type .api-row__default')?.textContent).toContain("'light'");
+    expect(element.querySelector('.api-filter__count')?.textContent?.trim()).toBe('3 entries');
+
+    const filter = element.querySelector('.api-filter input') as HTMLInputElement;
+    filter.value = 'throttled';
+    filter.dispatchEvent(new Event('input'));
+    fixture!.detectChanges();
+    expect(element.querySelector('#inputs')).toBeNull();
+    expect([...element.querySelectorAll('.api-row')].map(row => row.id)).toEqual(['api-outputs-click']);
+    expect(element.querySelector('.api-filter__count')?.textContent?.trim()).toBe('1 entries');
+
+    filter.value = 'nothing-matches';
+    filter.dispatchEvent(new Event('input'));
+    fixture!.detectChanges();
+    expect(element.querySelector('.api-empty')?.textContent?.trim()).toBe('No matching entries');
+  });
+
+  it('renders service methods as cards with shared options collapsed', async () => {
+    const method = (name: string, extra: string): MarkdownSection => ({
+      heading: `\`${name}(message, option?): Promise<string>\``,
+      id: name,
+      level: 3,
+      markdown: [
+        `${name} dialog.`,
+        '',
+        '```typescript',
+        `${name}(`,
+        '  option?: {',
+        "    title?: string;   // default: 'Xác nhận'",
+        `    ${extra}?: string;`,
+        '  }',
+        '): Promise<string>;',
+        '```',
+      ].join('\n'),
+    });
+    await setup({
+      category: 'services',
+      slug: 'confirm',
+      tab: 'api',
+      viewModel: publishedView({ api: [section('Public API', 'public-api'), method('confirm', 'width'), method('withInput', 'label')] }),
+    });
+    const element = fixture!.nativeElement as HTMLElement;
+
+    expect([...element.querySelectorAll('.method')].map(card => card.id)).toEqual(['api-methods-confirm', 'api-methods-withInput']);
+    expect([...element.querySelectorAll('#api-methods-confirm .method-option__name')].map(name => name.textContent)).toEqual(['width']);
+    const toggle = element.querySelector('#api-methods-confirm .method__toggle') as HTMLButtonElement;
+    expect(toggle.textContent).toContain('Show 1 shared options');
+
+    toggle.click();
+    fixture!.detectChanges();
+    expect([...element.querySelectorAll('#api-methods-confirm .method-option__name')].map(name => name.textContent)).toEqual([
+      'width',
+      'title',
+    ]);
+    expect(element.querySelector('#api-methods-confirm .method-option__default')?.textContent).toContain("'Xác nhận'");
+  });
+
+  it('builds a quick start for components and services', () => {
+    const button = DOC_PAGES.find(page => page.category === 'components' && page.slug === 'button')!;
+    const confirm = DOC_PAGES.find(page => page.category === 'services' && page.slug === 'confirm')!;
+
+    expect(quickStartCode(button, 'SdButton')).toContain(`template: \`<sd-button></sd-button>\``);
+    expect(quickStartCode(button, 'SdButton')).toContain(`import { SdButton } from '${button.importPath}';`);
+    expect(quickStartCode(confirm, 'SdConfirmService')).toContain('readonly #confirmService = inject(SdConfirmService);');
+    expect(quickStartCode(button, null)).toBeNull();
+  });
+
   it('clearly distinguishes archived documentation from current live examples', async () => {
-    await setup({ version: '20.1.2', latestVersion: '21.1.2' });
+    await setup({ version: '21.1.1', latestVersion: '21.1.2' });
 
     const notice = fixture?.nativeElement.querySelector('.historical-notice');
-    expect(notice?.textContent).toContain('Archived documentation v20.1.2');
+    expect(notice?.textContent).toContain('Archived documentation v21.1.1');
     expect(notice?.textContent).toContain('current showcase');
+  });
+
+  it('does not call another Angular line of the latest release archived', async () => {
+    await setup({ version: '20.1.2', latestVersion: '21.1.2' });
+
+    expect(fixture?.nativeElement.querySelector('.historical-notice')).toBeNull();
   });
 
   it('keeps a wide live example inside the documentation content column', async () => {
