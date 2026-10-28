@@ -40,6 +40,9 @@
      cột data đầu tiên. Đây là field của cột đó (null nếu có Index hoặc không tree). -->
 @let _treeFirstField = _tableOption?.tree && !_tableOption.index?.enabled ? _configuration?.firstColumns?.[0]?.field : null;
 
+<!-- why: vùng status luôn có trong DOM, kể cả trước khi có configuration. Vùng chỉ render trong lúc tải bị gỡ
+     trước khi screen reader kịp đọc và không báo được "đã tải xong". -->
+<span class="sd-table-live" role="status" aria-live="polite" aria-atomic="true">{{ liveMessage() }}</span>
 @if (_configuration) {
   @if (!_mobileCards && !_tableOption.filter?.disabled && !!_tableOption.filter?.externalFilters?.length && filterRegister) {
     <external-filter

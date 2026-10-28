@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<title>sd-table loading: thiết kế chi tiết 1e</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f4f4f1}
+a{color:#005cbb;text-decoration:underline;text-underline-offset:2px}
+a:hover{color:#00408a}
+code{font:500 0.88em 'JetBrains Mono',monospace;background:#ecebe6;padding:1px 5px;border-radius:4px}
+[data-tone="dark"]{--tb:#1d1f23;--hb:#26292e;--tx:#e3e3e6;--dv:#2c2f34;--fb:#33363c;--skb:#2d2f33;--skh:#232529;--pt:#343c49;--pb:#9ec2f5;--mu:#a4a7ae;--pad:#121417}
+@keyframes sdspin{to{transform:rotate(360deg)}}
+.spin{animation:sdspin 1s linear infinite;transform-origin:50% 50%}
+@keyframes sdbar{0%{left:-35%}100%{left:100%}}
+.barseg{position:absolute;top:0;bottom:0;width:35%;background:var(--pb,#005cbb);animation:sdbar 1.1s ease-in-out infinite}
+@keyframes sdshimmer{0%{background-position:-240px 0}100%{background-position:240px 0}}
+.sk{background:linear-gradient(90deg,var(--skb,#ededed) 0,var(--skh,#f8f8f8) 40%,var(--skb,#ededed) 80%);background-size:480px 100%;animation:sdshimmer 1.4s linear infinite}
+@media (prefers-reduced-motion: reduce){*{transition:none !important}.spin,.barseg,.sk{animation:none}.barseg{left:0;width:100%;opacity:.6}}
+</style>
+</helmet>
+<main style="font-family:'Be Vietnam Pro',sans-serif;font-size:15px;line-height:1.6;color:#1a1b1f;background:#f4f4f1">
+<div style="max-width:1200px;margin:0 auto;padding:56px clamp(16px,4vw,40px) 96px;box-sizing:border-box;display:flex;flex-direction:column;gap:72px">
+
+<header style="display:flex;flex-direction:column;gap:14px;max-width:920px">
+  <div style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#5f6167">sdcorejs/sdcorejs-angular · main @ aacb38e · components/table · đọc 28/10/2026</div>
+  <h1 style="margin:0;font-weight:600;font-size:40px;line-height:1.15;letter-spacing:-0.02em">sd-table loading: thiết kế chi tiết 1e</h1>
+  <p style="margin:0;color:#3a3c42;text-wrap:pretty">Chưa có dòng thì hiện khung xương ngay. Đã có dòng thì giữ dòng cũ; request chạy quá 300ms mới hiện thanh tiến trình 2px dưới header và làm mờ thân bảng, đã hiện thì giữ ít nhất 400ms. Header, filter, sort và thanh cuộn không bị chặn. Thông số đầy đủ trong <code>table-loading.md</code>; trang này là hình minh hoạ.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:6px 20px;font-size:14px"><a href="Table%20Loading%20Options.dc.html#1e">Phương án 1a–1e</a><a href="Icon%20Chip%20Table%20Review.dc.html#table-05">Review 3.05 (L1–L8)</a></div>
+</header>
+
+<section id="demo" data-screen-label="01 Bấm thử" style="display:flex;flex-direction:column;gap:18px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#5f6167">01</span><h2 style="margin:0;font-size:28px;font-weight:600;line-height:1.2;letter-spacing:-0.01em">Bấm thử</h2></div>
+  <p style="margin:0;max-width:880px;color:#3a3c42;text-wrap:pretty">Bấm sort ở cột Tổng, đổi trang, gõ vào ô tìm kiếm trong lúc đang tải. Chọn 600ms để thấy thanh tiến trình được giữ thêm sau khi dữ liệu về. Bên phải là giá trị attribute và vùng live theo thời gian thực.</p>
+  <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px;background:#ffffff;border:1px solid #dddcd6;border-radius:12px;padding:12px 16px">
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+      <sc-for list="{{ actions }}" as="a" hint-placeholder-count="2"><button type="button" aria-pressed="{{ a.pressed }}" onClick="{{ a.run }}" style="{{ a.style }}">{{ a.label }}</button></sc-for>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:13px;color:#3a3c42">Mạng</span>
+      <div role="group" aria-label="Tốc độ mạng" style="display:flex;gap:4px;padding:3px;background:#f2f3f6;border-radius:8px">
+        <sc-for list="{{ speedOpts }}" as="o" hint-placeholder-count="3"><button type="button" aria-pressed="{{ o.pressed }}" onClick="{{ o.pick }}" style="{{ o.style }}">{{ o.label }}</button></sc-for>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+    <div style="flex:1 1 600px;min-width:0;background:#f9f9f9;border-radius:12px;padding:16px">
+      <div style="background:var(--tb,#ffffff);border:1px solid var(--fb,#e3e4ea);border-radius:6px;overflow:hidden;font:400 14px/20px Roboto,'Helvetica Neue',sans-serif;color:var(--tx,#212121)">
+        <div style="display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--dv,#f2f2f2)">
+          <label style="flex:1 1 auto;max-width:340px;display:flex;align-items:center;gap:8px;height:36px;box-sizing:border-box;border:1px solid #c4c6d0;border-radius:8px;padding:0 10px;color:#5f6167">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+            <input type="search" aria-label="Tìm theo khách hàng" placeholder="Tìm theo khách hàng" value="{{ query }}" onChange="{{ onQuery }}" style="flex:1;min-width:0;border:0;outline:0;background:transparent;font:400 14px Roboto,sans-serif;color:#212121">
+          </label>
+        </div>
+        <div style="position:relative;isolation:isolate">
+          <div aria-busy="{{ d.ariaBusy }}" style="{{ d.wrapStyle }}">
+            <table style="border-collapse:separate;border-spacing:0;width:100%;table-layout:fixed">
+              <thead><tr style="height:40px">
+                <th scope="col" style="width:50px;box-sizing:border-box;background:var(--hb,#f2f3f4);padding:0 8px;text-align:center;font-weight:500">#</th>
+                <th scope="col" style="width:96px;box-sizing:border-box;background:var(--hb,#f2f3f4);padding:0 8px;text-align:left;font-weight:500">Mã đơn</th>
+                <th scope="col" style="background:var(--hb,#f2f3f4);padding:0 8px;text-align:left;font-weight:500">Khách hàng</th>
+                <th scope="col" style="width:104px;box-sizing:border-box;background:var(--hb,#f2f3f4);padding:0 8px;text-align:left;font-weight:500">Ngày đặt</th>
+                <th scope="col" aria-sort="{{ ariaSort }}" style="width:128px;box-sizing:border-box;background:var(--hb,#f2f3f4);padding:0 8px;text-align:right;font-weight:500"><button type="button" onClick="{{ sortTotal }}" style="display:inline-flex;align-items:center;gap:4px;padding:2px 4px;margin:0 -4px;border:0;border-radius:4px;background:transparent;font:500 14px/20px Roboto,sans-serif;color:inherit;cursor:pointer" style-hover="background:#e6e7ea">Tổng<span style="font-size:13px;color:#5f6167">{{ sortMark }}</span></button></th>
+              </tr></thead>
+              <tbody style="{{ d.bodyStyle }}">
+                <sc-for list="{{ d.sk }}" as="k" hint-placeholder-count="0"><tr aria-hidden="true" style="height:36px"><sc-for list="{{ k.cells }}" as="c" hint-placeholder-count="5"><td style="{{ c.td }}"><span class="sk" style="{{ c.bar }}"></span></td></sc-for></tr></sc-for>
+                <sc-for list="{{ d.rows }}" as="r" hint-placeholder-count="0"><tr style="height:36px" style-hover="background:#f5f5f5"><td style="padding:0 8px;border-bottom:1px solid var(--dv,#f2f2f2);text-align:center;color:var(--mu,#5f6167);font-variant-numeric:tabular-nums">{{ r.idx }}</td><td style="padding:0 8px;border-bottom:1px solid var(--dv,#f2f2f2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.code }}</td><td style="padding:0 8px;border-bottom:1px solid var(--dv,#f2f2f2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.customer }}</td><td style="padding:0 8px;border-bottom:1px solid var(--dv,#f2f2f2);font-variant-numeric:tabular-nums">{{ r.date }}</td><td style="padding:0 8px;border-bottom:1px solid var(--dv,#f2f2f2);text-align:right;font-variant-numeric:tabular-nums">{{ r.total }}</td></tr></sc-for>
+              </tbody>
+            </table>
+            <sc-if value="{{ d.empty }}" hint-placeholder-val="{{ false }}">
+              <div role="status" style="height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center"><div style="font-weight:500;font-size:15px">Không có kết quả</div><div style="color:#5f6167">Thử từ khoá khác</div></div>
+            </sc-if>
+            <sc-if value="{{ d.error }}" hint-placeholder-val="{{ false }}">
+              <div role="alert" style="height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center">
+                <svg width="36" height="36" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#fdecea"></circle><path d="M12 7v6M12 16.5v.5" stroke="#ba1a1a" stroke-width="2" stroke-linecap="round"></path></svg>
+                <div style="font-weight:500;font-size:15px">Có lỗi xảy ra</div>
+                <button type="button" onClick="{{ retry }}" style="margin-top:4px;min-height:32px;padding:0 14px;border:0;border-radius:6px;background:#005cbb;color:#ffffff;font:500 14px Roboto,sans-serif;cursor:pointer">Thử lại</button>
+              </div>
+            </sc-if>
+          </div>
+          <sc-if value="{{ d.bar }}" hint-placeholder-val="{{ false }}">
+            <div aria-hidden="true" style="position:absolute;left:0;right:0;top:40px;height:2px;overflow:hidden;background:var(--pt,#d1e2f3);z-index:3"><span class="barseg"></span></div>
+          </sc-if>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;padding:0 8px;border-top:1px solid var(--dv,#f2f2f2);font:400 13px Roboto,sans-serif;color:#3a3c42">
+          <button type="button" onClick="{{ reload }}" style="display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 10px;border:0;border-radius:6px;background:transparent;color:#005cbb;font:500 14px Roboto,sans-serif;cursor:pointer" style-hover="background:#eef3fb"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"></path><path d="M20 5v6h-6"></path></svg>Tải lại</button>
+          <div style="display:flex;align-items:center;gap:4px"><span style="font-variant-numeric:tabular-nums;margin-right:6px">{{ d.range }}</span><button type="button" aria-label="Trang trước" disabled="{{ prevDisabled }}" onClick="{{ prev }}" style="{{ prevStyle }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></button><button type="button" aria-label="Trang sau" disabled="{{ nextDisabled }}" onClick="{{ next }}" style="{{ nextStyle }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button></div>
+        </div>
+      </div>
+    </div>
+    <aside aria-label="Trạng thái component" style="flex:1 1 280px;min-width:0;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;background:#1d1f24;color:#e6e7ea;border-radius:12px;padding:16px 18px;font:400 12.5px/1.6 'JetBrains Mono',monospace">
+      <div style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#a4a7ae">Giá trị hiện tại</div>
+      <sc-for list="{{ readouts }}" as="o" hint-placeholder-count="5"><div style="display:flex;justify-content:space-between;gap:12px"><span style="color:#a4a7ae;white-space:nowrap">{{ o.k }}</span><span style="color:#ffffff;text-align:right;overflow-wrap:anywhere">{{ o.v }}</span></div></sc-for>
+      <div style="height:1px;background:#33363c;margin:4px 0"></div>
+      <div style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#a4a7ae">Diễn biến lần tải gần nhất</div>
+      <sc-for list="{{ log }}" as="l" hint-placeholder-count="3"><div style="display:grid;grid-template-columns:58px minmax(0,1fr);gap:8px"><span style="color:#8fb3e0;text-align:right;font-variant-numeric:tabular-nums">{{ l.t }}</span><span>{{ l.msg }}</span></div></sc-for>
+    </aside>
+  </div>
+</section>
+
+<section id="anatomy" data-screen-label="02 Thông số" style="display:flex;flex-direction:column;gap:18px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#5f6167">02</span><h2 style="margin:0;font-size:28px;font-weight:600;line-height:1.2;letter-spacing:-0.01em">Thông số</h2></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,540px),1fr));gap:20px">
+    <article style="background:#ffffff;border:1px solid #dddcd6;border-radius:12px;padding:18px 20px;display:flex;flex-direction:column;gap:14px">
+      <h3 style="margin:0;font-size:17px;font-weight:600">Khung xương <code>skeleton</code></h3>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,200px);gap:0 16px">
+        <div style="border:1px solid #e3e4ea;border-radius:6px;overflow:hidden;font:400 14px/20px Roboto,sans-serif;color:#212121">
+          <div style="display:grid;grid-template-columns:40px 72px minmax(0,1fr) 84px;height:40px;align-items:center;background:#f2f3f4;font-weight:500"><span style="text-align:center">#</span><span style="padding:0 8px">Mã đơn</span><span style="padding:0 8px">Khách hàng</span><span style="padding:0 8px;text-align:right">Tổng</span></div>
+          <div style="display:grid;grid-template-columns:40px 72px minmax(0,1fr) 84px;height:36px;align-items:center;border-bottom:1px solid #f2f2f2"><span style="display:flex;justify-content:center"><span class="sk" style="width:16px;height:12px;border-radius:4px"></span></span><span style="padding:0 8px"><span class="sk" style="display:block;width:72%;height:12px;border-radius:4px"></span></span><span style="padding:0 8px"><span class="sk" style="display:block;width:54%;height:12px;border-radius:4px"></span></span><span style="padding:0 8px;display:flex;justify-content:flex-end"><span class="sk" style="width:48%;height:12px;border-radius:4px"></span></span></div>
+          <div style="display:grid;grid-template-columns:40px 72px minmax(0,1fr) 84px;height:36px;align-items:center;border-bottom:1px solid #f2f2f2"><span style="display:flex;justify-content:center"><span class="sk" style="width:16px;height:12px;border-radius:4px"></span></span><span style="padding:0 8px"><span class="sk" style="display:block;width:54%;height:12px;border-radius:4px"></span></span><span style="padding:0 8px"><span class="sk" style="display:block;width:84%;height:12px;border-radius:4px"></span></span><span style="padding:0 8px;display:flex;justify-content:flex-end"><span class="sk" style="width:80%;height:12px;border-radius:4px"></span></span></div>
+          <div style="display:grid;grid-template-columns:40px 72px minmax(0,1fr) 84px;height:36px;align-items:center"><span style="display:flex;justify-content:center"><span class="sk" style="width:16px;height:12px;border-radius:4px"></span></span><span style="padding:0 8px"><span class="sk" style="display:block;width:84%;height:12px;border-radius:4px"></span></span><span style="padding:0 8px"><span class="sk" style="display:block;width:62%;height:12px;border-radius:4px"></span></span><span style="padding:0 8px;display:flex;justify-content:flex-end"><span class="sk" style="width:56%;height:12px;border-radius:4px"></span></span></div>
+        </div>
+        <div style="display:flex;flex-direction:column;padding-top:1px;font:400 12px/1.35 'JetBrains Mono',monospace;color:#3a3c42">
+          <div style="height:40px;display:flex;align-items:center;gap:8px"><span style="width:14px;height:1px;background:#8b8e96;flex:none"></span><span>header thật, bấm được</span></div>
+          <div style="height:36px;display:flex;align-items:center;gap:8px"><span style="width:14px;height:1px;background:#8b8e96;flex:none"></span><span>dòng 36px, viền row-divider</span></div>
+          <div style="height:36px;display:flex;align-items:center;gap:8px"><span style="width:14px;height:1px;background:#8b8e96;flex:none"></span><span>thanh 12px, bo 4px, ô đệm 0 8px</span></div>
+          <div style="height:36px;display:flex;align-items:center;gap:8px"><span style="width:14px;height:1px;background:#8b8e96;flex:none"></span><span>cột phải: thanh căn phải</span></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:112px minmax(0,1fr);gap:6px 12px;font-size:13.5px;line-height:1.5;padding-top:12px;border-top:1px solid #efeee9">
+        <span style="color:#5f6167">Khi nào</span><span>Bật <code>loading()</code> khi <code>items().length === 0</code>. Hiện ngay, không trễ, không giữ.</span>
+        <span style="color:#5f6167">Số dòng</span><span>5, hoặc đủ lấp bảng có chiều cao cố định; tối đa <code>pageSize</code> và 20.</span>
+        <span style="color:#5f6167">Màu</span><span><code>--sd-table-skeleton-bg</code>, vệt sáng <code>--sd-table-skeleton-highlight</code> chạy 1,4s.</span>
+        <span style="color:#5f6167">A11y</span><span>Cả khối <code>aria-hidden</code>. Vùng live đọc "Đang tải dữ liệu bảng".</span>
+      </div>
+    </article>
+    <article style="background:#ffffff;border:1px solid #dddcd6;border-radius:12px;padding:18px 20px;display:flex;flex-direction:column;gap:14px">
+      <h3 style="margin:0;font-size:17px;font-weight:600">Tải lại <code>refresh</code></h3>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,200px);gap:0 16px">
+        <div style="position:relative;border:1px solid #e3e4ea;border-radius:6px;overflow:hidden;font:400 14px/20px Roboto,sans-serif;color:#212121">
+          <div style="display:grid;grid-template-columns:40px 72px minmax(0,1fr) 84px;height:40px;align-items:center;background:#f2f3f4;font-weight:500"><span style="text-align:center">#</span><span style="padding:0 8px">Mã đơn</span><span style="padding:0 8px">Khách hàng</span><span style="padding:0 8px;text-align:right">Tổng ↓</span></div>
+          <div aria-hidden="true" style="position:absolute;left:0;right:0;top:40px;height:2px;overflow:hidden;background:#d1e2f3"><span class="barseg"></span></div>
+          <div style="opacity:.55">
+            <div style="display:grid;grid-template-columns:40px 72px minmax(0,1fr) 84px;height:36px;align-items:center;border-bottom:1px solid #f2f2f2"><span style="text-align:center;color:#5f6167">1</span><span style="padding:0 8px">DH-24057</span><span style="padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Công ty CP Đại Việt</span><span style="padding:0 8px;text-align:right;font-variant-numeric:tabular-nums">134.500.000</span></div>
+            <div style="display:grid;grid-template-columns:40px 72px minmax(0,1fr) 84px;height:36px;align-items:center;border-bottom:1px solid #f2f2f2"><span style="text-align:center;color:#5f6167">2</span><span style="padding:0 8px">DH-24053</span><span style="padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Siêu thị Bình An</span><span style="padding:0 8px;text-align:right;font-variant-numeric:tabular-nums">56.900.000</span></div>
+            <div style="display:grid;grid-template-columns:40px 72px minmax(0,1fr) 84px;height:36px;align-items:center"><span style="text-align:center;color:#5f6167">3</span><span style="padding:0 8px">DH-24059</span><span style="padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Nhà thuốc An Khang</span><span style="padding:0 8px;text-align:right;font-variant-numeric:tabular-nums">27.840.000</span></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;padding-top:1px;font:400 12px/1.35 'JetBrains Mono',monospace;color:#3a3c42">
+          <div style="height:40px;display:flex;align-items:center;gap:8px"><span style="width:14px;height:1px;background:#8b8e96;flex:none"></span><span>header không mờ, sort/filter bấm được</span></div>
+          <div style="height:36px;display:flex;align-items:center;gap:8px"><span style="width:14px;height:1px;background:#8b8e96;flex:none"></span><span>thanh 2px sát mép dưới header</span></div>
+          <div style="height:36px;display:flex;align-items:center;gap:8px"><span style="width:14px;height:1px;background:#8b8e96;flex:none"></span><span>tr opacity 0.55, pointer-events none</span></div>
+          <div style="height:36px;display:flex;align-items:center;gap:8px"><span style="width:14px;height:1px;background:#8b8e96;flex:none"></span><span>cursor progress, cuộn vẫn chạy</span></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:112px minmax(0,1fr);gap:6px 12px;font-size:13.5px;line-height:1.5;padding-top:12px;border-top:1px solid #efeee9">
+        <span style="color:#5f6167">Khi nào</span><span>Có dòng và <code>loading()</code> đã bật quá 300ms; giữ ít nhất 400ms nếu kết quả có dòng.</span>
+        <span style="color:#5f6167">Thanh</span><span>Track <code>--sd-table-progress-track</code>, vệt 35% màu <code>--sd-table-spinner</code>, 1,1s. Đặt trong <code>.c-container</code>, <code>top</code> = cao thead đo được.</span>
+        <span style="color:#5f6167">Mờ</span><span>Trên <code>tr</code> của thân bảng, không trên <code>td</code> và không trên footer sticky, để ô sticky không trong suốt.</span>
+        <span style="color:#5f6167">Bàn phím</span><span>Không chặn, không dùng <code>inert</code>.</span>
+      </div>
+    </article>
+  </div>
+  <div style="overflow-x:auto;background:#ffffff;border:1px solid #dddcd6;border-radius:12px">
+    <table style="width:100%;min-width:640px;border-collapse:collapse;font-size:14px">
+      <thead><tr style="background:#f9f9f7"><th scope="col" style="padding:10px 14px;border-bottom:1px solid #dddcd6;font:600 12px 'JetBrains Mono',monospace;color:#5f6167;text-align:left;width:34%">Cột</th><th scope="col" style="padding:10px 14px;border-bottom:1px solid #dddcd6;font:600 12px 'JetBrains Mono',monospace;color:#5f6167;text-align:left">Thanh khung xương (i = dòng, j = thứ tự cột dữ liệu)</th></tr></thead>
+      <tbody>
+        <tr><td style="padding:9px 14px;border-bottom:1px solid #efeee9"><code>string</code>, <code>values</code>, <code>lazy-values</code>, cột có <code>cell.templateRef</code></td><td style="padding:9px 14px;border-bottom:1px solid #efeee9"><code>[72, 54, 84, 62, 46][(i + j) % 5]%</code>, tối đa 240px</td></tr>
+        <tr><td style="padding:9px 14px;border-bottom:1px solid #efeee9"><code>number</code></td><td style="padding:9px 14px;border-bottom:1px solid #efeee9"><code>[64, 48, 80, 56, 72][(i + j) % 5]%</code>, tối đa 120px; căn theo <code>align</code></td></tr>
+        <tr><td style="padding:9px 14px;border-bottom:1px solid #efeee9"><code>date</code> · <code>datetime</code> · <code>time</code></td><td style="padding:9px 14px;border-bottom:1px solid #efeee9">76px · 116px · 44px, không quá bề rộng ô</td></tr>
+        <tr><td style="padding:9px 14px;border-bottom:1px solid #efeee9"><code>boolean</code> · cột có <code>useBadge</code></td><td style="padding:9px 14px;border-bottom:1px solid #efeee9">40px · viên thuốc 64 × 20px bo 999px</td></tr>
+        <tr><td style="padding:9px 14px;border-bottom:1px solid #efeee9"><code>sdSelection</code> · <code>sdIndex</code></td><td style="padding:9px 14px;border-bottom:1px solid #efeee9">ô vuông 14px bo 3px · thanh 16px căn giữa</td></tr>
+        <tr><td style="padding:9px 14px"><code>sdCommand</code>, <code>sdReorder</code>, <code>sdSubInformationAction</code>, <code>sdFiller</code></td><td style="padding:9px 14px">trống</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="timing" data-screen-label="03 Mốc thời gian" style="display:flex;flex-direction:column;gap:18px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#5f6167">03</span><h2 style="margin:0;font-size:28px;font-weight:600;line-height:1.2;letter-spacing:-0.01em">Mốc thời gian</h2></div>
+  <p style="margin:0;max-width:880px;color:#3a3c42;text-wrap:pretty">Chỉ dựa vào <code>loading()</code>. Thời gian debounce khi gõ filter (<code>#readScheduled</code>) không tính. <code>data-loading</code> và <code>aria-busy</code> theo đúng thanh "request".</p>
+  <div style="display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;color:#3a3c42">
+    <sc-for list="{{ legend }}" as="g" hint-placeholder-count="6"><span style="display:inline-flex;align-items:center;gap:6px"><span style="{{ g.swatch }}"></span>{{ g.label }}</span></sc-for>
+  </div>
+  <div style="background:#ffffff;border:1px solid #dddcd6;border-radius:12px;padding:8px 20px 16px;display:flex;flex-direction:column">
+    <sc-for list="{{ scenarios }}" as="sc" hint-placeholder-count="6">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:8px 24px;padding:14px 0;border-bottom:1px solid #efeee9;align-items:center">
+        <div style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:600;font-size:14.5px">{{ sc.label }}</span><span style="font-size:13px;color:#3a3c42;text-wrap:pretty">{{ sc.note }}</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+          <div style="display:grid;grid-template-columns:64px minmax(0,1fr);gap:10px;align-items:center"><span style="font:400 11.5px 'JetBrains Mono',monospace;color:#5f6167">request</span><div style="position:relative;height:16px;background:#f2f2ef;border-radius:4px"><sc-for list="{{ guides }}" as="gl" hint-placeholder-count="2"><span style="{{ gl.style }}"></span></sc-for><sc-for list="{{ sc.req }}" as="sg" hint-placeholder-count="1"><span style="{{ sg.style }}"></span></sc-for></div></div>
+          <div style="display:grid;grid-template-columns:64px minmax(0,1fr);gap:10px;align-items:center"><span style="font:400 11.5px 'JetBrains Mono',monospace;color:#5f6167">hiển thị</span><div style="position:relative;height:16px;background:#f2f2ef;border-radius:4px"><sc-for list="{{ guides }}" as="gl" hint-placeholder-count="2"><span style="{{ gl.style }}"></span></sc-for><sc-for list="{{ sc.view }}" as="sg" hint-placeholder-count="1"><span style="{{ sg.style }}"></span></sc-for></div></div>
+        </div>
+      </div>
+    </sc-for>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:0 24px;padding-top:8px">
+      <span></span>
+      <div style="display:grid;grid-template-columns:64px minmax(0,1fr);gap:10px"><span></span><div style="position:relative;height:16px;font:400 11px 'JetBrains Mono',monospace;color:#5f6167"><sc-for list="{{ ticks }}" as="tk" hint-placeholder-count="5"><span style="{{ tk.style }}">{{ tk.label }}</span></sc-for></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="states" data-screen-label="04 Light và dark" style="display:flex;flex-direction:column;gap:18px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#5f6167">04</span><h2 style="margin:0;font-size:28px;font-weight:600;line-height:1.2;letter-spacing:-0.01em">Light và dark</h2></div>
+  <p style="margin:0;max-width:880px;color:#3a3c42;text-wrap:pretty">Mọi màu suy ra từ <code>--sd-text</code>, <code>--sd-primary</code> và <code>--sd-table-bg</code>, nên dark không cần giá trị riêng. Màu dark ở đây chỉ minh hoạ; giá trị thật lấy từ token.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:20px">
+    <sc-for list="{{ frames }}" as="f" hint-placeholder-count="4">
+      <article style="background:#ffffff;border:1px solid #dddcd6;border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;gap:10px"><span style="font:600 12px/16px 'JetBrains Mono',monospace;color:#ffffff;background:#1a1b1f;padding:3px 9px;border-radius:999px">{{ f.badge }}</span><h3 style="margin:0;font-size:16px;font-weight:600">{{ f.title }}</h3></div>
+        <div data-tone="{{ f.tone }}" style="background:var(--pad,#f9f9f9);border-radius:8px;padding:16px">
+          <div style="background:var(--tb,#ffffff);border:1px solid var(--fb,#e3e4ea);border-radius:6px;overflow:hidden;font:400 14px/20px Roboto,'Helvetica Neue',sans-serif;color:var(--tx,#212121)">
+            <div style="position:relative">
+              <table style="border-collapse:separate;border-spacing:0;width:100%;table-layout:fixed">
+                <thead><tr style="height:40px"><th scope="col" style="width:44px;box-sizing:border-box;background:var(--hb,#f2f3f4);padding:0 8px;text-align:center;font-weight:500">#</th><th scope="col" style="width:88px;box-sizing:border-box;background:var(--hb,#f2f3f4);padding:0 8px;text-align:left;font-weight:500">Mã đơn</th><th scope="col" style="background:var(--hb,#f2f3f4);padding:0 8px;text-align:left;font-weight:500">Khách hàng</th><th scope="col" style="width:96px;box-sizing:border-box;background:var(--hb,#f2f3f4);padding:0 8px;text-align:left;font-weight:500">Ngày đặt</th><th scope="col" style="width:112px;box-sizing:border-box;background:var(--hb,#f2f3f4);padding:0 8px;text-align:right;font-weight:500">Tổng</th></tr></thead>
+                <tbody style="{{ f.bodyStyle }}">
+                  <sc-for list="{{ f.sk }}" as="k" hint-placeholder-count="0"><tr aria-hidden="true" style="height:36px"><sc-for list="{{ k.cells }}" as="c" hint-placeholder-count="5"><td style="{{ c.td }}"><span class="sk" style="{{ c.bar }}"></span></td></sc-for></tr></sc-for>
+                  <sc-for list="{{ f.rows }}" as="r" hint-placeholder-count="0"><tr style="height:36px"><td style="padding:0 8px;border-bottom:1px solid var(--dv,#f2f2f2);text-align:center;color:var(--mu,#5f6167)">{{ r.idx }}</td><td style="padding:0 8px;border-bottom:1px solid var(--dv,#f2f2f2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.code }}</td><td style="padding:0 8px;border-bottom:1px solid var(--dv,#f2f2f2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.customer }}</td><td style="padding:0 8px;border-bottom:1px solid var(--dv,#f2f2f2);font-variant-numeric:tabular-nums">{{ r.date }}</td><td style="padding:0 8px;border-bottom:1px solid var(--dv,#f2f2f2);text-align:right;font-variant-numeric:tabular-nums">{{ r.total }}</td></tr></sc-for>
+                </tbody>
+              </table>
+              <sc-if value="{{ f.bar }}" hint-placeholder-val="{{ false }}"><div aria-hidden="true" style="position:absolute;left:0;right:0;top:40px;height:2px;overflow:hidden;background:var(--pt,#d1e2f3)"><span class="barseg"></span></div></sc-if>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:flex-end;min-height:48px;padding:0 16px;border-top:1px solid var(--dv,#f2f2f2);font:400 13px Roboto,sans-serif;color:var(--mu,#5f6167);font-variant-numeric:tabular-nums">{{ f.range }}</div>
+          </div>
+        </div>
+        <p style="margin:0;font-size:13.5px;color:#3a3c42;text-wrap:pretty">{{ f.note }}</p>
+      </article>
+    </sc-for>
+  </div>
+</section>
+
+<section id="mobile" data-screen-label="05 Mobile cards" style="display:flex;flex-direction:column;gap:18px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#5f6167">05</span><h2 style="margin:0;font-size:28px;font-weight:600;line-height:1.2;letter-spacing:-0.01em">Mobile cards</h2></div>
+  <p style="margin:0;max-width:880px;color:#3a3c42;text-wrap:pretty">Khi <code>mobileCards()</code> bật. Thẻ giả dùng đúng viền, bo góc, đệm của <code>.sd-mobile-card</code>; danh sách giữ gap 24px và đệm <code>20px 20px 8px</code>.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:24px">
+    <figure style="margin:0;display:flex;flex-direction:column;gap:10px;width:360px;max-width:100%">
+      <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:12px;overflow:hidden;font:400 14px/20px Roboto,sans-serif;color:#212121">
+        <div aria-hidden="true" style="display:flex;flex-direction:column;gap:24px;padding:20px 20px 8px">
+          <sc-for list="{{ mobileSk }}" as="m" hint-placeholder-count="3"><div style="border:1px solid #c4c6d0;border-radius:8px;padding:8px 12px"><div style="padding:4px 0;display:flex;flex-direction:column;gap:8px"><span class="sk" style="{{ m.a }}"></span><span class="sk" style="{{ m.b }}"></span><span class="sk" style="{{ m.c }}"></span></div></div></sc-for>
+        </div>
+        <div style="display:flex;align-items:center;min-height:48px;padding:0 12px;color:#005cbb;font-weight:500;gap:6px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"></path><circle cx="16" cy="7" r="2"></circle><circle cx="10" cy="17" r="2"></circle></svg>Công cụ</div>
+      </div>
+      <figcaption style="font-size:13.5px;color:#3a3c42"><b style="font-weight:600">skeleton</b> · <code>min(skeletonRows, 3)</code> thẻ, thanh 14/12/12px rộng 60/85/40%, cách 8px.</figcaption>
+    </figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:10px;width:360px;max-width:100%">
+      <div style="position:relative;background:#ffffff;border:1px solid #e3e4ea;border-radius:12px;overflow:hidden;font:400 14px/20px Roboto,sans-serif;color:#212121">
+        <div aria-hidden="true" style="position:absolute;left:0;right:0;top:0;height:2px;overflow:hidden;background:#d1e2f3;z-index:2"><span class="barseg"></span></div>
+        <div style="display:flex;flex-direction:column;gap:24px;padding:20px 20px 8px;opacity:.55">
+          <sc-for list="{{ mobileCards }}" as="m" hint-placeholder-count="3"><div style="border:1px solid #c4c6d0;border-radius:8px;padding:8px 12px"><div style="padding:4px 0;display:flex;flex-direction:column;gap:2px"><span style="font-weight:500">{{ m.code }} · {{ m.customer }}</span><span style="color:#5f6167">Ngày đặt {{ m.date }}</span><span style="font-variant-numeric:tabular-nums">Tổng {{ m.total }}</span></div></div></sc-for>
+        </div>
+        <div style="display:flex;align-items:center;min-height:48px;padding:0 12px;color:#005cbb;font-weight:500;gap:6px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"></path><circle cx="16" cy="7" r="2"></circle><circle cx="10" cy="17" r="2"></circle></svg>Công cụ</div>
+      </div>
+      <figcaption style="font-size:13.5px;color:#3a3c42"><b style="font-weight:600">refresh</b> · thanh ở mép trên <code>.c-table</code> (dưới command header nếu có), <code>.sd-mobile-list</code> mờ, không nhận chạm; cuộn vẫn chạy.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="spinner" data-screen-label="06 Spinner tree và expand" style="display:flex;flex-direction:column;gap:18px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#5f6167">06</span><h2 style="margin:0;font-size:28px;font-weight:600;line-height:1.2;letter-spacing:-0.01em">Spinner tree và expand</h2></div>
+  <p style="margin:0;max-width:880px;color:#3a3c42;text-wrap:pretty">Một spinner 16px, nét 2px, màu <code>--sd-table-spinner</code> trên track <code>--sd-table-progress-track</code>. Nút giữ nguyên trong DOM, chỉ đổi icon, nên người dùng bàn phím không mất vị trí.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:20px">
+    <article style="background:#ffffff;border:1px solid #dddcd6;border-radius:12px;padding:18px 20px;display:flex;flex-direction:column;gap:14px">
+      <h3 style="margin:0;font-size:16px;font-weight:600">Tree: node đang tải con</h3>
+      <div style="display:grid;grid-template-columns:56px minmax(0,1fr);gap:12px;align-items:center">
+        <span style="font:600 11px/16px 'JetBrains Mono',monospace;color:#ba1a1a">Trước</span>
+        <div style="display:flex;align-items:center;gap:4px;height:36px;padding:0 8px;border:1px solid #e3e4ea;border-radius:6px;font:400 14px Roboto,sans-serif;color:#212121"><span style="width:20px;flex:none"></span><span style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex:none"><svg class="spin" width="18" height="18" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="14" fill="none" stroke="#cceeff" stroke-width="4" stroke-dasharray="22 66" stroke-linecap="round"></circle></svg></span><span style="font-weight:500;margin-left:2px">1.2</span><span style="margin-left:8px">Phòng Kinh doanh</span></div>
+        <span style="font:600 11px/16px 'JetBrains Mono',monospace;color:#1f6b3a">Sau</span>
+        <div style="display:flex;align-items:center;gap:4px;height:36px;padding:0 8px;border:1px solid #e3e4ea;border-radius:6px;font:400 14px Roboto,sans-serif;color:#212121"><span style="width:20px;flex:none"></span><span aria-busy="true" style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex:none;border-radius:50%"><svg class="spin" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="#d1e2f3" stroke-width="2"></circle><circle cx="8" cy="8" r="6" fill="none" stroke="#005cbb" stroke-width="2" stroke-dasharray="9.4 28.3" stroke-linecap="round"></circle></svg></span><span style="font-weight:500;margin-left:2px">1.2</span><span style="margin-left:8px">Phòng Kinh doanh</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:112px minmax(0,1fr);gap:6px 12px;font-size:13.5px;line-height:1.5;padding-top:12px;border-top:1px solid #efeee9">
+        <span style="color:#5f6167">Trước</span><span><code>.lds-ring</code> 40px thu <code>scale(0.45)</code>, màu <code>#cceeff</code> khoảng 1,2:1. Nút bị gỡ nên focus rơi về <code>body</code>.</span>
+        <span style="color:#5f6167">Sau</span><span><code>button.sd-tree-toggle-btn</code> luôn render; khi <code>isExpanding</code>: icon thành spinner, <code>aria-busy="true"</code>, <code>aria-disabled="true"</code>, click bỏ qua. Focus ở nguyên nút; vòng focus chỉ hiện khi dùng bàn phím (<code>:focus-visible</code>).</span>
+      </div>
+    </article>
+    <article style="background:#ffffff;border:1px solid #dddcd6;border-radius:12px;padding:18px 20px;display:flex;flex-direction:column;gap:14px">
+      <h3 style="margin:0;font-size:16px;font-weight:600">Expand: đang tải vùng chi tiết</h3>
+      <div style="display:grid;grid-template-columns:56px minmax(0,1fr);gap:12px;align-items:center">
+        <span style="font:600 11px/16px 'JetBrains Mono',monospace;color:#ba1a1a">Trước</span>
+        <div style="display:flex;align-items:center;height:44px;padding:0 0 0 12px;border:1px solid #e3e4ea;border-radius:6px;font:400 14px Roboto,sans-serif;color:#212121"><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">DH-24053 · Siêu thị Bình An</span><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex:none"><svg class="spin" width="40" height="40" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="14" fill="none" stroke="#cceeff" stroke-width="4" stroke-dasharray="22 66" stroke-linecap="round"></circle></svg></span></div>
+        <span style="font:600 11px/16px 'JetBrains Mono',monospace;color:#1f6b3a">Sau</span>
+        <div style="display:flex;align-items:center;height:44px;padding:0 6px 0 12px;border:1px solid #e3e4ea;border-radius:6px;font:400 14px Roboto,sans-serif;color:#212121"><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">DH-24053 · Siêu thị Bình An</span><span aria-busy="true" style="width:35px;height:32px;display:flex;align-items:center;justify-content:center;flex:none;border-radius:6px"><svg class="spin" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="#d1e2f3" stroke-width="2"></circle><circle cx="8" cy="8" r="6" fill="none" stroke="#005cbb" stroke-width="2" stroke-dasharray="9.4 28.3" stroke-linecap="round"></circle></svg></span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:112px minmax(0,1fr);gap:6px 12px;font-size:13.5px;line-height:1.5;padding-top:12px;border-top:1px solid #efeee9">
+        <span style="color:#5f6167">Trước</span><span><code>sd-button</code> bị thay bằng <code>.lds-ring</code> 40px, đẩy cao dòng và mất focus.</span>
+        <span style="color:#5f6167">Sau</span><span>Nút 35px giữ nguyên, prefix icon thành spinner 16px, không thêm viền. Mobile: icon <code>hourglass_empty</code> thành spinner, nút giữ <code>disabled</code>.</span>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section id="error" data-screen-label="07 Lỗi" style="display:flex;flex-direction:column;gap:18px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#5f6167">07</span><h2 style="margin:0;font-size:28px;font-weight:600;line-height:1.2;letter-spacing:-0.01em">Lỗi: một giao diện cho local và server</h2></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:20px">
+    <article style="background:#ffffff;border:1px solid #dddcd6;border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;gap:10px"><span style="font:600 11px/16px 'JetBrains Mono',monospace;color:#ba1a1a;background:#fdecea;padding:2px 8px;border-radius:999px">Trước · local</span><span style="font:400 12px 'JetBrains Mono',monospace;color:#5f6167">html:645–650</span></div>
+      <div style="border:1px solid #e3e4ea;border-radius:6px;overflow:hidden;font:400 14px/20px Roboto,sans-serif;color:#212121">
+        <div style="height:40px;background:#f2f3f4"></div>
+        <div style="height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px"><p style="margin:0">Có lỗi xảy ra</p><span style="display:inline-flex;align-items:center;min-height:32px;padding:0 14px;border:1px solid #c4c6d0;border-radius:6px;font-weight:500;color:#005cbb">Tải lại</span></div>
+      </div>
+      <p style="margin:0;font-size:13.5px;color:#3a3c42">Khối chữ riêng, kèm toast. Bảng server lại dùng <code>sd-data-state</code>.</p>
+    </article>
+    <article style="background:#ffffff;border:1px solid #dddcd6;border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;gap:10px"><span style="font:600 11px/16px 'JetBrains Mono',monospace;color:#1f6b3a;background:#e5f2e9;padding:2px 8px;border-radius:999px">Sau · local và server</span></div>
+      <div style="border:1px solid #e3e4ea;border-radius:6px;overflow:hidden;font:400 14px/20px Roboto,sans-serif;color:#212121">
+        <div style="height:40px;background:#f2f3f4"></div>
+        <div style="height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center"><svg width="36" height="36" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#fdecea"></circle><path d="M12 7v6M12 16.5v.5" stroke="#ba1a1a" stroke-width="2" stroke-linecap="round"></path></svg><div style="font-weight:500;font-size:15px">Có lỗi xảy ra</div><span style="margin-top:4px;display:inline-flex;align-items:center;min-height:32px;padding:0 14px;border-radius:6px;background:#005cbb;color:#ffffff;font-weight:500">Thử lại</span></div>
+      </div>
+      <p style="margin:0;font-size:13.5px;color:#3a3c42"><code>sd-data-state state="error" [retryable]="true" (sdRetry)="reload()"</code>, cùng nhánh <code>sdDataStateTemplate</code>. Hình chỉ minh hoạ; giao diện thật do <code>sd-data-state</code> vẽ. Thử lại không còn dòng nên đi vào khung xương.</p>
+    </article>
+  </div>
+</section>
+
+<section id="a11y" data-screen-label="08 Thông báo cho trình đọc màn hình" style="display:flex;flex-direction:column;gap:18px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#5f6167">08</span><h2 style="margin:0;font-size:28px;font-weight:600;line-height:1.2;letter-spacing:-0.01em">Thông báo cho trình đọc màn hình</h2></div>
+  <p style="margin:0;max-width:880px;color:#3a3c42;text-wrap:pretty"><code>span.sd-table-live</code> (<code>role="status" aria-live="polite" aria-atomic="true"</code>, sr-only) luôn có trong DOM. Chỉ báo khi lớp hiển thị thật sự hiện, để tải nhanh không gây ồn.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px">
+    <sc-for list="{{ announce }}" as="an" hint-placeholder-count="4">
+      <article style="background:#ffffff;border:1px solid #dddcd6;border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:10px">
+        <h3 style="margin:0;font-size:15px;font-weight:600">{{ an.title }}</h3>
+        <sc-for list="{{ an.steps }}" as="st" hint-placeholder-count="2"><div style="display:grid;grid-template-columns:58px minmax(0,1fr);gap:10px;font-size:13.5px;line-height:1.5"><span style="font:400 12px/1.6 'JetBrains Mono',monospace;color:#5f6167;text-align:right">{{ st.t }}</span><span>{{ st.text }}</span></div></sc-for>
+      </article>
+    </sc-for>
+  </div>
+</section>
+
+<section id="api" data-screen-label="09 Token và API" style="display:flex;flex-direction:column;gap:18px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#5f6167">09</span><h2 style="margin:0;font-size:28px;font-weight:600;line-height:1.2;letter-spacing:-0.01em">Token và API</h2></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:20px;align-items:start">
+    <pre style="margin:0;padding:16px 18px;background:#1d1f24;color:#e6e7ea;border-radius:12px;font:400 13px/1.65 'JetBrains Mono',monospace;overflow-x:auto">// option.loading, hoặc SD_TABLE_CONFIGURATION.loading
+export interface SdTableOptionLoading {
+  skeleton?: boolean;     // true
+  skeletonRows?: number;  // 5, tối đa 20
+  showDelay?: number;     // 300 ms
+  minDuration?: number;   // 400 ms
+  dim?: boolean;          // true
+}
+
+// option.loading &gt; configuration.loading &gt; mặc định
+// gộp theo từng field
+
+// host
+data-loading       = "true" | "false"   // giữ nguyên
+data-loading-view  = "none" | "skeleton" | "refresh"  // mới</pre>
+    <div style="overflow-x:auto;background:#ffffff;border:1px solid #dddcd6;border-radius:12px">
+      <table style="width:100%;min-width:480px;border-collapse:collapse;font-size:13.5px">
+        <thead><tr style="background:#f9f9f7"><th scope="col" style="padding:10px 14px;border-bottom:1px solid #dddcd6;font:600 12px 'JetBrains Mono',monospace;color:#5f6167;text-align:left">Token mới</th><th scope="col" style="padding:10px 14px;border-bottom:1px solid #dddcd6;font:600 12px 'JetBrains Mono',monospace;color:#5f6167;text-align:left">Giá trị (light và dark)</th><th scope="col" style="padding:10px 14px;border-bottom:1px solid #dddcd6;font:600 12px 'JetBrains Mono',monospace;color:#5f6167;text-align:left">Light</th></tr></thead>
+        <tbody>
+          <tr><td style="padding:9px 14px;border-bottom:1px solid #efeee9"><code>--sd-table-skeleton-bg</code></td><td style="padding:9px 14px;border-bottom:1px solid #efeee9">text 8% vào table-bg</td><td style="padding:9px 14px;border-bottom:1px solid #efeee9"><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border-radius:3px;background:#ededed;border:1px solid #dddcd6"></span>#ededed</span></td></tr>
+          <tr><td style="padding:9px 14px;border-bottom:1px solid #efeee9"><code>--sd-table-skeleton-highlight</code></td><td style="padding:9px 14px;border-bottom:1px solid #efeee9">text 3% vào table-bg</td><td style="padding:9px 14px;border-bottom:1px solid #efeee9"><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border-radius:3px;background:#f8f8f8;border:1px solid #dddcd6"></span>#f8f8f8</span></td></tr>
+          <tr><td style="padding:9px 14px;border-bottom:1px solid #efeee9"><code>--sd-table-progress-track</code></td><td style="padding:9px 14px;border-bottom:1px solid #efeee9">primary 18% vào table-bg</td><td style="padding:9px 14px;border-bottom:1px solid #efeee9"><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border-radius:3px;background:#d1e2f3;border:1px solid #dddcd6"></span>#d1e2f3</span></td></tr>
+          <tr><td style="padding:9px 14px;border-bottom:1px solid #efeee9"><code>--sd-table-spinner</code> (đã có)</td><td style="padding:9px 14px;border-bottom:1px solid #efeee9">var(--sd-primary)</td><td style="padding:9px 14px;border-bottom:1px solid #efeee9"><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border-radius:3px;background:#005cbb"></span>vệt, spinner</span></td></tr>
+          <tr><td style="padding:9px 14px"><code>--sd-table-loading-dim</code></td><td style="padding:9px 14px">biến CSS cấp component</td><td style="padding:9px 14px">0.55</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:14px">
+    <div style="background:#ffffff;border:1px solid #dddcd6;border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:6px"><div style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#1f6b3a">Bỏ</div><p style="margin:0;font-size:14px;color:#3a3c42"><code>.c-loading</code>, <code>&lt;mat-spinner&gt;</code> 100px, <code>bottom: 56px</code>, <code>rgba(0,0,0,.15)</code>, <code>.lds-ring</code>, <code>@keyframes lds-ring</code>, <code>.sd-tree-spinner</code>. Ghi CHANGELOG vì app có thể đè bằng <code>::ng-deep</code>.</p></div>
+    <div style="background:#ffffff;border:1px solid #dddcd6;border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:6px"><div style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#5f6167">Giữ nguyên</div><p style="margin:0;font-size:14px;color:#3a3c42"><code>loading</code>, <code>data-loading</code>, <code>aria-busy</code>, <code>readState</code>, <code>retryRead()</code>, <code>reload()</code>, khoá paginator, <code>sdDataStateTemplate</code>, toàn bộ logic đọc.</p></div>
+    <div style="background:#ffffff;border:1px solid #dddcd6;border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:6px"><div style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#5f6167">i18n mới</div><p style="margin:0;font-size:14px;color:#3a3c42"><code>core.component.table.loaded</code>: "Đã tải xong {count} dòng", đủ vi/en/ja/ko/zh. Dùng lại <code>core.component.table.loading</code>.</p></div>
+  </div>
+</section>
+
+</div>
+</main>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showDelayMs&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:300,&quot;min&quot;:0,&quot;max&quot;:1000,&quot;step&quot;:50,&quot;unit&quot;:&quot;ms&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Loading&quot;},&quot;minDurationMs&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:400,&quot;min&quot;:0,&quot;max&quot;:1500,&quot;step&quot;:50,&quot;unit&quot;:&quot;ms&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Loading&quot;},&quot;dim&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Loading&quot;},&quot;dimOpacity&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.55,&quot;min&quot;:0.3,&quot;max&quot;:0.8,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Loading&quot;}}">
+class Component extends DCLogic {
+  state = { speed: 600, failNext: false, query: '', loading: false, view: 'none', data: null, error: false, live: '', log: [] };
+  t = {};
+  req = 0;
+  shownAt = 0;
+  cycleStart = 0;
+  announced = false;
+  target = { page: 0, sortDir: null, query: '' };
+  data = [
+    ['DH-24051', 'Công ty TNHH Minh Phát', '02/10/2026', 18450000],
+    ['DH-24052', 'Nguyễn Thị Hồng Nhung', '02/10/2026', 2380000],
+    ['DH-24053', 'Siêu thị Bình An', '03/10/2026', 56900000],
+    ['DH-24054', 'Trần Quốc Bảo', '04/10/2026', 940000],
+    ['DH-24055', 'Cửa hàng Hoa Mai', '05/10/2026', 7215000],
+    ['DH-24056', 'Lê Hoàng Phúc', '06/10/2026', 12600000],
+    ['DH-24057', 'Công ty CP Đại Việt', '07/10/2026', 134500000],
+    ['DH-24058', 'Phạm Minh Châu', '08/10/2026', 3150000],
+    ['DH-24059', 'Nhà thuốc An Khang', '09/10/2026', 27840000],
+    ['DH-24060', 'Võ Thanh Tùng', '10/10/2026', 5600000]
+  ];
+  componentDidMount() { this.begin('initial'); }
+  componentWillUnmount() { this.clearAll(); }
+  clearAll() { ['show', 'hold', 'done', 'deb'].forEach((k) => clearTimeout(this.t[k])); }
+  opt() {
+    const n = (v, d) => (typeof v === 'number' && v >= 0 ? v : d);
+    return { delay: n(this.props.showDelayMs, 300), min: n(this.props.minDurationMs, 400) };
+  }
+  norm(x) { return x.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[đĐ]/g, 'd').toLowerCase(); }
+  fmt(n) { return n.toLocaleString('vi-VN'); }
+  rowsFor(v) {
+    const q = v.query ? this.norm(v.query.trim()) : '';
+    const arr = this.data.filter((r) => !q || this.norm(r[1]).includes(q));
+    if (v.sortDir) arr.sort((x, y) => (v.sortDir === 'asc' ? x[3] - y[3] : y[3] - x[3]));
+    const total = arr.length;
+    const pages = Math.max(1, Math.ceil(total / 5));
+    const page = Math.min(v.page, pages - 1);
+    const rows = arr.slice(page * 5, page * 5 + 5).map((r, i) => ({ idx: page * 5 + i + 1, code: r[0], customer: r[1], date: r[2], total: this.fmt(r[3]) }));
+    return { rows, total, page, pages };
+  }
+  stamp(msg, reset) {
+    const now = performance.now();
+    if (reset) this.cycleStart = now;
+    const e = { t: Math.round(now - this.cycleStart) + 'ms', msg };
+    this.setState((s) => ({ log: reset ? [e] : s.log.concat(e).slice(-10) }));
+  }
+  begin(kind) {
+    const labels = { initial: 'Tải lần đầu', sort: 'Sort', next: 'Trang sau', prev: 'Trang trước', search: 'Tìm kiếm', reload: 'Tải lại', retry: 'Thử lại' };
+    if (kind === 'initial') {
+      this.clearAll();
+      this.target = { page: 0, sortDir: null, query: this.state.query };
+      this.setState({ loading: false, view: 'none', data: null, error: false });
+      this.start(this.target, { loading: false, view: 'none', hasRows: false }, labels[kind]);
+      return;
+    }
+    const cur = this.target;
+    const next = Object.assign({}, cur);
+    if (kind === 'sort') { next.sortDir = cur.sortDir === 'desc' ? 'asc' : 'desc'; next.page = 0; }
+    if (kind === 'next') next.page = cur.page + 1;
+    if (kind === 'prev') next.page = Math.max(0, cur.page - 1);
+    if (kind === 'search') { next.query = this.state.query; next.page = 0; }
+    this.target = next;
+    const s = this.state;
+    const hasRows = !s.error && !!s.data && this.rowsFor(s.data).rows.length > 0;
+    this.start(next, { loading: s.loading, view: s.view, hasRows }, labels[kind]);
+  }
+  start(next, cur, label) {
+    const { delay } = this.opt();
+    const id = ++this.req;
+    clearTimeout(this.t.done);
+    if (cur.loading) {
+      this.stamp(label + ': request mới thay request cũ');
+    } else if (cur.view === 'refresh') {
+      clearTimeout(this.t.hold);
+      this.setState({ loading: true });
+      this.stamp(label + ': request mới trong lúc giữ, refresh tiếp tục');
+    } else {
+      this.stamp(label + ' · loading() = true', true);
+      clearTimeout(this.t.show);
+      if (!cur.hasRows) {
+        this.announced = true;
+        this.setState({ loading: true, view: 'skeleton', live: 'Đang tải dữ liệu bảng' });
+        this.stamp('chưa có dòng · view = skeleton');
+      } else {
+        this.announced = false;
+        this.setState({ loading: true });
+        this.t.show = setTimeout(() => {
+          if (!this.state.loading || this.state.view !== 'none') return;
+          this.shownAt = performance.now();
+          this.announced = true;
+          this.setState({ view: 'refresh', live: 'Đang tải dữ liệu bảng' });
+          this.stamp('quá ' + delay + 'ms · view = refresh');
+        }, delay);
+      }
+    }
+    this.t.done = setTimeout(() => this.finish(id, next), this.state.speed);
+  }
+  finish(id, next) {
+    if (id !== this.req) return;
+    const { min } = this.opt();
+    clearTimeout(this.t.show);
+    const fail = this.state.failNext;
+    const res = fail ? null : this.rowsFor(next);
+    const has = !!res && res.rows.length > 0;
+    if (res) this.target = Object.assign({}, next, { page: res.page });
+    const live = !has ? '' : (this.announced ? 'Đã tải xong ' + res.rows.length + ' dòng' : this.state.live);
+    const base = { loading: false, live, data: fail ? null : this.target, error: fail, failNext: fail ? false : this.state.failNext };
+    this.stamp(fail ? 'lỗi · gỡ dòng cũ' : (has ? 'dữ liệu về · render ngay' : 'dữ liệu về · rỗng'));
+    const v = this.state.view;
+    const remain = this.shownAt + min - performance.now();
+    if (v === 'refresh' && has && remain > 1) {
+      this.setState(base);
+      this.stamp('giữ thêm ' + Math.round(remain) + 'ms (minDuration ' + min + 'ms)');
+      if (this.announced) this.stamp('live: "' + live + '"');
+      this.t.hold = setTimeout(() => { this.setState({ view: 'none' }); this.stamp('view = none'); }, remain);
+      return;
+    }
+    this.setState(Object.assign({}, base, { view: 'none' }));
+    if (v !== 'none') this.stamp('view = none');
+    if (has && this.announced) this.stamp('live: "' + live + '"');
+  }
+  skRows(n) {
+    const TD = 'padding:0 8px;border-bottom:1px solid var(--dv,#f2f2f2)';
+    const bar = (w, extra) => 'display:inline-block;height:12px;border-radius:4px;vertical-align:middle;width:' + w + (extra || '');
+    const sq = [72, 54, 84, 62, 46], nq = [64, 48, 80, 56, 72];
+    return Array.from({ length: n }, (_, i) => ({
+      cells: [
+        { td: TD + ';text-align:center', bar: bar('16px') },
+        { td: TD, bar: bar(sq[i % 5] + '%', ';max-width:240px') },
+        { td: TD, bar: bar(sq[(i + 1) % 5] + '%', ';max-width:240px') },
+        { td: TD, bar: bar('76px', ';max-width:100%') },
+        { td: TD + ';text-align:right', bar: bar(nq[(i + 3) % 5] + '%', ';max-width:120px') }
+      ]
+    }));
+  }
+  renderVals() {
+    const s = this.state;
+    const dimOn = this.props.dim ?? true;
+    const dimOp = this.props.dimOpacity ?? 0.55;
+    const { delay, min } = this.opt();
+    const res = s.data && !s.error ? this.rowsFor(s.data) : { rows: [], total: 0, page: 0, pages: 1 };
+    const skel = s.view === 'skeleton', refresh = s.view === 'refresh';
+    const dimStyle = 'transition:opacity 120ms;opacity:' + dimOp + ';pointer-events:none';
+    const d = {
+      sk: skel ? this.skRows(5) : [],
+      rows: skel ? [] : res.rows,
+      bodyStyle: refresh && dimOn && res.rows.length ? dimStyle : 'transition:opacity 120ms;opacity:1',
+      bar: refresh,
+      empty: !s.loading && !s.error && !!s.data && !res.rows.length,
+      error: !s.loading && s.error,
+      range: !skel && res.total ? (res.page * 5 + 1) + '–' + (res.page * 5 + res.rows.length) + ' / ' + res.total : '',
+      wrapStyle: 'position:relative;min-height:220px' + (refresh ? ';cursor:progress' : ''),
+      ariaBusy: s.loading ? 'true' : 'false'
+    };
+    const seg = (on) => 'white-space:nowrap;flex:none;min-height:30px;padding:0 12px;border:0;border-radius:6px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;' + (on ? 'background:#ffffff;color:#1a1b1f;box-shadow:0 1px 2px rgba(0,0,0,.12)' : 'background:transparent;color:#3a3c42');
+    const act = (on) => 'white-space:nowrap;flex:none;min-height:36px;padding:0 14px;border:1px solid ' + (on ? '#ba1a1a' : '#c8c9cf') + ';border-radius:8px;background:' + (on ? '#fdecea' : '#ffffff') + ';color:' + (on ? '#8c1414' : '#1a1b1f') + ';font-family:inherit;font-size:13px;font-weight:500;cursor:pointer';
+    const pager = (dis) => 'width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:6px;background:transparent;color:#3a3c42;cursor:' + (dis ? 'default;opacity:.35' : 'pointer');
+    const pageNow = s.data ? res.page : 0;
+    const prevDisabled = s.loading || !s.data || s.error || pageNow === 0;
+    const nextDisabled = s.loading || !s.data || s.error || pageNow >= res.pages - 1;
+    const sd = this.target.sortDir;
+    const pct = (a) => (a / 1200 * 100).toFixed(3) + '%';
+    const C = {
+      req: '#8b8e96', cancel: 'repeating-linear-gradient(135deg,#8b8e96 0 3px,#d4d5d9 3px 6px)', err: '#ba1a1a',
+      refresh: '#005cbb', hold: 'repeating-linear-gradient(135deg,#005cbb 0 3px,#9dbde6 3px 6px)', skeleton: '#1f6b3a'
+    };
+    const sgs = (list) => list.map((x) => ({ style: 'position:absolute;top:2px;bottom:2px;left:' + pct(x[0]) + ';width:' + pct(x[1] - x[0]) + ';border-radius:3px;background:' + C[x[2]] }));
+    const page0 = this.rowsFor({ page: 0, sortDir: null, query: '' }).rows;
+    const pageSorted = this.rowsFor({ page: 0, sortDir: 'desc', query: '' }).rows;
+    return {
+      query: s.query,
+      onQuery: (e) => {
+        const q = e.target.value;
+        this.setState({ query: q });
+        clearTimeout(this.t.deb);
+        this.t.deb = setTimeout(() => this.begin('search'), 300);
+      },
+      actions: [
+        { label: 'Tải lần đầu', run: () => this.begin('initial'), style: act(false), pressed: null },
+        { label: s.failNext ? 'Lần tải tới sẽ lỗi' : 'Cho lần tải tới lỗi', run: () => this.setState({ failNext: !s.failNext }), style: act(s.failNext), pressed: s.failNext ? 'true' : 'false' }
+      ],
+      speedOpts: [[150, '150ms'], [600, '600ms'], [3000, '3s']].map((x) => ({ label: x[1], pressed: s.speed === x[0] ? 'true' : 'false', style: seg(s.speed === x[0]), pick: () => this.setState({ speed: x[0] }) })),
+      d,
+      sortMark: sd === 'asc' ? '↑' : (sd === 'desc' ? '↓' : '↕'),
+      ariaSort: sd === 'asc' ? 'ascending' : (sd === 'desc' ? 'descending' : 'none'),
+      sortTotal: () => this.begin('sort'),
+      reload: () => this.begin('reload'),
+      retry: () => this.begin('retry'),
+      prev: () => this.begin('prev'),
+      next: () => this.begin('next'),
+      prevDisabled, nextDisabled, prevStyle: pager(prevDisabled), nextStyle: pager(nextDisabled),
+      readouts: [
+        { k: 'loading()', v: String(s.loading) },
+        { k: 'data-loading', v: '"' + s.loading + '"' },
+        { k: 'data-loading-view', v: '"' + s.view + '"' },
+        { k: '.c-table aria-busy', v: s.loading ? '"true"' : 'null' },
+        { k: '.sd-table-live', v: '"' + s.live + '"' },
+        { k: 'showDelay · minDuration', v: delay + ' · ' + min + 'ms' }
+      ],
+      log: s.log,
+      legend: [['req', 'request'], ['cancel', 'request bị thay'], ['err', 'request lỗi'], ['refresh', 'refresh'], ['hold', 'giữ minDuration'], ['skeleton', 'khung xương']].map((x) => ({ label: x[1], swatch: 'display:inline-block;width:22px;height:10px;border-radius:3px;background:' + C[x[0]] })),
+      scenarios: [
+        { label: 'Tải lại, 150ms', note: 'Xong trước 300ms: không hiện gì, không thông báo.', req: sgs([[0, 150, 'req']]), view: [] },
+        { label: 'Tải lại, 450ms', note: 'Hiện ở 300ms. Dữ liệu về ở 450ms và render ngay; lớp mờ giữ tới 700ms.', req: sgs([[0, 450, 'req']]), view: sgs([[300, 450, 'refresh'], [450, 700, 'hold']]) },
+        { label: 'Tải lại, 1000ms', note: 'Hiện 300ms → 1000ms. Đã quá 400ms nên tắt ngay.', req: sgs([[0, 1000, 'req']]), view: sgs([[300, 1000, 'refresh']]) },
+        { label: 'Gõ filter khi đang tải', note: 'Request mới ở 500ms thay request cũ. Thanh chạy liền tới 1100ms.', req: sgs([[0, 500, 'cancel'], [500, 1100, 'req']]), view: sgs([[300, 1100, 'refresh']]) },
+        { label: 'Lần đầu, 600ms', note: 'Chưa có dòng: khung xương ngay từ 0ms, tắt ngay khi có dữ liệu.', req: sgs([[0, 600, 'req']]), view: sgs([[0, 600, 'skeleton']]) },
+        { label: 'Tải lại lỗi, 450ms', note: 'Lỗi gỡ dòng cũ nên tắt ngay, không giữ; sd-data-state hiện.', req: sgs([[0, 450, 'err']]), view: sgs([[300, 450, 'refresh']]) }
+      ],
+      guides: [300, 700].map((x) => ({ style: 'position:absolute;top:-3px;bottom:-3px;left:' + pct(x) + ';width:0;border-left:1px dashed #b5b7bd' })),
+      ticks: [0, 300, 700, 1000, 1200].map((x) => ({ label: x === 1200 ? '1200ms' : String(x), style: 'position:absolute;top:0;left:' + pct(x) + ';transform:translateX(' + (x === 0 ? '0' : (x === 1200 ? '-100%' : '-50%')) + ');white-space:nowrap' })),
+      frames: [
+        { badge: 'light', title: 'Lần đầu · khung xương', tone: 'light', sk: this.skRows(5), rows: [], bar: false, bodyStyle: 'opacity:1', range: '', note: 'Paginator ẩn như hiện nay vì chưa có total. Dòng thật thay vào ngay, cùng bố cục nên không nhảy.' },
+        { badge: 'light', title: 'Tải lại · quá 300ms', tone: 'light', sk: [], rows: pageSorted, bar: true, bodyStyle: 'opacity:' + dimOp, range: '1–5 / 10', note: 'Dòng cũ vẫn đọc được. Paginator giữ khoá như hiện nay.' },
+        { badge: 'dark', title: 'Lần đầu · khung xương', tone: 'dark', sk: this.skRows(5), rows: [], bar: false, bodyStyle: 'opacity:1', range: '', note: 'Thanh khung xương là text 8% trộn vào nền bảng, vệt sáng 3%: vệt luôn đi về phía màu nền.' },
+        { badge: 'dark', title: 'Tải lại · quá 300ms', tone: 'dark', sk: [], rows: page0, bar: true, bodyStyle: 'opacity:' + dimOp, range: '1–5 / 10', note: 'Thay lớp phủ đen gần như vô hình ở dark mode (L6).' }
+      ],
+      mobileSk: [0, 1, 2].map(() => ({
+        a: 'display:block;height:14px;width:60%;border-radius:4px',
+        b: 'display:block;height:12px;width:85%;border-radius:4px',
+        c: 'display:block;height:12px;width:40%;border-radius:4px'
+      })),
+      mobileCards: page0.slice(0, 3).map((r) => ({ code: r.code, customer: r.customer, date: r.date, total: r.total + ' ₫' })),
+      announce: [
+        { title: 'Tải lại, 1000ms', steps: [{ t: '300ms', text: '"Đang tải dữ liệu bảng"' }, { t: '1000ms', text: '"Đã tải xong 5 dòng"' }] },
+        { title: 'Tải lại, 150ms', steps: [{ t: '—', text: 'Không đọc gì. Sort đã đổi aria-sort, đổi trang đã đổi nhãn phạm vi.' }] },
+        { title: 'Lọc ra rỗng', steps: [{ t: '300ms', text: '"Đang tải dữ liệu bảng"' }, { t: 'xong', text: 'Vùng live xoá nội dung; khối rỗng tự đọc "Không có kết quả".' }] },
+        { title: 'Lỗi', steps: [{ t: '300ms', text: '"Đang tải dữ liệu bảng"' }, { t: 'xong', text: 'Vùng live xoá nội dung; sd-data-state tự báo lỗi.' }] }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

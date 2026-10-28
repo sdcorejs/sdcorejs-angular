@@ -998,6 +998,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.select.search': 'Tìm kiếm',
   'core.form.search-field.clear': 'Xóa nội dung tìm kiếm',
   'core.component.table.loading': 'Đang tải dữ liệu bảng',
+  'core.component.table.loaded': 'Đã tải xong {count} dòng',
   'core.component.upload-file.loading': 'Đang tải tệp lên',
   'core.component.import-excel.loading': 'Đang tải dữ liệu',
   'core.component.upload-file.remove': 'Xóa tệp',

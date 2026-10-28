@@ -9,6 +9,7 @@ import {
   ElementRef,
   Injectable,
   Input,
+  NgZone,
   OnDestroy,
   OnInit,
   computed,
@@ -61,6 +62,7 @@ import {
   SdTablePagePosition,
   SdTableShownPage,
 } from './services/table-paging/unknown-total.util';
+import { resolveTableLoading, SdTableLoadingView, TableRefreshTimer, tableLoadingView } from './services/table-loading/table-loading.util';
 import {
   SdConvertToPagingReq,
   SdTableFilterRequest,
@@ -246,6 +248,7 @@ const EMPTY_COMMANDS: SdTableCommand[] = [];
     '[attr.data-autoid]': 'autoId()',
     tabindex: '0',
     '[attr.data-loading]': 'loading() ? "true" : "false"',
+    '[attr.data-loading-view]': 'loadingView()',
     '[class.sd-table--fill]': 'fill()',
   },
   providers: [
@@ -418,6 +421,40 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   readonly #shownPage = signal<SdTableShownPage | undefined>(undefined);
   /** A read is waiting in the schedule (debounce) and has not started loading yet. */
   readonly #readScheduled = signal(false);
+
+  /** `option.loading`, then `SD_TABLE_CONFIGURATION.loading`, then the defaults, field by field. */
+  readonly loadingSettings = computed(() => resolveTableLoading(this.tableOption()?.loading, this.tableConfiguration?.loading));
+  readonly #refresh = new TableRefreshTimer((callback, ms) => {
+    // why: the timer only sets a signal; running it inside the zone would check the whole app for nothing.
+    const id = this.#zone.runOutsideAngular(() => setTimeout(callback, ms));
+    return () => clearTimeout(id);
+  });
+  /**
+   * Nothing to show yet but something is on its way: the configuration (column lookups) is not ready, or the
+   * first read of the option waits in the schedule. Without it the empty-state block shows before that read.
+   */
+  readonly #readPending = computed(
+    () =>
+      this.readState().status !== 'error' &&
+      (!this.configuration() || (this.#readScheduled() && this.total() === undefined && this.#shownPage() === undefined))
+  );
+  /**
+   * What the loading layer draws (host `data-loading-view`). Derived only; `loading()`, `data-loading` and
+   * `aria-busy` keep following every read at once.
+   */
+  readonly loadingView = computed<SdTableLoadingView>(() =>
+    tableLoadingView({
+      skeleton: this.loadingSettings().skeleton,
+      loading: this.loading(),
+      pending: this.#readPending(),
+      rows: this.items().length > 0,
+      refresh: this.#refresh.shown(),
+    })
+  );
+  readonly #liveMessage = signal('');
+  /** Text of the `.sd-table-live` status region: "loading" once the loading layer shows, then the result. */
+  readonly liveMessage = this.#liveMessage.asReadonly();
+  #liveLoading = false;
   readonly unknownTotalPager = computed<SdTableUnknownTotalPagerState | undefined>(() => {
     if (!this.unknownTotal()) return undefined;
     const target = this.#unknownTarget();
@@ -623,6 +660,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
   // 1. Private Services
   #ref = inject(ChangeDetectorRef);
+  readonly #zone = inject(NgZone);
 
   #configService = inject(ConfigService);
   #gridFilterService = inject(SdTableFilterService);
@@ -724,6 +762,18 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
         resize?.disconnect();
         host.style.removeProperty('--sd-table-fill-head');
         host.style.removeProperty('--sd-table-fill-min');
+      });
+    });
+
+    // why: the loading layer follows `loading()` and the read schedule; the progress bar timer and the status
+    // region only change on those transitions, so rows, settings and errors are read untracked.
+    effect(() => {
+      const loading = this.loading();
+      const scheduled = this.#readScheduled();
+      const view = this.loadingView();
+      untracked(() => {
+        this.#refresh.update({ loading, scheduled, skeleton: view === 'skeleton', rows: this.items().length > 0 }, this.loadingSettings());
+        this.#announceLoading(view === 'skeleton' || (view === 'refresh' && (loading || scheduled)));
       });
     });
 
@@ -866,11 +916,32 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
   ngOnDestroy() {
     this.#destroyed = true;
+    this.#refresh.destroy();
     this.#cancelReload();
     this.#retryConfiguration = undefined;
     this.#read.invalidate();
     this.#failedRead = undefined;
     this.#subscription.unsubscribe();
+  }
+
+  /**
+   * "Loading" when the loading layer shows; once the read ends, the row count. An empty result or a default
+   * error region announces itself, so the region is cleared; a custom `sdDataStateTemplate` may have no role,
+   * so the region reads the error. Reads faster than `showDelay` show nothing and announce nothing.
+   */
+  #announceLoading(active: boolean): void {
+    if (active === this.#liveLoading) return;
+    this.#liveLoading = active;
+    if (active) {
+      this.#liveMessage.set(this.#i18n.t('core.component.table.loading'));
+      return;
+    }
+    const count = this.items().length;
+    const failed = this.readState().status === 'error' || this.loadError();
+    if (count) this.#liveMessage.set(this.#i18n.t('core.component.table.loaded', { count }));
+    else if (failed && !!this.dataStateTemplate() && !this.hideReadError())
+      this.#liveMessage.set(this.#i18n.t('core.component.table.error-occurred'));
+    else this.#liveMessage.set('');
   }
 
   // --- GIỮ NGUYÊN TẤT CẢ CÁC HÀM FILTER VÀ EXPORT CŨ CỦA BẠN ---

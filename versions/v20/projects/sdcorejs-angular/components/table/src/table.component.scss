@@ -12,6 +12,16 @@
   // hoặc có nút vẫn tự cao lên theo nội dung.
   --mat-table-row-item-container-height: 36px;
 
+  // Vùng status của lớp loading: chỉ cho screen reader, không chiếm chỗ trong cột flex.
+  .sd-table-live {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
   // CSS này mục đích là để title 1 dòng hay 2 dòng cũng sẽ chiếm diện tích
   .c-header-title {
     height: 40px;

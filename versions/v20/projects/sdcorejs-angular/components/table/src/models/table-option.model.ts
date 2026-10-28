@@ -6,6 +6,7 @@ import { TableOptionConfig } from './table-option-config.model';
 import { SdTableOptionExpand } from './table-option-expand.model';
 import { SdTableOptionExport } from './table-option-export.model';
 import { SdTableOptionGroup } from './table-option-group.model';
+import { SdTableOptionLoading } from './table-option-loading.model';
 import { SdTableOptionPaginate } from './table-option-paginate.model';
 import { SdTableOptionReload } from './table-option-reload.model';
 import { SdTableOptionSelector } from './table-option-selector.model';
@@ -80,6 +81,11 @@ interface SdTableBaseOption<T = any> {
    * Xem thêm tại `SdTableOptionReload`.
    */
   reload?: SdTableOptionReload<T>;
+  /**
+   * Cấu hình lớp hiển thị khi đang tải: khung xương, thanh tiến trình, làm mờ dòng cũ.
+   * Gộp theo từng field với `SD_TABLE_CONFIGURATION.loading`. Xem thêm tại `SdTableOptionLoading`.
+   */
+  loading?: SdTableOptionLoading;
   /**
    * Cấu hình export dữ liệu.
    * Xem thêm tại `SdTableOptionExport` để biết mode `default`/`custom`, mapping,

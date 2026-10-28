@@ -995,6 +995,7 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.select.search': '搜索',
   'core.form.search-field.clear': '清除搜索',
   'core.component.table.loading': '正在加载表格数据',
+  'core.component.table.loaded': '已加载 {count} 行',
   'core.component.upload-file.loading': '正在上传文件',
   'core.component.import-excel.loading': '正在加载数据',
   'core.component.upload-file.remove': '删除文件',

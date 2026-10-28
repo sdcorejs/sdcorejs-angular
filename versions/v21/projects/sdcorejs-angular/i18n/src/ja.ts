@@ -1001,6 +1001,7 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.select.search': '検索',
   'core.form.search-field.clear': '検索をクリア',
   'core.component.table.loading': 'テーブルデータを読み込み中',
+  'core.component.table.loaded': '{count} 行を読み込みました',
   'core.component.upload-file.loading': 'ファイルをアップロード中',
   'core.component.import-excel.loading': 'データを読み込み中',
   'core.component.upload-file.remove': 'ファイルを削除',
