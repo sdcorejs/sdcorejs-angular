@@ -51,8 +51,10 @@ describe('DocsI18nService', () => {
   it('keeps both catalogs complete', () => {
     expect(Object.keys(VI_UI_STRINGS).sort()).toEqual(Object.keys(EN_UI_STRINGS).sort());
     for (const [key, value] of Object.entries(VI_UI_STRINGS)) {
-      expect(value.trim()).withContext(key).not.toBe('');
+      const strings: string[] = typeof value === 'string' ? [value] : Object.values(value);
+      for (const text of strings) expect(text.trim()).withContext(key).not.toBe('');
     }
+    expect(Object.keys(VI_UI_STRINGS.categories).sort()).toEqual(Object.keys(EN_UI_STRINGS.categories).sort());
   });
 
   it('leaves unknown holes untouched', () => {

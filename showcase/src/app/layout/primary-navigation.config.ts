@@ -1,4 +1,4 @@
-import { DOC_CATEGORIES } from '../docs/core/documentation.models';
+import { DOC_CATEGORIES, DocCategory, isDocCategory } from '../docs/core/documentation.models';
 
 export type PrimaryNavigationId = 'docs' | 'changelog' | 'about';
 
@@ -18,6 +18,23 @@ export function buildPrimaryNavigation(version: string): PrimaryNavigationItem[]
     { id: 'changelog', label: 'Changelog', commands: ['/v', version, 'changelog'] },
     { id: 'about', label: 'About', commands: ['/about'] },
   ];
+}
+
+function pathSegments(url: string): string[] {
+  return (url.split(/[?#]/, 1)[0] ?? '/').split('/').filter(Boolean);
+}
+
+/** Category of a versioned docs route (/v/:version/:category/…); Getting started belongs to Guides. */
+export function routeCategory(url: string): DocCategory | null {
+  const segments = pathSegments(url);
+  if (segments[0] !== 'v') return null;
+  if (segments[2] === 'getting-started') return 'guides';
+  return isDocCategory(segments[2]) ? segments[2] : null;
+}
+
+/** Guide, component, service and category pages show the catalog sidebar; home, changelog, search and 404 do not. */
+export function routeHasSidebar(url: string): boolean {
+  return routeCategory(url) !== null;
 }
 
 /** Resolves the active destination without treating Changelog as a generic Docs detail page. */

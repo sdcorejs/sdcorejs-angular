@@ -19,13 +19,22 @@ import { DocsClipboardService } from '../docs/core/docs-clipboard.service';
 import { DocsI18nService } from '../docs/core/docs-i18n.service';
 import { DocsThemeService } from '../docs/core/docs-theme.service';
 import { DocsVersionService } from '../docs/core/docs-version.service';
-import { DOC_NAV_GROUPS } from '../docs/core/documentation.registry';
+import { deriveReleaseBadges } from '../docs/core/docs-release-badges';
+import { foldSearchText } from '../docs/core/docs-search.utils';
+import { DOC_NAV_GROUPS, DOC_PAGES } from '../docs/core/documentation.registry';
+import type { ShowcaseChangelogRelease } from '../docs/generated/changelog.generated';
 import { PublishedDocsService } from '../docs/core/published-docs.service';
 import { DocsFragmentLinkDirective } from '../docs/shared/docs-fragment-link.directive';
 import { resolveDocsPageAvailability } from '../docs/shared/docs-page-availability';
 import { DocsVersionControlComponent } from '../docs/shared/docs-version-control.component';
 import { GlobalSearchComponent } from '../docs/shared/global-search.component';
-import { MOBILE_NAV_BREAKPOINT_PX, buildPrimaryNavigation, resolvePrimaryNavigationId } from './primary-navigation.config';
+import {
+  MOBILE_NAV_BREAKPOINT_PX,
+  buildPrimaryNavigation,
+  resolvePrimaryNavigationId,
+  routeCategory,
+  routeHasSidebar,
+} from './primary-navigation.config';
 
 @Component({
   selector: 'app-shell',
@@ -55,8 +64,12 @@ export class ShellComponent {
   readonly searchOpen = signal(false);
   readonly isMobile = signal(typeof window !== 'undefined' && window.innerWidth <= MOBILE_NAV_BREAKPOINT_PX);
   readonly sidebarHidden = computed(() => this.isMobile() && !this.mobileNavOpen());
-  readonly collapsed = signal<ReadonlySet<string>>(new Set());
+  /** Groups the reader opened or closed; every other group is open only when it holds the current page. */
+  readonly groupOverrides = signal<ReadonlyMap<string, boolean>>(new Map());
+  readonly navQuery = signal('');
   readonly currentUrl = signal(this.#router.url);
+  readonly hasSidebar = computed(() => routeHasSidebar(this.currentUrl()));
+  readonly currentCategory = computed(() => routeCategory(this.currentUrl()));
   readonly publishedDocIds = signal<ReadonlySet<string> | null>(null);
   private readonly mobileMenu = viewChild<ElementRef<HTMLButtonElement>>('mobileMenu');
   private readonly sidebar = viewChild<ElementRef<HTMLElement>>('sidebar');
@@ -68,26 +81,45 @@ export class ShellComponent {
   });
   readonly docsHomeLink = computed(() => this.primaryNavigation()[0]?.commands ?? ['/v', this.currentVersion()]);
   readonly activePrimaryNavigationId = computed(() => resolvePrimaryNavigationId(this.currentUrl()));
-  readonly navGroups = computed(() =>
-    DOC_NAV_GROUPS.map(group => ({
+  /** Parsed CHANGELOG.md, loaded lazily: it is large and only feeds the New/Updated badges here. */
+  readonly changelogReleases = signal<readonly ShowcaseChangelogRelease[]>([]);
+  readonly releaseBadges = computed(() =>
+    deriveReleaseBadges(
+      this.changelogReleases().find(release => release.suffix === this.versions.selectedRelease()),
+      DOC_PAGES
+    )
+  );
+  readonly navGroups = computed(() => {
+    const term = foldSearchText(this.navQuery().trim());
+    const overrides = this.groupOverrides();
+    const badges = this.releaseBadges();
+    const t = this.i18n.t();
+    return DOC_NAV_GROUPS.map(group => ({
       ...group,
-      collapsed: this.collapsed().has(group.category),
+      title: t.categories[group.category],
+      open: term ? true : (overrides.get(group.category) ?? group.category === this.currentCategory()),
       pages: group.pages
+        .filter(page => !term || foldSearchText(page.title).includes(term) || page.slug.includes(term))
         .map(page => {
           const availability = resolveDocsPageAvailability(page, this.publishedDocIds());
           return {
             ...page,
             availability,
+            badge: badges.get(page.id) ?? null,
             commands: ['/v', this.currentVersion(), page.category, page.slug, availability === 'live-demo' ? 'examples' : 'overview'],
           };
         })
         .filter(page => page.availability !== 'unavailable'),
-    })).filter(group => group.pages.length > 0)
-  );
+    })).filter(group => group.pages.length > 0);
+  });
+  readonly navMatchCount = computed(() => this.navGroups().reduce((total, group) => total + group.pages.length, 0));
   #indexLoadSequence = 0;
 
   constructor() {
     void this.versions.load().catch(() => undefined);
+    void import('../docs/generated/changelog.generated')
+      .then(module => this.changelogReleases.set(module.SHOWCASE_CHANGELOG_RELEASES))
+      .catch(() => undefined);
     effect(() => {
       const version = this.versions.selectedVersion();
       if (!version) return;
@@ -162,7 +194,7 @@ export class ShellComponent {
     }
     if (event.key !== 'Tab') return;
     const sidebar = this.sidebar()?.nativeElement;
-    const focusable = [...(sidebar?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])') ?? [])];
+    const focusable = [...(sidebar?.querySelectorAll<HTMLElement>('input, a[href], button:not([disabled])') ?? [])];
     if (!focusable.length) return;
     const first = focusable[0];
     const last = focusable.at(-1);
@@ -179,12 +211,18 @@ export class ShellComponent {
   }
 
   toggleGroup(category: string): void {
-    this.collapsed.update(current => {
-      const next = new Set(current);
-      if (next.has(category)) next.delete(category);
-      else next.add(category);
-      return next;
-    });
+    const open = this.navGroups().find(group => group.category === category)?.open ?? false;
+    this.groupOverrides.update(current => new Map(current).set(category, !open));
+  }
+
+  onNavQuery(event: Event): void {
+    this.navQuery.set((event.target as HTMLInputElement).value);
+  }
+
+  clearNavQuery(event: Event): void {
+    if (!this.navQuery()) return;
+    event.stopPropagation();
+    this.navQuery.set('');
   }
 
   toggleMobileNav(): void {
@@ -196,7 +234,7 @@ export class ShellComponent {
     afterNextRender(
       () => {
         if (!this.mobileNavOpen()) return;
-        this.sidebar()?.nativeElement.querySelector<HTMLElement>('a[href], button:not([disabled])')?.focus();
+        this.sidebar()?.nativeElement.querySelector<HTMLElement>('input, a[href], button:not([disabled])')?.focus();
       },
       { injector: this.#injector }
     );

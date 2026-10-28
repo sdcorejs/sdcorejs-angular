@@ -70,6 +70,62 @@ describe('ShellComponent', () => {
     fixture = TestBed.createComponent(ShellComponent);
     document.body.appendChild(fixture.nativeElement);
     fixture.detectChanges();
+    // why: the catalog sidebar only exists on guide, component and service pages.
+    await TestBed.inject(Router).navigateByUrl('/v/21.1.2/components/button/overview');
+    fixture.detectChanges();
+    await fixture.whenStable();
+  });
+
+  function groupByTitle(title: string): HTMLElement | undefined {
+    return ([...fixture.nativeElement.querySelectorAll('.nav-group')] as HTMLElement[]).find(
+      group => group.querySelector('.nav-group__header span')?.textContent?.trim() === title
+    );
+  }
+
+  it('opens only the current category by default and lets the reader toggle others', () => {
+    expect(groupByTitle('Components')?.querySelector('.nav-group__header')?.getAttribute('aria-expanded')).toBe('true');
+    const guides = groupByTitle('Guides')?.querySelector('.nav-group__header') as HTMLButtonElement;
+    expect(guides.getAttribute('aria-expanded')).toBe('false');
+
+    guides.click();
+    fixture.detectChanges();
+    expect(guides.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('filters across every category, opens matching groups and reports the count', () => {
+    const input = fixture.nativeElement.querySelector('.nav-filter input') as HTMLInputElement;
+
+    input.value = 'date';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    const titles = [...fixture.nativeElement.querySelectorAll('.nav-group li a .nav-item__title')].map(
+      (title: Element) => title.textContent?.trim() ?? ''
+    );
+    expect(titles.length).toBeGreaterThan(1);
+    expect(titles.every(title => /date/i.test(title))).toBeTrue();
+    expect(fixture.nativeElement.querySelector('.nav-filter__count')?.textContent?.trim()).toBe(String(titles.length));
+    expect(fixture.nativeElement.querySelector('.sidebar__filter [role="status"]')?.textContent?.trim()).toBe(
+      `${titles.length} pages match`
+    );
+
+    input.value = 'zzzz';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.sidebar__empty')?.textContent?.trim()).toBe('No matching entries');
+
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.navQuery()).toBe('');
+  });
+
+  it('hides the catalog and its menu button on pages without a sidebar', async () => {
+    await TestBed.inject(Router).navigateByUrl('/v/21.1.2/changelog');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.sidebar')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.mobile-menu')?.classList).toContain('mobile-menu--hidden');
+    expect(fixture.nativeElement.querySelector('.shell__body')?.classList).toContain('shell__body--no-sidebar');
   });
 
   afterEach(() => {
@@ -129,7 +185,7 @@ describe('ShellComponent', () => {
     expect(document.activeElement).toBe(trigger);
     fixture.detectChanges();
     await fixture.whenStable();
-    const focusable = [...fixture.nativeElement.querySelectorAll('.sidebar a[href], .sidebar button:not([disabled])')] as HTMLElement[];
+    const focusable = [...fixture.nativeElement.querySelectorAll('.sidebar input, .sidebar a[href], .sidebar button:not([disabled])')] as HTMLElement[];
     const sidebar = fixture.nativeElement.querySelector('.sidebar') as HTMLElement;
     expect(sidebar.hasAttribute('inert')).toBeFalse();
     expect(document.activeElement).toBe(focusable[0]);
@@ -176,22 +232,17 @@ describe('ShellComponent', () => {
     expect(drawerLabels).toEqual(headerLabels);
   });
 
-  it('labels example counts instead of presenting an unexplained number', async () => {
-    await fixture.whenStable();
-    fixture.detectChanges();
-    const buttonLink = ([...fixture.nativeElement.querySelectorAll('.nav-group li a')] as HTMLAnchorElement[]).find(link =>
-      link.textContent?.includes('Button')
-    );
-    const count = buttonLink?.querySelector('small');
+  it('marks the active page and shows the package version in the catalog footer', () => {
+    const active = fixture.nativeElement.querySelector('.nav-group li a.active') as HTMLAnchorElement;
 
-    expect(count?.textContent?.trim()).toMatch(/^\d+ ex\.$/);
-    expect(count?.getAttribute('aria-label')).toMatch(/^\d+ examples$/);
+    expect(active.querySelector('.nav-item__title')?.textContent?.trim()).toBe('Button');
+    expect(active.getAttribute('aria-current')).toBe('page');
+    expect(fixture.nativeElement.querySelector('.sidebar footer code')?.textContent?.trim()).toBe('v21.1.2');
   });
 
   it('lists Form Generic under Components with its canonical route', () => {
-    const groups = [...fixture.nativeElement.querySelectorAll('.nav-group')] as HTMLElement[];
-    const components = groups.find(group => group.querySelector('.nav-group__header span')?.textContent?.trim() === 'Components');
-    const modules = groups.find(group => group.querySelector('.nav-group__header span')?.textContent?.trim() === 'Modules & Integrations');
+    const components = groupByTitle('Components');
+    const modules = groupByTitle('Modules & Integrations');
     const formGeneric = ([...(components?.querySelectorAll('li a') ?? [])] as HTMLAnchorElement[]).find(link =>
       link.textContent?.includes('Form Generic')
     );
@@ -212,7 +263,7 @@ describe('ShellComponent', () => {
   });
 
   it('connects each catalog disclosure button to the list it controls', () => {
-    const button = fixture.nativeElement.querySelector('.nav-group__header') as HTMLButtonElement;
+    const button = groupByTitle('Components')?.querySelector('.nav-group__header') as HTMLButtonElement;
     const controlledId = button.getAttribute('aria-controls');
 
     expect(button.getAttribute('aria-expanded')).toBe('true');

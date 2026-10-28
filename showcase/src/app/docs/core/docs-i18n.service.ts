@@ -1,6 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { DocsLanguage, DocsUiStrings, formatUiString } from '../i18n/docs-ui-strings';
+import { DocsLanguage, DocsUiStrings, DocsUiTextKey, formatUiString } from '../i18n/docs-ui-strings';
 import { EN_UI_STRINGS } from '../i18n/en';
 import { VI_UI_STRINGS } from '../i18n/vi';
 import { DOCS_STORAGE } from './docs.tokens';
@@ -47,7 +47,7 @@ export class DocsI18nService {
   }
 
   /** Formats a catalog string with {name} holes, e.g. format('goLatest', { v: '3.2' }). */
-  format(key: keyof DocsUiStrings, values: Readonly<Record<string, string | number>>): string {
+  format(key: DocsUiTextKey, values: Readonly<Record<string, string | number>>): string {
     return formatUiString(this.t()[key], values);
   }
 

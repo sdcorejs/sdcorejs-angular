@@ -1,3 +1,5 @@
+import type { DocCategory } from '../core/documentation.models';
+
 /** UI strings of the docs site chrome. Content (published Markdown, registry text) is not translated here. */
 export interface DocsUiStrings {
   readonly docs: string;
@@ -31,9 +33,21 @@ export interface DocsUiStrings {
   readonly themeToDark: string;
   readonly themeToLight: string;
   readonly github: string;
+  readonly catalog: string;
+  readonly docsPages: string;
+  readonly filterPages: string;
+  readonly pagesMatching: string;
+  readonly noResults: string;
+  readonly badgeNew: string;
+  readonly badgeUpdated: string;
+  readonly liveDemo: string;
+  readonly categories: Readonly<Record<DocCategory, string>>;
 }
 
 export type DocsLanguage = 'en' | 'vi';
+
+/** Catalog keys that hold a plain string (and may carry {name} holes). */
+export type DocsUiTextKey = { [K in keyof DocsUiStrings]: DocsUiStrings[K] extends string ? K : never }[keyof DocsUiStrings];
 
 /** Replaces {name} holes with values; unknown holes stay as written. */
 export function formatUiString(template: string, values: Readonly<Record<string, string | number>>): string {
