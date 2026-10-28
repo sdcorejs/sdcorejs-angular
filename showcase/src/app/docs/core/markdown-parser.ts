@@ -1,4 +1,4 @@
-import { MarkdownBlock, MarkdownSection, ParsedMarkdownDocument } from './published-docs.models';
+import { MarkdownAlertType, MarkdownBlock, MarkdownSection, ParsedMarkdownDocument } from './published-docs.models';
 
 export function toMarkdownAnchor(value: string): string {
   return value
@@ -121,6 +121,75 @@ export function parseMarkdownDocument(markdown: string): ParsedMarkdownDocument 
   };
 }
 
+const LIST_ITEM = /^(\s*)(?:([-*+])|(\d+)\.)\s+(.*)$/;
+const ALERT_MARKER = /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]$/i;
+
+function indentation(line: string): number {
+  return line.length - line.trimStart().length;
+}
+
+function stripIndent(line: string, width: number): string {
+  return line.slice(Math.min(width, indentation(line)));
+}
+
+// why: a bullet, a list starting at 1, a quote, a fence or a heading ends the paragraph above it, as on GitHub.
+function interruptsParagraph(line: string): boolean {
+  return /^\s*```/.test(line) || /^#{1,6}\s+/.test(line) || /^>/.test(line) || /^\s*(?:[-*+]|1\.)\s+\S/.test(line);
+}
+
+function isListItemOf(line: string, indent: number, ordered: boolean): boolean {
+  const item = LIST_ITEM.exec(line);
+  return !!item && (item[1] ?? '').length === indent && (item[3] !== undefined) === ordered;
+}
+
+// Lines indented past the marker belong to the item, blank lines included when the item goes on after them.
+function parseList(lines: string[], start: number): { block: MarkdownBlock; next: number } {
+  const first = LIST_ITEM.exec(lines[start] ?? '');
+  const indent = (first?.[1] ?? '').length;
+  const ordered = first?.[3] !== undefined;
+  const items: { text: string; body: string[] }[] = [];
+  let index = start;
+
+  while (index < lines.length) {
+    const line = lines[index] ?? '';
+    const item = isListItemOf(line, indent, ordered) ? LIST_ITEM.exec(line) : null;
+    if (item) {
+      items.push({ text: item[4] ?? '', body: [] });
+    } else if (!line.trim()) {
+      let ahead = index + 1;
+      while (ahead < lines.length && !(lines[ahead] ?? '').trim()) ahead += 1;
+      const following = lines[ahead];
+      if (following === undefined || (indentation(following) <= indent && !isListItemOf(following, indent, ordered))) break;
+      items[items.length - 1]?.body.push('');
+    } else if (indentation(line) > indent) {
+      items[items.length - 1]?.body.push(line);
+    } else {
+      break;
+    }
+    index += 1;
+  }
+
+  return {
+    block: {
+      kind: 'list',
+      ordered,
+      items: items.map(({ text, body }) => {
+        const width = Math.min(...body.filter((line) => line.trim()).map(indentation));
+        const content = body.map((line) => stripIndent(line, width));
+        // Wrapped text of the item itself continues its first line.
+        let lead = 0;
+        const parts = [text];
+        while (lead < content.length && (content[lead] ?? '').trim() && !interruptsParagraph(content[lead] ?? '')) {
+          parts.push((content[lead] ?? '').trim());
+          lead += 1;
+        }
+        return { text: parts.join(' ').trim(), blocks: toMarkdownBlocks(content.slice(lead).join('\n')) };
+      }),
+    },
+    next: index,
+  };
+}
+
 export function toMarkdownBlocks(markdown: string): MarkdownBlock[] {
   const lines = markdown.replace(/\r\n?/g, '\n').split('\n');
   const blocks: MarkdownBlock[] = [];
@@ -133,16 +202,17 @@ export function toMarkdownBlocks(markdown: string): MarkdownBlock[] {
       continue;
     }
 
-    const fence = /^```\s*([^\s]*)/.exec(line);
+    const fence = /^(\s*)```\s*([^\s]*)/.exec(line);
     if (fence) {
+      const fenceIndent = (fence[1] ?? '').length;
       const code: string[] = [];
       index += 1;
-      while (index < lines.length && !/^```/.test(lines[index] ?? '')) {
-        code.push(lines[index] ?? '');
+      while (index < lines.length && !/^\s*```\s*$/.test(lines[index] ?? '')) {
+        code.push(stripIndent(lines[index] ?? '', fenceIndent));
         index += 1;
       }
       if (index < lines.length) index += 1;
-      blocks.push({ kind: 'code', language: fence[1] ?? '', code: code.join('\n') });
+      blocks.push({ kind: 'code', language: fence[2] ?? '', code: code.join('\n') });
       continue;
     }
 
@@ -166,17 +236,10 @@ export function toMarkdownBlocks(markdown: string): MarkdownBlock[] {
       continue;
     }
 
-    const listMatch = /^\s*(?:([-*+])|(\d+)\.)\s+(.+)$/.exec(line);
-    if (listMatch) {
-      const ordered = !!listMatch[2];
-      const items: string[] = [];
-      while (index < lines.length) {
-        const item = /^\s*(?:([-*+])|(\d+)\.)\s+(.+)$/.exec(lines[index] ?? '');
-        if (!item || !!item[2] !== ordered) break;
-        items.push(item[3] ?? '');
-        index += 1;
-      }
-      blocks.push({ kind: 'list', ordered, items });
+    if (LIST_ITEM.test(line)) {
+      const list = parseList(lines, index);
+      blocks.push(list.block);
+      index = list.next;
       continue;
     }
 
@@ -186,14 +249,31 @@ export function toMarkdownBlocks(markdown: string): MarkdownBlock[] {
         quote.push((lines[index] ?? '').replace(/^>\s?/, ''));
         index += 1;
       }
-      blocks.push({ kind: 'quote', text: quote.join(' ') });
+      // GitHub alert: "> [!IMPORTANT]" on the first line, then the alert body.
+      const alert = ALERT_MARKER.exec((quote[0] ?? '').trim());
+      if (alert) {
+        const paragraphs: string[] = [];
+        let current: string[] = [];
+        for (const quoted of quote.slice(1)) {
+          if (quoted.trim()) {
+            current.push(quoted.trim());
+          } else if (current.length) {
+            paragraphs.push(current.join(' '));
+            current = [];
+          }
+        }
+        if (current.length) paragraphs.push(current.join(' '));
+        blocks.push({ kind: 'alert', alertType: (alert[1] ?? 'note').toLowerCase() as MarkdownAlertType, paragraphs });
+      } else {
+        blocks.push({ kind: 'quote', text: quote.join(' ') });
+      }
       continue;
     }
 
     const paragraph: string[] = [];
     while (index < lines.length && (lines[index] ?? '').trim()) {
       const current = lines[index] ?? '';
-      if (paragraph.length > 0 && (/^```/.test(current) || /^#{1,6}\s+/.test(current))) break;
+      if (paragraph.length > 0 && interruptsParagraph(current)) break;
       paragraph.push(current.trim());
       index += 1;
     }

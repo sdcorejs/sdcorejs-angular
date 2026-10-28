@@ -69,6 +69,47 @@ describe('published Markdown parser', () => {
     expect(blocks.some((block) => block.kind === 'code' && block.language === 'ts')).toBeTrue();
   });
 
+  it('reads GitHub alerts and keeps plain quotes as quotes', () => {
+    const [alert, quote] = toMarkdownBlocks('> [!WARNING]\n> First line\n> continues.\n>\n> Second.\n\n> Plain quote.');
+
+    expect(alert).toEqual({ kind: 'alert', alertType: 'warning', paragraphs: ['First line continues.', 'Second.'] });
+    expect(quote).toEqual({ kind: 'quote', text: 'Plain quote.' });
+  });
+
+  it('nests sub-bullets, wrapped text and indented fences under their list item', () => {
+    const blocks = toMarkdownBlocks(
+      [
+        '**Highlights**',
+        '- Bullet one',
+        '  wrapped text.',
+        '  - Sub-bullet',
+        '',
+        '  ```diff',
+        '  - old usage',
+        '      indented',
+        '  ```',
+        '',
+        '  Paragraph after the code.',
+        '',
+        '- Bullet two',
+        '',
+        'After the list.',
+      ].join('\n')
+    );
+
+    expect(blocks.map((block) => block.kind)).toEqual(['paragraph', 'list', 'paragraph']);
+    const list = blocks[1];
+    expect(list?.kind).toBe('list');
+    if (list?.kind === 'list') {
+      expect(list.items.map((item) => item.text)).toEqual(['Bullet one wrapped text.', 'Bullet two']);
+      expect(list.items[0]?.blocks).toEqual([
+        { kind: 'list', ordered: false, items: [{ text: 'Sub-bullet', blocks: [] }] },
+        { kind: 'code', language: 'diff', code: '- old usage\n    indented' },
+        { kind: 'paragraph', text: 'Paragraph after the code.' },
+      ]);
+    }
+  });
+
   it('keeps escaped union pipes inside a single Markdown table cell', () => {
     const [table] = toMarkdownBlocks('| Name | Type |\n| --- | --- |\n| value | `string \\| null` |');
 

@@ -31,6 +31,64 @@
     padding: 12px 16px;
     color: var(--docs-text-secondary);
   }
+
+  // why: nested bullets, paragraphs and code inside a list item sit closer than top-level blocks.
+  li > :is(ul, ol, p) {
+    margin: 4px 0 8px;
+  }
+
+  li > .docs-code {
+    margin: 8px 0 12px;
+  }
+
+  // why: the inline-code chip above must not reach a code block nested in a list item.
+  .docs-code code {
+    border: 0;
+    border-radius: 0;
+    background: none;
+    padding: 0;
+    font-size: inherit;
+  }
+}
+
+// why: GitHub alerts ("> [!IMPORTANT]") read as callouts, coloured by the semantic palette in light and dark.
+.docs-alert {
+  --docs-alert-color: var(--sd-info, #006a6a);
+
+  margin: 0 0 16px;
+  border-left: 4px solid var(--docs-alert-color);
+  border-radius: 0 var(--docs-radius-sm) var(--docs-radius-sm) 0;
+  background: color-mix(in srgb, var(--docs-alert-color) 8%, var(--docs-surface));
+  padding: 12px 16px;
+
+  p {
+    margin: 0 0 8px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  &__title {
+    color: var(--docs-alert-color);
+    font-weight: 600;
+  }
+
+  &[data-alert='tip'] {
+    --docs-alert-color: var(--sd-success, #2e7d32);
+  }
+
+  &[data-alert='important'] {
+    --docs-alert-color: var(--sd-primary, #005cbb);
+  }
+
+  &[data-alert='warning'] {
+    --docs-alert-color: var(--sd-warning, #a66300);
+  }
+
+  &[data-alert='caution'] {
+    --docs-alert-color: var(--sd-error, #ba1a1a);
+  }
 }
 
 // why: Code copied from published docs needs a readable, responsive presentation.

@@ -175,6 +175,60 @@ test('extractReleaseNotes does not match a different suffix by prefix', () => {
   assert.equal(extractReleaseNotes(CHANGELOG_FIXTURE, '1'), null);
 });
 
+// The release template of CHANGELOG.md: an indented example heading inside an HTML comment,
+// a Packages line, a GitHub alert, component groups and code blocks indented under their bullet.
+const TEMPLATE_CHANGELOG_FIXTURE = [
+  '# Changelog',
+  '',
+  '<!--',
+  '    ## [x.y] - YYYY-MM-DD',
+  '',
+  '    ### Changed (BREAKING for consumers)',
+  '-->',
+  '',
+  '## [3.2] - 2026-10-23',
+  '',
+  'Packages `19.3.2` · `20.3.2` · `21.3.2` · `22.3.2`, validated against `*.3.1`.',
+  '',
+  '> [!IMPORTANT]',
+  '> **Before upgrading:** custom i18n catalogs need new keys.',
+  '',
+  '### Changed (BREAKING for consumers)',
+  '',
+  '#### Form generic',
+  '',
+  '- Exhaustive switches need the `time` case.',
+  '',
+  '  ```diff',
+  "  +  case 'time':",
+  '  ```',
+  '',
+  '### Fixed',
+  '',
+  '#### Table',
+  '',
+  '- First sentence.',
+  '  - The rest of the bullet.',
+  '',
+  '## [3.1] - 2026-10-10',
+  '',
+  'Packages `19.3.1` · `20.3.1` · `21.3.1` · `22.3.1`.',
+  '',
+].join('\n');
+
+test('extractReleaseNotes keeps the whole templated release and ignores the template example', () => {
+  const notes = extractReleaseNotes(TEMPLATE_CHANGELOG_FIXTURE, '3.2');
+
+  assert.equal(notes.date, '2026-10-23');
+  assert.ok(notes.body.startsWith('Packages `19.3.2` · `20.3.2`'));
+  assert.match(notes.body, /^> \[!IMPORTANT\]\n> \*\*Before upgrading:\*\*/m);
+  assert.match(notes.body, /^#### Form generic$/m);
+  assert.match(notes.body, /^ {2}```diff\n {2}\+ {2}case 'time':\n {2}```$/m);
+  assert.ok(notes.body.endsWith('  - The rest of the bullet.'));
+  assert.ok(!notes.body.includes('19.3.1'));
+  assert.equal(extractReleaseNotes(TEMPLATE_CHANGELOG_FIXTURE, 'x.y'), null);
+});
+
 test('previousArchiveVersion picks the closest lower version on the same major', () => {
   const known = ['19.1.4', '19.1.3', '19.0.11', '20.1.4', '21.1.4'];
 

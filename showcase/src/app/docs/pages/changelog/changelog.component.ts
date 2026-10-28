@@ -37,7 +37,9 @@ function addDisplaySections(release: ShowcaseChangelogRelease) {
     });
   });
   const custom = release.sections.filter(section => !matched.has(section) && section.markdown.trim());
-  const displaySections = [...standard, ...custom];
+  // why: CHANGELOG.md lists consumer-breaking sections first; keep that order on the page.
+  const isBreaking = (section: { title: string }) => /\bBREAKING\b/.test(section.title);
+  const displaySections = [...standard.filter(isBreaking), ...standard.filter(section => !isBreaking(section)), ...custom];
   return { ...release, displaySections, hasContent: !!release.summaryMarkdown.trim() || displaySections.length > 0 };
 }
 
@@ -118,7 +120,10 @@ function addDisplaySections(release: ShowcaseChangelogRelease) {
               @for (section of release.displaySections; track section.anchor) {
                 <section class="release__section" [id]="section.anchor">
                   <h3>{{ section.title }}</h3>
-                  <docs-markdown-renderer [markdown]="section.markdown" language="en"></docs-markdown-renderer>
+                  <docs-markdown-renderer
+                    [markdown]="section.markdown"
+                    [headingIdPrefix]="section.anchor + '-'"
+                    language="en"></docs-markdown-renderer>
                 </section>
               }
             } @else if (release.unreleased) {
