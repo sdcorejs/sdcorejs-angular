@@ -181,6 +181,7 @@
 
 .api-row {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 6px;
   scroll-margin-top: var(--docs-scroll-offset);
   border-top: 1px solid var(--docs-line);
@@ -195,9 +196,16 @@
     flex-wrap: wrap;
     align-items: baseline;
     gap: 6px 8px;
+    min-width: 0;
+
+    // why: long names, unions and defaults wrap instead of widening the page on phones.
+    code {
+      overflow-wrap: anywhere;
+    }
   }
 
   &__name {
+    min-width: 0;
     margin-right: 4px;
     color: var(--docs-fg);
 
@@ -233,7 +241,8 @@
   }
 
   &__default {
-    flex: none;
+    flex: 0 1 auto;
+    min-width: 0;
     margin-left: auto;
     color: var(--docs-fg-3);
     font-size: 12.5px;
@@ -241,6 +250,7 @@
 
     code {
       color: var(--docs-fg-2);
+      white-space: normal;
     }
   }
 
