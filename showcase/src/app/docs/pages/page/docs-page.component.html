@@ -94,6 +94,26 @@
               </section>
             }
 
+            @if (tab() === 'overview' && quickStart(); as start) {
+              <section id="quick-start" class="quick-start">
+                <h2>{{ t.quickStart }}</h2>
+                <div class="quick-start__box">
+                  <div class="quick-start__install">
+                    <span aria-hidden="true">$</span>
+                    <code><span class="token keyword">npm</span> i <span class="token string">&#64;sdcorejs/angular&#64;{{ version() }}</span></code>
+                    <button type="button" [attr.aria-label]="t.copyInstall" (click)="clipboard.copy(installCommand(), 'page-install')">
+                      <mat-icon aria-hidden="true">{{ clipboard.isCopied('page-install') ? 'check' : 'content_copy' }}</mat-icon>
+                      {{ clipboard.isCopied('page-install') ? t.copied : t.copy }}
+                    </button>
+                  </div>
+                  <div class="quick-start__code" tabindex="0" aria-label="Quick start code">
+                    <pre class="quick-start__lines" aria-hidden="true">{{ start.lines }}</pre>
+                    <pre class="quick-start__pre"><code [innerHTML]="start.html"></code></pre>
+                  </div>
+                </div>
+              </section>
+            }
+
             @if (tab() === 'api' && apiSections().length) {
               <label class="api-filter">
                 <mat-icon aria-hidden="true">search</mat-icon>

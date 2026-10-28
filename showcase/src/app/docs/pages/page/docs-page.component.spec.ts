@@ -8,7 +8,7 @@ import { DOC_PAGES } from '../../core/documentation.registry';
 import { MarkdownSection, PublishedDocTabsViewModel } from '../../core/published-docs.models';
 import { PublishedDocsService } from '../../core/published-docs.service';
 import { ExampleViewerComponent } from '../../shared/example-viewer.component';
-import { DocsPageComponent } from './docs-page.component';
+import { DocsPageComponent, quickStartCode } from './docs-page.component';
 
 @Component({
   selector: 'docs-example-viewer',
@@ -273,6 +273,16 @@ describe('DocsPageComponent', () => {
       'title',
     ]);
     expect(element.querySelector('#api-methods-confirm .method-option__default')?.textContent).toContain("'Xác nhận'");
+  });
+
+  it('builds a quick start for components and services', () => {
+    const button = DOC_PAGES.find(page => page.category === 'components' && page.slug === 'button')!;
+    const confirm = DOC_PAGES.find(page => page.category === 'services' && page.slug === 'confirm')!;
+
+    expect(quickStartCode(button, 'SdButton')).toContain(`template: \`<sd-button></sd-button>\``);
+    expect(quickStartCode(button, 'SdButton')).toContain(`import { SdButton } from '${button.importPath}';`);
+    expect(quickStartCode(confirm, 'SdConfirmService')).toContain('readonly #confirmService = inject(SdConfirmService);');
+    expect(quickStartCode(button, null)).toBeNull();
   });
 
   it('clearly distinguishes archived documentation from current live examples', async () => {

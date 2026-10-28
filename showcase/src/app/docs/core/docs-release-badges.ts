@@ -76,6 +76,18 @@ export function changelogEntriesForPage(
   return entries;
 }
 
+/** Page id for an entry's "Name:" lead (longest title match), or null. */
+export function pageIdForEntry(text: string, pages: readonly BadgeTarget[]): string | null {
+  const tag = changelogEntryTag(text);
+  if (!tag) return null;
+  const byTag = new Map<string, string[]>();
+  for (const page of pages) {
+    const key = foldSearchText(page.title).replace(/[^a-z0-9]+/g, ' ').trim();
+    byTag.set(key, [...(byTag.get(key) ?? []), page.id]);
+  }
+  return byTag.get(matchPageTag(tag, byTag))?.[0] ?? null;
+}
+
 /** Longest page title that starts the tag on a word boundary: "button outline" → "button", "tab router" → "tab router". */
 function matchPageTag(tag: string, byTag: ReadonlyMap<string, readonly string[]>): string {
   const words = tag.split(' ');

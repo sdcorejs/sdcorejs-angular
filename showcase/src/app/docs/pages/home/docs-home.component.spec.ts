@@ -2,31 +2,35 @@ import { signal } from '@angular/core';
 import { ComponentFixture, fakeAsync, flushMicrotasks, TestBed, tick } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
+import { DocsClipboardService } from '../../core/docs-clipboard.service';
+import { DocsRelease } from '../../core/docs-release.utils';
 import { DocsVersionService } from '../../core/docs-version.service';
-import { DocsHomeComponent } from './docs-home.component';
+import { DOC_NAV_GROUPS } from '../../core/documentation.registry';
+import { DocsHomeComponent, firstSentence, installCommandFor } from './docs-home.component';
 
 describe('DocsHomeComponent', () => {
   let fixture: ComponentFixture<DocsHomeComponent>;
   let clipboardDescriptor: PropertyDescriptor | undefined;
   let clipboardWrite: jasmine.Spy;
+  let selectAngularMajor: jasmine.Spy;
+  const release: DocsRelease = { id: '2.5', group: '2.x', released: '2026-09-02', majors: [22, 21, 20, 19], latest: true };
 
   beforeEach(async () => {
     clipboardDescriptor = Object.getOwnPropertyDescriptor(window.navigator, 'clipboard');
     clipboardWrite = jasmine.createSpy().and.resolveTo(undefined);
-    Object.defineProperty(window.navigator, 'clipboard', {
-      configurable: true,
-      value: { writeText: clipboardWrite },
-    });
+    Object.defineProperty(window.navigator, 'clipboard', { configurable: true, value: { writeText: clipboardWrite } });
+    selectAngularMajor = jasmine.createSpy().and.resolveTo(undefined);
 
     const paramMap = convertToParamMap({ version: '22.2.5' });
     const versions = {
       selectedVersion: signal<string | null>('22.2.5'),
-      latestVersion: signal('22.2.5'),
-      invalidVersion: signal<string | null>(null),
-      error: signal<string | null>(null),
-      versionGroups: signal([{ major: 22, versions: ['22.2.5'] }]),
-      load: jasmine.createSpy().and.resolveTo(undefined),
+      resolvedPackageVersion: signal('22.2.5'),
+      selectedRelease: signal('2.5'),
+      selectedAngularMajor: signal(22),
+      currentRelease: signal({ ...release, majors: [22, 21, 20] }),
+      releaseCatalog: signal([release]),
       resolve: jasmine.createSpy().and.resolveTo('22.2.5'),
+      selectAngularMajor,
     };
 
     await TestBed.configureTestingModule({
@@ -50,102 +54,52 @@ describe('DocsHomeComponent', () => {
     else delete (window.navigator as { clipboard?: Clipboard }).clipboard;
   });
 
-  it('uses task-first entry points instead of arbitrary component pages', () => {
+  it('links Get started and Browse components for the selected version', () => {
     const actions = [...fixture.nativeElement.querySelectorAll('.hero__actions a')] as HTMLAnchorElement[];
 
     expect(actions[0]?.getAttribute('href')).toBe('/v/22.2.5/getting-started');
     expect(actions[1]?.getAttribute('href')).toBe('/v/22.2.5/components');
-    const categoryLinks = [...fixture.nativeElement.querySelectorAll('.category-grid article > a')] as HTMLAnchorElement[];
-    expect(categoryLinks.every(link => /^\/v\/22\.2\.5\/[a-z-]+$/.test(link.getAttribute('href') ?? ''))).toBeTrue();
+    expect(fixture.nativeElement.querySelector('.hero__release')?.textContent).toContain('Release 2.5 · 2026-09-02');
   });
 
-  it('renders category icons through the Core UI icon facade', () => {
-    const iconContainers = [...fixture.nativeElement.querySelectorAll('.category-grid__icon')] as HTMLElement[];
+  it('shows one card per category with its icon and page count', () => {
+    const cards = [...fixture.nativeElement.querySelectorAll('.category-card')] as HTMLAnchorElement[];
 
-    expect(iconContainers.length).toBeGreaterThan(0);
-    expect(iconContainers.every(container => container.querySelector('sd-icon'))).toBeTrue();
-    expect(
-      iconContainers.every(container =>
-        [...container.childNodes].filter(node => node.nodeType === Node.TEXT_NODE).every(node => !(node.textContent ?? '').trim())
-      )
-    ).toBeTrue();
+    expect(cards.length).toBe(DOC_NAV_GROUPS.length);
+    expect(cards.every(card => /^\/v\/22\.2\.5\/[a-z-]+$/.test(card.getAttribute('href') ?? ''))).toBeTrue();
+    expect(cards[0].querySelector('.category-card__count')?.textContent?.trim()).toBe(String(DOC_NAV_GROUPS[0].pages.length));
   });
 
-  it('keeps consumer-facing copy free of migration and implementation language', () => {
-    const copy = fixture.nativeElement.textContent.toLocaleLowerCase();
+  it('pins the install command to the selected Angular major and disables unpublished majors', () => {
+    const tabs = [...fixture.nativeElement.querySelectorAll('.install__tabs button')] as HTMLButtonElement[];
 
-    expect(copy).not.toContain('preserved');
-    expect(copy).not.toContain('hard-coded');
-    expect(copy).not.toContain('typed configuration');
-    expect(copy).toContain('interactive examples');
-    expect(copy).toContain('angular 19–22');
+    expect(fixture.nativeElement.querySelector('.install__command code')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(installCommandFor(22));
+    expect(tabs.map(tab => tab.textContent?.trim())).toEqual(['22', '21', '20', '19']);
+    expect(tabs[3].disabled).toBeTrue();
+
+    tabs[1].click();
+    expect(selectAngularMajor).toHaveBeenCalledWith(21);
   });
 
-  it('presents the configured maintainer profile and public contact links', () => {
-    const profile = fixture.nativeElement.querySelector('.maintainer-card') as HTMLElement | null;
-    const links = [...(profile?.querySelectorAll('a') ?? [])] as HTMLAnchorElement[];
-
-    expect(profile?.textContent).toContain('Trần Thuận Nghĩa');
-    expect(profile?.textContent).toContain('Full Stack Developer');
-    expect(profile?.textContent).toContain('strongly typed web applications');
-    const avatar = profile?.querySelector<HTMLImageElement>('.maintainer-card__avatar');
-    expect(avatar?.getAttribute('src')).toBe('assets/brand/sdcorejs-logo.png');
-    expect(avatar?.alt).toBe('');
-    expect(links.some(link => link.href === 'https://www.linkedin.com/in/tran-thuan-nghia/')).toBeTrue();
-    expect(links.some(link => link.href === 'mailto:tran.thuan.nghia@gmail.com')).toBeTrue();
-  });
-
-  it('pins the install command to the selected Angular major', () => {
-    expect(fixture.nativeElement.querySelector('.install code')?.textContent?.trim()).toBe('npm install @sdcorejs/angular@^22');
-  });
-
-  it('announces installation copy success only after the version-pinned command is written, then resets', fakeAsync(() => {
-    let resolveWrite!: () => void;
-    clipboardWrite.and.returnValue(new Promise<void>(resolve => (resolveWrite = resolve)));
-    const copyButton = fixture.nativeElement.querySelector('[aria-label="Copy installation command"]') as HTMLButtonElement;
-    const liveRegion = fixture.nativeElement.querySelector('[aria-live="polite"]') as HTMLElement;
-
-    copyButton.click();
-    fixture.detectChanges();
-
-    expect(clipboardWrite).toHaveBeenCalledOnceWith('npm install @sdcorejs/angular@^22');
-    expect(liveRegion.textContent?.trim()).toBe('');
-
-    resolveWrite();
+  it('copies the install command and shows Copied for 1.4s', fakeAsync(() => {
+    (fixture.nativeElement.querySelector('.install__command button') as HTMLButtonElement).click();
     flushMicrotasks();
     fixture.detectChanges();
 
-    expect(liveRegion.textContent).toContain('Installation command copied to clipboard.');
-
-    tick(1600);
-    fixture.detectChanges();
-    expect(liveRegion.textContent?.trim()).toBe('');
+    expect(clipboardWrite).toHaveBeenCalledOnceWith(installCommandFor(22));
+    expect(fixture.nativeElement.querySelector('.install__command button')?.textContent).toContain('Copied');
+    expect(TestBed.inject(DocsClipboardService).announcement()).toBe('Copied to clipboard.');
+    tick(1400);
   }));
 
-  it('announces a rejected installation copy without claiming success', fakeAsync(() => {
-    clipboardWrite.and.rejectWith(new Error('denied'));
-    const copyButton = fixture.nativeElement.querySelector('[aria-label="Copy installation command"]') as HTMLButtonElement;
+  it('shortens a changelog entry to its first plain sentence', () => {
+    expect(firstSentence('optional generic `Item<T>.data`, typed columns. More text here.')).toBe('Optional generic Item<T>.data, typed columns.');
+    expect(firstSentence('outline: neutral border; rest')).toBe('Outline: neutral border.');
+  });
 
-    copyButton.click();
-    flushMicrotasks();
-    fixture.detectChanges();
+  it('lists compatibility with the latest package of each Angular major', () => {
+    const rows = [...fixture.nativeElement.querySelectorAll('.compat__row:not(.compat__row--head)')] as HTMLElement[];
 
-    const announcement = fixture.nativeElement.querySelector('[aria-live="polite"]')?.textContent ?? '';
-    expect(announcement).toContain('Installation command could not be copied.');
-    expect(announcement).not.toContain('copied to clipboard');
-  }));
-
-  it('announces an unavailable clipboard and keeps the copy target at least 44px', () => {
-    Object.defineProperty(window.navigator, 'clipboard', { configurable: true, value: undefined });
-    const copyButton = fixture.nativeElement.querySelector('[aria-label="Copy installation command"]') as HTMLButtonElement;
-
-    copyButton.click();
-    fixture.detectChanges();
-
-    expect(fixture.nativeElement.querySelector('[aria-live="polite"]')?.textContent).toContain(
-      'Clipboard is unavailable. Copy the installation command manually.'
-    );
-    expect(getComputedStyle(copyButton).minWidth).toBe('44px');
-    expect(getComputedStyle(copyButton).minHeight).toBe('44px');
+    expect(rows.map(row => row.querySelector('.compat__latest')?.textContent)).toEqual(['22.2.5', '21.2.5', '20.2.5', '19.2.5']);
   });
 });

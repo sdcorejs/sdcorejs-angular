@@ -1,0 +1,114 @@
+@let t = i18n.t();
+<main class="changelog">
+  @if (versions.invalidVersion(); as invalid) {
+    <div class="changelog__notice" role="status">Version “{{ invalid }}” is unavailable. Showing v{{ versions.selectedVersion() }} instead.</div>
+  }
+  <h1>{{ t.changelogTitle }}</h1>
+  <p class="changelog__lead">{{ t.changelogLead }}</p>
+
+  <div class="changelog__layout">
+    <nav class="release-rail" [attr.aria-label]="t.releases">
+      @for (group of rail; track group.label) {
+        <p class="release-rail__label" aria-hidden="true">{{ group.label }}</p>
+        @for (item of group.releases; track item.id) {
+          <button
+            type="button"
+            [class.active]="item.suffix === selectedSuffix()"
+            [attr.aria-pressed]="item.suffix === selectedSuffix()"
+            (click)="selectRelease(item.suffix!)">
+            <span class="release-rail__id">{{ item.suffix }}</span>
+            @if (item.suffix === latestSuffix()) {
+              <span class="pill-latest">{{ t.latest }}</span>
+            }
+          </button>
+        }
+      }
+    </nav>
+
+    @if (release(); as current) {
+      <div class="changelog__body">
+        <section class="release-card" [id]="current.anchor">
+          <div class="release-card__title">
+            <h2>{{ current.suffix }}</h2>
+            @if (current.suffix === latestSuffix()) {
+              <span class="pill-latest">{{ t.latest }}</span>
+            }
+            @if (current.date) {
+              <time [attr.datetime]="current.date">{{ current.date }}</time>
+            }
+          </div>
+          <div class="release-card__packages">
+            @for (packageVersion of current.packageVersions; track packageVersion.angularMajor) {
+              <a [href]="notesUrl(packageVersion.version)" target="_blank" rel="noopener noreferrer"
+                >{{ t.angular }} {{ packageVersion.angularMajor }} · {{ packageVersion.version }}</a
+              >
+            }
+          </div>
+          @if (compare(); as url) {
+            <a class="release-card__diff" [href]="url" target="_blank" rel="noopener noreferrer">{{ t.sourceDiff }}</a>
+          }
+        </section>
+
+        @if (current.summaryMarkdown.trim()) {
+          <docs-markdown-renderer class="release-summary" [markdown]="current.summaryMarkdown" language="en"></docs-markdown-renderer>
+        }
+
+        <div class="change-filters" role="group" [attr.aria-label]="t.releases">
+          @for (filter of filters(); track filter.type) {
+            <button
+              type="button"
+              [attr.data-type]="filter.type"
+              [class.active]="typeFilter() === filter.type"
+              [attr.aria-pressed]="typeFilter() === filter.type"
+              (click)="typeFilter.set(filter.type)">
+              <span class="change-dot" aria-hidden="true"></span>{{ typeLabel(filter.type) }}<span class="change-count">{{ filter.count }}</span>
+            </button>
+          }
+        </div>
+
+        @if (i18n.language() === 'vi') {
+          <p class="untranslated">{{ t.notTranslated }}</p>
+        }
+
+        @for (group of visibleGroups(); track group.type) {
+          <section class="change-group" [attr.data-type]="group.type" [id]="current.anchor + '-' + group.type">
+            <h3><span class="change-dot" aria-hidden="true"></span>{{ typeLabel(group.type) }}<span class="change-count">{{ group.entries.length }}</span></h3>
+            @for (entry of group.entries; track $index) {
+              <div class="change-entry">
+                <div class="change-entry__tag">
+                  @if (entry.tag) {
+                    @if (pageLink(entry.pageId); as link) {
+                      <a class="change-tag change-tag--link" [routerLink]="link">{{ entry.tag }}</a>
+                    } @else {
+                      <span class="change-tag">{{ entry.tag }}</span>
+                    }
+                  }
+                </div>
+                <docs-markdown-renderer class="change-entry__text" [markdown]="entry.markdown" language="en"></docs-markdown-renderer>
+              </div>
+            }
+            @for (migration of group.migrations; track $index) {
+              <div class="migration">
+                <p class="migration__title">{{ t.migration }}</p>
+                <div class="migration__rows">
+                  <div class="migration__before">
+                    <span>{{ t.before }}</span>
+                    @for (line of migration.before; track $index) {
+                      <code>− {{ line }}</code>
+                    }
+                  </div>
+                  <div class="migration__after">
+                    <span>{{ t.after }}</span>
+                    @for (line of migration.after; track $index) {
+                      <code>+ {{ line }}</code>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+          </section>
+        }
+      </div>
+    }
+  </div>
+</main>

@@ -1,6 +1,7 @@
 import { DOCUMENT, Location } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, input, signal } from '@angular/core';
 import { Params, Router } from '@angular/router';
+import { MatIconModule } from '@angular/material/icon';
 import Prism from 'prismjs';
 import { ApiTypeChip, booleanAttributeNames, isApiTable, matchesApiQuery, parseApiTable } from '../core/api-table.parser';
 import { DocsI18nService } from '../core/docs-i18n.service';
@@ -121,6 +122,7 @@ export function highlightCode(code: string, language: string): string {
 @Component({
   selector: 'docs-markdown-renderer',
   standalone: true,
+  imports: [MatIconModule],
   template: `
     <div class="docs-markdown" [attr.lang]="language()" (click)="onMarkdownClick($event)">
       <span class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">{{ copyAnnouncement() }}</span>
@@ -137,7 +139,10 @@ export function highlightCode(code: string, language: string): string {
             <p [innerHTML]="block.html"></p>
           }
           @case ('quote') {
-            <blockquote [innerHTML]="block.html"></blockquote>
+            <blockquote [class]="'docs-callout docs-callout--' + calloutKind(block.html ?? '')">
+              <mat-icon class="docs-callout__icon" aria-hidden="true">{{ calloutIcon(block.html ?? '') }}</mat-icon>
+              <div [innerHTML]="block.html"></div>
+            </blockquote>
           }
           @case ('list') {
             @if (block.ordered) {
@@ -157,14 +162,16 @@ export function highlightCode(code: string, language: string): string {
           @case ('code') {
             <div class="docs-code">
               <div class="docs-code__toolbar">
-                <span>{{ block.language || 'text' }}</span>
+                <span class="docs-code__file">{{ block.language || 'text' }}</span>
                 <button type="button" aria-label="Copy code block" (click)="copy(block.code ?? '')">
+                  <mat-icon class="docs-code__copy-icon" aria-hidden="true">{{ copyResult()?.code === block.code && copyResult()?.status === 'success' ? 'check' : 'content_copy' }}</mat-icon>
                   {{ copyLabel(block.code ?? '') }}
                 </button>
               </div>
-              <pre
-                tabindex="0"
-                aria-label="Scrollable code block"><code [class]="'language-' + (block.language || 'text')" [innerHTML]="block.html"></code></pre>
+              <div class="docs-code__body" tabindex="0" aria-label="Scrollable code block">
+                <pre class="docs-code__lines" aria-hidden="true">{{ lineNumbers(block.code ?? '') }}</pre>
+                <pre class="docs-code__pre"><code [class]="'language-' + (block.language || 'text')" [innerHTML]="block.html"></code></pre>
+              </div>
             </div>
           }
           @case ('api') {
@@ -350,6 +357,22 @@ export class MarkdownRendererComponent {
     if (!href) return;
     event.preventDefault();
     void this.#router.navigateByUrl(this.#location.normalize(href));
+  }
+
+  lineNumbers(code: string): string {
+    return Array.from({ length: code.replace(/\n$/, '').split('\n').length }, (_, index) => index + 1).join('\n');
+  }
+
+  /** "> **Tip**: …" quotes become tip callouts, "> **Warning**" / Important / Caution become warn, the rest notes. */
+  calloutKind(html: string): 'note' | 'tip' | 'warn' {
+    const lead = /^\s*<strong>([^<]+)<\/strong>/.exec(html)?.[1]?.toLowerCase() ?? '';
+    if (/^tip/.test(lead)) return 'tip';
+    if (/^(warn|important|caution|breaking|do not)/.test(lead)) return 'warn';
+    return 'note';
+  }
+
+  calloutIcon(html: string): string {
+    return { note: 'info', tip: 'lightbulb', warn: 'warning' }[this.calloutKind(html)];
   }
 
   copyLabel(code: string): string {

@@ -14,7 +14,7 @@ export interface DocsSearchEntry {
   readonly path: string;
   readonly snippet: string;
   readonly icon: string;
-  readonly commands: readonly string[];
+  readonly commands: string[];
   readonly fragment: string | null;
 }
 

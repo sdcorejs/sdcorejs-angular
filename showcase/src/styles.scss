@@ -215,6 +215,12 @@ h3 {
   }
 }
 
+// Docs chrome icons are Material Symbols Outlined (shipped by sd-core.scss); live examples keep their own icon fonts.
+:is(.topbar, .sidebar, .release-banner, .version-menu, .docs-article, .toc, .home, .search-page, .not-found, .changelog)
+  mat-icon.mat-icon:not(.example__preview *) {
+  font-family: 'Material Symbols Outlined';
+}
+
 // Inline code inside rendered Markdown. The renderer writes this HTML through [innerHTML], so component styles
 // cannot reach it; these rules are global and scoped by the renderer's classes.
 .docs-markdown :is(p, li, td, th, blockquote, h3, h4) code,
@@ -229,6 +235,11 @@ h3 {
 .api-row__description a,
 .docs-markdown a {
   color: var(--docs-acc);
+}
+
+// Short Markdown fragments (changelog entries, "What changed") sit flush in their row.
+:is(.change-entry__text, .release-changes__entry, .release-summary) .docs-markdown > :last-child {
+  margin-bottom: 0;
 }
 
 // Prism tokens of highlighted code in the docs (Markdown code blocks and example sources).

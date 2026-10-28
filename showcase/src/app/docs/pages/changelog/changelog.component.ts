@@ -1,165 +1,92 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { DocsI18nService } from '../../core/docs-i18n.service';
+import { DOCS_BASE_URL } from '../../core/docs.tokens';
 import { DocsVersionService } from '../../core/docs-version.service';
 import { buildVersionRoute } from '../../core/docs-version.utils';
-import { SHOWCASE_CHANGELOG_RELEASES, ShowcaseChangelogAngularMajor, ShowcaseChangelogRelease } from '../../generated/changelog.generated';
-import { DocsFragmentLinkDirective } from '../../shared/docs-fragment-link.directive';
+import { DOC_PAGES } from '../../core/documentation.registry';
+import { SHOWCASE_CHANGELOG_RELEASES, ShowcaseChangelogRelease } from '../../generated/changelog.generated';
 import { MarkdownRendererComponent } from '../../shared/markdown-renderer.component';
+import { ChangeType, changelogGroups, compareUrl, releaseRail } from './changelog-view';
 
-type MajorFilter = 'all' | ShowcaseChangelogAngularMajor;
+const RELEASES: readonly ShowcaseChangelogRelease[] = SHOWCASE_CHANGELOG_RELEASES;
+const PAGES_BY_ID = new Map(DOC_PAGES.map(page => [page.id, page]));
 
-const STANDARD_RELEASE_SECTIONS = [
-  { key: 'added', title: 'Added' },
-  { key: 'changed', title: 'Changed' },
-  { key: 'deprecated', title: 'Deprecated' },
-  { key: 'removed', title: 'Removed' },
-  { key: 'fixed', title: 'Fixed' },
-  { key: 'security', title: 'Security' },
-  { key: 'migration', title: 'Migration notes' },
-] as const;
-
-function addDisplaySections(release: ShowcaseChangelogRelease) {
-  const matched = new Set<ShowcaseChangelogRelease['sections'][number]>();
-  const standard = STANDARD_RELEASE_SECTIONS.flatMap(slot => {
-    return release.sections.flatMap(section => {
-      const isMatch = section.key === slot.key || (slot.key === 'migration' && section.key.startsWith('migration'));
-      if (!isMatch || !section.markdown.trim()) return [];
-      matched.add(section);
-      return [
-        {
-          key: section.key,
-          title: section.title,
-          anchor: section.anchor,
-          markdown: section.markdown,
-        },
-      ];
-    });
-  });
-  const custom = release.sections.filter(section => !matched.has(section) && section.markdown.trim());
-  const displaySections = [...standard, ...custom];
-  return { ...release, displaySections, hasContent: !!release.summaryMarkdown.trim() || displaySections.length > 0 };
-}
-
+/** Changelog: release rail, release card with package chips, sticky type filters and entries with migrations. */
 @Component({
   selector: 'docs-changelog',
   standalone: true,
-  imports: [RouterLink, DocsFragmentLinkDirective, MarkdownRendererComponent],
-  template: `
-    <main class="changelog">
-      <nav class="changelog__breadcrumb" aria-label="Breadcrumb"><a routerLink="/">Docs</a><span>/</span><span>Changelog</span></nav>
-      @if (versions.invalidVersion(); as invalid) {
-        <div class="changelog__notice" role="status">
-          Version “{{ invalid }}” is unavailable. Showing v{{ versions.selectedVersion() }} instead.
-        </div>
-      }
-      <header class="changelog__header">
-        <div>
-          <span>Release history</span>
-          <h1>Changelog</h1>
-          <p>Track fixes, improvements, and migration notes across the maintained Angular release lines.</p>
-        </div>
-        <a href="https://github.com/sdcorejs/sdcorejs-angular/blob/main/CHANGELOG.md" target="_blank" rel="noreferrer"
-          >View full changelog</a
-        >
-      </header>
-
-      <div class="changelog__filters" role="group" aria-label="Filter releases by Angular major">
-        @for (filter of filters; track filter.value) {
-          <button
-            type="button"
-            [class.active]="majorFilter() === filter.value"
-            [attr.aria-pressed]="majorFilter() === filter.value"
-            (click)="majorFilter.set(filter.value)">
-            {{ filter.label }}
-          </button>
-        }
-      </div>
-
-      <nav class="changelog__release-nav" aria-label="Jump to a release">
-        <strong>Jump to</strong>
-        <div>
-          @for (release of filteredReleases(); track release.id) {
-            <a [docsFragmentLink]="release.anchor">{{ release.title }}</a>
-          }
-        </div>
-      </nav>
-
-      <div class="changelog__timeline">
-        @for (release of filteredReleases(); track release.id) {
-          <article class="release" [class.release--unreleased]="release.unreleased" [id]="release.anchor">
-            <header>
-              <div>
-                <a [docsFragmentLink]="release.anchor" [attr.aria-label]="'Link to ' + release.title">#</a>
-                <h2>{{ release.title }}</h2>
-                @if (release.date) {
-                  <time [attr.datetime]="release.date">{{ release.date }}</time>
-                }
-              </div>
-              <div class="release__versions">
-                @for (packageVersion of release.packageVersions; track packageVersion.angularMajor) {
-                  <a
-                    [routerLink]="['/v', packageVersion.version]"
-                    [class.current]="packageVersion.version === versions.selectedVersion()"
-                    [attr.aria-current]="packageVersion.version === versions.selectedVersion() ? 'page' : null">
-                    Angular {{ packageVersion.angularMajor }} · {{ packageVersion.version }}
-                    @if (packageVersion.version === versions.selectedVersion()) {
-                      <span class="docs-visually-hidden"> Current documentation version</span>
-                    }
-                  </a>
-                }
-              </div>
-            </header>
-
-            @if (release.summaryMarkdown) {
-              <docs-markdown-renderer [markdown]="release.summaryMarkdown" language="en"></docs-markdown-renderer>
-            }
-            @if (release.hasContent) {
-              @for (section of release.displaySections; track section.anchor) {
-                <section class="release__section" [id]="section.anchor">
-                  <h3>{{ section.title }}</h3>
-                  <docs-markdown-renderer [markdown]="section.markdown" language="en"></docs-markdown-renderer>
-                </section>
-              }
-            } @else if (release.unreleased) {
-              <p class="release__empty">No unreleased changes have been recorded.</p>
-            }
-          </article>
-        }
-      </div>
-    </main>
-  `,
+  imports: [RouterLink, MarkdownRendererComponent],
+  templateUrl: './changelog.component.html',
   styleUrl: './changelog.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChangelogComponent {
   readonly #route = inject(ActivatedRoute);
   readonly #router = inject(Router);
+  readonly #docsBase = inject(DOCS_BASE_URL);
   readonly routeParams = toSignal(this.#route.paramMap, { initialValue: this.#route.snapshot.paramMap });
   readonly versions = inject(DocsVersionService);
-  readonly majorFilter = signal<MajorFilter>('all');
-  readonly filters: readonly { value: MajorFilter; label: string }[] = [
-    { value: 'all', label: 'All maintained lines' },
-    { value: 22, label: 'Angular 22' },
-    { value: 21, label: 'Angular 21' },
-    { value: 20, label: 'Angular 20' },
-    { value: 19, label: 'Angular 19' },
-  ];
-  readonly filteredReleases = computed(() => {
-    const filter = this.majorFilter();
-    const releases =
-      filter === 'all'
-        ? SHOWCASE_CHANGELOG_RELEASES
-        : SHOWCASE_CHANGELOG_RELEASES.filter(
-            release => release.unreleased || release.packageVersions.some(version => version.angularMajor === filter)
-          );
-    return releases.map(addDisplaySections);
+  readonly i18n = inject(DocsI18nService);
+
+  readonly rail = releaseRail(RELEASES);
+  /** The latest published release; the generated notes can lag one release behind it. */
+  readonly latestSuffix = computed(() => this.versions.latestRelease());
+  /** Release shown on the page; it starts at the selected docs release and does not change the global version. */
+  readonly #chosen = signal<string | null>(null);
+  readonly selectedSuffix = computed(() => {
+    const chosen = this.#chosen();
+    if (chosen) return chosen;
+    const current = this.versions.selectedRelease();
+    return current && RELEASES.some(release => release.suffix === current) ? current : (this.rail[0]?.releases[0]?.suffix ?? null);
+  });
+  readonly release = computed(() => RELEASES.find(release => release.suffix === this.selectedSuffix()) ?? null);
+  readonly typeFilter = signal<ChangeType | 'all'>('all');
+  readonly groups = computed(() => {
+    const release = this.release();
+    return release ? changelogGroups(release, DOC_PAGES) : [];
+  });
+  readonly filters = computed(() => {
+    const groups = this.groups();
+    return [
+      { type: 'all' as const, count: groups.reduce((total, group) => total + group.entries.length, 0) },
+      ...groups.map(group => ({ type: group.type, count: group.entries.length })),
+    ];
+  });
+  readonly visibleGroups = computed(() => {
+    const filter = this.typeFilter();
+    return this.groups().filter(group => filter === 'all' || group.type === filter);
+  });
+  readonly compare = computed(() => {
+    const release = this.release();
+    return release ? compareUrl(release, RELEASES) : null;
   });
 
   constructor() {
     effect(() => {
       void this.#resolveRouteVersion(this.routeParams().get('version'));
     });
+  }
+
+  selectRelease(suffix: string): void {
+    this.#chosen.set(suffix);
+    this.typeFilter.set('all');
+  }
+
+  typeLabel(type: ChangeType | 'all'): string {
+    const t = this.i18n.t();
+    return type === 'all' ? t.filterAll : t.changeTypes[type];
+  }
+
+  pageLink(pageId: string | null): string[] | null {
+    const page = pageId ? PAGES_BY_ID.get(pageId) : undefined;
+    const version = this.versions.resolvedPackageVersion() || 'latest';
+    return page ? ['/v', version, page.category, page.slug, 'overview'] : null;
+  }
+
+  notesUrl(packageVersion: string): string {
+    return new URL(`${encodeURIComponent(packageVersion)}/CHANGELOG.md`, this.#docsBase).toString();
   }
 
   async #resolveRouteVersion(requested: string | null): Promise<void> {

@@ -16,7 +16,10 @@ import { MarkdownSection, PublishedDocTabsViewModel } from '../../core/published
 import { PublishedDocsService } from '../../core/published-docs.service';
 import { ExampleViewerComponent } from '../../shared/example-viewer.component';
 import { MarkdownRendererComponent } from '../../shared/markdown-renderer.component';
+import { DocsClipboardService } from '../../core/docs-clipboard.service';
 import { DocsApiMethodsComponent } from '../../shared/docs-api-methods.component';
+import { metadataCode } from '../../shared/docs-page-header.component';
+import { highlightCode } from '../../shared/markdown-renderer.component';
 import { DocsNotFoundComponent } from '../not-found/docs-not-found.component';
 import { DocsPageHeaderComponent } from '../../shared/docs-page-header.component';
 import { DocsPageTabLink, DocsPageTabsComponent } from '../../shared/docs-page-tabs.component';
@@ -38,6 +41,39 @@ export function toApiSections(sections: readonly MarkdownSection[]): ApiSectionV
     const method = parseApiMethod(section.heading, section.markdown);
     return { section, method, rows: method ? [] : apiRowsOfMarkdown(section.markdown, section.id) };
   });
+}
+
+/** Minimal standalone usage for the Overview "Quick start": a host component for components, inject() for services. */
+export function quickStartCode(page: DocPageDefinition, className: string | null): string | null {
+  if (!className) return null;
+  const imports = [`import { ${className} } from '${page.importPath}';`];
+  if (page.selector && /^[a-z][\w-]*$/.test(page.selector)) {
+    return [
+      "import { Component } from '@angular/core';",
+      ...imports,
+      '',
+      '@Component({',
+      "  selector: 'app-example',",
+      '  standalone: true,',
+      `  imports: [${className}],`,
+      `  template: \`<${page.selector}></${page.selector}>\`,`,
+      '})',
+      'export class ExampleComponent {}',
+    ].join('\n');
+  }
+  if (page.category === 'services') {
+    const field = className.replace(/^Sd/, '').replace(/^./, character => character.toLowerCase());
+    return [
+      "import { Component, inject } from '@angular/core';",
+      ...imports,
+      '',
+      "@Component({ selector: 'app-example', standalone: true, template: '' })",
+      'export class ExampleComponent {',
+      `  readonly #${field} = inject(${className});`,
+      '}',
+    ].join('\n');
+  }
+  return null;
 }
 
 /** API members of a document (table rows and method options): the API tab count. */
@@ -86,6 +122,7 @@ export class DocsPageComponent {
   #tabScrollTarget: number | null = null;
 
   readonly i18n = inject(DocsI18nService);
+  readonly clipboard = inject(DocsClipboardService);
   readonly versions = inject(DocsVersionService);
   readonly page = signal<DocPageDefinition | null>(null);
   readonly tab = signal<DocTabId>('overview');
@@ -129,6 +166,13 @@ export class DocsPageComponent {
     return page && this.isLatestRelease() ? this.#releaseNotes.entriesFor(page.id) : [];
   });
   readonly changelogLink = computed(() => ['/v', this.version(), 'changelog']);
+  readonly installCommand = computed(() => `npm i @sdcorejs/angular@${this.version()}`);
+  readonly quickStart = computed(() => {
+    const page = this.page();
+    if (!page || !this.viewModel()) return null;
+    const code = quickStartCode(page, metadataCode(this.metadataRecord()['Class']));
+    return code ? { code, html: highlightCode(code, 'typescript'), lines: code.split('\n').map((_, index) => index + 1).join('\n') } : null;
+  });
   readonly untranslated = computed(() => this.i18n.language() === 'vi');
   readonly apiQuery = signal('');
   readonly apiSections = computed(() => (this.tab() === 'api' ? toApiSections(this.sections()) : []));
@@ -198,6 +242,9 @@ export class DocsPageComponent {
         ? { id: method.id, label: `${method.name}()`, level: section.level }
         : { id: section.id, label: section.heading.replace(/`/g, ''), level: section.level };
     });
+    if (this.tab() === 'overview' && this.quickStart()) {
+      items.unshift({ id: 'quick-start', label: this.i18n.t().quickStart, level: 2 });
+    }
     if (this.tab() === 'overview' && this.changes().length) {
       items.unshift({ id: 'changed', label: this.i18n.format('changedIn', { v: this.release() }), level: 2 });
     }
