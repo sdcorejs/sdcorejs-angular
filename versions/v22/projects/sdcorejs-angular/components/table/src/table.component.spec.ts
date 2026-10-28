@@ -160,11 +160,13 @@ describe('E2E attributes', () => {
     tableComponent.loading.set(true);
     fixture.detectChanges();
 
-    const status = sdTableEl.querySelector('.c-loading') as HTMLElement;
+    // The overlay with its own status role is gone; one status region stays in the DOM for the whole lifetime.
+    expect(sdTableEl.querySelector('.c-loading')).toBeNull();
+    const status = sdTableEl.querySelector('.sd-table-live') as HTMLElement;
     expect(status).not.toBeNull();
     expect(status.getAttribute('role')).toBe('status');
     expect(status.getAttribute('aria-live')).toBe('polite');
-    expect(status.getAttribute('aria-label')).toBeTruthy();
+    expect(status.getAttribute('aria-atomic')).toBe('true');
     expect(sdTableEl.querySelector('.c-table')?.getAttribute('aria-busy')).toBe('true');
 
     tableComponent.loading.set(false);

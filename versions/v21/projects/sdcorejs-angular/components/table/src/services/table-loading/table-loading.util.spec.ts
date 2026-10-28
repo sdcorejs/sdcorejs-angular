@@ -1,5 +1,73 @@
 import type { SdTableOptionLoading } from '../../models/table-option-loading.model';
-import { TableRefreshTimer, resolveTableLoading, tableLoadingView } from './table-loading.util';
+import {
+  TABLE_GENERIC_SKELETON,
+  TableRefreshTimer,
+  buildTableSkeleton,
+  resolveTableLoading,
+  skeletonFillRows,
+  tableLoadingView,
+} from './table-loading.util';
+
+describe('buildTableSkeleton', () => {
+  it('shapes each cell by column type and steps the widths by row and data column', () => {
+    const [first, second] = buildTableSkeleton(
+      [
+        { field: 'sdSelection' },
+        { field: 'sdIndex' },
+        { field: 'name', type: 'string' },
+        { field: 'amount', type: 'number', align: 'right' },
+        { field: 'status', type: 'values', badge: true },
+        { field: 'createdAt', type: 'datetime' },
+        { field: 'day', type: 'date' },
+        { field: 'at', type: 'time' },
+        { field: 'active', type: 'boolean' },
+        { field: 'custom', type: 'number', template: true },
+        { field: 'sdCommand' },
+        { field: 'sdFiller' },
+      ],
+      2
+    );
+    expect(first.map(cell => [cell.field, cell.shape, cell.align, cell.width, cell.maxWidth])).toEqual([
+      ['sdSelection', 'box', 'center', undefined, undefined],
+      ['sdIndex', 'bar', 'center', '16px', undefined],
+      ['name', 'bar', 'start', '72%', '240px'],
+      ['amount', 'bar', 'end', '48%', '120px'],
+      ['status', 'pill', 'start', '64px', undefined],
+      ['createdAt', 'bar', 'start', '116px', '100%'],
+      ['day', 'bar', 'start', '76px', '100%'],
+      ['at', 'bar', 'start', '44px', '100%'],
+      ['active', 'bar', 'start', '40px', '100%'],
+      ['custom', 'bar', 'start', '84%', '240px'],
+      ['sdCommand', 'none', 'start', undefined, undefined],
+      ['sdFiller', 'none', 'start', undefined, undefined],
+    ]);
+    // Row 1 starts one step further along the same sequence.
+    expect(second[2].width).toBe('54%');
+    expect(second[3].width).toBe('80%');
+  });
+
+  it('hides the cells of children columns and gives the generic skeleton 5 rows × 4 bars', () => {
+    expect(buildTableSkeleton([{ field: 'group', type: 'children' }], 1)[0][0]).toEqual({
+      field: 'group',
+      shape: 'none',
+      align: 'start',
+      hidden: true,
+    });
+    expect(TABLE_GENERIC_SKELETON.length).toBe(5);
+    expect(TABLE_GENERIC_SKELETON.every(row => row.length === 4 && row.every(cell => cell.shape === 'bar'))).toBeTrue();
+  });
+});
+
+describe('skeletonFillRows', () => {
+  it('fills the body, at most the page size and 20', () => {
+    expect(skeletonFillRows(260, 36)).toBe(7);
+    expect(skeletonFillRows(260, 36, 4)).toBe(4);
+    expect(skeletonFillRows(5000, 36)).toBe(20);
+    expect(skeletonFillRows(10, 36)).toBe(1);
+    expect(skeletonFillRows(Number.NaN, 36)).toBeUndefined();
+    expect(skeletonFillRows(0, 36)).toBeUndefined();
+  });
+});
 
 describe('resolveTableLoading', () => {
   it('uses the defaults when nothing is set', () => {

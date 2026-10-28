@@ -35,6 +35,74 @@ export function resolveTableLoading(
   };
 }
 
+/** A displayed column as the skeleton sees it. */
+export interface TableSkeletonColumn {
+  readonly field: string;
+  /** `SdTableColumn['type']`; unset for the table's own columns (`sdSelection`, `sdIndex`, …). */
+  readonly type?: string;
+  readonly align?: 'right';
+  readonly badge?: boolean;
+  readonly template?: boolean;
+}
+
+/** One skeleton cell. `none` leaves it empty; `hidden` mirrors the hidden cell of a `children` column. */
+export interface TableSkeletonCell {
+  readonly field: string;
+  readonly shape: 'bar' | 'pill' | 'box' | 'none';
+  readonly align: 'start' | 'end' | 'center';
+  readonly width?: string;
+  readonly maxWidth?: string;
+  readonly hidden?: boolean;
+}
+
+const TEXT_WIDTHS = [72, 54, 84, 62, 46];
+const NUMBER_WIDTHS = [64, 48, 80, 56, 72];
+const FIXED_WIDTHS: Readonly<Record<string, string>> = { date: '76px', datetime: '116px', time: '44px', boolean: '40px' };
+const TEXT_TYPES = new Set(['string', 'values', 'lazy-values']);
+const EMPTY_COLUMNS = new Set(['sdCommand', 'sdReorder', 'sdSubInformationAction', 'sdFiller']);
+
+function skeletonCell(column: TableSkeletonColumn, row: number, dataColumn: number): TableSkeletonCell {
+  const { field, type } = column;
+  if (field === 'sdSelection') return { field, shape: 'box', align: 'center' };
+  if (field === 'sdIndex') return { field, shape: 'bar', align: 'center', width: '16px' };
+  if (!type || EMPTY_COLUMNS.has(field)) return { field, shape: 'none', align: 'start' };
+  if (type === 'children') return { field, shape: 'none', align: 'start', hidden: true };
+  const align = column.align === 'right' ? 'end' : 'start';
+  const step = (row + dataColumn) % 5;
+  if (column.badge) return { field, shape: 'pill', align, width: '64px' };
+  if (type === 'number' && !column.template) return { field, shape: 'bar', align, width: `${NUMBER_WIDTHS[step]}%`, maxWidth: '120px' };
+  if (FIXED_WIDTHS[type] && !column.template) return { field, shape: 'bar', align, width: FIXED_WIDTHS[type], maxWidth: '100%' };
+  if (TEXT_TYPES.has(type) || column.template) return { field, shape: 'bar', align, width: `${TEXT_WIDTHS[step]}%`, maxWidth: '240px' };
+  return { field, shape: 'none', align };
+}
+
+/**
+ * `rows` skeleton rows over the displayed columns. Bar widths follow the column type, the row `i` and the data
+ * column `j` (the table's own columns do not count), so the rows look like text without repeating.
+ */
+export function buildTableSkeleton(columns: readonly TableSkeletonColumn[], rows: number): TableSkeletonCell[][] {
+  return Array.from({ length: rows }, (_, row) => {
+    let dataColumn = 0;
+    return columns.map(column => skeletonCell(column, row, column.type && column.type !== 'children' ? dataColumn++ : dataColumn));
+  });
+}
+
+/** 5 rows × 4 text columns, without a header: what the table shows before its configuration is ready. */
+export const TABLE_GENERIC_SKELETON = buildTableSkeleton(
+  ['a', 'b', 'c', 'd'].map(field => ({ field, type: 'string' })),
+  TABLE_SKELETON_ROWS
+);
+
+/**
+ * Rows that fill the visible body of a table with a fixed height, at most `pageSize` and 20; `undefined` when
+ * the height is not fixed or not measurable yet.
+ */
+export function skeletonFillRows(body: number, rowHeight: number, pageSize?: number): number | undefined {
+  if (!(body > 0) || !(rowHeight > 0)) return undefined;
+  const rows = Math.max(1, Math.floor(body / rowHeight));
+  return Math.min(rows, TABLE_SKELETON_MAX_ROWS, pageSize && pageSize > 0 ? pageSize : TABLE_SKELETON_MAX_ROWS);
+}
+
 /**
  * - `skeleton`: the table has no rows and something is on its way — a read is loading, the first read of the
  *   option is scheduled, or the configuration is not ready yet (`pending`).

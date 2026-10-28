@@ -1,0 +1,79 @@
+// Shared look of the sd-table loading layer (skeleton bars, progress bar), used by the desktop table and the
+// mobile cards. Colours: --sd-table-skeleton-bg / -highlight, --sd-table-progress-track, --sd-table-spinner.
+
+// One skeleton bar: 12px, 4px corners, a highlight that sweeps left to right. Decorative only (aria-hidden),
+// so it needs no 3:1 contrast; forced-colors draws it in GrayText.
+@mixin skeleton-bar($height: 12px) {
+  display: block;
+  height: $height;
+  border-radius: var(--sd-radius-4, 4px);
+  background: linear-gradient(90deg, var(--sd-table-skeleton-bg) 0, var(--sd-table-skeleton-highlight) 40%, var(--sd-table-skeleton-bg) 80%)
+    0 0 / 480px 100%;
+  animation: sd-table-skeleton-sweep 1.4s linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+
+  @media (forced-colors: active) {
+    forced-color-adjust: none;
+    background: GrayText;
+  }
+}
+
+@mixin skeleton-keyframes {
+  @keyframes sd-table-skeleton-sweep {
+    to {
+      background-position: 480px 0;
+    }
+  }
+}
+
+// 2px indeterminate bar: a 35% streak runs from -35% to 100% of the track. Reduced motion: a still, full bar.
+@mixin progress-bar {
+  height: 2px;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--sd-table-progress-track);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 35%;
+    background: var(--sd-table-spinner);
+    animation: sd-table-progress-run 1.1s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::before {
+      width: 100%;
+      opacity: 0.6;
+      animation: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    forced-color-adjust: none;
+    box-sizing: content-box;
+    border: 1px solid CanvasText;
+    background: Canvas;
+
+    &::before {
+      background: Highlight;
+    }
+  }
+}
+
+@mixin progress-keyframes {
+  @keyframes sd-table-progress-run {
+    from {
+      transform: translateX(-100%);
+    }
+
+    to {
+      // 100% of the track = 100% / 35% of the streak.
+      transform: translateX(calc(100% / 0.35));
+    }
+  }
+}

@@ -255,6 +255,10 @@ $component-tokens: (
   'table-row-selected-bg': (color-mix(in srgb, var(--sd-primary) 9%, var(--sd-table-bg)), color-mix(in srgb, var(--sd-primary) 9%, var(--sd-table-bg))),
   'table-row-activated-bg': (color-mix(in srgb, var(--sd-primary) 14%, var(--sd-table-bg)), color-mix(in srgb, var(--sd-primary) 14%, var(--sd-table-bg))),
   'table-spinner': (var(--sd-primary), var(--sd-primary)),
+  // loading layer (design handoff table-loading 1e): skeleton bars and the progress bar track
+  'table-skeleton-bg': (color-mix(in srgb, var(--sd-text) 8%, var(--sd-table-bg)), color-mix(in srgb, var(--sd-text) 8%, var(--sd-table-bg))),
+  'table-skeleton-highlight': (color-mix(in srgb, var(--sd-text) 3%, var(--sd-table-bg)), color-mix(in srgb, var(--sd-text) 3%, var(--sd-table-bg))),
+  'table-progress-track': (color-mix(in srgb, var(--sd-primary) 18%, var(--sd-table-bg)), color-mix(in srgb, var(--sd-primary) 18%, var(--sd-table-bg))),
   'table-select-arrow': (var(--sd-text-secondary), var(--sd-text-secondary)),
   'table-group-row-bg': (color-mix(in srgb, var(--sd-primary) 4%, var(--sd-table-bg)), color-mix(in srgb, var(--sd-primary) 4%, var(--sd-table-bg))),
   'table-group-row-border': (var(--sd-table-row-divider), var(--sd-table-row-divider)),

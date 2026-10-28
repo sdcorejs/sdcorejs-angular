@@ -4,6 +4,7 @@
 @let _configuration = configuration();
 @let _tableOption = tableOption()!;
 @let _loading = loading();
+@let _loadingView = loadingView();
 @let _readState = readState();
 @let _hideReadError = hideReadError();
 @let _dataStateTemplate = dataStateTemplate();
@@ -166,20 +167,16 @@
         (valueChange)="onQuickSearchChange($event)" />
     }
     <div class="c-container" [class.sd-table-mobile]="_mobileCards">
-      <!-- why: bảng tải dữ liệu BẤT ĐỒNG BỘ nhưng trước đây chỉ có spinner thuần hình ảnh — screen
-           reader không được báo gì cả. role="status" + aria-live="polite" đọc trạng thái ngay khi
-           spinner xuất hiện; aria-busy trên vùng bảng cho biết nội dung đang được thay thế. -->
-      @if (_loading) {
-        <div class="c-loading" role="status" aria-live="polite" [attr.aria-label]="'core.component.table.loading' | sdTranslate">
-          <mat-spinner></mat-spinner>
-        </div>
-      }
+      <!-- why: lớp loading không phủ lên bảng: header, filter, sort và thanh cuộn luôn dùng được. Chưa có dòng thì
+           khung xương (matNoDataRow); đã có dòng thì giữ dòng cũ, quá showDelay mới làm mờ dòng và hiện thanh tiến
+           trình. aria-busy vẫn theo loading() thật; vùng .sd-table-live báo "đang tải"/"đã tải xong". -->
       <div
         class="c-table"
         sdScroll
         stickyShadow
         matSort
         [matSortDisabled]="!_tableOption.sort?.enable"
+        [class.sd-table-dim]="_loadingView === 'refresh' && loadingSettings().dim"
         [attr.aria-busy]="_loading ? 'true' : null"
         [style.max-height]="_tableOption.style?.maxHeight"
         [style.min-height]="_tableOption.style?.minHeight">
@@ -629,12 +626,32 @@
             @if (hasFooter() && !!_configuration.displayedFooters.length) {
               <tr mat-footer-row *sdTableFooterRowDef="_configuration.displayedFooters; sticky: true"></tr>
             }
+            <!-- why: khung xương là dòng thật trong tbody (matNoDataRow chỉ hiện khi không có dòng dữ liệu) nên ô thẳng
+                 cột với header, kể cả header nhóm, mà không phải đo; footer vẫn nằm dưới; dataSource không đổi. -->
+            <ng-template matNoDataRow>
+              @for (cells of skeleton(); track $index) {
+                <tr class="sd-table-skeleton-row" aria-hidden="true">
+                  @for (cell of cells; track cell.field) {
+                    <td class="sd-table-skeleton-cell" [class.d-none]="cell.hidden">
+                      @if (cell.shape !== 'none') {
+                        <span
+                          class="sd-table-skeleton-bar"
+                          [attr.data-shape]="cell.shape"
+                          [attr.data-align]="cell.align"
+                          [style.width]="cell.width"
+                          [style.max-width]="cell.maxWidth"></span>
+                      }
+                    </td>
+                  }
+                </tr>
+              }
+            </ng-template>
           </table>
         }
         @let _readError = _readState.status === 'error';
         <!-- why: dòng cũ bị gỡ khi lần đọc hiện hành lỗi, nên vùng lỗi/empty chỉ hiện khi bảng không còn dòng nào
              — end user không bao giờ thấy dữ liệu và lỗi cùng lúc (NSP-4877). -->
-        @let _noRows = !_readError && !_loading && !_total && !_items.length;
+        @let _noRows = !_readError && !_loading && !_total && !_items.length && _loadingView !== 'skeleton';
         @if ((_readError && !_hideReadError) || (_noRows && _readState.status === 'empty' && !!_dataStateTemplate)) {
           <sd-data-state [state]="_readError ? 'error' : 'empty'" [retryable]="_readError" (sdRetry)="retryRead()">
             @if (_dataStateTemplate; as custom) {
@@ -682,6 +699,10 @@
           </div>
         }
       </div>
+      @if (_loadingView === 'refresh' && !_mobileCards) {
+        <!-- Nằm trong .c-container, không trong .c-table, để không cuộn ngang theo bảng; top = --sd-table-head-h (đo). -->
+        <div class="sd-table-progress" aria-hidden="true"></div>
+      }
       @if (!_mobileCards) {
         <selector-action
           [autoId]="_autoId"
@@ -880,4 +901,18 @@
       </ng-template>
     }
   </sd-data-state>
+} @else if (_loadingView === 'skeleton') {
+  <!-- why: lookup cột (values/lazy-values) có thể chậm; chưa có configuration nên chưa biết cột, vẽ khung xương chung
+       thay vì để trống. Hydrate không có lookup xong trong microtask nên khối này không kịp hiện. -->
+  <div class="sd-table-skeleton-block" aria-hidden="true">
+    @for (cells of genericSkeleton; track $index) {
+      <div class="sd-table-skeleton-block-row">
+        @for (cell of cells; track cell.field) {
+          <span class="sd-table-skeleton-cell">
+            <span class="sd-table-skeleton-bar" [style.width]="cell.width" [style.max-width]="cell.maxWidth"></span>
+          </span>
+        }
+      </div>
+    }
+  </div>
 }

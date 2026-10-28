@@ -332,10 +332,13 @@ describe('SdTable loading view', () => {
       create({ loading: { skeleton: false } });
       expect(table.loading()).toBeTrue();
       expect(view()).toBe('none');
+      expect(f.nativeElement.querySelector('tr.sd-table-skeleton-row')).toBeNull();
       tick(299);
       expect(view()).toBe('none');
       tick(1);
       expect(view()).toBe('refresh');
+      expect(f.nativeElement.querySelector('.sd-table-progress')).not.toBeNull();
+      expect(f.nativeElement.querySelector('tr.sd-table-skeleton-row')).toBeNull();
       answer(page(5));
       flush();
     }));
@@ -351,6 +354,190 @@ describe('SdTable loading view', () => {
       expect(view()).toBe('refresh');
       answer(page(5));
       expect(view()).toBe('none');
+      flush();
+    }));
+  });
+
+  describe('desktop layer', () => {
+    beforeEach(() => configure());
+
+    const el = (selector: string) => f.nativeElement.querySelector(selector) as HTMLElement | null;
+    const all = (selector: string) => Array.from(f.nativeElement.querySelectorAll(selector)) as HTMLElement[];
+    /** The element under the centre of `target`, as a pointer would hit it. */
+    const hit = (target: Element) => {
+      const box = target.getBoundingClientRect();
+      return document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+    };
+
+    it('replaces the loading overlay: no .c-loading or Material spinner at any time', fakeAsync(() => {
+      create();
+      expect(el('.c-loading')).toBeNull();
+      expect(el('mat-spinner')).toBeNull();
+      answer(page(5));
+      reload();
+      tick(500);
+      f.detectChanges();
+      expect(el('.c-loading')).toBeNull();
+      expect(el('mat-spinner')).toBeNull();
+      answer(page(5));
+      flush();
+    }));
+
+    it('draws 5 hidden skeleton rows aligned with the displayed columns, then the real rows', fakeAsync(() => {
+      create({
+        columns: [
+          { field: 'name', type: 'string', title: 'Name' },
+          { field: 'id', type: 'number', title: 'Id', align: 'right' },
+        ],
+      });
+      const skeleton = all('tbody tr.sd-table-skeleton-row');
+      expect(skeleton.length).toBe(5);
+      expect(skeleton.every(row => row.getAttribute('aria-hidden') === 'true')).toBeTrue();
+      expect(skeleton[0].querySelectorAll('td').length).toBe(table.configuration()!.displayedColumns.length);
+      expect(skeleton[0].querySelector('[data-align="end"]')).not.toBeNull();
+      // The header stays the real header.
+      expect(all('thead th').length).toBeGreaterThan(0);
+      expect(el('.c-no-data-row')).toBeNull();
+      expect(el('sd-data-state')).toBeNull();
+      answer(page(3));
+      expect(all('tr.sd-table-skeleton-row').length).toBe(0);
+      expect(all('tr.c-row').length).toBe(3);
+      flush();
+    }));
+
+    it('honours skeletonRows', fakeAsync(() => {
+      create({ loading: { skeletonRows: 3 } });
+      expect(all('tr.sd-table-skeleton-row').length).toBe(3);
+      answer(page(1));
+      flush();
+    }));
+
+    it('fills a table with a fixed height, up to the page size', fakeAsync(() => {
+      create({ style: { maxHeight: '300px' }, paginate: { pageSize: 50 } });
+      const head = el('.c-table thead')!.offsetHeight;
+      expect(all('tr.sd-table-skeleton-row').length).toBe(Math.floor((300 - head) / 36));
+      answer(page(1));
+      f.destroy();
+
+      create({ style: { maxHeight: '2000px' }, paginate: { pageSize: 4 } });
+      expect(all('tr.sd-table-skeleton-row').length).toBe(4);
+      answer(page(1));
+      flush();
+    }));
+
+    it('shows a generic skeleton before the configuration and skeleton rows (not the empty block) before the first read', fakeAsync(() => {
+      reads = [];
+      f = TestBed.createComponent(SdTable<Row>);
+      table = f.componentInstance;
+      f.componentRef.setInput('option', {
+        type: 'server',
+        items: () => {
+          const read = deferred<Page>();
+          reads.push(read);
+          return read.promise;
+        },
+        columns: [{ field: 'name', type: 'string', title: 'Name' }],
+      } as ServerOption);
+      f.detectChanges();
+      const block = el('.sd-table-skeleton-block');
+      expect(block?.getAttribute('aria-hidden')).toBe('true');
+      expect(block?.querySelectorAll('.sd-table-skeleton-block-row').length).toBe(5);
+      expect(block?.querySelectorAll('.sd-table-skeleton-bar').length).toBe(20);
+
+      flushMicrotasks();
+      f.detectChanges();
+      expect(table.loading()).toBeFalse();
+      expect(el('.sd-table-skeleton-block')).toBeNull();
+      expect(all('tr.sd-table-skeleton-row').length).toBe(5);
+      expect(el('.c-no-data-row')).toBeNull();
+      tick(250);
+      answer(page(2));
+      expect(all('tr.c-row').length).toBe(2);
+      flush();
+    }));
+
+    it('dims the rows and shows the progress bar while refreshing, never the footer', fakeAsync(() => {
+      createWithRows();
+      reload();
+      tick(300);
+      f.detectChanges();
+      const data = el('.c-table')!;
+      const bar = el('.sd-table-progress')!;
+      expect(data.classList).toContain('sd-table-dim');
+      expect(bar.getAttribute('aria-hidden')).toBe('true');
+      expect(bar.parentElement?.classList).toContain('c-container');
+      const row = el('tr.c-row')!;
+      expect(getComputedStyle(row).pointerEvents).toBe('none');
+      expect(getComputedStyle(el('.c-container')!).isolation).toBe('isolate');
+      answer(page(5));
+      tick(400);
+      f.detectChanges();
+      expect(el('.sd-table-progress')).toBeNull();
+      expect(el('.c-table')!.classList).not.toContain('sd-table-dim');
+      expect(getComputedStyle(el('tr.c-row')!).pointerEvents).toBe('auto');
+      flush();
+    }));
+
+    it('with dim: false shows only the progress bar and the rows stay clickable', fakeAsync(() => {
+      createWithRows(5, { loading: { dim: false } });
+      reload();
+      tick(300);
+      f.detectChanges();
+      expect(el('.sd-table-progress')).not.toBeNull();
+      expect(el('.c-table')!.classList).not.toContain('sd-table-dim');
+      expect(getComputedStyle(el('tr.c-row')!).pointerEvents).toBe('auto');
+      answer(page(5));
+      flush();
+    }));
+
+    it('leaves the header and its inline filter on top in skeleton and refresh', fakeAsync(() => {
+      create();
+      // why: in the full suite DOM left by other specs pushes the fixture below the Karma viewport, where
+      // elementFromPoint finds nothing; pin the table to the top so the hit test sees what a pointer would.
+      Object.assign(f.nativeElement.style, { position: 'fixed', top: '0', left: '0', width: '800px', zIndex: '10000' });
+      const check = () => {
+        const title = el('thead .c-header-title')!;
+        const filter = el('thead column-filter')!;
+        expect(title.closest('th')?.contains(hit(title)))
+          .withContext('title')
+          .toBeTrue();
+        expect(filter.closest('th')?.contains(hit(filter)))
+          .withContext('inline filter')
+          .toBeTrue();
+      };
+      expect(view()).toBe('skeleton');
+      check();
+      answer(page(5));
+      reload();
+      tick(300);
+      expect(view()).toBe('refresh');
+      check();
+      answer(page(5));
+      flush();
+    }));
+
+    it('puts the progress bar right under the last header row of a grouped header with a filter row', fakeAsync(() => {
+      createWithRows(5, {
+        columns: [
+          {
+            field: 'group',
+            type: 'children',
+            title: 'Group',
+            children: [
+              { field: 'name', type: 'string', title: 'Name' },
+              { field: 'id', type: 'number', title: 'Id' },
+            ],
+          },
+        ],
+      } as Partial<ServerOption>);
+      reload();
+      tick(300);
+      f.detectChanges();
+      const last = el('thead tr.c-filter-header')!;
+      expect(getComputedStyle(last).display).not.toBe('none');
+      const bar = el('.sd-table-progress')!;
+      expect(Math.abs(bar.getBoundingClientRect().top - last.getBoundingClientRect().bottom)).toBeLessThan(1);
+      answer(page(5));
       flush();
     }));
   });

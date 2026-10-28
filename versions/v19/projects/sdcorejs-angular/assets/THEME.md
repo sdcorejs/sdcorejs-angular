@@ -269,8 +269,15 @@ same expression in light and dark, so presets, dark mode and a custom palette ch
 | `--sd-table-group-row-border` | `var(--sd-table-row-divider)` |
 | `--sd-table-select-arrow` | `var(--sd-text-secondary)` |
 | `--sd-table-spinner` | `var(--sd-primary)` |
+| `--sd-table-skeleton-bg` | `color-mix(in srgb, var(--sd-text) 8%, var(--sd-table-bg))` |
+| `--sd-table-skeleton-highlight` | `color-mix(in srgb, var(--sd-text) 3%, var(--sd-table-bg))` |
+| `--sd-table-progress-track` | `color-mix(in srgb, var(--sd-primary) 18%, var(--sd-table-bg))` |
 
 `--sd-table-bg` (`#ffffff` / `#1d1f23`), the tree level backgrounds and the export panel keep their values.
+The loading layer draws skeleton bars in `--sd-table-skeleton-bg` with a `--sd-table-skeleton-highlight` sweep,
+and the 2px progress bar as a `--sd-table-spinner` streak on `--sd-table-progress-track`. The skeleton is
+decorative (`aria-hidden`), so it has no contrast minimum; with `forced-colors: active` the bars use `GrayText`
+and the progress bar `Canvas`, `CanvasText` and `Highlight`.
 The sort arrows are a mask tinted `--sd-text-secondary` (`--sd-text` on the sorted column); the drag preview,
 the reorder handle, the resize and tree-toggle hovers and the add button shadow use `--sd-table-bg`,
 `--sd-table-row-divider`, `--sd-text-muted`, `color-mix(in srgb, var(--sd-text) 8%, transparent)` and the shadow

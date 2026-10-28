@@ -62,7 +62,17 @@ import {
   SdTablePagePosition,
   SdTableShownPage,
 } from './services/table-paging/unknown-total.util';
-import { resolveTableLoading, SdTableLoadingView, TableRefreshTimer, tableLoadingView } from './services/table-loading/table-loading.util';
+import {
+  buildTableSkeleton,
+  resolveTableLoading,
+  SdTableLoadingView,
+  skeletonFillRows,
+  TABLE_GENERIC_SKELETON,
+  TABLE_SKELETON_ROWS,
+  TableRefreshTimer,
+  tableLoadingView,
+  TableSkeletonCell,
+} from './services/table-loading/table-loading.util';
 import {
   SdConvertToPagingReq,
   SdTableFilterRequest,
@@ -77,7 +87,6 @@ import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SdButton, SdButtonItem } from '@sdcorejs/angular/components/button';
 import { SdDataState, SdDataStateTemplateDirective } from '@sdcorejs/angular/components/data-state';
 import { cloneReadRequest, SdReadChannel, SdReadState } from '@sdcorejs/angular/utilities/read-state';
@@ -274,7 +283,6 @@ const EMPTY_COMMANDS: SdTableCommand[] = [];
     MatPaginatorModule,
     MatTableModule,
     MatSortModule,
-    MatProgressSpinnerModule,
     MatButtonModule,
     MatCheckboxModule,
     MatRadioModule,
@@ -455,6 +463,35 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   /** Text of the `.sd-table-live` status region: "loading" once the loading layer shows, then the result. */
   readonly liveMessage = this.#liveMessage.asReadonly();
   #liveLoading = false;
+  /** Rows that fill a table with a fixed height, measured when the skeleton shows. */
+  readonly #skeletonFill = signal<number | undefined>(undefined);
+  /** Skeleton rows of the desktop table (`matNoDataRow`) while `loadingView()` is `skeleton`; empty otherwise. */
+  readonly skeleton = computed<TableSkeletonCell[][]>(() => {
+    const config = this.configuration();
+    if (!config || this.loadingView() !== 'skeleton') return [];
+    const columns = new Map([...config.firstColumns, ...config.secondColumns].map(column => [column.field, column]));
+    const cellDef = this.cellDef();
+    const pageSize = this.tableOption()?.paginate?.pageSize;
+    const rows =
+      this.loadingSettings().skeletonRows ??
+      this.#skeletonFill() ??
+      Math.min(TABLE_SKELETON_ROWS, pageSize && pageSize > 0 ? pageSize : TABLE_SKELETON_ROWS);
+    return buildTableSkeleton(
+      config.displayedColumns.map(field => {
+        const column = columns.get(field);
+        return {
+          field,
+          type: column?.type,
+          align: column?.align,
+          badge: !!column && 'useBadge' in column && !!column.useBadge,
+          template: !!column?.cell?.templateRef || !!cellDef[field],
+        };
+      }),
+      rows
+    );
+  });
+  /** What the table shows before its configuration is ready: 5 rows × 4 bars, without a header. */
+  readonly genericSkeleton = TABLE_GENERIC_SKELETON;
   readonly unknownTotalPager = computed<SdTableUnknownTotalPagerState | undefined>(() => {
     if (!this.unknownTotal()) return undefined;
     const target = this.#unknownTarget();
@@ -774,6 +811,28 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       untracked(() => {
         this.#refresh.update({ loading, scheduled, skeleton: view === 'skeleton', rows: this.items().length > 0 }, this.loadingSettings());
         this.#announceLoading(view === 'skeleton' || (view === 'refresh' && (loading || scheduled)));
+        // why: measured before the skeleton renders, under the header that is already on screen, so the row
+        // count is right in the first frame instead of jumping from 5.
+        if (view === 'skeleton') this.#skeletonFill.set(this.#measureSkeletonFill());
+      });
+    });
+
+    // why: the progress bar sits in .c-container (so it does not scroll sideways with the table) right under the
+    // last header row; that row's bottom depends on grouped headers, the filter row and wrapping titles. Only
+    // measured while the bar shows.
+    effect(onCleanup => {
+      if (this.loadingView() !== 'refresh' || this.mobileCards()) return;
+      const host = this.#host;
+      const data = host.querySelector<HTMLElement>('.c-container > .c-table');
+      const head = data?.querySelector<HTMLElement>(':scope > table > thead');
+      if (!data || !head) return;
+      const sync = (): void => host.style.setProperty('--sd-table-head-h', `${data.offsetTop + head.offsetHeight}px`);
+      const resize = typeof ResizeObserver === 'function' ? new ResizeObserver(sync) : null;
+      resize?.observe(head);
+      sync();
+      onCleanup(() => {
+        resize?.disconnect();
+        host.style.removeProperty('--sd-table-head-h');
       });
     });
 
@@ -942,6 +1001,19 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     else if (failed && !!this.dataStateTemplate() && !this.hideReadError())
       this.#liveMessage.set(this.#i18n.t('core.component.table.error-occurred'));
     else this.#liveMessage.set('');
+  }
+
+  /** Skeleton rows that fill a table with a fixed height (fill mode, `style.maxHeight`); `undefined` otherwise. */
+  #measureSkeletonFill(): number | undefined {
+    const option = this.tableOption();
+    const fill = this.fill();
+    if ((!fill && !option?.style?.maxHeight) || this.mobileCards()) return undefined;
+    const data = this.#host.querySelector<HTMLElement>('.c-container > .c-table');
+    if (!data) return undefined;
+    const box = fill ? data.clientHeight : parseFloat(getComputedStyle(data).maxHeight);
+    const head = data.querySelector<HTMLElement>(':scope > table > thead')?.offsetHeight ?? 0;
+    const row = parseFloat(getComputedStyle(this.#host).getPropertyValue('--mat-table-row-item-container-height')) || 36;
+    return skeletonFillRows(box - head, row, option?.paginate?.pageSize);
   }
 
   // --- GIỮ NGUYÊN TẤT CẢ CÁC HÀM FILTER VÀ EXPORT CŨ CỦA BẠN ---
