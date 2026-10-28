@@ -1,259 +1,344 @@
-# Changelog — `@sdcorejs/angular`
+# Changelog
 
-Changelog cho npm package `@sdcorejs/angular`, tập trung vào thay đổi public API, hành vi runtime, tài liệu sử dụng, tooling release, và các migration cần consumer chú ý.
+All notable changes to `@sdcorejs/angular`: public API, runtime behavior, usage documentation, release tooling, and the migrations consumers need.
 
-Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Major digit khoá theo Angular line, nên breaking change luôn được ghi rõ trong mục `Changed (BREAKING for consumers)` kèm hướng dẫn migration.
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). A release suffix such as `3.2` ships as one package per Angular line (`19.3.2`, `20.3.2`, `21.3.2`, `22.3.2`). The first version number is reserved for Angular, so every release lists consumer-breaking changes first, under **Changed (BREAKING for consumers)**, with migration steps.
+
+<!--
+    Release template. Keep the release heading format exactly: scripts/generate-showcase-changelog.mjs
+    and scripts/collect-docs.mjs parse "## [x.y] - YYYY-MM-DD".
+
+    ## [x.y] - YYYY-MM-DD
+
+    Packages `19.x.y` · `20.x.y` · `21.x.y` · `22.x.y`, validated against `*.x.y`.
+
+    > [!IMPORTANT]
+    > **Before upgrading:** one clause per consumer-breaking change.
+
+    **Highlights**
+
+    - The main additions, one line each.
+
+    ### Changed (BREAKING for consumers)   (then Added, Changed, Deprecated, Removed, Fixed)
+
+    #### Component name                    (alphabetical inside each section)
+
+    - One-line summary of the change.
+      - Details: inputs, tokens, i18n keys, sizes, edge cases.
+
+      ```diff
+      - old usage
+      + new usage
+      ```
+-->
 
 ## [Unreleased]
 
+> [!IMPORTANT]
+> **Before upgrading:** `SdChip` drops its unused autocomplete path (`onSelect()`, `selectable`, `separatorKeysCodes`), stops exporting `SdRemovableChipPipe`, and `isFocused` becomes a signal. Upload file `upload()` now rejects unless the handler returns one non-empty string ID per file, in order. Defaults that change: chips are added on blur, one-line table rows are 36px, and upload previews are 72px.
+
+**Highlights**
+
+- Pattern screens in `@sdcorejs/angular/modules/pattern`
+- `<sd-page-list>`, `<sd-page-detail>` and `<sd-page-form>`, with a page table of contents and a leave guard
+- Chip limits, paste, validation and clear-all
+- Tab router keyboard support, context menu and unsaved-tab dot
+- Upload file dark viewer and `variant="inline"`
+
 ### Changed (BREAKING for consumers)
 
-- Chip: the unused autocomplete path is gone — `onSelect()`, `selectable`, `separatorKeysCodes` and the `MatAutocompleteModule` / `MatProgressSpinnerModule` imports. The template never rendered an autocomplete, so only code that called `onSelect()` itself is affected; add the value through `[(model)]`.
-- Chip: `SdRemovableChipPipe` (`sdRemovableChip`) is no longer exported from `@sdcorejs/angular/forms/chip`; `<sd-chip>` stopped using it. Apply the `removable` value yourself.
-- Chip: `isFocused` is a signal (read `isFocused()`), and `SdChip` no longer has `ngAfterViewInit()` / `ngOnDestroy()`.
+#### Chip
 
-```diff
-- chip.onSelect(event);
-+ model = [...model, event.option.value];
+- The unused autocomplete path is gone — `onSelect()`, `selectable`, `separatorKeysCodes` and the `MatAutocompleteModule` / `MatProgressSpinnerModule` imports.
+  - The template never rendered an autocomplete, so only code that called `onSelect()` itself is affected; add the value through `[(model)]`.
+- `SdRemovableChipPipe` (`sdRemovableChip`) is no longer exported from `@sdcorejs/angular/forms/chip`; `<sd-chip>` stopped using it. Apply the `removable` value yourself.
+- `isFocused` is a signal (read `isFocused()`), and `SdChip` no longer has `ngAfterViewInit()` / `ngOnDestroy()`.
 
-- @let canRemove = item | sdRemovableChip: removable;
-+ @let canRemove = typeof removable === 'function' ? removable(item) : removable;
+  ```diff
+  - chip.onSelect(event);
+  + model = [...model, event.option.value];
 
-- if (chip.isFocused) { … }
-+ if (chip.isFocused()) { … }
-```
+  - @let canRemove = item | sdRemovableChip: removable;
+  + @let canRemove = typeof removable === 'function' ? removable(item) : removable;
 
-- Upload file: `upload()` rejects with an `Error` when the `upload` handler does not return exactly one non-empty string ID per file it received, in the same order (a non-array, too few or too many IDs, an empty or non-string ID). It used to drop from `model`, without an error, the local files it got no ID for. `model` and the cache keep the local files, so the call can be retried. The handler also receives each distinct local file once: a file that appears twice in `model` is uploaded once and both positions get its ID.
+  - if (chip.isFocused) { … }
+  + if (chip.isFocused()) { … }
+  ```
 
-```diff
-  upload: async files => {
-    const res = await api.upload(files);
--   return res.ids.filter(Boolean);
-+   if (res.ids.length !== files.length) throw new Error('Upload returned no ID for some files');
-+   return res.ids.map(String); // one ID per file, in the order of `files`
-  },
-```
+#### Upload file
+
+- `upload()` rejects with an `Error` when the `upload` handler does not return exactly one non-empty string ID per file it received, in the same order (a non-array, too few or too many IDs, an empty or non-string ID).
+  - It used to drop from `model`, without an error, the local files it got no ID for. `model` and the cache keep the local files, so the call can be retried. The handler also receives each distinct local file once: a file that appears twice in `model` is uploaded once and both positions get its ID.
+
+  ```diff
+    upload: async files => {
+      const res = await api.upload(files);
+  -   return res.ids.filter(Boolean);
+  +   if (res.ids.length !== files.length) throw new Error('Upload returned no ID for some files');
+  +   return res.ids.map(String); // one ID per file, in the order of `files`
+    },
+  ```
 
 ### Added
 
-- Pattern: new entry point `@sdcorejs/angular/modules/pattern` with sample screens by entity that a host app mounts: `SD_PATTERN_ROUTES` (`product`, `customer`, `order`, `approval`, `category`, `import`, `partner/create`, `settings` and an index page) and `provideSdPatterns({ mockApi, apiBaseUrl, latencyMs, storage, forbiddenUrl })`. The routes get their own `HttpClient` with a mock API over seeded data kept in `sessionStorage` (the blueprint list request, field errors on 400/409, bulk actions with a result per record), sample roles over `PATTERN_<ENTITY>_<R|C|U|D>_<ACTION>` permission codes, and a toolbar that switches the role, the latency and a simulated failure (500, timeout, 404, 403), resets the data and shows the source of the screen. Each pattern has a doc in `modules/pattern/docs/` — list, detail, form, flow, drawer, split, select, relation, header actions, states — whose code blocks are extracted from `features/` by `npm run pattern:docs`, and `modules/pattern/README.md` picks the pattern for a screen. The package ships the `features/` source, the docs and the README, so an app reads them under `node_modules/@sdcorejs/angular/modules/pattern/`. The showcase mounts it at `/pattern`; Playwright suites in `showcase/e2e/pattern/`.
-- Table: `reloadFirstPage()` reads the first page again with the current filters, for a condition outside the table (a status tab, a score card); `reload()` keeps the current page.
-- Section: `SD_SECTION_REGISTRY` and `SdSectionRegistry` (`@sdcorejs/angular/components/section`). A top-level `<sd-section>` registers with the nearest registry, so a page's table of contents also lists the sections that child components render.
-- Splitter: the `SdSplitterOption` type is exported from `@sdcorejs/angular/components/splitter`.
-- Page list: `<sd-page-list>` (`SdPageList`, `@sdcorejs/angular/modules/layout`) for list screens with an `sd-table`. The body fits the viewport, the main table (the last direct `sd-table`, or an `[sdPageListMain]` wrapper) takes the space left, and the paginator stays visible and still while rows, page size and read states change; the data area keeps room for the header and 5 rows, and only then does the page body scroll. On a viewport lower than 720px `compact()` is on (turn it off with `[autoCompact]="false"`): the main table's external filter starts collapsed and features can fold their summary. The detail is a child route rendered by the list: `detail="page"` hides the list and restores its scroll and focus on the way back, also when one child route replaces another (detail → update); `detail="drawer"` keeps it on screen; `detail="none"` renders no outlet, for a screen that places the child route itself (list and detail side by side). `SD_PAGE_LIST` gives the content `compact`, `childActive` and `detail`. Live screen `/pattern/order` and Playwright suite `showcase/e2e/page-list.e2e.ts` (E1 at 1440×960, 1440×800, 1280×768, 1440×650).
-- Table: `SD_TABLE_LAYOUT` lets a page frame put one table in fill mode (`sd-table--fill`): it takes the height left in a flex column, keeps the header and five rows, and gives the footer at least 48px. `filter.externalFilterCollapsed` sets the initial collapsed state of the external filter.
-- Page: `<sd-page-detail>` and `<sd-page-form>` are selectors of the same `SdPageComponent`; only the default `width` changes (`wide` and `medium`; `sd-page` stays `full`). `aside="start"` puts the aside column before the body (the default `end` keeps it after). `toc` on a page lists the titled top-level `<sd-section>`s of the body, including those of child components, in DOM order as a table of contents in the aside column, scrolls to a section on click and marks the current one; it is hidden below 1200px of viewport. `sdPageFormLeaveGuard` (a `CanDeactivateFn`) asks with the Core confirm dialog before leaving a page with unsaved changes. New keys `core.module.layout.page.toc` and `core.module.layout.page.leave.{title,message,stay,leave}`.
-- Unsaved changes: `registerSdUnsavedChangesForm(..., { dirty: 'value' })` counts the form as changed only while its value differs from the last saved value, also for fields that write a user edit without marking their control dirty (`<sd-input-number>`, `<sd-date>`, pickers). A control added later, such as a Core field registering itself, starts from the value it holds once its model is in. The saved value is taken again on `save()`, `reset()`, `discard()`, when the form or a control is marked pristine, and on `markPristine()`, which in this mode keeps reporting later edits. The default `'control'` keeps the form's `dirty` flag. `confirmLeave({ adapter })` asks with that adapter for one prompt instead of `SD_UNSAVED_CHANGES_CONFIRMATION_ADAPTER`.
-- Page: `<sd-page>` gains `backLink` (a ← link before the title, URL or router commands), `[badges]` (at most two `SdBadgeData` next to the title, `round` by default) and `width` (`full` · `wide` 1200px · `medium` 960px · `narrow` 720px). New slots: `[sdSubheader]` under the header row, `[sdAside]` as a 320px sticky column that moves under the body below 1200px, and `[sdFooterLeft]` / `[sdFooterRight]` in a footer pinned to the bottom and hidden while empty. `[sdHeaderLeft]` / `[sdHeaderRight]` are aliases of `[headerLeft]` / `[headerRight]`. New keys `core.common.back` and `core.module.layout.page.actions`, new component tokens `--sd-page-divider`, `--sd-page-back-fg` and `--sd-page-back-hover-bg`, and a new doc `sd-page.md` with its showcase page. A page that uses none of these renders the same header and body as before.
-- Badge: `SdBadgeData` (`{ title, type, color, icon, label, tooltip }`) is exported from `@sdcorejs/angular/components/badge`. `useBadge` of `<sd-table>` columns returns it, so a cell badge can show the `label` of `type: 'pair'` and a `tooltip`. The column `tooltip` still wins when both are set. Objects of the old `{ type, color, icon, title }` shape still type-check.
-- Theme: the component tokens `--sd-chip-locked-bg` and `--sd-chip-more-hover-bg`, shared by `<sd-chip>` and `<sd-chip-calendar>`. `--sd-chip-calendar-chip-locked-bg` and `--sd-chip-calendar-more-hover-bg` keep their names and now default to them.
-- Chip: `minCount` / `maxCount` replace `min` / `max`. `maxCount` also stops adding once reached: an `n/max` counter shows under the field, the placeholder says “Đã đủ {max} giá trị”, and typing or pasting more is announced instead of added.
-- Chip: `addOnBlur` (default `true`) turns the typed text into a chip when the field loses focus.
-- Chip: `separators` (default `['Enter', ',']`) sets the keys that commit the typed text, compared with `KeyboardEvent.key`. Pasting a list that holds a separator, a new line or a tab adds every value in one change, skips duplicates, keeps refused values in the input and announces the result (“Đã thêm 3 · bỏ 1 trùng”).
-- Chip: `chipTransform(raw)` normalises typed and pasted text before it is compared and stored (default trim; `null` drops it). `chipValidator(value)` refuses a value with an i18n key or a message: the value does not become a chip, its text stays in the input and the message shows under the field.
-- Chip: `clearable` (default `false`) shows a clear-all button like `<sd-date>`, reachable by keyboard and always visible on touch screens. It removes every chip `removable` allows in one change and keeps the locked ones.
-- Chip: `maxVisible` folds the chips past that number into a “+N” button while the field is not focused; `2` suits `<sd-table>` cells. Chip text stops at 240px with an ellipsis and a tooltip.
-- Chip: a duplicate highlights the chip it repeats for 1.4s and is announced, and Backspace / Delete on a locked chip announces “Không xoá được”, through a polite live region. New keys `core.form.chip.placeholder`, `locked`, `duplicate`, `full`, `added`, `skipped`, `more`, `clear` in the five locales, and the component token `--sd-chip-duplicate-bg`.
-- Tab router: the tab bar works from the keyboard as a WAI-ARIA tablist with one tab stop (roving tabindex): ←/→ move focus (wrapping), Home/End go to the first/last tab, Enter/Space open the focused tab, Delete closes it. Focus coming back into the bar lands on the open tab, and when the focused tab closes, focus moves to the tab on its right (on its left at the end).
-- Tab router: a right-click menu on a tab, also opened with Shift+F10 or the Menu key, with “Đóng tab” and “Đóng các tab khác”. New `SdTabRouterService.closeOthers(tab?)` closes every other tab after asking each `beforeClose` in turn; tabs that refuse stay, and the kept tab opens when the open tab was closed. New key `core.component.tab-router.close-others` in the five locales.
-- Tab router: while a tab is dragged it floats with a shadow and four 8px corners over a `--sd-primary` 12% drop spot, and the other tabs slide aside (no motion under `prefers-reduced-motion`).
-- Tab router: `SdTabInfo.dirty` shows an 8px dot where the close button of the tab is; on hover or keyboard focus it turns into the close button, and the open tab keeps the dot until hover. Screen readers hear “Chưa lưu” (new key `core.component.tab-router.unsaved` in the five locales). Send it through `tabInfoChanges`, from the same state as `beforeClose`.
-- Tab router: `syncBrowserTitle` on `<sd-tab-router-outlet>` (default `false`) sets the browser title to “{tab name} – {app name}”, with “● ” in front while the tab is dirty. The app name is the title when the outlet starts; turning the input off, `disabled` or destroying the outlet gives it back.
-- Theme: component tokens `--sd-upload-file-viewer-*` (bg, fg, fg-muted, divider, control-bg, thumb-bg, accent, on-accent, error, ext-pdf / -word / -excel) for the dark viewer, and `--sd-upload-file-scrim` / `--sd-upload-file-empty-text` for the field. New i18n keys `core.component.upload-file.viewer.*`, `retry`, `add-image`, `upload-tile`, `drop-hint`, `choose-file`, `drop-to-upload`, `remove-named` and `no-files` in the five locales.
-- Upload file: `variant="inline"` — one 32px line for `<sd-table>` cells and dense lists: a 32px upload tile, 32px images, document chips (at most 140px) and `+N` for the rest (`maxOfImage` items show), “Chưa có tệp” when empty, 16px remove badges, a primary tint while files are dragged over, and the required error as an error border around the tile. No label, description, counter or reordering. `variant` defaults to `default`.
+#### Badge
+
+- `SdBadgeData` (`{ title, type, color, icon, label, tooltip }`) is exported from `@sdcorejs/angular/components/badge`.
+  - `useBadge` of `<sd-table>` columns returns it, so a cell badge can show the `label` of `type: 'pair'` and a `tooltip`. The column `tooltip` still wins when both are set. Objects of the old `{ type, color, icon, title }` shape still type-check.
+
+#### Chip
+
+- `minCount` / `maxCount` replace `min` / `max`. `maxCount` also stops adding once reached: an `n/max` counter shows under the field, the placeholder says “Đã đủ {max} giá trị”, and typing or pasting more is announced instead of added.
+- `addOnBlur` (default `true`) turns the typed text into a chip when the field loses focus.
+- `separators` (default `['Enter', ',']`) sets the keys that commit the typed text, compared with `KeyboardEvent.key`.
+  - Pasting a list that holds a separator, a new line or a tab adds every value in one change, skips duplicates, keeps refused values in the input and announces the result (“Đã thêm 3 · bỏ 1 trùng”).
+- `chipTransform(raw)` normalises typed and pasted text before it is compared and stored (default trim; `null` drops it).
+  - `chipValidator(value)` refuses a value with an i18n key or a message: the value does not become a chip, its text stays in the input and the message shows under the field.
+- `clearable` (default `false`) shows a clear-all button like `<sd-date>`, reachable by keyboard and always visible on touch screens. It removes every chip `removable` allows in one change and keeps the locked ones.
+- `maxVisible` folds the chips past that number into a “+N” button while the field is not focused; `2` suits `<sd-table>` cells. Chip text stops at 240px with an ellipsis and a tooltip.
+- A duplicate highlights the chip it repeats for 1.4s and is announced, and Backspace / Delete on a locked chip announces “Không xoá được”, through a polite live region.
+  - New keys `core.form.chip.placeholder`, `locked`, `duplicate`, `full`, `added`, `skipped`, `more`, `clear` in the five locales, and the component token `--sd-chip-duplicate-bg`.
+
+#### Page
+
+- `<sd-page-detail>` and `<sd-page-form>` are selectors of the same `SdPageComponent`; only the default `width` changes (`wide` and `medium`; `sd-page` stays `full`).
+  - `aside="start"` puts the aside column before the body (the default `end` keeps it after). `toc` on a page lists the titled top-level `<sd-section>`s of the body, including those of child components, in DOM order as a table of contents in the aside column, scrolls to a section on click and marks the current one; it is hidden below 1200px of viewport. `sdPageFormLeaveGuard` (a `CanDeactivateFn`) asks with the Core confirm dialog before leaving a page with unsaved changes. New keys `core.module.layout.page.toc` and `core.module.layout.page.leave.{title,message,stay,leave}`.
+- `<sd-page>` gains `backLink` (a ← link before the title, URL or router commands), `[badges]` (at most two `SdBadgeData` next to the title, `round` by default) and `width` (`full` · `wide` 1200px · `medium` 960px · `narrow` 720px).
+  - New slots: `[sdSubheader]` under the header row, `[sdAside]` as a 320px sticky column that moves under the body below 1200px, and `[sdFooterLeft]` / `[sdFooterRight]` in a footer pinned to the bottom and hidden while empty. `[sdHeaderLeft]` / `[sdHeaderRight]` are aliases of `[headerLeft]` / `[headerRight]`. New keys `core.common.back` and `core.module.layout.page.actions`, new component tokens `--sd-page-divider`, `--sd-page-back-fg` and `--sd-page-back-hover-bg`, and a new doc `sd-page.md` with its showcase page. A page that uses none of these renders the same header and body as before.
+
+#### Page list
+
+- `<sd-page-list>` (`SdPageList`, `@sdcorejs/angular/modules/layout`) for list screens with an `sd-table`.
+  - The body fits the viewport, the main table (the last direct `sd-table`, or an `[sdPageListMain]` wrapper) takes the space left, and the paginator stays visible and still while rows, page size and read states change; the data area keeps room for the header and 5 rows, and only then does the page body scroll. On a viewport lower than 720px `compact()` is on (turn it off with `[autoCompact]="false"`): the main table's external filter starts collapsed and features can fold their summary. The detail is a child route rendered by the list: `detail="page"` hides the list and restores its scroll and focus on the way back, also when one child route replaces another (detail → update); `detail="drawer"` keeps it on screen; `detail="none"` renders no outlet, for a screen that places the child route itself (list and detail side by side). `SD_PAGE_LIST` gives the content `compact`, `childActive` and `detail`. Live screen `/pattern/order` and Playwright suite `showcase/e2e/page-list.e2e.ts` (E1 at 1440×960, 1440×800, 1280×768, 1440×650).
+
+#### Pattern
+
+- New entry point `@sdcorejs/angular/modules/pattern` with sample screens by entity that a host app mounts: `SD_PATTERN_ROUTES` (`product`, `customer`, `order`, `approval`, `category`, `import`, `partner/create`, `settings` and an index page) and `provideSdPatterns({ mockApi, apiBaseUrl, latencyMs, storage, forbiddenUrl })`.
+  - The routes get their own `HttpClient` with a mock API over seeded data kept in `sessionStorage` (the blueprint list request, field errors on 400/409, bulk actions with a result per record), sample roles over `PATTERN_<ENTITY>_<R|C|U|D>_<ACTION>` permission codes, and a toolbar that switches the role, the latency and a simulated failure (500, timeout, 404, 403), resets the data and shows the source of the screen. Each pattern has a doc in `modules/pattern/docs/` — list, detail, form, flow, drawer, split, select, relation, header actions, states — whose code blocks are extracted from `features/` by `npm run pattern:docs`, and `modules/pattern/README.md` picks the pattern for a screen. The package ships the `features/` source, the docs and the README, so an app reads them under `node_modules/@sdcorejs/angular/modules/pattern/`. The showcase mounts it at `/pattern`; Playwright suites in `showcase/e2e/pattern/`.
+
+#### Section
+
+- `SD_SECTION_REGISTRY` and `SdSectionRegistry` (`@sdcorejs/angular/components/section`). A top-level `<sd-section>` registers with the nearest registry, so a page's table of contents also lists the sections that child components render.
+
+#### Splitter
+
+- The `SdSplitterOption` type is exported from `@sdcorejs/angular/components/splitter`.
+
+#### Tab router
+
+- The tab bar works from the keyboard as a WAI-ARIA tablist with one tab stop (roving tabindex): ←/→ move focus (wrapping), Home/End go to the first/last tab, Enter/Space open the focused tab, Delete closes it.
+  - Focus coming back into the bar lands on the open tab, and when the focused tab closes, focus moves to the tab on its right (on its left at the end).
+- A right-click menu on a tab, also opened with Shift+F10 or the Menu key, with “Đóng tab” and “Đóng các tab khác”.
+  - New `SdTabRouterService.closeOthers(tab?)` closes every other tab after asking each `beforeClose` in turn; tabs that refuse stay, and the kept tab opens when the open tab was closed. New key `core.component.tab-router.close-others` in the five locales.
+- While a tab is dragged it floats with a shadow and four 8px corners over a `--sd-primary` 12% drop spot, and the other tabs slide aside (no motion under `prefers-reduced-motion`).
+- `SdTabInfo.dirty` shows an 8px dot where the close button of the tab is; on hover or keyboard focus it turns into the close button, and the open tab keeps the dot until hover.
+  - Screen readers hear “Chưa lưu” (new key `core.component.tab-router.unsaved` in the five locales). Send it through `tabInfoChanges`, from the same state as `beforeClose`.
+- `syncBrowserTitle` on `<sd-tab-router-outlet>` (default `false`) sets the browser title to “{tab name} – {app name}”, with “● ” in front while the tab is dirty.
+  - The app name is the title when the outlet starts; turning the input off, `disabled` or destroying the outlet gives it back.
+
+#### Table
+
+- `reloadFirstPage()` reads the first page again with the current filters, for a condition outside the table (a status tab, a score card); `reload()` keeps the current page.
+- `SD_TABLE_LAYOUT` lets a page frame put one table in fill mode (`sd-table--fill`): it takes the height left in a flex column, keeps the header and five rows, and gives the footer at least 48px.
+  - `filter.externalFilterCollapsed` sets the initial collapsed state of the external filter.
+
+#### Theme
+
+- The component tokens `--sd-chip-locked-bg` and `--sd-chip-more-hover-bg`, shared by `<sd-chip>` and `<sd-chip-calendar>`. `--sd-chip-calendar-chip-locked-bg` and `--sd-chip-calendar-more-hover-bg` keep their names and now default to them.
+- Component tokens `--sd-upload-file-viewer-*` (bg, fg, fg-muted, divider, control-bg, thumb-bg, accent, on-accent, error, ext-pdf / -word / -excel) for the dark viewer, and `--sd-upload-file-scrim` / `--sd-upload-file-empty-text` for the field.
+  - New i18n keys `core.component.upload-file.viewer.*`, `retry`, `add-image`, `upload-tile`, `drop-hint`, `choose-file`, `drop-to-upload`, `remove-named` and `no-files` in the five locales.
+
+#### Unsaved changes
+
+- `registerSdUnsavedChangesForm(..., { dirty: 'value' })` counts the form as changed only while its value differs from the last saved value, also for fields that write a user edit without marking their control dirty (`<sd-input-number>`, `<sd-date>`, pickers).
+  - A control added later, such as a Core field registering itself, starts from the value it holds once its model is in. The saved value is taken again on `save()`, `reset()`, `discard()`, when the form or a control is marked pristine, and on `markPristine()`, which in this mode keeps reporting later edits. The default `'control'` keeps the form's `dirty` flag. `confirmLeave({ adapter })` asks with that adapter for one prompt instead of `SD_UNSAVED_CHANGES_CONFIRMATION_ADAPTER`.
+
+#### Upload file
+
+- `variant="inline"` — one 32px line for `<sd-table>` cells and dense lists: a 32px upload tile, 32px images, document chips (at most 140px) and `+N` for the rest (`maxOfImage` items show), “Chưa có tệp” when empty, 16px remove badges, a primary tint while files are dragged over, and the required error as an error border around the tile.
+  - No label, description, counter or reordering. `variant` defaults to `default`.
 
 ### Changed
 
-- Table: the page-size dropdown of the paginator looks like `<sd-select>`: 14px text and a `keyboard_arrow_down` chevron instead of Material's 12px text and triangle, centred in a 32px field, and its list opens in the `<sd-select>` panel (rounded, bordered, 36px options). Same for the pager of `paginate.total: 'unknown'`.
-- Table: a one-line row is 36px high instead of Material's 52px (`--mat-table-row-item-container-height: 36px` on `<sd-table>`), as the table's dense design intended. Rows with longer text or buttons still grow. A screen that relied on 52px rows can set the token back with a selector more specific than the component's own, for example `.orders sd-table { --mat-table-row-item-container-height: 52px; }`.
-- Page: the header of `<sd-page>` is a `<header class="c-page-header bg-white">` instead of a `<div>`, and its `title` renders in an `<h1 class="T20M">` instead of a `<div class="T20M">`, with its margin reset, so the page has one main heading. Pages that project `[headerLeft]` are not affected. `SdPageComponent` now uses `OnPush`.
-- Chip: leaving the field now adds the typed text as a chip (`addOnBlur` defaults to `true`). It used to drop the text, and so did focusing the input again. For the old behaviour set `[addOnBlur]="false"`.
-- Chip: the placeholder no longer repeats the label; without `placeholder` it is “Nhập rồi nhấn Enter”.
-- Chip: with `[addable]="false"` the input is read-only and out of the Tab order instead of accepting text that was then thrown away.
-- Chip: `onClear()` keeps the chips `removable` keeps and emits nothing when no chip goes.
-- Form Generic: chip fields pass `validation.maxItems` as `maxCount`.
-- Chip: chips look like those of `<sd-chip-calendar>`, through one SCSS mixin (`sd-chip-row()` in `core/form.scss`): 20 / 24 / 28px chips centred in a 32 / 40 / 48px field at `sm` / `md` / `lg` (`size="lg"` had no style), a 6px radius, a 1px `--sd-border` outline on `--sd-surface`, tabular digits, 4px between chips, and a square clear-all button of 24 / 28 / 32px. The `md` field is no longer taller than other controls (its chips sat 10px lower). The typing area wraps to a new line only when less than 80px is left (Material kept 150px), and while chips are folded into “+N” it only fills the rest of the line and shows no placeholder, so a table cell stays one line.
-- Chip: a chip that `removable` keeps has the locked background (`--sd-chip-locked-bg`), a lock icon whose tooltip says “Không xoá được”, and an accessible name that ends with “, Không xoá được”. It used to differ only by the missing ✕.
-- Chip calendar: the field and chip styles moved to the shared mixin, with no visible change except the clear-button icon below.
-- Tab router: a tab is a `role="tab"` element without `href` instead of an `<a href>` (selector `.tab-router__item` is unchanged), with `aria-selected` and `aria-controls`; panes are `role="tabpanel"`. With the link, CDK drag cancelled the mouse-down of the natively draggable anchor, so clicking a tab did not focus it. The browser no longer offers “Open link in new tab” on a tab; the bar menu takes its place. The close button is out of the Tab order (`tabindex="-1"`); the keyboard closes a tab with Delete.
-- Tab router: `tabs` of `<sd-tab-router-nav>` is a `model`. Dropping a dragged tab emits a reordered copy through `tabsChange`, which the outlet binds two-way, instead of reordering the outlet array in place; a tab dropped where it started emits nothing.
-- Upload file: file sizes read `{n} KB` below 1 MB (whole kilobytes, rounded up) and `{n} MB` with one decimal from 1 MB, in the number format of the current language (`2,4 MB`); a document row shows `{EXT} · {size}`. Sizes used to be always `fileSize / 1024` KB.
-- Upload file: file-type icons cover the 51 SVGs of the set (pdf, doc/docx, xls/xlsx, ppt/pptx, csv, zip, txt, mp4, …, `jpeg` → jpg, `tif` → tiff), the generic file icon for the rest, through one internal icon component shared by the field and the popup; the bundle no longer inlines the SVGs three times.
-- Upload file: the preview popup is a dark viewer (CDK `Dialog`, `min(1200px, 100vw − 48px)` × `100vh − 48px`, full screen at ≤ 600px): a top bar with the file name, `{EXT} · {size}` and the position (`3 / 7`), zoom (fit, 50–400%), rotate, download and open in a new tab for images, download and open in a new tab for other files; a stage that shows a PDF inline in an `<iframe>`, a loading state after 150ms and an error state with Retry; previous / next buttons that stop at the ends instead of wrapping; and an 88px filmstrip. ←/→, `+`/`=`/`-`/`0` and Esc work from the keyboard; focus moves to the stage and back to the opener. It used to be an `sd-modal` with a fixed “Xem ảnh” title, a vertical thumbnail rail and no toolbar.
-- Upload file: `previewWidth` / `previewHeight` default to `72px` (they were `50px`). Bind `previewWidth="50px" previewHeight="50px"` to keep the old size, or use `variant="inline"` in table cells.
-- Upload file: the field follows the new design (variant `default`): the label with a `{n} / {max}` counter right after it; a wrapping image grid whose first tile is the upload tile (“Thêm ảnh” / “Tải lên”, dashed `--sd-border-strong`, tinted while files are dragged over the field); image tiles that open the popup at that image (no zoom icon or dark overlay) with a scrim and a 20px remove badge on hover or focus (always under `pointer: coarse`); a full-width drop zone for `type="document"`; 52px document rows (icon, name, `{EXT} · {size}`, download) whose click opens the popup at that file instead of downloading it; a read-only grid whose last tile is covered by `+N`; and the required error as an icon and 12px text like other fields.
-- Upload file: a file refused when picked or dropped (wrong extension, too large, not an image, image size) stays in the list with its reason, outside the value, until removed; the valid files of the same pick are still added (one invalid file used to drop the whole pick). Only “too many files” still uses a toast. The file dialog filters by `extensions` (`accept`) and no longer refuses files itself.
-- Upload file: while `upload()` runs, its files show as uploading (spinner on an image, “Đang tải tệp lên…”, a cancel button and an indeterminate bar on a row); when it fails they show as failed with Retry, which calls `upload()` again. `upload()` still rejects.
-- Upload file: drag listeners are host listeners that Angular removes on destroy, and react only while files are dragged.
+#### Chip
+
+- Leaving the field now adds the typed text as a chip (`addOnBlur` defaults to `true`). It used to drop the text, and so did focusing the input again. For the old behaviour set `[addOnBlur]="false"`.
+- The placeholder no longer repeats the label; without `placeholder` it is “Nhập rồi nhấn Enter”.
+- With `[addable]="false"` the input is read-only and out of the Tab order instead of accepting text that was then thrown away.
+- `onClear()` keeps the chips `removable` keeps and emits nothing when no chip goes.
+- Chips look like those of `<sd-chip-calendar>`, through one SCSS mixin (`sd-chip-row()` in `core/form.scss`): 20 / 24 / 28px chips centred in a 32 / 40 / 48px field at `sm` / `md` / `lg` (`size="lg"` had no style), a 6px radius, a 1px `--sd-border` outline on `--sd-surface`, tabular digits, 4px between chips, and a square clear-all button of 24 / 28 / 32px.
+  - The `md` field is no longer taller than other controls (its chips sat 10px lower). The typing area wraps to a new line only when less than 80px is left (Material kept 150px), and while chips are folded into “+N” it only fills the rest of the line and shows no placeholder, so a table cell stays one line.
+- A chip that `removable` keeps has the locked background (`--sd-chip-locked-bg`), a lock icon whose tooltip says “Không xoá được”, and an accessible name that ends with “, Không xoá được”. It used to differ only by the missing ✕.
+
+#### Chip calendar
+
+- The field and chip styles moved to the shared mixin, with no visible change except the clear-button icon below.
+
+#### Form generic
+
+- Chip fields pass `validation.maxItems` as `maxCount`.
+
+#### Page
+
+- The header of `<sd-page>` is a `<header class="c-page-header bg-white">` instead of a `<div>`, and its `title` renders in an `<h1 class="T20M">` instead of a `<div class="T20M">`, with its margin reset, so the page has one main heading.
+  - Pages that project `[headerLeft]` are not affected. `SdPageComponent` now uses `OnPush`.
+
+#### Tab router
+
+- A tab is a `role="tab"` element without `href` instead of an `<a href>` (selector `.tab-router__item` is unchanged), with `aria-selected` and `aria-controls`; panes are `role="tabpanel"`.
+  - With the link, CDK drag cancelled the mouse-down of the natively draggable anchor, so clicking a tab did not focus it. The browser no longer offers “Open link in new tab” on a tab; the bar menu takes its place. The close button is out of the Tab order (`tabindex="-1"`); the keyboard closes a tab with Delete.
+- `tabs` of `<sd-tab-router-nav>` is a `model`. Dropping a dragged tab emits a reordered copy through `tabsChange`, which the outlet binds two-way, instead of reordering the outlet array in place; a tab dropped where it started emits nothing.
+
+#### Table
+
+- The page-size dropdown of the paginator looks like `<sd-select>`: 14px text and a `keyboard_arrow_down` chevron instead of Material's 12px text and triangle, centred in a 32px field, and its list opens in the `<sd-select>` panel (rounded, bordered, 36px options). Same for the pager of `paginate.total: 'unknown'`.
+- A one-line row is 36px high instead of Material's 52px (`--mat-table-row-item-container-height: 36px` on `<sd-table>`), as the table's dense design intended.
+  - Rows with longer text or buttons still grow. A screen that relied on 52px rows can set the token back with a selector more specific than the component's own, for example `.orders sd-table { --mat-table-row-item-container-height: 52px; }`.
+
+#### Upload file
+
+- File sizes read `{n} KB` below 1 MB (whole kilobytes, rounded up) and `{n} MB` with one decimal from 1 MB, in the number format of the current language (`2,4 MB`); a document row shows `{EXT} · {size}`. Sizes used to be always `fileSize / 1024` KB.
+- File-type icons cover the 51 SVGs of the set (pdf, doc/docx, xls/xlsx, ppt/pptx, csv, zip, txt, mp4, …, `jpeg` → jpg, `tif` → tiff), the generic file icon for the rest, through one internal icon component shared by the field and the popup; the bundle no longer inlines the SVGs three times.
+- The preview popup is a dark viewer (CDK `Dialog`, `min(1200px, 100vw − 48px)` × `100vh − 48px`, full screen at ≤ 600px): a top bar with the file name, `{EXT} · {size}` and the position (`3 / 7`), zoom (fit, 50–400%), rotate, download and open in a new tab for images, download and open in a new tab for other files; a stage that shows a PDF inline in an `<iframe>`, a loading state after 150ms and an error state with Retry; previous / next buttons that stop at the ends instead of wrapping; and an 88px filmstrip. ←/→, `+`/`=`/`-`/`0` and Esc work from the keyboard; focus moves to the stage and back to the opener.
+  - It used to be an `sd-modal` with a fixed “Xem ảnh” title, a vertical thumbnail rail and no toolbar.
+- `previewWidth` / `previewHeight` default to `72px` (they were `50px`). Bind `previewWidth="50px" previewHeight="50px"` to keep the old size, or use `variant="inline"` in table cells.
+- The field follows the new design (variant `default`): the label with a `{n} / {max}` counter right after it; a wrapping image grid whose first tile is the upload tile (“Thêm ảnh” / “Tải lên”, dashed `--sd-border-strong`, tinted while files are dragged over the field); image tiles that open the popup at that image (no zoom icon or dark overlay) with a scrim and a 20px remove badge on hover or focus (always under `pointer: coarse`); a full-width drop zone for `type="document"`; 52px document rows (icon, name, `{EXT} · {size}`, download) whose click opens the popup at that file instead of downloading it; a read-only grid whose last tile is covered by `+N`; and the required error as an icon and 12px text like other fields.
+- A file refused when picked or dropped (wrong extension, too large, not an image, image size) stays in the list with its reason, outside the value, until removed; the valid files of the same pick are still added (one invalid file used to drop the whole pick).
+  - Only “too many files” still uses a toast. The file dialog filters by `extensions` (`accept`) and no longer refuses files itself.
+- While `upload()` runs, its files show as uploading (spinner on an image, “Đang tải tệp lên…”, a cancel button and an indeterminate bar on a row); when it fails they show as failed with Retry, which calls `upload()` again. `upload()` still rejects.
+- Drag listeners are host listeners that Angular removes on destroy, and react only while files are dragged.
 
 ### Deprecated
 
-- Chip: `min` / `max`; use `minCount` / `maxCount`. Both still work, the new name wins when both are set, and each instance warns once in dev mode.
-- Upload file: `selectedFile`, `onSelect()` and `onSelectKeydown()` — a tap on a tile opens the popup and the remove badge is always shown on touch screens. They are no longer used.
+#### Chip
 
-### Fixed
+- `min` / `max`; use `minCount` / `maxCount`. Both still work, the new name wins when both are set, and each instance warns once in dev mode.
 
-- Side drawer: opening a drawer focuses its close button (X) also when `[sdHeaderRight]` holds actions, which come before X in the tab order. It used to focus the first of them, such as a Delete icon, where an Enter started the deletion prompt.
-- Forms: a user edit now marks the control of the parent form dirty before writing its value, as Angular's value accessors do, so `form.dirty` and the default `'control'` mode of `registerSdUnsavedChangesForm` see it. Before, the control stayed pristine for a number typed into `<sd-input-number>`, the clear button of `<sd-input>`, `<sd-select>`, `<sd-date>`, `<sd-datetime>` and `<sd-autocomplete>`, a masked `<sd-input>`, select-all and the virtual list of `<sd-select>`, a day picked in `<sd-date>` or `<sd-datetime>`, an option chosen in `<sd-autocomplete>`, chips added or removed in `<sd-chip>` and `<sd-chip-calendar>`, and `<sd-date-range>`; leaving a page after such an edit did not ask. Blurring an empty `<sd-input-number>` still leaves it pristine.
-- Select, Autocomplete: the `sdItemDef` template context has `$implicit` as well as `item`, so `<ng-template sdItemDef let-option>` gets the item; it used to be `undefined` and the template threw. `let-item="item"` keeps working.
-- Input number, Textarea: an `[inlineError]` set while the field is already touched — the field error of a save the API rejected — shows its message, `data-invalid` and `aria-invalid` (and the red outline of `<sd-input-number>`) at once. It stayed hidden until the value changed, because the validator was installed without a control event.
-- Section: clicking the header of a collapsible `<sd-section>` placed inside a focusable element collapses it again. The click was ignored whenever any ancestor had a `tabindex`, so the external filter header of `<sd-table>` (whose host has `tabindex="0"`) only toggled from its chevron button. Clicks on actions inside the header still do not toggle.
-- Chip: `removable` now applies on every removal path. A predicate used to reach `mat-chip-row` as a function, which is always truthy, so Backspace / Delete on a chip (or Backspace twice from the empty input) removed a chip the predicate kept; each chip now gets its own boolean and `onRemove` checks it again.
-- Chip: every model item except `null`, `undefined` and `''` is a chip, so `0` shows (it was counted but hidden). Chips are tracked by value, so removing one no longer rebuilds the chips after it and moves focus.
-- Chip: a typed value that equals an existing chip as a string is a duplicate: a model `[1, 2]` plus a typed “1” stays `[1, 2]`.
-- Chip: setting `model` to `null` or `undefined` clears the chips and sets `formControl` to `[]`. The control used to keep the old array and send it on submit.
-- Chip: one rule decides when the error shows — invalid, and touched or the parent `NgForm` / `FormGroupDirective` submitted — for the red outline, `<mat-error>`, the `hideInlineError` icon and `aria-invalid`. A submit without touching the field used to show a red outline without a message, a field that was only dirty turned red, and the input carried `aria-invalid="true"` before any interaction.
-- Chip: the ✕ button of a chip is named “Xoá {value}” (`core.form.chip.remove`, in the five locales) and uses the `close` icon; it was hidden from assistive technology.
-- Chip: the wrapper around the field is layout only. It used to sit in the Tab order with no role or name, disabled included; with `sdViewDef` the face itself is now a `role="button"` that Enter or Space opens, and it leaves the Tab order when disabled.
-- Chip: with `hideInlineError`, the hidden error text has an id and the input points `aria-describedby` at it.
-- Chip: leaving the field no longer rewrites its value. `mat-chip-grid`, bound to the control as its value accessor, wrote the text of the rendered chips into the control after every blur: number items became strings without a `modelChange`, and a form reset made while the input had focus was undone. The grid now has a control of its own, and the field is marked touched when focus leaves it (moving between the input and its chips does not count).
-- Chip calendar: the clear button icon is 18 / 20px at `md` / `lg`, as designed. A shared `.sd-clear-btn sd-icon` rule forced 16px.
-- Tab router: navigations that finish one after another while an earlier tab is still being activated (for example while the outlet loads an NgModule lazy route) each open their own tab. The outlet read the router state when the queued activation ran, so the tab of an earlier URL got the component, route and name of the later one; it now captures the route when `NavigationEnd` is emitted.
-- Upload file: a `details` response that arrives after `model` changed no longer replaces the preview or emits `filesChanged`, and the `FileReader`s of a replaced preview are aborted. `upload()` reads the local files from `model` instead of the preview, so a file whose preview is still loading is uploaded, server IDs and URLs without metadata stay in `model`, and a missing handler keeps the local files. The returned IDs replace the local keys in the latest `model`: files removed, reordered or added while the upload ran keep that change. Concurrent calls share one upload. Each control keeps its own picked files, so uploading the same file from another control no longer loses this control's pending file. A pick that finishes its checks (resize, image validation) after `model` changed adds its files to the current value and checks `max` again; it used to write back the value from before, which replaced the IDs of an upload that finished meanwhile with stale keys. After destruction, no callback updates `model`.
-- Select: with an async `items` loader, the selected value shows its label once a `SEARCH` result contains it, also when the `VALUE` request returned nothing or failed: `selectedItems`, the trigger, custom selected templates, the read-only and inline views and the tooltip update together, also with `virtualScroll`, without `modelChange`, `sdChange` or `sdSelection`. A retry updates them the same way. A response for a replaced loader, `cacheChecksum`, field mapping, search text or selection — such as the ward list after the province changed — no longer sets the label.
-- Badge: the title of an `md` round, solid or tag badge, counters included, sits 1px lower, in the middle of the badge. With Roboto at 13px the baseline of the 18px line falls on a half pixel, so digits and capitals were drawn 0.5–1.6px above the middle, depending on the badge's position and the screen scale. `sm`, `lg`, `pair` and a tag with a description are unchanged.
-- Upload file: ppt and pptx files show their own icons (they showed the xls / xlsx ones). `SdUploadFileDetail.size` is documented in bytes, as the component always read it (the JSDoc said MB).
-- Upload file: the download button of the popup is labelled “Tải xuống”; it used the upload key (“Tải file”). The thumbnail rail followed the current file only by looking up ids that were never set; the filmstrip now scrolls to it.
-- Upload file: dragging an image to reorder moves it among the image positions of `model` only; the index of the image group used to be applied to the mixed array of images and documents. Documents can be reordered too.
-- Upload file: the remove badge is no longer clipped (the field had `overflow-y: hidden` and the badge sat at −8px of a 3px margin).
-- Chip: in a field narrower than a chip, the chip text is cut with “…” and the ✕ or the lock stays inside the chip. The text used to keep its width (up to 240px) while the chip shrank to the field, so the ✕ or the lock was pushed past the chip's edge, and past the field's edge in a narrow one. Chips that fit are unchanged.
+#### Upload file
+
+- `selectedFile`, `onSelect()` and `onSelectKeydown()` — a tap on a tile opens the popup and the remove badge is always shown on touch screens. They are no longer used.
 
 ### Removed
 
-- Tab router: the component token `--sd-tab-router-badge-bg`, deprecated in 3.2. Its only reader filled the icon of the old tab, which had not been rendered since the tabs moved to `sd-badge`, so no tab used it. Code that set or read it can drop it. `--sd-tab-router-item-muted-bg` stays deprecated.
-- Upload file: the unused `thumbnailPosition` and `title` fields of the internal preview component (`<preview>`), and its `modal` reference.
+#### Tab router
 
-## [3.2] - 2026-10-23
+- The component token `--sd-tab-router-badge-bg`, deprecated in 3.2.
+  - Its only reader filled the icon of the old tab, which had not been rendered since the tabs moved to `sd-badge`, so no tab used it. Code that set or read it can drop it. `--sd-tab-router-item-muted-bg` stays deprecated.
 
-Release suffix `3.2` targets `19.3.2`, `20.3.2`, `21.3.2`, and `22.3.2`, validated against `*.3.1`. Repo-owned: design handoff waves 1–3 (control tokens and box controls, operator chip in the form controls, select panel, checkbox and radio, segmented, kanban, badge, badge picker, avatar status and group, tab bar with scrolling and a tab list), Sidebar V4 with the context switcher and the `graphite` preset, the generic CRUD module, form-generic static elements and buttons, a fixed app time zone, unknown-total table pagination, the Tiptap editor engine and `sd-chip-calendar` limits and popup. Read `Changed (BREAKING for consumers)` before upgrading: custom i18n catalogs need new keys, the CKEditor-specific editor API is gone, exhaustive switches over `SdFormGenericField['type']` and the sidebar `version` need new cases, and the server payload changes for `NULL` / `NOT_NULL` and `split-number` table filters.
+#### Upload file
 
-### Added
-
-- Avatar: `sd-avatar-group` (`SdAvatarGroup`, in `@sdcorejs/angular/components/avatar`) shows `items` (`SdAvatarGroupItem`: `src`, `name`, `status`, `statusLabel`, `statusPulse`) as overlapping avatars — each overlaps the previous one by `round(size × 0.15)`, has a 2px ring (3px from 64) in `--sd-avatar-status-ring`, and the left one is on top. At most `max` (default 4) are shown; the rest fold into a "+N" button, except that one leftover person is shown instead of "+1". "+N" opens a 280px list of the hidden people (avatar, name, status; focus on the first row, Esc returns to the button), or emits `moreClick` with them when that output is listened to. The host is `role="group"` named by `ariaLabel` (default "{n} người"). `sd-avatar` gains a `tooltip` input, which the group sets to "{name} · {statusLabel}". New i18n keys `core.component.avatar.group-label`, `.more-label` and `.more-title` are in all five built-in catalogs.
-- Avatar: `sd-avatar` shows a status dot with the new inputs `status` (`Color`), `statusLabel` and `statusPulse`. The dot is an `sd-badge type="dot"` on the lower-right edge: diameter `clamp(8px, size × 0.25, 20px)`, a 2px ring (3px from size 64) in the new component token `--sd-avatar-status-ring` (`var(--sd-surface)` in light and dark), centred on the edge at 45°. `statusLabel` is the dot's tooltip and is appended to the accessible name; a dev-mode warning says when `status` has no `statusLabel`. New input `name`: the accessible name and, for an image avatar, the tooltip; a failed image now takes its initials and colour from `name` when it is set. `sd-badge` gains the hook `--sd-badge-dot-size` for the diameter of its dot.
-- Badge: `sd-badge-picker` (`SdBadgePicker`, in `@sdcorejs/angular/components/badge`) picks the type, colour and icon of an `sd-badge` in one panel: a live preview, a 3-column grid of the six types, six colour swatches and a searchable 8-column icon grid. Models `[(type)]`, `[(color)]` and `[(icon)]` are written when the panel closes (outside click, Done, or Tab out); Esc discards the draft; the footer hint draws Esc as a key cap (`<kbd>`) inside the sentence, so `core.component.badge.picker.esc-hint` carries a `{key}` placeholder ("{key} huỷ thay đổi"; a custom catalog without it shows the plain sentence). `sdChange` emits `{ type, color, icon }` once, only when something changed. The trigger is a `mat-form-field` like `sd-select` (`size`, `floatLabel`, `labelPlacement`, `appearance`, `label`, `placeholder`, `helperText`, `required`, `validator`, `inlineError`, `hideInlineError`, `disabled`, `viewed`, `autoId`), and `[form]` + `name` register a control whose value is `{ type, color, icon } | null`. Each panel group is a radio group with one tab stop and arrow-key movement. Also exported: `SD_BADGE_TYPE_OPTIONS` (`{ value, labelKey, descriptionKey }`), `SD_BADGE_ICON_PRESET` (23 icons) and the types `SdBadgePickerValue` and `SdBadgeTypeOption`. New i18n keys `core.component.badge.type.*` (with `.description`), `core.component.badge.color.*` and `core.component.badge.picker.*` are in all five built-in catalogs; custom catalogs should add them.
-- Badge: `sd-badge` has three new types. `solid` is a `--sd-*` pill with `--sd-*-contrast` text (as `round` otherwise, counters included) for a status that needs attention at once. `dot` shows only an 8px (10px at `lg`) dot; its `title` is not shown but is the tooltip and the accessible name (`role="img"`, or `role="button"` with a 20px hit area when clickable). `pair` joins a secondary `label` (weight 400) to the coloured value (`title`, weight 500) in one 4px / 6px-corner box and cuts the value first when it is too narrow. New input `label` (the left part of `pair`) and `pulse` (boolean attribute: a 3px ring of 28% of the colour around the dot of `dot` and of `icon` without an icon, pulsing every 1.6s, still under `prefers-reduced-motion`). `SdBadgeType` gains `'solid' | 'dot' | 'pair'`. `npm run test:theme` now checks `*-contrast` on the base colour and `*-dark` on `*-light` for every preset and dark.
-- Generic module (`@sdcorejs/angular/modules/generic`): list, detail, create, update, Excel import and configuration screens generated from one `SdGenericSchema` per entity. Backends plug in through `provideSdGeneric({ adapters })` (`SdGenericConfiguration`; one adapter per module, nearest injector wins); `provideSdGenericEntity` adds schema adjustments, a dedicated search, page/side-drawer display, `beforeSave`/`afterSave` hooks and custom actions. Routes `generic/:module/:entity[/create|/:id/detail|/:id/update|/configuration]` are guarded by `<MODULE>_<ENTITY>_C_GENERIC_<ACTION>` codes, refuse unsafe module/entity names and close the form routes hidden by `hiddenDefaults`. Stored configurations (`adapter.schemaStore`, default `localStorage`) are checked by `validateSdGenericSchema` and merged with the backend schema; a configuration may narrow but never reopen `insertable`/`updatable`. Excel import looks records up in batches of 100 and reports ambiguous matches and every failed row in `<sd-import-excel>`. Screens render in `<sd-page>`; the list opens a record from a link on its first column, keeps edit in the detail screen and delete in the selector, and shows external filters declared in code (backend schema or `provideSdGenericEntity`) without the filter toolbar. The configuration screen does not edit external filters, and a stored configuration neither carries nor contributes them.
-- Icon: shared data-type icon set in `@sdcorejs/angular/modules/icon`, made of `SdDataTypeIconKey` (22 keys), `SD_DATA_TYPE_ICON`, `SD_DATA_TYPE_LABEL_KEY` (`core.data-type.<key>`), `sdDataTypeIcon()` and `SD_DATA_TYPE_LUCIDE_ICONS`. The form builder palette uses it with unchanged icons. Every icon also renders under the Lucide renderer once `SD_DATA_TYPE_LUCIDE_ICONS` is passed to `provideSdIcon({ lucideIcons })`.
-- Generic configuration screen: every property row of General, List and Import shows its data-type icon and its `key` under the label. List columns reorder by dragging a handle, and the move buttons stay for keyboard use. The column "Visible" checkbox reads "Show by default" and has a tooltip saying the end user can still show the column.
-- Form Generic: `time` (`HH:mm`, `<sd-time>`) and `json` (`<sd-code-editor>`, stores the parsed value) field types in the renderer, builder palette, preview and inspector. The JSON field exposes its label, required state and error to assistive technology.
-- Form generic: static elements and buttons. A page or a group can hold seven static elements — `heading` (`level` 2–4, default 3), `paragraph`, `quote` (`cite`), `image` (`src`, `alt`, `width`, `caption`), `link` (`href`, `newTab`), `divider` and `notice` (`title`, `color` `info` / `success` / `warning` / `error`) — and `button` elements. They sit on the same 12-column grid as fields (`layout.span`, `layout.newRow`), are shown or hidden by `hidden` and `rules.visible` / `rules.hidden` (a button also by `disabled` and `rules.disabled`) and have no `key`, so they never reach the value, `validate()` or `viewEntities()`. Texts are plain text (no HTML, no `${key}`). `href` and `src` go through one URL policy: a link accepts absolute http(s) without credentials, a same-origin relative path, `mailto:` and `tel:`; an image accepts http(s), a relative path and `data:image/*`. A rejected URL renders no link or image (a dev-mode warning in the renderer, a warning in the builder inspector); a link opened in a new tab always has `rel="noopener noreferrer"`. `sdValidateSchema` adds `text-missing`, `heading-level-invalid`, `button-action-invalid`, `button-name-missing` and `button-name-reserved`.
-
-  A button runs `submit`, `reset` or a `custom` action (`name`, optional `validate`), drawn with `sd-button` (`variant`, `color`, `icon`, `align`). `<sd-form-render>` emits `sdAction` — `{ action, buttonId, value, messages }` — and never calls an API or uploads: `submit` emits only when `validate()` passes (otherwise field errors and a form-level error block above the grid are shown), `reset` restores the last value the host loaded with `defaultValue` applied again and marks the form pristine, a custom action emits at once or like submit with `validate: true`. `submit()` (resolves `{ valid, messages, value }`) and `reset()` run the same pipeline from code; while a validating run is in progress other actions are ignored and `submit()` returns the same promise. Buttons are hidden in `[viewed]` mode unless `showWhenViewed: true`; static elements and buttons are hidden while `[keys]` is set. The public runtime surface is unchanged (new types only: `SdFormGenericStatic`, `SdFormGenericButton`, `SdFormGenericAction`, `SdFormGenericSubmitResult`, …).
-
-  In `<sd-form-builder>` the palette has *Static* (7 entries) and *Buttons* groups before *Layout*; the canvas previews the real elements inside an `inert` region; the inspector has *General* / *Conditions* / *Layout* tabs, keeps an empty text, label or action name (or `submit` / `reset` as a name) as an unsaved draft so every emitted schema stays valid, warns about unsafe URLs and a missing or reserved name, and gives a button switched to `custom` — or a duplicated custom button — an unused name. Drag and drop, resize, duplicate, delete with Undo, undo / redo, *Structure* and key rename (their `rules` follow) work as for fields. Custom i18n catalogs must add the 52 new `core.component.form-builder.*` keys present in the built-in catalogs.
-- Editor and MiniEditor use a shared Tiptap OSS document engine with full and compact Core toolbars. Supported rich HTML, merged tables, image figures/captions, fonts, alignment and mentions use the same schema in both components.
-- Import diagnostics preserve untouched safe source, lock unsupported content and reject unsafe/lossy exports or paste. HTML/Markdown conversion verifies preservation; no Pro/paid conversion or DocumentEditor is included.
-- Selected-image sizing/alignment actions, composition-aware form output, SSR-safe initialization/counting, and upload generation/result/retry safeguards. OSS license notices ship with package assets.
-- View: component tokens `--sd-view-label-color` and `--sd-view-value-color`, and the classes `.sd-view-label` / `.sd-view-value` for custom read-only layouts (see `sd-view.md`, "Styling tokens").
-- Fixed time zone: `ISdCoreConfiguration.timeZone` (`SdTimeZone`: `'local'`, the default, or an IANA id such as `'Asia/Ho_Chi_Minh'`) makes every Core UI surface show, parse, filter and serialize dates in that zone instead of the browser's. A date saved in Vietnam in 1960 (UTC+08 until 1975) now keeps its day when viewed in Thailand. Numeric offsets (`'+07:00'`) and unknown ids throw; the setting is read once from the root injector. The new `SdDateTimeService` (`@sdcorejs/angular/services/date-time`) holds the conversions: `toFormat`, `parse`, `parseFrom`, `begin`, `end`, `beginOfNextDay`, `today`, `now`, `toWallClock`, `fromWallClock`. Surfaces that follow the zone: `sdFormatDate`, `sdFormatDatetime`, `sdTimeDifferent`; `sd-date`, `sd-datetime`, `sd-date-range` (display, `TODAY` limits, picker today/Now, `transform` output); `sd-table` cells, server filters, client filter, local sort, aggregate MIN/MAX and Excel export; `sd-import-excel`; `sd-form-generic` rules, validations, read-only display and `'today'` limits; `sd-history`; `sd-file-explorer` `modifiedAt`. `sd-time` and `sd-chip-calendar` have no zone. A day filter is `[begin of the day, begin of the next calendar day)` in the zone, so 23- and 25-hour days are bounded correctly. Without the setting every value stays as before. See `sd-date-time.md`.
-- Table: unknown-total pagination for server tables whose API pages by offset/limit but returns no count. Declare `paginate: { total: 'unknown' }` and resolve `{ items, hasMore }` (`SdTableServerHasMoreResult<T>`) from `items()`; `SdTableServerTotalResult<T>` names the existing `{ items, total }` shape. The table footer then shows page size, the range of the rows actually loaded (`26-32`, no total), Previous/Next and First (with `showFirstLastButtons`), never Last; it reuses the `mat-paginator` classes, tokens and `SdTablePaginatorIntl` labels. The requested page and the shown page are separate: range, row numbers and Next follow only a successfully rendered page; every control is locked while a read is scheduled or running; filter, quick search, sort and page-size changes restart at the first page; a failed page keeps the existing rows-or-error rule and `retryRead()` replays it exactly. Rows past `pageSize` are dropped as lookahead and mean "more", an empty page always ends paging, and a result without a boolean `hasMore` is a read error. Default export fetches chunks until `hasMore` is false, a chunk is not exactly one page, or 1,048,575 rows (one Excel sheet) when `export.max` is not set. Known-total and local tables render as before; a known-total loader that resolves `{ items, hasMore }` without `total` logs one `console.warn`. Type change: the server `items` return type is now `Promise<SdTableServerTotalResult<T> | SdTableServerHasMoreResult<T>>`. Loaders that return `{ items, total }` still compile; code that calls `option.items(...)` itself and reads `.total` must narrow with `'total' in result`. See `sd-table.md`, "Phân trang không biết tổng".
-- Table: `SdConvertToPagingReq` accepts an optional `dateTime` (pass `inject(SdDateTimeService)`) so a hand-built paging request uses the same zone bounds as the table. Omitted, the payload is unchanged.
-
-- `SdWindow` / `sd-window` and `components/window` are the preferred public API. Additive `hideClose`, `windowClass`, `beforeClose`, `sdClosed`, `sdCloseError`, `requestClose` and `forceClose` match Core overlay conventions, with stale-guard protection. Added Core header/default-body slots, readable state/action names, docs and four Showcase examples. The nonmodal window intentionally has no backdrop, focus trap or body scroll lock.
-- Layout: Sidebar V4 (`version: 4`) — `SdSidebarV4` / `sd-sidebar-v4` on desktop and `SdSidebarMobileV4` / `sd-sidebar-mobile-v4` below `mobileBreakpoint`. It keeps the V3 routing, Pinned/Recent and collapsed preference (stored in the same version 3 entry), and adds menu section headings, one trailing count, badge, status or "Soon" chip per row, a pill search focused with `Ctrl+K` / `⌘K` and driven with `↑ ↓ Enter Esc`, a 72px rail with section separators and group flyouts, and colours that come only from theme tokens (`brandColor` / `brandLightColor` are ignored). `SidebarConfigurationV4` adds `itemShape` (`'pill'` | `'soft'`), `density` (`'compact'` | `'comfortable'`), `collapsedGroup` (`'flyout'` | `'expand'`) and `mobile.bottomBar` (at most 4 menu ids, plus "More"); `normalizeSidebarConfiguration` fills the defaults. On mobile, V4 has a 56px app bar, a `min(88vw, 360px)` drawer with 44px rows, and the bottom bar when `mobile.bottomBar` is set. See `sd-layout.md`, "Sidebar V4".
-- Layout: Context Switcher for sidebar V1–V4 and their mobile variants. Assign `sidebar.context = { label?, items, searchable? }` (`SdLayoutContextConfiguration`, `SdLayoutContext`); Core persists the selected context in the layout storage namespace, restores it on the next load, falls back to `items[0]` (with at most one reload) when the stored id is missing or stale, and reloads the page after a switch. There is no change event: read the context at bootstrap with `SdLayoutContextService.getCurrentContext()`, for example in `provideAppInitializer`. A switch in another tab shows a "Context changed in another tab" notice with a Reload button and never reloads by itself. `SD_LAYOUT_CONTEXT_RUNTIME` (`SdLayoutContextRuntime`, `createSdLayoutContextBrowserRuntime`, `SD_LAYOUT_CONTEXT_MARKER_KEY`) carries the page reload, `storage` events and the per-tab reconcile marker, so specs and demos can provide a fake. `SdLayoutContextSwitcher` / `sd-layout-context-switcher` is exported; the CSS hooks `--sd-layout-context-switcher-popover-width` (popover width) and `--sd-layout-context-switcher-dot-ring-color` (ring of the rail "changed in another tab" dot) can be set on or above it. Without `context`, every sidebar renders as before. See `sd-layout.md`, "Context switcher".
-- Layout: `SdLayoutMenu` accepts optional `section`, `badge` (`SdLayoutMenuBadge`), `status` (`SdLayoutMenuStatus`) and `comingSoon`. Only Sidebar V4 renders them; V1–V3 ignore them, and a `comingSoon` item still navigates there. New helpers `searchAvailableMenuLeaves`, `groupMenusBySection` and `resolveMenuTrailing`; `searchMenuLeaves` is unchanged.
-- Storage: `SdStorage.refresh()` and `SdStorageWithDefault.refresh()` re-read the persisted value, replace the shared in-memory entry and notify subscribers only when the value changed — for values written by another tab, or to confirm that a write persisted (see `sd-storage.md`).
-- Theme: `graphite` preset (`sd.theme($preset: 'graphite')`), a light-only near-black palette for back-office consoles. A named preset may carry an optional `components` map that overrides component tokens with single values; unknown keys fail the Sass build. `graphite` uses it to raise the active Sidebar V4 item (`--sd-sidebar-v4-active-bg: var(--sd-surface)` plus a ring in `--sd-sidebar-v4-active-shadow`). With `graphite`, links and text buttons share the body text colour because `--sd-link` and `--sd-primary` are the text colour; no link token is added (see `THEME.md`).
-- Theme: Sidebar V4 colour tokens `--sd-sidebar-v4-bg`, `-line`, `-hover-bg`, `-active-bg`, `-active-shadow`, `-active-ink`, `-avatar-bg`, `-avatar-ink`, `-attention` and `-live`, emitted in light and dark and by every preset.
-- Theme: the `copper` and `teal` presets darken Sidebar V4 text that sits on a primary tint to `--sd-primary-dark` through their `components` map, so it reaches WCAG AA 4.5:1. `copper` sets `--sd-sidebar-v4-active-ink` (the active item label, 4.41:1 before, 7.50:1 now) and `--sd-sidebar-v4-avatar-ink` (the avatar initials, 4.18:1 before, 7.10:1 now); `teal` sets `--sd-sidebar-v4-avatar-ink` (4.498:1 before, 6.23:1 now). Other presets are unchanged. `npm run test:theme` now checks both pairs for every preset.
-- Theme: control height scale `--sd-control-height-sm` (32px), `-md` (40px), `-lg` (48px) and `-coarse` (44px, the minimum height under `pointer: coarse`). `sd-button` sizes and the outlined `mat-form-field` heights now read these tokens, with the old pixel value as fallback, so nothing changes visually.
-- Theme: control tokens shared by every box control. Scales `--sd-control-radius` (8px) and `--sd-panel-radius` (10px); semantic roles `--sd-control-border` (`color-mix(in srgb, var(--sd-border-strong) 82%, var(--sd-surface))`, at least 3:1 on `surface` for every preset), `--sd-control-border-hover`, `--sd-control-border-focus`, `--sd-control-border-disabled`, `--sd-control-ring`, `--sd-control-ring-error` and `--sd-control-bg-disabled`, also listed in `SD_COLOR_TOKENS`. See `assets/THEME.md` "Control tokens".
-- Theme: kanban tokens `--sd-kanban-lane-bg`, `--sd-kanban-lane-target-bg`, `--sd-kanban-lane-target-border`, `--sd-kanban-drop-slot-border`, `--sd-kanban-card-border` and `--sd-kanban-card-hover-border`, `color-mix()` of the palette with one expression for light and dark (see `assets/THEME.md`, "Kanban tokens").
-- Button: `indicator`, `indicatorColor`, `indicatorMax` and `indicatorLabel` on `sd-button`. `indicator` shows a dot (`true`) or a count (a number above 0, floored; `0`, negatives, `NaN`, `false` and `null` hide it) on the top-end corner, anchored at 0.146 × the button height so it sits on the corner arc of every type, size and shape; a count above `indicatorMax` (default 99) reads `{max}+`. It uses `--sd-{indicatorColor}` (default `error`) with its `-contrast` text and a 2px ring of the new `--sd-button-indicator-ring` token (`var(--sd-surface)`), turns grey on a disabled button, stays while loading, and never changes the button size. Under forced colors it is drawn in `CanvasText` with a `Canvas` ring (`GrayText` when disabled), so the dot stays visible. It is a sibling of the native button, `aria-hidden`; `indicatorLabel` is a visually hidden text added to the button's `aria-describedby`. See `sd-button.md`, "Indicator".
-- Forms: `operators` and `operator` on `sd-input`, `sd-input-number`, `sd-select`, `sd-date` and `sd-date-range`. With two or more `operators` the field shows the current operator as a prefix chip (`matPrefix`): a `<button type="button">` with the operator icon and an arrow, 24px high at `sm` and 28px at `md`, muted without a value, `--sd-primary-light` once the field has a value and solid `--sd-primary` while its menu is open; the arrow shows in every field, narrow ones included. The menu opens 6px away from the field box and lines up with the field start, like the `sd-select` panel. The menu is the `sd-operator` one. With exactly one operator the control sets `operator` to it and shows no chip; with none nothing changes. The label always floats while the chip is shown. Tab reaches the chip before the field; Enter, Space or Alt+↓ open the menu; picking a row moves focus to the field and Escape returns it to the chip. Changing the operator keeps the value and the clear button keeps the operator; `NULL` / `NOT_NULL` need no value, so picking one clears the value and disables the entry until another operator is picked (the chip stays usable). The label is not repeated as the placeholder while the chip is shown. `autoId` gives the chip `data-autoid="<autoId>-operator"`. New i18n keys `core.component.operator.current` and `core.component.operator.choose` (the chip's accessible name) are in all five built-in catalogs; custom catalogs should add them.
-- i18n: `core.module.layout.sidebar.*` keys for the V4 search, "Soon", badge descriptions, the collapse/expand toggle and the mobile menu button, and `core.module.layout.context.*` keys for the Context Switcher, in all five built-in catalogs.
-- Chip calendar: new inputs `minDate` and `maxDate` (`'TODAY'` is today in the configured zone), `dateFilter`, `startAt`, `minCount`, `maxCount`, `clearable`, `maxVisible`, `displayFormat` (Angular `DatePipe` syntax, default `dd/MM/yyyy`) and `transform` (the string forms of `sd-date`), and the types `SdChipCalendarValue`, `SdChipCalendarModel`, `SdChipCalendarDate` and `SdChipCalendarRemovable`. The field has a calendar button in its suffix and, with `clearable`, a clear button; `maxVisible` folds the extra chips into a "+N" button while the popup is closed. The popup has its own header (previous month, month label, next month), a count line ("Đã chọn {n} ngày · Tối đa {max}"), a polite live message when `maxCount` is reached, and a footer with "Xoá hết" (`clearable`) and "Xong". New component tokens `--sd-chip-calendar-panel-width` (296px), `--sd-chip-calendar-chip-locked-bg` and `--sd-chip-calendar-more-hover-bg` (both derived from the palette). New i18n keys `core.form.chip-calendar.placeholder`, `.dialog-label`, `.clear`, `.clear-all`, `.done`, `.selected-count`, `.max-count`, `.no-limit`, `.full`, `.remove`, `.locked` and `.more` are in all five built-in catalogs.
-- Operator: `sd-operator` gains `size` (`SdOperatorSize`: `'xs' | 'sm' | 'md'`, default `md`), `readonly`, `active` and `showCode`. `sm` / `md` are the 24 / 28px chip that the form controls draw for `[operators]`; `xs` is a bare 14px glyph with a 24px hit area that does not grow the layout. `readonly` shows only the glyph with the operator name (`role="img"`, `aria-label`, tooltip) — no menu, no tab stop; `disabled` wins over it. `active` tints the chip primary while the condition has a value. `showCode` shows the operator code after the label in the menu.
-
-### Changed
-
-- Tab router: new tab bar. The bar is 40px on `--sd-tab-router-nav-bg` with the tabs on its bottom edge; a tab prefers 200px and shrinks to 120px (it used to stretch over the bar and shrink to a few pixels), is 34px tall with 8px top corners, and shows a 16px icon in `--sd-<color>-dark` of `SdTabInfo.color` (primary when unset) and the name in 13px/18px, cut with an ellipsis. Tabs that are not open have no background and `--sd-tab-router-item-text`; a hovered tab gets the new `--sd-tab-router-item-hover-bg` instead of the white of the open tab; the open tab is `--sd-tab-router-item-active-bg` with `--sd-text` at weight 500. The close button is 20×20 with a 14px icon, always shown on the open tab and on touch screens (32px hit area), and on other tabs only on hover or focus. The divider hides on both sides of the open and the hovered tab. Focus draws a 2px ring inside the tab; under forced colours the open tab is outlined in `CanvasText`. The tab no longer uses `sd-badge`: a tab without an icon shows no dot, and the tooltip appears only when the name is cut or `@SdTabComponent` sets `tooltip` (it used to repeat the name on every tab). Tab router tokens now derive from the palette with one expression for light and dark (see `assets/THEME.md`, "Tab router tokens"); `npm run test:theme` checks the tab text on the bar, on a hovered tab and on the open tab.
-- Tab router: the outlet is `height: 100dvh` after a `100vh` fallback, so it no longer runs under the address bar of mobile browsers. Under a header, set the height on the element (`<sd-tab-router-outlet style="height: calc(100dvh - 56px)">`).
-- Tab router: the bar grows from 0 to 40px in 150ms when the second tab opens (no motion under `prefers-reduced-motion`).
-- Tab router: when the tabs no longer fit at 120px, the bar scrolls sideways (hidden scrollbar; a vertical mouse wheel scrolls it too) instead of clipping the extra tabs, and keeps the open tab fully in view whenever it changes. A 32px fade shows on an edge that still hides tabs. A button at the end of the bar, shown only while the tabs overflow, shows the tab count and opens a 320px list of every open tab: pick a tab to switch to it, or close it from its row (the open tab is tinted primary, the list scrolls past 300px, Escape or a click outside closes it). New i18n keys `core.component.tab-router.tab-list`, `.open-tabs` and `.close-tab` are in all five built-in catalogs; custom catalogs should add them. The internal nav component loses its no-op `mode` and `checkUI()`.
-- Tab router: the outlet creates `SdTabRouterTab.tabInfoChanges` as a `ReplaySubject(1)` (still a `Subject`), so a late subscriber — such as the tab list — receives the last tab info sent.
-- Layout: the expanded Sidebar V3 header keeps 12px between the app icon (or logo) and the app name, as Sidebar V4 does (was 8px, which crowded the two-line name when `context` is set).
-- Layout: the user menu hides its avatars from screen readers (`aria-hidden`), because the user name is shown beside them and the avatar now carries the name as well.
-- Avatar: the `sd-avatar` host is `display: inline-flex; position: relative; vertical-align: middle` instead of the default inline box, and it is `role="img"` with `aria-label` = the name (plus ", {statusLabel}" with a status) — the name is `name`, or `src` when it is a name; without a name and a status the avatar stays decorative. The inner image has `alt=""` instead of `alt="avatar"`, so the name is not read twice.
-- Forms: box controls look the same everywhere. The outlined `mat-form-field` (`sd-input`, `sd-input-number`, `sd-textarea`, `sd-select`, `sd-autocomplete`, `sd-date`, `sd-datetime`, `sd-date-range`, `sd-time`, the box of `sd-input-color`), the filter input of the `sd-select` panel, `sd-entity-picker` and the inputs of the editor link/image popup, the form builder option editor and canvas preview, the file explorer dialogs and the query bar search box move from a 4–6px corner and the `--sd-border` outline to the 8px control corner and the darker `--sd-control-border` outline. Hover darkens the outline, focus is a 1px primary outline plus a soft 3px ring (an error ring on an invalid field, a 2px `Highlight` outline under forced colors), and every disabled control gets the `--sd-control-bg-disabled` background (`sd-autocomplete` used `--sd-surface-muted`). Heights, label typography, error messages and padding do not change. The query bar no longer forces its own 6px radius and border colours on the form fields inside it. To keep the previous look, set `--sd-control-radius: 4px`, `--sd-control-border: var(--sd-border)` and `--sd-control-ring: none` at the root.
-- Forms: the `sd-select` and `sd-autocomplete` panels, the `sd-operator` menu and the datepicker calendar take a 10px corner on all four sides, a thin border and `--sd-shadow-md`. The select and autocomplete panels open 6px away from the field (on the side the panel opens), use the white `--sd-select-panel-bg` instead of Material's tinted surface container, and have 4px of padding above the first and below the last option. Options keep their 36px height (virtual scroll unchanged) and are inset 4px with a 6px corner; a transparent 1px top and bottom border inside those 36px leaves a 2px gap between the hover or selected backgrounds of neighbouring options (under forced colors the border takes `Canvas`, so no line shows between options). The "select all" row of a multiple `sd-select` has the same inset, so its checkbox lines up with the options. The selected option of `sd-select` / `sd-autocomplete` is `--sd-primary-dark` on `--sd-primary-light` with weight 500 (the global `--mat-option-selected-state-label-text-color` stays `--sd-primary`); `sd-autocomplete` now also highlights the option that matches its value when the panel opens again (class `sd-option--selected`).
-- Badge: `sd-badge` has a fixed height of 20 / 24 / 28px for `sm` / `md` / `lg`, whatever the line-height around it. `round` and `tag` use 12px/16px, 13px/18px and 14px/20px text with weight 500 and 14 / 16 / 18px icons (they were 14 / 16 / 18px text and 16 / 18 / 24px icons, so screens on the default `sm` get smaller badges); `type="icon"` uses 13px/18px, 14px/20px and 14px/20px text in `--sd-text` with 16 / 18 / 18px icons, 6px from the text. Titles and descriptions stay on one line and are cut with an ellipsis (a long `round` title used to wrap into a centred block). The tag border is `color-mix(in srgb, *-dark 22%, *-light)` instead of the full `*-dark`, with a 4px corner at `sm` and 6px at `md` / `lg`. A number `title` on `round` is a counter: tabular figures, `min-width` equal to the height (one digit is a circle) and `99+` above 99, with the real number for screen readers. Descriptions are 12px/16px `--sd-text-secondary` for `icon` and `tag` (the `icon` description was 10px); a tag with a description becomes a two-line block (padding 4px 8px, 6px corner, 13px/18px title), and the icon lines up with the first line. `type="icon"` without an icon draws an 8px (10px at `lg`) CSS dot in the base colour instead of the `fiber_manual_record` glyph. A clickable badge gets a hover (6% `*-dark` mixed into its background, 10% while pressed) and its focus ring keeps the badge's corner (focus used to square it to 4px). The tooltip is `[sdTooltip]` instead of a `matTooltip` on every badge, and appears only when `tooltip` is set or the title is cut (then it shows the full title); the host's `title` attribute is removed, so the browser no longer adds its own tooltip. New size tokens `--sd-badge-height-sm` / `-md` / `-lg`, `--sd-badge-radius-tag` and `--sd-badge-font-weight` are read with a fallback; set them on any ancestor. Inputs, outputs and the colour precedence do not change.
-- Table: a `useBadge` cell is a button (`role="button"`, focusable, hover) only when the column has `click`; before, every badge cell was one because the cell always listened to the badge's `click`. The cell tooltip now goes to the badge's `tooltip` input, so a badge whose text is cut shows one tooltip instead of two.
-- Tooltip: `[sdTooltip]` opens as soon as its content arrives while the tooltip is wanted — after the hover delay with the pointer still over the host, or while the host has focus. Content that arrives after the pointer left, after `focusout` or after Escape opens nothing.
-- Select: the "select all" row of a multiple `sd-select` (`showSelectAll`) moves into the sticky panel header, below the search box, so it stays visible while the options scroll. It lines up with the options (same inset, checkbox column, 36px height, hover and full 6px corner) and loses its own bottom border: the header line is the only divider. A `selected/total` counter in 12px secondary tabular figures ends the row, over the same scope as the checkbox (enabled items matching the search). Screen readers get the counter as the row description through the new i18n key `core.form.select.selectAllCount`, which is in all five built-in catalogs; custom catalogs should add it. Without a search box the header holds only the row. The row keeps `.sd-select-all-row`, `role="checkbox"`, its keyboard and `data-autoid`.
-- Segmented: `sd-segmented` is now exactly as tall as an `sd-button` of the same size — 32 / 40 / 48px for `sm` / `md` / `lg` (38 / 46 / 54px before, from a 4px top margin and a 4px track padding). Choices are 24 / 32 / 40px with the label centred, the track padding is 3px (4px inline), the track corner is `--sd-control-radius` and choices are concentric with it (5px, was 4px). A `label` sits 4px above the track. Under `pointer: coarse` the track is at least 44px (was 50px). The focus ring is offset by a new host variable `--sd-segmented-ring-offset` (1px) instead of `--sd-focus-ring-offset`, and keyboard scrolling reserves the same ring. API, template, keyboard and colours do not change.
-- Checkbox and radio: an unchecked checkbox, radio or multi-select pseudo-checkbox has a lighter `--sd-border-strong` border (was Material's on-surface-variant), `--sd-text-secondary` on hover and focus; the border stays 2px and a checked control keeps its colour. `sd-checkbox` rounds its box by size — 3 / 4 / 5px for `sm` / `md` / `lg` (Material's 2px before) — and a `mat-checkbox` used directly (the `sd-table` selection column) and the pseudo-checkbox in a multiple `sd-select` take 4px. Radios stay round.
-- Entity picker: focus moves from an outline on the trigger to the focus outline and ring of the whole control box; viewed mode drops the outline; a disabled picker gets the disabled outline and background; a visible validation message also turns the outline red.
-- Search boxes: the `sd-kanban` board search, the `sd-table` quick-search keyword, the form builder palette search and the filter box of the `sd-select` panel are drawn by one internal search field (`ɵSdSearchField` in `@sdcorejs/angular/forms/directives`; internal, not covered by SemVer). All four use size `sm`: 32px high, 8px control corner, `--sd-control-border` with the hover and focus ring of the other box controls, an 18px search icon and 14px text. The kanban search was 40px high, the form builder search 36px with 13px text, and the quick-search keyword had a 6px corner. Under `pointer: coarse` they are at least 44px high with 16px text. The quick-search clear button keeps its label and `data-autoid`, and the field keeps its 44px height in containers of 550px or less. Clicking the icon or the padding still focuses the input. Each search keeps its own behaviour (Enter to apply, Escape to clear, ↵ hint, disabled state, `aria-describedby`). The new i18n key `core.form.search-field.clear` (the default name of the clear button) is in all five built-in catalogs; custom catalogs should add it.
-- Table: `sd-table` colours derive from the palette instead of fixed hex values. `--sd-table-header-bg`, `--sd-table-row-divider`, `--sd-table-row-hover-bg`, `--sd-table-row-selected-bg`, `--sd-table-row-activated-bg` and `--sd-table-group-row-bg` are `color-mix()` of the palette over `--sd-table-bg`; `--sd-table-header-text` is `--sd-text`, `--sd-table-select-arrow` `--sd-text-secondary`, `--sd-table-spinner` `--sd-primary`, and `--sd-table-group-header-mix` / `--sd-table-group-row-border` follow the header band and the divider. Light and dark use the same expression, so presets and a custom palette now tint the table (the default light look changes slightly: the header band is a softer grey, selected rows a primary tint). The sort arrows are tinted `--sd-text-secondary`, and `--sd-text` on the sorted column, instead of a fixed grey; the drag preview, the reorder handle, the resize and tree-toggle hovers and the add button shadow use theme tokens, so they also work in dark mode. `--sd-table-bg`, the tree levels and the export panel keep their values. Overriding any of these tokens still works as before. See `assets/THEME.md`, "Table tokens".
-- Form builder: the toolbar modes (_Design · Preview · Schema_) and levels (_Desktop · Tablet · Mobile_) are `sd-segmented` groups of size `sm` instead of hand-written radio groups. The levels show icons only, and below 720px the modes do too, with their names kept as accessible names; the design mode icon is `design_services` (was `edit`). The choices switch with ← → Home End as in every `sd-segmented` (↑ ↓ no longer do). Pages are underline tabs; the five page buttons are replaced by a 24px ⋯ button on the selected tab whose menu holds _Duplicate_, _Move left_, _Move right_ and _Delete_ (in the error colour), with the same disabled rules, and an _Add page_ text button ends the strip. The `data-builder-page` and `data-page-action` hooks stay, and the ⋯ button has `data-page-menu-trigger`. New i18n keys `core.component.form-builder.page.actions`, `.page.move-left` and `.page.move-right` are in all five built-in catalogs; custom catalogs should add them.
-- Kanban: lanes are neutral (`--sd-kanban-lane-bg`) instead of tinted with the column colour; the colour marks an 8px dot before the label (between the expand button and the count when collapsed), or the prefix icon. The count is plain 13px secondary text with tabular figures, `2/5` while filtering (was a pill reading `2 / 5`). Cards have a `--sd-kanban-card-border` outline and no shadow, darker on hover. With a mouse the drag handle and the movement menu are transparent until the card is hovered or focused, pending or failed, or its menu is open, and they stay in the tab order; on touch they are always shown. While dragging only the lane under the pointer is highlighted, and the drop position is a dashed slot instead of a faded copy of the card. Under forced colors lanes get a `CanvasText` border. Inputs, outputs, the move contract, keyboard and live region do not change.
-- Table: the inline column filter shows the operator as the chip inside its control for `string`, `number`, `boolean`, `values`, `lazy-values`, `date`, `datetime` and `time` columns, instead of a separate `sd-operator` before the control. Columns with a `filter.filterDef` template, `split-number` / `split-date` filters and an operator list of a single entry keep the separate `sd-operator` (a control given one operator would set it itself and emit `operatorChange` on start-up). `filter.operatorChange`, `filterChange`, `filterCommit` and when they emit do not change. **Server payload change for `NULL` / `NOT_NULL` on these columns:** `SdConvertToPagingReq` now sends `{ field, operator }` without `data`, also when the cell is empty (before, it sent nothing for an empty cell and `{ field, operator, data }` with a value); local tables keep rows whose value is `null` / `undefined` (`NULL`) or not (`NOT_NULL`), and picking or leaving either operator filters again at once. `filterDef` and split columns still filter only with a value.
-- Operator: the `sd-operator` menu uses the white select panel surface (`--sd-select-panel-bg`) opens 6px away from its trigger, and highlights the current operator (no tick). Inputs, outputs and `open()` do not change; the operator resolution and the menu styles are now shared with the form-control chip.
-
-- Icon: `SD_DEFAULT_LUCIDE_ALIASES` gains Lucide targets for `access_time`, `arrow_drop_down_circle`, `calculate`, `call`, `check_box`, `checklist`, `data_object`, `event_note`, `hub`, `label`, `link`, `mail`, `notes`, `numbers`, `payments`, `percent`, `pin` and `schedule`. Under the Lucide renderer, existing uses of those names now render the mapped icon (for example `schedule` in `sd-time` and `sd-datetime` renders `clock`). Existing keys keep their targets, app aliases still win, and Material rendering is unchanged. `notes` renders `align-justify`, so the `text` data type stays distinct from `string` (`text_fields`, which renders `text`).
-- Icon: `provideSdIcon({ lucideIcons })` also accepts a readonly array or map, such as `SD_DATA_TYPE_LUCIDE_ICONS`, without a copy.
-- Form controls: the outline of a focused field is `--sd-primary`. It used to stay `--sd-border` grey and only grow thicker, because Core forced the outline colour with `!important` in every state. The floating label, caret, select arrow and datepicker toggle of a focused field, the selected option and checkmark in option panels, and the selected day, range and "today" ring of the datepicker also use `--sd-primary` instead of Material's own azure palette, so a preset or a custom primary recolours them. Core sets these through Material's tokens in `sd.theme()` (see `THEME.md`, "Material tokens"), so an app can still override a Material token for a subtree.
-- Form controls: an invalid field turns its outline red and keeps the floating label in the colour of a valid field (primary while focused). It used to keep a grey outline (except with `hideInlineError`) and paint the label red. The error message, the error icon and the required `*` stay red.
-- Select and Autocomplete: options are 14px, the size of the value shown in the field. Single-select options were 16px.
-- View: the label of `<sd-view>`, of every form control in `viewed` mode and of `<sd-section-item>` is lighter (`--sd-view-label-color`, ≈ `#5e5e62` instead of `#44474f`), so it stands apart from the value (`--sd-view-value-color`, the text colour). The label element carries `.sd-view-label` instead of `.text-secondary`.
-- Form builder: page settings and form settings are separate inspector panels. Clicking a page in the page strip (or adding/duplicating one) opens the page panel — title, description, icon, visibility rules; clicking the empty canvas or the back button in the page panel header opens the form panel — a tip pointing to the page strip, page navigation, variables, form validations, shortcuts. The page "Display label" field is now "Title".
-- Form Generic: pages accept an optional plain-text `description`, edited in the page panel and shown above the page fields in every navigation mode (also the `aria-describedby` of the page region with tabs/steps).
-- Form builder: with "Single page" navigation and two or more pages, the form settings show a warning that only the first page is rendered, and every later page in the page strip is muted with a `visibility_off` icon and a screen-reader description. Navigation is not changed automatically; choose Tabs or Steps to show the other pages.
-- Form builder: the page settings card uses the same layout as the Variables and Form validations cards, its fields take the full card width, and the page icon is picked from the group icon presets instead of typed. The Vietnamese label "Xác thực cấp form" becomes "Xác thực của biểu mẫu", and its hint says "biểu mẫu" too. Clicking the selected group icon again removes it, as for the page icon.
-- Dependencies: `@sdcorejs/utils` 1.3.0 is required (time zone options of `DateUtilities` and `FilterUtilities`).
-- Date forms, only for apps that set `timeZone`: `sd-date`, `sd-datetime` and `sd-date-range` register their model value in the parent `FormGroup`, as they already do with a `transform`. Without a `transform`, `form.value` of `sd-date` changes from `Date` to `'yyyy/MM/dd'`, of `sd-datetime` from the display string to `'yyyy/MM/dd HH:mm:ss'`, and of `sd-date-range` from `{ from: Date, to: Date }` to `{ from: 'yyyy/MM/dd', to: 'yyyy/MM/dd' }`. Apps that keep `'local'` see no change. Before turning `timeZone` on, read `form.value` dates as model values:
-
-  ```diff
-  - const day: Date = form.value.birthDate;
-  + const day: string = form.value.birthDate; // 'yyyy/MM/dd' under a configured zone
-  ```
-- Date forms with `transform` or `timeZone`: `form.valueChanges` emits once per user edit that changes the model, with the model value, as it does without them. Before, the parent form stayed silent for those edits because the control registered in it received the model with `emitEvent: false`. Writes from the parent `[(model)]` binding still emit nothing. Apps that use `transform` and listen to `form.valueChanges` now receive these events.
-- Layout: `ISdSidebarConfiguration` includes `SidebarConfigurationV4` (`version: 4`), and `SidebarConfigurationBase` gains `context`.
-- Layout: `SdLayoutStorageService` has an eighth handle, `currentContext` — the context snapshot `{ id, title, subtitle?, avatar? }`, namespaced like the other entries and removed by `clear()`. The service also exposes `readCurrentContext()`, `writeCurrentContext()`, `refreshCurrentContext()` and `resolvedNamespace()` for `SdLayoutContextService`; apps keep using `SdLayoutContextService`.
-- Chip calendar: the popup is a CDK overlay with `role="dialog"` under the field (6px gap, it flips above when there is no room) instead of a `mat-menu`. Tab cycles inside it, Esc and "Xong" close it and return focus to the chip input, a click outside closes it, and the field keeps its focused outline while it is open. The calendar opens at the month of the chosen day nearest to today (or at `startAt`), and chosen days are solid primary cells.
-- Chip calendar: chips are sorted by date (the model keeps its order), shown in `displayFormat`, and are 20 / 24 / 28 px high in a one-line field of 32 / 40 / 48 px at `sm` / `md` / `lg`. A chip that `removable` keeps shows a lock icon with a tooltip instead of ✕. The ✕ and the lock are 12 / 14 / 16 px, sit 4px after the date and 5px from the chip's end and are centred in the chip (the lock takes the place of the ✕), and hovering the ✕ shows a round background (16 / 18 / 20 px) instead of Material's oval state layer. The default placeholder is "Chọn ngày" instead of the label and shows only while no day is chosen; the chips and the input share one line until the chips fill it. The viewed text lists the days sorted, in `displayFormat`, joined by ", ".
-- Chip calendar: `model` accepts `(string | number | Date)[]`, read like the model of `sd-date` (in `ISdCoreConfiguration.timeZone` when it is configured); the same day in two forms is one chip, and a model set by the parent is not written back. With `transform`, the parent form receives a control that carries the model.
-- Chip calendar: an error shows once the control is touched (closing the popup touches it) or the parent form is submitted, no longer while it is only dirty.
-- Form render: the `chip-calendar` field passes `validation.maxItems` as `maxCount` instead of the deprecated `max`.
-- Operator: the `sd-operator` trigger is a grey chip (primary tint only with `active`, solid primary while open, `expand_less` arrow while open) named "Điều kiện: {label}" / "Chọn điều kiện"; it was a primary icon button without a name. The menu is shared with the operator chip of the form controls: one 36px line per row, rows are `menuitemradio` with `aria-checked` on the current one (still no tick), operator codes only with `showCode`, a separator between operator families (comparison, text, list, range, empty) when the list has more than four items, and up to `min(360px, 100vw - 32px)` wide. Icon stroke follows the icon size (18px 2.1, 16px 2.25, 14px 2.5) and every glyph is `aria-hidden`.
-- Operator: `core.component.operator.current` / `.choose` read "Điều kiện: {operator}" / "Chọn điều kiện" (and "Condition: …" / "Choose condition" in English, matching wording in ja / ko / zh); the shorter Vietnamese operator labels are "Khác", "Lớn hơn hoặc bằng", "Nhỏ hơn hoặc bằng", "Bắt đầu bằng", "Không bắt đầu bằng", "Kết thúc bằng", "Không kết thúc bằng", "Trống" and "Không trống".
-- Table: the column filter lists its operators in the order of `filter.operator.list`, not the order of `OPERATORS`. The separate `sd-operator` (split filters, `filterDef` templates, single-operator lists) uses `size="sm"` and is `active` while the column has a value; without an operator nothing is picked or emitted.
-- Query bar: finished chips show the operator as a read-only xs glyph with its name and tooltip instead of a disabled button; the build step for the operator uses the xs glyph with a 24px hit area and the popover header the sm chip. The `::ng-deep` overrides of `.c-op-trigger` / `.c-op-icon` are gone.
-- Dependencies: `@sdcorejs/utils` 1.3.1, which redraws the 17 operator icons (wider comparison signs, larger string pills, one negation slash, the set-membership sign for `IN`, a slashed ring for `NULL`, a ring with a dot for `NOT_NULL`).
+- The unused `thumbnailPosition` and `title` fields of the internal preview component (`<preview>`), and its `modal` reference.
 
 ### Fixed
 
-- Forms: the background of an outlined field (the table background in the inline filter row, the disabled background) is rounded with the 8px control outline in every state. It used Material's 4px top / 0px bottom corners outside focus, so square corners showed outside the outline on a grey filter row or a disabled field.
-- Forms: at size `lg` (Material's own field metrics) the suffix icons and icon buttons (the arrow of `sd-badge-picker`, the clear button of `sd-input`, the calendar button of `sd-date`, …) sat on the right border; the suffix now has the 12px padding and 8px gap of `md`.
-- Tab router: the tab bar is hidden when there is one tab or none and shown from the second tab. The condition was inverted (`tabs().length > 1`), so the bar disappeared exactly when several tabs were open.
-- Tab router: tab names were cut at a fixed 184px without an ellipsis; they now take the width of the tab and end with "…".
-- Tab router: a middle-click on a tab closes it without also opening its url in a new browser tab. The tab cancelled `mousedown` and `mouseup`, but the browser opens a link on `auxclick`, so the page opened in a new browser tab whenever the tab was still in the DOM at that moment: in apps with `eventCoalescing: true` or zoneless change detection, and for tabs with an async `beforeClose`.
-- Select: options no longer show through a 4px strip above the panel's sticky search box while the list scrolls. The search box now covers the panel's top padding when stuck; at rest the panel keeps its 4px padding.
-- Select: the multiple-selection summary tooltip ("N selected • …") shows only while the panel is closed. Opening the panel hides a tooltip that is already visible.
-- Tooltip: `[sdTooltip]` hides a visible tooltip as soon as its bound content becomes empty, instead of keeping it until the pointer or focus leaves.
-- Table: a response dropped because a filter was committed without reload (`notReload`) no longer leaves the table loading; the read returns to `idle` and the spinner stops. `SdReadChannel` (internal) gains `isLatest(revision)`.
-- Table: `type: 'local'` tables apply the inline filter operator. Local matching ignored `columnOperator`, so a number column always compared with `=` whatever operator was picked and a string column always used `CONTAIN`. It now reads `columnOperator[field]`, then `column.filter.operator.default`, the same fallback `SdConvertToPagingReq` uses for server tables. Number columns support `EQUAL`, `NOT_EQUAL`, `GREATER_THAN`, `GREATER_OR_EQUAL`, `LESS_THAN` and `LESS_OR_EQUAL`. String columns support `CONTAIN` (default), `NOT_CONTAIN`, `EQUAL`, `NOT_EQUAL`, `START_WITH`, `NOT_START_WITH`, `END_WITH` and `NOT_END_WITH`, case-insensitive.
-- Table: local number filters treat `0` as a value. A filter of `0` was dropped, and rows whose value is `0` were hidden whenever the column was filtered. The typed `>`, `>=`, `<`, `<=` prefix works (any prefix returned no rows) and wins over the operator dropdown. `filter.type: 'split-number'` filters local rows by its inclusive `{ from, to }` range, with open ends; it filtered nothing before.
-- Table: changing the operator of a filter cell that has a value filters again at once, for local and server tables. Before, the new operator waited for the next Enter or reload. On an empty cell the operator is only stored.
-- Table: pressing Tab within 700 ms of Enter in an inline column filter no longer cancels the search. The blur committed the same value again with `notReload: true`, which dropped the pending read, so the filter was stored but the rows stayed stale. A blur now commits only a value that changed since the last commit; a changed value still replaces the pending read without searching, and `setFilter()` followed by a `notReload` commit stays silent.
-- Select, Autocomplete and the other outlined `size="sm"` fields: the resting floating label shares the 24px line height of the value, so it sits on the same pixel row as the placeholder and the selected value on every OS. On Windows it was 1px lower: Chrome floors the half-leading of the value line, and Roboto is 17px tall there (16px on Linux and macOS). The old `sm` label rule targeted a Material 2 class and never applied.
-- Layout search field on Angular 20–22: the placeholder colour and the square shape apply again; they were set only under the Material 19 token names.
-- Input: `viewed=true` shows a value that arrives after the first render — through `[model]` or the parent form's `patchValue` — and keeps following later changes, masked values included. It used to keep the first value it read, so a detail screen rendered before its record loaded showed "--". A `patchValue(…, { emitEvent: false })` still does not refresh the viewed text (see `sd-input.md`).
-- MiniEditor now synchronizes external values before/after mount, implements CVA touched and disabled state, and retains its 500ms leading/trailing output contract. Editor retains form/name registration and 100ms debounce.
-- Table (**server payload change — backends that receive this filter must accept the new operators**): `SdConvertToPagingReq` sends the `{ from, to }` value of a `type: 'number'` column with `filter: { type: 'split-number' }` as a range. Both ends → `{ field, operator: 'BETWEEN', data: { from, to } }` (inclusive); only `from` → `GREATER_OR_EQUAL`; only `to` → `LESS_OR_EQUAL`; no end → no filter. `0` is a bound; `undefined`, `null` and `''` are empty ends; the operator picked in the cell is ignored for this filter. It used to send `{ field, operator: 'EQUAL', data: { from, to } }`, or the picked operator with the same object, even when both ends were empty. Date columns and plain number filters are unchanged. See "server payload for `split-number`" in `sd-table.md`.
-- Package: the export map exposes `./assets/*` (`sass` and `default` conditions), so `@use '@sdcorejs/angular/assets/scss/themes/default' as sd;` from `THEME.md` resolves under every Angular builder. The webpack-based builders (`browser`, `karma`) stopped with `Can't find stylesheet to import` because the subpath was not exported; the esbuild `application` builder already resolved it. Paths with an explicit extension (`@sdcorejs/angular/assets/scss/sd-core.scss`) resolve the same way. Remove relative `node_modules/@sdcorejs/angular/...` `@use` workarounds once on this release.
+#### Badge
 
-- Window: neutral theme-aware chrome, shared Core UI icon buttons, token-based footer spacing/wrapping and viewport-bounded stacking. Removed delayed lifecycle races, released owned loading refs and kept keyboard page focus visible. Loading content is inert with an exposed localized status; nested overlays retain their own focus behavior. Window/Modal/Drawer share the semantic overlay surface in light/dark; existing component surface overrides remain.
-- Window: explicit boolean/bare-attribute write type for the unreleased `disableEscapeClose` input matches Core overlays and rejects invalid strict-template bindings without changing its default or runtime behavior. Server rendering leaves the body portal client-only; lifecycle and teardown work on Angular 19–22.
-- Chip calendar: the `removable` predicate applies to Backspace / Delete on a chip, to pressing a chosen day in the calendar and to clearing, not only to the ✕ button. Numeric model items are highlighted in the calendar and can be removed. Tab inside the calendar no longer closes it. The red outline no longer shows without its message. Picking more than `maxCount` days is no longer possible. The chips and their ✕ buttons have accessible names.
-- Operator: the `sd-operator` trigger and the query-bar operator glyphs have an accessible name, and the query-bar operator keeps its tooltip (it was a disabled button). The operator step of the query-bar build flow has a 24px hit area. The popover header of the query bar no longer paints the operator chip arrow primary.
+- The title of an `md` round, solid or tag badge, counters included, sits 1px lower, in the middle of the badge.
+  - With Roboto at 13px the baseline of the 18px line falls on a half pixel, so digits and capitals were drawn 0.5–1.6px above the middle, depending on the badge's position and the screen scale. `sm`, `lg`, `pair` and a tag with a description are unchanged.
+
+#### Chip
+
+- `removable` now applies on every removal path.
+  - A predicate used to reach `mat-chip-row` as a function, which is always truthy, so Backspace / Delete on a chip (or Backspace twice from the empty input) removed a chip the predicate kept; each chip now gets its own boolean and `onRemove` checks it again.
+- Every model item except `null`, `undefined` and `''` is a chip, so `0` shows (it was counted but hidden). Chips are tracked by value, so removing one no longer rebuilds the chips after it and moves focus.
+- A typed value that equals an existing chip as a string is a duplicate: a model `[1, 2]` plus a typed “1” stays `[1, 2]`.
+- Setting `model` to `null` or `undefined` clears the chips and sets `formControl` to `[]`. The control used to keep the old array and send it on submit.
+- One rule decides when the error shows — invalid, and touched or the parent `NgForm` / `FormGroupDirective` submitted — for the red outline, `<mat-error>`, the `hideInlineError` icon and `aria-invalid`.
+  - A submit without touching the field used to show a red outline without a message, a field that was only dirty turned red, and the input carried `aria-invalid="true"` before any interaction.
+- The ✕ button of a chip is named “Xoá {value}” (`core.form.chip.remove`, in the five locales) and uses the `close` icon; it was hidden from assistive technology.
+- The wrapper around the field is layout only.
+  - It used to sit in the Tab order with no role or name, disabled included; with `sdViewDef` the face itself is now a `role="button"` that Enter or Space opens, and it leaves the Tab order when disabled.
+- With `hideInlineError`, the hidden error text has an id and the input points `aria-describedby` at it.
+- Leaving the field no longer rewrites its value.
+  - `mat-chip-grid`, bound to the control as its value accessor, wrote the text of the rendered chips into the control after every blur: number items became strings without a `modelChange`, and a form reset made while the input had focus was undone. The grid now has a control of its own, and the field is marked touched when focus leaves it (moving between the input and its chips does not count).
+- In a field narrower than a chip, the chip text is cut with “…” and the ✕ or the lock stays inside the chip.
+  - The text used to keep its width (up to 240px) while the chip shrank to the field, so the ✕ or the lock was pushed past the chip's edge, and past the field's edge in a narrow one. Chips that fit are unchanged.
+
+#### Chip calendar
+
+- The clear button icon is 18 / 20px at `md` / `lg`, as designed. A shared `.sd-clear-btn sd-icon` rule forced 16px.
+
+#### Forms
+
+- A user edit now marks the control of the parent form dirty before writing its value, as Angular's value accessors do, so `form.dirty` and the default `'control'` mode of `registerSdUnsavedChangesForm` see it.
+  - Before, the control stayed pristine for a number typed into `<sd-input-number>`, the clear button of `<sd-input>`, `<sd-select>`, `<sd-date>`, `<sd-datetime>` and `<sd-autocomplete>`, a masked `<sd-input>`, select-all and the virtual list of `<sd-select>`, a day picked in `<sd-date>` or `<sd-datetime>`, an option chosen in `<sd-autocomplete>`, chips added or removed in `<sd-chip>` and `<sd-chip-calendar>`, and `<sd-date-range>`; leaving a page after such an edit did not ask. Blurring an empty `<sd-input-number>` still leaves it pristine.
+
+#### Input number, Textarea
+
+- An `[inlineError]` set while the field is already touched — the field error of a save the API rejected — shows its message, `data-invalid` and `aria-invalid` (and the red outline of `<sd-input-number>`) at once.
+  - It stayed hidden until the value changed, because the validator was installed without a control event.
+
+#### Section
+
+- Clicking the header of a collapsible `<sd-section>` placed inside a focusable element collapses it again.
+  - The click was ignored whenever any ancestor had a `tabindex`, so the external filter header of `<sd-table>` (whose host has `tabindex="0"`) only toggled from its chevron button. Clicks on actions inside the header still do not toggle.
+
+#### Select
+
+- With an async `items` loader, the selected value shows its label once a `SEARCH` result contains it, also when the `VALUE` request returned nothing or failed: `selectedItems`, the trigger, custom selected templates, the read-only and inline views and the tooltip update together, also with `virtualScroll`, without `modelChange`, `sdChange` or `sdSelection`.
+  - A retry updates them the same way. A response for a replaced loader, `cacheChecksum`, field mapping, search text or selection — such as the ward list after the province changed — no longer sets the label.
+
+#### Select, Autocomplete
+
+- The `sdItemDef` template context has `$implicit` as well as `item`, so `<ng-template sdItemDef let-option>` gets the item; it used to be `undefined` and the template threw. `let-item="item"` keeps working.
+
+#### Side drawer
+
+- Opening a drawer focuses its close button (X) also when `[sdHeaderRight]` holds actions, which come before X in the tab order. It used to focus the first of them, such as a Delete icon, where an Enter started the deletion prompt.
+
+#### Tab router
+
+- Navigations that finish one after another while an earlier tab is still being activated (for example while the outlet loads an NgModule lazy route) each open their own tab.
+  - The outlet read the router state when the queued activation ran, so the tab of an earlier URL got the component, route and name of the later one; it now captures the route when `NavigationEnd` is emitted.
+
+#### Upload file
+
+- A `details` response that arrives after `model` changed no longer replaces the preview or emits `filesChanged`, and the `FileReader`s of a replaced preview are aborted.
+  - `upload()` reads the local files from `model` instead of the preview, so a file whose preview is still loading is uploaded, server IDs and URLs without metadata stay in `model`, and a missing handler keeps the local files. The returned IDs replace the local keys in the latest `model`: files removed, reordered or added while the upload ran keep that change. Concurrent calls share one upload. Each control keeps its own picked files, so uploading the same file from another control no longer loses this control's pending file. A pick that finishes its checks (resize, image validation) after `model` changed adds its files to the current value and checks `max` again; it used to write back the value from before, which replaced the IDs of an upload that finished meanwhile with stale keys. After destruction, no callback updates `model`.
+- Ppt and pptx files show their own icons (they showed the xls / xlsx ones). `SdUploadFileDetail.size` is documented in bytes, as the component always read it (the JSDoc said MB).
+- The download button of the popup is labelled “Tải xuống”; it used the upload key (“Tải file”). The thumbnail rail followed the current file only by looking up ids that were never set; the filmstrip now scrolls to it.
+- Dragging an image to reorder moves it among the image positions of `model` only; the index of the image group used to be applied to the mixed array of images and documents. Documents can be reordered too.
+- The remove badge is no longer clipped (the field had `overflow-y: hidden` and the badge sat at −8px of a 3px margin).
+
+## [3.2] - 2026-10-23
+
+Packages `19.3.2` · `20.3.2` · `21.3.2` · `22.3.2`, validated against `*.3.1`.
+
+> [!IMPORTANT]
+> **Before upgrading:** custom i18n catalogs need new keys, the CKEditor-specific editor API is gone, exhaustive switches over `SdFormGenericField['type']` and the sidebar `version` need new cases, and the server payload changes for `NULL` / `NOT_NULL` and `split-number` table filters.
+
+**Highlights**
+
+- Design handoff waves 1–3: control tokens and box controls, operator chip in the form controls, select panel, checkbox and radio, segmented, kanban, badge, badge picker, avatar status and group, tab bar with scrolling and a tab list
+- Sidebar V4 with the context switcher and the `graphite` preset
+- The generic CRUD module
+- Form-generic static elements and buttons
+- A fixed app time zone
+- Unknown-total table pagination
+- The Tiptap editor engine
+- `sd-chip-calendar` limits and popup
 
 ### Changed (BREAKING for consumers)
 
-- Custom typed i18n catalogs must add the new `core.module.generic.*`, `core.component.form-builder.preset.time`, `core.component.form-builder.preset.json`, `core.component.form-generic.json.invalid`, `core.data-type.*`, `core.module.generic.field.visible-hint`, `core.module.generic.action.drag`, `core.component.form-builder.page.single-hint`, `core.component.form-builder.page.hidden-in-single`, `core.component.form-builder.page.title`, `core.component.form-builder.page.description`, `core.component.form-builder.page.description-hint`, `core.component.form-builder.page.back-to-form`, `core.component.form-builder.page.navigation-card` and `core.component.form-builder.page.settings-tip` keys present in the built-in catalogs, and drop `core.module.generic.field.external-filter`. Copy the entries from the built-in catalog of the same language, or let the compiler list the missing keys.
+#### Chip calendar
+
+- The `removable` predicate receives the normalised `'yyyy/MM/dd'` day instead of the raw model item, and after the first user action the model is a new `string[]` in the `transform` form — a `number[]` or `Date[]` model no longer keeps its item type.
+  - `sdChange` is typed `string[]`. E2E selectors that rely on `.mat-mdc-menu-panel` must use `role="dialog"` or `data-autoid="forms-chip-calendar-<autoId>-panel"`.
+
+  ```diff
+  - canRemove = (item: Date) => item >= this.today;
+  + canRemove = (day: string) => day >= DateUtilities.toFormat(this.today, 'yyyy/MM/dd');
+  ```
+
+#### Editor
+
+- CKEditor-specific public `Editor`, `editorConfig` and `onReady(ClassicEditor)` surfaces are removed.
+  - Deprecated `EditorOption`, `SdMiniEditorConfig` and `MentionFeedObjectItem` names now refer to Core-owned contracts; CK plugins/config/licenseKey/itemRenderer are unsupported. See component migration guides before upgrading.
+- `SdCKEditorStyles` / `sd-ckeditor-styles` and the legacy stylesheet import path remain deprecated compatibility loaders for shared Core content styles. They no longer load CKEditor CSS.
+- Unsafe content getters/upload and lossy format conversions report `SdEditorImportError` instead of silently exporting stripped content. Handle diagnostics before repairing or replacing stored values.
+
+#### Form generic
+
 - Code that switches exhaustively over `SdFormGenericField['type']` (or `SD_FORM_GENERIC_FIELD_TYPES`) no longer compiles until it handles `time` and `json`:
 
   ```diff
@@ -266,10 +351,17 @@ Release suffix `3.2` targets `19.3.2`, `20.3.2`, `21.3.2`, and `22.3.2`, validat
   +    return JSON.stringify(value);
    }
   ```
-- CKEditor-specific public `Editor`, `editorConfig` and `onReady(ClassicEditor)` surfaces are removed. Deprecated `EditorOption`, `SdMiniEditorConfig` and `MentionFeedObjectItem` names now refer to Core-owned contracts; CK plugins/config/licenseKey/itemRenderer are unsupported. See component migration guides before upgrading.
-- `SdCKEditorStyles` / `sd-ckeditor-styles` and the legacy stylesheet import path remain deprecated compatibility loaders for shared Core content styles. They no longer load CKEditor CSS.
-- Unsafe content getters/upload and lossy format conversions report `SdEditorImportError` instead of silently exporting stripped content. Handle diagnostics before repairing or replacing stored values.
+
+#### i18n
+
+- Custom typed i18n catalogs must add the new `core.module.generic.*`, `core.component.form-builder.preset.time`, `core.component.form-builder.preset.json`, `core.component.form-generic.json.invalid`, `core.data-type.*`, `core.module.generic.field.visible-hint`, `core.module.generic.action.drag`, `core.component.form-builder.page.single-hint`, `core.component.form-builder.page.hidden-in-single`, `core.component.form-builder.page.title`, `core.component.form-builder.page.description`, `core.component.form-builder.page.description-hint`, `core.component.form-builder.page.back-to-form`, `core.component.form-builder.page.navigation-card` and `core.component.form-builder.page.settings-tip` keys present in the built-in catalogs, and drop `core.module.generic.field.external-filter`.
+  - Copy the entries from the built-in catalog of the same language, or let the compiler list the missing keys.
 - Custom typed i18n catalogs must add the new editor toolbar/content/import/upload/mention keys present in the built-in catalogs. VI/EN labels are localized; other built-in catalogs currently use explicit English fallback for the new keys.
+- Custom typed i18n catalogs must add the new `core.module.layout.sidebar.v4-search-placeholder`, `.result-count`, `.no-match`, `.search-hint`, `.coming-soon`, `.badge-pending`, `.expand`, `.collapse`, `.open-menu` and `core.module.layout.context.*` keys present in the built-in catalogs.
+- Custom typed i18n catalogs must add the new `core.form.chip-calendar.*` keys present in the built-in catalogs.
+
+#### Layout
+
 - Code that switches exhaustively over `ISdSidebarConfiguration['version']` no longer compiles until it handles Sidebar V4:
 
   ```diff
@@ -280,338 +372,973 @@ Release suffix `3.2` targets `19.3.2`, `20.3.2`, `21.3.2`, and `22.3.2`, validat
   +    return renderV4(sidebar); // SidebarConfigurationV4
    }
   ```
+
+#### Storage
+
 - Hand-written implementations of `SdStorage<T>` or `SdStorageWithDefault<T>` (for example test doubles) must add `refresh()`. Code that only calls the storage API is unaffected.
-- Custom typed i18n catalogs must add the new `core.module.layout.sidebar.v4-search-placeholder`, `.result-count`, `.no-match`, `.search-hint`, `.coming-soon`, `.badge-pending`, `.expand`, `.collapse`, `.open-menu` and `core.module.layout.context.*` keys present in the built-in catalogs.
-- Chip calendar: the `removable` predicate receives the normalised `'yyyy/MM/dd'` day instead of the raw model item, and after the first user action the model is a new `string[]` in the `transform` form — a `number[]` or `Date[]` model no longer keeps its item type. `sdChange` is typed `string[]`. E2E selectors that rely on `.mat-mdc-menu-panel` must use `role="dialog"` or `data-autoid="forms-chip-calendar-<autoId>-panel"`.
-
-  ```diff
-  - canRemove = (item: Date) => item >= this.today;
-  + canRemove = (day: string) => day >= DateUtilities.toFormat(this.today, 'yyyy/MM/dd');
-  ```
-- Custom typed i18n catalogs must add the new `core.form.chip-calendar.*` keys present in the built-in catalogs.
-
-### Removed
-
-- Form builder: the seven unused component tokens `--sd-form-builder-md-secondary`, `-md-secondary-container`, `-md-on-secondary-container`, `-md-warning`, `-md-warning-container`, `-md-success` and `-md-success-container`, the `--md-sys-color-*` aliases that `sd-form-builder` declared on its host for its configuration widgets (every widget reads the `--sd-*` tokens; the last reader, the number field of the renderer, used it only as a fallback), and the dead `.msi` icon-font rules. Code that set or read these variables inside the builder should use the `--sd-*` tokens.
-- Chip calendar: the unused autocomplete code (`onSelect`, `MatAutocompleteModule`, `MatProgressSpinnerModule`), the global `.sd-chip-calendar-selected-date` rule and the unused styles `.c-md`, `.no-padding-wrapper` and `mat-chip-listbox`.
-
-### Deprecated
-
-- Tab router: `--sd-tab-router-item-muted-bg` (now an alias of `--sd-tab-router-nav-bg`) and `--sd-tab-router-badge-bg` are no longer read by the tab bar and will be removed in a later release.
-- `SdModalResizable` / `sd-modal-resizable` / `components/modal-resizable` remain aliases of the same Window component; no existing API is removed. Legacy `maximize`/`toggleMaximum`, writable signals, projection slots, CSS hooks and selector autoId prefix remain supported. Prefer `restore`/`toggleFullscreen` and readonly `isMinimized`/`isFullscreen`. See `components/window/sd-window.md` for migration and Core API mapping.
-- Standard npm build/prepack hooks preserve the alias's TypeScript deprecation hint on Angular 19–22, including single-version CI installations. The annotation changes only the existing declaration export specifier's JSDoc; canonical exports, runtime code and signatures stay intact. Raw Angular CLI/watch artifacts need the documented annotation step before packaging.
-- Chip calendar: `min` and `max`; use `minCount` and `maxCount`. The new names win when both are set, and dev mode warns once per instance.
-
-## [3.1] - 2026-10-10
 
 ### Added
 
-- Kanban: generic status columns and immutable mappings, card/header/action templates, search/filter/count/collapse, drag/menu/keyboard moves, consumer-confirmed asynchronous transitions and stale-response protection. Columns retain horizontal mobile scrolling.
-- Segmented control: single/multiple model choices, light/fill/outline variants, semantic colors/sizes, templates/icons and accessible keyboard navigation that scrolls its own track.
-- File Explorer: optional generic `Item<T>.data`, typed projected metadata columns, additive `dataSource` and grouped capability callbacks, `onClick` action aliases with legacy `click` retained, and consumer-controlled moves through drag, an accessible destination picker or `moveFiles()`. Legacy callable root callbacks remain supported.
-- File Explorer: selection actions and per-item file/folder commands, ordered flat or one-level grouped definitions, current hidden/disabled/loading eligibility and compact viewport action drawers. Explicit action arrays retain consumer order; omitted action arrays can supply Move/Share/Download from configured callbacks.
-- Form Generic: optional schema tabs/linear steps, serialized guarded transitions, renderer keyboard navigation, active builder page synchronization and model/FormGroup support with legacy schemas retained. Builder page create/remove/reorder, transition rules, undo and preview share the same schema.
-- Section item: optional `label` defaults to an empty string; projected `[itemLeft]` content occupies the existing left column and keeps consumer-owned typography.
+#### Avatar
+
+- `sd-avatar-group` (`SdAvatarGroup`, in `@sdcorejs/angular/components/avatar`) shows `items` (`SdAvatarGroupItem`: `src`, `name`, `status`, `statusLabel`, `statusPulse`) as overlapping avatars — each overlaps the previous one by `round(size × 0.15)`, has a 2px ring (3px from 64) in `--sd-avatar-status-ring`, and the left one is on top.
+  - At most `max` (default 4) are shown; the rest fold into a "+N" button, except that one leftover person is shown instead of "+1". "+N" opens a 280px list of the hidden people (avatar, name, status; focus on the first row, Esc returns to the button), or emits `moreClick` with them when that output is listened to. The host is `role="group"` named by `ariaLabel` (default "{n} người"). `sd-avatar` gains a `tooltip` input, which the group sets to "{name} · {statusLabel}". New i18n keys `core.component.avatar.group-label`, `.more-label` and `.more-title` are in all five built-in catalogs.
+- `sd-avatar` shows a status dot with the new inputs `status` (`Color`), `statusLabel` and `statusPulse`.
+  - The dot is an `sd-badge type="dot"` on the lower-right edge: diameter `clamp(8px, size × 0.25, 20px)`, a 2px ring (3px from size 64) in the new component token `--sd-avatar-status-ring` (`var(--sd-surface)` in light and dark), centred on the edge at 45°. `statusLabel` is the dot's tooltip and is appended to the accessible name; a dev-mode warning says when `status` has no `statusLabel`. New input `name`: the accessible name and, for an image avatar, the tooltip; a failed image now takes its initials and colour from `name` when it is set. `sd-badge` gains the hook `--sd-badge-dot-size` for the diameter of its dot.
+
+#### Badge
+
+- `sd-badge-picker` (`SdBadgePicker`, in `@sdcorejs/angular/components/badge`) picks the type, colour and icon of an `sd-badge` in one panel: a live preview, a 3-column grid of the six types, six colour swatches and a searchable 8-column icon grid.
+  - Models `[(type)]`, `[(color)]` and `[(icon)]` are written when the panel closes (outside click, Done, or Tab out); Esc discards the draft; the footer hint draws Esc as a key cap (`<kbd>`) inside the sentence, so `core.component.badge.picker.esc-hint` carries a `{key}` placeholder ("{key} huỷ thay đổi"; a custom catalog without it shows the plain sentence). `sdChange` emits `{ type, color, icon }` once, only when something changed. The trigger is a `mat-form-field` like `sd-select` (`size`, `floatLabel`, `labelPlacement`, `appearance`, `label`, `placeholder`, `helperText`, `required`, `validator`, `inlineError`, `hideInlineError`, `disabled`, `viewed`, `autoId`), and `[form]` + `name` register a control whose value is `{ type, color, icon } | null`. Each panel group is a radio group with one tab stop and arrow-key movement. Also exported: `SD_BADGE_TYPE_OPTIONS` (`{ value, labelKey, descriptionKey }`), `SD_BADGE_ICON_PRESET` (23 icons) and the types `SdBadgePickerValue` and `SdBadgeTypeOption`. New i18n keys `core.component.badge.type.*` (with `.description`), `core.component.badge.color.*` and `core.component.badge.picker.*` are in all five built-in catalogs; custom catalogs should add them.
+- `sd-badge` has three new types.
+  - `solid` is a `--sd-*` pill with `--sd-*-contrast` text (as `round` otherwise, counters included) for a status that needs attention at once. `dot` shows only an 8px (10px at `lg`) dot; its `title` is not shown but is the tooltip and the accessible name (`role="img"`, or `role="button"` with a 20px hit area when clickable). `pair` joins a secondary `label` (weight 400) to the coloured value (`title`, weight 500) in one 4px / 6px-corner box and cuts the value first when it is too narrow. New input `label` (the left part of `pair`) and `pulse` (boolean attribute: a 3px ring of 28% of the colour around the dot of `dot` and of `icon` without an icon, pulsing every 1.6s, still under `prefers-reduced-motion`). `SdBadgeType` gains `'solid' | 'dot' | 'pair'`. `npm run test:theme` now checks `*-contrast` on the base colour and `*-dark` on `*-light` for every preset and dark.
+
+#### Button
+
+- `indicator`, `indicatorColor`, `indicatorMax` and `indicatorLabel` on `sd-button`.
+  - `indicator` shows a dot (`true`) or a count (a number above 0, floored; `0`, negatives, `NaN`, `false` and `null` hide it) on the top-end corner, anchored at 0.146 × the button height so it sits on the corner arc of every type, size and shape; a count above `indicatorMax` (default 99) reads `{max}+`. It uses `--sd-{indicatorColor}` (default `error`) with its `-contrast` text and a 2px ring of the new `--sd-button-indicator-ring` token (`var(--sd-surface)`), turns grey on a disabled button, stays while loading, and never changes the button size. Under forced colors it is drawn in `CanvasText` with a `Canvas` ring (`GrayText` when disabled), so the dot stays visible. It is a sibling of the native button, `aria-hidden`; `indicatorLabel` is a visually hidden text added to the button's `aria-describedby`. See `sd-button.md`, "Indicator".
+
+#### Chip calendar
+
+- New inputs `minDate` and `maxDate` (`'TODAY'` is today in the configured zone), `dateFilter`, `startAt`, `minCount`, `maxCount`, `clearable`, `maxVisible`, `displayFormat` (Angular `DatePipe` syntax, default `dd/MM/yyyy`) and `transform` (the string forms of `sd-date`), and the types `SdChipCalendarValue`, `SdChipCalendarModel`, `SdChipCalendarDate` and `SdChipCalendarRemovable`.
+  - The field has a calendar button in its suffix and, with `clearable`, a clear button; `maxVisible` folds the extra chips into a "+N" button while the popup is closed. The popup has its own header (previous month, month label, next month), a count line ("Đã chọn {n} ngày · Tối đa {max}"), a polite live message when `maxCount` is reached, and a footer with "Xoá hết" (`clearable`) and "Xong". New component tokens `--sd-chip-calendar-panel-width` (296px), `--sd-chip-calendar-chip-locked-bg` and `--sd-chip-calendar-more-hover-bg` (both derived from the palette). New i18n keys `core.form.chip-calendar.placeholder`, `.dialog-label`, `.clear`, `.clear-all`, `.done`, `.selected-count`, `.max-count`, `.no-limit`, `.full`, `.remove`, `.locked` and `.more` are in all five built-in catalogs.
+
+#### Editor
+
+- Editor and MiniEditor use a shared Tiptap OSS document engine with full and compact Core toolbars. Supported rich HTML, merged tables, image figures/captions, fonts, alignment and mentions use the same schema in both components.
+- Import diagnostics preserve untouched safe source, lock unsupported content and reject unsafe/lossy exports or paste. HTML/Markdown conversion verifies preservation; no Pro/paid conversion or DocumentEditor is included.
+- Selected-image sizing/alignment actions, composition-aware form output, SSR-safe initialization/counting, and upload generation/result/retry safeguards. OSS license notices ship with package assets.
+
+#### Form generic
+
+- `time` (`HH:mm`, `<sd-time>`) and `json` (`<sd-code-editor>`, stores the parsed value) field types in the renderer, builder palette, preview and inspector. The JSON field exposes its label, required state and error to assistive technology.
+- Static elements and buttons.
+  - A page or a group can hold seven static elements — `heading` (`level` 2–4, default 3), `paragraph`, `quote` (`cite`), `image` (`src`, `alt`, `width`, `caption`), `link` (`href`, `newTab`), `divider` and `notice` (`title`, `color` `info` / `success` / `warning` / `error`) — and `button` elements. They sit on the same 12-column grid as fields (`layout.span`, `layout.newRow`), are shown or hidden by `hidden` and `rules.visible` / `rules.hidden` (a button also by `disabled` and `rules.disabled`) and have no `key`, so they never reach the value, `validate()` or `viewEntities()`. Texts are plain text (no HTML, no `${key}`). `href` and `src` go through one URL policy: a link accepts absolute http(s) without credentials, a same-origin relative path, `mailto:` and `tel:`; an image accepts http(s), a relative path and `data:image/*`. A rejected URL renders no link or image (a dev-mode warning in the renderer, a warning in the builder inspector); a link opened in a new tab always has `rel="noopener noreferrer"`. `sdValidateSchema` adds `text-missing`, `heading-level-invalid`, `button-action-invalid`, `button-name-missing` and `button-name-reserved`.
+  - A button runs `submit`, `reset` or a `custom` action (`name`, optional `validate`), drawn with `sd-button` (`variant`, `color`, `icon`, `align`). `<sd-form-render>` emits `sdAction` — `{ action, buttonId, value, messages }` — and never calls an API or uploads: `submit` emits only when `validate()` passes (otherwise field errors and a form-level error block above the grid are shown), `reset` restores the last value the host loaded with `defaultValue` applied again and marks the form pristine, a custom action emits at once or like submit with `validate: true`. `submit()` (resolves `{ valid, messages, value }`) and `reset()` run the same pipeline from code; while a validating run is in progress other actions are ignored and `submit()` returns the same promise. Buttons are hidden in `[viewed]` mode unless `showWhenViewed: true`; static elements and buttons are hidden while `[keys]` is set. The public runtime surface is unchanged (new types only: `SdFormGenericStatic`, `SdFormGenericButton`, `SdFormGenericAction`, `SdFormGenericSubmitResult`, …).
+  - In `<sd-form-builder>` the palette has *Static* (7 entries) and *Buttons* groups before *Layout*; the canvas previews the real elements inside an `inert` region; the inspector has *General* / *Conditions* / *Layout* tabs, keeps an empty text, label or action name (or `submit` / `reset` as a name) as an unsaved draft so every emitted schema stays valid, warns about unsafe URLs and a missing or reserved name, and gives a button switched to `custom` — or a duplicated custom button — an unused name. Drag and drop, resize, duplicate, delete with Undo, undo / redo, *Structure* and key rename (their `rules` follow) work as for fields. Custom i18n catalogs must add the 52 new `core.component.form-builder.*` keys present in the built-in catalogs.
+
+#### Forms
+
+- `operators` and `operator` on `sd-input`, `sd-input-number`, `sd-select`, `sd-date` and `sd-date-range`.
+  - With two or more `operators` the field shows the current operator as a prefix chip (`matPrefix`): a `<button type="button">` with the operator icon and an arrow, 24px high at `sm` and 28px at `md`, muted without a value, `--sd-primary-light` once the field has a value and solid `--sd-primary` while its menu is open; the arrow shows in every field, narrow ones included. The menu opens 6px away from the field box and lines up with the field start, like the `sd-select` panel. The menu is the `sd-operator` one. With exactly one operator the control sets `operator` to it and shows no chip; with none nothing changes. The label always floats while the chip is shown. Tab reaches the chip before the field; Enter, Space or Alt+↓ open the menu; picking a row moves focus to the field and Escape returns it to the chip. Changing the operator keeps the value and the clear button keeps the operator; `NULL` / `NOT_NULL` need no value, so picking one clears the value and disables the entry until another operator is picked (the chip stays usable). The label is not repeated as the placeholder while the chip is shown. `autoId` gives the chip `data-autoid="<autoId>-operator"`. New i18n keys `core.component.operator.current` and `core.component.operator.choose` (the chip's accessible name) are in all five built-in catalogs; custom catalogs should add them.
+
+#### Generic module
+
+- New entry point `@sdcorejs/angular/modules/generic`: list, detail, create, update, Excel import and configuration screens generated from one `SdGenericSchema` per entity.
+  - Backends plug in through `provideSdGeneric({ adapters })` (`SdGenericConfiguration`; one adapter per module, nearest injector wins); `provideSdGenericEntity` adds schema adjustments, a dedicated search, page/side-drawer display, `beforeSave`/`afterSave` hooks and custom actions. Routes `generic/:module/:entity[/create|/:id/detail|/:id/update|/configuration]` are guarded by `<MODULE>_<ENTITY>_C_GENERIC_<ACTION>` codes, refuse unsafe module/entity names and close the form routes hidden by `hiddenDefaults`. Stored configurations (`adapter.schemaStore`, default `localStorage`) are checked by `validateSdGenericSchema` and merged with the backend schema; a configuration may narrow but never reopen `insertable`/`updatable`. Excel import looks records up in batches of 100 and reports ambiguous matches and every failed row in `<sd-import-excel>`. Screens render in `<sd-page>`; the list opens a record from a link on its first column, keeps edit in the detail screen and delete in the selector, and shows external filters declared in code (backend schema or `provideSdGenericEntity`) without the filter toolbar. The configuration screen does not edit external filters, and a stored configuration neither carries nor contributes them.
+- Configuration screen: every property row of General, List and Import shows its data-type icon and its `key` under the label.
+  - List columns reorder by dragging a handle, and the move buttons stay for keyboard use. The column "Visible" checkbox reads "Show by default" and has a tooltip saying the end user can still show the column.
+
+#### i18n
+
+- `core.module.layout.sidebar.*` keys for the V4 search, "Soon", badge descriptions, the collapse/expand toggle and the mobile menu button, and `core.module.layout.context.*` keys for the Context Switcher, in all five built-in catalogs.
+
+#### Icon
+
+- Shared data-type icon set in `@sdcorejs/angular/modules/icon`, made of `SdDataTypeIconKey` (22 keys), `SD_DATA_TYPE_ICON`, `SD_DATA_TYPE_LABEL_KEY` (`core.data-type.<key>`), `sdDataTypeIcon()` and `SD_DATA_TYPE_LUCIDE_ICONS`.
+  - The form builder palette uses it with unchanged icons. Every icon also renders under the Lucide renderer once `SD_DATA_TYPE_LUCIDE_ICONS` is passed to `provideSdIcon({ lucideIcons })`.
+
+#### Layout
+
+- Sidebar V4 (`version: 4`) — `SdSidebarV4` / `sd-sidebar-v4` on desktop and `SdSidebarMobileV4` / `sd-sidebar-mobile-v4` below `mobileBreakpoint`.
+  - It keeps the V3 routing, Pinned/Recent and collapsed preference (stored in the same version 3 entry), and adds menu section headings, one trailing count, badge, status or "Soon" chip per row, a pill search focused with `Ctrl+K` / `⌘K` and driven with `↑ ↓ Enter Esc`, a 72px rail with section separators and group flyouts, and colours that come only from theme tokens (`brandColor` / `brandLightColor` are ignored). `SidebarConfigurationV4` adds `itemShape` (`'pill'` | `'soft'`), `density` (`'compact'` | `'comfortable'`), `collapsedGroup` (`'flyout'` | `'expand'`) and `mobile.bottomBar` (at most 4 menu ids, plus "More"); `normalizeSidebarConfiguration` fills the defaults. On mobile, V4 has a 56px app bar, a `min(88vw, 360px)` drawer with 44px rows, and the bottom bar when `mobile.bottomBar` is set. See `sd-layout.md`, "Sidebar V4".
+- Context Switcher for sidebar V1–V4 and their mobile variants.
+  - Assign `sidebar.context = { label?, items, searchable? }` (`SdLayoutContextConfiguration`, `SdLayoutContext`); Core persists the selected context in the layout storage namespace, restores it on the next load, falls back to `items[0]` (with at most one reload) when the stored id is missing or stale, and reloads the page after a switch. There is no change event: read the context at bootstrap with `SdLayoutContextService.getCurrentContext()`, for example in `provideAppInitializer`. A switch in another tab shows a "Context changed in another tab" notice with a Reload button and never reloads by itself. `SD_LAYOUT_CONTEXT_RUNTIME` (`SdLayoutContextRuntime`, `createSdLayoutContextBrowserRuntime`, `SD_LAYOUT_CONTEXT_MARKER_KEY`) carries the page reload, `storage` events and the per-tab reconcile marker, so specs and demos can provide a fake. `SdLayoutContextSwitcher` / `sd-layout-context-switcher` is exported; the CSS hooks `--sd-layout-context-switcher-popover-width` (popover width) and `--sd-layout-context-switcher-dot-ring-color` (ring of the rail "changed in another tab" dot) can be set on or above it. Without `context`, every sidebar renders as before. See `sd-layout.md`, "Context switcher".
+- `SdLayoutMenu` accepts optional `section`, `badge` (`SdLayoutMenuBadge`), `status` (`SdLayoutMenuStatus`) and `comingSoon`.
+  - Only Sidebar V4 renders them; V1–V3 ignore them, and a `comingSoon` item still navigates there. New helpers `searchAvailableMenuLeaves`, `groupMenusBySection` and `resolveMenuTrailing`; `searchMenuLeaves` is unchanged.
+
+#### Operator
+
+- `sd-operator` gains `size` (`SdOperatorSize`: `'xs' | 'sm' | 'md'`, default `md`), `readonly`, `active` and `showCode`.
+  - `sm` / `md` are the 24 / 28px chip that the form controls draw for `[operators]`; `xs` is a bare 14px glyph with a 24px hit area that does not grow the layout. `readonly` shows only the glyph with the operator name (`role="img"`, `aria-label`, tooltip) — no menu, no tab stop; `disabled` wins over it. `active` tints the chip primary while the condition has a value. `showCode` shows the operator code after the label in the menu.
+
+#### Storage
+
+- `SdStorage.refresh()` and `SdStorageWithDefault.refresh()` re-read the persisted value, replace the shared in-memory entry and notify subscribers only when the value changed — for values written by another tab, or to confirm that a write persisted (see `sd-storage.md`).
+
+#### Table
+
+- Unknown-total pagination for server tables whose API pages by offset/limit but returns no count.
+  - Declare `paginate: { total: 'unknown' }` and resolve `{ items, hasMore }` (`SdTableServerHasMoreResult<T>`) from `items()`; `SdTableServerTotalResult<T>` names the existing `{ items, total }` shape. The table footer then shows page size, the range of the rows actually loaded (`26-32`, no total), Previous/Next and First (with `showFirstLastButtons`), never Last; it reuses the `mat-paginator` classes, tokens and `SdTablePaginatorIntl` labels. The requested page and the shown page are separate: range, row numbers and Next follow only a successfully rendered page; every control is locked while a read is scheduled or running; filter, quick search, sort and page-size changes restart at the first page; a failed page keeps the existing rows-or-error rule and `retryRead()` replays it exactly. Rows past `pageSize` are dropped as lookahead and mean "more", an empty page always ends paging, and a result without a boolean `hasMore` is a read error. Default export fetches chunks until `hasMore` is false, a chunk is not exactly one page, or 1,048,575 rows (one Excel sheet) when `export.max` is not set. Known-total and local tables render as before; a known-total loader that resolves `{ items, hasMore }` without `total` logs one `console.warn`. Type change: the server `items` return type is now `Promise<SdTableServerTotalResult<T> | SdTableServerHasMoreResult<T>>`. Loaders that return `{ items, total }` still compile; code that calls `option.items(...)` itself and reads `.total` must narrow with `'total' in result`. See `sd-table.md`, "Phân trang không biết tổng".
+- `SdConvertToPagingReq` accepts an optional `dateTime` (pass `inject(SdDateTimeService)`) so a hand-built paging request uses the same zone bounds as the table. Omitted, the payload is unchanged.
+
+#### Theme
+
+- `graphite` preset (`sd.theme($preset: 'graphite')`), a light-only near-black palette for back-office consoles.
+  - A named preset may carry an optional `components` map that overrides component tokens with single values; unknown keys fail the Sass build. `graphite` uses it to raise the active Sidebar V4 item (`--sd-sidebar-v4-active-bg: var(--sd-surface)` plus a ring in `--sd-sidebar-v4-active-shadow`). With `graphite`, links and text buttons share the body text colour because `--sd-link` and `--sd-primary` are the text colour; no link token is added (see `THEME.md`).
+- Sidebar V4 colour tokens `--sd-sidebar-v4-bg`, `-line`, `-hover-bg`, `-active-bg`, `-active-shadow`, `-active-ink`, `-avatar-bg`, `-avatar-ink`, `-attention` and `-live`, emitted in light and dark and by every preset.
+- The `copper` and `teal` presets darken Sidebar V4 text that sits on a primary tint to `--sd-primary-dark` through their `components` map, so it reaches WCAG AA 4.5:1.
+  - `copper` sets `--sd-sidebar-v4-active-ink` (the active item label, 4.41:1 before, 7.50:1 now) and `--sd-sidebar-v4-avatar-ink` (the avatar initials, 4.18:1 before, 7.10:1 now); `teal` sets `--sd-sidebar-v4-avatar-ink` (4.498:1 before, 6.23:1 now). Other presets are unchanged. `npm run test:theme` now checks both pairs for every preset.
+- Control height scale `--sd-control-height-sm` (32px), `-md` (40px), `-lg` (48px) and `-coarse` (44px, the minimum height under `pointer: coarse`).
+  - `sd-button` sizes and the outlined `mat-form-field` heights now read these tokens, with the old pixel value as fallback, so nothing changes visually.
+- Control tokens shared by every box control.
+  - Scales `--sd-control-radius` (8px) and `--sd-panel-radius` (10px); semantic roles `--sd-control-border` (`color-mix(in srgb, var(--sd-border-strong) 82%, var(--sd-surface))`, at least 3:1 on `surface` for every preset), `--sd-control-border-hover`, `--sd-control-border-focus`, `--sd-control-border-disabled`, `--sd-control-ring`, `--sd-control-ring-error` and `--sd-control-bg-disabled`, also listed in `SD_COLOR_TOKENS`. See `assets/THEME.md` "Control tokens".
+- Kanban tokens `--sd-kanban-lane-bg`, `--sd-kanban-lane-target-bg`, `--sd-kanban-lane-target-border`, `--sd-kanban-drop-slot-border`, `--sd-kanban-card-border` and `--sd-kanban-card-hover-border`, `color-mix()` of the palette with one expression for light and dark (see `assets/THEME.md`, "Kanban tokens").
+
+#### Time zone
+
+- Fixed time zone: `ISdCoreConfiguration.timeZone` (`SdTimeZone`: `'local'`, the default, or an IANA id such as `'Asia/Ho_Chi_Minh'`) makes every Core UI surface show, parse, filter and serialize dates in that zone instead of the browser's.
+  - A date saved in Vietnam in 1960 (UTC+08 until 1975) now keeps its day when viewed in Thailand. Numeric offsets (`'+07:00'`) and unknown ids throw; the setting is read once from the root injector. The new `SdDateTimeService` (`@sdcorejs/angular/services/date-time`) holds the conversions: `toFormat`, `parse`, `parseFrom`, `begin`, `end`, `beginOfNextDay`, `today`, `now`, `toWallClock`, `fromWallClock`. Surfaces that follow the zone: `sdFormatDate`, `sdFormatDatetime`, `sdTimeDifferent`; `sd-date`, `sd-datetime`, `sd-date-range` (display, `TODAY` limits, picker today/Now, `transform` output); `sd-table` cells, server filters, client filter, local sort, aggregate MIN/MAX and Excel export; `sd-import-excel`; `sd-form-generic` rules, validations, read-only display and `'today'` limits; `sd-history`; `sd-file-explorer` `modifiedAt`. `sd-time` and `sd-chip-calendar` have no zone. A day filter is `[begin of the day, begin of the next calendar day)` in the zone, so 23- and 25-hour days are bounded correctly. Without the setting every value stays as before. See `sd-date-time.md`.
+
+#### View
+
+- Component tokens `--sd-view-label-color` and `--sd-view-value-color`, and the classes `.sd-view-label` / `.sd-view-value` for custom read-only layouts (see `sd-view.md`, "Styling tokens").
+
+#### Window
+
+- `SdWindow` / `sd-window` and `components/window` are the preferred public API.
+  - Additive `hideClose`, `windowClass`, `beforeClose`, `sdClosed`, `sdCloseError`, `requestClose` and `forceClose` match Core overlay conventions, with stale-guard protection. Added Core header/default-body slots, readable state/action names, docs and four Showcase examples. The nonmodal window intentionally has no backdrop, focus trap or body scroll lock.
 
 ### Changed
 
-- Button outline: neutral border and semantic foreground roles, light/dark overrides, subtle hover/pressed states, full-opacity loading and forced-colors support. Existing inputs/outputs, Material shape and other variants are retained.
-- Confirm dialog content padding is 20px desktop and 16px up to600px; existing mobile safe-area handling and service API are retained.
-- Compact Explorer controls and mobile Form footer use actual Core `sm` buttons (32px visual, 48px touch target). Selection Move is inside the selection band. Form renderer owns internal gaps; the page/dialog consumer owns outer gutter and safe-area.
+#### Avatar
 
-### Changed (BREAKING for consumers)
+- The `sd-avatar` host is `display: inline-flex; position: relative; vertical-align: middle` instead of the default inline box, and it is `role="img"` with `aria-label` = the name (plus ", {statusLabel}" with a status) — the name is `name`, or `src` when it is a name; without a name and a status the avatar stays decorative.
+  - The inner image has `alt=""` instead of `alt="avatar"`, so the name is not read twice.
 
-- Action-mode selection requires a usable configured action. Explicit empty or statically fully hidden actions suppress file checkboxes, select-all and the band; withdrawing actions clears selection. Dynamic `hidden` predicates affect current action visibility while retaining checkboxes and intermediate selections, including actions that require exactly two files. For an intentional actionless picker, migrate `selector: {}` to `selector: { mode: 'picker' }`. Omitted mode with legacy `onSelect`/`onSelectAll` callbacks preserves callback-owned picker behavior. Disabled/loading actions retain selection affordances.
-- Custom typed i18n catalogs must add the new selection/action/loading/item-actions, move/availability, and sixteen Form layout/transition keys present in the built-in catalogs.
+#### Badge
+
+- `sd-badge` has a fixed height of 20 / 24 / 28px for `sm` / `md` / `lg`, whatever the line-height around it.
+  - `round` and `tag` use 12px/16px, 13px/18px and 14px/20px text with weight 500 and 14 / 16 / 18px icons (they were 14 / 16 / 18px text and 16 / 18 / 24px icons, so screens on the default `sm` get smaller badges); `type="icon"` uses 13px/18px, 14px/20px and 14px/20px text in `--sd-text` with 16 / 18 / 18px icons, 6px from the text. Titles and descriptions stay on one line and are cut with an ellipsis (a long `round` title used to wrap into a centred block). The tag border is `color-mix(in srgb, *-dark 22%, *-light)` instead of the full `*-dark`, with a 4px corner at `sm` and 6px at `md` / `lg`. A number `title` on `round` is a counter: tabular figures, `min-width` equal to the height (one digit is a circle) and `99+` above 99, with the real number for screen readers. Descriptions are 12px/16px `--sd-text-secondary` for `icon` and `tag` (the `icon` description was 10px); a tag with a description becomes a two-line block (padding 4px 8px, 6px corner, 13px/18px title), and the icon lines up with the first line. `type="icon"` without an icon draws an 8px (10px at `lg`) CSS dot in the base colour instead of the `fiber_manual_record` glyph. A clickable badge gets a hover (6% `*-dark` mixed into its background, 10% while pressed) and its focus ring keeps the badge's corner (focus used to square it to 4px). The tooltip is `[sdTooltip]` instead of a `matTooltip` on every badge, and appears only when `tooltip` is set or the title is cut (then it shows the full title); the host's `title` attribute is removed, so the browser no longer adds its own tooltip. New size tokens `--sd-badge-height-sm` / `-md` / `-lg`, `--sd-badge-radius-tag` and `--sd-badge-font-weight` are read with a fallback; set them on any ancestor. Inputs, outputs and the colour precedence do not change.
+
+#### Checkbox and radio
+
+- An unchecked checkbox, radio or multi-select pseudo-checkbox has a lighter `--sd-border-strong` border (was Material's on-surface-variant), `--sd-text-secondary` on hover and focus; the border stays 2px and a checked control keeps its colour.
+  - `sd-checkbox` rounds its box by size — 3 / 4 / 5px for `sm` / `md` / `lg` (Material's 2px before) — and a `mat-checkbox` used directly (the `sd-table` selection column) and the pseudo-checkbox in a multiple `sd-select` take 4px. Radios stay round.
+
+#### Chip calendar
+
+- The popup is a CDK overlay with `role="dialog"` under the field (6px gap, it flips above when there is no room) instead of a `mat-menu`.
+  - Tab cycles inside it, Esc and "Xong" close it and return focus to the chip input, a click outside closes it, and the field keeps its focused outline while it is open. The calendar opens at the month of the chosen day nearest to today (or at `startAt`), and chosen days are solid primary cells.
+- Chips are sorted by date (the model keeps its order), shown in `displayFormat`, and are 20 / 24 / 28 px high in a one-line field of 32 / 40 / 48 px at `sm` / `md` / `lg`.
+  - A chip that `removable` keeps shows a lock icon with a tooltip instead of ✕. The ✕ and the lock are 12 / 14 / 16 px, sit 4px after the date and 5px from the chip's end and are centred in the chip (the lock takes the place of the ✕), and hovering the ✕ shows a round background (16 / 18 / 20 px) instead of Material's oval state layer. The default placeholder is "Chọn ngày" instead of the label and shows only while no day is chosen; the chips and the input share one line until the chips fill it. The viewed text lists the days sorted, in `displayFormat`, joined by ", ".
+- `model` accepts `(string | number | Date)[]`, read like the model of `sd-date` (in `ISdCoreConfiguration.timeZone` when it is configured); the same day in two forms is one chip, and a model set by the parent is not written back.
+  - With `transform`, the parent form receives a control that carries the model.
+- An error shows once the control is touched (closing the popup touches it) or the parent form is submitted, no longer while it is only dirty.
+
+#### Date forms
+
+- Only for apps that set `timeZone`: `sd-date`, `sd-datetime` and `sd-date-range` register their model value in the parent `FormGroup`, as they already do with a `transform`.
+  - Without a `transform`, `form.value` of `sd-date` changes from `Date` to `'yyyy/MM/dd'`, of `sd-datetime` from the display string to `'yyyy/MM/dd HH:mm:ss'`, and of `sd-date-range` from `{ from: Date, to: Date }` to `{ from: 'yyyy/MM/dd', to: 'yyyy/MM/dd' }`. Apps that keep `'local'` see no change. Before turning `timeZone` on, read `form.value` dates as model values:
+
+  ```diff
+  - const day: Date = form.value.birthDate;
+  + const day: string = form.value.birthDate; // 'yyyy/MM/dd' under a configured zone
+  ```
+
+- With `transform` or `timeZone`: `form.valueChanges` emits once per user edit that changes the model, with the model value, as it does without them.
+  - Before, the parent form stayed silent for those edits because the control registered in it received the model with `emitEvent: false`. Writes from the parent `[(model)]` binding still emit nothing. Apps that use `transform` and listen to `form.valueChanges` now receive these events.
+
+#### Dependencies
+
+- `@sdcorejs/utils` 1.3.0 is required (time zone options of `DateUtilities` and `FilterUtilities`).
+- `@sdcorejs/utils` 1.3.1, which redraws the 17 operator icons (wider comparison signs, larger string pills, one negation slash, the set-membership sign for `IN`, a slashed ring for `NULL`, a ring with a dot for `NOT_NULL`).
+
+#### Entity picker
+
+- Focus moves from an outline on the trigger to the focus outline and ring of the whole control box; viewed mode drops the outline; a disabled picker gets the disabled outline and background; a visible validation message also turns the outline red.
+
+#### Form builder
+
+- The toolbar modes (_Design · Preview · Schema_) and levels (_Desktop · Tablet · Mobile_) are `sd-segmented` groups of size `sm` instead of hand-written radio groups.
+  - The levels show icons only, and below 720px the modes do too, with their names kept as accessible names; the design mode icon is `design_services` (was `edit`). The choices switch with ← → Home End as in every `sd-segmented` (↑ ↓ no longer do). Pages are underline tabs; the five page buttons are replaced by a 24px ⋯ button on the selected tab whose menu holds _Duplicate_, _Move left_, _Move right_ and _Delete_ (in the error colour), with the same disabled rules, and an _Add page_ text button ends the strip. The `data-builder-page` and `data-page-action` hooks stay, and the ⋯ button has `data-page-menu-trigger`. New i18n keys `core.component.form-builder.page.actions`, `.page.move-left` and `.page.move-right` are in all five built-in catalogs; custom catalogs should add them.
+- Page settings and form settings are separate inspector panels.
+  - Clicking a page in the page strip (or adding/duplicating one) opens the page panel — title, description, icon, visibility rules; clicking the empty canvas or the back button in the page panel header opens the form panel — a tip pointing to the page strip, page navigation, variables, form validations, shortcuts. The page "Display label" field is now "Title".
+- With "Single page" navigation and two or more pages, the form settings show a warning that only the first page is rendered, and every later page in the page strip is muted with a `visibility_off` icon and a screen-reader description.
+  - Navigation is not changed automatically; choose Tabs or Steps to show the other pages.
+- The page settings card uses the same layout as the Variables and Form validations cards, its fields take the full card width, and the page icon is picked from the group icon presets instead of typed.
+  - The Vietnamese label "Xác thực cấp form" becomes "Xác thực của biểu mẫu", and its hint says "biểu mẫu" too. Clicking the selected group icon again removes it, as for the page icon.
+
+#### Form generic
+
+- Pages accept an optional plain-text `description`, edited in the page panel and shown above the page fields in every navigation mode (also the `aria-describedby` of the page region with tabs/steps).
+
+#### Form render
+
+- The `chip-calendar` field passes `validation.maxItems` as `maxCount` instead of the deprecated `max`.
+
+#### Forms
+
+- Box controls look the same everywhere.
+  - The outlined `mat-form-field` (`sd-input`, `sd-input-number`, `sd-textarea`, `sd-select`, `sd-autocomplete`, `sd-date`, `sd-datetime`, `sd-date-range`, `sd-time`, the box of `sd-input-color`), the filter input of the `sd-select` panel, `sd-entity-picker` and the inputs of the editor link/image popup, the form builder option editor and canvas preview, the file explorer dialogs and the query bar search box move from a 4–6px corner and the `--sd-border` outline to the 8px control corner and the darker `--sd-control-border` outline. Hover darkens the outline, focus is a 1px primary outline plus a soft 3px ring (an error ring on an invalid field, a 2px `Highlight` outline under forced colors), and every disabled control gets the `--sd-control-bg-disabled` background (`sd-autocomplete` used `--sd-surface-muted`). Heights, label typography, error messages and padding do not change. The query bar no longer forces its own 6px radius and border colours on the form fields inside it. To keep the previous look, set `--sd-control-radius: 4px`, `--sd-control-border: var(--sd-border)` and `--sd-control-ring: none` at the root.
+- The `sd-select` and `sd-autocomplete` panels, the `sd-operator` menu and the datepicker calendar take a 10px corner on all four sides, a thin border and `--sd-shadow-md`.
+  - The select and autocomplete panels open 6px away from the field (on the side the panel opens), use the white `--sd-select-panel-bg` instead of Material's tinted surface container, and have 4px of padding above the first and below the last option. Options keep their 36px height (virtual scroll unchanged) and are inset 4px with a 6px corner; a transparent 1px top and bottom border inside those 36px leaves a 2px gap between the hover or selected backgrounds of neighbouring options (under forced colors the border takes `Canvas`, so no line shows between options). The "select all" row of a multiple `sd-select` has the same inset, so its checkbox lines up with the options. The selected option of `sd-select` / `sd-autocomplete` is `--sd-primary-dark` on `--sd-primary-light` with weight 500 (the global `--mat-option-selected-state-label-text-color` stays `--sd-primary`); `sd-autocomplete` now also highlights the option that matches its value when the panel opens again (class `sd-option--selected`).
+- The outline of a focused field is `--sd-primary`.
+  - It used to stay `--sd-border` grey and only grow thicker, because Core forced the outline colour with `!important` in every state. The floating label, caret, select arrow and datepicker toggle of a focused field, the selected option and checkmark in option panels, and the selected day, range and "today" ring of the datepicker also use `--sd-primary` instead of Material's own azure palette, so a preset or a custom primary recolours them. Core sets these through Material's tokens in `sd.theme()` (see `THEME.md`, "Material tokens"), so an app can still override a Material token for a subtree.
+- An invalid field turns its outline red and keeps the floating label in the colour of a valid field (primary while focused).
+  - It used to keep a grey outline (except with `hideInlineError`) and paint the label red. The error message, the error icon and the required `*` stay red.
+
+#### Icon
+
+- `SD_DEFAULT_LUCIDE_ALIASES` gains Lucide targets for `access_time`, `arrow_drop_down_circle`, `calculate`, `call`, `check_box`, `checklist`, `data_object`, `event_note`, `hub`, `label`, `link`, `mail`, `notes`, `numbers`, `payments`, `percent`, `pin` and `schedule`.
+  - Under the Lucide renderer, existing uses of those names now render the mapped icon (for example `schedule` in `sd-time` and `sd-datetime` renders `clock`). Existing keys keep their targets, app aliases still win, and Material rendering is unchanged. `notes` renders `align-justify`, so the `text` data type stays distinct from `string` (`text_fields`, which renders `text`).
+- `provideSdIcon({ lucideIcons })` also accepts a readonly array or map, such as `SD_DATA_TYPE_LUCIDE_ICONS`, without a copy.
+
+#### Kanban
+
+- Lanes are neutral (`--sd-kanban-lane-bg`) instead of tinted with the column colour; the colour marks an 8px dot before the label (between the expand button and the count when collapsed), or the prefix icon.
+  - The count is plain 13px secondary text with tabular figures, `2/5` while filtering (was a pill reading `2 / 5`). Cards have a `--sd-kanban-card-border` outline and no shadow, darker on hover. With a mouse the drag handle and the movement menu are transparent until the card is hovered or focused, pending or failed, or its menu is open, and they stay in the tab order; on touch they are always shown. While dragging only the lane under the pointer is highlighted, and the drop position is a dashed slot instead of a faded copy of the card. Under forced colors lanes get a `CanvasText` border. Inputs, outputs, the move contract, keyboard and live region do not change.
+
+#### Layout
+
+- The expanded Sidebar V3 header keeps 12px between the app icon (or logo) and the app name, as Sidebar V4 does (was 8px, which crowded the two-line name when `context` is set).
+- The user menu hides its avatars from screen readers (`aria-hidden`), because the user name is shown beside them and the avatar now carries the name as well.
+- `ISdSidebarConfiguration` includes `SidebarConfigurationV4` (`version: 4`), and `SidebarConfigurationBase` gains `context`.
+- `SdLayoutStorageService` has an eighth handle, `currentContext` — the context snapshot `{ id, title, subtitle?, avatar? }`, namespaced like the other entries and removed by `clear()`.
+  - The service also exposes `readCurrentContext()`, `writeCurrentContext()`, `refreshCurrentContext()` and `resolvedNamespace()` for `SdLayoutContextService`; apps keep using `SdLayoutContextService`.
+
+#### Operator
+
+- The `sd-operator` menu uses the white select panel surface (`--sd-select-panel-bg`) opens 6px away from its trigger, and highlights the current operator (no tick).
+  - Inputs, outputs and `open()` do not change; the operator resolution and the menu styles are now shared with the form-control chip.
+- The `sd-operator` trigger is a grey chip (primary tint only with `active`, solid primary while open, `expand_less` arrow while open) named "Điều kiện: {label}" / "Chọn điều kiện"; it was a primary icon button without a name.
+  - The menu is shared with the operator chip of the form controls: one 36px line per row, rows are `menuitemradio` with `aria-checked` on the current one (still no tick), operator codes only with `showCode`, a separator between operator families (comparison, text, list, range, empty) when the list has more than four items, and up to `min(360px, 100vw - 32px)` wide. Icon stroke follows the icon size (18px 2.1, 16px 2.25, 14px 2.5) and every glyph is `aria-hidden`.
+- `core.component.operator.current` / `.choose` read "Điều kiện: {operator}" / "Chọn điều kiện" (and "Condition: …" / "Choose condition" in English, matching wording in ja / ko / zh); the shorter Vietnamese operator labels are "Khác", "Lớn hơn hoặc bằng", "Nhỏ hơn hoặc bằng", "Bắt đầu bằng", "Không bắt đầu bằng", "Kết thúc bằng", "Không kết thúc bằng", "Trống" and "Không trống".
+
+#### Query bar
+
+- Finished chips show the operator as a read-only xs glyph with its name and tooltip instead of a disabled button; the build step for the operator uses the xs glyph with a 24px hit area and the popover header the sm chip.
+  - The `::ng-deep` overrides of `.c-op-trigger` / `.c-op-icon` are gone.
+
+#### Search boxes
+
+- The `sd-kanban` board search, the `sd-table` quick-search keyword, the form builder palette search and the filter box of the `sd-select` panel are drawn by one internal search field (`ɵSdSearchField` in `@sdcorejs/angular/forms/directives`; internal, not covered by SemVer).
+  - All four use size `sm`: 32px high, 8px control corner, `--sd-control-border` with the hover and focus ring of the other box controls, an 18px search icon and 14px text. The kanban search was 40px high, the form builder search 36px with 13px text, and the quick-search keyword had a 6px corner. Under `pointer: coarse` they are at least 44px high with 16px text. The quick-search clear button keeps its label and `data-autoid`, and the field keeps its 44px height in containers of 550px or less. Clicking the icon or the padding still focuses the input. Each search keeps its own behaviour (Enter to apply, Escape to clear, ↵ hint, disabled state, `aria-describedby`). The new i18n key `core.form.search-field.clear` (the default name of the clear button) is in all five built-in catalogs; custom catalogs should add it.
+
+#### Segmented
+
+- `sd-segmented` is now exactly as tall as an `sd-button` of the same size — 32 / 40 / 48px for `sm` / `md` / `lg` (38 / 46 / 54px before, from a 4px top margin and a 4px track padding).
+  - Choices are 24 / 32 / 40px with the label centred, the track padding is 3px (4px inline), the track corner is `--sd-control-radius` and choices are concentric with it (5px, was 4px). A `label` sits 4px above the track. Under `pointer: coarse` the track is at least 44px (was 50px). The focus ring is offset by a new host variable `--sd-segmented-ring-offset` (1px) instead of `--sd-focus-ring-offset`, and keyboard scrolling reserves the same ring. API, template, keyboard and colours do not change.
+
+#### Select
+
+- The "select all" row of a multiple `sd-select` (`showSelectAll`) moves into the sticky panel header, below the search box, so it stays visible while the options scroll.
+  - It lines up with the options (same inset, checkbox column, 36px height, hover and full 6px corner) and loses its own bottom border: the header line is the only divider. A `selected/total` counter in 12px secondary tabular figures ends the row, over the same scope as the checkbox (enabled items matching the search). Screen readers get the counter as the row description through the new i18n key `core.form.select.selectAllCount`, which is in all five built-in catalogs; custom catalogs should add it. Without a search box the header holds only the row. The row keeps `.sd-select-all-row`, `role="checkbox"`, its keyboard and `data-autoid`.
+
+#### Select, Autocomplete
+
+- Options are 14px, the size of the value shown in the field. Single-select options were 16px.
+
+#### Tab router
+
+- New tab bar.
+  - The bar is 40px on `--sd-tab-router-nav-bg` with the tabs on its bottom edge; a tab prefers 200px and shrinks to 120px (it used to stretch over the bar and shrink to a few pixels), is 34px tall with 8px top corners, and shows a 16px icon in `--sd-<color>-dark` of `SdTabInfo.color` (primary when unset) and the name in 13px/18px, cut with an ellipsis. Tabs that are not open have no background and `--sd-tab-router-item-text`; a hovered tab gets the new `--sd-tab-router-item-hover-bg` instead of the white of the open tab; the open tab is `--sd-tab-router-item-active-bg` with `--sd-text` at weight 500. The close button is 20×20 with a 14px icon, always shown on the open tab and on touch screens (32px hit area), and on other tabs only on hover or focus. The divider hides on both sides of the open and the hovered tab. Focus draws a 2px ring inside the tab; under forced colours the open tab is outlined in `CanvasText`. The tab no longer uses `sd-badge`: a tab without an icon shows no dot, and the tooltip appears only when the name is cut or `@SdTabComponent` sets `tooltip` (it used to repeat the name on every tab). Tab router tokens now derive from the palette with one expression for light and dark (see `assets/THEME.md`, "Tab router tokens"); `npm run test:theme` checks the tab text on the bar, on a hovered tab and on the open tab.
+- The outlet is `height: 100dvh` after a `100vh` fallback, so it no longer runs under the address bar of mobile browsers. Under a header, set the height on the element (`<sd-tab-router-outlet style="height: calc(100dvh - 56px)">`).
+- The bar grows from 0 to 40px in 150ms when the second tab opens (no motion under `prefers-reduced-motion`).
+- When the tabs no longer fit at 120px, the bar scrolls sideways (hidden scrollbar; a vertical mouse wheel scrolls it too) instead of clipping the extra tabs, and keeps the open tab fully in view whenever it changes.
+  - A 32px fade shows on an edge that still hides tabs. A button at the end of the bar, shown only while the tabs overflow, shows the tab count and opens a 320px list of every open tab: pick a tab to switch to it, or close it from its row (the open tab is tinted primary, the list scrolls past 300px, Escape or a click outside closes it). New i18n keys `core.component.tab-router.tab-list`, `.open-tabs` and `.close-tab` are in all five built-in catalogs; custom catalogs should add them. The internal nav component loses its no-op `mode` and `checkUI()`.
+- The outlet creates `SdTabRouterTab.tabInfoChanges` as a `ReplaySubject(1)` (still a `Subject`), so a late subscriber — such as the tab list — receives the last tab info sent.
+
+#### Table
+
+- A `useBadge` cell is a button (`role="button"`, focusable, hover) only when the column has `click`; before, every badge cell was one because the cell always listened to the badge's `click`.
+  - The cell tooltip now goes to the badge's `tooltip` input, so a badge whose text is cut shows one tooltip instead of two.
+- `sd-table` colours derive from the palette instead of fixed hex values.
+  - `--sd-table-header-bg`, `--sd-table-row-divider`, `--sd-table-row-hover-bg`, `--sd-table-row-selected-bg`, `--sd-table-row-activated-bg` and `--sd-table-group-row-bg` are `color-mix()` of the palette over `--sd-table-bg`; `--sd-table-header-text` is `--sd-text`, `--sd-table-select-arrow` `--sd-text-secondary`, `--sd-table-spinner` `--sd-primary`, and `--sd-table-group-header-mix` / `--sd-table-group-row-border` follow the header band and the divider. Light and dark use the same expression, so presets and a custom palette now tint the table (the default light look changes slightly: the header band is a softer grey, selected rows a primary tint). The sort arrows are tinted `--sd-text-secondary`, and `--sd-text` on the sorted column, instead of a fixed grey; the drag preview, the reorder handle, the resize and tree-toggle hovers and the add button shadow use theme tokens, so they also work in dark mode. `--sd-table-bg`, the tree levels and the export panel keep their values. Overriding any of these tokens still works as before. See `assets/THEME.md`, "Table tokens".
+- The inline column filter shows the operator as the chip inside its control for `string`, `number`, `boolean`, `values`, `lazy-values`, `date`, `datetime` and `time` columns, instead of a separate `sd-operator` before the control.
+  - Columns with a `filter.filterDef` template, `split-number` / `split-date` filters and an operator list of a single entry keep the separate `sd-operator` (a control given one operator would set it itself and emit `operatorChange` on start-up). `filter.operatorChange`, `filterChange`, `filterCommit` and when they emit do not change. **Server payload change for `NULL` / `NOT_NULL` on these columns:** `SdConvertToPagingReq` now sends `{ field, operator }` without `data`, also when the cell is empty (before, it sent nothing for an empty cell and `{ field, operator, data }` with a value); local tables keep rows whose value is `null` / `undefined` (`NULL`) or not (`NOT_NULL`), and picking or leaving either operator filters again at once. `filterDef` and split columns still filter only with a value.
+- The column filter lists its operators in the order of `filter.operator.list`, not the order of `OPERATORS`.
+  - The separate `sd-operator` (split filters, `filterDef` templates, single-operator lists) uses `size="sm"` and is `active` while the column has a value; without an operator nothing is picked or emitted.
+
+#### Tooltip
+
+- `[sdTooltip]` opens as soon as its content arrives while the tooltip is wanted — after the hover delay with the pointer still over the host, or while the host has focus.
+  - Content that arrives after the pointer left, after `focusout` or after Escape opens nothing.
+
+#### View
+
+- The label of `<sd-view>`, of every form control in `viewed` mode and of `<sd-section-item>` is lighter (`--sd-view-label-color`, ≈ `#5e5e62` instead of `#44474f`), so it stands apart from the value (`--sd-view-value-color`, the text colour).
+  - The label element carries `.sd-view-label` instead of `.text-secondary`.
+
+### Deprecated
+
+#### Chip calendar
+
+- `min` and `max`; use `minCount` and `maxCount`. The new names win when both are set, and dev mode warns once per instance.
+
+#### Tab router
+
+- `--sd-tab-router-item-muted-bg` (now an alias of `--sd-tab-router-nav-bg`) and `--sd-tab-router-badge-bg` are no longer read by the tab bar and will be removed in a later release.
+
+#### Window
+
+- `SdModalResizable` / `sd-modal-resizable` / `components/modal-resizable` remain aliases of the same Window component; no existing API is removed.
+  - Legacy `maximize`/`toggleMaximum`, writable signals, projection slots, CSS hooks and selector autoId prefix remain supported. Prefer `restore`/`toggleFullscreen` and readonly `isMinimized`/`isFullscreen`. See `components/window/sd-window.md` for migration and Core API mapping.
+- Standard npm build/prepack hooks preserve the alias's TypeScript deprecation hint on Angular 19–22, including single-version CI installations.
+  - The annotation changes only the existing declaration export specifier's JSDoc; canonical exports, runtime code and signatures stay intact. Raw Angular CLI/watch artifacts need the documented annotation step before packaging.
+
+### Removed
+
+#### Chip calendar
+
+- The unused autocomplete code (`onSelect`, `MatAutocompleteModule`, `MatProgressSpinnerModule`), the global `.sd-chip-calendar-selected-date` rule and the unused styles `.c-md`, `.no-padding-wrapper` and `mat-chip-listbox`.
+
+#### Form builder
+
+- The seven unused component tokens `--sd-form-builder-md-secondary`, `-md-secondary-container`, `-md-on-secondary-container`, `-md-warning`, `-md-warning-container`, `-md-success` and `-md-success-container`, the `--md-sys-color-*` aliases that `sd-form-builder` declared on its host for its configuration widgets (every widget reads the `--sd-*` tokens; the last reader, the number field of the renderer, used it only as a fallback), and the dead `.msi` icon-font rules.
+  - Code that set or read these variables inside the builder should use the `--sd-*` tokens.
 
 ### Fixed
 
+#### Chip calendar
+
+- The `removable` predicate applies to Backspace / Delete on a chip, to pressing a chosen day in the calendar and to clearing, not only to the ✕ button.
+  - Numeric model items are highlighted in the calendar and can be removed. Tab inside the calendar no longer closes it. The red outline no longer shows without its message. Picking more than `maxCount` days is no longer possible. The chips and their ✕ buttons have accessible names.
+
+#### Editor
+
+- MiniEditor now synchronizes external values before/after mount, implements CVA touched and disabled state, and retains its 500ms leading/trailing output contract. Editor retains form/name registration and 100ms debounce.
+
+#### Forms
+
+- The background of an outlined field (the table background in the inline filter row, the disabled background) is rounded with the 8px control outline in every state.
+  - It used Material's 4px top / 0px bottom corners outside focus, so square corners showed outside the outline on a grey filter row or a disabled field.
+- At size `lg` (Material's own field metrics) the suffix icons and icon buttons (the arrow of `sd-badge-picker`, the clear button of `sd-input`, the calendar button of `sd-date`, …) sat on the right border; the suffix now has the 12px padding and 8px gap of `md`.
+
+#### Input
+
+- `viewed=true` shows a value that arrives after the first render — through `[model]` or the parent form's `patchValue` — and keeps following later changes, masked values included.
+  - It used to keep the first value it read, so a detail screen rendered before its record loaded showed "--". A `patchValue(…, { emitEvent: false })` still does not refresh the viewed text (see `sd-input.md`).
+
+#### Layout
+
+- Search field on Angular 20–22: the placeholder colour and the square shape apply again; they were set only under the Material 19 token names.
+
+#### Operator
+
+- The `sd-operator` trigger and the query-bar operator glyphs have an accessible name, and the query-bar operator keeps its tooltip (it was a disabled button).
+  - The operator step of the query-bar build flow has a 24px hit area. The popover header of the query bar no longer paints the operator chip arrow primary.
+
+#### Package
+
+- The export map exposes `./assets/*` (`sass` and `default` conditions), so `@use '@sdcorejs/angular/assets/scss/themes/default' as sd;` from `THEME.md` resolves under every Angular builder.
+  - The webpack-based builders (`browser`, `karma`) stopped with `Can't find stylesheet to import` because the subpath was not exported; the esbuild `application` builder already resolved it. Paths with an explicit extension (`@sdcorejs/angular/assets/scss/sd-core.scss`) resolve the same way. Remove relative `node_modules/@sdcorejs/angular/...` `@use` workarounds once on this release.
+
+#### Select
+
+- Options no longer show through a 4px strip above the panel's sticky search box while the list scrolls. The search box now covers the panel's top padding when stuck; at rest the panel keeps its 4px padding.
+- The multiple-selection summary tooltip ("N selected • …") shows only while the panel is closed. Opening the panel hides a tooltip that is already visible.
+
+#### Select, Autocomplete
+
+- Select, Autocomplete and the other outlined `size="sm"` fields: the resting floating label shares the 24px line height of the value, so it sits on the same pixel row as the placeholder and the selected value on every OS.
+  - On Windows it was 1px lower: Chrome floors the half-leading of the value line, and Roboto is 17px tall there (16px on Linux and macOS). The old `sm` label rule targeted a Material 2 class and never applied.
+
+#### Tab router
+
+- The tab bar is hidden when there is one tab or none and shown from the second tab. The condition was inverted (`tabs().length > 1`), so the bar disappeared exactly when several tabs were open.
+- Tab names were cut at a fixed 184px without an ellipsis; they now take the width of the tab and end with "…".
+- A middle-click on a tab closes it without also opening its url in a new browser tab.
+  - The tab cancelled `mousedown` and `mouseup`, but the browser opens a link on `auxclick`, so the page opened in a new browser tab whenever the tab was still in the DOM at that moment: in apps with `eventCoalescing: true` or zoneless change detection, and for tabs with an async `beforeClose`.
+
+#### Table
+
+- A response dropped because a filter was committed without reload (`notReload`) no longer leaves the table loading; the read returns to `idle` and the spinner stops. `SdReadChannel` (internal) gains `isLatest(revision)`.
+- `type: 'local'` tables apply the inline filter operator.
+  - Local matching ignored `columnOperator`, so a number column always compared with `=` whatever operator was picked and a string column always used `CONTAIN`. It now reads `columnOperator[field]`, then `column.filter.operator.default`, the same fallback `SdConvertToPagingReq` uses for server tables. Number columns support `EQUAL`, `NOT_EQUAL`, `GREATER_THAN`, `GREATER_OR_EQUAL`, `LESS_THAN` and `LESS_OR_EQUAL`. String columns support `CONTAIN` (default), `NOT_CONTAIN`, `EQUAL`, `NOT_EQUAL`, `START_WITH`, `NOT_START_WITH`, `END_WITH` and `NOT_END_WITH`, case-insensitive.
+- Local number filters treat `0` as a value.
+  - A filter of `0` was dropped, and rows whose value is `0` were hidden whenever the column was filtered. The typed `>`, `>=`, `<`, `<=` prefix works (any prefix returned no rows) and wins over the operator dropdown. `filter.type: 'split-number'` filters local rows by its inclusive `{ from, to }` range, with open ends; it filtered nothing before.
+- Changing the operator of a filter cell that has a value filters again at once, for local and server tables. Before, the new operator waited for the next Enter or reload. On an empty cell the operator is only stored.
+- Pressing Tab within 700 ms of Enter in an inline column filter no longer cancels the search.
+  - The blur committed the same value again with `notReload: true`, which dropped the pending read, so the filter was stored but the rows stayed stale. A blur now commits only a value that changed since the last commit; a changed value still replaces the pending read without searching, and `setFilter()` followed by a `notReload` commit stays silent.
+- **Server payload change — backends that receive this filter must accept the new operators.** `SdConvertToPagingReq` sends the `{ from, to }` value of a `type: 'number'` column with `filter: { type: 'split-number' }` as a range.
+  - Both ends → `{ field, operator: 'BETWEEN', data: { from, to } }` (inclusive); only `from` → `GREATER_OR_EQUAL`; only `to` → `LESS_OR_EQUAL`; no end → no filter. `0` is a bound; `undefined`, `null` and `''` are empty ends; the operator picked in the cell is ignored for this filter. It used to send `{ field, operator: 'EQUAL', data: { from, to } }`, or the picked operator with the same object, even when both ends were empty. Date columns and plain number filters are unchanged. See "server payload for `split-number`" in `sd-table.md`.
+
+#### Tooltip
+
+- `[sdTooltip]` hides a visible tooltip as soon as its bound content becomes empty, instead of keeping it until the pointer or focus leaves.
+
+#### Window
+
+- Neutral theme-aware chrome, shared Core UI icon buttons, token-based footer spacing/wrapping and viewport-bounded stacking.
+  - Removed delayed lifecycle races, released owned loading refs and kept keyboard page focus visible. Loading content is inert with an exposed localized status; nested overlays retain their own focus behavior. Window/Modal/Drawer share the semantic overlay surface in light/dark; existing component surface overrides remain.
+- Explicit boolean/bare-attribute write type for the unreleased `disableEscapeClose` input matches Core overlays and rejects invalid strict-template bindings without changing its default or runtime behavior.
+  - Server rendering leaves the body portal client-only; lifecycle and teardown work on Angular 19–22.
+
+## [3.1] - 2026-10-10
+
+Packages `19.3.1` · `20.3.1` · `21.3.1` · `22.3.1`.
+
+> [!IMPORTANT]
+> **Before upgrading:** action-mode selection requires a usable configured action, and custom typed i18n catalogs must add the new keys present in the built-in catalogs.
+
+### Changed (BREAKING for consumers)
+
+#### File explorer
+
+- Action-mode selection requires a usable configured action.
+  - Explicit empty or statically fully hidden actions suppress file checkboxes, select-all and the band; withdrawing actions clears selection. Dynamic `hidden` predicates affect current action visibility while retaining checkboxes and intermediate selections, including actions that require exactly two files. For an intentional actionless picker, migrate `selector: {}` to `selector: { mode: 'picker' }`. Omitted mode with legacy `onSelect`/`onSelectAll` callbacks preserves callback-owned picker behavior. Disabled/loading actions retain selection affordances.
+
+#### i18n
+
+- Custom typed i18n catalogs must add the new selection/action/loading/item-actions, move/availability, and sixteen Form layout/transition keys present in the built-in catalogs.
+
+### Added
+
+#### File explorer
+
+- Optional generic `Item<T>.data`, typed projected metadata columns, additive `dataSource` and grouped capability callbacks, `onClick` action aliases with legacy `click` retained, and consumer-controlled moves through drag, an accessible destination picker or `moveFiles()`.
+  - Legacy callable root callbacks remain supported.
+- Selection actions and per-item file/folder commands, ordered flat or one-level grouped definitions, current hidden/disabled/loading eligibility and compact viewport action drawers.
+  - Explicit action arrays retain consumer order; omitted action arrays can supply Move/Share/Download from configured callbacks.
+
+#### Form generic
+
+- Optional schema tabs/linear steps, serialized guarded transitions, renderer keyboard navigation, active builder page synchronization and model/FormGroup support with legacy schemas retained.
+  - Builder page create/remove/reorder, transition rules, undo and preview share the same schema.
+
+#### Kanban
+
+- Generic status columns and immutable mappings, card/header/action templates, search/filter/count/collapse, drag/menu/keyboard moves, consumer-confirmed asynchronous transitions and stale-response protection.
+  - Columns retain horizontal mobile scrolling.
+
+#### Section item
+
+- Optional `label` defaults to an empty string; projected `[itemLeft]` content occupies the existing left column and keeps consumer-owned typography.
+
+#### Segmented
+
+- Single/multiple model choices, light/fill/outline variants, semantic colors/sizes, templates/icons and accessible keyboard navigation that scrolls its own track.
+
+### Changed
+
+#### Button
+
+- Outline: neutral border and semantic foreground roles, light/dark overrides, subtle hover/pressed states, full-opacity loading and forced-colors support. Existing inputs/outputs, Material shape and other variants are retained.
+
+#### Confirm
+
+- Confirm dialog content padding is 20px desktop and 16px up to600px; existing mobile safe-area handling and service API are retained.
+
+#### File explorer, Form generic
+
+- Compact Explorer controls and mobile Form footer use actual Core `sm` buttons (32px visual, 48px touch target).
+  - Selection Move is inside the selection band. Form renderer owns internal gaps; the page/dialog consumer owns outer gutter and safe-area.
+
+### Fixed
+
+#### File explorer
+
 - Legacy Explorer `SdFileExplorerActionLeaf` and `SdFileExplorerActionGroup` retain callable `click` interfaces; additive definition types accept canonical `onClick` callbacks throughout the actual action component.
 - Compact touch error folder rows keep wrapping when commands are present; a long destination picker stays inside consumer-supplied short Explorer hosts and retains a scrollable footer.
-- Form navigation reacquires owned controls after consumer replacement/removal while validation is pending and checks cancellation before touching replacement schema controls. Global validation configuration includes fields from every page; page changes dismiss stale delete Undo toasts, and page metadata edits seal history through Core `sdBlur`.
 - Explorer destination-picker Tab/Shift+Tab ownership, dark surfaces, current selection/search move eligibility, changed-provider stale-response rejection and accepted-move cache refresh.
 - Per-item Move rows permit the full Core48px touch span without clipping; filenames keep ellipsis and narrow rows can wrap without overlapping touch targets. Retry controls retain readable labels on narrow layouts.
+
+#### Form builder
+
 - Form builder/page-strip scrolling reveals selected/focused long labels. Dynamic helper/error heights, radio label wrapping, renderer tab scrolling/focus and blocked linear navigation remain usable on narrow screens and enlarged text.
 
+#### Form generic
+
+- Form navigation reacquires owned controls after consumer replacement/removal while validation is pending and checks cancellation before touching replacement schema controls.
+  - Global validation configuration includes fields from every page; page changes dismiss stale delete Undo toasts, and page metadata edits seal history through Core `sdBlur`.
+
 ### Release tooling
+
+#### General
 
 - The reviewed3.1 contract compares exact same-major3.0 npm packages. The existing four-artifact OIDC transaction, immutable integrity checks, strict consumers and postpublish-only docs/page workflow remain release gates.
 - Explicit Form signal types keep v19 declarations stable across repeated builds without changing their accepted values or weakening the package fingerprint guard.
 
 ## [3.0] - 2026-10-02
 
-Release suffix `3.0` targets `19.3.0`, `20.3.0`, `21.3.0`, and `22.3.0`, validated against `*.2.15`.
+Packages `19.3.0` · `20.3.0` · `21.3.0` · `22.3.0`, validated against `*.2.15`.
+
+> [!IMPORTANT]
+> **Before upgrading:** `export.max` is now enforced for Excel and CSV export, editor output HTML goes through `sdSanitizeEditorHtml`, `SdUtilities.download(url)` requires a safe resource URL for anything that is not an absolute http(s) URL, the new schema `SdFormGenericSchema` replaces `SdFormGeneric` (stored schemas must be migrated once) and `SD_FORM_GENERIC_CONFIGURATION` is replaced by `provideSdFormGeneric()`, and a custom typed `I18nCatalog` must add the new keys. E2E selectors that assumed the old tooltip, toast or upload-file markup may need updating.
 
 ### Changed (BREAKING for consumers)
 
-- Table: `export.max` is now enforced for Excel and CSV export (it was declared but never read). The table total is checked before any data is fetched, and the `{ items, total }` totals and fetched row count are checked again while exporting; above the limit no file is written and a warning toast shows `core.component.table.export-max-exceeded`. Only a positive finite number is a limit — unset, `0`, negative or `NaN` stays unlimited; `export.type: 'custom'` is unaffected.
+#### Editor, Mini-editor
 
-```diff
-  export: {
--   max: 5000, // ignored before 3.0
-+   max: 5000, // now blocks exports above 5,000 rows
-  }
-```
+- Output HTML (`[(model)]`, the form value, `sdChange`, `upload()`) goes through the allowlist filter `sdSanitizeEditorHtml`.
+  - CKEditor formatting is kept; `<script>`, `<style>`, `<iframe>`, form controls, every `on*` attribute, links outside http/https/mailto/tel/relative/`#` and image sources outside http/https/`blob:`/relative/`data:image/*` are removed. Loaded content that needs filtering is written back once and the control is marked dirty. The mini-editor link dialog only accepts `https`, `http`, `mailto` and `tel` (`link.allowedProtocols`). Filter stored HTML rendered elsewhere with the same function:
 
-- Editor and mini-editor: output HTML (`[(model)]`, the form value, `sdChange`, `upload()`) goes through the allowlist filter `sdSanitizeEditorHtml`. CKEditor formatting is kept; `<script>`, `<style>`, `<iframe>`, form controls, every `on*` attribute, links outside http/https/mailto/tel/relative/`#` and image sources outside http/https/`blob:`/relative/`data:image/*` are removed. Loaded content that needs filtering is written back once and the control is marked dirty. The mini-editor link dialog only accepts `https`, `http`, `mailto` and `tel` (`link.allowedProtocols`). Filter stored HTML rendered elsewhere with the same function:
+  ```diff
+  - <div [innerHTML]="article.body | sdSafeHtml"></div>
+  + <div [innerHTML]="sanitize(article.body) | sdSafeHtml"></div>
+  + // sanitize = sdSanitizeEditorHtml from '@sdcorejs/angular/utilities/extensions'
+  ```
 
-```diff
-- <div [innerHTML]="article.body | sdSafeHtml"></div>
-+ <div [innerHTML]="sanitize(article.body) | sdSafeHtml"></div>
-+ // sanitize = sdSanitizeEditorHtml from '@sdcorejs/angular/utilities/extensions'
-```
+#### Form generic
 
-- Downloads: `SdUtilities.download(url)` with a string that is not an absolute http(s) URL now requires a safe resource URL — relative paths, `blob:`, `data:image/*` and `data:application/pdf`. `javascript:`, `vbscript:` and other `data:` URLs are refused with a dev-mode warning. Preview image/PDF downloads and the upload-file document link apply the same guard.
+- **New schema `SdFormGenericSchema` replaces `SdFormGeneric`.**
+  - `<sd-form-builder>` and `<sd-form-render>` read and write the new schema only — this is its first version (no `schemaVersion` field) and there is no automatic conversion, so stored schemas must be migrated once. The tree is fixed: `pages[] → group | field`, groups hold fields and do not nest; this release designs and renders the first page (other pages and `navigation` are kept for the tabs/steps release).
 
-```diff
-- SdUtilities.download('data:text/html,...');
-+ SdUtilities.download(URL.createObjectURL(new Blob([html], { type: 'text/html' })), 'report.html');
-```
+  ```diff
+  - const form: SdFormGeneric = {
+  -   components: [
+  -     {
+  -       id: 'a', key: 'email', type: 'textfield', subtype: 'email', label: 'Email',
+  -       layout: { columns: '6', mobileColumns: '12' },
+  -       validate: { required: true, maxlength: 120 },
+  -       properties: { viewed: false, visibleWhenExpression: { key: 'e', type: 'combinator', combinator: '&&', conditions: [/* … */] } },
+  -     },
+  -     { id: 'br', type: 'break' },
+  -     { id: 'c', key: 'district', type: 'select', label: 'District', valuesKey: 'districts', properties: { query: { provinceId: '${province}' } } },
+  -   ],
+  -   variables: [{ id: 'v1', key: 'tenantId', label: 'Tenant' }],
+  -   validations: [{ type: 'function', code: 'BUDGET', alert: 'error' }],
+  - };
+  + const schema: SdFormGenericSchema = {
+  +   pages: [{
+  +     id: 'main',
+  +     elements: [
+  +       {
+  +         id: 'a', key: 'email', type: 'textfield', subtype: 'email', label: 'Email',
+  +         layout: { span: { desktop: 6 } },                    // tablet follows desktop, mobile is a full row
+  +         validation: { required: true, maxLength: 120 },
+  +         rules: { visible: { field: 'agree', operator: 'EQUAL', data: true } },   // Filter from @sdcorejs/utils
+  +       },
+  +       {
+  +         id: 'c', key: 'district', type: 'select', label: 'District',
+  +         layout: { newRow: true },                            // replaces the break element
+  +         options: { source: 'catalog', catalog: 'districts', params: [{ name: 'provinceId', value: { field: 'province' } }] },
+  +       },
+  +     ],
+  +   }],
+  +   variables: [{ key: 'tenantId', label: 'Tenant' }],
+  +   validations: [{ type: 'function', validator: 'budget', alert: 'error' }],
+  + };
+  ```
 
-- Tooltip (`sdTooltip`): the bubble has `role="tooltip"` and an id referenced by the trigger's `aria-describedby` while it is shown; it opens on keyboard focus, stays open while the pointer is over the trigger or the bubble, and `Escape` hides it. E2E selectors that assumed the old bubble markup may need updating. `MatTooltip` usages are unchanged.
-- Notify: the toast container keeps two visually hidden live regions (`data-autoid="services-notify-live-polite"` and `services-notify-live-assertive`) that announce each toast; toasts no longer carry `aria-live`. The close button is `type="button"` with the i18n label `core.notify.close`, and a toast pauses its timer while hovered or focused. Selectors that count the container's children must skip the two regions.
-- Upload file: the document name is a `<button type="button" class="c-file-name">` instead of `<a href="javascript:;">`; the link look is unchanged.
-- i18n: new catalog keys `core.notify.close`, `core.form.select.clear`, `core.component.table.export-max-exceeded`, `core.component.preview-video.error`, `.retry`, `.download` and `.unsupported`. A custom typed `I18nCatalog` must add them.
+  Property mapping: `components` → `pages[0].elements` (group `components` → `elements`); `layout.columns` / `layout.mobileColumns` → `layout.span.desktop` / `layout.span.mobile` (numbers, plus the new `tablet` level); a `break` element → `layout.newRow: true` on the next field; `validate.*` → `validation.*` with `minLength`, `maxLength`, `maxItems` (was `maxOfItems`), `pattern: { value, message }` (was `pattern` + `patternErrorMessage`) and `'today'` (was `'TODAY'`); `properties.{hidden, viewed, hyperlink, multiple, direction, precision, currency}` and group `properties.{icon, color, collapsible}` → top-level properties; `properties.{visible,hidden,disabled,required}WhenExpression` (`SdFormGenericExpression`) → `rules.{visible, hidden, disabled, required}` stored as `Filter`; `values` → `options: { source: 'static', items }`; `valuesKey` + `properties.query` / `properties.setVariables` → `options: { source: 'catalog', catalog, params, fill }` with structured value refs (`{ field }`, `{ variable }`, `{ value }`) instead of `${key}` strings; upload `properties.{type, max, maxSize, args}` → `accept`, `maxFiles`, `maxSizeMb`, `params`; html `template` + `properties.{variables, queries, query}` → `definition`, `variables` (a record), `query`; validation `{ type: 'expression', expression, message }` → `{ type: 'filter', filter, message }` and `{ type: 'function', code }` → `{ type: 'function', validator }`; variables drop `id`. The `table` and `checklist` field types and the `break` element are gone (a table field returns in a later release). `hyperlink` now URL-encodes every `${key}` value: keep the scheme, host and `/` separators in the template text — a template such as `${baseUrl}/x` or `/files/${path}` whose value carries them must be rewritten.
 
-- **Form generic: new schema `SdFormGenericSchema` replaces `SdFormGeneric`.** `<sd-form-builder>` and `<sd-form-render>` read and write the new schema only — this is its first version (no `schemaVersion` field) and there is no automatic conversion, so stored schemas must be migrated once. The tree is fixed: `pages[] → group | field`, groups hold fields and do not nest; this release designs and renders the first page (other pages and `navigation` are kept for the tabs/steps release).
+- **Component API.** `<sd-form-builder>` binds `[(schema)]` (a `model()`); `<sd-form-render>` takes `[schema]` and a `[(value)]` model that always emits a new object and never mutates the one you pass.
 
-```diff
-- const form: SdFormGeneric = {
--   components: [
--     {
--       id: 'a', key: 'email', type: 'textfield', subtype: 'email', label: 'Email',
--       layout: { columns: '6', mobileColumns: '12' },
--       validate: { required: true, maxlength: 120 },
--       properties: { viewed: false, visibleWhenExpression: { key: 'e', type: 'combinator', combinator: '&&', conditions: [/* … */] } },
--     },
--     { id: 'br', type: 'break' },
--     { id: 'c', key: 'district', type: 'select', label: 'District', valuesKey: 'districts', properties: { query: { provinceId: '${province}' } } },
--   ],
--   variables: [{ id: 'v1', key: 'tenantId', label: 'Tenant' }],
--   validations: [{ type: 'function', code: 'BUDGET', alert: 'error' }],
-- };
-+ const schema: SdFormGenericSchema = {
-+   pages: [{
-+     id: 'main',
-+     elements: [
-+       {
-+         id: 'a', key: 'email', type: 'textfield', subtype: 'email', label: 'Email',
-+         layout: { span: { desktop: 6 } },                    // tablet follows desktop, mobile is a full row
-+         validation: { required: true, maxLength: 120 },
-+         rules: { visible: { field: 'agree', operator: 'EQUAL', data: true } },   // Filter from @sdcorejs/utils
-+       },
-+       {
-+         id: 'c', key: 'district', type: 'select', label: 'District',
-+         layout: { newRow: true },                            // replaces the break element
-+         options: { source: 'catalog', catalog: 'districts', params: [{ name: 'provinceId', value: { field: 'province' } }] },
-+       },
-+     ],
-+   }],
-+   variables: [{ key: 'tenantId', label: 'Tenant' }],
-+   validations: [{ type: 'function', validator: 'budget', alert: 'error' }],
-+ };
-```
+  ```diff
+  - <sd-form-builder [formGeneric]="form()" (sdChange)="form.set($event)"></sd-form-builder>
+  + <sd-form-builder [(schema)]="schema"></sd-form-builder>
 
-Property mapping: `components` → `pages[0].elements` (group `components` → `elements`); `layout.columns` / `layout.mobileColumns` → `layout.span.desktop` / `layout.span.mobile` (numbers, plus the new `tablet` level); a `break` element → `layout.newRow: true` on the next field; `validate.*` → `validation.*` with `minLength`, `maxLength`, `maxItems` (was `maxOfItems`), `pattern: { value, message }` (was `pattern` + `patternErrorMessage`) and `'today'` (was `'TODAY'`); `properties.{hidden, viewed, hyperlink, multiple, direction, precision, currency}` and group `properties.{icon, color, collapsible}` → top-level properties; `properties.{visible,hidden,disabled,required}WhenExpression` (`SdFormGenericExpression`) → `rules.{visible, hidden, disabled, required}` stored as `Filter`; `values` → `options: { source: 'static', items }`; `valuesKey` + `properties.query` / `properties.setVariables` → `options: { source: 'catalog', catalog, params, fill }` with structured value refs (`{ field }`, `{ variable }`, `{ value }`) instead of `${key}` strings; upload `properties.{type, max, maxSize, args}` → `accept`, `maxFiles`, `maxSizeMb`, `params`; html `template` + `properties.{variables, queries, query}` → `definition`, `variables` (a record), `query`; validation `{ type: 'expression', expression, message }` → `{ type: 'filter', filter, message }` and `{ type: 'function', code }` → `{ type: 'function', validator }`; variables drop `id`. The `table` and `checklist` field types and the `break` element are gone (a table field returns in a later release). `hyperlink` now URL-encodes every `${key}` value: keep the scheme, host and `/` separators in the template text — a template such as `${baseUrl}/x` or `/files/${path}` whose value carries them must be rewritten.
+  - <sd-form-render [configuration]="config" [form]="form" [entity]="entity" [properties]="keys"></sd-form-render>
+  + <sd-form-render [schema]="schema()" [(value)]="value" [form]="form" [variables]="variables" [keys]="keys"></sd-form-render>
+  ```
 
-- **Form generic: component API.** `<sd-form-builder>` binds `[(schema)]` (a `model()`); `<sd-form-render>` takes `[schema]` and a `[(value)]` model that always emits a new object and never mutates the one you pass.
+  ```diff
+  - const errors = await render.getValidationMessages('error');
+  - if (errors === undefined || errors.length) return;
+  + const { valid, messages } = await render.validate();   // { valid, messages: { error: [], warning: [] } }, never undefined
+  + if (!valid) return;
+  ```
 
-```diff
-- <sd-form-builder [formGeneric]="form()" (sdChange)="form.set($event)"></sd-form-builder>
-+ <sd-form-builder [(schema)]="schema"></sd-form-builder>
+  Removed from the builder: `[formGeneric]`, `(sdChange)`, `getForm()`, `getComponents()`, `getVariables()` and the `components` / `variables` / `validations` accessors — use `[(schema)]` and `getSchema()`. Removed from the renderer: `configuration`, `entity`, `defaultEntity`, `properties`, `getValidationMessages()`, `entity` / `formValue` / `loadCompleted` fields, the `setVariables` subject, and the `onLoaded`, `beforeSubmit` and `onChange.setValues` hooks — use `[schema]`, `[(value)]`, field `defaultValue`, `[keys]`, `[variables]` and `validate()`. Labels sit above the controls by default (`labelPlacement="top"`); `labelPlacement="float"` restores the Material floating label.
 
-- <sd-form-render [configuration]="config" [form]="form" [entity]="entity" [properties]="keys"></sd-form-render>
-+ <sd-form-render [schema]="schema()" [(value)]="value" [form]="form" [variables]="variables" [keys]="keys"></sd-form-render>
-```
+- **Configuration.**
+  - `SD_FORM_GENERIC_CONFIGURATION` is replaced by `provideSdFormGeneric()`. Catalogs replace selection definitions and `getValues`; the components never call HTTP. A `function` validation whose validator is not registered now **fails closed** (an error message, `valid: false`) instead of passing.
 
-```diff
-- const errors = await render.getValidationMessages('error');
-- if (errors === undefined || errors.length) return;
-+ const { valid, messages } = await render.validate();   // { valid, messages: { error: [], warning: [] } }, never undefined
-+ if (!valid) return;
-```
+  ```diff
+  - { provide: SD_FORM_GENERIC_CONFIGURATION, useValue: { form: { selections, getValues, htmls, validation: { functions } } } }
+  + provideSdFormGeneric({
+  +   catalogs: [{ id: 'districts', label: 'Districts', params: [{ name: 'provinceId', label: 'Province' }], load: params => api.districts(params) }],
+  +   htmlDefinitions,
+  +   validators: [{ id: 'budget', label: 'Budget', validate: value => (value['amount'] > value['budget'] ? 'Over budget' : null) }],
+  +   breakpoints: { tablet: 700 },   // optional, partial override of SD_FORM_GENERIC_BREAKPOINTS
+  + })
+  ```
 
-Removed from the builder: `[formGeneric]`, `(sdChange)`, `getForm()`, `getComponents()`, `getVariables()` and the `components` / `variables` / `validations` accessors — use `[(schema)]` and `getSchema()`. Removed from the renderer: `configuration`, `entity`, `defaultEntity`, `properties`, `getValidationMessages()`, `entity` / `formValue` / `loadCompleted` fields, the `setVariables` subject, and the `onLoaded`, `beforeSubmit` and `onChange.setValues` hooks — use `[schema]`, `[(value)]`, field `defaultValue`, `[keys]`, `[variables]` and `validate()`. Labels sit above the controls by default (`labelPlacement="top"`); `labelPlacement="float"` restores the Material floating label.
+- **Removed exports.**
+  - Runtime: `SdFeelExpression` (`<sd-feel-expression>`), `sdEvaluateExpression`, `sdExpressionToJavascriptExpression`, `sdTemplateToCondition`, `sdGetAttributes`, `sdGetComponentAttributes`, `sdGetVariableAttributes`, `sdGetDatetimeValue`, `sdGenerateId`, `sdGenerateKey`, `sdFormatComponent`, `SD_FORM_BUILDER_COMPONENTS`, `SD_COMPONENT_ICONS`, `SD_TABLE_COLUMN_TYPES`, `SD_ATTRIBUTE_OPERATORS`, `SD_DAY_INFO_TYPES`, `SD_DAY_INFO_PREVIOUSES`, `SdFormGenericOperators`, `ValidationAlerts` and `SD_FORM_GENERIC_CONFIGURATION`. Types: `ISdFormGenericConfiguration`, `IWorkflowConfigurationForm`, `SdFormGeneric`, `SdFormRenderConfiguration`, `SdFormRenderEntity`, `SdFormGenericArgs`, `SdFormGenericComponent`, `SdFormGenericComponentBase`, `SdFormGenericValues`, `SdFormGenericChecklist`, `SdFormGenericTable`, `SdFormGenericTableColumn`, `FormRenderComponentTableColumnValues`, `SdFormGenericBreak`, `FormBuilderComponent`, `FormBuilderComponentGroup`, `SdFormGenericExpression`, `SdFormGenericExpressionCondition`, `SdFormGenericOperator`, `Attribute`, `DayInfo`, `SdFormGenericSelectionItem`, `SdFormGenericSelectionStaticItem`, `SdFormGenericDefinitionSelection`, `SdFormGenericDefinitionTable`, `SdFormGenericDefinitionHtml`, `SdFormGenericValidationFunction` and `SdFormGenericValidationConfiguration`. These names are kept with a **new shape** (see the property mapping above): `SdFormGenericLayout`, `SdFormGenericVariable`, `SdFormGenericGroup`, `SdFormGenericTemplate`, `SdFormGenericValidation` and the field interfaces `SdFormGenericTextfield`, `SdFormGenericTextarea`, `SdFormGenericNumber`, `SdFormGenericSelect`, `SdFormGenericRadio`, `SdFormGenericCheckbox`, `SdFormGenericDatetime`, `SdFormGenericChipString`, `SdFormGenericChipCalendar`, `SdFormGenericUpload` and `SdFormGenericHtml`. The entry point now exports five runtime symbols — `SdFormBuilder`, `SdFormRender`, `SdFormRenderService`, `provideSdFormGeneric`, `SD_FORM_GENERIC_BREAKPOINTS` — plus the schema, field and configuration types.
+- **Layout follows the form width at three levels.**
+  - The renderer picks desktop (≥ 1024 px), tablet (600–1023 px) or mobile (< 600 px) from its **own** width, not the viewport, where 2.15 had a single 768 px switch. `[breakpoint]` forces a level. Tablet inherits the desktop span and mobile defaults to a full row, so a schema that only sets `span.desktop` keeps its desktop rows on tablet-width forms.
 
-- **Form generic: configuration.** `SD_FORM_GENERIC_CONFIGURATION` is replaced by `provideSdFormGeneric()`. Catalogs replace selection definitions and `getValues`; the components never call HTTP. A `function` validation whose validator is not registered now **fails closed** (an error message, `valid: false`) instead of passing.
+#### i18n
 
-```diff
-- { provide: SD_FORM_GENERIC_CONFIGURATION, useValue: { form: { selections, getValues, htmls, validation: { functions } } } }
-+ provideSdFormGeneric({
-+   catalogs: [{ id: 'districts', label: 'Districts', params: [{ name: 'provinceId', label: 'Province' }], load: params => api.districts(params) }],
-+   htmlDefinitions,
-+   validators: [{ id: 'budget', label: 'Budget', validate: value => (value['amount'] > value['budget'] ? 'Over budget' : null) }],
-+   breakpoints: { tablet: 700 },   // optional, partial override of SD_FORM_GENERIC_BREAKPOINTS
-+ })
-```
+- New catalog keys `core.notify.close`, `core.form.select.clear`, `core.component.table.export-max-exceeded`, `core.component.preview-video.error`, `.retry`, `.download` and `.unsupported`. A custom typed `I18nCatalog` must add them.
+- 217 new catalog keys — `core.component.form-builder.*` (210), `core.component.form-generic.validator.{integer,precision,number}`, `core.component.form-generic.validation.{unregistered,failed}`, `core.form.input.minlength` and `core.form.textarea.minlength` — and 54 `core.component.form-builder.*` keys of the previous builder removed.
+  - A custom typed `I18nCatalog` must add and drop them.
 
-- **Form generic: removed exports.** Runtime: `SdFeelExpression` (`<sd-feel-expression>`), `sdEvaluateExpression`, `sdExpressionToJavascriptExpression`, `sdTemplateToCondition`, `sdGetAttributes`, `sdGetComponentAttributes`, `sdGetVariableAttributes`, `sdGetDatetimeValue`, `sdGenerateId`, `sdGenerateKey`, `sdFormatComponent`, `SD_FORM_BUILDER_COMPONENTS`, `SD_COMPONENT_ICONS`, `SD_TABLE_COLUMN_TYPES`, `SD_ATTRIBUTE_OPERATORS`, `SD_DAY_INFO_TYPES`, `SD_DAY_INFO_PREVIOUSES`, `SdFormGenericOperators`, `ValidationAlerts` and `SD_FORM_GENERIC_CONFIGURATION`. Types: `ISdFormGenericConfiguration`, `IWorkflowConfigurationForm`, `SdFormGeneric`, `SdFormRenderConfiguration`, `SdFormRenderEntity`, `SdFormGenericArgs`, `SdFormGenericComponent`, `SdFormGenericComponentBase`, `SdFormGenericValues`, `SdFormGenericChecklist`, `SdFormGenericTable`, `SdFormGenericTableColumn`, `FormRenderComponentTableColumnValues`, `SdFormGenericBreak`, `FormBuilderComponent`, `FormBuilderComponentGroup`, `SdFormGenericExpression`, `SdFormGenericExpressionCondition`, `SdFormGenericOperator`, `Attribute`, `DayInfo`, `SdFormGenericSelectionItem`, `SdFormGenericSelectionStaticItem`, `SdFormGenericDefinitionSelection`, `SdFormGenericDefinitionTable`, `SdFormGenericDefinitionHtml`, `SdFormGenericValidationFunction` and `SdFormGenericValidationConfiguration`. These names are kept with a **new shape** (see the property mapping above): `SdFormGenericLayout`, `SdFormGenericVariable`, `SdFormGenericGroup`, `SdFormGenericTemplate`, `SdFormGenericValidation` and the field interfaces `SdFormGenericTextfield`, `SdFormGenericTextarea`, `SdFormGenericNumber`, `SdFormGenericSelect`, `SdFormGenericRadio`, `SdFormGenericCheckbox`, `SdFormGenericDatetime`, `SdFormGenericChipString`, `SdFormGenericChipCalendar`, `SdFormGenericUpload` and `SdFormGenericHtml`. The entry point now exports five runtime symbols — `SdFormBuilder`, `SdFormRender`, `SdFormRenderService`, `provideSdFormGeneric`, `SD_FORM_GENERIC_BREAKPOINTS` — plus the schema, field and configuration types.
-- **Form generic: layout follows the form width at three levels.** The renderer picks desktop (≥ 1024 px), tablet (600–1023 px) or mobile (< 600 px) from its **own** width, not the viewport, where 2.15 had a single 768 px switch. `[breakpoint]` forces a level. Tablet inherits the desktop span and mobile defaults to a full row, so a schema that only sets `span.desktop` keeps its desktop rows on tablet-width forms.
-- i18n: 217 new catalog keys — `core.component.form-builder.*` (210), `core.component.form-generic.validator.{integer,precision,number}`, `core.component.form-generic.validation.{unregistered,failed}`, `core.form.input.minlength` and `core.form.textarea.minlength` — and 54 `core.component.form-builder.*` keys of the previous builder removed. A custom typed `I18nCatalog` must add and drop them.
+#### Notify
+
+- The toast container keeps two visually hidden live regions (`data-autoid="services-notify-live-polite"` and `services-notify-live-assertive`) that announce each toast; toasts no longer carry `aria-live`.
+  - The close button is `type="button"` with the i18n label `core.notify.close`, and a toast pauses its timer while hovered or focused. Selectors that count the container's children must skip the two regions.
+
+#### Table
+
+- `export.max` is now enforced for Excel and CSV export (it was declared but never read).
+  - The table total is checked before any data is fetched, and the `{ items, total }` totals and fetched row count are checked again while exporting; above the limit no file is written and a warning toast shows `core.component.table.export-max-exceeded`. Only a positive finite number is a limit — unset, `0`, negative or `NaN` stays unlimited; `export.type: 'custom'` is unaffected.
+
+  ```diff
+    export: {
+  -   max: 5000, // ignored before 3.0
+  +   max: 5000, // now blocks exports above 5,000 rows
+    }
+  ```
+
+#### Tooltip
+
+- `sdTooltip`: the bubble has `role="tooltip"` and an id referenced by the trigger's `aria-describedby` while it is shown; it opens on keyboard focus, stays open while the pointer is over the trigger or the bubble, and `Escape` hides it.
+  - E2E selectors that assumed the old bubble markup may need updating. `MatTooltip` usages are unchanged.
+
+#### Upload file
+
+- The document name is a `<button type="button" class="c-file-name">` instead of `<a href="javascript:;">`; the link look is unchanged.
+
+#### Utilities
+
+- `SdUtilities.download(url)` with a string that is not an absolute http(s) URL now requires a safe resource URL — relative paths, `blob:`, `data:image/*` and `data:application/pdf`.
+  - `javascript:`, `vbscript:` and other `data:` URLs are refused with a dev-mode warning. Preview image/PDF downloads and the upload-file document link apply the same guard.
+
+  ```diff
+  - SdUtilities.download('data:text/html,...');
+  + SdUtilities.download(URL.createObjectURL(new Blob([html], { type: 'text/html' })), 'report.html');
+  ```
 
 ### Added
 
-- API handlers work from lazy routes, with no library change (`@sdcorejs/angular/services/api`). `SdHttpInterceptor` is registered at the root injector and read `SD_API_CONFIG` once at construction, so a library that provided `{ provide: SD_API_CONFIG, multi: true }` in an NgModule loaded with `loadChildren` lost every handler without any error: no headers, no `beforeRemote` / `afterRemote`, no error toast. Now the root `SdApiHandlerRegistry` reads the `SD_API_CONFIG` entries of each injector that the Router creates for a route (`Route.providers`, or the NgModule of `loadChildren`). It registers them in the same navigation, before guards, resolvers and components run, and removes them when that injector is destroyed. Libraries keep their existing provider. A lazy handler exists only after its route has been navigated to, so a shell that calls a library's host itself before that, for example in a guard on a parent route, must keep a root handler for that host.
-- `provideSdApiConfiguration(Configuration | value)` registers a configuration for any scope, including one that the Router does not create. `provideSdApiConfiguration` registers the configuration in a root registry when its scope's injector is created and removes it when that injector is destroyed. The same declaration therefore works in root providers, an eager NgModule, a lazy `Route.providers` and a `loadChildren` module. The interceptor and `SdApiService` now resolve handlers per request from the root list plus the registry, and root `SD_API_CONFIG` providers keep working unchanged. `SdApiModule` still does not call `provideHttpClient`.
-- Image editor: add `SdImageEditor` (`@sdcorejs/angular/components/image-editor`), an inline editor for one still JPEG, PNG or WebP passed as a `File`/`Blob`. It only edits — there is no Apply/Cancel footer: the consumer places its own buttons and calls `getResult()` (`SdImageEditorResult`: `blob`, `file`, `fileName` with the real extension, `mimeType`, `width`, `height`, `size`, `quality`, `edits`, `sizeLimited`), `getFile(fileName?)` or `getBlob()`; `reset()`, `undo()`, `redo()`, `rotate()`, `flip()` and `fitToView()` are public, and `status()`, `dirty()`, `edits()`, `sourceInfo()`, `error()`, `canUndo()`, `canRedo()` are read-only signals. Tools: crop with handles, keyboard and X/Y/width/height fields (`sd-input-number`, committed on blur/Enter); ratio chips (Free, 1:1, 4:3, 16:9, 3:4) and a "Keep ratio" row that locks or frees the crop shape (shown locked and disabled with `lockAspectRatio`, the reason in an info-icon `sdTooltip`); crop, output-size and format fields keep the Core floating label; 90° rotation; horizontal/vertical flip; output size that always follows the crop ratio (never stretched, no accidental upscaling); zoom/pan and fit that never affect the export; bounded undo/redo of small edit objects and reset in the toolbar; output format in an `sd-select` (JPEG/PNG/WebP, probed per browser and verified from the encoded bytes), quality and JPEG background; the real encoded size measured after each change. `(failed)` reports source errors; `getResult()` rejects with `SdImageEditorError` codes (`not-ready`, `format-unsupported`, `render-failed`, `encode-failed`; source codes `unsupported-format`, `animated`, `source-too-large`, `source-too-many-pixels`, `decode-failed`). EXIF orientation is applied once by the decoder; exports are drawn from the full-resolution source with the same matrices as the preview. Configurable `limits` are checked on the header before decoding. The editor never fetches, uploads, downloads or overwrites; `sd-upload-file` and `sd-file-explorer` do not import it. Ships JSDoc, API documentation, 56 i18n keys in the five catalogs, two theme tokens (`--sd-image-editor-checker-light/dark`) and a showcase with avatar, banner, modal (consumer footer), error, `sd-upload-file` (edit an uploaded evidence photo, keep the original) and `sd-file-explorer` (save an edited copy, `reload()`) demos.
-- Icon: add default Lucide aliases for `broken_image`, `crop`, `flip`, `lock_open`, `photo_size_select_large`, `redo`, `rotate_left`, `tune`, `undo` and `zoom_out` (and the matching Material aliases).
-- Theme tokens: `sd.theme()` also emits colour ramps `--sd-{primary,secondary,info,success,warning,error,neutral}-{50…950}`, semantic roles (`--sd-status-*-bg/fg`, `--sd-link`, `--sd-surface-inverse`, `--sd-text-on-solid`, `--sd-border-focus`, `--sd-border-danger`, `--sd-overlay-backdrop`, `--sd-focus-ring-color`), non-colour scales (`--sd-space-*`, `--sd-radius-*`, `--sd-shadow-*`, `--sd-z-*`, `--sd-duration-*`, `--sd-ease-standard`, `--sd-font-size-*`, `--sd-font-weight-*`, `--sd-line-height-*`, `--sd-focus-ring-width/offset`) and per-component tokens (`--sd-{component}-{part}`). The light output keeps every 2.15 declaration and value.
-- Theme modes: `sd.theme($mode: 'light' | 'dark' | 'auto')` for the default palette, with Material's dark colour tokens and `color-scheme`; `sd-core.scss` switches with `data-sd-theme="dark"` / `"light"` on `<html>`. Named presets stay light — combining them with dark or auto stops the Sass build. New guide `assets/THEME.md` and a showcase _Theme & tokens_ page (swatches, ramps, scales, measured contrast table, dark toggle).
-- `@sdcorejs/angular/utilities/theme`: `readSdTokens()`, `SdColorToken`, `SD_COLOR_TOKENS` for reading resolved colours from TypeScript.
-- `sd-highlight` (`@sdcorejs/angular/components/highlight`): highlights a term in text without diacritics or case (including đ/Đ), rendering only text and `<mark>`; `sdNormalizeSearchText()` and `sdFindHighlightRanges()` in `@sdcorejs/angular/utilities/extensions`.
-- `sd-preview-video` in `@sdcorejs/angular/components/preview`: native video preview from a URL or `Blob`, with poster, error/unsupported states, retry and a guarded download.
-- Select and autocomplete: opt-in `virtualScroll` and `itemSize`. Only the rows in view are rendered, the list is not cut at `limit`, and the keyboard reaches every row (select: arrows, PageUp/PageDown, Home/End, typeahead; autocomplete: arrows with wrap). In virtual mode `sd-select` owns its value, so selected rows scrolled out of view are kept. Default off: the non-virtual panels are unchanged.
-- `I18nService.locale()`: BCP 47 locale of the current language (`vi-VN`, `en-US`, `ja-JP`, `ko-KR`, `zh-CN`).
-- `sdIsSafeResourceUrl()` and `sdSanitizeEditorHtml()` exported from `@sdcorejs/angular/utilities/extensions`.
-- Tooling: `npm run check:scss-hex` (raw hex and focus-outline check for library SCSS/TS, `--report --literals` for scale literals), an ESLint rule for hex colours in library TS and templates, `test:theme` now includes the contrast matrix, `test:theme-token-list`, and a CI scripts job on Node 22.22.3. Release tooling accepts an `x.0` suffix with an explicit lower-minor baseline (`--baseline-suffix`, `deploy.ps1 -BaselineSuffix`, `baselineSuffix` in the release snapshot).
+#### API
 
-- Form builder: `<sd-form-builder>` is an embedded designer — toolbar Design / Preview / Schema, **Desktop / Tablet / Mobile** and undo / redo; presets palette (Text, Email, Phone, URL, Password, Integer, Decimal, Currency, Percent are `subtype` on `textfield` / `number`); canvas with in-place groups; inspector. Resize and the _Layout_ tab write the span of the level in view and show the inherited value (_Same as Desktop_ / _Default_); _Start a new row_ sets `layout.newRow`. Drag and drop (Pointer Events, one planner for the indicator and the commit), 100-step undo, key rename that updates every structured reference (rules, catalog params/fill, upload params, html query, form validations), Undo toast after a delete, and keyboard paths for every drag. Preview is the real renderer forced to the level in view (tablet 768 px, mobile 390 px frames). Elements of an unknown `type` are kept unchanged and shown as unsupported.
-- Form render: `[(value)]` model, `[variables]`, `[breakpoint]`, `[keys]`, `labelPlacement` (`'top'` default, `'float'`), `validate()` and `upload()`; rules and form validations evaluate `Filter` against `{ ...value, ...variables }`; select / radio options from a static list or a portal catalog (`load`, optional `search` and `labels`) with `params` and `fill`. `SdFormRenderService.viewEntities(schema, entities)` formats values for lists.
-- Forms: `labelPlacement: 'float' | 'top'` (type `SdLabelPlacement` in `@sdcorejs/angular/forms/models`) on `sd-input`, `sd-input-number`, `sd-textarea`, `sd-select`, `sd-date`, `sd-datetime`, `sd-chip` and `sd-chip-calendar` — default `'float'`, so existing screens are unchanged. `sd-label` gains `for` and `labelId`. `sd-input` accepts `type="tel" | "url"`, `inputmode` and `autocomplete`; `sd-input-number` accepts `inputmode`; `sd-textarea` accepts `minlength`.
-- Icon tile shape (`@sdcorejs/angular/modules/icon`): new type `SdIconShape = 'square' | 'circle' | 'none'` for the decorative icon tile of `<sd-section>` (header), `<sd-inform>`, `<sd-data-state>`, `SdNotifyService` toasts and `SdConfirmService` dialogs. Set it per instance with the `iconShape` input (`sd-section`, `sd-inform`, `sd-data-state`) or the `iconShape` option (`success`/`info`/`warning`/`error`, and all six confirm methods), or app-wide with `provideSdIcon({ defaultShape })`; the instance value wins. `none` drops the background but keeps the tile size. Each tile carries `data-icon-shape`, and the CSS custom property `--sd-icon-shape-radius` (default `var(--sd-radius-8, 8px)`) sets the square radius.
+- API handlers work from lazy routes, with no library change (`@sdcorejs/angular/services/api`).
+  - `SdHttpInterceptor` is registered at the root injector and read `SD_API_CONFIG` once at construction, so a library that provided `{ provide: SD_API_CONFIG, multi: true }` in an NgModule loaded with `loadChildren` lost every handler without any error: no headers, no `beforeRemote` / `afterRemote`, no error toast. Now the root `SdApiHandlerRegistry` reads the `SD_API_CONFIG` entries of each injector that the Router creates for a route (`Route.providers`, or the NgModule of `loadChildren`). It registers them in the same navigation, before guards, resolvers and components run, and removes them when that injector is destroyed. Libraries keep their existing provider. A lazy handler exists only after its route has been navigated to, so a shell that calls a library's host itself before that, for example in a guard on a parent route, must keep a root handler for that host.
+- `provideSdApiConfiguration(Configuration | value)` registers a configuration for any scope, including one that the Router does not create.
+  - `provideSdApiConfiguration` registers the configuration in a root registry when its scope's injector is created and removes it when that injector is destroyed. The same declaration therefore works in root providers, an eager NgModule, a lazy `Route.providers` and a `loadChildren` module. The interceptor and `SdApiService` now resolve handlers per request from the root list plus the registry, and root `SD_API_CONFIG` providers keep working unchanged. `SdApiModule` still does not call `provideHttpClient`.
+
+#### Form builder
+
+- `<sd-form-builder>` is an embedded designer — toolbar Design / Preview / Schema, **Desktop / Tablet / Mobile** and undo / redo; presets palette (Text, Email, Phone, URL, Password, Integer, Decimal, Currency, Percent are `subtype` on `textfield` / `number`); canvas with in-place groups; inspector.
+  - Resize and the _Layout_ tab write the span of the level in view and show the inherited value (_Same as Desktop_ / _Default_); _Start a new row_ sets `layout.newRow`. Drag and drop (Pointer Events, one planner for the indicator and the commit), 100-step undo, key rename that updates every structured reference (rules, catalog params/fill, upload params, html query, form validations), Undo toast after a delete, and keyboard paths for every drag. Preview is the real renderer forced to the level in view (tablet 768 px, mobile 390 px frames). Elements of an unknown `type` are kept unchanged and shown as unsupported.
+
+#### Form render
+
+- `[(value)]` model, `[variables]`, `[breakpoint]`, `[keys]`, `labelPlacement` (`'top'` default, `'float'`), `validate()` and `upload()`; rules and form validations evaluate `Filter` against `{ ...value, ...variables }`; select / radio options from a static list or a portal catalog (`load`, optional `search` and `labels`) with `params` and `fill`.
+  - `SdFormRenderService.viewEntities(schema, entities)` formats values for lists.
+
+#### Forms
+
+- `labelPlacement: 'float' | 'top'` (type `SdLabelPlacement` in `@sdcorejs/angular/forms/models`) on `sd-input`, `sd-input-number`, `sd-textarea`, `sd-select`, `sd-date`, `sd-datetime`, `sd-chip` and `sd-chip-calendar` — default `'float'`, so existing screens are unchanged.
+  - `sd-label` gains `for` and `labelId`. `sd-input` accepts `type="tel" | "url"`, `inputmode` and `autocomplete`; `sd-input-number` accepts `inputmode`; `sd-textarea` accepts `minlength`.
+
+#### Highlight
+
+- `sd-highlight` (`@sdcorejs/angular/components/highlight`): highlights a term in text without diacritics or case (including đ/Đ), rendering only text and `<mark>`; `sdNormalizeSearchText()` and `sdFindHighlightRanges()` in `@sdcorejs/angular/utilities/extensions`.
+
+#### i18n
+
+- `I18nService.locale()`: BCP 47 locale of the current language (`vi-VN`, `en-US`, `ja-JP`, `ko-KR`, `zh-CN`).
+
+#### Icon
+
+- Add default Lucide aliases for `broken_image`, `crop`, `flip`, `lock_open`, `photo_size_select_large`, `redo`, `rotate_left`, `tune`, `undo` and `zoom_out` (and the matching Material aliases).
+- Tile shape (`@sdcorejs/angular/modules/icon`): new type `SdIconShape = 'square' | 'circle' | 'none'` for the decorative icon tile of `<sd-section>` (header), `<sd-inform>`, `<sd-data-state>`, `SdNotifyService` toasts and `SdConfirmService` dialogs.
+  - Set it per instance with the `iconShape` input (`sd-section`, `sd-inform`, `sd-data-state`) or the `iconShape` option (`success`/`info`/`warning`/`error`, and all six confirm methods), or app-wide with `provideSdIcon({ defaultShape })`; the instance value wins. `none` drops the background but keeps the tile size. Each tile carries `data-icon-shape`, and the CSS custom property `--sd-icon-shape-radius` (default `var(--sd-radius-8, 8px)`) sets the square radius.
+
+#### Image editor
+
+- Add `SdImageEditor` (`@sdcorejs/angular/components/image-editor`), an inline editor for one still JPEG, PNG or WebP passed as a `File`/`Blob`.
+  - It only edits — there is no Apply/Cancel footer: the consumer places its own buttons and calls `getResult()` (`SdImageEditorResult`: `blob`, `file`, `fileName` with the real extension, `mimeType`, `width`, `height`, `size`, `quality`, `edits`, `sizeLimited`), `getFile(fileName?)` or `getBlob()`; `reset()`, `undo()`, `redo()`, `rotate()`, `flip()` and `fitToView()` are public, and `status()`, `dirty()`, `edits()`, `sourceInfo()`, `error()`, `canUndo()`, `canRedo()` are read-only signals. Tools: crop with handles, keyboard and X/Y/width/height fields (`sd-input-number`, committed on blur/Enter); ratio chips (Free, 1:1, 4:3, 16:9, 3:4) and a "Keep ratio" row that locks or frees the crop shape (shown locked and disabled with `lockAspectRatio`, the reason in an info-icon `sdTooltip`); crop, output-size and format fields keep the Core floating label; 90° rotation; horizontal/vertical flip; output size that always follows the crop ratio (never stretched, no accidental upscaling); zoom/pan and fit that never affect the export; bounded undo/redo of small edit objects and reset in the toolbar; output format in an `sd-select` (JPEG/PNG/WebP, probed per browser and verified from the encoded bytes), quality and JPEG background; the real encoded size measured after each change. `(failed)` reports source errors; `getResult()` rejects with `SdImageEditorError` codes (`not-ready`, `format-unsupported`, `render-failed`, `encode-failed`; source codes `unsupported-format`, `animated`, `source-too-large`, `source-too-many-pixels`, `decode-failed`). EXIF orientation is applied once by the decoder; exports are drawn from the full-resolution source with the same matrices as the preview. Configurable `limits` are checked on the header before decoding. The editor never fetches, uploads, downloads or overwrites; `sd-upload-file` and `sd-file-explorer` do not import it. Ships JSDoc, API documentation, 56 i18n keys in the five catalogs, two theme tokens (`--sd-image-editor-checker-light/dark`) and a showcase with avatar, banner, modal (consumer footer), error, `sd-upload-file` (edit an uploaded evidence photo, keep the original) and `sd-file-explorer` (save an edited copy, `reload()`) demos.
+
+#### Preview video
+
+- `sd-preview-video` in `@sdcorejs/angular/components/preview`: native video preview from a URL or `Blob`, with poster, error/unsupported states, retry and a guarded download.
+
+#### Select, Autocomplete
+
+- Opt-in `virtualScroll` and `itemSize`.
+  - Only the rows in view are rendered, the list is not cut at `limit`, and the keyboard reaches every row (select: arrows, PageUp/PageDown, Home/End, typeahead; autocomplete: arrows with wrap). In virtual mode `sd-select` owns its value, so selected rows scrolled out of view are kept. Default off: the non-virtual panels are unchanged.
+
+#### Theme
+
+- Tokens: `sd.theme()` also emits colour ramps `--sd-{primary,secondary,info,success,warning,error,neutral}-{50…950}`, semantic roles (`--sd-status-*-bg/fg`, `--sd-link`, `--sd-surface-inverse`, `--sd-text-on-solid`, `--sd-border-focus`, `--sd-border-danger`, `--sd-overlay-backdrop`, `--sd-focus-ring-color`), non-colour scales (`--sd-space-*`, `--sd-radius-*`, `--sd-shadow-*`, `--sd-z-*`, `--sd-duration-*`, `--sd-ease-standard`, `--sd-font-size-*`, `--sd-font-weight-*`, `--sd-line-height-*`, `--sd-focus-ring-width/offset`) and per-component tokens (`--sd-{component}-{part}`).
+  - The light output keeps every 2.15 declaration and value.
+- Modes: `sd.theme($mode: 'light' | 'dark' | 'auto')` for the default palette, with Material's dark colour tokens and `color-scheme`; `sd-core.scss` switches with `data-sd-theme="dark"` / `"light"` on `<html>`.
+  - Named presets stay light — combining them with dark or auto stops the Sass build. New guide `assets/THEME.md` and a showcase _Theme & tokens_ page (swatches, ramps, scales, measured contrast table, dark toggle).
+- `@sdcorejs/angular/utilities/theme`: `readSdTokens()`, `SdColorToken`, `SD_COLOR_TOKENS` for reading resolved colours from TypeScript.
+
+#### Tooling
+
+- `npm run check:scss-hex` (raw hex and focus-outline check for library SCSS/TS, `--report --literals` for scale literals), an ESLint rule for hex colours in library TS and templates, `test:theme` now includes the contrast matrix, `test:theme-token-list`, and a CI scripts job on Node 22.22.3.
+  - Release tooling accepts an `x.0` suffix with an explicit lower-minor baseline (`--baseline-suffix`, `deploy.ps1 -BaselineSuffix`, `baselineSuffix` in the release snapshot).
+
+#### Utilities
+
+- `sdIsSafeResourceUrl()` and `sdSanitizeEditorHtml()` exported from `@sdcorejs/angular/utilities/extensions`.
 
 ### Changed
 
-- Icon tiles of `<sd-section>`, `<sd-inform>`, `<sd-data-state>`, notify toasts and confirm dialogs are square with an 8px radius instead of round. Keep the round tiles app-wide with `provideSdIcon({ defaultShape: 'circle' })`, or per instance with `iconShape="circle"`. The inform tip variant stays flat and transparent. `ISdIconResolvedConfiguration` now includes `defaultShape`: build hand-made `SD_ICON_CONFIGURATION` values with `resolveSdIconConfig(...)`, which fills it.
-- API handler selection: when several handlers match a URL, the one with the **longest** matching host prefix (origin plus path) wins. It used to be the first match in registration order, so when libraries share a gateway and differ by context path, provider order decided which handler received a request. Now `https://gw.example/bpm` wins over `https://gw.example` in either order; equally long prefixes keep registration order, with root providers first. If a broad host listed first was shadowing a more specific one on purpose, remove the broad host from that handler. Host matching itself (origin plus segment-aware path, blank hosts match nothing) is unchanged. `@sd-angular/core` 19.0.41 ships the same registry API and the same longest-prefix rule, but it keeps a raw `url.startsWith(host)` match.
-- `@sdcorejs/utils` is upgraded from `1.1.4` to `1.2.5` on every line (a runtime dependency of the package, pinned exactly). Consumers that import `@sdcorejs/utils` directly get the 1.2 contract: see its `MIGRATION-1.2.md`. The notable changes are that `getNestedValue` returns `T | undefined` and rejects property paths with whitespace, `normalizeAsync` returns a structural subscribable rather than an RxJS `Observable`, `BrowserUtilities.upload` rejects with `FilePickerCancelledError` when the picker is cancelled or times out instead of resolving empty, the date and number helpers are stricter, and a class that extends a `@sdcorejs/utils` error must declare its own `static override readonly errorName: string` (1.2.5). Behaviour of `@sdcorejs/angular` itself is kept:
+#### API
+
+- Handler selection: when several handlers match a URL, the one with the **longest** matching host prefix (origin plus path) wins.
+  - It used to be the first match in registration order, so when libraries share a gateway and differ by context path, provider order decided which handler received a request. Now `https://gw.example/bpm` wins over `https://gw.example` in either order; equally long prefixes keep registration order, with root providers first. If a broad host listed first was shadowing a more specific one on purpose, remove the broad host from that handler. Host matching itself (origin plus segment-aware path, blank hosts match nothing) is unchanged. `@sd-angular/core` 19.0.41 ships the same registry API and the same longest-prefix rule, but it keeps a raw `url.startsWith(host)` match.
+
+#### Dependencies
+
+- `@sdcorejs/utils` is upgraded from `1.1.4` to `1.2.5` on every line (a runtime dependency of the package, pinned exactly).
+  - Consumers that import `@sdcorejs/utils` directly get the 1.2 contract: see its `MIGRATION-1.2.md`. The notable changes are that `getNestedValue` returns `T | undefined` and rejects property paths with whitespace, `normalizeAsync` returns a structural subscribable rather than an RxJS `Observable`, `BrowserUtilities.upload` rejects with `FilePickerCancelledError` when the picker is cancelled or times out instead of resolving empty, the date and number helpers are stricter, and a class that extends a `@sdcorejs/utils` error must declare its own `static override readonly errorName: string` (1.2.5). Behaviour of `@sdcorejs/angular` itself is kept:
   - Cancelling the file picker still produces no error: `sd-upload-file` shows no toast, `SdApiService.upload()` resolves `undefined` without a request, and `SdExcelService.upload()` resolves `{ items: [], file: null }`. 1.2.5 is needed for this in a bundled application: with 1.2.4 the cancel error thrown by one utils entry point was not `instanceof` the class the library imports from another, so the cancel surfaced as an error.
   - Table columns and row groups whose `field` is a backend key with spaces or `*` (for example `'Số phòng ngủ'`, `'Loại sản phẩm*'`) work as with 1.1.x. Cells, `lazy-values`, aggregates, quick search, local filter and sort, and export read such a key literally, or split it on dots, through own properties only; `__proto__`, `prototype` and `constructor` read as empty. Without this, the strict 1.2 path parser fails the whole read with "Không thể tải dữ liệu". Fields that are valid paths are read exactly as before.
   - Public async configuration slots keep accepting RxJS Observables of the same or a narrower type, as with 1.1.x. `MaybeAsync` from 1.2.0-1.2.3 rejects, for example, `Observable<string>` for `string | null | undefined` or an Observable of a subtype. The affected slots are the `sd-breadcrumb` `label`, the auth `signout` / `changePassword` / `authInfo`, the layout `sidebar` / `userInfo` factories, and the permission `loadPermissions` / `getToken`; each is typed `MaybeAsync<T> | Observable<T>`. 1.2.4 fixes the root cause in `@sdcorejs/utils` itself: `SubscribableLike.subscribe` no longer accepts `null` as its first argument, so narrower Observables fit `MaybeAsync<T>` in application code too. Only a literal `null` passed as the first `subscribe` argument on a `SubscribableLike` value is now rejected; pass `undefined` or omit it.
   - Table cells with backend timestamps carrying microsecond fractions or a colon-less offset are formatted as before; 1.2.3 is the first 1.2 release that restores them (1.2.0-1.2.2 rendered them as `--`).
-- Table: a failed server read or configuration clears the rows, total, aggregate totals and non-preserved selection of the previous read before the error panel is shown, so rows and a load error are never displayed together and stale rows never look like the result of a new filter. `retryRead()` still replays the exact failed snapshot. This replaces keeping the old rows beside the error.
-- Table: a `values` column whose `option.items` lookup rejects or throws no longer fails the table. The lookup is logged and left uncached, so its cells show raw codes, the rows still load, and the next configuration retries the lookup.
+
+#### File explorer
+
+- Video files (`mp4`, `mov`, `webm`, …) play in `sd-preview-video` in the file detail, so `option.preview` is now also called for them. For large videos return a URL (signed or streamed) rather than a `Blob`.
+
+#### Form render
+
+- `defaultValue` fills a key only while it is `undefined` (a value the user cleared is not refilled), never in viewed mode and never for the password preset; `validation.minLength` applies to `textarea` and `validation.maxItems` to chip fields, and chip fields show their values in viewed mode.
+- A viewed field is not validated (its `required` and constraints never fail `validate()`); on a multiple value `EQUAL` / `NOT_EQUAL` mean "one selected item equals" / "none equals"; an untouched checkbox counts as `false`; a `number` without `subtype` shows 3 decimals in viewed mode, like its input; an invalid `validation.pattern` is ignored instead of breaking the field; an `AND` / `OR` group without conditions is no condition (a rule that is only an empty group does not apply); values inserted into a `hyperlink` are URL-encoded; a key that is an `Object.prototype` name (`__proto__`, `constructor`…) is refused by the builder and its field is skipped by the renderer.
+  - `provideSdFormGeneric()` in a route's `providers` applies to the builder, the renderer and `SdFormRenderService` under that route.
+
+#### i18n
+
+- Dates and numbers formatted by the library (date/datetime min/max messages, query-bar values, home page, 403/404 pages) follow `I18nService.locale()` instead of always `vi-VN`.
+
+#### Icon
+
+- Icon tiles of `<sd-section>`, `<sd-inform>`, `<sd-data-state>`, notify toasts and confirm dialogs are square with an 8px radius instead of round.
+  - Keep the round tiles app-wide with `provideSdIcon({ defaultShape: 'circle' })`, or per instance with `iconShape="circle"`. The inform tip variant stays flat and transparent. `ISdIconResolvedConfiguration` now includes `defaultShape`: build hand-made `SD_ICON_CONFIGURATION` values with `resolveSdIconConfig(...)`, which fills it.
+
+#### Table
+
+- A failed server read or configuration clears the rows, total, aggregate totals and non-preserved selection of the previous read before the error panel is shown, so rows and a load error are never displayed together and stale rows never look like the result of a new filter.
+  - `retryRead()` still replays the exact failed snapshot. This replaces keeping the old rows beside the error.
+- A `values` column whose `option.items` lookup rejects or throws no longer fails the table. The lookup is logged and left uncached, so its cells show raw codes, the rows still load, and the next configuration retries the lookup.
+
+#### Theme
+
 - Components read colours, radii, font sizes/weights, line heights, motion and z-index layers from the new tokens, each with its 2.15 value as fallback; light rendering is unchanged.
 - Focus rings use `--sd-focus-ring-color` (a component's own colour hook keeps priority). The breadcrumb focus ring now uses the primary colour instead of the info colour; controls whose hook was unset now show the primary ring.
-- Dates and numbers formatted by the library (date/datetime min/max messages, query-bar values, home page, 403/404 pages) follow `I18nService.locale()` instead of always `vi-VN`.
-- File explorer: video files (`mp4`, `mov`, `webm`, …) play in `sd-preview-video` in the file detail, so `option.preview` is now also called for them. For large videos return a URL (signed or streamed) rather than a `Blob`.
-
-- Form render: `defaultValue` fills a key only while it is `undefined` (a value the user cleared is not refilled), never in viewed mode and never for the password preset; `validation.minLength` applies to `textarea` and `validation.maxItems` to chip fields, and chip fields show their values in viewed mode.
-- Form render: a viewed field is not validated (its `required` and constraints never fail `validate()`); on a multiple value `EQUAL` / `NOT_EQUAL` mean "one selected item equals" / "none equals"; an untouched checkbox counts as `false`; a `number` without `subtype` shows 3 decimals in viewed mode, like its input; an invalid `validation.pattern` is ignored instead of breaking the field; an `AND` / `OR` group without conditions is no condition (a rule that is only an empty group does not apply); values inserted into a `hyperlink` are URL-encoded; a key that is an `Object.prototype` name (`__proto__`, `constructor`…) is refused by the builder and its field is skipped by the renderer. `provideSdFormGeneric()` in a route's `providers` applies to the builder, the renderer and `SdFormRenderService` under that route.
 
 ### Fixed
 
-- Table: a display callback that throws or rejects (`transform`, `htmlTemplate`, `tooltip`, `useBadge`, `lazy-values` `views`) no longer turns a successful server read into the "Không thể tải dữ liệu" error. Only that cell falls back to its raw value (arrays joined with `, `, empty values `--`); the error is logged once per column for each format pass and the read stays `ready`/`empty`. Only a failing loader is a read error.
-- Table: a successful empty server read shows the three illustrated empty states again, as local tables do: filter returned nothing, required external filter not chosen, or no data yet, with `SD_TABLE_CONFIGURATION.images` (`filterEmpty`, `filterRequired`, `dataEmpty`). It had shown a single generic "Chưa có dữ liệu" panel. A projected `sdDataStateTemplate` still renders the empty state, and the empty region only appears when the table has no rows.
-- Form render: a group's `color` now colours its icon (`sd-section [iconColor]`); it used to be saved by the builder but ignored at render time. Unset still means `primary`.
-- Side drawer: locking page scroll adds the scrollbar width as right padding, so the page no longer shifts when a drawer opens.
-- Tooltip: meets WCAG 1.4.13 (hoverable, dismissible with Escape, persistent while hovered or focused).
-- Notify: toast announcements are reliable (persistent live regions) and the close button has an accessible name.
-- File explorer: let the detail preview shrink (down to 140 px for images and 240 px for PDFs) so the name, type, size and date stay visible without scrolling on short explorers.
-- Button: a keyed `@for` of `sd-button-item` / `sd-button-item-divider` (for example `track group.id`) no longer throws `NotFoundError` from `insertBefore` when the list is reordered or an entry is inserted before the last one. The button no longer moves entry hosts into a hidden container after rendering; they stay where Angular projects them, in the trigger's label slot, hidden and without text, so the label and the icon-only footprint are unchanged. `track $index` workarounds can go.
-- Showcase: the "View demo source" link on each documentation page points at the root `showcase/` workspace (`showcase/src/app/pages/…`) instead of the removed `versions/v19/projects/showcase` path, which returned 404 on GitHub. `npm run test:scripts` now checks that every registry entry links to the demo file its page loads.
-- Docs: the "Related" links at the end of the auth, keycloak and permission module docs point at the sibling module folders (for example `../keycloak/sd-keycloak.md`) and at `services/cache/sd-cache.md`. The old `./sd-*.md` targets returned 404 on GitHub and in the raw published docs.
+#### Button
+
+- A keyed `@for` of `sd-button-item` / `sd-button-item-divider` (for example `track group.id`) no longer throws `NotFoundError` from `insertBefore` when the list is reordered or an entry is inserted before the last one.
+  - The button no longer moves entry hosts into a hidden container after rendering; they stay where Angular projects them, in the trigger's label slot, hidden and without text, so the label and the icon-only footprint are unchanged. `track $index` workarounds can go.
+
+#### Docs
+
+- The "Related" links at the end of the auth, keycloak and permission module docs point at the sibling module folders (for example `../keycloak/sd-keycloak.md`) and at `services/cache/sd-cache.md`.
+  - The old `./sd-*.md` targets returned 404 on GitHub and in the raw published docs.
+
+#### File explorer
+
+- Let the detail preview shrink (down to 140 px for images and 240 px for PDFs) so the name, type, size and date stay visible without scrolling on short explorers.
+
+#### Form render
+
+- A group's `color` now colours its icon (`sd-section [iconColor]`); it used to be saved by the builder but ignored at render time. Unset still means `primary`.
+
+#### Notify
+
+- Toast announcements are reliable (persistent live regions) and the close button has an accessible name.
+
+#### Showcase
+
+- The "View demo source" link on each documentation page points at the root `showcase/` workspace (`showcase/src/app/pages/…`) instead of the removed `versions/v19/projects/showcase` path, which returned 404 on GitHub.
+  - `npm run test:scripts` now checks that every registry entry links to the demo file its page loads.
+
+#### Side drawer
+
+- Locking page scroll adds the scrollbar width as right padding, so the page no longer shifts when a drawer opens.
+
+#### Table
+
+- A display callback that throws or rejects (`transform`, `htmlTemplate`, `tooltip`, `useBadge`, `lazy-values` `views`) no longer turns a successful server read into the "Không thể tải dữ liệu" error.
+  - Only that cell falls back to its raw value (arrays joined with `, `, empty values `--`); the error is logged once per column for each format pass and the read stays `ready`/`empty`. Only a failing loader is a read error.
+- A successful empty server read shows the three illustrated empty states again, as local tables do: filter returned nothing, required external filter not chosen, or no data yet, with `SD_TABLE_CONFIGURATION.images` (`filterEmpty`, `filterRequired`, `dataEmpty`).
+  - It had shown a single generic "Chưa có dữ liệu" panel. A projected `sdDataStateTemplate` still renders the empty state, and the empty region only appears when the table has no rows.
+
+#### Tooltip
+
+- Meets WCAG 1.4.13 (hoverable, dismissible with Escape, persistent while hovered or focused).
 
 ## [2.15] - 2026-09-24
 
-Release suffix `2.15` targets `19.2.15`, `20.2.15`, `21.2.15`, and `22.2.15`.
+Packages `19.2.15` · `20.2.15` · `21.2.15` · `22.2.15`.
 
 ### Added
 
-- File explorer: add `SdFileExplorer` (`@sdcorejs/angular/components/file-explorer`), a storage-agnostic Google-Drive-like browser in one element — lazy folder tree, breadcrumb, list/grid, debounced search in the current folder, a file detail drawer (images, on-demand PDF viewer, fallback, metadata, download, share link), multi-file upload with drag-and-drop and a 3-slot queue, downloads, cancel/retry transfer queue, folder creation and a compact layout below 720 px of its own width. Configured through `SdFileExplorerOption` callbacks (`list`, optional `search`, `preview`, `download`, `share`, `upload`, `createFolder`); UI for an absent callback is hidden, and `(open)` emits once per opened file. The file detail reuses `sd-side-drawer`, opened in the explorer item area (right of the folder tree, below the header) through the new `container` input, so search, upload, the folder tree and the transfer queue stay usable. File-type icons come from an embedded 45-icon SVG set (136 extensions, compound suffixes, dot-files and MIME fallbacks) that needs no consumer asset configuration; maintainers regenerate it with `npm run generate:file-explorer-icons`, guarded by `npm run test:scripts`. Ships JSDoc, API documentation and an interactive showcase with an in-memory drive.
-- Icon: add default Lucide aliases for `folder_open`, `format_list_bulleted`, `grid_view` and `swap_vert`.
-- Side drawer: add `container` (`HTMLElement | ElementRef<HTMLElement>`) to open the drawer inside an element instead of over the viewport. Panel and backdrop stay within that element, page scroll stays unlocked, a static container becomes the positioning context while the drawer lives in it, and the narrow layout follows the container width. `null` (default) keeps the current behaviour.
+#### File explorer
+
+- Add `SdFileExplorer` (`@sdcorejs/angular/components/file-explorer`), a storage-agnostic Google-Drive-like browser in one element — lazy folder tree, breadcrumb, list/grid, debounced search in the current folder, a file detail drawer (images, on-demand PDF viewer, fallback, metadata, download, share link), multi-file upload with drag-and-drop and a 3-slot queue, downloads, cancel/retry transfer queue, folder creation and a compact layout below 720 px of its own width.
+  - Configured through `SdFileExplorerOption` callbacks (`list`, optional `search`, `preview`, `download`, `share`, `upload`, `createFolder`); UI for an absent callback is hidden, and `(open)` emits once per opened file. The file detail reuses `sd-side-drawer`, opened in the explorer item area (right of the folder tree, below the header) through the new `container` input, so search, upload, the folder tree and the transfer queue stay usable. File-type icons come from an embedded 45-icon SVG set (136 extensions, compound suffixes, dot-files and MIME fallbacks) that needs no consumer asset configuration; maintainers regenerate it with `npm run generate:file-explorer-icons`, guarded by `npm run test:scripts`. Ships JSDoc, API documentation and an interactive showcase with an in-memory drive.
+
+#### Icon
+
+- Add default Lucide aliases for `folder_open`, `format_list_bulleted`, `grid_view` and `swap_vert`.
+
+#### Side drawer
+
+- Add `container` (`HTMLElement | ElementRef<HTMLElement>`) to open the drawer inside an element instead of over the viewport.
+  - Panel and backdrop stay within that element, page scroll stays unlocked, a static container becomes the positioning context while the drawer lives in it, and the narrow layout follows the container width. `null` (default) keeps the current behaviour.
 
 ### Fixed
 
-- Button: icon-only buttons use `tooltip` as their accessible name (`aria-label`), so screen readers no longer announce them as unnamed buttons.
-- Preview PDF: draw the light-theme "PDF" file tile label in the danger colour; it used the pale error tint and was nearly invisible.
+#### Button
+
+- Icon-only buttons use `tooltip` as their accessible name (`aria-label`), so screen readers no longer announce them as unnamed buttons.
+
+#### Preview PDF
+
+- Draw the light-theme "PDF" file tile label in the danger colour; it used the pale error tint and was nearly invisible.
 
 ## [2.14] - 2026-09-22
 
-Release suffix `2.14` targets `19.2.14`, `20.2.14`, `21.2.14`, and `22.2.14`.
+Packages `19.2.14` · `20.2.14` · `21.2.14` · `22.2.14`.
+
+> [!IMPORTANT]
+> **Before upgrading:** Core UI now owns its default colors instead of implicitly inheriting Material system colors; apps relying on Material-owned Core colors must opt in with `sd.theme($source: 'material')` after loading Core styles.
 
 ### Changed (BREAKING for consumers)
 
+#### Theme
+
 - Core UI now owns its default colors instead of implicitly inheriting Material system colors. Core styles consume `--sd-*`; Material-only controls retain their own theme configuration.
+
 - Apps relying on Material-owned Core colors must opt in after loading Core styles:
 
-```diff
-- @include sd.theme();
-+ @include sd.theme($source: 'material');
-```
+  ```diff
+  - @include sd.theme();
+  + @include sd.theme($source: 'material');
+  ```
 
-Existing `sd.theme((...))` overrides remain supported and take precedence over either source.
+  Existing `sd.theme((...))` overrides remain supported and take precedence over either source.
 
 ### Added
 
-- Table: add typed column aggregates (SUM/AVERAGE/COUNT/MIN/MAX, raw-data callbacks and templates), local page/filtered scope, group/tree subtotals with lazy-data completeness, independent sticky total above existing footers, and shared mobile summaries. Include public JSDoc, complete consumer examples and an interactive showcase.
-- Theme: add eight Core-owned light presets (`ocean`, `indigo`, `teal`, `copper`, `slate`, `forest`, `plum`, `rose`) through `sd.theme($preset: ...)`, with consumer override precedence, invalid-argument guards, palette contrast tests and complete style-guide usage/migration guidance. The default palette and existing mixin calls remain unchanged.
-- Tab group: add per-instance `headerClass`, `headerStyle`, `bodyClass` and `bodyStyle` inputs with reactive cleanup and separate header/body styling.
+#### Tab group
+
+- Add per-instance `headerClass`, `headerStyle`, `bodyClass` and `bodyStyle` inputs with reactive cleanup and separate header/body styling.
+
+#### Table
+
+- Add typed column aggregates (SUM/AVERAGE/COUNT/MIN/MAX, raw-data callbacks and templates), local page/filtered scope, group/tree subtotals with lazy-data completeness, independent sticky total above existing footers, and shared mobile summaries.
+  - Include public JSDoc, complete consumer examples and an interactive showcase.
+
+#### Theme
+
+- Add eight Core-owned light presets (`ocean`, `indigo`, `teal`, `copper`, `slate`, `forest`, `plum`, `rose`) through `sd.theme($preset: ...)`, with consumer override precedence, invalid-argument guards, palette contrast tests and complete style-guide usage/migration guidance.
+  - The default palette and existing mixin calls remain unchanged.
 
 ### Fixed
 
-- Tab router: isolate activation errors so subsequent menu navigation remains responsive.
-- Table: stop reload from invoking the previous option's loader while an input change is waiting for its effect; cover early reload, pending lookups, stale responses, teardown and retry with regression tests.
-- Layout: add regression coverage for focused V1 tree branches/routes and V2 route/pin controls to keep visible navigation outside `aria-hidden` ancestors. Existing runtime markup already meets this requirement.
-- Table: use compact parent headers and vertically centered standalone titles, align filters in a separate sticky row for grouped columns, and apply automatic filter visibility consistently at both levels.
-- Table: use fixed white backgrounds for quick search and pagination with square corners and no toolbar divider; balance toolbar spacing and retain compact stacking on narrow containers.
+#### Layout
+
+- Add regression coverage for focused V1 tree branches/routes and V2 route/pin controls to keep visible navigation outside `aria-hidden` ancestors. Existing runtime markup already meets this requirement.
+
+#### Tab router
+
+- Isolate activation errors so subsequent menu navigation remains responsive.
+
+#### Table
+
+- Stop reload from invoking the previous option's loader while an input change is waiting for its effect; cover early reload, pending lookups, stale responses, teardown and retry with regression tests.
+- Use compact parent headers and vertically centered standalone titles, align filters in a separate sticky row for grouped columns, and apply automatic filter visibility consistently at both levels.
+- Use fixed white backgrounds for quick search and pagination with square corners and no toolbar divider; balance toolbar spacing and retain compact stacking on narrow containers.
 
 ## [2.13] - 2026-09-15
 
+Packages `19.2.13` · `20.2.13` · `21.2.13` · `22.2.13`.
+
 ### Added
 
-- Inform: add compact `type="tip"` guidance with theme tokens, optional title, projected rich text and Angular bindings; include API documentation and five showcase examples.
+#### Inform
+
+- Add compact `type="tip"` guidance with theme tokens, optional title, projected rich text and Angular bindings; include API documentation and five showcase examples.
 
 ### Fixed
 
-- Inform: use outline warning/error icons by default and center title-only content with the status icon.
-- Inform: prioritize projected content within the title/description/action region while preserving the status icon and close button; retain existing action-only projection behavior.
+#### Inform
+
+- Use outline warning/error icons by default and center title-only content with the status icon.
+- Prioritize projected content within the title/description/action region while preserving the status icon and close button; retain existing action-only projection behavior.
 
 ## [2.12] - 2026-09-15
 
+Packages `19.2.12` · `20.2.12` · `21.2.12` · `22.2.12`.
+
 ### Fixed
 
-- Stepper: use round indicators with active fill/contrast, completed light and neutral pending states; align and unify bottom-label connector segments to remove the short dark lines.
+#### Stepper
+
+- Use round indicators with active fill/contrast, completed light and neutral pending states; align and unify bottom-label connector segments to remove the short dark lines.
 
 ## [2.11] - 2026-09-15
 
-Release suffix `2.11` targets `19.2.11`, `20.2.11`, `21.2.11`, and `22.2.11`.
+Packages `19.2.11` · `20.2.11` · `21.2.11` · `22.2.11`.
 
 ### Added
 
+#### Button
+
+- Declarative `sd-button-item` / `sd-button-item-divider` Action Popover, keyboard/focus support and dynamic children.
+- Optional `openOnHover` boolean attribute (default false), with delayed pointer exit and preserved keyboard navigation.
+
+#### Checkbox
+
 - Add `size` to `sd-checkbox` using the shared `Size` type and `data-size` pattern from `sd-switch`: `sm` / `md` / `lg` (default `md`), with proportional box/icons and label spacing, retained touch targets, and showcase examples.
 
-- Tree: optional `showLines` boolean attribute and option for visible parent/child connectors; stronger parent titles and neutral expansion icons.
-- Button: declarative `sd-button-item` / `sd-button-item-divider` Action Popover, keyboard/focus support and dynamic children.
-- Button: optional `openOnHover` boolean attribute (default false), with delayed pointer exit and preserved keyboard navigation.
+#### Tree
+
+- Optional `showLines` boolean attribute and option for visible parent/child connectors; stronger parent titles and neutral expansion icons.
 
 ### Changed
 
+#### Button
+
+- Omit the Action Popover chevron for icon-only triggers or triggers with `suffixIcon`; table commands and overflow actions reuse this rule.
+
+#### Tab group, Avatar
+
 - Pills tabs use a light active background with consistent accent text on hover/focus; text avatars use light backgrounds and darker initials while retaining name colors and image behavior.
-- Tree: reuse the shared Button Action Popover for node commands, retaining command metadata and node callbacks.
-- Button: omit the Action Popover chevron for icon-only triggers or triggers with `suffixIcon`; table commands and overflow actions reuse this rule.
-- Table: reuse Button Action Popover for desktop command children, selection actions and export menus; retain consumer models and current row/selection context.
+
+#### Table
+
+- Reuse Button Action Popover for desktop command children, selection actions and export menus; retain consumer models and current row/selection context.
+
+#### Tree
+
+- Reuse the shared Button Action Popover for node commands, retaining command metadata and node callbacks.
 
 ### Fixed
 
-- Preserve checkbox size-specific label spacing with Angular Material 22 markup and keep unlabeled table-configuration checkboxes centered.
+#### Button
 
 - Make disabled secondary icon-only text buttons visibly dimmer while preserving enabled, loading and labeled-button styles.
+
+#### Checkbox
+
+- Preserve checkbox size-specific label spacing with Angular Material 22 markup and keep unlabeled table-configuration checkboxes centered.
+
+#### Table
 
 - Inset the `sd-table` selection message/action toolbar by 8px on both sides so it does not touch the table edges.
 
 ## [2.10] - 2026-09-12
 
-Release suffix `2.10` targets `19.2.10`, `20.2.10`, `21.2.10`, and `22.2.10`.
+Packages `19.2.10` · `20.2.10` · `21.2.10` · `22.2.10`.
 
 ### Fixed
 
-- `sd-table` renders its first successful response when `onFilter` restores URL/saved filters, including the `setFilter()` followed by `notReload` sequence used by Enterprise Console's tenant list. Synchronous hook updates now hydrate the current request and controls before validation instead of cancelling their own read/render subscription. Recheck required tenant validity after hydration; preserve later filter/scope cancellation and explicit refresh/retry. Real-table HTTP regressions verify row DOM and totals as well as loader/request counts with POST dedupe disabled.
+#### Query builder
 
 - Stabilize the existing Query Builder overlay test fixture's viewport position while retaining clipping, clickability and flip-above assertions. Query Builder runtime behavior is unchanged.
 
+#### Table
+
+- `sd-table` renders its first successful response when `onFilter` restores URL/saved filters, including the `setFilter()` followed by `notReload` sequence used by Enterprise Console's tenant list.
+  - Synchronous hook updates now hydrate the current request and controls before validation instead of cancelling their own read/render subscription. Recheck required tenant validity after hydration; preserve later filter/scope cancellation and explicit refresh/retry. Real-table HTTP regressions verify row DOM and totals as well as loader/request counts with POST dedupe disabled.
+
 ### Consumer upgrade
 
-- Enterprise Console: upgrade Core to `20.2.10` to fix the tenant list staying empty after a successful initial paging response. No table or POST-dedupe workaround is required. Keep the independent layout/configuration and tab-router patch hunks, rebasing only their package version/guard as part of the dependency upgrade; the initial-read duplication patch removed for `20.2.9` stays removed.
+#### Enterprise Console
+
+- Upgrade Core to `20.2.10` to fix the tenant list staying empty after a successful initial paging response.
+  - No table or POST-dedupe workaround is required. Keep the independent layout/configuration and tab-router patch hunks, rebasing only their package version/guard as part of the dependency upgrade; the initial-read duplication patch removed for `20.2.9` stays removed.
 
 ## [2.9] - 2026-09-11
 
-Release suffix `2.9` targets `19.2.9`, `20.2.9`, `21.2.9`, and `22.2.9`.
+Packages `19.2.9` · `20.2.9` · `21.2.9` · `22.2.9`.
+
+> [!IMPORTANT]
+> **Before upgrading:** `@sdcorejs/angular/components/chart` and its chart component exports are removed, and Chart.js is no longer a Core UI dependency.
 
 ### Changed (BREAKING for consumers)
 
-- Remove `@sdcorejs/angular/components/chart` and its `SdLineChartComponent`, `SdBarChartComponent`, `SdPieChartComponent`, and `SdDoughnutChartComponent` exports (also removed from the root/components barrels). Chart.js is no longer a Core UI dependency; consumers choose, install, and configure their own chart library. `sd-org-chart` remains available.
+#### Chart
+
+- Remove `@sdcorejs/angular/components/chart` and its `SdLineChartComponent`, `SdBarChartComponent`, `SdPieChartComponent`, and `SdDoughnutChartComponent` exports (also removed from the root/components barrels).
+  - Chart.js is no longer a Core UI dependency; consumers choose, install, and configure their own chart library. `sd-org-chart` remains available.
 
   Migration: remove the Core UI chart imports and replace `<sd-line-chart>`, `<sd-bar-chart>`, `<sd-pie-chart>`, and `<sd-doughnut-chart>` in consumer templates. If retaining Chart.js, declare `chart.js` as a direct application dependency and own its canvas lifecycle and registration:
 
@@ -625,45 +1352,60 @@ Release suffix `2.9` targets `19.2.9`, `20.2.9`, `21.2.9`, and `22.2.9`.
 
 ### Added
 
+#### Form builder
+
+- Form builder groups support `properties.collapsible` (default `false`), matching `sd-section`.
+  - Enable it to expand/collapse groups in preview and form render while preserving child values and validation. Group conditions remain limited to visibility; disabled-when rules belong to child fields.
+
+#### Sidebar V3
+
+- Sidebar V3 supports independent expand/collapse of menu groups at every depth, with keyboard-accessible disclosure buttons.
+  - Group state survives search and sidebar rail toggles; navigation opens the active branch, and selecting a group icon in the rail opens that group.
+
+#### Switch
+
 - `sd-switch` supports `size="sm | md | lg"` (default `md`) with matching track, handle, icon and focus-layer dimensions. Switches rendered inside `sd-table`, including consumer cell templates, use the compact `sm` appearance automatically.
-- Sidebar V3 supports independent expand/collapse of menu groups at every depth, with keyboard-accessible disclosure buttons. Group state survives search and sidebar rail toggles; navigation opens the active branch, and selecting a group icon in the rail opens that group.
-- Form builder groups support `properties.collapsible` (default `false`), matching `sd-section`. Enable it to expand/collapse groups in preview and form render while preserving child values and validation. Group conditions remain limited to visibility; disabled-when rules belong to child fields.
 
 ### Fixed
 
-- `sd-table` hydrates configuration, asynchronous lookups and filters before one initial read. Remove duplicate initial BehaviorSubject emissions and coordinate subsequent reads through one cancellable scheduler. Preserve manual/notReload filters, required tenant, quick search, inline/saved/URL filters, paging/sort, explicit refresh/retry and loading/error states; discard stale scope/destroy responses. POST caching and deduplication remain opt-in. Real-table HTTP regressions count both loader calls and requests with dedupe disabled.
+#### Query builder
 
-- Table row-command children and selection-action menus use a compact white CDK menu with 36px rows, 18px icons and 8px corners. Preserve child filtering, disabled commands, callbacks, keyboard navigation, focus restoration and overlay placement outside clipped cells; touch targets remain 44px.
-- Side drawer, dialog and bottom-sheet headers/footers share a white background and use compact 12px vertical and 16px horizontal padding. Body content also uses `12px 16px` padding on desktop and mobile, including its own top spacing below the separate header surface; mobile safe-area spacing and touch targets remain supported.
-- Tab group pills clip hover/ripple effects to their rounded shape and retain the active fill on hover. Segmented tabs have a 4px gap so adjacent hover backgrounds remain separate.
-- Hover-copy confirmation tooltips render in a CDK overlay above table rows and outside clipped cells. Scrolling, disabling and teardown clean up the overlay; initial rendering creates only one copy button.
 - Query builder's add-condition/group menu renders outside ancestor overflow, keeping both actions visible in short modal bodies. Backdrop/Escape dismissal and focus restoration keep the surrounding modal open.
+
+#### Tab group
+
+- Tab group pills clip hover/ripple effects to their rounded shape and retain the active fill on hover. Segmented tabs have a 4px gap so adjacent hover backgrounds remain separate.
+
+#### Table
+
+- `sd-table` hydrates configuration, asynchronous lookups and filters before one initial read.
+  - Remove duplicate initial BehaviorSubject emissions and coordinate subsequent reads through one cancellable scheduler. Preserve manual/notReload filters, required tenant, quick search, inline/saved/URL filters, paging/sort, explicit refresh/retry and loading/error states; discard stale scope/destroy responses. POST caching and deduplication remain opt-in. Real-table HTTP regressions count both loader calls and requests with dedupe disabled.
+- Table row-command children and selection-action menus use a compact white CDK menu with 36px rows, 18px icons and 8px corners.
+  - Preserve child filtering, disabled commands, callbacks, keyboard navigation, focus restoration and overlay placement outside clipped cells; touch targets remain 44px.
+- Hover-copy confirmation tooltips render in a CDK overlay above table rows and outside clipped cells. Scrolling, disabling and teardown clean up the overlay; initial rendering creates only one copy button.
+
+#### General
+
+- Side drawer, dialog and bottom-sheet headers/footers share a white background and use compact 12px vertical and 16px horizontal padding.
+  - Body content also uses `12px 16px` padding on desktop and mobile, including its own top spacing below the separate header surface; mobile safe-area spacing and touch targets remain supported.
 
 ### Consumer upgrade
 
-- Enterprise Console: after `20.2.9` is published and verified, update Core and the lockfile, then remove only the temporary patch that suppresses duplicate initial table reads/paging. Remove POST dedupe only where it was added solely to mask this duplication; explicit refresh/retry must still send a new request. Rebase remaining Core patches independently and verify loader/request counts after a clean install.
+#### Enterprise Console
+
+- After `20.2.9` is published and verified, update Core and the lockfile, then remove only the temporary patch that suppresses duplicate initial table reads/paging.
+  - Remove POST dedupe only where it was added solely to mask this duplication; explicit refresh/retry must still send a new request. Rebase remaining Core patches independently and verify loader/request counts after a clean install.
 
 ## [2.8] - 2026-09-11
 
-Release suffix `2.8` targets `19.2.8`, `20.2.8`, `21.2.8`, and `22.2.8`.
+Packages `19.2.8` · `20.2.8` · `21.2.8` · `22.2.8`.
 
-### Fixed
-
-- Table settings use compact rows with centered checkboxes and share the modal footer gutters, removing the extra content inset.
-- Small form controls center their resting floating labels consistently with the focused placeholder and value, including select, input, date/time and textarea controls.
-- Loading service overlay CSS now requires `.sd-loading[data-sd-loading-overlay]`; its spinner rules are scoped to the overlay's direct child. Loading `SdButton` hosts keep their header position and size, Material spinner and click protection. Existing classes, API, reference ownership, stylesheet sharing and synchronous cleanup remain unchanged. Chrome rendering regressions cover page/drawer headers, close-button hit testing, unrelated class names and overlapping refs/services.
-
-### Consumer upgrade
-
-- Enterprise Console: after `20.2.8` is published and verified, pin `@sdcorejs/angular` to `20.2.8`, update the lockfile and rebase `patch-package`. Remove only the `fesm2022/sdcorejs-angular-services-loading.mjs` diff block introduced by Console commit `4a36177`. Retain the configuration/layout token and tab-router hunks, rename the patch to `@sdcorejs+angular+20.2.8.patch`, and update the exact-version guard in `scripts/apply-core-ui-patches.mjs` to describe the remaining layout/tab-router patches. Verify clean install, Console loading-layout/shell regressions and the production bundle budget before deploying.
-
-### Changed
-
-- **Sidebar V3:** match V1 navigation density and compact search, show menu icons only at the first level, and use text, ancestor rails and a current-route marker for deeper levels. Flat search/Pinned/Recent shortcuts are text-only; preserve collapse, route, pin, storage and mobile behavior.
-
-- Table now contains quick search, rows and pagination in one white surface with 6px outer corners and 8px quick-search padding. Consumers no longer need an extra presentation wrapper; scrolling and sticky headers stay on the existing table scroll area.
+> [!IMPORTANT]
+> **Before upgrading:** the expanded dropzone and the `appearance` input of `sd-upload-file` are removed.
 
 ### Changed (BREAKING for consumers)
+
+#### Upload file
 
 - Restore the compact `sd-upload-file` tile (default 50x50px) for table cells. Remove the expanded dropzone and `appearance` input; file drag/drop, keyboard access, preview and sorting remain supported.
 
@@ -674,114 +1416,253 @@ Release suffix `2.8` targets `19.2.8`, `20.2.8`, `21.2.8`, and `22.2.8`.
 
   Remove `appearance="dropzone"` or `[appearance]` bindings in the same way. `previewWidth` and `previewHeight` size the tile and thumbnails.
 
-## [2.7] - 2026-09-09
-
-Release suffix `2.7` publishes `19.2.7`, `20.2.7`, `21.2.7`, and `22.2.7`.
-
-### Added
-
-- Table supports an optional `filter.quickSearch` row: Enter commits the keyword, `containFields` and `equalFields` generate an OR group, and `values`/`lazy-values` dropdowns apply immediately. Dropdowns support signal defaults, reactive visibility/disabled state, required values and user-only `onChange`. The applied `{ term, filters }` is available in `filterReq.quickSearch` even without search fields. `sdTableQuickSearchRightDef` lets consumers project optional UI on the right.
-
 ### Changed
 
-- Sidebar V1 dùng nền sáng, tổng chiều rộng 304px với thanh module 56px, tiêu đề đậm, khoảng cách gọn và Material Icons Outlined. Menu 1–3 cấp phân biệt nhánh cha với mục đang chọn; avatar và nút thu gọn nhỏ nằm ở cuối thanh module. Giữ nguyên API, dữ liệu menu, routing, phân quyền, tìm kiếm và expand/collapse; không thêm vùng trống cho description.
-- Table external filters use small controls with inline errors hidden and a padded section body. Desktop tables use subtle 6px outer corners while retaining their existing scroll and sticky behavior.
-- Confirm, Notify, Inform and Data-state now use circular status icon backgrounds, including compact Data-state. Existing icon sizes, semantic colors, layouts and interactions are preserved.
-- Section header icons use a 32px circular soft background with a centered 20px glyph, matching `iconColor` across all six color tokens. Custom header slots and collapse behavior are preserved.
+#### Sidebar V3
+
+- Match V1 navigation density and compact search, show menu icons only at the first level, and use text, ancestor rails and a current-route marker for deeper levels.
+  - Flat search/Pinned/Recent shortcuts are text-only; preserve collapse, route, pin, storage and mobile behavior.
+
+#### Table
+
+- Table now contains quick search, rows and pagination in one white surface with 6px outer corners and 8px quick-search padding.
+  - Consumers no longer need an extra presentation wrapper; scrolling and sticky headers stay on the existing table scroll area.
 
 ### Fixed
 
-- Error state của select/autocomplete căn giữa, nằm dưới dữ liệu đang giữ lại; panel hẹp giảm khoảng đệm, icon và cho phép xuống dòng.
-- Confirm `withRadio` loại bỏ scroll dọc dư do baseline và vùng bấm M3 tràn khỏi hàng radio; giữ vùng bấm 48px, khả năng cuộn danh sách dài và wrap lựa chọn trên mobile.
-- Badge `type="icon"` giữ đúng kích thước icon, căn giữa với phần chữ và không co icon khi nội dung dài.
-- Chỉ báo selection của table dùng màu success, gồm icon desktop và số lượng đã chọn trên mobile.
-- Local release staging selects the previous package from the same Angular major; the Angular 21 baseline fallback is limited to the Angular 22 inception release `22.2.5`.
-- Disabled table row-command icons use the button's muted disabled color instead of retaining the active icon color.
-- Table desktop command touch targets stay within each button, preventing adjacent commands from intercepting clicks.
-- Sidebar V1 search uses a compact light native input with a leading icon and a single thin focus border. Keep existing search matching and IME buffering; make clear accessible by keyboard and restore input focus after clearing.
+#### Forms
 
-## [2.6] - 2026-09-08
+- Small form controls center their resting floating labels consistently with the focused placeholder and value, including select, input, date/time and textarea controls.
 
-Release suffix `2.6` publishes `19.2.6`, `20.2.6`, `21.2.6`, and `22.2.6`.
+#### Loading
+
+- Loading service overlay CSS now requires `.sd-loading[data-sd-loading-overlay]`; its spinner rules are scoped to the overlay's direct child.
+  - Loading `SdButton` hosts keep their header position and size, Material spinner and click protection. Existing classes, API, reference ownership, stylesheet sharing and synchronous cleanup remain unchanged. Chrome rendering regressions cover page/drawer headers, close-button hit testing, unrelated class names and overlapping refs/services.
+
+#### Table
+
+- Table settings use compact rows with centered checkboxes and share the modal footer gutters, removing the extra content inset.
+
+### Consumer upgrade
+
+#### Enterprise Console
+
+- After `20.2.8` is published and verified, pin `@sdcorejs/angular` to `20.2.8`, update the lockfile and rebase `patch-package`.
+  - Remove only the `fesm2022/sdcorejs-angular-services-loading.mjs` diff block introduced by Console commit `4a36177`. Retain the configuration/layout token and tab-router hunks, rename the patch to `@sdcorejs+angular+20.2.8.patch`, and update the exact-version guard in `scripts/apply-core-ui-patches.mjs` to describe the remaining layout/tab-router patches. Verify clean install, Console loading-layout/shell regressions and the production bundle budget before deploying.
+
+## [2.7] - 2026-09-09
+
+Packages `19.2.7` · `20.2.7` · `21.2.7` · `22.2.7`.
 
 ### Added
 
-- Select, autocomplete và server table có `readState`, `sdReadStateChange`, `retryRead()`, `hideReadError` và template `sdDataStateTemplate`. VALUE/SEARCH độc lập; retry dùng snapshot request đã lỗi, giữ model và dữ liệu thành công, bỏ qua response cũ. Public entry point `utilities/read-state` tách biệt với `utilities/data-state`.
+#### Table
+
+- Table supports an optional `filter.quickSearch` row: Enter commits the keyword, `containFields` and `equalFields` generate an OR group, and `values`/`lazy-values` dropdowns apply immediately.
+  - Dropdowns support signal defaults, reactive visibility/disabled state, required values and user-only `onChange`. The applied `{ term, filters }` is available in `filterReq.quickSearch` even without search fields. `sdTableQuickSearchRightDef` lets consumers project optional UI on the right.
 
 ### Changed
 
-- Button cải thiện màu outline/disabled theo theme, khoảng cách icon và focus bàn phím; giữ bo tròn M3 và các kích thước 32/40/48px. Table gom thao tác chọn hàng trong QuickAction; Import Excel cải thiện bước chọn file, lọc và hiển thị lỗi, kể cả trên mobile.
-- Inform dùng icon nền nhẹ và SdButton nhỏ; Upload thêm appearance dropzone/compact và thao tác bàn phím; Stepper dùng icon trong chỉ báo và phân biệt bước hoàn tất. Modal/Drawer thống nhất khoảng cách, bo góc và mobile; Drawer giữ và khôi phục focus bằng CDK.
-- Confirm dùng layout gọn với icon nền nhẹ luôn hiển thị, tiêu đề 18px và nút SdButton nhỏ. Các phương thức hỗ trợ icon tùy chỉnh hoặc mặc định theo context; withInput thêm label/placeholder. Giữ các biến thể và kết quả Promise hiện có, cải thiện focus và bố cục mobile.
+#### Section
+
+- Section header icons use a 32px circular soft background with a centered 20px glyph, matching `iconColor` across all six color tokens. Custom header slots and collapse behavior are preserved.
+
+#### Sidebar V1
+
+- Sidebar V1 dùng nền sáng, tổng chiều rộng 304px với thanh module 56px, tiêu đề đậm, khoảng cách gọn và Material Icons Outlined.
+  - Menu 1–3 cấp phân biệt nhánh cha với mục đang chọn; avatar và nút thu gọn nhỏ nằm ở cuối thanh module. Giữ nguyên API, dữ liệu menu, routing, phân quyền, tìm kiếm và expand/collapse; không thêm vùng trống cho description.
+
+#### Table
+
+- Table external filters use small controls with inline errors hidden and a padded section body. Desktop tables use subtle 6px outer corners while retaining their existing scroll and sticky behavior.
+
+#### General
+
+- Confirm, Notify, Inform and Data-state now use circular status icon backgrounds, including compact Data-state. Existing icon sizes, semantic colors, layouts and interactions are preserved.
+
+### Fixed
+
+#### Badge
+
+- Badge `type="icon"` giữ đúng kích thước icon, căn giữa với phần chữ và không co icon khi nội dung dài.
+
+#### Confirm
+
+- Confirm `withRadio` loại bỏ scroll dọc dư do baseline và vùng bấm M3 tràn khỏi hàng radio; giữ vùng bấm 48px, khả năng cuộn danh sách dài và wrap lựa chọn trên mobile.
+
+#### Select, Autocomplete
+
+- Error state của select/autocomplete căn giữa, nằm dưới dữ liệu đang giữ lại; panel hẹp giảm khoảng đệm, icon và cho phép xuống dòng.
+
+#### Sidebar V1
+
+- Sidebar V1 search uses a compact light native input with a leading icon and a single thin focus border. Keep existing search matching and IME buffering; make clear accessible by keyboard and restore input focus after clearing.
+
+#### Table
+
+- Chỉ báo selection của table dùng màu success, gồm icon desktop và số lượng đã chọn trên mobile.
+- Disabled table row-command icons use the button's muted disabled color instead of retaining the active icon color.
+- Table desktop command touch targets stay within each button, preventing adjacent commands from intercepting clicks.
+
+#### General
+
+- Local release staging selects the previous package from the same Angular major; the Angular 21 baseline fallback is limited to the Angular 22 inception release `22.2.5`.
+
+## [2.6] - 2026-09-08
+
+Packages `19.2.6` · `20.2.6` · `21.2.6` · `22.2.6`.
+
+### Added
+
+#### Select, Autocomplete, Table
+
+- Select, autocomplete và server table có `readState`, `sdReadStateChange`, `retryRead()`, `hideReadError` và template `sdDataStateTemplate`.
+  - VALUE/SEARCH độc lập; retry dùng snapshot request đã lỗi, giữ model và dữ liệu thành công, bỏ qua response cũ. Public entry point `utilities/read-state` tách biệt với `utilities/data-state`.
+
+### Changed
+
+#### Button
+
+- Button cải thiện màu outline/disabled theo theme, khoảng cách icon và focus bàn phím; giữ bo tròn M3 và các kích thước 32/40/48px.
+  - Table gom thao tác chọn hàng trong QuickAction; Import Excel cải thiện bước chọn file, lọc và hiển thị lỗi, kể cả trên mobile.
+
+#### Confirm
+
+- Confirm dùng layout gọn với icon nền nhẹ luôn hiển thị, tiêu đề 18px và nút SdButton nhỏ.
+  - Các phương thức hỗ trợ icon tùy chỉnh hoặc mặc định theo context; withInput thêm label/placeholder. Giữ các biến thể và kết quả Promise hiện có, cải thiện focus và bố cục mobile.
+
+#### Data state
+
 - Data-state dùng icon nền nhẹ, loading primary, empty warning, compact căn ngang và nút retry/action `SdButton size="sm"`. Loading ưu tiên hiển thị so với lỗi khi VALUE/SEARCH đọc xen kẽ; giảm chuyển động tiếp tục tắt animation.
+
+#### Inform, Stepper, Upload file
+
+- Inform dùng icon nền nhẹ và SdButton nhỏ; Upload thêm appearance dropzone/compact và thao tác bàn phím; Stepper dùng icon trong chỉ báo và phân biệt bước hoàn tất.
+  - Modal/Drawer thống nhất khoảng cách, bo góc và mobile; Drawer giữ và khôi phục focus bằng CDK.
+
+#### Notify
+
 - Notify dùng icon SVG nét trong ô nền nhạt theo màu trạng thái, đồng nhất với data-state; giữ timing/grouping/action và cơ chế sanitize HTML.
 
 ### Fixed
 
-- Release verification refreshes npm pack metadata and retries only transient `ETARGET`/`E404` visibility failures after publication (up to 12 attempts, 5 seconds apart). Recovery and sequential publication await the downloaded tarball's exact SHA-256; access, integrity, provenance and immutable-version checks remain fail-closed.
-- Postpublish clears only the three generated Showcase input files after retaining the page, so the artifact commit can rebase onto current `main`; unexpected tracked changes still stop the release.
-- Manual recovery accepts an original artifact run ID and revalidates those exact tarballs instead of repacking: Angular's generated export ordering can otherwise change package bytes between builds of the same source. Source, hash, package-contract, consumer and provenance checks remain mandatory.
+#### Button, Side drawer
 
 - Button chỉ hiển thị một icon khi dùng suffix mà không truyền icon đầu. SideDrawer nhận focus ngay khi mở, giữ hiệu ứng đóng và thiết lập giảm chuyển động.
-- Date-range áp dụng đúng `clearable`, required và disabled cho nút xóa; datetime dùng icon picker đồng nhất. Multiple-select hiển thị số lượng đã chọn và tooltip với mỗi lựa chọn trên một dòng. Sidebar dùng hết chiều cao khả dụng để cuộn menu dài.
+
+#### Date range, Datetime
+
+- Date-range áp dụng đúng `clearable`, required và disabled cho nút xóa; datetime dùng icon picker đồng nhất.
+  - Multiple-select hiển thị số lượng đã chọn và tooltip với mỗi lựa chọn trên một dòng. Sidebar dùng hết chiều cao khả dụng để cuộn menu dài.
+
+#### Showcase
+
+- **Showcase release pages resolve library styles from the installed package.**
+  - Global Core UI SCSS now loads from `showcase/node_modules/@sdcorejs/angular`, so Angular Material resolves from Showcase's own dependencies when postpublish materializes a tarball without installing the v19 workspace.
+
+#### General
+
+- Release verification refreshes npm pack metadata and retries only transient `ETARGET`/`E404` visibility failures after publication (up to 12 attempts, 5 seconds apart).
+  - Recovery and sequential publication await the downloaded tarball's exact SHA-256; access, integrity, provenance and immutable-version checks remain fail-closed.
+- Postpublish clears only the three generated Showcase input files after retaining the page, so the artifact commit can rebase onto current `main`; unexpected tracked changes still stop the release.
+- Manual recovery accepts an original artifact run ID and revalidates those exact tarballs instead of repacking: Angular's generated export ordering can otherwise change package bytes between builds of the same source.
+  - Source, hash, package-contract, consumer and provenance checks remain mandatory.
 - Release `2.6` dùng bản đối chiếu `22.2.5` cho Angular 22; pipeline pin đúng tag, artifact và quy tắc giữ năm trang release gần nhất.
-- **Showcase release pages resolve library styles from the installed package.** Global Core UI SCSS now loads from `showcase/node_modules/@sdcorejs/angular`, so Angular Material resolves from Showcase's own dependencies when postpublish materializes a tarball without installing the v19 workspace.
 
 ## [2.5] - 2026-09-07
 
-Release suffix `2.5` publishes `19.2.5`, `20.2.5`, `21.2.5`, and `22.2.5`.
+Packages `19.2.5` · `20.2.5` · `21.2.5` · `22.2.5`.
 
 ### Added
 
-- **Angular 22 is now a first-class package line.** `22.2.5` is the inception release for that line; no earlier Angular 22 package history is implied. It is built from the same canonical v19 source as the generated v20 and v21 workspaces and is published as the stable `latest` target only after the three maintained recovery lines have been verified.
+#### Card
 
-- **`sd-table` mobile row cards** via `SdTableRowMobileDefDirective<T>` and `SdTableRowMobileDefContext<T>`, with optional `mobile.rowLabel`, typed template binding, shared selection/filter/sort/page/expand state, row and bulk commands in one contained `SdQuickAction`, grouped More sheets, and independent interactive card content. Canonical docs, consumer compilation fixtures and showcase cover local/server data, selection preservation, group/tree and responsive controls. `SdQuickAction.contained` enables an action bar inside an owning scroll container. Mobile tools and row commands use clearly titled SdModal bottom sheets. Selection uses one compact QuickAction row with a highlighted count, fitting actions and clear; selector messages/page checkboxes are omitted. A small circular selector straddles the top-right card border, and command-header content is centered above the cards. Modal overlays are named from their live headings.
+- **`<sd-card>` and `<sd-card-group>`** are available from `@sdcorejs/angular/components/card`.
+  - The standalone, generic-content card supports accessible pointer/keyboard toggle behavior, read-only `selected()` state, semantic Core UI colors, stable `autoId` selectors, disabled states, and the same 300 ms leading click throttle as `SdButton`. Groups provide single or immutable multiple selection through `[(model)]`, user-only `(sdChange)`, object-aware `compareWith`, direct nearest-group injection, and no imposed application layout.
 
-- **`<sd-card>` and `<sd-card-group>`** are available from `@sdcorejs/angular/components/card`. The standalone, generic-content card supports accessible pointer/keyboard toggle behavior, read-only `selected()` state, semantic Core UI colors, stable `autoId` selectors, disabled states, and the same 300 ms leading click throttle as `SdButton`. Groups provide single or immutable multiple selection through `[(model)]`, user-only `(sdChange)`, object-aware `compareWith`, direct nearest-group injection, and no imposed application layout.
+#### Package
+
+- **Angular 22 is now a first-class package line.**
+  - `22.2.5` is the inception release for that line; no earlier Angular 22 package history is implied. It is built from the same canonical v19 source as the generated v20 and v21 workspaces and is published as the stable `latest` target only after the three maintained recovery lines have been verified.
+
+#### Table
+
+- **`sd-table` mobile row cards** via `SdTableRowMobileDefDirective<T>` and `SdTableRowMobileDefContext<T>`, with optional `mobile.rowLabel`, typed template binding, shared selection/filter/sort/page/expand state, row and bulk commands in one contained `SdQuickAction`, grouped More sheets, and independent interactive card content.
+  - Canonical docs, consumer compilation fixtures and showcase cover local/server data, selection preservation, group/tree and responsive controls. `SdQuickAction.contained` enables an action bar inside an owning scroll container. Mobile tools and row commands use clearly titled SdModal bottom sheets. Selection uses one compact QuickAction row with a highlighted count, fitting actions and clear; selector messages/page checkboxes are omitted. A small circular selector straddles the top-right card border, and command-header content is centered above the cards. Modal overlays are named from their live headings.
 
 ### Changed
 
-- **Release compatibility remains dependency-first and public-API compatible.** The Angular 22 line consumes `@sdcorejs/angular-material-datetime@1.0.4`, which is released and verified first for Angular 22 peer compatibility. The four `@sdcorejs/angular` packages keep the existing public API, entry points, selectors and consumer syntax; this release adds framework compatibility rather than a consumer migration.
+#### Package
+
+- **Release compatibility remains dependency-first and public-API compatible.**
+  - The Angular 22 line consumes `@sdcorejs/angular-material-datetime@1.0.4`, which is released and verified first for Angular 22 peer compatibility. The four `@sdcorejs/angular` packages keep the existing public API, entry points, selectors and consumer syntax; this release adds framework compatibility rather than a consumer migration.
 
 ### Fixed
 
-- **OIDC publication avoids setup-node's placeholder token.** The publisher configures the public npm registry through `NPM_CONFIG_REGISTRY`, leaving setup-node token authentication disabled so the token-free release guard can reach trusted publishing.
-- **Release package validation recognizes the reviewed 2.5 changes.** Per-line snapshots pin both the 2.4 baseline and the exact 2.5 exports, packed paths, declarations and authored sources, allowing the card/mobile-table additions and runtime fixes while still rejecting unreviewed drift. Artifact integrity, source-commit binding and strict consumer compilation remain required.
-- **`sd-input-number` accepts pasted table amounts across both supported number formats.** Clipboard whitespace, including newlines, NBSP (`U+00A0`) and narrow NBSP (`U+202F`), is removed before parsing. Excess fractional digits are truncated toward zero to the configured `precision`; for example, `1.234.567,89` becomes 1234567 at precision 0. Ambiguous single-separator values prefer the configured format. Paste replaces the selected text and updates the model and `sdChange` through the normal input pipeline, retaining min/max validation without clamping. Invalid input remains blocked. Thousands groups require three digits, Cmd+V works like Ctrl+V, and ordinary typing keeps its precision checks.
-- **`sd-table` local sorting keeps empty values last in both directions.** Null, undefined and empty strings, plus invalid numeric and date/time values for their corresponding column types, no longer produce inconsistent comparisons or change position unpredictably when switching ASC/DESC. Equal values keep their relative order, zero remains valid, and sorting runs before pagination. This applies to local `number`, `date`, `datetime`, `time` and `string` columns.
+#### Input number
+
+- **`sd-input-number` accepts pasted table amounts across both supported number formats.**
+  - Clipboard whitespace, including newlines, NBSP (`U+00A0`) and narrow NBSP (`U+202F`), is removed before parsing. Excess fractional digits are truncated toward zero to the configured `precision`; for example, `1.234.567,89` becomes 1234567 at precision 0. Ambiguous single-separator values prefer the configured format. Paste replaces the selected text and updates the model and `sdChange` through the normal input pipeline, retaining min/max validation without clamping. Invalid input remains blocked. Thousands groups require three digits, Cmd+V works like Ctrl+V, and ordinary typing keeps its precision checks.
+
+#### Table
+
+- **`sd-table` local sorting keeps empty values last in both directions.**
+  - Null, undefined and empty strings, plus invalid numeric and date/time values for their corresponding column types, no longer produce inconsistent comparisons or change position unpredictably when switching ASC/DESC. Equal values keep their relative order, zero remains valid, and sorting runs before pagination. This applies to local `number`, `date`, `datetime`, `time` and `string` columns.
+
+#### General
+
+- **OIDC publication avoids setup-node's placeholder token.**
+  - The publisher configures the public npm registry through `NPM_CONFIG_REGISTRY`, leaving setup-node token authentication disabled so the token-free release guard can reach trusted publishing.
+- **Release package validation recognizes the reviewed 2.5 changes.**
+  - Per-line snapshots pin both the 2.4 baseline and the exact 2.5 exports, packed paths, declarations and authored sources, allowing the card/mobile-table additions and runtime fixes while still rejecting unreviewed drift. Artifact integrity, source-commit binding and strict consumer compilation remain required.
 
 ## [2.4] - 2026-09-01
 
-Release suffix `2.4` publishes `19.2.4`, `20.2.4`, and `21.2.4`.
+Packages `19.2.4` · `20.2.4` · `21.2.4`.
 
 ### Fixed
 
+#### Date range
+
 - **`<sd-date-range>` now emits valid autocomplete metadata for both endpoints.** The end-date input no longer derives its `autocomplete` value from a generated component id; both start and end inputs use the valid HTML token `off`.
-- **`<sd-table>` keeps sort state on semantic column headers without duplicating the design-system icon.** `aria-sort` now belongs only to the native `<th>`. A title-only internal sort control keeps inline filters and resize handles outside the sort activation target, delegates state and events to the existing `MatSort`, and renders exactly one custom indicator with no Angular Material arrow. When `option.sort.enable` is false or omitted, or a leaf column is not sortable, no sort control, `aria-sort`, sort focus target, or sort icon is created. Mouse, Enter/Space, custom titles, multi-row headers, server request ordering, filters and resize behavior remain compatible; enabled and disabled fixtures pass unsuppressed Axe WCAG 2.1 A/AA scans.
+
+#### Table
+
+- **`<sd-table>` keeps sort state on semantic column headers without duplicating the design-system icon.**
+  - `aria-sort` now belongs only to the native `<th>`. A title-only internal sort control keeps inline filters and resize handles outside the sort activation target, delegates state and events to the existing `MatSort`, and renders exactly one custom indicator with no Angular Material arrow. When `option.sort.enable` is false or omitted, or a leaf column is not sortable, no sort control, `aria-sort`, sort focus target, or sort icon is created. Mouse, Enter/Space, custom titles, multi-row headers, server request ordering, filters and resize behavior remain compatible; enabled and disabled fixtures pass unsuppressed Axe WCAG 2.1 A/AA scans.
 
 ## [2.3] - 2026-08-31
 
-Release suffix `2.3` publishes `19.2.3`, `20.2.3`, and `21.2.3`.
+Packages `19.2.3` · `20.2.3` · `21.2.3`.
 
 ### Fixed
 
-- **Projected `<sd-tree>` item templates compile again with `strictTemplates` and the documented syntax.** Angular cannot infer the generic parameter of `SdTreeItemDefDirective` from `SdTreeComponentOption<T>` on the parent component because the projected directive has no generic input of its own. Its narrowly scoped compatibility default is restored from `unknown` to `any`, so `<ng-template sdTreeItemDef let-item>{{ item.name }}</ng-template>` no longer requires `$any()`, a cast pipe, or a consumer-local context guard. Every Tree model and option keeps its existing `unknown` default; this does not roll back the broader type-safety improvements.
+#### Tree
+
+- **Projected `<sd-tree>` item templates compile again with `strictTemplates` and the documented syntax.**
+  - Angular cannot infer the generic parameter of `SdTreeItemDefDirective` from `SdTreeComponentOption<T>` on the parent component because the projected directive has no generic input of its own. Its narrowly scoped compatibility default is restored from `unknown` to `any`, so `<ng-template sdTreeItemDef let-item>{{ item.name }}</ng-template>` no longer requires `$any()`, a cast pipe, or a consumer-local context guard. Every Tree model and option keeps its existing `unknown` default; this does not roll back the broader type-safety improvements.
 
 ## [2.2] - 2026-08-30
 
-Release suffix `2.2` publishes `19.2.2`, `20.2.2`, and `21.2.2`.
+Packages `19.2.2` · `20.2.2` · `21.2.2`.
 
 ### Fixed
 
-- **The sidebar highlighted an ancestor menu together with the child the route actually belongs to.** A menu counted as active whenever the current route matched the front of its `path`, so declaring both `/appointment` and `/appointment/cs` lit up both rows while standing on `/appointment/cs`. When several menus match, only the longest — most exact — path is active now; the ancestor goes dark and `aria-current="page"` lands on a single row. The new `resolveActiveMenuPath(menus, routePath)` in the layout `utils` is the single decision point, used by V1 for node focus, menu-group binding and branch expansion, and by the shared `sd-layout-menu-tree` behind V2/V3 and their mobile variants. Matching stays segment-based (`/appointment` still never matches `/appointments`), and a route with no menu of its own (`/appointment/cs/123`) still activates its closest declared ancestor. `MenuFocusPipe` accepts the resolved path as an optional third argument and keeps its previous prefix matching when called with two.
+#### Sidebar
+
+- **The sidebar highlighted an ancestor menu together with the child the route actually belongs to.**
+  - A menu counted as active whenever the current route matched the front of its `path`, so declaring both `/appointment` and `/appointment/cs` lit up both rows while standing on `/appointment/cs`. When several menus match, only the longest — most exact — path is active now; the ancestor goes dark and `aria-current="page"` lands on a single row. The new `resolveActiveMenuPath(menus, routePath)` in the layout `utils` is the single decision point, used by V1 for node focus, menu-group binding and branch expansion, and by the shared `sd-layout-menu-tree` behind V2/V3 and their mobile variants. Matching stays segment-based (`/appointment` still never matches `/appointments`), and a route with no menu of its own (`/appointment/cs/123`) still activates its closest declared ancestor. `MenuFocusPipe` accepts the resolved path as an optional third argument and keeps its previous prefix matching when called with two.
 
 ## [2.1] - 2026-08-30
 
-Release suffix `2.1` publishes `19.2.1`, `20.2.1`, and `21.2.1`.
+Packages `19.2.1` · `20.2.1` · `21.2.1`.
 
 ### Added
 
-- **`<sd-api-contract-builder>`** (`@sdcorejs/angular/components/api-contract-builder`) — a design-time builder for an **API contract**: one JSON document describing the data the frontend hands in (`input.schema`), the HTTP request that is sent (`req`), the HTTP response that comes back (`res`), and the data the frontend finally receives (`output.schema`). It exists so an integrator can declare an endpoint once and a future `form-builder` / `form-render` can drive a dropdown, a table or a create/update/delete action from it without anyone hand-writing mapping code.
+#### API contract builder
+
+- **`<sd-api-contract-builder>`** (`@sdcorejs/angular/components/api-contract-builder`) — a design-time builder for an **API contract**: one JSON document describing the data the frontend hands in (`input.schema`), the HTTP request that is sent (`req`), the HTTP response that comes back (`res`), and the data the frontend finally receives (`output.schema`).
+  - It exists so an integrator can declare an endpoint once and a future `form-builder` / `form-render` can drive a dropdown, a table or a create/update/delete action from it without anyone hand-writing mapping code.
 
   The component **never performs a request and never holds a secret** — executing a contract is a separate concern that is deliberately out of scope for this version, along with OpenAPI import/export, GraphQL/SOAP/WebSocket, multipart upload, and any per-element array transformation.
   - **Canonical JSON.** `input` / `output` are frontend contracts and keep their `.schema`; `req` / `res` describe HTTP and expose REST structure directly, with no `.schema` wrapper. There are no `requestMappings: []` / `responseMappings: []` arrays — a mapping lives directly in `req.path` / `req.query` / `req.headers` / `req.body` and in `output.schema`.
@@ -804,23 +1685,54 @@ Release suffix `2.1` publishes `19.2.1`, `20.2.1`, and `21.2.1`.
 
 ### Changed
 
-- **`<sd-operator>` menu rows are two-line: label first, operator code underneath.** The row used to lay the translated label and the raw code side by side, so inside an `<sd-table>` inline column filter — where the panel is only as wide as the column — a long label such as `Lớn hơn, hoặc bằng` wrapped onto a second line and the rows ended up at different heights. The label now owns the first line (weight 400, `nowrap`) and the code the second, still muted grey 11px monospace; `mat-menu-item`'s single-line box is released (`min-height: 0`, `height: auto`, `line-height: normal`) so the second line is not cropped. Measured on the number-operator set: the panel narrows from 304px to 235px and rows go from 48px to 46px, because the label no longer shares its line with the code.
+#### Operator
+
+- **`<sd-operator>` menu rows are two-line: label first, operator code underneath.**
+  - The row used to lay the translated label and the raw code side by side, so inside an `<sd-table>` inline column filter — where the panel is only as wide as the column — a long label such as `Lớn hơn, hoặc bằng` wrapped onto a second line and the rows ended up at different heights. The label now owns the first line (weight 400, `nowrap`) and the code the second, still muted grey 11px monospace; `mat-menu-item`'s single-line box is released (`min-height: 0`, `height: auto`, `line-height: normal`) so the second line is not cropped. Measured on the number-operator set: the panel narrows from 304px to 235px and rows go from 48px to 46px, because the label no longer shares its line with the code.
 
 ### Fixed
 
-- `SdSection`, Sidebar v1 and `SdBadge` now expose named native controls and links, isolate collapsed focus, use valid tree/group markup, and use contrast-safe badge tokens without changing their public inputs, outputs or selectors.
+#### Table
 
-- **`<sd-table>` with `type: 'local'` dropped every row once an inline column filter on a `MULTIPLE` `values` / `lazy-values` column had two or more values selected.** Client-side matching picked its branch from the array-ness of the **row** value instead of the filter value, so a scalar cell (`status: 'ACTIVE'`) fell through to a strict `===` against `['ACTIVE','PENDING'].toString()` → `'active,pending'` and could never match. Selecting exactly one value happened to work (`['ACTIVE'].toString() === 'ACTIVE'`), which is why the defect read as intermittent rather than broken. Matching now branches on the shape of the actual values: several selected values are OR-ed — mirroring the `IN` operator `SdConvertToPagingReq` sends in `type: 'server'`, so local and server tables agree — and an array-valued cell matches when the intersection is non-empty. A scalar filter value on a `MULTIPLE` column (e.g. `filter.default: 'ACTIVE'`) no longer throws `TypeError: …map is not a function`.
+- **`<sd-table>` with `type: 'local'` dropped every row once an inline column filter on a `MULTIPLE` `values` / `lazy-values` column had two or more values selected.**
+  - Client-side matching picked its branch from the array-ness of the **row** value instead of the filter value, so a scalar cell (`status: 'ACTIVE'`) fell through to a strict `===` against `['ACTIVE','PENDING'].toString()` → `'active,pending'` and could never match. Selecting exactly one value happened to work (`['ACTIVE'].toString() === 'ACTIVE'`), which is why the defect read as intermittent rather than broken. Matching now branches on the shape of the actual values: several selected values are OR-ed — mirroring the `IN` operator `SdConvertToPagingReq` sends in `type: 'server'`, so local and server tables agree — and an array-valued cell matches when the intersection is non-empty. A scalar filter value on a `MULTIPLE` column (e.g. `filter.default: 'ACTIVE'`) no longer throws `TypeError: …map is not a function`.
+
+#### General
+
+- `SdSection`, Sidebar v1 and `SdBadge` now expose named native controls and links, isolate collapsed focus, use valid tree/group markup, and use contrast-safe badge tokens without changing their public inputs, outputs or selectors.
 
 ## [2.0] - 2026-08-15
 
-Release suffix `2.0` publishes `19.2.0`, `20.2.0`, and `21.2.0` as a stable release across the maintained Angular lines.
+Packages `19.2.0` · `20.2.0` · `21.2.0`, as a stable release across the maintained Angular lines.
 
-**Read the breaking-change entry below before upgrading.** The suffix jumps from `1.6` to `2.0` deliberately: the major digit of an npm version is locked to the Angular line, so it can never signal a break. The leading digit of the release suffix is the only signal this changelog has, and this release removes three exported surfaces. `npm install @sdcorejs/angular@^19.0.0` does not protect you here — the compiler will.
+> [!IMPORTANT]
+> **Before upgrading:** `SdLicenseService`, `SdBaseSecureComponent` and `ISdCoreConfiguration.licenseKey` are gone, the `@sdcorejs/angular/services/docx` and `@sdcorejs/angular/components/document-builder` entry points and every re-export from `@sdcorejs/utils` are removed, and renamed public APIs keep no `@deprecated` alias.
+>
+> **Read the breaking-change entry below before upgrading.** The suffix jumps from `1.6` to `2.0` deliberately: the major digit of an npm version is locked to the Angular line, so it can never signal a break. The leading digit of the release suffix is the only signal this changelog has, and this release removes three exported surfaces. `npm install @sdcorejs/angular@^19.0.0` does not protect you here — the compiler will.
 
 ### Changed (BREAKING for consumers)
 
-- **`SdLicenseService`, `SdBaseSecureComponent` and `ISdCoreConfiguration.licenseKey` are gone.** The package is MIT and public; no component has enforced a license since the gate was made dormant, so the three surfaces were carrying a promise the library does not keep. Removed outright rather than left deprecated: an exported base class whose constructor could still `throw` on a mis-configured host is a production hazard for anyone who inherits it.
+Đợt đổi tên public API có chủ đích, **xoá hẳn tên cũ, không giữ alias `@deprecated`**. Lý do gộp một lần: tag format `^\d+\.\d+$` khoá major theo Angular line, nên semver KHÔNG thể phát tín hiệu breaking — mỗi lần hoãn thì chi phí migration về sau lại tăng.
+
+#### Entity picker, Tree select
+
+- **`sdLoadError` → `loadError` trên `<sd-tree-select>` và `<sd-entity-picker>`** — hai component này là chỗ duy nhất dùng tiền tố `sd` cho sự kiện load-error, trong khi `<sd-tree>` và `<sd-preview-pdf>` (cùng sự kiện, cùng `SdTreeLoadErrorEvent` ở nhóm tree) đã publish tên `loadError` từ trước.
+  - Gộp về `loadError`. Migration: find/replace `(sdLoadError)` → `(loadError)` trên hai element đó.
+
+#### Form generic
+
+- **Helper PascalCase của `form-generic` chuyển sang `sd` + camelCase** — `GenerateId` / `GenerateKey` / `GetAttributes` / `GetComponentAttributes` / `GetDatetimeValue` / `GetVariableAttributes` / `EvaluateExpression` / `ExpressionToJavascriptExpression` / `TemplateToCondition` / `SdFormatComponent` → `sdGenerateId` / `sdGenerateKey` / `sdGetAttributes` / … Chúng là hàm thuần nhưng đọc như class (`new GenerateId()` nhìn vẫn hợp lệ).
+  - Const đi kèm: `DayInfoTypes` / `DayInfoPreviouses` / `AttributeOperators` / `TableColumnTypes` / `FormBuilderComponents` / `COMPONENT_ICONS` → `SD_DAY_INFO_TYPES` / `SD_DAY_INFO_PREVIOUSES` / `SD_ATTRIBUTE_OPERATORS` / `SD_TABLE_COLUMN_TYPES` / `SD_FORM_BUILDER_COMPONENTS` / `SD_COMPONENT_ICONS`.
+
+#### i18n
+
+- **Pipe `translate` → `sdTranslate`** (class `TranslatePipe` → `SdTranslatePipe`).
+  - Tên cũ đụng trực diện pipe cùng tên của `@ngx-translate/core`; cả hai đều standalone nên app dùng song song KHÔNG import chung vào một component được. Migration: find/replace `| translate` → `| sdTranslate` và `TranslatePipe` → `SdTranslatePipe`.
+
+#### License
+
+- **`SdLicenseService`, `SdBaseSecureComponent` and `ISdCoreConfiguration.licenseKey` are gone.**
+  - The package is MIT and public; no component has enforced a license since the gate was made dormant, so the three surfaces were carrying a promise the library does not keep. Removed outright rather than left deprecated: an exported base class whose constructor could still `throw` on a mis-configured host is a production hazard for anyone who inherits it.
 
   Migration — delete `licenseKey` from the object you provide for `SD_CORE_CONFIGURATION` (the field no longer exists, so TypeScript will point at it):
 
@@ -834,27 +1746,52 @@ Release suffix `2.0` publishes `19.2.0`, `20.2.0`, and `21.2.0` as a stable rele
 
   If you `extends SdBaseSecureComponent` anywhere, drop the `extends` clause and the `super()` call — the class did nothing except call `enforceLicense()`. The entry points `@sdcorejs/angular/services/license` and `@sdcorejs/angular/components/base` no longer resolve, and `services/license/sd-license.md` is no longer published. Consumers gating features by permission should keep using `*sdPermission`, which is unrelated and unchanged. `ISdCoreConfiguration.language` — always supported, never documented — is now in the configuration doc.
 
-### Changed
+#### Query builder
 
-- **`<sd-tree-select>`'s trigger is now the same shell as `<sd-select>`.** It used to draw its own bordered `<button>`, which meant a form mixing the two showed two different field heights, corner radii, label positions and error placements, and the `label` input was accepted but never rendered at all. The trigger is a readonly `<input matInput>` inside a `<mat-form-field>`, so it inherits the floating label, the error subscript, the suffix slot and the size/appearance tokens from the same place every other control does. The only intentional difference is the suffix icon — `account_tree` instead of the select caret — signalling that this control opens a tree dialog rather than a dropdown; the clear `×` replaces that icon while a value is present, exactly as in `<sd-select>`. New inputs `size`, `appearance`, `helperText` and `hideInlineError` come with the shell. Inside the modal, the search box is an `<sd-input>` and Cancel/Apply are `<sd-button>`s (`outline`/`secondary` and `fill`/`primary`); the body now sets its own `16px` padding, since `.sd-modal-body` is deliberately padding-free and the search field had been sitting flush against the modal edge. **Behaviour note:** `aria-invalid` now follows Material's convention — unset while the field is both `required` and empty, `true` for every other error — because the field is a Material control now. The message element is a `<mat-error>` (still tagged `data-tree-select-error`) instead of a bare `<div>`.
+- **Namespace `qb*` / `QB_*` / `Qb*` của `query-builder` → `sdQb*` / `SD_QB_*` / `SdQb*`** — ví dụ `qbNewRule` → `sdQbNewRule`, `isQbGroup` → `sdIsQbGroup`, `QB_OPERATORS_BY_TYPE` → `SD_QB_OPERATORS_BY_TYPE`, `QbGroup` / `QbRule` / `QbToken` → `SdQbGroup` / `SdQbRule` / `SdQbToken`.
+  - Các type đã đúng tiền tố (`SdQbRelativeUnit`, …) giữ nguyên.
 
-- **With a `transform` active, the registered form field now carries the model rather than the editor's own value.** These three controls bind their Angular control straight to the Material editor, so `form.get(name).value` has always held a `Date` (date, date-range) or the display string (datetime) while `model` held something else. That mismatch is invisible until a transform promises the two agree. The components now register a second, model-facing control while a transform is set — mirroring validity, disabled and touched/dirty from the editor control so the parent form still sees min/max, parse and required errors. Without `transform` the registration is untouched and the form keeps receiving exactly what it received before.
+#### Sidebar
 
-- **A single-selection `<sd-tree>` renders radios instead of checkboxes.** `selector.single` already limited the selection to one node, but the control still looked like a checkbox — so the limit only announced itself after the user ticked a second node and watched the first one clear. `<sd-tree-select>` without `multiple` picks this up for free. The radios are deliberately not wrapped in a `<mat-radio-group>`: a group binds Arrow Up/Down to moving the selection, and tree rows already use those keys to navigate. Clicking the selected radio still clears it, exactly as the checkbox did. New public signal `selectionSingle()`.
+- **Sidebar bỏ tên không tiền tố** — `SidebarV2Component` → `SdSidebarV2` (`sidebar-v2` → `sd-sidebar-v2`), tương tự `V3`, `MobileV1/V2/V3`; `SidebarMobileOverlayComponent` → `SdSidebarMobileOverlay`.
+  - Nội bộ: `SidebarV1Component` → `SdSidebarV1`, `SidebarComponent` (selector `sidebar` — tên element toàn cục cực dễ đụng) → `SdSidebarV1Panel` (`sd-sidebar-v1-panel`).
 
-- **`<sd-time>`'s picker trigger is sized like every other suffix affordance.** It was the last control still using `mat-icon-button`, whose 40px box and 48px touch target pushed the clock away from the right edge and gave it a visibly larger hit area than the icons in `<sd-date>` / `<sd-datetime>` / `<sd-date-range>`. It is now the same plain `<button class="sd-suffix-icon sd-suffix-btn">` those three already use, so the four controls finally line up. `<sd-time-range>` inherits the fix through its two endpoints.
+#### Table
 
-- **The selection quick-action bar stays closed when the selection has no actions**, in both `<sd-table>` and `<sd-tree>`. It used to open on any selection, so a table or tree that declares `selector.visible` without `selector.actions` floated a bar over the content whose entire payload was a count the checkboxes already showed and a `×` to undo the click that opened it. The gate is the _resolved_ action list, so a selection mixing rows with different permitted actions can resolve to zero and keep the bar closed too; deselect through the checkboxes. `<sd-tree>` exposes the decision as `selectionQuickActionOpened()`. This is what removes the bar from `<sd-tree-select>`'s picker modal, where the tree declares no actions and Apply/Cancel already live in the footer.
+- **`MatPaginatorIntlCro` → `SdTablePaginatorIntl`** (`@sdcorejs/angular/components/table`). Tên cũ là vết copy-paste từ ví dụ locale Croatia, lại mang tiền tố `Mat` gây hiểu nhầm là API của Angular Material.
 
-- **`<sd-time-range>` clears one endpoint at a time.** The single group-level `×` sat after the "to" field, aligned with neither input, and could only empty both ends at once — so narrowing a range meant clearing it and retyping. `clearable` is forwarded to both `<sd-time>` endpoints instead, giving each field the same in-suffix clear `<sd-input>` has. The `→` separator is sized to the input row height (`--sd-time-range-row-height`, resolved per `size`) rather than a hard-coded 56px, so it is centred against the fields instead of against the taller error-subscript box. `clear()` still empties both endpoints regardless of `clearable`. Removed: the `showClear` signal and the `.sd-time-range-clear` element.
+#### Utilities
 
-### Fixed
+- **Xoá toàn bộ alias `@deprecated` dưới `utilities/**`** — `SdColor`, `SdSize`, `SdNestedKeyOf`, `SdOrder`, `SdFilter\*`, `SdQueryReq`/`SdPagingReq`/`SdPagingRes`, `SdMaybeAsync`/`SdResolveMaybeAsync`/`SdNormalizeAsync`, `SD_EMPTY_STR`, `hslToHex`/`rgbToHex`, `SdPatternType`/`SdPatternCommon`/`SdPatternCommons`, và các member lỗi thời trên `StringUtilities` (`REGEX_PHONE_VN`, `REGEX_IDVN`, `REGEX_IDVN_OR_PASSPORT`, `isValidEmail`, `isValidPhone`, `isValidCode`).
+  - Bảng ánh xạ đầy đủ ở `utilities/models/models.md`. ⚠️ Riêng nhóm pattern KHÔNG phải đổi tên thuần: field `regex`nay là`pattern`, và 3 member đổi tên kèm i18n key (`PHONE_VN`→`VN_PHONE`, `IDVN`→`VN_ID`, `IDVN_OR_PASSPORT`→`VN_ID_OR_PASSPORT`). `<sd-input [pattern]>` vẫn nhận 3 chuỗi cũ qua bảng alias nội bộ nên template không vỡ.
 
-- **`<sd-time>`'s clear button never appeared.** `showClear` is a `computed` reading `formControl.value` — a plain property that emits no signal — so it settled on `false` at first paint, while the field was empty, and never recomputed. The bug had been dormant because `clearable` defaults to `false`; `<sd-time-range>` turning it on is what surfaced it. It now tracks the control's event stream _and_ `valueModel`, the latter because the shared form connector writes programmatic values with `{ emitEvent: false }` and so never ticks the event stream at all.
+### Removed (BREAKING for consumers)
+
+#### Document builder
+
+- **Xoá hẳn entry point `@sdcorejs/angular/components/document-builder`** (`<sd-document-builder>` — trình dựng tài liệu CKEditor cho mẫu hợp đồng, legacy từ hệ cũ).
+  - Không có thay thế; soạn thảo rich-text vẫn còn `<sd-editor>` / `<sd-mini-editor>`. 6 key i18n `core.component.document-builder.*` đi theo. `<sd-ckeditor-styles>` giữ nguyên (editor/mini-editor vẫn nhúng).
+
+#### Docx
+
+- **Xoá hẳn entry point `@sdcorejs/angular/services/docx`** (`SdDocxService` — chuyển DOCX sang HTML qua pandoc).
+  - Đây là entry point duy nhất chứa code vendored GPL-2.0-or-later (bản copy pandoc-wasm core) trong một package khai MIT; xoá nó loại bỏ xung đột giấy phép thay vì phải relicense hay tách package. Không có thay thế trong thư viện — consumer cần chức năng này tự tích hợp [pandoc-wasm](https://github.com/pandoc/pandoc-wasm) (GPL) ở tầng app của mình. Dependency `@bjorn3/browser_wasi_shim` (chỉ docx dùng) và 3 key i18n `core.docx.*` đi theo. File `NOTICE` (thêm trong chính chu kỳ Unreleased này) cũng gỡ vì không còn code vendored nào để ghi nhận.
+
+#### Utilities
+
+- **Bỏ TOÀN BỘ re-export từ `@sdcorejs/utils`** — nguyên tắc: cái gì `@sdcorejs/utils` sở hữu thì import và đọc doc ở `@sdcorejs/utils`, thư viện này không làm mặt tiền trung gian nữa.
+  - Package đó đã là dependency runtime của thư viện nên có sẵn trong tree; thêm nó vào `package.json` của app khi import trực tiếp. Cụ thể:
+  - `utilities/extensions` bỏ re-export `ArrayUtilities` / `ColorUtilities` / `DateUtilities` / `NumberUtilities` / `StringUtilities` / `ValidationUtilities` / `Utilities` / `BrowserUtilities` → import từ `@sdcorejs/utils/fns`. Entry point còn lại `ObjectUtilities`, `SdUtilities` (14 hàm cài đặt cục bộ) và nhóm url-safety (`sdParseUrl`, `sdOpenExternal`, …) — code local.
+  - `utilities/models` bỏ re-export `Color`, `Size`, `Order`, `NestedKeyOf`, `Filter*`, `Operator*`, `QueryReq` / `PagingReq` / `PagingRes`, `MaybeAsync` / `resolveMaybeAsync` / `normalizeAsync`, `ValidationPatternType` / `ValidationPattern` → `@sdcorejs/utils/models`; `VALIDATION_PATTERNS`, `EMPTY_STR` → `@sdcorejs/utils/constants`. Entry point còn lại `icon.model` + `unwrap-signal.model` (local). Bảng "ở đâu bây giờ" đầy đủ trong `utilities/models/models.md`.
+  - **Xoá hẳn entry point `@sdcorejs/angular/models`** — nó chỉ re-export `Language` + `SUPPORTED_LANGUAGES`; import từ `@sdcorejs/utils/models` / `@sdcorejs/utils/constants`. `@sdcorejs/angular/i18n` cũng thôi re-export hai tên này.
+  - Spec của các file re-export thuần (array/color/date/number/string extension, pattern.model) xoá theo — chúng test hành vi của `@sdcorejs/utils`, thuộc repo đó.
 
 ### Added
 
-- **`<sd-date>`, `<sd-datetime>` and `<sd-date-range>` accept a `transform` input** that names how a committed value leaves the component: `'ISOString'` (`toISOString()` — UTC, `Z` suffix, milliseconds) or `'UTCString'` (`toUTCString()` — UTC RFC-1123, `GMT` suffix, no milliseconds). It changes `model` / `modelChange` / `sdChange` **and the registered `FormGroup` field**; it does not touch what the field displays, which stays `dd/MM/yyyy`, `dd/MM/yyyy HH:mm[:ss]` per `showSeconds`, and `dd/MM/yyyy → dd/MM/yyyy`. Leaving it unset keeps every existing behaviour, including the canonical output strings and the `Date` / display-string values the form currently receives. New public type `SdTemporalValueTransform`, exported from `@sdcorejs/angular/forms/models`.
+#### Date forms
+
+- **`<sd-date>`, `<sd-datetime>` and `<sd-date-range>` accept a `transform` input** that names how a committed value leaves the component: `'ISOString'` (`toISOString()` — UTC, `Z` suffix, milliseconds) or `'UTCString'` (`toUTCString()` — UTC RFC-1123, `GMT` suffix, no milliseconds).
+  - It changes `model` / `modelChange` / `sdChange` **and the registered `FormGroup` field**; it does not touch what the field displays, which stays `dd/MM/yyyy`, `dd/MM/yyyy HH:mm[:ss]` per `showSeconds`, and `dd/MM/yyyy → dd/MM/yyyy`. Leaving it unset keeps every existing behaviour, including the canonical output strings and the `Date` / display-string values the form currently receives. New public type `SdTemporalValueTransform`, exported from `@sdcorejs/angular/forms/models`.
 
   Date and date-range serialize **local start-of-day** — the calendar day the user picked, at midnight in their timezone. Date-range applies the strategy to each endpoint separately (`{ from, to }`), never to the range object as a whole. Datetime keeps the precision `showSeconds` already governs and always zeroes milliseconds. Because the output is UTC, its calendar day can differ from the local one; that is the same instant, but a server comparing date strings will see the neighbouring date.
 
@@ -862,371 +1799,758 @@ Release suffix `2.0` publishes `19.2.0`, `20.2.0`, and `21.2.0` as a stable rele
 
   Adding a strategy later means adding one literal to the union and one entry to the strategy map; the components hold no per-strategy branching. Note that `transform` here is a value-serialization strategy, not an Angular input-coercion `transform`.
 
-- **Live demos for the six directives and seven pipes** that shipped as reference text only: `*sdDesktop`, `*sdMobile`, `[sdHoverCopy]`, `a[sdHref]`, `[sdScroll]`, `[sdTooltip]`, and `sdEmpty`, `sdFormatDate`, `sdFormatDatetime`, `sdFormatNumber`, `sdSafeHtml`, `sdTimeDifferent`, `sdView`. 28 new showcase sections; each page moves from a published-doc entry to a full demo page, so the Examples tab and the deep-linkable section anchors work there like they do for components.
+#### Docs
+
+- **Docs for three previously undocumented entry points** — `components/form-generic` (form builder, form renderer, `sd-feel-expression`, the schema model and the configuration token), `components/ckeditor-styles`, and `forms/directives` (`sdSuffixDef` / `sdLabelDef` / `sdViewDef` / `sdItemDef`, with a table of which control reads which).
+
+#### Excel
+
+- **Ô số trong file Excel xuất ra giờ THẬT SỰ có number format** — `SdExcelService.export` từng set `numFmt = '#'` rồi gán đè cả object `style` ngay sau (exceljs thay thế toàn bộ style khi gán), nên format chưa từng được áp.
+  - Nay numFmt nằm trong cùng object style: số nguyên mang `'0'`, số thập phân giữ General (format '#' cũ nếu được áp sẽ hiển thị 0 thành ô trống và làm tròn phần hiển thị của số lẻ — nên không giữ). Diện mạo file xuất đổi nhẹ: ô số nguyên hiển thị theo format '0'.
+
+#### Form generic
+
+- **`SdFormGenericValidation` + 3 symbol liên quan import được bằng tên** — `form-generic-validation.model` giờ nằm trong models barrel của `components/form-generic`; trước đây `SdFormGeneric.validations` dùng các type này nhưng consumer không annotate được biến bằng chúng.
+
+#### i18n
+
+- **64 new i18n keys across all five locales** (vi, en, ja, ko, zh; 525 → 589, parity verified) covering `query-bar`, `query-builder`, `tree`, `sd-hover-copy` and `modules/layout`, which previously shipped hardcoded Vietnamese and English.
+- **32 i18n key mới (mỗi key × 5 locale, parity 599)** — nhóm `query-bar` (popover: swap-field, placeholder chọn/nhập giá trị, loading lazy-values; field-picker empty; toàn bộ menu saved-filters), nhóm `modules/layout/sidebar` (v2 rail + mobile v2: brand, nhóm menu, đóng menu, placeholder tìm kiếm, primary-nav, "Thêm"), và `core.component.form-builder.select-item`.
+  - Đây là các chuỗi tiếng Việt hardcode nằm DƯỚI ngưỡng budget nên checker cũ không báo.
+- **`npm run check:i18n` xanh lần đầu và đáng tin** — stripper hiểu regex literal (một regex chứa quote/backtick từng đẩy máy trạng thái vào string vĩnh viễn, đếm nhầm comment là code — `excel.service.ts` bị đếm 22 chỗ toàn comment); checker giờ đọc marker `// @i18n-ignore` (dòng đó hoặc dòng ngay dưới) đúng như i18n.md đã hứa; budget per-file tính lại theo số thực.
+  - +9 test (`npm run test:check-i18n`, gộp vào `test:scripts`).
+
+#### Notify
+
+- **`SdToastData` + `SdToastType` are now exported** from `@sdcorejs/angular/services/notify`.
+  - Both already sat on the public surface of `SdNotifyService` (`toasts: WritableSignal<ToastData[]>`, `clearByType(type: ToastType)`) but were not exported, so a consumer could not annotate either. Aliased with the `Sd` prefix like the existing `NotifyOption as SdNotifyOption`. The toast container/toast components stay internal — they are not exported and `…/services/notify/components` is not an entry point, contrary to what `sd-notify.md` used to claim.
+
+#### Query bar
+
+- **Đặt tên bộ lọc đã lưu dùng dialog thật** — `SdQuerySavedFiltersMenu.promptSave()` chuyển từ `window.prompt` sang `SdConfirmService.withInput` (nay là `async`).
+  - `window.prompt` chặn UI thread, không style/dịch được và bị vô hiệu trong một số ngữ cảnh nhúng.
+
+#### Select
+
+- **`<sd-select multiple>` can offer a "Tất cả" row** — new opt-in input `showSelectAll` (default `false`) renders a checkbox row at the top of the panel, but only when `items` is a static array or `Signal` (it stays hidden for `SdSearch` lazy items, where the full dataset is unknown so "all" has no meaning).
+  - Ticking selects every enabled item matching the current search text and **adds** to the existing selection, so entries selected outside the active filter survive; unticking removes only that scope. The scope is computed from the source array rather than the rendered list, so `limit` paging cannot silently leave items out, and items disabled through `disabledField` are never touched in either direction. The checkbox carries the usual checked/indeterminate/unchecked states. `sdChange`/`sdSelection` still fire only on panel close. New public method `toggleSelectAll()`, new i18n key `core.form.select.selectAll` across all five locales, and the row exposes `data-autoid="<autoId>-select-all"`. The row reuses the option's own `<mat-pseudo-checkbox>` markup so it inherits option sizing, spacing and theme colour instead of restyling a real `mat-checkbox`; because that element is `aria-hidden`, the row itself carries `role="checkbox"`, `aria-checked`, `tabindex` and Enter/Space.
+
+#### Showcase
+
+- **Live demos for the six directives and seven pipes** that shipped as reference text only: `*sdDesktop`, `*sdMobile`, `[sdHoverCopy]`, `a[sdHref]`, `[sdScroll]`, `[sdTooltip]`, and `sdEmpty`, `sdFormatDate`, `sdFormatDatetime`, `sdFormatNumber`, `sdSafeHtml`, `sdTimeDifferent`, `sdView`.
+  - 28 new showcase sections; each page moves from a published-doc entry to a full demo page, so the Examples tab and the deep-linkable section anchors work there like they do for components.
+
+#### Table
+
+- **`<sd-table>` can render content in the command column's header** through a new `sdTableCommandHeaderDef` template (exported as `SdTableCommandHeaderDefDirective`).
+  - That header cell has always been empty — it only reserves width for the per-row command buttons — so it is the natural home for a table-level action. It takes no field argument, unlike `sdTableCellDef`/`sdTableTitleDef`, because there is only one command column, and it renders no wrapper at all when no template is projected. `form-generic`'s table field now puts its "add row" button there instead of below the table, which removes a full strip of vertical space and places "add" directly above the edit/delete buttons it belongs with.
+
+#### General
+
+- **CI actually runs the tests.**
+  - A `test` job now gates every npm publish, and a new `ci.yml` runs `check:sync`, lint, build, the unit suite and the repo script tests on every push and pull request. Previously nothing ran the ~4,600 specs at all, and `npm run lint:release` — a documented pre-release step — was red on a clean `main`.
+- **Coverage đo trên mẫu số đầy đủ, và threshold siết lại đúng số đo** — `coverage-includes.spec.ts` dùng `import.meta.webpackContext` kéo mọi file source vào test bundle, nên file không spec nào import vẫn được instrument (trước đó nó không nằm ở cả tử số lẫn mẫu số, khiến việc thêm test đầu tiên vào một vùng chưa có test có thể làm % TỤT).
+  - `tsconfig.spec.json` mở `include` sang `**/*.ts` — hệ quả phụ đáng giá: `ng test` giờ type-check cả source dưới path mapping source (không phải `dist`). Threshold 72/62/71/72 → **78/67/75/78**, sát số đo thật 79.01/68.00/76.48/79.83 (trước đây gate thấp hơn thực tế ~7pp nên gần như không chặn gì).
+- **Karma không còn báo xanh cho một run RỖNG** — bundle nặng hơn làm Chrome bị coi là chết trước khi chạy spec đầu tiên (`Disconnected … ping timeout`), 0 spec chạy mà exit code vẫn 0.
+  - `browserNoActivityTimeout` / `browserDisconnectTimeout` / `captureTimeout` / `pingTimeout` được nâng để chờ đúng page load nặng (không phải để che spec chậm).
 
 ### Changed
 
-- **The `<sd-table>` column-setup dialog was rebuilt around its own density.** Every row is a list of on/off values, so the three `sd-switch` controls became `sd-checkbox` — a switch reads as a heavyweight, standalone setting and seven stacked pairs of them dominated the dialog. The title and width fields drop to `size="sm"` and every cell gains vertical padding, so text no longer sits flush against the row edge. The grid lines move from Material's default (`on-surface` at ~12%) to `outline-variant`, keep only horizontal rules, and sit inside a single rounded border, so the eye follows rows instead of a heavy lattice. The width and toggle columns are width-capped to give the header-title field the remaining space, the drag handle became a real `<button>` (keyboard/AT reachable, `grab` cursor, no button chrome) and rows highlight on hover. **New:** a localized hint above the table (`core.component.table.config.drag-hint`) advertises drag-to-reorder, which had no affordance beyond an unlabelled handle; turning **Hiển thị** off now dims the row and disables its title/width/fixed/truncate editors — those settings do nothing for a hidden column — while leaving the display checkbox itself enabled so the column can be restored. Footer buttons lose their `mr-8`; the modal footer already lays them out with `gap: 8px`, so the margin only widened the gaps unevenly. Two new i18n keys across all five locales; first specs for the dialog (6).
+#### Date forms
 
-- **A `checkbox` field built in form-builder rendered nothing at runtime.** `item.component.html` is form-render's only type dispatcher and its two `@if / @else if` chains had no `checkbox` branch and no fallback, so the field silently disappeared — the palette, the attribute panel and the schema type had all shipped without the renderer half. New `lib-checkbox` control, built on the same shape as the other simple controls (same inputs, `defaultValue` applied only while the value is still `undefined` so unticking is not undone on the next render, and `setVariables` honoured). Note that `sd-checkbox` has no `required` input, so a checkbox field's `validate.required` is not enforced; the binding is deliberately absent rather than written and silently ignored.
-- **`sd-tree` rows were misaligned wherever checkboxes are shown** — which is every `<sd-tree-select>`, since it turns the selector on by default. `--sd-tree-control-size` is 28px and the chevron fills that slot exactly, but the checkbox only had its `height` clamped while Material's `.mdc-checkbox` is a content-box sized by `--mdc-checkbox-state-layer-size` (40px), so the real box overflowed the slot and the column drifted; the `transform: scale(0.85)` that tried to compensate could not, because it scales around the centre of the already-clamped box. Forcing the state-layer token to the slot size makes the checkbox fill it like the chevron does, and the scale hack is gone (the tick is now a full 18px, matching the 20px chevron and item icon). Rows also aligned their controls to the middle of the whole text block, so a label wrapping to two lines dragged the chevron and checkbox down with it; controls now align to the first line. Single-line rows are pixel-identical — the row padding moves 6px → 8px precisely so that `flex-start` and `center` coincide against the 44px `min-height`.
-- **`form-generic`'s table field used slots that do not exist.** Its side-drawer projected `<div sdTitle>` and `<div sdBody>`, but `sd-side-drawer` only accepts `sdHeaderLeft` / `sdHeaderRight` / `sdFooterLeft` / `sdFooterRight` plus a default `ng-content` — so both blocks fell into the drawer body, putting "Tạo mới/cập nhật" inside the content while the header stayed stuck on "Chi tiết". The drawer title is now driven by the actual task (add row / update row / detail, two new i18n keys), and the content sits in the default slot.
-- **The same drawer was indented and scrolled sideways.** Its content carried `margin: -16px`, which existed to cancel padding the drawer no longer applies (`.sd-side-drawer-content` is deliberately `padding: 0` so each consumer decides). The negative margin therefore dragged the content past the edge. Dropped, along with a `height: calc(100vh - 97px)` whose magic number no longer matched the header/footer. Fields stack with a declared `gap` instead of a hard `mt-16` on every one of them, including the first.
+- **With a `transform` active, the registered form field now carries the model rather than the editor's own value.**
+  - These three controls bind their Angular control straight to the Material editor, so `form.get(name).value` has always held a `Date` (date, date-range) or the display string (datetime) while `model` held something else. That mismatch is invisible until a transform promises the two agree. The components now register a second, model-facing control while a transform is set — mirroring validity, disabled and touched/dirty from the editor control so the parent form still sees min/max, parse and required errors. Without `transform` the registration is untouched and the form keeps receiving exactly what it received before.
+
+#### Form builder
+
+- **A `checkbox` field built in form-builder rendered nothing at runtime.**
+  - `item.component.html` is form-render's only type dispatcher and its two `@if / @else if` chains had no `checkbox` branch and no fallback, so the field silently disappeared — the palette, the attribute panel and the schema type had all shipped without the renderer half. New `lib-checkbox` control, built on the same shape as the other simple controls (same inputs, `defaultValue` applied only while the value is still `undefined` so unticking is not undone on the next render, and `setVariables` honoured). Note that `sd-checkbox` has no `required` input, so a checkbox field's `validate.required` is not enforced; the binding is deliberately absent rather than written and silently ignored.
+- **The expression pill lost all of its styling inside the validation dialog.**
+  - `.fb-expr` was styled from `form-builder.component.scss` under `:host ::ng-deep`, which only reaches `expression-builder` while it sits inside the builder's DOM; the validation dialog renders through an overlay on `document.body`, so the rules never applied and the control collapsed into bare text ("FEEL / Thiết lập biểu thức / functions"). The styles moved to the component that owns the markup, so they hold in any host.
+- **Deleting a nested condition removed the wrong row.**
+  - The level-2 delete button passed `idxLv1` — the index of the _parent group_ — into the child condition list, so removing the second child deleted the first, and removing anything from a group positioned beyond the child count did nothing at all.
+- **The form-builder's JSON, variable and validation dialogs were reworked.**
+  - JSON moves from a bare `sd-textarea` to `sd-code-editor` with `language="json"` and is pretty-printed on open — it used to be a single unreadable line that could not realistically be hand-edited. The variable rows become bordered cards on a fixed `key / label / delete` grid (they were a flex row where both inputs stretched and the delete button rendered as large as a primary action), the add control changes from `<a href="javascript:;">` to a real button, and both dialogs gain an empty state. In the validation dialog the delete control was an `<sd-icon (click)>` — not a button, so it could not be reached or activated from the keyboard — and each rule was a `mat-elevation-z2` block with inline styles; rules are bordered cards now and the `function` branch finally labels its select. The toolbar buttons for variables and validations carry a count badge, so the form's configuration is visible without opening either dialog. Three new i18n keys across all five locales.
+
+#### Form generic
+
+- **`form-generic`'s table field used slots that do not exist.**
+  - Its side-drawer projected `<div sdTitle>` and `<div sdBody>`, but `sd-side-drawer` only accepts `sdHeaderLeft` / `sdHeaderRight` / `sdFooterLeft` / `sdFooterRight` plus a default `ng-content` — so both blocks fell into the drawer body, putting "Tạo mới/cập nhật" inside the content while the header stayed stuck on "Chi tiết". The drawer title is now driven by the actual task (add row / update row / detail, two new i18n keys), and the content sits in the default slot.
+- **The same drawer was indented and scrolled sideways.**
+  - Its content carried `margin: -16px`, which existed to cancel padding the drawer no longer applies (`.sd-side-drawer-content` is deliberately `padding: 0` so each consumer decides). The negative margin therefore dragged the content past the edge. Dropped, along with a `height: calc(100vh - 97px)` whose magic number no longer matched the header/footer. Fields stack with a declared `gap` instead of a hard `mt-16` on every one of them, including the first.
 - **Fields in a `group` sat flush against the section frame** — `.sd-section-body` is also `padding: 0` by design, and the fields only carried their own `px-8`, so the group now declares its own inset.
-- **The expression pill lost all of its styling inside the validation dialog.** `.fb-expr` was styled from `form-builder.component.scss` under `:host ::ng-deep`, which only reaches `expression-builder` while it sits inside the builder's DOM; the validation dialog renders through an overlay on `document.body`, so the rules never applied and the control collapsed into bare text ("FEEL / Thiết lập biểu thức / functions"). The styles moved to the component that owns the markup, so they hold in any host.
-- **Deleting a nested condition removed the wrong row.** The level-2 delete button passed `idxLv1` — the index of the _parent group_ — into the child condition list, so removing the second child deleted the first, and removing anything from a group positioned beyond the child count did nothing at all.
+- **The Save button in the table field's drawer sat at double the standard inset.**
+  - `.sd-side-drawer-footer` already pads 16px — every other `sdFooterRight` consumer in the library relies on that alone — but the projected wrapper also carried `pr-16`, for 32px total. The extra padding was a leftover from when this markup targeted a non-existent `sdFooter` slot and fell into the unpadded drawer body; the later rename to the real slot made it redundant. The sibling `text-right` was inert too (the slot is already a right-aligned flex container).
 
-### Changed
+#### Table
 
-- **The Save button in the table field's drawer sat at double the standard inset.** `.sd-side-drawer-footer` already pads 16px — every other `sdFooterRight` consumer in the library relies on that alone — but the projected wrapper also carried `pr-16`, for 32px total. The extra padding was a leftover from when this markup targeted a non-existent `sdFooter` slot and fell into the unpadded drawer body; the later rename to the real slot made it redundant. The sibling `text-right` was inert too (the slot is already a right-aligned flex container).
-- **The form-builder's JSON, variable and validation dialogs were reworked.** JSON moves from a bare `sd-textarea` to `sd-code-editor` with `language="json"` and is pretty-printed on open — it used to be a single unreadable line that could not realistically be hand-edited. The variable rows become bordered cards on a fixed `key / label / delete` grid (they were a flex row where both inputs stretched and the delete button rendered as large as a primary action), the add control changes from `<a href="javascript:;">` to a real button, and both dialogs gain an empty state. In the validation dialog the delete control was an `<sd-icon (click)>` — not a button, so it could not be reached or activated from the keyboard — and each rule was a `mat-elevation-z2` block with inline styles; rules are bordered cards now and the `function` branch finally labels its select. The toolbar buttons for variables and validations carry a count badge, so the form's configuration is visible without opening either dialog. Three new i18n keys across all five locales.
+- **The `<sd-table>` column-setup dialog was rebuilt around its own density.**
+  - Every row is a list of on/off values, so the three `sd-switch` controls became `sd-checkbox` — a switch reads as a heavyweight, standalone setting and seven stacked pairs of them dominated the dialog. The title and width fields drop to `size="sm"` and every cell gains vertical padding, so text no longer sits flush against the row edge. The grid lines move from Material's default (`on-surface` at ~12%) to `outline-variant`, keep only horizontal rules, and sit inside a single rounded border, so the eye follows rows instead of a heavy lattice. The width and toggle columns are width-capped to give the header-title field the remaining space, the drag handle became a real `<button>` (keyboard/AT reachable, `grab` cursor, no button chrome) and rows highlight on hover. **New:** a localized hint above the table (`core.component.table.config.drag-hint`) advertises drag-to-reorder, which had no affordance beyond an unlabelled handle; turning **Hiển thị** off now dims the row and disables its title/width/fixed/truncate editors — those settings do nothing for a hidden column — while leaving the display checkbox itself enabled so the column can be restored. Footer buttons lose their `mr-8`; the modal footer already lays them out with `gap: 8px`, so the margin only widened the gaps unevenly. Two new i18n keys across all five locales; first specs for the dialog (6).
+- **The `<sd-table>` paginator is more compact.**
+  - Its row kept Material's default `--mat-paginator-container-size` (56px min-height) and the previous/next buttons their 40px hover state layer, which is a lot of footer for a table whose rows are 36px. Both come down through Material's own tokens (40px row, 32px state layer, 20px icon) instead of overriding sizes on the elements.
+
+#### Table, Tree
+
+- **The selection quick-action bar stays closed when the selection has no actions**, in both `<sd-table>` and `<sd-tree>`.
+  - It used to open on any selection, so a table or tree that declares `selector.visible` without `selector.actions` floated a bar over the content whose entire payload was a count the checkboxes already showed and a `×` to undo the click that opened it. The gate is the _resolved_ action list, so a selection mixing rows with different permitted actions can resolve to zero and keep the bar closed too; deselect through the checkboxes. `<sd-tree>` exposes the decision as `selectionQuickActionOpened()`. This is what removes the bar from `<sd-tree-select>`'s picker modal, where the tree declares no actions and Apply/Cancel already live in the footer.
+
+#### Time
+
+- **`<sd-time>`'s picker trigger is sized like every other suffix affordance.**
+  - It was the last control still using `mat-icon-button`, whose 40px box and 48px touch target pushed the clock away from the right edge and gave it a visibly larger hit area than the icons in `<sd-date>` / `<sd-datetime>` / `<sd-date-range>`. It is now the same plain `<button class="sd-suffix-icon sd-suffix-btn">` those three already use, so the four controls finally line up. `<sd-time-range>` inherits the fix through its two endpoints.
+
+#### Time range
+
+- **`<sd-time-range>` clears one endpoint at a time.**
+  - The single group-level `×` sat after the "to" field, aligned with neither input, and could only empty both ends at once — so narrowing a range meant clearing it and retyping. `clearable` is forwarded to both `<sd-time>` endpoints instead, giving each field the same in-suffix clear `<sd-input>` has. The `→` separator is sized to the input row height (`--sd-time-range-row-height`, resolved per `size`) rather than a hard-coded 56px, so it is centred against the fields instead of against the taller error-subscript box. `clear()` still empties both endpoints regardless of `clearable`. Removed: the `showClear` signal and the `.sd-time-range-clear` element.
+
+#### Tree
+
+- **A single-selection `<sd-tree>` renders radios instead of checkboxes.**
+  - `selector.single` already limited the selection to one node, but the control still looked like a checkbox — so the limit only announced itself after the user ticked a second node and watched the first one clear. `<sd-tree-select>` without `multiple` picks this up for free. The radios are deliberately not wrapped in a `<mat-radio-group>`: a group binds Arrow Up/Down to moving the selection, and tree rows already use those keys to navigate. Clicking the selected radio still clears it, exactly as the checkbox did. New public signal `selectionSingle()`.
+- **`sd-tree` rows were misaligned wherever checkboxes are shown** — which is every `<sd-tree-select>`, since it turns the selector on by default.
+  - `--sd-tree-control-size` is 28px and the chevron fills that slot exactly, but the checkbox only had its `height` clamped while Material's `.mdc-checkbox` is a content-box sized by `--mdc-checkbox-state-layer-size` (40px), so the real box overflowed the slot and the column drifted; the `transform: scale(0.85)` that tried to compensate could not, because it scales around the centre of the already-clamped box. Forcing the state-layer token to the slot size makes the checkbox fill it like the chevron does, and the scale hack is gone (the tick is now a full 18px, matching the 20px chevron and item icon). Rows also aligned their controls to the middle of the whole text block, so a label wrapping to two lines dragged the chevron and checkbox down with it; controls now align to the first line. Single-line rows are pixel-identical — the row padding moves 6px → 8px precisely so that `flex-start` and `center` coincide against the 44px `min-height`.
+
+#### Tree select
+
+- **`<sd-tree-select>`'s trigger is now the same shell as `<sd-select>`.**
+  - It used to draw its own bordered `<button>`, which meant a form mixing the two showed two different field heights, corner radii, label positions and error placements, and the `label` input was accepted but never rendered at all. The trigger is a readonly `<input matInput>` inside a `<mat-form-field>`, so it inherits the floating label, the error subscript, the suffix slot and the size/appearance tokens from the same place every other control does. The only intentional difference is the suffix icon — `account_tree` instead of the select caret — signalling that this control opens a tree dialog rather than a dropdown; the clear `×` replaces that icon while a value is present, exactly as in `<sd-select>`. New inputs `size`, `appearance`, `helperText` and `hideInlineError` come with the shell. Inside the modal, the search box is an `<sd-input>` and Cancel/Apply are `<sd-button>`s (`outline`/`secondary` and `fill`/`primary`); the body now sets its own `16px` padding, since `.sd-modal-body` is deliberately padding-free and the search field had been sitting flush against the modal edge. **Behaviour note:** `aria-invalid` now follows Material's convention — unset while the field is both `required` and empty, `true` for every other error — because the field is a Material control now. The message element is a `<mat-error>` (still tagged `data-tree-select-error`) instead of a bare `<div>`.
+
+#### Utilities
+
+- **`SdUtilities` KHÔNG bị xoá** — marker `@deprecated` cũ mô tả sai: đây không phải alias mà là 14 hàm cài đặt cục bộ. Marker đã được gỡ, implementation giữ nguyên.
+
+#### General
+
+- **Siết default generic `any` → `unknown` trên 19 file model** (82 khai báo), gồm `components/tree/src/tree.model.ts` (toàn bộ type export), `components/table/src/services/table-filter/table-filter.model.ts`, `components/table/src/models/table-column.model.ts`, `components/query-bar/src/query-bar.model.ts`, `forms/models/**`, … Consumer viết `SdTableColumn<User>` hay `SdTreeOption<User>` từ nay được suy luận kiểu thật và báo lỗi khi dùng sai, thay vì im lặng như với `any`.
+  - Thêm `SdTableColumnAnyRow` cho vài vị trí tham số nội bộ row-agnostic (giải thích trong `table-column.model.ts`).
 
 ### Fixed
 
-- **The `<sd-table>` footer showed two different backgrounds.** Material paints the paginator itself with `--mat-paginator-container-background-color`, whose default is `--mat-sys-surface` — not white — so the pager half of the footer sat on a different colour than the action half. The paginator is part of the footer rather than a surface of its own, so it is transparent now and takes the footer background.
+#### Chip, Chip calendar
 
-### Changed
+- **`<sd-chip>` / `<sd-chip-calendar>` mutated the caller's array in place** and re-set the same reference, so `[(model)]` never emitted.
 
-- **The `<sd-table>` paginator is more compact.** Its row kept Material's default `--mat-paginator-container-size` (56px min-height) and the previous/next buttons their 40px hover state layer, which is a lot of footer for a table whose rows are 36px. Both come down through Material's own tokens (40px row, 32px state layer, 20px icon) instead of overriding sizes on the elements.
+#### Date range
 
-### Added
+- **`<sd-date-range>` `[required]` could never fail** — `Validators.required` was applied to a control whose value is always an object.
 
-- **`<sd-table>` can render content in the command column's header** through a new `sdTableCommandHeaderDef` template (exported as `SdTableCommandHeaderDefDirective`). That header cell has always been empty — it only reserves width for the per-row command buttons — so it is the natural home for a table-level action. It takes no field argument, unlike `sdTableCellDef`/`sdTableTitleDef`, because there is only one command column, and it renders no wrapper at all when no template is projected. `form-generic`'s table field now puts its "add row" button there instead of below the table, which removes a full strip of vertical space and places "add" directly above the edit/delete buttons it belongs with.
+#### Date range, Time range
 
-- **`<sd-select multiple>` can offer a "Tất cả" row** — new opt-in input `showSelectAll` (default `false`) renders a checkbox row at the top of the panel, but only when `items` is a static array or `Signal` (it stays hidden for `SdSearch` lazy items, where the full dataset is unknown so "all" has no meaning). Ticking selects every enabled item matching the current search text and **adds** to the existing selection, so entries selected outside the active filter survive; unticking removes only that scope. The scope is computed from the source array rather than the rendered list, so `limit` paging cannot silently leave items out, and items disabled through `disabledField` are never touched in either direction. The checkbox carries the usual checked/indeterminate/unchecked states. `sdChange`/`sdSelection` still fire only on panel close. New public method `toggleSelectAll()`, new i18n key `core.form.select.selectAll` across all five locales, and the row exposes `data-autoid="<autoId>-select-all"`. The row reuses the option's own `<mat-pseudo-checkbox>` markup so it inherits option sizing, spacing and theme colour instead of restyling a real `mat-checkbox`; because that element is `aria-hidden`, the row itself carries `role="checkbox"`, `aria-checked`, `tabindex` and Enter/Space.
-- **`SdToastData` + `SdToastType` are now exported** from `@sdcorejs/angular/services/notify`. Both already sat on the public surface of `SdNotifyService` (`toasts: WritableSignal<ToastData[]>`, `clearByType(type: ToastType)`) but were not exported, so a consumer could not annotate either. Aliased with the `Sd` prefix like the existing `NotifyOption as SdNotifyOption`. The toast container/toast components stay internal — they are not exported and `…/services/notify/components` is not an entry point, contrary to what `sd-notify.md` used to claim.
-- **Docs for three previously undocumented entry points** — `components/form-generic` (form builder, form renderer, `sd-feel-expression`, the schema model and the configuration token), `components/ckeditor-styles`, and `forms/directives` (`sdSuffixDef` / `sdLabelDef` / `sdViewDef` / `sdItemDef`, with a table of which control reads which).
-- **CI actually runs the tests.** A `test` job now gates every npm publish, and a new `ci.yml` runs `check:sync`, lint, build, the unit suite and the repo script tests on every push and pull request. Previously nothing ran the ~4,600 specs at all, and `npm run lint:release` — a documented pre-release step — was red on a clean `main`.
-- **64 new i18n keys across all five locales** (vi, en, ja, ko, zh; 525 → 589, parity verified) covering `query-bar`, `query-builder`, `tree`, `sd-hover-copy` and `modules/layout`, which previously shipped hardcoded Vietnamese and English.
-- **Coverage đo trên mẫu số đầy đủ, và threshold siết lại đúng số đo** — `coverage-includes.spec.ts` dùng `import.meta.webpackContext` kéo mọi file source vào test bundle, nên file không spec nào import vẫn được instrument (trước đó nó không nằm ở cả tử số lẫn mẫu số, khiến việc thêm test đầu tiên vào một vùng chưa có test có thể làm % TỤT). `tsconfig.spec.json` mở `include` sang `**/*.ts` — hệ quả phụ đáng giá: `ng test` giờ type-check cả source dưới path mapping source (không phải `dist`). Threshold 72/62/71/72 → **78/67/75/78**, sát số đo thật 79.01/68.00/76.48/79.83 (trước đây gate thấp hơn thực tế ~7pp nên gần như không chặn gì).
-- **Karma không còn báo xanh cho một run RỖNG** — bundle nặng hơn làm Chrome bị coi là chết trước khi chạy spec đầu tiên (`Disconnected … ping timeout`), 0 spec chạy mà exit code vẫn 0. `browserNoActivityTimeout` / `browserDisconnectTimeout` / `captureTimeout` / `pingTimeout` được nâng để chờ đúng page load nặng (không phải để che spec chậm).
-- **32 i18n key mới (mỗi key × 5 locale, parity 599)** — nhóm `query-bar` (popover: swap-field, placeholder chọn/nhập giá trị, loading lazy-values; field-picker empty; toàn bộ menu saved-filters), nhóm `modules/layout/sidebar` (v2 rail + mobile v2: brand, nhóm menu, đóng menu, placeholder tìm kiếm, primary-nav, "Thêm"), và `core.component.form-builder.select-item`. Đây là các chuỗi tiếng Việt hardcode nằm DƯỚI ngưỡng budget nên checker cũ không báo.
-- **Đặt tên bộ lọc đã lưu dùng dialog thật** — `SdQuerySavedFiltersMenu.promptSave()` chuyển từ `window.prompt` sang `SdConfirmService.withInput` (nay là `async`). `window.prompt` chặn UI thread, không style/dịch được và bị vô hiệu trong một số ngữ cảnh nhúng.
-- **Ô số trong file Excel xuất ra giờ THẬT SỰ có number format** — `SdExcelService.export` từng set `numFmt = '#'` rồi gán đè cả object `style` ngay sau (exceljs thay thế toàn bộ style khi gán), nên format chưa từng được áp. Nay numFmt nằm trong cùng object style: số nguyên mang `'0'`, số thập phân giữ General (format '#' cũ nếu được áp sẽ hiển thị 0 thành ô trống và làm tròn phần hiển thị của số lẻ — nên không giữ). Diện mạo file xuất đổi nhẹ: ô số nguyên hiển thị theo format '0'.
-- **`SdFormGenericValidation` + 3 symbol liên quan import được bằng tên** — `form-generic-validation.model` giờ nằm trong models barrel của `components/form-generic`; trước đây `SdFormGeneric.validations` dùng các type này nhưng consumer không annotate được biến bằng chúng.
-- **`npm run check:i18n` xanh lần đầu và đáng tin** — stripper hiểu regex literal (một regex chứa quote/backtick từng đẩy máy trạng thái vào string vĩnh viễn, đếm nhầm comment là code — `excel.service.ts` bị đếm 22 chỗ toàn comment); checker giờ đọc marker `// @i18n-ignore` (dòng đó hoặc dòng ngay dưới) đúng như i18n.md đã hứa; budget per-file tính lại theo số thực. +9 test (`npm run test:check-i18n`, gộp vào `test:scripts`).
+- **`<sd-date-range>` and `<sd-time-range>` no longer inject their internal endpoint controls into the consumer's FormGroup under random UUID keys**, which broke the value shape and `form.reset(obj)`.
+
+#### Forms
+
+- **Chế độ `hideInlineError` giờ có tiếng cho screen reader.**
+  - Ở chế độ này thông báo lỗi chỉ sống trong tooltip của icon — không có text node nào để `aria-describedby` trỏ tới, nên trình đọc màn hình không đọc gì cả. Nay message được render thêm vào một phần tử chỉ-dành-cho-screen-reader (`span.sd-visually-hidden`, class utility mới trong `assets/scss`) và `aria-describedby` trỏ vào đó. Áp cho 12 control: input, input-number, textarea, select, autocomplete, date, date-range, datetime, chip, chip-calendar, time, editor.
+- **Form error messages that never rendered.**
+  - Writing to the validation control with `setValue(v, { emitEvent: false })` suppresses the async validator's completion, so the state signal never ticks and OnPush shows a red outline with no message. Fixed in `clear()` on input / input-number / autocomplete, in every write in date-range, and in `<sd-select>`'s primary selection path.
+- **Validators a consumer attached to the public `formControl` were silently wiped** by destructive `clearValidators()`/`setValidators()` blocks in select, autocomplete, textarea, chip, chip-calendar and date-range.
+- **The shared form connector silently dropped the control** when the parent FormGroup already declared one at the same `name`: the user typed, `form.value` never changed, the form submitted empty, and nothing warned.
+
+#### Loading
+
+- **`SdLoadingService` leaked its overlay and stylesheet into the document permanently** under `provideAnimations()`: `Renderer2` from `AnimationRendererFactory` defers `removeChild` to the animation engine's next flush, which never happens on teardown.
+
+#### Package
+
+- **The published package was not consumable.**
+  - The primary entry point exported **nothing** — `src/public-api.ts` was ten bare `import` statements, so `import { SdButton } from '@sdcorejs/angular'` resolved to nothing in every published version. `@angular/router` and `@angular/animations` were used but declared as neither dependency nor peer. `"sideEffects": false` was factually wrong (`Chart.register(...)` at module scope, five bare `prismjs` grammar imports), letting bundlers legally drop them with a silent production-only failure. `@omer-go/docx-parser-converter-ts` was a hard runtime dependency with zero imports.
+
+#### Pipes
+
+- **A pure pipe mutated its own input** (`selection-visible`), appending duplicates without bound; a sibling pipe slept 500 ms inside an `async` pure pipe to paper over a change-detection ordering problem.
+
+#### Query builder
+
+- **A live OOM reproduction** in `query-builder` — `[items]="field.values || []"` allocated a fresh array every change-detection pass and `sd-select`'s `toObservable(items)` loop froze the page.
+  - Fixed, along with the same allocation shape in query-bar, table, org-chart and tab-router.
+
+#### Table
+
+- **The `<sd-table>` footer showed two different backgrounds.**
+  - Material paints the paginator itself with `--mat-paginator-container-background-color`, whose default is `--mat-sys-surface` — not white — so the pager half of the footer sat on a different colour than the action half. The paginator is part of the footer rather than a surface of its own, so it is transparent now and takes the footer background.
+- **Table row identity was a content hash**, so `flattenTree`'s `visited` Set **silently dropped the second of two content-equal rows from the rendered output**.
+  - Identity now comes from the new `option.rowKey`, falling back to per-object identity. **BREAKING** for tables using `preserveSelection` across a server re-fetch, or asserting on `data-autoid="…-tree-toggle-<id>"` in E2E.
+
+#### Time
+
+- **`<sd-time>`'s clear button never appeared.**
+  - `showClear` is a `computed` reading `formControl.value` — a plain property that emits no signal — so it settled on `false` at first paint, while the field was empty, and never recomputed. The bug had been dormant because `clearable` defaults to `false`; `<sd-time-range>` turning it on is what surfaced it. It now tracks the control's event stream _and_ `valueModel`, the latter because the shared form connector writes programmatic values with `{ emitEvent: false }` and so never ticks the event stream at all.
+
+#### General
+
+- **Accessibility.**
+  - Four a11y lint rules were switched **off**, and `aria-hidden="true"` had been used to silence tooling rather than fix markup — including on 10 real `<input>` elements and on wrappers containing an entire `mat-form-field`, an entire `<mat-calendar>`, the whole form-builder canvas, a whole sidebar menu branch, and three `mat-sort-header` divs, which made table sorting unusable with assistive tech. The rules are back on as `error`. Click-only controls are keyboard-operable, async states carry `role="status"`/`aria-live`, the `role="tablist"`/`treeitem` patterns are complete, and every `outline: none` has a `:focus-visible` replacement — notably `sd-button`, and `sd-modal`, which leaked a global focus-ring reset through `ViewEncapsulation.None`.
+- **Hai wrapper `role="button"` bọc phần tử tương tác đã được tái cấu trúc** — AT gộp cả cụm thành MỘT nút và bỏ phần tử bên trong khỏi accessibility tree.
+  - (a) Hàng menu sidebar v1: `role` / `tabindex` / `aria-current` / Enter-Space chuyển xuống phần tiêu đề, nút ghim thành sibling độc lập, row giữ `(click)` cho chuột. (b) Card trên canvas của form-builder (group / break / component — bọc cả nút hành động lẫn preview control có `<input>` thật): card bỏ hẳn `role="button"`, affordance bàn phím/AT thành một `<button>` thật ở đầu thanh action (`aria-pressed` + `aria-label`), và thanh action hiện cả khi `:focus-within` để focus không rơi vào nút vô hình.
+- **Promises that never settled on the cancel path.**
+  - All six `SdConfirmService` methods, `SdDocxService.open()` and `SdUtilities.upload()` left the caller's `await` pending forever when the user backed out. `upload()` additionally resolved inside its loop, so validation failures after the first file were swallowed.
+- **Resources outliving their owner.**
+  - `<sd-modal>` had no destroy hook at all and orphaned its overlay; `sd-upload-file` left four drag listeners on a consumer-supplied element; `SdNotifyService` never destroyed the `<body>` node it created; `<sd-side-drawer>`'s scroll lock could leave the page permanently unscrollable with two stacked drawers; `<sd-modal-resizable>` rewrote inline styles on every `.modal-resizable` element in the document; and 13 `setTimeout` sites across `forms/**` stored no handle, two of which called `detectChanges()` after destroy. `SdCacheService` kept every cached URL forever — now a bounded LRU via `maxMemoryEntries` (default 500).
+- SSR-unsafe global `document`/`window` access in `preview-image`, `SdLicenseService`, `global-error.handler` and a sidebar.
 
 ### Security
 
-- **Bearer token could be sent to any host.** `SdKeycloakInterceptor` gated the `Authorization` header on `config.secureRoutes?.some(route => req.url.includes(route))` — an unanchored substring test with no host check. With the documented example `secureRoutes: ['/api/v1']`, a request to `https://analytics.thirdparty.com/api/v1/collect` received the access token. It now matches on parsed origin plus a segment-aware path prefix.
-- **`sdSafeHtml` was an unconditional sanitizer bypass.** It called `bypassSecurityTrustHtml()` on every value with no sanitize step, and `<sd-table>` pipes server-supplied cell data through it — a stored-XSS sink inside the library. It now **sanitizes by default**; the bypass is an explicit `| sdSafeHtml: true`. **BREAKING** for call sites relying on markup the sanitizer strips (inline `<svg>`, custom elements): add `: true` there.
-- **`javascript:` URLs could execute in the app origin.** Six sidebars gated `window.open` on `path.includes('http')`, which `javascript:fetch(...)//http` satisfies. One passed no `noopener`, leaving the opened page with `window.opener`. All now parse the URL and always pass `noopener,noreferrer`.
+#### API
+
 - **Lookalike hosts inherited auth hooks.** `SdApiService` and its interceptor selected a handler with `url.startsWith(host)`, so `https://api.example.com.attacker.tld/x` matched a handler configured for `https://api.example.com`.
-- **Every optional config degraded to permissive.** `SdAuthGuard`/`SdPortalGuard` returned `true` when their callback was unset; `hasPermission('')` returned `true` while the permission guard fed it route data unchecked, so a misspelled `data` key was granted; `*sdPermission` rendered on an empty binding without consulting the service; `SdLayoutService` fell back to a mock `demo@example.com` signed-in user; `SdLicenseService` approved any hostname merely _containing_ `localhost`. All now fail closed, with "no restriction" declared explicitly via the new `SD_PERMISSION_PUBLIC`.
-- **Root singletons cached identity with no way to clear it**, so state survived signout into the next user in the same tab. `SdPermissionService` gains `reset()`/`invalidate()`, the 401 latch became a time window instead of a permanent boolean, and `SdLayoutStorageService` gains a namespace resolver plus `clear()`. Permission codes are no longer mirrored into `sessionStorage` under a fixed UUID — readable _and writable_ by any script on the origin; persistence is opt-in via `persistCache` and documented as not an authorization boundary.
-- `decodeToken` renamed **`readUnverifiedTokenClaims`**: it performs no signature or `exp` check and must never drive an authorization decision.
-- **Third-party network calls removed.** The offline interceptor pinged `jsonplaceholder.typicode.com` every 3 s through the app's full interceptor chain, leaking any unconditionally-attached auth header off-origin; it is now a same-origin probe behind `SD_NO_INTERNET_PROBE_URL`, issued via `HttpBackend`. `SdUtilities.getClientPublicIp()` called `api.ipify.org`; the endpoint is now a **required argument**.
 - API cache and in-flight dedupe keys came from a 32-bit rolling hash collapsed to 31 bits; a collision made two unrelated requests share one response body. Now SHA-256.
 
-### Fixed
+#### Auth
 
-- **Accessibility.** Four a11y lint rules were switched **off**, and `aria-hidden="true"` had been used to silence tooling rather than fix markup — including on 10 real `<input>` elements and on wrappers containing an entire `mat-form-field`, an entire `<mat-calendar>`, the whole form-builder canvas, a whole sidebar menu branch, and three `mat-sort-header` divs, which made table sorting unusable with assistive tech. The rules are back on as `error`. Click-only controls are keyboard-operable, async states carry `role="status"`/`aria-live`, the `role="tablist"`/`treeitem` patterns are complete, and every `outline: none` has a `:focus-visible` replacement — notably `sd-button`, and `sd-modal`, which leaked a global focus-ring reset through `ViewEncapsulation.None`.
-- **Chế độ `hideInlineError` giờ có tiếng cho screen reader.** Ở chế độ này thông báo lỗi chỉ sống trong tooltip của icon — không có text node nào để `aria-describedby` trỏ tới, nên trình đọc màn hình không đọc gì cả. Nay message được render thêm vào một phần tử chỉ-dành-cho-screen-reader (`span.sd-visually-hidden`, class utility mới trong `assets/scss`) và `aria-describedby` trỏ vào đó. Áp cho 12 control: input, input-number, textarea, select, autocomplete, date, date-range, datetime, chip, chip-calendar, time, editor.
-- **Hai wrapper `role="button"` bọc phần tử tương tác đã được tái cấu trúc** — AT gộp cả cụm thành MỘT nút và bỏ phần tử bên trong khỏi accessibility tree. (a) Hàng menu sidebar v1: `role` / `tabindex` / `aria-current` / Enter-Space chuyển xuống phần tiêu đề, nút ghim thành sibling độc lập, row giữ `(click)` cho chuột. (b) Card trên canvas của form-builder (group / break / component — bọc cả nút hành động lẫn preview control có `<input>` thật): card bỏ hẳn `role="button"`, affordance bàn phím/AT thành một `<button>` thật ở đầu thanh action (`aria-pressed` + `aria-label`), và thanh action hiện cả khi `:focus-within` để focus không rơi vào nút vô hình.
-- **Form error messages that never rendered.** Writing to the validation control with `setValue(v, { emitEvent: false })` suppresses the async validator's completion, so the state signal never ticks and OnPush shows a red outline with no message. Fixed in `clear()` on input / input-number / autocomplete, in every write in date-range, and in `<sd-select>`'s primary selection path.
-- **Validators a consumer attached to the public `formControl` were silently wiped** by destructive `clearValidators()`/`setValidators()` blocks in select, autocomplete, textarea, chip, chip-calendar and date-range.
-- **`<sd-date-range>` `[required]` could never fail** — `Validators.required` was applied to a control whose value is always an object.
-- **`<sd-date-range>` and `<sd-time-range>` no longer inject their internal endpoint controls into the consumer's FormGroup under random UUID keys**, which broke the value shape and `form.reset(obj)`.
-- **The shared form connector silently dropped the control** when the parent FormGroup already declared one at the same `name`: the user typed, `form.value` never changed, the form submitted empty, and nothing warned.
-- **`<sd-chip>` / `<sd-chip-calendar>` mutated the caller's array in place** and re-set the same reference, so `[(model)]` never emitted.
-- **A live OOM reproduction** in `query-builder` — `[items]="field.values || []"` allocated a fresh array every change-detection pass and `sd-select`'s `toObservable(items)` loop froze the page. Fixed, along with the same allocation shape in query-bar, table, org-chart and tab-router.
-- **Table row identity was a content hash**, so `flattenTree`'s `visited` Set **silently dropped the second of two content-equal rows from the rendered output**. Identity now comes from the new `option.rowKey`, falling back to per-object identity. **BREAKING** for tables using `preserveSelection` across a server re-fetch, or asserting on `data-autoid="…-tree-toggle-<id>"` in E2E.
-- **A pure pipe mutated its own input** (`selection-visible`), appending duplicates without bound; a sibling pipe slept 500 ms inside an `async` pure pipe to paper over a change-detection ordering problem.
-- **Promises that never settled on the cancel path.** All six `SdConfirmService` methods, `SdDocxService.open()` and `SdUtilities.upload()` left the caller's `await` pending forever when the user backed out. `upload()` additionally resolved inside its loop, so validation failures after the first file were swallowed.
-- **Resources outliving their owner.** `<sd-modal>` had no destroy hook at all and orphaned its overlay; `sd-upload-file` left four drag listeners on a consumer-supplied element; `SdNotifyService` never destroyed the `<body>` node it created; `<sd-side-drawer>`'s scroll lock could leave the page permanently unscrollable with two stacked drawers; `<sd-modal-resizable>` rewrote inline styles on every `.modal-resizable` element in the document; and 13 `setTimeout` sites across `forms/**` stored no handle, two of which called `detectChanges()` after destroy. `SdCacheService` kept every cached URL forever — now a bounded LRU via `maxMemoryEntries` (default 500).
-- **`SdLoadingService` leaked its overlay and stylesheet into the document permanently** under `provideAnimations()`: `Renderer2` from `AnimationRendererFactory` defers `removeChild` to the animation engine's next flush, which never happens on teardown.
-- SSR-unsafe global `document`/`window` access in `preview-image`, `SdLicenseService`, `global-error.handler` and a sidebar.
-- **The published package was not consumable.** The primary entry point exported **nothing** — `src/public-api.ts` was ten bare `import` statements, so `import { SdButton } from '@sdcorejs/angular'` resolved to nothing in every published version. `@angular/router` and `@angular/animations` were used but declared as neither dependency nor peer. `"sideEffects": false` was factually wrong (`Chart.register(...)` at module scope, five bare `prismjs` grammar imports), letting bundlers legally drop them with a silent production-only failure. `@omer-go/docx-parser-converter-ts` was a hard runtime dependency with zero imports.
+- **Every optional config degraded to permissive.**
+  - `SdAuthGuard`/`SdPortalGuard` returned `true` when their callback was unset; `hasPermission('')` returned `true` while the permission guard fed it route data unchecked, so a misspelled `data` key was granted; `*sdPermission` rendered on an empty binding without consulting the service; `SdLayoutService` fell back to a mock `demo@example.com` signed-in user; `SdLicenseService` approved any hostname merely _containing_ `localhost`. All now fail closed, with "no restriction" declared explicitly via the new `SD_PERMISSION_PUBLIC`.
+- **Root singletons cached identity with no way to clear it**, so state survived signout into the next user in the same tab.
+  - `SdPermissionService` gains `reset()`/`invalidate()`, the 401 latch became a time window instead of a permanent boolean, and `SdLayoutStorageService` gains a namespace resolver plus `clear()`. Permission codes are no longer mirrored into `sessionStorage` under a fixed UUID — readable _and writable_ by any script on the origin; persistence is opt-in via `persistCache` and documented as not an authorization boundary.
+- `decodeToken` renamed **`readUnverifiedTokenClaims`**: it performs no signature or `exp` check and must never drive an authorization decision.
 
-### Removed (BREAKING for consumers)
+#### Keycloak
 
-- **Xoá hẳn entry point `@sdcorejs/angular/services/docx`** (`SdDocxService` — chuyển DOCX sang HTML qua pandoc). Đây là entry point duy nhất chứa code vendored GPL-2.0-or-later (bản copy pandoc-wasm core) trong một package khai MIT; xoá nó loại bỏ xung đột giấy phép thay vì phải relicense hay tách package. Không có thay thế trong thư viện — consumer cần chức năng này tự tích hợp [pandoc-wasm](https://github.com/pandoc/pandoc-wasm) (GPL) ở tầng app của mình. Dependency `@bjorn3/browser_wasi_shim` (chỉ docx dùng) và 3 key i18n `core.docx.*` đi theo. File `NOTICE` (thêm trong chính chu kỳ Unreleased này) cũng gỡ vì không còn code vendored nào để ghi nhận.
-- **Bỏ TOÀN BỘ re-export từ `@sdcorejs/utils`** — nguyên tắc: cái gì `@sdcorejs/utils` sở hữu thì import và đọc doc ở `@sdcorejs/utils`, thư viện này không làm mặt tiền trung gian nữa. Package đó đã là dependency runtime của thư viện nên có sẵn trong tree; thêm nó vào `package.json` của app khi import trực tiếp. Cụ thể:
-  - `utilities/extensions` bỏ re-export `ArrayUtilities` / `ColorUtilities` / `DateUtilities` / `NumberUtilities` / `StringUtilities` / `ValidationUtilities` / `Utilities` / `BrowserUtilities` → import từ `@sdcorejs/utils/fns`. Entry point còn lại `ObjectUtilities`, `SdUtilities` (14 hàm cài đặt cục bộ) và nhóm url-safety (`sdParseUrl`, `sdOpenExternal`, …) — code local.
-  - `utilities/models` bỏ re-export `Color`, `Size`, `Order`, `NestedKeyOf`, `Filter*`, `Operator*`, `QueryReq` / `PagingReq` / `PagingRes`, `MaybeAsync` / `resolveMaybeAsync` / `normalizeAsync`, `ValidationPatternType` / `ValidationPattern` → `@sdcorejs/utils/models`; `VALIDATION_PATTERNS`, `EMPTY_STR` → `@sdcorejs/utils/constants`. Entry point còn lại `icon.model` + `unwrap-signal.model` (local). Bảng "ở đâu bây giờ" đầy đủ trong `utilities/models/models.md`.
-  - **Xoá hẳn entry point `@sdcorejs/angular/models`** — nó chỉ re-export `Language` + `SUPPORTED_LANGUAGES`; import từ `@sdcorejs/utils/models` / `@sdcorejs/utils/constants`. `@sdcorejs/angular/i18n` cũng thôi re-export hai tên này.
-  - Spec của các file re-export thuần (array/color/date/number/string extension, pattern.model) xoá theo — chúng test hành vi của `@sdcorejs/utils`, thuộc repo đó.
-- **Xoá hẳn entry point `@sdcorejs/angular/components/document-builder`** (`<sd-document-builder>` — trình dựng tài liệu CKEditor cho mẫu hợp đồng, legacy từ hệ cũ). Không có thay thế; soạn thảo rich-text vẫn còn `<sd-editor>` / `<sd-mini-editor>`. 6 key i18n `core.component.document-builder.*` đi theo. `<sd-ckeditor-styles>` giữ nguyên (editor/mini-editor vẫn nhúng).
+- **Bearer token could be sent to any host.**
+  - `SdKeycloakInterceptor` gated the `Authorization` header on `config.secureRoutes?.some(route => req.url.includes(route))` — an unanchored substring test with no host check. With the documented example `secureRoutes: ['/api/v1']`, a request to `https://analytics.thirdparty.com/api/v1/collect` received the access token. It now matches on parsed origin plus a segment-aware path prefix.
 
-### Changed (BREAKING for consumers)
+#### Pipes
 
-Đợt đổi tên public API có chủ đích, **xoá hẳn tên cũ, không giữ alias `@deprecated`**. Lý do gộp một lần: tag format `^\d+\.\d+$` khoá major theo Angular line, nên semver KHÔNG thể phát tín hiệu breaking — mỗi lần hoãn thì chi phí migration về sau lại tăng.
+- **`sdSafeHtml` was an unconditional sanitizer bypass.**
+  - It called `bypassSecurityTrustHtml()` on every value with no sanitize step, and `<sd-table>` pipes server-supplied cell data through it — a stored-XSS sink inside the library. It now **sanitizes by default**; the bypass is an explicit `| sdSafeHtml: true`. **BREAKING** for call sites relying on markup the sanitizer strips (inline `<svg>`, custom elements): add `: true` there.
 
-- **Pipe `translate` → `sdTranslate`** (class `TranslatePipe` → `SdTranslatePipe`). Tên cũ đụng trực diện pipe cùng tên của `@ngx-translate/core`; cả hai đều standalone nên app dùng song song KHÔNG import chung vào một component được. Migration: find/replace `| translate` → `| sdTranslate` và `TranslatePipe` → `SdTranslatePipe`.
-- **`MatPaginatorIntlCro` → `SdTablePaginatorIntl`** (`@sdcorejs/angular/components/table`). Tên cũ là vết copy-paste từ ví dụ locale Croatia, lại mang tiền tố `Mat` gây hiểu nhầm là API của Angular Material.
-- **Sidebar bỏ tên không tiền tố** — `SidebarV2Component` → `SdSidebarV2` (`sidebar-v2` → `sd-sidebar-v2`), tương tự `V3`, `MobileV1/V2/V3`; `SidebarMobileOverlayComponent` → `SdSidebarMobileOverlay`. Nội bộ: `SidebarV1Component` → `SdSidebarV1`, `SidebarComponent` (selector `sidebar` — tên element toàn cục cực dễ đụng) → `SdSidebarV1Panel` (`sd-sidebar-v1-panel`).
-- **Helper PascalCase của `form-generic` chuyển sang `sd` + camelCase** — `GenerateId` / `GenerateKey` / `GetAttributes` / `GetComponentAttributes` / `GetDatetimeValue` / `GetVariableAttributes` / `EvaluateExpression` / `ExpressionToJavascriptExpression` / `TemplateToCondition` / `SdFormatComponent` → `sdGenerateId` / `sdGenerateKey` / `sdGetAttributes` / … Chúng là hàm thuần nhưng đọc như class (`new GenerateId()` nhìn vẫn hợp lệ). Const đi kèm: `DayInfoTypes` / `DayInfoPreviouses` / `AttributeOperators` / `TableColumnTypes` / `FormBuilderComponents` / `COMPONENT_ICONS` → `SD_DAY_INFO_TYPES` / `SD_DAY_INFO_PREVIOUSES` / `SD_ATTRIBUTE_OPERATORS` / `SD_TABLE_COLUMN_TYPES` / `SD_FORM_BUILDER_COMPONENTS` / `SD_COMPONENT_ICONS`.
-- **Namespace `qb*` / `QB_*` / `Qb*` của `query-builder` → `sdQb*` / `SD_QB_*` / `SdQb*`** — ví dụ `qbNewRule` → `sdQbNewRule`, `isQbGroup` → `sdIsQbGroup`, `QB_OPERATORS_BY_TYPE` → `SD_QB_OPERATORS_BY_TYPE`, `QbGroup` / `QbRule` / `QbToken` → `SdQbGroup` / `SdQbRule` / `SdQbToken`. Các type đã đúng tiền tố (`SdQbRelativeUnit`, …) giữ nguyên.
-- **`sdLoadError` → `loadError` trên `<sd-tree-select>` và `<sd-entity-picker>`** — hai component này là chỗ duy nhất dùng tiền tố `sd` cho sự kiện load-error, trong khi `<sd-tree>` và `<sd-preview-pdf>` (cùng sự kiện, cùng `SdTreeLoadErrorEvent` ở nhóm tree) đã publish tên `loadError` từ trước. Gộp về `loadError`. Migration: find/replace `(sdLoadError)` → `(loadError)` trên hai element đó.
-- **Xoá toàn bộ alias `@deprecated` dưới `utilities/**`** — `SdColor`, `SdSize`, `SdNestedKeyOf`, `SdOrder`, `SdFilter\*`, `SdQueryReq`/`SdPagingReq`/`SdPagingRes`, `SdMaybeAsync`/`SdResolveMaybeAsync`/`SdNormalizeAsync`, `SD_EMPTY_STR`, `hslToHex`/`rgbToHex`, `SdPatternType`/`SdPatternCommon`/`SdPatternCommons`, và các member lỗi thời trên `StringUtilities` (`REGEX_PHONE_VN`, `REGEX_IDVN`, `REGEX_IDVN_OR_PASSPORT`, `isValidEmail`, `isValidPhone`, `isValidCode`). Bảng ánh xạ đầy đủ ở `utilities/models/models.md`. ⚠️ Riêng nhóm pattern KHÔNG phải đổi tên thuần: field `regex`nay là`pattern`, và 3 member đổi tên kèm i18n key (`PHONE_VN`→`VN_PHONE`, `IDVN`→`VN_ID`, `IDVN_OR_PASSPORT`→`VN_ID_OR_PASSPORT`). `<sd-input [pattern]>` vẫn nhận 3 chuỗi cũ qua bảng alias nội bộ nên template không vỡ.
+#### Sidebar
 
-### Changed
+- **`javascript:` URLs could execute in the app origin.**
+  - Six sidebars gated `window.open` on `path.includes('http')`, which `javascript:fetch(...)//http` satisfies. One passed no `noopener`, leaving the opened page with `window.opener`. All now parse the URL and always pass `noopener,noreferrer`.
 
-- **Siết default generic `any` → `unknown` trên 19 file model** (82 khai báo), gồm `components/tree/src/tree.model.ts` (toàn bộ type export), `components/table/src/services/table-filter/table-filter.model.ts`, `components/table/src/models/table-column.model.ts`, `components/query-bar/src/query-bar.model.ts`, `forms/models/**`, … Consumer viết `SdTableColumn<User>` hay `SdTreeOption<User>` từ nay được suy luận kiểu thật và báo lỗi khi dùng sai, thay vì im lặng như với `any`. Thêm `SdTableColumnAnyRow` cho vài vị trí tham số nội bộ row-agnostic (giải thích trong `table-column.model.ts`).
-- **`SdUtilities` KHÔNG bị xoá** — marker `@deprecated` cũ mô tả sai: đây không phải alias mà là 14 hàm cài đặt cục bộ. Marker đã được gỡ, implementation giữ nguyên.
+#### General
+
+- **Third-party network calls removed.**
+  - The offline interceptor pinged `jsonplaceholder.typicode.com` every 3 s through the app's full interceptor chain, leaking any unconditionally-attached auth header off-origin; it is now a same-origin probe behind `SD_NO_INTERNET_PROBE_URL`, issued via `HttpBackend`. `SdUtilities.getClientPublicIp()` called `api.ipify.org`; the endpoint is now a **required argument**.
 
 ### Không đổi (có chủ đích)
 
-- **Tên output KHÔNG đổi hàng loạt.** Đợt này từng thêm tiền tố `sd` cho ~73 output (`close` → `sdClose`, `search` → `sdSearch`, …) nhưng đã đảo lại trước khi release: tên không tiền tố là tên đã publish tới 1.6, quen thuộc, và khớp thông lệ Angular Material (output không mang prefix). Hệ quả chấp nhận: surface output vẫn **mixed** — 16 tên `sd*` đã publish từ 1.4/1.6 (`sdChanges`, `sdBlur`, `sdFocus`, `sdClosed`, `sdCloseError` trên modal/side-drawer/inform/import-excel, `sdCancel` trên job-progress, `sdAction`, `sdKeydown`, …) giữ nguyên vì đổi chúng mới là breaking. Muốn thống nhất toàn bộ thì cần một đợt riêng kèm codemod.
-- `click` của `<sd-button>` giữ nguyên tên. Đổi sang `sdClick` sẽ khiến mọi `(click)` sẵn có của consumer im lặng rơi về DOM event gốc — vẫn chạy nhưng đổi payload và bỏ qua gate `disabled`. Đây là kiểu breaking "âm thầm" nguy hiểm nhất, cần một đợt riêng kèm codemod.
+#### Button
+
+- `click` của `<sd-button>` giữ nguyên tên.
+  - Đổi sang `sdClick` sẽ khiến mọi `(click)` sẵn có của consumer im lặng rơi về DOM event gốc — vẫn chạy nhưng đổi payload và bỏ qua gate `disabled`. Đây là kiểu breaking "âm thầm" nguy hiểm nhất, cần một đợt riêng kèm codemod.
+
+#### General
+
+- **Tên output KHÔNG đổi hàng loạt.**
+  - Đợt này từng thêm tiền tố `sd` cho ~73 output (`close` → `sdClose`, `search` → `sdSearch`, …) nhưng đã đảo lại trước khi release: tên không tiền tố là tên đã publish tới 1.6, quen thuộc, và khớp thông lệ Angular Material (output không mang prefix). Hệ quả chấp nhận: surface output vẫn **mixed** — 16 tên `sd*` đã publish từ 1.4/1.6 (`sdChanges`, `sdBlur`, `sdFocus`, `sdClosed`, `sdCloseError` trên modal/side-drawer/inform/import-excel, `sdCancel` trên job-progress, `sdAction`, `sdKeydown`, …) giữ nguyên vì đổi chúng mới là breaking. Muốn thống nhất toàn bộ thì cần một đợt riêng kèm codemod.
 - Một số vùng vẫn giữ default generic `any` vì `unknown` gây lan quá rộng (`import-excel`, `services/excel`, phần lớn `components/table/src/models/**`, `form-generic-component.model.ts`) — chi tiết trong ghi chú review của đợt này.
 
 ## [1.6] - 2026-08-07
 
-Release suffix `1.6` publishes `19.1.6`, `20.1.6`, and `21.1.6` as a stable release across the maintained Angular lines.
+Packages `19.1.6` · `20.1.6` · `21.1.6`, as a stable release across the maintained Angular lines.
 
-### Added
-
-- **`sd-date` auto-formats a typed date** - separators appear while you type (`22081991` becomes `22/08/1991`); non-digits are dropped and the input is capped at eight digits. Deleting never re-adds the separator you just removed.
-- **Sidebar menu search matches routes and initials** - the menu filter now also matches a menu's route path (`product`) and the ordered initials of its label (`sp` finds `San pham`), on top of the existing accent-insensitive title match. `HighlightSearchPipe` marks each matched initial when there is no contiguous substring to highlight.
-- **Tabs for the built-in `forbidden` and `not-found` pages** - both register a `@SdTabComponent` (icons `block` and `search_off`), so opening them in a tabbed shell shows a real icon and a translated label instead of an empty tab. New i18n keys `core.module.layout.{forbidden,not-found}.tab-name` in all five locales, plus a shared `resolveTabName()` helper that `home` now uses as well.
-
-### Fixed
-
-- **`sd-date` and `sd-date-range` accepted a half-typed date as a value** - typing `11/12/2` produced year 0002, `11/12/20` produced year 0020, and deleting back to `11` produced year 1100, with the error flag cleared so the field looked valid. Both inputs are bound to Angular Material date inputs, which re-parse the text after every keystroke; the stock date-fns adapter accepts a short year and falls back to `parseISO`, which reads `11` as a century. The new `SdStrictDateFnsAdapter` skips that fallback and requires the text to round-trip through the configured format, so a control only ever receives a date the user finished typing. `sd-datetime` is unaffected - its input is not `[matDatepicker]`-bound.
-- **PDFs failed to open in production builds** - `<sd-preview-pdf>` pointed pdf.js at a worker file that esbuild never emitted, so every document ended in the "Setting up fake worker failed" network-error state after an AOT deploy while `ng serve` was fine. The worker bundle is now inlined and handed to pdf.js as a `blob:` URL, so consumer apps need no `angular.json` assets entry and no manual file copy. Requires a deployment CSP that allows `worker-src blob:`; `sd-preview.md` documents the manual `workerSrc` escape hatch.
-- **`sd-table` export button label was hard-coded English** - the main Export button now goes through `I18nService` like the export-excel and export-csv menu items already did, so a Vietnamese user sees "Xuat du lieu". New keys `core.component.table.export` and `core.component.table.exporting` in all five locales.
+> [!IMPORTANT]
+> **Before upgrading:** `TableExportService.exportTitle` is no longer a `WritableSignal`; drive progress through `setExportProgress(percent | null)`.
 
 ### Changed (BREAKING for consumers)
 
-- **`TableExportService.exportTitle` is no longer a `WritableSignal`** - it became a `computed()` over the current language plus export progress. Drive progress through the new `setExportProgress(percent | null)` instead of assigning to `exportTitle`. Nothing in the library assigned to it; only consumers that did need to migrate.
+#### Table
+
+- **`TableExportService.exportTitle` is no longer a `WritableSignal`** - it became a `computed()` over the current language plus export progress.
+  - Drive progress through the new `setExportProgress(percent | null)` instead of assigning to `exportTitle`. Nothing in the library assigned to it; only consumers that did need to migrate.
+
+### Added
+
+#### Date
+
+- **`sd-date` auto-formats a typed date** - separators appear while you type (`22081991` becomes `22/08/1991`); non-digits are dropped and the input is capped at eight digits. Deleting never re-adds the separator you just removed.
+
+#### Sidebar
+
+- **Sidebar menu search matches routes and initials** - the menu filter now also matches a menu's route path (`product`) and the ordered initials of its label (`sp` finds `San pham`), on top of the existing accent-insensitive title match.
+  - `HighlightSearchPipe` marks each matched initial when there is no contiguous substring to highlight.
+
+#### Tab router
+
+- **Tabs for the built-in `forbidden` and `not-found` pages** - both register a `@SdTabComponent` (icons `block` and `search_off`), so opening them in a tabbed shell shows a real icon and a translated label instead of an empty tab.
+  - New i18n keys `core.module.layout.{forbidden,not-found}.tab-name` in all five locales, plus a shared `resolveTabName()` helper that `home` now uses as well.
+
+### Fixed
+
+#### Date, Date range
+
+- **`sd-date` and `sd-date-range` accepted a half-typed date as a value** - typing `11/12/2` produced year 0002, `11/12/20` produced year 0020, and deleting back to `11` produced year 1100, with the error flag cleared so the field looked valid.
+  - Both inputs are bound to Angular Material date inputs, which re-parse the text after every keystroke; the stock date-fns adapter accepts a short year and falls back to `parseISO`, which reads `11` as a century. The new `SdStrictDateFnsAdapter` skips that fallback and requires the text to round-trip through the configured format, so a control only ever receives a date the user finished typing. `sd-datetime` is unaffected - its input is not `[matDatepicker]`-bound.
+
+#### Preview PDF
+
+- **PDFs failed to open in production builds** - `<sd-preview-pdf>` pointed pdf.js at a worker file that esbuild never emitted, so every document ended in the "Setting up fake worker failed" network-error state after an AOT deploy while `ng serve` was fine.
+  - The worker bundle is now inlined and handed to pdf.js as a `blob:` URL, so consumer apps need no `angular.json` assets entry and no manual file copy. Requires a deployment CSP that allows `worker-src blob:`; `sd-preview.md` documents the manual `workerSrc` escape hatch.
+
+#### Table
+
+- **`sd-table` export button label was hard-coded English** - the main Export button now goes through `I18nService` like the export-excel and export-csv menu items already did, so a Vietnamese user sees "Xuat du lieu".
+  - New keys `core.component.table.export` and `core.component.table.exporting` in all five locales.
 
 ## [1.5] - 2026-07-28
 
-Release suffix `1.5` publishes `19.1.5`, `20.1.5`, and `21.1.5` as a stable release across the maintained Angular lines.
+Packages `19.1.5` · `20.1.5` · `21.1.5`, as a stable release across the maintained Angular lines.
 
 ### Changed
+
+#### Layout
 
 - **Layout V2/V3 navigation polish** - centered compact account and drawer controls, removed the collapsed V3 fallback brand icon, and unified desktop/mobile menu search behind an internal Soft-pill presentation without changing public APIs or filtering behavior.
 - **Layout account menu** - added optional profile, settings and notification actions plus role metadata to the shared V1/V2/V3 account presentation; consumers continue to own navigation, authorization and notification data.
 
 ### Fixed
 
-- **Showcase published-doc versions** - derive every supported `1.2+` documentation release from `published-docs/versions.json`, so the version selector exposes the existing 1.3/1.4 archives and automatically accepts the 1.5 archives after publishing instead of canonicalizing every route to 1.2.
+#### Layout
+
 - **Layout mobile containment** - render the Layout, Mobile V2 and Mobile V3 custom-element hosts as blocks so full-height shells and the V3 topbar start inside consumer and Showcase containers instead of aligning below an inline baseline.
+
+#### Showcase
+
+- **Showcase published-doc versions** - derive every supported `1.2+` documentation release from `published-docs/versions.json`, so the version selector exposes the existing 1.3/1.4 archives and automatically accepts the 1.5 archives after publishing instead of canonicalizing every route to 1.2.
 
 ## [1.4] - 2026-07-23
 
-Release suffix `1.4` publishes `19.1.4`, `20.1.4`, and `21.1.4` as a stable release across the maintained Angular lines.
+Packages `19.1.4` · `20.1.4` · `21.1.4`, as a stable release across the maintained Angular lines.
 
-### Added
-
-- **Time controls and input masks** - added timezone-free `SdTime` / `SdTimeRange`, reusable raw/display input-mask adapters and common business presets, all integrated with the shared form lifecycle contract.
-- **Responsive navigation and state UI** - added the signal-based `SdViewportService`, router/manual `SdBreadcrumb`, and accessible loading/empty/error/forbidden/success `SdDataState` presentation.
-- **Typed business selection** - added generic server-backed `SdEntityPicker` and static/lazy `SdTreeSelect` controls with stable-key selection, hydration, templates, responsive layout, keyboard behavior and form integration.
-- **Safe workflow and operations primitives** - added scoped `SdUnsavedChangesService` guards/adapters, shared poll/SSE `SdTaskService`, `SdJobProgress`, and normalized/redacted `SdAuditDiff`.
-- **Graph persistence foundation** - added the public `SdGraphSerializer` plus identity/envelope/storage-adapter entrypoint used by cache and storage to preserve `Date`, `Map`, `Set`, shared references and cycles with bounded validation.
-- **Complete PDF workflows** - added continuous scroll, printing adapters, outline navigation, bounded thumbnails/search, browser capability tokens and consumer-facing PDF state/event types.
+> [!IMPORTANT]
+> **Before upgrading:** direct class consumers and tests must read migrated inputs as signals (for example `component.value()`) and set them through Angular's `ComponentRef.setInput(...)`.
 
 ### Changed (BREAKING for consumers)
 
-- **Angular signal input/output contracts** - migrated compatible component inputs and outputs to `input()` and `output()` across Angular 19/20/21 while preserving template binding names and behavior. Direct class consumers and tests must read migrated inputs as signals (for example `component.value()`), set them through Angular's `ComponentRef.setInput(...)`, and use the output `emit()`/`subscribe()` contract instead of RxJS-only `EventEmitter` APIs.
+#### General
+
+- **Angular signal input/output contracts** - migrated compatible component inputs and outputs to `input()` and `output()` across Angular 19/20/21 while preserving template binding names and behavior.
+  - Direct class consumers and tests must read migrated inputs as signals (for example `component.value()`), set them through Angular's `ComponentRef.setInput(...)`, and use the output `emit()`/`subscribe()` contract instead of RxJS-only `EventEmitter` APIs.
+
+### Added
+
+#### Entity picker, Tree select
+
+- **Typed business selection** - added generic server-backed `SdEntityPicker` and static/lazy `SdTreeSelect` controls with stable-key selection, hydration, templates, responsive layout, keyboard behavior and form integration.
+
+#### Graph
+
+- **Graph persistence foundation** - added the public `SdGraphSerializer` plus identity/envelope/storage-adapter entrypoint used by cache and storage to preserve `Date`, `Map`, `Set`, shared references and cycles with bounded validation.
+
+#### Preview PDF
+
+- **Complete PDF workflows** - added continuous scroll, printing adapters, outline navigation, bounded thumbnails/search, browser capability tokens and consumer-facing PDF state/event types.
+
+#### Time, Input mask
+
+- **Time controls and input masks** - added timezone-free `SdTime` / `SdTimeRange`, reusable raw/display input-mask adapters and common business presets, all integrated with the shared form lifecycle contract.
+
+#### General
+
+- **Responsive navigation and state UI** - added the signal-based `SdViewportService`, router/manual `SdBreadcrumb`, and accessible loading/empty/error/forbidden/success `SdDataState` presentation.
+- **Safe workflow and operations primitives** - added scoped `SdUnsavedChangesService` guards/adapters, shared poll/SSE `SdTaskService`, `SdJobProgress`, and normalized/redacted `SdAuditDiff`.
 
 ### Changed
 
-- **Angular dependency injection internals** - migrated compatible constructor-injected dependencies to field-level `inject()` with compatibility constructors where public inheritance may depend on the existing class shape. Runtime constructor arguments and classes instantiated directly outside Angular injection context remain constructor-based.
-- **Signal migration safety** - retained setter/aliased inputs and outputs whose listener/type semantics cannot be migrated safely yet, including outputs that rely on `EventEmitter.observed`; these exceptions preserve current runtime behavior.
-- **Form lifecycle foundation** - consolidated registration, dynamic parent/name changes, model/control synchronization, validation state and destroy cleanup behind `ɵsdFormControlConnector` while retaining existing template bindings.
-- **API request safety** - GET requests deduplicate by default; mutations deduplicate/retry only through explicit opt-in. Added typed PATCH, per-caller `AbortSignal`, bounded backoff and deterministic in-flight cleanup; response generics now default to `unknown`.
-- **Loading ownership** - `start()` now returns an idempotent ref, overlapping owners are reference-counted, `run()` scopes async work, and browser DOM/style state is shared and cleaned up safely.
+#### API
+
+- **API request safety** - GET requests deduplicate by default; mutations deduplicate/retry only through explicit opt-in.
+  - Added typed PATCH, per-caller `AbortSignal`, bounded backoff and deterministic in-flight cleanup; response generics now default to `unknown`.
+
+#### Cache, Storage
+
 - **Cache and storage persistence** - activated `SD_CACHE_CONFIG`, added namespace/version/custom serializers, exact cached-absence snapshots, load coalescing, typed handle teardown, legacy JSON migration and SSR/quota/corruption containment.
-- **Responsive layout behavior** - layout responds live to viewport signals while legacy responsive services/tokens remain supported as adapters.
+
+#### Docs
+
 - **Release documentation rollout** - the multi-version sync now treats the canonical npm README and i18n quality scripts as managed release inputs, while the sync guard fails closed on README, package-version, script or generated-workspace drift.
 
-### Fixed
+#### Forms
 
-- **`sd-table` empty-result reload** - kept a configured reload action enabled when the current items or total are zero, allowing users to retry without changing export or paginator behavior.
-- **Showcase loading documentation manifest** - aligned the generated loading-service example count with the current showcase source so documentation generation no longer reports a stale manifest expectation. (#15)
-- **Published no-op and lifecycle paths** - implemented the previously inert PDF print/outline/continuous APIs and hardened modal/drawer/tab close hooks, task cancellation, picker races and tree cascade/error behavior.
-- **Accessibility and resource cleanup** - added semantic breadcrumb/data-state/progress/audit markup, focus/keyboard handling, bounded PDF work, SSR guards and deterministic listeners/timers/subscriptions/EventSource teardown across the new surfaces.
-- **Form expression evaluation** - corrected `NextDay` handling so relative expressions remove the `NextDay` token instead of the unrelated `LastDay` token before evaluation.
-- **Showcase release and layout demos** - preserved repeated populated changelog groups such as breaking and non-breaking `Changed` sections, and made the Layout Desktop/Mobile controls switch the actual rendered sidebar through the scoped viewport adapter.
+- **Form lifecycle foundation** - consolidated registration, dynamic parent/name changes, model/control synchronization, validation state and destroy cleanup behind `ɵsdFormControlConnector` while retaining existing template bindings.
+
+#### Layout
+
+- **Responsive layout behavior** - layout responds live to viewport signals while legacy responsive services/tokens remain supported as adapters.
+
+#### Loading
+
+- **Loading ownership** - `start()` now returns an idempotent ref, overlapping owners are reference-counted, `run()` scopes async work, and browser DOM/style state is shared and cleaned up safely.
+
+#### General
+
+- **Angular dependency injection internals** - migrated compatible constructor-injected dependencies to field-level `inject()` with compatibility constructors where public inheritance may depend on the existing class shape.
+  - Runtime constructor arguments and classes instantiated directly outside Angular injection context remain constructor-based.
+- **Signal migration safety** - retained setter/aliased inputs and outputs whose listener/type semantics cannot be migrated safely yet, including outputs that rely on `EventEmitter.observed`; these exceptions preserve current runtime behavior.
 
 ### Deprecated
 
+#### API
+
 - **API compatibility aliases** - deprecated `SdApiOption.autoCache` in favor of `dedupe` and `SD_API_CONFIGURATION` in favor of `SD_API_CONFIG`.
+
+#### Cache
+
 - **Generic cache callback providers** - deprecated directly typed legacy callbacks; migrate to globally safe `unknown` callbacks or use `adaptLegacySdCacheCallbacks()` temporarily with a runtime guard.
+
+### Fixed
+
+#### Form generic
+
+- **Form expression evaluation** - corrected `NextDay` handling so relative expressions remove the `NextDay` token instead of the unrelated `LastDay` token before evaluation.
+
+#### Showcase
+
+- **Showcase loading documentation manifest** - aligned the generated loading-service example count with the current showcase source so documentation generation no longer reports a stale manifest expectation. (#15)
+- **Showcase release and layout demos** - preserved repeated populated changelog groups such as breaking and non-breaking `Changed` sections, and made the Layout Desktop/Mobile controls switch the actual rendered sidebar through the scoped viewport adapter.
+
+#### Table
+
+- **`sd-table` empty-result reload** - kept a configured reload action enabled when the current items or total are zero, allowing users to retry without changing export or paginator behavior.
+
+#### General
+
+- **Published no-op and lifecycle paths** - implemented the previously inert PDF print/outline/continuous APIs and hardened modal/drawer/tab close hooks, task cancellation, picker races and tree cascade/error behavior.
+- **Accessibility and resource cleanup** - added semantic breadcrumb/data-state/progress/audit markup, focus/keyboard handling, bounded PDF work, SSR guards and deterministic listeners/timers/subscriptions/EventSource teardown across the new surfaces.
 
 ## [1.3] - 2026-07-18
 
-Release suffix `1.3` publishes `19.1.3`, `20.1.3`, and `21.1.3` as a stable release across the maintained Angular lines.
+Packages `19.1.3` · `20.1.3` · `21.1.3`, as a stable release across the maintained Angular lines.
 
-### Added
-
-- **Opt-in clearable controls** - added `clearable` support to text, number, color, date, and datetime controls, and enabled clear actions for inline-column and external table filters. Existing behavior remains unchanged unless the option is enabled. (1176664)
-- **Shared datetime picker integration** - replaced the remaining vendored datetime picker implementation with `@sdcorejs/angular-material-datetime@1.0.3`, synchronized the integration across Angular 19/20/21, and preserved model refresh behavior with focused regression coverage. (f66de9c)
-- **Showcase release discovery** - added SDCoreJS branding, social metadata, indexable GitHub Pages route shells, and a version-aware documentation experience across the maintained workspaces. (#8, 8f334f6)
+> [!IMPORTANT]
+> **Before upgrading:** the AuthOM integration (`@sdcorejs/angular/modules/authom`) is removed with no compatibility stub.
 
 ### Changed (BREAKING for consumers)
 
-- **Removed the AuthOM integration** - deleted `@sdcorejs/angular/modules/authom` and all related Showcase and published-document references, with no compatibility stub. **Migration:** remove AuthOM imports and migrate each use case to the supported `auth`, `keycloak`, `permission`, `layout`, or `icon` entry point as appropriate. (dfced07)
+#### AuthOM
+
+- **Removed the AuthOM integration** - deleted `@sdcorejs/angular/modules/authom` and all related Showcase and published-document references, with no compatibility stub.
+  - **Migration:** remove AuthOM imports and migrate each use case to the supported `auth`, `keycloak`, `permission`, `layout`, or `icon` entry point as appropriate. (dfced07)
+
+### Added
+
+#### Datetime
+
+- **Shared datetime picker integration** - replaced the remaining vendored datetime picker implementation with `@sdcorejs/angular-material-datetime@1.0.3`, synchronized the integration across Angular 19/20/21, and preserved model refresh behavior with focused regression coverage. (f66de9c)
+
+#### Forms
+
+- **Opt-in clearable controls** - added `clearable` support to text, number, color, date, and datetime controls, and enabled clear actions for inline-column and external table filters.
+  - Existing behavior remains unchanged unless the option is enabled. (1176664)
+
+#### Showcase
+
+- **Showcase release discovery** - added SDCoreJS branding, social metadata, indexable GitHub Pages route shells, and a version-aware documentation experience across the maintained workspaces. (#8, 8f334f6)
 
 ### Changed
 
+#### Package
+
 - **Type-only barrel exports** - marked 46 type-only wildcard re-exports explicitly with `export type *` while preserving all public type names and runtime value exports across Angular 19/20/21. (#12)
+
+#### Showcase
+
 - **Showcase documentation navigation** - refreshed maintainer attribution and navigation while preserving legacy routes and stable fragment IDs. (#9)
 
 ### Fixed
 
-- **Loading overlays on duplicate hosts** - loading start, stop, and state checks now update every matching host, including duplicated router-tab hosts. (#11)
-- **Table selection and tab reload behavior** - select-all skips disabled rows and keeps header state synchronized; forced tab reload recreates existing tabs even for same-URL navigation. (43dfed1)
+#### Form builder
+
 - **Form-builder drag/drop feedback** - stabilized palette previews and live placeholder movement so only one preview is rendered and drops follow the active CDK position. (2b7d644, 7b774f5, 2468118)
+
+#### Loading
+
+- **Loading overlays on duplicate hosts** - loading start, stop, and state checks now update every matching host, including duplicated router-tab hosts. (#11)
+
+#### Table, Tab router
+
+- **Table selection and tab reload behavior** - select-all skips disabled rows and keeps header state synchronized; forced tab reload recreates existing tabs even for same-URL navigation. (43dfed1)
 
 ## [1.2] - 2026-07-11
 
-Release suffix `1.2` publishes `19.1.2`, `20.1.2`, and `21.1.2` as a stable patch across the maintained Angular lines.
+Packages `19.1.2` · `20.1.2` · `21.1.2`, as a stable patch across the maintained Angular lines.
 
 ### Fixed
 
-- **`sd-table` hidden-paginator height** - contained Material's 48px footer-action touch targets without forcing extra height when no action is rendered, preventing the table host from gaining a redundant outer vertical scrollbar for short data sets. The fix is synchronized across Angular 19/20/21 and avoids relational selectors for compatibility with the supported browser baseline. (#6)
+#### Table
+
+- **`sd-table` hidden-paginator height** - contained Material's 48px footer-action touch targets without forcing extra height when no action is rendered, preventing the table host from gaining a redundant outer vertical scrollbar for short data sets.
+  - The fix is synchronized across Angular 19/20/21 and avoids relational selectors for compatibility with the supported browser baseline. (#6)
 
 ## [1.1] - 2026-07-10
 
-Release suffix `1.1` publishes `19.1.1`, `20.1.1`, and `21.1.1` as a hotfix across the maintained Angular lines.
+Packages `19.1.1` · `20.1.1` · `21.1.1`, as a hotfix across the maintained Angular lines.
 
 ### Added
+
+#### General
 
 - **Release sync guard** - added `npm run check:sync` and wired it into the publish workflow plus local deploy script so release fails before npm publish if `v20` or `v21` drifts from the `v19` source workspace.
 
 ### Fixed
 
+#### Section
+
 - **Footer right projection alignment** - restored the v19 `margin-left: auto` behavior in v20/v21 for `sd-section`, `sd-side-drawer`, and `sd-modal` right-only footers, with matching regression assertions.
 
 ## [1.0] - 2026-07-10
 
-Release suffix `1.0` publishes `19.1.0`, `20.1.0`, and `21.1.0` with the same Core UI surface across the maintained Angular lines.
+Packages `19.1.0` · `20.1.0` · `21.1.0`, with the same Core UI surface across the maintained Angular lines.
 
 ### Added
+
+#### Confirm, Section
 
 - **Core UI confirm/section controls** - expanded dialog and confirmation flows with section-level controls, then rolled the same surface through v20 and v21.
 
 ### Changed
 
-- **Material M3 theme alignment** - aligned Core UI theme tokens with Angular Material M3 system variables across v19/v20/v21.
+#### Docs
+
 - **Release docs** - documented the shared `v1.0` release suffix flow for publishing `19.1.0`, `20.1.0`, and `21.1.0`.
+
+#### Theme
+
+- **Material M3 theme alignment** - aligned Core UI theme tokens with Angular Material M3 system variables across v19/v20/v21.
 
 ### Fixed
 
-- **`form-generic` builder stability** - stabilized builder drop handling and modal footer behavior.
+#### Confirm
+
 - **`sd-confirm` docs encoding** - repaired mojibake in the confirm service default button label examples before release docs collection.
+
+#### Form builder
+
+- **`form-generic` builder stability** - stabilized builder drop handling and modal footer behavior.
 
 ## [0.10] - 2026-06-30
 
+Packages `19.0.10` · `20.0.10` · `21.0.10`.
+
 ### Added
 
+#### Pipes
+
 - **Shared display pipes** — added `sdFormatDate`, `sdFormatDatetime`, and `sdView` display pipes with tests and npm-facing docs.
+
+#### Table
+
 - **`sd-table` column filter callback** — column filters can notify committed value changes through `onChange`, with regression coverage and showcase wiring.
+
+#### General
+
 - **Phased lint workflow** — added release-oriented lint entry points and a phase runner for targeted Angular workspace cleanup.
 
 ### Changed
 
+#### Docs
+
 - **Core UI docs and API docs** — expanded standalone import, table-cell control, shared pipe, and AI-facing usage guidance, then regenerated docs for the maintained Angular lines.
+
+#### Form builder
+
 - **`form-generic` builder UX** — refined drag/drop, resize, preview, row feedback, palette placement, row-level resize state, and Material-style mode controls while keeping render behavior covered by regression tests.
+
+#### Table, View
+
 - **Table and view display rendering** — reused shared display pipes in table/view flows and aligned command icon rendering for more consistent UI output.
+
+#### General
+
 - **Release hardening across v19/v20/v21** — modernized safe Angular metadata and dependency injection usage, reduced runtime/Sass warnings, and strengthened fragile test assertions.
 
 ### Fixed
 
-- **`tab-router` lifecycle handling** — ported `beforeClose` handling and `SD_TAB` injection fixes across all maintained versions.
-- **`sd-table` selection and filter stability** — added table filter `onChange` support, selector disabled fixes, preserved selected-row behavior, docs, and showcase updates.
-- **`form-generic` preview render safety** — only registered controls are patched before dynamic form fields finish registering, preventing preview render instability.
+#### Form builder
+
 - **`form-generic` drop feedback** — made drag previews text-free, centered drop rails, and row enter predicates match the actual form layout placement.
+
+#### Form generic
+
+- **`form-generic` preview render safety** — only registered controls are patched before dynamic form fields finish registering, preventing preview render instability.
+
+#### Notify
+
 - **`notify` toast formatting** — applied toast formatting fixes and kept preview regressions covered across maintained Angular lines.
+
+#### Styles
+
 - **Sass grid utilities** — replaced deprecated Sass percentage calls in grid utilities to reduce build warnings.
+
+#### Tab router
+
+- **`tab-router` lifecycle handling** — ported `beforeClose` handling and `SD_TAB` injection fixes across all maintained versions.
+
+#### Table
+
+- **`sd-table` selection and filter stability** — added table filter `onChange` support, selector disabled fixes, preserved selected-row behavior, docs, and showcase updates.
 
 ## [0.9] - 2026-06-22
 
-### Fixed
-
-- **`sd-table` inline column filter defaults** — table option replacement now recreates the table/filter state so default inline filter values are applied on first load and stale state is not carried across option instances.
-- **Date-range and operator autoId stability** — cleaned up generated selectors for `sd-date-range` and table column operators so automation targets remain deterministic.
+Packages `19.0.9` · `20.0.9` · `21.0.9`.
 
 ### Changed
 
+#### Table
+
 - **`sd-table` internals** — extracted paging/filter mapping, local filtering, row reorder, tree render state, and selection preservation helpers behind focused unit coverage. Public table APIs remain unchanged.
+
+### Fixed
+
+#### Date range, Operator
+
+- **Date-range and operator autoId stability** — cleaned up generated selectors for `sd-date-range` and table column operators so automation targets remain deterministic.
+
+#### Table
+
+- **`sd-table` inline column filter defaults** — table option replacement now recreates the table/filter state so default inline filter values are applied on first load and stale state is not carried across option instances.
 
 ## [0.8] - 2026-06-16
 
+Packages `19.0.8` · `20.0.8` · `21.0.8`.
+
 ### Added
 
-- **`components/autoid-inspector` — Forge E2E export** — inspector export tab can call a configured backend host to generate Playwright / Robot Framework E2E ZIPs from the current autoid scan payload, while API keys stay server-side.
-- **Core UI source-of-truth docs for AI rendering** — expanded component/form/service/module/pipe markdown so downstream agents can choose existing Core UI primitives before writing local CSS or custom markup. Notable docs cover `sd-operator`, `sd-tree`, `sd-query-bar`, `sd-query-builder`, `sd-inline-text`, `sd-input-color`, module `When NOT to use` guidance, pipe misuse guidance, and concrete copyable examples.
+#### Autoid inspector
+
+- **Forge E2E export** — inspector export tab can call a configured backend host to generate Playwright / Robot Framework E2E ZIPs from the current autoid scan payload, while API keys stay server-side.
+
+#### Docs
+
+- **Core UI source-of-truth docs for AI rendering** — expanded component/form/service/module/pipe markdown so downstream agents can choose existing Core UI primitives before writing local CSS or custom markup.
+  - Notable docs cover `sd-operator`, `sd-tree`, `sd-query-bar`, `sd-query-builder`, `sd-inline-text`, `sd-input-color`, module `When NOT to use` guidance, pipe misuse guidance, and concrete copyable examples.
 - **`STYLE-GUIDE.md` AI rendering guardrails** — added rules for 4px-based spacing, Core UI utilities/components first, `sd-view` for label/value display, `sd-badge` for status rendering, and `size="sm"` for dense/table form controls.
 
 ### Changed
 
-- **`sd-modal` and `sd-side-drawer` close buttons** — close affordances now render as accessible icon buttons with a stable hit area, neutral hover/active states, focus-visible ring, and theme CSS variables.
+#### Docs
+
 - **`sd-table` and form docs** — table docs now call out `useBadge` / `sd-badge` for status columns and `size="sm"` for filters or inline editors in dense table contexts; form docs mirror the same compact-size convention.
 - **`sd-query-bar` docs** — clarified that `SdQuery.filters` is already the canonical `Filter[]` payload and must not be copied into `sd-table.filter.externalFilters`, which describes built-in toolbar controls.
 
+#### Modal, Side drawer
+
+- **`sd-modal` and `sd-side-drawer` close buttons** — close affordances now render as accessible icon buttons with a stable hit area, neutral hover/active states, focus-visible ring, and theme CSS variables.
+
 ### Fixed
+
+#### Docs
 
 - **Docs copy-paste safety** — replaced placeholder snippets in public examples with concrete column definitions so AI-generated code does not inherit non-compiling skeletons.
 
 ## [0.7] - 2026-06-11
 
+Packages `19.0.7` · `20.0.7` · `21.0.7`.
+
 ### Added
 
-- **`modules/keycloak` — `silentRenewUrl` + `authErrorUrl`** — `SdKeycloakTenantConfig` nhận thêm 2 tùy chọn (mặc định `'silent-renew'` / `'auth-keycloak-error'`), là basename của 2 file tĩnh consumer đặt trong `public/`. Khi `keycloak.init()` ném lỗi, app tự redirect full-page tới trang lỗi tĩnh (`${origin}/<authErrorUrl>.html`) — render được kể cả khi bundle chưa boot — kèm guard chống vòng lặp. Package ship sẵn template tại `modules/keycloak/htmls/` (`silent-renew.html` cố định; `auth-keycloak-error.html` bản tổng quát dùng-được-ngay, không logo/email/phụ-thuộc-ngoài, chỉ placeholder). Log dev đổi sang tiếng Anh (thư viện global).
-- **`components/inform` — export từ barrel** — `<sd-inform>` giờ được re-export từ `@sdcorejs/angular/components` (trước đây thiếu trong index, phải import sâu).
+#### Inform
+
+- **Export từ barrel** — `<sd-inform>` giờ được re-export từ `@sdcorejs/angular/components` (trước đây thiếu trong index, phải import sâu).
+
+#### Keycloak
+
+- **`silentRenewUrl` + `authErrorUrl`** — `SdKeycloakTenantConfig` nhận thêm 2 tùy chọn (mặc định `'silent-renew'` / `'auth-keycloak-error'`), là basename của 2 file tĩnh consumer đặt trong `public/`.
+  - Khi `keycloak.init()` ném lỗi, app tự redirect full-page tới trang lỗi tĩnh (`${origin}/<authErrorUrl>.html`) — render được kể cả khi bundle chưa boot — kèm guard chống vòng lặp. Package ship sẵn template tại `modules/keycloak/htmls/` (`silent-renew.html` cố định; `auth-keycloak-error.html` bản tổng quát dùng-được-ngay, không logo/email/phụ-thuộc-ngoài, chỉ placeholder). Log dev đổi sang tiếng Anh (thư viện global).
 
 ### Changed
 
-- **`components/upload-file` — ưu tiên hàm `download`** — khi consumer cấu hình `download` handler (input `[download]` hoặc `SD_UPLOAD_FILE_CONFIGURATION`), click vào file đã lưu (có `idOrKey`) LUÔN gọi handler thay vì mở URL `src` lấy từ `details()` — phục vụ tải file qua endpoint có xác thực/proxy. File local chưa upload (chưa có `idOrKey`) vẫn tải trực tiếp từ blob.
+#### Upload file
+
+- **Ưu tiên hàm `download`** — khi consumer cấu hình `download` handler (input `[download]` hoặc `SD_UPLOAD_FILE_CONFIGURATION`), click vào file đã lưu (có `idOrKey`) LUÔN gọi handler thay vì mở URL `src` lấy từ `details()` — phục vụ tải file qua endpoint có xác thực/proxy.
+  - File local chưa upload (chưa có `idOrKey`) vẫn tải trực tiếp từ blob.
 
 ### Fixed
 
-- **`components/org-chart` — tài liệu** — sửa mojibake (UTF-8 bị double-encode kiểu CP1252) trong `sd-org-chart.md`; toàn bộ chuỗi tiếng Việt bị hỏng nay hiển thị đúng.
+#### Org chart
+
+- **Tài liệu** — sửa mojibake (UTF-8 bị double-encode kiểu CP1252) trong `sd-org-chart.md`; toàn bộ chuỗi tiếng Việt bị hỏng nay hiển thị đúng.
 
 ## [0.6] - 2026-06-10
 
+Packages `19.0.6` · `20.0.6` · `21.0.6`.
+
 ### Added
 
-- **`forms/select` — footer actions** — hỗ trợ project custom action vào sticky footer của panel qua `ng-template[sdSelectFooterAction]`. Template nhận context `{ searchText }`, giữ đúng thứ tự khai báo, và event binding của consumer như `(click)="addNew(searchText)"` hoạt động bình thường.
-- **`forms/select` — footer visibility modes** — thêm `when="always" | "empty" | "has-result"`: luôn hiện, chỉ hiện khi có search text nhưng không có option khớp, hoặc chỉ hiện khi filter còn kết quả.
+#### Select
+
+- **Footer actions** — hỗ trợ project custom action vào sticky footer của panel qua `ng-template[sdSelectFooterAction]`.
+  - Template nhận context `{ searchText }`, giữ đúng thứ tự khai báo, và event binding của consumer như `(click)="addNew(searchText)"` hoạt động bình thường.
+- **Footer visibility modes** — thêm `when="always" | "empty" | "has-result"`: luôn hiện, chỉ hiện khi có search text nhưng không có option khớp, hoặc chỉ hiện khi filter còn kết quả.
+
+#### Showcase
+
 - **Showcase `/forms/select`** — bổ sung ví dụ đầy đủ cho footer actions: add button theo search text, nhiều action cùng lúc, consumer tự thêm padding, và ví dụ dùng `div role="button"` + custom CSS để action nhìn như một dropdown item không viền button.
 
 ### Changed
 
-- **`forms/select` — footer shell** — `.sd-select-footer-actions` chỉ giữ sticky positioning, border, background và `gap: 4px`; không áp padding mặc định để consumer tự can thiệp theo nhu cầu. Container và đường gạch ngang chỉ render khi thật sự có footer action đang visible, tránh khoảng trắng/border thừa khi footer chưa hiện.
+#### Select
+
+- **Footer shell** — `.sd-select-footer-actions` chỉ giữ sticky positioning, border, background và `gap: 4px`; không áp padding mặc định để consumer tự can thiệp theo nhu cầu.
+  - Container và đường gạch ngang chỉ render khi thật sự có footer action đang visible, tránh khoảng trắng/border thừa khi footer chưa hiện.
 
 ## [0.5] - 2026-06-10
 
+Packages `19.0.5` · `20.0.5` · `21.0.5`.
+
 ### Added
 
-- **`components/tree`** — component `<sd-tree>` mới (secondary entry point `@sdcorejs/angular/components/tree`, class `SdTree`, standalone): cây phân cấp cho folder / category / đơn vị tổ chức / dữ liệu cha-con. Bind theo style `sd-table` qua `[option]` (`SdTreeComponentOption`); hỗ trợ static/lazy loading + loading state, multi-select, row command, custom item template, reload thủ công, và **lọc không dấu tiếng Việt** (accent-insensitive).
-- **`components/org-chart`** — new `<sd-org-chart>` organization tree component with default item cards, collapse/expand support, projected `sdOrgChartItemDef`, `[itemTemplate]` customization, and stable autoId selectors for node parts. Includes secondary entry points and showcase wiring for Angular 19/20/21.
-- **`forms/select` — template `#sdSelected`** — custom render giá trị đã chọn ngay trong trigger edit-mode (`<mat-select-trigger>`), tách biệt với `#sdValue` / `sdViewDef` (chỉ tác động face read-only `viewed`/`inline`). Context `{ $implicit, item, items, display, multiple }`; fallback về `display` text khi không project nên usage cũ không đổi.
-- **`components/query-builder` — so sánh field-to-field** — operator một toán hạng giờ chọn được **một field khác** làm vế phải thay vì literal (emit operand `dataType: 'field'`). Field ứng viên lọc theo đúng `type`, loại field trái, tôn trọng `allowFieldCompare: false` + guard `compareGroup`. `BETWEEN` / `IN` / `NOT_IN` / `NULL` / `NOT_NULL` vẫn literal/no-value.
+#### Org chart
+
+- New `<sd-org-chart>` organization tree component with default item cards, collapse/expand support, projected `sdOrgChartItemDef`, `[itemTemplate]` customization, and stable autoId selectors for node parts.
+  - Includes secondary entry points and showcase wiring for Angular 19/20/21.
+
+#### Query builder
+
+- **So sánh field-to-field** — operator một toán hạng giờ chọn được **một field khác** làm vế phải thay vì literal (emit operand `dataType: 'field'`).
+  - Field ứng viên lọc theo đúng `type`, loại field trái, tôn trọng `allowFieldCompare: false` + guard `compareGroup`. `BETWEEN` / `IN` / `NOT_IN` / `NULL` / `NOT_NULL` vẫn literal/no-value.
+
+#### Select
+
+- **Template `#sdSelected`** — custom render giá trị đã chọn ngay trong trigger edit-mode (`<mat-select-trigger>`), tách biệt với `#sdValue` / `sdViewDef` (chỉ tác động face read-only `viewed`/`inline`).
+  - Context `{ $implicit, item, items, display, multiple }`; fallback về `display` text khi không project nên usage cũ không đổi.
+
+#### Tree
+
+- Component `<sd-tree>` mới (secondary entry point `@sdcorejs/angular/components/tree`, class `SdTree`, standalone): cây phân cấp cho folder / category / đơn vị tổ chức / dữ liệu cha-con.
+  - Bind theo style `sd-table` qua `[option]` (`SdTreeComponentOption`); hỗ trợ static/lazy loading + loading state, multi-select, row command, custom item template, reload thủ công, và **lọc không dấu tiếng Việt** (accent-insensitive).
 
 ### Changed
 
-- **`components/query-builder` — relative date dùng model chuẩn `@sdcorejs/utils`** — bỏ model local, reuse `DateRelative` từ `@sdcorejs/utils` (≥ 1.1.3); `Filter` emit kèm discriminator `dataType`. Types/helpers re-export từ `@sdcorejs/angular/components/query-builder`.
+#### Query builder
+
+- **Relative date dùng model chuẩn `@sdcorejs/utils`** — bỏ model local, reuse `DateRelative` từ `@sdcorejs/utils` (≥ 1.1.3); `Filter` emit kèm discriminator `dataType`. Types/helpers re-export từ `@sdcorejs/angular/components/query-builder`.
 
 ### Fixed
+
+#### Select
 
 - **`forms/select` (multiple)** — khi số lượng đã chọn chạm `[limit]`, panel giờ vẫn hiển thị các option mới/đang chọn thay vì cắt mất.
 
 ## [0.4] - 2026-06-05
 
-### Security
-
-- **Toast XSS hardening** (`notify`) — toast `message` giờ render dạng **TEXT** (auto-escape) mặc định thay vì `[innerHTML]` (bỏ DOM-XSS sink ở path thường). Thêm opt-in `html?: boolean` trên `SdNotifyOption`; khi `true` mới render HTML qua `DomSanitizer.sanitize(SecurityContext.HTML)` tường minh (strip `<script>`/`on*`/`javascript:`) — chỉ dùng cho markup tin cậy. `onAction` là callback app-authored (không phải input không tin cậy).
+Packages `19.0.4` · `20.0.4` · `21.0.4`.
 
 ### Changed
 
-- **Bỏ license-gate `SdBaseSecureComponent` khỏi mọi component** — 9 component không còn `extends SdBaseSecureComponent` (không enforce license khi khởi tạo). Class base + `SdLicenseService` **vẫn giữ lại** (dormant) để gắn lại license sau khi cần. Cho phép dùng/publish thư viện công khai mà không bị chặn license.
+#### General
+
+- **Bỏ license-gate `SdBaseSecureComponent` khỏi mọi component** — 9 component không còn `extends SdBaseSecureComponent` (không enforce license khi khởi tạo).
+  - Class base + `SdLicenseService` **vẫn giữ lại** (dormant) để gắn lại license sau khi cần. Cho phép dùng/publish thư viện công khai mà không bị chặn license.
+
+### Security
+
+#### Notify
+
+- **Toast XSS hardening** (`notify`) — toast `message` giờ render dạng **TEXT** (auto-escape) mặc định thay vì `[innerHTML]` (bỏ DOM-XSS sink ở path thường).
+  - Thêm opt-in `html?: boolean` trên `SdNotifyOption`; khi `true` mới render HTML qua `DomSanitizer.sanitize(SecurityContext.HTML)` tường minh (strip `<script>`/`on*`/`javascript:`) — chỉ dùng cho markup tin cậy. `onAction` là callback app-authored (không phải input không tin cậy).
 
 ## [0.3] - 2026-06-04
 
+Packages `19.0.3` · `20.0.3` · `21.0.3`.
+
+> [!IMPORTANT]
+> **Before upgrading:** `SdTableOptionTree` giờ là discriminated union theo `loadType` — `loadType: 'static' | 'lazy'` là **bắt buộc**; E2E: không còn cột `sdTreeToggle`.
+
+> [!NOTE]
 > **Đổi scheme version:** bỏ hậu tố `-beta`. Từ bản này version dùng dạng `<angular-major>.0.<release>` — release này = `.3`.
 
-### Added
-
-- **`SdTable` tree lazy — `hasChildren`** — lazy tree (`loadType: 'lazy'`) nạp con theo yêu cầu qua `onExpandChildren(row) => Promise<T[]>`; thêm tuỳ chọn `hasChildren?: (row) => boolean` để chỉ hiện icon expand ở dòng thực sự có con (không truyền = mọi lazy node đều hiện icon). Spinner loading hiện trong ô chevron khi đang nạp.
-- **`SdTable` tree — search ở cấp con** (table `type: 'local'` + `loadType: 'static'`): khi lọc inline, một nhánh được giữ nếu chính nó HOẶC bất kỳ hậu duệ nào khớp từ khoá; sibling không khớp bị ẩn (prune) + nhánh khớp **tự bung** để lộ node khớp. Clear filter khôi phục cây về trạng thái mặc định.
-
 ### Changed (BREAKING for consumers)
+
+#### Table
 
 - **`SdTableOptionTree` giờ là discriminated union theo `loadType`** — `loadType: 'static' | 'lazy'` là **bắt buộc**.
 
@@ -1249,31 +2573,50 @@ Release suffix `1.0` publishes `19.1.0`, `20.1.0`, and `21.1.0` with the same Co
 
   Lazy **không còn** `childrenKey` / `defaultExpanded`; `onExpandChildren` phải trả `Promise<T[]>` (trước nhận cả `T[]`).
 
-- **Bỏ cột tree-toggle riêng (`sdTreeToggle`)** — icon expand (đổi sang `chevron_right` / `expand_more`, hover nền tròn nhỏ) giờ nhúng vào **cột đầu**: cột STT khi bật `index`, ngược lại cột data đầu tiên — thụt lề theo cấp. Không cần đổi cấu hình; chỉ là thay đổi layout/DOM. **E2E:** không còn cột `sdTreeToggle`; nút toggle giữ `data-autoid="<base>-tree-toggle-<rowId>"` (giờ là `<button>` trong cột đầu).
+- **Bỏ cột tree-toggle riêng (`sdTreeToggle`)** — icon expand (đổi sang `chevron_right` / `expand_more`, hover nền tròn nhỏ) giờ nhúng vào **cột đầu**: cột STT khi bật `index`, ngược lại cột data đầu tiên — thụt lề theo cấp.
+  - Không cần đổi cấu hình; chỉ là thay đổi layout/DOM. **E2E:** không còn cột `sdTreeToggle`; nút toggle giữ `data-autoid="<base>-tree-toggle-<rowId>"` (giờ là `<button>` trong cột đầu).
+
+### Added
+
+#### Table
+
+- **Tree lazy — `hasChildren`** — lazy tree (`loadType: 'lazy'`) nạp con theo yêu cầu qua `onExpandChildren(row) => Promise<T[]>`; thêm tuỳ chọn `hasChildren?: (row) => boolean` để chỉ hiện icon expand ở dòng thực sự có con (không truyền = mọi lazy node đều hiện icon).
+  - Spinner loading hiện trong ô chevron khi đang nạp.
+- **Tree — search ở cấp con** (table `type: 'local'` + `loadType: 'static'`): khi lọc inline, một nhánh được giữ nếu chính nó HOẶC bất kỳ hậu duệ nào khớp từ khoá; sibling không khớp bị ẩn (prune) + nhánh khớp **tự bung** để lộ node khớp.
+  - Clear filter khôi phục cây về trạng thái mặc định.
 
 ### Internal
+
+#### General
 
 - 212 table specs xanh; lib + showcase build sạch. Showcase `/components/table` có 3 demo tree: static + child-search, lazy + loading + `hasChildren`, và no-index (toggle trong cột data đầu).
 
 ## [0.1] - 2026-06-01
 
+Packages `19.0.1` · `20.0.1` · `21.0.1`.
+
 Bản metadata/docs — không thay đổi API hay code runtime so với `0.0`.
 
 ### Fixed
 
-- **`license`** — thêm field `"license": "MIT"` vào `package.json` (bản `0.0` publish thiếu → npm hiển thị UNLICENSED).
+#### Docs
+
 - **README npm-facing** — giờ là bản public do repo sinh ra (`docs/npm-README.md`): bỏ wording "internal use only", thêm link **Showcase** (`https://sdcorejs.github.io/sdcorejs-angular`) + **Storybook** (`https://sdcorejs.github.io/portal-template`), bỏ import `SdSearch` không tồn tại, sửa ví dụ form `[(ngModel)]` → `[(model)]`, bỏ version badge cũ.
+
+#### Package
+
+- **`license`** — thêm field `"license": "MIT"` vào `package.json` (bản `0.0` publish thiếu → npm hiển thị UNLICENSED).
 
 ## [0.0] - 2026-06-01
 
-### Added
+Packages `19.0.0` · `20.0.0` · `21.0.0`.
 
-- **`components/tab`** — `<sd-tab-group>` + `<sd-tab>` declarative tabs wrapping `mat-tab-group`. Inputs: `selectedIndex` (model), `variant` (`'line' | 'pills' | 'segmented'`), `color` (SdColor), `stretchTabs`, `alignTabs`, `headerPosition`, `animationDuration`, `disableRipple`, `dynamicHeight`, `autoId`. Per-tab: `label` (required), `icon`, `badge`, `disabled`, `closable`. Lazy content via `matTabContent` + viewChild template ref. 58 specs.
-- **`components/stepper`** — `<sd-stepper>` + `<sd-step>` wrapping `mat-stepper` / `CdkStepper`. Inputs: `selectedIndex` (model), `linear`, `orientation`, `labelPosition`, `headerPosition`, `animationDuration`, `disableRipple`, `color`, `autoId`. Per-step: `label` (required), `icon`, `optional`, `editable`, `stepControl`, `state`, `errorMessage`. Methods `next` / `previous` / `reset` / `goTo`. Doc tại `projects/sdcorejs-angular/components/stepper/sd-stepper.md`. 26 specs.
-- **`components/ckeditor-styles`** — `<sd-ckeditor-styles>` empty-render component sở hữu global CKEditor 5 CSS qua `ViewEncapsulation.None`. Nhúng tự động trong `<sd-editor>`, `<sd-mini-editor>`, `<sd-document-builder>`; consumer không cần load CSS thủ công nữa.
-- **`forms/input-color`** — `<sd-input-color>` hex color field gồm `<sd-input>` + suffix swatch + native `<input type="color">` ẩn. Hex pattern validator built-in; export `SD_INPUT_COLOR_HEX_PATTERN`. Nút Clear (X) khi có giá trị + editable + không required. 30 specs.
+> [!IMPORTANT]
+> **Before upgrading:** CKEditor global CSS no longer required — xoá dòng `@sdcorejs/angular/assets/scss/ckeditor5.scss` khỏi `angular.json` `styles[]` ở mọi consumer app.
 
 ### Changed (BREAKING for consumers)
+
+#### Editor
 
 - **CKEditor global CSS no longer required** — `<sd-editor>`, `<sd-mini-editor>`, `<sd-document-builder>` giờ nhúng `<sd-ckeditor-styles>` nội bộ. CSS nằm trong lazy chunk của từng editor thay vì initial bundle của consumer.
 
@@ -1294,8 +2637,68 @@ Bản metadata/docs — không thay đổi API hay code runtime so với `0.0`.
 
   Asset `@sdcorejs/angular/assets/scss/ckeditor5.scss` vẫn ship trong package — chỉ bỏ yêu cầu import global. App cũ giữ global import vẫn chạy (`ViewEncapsulation.None` dedupe `<style>` theo component identity).
 
+### Added
+
+#### CKEditor styles
+
+- `<sd-ckeditor-styles>` empty-render component sở hữu global CKEditor 5 CSS qua `ViewEncapsulation.None`. Nhúng tự động trong `<sd-editor>`, `<sd-mini-editor>`, `<sd-document-builder>`; consumer không cần load CSS thủ công nữa.
+
+#### Input color
+
+- `<sd-input-color>` hex color field gồm `<sd-input>` + suffix swatch + native `<input type="color">` ẩn. Hex pattern validator built-in; export `SD_INPUT_COLOR_HEX_PATTERN`. Nút Clear (X) khi có giá trị + editable + không required. 30 specs.
+
+#### Stepper
+
+- `<sd-stepper>` + `<sd-step>` wrapping `mat-stepper` / `CdkStepper`.
+  - Inputs: `selectedIndex` (model), `linear`, `orientation`, `labelPosition`, `headerPosition`, `animationDuration`, `disableRipple`, `color`, `autoId`. Per-step: `label` (required), `icon`, `optional`, `editable`, `stepControl`, `state`, `errorMessage`. Methods `next` / `previous` / `reset` / `goTo`. Doc tại `projects/sdcorejs-angular/components/stepper/sd-stepper.md`. 26 specs.
+
+#### Tab group
+
+- `<sd-tab-group>` + `<sd-tab>` declarative tabs wrapping `mat-tab-group`.
+  - Inputs: `selectedIndex` (model), `variant` (`'line' | 'pills' | 'segmented'`), `color` (SdColor), `stretchTabs`, `alignTabs`, `headerPosition`, `animationDuration`, `disableRipple`, `dynamicHeight`, `autoId`. Per-tab: `label` (required), `icon`, `badge`, `disabled`, `closable`. Lazy content via `matTabContent` + viewChild template ref. 58 specs.
+
 ### Internal
+
+#### Showcase
 
 - Showcase project tại `projects/showcase/` — catalog trực quan mọi component trong `@sdcorejs/angular`, 47 lazy demo page (Components / Forms / Services). Deploy lên GitHub Pages qua `.github/workflows/deploy-pages.yml`.
 
 ---
+
+[Unreleased]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.2...HEAD
+[3.2]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.1...v3.2
+[3.1]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.0...v3.1
+[3.0]: https://github.com/sdcorejs/sdcorejs-angular/compare/v2.15...v3.0
+[2.15]: https://github.com/sdcorejs/sdcorejs-angular/compare/v2.14...v2.15
+[2.14]: https://github.com/sdcorejs/sdcorejs-angular/compare/v2.13...v2.14
+[2.13]: https://github.com/sdcorejs/sdcorejs-angular/compare/v2.12...v2.13
+[2.12]: https://github.com/sdcorejs/sdcorejs-angular/compare/v2.11...v2.12
+[2.11]: https://github.com/sdcorejs/sdcorejs-angular/compare/v2.10...v2.11
+[2.10]: https://github.com/sdcorejs/sdcorejs-angular/compare/v2.9...v2.10
+[2.9]: https://github.com/sdcorejs/sdcorejs-angular/compare/v2.8...v2.9
+[2.8]: https://github.com/sdcorejs/sdcorejs-angular/compare/v2.7...v2.8
+[2.7]: https://github.com/sdcorejs/sdcorejs-angular/compare/v2.6...v2.7
+[2.6]: https://github.com/sdcorejs/sdcorejs-angular/compare/v2.5...v2.6
+[2.5]: https://github.com/sdcorejs/sdcorejs-angular/compare/v2.4...v2.5
+[2.4]: https://github.com/sdcorejs/sdcorejs-angular/compare/v2.3...v2.4
+[2.3]: https://github.com/sdcorejs/sdcorejs-angular/compare/v2.2...v2.3
+[2.2]: https://github.com/sdcorejs/sdcorejs-angular/compare/v2.1...v2.2
+[2.1]: https://github.com/sdcorejs/sdcorejs-angular/compare/v2.0...v2.1
+[2.0]: https://github.com/sdcorejs/sdcorejs-angular/compare/v1.6...v2.0
+[1.6]: https://github.com/sdcorejs/sdcorejs-angular/compare/v1.5...v1.6
+[1.5]: https://github.com/sdcorejs/sdcorejs-angular/compare/v1.4...v1.5
+[1.4]: https://github.com/sdcorejs/sdcorejs-angular/compare/v1.3...v1.4
+[1.3]: https://github.com/sdcorejs/sdcorejs-angular/compare/v1.2...v1.3
+[1.2]: https://github.com/sdcorejs/sdcorejs-angular/compare/v1.1...v1.2
+[1.1]: https://github.com/sdcorejs/sdcorejs-angular/compare/v1.0...v1.1
+[1.0]: https://github.com/sdcorejs/sdcorejs-angular/compare/v0.10...v1.0
+[0.10]: https://github.com/sdcorejs/sdcorejs-angular/compare/v0.9...v0.10
+[0.9]: https://github.com/sdcorejs/sdcorejs-angular/compare/v0.8...v0.9
+[0.8]: https://github.com/sdcorejs/sdcorejs-angular/compare/v0.7...v0.8
+[0.7]: https://github.com/sdcorejs/sdcorejs-angular/compare/v0.6...v0.7
+[0.6]: https://github.com/sdcorejs/sdcorejs-angular/compare/v0.5...v0.6
+[0.5]: https://github.com/sdcorejs/sdcorejs-angular/compare/v0.4...v0.5
+[0.4]: https://github.com/sdcorejs/sdcorejs-angular/compare/v0.3...v0.4
+[0.3]: https://github.com/sdcorejs/sdcorejs-angular/compare/v0.1...v0.3
+[0.1]: https://github.com/sdcorejs/sdcorejs-angular/compare/v0.0...v0.1
+[0.0]: https://github.com/sdcorejs/sdcorejs-angular/releases/tag/v0.0
