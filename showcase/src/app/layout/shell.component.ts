@@ -15,6 +15,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatIconModule } from '@angular/material/icon';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
+import { DocsThemeService } from '../docs/core/docs-theme.service';
 import { DocsVersionService } from '../docs/core/docs-version.service';
 import { DOC_NAV_GROUPS } from '../docs/core/documentation.registry';
 import { PublishedDocsService } from '../docs/core/published-docs.service';
@@ -45,6 +46,7 @@ export class ShellComponent {
   readonly #injector = inject(Injector);
   readonly #publishedDocs = inject(PublishedDocsService);
   readonly versions = inject(DocsVersionService);
+  readonly theme = inject(DocsThemeService);
   readonly mobileNavOpen = signal(false);
   readonly searchOpen = signal(false);
   readonly isMobile = signal(typeof window !== 'undefined' && window.innerWidth <= MOBILE_NAV_BREAKPOINT_PX);

@@ -36,6 +36,15 @@
     <div class="topbar__tools" [attr.inert]="mobileNavOpen() ? '' : null">
       <docs-global-search (openedChange)="onSearchOpenChange($event)"></docs-global-search>
       <docs-version-selector [attr.inert]="searchOpen() ? '' : null"></docs-version-selector>
+      <button
+        class="theme-toggle"
+        type="button"
+        [attr.aria-label]="theme.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
+        [title]="theme.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
+        [attr.inert]="searchOpen() ? '' : null"
+        (click)="theme.toggle()">
+        <mat-icon aria-hidden="true">{{ theme.theme() === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon>
+      </button>
       <a
         class="github-link"
         href="https://github.com/sdcorejs/sdcorejs-angular"

@@ -37,28 +37,33 @@
 .docs-code {
   overflow: hidden;
   margin: 16px 0 24px;
-  border-radius: var(--docs-radius-sm);
-  background: var(--docs-code-surface);
-  color: var(--docs-code-text);
+  border: 1px solid var(--docs-line);
+  border-radius: var(--docs-radius-code);
+  background: var(--docs-code-bg);
+  color: var(--docs-code-fg);
 
   &__toolbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid rgb(255 255 255 / 14%);
+    border-bottom: 1px solid var(--docs-line);
     padding: 8px 12px;
-    color: #a7b4c7;
+    color: var(--docs-fg-3);
     font-size: 12px;
 
     button {
       min-width: 44px;
       min-height: 44px;
       border: 0;
-      border-radius: 5px;
-      background: rgb(255 255 255 / 10%);
+      border-radius: var(--docs-radius-nav);
+      background: transparent;
       padding: 5px 9px;
-      color: inherit;
+      color: var(--docs-fg-2);
       cursor: pointer;
+
+      &:hover {
+        background: var(--docs-bg-3);
+      }
     }
   }
 

@@ -11,6 +11,18 @@
     <meta name="author" content="Trần Thuận Nghĩa" />
     <meta name="robots" content="index,follow,max-image-preview:large" />
     <meta name="theme-color" content="#005cbb" />
+    <script>
+      // Applies the stored or system theme before the first paint; DocsThemeService takes over after boot.
+      (function () {
+        var theme = 'light';
+        try {
+          var stored = localStorage.getItem('sdcorejs.docs.theme');
+          if (stored === 'light' || stored === 'dark') theme = stored;
+          else if (window.matchMedia('(prefers-color-scheme: dark)').matches) theme = 'dark';
+        } catch (error) {}
+        document.documentElement.setAttribute('data-sd-theme', theme);
+      })();
+    </script>
 
     <link rel="canonical" href="https://sdcorejs.github.io/sdcorejs-angular/" />
     <link rel="icon" type="image/png" sizes="368x368" href="assets/brand/sdcorejs-logo.png" />

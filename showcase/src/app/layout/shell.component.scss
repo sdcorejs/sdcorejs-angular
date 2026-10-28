@@ -124,6 +124,7 @@
   }
 }
 
+.theme-toggle,
 .github-link {
   display: inline-grid;
   place-items: center;
@@ -135,12 +136,19 @@
   border-radius: 10px;
   background: var(--docs-surface-raised);
   color: var(--docs-text-secondary);
-  box-shadow: 0 1px 2px rgb(15 23 42 / 5%);
+  padding: 0;
+  cursor: pointer;
 
   &:hover {
-    border-color: color-mix(in srgb, var(--sd-primary, #005cbb) 42%, var(--docs-border-color));
-    color: var(--docs-text);
+    background: var(--docs-bg-3);
+    color: var(--docs-fg);
     text-decoration: none;
+  }
+
+  mat-icon {
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
   }
 
   svg {
