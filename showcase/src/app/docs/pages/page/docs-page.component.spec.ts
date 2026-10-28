@@ -88,7 +88,8 @@ describe('DocsPageComponent', () => {
             selectedVersion: signal(version),
             latestVersion: signal(options.latestVersion ?? '21.1.2'),
             selectedRelease: signal(version.split('.').slice(1).join('.')),
-            isLatestRelease: signal(version === (options.latestVersion ?? '21.1.2')),
+            // why: the release is the version without its Angular major, so 20.1.2 and 21.1.2 are the same release.
+            isLatestRelease: signal(version.split('.').slice(1).join('.') === (options.latestVersion ?? '21.1.2').split('.').slice(1).join('.')),
           },
         },
         { provide: PublishedDocsService, useValue: publishedDocs },
@@ -141,7 +142,10 @@ describe('DocsPageComponent', () => {
       viewModel: publishedView({ styling: [], api: [], examples: [] }),
     });
 
-    expect(router.navigate).toHaveBeenCalledWith(['/v', '21.1.2', 'components', 'button', 'overview'], { replaceUrl: true });
+    expect(router.navigate).toHaveBeenCalledWith(['/v', '21.1.2', 'components', 'button', 'overview'], {
+      replaceUrl: true,
+      preserveFragment: true,
+    });
   });
 
   it('uses current-demo copy and removes migration language on the latest examples page', async () => {
@@ -286,11 +290,17 @@ describe('DocsPageComponent', () => {
   });
 
   it('clearly distinguishes archived documentation from current live examples', async () => {
-    await setup({ version: '20.1.2', latestVersion: '21.1.2' });
+    await setup({ version: '21.1.1', latestVersion: '21.1.2' });
 
     const notice = fixture?.nativeElement.querySelector('.historical-notice');
-    expect(notice?.textContent).toContain('Archived documentation v20.1.2');
+    expect(notice?.textContent).toContain('Archived documentation v21.1.1');
     expect(notice?.textContent).toContain('current showcase');
+  });
+
+  it('does not call another Angular line of the latest release archived', async () => {
+    await setup({ version: '20.1.2', latestVersion: '21.1.2' });
+
+    expect(fixture?.nativeElement.querySelector('.historical-notice')).toBeNull();
   });
 
   it('keeps a wide live example inside the documentation content column', async () => {

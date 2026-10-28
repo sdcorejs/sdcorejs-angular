@@ -218,7 +218,7 @@
 
     &.active,
     &:hover {
-      background: var(--sd-primary-light, #e8f1ff);
+      background: var(--docs-acc-soft);
     }
   }
 }
@@ -230,7 +230,7 @@
 .search-result__title mark,
 .search-result__meta mark {
   border-radius: 2px;
-  background: #fff1a8;
+  background: var(--docs-mark);
   color: inherit;
 }
 
@@ -263,20 +263,7 @@
   text-align: center;
 }
 
-@media (max-width: 760px) {
-  // why: Mobile header has room for an icon trigger but not the full search affordance.
-  .search-trigger {
-    justify-content: center;
-    width: var(--docs-control-height-lg, 44px);
-    min-width: var(--docs-control-height-lg, 44px);
-    padding: 0;
-
-    &__label,
-    kbd {
-      display: none;
-    }
-  }
-
+@media (max-width: 759.98px) {
   .search-dialog {
     top: 12px;
     width: calc(100vw - 24px);

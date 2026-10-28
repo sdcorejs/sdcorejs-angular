@@ -123,6 +123,27 @@ describe('API table parser', () => {
     expect(rows[3].types.length).toBe(1);
   });
 
+  it('keeps columns without a slot in the description and reads return and value columns as types', () => {
+    const [field] = apiRowsOfMarkdown(
+      ['| Field | Type | Required | Notes |', '| --- | --- | --- | --- |', '| `key` | `string` | yes | Row key. |'].join('\n'),
+      'fields'
+    );
+    const [method] = apiRowsOfMarkdown(
+      ['| Method | Returns | Notes |', '| --- | --- | --- |', '| `open()` | `Promise<void>` | Opens the editor. |'].join('\n'),
+      'methods'
+    );
+    const [parameter] = apiRowsOfMarkdown(
+      ['| Parameter | Accepted values | Default |', '| --- | --- | --- |', "| `size` | `'sm' \\| 'md'` | `'md'` |"].join('\n'),
+      'parameters'
+    );
+
+    expect(field.description).toBe('Row key. · **Required:** yes');
+    expect(method.types.map(type => type.text)).toEqual(['Promise<void>']);
+    expect(parameter.types.map(type => type.text)).toEqual(["'sm'", "'md'"]);
+    expect(parameter.defaultValue).toBe("'md'");
+    expect(parameter.description).toBe('');
+  });
+
   it('filters by name, type or description', () => {
     const [type, autoId, disabled] = apiRowsOfMarkdown(INPUTS, 'inputs');
 

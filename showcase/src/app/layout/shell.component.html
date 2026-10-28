@@ -1,11 +1,10 @@
 @let t = i18n.t();
 <div class="shell">
   <a class="skip-link" [docsFragmentLink]="'docs-content'">{{ t.skipToContent }}</a>
-  <header class="topbar">
+  <header class="topbar" [class.topbar--no-sidebar]="!hasSidebar()">
     <button
       #mobileMenu
       class="mobile-menu icon-button"
-      [class.mobile-menu--hidden]="!hasSidebar()"
       type="button"
       [attr.aria-label]="mobileNavOpen() ? t.closeMenu : t.openMenu"
       aria-controls="docs-sidebar"
@@ -66,8 +65,8 @@
     </div>
   </header>
 
-  @if (mobileNavOpen() && hasSidebar()) {
-    <button class="nav-backdrop" type="button" [attr.aria-label]="t.closeMenu" (click)="closeMobileNav(true)"></button>
+  @if (mobileNavOpen()) {
+    <button class="nav-backdrop" type="button" tabindex="-1" [attr.aria-label]="t.closeMenu" (click)="closeMobileNav(true)"></button>
   }
 
   <div
@@ -75,7 +74,8 @@
     [class.shell__body--no-sidebar]="!hasSidebar()"
     [attr.inert]="searchOpen() ? '' : null"
     [attr.aria-hidden]="searchOpen() ? 'true' : null">
-    @if (hasSidebar()) {
+    <!-- why: pages without the catalog still open the drawer below 980px, for Docs, Changelog and About. -->
+    @if (hasSidebar() || isMobile()) {
       <aside
         #sidebar
         id="docs-sidebar"
@@ -83,25 +83,27 @@
         [class.open]="mobileNavOpen()"
         [attr.aria-hidden]="sidebarHidden()"
         [attr.inert]="sidebarHidden() ? '' : null"
-        [attr.aria-label]="t.catalog">
-        <div class="sidebar__filter">
-          <label class="nav-filter">
-            <mat-icon aria-hidden="true">filter_list</mat-icon>
-            <input
-              type="search"
-              autocomplete="off"
-              aria-describedby="docs-nav-count"
-              [attr.aria-label]="t.filterPages"
-              [placeholder]="t.filterPages"
-              [value]="navQuery()"
-              (input)="onNavQuery($event)"
-              (keydown.escape)="clearNavQuery($event)" />
-            <span id="docs-nav-count" class="nav-filter__count">{{ navMatchCount() }}</span>
-          </label>
-          <span class="docs-visually-hidden" role="status" aria-live="polite" aria-atomic="true">
-            {{ navQuery().trim() ? (navMatchCount() ? i18n.format('pagesMatching', { n: navMatchCount() }) : t.noResults) : '' }}
-          </span>
-        </div>
+        [attr.aria-label]="hasSidebar() ? t.catalog : null">
+        @if (hasSidebar()) {
+          <div class="sidebar__filter">
+            <label class="nav-filter">
+              <mat-icon aria-hidden="true">filter_list</mat-icon>
+              <input
+                type="search"
+                autocomplete="off"
+                aria-describedby="docs-nav-count"
+                [attr.aria-label]="t.filterPages"
+                [placeholder]="t.filterPages"
+                [value]="navQuery()"
+                (input)="onNavQuery($event)"
+                (keydown.escape)="clearNavQuery($event)" />
+              <span id="docs-nav-count" class="nav-filter__count">{{ navMatchCount() }}</span>
+            </label>
+            <span class="docs-visually-hidden" role="status" aria-live="polite" aria-atomic="true">
+              {{ navQuery().trim() ? (navMatchCount() ? i18n.format('pagesMatching', { n: navMatchCount() }) : t.noResults) : '' }}
+            </span>
+          </div>
+        }
         <nav class="sidebar__primary" [attr.aria-label]="t.primaryNavigation">
           @for (item of primaryNavigation(); track item.id) {
             <a
@@ -113,46 +115,48 @@
             </a>
           }
         </nav>
-        <nav class="sidebar__nav" [attr.aria-label]="t.docsPages">
-          @if (!navGroups().length) {
-            <p class="sidebar__empty">{{ t.noResults }}</p>
-          }
-          @for (group of navGroups(); track group.category) {
-            <section class="nav-group">
-              <button
-                class="nav-group__header"
-                type="button"
-                [attr.aria-controls]="'nav-group-' + group.category"
-                [attr.aria-expanded]="group.open"
-                (click)="toggleGroup(group.category)">
-                <mat-icon aria-hidden="true">{{ group.open ? 'expand_more' : 'chevron_right' }}</mat-icon>
-                <span>{{ group.title }}</span>
-                <small>{{ group.pages.length }}</small>
-              </button>
-              <ul [id]="'nav-group-' + group.category" [hidden]="!group.open">
-                @if (group.open) {
-                  @for (page of group.pages; track page.id) {
-                    <li>
-                      <a [routerLink]="page.commands" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="closeMobileNav()">
-                        <span class="nav-item__title">{{ page.title }}</span>
-                        @if (page.availability === 'live-demo') {
-                          <small class="nav-badge availability-label">{{ t.liveDemo }}</small>
-                        } @else if (page.badge === 'new') {
-                          <small class="nav-badge nav-badge--new">{{ t.badgeNew }}</small>
-                        } @else if (page.badge === 'updated') {
-                          <small class="nav-badge nav-badge--updated">{{ t.badgeUpdated }}</small>
-                        }
-                      </a>
-                    </li>
+        @if (hasSidebar()) {
+          <nav class="sidebar__nav" [attr.aria-label]="t.docsPages">
+            @if (!navGroups().length) {
+              <p class="sidebar__empty">{{ t.noResults }}</p>
+            }
+            @for (group of navGroups(); track group.category) {
+              <section class="nav-group">
+                <button
+                  class="nav-group__header"
+                  type="button"
+                  [attr.aria-controls]="'nav-group-' + group.category"
+                  [attr.aria-expanded]="group.open"
+                  (click)="toggleGroup(group.category)">
+                  <mat-icon aria-hidden="true">{{ group.open ? 'expand_more' : 'chevron_right' }}</mat-icon>
+                  <span>{{ group.title }}</span>
+                  <small>{{ group.pages.length }}</small>
+                </button>
+                <ul [id]="'nav-group-' + group.category" [hidden]="!group.open">
+                  @if (group.open) {
+                    @for (page of group.pages; track page.id) {
+                      <li>
+                        <a [routerLink]="page.commands" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="closeMobileNav()">
+                          <span class="nav-item__title">{{ page.title }}</span>
+                          @if (page.availability === 'live-demo') {
+                            <small class="nav-badge availability-label">{{ t.liveDemo }}</small>
+                          } @else if (page.badge === 'new') {
+                            <small class="nav-badge nav-badge--new">{{ t.badgeNew }}</small>
+                          } @else if (page.badge === 'updated') {
+                            <small class="nav-badge nav-badge--updated">{{ t.badgeUpdated }}</small>
+                          }
+                        </a>
+                      </li>
+                    }
                   }
-                }
-              </ul>
-            </section>
-          }
-        </nav>
-        <footer>
-          <span>{{ t.package }}</span><code>v{{ currentVersion() }}</code>
-        </footer>
+                </ul>
+              </section>
+            }
+          </nav>
+          <footer>
+            <span>{{ t.package }}</span><code>v{{ currentVersion() }}</code>
+          </footer>
+        }
       </aside>
     }
 

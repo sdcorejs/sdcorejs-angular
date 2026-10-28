@@ -108,7 +108,6 @@ export const SHOWCASE_EXAMPLE_SOURCE_LOADER = new InjectionToken<() => Promise<E
             [class.example__code-toggle--open]="expanded()"
             [attr.aria-controls]="current.id + '-source'"
             [attr.aria-expanded]="expanded()"
-            [attr.aria-label]="expanded() ? 'Collapse source' : 'Expand source'"
             (click)="toggleSource()">
             <mat-icon aria-hidden="true">code</mat-icon>{{ expanded() ? t.hideCode : t.showCode }}
           </button>
@@ -121,6 +120,7 @@ export const SHOWCASE_EXAMPLE_SOURCE_LOADER = new InjectionToken<() => Promise<E
           class="example__preview"
           [id]="current.id + '-preview'"
           tabindex="0"
+          role="region"
           aria-label="Live example preview"
           lang="vi"
           (click)="markInteracted()"
@@ -177,7 +177,7 @@ export const SHOWCASE_EXAMPLE_SOURCE_LOADER = new InjectionToken<() => Promise<E
                 </button>
                 <span class="visually-hidden" role="status" aria-live="polite">{{ copyAnnouncement() }}</span>
               </div>
-              <div class="example__code" tabindex="0" aria-label="Scrollable example source">
+              <div class="example__code" tabindex="0" role="region" aria-label="Scrollable example source">
                 <pre class="example__lines" aria-hidden="true">{{ lineNumbers() }}</pre>
                 <pre class="example__pre"><code [innerHTML]="highlightedSource()"></code></pre>
               </div>

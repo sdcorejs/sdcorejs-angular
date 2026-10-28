@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject, input, signal, untracked } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { DocsI18nService } from '../core/docs-i18n.service';
 import { DocsFragmentLinkDirective } from './docs-fragment-link.directive';
@@ -16,6 +16,11 @@ interface DocsTocLink extends DocsTocItem {
 
 /** Distance from the viewport top at which a section counts as current, and the offset used when jumping to it. */
 export const DOCS_TOC_OFFSET_PX = 124;
+
+/** Smooth scrolling, except for readers who asked the system for reduced motion. */
+export function docsScrollBehavior(view: Window): ScrollBehavior {
+  return view.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+}
 
 const ISSUES_URL = 'https://github.com/sdcorejs/sdcorejs-angular/issues';
 
@@ -171,7 +176,7 @@ export class DocsTableOfContentsComponent {
 
     effect(() => {
       const links = this.links();
-      if (!links.some(link => link.id === this.activeId())) this.activeId.set(links[0]?.id ?? '');
+      if (!links.some(link => link.id === untracked(this.activeId))) this.activeId.set(links[0]?.id ?? '');
       queueMicrotask(() => this.updateActiveSection());
     });
   }
@@ -184,7 +189,7 @@ export class DocsTableOfContentsComponent {
     if (!view || !target || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey) return;
     event.preventDefault();
     const top = target.getBoundingClientRect().top + view.scrollY - DOCS_TOC_OFFSET_PX;
-    view.scrollTo({ top, behavior: 'smooth' });
+    view.scrollTo({ top, behavior: docsScrollBehavior(view) });
     view.history.replaceState(view.history.state, '', (event.currentTarget as HTMLAnchorElement).getAttribute('href') ?? '');
     target.tabIndex = -1;
     target.focus({ preventScroll: true });
@@ -192,7 +197,11 @@ export class DocsTableOfContentsComponent {
 
   backToTop(event: MouseEvent): void {
     event.preventDefault();
-    this.#document.defaultView?.scrollTo({ top: 0, behavior: 'smooth' });
+    const view = this.#document.defaultView;
+    if (!view) return;
+    view.scrollTo({ top: 0, behavior: docsScrollBehavior(view) });
+    // why: focus follows the reader back to the top instead of staying in the table of contents.
+    this.#document.getElementById('docs-content')?.focus({ preventScroll: true });
   }
 
   updateActiveSection(): void {

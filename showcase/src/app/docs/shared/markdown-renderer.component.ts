@@ -208,7 +208,7 @@ export function highlightCode(code: string, language: string): string {
                   {{ copyLabel(block.code ?? '') }}
                 </button>
               </div>
-              <div class="docs-code__body" tabindex="0" aria-label="Scrollable code block">
+              <div class="docs-code__body" tabindex="0" role="region" aria-label="Scrollable code block">
                 <pre class="docs-code__lines" aria-hidden="true">{{ lineNumbers(block.code ?? '') }}</pre>
                 <pre class="docs-code__pre"><code [class]="'language-' + (block.language || 'text')" [innerHTML]="block.html"></code></pre>
               </div>
@@ -238,7 +238,7 @@ export function highlightCode(code: string, language: string): string {
             </div>
           }
           @case ('table') {
-            <div class="docs-table-wrap" tabindex="0" aria-label="Scrollable API table">
+            <div class="docs-table-wrap" tabindex="0" role="region" aria-label="Scrollable API table">
               <table>
                 <thead>
                   <tr>

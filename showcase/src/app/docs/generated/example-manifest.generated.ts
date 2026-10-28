@@ -714,7 +714,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "components/badge",
     sectionId: "example-fontset-switch",
     title: "fontSet switch",
-    description: "Chon fontSet bang radio de so sanh alignment cua cung mot bo badge icon.",
+    description: "Chọn fontSet bằng radio để so sánh alignment của cùng một bộ badge icon.",
   },
   {
     sourceKey: "components/badge/example-mau-sac-round",

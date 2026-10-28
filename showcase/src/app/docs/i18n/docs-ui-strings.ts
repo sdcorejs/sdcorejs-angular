@@ -105,8 +105,7 @@ export interface DocsUiStrings {
   readonly migration: string;
   readonly before: string;
   readonly after: string;
-  readonly olderText: string;
-  readonly openNotes: string;
+  readonly changeTypeFilter: string;
   readonly changeTypes: Readonly<Record<'added' | 'changed' | 'breaking' | 'fixed' | 'tooling' | 'other', string>>;
   readonly releasedOn: string;
   readonly homeLead: string;

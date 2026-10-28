@@ -120,8 +120,7 @@ export const EN_UI_STRINGS: DocsUiStrings = {
   migration: 'Migration',
   before: 'Before',
   after: 'After',
-  olderText: 'Notes for this release are published with each package version.',
-  openNotes: 'Release notes',
+  changeTypeFilter: 'Change types',
   changeTypes: {
     added: 'Added',
     changed: 'Changed',

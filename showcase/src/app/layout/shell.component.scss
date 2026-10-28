@@ -443,6 +443,11 @@
     margin: 0;
     padding: 0 0 6px 4px;
     list-style: none;
+
+    // why: display: grid would otherwise override [hidden] and leave the padding of a collapsed group.
+    &[hidden] {
+      display: none;
+    }
   }
 
   li a {
@@ -507,6 +512,13 @@
   display: none;
 }
 
+// why: pages without the catalog have no sidebar to carry Docs, Changelog and About between 980px and 1180px.
+@media (min-width: 980px) {
+  .topbar--no-sidebar .topnav {
+    display: flex;
+  }
+}
+
 @media (min-width: 1180px) {
   .topnav {
     display: flex;
@@ -525,11 +537,6 @@
 
   .mobile-menu {
     display: inline-grid;
-  }
-
-  // why: pages without the catalog drop the menu button instead of leaving a gap.
-  .mobile-menu--hidden {
-    display: none;
   }
 
   .sidebar {
@@ -580,6 +587,10 @@
 
   .topbar {
     padding: 0 12px;
+  }
+
+  .topbar__search {
+    margin-left: 0;
   }
 
   .brand__name,

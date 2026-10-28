@@ -41,6 +41,20 @@
   }
 }
 
+// why: short fragments (changelog entries, release summary, "What changed") take the size of their row and sit flush in it.
+:host(.change-entry__text),
+:host(.release-summary),
+:host(.release-changes__entry) {
+  .docs-markdown {
+    font-size: inherit;
+    line-height: inherit;
+
+    > :last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
 .docs-callout {
   display: grid;
   grid-template-columns: 20px minmax(0, 1fr);

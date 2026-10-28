@@ -202,7 +202,6 @@
 .change-count {
   font-family: var(--docs-font-mono);
   font-size: 11px;
-  opacity: 0.7;
 }
 
 .change-filters {
@@ -278,7 +277,6 @@
       color: var(--docs-fg-3);
       font-size: 12px;
       font-weight: 400;
-      opacity: 1;
     }
   }
 }
@@ -300,6 +298,7 @@
 
 .change-tag {
   display: inline-block;
+  max-width: 100%;
   border: 1px solid var(--docs-line-2);
   border-radius: var(--docs-radius-pill);
   background: var(--docs-bg);
@@ -307,7 +306,8 @@
   color: var(--docs-fg-2);
   font-size: 12.5px;
   font-weight: 500;
-  white-space: nowrap;
+  // why: a combined lead ("Inform, Stepper, Upload file") wraps inside the 128px column instead of covering the text.
+  overflow-wrap: anywhere;
 
   &--link {
     color: var(--docs-acc);

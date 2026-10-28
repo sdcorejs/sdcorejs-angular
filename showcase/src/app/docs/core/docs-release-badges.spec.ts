@@ -92,6 +92,17 @@ describe('release badges', () => {
     expect(changelogEntriesForPage(current, pages[1], pages)).toEqual(['Outline: neutral border.']);
   });
 
+  it('marks every page of a combined heading or lead', () => {
+    const current = release([
+      section('Changed', ['File Explorer, Kanban: shared toolbar'], [section('Select, Button', ['Focus ring.'], [], 4)]),
+    ]);
+
+    const badges = deriveReleaseBadges(current, pages);
+
+    expect(['file-explorer', 'kanban', 'select', 'button'].map(id => badges.get(id))).toEqual(['updated', 'updated', 'updated', 'updated']);
+    expect(changelogEntriesForPage(current, pages[1], pages)).toEqual(['Focus ring.']);
+  });
+
   it('returns no badges without a release', () => {
     expect(deriveReleaseBadges(null, pages).size).toBe(0);
   });

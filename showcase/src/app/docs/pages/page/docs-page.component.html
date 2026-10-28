@@ -106,7 +106,7 @@
                       {{ clipboard.isCopied('page-install') ? t.copied : t.copy }}
                     </button>
                   </div>
-                  <div class="quick-start__code" tabindex="0" aria-label="Quick start code">
+                  <div class="quick-start__code" tabindex="0" role="region" [attr.aria-label]="t.quickStart">
                     <pre class="quick-start__lines" aria-hidden="true">{{ start.lines }}</pre>
                     <pre class="quick-start__pre"><code [innerHTML]="start.html"></code></pre>
                   </div>
@@ -162,7 +162,7 @@
                     @if (untranslated()) {
                       <p class="untranslated"><mat-icon aria-hidden="true">translate</mat-icon>{{ t.notTranslated }}</p>
                     }
-                    <docs-api-methods [methods]="apiMethods()" [query]="apiQuery()"></docs-api-methods>
+                    <docs-api-methods [methods]="apiMethods()" [apiQuery]="apiQuery()"></docs-api-methods>
                   }
                 } @else if (showApiSection(item.section.id)) {
                   <section class="doc-section" [id]="item.section.id">

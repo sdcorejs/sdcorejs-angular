@@ -65,12 +65,14 @@
   <div id="docs-search-page-results" role="listbox" [attr.aria-label]="t.searchResults">
     @for (group of groups(); track group.id) {
       <section class="search-group" role="group" [attr.aria-label]="groupLabel(group.id)">
-        <h2>{{ groupLabel(group.id) }}<span>{{ group.count }}</span></h2>
-        <div class="search-group__list">
+        <!-- why: the group label names the group; inside a listbox only options are read, and Tab skips them. -->
+        <h2 aria-hidden="true">{{ groupLabel(group.id) }}<span>{{ group.count }}</span></h2>
+        <div class="search-group__list" role="none">
           @for (view of group.views; track view.hit.id) {
             <a
               class="search-hit"
               role="option"
+              tabindex="-1"
               [id]="'docs-search-hit-' + view.index"
               [attr.aria-selected]="selected() === view.index"
               [class.active]="selected() === view.index"

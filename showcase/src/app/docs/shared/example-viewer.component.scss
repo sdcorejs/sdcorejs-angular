@@ -145,6 +145,10 @@
     background-image: radial-gradient(var(--docs-line) 1px, transparent 1px);
     background-size: 16px 16px;
     padding: 36px 24px;
+    // why: live demos use the library's base typography, as a consumer app does, not the docs' IBM Plex 15px.
+    font-family: Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-size: var(--sd-font-size-14, 14px);
+    line-height: 1.5;
     scrollbar-gutter: stable;
     overscroll-behavior: contain;
   }

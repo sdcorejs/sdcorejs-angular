@@ -53,7 +53,7 @@
           <docs-markdown-renderer class="release-summary" [markdown]="current.summaryMarkdown" language="en"></docs-markdown-renderer>
         }
 
-        <div class="change-filters" role="group" [attr.aria-label]="t.releases">
+        <div class="change-filters" role="group" [attr.aria-label]="t.changeTypeFilter">
           @for (filter of filters(); track filter.type) {
             <button
               type="button"

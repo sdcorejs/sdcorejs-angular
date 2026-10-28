@@ -14,12 +14,12 @@
     <script>
       // Applies the stored or system theme before the first paint; DocsThemeService takes over after boot.
       (function () {
-        var theme = 'light';
+        var stored = null;
         try {
-          var stored = localStorage.getItem('sdcorejs.docs.theme');
-          if (stored === 'light' || stored === 'dark') theme = stored;
-          else if (window.matchMedia('(prefers-color-scheme: dark)').matches) theme = 'dark';
+          stored = localStorage.getItem('sdcorejs.docs.theme');
         } catch (error) {}
+        // A blocked localStorage still follows the system theme, as DocsThemeService does.
+        var theme = stored === 'light' || stored === 'dark' ? stored : window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         document.documentElement.setAttribute('data-sd-theme', theme);
       })();
     </script>

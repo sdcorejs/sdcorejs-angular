@@ -29,15 +29,34 @@ function toTag(lead: string): string | null {
   return foldSearchText(lead.replace(/\s*\(.*\)\s*$/, '')).replace(/[^a-z0-9]+/g, ' ').trim() || null;
 }
 
-/** "Avatar: `sd-avatar-group` …" → "avatar"; entries without a "Name:" lead are not tied to a page. */
-export function changelogEntryTag(text: string): string | null {
+function entryLead(text: string): string | null {
   const match = /^\s*([^:\n]{2,80}?):\s/.exec(text);
-  if (!match || match[1].trimStart().startsWith('`')) return null;
-  return toTag(match[1]);
+  return !match || match[1].trimStart().startsWith('`') ? null : match[1];
 }
 
-function entryTag({ heading, item }: ChangelogSectionItem): string | null {
-  return heading ? toTag(heading) : changelogEntryTag(item.text);
+/** "Avatar: `sd-avatar-group` …" → "avatar"; entries without a "Name:" lead are not tied to a page. */
+export function changelogEntryTag(text: string): string | null {
+  const lead = entryLead(text);
+  return lead ? toTag(lead) : null;
+}
+
+/** Tags of an entry; a combined lead or heading ("Select, Autocomplete") names each of its pages. */
+function entryTags({ heading, item }: ChangelogSectionItem): string[] {
+  const lead = heading ?? entryLead(item.text);
+  return lead ? lead.split(/\s*[,&]\s*/).flatMap(part => toTag(part) ?? []) : [];
+}
+
+function pagesByTag(pages: readonly BadgeTarget[]): ReadonlyMap<string, readonly string[]> {
+  const byTag = new Map<string, string[]>();
+  for (const page of pages) {
+    const tag = foldSearchText(page.title).replace(/[^a-z0-9]+/g, ' ').trim();
+    byTag.set(tag, [...(byTag.get(tag) ?? []), page.id]);
+  }
+  return byTag;
+}
+
+function entryPageIds(entry: ChangelogSectionItem, byTag: ReadonlyMap<string, readonly string[]>): string[] {
+  return entryTags(entry).flatMap(tag => byTag.get(matchPageTag(tag, byTag)) ?? []);
 }
 
 function badgeForSection(section: ShowcaseChangelogSection): DocsReleaseBadge | null {
@@ -57,18 +76,13 @@ export function deriveReleaseBadges(
 ): ReadonlyMap<string, DocsReleaseBadge> {
   const badges = new Map<string, DocsReleaseBadge>();
   if (!release) return badges;
-  const byTag = new Map<string, string[]>();
-  for (const page of pages) {
-    const tag = foldSearchText(page.title).replace(/[^a-z0-9]+/g, ' ').trim();
-    byTag.set(tag, [...(byTag.get(tag) ?? []), page.id]);
-  }
+  const byTag = pagesByTag(pages);
 
   for (const section of release.sections) {
     const badge = badgeForSection(section);
     if (!badge) continue;
     for (const entry of changelogSectionItems(section)) {
-      const tag = entryTag(entry);
-      for (const id of (tag && byTag.get(matchPageTag(tag, byTag))) || []) {
+      for (const id of entryPageIds(entry, byTag)) {
         if (badges.get(id) !== 'new') badges.set(id, badge);
       }
     }
@@ -83,17 +97,12 @@ export function changelogEntriesForPage(
   pages: readonly BadgeTarget[]
 ): readonly string[] {
   if (!release) return [];
-  const byTag = new Map<string, string[]>();
-  for (const candidate of pages) {
-    const tag = foldSearchText(candidate.title).replace(/[^a-z0-9]+/g, ' ').trim();
-    byTag.set(tag, [...(byTag.get(tag) ?? []), candidate.id]);
-  }
+  const byTag = pagesByTag(pages);
   const entries: string[] = [];
   for (const section of release.sections) {
     if (!badgeForSection(section)) continue;
     for (const entry of changelogSectionItems(section)) {
-      const tag = entryTag(entry);
-      if (tag && byTag.get(matchPageTag(tag, byTag))?.includes(page.id)) {
+      if (entryPageIds(entry, byTag).includes(page.id)) {
         entries.push(entry.heading ? entry.item.text : entry.item.text.replace(/^\s*[^:\n]{2,80}?:\s+/, ''));
       }
     }
@@ -101,16 +110,9 @@ export function changelogEntriesForPage(
   return entries;
 }
 
-/** Page id for an entry's "#### Name" subsection or "Name:" lead (longest title match), or null. */
+/** Page id for an entry's "#### Name" subsection or "Name:" lead (longest title match; the first of a combined one), or null. */
 export function pageIdForEntry(entry: ChangelogSectionItem, pages: readonly BadgeTarget[]): string | null {
-  const tag = entryTag(entry);
-  if (!tag) return null;
-  const byTag = new Map<string, string[]>();
-  for (const page of pages) {
-    const key = foldSearchText(page.title).replace(/[^a-z0-9]+/g, ' ').trim();
-    byTag.set(key, [...(byTag.get(key) ?? []), page.id]);
-  }
-  return byTag.get(matchPageTag(tag, byTag))?.[0] ?? null;
+  return entryPageIds(entry, pagesByTag(pages))[0] ?? null;
 }
 
 /** Longest page title that starts the tag on a word boundary: "button outline" → "button", "tab router" → "tab router". */

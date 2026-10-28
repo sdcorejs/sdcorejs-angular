@@ -6,7 +6,9 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 20px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
 
   button {
     position: relative;

@@ -119,13 +119,22 @@ describe('ShellComponent', () => {
     expect(fixture.componentInstance.navQuery()).toBe('');
   });
 
-  it('hides the catalog and its menu button on pages without a sidebar', async () => {
+  it('drops the catalog on pages without a sidebar but keeps a drawer with the primary links below 980px', async () => {
     await TestBed.inject(Router).navigateByUrl('/v/21.1.2/changelog');
+    fixture.componentInstance.isMobile.set(false);
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('.sidebar')).toBeNull();
-    expect(fixture.nativeElement.querySelector('.mobile-menu')?.classList).toContain('mobile-menu--hidden');
+    expect(fixture.nativeElement.querySelector('.topbar')?.classList).toContain('topbar--no-sidebar');
     expect(fixture.nativeElement.querySelector('.shell__body')?.classList).toContain('shell__body--no-sidebar');
+
+    fixture.componentInstance.isMobile.set(true);
+    fixture.detectChanges();
+
+    const drawer = fixture.nativeElement.querySelector('.sidebar') as HTMLElement;
+    expect(drawer.querySelector('.sidebar__nav')).toBeNull();
+    expect(drawer.querySelector('.sidebar__filter')).toBeNull();
+    expect(drawer.querySelectorAll('.sidebar__primary a').length).toBe(3);
   });
 
   afterEach(() => {
@@ -194,7 +203,13 @@ describe('ShellComponent', () => {
     const tab = new KeyboardEvent('keydown', { key: 'Tab', cancelable: true });
     fixture.componentInstance.onDocumentKeydown(tab);
     expect(tab.defaultPrevented).toBeTrue();
-    expect(document.activeElement).toBe(focusable[0]);
+    // why: the header button that closes the drawer is part of the Tab cycle.
+    expect(document.activeElement).toBe(trigger);
+
+    const shiftTab = new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, cancelable: true });
+    fixture.componentInstance.onDocumentKeydown(shiftTab);
+    expect(shiftTab.defaultPrevented).toBeTrue();
+    expect(document.activeElement).toBe(focusable.at(-1) ?? null);
 
     const escape = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true });
     fixture.componentInstance.onDocumentKeydown(escape);

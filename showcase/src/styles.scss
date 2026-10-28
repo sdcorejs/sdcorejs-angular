@@ -12,7 +12,7 @@
   --docs-line-2: #d0d5dd;
   --docs-fg: #13161b;
   --docs-fg-2: #434a56;
-  --docs-fg-3: #687180;
+  --docs-fg-3: #5f6876;
   --docs-acc: var(--sd-primary, #005cbb);
   --docs-acc-soft: #e9f1fb;
   --docs-acc-on: #ffffff;
@@ -30,7 +30,7 @@
   --docs-syn-attr: #8250df;
   --docs-syn-str: #0a7a4b;
   --docs-syn-kw: #cf222e;
-  --docs-syn-com: #6e7781;
+  --docs-syn-com: #636c76;
   --docs-syn-type: #953800;
   --docs-syn-num: #0550ae;
   --docs-syn-dec: #8250df;
@@ -180,6 +180,12 @@ h3 {
   outline-offset: 2px;
 }
 
+// why: these controls sit inside overflow containers that would clip a ring drawn outside them.
+:is(.docs-tabs, .example, .docs-code, .quick-start__box, .search-group__list, .not-found__list, .method, .release-rail) :focus-visible,
+[role='region'][tabindex='0']:focus-visible {
+  outline-offset: -2px;
+}
+
 // Programmatically focused route landmarks keep a visible location cue without boxing large content areas.
 .content:focus-visible {
   outline: 0;
@@ -231,16 +237,21 @@ h3 {
   padding: 1px 5px;
   color: var(--docs-fg);
   font-size: 0.88em;
+  // why: a long route or token name breaks instead of widening the page on phones.
+  overflow-wrap: anywhere;
 }
 
+// why: links inside prose need more than colour to stand out from the text around them (WCAG 1.4.1).
 .api-row__description a,
 .docs-markdown a {
   color: var(--docs-acc);
-}
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
 
-// Short Markdown fragments (changelog entries, "What changed") sit flush in their row.
-:is(.change-entry__text, .release-changes__entry, .release-summary) .docs-markdown > :last-child {
-  margin-bottom: 0;
+  &:hover {
+    text-decoration-thickness: 2px;
+  }
 }
 
 // Prism tokens of highlighted code in the docs (Markdown code blocks and example sources).

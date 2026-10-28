@@ -188,11 +188,16 @@ export class ShellComponent {
     }
     if (event.key !== 'Tab') return;
     const sidebar = this.sidebar()?.nativeElement;
-    const focusable = [...(sidebar?.querySelectorAll<HTMLElement>('input, a[href], button:not([disabled])') ?? [])];
+    const menu = this.mobileMenu()?.nativeElement;
+    // why: the header button that closes the drawer stays in the Tab cycle with the drawer's own controls.
+    const focusable = [
+      ...(menu ? [menu] : []),
+      ...(sidebar?.querySelectorAll<HTMLElement>('input, a[href], button:not([disabled])') ?? []),
+    ];
     if (!focusable.length) return;
     const first = focusable[0];
     const last = focusable.at(-1);
-    if (!sidebar?.contains(document.activeElement)) {
+    if (!focusable.includes(document.activeElement as HTMLElement)) {
       event.preventDefault();
       (event.shiftKey ? last : first)?.focus();
     } else if (event.shiftKey && document.activeElement === first) {

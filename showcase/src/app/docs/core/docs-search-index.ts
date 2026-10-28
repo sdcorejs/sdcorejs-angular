@@ -115,17 +115,25 @@ export function documentSearchEntries(page: DocPageDefinition, view: PublishedDo
     }
   }
   if (page.category === 'guides') {
-    for (const section of view.overview.concat(view.api, view.styling).filter(item => item.level === 2)) {
-      entries.push({
-        id: `section:${page.id}:${section.id}`,
-        group: 'guides',
-        title: section.heading.replace(/`/g, ''),
-        path: page.title,
-        snippet: '',
-        icon: 'menu_book',
-        commands: ['/v', version, page.category, page.slug, 'overview'],
-        fragment: section.id,
-      });
+    // why: a guide's h2 sections are split across tabs, so each hit opens the tab that holds its section.
+    const tabs = [
+      ['overview', view.overview],
+      ['api', view.api],
+      ['styling', view.styling],
+    ] as const;
+    for (const [tab, sections] of tabs) {
+      for (const section of sections.filter(item => item.level === 2)) {
+        entries.push({
+          id: `section:${page.id}:${section.id}`,
+          group: 'guides',
+          title: section.heading.replace(/`/g, ''),
+          path: page.title,
+          snippet: '',
+          icon: 'menu_book',
+          commands: ['/v', version, page.category, page.slug, tab],
+          fragment: section.id,
+        });
+      }
     }
   }
   return entries;

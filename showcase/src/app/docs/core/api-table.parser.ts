@@ -21,7 +21,7 @@ export interface ApiRow {
 }
 
 const NAME_HEADERS = /^(name|input|inputs|output|outputs|member|field|param|parameter|method|slot|token|custom property|attribute|symbol|key|property|option)$/;
-const TYPE_HEADERS = /^(type|type \/ default|signature|payload|kind)$/;
+const TYPE_HEADERS = /^(type|type \/ default|signature|payload|kind|returns?|trả về|values|accepted values)$/;
 const DEFAULT_HEADERS = /^default/;
 const DESCRIPTION_HEADERS = /^(notes?|description|purpose|behavior|behaviour|meaning|effect|use for|where it renders)$/;
 const EMPTY_VALUE = /^(?:—|–|-|n\/a)?$/i;
@@ -103,8 +103,12 @@ export function parseApiTable(
   const plain = headers.map(plainHeader);
   const typeIndex = plain.findIndex(header => TYPE_HEADERS.test(header));
   const defaultIndex = plain.findIndex(header => DEFAULT_HEADERS.test(header));
+  const used = new Set([0, typeIndex, defaultIndex]);
   let descriptionIndex = plain.findIndex(header => DESCRIPTION_HEADERS.test(header));
-  if (descriptionIndex < 0) descriptionIndex = plain.length > 2 ? plain.length - 1 : -1;
+  if (descriptionIndex < 0) descriptionIndex = plain.length > 2 && !used.has(plain.length - 1) ? plain.length - 1 : -1;
+  used.add(descriptionIndex);
+  // why: a column the row pattern has no slot for (Required, Applies to…) is kept in the description, not dropped.
+  const extraIndexes = plain.flatMap((_, index) => (used.has(index) ? [] : [index]));
 
   return rows
     .filter(row => stripCode(row[0] ?? ''))
@@ -113,7 +117,11 @@ export function parseApiTable(
       const typeCell = typeIndex > 0 ? (row[typeIndex] ?? '') : '';
       const types = typeIndex > 0 ? typeChips(typeCell) : [];
       const defaultCell = defaultIndex > 0 ? stripCode(row[defaultIndex] ?? '') : '';
-      const description = descriptionIndex > 0 ? (row[descriptionIndex] ?? '').trim() : '';
+      const extras = extraIndexes.flatMap(index => {
+        const value = (row[index] ?? '').trim();
+        return EMPTY_VALUE.test(stripCode(value)) ? [] : [`**${headers[index].replace(/[`*]/g, '').trim()}:** ${value}`];
+      });
+      const description = [descriptionIndex > 0 ? (row[descriptionIndex] ?? '').trim() : '', ...extras].filter(Boolean).join(' · ');
       const usesBooleanAttribute =
         description.includes('booleanAttribute') ||
         typeCell.includes('booleanAttribute') ||

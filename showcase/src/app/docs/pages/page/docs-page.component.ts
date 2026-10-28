@@ -1,12 +1,22 @@
 import { DOCUMENT } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  ElementRef,
+  inject,
+  Injector,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router, RouterLink, Scroll } from '@angular/router';
 import { filter } from 'rxjs';
 import { ApiMethod, ApiRow, apiRowsOfMarkdown, matchesApiQuery, parseApiMethod } from '../../core/api-table.parser';
 import { DocsI18nService } from '../../core/docs-i18n.service';
-import { foldSearchText } from '../../core/docs-search.utils';
 import { DocsReleaseNotesService } from '../../core/docs-release-notes.service';
 import { DocsVersionService } from '../../core/docs-version.service';
 import { buildVersionRoute } from '../../core/docs-version.utils';
@@ -17,13 +27,13 @@ import { PublishedDocsService } from '../../core/published-docs.service';
 import { ExampleViewerComponent } from '../../shared/example-viewer.component';
 import { MarkdownRendererComponent } from '../../shared/markdown-renderer.component';
 import { DocsClipboardService } from '../../core/docs-clipboard.service';
-import { DocsApiMethodsComponent } from '../../shared/docs-api-methods.component';
+import { DocsApiMethodsComponent, apiMethodMatchCount } from '../../shared/docs-api-methods.component';
 import { metadataCode } from '../../shared/docs-page-header.component';
 import { highlightCode } from '../../shared/markdown-renderer.component';
 import { DocsNotFoundComponent } from '../not-found/docs-not-found.component';
 import { DocsPageHeaderComponent } from '../../shared/docs-page-header.component';
 import { DocsPageTabLink, DocsPageTabsComponent } from '../../shared/docs-page-tabs.component';
-import { DocsTableOfContentsComponent, DocsTocItem } from '../../shared/docs-table-of-contents.component';
+import { DOCS_TOC_OFFSET_PX, DocsTableOfContentsComponent, DocsTocItem } from '../../shared/docs-table-of-contents.component';
 import { resolveDocsPageAvailability } from '../../shared/docs-page-availability';
 
 const LIBRARY_SOURCE_ROOT = 'https://github.com/sdcorejs/sdcorejs-angular/blob/main/versions/v19/projects/sdcorejs-angular/';
@@ -112,6 +122,7 @@ export class DocsPageComponent {
   readonly #route = inject(ActivatedRoute);
   readonly #router = inject(Router);
   readonly #document = inject(DOCUMENT);
+  readonly #injector = inject(Injector);
   readonly #publishedDocs = inject(PublishedDocsService);
   readonly #releaseNotes = inject(DocsReleaseNotesService);
   readonly params = toSignal(this.#route.paramMap, { initialValue: this.#route.snapshot.paramMap });
@@ -184,17 +195,8 @@ export class DocsPageComponent {
     return new Map(this.apiSections().map(item => [item.section.id, item.rows.filter(row => matchesApiQuery(row, query)).length]));
   });
   readonly apiMatchCount = computed(() => {
-    const term = foldSearchText(this.apiQuery().trim());
     const rows = [...this.apiMatches().values()].reduce((total, count) => total + count, 0);
-    const options = this.apiMethods().reduce(
-      (total, method) =>
-        total +
-        method.options.filter(
-          option => !term || foldSearchText([option.name, ...option.types.map(type => type.text), option.description].join(' ')).includes(term)
-        ).length,
-      0
-    );
-    return rows + options;
+    return rows + apiMethodMatchCount(this.apiMethods(), this.apiQuery());
   });
   readonly editUrl = computed(() => {
     const path = this.viewModel()?.document.path;
@@ -274,10 +276,8 @@ export class DocsPageComponent {
     const path = this.page()?.sourcePath;
     return path ? `https://github.com/sdcorejs/sdcorejs-angular/blob/main/${path}` : null;
   });
-  readonly isHistoricalVersion = computed(() => {
-    const latest = this.versions.latestVersion();
-    return !!latest && !!this.version() && latest !== this.version();
-  });
+  // why: every Angular line of the latest release is current; only an older release is archived.
+  readonly isHistoricalVersion = computed(() => !!this.version() && !this.versions.isLatestRelease());
   readonly liveExamplesNotice = computed(
     () => `Archived documentation v${this.version()} is shown here. Live examples and demo source use the current showcase.`
   );
@@ -393,7 +393,7 @@ export class DocsPageComponent {
       if (!availableTabs.includes(tab)) {
         const fallback = availableTabs[0];
         if (fallback) {
-          await this.#router.navigate(['/v', version, page.category, page.slug, fallback], { replaceUrl: true });
+          await this.#router.navigate(['/v', version, page.category, page.slug, fallback], { replaceUrl: true, preserveFragment: true });
         } else {
           this.notAvailable.set(true);
         }
@@ -409,8 +409,28 @@ export class DocsPageComponent {
       if (sequence !== this.#loadSequence) return;
       this.error.set(error instanceof Error ? error.message : 'Unable to load published documentation.');
     } finally {
-      if (sequence === this.#loadSequence) this.loading.set(false);
+      if (sequence === this.#loadSequence) {
+        this.loading.set(false);
+        this.#revealFragment();
+      }
     }
+  }
+
+  /** A cold deep link (#api-…) arrives before the published document; scroll to its target once the content renders. */
+  #revealFragment(): void {
+    const fragment = this.#router.parseUrl(this.#router.url).fragment;
+    if (!fragment || !this.viewModel()) return;
+    afterNextRender(
+      () => {
+        const view = this.#document.defaultView;
+        const target = this.#document.getElementById(fragment);
+        if (!view || !target) return;
+        view.scrollTo({ top: target.getBoundingClientRect().top + view.scrollY - DOCS_TOC_OFFSET_PX });
+        if (!target.hasAttribute('tabindex')) target.tabIndex = -1;
+        target.focus({ preventScroll: true });
+      },
+      { injector: this.#injector }
+    );
   }
 
   #availableTabs(page: DocPageDefinition, view: PublishedDocTabsViewModel | null): readonly DocTabId[] {

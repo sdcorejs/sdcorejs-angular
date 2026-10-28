@@ -120,8 +120,7 @@ export const VI_UI_STRINGS: DocsUiStrings = {
   migration: 'Hướng dẫn nâng cấp',
   before: 'Trước',
   after: 'Sau',
-  olderText: 'Ghi chú của bản này được phát hành kèm từng phiên bản gói.',
-  openNotes: 'Ghi chú phát hành',
+  changeTypeFilter: 'Loại thay đổi',
   changeTypes: {
     added: 'Bổ sung',
     changed: 'Thay đổi',

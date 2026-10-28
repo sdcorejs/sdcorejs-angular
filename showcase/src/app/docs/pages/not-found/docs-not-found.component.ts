@@ -8,6 +8,7 @@ import { DocsVersionService } from '../../core/docs-version.service';
 import { DOC_NAV_GROUPS, DOC_PAGES } from '../../core/documentation.registry';
 
 const ICONS = new Map(DOC_NAV_GROUPS.map(group => [group.category, group.icon]));
+const DOC_TABS: ReadonlySet<string> = new Set(['overview', 'styling', 'api', 'examples']);
 
 /** 404: the missing path, closest matches from its slug tokens, a prefilled search and recovery links. */
 @Component({
@@ -62,7 +63,12 @@ export class DocsNotFoundComponent {
     const path = this.path() ?? this.queryParams()?.get('path');
     return path ? `/${path.replace(/^\/+/, '')}` : this.#router.url.split(/[?#]/, 1)[0];
   });
-  readonly slug = computed(() => this.missingPath().split('/').filter(Boolean).at(-1) ?? '');
+  /** Last path segment the reader typed; a trailing docs tab (".../buton/overview") is not the page they looked for. */
+  readonly slug = computed(() => {
+    const segments = this.missingPath().split('/').filter(Boolean);
+    if (segments.length > 1 && DOC_TABS.has(segments.at(-1) ?? '')) segments.pop();
+    return segments.at(-1) ?? '';
+  });
   readonly searchTerm = computed(() => {
     const tokens = this.slug().split(/[^A-Za-z0-9]+/).filter(token => token.length >= 4);
     return tokens.at(-1) ?? this.slug();

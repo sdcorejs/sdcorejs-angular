@@ -38,6 +38,8 @@ export class DocsClipboardService {
       }
     }
     const t = this.#i18n.t();
+    // why: a second copy that started before this one finished must not leave its timer running.
+    this.#reset();
     this.#copiedKey.set(copied ? key : null);
     this.#announcement.set(copied ? t.copiedAnnouncement : t.copyFailed);
     this.#resetTimeout = view?.setTimeout(() => this.#reset(), COPY_FEEDBACK_MS);

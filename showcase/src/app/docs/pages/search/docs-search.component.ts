@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -61,8 +61,9 @@ export class DocsSearchComponent {
     const type = this.activeType();
     const query = this.query();
     let index = 0;
-    return this.allGroups()
-      .filter(group => type === 'all' || group.id === type)
+    // why: "All" shows the top hits of each group; a type chip lists every hit of that group.
+    const source = type === 'all' ? this.allGroups() : groupSearchHits(this.hits(), Number.POSITIVE_INFINITY).filter(group => group.id === type);
+    return source
       .map(group => ({
         ...group,
         views: group.hits.map(
@@ -82,7 +83,9 @@ export class DocsSearchComponent {
     effect(() => this.#index.ensure(this.version()));
     effect(() => {
       const q = this.queryParams().get('q') ?? '';
-      if (q !== this.query()) this.query.set(q);
+      if (q === untracked(this.query)) return;
+      this.query.set(q);
+      this.selected.set(0);
     });
   }
 

@@ -175,7 +175,9 @@ describe('ExampleViewerComponent', () => {
   });
 
   it('selects generated source tabs and copies the displayed source', async () => {
-    const sourceToggle = fixture.nativeElement.querySelector('[aria-label="Expand source"]') as HTMLButtonElement;
+    const sourceToggle = fixture.nativeElement.querySelector('.example__code-toggle') as HTMLButtonElement;
+    // why: the visible "Code" text names the button (label in name), aria-expanded carries the state.
+    expect(sourceToggle.hasAttribute('aria-label')).toBeFalse();
     const sourceId = sourceToggle.getAttribute('aria-controls');
     const sourceRegion = fixture.nativeElement.querySelector(`#${sourceId}`) as HTMLElement;
     expect(sourceToggle.getAttribute('aria-expanded')).toBe('false');
@@ -188,7 +190,6 @@ describe('ExampleViewerComponent', () => {
       button.getAttribute('aria-label')
     );
 
-    expect(labels).toContain('Collapse source');
     expect(labels).toContain('Copy source code');
     expect(fixture.nativeElement.querySelector('[role="group"]')).not.toBeNull();
     expect(sourceToggle.getAttribute('aria-expanded')).toBe('true');
