@@ -42,13 +42,14 @@
               <div class="historical-notice" role="note">{{ liveExamplesNotice() }}</div>
             }
             <section class="live-examples" aria-labelledby="live-examples-title">
-              <h2 id="live-examples-title" class="examples-summary">
+              <!-- why: the tab pill already shows the count; the heading stays for screen readers. -->
+              <h2 id="live-examples-title" class="examples-summary docs-visually-hidden">
                 <strong>{{ currentPage.demoSectionCount }}</strong>
                 <span>interactive examples</span>
               </h2>
               <div class="examples-list">
-                @for (example of currentPage.examples; track example.id) {
-                  <docs-example-viewer [example]="example"></docs-example-viewer>
+                @for (example of currentPage.examples; track example.id; let first = $first) {
+                  <docs-example-viewer [example]="example" [codeOpen]="first"></docs-example-viewer>
                 }
               </div>
             </section>

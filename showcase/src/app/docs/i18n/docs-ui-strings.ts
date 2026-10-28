@@ -74,6 +74,9 @@ export interface DocsUiStrings {
   readonly showShared: string;
   readonly hideShared: string;
   readonly methods: string;
+  readonly copyLink: string;
+  readonly showCode: string;
+  readonly hideCode: string;
 }
 
 export type DocsLanguage = 'en' | 'vi';

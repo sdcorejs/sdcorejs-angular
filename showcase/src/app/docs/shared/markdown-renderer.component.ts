@@ -105,7 +105,7 @@ function renderInlineMarkdown(
     .replace(/\[([^\]]+)]\((https?:\/\/[^\s)]+|mailto:[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>');
 }
 
-function highlightCode(code: string, language: string): string {
+export function highlightCode(code: string, language: string): string {
   const languageAliases: Readonly<Record<string, string>> = {
     html: 'markup',
     scss: 'css',

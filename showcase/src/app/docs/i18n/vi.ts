@@ -89,4 +89,7 @@ export const VI_UI_STRINGS: DocsUiStrings = {
   showShared: 'Hiện {n} tùy chọn dùng chung',
   hideShared: 'Ẩn tùy chọn dùng chung',
   methods: 'Phương thức',
+  copyLink: 'Chép liên kết',
+  showCode: 'Code',
+  hideCode: 'Ẩn code',
 };

@@ -89,4 +89,7 @@ export const EN_UI_STRINGS: DocsUiStrings = {
   showShared: 'Show {n} shared options',
   hideShared: 'Hide shared options',
   methods: 'Methods',
+  copyLink: 'Copy link',
+  showCode: 'Code',
+  hideCode: 'Hide code',
 };

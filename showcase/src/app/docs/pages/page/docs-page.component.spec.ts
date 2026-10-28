@@ -18,6 +18,7 @@ import { DocsPageComponent } from './docs-page.component';
 })
 class ExampleViewerStubComponent {
   readonly example = input.required<DocExample>();
+  readonly codeOpen = input(false);
 }
 
 interface SetupOptions {
