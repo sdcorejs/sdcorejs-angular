@@ -13595,8 +13595,8 @@ const TASKS: Task[] = [
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-loading-empty-error') {
       <demo-section heading="Loading / empty / error"
         data-example-typescript="./examples/table-states.example.ts" data-example-template="./examples/table-states.example.html" data-example-style="./examples/table-pattern-example.scss"
-        [props]="[{ name: 'sdDataStateTemplate', value: 'template' }, { name: 'filter.quickSearch', value: 'containFields' }, { name: 'retry', value: 'keeps query' }]"
-        note="Dùng luồng tải của SdTable: loading khi chờ request, empty/no-results từ kết quả trả về, lỗi có retry giữ query. Tùy chỉnh nội dung bằng sdDataStateTemplate và SdDataState.">
+        [props]="[{ name: 'loading', value: 'showDelay / minDuration' }, { name: 'sdDataStateTemplate', value: 'template' }, { name: 'filter.quickSearch', value: 'containFields' }, { name: 'retry', value: 'keeps query' }]"
+        note="Dùng luồng tải của SdTable: khung xương khi chưa có dòng, thanh tiến trình và dòng mờ khi tải lại quá 300ms, empty/no-results từ kết quả trả về, lỗi có retry giữ query. Tùy chỉnh nội dung bằng sdDataStateTemplate và SdDataState.">
         <app-table-states-example />
       </demo-section>
       }
@@ -14677,6 +14677,11 @@ export class TableCustomCellsExampleComponent {
   gap: 8px;
 }
 
+// Fake-delay switch of the "Loading / empty / error" example: label and buttons on one line.
+.table-delays {
+  align-items: center;
+}
+
 .table-note {
   margin: 0;
   color: var(--sd-text-secondary, #5f6368);
@@ -14845,6 +14850,11 @@ export class TableInlineOperatorExampleComponent {
   gap: 8px;
 }
 
+// Fake-delay switch of the "Loading / empty / error" example: label and buttons on one line.
+.table-delays {
+  align-items: center;
+}
+
 .table-note {
   margin: 0;
   color: var(--sd-text-secondary, #5f6368);
@@ -14934,40 +14944,50 @@ const normalize = (value: string): string =>
 export class TableStatesExampleComponent {
   readonly table = viewChild.required(SdTable<Order>);
   readonly scenario = signal<Scenario>('ready');
-  // Only the first read after choosing "error" fails, so Retry succeeds and keeps the query.
-  #failNextRead = false;
+  /** Fake API delay. 150 ms stays under \`loading.showDelay\` (nothing shows); 600 ms shows the bar and its hold. */
+  readonly delays = [0, 150, 600, 3000] as const;
+  readonly delay = signal<number>(600);
+  // Only the next read fails, so Retry succeeds and keeps the query.
+  readonly failNext = signal(false);
 
   readonly option: SdTableOption<Order> = {
     type: 'server',
     rowKey: 'id',
-    items: async ({ quickSearch, pageNumber, pageSize }) => {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      if (this.#failNextRead) {
-        this.#failNextRead = false;
+    items: async ({ quickSearch, pageNumber, pageSize, orderBy, orderDirection }) => {
+      await new Promise(resolve => setTimeout(resolve, this.delay()));
+      if (this.failNext()) {
+        this.failNext.set(false);
         throw new Error('Không thể tải đơn hàng mẫu.');
       }
       const term = normalize(quickSearch?.term ?? '');
       const rows = this.scenario() === 'empty' ? [] : ORDERS.filter(row => normalize(\`\${row.code} \${row.name}\`).includes(term));
+      if (orderBy === 'code' || orderBy === 'amount') {
+        const direction = orderDirection === 'DESC' ? -1 : 1;
+        rows.sort((a, b) => direction * (orderBy === 'amount' ? a.amount - b.amount : a.code.localeCompare(b.code)));
+      }
       return { items: rows.slice(pageNumber * pageSize, (pageNumber + 1) * pageSize), total: rows.length };
     },
     selector: { visible: false },
+    sort: { enable: true },
     paginate: { pageSize: 6, pages: [6, 12] },
+    // The defaults, written out: the bar shows after 300 ms with rows on screen and stays at least 400 ms.
+    loading: { showDelay: 300, minDuration: 400 },
     filter: {
       cacheable: false,
       hideInlineFilter: true,
       quickSearch: { containFields: ['code', 'name'], placeholder: 'Tìm mã hoặc tên khách hàng' },
     },
     columns: [
-      { field: 'code', title: 'Mã đơn', type: 'string', width: '120px' },
+      { field: 'code', title: 'Mã đơn', type: 'string', width: '120px', sortable: true },
       { field: 'name', title: 'Khách hàng', type: 'string', width: '180px' },
       { field: 'region', title: 'Khu vực', type: 'string', width: '120px' },
-      { field: 'amount', title: 'Giá trị (VND)', type: 'number', align: 'right', width: '150px' },
+      { field: 'amount', title: 'Giá trị (VND)', type: 'number', align: 'right', width: '150px', sortable: true },
     ],
   };
 
   show(scenario: Scenario): void {
     this.scenario.set(scenario);
-    this.#failNextRead = scenario === 'error';
+    this.failNext.set(scenario === 'error');
     void this.table().reload(true);
   }
 
@@ -15003,6 +15023,11 @@ export class TableStatesExampleComponent {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+// Fake-delay switch of the "Loading / empty / error" example: label and buttons on one line.
+.table-delays {
+  align-items: center;
 }
 
 .table-note {
@@ -15176,6 +15201,11 @@ export class TableInlineErrorsExampleComponent {
   gap: 8px;
 }
 
+// Fake-delay switch of the "Loading / empty / error" example: label and buttons on one line.
+.table-delays {
+  align-items: center;
+}
+
 .table-note {
   margin: 0;
   color: var(--sd-text-secondary, #5f6368);
@@ -15337,6 +15367,11 @@ export class TableInlineEditExampleComponent {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+// Fake-delay switch of the "Loading / empty / error" example: label and buttons on one line.
+.table-delays {
+  align-items: center;
 }
 
 .table-note {
@@ -15659,6 +15694,11 @@ export class TableStandardExampleComponent {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+// Fake-delay switch of the "Loading / empty / error" example: label and buttons on one line.
+.table-delays {
+  align-items: center;
 }
 
 .table-note {
@@ -29672,9 +29712,16 @@ Bởi Nguyễn Văn A"></sd-badge>
   <sd-button title="Chưa có dữ liệu" [type]="scenario() === 'empty' ? 'fill' : 'outline'" (click)="show('empty')" />
   <sd-button title="Lỗi rồi thử lại" [type]="scenario() === 'error' ? 'fill' : 'outline'" (click)="show('error')" />
 </div>
+<div class="table-actions table-delays" role="group" aria-labelledby="table-states-delay-label">
+  <span id="table-states-delay-label" class="table-note">Độ trễ giả</span>
+  @for (ms of delays; track ms) {
+    <sd-button [title]="ms + ' ms'" [type]="delay() === ms ? 'fill' : 'outline'" (click)="delay.set(ms)" />
+  }
+  <sd-button title="Lần tới lỗi" prefixIcon="error_outline" [type]="failNext() ? 'fill' : 'outline'" (click)="failNext.set(!failNext())" />
+</div>
 <p class="table-note">
-  Mỗi lượt tải mất 1,5 giây. Chọn “Tải dữ liệu”, tìm “khong-ton-tai” để xem trạng thái không khớp bộ lọc; xóa từ khóa để khôi phục danh
-  sách.
+  150 ms nhanh hơn showDelay nên không hiện gì; 600 ms hiện thanh tiến trình và giữ thêm sau khi dữ liệu về; 3000 ms để sort, đổi trang hoặc
+  tìm kiếm trong lúc đang tải. “Lần tới lỗi” làm lượt tải kế tiếp lỗi. Tìm “khong-ton-tai” để xem trạng thái không khớp bộ lọc.
 </p>
 <sd-table autoId="pattern-states" [option]="option">
   <ng-template sdDataStateTemplate let-current let-retry="retry">

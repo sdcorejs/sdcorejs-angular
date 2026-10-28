@@ -29,6 +29,7 @@ The shared helpers live in `@sdcorejs/angular/utilities/data-state`: `sdSerializ
 | `data-autoid` | namespaced ID | all `autoId`-enabled components | input `autoId` |
 | `data-disabled` | `"true"` / `"false"` | all forms, button, editor, upload-file | `formControl.disabled` or `disabled` input |
 | `data-loading` | `"true"` / `"false"` | select, autocomplete, button, side-drawer, table | `loading` signal or input |
+| `data-loading-view` | `"none"` / `"skeleton"` / `"refresh"` | table | what the loading layer draws (`loadingView` signal); see `sd-table.md`, "Loading" |
 | `data-value` | stringified primitive | all forms (skipped for password / upload-file / editor) | `formControl.value` via `sdSerializeDataValue()` |
 | `data-empty` | `"true"` / `"false"` | all forms, upload-file, editor | `sdIsEmpty(value)` |
 | `data-invalid` | `"true"` / `"false"` | scalar / collection form controls that validate | `formControl.invalid && (touched \|\| dirty)` |
@@ -65,7 +66,7 @@ The shared helpers live in `@sdcorejs/angular/utilities/data-state`: `sdSerializ
 | `sd-button` | `components-button` | `button.c-button` | disabled, loading |
 | `sd-modal` | `components-modal` | `.sd-modal-root` (inside dialog overlay) | opened |
 | `sd-side-drawer` | `components-side-drawer` | `.sd-side-drawer` (in `document.body` via CdkPortal) | opened, loading |
-| `sd-table` | `components-table` | `<sd-table>` host | loading |
+| `sd-table` | `components-table` | `<sd-table>` host | loading, loading-view |
 | `sd-upload-file` | `components-upload-file` | drop zone (`.c-area-upload`) | disabled, empty, count |
 | `sd-editor` | `components-editor` | host | disabled, empty |
 | `sd-autoid-inspector` | `sd-autoid-inspector-fab` / `sd-autoid-inspector-panel` (static) | FAB + panel (devtool) | opened (on FAB); segment, highlight-on, element-count, missing-count, duplicate-count (on panel) |
@@ -228,7 +229,7 @@ sd-side-drawer:
   loading: true
 
 sd-table:
-  attrs: [data-autoid, data-loading]
+  attrs: [data-autoid, data-loading, data-loading-view]
   anchor: <sd-table> host
   prefix: components-table
   loading: true

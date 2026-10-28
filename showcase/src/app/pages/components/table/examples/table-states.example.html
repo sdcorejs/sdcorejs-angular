@@ -3,9 +3,16 @@
   <sd-button title="Chưa có dữ liệu" [type]="scenario() === 'empty' ? 'fill' : 'outline'" (click)="show('empty')" />
   <sd-button title="Lỗi rồi thử lại" [type]="scenario() === 'error' ? 'fill' : 'outline'" (click)="show('error')" />
 </div>
+<div class="table-actions table-delays" role="group" aria-labelledby="table-states-delay-label">
+  <span id="table-states-delay-label" class="table-note">Độ trễ giả</span>
+  @for (ms of delays; track ms) {
+    <sd-button [title]="ms + ' ms'" [type]="delay() === ms ? 'fill' : 'outline'" (click)="delay.set(ms)" />
+  }
+  <sd-button title="Lần tới lỗi" prefixIcon="error_outline" [type]="failNext() ? 'fill' : 'outline'" (click)="failNext.set(!failNext())" />
+</div>
 <p class="table-note">
-  Mỗi lượt tải mất 1,5 giây. Chọn “Tải dữ liệu”, tìm “khong-ton-tai” để xem trạng thái không khớp bộ lọc; xóa từ khóa để khôi phục danh
-  sách.
+  150 ms nhanh hơn showDelay nên không hiện gì; 600 ms hiện thanh tiến trình và giữ thêm sau khi dữ liệu về; 3000 ms để sort, đổi trang hoặc
+  tìm kiếm trong lúc đang tải. “Lần tới lỗi” làm lượt tải kế tiếp lỗi. Tìm “khong-ton-tai” để xem trạng thái không khớp bộ lọc.
 </p>
 <sd-table autoId="pattern-states" [option]="option">
   <ng-template sdDataStateTemplate let-current let-retry="retry">

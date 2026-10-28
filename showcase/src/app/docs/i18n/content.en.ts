@@ -730,7 +730,7 @@ export const EN_EXAMPLE_CONTENT: Readonly<Partial<Record<ShowcaseExampleSourceKe
   },
   'components/table/example-loading-empty-error': {
     description:
-      'Uses the SdTable loading flow: loading while waiting for the request, empty/no-results from the returned result, and an error with a retry that keeps the query. Customize the content with sdDataStateTemplate and SdDataState.',
+      'Uses the SdTable loading flow: skeleton rows while there are no rows yet, a progress bar over dimmed rows when a reload takes longer than 300 ms, empty/no-results from the returned result, and an error with a retry that keeps the query. Customize the content with sdDataStateTemplate and SdDataState.',
   },
   'components/table/example-mobile-chon-du-lieu': {
     title: 'Mobile data selection',

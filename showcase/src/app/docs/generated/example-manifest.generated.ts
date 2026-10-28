@@ -2436,7 +2436,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "components/table",
     sectionId: "example-loading-empty-error",
     title: "Loading / empty / error",
-    description: "Dùng luồng tải của SdTable: loading khi chờ request, empty/no-results từ kết quả trả về, lỗi có retry giữ query. Tùy chỉnh nội dung bằng sdDataStateTemplate và SdDataState.",
+    description: "Dùng luồng tải của SdTable: khung xương khi chưa có dòng, thanh tiến trình và dòng mờ khi tải lại quá 300ms, empty/no-results từ kết quả trả về, lỗi có retry giữ query. Tùy chỉnh nội dung bằng sdDataStateTemplate và SdDataState.",
   },
   {
     sourceKey: "components/tree/example-static-tree",

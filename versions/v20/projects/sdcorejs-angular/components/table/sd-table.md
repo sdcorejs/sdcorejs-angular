@@ -74,6 +74,56 @@ Import directive từ `@sdcorejs/angular/components/data-state`; types từ
 `@sdcorejs/angular/utilities/read-state`. Xem
 [contract và migration](../../utilities/read-state/sd-read-state.md).
 
+Bảng local lỗi (loader ném lỗi hoặc không trả mảng) hiện cùng `SdDataState` lỗi như bảng
+server, cùng nhánh `sdDataStateTemplate`; nút thử lại gọi `reload()`. Toast cảnh báo
+của bảng local vẫn giữ.
+
+## Loading
+
+Nothing covers the table while it loads: the header, inline filters, sort, quick search,
+external filters, the paginator and the scrollbars stay usable, and the keyboard is never
+blocked. What shows depends on whether rows are on screen:
+
+| `data-loading-view` | When | What shows |
+| --- | --- | --- |
+| `none` | not loading, or a read faster than `showDelay` | the rows |
+| `skeleton` | `loading()` with no rows (first read, after an empty result or an error); also before the configuration is ready and while the first read of an option waits in its debounce | skeleton rows under the real header (`aria-hidden`), at once; mobile cards: up to 3 skeleton cards |
+| `refresh` | `loading()` with rows for longer than `showDelay` (300 ms), then at least `minDuration` (400 ms) | the table body (`tbody`) at `--sd-table-loading-dim` and ignoring the pointer, buttons in cells included, plus a 2px progress bar under the last header row (mobile: the card list, bar at its top) |
+
+- New rows render as soon as they arrive; only the bar and the dimming wait for `minDuration`.
+  An empty or failed result ends `refresh` at once, so the empty/error region shows.
+- A read that replaces another (paging, sort, filter) keeps an already visible bar or skeleton
+  through the debounce between them; a debounce alone never shows the bar.
+- `data-loading` and `aria-busy` are unchanged: they follow `loading()` at once, without delay.
+- Skeleton rows: 5, or enough to fill a table with a fixed height (fill mode, `style.maxHeight`),
+  at most `paginate.pageSize` and 20. Bar widths follow the column type and `align`.
+- Desktop tree and expand buttons stay in the DOM while their children/details load, so focus
+  stays on them: the tree chevron becomes a 16px spinner (`aria-busy`, `aria-disabled`); the
+  expand `sd-button` shows its own loading spinner (`aria-busy` on the `sd-button`). Mobile tree
+  and expand buttons show the 16px spinner and stay `disabled` while loading.
+
+```ts
+// Per table (wins field by field)
+option: SdTableOption<Order> = { type: 'server', items: this.load, columns, loading: { showDelay: 500, dim: false } };
+
+// For every table of the app
+providers: [{ provide: SD_TABLE_CONFIGURATION, useValue: { loading: { skeletonRows: 8 } } }];
+```
+
+| `SdTableOptionLoading` field | Default | Notes |
+| --- | --- | --- |
+| `skeleton` | `true` | `false`: a read without rows waits `showDelay`, then shows only the progress bar. |
+| `skeletonRows` | 5, or fill a fixed-height table | Rounded down to 1–20. Mobile cards show at most 3. |
+| `showDelay` | `300` | ms before the bar and dimming show over existing rows. `0` shows them at once. |
+| `minDuration` | `400` | ms the bar stays once shown. `0` hides it as soon as the read ends. |
+| `dim` | `true` | `false`: progress bar only; the rows stay at full opacity and clickable. |
+
+Negative numbers and values of the wrong type count as not set. Colours:
+`--sd-table-skeleton-bg`, `--sd-table-skeleton-highlight`, `--sd-table-progress-track` and
+`--sd-table-spinner` (see `assets/THEME.md`, "Table tokens"). Component CSS variable:
+`--sd-table-loading-dim` (default `0.55`). Animations stop with `prefers-reduced-motion`; with
+`forced-colors: active` the bars use `GrayText` and the progress bar `Canvas`/`CanvasText`/`Highlight`.
+
 ## Phân trang không biết tổng (`paginate.total: 'unknown'`)
 
 Dùng cho API phân trang theo offset/limit nhưng không trả tổng số bản ghi (ví dụ
@@ -219,6 +269,7 @@ Everything is configured via the `SdTableOption<T>` object passed to `[option]`.
 | `sort`              | `{ enable?: boolean }`                                           | no           | Master switch for sortable headers. Omitted and `enable: false` create no sort control, sort focus target, `aria-sort`, or sort icon.                                                                                                                                                                        |
 | `paginate`          | `SdTableOptionPaginate`                                          | no           | `{ pageSize?, pages?, showFirstLastButtons?, hidePageSize?, hidden?, total? }`. `total: 'unknown'` (server only) pages without a record count — see **Phân trang không biết tổng**.                                                         |
 | `reload`            | `{ visible?, onReload? }`                                        | no           | Show the reload button and run `onReload` after refresh. When visible, the reload action stays enabled for empty results (`items.length === 0` or `total === 0`) so users can retry.                                                          |
+| `loading`           | `SdTableOptionLoading`                                           | no           | `{ skeleton?, skeletonRows?, showDelay?, minDuration?, dim? }` — skeleton rows, progress bar delay and hold, dimming. Merged field by field over `SD_TABLE_CONFIGURATION.loading`. See **Loading**.                                     |
 | `export`            | `SdTableOptionExportDefault \| SdTableOptionExportCustom`        | no           | Excel/CSV/Custom export config.                                                                                                                                                                                                              |
 | `group`             | `{ fields: string[]; htmlTemplate: (rows) => string }`           | no           | Group rows by `fields` and render an HTML group header.                                                                                                                                                                                      |
 | `filter`            | `SdTableOptionFilter`                                            | no           | `{ hideInlineFilter?, externalFilterPerRow?, manualFilter?, collapsible?, externalFilterCollapsed?, hideExternalFilterToolbar?, externalFilters?, operatorChange? }`.                                                                                                  |
@@ -434,7 +485,7 @@ Built-in `filter.externalFilters` controls use `size="sm"` and `hideInlineError`
 
 #### Quick search (`filter.quickSearch`)
 
-Quick search and the paginator use a fixed white background, independent of `--sd-surface`, on desktop and mobile. Quick search has 12px vertical / 16px horizontal padding; its toolbar and the paginator have square corners, with no divider below the toolbar. At container widths of 550px or less, the controls stack while keeping the same outer inset. The table body retains its theme surface. The existing table scroll area, sticky headers and loading overlay remain scoped to the table body. Tables without quick search reserve no extra toolbar space.
+Quick search and the paginator use a fixed white background, independent of `--sd-surface`, on desktop and mobile. Quick search has 12px vertical / 16px horizontal padding; its toolbar and the paginator have square corners, with no divider below the toolbar. At container widths of 550px or less, the controls stack while keeping the same outer inset. The table body retains its theme surface. The existing table scroll area, sticky headers and loading layer (skeleton rows, progress bar) remain scoped to the table body. Tables without quick search reserve no extra toolbar space.
 
 Optional row above the table: dropdowns on the left, one keyword input, and an optional consumer template on the right. No search button; **Enter** commits the trimmed term. Typing or blurring does not submit it. Clearing the input removes only the term. The keyword input is the shared internal search field at size sm (32px, control border and focus ring, search icon, clear button while it holds a term, ↵ hint at the end). At container widths of 550px or less, or on a coarse pointer, it grows to 44px with 16px text and a 40px clear button. Table utilities stay in the footer. The row and its custom slot are absent when `quickSearch` is undefined or `filter.disabled` is true.
 
@@ -1047,7 +1098,8 @@ The desktop table uses subtle 6px outer corners: the existing scroll area rounds
 - **Selection-action bar** (`<selector-action>`, contained): opens only when rows are selected **and** `selector.actions` resolves to at least one action the selection is allowed to run. A table with `selector.visible` but no `actions` never opens the bar — it would restate the checkbox state with `×` as its only control; deselect through the checkboxes instead. The per-row allow-list still applies, so a selection mixing rows with different permitted actions can resolve to zero and keep the bar closed.
 - **Sticky columns**: any column with `fixed: true` stays pinned while horizontal scroll happens; rendered with a subtle box-shadow on the boundary (via `StickyShadowDirective`).
 - **Group rows**: spanning row with HTML rendered from `group.htmlTemplate`, separating sub-sections.
-- **Empty state**: one of three illustrated messages, for local and server tables alike — filter/search returned nothing (`images.filterEmpty`), a required external filter is still empty (`images.filterRequired`), or there is no data yet (`images.dataEmpty`). A projected `sdDataStateTemplate` replaces it for server reads. It only renders when the table has no rows; loading state shows centered Material spinner.
+- **Empty state**: one of three illustrated messages, for local and server tables alike — filter/search returned nothing (`images.filterEmpty`), a required external filter is still empty (`images.filterRequired`), or there is no data yet (`images.dataEmpty`). A projected `sdDataStateTemplate` replaces it for server reads. It only renders when the table has no rows. A failed read, local or server, shows the `sd-data-state` error block with a retry button.
+- **Loading**: no overlay. Without rows: grey skeleton bars under the real header (mobile: skeleton cards). With rows, after 300 ms: the table body fades to 55% and a 2px bar runs under the last header row. A tree chevron or expand button that is loading shows a small spinner in place of its icon. See **Loading**.
 - **Pagination bar** (bottom): "Đang hiển thị 1-50/1.234" + page-size selector + first/prev/next/last buttons. Vietnamese labels via `SdTablePaginatorIntl`. With `paginate.total: 'unknown'`: page-size selector + loaded range only (`26-32`, no total) + prev/next (first when `showFirstLastButtons`), never a last button; automation ids `<autoId>-paginator`, `-paginator-previous`, `-paginator-next`, `-paginator-first`, `-paginator-page-size`.
 - **Drag handle** (when `rowReorder.enabled`): leftmost icon column `sdReorder` with the configured icon (default `drag_indicator`); rows can be reordered within the same group.
 - **Row-number (STT) column** (when `index.enabled`): sticky `sdIndex` column rendering the global row number (`pageIndex * pageSize + i + 1`). Sits after selector/tree/command(left)/group, before data columns. Title defaults to `'#'`, width `'50px'`. Hidden on group spanning rows.
@@ -1062,6 +1114,8 @@ useValue: {
   filter: { hideInlineFilter: false, operator: { default: { string: 'CONTAIN', ... }, list: { ... } } },
   // Ảnh thay cho 3 trạng thái empty mặc định (bỏ trống thì dùng ảnh của core).
   images: { dataEmpty: 'assets/empty.svg', filterEmpty: 'assets/no-results.svg', filterRequired: 'assets/choose-filter.svg' },
+  // Lớp loading cho mọi bảng; option.loading của từng bảng thắng theo từng field.
+  loading: { showDelay: 300, minDuration: 400 },
 } satisfies ISdTableConfiguration
 ```
 
@@ -1337,11 +1391,14 @@ Rendered directly on the `<sd-table>` host element:
 | -------------- | --------------------------- | ------------------------------------------------------------- |
 | `data-autoid`  | `components-table-<autoId>` | input `autoId`                                                |
 | `data-loading` | `"true"` / `"false"`        | `loading` signal (toggled by paging + external-filter submit) |
+| `data-loading-view` | `"none"` / `"skeleton"` / `"refresh"` | what the loading layer draws (see **Loading**). `skeleton` shows at once and also while `data-loading` is `"false"` (before the configuration, during the first read's debounce); `refresh` starts `showDelay` after `data-loading` and can stay `minDuration` after it |
 
 Selector example:
 
 ```ts
 await expect(page.locator('sd-table[data-autoid="components-table-employees"]')).toHaveAttribute('data-loading', 'false');
+// Wait for the loading layer itself to be gone (progress bar held for minDuration):
+await expect(page.locator('sd-table[data-autoid="components-table-employees"]')).toHaveAttribute('data-loading-view', 'none');
 ```
 
 ### Inner elements (derived autoIds)
@@ -1371,8 +1428,9 @@ All interactive children derive their autoId from the table base `components-tab
 ## Accessibility
 
 - **Sort state belongs to the semantic header cell.** For an enabled sortable leaf, `aria-sort` is emitted only on the native `<th>` and the title-only control supplies the accessible name plus mouse/Enter/Space activation. Inline filters and resize handles remain siblings outside that control, so they cannot become nested interactive content or trigger sorting. Disabled, omitted and non-sortable paths emit no sort control, focus target, `aria-sort`, or icon. The Material arrow is not instantiated; the existing SdTable background indicator is the single visible icon in unsorted, ascending and descending states.
-- **Loading is announced.** The spinner overlay is `role="status" aria-live="polite"` with an i18n `aria-label`, and the scroll container gets `aria-busy="true"` while `loading()` is set. Previously an async fetch produced no announcement whatsoever.
-- **Empty state is announced.** The `no-results` / `choose-filter` / `no-data` block is `role="status" aria-live="polite"`, so a fetch that returns zero rows is reported instead of leaving the user waiting silently.
+- **Loading is announced.** A visually hidden `span.sd-table-live` (`role="status" aria-live="polite" aria-atomic="true"`) is always in the DOM. It reads `core.component.table.loading` when the skeleton or the progress bar shows for a running read, then `core.component.table.loaded` (`loaded-one` for one row) with the number of rows on screen, expanded tree rows included, once the read ends. A new read clears an earlier count. A skeleton that resolves without a running read (column lookups, synchronous local data) announces nothing. When the read ends without rows, it reads the title of the empty block (see below). The default error block announces itself (`role="alert"`), so the region is cleared; with a custom `sdDataStateTemplate` it reads `core.component.table.error-occurred`. Reads faster than `showDelay` announce only an empty result. The scroll container gets `aria-busy="true"` while `loading()` is set. Skeleton rows and the progress bar are `aria-hidden`.
+- **Loading buttons keep focus (desktop).** A tree toggle or expand button that is loading stays in the DOM (`aria-busy`; the tree toggle also `aria-disabled`), so keyboard focus does not fall back to the page. The tree toggle is named `core.component.table.tree-toggle` and carries `aria-expanded`. Mobile cards keep their tree and expand buttons `disabled` while loading.
+- **Empty state is announced.** When a read ends without rows, `span.sd-table-live` reads the title of the empty block: `core.component.table.no-results` (filtered), `choose-filter-hint` (a required filter is missing) or `no-data`, also after a read faster than `showDelay` and under a custom `sdDataStateTemplate`. The block itself has no live role, because text inserted together with its region is often not read.
 - **Row commands are named.** The per-row command buttons (`desktop-command`) dropped `aria-hidden="true"` — they are real `<button>`s that still took tab focus while announcing nothing, because they render an icon with no text. They now expose `aria-label` from the command title, plus `aria-haspopup="menu"` on the submenu trigger.
 - **Clickable HTML cells are keyboard reachable.** A cell whose display config supplies `click` renders as `role="button"` + `tabindex="0"` with Enter/Space mirroring the click (it previously carried `aria-hidden="true"`). The handler ignores key events bubbling from consumer-supplied markup inside the cell, so nested controls do not double-fire.
 

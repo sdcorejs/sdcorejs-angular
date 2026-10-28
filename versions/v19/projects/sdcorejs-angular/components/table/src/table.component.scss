@@ -1,3 +1,5 @@
+@use 'table-loading' as loading;
+
 :host {
   &:focus-visible {
     outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
@@ -11,6 +13,16 @@
   // why: dòng một dòng chữ cao 36px (Material mặc định 52px) như comment ở footer đã giả định; dòng nhiều chữ
   // hoặc có nút vẫn tự cao lên theo nội dung.
   --mat-table-row-item-container-height: 36px;
+
+  // Vùng status của lớp loading: chỉ cho screen reader, không chiếm chỗ trong cột flex.
+  .sd-table-live {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 
   // CSS này mục đích là để title 1 dòng hay 2 dòng cũng sẽ chiếm diện tích
   .c-header-title {
@@ -36,6 +48,8 @@
     flex-direction: column;
     // overflow: auto;
     flex: 1;
+    // why: giữ z-index của thanh tiến trình (và của bảng) trong .c-container, để chúng không đè lên phần khác của trang.
+    isolation: isolate;
 
     .c-table {
       // min-height: 300px;
@@ -197,19 +211,6 @@
       }
     }
 
-    .c-loading {
-      position: absolute;
-      top: 0;
-      left: 0;
-      bottom: 56px;
-      right: 0;
-      background: rgba(0, 0, 0, 0.15);
-      z-index: 2;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
     .c-paginator {
       display: flex;
       flex-direction: row;
@@ -281,48 +282,6 @@
     }
   }
 
-  .lds-ring {
-    display: inline-block;
-    position: relative;
-    width: 40px;
-    height: 40px;
-  }
-
-  .lds-ring div {
-    box-sizing: border-box;
-    display: block;
-    position: absolute;
-    width: 32px;
-    height: 32px;
-    margin: 4px;
-    border: 4px solid var(--sd-table-spinner, #cceeff);
-    border-radius: 50%;
-    animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-    border-color: var(--sd-table-spinner, #cceeff) transparent transparent transparent;
-  }
-
-  .lds-ring div:nth-child(1) {
-    animation-delay: -0.45s;
-  }
-
-  .lds-ring div:nth-child(2) {
-    animation-delay: -0.3s;
-  }
-
-  .lds-ring div:nth-child(3) {
-    animation-delay: -0.15s;
-  }
-
-  @keyframes lds-ring {
-    0% {
-      transform: rotate(0deg);
-    }
-
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-
   .sd-reorder-header,
   .sd-reorder-cell {
     width: 40px;
@@ -364,9 +323,6 @@
   }
   > .c-paginator {
     border-radius: 0;
-  }
-  > .c-loading {
-    border-radius: 6px 6px 0 0;
   }
 }
 
@@ -654,10 +610,10 @@
     &:hover {
       background-color: color-mix(in srgb, var(--sd-text) 8%, transparent);
     }
-  }
 
-  .sd-tree-spinner {
-    transform: scale(0.45);
+    &[aria-busy='true'] {
+      cursor: progress;
+    }
   }
 
   // STT trong cột Index khi tree — chừa khoảng cách nhẹ với chevron.
@@ -714,10 +670,130 @@
 }
 
 :host .sd-table-surface--quick-search > .c-container:not(.sd-table-mobile) {
-  > .c-table,
-  > .c-loading {
+  > .c-table {
     border-top-left-radius: 0;
     border-top-right-radius: 0;
+  }
+}
+
+// Lớp loading (design handoff table-loading, phương án 1e). Không phủ lên bảng: header, filter, sort, paginator và
+// thanh cuộn luôn dùng được; bàn phím không bị chặn.
+@include loading.skeleton-keyframes;
+@include loading.progress-keyframes;
+@include loading.spinner-keyframes;
+
+:host {
+  // Khung xương: cùng cao dòng, viền dòng và đệm ô với dòng dữ liệu.
+  tr.sd-table-skeleton-row {
+    height: var(--mat-table-row-item-container-height, 36px);
+  }
+
+  .sd-table-skeleton-cell {
+    padding: 0 8px;
+    border-bottom: 1px solid var(--sd-table-row-divider);
+    vertical-align: middle;
+  }
+
+  .sd-table-skeleton-bar {
+    @include loading.skeleton-bar;
+
+    &[data-align='end'] {
+      margin-inline-start: auto;
+    }
+
+    &[data-align='center'] {
+      margin-inline: auto;
+    }
+
+    &[data-shape='pill'] {
+      height: 20px;
+      border-radius: 999px;
+    }
+
+    &[data-shape='box'] {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+    }
+  }
+
+  // Trước khi có configuration: 5 dòng × 4 cột, không header, trên cùng nền và bo góc với bảng sắp hiện.
+  .sd-table-skeleton-block {
+    overflow: hidden;
+    border-radius: var(--sd-radius-6, 6px);
+    background: var(--sd-surface);
+  }
+
+  .sd-table-skeleton-block-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: center;
+    height: var(--mat-table-row-item-container-height, 36px);
+    border-bottom: 1px solid var(--sd-table-row-divider);
+
+    > .sd-table-skeleton-cell {
+      border-bottom: 0;
+    }
+  }
+
+  // why: mờ cả tbody của bảng này thành một lớp, không mờ từng td: ô sticky vẫn che phần cuộn dưới nó (mờ từng td thì
+  // ô sticky trong suốt), thead và tfoot (footer sticky) không mờ, bảng lồng trong dòng mở rộng không mờ chồng, và chỉ
+  // có một transition. Selector bám `> table > tbody` để không chạm tbody của bảng lồng.
+  .c-table > table > ::ng-deep tbody {
+    transition: opacity var(--sd-duration-fast, 120ms);
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  // Con trỏ progress chỉ trên thân bảng; thead/tfoot giữ con trỏ của chúng.
+  .c-table.c-table--dim {
+    cursor: progress;
+
+    > table > ::ng-deep thead,
+    > table > ::ng-deep tfoot {
+      cursor: auto;
+    }
+  }
+
+  .c-table.c-table--dim > table > ::ng-deep tbody {
+    opacity: var(--sd-table-loading-dim, 0.55);
+
+    // why: sd-button đặt lại `pointer-events: auto` trên host và nút bên trong, nên phải chặn cả phần tử con.
+    // Cuộn chuột/chạm vẫn rơi xuống .c-table; bàn phím không bị chặn.
+    &,
+    * {
+      pointer-events: none !important;
+    }
+  }
+
+  .sd-table-progress {
+    position: absolute;
+    top: var(--sd-table-head-h, 0px);
+    right: 0;
+    left: 0;
+    // .c-table là một stacking context riêng (sdScroll đặt translate3d) nên thanh nằm trên cả bảng; nó không đè
+    // header chỉ vì luôn đặt ngay dưới thead đã đo. Dưới mọi overlay (CDK overlay nằm ngoài .c-container).
+    z-index: 20;
+    @include loading.progress-bar;
+  }
+
+  // Spinner 16px của nút tree đang tải con (thay .lds-ring 40px thu nhỏ).
+  .sd-table-spinner {
+    @include loading.spinner;
+  }
+
+  // Mobile cards: neo cao 0 ở mép trên danh sách thẻ, dính mép trên vùng cuộn của bảng.
+  .sd-table-progress-anchor {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    height: 0;
+
+    > .sd-table-progress {
+      top: 0;
+    }
   }
 }
 // Summaries use Core surface tokens and share the table grid, including sticky cells.

@@ -2,7 +2,7 @@ import { InjectionToken } from '@angular/core';
 import { SdTableOptionPaginate } from '../models/table-option-paginate.model';
 import { SdTableOptionFilter } from '../services/table-filter/table-filter.model';
 import { Operator } from '@sdcorejs/utils/models';
-import { SdTableColumn } from '../models';
+import { SdTableColumn, SdTableOptionLoading } from '../models';
 
 export interface ISdTableConfiguration {
   paginate?: {
@@ -37,6 +37,8 @@ export interface ISdTableConfiguration {
     dataEmpty?: string; // Link ảnh cho table ở trạng thái không có dữ liệu
     filterEmpty?: string; // Link ảnh cho table ở trạng thái filter không có dữ liệu
   };
+  /** Lớp hiển thị khi đang tải cho mọi bảng; `option.loading` của từng bảng thắng theo từng field. */
+  loading?: SdTableOptionLoading;
 }
 
 export const DEFAULT_TABLE_CONFIG: ISdTableConfiguration = {

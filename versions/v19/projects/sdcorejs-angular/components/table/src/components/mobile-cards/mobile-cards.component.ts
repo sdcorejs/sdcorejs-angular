@@ -31,6 +31,10 @@ import { SdTableMobileAction } from './mobile-action.model';
 import { SdTableMobileActionsComponent } from './mobile-actions.component';
 import { collectFormattedTreeRows } from '../../services/tree/tree.util';
 import type { AggregateRow } from '../../services/table-aggregate.util';
+import { TABLE_SKELETON_ROWS } from '../../services/table-loading/table-loading.util';
+
+/** A phone screen shows about three cards; more skeleton cards would only be scrolled past. */
+const MOBILE_SKELETON_CARDS = 3;
 
 interface Card<T> {
   row: SdTableItem<T>;
@@ -86,6 +90,16 @@ export class SdTableMobileCardsComponent<T = unknown> implements OnDestroy {
   #focusOrigin?: HTMLElement;
   #pointer?: { x: number; y: number; moved: boolean };
   #dragged = false;
+
+  /** Skeleton cards while the table has no rows yet: `loading.skeletonRows`, at most 3. */
+  readonly skeletonCards = computed(() => {
+    const table = this.table();
+    if (table.loadingView() !== 'skeleton') return [];
+    const count = Math.min(table.loadingSettings().skeletonRows ?? TABLE_SKELETON_ROWS, MOBILE_SKELETON_CARDS);
+    return Array.from({ length: count }, (_, index) => index);
+  });
+  /** The cards on screen are being replaced: dim them and ignore taps (scrolling and the keyboard still work). */
+  readonly dimmed = computed(() => this.table().loadingView() === 'refresh' && this.table().loadingSettings().dim);
 
   readonly cards = computed<Card<T>[]>(() => {
     const table = this.table();

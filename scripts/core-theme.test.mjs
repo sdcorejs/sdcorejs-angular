@@ -386,6 +386,10 @@ const TABLE_DERIVED_TOKENS = {
   '--sd-table-group-row-border': 'var(--sd-table-row-divider)',
   '--sd-table-select-arrow': 'var(--sd-text-secondary)',
   '--sd-table-spinner': 'var(--sd-primary)',
+  // Loading layer (design handoff table-loading 1e).
+  '--sd-table-skeleton-bg': 'color-mix(in srgb, var(--sd-text) 8%, var(--sd-table-bg))',
+  '--sd-table-skeleton-highlight': 'color-mix(in srgb, var(--sd-text) 3%, var(--sd-table-bg))',
+  '--sd-table-progress-track': 'color-mix(in srgb, var(--sd-primary) 18%, var(--sd-table-bg))',
 };
 
 test('Table tokens derive from the palette and --sd-table-bg with one expression in light and dark', () => {

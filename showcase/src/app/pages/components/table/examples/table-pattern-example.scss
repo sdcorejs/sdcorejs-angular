@@ -20,6 +20,11 @@
   gap: 8px;
 }
 
+// Fake-delay switch of the "Loading / empty / error" example: label and buttons on one line.
+.table-delays {
+  align-items: center;
+}
+
 .table-note {
   margin: 0;
   color: var(--sd-text-secondary, #5f6368);

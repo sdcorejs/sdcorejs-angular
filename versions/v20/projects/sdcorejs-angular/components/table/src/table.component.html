@@ -4,6 +4,7 @@
 @let _configuration = configuration();
 @let _tableOption = tableOption()!;
 @let _loading = loading();
+@let _loadingView = loadingView();
 @let _readState = readState();
 @let _hideReadError = hideReadError();
 @let _dataStateTemplate = dataStateTemplate();
@@ -40,6 +41,9 @@
      cột data đầu tiên. Đây là field của cột đó (null nếu có Index hoặc không tree). -->
 @let _treeFirstField = _tableOption?.tree && !_tableOption.index?.enabled ? _configuration?.firstColumns?.[0]?.field : null;
 
+<!-- why: vùng status luôn có trong DOM, kể cả trước khi có configuration. Vùng chỉ render trong lúc tải bị gỡ
+     trước khi screen reader kịp đọc và không báo được "đã tải xong". -->
+<span class="sd-table-live" role="status" aria-live="polite" aria-atomic="true">{{ liveMessage() }}</span>
 @if (_configuration) {
   @if (!_mobileCards && !_tableOption.filter?.disabled && !!_tableOption.filter?.externalFilters?.length && filterRegister) {
     <external-filter
@@ -98,23 +102,25 @@
       <span class="sd-tree-indent" [style.width.px]="(_tree.level ?? 0) * (_tableOption.tree?.indentSize ?? 20)"></span>
       <span class="sd-tree-toggle-slot">
         @if (_tree.hasChildren) {
-          @if (_tree.isExpanding) {
-            <span class="lds-ring sd-tree-spinner">
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-            </span>
-          } @else {
-            @let _aid = _autoId;
-            <button
-              type="button"
-              class="sd-tree-toggle-btn"
-              [attr.data-autoid]="_aid ? _aid + '-tree-toggle-' + row.meta.id : null"
-              (click)="onTreeToggle(row); $event.stopPropagation()">
+          @let _aid = _autoId;
+          @let _expanding = !!_tree.isExpanding;
+          <!-- why: nút luôn nằm trong DOM, chỉ đổi icon thành spinner khi đang tải con; gỡ nút làm focus bàn phím rơi
+               về body. Click trong lúc tải bị onTreeToggle bỏ qua. -->
+          <button
+            type="button"
+            class="sd-tree-toggle-btn"
+            [attr.data-autoid]="_aid ? _aid + '-tree-toggle-' + row.meta.id : null"
+            [attr.aria-label]="'core.component.table.tree-toggle' | sdTranslate"
+            [attr.aria-expanded]="!!_tree.isExpanded"
+            [attr.aria-busy]="_expanding ? 'true' : null"
+            [attr.aria-disabled]="_expanding ? 'true' : null"
+            (click)="onTreeToggle(row); $event.stopPropagation()">
+            @if (_expanding) {
+              <span class="sd-table-spinner" aria-hidden="true"></span>
+            } @else {
               <sd-icon [name]="_tree.isExpanded ? 'expand_more' : 'chevron_right'"></sd-icon>
-            </button>
-          }
+            }
+          </button>
         }
       </span>
     }
@@ -163,26 +169,29 @@
         (valueChange)="onQuickSearchChange($event)" />
     }
     <div class="c-container" [class.sd-table-mobile]="_mobileCards">
-      <!-- why: bảng tải dữ liệu BẤT ĐỒNG BỘ nhưng trước đây chỉ có spinner thuần hình ảnh — screen
-           reader không được báo gì cả. role="status" + aria-live="polite" đọc trạng thái ngay khi
-           spinner xuất hiện; aria-busy trên vùng bảng cho biết nội dung đang được thay thế. -->
-      @if (_loading) {
-        <div class="c-loading" role="status" aria-live="polite" [attr.aria-label]="'core.component.table.loading' | sdTranslate">
-          <mat-spinner></mat-spinner>
-        </div>
-      }
+      <!-- why: lớp loading không phủ lên bảng: header, filter, sort và thanh cuộn luôn dùng được. Chưa có dòng thì
+           khung xương (matNoDataRow); đã có dòng thì giữ dòng cũ, quá showDelay mới làm mờ dòng và hiện thanh tiến
+           trình. aria-busy vẫn theo loading() thật; vùng .sd-table-live báo "đang tải"/"đã tải xong". -->
       <div
         class="c-table"
         sdScroll
         stickyShadow
         matSort
         [matSortDisabled]="!_tableOption.sort?.enable"
+        [class.c-table--dim]="_loadingView === 'refresh' && loadingSettings().dim"
         [attr.aria-busy]="_loading ? 'true' : null"
         [style.max-height]="_tableOption.style?.maxHeight"
         [style.min-height]="_tableOption.style?.minHeight">
         @if (_mobileCards) {
           @if (_commandHeaderDef) {
             <div class="sd-mobile-command-header"><ng-container *ngTemplateOutlet="_commandHeaderDef.templateRef"></ng-container></div>
+          }
+          @if (_loadingView === 'refresh') {
+            <!-- Mobile: không có header bảng; thanh nằm ở mép trên danh sách thẻ, dưới command header. Anchor cao 0
+                 nên thanh hiện/ẩn không đẩy thẻ. -->
+            <div class="sd-table-progress-anchor">
+              <div class="sd-table-progress" aria-hidden="true"></div>
+            </div>
           }
           <sd-table-mobile-cards
             [table]="this"
@@ -257,22 +266,20 @@
                 style="width: 1px"
                 [attr.rowspan]="_configuration.multipleHeader ? 2 : 1"></th>
               <td mat-cell *matCellDef="let element">
-                @if (!element.meta.expand?.isExpanding && !_tableOption.expand?.always) {
+                @if (!_tableOption.expand?.always) {
+                  @let _expanding = !!element.meta.expand?.isExpanding;
+                  <!-- why: nút 35px giữ nguyên khi đang tải ([loading] thay prefix icon bằng spinner) để focus bàn phím
+                       không mất; onExpand bỏ qua click trong lúc tải. color primary chỉ để spinner theo màu nhấn. -->
                   <sd-button
                     [autoId]="_autoId ? _autoId + '-expand-' + element.meta.id : null"
                     type="text"
+                    [color]="_expanding ? 'primary' : null"
+                    [loading]="_expanding"
+                    [attr.aria-busy]="_expanding ? 'true' : null"
                     [prefixIcon]="element.meta.expand?.isExpanded ? 'expand_less' : 'expand_more'"
                     (click)="onExpand(element)"
                     width="35px">
                   </sd-button>
-                }
-                @if (element.meta.expand?.isExpanding) {
-                  <div class="lds-ring">
-                    <div></div>
-                    <div></div>
-                    <div></div>
-                    <div></div>
-                  </div>
                 }
               </td>
             </ng-container>
@@ -626,12 +633,32 @@
             @if (hasFooter() && !!_configuration.displayedFooters.length) {
               <tr mat-footer-row *sdTableFooterRowDef="_configuration.displayedFooters; sticky: true"></tr>
             }
+            <!-- why: khung xương là dòng thật trong tbody (matNoDataRow chỉ hiện khi không có dòng dữ liệu) nên ô thẳng
+                 cột với header, kể cả header nhóm, mà không phải đo; footer vẫn nằm dưới; dataSource không đổi. -->
+            <ng-template matNoDataRow>
+              @for (cells of skeleton(); track $index) {
+                <tr class="sd-table-skeleton-row" aria-hidden="true">
+                  @for (cell of cells; track cell.field) {
+                    <td class="sd-table-skeleton-cell" [class.d-none]="cell.hidden">
+                      @if (cell.shape !== 'none') {
+                        <span
+                          class="sd-table-skeleton-bar"
+                          [attr.data-shape]="cell.shape"
+                          [attr.data-align]="cell.align"
+                          [style.width]="cell.width"
+                          [style.max-width]="cell.maxWidth"></span>
+                      }
+                    </td>
+                  }
+                </tr>
+              }
+            </ng-template>
           </table>
         }
         @let _readError = _readState.status === 'error';
         <!-- why: dòng cũ bị gỡ khi lần đọc hiện hành lỗi, nên vùng lỗi/empty chỉ hiện khi bảng không còn dòng nào
              — end user không bao giờ thấy dữ liệu và lỗi cùng lúc (NSP-4877). -->
-        @let _noRows = !_readError && !_loading && !_total && !_items.length;
+        @let _noRows = !_readError && !_loading && !_total && !_items.length && _loadingView === 'none';
         @if ((_readError && !_hideReadError) || (_noRows && _readState.status === 'empty' && !!_dataStateTemplate)) {
           <sd-data-state [state]="_readError ? 'error' : 'empty'" [retryable]="_readError" (sdRetry)="retryRead()">
             @if (_dataStateTemplate; as custom) {
@@ -643,14 +670,22 @@
             }
           </sd-data-state>
         } @else if (!_loading && loadError() && !_hideReadError) {
-          <div class="c-no-data-row" role="alert">
-            <p>{{ 'core.component.table.error-occurred' | sdTranslate }}</p>
-            <sd-button [title]="'core.component.table.reload' | sdTranslate" (click)="reload()"></sd-button>
-          </div>
+          <!-- why: bảng local lỗi dùng cùng giao diện lỗi với bảng server (sd-data-state, role="alert") và cùng
+               sdDataStateTemplate; thử lại = reload() vì local không có snapshot đọc để retryRead(). -->
+          <sd-data-state state="error" [retryable]="true" (sdRetry)="reload()">
+            @if (_dataStateTemplate; as custom) {
+              <ng-template sdDataStateTemplate let-current let-retry="retry" let-action="action">
+                <ng-container
+                  [ngTemplateOutlet]="custom.template"
+                  [ngTemplateOutletContext]="{ $implicit: current, state: current, retry: retry, action: action }"></ng-container>
+              </ng-template>
+            }
+          </sd-data-state>
         } @else if (_noRows && !loadError()) {
           <!-- why: empty mặc định giữ 3 trạng thái (filter không có kết quả / chưa chọn filter bắt buộc / chưa có dữ liệu)
-               cùng ảnh cấu hình qua SD_TABLE_CONFIGURATION.images, cho cả bảng server (NSP-5551). -->
-          <div class="c-no-data-row" role="status" aria-live="polite">
+               cùng ảnh cấu hình qua SD_TABLE_CONFIGURATION.images, cho cả bảng server (NSP-5551). Không có role live:
+               vùng .sd-table-live (luôn có trong DOM) đọc tiêu đề của khối này. -->
+          <div class="c-no-data-row">
             @if (_isFiltered) {
               @if (tableConfiguration?.images?.filterEmpty) {
                 <img class="c-image" [src]="tableConfiguration!.images!.filterEmpty" alt="filter-empty" />
@@ -679,6 +714,10 @@
           </div>
         }
       </div>
+      @if (_loadingView === 'refresh' && !_mobileCards) {
+        <!-- Nằm trong .c-container, không trong .c-table, để không cuộn ngang theo bảng; top = --sd-table-head-h (đo). -->
+        <div class="sd-table-progress" aria-hidden="true"></div>
+      }
       @if (!_mobileCards) {
         <selector-action
           [autoId]="_autoId"
@@ -877,4 +916,18 @@
       </ng-template>
     }
   </sd-data-state>
+} @else if (_loadingView === 'skeleton') {
+  <!-- why: lookup cột (values/lazy-values) có thể chậm; chưa có configuration nên chưa biết cột, vẽ khung xương chung
+       thay vì để trống. Hydrate không có lookup xong trong microtask nên khối này không kịp hiện. -->
+  <div class="sd-table-skeleton-block" aria-hidden="true">
+    @for (cells of genericSkeleton; track $index) {
+      <div class="sd-table-skeleton-block-row">
+        @for (cell of cells; track cell.field) {
+          <span class="sd-table-skeleton-cell">
+            <span class="sd-table-skeleton-bar" [style.width]="cell.width" [style.max-width]="cell.maxWidth"></span>
+          </span>
+        }
+      </div>
+    }
+  </div>
 }

@@ -8,9 +8,12 @@ import {
   Directive,
   ElementRef,
   Injectable,
+  Injector,
   Input,
+  NgZone,
   OnDestroy,
   OnInit,
+  afterNextRender,
   computed,
   contentChild,
   contentChildren,
@@ -62,6 +65,18 @@ import {
   SdTableShownPage,
 } from './services/table-paging/unknown-total.util';
 import {
+  buildTableSkeleton,
+  resolveTableLoading,
+  SdTableLoadingView,
+  pixelLength,
+  skeletonFillRows,
+  TABLE_GENERIC_SKELETON,
+  TABLE_SKELETON_ROWS,
+  TableRefreshTimer,
+  tableLoadingView,
+  TableSkeletonCell,
+} from './services/table-loading/table-loading.util';
+import {
   SdConvertToPagingReq,
   SdTableFilterRequest,
   TableFilterRegister,
@@ -75,7 +90,6 @@ import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SdButton, SdButtonItem } from '@sdcorejs/angular/components/button';
 import { SdDataState, SdDataStateTemplateDirective } from '@sdcorejs/angular/components/data-state';
 import { cloneReadRequest, SdReadChannel, SdReadState } from '@sdcorejs/angular/utilities/read-state';
@@ -126,6 +140,7 @@ import { SdTableFilterService } from './services/table-filter/table-filter.servi
 import {
   clearTreeChildCache,
   collectFormattedTreeRows,
+  countVisibleTreeRows,
   flattenDataTree,
   getChildrenFromData,
   getChildrenKey,
@@ -246,6 +261,7 @@ const EMPTY_COMMANDS: SdTableCommand[] = [];
     '[attr.data-autoid]': 'autoId()',
     tabindex: '0',
     '[attr.data-loading]': 'loading() ? "true" : "false"',
+    '[attr.data-loading-view]': 'loadingView()',
     '[class.sd-table--fill]': 'fill()',
   },
   providers: [
@@ -271,7 +287,6 @@ const EMPTY_COMMANDS: SdTableCommand[] = [];
     MatPaginatorModule,
     MatTableModule,
     MatSortModule,
-    MatProgressSpinnerModule,
     MatButtonModule,
     MatCheckboxModule,
     MatRadioModule,
@@ -418,6 +433,86 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   readonly #shownPage = signal<SdTableShownPage | undefined>(undefined);
   /** A read is waiting in the schedule (debounce) and has not started loading yet. */
   readonly #readScheduled = signal(false);
+
+  /** `option.loading`, then `SD_TABLE_CONFIGURATION.loading`, then the defaults, field by field. */
+  readonly loadingSettings = computed(() => resolveTableLoading(this.tableOption()?.loading, this.tableConfiguration?.loading));
+  readonly #refresh = new TableRefreshTimer((callback, ms) => {
+    // why: a waiting timer outside the zone keeps it stable (whenStable, hydration); the callback runs inside it,
+    // so its signal write also renders in zone apps that ignore changes outside the zone.
+    const id = this.#zone.runOutsideAngular(() => setTimeout(() => this.#zone.run(callback), ms));
+    return () => clearTimeout(id);
+  });
+  /** The skeleton showed for a read that a scheduled read now replaces (sort, page, filter during the read). */
+  readonly #skeletonHeld = signal(false);
+  /**
+   * Nothing to show yet but something is on its way: the configuration (column lookups) is not ready, the first
+   * read of the option waits in the schedule, or a read replaces one that showed the skeleton. Without it the
+   * empty-state block shows during that debounce.
+   */
+  readonly #readPending = computed(
+    () =>
+      this.readState().status !== 'error' &&
+      (!this.configuration() ||
+        (this.#readScheduled() && ((this.total() === undefined && this.#shownPage() === undefined) || this.#skeletonHeld())))
+  );
+  /**
+   * What the loading layer draws (host `data-loading-view`). Derived only; `loading()`, `data-loading` and
+   * `aria-busy` keep following every read at once.
+   */
+  readonly loadingView = computed<SdTableLoadingView>(() =>
+    tableLoadingView({
+      skeleton: this.loadingSettings().skeleton,
+      loading: this.loading(),
+      pending: this.#readPending(),
+      scheduled: this.#readScheduled(),
+      rows: this.items().length > 0,
+      refresh: this.#refresh.shown(),
+    })
+  );
+  readonly #liveMessage = signal('');
+  /** Text of the `.sd-table-live` status region: "loading" once the loading layer shows, then the result. */
+  protected readonly liveMessage = this.#liveMessage.asReadonly();
+  #liveLoading = false;
+  /**
+   * i18n key of the empty block on screen, for the status region: the title of the default block, also under a
+   * custom `sdDataStateTemplate`; `undefined` while rows, a read, the loading layer or an error region show.
+   */
+  readonly #emptyKey = computed(() => {
+    const status = this.readState().status;
+    const noRows = status !== 'error' && !this.loading() && !this.total() && !this.items().length && this.loadingView() === 'none';
+    if (!noRows || (this.loadError() && !(status === 'empty' && this.dataStateTemplate()))) return undefined;
+    if (this.isFiltered()) return 'core.component.table.no-results';
+    return this.requireFiltered() ? 'core.component.table.choose-filter-hint' : 'core.component.table.no-data';
+  });
+  /** Rows that fill a table with a fixed height, measured when the skeleton shows. */
+  readonly #skeletonFill = signal<number | undefined>(undefined);
+  /** Skeleton rows of the desktop table (`matNoDataRow`) while `loadingView()` is `skeleton`; empty otherwise. */
+  protected readonly skeleton = computed<TableSkeletonCell[][]>(() => {
+    const config = this.configuration();
+    if (!config || this.loadingView() !== 'skeleton') return [];
+    const columns = new Map([...config.firstColumns, ...config.secondColumns].map(column => [column.field, column]));
+    const cellDef = this.cellDef();
+    const pageSize = this.tableOption()?.paginate?.pageSize;
+    const rows =
+      this.loadingSettings().skeletonRows ??
+      this.#skeletonFill() ??
+      Math.min(TABLE_SKELETON_ROWS, pageSize && pageSize > 0 ? pageSize : TABLE_SKELETON_ROWS);
+    return buildTableSkeleton(
+      config.displayedColumns.map(field => {
+        const column = columns.get(field);
+        return {
+          field,
+          type: column?.type,
+          align: column?.align,
+          badge: !!column && 'useBadge' in column && !!column.useBadge,
+          template: !!column?.cell?.templateRef || !!cellDef[field],
+        };
+      }),
+      rows
+    );
+  });
+  /** What the table shows before its configuration is ready: 5 rows × 4 bars, without a header. */
+  protected readonly genericSkeleton = TABLE_GENERIC_SKELETON;
   readonly unknownTotalPager = computed<SdTableUnknownTotalPagerState | undefined>(() => {
     if (!this.unknownTotal()) return undefined;
     const target = this.#unknownTarget();
@@ -623,6 +718,8 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
   // 1. Private Services
   #ref = inject(ChangeDetectorRef);
+  readonly #zone = inject(NgZone);
+  readonly #injector = inject(Injector);
 
   #configService = inject(ConfigService);
   #gridFilterService = inject(SdTableFilterService);
@@ -724,6 +821,63 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
         resize?.disconnect();
         host.style.removeProperty('--sd-table-fill-head');
         host.style.removeProperty('--sd-table-fill-min');
+      });
+    });
+
+    // why: the loading layer follows `loading()` and the read schedule; the progress bar timer and the status
+    // region only change on those transitions, so rows, settings and errors are read untracked.
+    effect(() => {
+      const loading = this.loading();
+      const scheduled = this.#readScheduled();
+      const view = this.loadingView();
+      untracked(() => {
+        const rows = this.items().length > 0;
+        this.#refresh.update({ loading, scheduled, skeleton: view === 'skeleton', rows }, this.loadingSettings());
+        if (view === 'skeleton' && loading) this.#skeletonHeld.set(true);
+        else if (!scheduled || rows) this.#skeletonHeld.set(false);
+        // why: "loading" is announced only once a read really runs, so a skeleton that resolves at once (column
+        // lookups, synchronous local data) says nothing; it stays active through the debounce of a replacing read.
+        const active = view !== 'none' && (loading || (this.#liveLoading && scheduled));
+        // A new read clears an earlier "loaded N", so the virtual cursor never reads a count that is out of date.
+        if (loading && !active && this.#liveMessage()) this.#liveMessage.set('');
+        this.#announceLoading(active);
+        // why: measured before the skeleton renders, under the header that is already on screen, so the row
+        // count is right in the first frame instead of jumping from 5.
+        if (view === 'skeleton') this.#skeletonFill.set(this.#measureSkeletonFill());
+      });
+    });
+
+    // why: the empty block has no live role (content inserted together with its region is not read reliably), so
+    // the status region says it, also after a read too fast to show the loading layer. Defined after the loading
+    // effect, which clears the region when a read starts, so the same text is read again for the next empty result.
+    effect(() => {
+      const key = this.#emptyKey();
+      if (key) untracked(() => this.#liveMessage.set(this.#i18n.t(key)));
+    });
+
+    // why: the progress bar sits in .c-container (so it does not scroll sideways with the table) right under the
+    // last header row; that row's bottom depends on grouped headers, the filter row and wrapping titles. Only
+    // measured while the bar shows.
+    effect(onCleanup => {
+      if (this.loadingView() !== 'refresh' || this.mobileCards()) return;
+      const host = this.#host;
+      let resize: ResizeObserver | null = null;
+      const measure = (): boolean => {
+        const data = host.querySelector<HTMLElement>('.c-container > .c-table');
+        const head = data?.querySelector<HTMLElement>(':scope > table > thead');
+        if (!data || !head) return false;
+        const sync = (): void => host.style.setProperty('--sd-table-head-h', `${data.offsetTop + head.offsetHeight}px`);
+        resize = typeof ResizeObserver === 'function' ? new ResizeObserver(sync) : null;
+        resize?.observe(head);
+        sync();
+        return true;
+      };
+      // why: right after a mobile → desktop switch the table is not in the DOM yet when this runs.
+      const later = measure() ? undefined : afterNextRender(() => void measure(), { injector: this.#injector });
+      onCleanup(() => {
+        later?.destroy();
+        resize?.disconnect();
+        host.style.removeProperty('--sd-table-head-h');
       });
     });
 
@@ -866,11 +1020,53 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
   ngOnDestroy() {
     this.#destroyed = true;
+    this.#refresh.destroy();
     this.#cancelReload();
     this.#retryConfiguration = undefined;
     this.#read.invalidate();
     this.#failedRead = undefined;
     this.#subscription.unsubscribe();
+  }
+
+  /**
+   * "Loading" when the loading layer shows; once the read ends, the row count, or the text of the empty block.
+   * The default error region announces itself (`role="alert"`), so the region is cleared; a custom
+   * `sdDataStateTemplate` may have no role, so the region reads the error. Reads faster than `showDelay` announce
+   * only an empty result (see the empty effect).
+   */
+  #announceLoading(active: boolean): void {
+    if (active === this.#liveLoading) return;
+    this.#liveLoading = active;
+    if (active) {
+      this.#liveMessage.set(this.#i18n.t('core.component.table.loading'));
+      return;
+    }
+    // Rows on screen: a tree also shows the children of its expanded rows.
+    const count = this.tableOption()?.tree ? countVisibleTreeRows(this.items()) : this.items().length;
+    const failed = this.readState().status === 'error' || this.loadError();
+    if (count)
+      this.#liveMessage.set(this.#i18n.t(count === 1 ? 'core.component.table.loaded-one' : 'core.component.table.loaded', { count }));
+    else if (failed && !!this.dataStateTemplate() && !this.hideReadError())
+      this.#liveMessage.set(this.#i18n.t('core.component.table.error-occurred'));
+    else {
+      const empty = this.#emptyKey();
+      this.#liveMessage.set(empty ? this.#i18n.t(empty) : '');
+    }
+  }
+
+  /** Skeleton rows that fill a table with a fixed height (fill mode, `style.maxHeight`); `undefined` otherwise. */
+  #measureSkeletonFill(): number | undefined {
+    const option = this.tableOption();
+    const fill = this.fill();
+    if ((!fill && !option?.style?.maxHeight) || this.mobileCards()) return undefined;
+    const data = this.#host.querySelector<HTMLElement>('.c-container > .c-table');
+    if (!data) return undefined;
+    // A percentage max-height resolves to a percentage, not pixels: fall back to the default count.
+    const box = fill ? data.clientHeight : pixelLength(getComputedStyle(data).maxHeight);
+    if (box === undefined) return undefined;
+    const head = data.querySelector<HTMLElement>(':scope > table > thead')?.offsetHeight ?? 0;
+    const row = parseFloat(getComputedStyle(this.#host).getPropertyValue('--mat-table-row-item-container-height')) || 36;
+    return skeletonFillRows(box - head, row, option?.paginate?.pageSize);
   }
 
   // --- GIỮ NGUYÊN TẤT CẢ CÁC HÀM FILTER VÀ EXPORT CŨ CỦA BẠN ---

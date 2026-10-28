@@ -1,3 +1,5 @@
+@use '../../table-loading' as loading;
+
 // why: cards are a renderer primitive; token colors follow both Core UI themes.
 :host {
   display: block;
@@ -8,8 +10,24 @@
   flex-direction: column;
   gap: 24px;
   padding: 20px 20px 8px;
+  transition: opacity var(--sd-duration-fast, 120ms);
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
 }
-.sd-mobile-card {
+// Loading layer, refresh: the old cards stay readable but dimmed and take no taps; scrolling and the keyboard work.
+// Descendants too: sd-button sets `pointer-events: auto` on its host and inner button.
+.sd-mobile-list--dim {
+  opacity: var(--sd-table-loading-dim, 0.55);
+
+  &,
+  * {
+    pointer-events: none !important;
+  }
+}
+.sd-mobile-card,
+.sd-mobile-skeleton-card {
   position: relative;
   border: 1px solid var(--sd-border);
   border-radius: var(--sd-radius-8, 8px);
@@ -96,6 +114,35 @@ button:focus-visible {
 .sd-mobile-card-body {
   padding: 4px 0;
   min-width: 0;
+}
+// Loading layer, tree/expand button that is loading: 16px spinner in place of the icon.
+@include loading.spinner-keyframes;
+.sd-table-spinner {
+  @include loading.spinner;
+}
+// Loading layer, skeleton: card frame of .sd-mobile-card, three bars 14/12/12px at 60/85/40%.
+@include loading.skeleton-keyframes;
+.sd-mobile-skeleton-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0;
+}
+.sd-mobile-skeleton-bar {
+  @include loading.skeleton-bar;
+
+  &:nth-child(1) {
+    width: 60%;
+    height: 14px;
+  }
+
+  &:nth-child(2) {
+    width: 85%;
+  }
+
+  &:nth-child(3) {
+    width: 40%;
+  }
 }
 .sd-mobile-group {
   overflow-wrap: anywhere;
