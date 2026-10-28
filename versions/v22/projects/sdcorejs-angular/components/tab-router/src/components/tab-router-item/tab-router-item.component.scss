@@ -138,6 +138,10 @@
 // - Bản kéo: nổi lên với bóng, bo đủ 4 góc 8px, nền và chữ của tab đang mở.
 // - Chỗ thả: ô nền primary 12% có viền primary mảnh, nội dung ẩn.
 :host(.cdk-drag-preview) {
+  // why: CDK mở bản kéo bằng popover; style mặc định của popover có `overflow: auto` (lớp reset của CDK không đè) nên
+  // bóng của tab bị cắt theo khung vuông của host và chỉ còn vệt xám ở bốn góc ngoài phần bo tròn.
+  overflow: visible;
+
   &::after {
     content: none;
   }

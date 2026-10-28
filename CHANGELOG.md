@@ -290,6 +290,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Navigations that finish one after another while an earlier tab is still being activated (for example while the outlet loads an NgModule lazy route) each open their own tab.
   - The outlet read the router state when the queued activation ran, so the tab of an earlier URL got the component, route and name of the later one; it now captures the route when `NavigationEnd` is emitted.
+- The tab being dragged keeps its rounded shadow on all four corners.
+  - CDK opens the drag preview as a popover, whose default style has `overflow: auto`, so the shadow was clipped to the square host and showed only as grey patches outside the rounded corners. The preview host now has `overflow: visible`.
 
 #### Upload file
 
