@@ -165,7 +165,7 @@
       id="docs-content"
       class="content"
       tabindex="-1"
-      aria-label="Documentation content"
+      [attr.aria-label]="i18n.t().documentationContent"
       [attr.aria-hidden]="mobileNavOpen() ? 'true' : null"
       [attr.inert]="mobileNavOpen() ? '' : null">
       @if (versions.manifest() && !versions.isLatestRelease()) {

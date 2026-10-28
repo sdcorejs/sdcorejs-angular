@@ -10,8 +10,10 @@ import {
   input,
   signal,
   Type,
+  untracked,
 } from '@angular/core';
 import { SHOWCASE_DEMO_SECTION_ID } from '../../shared/demo-page.component';
+import { DocsI18nService } from '../core/docs-i18n.service';
 import { DocExample } from '../core/documentation.models';
 
 @Component({
@@ -19,8 +21,10 @@ import { DocExample } from '../core/documentation.models';
   standalone: true,
   imports: [NgComponentOutlet],
   template: `
-    @if (loading()) { <p class="example-preview__state" role="status">Loading live example…</p> }
-    @if (error(); as message) { <p class="example-preview__state example-preview__state--error" role="alert">{{ message }}</p> }
+    @if (loading()) { <p class="example-preview__state" role="status">{{ i18n.t().loadingExample }}</p> }
+    @if (error(); as detail) {
+      <p class="example-preview__state example-preview__state--error" role="alert">{{ i18n.format('exampleLoadFailed', { detail }) }}</p>
+    }
     @if (componentType(); as previewType) {
       <ng-container *ngComponentOutlet="previewType; injector: previewInjector()"></ng-container>
     }
@@ -35,18 +39,24 @@ import { DocExample } from '../core/documentation.models';
 export class ExamplePreviewComponent {
   readonly #injector = inject(Injector);
   readonly #changeDetector = inject(ChangeDetectorRef);
+  readonly i18n = inject(DocsI18nService);
   readonly example = input.required<DocExample>();
   readonly componentType = signal<Type<unknown> | null>(null);
   readonly loading = signal(true);
+  /** Error detail of a failed load; the sentence around it follows the current language. */
   readonly error = signal<string | null>(null);
+  // why: a language switch hands in a new example object with the same demo; only a new section or loader may rebuild it.
+  readonly #sectionId = computed(() => this.example().sectionId);
+  readonly #loader = computed(() => this.example().loadComponent);
   readonly previewInjector = computed(() => Injector.create({
     parent: this.#injector,
-    providers: [{ provide: SHOWCASE_DEMO_SECTION_ID, useValue: this.example().sectionId }],
+    providers: [{ provide: SHOWCASE_DEMO_SECTION_ID, useValue: this.#sectionId() }],
   }));
 
   constructor() {
     effect(() => {
-      void this.#loadPreview(this.example());
+      const loader = this.#loader();
+      void this.#loadPreview(loader, untracked(() => this.#sectionId()));
     });
   }
 
@@ -58,19 +68,18 @@ export class ExamplePreviewComponent {
     this.#changeDetector.detectChanges();
   }
 
-  async #loadPreview(example: DocExample): Promise<void> {
+  async #loadPreview(loadComponent: DocExample['loadComponent'], sectionId: string | null): Promise<void> {
     this.loading.set(true);
     this.error.set(null);
     try {
-      this.componentType.set(await example.loadComponent());
+      this.componentType.set(await loadComponent());
     } catch (cause) {
       // why: swallowing the cause left "could not be loaded" as the only clue, which says nothing
       // about a failed chunk, a missing provider, or a broken import. Surface it in both places —
       // console for the stack, the alert itself for whoever is looking at the page.
       // eslint-disable-next-line no-console
-      console.error('[example-preview] failed to load', example.sectionId, cause);
-      const detail = cause instanceof Error ? `${cause.name}: ${cause.message}` : String(cause);
-      this.error.set(`The live example could not be loaded. ${detail}`);
+      console.error('[example-preview] failed to load', sectionId, cause);
+      this.error.set(cause instanceof Error ? `${cause.name}: ${cause.message}` : String(cause));
     } finally {
       this.loading.set(false);
     }

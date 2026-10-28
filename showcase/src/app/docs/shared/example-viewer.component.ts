@@ -72,9 +72,9 @@ export const SHOWCASE_EXAMPLE_SOURCE_LOADER = new InjectionToken<() => Promise<E
       [attr.aria-labelledby]="current.id + '-title'">
       <header class="example__header">
         <div class="example__heading">
-          <h3 [id]="current.id + '-title'" lang="vi">{{ current.title }}</h3>
+          <h3 [id]="current.id + '-title'" [attr.lang]="i18n.contentLang(current.title)">{{ current.title }}</h3>
           @if (displayDescription(); as description) {
-            <p class="example__description" lang="vi">{{ description }}</p>
+            <p class="example__description" [attr.lang]="i18n.contentLang(description)">{{ description }}</p>
           }
         </div>
         <div class="example__actions">
@@ -87,7 +87,7 @@ export const SHOWCASE_EXAMPLE_SOURCE_LOADER = new InjectionToken<() => Promise<E
             <mat-icon aria-hidden="true">{{ clipboard.isCopied('example-link-' + current.id) ? 'check' : 'link' }}</mat-icon>
           </button>
           @if (interacted()) {
-            <button class="example__icon-button" type="button" aria-label="Reset live example" title="Reset" (click)="reset()">
+            <button class="example__icon-button" type="button" [attr.aria-label]="t.resetExample" [title]="t.reset" (click)="reset()">
               <mat-icon aria-hidden="true">restart_alt</mat-icon>
             </button>
           }
@@ -95,10 +95,10 @@ export const SHOWCASE_EXAMPLE_SOURCE_LOADER = new InjectionToken<() => Promise<E
             #expandButton
             class="example__icon-button"
             type="button"
-            [title]="previewExpanded() ? 'Exit full width' : 'Full width'"
+            [title]="previewExpanded() ? t.exitFullWidth : t.fullWidth"
             [attr.aria-controls]="current.id + '-preview'"
             [attr.aria-expanded]="previewExpanded()"
-            [attr.aria-label]="previewExpanded() ? 'Collapse live example' : 'Expand live example'"
+            [attr.aria-label]="previewExpanded() ? t.collapseExample : t.expandExample"
             (click)="togglePreviewSize()">
             <mat-icon aria-hidden="true">{{ previewExpanded() ? 'close_fullscreen' : 'open_in_full' }}</mat-icon>
           </button>
@@ -121,7 +121,7 @@ export const SHOWCASE_EXAMPLE_SOURCE_LOADER = new InjectionToken<() => Promise<E
           [id]="current.id + '-preview'"
           tabindex="0"
           role="region"
-          aria-label="Live example preview"
+          [attr.aria-label]="t.examplePreview"
           lang="vi"
           (click)="markInteracted()"
           (input)="markInteracted()"
@@ -131,35 +131,35 @@ export const SHOWCASE_EXAMPLE_SOURCE_LOADER = new InjectionToken<() => Promise<E
             @defer (on interaction) {
               <docs-example-preview [example]="current"></docs-example-preview>
             } @placeholder {
-              <button class="example__load" type="button">Load live preview</button>
+              <button class="example__load" type="button">{{ t.loadPreview }}</button>
             }
           } @else {
             @defer (on viewport) {
               <docs-example-preview [example]="current"></docs-example-preview>
             } @placeholder {
-              <p class="example__state">Loading preview...</p>
+              <p class="example__state">{{ t.loadingPreview }}</p>
             }
           }
         </div>
         @if (showScrollHint()) {
-          <span class="example__scroll-hint">Scroll horizontally to view the full demo</span>
+          <span class="example__scroll-hint">{{ t.scrollHint }}</span>
         }
       </div>
 
-      <section class="example__source" [id]="current.id + '-source'" aria-label="Example source code" [hidden]="!expanded()">
+      <section class="example__source" [id]="current.id + '-source'" [attr.aria-label]="t.exampleSource" [hidden]="!expanded()">
         @if (expanded()) {
-          @let sourceErrorMessage = sourceError();
+          @let sourceErrorKey = sourceError();
           @if (sourceLoading()) {
-            <p class="example__state" role="status">Loading source…</p>
-          } @else if (sourceErrorMessage) {
+            <p class="example__state" role="status">{{ t.loadingSource }}</p>
+          } @else if (sourceErrorKey) {
             <div class="example__source-error" role="alert">
-              <p>{{ sourceErrorMessage }}</p>
-              <button type="button" (click)="retrySource()">Retry source</button>
+              <p>{{ t[sourceErrorKey] }}</p>
+              <button type="button" (click)="retrySource()">{{ t.retrySource }}</button>
             </div>
           } @else {
             @if (source()) {
               <div class="example__source-toolbar">
-                <div class="example__source-tabs" role="group" aria-label="Source language">
+                <div class="example__source-tabs" role="group" [attr.aria-label]="t.sourceLanguage">
                   @for (tab of sourceTabs(); track tab.id) {
                     <button
                       type="button"
@@ -172,17 +172,17 @@ export const SHOWCASE_EXAMPLE_SOURCE_LOADER = new InjectionToken<() => Promise<E
                   }
                 </div>
                 <span class="example__file">{{ fileName() }}</span>
-                <button class="example__copy" type="button" aria-label="Copy source code" (click)="copySource()">
+                <button class="example__copy" type="button" [attr.aria-label]="t.copySource" (click)="copySource()">
                   <mat-icon aria-hidden="true">{{ copyStatus() === 'success' ? 'check' : 'content_copy' }}</mat-icon>{{ copyButtonLabel() }}
                 </button>
                 <span class="visually-hidden" role="status" aria-live="polite">{{ copyAnnouncement() }}</span>
               </div>
-              <div class="example__code" tabindex="0" role="region" aria-label="Scrollable example source">
+              <div class="example__code" tabindex="0" role="region" [attr.aria-label]="t.scrollableSource">
                 <pre class="example__lines" aria-hidden="true">{{ lineNumbers() }}</pre>
                 <pre class="example__pre"><code [innerHTML]="highlightedSource()"></code></pre>
               </div>
             } @else {
-              <p class="example__state example__state--error">Source is not available for this example.</p>
+              <p class="example__state example__state--error">{{ t.sourceUnavailable }}</p>
             }
           }
         }
@@ -212,18 +212,21 @@ export class ExampleViewerComponent implements OnDestroy {
   readonly hasHorizontalOverflow = signal(false);
   readonly scrolledToEnd = signal(false);
   readonly sourceLoading = signal(false);
-  readonly sourceError = signal<string | null>(null);
+  /** Catalog key of the source error; the message follows the current language. */
+  readonly sourceError = signal<'sourceUnregistered' | 'sourceLoadFailed' | null>(null);
   readonly source = signal<ShowcaseExampleSource | null>(null);
   readonly selectedTab = signal<SourceTab>('html');
   readonly copyStatus = signal<'idle' | 'success' | 'error'>('idle');
   readonly copyButtonLabel = computed(() => {
-    if (this.copyStatus() === 'success') return 'Copied';
-    if (this.copyStatus() === 'error') return 'Copy failed';
-    return 'Copy';
+    const t = this.i18n.t();
+    if (this.copyStatus() === 'success') return t.copied;
+    if (this.copyStatus() === 'error') return t.copyFailedShort;
+    return t.copy;
   });
   readonly copyAnnouncement = computed(() => {
-    if (this.copyStatus() === 'success') return 'Source code copied to clipboard.';
-    if (this.copyStatus() === 'error') return 'Source code could not be copied.';
+    const t = this.i18n.t();
+    if (this.copyStatus() === 'success') return t.sourceCopied;
+    if (this.copyStatus() === 'error') return t.sourceCopyFailed;
     return '';
   });
   /** HTML / TS / SCSS are always listed; a file the example does not have is a disabled tab. */
@@ -408,14 +411,14 @@ export class ExampleViewerComponent implements OnDestroy {
       const module = await this.#sourceLoader();
       const key = this.example().sourceKey;
       this.source.set(module.SHOWCASE_EXAMPLE_SOURCES[key] ?? null);
-      if (!this.source()) this.sourceError.set('Source is not registered for this example.');
+      if (!this.source()) this.sourceError.set('sourceUnregistered');
       const tabs = this.sourceTabs();
       if (!tabs.some(tab => tab.id === this.selectedTab() && tab.available)) {
         this.selectedTab.set(tabs.find(tab => tab.available)?.id ?? 'typescript');
       }
     } catch {
       this.source.set(null);
-      this.sourceError.set('The example source could not be loaded.');
+      this.sourceError.set('sourceLoadFailed');
     } finally {
       this.sourceLoading.set(false);
     }

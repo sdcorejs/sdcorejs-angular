@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ComponentFixture, DeferBlockState, TestBed } from '@angular/core/testing';
+import { DocsI18nService } from '../core/docs-i18n.service';
 import { DocExample } from '../core/documentation.models';
 import { ExampleViewerComponent, SHOWCASE_EXAMPLE_SOURCE_LOADER } from './example-viewer.component';
 
@@ -54,6 +55,26 @@ describe('ExampleViewerComponent', () => {
   it('renders a stable deep-link anchor and live preview', () => {
     expect(fixture.nativeElement.querySelector('#components-button-showcase')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('[data-testid="preview"]')?.textContent).toContain('Live preview');
+  });
+
+  it('marks the language of the example text and keeps the live demo when the text changes language', async () => {
+    const i18n = TestBed.inject(DocsI18nService);
+    const preview = fixture.nativeElement.querySelector('[data-testid="preview"]');
+    const title = () => fixture.nativeElement.querySelector('h3') as HTMLElement;
+    expect(title().getAttribute('lang')).toBe('en');
+
+    fixture.componentRef.setInput('example', { ...example, title: 'Biến thể', description: 'Các biến thể của nút.' });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(title().getAttribute('lang')).toBe('vi');
+    expect(fixture.nativeElement.querySelector('.example__description')?.getAttribute('lang')).toBe('vi');
+    expect(fixture.nativeElement.querySelector('[data-testid="preview"]')).toBe(preview);
+
+    i18n.set('vi');
+    fixture.componentRef.setInput('example', example);
+    fixture.detectChanges();
+    expect(title().getAttribute('lang')).toBe('vi');
+    i18n.set('en');
   });
 
   it('suppresses generated migration descriptions instead of repeating the example title', () => {

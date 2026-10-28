@@ -51,14 +51,15 @@ export class DocsPageHeaderComponent {
   readonly invalidVersion = input<string | null>(null);
   /** Metadata lines of the published document (Type, Class, Provided in…). */
   readonly metadata = input<Readonly<Record<string, string>>>({});
-  /** English one-line purpose from the published document; the registry description (Vietnamese) is the fallback. */
+  /** English one-line purpose from the published document; the registry description of the page is the fallback. */
   readonly lead = input<string | null>(null);
   readonly badge = input<DocsReleaseBadge | null>(null);
 
   readonly leadText = computed(() => {
     const english = this.lead();
     if (english && this.i18n.language() === 'en') return { lang: 'en', segments: inlineCodeSegments(english) };
-    return { lang: 'vi', segments: inlineCodeSegments(this.page().description) };
+    const description = this.page().description;
+    return { lang: this.i18n.contentLang(description), segments: inlineCodeSegments(description) };
   });
 
   readonly badgeText = computed(() => {

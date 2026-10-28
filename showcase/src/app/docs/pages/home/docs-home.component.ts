@@ -71,9 +71,9 @@ export class DocsHomeComponent {
       .slice(0, HOME_NEW_LIMIT)
       .map(page => ({
         id: page.id,
-        title: page.title,
+        title: this.i18n.page(page).title,
         badge: badges.get(page.id)!,
-        text: firstSentence(changelogEntriesForPage(release, page, DOC_PAGES)[0] ?? page.description),
+        text: firstSentence(changelogEntriesForPage(release, page, DOC_PAGES)[0] ?? this.i18n.page(page).description),
         commands: ['/v', this.version(), page.category, page.slug, 'overview'],
       }));
   });

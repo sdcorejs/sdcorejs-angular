@@ -21,7 +21,6 @@ import { DocsThemeService } from '../docs/core/docs-theme.service';
 import { DocsVersionService } from '../docs/core/docs-version.service';
 import { DocsReleaseNotesService } from '../docs/core/docs-release-notes.service';
 import { foldSearchText } from '../docs/core/docs-search.utils';
-import { DOC_NAV_GROUPS } from '../docs/core/documentation.registry';
 import { PublishedDocsService } from '../docs/core/published-docs.service';
 import { DocsFragmentLinkDirective } from '../docs/shared/docs-fragment-link.directive';
 import { resolveDocsPageAvailability } from '../docs/shared/docs-page-availability';
@@ -88,23 +87,26 @@ export class ShellComponent {
     const overrides = this.groupOverrides();
     const badges = this.releaseBadges();
     const t = this.i18n.t();
-    return DOC_NAV_GROUPS.map(group => ({
-      ...group,
-      title: t.categories[group.category],
-      open: term ? true : (overrides.get(group.category) ?? group.category === this.currentCategory()),
-      pages: group.pages
-        .filter(page => !term || foldSearchText(page.title).includes(term) || page.slug.includes(term))
-        .map(page => {
-          const availability = resolveDocsPageAvailability(page, this.publishedDocIds());
-          return {
-            ...page,
-            availability,
-            badge: badges.get(page.id) ?? null,
-            commands: ['/v', this.currentVersion(), page.category, page.slug, availability === 'live-demo' ? 'examples' : 'overview'],
-          };
-        })
-        .filter(page => page.availability !== 'unavailable'),
-    })).filter(group => group.pages.length > 0);
+    return this.i18n
+      .navGroups()
+      .map(group => ({
+        ...group,
+        title: t.categories[group.category],
+        open: term ? true : (overrides.get(group.category) ?? group.category === this.currentCategory()),
+        pages: group.pages
+          .filter(page => !term || foldSearchText(page.title).includes(term) || page.slug.includes(term))
+          .map(page => {
+            const availability = resolveDocsPageAvailability(page, this.publishedDocIds());
+            return {
+              ...page,
+              availability,
+              badge: badges.get(page.id) ?? null,
+              commands: ['/v', this.currentVersion(), page.category, page.slug, availability === 'live-demo' ? 'examples' : 'overview'],
+            };
+          })
+          .filter(page => page.availability !== 'unavailable'),
+      }))
+      .filter(group => group.pages.length > 0);
   });
   readonly navMatchCount = computed(() => this.navGroups().reduce((total, group) => total + group.pages.length, 0));
   #indexLoadSequence = 0;

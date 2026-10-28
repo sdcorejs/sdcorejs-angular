@@ -9,7 +9,7 @@
 </nav>
 
 @if (invalidVersion(); as invalid) {
-  <div class="version-notice" role="status">Version “{{ invalid }}” is unavailable. Showing v{{ version() }} instead.</div>
+  <div class="version-notice" role="status">{{ i18n.format('versionUnavailable', { x: invalid, v: version() }) }}</div>
 }
 
 <header class="page-header">

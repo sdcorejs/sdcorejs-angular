@@ -76,6 +76,24 @@ describe('DocsPageHeaderComponent', () => {
     expect(lead().textContent?.trim()).toBe(fixture.componentInstance.page().description);
   });
 
+  it('falls back to the registry description of the current language without a published lead', () => {
+    const i18n = TestBed.inject(DocsI18nService);
+    const source = fixture.componentInstance.page();
+    const lead = () => fixture.nativeElement.querySelector('.page-header__lead') as HTMLElement;
+    fixture.componentRef.setInput('lead', null);
+    fixture.componentRef.setInput('page', i18n.page(source));
+    fixture.detectChanges();
+
+    expect(lead().textContent?.trim()).toBe('Action button with variants, sizes, icons and a loading state.');
+    expect(lead().getAttribute('lang')).toBe('en');
+
+    i18n.set('vi');
+    fixture.componentRef.setInput('page', i18n.page(source));
+    fixture.detectChanges();
+    expect(lead().textContent?.trim()).toBe(source.description);
+    expect(lead().getAttribute('lang')).toBe('vi');
+  });
+
   it('copies one cell, shows a check for 1.4s and announces the result', fakeAsync(() => {
     const clipboard = TestBed.inject(DocsClipboardService);
     const button = cells()[0].querySelector('button') as HTMLButtonElement;

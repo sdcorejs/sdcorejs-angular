@@ -203,12 +203,12 @@ export function highlightCode(code: string, language: string): string {
             <div class="docs-code">
               <div class="docs-code__toolbar">
                 <span class="docs-code__file">{{ block.language || 'text' }}</span>
-                <button type="button" aria-label="Copy code block" (click)="copy(block.code ?? '')">
+                <button type="button" [attr.aria-label]="i18n.t().copyCode" (click)="copy(block.code ?? '')">
                   <mat-icon class="docs-code__copy-icon" aria-hidden="true">{{ copyResult()?.code === block.code && copyResult()?.status === 'success' ? 'check' : 'content_copy' }}</mat-icon>
                   {{ copyLabel(block.code ?? '') }}
                 </button>
               </div>
-              <div class="docs-code__body" tabindex="0" role="region" aria-label="Scrollable code block">
+              <div class="docs-code__body" tabindex="0" role="region" [attr.aria-label]="i18n.t().scrollableCode">
                 <pre class="docs-code__lines" aria-hidden="true">{{ lineNumbers(block.code ?? '') }}</pre>
                 <pre class="docs-code__pre"><code [class]="'language-' + (block.language || 'text')" [innerHTML]="block.html"></code></pre>
               </div>
@@ -238,7 +238,7 @@ export function highlightCode(code: string, language: string): string {
             </div>
           }
           @case ('table') {
-            <div class="docs-table-wrap" tabindex="0" role="region" aria-label="Scrollable API table">
+            <div class="docs-table-wrap" tabindex="0" role="region" [attr.aria-label]="i18n.t().scrollableTable">
               <table>
                 <thead>
                   <tr>
@@ -286,8 +286,8 @@ export class MarkdownRendererComponent {
   readonly copyResult = signal<{ readonly code: string; readonly status: 'success' | 'error' } | null>(null);
   readonly copyAnnouncement = computed(() => {
     const result = this.copyResult();
-    if (result?.status === 'success') return 'Code block copied to clipboard.';
-    if (result?.status === 'error') return 'Code block could not be copied.';
+    if (result?.status === 'success') return this.i18n.t().codeCopied;
+    if (result?.status === 'error') return this.i18n.t().codeCopyFailed;
     return '';
   });
   readonly blocks = computed<readonly MarkdownBlockView[]>(() => {
@@ -432,8 +432,9 @@ export class MarkdownRendererComponent {
 
   copyLabel(code: string): string {
     const result = this.copyResult();
-    if (result?.code !== code) return 'Copy';
-    return result.status === 'success' ? 'Copied' : 'Copy failed';
+    const t = this.i18n.t();
+    if (result?.code !== code) return t.copy;
+    return result.status === 'success' ? t.copied : t.copyFailedShort;
   }
 
   async copy(code: string): Promise<void> {
